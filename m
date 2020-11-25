@@ -2,112 +2,165 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99BCDC56202
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 21:12:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90AECC56202
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 21:36:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 505252075A
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 21:12:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1932F2075A
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 21:36:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="g9y81DNQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731229AbgKYVMk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Nov 2020 16:12:40 -0500
-Received: from sandeen.net ([63.231.237.45]:36724 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731158AbgKYVMk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Nov 2020 16:12:40 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id A0919324E60;
-        Wed, 25 Nov 2020 15:12:33 -0600 (CST)
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <160633667604.634603.7657982642827987317.stgit@magnolia>
- <160633668210.634603.16132006317248436755.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH 1/5] libxfs-apply: don't add duplicate headers
-Message-ID: <4bc2eb57-a5e8-59e5-9c69-0d8767df4796@sandeen.net>
-Date:   Wed, 25 Nov 2020 15:12:39 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.5.0
+        id S1730364AbgKYVf4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Nov 2020 16:35:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50198 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730600AbgKYVf4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Nov 2020 16:35:56 -0500
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6B89C0613D4
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2020 13:35:55 -0800 (PST)
+Received: by mail-lf1-x12b.google.com with SMTP id r24so5154559lfm.8
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2020 13:35:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=tOPQoHjgvYUvh+HHnKxiG8jONSzsA15qJMnLlNlgP0M=;
+        b=g9y81DNQmmhmWGTiGwiN1BpWJR901eSsmOaWRaDAPAF045hxvt7onry/8Zvu9QMIoO
+         Mj7cMnjDGxU6hMF6tVoIt4bsojN6gPJ4SXLznmP+jMHmyniwn5WHjj2vQ6xOOO0OJlr6
+         V8poGWCE2wHSk99omymX/xHLo/xmK1pAoTF0c=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=tOPQoHjgvYUvh+HHnKxiG8jONSzsA15qJMnLlNlgP0M=;
+        b=szus//NFSQQ7I5+APJUKAQcWRISa3Nazh5IQbtQkFJazYTbiZSB4TDirw8fbdk5BAd
+         lrFduvh5aKi7PVozZVFaWbU0HmcH590ZGnRdTeefwNMZX4zKoIfFR7qa+9usy6q03Owp
+         9gEc7zzChK7rqwpff71A7G1eu90fxuMBgC25XpUBZF6LE25zgtORwCEmh6rb8uEbVL/k
+         4j1rLFHTIhgkZSEpKrmebX/IGyur0Z7gR0lLLuJbdu7phdkZb2Cuwy5A/8VEXQ64NMsC
+         iRw6vosIDalrDfQW8OgGwcXyWviRbmqW/sza+eWZwTRGVnmUSocIQIxbe2D4gV/H7elb
+         XRVQ==
+X-Gm-Message-State: AOAM531W8SO09H6Q+OaPSHOfXFMtVh4TaMS/JunIs9XOwIkvfF8VTson
+        V7nHpojkFVwVfJLYMGZIojaI7uSm7viJHw==
+X-Google-Smtp-Source: ABdhPJwFs0OWZP6ne66+qLnvjVi0Gixg+tut8BB7lBEf2aDKWiyGxvU+HRf9waiau0GD5iYe5mJKEQ==
+X-Received: by 2002:a19:c6d1:: with SMTP id w200mr58405lff.217.1606340153860;
+        Wed, 25 Nov 2020 13:35:53 -0800 (PST)
+Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com. [209.85.208.181])
+        by smtp.gmail.com with ESMTPSA id w28sm65861lfk.8.2020.11.25.13.35.53
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 Nov 2020 13:35:53 -0800 (PST)
+Received: by mail-lj1-f181.google.com with SMTP id j10so9912lja.5
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2020 13:35:53 -0800 (PST)
+X-Received: by 2002:a05:651c:339:: with SMTP id b25mr15104ljp.285.1606339837289;
+ Wed, 25 Nov 2020 13:30:37 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <160633668210.634603.16132006317248436755.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <000000000000d3a33205add2f7b2@google.com> <20200828100755.GG7072@quack2.suse.cz>
+ <20200831100340.GA26519@quack2.suse.cz> <CAHk-=wivRS_1uy326sLqKuwerbL0APyKYKwa+vWVGsQg8sxhLw@mail.gmail.com>
+ <alpine.LSU.2.11.2011231928140.4305@eggly.anvils> <20201124121912.GZ4327@casper.infradead.org>
+ <alpine.LSU.2.11.2011240810470.1029@eggly.anvils> <20201124183351.GD4327@casper.infradead.org>
+ <CAHk-=wjtGAUP5fydxR8iWbzB65p2XvM0BrHE=PkPLQcJ=kq_8A@mail.gmail.com>
+ <20201124201552.GE4327@casper.infradead.org> <CAHk-=wj9n5y7pu=SVVGwd5-FbjMGS6uoFU4RpzVLbuOfwBifUA@mail.gmail.com>
+ <alpine.LSU.2.11.2011241322540.1777@eggly.anvils> <CAHk-=wjiVtroOvNkuptH0GofVUvOMw4wmmaXdnGPPT8y8+MbyQ@mail.gmail.com>
+In-Reply-To: <CAHk-=wjiVtroOvNkuptH0GofVUvOMw4wmmaXdnGPPT8y8+MbyQ@mail.gmail.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Wed, 25 Nov 2020 13:30:20 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wix0YNq1U8iroRLpx+fCUGE8RG3asY8Zm4vyH-g4UhbPg@mail.gmail.com>
+Message-ID: <CAHk-=wix0YNq1U8iroRLpx+fCUGE8RG3asY8Zm4vyH-g4UhbPg@mail.gmail.com>
+Subject: Re: kernel BUG at fs/ext4/inode.c:LINE!
+To:     Hugh Dickins <hughd@google.com>
+Cc:     Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        syzbot <syzbot+3622cea378100f45d59f@syzkaller.appspotmail.com>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
+        "Theodore Ts'o" <tytso@mit.edu>, Linux-MM <linux-mm@kvack.org>,
+        Oleg Nesterov <oleg@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Kirill A. Shutemov" <kirill@shutemov.name>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Alex Shi <alex.shi@linux.alibaba.com>, Qian Cai <cai@lca.pw>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        William Kucharski <william.kucharski@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/25/20 2:38 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> When we're backporting patches from libxfs, don't add a S-o-b header if
-> there's already one at the end of the headers of the patch being ported.
-> 
-> That way, we avoid things like:
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Nov 24, 2020 at 3:24 PM Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+> I've applied your second patch (the smaller one that just takes a ref
+> around the critical section). If somebody comes up with some great
+> alternative, we can always revisit this.
 
-But it will still not add my additional SOB if I merge something across to
-userspace that starts out with:
+Hmm.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+I'm not sure about "great alternative", but it strikes me that we
+*could* move the clearing of the PG_writeback bit _into_
+wake_up_page_bit(), under the page waitqueue lock.
 
-And I always felt like the committer should be adding their SOB to the end of
-the chain when they move code from one place to another, especially if any
-tweaks got made along the way.
+IOW, we could make the rule be that the bit isn't actually cleared
+before calling wake_up_page() at all, and we'd clear it with something
+like
 
-IOWs I see the rationale for removing duplicate /sequential/ SOBs, but not
-for removing duplicate SOBs in general.
+    unsigned long flags = READ_ONCE(page->flags);
 
-Am I thinking about that wrong?
+    // We can clear PG_writeback directly if PG_waiters isn't set
+    while (!(flags & (1ul << PG_waiters))) {
+        unsigned long new = flags & ~(1ul << PG_writeback);
+        // PG_writeback was already clear??!!?
+        if (WARN_ON_ONCE(new == flags))
+            return;
+        new = cmpxchg(&page->flags, flags, new);
+        if (likely(flags == new))
+            return;
+        flags = new;
+    }
 
-> ---
->  tools/libxfs-apply |   14 +++++++++++---
->  1 file changed, 11 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/tools/libxfs-apply b/tools/libxfs-apply
-> index 3258272d6189..9271db380198 100755
-> --- a/tools/libxfs-apply
-> +++ b/tools/libxfs-apply
-> @@ -193,6 +193,14 @@ filter_xfsprogs_patch()
->  	rm -f $_libxfs_files
->  }
->  
-> +add_header()
-> +{
-> +	local hdr="$1"
-> +	local hdrfile="$2"
-> +
-> +	tail -n 1 "$hdrfile" | grep -q "^${hdr}$" || echo "$hdr" >> "$hdrfile"
-> +}
-> +
->  fixup_header_format()
->  {
->  	local _source=$1
-> @@ -280,13 +288,13 @@ fixup_header_format()
->  	sed -i '${/^[[:space:]]*$/d;}' $_hdr.new
->  
->  	# Add Signed-off-by: header if specified
-> -	if [ ! -z ${SIGNED_OFF_BY+x} ]; then 
-> -		echo "Signed-off-by: $SIGNED_OFF_BY" >> $_hdr.new
-> +	if [ ! -z ${SIGNED_OFF_BY+x} ]; then
-> +		add_header "Signed-off-by: $SIGNED_OFF_BY" $_hdr.new
->  	else	# get it from git config if present
->  		SOB_NAME=`git config --get user.name`
->  		SOB_EMAIL=`git config --get user.email`
->  		if [ ! -z ${SOB_NAME+x} ]; then
-> -			echo "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" >> $_hdr.new
-> +			add_header "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" $_hdr.new
->  		fi
->  	fi
->  
-> 
+    // Otherwise, clear the bit at the end - but under the
+    // page waitqueue lock - inside wake_up_page_bit()
+    return wake_up_page_bit(..);
+
+instead.
+
+That would basically make the bit clearing atomic wrt the PG_waiters
+flags - either using that atomic cmpxchg, or by doing it under the
+page queue lock so that it's atomic wrt any new waiters.
+
+This seems conceptually like the right thing to do - and if would also
+make the (fair) exclusive lock hand-off case atomic too, because the
+bit we're waking up on would never be cleared if it gets handed off
+directly.
+
+The above is entirely untested crap written in my MUA, and obviously
+requires that all callers of wake_up_page() be moved to that new world
+order, but I think we only have two cases: unlock_page() and
+end_page_writeback().
+
+And unlock_page() already has that
+"clear_bit_unlock_is_negative_byte()" special case that is an ugly
+special case of PG_waiters atomicity. So we'd get rid of that, because
+the cmpxchg loop would be the better model.
+
+I'm not sure I'm willing to write and test the real patch, but it
+doesn't look _too_ nasty from just looking at the code. The bookmark
+thing makes it important to only actually clear the bit at the end (as
+does the handoff case anyway), but the way wake_up_page_bit() is
+written, that's actually very straightforward - just after the
+while-loop. That's when we've woken up everybody.
+
+So I'm sending this idea out to see if somebody can shoot it down, or
+even wants to possibly even try to do it..
+
+                Linus
