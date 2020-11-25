@@ -2,114 +2,144 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E56C83013
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 16:26:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC477C71155
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 16:26:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6ECD2067C
+	by mail.kernel.org (Postfix) with ESMTP id 8E2CA206F7
 	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 16:26:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="gwqmqFyS"
+	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="YUoZKq8L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731510AbgKYQZ5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Nov 2020 11:25:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58056 "EHLO
+        id S1731658AbgKYQZw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Nov 2020 11:25:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731491AbgKYQZl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Nov 2020 11:25:41 -0500
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8087AC0613D4
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2020 08:25:39 -0800 (PST)
-Received: by mail-wm1-x341.google.com with SMTP id x22so2503457wmc.5
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2020 08:25:39 -0800 (PST)
+        with ESMTP id S1731516AbgKYQZr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Nov 2020 11:25:47 -0500
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFBC7C0613D4
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2020 08:25:45 -0800 (PST)
+Received: by mail-wm1-x344.google.com with SMTP id h21so2701596wmb.2
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2020 08:25:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=ffwll.ch; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=uUxbRrS9MFqXGOvk/ieUK3bhzkS/VSko486/NfxYD1w=;
-        b=gwqmqFySnTT8wFc9pyNO08a05EtFio6skO3VOfMb8mdBj6W1qBPu6+VRr2k1XCh6kl
-         Q/nUJzrA1+98qaJuJmEx9Yj8Xp0Qz4KncxaIhz/aDBFojKu7G5YnfJs/2YEnSNGH2lKf
-         sVR6MQzcank3A6sMNUPe9nWSpOoUBv2+cAY+I=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=lnj1vSewnYJ6/gw6qejvRzkdxRWgCvvqGMHaDGl+NSM=;
+        b=YUoZKq8L06+FDLM6Fl810zMa4QNm9z7yylijbYlze6fR8otQLzenAvEmy/fayirA5N
+         O41roW+Y0PCq5CiO8xCdkb7te5p4XNiNP2KMYNITnW7GvP766R3pheeUSYaMWtw/NCoq
+         hiMpjQptcAu3Wxmv8w5zOIWpXb2cG4iSD2BBk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=uUxbRrS9MFqXGOvk/ieUK3bhzkS/VSko486/NfxYD1w=;
-        b=s8fpPIaKIXiU0lwRjN6VbJEsKEnbP0nyHnEphBeW5y98j9BRRsbvy7fh5aoQ5sEJMw
-         lmeJ/O3DWVvOpSZRlwJpj5+lmcGlwzvxXoIcLJWpQFIo4JYSYJ+nIAHhBFkyc+RVHiBc
-         RvMonNkIJTPUKooAyryip02ITzmtL2W8W95KjfXfGEaYVDHCdp8n/J+SojbsOFG8iUV3
-         kVM0TEmNCfr/pTe93F4bho/dpQSUPqQifrQEsTk66AuRMzTaBGDBUb8CSzHb2tnwv6nW
-         LfK/wU13KxW9NOWT8i16ivN+ZHAXIapbh9+RM/ukt3CRWuV1nFRvBr5p3g4n015F2IV1
-         Lnyg==
-X-Gm-Message-State: AOAM532WbSeRjB2IBGJnHn1rwosSStuGvGTRBAaz82HYlbIpnIJ6Oxd4
-        vIQbFwdE1OKqPRFFgCGOoyXYZA==
-X-Google-Smtp-Source: ABdhPJwU55boKQUargCwj7uABbDFGkLI6m5Shju4RIwPqnobg7pzset1RPYMkQXjIR0a2azRJHembg==
-X-Received: by 2002:a1c:1b06:: with SMTP id b6mr3649998wmb.101.1606321538289;
-        Wed, 25 Nov 2020 08:25:38 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=lnj1vSewnYJ6/gw6qejvRzkdxRWgCvvqGMHaDGl+NSM=;
+        b=onSNpJEjgbTsmcLGCzo6kkVZUOSF+vGB2YFzH2JTxUOWTT6kPlkTmxfzAnjnB41qhv
+         iIo0HP3j0bT1njynsHdzLpfsWoRQCI7MPpXKl/ukRy6lSyaSeukh2aUGr0bKLpyQegxh
+         71MuXzHQrXPXsk+nkTN5aw0u20tiZ14rjYBtuygUtSEke0iDyK0a6VicXKfM6ePH2PXn
+         NxpMmd380X18ATGVmrY1mIKMkE2Sj4vXg5gSMF7LEeXA05WMEu4K9nHBiEXAlJ3UVZjf
+         UoxjtRKuLAkNDzLkogaxRWorkHylIa3TH38LKkf+49GtZKW6PPNQj90bdg6WkhjNrvsn
+         zt2Q==
+X-Gm-Message-State: AOAM530y/V3O+fRy7/n3hVauOL/MXtZ+oDB8bnXftU2D1zkmXvFMWqT/
+        Cp83KKl70TNAkvgLD19wKE+p7Q==
+X-Google-Smtp-Source: ABdhPJzimL6dZ1eWi01TNV2dJDgqjd5jFZPTvE6ZnqLenNCICrynr5xXWljktH5hZBPm90Z1zf9kBQ==
+X-Received: by 2002:a7b:cf26:: with SMTP id m6mr4920447wmg.121.1606321544420;
+        Wed, 25 Nov 2020 08:25:44 -0800 (PST)
 Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
-        by smtp.gmail.com with ESMTPSA id a21sm4855187wmb.38.2020.11.25.08.25.37
+        by smtp.gmail.com with ESMTPSA id a21sm4855187wmb.38.2020.11.25.08.25.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2020 08:25:37 -0800 (PST)
+        Wed, 25 Nov 2020 08:25:43 -0800 (PST)
 From:   Daniel Vetter <daniel.vetter@ffwll.ch>
 To:     DRI Development <dri-devel@lists.freedesktop.org>
 Cc:     Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
         linux-mm@kvack.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>
-Subject: [PATCH v4 0/3] mmu_notifier vs fs_reclaim lockdep annotations
-Date:   Wed, 25 Nov 2020 17:25:28 +0100
-Message-Id: <20201125162532.1299794-1-daniel.vetter@ffwll.ch>
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Thomas Hellstrom <thellstrom@vmware.com>,
+        Brian Paul <brianp@vmware.com>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        Huang Rui <ray.huang@amd.com>
+Subject: [PATCH] drm/ttm: don't set page->mapping
+Date:   Wed, 25 Nov 2020 17:25:32 +0100
+Message-Id: <20201125162532.1299794-5-daniel.vetter@ffwll.ch>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201125162532.1299794-1-daniel.vetter@ffwll.ch>
+References: <20201125162532.1299794-1-daniel.vetter@ffwll.ch>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+Random observation while trying to review Christian's patch series to
+stop looking at struct page for dma-buf imports.
 
-Just resending with the polish applied, no functional changes at all.
+This was originally added in
 
-Previous versions.
+commit 58aa6622d32af7d2c08d45085f44c54554a16ed7
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Fri Jan 3 11:47:23 2014 +0100
 
-v3: https://lore.kernel.org/dri-devel/20201120095445.1195585-1-daniel.vetter@ffwll.ch/
-v2: https://lore.kernel.org/dri-devel/20200610194101.1668038-1-daniel.vetter@ffwll.ch/
+    drm/ttm: Correctly set page mapping and -index members
 
-Changes since v3:
-- more acks/r-b
-- typos in the kerneldoc fixed
+    Needed for some vm operations; most notably unmap_mapping_range() with
+    even_cows = 0.
 
-Changes since v2:
-- Now hopefully the bug that bombed xfs fixed.
-- With unit-tests (that's the part I really wanted and never got to)
-- might_alloc() helper thrown in for good.
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
 
-I think if we have an ack/review from fs-devel this should be good to
-land. Last version that landed in -mm (v2) broke xfs pretty badly.
+but we do not have a single caller of unmap_mapping_range with
+even_cows == 0. And all the gem drivers don't do this, so another
+small thing we could standardize between drm and ttm drivers.
 
-Unfortuantely I don't have a working email from Qian anymore, who reported
-the xfs issue. Maybe Dave Chinner instead?
+Plus I don't really see a need for unamp_mapping_range where we don't
+want to indiscriminately shoot down all ptes.
 
-Cheers, Daniel
+Cc: Thomas Hellstrom <thellstrom@vmware.com>
+Cc: Brian Paul <brianp@vmware.com>
+Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
+Cc: Christian Koenig <christian.koenig@amd.com>
+Cc: Huang Rui <ray.huang@amd.com>
+---
+ drivers/gpu/drm/ttm/ttm_tt.c | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-Daniel Vetter (3):
-  mm: Track mmu notifiers in fs_reclaim_acquire/release
-  mm: Extract might_alloc() debug check
-  locking/selftests: Add testcases for fs_reclaim
-
- include/linux/sched/mm.h | 16 ++++++++++++++
- lib/locking-selftest.c   | 47 ++++++++++++++++++++++++++++++++++++++++
- mm/mmu_notifier.c        |  7 ------
- mm/page_alloc.c          | 31 ++++++++++++++++----------
- mm/slab.h                |  5 +----
- mm/slob.c                |  6 ++---
- 6 files changed, 86 insertions(+), 26 deletions(-)
-
+diff --git a/drivers/gpu/drm/ttm/ttm_tt.c b/drivers/gpu/drm/ttm/ttm_tt.c
+index da9eeffe0c6d..5b2eb6d58bb7 100644
+--- a/drivers/gpu/drm/ttm/ttm_tt.c
++++ b/drivers/gpu/drm/ttm/ttm_tt.c
+@@ -284,17 +284,6 @@ int ttm_tt_swapout(struct ttm_bo_device *bdev, struct ttm_tt *ttm)
+ 	return ret;
+ }
+ 
+-static void ttm_tt_add_mapping(struct ttm_bo_device *bdev, struct ttm_tt *ttm)
+-{
+-	pgoff_t i;
+-
+-	if (ttm->page_flags & TTM_PAGE_FLAG_SG)
+-		return;
+-
+-	for (i = 0; i < ttm->num_pages; ++i)
+-		ttm->pages[i]->mapping = bdev->dev_mapping;
+-}
+-
+ int ttm_tt_populate(struct ttm_bo_device *bdev,
+ 		    struct ttm_tt *ttm, struct ttm_operation_ctx *ctx)
+ {
+@@ -313,7 +302,6 @@ int ttm_tt_populate(struct ttm_bo_device *bdev,
+ 	if (ret)
+ 		return ret;
+ 
+-	ttm_tt_add_mapping(bdev, ttm);
+ 	ttm->page_flags |= TTM_PAGE_FLAG_PRIV_POPULATED;
+ 	if (unlikely(ttm->page_flags & TTM_PAGE_FLAG_SWAPPED)) {
+ 		ret = ttm_tt_swapin(ttm);
 -- 
 2.29.2
 
