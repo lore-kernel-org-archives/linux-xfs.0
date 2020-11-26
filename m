@@ -2,118 +2,131 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4854C56202
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Nov 2020 03:14:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 152DAC63697
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Nov 2020 03:54:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7145D216C4
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Nov 2020 03:14:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE91921D1A
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Nov 2020 03:54:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cV86WqIE"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="h2nirmbZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732389AbgKZDOM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Nov 2020 22:14:12 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:58911 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730696AbgKZDOK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Nov 2020 22:14:10 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606360449;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=CP+P72YDkk6r+96+ukHLMOpDWmwuEuxrRgqlxfsqF6M=;
-        b=cV86WqIEAGx49ylqPPO/phqvjyVUc84U9XDFL6hmB3wqLud2hITOUdGuZcTl0iZxhI5tI8
-        NEfmKxtxfG9WDYt9uLsnldj6vEBDSOA6P8lGsHWzbkpLLW6AMiGRRvhgHxYEBWdu5kto1J
-        aEe8n6YqUEGBhSlKZLOZkfTnGtORrz8=
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
- [209.85.214.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-575-Z-8UG9w3PGKbzTQaNlRKmg-1; Wed, 25 Nov 2020 22:14:07 -0500
-X-MC-Unique: Z-8UG9w3PGKbzTQaNlRKmg-1
-Received: by mail-pl1-f199.google.com with SMTP id bf9so591170plb.18
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Nov 2020 19:14:07 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to:user-agent;
-        bh=CP+P72YDkk6r+96+ukHLMOpDWmwuEuxrRgqlxfsqF6M=;
-        b=buVPbwwdW55B3Ymb6V7vd0/Ams+q5lP1+TU5gxblMPGSRFJfdYAY/ftfnhCY8Coi2d
-         3A//acARY03ZKnhVbX1h0vapl/Pd2SsoLXKbXtAcnzjAf15Po+u8fZXkmSRIlbg+Jz1X
-         nC5Q2tnKqbshmqPMnyK5wvHFmM5oUYGF17J5wns1KrhkC5rqjHLkZjP04QVamBQrTQMz
-         O7Kj301lTiy9t84IGG1YieNrmMeFmbyeiuC5IuEDK0ByqBs6QtWEj8vDWygNSMO1Wpsh
-         /8p4fjXDJKNk+g9kJYDpulRVmLWVBJExwRXg2uSKgxZX77dkgKV87v+AOTu96MOknERM
-         nP+g==
-X-Gm-Message-State: AOAM532h8sF7VX0Mz/mzF8qSEIXFsS6IUqwcbarP6m4ZTONqIb5ZkRQ0
-        hz+kMCbZjt+z7jqZS7WznlvD6AI3rdAvfZC3n9pecQ0gdYuYl4cG1Se0DOe/wPwLJ/SDPCh1v0R
-        VQS3+O2vGzKGBY/hDKBLW
-X-Received: by 2002:a17:902:8209:b029:d6:d2c9:1db5 with SMTP id x9-20020a1709028209b02900d6d2c91db5mr1009626pln.54.1606360445890;
-        Wed, 25 Nov 2020 19:14:05 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxsQ7WHZSGSQfaUiSHqtqqoRw0+46vwJE9kTOPMHu6GdPqgV+5NQiGJOmlZ+cstEeAN/7Af3A==
-X-Received: by 2002:a17:902:8209:b029:d6:d2c9:1db5 with SMTP id x9-20020a1709028209b02900d6d2c91db5mr1009611pln.54.1606360445702;
-        Wed, 25 Nov 2020 19:14:05 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id k4sm2992384pfg.174.2020.11.25.19.14.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2020 19:14:05 -0800 (PST)
-Date:   Thu, 26 Nov 2020 11:13:54 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Qinglang Miao <miaoqinglang@huawei.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: check the return value of krealloc() in
- xfs_uuid_mount
-Message-ID: <20201126031354.GA345905@xiangao.remote.csb>
-References: <20201125065036.154312-1-miaoqinglang@huawei.com>
- <365b952c-7fea-3bc2-55ea-3f6b1c9f9142@sandeen.net>
- <9f998a9d-0684-6b45-009e-acf2e0ac4c85@huawei.com>
- <20201126021622.GA336866@xiangao.remote.csb>
- <5d6b6f6f-4bc3-2821-d5b1-569afba0221a@huawei.com>
+        id S2387523AbgKZDyA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Nov 2020 22:54:00 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:13170 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730187AbgKZDx7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Nov 2020 22:53:59 -0500
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0AQ3p2eN106232;
+        Wed, 25 Nov 2020 22:53:57 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=kqINen3i/bNXMyyBdnQBchA7tQeXPs2uRmFNT/lCS/0=;
+ b=h2nirmbZJC9bsVDpHrIhNUtRmjuG3Nz+3H2XzW2n9kOD6TOIEm3TKM9y0mqAbFjfqOCp
+ sW0b2oEh6h2QwWVdPgERyyCrn17fmVpgr/FZZuWuGjUp6Od8cWf/rezRZwHAujlmvHbB
+ aurKF/0us+1bQuFsN9k4m0oTv2VJ6f8jl48AXGy20Z1ZmD4LMKACrpAUhwuoFlDet1Xj
+ cVAd7U2fWad/mLlG9A2QREsZvcrxyLJsJf3tN4vWja4jdrzQzv3QcgMjeOwARzM4FyZz
+ c55pUP81UDn/kOIX0AH/wTAZBJqNob3azV4dPVAhkUYg8P2BvqX6SzTrvBWjJZvlhVBV 0w== 
+Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3524tqg1h5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 25 Nov 2020 22:53:57 -0500
+Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
+        by ppma03fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0AQ3rZHj003209;
+        Thu, 26 Nov 2020 03:53:54 GMT
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
+        by ppma03fra.de.ibm.com with ESMTP id 34yy8r2ct7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 26 Nov 2020 03:53:54 +0000
+Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0AQ3pMNA8061690
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 26 Nov 2020 03:51:22 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A3DFD42045;
+        Thu, 26 Nov 2020 03:51:22 +0000 (GMT)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 225F142041;
+        Thu, 26 Nov 2020 03:51:21 +0000 (GMT)
+Received: from [9.199.32.61] (unknown [9.199.32.61])
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Thu, 26 Nov 2020 03:51:20 +0000 (GMT)
+Subject: Re: [PATCH 0/3] fstests: Fix tests which checks for swapfile support
+To:     Eryu Guan <guan@eryu.me>
+Cc:     fstests@vger.kernel.org, anju@linux.vnet.ibm.com,
+        linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+References: <cover.1604000570.git.riteshh@linux.ibm.com>
+ <20201101160357.GE3853@desktop>
+From:   Ritesh Harjani <riteshh@linux.ibm.com>
+Message-ID: <c2f91a8e-b831-52c5-7e5e-79dcc7175cd3@linux.ibm.com>
+Date:   Thu, 26 Nov 2020 09:21:19 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <5d6b6f6f-4bc3-2821-d5b1-569afba0221a@huawei.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20201101160357.GE3853@desktop>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-11-25_14:2020-11-25,2020-11-25 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 phishscore=0
+ suspectscore=0 bulkscore=0 adultscore=0 mlxlogscore=999 clxscore=1011
+ priorityscore=1501 malwarescore=0 lowpriorityscore=0 impostorscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011260016
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 26, 2020 at 11:05:03AM +0800, Qinglang Miao wrote:
 
-...
 
-> > 
-> > I'm not sure if Hulk CI is completely broken or not on this, also if
-> > such CI can now generate trivial patch (?) since the subject, commit
-> > message and even the variable name is quite similiar to
-> > https://lore.kernel.org/linux-xfs/20201124104531.561-2-thunder.leizhen@huawei.com
-> > in a day.
-> > 
-> > And it'd be better to look into the code before sending patches...
-> Yeah..  I should pay more attension.
-
-Yeah, it'd be better to address/fix the Hulk CI false report
-if possible, so it won't have such warning in the future.
-
-Thanks,
-Gao Xiang
-
-> > 
-> > Thanks,
-> > Gao Xiang >
-> Thanks for your advice~
-> > > 
-> > > Thanks for your advice！
-> > > 
-> > 
-> > .
-> > 
+On 11/1/20 9:33 PM, Eryu Guan wrote:
+> On Fri, Oct 30, 2020 at 01:22:50AM +0530, Ritesh Harjani wrote:
+>> For more details, pls refer commit msg of each patch.
+>>
+>> Patch-1: modifies _require_scratch_swapfile() to check swapon only for btrfs
 > 
+> I don't think it's a good idea, if a new fs without swapfile support is
+> tested by fstests, test would get false failure, where it should
+> _notrun. And making a generic requirement check to fs-specific doesn't
+> seem quite right either.
+> 
+>> Patch-2: adds a swapfile test for fallocate files for ext4, xfs (assuming
+>> both FS supports and thus should pass).
+> 
+> As Brian mentioned in his review, we're in the process to convert all
+> shared tests to generic or fs-specific tests (very slow though), that
+> said we don't want new shared tests.
+> 
+> I think we could whitelist fs types in _require_scratch_swapfile() and
+> don't _notrun for such filesystems, something like what we did in
+> _fstyp_has_non_default_seek_data_hole(), so that we won't miss silent
+> regressions on sucn filesystems, and we'll do sanity check as well on
+> other filesystems.
 
+Nice idea. Let me check that part.
+
+> 
+>> Patch-3: added to support tests to run when multiple config section present
+>> in local.config file.
+> 
+> I have a patch[1] that should fix the issue 3 years ago, but it never
+> got reviewed, would you please check and see if it fixed the bug for you?
+> 
+> [1] https://patchwork.kernel.org/project/fstests/patch/20171117070022.14002-1-eguan@redhat.com/
+
+Sure, will test it and get back.
+
+Sorry about the delay from my end on this patch series. I got pulled
+into something else. Let me work on your suggestions.
+
+
+-ritesh
