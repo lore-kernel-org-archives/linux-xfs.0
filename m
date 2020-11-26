@@ -2,131 +2,283 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 152DAC63697
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Nov 2020 03:54:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 503DFC63777
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Nov 2020 07:13:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE91921D1A
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Nov 2020 03:54:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="h2nirmbZ"
+	by mail.kernel.org (Postfix) with ESMTP id 0026B221E9
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Nov 2020 07:13:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387523AbgKZDyA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Nov 2020 22:54:00 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:13170 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730187AbgKZDx7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Nov 2020 22:53:59 -0500
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0AQ3p2eN106232;
-        Wed, 25 Nov 2020 22:53:57 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=kqINen3i/bNXMyyBdnQBchA7tQeXPs2uRmFNT/lCS/0=;
- b=h2nirmbZJC9bsVDpHrIhNUtRmjuG3Nz+3H2XzW2n9kOD6TOIEm3TKM9y0mqAbFjfqOCp
- sW0b2oEh6h2QwWVdPgERyyCrn17fmVpgr/FZZuWuGjUp6Od8cWf/rezRZwHAujlmvHbB
- aurKF/0us+1bQuFsN9k4m0oTv2VJ6f8jl48AXGy20Z1ZmD4LMKACrpAUhwuoFlDet1Xj
- cVAd7U2fWad/mLlG9A2QREsZvcrxyLJsJf3tN4vWja4jdrzQzv3QcgMjeOwARzM4FyZz
- c55pUP81UDn/kOIX0AH/wTAZBJqNob3azV4dPVAhkUYg8P2BvqX6SzTrvBWjJZvlhVBV 0w== 
-Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3524tqg1h5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 25 Nov 2020 22:53:57 -0500
-Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0AQ3rZHj003209;
-        Thu, 26 Nov 2020 03:53:54 GMT
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
-        by ppma03fra.de.ibm.com with ESMTP id 34yy8r2ct7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 26 Nov 2020 03:53:54 +0000
-Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0AQ3pMNA8061690
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 26 Nov 2020 03:51:22 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A3DFD42045;
-        Thu, 26 Nov 2020 03:51:22 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 225F142041;
-        Thu, 26 Nov 2020 03:51:21 +0000 (GMT)
-Received: from [9.199.32.61] (unknown [9.199.32.61])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Thu, 26 Nov 2020 03:51:20 +0000 (GMT)
-Subject: Re: [PATCH 0/3] fstests: Fix tests which checks for swapfile support
-To:     Eryu Guan <guan@eryu.me>
-Cc:     fstests@vger.kernel.org, anju@linux.vnet.ibm.com,
-        linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        id S2388335AbgKZHNa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Nov 2020 02:13:30 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33752 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732167AbgKZHNa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Nov 2020 02:13:30 -0500
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9805158C639;
+        Thu, 26 Nov 2020 18:13:24 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kiBT1-00F9UK-94; Thu, 26 Nov 2020 18:13:23 +1100
+Date:   Thu, 26 Nov 2020 18:13:23 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Sasha Levin <sashal@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Dave Chinner <dchinner@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
         linux-xfs@vger.kernel.org
-References: <cover.1604000570.git.riteshh@linux.ibm.com>
- <20201101160357.GE3853@desktop>
-From:   Ritesh Harjani <riteshh@linux.ibm.com>
-Message-ID: <c2f91a8e-b831-52c5-7e5e-79dcc7175cd3@linux.ibm.com>
-Date:   Thu, 26 Nov 2020 09:21:19 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+Subject: Re: [PATCH AUTOSEL 5.9 33/33] xfs: don't allow NOWAIT DIO across
+ extent boundaries
+Message-ID: <20201126071323.GF2842436@dread.disaster.area>
+References: <20201125153550.810101-1-sashal@kernel.org>
+ <20201125153550.810101-33-sashal@kernel.org>
+ <20201125215247.GD2842436@dread.disaster.area>
+ <20201125234654.GN643756@sasha-vm>
 MIME-Version: 1.0
-In-Reply-To: <20201101160357.GE3853@desktop>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
- definitions=2020-11-25_14:2020-11-25,2020-11-25 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 phishscore=0
- suspectscore=0 bulkscore=0 adultscore=0 mlxlogscore=999 clxscore=1011
- priorityscore=1501 malwarescore=0 lowpriorityscore=0 impostorscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011260016
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201125234654.GN643756@sasha-vm>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=kj9zAlcOel0A:10 a=nNwsprhYR40A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=3N_etuhSgFmOKDSDCMsA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 11/1/20 9:33 PM, Eryu Guan wrote:
-> On Fri, Oct 30, 2020 at 01:22:50AM +0530, Ritesh Harjani wrote:
->> For more details, pls refer commit msg of each patch.
->>
->> Patch-1: modifies _require_scratch_swapfile() to check swapon only for btrfs
+On Wed, Nov 25, 2020 at 06:46:54PM -0500, Sasha Levin wrote:
+> On Thu, Nov 26, 2020 at 08:52:47AM +1100, Dave Chinner wrote:
+> > We've already had one XFS upstream kernel regression in this -rc
+> > cycle propagated to the stable kernels in 5.9.9 because the stable
+> > process picked up a bunch of random XFS fixes within hours of them
+> > being merged by Linus. One of those commits was a result of a
+> > thinko, and despite the fact we found it and reverted it within a
+> > few days, users of stable kernels have been exposed to it for a
+> > couple of weeks. That *should never have happened*.
 > 
-> I don't think it's a good idea, if a new fs without swapfile support is
-> tested by fstests, test would get false failure, where it should
-> _notrun. And making a generic requirement check to fs-specific doesn't
-> seem quite right either.
-> 
->> Patch-2: adds a swapfile test for fallocate files for ext4, xfs (assuming
->> both FS supports and thus should pass).
-> 
-> As Brian mentioned in his review, we're in the process to convert all
-> shared tests to generic or fs-specific tests (very slow though), that
-> said we don't want new shared tests.
-> 
-> I think we could whitelist fs types in _require_scratch_swapfile() and
-> don't _notrun for such filesystems, something like what we did in
-> _fstyp_has_non_default_seek_data_hole(), so that we won't miss silent
-> regressions on sucn filesystems, and we'll do sanity check as well on
-> other filesystems.
+> No, what shouldn't have happened is a commit that never went out for a review
+> on the public mailing lists nor spending any time in linux-next ending
+> up in Linus's tree.
 
-Nice idea. Let me check that part.
+<sigh>
 
+I think you've got your wires crossed somewhere, Sasha, because none
+of that happened here.  From the public record, the patch was first
+posted here by Darrick:
+
+https://lore.kernel.org/linux-xfs/160494584816.772693.2490433010759557816.stgit@magnolia/
+
+on Nov 9, and was reviewed by Christoph a day later.  It was merged
+into the XFS tree on Nov 10, with the rvb tag:
+
+https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?h=for-next&id=6ff646b2ceb0eec916101877f38da0b73e3a5b7f
+
+Which means it should have been in linux-next on Nov 11, 12 and 13,
+when Darrick sent the pull request:
+
+https://lore.kernel.org/linux-xfs/20201113231738.GX9695@magnolia/
+
+It was merged into Linus's tree an hour later.
+
+So, in contrast to your claims, the evidence is that the patch was,
+in fact, publicly posted, reviewed, and spent time in linux-next
+before ending up in Linus's tree.
+
+FWIW, on November 17, GregKH sent the patch to lkml for stable review
+after being selected by the stable process for a stable backport.
+This was not cc'd to the XFS list, and it was committed without
+comment into the  5.9.x tree is on November 18.
+
+https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/fs/xfs?h=linux-5.9.y&id=0ca9a072112b18efc9ba9d3a9b77e9dae60f93ac
+
+IOWs, the XFS developers didn't ask for it to be backported to
+stable kernels - the commit did not contain a "cc:
+stable@kernel.org", nor was the original patch posting cc'd to the
+stable list.
+
+The fact is that entire decision to backport this commit was made by
+stable maintainers and/or their tools, and the stable maintainers
+themselves chose not to tell the XFS list they had selected it for
+backport.
+
+Hence:
+
+> It's ridiculous that you see a failure in the maintainership workflow of
+> XFS and turn around to blame it somehow on the stable process.
+
+.... I think you really need to have another look at the evidence
+before you dig yourself a deeper hole and waste more of my time....
+
+> > This has happened before, and *again* we were lucky this wasn't
+> > worse than it was. We were saved by the flaw being caught by own
+> > internal pre-write corruption verifiers (which exist because we
+> > don't trust our code to be bug-free, let alone the collections of
+> > random, poorly tested backports) so that it only resulted in
+> > corruption shutdowns rather than permanent on-disk damage and data
+> > loss.
+> > 
+> > Put simply: the stable process is flawed because it shortcuts the
+> > necessary stabilisation testing for new code. It doesn't matter if
 > 
->> Patch-3: added to support tests to run when multiple config section present
->> in local.config file.
+> The stable process assumes that commits that ended up upstream were
+> reviewed and tested; the stable process doesn't offer much in the way of
+> in-depth review of specific patches but mostly focuses on testing the
+> product of backporting hundreds of patches into each stable branch.
+
+And I've lost count of the number of times I've told the stable
+maintainers that this is an invalid assumption.
+
+Yet here we are again.
+
+How many times do we have to make the same mistake before we learn
+from it?
+
+> Release candidate cycles are here to squash the bugs that went in during
+> the merge window, not to introduce new "thinkos" in the way of pulling
+> patches out of your hip in the middle of the release cycle.
+
+"pulling patches out of your hip"
+
+Nice insult. Avoids profanity filters and everything. But I don't
+know why you're trying to insult me over something I played no part
+in.
+
+Seriously, merging critical fixes discovered in the -rc cycle
+happens *all the time* and has been done for as long as we've had
+-rc cycles.  Even Linus himself does this.
+
+The fact is that the -rc process is intended to accomodate merging
+fixes quickly whilst still allowing sufficient testing time to be
+confident that no regressions were introduced or have been found and
+addressed before release.
+
+And that's the whole point of having an iterative integration
+testing phase in the release cycle - it can be adapted in duration
+to the current state of the code base and the fixes that are being
+made late in the cycle.
+
+You *should* know all this Sasha, so I'm not sure why you are
+claiming that long standing, well founded software engineering
+practices are suddenly a problem...
+
+> > the merged commits have a "fixes" tag in them, that tag doesn't mean
+> > the change is ready to be exposed to production systems. We need the
+> > *-rc stabilisation process* to weed out thinkos, brown paper bag
+> > bugs, etc, because we all make mistakes, and bugs in filesystem code
+> > can *lose user data permanently*.
 > 
-> I have a patch[1] that should fix the issue 3 years ago, but it never
-> got reviewed, would you please check and see if it fixed the bug for you?
+> What needed to happen here is that XFS's internal testing story would
+> run *before* this patch was merged anywhere and catch this bug. Why
+> didn't it happen?
+
+It did. It's simply that kernel unit testing didn't discover the
+bug. That happens all the time, not just in XFS.  In fact, it was
+XFS userspace unit testing that found the bug.
+
+The kernel by itself didn't trigger inconsistencies because
+everything it created matches what it expected, and an old userspace
+checking a new kernel would ignore the bits changed by the bad
+commit in the kernel.  IOWs, the typical kernel unit testing
+configuration of "new kernel, stable userspace" didn't see anything
+wrong.
+
+It wasn't until a new userspace was run with an old kernel that the
+problem was found. The new userspace expected bits in the keys
+on disk to be set that an old kernel didn't set and that's when
+inconsistencies were flagged and the problem uncovered. This was
+found by the userspace XFS maintainer as when testing the
+changes merged from the kernel code. Unit testing userspace is
+the opposite of the kernel - "stable kernel, new userspace" - and
+that's the combination that triggered the errors that made us aware
+of the problem.
+
+So, yes, our normal testing processes found the bug, it's just a the
+filesystem is *much more than just the kernel code* and sometimes
+bugs in the core code are found on the userspace side before they
+are found in the kernel.
+
+However, testing variations in kernel and/or userspace tool versions
+is not generally part of the unit tests developers run.  It is,
+however, something that we cover as the new code rolls out to
+testers and developers code as part of the integration testing
+process. That's when version mismatch and upgrade/downgrade bugs
+tend to show up as that's when the variety of installations the code
+is tested on rapidly expands.  IOWs, we caught the problem exactly
+when hindsight tells us we should expect to catch such a problem.
+
+The reality is that a single developer cannot do this sort of
+testing, hence we do not expect a single developer to do this. We
+don't even expect the maintainer to be able to cover such a huge
+testing scope before merging commits. It's simply not realistic to
+cover everything before code changes are merged. Perfection is the
+enemy of good.
+
+I'll repeat the lesson to be learned here: merging a commit into
+Linus's tree does not mean it is fully tested and production ready.
+It just means it's passed a wide range of unit tests without
+regressions and so is considered ready for wider integration testing
+by a larger population of developers and testers.
+
+> > Hence I ask that the stable maintainers only do automated pulls of
+> > iomap and XFS changes from upstream kernels when Linus officially
+> > releases them rather than at random points in time in the -rc cycle.
+> > If there is a critical fix we need to go back to stable kernels
+> > immediately, we will let stable@kernel.org know directly that we
+> > want this done.
 > 
-> [1] https://patchwork.kernel.org/project/fstests/patch/20171117070022.14002-1-eguan@redhat.com/
+> I'll happily switch back to a model where we look only for stable tags
+> from XFS, but sadly this happened only *once* in the past year. How is
+> this helping to prevent the dangerous bugs that may cause users to lose
+> their data permanently?
 
-Sure, will test it and get back.
+Given that the only dangerous bug that XFS users have been directly
+exposed to in recent times has been caused by an automated stable
+kernel backport short-circuiting our normal commit-test-release
+cycle, I can't see how XFS users will be worse off by turning off
+automated backports. :/
 
-Sorry about the delay from my end on this patch series. I got pulled
-into something else. Let me work on your suggestions.
+But that is not what I asked you to do or consider, it's just a
+strawman you constructed.  What I want is for users to benefit from
+the overall stable process, but I don't want them exposed to the
+potential catastrophic risks that the current stable process exposes
+them to.
 
+As developers, the stable process gives us no margin for error. We
+need at least some margin to prevent users for being exposed to
+avoidable regressions in stable kernels.  So what I'm asking you to
+do is back off the bots a bit to provide that margin because, as we
+all known, bugs and mistakes happen.
 
--ritesh
+An acceptible compromise from our perspective would be to run
+automated scans on released kernels that have already run the full
+test cycle.  This way the users get the benefits of both full
+integration testing of the patches that get backported, and all the
+changes that the stable maintainers think their kernels should be
+getting end up in the stable kernel.
+
+For the sorts of changes your process is typically backporting from
+XFS, an extra couple of weeks time lag is going to make no
+difference to users at all. But that extra margin means that
+situations like this recent stable kernel regression do not occur,
+resulting in stable kernels having a much lower risk profile for
+it's users.
+
+That seems like a win-win-win scenario to me, so rather than throw
+shade and insults at the messenger, how about listening, learning
+from mistakes and trying to improve the process in a way that
+benefits everyone?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
