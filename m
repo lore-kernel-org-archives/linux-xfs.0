@@ -2,134 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9112C63777
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Nov 2020 17:17:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 741B9C63777
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Nov 2020 17:26:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90BDD2073C
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Nov 2020 17:17:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 221632076E
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Nov 2020 17:26:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kP4J/iQF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387404AbgK3RRW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Nov 2020 12:17:22 -0500
-Received: from sandeen.net ([63.231.237.45]:59064 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387403AbgK3RRV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Nov 2020 12:17:21 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 363F4EDD;
-        Mon, 30 Nov 2020 11:16:27 -0600 (CST)
-Subject: Re: [PATCH 1/5] libxfs-apply: don't add duplicate headers
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <160633667604.634603.7657982642827987317.stgit@magnolia>
- <160633668210.634603.16132006317248436755.stgit@magnolia>
- <4bc2eb57-a5e8-59e5-9c69-0d8767df4796@sandeen.net>
- <20201130171323.GA143049@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <38729061-ff5b-bde2-35cd-403dd9032102@sandeen.net>
-Date:   Mon, 30 Nov 2020 11:16:40 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.5.0
+        id S2387510AbgK3R0X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Nov 2020 12:26:23 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:52422 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387399AbgK3R0X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Nov 2020 12:26:23 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AUHIvjJ007232;
+        Mon, 30 Nov 2020 17:24:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=zxEYQxWkeioI23EP3tXuuM/cn+rrt2LlzfWd+JCPeBg=;
+ b=kP4J/iQFAYitxa5dhwf3SLOQJEF7nOWtdj3FzxScLSXPU6GB8ZnauunklmiyaeBmq0Im
+ 1091zsECJDm/iUPe0BCUf5iPtGa4tf/r5y1XMbUF+pidYHlb2dMPPNI9vWTLJTrvyhE2
+ PADrx4r5aquDUWiG8YS4zb2gzdpZPfGiY+w4kWD+i0Kh3OSL9qnwr4D3BvxQcjadDTrr
+ 3OVS5FJfBxID3BxsrHG77sp2nzZlxJU1Aj0DYtR5JqnUbXHvqT68b/KfLOqM3v4j8R7H
+ hn3ye6tMPJpBe1OguKgxmAAykc1E8icWceixbSs5J0SRSt601bwRgtGxL9YjVUo3F1yr Ew== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 353egke8kg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 30 Nov 2020 17:24:26 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AUHFGeO001413;
+        Mon, 30 Nov 2020 17:22:25 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 3540fvdryn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 30 Nov 2020 17:22:25 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AUHMKjf019059;
+        Mon, 30 Nov 2020 17:22:20 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 30 Nov 2020 09:22:19 -0800
+Date:   Mon, 30 Nov 2020 09:22:18 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     chenlei0x@gmail.com
+Cc:     hch@infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lei Chen <lennychen@tencent.com>
+Subject: Re: [PATCH] fs: iomap: Replace bio_add_page with __bio_add_page in
+ iomap_add_to_ioend
+Message-ID: <20201130172218.GA143045@magnolia>
+References: <1606721331-4211-1-git-send-email-lennychen@tencent.com>
 MIME-Version: 1.0
-In-Reply-To: <20201130171323.GA143049@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1606721331-4211-1-git-send-email-lennychen@tencent.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9821 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=3
+ phishscore=0 mlxlogscore=743 adultscore=0 mlxscore=0 bulkscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011300112
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9821 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=3
+ phishscore=0 mlxlogscore=726 lowpriorityscore=0 malwarescore=0
+ priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1011 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011300112
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/30/20 11:13 AM, Darrick J. Wong wrote:
-> On Wed, Nov 25, 2020 at 03:12:39PM -0600, Eric Sandeen wrote:
->> On 11/25/20 2:38 PM, Darrick J. Wong wrote:
->>> From: Darrick J. Wong <darrick.wong@oracle.com>
->>>
->>> When we're backporting patches from libxfs, don't add a S-o-b header if
->>> there's already one at the end of the headers of the patch being ported.
->>>
->>> That way, we avoid things like:
->>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>
->> But it will still not add my additional SOB if I merge something across to
->> userspace that starts out with:
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> Reviewed-by: Dave Chinner <dchinner@redhat.com>
->> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>
->> And I always felt like the committer should be adding their SOB to the end of
->> the chain when they move code from one place to another, especially if any
->> tweaks got made along the way.
->>
->> IOWs I see the rationale for removing duplicate /sequential/ SOBs, but not
->> for removing duplicate SOBs in general.
->>
->> Am I thinking about that wrong?
+On Mon, Nov 30, 2020 at 03:28:51PM +0800, chenlei0x@gmail.com wrote:
+> From: Lei Chen <lennychen@tencent.com>
 > 
-> add_header is different from last time -- whereas before it would search
-> the entire $hdrfile for $hdr and add $hdr if it didn't find a match, now
-> it only looks at the last line of $hdrfile for a match.
+> iomap_add_to_ioend append page on wpc->ioend->io_bio. If io_bio is full,
+> iomap_chain_bio will allocate a new bio. So when bio_add_page is called,
+> pages is guaranteed to be appended into wpc->ioend->io_bio. So we do not
+> need to check if page can be merged. Thus it's a faster way to directly
+> call __bio_add_page.
 
-I'm sorry, I visually checked and thought it was same as last time.  Will
-look again, more closely.
+How much faster?
 
-Thanks,
--Eric
+--D
 
-> For your example above, it would not add another "SOB: Darrick" because
-> there's already one at the bottom of the headers; but it would add
-> another "SOB: Eric" because this commit acquired other tags after your
-> first signoff.
+> Signed-off-by: Lei Chen <lennychen@tencent.com>
+> ---
+>  fs/iomap/buffered-io.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> --D
-> 
->>> ---
->>>  tools/libxfs-apply |   14 +++++++++++---
->>>  1 file changed, 11 insertions(+), 3 deletions(-)
->>>
->>>
->>> diff --git a/tools/libxfs-apply b/tools/libxfs-apply
->>> index 3258272d6189..9271db380198 100755
->>> --- a/tools/libxfs-apply
->>> +++ b/tools/libxfs-apply
->>> @@ -193,6 +193,14 @@ filter_xfsprogs_patch()
->>>  	rm -f $_libxfs_files
->>>  }
->>>  
->>> +add_header()
->>> +{
->>> +	local hdr="$1"
->>> +	local hdrfile="$2"
->>> +
->>> +	tail -n 1 "$hdrfile" | grep -q "^${hdr}$" || echo "$hdr" >> "$hdrfile"
->>> +}
->>> +
->>>  fixup_header_format()
->>>  {
->>>  	local _source=$1
->>> @@ -280,13 +288,13 @@ fixup_header_format()
->>>  	sed -i '${/^[[:space:]]*$/d;}' $_hdr.new
->>>  
->>>  	# Add Signed-off-by: header if specified
->>> -	if [ ! -z ${SIGNED_OFF_BY+x} ]; then 
->>> -		echo "Signed-off-by: $SIGNED_OFF_BY" >> $_hdr.new
->>> +	if [ ! -z ${SIGNED_OFF_BY+x} ]; then
->>> +		add_header "Signed-off-by: $SIGNED_OFF_BY" $_hdr.new
->>>  	else	# get it from git config if present
->>>  		SOB_NAME=`git config --get user.name`
->>>  		SOB_EMAIL=`git config --get user.email`
->>>  		if [ ! -z ${SOB_NAME+x} ]; then
->>> -			echo "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" >> $_hdr.new
->>> +			add_header "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" $_hdr.new
->>>  		fi
->>>  	fi
->>>  
->>>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 10cc797..7a0631a 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1310,7 +1310,7 @@ static void iomap_writepage_end_bio(struct bio *bio)
+>  			wpc->ioend->io_bio =
+>  				iomap_chain_bio(wpc->ioend->io_bio);
+>  		}
+> -		bio_add_page(wpc->ioend->io_bio, page, len, poff);
+> +		__bio_add_page(wpc->ioend->io_bio, page, len, poff);
+>  	}
+>  
+>  	wpc->ioend->io_size += len;
+> -- 
+> 1.8.3.1
 > 
