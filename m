@@ -2,145 +2,99 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78728C3E8C5
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 Nov 2020 22:48:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 738E2C63777
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Nov 2020 07:31:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3301E2078D
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 Nov 2020 22:48:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B46E2087C
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Nov 2020 07:31:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JOEzDc6o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726777AbgK2WsK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 29 Nov 2020 17:48:10 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:43185 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726512AbgK2WsK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Nov 2020 17:48:10 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8DFEA58DF4D;
-        Mon, 30 Nov 2020 09:47:24 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kjVTX-00GPKX-HI; Mon, 30 Nov 2020 09:47:23 +1100
-Date:   Mon, 30 Nov 2020 09:47:23 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com, hch@lst.de,
-        song@kernel.org, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
-        y-goto@fujitsu.com
-Subject: Re: [RFC PATCH v2 0/6] fsdax: introduce fs query to support reflink
-Message-ID: <20201129224723.GG2842436@dread.disaster.area>
-References: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=nNwsprhYR40A:10 a=7-415B0cAAAA:8
-        a=fQ8chXSYUWhFZ-3vMtIA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        id S1726929AbgK3HbN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Nov 2020 02:31:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38954 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725860AbgK3HbN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Nov 2020 02:31:13 -0500
+Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19754C0613CF;
+        Sun, 29 Nov 2020 23:30:33 -0800 (PST)
+Received: by mail-pj1-x1043.google.com with SMTP id iq13so798275pjb.3;
+        Sun, 29 Nov 2020 23:30:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=EsNXvlnoUKD2pZSzgAC0fLx5VDJnXOdVhqeYF4VM7gs=;
+        b=JOEzDc6okElYcSppns7/WVjH1la6U1Bw5p7qhSK0IJqmEaHqwuh9tFG2B5MMVggN0H
+         AmTQrBI2OitGu8CMagBVTdT2EPudPSyFSGN+VrG0gJUCJnUk9vmEIDwEAyMuFFCzGbAa
+         hhC/Y0udAf5zmNB+72YR2M6Ul+0mq9nvGjd/kRL0aV8fMaLGkH6j1s+lEKYnASjexezc
+         mP8PAoia/TsrQ6EU45f/rLpdoQehPJCTbfIXrqH1qG49XXlpKUa55ya/my27DwkVwcSi
+         0hRhl8ZOkziZrkaYb9DGb/2/oGVvWD9I7tgvY9cY7ucO3d03TOhOpqc0A2zdPdZlcfCr
+         iweg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=EsNXvlnoUKD2pZSzgAC0fLx5VDJnXOdVhqeYF4VM7gs=;
+        b=oROou3c4jPd3r80MAZrj71YA+3bj1Ea4SC2Xp7jeZK6mwwt5iFtRCbeAICjk/3lwSu
+         iELH9pDcyg8dYeiNdvvlSGfOtrU6lJHV7nhadJu/wGx9ehVZiEBfAafsVh/Xwug/0g5L
+         o7JxlPpJuabhB+DYtnp8pRWKqD0rbv5JkiBqjQ7Ozx9ThN+zZ5NIYihUIKNr0FTFbqgP
+         kq2VdQrFoxuLDkKALMVo45R6tq3/LlNc6JqkMQQTdqm4VovpouhrRdER6XQJaRONtG8N
+         epH249n66WOj5uS7u9RzklnyzQp0/27m0yCcg4bEectYql2EgQ8TCQ8d3IvM4BUJNDfc
+         8k0Q==
+X-Gm-Message-State: AOAM530kzZIq0gzMwA+VO9F6aJfYesR1fofOtHVxx404rKL2LpJXXOnC
+        ft4MKIFfNT/+wIh8/TqRCH4=
+X-Google-Smtp-Source: ABdhPJzmeWSfnybsAR3n/WvwFdQBAK5VqwyTCok3n0nJ50h0iqqlR5YIDKGqPhzhritbLkwzXAAP4Q==
+X-Received: by 2002:a17:90a:7f93:: with SMTP id m19mr45747pjl.61.1606721432729;
+        Sun, 29 Nov 2020 23:30:32 -0800 (PST)
+Received: from localhost.localdomain ([203.205.141.39])
+        by smtp.gmail.com with ESMTPSA id l76sm16006710pfd.82.2020.11.29.23.30.30
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 29 Nov 2020 23:30:32 -0800 (PST)
+From:   chenlei0x@gmail.com
+X-Google-Original-From: lennychen@tencent.com
+To:     hch@infradead.org, darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Lei Chen <lennychen@tencent.com>
+Subject: [PATCH] fs: iomap: Replace bio_add_page with __bio_add_page in iomap_add_to_ioend
+Date:   Mon, 30 Nov 2020 15:28:51 +0800
+Message-Id: <1606721331-4211-1-git-send-email-lennychen@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 23, 2020 at 08:41:10AM +0800, Shiyang Ruan wrote:
-> This patchset is a try to resolve the problem of tracking shared page
-> for fsdax.
-> 
-> Change from v1:
->   - Intorduce ->block_lost() for block device
->   - Support mapped device
->   - Add 'not available' warning for realtime device in XFS
->   - Rebased to v5.10-rc1
-> 
-> This patchset moves owner tracking from dax_assocaite_entry() to pmem
-> device, by introducing an interface ->memory_failure() of struct
-> pagemap.  The interface is called by memory_failure() in mm, and
-> implemented by pmem device.  Then pmem device calls its ->block_lost()
-> to find the filesystem which the damaged page located in, and call
-> ->storage_lost() to track files or metadata assocaited with this page.
-> Finally we are able to try to fix the damaged data in filesystem and do
-> other necessary processing, such as killing processes who are using the
-> files affected.
-> 
-> The call trace is like this:
->  memory_failure()
->    pgmap->ops->memory_failure()   => pmem_pgmap_memory_failure()
->     gendisk->fops->block_lost()   => pmem_block_lost() or
->                                          md_blk_block_lost()
->      sb->s_ops->storage_lost()    => xfs_fs_storage_lost()
->       xfs_rmap_query_range()
->        xfs_storage_lost_helper()
->         mf_recover_controller->recover_fn => \ 
->                             memory_failure_dev_pagemap_kill_procs()
-> 
-> The collect_procs() and kill_procs() are moved into a callback which
-> is passed from memory_failure() to xfs_storage_lost_helper().  So we
-> can call it when a file assocaited is found, instead of creating a
-> file list and iterate it.
-> 
-> The fsdax & reflink support for XFS is not contained in this patchset.
+From: Lei Chen <lennychen@tencent.com>
 
-This looks promising - the overall architecture is a lot more
-generic and less dependent on knowing about memory, dax or memory
-failures. A few comments that I think would further improve
-understanding the patchset and the implementation:
+iomap_add_to_ioend append page on wpc->ioend->io_bio. If io_bio is full,
+iomap_chain_bio will allocate a new bio. So when bio_add_page is called,
+pages is guaranteed to be appended into wpc->ioend->io_bio. So we do not
+need to check if page can be merged. Thus it's a faster way to directly
+call __bio_add_page.
 
-- the order of the patches is inverted. It should start with a
-  single patch introducing the mf_recover_controller structure for
-  callbacks, then introduce pgmap->ops->memory_failure, then
-  ->block_lost, then the pmem and md implementations of ->block
-  list, then ->storage_lost and the XFS implementations of
-  ->storage_lost.
+Signed-off-by: Lei Chen <lennychen@tencent.com>
+---
+ fs/iomap/buffered-io.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-- I think the names "block_lost" and "storage_lost" are misleading.
-  It's more like a "media failure" or a general "data corruption"
-  event at a specific physical location. The data may not be "lost"
-  but only damaged, so we might be able to recover from it without
-  "losing" anything. Hence I think they could be better named,
-  perhaps just "->corrupt_range"
-
-- need to pass a {offset,len} pair through the chain, not just a
-  single offset. This will allow other types of devices to report
-  different ranges of failures, from a single sector to an entire
-  device.
-
-- I'm not sure that passing the mf_recover_controller structure
-  through the corruption event chain is the right thing to do here.
-  A block device could generate this storage failure callback if it
-  detects an unrecoverable error (e.g. during a MD media scrub or
-  rebuild/resilver failure) and in that case we don't have PFNs or
-  memory device failure functions to perform.
-
-  IOWs, I think the action that is taken needs to be independent of
-  the source that generated the error. Even for a pmem device, we
-  can be using the page cache, so it may be possible to recover the
-  pmem error by writing the cached page (if it exists) back over the
-  pmem.
-
-  Hence I think that the recover function probably needs to be moved
-  to the address space ops, because what we do to recover from the
-  error is going to be dependent on type of mapping the filesystem
-  is using. If it's a DAX mapping, we call back into a generic DAX
-  function that does the vma walk and process kill functions. If it
-  is a page cache mapping, then if the page is cached then we can
-  try to re-write it to disk to fix the bad data, otherwise we treat
-  it like a writeback error and report it on the next
-  write/fsync/close operation done on that file.
-
-  This gets rid of the mf_recover_controller altogether and allows
-  the interface to be used by any sort of block device for any sort
-  of bottom-up reporting of media/device failures.
-
-Cheers,
-
-Dave.
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 10cc797..7a0631a 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1310,7 +1310,7 @@ static void iomap_writepage_end_bio(struct bio *bio)
+ 			wpc->ioend->io_bio =
+ 				iomap_chain_bio(wpc->ioend->io_bio);
+ 		}
+-		bio_add_page(wpc->ioend->io_bio, page, len, poff);
++		__bio_add_page(wpc->ioend->io_bio, page, len, poff);
+ 	}
+ 
+ 	wpc->ioend->io_size += len;
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.3.1
+
