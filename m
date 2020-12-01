@@ -4,167 +4,156 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 268CAC64E7B
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 17:05:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0FD0C64E7A
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 17:10:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEDE6206B7
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 17:05:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5430620679
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 17:10:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GdvivVsl"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hPidK3lO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388821AbgLARFH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Dec 2020 12:05:07 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:60336 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387407AbgLARFH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Dec 2020 12:05:07 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1GtHwn010607;
-        Tue, 1 Dec 2020 17:04:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=mFAymsUaGzHqfO2e1CaAb2lzDc0TH82l4y//GXrjzEQ=;
- b=GdvivVslH15jbEVCzWG8KdYDY64ViqiVAhjYrrvsb31kQnSaEm/xA+HGuFWzXKCuMCH1
- rvy13lg22fh8O52Wzxjpha7CsFrmIai7xOyRxAfI2Js/IEXDra3hPMp9Qp9eMcovIf02
- j4wxk3e9DSY1SsXkpqw5K3zjCEM3tVIibcnHGIHB4H64nf1uwo7maQRU54bLBOho76H1
- n+hgrYoecYzvgKyeMA5VAkOx35Q97mJjcRAwG2BpCbJPX6oxyBvuJ7uDPHNq7GlZpXfA
- VpGdeAHfohyNB4eI6Sb6nM8dkSJ8NLJ7B/AWDQhrEUq/sVJ2V5Hsk8ulOSqLet6FMvKd lw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 353dyqkr5c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 01 Dec 2020 17:04:23 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1GuGVD049687;
-        Tue, 1 Dec 2020 17:04:23 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 3540asns4w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Dec 2020 17:04:23 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B1H4MEd027323;
-        Tue, 1 Dec 2020 17:04:23 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 01 Dec 2020 09:04:22 -0800
-Date:   Tue, 1 Dec 2020 09:04:20 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: kill ialloced in xfs_dialloc()
-Message-ID: <20201201170420.GG143045@magnolia>
-References: <20201124155130.40848-1-hsiangkao@redhat.com>
- <20201124155130.40848-2-hsiangkao@redhat.com>
+        id S2388562AbgLARKc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Dec 2020 12:10:32 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:37922 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388399AbgLARKc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Dec 2020 12:10:32 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1606842545;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Ffa9WVVJI0Uzq0EjpIBIoEAzJB/I8eRd2YyB0ESa+I8=;
+        b=hPidK3lO5pnYRjXWVeLCRMEF2gHDeS+yMv3cZFExzyTHsSkY41xb/VLN0h1O5eNhkbgAZr
+        cVNUtINKKtRsPUWPbOv5eYgCqcrgfX6COtrPPrZfYzNK3oGaidcw0p5x1L9XgHQ1GkfzGv
+        cdlH8x+ZornN7L3Fmnq55Eb7NWDKYkQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-471-EzmD5vR8N925q7sRQXuKyQ-1; Tue, 01 Dec 2020 12:09:03 -0500
+X-MC-Unique: EzmD5vR8N925q7sRQXuKyQ-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AB6E88042AE;
+        Tue,  1 Dec 2020 17:09:02 +0000 (UTC)
+Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3B2E35C1B4;
+        Tue,  1 Dec 2020 17:09:02 +0000 (UTC)
+Date:   Tue, 1 Dec 2020 12:09:00 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: define a new "needrepair" feature
+Message-ID: <20201201170900.GF1205666@bfoster>
+References: <160679383892.447856.12907477074923729733.stgit@magnolia>
+ <160679385127.447856.3129099457617444604.stgit@magnolia>
+ <20201201161812.GD1205666@bfoster>
+ <20201201162539.GB143045@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201124155130.40848-2-hsiangkao@redhat.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- phishscore=0 mlxscore=0 adultscore=0 malwarescore=0 suspectscore=1
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012010104
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
- clxscore=1015 mlxscore=0 spamscore=0 priorityscore=1501 mlxlogscore=999
- suspectscore=1 lowpriorityscore=0 phishscore=0 adultscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012010104
+In-Reply-To: <20201201162539.GB143045@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 24, 2020 at 11:51:29PM +0800, Gao Xiang wrote:
-> It's enough to just use return code, and get rid of an argument.
+On Tue, Dec 01, 2020 at 08:25:39AM -0800, Darrick J. Wong wrote:
+> On Tue, Dec 01, 2020 at 11:18:12AM -0500, Brian Foster wrote:
+> > On Mon, Nov 30, 2020 at 07:37:31PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Define an incompat feature flag to indicate that the filesystem needs to
+> > > be repaired.  While libxfs will recognize this feature, the kernel will
+> > > refuse to mount if the feature flag is set, and only xfs_repair will be
+> > > able to clear the flag.  The goal here is to force the admin to run
+> > > xfs_repair to completion after upgrading the filesystem, or if we
+> > > otherwise detect anomalies.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > 
+> > IIUC, we're using an incompat bit to intentionally ensure the filesystem
+> > cannot mount, even on kernels that predate this particular "needs
+> > repair" feature. The only difference is that an older kernel would
+> > complain about an unknown feature and return a different error code.
+> > Right?
+> > 
+> > That seems reasonable, but out of curiousity is there a need/reason for
+> > using an incompat bit over an ro_compat bit?
 > 
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_ialloc.c | 22 ++++++++++------------
->  1 file changed, 10 insertions(+), 12 deletions(-)
+> The general principle is to prevent /any/ mounting of the fs until the
+> admin runs repair, even if it's readonly mounting.  The specific reason
+> is so that xfs_db can set some other feature flag as part of an upgrade
+> and then set the incompat bit to force a repair run (which xfs_admin
+> will immediately take care of).
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 45cf7e55f5ee..5c8b0210aad3 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -607,13 +607,14 @@ xfs_inobt_insert_sprec(
->  
->  /*
->   * Allocate new inodes in the allocation group specified by agbp.
-> - * Return 0 for success, else error code.
-> + * Return 0 for successfully allocating some inodes in this AG;
-> + *        1 for skipping to allocating in the next AG;
-> + *      < 0 for error code.
->   */
->  STATIC int
->  xfs_ialloc_ag_alloc(
->  	struct xfs_trans	*tp,
-> -	struct xfs_buf		*agbp,
-> -	int			*alloc)
-> +	struct xfs_buf		*agbp)
->  {
->  	struct xfs_agi		*agi;
->  	struct xfs_alloc_arg	args;
-> @@ -795,10 +796,9 @@ xfs_ialloc_ag_alloc(
->  		allocmask = (1 << (newlen / XFS_INODES_PER_HOLEMASK_BIT)) - 1;
->  	}
->  
-> -	if (args.fsbno == NULLFSBLOCK) {
-> -		*alloc = 0;
-> -		return 0;
-> -	}
-> +	if (args.fsbno == NULLFSBLOCK)
-> +		return 1;
-> +
->  	ASSERT(args.len == args.minlen);
->  
->  	/*
-> @@ -903,7 +903,6 @@ xfs_ialloc_ag_alloc(
->  	 */
->  	xfs_trans_mod_sb(tp, XFS_TRANS_SB_ICOUNT, (long)newlen);
->  	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, (long)newlen);
-> -	*alloc = 1;
->  	return 0;
->  }
->  
-> @@ -1715,7 +1714,6 @@ xfs_dialloc(
->  	struct xfs_buf		*agbp;
->  	xfs_agnumber_t		agno;
->  	int			error;
-> -	int			ialloced;
->  	bool			noroom = false;
->  	xfs_agnumber_t		start_agno;
->  	struct xfs_perag	*pag;
-> @@ -1799,8 +1797,8 @@ xfs_dialloc(
->  			goto nextag_relse_buffer;
->  
->  
-> -		error = xfs_ialloc_ag_alloc(tp, agbp, &ialloced);
-> -		if (error) {
-> +		error = xfs_ialloc_ag_alloc(tp, agbp);
-> +		if (error < 0) {
->  			xfs_trans_brelse(tp, agbp);
->  
->  			if (error != -ENOSPC)
-> @@ -1811,7 +1809,7 @@ xfs_dialloc(
->  			return 0;
->  		}
->  
-> -		if (ialloced) {
-> +		if (!error) {
-
-I wonder if this should be "if (error == 0)" because the comment
-for _ialloc_ag_alloc says that 0 and 1 have specific meanings?
-
-Otherwise looks fine to me.
-
---D
-
->  			/*
->  			 * We successfully allocated some inodes, return
->  			 * the current context to the caller so that it
-> -- 
-> 2.18.4
+> Hm.  Now that you got me thinking, maybe there should be an exception
+> for a norecovery mount?
 > 
+
+Yeah, I was more thinking about for recovery purposes if something
+happens to go wrong, so that should imply norecovery as well. Eh, I
+suppose one could always clear the bit too in that case so it's not that
+big of a deal. Either way:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> --D
+> 
+> > Brian
+> > 
+> > >  fs/xfs/libxfs/xfs_format.h |    7 +++++++
+> > >  fs/xfs/xfs_mount.c         |    6 ++++++
+> > >  2 files changed, 13 insertions(+)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > > index dd764da08f6f..5d8ba609ac0b 100644
+> > > --- a/fs/xfs/libxfs/xfs_format.h
+> > > +++ b/fs/xfs/libxfs/xfs_format.h
+> > > @@ -468,6 +468,7 @@ xfs_sb_has_ro_compat_feature(
+> > >  #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
+> > >  #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
+> > >  #define XFS_SB_FEAT_INCOMPAT_BIGTIME	(1 << 3)	/* large timestamps */
+> > > +#define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)	/* needs xfs_repair */
+> > >  #define XFS_SB_FEAT_INCOMPAT_ALL \
+> > >  		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
+> > >  		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
+> > > @@ -584,6 +585,12 @@ static inline bool xfs_sb_version_hasinobtcounts(struct xfs_sb *sbp)
+> > >  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_INOBTCNT);
+> > >  }
+> > >  
+> > > +static inline bool xfs_sb_version_needsrepair(struct xfs_sb *sbp)
+> > > +{
+> > > +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> > > +		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR);
+> > > +}
+> > > +
+> > >  /*
+> > >   * end of superblock version macros
+> > >   */
+> > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > > index 7bc7901d648d..2853ad49b27d 100644
+> > > --- a/fs/xfs/xfs_mount.c
+> > > +++ b/fs/xfs/xfs_mount.c
+> > > @@ -266,6 +266,12 @@ xfs_sb_validate_mount(
+> > >  	struct xfs_buf		*bp,
+> > >  	struct xfs_sb		*sbp)
+> > >  {
+> > > +	/* Filesystem claims it needs repair, so refuse the mount. */
+> > > +	if (xfs_sb_version_needsrepair(&mp->m_sb)) {
+> > > +		xfs_warn(mp, "Filesystem needs repair.  Please run xfs_repair.");
+> > > +		return -EFSCORRUPTED;
+> > > +	}
+> > > +
+> > >  	/*
+> > >  	 * Don't touch the filesystem if a user tool thinks it owns the primary
+> > >  	 * superblock.  mkfs doesn't clear the flag from secondary supers, so
+> > > 
+> > 
+> 
+
