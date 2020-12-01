@@ -2,164 +2,296 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3F37C64E7B
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 16:28:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82522C64E7A
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 16:30:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 773B0206A5
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 16:28:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dkXQatAi"
+	by mail.kernel.org (Postfix) with ESMTP id 0F6FE22244
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 16:30:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726037AbgLAQ20 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Dec 2020 11:28:26 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:54926 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725885AbgLAQ2Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Dec 2020 11:28:25 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1GOvns042665;
-        Tue, 1 Dec 2020 16:27:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=4qcu6Nfs5xF2u5Qg4jr6YMM/a3EcfVZG1zl21TGLMXM=;
- b=dkXQatAi1P9zUiep6v22T0CFxHdPHPKx5g7pCiB95/PzUA4da/VT7L4xXHFJdqcSZtM6
- 4vP62NkKR6F3V/Wv2wjaeCtsejx5TqtznHHkDnNwajfucnoE3vrAWLh8mLp1CHY0noHw
- bKNAx67GkOTE3OHEUkZDWheqQS6V8odIrPVgQm5DmHZy5iwFk1rkuPtEQ8OwyTUMvYqL
- nhQrXKwnUcxBXJWp2fWuR5qaOLSDFFq4UNeIGH7er0GY0E283qlZOeicXJA3scW+BL6M
- r8Niiqr1TgLRP/Br2I6ygKNYSEBFtAROONf2VxWCdgzYjD/t+XfHyAzJJ9vIo2VlRjZE +A== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 353egkkf03-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 01 Dec 2020 16:27:41 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1G65Df042667;
-        Tue, 1 Dec 2020 16:25:40 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 3540ey6ht8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Dec 2020 16:25:40 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0B1GPdu9030218;
-        Tue, 1 Dec 2020 16:25:39 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 01 Dec 2020 08:25:39 -0800
-Date:   Tue, 1 Dec 2020 08:25:39 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: define a new "needrepair" feature
-Message-ID: <20201201162539.GB143045@magnolia>
-References: <160679383892.447856.12907477074923729733.stgit@magnolia>
- <160679385127.447856.3129099457617444604.stgit@magnolia>
- <20201201161812.GD1205666@bfoster>
+        id S2387395AbgLAQaW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Dec 2020 11:30:22 -0500
+Received: from mx2.suse.de ([195.135.220.15]:43254 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727266AbgLAQaW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 Dec 2020 11:30:22 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 7642FAE93;
+        Tue,  1 Dec 2020 16:29:39 +0000 (UTC)
+Date:   Tue, 1 Dec 2020 17:29:37 +0100
+From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: show the dax option in mount options.
+Message-ID: <20201201162937.GL27530@kitsune.suse.cz>
+References: <cover.1604948373.git.msuchanek@suse.de>
+ <f9f7ba25e97dacd92c09eb3ee6a4aca8b4f72b00.1604948373.git.msuchanek@suse.de>
+ <20201109192419.GC9695@magnolia>
+ <20201109202705.GZ29778@kitsune.suse.cz>
+ <20201109210823.GI7391@dread.disaster.area>
+ <20201111102848.GD29778@kitsune.suse.cz>
+ <20201112014952.GL7391@dread.disaster.area>
+ <20201112111217.GF29778@kitsune.suse.cz>
+ <20201112151046.GD27697@quack2.suse.cz>
+ <20201112160848.GS3976735@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20201201161812.GD1205666@bfoster>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 phishscore=0
- suspectscore=1 bulkscore=0 spamscore=0 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012010101
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=1
- phishscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
- priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012010102
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201112160848.GS3976735@iweiny-DESK2.sc.intel.com>
+User-Agent: Mutt/1.11.3 (2019-02-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 01, 2020 at 11:18:12AM -0500, Brian Foster wrote:
-> On Mon, Nov 30, 2020 at 07:37:31PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Define an incompat feature flag to indicate that the filesystem needs to
-> > be repaired.  While libxfs will recognize this feature, the kernel will
-> > refuse to mount if the feature flag is set, and only xfs_repair will be
-> > able to clear the flag.  The goal here is to force the admin to run
-> > xfs_repair to completion after upgrading the filesystem, or if we
-> > otherwise detect anomalies.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
+On Thu, Nov 12, 2020 at 08:08:49AM -0800, Ira Weiny wrote:
+> On Thu, Nov 12, 2020 at 04:10:46PM +0100, Jan Kara wrote:
+> > On Thu 12-11-20 12:12:17, Michal Suchánek wrote:
+> > > On Thu, Nov 12, 2020 at 12:49:52PM +1100, Dave Chinner wrote:
+> > > > On Wed, Nov 11, 2020 at 11:28:48AM +0100, Michal Suchánek wrote:
+> > > > > On Tue, Nov 10, 2020 at 08:08:23AM +1100, Dave Chinner wrote:
+> > > > > > On Mon, Nov 09, 2020 at 09:27:05PM +0100, Michal Suchánek wrote:
+> > > > > > > On Mon, Nov 09, 2020 at 11:24:19AM -0800, Darrick J. Wong wrote:
+> > > > > > > > On Mon, Nov 09, 2020 at 08:10:08PM +0100, Michal Suchanek wrote:
+> > > > > > > > > xfs accepts both dax and dax_enum but shows only dax_enum. Show both
+> > > > > > > > > options.
+> > > > > > > > > 
+> > > > > > > > > Fixes: 8d6c3446ec23 ("fs/xfs: Make DAX mount option a tri-state")
+> > > > > > > > > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
+> > > > > > > > > ---
+> > > > > > > > >  fs/xfs/xfs_super.c | 2 +-
+> > > > > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > > > > > > 
+> > > > > > > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > > > > > > > index e3e229e52512..a3b00003840d 100644
+> > > > > > > > > --- a/fs/xfs/xfs_super.c
+> > > > > > > > > +++ b/fs/xfs/xfs_super.c
+> > > > > > > > > @@ -163,7 +163,7 @@ xfs_fs_show_options(
+> > > > > > > > >  		{ XFS_MOUNT_GRPID,		",grpid" },
+> > > > > > > > >  		{ XFS_MOUNT_DISCARD,		",discard" },
+> > > > > > > > >  		{ XFS_MOUNT_LARGEIO,		",largeio" },
+> > > > > > > > > -		{ XFS_MOUNT_DAX_ALWAYS,		",dax=always" },
+> > > > > > > > > +		{ XFS_MOUNT_DAX_ALWAYS,		",dax,dax=always" },
 > 
-> IIUC, we're using an incompat bit to intentionally ensure the filesystem
-> cannot mount, even on kernels that predate this particular "needs
-> repair" feature. The only difference is that an older kernel would
-> complain about an unknown feature and return a different error code.
-> Right?
+> I only caught this thread yesterday sorry about that...
 > 
-> That seems reasonable, but out of curiousity is there a need/reason for
-> using an incompat bit over an ro_compat bit?
-
-The general principle is to prevent /any/ mounting of the fs until the
-admin runs repair, even if it's readonly mounting.  The specific reason
-is so that xfs_db can set some other feature flag as part of an upgrade
-and then set the incompat bit to force a repair run (which xfs_admin
-will immediately take care of).
-
-Hm.  Now that you got me thinking, maybe there should be an exception
-for a norecovery mount?
-
---D
-
-> Brian
+> FWIW I think it odd to have this string.  Because what does 'dax,dax=always'
+> mean?  dax=always is not the only way the FS can support DAX.  The default
+> 'dax=inode' also means the FS supports DAX.  So I'm not sure this is really
+> even giving you what you want.
+The dax flag which was accepted previously and is still accepted now
+means dax=always. It just shows both the old and new form of the flag.
 > 
-> >  fs/xfs/libxfs/xfs_format.h |    7 +++++++
-> >  fs/xfs/xfs_mount.c         |    6 ++++++
-> >  2 files changed, 13 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index dd764da08f6f..5d8ba609ac0b 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -468,6 +468,7 @@ xfs_sb_has_ro_compat_feature(
-> >  #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
-> >  #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
-> >  #define XFS_SB_FEAT_INCOMPAT_BIGTIME	(1 << 3)	/* large timestamps */
-> > +#define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)	/* needs xfs_repair */
-> >  #define XFS_SB_FEAT_INCOMPAT_ALL \
-> >  		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
-> >  		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
-> > @@ -584,6 +585,12 @@ static inline bool xfs_sb_version_hasinobtcounts(struct xfs_sb *sbp)
-> >  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_INOBTCNT);
-> >  }
-> >  
-> > +static inline bool xfs_sb_version_needsrepair(struct xfs_sb *sbp)
-> > +{
-> > +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-> > +		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR);
-> > +}
-> > +
-> >  /*
-> >   * end of superblock version macros
-> >   */
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index 7bc7901d648d..2853ad49b27d 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -266,6 +266,12 @@ xfs_sb_validate_mount(
-> >  	struct xfs_buf		*bp,
-> >  	struct xfs_sb		*sbp)
-> >  {
-> > +	/* Filesystem claims it needs repair, so refuse the mount. */
-> > +	if (xfs_sb_version_needsrepair(&mp->m_sb)) {
-> > +		xfs_warn(mp, "Filesystem needs repair.  Please run xfs_repair.");
-> > +		return -EFSCORRUPTED;
-> > +	}
-> > +
-> >  	/*
-> >  	 * Don't touch the filesystem if a user tool thinks it owns the primary
-> >  	 * superblock.  mkfs doesn't clear the flag from secondary supers, so
-> > 
+> > > > > > > > 
+> > > > > > > > NAK, programs that require DAX semantics for files stored on XFS must
+> > > > > > > > call statx to detect the STATX_ATTR_DAX flag, as outlined in "Enabling
+> > > > > > > > DAX on xfs" in Documentation/filesystems/dax.txt.
+> > > > > > > statx can be used to query S_DAX.  NOTE that only regular files will
+> > > > > > > ever have S_DAX set and therefore statx will never indicate that S_DAX
+> > > > > > > is set on directories.
+> > > > > > 
+> > > > > > Yup, by design.
+> > > > > > 
+> > > > > > The application doesn't need to do anything complex to make this
+> > > > > > work. If the app wants to use DAX, then it should use
+> > > > > > FS_IOC_FS{GS}ETXATTR to always set the on disk per inode DAX flags
+> > > > > > for it's data dirs and files, and then STATX_ATTR_DAX will *always*
+> > > > > > tell it whether DAX is actively in use at runtime. It's pretty
+> > > > > > simple, really.
+> > > > > > 
+> > > > > > > The filesystem may not have any files so statx cannot be used.
+> > > > > > 
+> > > > > > Really?  The app or installer is about to *write to the fs* and has
+> > > > > > all the permissions it needs to modify the contents of the fs. It's
+> > > > > > pretty simple to create a tmpdir, set the DAX flag on the tmpdir,
+> > > > > > then create a tmpfile in the tmpdir and run STATX_ATTR_DAX on it to
+> > > > > > see if DAX is active or not.....
+> > > > > 
+> > > > > Have you ever seen a 'wizard' style installer?
+> > > > 
+> > > > I wrote my first one in 1995 on Windows NT 3.51 using Installshield.
 > 
+> I'm confused about this talk of an installer.  If 1 FS supports DAX and the
+> other, say 10, do not; what happens when you install something special which
+> to support DAX?  But what if the user of that software uses one of the other
+> 10 FS's?
+> 
+> I think it has already been mentioned that the software needs this check at run
+> time to be correct.
+
+Sure. The installer is the first part the gets in contact with the
+change. There is no point trying to run the application if your system
+does not support dax so the installer chacks that early on. I think that
+makes sense. You may need to re-format the filesystem with different
+block size or other options to enable dax.
+
+> 
+> > > > 
+> > > > > Like one that firsts asks what to install, and then presents a list of
+> > > > > suitable locations that have enough space, supported filesystem features
+> > > > > enabled, and whatnot?
+> > > > 
+> > > > Hold on, 1995 is calling me. The application I was packaging used
+> > > > ACLs. But the NTFS version created by windows NT 3.1 was
+> > > > incompatible as ACL support didn't arrive until NT 3.51 and service
+> > > > pack 4(?) for NT 3.1. Yes, I had to write code to probe the
+> > > > filesystems to detect whether ACL support was available or not by
+> > > > -trying to create an ACL-.
+> > > > 
+> > > > I guess you could say "been there, done that, learnt the lesson".
+> > > So we are trying to be as bad as Windows now?
+> > > > 
+> > > > > So to present a list of mountpoints that support DAX one has to scribble
+> > > > > over every mountpoint on the system?
+> > > > 
+> > > > If you are filtering storage options presented to the user by
+> > > > supported features, then you have to probe for them in some way.
+> > > > And that means you have to consider that many option filesystem
+> > > > features that applications use cannot be detected via mount options
+> > > > checking the filesytem config. That is, there are features that can
+> > > > only be discovered by actually testing whether they work or not.
+> > > > 
+> > > > > That sounds ridiculous.
+> > > > 
+> > > > Reality is a harsh mistress. :/
+> > > > 
+> > > > [snip the rest because you're being ridiculous]
+> > > > 
+> > > > Are you aware of ndctl?
+> > > > 
+> > > > $ ndctl list
+> > > > [
+> > > >   {
+> > > >     "dev":"namespace1.0",
+> > > >     "mode":"fsdax",
+> > > >     "map":"mem",
+> > > >     "size":8589934592,
+> > > >     "sector_size":512,
+> > > >     "blockdev":"pmem1"
+> > > >   },
+> > > >   {
+> > > >     "dev":"namespace0.0",
+> > > >     "mode":"fsdax",
+> > > >     "map":"mem",
+> > > >     "size":8589934592,
+> > > >     "sector_size":512,
+> > > >     "blockdev":"pmem0"
+> > > >   }
+> > > > ]
+> > > Yes, that tells me that the device can be configured for dax. Not if the
+> > > filesystem will use it.
+> > > > 
+> > > > Oh, look there are two block devices on this machine that are
+> > > > configured for filesystem DAX (fsdax). They are /dev/pmem0 and
+> > > > /dev/pmem1.
+> > > > 
+> > > > What filesytsems are on them?
+> > > > 
+> > > > $ lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT /dev/pmem0 /dev/pmem1
+> > > > NAME  SIZE FSTYPE MOUNTPOINT
+> > > > pmem1   8G ext4   /mnt/test
+> > > > pmem0   8G xfs    /mnt/scratch
+> > > > $
+> > > > 
+> > > > One XFs, one ext4, both of which will be using DAX capable unless
+> > > > the dax=never mount option is set. Which:
+> > > Or the bock size does not match page size. Or whatever other requirement
+> > > the filesystem might have is not met.
+> > > > 
+> > > > $ mount  |grep pmem
+> > > > /dev/pmem0 on /mnt/scratch type xfs (rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+> > > > /dev/pmem1 on /mnt/test type ext4 (rw,relatime)
+> > > > $
+> > > > 
+> > > > is not set on either mount.
+> > > > 
+> > > > Hence both filesystems at DAX capable and enabled, and should be
+> > > > presented as options to the user as such.
+> > > No, it is not the case. That is why it would make sense for the kernel
+> > > to make the information about DAX availability accessible somewhere.
+> 
+> But again at run time the software needs to verify it is being asked to operate
+> on a FS which supports DAX.  So I don't think what you are proposing is going
+> to work all of the time.
+If the kernel makes the information available it will be available both
+at installation time and runtime. Currently you can only guess.
+> 
+> > > > 
+> > > > And all this comes about because DAX is a property of the block
+> > > > device, not the filesystem. Hence the only time a DAX capable
+> > > > filesystem on a block device that is DAX capable will not be DAX
+> > > > capable is if the dax=never is set...
+> > > See, it is not property of the block device. It is property of the mount
+> > > point. The availability on the device is one requirement but the
+> > > filesystem options affect availability to the user in the end.
+> > 
+> > No, it is not really a property of the mountpoint either. If anything it is
+> > a property of the inode. Two different inodes on the very same filesystem,
+> > one may support DAX the other will not (think for example of XFS real-time
+> > volumes, or simply inodes with / without S_DAX flag set). And we are back
+> > at what Dave tries to get accross. As inconvenient as it is
+> > statx(STATX_ATTR_DAX) is the only way to tell.
+That's exactly property of the mount point, nothing else. Technically
+inside teh kernels it's probably represented as superblock but that's
+impleentation detail.
+
+In the case of dax=always all files presumably behave as if they had the
+STATX_ATTR_DAX flag set. Ideally the flag should be returned in this
+case even if the inode does not really have it.
+
+In the case of dax=inode you can set this flag if
+ - the filesystem driver supports it
+ - the filesystem block size matches the
+ - the user did not use a ount option that changes the default
+ - probably a number of other options
+Then the user can set STATX_ATTR_DAX but the files don't magically grow
+it. Much like with xattrs, acls, and whatnot. Same thing - the
+filesystem must suport it, the on-disk format (if any) must be suitable,
+the mount options must enable/not disable teh feature.
+
+What problem do you have with telling the user that filesystem mounted
+at /foo supports bar?
+> > 
+> > > > Of course, this is just encoding how existing filesystems behave -
+> > > > it's not a requirement for future filesytsems so they may use other
+> > > > mechanisms for enabling/disabling DAX. Which leaves you with the
+> > > > only reliable mechanism of creating filesystem and checking
+> > > > statx(STATX_ATTR_DAX)....
+> > > Or the kernel could just tell the user. But right, information is power,
+> > > and keeping the user in the dark is much more entertaining.
+> > 
+> > I think it would be more productive if you actually answered Ted's
+> > question: Exactly which application got broken by the change? I know for a
+> > fact that one large DB vendor was parsing mount options in /proc/mounts to
+> > determine whether their DB can use DAX or not (and this was already a
+> > "cleaned up" method because before this they were parsing VMA flags in
+> > /proc/<pid>/smaps which is even worse). But in this case they also seemed
+> > OK to switch to statx() once it is available...
+> 
+> I agree.  I struggled over these options and what to present when I added the
+> feature and I never intended to break anything.
+> 
+> That said, I'm not sure what exactly is broken.  Moreover, I'm concerned that
+> there may be more wrong here than just the lack of a 'dax' option string in the
+> mount.
+
+Indeed, this attitude of not telling the user if a filesystem supports a
+feature and leaving the user with weird hacks to detect it sounds wrong,
+irrespective of the application involved.
+
+You know, users use these hacks because the kernel won't tell them in a
+sane way.
+
+Thanks
+
+Michal
