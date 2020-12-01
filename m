@@ -7,187 +7,178 @@ X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2F76C64E7A
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 15:27:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 883B6C64E7B
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 16:18:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9156A20770
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 15:27:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0ECA822244
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 16:18:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iMr4LCii"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OVDHyfq+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391609AbgLAP1V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Dec 2020 10:27:21 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:59375 "EHLO
+        id S2392037AbgLAQSp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Dec 2020 11:18:45 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:47594 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2387678AbgLAP1V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Dec 2020 10:27:21 -0500
+        by vger.kernel.org with ESMTP id S2390841AbgLAQSp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Dec 2020 11:18:45 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606836354;
+        s=mimecast20190719; t=1606839438;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=Z8QTP/WEx1zBmWNBr5ADW1p8hLWJrdDVqOWqBfUCCjM=;
-        b=iMr4LCiiATEARXFnLDL2iJRSGnvEMb+flE9DkFrh7aoZsYRZ2IS67Zs3BOmhJPtgAPZxh8
-        Qi2b5DwWyeUPkV0o8X+hVplcKB7yV2v6dTpsfpgtB8GhxmEIJif9jPYJCwuL7d6djC+1ie
-        gArgBT7pWaPWM3vMXiACaTSd9Hn6j4o=
+        bh=irG1Bhj1PtJ0Ilu0zpNIYH1r9APfz0jnp9hdfwBn6Tw=;
+        b=OVDHyfq+YWD+PPluW8S8pfMPHwQBjhXfxIQzytTZLmMiYuYbkPkDChLp2e89dtfuhJjwN/
+        mcF5i//ZZ6uV7fIO1NYRSr5/ToIwczF7UcuiTOK4mTMv1vDFKcxWCjzjI8YbBtH04fyNNW
+        /LnbhCOgUBriekq6yc/Vo9asNKqYse4=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-466-zw-YOqq7PtGqbzY8_h37nQ-1; Tue, 01 Dec 2020 10:25:51 -0500
-X-MC-Unique: zw-YOqq7PtGqbzY8_h37nQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+ us-mta-488-FccXdTyrM6WEkok6Zj1vRQ-1; Tue, 01 Dec 2020 11:17:14 -0500
+X-MC-Unique: FccXdTyrM6WEkok6Zj1vRQ-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 37054AFA88;
-        Tue,  1 Dec 2020 15:25:50 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0A5D11005E44;
+        Tue,  1 Dec 2020 16:17:13 +0000 (UTC)
 Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D9F1060C6B;
-        Tue,  1 Dec 2020 15:25:49 +0000 (UTC)
-Date:   Tue, 1 Dec 2020 10:25:48 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8D2F01000320;
+        Tue,  1 Dec 2020 16:17:12 +0000 (UTC)
+Date:   Tue, 1 Dec 2020 11:17:10 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: use reflink to assist unaligned copy_file_range
- calls
-Message-ID: <20201201152548.GB1205666@bfoster>
-References: <160679383048.447787.12488361211673312070.stgit@magnolia>
- <160679383664.447787.14224539520566294960.stgit@magnolia>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: move kernel-specific superblock validation out
+ of libxfs
+Message-ID: <20201201161710.GC1205666@bfoster>
+References: <160679383892.447856.12907477074923729733.stgit@magnolia>
+ <160679384513.447856.3675245763779550446.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160679383664.447787.14224539520566294960.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <160679384513.447856.3675245763779550446.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 30, 2020 at 07:37:16PM -0800, Darrick J. Wong wrote:
+On Mon, Nov 30, 2020 at 07:37:25PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Add a copy_file_range handler to XFS so that we can accelerate file
-> copies with reflink when the source and destination ranges are not
-> block-aligned.  We'll use the generic pagecache copy to handle the
-> unaligned edges and attempt to reflink the middle.
+> A couple of the superblock validation checks apply only to the kernel,
+> so move them to xfs_mount.c before we start changing sb_inprogress.
+> This also reduces the diff between kernel and userspace libxfs.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_file.c |   99 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 99 insertions(+)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/libxfs/xfs_sb.c |   23 ++++-------------------
+>  fs/xfs/libxfs/xfs_sb.h |    3 +++
+>  fs/xfs/xfs_mount.c     |   31 +++++++++++++++++++++++++++++++
+>  3 files changed, 38 insertions(+), 19 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 5b0f93f73837..9d1bb0dc30e2 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1119,6 +1119,104 @@ xfs_file_remap_range(
->  	return remapped > 0 ? remapped : ret;
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 5aeafa59ed27..a2c43fe38f64 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -223,6 +223,7 @@ xfs_validate_sb_common(
+>  	struct xfs_dsb		*dsb = bp->b_addr;
+>  	uint32_t		agcount = 0;
+>  	uint32_t		rem;
+> +	int			error;
+>  
+>  	if (!xfs_verify_magic(bp, dsb->sb_magicnum)) {
+>  		xfs_warn(mp, "bad magic number");
+> @@ -382,16 +383,9 @@ xfs_validate_sb_common(
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> -	/*
+> -	 * Until this is fixed only page-sized or smaller data blocks work.
+> -	 */
+> -	if (unlikely(sbp->sb_blocksize > PAGE_SIZE)) {
+> -		xfs_warn(mp,
+> -		"File system with blocksize %d bytes. "
+> -		"Only pagesize (%ld) or less will currently work.",
+> -				sbp->sb_blocksize, PAGE_SIZE);
+> -		return -ENOSYS;
+> -	}
+> +	error = xfs_sb_validate_mount(mp, bp, sbp);
+> +	if (error)
+> +		return error;
+>  
+>  	/*
+>  	 * Currently only very few inode sizes are supported.
+> @@ -415,15 +409,6 @@ xfs_validate_sb_common(
+>  		return -EFBIG;
+>  	}
+>  
+> -	/*
+> -	 * Don't touch the filesystem if a user tool thinks it owns the primary
+> -	 * superblock.  mkfs doesn't clear the flag from secondary supers, so
+> -	 * we don't check them at all.
+> -	 */
+> -	if (XFS_BUF_ADDR(bp) == XFS_SB_DADDR && sbp->sb_inprogress) {
+> -		xfs_warn(mp, "Offline file system operation in progress!");
+> -		return -EFSCORRUPTED;
+> -	}
+>  	return 0;
 >  }
 >  
-...
-> +STATIC ssize_t
-> +xfs_file_copy_range(
-> +	struct file		*src_file,
-> +	loff_t			src_off,
-> +	struct file		*dst_file,
-> +	loff_t			dst_off,
-> +	size_t			len,
-> +	unsigned int		flags)
+> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+> index 92465a9a5162..ee0a5858dd47 100644
+> --- a/fs/xfs/libxfs/xfs_sb.h
+> +++ b/fs/xfs/libxfs/xfs_sb.h
+> @@ -42,4 +42,7 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
+>  				struct xfs_trans *tp, xfs_agnumber_t agno,
+>  				struct xfs_buf **bpp);
+>  
+> +int xfs_sb_validate_mount(struct xfs_mount *mp, struct xfs_buf *bp,
+> +		struct xfs_sb *sbp);
+> +
+>  #endif	/* __XFS_SB_H__ */
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 7110507a2b6b..7bc7901d648d 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -259,6 +259,37 @@ xfs_initialize_perag(
+>  	return error;
+>  }
+>  
+> +/* Validate the superblock is compatible with this mount. */
+> +int
+> +xfs_sb_validate_mount(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_buf		*bp,
+> +	struct xfs_sb		*sbp)
 > +{
-> +	struct inode		*inode_src = file_inode(src_file);
-> +	struct xfs_inode	*src = XFS_I(inode_src);
-> +	struct inode		*inode_dst = file_inode(dst_file);
-> +	struct xfs_inode	*dst = XFS_I(inode_dst);
-> +	struct xfs_mount	*mp = src->i_mount;
-> +	loff_t			copy_ret;
-> +	loff_t			next_block;
-> +	size_t			copy_len;
-> +	ssize_t			total_copied = 0;
-> +
-> +	/* Bypass all this if no copy acceleration is possible. */
-> +	if (!xfs_want_reflink_copy_range(src, src_off, dst, dst_off, len))
-> +		goto use_generic;
-> +
-> +	/* Use the regular copy until we're block aligned at the start. */
-> +	next_block = round_up(src_off + 1, mp->m_sb.sb_blocksize);
-
-Why the +1? AFAICT this means we manually copy the first block if
-src_off does happen to be block aligned. Is this an assumption based on
-the caller attempting ->remap_file_range() first?
-
-BTW, if we do happen to be called in some (theoretical) corner case
-where remap doesn't work unrelated to alignment, it seems this would
-unconditionally break the manual copy into multiple parts (first block +
-the rest). It's not immediately clear to me if that's significant from a
-performance perspective, but I wonder if it would be nicer here to
-filter that out more explicitly. For example, run the remap checks on
-the block aligned offset/len first, or skip the remap if the caller has
-provided a block aligned start (i.e. hinting that remap failed for other
-reasons), or perhaps even implement this so it conditionally performs a
-short manual copy so the next retry would fall into ->remap_file_range()
-with aligned offsets, etc. Thoughts?
-
-> +	copy_len = min_t(size_t, len, next_block - src_off);
-> +	if (copy_len > 0) {
-> +		copy_ret = generic_copy_file_range(src_file, src_off, dst_file,
-> +					dst_off, copy_len, flags);
-> +		if (copy_ret < 0)
-> +			return copy_ret;
-> +
-> +		src_off += copy_ret;
-> +		dst_off += copy_ret;
-> +		len -= copy_ret;
-> +		total_copied += copy_ret;
-> +		if (copy_ret < copy_len || len == 0)
-> +			return total_copied;
+> +	/*
+> +	 * Don't touch the filesystem if a user tool thinks it owns the primary
+> +	 * superblock.  mkfs doesn't clear the flag from secondary supers, so
+> +	 * we don't check them at all.
+> +	 */
+> +	if (XFS_BUF_ADDR(bp) == XFS_SB_DADDR && sbp->sb_inprogress) {
+> +		xfs_warn(mp, "Offline file system operation in progress!");
+> +		return -EFSCORRUPTED;
 > +	}
 > +
 > +	/*
-> +	 * Now try to reflink as many full blocks as we can.  If the end of the
-> +	 * copy request wasn't block-aligned or the reflink fails, we'll just
-> +	 * fall into the generic copy to do the rest.
+> +	 * Until this is fixed only page-sized or smaller data blocks work.
 > +	 */
-> +	copy_len = round_down(len, mp->m_sb.sb_blocksize);
-> +	if (copy_len > 0) {
-> +		copy_ret = xfs_file_remap_range(src_file, src_off, dst_file,
-> +				dst_off, copy_len, REMAP_FILE_CAN_SHORTEN);
-> +		if (copy_ret >= 0) {
-> +			src_off += copy_ret;
-> +			dst_off += copy_ret;
-> +			len -= copy_ret;
-> +			total_copied += copy_ret;
-> +			if (copy_ret < copy_len || len == 0)
-> +				return total_copied;
-
-Any reason we return a potential short copy here, but fall into the
-manual copy if the reflink outright fails?
-
-> +		}
+> +	if (unlikely(sbp->sb_blocksize > PAGE_SIZE)) {
+> +		xfs_warn(mp,
+> +		"File system with blocksize %d bytes. "
+> +		"Only pagesize (%ld) or less will currently work.",
+> +				sbp->sb_blocksize, PAGE_SIZE);
+> +		return -ENOSYS;
 > +	}
 > +
-> +use_generic:
-> +	/* Use the regular copy to deal with leftover bytes. */
-> +	copy_ret = generic_copy_file_range(src_file, src_off, dst_file,
-> +			dst_off, len, flags);
-> +	if (copy_ret < 0)
-> +		return copy_ret;
-
-Perhaps this should also check/return total_copied in the event we've
-already done some work..?
-
-Brian
-
-> +	return total_copied + copy_ret;
+> +	return 0;
 > +}
 > +
->  STATIC int
->  xfs_file_open(
->  	struct inode	*inode,
-> @@ -1381,6 +1479,7 @@ const struct file_operations xfs_file_operations = {
->  	.get_unmapped_area = thp_get_unmapped_area,
->  	.fallocate	= xfs_file_fallocate,
->  	.fadvise	= xfs_file_fadvise,
-> +	.copy_file_range = xfs_file_copy_range,
->  	.remap_file_range = xfs_file_remap_range,
->  };
->  
+>  /*
+>   * xfs_readsb
+>   *
 > 
 
