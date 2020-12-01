@@ -2,123 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20464C64E7A
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 16:57:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB128C64E7B
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 16:59:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE3E420758
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 16:57:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A7FC208FE
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Dec 2020 16:59:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="yz4QemZj"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KfgYPkqj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388821AbgLAQ5V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Dec 2020 11:57:21 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:47636 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388184AbgLAQ5V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Dec 2020 11:57:21 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1GtLrf161342;
-        Tue, 1 Dec 2020 16:56:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=N8901k35r16nO1pr/e2pClLcdTOjoPFQLRotmoFDod8=;
- b=yz4QemZjhtwPqpCwiljU8eHlOHB7v2xa8FScyyTU5uW9a4ML3P/OnLvLCinw8jQ/e3r8
- sQoVtcBx3FY6IcWgsW4uphcwzCRTVoadBYpjp3msN91AFoOjUNJvPHNIFYxrv9jiO+LA
- uXuCy+ZhXW2y00jFwdHvYVm+lmPLQe8NfPE7JQcGklGeyYXkN7sV+5F2zcCoIfFFndUY
- HRlIJQvGpuFQLNkkFHzvjrPAgGPqcO44SZ/sYtxqeGDXDsWmTxMkZyMi9hUq/N7WoNFV
- ucuBnd4QgvpnGpvNlgtPEcBct+QBgKNi6bnqkvp7vrRMbZ82IjGUr7JdUEADMUApbFM9 /w== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 353c2autd0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 01 Dec 2020 16:56:38 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1Gu6b5036099;
-        Tue, 1 Dec 2020 16:56:38 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 3540ey7rnc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Dec 2020 16:56:38 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B1GubfJ010973;
-        Tue, 1 Dec 2020 16:56:37 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 01 Dec 2020 08:56:37 -0800
-Date:   Tue, 1 Dec 2020 08:56:36 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: convert noroom, okalloc in xfs_dialloc() to bool
-Message-ID: <20201201165636.GF143045@magnolia>
-References: <20201124155130.40848-1-hsiangkao@redhat.com>
+        id S2388037AbgLAQ6n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Dec 2020 11:58:43 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:45425 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728168AbgLAQ6n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Dec 2020 11:58:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1606841837;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4Ro4gapDF/c1vHKexZiNGzqQBi5h9f7igOkn2/s1ehI=;
+        b=KfgYPkqjdH2p3lnep1vgh30v2tU4Wai0TvX4BaW/QBimmOn9AI98VV3YDMef30B2boDl45
+        3foFcNdNdiid9QdEuZO9Y7tKfFkLboYuDa7j8f0OrdkfUcTaxuz3nY5pK7xMvWRcsu/BHm
+        0hTzw0Wrs1xytejzWrgaVTrAJdhm3/o=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-499-niUJn-4kNAuxnRoPOyqzVw-1; Tue, 01 Dec 2020 11:57:14 -0500
+X-MC-Unique: niUJn-4kNAuxnRoPOyqzVw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E86181084427;
+        Tue,  1 Dec 2020 16:57:12 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1D32219D61;
+        Tue,  1 Dec 2020 16:57:12 +0000 (UTC)
+Subject: [PATCH 1/2] uapi: fix statx attribute value overlap for DAX &
+ MOUNT_ROOT
+To:     torvalds@linux-foundation.org,
+        Miklos Szeredi <mszeredi@redhat.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        David Howells <dhowells@redhat.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-man@vger.kernel.org,
+        linux-kernel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>,
+        linux-ext4@vger.kernel.org, Xiaoli Feng <xifeng@redhat.com>
+References: <e388f379-cd11-a5d2-db82-aa1aa518a582@redhat.com>
+From:   Eric Sandeen <sandeen@redhat.com>
+Message-ID: <7027520f-7c79-087e-1d00-743bdefa1a1e@redhat.com>
+Date:   Tue, 1 Dec 2020 10:57:11 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201124155130.40848-1-hsiangkao@redhat.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 phishscore=0
- suspectscore=1 bulkscore=0 spamscore=0 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012010104
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 lowpriorityscore=0
- clxscore=1015 bulkscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
- spamscore=0 adultscore=0 mlxscore=0 priorityscore=1501 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012010104
+In-Reply-To: <e388f379-cd11-a5d2-db82-aa1aa518a582@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 24, 2020 at 11:51:28PM +0800, Gao Xiang wrote:
-> Boolean is preferred for such use.
-> 
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+STATX_ATTR_MOUNT_ROOT and STATX_ATTR_DAX got merged with the same value,
+so one of them needs fixing. Move STATX_ATTR_DAX.
 
-Looks simple enough,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+While we're in here, clarify the value-matching scheme for some of the
+attributes, and explain why the value for DAX does not match.
 
---D
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ include/uapi/linux/stat.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-> ---
->  fs/xfs/libxfs/xfs_ialloc.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 974e71bc4a3a..45cf7e55f5ee 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -1716,11 +1716,11 @@ xfs_dialloc(
->  	xfs_agnumber_t		agno;
->  	int			error;
->  	int			ialloced;
-> -	int			noroom = 0;
-> +	bool			noroom = false;
->  	xfs_agnumber_t		start_agno;
->  	struct xfs_perag	*pag;
->  	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
-> -	int			okalloc = 1;
-> +	bool			okalloc = true;
->  
->  	if (*IO_agbp) {
->  		/*
-> @@ -1753,8 +1753,8 @@ xfs_dialloc(
->  	if (igeo->maxicount &&
->  	    percpu_counter_read_positive(&mp->m_icount) + igeo->ialloc_inos
->  							> igeo->maxicount) {
-> -		noroom = 1;
-> -		okalloc = 0;
-> +		noroom = true;
-> +		okalloc = false;
->  	}
->  
->  	/*
-> -- 
-> 2.18.4
-> 
+diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
+index 82cc58fe9368..9ad19eb9bbbf 100644
+--- a/include/uapi/linux/stat.h
++++ b/include/uapi/linux/stat.h
+@@ -171,9 +171,10 @@ struct statx {
+  * be of use to ordinary userspace programs such as GUIs or ls rather than
+  * specialised tools.
+  *
+- * Note that the flags marked [I] correspond to generic FS_IOC_FLAGS
++ * Note that the flags marked [I] correspond to the FS_IOC_SETFLAGS flags
+  * semantically.  Where possible, the numerical value is picked to correspond
+- * also.
++ * also. Note that the DAX attribute indicates that the inode is currently
++ * DAX-enabled, not simply that the per-inode flag has been set.
+  */
+ #define STATX_ATTR_COMPRESSED		0x00000004 /* [I] File is compressed by the fs */
+ #define STATX_ATTR_IMMUTABLE		0x00000010 /* [I] File is marked immutable */
+@@ -183,7 +184,7 @@ struct statx {
+ #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
+ #define STATX_ATTR_MOUNT_ROOT		0x00002000 /* Root of a mount */
+ #define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
+-#define STATX_ATTR_DAX			0x00002000 /* [I] File is DAX */
++#define STATX_ATTR_DAX			0x00400000 /* File is currently DAX-enabled */
+ 
+ 
+ #endif /* _UAPI_LINUX_STAT_H */
+-- 
+2.17.0
+
