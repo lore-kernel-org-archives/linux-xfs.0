@@ -2,105 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C398C83013
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 14:46:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF334C64E8A
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 16:01:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD0962222E
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 14:46:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BF8821D42
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 16:01:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727983AbgLBOpx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Dec 2020 09:45:53 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:47644 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726121AbgLBOpx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Dec 2020 09:45:53 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606920267;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=CySxSh2Ld010Ti5dLGysi8diYPX64t0f3BfCXzkYBHI=;
-        b=W5+o9kWoM4IfvG4kEY8n5to1tSkQoVWyAjEOa8ynxTVcSJnRw7UVRIQQTrtYZ1Lg3ygcmi
-        XlpIrTVGO1JE1UdGf+B9O33qr22jWLPRA2xl7zPia7cTC0E4Q1gYEm0ah06Xcj7bNHKMEQ
-        M5CcRqnXJA8bMLaUzW36h/nZduNa9dU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-1-hnA_kny3M3GsQhCmZYbQ8Q-1; Wed, 02 Dec 2020 09:44:25 -0500
-X-MC-Unique: hnA_kny3M3GsQhCmZYbQ8Q-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CE958425DE;
-        Wed,  2 Dec 2020 14:44:24 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8CB615D6BA;
-        Wed,  2 Dec 2020 14:44:24 +0000 (UTC)
-Subject: Re: [RFC PATCH 2/2] xfs: do not allow reflinking inodes with the dax
- flag set
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-References: <1d87a83e-ba03-b735-f19a-955a09bcdcf7@redhat.com>
- <07c41ba8-ecb7-5042-fa6c-dd8c9754b824@redhat.com>
- <20201202102221.GB19762@infradead.org>
-From:   Eric Sandeen <sandeen@redhat.com>
-Message-ID: <49e44513-2f52-b221-6c33-e5e7119eb8b9@redhat.com>
-Date:   Wed, 2 Dec 2020 08:44:24 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.5.0
+        id S1730625AbgLBQBe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Dec 2020 11:01:34 -0500
+Received: from mga17.intel.com ([192.55.52.151]:42669 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726178AbgLBQBe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Dec 2020 11:01:34 -0500
+IronPort-SDR: vTQ49dhM8QBd0+4nYadcCOvoTfZw705rWHm0qw0rm50FiH9wI14DM2hvQCAkSRTZDARA2k3ter
+ hLH5oIOwMlSQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9823"; a="152864217"
+X-IronPort-AV: E=Sophos;i="5.78,387,1599548400"; 
+   d="scan'208";a="152864217"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2020 08:00:50 -0800
+IronPort-SDR: z1IqvhDZPFYY4z4SR+s5gX3XaQ3NMgT9GM0Mla2pqeN/yCqk8tUFbBLI/da0PDe15bIDT0ioBg
+ KB4Vk+2ypybA==
+X-IronPort-AV: E=Sophos;i="5.78,387,1599548400"; 
+   d="scan'208";a="539744114"
+Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2020 08:00:50 -0800
+Date:   Wed, 2 Dec 2020 08:00:49 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     torvalds@linux-foundation.org,
+        Miklos Szeredi <mszeredi@redhat.com>,
+        David Howells <dhowells@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-man@vger.kernel.org,
+        linux-kernel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>,
+        linux-ext4@vger.kernel.org, Xiaoli Feng <xifeng@redhat.com>
+Subject: Re: [PATCH V2] uapi: fix statx attribute value overlap for DAX &
+ MOUNT_ROOT
+Message-ID: <20201202160049.GD1447340@iweiny-DESK2.sc.intel.com>
+References: <3e28d2c7-fbe5-298a-13ba-dcd8fd504666@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20201202102221.GB19762@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3e28d2c7-fbe5-298a-13ba-dcd8fd504666@redhat.com>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/2/20 4:22 AM, Christoph Hellwig wrote:
-> On Tue, Dec 01, 2020 at 01:20:55PM -0600, Eric Sandeen wrote:
->> Today, xfs_reflink_remap_prep() will reject inodes which are in the CPU
->> direct access state, i.e. IS_DAX() is true.  However, it is possible to
->> have inodes with the XFS_DIFLAG2_DAX set, but which are not activated as
->> dax, due to the dax=never mount option, or due to the flag being set after
->> the inode was loaded.
->>
->> To avoid confusion and make the lack of dax+reflink crystal clear for the
->> user, reject reflink requests for both IS_DAX and XFS_DIFLAG2_DAX inodes.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> This is RFC because as Darrick says, it introduces a new failure mode for
->> reflink. On the flip side, today the user can reflink a chattr +x'd file,
->> but cannot chattr +x a reflinked file, which seems a best a bit asymmetrical
->> and confusing... see xfs_ioctl_setattr_xflags()
+On Tue, Dec 01, 2020 at 05:21:40PM -0600, Eric Sandeen wrote:
+> [*] Note: This needs to be merged as soon as possible as it's introducing an incompatible UAPI change...
 > 
-> This seems confusing.  IMHO for now we should just for non-dax access
-> to any reflink file even if XFS_DIFLAG2_DAX is set.  The only place
-> where we cannot do that is if a file has XFS_DIFLAG2_DAX set and is in
-> use and we want to reflink it.  Note that "in use" is kinda murky and
-> potentially racy.  So IMHO not allowing reflink when XFS_DIFLAG2_DAX
-> is set and dax=never is not set makes sense, but we should not go
-> further.
+> STATX_ATTR_MOUNT_ROOT and STATX_ATTR_DAX got merged with the same value,
+> so one of them needs fixing. Move STATX_ATTR_DAX.
+> 
+> While we're in here, clarify the value-matching scheme for some of the
+> attributes, and explain why the value for DAX does not match.
+> 
+> Fixes: 80340fe3605c ("statx: add mount_root")
+> Fixes: 712b2698e4c0 ("fs/stat: Define DAX statx attribute")
+> Reported-by: David Howells <dhowells@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Reviewed-by: David Howells <dhowells@redhat.com>
 
-Hm, trying to parse that...
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
 
-Would it be correct to restate your last sentence as "Disallowing reflink
-when XFS_DIFLAG2_DAX is set and dax=inode is set makes sense?"
-
-If so, then the only change you're suggesting to this patch is to /allow/
-reflinking if dax=never is set?
-
-I just figured a very clear statementa bout incompatible flags was simplest,
-but I get it that it's overly restrictive, functionally.
-
-Thanks,
--Eric
-
+> ---
+> V2: Change flag value per Darrick Wong
+>     Tweak comment per Darrick Wong
+>     Add Fixes: tags & reported-by & RVB per dhowells
+> 
+>  include/uapi/linux/stat.h | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
+> index 82cc58fe9368..1500a0f58041 100644
+> --- a/include/uapi/linux/stat.h
+> +++ b/include/uapi/linux/stat.h
+> @@ -171,9 +171,12 @@ struct statx {
+>   * be of use to ordinary userspace programs such as GUIs or ls rather than
+>   * specialised tools.
+>   *
+> - * Note that the flags marked [I] correspond to generic FS_IOC_FLAGS
+> + * Note that the flags marked [I] correspond to the FS_IOC_SETFLAGS flags
+>   * semantically.  Where possible, the numerical value is picked to correspond
+> - * also.
+> + * also.  Note that the DAX attribute indicates that the file is in the CPU
+> + * direct access state.  It does not correspond to the per-inode flag that
+> + * some filesystems support.
+> + *
+>   */
+>  #define STATX_ATTR_COMPRESSED		0x00000004 /* [I] File is compressed by the fs */
+>  #define STATX_ATTR_IMMUTABLE		0x00000010 /* [I] File is marked immutable */
+> @@ -183,7 +186,7 @@ struct statx {
+>  #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
+>  #define STATX_ATTR_MOUNT_ROOT		0x00002000 /* Root of a mount */
+>  #define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
+> -#define STATX_ATTR_DAX			0x00002000 /* [I] File is DAX */
+> +#define STATX_ATTR_DAX			0x00200000 /* File is currently in DAX state */
+>  
+>  
+>  #endif /* _UAPI_LINUX_STAT_H */
+> -- 
+> 2.17.0
+> 
