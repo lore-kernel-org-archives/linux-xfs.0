@@ -2,122 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 306C0C64E90
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 00:00:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 574F0C64E7A
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 00:12:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB0A3221FF
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 00:00:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6D522224C
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 00:12:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726486AbgLBAA4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Dec 2020 19:00:56 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:25430 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726011AbgLBAA4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Dec 2020 19:00:56 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606867169;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=tBqctEgUjnUSdhriE5RKXO7txjn/VplepcevOdViy/4=;
-        b=AaPDtiDMssq37+OekjFpignSS3o9E9wWYeKagD4Mg8tEqqBHFaidAO1f6vPIr6+6ldMUSP
-        AEpHcEvPe712YgiUMCGGkMpKeX7INTTPTer9VYZbdiXcIXhvUkk/M3ZVNvbjPnn05p6xRX
-        x6F8V0wmCvKf94/NNkVEaB2cr0Qzc0k=
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
- [209.85.210.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-395-_yJ6hakQMlu9akEOEEQSHA-1; Tue, 01 Dec 2020 18:59:24 -0500
-X-MC-Unique: _yJ6hakQMlu9akEOEEQSHA-1
-Received: by mail-pf1-f200.google.com with SMTP id l11so19634pfc.16
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Dec 2020 15:59:24 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=tBqctEgUjnUSdhriE5RKXO7txjn/VplepcevOdViy/4=;
-        b=a1MdOwbjqgnTZ1B9CqEV0Xr5zAe2CVd+WqR8Fe6wMTPcpM7mwgFdpwDrau1DBLkksn
-         YGD7O5VVLlhD+wiqSIZy7BLxEgXyIpOMHHZRU/Uic5uRoAa9iHAa3Ygd3Ch80mxzw+9i
-         iq+5PRKnJ9DDcG8HcD3iOK46T+D550rV0ZTEi55NrB2v0EjUjSOw6qWagdP1+s4VYN2c
-         Y8PhyRbVXoU9nmchOW5L9VR23Wdfk82BtNK1U0v7izDdB1YkIrlq3jeatcmfcGuMTWt8
-         fsalDOglHRIpmIitHpJEfd/Y/V9FJ3mUsVp3yx9x22NFhJCIibu158PIGJYxHqSHI8/V
-         vPUA==
-X-Gm-Message-State: AOAM533yivjCZrHX93yrK4LnSYWO0AKmodC/nToE3ZFDIMGuu6h6vY2Z
-        4WrhBfrOX4tmF5lYVwuRTri3Pi6P7gea2HfYTwKKBlHxrQ6UbwKrpWoBvkqBQYfdLJueeKTLQAn
-        GVrx/mi+4kuQHR2/rtgyz
-X-Received: by 2002:a17:90a:c592:: with SMTP id l18mr171209pjt.228.1606867163543;
-        Tue, 01 Dec 2020 15:59:23 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJwNIXOAYuh9i6b32OeXnhhz949wI7PT55LqaSmrdhN8O4zQ78Qk3lau3zKRhbes+6oVBoEjsg==
-X-Received: by 2002:a17:90a:c592:: with SMTP id l18mr171201pjt.228.1606867163386;
-        Tue, 01 Dec 2020 15:59:23 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id h16sm38706pjt.43.2020.12.01.15.59.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Dec 2020 15:59:23 -0800 (PST)
-Date:   Wed, 2 Dec 2020 07:59:13 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: kill ialloced in xfs_dialloc()
-Message-ID: <20201201235913.GB1423765@xiangao.remote.csb>
-References: <20201124155130.40848-1-hsiangkao@redhat.com>
- <20201124155130.40848-2-hsiangkao@redhat.com>
- <20201201170420.GG143045@magnolia>
+        id S1727378AbgLBAMH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Dec 2020 19:12:07 -0500
+Received: from sandeen.net ([63.231.237.45]:35898 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726011AbgLBAMG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 Dec 2020 19:12:06 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 2799D146284;
+        Tue,  1 Dec 2020 18:11:09 -0600 (CST)
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>
+Cc:     Eric Sandeen <sandeen@redhat.com>,
+        Miklos Szeredi <mszeredi@redhat.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-man <linux-man@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        Xiaoli Feng <xifeng@redhat.com>
+References: <e388f379-cd11-a5d2-db82-aa1aa518a582@redhat.com>
+ <05a0f4fd-7f62-8fbc-378d-886ccd5b3f11@redhat.com>
+ <CAHk-=wgOu9vgUfOSsjO3hHHxGDn4BKhitC_8XCfgmGKiiSm_ag@mail.gmail.com>
+ <300456.1606856642@warthog.procyon.org.uk>
+ <CAHk-=wgB_e1anR0b4B5p3qxR9nq1-xrRponA6Q6WbGTOSFNmPw@mail.gmail.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH 2/2] statx: move STATX_ATTR_DAX attribute handling to
+ filesystems
+Message-ID: <421cb25d-ca52-0a08-e535-5f650dda8d93@sandeen.net>
+Date:   Tue, 1 Dec 2020 18:11:24 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.0
 MIME-Version: 1.0
+In-Reply-To: <CAHk-=wgB_e1anR0b4B5p3qxR9nq1-xrRponA6Q6WbGTOSFNmPw@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20201201170420.GG143045@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 01, 2020 at 09:04:20AM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 24, 2020 at 11:51:29PM +0800, Gao Xiang wrote:
-
-...
-
-> > @@ -1799,8 +1797,8 @@ xfs_dialloc(
-> >  			goto nextag_relse_buffer;
-> >  
-> >  
-> > -		error = xfs_ialloc_ag_alloc(tp, agbp, &ialloced);
-> > -		if (error) {
-> > +		error = xfs_ialloc_ag_alloc(tp, agbp);
-> > +		if (error < 0) {
-> >  			xfs_trans_brelse(tp, agbp);
-> >  
-> >  			if (error != -ENOSPC)
-> > @@ -1811,7 +1809,7 @@ xfs_dialloc(
-> >  			return 0;
-> >  		}
-> >  
-> > -		if (ialloced) {
-> > +		if (!error) {
+On 12/1/20 4:09 PM, Linus Torvalds wrote:
+> So basically, the thing that argues against this patch is that it
+> seems to just duplicate things inside filesystems, when the VFS layter
+> already has the information.
 > 
-> I wonder if this should be "if (error == 0)" because the comment
-> for _ialloc_ag_alloc says that 0 and 1 have specific meanings?
+> Now, if the VFS information was possibly stale or wrong, that woudl be
+> one thing. But then we'd have other and bigger  problems elsewhere as
+> far as I can tell.
+> 
+> IOW - make generic what can be made generic, and try to avoid having
+> filesystems do their own thing.
+> 
+> [ Replace "filesystems" by "architectures" or whatever else, this is
+> obviously not a filesystem-specific rule in general. ]
+> 
+> And don't get me wrong - I don't _hate_ the patch, and I don't care
+> _that_ deeply, but it just doesn't seem to make any sense to me. My
+> initial query was really about "what am I missing - can you please
+> flesh out the commit message because I don't understand what's wrong".
 
-I'm fine with either way personally, it could make checkpatch.pl
-happy by using "if (!error)" though... (always follow such rule
-when I walked into the kernel community...)
+Backing way up, my motivation was: Only the filesystem can appropriately
+set the statx->attributes_mask, so it has to be done there. Since that
+has to be done in the filesystem, set the actual attribute flag adjacent
+to it, as is done for ~every other flag.
+
+*shrug*
+
+In any case I resent the flag value clash fix on a separate thread as
+V2, hopefully that one is straightforward enough to go in.
 
 Thanks,
-Gao Xiang
-
-> 
-> Otherwise looks fine to me.
-> 
-> --D
-> 
-> >  			/*
-> >  			 * We successfully allocated some inodes, return
-> >  			 * the current context to the caller so that it
-> > -- 
-> > 2.18.4
-> > 
-> 
-
+-Eric
