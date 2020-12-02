@@ -2,144 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA56DC64E7C
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 21:05:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBAF2C83013
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 21:42:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D9DC21D93
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 21:05:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EC8D217A0
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 21:42:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729199AbgLBVFD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Dec 2020 16:05:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42644 "EHLO mail.kernel.org"
+        id S2387492AbgLBVmc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Dec 2020 16:42:32 -0500
+Received: from mga12.intel.com ([192.55.52.136]:34686 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726962AbgLBVFD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Dec 2020 16:05:03 -0500
-Date:   Wed, 2 Dec 2020 22:04:17 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1606943062;
-        bh=Lov+rl2zMsm/DNiknCS71Nefh+Dku1EKItYVB/Sc7X0=;
-        h=From:To:Cc:Subject:References:In-Reply-To:From;
-        b=1K48tAXxw42dVwFAhEqj3JOIUkCoSekEIDrMwliXlTFI/wEmnXSElRiKdsEx/7yQW
-         Y8I4/21n9TiR9oC0zszhjrLazN/gs+JtC0oy4FteTBaeiQQxV0bwMMOj3DF3HLqszO
-         2a5VL5wOBDskzNvsh5AF6RoqImctJXn+Wya2AHg8=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Miklos Szeredi <miklos@szeredi.hu>,
-        David Howells <dhowells@redhat.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Miklos Szeredi <mszeredi@redhat.com>,
-        linux-fsdevel@vger.kernel.org,
-        linux-man <linux-man@vger.kernel.org>,
-        linux-kernel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>,
-        linux-ext4@vger.kernel.org, Xiaoli Feng <xifeng@redhat.com>
-Subject: Re: [PATCH V2] uapi: fix statx attribute value overlap for DAX &
- MOUNT_ROOT
-Message-ID: <X8gBUc0fkdh6KK01@kroah.com>
-References: <3e28d2c7-fbe5-298a-13ba-dcd8fd504666@redhat.com>
- <20201202160049.GD1447340@iweiny-DESK2.sc.intel.com>
- <CAJfpegt6w4h28VLctpaH46r2pkbcUNJ4pUhwUqZ-zbrOrXPEEQ@mail.gmail.com>
- <641397.1606926232@warthog.procyon.org.uk>
- <CAJfpegsQxi+_ttNshHu5MP+uLn3px9+nZRoTLTxh9-xwU8s1yg@mail.gmail.com>
- <X8flmVAwl0158872@kroah.com>
- <20201202204045.GM2842436@dread.disaster.area>
+        id S1726309AbgLBVmc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Dec 2020 16:42:32 -0500
+IronPort-SDR: P1DQ244u4J5trZ2CW1gWIDMpwu4O1HBAn+N/OgCPi3vRqVc9Zp5fevr+bP5nMWMiGDsEhL9GkM
+ hsR+2JuDLSKA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9823"; a="152345748"
+X-IronPort-AV: E=Sophos;i="5.78,387,1599548400"; 
+   d="scan'208";a="152345748"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2020 13:41:51 -0800
+IronPort-SDR: 2QJCNzsEBVMH4I8OWQapC/iFvj9Eh/m/3JafMG46DhRJMRcKQvjYVRsFPbIOB3nqwkskPxyKne
+ XmGQxAZyPAnQ==
+X-IronPort-AV: E=Sophos;i="5.78,387,1599548400"; 
+   d="scan'208";a="550223437"
+Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2020 13:41:50 -0800
+From:   ira.weiny@intel.com
+To:     fstests@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     Ira Weiny <ira.weiny@intel.com>, linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        David Howells <dhowells@redhat.com>
+Subject: [PATCH] common/rc: Fix _check_s_dax()
+Date:   Wed,  2 Dec 2020 13:41:45 -0800
+Message-Id: <20201202214145.1563433-1-ira.weiny@intel.com>
+X-Mailer: git-send-email 2.28.0.rc0.12.gb6a658bd00c9
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201202204045.GM2842436@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 03, 2020 at 07:40:45AM +1100, Dave Chinner wrote:
-> On Wed, Dec 02, 2020 at 08:06:01PM +0100, Greg Kroah-Hartman wrote:
-> > On Wed, Dec 02, 2020 at 06:41:43PM +0100, Miklos Szeredi wrote:
-> > > On Wed, Dec 2, 2020 at 5:24 PM David Howells <dhowells@redhat.com> wrote:
-> > > >
-> > > > Miklos Szeredi <miklos@szeredi.hu> wrote:
-> > > >
-> > > > > Stable cc also?
-> > > > >
-> > > > > Cc: <stable@vger.kernel.org> # 5.8
-> > > >
-> > > > That seems to be unnecessary, provided there's a Fixes: tag.
-> > > 
-> > > Is it?
-> > > 
-> > > Fixes: means it fixes a patch, Cc: stable means it needs to be
-> > > included in stable kernels.  The two are not necessarily the same.
-> > > 
-> > > Greg?
-> > 
-> > You are correct.  cc: stable, as is documented in
-> >     https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
-> > ensures that the patch will get merged into the stable tree.
-> > 
-> > Fixes: is independent of it.  It's great to have for stable patches so
-> > that I know how far back to backport patches.
-> > 
-> > We do scan all commits for Fixes: tags that do not have cc: stable, and
-> > try to pick them up when we can and have the time to do so.  But it's
-> > not guaranteed at all that this will happen.
-> > 
-> > I don't know why people keep getting confused about this, we don't
-> > document the "Fixes: means it goes to stable" anywhere...
-> 
-> Except that is exactly what happens, sometimes within a day of two
-> of a patch with a Fixes tag hitting Linus' kernel. We have had a
-> serious XFS regression in the 5.9.9 stable kernel that should never
-> have happened as a result of exactly this "Fixes = automatically
-> swept immediately into stable kernels" behaviour. See here for
-> post-mortem analysis:
-> 
-> https://lore.kernel.org/linux-xfs/20201126071323.GF2842436@dread.disaster.area/T/#m26e14ebd28ad306025f4ebf37e2aae9a304345a5
-> 
-> This happened because these auotmated Fixes scans seem to occur
-> weekly during -rcX release periods, which means there really is *no
-> practical difference* between the way the stable process treats
-> Fixes tags and cc: stable.
+From: Ira Weiny <ira.weiny@intel.com>
 
-Sometimes, yes, that is true.  But as it went into Linus's tree at the
-same time, we just ended up with "bug compatible" trees :)
+There is a conflict with the user visible statx bits 'mount root' and
+'dax'.  The kernel is changing the dax bit to correct this conflict.[1]
 
-Not a big deal overall, happens every few releases, we fix it up and
-move on.  The benifits in doing all of this _FAR_ outweigh the very
-infrequent times that kernel developers get something wrong.
+Adjust _check_s_dax() to use the new bit.  Because DAX tests do not run
+on root mounts, STATX_ATTR_MOUNT_ROOT should always be 0, therefore we
+can allow either bit to indicate DAX and cover any kernel which may be
+running.
 
-As always, if you do NOT want your subsystem to have fixes: tags picked
-up automatically by us for stable trees, just email us and let us know
-to not do that and we gladly will.
+[1] https://lore.kernel.org/lkml/3e28d2c7-fbe5-298a-13ba-dcd8fd504666@redhat.com/
 
-> It seems like this can all be avoided simply by scheduling the
-> automated fixes scans once the upstream kernel is released, not
-> while it is still being stabilised by -rc releases. That way stable
-> kernels get better tested fixes, they still get the same quantity of
-> fixes, and upstream developers have some margin to detect and
-> correct regressions in fixes before they get propagated to users.
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
 
-So the "magic" -final release from Linus would cause this to happen?
-That means that the world would go for 3 months without some known fixes
-being applied to the tree?  That's not acceptable to me, as I started
-doing this because it was needed to be done, not just because I wanted
-to do more work...
+I went ahead and used Christoph's suggestion regarding using both bits.
 
-> It also creates a clear demarcation between fixes and cc: stable for
-> maintainers and developers: only patches with a cc: stable will be
-> backported immediately to stable. Developers know what patches need
-> urgent backports and, unlike developers, the automated fixes scan
-> does not have the subject matter expertise or background to make
-> that judgement....
+---
+ common/rc | 23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
 
-Some subsystems do not have such clear demarcation at all.  Heck, some
-subsystems don't even add a cc: stable to known major fixes.  And that's
-ok, the goal of the stable kernel work is to NOT impose additional work
-on developers or maintainers if they don't want to do that work.
+diff --git a/common/rc b/common/rc
+index b5a504e0dcb4..322e682e5239 100644
+--- a/common/rc
++++ b/common/rc
+@@ -3221,11 +3221,24 @@ _check_s_dax()
+ 	local exp_s_dax=$2
+ 
+ 	local attributes=$($XFS_IO_PROG -c 'statx -r' $target | awk '/stat.attributes / { print $3 }')
+-	if [ $exp_s_dax -eq 0 ]; then
+-		(( attributes & 0x2000 )) && echo "$target has unexpected S_DAX flag"
+-	else
+-		(( attributes & 0x2000 )) || echo "$target doesn't have expected S_DAX flag"
+-	fi
++
++	# The attribute bit value, STATX_ATTR_DAX (0x2000), conflicted with
++	# STATX_ATTR_MOUNT_ROOT.  Therefore, STATX_ATTR_DAX was changed to
++	# 0x00200000.
++	#
++	# Because DAX tests do not run on root mounts, STATX_ATTR_MOUNT_ROOT
++	# should always be 0, therefore we can allow either bit to indicate DAX
++	# and cover any kernel which may be running.
++
++        if [ $(( attributes & 0x00200000 )) -ne 0 ] || [ $(( attributes & 0x2000 )) -ne 0 ]; then
++                if [ $exp_s_dax -eq 0 ]; then
++                        echo "$target has unexpected S_DAX flag"
++                fi
++        else
++                if [ $exp_s_dax -ne 0 ]; then
++                        echo "$target doesn't have expected S_DAX flag"
++                fi
++        fi
+ }
+ 
+ _check_xflag()
+-- 
+2.28.0.rc0.12.gb6a658bd00c9
 
-thanks,
-
-greg k-h
