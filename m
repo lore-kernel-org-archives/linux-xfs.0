@@ -2,162 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4005FC64E8A
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 12:31:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C398C83013
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 14:46:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D21A122203
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 12:31:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD0962222E
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 14:46:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727017AbgLBMbi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Dec 2020 07:31:38 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:31342 "EHLO
+        id S1727983AbgLBOpx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Dec 2020 09:45:53 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:47644 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726751AbgLBMbi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Dec 2020 07:31:38 -0500
+        by vger.kernel.org with ESMTP id S1726121AbgLBOpx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Dec 2020 09:45:53 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606912212;
+        s=mimecast20190719; t=1606920267;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=UUaN/kxsxDvKSQ9j/ivjUi0oSAWAzH5toCWNTKHEtf4=;
-        b=idr6NSTbFj9kDmD9AfiRShlmTOIW2evpyJYiS5fP1Kgpym2yeoWJsujP57VetRXdvn0Ni9
-        Kn1ESEQlgzG2BZU4l2i7BeJ2RpewUqjxDe344D6ShR5sJDMk13h8KYjtoJulX/6rICgoiE
-        k5raqKag2k8rmzhvxUwrVQBjgQdNE/Y=
+        bh=CySxSh2Ld010Ti5dLGysi8diYPX64t0f3BfCXzkYBHI=;
+        b=W5+o9kWoM4IfvG4kEY8n5to1tSkQoVWyAjEOa8ynxTVcSJnRw7UVRIQQTrtYZ1Lg3ygcmi
+        XlpIrTVGO1JE1UdGf+B9O33qr22jWLPRA2xl7zPia7cTC0E4Q1gYEm0ah06Xcj7bNHKMEQ
+        M5CcRqnXJA8bMLaUzW36h/nZduNa9dU=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-478-VtBElmzwOpKaKzaW-NXEGw-1; Wed, 02 Dec 2020 07:30:10 -0500
-X-MC-Unique: VtBElmzwOpKaKzaW-NXEGw-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-1-hnA_kny3M3GsQhCmZYbQ8Q-1; Wed, 02 Dec 2020 09:44:25 -0500
+X-MC-Unique: hnA_kny3M3GsQhCmZYbQ8Q-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7417F817BA8;
-        Wed,  2 Dec 2020 12:30:08 +0000 (UTC)
-Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1A8B019D9C;
-        Wed,  2 Dec 2020 12:30:07 +0000 (UTC)
-Date:   Wed, 2 Dec 2020 07:30:06 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] [RFC] spaceman: physically move a regular inode
-Message-ID: <20201202123006.GA1278877@bfoster>
-References: <20201110225924.4031404-1-david@fromorbit.com>
- <20201201140742.GA1205666@bfoster>
- <20201201211557.GL2842436@dread.disaster.area>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CE958425DE;
+        Wed,  2 Dec 2020 14:44:24 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8CB615D6BA;
+        Wed,  2 Dec 2020 14:44:24 +0000 (UTC)
+Subject: Re: [RFC PATCH 2/2] xfs: do not allow reflinking inodes with the dax
+ flag set
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+References: <1d87a83e-ba03-b735-f19a-955a09bcdcf7@redhat.com>
+ <07c41ba8-ecb7-5042-fa6c-dd8c9754b824@redhat.com>
+ <20201202102221.GB19762@infradead.org>
+From:   Eric Sandeen <sandeen@redhat.com>
+Message-ID: <49e44513-2f52-b221-6c33-e5e7119eb8b9@redhat.com>
+Date:   Wed, 2 Dec 2020 08:44:24 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201201211557.GL2842436@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <20201202102221.GB19762@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 02, 2020 at 08:15:57AM +1100, Dave Chinner wrote:
-> On Tue, Dec 01, 2020 at 09:07:42AM -0500, Brian Foster wrote:
-> > On Wed, Nov 11, 2020 at 09:59:24AM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > To be able to shrink a filesystem, we need to be able to physically
-> > > move an inode and all it's data and metadata from it's current
-> > > location to a new AG.  Add a command to spaceman to allow an inode
-> > > to be moved to a new AG.
-> > > 
-> > > This new command is not intended to be a perfect solution. I am not
-> > > trying to handle atomic movement of open files - this is intended to
-> > > be run as a maintenance operation on idle filesystem. If root
-> > > filesystems are the target, then this should be run via a rescue
-> > > environment that is not executing directly on the root fs. With
-> > > those caveats in place, we can do the entire inode move as a set of
-> > > non-destructive operations finalised by an atomic inode swap
-> > > without any needing special kernel support.
-> > > 
-> > > To ensure we move metadata such as BMBT blocks even if we don't need
-> > > to move data, we clone the data to a new inode that we've allocated
-> > > in the destination AG. This will result in new bmbt blocks being
-> > > allocated in the new location even though the data is not copied.
-> > > Attributes need to be copied one at a time from the original inode.
-> > > 
-> > > If data needs to be moved, then we use fallocate(UNSHARE) to create
-> > > a private copy of the range of data that needs to be moved in the
-> > > new inode. This will be allocated in the destination AG by normal
-> > > allocation policy.
-> > > 
-> > > Once the new inode has been finalised, use RENAME_EXCHANGE to swap
-> > > it into place and unlink the original inode to free up all the
-> > > resources it still pins.
-> > > 
-> > > There are many optimisations still possible to speed this up, but
-> > > the goal here is "functional" rather than "optimal". Performance can
-> > > be optimised once all the parts for a "empty the tail of the
-> > > filesystem before shrink" operation are implemented and solidly
-> > > tested.
-> > > 
-> > 
-> > Neat idea. With respect to the shrink use case, what's the reasoning
-> > behind userspace selecting the target AG? There's no harm in having the
-> > target AG option in the utility of course, but ISTM that shrink might
-> > care more about moving some set of inodes from a particular AG as
-> > opposed to a specific target AG.
+On 12/2/20 4:22 AM, Christoph Hellwig wrote:
+> On Tue, Dec 01, 2020 at 01:20:55PM -0600, Eric Sandeen wrote:
+>> Today, xfs_reflink_remap_prep() will reject inodes which are in the CPU
+>> direct access state, i.e. IS_DAX() is true.  However, it is possible to
+>> have inodes with the XFS_DIFLAG2_DAX set, but which are not activated as
+>> dax, due to the dax=never mount option, or due to the flag being set after
+>> the inode was loaded.
+>>
+>> To avoid confusion and make the lack of dax+reflink crystal clear for the
+>> user, reject reflink requests for both IS_DAX and XFS_DIFLAG2_DAX inodes.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> This is RFC because as Darrick says, it introduces a new failure mode for
+>> reflink. On the flip side, today the user can reflink a chattr +x'd file,
+>> but cannot chattr +x a reflinked file, which seems a best a bit asymmetrical
+>> and confusing... see xfs_ioctl_setattr_xflags()
 > 
-> Oh, that's just a mechanism right now to avoid needing kernel
-> allocator policy support for relocating things. Say for example, we
-> plan to empty the top six AGs - we don't want the allocator to chose
-> any of them for relocation, and in the absence of kernel side policy
-> the only way we can direct that is to select an AG outside that
-> range manually with a target directory location (as per xfs_fsr).
-> 
-> IOWs, I'm just trying to implement the move mechanisms without
-> having to introduce new kernel API dependencies because I kinda want
-> shrink to be possible with minimal kernel requirements. It's also
-> not meant to be an optimal implementation at this point, merely a
-> generic one. Adding policy hooks for controlling AG allocation can
-> be done once we know exactly what the data movement process needs
-> for optimal behaviour.
-> 
+> This seems confusing.  IMHO for now we should just for non-dax access
+> to any reflink file even if XFS_DIFLAG2_DAX is set.  The only place
+> where we cannot do that is if a file has XFS_DIFLAG2_DAX set and is in
+> use and we want to reflink it.  Note that "in use" is kinda murky and
+> potentially racy.  So IMHO not allowing reflink when XFS_DIFLAG2_DAX
+> is set and dax=never is not set makes sense, but we should not go
+> further.
 
-Ok.
+Hm, trying to parse that...
 
-> > For example, might it make sense to implement a policy where move_inode
-> > simply moves an inode to the first AG the tempdir lands in that is < the
-> > AG of the source inode? We'd probably want to be careful to make sure
-> > that we don't attempt to dump the entire set of moved files into the
-> > same AG, but I assume the temp dir creation logic would effectively
-> > rotor across the remaining set of AGs we do want to allow.. Thoughts?
-> 
-> Yes, we could. But I simply decided that a basic, robust shrink to
-> the minimum possible size will have to fill the filesystem from AG 0
-> up, and not move to AG 1 until AG 0 is full.  I also know that the
-> kernel allocation policies will skip to the next AG if there is lock
-> contention, space or other allocation setup issues, hence I wanted
-> to be able to direct movement to the lowest possible AGs first...
-> 
-> THere's enough complexity in an optimal shrink implementation that
-> it will keep someone busy full time for a couple of years. I want to
-> provide the basic functionality userspace needs only spending a
-> couple of days a week for a couple of months on it. If we want it
-> fast and deployable on existing systems, compromises will need to be
-> made...
-> 
+Would it be correct to restate your last sentence as "Disallowing reflink
+when XFS_DIFLAG2_DAX is set and dax=inode is set makes sense?"
 
-Yeah, I'm not suggesting we implement the eventual policy here. I do
-think it would be nice if the userspace command implemented some
-reasonable default when a target AG is not specified. That could be the
-"anything less than source AG" logic I described above, a default target
-of AG 0, or something similarly simple...
+If so, then the only change you're suggesting to this patch is to /allow/
+reflinking if dax=never is set?
 
-Brian 
+I just figured a very clear statementa bout incompatible flags was simplest,
+but I get it that it's overly restrictive, functionally.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+Thanks,
+-Eric
 
