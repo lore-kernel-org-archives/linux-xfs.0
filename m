@@ -2,113 +2,253 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.2 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCC96C64E7C
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 21:47:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6041C64E7B
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 22:53:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68E962222F
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 21:47:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89CEC221F7
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 22:53:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728331AbgLBVrN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Dec 2020 16:47:13 -0500
-Received: from mga12.intel.com ([192.55.52.136]:35055 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726646AbgLBVrM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Dec 2020 16:47:12 -0500
-IronPort-SDR: d5tK3cdokoC6yc2tGvy2mpAu6eMaUmzsPGvCwwxn+BY+eInw+2mikHo9PWv8IxtsIYRZm0j/Zh
- jytjM1UMS7HQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9823"; a="152346583"
-X-IronPort-AV: E=Sophos;i="5.78,387,1599548400"; 
-   d="scan'208";a="152346583"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2020 13:46:32 -0800
-IronPort-SDR: 63r2hOH28lGBrb5+aNs8JtEfc3rF5jVDNVCmUbmcxKHQ/Cjrr2iCKMsMUYShTiJvbihV7WLpvX
- lZxC9VHeIrSw==
-X-IronPort-AV: E=Sophos;i="5.78,387,1599548400"; 
-   d="scan'208";a="481714327"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2020 13:46:31 -0800
-From:   ira.weiny@intel.com
-To:     fstests@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>, linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        David Howells <dhowells@redhat.com>
-Subject: [PATCH V2] common/rc: Fix _check_s_dax()
-Date:   Wed,  2 Dec 2020 13:46:29 -0800
-Message-Id: <20201202214629.1563760-1-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.28.0.rc0.12.gb6a658bd00c9
-In-Reply-To: <20201202214145.1563433-1-ira.weiny@intel.com>
-References: <20201202214145.1563433-1-ira.weiny@intel.com>
+        id S1726955AbgLBWxn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Dec 2020 17:53:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36490 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726903AbgLBWxm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Dec 2020 17:53:42 -0500
+Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED3BFC061A4C
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Dec 2020 14:52:56 -0800 (PST)
+Received: by mail-pl1-x644.google.com with SMTP id p6so43100plo.6
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Dec 2020 14:52:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=w13vKkQO9QCP0aR5R9Nv4FOw9sZU+DjLBFqmX3t26s8=;
+        b=rxIMvrsLz416YTkoh8oP0XwIZGWM+lG9YJHHqWJFZPAJfdeUMvP8RjKlfZq98Rtmoj
+         51XR5TMkAuVUmfbpRWeUYX2kReToKwMJxeCDaQAD4wb5BBQ0YDsOsp2MZViotWu9SI0X
+         WYaing/GdzvYBEdsc7YEhc1/eVjqn58Lq2HNaKlwDFLykzFGKRaBJifz1RKFCWORX67N
+         QqpxoNgr1sMlhz0EOwRyFVFgilPv7b58VK8xZ9L1w6ZREg/iO+rECdVjZ+SPYpk3mtv5
+         n5AWnXd9VZw9D/DC4Ps2r8qIYENdVpJpYlEEmCS8ymJK3QZlqa5Q0FD0/c2TZbobCLnq
+         GdGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=w13vKkQO9QCP0aR5R9Nv4FOw9sZU+DjLBFqmX3t26s8=;
+        b=pMKUmRLR3BILBf7Rzn30oxVHihgy9KugoxPQdSWpJKFJ48DO4FRVZQgxz4HIrXs8Gp
+         Muax57S9jdAM97+90srQX/Ds/1aOdUgt4iJ/egPWCE74/7xlBePA8zn3e0egQjvHWEXf
+         Gd7ed2/UWmoCF1xKQmX62XrCjjMwHP3h3ubNS3TKWidFAJqCq9V+O/F+kGVDBiVfkckr
+         ed+9SNhxZ1hJ799bglbAHHbgJINhy/31YjGIveT8D2W9Q/SftlU7Znd/gwhJ3agQdTmn
+         WrEfvCSLIMBZ2QSk98hS9AFp+ONuZA6tVksMFNXWF6CnBwSIxgwIE9ADLALvhY6kCj8X
+         lpww==
+X-Gm-Message-State: AOAM531D2dv0GZeXNSrHVcUpdG+oofsJXbaN24QcnqSpmVL+46LBWgEB
+        ZP2CfDGMS8T/oTdbZZbwwojY2w==
+X-Google-Smtp-Source: ABdhPJxMYQCCb1zJfnzSpLJeB756gwkPBF5cUE4tVCqByyJoHNiQ65qHwLsKgJXa31l+PERlBN+Reg==
+X-Received: by 2002:a17:902:9307:b029:d9:d097:fd6c with SMTP id bc7-20020a1709029307b02900d9d097fd6cmr302473plb.10.1606949576165;
+        Wed, 02 Dec 2020 14:52:56 -0800 (PST)
+Received: from google.com (154.137.233.35.bc.googleusercontent.com. [35.233.137.154])
+        by smtp.gmail.com with ESMTPSA id z22sm119458pfn.153.2020.12.02.14.52.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Dec 2020 14:52:55 -0800 (PST)
+Date:   Wed, 2 Dec 2020 22:52:51 +0000
+From:   Satya Tangirala <satyat@google.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     "Theodore Y . Ts'o" <tytso@mit.edu>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v7 1/8] block: ensure bios are not split in middle of
+ crypto data unit
+Message-ID: <X8gaw4ouQQFd9unN@google.com>
+References: <20201117140708.1068688-1-satyat@google.com>
+ <20201117140708.1068688-2-satyat@google.com>
+ <X7RdS2cINwFkl/MN@sol.localdomain>
+ <20201118003815.GA1155188@google.com>
+ <X77W05O8Pl8t0gPi@sol.localdomain>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <X77W05O8Pl8t0gPi@sol.localdomain>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Wed, Nov 25, 2020 at 02:12:35PM -0800, Eric Biggers wrote:
+> On Wed, Nov 18, 2020 at 12:38:15AM +0000, Satya Tangirala wrote:
+> > > > +/**
+> > > > + * update_aligned_sectors_and_segs() - Ensures that *@aligned_sectors is aligned
+> > > > + *				       to @bio_sectors_alignment, and that
+> > > > + *				       *@aligned_segs is the value of nsegs
+> > > > + *				       when sectors reached/first exceeded that
+> > > > + *				       value of *@aligned_sectors.
+> > > > + *
+> > > > + * @nsegs: [in] The current number of segs
+> > > > + * @sectors: [in] The current number of sectors
+> > > > + * @aligned_segs: [in,out] The number of segments that make up @aligned_sectors
+> > > > + * @aligned_sectors: [in,out] The largest number of sectors <= @sectors that is
+> > > > + *		     aligned to @sectors
+> > > > + * @bio_sectors_alignment: [in] The alignment requirement for the number of
+> > > > + *			  sectors
+> > > > + *
+> > > > + * Updates *@aligned_sectors to the largest number <= @sectors that is also a
+> > > > + * multiple of @bio_sectors_alignment. This is done by updating *@aligned_sectors
+> > > > + * whenever @sectors is at least @bio_sectors_alignment more than
+> > > > + * *@aligned_sectors, since that means we can increment *@aligned_sectors while
+> > > > + * still keeping it aligned to @bio_sectors_alignment and also keeping it <=
+> > > > + * @sectors. *@aligned_segs is updated to the value of nsegs when @sectors first
+> > > > + * reaches/exceeds any value that causes *@aligned_sectors to be updated.
+> > > > + */
+> > > > +static inline void update_aligned_sectors_and_segs(const unsigned int nsegs,
+> > > > +						   const unsigned int sectors,
+> > > > +						   unsigned int *aligned_segs,
+> > > > +				unsigned int *aligned_sectors,
+> > > > +				const unsigned int bio_sectors_alignment)
+> > > > +{
+> > > > +	if (sectors - *aligned_sectors < bio_sectors_alignment)
+> > > > +		return;
+> > > > +	*aligned_sectors = round_down(sectors, bio_sectors_alignment);
+> > > > +	*aligned_segs = nsegs;
+> > > > +}
+> > > > +
+> > > >  /**
+> > > >   * bvec_split_segs - verify whether or not a bvec should be split in the middle
+> > > >   * @q:        [in] request queue associated with the bio associated with @bv
+> > > > @@ -195,9 +232,12 @@ static inline unsigned get_max_segment_size(const struct request_queue *q,
+> > > >   * the block driver.
+> > > >   */
+> > > >  static bool bvec_split_segs(const struct request_queue *q,
+> > > > -			    const struct bio_vec *bv, unsigned *nsegs,
+> > > > -			    unsigned *sectors, unsigned max_segs,
+> > > > -			    unsigned max_sectors)
+> > > > +			    const struct bio_vec *bv, unsigned int *nsegs,
+> > > > +			    unsigned int *sectors, unsigned int *aligned_segs,
+> > > > +			    unsigned int *aligned_sectors,
+> > > > +			    unsigned int bio_sectors_alignment,
+> > > > +			    unsigned int max_segs,
+> > > > +			    unsigned int max_sectors)
+> > > >  {
+> > > >  	unsigned max_len = (min(max_sectors, UINT_MAX >> 9) - *sectors) << 9;
+> > > >  	unsigned len = min(bv->bv_len, max_len);
+> > > > @@ -211,6 +251,11 @@ static bool bvec_split_segs(const struct request_queue *q,
+> > > >  
+> > > >  		(*nsegs)++;
+> > > >  		total_len += seg_size;
+> > > > +		update_aligned_sectors_and_segs(*nsegs,
+> > > > +						*sectors + (total_len >> 9),
+> > > > +						aligned_segs,
+> > > > +						aligned_sectors,
+> > > > +						bio_sectors_alignment);
+> > > >  		len -= seg_size;
+> > > >  
+> > > >  		if ((bv->bv_offset + total_len) & queue_virt_boundary(q))
+> > > > @@ -235,6 +280,8 @@ static bool bvec_split_segs(const struct request_queue *q,
+> > > >   * following is guaranteed for the cloned bio:
+> > > >   * - That it has at most get_max_io_size(@q, @bio) sectors.
+> > > >   * - That it has at most queue_max_segments(@q) segments.
+> > > > + * - That the number of sectors in the returned bio is aligned to
+> > > > + *   blk_crypto_bio_sectors_alignment(@bio)
+> > > >   *
+> > > >   * Except for discard requests the cloned bio will point at the bi_io_vec of
+> > > >   * the original bio. It is the responsibility of the caller to ensure that the
+> > > > @@ -252,6 +299,9 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+> > > >  	unsigned nsegs = 0, sectors = 0;
+> > > >  	const unsigned max_sectors = get_max_io_size(q, bio);
+> > > >  	const unsigned max_segs = queue_max_segments(q);
+> > > > +	const unsigned int bio_sectors_alignment =
+> > > > +					blk_crypto_bio_sectors_alignment(bio);
+> > > > +	unsigned int aligned_segs = 0, aligned_sectors = 0;
+> > > >  
+> > > >  	bio_for_each_bvec(bv, bio, iter) {
+> > > >  		/*
+> > > > @@ -266,8 +316,14 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+> > > >  		    bv.bv_offset + bv.bv_len <= PAGE_SIZE) {
+> > > >  			nsegs++;
+> > > >  			sectors += bv.bv_len >> 9;
+> > > > -		} else if (bvec_split_segs(q, &bv, &nsegs, &sectors, max_segs,
+> > > > -					 max_sectors)) {
+> > > > +			update_aligned_sectors_and_segs(nsegs, sectors,
+> > > > +							&aligned_segs,
+> > > > +							&aligned_sectors,
+> > > > +							bio_sectors_alignment);
+> > > > +		} else if (bvec_split_segs(q, &bv, &nsegs, &sectors,
+> > > > +					   &aligned_segs, &aligned_sectors,
+> > > > +					   bio_sectors_alignment, max_segs,
+> > > > +					   max_sectors)) {
+> > > >  			goto split;
+> > > >  		}
+> > > >  
+> > > > @@ -275,11 +331,24 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+> > > >  		bvprvp = &bvprv;
+> > > >  	}
+> > > >  
+> > > > +	/*
+> > > > +	 * The input bio's number of sectors is assumed to be aligned to
+> > > > +	 * bio_sectors_alignment. If that's the case, then this function should
+> > > > +	 * ensure that aligned_segs == nsegs and aligned_sectors == sectors if
+> > > > +	 * the bio is not going to be split.
+> > > > +	 */
+> > > > +	WARN_ON(aligned_segs != nsegs || aligned_sectors != sectors);
+> > > >  	*segs = nsegs;
+> > > >  	return NULL;
+> > > >  split:
+> > > > -	*segs = nsegs;
+> > > > -	return bio_split(bio, sectors, GFP_NOIO, bs);
+> > > > +	*segs = aligned_segs;
+> > > > +	if (WARN_ON(aligned_sectors == 0))
+> > > > +		goto err;
+> > > > +	return bio_split(bio, aligned_sectors, GFP_NOIO, bs);
+> > > > +err:
+> > > > +	bio->bi_status = BLK_STS_IOERR;
+> > > > +	bio_endio(bio);
+> > > > +	return bio;
+> > > >  }
+> > > 
+> > > This part is pretty complex.  Are you sure it's needed?  How was alignment to
+> > > logical_block_size ensured before?
+> > > 
+> > Afaict, alignment to logical_block_size (lbs) is done by assuming that
+> > bv->bv_len is always lbs aligned (among other things). Is that not the
+> > case?
+> 
+> I believe that's the case; bvecs are logical_block_size aligned.
+> 
+> So the new thing (with data_unit_size > logical_block_size) is that
+> bvec boundaries aren't necessarily valid split points anymore.
+> 
+> > 
+> > If it is the case, that's what we're trying to avoid with this patch (we
+> > want to be able to submit bios that have 2 bvecs that together make up a
+> > single crypto data unit, for example). And this is complex because
+> > multiple segments could "add up" to make up a single crypto data unit,
+> > but this function's job is to limit both the number of segments *and*
+> > the number of sectors - so when ensuring that the number of sectors is
+> > aligned to crypto data unit size, we also want the smallest number of
+> > segments that can make up that aligned number of sectors.
+> 
+> Does the number of physical segments that is calculated have to be exact, or
+> could it be a slight overestimate?  If the purpose of the calculation is just to
+> size scatterlists and to avoid exceeding the hardware limit on the number of
+> physical segments (and at a quick glance that seems to be the purpose, though I
+> didn't look at everything), it seems that a slight overestimate would be okay.
+> 
+> If so, couldn't the number of sectors could simply be rounded down to
+> blk_crypto_bio_sectors_alignment(bio) when blk_bio_segment_split() actually
+> calls bio_split()?  That would be much simpler; why doesn't that work?
+> 
+I was assuming we'd prefer the better bound, but yeah it would be much
+simpler if an overestimate was alright.
 
-There is a conflict with the user visible statx bits 'mount root' and
-'dax'.  The kernel is changing the dax bit to correct this conflict.[1]
-
-Adjust _check_s_dax() to use the new bit.  Because DAX tests do not run
-on root mounts, STATX_ATTR_MOUNT_ROOT should always be 0, therefore we
-can allow either bit to indicate DAX and cover any kernel which may be
-running.
-
-[1] https://lore.kernel.org/lkml/3e28d2c7-fbe5-298a-13ba-dcd8fd504666@redhat.com/
-
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
-
-Changes for V2:
-	Fix bad indentation whitespace.
-
- common/rc | 19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
-
-diff --git a/common/rc b/common/rc
-index b5a504e0dcb4..9418f7bc8dab 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3221,10 +3221,23 @@ _check_s_dax()
- 	local exp_s_dax=$2
- 
- 	local attributes=$($XFS_IO_PROG -c 'statx -r' $target | awk '/stat.attributes / { print $3 }')
--	if [ $exp_s_dax -eq 0 ]; then
--		(( attributes & 0x2000 )) && echo "$target has unexpected S_DAX flag"
-+
-+	# The attribute bit value, STATX_ATTR_DAX (0x2000), conflicted with
-+	# STATX_ATTR_MOUNT_ROOT.  Therefore, STATX_ATTR_DAX was changed to
-+	# 0x00200000.
-+	#
-+	# Because DAX tests do not run on root mounts, STATX_ATTR_MOUNT_ROOT
-+	# should always be 0, therefore we can allow either bit to indicate DAX
-+	# and cover any kernel which may be running.
-+
-+	if [ $(( attributes & 0x00200000 )) -ne 0 ] || [ $(( attributes & 0x2000 )) -ne 0 ]; then
-+		if [ $exp_s_dax -eq 0 ]; then
-+			echo "$target has unexpected S_DAX flag"
-+		fi
- 	else
--		(( attributes & 0x2000 )) || echo "$target doesn't have expected S_DAX flag"
-+		if [ $exp_s_dax -ne 0 ]; then
-+			echo "$target doesn't have expected S_DAX flag"
-+		fi
- 	fi
- }
- 
--- 
-2.28.0.rc0.12.gb6a658bd00c9
-
+I'll look through the users of that estimate to try to gauge better
+whether overestimating is ok to do (although if someone can already
+authoritatively say that it's ok/not ok to overestimate, that would be
+awesome too :)).
+> - Eric
