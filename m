@@ -2,78 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90101C83012
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 16:25:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DA23C64E7C
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 17:11:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D84B21D7F
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 16:25:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE2C32224F
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 17:11:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387404AbgLBQZa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Dec 2020 11:25:30 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:32564 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726670AbgLBQZa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Dec 2020 11:25:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606926244;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=/KvFOz7MMzTDoHF0bJjNyv+MeqNtUt9D2w2PnLZk360=;
-        b=VTsFX55mTLZYLsedCLJEsbLRF6MZwoBLU9RSF4aLZ70ErgdC8AVbUkHXUTUs53/HYOtUJ6
-        sy2q5DUpXCqjUP/0kSVBRZeRKKGhiqIQG98w671EpqTJot0hdmk6HlnCi7DLMEV6xtRoLe
-        xB5cdfU99B6wSRmxfrqBPDAOcJ3M7eE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-139-9wNKgQKzOJy9g31KKd79iw-1; Wed, 02 Dec 2020 11:24:00 -0500
-X-MC-Unique: 9wNKgQKzOJy9g31KKd79iw-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S2387637AbgLBRLd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Dec 2020 12:11:33 -0500
+Received: from sandeen.net ([63.231.237.45]:56874 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728380AbgLBRLc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Dec 2020 12:11:32 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EAA4F100E421;
-        Wed,  2 Dec 2020 16:23:58 +0000 (UTC)
-Received: from warthog.procyon.org.uk (ovpn-112-159.rdu2.redhat.com [10.10.112.159])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 94C285D9C6;
-        Wed,  2 Dec 2020 16:23:53 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-        Kingdom.
-        Registered in England and Wales under Company Registration No. 3798903
-From:   David Howells <dhowells@redhat.com>
-In-Reply-To: <CAJfpegt6w4h28VLctpaH46r2pkbcUNJ4pUhwUqZ-zbrOrXPEEQ@mail.gmail.com>
-References: <CAJfpegt6w4h28VLctpaH46r2pkbcUNJ4pUhwUqZ-zbrOrXPEEQ@mail.gmail.com> <3e28d2c7-fbe5-298a-13ba-dcd8fd504666@redhat.com> <20201202160049.GD1447340@iweiny-DESK2.sc.intel.com>
-To:     Miklos Szeredi <miklos@szeredi.hu>
-Cc:     dhowells@redhat.com, Ira Weiny <ira.weiny@intel.com>,
+        by sandeen.net (Postfix) with ESMTPSA id 1EAB1146296;
+        Wed,  2 Dec 2020 11:10:34 -0600 (CST)
+To:     ira.weiny@intel.com, fstests@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Eric Sandeen <sandeen@redhat.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Miklos Szeredi <mszeredi@redhat.com>,
-        linux-fsdevel@vger.kernel.org,
-        linux-man <linux-man@vger.kernel.org>,
-        linux-kernel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>,
-        linux-ext4@vger.kernel.org, Xiaoli Feng <xifeng@redhat.com>
-Subject: Re: [PATCH V2] uapi: fix statx attribute value overlap for DAX & MOUNT_ROOT
+        David Howells <dhowells@redhat.com>
+References: <20201202160701.1458658-1-ira.weiny@intel.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [RFC PATCH] common/rc: Fix _check_s_dax() for kernel 5.10
+Message-ID: <b131a2a6-f02f-9a91-4de1-01a77b76577a@sandeen.net>
+Date:   Wed, 2 Dec 2020 11:10:50 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <641396.1606926232.1@warthog.procyon.org.uk>
-Date:   Wed, 02 Dec 2020 16:23:52 +0000
-Message-ID: <641397.1606926232@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <20201202160701.1458658-1-ira.weiny@intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Miklos Szeredi <miklos@szeredi.hu> wrote:
-
-> Stable cc also?
+On 12/2/20 10:07 AM, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
 > 
-> Cc: <stable@vger.kernel.org> # 5.8
+> There is a conflict with the user visible statx bits 'mount root' and
+> 'dax'.  The kernel is shifting the dax bit.[1]
+> 
+> Adjust _check_s_dax() to use the new bit.
+> 
+> [1] https://lore.kernel.org/lkml/3e28d2c7-fbe5-298a-13ba-dcd8fd504666@redhat.com/
+> 
+> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> 
+> ---
+> 
+> I'm not seeing an easy way to check for kernel version.  It seems like that is
+> the right thing to do.  So do I need to do that by hand or is that something
+> xfstests does not worry about?
 
-That seems to be unnecessary, provided there's a Fixes: tag.
+xfstests gets used on distro kernels too, so relying on kernel version isn't
+really something we can use to make determinations like this, unfortunately.
 
-David
+Probably the best we can do is hope that the change makes it to stable and
+distro kernels quickly, and the old flag fades into obscurity.
 
+Maybe worth a comment in the test mentioning the SNAFU, though, for anyone
+investigating it when it fails on older kernels?
+
+> Ira
+> 
+> ---
+>  common/rc | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/common/rc b/common/rc
+> index b5a504e0dcb4..3d45e233954f 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -3222,9 +3222,9 @@ _check_s_dax()
+>  
+>  	local attributes=$($XFS_IO_PROG -c 'statx -r' $target | awk '/stat.attributes / { print $3 }')
+>  	if [ $exp_s_dax -eq 0 ]; then
+> -		(( attributes & 0x2000 )) && echo "$target has unexpected S_DAX flag"
+> +		(( attributes & 0x00200000 )) && echo "$target has unexpected S_DAX flag"
+>  	else
+> -		(( attributes & 0x2000 )) || echo "$target doesn't have expected S_DAX flag"
+> +		(( attributes & 0x00200000 )) || echo "$target doesn't have expected S_DAX flag"
+
+I suppose you could add a test for 0x2000 in this failure case, and echo "Is your kernel missing
+commit xxxxxx?" as another hint.
+
+-Eric
+
+>  	fi
+>  }
+>  
+> 
