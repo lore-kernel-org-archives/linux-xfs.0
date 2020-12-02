@@ -2,141 +2,208 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5849CC64E8A
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 04:21:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34E7CC64E8A
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 07:15:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFD69221FA
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 04:21:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D75252222C
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Dec 2020 07:15:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728311AbgLBEVn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Dec 2020 23:21:43 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:44762 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727375AbgLBEVm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Dec 2020 23:21:42 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B24Ixi9098441;
-        Wed, 2 Dec 2020 04:20:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=IoUSY1Rx9GPU+8n33gzJjRRryGMyGmmSb9uVbdF0/h0=;
- b=LTdz4/2y11iBoFXIscjVNSPNWI2eoj5PBRJP+3t/+zz6KQ/8bCbNtiSBIxRFGqs0IhtV
- wv657qRaudQBbjRyqE6zg4WZ5bZbHKYW9kVVj8Sqinvlv9oJ67xdXgtskNleOR3LiJPm
- 2n0tvhBgG5nC3XSdzSx00JFxW5hiVnwnoIVF4jf47TveTZ1Mnv5bSE50iKx8uqR4GtOX
- irvJsASt9F8zKGmfJoVRTTWl8DTiJM4CmiOqQtpnm4+KCk/5tf5NDB80Tf6wS9Dg/IHC
- gXEozTkGNDyucFnou6G7fdtTpbxcuwrBXVGSu68tHmDbS6O/otBArMnvr4mFC5YgSVYI +w== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 353egkp0xd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 02 Dec 2020 04:20:55 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B24AP4Y072940;
-        Wed, 2 Dec 2020 04:18:55 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 35404nrh7m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Dec 2020 04:18:55 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B24IrjE018314;
-        Wed, 2 Dec 2020 04:18:53 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 02 Dec 2020 04:18:53 +0000
-Date:   Tue, 1 Dec 2020 20:18:52 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     torvalds@linux-foundation.org,
-        Miklos Szeredi <mszeredi@redhat.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        David Howells <dhowells@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-man@vger.kernel.org,
-        linux-kernel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>,
-        linux-ext4@vger.kernel.org, Xiaoli Feng <xifeng@redhat.com>
-Subject: Re: [PATCH V2] uapi: fix statx attribute value overlap for DAX &
- MOUNT_ROOT
-Message-ID: <20201202041852.GA106272@magnolia>
-References: <3e28d2c7-fbe5-298a-13ba-dcd8fd504666@redhat.com>
+        id S1728774AbgLBHO5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Dec 2020 02:14:57 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:13741 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728105AbgLBHO5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Dec 2020 02:14:57 -0500
+X-IronPort-AV: E=Sophos;i="5.78,385,1599494400"; 
+   d="scan'208";a="101976775"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 02 Dec 2020 15:14:10 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id 11B374CE5CF5;
+        Wed,  2 Dec 2020 15:14:06 +0800 (CST)
+Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
+ (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 2 Dec
+ 2020 15:14:05 +0800
+Subject: Re: [RFC PATCH v2 0/6] fsdax: introduce fs query to support reflink
+To:     Dave Chinner <david@fromorbit.com>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
+        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <hch@lst.de>, <song@kernel.org>, <rgoldwyn@suse.de>,
+        <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
+References: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
+ <20201129224723.GG2842436@dread.disaster.area>
+From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <e0aa187f-e124-1ddc-0f5a-6a8c41a3dc66@cn.fujitsu.com>
+Date:   Wed, 2 Dec 2020 15:12:20 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3e28d2c7-fbe5-298a-13ba-dcd8fd504666@redhat.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 bulkscore=0
- malwarescore=0 mlxscore=0 mlxlogscore=999 phishscore=0 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012020024
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=1
- phishscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
- priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012020025
+In-Reply-To: <20201129224723.GG2842436@dread.disaster.area>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
+X-yoursite-MailScanner-ID: 11B374CE5CF5.A2628
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 01, 2020 at 05:21:40PM -0600, Eric Sandeen wrote:
-> [*] Note: This needs to be merged as soon as possible as it's introducing an incompatible UAPI change...
-> 
-> STATX_ATTR_MOUNT_ROOT and STATX_ATTR_DAX got merged with the same value,
-> so one of them needs fixing. Move STATX_ATTR_DAX.
-> 
-> While we're in here, clarify the value-matching scheme for some of the
-> attributes, and explain why the value for DAX does not match.
-> 
-> Fixes: 80340fe3605c ("statx: add mount_root")
-> Fixes: 712b2698e4c0 ("fs/stat: Define DAX statx attribute")
-> Reported-by: David Howells <dhowells@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Reviewed-by: David Howells <dhowells@redhat.com>
+Hi Dave,
 
-Looks fine to me,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+On 2020/11/30 上午6:47, Dave Chinner wrote:
+> On Mon, Nov 23, 2020 at 08:41:10AM +0800, Shiyang Ruan wrote:
+>> 
+>> The call trace is like this:
+>>   memory_failure()
+>>     pgmap->ops->memory_failure()   => pmem_pgmap_memory_failure()
+>>      gendisk->fops->block_lost()   => pmem_block_lost() or
+>>                                           md_blk_block_lost()
+>>       sb->s_ops->storage_lost()    => xfs_fs_storage_lost()
+>>        xfs_rmap_query_range()
+>>         xfs_storage_lost_helper()
+>>          mf_recover_controller->recover_fn => \
+>>                              memory_failure_dev_pagemap_kill_procs()
+>>
+>> The collect_procs() and kill_procs() are moved into a callback which
+>> is passed from memory_failure() to xfs_storage_lost_helper().  So we
+>> can call it when a file assocaited is found, instead of creating a
+>> file list and iterate it.
+>>
+>> The fsdax & reflink support for XFS is not contained in this patchset.
+> 
+> This looks promising - the overall architecture is a lot more
+> generic and less dependent on knowing about memory, dax or memory
+> failures. A few comments that I think would further improve
+> understanding the patchset and the implementation:
 
---D
+Thanks for your kindly comment.  It gives me confidence.
 
-> ---
-> V2: Change flag value per Darrick Wong
->     Tweak comment per Darrick Wong
->     Add Fixes: tags & reported-by & RVB per dhowells
 > 
->  include/uapi/linux/stat.h | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
+> - the order of the patches is inverted. It should start with a
+>    single patch introducing the mf_recover_controller structure for
+>    callbacks, then introduce pgmap->ops->memory_failure, then
+>    ->block_lost, then the pmem and md implementations of ->block
+>    list, then ->storage_lost and the XFS implementations of
+>    ->storage_lost.
+
+Yes, it will be easier to understand the patchset in this order.
+
+But I have something unsure: for example, I introduce ->memory_failure() 
+firstly, but the implementation of ->memory_failure() needs to call 
+->block_lost() which is supposed to be introduced in the next patch. So, 
+I am not sure the code is supposed to be what in the implementation of 
+->memory_failure() in pmem?  To avoid this situation, I committed the 
+patches in the inverted order: lowest level first, then its caller, and 
+then caller's caller.
+
+I am trying to sort out the order.  How about this:
+  Patch i.
+    Introduce ->memory_failure()
+       - just introduce interface, without implementation
+  Patch i++.
+    Introduce ->block_lost()
+       - introduce interface and implement ->memory_failure()
+          in pmem, so that it can call ->block_lost()
+  Patch i++.
+    (similar with above, skip...)
+
 > 
-> diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
-> index 82cc58fe9368..1500a0f58041 100644
-> --- a/include/uapi/linux/stat.h
-> +++ b/include/uapi/linux/stat.h
-> @@ -171,9 +171,12 @@ struct statx {
->   * be of use to ordinary userspace programs such as GUIs or ls rather than
->   * specialised tools.
->   *
-> - * Note that the flags marked [I] correspond to generic FS_IOC_FLAGS
-> + * Note that the flags marked [I] correspond to the FS_IOC_SETFLAGS flags
->   * semantically.  Where possible, the numerical value is picked to correspond
-> - * also.
-> + * also.  Note that the DAX attribute indicates that the file is in the CPU
-> + * direct access state.  It does not correspond to the per-inode flag that
-> + * some filesystems support.
-> + *
->   */
->  #define STATX_ATTR_COMPRESSED		0x00000004 /* [I] File is compressed by the fs */
->  #define STATX_ATTR_IMMUTABLE		0x00000010 /* [I] File is marked immutable */
-> @@ -183,7 +186,7 @@ struct statx {
->  #define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
->  #define STATX_ATTR_MOUNT_ROOT		0x00002000 /* Root of a mount */
->  #define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
-> -#define STATX_ATTR_DAX			0x00002000 /* [I] File is DAX */
-> +#define STATX_ATTR_DAX			0x00200000 /* File is currently in DAX state */
->  
->  
->  #endif /* _UAPI_LINUX_STAT_H */
-> -- 
-> 2.17.0
+> - I think the names "block_lost" and "storage_lost" are misleading.
+>    It's more like a "media failure" or a general "data corruption"
+>    event at a specific physical location. The data may not be "lost"
+>    but only damaged, so we might be able to recover from it without
+>    "losing" anything. Hence I think they could be better named,
+>    perhaps just "->corrupt_range"
+
+'corrupt' sounds better.  (I'm not good at naming functions...)
+
 > 
+> - need to pass a {offset,len} pair through the chain, not just a
+>    single offset. This will allow other types of devices to report
+>    different ranges of failures, from a single sector to an entire
+>    device.
+
+Yes, it's better to add the length.  I restrictively thought that 
+memory-failure on pmem should affect one single page at one time.
+
+> 
+> - I'm not sure that passing the mf_recover_controller structure
+>    through the corruption event chain is the right thing to do here.
+>    A block device could generate this storage failure callback if it
+>    detects an unrecoverable error (e.g. during a MD media scrub or
+>    rebuild/resilver failure) and in that case we don't have PFNs or
+>    memory device failure functions to perform.
+> 
+>    IOWs, I think the action that is taken needs to be independent of
+>    the source that generated the error. Even for a pmem device, we
+>    can be using the page cache, so it may be possible to recover the
+>    pmem error by writing the cached page (if it exists) back over the
+>    pmem.
+> 
+>    Hence I think that the recover function probably needs to be moved
+>    to the address space ops, because what we do to recover from the
+>    error is going to be dependent on type of mapping the filesystem
+>    is using. If it's a DAX mapping, we call back into a generic DAX
+>    function that does the vma walk and process kill functions. If it
+>    is a page cache mapping, then if the page is cached then we can
+>    try to re-write it to disk to fix the bad data, otherwise we treat
+>    it like a writeback error and report it on the next
+>    write/fsync/close operation done on that file.
+> 
+>    This gets rid of the mf_recover_controller altogether and allows
+>    the interface to be used by any sort of block device for any sort
+>    of bottom-up reporting of media/device failures.
+
+Moving the recover function to the address_space ops looks a better 
+idea. But I think that the error handler for page cache mapping is 
+finished well in memory-failure.  The memory-failure is also reused to 
+handles anonymous page.  If we move the recover function to 
+address_space ops, I think we also need to refactor the existing handler 
+for page cache mapping, which may affect anonymous page handling.  This 
+makes me confused...
+
+
+I rewrote the call trace:
+memory_failure()
+  * dax mapping case
+  pgmap->ops->memory_failure()          =>
+                                    pmem_pgmap_memory_failure()
+   gendisk->fops->block_corrupt_range() =>
+                                    - pmem_block_corrupt_range()
+                                    - md_blk_block_corrupt_range()
+    sb->s_ops->storage_currupt_range()  =>
+                                    xfs_fs_storage_corrupt_range()
+     xfs_rmap_query_range()
+      xfs_storage_lost_helper()
+       mapping->a_ops->corrupt_range()  =>
+                                    xfs_dax_aops.xfs_dax_corrupt_range
+        memory_failure_dev_pagemap_kill_procs()
+
+  * page cache mapping case
+  mapping->a_ops->corrupt_range()       =>
+                                    xfs_address_space_operations.xfs_xxx
+   memory_failure_generic_kill_procs()
+
+It's rough and not completed yet.  Hope for your comment.
+
+-- 
+Thanks,
+Ruan Shiyang.
+
+> 
+> Cheers,
+> 
+> Dave.
+> 
+
+
