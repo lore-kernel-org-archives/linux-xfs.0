@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AB91C4361B
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 16:13:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94B9CC4361A
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 16:13:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 321AC207A9
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 16:13:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42A77207A9
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 16:13:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728490AbgLCQNJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Dec 2020 11:13:09 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:45369 "EHLO
+        id S1731007AbgLCQNN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Dec 2020 11:13:13 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:47484 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726032AbgLCQNJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 11:13:09 -0500
+        by vger.kernel.org with ESMTP id S1728605AbgLCQNN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 11:13:13 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607011902;
+        s=mimecast20190719; t=1607011906;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=Mys+GuMFRrDSDQrGANwQvd0NQVIOKbsEJ/00UybyvuU=;
-        b=jKqVlIM8idDolf5p1IysNfdsQf4lcf8ZCQknwQ7L7az5lbHJJFDxu/jMOwBwti4YT1rQlz
-        4fB6VAVUCfhwBXkZkEhrGWIAOGNcdAwPQNsNup06/+KKv3HofqIPyu/zM1+qo1/86nx3Hy
-        +WDJxut12K4xojKAX23JKiBNuDsgbNI=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-451-iSULhOZ4P-uOswzRylnRzw-1; Thu, 03 Dec 2020 11:11:40 -0500
-X-MC-Unique: iSULhOZ4P-uOswzRylnRzw-1
-Received: by mail-pj1-f71.google.com with SMTP id p20so1622434pjz.0
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Dec 2020 08:11:40 -0800 (PST)
+        bh=rV11VsE1m0UBE9TrAynYMIvdgOzAACar4YQIU5mZkHM=;
+        b=BRohluQ9dfaB/2/l+XHqg6zH7w7p5v7Zn9Dt5pBLGBTMJ9RSb3jxOoYrjpiYUUUeELI9us
+        AYezPbVSu09BnQQXkc/K4607u4Zj3Bg9yMFiKaU1m8irqbbP+vPhY+z2ODDCjyo/RqGbDN
+        ORM29fWaG0Gd9TevTQ003TCcX5qXmcE=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-339-8eZhP8W6P6aVCmiHEYfmcA-1; Thu, 03 Dec 2020 11:11:44 -0500
+X-MC-Unique: 8eZhP8W6P6aVCmiHEYfmcA-1
+Received: by mail-pl1-f200.google.com with SMTP id x11so1457041plv.7
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Dec 2020 08:11:44 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=Mys+GuMFRrDSDQrGANwQvd0NQVIOKbsEJ/00UybyvuU=;
-        b=Z4o2Ihd5jnLnJ40bPw4GMJOAhuZbBc5hQrnf133iCMykwQG8SakVfrXsnYPGyTDViF
-         RB/d4DT7Hs4yS2DMx0pWyhS+zgZ9evMEIZ47tnbWEg3EvLNdgGw81oMtAfrmcfHNDJCk
-         fXl4BCU/bILcHX78n24XNbJ0c1D982X/vciw5lm+yZuYhy+C5k39IsRpFcFDZq27jP+B
-         3lEdMqbqdg8em+4JfUyOJzCSgym0N/64MTzaFj1IBmBR/LPxMb9UsTJimnnnR5nOTyKw
-         zOxJ4H5+ncMYMI6az23udpjuXfenNv/XLnXtmXEiJzt0PSh71PwOo2PmKtM+alBn/MXF
-         dIbA==
-X-Gm-Message-State: AOAM5338XfjKN30nsARUlPXjc4y23ouYaXJHeXYpz9cfky4vBa8UXu2o
-        oeaKIEmTSPiBx9NhZQJFJ/BXScffpwNauC83On8AEdS6CFL427YOHoINPnZHwVA6Kzccd6iccam
-        XhshPhjzX+9Q4CqLDUwIZCUMQrLx0K1SnDw24UjIHhOguWNA6r/BPlwVH7r8Xubz7OVY9AsNcRQ
+        bh=rV11VsE1m0UBE9TrAynYMIvdgOzAACar4YQIU5mZkHM=;
+        b=mr82Qy93NmlwHzS1yBB98vBppIaolqxo6YhGUEjmER3ynU3h9DEMFvA3uThdruDAdP
+         Ie8BK2iKeU7LAekvZ1mqIm8s/l0NKN8474r5aew102i5l6MbSShbvVpq0BswjjPNKriC
+         XjSTk23oREbrkp7v8e81R5VwPFiksILgpiQ4mW2BwhuDUfGi0pV/RWb2qTX5Q+1Ce6gs
+         Htap/0m8JDdbWq9yswo9x7CbzWawbb/y4TTT2lN5Yb2HeTDcKZzzXGcYDiLKDYik+qRp
+         zArO4WbuSdvGZ0/B/ihIE9b+TuTtGXHgULy5j9273kv7wYDUi781zhPhz5yM33I01dSs
+         O9ug==
+X-Gm-Message-State: AOAM5305bj+IslwGyxeqZuqal67g2lpzuepQ5PvgsoslzYCkHJUQtLHT
+        vRNmCyrtLOJ58VBFLLyBFCzFEaIVbGh0K+L+6ZBCrt2VFC/kqM6umoKBcVSgj/JCS0Cbe2Lt5gB
+        JPQ1YIOjeWgtOvQfMkwdEMnjWIGJRPTDmC3xq3dkXvRvHFdkXiePbqHNy9rs8k3oBiMCzMlUBiQ
         ==
-X-Received: by 2002:a17:90b:1894:: with SMTP id mn20mr3712570pjb.100.1607011898728;
-        Thu, 03 Dec 2020 08:11:38 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJx9BTuSLqNFnGbX6yxMW3gAEZS9+CV6j03OcSvBqM3H1t+Ii9nTpuLiwhzU70lMkMdn2Pn+wg==
-X-Received: by 2002:a17:90b:1894:: with SMTP id mn20mr3712528pjb.100.1607011898195;
-        Thu, 03 Dec 2020 08:11:38 -0800 (PST)
+X-Received: by 2002:a63:a70d:: with SMTP id d13mr3649356pgf.15.1607011903252;
+        Thu, 03 Dec 2020 08:11:43 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJzTsQPXxQiGuMFO7oxJ0Bl9CufjDV7lmQFLiOlSyr/yKq45+32vcGkB2s0GCnPoJYA8cZdd2Q==
+X-Received: by 2002:a63:a70d:: with SMTP id d13mr3649330pgf.15.1607011902895;
+        Thu, 03 Dec 2020 08:11:42 -0800 (PST)
 Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id l1sm1738798pgg.4.2020.12.03.08.11.35
+        by smtp.gmail.com with ESMTPSA id l1sm1738798pgg.4.2020.12.03.08.11.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Dec 2020 08:11:37 -0800 (PST)
+        Thu, 03 Dec 2020 08:11:42 -0800 (PST)
 From:   Gao Xiang <hsiangkao@redhat.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
@@ -64,9 +64,9 @@ Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         Dave Chinner <dchinner@redhat.com>,
         Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH v2 4/6] xfs: move xfs_dialloc_roll() into xfs_dialloc()
-Date:   Fri,  4 Dec 2020 00:10:26 +0800
-Message-Id: <20201203161028.1900929-5-hsiangkao@redhat.com>
+Subject: [PATCH v2 5/6] xfs: spilt xfs_dialloc() into 2 functions
+Date:   Fri,  4 Dec 2020 00:10:27 +0800
+Message-Id: <20201203161028.1900929-6-hsiangkao@redhat.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20201203161028.1900929-1-hsiangkao@redhat.com>
 References: <20201203161028.1900929-1-hsiangkao@redhat.com>
@@ -76,248 +76,237 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Get rid of the confusing ialloc_context and failure handling around
-xfs_dialloc() by moving xfs_dialloc_roll() into xfs_dialloc().
+This patch explicitly separates free inode chunk allocation and
+inode allocation into two individual high level operations.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 57 ++++++++++++--------------------------
- fs/xfs/libxfs/xfs_ialloc.h | 22 +--------------
- fs/xfs/xfs_inode.c         | 24 +---------------
- 3 files changed, 20 insertions(+), 83 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 59 +++++++++++++++++---------------------
+ fs/xfs/libxfs/xfs_ialloc.h | 20 +++++++++----
+ fs/xfs/xfs_inode.c         | 19 ++++++++----
+ 3 files changed, 55 insertions(+), 43 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index d5dc3167e2ff..d2d7378abf49 100644
+index d2d7378abf49..597629353d4d 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1682,7 +1682,7 @@ xfs_dialloc_ag(
- 	return error;
+@@ -1570,7 +1570,7 @@ xfs_dialloc_ag_update_inobt(
+  * The caller selected an AG for us, and made sure that free inodes are
+  * available.
+  */
+-STATIC int
++int
+ xfs_dialloc_ag(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buf		*agbp,
+@@ -1728,21 +1728,22 @@ xfs_dialloc_roll(
  }
  
--int
-+static int
- xfs_dialloc_roll(
- 	struct xfs_trans	**tpp,
- 	struct xfs_buf		*agibp)
-@@ -1733,30 +1733,18 @@ xfs_dialloc_roll(
-  * Mode is used to tell whether the new inode will need space, and whether it
-  * is a directory.
+ /*
+- * Allocate an inode on disk.
++ * Select and prepare an AG for inode allocation.
   *
-- * This function is designed to be called twice if it has to do an allocation
-- * to make more free inodes.  On the first call, *IO_agbp should be set to NULL.
-- * If an inode is available without having to performn an allocation, an inode
-- * number is returned.  In this case, *IO_agbp is set to NULL.  If an allocation
-- * needs to be done, xfs_dialloc returns the current AGI buffer in *IO_agbp.
-- * The caller should then commit the current transaction, allocate a
-- * new transaction, and call xfs_dialloc() again, passing in the previous value
-- * of *IO_agbp.  IO_agbp should be held across the transactions. Since the AGI
-- * buffer is locked across the two calls, the second call is guaranteed to have
-- * a free inode available.
-- *
-  * Once we successfully pick an inode its number is returned and the on-disk
-  * data structures are updated.  The inode itself is not read in, since doing so
-  * would break ordering constraints with xfs_reclaim.
+- * Mode is used to tell whether the new inode will need space, and whether it
+- * is a directory.
++ * Mode is used to tell whether the new inode is a directory and hence where to
++ * locate it.
+  *
+- * Once we successfully pick an inode its number is returned and the on-disk
+- * data structures are updated.  The inode itself is not read in, since doing so
+- * would break ordering constraints with xfs_reclaim.
++ * This function will ensure that the selected AG has free inodes available to
++ * allocate from. The selected AGI will be returned locked to the caller, and it
++ * will allocate more free inodes if required. If no free inodes are found or
++ * can be allocated, no AGI will be returned.
   */
  int
- xfs_dialloc(
--	struct xfs_trans	*tp,
-+	struct xfs_trans	**tpp,
+-xfs_dialloc(
++xfs_dialloc_select_ag(
+ 	struct xfs_trans	**tpp,
  	xfs_ino_t		parent,
  	umode_t			mode,
--	struct xfs_buf		**IO_agbp,
- 	xfs_ino_t		*inop)
+-	xfs_ino_t		*inop)
++	struct xfs_buf		**IO_agbp)
  {
--	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_mount	*mp = (*tpp)->t_mountp;
+ 	struct xfs_mount	*mp = (*tpp)->t_mountp;
  	struct xfs_buf		*agbp;
- 	xfs_agnumber_t		agno;
- 	int			error;
-@@ -1767,21 +1755,11 @@ xfs_dialloc(
+@@ -1755,15 +1756,15 @@ xfs_dialloc(
  	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
  	bool			okalloc = true;
  
--	if (*IO_agbp) {
--		/*
--		 * If the caller passes in a pointer to the AGI buffer,
--		 * continue where we left off before.  In this case, we
--		 * know that the allocation group has free inodes.
--		 */
--		agbp = *IO_agbp;
--		goto out_alloc;
--	}
--
++	*IO_agbp = NULL;
++
  	/*
  	 * We do not have an agbp, so select an initial allocation
  	 * group for inode allocation.
  	 */
--	start_agno = xfs_ialloc_ag_select(tp, parent, mode);
-+	start_agno = xfs_ialloc_ag_select(*tpp, parent, mode);
- 	if (start_agno == NULLAGNUMBER) {
- 		*inop = NULLFSINO;
+ 	start_agno = xfs_ialloc_ag_select(*tpp, parent, mode);
+-	if (start_agno == NULLAGNUMBER) {
+-		*inop = NULLFSINO;
++	if (start_agno == NULLAGNUMBER)
  		return 0;
-@@ -1816,7 +1794,7 @@ xfs_dialloc(
- 		}
+-	}
  
+ 	/*
+ 	 * If we have already hit the ceiling of inode blocks then clear
+@@ -1796,7 +1797,7 @@ xfs_dialloc(
  		if (!pag->pagi_init) {
--			error = xfs_ialloc_pagi_init(mp, tp, agno);
-+			error = xfs_ialloc_pagi_init(mp, *tpp, agno);
+ 			error = xfs_ialloc_pagi_init(mp, *tpp, agno);
  			if (error)
- 				goto out_error;
+-				goto out_error;
++				break;
  		}
-@@ -1831,7 +1809,7 @@ xfs_dialloc(
- 		 * Then read in the AGI buffer and recheck with the AGI buffer
- 		 * lock held.
+ 
+ 		/*
+@@ -1811,11 +1812,12 @@ xfs_dialloc(
  		 */
--		error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
-+		error = xfs_ialloc_read_agi(mp, *tpp, agno, &agbp);
+ 		error = xfs_ialloc_read_agi(mp, *tpp, agno, &agbp);
  		if (error)
- 			goto out_error;
+-			goto out_error;
++			break;
  
-@@ -1844,9 +1822,9 @@ xfs_dialloc(
- 			goto nextag_relse_buffer;
+ 		if (pag->pagi_freecount) {
+ 			xfs_perag_put(pag);
+-			goto out_alloc;
++			*IO_agbp = agbp;
++			return 0;
+ 		}
  
- 
--		error = xfs_ialloc_ag_alloc(tp, agbp, &ialloced);
-+		error = xfs_ialloc_ag_alloc(*tpp, agbp, &ialloced);
+ 		if (!okalloc)
+@@ -1826,19 +1828,17 @@ xfs_dialloc(
  		if (error) {
--			xfs_trans_brelse(tp, agbp);
-+			xfs_trans_brelse(*tpp, agbp);
+ 			xfs_trans_brelse(*tpp, agbp);
  
- 			if (error != -ENOSPC)
- 				goto out_error;
-@@ -1858,21 +1836,23 @@ xfs_dialloc(
+-			if (error != -ENOSPC)
+-				goto out_error;
+-
+-			xfs_perag_put(pag);
+-			*inop = NULLFSINO;
+-			return 0;
++			if (error == -ENOSPC)
++				error = 0;
++			break;
+ 		}
  
  		if (ialloced) {
  			/*
--			 * We successfully allocated some inodes, return
--			 * the current context to the caller so that it
--			 * can commit the current transaction and call
--			 * us again where we left off.
-+			 * We successfully allocated some inodes, roll the
-+			 * transaction so they can allocate one of the free
-+			 * inodes we just prepared for them.
+-			 * We successfully allocated some inodes, roll the
+-			 * transaction so they can allocate one of the free
+-			 * inodes we just prepared for them.
++			 * We successfully allocated some inodes, so roll the
++			 * transaction and return the locked AGI buffer to the
++			 * caller so they can allocate one of the free inodes we
++			 * just prepared for them.
  			 */
  			ASSERT(pag->pagi_freecount > 0);
  			xfs_perag_put(pag);
+@@ -1847,8 +1847,8 @@ xfs_dialloc(
+ 			if (error)
+ 				return error;
  
--			*IO_agbp = agbp;
-+			error = xfs_dialloc_roll(tpp, agbp);
-+			if (error)
-+				return error;
-+
- 			*inop = NULLFSINO;
--			return 0;
-+			goto out_alloc;
+-			*inop = NULLFSINO;
+-			goto out_alloc;
++			*IO_agbp = agbp;
++			return 0;
  		}
  
  nextag_relse_buffer:
--		xfs_trans_brelse(tp, agbp);
-+		xfs_trans_brelse(*tpp, agbp);
- nextag:
+@@ -1857,15 +1857,10 @@ xfs_dialloc(
  		xfs_perag_put(pag);
  		if (++agno == mp->m_sb.sb_agcount)
-@@ -1884,8 +1864,7 @@ xfs_dialloc(
+ 			agno = 0;
+-		if (agno == start_agno) {
+-			*inop = NULLFSINO;
++		if (agno == start_agno)
+ 			return noroom ? -ENOSPC : 0;
+-		}
  	}
  
- out_alloc:
--	*IO_agbp = NULL;
--	return xfs_dialloc_ag(tp, agbp, parent, inop);
-+	return xfs_dialloc_ag(*tpp, agbp, parent, inop);
- out_error:
+-out_alloc:
+-	return xfs_dialloc_ag(*tpp, agbp, parent, inop);
+-out_error:
  	xfs_perag_put(pag);
  	return error;
+ }
 diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-index a145e2a72530..13810ffe4af9 100644
+index 13810ffe4af9..3511086a7ae1 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.h
 +++ b/fs/xfs/libxfs/xfs_ialloc.h
-@@ -32,40 +32,20 @@ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
- 	return xfs_buf_offset(b, o << (mp)->m_sb.sb_inodelog);
- }
- 
--/* XXX: will be removed in the following patch */
--int
--xfs_dialloc_roll(
--	struct xfs_trans	**tpp,
--	struct xfs_buf		*agibp);
--
- /*
-  * Allocate an inode on disk.
+@@ -37,16 +37,26 @@ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
   * Mode is used to tell whether the new inode will need space, and whether
   * it is a directory.
   *
-- * To work within the constraint of one allocation per transaction,
-- * xfs_dialloc() is designed to be called twice if it has to do an
-- * allocation to make more free inodes.  If an inode is
-- * available without an allocation, agbp would be set to the current
-- * agbp and alloc_done set to false.
-- * If an allocation needed to be done, agbp would be set to the
-- * inode header of the allocation group and alloc_done set to true.
-- * The caller should then commit the current transaction and allocate a new
-- * transaction.  xfs_dialloc() should then be called again with
-- * the agbp value returned from the previous call.
-- *
-  * Once we successfully pick an inode its number is returned and the
-  * on-disk data structures are updated.  The inode itself is not read
-  * in, since doing so would break ordering constraints with xfs_reclaim.
-- *
-- * *agbp should be set to NULL on the first call, *alloc_done set to FALSE.
+- * Once we successfully pick an inode its number is returned and the
+- * on-disk data structures are updated.  The inode itself is not read
+- * in, since doing so would break ordering constraints with xfs_reclaim.
++ * There are two phases to inode allocation: selecting an AG and ensuring
++ * that it contains free inodes, followed by allocating one of the free
++ * inodes. xfs_dialloc_select_ag() does the former and returns a locked AGI
++ * to the caller, ensuring that followup call to xfs_dialloc_ag() will
++ * have free inodes to allocate from. xfs_dialloc_ag() will return the inode
++ * number of the free inode we allocated.
   */
  int					/* error */
- xfs_dialloc(
--	struct xfs_trans *tp,		/* transaction pointer */
-+	struct xfs_trans **tpp,		/* double pointer of transaction */
+-xfs_dialloc(
++xfs_dialloc_select_ag(
+ 	struct xfs_trans **tpp,		/* double pointer of transaction */
  	xfs_ino_t	parent,		/* parent inode (directory) */
  	umode_t		mode,		/* mode bits for new inode */
--	struct xfs_buf	**agbp,		/* buf for a.g. inode header */
- 	xfs_ino_t	*inop);		/* inode number allocated */
+-	xfs_ino_t	*inop);		/* inode number allocated */
++	struct xfs_buf	**IO_agbp);
++
++int
++xfs_dialloc_ag(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agbp,
++	xfs_ino_t		parent,
++	xfs_ino_t		*inop);
  
  /*
+  * Free disk inode.  Carefully avoids touching the incore inode, all
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 34eca1624397..c039fc56b396 100644
+index c039fc56b396..d0ae0d6ee892 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -909,7 +909,6 @@ xfs_dir_ialloc(
+@@ -908,10 +908,11 @@ xfs_dir_ialloc(
+ 	xfs_inode_t	**ipp)		/* pointer to inode; it will be
  					   locked. */
  {
- 	xfs_inode_t	*ip;
--	xfs_buf_t	*ialloc_context = NULL;
- 	xfs_ino_t	pino = dp ? dp->i_ino : 0;
- 	xfs_ino_t	ino;
- 	int		error;
-@@ -928,31 +927,10 @@ xfs_dir_ialloc(
+-	xfs_inode_t	*ip;
+-	xfs_ino_t	pino = dp ? dp->i_ino : 0;
+-	xfs_ino_t	ino;
+-	int		error;
++	struct xfs_buf		*agibp;
++	struct xfs_inode	*ip;
++	xfs_ino_t		pino = dp ? dp->i_ino : 0;
++	xfs_ino_t		ino;
++	int			error;
+ 
+ 	ASSERT((*tpp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+ 	*ipp = NULL;
+@@ -927,13 +928,19 @@ xfs_dir_ialloc(
  	 * commit so that no other process can steal the inode(s) that we've
  	 * just allocated.
  	 */
--	error = xfs_dialloc(*tpp, pino, mode, ialloc_context, &ino);
-+	error = xfs_dialloc(tpp, pino, mode, &ino);
+-	error = xfs_dialloc(tpp, pino, mode, &ino);
++	error = xfs_dialloc_select_ag(tpp, pino, mode, &agibp);
  	if (error)
  		return error;
  
--	/*
--	 * If the AGI buffer is non-NULL, then we were unable to get an
--	 * inode in one operation.  We need to commit the current
--	 * transaction and call xfs_ialloc() then.  It is guaranteed
--	 * to succeed the second time.
--	 */
--	if (ialloc_context) {
--		error = xfs_dialloc_roll(tpp, ialloc_context);
--		if (error)
--			return error;
--		/*
--		 * Call dialloc again. Since we've locked out all other
--		 * allocations in this allocation group, this call should
--		 * always succeed.
--		 */
--		error = xfs_dialloc(*tpp, pino, mode, ialloc_context, &ino);
--		if (error)
--			return error;
--		ASSERT(!ialloc_context);
--	}
--
- 	if (ino == NULLFSINO)
+-	if (ino == NULLFSINO)
++	if (!agibp)
  		return -ENOSPC;
  
++	/* Allocate an inode from the selected AG */
++	error = xfs_dialloc_ag(*tpp, agibp, pino, &ino);
++	if (error)
++		return error;
++	ASSERT(ino != NULLFSINO);
++
+ 	/* Initialise the newly allocated inode. */
+ 	ip = xfs_ialloc(*tpp, dp, ino, mode, nlink, rdev, prid);
+ 	if (IS_ERR(ip))
 -- 
 2.18.4
 
