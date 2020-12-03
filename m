@@ -2,101 +2,118 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63209C4361A
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 21:45:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F1B6C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 21:45:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07B8D221F2
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 21:45:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08222221F2
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 21:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728801AbgLCVpL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Dec 2020 16:45:11 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:41544 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728715AbgLCVpL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 16:45:11 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 87B9A1AC8D2;
-        Fri,  4 Dec 2020 08:44:27 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kkwOo-000CAA-P5; Fri, 04 Dec 2020 08:44:26 +1100
-Date:   Fri, 4 Dec 2020 08:44:26 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] [RFC] xfs: initialise attr fork on inode create
-Message-ID: <20201203214426.GE3913616@dread.disaster.area>
-References: <20201202232724.1730114-1-david@fromorbit.com>
- <20201203084012.GA32480@infradead.org>
+        id S1728826AbgLCVpV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Dec 2020 16:45:21 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:35340 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728715AbgLCVpV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 16:45:21 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3LZb7W162324;
+        Thu, 3 Dec 2020 21:44:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=8CnLWe/tyo68lVZokxqvYEcsJl3vfxm5yqYmekjdANI=;
+ b=wmSl8aBRri1xLU26WsD3CnHYk+rL7Y7MeT7QpNwv8Ux5OuderNeiDANatURkJVwiEqSE
+ nPCDxIRxoi4iqMZXLXXNakJR+fGC4t5fwuC3sK7Xfr+tLjxv5iRM9rsxdku5WvuFKLTN
+ mk2F8nNWvYHGwspqup2qYr3lpNIJJrz6hW5+AD/U1eFfT2X0s9bh+4JJoakSBVCg15cJ
+ inffuZMAZHlPhq7S62ZhzylYDGrEUm2xFwVU5dXyTEMZ3ddl7T6+OlGztlO1AAZErI9d
+ 5rUkCUqZ8QLklIfu+5qE+XAKBVL5VP6zcXqTX2ZmMLbN37v8mwP/knUz4TQRHJ4rKL2O jA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 353dyr0dwa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 03 Dec 2020 21:44:37 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3LfYAH194242;
+        Thu, 3 Dec 2020 21:44:37 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 3540g2ghyq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 03 Dec 2020 21:44:37 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0B3LiaFk011794;
+        Thu, 3 Dec 2020 21:44:37 GMT
+Received: from localhost (/10.159.242.140)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 03 Dec 2020 13:44:36 -0800
+Date:   Thu, 3 Dec 2020 13:44:36 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 1/2] xfs: don't catch dax+reflink inodes as corruption in
+ verifier
+Message-ID: <20201203214436.GA629293@magnolia>
+References: <1d87a83e-ba03-b735-f19a-955a09bcdcf7@redhat.com>
+ <4b655a26-0e3c-3da7-2017-6ed88a46a611@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201203084012.GA32480@infradead.org>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
-        a=5oyB3hKR7ax4ijZr7l8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <4b655a26-0e3c-3da7-2017-6ed88a46a611@redhat.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=1
+ phishscore=0 mlxlogscore=999 adultscore=0 mlxscore=0 bulkscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012030124
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
+ clxscore=1015 mlxscore=0 spamscore=0 priorityscore=1501 mlxlogscore=999
+ suspectscore=1 lowpriorityscore=0 phishscore=0 adultscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012030124
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 03, 2020 at 08:40:12AM +0000, Christoph Hellwig wrote:
-> This looks pretty sensible, and pretty simple.  Why the RFC?
+On Tue, Dec 01, 2020 at 01:16:09PM -0600, Eric Sandeen wrote:
+> We don't yet support dax on reflinked files, but that is in the works.
 > 
-> This looks good to me modulo a few tiny nitpicks below:
+> Further, having the flag set does not automatically mean that the inode
+> is actually "in the CPU direct access state," which depends on several
+> other conditions in addition to the flag being set.
 > 
-> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > index 1414ab79eacf..75b44b82ad1f 100644
-> > --- a/fs/xfs/xfs_iops.c
-> > +++ b/fs/xfs/xfs_iops.c
-> > @@ -126,6 +126,7 @@ xfs_cleanup_inode(
-> >  	xfs_remove(XFS_I(dir), &teardown, XFS_I(inode));
-> >  }
-> >  
-> > +
-> >  STATIC int
-> >  xfs_generic_create(
-> >  	struct inode	*dir,
+> As such, we should not catch this as corruption in the verifier - simply
+> not actually enabling S_DAX on reflinked files is enough for now.
 > 
-> Nit: this adds a spuurious empty line.
-
-Fixed.
-
-> > @@ -161,7 +162,14 @@ xfs_generic_create(
-> >  		goto out_free_acl;
-> >  
-> >  	if (!tmpfile) {
-> > -		error = xfs_create(XFS_I(dir), &name, mode, rdev, &ip);
-> > +		bool need_xattr = false;
-> > +
-> > +		if ((IS_ENABLED(CONFIG_SECURITY) && dir->i_sb->s_security) ||
-> > +		    default_acl || acl)
-> > +			need_xattr = true;
-> > +
-> > +		error = xfs_create(XFS_I(dir), &name, mode, rdev,
-> > +					need_xattr, &ip);
+> Fixes: 4f435ebe7d04 ("xfs: don't mix reflink and DAX mode for now")
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.c | 4 ----
+>  1 file changed, 4 deletions(-)
 > 
-> It might be wort to factor the condition into a little helper.  Also
-> I think we also have security labels for O_TMPFILE inodes, so it might
-> be worth plugging into that path as well.
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index c667c63f2cb0..4d7410e49db4 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -547,10 +547,6 @@ xfs_dinode_verify(
+>  	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags & XFS_DIFLAG_REALTIME))
+>  		return __this_address;
+>  
+> -	/* don't let reflink and dax mix */
+> -	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags2 & XFS_DIFLAG2_DAX))
+> -		return __this_address;
 
-Yeah, a helper is a good idea - I just wanted to get some feedback
-first on whether it's a good idea to peek directly at
-i_sb->s_security or whether there is some other way of knowing ahead
-of time that a security xattr is going to be created. I couldn't
-find one, but that doesn't mean such an interface doesn't exist in
-all the twisty passages of the LSM layers...
+If we're going to let in inodes with the DAX and REFLINK iflags set,
+doesn't that mean that xfs_inode_should_enable_dax needs to return false
+if REFLINK is set?
 
-You didn't shout and run screaming, so that's a positive :)
+--D
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> -
+>  	/* COW extent size hint validation */
+>  	fa = xfs_inode_validate_cowextsize(mp, be32_to_cpu(dip->di_cowextsize),
+>  			mode, flags, flags2);
+> -- 
+> 2.17.0
+> 
