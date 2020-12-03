@@ -5,175 +5,164 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FE82C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 19:07:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6DC3C4361A
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 19:09:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E00AE221E7
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 19:07:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FE6421D95
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 19:09:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727156AbgLCTHD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Dec 2020 14:07:03 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:51526 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725981AbgLCTHC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 14:07:02 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3IwLaQ021703;
-        Thu, 3 Dec 2020 19:06:20 GMT
+        id S1726121AbgLCTJP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Dec 2020 14:09:15 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:43494 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725793AbgLCTJP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 14:09:15 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3IwM0d160694;
+        Thu, 3 Dec 2020 19:08:27 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=yH66ZOVSWrANUbMQ027t27rUTWgbFMupCfCbxnqnZLU=;
- b=dnv3U+xhKDcac2qiRcqX7R2ktIrwnipsFnG2kRTHBBHoI5p5Dgzyi1XTfhDm0oXzRTUu
- +mBp+v9EDnaFPdM3tfidFP+F0GH+iDgpsiVgUCEOb/Aw/VgRrKlbfYO2maEalE2ybh/r
- 8pM7AyqAZpFHurQ9d+svk54IMVaTUpJz44c930TN/RAAyDe8w02pL0ZjqqgqzlAHzNwh
- rxrLRazUqNmv2leJkxmYbKBD0G8hGd3SuJ9OQS1KrHXlWZEcmo6MYQHWyTqyVOWQjB/a
- ZgE3bZ6VdgGlt5Rv+UfG6jp+bmz9kD4B383wE5T7+MssAxx9LFr2AXfylF/C9j41dhPU XA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 353egkyq4e-1
+ bh=uimChc3D9LBOpe4H/4kfDMrpVj4jORFX8H6D3X3Sd9U=;
+ b=ywS0KY40KH6EdIF9I76NJ9Dxp8Kv2dJZeraKJD4aP5rxpwp4dcDGq4Zj9ue6vp9IxT1J
+ dLrR8A7brkLayc/5dEl+eW7VG96KP2Qn/C0Ptv5b3JY6bSROFr4sAt10ZVuAvRXfFZGW
+ qf0ZwGyS0zgHwNKD7VgBwchjuiJGXHCtfNPywGDUkficmYEGDMBLscY40pW1sr+E7Ehy
+ efyhJNpRstdZY/2vIY9AyPtjyqeIQLnePnf/1zRkJrqrYkGFPsOvzlfr9IzgnB1d6one
+ YScC68Zn9hGGyxBxrWiPSjUivV8Xpzuiepn8WXn2B3hca5hrR/HwPM+u6PehuGPq36Gp fA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 353dyqyt6y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 03 Dec 2020 19:06:20 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3IuOus067387;
-        Thu, 3 Dec 2020 19:06:20 GMT
+        Thu, 03 Dec 2020 19:08:26 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3IuD0M101453;
+        Thu, 3 Dec 2020 19:08:26 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 3540awn7nm-1
+        by aserp3020.oracle.com with ESMTP id 3540f29hvd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 03 Dec 2020 19:06:19 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B3J6JMS028733;
-        Thu, 3 Dec 2020 19:06:19 GMT
+        Thu, 03 Dec 2020 19:08:25 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B3J8O9q029797;
+        Thu, 3 Dec 2020 19:08:25 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 03 Dec 2020 11:06:18 -0800
-Date:   Thu, 3 Dec 2020 11:06:16 -0800
+        with ESMTP ; Thu, 03 Dec 2020 11:08:24 -0800
+Date:   Thu, 3 Dec 2020 11:08:23 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V11 10/14] xfs: Introduce error injection to reduce
- maximum inode fork extent count
-Message-ID: <20201203190616.GC106272@magnolia>
-References: <20201117134416.207945-1-chandanrlinux@gmail.com>
- <20201117134416.207945-11-chandanrlinux@gmail.com>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 6/6] xfs: kill ialloced in xfs_dialloc()
+Message-ID: <20201203190823.GD106272@magnolia>
+References: <20201203161028.1900929-1-hsiangkao@redhat.com>
+ <20201203161028.1900929-7-hsiangkao@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201117134416.207945-11-chandanrlinux@gmail.com>
+In-Reply-To: <20201203161028.1900929-7-hsiangkao@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- phishscore=0 mlxscore=0 adultscore=0 malwarescore=0 suspectscore=1
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012030110
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=1
- phishscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
- priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 phishscore=0
+ suspectscore=1 bulkscore=0 spamscore=0 adultscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2012030110
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
+ clxscore=1015 mlxscore=0 spamscore=0 priorityscore=1501 mlxlogscore=999
+ suspectscore=1 lowpriorityscore=0 phishscore=0 adultscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012030110
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 17, 2020 at 07:14:12PM +0530, Chandan Babu R wrote:
-> This commit adds XFS_ERRTAG_REDUCE_MAX_IEXTENTS error tag which enables
-> userspace programs to test "Inode fork extent count overflow detection"
-> by reducing maximum possible inode fork extent count to 35.
+On Fri, Dec 04, 2020 at 12:10:28AM +0800, Gao Xiang wrote:
+> It's enough to just use return code, and get rid of an argument.
 > 
-> With block size of 4k, xattr (with local value) insert operation would
-> require in the worst case "XFS_DA_NODE_MAXDEPTH + 1" plus
-> "XFS_DA_NODE_MAXDEPTH + (64k / 4k)" (required for guaranteeing removal
-> of a maximum sized xattr) number of extents. This evaluates to ~28
-> extents. To allow for additions of two or more xattrs during extent
-> overflow testing, the pseudo max extent count is set to 35.
-> 
-> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> ---
->  fs/xfs/libxfs/xfs_errortag.h   | 4 +++-
->  fs/xfs/libxfs/xfs_inode_fork.c | 4 ++++
->  fs/xfs/xfs_error.c             | 3 +++
->  3 files changed, 10 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-> index 53b305dea381..1c56fcceeea6 100644
-> --- a/fs/xfs/libxfs/xfs_errortag.h
-> +++ b/fs/xfs/libxfs/xfs_errortag.h
-> @@ -56,7 +56,8 @@
->  #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
->  #define XFS_ERRTAG_IUNLINK_FALLBACK			34
->  #define XFS_ERRTAG_BUF_IOERROR				35
-> -#define XFS_ERRTAG_MAX					36
-> +#define XFS_ERRTAG_REDUCE_MAX_IEXTENTS			36
-> +#define XFS_ERRTAG_MAX					37
->  
->  /*
->   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-> @@ -97,5 +98,6 @@
->  #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
->  #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
->  #define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
-> +#define XFS_RANDOM_REDUCE_MAX_IEXTENTS			1
->  
->  #endif /* __XFS_ERRORTAG_H_ */
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 8d48716547e5..989b20977654 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -24,6 +24,7 @@
->  #include "xfs_dir2_priv.h"
->  #include "xfs_attr_leaf.h"
->  #include "xfs_types.h"
-> +#include "xfs_errortag.h"
->  
->  kmem_zone_t *xfs_ifork_zone;
->  
-> @@ -745,6 +746,9 @@ xfs_iext_count_may_overflow(
->  
->  	max_exts = (whichfork == XFS_ATTR_FORK) ? MAXAEXTNUM : MAXEXTNUM;
->  
-> +	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
-> +		max_exts = 35;
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 
-Please add a comment here explaining why 35.
-
-Sorry about the longish review delay, last week was a US holiday and
-this week I have eye problems again. :(
+LGTM,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c | 24 +++++++++---------------
+>  1 file changed, 9 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 597629353d4d..ec63afb59156 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -607,13 +607,13 @@ xfs_inobt_insert_sprec(
+>  
+>  /*
+>   * Allocate new inodes in the allocation group specified by agbp.
+> - * Return 0 for success, else error code.
+> + * Returns 0 if inodes were allocated in this AG; 1 if there was no space
+> + * in this AG; or the usual negative error code.
+>   */
+>  STATIC int
+>  xfs_ialloc_ag_alloc(
+>  	struct xfs_trans	*tp,
+> -	struct xfs_buf		*agbp,
+> -	int			*alloc)
+> +	struct xfs_buf		*agbp)
+>  {
+>  	struct xfs_agi		*agi;
+>  	struct xfs_alloc_arg	args;
+> @@ -795,10 +795,9 @@ xfs_ialloc_ag_alloc(
+>  		allocmask = (1 << (newlen / XFS_INODES_PER_HOLEMASK_BIT)) - 1;
+>  	}
+>  
+> -	if (args.fsbno == NULLFSBLOCK) {
+> -		*alloc = 0;
+> -		return 0;
+> -	}
+> +	if (args.fsbno == NULLFSBLOCK)
+> +		return 1;
 > +
->  	nr_exts = ifp->if_nextents + nr_to_add;
->  	if (nr_exts < ifp->if_nextents || nr_exts > max_exts)
->  		return -EFBIG;
-> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index 7f6e20899473..3780b118cc47 100644
-> --- a/fs/xfs/xfs_error.c
-> +++ b/fs/xfs/xfs_error.c
-> @@ -54,6 +54,7 @@ static unsigned int xfs_errortag_random_default[] = {
->  	XFS_RANDOM_FORCE_SUMMARY_RECALC,
->  	XFS_RANDOM_IUNLINK_FALLBACK,
->  	XFS_RANDOM_BUF_IOERROR,
-> +	XFS_RANDOM_REDUCE_MAX_IEXTENTS,
->  };
+>  	ASSERT(args.len == args.minlen);
 >  
->  struct xfs_errortag_attr {
-> @@ -164,6 +165,7 @@ XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
->  XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
->  XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
->  XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
-> +XFS_ERRORTAG_ATTR_RW(reduce_max_iextents,	XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
+>  	/*
+> @@ -903,7 +902,6 @@ xfs_ialloc_ag_alloc(
+>  	 */
+>  	xfs_trans_mod_sb(tp, XFS_TRANS_SB_ICOUNT, (long)newlen);
+>  	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, (long)newlen);
+> -	*alloc = 1;
+>  	return 0;
+>  }
 >  
->  static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(noerror),
-> @@ -202,6 +204,7 @@ static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(bad_summary),
->  	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
->  	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
-> +	XFS_ERRORTAG_ATTR_LIST(reduce_max_iextents),
->  	NULL,
->  };
+> @@ -1749,7 +1747,6 @@ xfs_dialloc_select_ag(
+>  	struct xfs_buf		*agbp;
+>  	xfs_agnumber_t		agno;
+>  	int			error;
+> -	int			ialloced;
+>  	bool			noroom = false;
+>  	xfs_agnumber_t		start_agno;
+>  	struct xfs_perag	*pag;
+> @@ -1823,17 +1820,14 @@ xfs_dialloc_select_ag(
+>  		if (!okalloc)
+>  			goto nextag_relse_buffer;
 >  
+> -
+> -		error = xfs_ialloc_ag_alloc(*tpp, agbp, &ialloced);
+> -		if (error) {
+> +		error = xfs_ialloc_ag_alloc(*tpp, agbp);
+> +		if (error < 0) {
+>  			xfs_trans_brelse(*tpp, agbp);
+>  
+>  			if (error == -ENOSPC)
+>  				error = 0;
+>  			break;
+> -		}
+> -
+> -		if (ialloced) {
+> +		} else if (error == 0) {
+>  			/*
+>  			 * We successfully allocated some inodes, so roll the
+>  			 * transaction and return the locked AGI buffer to the
 > -- 
-> 2.28.0
+> 2.18.4
 > 
