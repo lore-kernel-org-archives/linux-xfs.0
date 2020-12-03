@@ -2,133 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59CFDC4361A
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 20:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0350C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 20:47:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E18E72220F
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 20:42:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40FC2221EA
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 20:47:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726332AbgLCUmx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Dec 2020 15:42:53 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:42822 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726147AbgLCUmx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 15:42:53 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3KdDAl025966;
-        Thu, 3 Dec 2020 20:42:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=9SeIYDiFAQuPOEG4XxB/t67BOSwmFmeXcLhuwqwMH84=;
- b=CJwshgynuFOuzIAobDofEdzxWvLi8VGtRNV8589OjHwZ+OGAcwb9q+yQk+3Y3GkRIZe2
- PTlPM8MWiWaFBZyDHud7A8rq1W7iuOL0rLOnsWI0c+CRedREZk8IUWl4BowQjUNYww3P
- UY5X7rad/Ho8VeMyyoS3GzA0Q6YWiRgLjNv++7On86OLj0tn7yTKY3afTn4HipCznwff
- A5VzDJ7tYVgbqAof+roi1O0XQ0wws1g6GnjFU0bGKGlzzJLkUeuuz/saa74yMdzsZt4s
- IORXaEYrNUuclGlYbgnHUvaThWLCgwyKd38P+E8HRVRvw/Az3lciBwoImpofY/sxkD57 1w== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 353c2b87sx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 03 Dec 2020 20:42:10 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3KdSwT029558;
-        Thu, 3 Dec 2020 20:40:10 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 3540g2dkps-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 03 Dec 2020 20:40:10 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B3Ke9Ps026737;
-        Thu, 3 Dec 2020 20:40:09 GMT
-Received: from localhost (/10.159.242.140)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 03 Dec 2020 12:40:08 -0800
-Date:   Thu, 3 Dec 2020 12:40:08 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 3/3 V2] xfsprogs: make things non-gender-specific
-Message-ID: <20201203204008.GN106272@magnolia>
+        id S1727289AbgLCUrj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Dec 2020 15:47:39 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:27338 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726761AbgLCUrj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 15:47:39 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1607028373;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=RfYJsYDIiA6G7PWui7E2OSksUWEwDiIzFy4M1+XEM4M=;
+        b=Tef9+qvOuwJpG/KBI4t0Q+fPo3ovUlekXUQ5kAAJ3nH/DoDoH+IiFVjzTgJwXrtRpjy4Od
+        2yFBQHq2+/lohwUsKbUmN3WSomPYgREHB0AIkuFa88mhLjpTaN0x7rjM4a3JC9l1w5PYFP
+        4nS0WOhuZQEIjYSGNsN+qpS0DRaRhbk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-325-YYEdJv-IMOWaG7Yw9wAtZg-1; Thu, 03 Dec 2020 15:46:11 -0500
+X-MC-Unique: YYEdJv-IMOWaG7Yw9wAtZg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A9BB4800D62
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Dec 2020 20:46:10 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 7E40B60BFA
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Dec 2020 20:46:10 +0000 (UTC)
+Subject: [PATCH 1/3 V3] xfs_quota: document how the default quota is stored
+From:   Eric Sandeen <sandeen@redhat.com>
+To:     xfs <linux-xfs@vger.kernel.org>
 References: <44dcd8f3-0585-e463-499f-44256d8bad8d@redhat.com>
- <9fde98da-d221-87d0-a401-2c82cf1df35f@redhat.com>
- <7b81f21d-68b9-86e1-de7e-f9e82dd28195@redhat.com>
+ <2e9b1d0f-7ad8-b42a-ac2b-b1fdd9a9fb45@redhat.com>
+Message-ID: <e9c369a2-43d2-c8a0-6be6-1d8070e8cd77@redhat.com>
+Date:   Thu, 3 Dec 2020 14:46:10 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7b81f21d-68b9-86e1-de7e-f9e82dd28195@redhat.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=2
- phishscore=0 mlxlogscore=999 adultscore=0 mlxscore=0 bulkscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012030121
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 lowpriorityscore=0
- clxscore=1015 bulkscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
- spamscore=0 adultscore=0 mlxscore=0 priorityscore=1501 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012030120
+In-Reply-To: <2e9b1d0f-7ad8-b42a-ac2b-b1fdd9a9fb45@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 03, 2020 at 02:33:26PM -0600, Eric Sandeen wrote:
-> Users are not exclusively male, so fix that implication
-> in the xfs_quota manpage and the configure.ac comments.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Nowhere in the man page is the default quota described; what it
+does or where it is stored.  Add some brief information about this.
 
-Looks good now,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
---D
+V3: stop trying, and just use Darrick's nice words.
 
-> ---
-> 
-> V2: Fix configure.ac comments too, and fix a missed "him" in the manpage
->     also "choses" is not a word :)
-> 
-> diff --git a/configure.ac b/configure.ac
-> index 645e4572..48f3566d 100644
-> --- a/configure.ac
-> +++ b/configure.ac
-> @@ -113,7 +113,7 @@ esac
->  # Some important tools should be installed into the root partitions.
->  #
->  # Check whether exec_prefix=/usr: and install them to /sbin in that
-> -# case.  If the user choses a different prefix assume he just wants
-> +# case.  If the user chooses a different prefix assume they just want
->  # a local install for testing and not a system install.
->  #
->  case $exec_prefix:$prefix in
-> diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
-> index 74c24916..cfb87621 100644
-> --- a/man/man8/xfs_quota.8
-> +++ b/man/man8/xfs_quota.8
-> @@ -128,7 +128,7 @@ To most users, disk quotas are either of no concern or a fact of life
->  that cannot be avoided.
->  There are two possible quotas that can be imposed \- a limit can be set
->  on the amount of space a user can occupy, and there may be a limit on
-> -the number of files (inodes) he can own.
-> +the number of files (inodes) they can own.
->  .PP
->  The
->  .B quota
-> @@ -167,10 +167,10 @@ the file, not only are the recent changes lost, but possibly much, or even
->  all, of the contents that previously existed.
->  .br
->  There are several possible safe exits for a user caught in this situation.
-> -He can use the editor shell escape command to examine his file space
-> +They can use the editor shell escape command to examine their file space
->  and remove surplus files.  Alternatively, using
->  .BR sh (1),
-> -he can suspend
-> +they can suspend
->  the editor, remove some files, then resume it.
->  A third possibility is to write the file to some other filesystem (perhaps
->  to a file on
-> 
+diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
+index dd0479cd..2a911969 100644
+--- a/man/man8/xfs_quota.8
++++ b/man/man8/xfs_quota.8
+@@ -178,6 +178,12 @@ to a file on
+ where the user's quota has not been exceeded.
+ Then after rectifying the quota situation, the file can be moved back to the
+ filesystem it belongs on.
++.SS Default Quotas
++The XFS quota subsystem allows a default quota to be enforced
++for any user, group or project which does not have a quota limit
++explicitly set.
++These limits are stored in and displayed as ID 0's limits, although they
++do not actually limit ID 0.
+ .SH USER COMMANDS
+ .TP
+ .B print
+
+
