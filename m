@@ -7,108 +7,114 @@ X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 217B7C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 20:08:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFF3AC433FE
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 20:10:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B455520769
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 20:08:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5903A207B8
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 20:10:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726222AbgLCUIj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Dec 2020 15:08:39 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:47142 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725885AbgLCUIj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 15:08:39 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3Jxh5k150637;
-        Thu, 3 Dec 2020 20:07:56 GMT
+        id S1731052AbgLCUKv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Dec 2020 15:10:51 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:45088 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726681AbgLCUKv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 15:10:51 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3K9C2Q157139;
+        Thu, 3 Dec 2020 20:10:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=edLiF/CyNkT+0flirTcWoecP6BNK4zG6iM++JdsZINQ=;
- b=x98Z9ocTVTHa3FDvfU6SBBSvf7DAOcQovRhd1D+4x7dg/E1Lhrq4eZ+JrJQZPEPACsnC
- TrEQx62E4W1CCANpD9x8cAuGQ5nymbnTb1la0pYUZjdVCVS5cROC6xYeYVNHPa+q086g
- /L207OowvcEZNC0m706ieKRRXDDe8gOUrOSoi5GPpCJI4LWF1Lrp6ck12v3OYauJZFbD
- XvLN7vLhCmLBV4X901AFROoQs5lRuwxNwnpjZIrssm2ghV0mKOTcXxGExQqlEA9ZlCZ0
- oawc2wjyqmnmAANQKH822KYnyI/w04WLL7kRtE9gNGqZAeAuIlorGYcyHyFY5nYTrVdx gw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 353egkyy7m-1
+ bh=Wpl0t89peb8Aq1S/CVdzUw1pJTWdXS8ZPdA4MwQ2TX0=;
+ b=AczUgFWAQ8jzgukuzZbYDlYYt5Wx4gOPUoex1R3awki9/ixwyKTT7D19N0ayBgjeoGPu
+ d25iFJDeghxLzNjVLnjLwUid2bBpdgbGI+jCo/1YDFcB9c7+ClguSSuHq2XDgPuvxzqx
+ jRGGDgSHas1w5IM7YHJ2YOkaQeBUrgq6A+jtksCKQ9ccu/aqhn8cRcxRsQZauRiS9u0a
+ 36h4ztFZmvzDksbhi8sqLuzRT2laqeT5BfzZsMuDn/qiLzIGl8oEzncxerMxB2H9cSA6
+ oz8KtsPBE+twML+wNJKRB1165dFLq309UkkVtfEOI9l1Z2ZlZZACiI+a61ZrILzJXKJc Og== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 353c2b83qq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 03 Dec 2020 20:07:56 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3K0RQx057410;
-        Thu, 3 Dec 2020 20:07:55 GMT
+        Thu, 03 Dec 2020 20:10:08 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3K0EHG094206;
+        Thu, 3 Dec 2020 20:08:08 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 3540awrmbm-1
+        by aserp3020.oracle.com with ESMTP id 3540f2bq98-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 03 Dec 2020 20:07:55 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B3K7s5s005687;
-        Thu, 3 Dec 2020 20:07:54 GMT
+        Thu, 03 Dec 2020 20:08:08 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B3K88mh005879;
+        Thu, 3 Dec 2020 20:08:08 GMT
 Received: from localhost (/10.159.242.140)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 03 Dec 2020 12:07:54 -0800
-Date:   Thu, 3 Dec 2020 12:07:53 -0800
+        with ESMTP ; Thu, 03 Dec 2020 12:08:07 -0800
+Date:   Thu, 3 Dec 2020 12:08:05 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Eric Sandeen <sandeen@redhat.com>
 Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 1/3] xfs_quota: document how the default quota is stored
-Message-ID: <20201203200753.GJ106272@magnolia>
+Subject: Re: [PATCH 2/3] xfs_quota: Remove delalloc caveat from man page
+Message-ID: <20201203200805.GK106272@magnolia>
 References: <44dcd8f3-0585-e463-499f-44256d8bad8d@redhat.com>
- <2e9b1d0f-7ad8-b42a-ac2b-b1fdd9a9fb45@redhat.com>
+ <8fe85780-d68e-6d33-349b-66dad73858c3@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2e9b1d0f-7ad8-b42a-ac2b-b1fdd9a9fb45@redhat.com>
+In-Reply-To: <8fe85780-d68e-6d33-349b-66dad73858c3@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- phishscore=0 mlxscore=0 adultscore=0 malwarescore=0 suspectscore=1
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012030116
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=1
- phishscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
- priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 phishscore=0
+ suspectscore=1 bulkscore=0 spamscore=0 adultscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2012030116
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 lowpriorityscore=0
+ clxscore=1015 bulkscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
+ spamscore=0 adultscore=0 mlxscore=0 priorityscore=1501 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012030117
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 03, 2020 at 02:00:01PM -0600, Eric Sandeen wrote:
-> Nowhere in the man page is the default quota described; what it
-> does or where it is stored.  Add some brief information about this.
+On Thu, Dec 03, 2020 at 02:00:42PM -0600, Eric Sandeen wrote:
+> Ever since
+> 89605011915a ("xfs: include reservations in quota reporting")
+> xfs quota has been in sync with delayed allocations, so this caveat
+> is no longer relevant or correct; remove it.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->  man/man8/xfs_quota.8 | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
-> index dd0479cd..b3c4108e 100644
-> --- a/man/man8/xfs_quota.8
-> +++ b/man/man8/xfs_quota.8
-> @@ -178,6 +178,11 @@ to a file on
->  where the user's quota has not been exceeded.
->  Then after rectifying the quota situation, the file can be moved back to the
->  filesystem it belongs on.
-> +.SS Default Quotas
-> +The XFS quota subsystem allows a default quota to be enforced for any user which
 
-"user"?  Does this not apply to group or project quotas? ;)
-
-> +does not have a quota limit explicitly set. These limits are stored in and
-
-Usual complaint about starting sentences in column zero in manpage
-source. :)
+Looks good,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> +displayed as the "root" user's limits, although they do not actually limit the
-> +root user.
->  .SH USER COMMANDS
->  .TP
->  .B print
+> ---
+>  man/man8/xfs_quota.8 | 11 +----------
+>  1 file changed, 1 insertion(+), 10 deletions(-)
+> 
+> diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
+> index b3c4108e..bfdc2e4f 100644
+> --- a/man/man8/xfs_quota.8
+> +++ b/man/man8/xfs_quota.8
+> @@ -725,17 +725,8 @@ Same as above without a need for configuration files.
+>  .in -5
+>  .fi
+>  .SH CAVEATS
+> -XFS implements delayed allocation (aka. allocate-on-flush) and this
+> -has implications for the quota subsystem.
+> -Since quota accounting can only be done when blocks are actually
+> -allocated, it is possible to issue (buffered) writes into a file
+> -and not see the usage immediately updated.
+> -Only when the data is actually written out, either via one of the
+> -kernels flushing mechanisms, or via a manual
+> -.BR sync (2),
+> -will the usage reported reflect what has actually been written.
+>  .PP
+> -In addition, the XFS allocation mechanism will always reserve the
+> +The XFS allocation mechanism will always reserve the
+>  maximum amount of space required before proceeding with an allocation.
+>  If insufficient space for this reservation is available, due to the
+>  block quota limit being reached for example, this may result in the
 > -- 
 > 2.17.0
 > 
