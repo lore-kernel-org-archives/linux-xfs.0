@@ -2,127 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.2 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AADBC4361A
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 23:58:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02F1FC4361A
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 00:59:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30F4B22211
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Dec 2020 23:58:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 993DA224B2
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 00:59:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731849AbgLCX6E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Dec 2020 18:58:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43728 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731021AbgLCX6E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 18:58:04 -0500
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 368C9C061A53
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Dec 2020 15:57:24 -0800 (PST)
-Received: by mail-pl1-x643.google.com with SMTP id y10so626002plr.10
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Dec 2020 15:57:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=r3iPhcdxqx2nLoy8M4vQlPfXI0ncDfSnm735uhVf2l4=;
-        b=d/iGiH3bSWJT1Ok5lWKWHJazX8nRtciZ2SkqFh9sl21toJzUW3UCNhveT2aQoj8ogX
-         t8QbwYZcTOMwT9M0ATD7aMBq57xHvZ7nJiVMEg3iEVnQTpCHlkNcA7YXikSh4EnjqcWB
-         stzhhr9yJFM5pdjrLS5OWbEUCKgdH29INZ2zyjE9xeUW1FcIhd4Q4iL/Nw/f2/GACHgg
-         aDvQXBk87ZODzpcpMKE0pHui+1uEyo2klybaJRW6e4JiWbP1cTiTkrjTlZ3NjpWie3B3
-         x/eCp8DtTgOmUW9I+63inDoSSbf7/2l1mfqTeH2KsYFmct06Vi5iCwJMCrjqpL36/MTJ
-         o1tw==
+        id S1728139AbgLDA7l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Dec 2020 19:59:41 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:38244 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727042AbgLDA7k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 19:59:40 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1607043494;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=N+slr0Rz12Si+GG7tUCpeMdeQ1gN0SZ7mi1WEvVPjCc=;
+        b=fPAOnJCQMQxQ7SvoC0t547ICDbfpoeo7jeee7HhgE8qmwmRARIRBezfx5zFaygSbHsokLS
+        GA9oE4EaP7TA/iX4uQCwg4A9wI1Pz7iQxJY0czMu109DXNrbpcxew1YQ12KqkPqdqAsGvR
+        3I3csZNdq+JcAzDMS1d0xFlN5VwyiJ4=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-464-_B2m2rruMqi-I8Jq_2JPUQ-1; Thu, 03 Dec 2020 19:58:13 -0500
+X-MC-Unique: _B2m2rruMqi-I8Jq_2JPUQ-1
+Received: by mail-pg1-f199.google.com with SMTP id b35so2479163pgl.8
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Dec 2020 16:58:12 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=r3iPhcdxqx2nLoy8M4vQlPfXI0ncDfSnm735uhVf2l4=;
-        b=jMNyPQslDGDnRTG7bRjUSS1n3LFfG2ygfCu5HQGf+dIwZ32o5jGW3nqxFGf2ei/juE
-         r2vhHCPweufqjadzrDLop1+9xBxcDjpt7TEbaQpcOeaeD0T7FPyxdsxBIAna29nF0Tei
-         9roOVHSitnngJOfbNPYRlTcVB32YKaKsZrWfQp0tvXeLqK5GXfDzl9jngn/i4XfrYvRd
-         jBsRZhD1kN1F+u2gqWHiTMA5LV4qZNQXbXSHhYctCUM3x+qzrr89gIQzNRTJlKcMIW0Z
-         WoWEeEi3GUpVKRp4p1pYNeZVM++Yy5qxS2WfBQFI9lGUzRDhXPhAfKW15uWuVPf8ihT/
-         2bvA==
-X-Gm-Message-State: AOAM532Pxl/hgGKNMBclu3vZ9ot3RfHRD8eF9wW0LCfTgf92Nc08GJBD
-        Gw011QLAjCaS1o4eDSDWOIXtlA==
-X-Google-Smtp-Source: ABdhPJzNGZB0k9vwg17W0yzDJC60tNxzVr36GnJUcQmz8GR8UJ0qGwRTf4QVg019AhXRMWmMtQBlhw==
-X-Received: by 2002:a17:90b:4c41:: with SMTP id np1mr1449158pjb.186.1607039843547;
-        Thu, 03 Dec 2020 15:57:23 -0800 (PST)
-Received: from google.com (154.137.233.35.bc.googleusercontent.com. [35.233.137.154])
-        by smtp.gmail.com with ESMTPSA id q23sm2903613pfg.18.2020.12.03.15.57.22
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=N+slr0Rz12Si+GG7tUCpeMdeQ1gN0SZ7mi1WEvVPjCc=;
+        b=slT3j9TmmKb/hgN3giOQs2lBY2UuKSyz9zAvxommfP1wAXj/ig2j8jSJssr0uxZPJa
+         WOAuK6D2T7JFRgHa3Sw3bI+yiSso5v5DNbvlnFwR65G/11zCFbkon2l9xqTr0gX0x7Xi
+         Y1Lvj3TuS+ASLcEUdnPNj3p2/Dt/Fwydx7D7rCCYrK0J/npw2A1opIMnzvnyylUYJT+R
+         p6vYix+5Ca5Rrs9zM0CW8aiZ9ouDe6VV1Sg0Kc5i6fYRYSUJgCPwgoEazMqgOmuzVmgl
+         GO5rLfJTiAEecE84bl6PlDAY+Te6YJruvmTCuq03LL/QhFSakkIzxphuTlq507vVQO4Q
+         2fcw==
+X-Gm-Message-State: AOAM5305oCadVyjrBoObEE4v2+Y1GRAi6UQZNka1O1G08Gn4xSEAs0e2
+        PFqiMVH38ZfwYKXd0tYlCJG2JyT/VY1KBo4bwhY+ZB6oytXGHRBvUwN1Pjp5ymGDrkgUQ/jjQGS
+        SuSYaOs/RyVi2Kal8pS+V
+X-Received: by 2002:a17:90a:7c44:: with SMTP id e4mr1658572pjl.138.1607043491846;
+        Thu, 03 Dec 2020 16:58:11 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyDQMgDxTkeT4f+kfjP68REawL2mbj74fFaidXk9/YazhdfB4MlqEHcsdsC9Y+1V09qtc4BFQ==
+X-Received: by 2002:a17:90a:7c44:: with SMTP id e4mr1658557pjl.138.1607043491568;
+        Thu, 03 Dec 2020 16:58:11 -0800 (PST)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id y188sm2875307pfy.98.2020.12.03.16.58.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Dec 2020 15:57:22 -0800 (PST)
-Date:   Thu, 3 Dec 2020 23:57:18 +0000
-From:   Satya Tangirala <satyat@google.com>
-To:     "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Eric Biggers <ebiggers@kernel.org>, Chao Yu <chao@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v7 0/8] add support for direct I/O with fscrypt using
- blk-crypto
-Message-ID: <X8l7XgWNz5sO/LQ6@google.com>
-References: <20201117140708.1068688-1-satyat@google.com>
- <20201117171526.GD445084@mit.edu>
+        Thu, 03 Dec 2020 16:58:10 -0800 (PST)
+Date:   Fri, 4 Dec 2020 08:58:00 +0800
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH v2 3/6] xfs: move on-disk inode allocation out of
+ xfs_ialloc()
+Message-ID: <20201204005800.GA1963435@xiangao.remote.csb>
+References: <20201203161028.1900929-1-hsiangkao@redhat.com>
+ <20201203161028.1900929-4-hsiangkao@redhat.com>
+ <20201203203130.GB3913616@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20201117171526.GD445084@mit.edu>
+In-Reply-To: <20201203203130.GB3913616@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 17, 2020 at 12:15:26PM -0500, Theodore Y. Ts'o wrote:
-> What is the expected use case for Direct I/O using fscrypt?  This
-> isn't a problem which is unique to fscrypt, but one of the really
-> unfortunate aspects of the DIO interface is the silent fallback to
-> buffered I/O.  We've lived with this because DIO goes back decades,
-> and the original use case was to keep enterprise databases happy, and
-> the rules around what is necessary for DIO to work was relatively well
-> understood.
-> 
-> But with fscrypt, there's going to be some additional requirements
-> (e.g., using inline crypto) required or else DIO silently fall back to
-> buffered I/O for encrypted files.  Depending on the intended use case
-> of DIO with fscrypt, this caveat might or might not be unfortunately
-> surprising for applications.
-> 
-> I wonder if we should have some kind of interface so we can more
-> explicitly allow applications to query exactly what the requirements
-> might be for a particular file vis-a-vis Direct I/O.  What are the
-> memory alignment requirements, what are the file offset alignment
-> requirements, what are the write size requirements, for a particular
-> file.
-> 
-(Credit to Eric for the description of use cases that I'm
-copying/summarizing here).
-The primary motivation for this patch series is Android - some devices use
-zram with cold page writeback enabled to an encrypted swap file, so direct
-I/O is needed to avoid double-caching the data in the swap file. In
-general, this patch is useful for avoiding double caching any time a
-loopback device is created in an encrypted directory. We also expect this
-to be useful for databases that want to use direct I/O but also want to
-encrypt data at the FS level.
+Hi Dave,
 
-I do think having a good way to tell userspace about the DIO requirements
-would be great to have. Userspace does have ways to access to most, but not
-all, of the information it needs to figure out the DIO requirements (I
-don't think userspace has any way of figuring out if inline encryption
-hardware is available right now), so it would be nice if there was a
-good/unified API for getting those requirements.
+On Fri, Dec 04, 2020 at 07:31:30AM +1100, Dave Chinner wrote:
+> On Fri, Dec 04, 2020 at 12:10:25AM +0800, Gao Xiang wrote:
 
-Do you think we'll need that before these patches can go in though? I do
-think the patches as is are useful for their primary use case even without
-the ability to explicitly query for the DIO requirements, because Android
-devices are predictable w.r.t inline encryption support (devices ship with
-either blk-crypto-fallback or have inline encryption hardware, and the
-patchset's requirements are met in either case). And even when used on
-machines without such predictability, this patch is at worst the same as
-the current situation, and at best an improvement.
-> 						- Ted
+...
+
+> > - * directly to the superblock - and so have no parent.
+> > + * Initialise a newly allocated inode and return the in-core inode to the
+> > + * caller locked exclusively.
+> >   */
+> > -static int
+> > +static struct xfs_inode *
+> >  xfs_ialloc(
+> 
+> Can we rename this xfs_dir_ialloc_init()?
+> 
+> That way we keep everything in xfs_inode.c under the same namespace
+> (xfs_dir_ialloc_*) and don't confuse it with functions in the
+> xfs_ialloc_* namespace in fs/xfs/libxfs/xfs_ialloc*.c...
+
+Ok, thanks for the suggestion! Let me revise it in the next version.
+
+Thanks,
+Gao Xiang
+
+> 
+> Otherwise looks good.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+
