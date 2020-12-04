@@ -2,157 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05378C433FE
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 19:58:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B0EDC4361A
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 20:08:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C1A8322955
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 19:58:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B425922A83
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 20:08:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727272AbgLDT6W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Dec 2020 14:58:22 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:38494 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726152AbgLDT6W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 14:58:22 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B4Jn918077017;
-        Fri, 4 Dec 2020 19:57:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=iMwtR+1QmisOeRmStW0oIOKVnqKPgap6t4jPYCCk/Lk=;
- b=kcn9F4QchdXEVOVIGTAGwbZZOJsMu3jtP/aXcQUaV5TXIyosso8BgdfPkP8IKfHblcs8
- k0tDaa8rjhPxrC1enYViVY9+7Wfgh/bIQjjLf3ZxKZKHxW1zQ0rixKruyrvDgDIIr6op
- rn/JgMsV8bkXoEM77msjlYsrgdc26JVL5czRkktbOrisf1vqcpdwllAmIbDKIgbkpAEO
- AKCeXb6NC/ssGDrWGZ5mANN6nvfJMOCx8HHKpnn1c9ur2Y/DE3KT3wOyUtvtS4xuZ/DV
- oSAWi4671lJfsgJPt7FNVHgd/uuFLlVS4DLzxKHsVYa4JcqzTl77pxu7CiQQIaXqQoT1 Tw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 353egm4vd5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 04 Dec 2020 19:57:37 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B4JoRZC083286;
-        Fri, 4 Dec 2020 19:57:36 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 3540ayj2fa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 04 Dec 2020 19:57:36 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B4JvZp9028540;
-        Fri, 4 Dec 2020 19:57:35 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 04 Dec 2020 11:57:35 -0800
-Date:   Fri, 4 Dec 2020 11:57:34 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/10] xfs: trace log intent item recovery failures
-Message-ID: <20201204195734.GF629293@magnolia>
-References: <160704429410.734470.15640089119078502938.stgit@magnolia>
- <160704435695.734470.320027217185016602.stgit@magnolia>
- <20201204140052.GL1404170@bfoster>
+        id S1730545AbgLDUIb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Dec 2020 15:08:31 -0500
+Received: from sandeen.net ([63.231.237.45]:38872 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728623AbgLDUIa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Dec 2020 15:08:30 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id E61F8335020;
+        Fri,  4 Dec 2020 14:07:29 -0600 (CST)
+To:     Brian Foster <bfoster@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <160679383892.447856.12907477074923729733.stgit@magnolia>
+ <160679385127.447856.3129099457617444604.stgit@magnolia>
+ <20201201161812.GD1205666@bfoster>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH 2/3] xfs: define a new "needrepair" feature
+Message-ID: <2a5ce5a2-9df4-5c19-13d3-f0a16d8030ba@sandeen.net>
+Date:   Fri, 4 Dec 2020 14:07:49 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201204140052.GL1404170@bfoster>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9825 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- phishscore=0 mlxscore=0 adultscore=0 malwarescore=0 suspectscore=1
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012040114
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9825 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=1
- phishscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
- priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012040114
+In-Reply-To: <20201201161812.GD1205666@bfoster>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 04, 2020 at 09:00:52AM -0500, Brian Foster wrote:
-> On Thu, Dec 03, 2020 at 05:12:37PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add a trace point so that we can capture when a recovered log intent
-> > item fails to recover.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/xfs_log_recover.c |    5 ++++-
-> >  fs/xfs/xfs_trace.h       |   19 +++++++++++++++++++
-> >  2 files changed, 23 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index 87886b7f77da..ed92c72976c9 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -2559,8 +2559,11 @@ xlog_recover_process_intents(
-> >  		spin_unlock(&ailp->ail_lock);
-> >  		error = lip->li_ops->iop_recover(lip, &capture_list);
-> >  		spin_lock(&ailp->ail_lock);
-> > -		if (error)
-> > +		if (error) {
-> > +			trace_xfs_error_return(log->l_mp, error,
-> > +					lip->li_ops->iop_recover);
-> >  			break;
-> > +		}
-> >  	}
-> >  
-> >  	xfs_trans_ail_cursor_done(&cur);
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 86951652d3ed..99383b1acd49 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -103,6 +103,25 @@ DEFINE_ATTR_LIST_EVENT(xfs_attr_list_notfound);
-> >  DEFINE_ATTR_LIST_EVENT(xfs_attr_leaf_list);
-> >  DEFINE_ATTR_LIST_EVENT(xfs_attr_node_list);
-> >  
-> > +TRACE_EVENT(xfs_error_return,
+On 12/1/20 10:18 AM, Brian Foster wrote:
+> On Mon, Nov 30, 2020 at 07:37:31PM -0800, Darrick J. Wong wrote:
+>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> Define an incompat feature flag to indicate that the filesystem needs to
+>> be repaired.  While libxfs will recognize this feature, the kernel will
+>> refuse to mount if the feature flag is set, and only xfs_repair will be
+>> able to clear the flag.  The goal here is to force the admin to run
+>> xfs_repair to completion after upgrading the filesystem, or if we
+>> otherwise detect anomalies.
+>>
+>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>> ---
+> IIUC, we're using an incompat bit to intentionally ensure the filesystem
+> cannot mount, even on kernels that predate this particular "needs
+> repair" feature. The only difference is that an older kernel would
+> complain about an unknown feature and return a different error code.
+> Right?
 > 
-> xfs_error_return seems rather vague of a name given the current use.
+> That seems reasonable, but out of curiousity is there a need/reason for
+> using an incompat bit over an ro_compat bit?
 
-Yeah, I'll change it to xlog_intent_recovery_failed.
+I'm a fan of a straight-up incompat, because we don't really know what
+format changes in the future might require this flag to be set; nothing
+guarantees that future changes will be ro-compat-safe, right?
 
-> > +	TP_PROTO(struct xfs_mount *mp, int error, void *caller_ip),
-> > +	TP_ARGS(mp, error, caller_ip),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(int, error)
-> > +		__field(void *, caller_ip)
-> > +	),
-> > +	TP_fast_assign(
-> > +		__entry->dev = mp->m_super->s_dev;
-> > +		__entry->error = error;
-> > +		__entry->caller_ip = caller_ip;
-> > +	),
-> > +	TP_printk("dev %d:%d error %d caller %pS",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > +		  __entry->error, __entry->caller_ip)
-> > +
-> 
-> Extra whitespace. Also, using the text "caller" here is a bit misleading
-> IMO. I'd suggest just calling it "function" or some such, but not that
-> big of a deal.
-
-Fixed, thanks.
-
---D
-
-> Brian
-> 
-> > +);
-> > +
-> >  DECLARE_EVENT_CLASS(xfs_perag_class,
-> >  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int refcount,
-> >  		 unsigned long caller_ip),
-> > 
-> 
+-Eric
