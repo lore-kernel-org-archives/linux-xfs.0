@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FB8C433FE
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 09:05:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BA8FC433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 09:05:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F481227BF
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 09:05:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D93F227C3
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 09:05:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728211AbgLDJFC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Dec 2020 04:05:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43750 "EHLO
+        id S1729218AbgLDJFW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Dec 2020 04:05:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726646AbgLDJFC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 04:05:02 -0500
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0610C061A53
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Dec 2020 01:04:21 -0800 (PST)
-Received: by mail-pg1-x541.google.com with SMTP id o5so3120650pgm.10
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Dec 2020 01:04:21 -0800 (PST)
+        with ESMTP id S1728279AbgLDJFW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 04:05:22 -0500
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DCD5C061A54
+        for <linux-xfs@vger.kernel.org>; Fri,  4 Dec 2020 01:04:36 -0800 (PST)
+Received: by mail-pl1-x643.google.com with SMTP id y10so1289724plr.10
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Dec 2020 01:04:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=H60VnhjAUj7EARAWCUISwk9emQNR5k9noTPQBdfFHhI=;
-        b=D2PLMhSPMnOsUKzT0m4lN1Z5HgK8fnslZI98K8LunF6t4UgnqTnMKqr57jVhpUhvDs
-         6GlbwmxnCNDSk5a4H8OeQHYj/LQOeOjvR5CriYXLmaa0TTAxo7W9sLSyuAsC2TSUbAJy
-         NMMrVKVGA909CwKxbKrhE+11VfnMziAfkIqbBXcwkO0NOHvQ0sBusFDh8WzBCz/5zs1T
-         oPxdaUPl3OCJv+6Mumoad4TC5wbX8w3FiF+VjJVecS7IuRoJcgxLRvPeTVk0iNOOX3wW
-         JJQO3+hntZu6IQyy16h/ZjIRqMD/8vCzh/iFVKmEwtFLc/DYvLC/3DHXR/dBcJGhjHCl
-         F4xg==
+        bh=LDhEeiNr4uKszkfCrwZ379LULfFxcwCekoXIioXec9g=;
+        b=sT4lPgUCUYjlFhDBOKoHOohKoKBeGv+jodkmdPUYzYSr/gy2NDL04uhMirGLQtBmKs
+         KpgRs/EA1PMihsZP3lX4Gi+SSh90ekJ4jiZsgbSMDjWFuoTpLYbB8ALr6LpnHnv346L4
+         VyDz602kl4f2hAlIOPlkIGFMXEEx2ftkHWEmkKsW2VYXmUotV5+PVjjT97WKhUzwoqxi
+         39C3/efh8uhkU4wx6PTkQ4gcN2hXRZKQiDkk3mrFR2vS14cvT8nqIsjFChEoT8sCrFQM
+         4kNsVJwaqWQzAWHyD/yKEhruK4m+JDivePPdytg59/XYrXf+9rfKGaJJ58VJlUtb9u3Y
+         gobA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=H60VnhjAUj7EARAWCUISwk9emQNR5k9noTPQBdfFHhI=;
-        b=TNbvPhXNSe5OGvThEEm63R5PcNv6anw1sq2U8Hqm5mVPsvckD3SecPc7J+sqqtM6A/
-         +N7VkPYuv8rqrFj8JE43JydNE3xLRgQtWkw3bPEOf2iV+UmrvKtkNdqhguiVSV6Y/9Rt
-         EEcDV6rk05umakPnC2naxVlFzuZJtBwOVaS6o8P56Rc4hafhu81oxu2NvMWSDY87nYwU
-         8DReTIPLJPeZNfUYo3c6IQz0I+vcYgAcza73OeWS52nfd61tbv6oIEdk31h73Wip6WLS
-         QFphxdfvYR1uy0O75t1IRnju0RejFAyPTFOkcdS+dKMp9RDb1wzyALYznAyCOhZLq/Rq
-         XsAg==
-X-Gm-Message-State: AOAM532DdyswQ5ITXDCKVJ7a7hG46qph3pd05xpzBkBRL1SL62IUGi1f
-        yrcxJuXS3tUWNHB3DDn3ED0=
-X-Google-Smtp-Source: ABdhPJywsC27VblXeta47DL7J8+L0SFm3s9oBHlw2T4q19QGPdBBesMsZCK29xfxULJkrhbg9JOkHQ==
-X-Received: by 2002:a63:33c5:: with SMTP id z188mr6747983pgz.295.1607072661432;
-        Fri, 04 Dec 2020 01:04:21 -0800 (PST)
+        bh=LDhEeiNr4uKszkfCrwZ379LULfFxcwCekoXIioXec9g=;
+        b=XIYTftPV6bdmjEsFDxdlNN5Q/v8BnwMywCQkrLdnv6GA+aEjtyjyySTx2/KVyFR5op
+         nZ3m6gwz80EeUVmWFhQB1O6wxEYnfIs4YQ5diDxzr0WjWj91orcAE2HgkUe3zu7H6eHa
+         YpSHPMbarxlg3N0VFA494ag5cqzgaTC3Yba+KpTl8m2GwUE63/3ihkcTjQyjk62WIXEI
+         zvxK+Ta0xPGFgMj4mer51wo/KU1adUbP/MOCzSHmY+9Gq+XAPLGJbYlh6CIAO1Dk0m1Y
+         HHWJqe3LRfdt2zt9Tk7vLx/mOKWzuLuGidnuGOl+m//ZEOM+l1nTWWIkm6dAtL8aNB6y
+         aP/Q==
+X-Gm-Message-State: AOAM533bc1niEmsipnJY+k56STF0+jbdPLQNOK8R9ffqte6kJQJQn3Ty
+        sSSmYXozbn+sInRyPTV1nDiSEJTZfpw=
+X-Google-Smtp-Source: ABdhPJwy42x0qyjwwKIlB95+CVjr3WpaH7ntBJEwC4X2XeoR6tErWuvuVfrFKTWVQzZvVYpTipEhYA==
+X-Received: by 2002:a17:902:ab8a:b029:da:13c5:6ed4 with SMTP id f10-20020a170902ab8ab02900da13c56ed4mr3226354plr.56.1607072675716;
+        Fri, 04 Dec 2020 01:04:35 -0800 (PST)
 Received: from garuda.localnet ([122.171.196.244])
-        by smtp.gmail.com with ESMTPSA id t16sm3295639pga.51.2020.12.04.01.04.19
+        by smtp.gmail.com with ESMTPSA id t9sm4330126pfq.39.2020.12.04.01.04.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Dec 2020 01:04:20 -0800 (PST)
+        Fri, 04 Dec 2020 01:04:35 -0800 (PST)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V11 04/14] xfs: Check for extent overflow when adding/removing xattrs
-Date:   Fri, 04 Dec 2020 14:34:17 +0530
-Message-ID: <4842874.Y7L5Z29mQF@garuda>
-In-Reply-To: <20201203184559.GA106271@magnolia>
-References: <20201117134416.207945-1-chandanrlinux@gmail.com> <20201117134416.207945-5-chandanrlinux@gmail.com> <20201203184559.GA106271@magnolia>
+Subject: Re: [PATCH V11 05/14] xfs: Check for extent overflow when adding/removing dir entries
+Date:   Fri, 04 Dec 2020 14:34:32 +0530
+Message-ID: <15021664.sC18oI5324@garuda>
+In-Reply-To: <20201203190422.GB106271@magnolia>
+References: <20201117134416.207945-1-chandanrlinux@gmail.com> <20201117134416.207945-6-chandanrlinux@gmail.com> <20201203190422.GB106271@magnolia>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -71,127 +71,236 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 03 Dec 2020 10:45:59 -0800, Darrick J. Wong wrote:
-> On Tue, Nov 17, 2020 at 07:14:06PM +0530, Chandan Babu R wrote:
-> > Adding/removing an xattr can cause XFS_DA_NODE_MAXDEPTH extents to be
-> > added. One extra extent for dabtree in case a local attr is large enough
-> > to cause a double split.  It can also cause extent count to increase
-> > proportional to the size of a remote xattr's value.
+On Thu, 03 Dec 2020 11:04:22 -0800, Darrick J. Wong wrote:
+> On Tue, Nov 17, 2020 at 07:14:07PM +0530, Chandan Babu R wrote:
+> > Directory entry addition/removal can cause the following,
+> > 1. Data block can be added/removed.
+> >    A new extent can cause extent count to increase by 1.
+> > 2. Free disk block can be added/removed.
+> >    Same behaviour as described above for Data block.
+> > 3. Dabtree blocks.
+> >    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these
+> >    can be new extents. Hence extent count can increase by
+> >    XFS_DA_NODE_MAXDEPTH.
 > > 
-> > To be able to always remove an existing xattr, when adding an xattr we
-> > make sure to reserve inode fork extent count required for removing max
-> > sized xattr in addition to that required by the xattr add operation.
+> > To be able to always remove an existing directory entry, when adding a
+> > new directory entry we make sure to reserve inode fork extent count
+> > required for removing a directory entry in addition to that required for
+> > the directory entry add operation.
 > > 
 > > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 > > ---
-> >  fs/xfs/libxfs/xfs_attr.c       | 20 ++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_inode_fork.h | 10 ++++++++++
-> >  2 files changed, 30 insertions(+)
+> >  fs/xfs/libxfs/xfs_inode_fork.h | 13 +++++++++++++
+> >  fs/xfs/xfs_inode.c             | 27 +++++++++++++++++++++++++++
+> >  fs/xfs/xfs_symlink.c           |  5 +++++
+> >  3 files changed, 45 insertions(+)
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index fd8e6418a0d3..d53b3867b308 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -396,6 +396,8 @@ xfs_attr_set(
-> >  	struct xfs_trans_res	tres;
-> >  	bool			rsvd = (args->attr_filter & XFS_ATTR_ROOT);
-> >  	int			error, local;
-> > +	int			iext_cnt;
-> > +	int			rmt_blks;
-> >  	unsigned int		total;
-> >  
-> >  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
-> > @@ -416,6 +418,9 @@ xfs_attr_set(
-> >  	 */
-> >  	args->op_flags = XFS_DA_OP_OKNOENT;
-> >  
-> > +	rmt_blks = xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX);
-> > +	iext_cnt = XFS_IEXT_ATTR_MANIP_CNT(rmt_blks);
-> 
-> These values are only relevant for the xattr removal case, right?
-> AFAICT the args->value != NULL case immediately after will set new
-> values, so why not just move this into...
-
-The above statements compute the extent count required to remove a maximum
-sized remote xattr.
-
-To guarantee that a user can always remove an xattr, the "args->value != NULL"
-case adds to the value of iext_cnt that has been computed above. I had
-extracted and placed the above set of statements since they were now common to
-both "insert" and "remove" xattr operations.
-
-> 
-> > +
-> >  	if (args->value) {
-> >  		XFS_STATS_INC(mp, xs_attr_set);
-> >  
-> > @@ -442,6 +447,13 @@ xfs_attr_set(
-> >  		tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
-> >  		tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
-> >  		total = args->total;
-> > +
-> > +		if (local)
-> > +			rmt_blks = 0;
-> > +		else
-> > +			rmt_blks = xfs_attr3_rmt_blocks(mp, args->valuelen);
-> > +
-> > +		iext_cnt += XFS_IEXT_ATTR_MANIP_CNT(rmt_blks);
-> >  	} else {
-> >  		XFS_STATS_INC(mp, xs_attr_remove);
-> 
-> ...the bottom of this clause here.
-> 
-> >  
-> > @@ -460,6 +472,14 @@ xfs_attr_set(
-> >  
-> >  	xfs_ilock(dp, XFS_ILOCK_EXCL);
-> >  	xfs_trans_ijoin(args->trans, dp, 0);
-> > +
-> > +	if (args->value || xfs_inode_hasattr(dp)) {
-> 
-> Can this simply be "if (iext_cnt != 0)" ?
-
-That would lead to a bug since iext_cnt is computed unconditionally at the
-beginning of the function. An extent count reservation will be attempted when
-xattr delete operation is executed against an inode which does not have an
-associated attr fork. This will cause xfs_iext_count_may_overflow() to
-dereference the NULL pointer at xfs_inode->i_afp->if_nextents.
-
-> 
-> --D
-> 
-> > +		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
-> > +				iext_cnt);
-> > +		if (error)
-> > +			goto out_trans_cancel;
-> > +	}
-> > +
-> >  	if (args->value) {
-> >  		unsigned int	quota_flags = XFS_QMOPT_RES_REGBLKS;
-> >  
 > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> > index bcac769a7df6..5de2f07d0dd5 100644
+> > index 5de2f07d0dd5..fd93fdc67ee4 100644
 > > --- a/fs/xfs/libxfs/xfs_inode_fork.h
 > > +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> > @@ -47,6 +47,16 @@ struct xfs_ifork {
-> >   */
-> >  #define XFS_IEXT_PUNCH_HOLE_CNT		(1)
+> > @@ -57,6 +57,19 @@ struct xfs_ifork {
+> >  #define XFS_IEXT_ATTR_MANIP_CNT(rmt_blks) \
+> >  	(XFS_DA_NODE_MAXDEPTH + max(1, rmt_blks))
 > >  
 > > +/*
-> > + * Adding/removing an xattr can cause XFS_DA_NODE_MAXDEPTH extents to
-> > + * be added. One extra extent for dabtree in case a local attr is
-> > + * large enough to cause a double split.  It can also cause extent
-> > + * count to increase proportional to the size of a remote xattr's
-> > + * value.
+> > + * Directory entry addition/removal can cause the following,
+> > + * 1. Data block can be added/removed.
+> > + *    A new extent can cause extent count to increase by 1.
+> > + * 2. Free disk block can be added/removed.
+> > + *    Same behaviour as described above for Data block.
+> > + * 3. Dabtree blocks.
+> > + *    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these can be new
+> > + *    extents. Hence extent count can increase by XFS_DA_NODE_MAXDEPTH.
 > > + */
-> > +#define XFS_IEXT_ATTR_MANIP_CNT(rmt_blks) \
-> > +	(XFS_DA_NODE_MAXDEPTH + max(1, rmt_blks))
+> > +#define XFS_IEXT_DIR_MANIP_CNT(mp) \
+> > +	((XFS_DA_NODE_MAXDEPTH + 1 + 1) * (mp)->m_dir_geo->fsbcount)
 > > +
 > >  /*
 > >   * Fork handling.
 > >   */
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 2bfbcf28b1bd..f7b0b7fce940 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -1177,6 +1177,11 @@ xfs_create(
+> >  	if (error)
+> >  		goto out_trans_cancel;
+> >  
+> > +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
+> > +			XFS_IEXT_DIR_MANIP_CNT(mp) << 1);
 > 
+> Er, why did these double since V10?  We're only adding one entry, right?
 
+To be able to always guarantee the removal of an existing directory entry, we
+reserve inode fork extent count required for removing a directory entry in
+addition to that required for the directory entry add operation.
+
+A bug was discovered when executing the following sequence of
+operations,
+1. Keep inserting directory entries until the pseudo max extent count limit is
+   reached.
+2. At this stage, a directory entry remove operation will fail because it
+   tries to reserve XFS_IEXT_DIR_MANIP_CNT(mp) worth of extent count. This
+   reservation fails since the extent count would go over the pseudo max
+   extent count limit as it did in step 1.
+
+We would end up with a directory which can never be deleted.
+
+Hence V11 doubles the extent count reservation for "directory entry insert"
+operations. The first XFS_IEXT_DIR_MANIP_CNT(mp) instance is for "insert"
+operation while the second XFS_IEXT_DIR_MANIP_CNT(mp) instance is for
+guaranteeing a possible future "remove" operation to succeed.
+
+> 
+> > +	if (error)
+> > +		goto out_trans_cancel;
+> > +
+> >  	/*
+> >  	 * A newly created regular or special file just has one directory
+> >  	 * entry pointing to them, but a directory also the "." entry
+> > @@ -1393,6 +1398,11 @@ xfs_link(
+> >  	xfs_trans_ijoin(tp, sip, XFS_ILOCK_EXCL);
+> >  	xfs_trans_ijoin(tp, tdp, XFS_ILOCK_EXCL);
+> >  
+> > +	error = xfs_iext_count_may_overflow(tdp, XFS_DATA_FORK,
+> > +			XFS_IEXT_DIR_MANIP_CNT(mp) << 1);
+> 
+> Same question here.
+
+Creating a new hard link involves adding a new directory entry. Hence apart
+from reserving extent count for directory entry addition we will have to
+reserve extent count for a future directory entry removal as well.
+
+> 
+> > +	if (error)
+> > +		goto error_return;
+> > +
+> >  	/*
+> >  	 * If we are using project inheritance, we only allow hard link
+> >  	 * creation in our tree when the project IDs are the same; else
+> > @@ -2861,6 +2871,11 @@ xfs_remove(
+> >  	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+> >  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> >  
+> > +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
+> > +			XFS_IEXT_DIR_MANIP_CNT(mp));
+> > +	if (error)
+> > +		goto out_trans_cancel;
+> > +
+> >  	/*
+> >  	 * If we're removing a directory perform some additional validation.
+> >  	 */
+> > @@ -3221,6 +3236,18 @@ xfs_rename(
+> >  	if (wip)
+> >  		xfs_trans_ijoin(tp, wip, XFS_ILOCK_EXCL);
+> >  
+> > +	error = xfs_iext_count_may_overflow(src_dp, XFS_DATA_FORK,
+> > +			XFS_IEXT_DIR_MANIP_CNT(mp));
+> > +	if (error)
+> > +		goto out_trans_cancel;
+> > +
+> > +	if (target_ip == NULL) {
+> > +		error = xfs_iext_count_may_overflow(target_dp, XFS_DATA_FORK,
+> > +				XFS_IEXT_DIR_MANIP_CNT(mp) << 1);
+> 
+> Why did this change to "<< 1" since V10?
+
+Extent count is doubled since this is essentially a directory insert operation
+w.r.t target_dp directory. One instance of XFS_IEXT_DIR_MANIP_CNT(mp) is for
+the directory entry being added to target_dp directory and another instance of
+XFS_IEXT_DIR_MANIP_CNT(mp) is for guaranteeing a future directory entry
+removal from target_dp directory to succeed.
+
+> 
+> I'm sorry, but I've lost my recollection on how the accounting works
+> here.  This seems (to me anyway ;)) a good candidate for a comment:
+> 
+> For a rename between dirs where the target name doesn't exist, we're
+> removing src_name from src_dp and adding target_name to target_dp.
+> Therefore we have to check for DIR_MANIP_CNT overflow on each of src_dp
+> and target_dp, right?
+
+Extent count check is doubled since this is a directory insert operation w.r.t
+target_dp directory ... One instance of XFS_IEXT_DIR_MANIP_CNT(mp) is for the
+directory entry being added to target_dp directory and another instance of
+XFS_IEXT_DIR_MANIP_CNT(mp) is for guaranteeing a future directory entry
+removal from target_dp directory to succeed.
+
+Since a directory entry is being removed from src_dp, reserving only a single
+instance of XFS_IEXT_DIR_MANIP_CNT(mp) would suffice.
+
+> 
+> For a rename within the same dir where target_name doesn't yet exist, we
+> are removing a name and then adding a name.  We therefore check for iext
+> overflow with (DIR_MANIP_CNT * 2), right?  And I think that "target name
+> does not exist" is synonymous with target_ip == NULL?
+
+Here again we have to reserve two instances of XFS_IEXT_DIR_MANIP_CNT(mp) for
+target_name insertion and one instance of XFS_IEXT_DIR_MANIP_CNT(mp) for
+src_name removal. This is because insertion and removal of src_name may each
+end up consuming XFS_IEXT_DIR_MANIP_CNT(mp) extent counts in the worst case. A
+future directory entry remove operation will require
+XFS_IEXT_DIR_MANIP_CNT(mp) extent counts to be reserved.
+
+Also, You are right about "target name does not exist" being synonymous with
+target_ip == NULL.
+
+> 
+> For a rename where target_name /does/ exist, we're only removing the
+> src_name, so we have to check for DIR_MANIP_CNT on src_dp, right?
+
+Yes, you are right.
+
+> 
+> For a RENAME_EXCHANGE we're not removing either name, so we don't need
+> to check for iext overflow of src_dp or target_dp, right?
+
+You are right. Sorry, I missed this. I will move the extent count reservation
+logic to come after the invocation of xfs_cross_rename().
+
+I will also add appropriate comments into xfs_rename() describing the
+scenarios that have been discussed above.
+
+PS: I have swapped the order of two comments from your original reply since I
+think it is easier to explain the scenarios with the order of
+comments/questions swapped.
+
+> 
+> > +		if (error)
+> > +			goto out_trans_cancel;
+> > +	}
+> > +
+> >  	/*
+> >  	 * If we are using project inheritance, we only allow renames
+> >  	 * into our tree when the project IDs are the same; else the
+> > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> > index 8e88a7ca387e..08aa808fe290 100644
+> > --- a/fs/xfs/xfs_symlink.c
+> > +++ b/fs/xfs/xfs_symlink.c
+> > @@ -220,6 +220,11 @@ xfs_symlink(
+> >  	if (error)
+> >  		goto out_trans_cancel;
+> >  
+> > +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
+> > +			XFS_IEXT_DIR_MANIP_CNT(mp) << 1);
+> 
+> Same question as xfs_create.
+
+This is again similar to adding a new directory entry. Hence, apart from
+reserving extent count for directory entry addition we will have to reserve
+extent count for a future directory entry removal as well.
+
+> 
+> --D
+> 
+> > +	if (error)
+> > +		goto out_trans_cancel;
+> > +
+> >  	/*
+> >  	 * Allocate an inode for the symlink.
+> >  	 */
+> 
 
 -- 
 chandan
