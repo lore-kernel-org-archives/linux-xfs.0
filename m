@@ -2,131 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85549C4361A
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 14:02:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 912ADC1B0E3
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 15:49:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58AAF22AB0
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 14:02:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6240722C9C
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 15:49:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726986AbgLDOCY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Dec 2020 09:02:24 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:21282 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2387618AbgLDOCX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 09:02:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607090457;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=l1GS5zcYORTRwDSwfTviRNVKNO9WCwACYXygzVv4B1I=;
-        b=cDm0UTHtN/xv4oSrYa9jRyDyo9UYgnSp745zNOIWoV7Goap1YBF1ocw5IV4BcAzqiylUTk
-        9UgQjHgA7xGzam4pEnB/or9P16rKWrELiQnToXue2XmjpcsaDQWlwq9nkjEj8DYY8reSwg
-        5eSuob0RiHH691Le+l4sBKtAaT8+p/w=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-563-4uezzPo5O2aTxrYsa9lZHg-1; Fri, 04 Dec 2020 09:00:55 -0500
-X-MC-Unique: 4uezzPo5O2aTxrYsa9lZHg-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 97C5581CBF6;
-        Fri,  4 Dec 2020 14:00:54 +0000 (UTC)
-Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 27017620D7;
-        Fri,  4 Dec 2020 14:00:54 +0000 (UTC)
-Date:   Fri, 4 Dec 2020 09:00:52 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/10] xfs: trace log intent item recovery failures
-Message-ID: <20201204140052.GL1404170@bfoster>
-References: <160704429410.734470.15640089119078502938.stgit@magnolia>
- <160704435695.734470.320027217185016602.stgit@magnolia>
+        id S1730904AbgLDPtm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Dec 2020 10:49:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49794 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730896AbgLDPtm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 10:49:42 -0500
+Received: from mail-qv1-xf35.google.com (mail-qv1-xf35.google.com [IPv6:2607:f8b0:4864:20::f35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C6F8C061A56
+        for <linux-xfs@vger.kernel.org>; Fri,  4 Dec 2020 07:48:56 -0800 (PST)
+Received: by mail-qv1-xf35.google.com with SMTP id n9so2956260qvp.5
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Dec 2020 07:48:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
+        h=to:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=PA56DtQ3U6OS3ADt3JtiQH9iJ5okRT03tMtGP16RXIA=;
+        b=p4AZo33WMTXTpz74XuTaQCvr8JjiLn7ypdk62+VPzm5BdMKt9igpjZmiV4Ts4qi6+J
+         SKGTsVwNJHxvNy9D43S5RpkEjJtwvyjUcFbtGl6g7qLXlUFpBTsSCxXpBePSHE5OPbfm
+         mksQaolb9sXzm7+22TDrXsouNjPDrgzfQk55cGZ8dcksUDtecVBuIrV/rL0rDS4FIXGa
+         CvPH8RXGjKym1lMM679nc6sYC/ea1CzYYsrPdIStasXpT1d5deVX/6/ey0wtHLMxDXaU
+         REoOC8e2HrqtsbjM8fzvA/EMqQSINaRo0nL6ofS1dQc6bP4Jew/L1eiqWwgkD+J/NGRS
+         Uo0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=PA56DtQ3U6OS3ADt3JtiQH9iJ5okRT03tMtGP16RXIA=;
+        b=QBJZVr44VNohvp5arvO6X8ZqsNAr5xZU77puyVtIUWpzTMwHcyR+EYmAfsx0tN2UTH
+         jVvmbsmgyPpKcj/ayW/XxS8d07eo3ihPQ0d7UjBL10uaRuWScrmhfMayj+xqnbh3XmA1
+         CcczTQb7IVQ/Ddjf5ypPHqvdxnPcrBFvbVgR94jxhfIaLp7ncBW/e7pWXd7Rvbo/MyoO
+         fP42Si7TAHulgkGBEfG1IAobiqZYu3pfa4PVS4C6n9SPHMJtdPWwE5sv5XXqCtQLzW7C
+         BvkZIYhSumiN7A0H7/leTpzq0DDJ/ha3pFuM2/aXNqoT1IlrjySDa6S8qbtRRvUeCbso
+         kVPA==
+X-Gm-Message-State: AOAM5339psYfu2F4gb7eY+GAN+oBXlX07V76oD3W9bU+J+UmfmbJhpSp
+        IyV/+B68jQL+u1yq/8wy9YefOw==
+X-Google-Smtp-Source: ABdhPJxnvGuh1h4AicIp2Z2Ob074CL8yAHW4/pb+/Ip6VIx5jqWNzkUvWI0x5L/Pf3ERPP+MY/J4+Q==
+X-Received: by 2002:a0c:e18f:: with SMTP id p15mr6149469qvl.12.1607096935114;
+        Fri, 04 Dec 2020 07:48:55 -0800 (PST)
+Received: from [192.168.1.45] (cpe-174-109-172-136.nc.res.rr.com. [174.109.172.136])
+        by smtp.gmail.com with ESMTPSA id y1sm5586436qky.63.2020.12.04.07.48.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 04 Dec 2020 07:48:54 -0800 (PST)
+To:     Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        "bpf@vger.kernel.org" <bpf@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-nvme@vger.kernel.org" <linux-nvme@vger.kernel.org>
+From:   Josef Bacik <josef@toxicpanda.com>
+Subject: [LSFMMBPF 2021] A status update
+Message-ID: <fd5264ac-c84d-e1d4-01e2-62b9c05af892@toxicpanda.com>
+Date:   Fri, 4 Dec 2020 10:48:53 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <160704435695.734470.320027217185016602.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 03, 2020 at 05:12:37PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Add a trace point so that we can capture when a recovered log intent
-> item fails to recover.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_log_recover.c |    5 ++++-
->  fs/xfs/xfs_trace.h       |   19 +++++++++++++++++++
->  2 files changed, 23 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 87886b7f77da..ed92c72976c9 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2559,8 +2559,11 @@ xlog_recover_process_intents(
->  		spin_unlock(&ailp->ail_lock);
->  		error = lip->li_ops->iop_recover(lip, &capture_list);
->  		spin_lock(&ailp->ail_lock);
-> -		if (error)
-> +		if (error) {
-> +			trace_xfs_error_return(log->l_mp, error,
-> +					lip->li_ops->iop_recover);
->  			break;
-> +		}
->  	}
->  
->  	xfs_trans_ail_cursor_done(&cur);
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 86951652d3ed..99383b1acd49 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -103,6 +103,25 @@ DEFINE_ATTR_LIST_EVENT(xfs_attr_list_notfound);
->  DEFINE_ATTR_LIST_EVENT(xfs_attr_leaf_list);
->  DEFINE_ATTR_LIST_EVENT(xfs_attr_node_list);
->  
-> +TRACE_EVENT(xfs_error_return,
+Hello,
 
-xfs_error_return seems rather vague of a name given the current use.
+We on the program committee hope everybody has been able to stay safe and 
+healthy during this challenging time, and look forward to being able to see all 
+of you in person again when it is safe.
 
-> +	TP_PROTO(struct xfs_mount *mp, int error, void *caller_ip),
-> +	TP_ARGS(mp, error, caller_ip),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(int, error)
-> +		__field(void *, caller_ip)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = mp->m_super->s_dev;
-> +		__entry->error = error;
-> +		__entry->caller_ip = caller_ip;
-> +	),
-> +	TP_printk("dev %d:%d error %d caller %pS",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __entry->error, __entry->caller_ip)
-> +
+The current plans for LSFMMBPF 2021 are to schedule an in person conference in 
+H2 (after June) of 2021.  The tentative plan is to use the same hotel that we 
+had planned to use for 2020, as we still have contracts with them.  However 
+clearly that is not set in stone.  The Linux Foundation has done a wonderful job 
+of working with us to formulate a plan and figure out the logistics that will 
+work the best for everybody, I really can't thank them enough for their help.
 
-Extra whitespace. Also, using the text "caller" here is a bit misleading
-IMO. I'd suggest just calling it "function" or some such, but not that
-big of a deal.
+Once we have a finalized date we will redo the CFP emails, probably coming out 
+March time frame.  If you have any questions or concerns please feel free to 
+respond to this email, or email me or any of the other PC members privately and 
+we will do our best to answer your questions.  Rest assured the general timing 
+of the conference is going to take into account the wide variety of schedules 
+that we are dealing with, and we will do our best to come up with something that 
+works for as many as people as possible.
 
-Brian
+We hope that you and your families continue to stay safe and health.  Thank you 
+on behalf of the program committee:
 
-> +);
-> +
->  DECLARE_EVENT_CLASS(xfs_perag_class,
->  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int refcount,
->  		 unsigned long caller_ip),
-> 
-
+	Josef Bacik (Filesystems)
+	Amir Goldstein (Filesystems)
+	Martin K. Petersen (Storage)
+	Omar Sandoval (Storage)
+	Michal Hocko (MM)
+	Dan Williams (MM)
+	Alexei Starovoitov (BPF)
+	Daniel Borkmann (BPF)
