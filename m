@@ -2,116 +2,128 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2FDBC4361B
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 01:46:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1942C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 01:47:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A144522507
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 01:46:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46936224F9
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 01:47:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726143AbgLDBqe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Dec 2020 20:46:34 -0500
-Received: from mga01.intel.com ([192.55.52.88]:48195 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725885AbgLDBqe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Dec 2020 20:46:34 -0500
-IronPort-SDR: Nr1XHOaXJdH9XjWLkBjyTbWdoKTmf0TNK3z55S8/oD3ZbfvC3djXiDHv9E9SgGYn4yaA+5EVG5
- U3TFWdNEZwIw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9824"; a="191550560"
-X-IronPort-AV: E=Sophos;i="5.78,390,1599548400"; 
-   d="scan'208";a="191550560"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Dec 2020 17:45:53 -0800
-IronPort-SDR: pdrev79caLf9OpaDWWhlKyXnHidKdPFDKTc5unyM12YRNkHjmdcuieu7P4FJvRsIqmKWdXwZky
- 1D3asWomwszw==
-X-IronPort-AV: E=Sophos;i="5.78,390,1599548400"; 
-   d="scan'208";a="550753253"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Dec 2020 17:45:52 -0800
-From:   ira.weiny@intel.com
-To:     fstests@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>, linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        David Howells <dhowells@redhat.com>
-Subject: [PATCH V3] common/rc: Fix _check_s_dax()
-Date:   Thu,  3 Dec 2020 17:45:50 -0800
-Message-Id: <20201204014550.1736306-1-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.28.0.rc0.12.gb6a658bd00c9
-In-Reply-To: <20201202214629.1563760-1-ira.weiny@intel.com>
-References: <20201202214629.1563760-1-ira.weiny@intel.com>
+        id S1726869AbgLDBqm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Dec 2020 20:46:42 -0500
+Received: from out30-57.freemail.mail.aliyun.com ([115.124.30.57]:46043 "EHLO
+        out30-57.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725885AbgLDBql (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 20:46:41 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R471e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=joseph.qi@linux.alibaba.com;NM=1;PH=DS;RN=2;SR=0;TI=SMTPD_---0UHSKhDt_1607046358;
+Received: from B-D1K7ML85-0059.local(mailfrom:joseph.qi@linux.alibaba.com fp:SMTPD_---0UHSKhDt_1607046358)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Fri, 04 Dec 2020 09:45:58 +0800
+Subject: Re: [PATCH] xfs: remove unneeded return value check for
+ xfs_rmapbt_init_cursor()
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <1606984438-13997-1-git-send-email-joseph.qi@linux.alibaba.com>
+ <20201203182544.GB106272@magnolia>
+From:   Joseph Qi <joseph.qi@linux.alibaba.com>
+Message-ID: <372d35a8-254e-a770-7a88-279944e09365@linux.alibaba.com>
+Date:   Fri, 4 Dec 2020 09:45:58 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201203182544.GB106272@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
 
-There is a conflict with the user visible statx bits 'mount root' and
-'dax'.  The kernel is changing the dax bit to correct this conflict.[1]
 
-Adjust _check_s_dax() to use the new bit.  Because DAX tests do not run
-on root mounts, STATX_ATTR_MOUNT_ROOT should always be 0.  Therefore,
-check for the old flag and fail the test if that occurs.
+On 12/4/20 2:25 AM, Darrick J. Wong wrote:
+> On Thu, Dec 03, 2020 at 04:33:58PM +0800, Joseph Qi wrote:
+>> Since xfs_rmapbt_init_cursor() can always return a valid cursor, the
+>> NULL check in caller is unneeded.
+>> This also keeps the behavior consistent with other callers.
+>>
+>> Signed-off-by: Joseph Qi <joseph.qi@linux.alibaba.com>
+>> ---
+>>  fs/xfs/libxfs/xfs_rmap.c | 9 ---------
+>>  fs/xfs/scrub/bmap.c      | 5 -----
+>>  fs/xfs/scrub/common.c    | 2 --
+>>  3 files changed, 16 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+>> index 2668ebe..10e0cf99 100644
+>> --- a/fs/xfs/libxfs/xfs_rmap.c
+>> +++ b/fs/xfs/libxfs/xfs_rmap.c
+>> @@ -2404,10 +2404,6 @@ struct xfs_rmap_query_range_info {
+>>  			return -EFSCORRUPTED;
+>>  
+>>  		rcur = xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
+>> -		if (!rcur) {
+>> -			error = -ENOMEM;
+>> -			goto out_cur;
+>> -		}
+>>  	}
+>>  	*pcur = rcur;
+>>  
+>> @@ -2446,11 +2442,6 @@ struct xfs_rmap_query_range_info {
+>>  		error = -EFSCORRUPTED;
+>>  	}
+>>  	return error;
+>> -
+>> -out_cur:
+>> -	xfs_trans_brelse(tp, agbp);
+>> -
+>> -	return error;
+>>  }
+>>  
+>>  /*
+>> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+>> index fed56d2..dd165c0 100644
+>> --- a/fs/xfs/scrub/bmap.c
+>> +++ b/fs/xfs/scrub/bmap.c
+>> @@ -563,10 +563,6 @@ struct xchk_bmap_check_rmap_info {
+>>  		return error;
+>>  
+>>  	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf, agno);
+>> -	if (!cur) {
+>> -		error = -ENOMEM;
+>> -		goto out_agf;
+>> -	}
+>>  
+>>  	sbcri.sc = sc;
+>>  	sbcri.whichfork = whichfork;
+>> @@ -575,7 +571,6 @@ struct xchk_bmap_check_rmap_info {
+>>  		error = 0;
+>>  
+>>  	xfs_btree_del_cursor(cur, error);
+>> -out_agf:
+>>  	xfs_trans_brelse(sc->tp, agf);
+>>  	return error;
+>>  }
+>> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+>> index 1887605..6757dc7 100644
+>> --- a/fs/xfs/scrub/common.c
+>> +++ b/fs/xfs/scrub/common.c
+>> @@ -502,8 +502,6 @@ struct xchk_rmap_ownedby_info {
+>>  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_RMAP)) {
+>>  		sa->rmap_cur = xfs_rmapbt_init_cursor(mp, sc->tp, sa->agf_bp,
+>>  				agno);
+>> -		if (!sa->rmap_cur)
+>> -			goto err;
+> 
+> Would you mind cleaning out the other btree cursor allocation
+> warts under fs/xfs/scrub/ ?
+> 
 
-[1] https://lore.kernel.org/lkml/3e28d2c7-fbe5-298a-13ba-dcd8fd504666@redhat.com/
+Sure, I'll do this and send v2.
 
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-
----
-Changes from V2:
-	As suggested by Christoph and Eric:
-		Fail the test with a hint as to why the wrong bit may be set.
-
- common/rc | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
-
-diff --git a/common/rc b/common/rc
-index b5a504e0dcb4..5911a6c89a78 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3221,10 +3221,27 @@ _check_s_dax()
- 	local exp_s_dax=$2
- 
- 	local attributes=$($XFS_IO_PROG -c 'statx -r' $target | awk '/stat.attributes / { print $3 }')
-+
-+	# The original attribute bit value, STATX_ATTR_DAX (0x2000), conflicted
-+	# with STATX_ATTR_MOUNT_ROOT.  Therefore, STATX_ATTR_DAX was changed to
-+	# 0x00200000.
-+	#
-+	# Because DAX tests do not run on root mounts, STATX_ATTR_MOUNT_ROOT
-+	# should always be 0.  Check for the old flag and fail the test if that
-+	# occurs.
-+
-+	if [ $(( attributes & 0x2000 )) -ne 0 ]; then
-+		echo "$target has an unexpected STATX_ATTR_MOUNT_ROOT flag set"
-+		echo "which used to be STATX_ATTR_DAX"
-+		echo "     This test should not be running on the root inode..."
-+		echo "     Does the kernel have the following patch?"
-+		echo "     72d1249e2ffd uapi: fix statx attribute value overlap for DAX & MOUNT_ROOT"
-+	fi
-+
- 	if [ $exp_s_dax -eq 0 ]; then
--		(( attributes & 0x2000 )) && echo "$target has unexpected S_DAX flag"
-+		(( attributes & 0x00200000 )) && echo "$target has unexpected S_DAX flag"
- 	else
--		(( attributes & 0x2000 )) || echo "$target doesn't have expected S_DAX flag"
-+		(( attributes & 0x00200000 )) || echo "$target doesn't have expected S_DAX flag"
- 	fi
- }
- 
--- 
-2.28.0.rc0.12.gb6a658bd00c9
-
+Thanks,
+Joseph
