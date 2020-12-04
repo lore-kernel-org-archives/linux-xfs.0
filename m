@@ -2,161 +2,119 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 108EFC4361A
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 21:23:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C1F7C4361A
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 21:37:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 898B622CF7
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 21:23:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 460A922BE8
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 21:37:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730175AbgLDVXM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Dec 2020 16:23:12 -0500
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:40999 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730048AbgLDVXM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 16:23:12 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 1019E7659FE;
-        Sat,  5 Dec 2020 08:22:23 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1klIX0-000XI9-MX; Sat, 05 Dec 2020 08:22:22 +1100
-Date:   Sat, 5 Dec 2020 08:22:22 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] [RFC] xfs: initialise attr fork on inode create
-Message-ID: <20201204212222.GG3913616@dread.disaster.area>
-References: <20201202232724.1730114-1-david@fromorbit.com>
- <20201204123137.GA1404170@bfoster>
+        id S1729268AbgLDVhU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Dec 2020 16:37:20 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:33600 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727906AbgLDVhT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 16:37:19 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B4LZ7gI108461;
+        Fri, 4 Dec 2020 21:36:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=w2kOfQd6yP23oo1ZSaBAU4YKlvuyWwKPdHy+PuJrnww=;
+ b=K/RpR/+wO8WOBtoKoCrfnf+h2WcRdbiD5fdouX3yJTj4lhuHaE1csek4nSWEHnXcYMsu
+ QqQOnW/oS5p6IgoTxjMtk2fgPxtT9TZuCcPMW1MjUjf+yB8cXc08bXV7xQLK9TJxqKTm
+ CGpViQNUZ+1NBU1qwavP+EFt7QB8i6TgGlIFI+Av3XGD1r7fjbc+z4SWxurKuwPX9EFr
+ 8L9qDYHXSWu32OmCTeo+HBlrbYNmslUsPWBvnvjXQmogAUbL11z+LhMZmFOLFXvqtwEw
+ rVvYyLUcdNjCOvTG9TZH7SCXJpAehvk5qDydzvhaV1lyHVwgDwN2QdI10RZqPGjf1/lb Ew== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 353c2bd9wt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 04 Dec 2020 21:36:35 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B4LaHjJ120727;
+        Fri, 4 Dec 2020 21:36:35 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 3540f3urxh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 04 Dec 2020 21:36:35 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0B4LaXw3003782;
+        Fri, 4 Dec 2020 21:36:33 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 04 Dec 2020 13:36:33 -0800
+Date:   Fri, 4 Dec 2020 13:36:32 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: define a new "needrepair" feature
+Message-ID: <20201204213632.GG629293@magnolia>
+References: <160679383892.447856.12907477074923729733.stgit@magnolia>
+ <160679385127.447856.3129099457617444604.stgit@magnolia>
+ <20201201161812.GD1205666@bfoster>
+ <2a5ce5a2-9df4-5c19-13d3-f0a16d8030ba@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201204123137.GA1404170@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=vsqdUP0MVNUnAF5Z7yIA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <2a5ce5a2-9df4-5c19-13d3-f0a16d8030ba@sandeen.net>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9825 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 phishscore=0
+ suspectscore=1 bulkscore=0 spamscore=0 adultscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012040122
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9825 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 lowpriorityscore=0
+ clxscore=1015 bulkscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
+ spamscore=0 adultscore=0 mlxscore=0 priorityscore=1501 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012040122
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 04, 2020 at 07:31:37AM -0500, Brian Foster wrote:
-> On Thu, Dec 03, 2020 at 10:27:24AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Fri, Dec 04, 2020 at 02:07:49PM -0600, Eric Sandeen wrote:
+> On 12/1/20 10:18 AM, Brian Foster wrote:
+> > On Mon, Nov 30, 2020 at 07:37:31PM -0800, Darrick J. Wong wrote:
+> >> From: Darrick J. Wong <darrick.wong@oracle.com>
+> >>
+> >> Define an incompat feature flag to indicate that the filesystem needs to
+> >> be repaired.  While libxfs will recognize this feature, the kernel will
+> >> refuse to mount if the feature flag is set, and only xfs_repair will be
+> >> able to clear the flag.  The goal here is to force the admin to run
+> >> xfs_repair to completion after upgrading the filesystem, or if we
+> >> otherwise detect anomalies.
+> >>
+> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >> ---
+> > IIUC, we're using an incompat bit to intentionally ensure the filesystem
+> > cannot mount, even on kernels that predate this particular "needs
+> > repair" feature. The only difference is that an older kernel would
+> > complain about an unknown feature and return a different error code.
+> > Right?
 > > 
-> > When we allocate a new inode, we often need to add an attribute to
-> > the inode as part of the create. This can happen as a result of
-> > needing to add default ACLs or security labels before the inode is
-> > made visible to userspace.
-> > 
-> > This is highly inefficient right now. We do the create transaction
-> > to allocate the inode, then we do an "add attr fork" transaction to
-> > modify the just created empty inode to set the inode fork offset to
-> > allow attributes to be stored, then we go and do the attribute
-> > creation.
-> > 
-> > This means 3 transactions instead of 1 to allocate an inode, and
-> > this greatly increases the load on the CIL commit code, resulting in
-> > excessive contention on the CIL spin locks and performance
-> > degradation:
-> > 
-> >  18.99%  [kernel]                [k] __pv_queued_spin_lock_slowpath
-> >   3.57%  [kernel]                [k] do_raw_spin_lock
-> >   2.51%  [kernel]                [k] __raw_callee_save___pv_queued_spin_unlock
-> >   2.48%  [kernel]                [k] memcpy
-> >   2.34%  [kernel]                [k] xfs_log_commit_cil
-> > 
-> > The typical profile resulting from running fsmark on a selinux enabled
-> > filesytem is adds this overhead to the create path:
-> > 
-> ...
-> > 
-> > And fsmark creation rate performance drops by ~25%. The key point to
-> > note here is that half the additional overhead comes from adding the
-> > attribute fork to the newly created inode. That's crazy, considering
-> > we can do this same thing at inode create time with a couple of
-> > lines of code and no extra overhead.
-> > 
-> > So, if we know we are going to add an attribute immediately after
-> > creating the inode, let's just initialise the attribute fork inside
-> > the create transaction and chop that whole chunk of code out of
-> > the create fast path. This completely removes the performance
-> > drop caused by enabling SELinux, and the profile looks like:
-> > 
-> ...
-> > 
-> > Which indicates the XFS overhead of creating the selinux xattr has
-> > been halved. This doesn't fix the CIL lock contention problem, just
-> > means it's not a limiting factor for this workload. Lock contention
-> > in the security subsystems is going to be an issue soon, though...
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_inode_fork.c | 20 +++++++++++++++-----
-> >  fs/xfs/libxfs/xfs_inode_fork.h |  1 +
-> >  fs/xfs/xfs_inode.c             | 24 ++++++++++++++++++++----
-> >  fs/xfs/xfs_inode.h             |  5 +++--
-> >  fs/xfs/xfs_iops.c              | 10 +++++++++-
-> >  fs/xfs/xfs_qm.c                |  2 +-
-> >  fs/xfs/xfs_symlink.c           |  2 +-
-> >  7 files changed, 50 insertions(+), 14 deletions(-)
-> > 
-> ...
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 2bfbcf28b1bd..9ee2e0b4c6fd 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> ...
-> > @@ -918,6 +919,18 @@ xfs_ialloc(
-> >  		ASSERT(0);
-> >  	}
-> >  
-> > +	/*
-> > +	 * If we need to create attributes immediately after allocating the
-> > +	 * inode, initialise an empty attribute fork right now. We use the
-> > +	 * default fork offset for attributes here as we don't know exactly what
-> > +	 * size or how many attributes we might be adding. We can do this safely
-> > +	 * here because we know the data fork is completely empty right now.
-> > +	 */
-> > +	if (init_attrs) {
-> > +		ip->i_afp = xfs_ifork_alloc(XFS_DINODE_FMT_EXTENTS, 0);
-> > +		ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
-> > +	}
-> > +
+> > That seems reasonable, but out of curiousity is there a need/reason for
+> > using an incompat bit over an ro_compat bit?
 > 
-> Seems reasonable in principle, but why not refactor
-> xfs_bmap_add_attrfork() such that the internals (i.e. everything within
-> the transaction/ilock code) can be properly reused in both contexts
-> rather than open-coding (and thus duplicating) a somewhat stripped down
-> version?
+> I'm a fan of a straight-up incompat, because we don't really know what
+> format changes in the future might require this flag to be set; nothing
+> guarantees that future changes will be ro-compat-safe, right?
 
-We don't know the size of the attribute that is being created, so
-the attr size dependent parts of it can't be used.
+Correct.  In the case of the inobtcount upgrade, we know that the
+inobt/finobt blockcounts in the AGI are zero (and thus wrong) right
+after the upgrade.  If we made it a rocompat bit then we'd allow ro
+mounts but we'd also have to be careful to prohibit a ro->rw remount,
+at which point the admin gets a Big Surprise.
 
-> At a glance, it looks like there are some subtle differences in
-> the initial setup of the attr fork for a device node inode, for example.
+Why not just make the admin repair the system right then and there?
+I mean, xfs_admin is already going to run repair anyway, so in practice
+there shouldn't be that many people trying to push an "upgraded but
+needs repair" fs at the kernel anyway.
 
-Yes, there's a difference, but it's largely irrelevant as adding
-the first attribute to a device format inode will reset the
-forkoffset to the min via xfs_attr_shortform_bytesfit().
+--D
 
-And if the attribute is larger than will fit in the default fork
-offset space, but can fit the attr in shrotform by shrinking the
-empty data fork space, xfs_attr_shortform_bytesfit() will do that as
-well. IOWs, we only need to set a non-zero fork offset here and init
-the ip->i_afp pointer - immediately setting an attribute on the
-empty inode literal area will do the rest for the fork offset setup
-for us...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> -Eric
