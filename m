@@ -2,164 +2,187 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8F2CC4167B
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 12:42:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFFC4C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 13:56:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EFA522AAA
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 12:42:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B3C122AB9
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 13:56:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730100AbgLDMmH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Dec 2020 07:42:07 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30421 "EHLO
+        id S1726312AbgLDN4k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Dec 2020 08:56:40 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:27728 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729117AbgLDMmG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 07:42:06 -0500
+        by vger.kernel.org with ESMTP id S1725973AbgLDN4k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 08:56:40 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607085640;
+        s=mimecast20190719; t=1607090113;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=s7SZkynC9o5pOfPfzahzJ7tLuCrd7IMpN9xI6Jeog8M=;
-        b=UtWE4ycpf3+HGKnnCA5pR/43qUZiHgKETn8k0bXa/j/K+pwhe/wI/SBHKcxt65IjwR7jVZ
-        3Pk80Aa7WxUBfgzNY1xlPx+y25bS7XSV00seu3Ky7bZCi3JW2TaQUSO3kQn7VOnsIwK0m6
-        nkrH9+w3v1wS9EIPUptdDgbAULkm0eA=
+        bh=/kmMQrf62+0/LKnvzuy4zcqyAVwrE007kpb+JDE5Srs=;
+        b=e0ItYenp6x4cwGN7tIoCc9os48idZDBTQadiMl1PS+gvV74Bjt9VdZs5xcQtlj4Mn+2bnY
+        hvs11DtIBqbXiV37xhwfN6QkkUOITBirTsgtjCMKXFAbEO05i867jddYs5dApMb94e+qsZ
+        QjeReVcYuXZafKbJJfaffjwGyz0GbhA=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-325-5TnPGMTePMCEscrl74V6QQ-1; Fri, 04 Dec 2020 07:40:36 -0500
-X-MC-Unique: 5TnPGMTePMCEscrl74V6QQ-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+ us-mta-42-EwTObsEnOgm7dQQh2vIc7A-1; Fri, 04 Dec 2020 08:55:09 -0500
+X-MC-Unique: EwTObsEnOgm7dQQh2vIc7A-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5605D107ACE6;
-        Fri,  4 Dec 2020 12:40:35 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BF994612A3;
+        Fri,  4 Dec 2020 13:55:08 +0000 (UTC)
 Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id EDD1018AD6;
-        Fri,  4 Dec 2020 12:40:34 +0000 (UTC)
-Date:   Fri, 4 Dec 2020 07:40:33 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4E15F100164C;
+        Fri,  4 Dec 2020 13:55:08 +0000 (UTC)
+Date:   Fri, 4 Dec 2020 08:55:06 -0500
 From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] [RFC] spaceman: physically move a regular inode
-Message-ID: <20201204124033.GB1404170@bfoster>
-References: <20201110225924.4031404-1-david@fromorbit.com>
- <20201201140742.GA1205666@bfoster>
- <20201201211557.GL2842436@dread.disaster.area>
- <20201202123006.GA1278877@bfoster>
- <20201204061059.GF3913616@dread.disaster.area>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/10] xfs: hoist recovered bmap intent checks out of
+ xfs_bui_item_recover
+Message-ID: <20201204135506.GC1404170@bfoster>
+References: <160704429410.734470.15640089119078502938.stgit@magnolia>
+ <160704430044.734470.16065444609448176719.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201204061059.GF3913616@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <160704430044.734470.16065444609448176719.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 04, 2020 at 05:10:59PM +1100, Dave Chinner wrote:
-> On Wed, Dec 02, 2020 at 07:30:06AM -0500, Brian Foster wrote:
-> > On Wed, Dec 02, 2020 at 08:15:57AM +1100, Dave Chinner wrote:
-> > > On Tue, Dec 01, 2020 at 09:07:42AM -0500, Brian Foster wrote:
-> > > > On Wed, Nov 11, 2020 at 09:59:24AM +1100, Dave Chinner wrote:
-> > > > For example, might it make sense to implement a policy where move_inode
-> > > > simply moves an inode to the first AG the tempdir lands in that is < the
-> > > > AG of the source inode? We'd probably want to be careful to make sure
-> > > > that we don't attempt to dump the entire set of moved files into the
-> > > > same AG, but I assume the temp dir creation logic would effectively
-> > > > rotor across the remaining set of AGs we do want to allow.. Thoughts?
-> > > 
-> > > Yes, we could. But I simply decided that a basic, robust shrink to
-> > > the minimum possible size will have to fill the filesystem from AG 0
-> > > up, and not move to AG 1 until AG 0 is full.  I also know that the
-> > > kernel allocation policies will skip to the next AG if there is lock
-> > > contention, space or other allocation setup issues, hence I wanted
-> > > to be able to direct movement to the lowest possible AGs first...
-> > > 
-> > > THere's enough complexity in an optimal shrink implementation that
-> > > it will keep someone busy full time for a couple of years. I want to
-> > > provide the basic functionality userspace needs only spending a
-> > > couple of days a week for a couple of months on it. If we want it
-> > > fast and deployable on existing systems, compromises will need to be
-> > > made...
-> > > 
-> > 
-> > Yeah, I'm not suggesting we implement the eventual policy here. I do
-> > think it would be nice if the userspace command implemented some
-> > reasonable default when a target AG is not specified. That could be the
-> > "anything less than source AG" logic I described above, a default target
-> > of AG 0, or something similarly simple...
+On Thu, Dec 03, 2020 at 05:11:40PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> That's the plan. This patch is just a way of testing the mechanism
-> in a simple way without involving a full shrink or scanning AGs, or
-> anything like that.
+> When we recover a bmap intent from the log, we need to validate its
+> contents before we try to replay them.  Hoist the checking code into a
+> separate function in preparation to refactor this code to use validation
+> helpers.
 > 
-> i.e:
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_bmap_item.c |   73 ++++++++++++++++++++++++++++++------------------
+>  1 file changed, 46 insertions(+), 27 deletions(-)
 > 
-> $ ~/packages/xfs_spaceman  -c "help move_inode" -c "help find_owner" -c "help resolve_owner" -c "help relocate" /mnt/scratch
-> move_inode -a agno -- Move an inode into a new AG.
 > 
-> Physically move an inode into a new allocation group
-> 
->  -a agno       -- destination AG agno for the current open file
-> 
-> find_owner -a agno -- Find inodes owning physical blocks in a given AG
-> 
-> Find inodes owning physical blocks in a given AG.
-> 
->  -a agno  -- Scan the given AG agno.
-> 
-> resolve_owner  -- Resolve paths to inodes owning physical blocks in a given AG
-> 
-> Resolve inodes owning physical blocks in a given AG.  This requires
-> the find_owner command to be run first to populate the table of
-> inodes that need to have their paths resolved.
-> 
-> relocate -a agno [-h agno] -- Relocate data in an AG.
-> 
-> Relocate all the user data and metadata in an AG.
-> 
-> This function will discover all the relocatable objects in a single
-> AG and move them to a lower AG as preparation for a shrink
-> operation.
-> 
-> 	-a <agno>       Allocation group to empty
-> 	-h <agno>       Highest target AG allowed to relocate into
-> $
-> 
+> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> index 9e16a4d0f97c..555453d0e080 100644
+> --- a/fs/xfs/xfs_bmap_item.c
+> +++ b/fs/xfs/xfs_bmap_item.c
+> @@ -417,6 +417,49 @@ const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
+>  	.cancel_item	= xfs_bmap_update_cancel_item,
+>  };
+>  
+> +/* Is this recovered BUI ok? */
+> +static inline bool
+> +xfs_bui_validate(
+> +	struct xfs_mount		*mp,
+> +	struct xfs_bui_log_item		*buip)
+> +{
+> +	struct xfs_map_extent		*bmap;
+> +	xfs_fsblock_t			startblock_fsb;
+> +	xfs_fsblock_t			inode_fsb;
+> +
+> +	/* Only one mapping operation per BUI... */
+> +	if (buip->bui_format.bui_nextents != XFS_BUI_MAX_FAST_EXTENTS)
+> +		return false;
+> +
+> +	bmap = &buip->bui_format.bui_extents[0];
+> +	startblock_fsb = XFS_BB_TO_FSB(mp,
+> +			XFS_FSB_TO_DADDR(mp, bmap->me_startblock));
+> +	inode_fsb = XFS_BB_TO_FSB(mp, XFS_FSB_TO_DADDR(mp,
+> +			XFS_INO_TO_FSB(mp, bmap->me_owner)));
+> +
+> +	if (bmap->me_flags & ~XFS_BMAP_EXTENT_FLAGS)
+> +		return false;
+> +
+> +	switch (bmap->me_flags & XFS_BMAP_EXTENT_TYPE_MASK) {
+> +	case XFS_BMAP_MAP:
+> +	case XFS_BMAP_UNMAP:
+> +		break;
+> +	default:
+> +		return false;
+> +	}
+> +
+> +	if (startblock_fsb == 0 ||
+> +	    bmap->me_len == 0 ||
+> +	    inode_fsb == 0 ||
+> +	    startblock_fsb >= mp->m_sb.sb_dblocks ||
+> +	    bmap->me_len >= mp->m_sb.sb_agblocks ||
+> +	    inode_fsb >= mp->m_sb.sb_dblocks ||
+> +	    (bmap->me_flags & ~XFS_BMAP_EXTENT_FLAGS))
+> +		return false;
 
-Ah, I see. This relocate command is essentially what I was asking for,
-it just wasn't apparent from the move_inode bits alone that this was
-covered somewhere. I do think there's value in dropping this in
-userspace early, even if it's just a crude/isolated implementation for
-now, because that helps motivate keeping the kernel bits as simple as
-possible for the broader feature. Thanks for the description.
+Looks like the ->me_flags check is duplicated here and above. Otherwise
+looks good:
 
-Brian
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> So, essentially, I can test all the bits in one command with
-> "relocate", or I can test different types of objects 1 at a time
-> with "move_inode", or I can look at what "relocate" failed to move
-> with "find_owner" and "resolve_owner"....
-> 
-> An actual shrink operation will effectively run "relocate" on all
-> the AGs that it wants to empty, setting the highest AG that
-> relocation is allowed into to the last full AG that will remain in
-> the shrunk filesystem, then check the AGs are empty, then run the
-> shrink ioctl....
-> 
-> But to get there, I'm bootstrapping the functionality one testable
-> module at a time, then refactoring them to combine them into more
-> complex operations...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> +
+> +	return true;
+> +}
+> +
+>  /*
+>   * Process a bmap update intent item that was recovered from the log.
+>   * We need to update some inode's bmbt.
+> @@ -433,47 +476,23 @@ xfs_bui_item_recover(
+>  	struct xfs_mount		*mp = lip->li_mountp;
+>  	struct xfs_map_extent		*bmap;
+>  	struct xfs_bud_log_item		*budp;
+> -	xfs_fsblock_t			startblock_fsb;
+> -	xfs_fsblock_t			inode_fsb;
+>  	xfs_filblks_t			count;
+>  	xfs_exntst_t			state;
+>  	unsigned int			bui_type;
+>  	int				whichfork;
+>  	int				error = 0;
+>  
+> -	/* Only one mapping operation per BUI... */
+> -	if (buip->bui_format.bui_nextents != XFS_BUI_MAX_FAST_EXTENTS)
+> +	if (!xfs_bui_validate(mp, buip)) {
+> +		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+>  		return -EFSCORRUPTED;
+> +	}
+>  
+> -	/*
+> -	 * First check the validity of the extent described by the
+> -	 * BUI.  If anything is bad, then toss the BUI.
+> -	 */
+>  	bmap = &buip->bui_format.bui_extents[0];
+> -	startblock_fsb = XFS_BB_TO_FSB(mp,
+> -			   XFS_FSB_TO_DADDR(mp, bmap->me_startblock));
+> -	inode_fsb = XFS_BB_TO_FSB(mp, XFS_FSB_TO_DADDR(mp,
+> -			XFS_INO_TO_FSB(mp, bmap->me_owner)));
+>  	state = (bmap->me_flags & XFS_BMAP_EXTENT_UNWRITTEN) ?
+>  			XFS_EXT_UNWRITTEN : XFS_EXT_NORM;
+>  	whichfork = (bmap->me_flags & XFS_BMAP_EXTENT_ATTR_FORK) ?
+>  			XFS_ATTR_FORK : XFS_DATA_FORK;
+>  	bui_type = bmap->me_flags & XFS_BMAP_EXTENT_TYPE_MASK;
+> -	switch (bui_type) {
+> -	case XFS_BMAP_MAP:
+> -	case XFS_BMAP_UNMAP:
+> -		break;
+> -	default:
+> -		return -EFSCORRUPTED;
+> -	}
+> -	if (startblock_fsb == 0 ||
+> -	    bmap->me_len == 0 ||
+> -	    inode_fsb == 0 ||
+> -	    startblock_fsb >= mp->m_sb.sb_dblocks ||
+> -	    bmap->me_len >= mp->m_sb.sb_agblocks ||
+> -	    inode_fsb >= mp->m_sb.sb_dblocks ||
+> -	    (bmap->me_flags & ~XFS_BMAP_EXTENT_FLAGS))
+> -		return -EFSCORRUPTED;
+>  
+>  	/* Grab the inode. */
+>  	error = xfs_iget(mp, NULL, bmap->me_owner, 0, 0, &ip);
 > 
 
