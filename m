@@ -2,98 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F379C4167B
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 16:03:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF3A4C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 17:17:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6385B22CB9
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 16:03:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B5EA22B40
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 17:17:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730641AbgLDQDb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Dec 2020 11:03:31 -0500
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:52354 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729625AbgLDQDa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 11:03:30 -0500
-Received: from callcc.thunk.org (pool-72-74-133-215.bstnma.fios.verizon.net [72.74.133.215])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 0B4G2R8k023074
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 4 Dec 2020 11:02:27 -0500
-Received: by callcc.thunk.org (Postfix, from userid 15806)
-        id 19219420136; Fri,  4 Dec 2020 11:02:27 -0500 (EST)
-Date:   Fri, 4 Dec 2020 11:02:27 -0500
-From:   "Theodore Y. Ts'o" <tytso@mit.edu>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        David Howells <dhowells@redhat.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Miklos Szeredi <mszeredi@redhat.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-man <linux-man@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        Ext4 <linux-ext4@vger.kernel.org>,
-        Xiaoli Feng <xifeng@redhat.com>,
-        Sasha Levin <sashal@kernel.org>, Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH V2] uapi: fix statx attribute value overlap for DAX &
- MOUNT_ROOT
-Message-ID: <20201204160227.GA577125@mit.edu>
-References: <3e28d2c7-fbe5-298a-13ba-dcd8fd504666@redhat.com>
- <20201202160049.GD1447340@iweiny-DESK2.sc.intel.com>
- <CAJfpegt6w4h28VLctpaH46r2pkbcUNJ4pUhwUqZ-zbrOrXPEEQ@mail.gmail.com>
- <641397.1606926232@warthog.procyon.org.uk>
- <CAJfpegsQxi+_ttNshHu5MP+uLn3px9+nZRoTLTxh9-xwU8s1yg@mail.gmail.com>
- <X8flmVAwl0158872@kroah.com>
- <20201202204045.GM2842436@dread.disaster.area>
- <X8gBUc0fkdh6KK01@kroah.com>
- <CAOQ4uxhNvTxEo_-wkHy-KO8Jhz0Amh-g2Nz+PzN_8OODWJPz7w@mail.gmail.com>
+        id S1728583AbgLDRRW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Dec 2020 12:17:22 -0500
+Received: from sandeen.net ([63.231.237.45]:56628 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726173AbgLDRRU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Dec 2020 12:17:20 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 103F0335020;
+        Fri,  4 Dec 2020 11:16:19 -0600 (CST)
+Subject: Re: [PATCH 1/5] libxfs-apply: don't add duplicate headers
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <160633667604.634603.7657982642827987317.stgit@magnolia>
+ <160633668210.634603.16132006317248436755.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d077eb53-d3cd-9d81-6a84-cdea8b5165ae@sandeen.net>
+Date:   Fri, 4 Dec 2020 11:16:39 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxhNvTxEo_-wkHy-KO8Jhz0Amh-g2Nz+PzN_8OODWJPz7w@mail.gmail.com>
+In-Reply-To: <160633668210.634603.16132006317248436755.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 03, 2020 at 08:18:23AM +0200, Amir Goldstein wrote:
-> Here is a recent example, where during patch review, I requested NOT to include
-> any stable backport triggers [1]:
-> "...We should consider sending this to stable, but maybe let's merge
-> first and let it
->  run in master for a while before because it is not a clear and
-> immediate danger..."
->
-> As a developer and as a reviewer, I wish (as Dave implied) that I had a way to
-> communicate to AUTOSEL that auto backport of this patch has more risk than
-> the risk of not backporting.
+On 11/25/20 2:38 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> When we're backporting patches from libxfs, don't add a S-o-b header if
+> there's already one at the end of the headers of the patch being ported.
+> 
+> That way, we avoid things like:
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-My suggestion is that we could put something in the MAINTAINERS file
-which indicates what the preferred delay time should be for (a)
-patches explicitly cc'ed to stable, and (b) preferred time should be
-for patches which are AUTOSEL'ed for stable for that subsystem.  That
-time might be either in days/weeks, or "after N -rc releases", "after
-the next full release", or, "never" (which would be a way for a
-subsystem to opt out of the AUTOSEL process).
+I like how that SOB is part of the changelog and is also part of
+the changelog ;)
 
-It should also be possible specify the delay in the trailer, e.g.:
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Stable-Defer: <delayspec>
-Auto-Stable-Defer: <delayspec>
-
-The advantage of specifying the delay relative to when they show up in
-Linus's tree helps deal with the case where the submaintainer might
-not be sure when their patches will get pushed to Linus by the
-maintainer.
-
-Cheers,
-
-						- Ted
+> ---
+>  tools/libxfs-apply |   14 +++++++++++---
+>  1 file changed, 11 insertions(+), 3 deletions(-)
+> 
+> 
+> diff --git a/tools/libxfs-apply b/tools/libxfs-apply
+> index 3258272d6189..9271db380198 100755
+> --- a/tools/libxfs-apply
+> +++ b/tools/libxfs-apply
+> @@ -193,6 +193,14 @@ filter_xfsprogs_patch()
+>  	rm -f $_libxfs_files
+>  }
+>  
+> +add_header()
+> +{
+> +	local hdr="$1"
+> +	local hdrfile="$2"
+> +
+> +	tail -n 1 "$hdrfile" | grep -q "^${hdr}$" || echo "$hdr" >> "$hdrfile"
+> +}
+> +
+>  fixup_header_format()
+>  {
+>  	local _source=$1
+> @@ -280,13 +288,13 @@ fixup_header_format()
+>  	sed -i '${/^[[:space:]]*$/d;}' $_hdr.new
+>  
+>  	# Add Signed-off-by: header if specified
+> -	if [ ! -z ${SIGNED_OFF_BY+x} ]; then 
+> -		echo "Signed-off-by: $SIGNED_OFF_BY" >> $_hdr.new
+> +	if [ ! -z ${SIGNED_OFF_BY+x} ]; then
+> +		add_header "Signed-off-by: $SIGNED_OFF_BY" $_hdr.new
+>  	else	# get it from git config if present
+>  		SOB_NAME=`git config --get user.name`
+>  		SOB_EMAIL=`git config --get user.email`
+>  		if [ ! -z ${SOB_NAME+x} ]; then
+> -			echo "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" >> $_hdr.new
+> +			add_header "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" $_hdr.new
+>  		fi
+>  	fi
+>  
+> 
