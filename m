@@ -2,138 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CFA4C433FE
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 06:11:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DF14C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 07:55:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06A5D2253D
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 06:11:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58F4022573
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 07:55:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725819AbgLDGLm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Dec 2020 01:11:42 -0500
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:51054 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725550AbgLDGLm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 01:11:42 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id B5D2D1098D7;
-        Fri,  4 Dec 2020 17:10:59 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kl4J1-000JjL-1W; Fri, 04 Dec 2020 17:10:59 +1100
-Date:   Fri, 4 Dec 2020 17:10:59 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] [RFC] spaceman: physically move a regular inode
-Message-ID: <20201204061059.GF3913616@dread.disaster.area>
-References: <20201110225924.4031404-1-david@fromorbit.com>
- <20201201140742.GA1205666@bfoster>
- <20201201211557.GL2842436@dread.disaster.area>
- <20201202123006.GA1278877@bfoster>
+        id S1728811AbgLDHyr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Dec 2020 02:54:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32846 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726669AbgLDHyr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 02:54:47 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2890FC061A52;
+        Thu,  3 Dec 2020 23:54:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=YwMmp9Po9KaoD0NNYk3HwEV3ejsrXIggwtX+cmpAFd8=; b=vd1ekFAS1Iuc4aTT78JnV3zy58
+        g4wpw/IAVO93BSBjUdXMCKIf19dLiuJM6DH/2NvcbOSis0lNlnY5EN9g6tqpTk3S4GCAjjOtwvDeh
+        UCXX6UhU1yGNBZlZH7AqqtJ5X8MeH6EPb6FYfk9Xemz+mlcaaTzL1eJIuJEjpuEAiZBs3F2Xk0Axg
+        16CUEvcBIC4eKvcDAEeJFR+lOKxhgqh2lBPETOUCX9wKfQjhfsb8KlfDuc12Ej8O5ctWdbF/lGaBA
+        qBrypqtfGvpwV0+c1QG6AFY7thVJnv5W6Qu1zdkW5H149iDeBObkPSG9EvQdD5/c/YR6pTT3MeH2C
+        XDVAAYTA==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kl5un-0007uq-Fk; Fri, 04 Dec 2020 07:54:05 +0000
+Date:   Fri, 4 Dec 2020 07:54:05 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+        linux-security-module@vger.kernel.org
+Subject: Re: [PATCH] [RFC] xfs: initialise attr fork on inode create
+Message-ID: <20201204075405.GA30060@infradead.org>
+References: <20201202232724.1730114-1-david@fromorbit.com>
+ <20201203084012.GA32480@infradead.org>
+ <20201203214426.GE3913616@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201202123006.GA1278877@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
-        a=0euc3Nsfh_ZNLAS2PgwA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20201203214426.GE3913616@dread.disaster.area>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 02, 2020 at 07:30:06AM -0500, Brian Foster wrote:
-> On Wed, Dec 02, 2020 at 08:15:57AM +1100, Dave Chinner wrote:
-> > On Tue, Dec 01, 2020 at 09:07:42AM -0500, Brian Foster wrote:
-> > > On Wed, Nov 11, 2020 at 09:59:24AM +1100, Dave Chinner wrote:
-> > > For example, might it make sense to implement a policy where move_inode
-> > > simply moves an inode to the first AG the tempdir lands in that is < the
-> > > AG of the source inode? We'd probably want to be careful to make sure
-> > > that we don't attempt to dump the entire set of moved files into the
-> > > same AG, but I assume the temp dir creation logic would effectively
-> > > rotor across the remaining set of AGs we do want to allow.. Thoughts?
+On Fri, Dec 04, 2020 at 08:44:26AM +1100, Dave Chinner wrote:
+> > > +		if ((IS_ENABLED(CONFIG_SECURITY) && dir->i_sb->s_security) ||
+> > > +		    default_acl || acl)
+> > > +			need_xattr = true;
+> > > +
+> > > +		error = xfs_create(XFS_I(dir), &name, mode, rdev,
+> > > +					need_xattr, &ip);
 > > 
-> > Yes, we could. But I simply decided that a basic, robust shrink to
-> > the minimum possible size will have to fill the filesystem from AG 0
-> > up, and not move to AG 1 until AG 0 is full.  I also know that the
-> > kernel allocation policies will skip to the next AG if there is lock
-> > contention, space or other allocation setup issues, hence I wanted
-> > to be able to direct movement to the lowest possible AGs first...
-> > 
-> > THere's enough complexity in an optimal shrink implementation that
-> > it will keep someone busy full time for a couple of years. I want to
-> > provide the basic functionality userspace needs only spending a
-> > couple of days a week for a couple of months on it. If we want it
-> > fast and deployable on existing systems, compromises will need to be
-> > made...
-> > 
+> > It might be wort to factor the condition into a little helper.  Also
+> > I think we also have security labels for O_TMPFILE inodes, so it might
+> > be worth plugging into that path as well.
 > 
-> Yeah, I'm not suggesting we implement the eventual policy here. I do
-> think it would be nice if the userspace command implemented some
-> reasonable default when a target AG is not specified. That could be the
-> "anything less than source AG" logic I described above, a default target
-> of AG 0, or something similarly simple...
+> Yeah, a helper is a good idea - I just wanted to get some feedback
+> first on whether it's a good idea to peek directly at
+> i_sb->s_security or whether there is some other way of knowing ahead
+> of time that a security xattr is going to be created. I couldn't
+> find one, but that doesn't mean such an interface doesn't exist in
+> all the twisty passages of the LSM layers...
 
-That's the plan. This patch is just a way of testing the mechanism
-in a simple way without involving a full shrink or scanning AGs, or
-anything like that.
-
-i.e:
-
-$ ~/packages/xfs_spaceman  -c "help move_inode" -c "help find_owner" -c "help resolve_owner" -c "help relocate" /mnt/scratch
-move_inode -a agno -- Move an inode into a new AG.
-
-Physically move an inode into a new allocation group
-
- -a agno       -- destination AG agno for the current open file
-
-find_owner -a agno -- Find inodes owning physical blocks in a given AG
-
-Find inodes owning physical blocks in a given AG.
-
- -a agno  -- Scan the given AG agno.
-
-resolve_owner  -- Resolve paths to inodes owning physical blocks in a given AG
-
-Resolve inodes owning physical blocks in a given AG.  This requires
-the find_owner command to be run first to populate the table of
-inodes that need to have their paths resolved.
-
-relocate -a agno [-h agno] -- Relocate data in an AG.
-
-Relocate all the user data and metadata in an AG.
-
-This function will discover all the relocatable objects in a single
-AG and move them to a lower AG as preparation for a shrink
-operation.
-
-	-a <agno>       Allocation group to empty
-	-h <agno>       Highest target AG allowed to relocate into
-$
-
-So, essentially, I can test all the bits in one command with
-"relocate", or I can test different types of objects 1 at a time
-with "move_inode", or I can look at what "relocate" failed to move
-with "find_owner" and "resolve_owner"....
-
-An actual shrink operation will effectively run "relocate" on all
-the AGs that it wants to empty, setting the highest AG that
-relocation is allowed into to the last full AG that will remain in
-the shrunk filesystem, then check the AGs are empty, then run the
-shrink ioctl....
-
-But to get there, I'm bootstrapping the functionality one testable
-module at a time, then refactoring them to combine them into more
-complex operations...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I've added the relevant list, maybe someone there has an opinion.
