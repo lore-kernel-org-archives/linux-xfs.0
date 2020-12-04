@@ -5,134 +5,108 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A9FFC433FE
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 01:15:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 273D3C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 01:15:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43E53224B8
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 01:15:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA85A224B8
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 01:15:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728139AbgLDBPW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Dec 2020 20:15:22 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:48414 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726028AbgLDBPW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 20:15:22 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B419hEF014509;
-        Fri, 4 Dec 2020 01:12:39 GMT
+        id S1728300AbgLDBPd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Dec 2020 20:15:33 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:54268 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726028AbgLDBPd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Dec 2020 20:15:33 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B419k9s068074
+        for <linux-xfs@vger.kernel.org>; Fri, 4 Dec 2020 01:14:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=88m3F0gr7DRiV55VrYVBa6uCGFdOsZkM0pHI5IXQpZM=;
- b=m+l67sVuKtW6e6dzJFBcdfzi7xz7vqZfdJfW78ecat3HBLGlZs9zObIqTDKlcwoalEMs
- eAjq7B1tU2gjj3z0mmWC8S8rUkrZkU62aF/A3qWrl2W3coDHHltR3sYhqVTluIJh7wlb
- t/Rd+mLfrk26kDYGVzCunQa5uFpEXuIAprx+d0cGa1RWx3qhPPodOr/vUX8yUbqSBD5Q
- rKiGlJsZ+aLUKjNrL/UcGIf4k+ongZfe8ETzZAQKJnNs21uxP894Rd2rcfBlVAnP0arC
- lI2e6Ry/5uWYEMwaa22rRs3cnwgN6eUutjik1buhoc7dv+zT1ymW9O2iAmQglFv/GA1D rA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 353egm0yma-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 04 Dec 2020 01:12:39 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B41BSfC157253;
-        Fri, 4 Dec 2020 01:12:38 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 3540g2sw7v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 04 Dec 2020 01:12:38 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0B41Cbln002562;
-        Fri, 4 Dec 2020 01:12:37 GMT
+ bh=IApmRNFLf8E7OWKbmy3AHqTyNNrow7mea4MCJaBBtyk=;
+ b=G2q2WEL0DuIOdX+RM+HjvCVpYzoZxXrM3rJtM2F5vPk8jeRFLm3O7V4KgGqWybG0ReD1
+ gf7vze1074Key3cPZ0uoXIoudefuLy+NWvYc1oDz6MIsadDmZKT8vK2bNVGtOFiN3tEK
+ rNhjPcAHZulMzJp+airDVt1/m7ZJMxFM+RsR3SOW965uiAlEaskzA0D3LL+Eyy/sc5QL
+ mzS2CJMkgjS1KHmbDrYflWxKX6gD4qkze1US+E+7DbxVFlaIyVoq+F5+mSTWkytt/ZXi
+ 8jET+gG5l/sigOAg9WS9bi0ntSDv2H4sRbu+Nh08d9yordm+vugdo5mOntqg2P56ZxPC iw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 353dyr126p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Dec 2020 01:14:51 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B41APNb099316
+        for <linux-xfs@vger.kernel.org>; Fri, 4 Dec 2020 01:12:51 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 3540ax541e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Dec 2020 01:12:51 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0B41Co6r016578
+        for <linux-xfs@vger.kernel.org>; Fri, 4 Dec 2020 01:12:51 GMT
 Received: from localhost (/10.159.242.140)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 03 Dec 2020 17:12:37 -0800
-Subject: [PATCH 10/10] xfs: trace log intent item recovery failures
+        with ESMTP ; Thu, 03 Dec 2020 17:12:50 -0800
+Subject: [PATCH 1/3] xfs: detect overflows in bmbt records
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Date:   Thu, 03 Dec 2020 17:12:37 -0800
-Message-ID: <160704435695.734470.320027217185016602.stgit@magnolia>
-In-Reply-To: <160704429410.734470.15640089119078502938.stgit@magnolia>
-References: <160704429410.734470.15640089119078502938.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Thu, 03 Dec 2020 17:12:50 -0800
+Message-ID: <160704437017.736504.13199098088562847416.stgit@magnolia>
+In-Reply-To: <160704436050.736504.11280764290946254498.stgit@magnolia>
+References: <160704436050.736504.11280764290946254498.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=1
- phishscore=0 mlxlogscore=999 adultscore=0 mlxscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
+ phishscore=0 mlxscore=0 adultscore=0 malwarescore=0 suspectscore=1
  spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2012040003
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=1
- phishscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
- priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012040003
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
+ clxscore=1015 mlxscore=0 spamscore=0 priorityscore=1501 mlxlogscore=999
+ suspectscore=1 lowpriorityscore=0 phishscore=0 adultscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012040003
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a trace point so that we can capture when a recovered log intent
-item fails to recover.
+Detect file block mappings with a blockcount that's either so large that
+integer overflows occur or are zero, because neither are valid in the
+filesystem.  Worse yet, attempting directory modifications causes the
+iext code to trip over the bmbt key handling and takes the filesystem
+down.  We can fix most of this by preventing the bad metadata from
+entering the incore structures in the first place.
+
+Found by setting blockcount=0 in a directory data fork mapping and
+watching the fireworks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log_recover.c |    5 ++++-
- fs/xfs/xfs_trace.h       |   19 +++++++++++++++++++
- 2 files changed, 23 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_bmap.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 87886b7f77da..ed92c72976c9 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2559,8 +2559,11 @@ xlog_recover_process_intents(
- 		spin_unlock(&ailp->ail_lock);
- 		error = lip->li_ops->iop_recover(lip, &capture_list);
- 		spin_lock(&ailp->ail_lock);
--		if (error)
-+		if (error) {
-+			trace_xfs_error_return(log->l_mp, error,
-+					lip->li_ops->iop_recover);
- 			break;
-+		}
- 	}
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index d9a692484eae..de9c27ef68d8 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -6229,6 +6229,11 @@ xfs_bmap_validate_extent(
+ 	xfs_fsblock_t		endfsb;
+ 	bool			isrt;
  
- 	xfs_trans_ail_cursor_done(&cur);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 86951652d3ed..99383b1acd49 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -103,6 +103,25 @@ DEFINE_ATTR_LIST_EVENT(xfs_attr_list_notfound);
- DEFINE_ATTR_LIST_EVENT(xfs_attr_leaf_list);
- DEFINE_ATTR_LIST_EVENT(xfs_attr_node_list);
- 
-+TRACE_EVENT(xfs_error_return,
-+	TP_PROTO(struct xfs_mount *mp, int error, void *caller_ip),
-+	TP_ARGS(mp, error, caller_ip),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(int, error)
-+		__field(void *, caller_ip)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->error = error;
-+		__entry->caller_ip = caller_ip;
-+	),
-+	TP_printk("dev %d:%d error %d caller %pS",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->error, __entry->caller_ip)
++	if (irec->br_startblock + irec->br_blockcount <= irec->br_startblock)
++		return __this_address;
++	if (irec->br_startoff + irec->br_blockcount <= irec->br_startoff)
++		return __this_address;
 +
-+);
-+
- DECLARE_EVENT_CLASS(xfs_perag_class,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int refcount,
- 		 unsigned long caller_ip),
+ 	isrt = XFS_IS_REALTIME_INODE(ip);
+ 	endfsb = irec->br_startblock + irec->br_blockcount - 1;
+ 	if (isrt && whichfork == XFS_DATA_FORK) {
 
