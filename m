@@ -2,135 +2,192 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BBE2C4167B
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 23:30:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0560C433FE
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Dec 2020 11:40:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B2E922D3E
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Dec 2020 23:30:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 720DF22E01
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Dec 2020 11:40:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726558AbgLDX36 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Dec 2020 18:29:58 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:34945 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726111AbgLDX36 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Dec 2020 18:29:58 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 53AEE1AE002;
-        Sat,  5 Dec 2020 10:29:23 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1klKVt-000ZGZ-0t; Sat, 05 Dec 2020 10:29:21 +1100
-Date:   Sat, 5 Dec 2020 10:29:21 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: move kernel-specific superblock validation out
- of libxfs
-Message-ID: <20201204232921.GH3913616@dread.disaster.area>
-References: <160679383892.447856.12907477074923729733.stgit@magnolia>
- <160679384513.447856.3675245763779550446.stgit@magnolia>
- <d54542e0-728f-52b4-3762-c9353fcae8de@sandeen.net>
- <20201204211206.GE106271@magnolia>
- <3123a8c7-9afe-fd73-ae6d-d8c9cd2188ad@sandeen.net>
+        id S1726314AbgLELhY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 5 Dec 2020 06:37:24 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:52638 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726298AbgLELgY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Dec 2020 06:36:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1607168089;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DT6/2aIM4fTXtQze8PkURCZDUyUK4+gRkKzCv8r8qfg=;
+        b=ixzLe/GGYgk/G9qrRGtXDxRGzVjrfaE11rBwp7YOWn4dh0HOvJX9pMiZ17QHLTKJmQmlbV
+        5XDoU42OMjCzdBVOdBwkmcEsPJXdczL+zLBjnKbvuWQkBh7JkJbtYo1ZLTVFtbMb0KnZb6
+        EvG6nEMmjiRkZpCXV9zfaBIdnbexje8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-160-2QaiOHN0P3yIdcTFLdgyuA-1; Sat, 05 Dec 2020 06:34:48 -0500
+X-MC-Unique: 2QaiOHN0P3yIdcTFLdgyuA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1757310054FF;
+        Sat,  5 Dec 2020 11:34:47 +0000 (UTC)
+Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B2FAA5C22A;
+        Sat,  5 Dec 2020 11:34:46 +0000 (UTC)
+Date:   Sat, 5 Dec 2020 06:34:44 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] [RFC] xfs: initialise attr fork on inode create
+Message-ID: <20201205113444.GA1485029@bfoster>
+References: <20201202232724.1730114-1-david@fromorbit.com>
+ <20201204123137.GA1404170@bfoster>
+ <20201204212222.GG3913616@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3123a8c7-9afe-fd73-ae6d-d8c9cd2188ad@sandeen.net>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=rgEY-LVCiogrsf675ugA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20201204212222.GG3913616@dread.disaster.area>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 04, 2020 at 03:46:19PM -0600, Eric Sandeen wrote:
-> On 12/4/20 3:12 PM, Darrick J. Wong wrote:
-> > On Fri, Dec 04, 2020 at 02:35:45PM -0600, Eric Sandeen wrote:
-> >> On 11/30/20 9:37 PM, Darrick J. Wong wrote:
-> >>> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>>
-> >>> A couple of the superblock validation checks apply only to the kernel,
-> >>> so move them to xfs_mount.c before we start changing sb_inprogress.
-> 
-> oh also, you're not changing sb_inprogress anymore, right? ;)
-> 
-> >>> This also reduces the diff between kernel and userspace libxfs.
-> >>
-> >> My only complaint is that "xfs_sb_validate_mount" isn't really descriptive
-> >> at all, and nobody reading the code or comments will know why we've chosen
-> >> to move just these two checks out of the common validator...
-> >>
-> >> What does "compatible with this mount" mean?
+On Sat, Dec 05, 2020 at 08:22:22AM +1100, Dave Chinner wrote:
+> On Fri, Dec 04, 2020 at 07:31:37AM -0500, Brian Foster wrote:
+> > On Thu, Dec 03, 2020 at 10:27:24AM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > When we allocate a new inode, we often need to add an attribute to
+> > > the inode as part of the create. This can happen as a result of
+> > > needing to add default ACLs or security labels before the inode is
+> > > made visible to userspace.
+> > > 
+> > > This is highly inefficient right now. We do the create transaction
+> > > to allocate the inode, then we do an "add attr fork" transaction to
+> > > modify the just created empty inode to set the inode fork offset to
+> > > allow attributes to be stored, then we go and do the attribute
+> > > creation.
+> > > 
+> > > This means 3 transactions instead of 1 to allocate an inode, and
+> > > this greatly increases the load on the CIL commit code, resulting in
+> > > excessive contention on the CIL spin locks and performance
+> > > degradation:
+> > > 
+> > >  18.99%  [kernel]                [k] __pv_queued_spin_lock_slowpath
+> > >   3.57%  [kernel]                [k] do_raw_spin_lock
+> > >   2.51%  [kernel]                [k] __raw_callee_save___pv_queued_spin_unlock
+> > >   2.48%  [kernel]                [k] memcpy
+> > >   2.34%  [kernel]                [k] xfs_log_commit_cil
+> > > 
+> > > The typical profile resulting from running fsmark on a selinux enabled
+> > > filesytem is adds this overhead to the create path:
+> > > 
+> > ...
+> > > 
+> > > And fsmark creation rate performance drops by ~25%. The key point to
+> > > note here is that half the additional overhead comes from adding the
+> > > attribute fork to the newly created inode. That's crazy, considering
+> > > we can do this same thing at inode create time with a couple of
+> > > lines of code and no extra overhead.
+> > > 
+> > > So, if we know we are going to add an attribute immediately after
+> > > creating the inode, let's just initialise the attribute fork inside
+> > > the create transaction and chop that whole chunk of code out of
+> > > the create fast path. This completely removes the performance
+> > > drop caused by enabling SELinux, and the profile looks like:
+> > > 
+> > ...
+> > > 
+> > > Which indicates the XFS overhead of creating the selinux xattr has
+> > > been halved. This doesn't fix the CIL lock contention problem, just
+> > > means it's not a limiting factor for this workload. Lock contention
+> > > in the security subsystems is going to be an issue soon, though...
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_inode_fork.c | 20 +++++++++++++++-----
+> > >  fs/xfs/libxfs/xfs_inode_fork.h |  1 +
+> > >  fs/xfs/xfs_inode.c             | 24 ++++++++++++++++++++----
+> > >  fs/xfs/xfs_inode.h             |  5 +++--
+> > >  fs/xfs/xfs_iops.c              | 10 +++++++++-
+> > >  fs/xfs/xfs_qm.c                |  2 +-
+> > >  fs/xfs/xfs_symlink.c           |  2 +-
+> > >  7 files changed, 50 insertions(+), 14 deletions(-)
+> > > 
+> > ...
+> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > index 2bfbcf28b1bd..9ee2e0b4c6fd 100644
+> > > --- a/fs/xfs/xfs_inode.c
+> > > +++ b/fs/xfs/xfs_inode.c
+> > ...
+> > > @@ -918,6 +919,18 @@ xfs_ialloc(
+> > >  		ASSERT(0);
+> > >  	}
+> > >  
+> > > +	/*
+> > > +	 * If we need to create attributes immediately after allocating the
+> > > +	 * inode, initialise an empty attribute fork right now. We use the
+> > > +	 * default fork offset for attributes here as we don't know exactly what
+> > > +	 * size or how many attributes we might be adding. We can do this safely
+> > > +	 * here because we know the data fork is completely empty right now.
+> > > +	 */
+> > > +	if (init_attrs) {
+> > > +		ip->i_afp = xfs_ifork_alloc(XFS_DINODE_FMT_EXTENTS, 0);
+> > > +		ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
+> > > +	}
+> > > +
 > > 
-> > Compatible with this implementation?
+> > Seems reasonable in principle, but why not refactor
+> > xfs_bmap_add_attrfork() such that the internals (i.e. everything within
+> > the transaction/ilock code) can be properly reused in both contexts
+> > rather than open-coding (and thus duplicating) a somewhat stripped down
+> > version?
 > 
-> Hm.
+> We don't know the size of the attribute that is being created, so
+> the attr size dependent parts of it can't be used.
 > 
-> So most of xfs_validate_sb_common is doing internal consistency checking
-> that has nothing at all to do with the host's core capabilities or filesystem
-> "state" (other than version/features I guess).
-> 
-> You've moved out the PAGE_SIZE check, which depends on the host.
-> 
-> You've also moved the inprogress check, which depends on state.
-> (and that's not really "kernel-specific" is it?)
-> 
-> You'll later move the NEEDSREPAIR check, which I guess is state.
-> 
-> But you haven't moved the fsb_count-vs-host check, which depends on the host.
-> 
-> (and ... I think that one may actually be kernel-specific,
-> because it depends on pagecache limitations in the kernel, so maybe it
-> should be moved out as well?)
-> 
-> So maybe the distinction is internal consistency checks, vs
-> host-compatibility-and-filesystem-state checks.
-> 
-> How about ultimately:
-> 
-> /*
->  * Do host compatibility and filesystem state checks here; these are unique
->  * to the kernel, and may differ in userspace.
->  */
-> xfs_validate_sb_host(
-> 	struct xfs_mount	*mp,
-> 	struct xfs_buf		*bp,
-> 	struct xfs_sb		*sbp)
-> {
 
-THis host stuff should be checked in xfs_fs_fill_super(), right?
+Not sure I see the problem here. It looks to me that
+xfs_bmap_add_attrfork() would do the right thing if we just passed a
+size of zero. The only place the size value is actually used is down in
+xfs_attr_shortform_bytesfit(), and I'd expect that to identify that the
+requested size is <= than the current afork size (also zero for a newly
+allocated inode..?) and bail out.
 
-i.e. it's not really part of the superblock validation, but checking
-if the host can actually run this filesystem. That's what we do in
-xfs_fc_fill_super(), such as the max file size support, whether
-mount options are valid for the superblock config (e.g. reflink vs
-rt) and so on. IOWs, these aren't corruption verifiers, just config
-checks, so we should put them with all the other config checks we do
-at mount time...
+That said, I wouldn't be opposed to tweaking xfs_bmap_set_attrforkoff()
+by a line or two to just skip the shortform call if size == 0. Then we
+can be more explicit about the "size == 0 means preemptive fork alloc,
+use the default offset" use case and perhaps actually document it with
+some comments as well.
 
-i.e. call it something like xfs_fs_validate_sb_config() and move all
-the config and experimental function checks into it, call it only
-from xfs_fs_fill_super() once we've already read in and validated
-the superblock is within the bounds defined by the on-disk format.
+Brian
 
-Oh, and just another thing: can we rename all the "xfs_fc_*"
-functions in xfs_super.c back to xfs_fs_*? I'm getting tired of not
-being about to find the superblock init functions in xfs_super.c
-(e.g. xfs_fs_fill_super()) with grep or cscope because they have a
-whacky, one-off namespace now...
+> > At a glance, it looks like there are some subtle differences in
+> > the initial setup of the attr fork for a device node inode, for example.
+> 
+> Yes, there's a difference, but it's largely irrelevant as adding
+> the first attribute to a device format inode will reset the
+> forkoffset to the min via xfs_attr_shortform_bytesfit().
+> 
+> And if the attribute is larger than will fit in the default fork
+> offset space, but can fit the attr in shrotform by shrinking the
+> empty data fork space, xfs_attr_shortform_bytesfit() will do that as
+> well. IOWs, we only need to set a non-zero fork offset here and init
+> the ip->i_afp pointer - immediately setting an attribute on the
+> empty inode literal area will do the rest for the fork offset setup
+> for us...
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
-Cheers,
-
-Dave.
-
-
--- 
-Dave Chinner
-david@fromorbit.com
