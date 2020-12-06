@@ -2,223 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EB67C4361B
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 22:56:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 760D7C19425
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 23:09:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A0FF23107
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 22:56:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4284223120
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 23:09:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727661AbgLFW4E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Dec 2020 17:56:04 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:53337 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726046AbgLFW4E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Dec 2020 17:56:04 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 6D9241AC2B8;
-        Mon,  7 Dec 2020 09:55:19 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1km2w2-001FXH-Ks; Mon, 07 Dec 2020 09:55:18 +1100
-Date:   Mon, 7 Dec 2020 09:55:18 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com, hch@lst.de,
-        song@kernel.org, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
-        y-goto@fujitsu.com
-Subject: Re: [RFC PATCH v2 0/6] fsdax: introduce fs query to support reflink
-Message-ID: <20201206225518.GJ3913616@dread.disaster.area>
-References: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
- <20201129224723.GG2842436@dread.disaster.area>
- <e0aa187f-e124-1ddc-0f5a-6a8c41a3dc66@cn.fujitsu.com>
+        id S1727375AbgLFXJc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 6 Dec 2020 18:09:32 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:37744 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726400AbgLFXJc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Dec 2020 18:09:32 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B6N45A5185213;
+        Sun, 6 Dec 2020 23:08:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=s4UpUcCt0LUuCpMK1xE78x4ZJaUd39uODPHs3WzwcDg=;
+ b=zcxSxV7huCfuQQQfzJUMjbxFXF3UHCWa7U8br4ef5f8g60QwGs4j9sbZdTAHYytB8Q4n
+ DEUdJPaRBKVbLUTwH9vgGxv0W8CiCijAwpL10co5GaDZnng5OTwoqMT7zHR6osCj9JJF
+ rxfQO5YHgCYAHwyoKctPTfymdIKC6QcLjTnkUdmlR9kQ5hYkdJtCKgz3JqRrvTJfd5sg
+ 1RnUk1guWCCMrDZTgTsf1cATGS6TZEk5iGNP1WbltLmbaGom6d0DmVb86gwRscqviUFi
+ yUZfS215IUJ9aXlCkc3l6X/4ckbt7GSicO9FZNXmTW5QhDUnM6EydfYOBjlI1XkCI5zm xA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 3581mqjvgm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sun, 06 Dec 2020 23:08:47 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B6N4frH165518;
+        Sun, 6 Dec 2020 23:08:46 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 358kskgaef-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 06 Dec 2020 23:08:46 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B6N8hme010870;
+        Sun, 6 Dec 2020 23:08:43 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 06 Dec 2020 15:08:43 -0800
+Date:   Sun, 6 Dec 2020 15:08:42 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/10] xfs: validate feature support when recovering
+ rmap/refcount/bmap intents
+Message-ID: <20201206230842.GI629293@magnolia>
+References: <160704429410.734470.15640089119078502938.stgit@magnolia>
+ <160704435080.734470.11175993745850698818.stgit@magnolia>
+ <20201204140036.GK1404170@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <e0aa187f-e124-1ddc-0f5a-6a8c41a3dc66@cn.fujitsu.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=IkcTkHD0fZMA:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
-        a=HHWehwv_o5C9Q5xAZY4A:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20201204140036.GK1404170@bfoster>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9827 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=1
+ bulkscore=0 malwarescore=0 phishscore=0 mlxscore=0 spamscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012060151
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9827 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxlogscore=999
+ clxscore=1015 malwarescore=0 priorityscore=1501 adultscore=0
+ lowpriorityscore=0 phishscore=0 spamscore=0 impostorscore=0 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012060151
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 02, 2020 at 03:12:20PM +0800, Ruan Shiyang wrote:
-> Hi Dave,
-> 
-> On 2020/11/30 上午6:47, Dave Chinner wrote:
-> > On Mon, Nov 23, 2020 at 08:41:10AM +0800, Shiyang Ruan wrote:
-> > > 
-> > > The call trace is like this:
-> > >   memory_failure()
-> > >     pgmap->ops->memory_failure()   => pmem_pgmap_memory_failure()
-> > >      gendisk->fops->block_lost()   => pmem_block_lost() or
-> > >                                           md_blk_block_lost()
-> > >       sb->s_ops->storage_lost()    => xfs_fs_storage_lost()
-> > >        xfs_rmap_query_range()
-> > >         xfs_storage_lost_helper()
-> > >          mf_recover_controller->recover_fn => \
-> > >                              memory_failure_dev_pagemap_kill_procs()
-> > > 
-> > > The collect_procs() and kill_procs() are moved into a callback which
-> > > is passed from memory_failure() to xfs_storage_lost_helper().  So we
-> > > can call it when a file assocaited is found, instead of creating a
-> > > file list and iterate it.
-> > > 
-> > > The fsdax & reflink support for XFS is not contained in this patchset.
+On Fri, Dec 04, 2020 at 09:00:36AM -0500, Brian Foster wrote:
+> On Thu, Dec 03, 2020 at 05:12:30PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > This looks promising - the overall architecture is a lot more
-> > generic and less dependent on knowing about memory, dax or memory
-> > failures. A few comments that I think would further improve
-> > understanding the patchset and the implementation:
-> 
-> Thanks for your kindly comment.  It gives me confidence.
-> 
+> > The bmap, rmap, and refcount log intent items were added to support the
+> > rmap and reflink features.  Because these features come with changes to
+> > the ondisk format, the log items aren't tied to a log incompat flag.
 > > 
-> > - the order of the patches is inverted. It should start with a
-> >    single patch introducing the mf_recover_controller structure for
-> >    callbacks, then introduce pgmap->ops->memory_failure, then
-> >    ->block_lost, then the pmem and md implementations of ->block
-> >    list, then ->storage_lost and the XFS implementations of
-> >    ->storage_lost.
+> > However, the log recovery routines don't actually check for those
+> > feature flags.  The kernel has no business replayng an intent item for a
+> > feature that isn't enabled, so check that as part of recovered log item
+> > validation.  (Note that kernels pre-dating rmap and reflink will fail
+> > the mount on the unknown log item type code.)
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_bmap_item.c     |    4 ++++
+> >  fs/xfs/xfs_refcount_item.c |    3 +++
+> >  fs/xfs/xfs_rmap_item.c     |    3 +++
+> >  3 files changed, 10 insertions(+)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> > index 78346d47564b..4ea9132716c6 100644
+> > --- a/fs/xfs/xfs_bmap_item.c
+> > +++ b/fs/xfs/xfs_bmap_item.c
+> > @@ -425,6 +425,10 @@ xfs_bui_validate(
+> >  {
+> >  	struct xfs_map_extent		*bmap;
+> >  
+> > +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb) &&
+> > +	    !xfs_sb_version_hasreflink(&mp->m_sb))
+> > +		return false;
+> > +
 > 
-> Yes, it will be easier to understand the patchset in this order.
+> Took me a minute to realize we use the map/unmap for extent swap if rmap
+> is enabled. That does make me wonder a bit.. had we made this kind of
+> recovery feature validation change before that came around (such that we
+> probably would have only checked _hasreflink() here), would we have
+> created an unnecessary backwards incompatibility?
+
+Yes.
+
+I confess to cheating a little here -- technically the bmap intents were
+introduced with reflink in 4.9, whereas rmap was introduced in 4.8.  The
+proper solution is probably to introduce a new log incompat bit for bmap
+intents when reflink isn't enabled, but TBH there were enough other rmap
+bugs in 4.8 (not to mention the EXPERIMENTAL warning) that nobody should
+be running that old of a kernel on a production system.
+
+(Also we don't enable rmap by default yet whereas reflink has been
+enabled by default since 4.18, so the number of people affected probably
+isn't very high...)
+
+Secondary question: should we patch 4.9 and 4.14 to disable rmap and
+reflink support, since they both still have EXPERIMENTAL warnings?
+
+--D
+
+> Brian
 > 
-> But I have something unsure: for example, I introduce ->memory_failure()
-> firstly, but the implementation of ->memory_failure() needs to call
-> ->block_lost() which is supposed to be introduced in the next patch. So, I
-> am not sure the code is supposed to be what in the implementation of
-> ->memory_failure() in pmem?  To avoid this situation, I committed the
-> patches in the inverted order: lowest level first, then its caller, and then
-> caller's caller.
-
-Well, there's two things here. The first is the infrastructure, the
-second is the drivers that use the infrastructure. You can introduce
-a method in one patch, and then the driver that uses it in another.
-Or you can introduce a driver skeleton that doesn't nothing until
-more infrastructure is added. so...
-
+> >  	/* Only one mapping operation per BUI... */
+> >  	if (buip->bui_format.bui_nextents != XFS_BUI_MAX_FAST_EXTENTS)
+> >  		return false;
+> > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+> > index 8ad6c81f6d8f..2b28f5643c0b 100644
+> > --- a/fs/xfs/xfs_refcount_item.c
+> > +++ b/fs/xfs/xfs_refcount_item.c
+> > @@ -423,6 +423,9 @@ xfs_cui_validate_phys(
+> >  	struct xfs_mount		*mp,
+> >  	struct xfs_phys_extent		*refc)
+> >  {
+> > +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+> > +		return false;
+> > +
+> >  	if (refc->pe_flags & ~XFS_REFCOUNT_EXTENT_FLAGS)
+> >  		return false;
+> >  
+> > diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+> > index f296ec349936..2628bc0080fe 100644
+> > --- a/fs/xfs/xfs_rmap_item.c
+> > +++ b/fs/xfs/xfs_rmap_item.c
+> > @@ -466,6 +466,9 @@ xfs_rui_validate_map(
+> >  	struct xfs_mount		*mp,
+> >  	struct xfs_map_extent		*rmap)
+> >  {
+> > +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> > +		return false;
+> > +
+> >  	if (rmap->me_flags & ~XFS_RMAP_EXTENT_FLAGS)
+> >  		return false;
+> >  
+> > 
 > 
-> I am trying to sort out the order.  How about this:
->  Patch i.
->    Introduce ->memory_failure()
->       - just introduce interface, without implementation
->  Patch i++.
->    Introduce ->block_lost()
->       - introduce interface and implement ->memory_failure()
->          in pmem, so that it can call ->block_lost()
->  Patch i++.
->    (similar with above, skip...)
-
-So this is better, but you don't need to add the pmem driver use of
-"->block_lost" in the patch that adds the method. IOWs, something
-like:
-
-P1: introduce ->memory_failure API, all the required documentation
-and add the call sites in the infrastructure that trigger it
-
-P2: introduce ->corrupted_range to the block device API, all the
-required documentation and any generic block infrastructure that
-needs to call it.
-
-P3: introduce ->corrupted_range to the superblock ops API, all the
-required documentation
-
-P4: add ->corrupted_range() API to the address space ops, all the
-required documentation
-
-P5: factor the existing kill procs stuff to be able to be called on
-via generic_mapping_kill_range()
-
-P5: add dax_mapping_kill_range()
-
-P6: add the pmem driver support for ->memory_failure
-
-P7: add the block device driver support for ->corrupted_range
-
-P8: add filesystem support for sb_ops->corrupted_range.
-
-P9: add filesystem support for aops->corrupted_range.
-
-> >    This gets rid of the mf_recover_controller altogether and allows
-> >    the interface to be used by any sort of block device for any sort
-> >    of bottom-up reporting of media/device failures.
-> 
-> Moving the recover function to the address_space ops looks a better idea.
-> But I think that the error handler for page cache mapping is finished well
-> in memory-failure.  The memory-failure is also reused to handles anonymous
-> page.
-
-Yes, anonymous page handling can remain there, we're only concerned
-about handling file mapped pages here right now. If we end up
-sharing page cache pages across reflink mappings, we'll have exactly
-the same issue we have now with DAX....
-
-> If we move the recover function to address_space ops, I think we also
-> need to refactor the existing handler for page cache mapping, which may
-> affect anonymous page handling.  This makes me confused...
-
-Make the handling of the page the error occurred in conditional on
-!PageAnon().
-
-> I rewrote the call trace:
-> memory_failure()
->  * dax mapping case
->  pgmap->ops->memory_failure()          =>
->                                    pmem_pgmap_memory_failure()
->   gendisk->fops->block_corrupt_range() =>
->                                    - pmem_block_corrupt_range()
->                                    - md_blk_block_corrupt_range()
->    sb->s_ops->storage_currupt_range()  =>
->                                    xfs_fs_storage_corrupt_range()
-
-No need for block/storage prefixes in these...
-
->     xfs_rmap_query_range()
->      xfs_storage_lost_helper()
->       mapping->a_ops->corrupt_range()  =>
->                                    xfs_dax_aops.xfs_dax_corrupt_range
->        memory_failure_dev_pagemap_kill_procs()
-
-This assumes we find a user data mapping. We might find the
-corrupted storage contained metadata, in which case we'll be
-shutting down the filesystem, not trying to kill user procs...
-
-Also, we don't need aops->corrupt_range() here as we are already in
-the filesystem code and if we find a mapping in memory we can just
-do "if (IS_DAX(mapping->host))" to call the right kill procs
-implementation for the mapping we've found. aops->corrupt_range is
-for generic code working on a mapping to inform the filesystem that
-there is a bad range in the mapping (my apologies for getting that
-all mixed up in my last email).
-
->  * page cache mapping case
->  mapping->a_ops->corrupt_range()       =>
->                                    xfs_address_space_operations.xfs_xxx
->   memory_failure_generic_kill_procs()
-
-We need the aops->corrupted_range() to call into the filesystem so
-it can do a similar reverse mapping lookup to
-sb->s_ops->corrupted_range.  Yes, the page cache should already have
-a mapping attached to the page, but we do not know whether it is the
-only mapping that exists for that page. e.g. if/when we implement
-multiple-mapped shared read-only reflink pages in the page cache
-which results in the same problem we have with DAX pages right now.
-
-Overall, though, it seems like you're on the right path. :)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
