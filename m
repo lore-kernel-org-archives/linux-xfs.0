@@ -7,66 +7,68 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A3FCC433FE
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 23:14:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82B8FC433FE
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 23:15:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4929E2310B
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 23:14:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A7DD2311B
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 23:15:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727659AbgLFXNy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Dec 2020 18:13:54 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:58092 "EHLO
+        id S1728039AbgLFXPR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 6 Dec 2020 18:15:17 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:59138 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728471AbgLFXNw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Dec 2020 18:13:52 -0500
+        with ESMTP id S1727350AbgLFXPR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Dec 2020 18:15:17 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B6N6YSw182481
-        for <linux-xfs@vger.kernel.org>; Sun, 6 Dec 2020 23:13:11 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B6N5ix7182044;
+        Sun, 6 Dec 2020 23:12:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=EVHFx3B23oECeeh/6hykWPXtq2XyOvqALbN7shfya1A=;
- b=Sx/cWZzUf8v4+adTQWk0g9bWF+7PUpT8zlHmLp+OXERPrrkUXuLE4DMZTGYla8vgqSO6
- BcCm5FYMw/FJ3Oc2oTaA1z7QM3AJcf/ofzMV4roQ5l0oinwNnRNwT8nW7W1qM0TIaxbu
- uQOljzhvhmWcIVJl9f92jnYa1BBNr9rYlnDYlz6bJd31SLXHa/A/8d3iibS23a2uaQ1t
- rHTX5lS/mgu9LO+GDrNQ0DVzwafb6N/+z98ksbTP26jUnfGYZEJYegrFBaC3C8fkfi30
- LumcpVNiF+l+HlZD7dLqEmNqZqAMUgdaSOVHxVFGJKi7MuunWFslNlNEb2kp5mQ5/zKe hQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 35825ktukd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sun, 06 Dec 2020 23:13:11 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B6NAMCi005640
-        for <linux-xfs@vger.kernel.org>; Sun, 6 Dec 2020 23:11:10 GMT
+ bh=OzmnVKdRHi6WTgQFdPalPzUI3wEAvoeOIT05cy1Ifkc=;
+ b=Q/TDXSuPOR2hWlcPBcE2Z4s0DzfhTonMeLspILEEs6XCu8ROTLluUS2XquRk05L2Ulek
+ eA9/zNtF6Q46LP2NyOlD6ErS0KBKr7jyqnspXuLoJG8RTYB7WKIIVxrlnHaJO3H8gb0+
+ R6fppAQomphzEJjtZkAD04O8/QG/sPC5jy4+lI/OIH8cvCTof0dMbFl5C4aclXbd8P3O
+ xM4BhLav+OisQ/j27SftWmUf84IAmb+eHEYQ4tWCbajOaXSdSUxXTCpkOhu0jYQ6hnwF
+ hTX0bx7RTgIHdfst1OtyigeavaCcGgG4JAQXlUwdH1NHHmJkBOxhTtqvUAqu4Ucn0CnZ Cg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 35825ktujt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sun, 06 Dec 2020 23:12:32 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B6N5bHS120667;
+        Sun, 6 Dec 2020 23:10:31 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 358m3vpe4q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 06 Dec 2020 23:11:10 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B6NBAMb012491
-        for <linux-xfs@vger.kernel.org>; Sun, 6 Dec 2020 23:11:10 GMT
+        by userp3030.oracle.com with ESMTP id 358m4v6508-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 06 Dec 2020 23:10:31 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B6NAUw4011589;
+        Sun, 6 Dec 2020 23:10:30 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 06 Dec 2020 15:11:10 -0800
-Subject: [PATCH 3/4] xfs: refactor file range validation
+        with ESMTP ; Sun, 06 Dec 2020 15:10:30 -0800
+Subject: [PATCH 07/10] xfs: hoist recovered extent-free intent checks out of
+ xfs_efi_item_recover
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Date:   Sun, 06 Dec 2020 15:11:09 -0800
-Message-ID: <160729626928.1608297.12355625902682243490.stgit@magnolia>
-In-Reply-To: <160729625074.1608297.13414859761208067117.stgit@magnolia>
-References: <160729625074.1608297.13414859761208067117.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>,
+        linux-xfs@vger.kernel.org, bfoster@redhat.com
+Date:   Sun, 06 Dec 2020 15:10:29 -0800
+Message-ID: <160729622893.1607103.16920765742195834092.stgit@magnolia>
+In-Reply-To: <160729618252.1607103.863261260798043728.stgit@magnolia>
+References: <160729618252.1607103.863261260798043728.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9827 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 adultscore=0
- bulkscore=0 phishscore=0 suspectscore=1 mlxscore=0 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 suspectscore=3
+ bulkscore=0 malwarescore=0 phishscore=0 adultscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012060152
+ definitions=main-2012060151
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9827 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 adultscore=0 bulkscore=0
  phishscore=0 mlxlogscore=999 clxscore=1015 priorityscore=1501 mlxscore=0
  spamscore=0 lowpriorityscore=0 malwarescore=0 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
@@ -77,118 +79,76 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor all the open-coded validation of file block ranges into a
-single helper, and teach the bmap scrubber to check the ranges.
+When we recover a extent-free intent from the log, we need to validate
+its contents before we try to replay them.  Hoist the checking code into
+a separate function in preparation to refactor this code to use
+validation helpers.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c  |    2 +-
- fs/xfs/libxfs/xfs_types.c |   25 +++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_types.h |    3 +++
- fs/xfs/scrub/bmap.c       |    4 ++++
- fs/xfs/xfs_bmap_item.c    |    2 +-
- fs/xfs/xfs_rmap_item.c    |    2 +-
- 6 files changed, 35 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_extfree_item.c |   33 +++++++++++++++++++++++++--------
+ 1 file changed, 25 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 7bcf498ef6b2..dcf56bcafb8f 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -6227,7 +6227,7 @@ xfs_bmap_validate_extent(
- {
- 	struct xfs_mount	*mp = ip->i_mount;
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 6c11bfc3d452..f86c8a7c9c4e 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -578,6 +578,25 @@ const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
+ 	.cancel_item	= xfs_extent_free_cancel_item,
+ };
  
--	if (irec->br_startoff + irec->br_blockcount <= irec->br_startoff)
-+	if (!xfs_verify_fileext(mp, irec->br_startoff, irec->br_blockcount))
- 		return __this_address;
- 
- 	if (XFS_IS_REALTIME_INODE(ip) && whichfork == XFS_DATA_FORK) {
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index 7b310eb296b7..b254fbeaaa50 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -258,3 +258,28 @@ xfs_verify_dablk(
- 
- 	return dabno <= max_dablk;
- }
-+
-+/* Check that a file block offset does not exceed the maximum. */
-+bool
-+xfs_verify_fileoff(
-+	struct xfs_mount	*mp,
-+	xfs_fileoff_t		off)
++/* Is this recovered EFI ok? */
++static inline bool
++xfs_efi_validate_ext(
++	struct xfs_mount		*mp,
++	struct xfs_extent		*extp)
 +{
-+	return off <= XFS_MAX_FILEOFF;
-+}
++	xfs_fsblock_t			startblock_fsb;
 +
-+/* Check that a range of file block offsets do not exceed the maximum. */
-+bool
-+xfs_verify_fileext(
-+	struct xfs_mount	*mp,
-+	xfs_fileoff_t		off,
-+	xfs_fileoff_t		len)
-+{
-+	if (off + len <= off)
++	startblock_fsb = XFS_BB_TO_FSB(mp,
++			   XFS_FSB_TO_DADDR(mp, extp->ext_start));
++	if (startblock_fsb == 0 ||
++	    extp->ext_len == 0 ||
++	    startblock_fsb >= mp->m_sb.sb_dblocks ||
++	    extp->ext_len >= mp->m_sb.sb_agblocks)
 +		return false;
 +
-+	if (!xfs_verify_fileoff(mp, off))
-+		return false;
-+
-+	return xfs_verify_fileoff(mp, off + len - 1);
++	return true;
 +}
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index 18e83ce46568..064bd6e8c922 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -203,5 +203,8 @@ bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
- bool xfs_verify_dablk(struct xfs_mount *mp, xfs_fileoff_t off);
- void xfs_icount_range(struct xfs_mount *mp, unsigned long long *min,
- 		unsigned long long *max);
-+bool xfs_verify_fileoff(struct xfs_mount *mp, xfs_fileoff_t off);
-+bool xfs_verify_fileext(struct xfs_mount *mp, xfs_fileoff_t off,
-+		xfs_fileoff_t len);
- 
- #endif	/* __XFS_TYPES_H__ */
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index cce8ac7d3973..bce4421acdb9 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -329,6 +329,10 @@ xchk_bmap_iextent(
- 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
- 				irec->br_startoff);
- 
-+	if (!xfs_verify_fileext(mp, irec->br_startoff, irec->br_blockcount))
-+		xchk_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
 +
- 	xchk_bmap_dirattr_extent(ip, info, irec);
+ /*
+  * Process an extent free intent item that was recovered from
+  * the log.  We need to free the extents that it describes.
+@@ -592,7 +611,6 @@ xfs_efi_item_recover(
+ 	struct xfs_efd_log_item		*efdp;
+ 	struct xfs_trans		*tp;
+ 	struct xfs_extent		*extp;
+-	xfs_fsblock_t			startblock_fsb;
+ 	int				i;
+ 	int				error = 0;
  
- 	/* There should never be a "hole" extent in either extent list. */
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 5c9706760e68..9a2e54b7ccb9 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -449,7 +449,7 @@ xfs_bui_validate(
- 	if (!xfs_verify_ino(mp, bmap->me_owner))
- 		return false;
+@@ -602,14 +620,13 @@ xfs_efi_item_recover(
+ 	 * just toss the EFI.
+ 	 */
+ 	for (i = 0; i < efip->efi_format.efi_nextents; i++) {
+-		extp = &efip->efi_format.efi_extents[i];
+-		startblock_fsb = XFS_BB_TO_FSB(mp,
+-				   XFS_FSB_TO_DADDR(mp, extp->ext_start));
+-		if (startblock_fsb == 0 ||
+-		    extp->ext_len == 0 ||
+-		    startblock_fsb >= mp->m_sb.sb_dblocks ||
+-		    extp->ext_len >= mp->m_sb.sb_agblocks)
++		if (!xfs_efi_validate_ext(mp,
++					&efip->efi_format.efi_extents[i])) {
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++					&efip->efi_format,
++					sizeof(efip->efi_format));
+ 			return -EFSCORRUPTED;
++		}
+ 	}
  
--	if (bmap->me_startoff + bmap->me_len <= bmap->me_startoff)
-+	if (!xfs_verify_fileext(mp, bmap->me_startoff, bmap->me_len))
- 		return false;
- 
- 	return xfs_verify_fsbext(mp, bmap->me_startblock, bmap->me_len);
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 4fa875237422..49cebd68b672 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -490,7 +490,7 @@ xfs_rui_validate_map(
- 	    !xfs_verify_ino(mp, rmap->me_owner))
- 		return false;
- 
--	if (rmap->me_startoff + rmap->me_len <= rmap->me_startoff)
-+	if (!xfs_verify_fileext(mp, rmap->me_startoff, rmap->me_len))
- 		return false;
- 
- 	return xfs_verify_fsbext(mp, rmap->me_startblock, rmap->me_len);
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
 
