@@ -2,227 +2,124 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D982C4361B
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 23:25:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C550AC4361B
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 23:34:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 078ED2311B
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 23:25:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EAB423120
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Dec 2020 23:34:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727375AbgLFXZk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Dec 2020 18:25:40 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:38876 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726046AbgLFXZk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Dec 2020 18:25:40 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B6NJGcn048712;
-        Sun, 6 Dec 2020 23:24:57 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=vI2NBiCGlbYrcBYCIAYcdTt5rxULNqXm1qgJNwoXKIw=;
- b=F7CO/zu1WtuXr0lvAGU+ZMOX4tGYYIG28EUMhXcZ59OCfUNYQ+mBdOo5iV5XfNUDfnI/
- itXZtxrFw2WcOyGJppyker2uJ7GfNm3YUxJ5amusWLzkdDa+poDk7obwo/f9iB1Tjewa
- i64pQ7EAJJsq1AXzjw5LBT7KhqcKHBOWUliQycSupWUwcFtxKR84QsP6Vshkx7irlZ2L
- GFbqJxvUJRzsrGXG6CuTPOSy+W7vYHhQlej3jZj+j8Dv48PRUA6a/RkAUp1gInfwchvU
- tW9htmY+PDRJIkBg5zXZKGT490f55JMU/iLtGxMNZWphKlMzdSjVngvg70gnRzmNutoS oA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 357yqbk17j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 06 Dec 2020 23:24:56 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B6NKMw8019226;
-        Sun, 6 Dec 2020 23:24:56 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 358m3vps0d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 06 Dec 2020 23:24:56 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B6NOuTx020174;
-        Sun, 6 Dec 2020 23:24:56 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 06 Dec 2020 15:24:55 -0800
-Date:   Sun, 6 Dec 2020 15:24:54 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1728075AbgLFXeI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 6 Dec 2020 18:34:08 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:42183 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726046AbgLFXeH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Dec 2020 18:34:07 -0500
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id AEB6B3CA6FF;
+        Mon,  7 Dec 2020 10:33:23 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1km3Ws-001G8O-Ia; Mon, 07 Dec 2020 10:33:22 +1100
+Date:   Mon, 7 Dec 2020 10:33:22 +1100
+From:   Dave Chinner <david@fromorbit.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: use reflink to assist unaligned copy_file_range
- calls
-Message-ID: <20201206232454.GL629293@magnolia>
-References: <160679383048.447787.12488361211673312070.stgit@magnolia>
- <160679383664.447787.14224539520566294960.stgit@magnolia>
- <20201201152548.GB1205666@bfoster>
+Subject: Re: [PATCH] [RFC] xfs: initialise attr fork on inode create
+Message-ID: <20201206233322.GK3913616@dread.disaster.area>
+References: <20201202232724.1730114-1-david@fromorbit.com>
+ <20201204123137.GA1404170@bfoster>
+ <20201204212222.GG3913616@dread.disaster.area>
+ <20201205113444.GA1485029@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201201152548.GB1205666@bfoster>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9827 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 adultscore=0
- bulkscore=0 phishscore=0 suspectscore=1 mlxscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012060153
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9827 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxlogscore=999
- clxscore=1015 malwarescore=0 bulkscore=0 phishscore=0 adultscore=0
- spamscore=0 priorityscore=1501 mlxscore=0 lowpriorityscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012060153
+In-Reply-To: <20201205113444.GA1485029@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
+        a=oflAuAwyQYcZkxkKKxsA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 01, 2020 at 10:25:48AM -0500, Brian Foster wrote:
-> On Mon, Nov 30, 2020 at 07:37:16PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Dec 05, 2020 at 06:34:44AM -0500, Brian Foster wrote:
+> On Sat, Dec 05, 2020 at 08:22:22AM +1100, Dave Chinner wrote:
+> > On Fri, Dec 04, 2020 at 07:31:37AM -0500, Brian Foster wrote:
+> > > On Thu, Dec 03, 2020 at 10:27:24AM +1100, Dave Chinner wrote:
+> > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > > index 2bfbcf28b1bd..9ee2e0b4c6fd 100644
+> > > > --- a/fs/xfs/xfs_inode.c
+> > > > +++ b/fs/xfs/xfs_inode.c
+> > > ...
+> > > > @@ -918,6 +919,18 @@ xfs_ialloc(
+> > > >  		ASSERT(0);
+> > > >  	}
+> > > >  
+> > > > +	/*
+> > > > +	 * If we need to create attributes immediately after allocating the
+> > > > +	 * inode, initialise an empty attribute fork right now. We use the
+> > > > +	 * default fork offset for attributes here as we don't know exactly what
+> > > > +	 * size or how many attributes we might be adding. We can do this safely
+> > > > +	 * here because we know the data fork is completely empty right now.
+> > > > +	 */
+> > > > +	if (init_attrs) {
+> > > > +		ip->i_afp = xfs_ifork_alloc(XFS_DINODE_FMT_EXTENTS, 0);
+> > > > +		ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
+> > > > +	}
+> > > > +
+> > > 
+> > > Seems reasonable in principle, but why not refactor
+> > > xfs_bmap_add_attrfork() such that the internals (i.e. everything within
+> > > the transaction/ilock code) can be properly reused in both contexts
+> > > rather than open-coding (and thus duplicating) a somewhat stripped down
+> > > version?
 > > 
-> > Add a copy_file_range handler to XFS so that we can accelerate file
-> > copies with reflink when the source and destination ranges are not
-> > block-aligned.  We'll use the generic pagecache copy to handle the
-> > unaligned edges and attempt to reflink the middle.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_file.c |   99 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 99 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > index 5b0f93f73837..9d1bb0dc30e2 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -1119,6 +1119,104 @@ xfs_file_remap_range(
-> >  	return remapped > 0 ? remapped : ret;
-> >  }
-> >  
-> ...
-> > +STATIC ssize_t
-> > +xfs_file_copy_range(
-> > +	struct file		*src_file,
-> > +	loff_t			src_off,
-> > +	struct file		*dst_file,
-> > +	loff_t			dst_off,
-> > +	size_t			len,
-> > +	unsigned int		flags)
-> > +{
-> > +	struct inode		*inode_src = file_inode(src_file);
-> > +	struct xfs_inode	*src = XFS_I(inode_src);
-> > +	struct inode		*inode_dst = file_inode(dst_file);
-> > +	struct xfs_inode	*dst = XFS_I(inode_dst);
-> > +	struct xfs_mount	*mp = src->i_mount;
-> > +	loff_t			copy_ret;
-> > +	loff_t			next_block;
-> > +	size_t			copy_len;
-> > +	ssize_t			total_copied = 0;
-> > +
-> > +	/* Bypass all this if no copy acceleration is possible. */
-> > +	if (!xfs_want_reflink_copy_range(src, src_off, dst, dst_off, len))
-> > +		goto use_generic;
-> > +
-> > +	/* Use the regular copy until we're block aligned at the start. */
-> > +	next_block = round_up(src_off + 1, mp->m_sb.sb_blocksize);
+> > We don't know the size of the attribute that is being created, so
+> > the attr size dependent parts of it can't be used.
 > 
-> Why the +1? AFAICT this means we manually copy the first block if
-> src_off does happen to be block aligned. Is this an assumption based on
-> the caller attempting ->remap_file_range() first?
+> Not sure I see the problem here. It looks to me that
+> xfs_bmap_add_attrfork() would do the right thing if we just passed a
+> size of zero.
 
-Yes.  The VFS always tries that first.
+Yes, but it also does an awful lot that we do not need.
 
-> BTW, if we do happen to be called in some (theoretical) corner case
-> where remap doesn't work unrelated to alignment, it seems this would
-> unconditionally break the manual copy into multiple parts (first block +
-> the rest). It's not immediately clear to me if that's significant from a
-> performance perspective,
+> The only place the size value is actually used is down in
+> xfs_attr_shortform_bytesfit(), and I'd expect that to identify that the
+> requested size is <= than the current afork size (also zero for a newly
+> allocated inode..?) and bail out.
 
-I doubt it, since that's usually just copying around the pagecache.
+RIght it ends up doing that because an uninitialised inode fork
+(di_forkoff = 0) is the same size as the requested size of zero, and
+then it does ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
 
-> but I wonder if it would be nicer here to
-> filter that out more explicitly. For example, run the remap checks on
-> the block aligned offset/len first, or skip the remap if the caller has
-> provided a block aligned start (i.e. hinting that remap failed for other
-> reasons),
+But that's decided another two function calls deep, after a lot of
+branches and shifting and comparisons to determine that the attr
+fork is empty. Yet we already know that the attr fork is empty here
+so all that extra CPU work is completely unnecessary.
 
-Yes, checking the block alignment is a good suggestion.  Will fix.
+Keep in mind we do exactly the same thing in
+xfs_bmap_forkoff_reset(). We don't care about all the setup stuff in
+xfs_bmap_add_attrfork(), we just reset the attr fork offset to the
+default if the attr fork had grown larger than the default offset.
 
-> or perhaps even implement this so it conditionally performs a
-> short manual copy so the next retry would fall into ->remap_file_range()
-> with aligned offsets, etc.
+> That said, I wouldn't be opposed to tweaking xfs_bmap_set_attrforkoff()
+> by a line or two to just skip the shortform call if size == 0. Then we
+> can be more explicit about the "size == 0 means preemptive fork alloc,
+> use the default offset" use case and perhaps actually document it with
+> some comments as well.
 
-Hm.  That could be a thing too, though my opinion is that we should make
-as much progress as we can before exiting the kernel.
+It just seems wrong to me to code a special case into some function
+to optimise that special case when the code that needs the special
+case has no need to call that function in the first place.....
 
---D
+Cheers,
 
-> Thoughts?
-> 
-> > +	copy_len = min_t(size_t, len, next_block - src_off);
-> > +	if (copy_len > 0) {
-> > +		copy_ret = generic_copy_file_range(src_file, src_off, dst_file,
-> > +					dst_off, copy_len, flags);
-> > +		if (copy_ret < 0)
-> > +			return copy_ret;
-> > +
-> > +		src_off += copy_ret;
-> > +		dst_off += copy_ret;
-> > +		len -= copy_ret;
-> > +		total_copied += copy_ret;
-> > +		if (copy_ret < copy_len || len == 0)
-> > +			return total_copied;
-> > +	}
-> > +
-> > +	/*
-> > +	 * Now try to reflink as many full blocks as we can.  If the end of the
-> > +	 * copy request wasn't block-aligned or the reflink fails, we'll just
-> > +	 * fall into the generic copy to do the rest.
-> > +	 */
-> > +	copy_len = round_down(len, mp->m_sb.sb_blocksize);
-> > +	if (copy_len > 0) {
-> > +		copy_ret = xfs_file_remap_range(src_file, src_off, dst_file,
-> > +				dst_off, copy_len, REMAP_FILE_CAN_SHORTEN);
-> > +		if (copy_ret >= 0) {
-> > +			src_off += copy_ret;
-> > +			dst_off += copy_ret;
-> > +			len -= copy_ret;
-> > +			total_copied += copy_ret;
-> > +			if (copy_ret < copy_len || len == 0)
-> > +				return total_copied;
-> 
-> Any reason we return a potential short copy here, but fall into the
-> manual copy if the reflink outright fails?
-> 
-> > +		}
-> > +	}
-> > +
-> > +use_generic:
-> > +	/* Use the regular copy to deal with leftover bytes. */
-> > +	copy_ret = generic_copy_file_range(src_file, src_off, dst_file,
-> > +			dst_off, len, flags);
-> > +	if (copy_ret < 0)
-> > +		return copy_ret;
-> 
-> Perhaps this should also check/return total_copied in the event we've
-> already done some work..?
-> 
-> Brian
-> 
-> > +	return total_copied + copy_ret;
-> > +}
-> > +
-> >  STATIC int
-> >  xfs_file_open(
-> >  	struct inode	*inode,
-> > @@ -1381,6 +1479,7 @@ const struct file_operations xfs_file_operations = {
-> >  	.get_unmapped_area = thp_get_unmapped_area,
-> >  	.fallocate	= xfs_file_fallocate,
-> >  	.fadvise	= xfs_file_fadvise,
-> > +	.copy_file_range = xfs_file_copy_range,
-> >  	.remap_file_range = xfs_file_remap_range,
-> >  };
-> >  
-> > 
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
