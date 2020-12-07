@@ -2,81 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5F69C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 14:21:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB180C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 14:22:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1EE0235FF
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 14:21:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93DBD235FF
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 14:22:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726412AbgLGOVj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Dec 2020 09:21:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38840 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725770AbgLGOVj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 09:21:39 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB5D6C0613D0
-        for <linux-xfs@vger.kernel.org>; Mon,  7 Dec 2020 06:20:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=vmxIhbotHS7BYv8yJKXFofUt0FADRRv9JcQyq/fGgEM=; b=T/3/bSxcWfDRZVHpxepi55s/FB
-        mprUzFyc3RN8QiW2FddAPJcg6l6ZzcwOhS4YH5reLsSKSzBIQLyMnCAOFKl2NLG8m1aiMSFNYilsZ
-        U/cQM8j5r2g/ujEYoudJtuw7jwOwdhm8W7IX8WOIkqz1Z3aGP+R4ps8PG1EmQQACwBCWXT4ICBxRR
-        glu1lOQKyYaP7ZAM/2DilSDJwJE5dlO7/l+ztQ1pizybuVdbZQsktTj3oeZD2QQAFat92huUd3qf5
-        DrllGK/SoSfBC7nPq8TmxzVgLHEG0MDA9pKX/6Al16yEHlIdyH315o2P3w7/HYITmbib6sWvSd0vU
-        CLiI6fPQ==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kmHNp-0002it-Cq; Mon, 07 Dec 2020 14:20:57 +0000
-Date:   Mon, 7 Dec 2020 14:20:57 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: use reflink to assist unaligned copy_file_range
- calls
-Message-ID: <20201207142057.GA9865@infradead.org>
-References: <160679383048.447787.12488361211673312070.stgit@magnolia>
- <160679383664.447787.14224539520566294960.stgit@magnolia>
- <20201201100206.GA10262@infradead.org>
- <20201206232154.GK629293@magnolia>
+        id S1726261AbgLGOWW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Dec 2020 09:22:22 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:41461 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726218AbgLGOWW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 09:22:22 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1607350855;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=JLDMVhSIGIMERc5PZhOo57C42S41fmMhHnQ7kmISmW0=;
+        b=bBLAHD8wGIRkPihrMIgAmoOhH0sEHIx5AxEm9YVVh5cge2tjvR/eVbuFP+4VmVNf+rxNB/
+        IXdOikQIEO5nS1ifVEbuVcwvEIeKqs1vkTPTvhUOtOHIK41PAtEa9ctkpUiPmYPVUCDpi0
+        gqu7hXZc3ppQ4cdkZUYHPt8klM7D8m0=
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
+ [209.85.215.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-336-u-mmneYVMc-k-sAhT4wxoA-1; Mon, 07 Dec 2020 09:20:54 -0500
+X-MC-Unique: u-mmneYVMc-k-sAhT4wxoA-1
+Received: by mail-pg1-f200.google.com with SMTP id l7so8855926pgq.16
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Dec 2020 06:20:54 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=JLDMVhSIGIMERc5PZhOo57C42S41fmMhHnQ7kmISmW0=;
+        b=djWoWiPDYQT+GYgooVhrOo13ukJn2+PPa5/35kwXW+tsYUQfCqszBA13ZqePjADkFR
+         SkLa96llCuyCnxVxQ9Yhq7o1U+UnfUoD2LeKULZC+7AxlVq9RSN6Ba3S6heil13phesP
+         C8iongKCMewl/5lgVBWeAAUmPQLdOmSZVnf9O2bWVbIAyIFR5VqXoJbKMFKQ3JZgfB4k
+         rLSvI3NCpSSFYyT7hGaJJGl0e6Y0/sOz/gbY7CKopRGL7BRffmuxVht088Nva5vlguSH
+         Mqx0uvBp0+yGwWFqUxzA+osB23RewPK6511L5N18XI/6iefcaxDfl3KfovdS9MnZ7PPb
+         uTjg==
+X-Gm-Message-State: AOAM531RFE7GANiMiOsm+CgjDiKFyJW9Dnu7pjbZuKdG5lcI48vn0X5u
+        WCNbNEcxNWim8lPYXdiQ7xoyZ+fTDZ7fBAzIr0J6wg5m4FMzkmtKe1HKuADqQ0Af5BUkP/Ga/C1
+        DHXWk+pCsGrP1gEaFOKc5
+X-Received: by 2002:aa7:8499:0:b029:19e:6c5:b103 with SMTP id u25-20020aa784990000b029019e06c5b103mr5406927pfn.13.1607350853007;
+        Mon, 07 Dec 2020 06:20:53 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxE2/7kl6A+K/kNbtip+FCDemP7TZ9r+nukmSOoSZ6UOPFMpoLQyd/3/Tbtt40Xh2Rq3zGtWg==
+X-Received: by 2002:aa7:8499:0:b029:19e:6c5:b103 with SMTP id u25-20020aa784990000b029019e06c5b103mr5406917pfn.13.1607350852817;
+        Mon, 07 Dec 2020 06:20:52 -0800 (PST)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id w1sm6199687pjt.23.2020.12.07.06.20.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Dec 2020 06:20:52 -0800 (PST)
+Date:   Mon, 7 Dec 2020 22:20:41 +0800
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH v3 4/6] xfs: move xfs_dialloc_roll() into xfs_dialloc()
+Message-ID: <20201207142041.GC2817641@xiangao.remote.csb>
+References: <20201207001533.2702719-1-hsiangkao@redhat.com>
+ <20201207001533.2702719-5-hsiangkao@redhat.com>
+ <20201207135336.GE29249@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20201206232154.GK629293@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20201207135336.GE29249@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Dec 06, 2020 at 03:21:54PM -0800, Darrick J. Wong wrote:
-> On Tue, Dec 01, 2020 at 10:02:06AM +0000, Christoph Hellwig wrote:
-> > On Mon, Nov 30, 2020 at 07:37:16PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Add a copy_file_range handler to XFS so that we can accelerate file
-> > > copies with reflink when the source and destination ranges are not
-> > > block-aligned.  We'll use the generic pagecache copy to handle the
-> > > unaligned edges and attempt to reflink the middle.
-> > 
-> > Isn't this something we could better handle in the VFS (or a generic
-> > helper) so that all file systems that support reflink could benefit?
+On Mon, Dec 07, 2020 at 02:53:36PM +0100, Christoph Hellwig wrote:
+> >  
+> >  		if (ialloced) {
+> >  			/*
+> > +			 * We successfully allocated some inodes, roll the
+> > +			 * transaction so they can allocate one of the free
+> > +			 * inodes we just prepared for them.
 > 
-> Maybe.  I don't know if it's universally true that all filesystems
-> should fall back to reflinking the middle range and pagecache copying
-> the unaligned start/end.
+> Maybe:
 > 
-> The other thing is that xfs can easily support reflink on rtextsize > 1,
-> but that adds the requirement that we set i_blocksize to a larger value
-> than we do now... or find some other way to convey allocation unit size
-> to a generic version of the fallback.  OTOH that's pretty easy to do
-> from xfs_copy_file_range.
+> 			/*
+> 			 * We successfully allocated space for an inode cluster
+> 			 * in this AG.  Roll the transaction so that we can
+> 			 * allocate one of the new inodes.
+> 			 */
 
-I think you can basically turn xfs_want_reflink_copy_range into a
-callback supplied by the fs for the generic helper, and to deal with
-the rtextsize problem just return the relevant block size from the
-helper.
+Okay, will update.
+
+Thanks,
+Gao Xiang
+
+> 
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+
