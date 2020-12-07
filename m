@@ -2,160 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EECCEC433FE
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 00:18:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51AF7C4361B
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 03:14:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C31B322E03
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 00:18:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2296E22D06
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 03:14:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728338AbgLGASU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Dec 2020 19:18:20 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:54409 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726046AbgLGASU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Dec 2020 19:18:20 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607300213;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=V/FQM7+BNIZb8xy/yAEOGBR4rK3IjDnj432W9+MGeq4=;
-        b=VnMgp8z+JQ0Pbo3ykv77Q5/ZJY73/BR9Jlya0+1aYZFCiGl3t2yGLm9SY81LU37jjHufJY
-        0XBxjDVDhK5BjRiSpOvWVs90nVv2cVKbsNWNGYL4cpmFTPB5Q7kjVo+LuKr/h26KnkfnDt
-        AOxWCUcOmLvytm5bPAGsQLQfTz5kCEc=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-249-4ctzrekqPquDb4p2qJBmkw-1; Sun, 06 Dec 2020 19:16:51 -0500
-X-MC-Unique: 4ctzrekqPquDb4p2qJBmkw-1
-Received: by mail-pj1-f69.google.com with SMTP id gv14so8054581pjb.1
-        for <linux-xfs@vger.kernel.org>; Sun, 06 Dec 2020 16:16:51 -0800 (PST)
+        id S1726817AbgLGDOa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 6 Dec 2020 22:14:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48818 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726484AbgLGDOa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Dec 2020 22:14:30 -0500
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FE4AC0613D0
+        for <linux-xfs@vger.kernel.org>; Sun,  6 Dec 2020 19:13:50 -0800 (PST)
+Received: by mail-pf1-x444.google.com with SMTP id s21so8375641pfu.13
+        for <linux-xfs@vger.kernel.org>; Sun, 06 Dec 2020 19:13:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Vhqty+rjuw112AEboGCraPINE4Ws+BBOXZd8up6pD5g=;
+        b=s1WUoyplUEauttP51/t+c4AeaWqgBUPZ9y86nJ/vNHHyNT+UI3xziQJQ2gl3F4Lj3H
+         0k4VbujKC3a9wWeRu4u2XIHXS1cHZYm5NQnGEPzVkmTqqcTIGvWa0bwNUgWgXSvQverv
+         nOe86/lTyfxknPTrxM0hFxbDZSWFv3l1b7QUHinW54Rhdpb+8/cFvHTRxP2vEVfq7LZX
+         v2hD0zejhlT6QXHiX8M6dhIgkH4+hueH6LmJT2ZHS2BGEyoFyVHNni6x0sctT8LXz2bq
+         iRvkAtssflacrZnyT7zMudpkwvEXcgXG58qkdrvkglt8mkly7wb+fxFONHsD6cIplU6f
+         xihw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=V/FQM7+BNIZb8xy/yAEOGBR4rK3IjDnj432W9+MGeq4=;
-        b=DURmmNMI7Dm0O0xEEHnDHIyDhctzDwvgHh443d2lWvjH2kP1eoKQEjL3pB46RD5an3
-         rArfsJA3FJSx5T1dvVvpejuxPAhCuJXWKPBHQ084DfClvSwsyHC2OgdxEG4kmddHowFd
-         CAjECfkRatBWefaeQl8LXDz9Z6uTr90t7aKppM3J+7iErhwqln4PQcboaNulZ5RabVg8
-         1RWlzBl2pdkXw6E2zQMFY7hBOZB+T9IsFE513Kp+3PeSBrvgthmOn14Hj5loaupBeRBi
-         /P6G6FmngIIjhRueVyowgHpW9KXb2oaqW88nMUQGp+5JP4fHsr3xfhDEvASixYQ6zZbd
-         2gLw==
-X-Gm-Message-State: AOAM530ifwGNSd5Krt6H8y6GOGu6l9G93dLwpmw9K0WKFf29Knz3vGrb
-        qA0pwcw032c0GmxY28c8A8S7nwBmtQRyjGgF9HWmslShvL19MIR6luGEw66REgPR7hTvqH8hmmy
-        mgSDeI9jH+4wU2uy3lmG+h5A7vPkEnDQP6Ms/ddcXqyKCauTlSS4kUQJuclJ6rfyNBbzRUfJBOQ
-        ==
-X-Received: by 2002:a17:90a:fa0c:: with SMTP id cm12mr14239261pjb.87.1607300210698;
-        Sun, 06 Dec 2020 16:16:50 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxBfzhn/az6pMcNfySeI4XEUwIOiRduKJKkuvYOjGIWHjTYScAXBZhFcmso7RVultU5x21PiQ==
-X-Received: by 2002:a17:90a:fa0c:: with SMTP id cm12mr14239246pjb.87.1607300210382;
-        Sun, 06 Dec 2020 16:16:50 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id o9sm8218056pjl.11.2020.12.06.16.16.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Dec 2020 16:16:50 -0800 (PST)
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH v3 6/6] xfs: kill ialloced in xfs_dialloc()
-Date:   Mon,  7 Dec 2020 08:15:33 +0800
-Message-Id: <20201207001533.2702719-7-hsiangkao@redhat.com>
-X-Mailer: git-send-email 2.18.4
-In-Reply-To: <20201207001533.2702719-1-hsiangkao@redhat.com>
-References: <20201207001533.2702719-1-hsiangkao@redhat.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Vhqty+rjuw112AEboGCraPINE4Ws+BBOXZd8up6pD5g=;
+        b=GSdH0Flz2QK7fUNw9Bv83ppwntZ/SgsMzvW0LthbrnGlyvPlQ6ON0WvKjZj9SHLpOz
+         +B20SWBwcF4jmB+jxf+Y7SeGuiFQ0uxFUnX5csOnwqOuloHzFBLKuy4nx63m/wh4R8pr
+         78xvUlIlytyOubXzZ7aIYumWXxwSw7Il/c5a7RJz+n4W1o9vksGtqaMwwaj9nmQ1or6d
+         wGC5+aWBRBAWmZnCWXkR3eXhxKN1kaoKOfcs0GM1OnW77XQ/OgtzAWAJ7UiCnSDDovFt
+         rHC85A2FHFziNMsO6UaAEO7HaUWG646o0yBLOSn2dIEhZgViKe27+3nVHG5J+J2TFvwN
+         3GgA==
+X-Gm-Message-State: AOAM5323rwwMaum9eJxVxx75sCGSDKpLCFbi+e814WAQJD+igjcErUL6
+        CrKiLJD7rVo/ZsUVtm3Sjg==
+X-Google-Smtp-Source: ABdhPJw5G4Yy/cuiCTe54oAAsdGrlGe0t3u4Odx0wqZyQTIxzlLHZuLswcqRi8iFXZZDAeE11/9CRg==
+X-Received: by 2002:a65:6401:: with SMTP id a1mr16786224pgv.149.1607310829766;
+        Sun, 06 Dec 2020 19:13:49 -0800 (PST)
+Received: from [10.76.131.47] ([103.7.29.6])
+        by smtp.gmail.com with ESMTPSA id q5sm12557816pff.36.2020.12.06.19.13.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 06 Dec 2020 19:13:49 -0800 (PST)
+Subject: Re: [PATCH] xfs: show the proper user quota options
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
+References: <1606124332-22100-1-git-send-email-kaixuxia@tencent.com>
+ <20201206231201.GJ629293@magnolia>
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Message-ID: <648aa958-96a1-1349-c665-1954bc87681c@gmail.com>
+Date:   Mon, 7 Dec 2020 11:13:41 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.0
+MIME-Version: 1.0
+In-Reply-To: <20201206231201.GJ629293@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-It's enough to just use return code, and get rid of an argument.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
----
- fs/xfs/libxfs/xfs_ialloc.c | 24 +++++++++---------------
- 1 file changed, 9 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 527f17f09bd3..a0e6e333eea2 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -607,13 +607,13 @@ xfs_inobt_insert_sprec(
- 
- /*
-  * Allocate new inodes in the allocation group specified by agbp.
-- * Return 0 for success, else error code.
-+ * Returns 0 if inodes were allocated in this AG; 1 if there was no space
-+ * in this AG; or the usual negative error code.
-  */
- STATIC int
- xfs_ialloc_ag_alloc(
- 	struct xfs_trans	*tp,
--	struct xfs_buf		*agbp,
--	int			*alloc)
-+	struct xfs_buf		*agbp)
- {
- 	struct xfs_agi		*agi;
- 	struct xfs_alloc_arg	args;
-@@ -795,10 +795,9 @@ xfs_ialloc_ag_alloc(
- 		allocmask = (1 << (newlen / XFS_INODES_PER_HOLEMASK_BIT)) - 1;
- 	}
- 
--	if (args.fsbno == NULLFSBLOCK) {
--		*alloc = 0;
--		return 0;
--	}
-+	if (args.fsbno == NULLFSBLOCK)
-+		return 1;
-+
- 	ASSERT(args.len == args.minlen);
- 
- 	/*
-@@ -903,7 +902,6 @@ xfs_ialloc_ag_alloc(
- 	 */
- 	xfs_trans_mod_sb(tp, XFS_TRANS_SB_ICOUNT, (long)newlen);
- 	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, (long)newlen);
--	*alloc = 1;
- 	return 0;
- }
- 
-@@ -1749,7 +1747,6 @@ xfs_dialloc_select_ag(
- 	struct xfs_buf		*agbp;
- 	xfs_agnumber_t		agno;
- 	int			error;
--	int			ialloced;
- 	bool			noroom = false;
- 	xfs_agnumber_t		start_agno;
- 	struct xfs_perag	*pag;
-@@ -1823,17 +1820,14 @@ xfs_dialloc_select_ag(
- 		if (!okalloc)
- 			goto nextag_relse_buffer;
- 
--
--		error = xfs_ialloc_ag_alloc(*tpp, agbp, &ialloced);
--		if (error) {
-+		error = xfs_ialloc_ag_alloc(*tpp, agbp);
-+		if (error < 0) {
- 			xfs_trans_brelse(*tpp, agbp);
- 
- 			if (error == -ENOSPC)
- 				error = 0;
- 			break;
--		}
--
--		if (ialloced) {
-+		} else if (error == 0) {
- 			/*
- 			 * We successfully allocated some inodes, so roll the
- 			 * transaction and return the locked AGI buffer to the
+On 2020/12/7 7:12, Darrick J. Wong wrote:
+> On Mon, Nov 23, 2020 at 05:38:52PM +0800, xiakaixu1987@gmail.com wrote:
+>> From: Kaixu Xia <kaixuxia@tencent.com>
+>>
+>> The quota option 'usrquota' should be shown if both the XFS_UQUOTA_ACCT
+>> and XFS_UQUOTA_ENFD flags are set. The option 'uqnoenforce' should be
+>> shown when only the XFS_UQUOTA_ACCT flag is set. The current code logic
+>> seems wrong, Fix it and show proper options.
+>>
+>> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+> 
+> FWIW this causes a regression in xfs/513 since mount option uqnoenforce
+> no longer causes 'usrquota' to be emitted in /proc/mounts.  Do you have
+> a patch to fix fstests?
+
+Yeah, I'll send the patches to fix the regression in xfs/513 and add the
+xfstest case for this bug ASAP:)
+
+Thanks,
+Kaixu
+> 
+> --D
+> 
+>> ---
+>>  fs/xfs/xfs_super.c | 10 ++++++----
+>>  1 file changed, 6 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index e3e229e52512..5ebd6cdc44a7 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -199,10 +199,12 @@ xfs_fs_show_options(
+>>  		seq_printf(m, ",swidth=%d",
+>>  				(int)XFS_FSB_TO_BB(mp, mp->m_swidth));
+>>  
+>> -	if (mp->m_qflags & (XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD))
+>> -		seq_puts(m, ",usrquota");
+>> -	else if (mp->m_qflags & XFS_UQUOTA_ACCT)
+>> -		seq_puts(m, ",uqnoenforce");
+>> +	if (mp->m_qflags & XFS_UQUOTA_ACCT) {
+>> +		if (mp->m_qflags & XFS_UQUOTA_ENFD)
+>> +			seq_puts(m, ",usrquota");
+>> +		else
+>> +			seq_puts(m, ",uqnoenforce");
+>> +	}
+>>  
+>>  	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
+>>  		if (mp->m_qflags & XFS_PQUOTA_ENFD)
+>> -- 
+>> 2.20.0
+>>
+
 -- 
-2.18.4
-
+kaixuxia
