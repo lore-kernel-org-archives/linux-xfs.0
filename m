@@ -2,346 +2,193 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-3.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,STOX_REPLY_TYPE,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43DD0C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 08:19:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2148C4361B
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 10:19:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDAC522ADF
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 08:19:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8235623120
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 10:19:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726119AbgLGITl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Dec 2020 03:19:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38980 "EHLO
+        id S1726379AbgLGKS6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Dec 2020 05:18:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57354 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725972AbgLGITk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 03:19:40 -0500
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0210C0613D0
-        for <linux-xfs@vger.kernel.org>; Mon,  7 Dec 2020 00:18:54 -0800 (PST)
-Received: by mail-pg1-x542.google.com with SMTP id n7so8277458pgg.2
-        for <linux-xfs@vger.kernel.org>; Mon, 07 Dec 2020 00:18:54 -0800 (PST)
+        with ESMTP id S1725802AbgLGKS5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 05:18:57 -0500
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AB85C0613D0
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Dec 2020 02:18:17 -0800 (PST)
+Received: by mail-wm1-x342.google.com with SMTP id w206so9231268wma.0
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Dec 2020 02:18:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=E0aW0mK3EPa4EjxieKTdCQUH4CSre5joztFDcsbx7AA=;
-        b=kMmvIHeapsiARG9PEpLqJmz0YHOgLpHzcF2HvLAMcUnJRigdGjnOalr/9BKqZzYzBC
-         +xR82ZG/VwggS9PLlIHhTsL44PmXp1cIIiaSHudcckfuK1+37KJKNwNZx5szNFBO8wtt
-         aLqmB2dZS3VzhaH3+5nEmot4ROs3L4/X6HJf00aVvYsVNs0PIxLcSO1byyk/U6vx/M4X
-         dZfnHJDGSFf6Mt7RgUsvFuhADcKFj49+cZZaR1044prkvYbcbLO8pHQuXuTQD79UHNGr
-         v20a+sFbepTsCk/Na/zVDRJl4E1HxKSe01kTGWF2FQTvtPypDZ3/5DQ85fcbwNHJfdCx
-         G3FQ==
+        d=zadara-com.20150623.gappssmtp.com; s=20150623;
+        h=message-id:from:to:cc:references:in-reply-to:subject:date
+         :mime-version:content-transfer-encoding:importance;
+        bh=0+2uuzIC92vBNydm67SsJY9Y4R0KS/9h0nCWTvnN1zs=;
+        b=bLF+XuRYc+pmfrwaJH5PTz0TFFJoUqXKku3jJJdGxkO7bGc+OpSYAu3wJtOaXmZE70
+         FtZk8i56vSlN0Xo6UcP5ylgow74JGzOqt7x86wdo4/gzcqNgfWhzBjBZAVgj9FiAEFSp
+         maUUhwcdyYAfwazPlP3jPNo8ETH2kwKC2xQmH4Tm1DMktnxG1rbNOQo5YimCP6pSt18D
+         u7BrFayVY4w2uXKtbeSAUO/WXIf+YhJiIzPSpye5j0vBYj8ZumdiZlh+1laIlYVp0pmg
+         s40s+OnTIL2v4+wfpdLbwko0rG4Oqya+e9E+9gF3Slw6opnrXdmdX5/htBDAimBOZ5sR
+         5VkA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=E0aW0mK3EPa4EjxieKTdCQUH4CSre5joztFDcsbx7AA=;
-        b=YjvGfouFeTHsxiqUxUdb4GgM16q3OoGS47mXSGPJjuo5CYPu0USBpbBq/w1cRYIYkJ
-         a72IliCuxngfiaJfiClVP+Btzv2zRZhQAZUNnXZ7Qmp0VHO7ecHZB4edFQJPnSg1Jq/g
-         NhzHa5/faHGJZLjfyGs/zy2XWMviasdCJGZ3HiWK1tLZwSt6YuaBNtEoKdcgGImM/55U
-         X84LsJNdfJddFtI4XtwvIa8/nhDeZlmD9c22MQuGKuVh+k3HDHfR70LCyx+MrohJEZ9f
-         76tQ10v6gTc+cN3YqQmXcTgePM5ZsuSSpniwdcDpk1U9QM0+J7PtQwk2zZPdrD0abGnu
-         1yqQ==
-X-Gm-Message-State: AOAM533Jr91ItCK+dBfYLdy8LdUzAoK76Cqid2JbpwMGxJyyWONY7xWD
-        8q6YwVzuRWBkq/gD9kzlSjqGKLE//ms=
-X-Google-Smtp-Source: ABdhPJxgu8XkXiZiNBm6AwbitB0Hetle3PcKQ7kDGD5tIOTuNQ+XpPezi5zVQyAhRfNdzXjQ/4ODzA==
-X-Received: by 2002:a05:6a00:1627:b029:19c:b9c3:da3b with SMTP id e7-20020a056a001627b029019cb9c3da3bmr15267486pfc.20.1607329134410;
-        Mon, 07 Dec 2020 00:18:54 -0800 (PST)
-Received: from garuda.localnet ([122.171.163.28])
-        by smtp.gmail.com with ESMTPSA id c14sm5013887pfp.167.2020.12.07.00.18.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Dec 2020 00:18:53 -0800 (PST)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V11 05/14] xfs: Check for extent overflow when adding/removing dir entries
-Date:   Mon, 07 Dec 2020 13:48:50 +0530
-Message-ID: <3689375.PeLr2PdtSZ@garuda>
-In-Reply-To: <15021664.sC18oI5324@garuda>
-References: <20201117134416.207945-1-chandanrlinux@gmail.com> <20201203190422.GB106271@magnolia> <15021664.sC18oI5324@garuda>
+        h=x-gm-message-state:message-id:from:to:cc:references:in-reply-to
+         :subject:date:mime-version:content-transfer-encoding:importance;
+        bh=0+2uuzIC92vBNydm67SsJY9Y4R0KS/9h0nCWTvnN1zs=;
+        b=HuZKG9yOEEQ3JbSRQ7rxhgZsO+idZCf79eUSr0l8VQ40Ypi/WPyPwsfxnq91SvYb0Q
+         v28V178lgMSS23Cm6TR1WXs5aHScUoirZJtvlgF9paioGBqPDA6j+oMncdtyLmeRcqWU
+         3rlA+PEJk92pZSLMcFR7ZDKc43XMMiUCkQC551S//SeoSMs+Lxx4A4DiEJJ9LpUEdOD7
+         VZXdt14gi4ADo3OKd3dQ2gvwX5Axzwrab2RdboHrpackYBK4AGQVXPBXq6N6xz8Me/UF
+         sOVQ6ariH5iHq3Fu/mAuRlaFULM8xa0Gj+4oCysvE6/RrOQXjFpkLhSzweOuhsCjYmZr
+         ewDg==
+X-Gm-Message-State: AOAM533ex217vXee+VMOc+rXuQyQ9UIeQPu676BlZ9wClGr9gozvj29H
+        n4iMaFXKveVVpqYthW4SMcOltFRRubZyk6Ve
+X-Google-Smtp-Source: ABdhPJy9BvtH0FpLHCWLbhVxtXYbsPZbpGgcHS4Py6WTDuRvqTODpWu38UD6kmH+J6aM2KbVI5trhA==
+X-Received: by 2002:a7b:c843:: with SMTP id c3mr17563350wml.100.1607336295680;
+        Mon, 07 Dec 2020 02:18:15 -0800 (PST)
+Received: from alyakaslap ([82.166.81.77])
+        by smtp.gmail.com with ESMTPSA id l13sm14477431wrm.24.2020.12.07.02.18.14
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 07 Dec 2020 02:18:14 -0800 (PST)
+Message-ID: <6117EC6AA8F04ECA90EAACF20C4A2A7C@alyakaslap>
+From:   "Alex Lyakas" <alex@zadara.com>
+To:     "Dave Chinner" <david@fromorbit.com>
+Cc:     <linux-xfs@vger.kernel.org>
+References: <5582F682900B483C89460123ABE79292@alyakaslap> <20201116213005.GM7391@dread.disaster.area>
+In-Reply-To: <20201116213005.GM7391@dread.disaster.area>
+Subject: Re: RCU stall in xfs_reclaim_inodes_ag
+Date:   Mon, 7 Dec 2020 12:18:13 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+        format=flowed;
+        charset="iso-8859-1";
+        reply-type=original
+Content-Transfer-Encoding: 7bit
+X-Priority: 3
+X-MSMail-Priority: Normal
+Importance: Normal
+X-Mailer: Microsoft Windows Live Mail 16.4.3528.331
+X-MimeOLE: Produced By Microsoft MimeOLE V16.4.3528.331
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 04 Dec 2020 14:34:32 +0530, Chandan Babu R wrote:
-> On Thu, 03 Dec 2020 11:04:22 -0800, Darrick J. Wong wrote:
-> > On Tue, Nov 17, 2020 at 07:14:07PM +0530, Chandan Babu R wrote:
-> > > Directory entry addition/removal can cause the following,
-> > > 1. Data block can be added/removed.
-> > >    A new extent can cause extent count to increase by 1.
-> > > 2. Free disk block can be added/removed.
-> > >    Same behaviour as described above for Data block.
-> > > 3. Dabtree blocks.
-> > >    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these
-> > >    can be new extents. Hence extent count can increase by
-> > >    XFS_DA_NODE_MAXDEPTH.
-> > > 
-> > > To be able to always remove an existing directory entry, when adding a
-> > > new directory entry we make sure to reserve inode fork extent count
-> > > required for removing a directory entry in addition to that required for
-> > > the directory entry add operation.
-> > > 
-> > > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_inode_fork.h | 13 +++++++++++++
-> > >  fs/xfs/xfs_inode.c             | 27 +++++++++++++++++++++++++++
-> > >  fs/xfs/xfs_symlink.c           |  5 +++++
-> > >  3 files changed, 45 insertions(+)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> > > index 5de2f07d0dd5..fd93fdc67ee4 100644
-> > > --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> > > +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> > > @@ -57,6 +57,19 @@ struct xfs_ifork {
-> > >  #define XFS_IEXT_ATTR_MANIP_CNT(rmt_blks) \
-> > >  	(XFS_DA_NODE_MAXDEPTH + max(1, rmt_blks))
-> > >  
-> > > +/*
-> > > + * Directory entry addition/removal can cause the following,
-> > > + * 1. Data block can be added/removed.
-> > > + *    A new extent can cause extent count to increase by 1.
-> > > + * 2. Free disk block can be added/removed.
-> > > + *    Same behaviour as described above for Data block.
-> > > + * 3. Dabtree blocks.
-> > > + *    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these can be new
-> > > + *    extents. Hence extent count can increase by XFS_DA_NODE_MAXDEPTH.
-> > > + */
-> > > +#define XFS_IEXT_DIR_MANIP_CNT(mp) \
-> > > +	((XFS_DA_NODE_MAXDEPTH + 1 + 1) * (mp)->m_dir_geo->fsbcount)
-> > > +
-> > >  /*
-> > >   * Fork handling.
-> > >   */
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index 2bfbcf28b1bd..f7b0b7fce940 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -1177,6 +1177,11 @@ xfs_create(
-> > >  	if (error)
-> > >  		goto out_trans_cancel;
-> > >  
-> > > +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
-> > > +			XFS_IEXT_DIR_MANIP_CNT(mp) << 1);
-> > 
-> > Er, why did these double since V10?  We're only adding one entry, right?
-> 
-> To be able to always guarantee the removal of an existing directory entry, we
-> reserve inode fork extent count required for removing a directory entry in
-> addition to that required for the directory entry add operation.
-> 
-> A bug was discovered when executing the following sequence of
-> operations,
-> 1. Keep inserting directory entries until the pseudo max extent count limit is
->    reached.
-> 2. At this stage, a directory entry remove operation will fail because it
->    tries to reserve XFS_IEXT_DIR_MANIP_CNT(mp) worth of extent count. This
->    reservation fails since the extent count would go over the pseudo max
->    extent count limit as it did in step 1.
-> 
-> We would end up with a directory which can never be deleted.
+Hi Dave,
 
-I just found that reserving an extra XFS_IEXT_DIR_MANIP_CNT(mp) extent count,
-when performing a directory insert operation, would not prevent us from ending
-up with a directory which can never be deleted.
+Thank you for your response.
 
-Let x be a directory's data fork extent count and lets assume its value to be,
+We did some more investigations on the issue, and we have the following 
+findings:
 
-x = MAX_EXT_COUNT - XFS_IEXT_DIR_MANIP_CNT(mp)
+1) We tracked the max amount of inodes per AG radix tree. We found in our 
+tests, that the max amount of inodes per AG radix tree was about 1.5M:
+[xfs_reclaim_inodes_ag:1285] XFS(dm-79): AG[1368]: count=1384662 
+reclaimable=58
+[xfs_reclaim_inodes_ag:1285] XFS(dm-79): AG[1368]: count=1384630 
+reclaimable=46
+[xfs_reclaim_inodes_ag:1285] XFS(dm-79): AG[1368]: count=1384600 
+reclaimable=16
+[xfs_reclaim_inodes_ag:1285] XFS(dm-79): AG[1370]: count=1594500 
+reclaimable=75
+[xfs_reclaim_inodes_ag:1285] XFS(dm-79): AG[1370]: count=1594468 
+reclaimable=55
+[xfs_reclaim_inodes_ag:1285] XFS(dm-79): AG[1370]: count=1594436 
+reclaimable=46
+[xfs_reclaim_inodes_ag:1285] XFS(dm-79): AG[1370]: count=1594421 
+reclaimable=42
+(but the amount of reclaimable inodes is very small, as you can see).
 
-So in this case we do have sufficient "extent count" to be able to perform a
-directory entry remove operation. But the directory remove operation itself
-can cause extent count to increase by XFS_IEXT_DIR_MANIP_CNT(mp) units in the
-worst case. This happens when freeing 5 dabtree blocks, one data block and one
-free block causes file extents to be split for each of the above mentioned
-blocks.
+Do you think this number is reasonable per radix tree?
 
-If on the other hand, the current value of 'x' were,
+2) This particular XFS instance is total of 500TB. However, the AG size in 
+this case is 100GB. This is the AG size that we use, due to issues that we 
+reported in https://www.spinics.net/lists/linux-xfs/msg06501.html,
+where the "near" allocation algorithm was stuck for a long time scanning the 
+free-space btrees. With smaller AG size, we don't see such issues.
+But with 500TB filesystem, we now have 5000 AGs. As a result, we suspect 
+(due to some instrumentation), that the looping over 5000 AGs in 
+xfs_reclaim_inodes_ag() is what is causing the RCU stall for us. Although 
+the code has cond_resched() call, but somehow the RCU stall still happens, 
+and it always happens in this function, while searching the radix tree.
 
-x = MAX_EXT_COUNT - (2 * XFS_IEXT_DIR_MANIP_CNT(mp))
-
-'x' can still reach MAX_EXT_COUNT if two consecutive directory remove
-operations can each cause extent count to increase by
-XFS_IEXT_DIR_MANIP_CNT(mp).
-
-IMHO there is no way to prevent a directory from becoming un-deletable
-once its data fork extent count reaches close to MAX_EXT_COUNT. The other
-choice of not checking for extent overflow would mean silent data
-corruption. Hence maybe the former result is better one to go with.
-
-W.r.t xattrs, not reserving an extra XFS_IEXT_ATTR_MANIP_CNT(mp) extent count
-units would prevent the user from removing xattrs when the inode's attr fork
-extent count value is close to MAX_EXT_COUNT. However, the file and the
-associated extents will be removed during file deletion operation.
-
-> 
-> Hence V11 doubles the extent count reservation for "directory entry insert"
-> operations. The first XFS_IEXT_DIR_MANIP_CNT(mp) instance is for "insert"
-> operation while the second XFS_IEXT_DIR_MANIP_CNT(mp) instance is for
-> guaranteeing a possible future "remove" operation to succeed.
-> 
-> > 
-> > > +	if (error)
-> > > +		goto out_trans_cancel;
-> > > +
-> > >  	/*
-> > >  	 * A newly created regular or special file just has one directory
-> > >  	 * entry pointing to them, but a directory also the "." entry
-> > > @@ -1393,6 +1398,11 @@ xfs_link(
-> > >  	xfs_trans_ijoin(tp, sip, XFS_ILOCK_EXCL);
-> > >  	xfs_trans_ijoin(tp, tdp, XFS_ILOCK_EXCL);
-> > >  
-> > > +	error = xfs_iext_count_may_overflow(tdp, XFS_DATA_FORK,
-> > > +			XFS_IEXT_DIR_MANIP_CNT(mp) << 1);
-> > 
-> > Same question here.
-> 
-> Creating a new hard link involves adding a new directory entry. Hence apart
-> from reserving extent count for directory entry addition we will have to
-> reserve extent count for a future directory entry removal as well.
-> 
-> > 
-> > > +	if (error)
-> > > +		goto error_return;
-> > > +
-> > >  	/*
-> > >  	 * If we are using project inheritance, we only allow hard link
-> > >  	 * creation in our tree when the project IDs are the same; else
-> > > @@ -2861,6 +2871,11 @@ xfs_remove(
-> > >  	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
-> > >  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> > >  
-> > > +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
-> > > +			XFS_IEXT_DIR_MANIP_CNT(mp));
-> > > +	if (error)
-> > > +		goto out_trans_cancel;
-> > > +
-> > >  	/*
-> > >  	 * If we're removing a directory perform some additional validation.
-> > >  	 */
-> > > @@ -3221,6 +3236,18 @@ xfs_rename(
-> > >  	if (wip)
-> > >  		xfs_trans_ijoin(tp, wip, XFS_ILOCK_EXCL);
-> > >  
-> > > +	error = xfs_iext_count_may_overflow(src_dp, XFS_DATA_FORK,
-> > > +			XFS_IEXT_DIR_MANIP_CNT(mp));
-> > > +	if (error)
-> > > +		goto out_trans_cancel;
-> > > +
-> > > +	if (target_ip == NULL) {
-> > > +		error = xfs_iext_count_may_overflow(target_dp, XFS_DATA_FORK,
-> > > +				XFS_IEXT_DIR_MANIP_CNT(mp) << 1);
-> > 
-> > Why did this change to "<< 1" since V10?
-> 
-> Extent count is doubled since this is essentially a directory insert operation
-> w.r.t target_dp directory. One instance of XFS_IEXT_DIR_MANIP_CNT(mp) is for
-> the directory entry being added to target_dp directory and another instance of
-> XFS_IEXT_DIR_MANIP_CNT(mp) is for guaranteeing a future directory entry
-> removal from target_dp directory to succeed.
-> 
-> > 
-> > I'm sorry, but I've lost my recollection on how the accounting works
-> > here.  This seems (to me anyway ;)) a good candidate for a comment:
-> > 
-> > For a rename between dirs where the target name doesn't exist, we're
-> > removing src_name from src_dp and adding target_name to target_dp.
-> > Therefore we have to check for DIR_MANIP_CNT overflow on each of src_dp
-> > and target_dp, right?
-> 
-> Extent count check is doubled since this is a directory insert operation w.r.t
-> target_dp directory ... One instance of XFS_IEXT_DIR_MANIP_CNT(mp) is for the
-> directory entry being added to target_dp directory and another instance of
-> XFS_IEXT_DIR_MANIP_CNT(mp) is for guaranteeing a future directory entry
-> removal from target_dp directory to succeed.
-> 
-> Since a directory entry is being removed from src_dp, reserving only a single
-> instance of XFS_IEXT_DIR_MANIP_CNT(mp) would suffice.
-> 
-> > 
-> > For a rename within the same dir where target_name doesn't yet exist, we
-> > are removing a name and then adding a name.  We therefore check for iext
-> > overflow with (DIR_MANIP_CNT * 2), right?  And I think that "target name
-> > does not exist" is synonymous with target_ip == NULL?
-> 
-> Here again we have to reserve two instances of XFS_IEXT_DIR_MANIP_CNT(mp) for
-> target_name insertion and one instance of XFS_IEXT_DIR_MANIP_CNT(mp) for
-> src_name removal. This is because insertion and removal of src_name may each
-> end up consuming XFS_IEXT_DIR_MANIP_CNT(mp) extent counts in the worst case. A
-> future directory entry remove operation will require
-> XFS_IEXT_DIR_MANIP_CNT(mp) extent counts to be reserved.
-> 
-> Also, You are right about "target name does not exist" being synonymous with
-> target_ip == NULL.
-> 
-> > 
-> > For a rename where target_name /does/ exist, we're only removing the
-> > src_name, so we have to check for DIR_MANIP_CNT on src_dp, right?
-> 
-> Yes, you are right.
-> 
-> > 
-> > For a RENAME_EXCHANGE we're not removing either name, so we don't need
-> > to check for iext overflow of src_dp or target_dp, right?
-> 
-> You are right. Sorry, I missed this. I will move the extent count reservation
-> logic to come after the invocation of xfs_cross_rename().
-> 
-> I will also add appropriate comments into xfs_rename() describing the
-> scenarios that have been discussed above.
-> 
-> PS: I have swapped the order of two comments from your original reply since I
-> think it is easier to explain the scenarios with the order of
-> comments/questions swapped.
-> 
-> > 
-> > > +		if (error)
-> > > +			goto out_trans_cancel;
-> > > +	}
-> > > +
-> > >  	/*
-> > >  	 * If we are using project inheritance, we only allow renames
-> > >  	 * into our tree when the project IDs are the same; else the
-> > > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> > > index 8e88a7ca387e..08aa808fe290 100644
-> > > --- a/fs/xfs/xfs_symlink.c
-> > > +++ b/fs/xfs/xfs_symlink.c
-> > > @@ -220,6 +220,11 @@ xfs_symlink(
-> > >  	if (error)
-> > >  		goto out_trans_cancel;
-> > >  
-> > > +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
-> > > +			XFS_IEXT_DIR_MANIP_CNT(mp) << 1);
-> > 
-> > Same question as xfs_create.
-> 
-> This is again similar to adding a new directory entry. Hence, apart from
-> reserving extent count for directory entry addition we will have to reserve
-> extent count for a future directory entry removal as well.
-> 
-> > 
-> > --D
-> > 
-> > > +	if (error)
-> > > +		goto out_trans_cancel;
-> > > +
-> > >  	/*
-> > >  	 * Allocate an inode for the symlink.
-> > >  	 */
-> > 
-> 
-> 
+Thanks,
+Alex.
 
 
+
+-----Original Message----- 
+From: Dave Chinner
+Sent: Monday, November 16, 2020 11:30 PM
+To: Alex Lyakas
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: RCU stall in xfs_reclaim_inodes_ag
+
+On Mon, Nov 16, 2020 at 07:45:46PM +0200, Alex Lyakas wrote:
+> Greetings XFS community,
+>
+> We had an RCU stall [1]. According to the code, it happened in
+> radix_tree_gang_lookup_tag():
+>
+> rcu_read_lock();
+> nr_found = radix_tree_gang_lookup_tag(
+>        &pag->pag_ici_root,
+>        (void **)batch, first_index,
+>        XFS_LOOKUP_BATCH,
+>        XFS_ICI_RECLAIM_TAG);
+>
+>
+> This XFS system has over 100M files. So perhaps looping inside the radix
+> tree took too long, and it was happening in RCU read-side critical 
+> seciton.
+> This is one of the possible causes for RCU stall.
+
+Doubt it. According to the trace it was stalled for 60s, and a
+radix tree walk of 100M entries only takes a second or two.
+
+Further, unless you are using inode32, the inodes will be spread
+across multiple radix trees and that makes the radix trees much
+smaller and even less likely to take this long to run a traversal.
+
+This could be made a little more efficient by adding a "last index"
+parameter to tell the search where to stop (i.e. if the batch count
+has not yet been reached), but in general that makes little
+difference to the search because the radix tree walk finds the next
+inodes in a few pointer chases...
+
+> This happened in kernel 4.14.99, but looking at latest mainline code, code
+> is still the same.
+
+These inode radix trees have been used in XFS since 2008, and this
+is the first time anyone has reported a stall like this, so I'm
+doubtful that there is actually a general bug. My suspicion for such
+a rare occurrence would be memory corruption of some kind or a
+leaked atomic/rcu state in some other code on that CPU....
+
+> Can anyone please advise how to address that? It is not possible to put
+> cond_resched() inside the radix tree code, because it can be used with
+> spinlocks, and perhaps other contexts where sleeping is not allowed.
+
+I don't think there is a solution to this problem - it just
+shouldn't happen in when everything is operating normally as it's
+just a tag search on an indexed tree.
+
+Hence even if there was a hack to stop stall warnings, it won't fix
+whatever problem is leading to the rcu stall. The system will then
+just spin burning CPU, and eventually something else will fail.
+
+IOWs, unless you can reproduce this stall and find out what is wrong
+in the radix tree that is leading to it looping forever, there's
+likely nothing we can do to avoid this.
+
+Cheers,
+
+Dave.
 -- 
-chandan
-
-
+Dave Chinner
+david@fromorbit.com 
 
