@@ -4,178 +4,169 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA20C4361B
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:47:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3267C4361B
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:48:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FE5121D42
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:47:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4C8621D42
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:48:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726042AbgLGRry (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Dec 2020 12:47:54 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:33738 "EHLO
+        id S1725918AbgLGRsB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Dec 2020 12:48:01 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:41632 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725960AbgLGRry (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 12:47:54 -0500
+        by vger.kernel.org with ESMTP id S1725852AbgLGRsB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 12:48:01 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607363187;
+        s=mimecast20190719; t=1607363195;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=tWexjcj9RuEy/k5UqwBL0kkZ/F5rTI1aCFV0SsE7X+A=;
-        b=RyBpC0y7yNgFrvv/ajwDaS/Xh8fMsd7dcajXp9pEYQSbfncTmCLw+jVQ71hgnTTIqm6WIo
-        e9TQaZ20zos0TOEO2zNYdWrqNMlK6H4cW4IcfCf64aciqaGl6IUcFW0Vq4JWRUxHBJazSd
-        1DUJzOmzF9UoWTpP2xMygaHwrNpPIhw=
+        bh=4aSBzBzTYH/m/0Ai/KK67lPgo7Z4mhIXknY4aYtPeeY=;
+        b=GHxT8yiTaw2I0aZ668DhdQG/2zqImC/E/sYZeCga26GxjQaP5gHgwcqfxR5OLQNIt5GN3b
+        FQfrsu9nkBxIEtwlyEDmd9jEv3Yxpkd5a4+DqjMspWgw/v52275AyIkPy+hP/BTgfZqwOd
+        9ZNKC3jUiMekXJEmFHKiwPyZXOsLUhc=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-33-14A-uEZsORuJuasbO7QN1w-1; Mon, 07 Dec 2020 12:46:25 -0500
-X-MC-Unique: 14A-uEZsORuJuasbO7QN1w-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-543-zYfg138lOCSKqjyz5cfD8w-1; Mon, 07 Dec 2020 12:46:33 -0500
+X-MC-Unique: zYfg138lOCSKqjyz5cfD8w-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9AFAC809DCD;
-        Mon,  7 Dec 2020 17:46:24 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id ED73A800D55;
+        Mon,  7 Dec 2020 17:46:31 +0000 (UTC)
 Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 468C9648A2;
-        Mon,  7 Dec 2020 17:46:24 +0000 (UTC)
-Date:   Mon, 7 Dec 2020 12:46:22 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6C4625D9D0;
+        Mon,  7 Dec 2020 17:46:31 +0000 (UTC)
+Date:   Mon, 7 Dec 2020 12:46:29 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: refactor file range validation
-Message-ID: <20201207174622.GD1598552@bfoster>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: rename xfs_fc_* back to xfs_fs_*
+Message-ID: <20201207174629.GE1598552@bfoster>
 References: <160729625074.1608297.13414859761208067117.stgit@magnolia>
- <160729626928.1608297.12355625902682243490.stgit@magnolia>
+ <160729627541.1608297.18095324548384560045.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160729626928.1608297.12355625902682243490.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <160729627541.1608297.18095324548384560045.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Dec 06, 2020 at 03:11:09PM -0800, Darrick J. Wong wrote:
+On Sun, Dec 06, 2020 at 03:11:15PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Refactor all the open-coded validation of file block ranges into a
-> single helper, and teach the bmap scrubber to check the ranges.
+> Get rid of this one-off namespace since we're done converting things to
+> fscontext now.
 > 
+> Suggested-by: Dave Chinner <david@fromorbit.com>
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/libxfs/xfs_bmap.c  |    2 +-
->  fs/xfs/libxfs/xfs_types.c |   25 +++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_types.h |    3 +++
->  fs/xfs/scrub/bmap.c       |    4 ++++
->  fs/xfs/xfs_bmap_item.c    |    2 +-
->  fs/xfs/xfs_rmap_item.c    |    2 +-
->  6 files changed, 35 insertions(+), 3 deletions(-)
+>  fs/xfs/xfs_super.c |   26 +++++++++++++-------------
+>  1 file changed, 13 insertions(+), 13 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 7bcf498ef6b2..dcf56bcafb8f 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -6227,7 +6227,7 @@ xfs_bmap_validate_extent(
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 36002f460d7c..12d6850aedc6 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1159,7 +1159,7 @@ suffix_kstrtoint(
+>   * NOTE: mp->m_super is NULL here!
+>   */
+>  static int
+> -xfs_fc_parse_param(
+> +xfs_fs_parse_param(
+>  	struct fs_context	*fc,
+>  	struct fs_parameter	*param)
 >  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  
-> -	if (irec->br_startoff + irec->br_blockcount <= irec->br_startoff)
-> +	if (!xfs_verify_fileext(mp, irec->br_startoff, irec->br_blockcount))
->  		return __this_address;
->  
->  	if (XFS_IS_REALTIME_INODE(ip) && whichfork == XFS_DATA_FORK) {
-> diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-> index 7b310eb296b7..b254fbeaaa50 100644
-> --- a/fs/xfs/libxfs/xfs_types.c
-> +++ b/fs/xfs/libxfs/xfs_types.c
-> @@ -258,3 +258,28 @@ xfs_verify_dablk(
->  
->  	return dabno <= max_dablk;
+> @@ -1317,7 +1317,7 @@ xfs_fc_parse_param(
 >  }
-> +
-> +/* Check that a file block offset does not exceed the maximum. */
-> +bool
-> +xfs_verify_fileoff(
-> +	struct xfs_mount	*mp,
-> +	xfs_fileoff_t		off)
-> +{
-> +	return off <= XFS_MAX_FILEOFF;
-> +}
-> +
-> +/* Check that a range of file block offsets do not exceed the maximum. */
-> +bool
-> +xfs_verify_fileext(
-> +	struct xfs_mount	*mp,
-> +	xfs_fileoff_t		off,
-> +	xfs_fileoff_t		len)
-> +{
-> +	if (off + len <= off)
-> +		return false;
-> +
-> +	if (!xfs_verify_fileoff(mp, off))
-> +		return false;
-> +
-> +	return xfs_verify_fileoff(mp, off + len - 1);
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 18e83ce46568..064bd6e8c922 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -203,5 +203,8 @@ bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
->  bool xfs_verify_dablk(struct xfs_mount *mp, xfs_fileoff_t off);
->  void xfs_icount_range(struct xfs_mount *mp, unsigned long long *min,
->  		unsigned long long *max);
-> +bool xfs_verify_fileoff(struct xfs_mount *mp, xfs_fileoff_t off);
-> +bool xfs_verify_fileext(struct xfs_mount *mp, xfs_fileoff_t off,
-> +		xfs_fileoff_t len);
 >  
->  #endif	/* __XFS_TYPES_H__ */
-> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-> index cce8ac7d3973..bce4421acdb9 100644
-> --- a/fs/xfs/scrub/bmap.c
-> +++ b/fs/xfs/scrub/bmap.c
-> @@ -329,6 +329,10 @@ xchk_bmap_iextent(
->  		xchk_fblock_set_corrupt(info->sc, info->whichfork,
->  				irec->br_startoff);
+>  static int
+> -xfs_fc_validate_params(
+> +xfs_fs_validate_params(
+>  	struct xfs_mount	*mp)
+>  {
+>  	/*
+> @@ -1386,7 +1386,7 @@ xfs_fc_validate_params(
+>  }
 >  
-> +	if (!xfs_verify_fileext(mp, irec->br_startoff, irec->br_blockcount))
-> +		xchk_fblock_set_corrupt(info->sc, info->whichfork,
-> +				irec->br_startoff);
-> +
->  	xchk_bmap_dirattr_extent(ip, info, irec);
+>  static int
+> -xfs_fc_fill_super(
+> +xfs_fs_fill_super(
+>  	struct super_block	*sb,
+>  	struct fs_context	*fc)
+>  {
+> @@ -1396,7 +1396,7 @@ xfs_fc_fill_super(
 >  
->  	/* There should never be a "hole" extent in either extent list. */
-> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index 5c9706760e68..9a2e54b7ccb9 100644
-> --- a/fs/xfs/xfs_bmap_item.c
-> +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -449,7 +449,7 @@ xfs_bui_validate(
->  	if (!xfs_verify_ino(mp, bmap->me_owner))
->  		return false;
+>  	mp->m_super = sb;
 >  
-> -	if (bmap->me_startoff + bmap->me_len <= bmap->me_startoff)
-> +	if (!xfs_verify_fileext(mp, bmap->me_startoff, bmap->me_len))
->  		return false;
+> -	error = xfs_fc_validate_params(mp);
+> +	error = xfs_fs_validate_params(mp);
+>  	if (error)
+>  		goto out_free_names;
 >  
->  	return xfs_verify_fsbext(mp, bmap->me_startblock, bmap->me_len);
-> diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> index 4fa875237422..49cebd68b672 100644
-> --- a/fs/xfs/xfs_rmap_item.c
-> +++ b/fs/xfs/xfs_rmap_item.c
-> @@ -490,7 +490,7 @@ xfs_rui_validate_map(
->  	    !xfs_verify_ino(mp, rmap->me_owner))
->  		return false;
+> @@ -1660,10 +1660,10 @@ xfs_fc_fill_super(
+>  }
 >  
-> -	if (rmap->me_startoff + rmap->me_len <= rmap->me_startoff)
-> +	if (!xfs_verify_fileext(mp, rmap->me_startoff, rmap->me_len))
->  		return false;
+>  static int
+> -xfs_fc_get_tree(
+> +xfs_fs_get_tree(
+>  	struct fs_context	*fc)
+>  {
+> -	return get_tree_bdev(fc, xfs_fc_fill_super);
+> +	return get_tree_bdev(fc, xfs_fs_fill_super);
+>  }
 >  
->  	return xfs_verify_fsbext(mp, rmap->me_startblock, rmap->me_len);
+>  static int
+> @@ -1782,7 +1782,7 @@ xfs_remount_ro(
+>   * silently ignore all options that we can't actually change.
+>   */
+>  static int
+> -xfs_fc_reconfigure(
+> +xfs_fs_reconfigure(
+>  	struct fs_context *fc)
+>  {
+>  	struct xfs_mount	*mp = XFS_M(fc->root->d_sb);
+> @@ -1795,7 +1795,7 @@ xfs_fc_reconfigure(
+>  	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+>  		fc->sb_flags |= SB_I_VERSION;
+>  
+> -	error = xfs_fc_validate_params(new_mp);
+> +	error = xfs_fs_validate_params(new_mp);
+>  	if (error)
+>  		return error;
+>  
+> @@ -1832,7 +1832,7 @@ xfs_fc_reconfigure(
+>  	return 0;
+>  }
+>  
+> -static void xfs_fc_free(
+> +static void xfs_fs_free(
+>  	struct fs_context	*fc)
+>  {
+>  	struct xfs_mount	*mp = fc->s_fs_info;
+> @@ -1848,10 +1848,10 @@ static void xfs_fc_free(
+>  }
+>  
+>  static const struct fs_context_operations xfs_context_ops = {
+> -	.parse_param = xfs_fc_parse_param,
+> -	.get_tree    = xfs_fc_get_tree,
+> -	.reconfigure = xfs_fc_reconfigure,
+> -	.free        = xfs_fc_free,
+> +	.parse_param = xfs_fs_parse_param,
+> +	.get_tree    = xfs_fs_get_tree,
+> +	.reconfigure = xfs_fs_reconfigure,
+> +	.free        = xfs_fs_free,
+>  };
+>  
+>  static int xfs_init_fs_context(
 > 
 
