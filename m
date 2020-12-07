@@ -2,177 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EA67C0018C
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 14:04:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 250D0C4167B
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 14:12:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E1C8235E4
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 14:04:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9479235F7
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 14:12:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725779AbgLGODo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Dec 2020 09:03:44 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:49166 "EHLO
+        id S1727366AbgLGOMn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Dec 2020 09:12:43 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:29024 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725800AbgLGODo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 09:03:44 -0500
+        by vger.kernel.org with ESMTP id S1726112AbgLGOMm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 09:12:42 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607349737;
+        s=mimecast20190719; t=1607350276;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=2vGQonZJdDbvGDocYv1R+lIWUTAhUH9klieXs8R0PqY=;
-        b=aG40T4gfhaxtPYN6u2XHk/VmMZvmfwdwOP3wtJ0scniQjcTeNCnDDPGlTpW2WKXfyuEob/
-        YTAPTCWVshTX2PMlc5GDEfevlhew7Ses/wV5wm1oVAXeVuZ2ICOD1yKuOaCe52DLKAy+OG
-        3JDsjKvc2R0ocFQx7WIEso0pPO14S3Y=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-100-zzrhzlrENGC9la4D9KDywA-1; Mon, 07 Dec 2020 09:02:15 -0500
-X-MC-Unique: zzrhzlrENGC9la4D9KDywA-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9AE4E107ACF9;
-        Mon,  7 Dec 2020 14:02:14 +0000 (UTC)
-Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 246605C1A1;
-        Mon,  7 Dec 2020 14:02:14 +0000 (UTC)
-Date:   Mon, 7 Dec 2020 09:02:12 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/10] xfs: validate feature support when recovering
- rmap/refcount/bmap intents
-Message-ID: <20201207140212.GB1585352@bfoster>
-References: <160704429410.734470.15640089119078502938.stgit@magnolia>
- <160704435080.734470.11175993745850698818.stgit@magnolia>
- <20201204140036.GK1404170@bfoster>
- <20201206230842.GI629293@magnolia>
+        bh=VkuXqn07NC4RmmDkLXtn+/ClysLAXWLMMs5/uaYHgYw=;
+        b=L1LO+ELHY8L5Ma/hcm/Y4TiXkvfxUu2Mj2Gyexl+jyxj19Z5d/0+xuhnbw3E0MpeOmVHPv
+        Jotz3E3dLGFzjXGBieqFBaUgvvwfXWpo7viTCzIGdm+CA61fxiOZSPZnS1sEsIu+QFss6m
+        Sg3e+WIu5GutLpldq8wPHA5at/MxD2g=
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
+ [209.85.215.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-509-ZEEvcr4IOgur-wp6WM1BVA-1; Mon, 07 Dec 2020 09:11:14 -0500
+X-MC-Unique: ZEEvcr4IOgur-wp6WM1BVA-1
+Received: by mail-pg1-f200.google.com with SMTP id c6so276748pgt.19
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Dec 2020 06:11:14 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=VkuXqn07NC4RmmDkLXtn+/ClysLAXWLMMs5/uaYHgYw=;
+        b=eQKhG1YhQxte9jq9mxlttIGDaBDLWgSJlE+a/AJXmJutRlnMuCRwqfmRRN89sVU3+X
+         lD3/RiDpwqvIOldfYo6j8YJBHfJg30J1jCVkxOgbu5IGHY5e3qFn3UFhczwH7O1qGCeU
+         Ju4LDKEtaXSV+2ynZvIZcZ9KnJ0q/J1/jYe0IVhmBh8MC0geAoUarRM0M22FbvrF3kZQ
+         AztriKiysAzrl9vcYQyTjzgjJq4d3sceEtUzwAp4d1vCpANPgObRqw4xlsK2WwKIM91S
+         NG++dWBTwJ7mR7UnBrDF5qbEdIM8Xd7R36N7aS0Ao7238Oi3Vnbeu4A1NH+luVjGZioH
+         MFRA==
+X-Gm-Message-State: AOAM533VRqhHoaXZAHkBEBOgO/Lo/v01V8Qf45zAA9QBwYQKOjLFWhn4
+        UFGwIzMDy+7mh1P3FFaFOtrzUAWIh8Dtu1AX6y5e6gvb76huaYlRg2QcXwzS5qeE2bVv4+3cr6N
+        vWZFv4a2EumU22VDHI/kd
+X-Received: by 2002:a62:c505:0:b029:19d:c3fe:6d92 with SMTP id j5-20020a62c5050000b029019dc3fe6d92mr13880557pfg.47.1607350273953;
+        Mon, 07 Dec 2020 06:11:13 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxkBxyk206alvT7mPdTo3tQ9khlj97UeTzTkj83yXcXKskwBNzYfDVFWEX6MGkhpUMycG+3Xw==
+X-Received: by 2002:a62:c505:0:b029:19d:c3fe:6d92 with SMTP id j5-20020a62c5050000b029019dc3fe6d92mr13880536pfg.47.1607350273694;
+        Mon, 07 Dec 2020 06:11:13 -0800 (PST)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id z13sm10906925pjt.45.2020.12.07.06.11.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Dec 2020 06:11:12 -0800 (PST)
+Date:   Mon, 7 Dec 2020 22:11:01 +0800
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH v3 2/6] xfs: introduce xfs_dialloc_roll()
+Message-ID: <20201207141101.GA2817641@xiangao.remote.csb>
+References: <20201207001533.2702719-1-hsiangkao@redhat.com>
+ <20201207001533.2702719-3-hsiangkao@redhat.com>
+ <20201207134350.GC29249@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20201206230842.GI629293@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <20201207134350.GC29249@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Dec 06, 2020 at 03:08:42PM -0800, Darrick J. Wong wrote:
-> On Fri, Dec 04, 2020 at 09:00:36AM -0500, Brian Foster wrote:
-> > On Thu, Dec 03, 2020 at 05:12:30PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > The bmap, rmap, and refcount log intent items were added to support the
-> > > rmap and reflink features.  Because these features come with changes to
-> > > the ondisk format, the log items aren't tied to a log incompat flag.
-> > > 
-> > > However, the log recovery routines don't actually check for those
-> > > feature flags.  The kernel has no business replayng an intent item for a
-> > > feature that isn't enabled, so check that as part of recovered log item
-> > > validation.  (Note that kernels pre-dating rmap and reflink will fail
-> > > the mount on the unknown log item type code.)
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  fs/xfs/xfs_bmap_item.c     |    4 ++++
-> > >  fs/xfs/xfs_refcount_item.c |    3 +++
-> > >  fs/xfs/xfs_rmap_item.c     |    3 +++
-> > >  3 files changed, 10 insertions(+)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> > > index 78346d47564b..4ea9132716c6 100644
-> > > --- a/fs/xfs/xfs_bmap_item.c
-> > > +++ b/fs/xfs/xfs_bmap_item.c
-> > > @@ -425,6 +425,10 @@ xfs_bui_validate(
-> > >  {
-> > >  	struct xfs_map_extent		*bmap;
-> > >  
-> > > +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb) &&
-> > > +	    !xfs_sb_version_hasreflink(&mp->m_sb))
-> > > +		return false;
-> > > +
-> > 
-> > Took me a minute to realize we use the map/unmap for extent swap if rmap
-> > is enabled. That does make me wonder a bit.. had we made this kind of
-> > recovery feature validation change before that came around (such that we
-> > probably would have only checked _hasreflink() here), would we have
-> > created an unnecessary backwards incompatibility?
+On Mon, Dec 07, 2020 at 02:43:50PM +0100, Christoph Hellwig wrote:
+> > +	/*
+> > +	 * We want the quota changes to be associated with the next transaction,
+> > +	 * NOT this one. So, detach the dqinfo from this and attach it to the
+> > +	 * next transaction.
+> > +	 */
+> > +	if (tp->t_dqinfo) {
+> > +		dqinfo = tp->t_dqinfo;
+> > +		tp->t_dqinfo = NULL;
+> > +		tflags = tp->t_flags & XFS_TRANS_DQ_DIRTY;
+> > +		tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
 > 
-> Yes.
-> 
-> I confess to cheating a little here -- technically the bmap intents were
-> introduced with reflink in 4.9, whereas rmap was introduced in 4.8.  The
-> proper solution is probably to introduce a new log incompat bit for bmap
-> intents when reflink isn't enabled, but TBH there were enough other rmap
-> bugs in 4.8 (not to mention the EXPERIMENTAL warning) that nobody should
-> be running that old of a kernel on a production system.
-> 
-> (Also we don't enable rmap by default yet whereas reflink has been
-> enabled by default since 4.18, so the number of people affected probably
-> isn't very high...)
-> 
+> No need for the braces here.
 
-Hmm, so this all has me a a bit concerned over the value proposition for
-these particular feature checks. The current reflink/rmap feature
-situation may work out Ok in practice, but it sounds like that is partly
-due to timing and a little bit of luck around when the implementations
-and interdependencies landed. This code will ultimately introduce a
-verification pattern that will likely be followed for new features,
-associated log item types, etc. and it's not totally clear to me that
-we'd always get it right (as opposed to something more granular like
-incompat bits for intent formats). Is this addressing a real problem
-we've seen in the wild or more of a fuzzing thing?
+Ok, will fix.
 
-> Secondary question: should we patch 4.9 and 4.14 to disable rmap and
-> reflink support, since they both still have EXPERIMENTAL warnings?
 > 
-
-That sounds like an odd thing to do to a stable kernel, but that's just
-my .02.
-
-Brian
-
-> --D
+> > +	if (error) {
+> > +		xfs_buf_relse(agibp);
+> > +		return error;
+> > +	}
 > 
-> > Brian
-> > 
-> > >  	/* Only one mapping operation per BUI... */
-> > >  	if (buip->bui_format.bui_nextents != XFS_BUI_MAX_FAST_EXTENTS)
-> > >  		return false;
-> > > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> > > index 8ad6c81f6d8f..2b28f5643c0b 100644
-> > > --- a/fs/xfs/xfs_refcount_item.c
-> > > +++ b/fs/xfs/xfs_refcount_item.c
-> > > @@ -423,6 +423,9 @@ xfs_cui_validate_phys(
-> > >  	struct xfs_mount		*mp,
-> > >  	struct xfs_phys_extent		*refc)
-> > >  {
-> > > +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-> > > +		return false;
-> > > +
-> > >  	if (refc->pe_flags & ~XFS_REFCOUNT_EXTENT_FLAGS)
-> > >  		return false;
-> > >  
-> > > diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> > > index f296ec349936..2628bc0080fe 100644
-> > > --- a/fs/xfs/xfs_rmap_item.c
-> > > +++ b/fs/xfs/xfs_rmap_item.c
-> > > @@ -466,6 +466,9 @@ xfs_rui_validate_map(
-> > >  	struct xfs_mount		*mp,
-> > >  	struct xfs_map_extent		*rmap)
-> > >  {
-> > > +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-> > > +		return false;
-> > > +
-> > >  	if (rmap->me_flags & ~XFS_RMAP_EXTENT_FLAGS)
-> > >  		return false;
-> > >  
-> > > 
-> > 
+> I haven't looked over the other patches if there is a good reason for
+> it, but to me keeping the xfs_buf_relse in the caller would seem more
+> natural.
+
+This part is inherited from Dave's original patch, but I guess I could
+move this to all callers if needed, no strong opinion from myself.
+
+> 
+> >  
+> > +/* XXX: will be removed in the following patch */
+> > +int
+> 
+> I don't think the comment is very helpful.  As of this patch the
+> declaration is obviously needed, and that is all that matters.
+
+Ok, will remove it.
+
+> 
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
 
