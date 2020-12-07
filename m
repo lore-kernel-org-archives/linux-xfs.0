@@ -5,168 +5,122 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3267C4361B
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:48:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7FACC433FE
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 18:27:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C4C8621D42
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:48:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3BF8238A1
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 18:27:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725918AbgLGRsB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Dec 2020 12:48:01 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:41632 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725852AbgLGRsB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 12:48:01 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607363195;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=4aSBzBzTYH/m/0Ai/KK67lPgo7Z4mhIXknY4aYtPeeY=;
-        b=GHxT8yiTaw2I0aZ668DhdQG/2zqImC/E/sYZeCga26GxjQaP5gHgwcqfxR5OLQNIt5GN3b
-        FQfrsu9nkBxIEtwlyEDmd9jEv3Yxpkd5a4+DqjMspWgw/v52275AyIkPy+hP/BTgfZqwOd
-        9ZNKC3jUiMekXJEmFHKiwPyZXOsLUhc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-543-zYfg138lOCSKqjyz5cfD8w-1; Mon, 07 Dec 2020 12:46:33 -0500
-X-MC-Unique: zYfg138lOCSKqjyz5cfD8w-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id ED73A800D55;
-        Mon,  7 Dec 2020 17:46:31 +0000 (UTC)
-Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6C4625D9D0;
-        Mon,  7 Dec 2020 17:46:31 +0000 (UTC)
-Date:   Mon, 7 Dec 2020 12:46:29 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: rename xfs_fc_* back to xfs_fs_*
-Message-ID: <20201207174629.GE1598552@bfoster>
-References: <160729625074.1608297.13414859761208067117.stgit@magnolia>
- <160729627541.1608297.18095324548384560045.stgit@magnolia>
+        id S1725799AbgLGS1M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Dec 2020 13:27:12 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:60420 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725781AbgLGS1L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 13:27:11 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B7I9rJv005403;
+        Mon, 7 Dec 2020 18:26:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=cMd8H5+hk11W2lpWshh1VEbW5uGQWWmQKvLg7S3E2y4=;
+ b=EUxmK5e77O7b0dQjuhKf+SAi5N6rJfOpFiNmCGUitz/8k5sDA4yPewFosgTmNLYwvM2u
+ 1tja5kpUZr7bkB2bZfxiZ4uVoTdjciTR1QP1FaTcEbxV54i2OUWVhm+3FkR+clVe/zHU
+ a7eP9XABAjJT/PJdJTKyXDgTiZI+/d0Eb4isT8fyp+aXPfbeGTuuRP2s3OrDl5C6J0fY
+ gqcRw60d1MFkzjfx5CtDjLiD9E2Hm6NoNKOblQJYQHvkp5xkcxKigmyk8QOFHyLKAglY
+ LTyFMTx5Ozc+wDrC/0ch0K6tsFCdPI1WYuOAYrcA+7nS1Zxpl37B7rv0SL95Idw6upsy xQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 3581mqpt96-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 07 Dec 2020 18:26:26 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B7IAUcu177359;
+        Mon, 7 Dec 2020 18:26:25 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 358m3wqf9m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 07 Dec 2020 18:26:25 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0B7IQPh9013489;
+        Mon, 7 Dec 2020 18:26:25 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 07 Dec 2020 10:26:24 -0800
+Date:   Mon, 7 Dec 2020 10:26:23 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        bfoster@redhat.com
+Subject: [PATCH v3.1 09/10] xfs: validate feature support when recovering
+ rmap/refcount intents
+Message-ID: <20201207182623.GR629293@magnolia>
+References: <160729618252.1607103.863261260798043728.stgit@magnolia>
+ <160729624155.1607103.14703148264133630631.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160729627541.1608297.18095324548384560045.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <160729624155.1607103.14703148264133630631.stgit@magnolia>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9828 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 adultscore=0
+ bulkscore=0 phishscore=0 suspectscore=1 mlxscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012070118
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9828 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxlogscore=999
+ clxscore=1015 malwarescore=0 priorityscore=1501 adultscore=0
+ lowpriorityscore=0 phishscore=0 spamscore=0 impostorscore=0 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012070118
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Dec 06, 2020 at 03:11:15PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Get rid of this one-off namespace since we're done converting things to
-> fscontext now.
-> 
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+The rmap, and refcount log intent items were added to support the rmap
+and reflink features.  Because these features come with changes to the
+ondisk format, the log items aren't tied to a log incompat flag.
 
->  fs/xfs/xfs_super.c |   26 +++++++++++++-------------
->  1 file changed, 13 insertions(+), 13 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 36002f460d7c..12d6850aedc6 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1159,7 +1159,7 @@ suffix_kstrtoint(
->   * NOTE: mp->m_super is NULL here!
->   */
->  static int
-> -xfs_fc_parse_param(
-> +xfs_fs_parse_param(
->  	struct fs_context	*fc,
->  	struct fs_parameter	*param)
->  {
-> @@ -1317,7 +1317,7 @@ xfs_fc_parse_param(
->  }
->  
->  static int
-> -xfs_fc_validate_params(
-> +xfs_fs_validate_params(
->  	struct xfs_mount	*mp)
->  {
->  	/*
-> @@ -1386,7 +1386,7 @@ xfs_fc_validate_params(
->  }
->  
->  static int
-> -xfs_fc_fill_super(
-> +xfs_fs_fill_super(
->  	struct super_block	*sb,
->  	struct fs_context	*fc)
->  {
-> @@ -1396,7 +1396,7 @@ xfs_fc_fill_super(
->  
->  	mp->m_super = sb;
->  
-> -	error = xfs_fc_validate_params(mp);
-> +	error = xfs_fs_validate_params(mp);
->  	if (error)
->  		goto out_free_names;
->  
-> @@ -1660,10 +1660,10 @@ xfs_fc_fill_super(
->  }
->  
->  static int
-> -xfs_fc_get_tree(
-> +xfs_fs_get_tree(
->  	struct fs_context	*fc)
->  {
-> -	return get_tree_bdev(fc, xfs_fc_fill_super);
-> +	return get_tree_bdev(fc, xfs_fs_fill_super);
->  }
->  
->  static int
-> @@ -1782,7 +1782,7 @@ xfs_remount_ro(
->   * silently ignore all options that we can't actually change.
->   */
->  static int
-> -xfs_fc_reconfigure(
-> +xfs_fs_reconfigure(
->  	struct fs_context *fc)
->  {
->  	struct xfs_mount	*mp = XFS_M(fc->root->d_sb);
-> @@ -1795,7 +1795,7 @@ xfs_fc_reconfigure(
->  	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
->  		fc->sb_flags |= SB_I_VERSION;
->  
-> -	error = xfs_fc_validate_params(new_mp);
-> +	error = xfs_fs_validate_params(new_mp);
->  	if (error)
->  		return error;
->  
-> @@ -1832,7 +1832,7 @@ xfs_fc_reconfigure(
->  	return 0;
->  }
->  
-> -static void xfs_fc_free(
-> +static void xfs_fs_free(
->  	struct fs_context	*fc)
->  {
->  	struct xfs_mount	*mp = fc->s_fs_info;
-> @@ -1848,10 +1848,10 @@ static void xfs_fc_free(
->  }
->  
->  static const struct fs_context_operations xfs_context_ops = {
-> -	.parse_param = xfs_fc_parse_param,
-> -	.get_tree    = xfs_fc_get_tree,
-> -	.reconfigure = xfs_fc_reconfigure,
-> -	.free        = xfs_fc_free,
-> +	.parse_param = xfs_fs_parse_param,
-> +	.get_tree    = xfs_fs_get_tree,
-> +	.reconfigure = xfs_fs_reconfigure,
-> +	.free        = xfs_fs_free,
->  };
->  
->  static int xfs_init_fs_context(
-> 
+However, the log recovery routines don't actually check for those
+feature flags.  The kernel has no business replayng an intent item for a
+feature that isn't enabled, so check that as part of recovered log item
+validation.  (Note that kernels pre-dating rmap and reflink already fail
+log recovery on the unknown log item type code.)
 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v3.1: drop the feature check for BUI validation for now
+---
+ fs/xfs/xfs_refcount_item.c |    3 +++
+ fs/xfs/xfs_rmap_item.c     |    3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+index c24f2da0f795..937d482c9be4 100644
+--- a/fs/xfs/xfs_refcount_item.c
++++ b/fs/xfs/xfs_refcount_item.c
+@@ -423,6 +423,9 @@ xfs_cui_validate_phys(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_phys_extent		*refc)
+ {
++	if (!xfs_sb_version_hasreflink(&mp->m_sb))
++		return false;
++
+ 	if (refc->pe_flags & ~XFS_REFCOUNT_EXTENT_FLAGS)
+ 		return false;
+ 
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index 6f3250a22093..9b84017184d9 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -466,6 +466,9 @@ xfs_rui_validate_map(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_map_extent		*rmap)
+ {
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return false;
++
+ 	if (rmap->me_flags & ~XFS_RMAP_EXTENT_FLAGS)
+ 		return false;
+ 
