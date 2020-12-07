@@ -2,211 +2,116 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E60CDC433FE
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:19:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B72BC1B0E3
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:23:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC0DC2388E
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:19:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7372F2388D
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:23:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726377AbgLGRTj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Dec 2020 12:19:39 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:34906 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725866AbgLGRTj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 12:19:39 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B7HFQRk034605;
-        Mon, 7 Dec 2020 17:18:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=t8CphUzX/vm95PmGD0WDLvZ5xNVmzh21p0yLG1gFugU=;
- b=Y78uIQu6NIv3JFeem2RedJ7YHp+o/YTEAKwOwjI3rqTOGIKsgATyImfGdiUBiV1zGSR6
- xNx6hmxgM47dCtzlf+MWk4vN3s4dS502Cl+xwVv0HQEGf7SSx5Nd+cEeVPfJFADMCt+d
- uwKWOHrinhUTN5EJbEUIC/XFLuaYOwDN76C8B+TDK6eq2drzgzMDTvQSqTs4mRBYGKJF
- agwYP/jtSKfFZeDRvY8DVtT4Re5dAj9g2jSXrpEvSiSzpxfQntCYhUOj4A0t4lst/zdr
- 6QaXVBXxw9WxyO4h/YIPa45k3gyqUpRjHxGxSW0O34MBnldXPjUePndzOmRSeiiBjPzh lA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 35825kxh57-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 07 Dec 2020 17:18:55 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B7HFfYO177228;
-        Mon, 7 Dec 2020 17:18:55 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 358m4wj7k2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 07 Dec 2020 17:18:54 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0B7HIrj9004945;
-        Mon, 7 Dec 2020 17:18:53 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 07 Dec 2020 09:18:53 -0800
-Date:   Mon, 7 Dec 2020 09:18:51 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] [RFC] xfs: initialise attr fork on inode create
-Message-ID: <20201207171851.GQ629293@magnolia>
+        id S1727346AbgLGRXG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Dec 2020 12:23:06 -0500
+Received: from sonic316-26.consmr.mail.ne1.yahoo.com ([66.163.187.152]:43549
+        "EHLO sonic316-26.consmr.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726352AbgLGRXG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 12:23:06 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1607361739; bh=OOjCeroPBUfdWrczr4SnwUXd+j8FKd61fwJe2BVkibQ=; h=To:Cc:References:From:Subject:Date:In-Reply-To:From:Subject; b=XlxCug4AelGxYW0ggJVkLSwQ/CJR1D/t8CgoslhDFmV/o0SpVF7mVLKZgQtTqEzGMXkTTrdS6MDUvC5cy7zB6DWP+BQ9HiwJuNbmduY8Bb3T2+mKP5P4dxwWyTAiT7NBuAKxZFoqvdptlpXMo9/jX0sC82NG/joNZcEYHPyHkdvbc0vdHXBYd60rrLyimH4O3zCn9ihzQ+foWzqo/P2yBsQars8OTiU8VM+0luoSeS9daXQrt3RrGcmeiAP35r5u5E+WkHZVStQK3J/r3KlR298EArnA5qCTEQrh3eQ7BWgiwyFXz77a6YbNBviNOd927b6VOlQ6tGxATtU61F0KKw==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1607361739; bh=iXikzVKhlPtu2BcGY+/8m4n33gmKMdcgFMuvL9XZqE3=; h=To:From:Subject:Date:From:Subject; b=n9DK4CfbCIdFted4tVi5dZZn0+lSIlTTWVuca8aVP+N10nh0O22XCvCfA8MEXZ++92RS1fycVpUjbr1Tl9rrQqCDbr0F4xxUZFSSLFGhUfhzWbJ1FGlvMBdD8vzmJW3ly6uIYecQvAlQer3zf61VO6/zR86w6OjD5gVVc+GYjB6hHgDnZx9jJ6to7+Y3lQ0Wwea3HxkNGAcRU612oQGGb3seQv1XXYVF3xgUJ2HUJxg3ujqet+41Y7e9kcAb9jANvzDA6I8hn2vYtYguUe/4i8TY1WuNBUoN4yI73TjkpoI5svPB/4qtJe5zPx625xejdldpcDsJT5byP/NOyg7psg==
+X-YMail-OSG: gvxi9NUVM1mlko6dWyQLEue2FssDwgIcXrp54YdPvZPLiQow2ey3MLAvfmBrX_y
+ pk_934gqvDl79A7auYe63enmeYod1SvbHdkyLsnOLzSH.k1RRXCeA9qQheKqy1JPOTFEuGwRPjwV
+ EHYh6757Vd2m4_fjfyqgIl.apnSSpkZOmF45rr5qdO_6cjQgr9KZ7Gw_F.y9a64WP6ivzW9VXI9v
+ qTzLNR9RVTahRWCUh1HcucDy7t7le8qB9IN7D_JoFelxYYbbsI_B4_BOdMNNugZwUF0AF.LXMfGs
+ EFVqkSHFxyF7y9Xr0tKzEeY03Tv8PmbsX27GrZF6E6ADXduNj6IQYfpVinNbRZnJUzchOjysqxTh
+ GgjUmOq5AnQohgADow_nH5o4Ry7fD4e_D9HQfkbJOZHJ353UhSwEAYuV.OigWUBExIgFuZk5Npkt
+ EbNSimo51lgdq7m_O3gOrAJnLaNC2zuLcwlx8VWR_XYOAxIHv9y.HUemPZR5sTogdtwHsTfHWXWO
+ p9R6oFNkkuZyW1DoZ7biBXjsUKFTJhWwSukArH9XBG7b0leNg476BxyKAsbZdhRlotTXzXHttAT.
+ 2QSMVnteo8kL6nymjZvAulPe2ezHM5Etwa89ppRYBBkqc0oRXrjEZEP3HYhVX8smkOAfUhj7_ZAJ
+ .JoXq88VhI5rh7Rpsl942qUiepMznghJ0WOn_bmg1WEN79yoKs5UMmAO00HkLxugcs5bYs_SVY82
+ vCK0rYn9uwtQoZ_J7ZIr2_K2CKLbQ.41YWPGO8Yn1Ckd4xEkgWMzI0H8X6iZ.0dkvDpBA81l7GLa
+ TZV8AtfmGILLX9ZlO1KvzO1tCyoiKFSdOek8jqZuuIm1utjmBM2x8Ez37dVDm1XJ3.oBzyMNeA5d
+ 15OCqZv1MI3EiTgwd8rpyRQ0tXiNGdw_MI1uGvt.8EaAj38C.nCgQa3TY5tbn8DUYorNTTMkpMBl
+ SseRQZWk4gI41p4UCTYLloBgb3Ch..qb8BSH7uvZi9JcQxXqtDUYhNLJopXZBtnPxn_wqsDm7Lfe
+ oJClSjrnyIzeeFkJLNsVIBypWC7PPfWwCFvBxtqxR8f4eDeYXSrd99rBsyJPaRx9Cmzo_7bHovVf
+ G2Xaf80QX5UYrvAyETFT41e8ywDVzLxSPZGUAL8xGWHAV4MvFAQkm31dkvJ_MRmojv7SSLS2GUvA
+ _cqVVgZqmg9ryHTVFAGb74uWUyXZ04z3._vqVhvVm00iDaVnWTqF8uoT8Rn3fXsGdl7B4ftt7Fim
+ 7H62WU5t2ADUytb1Yxoh6fVwvWksvpkm39N5i6dvNHXuZT6FIZd4yqpjlSnqWwjy6wiiQ0jjP4Ho
+ uq9SGKSeLcgaQHZKQpADgLB0.h64d5YZLal3qZIB4eIWBUXHgLEg99wVHzAKi64ojyW7FAbt7WhE
+ cbdyQTznIfIqgtgahD.JoM3uwFxBEiVPto.wqaHqjWfcISzry92JV6Jaxn2WoyT9q39erPXgvgWU
+ LcxqL1qEEzg_8DL3woHdfWh2WHtrD5w5mNdGIJ0xY09PD83KDvkK0zHhANdzh405Pyurq3hZWqQt
+ 71rwyDCqGrqAWqEMhpRpzVsoNhxitQOM.jKSZpc3gt7t5nlgEo4ntd7cZWda0jIhC8XMRDqf1bCB
+ WAJpxD.7p4.eCdJ38GKZskyF9DFDz9yoQaSOqmuq1byq.YZ__WAICi62KsnE8QckXq2ySo9.eLTt
+ ZlN3zXKLsXzGnpfZxysTx3NR4.24GGGL5WeNWkpGkgdkAecK_4WMiM4E6nZxzTbnMgV7dRdi.A_B
+ pmir7FXrsHyvpgomrMz__G0Zf7wUfnZipQatwDdD5zSTkF0x0t_b5wd5zoim9hhmT0.mgUvoz4S5
+ gU3p70x2kXiOKc73RQ7cydEjbfQu6DYloUg0JXMjJ_GJkzLffv6iX4iaF4_uI5uHgThHfKqnwBmg
+ v9B3lc.vezFN.Zm7Alkjjrqmw6w_iI3NxukwljOodLkBZfjC0G_Bmdhq03J1IFTFFUno2p50AKOc
+ Qsx4zNfmEvtvBQxqkBwaQOUnE6QteDaCIL46wdIENzQBrXY_YX04HAE76Im_dZnebpcR.653bIME
+ jqm_R9jJLOi0APIEPij6b0Sfx4iw9sU1u5CUYXFV0Jn.vyXSpshFbSzaBjfHkulwqkGOIDVYBMQC
+ FaWxNuhYDLOvd.qRioBiEV9EtGIItgKAwja1mPUiu8E9ehrzK9kRuMWKtv2hLUHvWKTL6pCgyVN2
+ d7bZbmeP7rF2owzzdGGulOig8x9js.Ma8v8xo8mPDd7RcyX9ZfTsaB5IOf.9Lei5xvNKI2CeMOHL
+ d1xYH6Ncsnnn_Dne1lP1C3fzs5XW5_CjYutXHuMUSZIJz.8M7fFoCZZRiNq_QfjhzpRCwuqkdT1c
+ U4Age.wIT1nKjm.lpD8naEd9t.kqUdJzu6LYTQihi8G8Kg5bmvePqDVHUS8zCfA7aFQhOFjq_IPf
+ TDFhVmIkvQezkzzh6.wneaZY6k9otHQmhppbh27FTmtcuM3r6QUyzexhOsU.F59Z7VY1TKy2tV1d
+ f7CGM7PLL7if5JS7oVrTgy.O9mvER7qpA7uPAQAoz5YBj2SYWaWyLreZHrmxLgggwoTNzQwrskQh
+ Cp1UC0b9wJ6xb9Lrj79avHgndA_B5LQnErO91vCNWQDJqrgaF79FifPD9e3pWkUSlbwC_emjo5qu
+ 0FyODCZY-
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic316.consmr.mail.ne1.yahoo.com with HTTP; Mon, 7 Dec 2020 17:22:19 +0000
+Received: by smtp403.mail.bf1.yahoo.com (VZM Hermes SMTP Server) with ESMTPA ID 5b928a72d2861b73bd11afb7cf13b8b7;
+          Mon, 07 Dec 2020 17:22:14 +0000 (UTC)
+To:     Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-security-module@vger.kernel.org,
+        Casey Schaufler <casey@schaufler-ca.com>
 References: <20201202232724.1730114-1-david@fromorbit.com>
- <20201204123137.GA1404170@bfoster>
- <20201204212222.GG3913616@dread.disaster.area>
- <20201205113444.GA1485029@bfoster>
- <20201206233322.GK3913616@dread.disaster.area>
- <20201207163018.GD1585352@bfoster>
+ <20201203084012.GA32480@infradead.org>
+ <20201203214426.GE3913616@dread.disaster.area>
+ <20201204075405.GA30060@infradead.org>
+From:   Casey Schaufler <casey@schaufler-ca.com>
+Subject: Re: [PATCH] [RFC] xfs: initialise attr fork on inode create
+Message-ID: <f39eb0d7-e437-5dae-303a-bae399e4bada@schaufler-ca.com>
+Date:   Mon, 7 Dec 2020 09:22:13 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201207163018.GD1585352@bfoster>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9827 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 suspectscore=1
- bulkscore=0 malwarescore=0 phishscore=0 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012070111
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9827 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0 bulkscore=0
- phishscore=0 mlxlogscore=999 clxscore=1015 priorityscore=1501 mlxscore=0
- spamscore=0 lowpriorityscore=0 malwarescore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012070111
+In-Reply-To: <20201204075405.GA30060@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
+X-Mailer: WebService/1.1.17111 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo Apache-HttpAsyncClient/4.1.4 (Java/11.0.8)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Dec 07, 2020 at 11:30:18AM -0500, Brian Foster wrote:
-> On Mon, Dec 07, 2020 at 10:33:22AM +1100, Dave Chinner wrote:
-> > On Sat, Dec 05, 2020 at 06:34:44AM -0500, Brian Foster wrote:
-> > > On Sat, Dec 05, 2020 at 08:22:22AM +1100, Dave Chinner wrote:
-> > > > On Fri, Dec 04, 2020 at 07:31:37AM -0500, Brian Foster wrote:
-> > > > > On Thu, Dec 03, 2020 at 10:27:24AM +1100, Dave Chinner wrote:
-> > > > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > > > > index 2bfbcf28b1bd..9ee2e0b4c6fd 100644
-> > > > > > --- a/fs/xfs/xfs_inode.c
-> > > > > > +++ b/fs/xfs/xfs_inode.c
-> > > > > ...
-> > > > > > @@ -918,6 +919,18 @@ xfs_ialloc(
-> > > > > >  		ASSERT(0);
-> > > > > >  	}
-> > > > > >  
-> > > > > > +	/*
-> > > > > > +	 * If we need to create attributes immediately after allocating the
-> > > > > > +	 * inode, initialise an empty attribute fork right now. We use the
-> > > > > > +	 * default fork offset for attributes here as we don't know exactly what
-> > > > > > +	 * size or how many attributes we might be adding. We can do this safely
-> > > > > > +	 * here because we know the data fork is completely empty right now.
-> > > > > > +	 */
-> > > > > > +	if (init_attrs) {
-> > > > > > +		ip->i_afp = xfs_ifork_alloc(XFS_DINODE_FMT_EXTENTS, 0);
-> > > > > > +		ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
-> > > > > > +	}
-> > > > > > +
-> > > > > 
-> > > > > Seems reasonable in principle, but why not refactor
-> > > > > xfs_bmap_add_attrfork() such that the internals (i.e. everything within
-> > > > > the transaction/ilock code) can be properly reused in both contexts
-> > > > > rather than open-coding (and thus duplicating) a somewhat stripped down
-> > > > > version?
-> > > > 
-> > > > We don't know the size of the attribute that is being created, so
-> > > > the attr size dependent parts of it can't be used.
-> > > 
-> > > Not sure I see the problem here. It looks to me that
-> > > xfs_bmap_add_attrfork() would do the right thing if we just passed a
-> > > size of zero.
-> > 
-> > Yes, but it also does an awful lot that we do not need.
-> > 
-> 
-> Hence the suggestion to refactor it..
-> 
-> > > The only place the size value is actually used is down in
-> > > xfs_attr_shortform_bytesfit(), and I'd expect that to identify that the
-> > > requested size is <= than the current afork size (also zero for a newly
-> > > allocated inode..?) and bail out.
-> > 
-> > RIght it ends up doing that because an uninitialised inode fork
-> > (di_forkoff = 0) is the same size as the requested size of zero, and
-> > then it does ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
-> > 
-> > But that's decided another two function calls deep, after a lot of
-> > branches and shifting and comparisons to determine that the attr
-> > fork is empty. Yet we already know that the attr fork is empty here
-> > so all that extra CPU work is completely unnecessary.
-> > 
-> 
-> xfs_bmap_add_attrfork() already asserts that the attr fork is
-> nonexistent at the very top of the function, for one. The 25-30 lines of
-> that function that we need can be trivially lifted out into a new helper
-> that can equally as trivially accommodate the size == 0 case and skip
-> all those shortform calculations.
-> 
-> > Keep in mind we do exactly the same thing in
-> > xfs_bmap_forkoff_reset(). We don't care about all the setup stuff in
-> > xfs_bmap_add_attrfork(), we just reset the attr fork offset to the
-> > default if the attr fork had grown larger than the default offset.
-> > 
-> 
-> I'm not arguing that the attr fork needs to be set up in a particular
-> way on initial creation. I'm arguing that we don't need yet a third
-> unique code path to set/initialize a default/empty attr fork. We can
-> slowly normalize them all to the _reset() technique you're effectively
-> reimplementing here if that works well enough and is preferred...
-> 
-> > > That said, I wouldn't be opposed to tweaking xfs_bmap_set_attrforkoff()
-> > > by a line or two to just skip the shortform call if size == 0. Then we
-> > > can be more explicit about the "size == 0 means preemptive fork alloc,
-> > > use the default offset" use case and perhaps actually document it with
-> > > some comments as well.
-> > 
-> > It just seems wrong to me to code a special case into some function
-> > to optimise that special case when the code that needs the special
-> > case has no need to call that function in the first place.....
-> > 
-> 
-> I'm not sure what's so odd or controversial about refactoring and
-> reusing an existing operational (i.e. add fork) function to facilitate
-> review and future maintenance of that particular operation being
-> performed from new and various contexts. And speaking in generalities
-> like this just obfuscates and overcomplicates the argument. Let's be
-> clear, we're literally arguing over a delta that would look something
-> like this:
-> 
-> xfs_bmap_set_attrforkoff()
-> {
-> ...
-> +		if (size)
-> -               ip->i_d.di_forkoff = xfs_attr_shortform_bytesfit(ip, size);
-> +			ip->i_d.di_forkoff = xfs_attr_shortform_bytesfit(ip, size);
->                 if (!ip->i_d.di_forkoff)
->                         ip->i_d.di_forkoff = xfs_default_attroffset(ip) >> 3;
-> 		...
-> }
-> 
-> Given all of that, I'm not convinced this is nearly the problem you seem
-> to insinuate, yet I also don't think I'll convince you otherwise so it's
-> probably not worth continuing to debate. You have my feedback, I'll let
-> others determine how this patch comes together from here...
+On 12/3/2020 11:54 PM, Christoph Hellwig wrote:
+> On Fri, Dec 04, 2020 at 08:44:26AM +1100, Dave Chinner wrote:
+>>>> +		if ((IS_ENABLED(CONFIG_SECURITY) && dir->i_sb->s_security) ||
+>>>> +		    default_acl || acl)
+>>>> +			need_xattr =3D true;
+>>>> +
+>>>> +		error =3D xfs_create(XFS_I(dir), &name, mode, rdev,
+>>>> +					need_xattr, &ip);
+>>> It might be wort to factor the condition into a little helper.  Also
+>>> I think we also have security labels for O_TMPFILE inodes, so it migh=
+t
+>>> be worth plugging into that path as well.
+>> Yeah, a helper is a good idea - I just wanted to get some feedback
+>> first on whether it's a good idea to peek directly at
+>> i_sb->s_security
 
-Alternate take: If you /are/ going to have a "init empty attr fork"
-shortcut function, can it at least be placed next to the regular one in
-xfs_bmap.c so that the di_forkoff setters are only split across three
-source files instead of four?
+Only security modules should ever look at what's in the security blob.
+In fact, you can't assume that the presence of a security blob
+(i.e. ...->s_security !=3D NULL) implies "need_xattr", or any other
+state for the superblock.
 
---D
+>>  or whether there is some other way of knowing ahead
+>> of time that a security xattr is going to be created. I couldn't
+>> find one, but that doesn't mean such an interface doesn't exist in
+>> all the twisty passages of the LSM layers...
+> I've added the relevant list, maybe someone there has an opinion.
 
-> Brian
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
-> 
+How is what you're looking for different from security_ismaclabel() ?
+
+
