@@ -2,77 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EEFCC4361B
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:26:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ECEFC4361B
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:30:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45EE32389B
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:26:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF6932388E
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Dec 2020 17:30:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726137AbgLGR03 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Dec 2020 12:26:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39496 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725918AbgLGR03 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 12:26:29 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07E09C061749;
-        Mon,  7 Dec 2020 09:25:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=AGQIg+oueMi6A55NMaIsDwwntSDRLAaqgJpE2Y2vFI8=; b=N+fvHN7hp3O2EWlUAG05xivFKk
-        IrO/k0u2ORK1/oZ0VXXMDLAVrpm0eClgkyJCHSSea5bTxD0jJQRBLLuNNeP9gPoPtgY0O5lkpRWrx
-        4O6vRNLH9+JtgH5dtzb0GB4Lgq8Fwt57F5rIDRxYDsNFwxvVF5G7O33GydF8EGzInj0vlrQ36zs6f
-        ZGauVtg8tQZGT+gZ63TXaPOjTeoHh5lHUOblulx07qqeYbWVSqJgvqw2EIFqhm2iJ8lQ5JlmL7HoE
-        JKQunTOuX91ltrUw0nZ0CdAb1ekmgxC7YmVMhPQj/hi9Sqx8aQs6511t6NvuFET6DBKMk+7yYTGYt
-        dxCi2jMw==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kmKGf-0005cI-IG; Mon, 07 Dec 2020 17:25:45 +0000
-Date:   Mon, 7 Dec 2020 17:25:45 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Casey Schaufler <casey@schaufler-ca.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        linux-security-module@vger.kernel.org
-Subject: Re: [PATCH] [RFC] xfs: initialise attr fork on inode create
-Message-ID: <20201207172545.GA20743@infradead.org>
-References: <20201202232724.1730114-1-david@fromorbit.com>
- <20201203084012.GA32480@infradead.org>
- <20201203214426.GE3913616@dread.disaster.area>
- <20201204075405.GA30060@infradead.org>
- <f39eb0d7-e437-5dae-303a-bae399e4bada@schaufler-ca.com>
+        id S1726182AbgLGRaT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Dec 2020 12:30:19 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:36083 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726137AbgLGRaT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Dec 2020 12:30:19 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1607362132;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=z1mzwpPklpdNpciM0MKkkQE3USYuYGTHjPrwZeuQL7k=;
+        b=CVNBcimPoCrYchB47PQAjVzKxgnIw0Mgi5uEhUKrz1YheYgA1LNvpnZilfp45KKb3+zcmI
+        Fgw3jpkolwK61lEhrRI8WZZESyqspwgJo1+Oc3FaKEq2muw5pLeYmiAQFUGuLXGwWQpnjp
+        mqaSn/6gFX33pqveMQ90rmN0T2kPk4k=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-332-8fXUXXcwOjehupqCiX5S6w-1; Mon, 07 Dec 2020 12:28:51 -0500
+X-MC-Unique: 8fXUXXcwOjehupqCiX5S6w-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1235C800D53;
+        Mon,  7 Dec 2020 17:28:50 +0000 (UTC)
+Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A17C26EF40;
+        Mon,  7 Dec 2020 17:28:49 +0000 (UTC)
+Date:   Mon, 7 Dec 2020 12:28:47 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 10/10] xfs: trace log intent item recovery failures
+Message-ID: <20201207172847.GA1598552@bfoster>
+References: <160729618252.1607103.863261260798043728.stgit@magnolia>
+ <160729624812.1607103.14927905190925127101.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f39eb0d7-e437-5dae-303a-bae399e4bada@schaufler-ca.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <160729624812.1607103.14927905190925127101.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Dec 07, 2020 at 09:22:13AM -0800, Casey Schaufler wrote:
-> Only security modules should ever look at what's in the security blob.
-> In fact, you can't assume that the presence of a security blob
-> (i.e. ...->s_security != NULL) implies "need_xattr", or any other
-> state for the superblock.
-
-Maybe "strongly suggests that an xattr will be added" is the better
-wording.
-
+On Sun, Dec 06, 2020 at 03:10:48PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> >>  or whether there is some other way of knowing ahead
-> >> of time that a security xattr is going to be created. I couldn't
-> >> find one, but that doesn't mean such an interface doesn't exist in
-> >> all the twisty passages of the LSM layers...
-> > I've added the relevant list, maybe someone there has an opinion.
+> Add a trace point so that we can capture when a recovered log intent
+> item fails to recover.
 > 
-> How is what you're looking for different from security_ismaclabel() ?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_log_recover.c |    5 ++++-
+>  fs/xfs/xfs_trace.h       |   18 ++++++++++++++++++
+>  2 files changed, 22 insertions(+), 1 deletion(-)
+> 
+> 
+...
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 86951652d3ed..8fdb51eac1af 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -103,6 +103,24 @@ DEFINE_ATTR_LIST_EVENT(xfs_attr_list_notfound);
+>  DEFINE_ATTR_LIST_EVENT(xfs_attr_leaf_list);
+>  DEFINE_ATTR_LIST_EVENT(xfs_attr_node_list);
+>  
+> +TRACE_EVENT(xlog_intent_recovery_failed,
+> +	TP_PROTO(struct xfs_mount *mp, int error, void *caller_ip),
+> +	TP_ARGS(mp, error, caller_ip),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(int, error)
+> +		__field(void *, caller_ip)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = mp->m_super->s_dev;
+> +		__entry->error = error;
+> +		__entry->caller_ip = caller_ip;
+> +	),
+> +	TP_printk("dev %d:%d error %d function %pS",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->error, __entry->caller_ip)
+> +);
+> +
 
-Not at all.  What this needs is a guestimate (which doesn't have
-to be 100% reliable) that a new inode created by ->create, ->mknod,
-or ->mkdir will have an xattr set on it during the creation syscall.
+Nit: I'd still swap out all of the caller_ip naming for clarity, but
+otherwise LGTM:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  DECLARE_EVENT_CLASS(xfs_perag_class,
+>  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int refcount,
+>  		 unsigned long caller_ip),
+> 
+
