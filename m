@@ -2,84 +2,76 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8393C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 04:27:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6CA7C4361B
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 07:53:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF52F23B19
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 04:27:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A46C223BC4
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 07:53:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726643AbgLIE1n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Dec 2020 23:27:43 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55450 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726303AbgLIE1n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Dec 2020 23:27:43 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id F38B43E0067;
-        Wed,  9 Dec 2020 15:27:00 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kmr48-0021WD-BE; Wed, 09 Dec 2020 15:27:00 +1100
-Date:   Wed, 9 Dec 2020 15:27:00 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Zorro Lang <zlang@redhat.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: fix the forward progress assertion in
- xfs_iwalk_run_callbacks
-Message-ID: <20201209042700.GZ3913616@dread.disaster.area>
-References: <20201208171651.GA1943235@magnolia>
+        id S1728442AbgLIHx3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Dec 2020 02:53:29 -0500
+Received: from verein.lst.de ([213.95.11.211]:49035 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728436AbgLIHx3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Dec 2020 02:53:29 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 6398067373; Wed,  9 Dec 2020 08:52:46 +0100 (CET)
+Date:   Wed, 9 Dec 2020 08:52:46 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH v4 3/6] xfs: move on-disk inode allocation out of
+ xfs_ialloc()
+Message-ID: <20201209075246.GA10645@lst.de>
+References: <20201208122003.3158922-1-hsiangkao@redhat.com> <20201208122003.3158922-4-hsiangkao@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201208171651.GA1943235@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=-lf4FeGQNLXjq8aQY3wA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20201208122003.3158922-4-hsiangkao@redhat.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 08, 2020 at 09:16:51AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In commit 27c14b5daa82 we started tracking the last inode seen during an
-> inode walk to avoid infinite loops if a corrupt inobt record happens to
-> have a lower ir_startino than the record preceeding it.  Unfortunately,
-> the assertion trips over the case where there are completely empty inobt
-> records (which can happen quite easily on 64k page filesystems) because
-> we advance the tracking cursor without actually putting the empty record
-> into the processing buffer.  Fix the assert to allow for this case.
-> 
-> Reported-by: zlang@redhat.com
-> Fixes: 27c14b5daa82 ("xfs: ensure inobt record walks always make forward progress")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_iwalk.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-> index 2a45138831e3..eae3aff9bc97 100644
-> --- a/fs/xfs/xfs_iwalk.c
-> +++ b/fs/xfs/xfs_iwalk.c
-> @@ -363,7 +363,7 @@ xfs_iwalk_run_callbacks(
->  	/* Delete cursor but remember the last record we cached... */
->  	xfs_iwalk_del_inobt(tp, curpp, agi_bpp, 0);
->  	irec = &iwag->recs[iwag->nr_recs - 1];
-> -	ASSERT(next_agino == irec->ir_startino + XFS_INODES_PER_CHUNK);
-> +	ASSERT(next_agino >= irec->ir_startino + XFS_INODES_PER_CHUNK);
+> +	/* Initialise the newly allocated inode. */
+> +	return xfs_init_new_inode(*tpp, dp, ino, mode, nlink, rdev, prid);
 
-Looks sensible.
+IMHO this comment is not overly helpful..
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> +	if (IS_ERR(ip)) {
+> +		error = PTR_ERR(ip);
+> +		ip = NULL;
+>  		goto out_trans_cancel;
+> +	}
 
--- 
-Dave Chinner
-david@fromorbit.com
+And the calling convention with the ERR_PTR return does not seem to
+fit the call chain to well.  But those are minor details, so:
+
+>  STATIC int
+>  xfs_qm_qino_alloc(
+> -	xfs_mount_t	*mp,
+> -	xfs_inode_t	**ip,
+> -	uint		flags)
+> +	struct xfs_mount	*mp,
+> +	struct xfs_inode	**ipp,
+> +	unsigned int		flags)
+>  {
+>  	xfs_trans_t	*tp;
+>  	int		error;
+>  	bool		need_alloc = true;
+
+Why do you reindent and de-typdefify the arguments, but not the local
+variables?
+
+All the stuff below also seems to deal with the fact that the old return
+ip by reference calling convention seems to actually work better with
+the code base..
