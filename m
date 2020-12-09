@@ -2,230 +2,246 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4038CC4361B
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Dec 2020 23:38:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2F45C4361B
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 01:42:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01354238EE
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Dec 2020 23:38:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B36CD238E4
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 01:42:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731604AbgLHXiQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Dec 2020 18:38:16 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:59898 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730438AbgLHXiP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Dec 2020 18:38:15 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607470608;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=aLVu68blltSYkkCFyUvNT7iMFXxbb0UBheR9AltG9Dc=;
-        b=QDuR34U6soLVdd2RbqYZ0gc7wWOo0yrdGQ2h7oYXJTOywaql/LU9QoMFo8eNnToURP2CrM
-        /85b5Lk0lD9lE/h3yCSD4tUaHK5MRtnuqB+hk8K+AeXoS+pY/JJ3y2wzUYe8iBXaTcr35f
-        zcTi3OwgYKjsvpqJV0cyQLxQr8CRqTs=
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
- [209.85.214.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-187-Tqa-7KJdOWSUzXyasuK1XA-1; Tue, 08 Dec 2020 18:36:47 -0500
-X-MC-Unique: Tqa-7KJdOWSUzXyasuK1XA-1
-Received: by mail-pl1-f199.google.com with SMTP id k17so251870pll.18
-        for <linux-xfs@vger.kernel.org>; Tue, 08 Dec 2020 15:36:46 -0800 (PST)
+        id S1725901AbgLIBmD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Dec 2020 20:42:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59642 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725283AbgLIBmD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Dec 2020 20:42:03 -0500
+Received: from mail-il1-x142.google.com (mail-il1-x142.google.com [IPv6:2607:f8b0:4864:20::142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDB82C0613D6;
+        Tue,  8 Dec 2020 17:41:16 -0800 (PST)
+Received: by mail-il1-x142.google.com with SMTP id b8so60439ila.13;
+        Tue, 08 Dec 2020 17:41:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=iAGWTxNYiR5ootYJRUnUUI04QhdswVTJD/R6XwstuWM=;
+        b=HB/rAKzJr5CG+rq2DeWaPCAmqtQN1wgBJx6FeZmzTHWzYSyhwWT6zlgTr7NxOc+CBn
+         1d52HA3170acxH6axHMsipNoDhhHBrZYXL7gLCMl0yWpgijY4omt0IcDaDj/NEG5gF5H
+         q1EafboB2/cpJuRinDHJ0lgR/M0goLFmG2o7Wmijj9zhGHPIkeiTMu9Qlv2NQdaZaDt5
+         CM40N0DOVcuN5ugpTuESqvMDuEdkvVZPy4y2p1TV1W4eJtF+w3aaWXT3T4P4QUqoWziZ
+         XByaOhvEsPitAECL4YMtMYHGeRxxqQHouGqgJ8+i7JKxE8QVee+q/A9cLG348f65gvQ0
+         1rRw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=aLVu68blltSYkkCFyUvNT7iMFXxbb0UBheR9AltG9Dc=;
-        b=GgiSk/YKc/2UZkKMjQuOiGdyQFXAykXqvl1PwlX3+Ebr+gw2fxsd/Gn4b+R28AbRpa
-         MocVCw+DhgGFSxJGMHgV0wFnzFS1rFMSIUf7sjkYaMMIaFq27rK0k1VD5mmFIa9s9TA8
-         ex0W+2gDEmMF0BrSP0soXB0uPLhLll4h/mxOdcLobUfai/mi6KCB9z2I0399+xHIG1is
-         32dUIC+gCdtEnacQyqHvVFkYd1FwWqb2m6dzdTPhKI15AB81YJLyeG/k/5Mz04Iijq69
-         1iLFvwMleMoAoowU7+W9dc1DHV6SZcP9j/0BEax72P5ZSprsLjMEFHRxN/nvCseJuQol
-         LOug==
-X-Gm-Message-State: AOAM530KRar+/N9eso84oAJFJgrmr5YDnSIEh7LN2moh2PyiuOdlmEBu
-        cOmk/6YFA/5ArikSxlAcdL0nZvd/wd34WMRoMRWHJtmDIiQPXm7x1apVN+jts6ws43+gOoGuvbd
-        4nCl5SkiN2m/SuGgIu6gh
-X-Received: by 2002:a63:ce18:: with SMTP id y24mr375096pgf.335.1607470606035;
-        Tue, 08 Dec 2020 15:36:46 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxJRdItkTz/Jc1RCxU9qpo6Ug7BoxoeTelWIbMHM3tY38406LCDwKWCN2YJiEuPXoim2+Pp2w==
-X-Received: by 2002:a63:ce18:: with SMTP id y24mr375084pgf.335.1607470605761;
-        Tue, 08 Dec 2020 15:36:45 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id u25sm267730pfn.101.2020.12.08.15.36.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Dec 2020 15:36:45 -0800 (PST)
-Date:   Wed, 9 Dec 2020 07:36:34 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH v4 2/6] xfs: introduce xfs_dialloc_roll()
-Message-ID: <20201208233634.GB3257594@xiangao.remote.csb>
-References: <20201208122003.3158922-1-hsiangkao@redhat.com>
- <20201208122003.3158922-3-hsiangkao@redhat.com>
- <20201208230913.GF1943235@magnolia>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=iAGWTxNYiR5ootYJRUnUUI04QhdswVTJD/R6XwstuWM=;
+        b=Rkhg+rUOKaWjwwzjI40hN0BBT59UAFck+hudNGj3AuI9ZMTs6za0ORFd5inBazLOUf
+         p301qa4tSrpeQQvGHcU1L08KLv6AkqNIizlTk1zEXXYrNtgboA5x9KuuW4vH3JTd/Y5T
+         o3eAp9DKN6i6/jbGX6ECx8iu5qANytLxS/5TAC6vICHTJS5qkvAg1k1ctiC3cV8rl1Dy
+         K+l2+nwKKA/RHqLgruAagk6NyxQx9XT4SPyO2DTQxZ3V0O7tGpYyB9VLOr4Li+s/oHkh
+         lYgu7hjbkR9RqdgRLk5LnoCuXb32MNk+dXX3h1MPWEGNmgsWIZnqIgZrsFlqy2PmPlD2
+         TSRw==
+X-Gm-Message-State: AOAM532oRvYvov2jhecMXP8qdkRAegKcK6QWlr3AjmDGItMMQegTwYpI
+        xE+ZuDtJCX+K0muooKuJklAR0HHCN2RSlGapra4=
+X-Google-Smtp-Source: ABdhPJwYEbLB3evwd4abSi2gz55NeZ/XnLzHrSL8vccVrF859VvYv+M/ufOp7NWH+xP5cHBIkbG+AhvacQbYO4UR5S4=
+X-Received: by 2002:a05:6e02:c32:: with SMTP id q18mr58174ilg.203.1607478076247;
+ Tue, 08 Dec 2020 17:41:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20201208230913.GF1943235@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20201208122824.16118-1-laoar.shao@gmail.com> <20201208122824.16118-5-laoar.shao@gmail.com>
+ <20201208185959.GD1943235@magnolia>
+In-Reply-To: <20201208185959.GD1943235@magnolia>
+From:   Yafang Shao <laoar.shao@gmail.com>
+Date:   Wed, 9 Dec 2020 09:40:40 +0800
+Message-ID: <CALOAHbCgfAJOn60_2Gw++uHPqutU0UO8pXi6Bg0_huRqepxpaA@mail.gmail.com>
+Subject: Re: [PATCH v11 4/4] xfs: use current->journal_info to avoid
+ transaction reservation recursion
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Michal Hocko <mhocko@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>, jlayton@redhat.com,
+        linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
+        linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 08, 2020 at 03:09:13PM -0800, Darrick J. Wong wrote:
-> On Tue, Dec 08, 2020 at 08:19:59PM +0800, Gao Xiang wrote:
-
-...
-
-> >  
-> > +int
-> > +xfs_dialloc_roll(
-> > +	struct xfs_trans	**tpp,
-> > +	struct xfs_buf		*agibp)
-> > +{
-> > +	struct xfs_trans	*tp = *tpp;
-> > +	struct xfs_dquot_acct	*dqinfo = NULL;
-> > +	unsigned int		tflags = 0;
-> > +	int			error;
+On Wed, Dec 9, 2020 at 3:00 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Tue, Dec 08, 2020 at 08:28:24PM +0800, Yafang Shao wrote:
+> > PF_FSTRANS which is used to avoid transaction reservation recursion, is
+> > dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
+> > PF_MEMALLOC_NOFS") and commit 7dea19f9ee63 ("mm: introduce
+> > memalloc_nofs_{save,restore} API") and replaced by PF_MEMALLOC_NOFS which
+> > means to avoid filesystem reclaim recursion.
+> >
+> > As these two flags have different meanings, we'd better reintroduce
+> > PF_FSTRANS back. To avoid wasting the space of PF_* flags in task_struct,
+> > we can reuse the current->journal_info to do that, per Willy. As the
+> > check of transaction reservation recursion is used by XFS only, we can
+> > move the check into xfs_vm_writepage(s), per Dave.
+> >
+> > To better abstract that behavoir, two new helpers are introduced, as
+> > follows,
+> > - xfs_trans_context_active
+> >   To check whehter current is in fs transcation or not
+> > - xfs_trans_context_swap
+> >   Transfer the transaction context when rolling a permanent transaction
+> >
+> > These two new helpers are instroduced in xfs_trans.h.
+> >
+> > Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> > Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Dave Chinner <david@fromorbit.com>
+> > Cc: Michal Hocko <mhocko@kernel.org>
+> > Cc: David Howells <dhowells@redhat.com>
+> > Cc: Jeff Layton <jlayton@redhat.com>
+> > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+> > ---
+> >  fs/iomap/buffered-io.c |  7 -------
+> >  fs/xfs/xfs_aops.c      | 17 +++++++++++++++++
+> >  fs/xfs/xfs_trans.c     |  3 +++
+> >  fs/xfs/xfs_trans.h     | 22 ++++++++++++++++++++++
+> >  4 files changed, 42 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index 10cc7979ce38..3c53fa6ce64d 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -1458,13 +1458,6 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
+> >                       PF_MEMALLOC))
+> >               goto redirty;
+> >
+> > -     /*
+> > -      * Given that we do not allow direct reclaim to call us, we should
+> > -      * never be called in a recursive filesystem reclaim context.
+> > -      */
+> > -     if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
+> > -             goto redirty;
+> > -
+> >       /*
+> >        * Is this page beyond the end of the file?
+> >        *
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index 2371187b7615..0da0242d42c3 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -568,6 +568,16 @@ xfs_vm_writepage(
+> >  {
+> >       struct xfs_writepage_ctx wpc = { };
+> >
+> > +     /*
+> > +      * Given that we do not allow direct reclaim to call us, we should
+> > +      * never be called while in a filesystem transaction.
+> > +      */
+> > +     if (WARN_ON_ONCE(xfs_trans_context_active())) {
+> > +             redirty_page_for_writepage(wbc, page);
+> > +             unlock_page(page);
+> > +             return 0;
+> > +     }
 > > +
-> > +	/*
-> > +	 * Hold to on to the agibp across the commit so no other allocation can
-> > +	 * come in and take the free inodes we just allocated for our caller.
-> > +	 */
-> > +	xfs_trans_bhold(tp, agibp);
+> >       return iomap_writepage(page, wbc, &wpc.ctx, &xfs_writeback_ops);
+> >  }
+> >
+> > @@ -579,6 +589,13 @@ xfs_vm_writepages(
+> >       struct xfs_writepage_ctx wpc = { };
+> >
+> >       xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
+> > +     /*
+> > +      * Given that we do not allow direct reclaim to call us, we should
+> > +      * never be called while in a filesystem transaction.
+> > +      */
+> > +     if (WARN_ON_ONCE(xfs_trans_context_active()))
+> > +             return 0;
 > > +
-> > +	/*
-> > +	 * We want the quota changes to be associated with the next transaction,
-> > +	 * NOT this one. So, detach the dqinfo from this and attach it to the
-> > +	 * next transaction.
-> > +	 */
-> > +	if (tp->t_dqinfo) {
-> > +		dqinfo = tp->t_dqinfo;
-> > +		tp->t_dqinfo = NULL;
-> > +		tflags = tp->t_flags & XFS_TRANS_DQ_DIRTY;
-> > +		tp->t_flags &= ~XFS_TRANS_DQ_DIRTY;
-> 
-> FWIW, one of xiakaixu's cleanup patches removes XFS_TRANS_DQ_DIRTY on
-> the grounds that there seemed to be a 1:1 correlation between the dqinfo
-> being set and the flag being set.  That creates a minor merge conflict
-> that I can fix at commit time.  The rest looks fine, so
+> >       return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
+> >  }
+> >
+> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > index fe20398a214e..08d4916ffb13 100644
+> > --- a/fs/xfs/xfs_trans.c
+> > +++ b/fs/xfs/xfs_trans.c
+> > @@ -124,6 +124,9 @@ xfs_trans_dup(
+> >       tp->t_rtx_res = tp->t_rtx_res_used;
+> >       ntp->t_pflags = tp->t_pflags;
+>
+> This one line (ntp->t_pflags = tp->t_pflags) should move to
+> xfs_trans_context_swap.
+>
 
-Yeah, it sounds good to me, thanks for reminder & help!
+Make sense to me.
+Will update it.
 
-Thanks,
-Gao Xiang
 
-> 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
 > --D
-> 
-> 
-> > +	}
+>
+> >
+> > +     /* Associate the new transaction with this thread. */
+> > +     xfs_trans_context_swap(tp, ntp);
 > > +
-> > +	error = xfs_trans_roll(&tp);
-> > +
-> > +	/* Re-attach the quota info that we detached from prev trx. */
-> > +	if (dqinfo) {
-> > +		tp->t_dqinfo = dqinfo;
-> > +		tp->t_flags |= tflags;
-> > +	}
-> > +
-> > +	*tpp = tp;
-> > +	if (error)
-> > +		return error;
-> > +	xfs_trans_bjoin(tp, agibp);
-> > +	return 0;
+> >       /* move deferred ops over to the new tp */
+> >       xfs_defer_move(ntp, tp);
+> >
+> > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> > index 44b11c64a15e..d596a375e3bf 100644
+> > --- a/fs/xfs/xfs_trans.h
+> > +++ b/fs/xfs/xfs_trans.h
+> > @@ -268,16 +268,38 @@ xfs_trans_item_relog(
+> >       return lip->li_ops->iop_relog(lip, tp);
+> >  }
+> >
+> > +static inline bool
+> > +xfs_trans_context_active(void)
+> > +{
+> > +     /* Use journal_info to indicate current is in a transaction */
+> > +     return current->journal_info != NULL;
 > > +}
 > > +
-> >  /*
-> >   * Allocate an inode on disk.
-> >   *
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-> > index 72b3468b97b1..bd6e0db9e23c 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.h
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.h
-> > @@ -32,6 +32,11 @@ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
-> >  	return xfs_buf_offset(b, o << (mp)->m_sb.sb_inodelog);
+> >  static inline void
+> >  xfs_trans_context_set(struct xfs_trans *tp)
+> >  {
+> > +     ASSERT(!current->journal_info);
+> > +     current->journal_info = tp;
+> >       tp->t_pflags = memalloc_nofs_save();
 > >  }
-> >  
-> > +int
-> > +xfs_dialloc_roll(
-> > +	struct xfs_trans	**tpp,
-> > +	struct xfs_buf		*agibp);
+> >
+> >  static inline void
+> >  xfs_trans_context_clear(struct xfs_trans *tp)
+> >  {
+> > +     ASSERT(current->journal_info == tp);
+> > +     current->journal_info = NULL;
+> >       memalloc_nofs_restore(tp->t_pflags);
+> >  }
+> >
+> > +/*
+> > + * Transfer the transaction context when rolling a permanent
+> > + * transaction.
+> > + */
+> > +static inline void
+> > +xfs_trans_context_swap(struct xfs_trans *tp, struct xfs_trans *ntp)
+> > +{
+> > +     ASSERT(current->journal_info == tp);
+> > +     current->journal_info = ntp;
+> > +}
 > > +
-> >  /*
-> >   * Allocate an inode on disk.
-> >   * Mode is used to tell whether the new inode will need space, and whether
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 2bfbcf28b1bd..76282da7a05c 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -958,8 +958,6 @@ xfs_dir_ialloc(
-> >  	xfs_inode_t	*ip;
-> >  	xfs_buf_t	*ialloc_context = NULL;
-> >  	int		code;
-> > -	void		*dqinfo;
-> > -	uint		tflags;
-> >  
-> >  	tp = *tpp;
-> >  	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-> > @@ -1003,46 +1001,13 @@ xfs_dir_ialloc(
-> >  	 * to succeed the second time.
-> >  	 */
-> >  	if (ialloc_context) {
-> > -		/*
-> > -		 * Normally, xfs_trans_commit releases all the locks.
-> > -		 * We call bhold to hang on to the ialloc_context across
-> > -		 * the commit.  Holding this buffer prevents any other
-> > -		 * processes from doing any allocations in this
-> > -		 * allocation group.
-> > -		 */
-> > -		xfs_trans_bhold(tp, ialloc_context);
-> > -
-> > -		/*
-> > -		 * We want the quota changes to be associated with the next
-> > -		 * transaction, NOT this one. So, detach the dqinfo from this
-> > -		 * and attach it to the next transaction.
-> > -		 */
-> > -		dqinfo = NULL;
-> > -		tflags = 0;
-> > -		if (tp->t_dqinfo) {
-> > -			dqinfo = (void *)tp->t_dqinfo;
-> > -			tp->t_dqinfo = NULL;
-> > -			tflags = tp->t_flags & XFS_TRANS_DQ_DIRTY;
-> > -			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
-> > -		}
-> > -
-> > -		code = xfs_trans_roll(&tp);
-> > -
-> > -		/*
-> > -		 * Re-attach the quota info that we detached from prev trx.
-> > -		 */
-> > -		if (dqinfo) {
-> > -			tp->t_dqinfo = dqinfo;
-> > -			tp->t_flags |= tflags;
-> > -		}
-> > -
-> > +		code = xfs_dialloc_roll(&tp, ialloc_context);
-> >  		if (code) {
-> >  			xfs_buf_relse(ialloc_context);
-> >  			*tpp = tp;
-> >  			*ipp = NULL;
-> >  			return code;
-> >  		}
-> > -		xfs_trans_bjoin(tp, ialloc_context);
-> >  
-> >  		/*
-> >  		 * Call ialloc again. Since we've locked out all
-> > -- 
+> >  #endif       /* __XFS_TRANS_H__ */
+> > --
 > > 2.18.4
-> > 
-> 
+> >
 
+
+
+--
+Thanks
+Yafang
