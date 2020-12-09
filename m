@@ -2,151 +2,158 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC0C6C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 12:15:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E332DC4361B
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 13:13:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 823CA23B7B
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 12:15:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B01FE23BC7
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 13:13:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731291AbgLIMPf convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Dec 2020 07:15:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36466 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728637AbgLIMPe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Dec 2020 07:15:34 -0500
-From:   bugzilla-daemon@bugzilla.kernel.org
-Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 210577] New: [xfstests generic/616] kernel BUG at
- lib/list_debug.c:28!
-Date:   Wed, 09 Dec 2020 12:14:53 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: zlang@redhat.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression
-Message-ID: <bug-210577-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1727559AbgLINND (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Dec 2020 08:13:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52790 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732235AbgLINMw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Dec 2020 08:12:52 -0500
+Received: from mail-qt1-x842.google.com (mail-qt1-x842.google.com [IPv6:2607:f8b0:4864:20::842])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD0EAC0613D6;
+        Wed,  9 Dec 2020 05:12:11 -0800 (PST)
+Received: by mail-qt1-x842.google.com with SMTP id z3so807043qtw.9;
+        Wed, 09 Dec 2020 05:12:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Fp/zlSJNune866vhfPRgWPP0qPocE+vROnJvQxS4p80=;
+        b=P4yu2gZjwQ7BXmLqB1JZ3qkiJbYEtFuaJl8HjjxK5CN+I/sWCRW6JOIyfz6IEZ0p/8
+         Lhf8ypjVlgrBJejo6hrz26A5PFNlSIGDOcRoNKcyybruk/lyuVcButnaeo8bQqY//8bc
+         0Fplfqejh7lX0qVqVRZ+t4R1f65B6E8AuVxNLhffd8qkbQw64b4gG18OhtVv8iCEpPvH
+         HLy8GmwLbx9tjQrm214OM9THIUeTgkV2sOKQQRGXWS7oqF0VS0FOKrVc23fpVbPe8Vzg
+         VBGw0xu5/ZRO1iVFjzG/qWhmptTtZm4dZuRllNyZRKX3/Pj9TB2H/i4JsxO68fIrAtqu
+         /OhQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Fp/zlSJNune866vhfPRgWPP0qPocE+vROnJvQxS4p80=;
+        b=B5WAJnk40yBxbdqKqNUkF23kc6EFD1Nxwg+qQ388jazngBfTjwuYyLvZ6kewVlXvcq
+         J3vkUVh/EUBShA8NbJr0AJ/5i9QNsVaZihvboRcfPX5Y7u8F/jhG6nEIsNHKAFnp3RhI
+         Ew6vHWyvjH+FIHJpHlW8n0Jj0Jal9WrxaahTHLJod+qZObFL961TncLiKOYD09daHbnR
+         1zjre8jaLslduzgkukJ1oxgj415BprR1FDfPmWDSLNlR6acFT92M41IJZZmx/TeEZzBS
+         YVgZyzhVXmZ5zw/pQ1JAfnpeyGe3G5WaU/nPI+3/kgXgMAPLg+2Xsh9yD84DlicMA1gt
+         XvTw==
+X-Gm-Message-State: AOAM530bZV2dE952mgqUemuPEOBm+bzX3fYbtuxU2bk4N2JdkXDhbL5l
+        zNmvapVu5G7CDFL5bG0+rH0=
+X-Google-Smtp-Source: ABdhPJwtyKiLT8mj11kfTalztFan4ZD94eHgt1nxgmaGAp//Gvty4tmLVaeIkkdgh0EHjqteRp+v3w==
+X-Received: by 2002:ac8:5911:: with SMTP id 17mr3001559qty.218.1607519531161;
+        Wed, 09 Dec 2020 05:12:11 -0800 (PST)
+Received: from localhost.localdomain ([50.236.19.102])
+        by smtp.gmail.com with ESMTPSA id u72sm938114qka.15.2020.12.09.05.12.02
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 09 Dec 2020 05:12:10 -0800 (PST)
+From:   Yafang Shao <laoar.shao@gmail.com>
+To:     darrick.wong@oracle.com, willy@infradead.org, david@fromorbit.com,
+        hch@infradead.org, mhocko@kernel.org, akpm@linux-foundation.org,
+        dhowells@redhat.com, jlayton@redhat.com
+Cc:     linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        Yafang Shao <laoar.shao@gmail.com>
+Subject: [PATCH v12 0/4] xfs: avoid transaction reservation recursion
+Date:   Wed,  9 Dec 2020 21:11:42 +0800
+Message-Id: <20201209131146.67289-1-laoar.shao@gmail.com>
+X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=210577
+PF_FSTRANS which is used to avoid transaction reservation recursion, is
+dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
+PF_MEMALLOC_NOFS") and commit 7dea19f9ee63 ("mm: introduce
+memalloc_nofs_{save,restore} API"), and replaced by PF_MEMALLOC_NOFS which
+means to avoid filesystem reclaim recursion.
 
-            Bug ID: 210577
-           Summary: [xfstests generic/616] kernel BUG at
-                    lib/list_debug.c:28!
-           Product: File System
-           Version: 2.5
-    Kernel Version: xfs-linux xfs-5.10-fixes-7
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: zlang@redhat.com
-        Regression: No
+As these two flags have different meanings, we'd better reintroduce
+PF_FSTRANS back. To avoid wasting the space of PF_* flags in task_struct,
+we can reuse the current->journal_info to do that, per Willy. As the 
+check of transaction reservation recursion is used by XFS only, we can 
+move the check into xfs_vm_writepage(s), per Dave.
 
-xfstests generic/616 always hit a kernel panic on XFS:
-[46457.571135] run fstests generic/616 at 2020-12-08 16:01:49 
-[46484.047411] restraintd[962]: *** Current Time: Tue Dec 08 16:02:15 2020 
-Localwatchdog at: Thu Dec 10 03:12:15 2020 
-[46512.856503] list_add corruption. prev->next should be next
-(fffffe8071968010), but was fffffc73c4b67ee0. (prev=fffffc73c4b67ee0). 
-[46512.860542] ------------[ cut here ]------------ 
-[46512.861685] kernel BUG at lib/list_debug.c:28! 
-[46512.863206] Internal error: Oops - BUG: 0 [#1] SMP 
-[46512.864495] Modules linked in: dm_log_writes dm_thin_pool dm_persistent_data
-dm_bio_prison sg dm_snapshot dm_bufio ext4 mbcache jbd2 loop dm_flakey dm_mod
-rfkill sunrpc crct10dif_ce ghash_ce sha2_ce sha256_arm64 sha1_ce vfat fat
-ip_tables xfs libcrc32c virtio_net virtio_blk net_failover virtio_console
-failover virtio_mmio [last unloaded: scsi_debug] 
-[46512.872295] CPU: 3 PID: 1861929 Comm: fsx Tainted: G        W        
-5.10.0-rc1 #1 
-[46512.874214] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 02/06/2015 
-[46512.875923] pstate: 10400085 (nzcV daIf +PAN -UAO -TCO BTYPE=--) 
-[46512.877600] pc : __list_add_valid+0xac/0x118 
-[46512.878679] lr : __list_add_valid+0xac/0x118 
-[46512.879752] sp : fffffc7429007140 
-[46512.880648] x29: fffffc7429007140 x28: dffffe8000000000  
-[46512.881987] x27: fffffe8071968018 x26: 1fffffd00e32d003  
-[46512.883358] x25: fffffe8071967fd0 x24: 0000000000000000  
-[46512.884707] x23: fffffc73c4b67ee0 x22: fffffc73c4b67ee0  
-[46512.886046] x21: fffffc73c4b67eb8 x20: fffffc73c4b67ee0  
-[46512.887493] x19: fffffe8071968010 x18: 0000000000000000  
-[46512.888888] x17: 0000000000000000 x16: 0000000000000007  
-[46512.890256] x15: 1fffffd00e662581 x14: 0000000000000002  
-[46512.891665] x13: fffffe0e89d51569 x12: 1fffff8e89d51568  
-[46512.893066] x11: 1fffff8e89d51568 x10: fffffe0e89d51568  
-[46512.894477] x9 : fffffe806e735b20 x8 : fffffc744ea8ab47  
-[46512.895844] x7 : 0000000000000001 x6 : fffffe0e89d51569  
-[46512.897182] x5 : fffffe0e89d51569 x4 : fffffe0e89d51569  
-[46512.898565] x3 : 1fffff8e8509e0c2 x2 : d1d35b50805f9d00  
-[46512.899921] x1 : 0000000000000000 x0 : 0000000000000075  
-[46512.901307] Call trace: 
-[46512.901938]  __list_add_valid+0xac/0x118 
-[46512.902965]  __wait_on_page_locked_async+0xdc/0x3d0 
-[46512.904222]  generic_file_buffered_read+0x45c/0x11e8 
-[46512.905500]  generic_file_read_iter+0x268/0x3a0 
-[46512.906943]  xfs_file_buffered_aio_read+0x170/0x688 [xfs] 
-[46512.908457]  xfs_file_read_iter+0x2a8/0x6a0 [xfs] 
-[46512.909653]  io_iter_do_read+0x74/0x108 
-[46512.910668]  io_read+0x678/0x938 
-[46512.911450]  io_issue_sqe+0x12b8/0x2800 
-[46512.912363]  __io_queue_sqe+0x100/0xb68 
-[46512.913292]  io_queue_sqe+0x424/0xd70 
-[46512.914199]  io_submit_sqes+0x1608/0x2250 
-[46512.915171]  __arm64_sys_io_uring_enter+0xb30/0x10c8 
-[46512.916392]  do_el0_svc+0x1c4/0x3c0 
-[46512.917269]  el0_sync_handler+0x88/0xb4 
-[46512.918212]  el0_sync+0x140/0x180 
-[46512.919053] Code: aa0103e3 91020000 aa1303e1 9441d7a2 (d4210000)  
-[46512.920702] ---[ end trace d98533c43972277e ]--- 
-[46512.921927] Kernel panic - not syncing: Oops - BUG: Fatal exception 
-[46512.923534] SMP: stopping secondary CPUs 
-[46512.924907] Kernel Offset: 0x5e200000 from 0xfffffe8010000000 
-[46512.926299] PHYS_OFFSET: 0xffffff8d40000000 
-[46512.927349] CPU features: 0x0044002,63800438 
-[46512.928409] Memory Limit: none 
-[46512.929181] ---[ end Kernel panic - not syncing: Oops - BUG: Fatal exception
-]--- 
+Patch #1 and #2 are to use the memalloc_nofs_{save,restore} API 
+Patch #1 is picked form Willy's patchset "Overhaul memalloc_no*"[1]
 
-I hit this panic several times on 64k pagesize machine, likes ppc64le and
-aarch64. Generally reproduced with reflink=1,rmapbt=1.
-meta-data=/dev/sda3              isize=512    agcount=4, agsize=983040 blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=1    bigtime=0
-data     =                       bsize=4096   blocks=3932160, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=3546, version=2
-         =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+Patch #3 is the refactor of xfs_trans context, which is activated when
+xfs_trans is allocated and deactivated when xfs_trans is freed.
+
+Patch #4 is the implementation of reussing current->journal_info to
+avoid transaction reservation recursion.
+
+No obvious error occurred after running xfstests.
+
+[1]. https://lore.kernel.org/linux-mm/20200625113122.7540-1-willy@infradead.org
+
+v12:
+Per Darrick's suggestion,
+- add the check before calling xfs_trans_context_clear() in
+  xfs_trans_context_free().
+- move t_pflags into xfs_trans_context_swap()
+
+v11:
+- add the warning at the callsite of xfs_trans_context_active()
+- improve the commit log of patch #2
+
+v10:
+- refactor the code, per Dave.
+
+v9:
+- rebase it on xfs tree.
+- Darrick fixed an error occurred in xfs/141
+- run xfstests, and no obvious error occurred.
+
+v8:
+- check xfs_trans_context_active() in xfs_vm_writepage(s), per Dave.
+
+v7:
+- check fstrans recursion for XFS only, by introducing a new member in
+  struct writeback_control.
+
+v6:
+- add Michal's ack and comment in patch #1.
+
+v5:
+- pick one of Willy's patch
+- introduce four new helpers, per Dave
+
+v4:
+- retitle from "xfs: introduce task->in_fstrans for transaction reservation
+  recursion protection"
+- reuse current->journal_info, per Willy
+
+
+Matthew Wilcox (Oracle) (1):
+  mm: Add become_kswapd and restore_kswapd
+
+Yafang Shao (3):
+  xfs: use memalloc_nofs_{save,restore} in xfs transaction
+  xfs: refactor the usage around xfs_trans_context_{set,clear}
+  xfs: use current->journal_info to avoid transaction reservation
+    recursion
+
+ fs/iomap/buffered-io.c    |  7 -------
+ fs/xfs/libxfs/xfs_btree.c | 14 ++++++++------
+ fs/xfs/xfs_aops.c         | 21 +++++++++++++++++++--
+ fs/xfs/xfs_linux.h        |  4 ----
+ fs/xfs/xfs_trans.c        | 33 +++++++++++++++++++--------------
+ fs/xfs/xfs_trans.h        | 35 +++++++++++++++++++++++++++++++++++
+ include/linux/sched/mm.h  | 23 +++++++++++++++++++++++
+ mm/vmscan.c               | 16 +---------------
+ 8 files changed, 105 insertions(+), 48 deletions(-)
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.18.4
+
