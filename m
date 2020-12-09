@@ -2,51 +2,61 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C0C5C4361B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5204BC433FE
 	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 21:04:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FB0A22D0A
+	by mail.kernel.org (Postfix) with ESMTP id 1548822CB1
 	for <linux-xfs@archiver.kernel.org>; Wed,  9 Dec 2020 21:04:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728358AbgLIVEK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Dec 2020 16:04:10 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:37950 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725816AbgLIVEF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Dec 2020 16:04:05 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id C59301B027E;
-        Thu, 10 Dec 2020 08:03:03 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kn6c3-002GXD-3D; Thu, 10 Dec 2020 08:03:03 +1100
-Date:   Thu, 10 Dec 2020 08:03:03 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     bugzilla-daemon@bugzilla.kernel.org
-Cc:     linux-xfs@vger.kernel.org, willy@infradead.org, axboe@kernel.dk
-Subject: Re: [Bug 210577] New: [xfstests generic/616] kernel BUG at
+        id S1726501AbgLIVEJ convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Dec 2020 16:04:09 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60742 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728461AbgLIVEF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Dec 2020 16:04:05 -0500
+From:   bugzilla-daemon@bugzilla.kernel.org
+Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 210577] [xfstests generic/616] kernel BUG at
  lib/list_debug.c:28!
-Message-ID: <20201209210303.GB3913616@dread.disaster.area>
-References: <bug-210577-201763@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Date:   Wed, 09 Dec 2020 21:03:23 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: david@fromorbit.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-210577-201763-KD5Ku8y9fK@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-210577-201763@https.bugzilla.kernel.org/>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=ezCHmf2L7RaQ5ixQA_oA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <bug-210577-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 09, 2020 at 12:14:53PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=210577
+
+--- Comment #1 from Dave Chinner (david@fromorbit.com) ---
+On Wed, Dec 09, 2020 at 12:14:53PM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=210577
 > 
 >             Bug ID: 210577
@@ -75,7 +85,8 @@ On Wed, Dec 09, 2020 at 12:14:53PM +0000, bugzilla-daemon@bugzilla.kernel.org wr
 > [46512.860542] ------------[ cut here ]------------ 
 > [46512.861685] kernel BUG at lib/list_debug.c:28! 
 > [46512.863206] Internal error: Oops - BUG: 0 [#1] SMP 
-> [46512.864495] Modules linked in: dm_log_writes dm_thin_pool dm_persistent_data
+> [46512.864495] Modules linked in: dm_log_writes dm_thin_pool
+> dm_persistent_data
 > dm_bio_prison sg dm_snapshot dm_bufio ext4 mbcache jbd2 loop dm_flakey dm_mod
 > rfkill sunrpc crct10dif_ce ghash_ce sha2_ce sha256_arm64 sha1_ce vfat fat
 > ip_tables xfs libcrc32c virtio_net virtio_blk net_failover virtio_console
@@ -140,7 +151,8 @@ Dave.
 > [46512.926299] PHYS_OFFSET: 0xffffff8d40000000 
 > [46512.927349] CPU features: 0x0044002,63800438 
 > [46512.928409] Memory Limit: none 
-> [46512.929181] ---[ end Kernel panic - not syncing: Oops - BUG: Fatal exception
+> [46512.929181] ---[ end Kernel panic - not syncing: Oops - BUG: Fatal
+> exception
 > ]--- 
 > 
 > I hit this panic several times on 64k pagesize machine, likes ppc64le and
@@ -159,8 +171,8 @@ Dave.
 > -- 
 > You are receiving this mail because:
 > You are watching the assignee of the bug.
-> 
+>
 
 -- 
-Dave Chinner
-david@fromorbit.com
+You are receiving this mail because:
+You are watching the assignee of the bug.
