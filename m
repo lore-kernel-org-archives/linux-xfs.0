@@ -2,88 +2,248 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB57CC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 07:50:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C69C9C4361B
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 11:35:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 945D223B99
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 07:50:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8250F23D57
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 11:35:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726826AbgLJHuq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Dec 2020 02:50:46 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:39513 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727567AbgLJHul (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Dec 2020 02:50:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607586551;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=geTJ0CLPub3/U9/2474CmvOAmgo3qAZuJ4XhvFRQ/6o=;
-        b=IhffEH6hbtmJZJfAxVe2l72+nYs53JjorMfKp7ofgI/4SamH6c5vTY+/gI6WO6AbiBbaJA
-        4lQ6mNC86uacGpLfLs4Sqgu/JPSZjC8xA3TSLpIfRUTKF56e5gShoNQlV09C5fHzVtd4+t
-        6nnAZMVdcv1RXji6MntufHtBxiEgPg4=
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
- [209.85.215.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-281-XbGfJ2qzP5Kd11fpK0cOvA-1; Thu, 10 Dec 2020 02:49:09 -0500
-X-MC-Unique: XbGfJ2qzP5Kd11fpK0cOvA-1
-Received: by mail-pg1-f200.google.com with SMTP id g24so3179992pgh.14
-        for <linux-xfs@vger.kernel.org>; Wed, 09 Dec 2020 23:49:09 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=geTJ0CLPub3/U9/2474CmvOAmgo3qAZuJ4XhvFRQ/6o=;
-        b=QdO6HJN8JVTxbE8jAhMWIcSlyclfzFxTz6jPQAnZIuv1rW25dBTgcPazuBGSZZ2asF
-         sqH2ZSgaCv/e8WzNLwrIr0KaSRH2SOE/oh3JQMozZMTaygW4+goiYAwQqvXHmH0KZzoX
-         YjjtV9kOf6araJR38ITRWM2iygEJExr6zb0Os66Ms9OTKZ/qUxjwT0MAI3wnKxd6mp3A
-         znG4snVTDr5Fpw3Ex+i5t2jq03QkAep9Spnp6EMayx8aha71Pr5wjxewqPpeNliHEl4j
-         gc5ep9MKoFd7UXhwzSApuJf+mizt8kQURSILvFH+mJ/qAUOdTImJZljIcHYwpj+NgwmQ
-         YzbA==
-X-Gm-Message-State: AOAM530aD3QjuR8V9lH8D068nS42vVUcmW8E2QaPqIgBm44sVtOur/H+
-        PBTIP37DrjH+/fBPe0d2vzTz3rzf/Eu2qwLPhYOGgvF4hG5g1ErzQfFKd7GC1N9tDeU/ogE+9rW
-        7bSVKqex61pHlEtQP0k3h
-X-Received: by 2002:a17:902:fe95:b029:da:fa53:666 with SMTP id x21-20020a170902fe95b02900dafa530666mr5511603plm.72.1607586548361;
-        Wed, 09 Dec 2020 23:49:08 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxlKWo6pQ8tKEtlp5TLvi0qCzK3TLoZft/GjTaAtd8k6bGC+WhzN9FO5vWVQM6KExm9gPowQg==
-X-Received: by 2002:a17:902:fe95:b029:da:fa53:666 with SMTP id x21-20020a170902fe95b02900dafa530666mr5511594plm.72.1607586548166;
-        Wed, 09 Dec 2020 23:49:08 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id b10sm5453930pgh.15.2020.12.09.23.49.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Dec 2020 23:49:07 -0800 (PST)
-Date:   Thu, 10 Dec 2020 15:48:58 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
+        id S1727752AbgLJLfw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Dec 2020 06:35:52 -0500
+Received: from out30-132.freemail.mail.aliyun.com ([115.124.30.132]:58558 "EHLO
+        out30-132.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2389219AbgLJLfn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Dec 2020 06:35:43 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04426;MF=joseph.qi@linux.alibaba.com;NM=1;PH=DS;RN=2;SR=0;TI=SMTPD_---0UI8wVZ3_1607600097;
+Received: from B-D1K7ML85-0059.local(mailfrom:joseph.qi@linux.alibaba.com fp:SMTPD_---0UI8wVZ3_1607600097)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Thu, 10 Dec 2020 19:34:57 +0800
+Subject: Re: [PATCH v2] xfs: remove unneeded return value check for
+ *init_cursor()
+From:   Joseph Qi <joseph.qi@linux.alibaba.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: open code updating i_mode in xfs_set_acl
-Message-ID: <20201210074858.GB293649@xiangao.remote.csb>
-References: <20201210054821.2704734-1-hch@lst.de>
- <20201210054821.2704734-3-hch@lst.de>
+References: <1607050104-60778-1-git-send-email-joseph.qi@linux.alibaba.com>
+Message-ID: <52de10e8-1552-448c-c630-b3bc318ae565@linux.alibaba.com>
+Date:   Thu, 10 Dec 2020 19:34:57 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.1
 MIME-Version: 1.0
+In-Reply-To: <1607050104-60778-1-git-send-email-joseph.qi@linux.alibaba.com>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20201210054821.2704734-3-hch@lst.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 10, 2020 at 06:48:21AM +0100, Christoph Hellwig wrote:
-> Rather than going through the big and hairy xfs_setattr_nonsize function,
-> just open code a transactional i_mode and i_ctime update.  This allows
-> to mark xfs_setattr_nonsize and remove the flags argument to it.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks good to me (if it's needed),
-Reviewed-by: Gao Xiang <hsiangkao@redhat.com>
+Hi Darrick,
+How about this version?
 
 Thanks,
-Gao Xiang
+Joseph
 
+On 12/4/20 10:48 AM, Joseph Qi wrote:
+> Since *init_cursor() can always return a valid cursor, the NULL check
+> in caller is unneeded. So clean them up.
+> This also keeps the behavior consistent with other callers.
+> 
+> Signed-off-by: Joseph Qi <joseph.qi@linux.alibaba.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap_btree.c   |  2 --
+>  fs/xfs/libxfs/xfs_ialloc_btree.c |  5 -----
+>  fs/xfs/libxfs/xfs_refcount.c     |  9 ---------
+>  fs/xfs/libxfs/xfs_rmap.c         |  9 ---------
+>  fs/xfs/scrub/agheader_repair.c   |  2 --
+>  fs/xfs/scrub/bmap.c              |  5 -----
+>  fs/xfs/scrub/common.c            | 14 --------------
+>  7 files changed, 46 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> index ecec604..9766591 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> @@ -639,8 +639,6 @@ struct xfs_btree_cur *				/* new bmap btree cursor */
+>  	ASSERT(XFS_IFORK_PTR(ip, whichfork)->if_format == XFS_DINODE_FMT_BTREE);
+>  
+>  	cur = xfs_bmbt_init_cursor(ip->i_mount, tp, ip, whichfork);
+> -	if (!cur)
+> -		return -ENOMEM;
+>  	cur->bc_ino.flags |= XFS_BTCUR_BMBT_INVALID_OWNER;
+>  
+>  	error = xfs_btree_change_owner(cur, new_owner, buffer_list);
+> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> index cc919a2..4c58316 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> @@ -672,11 +672,6 @@ struct xfs_btree_cur *
+>  		return error;
+>  
+>  	cur = xfs_inobt_init_cursor(mp, tp, *agi_bpp, agno, which);
+> -	if (!cur) {
+> -		xfs_trans_brelse(tp, *agi_bpp);
+> -		*agi_bpp = NULL;
+> -		return -ENOMEM;
+> -	}
+>  	*curpp = cur;
+>  	return 0;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+> index 2076627..2037b9f 100644
+> --- a/fs/xfs/libxfs/xfs_refcount.c
+> +++ b/fs/xfs/libxfs/xfs_refcount.c
+> @@ -1179,10 +1179,6 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
+>  			return error;
+>  
+>  		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
+> -		if (!rcur) {
+> -			error = -ENOMEM;
+> -			goto out_cur;
+> -		}
+>  		rcur->bc_ag.refc.nr_ops = nr_ops;
+>  		rcur->bc_ag.refc.shape_changes = shape_changes;
+>  	}
+> @@ -1217,11 +1213,6 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
+>  		trace_xfs_refcount_finish_one_leftover(mp, agno, type,
+>  				bno, blockcount, new_agbno, *new_len);
+>  	return error;
+> -
+> -out_cur:
+> -	xfs_trans_brelse(tp, agbp);
+> -
+> -	return error;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> index 2668ebe..10e0cf99 100644
+> --- a/fs/xfs/libxfs/xfs_rmap.c
+> +++ b/fs/xfs/libxfs/xfs_rmap.c
+> @@ -2404,10 +2404,6 @@ struct xfs_rmap_query_range_info {
+>  			return -EFSCORRUPTED;
+>  
+>  		rcur = xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
+> -		if (!rcur) {
+> -			error = -ENOMEM;
+> -			goto out_cur;
+> -		}
+>  	}
+>  	*pcur = rcur;
+>  
+> @@ -2446,11 +2442,6 @@ struct xfs_rmap_query_range_info {
+>  		error = -EFSCORRUPTED;
+>  	}
+>  	return error;
+> -
+> -out_cur:
+> -	xfs_trans_brelse(tp, agbp);
+> -
+> -	return error;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> index 401f715..23690f8 100644
+> --- a/fs/xfs/scrub/agheader_repair.c
+> +++ b/fs/xfs/scrub/agheader_repair.c
+> @@ -829,8 +829,6 @@ enum {
+>  
+>  		cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
+>  				XFS_BTNUM_FINO);
+> -		if (error)
+> -			goto err;
+>  		error = xfs_btree_count_blocks(cur, &blocks);
+>  		if (error)
+>  			goto err;
+> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> index fed56d2..dd165c0 100644
+> --- a/fs/xfs/scrub/bmap.c
+> +++ b/fs/xfs/scrub/bmap.c
+> @@ -563,10 +563,6 @@ struct xchk_bmap_check_rmap_info {
+>  		return error;
+>  
+>  	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf, agno);
+> -	if (!cur) {
+> -		error = -ENOMEM;
+> -		goto out_agf;
+> -	}
+>  
+>  	sbcri.sc = sc;
+>  	sbcri.whichfork = whichfork;
+> @@ -575,7 +571,6 @@ struct xchk_bmap_check_rmap_info {
+>  		error = 0;
+>  
+>  	xfs_btree_del_cursor(cur, error);
+> -out_agf:
+>  	xfs_trans_brelse(sc->tp, agf);
+>  	return error;
+>  }
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index 1887605..8ea6d4a 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -466,8 +466,6 @@ struct xchk_rmap_ownedby_info {
+>  		/* Set up a bnobt cursor for cross-referencing. */
+>  		sa->bno_cur = xfs_allocbt_init_cursor(mp, sc->tp, sa->agf_bp,
+>  				agno, XFS_BTNUM_BNO);
+> -		if (!sa->bno_cur)
+> -			goto err;
+>  	}
+>  
+>  	if (sa->agf_bp &&
+> @@ -475,8 +473,6 @@ struct xchk_rmap_ownedby_info {
+>  		/* Set up a cntbt cursor for cross-referencing. */
+>  		sa->cnt_cur = xfs_allocbt_init_cursor(mp, sc->tp, sa->agf_bp,
+>  				agno, XFS_BTNUM_CNT);
+> -		if (!sa->cnt_cur)
+> -			goto err;
+>  	}
+>  
+>  	/* Set up a inobt cursor for cross-referencing. */
+> @@ -484,8 +480,6 @@ struct xchk_rmap_ownedby_info {
+>  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_INO)) {
+>  		sa->ino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
+>  					agno, XFS_BTNUM_INO);
+> -		if (!sa->ino_cur)
+> -			goto err;
+>  	}
+>  
+>  	/* Set up a finobt cursor for cross-referencing. */
+> @@ -493,8 +487,6 @@ struct xchk_rmap_ownedby_info {
+>  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_FINO)) {
+>  		sa->fino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
+>  				agno, XFS_BTNUM_FINO);
+> -		if (!sa->fino_cur)
+> -			goto err;
+>  	}
+>  
+>  	/* Set up a rmapbt cursor for cross-referencing. */
+> @@ -502,8 +494,6 @@ struct xchk_rmap_ownedby_info {
+>  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_RMAP)) {
+>  		sa->rmap_cur = xfs_rmapbt_init_cursor(mp, sc->tp, sa->agf_bp,
+>  				agno);
+> -		if (!sa->rmap_cur)
+> -			goto err;
+>  	}
+>  
+>  	/* Set up a refcountbt cursor for cross-referencing. */
+> @@ -511,13 +501,9 @@ struct xchk_rmap_ownedby_info {
+>  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_REFC)) {
+>  		sa->refc_cur = xfs_refcountbt_init_cursor(mp, sc->tp,
+>  				sa->agf_bp, agno);
+> -		if (!sa->refc_cur)
+> -			goto err;
+>  	}
+>  
+>  	return 0;
+> -err:
+> -	return -ENOMEM;
+>  }
+>  
+>  /* Release the AG header context and btree cursors. */
+> 
