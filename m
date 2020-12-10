@@ -2,220 +2,291 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D95D5C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 15:10:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBBA9C4167B
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 17:01:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C48123BE5
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 15:10:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9173E221E3
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 17:01:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388251AbgLJPKR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Dec 2020 10:10:17 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:46462 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2391659AbgLJOrm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Dec 2020 09:47:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607611574;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fKNomnAFTTOKrWab3r7X/KDNNbCd6qD9rsgGVqV2YyM=;
-        b=Ru3g/DV+oDGSLEZCNtt6vKZf3IQFXEi7wy1HWP2UnOVheX42RbnVLdDTOF6ifTe6y+/JLp
-        3ZkYKtlW8tN0jLtp+wgM8IaTRlwWjHzrL+u8IYwCZg85GasKPtlZRrV453jqkFgwCgYkdO
-        HgXYPPqu8iXzxcISI+HyEpSnaU8/XFg=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-276-smY8caPMPyG6Pr2cE1JfWA-1; Thu, 10 Dec 2020 09:46:12 -0500
-X-MC-Unique: smY8caPMPyG6Pr2cE1JfWA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 69DE1802EA6
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Dec 2020 14:46:11 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0E4B719714
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Dec 2020 14:46:10 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/2] xfs: rename xfs_wait_buftarg() to xfs_buftarg_drain()
-Date:   Thu, 10 Dec 2020 09:46:06 -0500
-Message-Id: <20201210144607.1922026-2-bfoster@redhat.com>
-In-Reply-To: <20201210144607.1922026-1-bfoster@redhat.com>
-References: <20201210144607.1922026-1-bfoster@redhat.com>
+        id S2392459AbgLJRBA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Dec 2020 12:01:00 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:42734 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390980AbgLJRAz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Dec 2020 12:00:55 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BAGoD7L120040;
+        Thu, 10 Dec 2020 17:00:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=oM2sk4nO/V2s1mQzh71ZUu5UxIxNgAln3V6GG5S+GoE=;
+ b=oNBwfjSuLN9MFrOlCWJ/AiCb7+ZJksPEQYemZA6NN05ZRfEQNXlfzw32sC9pjzmuvd5x
+ NCCM0ePl7J/0RMXF4KfQyP3cS5478le00i+1o2oG40/X5sFknXu13z3kgg5jFyA3NJB0
+ uMse4N/HeLo0fh9uzPeqfqt7CKRSjnWfd2LoujatOmcqNIYX/mL3f1VBghyO0U+VWKOb
+ D8mmohEJj+T/v+RyPWrXKxwr6cgoilhNNhmLPRr4F1AnWP6mLEwGpN375a4RQNqMT4dI
+ eHYSXC9EclV3LaXtDGQawqBe/NuxLS+61+Ygk67/WWqakgEl2tHiBIdS0ZJmjx4rkbVR Gw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 3581mr6env-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 10 Dec 2020 17:00:03 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BAGwj91046071;
+        Thu, 10 Dec 2020 17:00:02 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 358m41x3sa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 10 Dec 2020 17:00:02 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BAGxxtA002282;
+        Thu, 10 Dec 2020 17:00:00 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 10 Dec 2020 08:59:59 -0800
+Date:   Thu, 10 Dec 2020 08:59:58 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Joseph Qi <joseph.qi@linux.alibaba.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: remove unneeded return value check for
+ *init_cursor()
+Message-ID: <20201210165958.GO1943235@magnolia>
+References: <1607050104-60778-1-git-send-email-joseph.qi@linux.alibaba.com>
+ <52de10e8-1552-448c-c630-b3bc318ae565@linux.alibaba.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <52de10e8-1552-448c-c630-b3bc318ae565@linux.alibaba.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9830 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 adultscore=0
+ bulkscore=0 phishscore=0 suspectscore=7 mlxscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012100106
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9830 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=7 mlxlogscore=999
+ clxscore=1015 malwarescore=0 priorityscore=1501 adultscore=0
+ lowpriorityscore=0 phishscore=0 spamscore=0 impostorscore=0 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012100106
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_wait_buftarg() is vaguely named and somewhat overloaded. Its
-primary purpose is to reclaim all buffers from the provided buffer
-target LRU. In preparation to refactor xfs_wait_buftarg() into
-serialization and LRU draining components, rename the function and
-associated helpers to something more descriptive. This patch has no
-functional changes with the minor exception of renaming a
-tracepoint.
+On Thu, Dec 10, 2020 at 07:34:57PM +0800, Joseph Qi wrote:
+> Hi Darrick,
+> How about this version?
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf.c   | 12 ++++++------
- fs/xfs/xfs_buf.h   | 10 +++++-----
- fs/xfs/xfs_log.c   |  6 +++---
- fs/xfs/xfs_mount.c |  4 ++--
- fs/xfs/xfs_trace.h |  2 +-
- 5 files changed, 17 insertions(+), 17 deletions(-)
+Oh, sorry, apparently I forgot to reply to this patch.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 4e4cf91f4f9f..db918ed20c40 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -43,7 +43,7 @@ static kmem_zone_t *xfs_buf_zone;
-  *	  pag_buf_lock
-  *	    lru_lock
-  *
-- * xfs_buftarg_wait_rele
-+ * xfs_buftarg_drain_rele
-  *	lru_lock
-  *	  b_lock (trylock due to inversion)
-  *
-@@ -88,7 +88,7 @@ xfs_buf_vmap_len(
-  * because the corresponding decrement is deferred to buffer release. Buffers
-  * can undergo I/O multiple times in a hold-release cycle and per buffer I/O
-  * tracking adds unnecessary overhead. This is used for sychronization purposes
-- * with unmount (see xfs_wait_buftarg()), so all we really need is a count of
-+ * with unmount (see xfs_buftarg_drain()), so all we really need is a count of
-  * in-flight buffers.
-  *
-  * Buffers that are never released (e.g., superblock, iclog buffers) must set
-@@ -1786,7 +1786,7 @@ __xfs_buf_mark_corrupt(
-  * while freeing all the buffers only held by the LRU.
-  */
- static enum lru_status
--xfs_buftarg_wait_rele(
-+xfs_buftarg_drain_rele(
- 	struct list_head	*item,
- 	struct list_lru_one	*lru,
- 	spinlock_t		*lru_lock,
-@@ -1798,7 +1798,7 @@ xfs_buftarg_wait_rele(
- 
- 	if (atomic_read(&bp->b_hold) > 1) {
- 		/* need to wait, so skip it this pass */
--		trace_xfs_buf_wait_buftarg(bp, _RET_IP_);
-+		trace_xfs_buf_drain_buftarg(bp, _RET_IP_);
- 		return LRU_SKIP;
- 	}
- 	if (!spin_trylock(&bp->b_lock))
-@@ -1816,7 +1816,7 @@ xfs_buftarg_wait_rele(
- }
- 
- void
--xfs_wait_buftarg(
-+xfs_buftarg_drain(
- 	struct xfs_buftarg	*btp)
- {
- 	LIST_HEAD(dispose);
-@@ -1841,7 +1841,7 @@ xfs_wait_buftarg(
- 
- 	/* loop until there is nothing left on the lru list. */
- 	while (list_lru_count(&btp->bt_lru)) {
--		list_lru_walk(&btp->bt_lru, xfs_buftarg_wait_rele,
-+		list_lru_walk(&btp->bt_lru, xfs_buftarg_drain_rele,
- 			      &dispose, LONG_MAX);
- 
- 		while (!list_empty(&dispose)) {
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index bfd2907e7bc4..ea32369f8f77 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -152,7 +152,7 @@ typedef struct xfs_buf {
- 	struct list_head	b_list;
- 	struct xfs_perag	*b_pag;		/* contains rbtree root */
- 	struct xfs_mount	*b_mount;
--	xfs_buftarg_t		*b_target;	/* buffer target (device) */
-+	struct xfs_buftarg	*b_target;	/* buffer target (device) */
- 	void			*b_addr;	/* virtual address of buffer */
- 	struct work_struct	b_ioend_work;
- 	struct completion	b_iowait;	/* queue for I/O waiters */
-@@ -344,11 +344,11 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
- /*
-  *	Handling of buftargs.
-  */
--extern xfs_buftarg_t *xfs_alloc_buftarg(struct xfs_mount *,
--			struct block_device *, struct dax_device *);
-+extern struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *,
-+		struct block_device *, struct dax_device *);
- extern void xfs_free_buftarg(struct xfs_buftarg *);
--extern void xfs_wait_buftarg(xfs_buftarg_t *);
--extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
-+extern void xfs_buftarg_drain(struct xfs_buftarg *);
-+extern int xfs_setsize_buftarg(struct xfs_buftarg *, unsigned int);
- 
- #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
- #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index fa2d05e65ff1..5ad4d5e78019 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -741,7 +741,7 @@ xfs_log_mount_finish(
- 		xfs_log_force(mp, XFS_LOG_SYNC);
- 		xfs_ail_push_all_sync(mp->m_ail);
- 	}
--	xfs_wait_buftarg(mp->m_ddev_targp);
-+	xfs_buftarg_drain(mp->m_ddev_targp);
- 
- 	if (readonly)
- 		mp->m_flags |= XFS_MOUNT_RDONLY;
-@@ -936,13 +936,13 @@ xfs_log_quiesce(
- 
- 	/*
- 	 * The superblock buffer is uncached and while xfs_ail_push_all_sync()
--	 * will push it, xfs_wait_buftarg() will not wait for it. Further,
-+	 * will push it, xfs_buftarg_drain() will not wait for it. Further,
- 	 * xfs_buf_iowait() cannot be used because it was pushed with the
- 	 * XBF_ASYNC flag set, so we need to use a lock/unlock pair to wait for
- 	 * the IO to complete.
- 	 */
- 	xfs_ail_push_all_sync(mp->m_ail);
--	xfs_wait_buftarg(mp->m_ddev_targp);
-+	xfs_buftarg_drain(mp->m_ddev_targp);
- 	xfs_buf_lock(mp->m_sb_bp);
- 	xfs_buf_unlock(mp->m_sb_bp);
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 7110507a2b6b..29a553f0877d 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1023,8 +1023,8 @@ xfs_mountfs(
- 	xfs_log_mount_cancel(mp);
-  out_fail_wait:
- 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
--		xfs_wait_buftarg(mp->m_logdev_targp);
--	xfs_wait_buftarg(mp->m_ddev_targp);
-+		xfs_buftarg_drain(mp->m_logdev_targp);
-+	xfs_buftarg_drain(mp->m_ddev_targp);
-  out_free_perag:
- 	xfs_free_perag(mp);
-  out_free_dir:
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 86951652d3ed..7b4d8a5f2a49 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -340,7 +340,7 @@ DEFINE_BUF_EVENT(xfs_buf_get_uncached);
- DEFINE_BUF_EVENT(xfs_buf_item_relse);
- DEFINE_BUF_EVENT(xfs_buf_iodone_async);
- DEFINE_BUF_EVENT(xfs_buf_error_relse);
--DEFINE_BUF_EVENT(xfs_buf_wait_buftarg);
-+DEFINE_BUF_EVENT(xfs_buf_drain_buftarg);
- DEFINE_BUF_EVENT(xfs_trans_read_buf_shut);
- 
- /* not really buffer traces, but the buf provides useful information */
--- 
-2.26.2
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+(It's already in for-next fwiw)
+
+--D
+
+> Thanks,
+> Joseph
+> 
+> On 12/4/20 10:48 AM, Joseph Qi wrote:
+> > Since *init_cursor() can always return a valid cursor, the NULL check
+> > in caller is unneeded. So clean them up.
+> > This also keeps the behavior consistent with other callers.
+> > 
+> > Signed-off-by: Joseph Qi <joseph.qi@linux.alibaba.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap_btree.c   |  2 --
+> >  fs/xfs/libxfs/xfs_ialloc_btree.c |  5 -----
+> >  fs/xfs/libxfs/xfs_refcount.c     |  9 ---------
+> >  fs/xfs/libxfs/xfs_rmap.c         |  9 ---------
+> >  fs/xfs/scrub/agheader_repair.c   |  2 --
+> >  fs/xfs/scrub/bmap.c              |  5 -----
+> >  fs/xfs/scrub/common.c            | 14 --------------
+> >  7 files changed, 46 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> > index ecec604..9766591 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> > @@ -639,8 +639,6 @@ struct xfs_btree_cur *				/* new bmap btree cursor */
+> >  	ASSERT(XFS_IFORK_PTR(ip, whichfork)->if_format == XFS_DINODE_FMT_BTREE);
+> >  
+> >  	cur = xfs_bmbt_init_cursor(ip->i_mount, tp, ip, whichfork);
+> > -	if (!cur)
+> > -		return -ENOMEM;
+> >  	cur->bc_ino.flags |= XFS_BTCUR_BMBT_INVALID_OWNER;
+> >  
+> >  	error = xfs_btree_change_owner(cur, new_owner, buffer_list);
+> > diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > index cc919a2..4c58316 100644
+> > --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > @@ -672,11 +672,6 @@ struct xfs_btree_cur *
+> >  		return error;
+> >  
+> >  	cur = xfs_inobt_init_cursor(mp, tp, *agi_bpp, agno, which);
+> > -	if (!cur) {
+> > -		xfs_trans_brelse(tp, *agi_bpp);
+> > -		*agi_bpp = NULL;
+> > -		return -ENOMEM;
+> > -	}
+> >  	*curpp = cur;
+> >  	return 0;
+> >  }
+> > diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+> > index 2076627..2037b9f 100644
+> > --- a/fs/xfs/libxfs/xfs_refcount.c
+> > +++ b/fs/xfs/libxfs/xfs_refcount.c
+> > @@ -1179,10 +1179,6 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
+> >  			return error;
+> >  
+> >  		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
+> > -		if (!rcur) {
+> > -			error = -ENOMEM;
+> > -			goto out_cur;
+> > -		}
+> >  		rcur->bc_ag.refc.nr_ops = nr_ops;
+> >  		rcur->bc_ag.refc.shape_changes = shape_changes;
+> >  	}
+> > @@ -1217,11 +1213,6 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
+> >  		trace_xfs_refcount_finish_one_leftover(mp, agno, type,
+> >  				bno, blockcount, new_agbno, *new_len);
+> >  	return error;
+> > -
+> > -out_cur:
+> > -	xfs_trans_brelse(tp, agbp);
+> > -
+> > -	return error;
+> >  }
+> >  
+> >  /*
+> > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> > index 2668ebe..10e0cf99 100644
+> > --- a/fs/xfs/libxfs/xfs_rmap.c
+> > +++ b/fs/xfs/libxfs/xfs_rmap.c
+> > @@ -2404,10 +2404,6 @@ struct xfs_rmap_query_range_info {
+> >  			return -EFSCORRUPTED;
+> >  
+> >  		rcur = xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
+> > -		if (!rcur) {
+> > -			error = -ENOMEM;
+> > -			goto out_cur;
+> > -		}
+> >  	}
+> >  	*pcur = rcur;
+> >  
+> > @@ -2446,11 +2442,6 @@ struct xfs_rmap_query_range_info {
+> >  		error = -EFSCORRUPTED;
+> >  	}
+> >  	return error;
+> > -
+> > -out_cur:
+> > -	xfs_trans_brelse(tp, agbp);
+> > -
+> > -	return error;
+> >  }
+> >  
+> >  /*
+> > diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> > index 401f715..23690f8 100644
+> > --- a/fs/xfs/scrub/agheader_repair.c
+> > +++ b/fs/xfs/scrub/agheader_repair.c
+> > @@ -829,8 +829,6 @@ enum {
+> >  
+> >  		cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
+> >  				XFS_BTNUM_FINO);
+> > -		if (error)
+> > -			goto err;
+> >  		error = xfs_btree_count_blocks(cur, &blocks);
+> >  		if (error)
+> >  			goto err;
+> > diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> > index fed56d2..dd165c0 100644
+> > --- a/fs/xfs/scrub/bmap.c
+> > +++ b/fs/xfs/scrub/bmap.c
+> > @@ -563,10 +563,6 @@ struct xchk_bmap_check_rmap_info {
+> >  		return error;
+> >  
+> >  	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf, agno);
+> > -	if (!cur) {
+> > -		error = -ENOMEM;
+> > -		goto out_agf;
+> > -	}
+> >  
+> >  	sbcri.sc = sc;
+> >  	sbcri.whichfork = whichfork;
+> > @@ -575,7 +571,6 @@ struct xchk_bmap_check_rmap_info {
+> >  		error = 0;
+> >  
+> >  	xfs_btree_del_cursor(cur, error);
+> > -out_agf:
+> >  	xfs_trans_brelse(sc->tp, agf);
+> >  	return error;
+> >  }
+> > diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> > index 1887605..8ea6d4a 100644
+> > --- a/fs/xfs/scrub/common.c
+> > +++ b/fs/xfs/scrub/common.c
+> > @@ -466,8 +466,6 @@ struct xchk_rmap_ownedby_info {
+> >  		/* Set up a bnobt cursor for cross-referencing. */
+> >  		sa->bno_cur = xfs_allocbt_init_cursor(mp, sc->tp, sa->agf_bp,
+> >  				agno, XFS_BTNUM_BNO);
+> > -		if (!sa->bno_cur)
+> > -			goto err;
+> >  	}
+> >  
+> >  	if (sa->agf_bp &&
+> > @@ -475,8 +473,6 @@ struct xchk_rmap_ownedby_info {
+> >  		/* Set up a cntbt cursor for cross-referencing. */
+> >  		sa->cnt_cur = xfs_allocbt_init_cursor(mp, sc->tp, sa->agf_bp,
+> >  				agno, XFS_BTNUM_CNT);
+> > -		if (!sa->cnt_cur)
+> > -			goto err;
+> >  	}
+> >  
+> >  	/* Set up a inobt cursor for cross-referencing. */
+> > @@ -484,8 +480,6 @@ struct xchk_rmap_ownedby_info {
+> >  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_INO)) {
+> >  		sa->ino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
+> >  					agno, XFS_BTNUM_INO);
+> > -		if (!sa->ino_cur)
+> > -			goto err;
+> >  	}
+> >  
+> >  	/* Set up a finobt cursor for cross-referencing. */
+> > @@ -493,8 +487,6 @@ struct xchk_rmap_ownedby_info {
+> >  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_FINO)) {
+> >  		sa->fino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
+> >  				agno, XFS_BTNUM_FINO);
+> > -		if (!sa->fino_cur)
+> > -			goto err;
+> >  	}
+> >  
+> >  	/* Set up a rmapbt cursor for cross-referencing. */
+> > @@ -502,8 +494,6 @@ struct xchk_rmap_ownedby_info {
+> >  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_RMAP)) {
+> >  		sa->rmap_cur = xfs_rmapbt_init_cursor(mp, sc->tp, sa->agf_bp,
+> >  				agno);
+> > -		if (!sa->rmap_cur)
+> > -			goto err;
+> >  	}
+> >  
+> >  	/* Set up a refcountbt cursor for cross-referencing. */
+> > @@ -511,13 +501,9 @@ struct xchk_rmap_ownedby_info {
+> >  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_REFC)) {
+> >  		sa->refc_cur = xfs_refcountbt_init_cursor(mp, sc->tp,
+> >  				sa->agf_bp, agno);
+> > -		if (!sa->refc_cur)
+> > -			goto err;
+> >  	}
+> >  
+> >  	return 0;
+> > -err:
+> > -	return -ENOMEM;
+> >  }
+> >  
+> >  /* Release the AG header context and btree cursors. */
+> > 
