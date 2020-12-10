@@ -2,52 +2,49 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B631C4167B
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 14:48:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA9A3C4361B
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 15:10:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A02322EBE
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 14:48:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E68623BE5
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Dec 2020 15:10:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389571AbgLJOru (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Dec 2020 09:47:50 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:47754 "EHLO
+        id S2389173AbgLJOrs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Dec 2020 09:47:48 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:34970 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2391661AbgLJOrn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Dec 2020 09:47:43 -0500
+        by vger.kernel.org with ESMTP id S2391603AbgLJOrl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Dec 2020 09:47:41 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607611576;
+        s=mimecast20190719; t=1607611573;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=HEbJBrzCLJ0gwC8ya5yChC9F2Jtk/4QoE40fjbAsGM0=;
-        b=Jmi0z2hV22+qLW52mc25xTrVQ7UsXL6C7xG82Bu7xy5MiqnEcta5uLSDMmfElKZlUwow0F
-        luOx+Y9CxetW+hRGDn7uPOykOjDUKJM8Y5KoHOM5ltI+oVKY1cZYpmFx2Z2tvXwSHvhmUQ
-        5Ek0HsrDpYiLdyYaaQLgR00gGx+fTCg=
+         content-transfer-encoding:content-transfer-encoding;
+        bh=ZM0Cf9hfjAmv+Ah5VZag15W6puA4SWfoO0l8QGXimFw=;
+        b=SMCal5uMJ3T1nysBlcqmsTQVj8Mrdmepc5QGso56Gg/T8TZU2O9E+QYlcivGMyf2SWbPH+
+        UqbXTtY4i3Ro5V6W4nOKVRiw78mxFg7RRNl8K31FsWGGD257HurpyCoJXkSPyOz+9LRmx6
+        FLMvjFnGohDrRbHCCdc6gXlIqDCQ2HU=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-320-NWKWKKShOxOap-MxbHFTNg-1; Thu, 10 Dec 2020 09:46:13 -0500
-X-MC-Unique: NWKWKKShOxOap-MxbHFTNg-1
+ us-mta-141-mNVtjzmUNAydPC76mwX5Lg-1; Thu, 10 Dec 2020 09:46:11 -0500
+X-MC-Unique: mNVtjzmUNAydPC76mwX5Lg-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D6E61800D55
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Dec 2020 14:46:11 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DC3801009456
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Dec 2020 14:46:10 +0000 (UTC)
 Received: from bfoster.redhat.com (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 917F819713
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Dec 2020 14:46:11 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 96E8119713
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Dec 2020 14:46:10 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs: don't drain buffer lru on freeze and read-only remount
-Date:   Thu, 10 Dec 2020 09:46:07 -0500
-Message-Id: <20201210144607.1922026-3-bfoster@redhat.com>
-In-Reply-To: <20201210144607.1922026-1-bfoster@redhat.com>
-References: <20201210144607.1922026-1-bfoster@redhat.com>
+Subject: [PATCH 0/2] xfs: don't drain buffer lru on freeze
+Date:   Thu, 10 Dec 2020 09:46:05 -0500
+Message-Id: <20201210144607.1922026-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
@@ -55,116 +52,30 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_buftarg_drain() is called from xfs_log_quiesce() to ensure the
-buffer cache is reclaimed during unmount. xfs_log_quiesce() is also
-called from xfs_quiesce_attr(), however, which means that cache
-state is completely drained for filesystem freeze and read-only
-remount. While technically harmless, this is unnecessarily
-heavyweight. Both freeze and read-only mounts allow reads and thus
-allow population of the buffer cache. Therefore, the transitional
-sequence in either case really only needs to quiesce outstanding
-writes to return the filesystem in a generally read-only state.
+Hi all,
 
-Additionally, some users have reported that attempts to freeze a
-filesystem concurrent with a read-heavy workload causes the freeze
-process to stall for a significant amount of time. This occurs
-because, as mentioned above, the read workload repopulates the
-buffer LRU while the freeze task attempts to drain it.
+This series tweaks the xfs_log_quiesce() codepath to lift out the
+explicit buffer target LRU draining and isolate it to the unmount path.
+It's unnecessary to reclaim all buffers on filesystem freeze or
+read-only remount, and this also causes such operations to stall if a
+read heavy workload is running in parallel.
 
-To improve this situation, replace the drain in xfs_log_quiesce()
-with a buffer I/O quiesce and lift the drain into the unmount path.
-This removes buffer LRU reclaim from freeze and read-only [re]mount,
-but ensures the LRU is still drained before the filesystem unmounts.
+Patch 1 is a simple rename and patch 2 implements the functional change.
+Thoughts, reviews, flames appreciated.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf.c | 20 +++++++++++++++-----
- fs/xfs/xfs_buf.h |  1 +
- fs/xfs/xfs_log.c |  6 ++++--
- 3 files changed, 20 insertions(+), 7 deletions(-)
+Brian
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index db918ed20c40..d3fce3129f6e 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1815,14 +1815,13 @@ xfs_buftarg_drain_rele(
- 	return LRU_REMOVED;
- }
- 
-+/*
-+ * Wait for outstanding I/O on the buftarg to complete.
-+ */
- void
--xfs_buftarg_drain(
-+xfs_buftarg_wait(
- 	struct xfs_buftarg	*btp)
- {
--	LIST_HEAD(dispose);
--	int			loop = 0;
--	bool			write_fail = false;
--
- 	/*
- 	 * First wait on the buftarg I/O count for all in-flight buffers to be
- 	 * released. This is critical as new buffers do not make the LRU until
-@@ -1838,6 +1837,17 @@ xfs_buftarg_drain(
- 	while (percpu_counter_sum(&btp->bt_io_count))
- 		delay(100);
- 	flush_workqueue(btp->bt_mount->m_buf_workqueue);
-+}
-+
-+void
-+xfs_buftarg_drain(
-+	struct xfs_buftarg	*btp)
-+{
-+	LIST_HEAD(dispose);
-+	int			loop = 0;
-+	bool			write_fail = false;
-+
-+	xfs_buftarg_wait(btp);
- 
- 	/* loop until there is nothing left on the lru list. */
- 	while (list_lru_count(&btp->bt_lru)) {
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index ea32369f8f77..96c6b478e26e 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -347,6 +347,7 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
- extern struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *,
- 		struct block_device *, struct dax_device *);
- extern void xfs_free_buftarg(struct xfs_buftarg *);
-+extern void xfs_buftarg_wait(struct xfs_buftarg *);
- extern void xfs_buftarg_drain(struct xfs_buftarg *);
- extern int xfs_setsize_buftarg(struct xfs_buftarg *, unsigned int);
- 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 5ad4d5e78019..46ea4017fcec 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -936,13 +936,13 @@ xfs_log_quiesce(
- 
- 	/*
- 	 * The superblock buffer is uncached and while xfs_ail_push_all_sync()
--	 * will push it, xfs_buftarg_drain() will not wait for it. Further,
-+	 * will push it, xfs_buftarg_wait() will not wait for it. Further,
- 	 * xfs_buf_iowait() cannot be used because it was pushed with the
- 	 * XBF_ASYNC flag set, so we need to use a lock/unlock pair to wait for
- 	 * the IO to complete.
- 	 */
- 	xfs_ail_push_all_sync(mp->m_ail);
--	xfs_buftarg_drain(mp->m_ddev_targp);
-+	xfs_buftarg_wait(mp->m_ddev_targp);
- 	xfs_buf_lock(mp->m_sb_bp);
- 	xfs_buf_unlock(mp->m_sb_bp);
- 
-@@ -962,6 +962,8 @@ xfs_log_unmount(
- {
- 	xfs_log_quiesce(mp);
- 
-+	xfs_buftarg_drain(mp->m_ddev_targp);
-+
- 	xfs_trans_ail_destroy(mp);
- 
- 	xfs_sysfs_del(&mp->m_log->l_kobj);
+Brian Foster (2):
+  xfs: rename xfs_wait_buftarg() to xfs_buftarg_drain()
+  xfs: don't drain buffer lru on freeze and read-only remount
+
+ fs/xfs/xfs_buf.c   | 30 ++++++++++++++++++++----------
+ fs/xfs/xfs_buf.h   | 11 ++++++-----
+ fs/xfs/xfs_log.c   |  8 +++++---
+ fs/xfs/xfs_mount.c |  4 ++--
+ fs/xfs/xfs_trace.h |  2 +-
+ 5 files changed, 34 insertions(+), 21 deletions(-)
+
 -- 
 2.26.2
 
