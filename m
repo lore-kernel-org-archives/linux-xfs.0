@@ -2,267 +2,393 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0972DC433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 23:54:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E313C4361B
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 23:57:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B77042336F
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 23:54:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00714221E3
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 23:57:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437402AbgLKXgZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Dec 2020 18:36:25 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:58764 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391790AbgLKXgB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Dec 2020 18:36:01 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BBNYLSE090126;
-        Fri, 11 Dec 2020 23:35:11 GMT
+        id S2437306AbgLKXnz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Dec 2020 18:43:55 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:45986 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2407184AbgLKXnZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Dec 2020 18:43:25 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BBNXxsJ007809;
+        Fri, 11 Dec 2020 23:42:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=4hyIJdlPkzaHFiFcE66F3wGyU7Ub5TbRIdWZs1UHgK4=;
- b=h27nlQUMi1f2USKGA2jHnlDJDJDttOnEVEuDu8iwjKaHLpLHnMAnjMD6YAb7r7ci4I2h
- SiB7gjJkNOoOJgm3UjJqy+zG6Qo+mY5tZZ0/cxDscU9P0kQZV9cAiTWIYvwnjcvxbjyX
- Eui7UdZW42dPlILprBhW7kq/CeeSxPf3CahR34aQ2EmVvR1FoziiM65+ahaZDwCQIx7u
- tqWqsUlEW0TKAiArbVw3+3X66c0NEkI7k1pRhXoZkYcUfpY5CixOY70srCFHkyoJq8ZM
- EAtC84eF9jrN8mcXqzpxZeKBJVcm8rgx8filCSGOqSP4HAwh/8tlL+6lKK3c2qXUKK8t LA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 3581mrd2ab-1
+ bh=DHrRy6S+C0e8BoDmZqJ17luozFdJ3Xi1HeOaWHakVYo=;
+ b=aYCoWy6UOexNhPxvlRzNzOyYJeqz+/Yp056GiupjLy2JiJF6P1mahTvKai/WNEsfyEVN
+ 53WoHIWwNuKj29okoZcaa4ygsRmcmvdhbVU9Ybamyvde9ij86+VVFGTyj72LUoZj2GH/
+ nxfkfNOCX6/1apV4C0n5KSrMt2eRfCu9heKTQtguzKhLklQ11i+t+9l16Zphqy5xaokU
+ PBoHEXXjkHFHVhNvoZaqvSRMvxHlrvrvH+Ojr0wORT1zkxwS9xucozGuqacQdSmpnQlR
+ 5g3K2WM9yeQpemIuPsOhgvHD/v3et/Mhx8/wm85gjKcugkMKDgSO5OKfMR+yKyuPGjCI Mw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2130.oracle.com with ESMTP id 357yqcd70f-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 11 Dec 2020 23:35:11 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BBNZ5AE010380;
-        Fri, 11 Dec 2020 23:35:10 GMT
+        Fri, 11 Dec 2020 23:42:36 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BBNdt6r145322;
+        Fri, 11 Dec 2020 23:42:35 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 358ksu772p-1
+        by userp3030.oracle.com with ESMTP id 358m54s7us-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Dec 2020 23:35:10 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BBNZ9cl004769;
-        Fri, 11 Dec 2020 23:35:09 GMT
+        Fri, 11 Dec 2020 23:42:35 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BBNgYoN009066;
+        Fri, 11 Dec 2020 23:42:34 GMT
 Received: from localhost (/10.159.149.165)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 11 Dec 2020 15:35:09 -0800
-Date:   Fri, 11 Dec 2020 15:35:07 -0800
+        with ESMTP ; Fri, 11 Dec 2020 15:42:34 -0800
+Date:   Fri, 11 Dec 2020 15:42:33 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [RFC[RAP] PATCH] xfs: allow setting and clearing of log incompat
- feature flags
-Message-ID: <20201211233507.GP1943235@magnolia>
-References: <20201208181027.GB1943235@magnolia>
- <20201208191913.GB1685621@bfoster>
- <20201209032624.GH1943235@magnolia>
- <20201209041950.GY3913616@dread.disaster.area>
- <20201209155211.GB1860561@bfoster>
- <20201209170428.GC1860561@bfoster>
- <20201209205132.GA3913616@dread.disaster.area>
- <20201210142358.GB1912831@bfoster>
- <20201210215004.GC3913616@dread.disaster.area>
- <20201211133901.GA2032335@bfoster>
+To:     wenli xie <wlxie7296@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug report] overlayfs over xfs whiteout operation may cause
+ deadlock
+Message-ID: <20201211234233.GK106271@magnolia>
+References: <CABRboy006NP8JrxuBgEJbfCcGGUY2Kucwfov+HJf2xW34D5Ocg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201211133901.GA2032335@bfoster>
+In-Reply-To: <CABRboy006NP8JrxuBgEJbfCcGGUY2Kucwfov+HJf2xW34D5Ocg@mail.gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9832 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
- bulkscore=0 malwarescore=0 phishscore=0 mlxscore=0 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012110154
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 suspectscore=0
+ bulkscore=0 malwarescore=0 phishscore=0 adultscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012110155
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9832 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
- clxscore=1015 malwarescore=0 priorityscore=1501 adultscore=0
- lowpriorityscore=0 phishscore=0 spamscore=0 impostorscore=0 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ clxscore=1011 malwarescore=0 bulkscore=0 phishscore=0 adultscore=0
+ spamscore=0 priorityscore=1501 mlxscore=0 lowpriorityscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2012110154
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 11, 2020 at 08:39:01AM -0500, Brian Foster wrote:
-> On Fri, Dec 11, 2020 at 08:50:04AM +1100, Dave Chinner wrote:
-> > On Thu, Dec 10, 2020 at 09:23:58AM -0500, Brian Foster wrote:
-> > > On Thu, Dec 10, 2020 at 07:51:32AM +1100, Dave Chinner wrote:
-> > > > For changing incompat log flags, covering also provides exactly what
-> > > > we need - an empty log with only a dirty superblock in the journal
-> > > > to recover. All that we need then is to recheck feature flags after
-> > > > recovery (not just clear log incompat flags) because we might need
-> > > > to use this to also set incompat feature flags dynamically.
-> > > > 
-> > > 
-> > > I'd love it if we use a better term for a log isolated to the superblock
-> > > buffer. So far we've discussed an empty log with a dummy superblock, an
-> > > empty log with a dirty superblock, and I suppose we could also have an
-> > > actual empty log. :P "Covered log," perhaps?
-> > 
-> > On terminology: "covered log" has been around for 25 years
-> > in XFS, and it's very definition is "an empty, up-to-date log except
-> > for a dummy object we logged without any changes to update the log
-> > tail". And, by definition, that dummy object is dirty in the log
-
-Hmm, can we capture in a comment in the logging code the precise meaning
-of "covered log" in whatever patch we end up generating?  I've long
-suspected that's more or less what a covered log meant (the log has one
-item just to prove that head==tail and there's nothing else to see here)
-but it sure would've been nice to confirm that. :)
-
-> > even if it contains no actual modifications when it was logged.
-> > So in this case, "dummy" is directly interchangable with "dirty"
-> > when looking at the log contents w.r.t. recovery behaviour.
-> > 
-> > It's worth looking at a historical change, too. Log covering
-> > originally used the root inode and not the superblock. That caused
-> > problems on linux dirtying VFS inode state, so we changed it to the
-> > superblock in commit 1a387d3be2b3 ("xfs: dummy transactions should
-> > not dirty VFS state") about a decade ago.  Note the name of the
-> > function at the time (xfs_fs_log_dummy()) and that it's description
-> > explicitly mentions that a dummy transaction used for updating the
-> > log tail when covering it.
-> > 
-> > The only difference in this discussion is fact that we may be
-> > replacing the "dummy" with a modified superblock. Both are still
-> > dirty superblock objects in the log, and serve the same purpose for
-> > covering the log, but instead of using a dummy object we update the
-> > log incompat flags so taht the only thing that gets replayed if we
-> > crash is the modification to the superblock flags...
-> > 
+On Thu, Dec 10, 2020 at 03:14:53PM +0800, wenli xie wrote:
+> We are using the linux ubuntu kernel for 5.4.0-34.generic.x86_64. In our
+> host, there are many containers use the same base image. All of them have
+> `mv /etc/security/access.conf  /etc/security/access.conf.bak` operation
+> when the container starts up. Sometimes we met that the `mv` process came
+> to D state and couldn't recover.
+> I did some research and find this issue can be reproduced by following
+> steps.
 > 
-> Makes sense, thanks.
+> 1. mount a disk to /var/mnt/test with xfs fs.
+>  mount -t xfs /mnt/test
+> 2. Create lower dir under /var/mnt/test
+>    /var/mnt/test/lowdir
+>    /var/mnt/test/lowdir1
+> 3. Create `/etc/access.conf` in dir `/var/mnt/test/lowdir`
+> 4.
+> Run following script in different terminals
+> 1)
+> while true
+> do
+>   umount /var/mnt/test/merged
+>   rm -rf /var/mnt/test/merged
+>   rm -rf /var/mnt/test/upperdir
+>   rm -rf /var/mnt/test/workdir
+>   mkdir /var/mnt/test/merged
+>   mkdir /var/mnt/test/workdir
+>   mkdir /var/mnt/test/upperdir
+>   mount -t overlay overlay -o
+> lowerdir=/var/mnt/test/lowerdir:/var/mnt/test/lowerdir1,upperdir=/var/mnt/test/upperdir,workdir=/var/mnt/test/workdir
+> /var/mnt/test/merged
+>   mv /var/mnt/test/merged/etc/access.conf
+> /var/mnt/test/merged/etc/access.conf.bak
+>   touch /var/mnt/test/merged/etc/access.conf
+>   mv /var/mnt/test/merged/etc/access.conf
+> /var/mnt/test/merged/etc/access.conf.bak
+>   touch /var/mnt/test/merged/etc/access.conf
+>   echo "---------------"
+> done
 > 
-> > Finally, no, we can't have a truly empty log while the filesystem is
-> > mounted because log transaction records must not be empty. Further,
-> > we can only bring the log down to an "empty but not quite clean"
-> > state while mounted, because if the log is actually marked clean and
-> > we crash then log recovery will not run and so we will not clean up
-> > files that were open-but-unlinked when the system crashed.
-
-Whatever happened to Eric's patchset to make us process unlinked inodes
-at mount time so that freeze images wouldn't require recovery?
-
-> Yeah, I wasn't suggesting to do that, just surmising about terminology.
-> It sounds like "covered log" refers to the current state logging an
-> unmodified superblock object.
+> 2)
+> while true
+> do
+>   umount /var/mnt/test/merged1
+>   rm -rf /var/mnt/test/merged1
+>   rm -rf /var/mnt/test/upperdir1
+>   rm -rf /var/mnt/test/workdir1
+>   mkdir /var/mnt/test/merged1
+>   mkdir /var/mnt/test/workdir1
+>   mkdir /var/mnt/test/upperdir1
+>   mount -t overlay overlay -o
+> lowerdir=/var/mnt/test/lowerdir:/var/mnt/test/lowerdir1,upperdir=/var/mnt/test/upperdir1,workdir=/var/mnt/test/workdir1
+> /var/mnt/test/merged1
+>   mv /var/mnt/test/merged1/etc/access.conf
+> /var/mnt/test/merged1/etc/access.conf.bak
+>   touch /var/mnt/test/merged1/etc/access.conf
+>   mv /var/mnt/test/merged1/etc/access.conf
+> /var/mnt/test/merged1/etc/access.conf.bak
+>   touch /var/mnt/test/merged1/etc/access.conf
+>   echo "---------------"
+> done
 > 
-> > 
-> > > > > > but didn't necessarily clean the log. I wonder if we can fit that state
-> > > > > > into the existing log covering mechanism by logging the update earlier
-> > > > > > (or maybe via an intermediate state..)? I'll need to go stare at that
-> > > > > > code a bit..
-> > > > 
-> > > > That's kinda what I'd like to see done - it gives us a generic way
-> > > > of altering superblock incompat feature fields and filesystem
-> > > > structures dynamically with no risk of log recovery needing to parse
-> > > > structures it may not know about.
-> > > > 
-> > > 
-> > > We might have to think about if we want to clear such feature bits in
-> > > all log covering scenarios (idle, freeze) vs. just unmount.
-> > 
-> > I think clearing bits can probably be lazy. Set a state flag to tell
-> > log covering that it needs to do an update, and so when the covering
-> > code finally runs the feature bit modification just happens.
-> > 
+> 3)
+> while true
+> do
+>   umount /var/mnt/test/merged3
+>   rm -rf /var/mnt/test/merged3
+>   rm -rf /var/mnt/test/upperdir3
+>   rm -rf /var/mnt/test/workdir3
+>   mkdir /var/mnt/test/merged3
+>   mkdir /var/mnt/test/workdir3
+>   mkdir /var/mnt/test/upperdir3
+>   mount -t overlay overlay -o
+> lowerdir=/var/mnt/test/lowerdir:/var/mnt/test/lowerdir1,upperdir=/var/mnt/test/upperdir3,workdir=/var/mnt/test/workdir3
+> /var/mnt/test/merged3
+>   mv /var/mnt/test/merged3/etc/access.conf
+> /var/mnt/test/merged3/etc/access.conf.bak
+>   touch /var/mnt/test/merged3/etc/access.conf
+>   mv /var/mnt/test/merged3/etc/access.conf
+> /var/mnt/test/merged3/etc/access.conf.bak
+>   touch /var/mnt/test/merged3/etc/access.conf
+>   echo "---------------"
+> done
 > 
-> That's reasonable on its own, it just means we have to support dynamic
-> setting of the associated bit(s) at runtime...
-
-The one downside of clearing the log incompat flags when the log goes
-idle is that right now I print a big EXPERIMENTAL warning whenever we
-turn on the atomic swapext feature, and doing this will cause that
-message to cycle over and over...
-
-That's kind of a minor point though.  Either we add a superblock flag to
-remember that we've already warned about the experimental feature, or we
-just don't bother at all.
-
-Next time I have spare cycles I'll look into adapting this patch to make
-it clear log incompat flags at unmount and/or covering time, assuming
-nobody beats me to it.
-
-> > > My previous suggestion in the other sub-thread was to set bits on
-> > > mount and clear on unmount because that (hopefully) simplifies the
-> > > broader implementation.  Otherwise we need to manage dynamic
-> > > setting of bits when the associated log items are active, and that
-> > > still isn't truly representative because the bits would remain set
-> > > long after active items fall out of the log, until the log is
-> > > covered. Either way is possible, but I'm curious what others
-> > > think.
-> > 
-> > I think that unless we are setting a log incompat flag, log covering
-> > should unconditionally clear the log incompat flags. Because the log
-> > is empty, and recovery of a superblock buffer should -always- be
-> > possible, then by definition we have no log incompat state
-> > present....
-> > 
+> 4)
+> while true
+> do
+>   umount /var/mnt/test/merged4
+>   rm -rf /var/mnt/test/merged4
+>   rm -rf /var/mnt/test/upperdir4
+>   rm -rf /var/mnt/test/workdir4
+>   mkdir /var/mnt/test/merged4
+>   mkdir /var/mnt/test/workdir4
+>   mkdir /var/mnt/test/upperdir4
+>   mount -t overlay overlay -o
+> lowerdir=/var/mnt/test/lowerdir:/var/mnt/test/lowerdir1,upperdir=/var/mnt/test/upperdir4,workdir=/var/mnt/test/workdir4
+> /var/mnt/test/merged4
+>   mv /var/mnt/test/merged4/etc/access.conf
+> /var/mnt/test/merged4/etc/access.conf.bak
+>   touch /var/mnt/test/merged4/etc/access.conf
+>   mv /var/mnt/test/merged4/etc/access.conf
+> /var/mnt/test/merged4/etc/access.conf.bak
+>   touch /var/mnt/test/merged4/etc/access.conf
+>   echo "---------------"
+> done
 > 
-> It should, but in practice will depend on whether the superblock was
-> written back or not before a crash while in the covered state. So
-> recovery may or may not actually work on an older kernel after the log
-> is covered. I think that is fine from a correctness standpoint because
-> the important part is to make sure an older kernel will not attempt to
-> recover incompatible items, and we make that guarantee by covering the
-> log before clearing the bit. I'm merely pointing this out because I
-> still think it's more straightforward to just enforce that a kernel with
-> the associated feature bit be required to recover a dirty log.
-
-<nod>
-
-> > As for a mechanism for dynamically adding log incompat flags?
-> > Perhaps we just do that in xfs_trans_alloc() - add an log incompat
-> > flags field into the transaction reservation structure, and if
-> > xfs_trans_alloc() sees an incompat field set and the superblock
-> > doesn't have it set, the first thing it does is run a "set log
-> > incompat flag" transaction before then doing it's normal work...
-> > 
-> > This should be rare enough it doesn't have any measurable
-> > performance overhead, and it's flexible enough to support any log
-> > incompat feature we might need to implement...
-> > 
+> 5)
+> while true
+> do
+>   umount /var/mnt/test/merged5
+>   rm -rf /var/mnt/test/merged5
+>   rm -rf /var/mnt/test/upperdir5
+>   rm -rf /var/mnt/test/workdir5
+>   mkdir /var/mnt/test/merged5
+>   mkdir /var/mnt/test/workdir5
+>   mkdir /var/mnt/test/upperdir5
+>   mount -t overlay overlay -o
+> lowerdir=/var/mnt/test/lowerdir:/var/mnt/test/lowerdir1,upperdir=/var/mnt/test/upperdir5,workdir=/var/mnt/test/workdir5
+> /var/mnt/test/merged5
+>   mv /var/mnt/test/merged5/etc/access.conf
+> /var/mnt/test/merged5/etc/access.conf.bak
+>   touch /var/mnt/test/merged5/etc/access.conf
+>   mv /var/mnt/test/merged5/etc/access.conf
+> /var/mnt/test/merged5/etc/access.conf.bak
+>   touch /var/mnt/test/merged5/etc/access.conf
+>   echo "---------------"
+> done
 > 
-> But I don't think that is sufficient. As Darrick pointed out up-thread,
-> the updated superblock has to be written back before we're allowed to
-> commit transactions with incompatible items. Otherwise, an older kernel
-> can attempt log recovery with incompatible items present if the
-> filesystem crashes before the superblock is written back.
+> 6)
+> while true
+> do
+>   umount /var/mnt/test/merged6
+>   rm -rf /var/mnt/test/merged6
+>   rm -rf /var/mnt/test/upperdir6
+>   rm -rf /var/mnt/test/workdir6
+>   mkdir /var/mnt/test/merged6
+>   mkdir /var/mnt/test/workdir6
+>   mkdir /var/mnt/test/upperdir6
+>   mount -t overlay overlay -o
+> lowerdir=/var/mnt/test/lowerdir:/var/mnt/test/lowerdir1,upperdir=/var/mnt/test/upperdir6,workdir=/var/mnt/test/workdir6
+> /var/mnt/test/merged6
+>   mv /var/mnt/test/merged6/etc/access.conf
+> /var/mnt/test/merged6/etc/access.conf.bak
+>   touch /var/mnt/test/merged6/etc/access.conf
+>   mv /var/mnt/test/merged6/etc/access.conf
+> /var/mnt/test/merged6/etc/access.conf.bak
+>   touch /var/mnt/test/merged6/etc/access.conf
+>   echo "---------------"
+> done
 > 
-> We could do some sync transaction and/or sync write dance at runtime,
-> but I think the performance/overhead aspect becomes slightly less
-> deterministic. It's not clear to me how many bits we'd support over
-> time, and whether users would notice hiccups when running some sustained
-> workload and happen to trigger sync transaction/write or AIL push
-> sequences to set internal bits.
+> 
+> 
+> After a while, you will found that there are `mv` process become to D state
+> 
+> crash> foreach UN ps -m|sort|tail
+> [0 00:00:23.271] [UN]  PID: 38033  TASK: ffff908cd4c8ba80  CPU: 20
+>  COMMAND: "mv"
+> [0 00:00:23.332] [UN]  PID: 38029  TASK: ffff908cd6093a80  CPU: 1
+> COMMAND: "mv"
+> [0 00:00:23.332] [UN]  PID: 38037  TASK: ffff908cd606ba80  CPU: 31
+>  COMMAND: "touch"
+> [0 00:00:23.332] [UN]  PID: 38038  TASK: ffff908cd4c50000  CPU: 24
+>  COMMAND: "mv"
+> [0 00:00:23.333] [UN]  PID: 38032  TASK: ffff908cd5a0ba80  CPU: 33
+>  COMMAND: "mv"
+> [0 00:00:23.333] [UN]  PID: 38035  TASK: ffff908cd5110000  CPU: 8
+> COMMAND: "touch"
+> [0 00:00:23.336] [UN]  PID: 38040  TASK: ffff908cd4cbba80  CPU: 2
+> COMMAND: "touch"
+> [0 00:00:23.337] [UN]  PID: 38039  TASK: ffff908cd62cba80  CPU: 35
+>  COMMAND: "touch"
+> [0 00:00:23.338] [UN]  PID: 38030  TASK: ffff908cdbfc0000  CPU: 15
+>  COMMAND: "mv"
+> [0 00:00:23.339] [UN]  PID: 38036  TASK: ffff908cd4ce8000  CPU: 22
+>  COMMAND: "mv"
+> 
+> 
+> The `mv` process have the same stack like:
+> 
+> crash> bt
+> PID: 38029  TASK: ffff908cd6093a80  CPU: 1   COMMAND: "mv"
+>  #0 [ffffa848961b3558] __schedule at ffffffff8fa96c09
+>  #1 [ffffa848961b35e8] schedule at ffffffff8fa97235
+>  #2 [ffffa848961b3608] schedule_timeout at ffffffff8fa9ccc6
+>  #3 [ffffa848961b36c8] __down_common at ffffffff8fa9b2b3
+>  #4 [ffffa848961b3748] __down at ffffffff8fa9b311
+>  #5 [ffffa848961b3758] down at ffffffff8ed43be1
+>  #6 [ffffa848961b3778] xfs_buf_lock at ffffffffc06fab78 [xfs]
+>  #7 [ffffa848961b37a8] xfs_buf_find at ffffffffc06fb160 [xfs]
+>  #8 [ffffa848961b3850] xfs_buf_get_map at ffffffffc06fbf41 [xfs]
+>  #9 [ffffa848961b38a0] xfs_buf_read_map at ffffffffc06fcd67 [xfs]
+> #10 [ffffa848961b38f0] xfs_trans_read_buf_map at ffffffffc0752496 [xfs]
+> #11 [ffffa848961b3938] xfs_read_agi at ffffffffc06cdf02 [xfs]
+> #12 [ffffa848961b39a0] xfs_iunlink at ffffffffc071c741 [xfs]
+> #13 [ffffa848961b3a08] xfs_droplink at ffffffffc071c9e2 [xfs]
+> #14 [ffffa848961b3a30] xfs_rename at ffffffffc07221b7 [xfs]
+> #15 [ffffa848961b3b08] xfs_vn_rename at ffffffffc0717ec4 [xfs]
+> #16 [ffffa848961b3b80] vfs_rename at ffffffff8eff9d65
+> #17 [ffffa848961b3c40] ovl_do_rename at ffffffffc091d177 [overlay]
+> #18 [ffffa848961b3c78] ovl_rename at ffffffffc091e885 [overlay]
+> #19 [ffffa848961b3d10] vfs_rename at ffffffff8eff9d65
+> #20 [ffffa848961b3dd8] do_renameat2 at ffffffff8effcc66
+> #21 [ffffa848961b3ea8] __x64_sys_rename at ffffffff8effcdb9
+> #22 [ffffa848961b3ec0] do_syscall_64 at ffffffff8ec04c54
+> #23 [ffffa848961b3f50] entry_SYSCALL_64_after_hwframe at ffffffff8fc00091
+>     RIP: 00007f84ed829da7  RSP: 00007ffe6da90508  RFLAGS: 00000202
+>     RAX: ffffffffffffffda  RBX: 00007ffe6da9093f  RCX: 00007f84ed829da7
+>     RDX: 0000000000000000  RSI: 00007ffe6da92b94  RDI: 00007ffe6da92b7a
+>     RBP: 00007ffe6da908e0   R8: 0000000000000001   R9: 0000000000000000
+>     R10: 0000000000000001  R11: 0000000000000202  R12: 00007ffe6da909c0
+>     R13: 0000000000000000  R14: 0000000000000000  R15: 00007ffe6da92b7a
+>     ORIG_RAX: 0000000000000052  CS: 0033  SS: 002b
+> 
+> 
+> I revert this PR
+> https://github.com/torvalds/linux/commit/fa6c668d807b1e9ac041101dfcb59bd8e279cfe5
+> , which can indicate which process is hold the lock. This can help for the
+> debug.
+> 
+> 1. Check for process 38036
+> 
+> crash> set 38036
+>     PID: 38036
+> COMMAND: "mv"
+>    TASK: ffff908cd4ce8000  [THREAD_INFO: ffff908cd4ce8000]
+>     CPU: 22
+>   STATE: TASK_UNINTERRUPTIBLE
+> 
+> 
+> It is waiting for a lock, which is holding by 38029:
+> 
+> crash> struct xfs_buf.b_last_holder ffff908f92a0a680
+>   b_last_holder = 38029
+> 
+> 
+> 2. Check for process 38029
+> crash> set 38029
+>     PID: 38029
+> COMMAND: "mv"
+>    TASK: ffff908cd6093a80  [THREAD_INFO: ffff908cd6093a80]
+>     CPU: 1
+>   STATE: TASK_UNINTERRUPTIBLE
+> 
+> crash> struct xfs_buf.b_last_holder ffff908f993cc780
+>   b_last_holder = 38030
+> 
+> It is waiting for a lock, which is holding  by 38030
+> 
+> 3. Check for process 38030
+> crash> set 38030
+>     PID: 38030
+> COMMAND: "mv"
+>    TASK: ffff908cdbfc0000  [THREAD_INFO: ffff908cdbfc0000]
+>     CPU: 15
+>   STATE: TASK_UNINTERRUPTIBLE
+> 
+> crash> struct xfs_buf.b_last_holder ffff908f92a0a680
+>   b_last_holder = 38029
+> 
+> 
+> 
+> I did a bit more trace by ebpf, the lock ffff908f92a0a680 should be held by
+> 38029 in xfs_iunlink_remove() but not released:
+> 
+>   b'xfs_buf_trylock+0x1'
+>   b'xfs_buf_get_map+0x51'
+>   b'xfs_buf_read_map+0x47'
+>   b'xfs_trans_read_buf_map+0xf6'
+>   b'xfs_read_agi+0xd2'
+>   b'xfs_iunlink_remove+0x9a'
+>   b'xfs_rename+0x618'
+>   b'xfs_vn_rename+0x104'
+>   b'vfs_rename+0x6e5'
+>   b'ovl_do_rename+0x47'
+>   b'ovl_rename+0x5d5'
+>   b'vfs_rename+0x6e5'
+>   b'do_renameat2+0x576'
+>   b'__x64_sys_rename+0x29'
+>   b'do_syscall_64+0x84'
+>   b'entry_SYSCALL_64_after_hwframe+0x49'
+> 
+> The lock 0xffff908f993cc780 should also be held by 38030
+> xfs_iunlink_remove() but not released:
+> 
+>   b'xfs_buf_trylock+0x1'
+>   b'xfs_buf_get_map+0x51'
+>   b'xfs_buf_read_map+0x47'
+>   b'xfs_trans_read_buf_map+0xf6'
+>   b'xfs_read_agi+0xd2'
+>   b'xfs_iunlink_remove+0x9a'
+>   b'xfs_rename+0x618'
+>   b'xfs_vn_rename+0x104'
+>   b'vfs_rename+0x6e5'
+>   b'ovl_do_rename+0x47'
+>   b'ovl_rename+0x5d5'
+>   b'vfs_rename+0x6e5'
+>   b'do_renameat2+0x576'
+>   b'__x64_sys_rename+0x29'
+>   b'do_syscall_64+0x84'
+>   b'entry_SYSCALL_64_after_hwframe+0x49'
+> 
+> 
+> Looks like there are ABBA deadlock in this scenario.
+> 
+> This issue is very easy to be reproduced by the scripts I provided.
 
-Probably few, since I imagined that most new log items are going to get
-built on behalf of new disk format features.  OTOH Allison and I are
-both building features that don't change the disk format...
+Hm.  Does this happen on upstream?  There have been a couple of deadlock
+fixes for the rename code in the past couple of years.
 
-> My question is how flexible do we really need to make incompatible log
-> recovery support? Why not just commit the superblock once at mount time
-> with however many bits the current kernel supports and clear them on
-> unmount? (Or perhaps consider a lazy setting variant where we set all
-> supported bits on the first modification..?)
+93597ae8dac0149b5c00b787cba6bf7ba213e666 (5.5)
+bc56ad8c74b8588685c2875de0df8ab6974828ef (5.4)
 
-I don't think setting it at mount (or first mod) time is a good idea
-either, since that means that the fs cannot be recovered on an old
-kernel even if we never actually used the new log items.
+I have no idea if Ubuntu has picked up the newer one, you'll have to
+contact them.
+
+(Did this ever show up on linux-xfs?)
 
 --D
-
-> 
-> Brian
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
-> 
