@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1A97C4361B
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 09:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB58CC4361B
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 09:30:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48D1723F36
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 09:24:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BC4123F37
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 09:30:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405593AbgLKJYT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Dec 2020 04:24:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53986 "EHLO
+        id S2390126AbgLKJaH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Dec 2020 04:30:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405592AbgLKJXy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Dec 2020 04:23:54 -0500
-Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FFFAC06179C
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Dec 2020 01:22:43 -0800 (PST)
-Received: by mail-pl1-x644.google.com with SMTP id p6so4296453plo.6
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Dec 2020 01:22:43 -0800 (PST)
+        with ESMTP id S2405629AbgLKJ3f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Dec 2020 04:29:35 -0500
+Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D26C6C0613CF
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Dec 2020 01:28:54 -0800 (PST)
+Received: by mail-pj1-x1042.google.com with SMTP id lj6so501692pjb.0
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Dec 2020 01:28:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=piiXfIXgdNVp9OFBZD1gr2OLPhWAfZPLPmxKji7NJxY=;
-        b=SHvP0/30ZlGGU/wrrtUoCWeyT9gHVG4+G3gVx+zwAuyVyTK8tuQUcqUUqyRn+jBulC
-         Sacm5u8zSUlp9xmVc/RuMbTZI3drRP0OEDs0FnUnHS2ELRCz+ah2nF5ci+mCHk2+1Ioh
-         btPn73bEv/SZyXxF2PlyaG4DagFWPv2HARpB7rolqfF5aO6UxUxJFpC+C0M0E7EgQSK1
-         Q2nMLHHz0C/eGeI2EippKZuCfc77A+VgglmRqz8fN1V0MDaHMikgJxGrzkyFi20Na7A3
-         8J4ylU3Ikep/VLEgUqwIILT+SDeCiygtUVD/mEoJ8YI6885hF52IyAXWeQV9BltgP7yv
-         i5xg==
+        bh=u5RY3uToIQUfzkmsXDCHP9TJSZ1jiYnmnIcL9t7vCzM=;
+        b=qi/NpO3WpXHCTbzWKJM8mn5+SdJkXIK13Y6XnmJKQOHCFdL8NDp0GnRuPWPSrgqCpc
+         UBTqjhjCydwf8NY9ervJ2Vsi/Ek3K5zccJwmxsxBNS/CqVAEVZH/YYRAgr7UvikSb/nA
+         ptFO9Qap7ViR4fUvb0ChSkZuT8OsY/HeF5nY28SnkV+yBuiQpEJl2uMG1+Sgb1PeT7U3
+         1s1cafooQb1iDFkoSVI1mj7TqqNzyyJbTgLV6M3oxqpmeMFWGSdJUEIiOru3pHbTAgil
+         ct3A6MR8srseuyuOT23Enk1W6DgCY7b9XjeeBpy7FNIgQwlADKfxM+E8Q1w7vhO4tvAF
+         xTMg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=piiXfIXgdNVp9OFBZD1gr2OLPhWAfZPLPmxKji7NJxY=;
-        b=kbvSbeb3tDgOAE153xAuGkrT2VM5SRqQPprTbvWrXSPytqsa8Pz/OUqon/gWf7AQU8
-         xlT68wr5KYjWBpSaL5Yauqe1JZ8hGAnkDN7kY1+vYwfr2yr1aRUKCZLuCI0PdxBiAQk8
-         gwm1GcAnU3SkcSvRU+cDaHtNEsyloHDsUhMOoTlxomFhg9lPdQfCtAlpNxr1VJlBk1re
-         uExYPQFt17cv7ko/jA7DaoamXmKkodh1u895gHnXIwUmRBEjazIR8woThIZ7t/LsFxMg
-         MYC2CHSJ49iEZwlxrORR1vBBQgwmnmVY1z9ibEEEPRtCX58YaNHhrM0Q2rm+WaEDcYF1
-         cNYA==
-X-Gm-Message-State: AOAM532Fmql+5lGFTSm+rA8GYUn+qavWImv5ikaHFHq5HKjvztJJgpcl
-        ryoA+ol5+i4a+UzE9HNiGJw=
-X-Google-Smtp-Source: ABdhPJwJF9j3TLfu4yAliM3mJLhbnLa+rSYI7kgptz0OXFqZv6SYKS/1lXLw5ToxWPnqjgNZKIhJ6Q==
-X-Received: by 2002:a17:902:7001:b029:da:bbb6:c7e2 with SMTP id y1-20020a1709027001b02900dabbb6c7e2mr10196907plk.50.1607678562987;
-        Fri, 11 Dec 2020 01:22:42 -0800 (PST)
+        bh=u5RY3uToIQUfzkmsXDCHP9TJSZ1jiYnmnIcL9t7vCzM=;
+        b=i0Ut4jOF8Gh31KbNv+P6MT2Jadi2+jin+4d/S2xwDaL4azkPJx7nSnofQ6zzrlGCrP
+         4rLZ9uK/UbDVsUWN/PD/IujxrKOqJUgXuVL9nSwu+RMyiAVOUY8BU2Ffh1UMZGmwv6oC
+         cmUV6WZcEMyhX7W+ip/b+U5XukcS/qHTf9HwC7nr1mkyIaJuarJP00q0GRznyedNnb6G
+         fXJGjBaZj6JTVVJoVrj1+YEEEKQQV/qrVc/7FQROb0Xd6HOHgaA5hZ8YLTb81rIWNUM1
+         iecuxWAgEYjeAm04z5V9aJnkNKud3VqoYEG7E+xxs8P1/eBlITQYZuNY2ijtBAxZAaON
+         9m0w==
+X-Gm-Message-State: AOAM532KrqiSkYMd5EPlv+VOZ4n1FhgAYihN1VlgXa3chr6FSjYNsWom
+        LKaYaL4it9T2Vd7FaILaOBEoZXLcHGI=
+X-Google-Smtp-Source: ABdhPJzUvIqvjFDK38d+CfZXdqnp8jdFlxqZavFDI10EhMbyYNfQ0PQY2XKz86eHN2wDee+X9BTXsw==
+X-Received: by 2002:a17:90a:c905:: with SMTP id v5mr12349662pjt.183.1607678934389;
+        Fri, 11 Dec 2020 01:28:54 -0800 (PST)
 Received: from garuda.localnet ([122.167.39.189])
-        by smtp.gmail.com with ESMTPSA id s21sm9554503pgk.52.2020.12.11.01.22.41
+        by smtp.gmail.com with ESMTPSA id a22sm9568741pfa.215.2020.12.11.01.28.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Dec 2020 01:22:42 -0800 (PST)
+        Fri, 11 Dec 2020 01:28:53 -0800 (PST)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: rename xfs_wait_buftarg() to xfs_buftarg_drain()
-Date:   Fri, 11 Dec 2020 14:52:39 +0530
-Message-ID: <1854967.ZGscP5OW6Q@garuda>
-In-Reply-To: <20201210144607.1922026-2-bfoster@redhat.com>
-References: <20201210144607.1922026-1-bfoster@redhat.com> <20201210144607.1922026-2-bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: don't drain buffer lru on freeze and read-only remount
+Date:   Fri, 11 Dec 2020 14:58:51 +0530
+Message-ID: <5058397.6zluo7qbvW@garuda>
+In-Reply-To: <20201210144607.1922026-3-bfoster@redhat.com>
+References: <20201210144607.1922026-1-bfoster@redhat.com> <20201210144607.1922026-3-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -71,173 +71,125 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 10 Dec 2020 09:46:06 -0500, Brian Foster wrote:
-> xfs_wait_buftarg() is vaguely named and somewhat overloaded. Its
-> primary purpose is to reclaim all buffers from the provided buffer
-> target LRU. In preparation to refactor xfs_wait_buftarg() into
-> serialization and LRU draining components, rename the function and
-> associated helpers to something more descriptive. This patch has no
-> functional changes with the minor exception of renaming a
-> tracepoint.
+On Thu, 10 Dec 2020 09:46:07 -0500, Brian Foster wrote:
+> xfs_buftarg_drain() is called from xfs_log_quiesce() to ensure the
+> buffer cache is reclaimed during unmount. xfs_log_quiesce() is also
+> called from xfs_quiesce_attr(), however, which means that cache
+> state is completely drained for filesystem freeze and read-only
+> remount. While technically harmless, this is unnecessarily
+> heavyweight. Both freeze and read-only mounts allow reads and thus
+> allow population of the buffer cache. Therefore, the transitional
+> sequence in either case really only needs to quiesce outstanding
+> writes to return the filesystem in a generally read-only state.
+> 
+> Additionally, some users have reported that attempts to freeze a
+> filesystem concurrent with a read-heavy workload causes the freeze
+> process to stall for a significant amount of time. This occurs
+> because, as mentioned above, the read workload repopulates the
+> buffer LRU while the freeze task attempts to drain it.
+> 
+> To improve this situation, replace the drain in xfs_log_quiesce()
+> with a buffer I/O quiesce and lift the drain into the unmount path.
+> This removes buffer LRU reclaim from freeze and read-only [re]mount,
+> but ensures the LRU is still drained before the filesystem unmounts.
 >
 
-The changes look good to me.
+One change that the patch causes is that xfs_log_unmount_write() is now
+invoked while xfs_buf cache is still populated (though none of the xfs_bufs
+would be undergoing I/O). However, I don't see this causing any erroneous
+behaviour. Hence,
 
 Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->  fs/xfs/xfs_buf.c   | 12 ++++++------
->  fs/xfs/xfs_buf.h   | 10 +++++-----
->  fs/xfs/xfs_log.c   |  6 +++---
->  fs/xfs/xfs_mount.c |  4 ++--
->  fs/xfs/xfs_trace.h |  2 +-
->  5 files changed, 17 insertions(+), 17 deletions(-)
+>  fs/xfs/xfs_buf.c | 20 +++++++++++++++-----
+>  fs/xfs/xfs_buf.h |  1 +
+>  fs/xfs/xfs_log.c |  6 ++++--
+>  3 files changed, 20 insertions(+), 7 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 4e4cf91f4f9f..db918ed20c40 100644
+> index db918ed20c40..d3fce3129f6e 100644
 > --- a/fs/xfs/xfs_buf.c
 > +++ b/fs/xfs/xfs_buf.c
-> @@ -43,7 +43,7 @@ static kmem_zone_t *xfs_buf_zone;
->   *	  pag_buf_lock
->   *	    lru_lock
->   *
-> - * xfs_buftarg_wait_rele
-> + * xfs_buftarg_drain_rele
->   *	lru_lock
->   *	  b_lock (trylock due to inversion)
->   *
-> @@ -88,7 +88,7 @@ xfs_buf_vmap_len(
->   * because the corresponding decrement is deferred to buffer release. Buffers
->   * can undergo I/O multiple times in a hold-release cycle and per buffer I/O
->   * tracking adds unnecessary overhead. This is used for sychronization purposes
-> - * with unmount (see xfs_wait_buftarg()), so all we really need is a count of
-> + * with unmount (see xfs_buftarg_drain()), so all we really need is a count of
->   * in-flight buffers.
->   *
->   * Buffers that are never released (e.g., superblock, iclog buffers) must set
-> @@ -1786,7 +1786,7 @@ __xfs_buf_mark_corrupt(
->   * while freeing all the buffers only held by the LRU.
->   */
->  static enum lru_status
-> -xfs_buftarg_wait_rele(
-> +xfs_buftarg_drain_rele(
->  	struct list_head	*item,
->  	struct list_lru_one	*lru,
->  	spinlock_t		*lru_lock,
-> @@ -1798,7 +1798,7 @@ xfs_buftarg_wait_rele(
->  
->  	if (atomic_read(&bp->b_hold) > 1) {
->  		/* need to wait, so skip it this pass */
-> -		trace_xfs_buf_wait_buftarg(bp, _RET_IP_);
-> +		trace_xfs_buf_drain_buftarg(bp, _RET_IP_);
->  		return LRU_SKIP;
->  	}
->  	if (!spin_trylock(&bp->b_lock))
-> @@ -1816,7 +1816,7 @@ xfs_buftarg_wait_rele(
+> @@ -1815,14 +1815,13 @@ xfs_buftarg_drain_rele(
+>  	return LRU_REMOVED;
 >  }
 >  
+> +/*
+> + * Wait for outstanding I/O on the buftarg to complete.
+> + */
 >  void
-> -xfs_wait_buftarg(
-> +xfs_buftarg_drain(
+> -xfs_buftarg_drain(
+> +xfs_buftarg_wait(
 >  	struct xfs_buftarg	*btp)
 >  {
->  	LIST_HEAD(dispose);
-> @@ -1841,7 +1841,7 @@ xfs_wait_buftarg(
+> -	LIST_HEAD(dispose);
+> -	int			loop = 0;
+> -	bool			write_fail = false;
+> -
+>  	/*
+>  	 * First wait on the buftarg I/O count for all in-flight buffers to be
+>  	 * released. This is critical as new buffers do not make the LRU until
+> @@ -1838,6 +1837,17 @@ xfs_buftarg_drain(
+>  	while (percpu_counter_sum(&btp->bt_io_count))
+>  		delay(100);
+>  	flush_workqueue(btp->bt_mount->m_buf_workqueue);
+> +}
+> +
+> +void
+> +xfs_buftarg_drain(
+> +	struct xfs_buftarg	*btp)
+> +{
+> +	LIST_HEAD(dispose);
+> +	int			loop = 0;
+> +	bool			write_fail = false;
+> +
+> +	xfs_buftarg_wait(btp);
 >  
 >  	/* loop until there is nothing left on the lru list. */
 >  	while (list_lru_count(&btp->bt_lru)) {
-> -		list_lru_walk(&btp->bt_lru, xfs_buftarg_wait_rele,
-> +		list_lru_walk(&btp->bt_lru, xfs_buftarg_drain_rele,
->  			      &dispose, LONG_MAX);
->  
->  		while (!list_empty(&dispose)) {
 > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index bfd2907e7bc4..ea32369f8f77 100644
+> index ea32369f8f77..96c6b478e26e 100644
 > --- a/fs/xfs/xfs_buf.h
 > +++ b/fs/xfs/xfs_buf.h
-> @@ -152,7 +152,7 @@ typedef struct xfs_buf {
->  	struct list_head	b_list;
->  	struct xfs_perag	*b_pag;		/* contains rbtree root */
->  	struct xfs_mount	*b_mount;
-> -	xfs_buftarg_t		*b_target;	/* buffer target (device) */
-> +	struct xfs_buftarg	*b_target;	/* buffer target (device) */
->  	void			*b_addr;	/* virtual address of buffer */
->  	struct work_struct	b_ioend_work;
->  	struct completion	b_iowait;	/* queue for I/O waiters */
-> @@ -344,11 +344,11 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
->  /*
->   *	Handling of buftargs.
->   */
-> -extern xfs_buftarg_t *xfs_alloc_buftarg(struct xfs_mount *,
-> -			struct block_device *, struct dax_device *);
-> +extern struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *,
-> +		struct block_device *, struct dax_device *);
+> @@ -347,6 +347,7 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
+>  extern struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *,
+>  		struct block_device *, struct dax_device *);
 >  extern void xfs_free_buftarg(struct xfs_buftarg *);
-> -extern void xfs_wait_buftarg(xfs_buftarg_t *);
-> -extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
-> +extern void xfs_buftarg_drain(struct xfs_buftarg *);
-> +extern int xfs_setsize_buftarg(struct xfs_buftarg *, unsigned int);
+> +extern void xfs_buftarg_wait(struct xfs_buftarg *);
+>  extern void xfs_buftarg_drain(struct xfs_buftarg *);
+>  extern int xfs_setsize_buftarg(struct xfs_buftarg *, unsigned int);
 >  
->  #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
->  #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
 > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index fa2d05e65ff1..5ad4d5e78019 100644
+> index 5ad4d5e78019..46ea4017fcec 100644
 > --- a/fs/xfs/xfs_log.c
 > +++ b/fs/xfs/xfs_log.c
-> @@ -741,7 +741,7 @@ xfs_log_mount_finish(
->  		xfs_log_force(mp, XFS_LOG_SYNC);
->  		xfs_ail_push_all_sync(mp->m_ail);
->  	}
-> -	xfs_wait_buftarg(mp->m_ddev_targp);
-> +	xfs_buftarg_drain(mp->m_ddev_targp);
->  
->  	if (readonly)
->  		mp->m_flags |= XFS_MOUNT_RDONLY;
 > @@ -936,13 +936,13 @@ xfs_log_quiesce(
 >  
 >  	/*
 >  	 * The superblock buffer is uncached and while xfs_ail_push_all_sync()
-> -	 * will push it, xfs_wait_buftarg() will not wait for it. Further,
-> +	 * will push it, xfs_buftarg_drain() will not wait for it. Further,
+> -	 * will push it, xfs_buftarg_drain() will not wait for it. Further,
+> +	 * will push it, xfs_buftarg_wait() will not wait for it. Further,
 >  	 * xfs_buf_iowait() cannot be used because it was pushed with the
 >  	 * XBF_ASYNC flag set, so we need to use a lock/unlock pair to wait for
 >  	 * the IO to complete.
 >  	 */
 >  	xfs_ail_push_all_sync(mp->m_ail);
-> -	xfs_wait_buftarg(mp->m_ddev_targp);
-> +	xfs_buftarg_drain(mp->m_ddev_targp);
+> -	xfs_buftarg_drain(mp->m_ddev_targp);
+> +	xfs_buftarg_wait(mp->m_ddev_targp);
 >  	xfs_buf_lock(mp->m_sb_bp);
 >  	xfs_buf_unlock(mp->m_sb_bp);
 >  
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 7110507a2b6b..29a553f0877d 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1023,8 +1023,8 @@ xfs_mountfs(
->  	xfs_log_mount_cancel(mp);
->   out_fail_wait:
->  	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
-> -		xfs_wait_buftarg(mp->m_logdev_targp);
-> -	xfs_wait_buftarg(mp->m_ddev_targp);
-> +		xfs_buftarg_drain(mp->m_logdev_targp);
-> +	xfs_buftarg_drain(mp->m_ddev_targp);
->   out_free_perag:
->  	xfs_free_perag(mp);
->   out_free_dir:
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 86951652d3ed..7b4d8a5f2a49 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -340,7 +340,7 @@ DEFINE_BUF_EVENT(xfs_buf_get_uncached);
->  DEFINE_BUF_EVENT(xfs_buf_item_relse);
->  DEFINE_BUF_EVENT(xfs_buf_iodone_async);
->  DEFINE_BUF_EVENT(xfs_buf_error_relse);
-> -DEFINE_BUF_EVENT(xfs_buf_wait_buftarg);
-> +DEFINE_BUF_EVENT(xfs_buf_drain_buftarg);
->  DEFINE_BUF_EVENT(xfs_trans_read_buf_shut);
+> @@ -962,6 +962,8 @@ xfs_log_unmount(
+>  {
+>  	xfs_log_quiesce(mp);
 >  
->  /* not really buffer traces, but the buf provides useful information */
+> +	xfs_buftarg_drain(mp->m_ddev_targp);
+> +
+>  	xfs_trans_ail_destroy(mp);
+>  
+>  	xfs_sysfs_del(&mp->m_log->l_kobj);
 > 
 
 
