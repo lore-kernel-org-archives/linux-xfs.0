@@ -2,88 +2,141 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5620DC433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 18:38:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCA1BC433FE
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 23:21:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC1D323F2A
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 18:38:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A77782310E
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Dec 2020 23:21:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389604AbgLKREx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Dec 2020 12:04:53 -0500
-Received: from smtprelay0050.hostedemail.com ([216.40.44.50]:50292 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2405366AbgLKREV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Dec 2020 12:04:21 -0500
-X-Greylist: delayed 504 seconds by postgrey-1.27 at vger.kernel.org; Fri, 11 Dec 2020 12:04:21 EST
-Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
-        by smtpgrave05.hostedemail.com (Postfix) with ESMTP id EE7731808F579
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Dec 2020 16:55:56 +0000 (UTC)
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay01.hostedemail.com (Postfix) with ESMTP id 98932100E7B4A;
-        Fri, 11 Dec 2020 16:55:15 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: way72_3403e2027402
-X-Filterd-Recvd-Size: 2030
-Received: from XPS-9350.home (unknown [47.151.137.21])
-        (Authenticated sender: joe@perches.com)
-        by omf14.hostedemail.com (Postfix) with ESMTPA;
-        Fri, 11 Dec 2020 16:55:14 +0000 (UTC)
-Message-ID: <c42cdf7d51ec880b4941a8e1b7ec855c9bc746e8.camel@perches.com>
-Subject: Re: [PATCH -next] fs/xfs: convert comma to semicolon
-From:   Joe Perches <joe@perches.com>
-To:     David Laight <David.Laight@ACULAB.COM>,
-        'Eric Sandeen' <sandeen@sandeen.net>,
-        Zheng Yongjun <zhengyongjun3@huawei.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Fri, 11 Dec 2020 08:55:12 -0800
-In-Reply-To: <5f4ee9cf48a445cea25ba01bc9ffdf13@AcuMS.aculab.com>
-References: <20201211084112.1931-1-zhengyongjun3@huawei.com>
-         <fd372b27-983d-00ff-5218-4082fe2f08df@sandeen.net>
-         <5f4ee9cf48a445cea25ba01bc9ffdf13@AcuMS.aculab.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.38.1-1 
+        id S2406883AbgLKW02 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Dec 2020 17:26:28 -0500
+Received: from sandeen.net ([63.231.237.45]:55428 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2406918AbgLKW0V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Dec 2020 17:26:21 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id B7CC411662
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Dec 2020 16:24:54 -0600 (CST)
+To:     xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v5.10.0 released, master branch updated to
+ 25d27711
+Message-ID: <a4de41d3-6751-7227-0d20-e54aca182758@sandeen.net>
+Date:   Fri, 11 Dec 2020 16:25:39 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="JcXmxIVERjbnLIbwXj8IO5zlnQR1WHJl6"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 2020-12-11 at 16:17 +0000, David Laight wrote:
-> From: Eric Sandeen
-> > Sent: 11 December 2020 15:51
-> > 
-> > On 12/11/20 2:41 AM, Zheng Yongjun wrote:
-> > > Replace a comma between expression statements by a semicolon.
-> > > 
-> > > Signed-off-by: Zheng Yongjun <zhengyongjun3@huawei.com>
-> > 
-> > hah, that's an old one.  Harmless though, AFAICT.
-> > 
-> > this fixes 91cca5df9bc8 ("[XFS] implement generic xfs_btree_delete/delrec")
-> > if we dare add that tag ;)
-> 
-> It doesn't 'fix' anything, it is just stylistic.
-> Completely harmless in every sense.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--JcXmxIVERjbnLIbwXj8IO5zlnQR1WHJl6
+Content-Type: multipart/mixed; boundary="cfIncVSYdgIQZ6hzpRo3Mq8rnvllVDYD4";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: xfs <linux-xfs@vger.kernel.org>
+Message-ID: <a4de41d3-6751-7227-0d20-e54aca182758@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v5.10.0 released, master branch updated to
+ 25d27711
 
-True, so it's not necessary to add a fixes tag here.
+--cfIncVSYdgIQZ6hzpRo3Mq8rnvllVDYD4
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-The only time a comma->semicolon conversion could 'fix'
-something is when it's unintentionally used after something
-like an if statement
+Hi folks,
 
-	if (foo)
-		bar(),
-	baz();
+The master branch of the xfsprogs repository at:
 
-where now baz() is performed only when the if condition is true
-but the indentation indicates that it should always be performed.
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated and taggeged with v5.10.0
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+Condensed changelog follows:
+
+xfsprogs-5.10.0 (11 Dec 2020)
+        - xfs_repair: remove old code for mountpoint inodes (Anthony Ilio=
+poulos)
+
+xfsprogs-5.10.0-rc1 (04 Dec 2020)
+        - xfsprogs: Add inode btree counter feature (Darrick Wong)
+        - xfsprogs: Add bigtime feature for Y2038 (Darrick Wong)
+        - xfsprogs: Polish translation update (Jakub Bogusz)
+        - mkfs.xfs: Add config file feature (Dave Chinner)
+        - mkfs.xfs: allow users to specify rtinherit=3D0 (Darrick Wong)
+        - xfs_repair: simplify bmap_next_offset (Christoph Hellwig)
+        - man: various manpage updates (Eric Sandeen)
+        - libxfs: remove some old dead code (Dave Chinner)
+        - libxfs: add realtime extent tracking (Darrick Wong)
+
+xfsprogs-5.10.0-rc0 (17 Nov 2020)
+        - libxfs changes merged from kernel 5.10
+
+The new head of the master branch is commit:
+
+25d27711 (HEAD -> for-next, tag: v5.10.0, korg/master, korg/for-next, ref=
+s/patches/for-next/5.10.0-rinal) xfsprogs: Release v5.10.0
+
+New Commits:
+
+Anthony Iliopoulos (1):
+      [92065bfd] xfs_repair: remove obsolete code for handling mountpoint=
+ inodes
+
+Eric Sandeen (1):
+      [25d27711] xfsprogs: Release v5.10.0
 
 
+Code Diffstat:
 
+ VERSION          |  2 +-
+ configure.ac     |  2 +-
+ debian/changelog |  8 +++++++-
+ doc/CHANGES      |  3 +++
+ po/de.po         |  5 -----
+ po/pl.po         |  5 -----
+ repair/dinode.c  | 12 ------------
+ repair/incore.h  |  1 -
+ 8 files changed, 12 insertions(+), 26 deletions(-)
+
+
+--cfIncVSYdgIQZ6hzpRo3Mq8rnvllVDYD4--
+
+--JcXmxIVERjbnLIbwXj8IO5zlnQR1WHJl6
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl/T8eMFAwAAAAAACgkQIK4WkuE93uCY
+AQ/+MULOUCuxGT20JAeAPG+Xk3IBPvu8CcQcbT6Dt4Vmu/HXRY4SWbQ55yomWL/yWF6Zc07nGHnB
+6lkNALT+rmFJ6Z7KaTS+SKfJJE5WvGs8exA+q5h38gXB7iFDfAUwfBPBDEqFpEVpg+KIHEocndG0
+wMXf55WkWRPd5/swL8dEsrLJi7EqrZ1KCb4X2qZKV12thEASNxOX0+bgd3wAZk/4nzTRaZtNa0oU
+dF6bcvr5JYEEgNExPmmHCemUYX+RAlAMIY6jyT+C1RIcdE2iaoksghd4trDyTNXKmEwJDKXpj2V3
+GfLYSd+NxFyn5B7yCHsco+n5zBZNncp3K7nkOPKFpXls2LGcJ1ilJCR+jTG7PQs3nz810+/tVbx3
+biDTHywG+gUgLmKO+nLc0DJdbSkaA2JYsWngUSN69lAcfMi7xXnZUVmg9K8cwCjNtirhDWIpG5Gn
+F33SbS+naxV3uCPKhEOsCwKqSffbbPWf1xSu9OQCD39+CCg7iUs43vWU9bkMcX1yJcw1zNiY1ySP
+BLrkr8rizHM9DO6bCN64jGZRNljf4wkpwEjhqTieH6fVV8lS5akMGAYVqZZQWSqpRldOc2j2Yxi2
+o6mI2LhtFVzTWvAa/GJRIMcFVej/wYrVPpiTJSZfRrh6mtX5Fg+Oud38hr112MoxKD4RcfHWvXmH
+/E0=
+=1FcA
+-----END PGP SIGNATURE-----
+
+--JcXmxIVERjbnLIbwXj8IO5zlnQR1WHJl6--
