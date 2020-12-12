@@ -2,192 +2,128 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A349CC4167B
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Dec 2020 18:59:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8111C433FE
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Dec 2020 21:15:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7240222240
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Dec 2020 18:59:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8364C22509
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Dec 2020 21:15:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389286AbgLLS7D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 12 Dec 2020 13:59:03 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:45454 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2407741AbgLLS7B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Dec 2020 13:59:01 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BCItpXG023539
-        for <linux-xfs@vger.kernel.org>; Sat, 12 Dec 2020 18:58:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=FsXVW0ECJ1oE6j7Tirq1hzSPlDi53fxbY2UmojGQMg8=;
- b=nRjv6yM6eaU52ly2kOH0P+iGvEcL9e+gE6rRS5YzvN0DWW25nVt5D4c6a1o/4WVLsVe3
- yhb0bVqOrYQ+MgKsUcZAslOZf7J/fO4AfMIkd2oLOLFpH/wLeJ2yvXJ/P4Gni+bgGhPW
- mb6cd4NsBYon+UzDZadLGQ1AGWaC+x4th10LEFp2Lut3TEovQGYIWr7eicLWQgj7Yz5D
- TofBEZwAVwErA9/o1jI0Z4+b/Igeknr1uAV8j/BzRakBE/fWu5q5t4pUeRn1gH4FTm6U
- l+eMStPTFDyTNrAqJshw4maa3njshZMNZEGPCkzDfXP6FVucn/27V2GW6qPpq4Miz5NF bg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 35ckcb1b4t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sat, 12 Dec 2020 18:58:16 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BCIssTn021168
-        for <linux-xfs@vger.kernel.org>; Sat, 12 Dec 2020 18:58:15 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 35cn6ha7c7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 12 Dec 2020 18:58:15 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BCIwEbg006518
-        for <linux-xfs@vger.kernel.org>; Sat, 12 Dec 2020 18:58:14 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 12 Dec 2020 10:58:14 -0800
-Date:   Sat, 12 Dec 2020 10:58:15 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 1189686e5440
-Message-ID: <20201212185815.GQ1943235@magnolia>
+        id S1726898AbgLLVPe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 12 Dec 2020 16:15:34 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60413 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725822AbgLLVPZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Dec 2020 16:15:25 -0500
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BA5983C3CE6;
+        Sun, 13 Dec 2020 08:14:40 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1koCDv-003J2X-9P; Sun, 13 Dec 2020 08:14:39 +1100
+Date:   Sun, 13 Dec 2020 08:14:39 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [RFC[RAP] PATCH] xfs: allow setting and clearing of log incompat
+ feature flags
+Message-ID: <20201212211439.GC632069@dread.disaster.area>
+References: <20201208181027.GB1943235@magnolia>
+ <20201208191913.GB1685621@bfoster>
+ <20201209032624.GH1943235@magnolia>
+ <20201209041950.GY3913616@dread.disaster.area>
+ <20201209155211.GB1860561@bfoster>
+ <20201209170428.GC1860561@bfoster>
+ <20201209205132.GA3913616@dread.disaster.area>
+ <20201210142358.GB1912831@bfoster>
+ <20201210215004.GC3913616@dread.disaster.area>
+ <20201211133901.GA2032335@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9833 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 mlxlogscore=999
- bulkscore=0 phishscore=0 malwarescore=0 adultscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012120148
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9833 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
- priorityscore=1501 mlxscore=0 suspectscore=0 adultscore=0 phishscore=0
- malwarescore=0 impostorscore=0 lowpriorityscore=0 clxscore=1015
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012120148
+In-Reply-To: <20201211133901.GA2032335@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
+        a=-dL5HOfXmfJsX-LxWmsA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Fri, Dec 11, 2020 at 08:39:01AM -0500, Brian Foster wrote:
+> On Fri, Dec 11, 2020 at 08:50:04AM +1100, Dave Chinner wrote:
+> > As for a mechanism for dynamically adding log incompat flags?
+> > Perhaps we just do that in xfs_trans_alloc() - add an log incompat
+> > flags field into the transaction reservation structure, and if
+> > xfs_trans_alloc() sees an incompat field set and the superblock
+> > doesn't have it set, the first thing it does is run a "set log
+> > incompat flag" transaction before then doing it's normal work...
+> > 
+> > This should be rare enough it doesn't have any measurable
+> > performance overhead, and it's flexible enough to support any log
+> > incompat feature we might need to implement...
+> > 
+> 
+> But I don't think that is sufficient. As Darrick pointed out up-thread,
+> the updated superblock has to be written back before we're allowed to
+> commit transactions with incompatible items. Otherwise, an older kernel
+> can attempt log recovery with incompatible items present if the
+> filesystem crashes before the superblock is written back.
 
-The for-next branch of the xfs-linux repository at:
+Sure, that's what the hook in xfs_trans_alloc() would do. It can do
+the work in the context that is going to need it, and set a wait
+flag for all incoming transactions that need a log incompat flag to
+wait for it do it's work.  Once it's done and the flag is set, it
+can continue and wake all the waiters now that the log incompat flag
+has been set. Anything that doesn't need a log incompat flag can
+just keep going and doesn't ever get blocked....
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> We could do some sync transaction and/or sync write dance at runtime,
+> but I think the performance/overhead aspect becomes slightly less
+> deterministic. It's not clear to me how many bits we'd support over
+> time, and whether users would notice hiccups when running some sustained
+> workload and happen to trigger sync transaction/write or AIL push
+> sequences to set internal bits.
 
-has just been updated.
+I don't think the number of bits is ever going to be a worry.  If we
+do it on a transaction granularlity, it will only block transactions
+taht need the log incomapt bit, and only until the bit is set.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This pulls in the cleanups for dialloc and a few other
-things, so we're done with new stuff for 5.11.
+I suspect this is one of the rare occasions where an unlogged
+modification makes an awful lot of sense: we don't even log that we
+are adding a log incompat flag, we just do an atomic synchronous
+write straight to the superblock to set the incompat flag(s). The
+entire modification can be done under the superblock buffer lock to
+serialise multiple transactions all trying to set incompat bits, and
+we don't set the in-memory superblock incompat bit until after it
+has been set and written to disk. Hence multiple waits can check the
+flag after they've got the sb buffer lock, and they'll see that it's
+already been set and just continue...
 
-Anyone with new code, please have it ready for review /before/ 5.11-rc4.
-The trickle of "new" refactorings that show up after -rc6 adds to my
-pre-merge-window stress and I'm not going to be as willing to accept
-those in 2021.
+This gets rid of the whole "what about a log containing an item that
+sets the incompat bit" problem, and it provides a simple means of
+serialising and co-ordinating setting of a log incompat flag....
 
-The new head of the for-next branch is commit:
+> My question is how flexible do we really need to make incompatible log
+> recovery support? Why not just commit the superblock once at mount time
+> with however many bits the current kernel supports and clear them on
+> unmount? (Or perhaps consider a lazy setting variant where we set all
+> supported bits on the first modification..?)
 
-1189686e5440 fs/xfs: convert comma to semicolon
+We don't want to set the incompat bits if we don't need to. That
+just guarantees user horror stories that start with "boot system
+with new kernel, crash, go back to old kernel, can't mount root
+filesystem anymore".
 
-New Commits:
+Cheers,
 
-Christoph Hellwig (2):
-      [26f88363ec78] xfs: remove xfs_vn_setattr_nonsize
-      [5d24ec4c7d3c] xfs: open code updating i_mode in xfs_set_acl
-
-Darrick J. Wong (21):
-      [3945ae03d822] xfs: move kernel-specific superblock validation out of libxfs
-      [80c720b8eb1c] xfs: define a new "needrepair" feature
-      [96f65bad7c31] xfs: enable the needsrepair feature
-      [bc525cf455da] xfs: hoist recovered bmap intent checks out of xfs_bui_item_recover
-      [67d8679bd391] xfs: improve the code that checks recovered bmap intent items
-      [dda7ba65bf03] xfs: hoist recovered rmap intent checks out of xfs_rui_item_recover
-      [c447ad62dc90] xfs: improve the code that checks recovered rmap intent items
-      [ed64f8343aaf] xfs: hoist recovered refcount intent checks out of xfs_cui_item_recover
-      [0d79781a1aa6] xfs: improve the code that checks recovered refcount intent items
-      [3c15df3de0e2] xfs: hoist recovered extent-free intent checks out of xfs_efi_item_recover
-      [7396c7fbe07e] xfs: improve the code that checks recovered extent-free intent items
-      [da5de110296c] xfs: validate feature support when recovering rmap/refcount intents
-      [6337032689fa] xfs: trace log intent item recovery failures
-      [acf104c2331c] xfs: detect overflows in bmbt records
-      [da531cc46ef1] xfs: fix parent pointer scrubber bailing out on unallocated inodes
-      [4b80ac64450f] xfs: scrub should mark a directory corrupt if any entries cannot be iget'd
-      [67457eb0d225] xfs: refactor data device extent validation
-      [18695ad42514] xfs: refactor realtime volume extent validation
-      [33005fd0a537] xfs: refactor file range validation
-      [1e5c39dfd3a4] xfs: rename xfs_fc_* back to xfs_fs_*
-      [a5336d6bb2d0] xfs: fix the forward progress assertion in xfs_iwalk_run_callbacks
-
-Dave Chinner (4):
-      [aececc9f8dec] xfs: introduce xfs_dialloc_roll()
-      [1abcf261016e] xfs: move on-disk inode allocation out of xfs_ialloc()
-      [f3bf6e0f1196] xfs: move xfs_dialloc_roll() into xfs_dialloc()
-      [8d822dc38ad7] xfs: spilt xfs_dialloc() into 2 functions
-
-Eric Sandeen (1):
-      [207ddc0ef4f4] xfs: don't catch dax+reflink inodes as corruption in verifier
-
-Gao Xiang (3):
-      [7bc1fea9d36c] xfs: introduce xfs_validate_stripe_geometry()
-      [15574ebbff26] xfs: convert noroom, okalloc in xfs_dialloc() to bool
-      [3937493c5025] xfs: kill ialloced in xfs_dialloc()
-
-Joseph Qi (1):
-      [2e984badbcc0] xfs: remove unneeded return value check for *init_cursor()
-
-Kaixu Xia (6):
-      [a9382fa9a9ff] xfs: delete duplicated tp->t_dqinfo null check and allocation
-      [04a58620a17c] xfs: check tp->t_dqinfo value instead of the XFS_TRANS_DQ_DIRTY flag
-      [b3b29cd1069c] xfs: directly return if the delta equal to zero
-      [88269b880a8e] xfs: remove unnecessary null check in xfs_generic_create
-      [afbd914776db] xfs: remove the unused XFS_B_FSB_OFFSET macro
-      [237d7887ae72] xfs: show the proper user quota options
-
-Zheng Yongjun (1):
-      [1189686e5440] fs/xfs: convert comma to semicolon
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_bmap.c         |  22 ++--
- fs/xfs/libxfs/xfs_bmap_btree.c   |   2 -
- fs/xfs/libxfs/xfs_btree.c        |   2 +-
- fs/xfs/libxfs/xfs_format.h       |  11 +-
- fs/xfs/libxfs/xfs_ialloc.c       | 166 +++++++++++++-------------
- fs/xfs/libxfs/xfs_ialloc.h       |  36 +++---
- fs/xfs/libxfs/xfs_ialloc_btree.c |   5 -
- fs/xfs/libxfs/xfs_inode_buf.c    |   4 -
- fs/xfs/libxfs/xfs_refcount.c     |   9 --
- fs/xfs/libxfs/xfs_rmap.c         |   9 --
- fs/xfs/libxfs/xfs_sb.c           | 104 +++++++++++------
- fs/xfs/libxfs/xfs_sb.h           |   3 +
- fs/xfs/libxfs/xfs_shared.h       |   1 -
- fs/xfs/libxfs/xfs_types.c        |  64 +++++++++++
- fs/xfs/libxfs/xfs_types.h        |   7 ++
- fs/xfs/scrub/agheader_repair.c   |   2 -
- fs/xfs/scrub/bmap.c              |  22 +---
- fs/xfs/scrub/common.c            |  14 ---
- fs/xfs/scrub/dir.c               |  21 +++-
- fs/xfs/scrub/inode.c             |   4 -
- fs/xfs/scrub/parent.c            |  10 +-
- fs/xfs/scrub/rtbitmap.c          |   4 +-
- fs/xfs/xfs_acl.c                 |  40 ++++---
- fs/xfs/xfs_bmap_item.c           |  65 ++++++-----
- fs/xfs/xfs_extfree_item.c        |  23 ++--
- fs/xfs/xfs_inode.c               | 243 +++++++++------------------------------
- fs/xfs/xfs_inode.h               |   6 +-
- fs/xfs/xfs_iops.c                |  41 +++----
- fs/xfs/xfs_iops.h                |   8 --
- fs/xfs/xfs_iwalk.c               |   2 +-
- fs/xfs/xfs_log_recover.c         |   5 +-
- fs/xfs/xfs_qm.c                  |  26 ++---
- fs/xfs/xfs_refcount_item.c       |  52 +++++----
- fs/xfs/xfs_rmap_item.c           |  67 +++++++----
- fs/xfs/xfs_super.c               |  77 ++++++++++---
- fs/xfs/xfs_trace.h               |  18 +++
- fs/xfs/xfs_trans_dquot.c         |  43 ++-----
- 37 files changed, 614 insertions(+), 624 deletions(-)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
