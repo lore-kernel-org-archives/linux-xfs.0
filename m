@@ -2,128 +2,236 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8111C433FE
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Dec 2020 21:15:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 734BCC4361B
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Dec 2020 09:10:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8364C22509
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Dec 2020 21:15:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 354532312C
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Dec 2020 09:10:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726898AbgLLVPe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 12 Dec 2020 16:15:34 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60413 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725822AbgLLVPZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Dec 2020 16:15:25 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BA5983C3CE6;
-        Sun, 13 Dec 2020 08:14:40 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1koCDv-003J2X-9P; Sun, 13 Dec 2020 08:14:39 +1100
-Date:   Sun, 13 Dec 2020 08:14:39 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [RFC[RAP] PATCH] xfs: allow setting and clearing of log incompat
- feature flags
-Message-ID: <20201212211439.GC632069@dread.disaster.area>
-References: <20201208181027.GB1943235@magnolia>
- <20201208191913.GB1685621@bfoster>
- <20201209032624.GH1943235@magnolia>
- <20201209041950.GY3913616@dread.disaster.area>
- <20201209155211.GB1860561@bfoster>
- <20201209170428.GC1860561@bfoster>
- <20201209205132.GA3913616@dread.disaster.area>
- <20201210142358.GB1912831@bfoster>
- <20201210215004.GC3913616@dread.disaster.area>
- <20201211133901.GA2032335@bfoster>
+        id S1728186AbgLMJKU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 13 Dec 2020 04:10:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58184 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728170AbgLMJKT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Dec 2020 04:10:19 -0500
+Received: from mail-il1-x141.google.com (mail-il1-x141.google.com [IPv6:2607:f8b0:4864:20::141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C69FC0613CF;
+        Sun, 13 Dec 2020 01:09:39 -0800 (PST)
+Received: by mail-il1-x141.google.com with SMTP id q1so13000647ilt.6;
+        Sun, 13 Dec 2020 01:09:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=D7GTvYEsVIVwjvV23D7RG5wUssdQLZojxIkxkNlOkWI=;
+        b=SPCtjOSGrOXBOb7FXLg34p2igyWU588Jy1ITL3uDxg3KV9j9hqegwxfkW0PMA6cx/V
+         EOIY59QB7x7/mp9zDB3fIYNm11dir6pHU/4ExH2vXTUGRd00cXGfTzPxzChX4Qv4yd5v
+         xiIf3SCDIEbRRDnyfjhmXzSHdwK73M3q/6Aq28OeqAkDqKi3lGjNUviM7naD4H8dfA5m
+         sO9n7Wj6Uwr9uIgS7bzSu2sstoR4o/whHfcY+rwcirUgxtAcdL9JArIIGwmtes1AGVKF
+         yJ3o0HMnr4p9QSg2B/iMtWAAE0sHf4p7GDyv+C3lTz4hy+xxfeoj4sNT16ILLJa9PGKh
+         YmiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=D7GTvYEsVIVwjvV23D7RG5wUssdQLZojxIkxkNlOkWI=;
+        b=ttKx0gJkRMjtWyrqbdkXxwgxS6g+xGrP2Kda/n7hK4bBdagem86WKnwmHgO3Wqfsom
+         /1oLAjmr3QZAHaFP3Xz/Q3nxzYhSK+9yZa+CVmGaOQZJCSO7c2z6kin57srLTK0j9TN2
+         wT6NG8I2l2oB0yZ++rG368z/U5WytmAGmXTGgYN+u5oZM5oQ7iw7l+N13CeIrZsXR6z5
+         tQ0Z3NU58aUP5DfZ0+5oplBeNmLwzobVNFp0uvuUpvkSNRdA9flo5La3Sr0lXTq2HCPu
+         wolUFHECzXUDnUXJqfi7OwLoAWOJ5D+SUR9i/WDqI+ObVGU1UUwrw0pAzCfI7V8yp0lX
+         ACGw==
+X-Gm-Message-State: AOAM531wc54mbmaprGLVJyKbEFGMcEbgp1DyoT/ev9dp2Wq579pIWlyb
+        tqcN9thlpenOzWtCFM/NtELn+1NnfEFTLtGrX5M=
+X-Google-Smtp-Source: ABdhPJxSjfFeaIvKMeUtKyBFgh0BXATRF6yhOG6j7VgiMcuP7Alm48/FakLeqW9J+sdvHIt3tJBWychg6p4AMtF5CBw=
+X-Received: by 2002:a05:6e02:68f:: with SMTP id o15mr27943384ils.93.1607850578855;
+ Sun, 13 Dec 2020 01:09:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201211133901.GA2032335@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
-        a=-dL5HOfXmfJsX-LxWmsA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+References: <20201209131146.67289-1-laoar.shao@gmail.com> <20201209131146.67289-4-laoar.shao@gmail.com>
+ <20201209195235.GN1943235@magnolia>
+In-Reply-To: <20201209195235.GN1943235@magnolia>
+From:   Yafang Shao <laoar.shao@gmail.com>
+Date:   Sun, 13 Dec 2020 17:09:02 +0800
+Message-ID: <CALOAHbD_DK9w=s9RDsVBNaYwgeRi4UUEGDHFb3zEsqh_V8gLMA@mail.gmail.com>
+Subject: Re: [PATCH v12 3/4] xfs: refactor the usage around xfs_trans_context_{set,clear}
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Michal Hocko <mhocko@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>, jlayton@redhat.com,
+        linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
+        linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 11, 2020 at 08:39:01AM -0500, Brian Foster wrote:
-> On Fri, Dec 11, 2020 at 08:50:04AM +1100, Dave Chinner wrote:
-> > As for a mechanism for dynamically adding log incompat flags?
-> > Perhaps we just do that in xfs_trans_alloc() - add an log incompat
-> > flags field into the transaction reservation structure, and if
-> > xfs_trans_alloc() sees an incompat field set and the superblock
-> > doesn't have it set, the first thing it does is run a "set log
-> > incompat flag" transaction before then doing it's normal work...
-> > 
-> > This should be rare enough it doesn't have any measurable
-> > performance overhead, and it's flexible enough to support any log
-> > incompat feature we might need to implement...
-> > 
-> 
-> But I don't think that is sufficient. As Darrick pointed out up-thread,
-> the updated superblock has to be written back before we're allowed to
-> commit transactions with incompatible items. Otherwise, an older kernel
-> can attempt log recovery with incompatible items present if the
-> filesystem crashes before the superblock is written back.
+On Thu, Dec 10, 2020 at 3:52 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Wed, Dec 09, 2020 at 09:11:45PM +0800, Yafang Shao wrote:
+> > The xfs_trans context should be active after it is allocated, and
+> > deactive when it is freed.
+> >
+> > So these two helpers are refactored as,
+> > - xfs_trans_context_set()
+> >   Used in xfs_trans_alloc()
+> > - xfs_trans_context_clear()
+> >   Used in xfs_trans_free()
+> >
+> > This patch is based on Darrick's work to fix the issue in xfs/141 in the
+> > earlier version. [1]
+> >
+> > 1. https://lore.kernel.org/linux-xfs/20201104001649.GN7123@magnolia
+> >
+> > Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> > Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Dave Chinner <david@fromorbit.com>
+> > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+> > ---
+> >  fs/xfs/xfs_trans.c | 28 +++++++++++++++-------------
+> >  1 file changed, 15 insertions(+), 13 deletions(-)
+> >
+> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > index 11d390f0d3f2..4f4645329bb2 100644
+> > --- a/fs/xfs/xfs_trans.c
+> > +++ b/fs/xfs/xfs_trans.c
+> > @@ -67,6 +67,17 @@ xfs_trans_free(
+> >       xfs_extent_busy_sort(&tp->t_busy);
+> >       xfs_extent_busy_clear(tp->t_mountp, &tp->t_busy, false);
+> >
+> > +
+> > +     /* Detach the transaction from this thread. */
+> > +     ASSERT(current->journal_info != NULL);
+> > +     /*
+> > +      * The PF_MEMALLOC_NOFS is bound to the transaction itself instead
+> > +      * of the reservation, so we need to check if tp is still the
+> > +      * current transaction before clearing the flag.
+> > +      */
+> > +     if (current->journal_info == tp)
+>
+> Um, you don't start setting journal_info until the next patch, so this
+> means that someone who lands on this commit with git bisect will have a
+> xfs with broken logic.
+>
+> Because this is the patch that changes where we set and restore NOFS
+> context, I think you have to introduce xfs_trans_context_swap here,
+> and not in the next patch.
+>
 
-Sure, that's what the hook in xfs_trans_alloc() would do. It can do
-the work in the context that is going to need it, and set a wait
-flag for all incoming transactions that need a log incompat flag to
-wait for it do it's work.  Once it's done and the flag is set, it
-can continue and wake all the waiters now that the log incompat flag
-has been set. Anything that doesn't need a log incompat flag can
-just keep going and doesn't ever get blocked....
+Thanks for the review. I will change it in the next version.
 
-> We could do some sync transaction and/or sync write dance at runtime,
-> but I think the performance/overhead aspect becomes slightly less
-> deterministic. It's not clear to me how many bits we'd support over
-> time, and whether users would notice hiccups when running some sustained
-> workload and happen to trigger sync transaction/write or AIL push
-> sequences to set internal bits.
+> I also think the _swap routine has to move the old NOFS state to the
+> new transaction's t_pflags,
 
-I don't think the number of bits is ever going to be a worry.  If we
-do it on a transaction granularlity, it will only block transactions
-taht need the log incomapt bit, and only until the bit is set.
+Sure
 
-I suspect this is one of the rare occasions where an unlogged
-modification makes an awful lot of sense: we don't even log that we
-are adding a log incompat flag, we just do an atomic synchronous
-write straight to the superblock to set the incompat flag(s). The
-entire modification can be done under the superblock buffer lock to
-serialise multiple transactions all trying to set incompat bits, and
-we don't set the in-memory superblock incompat bit until after it
-has been set and written to disk. Hence multiple waits can check the
-flag after they've got the sb buffer lock, and they'll see that it's
-already been set and just continue...
+> and then set NOFS in the old transaction's
+> t_pflags so that when we clear the context on the old transaction we
+> don't actually change the thread's NOFS state.
+>
 
-This gets rid of the whole "what about a log containing an item that
-sets the incompat bit" problem, and it provides a simple means of
-serialising and co-ordinating setting of a log incompat flag....
+Both thread's NOFS state and thead's journal_info state can't be
+changed in that case, right ?
+So should it better be,
 
-> My question is how flexible do we really need to make incompatible log
-> recovery support? Why not just commit the superblock once at mount time
-> with however many bits the current kernel supports and clear them on
-> unmount? (Or perhaps consider a lazy setting variant where we set all
-> supported bits on the first modification..?)
+    __xfs_trans_commit(tp, regrant)
+        xfs_trans_free(tp, regrant)
+            if (!regrant). // don't clear the xfs_trans_context if
+regrant is true.
+                xfs_trans_context_clear()
 
-We don't want to set the incompat bits if we don't need to. That
-just guarantees user horror stories that start with "boot system
-with new kernel, crash, go back to old kernel, can't mount root
-filesystem anymore".
 
-Cheers,
 
-Dave.
+> --D
+>
+> > +             xfs_trans_context_clear(tp);
+> > +
+> >       trace_xfs_trans_free(tp, _RET_IP_);
+> >       if (!(tp->t_flags & XFS_TRANS_NO_WRITECOUNT))
+> >               sb_end_intwrite(tp->t_mountp->m_super);
+> > @@ -153,9 +164,6 @@ xfs_trans_reserve(
+> >       int                     error = 0;
+> >       bool                    rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
+> >
+> > -     /* Mark this thread as being in a transaction */
+> > -     xfs_trans_context_set(tp);
+> > -
+> >       /*
+> >        * Attempt to reserve the needed disk blocks by decrementing
+> >        * the number needed from the number available.  This will
+> > @@ -163,10 +171,9 @@ xfs_trans_reserve(
+> >        */
+> >       if (blocks > 0) {
+> >               error = xfs_mod_fdblocks(mp, -((int64_t)blocks), rsvd);
+> > -             if (error != 0) {
+> > -                     xfs_trans_context_clear(tp);
+> > +             if (error != 0)
+> >                       return -ENOSPC;
+> > -             }
+> > +
+> >               tp->t_blk_res += blocks;
+> >       }
+> >
+> > @@ -241,8 +248,6 @@ xfs_trans_reserve(
+> >               tp->t_blk_res = 0;
+> >       }
+> >
+> > -     xfs_trans_context_clear(tp);
+> > -
+> >       return error;
+> >  }
+> >
+> > @@ -284,6 +289,8 @@ xfs_trans_alloc(
+> >       INIT_LIST_HEAD(&tp->t_dfops);
+> >       tp->t_firstblock = NULLFSBLOCK;
+> >
+> > +     /* Mark this thread as being in a transaction */
+> > +     xfs_trans_context_set(tp);
+> >       error = xfs_trans_reserve(tp, resp, blocks, rtextents);
+> >       if (error) {
+> >               xfs_trans_cancel(tp);
+> > @@ -878,7 +885,6 @@ __xfs_trans_commit(
+> >
+> >       xfs_log_commit_cil(mp, tp, &commit_lsn, regrant);
+> >
+> > -     xfs_trans_context_clear(tp);
+> >       xfs_trans_free(tp);
+> >
+> >       /*
+> > @@ -911,7 +917,6 @@ __xfs_trans_commit(
+> >               tp->t_ticket = NULL;
+> >       }
+> >
+> > -     xfs_trans_context_clear(tp);
+> >       xfs_trans_free_items(tp, !!error);
+> >       xfs_trans_free(tp);
+> >
+> > @@ -971,9 +976,6 @@ xfs_trans_cancel(
+> >               tp->t_ticket = NULL;
+> >       }
+> >
+> > -     /* mark this thread as no longer being in a transaction */
+> > -     xfs_trans_context_clear(tp);
+> > -
+> >       xfs_trans_free_items(tp, dirty);
+> >       xfs_trans_free(tp);
+> >  }
+> > --
+> > 2.18.4
+> >
+
+
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Thanks
+Yafang
