@@ -2,120 +2,94 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B0B7C4361B
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 23:14:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 062CAC2BBD5
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Dec 2020 00:04:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3122522D03
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 23:14:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D399822D07
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Dec 2020 00:04:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728943AbgLOXMn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Dec 2020 18:12:43 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:43648 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726414AbgLOXLS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Dec 2020 18:11:18 -0500
+        id S1725962AbgLPAB3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Dec 2020 19:01:29 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:42299 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725769AbgLOX3W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Dec 2020 18:29:22 -0500
 Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1941F3C3F8B;
-        Wed, 16 Dec 2020 10:10:29 +1100 (AEDT)
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 2618411A239;
+        Wed, 16 Dec 2020 10:28:37 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kpJSY-004N5L-QJ; Wed, 16 Dec 2020 10:10:22 +1100
-Date:   Wed, 16 Dec 2020 10:10:22 +1100
+        id 1kpJk9-004NPu-GG; Wed, 16 Dec 2020 10:28:33 +1100
+Date:   Wed, 16 Dec 2020 10:28:33 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Jane Chu <jane.chu@oracle.com>
-Cc:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>,
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>,
         linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-nvdimm@lists.01.org, linux-mm@kvack.org,
         linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com, hch@lst.de,
-        song@kernel.org, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
-        y-goto@fujitsu.com
-Subject: Re: [RFC PATCH v2 0/6] fsdax: introduce fs query to support reflink
-Message-ID: <20201215231022.GL632069@dread.disaster.area>
-References: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
- <89ab4ec4-e4f0-7c17-6982-4f55bb40f574@oracle.com>
- <bb699996-ddc8-8f3a-dc8f-2422bf990b06@cn.fujitsu.com>
- <3b35604c-57e2-8cb5-da69-53508c998540@oracle.com>
+        dan.j.williams@intel.com, hch@lst.de, song@kernel.org,
+        rgoldwyn@suse.de, qi.fuli@fujitsu.com, y-goto@fujitsu.com,
+        Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [RFC PATCH v3 8/9] md: Implement ->corrupted_range()
+Message-ID: <20201215232833.GM632069@dread.disaster.area>
+References: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
+ <20201215121414.253660-9-ruansy.fnst@cn.fujitsu.com>
+ <20201215205102.GB6918@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <3b35604c-57e2-8cb5-da69-53508c998540@oracle.com>
+In-Reply-To: <20201215205102.GB6918@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=IkcTkHD0fZMA:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
-        a=1WtExyGbPUdzLH7rxhUA:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
+        a=c9VSvi9VynfUMAegli0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 15, 2020 at 11:05:07AM -0800, Jane Chu wrote:
-> On 12/15/2020 3:58 AM, Ruan Shiyang wrote:
-> > Hi Jane
-> > 
-> > On 2020/12/15 上午4:58, Jane Chu wrote:
-> > > Hi, Shiyang,
-> > > 
-> > > On 11/22/2020 4:41 PM, Shiyang Ruan wrote:
-> > > > This patchset is a try to resolve the problem of tracking shared page
-> > > > for fsdax.
-> > > > 
-> > > > Change from v1:
-> > > >    - Intorduce ->block_lost() for block device
-> > > >    - Support mapped device
-> > > >    - Add 'not available' warning for realtime device in XFS
-> > > >    - Rebased to v5.10-rc1
-> > > > 
-> > > > This patchset moves owner tracking from dax_assocaite_entry() to pmem
-> > > > device, by introducing an interface ->memory_failure() of struct
-> > > > pagemap.  The interface is called by memory_failure() in mm, and
-> > > > implemented by pmem device.  Then pmem device calls its ->block_lost()
-> > > > to find the filesystem which the damaged page located in, and call
-> > > > ->storage_lost() to track files or metadata assocaited with this page.
-> > > > Finally we are able to try to fix the damaged data in filesystem and do
-> > > 
-> > > Does that mean clearing poison? if so, would you mind to elaborate
-> > > specifically which change does that?
-> > 
-> > Recovering data for filesystem (or pmem device) has not been done in
-> > this patchset...  I just triggered the handler for the files sharing the
-> > corrupted page here.
+On Tue, Dec 15, 2020 at 12:51:02PM -0800, Darrick J. Wong wrote:
+> On Tue, Dec 15, 2020 at 08:14:13PM +0800, Shiyang Ruan wrote:
+> > diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+> > index 4688bff19c20..e8cfaf860149 100644
+> > --- a/drivers/nvdimm/pmem.c
+> > +++ b/drivers/nvdimm/pmem.c
+> > @@ -267,11 +267,14 @@ static int pmem_corrupted_range(struct gendisk *disk, struct block_device *bdev,
+> >  
+> >  	bdev_offset = (disk_sector - get_start_sect(bdev)) << SECTOR_SHIFT;
+> >  	sb = get_super(bdev);
+> > -	if (sb && sb->s_op->corrupted_range) {
+> > +	if (!sb) {
+> > +		rc = bd_disk_holder_corrupted_range(bdev, bdev_offset, len, data);
+> > +		goto out;
+> > +	} else if (sb->s_op->corrupted_range)
+> >  		rc = sb->s_op->corrupted_range(sb, bdev, bdev_offset, len, data);
+> > -		drop_super(sb);
 > 
-> Thanks! That confirms my understanding.
-> 
-> With the framework provided by the patchset, how do you envision it to
-> ease/simplify poison recovery from the user's perspective?
+> This is out of scope for this patch(set) but do you think that the scsi
+> disk driver should intercept media errors from sense data and call
+> ->corrupted_range too?  ISTR Ted muttering that one of his employers had
+> a patchset to do more with sense data than the upstream kernel currently
+> does...
 
-At the moment, I'd say no change what-so-ever. THe behaviour is
-necessary so that we can kill whatever user application maps
-multiply-shared physical blocks if there's a memory error. THe
-recovery method from that is unchanged. The only advantage may be
-that the filesystem (if rmap enabled) can tell you the exact file
-and offset into the file where data was corrupted.
+Most definitely!
 
-However, it can be worse, too: it may also now completely shut down
-the filesystem if the filesystem discovers the error is in metadata
-rather than user data. That's much more complex to recover from, and
-right now will require downtime to take the filesystem offline and
-run fsck to correct the error. That may trash whatever the metadata
-that can't be recovered points to, so you still have a uesr data
-recovery process to perform after this...
+That's the whole point of layering corrupt range reporting through
+the device layers like this - the corrupted range reporting is not
+limited specifically to pmem devices and so generic storage failures
+(e.g.  RAID failures, hardware media failures, etc) can be reported
+back up to the filesystem and we can take immediate, appropriate
+action, including reporting to userspace that they just lost data in
+file X at offset Y...
 
-> And how does it help in dealing with page faults upon poisoned
-> dax page?
-
-It doesn't. If the page is poisoned, the same behaviour will occur
-as does now. This is simply error reporting infrastructure, not
-error handling.
-
-Future work might change how we correct the faults found in the
-storage, but I think the user visible behaviour is going to be "kill
-apps mapping corrupted data" for a long time yet....
+Combine that with the proposed "watch_sb()" syscall for reporting
+such errors in a generic manner to interested listeners, and we've
+got a fairly solid generic path for reporting data loss events to
+userspace for an appropriate user-defined action to be taken...
 
 Cheers,
 
