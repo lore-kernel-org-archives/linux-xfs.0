@@ -2,261 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 908CAC4361B
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 13:52:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E34FC4361B
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 13:56:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43724224B8
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 13:52:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B8CA224B8
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 13:56:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728831AbgLONvu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Dec 2020 08:51:50 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43022 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728343AbgLONvm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Dec 2020 08:51:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1608040209;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=584bJEPMgEmCmvemhmzD3fgTn0OCoCrA2XxBza+I3Fw=;
-        b=i4S9hTwQUM17/xLwL7ixrVlNU/Eqsj2RvtCCEQpqRRduaeoV+2G+hRL2nCEWfEdr95V7gL
-        aKilL7Hq1qsxyku11HvYPAfcu2R2mrh9xrvlhUv14gO245bOTZjlTQAJxe+bhv5RLsd/c4
-        xnFjG2T2VDpSPM85I9ro8YtwWCcNvI0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-199-X7Q83zfcNVmkor_xA8SlpQ-1; Tue, 15 Dec 2020 08:50:07 -0500
-X-MC-Unique: X7Q83zfcNVmkor_xA8SlpQ-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0A520CC628;
-        Tue, 15 Dec 2020 13:50:06 +0000 (UTC)
-Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3E4E65D9E3;
-        Tue, 15 Dec 2020 13:50:05 +0000 (UTC)
-Date:   Tue, 15 Dec 2020 08:50:03 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [RFC[RAP] PATCH] xfs: allow setting and clearing of log incompat
- feature flags
-Message-ID: <20201215135003.GA2346012@bfoster>
-References: <20201209041950.GY3913616@dread.disaster.area>
- <20201209155211.GB1860561@bfoster>
- <20201209170428.GC1860561@bfoster>
- <20201209205132.GA3913616@dread.disaster.area>
- <20201210142358.GB1912831@bfoster>
- <20201210215004.GC3913616@dread.disaster.area>
- <20201211133901.GA2032335@bfoster>
- <20201212211439.GC632069@dread.disaster.area>
- <20201214155831.GB2244296@bfoster>
- <20201214205456.GD632069@dread.disaster.area>
+        id S1727200AbgLON4Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Dec 2020 08:56:24 -0500
+Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:53273 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727382AbgLON4D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Dec 2020 08:56:03 -0500
+Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mta-256-kyP4j1eZN0iEOkzo-w1qBQ-1; Tue, 15 Dec 2020 13:54:22 +0000
+X-MC-Unique: kyP4j1eZN0iEOkzo-w1qBQ-1
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
+ AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
+ Server (TLS) id 15.0.1347.2; Tue, 15 Dec 2020 13:54:17 +0000
+Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
+ AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
+ Tue, 15 Dec 2020 13:54:17 +0000
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Pavel Begunkov' <asml.silence@gmail.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+CC:     Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Subject: RE: [PATCH v1 2/6] iov_iter: optimise bvec iov_iter_advance()
+Thread-Topic: [PATCH v1 2/6] iov_iter: optimise bvec iov_iter_advance()
+Thread-Index: AQHW0njgRO60UNrAz0qHNwIRx20dYqn35EKAgAAgPwCAACb+4A==
+Date:   Tue, 15 Dec 2020 13:54:16 +0000
+Message-ID: <c5f54cb816564f2b96f5d7a0f85fdc4a@AcuMS.aculab.com>
+References: <cover.1607976425.git.asml.silence@gmail.com>
+ <5c9c22dbeecad883ca29b31896c262a8d2a77132.1607976425.git.asml.silence@gmail.com>
+ <262132648a8f4e7a9d1c79003ea74b3f@AcuMS.aculab.com>
+ <d151f81e-ec56-59c0-d2a0-ffd4a269fec1@gmail.com>
+In-Reply-To: <d151f81e-ec56-59c0-d2a0-ffd4a269fec1@gmail.com>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201214205456.GD632069@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 15, 2020 at 07:54:56AM +1100, Dave Chinner wrote:
-> On Mon, Dec 14, 2020 at 10:58:31AM -0500, Brian Foster wrote:
-> > On Sun, Dec 13, 2020 at 08:14:39AM +1100, Dave Chinner wrote:
-> > > On Fri, Dec 11, 2020 at 08:39:01AM -0500, Brian Foster wrote:
-> > > > On Fri, Dec 11, 2020 at 08:50:04AM +1100, Dave Chinner wrote:
-> > > > > As for a mechanism for dynamically adding log incompat flags?
-> > > > > Perhaps we just do that in xfs_trans_alloc() - add an log incompat
-> > > > > flags field into the transaction reservation structure, and if
-> > > > > xfs_trans_alloc() sees an incompat field set and the superblock
-> > > > > doesn't have it set, the first thing it does is run a "set log
-> > > > > incompat flag" transaction before then doing it's normal work...
-> > > > > 
-> > > > > This should be rare enough it doesn't have any measurable
-> > > > > performance overhead, and it's flexible enough to support any log
-> > > > > incompat feature we might need to implement...
-> > > > > 
-> > > > 
-> > > > But I don't think that is sufficient. As Darrick pointed out up-thread,
-> > > > the updated superblock has to be written back before we're allowed to
-> > > > commit transactions with incompatible items. Otherwise, an older kernel
-> > > > can attempt log recovery with incompatible items present if the
-> > > > filesystem crashes before the superblock is written back.
-> > > 
-> > > Sure, that's what the hook in xfs_trans_alloc() would do. It can do
-> > > the work in the context that is going to need it, and set a wait
-> > > flag for all incoming transactions that need a log incompat flag to
-> > > wait for it do it's work.  Once it's done and the flag is set, it
-> > > can continue and wake all the waiters now that the log incompat flag
-> > > has been set. Anything that doesn't need a log incompat flag can
-> > > just keep going and doesn't ever get blocked....
-> > > 
-> > 
-> > It would have to be a sync transaction plus sync AIL force in
-> > transaction allocation context if we were to log the superblock change,
-> > which sounds a bit hairy...
-> 
-> Well, we already do sync AIL forces in transaction reservation when
-> we run out of log space, so there's no technical reason for this
-> being a problem at all. xfs_trans_alloc() is expected to block
-> waiting on AIL tail pushing....
-> 
-> > > I suspect this is one of the rare occasions where an unlogged
-> > > modification makes an awful lot of sense: we don't even log that we
-> > > are adding a log incompat flag, we just do an atomic synchronous
-> > > write straight to the superblock to set the incompat flag(s). The
-> > > entire modification can be done under the superblock buffer lock to
-> > > serialise multiple transactions all trying to set incompat bits, and
-> > > we don't set the in-memory superblock incompat bit until after it
-> > > has been set and written to disk. Hence multiple waits can check the
-> > > flag after they've got the sb buffer lock, and they'll see that it's
-> > > already been set and just continue...
-> > > 
-> > 
-> > Agreed. That is a notable simplification and I think much more
-> > preferable than the above for the dynamic approach.
-> > 
-> > That said, note that dynamic feature bits might introduce complexity in
-> > more subtle ways. For example, nothing that I can see currently
-> > serializes idle log covering with an active transaction (that may have
-> > just set an incompat bit via some hook yet not committed anything to the
-> > log subsystem), so it might not be as simple as just adding a hook
-> > somewhere.
-> 
-> Right, we had to make log covering away of the CIL to prevent it
-> from idling while there were multiple active committed transactions
-> in memory. So the state machine only progresses if both the CIL and
-> AIL are empty. If we had some way of knowing that a transaction is
-> in progress, we could check that in xfs_log_need_covered() and we'd
-> stop the state machine progress at that point. But we got rid of the
-> active transaction counter that we could use for that....
-> 
-> [Hmmm, didn't I recently have a patch that re-introduced that
-> counter to fix some other "we need to know if there's an active
-> transaction running" issue? Can't remember what that was now...]
-> 
-
-I think you removed it, actually, via commit b41b46c20c0bd ("xfs: remove
-the m_active_trans counter"). We subsequently discussed reintroducing
-the same concept for the quotaoff rework [1], which might be what you're
-thinking of. That uses a percpu rwsem since we don't really need a
-counter, but I suspect could be reused for serialization in this use
-case as well (assuming I can get some reviews on it.. ;).
-
-FWIW, I was considering putting those quotaoff patches ahead of the log
-covering work so we could reuse that code again in attr quiesce, but I
-think I'm pretty close to being able to remove that particular usage
-entirely.
-
-[1] https://lore.kernel.org/linux-xfs/20201001150310.141467-1-bfoster@redhat.com/
-
-> > > This gets rid of the whole "what about a log containing an item that
-> > > sets the incompat bit" problem, and it provides a simple means of
-> > > serialising and co-ordinating setting of a log incompat flag....
-> > > 
-> > > > My question is how flexible do we really need to make incompatible log
-> > > > recovery support? Why not just commit the superblock once at mount time
-> > > > with however many bits the current kernel supports and clear them on
-> > > > unmount? (Or perhaps consider a lazy setting variant where we set all
-> > > > supported bits on the first modification..?)
-> > > 
-> > > We don't want to set the incompat bits if we don't need to. That
-> > > just guarantees user horror stories that start with "boot system
-> > > with new kernel, crash, go back to old kernel, can't mount root
-> > > filesystem anymore".
-> > > 
-> > 
-> > Indeed, that is a potential wart with just setting bits on mount. I do
-> > think this is likely to be the case with or without dynamic feature
-> > bits, because at least in certain cases we'll be setting incompat bits
-> > in short order anyways. E.g., one of the primary use cases here is for
-> > xattrs, which is likely to be active on any root filesystem via things
-> > like SELinux, etc. Point being, all it takes is one feature bit
-> > associated with some core operation to introduce this risky update
-> > scenario in practice.
-> 
-> That may well be the case for some distros and some root
-> filesystems, and that's an argument against using log incompat flags
-> for the -xattr feature-. It's not an argument against
-> dynamically setting and clearing log incompat features in general.
-> 
-
-Sure. I mentioned in past mails that my concerns/feedback depend heavily
-on use case. xattrs is one of the two (?) or so motivating this work.
-
-> That is, if xattrs are so wide spread that we expose users to
-> "upgrade-fail-can't downgrade" by use of a dynamic log incompat
-> flag, then we should not be making that feature dynamic and
-> "autoset". In this situation, it needs to be opt-in and planned,
-> likely done in maintenance downtime rather than a side effect of a
-> kernel upgrade.
-> 
-> So, yeah, this discussion is making me think that the xattr logging
-> upgrade is going to need a full ATTR3 feature bit like the other
-> ATTR and ATTR2 feature bits, not just a log incompat bit...
-> 
-
-Perhaps. Not using this at all for xattrs does address quite a bit of my
-concerns, but I think if we wanted the potential flexibility of the log
-incompat bit down the road, it might be reasonable to manage the
-experimental cycle "manually" as described above (i.e., essentially
-don't set/clear that bit automatically for a period of time). I don't
-feel strongly about one approach over the other in that regard, though,
-just that we don't immediately turn the mechanism on right out of the
-gate because the feature bit mechanism happens to support it.
-
-> > I dunno... I'm just trying to explore whether we can simplify this whole
-> > concept to something more easily managed and less likely to cause us
-> > headache. I'm a bit concerned that we're disregarding other tradeoffs
-> > like the complexity noted above, the risk and cost of bugs in the
-> > mechanism itself (because log recovery has historically been so well
-> > tested.. :P) or whether the idea of new kernels immediately delivering
-> > new incompat log formats is a robust/reliable solution in the first
-> > place. IIRC, the last time we did this was ICREATE and that was hidden
-> > behind the v5 update. IOW, for certain things like the xattr rework, I'd
-> > think that kind of experimental stabilization cycle is warranted before
-> > we'd consider enabling such a feature, even dynamically (which means a
-> > revertible kernel should be available in common/incremental upgrade
-> > cases).
-> 
-> IMO, the xattr logging rework is most definitely under the
-> EXPERIMENTAL umbrella and that was always going to be the case.
-> Also, I don't think we're ignoring the potential complexity of
-> dynamically setting/clearing stuff - otherwise we wouldn't be having
-> this conversation about how simple we can actually make it. If it
-> turns out that we can't do it simply, then setting/clearing at
-> mount/unmount should be considered "plan B"....
-> 
-
-I'm more approaching this from a "what are the requirements and how/why
-do they justify the associated complexity?" angle. That's why I'm asking
-things like how much difference does a dynamic bit really make for
-something like xattrs. But I agree that's less of a concern when
-associated with more obscure or rarely used operations, so on balance I
-think that's a fair approach to this mechanism provided we consider
-suitability on a per feature basis.
-
-> But right now, I think the discussion has come up with some ideas to
-> greatly simplify the dynamic flag setting + clearing....
-> 
-
-Agreed, thanks.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+RnJvbTogUGF2ZWwgQmVndW5rb3YNCj4gU2VudDogMTUgRGVjZW1iZXIgMjAyMCAxMToyNA0KPiAN
+Cj4gT24gMTUvMTIvMjAyMCAwOTozNywgRGF2aWQgTGFpZ2h0IHdyb3RlOg0KPiA+IEZyb206IFBh
+dmVsIEJlZ3Vua292DQo+ID4+IFNlbnQ6IDE1IERlY2VtYmVyIDIwMjAgMDA6MjANCj4gPj4NCj4g
+Pj4gaW92X2l0ZXJfYWR2YW5jZSgpIGlzIGhlYXZpbHkgdXNlZCwgYnV0IGltcGxlbWVudGVkIHRo
+cm91Z2ggZ2VuZXJpYw0KPiA+PiBpdGVyYXRpb24uIEFzIGJ2ZWNzIGhhdmUgYSBzcGVjaWZpY2Fs
+bHkgY3JhZnRlZCBhZHZhbmNlKCkgZnVuY3Rpb24sIGkuZS4NCj4gPj4gYnZlY19pdGVyX2FkdmFu
+Y2UoKSwgd2hpY2ggaXMgZmFzdGVyIGFuZCBzbGltbWVyLCB1c2UgaXQgaW5zdGVhZC4NCj4gPj4N
+Cj4gPj4gIGxpYi9pb3ZfaXRlci5jIHwgMTkgKysrKysrKysrKysrKysrKysrKw0KPiBbLi4uXQ0K
+PiA+PiAgdm9pZCBpb3ZfaXRlcl9hZHZhbmNlKHN0cnVjdCBpb3ZfaXRlciAqaSwgc2l6ZV90IHNp
+emUpDQo+ID4+ICB7DQo+ID4+ICAJaWYgKHVubGlrZWx5KGlvdl9pdGVyX2lzX3BpcGUoaSkpKSB7
+DQo+ID4+IEBAIC0xMDc3LDYgKzEwOTIsMTAgQEAgdm9pZCBpb3ZfaXRlcl9hZHZhbmNlKHN0cnVj
+dCBpb3ZfaXRlciAqaSwgc2l6ZV90IHNpemUpDQo+ID4+ICAJCWktPmNvdW50IC09IHNpemU7DQo+
+ID4+ICAJCXJldHVybjsNCj4gPj4gIAl9DQo+ID4+ICsJaWYgKGlvdl9pdGVyX2lzX2J2ZWMoaSkp
+IHsNCj4gPj4gKwkJaW92X2l0ZXJfYnZlY19hZHZhbmNlKGksIHNpemUpOw0KPiA+PiArCQlyZXR1
+cm47DQo+ID4+ICsJfQ0KPiA+PiAgCWl0ZXJhdGVfYW5kX2FkdmFuY2UoaSwgc2l6ZSwgdiwgMCwg
+MCwgMCkNCj4gPj4gIH0NCj4gPg0KPiA+IFRoaXMgc2VlbXMgdG8gYWRkIHlldCBhbm90aGVyIGNv
+bXBhcmlzb24gYmVmb3JlIHdoYXQgaXMgcHJvYmFibHkNCj4gPiB0aGUgY29tbW9uIGNhc2Ugb24g
+YW4gSU9WRUMgKGllIG5vcm1hbCB1c2Vyc3BhY2UgYnVmZmVyKS4NCj4gDQo+IElmIEFsIGZpbmFs
+bHkgdGFrZXMgdGhlIHBhdGNoIGZvciBpb3ZfaXRlcl9pc18qKCkgaGVscGVycyBpdCB3b3VsZA0K
+PiBiZSBjb21wbGV0ZWx5IG9wdGltaXNlZCBvdXQuDQoNCkkga25ldyBJIGRpZG4ndCBoYXZlIHRo
+YXQgcGF0aCAtIHRoZSBzb3VyY2VzIEkgbG9va2VkIGF0IGFyZW4ndCB0aGF0IG5ldy4NCkRpZG4n
+dCBrbm93IGl0cyBzdGF0ZS4NCg0KSW4gYW55IGNhc2UgdGhhdCBqdXN0IHN0b3BzIHRoZSBzYW1l
+IHRlc3QgYmVpbmcgZG9uZSB0d2ljZS4NCkluIHN0aWxsIGNoYW5nZXMgdGhlIG9yZGVyIG9mIHRo
+ZSB0ZXN0cy4NCg0KVGhlIHRocmVlICd1bmxpa2VseScgY2FzZXMgc2hvdWxkIHJlYWxseSBiZSBp
+bnNpZGUgYSBzaW5nbGUNCid1bmxpa2VseScgdGVzdCBmb3IgYWxsIHRocmVlIGJpdHMuDQpUaGVu
+IHRoZXJlIGlzIG9ubHkgb25lIG1pcy1wcmVkaWN0YWJsZSBqdW1wIHByaW9yIHRvIHRoZSB1c3Vh
+bCBwYXRoLg0KDQpCeSBhZGRpbmcgdGhlIHRlc3QgYmVmb3JlIGl0ZXJhdGVfYW5kX2FkdmFuY2Uo
+KSB5b3UgYXJlIChlZmZlY3RpdmVseSkNCm9wdGltaXNpbmcgZm9yIHRoZSBidmVjIChhbmQgZGlz
+Y2FyZCkgY2FzZXMuDQpBZGRpbmcgJ3VubGlrZWx5KCknIHdvbid0IG1ha2UgYW55IGRpZmZlcmVu
+Y2Ugb24gc29tZSBhcmNoaXRlY3R1cmVzLg0KSUlSQyByZWNlbnQgaW50ZWwgeDg2IGRvbid0IGhh
+dmUgYSAnc3RhdGljIHByZWRpY3Rpb24nIGZvciB1bmtub3duDQpicmFuY2hlcyAtIHRoZXkganVz
+dCB1c2Ugd2hhdGV2ZXIgaW4gaXMgdGhlIGJyYW5jaCBwcmVkaWN0b3IgdGFibGVzLg0KDQoJRGF2
+aWQNCg0KLQ0KUmVnaXN0ZXJlZCBBZGRyZXNzIExha2VzaWRlLCBCcmFtbGV5IFJvYWQsIE1vdW50
+IEZhcm0sIE1pbHRvbiBLZXluZXMsIE1LMSAxUFQsIFVLDQpSZWdpc3RyYXRpb24gTm86IDEzOTcz
+ODYgKFdhbGVzKQ0K
 
