@@ -2,83 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C992C2BB40
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 01:44:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C896C4361B
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 04:40:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C71E1224BE
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 01:44:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38586207B3
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 04:40:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730839AbgLOBoB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Dec 2020 20:44:01 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:25745 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730710AbgLOBnH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Dec 2020 20:43:07 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607996498;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PChAzdtbpi+PB7J87DcIhi+vl5NjETLfLM7SecPuwcY=;
-        b=HIYY4G0QfQNK2paU2qjqY7ECA3c+OG0FwPcb7+gR9iOTYwWp9hbi6xqW5jGswBD9QL3u5y
-        PVa5LiWBHyF5rpV7X3zbz03LwgYiJImBPnu389TFOGFD5WwYDxyLoKfUvAMewbT39i7N+j
-        gOVEZbSGCGex9hyZTatNPzWzFdgSWL0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-335-VMEMQTasPqiCfO3btqz3Kw-1; Mon, 14 Dec 2020 20:41:34 -0500
-X-MC-Unique: VMEMQTasPqiCfO3btqz3Kw-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A3829180A086;
-        Tue, 15 Dec 2020 01:41:31 +0000 (UTC)
-Received: from T590 (ovpn-13-7.pek2.redhat.com [10.72.13.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 29ED213470;
-        Tue, 15 Dec 2020 01:41:18 +0000 (UTC)
-Date:   Tue, 15 Dec 2020 09:41:14 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Pavel Begunkov <asml.silence@gmail.com>
-Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
-        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH v1 0/6] no-copy bvec
-Message-ID: <20201215014114.GA1777020@T590>
-References: <cover.1607976425.git.asml.silence@gmail.com>
+        id S1725976AbgLOEk1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Dec 2020 23:40:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36268 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726029AbgLOEkV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Dec 2020 23:40:21 -0500
+Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75A0CC06179C;
+        Mon, 14 Dec 2020 20:39:41 -0800 (PST)
+Received: by mail-io1-xd43.google.com with SMTP id 81so19165264ioc.13;
+        Mon, 14 Dec 2020 20:39:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=eZpMSPWj4XpZ3thlAzvu56DgfsvqpomnX3VopvGqVOs=;
+        b=V/a9QAKPx8DgB+4XXpXqICtMSlaSE25WJ7EJmPHUOuYhR4sEK0rOQVMjP/J53ayazG
+         R4n+7D3icF6qug0Wqr1+o2+CDKC+IfmAW6ZbXW5l3ne1nDcpvKecqX1G6COZS8w3/OS9
+         od3iLRkc8Uos9IbacbYGv5gWK6YQVuUm+Qum2CdGkOPs6wKhfR0VXRuNE5g/g/8kbhwr
+         FdgFzgbqCmA3Z+KbIoEFjeQxXnWbOJfytkPPJ3avbVCDIaL2SM+k+72q47F4rXl4Dj3m
+         XVzdnO7nDSMr7zCW02QABzTsiIyoYONzXKqrsz4/Le+zRThRK3Wm9eTMzlX4WWcqqrO9
+         JO1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=eZpMSPWj4XpZ3thlAzvu56DgfsvqpomnX3VopvGqVOs=;
+        b=ohZfr9QJkzmPYaknwtJdbnRx2R4AykPOxEKE7/EakGAV7cuQAvFVIkbdkEbdS7pyH4
+         gaW827FB2ix/AI5hPIzTOCXNrOyKq4QKPvsUco5Y47TYaU6V6rWW35d2FqheCroBRcNV
+         6hUMP/zlXp8vWvYXjjxfAG5ju+Q0TGzy3MHa4K8MLT6i1ByhZh+v00cMvk9LXQlColA8
+         ybXtZfT/jGXk8H64wGvscUjFKyLAsRzhxNNTwVCdwLwuZYWfHUX7035fKjw1b5H8F5hC
+         T00P34oJrr30Gi1w1CKQtfDqp21fhOVAI1MUlQmuyW0emfxWTKL6AmYvJ63odpZee7ru
+         CmDw==
+X-Gm-Message-State: AOAM532SPPNVAN+ieoeuVsaKvg6de16FyA+I/xOQnwcYL5vpaH7uC71l
+        1CgxUygM1MSn/0+CxCWYz5k4YgCv0Pd0EXBnehs=
+X-Google-Smtp-Source: ABdhPJz5tqAgMHotC0ERTj7zEoC52sQPoOS/rmGpHPpLK7dh8dJAOI6n+d/eAqkIo1EpDGfAFFhkyGH6jgFwEVtRovM=
+X-Received: by 2002:a02:a152:: with SMTP id m18mr37230897jah.64.1608007180900;
+ Mon, 14 Dec 2020 20:39:40 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1607976425.git.asml.silence@gmail.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+References: <20201209131146.67289-1-laoar.shao@gmail.com> <20201209131146.67289-4-laoar.shao@gmail.com>
+ <20201209195235.GN1943235@magnolia> <CALOAHbD_DK9w=s9RDsVBNaYwgeRi4UUEGDHFb3zEsqh_V8gLMA@mail.gmail.com>
+ <20201214210833.GE632069@dread.disaster.area> <CALOAHbAK=OB1NQKwNYHttBuM=QZjc04cjU=YRw5MoTWT34HXvg@mail.gmail.com>
+ <20201215011240.GJ632069@dread.disaster.area>
+In-Reply-To: <20201215011240.GJ632069@dread.disaster.area>
+From:   Yafang Shao <laoar.shao@gmail.com>
+Date:   Tue, 15 Dec 2020 12:39:05 +0800
+Message-ID: <CALOAHbDU1OUaMxV9fz3AP6t0OWp=o8X6bQnw0zdo5HiTmrOZBA@mail.gmail.com>
+Subject: Re: [PATCH v12 3/4] xfs: refactor the usage around xfs_trans_context_{set,clear}
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Michal Hocko <mhocko@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>, jlayton@redhat.com,
+        linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
+        linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 15, 2020 at 12:20:19AM +0000, Pavel Begunkov wrote:
-> Instead of creating a full copy of iter->bvec into bio in direct I/O,
-> the patchset makes use of the one provided. It changes semantics and
-> obliges users of asynchronous kiocb to track bvec lifetime, and [1/6]
-> converts the only place that doesn't.
+On Tue, Dec 15, 2020 at 9:12 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Tue, Dec 15, 2020 at 08:42:08AM +0800, Yafang Shao wrote:
+> > On Tue, Dec 15, 2020 at 5:08 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > On Sun, Dec 13, 2020 at 05:09:02PM +0800, Yafang Shao wrote:
+> > > > On Thu, Dec 10, 2020 at 3:52 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > > > > On Wed, Dec 09, 2020 at 09:11:45PM +0800, Yafang Shao wrote:
+> > > static inline void
+> > > xfs_trans_context_clear(struct xfs_trans *tp)
+> > > {
+> > >         /*
+> > >          * If xfs_trans_context_swap() handed the NOFS context to a
+> > >          * new transaction we do not clear the context here.
+> > >          */
+> > >         if (current->journal_info != tp)
+> >
+> > current->journal_info hasn't been used in patch #3, that will make
+> > patch #3 a little more complex.
+> > We have to do some workaround in patch #3. I will think about it.
+>
+> What I wrote is how the function should look at the end of the patch
+> series.  Do not add the current->journal_info parts of it until the
+> patch that introduces the current->journal_info tracking.
+>
 
-Just think of one corner case: iov_iter(BVEC) may pass bvec table with zero
-length bvec, which may not be supported by block layer or driver, so
-this patchset has to address this case first.
+I know what you meant.
+While I mean we have to do some hack, as suggested by Darrrick that
+"set NOFS in the old transaction's
+t_pflags so that when we clear the context on the old transaction we
+don't actually change the thread's NOFS state." in patch #3 and then
+remove it in patch #4.
 
-Please see 7e24969022cb ("block: allow for_each_bvec to support zero len bvec").
 
-
-thanks,
-Ming
-
+-- 
+Thanks
+Yafang
