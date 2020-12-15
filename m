@@ -2,281 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3550EC4361B
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 20:53:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76351C4361B
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 17:58:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0066822C7D
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 20:53:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4411422475
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 17:58:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726266AbgLOUwJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Dec 2020 15:52:09 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:56104 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727804AbgLOUwG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Dec 2020 15:52:06 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BFKoaa6193672;
-        Tue, 15 Dec 2020 20:51:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=U0/8Fm7pFqF1iyihP7LVzM2ebGbwYrgJDkT5uPW9pmw=;
- b=zdpNoBKbaLTc7cSst7dYZzIoCPEd1K6ZEtCm9AjC4scJCHgKpSMIQGvCqKTR9hmIcK+/
- /LfKA9PWqPsfF5NXxFDESf4IsWC66RQY88+lyUiQ9+cnVCt1EOFdl7kOwmsvp7w6ou0G
- kdUO8tWt7P06dRorSw0ndFfSqa2l87Cws+fe3L5hcW8JW5fK7tCxIjCeSPbUmlwKQvKA
- +PzSShFT0KxnY8TaF+DorxJKyFB3+/gOSP/nhYIJ7uZLgxIcWu5JL+oldbWAbEmSp9qh
- l9AMmnNmy2LkclfMskdvzA5/IZ9LQ/AMKxFPr2Le/krVOvHz5su+5lQyqEJHPan5I3QP SA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 35cn9rcrsy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 15 Dec 2020 20:51:08 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BFKp1jK046319;
-        Tue, 15 Dec 2020 20:51:07 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 35e6eqys6x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Dec 2020 20:51:07 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BFKp4g2021214;
-        Tue, 15 Dec 2020 20:51:04 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 15 Dec 2020 12:51:04 -0800
-Date:   Tue, 15 Dec 2020 12:51:02 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        dan.j.williams@intel.com, david@fromorbit.com, hch@lst.de,
-        song@kernel.org, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
-        y-goto@fujitsu.com, "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: [RFC PATCH v3 8/9] md: Implement ->corrupted_range()
-Message-ID: <20201215205102.GB6918@magnolia>
-References: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
- <20201215121414.253660-9-ruansy.fnst@cn.fujitsu.com>
+        id S1730636AbgLOR55 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Dec 2020 12:57:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46354 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730668AbgLOR5s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Dec 2020 12:57:48 -0500
+Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30F22C0617A7
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Dec 2020 09:57:08 -0800 (PST)
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
+        (envelope-from <debbugs@buxtehude.debian.org>)
+        id 1kpEZO-0002Wo-9M; Tue, 15 Dec 2020 17:57:06 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#976683: xfsprogs: Import new upstream version
+Reply-To: Bastian Germann <bastiangermann@fishpost.de>,
+          976683@bugs.debian.org
+X-Loop: owner@bugs.debian.org
+X-Debian-PR-Message: followup 976683
+X-Debian-PR-Package: src:xfsprogs
+X-Debian-PR-Keywords: 
+References: <8b769e38-3ffd-5e8c-7a57-d451daa30e67@fishpost.de> <8b769e38-3ffd-5e8c-7a57-d451daa30e67@fishpost.de> <8b769e38-3ffd-5e8c-7a57-d451daa30e67@fishpost.de>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 976683-submit@bugs.debian.org id=B976683.16080549249102
+          (code B ref 976683); Tue, 15 Dec 2020 17:57:05 +0000
+Received: (at 976683) by bugs.debian.org; 15 Dec 2020 17:55:24 +0000
+Received: from mail-ej1-x635.google.com ([2a00:1450:4864:20::635]:45434)
+        by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.92)
+        (envelope-from <bastiangermann@fishpost.de>)
+        id 1kpEXj-0002M8-E1
+        for 976683@bugs.debian.org; Tue, 15 Dec 2020 17:55:24 +0000
+Received: by mail-ej1-x635.google.com with SMTP id qw4so28921807ejb.12
+        for <976683@bugs.debian.org>; Tue, 15 Dec 2020 09:55:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fishpost-de.20150623.gappssmtp.com; s=20150623;
+        h=to:references:subject:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=IJfdwBLjNgbsuZFk8AcNGR9vHpYUJIMPhwMH7V49+Vk=;
+        b=IH+jM7dJLPX2IyIl/8QkAt+oARqWrXvDQJQGimpd589vTXMO8TECE/k/t1t9fF49GC
+         IfnVfL+3jneRRCPbg07XAN7cigkf4id32NDQqa7tbvdWlxxBW5KTag2in3rpBTNWnZAN
+         e8Eztv9b8W065XkWWBpDrjFCKESgwI8laExP7VuKLxlsaGUqmmL6nuizeyi4w2MMrM9a
+         bCdqa/hdWNXz8Z5tWsOzxsAeaEBgxngSiq4s6xBf1T0ZV1j+7ym/zaz+rEZXOPmTkWN7
+         JkEZUhdgpTfkduReaOazkhFoyLFkmRD51A13ywnvnUQGFXph9JLWiSCkiWrxAdStpKcI
+         zKog==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:references:subject:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=IJfdwBLjNgbsuZFk8AcNGR9vHpYUJIMPhwMH7V49+Vk=;
+        b=l2khYVU1jnbB3eLwpgWcEuIFIm/X99vDRqsb5W4XoQkiFMXwG5/Cw+1KVv/5LSO41z
+         Ak9tCr6/JBPnqLKZE0v7RNpkwBMJ6BcfNLF4uofRZqtqmc9q36y0/FAOMc4TrgTyyiKQ
+         8YU/+rK7DKWFi28LXJxr9fix5HK4k9iGKGNba4/SNoJxOKk35qcUUKNY3tm3JwwEE6vP
+         6JD/j3XcdgQnnJQIqtjr6PFvtIQ+1goWqMqZdAAkh6QTAfUa4rxKt603s9cCP3IoqhGg
+         0GuST35JUov4MPnVrVhsR9ameVULUIxmbNCOtUKVVOHrlotg+Y1j7IOFB+/hn3yGV+dt
+         kJ/g==
+X-Gm-Message-State: AOAM532eyaY5mO0xvu2PKYBQgVeMGB2jvWBTzMMyUEz+2P3Vn5y37kJO
+        /1aaI8NuqewmjPp2n08ofxLY4pctpo5+uQ==
+X-Google-Smtp-Source: ABdhPJzp5IkSDDHsEnF12xsGDwpWB39kWAowl1vtSC7hoRUuwJHaBghBrNy/1rYZXHt+gv0Vkbqc8Q==
+X-Received: by 2002:a17:906:7f11:: with SMTP id d17mr27906890ejr.534.1608054918848;
+        Tue, 15 Dec 2020 09:55:18 -0800 (PST)
+Received: from ?IPv6:2003:d0:6f35:5400:9d4a:a26f:7cc6:6e27? (p200300d06f3554009d4aa26f7cc66e27.dip0.t-ipconnect.de. [2003:d0:6f35:5400:9d4a:a26f:7cc6:6e27])
+        by smtp.gmail.com with ESMTPSA id d13sm5118727edx.27.2020.12.15.09.55.17
+        for <976683@bugs.debian.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 15 Dec 2020 09:55:18 -0800 (PST)
+To:     976683@bugs.debian.org
+From:   Bastian Germann <bastiangermann@fishpost.de>
+Message-ID: <0580a107-275d-3e5f-6818-65d6da583385@fishpost.de>
+Date:   Tue, 15 Dec 2020 18:55:16 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201215121414.253660-9-ruansy.fnst@cn.fujitsu.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9836 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 phishscore=0
- bulkscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012150140
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9836 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
- impostorscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
- malwarescore=0 priorityscore=1501 phishscore=0 mlxscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012150140
+In-Reply-To: <8b769e38-3ffd-5e8c-7a57-d451daa30e67@fishpost.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: de-DE-frami
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 15, 2020 at 08:14:13PM +0800, Shiyang Ruan wrote:
-> With the support of ->rmap(), it is possible to obtain the superblock on
-> a mapped device.
+On Sun, 6 Dec 2020 23:13:38 +0100 Bastian Germann 
+<bastiangermann@fishpost.de> wrote:
+> Source: xfsprogs
+> Version: xfsprogs/5.6.0-1
+> Severity: important
 > 
-> If a pmem device is used as one target of mapped device, we cannot
-> obtain its superblock directly.  With the help of SYSFS, the mapped
-> device can be found on the target devices.  So, we iterate the
-> bdev->bd_holder_disks to obtain its mapped device.
+> Hi,
 > 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-> ---
->  drivers/md/dm.c       | 66 +++++++++++++++++++++++++++++++++++++++++++
->  drivers/nvdimm/pmem.c |  9 ++++--
->  fs/block_dev.c        | 21 ++++++++++++++
->  include/linux/genhd.h |  7 +++++
->  4 files changed, 100 insertions(+), 3 deletions(-)
+> Please update the package to a new upstream version, preferrably the 
+> latest 5.9.0. As 5.7.0 removed libreadline support, this will imply 
+> building with libedit as filed in #695875.
 > 
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index 4e0cbfe3f14d..9da1f9322735 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -507,6 +507,71 @@ static int dm_blk_report_zones(struct gendisk *disk, sector_t sector,
->  #define dm_blk_report_zones		NULL
->  #endif /* CONFIG_BLK_DEV_ZONED */
->  
-> +struct dm_blk_corrupt {
-> +	struct block_device *bdev;
-> +	sector_t offset;
-> +};
-> +
-> +static int dm_blk_corrupt_fn(struct dm_target *ti, struct dm_dev *dev,
-> +				sector_t start, sector_t len, void *data)
-> +{
-> +	struct dm_blk_corrupt *bc = data;
-> +
-> +	return bc->bdev == (void *)dev->bdev &&
-> +			(start <= bc->offset && bc->offset < start + len);
-> +}
-> +
-> +static int dm_blk_corrupted_range(struct gendisk *disk,
-> +				  struct block_device *target_bdev,
-> +				  loff_t target_offset, size_t len, void *data)
-> +{
-> +	struct mapped_device *md = disk->private_data;
-> +	struct block_device *md_bdev = md->bdev;
-> +	struct dm_table *map;
-> +	struct dm_target *ti;
-> +	struct super_block *sb;
-> +	int srcu_idx, i, rc = 0;
-> +	bool found = false;
-> +	sector_t disk_sec, target_sec = to_sector(target_offset);
-> +
-> +	map = dm_get_live_table(md, &srcu_idx);
-> +	if (!map)
-> +		return -ENODEV;
-> +
-> +	for (i = 0; i < dm_table_get_num_targets(map); i++) {
-> +		ti = dm_table_get_target(map, i);
-> +		if (ti->type->iterate_devices && ti->type->rmap) {
-> +			struct dm_blk_corrupt bc = {target_bdev, target_sec};
-> +
-> +			found = ti->type->iterate_devices(ti, dm_blk_corrupt_fn, &bc);
-> +			if (!found)
-> +				continue;
-> +			disk_sec = ti->type->rmap(ti, target_sec);
+> Thanks,
+> Bastian
 
-What happens if the dm device has multiple reverse mappings because the
-physical storage is being shared at multiple LBAs?  (e.g. a
-deduplication target)
-
-> +			break;
-> +		}
-> +	}
-> +
-> +	if (!found) {
-> +		rc = -ENODEV;
-> +		goto out;
-> +	}
-> +
-> +	sb = get_super(md_bdev);
-> +	if (!sb) {
-> +		rc = bd_disk_holder_corrupted_range(md_bdev, to_bytes(disk_sec), len, data);
-> +		goto out;
-> +	} else if (sb->s_op->corrupted_range) {
-> +		loff_t off = to_bytes(disk_sec - get_start_sect(md_bdev));
-> +
-> +		rc = sb->s_op->corrupted_range(sb, md_bdev, off, len, data);
-
-This "call bd_disk_holder_corrupted_range or sb->s_op->corrupted_range"
-logic appears twice; should it be refactored into a common helper?
-
-Or, should the superblock dispatch part move to
-bd_disk_holder_corrupted_range?
-
-> +	}
-> +	drop_super(sb);
-> +
-> +out:
-> +	dm_put_live_table(md, srcu_idx);
-> +	return rc;
-> +}
-> +
->  static int dm_prepare_ioctl(struct mapped_device *md, int *srcu_idx,
->  			    struct block_device **bdev)
->  {
-> @@ -3084,6 +3149,7 @@ static const struct block_device_operations dm_blk_dops = {
->  	.getgeo = dm_blk_getgeo,
->  	.report_zones = dm_blk_report_zones,
->  	.pr_ops = &dm_pr_ops,
-> +	.corrupted_range = dm_blk_corrupted_range,
->  	.owner = THIS_MODULE
->  };
->  
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index 4688bff19c20..e8cfaf860149 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -267,11 +267,14 @@ static int pmem_corrupted_range(struct gendisk *disk, struct block_device *bdev,
->  
->  	bdev_offset = (disk_sector - get_start_sect(bdev)) << SECTOR_SHIFT;
->  	sb = get_super(bdev);
-> -	if (sb && sb->s_op->corrupted_range) {
-> +	if (!sb) {
-> +		rc = bd_disk_holder_corrupted_range(bdev, bdev_offset, len, data);
-> +		goto out;
-> +	} else if (sb->s_op->corrupted_range)
->  		rc = sb->s_op->corrupted_range(sb, bdev, bdev_offset, len, data);
-> -		drop_super(sb);
-
-This is out of scope for this patch(set) but do you think that the scsi
-disk driver should intercept media errors from sense data and call
-->corrupted_range too?  ISTR Ted muttering that one of his employers had
-a patchset to do more with sense data than the upstream kernel currently
-does...
-
-> -	}
-> +	drop_super(sb);
->  
-> +out:
->  	bdput(bdev);
->  	return rc;
->  }
-> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> index 9e84b1928b94..d3e6bddb8041 100644
-> --- a/fs/block_dev.c
-> +++ b/fs/block_dev.c
-> @@ -1171,6 +1171,27 @@ struct bd_holder_disk {
->  	int			refcnt;
->  };
->  
-> +int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off, size_t len, void *data)
-> +{
-> +	struct bd_holder_disk *holder;
-> +	struct gendisk *disk;
-> +	int rc = 0;
-> +
-> +	if (list_empty(&(bdev->bd_holder_disks)))
-> +		return -ENODEV;
-> +
-> +	list_for_each_entry(holder, &bdev->bd_holder_disks, list) {
-> +		disk = holder->disk;
-> +		if (disk->fops->corrupted_range) {
-> +			rc = disk->fops->corrupted_range(disk, bdev, off, len, data);
-> +			if (rc != -ENODEV)
-> +				break;
-> +		}
-> +	}
-> +	return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(bd_disk_holder_corrupted_range);
-> +
->  static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
->  						  struct gendisk *disk)
->  {
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index ed06209008b8..fba247b852fa 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -382,9 +382,16 @@ int blkdev_ioctl(struct block_device *, fmode_t, unsigned, unsigned long);
->  long compat_blkdev_ioctl(struct file *, unsigned, unsigned long);
->  
->  #ifdef CONFIG_SYSFS
-> +int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off,
-> +				   size_t len, void *data);
->  int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk);
->  void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk);
->  #else
-> +int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off,
-> +				   size_t len, void *data)
-> +{
-> +	return 0;
-> +}
->  static inline int bd_link_disk_holder(struct block_device *bdev,
->  				      struct gendisk *disk)
->  {
-> -- 
-> 2.29.2
-> 
-> 
-> 
+Now, 5.10.0 is available. The only change that is needed in addition to 
+the patch given in #695875 to build it is adding libinih-dev to the 
+Build-Dependencies: 
+https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/commit/?id=fe4a31eae2b514de94e84a8f84a263471b6c71a3
