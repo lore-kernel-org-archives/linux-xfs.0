@@ -2,160 +2,172 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19EA0C4361B
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Dec 2020 21:10:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35D6BC4361B
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 00:25:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4C752247F
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Dec 2020 21:10:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F05B622209
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 00:25:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503694AbgLNVJj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Dec 2020 16:09:39 -0500
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:39672 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2503647AbgLNVJU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Dec 2020 16:09:20 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id B9B5749952;
-        Tue, 15 Dec 2020 08:08:33 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kov57-003zjp-3R; Tue, 15 Dec 2020 08:08:33 +1100
-Date:   Tue, 15 Dec 2020 08:08:33 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Yafang Shao <laoar.shao@gmail.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
+        id S1727514AbgLOAZR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Dec 2020 19:25:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53502 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728437AbgLOAZI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Dec 2020 19:25:08 -0500
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B6BFC0617B0;
+        Mon, 14 Dec 2020 16:24:09 -0800 (PST)
+Received: by mail-wr1-x443.google.com with SMTP id r7so18152809wrc.5;
+        Mon, 14 Dec 2020 16:24:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=KwoEZ6JyxQmbBCmxLJQ+KWQFWoJwlaOL+90wK7NFOco=;
+        b=CCqnIhGkYp5ddpdcS1UPTb39Ra4D+5WscVMtb6oidexSCYeRHWEJdco70zMnNXbweP
+         Pn9+E/zWBZSVxQulIBksAPt2eJsrV+hcX5QXQ5e/rNpsVTCUypnB4O6PqOB1cPyrdig5
+         Z2W2sZoDSXpf3t6IsKdOTrqvZNe7gphiU7OKr3DzkP3ai/bVVx+ROIKjzGv/MjUZreFw
+         UJYaTjClZtkxL3Qk4unb4sOP/qIqrNNTCyOMK+oyZy/vMPEVYMwnvSidQGP0uwVdVXKT
+         RUMiYdgenV+xw4kpOcRJAQoq5G7ku8XOkHkg7hXSJdQunmwauFc9IIpAaXUTAN1K0Asq
+         asiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=KwoEZ6JyxQmbBCmxLJQ+KWQFWoJwlaOL+90wK7NFOco=;
+        b=C8fnFApzFssakdswfeTqlZYEDLAwW0mE3Cf7u83WCfUK6eyspdxWPpSaTNRo3UoGkX
+         FeX1xUJSCQpDmh8LpaS1FU4VQ59cwXfamSZy1KiXVoOBeJJyVHwfaiT1qIeUC0PjVxxl
+         QzpMzww5uSYPblj9pMsZJKTWsfk0uGE/yyqrnsgVt4tm3+ldHH7zV+1VCpNSJT2GiTTI
+         Io937H2qY53E8qXBKNQ3GjG/alxwtF5gsMok9xxeZLQo5sFWMeR+v85jKfHfs+GNJlaw
+         kDOGaKMTT2deo9XTDFk4MRfypSPovgPm4WYyilNdAr5nwpNeNm0HusbVLMNt9vj1zxor
+         hu0w==
+X-Gm-Message-State: AOAM531GiGUTbCY6fXyoB7aV6Gz1gY5LCKVEp+5A45yMbeS7EsVlWLl0
+        3aRIoihqCycesAxeOgqY/C+JyHDYx+fXZGcR
+X-Google-Smtp-Source: ABdhPJy2l/O+oho3Jx+i8vPBRwZoxDCJHPX4ZJfTmMVoBuUmrUSRDXK9gRQP/XvrS0UN33z/eOUSAg==
+X-Received: by 2002:a5d:6708:: with SMTP id o8mr190459wru.64.1607991847796;
+        Mon, 14 Dec 2020 16:24:07 -0800 (PST)
+Received: from localhost.localdomain ([85.255.232.163])
+        by smtp.gmail.com with ESMTPSA id b19sm5362012wmj.37.2020.12.14.16.24.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Dec 2020 16:24:07 -0800 (PST)
+From:   Pavel Begunkov <asml.silence@gmail.com>
+To:     linux-block@vger.kernel.org
+Cc:     Jens Axboe <axboe@kernel.dk>,
         Christoph Hellwig <hch@infradead.org>,
-        Michal Hocko <mhocko@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>, jlayton@redhat.com,
-        linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
-        linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v12 3/4] xfs: refactor the usage around
- xfs_trans_context_{set,clear}
-Message-ID: <20201214210833.GE632069@dread.disaster.area>
-References: <20201209131146.67289-1-laoar.shao@gmail.com>
- <20201209131146.67289-4-laoar.shao@gmail.com>
- <20201209195235.GN1943235@magnolia>
- <CALOAHbD_DK9w=s9RDsVBNaYwgeRi4UUEGDHFb3zEsqh_V8gLMA@mail.gmail.com>
+        Matthew Wilcox <willy@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: [PATCH v1 4/6] block/psi: remove PSI annotations from direct IO
+Date:   Tue, 15 Dec 2020 00:20:23 +0000
+Message-Id: <1d3cf86668e44b3a3d35b5dbe759a086a157e434.1607976425.git.asml.silence@gmail.com>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <cover.1607976425.git.asml.silence@gmail.com>
+References: <cover.1607976425.git.asml.silence@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CALOAHbD_DK9w=s9RDsVBNaYwgeRi4UUEGDHFb3zEsqh_V8gLMA@mail.gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=yPCof4ZbAAAA:8 a=VwQbUJbxAAAA:8
-        a=JfrnYn6hAAAA:8 a=7-415B0cAAAA:8 a=pGLkceISAAAA:8 a=rA-29Kngl8b7e2x1wjEA:9
-        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=1CNFftbPRP8L7MoqJWF3:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Dec 13, 2020 at 05:09:02PM +0800, Yafang Shao wrote:
-> On Thu, Dec 10, 2020 at 3:52 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > On Wed, Dec 09, 2020 at 09:11:45PM +0800, Yafang Shao wrote:
-> > > The xfs_trans context should be active after it is allocated, and
-> > > deactive when it is freed.
-> > >
-> > > So these two helpers are refactored as,
-> > > - xfs_trans_context_set()
-> > >   Used in xfs_trans_alloc()
-> > > - xfs_trans_context_clear()
-> > >   Used in xfs_trans_free()
-> > >
-> > > This patch is based on Darrick's work to fix the issue in xfs/141 in the
-> > > earlier version. [1]
-> > >
-> > > 1. https://lore.kernel.org/linux-xfs/20201104001649.GN7123@magnolia
-> > >
-> > > Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> > > Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
-> > > Cc: Christoph Hellwig <hch@lst.de>
-> > > Cc: Dave Chinner <david@fromorbit.com>
-> > > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-> > > ---
-> > >  fs/xfs/xfs_trans.c | 28 +++++++++++++++-------------
-> > >  1 file changed, 15 insertions(+), 13 deletions(-)
-> > >
-> > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > > index 11d390f0d3f2..4f4645329bb2 100644
-> > > --- a/fs/xfs/xfs_trans.c
-> > > +++ b/fs/xfs/xfs_trans.c
-> > > @@ -67,6 +67,17 @@ xfs_trans_free(
-> > >       xfs_extent_busy_sort(&tp->t_busy);
-> > >       xfs_extent_busy_clear(tp->t_mountp, &tp->t_busy, false);
-> > >
-> > > +
-> > > +     /* Detach the transaction from this thread. */
-> > > +     ASSERT(current->journal_info != NULL);
-> > > +     /*
-> > > +      * The PF_MEMALLOC_NOFS is bound to the transaction itself instead
-> > > +      * of the reservation, so we need to check if tp is still the
-> > > +      * current transaction before clearing the flag.
-> > > +      */
-> > > +     if (current->journal_info == tp)
-> >
-> > Um, you don't start setting journal_info until the next patch, so this
-> > means that someone who lands on this commit with git bisect will have a
-> > xfs with broken logic.
-> >
-> > Because this is the patch that changes where we set and restore NOFS
-> > context, I think you have to introduce xfs_trans_context_swap here,
-> > and not in the next patch.
-> >
-> 
-> Thanks for the review. I will change it in the next version.
-> 
-> > I also think the _swap routine has to move the old NOFS state to the
-> > new transaction's t_pflags,
-> 
-> Sure
-> 
-> > and then set NOFS in the old transaction's
-> > t_pflags so that when we clear the context on the old transaction we
-> > don't actually change the thread's NOFS state.
-> >
-> 
-> Both thread's NOFS state and thead's journal_info state can't be
-> changed in that case, right ?
-> So should it better be,
-> 
->     __xfs_trans_commit(tp, regrant)
->         xfs_trans_free(tp, regrant)
->             if (!regrant). // don't clear the xfs_trans_context if
-> regrant is true.
->                 xfs_trans_context_clear()
+As reported, we must not do pressure stall information accounting for
+direct IO, because otherwise it tells that it's thrashing a page when
+actually doing IO on hot data.
 
-No. You are trying to make this way more complex than it needs to be.
-The logic in the core XFS code is *already correct* and all we need
-to do is move that logic to wrapper functions, then slightly modify
-the implementation inside the wrapper functions.
+Apparently, bio_iov_iter_get_pages() is used only by paths doing direct
+IO, so just make it avoid setting BIO_WORKINGSET, it also saves us CPU
+cycles on doing that. For fs/direct-io.c just clear the flag before
+submit_bio(), it's not of much concern performance-wise.
 
-That is, xfs_trans_context_clear() should end up like this:
+Reported-by: Christoph Hellwig <hch@infradead.org>
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
+---
+ block/bio.c    | 25 ++++++++++++++++---------
+ fs/direct-io.c |  2 ++
+ 2 files changed, 18 insertions(+), 9 deletions(-)
 
-static inline void
-xfs_trans_context_clear(struct xfs_trans *tp)
-{
-	/*
-	 * If xfs_trans_context_swap() handed the NOFS context to a
-	 * new transaction we do not clear the context here.
-	 */
-	if (current->journal_info != tp)
-		return;
-	current->journal_info = NULL;
-	memalloc_nofs_restore(tp->t_pflags);
-}
-
--Dave.
+diff --git a/block/bio.c b/block/bio.c
+index 4a8f77bb3956..3192358c411f 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -963,18 +963,22 @@ EXPORT_SYMBOL_GPL(bio_release_pages);
+ static int __bio_iov_bvec_add_pages(struct bio *bio, struct iov_iter *iter)
+ {
+ 	const struct bio_vec *bv = iter->bvec;
+-	unsigned int len;
+-	size_t size;
++	struct page *page = bv->bv_page;
++	bool same_page = false;
++	unsigned int off, len;
+ 
+ 	if (WARN_ON_ONCE(iter->iov_offset > bv->bv_len))
+ 		return -EINVAL;
+ 
+ 	len = min_t(size_t, bv->bv_len - iter->iov_offset, iter->count);
+-	size = bio_add_page(bio, bv->bv_page, len,
+-				bv->bv_offset + iter->iov_offset);
+-	if (unlikely(size != len))
+-		return -EINVAL;
+-	iov_iter_advance(iter, size);
++	off = bv->bv_offset + iter->iov_offset;
++
++	if (!__bio_try_merge_page(bio, page, len, off, &same_page)) {
++		if (bio_full(bio, len))
++			return -EINVAL;
++		bio_add_page_noaccount(bio, page, len, off);
++	}
++	iov_iter_advance(iter, len);
+ 	return 0;
+ }
+ 
+@@ -1023,8 +1027,8 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 				put_page(page);
+ 		} else {
+ 			if (WARN_ON_ONCE(bio_full(bio, len)))
+-                                return -EINVAL;
+-			__bio_add_page(bio, page, len, offset);
++				return -EINVAL;
++			bio_add_page_noaccount(bio, page, len, offset);
+ 		}
+ 		offset = 0;
+ 	}
+@@ -1099,6 +1103,9 @@ static int __bio_iov_append_get_pages(struct bio *bio, struct iov_iter *iter)
+  * fit into the bio, or are requested in @iter, whatever is smaller. If
+  * MM encounters an error pinning the requested pages, it stops. Error
+  * is returned only if 0 pages could be pinned.
++ *
++ * It also doesn't set BIO_WORKINGSET, so is intended for direct IO. If used
++ * otherwise the caller is responsible to do that to keep PSI happy.
+  */
+ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ {
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index d53fa92a1ab6..914a7f600ecd 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -426,6 +426,8 @@ static inline void dio_bio_submit(struct dio *dio, struct dio_submit *sdio)
+ 	unsigned long flags;
+ 
+ 	bio->bi_private = dio;
++	/* PSI is only for paging IO */
++	bio_clear_flag(bio, BIO_WORKINGSET);
+ 
+ 	spin_lock_irqsave(&dio->bio_lock, flags);
+ 	dio->refcount++;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.24.0
+
