@@ -2,94 +2,121 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A79BC2BB9A
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 12:06:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08960C2BB48
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 12:16:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D67E4222BB
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 12:06:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4E2E224B8
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Dec 2020 12:16:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728701AbgLOMFs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Dec 2020 07:05:48 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:43988 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728975AbgLOMFp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Dec 2020 07:05:45 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1608033858;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=BMM7E9TuXF5eeNr/08yqebR2Dt2ctyis2zH1H/npDvk=;
-        b=GmEHkAAfCLEP4sQdcxW0ZzcrUWj+LBcYlN4opsY3OH8HsxnEvFrvwO77MP3CMRfD1zS5OE
-        zfu5TFxHd3+QChIGhlo8jM4d37p8GD66p60BqM8C44QPW6sPYPbCiVhjxEEItahiRbaFze
-        R3WK7HxuxUQBz9QcfhZYihn8mpIMEIU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-282-YS-IJu5KMfS3eRNExERwJw-1; Tue, 15 Dec 2020 07:04:16 -0500
-X-MC-Unique: YS-IJu5KMfS3eRNExERwJw-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 551CF180A096;
-        Tue, 15 Dec 2020 12:04:14 +0000 (UTC)
-Received: from T590 (ovpn-12-182.pek2.redhat.com [10.72.12.182])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 40F5019C44;
-        Tue, 15 Dec 2020 12:04:01 +0000 (UTC)
-Date:   Tue, 15 Dec 2020 20:03:57 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Pavel Begunkov <asml.silence@gmail.com>
-Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
-        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH v1 0/6] no-copy bvec
-Message-ID: <20201215120357.GA1798021@T590>
-References: <cover.1607976425.git.asml.silence@gmail.com>
- <20201215014114.GA1777020@T590>
- <103235c1-e7d0-0b55-65d0-013d1a09304e@gmail.com>
+        id S1728910AbgLOMQV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Dec 2020 07:16:21 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:27794 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728861AbgLOMQM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Dec 2020 07:16:12 -0500
+X-IronPort-AV: E=Sophos;i="5.78,420,1599494400"; 
+   d="scan'208";a="102420202"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 15 Dec 2020 20:15:00 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id 7F9924CE6011;
+        Tue, 15 Dec 2020 20:14:58 +0800 (CST)
+Received: from G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Tue, 15 Dec 2020 20:14:57 +0800
+Received: from localhost.localdomain (10.167.225.141) by
+ G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Tue, 15 Dec 2020 20:14:57 +0800
+From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>
+CC:     <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
+        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
+        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
+Subject: [RFC PATCH v3 7/9] dm: Introduce ->rmap() to find bdev offset
+Date:   Tue, 15 Dec 2020 20:14:12 +0800
+Message-ID: <20201215121414.253660-8-ruansy.fnst@cn.fujitsu.com>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
+References: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <103235c1-e7d0-0b55-65d0-013d1a09304e@gmail.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 7F9924CE6011.AB196
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 15, 2020 at 11:14:20AM +0000, Pavel Begunkov wrote:
-> On 15/12/2020 01:41, Ming Lei wrote:
-> > On Tue, Dec 15, 2020 at 12:20:19AM +0000, Pavel Begunkov wrote:
-> >> Instead of creating a full copy of iter->bvec into bio in direct I/O,
-> >> the patchset makes use of the one provided. It changes semantics and
-> >> obliges users of asynchronous kiocb to track bvec lifetime, and [1/6]
-> >> converts the only place that doesn't.
-> > 
-> > Just think of one corner case: iov_iter(BVEC) may pass bvec table with zero
-> > length bvec, which may not be supported by block layer or driver, so
-> > this patchset has to address this case first.
-> 
-> The easiest for me would be to fallback to copy if there are zero bvecs,
-> e.g. finding such during iov_iter_alignment(), but do we know from where
-> zero bvecs can came? As it's internals we may want to forbid them if
-> there is not too much hassle.
+Pmem device could be a target of mapped device.  In order to obtain
+superblock on the mapped device, we introduce this to translate offset
+from target device to md device.
 
-You may find clue from the following link:
+Currently, we implement it on linear target, which is easy to do the
+translation.  Other targets will be supported in the future.  However,
+some targets may not support it because of the non-linear mapping.
 
-https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg2262077.html
+Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+---
+ drivers/md/dm-linear.c        | 8 ++++++++
+ include/linux/device-mapper.h | 2 ++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
+index 00774b5d7668..7a7719e9958d 100644
+--- a/drivers/md/dm-linear.c
++++ b/drivers/md/dm-linear.c
+@@ -119,6 +119,13 @@ static void linear_status(struct dm_target *ti, status_type_t type,
+ 	}
+ }
+ 
++static sector_t linear_rmap(struct dm_target *ti, sector_t offset)
++{
++	struct linear_c *lc = (struct linear_c *) ti->private;
++
++	return offset - dm_target_offset(ti, lc->start);
++}
++
+ static int linear_prepare_ioctl(struct dm_target *ti, struct block_device **bdev)
+ {
+ 	struct linear_c *lc = (struct linear_c *) ti->private;
+@@ -238,6 +245,7 @@ static struct target_type linear_target = {
+ 	.ctr    = linear_ctr,
+ 	.dtr    = linear_dtr,
+ 	.map    = linear_map,
++	.rmap   = linear_rmap,
+ 	.status = linear_status,
+ 	.prepare_ioctl = linear_prepare_ioctl,
+ 	.iterate_devices = linear_iterate_devices,
+diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
+index 61a66fb8ebb3..4a2afff6937e 100644
+--- a/include/linux/device-mapper.h
++++ b/include/linux/device-mapper.h
+@@ -58,6 +58,7 @@ typedef void (*dm_dtr_fn) (struct dm_target *ti);
+  * = 2: The target wants to push back the io
+  */
+ typedef int (*dm_map_fn) (struct dm_target *ti, struct bio *bio);
++typedef sector_t (*dm_rmap_fn) (struct dm_target *ti, sector_t offset);
+ typedef int (*dm_clone_and_map_request_fn) (struct dm_target *ti,
+ 					    struct request *rq,
+ 					    union map_info *map_context,
+@@ -175,6 +176,7 @@ struct target_type {
+ 	dm_ctr_fn ctr;
+ 	dm_dtr_fn dtr;
+ 	dm_map_fn map;
++	dm_rmap_fn rmap;
+ 	dm_clone_and_map_request_fn clone_and_map_rq;
+ 	dm_release_clone_request_fn release_clone_rq;
+ 	dm_endio_fn end_io;
+-- 
+2.29.2
 
 
-Thanks,
-Ming
 
