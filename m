@@ -5,170 +5,98 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF92FC2BB9A
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 14:55:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99C8CC2BBCA
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 15:01:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70AE3233E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 14:55:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C4AF23975
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 15:01:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725988AbgLQOzF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Dec 2020 09:55:05 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20966 "EHLO
+        id S1727656AbgLQPBM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Dec 2020 10:01:12 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:45208 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725468AbgLQOzE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Dec 2020 09:55:04 -0500
+        by vger.kernel.org with ESMTP id S1727246AbgLQPBM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Dec 2020 10:01:12 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1608216818;
+        s=mimecast20190719; t=1608217186;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
+         to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding;
-        bh=hB58zboC0dtKxlmTz5kHA1Xe58GCQ02wmZOXvBBAcBQ=;
-        b=OpZtG3L94ZfkxtooWzTwjNmSIX2TAlkNQqY2IBlo8VQSPZc1xlbz0L13OYZy07xj9bdwY5
-        poaUIvAp4LWWbyJrQ1T7zNQgVU7csfX6D+n9QrIcspikNgjsvEIdDdAxZGpRd8Nsl1nE6T
-        ikciFGkVINzZWZ5v6SmW9I950s1s6Gk=
+        bh=+VhRHizk+3j+oQjhAIXd7sNju7EtAAFEBSfrXGAhhYk=;
+        b=CCC2hYnT9iCdnWk3XlQc5SEjKMgn1nHIqoUU01gbYrYeaHF3XfDeOGzV+KlSehLLlQpTxg
+        ztXlrLL4/Uf6VvdWa0m0vdDohZsRb/zPsP/UZYPNDWFZyQNm+22hb84k5rhRUnYXwNqTb9
+        N9INdWE2UBoZrLmjpVNPiYlSg4wsNmI=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-261-j5zGQGQiMMe7657Tj4QqXg-1; Thu, 17 Dec 2020 09:53:36 -0500
-X-MC-Unique: j5zGQGQiMMe7657Tj4QqXg-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-548-O3U14Sc3NkaX89RE84IaRA-1; Thu, 17 Dec 2020 09:59:42 -0500
+X-MC-Unique: O3U14Sc3NkaX89RE84IaRA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6551E800D53
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Dec 2020 14:53:35 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 050B4107ACE8;
+        Thu, 17 Dec 2020 14:59:42 +0000 (UTC)
 Received: from bfoster.redhat.com (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2542B19C71
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Dec 2020 14:53:35 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9BA992BFE1;
+        Thu, 17 Dec 2020 14:59:41 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: sync lazy sb accounting on quiesce of read-only mounts
-Date:   Thu, 17 Dec 2020 09:53:34 -0500
-Message-Id: <20201217145334.2512475-1-bfoster@redhat.com>
+To:     fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH] generic/388: randomly recover via read-only mounts
+Date:   Thu, 17 Dec 2020 09:59:41 -0500
+Message-Id: <20201217145941.2513069-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_log_sbcount() syncs the superblock specifically to accumulate
-the in-core percpu superblock counters and commit them to disk. This
-is required to maintain filesystem consistency across quiesce
-(freeze, read-only mount/remount) or unmount when lazy superblock
-accounting is enabled because individual transactions do not update
-the superblock directly.
-
-This mechanism works as expected for writable mounts, but
-xfs_log_sbcount() skips the update for read-only mounts. Read-only
-mounts otherwise still allow log recovery and write out an unmount
-record during log quiesce. If a read-only mount performs log
-recovery, it can modify the in-core superblock counters and write an
-unmount record when the filesystem unmounts without ever syncing the
-in-core counters. This leaves the filesystem with a clean log but in
-an inconsistent state with regard to lazy sb counters.
-
-Update xfs_log_sbcount() to use the same logic
-xfs_log_unmount_write() uses to determine when to write an unmount
-record. We can drop the freeze state check because the update is
-already allowed during the freezing process and no context calls
-this function on an already frozen fs. This ensures that lazy
-accounting is always synced before the log is cleaned. Refactor this
-logic into a new helper to distinguish between a writable filesystem
-and a writable log. Specifically, the log is writable unless the
-filesystem is mounted with the norecovery mount option, the
-underlying log device is read-only, or the filesystem is shutdown.
+XFS has an issue where superblock counters may not be properly
+synced when recovery occurs via a read-only mount. This causes the
+filesystem to become inconsistent after unmount. To cover this test
+case, update generic/388 to switch between read-only and read-write
+mounts to perform log recovery.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
 
-This is something I noticed when reworking the log quiesce code to reuse
-log covering. It seems like a bug worth an independent fix, so I peeled
-it off into a standalone patch. Note that the broader rework currently
-removes both xfs_log_sbcount() and xfs_quiesce_attr(), so this is
-intended to be an isolated/backportable bug fix. The problem is easily
-reproducible with a small tweak to generic/388 that I'll post shortly...
+I didn't think it was worth duplicating generic/388 to a whole new test
+just to invoke log recovery from a read-only mount. generic/388 is a
+rather general log recovery test and this preserves historical behavior
+of the test.
+
+A prospective fix for the issue this reproduces on XFS is posted here:
+
+https://lore.kernel.org/linux-xfs/20201217145334.2512475-1-bfoster@redhat.com/
 
 Brian
 
- fs/xfs/xfs_log.c   | 28 ++++++++++++++++++++--------
- fs/xfs/xfs_log.h   |  1 +
- fs/xfs/xfs_mount.c |  3 +--
- 3 files changed, 22 insertions(+), 10 deletions(-)
+ tests/generic/388 | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index fa2d05e65ff1..b445e63cbc3c 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -347,6 +347,25 @@ xlog_tic_add_region(xlog_ticket_t *tic, uint len, uint type)
- 	tic->t_res_num++;
- }
+diff --git a/tests/generic/388 b/tests/generic/388
+index 451a6be2..cdd547f4 100755
+--- a/tests/generic/388
++++ b/tests/generic/388
+@@ -66,8 +66,14 @@ for i in $(seq 1 $((50 * TIME_FACTOR)) ); do
+ 		ps -e | grep fsstress > /dev/null 2>&1
+ 	done
  
-+bool
-+xfs_log_writable(
-+	struct xfs_mount	*mp)
-+{
-+	/*
-+	 * Never write to the log on norecovery mounts, if the block device is
-+	 * read-only, or if the filesystem is shutdown. Read-only mounts still
-+	 * allow internal writes for log recovery and unmount purposes, so don't
-+	 * restrict that case here.
-+	 */
-+	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
-+		return false;
-+	if (xfs_readonly_buftarg(mp->m_log->l_targ))
-+		return false;
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return false;
-+	return true;
-+}
-+
- /*
-  * Replenish the byte reservation required by moving the grant write head.
-  */
-@@ -886,15 +905,8 @@ xfs_log_unmount_write(
- {
- 	struct xlog		*log = mp->m_log;
+-	# quit if mount fails so we don't shutdown the host fs
+-	_scratch_cycle_mount || _fail "cycle mount failed"
++	# Toggle between rw and ro mounts for recovery. Quit if any mount
++	# attempt fails so we don't shutdown the host fs.
++	if [ $((RANDOM % 2)) -eq 0 ]; then
++		_scratch_cycle_mount || _fail "cycle mount failed"
++	else
++		_scratch_cycle_mount "ro" || _fail "cycle ro mount failed"
++		_scratch_cycle_mount || _fail "cycle mount failed"
++	fi
+ done
  
--	/*
--	 * Don't write out unmount record on norecovery mounts or ro devices.
--	 * Or, if we are doing a forced umount (typically because of IO errors).
--	 */
--	if (mp->m_flags & XFS_MOUNT_NORECOVERY ||
--	    xfs_readonly_buftarg(log->l_targ)) {
--		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
-+	if (!xfs_log_writable(mp))
- 		return;
--	}
- 
- 	xfs_log_force(mp, XFS_LOG_SYNC);
- 
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index 58c3fcbec94a..98c913da7587 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -127,6 +127,7 @@ int	  xfs_log_reserve(struct xfs_mount *mp,
- int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
- void      xfs_log_unmount(struct xfs_mount *mp);
- int	  xfs_log_force_umount(struct xfs_mount *mp, int logerror);
-+bool	xfs_log_writable(struct xfs_mount *mp);
- 
- struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
- void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 7110507a2b6b..a62b8a574409 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1176,8 +1176,7 @@ xfs_fs_writable(
- int
- xfs_log_sbcount(xfs_mount_t *mp)
- {
--	/* allow this to proceed during the freeze sequence... */
--	if (!xfs_fs_writable(mp, SB_FREEZE_COMPLETE))
-+	if (!xfs_log_writable(mp))
- 		return 0;
- 
- 	/*
+ # success, all done
 -- 
 2.26.2
 
