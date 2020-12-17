@@ -2,227 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15B37C4361B
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 04:48:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF92FC2BB9A
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 14:55:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BAED623787
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 04:48:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70AE3233E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 14:55:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726588AbgLQEsF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Dec 2020 23:48:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59884 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725943AbgLQEsF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Dec 2020 23:48:05 -0500
-Received: from mail-io1-xd2a.google.com (mail-io1-xd2a.google.com [IPv6:2607:f8b0:4864:20::d2a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3A81C061794;
-        Wed, 16 Dec 2020 20:47:24 -0800 (PST)
-Received: by mail-io1-xd2a.google.com with SMTP id o6so13151027iob.10;
-        Wed, 16 Dec 2020 20:47:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=PRUMLTk7szvcs7E9rP3JJrNFOeJ7mkueV5pL+SzEkSM=;
-        b=QRlJcth1nNqZpZH57ZV7mSS0URPgxM4TleMaXtrVW/Wg6sSJuMdzAQ2MVJbIfHK9QL
-         TOjdktPjwgqXEoHWHBuG0Kpl5+maKdYmNU23/jI1DNrB7ADfnRzpSVzf5oooxKCXqVWq
-         LJp3q2T9S3J8Fi9w+CzM9u8yRXMkm79eE0iOva5jDp3J6nJS24PCJ1Hh6p+wh7NyRmIR
-         uBJxBaLZ2Q7CnqnG56ombBFJ5qYfZsS8mYqJ4D3qCOlBEOM8qGFfxhi9WaUKcr3kl9Y8
-         7WcXPNc0OTcuLR0XZm0DqojDVwC9wEupU2c+tXHL3XNjFgEMwxClj5IeqMz46oiH8mpr
-         d27g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=PRUMLTk7szvcs7E9rP3JJrNFOeJ7mkueV5pL+SzEkSM=;
-        b=FNZ3ymNP96cqtyCGzt+mS9VPaHUBEZxKtLZRT0U7ciHB8zlEjk73wRVNPPZIFjvEjV
-         gKRyGOQcTZUQarKrmm9Ut2XZW9Vkb2rGW70qTd88D2qquRNTNhLwOBSEzhCFbrO2Bp/D
-         qUEIoWWnEpqV1LycgpEUrKxvFPPcGNdOZIBcuxLeElc2Zx82K3WsI3Kl2c6sGJKULMQX
-         cqNwUZFaVfB1sEXE/jYMh+WEdwB2C3UGKQEFKY0LYpbM5fiz3AMakJsnoyRoYDc1orMt
-         zm40liNcEamVkzlvFDkZbQjfdM1HqcpMEWFNIKEO/seZBAriieNXokntyjGhOL5QCnsd
-         8udQ==
-X-Gm-Message-State: AOAM5306sKNKiJaK0guldyi92Phwgq6Hr/Pjf3x5gi1dv4gcSysF6gl5
-        SwUpN+vUXyCHK4hUW7IRpYgMPWKd+JZRhX7NFtbFlKKO6KKZ3DRN
-X-Google-Smtp-Source: ABdhPJxBoUYfBARhqKQXlH0TMk7AC8ra43Si0SEHE3kCbFav1S1El7VPg2rN//ZysJPcc8ybj8p4DXerd58/pSgl2f0=
-X-Received: by 2002:a05:6602:2157:: with SMTP id y23mr45264126ioy.202.1608180443614;
- Wed, 16 Dec 2020 20:47:23 -0800 (PST)
+        id S1725988AbgLQOzF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Dec 2020 09:55:05 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20966 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725468AbgLQOzE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Dec 2020 09:55:04 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1608216818;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=hB58zboC0dtKxlmTz5kHA1Xe58GCQ02wmZOXvBBAcBQ=;
+        b=OpZtG3L94ZfkxtooWzTwjNmSIX2TAlkNQqY2IBlo8VQSPZc1xlbz0L13OYZy07xj9bdwY5
+        poaUIvAp4LWWbyJrQ1T7zNQgVU7csfX6D+n9QrIcspikNgjsvEIdDdAxZGpRd8Nsl1nE6T
+        ikciFGkVINzZWZ5v6SmW9I950s1s6Gk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-261-j5zGQGQiMMe7657Tj4QqXg-1; Thu, 17 Dec 2020 09:53:36 -0500
+X-MC-Unique: j5zGQGQiMMe7657Tj4QqXg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6551E800D53
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Dec 2020 14:53:35 +0000 (UTC)
+Received: from bfoster.redhat.com (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2542B19C71
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Dec 2020 14:53:35 +0000 (UTC)
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: sync lazy sb accounting on quiesce of read-only mounts
+Date:   Thu, 17 Dec 2020 09:53:34 -0500
+Message-Id: <20201217145334.2512475-1-bfoster@redhat.com>
 MIME-Version: 1.0
-References: <20201217011157.92549-1-laoar.shao@gmail.com> <20201217011157.92549-2-laoar.shao@gmail.com>
- <20201217030609.GP632069@dread.disaster.area>
-In-Reply-To: <20201217030609.GP632069@dread.disaster.area>
-From:   Yafang Shao <laoar.shao@gmail.com>
-Date:   Thu, 17 Dec 2020 12:46:47 +0800
-Message-ID: <CALOAHbBNbJ9z6YR20wff1Ei=SR6E-uNFRO8OHpRqg_emsD7few@mail.gmail.com>
-Subject: Re: [PATCH v13 1/4] mm: Add become_kswapd and restore_kswapd
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Michal Hocko <mhocko@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>, jlayton@redhat.com,
-        linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
-        linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>,
-        Michal Hocko <mhocko@suse.com>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 17, 2020 at 11:06 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Thu, Dec 17, 2020 at 09:11:54AM +0800, Yafang Shao wrote:
-> > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-> >
-> > Since XFS needs to pretend to be kswapd in some of its worker threads,
-> > create methods to save & restore kswapd state.  Don't bother restoring
-> > kswapd state in kswapd -- the only time we reach this code is when we're
-> > exiting and the task_struct is about to be destroyed anyway.
-> >
-> > Cc: Dave Chinner <david@fromorbit.com>
-> > Acked-by: Michal Hocko <mhocko@suse.com>
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_btree.c | 14 ++++++++------
-> >  include/linux/sched/mm.h  | 23 +++++++++++++++++++++++
-> >  mm/vmscan.c               | 16 +---------------
-> >  3 files changed, 32 insertions(+), 21 deletions(-)
-> >
-> > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> > index 51dbff9b0908..0f35b7a38e76 100644
-> > --- a/fs/xfs/libxfs/xfs_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_btree.c
-> > @@ -2813,8 +2813,9 @@ xfs_btree_split_worker(
-> >  {
-> >       struct xfs_btree_split_args     *args = container_of(work,
-> >                                               struct xfs_btree_split_args, work);
-> > +     bool                    is_kswapd = args->kswapd;
-> >       unsigned long           pflags;
-> > -     unsigned long           new_pflags = PF_MEMALLOC_NOFS;
-> > +     int                     memalloc_nofs;
-> >
-> >       /*
-> >        * we are in a transaction context here, but may also be doing work
-> > @@ -2822,16 +2823,17 @@ xfs_btree_split_worker(
-> >        * temporarily to ensure that we don't block waiting for memory reclaim
-> >        * in any way.
-> >        */
-> > -     if (args->kswapd)
-> > -             new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
-> > -
-> > -     current_set_flags_nested(&pflags, new_pflags);
-> > +     if (is_kswapd)
-> > +             pflags = become_kswapd();
-> > +     memalloc_nofs = memalloc_nofs_save();
-> >
-> >       args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
-> >                                        args->key, args->curp, args->stat);
-> >       complete(args->done);
-> >
-> > -     current_restore_flags_nested(&pflags, new_pflags);
-> > +     memalloc_nofs_restore(memalloc_nofs);
-> > +     if (is_kswapd)
-> > +             restore_kswapd(pflags);
-> >  }
-> >
-> >  /*
-> > diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
-> > index d5ece7a9a403..2faf03e79a1e 100644
-> > --- a/include/linux/sched/mm.h
-> > +++ b/include/linux/sched/mm.h
-> > @@ -278,6 +278,29 @@ static inline void memalloc_nocma_restore(unsigned int flags)
-> >  }
-> >  #endif
-> >
-> > +/*
-> > + * Tell the memory management code that this thread is working on behalf
-> > + * of background memory reclaim (like kswapd).  That means that it will
-> > + * get access to memory reserves should it need to allocate memory in
-> > + * order to make forward progress.  With this great power comes great
-> > + * responsibility to not exhaust those reserves.
-> > + */
-> > +#define KSWAPD_PF_FLAGS              (PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD)
-> > +
-> > +static inline unsigned long become_kswapd(void)
-> > +{
-> > +     unsigned long flags = current->flags & KSWAPD_PF_FLAGS;
-> > +
-> > +     current->flags |= KSWAPD_PF_FLAGS;
-> > +
-> > +     return flags;
-> > +}
->
-> You can get rid of the empty lines out of this function.
->
-> > +static inline void restore_kswapd(unsigned long flags)
-> > +{
-> > +     current->flags &= ~(flags ^ KSWAPD_PF_FLAGS);
-> > +}
->
-> Urk, that requires thinking about to determine whether it is
-> correct. And it is 3 runtime logic operations (^, ~ and &) too. The
-> way all the memalloc_*_restore() functions restore the previous
-> flags is obviously correct and only requires 2 runtime logic
-> operations because the compiler calculates the ~ operation on the
-> constant. So why do it differently here? i.e.:
->
->         current->flags = (current->flags & ~KSWAPD_PF_FLAGS) | flags;
->
+xfs_log_sbcount() syncs the superblock specifically to accumulate
+the in-core percpu superblock counters and commit them to disk. This
+is required to maintain filesystem consistency across quiesce
+(freeze, read-only mount/remount) or unmount when lazy superblock
+accounting is enabled because individual transactions do not update
+the superblock directly.
 
-I will change it as you suggested if Matthew doesn't have a different
-opinion, Matthew ?
+This mechanism works as expected for writable mounts, but
+xfs_log_sbcount() skips the update for read-only mounts. Read-only
+mounts otherwise still allow log recovery and write out an unmount
+record during log quiesce. If a read-only mount performs log
+recovery, it can modify the in-core superblock counters and write an
+unmount record when the filesystem unmounts without ever syncing the
+in-core counters. This leaves the filesystem with a clean log but in
+an inconsistent state with regard to lazy sb counters.
 
+Update xfs_log_sbcount() to use the same logic
+xfs_log_unmount_write() uses to determine when to write an unmount
+record. We can drop the freeze state check because the update is
+already allowed during the freezing process and no context calls
+this function on an already frozen fs. This ensures that lazy
+accounting is always synced before the log is cleaned. Refactor this
+logic into a new helper to distinguish between a writable filesystem
+and a writable log. Specifically, the log is writable unless the
+filesystem is mounted with the norecovery mount option, the
+underlying log device is read-only, or the filesystem is shutdown.
 
-> > --- a/mm/vmscan.c
-> > +++ b/mm/vmscan.c
-> > @@ -3870,19 +3870,7 @@ static int kswapd(void *p)
-> >       if (!cpumask_empty(cpumask))
-> >               set_cpus_allowed_ptr(tsk, cpumask);
-> >
-> > -     /*
-> > -      * Tell the memory management that we're a "memory allocator",
-> > -      * and that if we need more memory we should get access to it
-> > -      * regardless (see "__alloc_pages()"). "kswapd" should
-> > -      * never get caught in the normal page freeing logic.
-> > -      *
-> > -      * (Kswapd normally doesn't need memory anyway, but sometimes
-> > -      * you need a small amount of memory in order to be able to
-> > -      * page out something else, and this flag essentially protects
-> > -      * us from recursively trying to free more memory as we're
-> > -      * trying to free the first piece of memory in the first place).
-> > -      */
-> > -     tsk->flags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
-> > +     become_kswapd();
-> >       set_freezable();
-> >
-> >       WRITE_ONCE(pgdat->kswapd_order, 0);
-> > @@ -3932,8 +3920,6 @@ static int kswapd(void *p)
-> >                       goto kswapd_try_sleep;
-> >       }
-> >
-> > -     tsk->flags &= ~(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD);
-> > -
->
-> Missing a restore_kswapd()?
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
+This is something I noticed when reworking the log quiesce code to reuse
+log covering. It seems like a bug worth an independent fix, so I peeled
+it off into a standalone patch. Note that the broader rework currently
+removes both xfs_log_sbcount() and xfs_quiesce_attr(), so this is
+intended to be an isolated/backportable bug fix. The problem is easily
+reproducible with a small tweak to generic/388 that I'll post shortly...
 
+Brian
 
+ fs/xfs/xfs_log.c   | 28 ++++++++++++++++++++--------
+ fs/xfs/xfs_log.h   |  1 +
+ fs/xfs/xfs_mount.c |  3 +--
+ 3 files changed, 22 insertions(+), 10 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index fa2d05e65ff1..b445e63cbc3c 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -347,6 +347,25 @@ xlog_tic_add_region(xlog_ticket_t *tic, uint len, uint type)
+ 	tic->t_res_num++;
+ }
+ 
++bool
++xfs_log_writable(
++	struct xfs_mount	*mp)
++{
++	/*
++	 * Never write to the log on norecovery mounts, if the block device is
++	 * read-only, or if the filesystem is shutdown. Read-only mounts still
++	 * allow internal writes for log recovery and unmount purposes, so don't
++	 * restrict that case here.
++	 */
++	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
++		return false;
++	if (xfs_readonly_buftarg(mp->m_log->l_targ))
++		return false;
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return false;
++	return true;
++}
++
+ /*
+  * Replenish the byte reservation required by moving the grant write head.
+  */
+@@ -886,15 +905,8 @@ xfs_log_unmount_write(
+ {
+ 	struct xlog		*log = mp->m_log;
+ 
+-	/*
+-	 * Don't write out unmount record on norecovery mounts or ro devices.
+-	 * Or, if we are doing a forced umount (typically because of IO errors).
+-	 */
+-	if (mp->m_flags & XFS_MOUNT_NORECOVERY ||
+-	    xfs_readonly_buftarg(log->l_targ)) {
+-		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
++	if (!xfs_log_writable(mp))
+ 		return;
+-	}
+ 
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
+ 
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index 58c3fcbec94a..98c913da7587 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -127,6 +127,7 @@ int	  xfs_log_reserve(struct xfs_mount *mp,
+ int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
+ void      xfs_log_unmount(struct xfs_mount *mp);
+ int	  xfs_log_force_umount(struct xfs_mount *mp, int logerror);
++bool	xfs_log_writable(struct xfs_mount *mp);
+ 
+ struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
+ void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 7110507a2b6b..a62b8a574409 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1176,8 +1176,7 @@ xfs_fs_writable(
+ int
+ xfs_log_sbcount(xfs_mount_t *mp)
+ {
+-	/* allow this to proceed during the freeze sequence... */
+-	if (!xfs_fs_writable(mp, SB_FREEZE_COMPLETE))
++	if (!xfs_log_writable(mp))
+ 		return 0;
+ 
+ 	/*
 -- 
-Thanks
-Yafang
+2.26.2
+
