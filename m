@@ -2,161 +2,227 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED9F5C2BBCD
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 01:13:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B33BAC2D0E4
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 01:13:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9CFCB22D05
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 01:13:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7884222D05
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 01:13:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388991AbgLQBMw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Dec 2020 20:12:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55006 "EHLO
+        id S2389085AbgLQBNI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Dec 2020 20:13:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388983AbgLQBMv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Dec 2020 20:12:51 -0500
-Received: from mail-vk1-xa31.google.com (mail-vk1-xa31.google.com [IPv6:2607:f8b0:4864:20::a31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59240C061794;
-        Wed, 16 Dec 2020 17:12:11 -0800 (PST)
-Received: by mail-vk1-xa31.google.com with SMTP id u67so6172092vkb.5;
-        Wed, 16 Dec 2020 17:12:11 -0800 (PST)
+        with ESMTP id S2389016AbgLQBNI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Dec 2020 20:13:08 -0500
+Received: from mail-ua1-x92a.google.com (mail-ua1-x92a.google.com [IPv6:2607:f8b0:4864:20::92a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC86EC0617A7;
+        Wed, 16 Dec 2020 17:12:27 -0800 (PST)
+Received: by mail-ua1-x92a.google.com with SMTP id s23so8628534uaq.10;
+        Wed, 16 Dec 2020 17:12:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=YmOnO3qjJFdw5qVil3tlbg5ItfTfI0GfT3/CX7O2nwg=;
-        b=Lz1I9mhbPRe0AdEYaDsAYNeuJZtXudbhCvODGCuFk/k+r2nAFsGR8YOBZliy224d2M
-         u4WQUXEjhdpKQhk/wVameqvT7hAN+kUZ32tQs7fjMm1odUgG+BdBwLLsH2IIoN2XBo8f
-         9f36iraWi8Zt72D2uHv169v8ib6B7Bf4LtZ7KjB/P0u6h33WXiwSu2H9L4qaq5KNWX00
-         6AXp8Ke4EziyMxwtEw0/2zfPotFOnF0NyOoAbb+Z8q43OfZ+ub4AFZu7F/+BdgoedtvZ
-         oxHBW6wq/lLzGzFDrW13cmw4qui+UaAB6Hn9jLm9ncYsyFo5CVfrDj52r0iQamMzbz87
-         a6+w==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=cd4JF0ZR2KfQvs7FahxcUpavGYokTwPG9ns84faHko4=;
+        b=RK/hYKSW5JgHtrKLNvLNfWz0OmgDAm6pj82G4IIu4cjEoJmIANVtGWiHaW4cZij0Vn
+         H0/APDsdXUyiwkheJ0U00RGGiXbsNtKxcx6K3mhyeH1Y3j74E6jpCP/7OUUrPkRZQT1d
+         NmGn1WsVpKz50SFslWF9wUkiGfkPHopeAe/75ouEB7Jp5JIejC875Kfz5qIlcrGfNaxv
+         P2+uW/7atJ5G52HMEA1tgVzOu3p9cFlzlRWmuTu3KPtDVJxKo1O9GujkyLBU/NTZnHSM
+         Dj6E0Q5eGRB/OHz9sp6+1OtrF/5Qy0xrf6hBENTopc0cMRcUrOs2Iw89hidknMqb1l6B
+         oRzA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=YmOnO3qjJFdw5qVil3tlbg5ItfTfI0GfT3/CX7O2nwg=;
-        b=irZrjDEV5mBVP/lexeyBjWsJ6PYKwJAo2fW8H6anbW7t2XsxwH3Ejc4VLvSR4apt1C
-         ifT1CEfPf+ltR7IQg/jLUbxoaXHO6DjBwu/ll3tHlbKHaWLHhXshQDUp5U8Hr+XcDoys
-         DrTwOTgHub3/BR4SAU4YNWSgJ+b7JzDqD5skRDBMaZXZPycZYWZiim8Wq621fQ6mlOad
-         NmzNxxJZf84RTkkz5HLw+9soh/GVkCeT7HSo4GIG+7qom8rBImn9IRMZ8I/fWRWm1Dhz
-         L7ivE3CdNLyurONLGdPmKj3nqiSNYKBE9fjRXDWcau+boHcc8mY8tZSz54s/hgwacqz8
-         Hskg==
-X-Gm-Message-State: AOAM533w1bSaG6MIqXDbgetB6nX4ztjjeFV5qMArZsScTHjuf5q2g4oO
-        ECD+/MgTId62CAG8WZ0VF3s=
-X-Google-Smtp-Source: ABdhPJwy0uTxmy5IZQfU7PF4u9B7yvz4bIGO/p5RVqbI6VwSx+pY2Dfn72dOIjRDpGS6eH747V9Djw==
-X-Received: by 2002:a1f:2ecd:: with SMTP id u196mr36256109vku.19.1608167530611;
-        Wed, 16 Dec 2020 17:12:10 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=cd4JF0ZR2KfQvs7FahxcUpavGYokTwPG9ns84faHko4=;
+        b=WrC0OLORi1xlTy4Y9WC/Zp5+ezJv5bbC5wTHfp4a2Z3LNSflgaP/LIv/qGahLyNZYZ
+         fX94Gpv8UIXk0a0mJNXqGMTxtZTTPpir8b7CtHADaPUvxfQp8E4a9yqeezHhkf9WCE4Q
+         DZjbCVuPSfkVUSmrJHvDAQYdM1t73e7eA+Y0ABH1d3K+xL2m+HYmAafYobFIMFW/xbfr
+         mu3h9xOmdS9EQkh9HiZ+kILxP6SrATgRs2Tyvqf77ZlUHkTnX5OdgwR4vY9gsJtPVI5h
+         vNY99d7gMXzZ94t735U+CZ53d3xSKD600GzFhWuZxNMURnBNqNcb5qt5hg75IC8aUNjN
+         qo8w==
+X-Gm-Message-State: AOAM532GB9O4qCIv+zh34FbesnuIQyjCpS6lEiOknsIdnVUmfVw3L3be
+        BMa1DgMu55cTESTqD+i2nbs=
+X-Google-Smtp-Source: ABdhPJxvwR0b2U/ZCHfDQPXvCX31ndWFVYmWR6GBXd8PtNbPGK6MzLrtIs1Rt0qPK/w+9XAPP4mtTQ==
+X-Received: by 2002:a9f:204e:: with SMTP id 72mr7554308uam.19.1608167546985;
+        Wed, 16 Dec 2020 17:12:26 -0800 (PST)
 Received: from localhost.localdomain ([50.236.19.102])
-        by smtp.gmail.com with ESMTPSA id i63sm2900760uad.4.2020.12.16.17.12.04
+        by smtp.gmail.com with ESMTPSA id i63sm2900760uad.4.2020.12.16.17.12.21
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 16 Dec 2020 17:12:09 -0800 (PST)
+        Wed, 16 Dec 2020 17:12:26 -0800 (PST)
 From:   Yafang Shao <laoar.shao@gmail.com>
 To:     darrick.wong@oracle.com, willy@infradead.org, david@fromorbit.com,
         hch@infradead.org, mhocko@kernel.org, akpm@linux-foundation.org,
         dhowells@redhat.com, jlayton@redhat.com
 Cc:     linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        Yafang Shao <laoar.shao@gmail.com>
-Subject: [PATCH v13 0/4] xfs: avoid transaction reservation recursion 
-Date:   Thu, 17 Dec 2020 09:11:53 +0800
-Message-Id: <20201217011157.92549-1-laoar.shao@gmail.com>
+        Yafang Shao <laoar.shao@gmail.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v13 3/4] xfs: refactor the usage around xfs_trans_context_{set,clear}
+Date:   Thu, 17 Dec 2020 09:11:56 +0800
+Message-Id: <20201217011157.92549-4-laoar.shao@gmail.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
+In-Reply-To: <20201217011157.92549-1-laoar.shao@gmail.com>
+References: <20201217011157.92549-1-laoar.shao@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-PF_FSTRANS which is used to avoid transaction reservation recursion, is
-dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
-PF_MEMALLOC_NOFS") and commit 7dea19f9ee63 ("mm: introduce
-memalloc_nofs_{save,restore} API"), and replaced by PF_MEMALLOC_NOFS which
-means to avoid filesystem reclaim recursion.
+The xfs_trans context should be active after it is allocated, and
+deactive when it is freed.
+The rolling transaction should be specially considered, because in the
+case when we clear the old transaction the thread's NOFS state shouldn't
+be changed, as a result we have to set NOFS in the old transaction's
+t_pflags in xfs_trans_context_swap().
 
-As these two flags have different meanings, we'd better reintroduce
-PF_FSTRANS back. To avoid wasting the space of PF_* flags in task_struct,
-we can reuse the current->journal_info to do that, per Willy. As the 
-check of transaction reservation recursion is used by XFS only, we can 
-move the check into xfs_vm_writepage(s), per Dave.
+So these helpers are refactored as,
+- xfs_trans_context_set()
+  Used in xfs_trans_alloc()
+- xfs_trans_context_clear()
+  Used in xfs_trans_free()
 
-Patch #1 and #2 are to use the memalloc_nofs_{save,restore} API 
-Patch #1 is picked form Willy's patchset "Overhaul memalloc_no*"[1]
+And a new helper is instroduced to handle the rolling transaction,
+- xfs_trans_context_swap()
+  Used in rolling transaction
 
-Patch #3 is the refactor of xfs_trans context, which is activated when
-xfs_trans is allocated and deactivated when xfs_trans is freed.
+This patch is based on Darrick's work to fix the issue in xfs/141 in the
+earlier version. [1]
 
-Patch #4 is the implementation of reusing current->journal_info to
-avoid transaction reservation recursion.
+1. https://lore.kernel.org/linux-xfs/20201104001649.GN7123@magnolia
 
-No obvious error occurred after running xfstests.
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+---
+ fs/xfs/xfs_trans.c | 25 +++++++++++--------------
+ fs/xfs/xfs_trans.h | 13 +++++++++++++
+ 2 files changed, 24 insertions(+), 14 deletions(-)
 
-[1]. https://lore.kernel.org/linux-mm/20200625113122.7540-1-willy@infradead.org
-
-v13:
-- move xfs_trans_context_swap() into patch #3 and set NOFS to the old
-  transaction
-
-v12:
-Per Darrick's suggestion,
-- add the check before calling xfs_trans_context_clear() in
-  xfs_trans_context_free().
-- move t_pflags into xfs_trans_context_swap()
-
-v11:
-- add the warning at the callsite of xfs_trans_context_active()
-- improve the commit log of patch #2
-
-v10:
-- refactor the code, per Dave.
-
-v9:
-- rebase it on xfs tree.
-- Darrick fixed an error occurred in xfs/141
-- run xfstests, and no obvious error occurred.
-
-v8:
-- check xfs_trans_context_active() in xfs_vm_writepage(s), per Dave.
-
-v7:
-- check fstrans recursion for XFS only, by introducing a new member in
-  struct writeback_control.
-
-v6:
-- add Michal's ack and comment in patch #1.
-
-v5:
-- pick one of Willy's patch
-- introduce four new helpers, per Dave
-
-v4:
-- retitle from "xfs: introduce task->in_fstrans for transaction reservation
-  recursion protection"
-- reuse current->journal_info, per Willy
-
-Matthew Wilcox (Oracle) (1):
-  mm: Add become_kswapd and restore_kswapd
-
-Yafang Shao (3):
-  xfs: use memalloc_nofs_{save,restore} in xfs transaction
-  xfs: refactor the usage around xfs_trans_context_{set,clear}
-  xfs: use current->journal_info to avoid transaction reservation
-    recursion
-
- fs/iomap/buffered-io.c    |  7 -------
- fs/xfs/libxfs/xfs_btree.c | 14 ++++++++------
- fs/xfs/xfs_aops.c         | 21 +++++++++++++++++++--
- fs/xfs/xfs_linux.h        |  4 ----
- fs/xfs/xfs_trans.c        | 26 ++++++++++++--------------
- fs/xfs/xfs_trans.h        | 37 +++++++++++++++++++++++++++++++++++++
- include/linux/sched/mm.h  | 23 +++++++++++++++++++++++
- mm/vmscan.c               | 16 +---------------
- 8 files changed, 100 insertions(+), 48 deletions(-)
-
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 11d390f0d3f2..aa213c3e2408 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -67,6 +67,10 @@ xfs_trans_free(
+ 	xfs_extent_busy_sort(&tp->t_busy);
+ 	xfs_extent_busy_clear(tp->t_mountp, &tp->t_busy, false);
+ 
++
++	/* Detach the transaction from this thread. */
++	xfs_trans_context_clear(tp);
++
+ 	trace_xfs_trans_free(tp, _RET_IP_);
+ 	if (!(tp->t_flags & XFS_TRANS_NO_WRITECOUNT))
+ 		sb_end_intwrite(tp->t_mountp->m_super);
+@@ -119,7 +123,9 @@ xfs_trans_dup(
+ 
+ 	ntp->t_rtx_res = tp->t_rtx_res - tp->t_rtx_res_used;
+ 	tp->t_rtx_res = tp->t_rtx_res_used;
+-	ntp->t_pflags = tp->t_pflags;
++
++	/* Associate the new transaction with this thread. */
++	xfs_trans_context_swap(tp, ntp);
+ 
+ 	/* move deferred ops over to the new tp */
+ 	xfs_defer_move(ntp, tp);
+@@ -153,9 +159,6 @@ xfs_trans_reserve(
+ 	int			error = 0;
+ 	bool			rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
+ 
+-	/* Mark this thread as being in a transaction */
+-	xfs_trans_context_set(tp);
+-
+ 	/*
+ 	 * Attempt to reserve the needed disk blocks by decrementing
+ 	 * the number needed from the number available.  This will
+@@ -163,10 +166,9 @@ xfs_trans_reserve(
+ 	 */
+ 	if (blocks > 0) {
+ 		error = xfs_mod_fdblocks(mp, -((int64_t)blocks), rsvd);
+-		if (error != 0) {
+-			xfs_trans_context_clear(tp);
++		if (error != 0)
+ 			return -ENOSPC;
+-		}
++
+ 		tp->t_blk_res += blocks;
+ 	}
+ 
+@@ -241,8 +243,6 @@ xfs_trans_reserve(
+ 		tp->t_blk_res = 0;
+ 	}
+ 
+-	xfs_trans_context_clear(tp);
+-
+ 	return error;
+ }
+ 
+@@ -284,6 +284,8 @@ xfs_trans_alloc(
+ 	INIT_LIST_HEAD(&tp->t_dfops);
+ 	tp->t_firstblock = NULLFSBLOCK;
+ 
++	/* Mark this thread as being in a transaction */
++	xfs_trans_context_set(tp);
+ 	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
+ 	if (error) {
+ 		xfs_trans_cancel(tp);
+@@ -878,7 +880,6 @@ __xfs_trans_commit(
+ 
+ 	xfs_log_commit_cil(mp, tp, &commit_lsn, regrant);
+ 
+-	xfs_trans_context_clear(tp);
+ 	xfs_trans_free(tp);
+ 
+ 	/*
+@@ -911,7 +912,6 @@ __xfs_trans_commit(
+ 		tp->t_ticket = NULL;
+ 	}
+ 
+-	xfs_trans_context_clear(tp);
+ 	xfs_trans_free_items(tp, !!error);
+ 	xfs_trans_free(tp);
+ 
+@@ -971,9 +971,6 @@ xfs_trans_cancel(
+ 		tp->t_ticket = NULL;
+ 	}
+ 
+-	/* mark this thread as no longer being in a transaction */
+-	xfs_trans_context_clear(tp);
+-
+ 	xfs_trans_free_items(tp, dirty);
+ 	xfs_trans_free(tp);
+ }
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 44b11c64a15e..12380eaaf7ce 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -280,4 +280,17 @@ xfs_trans_context_clear(struct xfs_trans *tp)
+ 	memalloc_nofs_restore(tp->t_pflags);
+ }
+ 
++static inline void
++xfs_trans_context_swap(struct xfs_trans *tp, struct xfs_trans *ntp)
++{
++	ntp->t_pflags = tp->t_pflags;
++	/*
++	 * For the rolling transaction, we have to set NOFS in the old
++	 * transaction's t_pflags so that when we clear the context on
++	 * the old transaction we don't actually change the thread's NOFS
++	 * state.
++	 */
++	tp->t_pflags = current->flags | PF_MEMALLOC_NOFS;
++}
++
+ #endif	/* __XFS_TRANS_H__ */
 -- 
 2.18.4
 
