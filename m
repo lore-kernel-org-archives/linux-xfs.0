@@ -2,211 +2,81 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0464BC3526C
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 01:13:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E61AC4361B
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 02:52:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C735E22D05
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 01:13:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D73C23405
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 02:52:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389016AbgLQBNc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Dec 2020 20:13:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55116 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725871AbgLQBNc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Dec 2020 20:13:32 -0500
-Received: from mail-vs1-xe36.google.com (mail-vs1-xe36.google.com [IPv6:2607:f8b0:4864:20::e36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0441FC06138C;
-        Wed, 16 Dec 2020 17:12:33 -0800 (PST)
-Received: by mail-vs1-xe36.google.com with SMTP id e15so12549429vsa.0;
-        Wed, 16 Dec 2020 17:12:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=9alW6vAYyuzuIAm2W1sBzzo1XFQKdglwiDiVNpF1K2U=;
-        b=Wi5ul+TpVrtbHopu2Iwb3DlGk1ZxVzDtLAsRdQMTu0GERUdvG2WVNpqpfK16fgUS9h
-         yhq0822cOkKhzQ7ZRWz8Npvm048BUEnToPYJy+xnZwyVe3RDHJLz0OF/hw55IGWeldgE
-         5eN4vwFCW486dOUy2PHx60b2avDZZplCXBLtp/MZ7UGJPsDYcXQeO1lq3yyxiP14Ndbr
-         c3KSA6WFYM51Cm3HJNKmNc96A2rjtwuTYDUHTxjQG6h9I+beliWreu54pMsFr24ff8cW
-         Bl8HuQt0co6Qc5ubOg4BSBFIANtBrd9eSaTpbhD0uV6moRHkdHgfcLJJB4b+Q/X3+GZ2
-         HG7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=9alW6vAYyuzuIAm2W1sBzzo1XFQKdglwiDiVNpF1K2U=;
-        b=uFFdvix69oFsXkVgW99anWq3fTBojBLKzgr09ZQtvW7byQjFIM+Fn8u1ZRGxBNu3EB
-         rkezMZDqUpnZ6xLcLkkeNFjmwfehkWS2Rr0Sgh7mZD0Ki+z22f+WrzdcLzXUVr74zfJy
-         1+acVqK5qFaPKzUYbhqsDOtFDRxmm9Nr46/IAB0Aj9pjltoiSmLIW2pOdu3JlfAqYikI
-         4HnxsO7zvFPo2JV+bSeSBnODuWd3urT3DHtVDGOfkTqzFygtfhA4FGt+UBWOK++eY4i3
-         qLG5kKZW/qJz55Fk27bJLNYHL9PqNzbbB47j9DcJwOz8gvikImevIaqmZJ5uXcGEkAAo
-         lH6A==
-X-Gm-Message-State: AOAM530Pp50QnzwiQPC65yWMJh3w5EajK6BWFwvcL1vdm8D9BbgpocrN
-        K9RQaO3xemd9ncDG50WWr7E3LBue5e/NBivF
-X-Google-Smtp-Source: ABdhPJymD38OIInUxz/A6UMIS832ePfAYJx4qTFdpzI+xn54beO/QqmFh11xxFmKvkJ1ebq2NwfIEA==
-X-Received: by 2002:a67:1142:: with SMTP id 63mr15960710vsr.24.1608167552295;
-        Wed, 16 Dec 2020 17:12:32 -0800 (PST)
-Received: from localhost.localdomain ([50.236.19.102])
-        by smtp.gmail.com with ESMTPSA id i63sm2900760uad.4.2020.12.16.17.12.27
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 16 Dec 2020 17:12:31 -0800 (PST)
-From:   Yafang Shao <laoar.shao@gmail.com>
-To:     darrick.wong@oracle.com, willy@infradead.org, david@fromorbit.com,
-        hch@infradead.org, mhocko@kernel.org, akpm@linux-foundation.org,
-        dhowells@redhat.com, jlayton@redhat.com
-Cc:     linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        Yafang Shao <laoar.shao@gmail.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v13 4/4] xfs: use current->journal_info to avoid transaction reservation recursion
-Date:   Thu, 17 Dec 2020 09:11:57 +0800
-Message-Id: <20201217011157.92549-5-laoar.shao@gmail.com>
-X-Mailer: git-send-email 2.24.3 (Apple Git-128)
-In-Reply-To: <20201217011157.92549-1-laoar.shao@gmail.com>
-References: <20201217011157.92549-1-laoar.shao@gmail.com>
+        id S1727617AbgLQCwH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Dec 2020 21:52:07 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:43079 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727396AbgLQCwG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Dec 2020 21:52:06 -0500
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id CA7911055D4;
+        Thu, 17 Dec 2020 13:51:23 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kpjNy-004ltk-Us; Thu, 17 Dec 2020 13:51:22 +1100
+Date:   Thu, 17 Dec 2020 13:51:22 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: remove xfs_buf_t typedef
+Message-ID: <20201217025122.GO632069@dread.disaster.area>
+References: <20201217003854.GD6918@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201217003854.GD6918@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
+        a=7-415B0cAAAA:8 a=brpUl30mPXIxXrqNKDUA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-PF_FSTRANS which is used to avoid transaction reservation recursion, is
-dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
-PF_MEMALLOC_NOFS") and replaced by PF_MEMALLOC_NOFS which means to avoid
-filesystem reclaim recursion.
+On Wed, Dec 16, 2020 at 04:38:54PM -0800, Darrick J. Wong wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Prepare for kernel xfs_buf  alignment by getting rid of the
+> xfs_buf_t typedef from userspace.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> [darrick: port the kernel now the 5.11 stuff has stabilized]
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c    |   16 ++++++++--------
+>  fs/xfs/libxfs/xfs_bmap.c     |    6 +++---
+>  fs/xfs/libxfs/xfs_btree.c    |   10 +++++-----
+>  fs/xfs/libxfs/xfs_ialloc.c   |    4 ++--
+>  fs/xfs/libxfs/xfs_rtbitmap.c |   22 +++++++++++-----------
+>  fs/xfs/xfs_buf.c             |   24 ++++++++++++------------
+>  fs/xfs/xfs_buf.h             |   14 +++++++-------
+>  fs/xfs/xfs_buf_item.c        |    4 ++--
+>  fs/xfs/xfs_fsops.c           |    2 +-
+>  fs/xfs/xfs_log_recover.c     |    8 ++++----
+>  fs/xfs/xfs_rtalloc.c         |   20 ++++++++++----------
+>  fs/xfs/xfs_rtalloc.h         |    4 ++--
+>  fs/xfs/xfs_symlink.c         |    4 ++--
+>  fs/xfs/xfs_trans.c           |    2 +-
+>  fs/xfs/xfs_trans_buf.c       |   16 ++++++++--------
+>  15 files changed, 78 insertions(+), 78 deletions(-)
 
-As these two flags have different meanings, we'd better reintroduce
-PF_FSTRANS back. To avoid wasting the space of PF_* flags in task_struct,
-we can reuse the current->journal_info to do that, per Willy. As the
-check of transaction reservation recursion is used by XFS only, we can
-move the check into xfs_vm_writepage(s), per Dave.
+LGTM.
 
-Cc: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Jeff Layton <jlayton@redhat.com>
-Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
----
- fs/iomap/buffered-io.c |  7 -------
- fs/xfs/xfs_aops.c      | 17 +++++++++++++++++
- fs/xfs/xfs_trans.h     | 26 +++++++++++++++++++-------
- 3 files changed, 36 insertions(+), 14 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 10cc7979ce38..3c53fa6ce64d 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1458,13 +1458,6 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
- 			PF_MEMALLOC))
- 		goto redirty;
- 
--	/*
--	 * Given that we do not allow direct reclaim to call us, we should
--	 * never be called in a recursive filesystem reclaim context.
--	 */
--	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
--		goto redirty;
--
- 	/*
- 	 * Is this page beyond the end of the file?
- 	 *
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 2371187b7615..0da0242d42c3 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -568,6 +568,16 @@ xfs_vm_writepage(
- {
- 	struct xfs_writepage_ctx wpc = { };
- 
-+	/*
-+	 * Given that we do not allow direct reclaim to call us, we should
-+	 * never be called while in a filesystem transaction.
-+	 */
-+	if (WARN_ON_ONCE(xfs_trans_context_active())) {
-+		redirty_page_for_writepage(wbc, page);
-+		unlock_page(page);
-+		return 0;
-+	}
-+
- 	return iomap_writepage(page, wbc, &wpc.ctx, &xfs_writeback_ops);
- }
- 
-@@ -579,6 +589,13 @@ xfs_vm_writepages(
- 	struct xfs_writepage_ctx wpc = { };
- 
- 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-+	/*
-+	 * Given that we do not allow direct reclaim to call us, we should
-+	 * never be called while in a filesystem transaction.
-+	 */
-+	if (WARN_ON_ONCE(xfs_trans_context_active()))
-+		return 0;
-+
- 	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
- }
- 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 12380eaaf7ce..0c8140147b9b 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -268,29 +268,41 @@ xfs_trans_item_relog(
- 	return lip->li_ops->iop_relog(lip, tp);
- }
- 
-+static inline bool
-+xfs_trans_context_active(void)
-+{
-+	/* Use journal_info to indicate current is in a transaction */
-+	return current->journal_info != NULL;
-+}
-+
- static inline void
- xfs_trans_context_set(struct xfs_trans *tp)
- {
-+	ASSERT(!current->journal_info);
-+	current->journal_info = tp;
- 	tp->t_pflags = memalloc_nofs_save();
- }
- 
- static inline void
- xfs_trans_context_clear(struct xfs_trans *tp)
- {
-+	/*
-+	 * If xfs_trans_context_swap() handed the NOFS context to a
-+	 * new transaction we do not clear the context here.
-+	 */
-+	if (current->journal_info != tp)
-+		return;
-+
-+	current->journal_info = NULL;
- 	memalloc_nofs_restore(tp->t_pflags);
- }
- 
- static inline void
- xfs_trans_context_swap(struct xfs_trans *tp, struct xfs_trans *ntp)
- {
-+	ASSERT(current->journal_info == tp);
-+	current->journal_info = ntp;
- 	ntp->t_pflags = tp->t_pflags;
--	/*
--	 * For the rolling transaction, we have to set NOFS in the old
--	 * transaction's t_pflags so that when we clear the context on
--	 * the old transaction we don't actually change the thread's NOFS
--	 * state.
--	 */
--	tp->t_pflags = current->flags | PF_MEMALLOC_NOFS;
- }
- 
- #endif	/* __XFS_TRANS_H__ */
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
-2.18.4
-
+Dave Chinner
+david@fromorbit.com
