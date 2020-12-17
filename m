@@ -2,122 +2,205 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BC42C4361B
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 00:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 683B2C2BBCD
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 01:13:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E0EB23D1C
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 00:59:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 314622389B
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 01:13:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727981AbgLQA7q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Dec 2020 19:59:46 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:44486 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727941AbgLQA7q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Dec 2020 19:59:46 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BH0sJZW114836;
-        Thu, 17 Dec 2020 00:58:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=d/jWUewRA4FR6A076hhgFrAeTsTCrFy6w4RPbVOmsdQ=;
- b=hXdV85auWLolM1zwQEA1DuJH+VOYjyEzLUsybW3xcmnKTBWnzxOvHjEMdwxbXPj3u3WH
- Run3xrKPvq6PoV8R5GsrajKnqjqz9UFkxTzij2Pb2j/rwB63scqVfegZRcRJMiSpqJvl
- 74VBG4ArZxw4fT6HYExSenZNLmbR+iX//MmF4rW2R/exDZsTke1qAep6AHYtb4PzQkW9
- kjphKAiekJJc+RYDqsKpjfXuKdUDuagnBSAcctV7PMMT+LGA/Joxk929PSw86cT+V4LU
- XhC3tuOr6d7jyqc2WSG5d4hr+P428oM2Xsy2VHeV32UT7GOeuZzZzqP2PO10+p32HYKk Mw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 35cn9rk45a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 17 Dec 2020 00:58:55 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BH0tAL5031575;
-        Thu, 17 Dec 2020 00:58:54 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 35e6esmuae-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 17 Dec 2020 00:58:54 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BH0wn6C030701;
-        Thu, 17 Dec 2020 00:58:49 GMT
-Received: from localhost (/10.159.128.12)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 16 Dec 2020 16:58:49 -0800
-Date:   Wed, 16 Dec 2020 16:58:48 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        Thomas Deutschmann <whissi@gentoo.org>
-Subject: Re: [PATCH V2] xfsdump: don't try to generate .ltdep in inventory/
-Message-ID: <20201217005848.GE6918@magnolia>
-References: <15af018c-caf7-71e7-c353-96775d7173ba@redhat.com>
- <ad5ad420-1c4d-7f53-a2a6-51480836ea09@redhat.com>
+        id S2389041AbgLQBM5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Dec 2020 20:12:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55022 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388972AbgLQBM4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Dec 2020 20:12:56 -0500
+Received: from mail-vs1-xe2d.google.com (mail-vs1-xe2d.google.com [IPv6:2607:f8b0:4864:20::e2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80AC6C06179C;
+        Wed, 16 Dec 2020 17:12:16 -0800 (PST)
+Received: by mail-vs1-xe2d.google.com with SMTP id p7so14047882vsf.8;
+        Wed, 16 Dec 2020 17:12:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=N+fYoxrulW4TVGOTkp9bnpkn5FRg1xC0yuEIcSYpseY=;
+        b=m9zRm85NyW0m3ujFgHrZGUfRmc7AyiAR0SnetEtaNxUsi69i9M2HwkeFATKPiC9Le4
+         Y4suXGdErdxCZZX2kA4yEPPbZZG6DXtuiFQGxfBGbpnophckJr7mMSagRbpCWmU2Zvdj
+         jbiQgo5nPETmhIAeC1L/zlxqzBNPTOJmBIXIEZYllDBZyorR2PudDWHA2003aLQ2Ymy3
+         9OkwfhsrZA+6itgMuUOy1q2AOjbwxr9r/TaeXz2EONqu9zHU/Oqt8U3aDubtUmGPpL3g
+         K1t1SQSM1MyZG5s7pSqV+pkbsX1jxODoVonLEoD/lmwmkOQ+QqZ7EBQHvshHILqEspLk
+         vZ8A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=N+fYoxrulW4TVGOTkp9bnpkn5FRg1xC0yuEIcSYpseY=;
+        b=kKFEgWaSZYlPmD19VnAuem1wLkUmWApRO0k83BWWT+sSf+Tc59bNNb10uYmAagfXiF
+         6yL/mcPWlT6LiV0jWZa+O5w4t57JtmECDLVZmSnfWAK3CsCohcucDIG8H7CbDxnW4CAP
+         Xee1R+79NgECDHPoZkmixTndD2Gx0caaMiw8biecai0MVFUxUdWHq2olpKuex5jB0Wjj
+         Dqs7iP8Oy8vW7Rig6brd6NCLifXn9QYb5pXrAACvQUq8ogrvtZ1GPJ08tely7l/1+Fk9
+         ID8nKZGj/31w+Gf8+4MgwytM5/Y+mTqYshitrnzfY9l0QADsKU380LGzrYY/ml9PFGWF
+         A8rg==
+X-Gm-Message-State: AOAM5333AnC5frx3aqPO6LLRUz/t6kzUo5pfDRWgXOwqBOVpSO2I6aJa
+        h5ctF4P9V4Y09nfInjyqmbE=
+X-Google-Smtp-Source: ABdhPJzzrvT/RDbvWYAc6ZkkEP+w4PKSJBV8+m3oWiiJMgOgcFAaTQsMJjVO1t2AAhh4CQT/GwXLfA==
+X-Received: by 2002:a67:ea02:: with SMTP id g2mr36306426vso.3.1608167535710;
+        Wed, 16 Dec 2020 17:12:15 -0800 (PST)
+Received: from localhost.localdomain ([50.236.19.102])
+        by smtp.gmail.com with ESMTPSA id i63sm2900760uad.4.2020.12.16.17.12.10
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 16 Dec 2020 17:12:14 -0800 (PST)
+From:   Yafang Shao <laoar.shao@gmail.com>
+To:     darrick.wong@oracle.com, willy@infradead.org, david@fromorbit.com,
+        hch@infradead.org, mhocko@kernel.org, akpm@linux-foundation.org,
+        dhowells@redhat.com, jlayton@redhat.com
+Cc:     linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        Michal Hocko <mhocko@suse.com>, Christoph Hellwig <hch@lst.de>,
+        Yafang Shao <laoar.shao@gmail.com>
+Subject: [PATCH v13 1/4] mm: Add become_kswapd and restore_kswapd
+Date:   Thu, 17 Dec 2020 09:11:54 +0800
+Message-Id: <20201217011157.92549-2-laoar.shao@gmail.com>
+X-Mailer: git-send-email 2.24.3 (Apple Git-128)
+In-Reply-To: <20201217011157.92549-1-laoar.shao@gmail.com>
+References: <20201217011157.92549-1-laoar.shao@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ad5ad420-1c4d-7f53-a2a6-51480836ea09@redhat.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9837 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 phishscore=0
- bulkscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012170003
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9837 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
- impostorscore=0 lowpriorityscore=0 clxscore=1011 spamscore=0
- malwarescore=0 priorityscore=1501 phishscore=0 mlxscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012170003
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 16, 2020 at 04:32:07PM -0600, Eric Sandeen wrote:
-> .ltdep gets generated from CFILES, and there are none in inventory/
-> so trying to generate it in that dir leads to a non-fatal error when
-> the include invokes the rule to build the .ltdep file:
-> 
-> Building inventory
->     [LTDEP]
-> gcc: fatal error: no input files
-> compilation terminated.
-> 
-> inventory/ - like common/ - has files that get linked into other dirs,
-> and .ltdep is generated in those other dirs, not in inventory/.
-> 
-> So, simply remove the .ltdep include/generation from the inventory/
-> dir, because there is no reason or ability to generate the file here.
-> 
-> Reported-by: Thomas Deutschmann <whissi@gentoo.org>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-/me has long wondered why the source files in inventory and common are
-built separately for dump and restore instead of being dumped into a
-shared .a file and linked from both tools.  There's probably some
-reason, though whether or not I really want to go digging into Yet
-Another Pile is questionable...
+Since XFS needs to pretend to be kswapd in some of its worker threads,
+create methods to save & restore kswapd state.  Don't bother restoring
+kswapd state in kswapd -- the only time we reach this code is when we're
+exiting and the task_struct is about to be destroyed anyway.
 
-For shutting up the warning,
+Cc: Dave Chinner <david@fromorbit.com>
+Acked-by: Michal Hocko <mhocko@suse.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+---
+ fs/xfs/libxfs/xfs_btree.c | 14 ++++++++------
+ include/linux/sched/mm.h  | 23 +++++++++++++++++++++++
+ mm/vmscan.c               | 16 +---------------
+ 3 files changed, 32 insertions(+), 21 deletions(-)
 
---D
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 51dbff9b0908..0f35b7a38e76 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -2813,8 +2813,9 @@ xfs_btree_split_worker(
+ {
+ 	struct xfs_btree_split_args	*args = container_of(work,
+ 						struct xfs_btree_split_args, work);
++	bool			is_kswapd = args->kswapd;
+ 	unsigned long		pflags;
+-	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
++	int			memalloc_nofs;
+ 
+ 	/*
+ 	 * we are in a transaction context here, but may also be doing work
+@@ -2822,16 +2823,17 @@ xfs_btree_split_worker(
+ 	 * temporarily to ensure that we don't block waiting for memory reclaim
+ 	 * in any way.
+ 	 */
+-	if (args->kswapd)
+-		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
+-
+-	current_set_flags_nested(&pflags, new_pflags);
++	if (is_kswapd)
++		pflags = become_kswapd();
++	memalloc_nofs = memalloc_nofs_save();
+ 
+ 	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
+ 					 args->key, args->curp, args->stat);
+ 	complete(args->done);
+ 
+-	current_restore_flags_nested(&pflags, new_pflags);
++	memalloc_nofs_restore(memalloc_nofs);
++	if (is_kswapd)
++		restore_kswapd(pflags);
+ }
+ 
+ /*
+diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
+index d5ece7a9a403..2faf03e79a1e 100644
+--- a/include/linux/sched/mm.h
++++ b/include/linux/sched/mm.h
+@@ -278,6 +278,29 @@ static inline void memalloc_nocma_restore(unsigned int flags)
+ }
+ #endif
+ 
++/*
++ * Tell the memory management code that this thread is working on behalf
++ * of background memory reclaim (like kswapd).  That means that it will
++ * get access to memory reserves should it need to allocate memory in
++ * order to make forward progress.  With this great power comes great
++ * responsibility to not exhaust those reserves.
++ */
++#define KSWAPD_PF_FLAGS		(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD)
++
++static inline unsigned long become_kswapd(void)
++{
++	unsigned long flags = current->flags & KSWAPD_PF_FLAGS;
++
++	current->flags |= KSWAPD_PF_FLAGS;
++
++	return flags;
++}
++
++static inline void restore_kswapd(unsigned long flags)
++{
++	current->flags &= ~(flags ^ KSWAPD_PF_FLAGS);
++}
++
+ #ifdef CONFIG_MEMCG
+ DECLARE_PER_CPU(struct mem_cgroup *, int_active_memcg);
+ /**
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 7b4e31eac2cf..15af99d1f3f7 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -3870,19 +3870,7 @@ static int kswapd(void *p)
+ 	if (!cpumask_empty(cpumask))
+ 		set_cpus_allowed_ptr(tsk, cpumask);
+ 
+-	/*
+-	 * Tell the memory management that we're a "memory allocator",
+-	 * and that if we need more memory we should get access to it
+-	 * regardless (see "__alloc_pages()"). "kswapd" should
+-	 * never get caught in the normal page freeing logic.
+-	 *
+-	 * (Kswapd normally doesn't need memory anyway, but sometimes
+-	 * you need a small amount of memory in order to be able to
+-	 * page out something else, and this flag essentially protects
+-	 * us from recursively trying to free more memory as we're
+-	 * trying to free the first piece of memory in the first place).
+-	 */
+-	tsk->flags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
++	become_kswapd();
+ 	set_freezable();
+ 
+ 	WRITE_ONCE(pgdat->kswapd_order, 0);
+@@ -3932,8 +3920,6 @@ static int kswapd(void *p)
+ 			goto kswapd_try_sleep;
+ 	}
+ 
+-	tsk->flags &= ~(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD);
+-
+ 	return 0;
+ }
+ 
+-- 
+2.18.4
 
-> ---
-> 
-> V2: more comprehensive problem description
-> 
-> diff --git a/inventory/Makefile b/inventory/Makefile
-> index cda145e..6624fba 100644
-> --- a/inventory/Makefile
-> +++ b/inventory/Makefile
-> @@ -12,5 +12,3 @@ LSRCFILES = inv_api.c inv_core.c inv_fstab.c inv_idx.c inv_mgr.c \
->  default install install-dev:
->  
->  include $(BUILDRULES)
-> -
-> --include .ltdep
-> 
