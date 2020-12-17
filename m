@@ -2,141 +2,252 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72ACAC4361B
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 19:45:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70055C4361B
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 21:12:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 383F122D72
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 19:45:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34D4023A24
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Dec 2020 21:12:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729967AbgLQTov (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Dec 2020 14:44:51 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:60359 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728201AbgLQTov (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Dec 2020 14:44:51 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1608234204;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=eiInVSnlqpizKwl4MQaYl1/p6ZqEDEGz+AKLm1L16R0=;
-        b=VBSyiacEEiA2ei4s0GQX8JjiXLNgvjXsJNba2FmPwAuxu2KkvkZ52L6jdmj19v/IsNZsne
-        7ZndFTS/DNdxi22Q7Av6OZkE605DDrnNV86tSCbLeFwub0hb7oynRp7LU+wpn5w2PiQUdt
-        9np7xcXfFYZdQPyyaT396EV085gFZNY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-537-_E_yJYzANbaox8dwHp_K_Q-1; Thu, 17 Dec 2020 14:43:20 -0500
-X-MC-Unique: _E_yJYzANbaox8dwHp_K_Q-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A4737180A086;
-        Thu, 17 Dec 2020 19:43:19 +0000 (UTC)
-Received: from bfoster (ovpn-112-184.rdu2.redhat.com [10.10.112.184])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 18FE05D9D5;
-        Thu, 17 Dec 2020 19:43:18 +0000 (UTC)
-Date:   Thu, 17 Dec 2020 14:43:17 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Donald Buczek <buczek@molgen.mpg.de>
-Cc:     linux-xfs@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+linux-xfs@molgen.mpg.de
-Subject: Re: v5.10.1 xfs deadlock
-Message-ID: <20201217194317.GD2507317@bfoster>
-References: <b8da4aed-ee44-5d9f-88dc-3d32f0298564@molgen.mpg.de>
+        id S1731598AbgLQVMD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Dec 2020 16:12:03 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:54650 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731500AbgLQVMD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Dec 2020 16:12:03 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BHL4N1Z038939;
+        Thu, 17 Dec 2020 21:11:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=ToE7bbmEY4WgMSl/lmZybuCco2OfMxwUm7ASfH+HwFk=;
+ b=wNlUAo4OIrK9QDxtj9TTWxoiB3V9s4HHjoyc8cIUkEOJFBu5pW3H/jhMGiTir27a/uwY
+ q3CSifFzS+1LAprH8ueBT4wmMubIWs3vbVsJdblpV5b1i4O/F954fC2yk/2oprR2fopl
+ HMVZ3Wmx4UUthurHwUFdnLNXG7orxmVdAtb60VD339mBvLWpGEv5GvlhXltOI0lx4sVi
+ JwtNXiZYzVLQt3qrFk6VKju+TsRYXIKTDKdcemyy3nlPmmiVmWPRAawa++/ORXKGzzJj
+ r1BOJu2upMKS421BjYLIv10NmOR+ZzVKYsSUozVe+jrKhClWHtYkV5ZraDUomzPfY6XL Ug== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 35cn9rqj4b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 17 Dec 2020 21:11:20 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BHL5GKx093983;
+        Thu, 17 Dec 2020 21:11:19 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 35e6etvste-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 17 Dec 2020 21:11:19 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BHLBJ6a023378;
+        Thu, 17 Dec 2020 21:11:19 GMT
+Received: from localhost (/10.159.157.202)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 17 Dec 2020 13:11:18 -0800
+Date:   Thu, 17 Dec 2020 13:11:17 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     wenli xie <wlxie7296@gmail.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [Bug report] overlayfs over xfs whiteout operation may cause
+ deadlock
+Message-ID: <20201217211117.GF38809@magnolia>
+References: <CABRboy006NP8JrxuBgEJbfCcGGUY2Kucwfov+HJf2xW34D5Ocg@mail.gmail.com>
+ <20201211234233.GK106271@magnolia>
+ <CABRboy35_tyxA3gHN7_=xp0_RVugQjvFOHCRsH4Y4rrivE7HmQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b8da4aed-ee44-5d9f-88dc-3d32f0298564@molgen.mpg.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <CABRboy35_tyxA3gHN7_=xp0_RVugQjvFOHCRsH4Y4rrivE7HmQ@mail.gmail.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9838 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 phishscore=0
+ bulkscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012170140
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9838 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
+ impostorscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
+ malwarescore=0 priorityscore=1501 phishscore=0 mlxscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012170140
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 17, 2020 at 06:44:51PM +0100, Donald Buczek wrote:
-> Dear xfs developer,
-> 
-> I was doing some testing on a Linux 5.10.1 system with two 100 TB xfs filesystems on md raid6 raids.
-> 
-> The stress test was essentially `cp -a`ing a Linux source repository with two threads in parallel on each filesystem.
-> 
-> After about on hour, the processes to one filesystem (md1) blocked, 30 minutes later the process to the other filesystem (md0) did.
-> 
->     root      7322  2167  0 Dec16 pts/1    00:00:06 cp -a /jbod/M8068/scratch/linux /jbod/M8068/scratch/1/linux.018.TMP
->     root      7329  2169  0 Dec16 pts/1    00:00:05 cp -a /jbod/M8068/scratch/linux /jbod/M8068/scratch/2/linux.019.TMP
->     root     13856  2170  0 Dec16 pts/1    00:00:08 cp -a /jbod/M8067/scratch/linux /jbod/M8067/scratch/2/linux.028.TMP
->     root     13899  2168  0 Dec16 pts/1    00:00:05 cp -a /jbod/M8067/scratch/linux /jbod/M8067/scratch/1/linux.027.TMP
-> 
-> Some info from the system (all stack traces, slabinfo) is available here: https://owww.molgen.mpg.de/~buczek/2020-12-16.info.txt
-> 
-> It stands out, that there are many (549 for md0, but only 10 for md1)  "xfs-conv" threads all with stacks like this
-> 
->     [<0>] xfs_log_commit_cil+0x6cc/0x7c0
->     [<0>] __xfs_trans_commit+0xab/0x320
->     [<0>] xfs_iomap_write_unwritten+0xcb/0x2e0
->     [<0>] xfs_end_ioend+0xc6/0x110
->     [<0>] xfs_end_io+0xad/0xe0
->     [<0>] process_one_work+0x1dd/0x3e0
->     [<0>] worker_thread+0x2d/0x3b0
->     [<0>] kthread+0x118/0x130
->     [<0>] ret_from_fork+0x22/0x30
-> 
-> xfs_log_commit_cil+0x6cc is
-> 
->   xfs_log_commit_cil()
->     xlog_cil_push_background(log)
->       xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
-> 
-> Some other threads, including the four "cp" commands are also blocking at xfs_log_commit_cil+0x6cc
-> 
-> There are also single "flush" process for each md device with this stack signature:
-> 
->     [<0>] xfs_map_blocks+0xbf/0x400
->     [<0>] iomap_do_writepage+0x15e/0x880
->     [<0>] write_cache_pages+0x175/0x3f0
->     [<0>] iomap_writepages+0x1c/0x40
->     [<0>] xfs_vm_writepages+0x59/0x80
->     [<0>] do_writepages+0x4b/0xe0
->     [<0>] __writeback_single_inode+0x42/0x300
->     [<0>] writeback_sb_inodes+0x198/0x3f0
->     [<0>] __writeback_inodes_wb+0x5e/0xc0
->     [<0>] wb_writeback+0x246/0x2d0
->     [<0>] wb_workfn+0x26e/0x490
->     [<0>] process_one_work+0x1dd/0x3e0
->     [<0>] worker_thread+0x2d/0x3b0
->     [<0>] kthread+0x118/0x130
->     [<0>] ret_from_fork+0x22/0x30
-> 
-> xfs_map_blocks+0xbf is the
-> 
->     xfs_ilock(ip, XFS_ILOCK_SHARED);
-> 
-> in xfs_map_blocks().
-> 
-> The system is low on free memory
-> 
->     MemTotal:       197587764 kB
->     MemFree:          2196496 kB
->     MemAvailable:   189895408 kB
-> 
-> but responsive.
-> 
-> I have an out of tree driver for the HBA ( smartpqi 2.1.6-005 pulled from linux-scsi) , but it is unlikely that this blocking is related to that, because the md block devices itself are responsive (`xxd /dev/md0` )
-> 
-> I can keep the system in the state for a while. Is there an idea what was going from or an idea what data I could collect from the running system to help? I have full debug info and could walk lists or retrieve data structures with gdb.
-> 
+On Tue, Dec 15, 2020 at 08:44:27PM +0800, wenli xie wrote:
+> I tried upstream kernel 5.10 to do the test, and this issue still  can be
+> reproduced.
 
-It might be useful to dump the values under /sys/fs/xfs/<dev>/log/* for
-each fs to get an idea of the state of the logs as well...
+Thanks for the report, I've condensed this down to the following:
 
-Brian
+#!/bin/bash
 
-> Best
->   Donald
-> 
+SCRATCH_MNT=/mnt
+LOAD_FACTOR=1
+TIME_FACTOR=1
 
+mkfs.xfs -f /dev/sda
+mount /dev/sda $SCRATCH_MNT
+
+mkdir $SCRATCH_MNT/lowerdir
+mkdir $SCRATCH_MNT/lowerdir1
+mkdir $SCRATCH_MNT/lowerdir/etc
+mkdir $SCRATCH_MNT/workers
+echo salts > $SCRATCH_MNT/lowerdir/etc/access.conf
+touch $SCRATCH_MNT/running
+
+stop_workers() {
+	test -e $SCRATCH_MNT/running || return
+	rm -f $SCRATCH_MNT/running
+
+	while [ "$(ls $SCRATCH_MNT/workers/ | wc -l)" -gt 0 ]; do
+		wait
+	done
+}
+
+worker() {
+	local tag="$1"
+	local mergedir="$SCRATCH_MNT/merged$tag"
+	local l="lowerdir=$SCRATCH_MNT/lowerdir:$SCRATCH_MNT/lowerdir1"
+	local u="upperdir=$SCRATCH_MNT/upperdir$tag"
+	local w="workdir=$SCRATCH_MNT/workdir$tag"
+	local i="index=off"
+
+	touch $SCRATCH_MNT/workers/$tag
+	while test -e $SCRATCH_MNT/running; do
+		rm -rf $SCRATCH_MNT/merged$tag
+		rm -rf $SCRATCH_MNT/upperdir$tag
+		rm -rf $SCRATCH_MNT/workdir$tag
+		mkdir $SCRATCH_MNT/merged$tag
+		mkdir $SCRATCH_MNT/workdir$tag
+		mkdir $SCRATCH_MNT/upperdir$tag
+
+		mount -t overlay overlay -o "$l,$u,$w,$i" $mergedir
+		mv $mergedir/etc/access.conf $mergedir/etc/access.conf.bak
+		touch $mergedir/etc/access.conf
+		mv $mergedir/etc/access.conf $mergedir/etc/access.conf.bak
+		touch $mergedir/etc/access.conf
+		umount $mergedir
+	done
+	rm -f $SCRATCH_MNT/workers/$tag
+}
+
+for i in $(seq 0 $((4 + LOAD_FACTOR)) ); do
+	worker $i &
+done
+
+sleep $((30 * TIME_FACTOR))
+stop_workers
+
+...and I think this is enough to diagnose the deadlock.
+
+This is an ABBA deadlock caused by locking the AGI buffers in the wrong
+order.  Specifically, we seem to be calling xfs_dir_rename with a
+non-null @wip and a non-null @target_ip.  In the deadlock scenario, @wip
+is an inode in AG 2, and @target_ip is an inode in AG 0 with nlink==1.
+
+First we call xfs_iunlink_remove to remove @wip from the unlinked list,
+which causes us to lock AGI 2.  Next we replace the directory entry.
+Finally, we need to droplink @target_ip.  Since @target_ip has nlink==1,
+xfs_droplink will need to put it on AGI 0's unlinked list.
+
+Unfortunately, the locking rules say that you can only lock AGIs in
+increasing order.  This means that we cannot lock AGI 0 after locking
+AGI 2 without risking deadlock.
+
+Does the attached patch fix the deadlock for you?
+
+--D
+
+From: Darrick J. Wong <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: fix an ABBA deadlock in xfs_rename
+
+When overlayfs is running on top of xfs and the user unlinks a file in
+the overlay, overlayfs will create a whiteout inode and ask xfs to
+"rename" the whiteout file atop the one being unlinked.  If the file
+being unlinked loses its one nlink, we then have to put the inode on the
+unlinked list.
+
+This requires us to grab the AGI buffer of the whiteout inode to take it
+off the unlinked list (which is where whiteouts are created) and to grab
+the AGI buffer of the file being deleted.  If the whiteout was created
+in a higher numbered AG than the file being deleted, we'll lock the AGIs
+in the wrong order and deadlock.
+
+Therefore, grab all the AGI locks we think we'll need ahead of time, and
+in the correct order.
+
+Reported-by: wenli xie <wlxie7296@gmail.com>
+Fixes: 93597ae8dac0 ("xfs: Fix deadlock between AGI and AGF when target_ip exists in xfs_rename()")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_inode.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index b7352bc4c815..dd419a1bc6ba 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3000,6 +3000,48 @@ xfs_rename_alloc_whiteout(
+ 	return 0;
+ }
+ 
++/*
++ * For the general case of renaming files, lock all the AGI buffers we need to
++ * handle bumping the nlink of the whiteout inode off the unlinked list and to
++ * handle dropping the nlink of the target inode.  We have to do this in
++ * increasing AG order to avoid deadlocks.
++ */
++static int
++xfs_rename_lock_agis(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*wip,
++	struct xfs_inode	*target_ip)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_buf		*bp;
++	xfs_agnumber_t		agi_locks[2] = { NULLAGNUMBER, NULLAGNUMBER };
++	int			error;
++
++	if (wip)
++		agi_locks[0] = XFS_INO_TO_AGNO(mp, wip->i_ino);
++
++	if (target_ip && VFS_I(target_ip)->i_nlink == 1)
++		agi_locks[1] = XFS_INO_TO_AGNO(mp, target_ip->i_ino);
++
++	if (agi_locks[0] != NULLAGNUMBER && agi_locks[1] != NULLAGNUMBER &&
++	    agi_locks[0] > agi_locks[1])
++		swap(agi_locks[0], agi_locks[1]);
++
++	if (agi_locks[0] != NULLAGNUMBER) {
++		error = xfs_read_agi(mp, tp, agi_locks[0], &bp);
++		if (error)
++			return error;
++	}
++
++	if (agi_locks[1] != NULLAGNUMBER) {
++		error = xfs_read_agi(mp, tp, agi_locks[1], &bp);
++		if (error)
++			return error;
++	}
++
++	return 0;
++}
++
+ /*
+  * xfs_rename
+  */
+@@ -3130,6 +3172,10 @@ xfs_rename(
+ 		}
+ 	}
+ 
++	error = xfs_rename_lock_agis(tp, wip, target_ip);
++	if (error)
++		return error;
++
+ 	/*
+ 	 * Directory entry creation below may acquire the AGF. Remove
+ 	 * the whiteout from the unlinked list first to preserve correct
