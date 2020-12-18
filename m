@@ -2,57 +2,57 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	UNPARSEABLE_RELAY,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47D39C3526D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A205C3526F
 	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 07:27:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E43023A5B
+	by mail.kernel.org (Postfix) with ESMTP id 6EA8623A79
 	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 07:27:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732955AbgLRH0w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Dec 2020 02:26:52 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:37690 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732956AbgLRH0v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Dec 2020 02:26:51 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7KScc003232
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:10 GMT
+        id S1732956AbgLRH0z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Dec 2020 02:26:55 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:33602 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732959AbgLRH0y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Dec 2020 02:26:54 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7Jm4d000759
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:12 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=EoQANJWcyLuJZEeCCnFZQHEfV3kQDCxOlBG1xme6bvk=;
- b=H2mDWWlURzlHW/pfxfCzb7f4GT2DpIrVGIRrv0mmSELd1Ac55w/RbSTni5s1KgcTwhkh
- H57kZykRmzMiwlSkAxThEbYq8QQ5Q+hXe/vEFmCTcU8JqnKcZxThw4nrZLmRCUsdS53r
- 3MNXQ6OWA2wwcn4d+3+S5f/WXrlJeJ4uAIzYzZdUW/m2AYX/8s0mToQSWepqk/kTYU9U
- G8LcskkhyQBTuZIaF0Bzxng0p7U5CN1tvZ0roa+H5yUxQYkwcp2TI284plvkfgkwCFzW
- 0i5SBHeXQUZP32SofFK+TB5mpshLhDK0AvBi3/k0gvbMdG3pCtdkt3hs214hV/lbk2D1 1Q== 
+ bh=RPpjj6xY7D71F078BvmqbotzF0ROuElSNwQZVDxu8ck=;
+ b=EDbFvp+gMEvfm7aAoHxRscjOMiHNq4roRlp081VnyIoB8P51ZF4MzGqSZZtm80gGMZLQ
+ hHSAu2g8A+GtTwTVj/WtISKD3UQTe1TjwzXuX+AuUL4xcpGr+DYw+udMrd4Jm26KF3kM
+ OlO76FTDccIXyoLRFGxtWJyufXy8S3ClY9PaS9t31cqeugI1mpxMn1FUrAQBm/+r7u6x
+ w367D1j1j2n8MW3kO2HNqT2dinLeXkr8ZMGRpj3/ovZfq3kjELPzfe9Rjl1zA43R/oWG
+ EMZ56k8uUKw5VNVVQR61CjxLrGs4/kL1eApc6dB3Njtr7k7gfBZJFe/OmKOgJeXNRtTE 3A== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 35cn9rs185-1
+        by aserp2130.oracle.com with ESMTP id 35ckcbs6fc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:10 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:12 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7LL2n044442
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:09 GMT
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7LL2C044534
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:11 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 35d7erys6q-1
+        by aserp3030.oracle.com with ESMTP id 35d7erys92-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:09 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:11 +0000
 Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BI7Q733020801
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:08 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BI7QAHH020817
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:10 GMT
 Received: from localhost.localdomain (/67.1.214.41)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 17 Dec 2020 23:26:07 -0800
+        with ESMTP ; Thu, 17 Dec 2020 23:26:10 -0800
 From:   Allison Henderson <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v14 08/14] xfsprogs: Set up infastructure for deferred attribute operations
-Date:   Fri, 18 Dec 2020 00:25:49 -0700
-Message-Id: <20201218072555.16694-9-allison.henderson@oracle.com>
+Subject: [PATCH v14 13/14] xfsprogs: Merge xfs_delattr_context into xfs_attr_item
+Date:   Fri, 18 Dec 2020 00:25:54 -0700
+Message-Id: <20201218072555.16694-14-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201218072555.16694-1-allison.henderson@oracle.com>
 References: <20201218072555.16694-1-allison.henderson@oracle.com>
@@ -62,433 +62,687 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spam
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2012180052
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9838 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
- impostorscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
- malwarescore=0 priorityscore=1501 phishscore=0 mlxscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
+ priorityscore=1501 mlxscore=0 suspectscore=0 adultscore=0 phishscore=0
+ malwarescore=0 impostorscore=0 lowpriorityscore=0 clxscore=1015
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2012180052
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Currently attributes are modified directly across one or more
-transactions. But they are not logged or replayed in the event of an
-error. The goal of delayed attributes is to enable logging and replaying
-of attribute operations using the existing delayed operations
-infrastructure.  This will later enable the attributes to become part of
-larger multi part operations that also must first be recorded to the
-log.  This is mostly of interest in the scheme of parent pointers which
-would need to maintain an attribute containing parent inode information
-any time an inode is moved, created, or removed.  Parent pointers would
-then be of interest to any feature that would need to quickly derive an
-inode path from the mount point. Online scrub, nfs lookups and fs grow
-or shrink operations are all features that could take advantage of this.
-
-This patch adds two new log item types for setting or removing
-attributes as deferred operations.  The xfs_attri_log_item logs an
-intent to set or remove an attribute.  The corresponding
-xfs_attrd_log_item holds a reference to the xfs_attri_log_item and is
-freed once the transaction is done.  Both log items use a generic
-xfs_attr_log_format structure that contains the attribute name, value,
-flags, inode, and an op_flag that indicates if the operations is a set
-or remove.
+This is a clean up patch that merges xfs_delattr_context into
+xfs_attr_item.  Now that the refactoring is complete and the delayed
+operation infastructure is in place, we can combine these to eliminate
+the extra struct
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- libxfs/defer_item.c     | 132 ++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/libxfs_priv.h    |   1 +
- libxfs/xfs_attr.c       |   7 ++-
- libxfs/xfs_attr.h       |  31 ++++++++++++
- libxfs/xfs_defer.c      |   1 +
- libxfs/xfs_defer.h      |   2 +
- libxfs/xfs_log_format.h |  43 +++++++++++++++-
- 7 files changed, 211 insertions(+), 6 deletions(-)
+ libxfs/defer_item.c      |  14 +++--
+ libxfs/xfs_attr.c        | 138 +++++++++++++++++++++++------------------------
+ libxfs/xfs_attr.h        |  40 ++++++--------
+ libxfs/xfs_attr_remote.c |  34 ++++++------
+ libxfs/xfs_attr_remote.h |   6 +--
+ 5 files changed, 112 insertions(+), 120 deletions(-)
 
 diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index b18182e..ab21173 100644
+index 054d158..04a7534 100644
 --- a/libxfs/defer_item.c
 +++ b/libxfs/defer_item.c
-@@ -16,10 +16,14 @@
- #include "xfs_trans.h"
- #include "xfs_bmap.h"
- #include "xfs_alloc.h"
-+#include "xfs_attr_item.h"
- #include "xfs_rmap.h"
- #include "xfs_refcount.h"
- #include "xfs_bmap.h"
- #include "xfs_inode.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_attr.h"
+@@ -129,11 +129,11 @@ static inline struct xfs_attrd_log_item *ATTRD_ITEM(struct xfs_log_item *lip)
+  */
+ int
+ xfs_trans_attr(
+-	struct xfs_delattr_context	*dac,
++	struct xfs_attr_item		*attr,
+ 	struct xfs_attrd_log_item	*attrdp,
+ 	uint32_t			op_flags)
+ {
+-	struct xfs_da_args		*args = dac->da_args;
++	struct xfs_da_args		*args = attr->xattri_da_args;
+ 	int				error;
  
- /* Dummy defer item ops, since we don't do logging. */
+ 	error = xfs_qm_dqattach_locked(args->dp, 0);
+@@ -143,11 +143,11 @@ xfs_trans_attr(
+ 	switch (op_flags) {
+ 	case XFS_ATTR_OP_FLAGS_SET:
+ 		args->op_flags |= XFS_DA_OP_ADDNAME;
+-		error = xfs_attr_set_iter(dac);
++		error = xfs_attr_set_iter(attr);
+ 		break;
+ 	case XFS_ATTR_OP_FLAGS_REMOVE:
+ 		ASSERT(XFS_IFORK_Q((args->dp)));
+-		error = xfs_attr_remove_iter(dac);
++		error = xfs_attr_remove_iter(attr);
+ 		break;
+ 	default:
+ 		error = -EFSCORRUPTED;
+@@ -204,18 +204,16 @@ xfs_attr_finish_item(
+ {
+ 	struct xfs_attr_item		*attr;
+ 	int				error;
+-	struct xfs_delattr_context      *dac;
  
-@@ -112,6 +116,134 @@ const struct xfs_defer_op_type xfs_extent_free_defer_type = {
- 	.cancel_item	= xfs_extent_free_cancel_item,
- };
+ 	attr = container_of(item, struct xfs_attr_item, xattri_list);
+-	dac = &attr->xattri_dac;
  
-+static inline struct xfs_attrd_log_item *ATTRD_ITEM(struct xfs_log_item *lip)
-+{
-+	return container_of(lip, struct xfs_attrd_log_item, attrd_item);
-+}
-+
-+/*
-+ * Log an ATTRI it to the ATTRD when the attr op is done.  An attr operation
-+ * may be a set or a remove.  Note that the transaction is marked dirty
-+ * regardless of whether the operation succeeds or fails to support the
-+ * ATTRI/ATTRD lifecycle rules.
-+ */
-+int
-+xfs_trans_attr(
-+	struct xfs_delattr_context	*dac,
-+	struct xfs_attrd_log_item	*attrdp,
-+	struct xfs_buf			**leaf_bp,
-+	uint32_t			op_flags)
-+{
-+	struct xfs_da_args		*args = dac->da_args;
-+	int				error;
-+
-+	error = xfs_qm_dqattach_locked(args->dp, 0);
-+	if (error)
-+		return error;
-+
-+	switch (op_flags) {
-+	case XFS_ATTR_OP_FLAGS_SET:
-+		args->op_flags |= XFS_DA_OP_ADDNAME;
-+		error = xfs_attr_set_iter(dac, leaf_bp);
-+		break;
-+	case XFS_ATTR_OP_FLAGS_REMOVE:
-+		ASSERT(XFS_IFORK_Q((args->dp)));
-+		error = xfs_attr_remove_iter(dac);
-+		break;
-+	default:
-+		error = -EFSCORRUPTED;
-+		break;
-+	}
-+
-+	/*
-+	 * Mark the transaction dirty, even on error. This ensures the
-+	 * transaction is aborted, which:
-+	 *
-+	 * 1.) releases the ATTRI and frees the ATTRD
-+	 * 2.) shuts down the filesystem
-+	 */
-+	args->trans->t_flags |= XFS_TRANS_DIRTY;
-+
-+	return error;
-+}
-+
-+/* Get an ATTRI. */
-+static struct xfs_log_item *
-+xfs_attr_create_intent(
-+	struct xfs_trans		*tp,
-+	struct list_head		*items,
-+	unsigned int			count,
-+	bool				sort)
-+{
-+	return NULL;
-+}
-+
-+/* Abort all pending ATTRs. */
-+STATIC void
-+xfs_attr_abort_intent(
-+	struct xfs_log_item		*intent)
-+{
-+}
-+
-+/* Get an ATTRD so we can process all the attrs. */
-+static struct xfs_log_item *
-+xfs_attr_create_done(
-+	struct xfs_trans		*tp,
-+	struct xfs_log_item		*intent,
-+	unsigned int			count)
-+{
-+	return NULL;
-+}
-+
-+/* Process an attr. */
-+STATIC int
-+xfs_attr_finish_item(
-+	struct xfs_trans		*tp,
-+	struct xfs_log_item		*done,
-+	struct list_head		*item,
-+	struct xfs_btree_cur		**state)
-+{
-+	struct xfs_attr_item		*attr;
-+	int				error;
-+	struct xfs_delattr_context      *dac;
-+
-+	attr = container_of(item, struct xfs_attr_item, xattri_list);
-+	dac = &attr->xattri_dac;
-+
-+	/*
-+	 * Always reset trans after EAGAIN cycle
-+	 * since the transaction is new
-+	 */
-+	dac->da_args->trans = tp;
-+
-+	error = xfs_trans_attr(dac, ATTRD_ITEM(done), &dac->leaf_bp,
-+			       attr->xattri_op_flags);
-+	if (error != -EAGAIN)
-+		kmem_free(attr);
-+
-+	return error;
-+}
-+
-+/* Cancel an attr */
-+STATIC void
-+xfs_attr_cancel_item(
-+	struct list_head		*item)
-+{
-+	struct xfs_attr_item		*attr;
-+
-+	attr = container_of(item, struct xfs_attr_item, xattri_list);
-+	kmem_free(attr);
-+}
-+
-+const struct xfs_defer_op_type xfs_attr_defer_type = {
-+	.max_items	= 1,
-+	.create_intent	= xfs_attr_create_intent,
-+	.abort_intent	= xfs_attr_abort_intent,
-+	.create_done	= xfs_attr_create_done,
-+	.finish_item	= xfs_attr_finish_item,
-+	.cancel_item	= xfs_attr_cancel_item,
-+};
-+
- /*
-  * AGFL blocks are accounted differently in the reserve pools and are not
-  * inserted into the busy extent list.
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index e92269f..ef199e3 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -497,6 +497,7 @@ void __xfs_buf_mark_corrupt(struct xfs_buf *bp, xfs_failaddr_t fa);
- #define xfs_trans_reserve_quota_nblks(t,i,b,n,f)	(0)
- #define xfs_trans_unreserve_quota_nblks(t,i,b,n,f)	((void) 0)
- #define xfs_qm_dqattach(i)				(0)
-+#define xfs_qm_dqattach_locked(i,b)			(0)
+ 	/*
+ 	 * Always reset trans after EAGAIN cycle
+ 	 * since the transaction is new
+ 	 */
+-	dac->da_args->trans = tp;
++	attr->xattri_da_args->trans = tp;
  
- #define uuid_copy(s,d)		platform_uuid_copy((s),(d))
- #define uuid_equal(s,d)		(platform_uuid_compare((s),(d)) == 0)
+-	error = xfs_trans_attr(dac, ATTRD_ITEM(done), attr->xattri_op_flags);
++	error = xfs_trans_attr(attr, ATTRD_ITEM(done), attr->xattri_op_flags);
+ 	if (error != -EAGAIN)
+ 		kmem_free(attr);
+ 
 diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index d0c2364..a3f256f 100644
+index 89f0ffd..483d03c 100644
 --- a/libxfs/xfs_attr.c
 +++ b/libxfs/xfs_attr.c
-@@ -24,6 +24,7 @@
- #include "xfs_quota_defs.h"
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
-+#include "xfs_attr_item.h"
+@@ -45,7 +45,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
+  * Internal routines when attribute list is one block.
+  */
+ STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
+-STATIC int xfs_attr_leaf_addname(struct xfs_delattr_context *dac);
++STATIC int xfs_attr_leaf_addname(struct xfs_attr_item *attr);
+ STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
+ STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
  
- /*
-  * xfs_attr.c
-@@ -59,8 +60,6 @@ STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
+@@ -53,8 +53,8 @@ STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
+  * Internal routines when attribute list is more than one block.
+  */
+ STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+-STATIC int xfs_attr_node_addname(struct xfs_delattr_context *dac);
+-STATIC int xfs_attr_node_removename_iter(struct xfs_delattr_context *dac);
++STATIC int xfs_attr_node_addname(struct xfs_attr_item *attr);
++STATIC int xfs_attr_node_removename_iter(struct xfs_attr_item *attr);
+ STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
+ 				 struct xfs_da_state **state);
  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
- STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
- STATIC int xfs_attr_leaf_try_add(struct xfs_da_args *args, struct xfs_buf *bp);
--STATIC int xfs_attr_set_iter(struct xfs_delattr_context *dac,
--			     struct xfs_buf **leaf_bp);
- 
+@@ -275,27 +275,27 @@ xfs_attr_set_shortform(
+  */
  int
- xfs_inode_hasattr(
-@@ -142,7 +141,7 @@ xfs_attr_get(
- /*
-  * Calculate how many blocks we need for the new attribute,
-  */
--STATIC int
-+int
- xfs_attr_calc_size(
- 	struct xfs_da_args	*args,
- 	int			*local)
-@@ -328,7 +327,7 @@ xfs_attr_set_args(
-  * to handle this, and recall the function until a successful error code is
-  * returned.
-  */
--STATIC int
-+int
  xfs_attr_set_iter(
- 	struct xfs_delattr_context	*dac,
- 	struct xfs_buf			**leaf_bp)
+-	struct xfs_delattr_context	*dac)
++	struct xfs_attr_item		*attr)
+ {
+-	struct xfs_da_args		*args = dac->da_args;
++	struct xfs_da_args		*args = attr->xattri_da_args;
+ 	struct xfs_inode		*dp = args->dp;
+-	struct xfs_buf			**leaf_bp = &dac->leaf_bp;
++	struct xfs_buf			**leaf_bp = &attr->xattri_leaf_bp;
+ 	int				error = 0;
+ 
+ 	/* State machine switch */
+-	switch (dac->dela_state) {
++	switch (attr->xattri_dela_state) {
+ 	case XFS_DAS_FLIP_LFLAG:
+ 	case XFS_DAS_FOUND_LBLK:
+ 	case XFS_DAS_RM_LBLK:
+-		return xfs_attr_leaf_addname(dac);
++		return xfs_attr_leaf_addname(attr);
+ 	case XFS_DAS_FOUND_NBLK:
+ 	case XFS_DAS_FLIP_NFLAG:
+ 	case XFS_DAS_ALLOC_NODE:
+-		return xfs_attr_node_addname(dac);
++		return xfs_attr_node_addname(attr);
+ 	case XFS_DAS_UNINIT:
+ 		break;
+ 	default:
+-		ASSERT(dac->dela_state != XFS_DAS_RM_SHRINK);
++		ASSERT(attr->xattri_dela_state != XFS_DAS_RM_SHRINK);
+ 		break;
+ 	}
+ 
+@@ -327,7 +327,7 @@ xfs_attr_set_iter(
+ 	}
+ 
+ 	if (!xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+-		return xfs_attr_node_addname(dac);
++		return xfs_attr_node_addname(attr);
+ 
+ 	error = xfs_attr_leaf_try_add(args, *leaf_bp);
+ 	switch (error) {
+@@ -350,11 +350,11 @@ xfs_attr_set_iter(
+ 		 * when we come back, we'll be a node, so we'll fall
+ 		 * down into the node handling code below
+ 		 */
+-		trace_xfs_das_state_return(dac->dela_state);
++		trace_xfs_das_state_return(attr->xattri_dela_state);
+ 		return -EAGAIN;
+ 	case 0:
+-		dac->dela_state = XFS_DAS_FOUND_LBLK;
+-		trace_xfs_das_state_return(dac->dela_state);
++		attr->xattri_dela_state = XFS_DAS_FOUND_LBLK;
++		trace_xfs_das_state_return(attr->xattri_dela_state);
+ 		return -EAGAIN;
+ 	}
+ 	return error;
+@@ -400,13 +400,13 @@ xfs_has_attr(
+  */
+ int
+ xfs_attr_remove_iter(
+-	struct xfs_delattr_context	*dac)
++	struct xfs_attr_item		*attr)
+ {
+-	struct xfs_da_args		*args = dac->da_args;
++	struct xfs_da_args		*args = attr->xattri_da_args;
+ 	struct xfs_inode		*dp = args->dp;
+ 
+ 	/* If we are shrinking a node, resume shrink */
+-	if (dac->dela_state == XFS_DAS_RM_SHRINK)
++	if (attr->xattri_dela_state == XFS_DAS_RM_SHRINK)
+ 		goto node;
+ 
+ 	if (!xfs_inode_hasattr(dp))
+@@ -421,7 +421,7 @@ xfs_attr_remove_iter(
+ 		return xfs_attr_leaf_removename(args);
+ node:
+ 	/* If we are not short form or leaf, then proceed to remove node */
+-	return  xfs_attr_node_removename_iter(dac);
++	return  xfs_attr_node_removename_iter(attr);
+ }
+ 
+ /*
+@@ -572,7 +572,7 @@ xfs_attr_item_init(
+ 
+ 	new = kmem_zalloc(sizeof(struct xfs_attr_item), KM_NOFS);
+ 	new->xattri_op_flags = op_flags;
+-	new->xattri_dac.da_args = args;
++	new->xattri_da_args = args;
+ 
+ 	*attr = new;
+ 	return 0;
+@@ -767,16 +767,16 @@ out_brelse:
+  */
+ STATIC int
+ xfs_attr_leaf_addname(
+-	struct xfs_delattr_context	*dac)
++	struct xfs_attr_item		*attr)
+ {
+-	struct xfs_da_args		*args = dac->da_args;
++	struct xfs_da_args		*args = attr->xattri_da_args;
+ 	struct xfs_buf			*bp = NULL;
+ 	int				error, forkoff;
+ 	struct xfs_inode		*dp = args->dp;
+ 	struct xfs_mount		*mp = args->dp->i_mount;
+ 
+ 	/* State machine switch */
+-	switch (dac->dela_state) {
++	switch (attr->xattri_dela_state) {
+ 	case XFS_DAS_FLIP_LFLAG:
+ 		goto das_flip_flag;
+ 	case XFS_DAS_RM_LBLK:
+@@ -793,10 +793,10 @@ xfs_attr_leaf_addname(
+ 	 */
+ 
+ 	/* Open coded xfs_attr_rmtval_set without trans handling */
+-	if ((dac->flags & XFS_DAC_LEAF_ADDNAME_INIT) == 0) {
+-		dac->flags |= XFS_DAC_LEAF_ADDNAME_INIT;
++	if ((attr->xattri_flags & XFS_DAC_LEAF_ADDNAME_INIT) == 0) {
++		attr->xattri_flags |= XFS_DAC_LEAF_ADDNAME_INIT;
+ 		if (args->rmtblkno > 0) {
+-			error = xfs_attr_rmtval_find_space(dac);
++			error = xfs_attr_rmtval_find_space(attr);
+ 			if (error)
+ 				return error;
+ 		}
+@@ -806,12 +806,12 @@ xfs_attr_leaf_addname(
+ 	 * Roll through the "value", allocating blocks on disk as
+ 	 * required.
+ 	 */
+-	if (dac->blkcnt > 0) {
+-		error = xfs_attr_rmtval_set_blk(dac);
++	if (attr->xattri_blkcnt > 0) {
++		error = xfs_attr_rmtval_set_blk(attr);
+ 		if (error)
+ 			return error;
+ 
+-		trace_xfs_das_state_return(dac->dela_state);
++		trace_xfs_das_state_return(attr->xattri_dela_state);
+ 		return -EAGAIN;
+ 	}
+ 
+@@ -845,8 +845,8 @@ xfs_attr_leaf_addname(
+ 		/*
+ 		 * Commit the flag value change and start the next trans in series.
+ 		 */
+-		dac->dela_state = XFS_DAS_FLIP_LFLAG;
+-		trace_xfs_das_state_return(dac->dela_state);
++		attr->xattri_dela_state = XFS_DAS_FLIP_LFLAG;
++		trace_xfs_das_state_return(attr->xattri_dela_state);
+ 		return -EAGAIN;
+ 	}
+ das_flip_flag:
+@@ -861,12 +861,12 @@ das_flip_flag:
+ 		return error;
+ 
+ 	/* Set state in case xfs_attr_rmtval_remove returns -EAGAIN */
+-	dac->dela_state = XFS_DAS_RM_LBLK;
++	attr->xattri_dela_state = XFS_DAS_RM_LBLK;
+ das_rm_lblk:
+ 	if (args->rmtblkno) {
+-		error = xfs_attr_rmtval_remove(dac);
++		error = xfs_attr_rmtval_remove(attr);
+ 		if (error == -EAGAIN)
+-			trace_xfs_das_state_return(dac->dela_state);
++			trace_xfs_das_state_return(attr->xattri_dela_state);
+ 		if (error)
+ 			return error;
+ 	}
+@@ -1040,9 +1040,9 @@ xfs_attr_node_hasname(
+  */
+ STATIC int
+ xfs_attr_node_addname(
+-	struct xfs_delattr_context	*dac)
++	struct xfs_attr_item		*attr)
+ {
+-	struct xfs_da_args		*args = dac->da_args;
++	struct xfs_da_args		*args = attr->xattri_da_args;
+ 	struct xfs_da_state		*state = NULL;
+ 	struct xfs_da_state_blk		*blk;
+ 	int				retval = 0;
+@@ -1052,7 +1052,7 @@ xfs_attr_node_addname(
+ 	trace_xfs_attr_node_addname(args);
+ 
+ 	/* State machine switch */
+-	switch (dac->dela_state) {
++	switch (attr->xattri_dela_state) {
+ 	case XFS_DAS_FLIP_NFLAG:
+ 		goto das_flip_flag;
+ 	case XFS_DAS_FOUND_NBLK:
+@@ -1118,7 +1118,7 @@ xfs_attr_node_addname(
+ 			 * this. dela_state is still unset by this function at
+ 			 * this point.
+ 			 */
+-			trace_xfs_das_state_return(dac->dela_state);
++			trace_xfs_das_state_return(attr->xattri_dela_state);
+ 			return -EAGAIN;
+ 		}
+ 
+@@ -1150,8 +1150,8 @@ xfs_attr_node_addname(
+ 	xfs_da_state_free(state);
+ 	state = NULL;
+ 
+-	dac->dela_state = XFS_DAS_FOUND_NBLK;
+-	trace_xfs_das_state_return(dac->dela_state);
++	attr->xattri_dela_state = XFS_DAS_FOUND_NBLK;
++	trace_xfs_das_state_return(attr->xattri_dela_state);
+ 	return -EAGAIN;
+ das_found_nblk:
+ 
+@@ -1163,7 +1163,7 @@ das_found_nblk:
+ 	 */
+ 	if (args->rmtblkno > 0) {
+ 		/* Open coded xfs_attr_rmtval_set without trans handling */
+-		error = xfs_attr_rmtval_find_space(dac);
++		error = xfs_attr_rmtval_find_space(attr);
+ 		if (error)
+ 			return error;
+ 
+@@ -1171,14 +1171,14 @@ das_found_nblk:
+ 		 * Roll through the "value", allocating blocks on disk as
+ 		 * required.  Set the state in case of -EAGAIN return code
+ 		 */
+-		dac->dela_state = XFS_DAS_ALLOC_NODE;
++		attr->xattri_dela_state = XFS_DAS_ALLOC_NODE;
+ das_alloc_node:
+-		if (dac->blkcnt > 0) {
+-			error = xfs_attr_rmtval_set_blk(dac);
++		if (attr->xattri_blkcnt > 0) {
++			error = xfs_attr_rmtval_set_blk(attr);
+ 			if (error)
+ 				return error;
+ 
+-			trace_xfs_das_state_return(dac->dela_state);
++			trace_xfs_das_state_return(attr->xattri_dela_state);
+ 			return -EAGAIN;
+ 		}
+ 
+@@ -1213,8 +1213,8 @@ das_alloc_node:
+ 		/*
+ 		 * Commit the flag value change and start the next trans in series
+ 		 */
+-		dac->dela_state = XFS_DAS_FLIP_NFLAG;
+-		trace_xfs_das_state_return(dac->dela_state);
++		attr->xattri_dela_state = XFS_DAS_FLIP_NFLAG;
++		trace_xfs_das_state_return(attr->xattri_dela_state);
+ 		return -EAGAIN;
+ 	}
+ das_flip_flag:
+@@ -1229,13 +1229,13 @@ das_flip_flag:
+ 		return error;
+ 
+ 	/* Set state in case xfs_attr_rmtval_remove returns -EAGAIN */
+-	dac->dela_state = XFS_DAS_RM_NBLK;
++	attr->xattri_dela_state = XFS_DAS_RM_NBLK;
+ das_rm_nblk:
+ 	if (args->rmtblkno) {
+-		error = xfs_attr_rmtval_remove(dac);
++		error = xfs_attr_rmtval_remove(attr);
+ 
+ 		if (error == -EAGAIN)
+-			trace_xfs_das_state_return(dac->dela_state);
++			trace_xfs_das_state_return(attr->xattri_dela_state);
+ 
+ 		if (error)
+ 			return error;
+@@ -1343,10 +1343,10 @@ xfs_attr_leaf_mark_incomplete(
+  */
+ STATIC
+ int xfs_attr_node_removename_setup(
+-	struct xfs_delattr_context	*dac)
++	struct xfs_attr_item		*attr)
+ {
+-	struct xfs_da_args		*args = dac->da_args;
+-	struct xfs_da_state		**state = &dac->da_state;
++	struct xfs_da_args		*args = attr->xattri_da_args;
++	struct xfs_da_state		**state = &attr->xattri_da_state;
+ 	int				error;
+ 
+ 	error = xfs_attr_node_hasname(args, state);
+@@ -1370,7 +1370,7 @@ int xfs_attr_node_removename_setup(
+ 
+ STATIC int
+ xfs_attr_node_remove_rmt (
+-	struct xfs_delattr_context	*dac,
++	struct xfs_attr_item		*attr,
+ 	struct xfs_da_state		*state)
+ {
+ 	int				error = 0;
+@@ -1378,9 +1378,9 @@ xfs_attr_node_remove_rmt (
+ 	/*
+ 	 * May return -EAGAIN to request that the caller recall this function
+ 	 */
+-	error = xfs_attr_rmtval_remove(dac);
++	error = xfs_attr_rmtval_remove(attr);
+ 	if (error == -EAGAIN)
+-		trace_xfs_das_state_return(dac->dela_state);
++		trace_xfs_das_state_return(attr->xattri_dela_state);
+ 	if (error)
+ 		return error;
+ 
+@@ -1424,10 +1424,10 @@ xfs_attr_node_remove_cleanup(
+  */
+ STATIC int
+ xfs_attr_node_remove_step(
+-	struct xfs_delattr_context	*dac)
++	struct xfs_attr_item		*attr)
+ {
+-	struct xfs_da_args		*args = dac->da_args;
+-	struct xfs_da_state		*state = dac->da_state;
++	struct xfs_da_args		*args = attr->xattri_da_args;
++	struct xfs_da_state		*state = attr->xattri_da_state;
+ 	int				error = 0;
+ 	/*
+ 	 * If there is an out-of-line value, de-allocate the blocks.
+@@ -1438,7 +1438,7 @@ xfs_attr_node_remove_step(
+ 		/*
+ 		 * May return -EAGAIN. Remove blocks until args->rmtblkno == 0
+ 		 */
+-		error = xfs_attr_node_remove_rmt(dac, state);
++		error = xfs_attr_node_remove_rmt(attr, state);
+ 		if (error)
+ 			return error;
+ 	}
+@@ -1459,29 +1459,29 @@ xfs_attr_node_remove_step(
+  */
+ STATIC int
+ xfs_attr_node_removename_iter(
+-	struct xfs_delattr_context	*dac)
++	struct xfs_attr_item		*attr)
+ {
+-	struct xfs_da_args		*args = dac->da_args;
++	struct xfs_da_args		*args = attr->xattri_da_args;
+ 	struct xfs_da_state		*state = NULL;
+ 	int				retval, error;
+ 	struct xfs_inode		*dp = args->dp;
+ 
+ 	trace_xfs_attr_node_removename(args);
+ 
+-	if (!dac->da_state) {
+-		error = xfs_attr_node_removename_setup(dac);
++	if (!attr->xattri_da_state) {
++		error = xfs_attr_node_removename_setup(attr);
+ 		if (error)
+ 			goto out;
+ 	}
+-	state = dac->da_state;
++	state = attr->xattri_da_state;
+ 
+-	switch (dac->dela_state) {
++	switch (attr->xattri_dela_state) {
+ 	case XFS_DAS_UNINIT:
+ 		/*
+ 		 * repeatedly remove remote blocks, remove the entry and join.
+ 		 * returns -EAGAIN or 0 for completion of the step.
+ 		 */
+-		error = xfs_attr_node_remove_step(dac);
++		error = xfs_attr_node_remove_step(attr);
+ 		if (error)
+ 			break;
+ 
+@@ -1497,8 +1497,8 @@ xfs_attr_node_removename_iter(
+ 			if (error)
+ 				return error;
+ 
+-			dac->dela_state = XFS_DAS_RM_SHRINK;
+-			trace_xfs_das_state_return(dac->dela_state);
++			attr->xattri_dela_state = XFS_DAS_RM_SHRINK;
++			trace_xfs_das_state_return(attr->xattri_dela_state);
+ 			return -EAGAIN;
+ 		}
+ 
+@@ -1518,7 +1518,7 @@ xfs_attr_node_removename_iter(
+ 	}
+ 
+ 	if (error == -EAGAIN) {
+-		trace_xfs_das_state_return(dac->dela_state);
++		trace_xfs_das_state_return(attr->xattri_dela_state);
+ 		return error;
+ 	}
+ out:
 diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index e101238..7c7af0a 100644
+index 4838094..8c70610 100644
 --- a/libxfs/xfs_attr.h
 +++ b/libxfs/xfs_attr.h
-@@ -28,6 +28,11 @@ struct xfs_attr_list_context;
+@@ -364,7 +364,7 @@ struct xfs_attr_list_context {
   */
- #define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
  
-+static inline bool xfs_hasdelattr(struct xfs_mount *mp)
-+{
-+	return false;
-+}
-+
  /*
-  * Kernel-internal version of the attrlist cursor.
-  */
-@@ -384,6 +389,7 @@ enum xfs_delattr_state {
-  */
- #define XFS_DAC_DEFER_FINISH		0x01 /* finish the transaction */
- #define XFS_DAC_LEAF_ADDNAME_INIT	0x02 /* xfs_attr_leaf_addname init*/
-+#define XFS_DAC_DELAYED_OP_INIT		0x04 /* delayed operations init*/
+- * Enum values for xfs_delattr_context.da_state
++ * Enum values for xfs_attr_item.xattri_da_state
+  *
+  * These values are used by delayed attribute operations to keep track  of where
+  * they were before they returned -EAGAIN.  A return code of -EAGAIN signals the
+@@ -385,7 +385,7 @@ enum xfs_delattr_state {
+ };
  
+ /*
+- * Defines for xfs_delattr_context.flags
++ * Defines for xfs_attr_item.xattri_flags
+  */
+ #define XFS_DAC_LEAF_ADDNAME_INIT	0x01 /* xfs_attr_leaf_addname init*/
+ #define XFS_DAC_DELAYED_OP_INIT		0x02 /* delayed operations init*/
+@@ -393,32 +393,25 @@ enum xfs_delattr_state {
  /*
   * Context used for keeping track of delayed attribute operations
-@@ -391,6 +397,11 @@ enum xfs_delattr_state {
- struct xfs_delattr_context {
- 	struct xfs_da_args      *da_args;
+  */
+-struct xfs_delattr_context {
+-	struct xfs_da_args      *da_args;
++struct xfs_attr_item {
++	struct xfs_da_args		*xattri_da_args;
  
-+	/*
-+	 * Used by xfs_attr_set to hold a leaf buffer across a transaction roll
-+	 */
-+	struct xfs_buf		*leaf_bp;
-+
+ 	/*
+ 	 * Used by xfs_attr_set to hold a leaf buffer across a transaction roll
+ 	 */
+-	struct xfs_buf		*leaf_bp;
++	struct xfs_buf			*xattri_leaf_bp;
+ 
  	/* Used in xfs_attr_rmtval_set_blk to roll through allocating blocks */
- 	struct xfs_bmbt_irec	map;
- 	xfs_dablk_t		lblkno;
-@@ -404,6 +415,23 @@ struct xfs_delattr_context {
- 	enum xfs_delattr_state  dela_state;
+-	struct xfs_bmbt_irec	map;
+-	xfs_dablk_t		lblkno;
+-	int			blkcnt;
++	struct xfs_bmbt_irec		xattri_map;
++	xfs_dablk_t			xattri_lblkno;
++	int				xattri_blkcnt;
+ 
+ 	/* Used in xfs_attr_node_removename to roll through removing blocks */
+-	struct xfs_da_state     *da_state;
++	struct xfs_da_state		*xattri_da_state;
+ 
+ 	/* Used to keep track of current state of delayed operation */
+-	unsigned int            flags;
+-	enum xfs_delattr_state  dela_state;
+-};
+-
+-/*
+- * List of attrs to commit later.
+- */
+-struct xfs_attr_item {
+-	struct xfs_delattr_context	xattri_dac;
++	unsigned int			xattri_flags;
++	enum xfs_delattr_state		xattri_dela_state;
+ 
+ 	/*
+ 	 * Indicates if the attr operation is a set or a remove
+@@ -426,7 +419,10 @@ struct xfs_attr_item {
+ 	 */
+ 	uint32_t			xattri_op_flags;
+ 
+-	/* used to log this item to an intent */
++	/*
++	 * used to log this item to an intent containing a list of attrs to
++	 * commit later
++	 */
+ 	struct list_head		xattri_list;
  };
  
-+/*
-+ * List of attrs to commit later.
-+ */
-+struct xfs_attr_item {
-+	struct xfs_delattr_context	xattri_dac;
-+
-+	/*
-+	 * Indicates if the attr operation is a set or a remove
-+	 * XFS_ATTR_OP_FLAGS_{SET,REMOVE}
-+	 */
-+	uint32_t			xattri_op_flags;
-+
-+	/* used to log this item to an intent */
-+	struct list_head		xattri_list;
-+};
-+
-+
- /*========================================================================
-  * Function prototypes for the kernel.
-  *========================================================================*/
-@@ -419,11 +447,14 @@ int xfs_attr_get_ilocked(struct xfs_da_args *args);
+@@ -445,12 +441,10 @@ int xfs_inode_hasattr(struct xfs_inode *ip);
+ int xfs_attr_get_ilocked(struct xfs_da_args *args);
  int xfs_attr_get(struct xfs_da_args *args);
  int xfs_attr_set(struct xfs_da_args *args);
- int xfs_attr_set_args(struct xfs_da_args *args);
-+int xfs_attr_set_iter(struct xfs_delattr_context *dac,
-+		      struct xfs_buf **leaf_bp);
+-int xfs_attr_set_iter(struct xfs_delattr_context *dac);
++int xfs_attr_set_iter(struct xfs_attr_item *attr);
  int xfs_has_attr(struct xfs_da_args *args);
- int xfs_attr_remove_args(struct xfs_da_args *args);
- int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
+-int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
++int xfs_attr_remove_iter(struct xfs_attr_item *attr);
  bool xfs_attr_namecheck(const void *name, size_t length);
- void xfs_delattr_context_init(struct xfs_delattr_context *dac,
- 			      struct xfs_da_args *args);
-+int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+-void xfs_delattr_context_init(struct xfs_delattr_context *dac,
+-			      struct xfs_da_args *args);
+ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+ int xfs_attr_set_deferred(struct xfs_da_args *args);
+ int xfs_attr_remove_deferred(struct xfs_da_args *args);
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index 1635e85..c6fee2a 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -633,14 +633,14 @@ xfs_attr_rmtval_set(
+  */
+ int
+ xfs_attr_rmtval_find_space(
+-	struct xfs_delattr_context	*dac)
++	struct xfs_attr_item		*attr)
+ {
+-	struct xfs_da_args		*args = dac->da_args;
+-	struct xfs_bmbt_irec		*map = &dac->map;
++	struct xfs_da_args		*args = attr->xattri_da_args;
++	struct xfs_bmbt_irec		*map = &attr->xattri_map;
+ 	int				error;
  
- #endif	/* __XFS_ATTR_H__ */
-diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 1fdf6c7..06df7ea 100644
---- a/libxfs/xfs_defer.c
-+++ b/libxfs/xfs_defer.c
-@@ -174,6 +174,7 @@ static const struct xfs_defer_op_type *defer_op_types[] = {
- 	[XFS_DEFER_OPS_TYPE_RMAP]	= &xfs_rmap_update_defer_type,
- 	[XFS_DEFER_OPS_TYPE_FREE]	= &xfs_extent_free_defer_type,
- 	[XFS_DEFER_OPS_TYPE_AGFL_FREE]	= &xfs_agfl_free_defer_type,
-+	[XFS_DEFER_OPS_TYPE_ATTR]	= &xfs_attr_defer_type,
- };
+-	dac->lblkno = 0;
+-	dac->blkcnt = 0;
++	attr->xattri_lblkno = 0;
++	attr->xattri_blkcnt = 0;
+ 	args->rmtblkcnt = 0;
+ 	args->rmtblkno = 0;
+ 	memset(map, 0, sizeof(struct xfs_bmbt_irec));
+@@ -649,8 +649,8 @@ xfs_attr_rmtval_find_space(
+ 	if (error)
+ 		return error;
  
- static void
-diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
-index 05472f7..58cf4e2 100644
---- a/libxfs/xfs_defer.h
-+++ b/libxfs/xfs_defer.h
-@@ -19,6 +19,7 @@ enum xfs_defer_ops_type {
- 	XFS_DEFER_OPS_TYPE_RMAP,
- 	XFS_DEFER_OPS_TYPE_FREE,
- 	XFS_DEFER_OPS_TYPE_AGFL_FREE,
-+	XFS_DEFER_OPS_TYPE_ATTR,
- 	XFS_DEFER_OPS_TYPE_MAX,
- };
+-	dac->blkcnt = args->rmtblkcnt;
+-	dac->lblkno = args->rmtblkno;
++	attr->xattri_blkcnt = args->rmtblkcnt;
++	attr->xattri_lblkno = args->rmtblkno;
  
-@@ -63,6 +64,7 @@ extern const struct xfs_defer_op_type xfs_refcount_update_defer_type;
- extern const struct xfs_defer_op_type xfs_rmap_update_defer_type;
- extern const struct xfs_defer_op_type xfs_extent_free_defer_type;
- extern const struct xfs_defer_op_type xfs_agfl_free_defer_type;
-+extern const struct xfs_defer_op_type xfs_attr_defer_type;
+ 	return 0;
+ }
+@@ -663,17 +663,17 @@ xfs_attr_rmtval_find_space(
+  */
+ int
+ xfs_attr_rmtval_set_blk(
+-	struct xfs_delattr_context	*dac)
++	struct xfs_attr_item		*attr)
+ {
+-	struct xfs_da_args		*args = dac->da_args;
++	struct xfs_da_args		*args = attr->xattri_da_args;
+ 	struct xfs_inode		*dp = args->dp;
+-	struct xfs_bmbt_irec		*map = &dac->map;
++	struct xfs_bmbt_irec		*map = &attr->xattri_map;
+ 	int nmap;
+ 	int error;
  
- /*
-  * This structure enables a dfops user to detach the chain of deferred
-diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
-index 8bd00da..59c2807 100644
---- a/libxfs/xfs_log_format.h
-+++ b/libxfs/xfs_log_format.h
-@@ -117,7 +117,11 @@ struct xfs_unmount_log_format {
- #define XLOG_REG_TYPE_CUD_FORMAT	24
- #define XLOG_REG_TYPE_BUI_FORMAT	25
- #define XLOG_REG_TYPE_BUD_FORMAT	26
--#define XLOG_REG_TYPE_MAX		26
-+#define XLOG_REG_TYPE_ATTRI_FORMAT	27
-+#define XLOG_REG_TYPE_ATTRD_FORMAT	28
-+#define XLOG_REG_TYPE_ATTR_NAME	29
-+#define XLOG_REG_TYPE_ATTR_VALUE	30
-+#define XLOG_REG_TYPE_MAX		30
+ 	nmap = 1;
+-	error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)dac->lblkno,
+-				dac->blkcnt, XFS_BMAPI_ATTRFORK, args->total,
++	error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)attr->xattri_lblkno,
++				attr->xattri_blkcnt, XFS_BMAPI_ATTRFORK, args->total,
+ 				map, &nmap);
+ 	if (error)
+ 		return error;
+@@ -683,8 +683,8 @@ xfs_attr_rmtval_set_blk(
+ 	       (map->br_startblock != HOLESTARTBLOCK));
  
- /*
-  * Flags to log operation header
-@@ -240,6 +244,8 @@ typedef struct xfs_trans_header {
- #define	XFS_LI_CUD		0x1243
- #define	XFS_LI_BUI		0x1244	/* bmbt update intent */
- #define	XFS_LI_BUD		0x1245
-+#define	XFS_LI_ATTRI		0x1246	/* attr set/remove intent*/
-+#define XFS_LI_ATTRD		0x1247	/* attr set/remove done */
+ 	/* roll attribute extent map forwards */
+-	dac->lblkno += map->br_blockcount;
+-	dac->blkcnt -= map->br_blockcount;
++	attr->xattri_lblkno += map->br_blockcount;
++	attr->xattri_blkcnt -= map->br_blockcount;
  
- #define XFS_LI_TYPE_DESC \
- 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
-@@ -255,7 +261,9 @@ typedef struct xfs_trans_header {
- 	{ XFS_LI_CUI,		"XFS_LI_CUI" }, \
- 	{ XFS_LI_CUD,		"XFS_LI_CUD" }, \
- 	{ XFS_LI_BUI,		"XFS_LI_BUI" }, \
--	{ XFS_LI_BUD,		"XFS_LI_BUD" }
-+	{ XFS_LI_BUD,		"XFS_LI_BUD" }, \
-+	{ XFS_LI_ATTRI,		"XFS_LI_ATTRI" }, \
-+	{ XFS_LI_ATTRD,		"XFS_LI_ATTRD" }
+ 	return 0;
+ }
+@@ -737,9 +737,9 @@ xfs_attr_rmtval_invalidate(
+  */
+ int
+ xfs_attr_rmtval_remove(
+-	struct xfs_delattr_context	*dac)
++	struct xfs_attr_item		*attr)
+ {
+-	struct xfs_da_args		*args = dac->da_args;
++	struct xfs_da_args		*args = attr->xattri_da_args;
+ 	int				error, done;
  
- /*
-  * Inode Log Item Format definitions.
-@@ -863,4 +871,35 @@ struct xfs_icreate_log {
- 	__be32		icl_gen;	/* inode generation number to use */
- };
+ 	/*
+@@ -761,7 +761,7 @@ xfs_attr_rmtval_remove(
+ 	 * by the parent
+ 	 */
+ 	if (!done) {
+-		trace_xfs_das_state_return(dac->dela_state);
++		trace_xfs_das_state_return(attr->xattri_dela_state);
+ 		return -EAGAIN;
+ 	}
  
-+/*
-+ * Flags for deferred attribute operations.
-+ * Upper bits are flags, lower byte is type code
-+ */
-+#define XFS_ATTR_OP_FLAGS_SET		1	/* Set the attribute */
-+#define XFS_ATTR_OP_FLAGS_REMOVE	2	/* Remove the attribute */
-+#define XFS_ATTR_OP_FLAGS_TYPE_MASK	0x0FF	/* Flags type mask */
-+
-+/*
-+ * This is the structure used to lay out an attr log item in the
-+ * log.
-+ */
-+struct xfs_attri_log_format {
-+	uint16_t	alfi_type;	/* attri log item type */
-+	uint16_t	alfi_size;	/* size of this item */
-+	uint32_t	__pad;		/* pad to 64 bit aligned */
-+	uint64_t	alfi_id;	/* attri identifier */
-+	uint64_t	alfi_ino;	/* the inode for this attr operation */
-+	uint32_t	alfi_op_flags;	/* marks the op as a set or remove */
-+	uint32_t	alfi_name_len;	/* attr name length */
-+	uint32_t	alfi_value_len;	/* attr value length */
-+	uint32_t	alfi_attr_flags;/* attr flags */
-+};
-+
-+struct xfs_attrd_log_format {
-+	uint16_t	alfd_type;	/* attrd log item type */
-+	uint16_t	alfd_size;	/* size of this item */
-+	uint32_t	__pad;		/* pad to 64 bit aligned */
-+	uint64_t	alfd_alf_id;	/* id of corresponding attri */
-+};
-+
- #endif /* __XFS_LOG_FORMAT_H__ */
+diff --git a/libxfs/xfs_attr_remote.h b/libxfs/xfs_attr_remote.h
+index 6ae91af..d3aa27d 100644
+--- a/libxfs/xfs_attr_remote.h
++++ b/libxfs/xfs_attr_remote.h
+@@ -13,9 +13,9 @@ int xfs_attr_rmtval_set(struct xfs_da_args *args);
+ int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
+ 		xfs_buf_flags_t incore_flags);
+ int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
+-int xfs_attr_rmtval_remove(struct xfs_delattr_context *dac);
++int xfs_attr_rmtval_remove(struct xfs_attr_item *attr);
+ int xfs_attr_rmt_find_hole(struct xfs_da_args *args);
+ int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
+-int xfs_attr_rmtval_set_blk(struct xfs_delattr_context *dac);
+-int xfs_attr_rmtval_find_space(struct xfs_delattr_context *dac);
++int xfs_attr_rmtval_set_blk(struct xfs_attr_item *attr);
++int xfs_attr_rmtval_find_space(struct xfs_attr_item *attr);
+ #endif /* __XFS_ATTR_REMOTE_H__ */
 -- 
 2.7.4
 
