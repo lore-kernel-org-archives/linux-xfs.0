@@ -8,51 +8,51 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3BA8C4361B
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 07:32:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE50AC4361B
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 07:32:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5855F23A5B
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 07:32:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99FA023A5B
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 07:32:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731526AbgLRHcE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Dec 2020 02:32:04 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:59876 "EHLO
+        id S1732090AbgLRHcI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Dec 2020 02:32:08 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:59946 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730054AbgLRHcE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Dec 2020 02:32:04 -0500
+        with ESMTP id S1731611AbgLRHcI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Dec 2020 02:32:08 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7Tswe129632
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:31:23 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7UHwu130036
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:31:26 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=bFOtxMHu1f1ryfu+v1VaVvk/RUNKG8fKqCjhEx5FsEs=;
- b=Jh2QoY5aY55TVG05XZX/ZToX+5swY1bigGH/fOPvuyMOCTJJTv74qpva/IYX7aHnbiGR
- 529atkqByScmiDvMDbQGsyZQwspSgi5OjytIhGxoJwgWpbLQzUogXiFvkQMXpo3JlPqU
- 93h78z0eiVUrFxk9nXLgEBni+HPd9mkP0V6DJURqlHX1hN+FDrN5hhh2CmGjVN1XfDuX
- +RqtrvQf9fSJVVR0OrhF4JcbjTWyFUkxszFr7IjbK9Osajg3qaB8kH9g0ozeybt6MtwC
- 3HWqV1KJ5aM0GtBjhatjPGe5Utj6Gt6P41pplU1UUxu2u9CDbOLuuQf7hlVnggo+ztW/ zg== 
+ bh=v5lkO86L2JsezIjazRsB9zwyUuCchgTcP5cVPe6jcqU=;
+ b=CzIyefSU+XTD1AfAeDkIkL60K63xo/L3PVVN7/tVsZTEuAWXc/6h+2wJJFEOrfxrBX4c
+ hd7Gl9N6PnZfwrC5FCJIMNbIvJXwP7GnwmEW33h+ibibX3Hg/WW4Apwbzdhi8febwm+4
+ hX5/qWoaC60OCjkYkuL4/fg8DEC8eGNQ2ocYP32PlB80NBLn7hih1kCjsh8kOyihy8Yl
+ WnroDkQzHVdUvh+8t+3TXbO5PLrnga/yaVuv0jrOvl6nXHXz0rFDZ12ohz6f3WllW/Dl
+ 2e37HkQKg/5YHoZ7tmt32jmdmeN1vE3K+1AZDbIZkRhlIDpSU/G7kCcLvZ0NUVfnclwm vg== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 35cntmgyf5-1
+        by aserp2120.oracle.com with ESMTP id 35cntmgyf9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:31:23 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:31:26 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7LK6B120978
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:29:23 GMT
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7LKHe121098
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:29:26 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 35e6eud9r2-1
+        by aserp3020.oracle.com with ESMTP id 35e6eud9se-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:29:23 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:29:26 +0000
 Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BI7TMY3004216
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:29:22 GMT
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BI7TP4F004233
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:29:25 GMT
 Received: from localhost.localdomain (/67.1.214.41)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 17 Dec 2020 23:29:22 -0800
+        with ESMTP ; Thu, 17 Dec 2020 23:29:25 -0800
 From:   Allison Henderson <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v14 01/15] xfs: Add helper xfs_attr_node_remove_step
-Date:   Fri, 18 Dec 2020 00:29:03 -0700
-Message-Id: <20201218072917.16805-2-allison.henderson@oracle.com>
+Subject: [PATCH v14 13/15] xfs: Add delayed attributes error tag
+Date:   Fri, 18 Dec 2020 00:29:15 -0700
+Message-Id: <20201218072917.16805-14-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201218072917.16805-1-allison.henderson@oracle.com>
 References: <20201218072917.16805-1-allison.henderson@oracle.com>
@@ -73,101 +73,99 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Allison Collins <allison.henderson@oracle.com>
 
-This patch as a new helper function xfs_attr_node_remove_step.  This
-will help simplify and modularize the calling function
-xfs_attr_node_remove.
+This patch adds an error tag that we can use to test delayed attribute
+recovery and replay
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c | 46 ++++++++++++++++++++++++++++++++++------------
- 1 file changed, 34 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_errortag.h | 4 +++-
+ fs/xfs/xfs_attr_item.c       | 8 ++++++++
+ fs/xfs/xfs_error.c           | 3 +++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index fd8e641..8b55a8d 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -1228,19 +1228,14 @@ xfs_attr_node_remove_rmt(
-  * the root node (a special case of an intermediate node).
-  */
- STATIC int
--xfs_attr_node_removename(
--	struct xfs_da_args	*args)
-+xfs_attr_node_remove_step(
-+	struct xfs_da_args	*args,
-+	struct xfs_da_state	*state)
- {
--	struct xfs_da_state	*state;
- 	struct xfs_da_state_blk	*blk;
- 	int			retval, error;
- 	struct xfs_inode	*dp = args->dp;
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+index 53b305d..cb38cbf 100644
+--- a/fs/xfs/libxfs/xfs_errortag.h
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -56,7 +56,8 @@
+ #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
+ #define XFS_ERRTAG_IUNLINK_FALLBACK			34
+ #define XFS_ERRTAG_BUF_IOERROR				35
+-#define XFS_ERRTAG_MAX					36
++#define XFS_ERRTAG_DELAYED_ATTR				36
++#define XFS_ERRTAG_MAX					37
  
--	trace_xfs_attr_node_removename(args);
--
--	error = xfs_attr_node_removename_setup(args, &state);
--	if (error)
--		goto out;
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -97,5 +98,6 @@
+ #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
+ #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
+ #define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_DELAYED_ATTR				1
  
- 	/*
- 	 * If there is an out-of-line value, de-allocate the blocks.
-@@ -1250,7 +1245,7 @@ xfs_attr_node_removename(
- 	if (args->rmtblkno > 0) {
- 		error = xfs_attr_node_remove_rmt(args, state);
- 		if (error)
--			goto out;
-+			return error;
+ #endif /* __XFS_ERRORTAG_H_ */
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 3185350..e1cfef1 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -40,6 +40,8 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_log_priv.h"
+ #include "xfs_log_recover.h"
++#include "xfs_error.h"
++#include "xfs_errortag.h"
+ 
+ static const struct xfs_item_ops xfs_attri_item_ops;
+ static const struct xfs_item_ops xfs_attrd_item_ops;
+@@ -300,6 +302,11 @@ xfs_trans_attr(
+ 	if (error)
+ 		return error;
+ 
++	if (XFS_TEST_ERROR(false, args->dp->i_mount, XFS_ERRTAG_DELAYED_ATTR)) {
++		error = -EIO;
++		goto out;
++	}
++
+ 	switch (op_flags) {
+ 	case XFS_ATTR_OP_FLAGS_SET:
+ 		args->op_flags |= XFS_DA_OP_ADDNAME;
+@@ -314,6 +321,7 @@ xfs_trans_attr(
+ 		break;
  	}
  
++out:
  	/*
-@@ -1267,18 +1262,45 @@ xfs_attr_node_removename(
- 	if (retval && (state->path.active > 1)) {
- 		error = xfs_da3_join(state);
- 		if (error)
--			goto out;
-+			return error;
- 		error = xfs_defer_finish(&args->trans);
- 		if (error)
--			goto out;
-+			return error;
- 		/*
- 		 * Commit the Btree join operation and start a new trans.
- 		 */
- 		error = xfs_trans_roll_inode(&args->trans, dp);
- 		if (error)
--			goto out;
-+			return error;
- 	}
+ 	 * Mark the transaction dirty, even on error. This ensures the
+ 	 * transaction is aborted, which:
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 7f6e208..fc551cb 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -54,6 +54,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_FORCE_SUMMARY_RECALC,
+ 	XFS_RANDOM_IUNLINK_FALLBACK,
+ 	XFS_RANDOM_BUF_IOERROR,
++	XFS_RANDOM_DELAYED_ATTR,
+ };
  
-+	return error;
-+}
-+
-+/*
-+ * Remove a name from a B-tree attribute list.
-+ *
-+ * This routine will find the blocks of the name to remove, remove them and
-+ * shrink the tree if needed.
-+ */
-+STATIC int
-+xfs_attr_node_removename(
-+	struct xfs_da_args	*args)
-+{
-+	struct xfs_da_state	*state = NULL;
-+	int			error;
-+	struct xfs_inode	*dp = args->dp;
-+
-+	trace_xfs_attr_node_removename(args);
-+
-+	error = xfs_attr_node_removename_setup(args, &state);
-+	if (error)
-+		goto out;
-+
-+	error = xfs_attr_node_remove_step(args, state);
-+	if (error)
-+		goto out;
-+
- 	/*
- 	 * If the result is small enough, push it all into the inode.
- 	 */
+ struct xfs_errortag_attr {
+@@ -164,6 +165,7 @@ XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
+ XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
+ XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
+ XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
++XFS_ERRORTAG_ATTR_RW(delayed_attr,	XFS_ERRTAG_DELAYED_ATTR);
+ 
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -202,6 +204,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(bad_summary),
+ 	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
+ 	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
++	XFS_ERRORTAG_ATTR_LIST(delayed_attr),
+ 	NULL,
+ };
+ 
 -- 
 2.7.4
 
