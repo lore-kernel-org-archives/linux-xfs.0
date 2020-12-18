@@ -8,178 +8,114 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 171A5C3526C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EAF4C3526B
 	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 07:27:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E50F723A9B
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 07:27:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5110923A82
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 07:27:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732958AbgLRH0v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Dec 2020 02:26:51 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:55184 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732955AbgLRH0v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Dec 2020 02:26:51 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7KGnq122381
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:10 GMT
+        id S1732952AbgLRH0x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Dec 2020 02:26:53 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:37728 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732956AbgLRH0x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Dec 2020 02:26:53 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7KOWo003170
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:12 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=Ub4JedDvw17ZXLOcQF4yeAeCGS9HMq+VPhb3DAc2bIU=;
- b=AVhilDTkDJ+03F0QvO8l3xjVC2iertZZTjyCJIT8+qQR+3ija6UXIx1D8XxhMxGiaJe+
- JlWQu5qJRb3Kv0vBmFtkTzDKFshlOEGd7VsfQ2WZRr3O2GV5OCTPqdX1bIrH7SozDAdh
- 5I3CAC3JYdgAJHTvugXl+SSeAJpTsO2eeFihxIvyFuS3pqyQJBNsXQ+tUQb9kQb5m5D1
- o8y3ueLkWhPBcmPF7c/NDNqzItm5ddonkGiHBXPKQHDy3GqnxR+Bj3LOneEyRmlcFsb7
- iV4vOMNUWRaoub1SbIzJzOM7G8pmBfiZ5YZi36TDxg2Utb2a8is1mk5Jayaddpe09qCp pA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 35cntmgy30-1
+ bh=Dg2xhcSa8tPr7z9EVSEGJFj6h0oRIxwpJP9tJIRcO0o=;
+ b=c6lEeZKulJabCs9XyAittypXevR4yqjJFz1A6Mp0e8LgP+8DUuS51C1SWwSHVWkgGGNp
+ OBORySLg0J1OMIHQzqZ7KbrSA9jixnB9y8c8MM1q6ZKp9RN2aBlmrSj8OLq43IX4GKad
+ W0Cr1G1cd5dipt6olOEYiGSIAWWLYfT8+NtQd5X9BwyeU/FkO7jgyQYtCqaS68OV4tko
+ mmr8dC9kmDslwx6HQbUy7AzITzMYABWgb2EwpPZBqSDIH/Hqb+n1IxPZ2hc76BFigVCq
+ Npl8EUV5rW/9/mEOetGvfP4pJjmpTND7wZljxPum5P5RfHiHAyYn6piUnsV96z+/F/jK GQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 35cn9rs188-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:10 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7LKZX120987
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:09 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 35e6eud6vr-1
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:12 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BI7LLYI044529
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:11 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 35d7erys85-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:09 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:11 +0000
 Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BI7Q8CS020806
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:08 GMT
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BI7QA8m019453
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Dec 2020 07:26:10 GMT
 Received: from localhost.localdomain (/67.1.214.41)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 17 Dec 2020 23:26:08 -0800
+        with ESMTP ; Thu, 17 Dec 2020 23:26:09 -0800
 From:   Allison Henderson <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v14 09/14] xfsprogs: Skip flip flags for delayed attrs
-Date:   Fri, 18 Dec 2020 00:25:50 -0700
-Message-Id: <20201218072555.16694-10-allison.henderson@oracle.com>
+Subject: [PATCH v14 12/14] xfsprogs: Add delayed attributes error tag
+Date:   Fri, 18 Dec 2020 00:25:53 -0700
+Message-Id: <20201218072555.16694-13-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201218072555.16694-1-allison.henderson@oracle.com>
 References: <20201218072555.16694-1-allison.henderson@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9838 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 phishscore=0
- bulkscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 adultscore=0 mlxscore=0 mlxlogscore=999 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2012180052
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9838 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 mlxscore=0
- lowpriorityscore=0 spamscore=0 adultscore=0 malwarescore=0 suspectscore=0
- mlxlogscore=999 impostorscore=0 priorityscore=1501 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012180052
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
+ impostorscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
+ malwarescore=0 priorityscore=1501 phishscore=0 mlxscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012180052
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Source kernel commit: 2b1c81a8c3f453ba16b6db8dae256723bf53c051
+From: Allison Collins <allison.henderson@oracle.com>
 
-This is a clean up patch that skips the flip flag logic for delayed attr
-renames.  Since the log replay keeps the inode locked, we do not need to
-worry about race windows with attr lookups.  So we can skip over
-flipping the flag and the extra transaction roll for it
+This patch adds an error tag that we can use to test delayed attribute
+recovery and replay
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_attr.c      | 43 ++++++++++++++++++++++++-------------------
- libxfs/xfs_attr_leaf.c |  3 ++-
- 2 files changed, 26 insertions(+), 20 deletions(-)
+ io/inject.c           | 1 +
+ libxfs/xfs_errortag.h | 4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index a3f256f..955e434 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -805,6 +805,7 @@ xfs_attr_leaf_addname(
- 	struct xfs_buf			*bp = NULL;
- 	int				error, forkoff;
- 	struct xfs_inode		*dp = args->dp;
-+	struct xfs_mount		*mp = args->dp->i_mount;
+diff --git a/io/inject.c b/io/inject.c
+index 352d27c..9124c41 100644
+--- a/io/inject.c
++++ b/io/inject.c
+@@ -55,6 +55,7 @@ error_tag(char *name)
+ 		{ XFS_ERRTAG_FORCE_SUMMARY_RECALC,	"bad_summary" },
+ 		{ XFS_ERRTAG_IUNLINK_FALLBACK,		"iunlink_fallback" },
+ 		{ XFS_ERRTAG_BUF_IOERROR,		"buf_ioerror" },
++		{ XFS_ERRTAG_DELAYED_ATTR,		"delayed_attr" },
+ 		{ XFS_ERRTAG_MAX,			NULL }
+ 	};
+ 	int	count;
+diff --git a/libxfs/xfs_errortag.h b/libxfs/xfs_errortag.h
+index 53b305d..cb38cbf 100644
+--- a/libxfs/xfs_errortag.h
++++ b/libxfs/xfs_errortag.h
+@@ -56,7 +56,8 @@
+ #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
+ #define XFS_ERRTAG_IUNLINK_FALLBACK			34
+ #define XFS_ERRTAG_BUF_IOERROR				35
+-#define XFS_ERRTAG_MAX					36
++#define XFS_ERRTAG_DELAYED_ATTR				36
++#define XFS_ERRTAG_MAX					37
  
- 	/* State machine switch */
- 	switch (dac->dela_state) {
-@@ -870,15 +871,17 @@ xfs_attr_leaf_addname(
- 	 * In a separate transaction, set the incomplete flag on the "old" attr
- 	 * and clear the incomplete flag on the "new" attr.
- 	 */
--	error = xfs_attr3_leaf_flipflags(args);
--	if (error)
--		return error;
--	/*
--	 * Commit the flag value change and start the next trans in series.
--	 */
--	dac->dela_state = XFS_DAS_FLIP_LFLAG;
--	trace_xfs_das_state_return(dac->dela_state);
--	return -EAGAIN;
-+	if (!xfs_hasdelattr(mp)) {
-+		error = xfs_attr3_leaf_flipflags(args);
-+		if (error)
-+			return error;
-+		/*
-+		 * Commit the flag value change and start the next trans in series.
-+		 */
-+		dac->dela_state = XFS_DAS_FLIP_LFLAG;
-+		trace_xfs_das_state_return(dac->dela_state);
-+		return -EAGAIN;
-+	}
- das_flip_flag:
- 	/*
- 	 * Dismantle the "old" attribute/value pair by removing a "remote" value
-@@ -1077,6 +1080,7 @@ xfs_attr_node_addname(
- 	struct xfs_da_state_blk		*blk;
- 	int				retval = 0;
- 	int				error = 0;
-+	struct xfs_mount		*mp = args->dp->i_mount;
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -97,5 +98,6 @@
+ #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
+ #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
+ #define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_DELAYED_ATTR				1
  
- 	trace_xfs_attr_node_addname(args);
- 
-@@ -1238,15 +1242,17 @@ das_alloc_node:
- 	 * In a separate transaction, set the incomplete flag on the "old" attr
- 	 * and clear the incomplete flag on the "new" attr.
- 	 */
--	error = xfs_attr3_leaf_flipflags(args);
--	if (error)
--		goto out;
--	/*
--	 * Commit the flag value change and start the next trans in series
--	 */
--	dac->dela_state = XFS_DAS_FLIP_NFLAG;
--	trace_xfs_das_state_return(dac->dela_state);
--	return -EAGAIN;
-+	if (!xfs_hasdelattr(mp)) {
-+		error = xfs_attr3_leaf_flipflags(args);
-+		if (error)
-+			goto out;
-+		/*
-+		 * Commit the flag value change and start the next trans in series
-+		 */
-+		dac->dela_state = XFS_DAS_FLIP_NFLAG;
-+		trace_xfs_das_state_return(dac->dela_state);
-+		return -EAGAIN;
-+	}
- das_flip_flag:
- 	/*
- 	 * Dismantle the "old" attribute/value pair by removing a "remote" value
-@@ -1275,7 +1281,6 @@ das_rm_nblk:
- 	 * Re-find the "old" attribute entry after any split ops. The INCOMPLETE
- 	 * flag means that we will find the "old" attr, not the "new" one.
- 	 */
--	args->attr_filter |= XFS_ATTR_INCOMPLETE;
- 	state = xfs_da_state_alloc(args);
- 	state->inleaf = 0;
- 	error = xfs_da3_node_lookup_int(state, &retval);
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 2c7aa6b..9837bd5 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -1483,7 +1483,8 @@ xfs_attr3_leaf_add_work(
- 	if (tmp)
- 		entry->flags |= XFS_ATTR_LOCAL;
- 	if (args->op_flags & XFS_DA_OP_RENAME) {
--		entry->flags |= XFS_ATTR_INCOMPLETE;
-+		if (!xfs_hasdelattr(mp))
-+			entry->flags |= XFS_ATTR_INCOMPLETE;
- 		if ((args->blkno2 == args->blkno) &&
- 		    (args->index2 <= args->index)) {
- 			args->index2++;
+ #endif /* __XFS_ERRORTAG_H_ */
 -- 
 2.7.4
 
