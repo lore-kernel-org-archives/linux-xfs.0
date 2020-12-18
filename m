@@ -2,193 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB9FAC4361B
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 00:15:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB2D1C2BBD4
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 01:51:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A617C23A53
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 00:15:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D0A423884
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 01:51:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730140AbgLRAP1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Dec 2020 19:15:27 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:37271 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727172AbgLRAP1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Dec 2020 19:15:27 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id A2DC51B3DEC;
-        Fri, 18 Dec 2020 11:14:43 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kq3Pu-00559F-Q5; Fri, 18 Dec 2020 11:14:42 +1100
-Date:   Fri, 18 Dec 2020 11:14:42 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Yafang Shao <laoar.shao@gmail.com>
-Cc:     darrick.wong@oracle.com, willy@infradead.org, hch@infradead.org,
-        mhocko@kernel.org, akpm@linux-foundation.org, dhowells@redhat.com,
-        jlayton@redhat.com, linux-fsdevel@vger.kernel.org,
-        linux-cachefs@redhat.com, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v13 4/4] xfs: use current->journal_info to avoid
- transaction reservation recursion
-Message-ID: <20201218001442.GS632069@dread.disaster.area>
-References: <20201217011157.92549-1-laoar.shao@gmail.com>
- <20201217011157.92549-5-laoar.shao@gmail.com>
+        id S1731513AbgLRBvQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Dec 2020 20:51:16 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:65507 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727138AbgLRBvQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Dec 2020 20:51:16 -0500
+X-IronPort-AV: E=Sophos;i="5.78,428,1599494400"; 
+   d="scan'208";a="102687225"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 18 Dec 2020 09:50:28 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id D0B364CE6014;
+        Fri, 18 Dec 2020 09:50:25 +0800 (CST)
+Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
+ (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 18 Dec
+ 2020 09:50:25 +0800
+Subject: Re: [RFC PATCH v3 4/9] mm, fsdax: Refactor memory-failure handler for
+ dax mapping
+To:     Dave Chinner <david@fromorbit.com>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
+        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <hch@lst.de>, <song@kernel.org>, <rgoldwyn@suse.de>,
+        <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
+References: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
+ <20201215121414.253660-5-ruansy.fnst@cn.fujitsu.com>
+ <20201216212648.GN632069@dread.disaster.area>
+From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <513e7602-80d7-8d8c-ed5d-06b8113823bf@cn.fujitsu.com>
+Date:   Fri, 18 Dec 2020 09:48:34 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201217011157.92549-5-laoar.shao@gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=yPCof4ZbAAAA:8 a=JfrnYn6hAAAA:8
-        a=7-415B0cAAAA:8 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8 a=pGLkceISAAAA:8
-        a=g3Vo3s_gVwYIqt0w1rsA:9 a=CjuIK1q_8ugA:10 a=1CNFftbPRP8L7MoqJWF3:22
-        a=biEYGPWJfzWAr4FL6Ov7:22 a=AjGcO6oz07-iQ99wixmX:22
+In-Reply-To: <20201216212648.GN632069@dread.disaster.area>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
+X-yoursite-MailScanner-ID: D0B364CE6014.AB9CB
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 17, 2020 at 09:11:57AM +0800, Yafang Shao wrote:
-> PF_FSTRANS which is used to avoid transaction reservation recursion, is
-> dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
-> PF_MEMALLOC_NOFS") and replaced by PF_MEMALLOC_NOFS which means to avoid
-> filesystem reclaim recursion.
+
+
+On 2020/12/17 上午5:26, Dave Chinner wrote:
+> On Tue, Dec 15, 2020 at 08:14:09PM +0800, Shiyang Ruan wrote:
+>> The current memory_failure_dev_pagemap() can only handle single-mapped
+>> dax page for fsdax mode.  The dax page could be mapped by multiple files
+>> and offsets if we let reflink feature & fsdax mode work together.  So,
+>> we refactor current implementation to support handle memory failure on
+>> each file and offset.
+>>
+>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+>> ---
+> .....
+>>   static const char *action_name[] = {
+>> @@ -1147,6 +1148,60 @@ static int try_to_split_thp_page(struct page *page, const char *msg)
+>>   	return 0;
+>>   }
+>>   
+>> +int mf_dax_mapping_kill_procs(struct address_space *mapping, pgoff_t index, int flags)
+>> +{
+>> +	const bool unmap_success = true;
+>> +	unsigned long pfn, size = 0;
+>> +	struct to_kill *tk;
+>> +	LIST_HEAD(to_kill);
+>> +	int rc = -EBUSY;
+>> +	loff_t start;
+>> +	dax_entry_t cookie;
+>> +
+>> +	/*
+>> +	 * Prevent the inode from being freed while we are interrogating
+>> +	 * the address_space, typically this would be handled by
+>> +	 * lock_page(), but dax pages do not use the page lock. This
+>> +	 * also prevents changes to the mapping of this pfn until
+>> +	 * poison signaling is complete.
+>> +	 */
+>> +	cookie = dax_lock(mapping, index, &pfn);
+>> +	if (!cookie)
+>> +		goto unlock;
 > 
-> As these two flags have different meanings, we'd better reintroduce
-> PF_FSTRANS back. To avoid wasting the space of PF_* flags in task_struct,
-> we can reuse the current->journal_info to do that, per Willy. As the
-> check of transaction reservation recursion is used by XFS only, we can
-> move the check into xfs_vm_writepage(s), per Dave.
+> Why do we need to prevent the inode from going away here? This
+> function gets called by XFS after doing an xfs_iget() call to grab
+> the inode that owns the block. Hence the the inode (and the mapping)
+> are guaranteed to be referenced and can't go away. Hence for the
+> filesystem based callers, this whole "dax_lock()" thing can go away >
+> So, AFAICT, the dax_lock() stuff is only necessary when the
+> filesystem can't be used to resolve the owner of physical page that
+> went bad....
+
+Yes, you are right.  I made a mistake in the calling sequence here. 
+Thanks for pointing out.
+
+
+--
+Thanks,
+Ruan Shiyang.
+
 > 
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Dave Chinner <david@fromorbit.com>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: David Howells <dhowells@redhat.com>
-> Cc: Jeff Layton <jlayton@redhat.com>
-> Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-> ---
->  fs/iomap/buffered-io.c |  7 -------
->  fs/xfs/xfs_aops.c      | 17 +++++++++++++++++
->  fs/xfs/xfs_trans.h     | 26 +++++++++++++++++++-------
->  3 files changed, 36 insertions(+), 14 deletions(-)
+> Cheers,
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 10cc7979ce38..3c53fa6ce64d 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1458,13 +1458,6 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
->  			PF_MEMALLOC))
->  		goto redirty;
->  
-> -	/*
-> -	 * Given that we do not allow direct reclaim to call us, we should
-> -	 * never be called in a recursive filesystem reclaim context.
-> -	 */
-> -	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
-> -		goto redirty;
-> -
->  	/*
->  	 * Is this page beyond the end of the file?
->  	 *
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 2371187b7615..0da0242d42c3 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -568,6 +568,16 @@ xfs_vm_writepage(
->  {
->  	struct xfs_writepage_ctx wpc = { };
->  
-> +	/*
-> +	 * Given that we do not allow direct reclaim to call us, we should
-> +	 * never be called while in a filesystem transaction.
-> +	 */
+> Dave.
+> 
 
-Comment is wrong. This is not protecting against direct reclaim
-recursion, this is protecting against writeback from within a
-transaction context.
 
-Best to remove the comment altogether, because it is largely
-redundant.
-
-> +	if (WARN_ON_ONCE(xfs_trans_context_active())) {
-> +		redirty_page_for_writepage(wbc, page);
-> +		unlock_page(page);
-> +		return 0;
-> +	}
-> +
->  	return iomap_writepage(page, wbc, &wpc.ctx, &xfs_writeback_ops);
->  }
->  
-> @@ -579,6 +589,13 @@ xfs_vm_writepages(
->  	struct xfs_writepage_ctx wpc = { };
->  
->  	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-> +	/*
-> +	 * Given that we do not allow direct reclaim to call us, we should
-> +	 * never be called while in a filesystem transaction.
-> +	 */
-
-same here.
-
-> +	if (WARN_ON_ONCE(xfs_trans_context_active()))
-> +		return 0;
-> +
->  	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
->  }
->  
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 12380eaaf7ce..0c8140147b9b 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -268,29 +268,41 @@ xfs_trans_item_relog(
->  	return lip->li_ops->iop_relog(lip, tp);
->  }
->  
-> +static inline bool
-> +xfs_trans_context_active(void)
-> +{
-> +	/* Use journal_info to indicate current is in a transaction */
-> +	return current->journal_info != NULL;
-> +}
-
-Comment is not necessary.
-
-> +
->  static inline void
->  xfs_trans_context_set(struct xfs_trans *tp)
->  {
-> +	ASSERT(!current->journal_info);
-> +	current->journal_info = tp;
->  	tp->t_pflags = memalloc_nofs_save();
->  }
->  
->  static inline void
->  xfs_trans_context_clear(struct xfs_trans *tp)
->  {
-> +	/*
-> +	 * If xfs_trans_context_swap() handed the NOFS context to a
-> +	 * new transaction we do not clear the context here.
-> +	 */
-
-It's a transaction context, not a "NOFS context". Setting NOFS is
-just something we implement inside the transaction context. More
-correct would be:
-
-	/*
-	 * If we handed over the context via xfs_trans_context_swap() then 
-	 * the context is no longer ours to clear.
-	 */
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
