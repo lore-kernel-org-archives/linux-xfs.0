@@ -2,64 +2,130 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D1BFC2D0E4
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 20:56:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C997DC4361B
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 21:50:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4ED6923B99
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 20:56:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A23123B7B
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 21:50:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726235AbgLRUzR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Dec 2020 15:55:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50738 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725854AbgLRUzR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 18 Dec 2020 15:55:17 -0500
-Subject: Re: [GIT PULL] xfs: new code for 5.11
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608324876;
-        bh=/EZMjwCMh/Ud9L/N29ElYrTIvm99/Kz8CeiNdOYCORw=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=B1UBmA+iCgeib63dlTpbpaRyqaGefMHvSuhTiLEdvfpVgOUlh6yYgzBVVWcNzyHeP
-         2K2p+cD9g07DTUsxQ7rwVCwT1gmJVIyYa6zATfQ0f58SV0Tra+jRQnrdnlff5y3UHN
-         +hdlKutCyu/arWbjp4ClpY6xB/TvMKhYO8kSQYC6s+z9ZlqzsdrsUzAX7o7BLjGjVj
-         S345w4LndTynEQsh3aDqGiFQMaspWPtzOe4OZaAtqlykno/TMiXNwtYJurZ+6yuq7K
-         FVNXlQdB0qTchM/y0dZX4OAjsO+2SNi21oL5cHet8a4gZ1eZ4LDT627HtAzIUV/MML
-         fd68TF63Dbdkg==
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20201218171242.GH6918@magnolia>
-References: <20201218171242.GH6918@magnolia>
-X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20201218171242.GH6918@magnolia>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.11-merge-4
-X-PR-Tracked-Commit-Id: e82226138b20d4f638426413e83c6b5db532c6a2
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: a0b96314870f7eff6d15a242cb162dfc46b3c284
-Message-Id: <160832487637.19372.7448008445325982345.pr-tracker-bot@kernel.org>
-Date:   Fri, 18 Dec 2020 20:54:36 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
+        id S1725998AbgLRVuA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Dec 2020 16:50:00 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:58790 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725982AbgLRVuA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Dec 2020 16:50:00 -0500
+Received: from dread.disaster.area (pa49-181-255-32.pa.nsw.optusnet.com.au [49.181.255.32])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 749E310676B;
+        Sat, 19 Dec 2020 08:49:16 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kqNch-000DzC-NE; Sat, 19 Dec 2020 08:49:15 +1100
+Date:   Sat, 19 Dec 2020 08:49:15 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Donald Buczek <buczek@molgen.mpg.de>
+Cc:     linux-xfs@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        it+linux-xfs@molgen.mpg.de
+Subject: Re: v5.10.1 xfs deadlock
+Message-ID: <20201218214915.GA53382@dread.disaster.area>
+References: <b8da4aed-ee44-5d9f-88dc-3d32f0298564@molgen.mpg.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b8da4aed-ee44-5d9f-88dc-3d32f0298564@molgen.mpg.de>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=TT2gYx/P4twmiiok1SQxOQ==:117 a=TT2gYx/P4twmiiok1SQxOQ==:17
+        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=pbPJX3KNAAAA:8 a=WWXfqoTBAAAA:8
+        a=7-415B0cAAAA:8 a=n4V3cln1qZeQZ-Gr4-cA:9 a=CjuIK1q_8ugA:10
+        a=oq68ferKVpmdzqj7Fr_q:22 a=G2uvcFSCWpQuK2C1375M:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Fri, 18 Dec 2020 09:12:42 -0800:
+On Thu, Dec 17, 2020 at 06:44:51PM +0100, Donald Buczek wrote:
+> Dear xfs developer,
+> 
+> I was doing some testing on a Linux 5.10.1 system with two 100 TB xfs filesystems on md raid6 raids.
+> 
+> The stress test was essentially `cp -a`ing a Linux source repository with two threads in parallel on each filesystem.
+> 
+> After about on hour, the processes to one filesystem (md1) blocked, 30 minutes later the process to the other filesystem (md0) did.
+> 
+>     root      7322  2167  0 Dec16 pts/1    00:00:06 cp -a /jbod/M8068/scratch/linux /jbod/M8068/scratch/1/linux.018.TMP
+>     root      7329  2169  0 Dec16 pts/1    00:00:05 cp -a /jbod/M8068/scratch/linux /jbod/M8068/scratch/2/linux.019.TMP
+>     root     13856  2170  0 Dec16 pts/1    00:00:08 cp -a /jbod/M8067/scratch/linux /jbod/M8067/scratch/2/linux.028.TMP
+>     root     13899  2168  0 Dec16 pts/1    00:00:05 cp -a /jbod/M8067/scratch/linux /jbod/M8067/scratch/1/linux.027.TMP
+> 
+> Some info from the system (all stack traces, slabinfo) is available here: https://owww.molgen.mpg.de/~buczek/2020-12-16.info.txt
+> 
+> It stands out, that there are many (549 for md0, but only 10 for md1)  "xfs-conv" threads all with stacks like this
+> 
+>     [<0>] xfs_log_commit_cil+0x6cc/0x7c0
+>     [<0>] __xfs_trans_commit+0xab/0x320
+>     [<0>] xfs_iomap_write_unwritten+0xcb/0x2e0
+>     [<0>] xfs_end_ioend+0xc6/0x110
+>     [<0>] xfs_end_io+0xad/0xe0
+>     [<0>] process_one_work+0x1dd/0x3e0
+>     [<0>] worker_thread+0x2d/0x3b0
+>     [<0>] kthread+0x118/0x130
+>     [<0>] ret_from_fork+0x22/0x30
+> 
+> xfs_log_commit_cil+0x6cc is
+> 
+>   xfs_log_commit_cil()
+>     xlog_cil_push_background(log)
+>       xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
+> 
+> Some other threads, including the four "cp" commands are also blocking at xfs_log_commit_cil+0x6cc
+> 
+> There are also single "flush" process for each md device with this stack signature:
+> 
+>     [<0>] xfs_map_blocks+0xbf/0x400
+>     [<0>] iomap_do_writepage+0x15e/0x880
+>     [<0>] write_cache_pages+0x175/0x3f0
+>     [<0>] iomap_writepages+0x1c/0x40
+>     [<0>] xfs_vm_writepages+0x59/0x80
+>     [<0>] do_writepages+0x4b/0xe0
+>     [<0>] __writeback_single_inode+0x42/0x300
+>     [<0>] writeback_sb_inodes+0x198/0x3f0
+>     [<0>] __writeback_inodes_wb+0x5e/0xc0
+>     [<0>] wb_writeback+0x246/0x2d0
+>     [<0>] wb_workfn+0x26e/0x490
+>     [<0>] process_one_work+0x1dd/0x3e0
+>     [<0>] worker_thread+0x2d/0x3b0
+>     [<0>] kthread+0x118/0x130
+>     [<0>] ret_from_fork+0x22/0x30
+> 
+> xfs_map_blocks+0xbf is the
+> 
+>     xfs_ilock(ip, XFS_ILOCK_SHARED);
+> 
+> in xfs_map_blocks().
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.11-merge-4
+Can you post the entire dmesg output after running
+'echo w > /proc/sysrq-trigger' to dump all the block threads to
+dmesg?
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/a0b96314870f7eff6d15a242cb162dfc46b3c284
+> I have an out of tree driver for the HBA ( smartpqi 2.1.6-005
+> pulled from linux-scsi) , but it is unlikely that this blocking is
+> related to that, because the md block devices itself are
+> responsive (`xxd /dev/md0` )
 
-Thank you!
+My bet is that the OOT driver/hardware had dropped a log IO on the
+floor - XFS is waiting for the CIL push to complete, and I'm betting
+that is stuck waiting for iclog IO completion while writing the CIL
+to the journal. The sysrq output will tell us if this is the case,
+so that's the first place to look.
 
+Cheers,
+
+Dave.
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Dave Chinner
+david@fromorbit.com
