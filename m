@@ -2,130 +2,226 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C997DC4361B
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 21:50:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20ED7C4361B
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Dec 2020 00:17:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A23123B7B
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Dec 2020 21:50:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8CC023B23
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Dec 2020 00:17:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725998AbgLRVuA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Dec 2020 16:50:00 -0500
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:58790 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725982AbgLRVuA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Dec 2020 16:50:00 -0500
-Received: from dread.disaster.area (pa49-181-255-32.pa.nsw.optusnet.com.au [49.181.255.32])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 749E310676B;
-        Sat, 19 Dec 2020 08:49:16 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kqNch-000DzC-NE; Sat, 19 Dec 2020 08:49:15 +1100
-Date:   Sat, 19 Dec 2020 08:49:15 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Donald Buczek <buczek@molgen.mpg.de>
-Cc:     linux-xfs@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+linux-xfs@molgen.mpg.de
-Subject: Re: v5.10.1 xfs deadlock
-Message-ID: <20201218214915.GA53382@dread.disaster.area>
-References: <b8da4aed-ee44-5d9f-88dc-3d32f0298564@molgen.mpg.de>
+        id S1725914AbgLSARh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Dec 2020 19:17:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37304 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725868AbgLSARg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Dec 2020 19:17:36 -0500
+Received: from mail-il1-x130.google.com (mail-il1-x130.google.com [IPv6:2607:f8b0:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 503F5C0617B0;
+        Fri, 18 Dec 2020 16:16:56 -0800 (PST)
+Received: by mail-il1-x130.google.com with SMTP id q1so3789953ilt.6;
+        Fri, 18 Dec 2020 16:16:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=o+srfVk5LFUit/NQt+S2ivZ9seQ6hbpnwEWB584IB1M=;
+        b=SaMiyBIWjpP1z8VlNM9VPbdbeQpZuMO+Ymt7hFKE3OVQV3PVyQYZaTe41AuayQ4r7u
+         D+0JyaOGlcCJXwD0QJ0BL594q7v/7PJIhIfXbD/iOduoUfb1AR/PPG6R3AbmcVSYpbAm
+         ovQ1Z0Y7b+pCrlyU+CgG4sY+lARHw6/0xHltrMSJ5PJh5+cFypQsXtrLXce9Y/dH1Rpp
+         MwrS/DOBr5q00zFGlcpV5qvSu+Mpr2EdZwA1tU41g7kRErAGjXT4OGZ4WVp1vWoD2yjo
+         bVJeGjhEzZ0pmAySe4X4Tu5S75zZlgcgfpuqM0IboeBybQTIh4uGfeN1e3irR1Lcb1qY
+         eRAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=o+srfVk5LFUit/NQt+S2ivZ9seQ6hbpnwEWB584IB1M=;
+        b=jaZTNIQjDUTUptZRIpVIFWJgKGuUY4XJudFnhEz11qxcCmjsitsN532lS2KXysJKzi
+         Cja4L6YZspoeZCmEuNG5gmv8kZGFFkEcewZZu0EdE09BCv51TsGmbgwODES0pU5E1p9A
+         PcrIqURE93PvVtHzj+hiaad0WpKmxNu6dfas45yaGMvPzFhnsiJXT1ylSt9pr5h5tApU
+         4lcJZftZHQASa0vD3I3ZMWJF6xL5m64GPHncyVzh3SmCwtJRRi4qcz7Smm4QGvTAOtkz
+         jXjGMfb2o079DxzL0Hz5GZSh0V9BjeE9jn/w5hH3/Swg+f5G5H1im5j5aADyaCsOYJVH
+         GefQ==
+X-Gm-Message-State: AOAM531TvVi/rsqWTuDkbPd/VkCAxhE6fCmEy5U51D33n2RdOGGXpWJA
+        kGhAQFbxVGkOGkX52hT2B9s3jVTuHCUn8eT3nBw=
+X-Google-Smtp-Source: ABdhPJzSxqkvV+NbAPCJQWZJzXNqRmylB8moClwA0C9kvg1T5xDU8dIs76SfXzjOTqJ1BXo3tRJj9ii5YSitobTpRSU=
+X-Received: by 2002:a05:6e02:c32:: with SMTP id q18mr6667563ilg.203.1608337015728;
+ Fri, 18 Dec 2020 16:16:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b8da4aed-ee44-5d9f-88dc-3d32f0298564@molgen.mpg.de>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=TT2gYx/P4twmiiok1SQxOQ==:117 a=TT2gYx/P4twmiiok1SQxOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=pbPJX3KNAAAA:8 a=WWXfqoTBAAAA:8
-        a=7-415B0cAAAA:8 a=n4V3cln1qZeQZ-Gr4-cA:9 a=CjuIK1q_8ugA:10
-        a=oq68ferKVpmdzqj7Fr_q:22 a=G2uvcFSCWpQuK2C1375M:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+References: <20201217011157.92549-1-laoar.shao@gmail.com> <20201217011157.92549-5-laoar.shao@gmail.com>
+ <20201218001442.GS632069@dread.disaster.area>
+In-Reply-To: <20201218001442.GS632069@dread.disaster.area>
+From:   Yafang Shao <laoar.shao@gmail.com>
+Date:   Sat, 19 Dec 2020 08:16:19 +0800
+Message-ID: <CALOAHbAKJ3G5VrsMhHeCy44rp2rhVUk2rWb1qdEF0BvRDuYYAA@mail.gmail.com>
+Subject: Re: [PATCH v13 4/4] xfs: use current->journal_info to avoid
+ transaction reservation recursion
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Michal Hocko <mhocko@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>, jlayton@redhat.com,
+        linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
+        linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 17, 2020 at 06:44:51PM +0100, Donald Buczek wrote:
-> Dear xfs developer,
-> 
-> I was doing some testing on a Linux 5.10.1 system with two 100 TB xfs filesystems on md raid6 raids.
-> 
-> The stress test was essentially `cp -a`ing a Linux source repository with two threads in parallel on each filesystem.
-> 
-> After about on hour, the processes to one filesystem (md1) blocked, 30 minutes later the process to the other filesystem (md0) did.
-> 
->     root      7322  2167  0 Dec16 pts/1    00:00:06 cp -a /jbod/M8068/scratch/linux /jbod/M8068/scratch/1/linux.018.TMP
->     root      7329  2169  0 Dec16 pts/1    00:00:05 cp -a /jbod/M8068/scratch/linux /jbod/M8068/scratch/2/linux.019.TMP
->     root     13856  2170  0 Dec16 pts/1    00:00:08 cp -a /jbod/M8067/scratch/linux /jbod/M8067/scratch/2/linux.028.TMP
->     root     13899  2168  0 Dec16 pts/1    00:00:05 cp -a /jbod/M8067/scratch/linux /jbod/M8067/scratch/1/linux.027.TMP
-> 
-> Some info from the system (all stack traces, slabinfo) is available here: https://owww.molgen.mpg.de/~buczek/2020-12-16.info.txt
-> 
-> It stands out, that there are many (549 for md0, but only 10 for md1)  "xfs-conv" threads all with stacks like this
-> 
->     [<0>] xfs_log_commit_cil+0x6cc/0x7c0
->     [<0>] __xfs_trans_commit+0xab/0x320
->     [<0>] xfs_iomap_write_unwritten+0xcb/0x2e0
->     [<0>] xfs_end_ioend+0xc6/0x110
->     [<0>] xfs_end_io+0xad/0xe0
->     [<0>] process_one_work+0x1dd/0x3e0
->     [<0>] worker_thread+0x2d/0x3b0
->     [<0>] kthread+0x118/0x130
->     [<0>] ret_from_fork+0x22/0x30
-> 
-> xfs_log_commit_cil+0x6cc is
-> 
->   xfs_log_commit_cil()
->     xlog_cil_push_background(log)
->       xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
-> 
-> Some other threads, including the four "cp" commands are also blocking at xfs_log_commit_cil+0x6cc
-> 
-> There are also single "flush" process for each md device with this stack signature:
-> 
->     [<0>] xfs_map_blocks+0xbf/0x400
->     [<0>] iomap_do_writepage+0x15e/0x880
->     [<0>] write_cache_pages+0x175/0x3f0
->     [<0>] iomap_writepages+0x1c/0x40
->     [<0>] xfs_vm_writepages+0x59/0x80
->     [<0>] do_writepages+0x4b/0xe0
->     [<0>] __writeback_single_inode+0x42/0x300
->     [<0>] writeback_sb_inodes+0x198/0x3f0
->     [<0>] __writeback_inodes_wb+0x5e/0xc0
->     [<0>] wb_writeback+0x246/0x2d0
->     [<0>] wb_workfn+0x26e/0x490
->     [<0>] process_one_work+0x1dd/0x3e0
->     [<0>] worker_thread+0x2d/0x3b0
->     [<0>] kthread+0x118/0x130
->     [<0>] ret_from_fork+0x22/0x30
-> 
-> xfs_map_blocks+0xbf is the
-> 
->     xfs_ilock(ip, XFS_ILOCK_SHARED);
-> 
-> in xfs_map_blocks().
+On Fri, Dec 18, 2020 at 8:14 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Thu, Dec 17, 2020 at 09:11:57AM +0800, Yafang Shao wrote:
+> > PF_FSTRANS which is used to avoid transaction reservation recursion, is
+> > dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
+> > PF_MEMALLOC_NOFS") and replaced by PF_MEMALLOC_NOFS which means to avoid
+> > filesystem reclaim recursion.
+> >
+> > As these two flags have different meanings, we'd better reintroduce
+> > PF_FSTRANS back. To avoid wasting the space of PF_* flags in task_struct,
+> > we can reuse the current->journal_info to do that, per Willy. As the
+> > check of transaction reservation recursion is used by XFS only, we can
+> > move the check into xfs_vm_writepage(s), per Dave.
+> >
+> > Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> > Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Dave Chinner <david@fromorbit.com>
+> > Cc: Michal Hocko <mhocko@kernel.org>
+> > Cc: David Howells <dhowells@redhat.com>
+> > Cc: Jeff Layton <jlayton@redhat.com>
+> > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+> > ---
+> >  fs/iomap/buffered-io.c |  7 -------
+> >  fs/xfs/xfs_aops.c      | 17 +++++++++++++++++
+> >  fs/xfs/xfs_trans.h     | 26 +++++++++++++++++++-------
+> >  3 files changed, 36 insertions(+), 14 deletions(-)
+> >
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index 10cc7979ce38..3c53fa6ce64d 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -1458,13 +1458,6 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
+> >                       PF_MEMALLOC))
+> >               goto redirty;
+> >
+> > -     /*
+> > -      * Given that we do not allow direct reclaim to call us, we should
+> > -      * never be called in a recursive filesystem reclaim context.
+> > -      */
+> > -     if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
+> > -             goto redirty;
+> > -
+> >       /*
+> >        * Is this page beyond the end of the file?
+> >        *
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index 2371187b7615..0da0242d42c3 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -568,6 +568,16 @@ xfs_vm_writepage(
+> >  {
+> >       struct xfs_writepage_ctx wpc = { };
+> >
+> > +     /*
+> > +      * Given that we do not allow direct reclaim to call us, we should
+> > +      * never be called while in a filesystem transaction.
+> > +      */
+>
+> Comment is wrong. This is not protecting against direct reclaim
+> recursion, this is protecting against writeback from within a
+> transaction context.
+>
 
-Can you post the entire dmesg output after running
-'echo w > /proc/sysrq-trigger' to dump all the block threads to
-dmesg?
+Ah, I forgot to change this comment after copy and paste. Thanks for
+pointing it out.
 
-> I have an out of tree driver for the HBA ( smartpqi 2.1.6-005
-> pulled from linux-scsi) , but it is unlikely that this blocking is
-> related to that, because the md block devices itself are
-> responsive (`xxd /dev/md0` )
+> Best to remove the comment altogether, because it is largely
+> redundant.
+>
 
-My bet is that the OOT driver/hardware had dropped a log IO on the
-floor - XFS is waiting for the CIL push to complete, and I'm betting
-that is stuck waiting for iclog IO completion while writing the CIL
-to the journal. The sysrq output will tell us if this is the case,
-so that's the first place to look.
+Sure, I will remove these comments.
 
-Cheers,
+> > +     if (WARN_ON_ONCE(xfs_trans_context_active())) {
+> > +             redirty_page_for_writepage(wbc, page);
+> > +             unlock_page(page);
+> > +             return 0;
+> > +     }
+> > +
+> >       return iomap_writepage(page, wbc, &wpc.ctx, &xfs_writeback_ops);
+> >  }
+> >
+> > @@ -579,6 +589,13 @@ xfs_vm_writepages(
+> >       struct xfs_writepage_ctx wpc = { };
+> >
+> >       xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
+> > +     /*
+> > +      * Given that we do not allow direct reclaim to call us, we should
+> > +      * never be called while in a filesystem transaction.
+> > +      */
+>
+> same here.
+>
+> > +     if (WARN_ON_ONCE(xfs_trans_context_active()))
+> > +             return 0;
+> > +
+> >       return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
+> >  }
+> >
+> > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> > index 12380eaaf7ce..0c8140147b9b 100644
+> > --- a/fs/xfs/xfs_trans.h
+> > +++ b/fs/xfs/xfs_trans.h
+> > @@ -268,29 +268,41 @@ xfs_trans_item_relog(
+> >       return lip->li_ops->iop_relog(lip, tp);
+> >  }
+> >
+> > +static inline bool
+> > +xfs_trans_context_active(void)
+> > +{
+> > +     /* Use journal_info to indicate current is in a transaction */
+> > +     return current->journal_info != NULL;
+> > +}
+>
+> Comment is not necessary.
+>
+> > +
+> >  static inline void
+> >  xfs_trans_context_set(struct xfs_trans *tp)
+> >  {
+> > +     ASSERT(!current->journal_info);
+> > +     current->journal_info = tp;
+> >       tp->t_pflags = memalloc_nofs_save();
+> >  }
+> >
+> >  static inline void
+> >  xfs_trans_context_clear(struct xfs_trans *tp)
+> >  {
+> > +     /*
+> > +      * If xfs_trans_context_swap() handed the NOFS context to a
+> > +      * new transaction we do not clear the context here.
+> > +      */
+>
+> It's a transaction context, not a "NOFS context". Setting NOFS is
+> just something we implement inside the transaction context. More
+> correct would be:
+>
+>         /*
+>          * If we handed over the context via xfs_trans_context_swap() then
+>          * the context is no longer ours to clear.
+>          */
+>
 
-Dave.
+Sure, I will change it.
+
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Thanks
+Yafang
