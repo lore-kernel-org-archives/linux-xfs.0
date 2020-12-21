@@ -2,94 +2,160 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E16D8C433DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Dec 2020 22:05:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65818C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Dec 2020 23:48:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F19E22A85
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Dec 2020 22:05:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24F0D230FC
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Dec 2020 23:48:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725780AbgLUWFg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Dec 2020 17:05:36 -0500
-Received: from smtp1.onthe.net.au ([203.22.196.249]:37903 "EHLO
-        smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725782AbgLUWFf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Dec 2020 17:05:35 -0500
-X-Greylist: delayed 599 seconds by postgrey-1.27 at vger.kernel.org; Mon, 21 Dec 2020 17:05:34 EST
-Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id B7DDF61938
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Dec 2020 08:54:53 +1100 (EST)
-Received: from smtp1.onthe.net.au ([10.200.63.11])
-        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
-        with ESMTP id mhZpe-EsAUvl for <linux-xfs@vger.kernel.org>;
-        Tue, 22 Dec 2020 08:54:53 +1100 (AEDT)
-Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 882C061935
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Dec 2020 08:54:53 +1100 (EST)
-Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id 6BC32680D6F; Tue, 22 Dec 2020 08:54:53 +1100 (AEDT)
-Date:   Tue, 22 Dec 2020 08:54:53 +1100
-From:   Chris Dunlop <chris@onthe.net.au>
-To:     linux-xfs@vger.kernel.org
-Subject: Extreme fragmentation ho!
-Message-ID: <20201221215453.GA1886598@onthe.net.au>
+        id S1726314AbgLUXs2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Dec 2020 18:48:28 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:40286 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726309AbgLUXs1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Dec 2020 18:48:27 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BLNevdn017125;
+        Mon, 21 Dec 2020 23:47:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=KxERdEzLQuDjkzAJCuY6UXIh7RWT5ta66iJ3gd4aloo=;
+ b=Xnsr6DAIopOrbxiSr8qgnTqseIpBXkUbybadBB8VU2xmotzqByujb5ooeRDZq6Vp9Z7O
+ ChvbPMUNrDggefwvsRXEkyN3+gw2b2x0ZktH2y+x53WEN/IycywY29q+SGKl1ATaZq6M
+ ro8sr4lGRD16lYMZlJnh7me2AYTBgjYotI8M949+CpCoO+3DZNw7RmffNyrJoYKKUnXe
+ Ns+NbNvvOm3DlZoiamv/QoxjQ9FVFY2m0uqCdcWfRRZLeyoHxZmctYpz+jkAH1DVjvbs
+ R0NdaHTUJclLRchqjga62f3CJJu5Ai308515P4wlYFETODucDuFgTmKJsWyxJuLUpteF jw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 35k0d895rn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 21 Dec 2020 23:47:45 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BLNfVEt172534;
+        Mon, 21 Dec 2020 23:47:44 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 35k0e7s4wr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 21 Dec 2020 23:47:44 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BLNlh1s019531;
+        Mon, 21 Dec 2020 23:47:43 GMT
+Received: from [192.168.1.226] (/67.1.214.41)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 21 Dec 2020 15:47:43 -0800
+Subject: Re: [PATCH v14 02/15] xfs: Add xfs_attr_node_remove_cleanup
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <20201218072917.16805-1-allison.henderson@oracle.com>
+ <20201218072917.16805-3-allison.henderson@oracle.com>
+ <4861977.KByABTbv6y@garuda>
+From:   Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <bb09069c-d0a2-a768-5f07-239e2cbf9353@oracle.com>
+Date:   Mon, 21 Dec 2020 16:47:42 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
+In-Reply-To: <4861977.KByABTbv6y@garuda>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9842 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 bulkscore=0
+ mlxlogscore=999 phishscore=0 mlxscore=0 spamscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012210160
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9842 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 priorityscore=1501
+ impostorscore=0 malwarescore=0 suspectscore=0 mlxlogscore=999 mlxscore=0
+ spamscore=0 lowpriorityscore=0 phishscore=0 adultscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012210160
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
 
-I have a 2T file fragmented into 841891 randomly placed extents. It takes 
-4-6 minutes (depending on what else the filesystem is doing) to delete the 
-file. This is causing a timeout in the application doing the removal, and 
-hilarity ensues.
 
-The fragmentation is the result of reflinking bits and bobs from other 
-files into the subject file, so it's probably unavoidable.
+On 12/20/20 11:45 PM, Chandan Babu R wrote:
+> On Fri, 18 Dec 2020 00:29:04 -0700, Allison Henderson wrote:
+>> This patch pulls a new helper function xfs_attr_node_remove_cleanup out
+>> of xfs_attr_node_remove_step.  This helps to modularize
+>> xfs_attr_node_remove_step which will help make the delayed attribute
+>> code easier to follow
+> 
+> The changes look good to me.
+> 
+> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Ok, thank you!
+Allison
 
-The file is sitting on XFS on LV on a raid6 comprising 6 x 5400 RPM HDD:
-
-# xfs_info /home
-meta-data=/dev/mapper/vg00-home  isize=512    agcount=32, agsize=244184192 blks
-          =                       sectsz=4096  attr=2, projid32bit=1
-          =                       crc=1        finobt=1, sparse=1, rmapbt=1
-          =                       reflink=1
-data     =                       bsize=4096   blocks=7813893120, imaxpct=5
-          =                       sunit=128    swidth=512 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=521728, version=2
-          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-I'm guessing the time taken to remove is not unreasonable given the speed 
-of the underlying storage and the amount of metadata involved. Does my 
-guess seem correct?
-
-I'd like to do some experimentation with a facsimile of this file, e.g.  
-try the remove on different storage subsystems, and/or with a external fast 
-journal etc., to see how they compare.
-
-What is the easiest way to recreate a similarly (or even better, 
-identically) fragmented file?
-
-One way would be to use xfs_metadump / xfs_mdrestore to create an entire 
-copy of the original filesystem, but I'd really prefer not taking the 
-original fs offline for the time required. I also don't have the space to 
-restore the whole fs but perhaps using lvmthin can address the restore 
-issue, at the cost of a slight(?) performance impact due to the extra 
-layer.
-
-Is it possible to using the output of xfs_bmap on the original file to 
-drive ...something, maybe xfs_io, to recreate the fragmentation? A naive 
-test using xfs_io pwrite didn't produce any fragmentation - unsurprisingly, 
-given the effort XFS puts into reducing fragmentation.
-
-Cheers,
-
-Chris
+> 
+>>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_attr.c | 29 ++++++++++++++++++++---------
+>>   1 file changed, 20 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index 8b55a8d..e93d76a 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -1220,6 +1220,25 @@ xfs_attr_node_remove_rmt(
+>>   	return xfs_attr_refillstate(state);
+>>   }
+>>   
+>> +STATIC int
+>> +xfs_attr_node_remove_cleanup(
+>> +	struct xfs_da_args	*args,
+>> +	struct xfs_da_state	*state)
+>> +{
+>> +	struct xfs_da_state_blk	*blk;
+>> +	int			retval;
+>> +
+>> +	/*
+>> +	 * Remove the name and update the hashvals in the tree.
+>> +	 */
+>> +	blk = &state->path.blk[state->path.active-1];
+>> +	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+>> +	retval = xfs_attr3_leaf_remove(blk->bp, args);
+>> +	xfs_da3_fixhashpath(state, &state->path);
+>> +
+>> +	return retval;
+>> +}
+>> +
+>>   /*
+>>    * Remove a name from a B-tree attribute list.
+>>    *
+>> @@ -1232,7 +1251,6 @@ xfs_attr_node_remove_step(
+>>   	struct xfs_da_args	*args,
+>>   	struct xfs_da_state	*state)
+>>   {
+>> -	struct xfs_da_state_blk	*blk;
+>>   	int			retval, error;
+>>   	struct xfs_inode	*dp = args->dp;
+>>   
+>> @@ -1247,14 +1265,7 @@ xfs_attr_node_remove_step(
+>>   		if (error)
+>>   			return error;
+>>   	}
+>> -
+>> -	/*
+>> -	 * Remove the name and update the hashvals in the tree.
+>> -	 */
+>> -	blk = &state->path.blk[ state->path.active-1 ];
+>> -	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+>> -	retval = xfs_attr3_leaf_remove(blk->bp, args);
+>> -	xfs_da3_fixhashpath(state, &state->path);
+>> +	retval = xfs_attr_node_remove_cleanup(args, state);
+>>   
+>>   	/*
+>>   	 * Check to see if the tree needs to be collapsed.
+>>
+> 
+> 
