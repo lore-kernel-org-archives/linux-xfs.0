@@ -2,199 +2,261 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65234C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Dec 2020 01:23:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74CECC433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Dec 2020 01:30:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C50F22B2B
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Dec 2020 01:23:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17F3422B2D
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Dec 2020 01:30:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726275AbgLVBXE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Dec 2020 20:23:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60126 "EHLO
+        id S1725785AbgLVBaX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Dec 2020 20:30:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726274AbgLVBXE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Dec 2020 20:23:04 -0500
-Received: from mail-ot1-x32d.google.com (mail-ot1-x32d.google.com [IPv6:2607:f8b0:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14C41C061285;
-        Mon, 21 Dec 2020 17:22:24 -0800 (PST)
-Received: by mail-ot1-x32d.google.com with SMTP id f16so10540670otl.11;
-        Mon, 21 Dec 2020 17:22:24 -0800 (PST)
+        with ESMTP id S1725780AbgLVBaW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Dec 2020 20:30:22 -0500
+Received: from mail-ot1-x32a.google.com (mail-ot1-x32a.google.com [IPv6:2607:f8b0:4864:20::32a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31937C0613D3
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Dec 2020 17:29:42 -0800 (PST)
+Received: by mail-ot1-x32a.google.com with SMTP id i6so10629334otr.2
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Dec 2020 17:29:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=1tqH6gFEH/QkT/MrE5FvbhgIXvCJPwTVubT5FNjmPiw=;
-        b=rDQ1n9sCgIQu8CDOMd1xFAyBAlEKruoRKOIr7lroKlEBdXGxXxqRL+/HRkqhY470yZ
-         ThEj/dMgQVz5SeohLyCT4ei38OewCR4fa53uXDDKxbxdMzwZ8bO/pLCs211NHHCtkj4B
-         tqeO9ujN3jBbA+0oJEpCROqGpvOjWM+Y9GhpLZqq2WLTb7RMoJVRhOMzjhvn/n+0jPQq
-         2TQp7CLuIjOVAAP45FaczyXD2lE10kec7bwlH8BTDMddI+2dpt85H2lIb5tJZ/bfzWzN
-         0Xqt9yDvXxoe2PboWou3NE8+sZcZVmSdVMK3geoPjV3Nx6EFKsN0Zve8KW5ut0UI2VG3
-         xqyw==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ZBKiN+RblSTZ3+cYnKPnyLpl4JiONegMbocvGsyvXSo=;
+        b=VEbDQsMOesDN2z5M21MF812gf1rt9nYfKotY6IZMpYubZujWGjtHkfeYzkt5O13F/Y
+         4q85DRpzRCn4r/Ea1Rk0aDcEK42gVCtPg4xewGqRW5TpsRiMrquejzjoSRPuNib0eF0/
+         huG3YwLrXSaSUfDEUtTGp9Y3tMfpffIa7pU1G77ttkfx02BelKSpVQkxZmblmaOEeguw
+         gJh5JbSpAnYmd7d6LgzYMtkmun67TPJYJmH1IWJCXUHnqzbXUvK+O2bN6aawMAsFOMRc
+         Ufln87Fx5gtbUhJdtSs9S/L+Ys3q10Yk2gC5/XZRz2yF3O0AY+H8X3DD7CdCiyCBqYNZ
+         Bj6g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=1tqH6gFEH/QkT/MrE5FvbhgIXvCJPwTVubT5FNjmPiw=;
-        b=THgwt5xw7PteuX+6i1hNZ1P5C77siDNBNaQl5YSEY25tJyy6dqAcd/XALIsNVSG7Vr
-         6DQzmPXJeA6x9gWzuo+4A6cfc/Ttbcix9tjZtFVZ4lxpblqS9zdX2hw/aWPbO5jBpr50
-         7tOnLCR7zfeo6hi/IRUxWmRTyexOTdFr03iTBsNMAjgWRT2iFNG7493h8UmlY6Qpyn5X
-         5dDoT6x3yHNbQ9cjNXEZ5K2vzQkYpfV0ybAtbfppvrunpme+Orz3ziiA3zmkpM7crqfb
-         Z/CKYzHf9LAYwwKYvvsP1161zxAhz9BjxtegTP78cAPYbR/VQftpj5Dw4byuiNC/pU56
-         mKvQ==
-X-Gm-Message-State: AOAM533uHbDsvxReUipLu7FMX58rb9FMNTfW72lxiASHSt729fq9hbKI
-        fmvS7oLzPqjuY+EgnySsi90=
-X-Google-Smtp-Source: ABdhPJwNKBYsLuiG7MmO1rP1TZQVCWEScL7Wn7rEabYIkS5ugbeuCCac5ztOmPJsmUppPC1+6neqmA==
-X-Received: by 2002:a9d:66d4:: with SMTP id t20mr14111088otm.264.1608600143560;
-        Mon, 21 Dec 2020 17:22:23 -0800 (PST)
-Received: from localhost.localdomain ([50.236.19.102])
-        by smtp.gmail.com with ESMTPSA id x20sm4070098oov.33.2020.12.21.17.22.18
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 21 Dec 2020 17:22:23 -0800 (PST)
-From:   Yafang Shao <laoar.shao@gmail.com>
-To:     darrick.wong@oracle.com, willy@infradead.org, david@fromorbit.com,
-        hch@infradead.org, mhocko@kernel.org, akpm@linux-foundation.org,
-        dhowells@redhat.com, jlayton@redhat.com
-Cc:     linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        Yafang Shao <laoar.shao@gmail.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v14 4/4] xfs: use current->journal_info to avoid transaction reservation recursion
-Date:   Tue, 22 Dec 2020 09:21:31 +0800
-Message-Id: <20201222012131.47020-5-laoar.shao@gmail.com>
-X-Mailer: git-send-email 2.24.3 (Apple Git-128)
-In-Reply-To: <20201222012131.47020-1-laoar.shao@gmail.com>
-References: <20201222012131.47020-1-laoar.shao@gmail.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ZBKiN+RblSTZ3+cYnKPnyLpl4JiONegMbocvGsyvXSo=;
+        b=rQPWe6az4HH1yIY4bKXu43o/UKVPcDvu1mbu0rlo/UhDwJ6KDFEndLYqfgYFTpwm/0
+         vaitMwJ/IDmUt8XjBQxnMXiRrSjfuvQrhWbxT8bYmQeNZJWcklOls/eBG7TvCKdqSIlV
+         5NMxG/7PgESVTR73PMUoCWHXZzZlxfAhfuiiT94sflCl3lsqI44GI8w3zvR998DKMedl
+         N9/0prhXT52r0boB+tXia09k70Y0UL2FZLFG3RTnaJM9B3zGtZCt0op2ELO6ZK7u220w
+         o7mSKQl1HxuKchKoAS5p/F89bp4c2eMd0IRt5Y2wUwXC9hd1Ko0HmiaQEOQg2ePs/AkO
+         iSYw==
+X-Gm-Message-State: AOAM533X+94gQoXAmm7XVrnaM62pbk2h468M+BgS1YKfoPB7AFZpUj1r
+        cyKDglsQWnZ7boFRJwhErBKK2b0T/SsthrpfCDNHeKXFbC1ZcQ==
+X-Google-Smtp-Source: ABdhPJzuhJbIwQZFZpid0OWT1o4niEqcwKfcTlRQU6coZSqEzfJAzPDg8sI8qmKJVMzX/ahXTd3zafSe6zRNLWnrLJ8=
+X-Received: by 2002:a05:6830:22eb:: with SMTP id t11mr14927915otc.114.1608600581451;
+ Mon, 21 Dec 2020 17:29:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CABRboy006NP8JrxuBgEJbfCcGGUY2Kucwfov+HJf2xW34D5Ocg@mail.gmail.com>
+ <20201211234233.GK106271@magnolia> <CABRboy35_tyxA3gHN7_=xp0_RVugQjvFOHCRsH4Y4rrivE7HmQ@mail.gmail.com>
+ <20201217211117.GF38809@magnolia>
+In-Reply-To: <20201217211117.GF38809@magnolia>
+From:   wenli xie <wlxie7296@gmail.com>
+Date:   Tue, 22 Dec 2020 09:29:30 +0800
+Message-ID: <CABRboy38580Wfj4g6w0PbLb4hUSm0tFDgXDGBK5pZ=7xySJKqw@mail.gmail.com>
+Subject: Re: [Bug report] overlayfs over xfs whiteout operation may cause deadlock
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-PF_FSTRANS which is used to avoid transaction reservation recursion, is
-dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
-PF_MEMALLOC_NOFS") and replaced by PF_MEMALLOC_NOFS which means to avoid
-filesystem reclaim recursion.
+Thanks Darrick
+This patch works fine.  I did some tests for about 3 days, this issue
+should be fixed.
 
-As these two flags have different meanings, we'd better reintroduce
-PF_FSTRANS back. To avoid wasting the space of PF_* flags in task_struct,
-we can reuse the current->journal_info to do that, per Willy. As the
-check of transaction reservation recursion is used by XFS only, we can
-move the check into xfs_vm_writepage(s), per Dave.
 
-Cc: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Jeff Layton <jlayton@redhat.com>
-Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
----
- fs/iomap/buffered-io.c |  7 -------
- fs/xfs/xfs_aops.c      | 10 ++++++++++
- fs/xfs/xfs_trans.h     | 22 +++++++++++++++++++---
- 3 files changed, 29 insertions(+), 10 deletions(-)
+During the test, I did 'ps -aux|grep mv'  to get the processes' status.
+I can see  some `mv` processes come to 'D' state and then disappear.
+So this patch may impact the rename operation's performance of overlay and xfs.
+I'd like to have a test, any suggestions?
+For overlay, this is fine because the container's rootfs shouldn't
+have many rename calls.
+What I am most worried about is XFS.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 10cc7979ce38..3c53fa6ce64d 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1458,13 +1458,6 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
- 			PF_MEMALLOC))
- 		goto redirty;
- 
--	/*
--	 * Given that we do not allow direct reclaim to call us, we should
--	 * never be called in a recursive filesystem reclaim context.
--	 */
--	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
--		goto redirty;
--
- 	/*
- 	 * Is this page beyond the end of the file?
- 	 *
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 2371187b7615..eed4881d4461 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -568,6 +568,12 @@ xfs_vm_writepage(
- {
- 	struct xfs_writepage_ctx wpc = { };
- 
-+	if (WARN_ON_ONCE(xfs_trans_context_active())) {
-+		redirty_page_for_writepage(wbc, page);
-+		unlock_page(page);
-+		return 0;
-+	}
-+
- 	return iomap_writepage(page, wbc, &wpc.ctx, &xfs_writeback_ops);
- }
- 
-@@ -579,6 +585,10 @@ xfs_vm_writepages(
- 	struct xfs_writepage_ctx wpc = { };
- 
- 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-+
-+	if (WARN_ON_ONCE(xfs_trans_context_active()))
-+		return 0;
-+
- 	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
- }
- 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index b428704eeb20..e2f3251d6cce 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -268,24 +268,40 @@ xfs_trans_item_relog(
- 	return lip->li_ops->iop_relog(lip, tp);
- }
- 
-+static inline bool
-+xfs_trans_context_active(void)
-+{
-+	return current->journal_info != NULL;
-+}
-+
- static inline void
- xfs_trans_context_set(struct xfs_trans *tp)
- {
-+	ASSERT(!current->journal_info);
-+	current->journal_info = tp;
- 	tp->t_pflags = memalloc_nofs_save();
- }
- 
- static inline void
- xfs_trans_context_clear(struct xfs_trans *tp)
- {
--	if (!tp->t_flags)
--		memalloc_nofs_restore(tp->t_pflags);
-+	/*
-+	 * If we handed over the context via xfs_trans_context_swap() then
-+	 * the context is no longer needed to clear.
-+	 */
-+	if (current->journal_info != tp)
-+		return;
-+
-+	current->journal_info = NULL;
-+	memalloc_nofs_restore(tp->t_pflags);
- }
- 
- static inline void
- xfs_trans_context_swap(struct xfs_trans *tp, struct xfs_trans *ntp)
- {
-+	ASSERT(current->journal_info == tp);
-+	current->journal_info = ntp;
- 	ntp->t_pflags = tp->t_pflags;
--	tp->t_flags = -1;
- }
- 
- #endif	/* __XFS_TRANS_H__ */
--- 
-2.18.4
 
+
+
+On Fri, Dec 18, 2020 at 5:11 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Tue, Dec 15, 2020 at 08:44:27PM +0800, wenli xie wrote:
+> > I tried upstream kernel 5.10 to do the test, and this issue still  can be
+> > reproduced.
+>
+> Thanks for the report, I've condensed this down to the following:
+>
+> #!/bin/bash
+>
+> SCRATCH_MNT=/mnt
+> LOAD_FACTOR=1
+> TIME_FACTOR=1
+>
+> mkfs.xfs -f /dev/sda
+> mount /dev/sda $SCRATCH_MNT
+>
+> mkdir $SCRATCH_MNT/lowerdir
+> mkdir $SCRATCH_MNT/lowerdir1
+> mkdir $SCRATCH_MNT/lowerdir/etc
+> mkdir $SCRATCH_MNT/workers
+> echo salts > $SCRATCH_MNT/lowerdir/etc/access.conf
+> touch $SCRATCH_MNT/running
+>
+> stop_workers() {
+>         test -e $SCRATCH_MNT/running || return
+>         rm -f $SCRATCH_MNT/running
+>
+>         while [ "$(ls $SCRATCH_MNT/workers/ | wc -l)" -gt 0 ]; do
+>                 wait
+>         done
+> }
+>
+> worker() {
+>         local tag="$1"
+>         local mergedir="$SCRATCH_MNT/merged$tag"
+>         local l="lowerdir=$SCRATCH_MNT/lowerdir:$SCRATCH_MNT/lowerdir1"
+>         local u="upperdir=$SCRATCH_MNT/upperdir$tag"
+>         local w="workdir=$SCRATCH_MNT/workdir$tag"
+>         local i="index=off"
+>
+>         touch $SCRATCH_MNT/workers/$tag
+>         while test -e $SCRATCH_MNT/running; do
+>                 rm -rf $SCRATCH_MNT/merged$tag
+>                 rm -rf $SCRATCH_MNT/upperdir$tag
+>                 rm -rf $SCRATCH_MNT/workdir$tag
+>                 mkdir $SCRATCH_MNT/merged$tag
+>                 mkdir $SCRATCH_MNT/workdir$tag
+>                 mkdir $SCRATCH_MNT/upperdir$tag
+>
+>                 mount -t overlay overlay -o "$l,$u,$w,$i" $mergedir
+>                 mv $mergedir/etc/access.conf $mergedir/etc/access.conf.bak
+>                 touch $mergedir/etc/access.conf
+>                 mv $mergedir/etc/access.conf $mergedir/etc/access.conf.bak
+>                 touch $mergedir/etc/access.conf
+>                 umount $mergedir
+>         done
+>         rm -f $SCRATCH_MNT/workers/$tag
+> }
+>
+> for i in $(seq 0 $((4 + LOAD_FACTOR)) ); do
+>         worker $i &
+> done
+>
+> sleep $((30 * TIME_FACTOR))
+> stop_workers
+>
+> ...and I think this is enough to diagnose the deadlock.
+>
+> This is an ABBA deadlock caused by locking the AGI buffers in the wrong
+> order.  Specifically, we seem to be calling xfs_dir_rename with a
+> non-null @wip and a non-null @target_ip.  In the deadlock scenario, @wip
+> is an inode in AG 2, and @target_ip is an inode in AG 0 with nlink==1.
+>
+> First we call xfs_iunlink_remove to remove @wip from the unlinked list,
+> which causes us to lock AGI 2.  Next we replace the directory entry.
+> Finally, we need to droplink @target_ip.  Since @target_ip has nlink==1,
+> xfs_droplink will need to put it on AGI 0's unlinked list.
+>
+> Unfortunately, the locking rules say that you can only lock AGIs in
+> increasing order.  This means that we cannot lock AGI 0 after locking
+> AGI 2 without risking deadlock.
+>
+> Does the attached patch fix the deadlock for you?
+>
+> --D
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> Subject: [PATCH] xfs: fix an ABBA deadlock in xfs_rename
+>
+> When overlayfs is running on top of xfs and the user unlinks a file in
+> the overlay, overlayfs will create a whiteout inode and ask xfs to
+> "rename" the whiteout file atop the one being unlinked.  If the file
+> being unlinked loses its one nlink, we then have to put the inode on the
+> unlinked list.
+>
+> This requires us to grab the AGI buffer of the whiteout inode to take it
+> off the unlinked list (which is where whiteouts are created) and to grab
+> the AGI buffer of the file being deleted.  If the whiteout was created
+> in a higher numbered AG than the file being deleted, we'll lock the AGIs
+> in the wrong order and deadlock.
+>
+> Therefore, grab all the AGI locks we think we'll need ahead of time, and
+> in the correct order.
+>
+> Reported-by: wenli xie <wlxie7296@gmail.com>
+> Fixes: 93597ae8dac0 ("xfs: Fix deadlock between AGI and AGF when target_ip exists in xfs_rename()")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_inode.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 46 insertions(+)
+>
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index b7352bc4c815..dd419a1bc6ba 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3000,6 +3000,48 @@ xfs_rename_alloc_whiteout(
+>         return 0;
+>  }
+>
+> +/*
+> + * For the general case of renaming files, lock all the AGI buffers we need to
+> + * handle bumping the nlink of the whiteout inode off the unlinked list and to
+> + * handle dropping the nlink of the target inode.  We have to do this in
+> + * increasing AG order to avoid deadlocks.
+> + */
+> +static int
+> +xfs_rename_lock_agis(
+> +       struct xfs_trans        *tp,
+> +       struct xfs_inode        *wip,
+> +       struct xfs_inode        *target_ip)
+> +{
+> +       struct xfs_mount        *mp = tp->t_mountp;
+> +       struct xfs_buf          *bp;
+> +       xfs_agnumber_t          agi_locks[2] = { NULLAGNUMBER, NULLAGNUMBER };
+> +       int                     error;
+> +
+> +       if (wip)
+> +               agi_locks[0] = XFS_INO_TO_AGNO(mp, wip->i_ino);
+> +
+> +       if (target_ip && VFS_I(target_ip)->i_nlink == 1)
+> +               agi_locks[1] = XFS_INO_TO_AGNO(mp, target_ip->i_ino);
+> +
+> +       if (agi_locks[0] != NULLAGNUMBER && agi_locks[1] != NULLAGNUMBER &&
+> +           agi_locks[0] > agi_locks[1])
+> +               swap(agi_locks[0], agi_locks[1]);
+> +
+> +       if (agi_locks[0] != NULLAGNUMBER) {
+> +               error = xfs_read_agi(mp, tp, agi_locks[0], &bp);
+> +               if (error)
+> +                       return error;
+> +       }
+> +
+> +       if (agi_locks[1] != NULLAGNUMBER) {
+> +               error = xfs_read_agi(mp, tp, agi_locks[1], &bp);
+> +               if (error)
+> +                       return error;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+>  /*
+>   * xfs_rename
+>   */
+> @@ -3130,6 +3172,10 @@ xfs_rename(
+>                 }
+>         }
+>
+> +       error = xfs_rename_lock_agis(tp, wip, target_ip);
+> +       if (error)
+> +               return error;
+> +
+>         /*
+>          * Directory entry creation below may acquire the AGF. Remove
+>          * the whiteout from the unlinked list first to preserve correct
