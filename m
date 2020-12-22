@@ -8,65 +8,65 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9267BC433E6
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Dec 2020 01:22:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65234C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Dec 2020 01:23:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B14522CB1
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Dec 2020 01:22:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C50F22B2B
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Dec 2020 01:23:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726131AbgLVBWr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Dec 2020 20:22:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60074 "EHLO
+        id S1726275AbgLVBXE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Dec 2020 20:23:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725780AbgLVBWr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Dec 2020 20:22:47 -0500
-Received: from mail-ot1-x330.google.com (mail-ot1-x330.google.com [IPv6:2607:f8b0:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC535C0613D6;
-        Mon, 21 Dec 2020 17:22:06 -0800 (PST)
-Received: by mail-ot1-x330.google.com with SMTP id d20so10595020otl.3;
-        Mon, 21 Dec 2020 17:22:06 -0800 (PST)
+        with ESMTP id S1726274AbgLVBXE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Dec 2020 20:23:04 -0500
+Received: from mail-ot1-x32d.google.com (mail-ot1-x32d.google.com [IPv6:2607:f8b0:4864:20::32d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14C41C061285;
+        Mon, 21 Dec 2020 17:22:24 -0800 (PST)
+Received: by mail-ot1-x32d.google.com with SMTP id f16so10540670otl.11;
+        Mon, 21 Dec 2020 17:22:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=3L0osnWCCNspwjgiTnY7o7GFkOk19djKZdTx6lTRDIw=;
-        b=RpXqOfbhkd/My709dzANuCJbRKRpph1ReJtl6s+An19SstIDuDTzZK4UxV8ZweKYpA
-         IvdHHFSI6fXKHC7RTTIh9lVh95Jq8DGIG3pATl5fEGEthjnFnjLxNAW72xDZ/oFY8uly
-         LFFyPUQKRL0sLD0lxj8kbASoo2EZQBO8kxLer81YaYE3x8Ho7zu4kajBguPx9CskxQoW
-         AP8bJhJRtdC4hrE+jLlamW23Nr35Mib2QujZDBp1jFOZD7JsFQp6964yFMFMPacsFgo8
-         KUZuwN2hyTQPZrnOHiWDHmJE2oFnadwWbCe9pmA5nLqPQ+pBxCGOylEQ1yqNZ+rrERpT
-         LDXQ==
+        bh=1tqH6gFEH/QkT/MrE5FvbhgIXvCJPwTVubT5FNjmPiw=;
+        b=rDQ1n9sCgIQu8CDOMd1xFAyBAlEKruoRKOIr7lroKlEBdXGxXxqRL+/HRkqhY470yZ
+         ThEj/dMgQVz5SeohLyCT4ei38OewCR4fa53uXDDKxbxdMzwZ8bO/pLCs211NHHCtkj4B
+         tqeO9ujN3jBbA+0oJEpCROqGpvOjWM+Y9GhpLZqq2WLTb7RMoJVRhOMzjhvn/n+0jPQq
+         2TQp7CLuIjOVAAP45FaczyXD2lE10kec7bwlH8BTDMddI+2dpt85H2lIb5tJZ/bfzWzN
+         0Xqt9yDvXxoe2PboWou3NE8+sZcZVmSdVMK3geoPjV3Nx6EFKsN0Zve8KW5ut0UI2VG3
+         xqyw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=3L0osnWCCNspwjgiTnY7o7GFkOk19djKZdTx6lTRDIw=;
-        b=JZuJA1Bz4S6CtJojT2aWo18y/wuq2shzk5w6f6aw41z5BeLfgolKGSF4JynqXInO6e
-         B+iU81s0QjGL6P02u/D6I6lwhkXqdjYn9V7D2Z9PDnETgWMdbSN4wY9NJLE5ywS3cca/
-         fS33pcEX9FdZDEbL/phKJVS0CMl/k2A2E9P3YC+TIpaj3oOAk45A3ae2xbIgtruNC6lj
-         aCJVAqg1DfPV90EflcwP9UB53tWWLujUGYDuI8uV7QfaDwkeK8woBCJAhptHkSzGbr9G
-         31XcRmIPx1xaa3RR5uY1uenFO2tDTpU9zS0fGRzvdku77GQqcsizxEd2ZBTe5VPrVrrw
-         Ra0w==
-X-Gm-Message-State: AOAM530vKQtIIUFZX8JkiPZwsU+NosoWxFLZO7IDX77Pa0gdSI4bD86N
-        SnI+Z+yixQ+nY6qpXe1xvX0=
-X-Google-Smtp-Source: ABdhPJzglWOOK9n3ZJvS4V6/3DnmRgOgzj2uqLh7pwvVBmxgOfW/XIq2c+hoiTEijTKX5aAZdnDW+g==
-X-Received: by 2002:a05:6830:16d9:: with SMTP id l25mr14305025otr.314.1608600126310;
-        Mon, 21 Dec 2020 17:22:06 -0800 (PST)
+        bh=1tqH6gFEH/QkT/MrE5FvbhgIXvCJPwTVubT5FNjmPiw=;
+        b=THgwt5xw7PteuX+6i1hNZ1P5C77siDNBNaQl5YSEY25tJyy6dqAcd/XALIsNVSG7Vr
+         6DQzmPXJeA6x9gWzuo+4A6cfc/Ttbcix9tjZtFVZ4lxpblqS9zdX2hw/aWPbO5jBpr50
+         7tOnLCR7zfeo6hi/IRUxWmRTyexOTdFr03iTBsNMAjgWRT2iFNG7493h8UmlY6Qpyn5X
+         5dDoT6x3yHNbQ9cjNXEZ5K2vzQkYpfV0ybAtbfppvrunpme+Orz3ziiA3zmkpM7crqfb
+         Z/CKYzHf9LAYwwKYvvsP1161zxAhz9BjxtegTP78cAPYbR/VQftpj5Dw4byuiNC/pU56
+         mKvQ==
+X-Gm-Message-State: AOAM533uHbDsvxReUipLu7FMX58rb9FMNTfW72lxiASHSt729fq9hbKI
+        fmvS7oLzPqjuY+EgnySsi90=
+X-Google-Smtp-Source: ABdhPJwNKBYsLuiG7MmO1rP1TZQVCWEScL7Wn7rEabYIkS5ugbeuCCac5ztOmPJsmUppPC1+6neqmA==
+X-Received: by 2002:a9d:66d4:: with SMTP id t20mr14111088otm.264.1608600143560;
+        Mon, 21 Dec 2020 17:22:23 -0800 (PST)
 Received: from localhost.localdomain ([50.236.19.102])
-        by smtp.gmail.com with ESMTPSA id x20sm4070098oov.33.2020.12.21.17.22.00
+        by smtp.gmail.com with ESMTPSA id x20sm4070098oov.33.2020.12.21.17.22.18
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 21 Dec 2020 17:22:05 -0800 (PST)
+        Mon, 21 Dec 2020 17:22:23 -0800 (PST)
 From:   Yafang Shao <laoar.shao@gmail.com>
 To:     darrick.wong@oracle.com, willy@infradead.org, david@fromorbit.com,
         hch@infradead.org, mhocko@kernel.org, akpm@linux-foundation.org,
         dhowells@redhat.com, jlayton@redhat.com
 Cc:     linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        Michal Hocko <mhocko@suse.com>, Christoph Hellwig <hch@lst.de>,
-        Yafang Shao <laoar.shao@gmail.com>
-Subject: [PATCH v14 1/4] mm: Add become_kswapd and restore_kswapd
-Date:   Tue, 22 Dec 2020 09:21:28 +0800
-Message-Id: <20201222012131.47020-2-laoar.shao@gmail.com>
+        Yafang Shao <laoar.shao@gmail.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v14 4/4] xfs: use current->journal_info to avoid transaction reservation recursion
+Date:   Tue, 22 Dec 2020 09:21:31 +0800
+Message-Id: <20201222012131.47020-5-laoar.shao@gmail.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20201222012131.47020-1-laoar.shao@gmail.com>
 References: <20201222012131.47020-1-laoar.shao@gmail.com>
@@ -76,130 +76,125 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+PF_FSTRANS which is used to avoid transaction reservation recursion, is
+dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
+PF_MEMALLOC_NOFS") and replaced by PF_MEMALLOC_NOFS which means to avoid
+filesystem reclaim recursion.
 
-Since XFS needs to pretend to be kswapd in some of its worker threads,
-create methods to save & restore kswapd state.  Don't bother restoring
-kswapd state in kswapd -- the only time we reach this code is when we're
-exiting and the task_struct is about to be destroyed anyway.
+As these two flags have different meanings, we'd better reintroduce
+PF_FSTRANS back. To avoid wasting the space of PF_* flags in task_struct,
+we can reuse the current->journal_info to do that, per Willy. As the
+check of transaction reservation recursion is used by XFS only, we can
+move the check into xfs_vm_writepage(s), per Dave.
 
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: Dave Chinner <david@fromorbit.com>
-Acked-by: Michal Hocko <mhocko@suse.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Jeff Layton <jlayton@redhat.com>
 Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
 ---
- fs/xfs/libxfs/xfs_btree.c | 14 ++++++++------
- include/linux/sched/mm.h  | 22 ++++++++++++++++++++++
- mm/vmscan.c               | 16 +---------------
- 3 files changed, 31 insertions(+), 21 deletions(-)
+ fs/iomap/buffered-io.c |  7 -------
+ fs/xfs/xfs_aops.c      | 10 ++++++++++
+ fs/xfs/xfs_trans.h     | 22 +++++++++++++++++++---
+ 3 files changed, 29 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 51dbff9b0908..0f35b7a38e76 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -2813,8 +2813,9 @@ xfs_btree_split_worker(
- {
- 	struct xfs_btree_split_args	*args = container_of(work,
- 						struct xfs_btree_split_args, work);
-+	bool			is_kswapd = args->kswapd;
- 	unsigned long		pflags;
--	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
-+	int			memalloc_nofs;
- 
- 	/*
- 	 * we are in a transaction context here, but may also be doing work
-@@ -2822,16 +2823,17 @@ xfs_btree_split_worker(
- 	 * temporarily to ensure that we don't block waiting for memory reclaim
- 	 * in any way.
- 	 */
--	if (args->kswapd)
--		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
--
--	current_set_flags_nested(&pflags, new_pflags);
-+	if (is_kswapd)
-+		pflags = become_kswapd();
-+	memalloc_nofs = memalloc_nofs_save();
- 
- 	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
- 					 args->key, args->curp, args->stat);
- 	complete(args->done);
- 
--	current_restore_flags_nested(&pflags, new_pflags);
-+	memalloc_nofs_restore(memalloc_nofs);
-+	if (is_kswapd)
-+		restore_kswapd(pflags);
- }
- 
- /*
-diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
-index d5ece7a9a403..7195e542a54d 100644
---- a/include/linux/sched/mm.h
-+++ b/include/linux/sched/mm.h
-@@ -278,6 +278,28 @@ static inline void memalloc_nocma_restore(unsigned int flags)
- }
- #endif
- 
-+/*
-+ * Tell the memory management code that this thread is working on behalf
-+ * of background memory reclaim (like kswapd).  That means that it will
-+ * get access to memory reserves should it need to allocate memory in
-+ * order to make forward progress.  With this great power comes great
-+ * responsibility to not exhaust those reserves.
-+ */
-+#define KSWAPD_PF_FLAGS		(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD)
-+
-+static inline unsigned long become_kswapd(void)
-+{
-+	unsigned long flags = current->flags & KSWAPD_PF_FLAGS;
-+
-+	current->flags |= KSWAPD_PF_FLAGS;
-+	return flags;
-+}
-+
-+static inline void restore_kswapd(unsigned long flags)
-+{
-+	current->flags = (current->flags & ~KSWAPD_PF_FLAGS) | flags;
-+}
-+
- #ifdef CONFIG_MEMCG
- DECLARE_PER_CPU(struct mem_cgroup *, int_active_memcg);
- /**
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 7b4e31eac2cf..15af99d1f3f7 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -3870,19 +3870,7 @@ static int kswapd(void *p)
- 	if (!cpumask_empty(cpumask))
- 		set_cpus_allowed_ptr(tsk, cpumask);
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 10cc7979ce38..3c53fa6ce64d 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1458,13 +1458,6 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
+ 			PF_MEMALLOC))
+ 		goto redirty;
  
 -	/*
--	 * Tell the memory management that we're a "memory allocator",
--	 * and that if we need more memory we should get access to it
--	 * regardless (see "__alloc_pages()"). "kswapd" should
--	 * never get caught in the normal page freeing logic.
--	 *
--	 * (Kswapd normally doesn't need memory anyway, but sometimes
--	 * you need a small amount of memory in order to be able to
--	 * page out something else, and this flag essentially protects
--	 * us from recursively trying to free more memory as we're
--	 * trying to free the first piece of memory in the first place).
+-	 * Given that we do not allow direct reclaim to call us, we should
+-	 * never be called in a recursive filesystem reclaim context.
 -	 */
--	tsk->flags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
-+	become_kswapd();
- 	set_freezable();
- 
- 	WRITE_ONCE(pgdat->kswapd_order, 0);
-@@ -3932,8 +3920,6 @@ static int kswapd(void *p)
- 			goto kswapd_try_sleep;
- 	}
- 
--	tsk->flags &= ~(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD);
+-	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
+-		goto redirty;
 -
- 	return 0;
+ 	/*
+ 	 * Is this page beyond the end of the file?
+ 	 *
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 2371187b7615..eed4881d4461 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -568,6 +568,12 @@ xfs_vm_writepage(
+ {
+ 	struct xfs_writepage_ctx wpc = { };
+ 
++	if (WARN_ON_ONCE(xfs_trans_context_active())) {
++		redirty_page_for_writepage(wbc, page);
++		unlock_page(page);
++		return 0;
++	}
++
+ 	return iomap_writepage(page, wbc, &wpc.ctx, &xfs_writeback_ops);
  }
  
+@@ -579,6 +585,10 @@ xfs_vm_writepages(
+ 	struct xfs_writepage_ctx wpc = { };
+ 
+ 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
++
++	if (WARN_ON_ONCE(xfs_trans_context_active()))
++		return 0;
++
+ 	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
+ }
+ 
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index b428704eeb20..e2f3251d6cce 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -268,24 +268,40 @@ xfs_trans_item_relog(
+ 	return lip->li_ops->iop_relog(lip, tp);
+ }
+ 
++static inline bool
++xfs_trans_context_active(void)
++{
++	return current->journal_info != NULL;
++}
++
+ static inline void
+ xfs_trans_context_set(struct xfs_trans *tp)
+ {
++	ASSERT(!current->journal_info);
++	current->journal_info = tp;
+ 	tp->t_pflags = memalloc_nofs_save();
+ }
+ 
+ static inline void
+ xfs_trans_context_clear(struct xfs_trans *tp)
+ {
+-	if (!tp->t_flags)
+-		memalloc_nofs_restore(tp->t_pflags);
++	/*
++	 * If we handed over the context via xfs_trans_context_swap() then
++	 * the context is no longer needed to clear.
++	 */
++	if (current->journal_info != tp)
++		return;
++
++	current->journal_info = NULL;
++	memalloc_nofs_restore(tp->t_pflags);
+ }
+ 
+ static inline void
+ xfs_trans_context_swap(struct xfs_trans *tp, struct xfs_trans *ntp)
+ {
++	ASSERT(current->journal_info == tp);
++	current->journal_info = ntp;
+ 	ntp->t_pflags = tp->t_pflags;
+-	tp->t_flags = -1;
+ }
+ 
+ #endif	/* __XFS_TRANS_H__ */
 -- 
 2.18.4
 
