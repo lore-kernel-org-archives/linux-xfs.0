@@ -2,128 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.1 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EC5AC433E6
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Dec 2020 17:31:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBFB8C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Dec 2020 19:36:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5ABA222288
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Dec 2020 17:31:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D1D522512
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Dec 2020 19:36:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728681AbgLXRbA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Dec 2020 12:31:00 -0500
-Received: from bedivere.hansenpartnership.com ([96.44.175.130]:37900 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726839AbgLXRbA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Dec 2020 12:31:00 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 97C271280937;
-        Thu, 24 Dec 2020 09:30:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1608831019;
-        bh=ZrDKMysEKyRnhYwGjS71SXXWaighP0ldoE8CWdohIrg=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=r8mNX+IrqMNTTr696CzKuwaS+Sq91rTomLLBTI6H2DQdIAq2hg33Y7UH5jb+Go3cI
-         tb6nDGo60ZPDH/51WQjOHUSL6ZxKTbUHp+YB5IXye5R/Z2sAeuMEGaBDZTuMX5elLc
-         TByeaVv9dfWCLAVPKYUK4GoJKGCinejD2LtKCi08=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id h3bvsEulAG7l; Thu, 24 Dec 2020 09:30:19 -0800 (PST)
-Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:600:8280:66d1::c447])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1728704AbgLXTgO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Dec 2020 14:36:14 -0500
+Received: from sandeen.net ([63.231.237.45]:49084 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728679AbgLXTgO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Dec 2020 14:36:14 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 8B4791280936;
-        Thu, 24 Dec 2020 09:30:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1608831019;
-        bh=ZrDKMysEKyRnhYwGjS71SXXWaighP0ldoE8CWdohIrg=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=r8mNX+IrqMNTTr696CzKuwaS+Sq91rTomLLBTI6H2DQdIAq2hg33Y7UH5jb+Go3cI
-         tb6nDGo60ZPDH/51WQjOHUSL6ZxKTbUHp+YB5IXye5R/Z2sAeuMEGaBDZTuMX5elLc
-         TByeaVv9dfWCLAVPKYUK4GoJKGCinejD2LtKCi08=
-Message-ID: <bdd002f433928dd545d336a982516afa4e095d49.camel@HansenPartnership.com>
-Subject: Re: [PATCH v1 0/6] no-copy bvec
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     dgilbert@interlog.com, Christoph Hellwig <hch@infradead.org>,
-        Pavel Begunkov <asml.silence@gmail.com>
-Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>,
-        Matthew Wilcox <willy@infradead.org>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
-        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
-Date:   Thu, 24 Dec 2020 09:30:17 -0800
-In-Reply-To: <8abc56c2-4db8-5ee3-ab2d-8960d0eeeb0d@interlog.com>
-References: <cover.1607976425.git.asml.silence@gmail.com>
-         <20201215014114.GA1777020@T590>
-         <103235c1-e7d0-0b55-65d0-013d1a09304e@gmail.com>
-         <20201215120357.GA1798021@T590>
-         <e755fec3-4181-1414-0603-02e1a1f4e9eb@gmail.com>
-         <20201222141112.GE13079@infradead.org>
-         <933030f0-e428-18fd-4668-68db4f14b976@gmail.com>
-         <20201223155145.GA5902@infradead.org>
-         <f06ece44a86eb9c8ef07bbd9f6f53342366b7751.camel@HansenPartnership.com>
-         <8abc56c2-4db8-5ee3-ab2d-8960d0eeeb0d@interlog.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        by sandeen.net (Postfix) with ESMTPSA id C3F1815D6C;
+        Thu, 24 Dec 2020 13:34:27 -0600 (CST)
+To:     Fengfei Xi <xi.fengfei@h3c.com>, darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        tian.xianting@h3c.com
+References: <20201224095142.7201-1-xi.fengfei@h3c.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH] xfs: fix system crash caused by null bp->b_pages
+Message-ID: <63d75865-84c6-0f76-81a2-058f4cad1d84@sandeen.net>
+Date:   Thu, 24 Dec 2020 13:35:32 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20201224095142.7201-1-xi.fengfei@h3c.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 2020-12-23 at 15:23 -0500, Douglas Gilbert wrote:
-> On 2020-12-23 11:04 a.m., James Bottomley wrote:
-> > On Wed, 2020-12-23 at 15:51 +0000, Christoph Hellwig wrote:
-> > > On Wed, Dec 23, 2020 at 12:52:59PM +0000, Pavel Begunkov wrote:
-> > > > Can scatterlist have 0-len entries? Those are directly
-> > > > translated into bvecs, e.g. in nvme/target/io-cmd-file.c and
-> > > > target/target_core_file.c. I've audited most of others by this
-> > > > moment, they're fine.
-> > > 
-> > > For block layer SGLs we should never see them, and for nvme
-> > > neither. I think the same is true for the SCSI target code, but
-> > > please double check.
-> > 
-> > Right, no-one ever wants to see a 0-len scatter list entry.  The
-> > reason is that every driver uses the sgl to program the device DMA
-> > engine in the way NVME does.  a 0 length sgl would be a dangerous
-> > corner case: some DMA engines would ignore it and others would go
-> > haywire, so if we ever let a 0 length list down into the driver,
-> > they'd have to understand the corner case behaviour of their DMA
-> > engine and filter it accordingly, which is why we disallow them in
-> > the upper levels, since they're effective nops anyway.
+On 12/24/20 3:51 AM, Fengfei Xi wrote:
+> We have encountered the following problems several times:
+>     1、A raid slot or hardware problem causes block device loss.
+>     2、Continue to issue IO requests to the problematic block device.
+>     3、The system possibly crash after a few hours.
+
+What kernel is this on?
+
+> dmesg log as below:
+> [15205901.268313] blk_partition_remap: fail for partition 1
+
+I think this message has been gone since kernel v4.16...
+
+If you're testing this on an old kernel, can you reproduce it on a
+current kernel?
+
+> [15205901.319309] blk_partition_remap: fail for partition 1
+> [15205901.319341] blk_partition_remap: fail for partition 1
+> [15205901.319873] sysctl (3998546): drop_caches: 3
+
+What performed the drop_caches immediately before the BUG?  Does
+the BUG happen without drop_caches?
+
+> [15205901.371379] BUG: unable to handle kernel NULL pointer dereference at
+
+was something lost here?  "dereference at" ... what?
+
+> [15205901.372602] IP: xfs_buf_offset+0x32/0x60 [xfs]
+> [15205901.373605] PGD 0 P4D 0
+> [15205901.374690] Oops: 0000 [#1] SMP
+> [15205901.375629] Modules linked in:
+> [15205901.382445] CPU: 6 PID: 18545 Comm: xfsaild/sdh1 Kdump: loaded Tainted: G
+> [15205901.384728] Hardware name:
+> [15205901.385830] task: ffff885216939e80 task.stack: ffffb28ba9b38000
+> [15205901.386974] RIP: 0010:xfs_buf_offset+0x32/0x60 [xfs]
+> [15205901.388044] RSP: 0018:ffffb28ba9b3bc68 EFLAGS: 00010246
+> [15205901.389021] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 000000000000000b
+> [15205901.390016] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff88627bebf000
+> [15205901.391075] RBP: ffffb28ba9b3bc98 R08: ffff88627bebf000 R09: 00000001802a000d
+> [15205901.392031] R10: ffff88521f3a0240 R11: ffff88627bebf000 R12: ffff88521041e000
+> [15205901.392950] R13: 0000000000000020 R14: ffff88627bebf000 R15: 0000000000000000
+> [15205901.393858] FS:  0000000000000000(0000) GS:ffff88521f380000(0000) knlGS:0000000000000000
+> [15205901.394774] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [15205901.395756] CR2: 0000000000000000 CR3: 000000099bc09001 CR4: 00000000007606e0
+> [15205901.396904] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> [15205901.397869] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> [15205901.398836] PKRU: 55555554
+> [15205901.400111] Call Trace:
+> [15205901.401058]  ? xfs_inode_buf_verify+0x8e/0xf0 [xfs]
+> [15205901.402069]  ? xfs_buf_delwri_submit_buffers+0x16d/0x2b0 [xfs]
+> [15205901.403060]  xfs_inode_buf_write_verify+0x10/0x20 [xfs]
+> [15205901.404017]  _xfs_buf_ioapply+0x88/0x410 [xfs]
+> [15205901.404990]  ? xfs_buf_delwri_submit_buffers+0x16d/0x2b0 [xfs]
+> [15205901.405929]  xfs_buf_submit+0x63/0x200 [xfs]
+> [15205901.406801]  xfs_buf_delwri_submit_buffers+0x16d/0x2b0 [xfs]
+> [15205901.407675]  ? xfs_buf_delwri_submit_nowait+0x10/0x20 [xfs]
+> [15205901.408540]  ? xfs_inode_item_push+0xb7/0x190 [xfs]
+> [15205901.409395]  xfs_buf_delwri_submit_nowait+0x10/0x20 [xfs]
+> [15205901.410249]  xfsaild+0x29a/0x780 [xfs]
+> [15205901.411121]  kthread+0x109/0x140
+> [15205901.411981]  ? xfs_trans_ail_cursor_first+0x90/0x90 [xfs]
+> [15205901.412785]  ? kthread_park+0x60/0x60
+> [15205901.413578]  ret_from_fork+0x2a/0x40
 > 
-> When using scatter gather lists at the far end (i.e. on the storage
-> device) the T10 examples (WRITE SCATTERED and POPULATE TOKEN in SBC-
-> 4) explicitly allow the "number of logical blocks" in their sgl_s to
-> be zero and state that it is _not_ to be considered an error.
+> The "obvious" cause is that the bp->b_pages was NULL in function
+> xfs_buf_offset. Analyzing vmcore, we found that b_pages=NULL but
+> b_page_count=16, so b_pages is set to NULL for some reason.
 
-But that's pretty irrelevant.  The scatterlists that block has been
-constructing to drive DMA engines pre-date SCSI's addition of SGLs by
-decades (all SCSI commands before the object commands use a linear
-buffer which is implemented in the HBA engine as a scatterlist but not
-described by the SCSI standard as one).
+this can happen, for example _xfs_buf_get_pages sets the count, but may
+fail the allocation, and leave the count set while the pointer is NULL.
+> 
+> crash> struct xfs_buf ffff88627bebf000 | less
+>     ...
+>   b_pages = 0x0,
+>   b_page_array = {0x0, 0x0},
+>   b_maps = 0xffff88627bebf118,
+>   __b_map = {
+>     bm_bn = 512,
+>     bm_len = 128
+>   },
+>   b_map_count = 1,
+>   b_io_length = 128,
+>   b_pin_count = {
+>     counter = 0
+>   },
+>   b_io_remaining = {
+>     counter = 1
+>   },
+>   b_page_count = 16,
+>   b_offset = 0,
+>   b_error = 0,
+>     ...
+> 
+> To avoid system crash, we can add the check of 'bp->b_pages' to
+> xfs_inode_buf_verify(). If b_pages == NULL, we mark the buffer
+> as -EFSCORRUPTED and the IO will not dispatched.
+> 
+> Signed-off-by: Fengfei Xi <xi.fengfei@h3c.com>
+> Reviewed-by: Xianting Tian <tian.xianting@h3c.com>
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index c667c63f2..5a485c51f 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -45,6 +45,17 @@ xfs_inode_buf_verify(
+>  	int		i;
+>  	int		ni;
+>  
+> +	/*
+> +	 * Don't crash and mark buffer EFSCORRUPTED when b_pages is NULL
+> +	 */
+> +	if (!bp->b_pages) {
+> +		xfs_buf_ioerror(bp, -EFSCORRUPTED);
+> +		xfs_alert(mp,
+> +			"xfs_buf(%p) b_pages corruption detected at %pS\n",
+> +			bp, __return_address);
+> +		return;
+> +	}
 
-So the answer to the question should the block layer emit zero length
-sgl elements is "no" because they can confuse some DMA engines.
+This seems fairly ad hoc.
 
-If there's a more theoretical question of whether the target driver in
-adding commands it doesn't yet support should inject zero length SGL
-elements into block because SCSI allows it, the answer is still "no"
-because we don't want block to have SGLs that may confuse other DMA
-engines.  There's lots of daft corner cases in the SCSI standard we
-don't implement and a nop for SGL elements seems to be one of the more
-hare brained because it adds no useful feature and merely causes
-compatibility issues.
+I think we need a better idea of how we got here; why should inode buffers
+be uniquely impacted (or defensively protected?)  Can you reproduce this
+using virtual devices so the test can be scripted?
 
-James
- 
-
+-Eric
