@@ -2,116 +2,167 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3301C432C3
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Dec 2020 23:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83D3EC433E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Dec 2020 23:14:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B0B9223C8
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Dec 2020 23:12:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B4F5223C8
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Dec 2020 23:14:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730865AbgL1Wz4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Dec 2020 17:55:56 -0500
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:33122 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729604AbgL1WHK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Dec 2020 17:07:10 -0500
-Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id B58DE9BD8;
-        Tue, 29 Dec 2020 09:06:23 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ku0ek-000i2E-GY; Tue, 29 Dec 2020 09:06:22 +1100
-Date:   Tue, 29 Dec 2020 09:06:22 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chris Dunlop <chris@onthe.net.au>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Extreme fragmentation ho!
-Message-ID: <20201228220622.GA164134@dread.disaster.area>
-References: <20201221215453.GA1886598@onthe.net.au>
+        id S1727231AbgL1XOV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Dec 2020 18:14:21 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:50131 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729666AbgL1XOR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 28 Dec 2020 18:14:17 -0500
+Received: from [192.168.0.8] (ip5f5aef2f.dynamic.kabel-deutschland.de [95.90.239.47])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 4C9012064622D;
+        Tue, 29 Dec 2020 00:13:34 +0100 (CET)
+Subject: Re: v5.10.1 xfs deadlock
+From:   Donald Buczek <buczek@molgen.mpg.de>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        it+linux-xfs@molgen.mpg.de
+References: <b8da4aed-ee44-5d9f-88dc-3d32f0298564@molgen.mpg.de>
+ <20201217194317.GD2507317@bfoster>
+ <39b92850-f2ff-e4b6-0b2e-477ab3ec3c87@molgen.mpg.de>
+ <20201218153533.GA2563439@bfoster>
+ <8e9a2939-220d-b12f-a24e-0fb48fa95215@molgen.mpg.de>
+ <066cb9e2-f583-b2c7-f42c-861568d38e2f@molgen.mpg.de>
+Message-ID: <1705b481-16db-391e-48a8-a932d1f137e7@molgen.mpg.de>
+Date:   Tue, 29 Dec 2020 00:13:33 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201221215453.GA1886598@onthe.net.au>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
-        a=Cl9GS8SSFwKT9TAkjrQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <066cb9e2-f583-b2c7-f42c-861568d38e2f@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 22, 2020 at 08:54:53AM +1100, Chris Dunlop wrote:
-> Hi,
+
+
+On 27.12.20 18:34, Donald Buczek wrote:
+> On 18.12.20 19:35, Donald Buczek wrote:
+>> On 18.12.20 16:35, Brian Foster wrote:
+>>> On Thu, Dec 17, 2020 at 10:30:37PM +0100, Donald Buczek wrote:
+>>>> On 17.12.20 20:43, Brian Foster wrote:
+>>>>> On Thu, Dec 17, 2020 at 06:44:51PM +0100, Donald Buczek wrote:
+>>>>>> Dear xfs developer,
+>>>>>>
+>>>>>> I was doing some testing on a Linux 5.10.1 system with two 100 TB xfs filesystems on md raid6 raids.
+>>>>>>
+>>>>>> The stress test was essentially `cp -a`ing a Linux source repository with two threads in parallel on each filesystem.
+>>>>>>
+>>>>>> After about on hour, the processes to one filesystem (md1) blocked, 30 minutes later the process to the other filesystem (md0) did.
+>>>>>>
+>>>>>>       root      7322  2167  0 Dec16 pts/1    00:00:06 cp -a /jbod/M8068/scratch/linux /jbod/M8068/scratch/1/linux.018.TMP
+>>>>>>       root      7329  2169  0 Dec16 pts/1    00:00:05 cp -a /jbod/M8068/scratch/linux /jbod/M8068/scratch/2/linux.019.TMP
+>>>>>>       root     13856  2170  0 Dec16 pts/1    00:00:08 cp -a /jbod/M8067/scratch/linux /jbod/M8067/scratch/2/linux.028.TMP
+>>>>>>       root     13899  2168  0 Dec16 pts/1    00:00:05 cp -a /jbod/M8067/scratch/linux /jbod/M8067/scratch/1/linux.027.TMP
+>>>>>>
+>>>
+>>> Do you have any indication of whether these workloads actually hung or
+>>> just became incredibly slow?
+>>
+>> There is zero progress. iostat doesn't show any I/O on any of the block devices (md or member)
+>>
+>>>>>> Some info from the system (all stack traces, slabinfo) is available here: https://owww.molgen.mpg.de/~buczek/2020-12-16.info.txt
+>>>>>>
+>>>>>> It stands out, that there are many (549 for md0, but only 10 for md1)  "xfs-conv" threads all with stacks like this
+>>>>>>
+>>>>>>       [<0>] xfs_log_commit_cil+0x6cc/0x7c0
+>>>>>>       [<0>] __xfs_trans_commit+0xab/0x320
+>>>>>>       [<0>] xfs_iomap_write_unwritten+0xcb/0x2e0
+>>>>>>       [<0>] xfs_end_ioend+0xc6/0x110
+>>>>>>       [<0>] xfs_end_io+0xad/0xe0
+>>>>>>       [<0>] process_one_work+0x1dd/0x3e0
+>>>>>>       [<0>] worker_thread+0x2d/0x3b0
+>>>>>>       [<0>] kthread+0x118/0x130
+>>>>>>       [<0>] ret_from_fork+0x22/0x30
+>>>>>>
+>>>>>> xfs_log_commit_cil+0x6cc is
+>>>>>>
+>>>>>>     xfs_log_commit_cil()
+>>>>>>       xlog_cil_push_background(log)
+>>>>>>         xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
+>>>>>>
+>>>
+>>> This looks like the transaction commit throttling code. That was
+>>> introduced earlier this year in v5.7 via commit 0e7ab7efe7745 ("xfs:
+>>> Throttle commits on delayed background CIL push"). The purpose of that
+>>> change was to prevent the CIL from growing too large. FWIW, I don't
+>>> recall that being a functional problem so it should be possible to
+>>> simply remove that blocking point and see if that avoids the problem or
+>>> if we simply stall out somewhere else, if you wanted to give that a
+>>> test.
+>>
+>> Will do. Before trying with this commit reverted, I will repeat the test without any change to see if the problem is reproducible at all.
 > 
-> I have a 2T file fragmented into 841891 randomly placed extents. It takes
-> 4-6 minutes (depending on what else the filesystem is doing) to delete the
-> file. This is causing a timeout in the application doing the removal, and
-> hilarity ensues.
-
-~3,000 extents/s being removed, with reflink+rmap mods being made for
-every extent. Seems a little slow compared to what I typically see,
-but...
-
-> The fragmentation is the result of reflinking bits and bobs from other files
-> into the subject file, so it's probably unavoidable.
+> I'm now able to reliably reproduce the deadlock with a little less complex setup (e.g. with only one filesystem involved). One key to that was to run the test against a freshly created filesystem (mkfs).
 > 
-> The file is sitting on XFS on LV on a raid6 comprising 6 x 5400 RPM HDD:
+> And, yes, you are right: When I revert ef565ab8cc2e ("xfs: Throttle commits on delayed background CIL push") and 7ee6dfa2a245 ("xfs: fix use-after-free on CIL context on shutdown") the deadlock seems to be gone.
 
-... probably not that unreasonable for pretty much the slowest
-storage configuration you can possibly come up with for small,
-metadata write intensive workloads.
+Hash Correction: 0e7ab7efe774 ("xfs: Throttle commits on delayed background CIL push") and c7f87f3984cf ("xfs: fix use-after-free on CIL context on shutdown")
 
-> # xfs_info /home
-> meta-data=/dev/mapper/vg00-home  isize=512    agcount=32, agsize=244184192 blks
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=1
->          =                       reflink=1
-> data     =                       bsize=4096   blocks=7813893120, imaxpct=5
->          =                       sunit=128    swidth=512 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=521728, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> I'm guessing the time taken to remove is not unreasonable given the speed of
-> the underlying storage and the amount of metadata involved. Does my guess
-> seem correct?
+When I tried to remove only the wait:
 
-Yup.
+     --- a/fs/xfs/xfs_log_cil.c
+     +++ b/fs/xfs/xfs_log_cil.c
+     @@ -936,7 +936,6 @@ xlog_cil_push_background(
+             if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
+                     trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
+                     ASSERT(cil->xc_ctx->space_used < log->l_logsize);
+     -               xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
+                     return;
+             }
 
-> I'd like to do some experimentation with a facsimile of this file, e.g.  try
-> the remove on different storage subsystems, and/or with a external fast
-> journal etc., to see how they compare.
+the system got into a critical overload situation with many kworker threads at 100% CPU and became totally unresponsive after a while, requiring sysrq triggered reboot.
 
-I think you'll find a limit at ~20,000 extents/s, regardless of your
-storage subsystem. Once you take away IO latency, it's basically
-single threaded and CPU bound so performance is largely dependent
-on how fast your CPUs are. IOWs, the moment you move to SSDs, it
-will be CPU bound and still take a minute or two to remove all the
-extents....
+I noticed, that 7ee6dfa2a245 ("xfs: fix use-after-free on CIL context on shutdown") put the `wake_up_all(&ctx->push_wait)` into an additional conditional `if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))` - the same as is used to decide whether the background push is triggered at all. But in the deadlock situation, I've seen waiters waiting on cil->xc_push_wait with ctx->space_used being zero with the debugger:
 
-> What is the easiest way to recreate a similarly (or even better,
-> identically) fragmented file?
+     $L_003: (struct xfs_cil *) 0xffff889886db0700 : {
+         xc_cil = {next = 0xffff889886db0708, prev = 0xffff889886db0708}    /* empty */
+         xc_ctx = 0xffff888e2cb6dd80 /* --> $L_004 */
+         xc_push_seq = 31
+         xc_committing = {next = 0xffff889886db0790, prev = 0xffff889886db0790}    /* empty */
+         xc_current_sequence = 32
+         xc_push_wait = {
+             head = {next = 0xffffc9000dbcbd48, prev = 0xffffc90021a1bd20}
+         }
+     }
+     $L_004: (struct xfs_cil_ctx *) 0xffff888e2cb6dd80 : {
+         sequence = 32
+         start_lsn = 0
+         commit_lsn = 0
+         space_used = 0
+         committing = {next = 0xffff888e2cb6ddd8, prev = 0xffff888e2cb6ddd8}    /* empty */
+     }
 
-Just script xfs_io to reflink random bits and bobs from other files
-into a larger file?
 
-> One way would be to use xfs_metadump / xfs_mdrestore to create an entire
-> copy of the original filesystem, but I'd really prefer not taking the
-> original fs offline for the time required. I also don't have the space to
-> restore the whole fs but perhaps using lvmthin can address the restore
-> issue, at the cost of a slight(?) performance impact due to the extra layer.
+So, out of curiosity I've tried
 
-Easiest, most space efficient way is to mdrestore to a file (ends up
-sparse, containing only metadata), mount it via loopback.
+     --- a/fs/xfs/xfs_log_cil.c
+     +++ b/fs/xfs/xfs_log_cil.c
+     @@ -670,8 +670,7 @@ xlog_cil_push_work(
+             /*
+              * Wake up any background push waiters now this context is being pushed.
+              */
+     -       if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
+     -               wake_up_all(&cil->xc_push_wait);
+     +       wake_up_all(&cil->xc_push_wait);
+      
+             /*
+              * Check if we've anything to push. If there is nothing, then we don't
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+and this seems to fix the problem. But I don't understand, how this is possible.
