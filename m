@@ -2,112 +2,151 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D32FDC433E0
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Dec 2020 17:35:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D20C433E9
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Dec 2020 15:58:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 998A6206CA
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Dec 2020 17:35:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0873720829
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Dec 2020 15:58:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726121AbgL0RfI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Dec 2020 12:35:08 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:58661 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726065AbgL0RfH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 27 Dec 2020 12:35:07 -0500
-Received: from [192.168.0.8] (ip5f5aef2f.dynamic.kabel-deutschland.de [95.90.239.47])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: buczek)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id E8C4520225BD3;
-        Sun, 27 Dec 2020 18:34:24 +0100 (CET)
-Subject: Re: v5.10.1 xfs deadlock
-From:   Donald Buczek <buczek@molgen.mpg.de>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+linux-xfs@molgen.mpg.de
-References: <b8da4aed-ee44-5d9f-88dc-3d32f0298564@molgen.mpg.de>
- <20201217194317.GD2507317@bfoster>
- <39b92850-f2ff-e4b6-0b2e-477ab3ec3c87@molgen.mpg.de>
- <20201218153533.GA2563439@bfoster>
- <8e9a2939-220d-b12f-a24e-0fb48fa95215@molgen.mpg.de>
-Message-ID: <066cb9e2-f583-b2c7-f42c-861568d38e2f@molgen.mpg.de>
-Date:   Sun, 27 Dec 2020 18:34:24 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S2387995AbgL1P6U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Dec 2020 10:58:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48052 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2393238AbgL1P6N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Dec 2020 10:58:13 -0500
+Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01463C061794
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Dec 2020 07:57:33 -0800 (PST)
+Received: by mail-ej1-x62b.google.com with SMTP id w1so14676407ejf.11
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Dec 2020 07:57:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=scylladb-com.20150623.gappssmtp.com; s=20150623;
+        h=to:from:subject:organization:message-id:date:user-agent
+         :mime-version:content-transfer-encoding:content-language;
+        bh=NcRCWnnwE+H8MivsnAWQfYI0nUGtIR3xTMp18e05J5c=;
+        b=OKJGGN2ydibsGxBwH1XdQlK60B0Mh6dF1+NVG342iPWFdwqFXJY88y0N8u2L3iEdtS
+         +3khlAbDL0DvVFHmaOHKsV1qxwSPAkSIM0kXqqtb4u6kPUkmMw5FTP22XYeZJ5XD4v0e
+         3MHhyfgGdZEYHrL3TZ+rhyI+KLldIXNf5yDEuC8mVbVZocBlcGjqYRBsYmvYosWs2rCu
+         DwuNHpmH4+y+EEh4D8WmzvXRNc2yMI7MgVyTfuDvG4gcmtKFA3IDiTLtHJRVbveOIK9z
+         D/YDLqDUXKHqLpwbgR4avGSQqTYEoDGOEPTmxNn0gpm2qT7hotCrlifto2yuWmgLetr2
+         KM8A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:from:subject:organization:message-id:date
+         :user-agent:mime-version:content-transfer-encoding:content-language;
+        bh=NcRCWnnwE+H8MivsnAWQfYI0nUGtIR3xTMp18e05J5c=;
+        b=Qc3X1/p+4Lzquofrzq2q5BSZ+Qb6lE55Kz05vG56c7IpDN6UJXJEgdwwQTbEGhdqIW
+         WgUzY4a3tDlSV4jKq9mEVz9pc9xByAjVD7Hg9xRLKJLziNml79PwYxVjeKJhyNY3Je5s
+         nce57ga1VPPspEd5CCRcxVx6oc8B0bybIbNG7Evi2pePyF04Vx73vpfCzCfPaDAxdsip
+         k9+1YbQJaUmKA5TF0M9sYIuBjWoGwMgsCynGMJm7nDA4AZfbzkZXmUIEXzzODIyW2UqP
+         x8jPFmCJZ4G3elJIA18yjtPEcxBNPukUZfg1lLIgSTCkC6cRn01ujWSnoRr1sdZ9Ssey
+         vu/Q==
+X-Gm-Message-State: AOAM5318YqKWpA75q/9iA8eyv4m4so773QtJ7RhYU3sAINq+MWdEJwIR
+        spoH0PsO9Yws1pV5EdHkISfOgQ==
+X-Google-Smtp-Source: ABdhPJx9iuJoameYazzbL/Z+MEtaiB98ERBGvogOGJPuW5lzGDj3wgMJjP7FmvuaUEkWbyuv5PjaTA==
+X-Received: by 2002:a17:907:2071:: with SMTP id qp17mr42570476ejb.110.1609171051672;
+        Mon, 28 Dec 2020 07:57:31 -0800 (PST)
+Received: from [10.0.0.1] (system.cloudius-systems.com. [199.203.229.89])
+        by smtp.gmail.com with ESMTPSA id c16sm11250598ejk.91.2020.12.28.07.57.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 28 Dec 2020 07:57:30 -0800 (PST)
+To:     linux-xfs@vger.kernel.org
+From:   Avi Kivity <avi@scylladb.com>
+Subject: Disk aligned (but not block aligned) DIO write woes
+Organization: ScyllaDB
+Message-ID: <20ce6a14-94cf-c8ef-8219-7a051fb6e66a@scylladb.com>
+Date:   Mon, 28 Dec 2020 17:57:29 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-In-Reply-To: <8e9a2939-220d-b12f-a24e-0fb48fa95215@molgen.mpg.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 18.12.20 19:35, Donald Buczek wrote:
-> On 18.12.20 16:35, Brian Foster wrote:
->> On Thu, Dec 17, 2020 at 10:30:37PM +0100, Donald Buczek wrote:
->>> On 17.12.20 20:43, Brian Foster wrote:
->>>> On Thu, Dec 17, 2020 at 06:44:51PM +0100, Donald Buczek wrote:
->>>>> Dear xfs developer,
->>>>>
->>>>> I was doing some testing on a Linux 5.10.1 system with two 100 TB xfs filesystems on md raid6 raids.
->>>>>
->>>>> The stress test was essentially `cp -a`ing a Linux source repository with two threads in parallel on each filesystem.
->>>>>
->>>>> After about on hour, the processes to one filesystem (md1) blocked, 30 minutes later the process to the other filesystem (md0) did.
->>>>>
->>>>>       root      7322  2167  0 Dec16 pts/1    00:00:06 cp -a /jbod/M8068/scratch/linux /jbod/M8068/scratch/1/linux.018.TMP
->>>>>       root      7329  2169  0 Dec16 pts/1    00:00:05 cp -a /jbod/M8068/scratch/linux /jbod/M8068/scratch/2/linux.019.TMP
->>>>>       root     13856  2170  0 Dec16 pts/1    00:00:08 cp -a /jbod/M8067/scratch/linux /jbod/M8067/scratch/2/linux.028.TMP
->>>>>       root     13899  2168  0 Dec16 pts/1    00:00:05 cp -a /jbod/M8067/scratch/linux /jbod/M8067/scratch/1/linux.027.TMP
->>>>>
->>
->> Do you have any indication of whether these workloads actually hung or
->> just became incredibly slow?
-> 
-> There is zero progress. iostat doesn't show any I/O on any of the block devices (md or member)
-> 
->>>>> Some info from the system (all stack traces, slabinfo) is available here: https://owww.molgen.mpg.de/~buczek/2020-12-16.info.txt
->>>>>
->>>>> It stands out, that there are many (549 for md0, but only 10 for md1)  "xfs-conv" threads all with stacks like this
->>>>>
->>>>>       [<0>] xfs_log_commit_cil+0x6cc/0x7c0
->>>>>       [<0>] __xfs_trans_commit+0xab/0x320
->>>>>       [<0>] xfs_iomap_write_unwritten+0xcb/0x2e0
->>>>>       [<0>] xfs_end_ioend+0xc6/0x110
->>>>>       [<0>] xfs_end_io+0xad/0xe0
->>>>>       [<0>] process_one_work+0x1dd/0x3e0
->>>>>       [<0>] worker_thread+0x2d/0x3b0
->>>>>       [<0>] kthread+0x118/0x130
->>>>>       [<0>] ret_from_fork+0x22/0x30
->>>>>
->>>>> xfs_log_commit_cil+0x6cc is
->>>>>
->>>>>     xfs_log_commit_cil()
->>>>>       xlog_cil_push_background(log)
->>>>>         xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
->>>>>
->>
->> This looks like the transaction commit throttling code. That was
->> introduced earlier this year in v5.7 via commit 0e7ab7efe7745 ("xfs:
->> Throttle commits on delayed background CIL push"). The purpose of that
->> change was to prevent the CIL from growing too large. FWIW, I don't
->> recall that being a functional problem so it should be possible to
->> simply remove that blocking point and see if that avoids the problem or
->> if we simply stall out somewhere else, if you wanted to give that a
->> test.
-> 
-> Will do. Before trying with this commit reverted, I will repeat the test without any change to see if the problem is reproducible at all.
+I observe that XFS takes an exclusive lock for DIO writes that are not 
+block aligned:
 
-I'm now able to reliably reproduce the deadlock with a little less complex setup (e.g. with only one filesystem involved). One key to that was to run the test against a freshly created filesystem (mkfs).
 
-And, yes, you are right: When I revert ef565ab8cc2e ("xfs: Throttle commits on delayed background CIL push") and 7ee6dfa2a245 ("xfs: fix use-after-free on CIL context on shutdown") the deadlock seems to be gone.
+xfs_file_dio_aio_write(
 
-Best
-   Donald
+{
+
+...
+
+        /*
+          * Don't take the exclusive iolock here unless the I/O is 
+unaligned to
+          * the file system block size.  We don't need to consider the EOF
+          * extension case here because xfs_file_aio_write_checks() will 
+relock
+          * the inode as necessary for EOF zeroing cases and fill out 
+the new
+          * inode size as appropriate.
+          */
+         if ((iocb->ki_pos & mp->m_blockmask) ||
+             ((iocb->ki_pos + count) & mp->m_blockmask)) {
+                 unaligned_io = 1;
+
+                 /*
+                  * We can't properly handle unaligned direct I/O to reflink
+                  * files yet, as we can't unshare a partial block.
+                  */
+                 if (xfs_is_cow_inode(ip)) {
+                         trace_xfs_reflink_bounce_dio_write(ip, 
+iocb->ki_pos, count);
+                         return -ENOTBLK;
+                 }
+                 iolock = XFS_IOLOCK_EXCL;
+         } else {
+                 iolock = XFS_IOLOCK_SHARED;
+         }
+
+
+I also see that such writes cause io_submit to block, even if they hit a 
+written extent (and are also not size-changing, by implication) and 
+therefore do not require a metadata write. Probably due to "|| 
+unaligned_io" in
+
+
+         ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
+                            &xfs_dio_write_ops,
+                            is_sync_kiocb(iocb) || unaligned_io);
+
+
+Can this be relaxed to allow writes to written extents to proceed in 
+parallel? I explain the motivation below.
+
+
+My thinking (from a position of blissful ignorance) is that if the 
+extent is already written, then no metadata changes and block zeroing 
+are needed. If we can detect that favorable conditions exists (perhaps 
+with the extra constraint that the mapping be already cached), then we 
+can handle this particular case asynchronously.
+
+
+My motivation is a database commit log. NVMe drives can serve small 
+writes with ridiculously low latency - around 20 microseconds. Let's say 
+a commitlog entry is around 100 bytes; we fill a 4k block with 41 
+entries. To achieve that in 20 microseconds requires 2 million 
+records/sec. Even if we add artificial delay and commit every 1ms, 
+filling this 4k block require 41,000 commits/sec. If the entry write 
+rate is lower, then we will be forced to pad the rest of the block. This 
+increases the write amplification, impacting other activities using the 
+disk (such as reads).
+
+
+41,000 commits/sec may not sound like much, but in a thread-per-core 
+design (where each core commits independently) this translates to 
+millions of commits per second for the entire machine. If the real 
+throughput is below that, then we are forced to either increase the 
+latency to collect more writes into a full block, or we have to tolerate 
+the increased write amplification.
+
+
