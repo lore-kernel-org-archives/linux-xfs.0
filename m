@@ -2,151 +2,116 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D20C433E9
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Dec 2020 15:58:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3301C432C3
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Dec 2020 23:12:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0873720829
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Dec 2020 15:58:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B0B9223C8
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Dec 2020 23:12:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387995AbgL1P6U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Dec 2020 10:58:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48052 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2393238AbgL1P6N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Dec 2020 10:58:13 -0500
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01463C061794
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Dec 2020 07:57:33 -0800 (PST)
-Received: by mail-ej1-x62b.google.com with SMTP id w1so14676407ejf.11
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Dec 2020 07:57:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=scylladb-com.20150623.gappssmtp.com; s=20150623;
-        h=to:from:subject:organization:message-id:date:user-agent
-         :mime-version:content-transfer-encoding:content-language;
-        bh=NcRCWnnwE+H8MivsnAWQfYI0nUGtIR3xTMp18e05J5c=;
-        b=OKJGGN2ydibsGxBwH1XdQlK60B0Mh6dF1+NVG342iPWFdwqFXJY88y0N8u2L3iEdtS
-         +3khlAbDL0DvVFHmaOHKsV1qxwSPAkSIM0kXqqtb4u6kPUkmMw5FTP22XYeZJ5XD4v0e
-         3MHhyfgGdZEYHrL3TZ+rhyI+KLldIXNf5yDEuC8mVbVZocBlcGjqYRBsYmvYosWs2rCu
-         DwuNHpmH4+y+EEh4D8WmzvXRNc2yMI7MgVyTfuDvG4gcmtKFA3IDiTLtHJRVbveOIK9z
-         D/YDLqDUXKHqLpwbgR4avGSQqTYEoDGOEPTmxNn0gpm2qT7hotCrlifto2yuWmgLetr2
-         KM8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:from:subject:organization:message-id:date
-         :user-agent:mime-version:content-transfer-encoding:content-language;
-        bh=NcRCWnnwE+H8MivsnAWQfYI0nUGtIR3xTMp18e05J5c=;
-        b=Qc3X1/p+4Lzquofrzq2q5BSZ+Qb6lE55Kz05vG56c7IpDN6UJXJEgdwwQTbEGhdqIW
-         WgUzY4a3tDlSV4jKq9mEVz9pc9xByAjVD7Hg9xRLKJLziNml79PwYxVjeKJhyNY3Je5s
-         nce57ga1VPPspEd5CCRcxVx6oc8B0bybIbNG7Evi2pePyF04Vx73vpfCzCfPaDAxdsip
-         k9+1YbQJaUmKA5TF0M9sYIuBjWoGwMgsCynGMJm7nDA4AZfbzkZXmUIEXzzODIyW2UqP
-         x8jPFmCJZ4G3elJIA18yjtPEcxBNPukUZfg1lLIgSTCkC6cRn01ujWSnoRr1sdZ9Ssey
-         vu/Q==
-X-Gm-Message-State: AOAM5318YqKWpA75q/9iA8eyv4m4so773QtJ7RhYU3sAINq+MWdEJwIR
-        spoH0PsO9Yws1pV5EdHkISfOgQ==
-X-Google-Smtp-Source: ABdhPJx9iuJoameYazzbL/Z+MEtaiB98ERBGvogOGJPuW5lzGDj3wgMJjP7FmvuaUEkWbyuv5PjaTA==
-X-Received: by 2002:a17:907:2071:: with SMTP id qp17mr42570476ejb.110.1609171051672;
-        Mon, 28 Dec 2020 07:57:31 -0800 (PST)
-Received: from [10.0.0.1] (system.cloudius-systems.com. [199.203.229.89])
-        by smtp.gmail.com with ESMTPSA id c16sm11250598ejk.91.2020.12.28.07.57.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Dec 2020 07:57:30 -0800 (PST)
-To:     linux-xfs@vger.kernel.org
-From:   Avi Kivity <avi@scylladb.com>
-Subject: Disk aligned (but not block aligned) DIO write woes
-Organization: ScyllaDB
-Message-ID: <20ce6a14-94cf-c8ef-8219-7a051fb6e66a@scylladb.com>
-Date:   Mon, 28 Dec 2020 17:57:29 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S1730865AbgL1Wz4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Dec 2020 17:55:56 -0500
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:33122 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729604AbgL1WHK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Dec 2020 17:07:10 -0500
+Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id B58DE9BD8;
+        Tue, 29 Dec 2020 09:06:23 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ku0ek-000i2E-GY; Tue, 29 Dec 2020 09:06:22 +1100
+Date:   Tue, 29 Dec 2020 09:06:22 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chris Dunlop <chris@onthe.net.au>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Extreme fragmentation ho!
+Message-ID: <20201228220622.GA164134@dread.disaster.area>
+References: <20201221215453.GA1886598@onthe.net.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201221215453.GA1886598@onthe.net.au>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
+        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
+        a=Cl9GS8SSFwKT9TAkjrQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I observe that XFS takes an exclusive lock for DIO writes that are not 
-block aligned:
+On Tue, Dec 22, 2020 at 08:54:53AM +1100, Chris Dunlop wrote:
+> Hi,
+> 
+> I have a 2T file fragmented into 841891 randomly placed extents. It takes
+> 4-6 minutes (depending on what else the filesystem is doing) to delete the
+> file. This is causing a timeout in the application doing the removal, and
+> hilarity ensues.
 
+~3,000 extents/s being removed, with reflink+rmap mods being made for
+every extent. Seems a little slow compared to what I typically see,
+but...
 
-xfs_file_dio_aio_write(
+> The fragmentation is the result of reflinking bits and bobs from other files
+> into the subject file, so it's probably unavoidable.
+> 
+> The file is sitting on XFS on LV on a raid6 comprising 6 x 5400 RPM HDD:
 
-{
+... probably not that unreasonable for pretty much the slowest
+storage configuration you can possibly come up with for small,
+metadata write intensive workloads.
 
-...
+> # xfs_info /home
+> meta-data=/dev/mapper/vg00-home  isize=512    agcount=32, agsize=244184192 blks
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=1
+>          =                       reflink=1
+> data     =                       bsize=4096   blocks=7813893120, imaxpct=5
+>          =                       sunit=128    swidth=512 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=521728, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> I'm guessing the time taken to remove is not unreasonable given the speed of
+> the underlying storage and the amount of metadata involved. Does my guess
+> seem correct?
 
-        /*
-          * Don't take the exclusive iolock here unless the I/O is 
-unaligned to
-          * the file system block size.  We don't need to consider the EOF
-          * extension case here because xfs_file_aio_write_checks() will 
-relock
-          * the inode as necessary for EOF zeroing cases and fill out 
-the new
-          * inode size as appropriate.
-          */
-         if ((iocb->ki_pos & mp->m_blockmask) ||
-             ((iocb->ki_pos + count) & mp->m_blockmask)) {
-                 unaligned_io = 1;
+Yup.
 
-                 /*
-                  * We can't properly handle unaligned direct I/O to reflink
-                  * files yet, as we can't unshare a partial block.
-                  */
-                 if (xfs_is_cow_inode(ip)) {
-                         trace_xfs_reflink_bounce_dio_write(ip, 
-iocb->ki_pos, count);
-                         return -ENOTBLK;
-                 }
-                 iolock = XFS_IOLOCK_EXCL;
-         } else {
-                 iolock = XFS_IOLOCK_SHARED;
-         }
+> I'd like to do some experimentation with a facsimile of this file, e.g.  try
+> the remove on different storage subsystems, and/or with a external fast
+> journal etc., to see how they compare.
 
+I think you'll find a limit at ~20,000 extents/s, regardless of your
+storage subsystem. Once you take away IO latency, it's basically
+single threaded and CPU bound so performance is largely dependent
+on how fast your CPUs are. IOWs, the moment you move to SSDs, it
+will be CPU bound and still take a minute or two to remove all the
+extents....
 
-I also see that such writes cause io_submit to block, even if they hit a 
-written extent (and are also not size-changing, by implication) and 
-therefore do not require a metadata write. Probably due to "|| 
-unaligned_io" in
+> What is the easiest way to recreate a similarly (or even better,
+> identically) fragmented file?
 
+Just script xfs_io to reflink random bits and bobs from other files
+into a larger file?
 
-         ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
-                            &xfs_dio_write_ops,
-                            is_sync_kiocb(iocb) || unaligned_io);
+> One way would be to use xfs_metadump / xfs_mdrestore to create an entire
+> copy of the original filesystem, but I'd really prefer not taking the
+> original fs offline for the time required. I also don't have the space to
+> restore the whole fs but perhaps using lvmthin can address the restore
+> issue, at the cost of a slight(?) performance impact due to the extra layer.
 
+Easiest, most space efficient way is to mdrestore to a file (ends up
+sparse, containing only metadata), mount it via loopback.
 
-Can this be relaxed to allow writes to written extents to proceed in 
-parallel? I explain the motivation below.
+Cheers,
 
-
-My thinking (from a position of blissful ignorance) is that if the 
-extent is already written, then no metadata changes and block zeroing 
-are needed. If we can detect that favorable conditions exists (perhaps 
-with the extra constraint that the mapping be already cached), then we 
-can handle this particular case asynchronously.
-
-
-My motivation is a database commit log. NVMe drives can serve small 
-writes with ridiculously low latency - around 20 microseconds. Let's say 
-a commitlog entry is around 100 bytes; we fill a 4k block with 41 
-entries. To achieve that in 20 microseconds requires 2 million 
-records/sec. Even if we add artificial delay and commit every 1ms, 
-filling this 4k block require 41,000 commits/sec. If the entry write 
-rate is lower, then we will be forced to pad the rest of the block. This 
-increases the write amplification, impacting other activities using the 
-disk (such as reads).
-
-
-41,000 commits/sec may not sound like much, but in a thread-per-core 
-design (where each core commits independently) this translates to 
-millions of commits per second for the entire machine. If the real 
-throughput is below that, then we are forced to either increase the 
-latency to collect more writes into a full block, or we have to tolerate 
-the increased write amplification.
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
