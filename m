@@ -2,86 +2,78 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,STOX_BOUND_090909_B,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40CC6C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Dec 2020 07:53:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FC90C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Dec 2020 12:57:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0703921D1B
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Dec 2020 07:53:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5EAE220825
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Dec 2020 12:57:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726021AbgL2HxK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Dec 2020 02:53:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53932 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725866AbgL2HxK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Dec 2020 02:53:10 -0500
-X-Greylist: delayed 144 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 28 Dec 2020 23:52:29 PST
-Received: from hermod.demsh.org (hermod.demsh.org [IPv6:2a01:4f9:c010:1460::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1031CC0613D6;
-        Mon, 28 Dec 2020 23:52:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=demsh.org; s=022020;
-        t=1609228197;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:in-reply-to;
-        bh=//yLaZSjNdLlz/C9HAUQPZz9tltS99gtWDxcBQPPlE4=;
-        b=Z9x/D9VhxMH48rNrYyLzrcfdZsownJNnxcqld/XzsNHcCASXv69T6V5AKuixVHS1fN5I9y
-        53WZt9VwBieU4CSya5EDAblJLzTC4pX9bwxm8YApI1A6oSyv/J1TPl+/e73UcWLvpyB3AP
-        2op3luxmkPHeKxSqxUlM/Z03TLiU9xbu1igFcBa17XCPCv6UqBn5ZzEgeuCRNtYk2O93Xk
-        je7FMcgXoKWXDDWB1S3kw+rVVs8Ndq9hHl8PuzUUWsE2LW9z/SlCFehYjMwtXRnK1Fdd5e
-        LsGFtVKdgC3+JcwwxIg+jjsePrwdhO/sG5kPjiV9qtqRgbvVGFII+d8HK+Q1xw==
-Received: from note (<unknown> [2a01:a282:13:14:1a3d:a2ff:fe1a:7964])
-        by hermod.demsh.org (OpenSMTPD) with ESMTPSA id 7d1a8c44 (TLSv1.3:AEAD-AES256-GCM-SHA384:256:NO) auth=yes user=me;
-        Tue, 29 Dec 2020 07:49:57 +0000 (UTC)
-Date:   Tue, 29 Dec 2020 10:49:55 +0300
-From:   Dmitrii Tcvetkov <me@demsh.org>
-To:     djwong@kernel.org
-Cc:     david@fromorbit.com, hch@lst.de, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        sandeen@sandeen.net, torvalds@linux-foundation.org
-Subject: Re: [GIT PULL] xfs: new code for 5.11
-Message-ID: <20201229104955.565423f9@note>
-In-Reply-To: <20201218171242.GH6918@magnolia>
-In-Reply-To: <20201218171242.GH6918@magnolia>
+        id S1725964AbgL2M4p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Dec 2020 07:56:45 -0500
+Received: from ishtar.tlinx.org ([173.164.175.65]:42518 "EHLO
+        Ishtar.sc.tlinx.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726016AbgL2M4W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Dec 2020 07:56:22 -0500
+X-Greylist: delayed 1792 seconds by postgrey-1.27 at vger.kernel.org; Tue, 29 Dec 2020 07:56:22 EST
+Received: from [192.168.3.12] (Athenae [192.168.3.12])
+        by Ishtar.sc.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id 0BTCPmwP075071
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Dec 2020 04:25:50 -0800
+Message-ID: <5FEB204B.9090109@tlinx.org>
+Date:   Tue, 29 Dec 2020 04:25:47 -0800
+From:   "L.A. Walsh" <xfs@tlinx.org>
+User-Agent: Thunderbird 2.0.0.24 (Windows/20100228)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+To:     xfs-oss <linux-xfs@vger.kernel.org>
+Subject: suggested patch to allow user to access their own file...
+Content-Type: multipart/mixed;
+ boundary="------------040604090003060508050301"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
->Please pull the following branch containing all the new xfs code for
->5.11.  In this release we add the ability to set a 'needsrepair' flag
->indicating that we /know/ the filesystem requires xfs_repair, but other
->than that, it's the usual strengthening of metadata validation and
->miscellaneous cleanups.
->...
->New code for 5.11:
->- Introduce a "needsrepair" "feature" to flag a filesystem as needing a
->  pass through xfs_repair.  This is key to enabling filesystem upgrades
->  (in xfs_db) that require xfs_repair to make minor adjustments to
->metadata.
+This is a multi-part message in MIME format.
+--------------040604090003060508050301
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hello.
+xfs_io checks for CAP_SYS_ADMIN in order to open a
+file_by_inode -- however, if the file one is opening
+is owned by the user performing the call, the call should
+not fail.
 
-Most likely I miss something obvious but according to xfs_repair(8):
-BUGS:
-The filesystem to be checked and repaired must have been unmounted
-cleanly  using  normal  system  administration  procedures (the
-umount(8)  command  or  system  shutdown),  not  as  a  result of a
-crash or system reset.  If the filesystem has not been unmounted
-cleanly, mount it and unmount it cleanly before running xfs_repair.
+(i.e. it opens the user's own file).
 
-which is there since commit d321ceac "add libxlog directory"
-Date:   Wed Oct 17 11:00:32 2001 +0000 in xfsprogs-dev[1]. 
+patch against 5.10.2 is attached.
 
-So will be there situation of uncleanly unmounted filesystem with
-"needsrepair" bit set? Will one be able to mount and umount it before
-running xfs_repair in that case?
+It gets rid of some unnecessary error messages if you
+run xfs_restore to restore one of your own files.
 
-[1] git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+--------------040604090003060508050301
+Content-Type: text/x-diff;
+ name="xfs_ioctl-perm.diff"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="xfs_ioctl-perm.diff"
+
+LS0tIGZzL3hmcy94ZnNfaW9jdGwuYwkyMDIwLTEyLTIyIDIxOjExOjAyLjAwMDAwMDAwMCAt
+MDgwMAorKysgZnMveGZzL3hmc19pb2N0bC5jCTIwMjAtMTItMjkgMDQ6MTQ6NDguNjgxMTAy
+ODA0IC0wODAwCkBAIC0xOTQsMTUgKzE5NCwyMSBAQAogCXN0cnVjdCBkZW50cnkJCSpkZW50
+cnk7CiAJZm1vZGVfdAkJCWZtb2RlOwogCXN0cnVjdCBwYXRoCQlwYXRoOworCWJvb2wgY29u
+ZGl0aW9uYWxfcGVybSA9IDA7CiAKLQlpZiAoIWNhcGFibGUoQ0FQX1NZU19BRE1JTikpCi0J
+CXJldHVybiAtRVBFUk07CisJaWYgKCFjYXBhYmxlKENBUF9TWVNfQURNSU4pKSBjb25kaXRp
+b25hbF9wZXJtPTE7CiAKIAlkZW50cnkgPSB4ZnNfaGFuZGxlcmVxX3RvX2RlbnRyeShwYXJm
+aWxwLCBocmVxKTsKIAlpZiAoSVNfRVJSKGRlbnRyeSkpCiAJCXJldHVybiBQVFJfRVJSKGRl
+bnRyeSk7CiAJaW5vZGUgPSBkX2lub2RlKGRlbnRyeSk7CiAKKwkvKiBvbmx5IGFsbG93IHVz
+ZXIgYWNjZXNzIHRvIHRoZWlyIG93biBmaWxlICovCisJaWYgKGNvbmRpdGlvbmFsX3Blcm0g
+JiYgIWlub2RlX293bmVyX29yX2NhcGFibGUoaW5vZGUpKSB7CisJCWVycm9yID0gLUVQRVJN
+OworCQlnb3RvIG91dF9kcHV0OworCX0KKwogCS8qIFJlc3RyaWN0IHhmc19vcGVuX2J5X2hh
+bmRsZSB0byBkaXJlY3RvcmllcyAmIHJlZ3VsYXIgZmlsZXMuICovCiAJaWYgKCEoU19JU1JF
+Ryhpbm9kZS0+aV9tb2RlKSB8fCBTX0lTRElSKGlub2RlLT5pX21vZGUpKSkgewogCQllcnJv
+ciA9IC1FUEVSTTsK
+--------------040604090003060508050301--
