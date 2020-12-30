@@ -2,108 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.6 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56C86C433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 16:55:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65F3FC433E9
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 16:59:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C03A207B0
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 16:55:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3231422242
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 16:59:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726277AbgL3Qy5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Dec 2020 11:54:57 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:34983 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726214AbgL3Qy5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 Dec 2020 11:54:57 -0500
-Received: from [192.168.0.8] (ip5f5aef2f.dynamic.kabel-deutschland.de [95.90.239.47])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: buczek)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 285FC20646219;
-        Wed, 30 Dec 2020 17:54:14 +0100 (CET)
-Subject: Re: [PATCH] xfs: Wake CIL push waiters more reliably
-To:     Hillf Danton <hdanton@sina.com>
-Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        LKML <linux-kernel@vger.kernel.org>, it+linux-xfs@molgen.mpg.de
-References: <1705b481-16db-391e-48a8-a932d1f137e7@molgen.mpg.de>
- <20201230024642.2171-1-hdanton@sina.com>
-From:   Donald Buczek <buczek@molgen.mpg.de>
-Message-ID: <f2933207-a48e-11a6-7dad-0081cae84e06@molgen.mpg.de>
-Date:   Wed, 30 Dec 2020 17:54:13 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726655AbgL3Q7e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Dec 2020 11:59:34 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:10914 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726214AbgL3Q7e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Dec 2020 11:59:34 -0500
+X-IronPort-AV: E=Sophos;i="5.78,461,1599494400"; 
+   d="scan'208";a="103085829"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 31 Dec 2020 00:58:39 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id 0FEBE4CE601C;
+        Thu, 31 Dec 2020 00:58:34 +0800 (CST)
+Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Thu, 31 Dec 2020 00:58:34 +0800
+Received: from irides.mr (10.167.225.141) by G08CNEXCHPEKD04.g08.fujitsu.local
+ (10.167.33.209) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 31 Dec 2020 00:58:33 +0800
+From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>
+CC:     <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
+        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
+        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
+Subject: [PATCH 01/10] pagemap: Introduce ->memory_failure()
+Date:   Thu, 31 Dec 2020 00:55:52 +0800
+Message-ID: <20201230165601.845024-2-ruansy.fnst@cn.fujitsu.com>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
+References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <20201230024642.2171-1-hdanton@sina.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 0FEBE4CE601C.A1747
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 30.12.20 03:46, Hillf Danton wrote:
-> On Wed, 30 Dec 2020 00:56:27 +0100
->> Threads, which committed items to the CIL, wait in the xc_push_wait
->> waitqueue when used_space in the push context goes over a limit. These
->> threads need to be woken when the CIL is pushed.
->>
->> The CIL push worker tries to avoid the overhead of calling wake_all()
->> when there are no waiters waiting. It does so by checking the same
->> condition which caused the waits to happen. This, however, is
->> unreliable, because ctx->space_used can actually decrease when items are
->> recommitted. If the value goes below the limit while some threads are
->> already waiting but before the push worker gets to it, these threads are
->> not woken.
-> 
-> Looks like you are fixing a typo in c7f87f3984cf ("xfs: fix
-> use-after-free on CIL context on shutdown") in mainline, and
-> it may mean
-> 
-> 	/*
-> 	 * Wake up any background push waiters now this context is being pushed
-> 	 * if we are no longer over the space limit
-> 	 */
-> 
-> given waiters throttled for comsuming more space than limit in
-> xlog_cil_push_background().
+When memory-failure occurs, we call this function which is implemented
+by each kind of devices.  For the fsdax case, pmem device driver
+implements it.  Pmem device driver will find out the block device where
+the error page locates in, and try to get the filesystem on this block
+device.  And finally call filesystem handler to deal with the error.
+The filesystem will try to recover the corrupted data if possiable.
 
-I'm not sure, I understand you correctly. Do you suggest to update the comment to "...if we are no longer over the space limit"  and change the code to `if (ctx->space_used < XLOG_CIL_BLOCKING_SPACE_LIMIT(log))` ?
+Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+---
+ include/linux/memremap.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-I don't think, that would be correct.
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 79c49e7f5c30..0bcf2b1e20bd 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -87,6 +87,14 @@ struct dev_pagemap_ops {
+ 	 * the page back to a CPU accessible page.
+ 	 */
+ 	vm_fault_t (*migrate_to_ram)(struct vm_fault *vmf);
++
++	/*
++	 * Handle the memory failure happens on one page.  Notify the processes
++	 * who are using this page, and try to recover the data on this page
++	 * if necessary.
++	 */
++	int (*memory_failure)(struct dev_pagemap *pgmap, unsigned long pfn,
++			      int flags);
+ };
+ 
+ #define PGMAP_ALTMAP_VALID	(1 << 0)
+-- 
+2.29.2
 
-The current push context is most probably still over the limit if it ever was. It is exceptional, that the few bytes, which might be returned to ctx->space_used, bring us back below the limit. The new context, on the other hand, will have space_used=0.
 
-We need to resume any thread which is waiting for the push.
 
-Best
-   Donald
-
->> Always wake all CIL push waiters. Test with waitqueue_active() as an
->> optimization. This is possible, because we hold the xc_push_lock
->> spinlock, which prevents additions to the waitqueue.
->>
->> Signed-off-by: Donald Buczek <buczek@molgen.mpg.de>
->> ---
->>   fs/xfs/xfs_log_cil.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
->> index b0ef071b3cb5..d620de8e217c 100644
->> --- a/fs/xfs/xfs_log_cil.c
->> +++ b/fs/xfs/xfs_log_cil.c
->> @@ -670,7 +670,7 @@ xlog_cil_push_work(
->>   	/*
->>   	 * Wake up any background push waiters now this context is being pushed.
->>   	 */
->> -	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
->> +	if (waitqueue_active(&cil->xc_push_wait))
->>   		wake_up_all(&cil->xc_push_wait);
->>   
->>   	/*
->> -- 
->> 2.26.2
