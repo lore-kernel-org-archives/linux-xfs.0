@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54177C43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7600C4332E
 	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 17:01:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0FDDB22287
+	by mail.kernel.org (Postfix) with ESMTP id AF75822242
 	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 17:01:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727046AbgL3RAy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Dec 2020 12:00:54 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:50482 "EHLO
+        id S1727100AbgL3RBJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Dec 2020 12:01:09 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:10914 "EHLO
         heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726681AbgL3RAv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Dec 2020 12:00:51 -0500
+        with ESMTP id S1726469AbgL3RBJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Dec 2020 12:01:09 -0500
 X-IronPort-AV: E=Sophos;i="5.78,461,1599494400"; 
-   d="scan'208";a="103085836"
+   d="scan'208";a="103085840"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
   by heian.cn.fujitsu.com with ESMTP; 31 Dec 2020 00:58:45 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 2EE7E4CE6024;
-        Thu, 31 Dec 2020 00:58:42 +0800 (CST)
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 896D04CE6027;
+        Thu, 31 Dec 2020 00:58:44 +0800 (CST)
 Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Thu, 31 Dec 2020 00:58:41 +0800
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Thu, 31 Dec 2020 00:58:44 +0800
 Received: from irides.mr (10.167.225.141) by G08CNEXCHPEKD04.g08.fujitsu.local
  (10.167.33.209) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 31 Dec 2020 00:58:41 +0800
+ Transport; Thu, 31 Dec 2020 00:58:43 +0800
 From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>
@@ -39,207 +39,195 @@ CC:     <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
         <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
         <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
         <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
-Subject: [PATCH 08/10] md: Implement ->corrupted_range()
-Date:   Thu, 31 Dec 2020 00:55:59 +0800
-Message-ID: <20201230165601.845024-9-ruansy.fnst@cn.fujitsu.com>
+Subject: [PATCH 10/10] fs/dax: remove useless functions
+Date:   Thu, 31 Dec 2020 00:56:01 +0800
+Message-ID: <20201230165601.845024-11-ruansy.fnst@cn.fujitsu.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
 References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 2EE7E4CE6024.AC3E1
+X-yoursite-MailScanner-ID: 896D04CE6027.ABF58
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-With the support of ->rmap(), it is possible to obtain the superblock on
-a mapped device.
-
-If a pmem device is used as one target of mapped device, we cannot
-obtain its superblock directly.  With the help of SYSFS, the mapped
-device can be found on the target devices.  So, we iterate the
-bdev->bd_holder_disks to obtain its mapped device.
+Since owner tarcking is triggerred by pmem device, these functions are
+useless.  So remove it.
 
 Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 ---
- drivers/md/dm.c       | 54 +++++++++++++++++++++++++++++++++++++++++++
- drivers/nvdimm/pmem.c | 11 +++------
- fs/block_dev.c        | 37 +++++++++++++++++++++++++++++
- include/linux/genhd.h |  2 ++
- 4 files changed, 96 insertions(+), 8 deletions(-)
+ fs/dax.c            | 112 --------------------------------------------
+ include/linux/dax.h |   2 -
+ 2 files changed, 114 deletions(-)
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 4e0cbfe3f14d..f9955be7afeb 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -507,6 +507,59 @@ static int dm_blk_report_zones(struct gendisk *disk, sector_t sector,
- #define dm_blk_report_zones		NULL
- #endif /* CONFIG_BLK_DEV_ZONED */
+diff --git a/fs/dax.c b/fs/dax.c
+index 799210cfa687..4267de360d79 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -323,48 +323,6 @@ static unsigned long dax_end_pfn(void *entry)
+ 	for (pfn = dax_to_pfn(entry); \
+ 			pfn < dax_end_pfn(entry); pfn++)
  
-+struct dm_blk_corrupt {
-+	struct block_device *bdev;
-+	sector_t offset;
-+};
-+
-+static int dm_blk_corrupt_fn(struct dm_target *ti, struct dm_dev *dev,
-+				sector_t start, sector_t len, void *data)
-+{
-+	struct dm_blk_corrupt *bc = data;
-+
-+	return bc->bdev == (void *)dev->bdev &&
-+			(start <= bc->offset && bc->offset < start + len);
-+}
-+
-+static int dm_blk_corrupted_range(struct gendisk *disk,
-+				  struct block_device *target_bdev,
-+				  loff_t target_offset, size_t len, void *data)
-+{
-+	struct mapped_device *md = disk->private_data;
-+	struct block_device *md_bdev = md->bdev;
-+	struct dm_table *map;
-+	struct dm_target *ti;
-+	int srcu_idx, i, rc = -ENODEV;
-+	bool found = false;
-+	sector_t disk_sect, target_sect = to_sector(target_offset);
-+
-+	map = dm_get_live_table(md, &srcu_idx);
-+	if (!map)
-+		return rc;
-+
-+	for (i = 0; i < dm_table_get_num_targets(map); i++) {
-+		ti = dm_table_get_target(map, i);
-+		if (ti->type->iterate_devices && ti->type->rmap) {
-+			struct dm_blk_corrupt bc = {target_bdev, target_sect};
-+
-+			found = ti->type->iterate_devices(ti, dm_blk_corrupt_fn, &bc);
-+			if (!found)
-+				continue;
-+			disk_sect = ti->type->rmap(ti, target_sect);
-+			break;
-+		}
-+	}
-+
-+	if (found) {
-+		loff_t disk_off = to_bytes(disk_sect);
-+		loff_t bdev_off = to_bytes(disk_sect - get_start_sect(md_bdev));
-+		rc = bd_corrupted_range(md_bdev, disk_off, bdev_off, len, data);
-+	}
-+
-+	dm_put_live_table(md, srcu_idx);
-+	return rc;
-+}
-+
- static int dm_prepare_ioctl(struct mapped_device *md, int *srcu_idx,
- 			    struct block_device **bdev)
- {
-@@ -3084,6 +3137,7 @@ static const struct block_device_operations dm_blk_dops = {
- 	.getgeo = dm_blk_getgeo,
- 	.report_zones = dm_blk_report_zones,
- 	.pr_ops = &dm_pr_ops,
-+	.corrupted_range = dm_blk_corrupted_range,
- 	.owner = THIS_MODULE
- };
- 
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index 4688bff19c20..9f9a2f3bf73b 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -256,21 +256,16 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
- static int pmem_corrupted_range(struct gendisk *disk, struct block_device *bdev,
- 				loff_t disk_offset, size_t len, void *data)
- {
--	struct super_block *sb;
- 	loff_t bdev_offset;
- 	sector_t disk_sector = disk_offset >> SECTOR_SHIFT;
--	int rc = 0;
-+	int rc = -ENODEV;
- 
- 	bdev = bdget_disk_sector(disk, disk_sector);
- 	if (!bdev)
--		return -ENODEV;
-+		return rc;
- 
- 	bdev_offset = (disk_sector - get_start_sect(bdev)) << SECTOR_SHIFT;
--	sb = get_super(bdev);
--	if (sb && sb->s_op->corrupted_range) {
--		rc = sb->s_op->corrupted_range(sb, bdev, bdev_offset, len, data);
--		drop_super(sb);
+-/*
+- * TODO: for reflink+dax we need a way to associate a single page with
+- * multiple address_space instances at different linear_page_index()
+- * offsets.
+- */
+-static void dax_associate_entry(void *entry, struct address_space *mapping,
+-		struct vm_area_struct *vma, unsigned long address)
+-{
+-	unsigned long size = dax_entry_size(entry), pfn, index;
+-	int i = 0;
+-
+-	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
+-		return;
+-
+-	index = linear_page_index(vma, address & ~(size - 1));
+-	for_each_mapped_pfn(entry, pfn) {
+-		struct page *page = pfn_to_page(pfn);
+-
+-		WARN_ON_ONCE(page->mapping);
+-		page->mapping = mapping;
+-		page->index = index + i++;
 -	}
-+	rc = bd_corrupted_range(bdev, bdev_offset, bdev_offset, len, data);
- 
- 	bdput(bdev);
- 	return rc;
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 9e84b1928b94..0e50f0e8e8af 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1171,6 +1171,27 @@ struct bd_holder_disk {
- 	int			refcnt;
- };
- 
-+static int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off,
-+					  size_t len, void *data)
-+{
-+	struct bd_holder_disk *holder;
-+	struct gendisk *disk;
-+	int rc = 0;
-+
-+	if (list_empty(&(bdev->bd_holder_disks)))
-+		return -ENODEV;
-+
-+	list_for_each_entry(holder, &bdev->bd_holder_disks, list) {
-+		disk = holder->disk;
-+		if (disk->fops->corrupted_range) {
-+			rc = disk->fops->corrupted_range(disk, bdev, off, len, data);
-+			if (rc != -ENODEV)
-+				break;
-+		}
-+	}
-+	return rc;
-+}
-+
- static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
- 						  struct gendisk *disk)
+-}
+-
+-static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+-		bool trunc)
+-{
+-	unsigned long pfn;
+-
+-	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
+-		return;
+-
+-	for_each_mapped_pfn(entry, pfn) {
+-		struct page *page = pfn_to_page(pfn);
+-
+-		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
+-		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+-		page->mapping = NULL;
+-		page->index = 0;
+-	}
+-}
+-
+ static struct page *dax_busy_page(void *entry)
  {
-@@ -1378,6 +1399,22 @@ void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors)
+ 	unsigned long pfn;
+@@ -399,72 +357,6 @@ unsigned long dax_load_pfn(struct address_space *mapping, unsigned long index)
+ 	return pfn;
  }
- EXPORT_SYMBOL(bd_set_nr_sectors);
  
-+int bd_corrupted_range(struct block_device *bdev, loff_t disk_off, loff_t bdev_off, size_t len, void *data)
-+{
-+	struct super_block *sb = get_super(bdev);
-+	int rc = 0;
-+
-+	if (!sb) {
-+		rc = bd_disk_holder_corrupted_range(bdev, disk_off, len, data);
-+		return rc;
-+	} else if (sb->s_op->corrupted_range)
-+		rc = sb->s_op->corrupted_range(sb, bdev, bdev_off, len, data);
-+	drop_super(sb);
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL(bd_corrupted_range);
-+
- static void __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part);
+-/*
+- * dax_lock_mapping_entry - Lock the DAX entry corresponding to a page
+- * @page: The page whose entry we want to lock
+- *
+- * Context: Process context.
+- * Return: A cookie to pass to dax_unlock_page() or 0 if the entry could
+- * not be locked.
+- */
+-dax_entry_t dax_lock_page(struct page *page)
+-{
+-	XA_STATE(xas, NULL, 0);
+-	void *entry;
+-
+-	/* Ensure page->mapping isn't freed while we look at it */
+-	rcu_read_lock();
+-	for (;;) {
+-		struct address_space *mapping = READ_ONCE(page->mapping);
+-
+-		entry = NULL;
+-		if (!mapping || !dax_mapping(mapping))
+-			break;
+-
+-		/*
+-		 * In the device-dax case there's no need to lock, a
+-		 * struct dev_pagemap pin is sufficient to keep the
+-		 * inode alive, and we assume we have dev_pagemap pin
+-		 * otherwise we would not have a valid pfn_to_page()
+-		 * translation.
+-		 */
+-		entry = (void *)~0UL;
+-		if (S_ISCHR(mapping->host->i_mode))
+-			break;
+-
+-		xas.xa = &mapping->i_pages;
+-		xas_lock_irq(&xas);
+-		if (mapping != page->mapping) {
+-			xas_unlock_irq(&xas);
+-			continue;
+-		}
+-		xas_set(&xas, page->index);
+-		entry = xas_load(&xas);
+-		if (dax_is_locked(entry)) {
+-			rcu_read_unlock();
+-			wait_entry_unlocked(&xas, entry);
+-			rcu_read_lock();
+-			continue;
+-		}
+-		dax_lock_entry(&xas, entry);
+-		xas_unlock_irq(&xas);
+-		break;
+-	}
+-	rcu_read_unlock();
+-	return (dax_entry_t)entry;
+-}
+-
+-void dax_unlock_page(struct page *page, dax_entry_t cookie)
+-{
+-	struct address_space *mapping = page->mapping;
+-	XA_STATE(xas, &mapping->i_pages, page->index);
+-
+-	if (S_ISCHR(mapping->host->i_mode))
+-		return;
+-
+-	dax_unlock_entry(&xas, (void *)cookie);
+-}
+-
+ /*
+  * Find page cache entry at given index. If it is a DAX entry, return it
+  * with the entry locked. If the page cache doesn't contain an entry at
+@@ -543,7 +435,6 @@ static void *grab_mapping_entry(struct xa_state *xas,
+ 			xas_lock_irq(xas);
+ 		}
  
- int bdev_disk_changed(struct block_device *bdev, bool invalidate)
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index ed06209008b8..42290470810d 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -376,6 +376,8 @@ void revalidate_disk_size(struct gendisk *disk, bool verbose);
- bool bdev_check_media_change(struct block_device *bdev);
- int __invalidate_device(struct block_device *bdev, bool kill_dirty);
- void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors);
-+int bd_corrupted_range(struct block_device *bdev, loff_t disk_off,
-+		       loff_t bdev_off, size_t len, void *data);
+-		dax_disassociate_entry(entry, mapping, false);
+ 		xas_store(xas, NULL);	/* undo the PMD join */
+ 		dax_wake_entry(xas, entry, true);
+ 		mapping->nrexceptional--;
+@@ -680,7 +571,6 @@ static int __dax_invalidate_entry(struct address_space *mapping,
+ 	    (xas_get_mark(&xas, PAGECACHE_TAG_DIRTY) ||
+ 	     xas_get_mark(&xas, PAGECACHE_TAG_TOWRITE)))
+ 		goto out;
+-	dax_disassociate_entry(entry, mapping, trunc);
+ 	xas_store(&xas, NULL);
+ 	mapping->nrexceptional--;
+ 	ret = 1;
+@@ -774,8 +664,6 @@ static void *dax_insert_entry(struct xa_state *xas,
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+ 		void *old;
  
- /* for drivers/char/raw.c: */
- int blkdev_ioctl(struct block_device *, fmode_t, unsigned, unsigned long);
+-		dax_disassociate_entry(entry, mapping, false);
+-		dax_associate_entry(new_entry, mapping, vmf->vma, vmf->address);
+ 		/*
+ 		 * Only swap our new entry into the page cache if the current
+ 		 * entry is a zero page or an empty entry.  If a normal PTE or
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 89e56ceeffc7..c6b8dc094b26 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -151,8 +151,6 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ struct page *dax_layout_busy_page(struct address_space *mapping);
+ struct page *dax_layout_busy_page_range(struct address_space *mapping, loff_t start, loff_t end);
+ unsigned long dax_load_pfn(struct address_space *mapping, unsigned long index);
+-dax_entry_t dax_lock_page(struct page *page);
+-void dax_unlock_page(struct page *page, dax_entry_t cookie);
+ #else
+ static inline bool bdev_dax_supported(struct block_device *bdev,
+ 		int blocksize)
 -- 
 2.29.2
 
