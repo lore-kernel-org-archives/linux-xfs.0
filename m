@@ -2,241 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91E99C43219
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 17:01:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAC03C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 22:04:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56B3522482
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 17:01:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91FCE207A6
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 22:04:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727134AbgL3RBO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Dec 2020 12:01:14 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:58640 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726428AbgL3RBN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Dec 2020 12:01:13 -0500
-X-IronPort-AV: E=Sophos;i="5.78,461,1599494400"; 
-   d="scan'208";a="103085839"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 31 Dec 2020 00:58:45 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id 57F5C4CE6023;
-        Thu, 31 Dec 2020 00:58:43 +0800 (CST)
-Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Thu, 31 Dec 2020 00:58:43 +0800
-Received: from irides.mr (10.167.225.141) by G08CNEXCHPEKD04.g08.fujitsu.local
- (10.167.33.209) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 31 Dec 2020 00:58:42 +0800
-From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>
-CC:     <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
-        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
-Subject: [PATCH 09/10] xfs: Implement ->corrupted_range() for XFS
-Date:   Thu, 31 Dec 2020 00:56:00 +0800
-Message-ID: <20201230165601.845024-10-ruansy.fnst@cn.fujitsu.com>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
-References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
+        id S1726305AbgL3WD4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Dec 2020 17:03:56 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:55927 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726197AbgL3WD4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Dec 2020 17:03:56 -0500
+Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id E120910F522;
+        Thu, 31 Dec 2020 09:03:13 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kujYl-001O8b-EZ; Thu, 31 Dec 2020 09:03:11 +1100
+Date:   Thu, 31 Dec 2020 09:03:11 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chris Dunlop <chris@onthe.net.au>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Extreme fragmentation ho!
+Message-ID: <20201230220311.GB164134@dread.disaster.area>
+References: <20201221215453.GA1886598@onthe.net.au>
+ <20201228220622.GA164134@dread.disaster.area>
+ <20201230062836.GA2695485@onthe.net.au>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 57F5C4CE6023.ABDE7
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201230062836.GA2695485@onthe.net.au>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
+        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=EO0W1A00QF6H6c12Q88A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This function is used to handle errors which may cause data lost in
-filesystem.  Such as memory failure in fsdax mode.
+On Wed, Dec 30, 2020 at 05:28:36PM +1100, Chris Dunlop wrote:
+> On Tue, Dec 29, 2020 at 09:06:22AM +1100, Dave Chinner wrote:
+> > On Tue, Dec 22, 2020 at 08:54:53AM +1100, Chris Dunlop wrote:
+> > > The file is sitting on XFS on LV on a raid6 comprising 6 x 5400 RPM HDD:
+> > 
+> > ... probably not that unreasonable for pretty much the slowest
+> > storage configuration you can possibly come up with for small,
+> > metadata write intensive workloads.
+> 
+> [ Chris grimaces and glances over at the 8+3 erasure-encoded ceph rbd
+> sitting like a pitch drop experiment in the corner. ]
 
-In XFS, it requires "rmapbt" feature in order to query for files or
-metadata which associated to the corrupted data.  Then we could call fs
-recover functions to try to repair the corrupted data.(did not
-implemented in this patchset)
+I would have thought that should be able to do more than the 20 IOPS
+the raid6 above will do on random 4kB writes.... :)
 
-After that, the memory failure also needs to notify the processes who
-are using those files.
+> Speaking of slow storage and metadata write intensive workloads, what's the
+> reason reflinks with a realtime device isn't supported? That was one
+> approach I wanted to try, to get the metadata ops running on a small fast
+> storage with the bulk data sitting on big slow bulk storage. But:
+> 
+> # mkfs.xfs -m reflink=1 -d rtinherit=1 -r rtdev=/dev/fast /dev/slow
+> reflink not supported with realtime devices
 
-Only support data device.  Realtime device is not supported for now.
+Yup, the realtime device is a pure data device, so all it's metadata
+is held externally to the device (i.e. it is held in the "data
+device", not the RT device). IOWs, it's a completely separate
+filesystem implementation within XFS, and so requires independent
+functional extensions to support reflink + rmap...
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
----
- fs/xfs/xfs_fsops.c |   5 +++
- fs/xfs/xfs_mount.h |   1 +
- fs/xfs/xfs_super.c | 107 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 113 insertions(+)
+> My naive thought was a reflink was probably "just" a block range referenced
+> from multiple places, and probably a refcount somewhere. It seems like it
+> should be possible to have the range, references and refcount sitting on the
+> fast storage pointing to the actual data blocks on the slow storage.
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index ef1d5bb88b93..0a2038875d32 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -501,6 +501,11 @@ xfs_do_force_shutdown(
- "Corruption of in-memory data detected.  Shutting down filesystem");
- 		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
- 			xfs_stack_trace();
-+	} else if (flags & SHUTDOWN_CORRUPT_META) {
-+		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
-+"Corruption of on-disk metadata detected.  Shutting down filesystem");
-+		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
-+			xfs_stack_trace();
- 	} else if (logerror) {
- 		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
- 			"Log I/O Error Detected. Shutting down filesystem");
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index dfa429b77ee2..8f0df67ffcc1 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -274,6 +274,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
- #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
- #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
-+#define SHUTDOWN_CORRUPT_META	0x0010  /* corrupt metadata on device */
- 
- /*
-  * Flags for xfs_mountfs
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e3e229e52512..cbcad419bb9e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -35,6 +35,11 @@
- #include "xfs_refcount_item.h"
- #include "xfs_bmap_item.h"
- #include "xfs_reflink.h"
-+#include "xfs_alloc.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_bit.h"
- 
- #include <linux/magic.h>
- #include <linux/fs_context.h>
-@@ -1103,6 +1108,107 @@ xfs_fs_free_cached_objects(
- 	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
- }
- 
-+static int
-+xfs_corrupt_helper(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*data)
-+{
-+	struct xfs_inode		*ip;
-+	struct address_space		*mapping;
-+	int				rc = 0;
-+	int				*flags = data;
-+
-+	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
-+	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-+		// TODO check and try to fix metadata
-+		rc = -EFSCORRUPTED;
-+	} else {
-+		/*
-+		 * Get files that incore, filter out others that are not in use.
-+		 */
-+		rc = xfs_iget(cur->bc_mp, cur->bc_tp, rec->rm_owner,
-+			      XFS_IGET_INCORE, 0, &ip);
-+		if (rc || !ip)
-+			return rc;
-+		if (!VFS_I(ip)->i_mapping)
-+			goto out;
-+
-+		mapping = VFS_I(ip)->i_mapping;
-+		if (IS_DAX(VFS_I(ip)))
-+			rc = mf_dax_mapping_kill_procs(mapping, rec->rm_offset,
-+						       *flags);
-+		else
-+			mapping_set_error(mapping, -EFSCORRUPTED);
-+
-+		// TODO try to fix data
-+out:
-+		xfs_irele(ip);
-+	}
-+
-+	return rc;
-+}
-+
-+static int
-+xfs_fs_corrupted_range(
-+	struct super_block	*sb,
-+	struct block_device	*bdev,
-+	loff_t			offset,
-+	size_t			len,
-+	void			*data)
-+{
-+	struct xfs_mount	*mp = XFS_M(sb);
-+	struct xfs_trans	*tp = NULL;
-+	struct xfs_btree_cur	*cur = NULL;
-+	struct xfs_rmap_irec	rmap_low, rmap_high;
-+	struct xfs_buf		*agf_bp = NULL;
-+	xfs_fsblock_t		fsbno = XFS_B_TO_FSB(mp, offset);
-+	xfs_filblks_t		bcnt = XFS_B_TO_FSB(mp, len);
-+	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	int			error = 0;
-+
-+	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_bdev == bdev) {
-+		xfs_warn(mp, "corrupted_range support not available for realtime device!");
-+		return 0;
-+	}
-+	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_bdev == bdev &&
-+	    mp->m_logdev_targp != mp->m_ddev_targp) {
-+		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
-+		return 0;
-+	}
-+
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		xfs_warn(mp, "corrupted_range needs rmapbt enabled!");
-+		return 0;
-+	}
-+
-+	error = xfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
-+	if (error)
-+		return error;
-+
-+	cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agno);
-+
-+	/* Construct a range for rmap query */
-+	memset(&rmap_low, 0, sizeof(rmap_low));
-+	memset(&rmap_high, 0xFF, sizeof(rmap_high));
-+	rmap_low.rm_startblock = rmap_high.rm_startblock = agbno;
-+	rmap_low.rm_blockcount = rmap_high.rm_blockcount = bcnt;
-+
-+	error = xfs_rmap_query_range(cur, &rmap_low, &rmap_high, xfs_corrupt_helper, data);
-+	if (error == -EFSCORRUPTED)
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
-+
-+	xfs_btree_del_cursor(cur, error);
-+	xfs_trans_brelse(tp, agf_bp);
-+	return error;
-+}
-+
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-@@ -1116,6 +1222,7 @@ static const struct super_operations xfs_super_operations = {
- 	.show_options		= xfs_fs_show_options,
- 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
- 	.free_cached_objects	= xfs_fs_free_cached_objects,
-+	.corrupted_range	= xfs_fs_corrupted_range,
- };
- 
- static int
+Yes, it is possible, but the current reflink implementation is based
+on allocation group internal structures (rmap is the same), and the
+realtime device doesn't have these. Hence there are new metadata
+structures that need to be added (refcount btrees rooted in inodes,
+not fixed location AG headers) and a bunch of new supporting code to
+be written. Largely Darrick has done this already, it's just a
+problem of review bandwidth and validation time:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-reflink-extsize
+
+(which also includes realtime rmap support, a whole new internal
+metadata inode directory to index all the new inode btrees for the
+rt device, etc)
+
+It's a pretty large chunk of shiny new code....
+
+Cheers,
+
+Dave.
 -- 
-2.29.2
-
-
-
+Dave Chinner
+david@fromorbit.com
