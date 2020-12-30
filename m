@@ -2,144 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.6 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0D04C433E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 06:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56C86C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 16:55:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FFB122273
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 06:29:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C03A207B0
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Dec 2020 16:55:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726523AbgL3G32 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Dec 2020 01:29:28 -0500
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:33821 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726388AbgL3G31 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Dec 2020 01:29:27 -0500
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.nyi.internal (Postfix) with ESMTP id 13D615C019C;
-        Wed, 30 Dec 2020 01:28:21 -0500 (EST)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Wed, 30 Dec 2020 01:28:21 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=anarazel.de; h=
-        date:from:to:cc:subject:message-id:mime-version:content-type; s=
-        fm3; bh=PSUMEHHqwnwguq8Haku3EVH3D6D0Gt/lLRo2eiPEe0o=; b=fuKuekFK
-        cF/8jEQv8NF5on28Z871ZPMKXLp+ZXcLLu00fvBCjDnv+n/SJgFe2pd++vniJBxN
-        2QbtNDtahBPPIl8ryDxc7k9awzhvSdGTWSQWs6e62+WegeTbBnvAQErBVA/wf5jq
-        DxsdL3mT0ltj/WlNIaGzYQI/jO099rWzu9V1iR1LFYOy6fgqXV5TaeevVvn27+bg
-        Q9g1R8TYrB7xflo8vt2rapZmN3KnNI6pW/DpXqV2XfmhYKQWw/3jE90qnRqg22JA
-        QEjNPcss//4wista67VxEt6pozqoLobosAceSABieftnichlpGKb9HGpqOEdl1DW
-        W8ei38apZc272Q==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:from:message-id
-        :mime-version:subject:to:x-me-proxy:x-me-proxy:x-me-sender
-        :x-me-sender:x-sasl-enc; s=fm1; bh=PSUMEHHqwnwguq8Haku3EVH3D6D0G
-        t/lLRo2eiPEe0o=; b=I0OlXwWsmBDeTTNcPsdFVhAeIK8NN0j1UauJbqrmf5KzC
-        2gKECnphBp2jXNv0fIntsuLc4u5N9AaHc5YxghWhJSSaRhvZI8CE2GwacAOCMMyW
-        FBlE2+slketILpz9psOgdWdcb54ox5iwJGajIMuXS1fvTowD4xRmm0u1gA5Z01Se
-        CgItG60tKAuKQdfxmyjipL4EemHjzp7Ii5kqE/HssD+ZNqG1LCAtAer7CVbFbdXi
-        K2/PfXU0Db+KNw/MQ1jjQDgKdpWPQFQrzYH/H1sf3RIHXjPkiS3mxi5dlUxj+a6D
-        VkDBpEeECSvt01mh76q5mV+hAauJSIZ/kxsL3sXIA==
-X-ME-Sender: <xms:BB7sXxUnK5Zzf5wujRTYGtL9qYIQu69ib7Ub8gVVBTulW_DJYRkrHA>
-    <xme:BB7sXxmezjpN-rVBTABnCSEETb4qC0GxjRX2UllR9P1RHXFcL-ebjX4XN7hhkjy3b
-    1kJR9v-mzsIDYFv7A>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrvddvvddgleekucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucenucfjughrpeffhffvuffkgggtugesthdtredttd
-    dtvdenucfhrhhomheptehnughrvghsucfhrhgvuhhnugcuoegrnhgurhgvshesrghnrghr
-    rgiivghlrdguvgeqnecuggftrfgrthhtvghrnhepiedvieelgeeuuedtfeduhfefteehhf
-    evvdeljeetgfeugfdtledtudetvdehkeffnecukfhppeeijedrudeitddrvddujedrvdeh
-    tdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrnh
-    gurhgvshesrghnrghrrgiivghlrdguvg
-X-ME-Proxy: <xmx:BB7sX9YecBCwvVMo-tZAhFK20KMo4cnymrxtmhZxEKaGuaGtAoHLaw>
-    <xmx:BB7sX0XRnAFwaurnjiZqrk3TGQQczic3lbksC6CgRmp0B4NQqbKqDg>
-    <xmx:BB7sX7ncqJEqlX3apBiIi8z1kPRPmN891tR-c_37jzMc8FOp-bICpg>
-    <xmx:BR7sXzvggNA85j3J6J4ZjUuROXnuPAgoiVGcsUlHHNVSs9spzz8KGg>
-Received: from intern.anarazel.de (c-67-160-217-250.hsd1.ca.comcast.net [67.160.217.250])
-        by mail.messagingengine.com (Postfix) with ESMTPA id B79F824005C;
-        Wed, 30 Dec 2020 01:28:20 -0500 (EST)
-Date:   Tue, 29 Dec 2020 22:28:19 -0800
-From:   Andres Freund <andres@anarazel.de>
-To:     linux-fsdevel@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-block@vger.kernel.org
-Subject: fallocate(FALLOC_FL_ZERO_RANGE_BUT_REALLY) to avoid unwritten
- extents?
-Message-ID: <20201230062819.yinrrp6uwfegsqo3@alap3.anarazel.de>
+        id S1726277AbgL3Qy5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Dec 2020 11:54:57 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:34983 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726214AbgL3Qy5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Dec 2020 11:54:57 -0500
+Received: from [192.168.0.8] (ip5f5aef2f.dynamic.kabel-deutschland.de [95.90.239.47])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 285FC20646219;
+        Wed, 30 Dec 2020 17:54:14 +0100 (CET)
+Subject: Re: [PATCH] xfs: Wake CIL push waiters more reliably
+To:     Hillf Danton <hdanton@sina.com>
+Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        LKML <linux-kernel@vger.kernel.org>, it+linux-xfs@molgen.mpg.de
+References: <1705b481-16db-391e-48a8-a932d1f137e7@molgen.mpg.de>
+ <20201230024642.2171-1-hdanton@sina.com>
+From:   Donald Buczek <buczek@molgen.mpg.de>
+Message-ID: <f2933207-a48e-11a6-7dad-0081cae84e06@molgen.mpg.de>
+Date:   Wed, 30 Dec 2020 17:54:13 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20201230024642.2171-1-hdanton@sina.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On 30.12.20 03:46, Hillf Danton wrote:
+> On Wed, 30 Dec 2020 00:56:27 +0100
+>> Threads, which committed items to the CIL, wait in the xc_push_wait
+>> waitqueue when used_space in the push context goes over a limit. These
+>> threads need to be woken when the CIL is pushed.
+>>
+>> The CIL push worker tries to avoid the overhead of calling wake_all()
+>> when there are no waiters waiting. It does so by checking the same
+>> condition which caused the waits to happen. This, however, is
+>> unreliable, because ctx->space_used can actually decrease when items are
+>> recommitted. If the value goes below the limit while some threads are
+>> already waiting but before the push worker gets to it, these threads are
+>> not woken.
+> 
+> Looks like you are fixing a typo in c7f87f3984cf ("xfs: fix
+> use-after-free on CIL context on shutdown") in mainline, and
+> it may mean
+> 
+> 	/*
+> 	 * Wake up any background push waiters now this context is being pushed
+> 	 * if we are no longer over the space limit
+> 	 */
+> 
+> given waiters throttled for comsuming more space than limit in
+> xlog_cil_push_background().
 
-For things like database journals using fallocate(0) is not sufficient,
-as writing into the the pre-allocated data with O_DIRECT | O_DSYNC
-writes requires the unwritten extents to be converted, which in turn
-requires journal operations.
+I'm not sure, I understand you correctly. Do you suggest to update the comment to "...if we are no longer over the space limit"  and change the code to `if (ctx->space_used < XLOG_CIL_BLOCKING_SPACE_LIMIT(log))` ?
 
-The performance difference in a journalling workload (lots of
-sequential, low-iodepth, often small, writes) is quite remarkable. Even
-on quite fast devices:
+I don't think, that would be correct.
 
-    andres@awork3:/mnt/t3$ grep /mnt/t3 /proc/mounts
-    /dev/nvme1n1 /mnt/t3 xfs rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota 0 0
+The current push context is most probably still over the limit if it ever was. It is exceptional, that the few bytes, which might be returned to ctx->space_used, bring us back below the limit. The new context, on the other hand, will have space_used=0.
 
-    andres@awork3:/mnt/t3$ fallocate -l $((1024*1024*1024)) test_file
+We need to resume any thread which is waiting for the push.
 
-    andres@awork3:/mnt/t3$ dd if=/dev/zero of=test_file bs=4096 conv=notrunc iflag=count_bytes count=$((1024*1024*1024)) oflag=direct,dsync
-    262144+0 records in
-    262144+0 records out
-    1073741824 bytes (1.1 GB, 1.0 GiB) copied, 117.587 s, 9.1 MB/s
+Best
+   Donald
 
-    andres@awork3:/mnt/t3$ dd if=/dev/zero of=test_file bs=4096 conv=notrunc iflag=count_bytes count=$((1024*1024*1024)) oflag=direct,dsync
-    262144+0 records in
-    262144+0 records out
-    1073741824 bytes (1.1 GB, 1.0 GiB) copied, 3.69125 s, 291 MB/s
-
-    andres@awork3:/mnt/t3$ fallocate -z -l $((1024*1024*1024)) test_file
-
-    andres@awork3:/mnt/t3$ dd if=/dev/zero of=test_file bs=4096 conv=notrunc iflag=count_bytes count=$((1024*1024*1024)) oflag=direct,dsync
-    z262144+0 records in
-    262144+0 records out
-    1073741824 bytes (1.1 GB, 1.0 GiB) copied, 109.398 s, 9.8 MB/s
-
-    andres@awork3:/mnt/t3$ dd if=/dev/zero of=test_file bs=4096 conv=notrunc iflag=count_bytes count=$((1024*1024*1024)) oflag=direct,dsync
-    262144+0 records in
-    262144+0 records out
-    1073741824 bytes (1.1 GB, 1.0 GiB) copied, 3.76166 s, 285 MB/s
-
-
-The way around that, from a database's perspective, is obviously to just
-overwrite the file "manually" after fallocate()ing it, utilizing larger
-writes, and then to recycle the file.
-
-
-But that's a fair bit of unnecessary IO from userspace, and it's IO that
-the kernel can do more efficiently on a number of types of block
-devices, e.g. by utilizing write-zeroes.
-
-
-Which brings me to $subject:
-
-Would it make sense to add a variant of FALLOC_FL_ZERO_RANGE that
-doesn't convert extents into unwritten extents, but instead uses
-blkdev_issue_zeroout() if supported?  Mostly interested in xfs/ext4
-myself, but ...
-
-Doing so as a variant of FALLOC_FL_ZERO_RANGE seems to make the most
-sense, as that'd work reasonably efficiently to initialize newly
-allocated space as well as for zeroing out previously used file space.
-
-
-As blkdev_issue_zeroout() already has a fallback path it seems this
-should be doable without too much concern for which devices have write
-zeroes, and which do not?
-
-Greetings,
-
-Andres Freund
+>> Always wake all CIL push waiters. Test with waitqueue_active() as an
+>> optimization. This is possible, because we hold the xc_push_lock
+>> spinlock, which prevents additions to the waitqueue.
+>>
+>> Signed-off-by: Donald Buczek <buczek@molgen.mpg.de>
+>> ---
+>>   fs/xfs/xfs_log_cil.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+>> index b0ef071b3cb5..d620de8e217c 100644
+>> --- a/fs/xfs/xfs_log_cil.c
+>> +++ b/fs/xfs/xfs_log_cil.c
+>> @@ -670,7 +670,7 @@ xlog_cil_push_work(
+>>   	/*
+>>   	 * Wake up any background push waiters now this context is being pushed.
+>>   	 */
+>> -	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
+>> +	if (waitqueue_active(&cil->xc_push_wait))
+>>   		wake_up_all(&cil->xc_push_wait);
+>>   
+>>   	/*
+>> -- 
+>> 2.26.2
