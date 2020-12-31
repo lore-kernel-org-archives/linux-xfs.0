@@ -5,55 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE17C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Dec 2020 22:47:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77537C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Dec 2020 22:47:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A4C420678
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Dec 2020 22:47:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41F7020658
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Dec 2020 22:47:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727133AbgLaWrK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Dec 2020 17:47:10 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:56692 "EHLO
+        id S1727140AbgLaWrQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Dec 2020 17:47:16 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:56728 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726896AbgLaWrJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Dec 2020 17:47:09 -0500
+        with ESMTP id S1726795AbgLaWrP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Dec 2020 17:47:15 -0500
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BVMkRTV155714;
-        Thu, 31 Dec 2020 22:46:27 GMT
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BVMkYAn155738;
+        Thu, 31 Dec 2020 22:46:34 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=LgzhvwLBlETPOwP0ljRGBvv6d5IkgoheQjWiV+eZfJ4=;
- b=xMPP92mVGp+GNHY9JcemTBZUZquN129KkR5cp5MSEc3zVoyD8N9uTzK2Lcg9Um+C1QZl
- bjYis59M5OBEwsyTsE20tWcPr5i8EjMrlfgvKP7wAcRP4DtTIAaSC9dQ8cAbgloj/XH8
- 90n3/1mzHux1azpvqcvUEtRHr2p+lGySDepkDUO5L18TjZNatQLO9OIE16Vg4VD6U/4i
- Sup3y3RvnSydJV4eodA2F09IvU+FauOQBvWHmkDGuRMj4Pi5R3uXGsrPi96gE1lKUzOJ
- wByhDRswtnqlrpZXo0z5NmpMnz9L41PJeGfMZM4QJ+f3SyZFQJhUfIkOZ8tlwljsQ9In VA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 35rk3bv3q1-1
+ bh=JZ8Z+sm8Eudng8cVlf0zvfSiZVA50AxrbzPmNsHsRPE=;
+ b=aXPkwbatFpAWxsTIYnvP4xi/OLiVsH+8smRt1f0fAxQn1bGU14hCgAKhTxbz7tdzQfr0
+ 21PPdrkqRULZEfht9mSB6AmQGm2BIBVelKa49HTRQASGy8EJFckHNZjh6lSOMEUbK27y
+ U7flZMQfx+LnmDnx6U6O5gdeigXfEPANPchG96fbe1FnhVjteTrMw3a2F2lMDFPAJ4Jt
+ W+EqpDikdtes6rgYOYZFbIXgyOoF+YC8kTjR0mphOE05gYBR/X4AN2Wf0xpS2SM5ocrS
+ X8S797qfKvMA6CBr1cM32PDa4b25OHM2YJRd0u0qYjmoYPtjHUZACZEpowGsEqLrDuJ9 +Q== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 35rk3bv3q4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 31 Dec 2020 22:46:26 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BVMk5Ye153779;
-        Thu, 31 Dec 2020 22:46:26 GMT
+        Thu, 31 Dec 2020 22:46:34 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BVMeUWf083414;
+        Thu, 31 Dec 2020 22:44:34 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 35pexukuar-1
+        by aserp3020.oracle.com with ESMTP id 35pf307m0w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 31 Dec 2020 22:46:26 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BVMkP6r025528;
-        Thu, 31 Dec 2020 22:46:25 GMT
+        Thu, 31 Dec 2020 22:44:33 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BVMiXNY024956;
+        Thu, 31 Dec 2020 22:44:33 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 31 Dec 2020 14:46:24 -0800
-Subject: [PATCHSET 0/7] xfs: reflink with large realtime extents
+        with ESMTP ; Thu, 31 Dec 2020 14:44:33 -0800
+Subject: [PATCHSET RFC v2 00/17] xfs: atomic file updates
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Thu, 31 Dec 2020 14:46:24 -0800
-Message-ID: <160945478389.2833972.13762851013245875609.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-api@vger.kernel.org
+Date:   Thu, 31 Dec 2020 14:44:32 -0800
+Message-ID: <160945467182.2830865.6578267403605057347.stgit@magnolia>
 In-Reply-To: <20201231223847.GI6918@magnolia>
 References: <20201231223847.GI6918@magnolia>
 User-Agent: StGit/0.19
@@ -61,10 +62,10 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9851 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 spamscore=0
- malwarescore=0 mlxscore=0 mlxlogscore=999 bulkscore=0 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
+ bulkscore=0 malwarescore=0 suspectscore=0 spamscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012310135
+ definitions=main-2012310134
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9851 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 clxscore=1015
  impostorscore=0 mlxlogscore=999 adultscore=0 spamscore=0 mlxscore=0
@@ -77,13 +78,54 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-Now that we've landed support for reflink on the realtime device for
-cases where the rt extent size is the same as the fs block size, enhance
-the reflink code further to support cases where the rt extent size is a
-power-of-two multiple of the fs block size.  This enables us to do data
-block sharing (for example) for much larger allocation units by dirtying
-pagecache around shared extents and expanding writeback to write back
-shared extents fully.
+This series creates a new log incompat feature and log intent items to
+track high level progress of swapping ranges of two files and finish
+interrupted work if the system goes down.  It then adds a new
+FISWAPRANGE ioctl so that userspace can access the atomic extent
+swapping feature.  With this feature, user programs will be able to
+update files atomically by opening an O_TMPFILE, reflinking the source
+file to it, making whatever updates they want to make, and then
+atomically swap the changed bits back to the source file.  It even has
+an optional ability to detect a changed source file and reject the
+update.
+
+The intent behind this new userspace functionality is to enable atomic
+rewrites of arbitrary parts of individual files.  For years, application
+programmers wanting to ensure the atomicity of a file update had to
+write the changes to a new file in the same directory, fsync the new
+file, rename the new file on top of the old filename, and then fsync the
+directory.  People get it wrong all the time, and $fs hacks abound.
+
+With atomic file updates, this is no longer necessary.  Programmers
+create an O_TMPFILE, optionally FICLONE the file contents into the
+temporary file, make whatever changes they want to the tempfile, and
+FISWAPRANGE the contents from the tempfile into the regular file.  The
+interface can optionally check the original file's [cm]time to reject
+the swap operation if the file has been modified by.  There are no
+fsyncs to take care of; no directory operations at all; and the fs will
+take care of finishing the swap operation if the system goes down in the
+middle of the swap.  Sample code can be found in the corresponding
+changes to xfs_io to exercise the use case mentioned above.
+
+Note that this function is /not/ the O_DIRECT atomic file writes concept
+that has been floating around for years.  This is constructed entirely
+in software, which means that there are no limitations other than the
+regular filesystem limits.
+
+As a side note, there's an extra motivation behind the kernel
+functionality: online repair of file-based metadata.  The atomic file
+swap is implemented as an atomic inode fork swap, which means that we
+can implement online reconstruction of extended attributes and
+directories by building a new one in another inode and atomically
+swap the contents.
+
+Next, we adapt the online filesystem repair code to use atomic extent
+swapping.  This enables repair functions to construct a clean copy of a
+directory, xattr information, realtime bitmaps, and realtime summary
+information in a temporary inode.  If this completes successfully, the
+new contents can be swapped atomically into the inode being repaired.
+This is essential to avoid making corruption problems worse if the
+system goes down in the middle of running repair.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -94,16 +136,63 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-reflink-extsize
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=atomic-file-updates
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=atomic-file-updates
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=atomic-file-updates
+
+xfsdocs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=atomic-file-updates
 ---
- fs/remap_range.c     |   37 +++++++---
- fs/xfs/xfs_aops.c    |   43 +++++++++---
- fs/xfs/xfs_file.c    |  174 +++++++++++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_inode.h   |    2 +
- fs/xfs/xfs_iops.c    |   15 ++++
- fs/xfs/xfs_reflink.c |  181 +++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_reflink.h |    9 ++
- fs/xfs/xfs_super.c   |   11 ++-
- include/linux/fs.h   |    5 +
- 9 files changed, 429 insertions(+), 48 deletions(-)
+ Documentation/filesystems/vfs.rst |   16 +
+ fs/ioctl.c                        |   42 ++
+ fs/remap_range.c                  |  283 +++++++++++++
+ fs/xfs/Makefile                   |    3 
+ fs/xfs/libxfs/xfs_defer.c         |   49 ++
+ fs/xfs/libxfs/xfs_defer.h         |   11 -
+ fs/xfs/libxfs/xfs_errortag.h      |    4 
+ fs/xfs/libxfs/xfs_format.h        |   38 ++
+ fs/xfs/libxfs/xfs_fs.h            |    2 
+ fs/xfs/libxfs/xfs_log_format.h    |   63 +++
+ fs/xfs/libxfs/xfs_log_recover.h   |    4 
+ fs/xfs/libxfs/xfs_sb.c            |    2 
+ fs/xfs/libxfs/xfs_swapext.c       |  793 +++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_swapext.h       |   89 ++++
+ fs/xfs/xfs_bmap_item.c            |   13 -
+ fs/xfs/xfs_bmap_util.c            |  595 ----------------------------
+ fs/xfs/xfs_bmap_util.h            |    3 
+ fs/xfs/xfs_error.c                |    3 
+ fs/xfs/xfs_extfree_item.c         |    2 
+ fs/xfs/xfs_file.c                 |   49 ++
+ fs/xfs/xfs_inode.c                |   13 +
+ fs/xfs/xfs_inode.h                |    1 
+ fs/xfs/xfs_ioctl.c                |  102 +----
+ fs/xfs/xfs_ioctl.h                |    4 
+ fs/xfs/xfs_ioctl32.c              |    8 
+ fs/xfs/xfs_log.c                  |   10 
+ fs/xfs/xfs_log_recover.c          |   41 ++
+ fs/xfs/xfs_mount.c                |  119 ++++++
+ fs/xfs/xfs_mount.h                |    2 
+ fs/xfs/xfs_refcount_item.c        |    2 
+ fs/xfs/xfs_rmap_item.c            |    2 
+ fs/xfs/xfs_super.c                |   26 +
+ fs/xfs/xfs_swapext_item.c         |  649 ++++++++++++++++++++++++++++++
+ fs/xfs/xfs_swapext_item.h         |   61 +++
+ fs/xfs/xfs_trace.c                |    1 
+ fs/xfs/xfs_trace.h                |  116 +++++
+ fs/xfs/xfs_xchgrange.c            |  721 ++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_xchgrange.h            |   30 +
+ include/linux/fs.h                |   14 +
+ include/uapi/linux/fiexchange.h   |  101 +++++
+ 40 files changed, 3363 insertions(+), 724 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_swapext.c
+ create mode 100644 fs/xfs/libxfs/xfs_swapext.h
+ create mode 100644 fs/xfs/xfs_swapext_item.c
+ create mode 100644 fs/xfs/xfs_swapext_item.h
+ create mode 100644 fs/xfs/xfs_xchgrange.c
+ create mode 100644 fs/xfs/xfs_xchgrange.h
+ create mode 100644 include/uapi/linux/fiexchange.h
 
