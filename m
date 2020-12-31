@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EA21C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Dec 2020 22:45:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10B09C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Dec 2020 22:45:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4CCC420658
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Dec 2020 22:45:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D524020678
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Dec 2020 22:45:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727052AbgLaWpL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Dec 2020 17:45:11 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:55624 "EHLO
+        id S1726317AbgLaWpR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Dec 2020 17:45:17 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:55668 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726883AbgLaWpL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Dec 2020 17:45:11 -0500
+        with ESMTP id S1726883AbgLaWpQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Dec 2020 17:45:16 -0500
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BVMiUTB154617
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Dec 2020 22:44:30 GMT
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BVMiaDm154623
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Dec 2020 22:44:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=KbOmqqzCriANCbTmSHd7Se4m0aSKJV+g6I1q5x0jVjE=;
- b=GXASUkFBmJAcBr87zL+Nun52PYq4go959/jJnj5bU/I266x3ZQmqWXAuoqPd2awx38FO
- 8H+/1++oHsMPqMldb881rJPj/L4lTlmLVms4SRk3Xs2v4Huxoa0tTm6uSP8E1jT/T1r7
- BqqhSP41R+gR/63OmdGmM67ZhNp8tlCJXHEWSTzNqYB1Lyhax0sBnpZo4pb9QP0aGdP1
- IT70VwdoslTwnpPFnhoQvRRcdzXdq6oAsDBgWuG2B9Pxdhmpw2ef4Ec/Oq+NYp7esxrl
- 4ASaPh4W5fMtMDaf9DiT/QIBNhUaYrv4DwuNbZ72+O5xt9qZDou4SUvp095r+aRBThvv FQ== 
+ bh=lAy1inHoLrtuI/g7eigfwpI1r9D3Sr6VPCSCAwtlr7U=;
+ b=IocPwuokX7sKKkSs/qvQfO6S46N8wKPcUPGIaewmX1Hn3dxtaWVBNPf26J4HE6alIfm2
+ nEScgMWKG1KqXLoMUXly1HnBsd1bj0llQLkBAgPrRN1IGlOSItcK58p43kGk8qR55XL3
+ QFvd2ZnnWcGO250t34HN/TGYk0P3cgwPQXVQ5+eTOIDzZHQSovYu4BJcy5FB4bL/UKFL
+ vRpwRimQGekyvw+EbfSC2UHe+64/jQEHsCJjeCxS2D21PXwYne/N43sYqruhNWvwXxvb
+ del48nJWc6OeMnkPUIt5xpnYeKbbM6GtLa/pCwJrs0Y1HR7nTUt9voMEMbTNNoY2mRqJ tA== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 35rk3bv3p2-1
+        by aserp2130.oracle.com with ESMTP id 35rk3bv3p4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Dec 2020 22:44:30 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Dec 2020 22:44:36 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BVMeUoF083476
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Dec 2020 22:44:26 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 35pf307m0h-1
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BVMehhV083635
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Dec 2020 22:42:35 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 35pf307kjs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Dec 2020 22:44:26 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BVMiPbp003000
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Dec 2020 22:44:25 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Dec 2020 22:42:35 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BVMgZv3024289
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Dec 2020 22:42:35 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 31 Dec 2020 14:44:24 -0800
-Subject: [PATCHSET 0/2] xfs: support attrfork and unwritten BUIs
+        with ESMTP ; Thu, 31 Dec 2020 14:42:35 -0800
+Subject: [PATCHSET v2 0/2] xfs: fix online repair block reaping
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 31 Dec 2020 14:44:24 -0800
-Message-ID: <160945466397.2830800.13578631929018018482.stgit@magnolia>
+Date:   Thu, 31 Dec 2020 14:42:34 -0800
+Message-ID: <160945455414.2828471.12268741339940881464.stgit@magnolia>
 In-Reply-To: <20201231223847.GI6918@magnolia>
 References: <20201231223847.GI6918@magnolia>
 User-Agent: StGit/0.19
@@ -77,10 +77,12 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-In preparation for atomic extent swapping and the online repair
-functionality that wants atomic extent swaps, enhance the BUI code so
-that we can support deferred work on the extended attribute fork and on
-unwritten extents.
+These patches fix a few problems that I noticed in the code that deals
+with old btree blocks after a successful repair. First, we clarify how
+the reaping function works w.r.t. bitmap lifetimes.  Next we fix a bug
+where we could incorrectly invalidate old btree blocks if they were
+crosslinked.  Finally, we convert the reap function to use EFIs so that
+we can delete blocks without overloading a transaction.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -91,15 +93,9 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=expand-bmap-intent-usage
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=expand-bmap-intent-usage
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-reap-fixes
 ---
- fs/xfs/libxfs/xfs_bmap.c |   44 ++++++++++++++++++--------------------------
- fs/xfs/libxfs/xfs_bmap.h |    4 ++--
- fs/xfs/xfs_bmap_item.c   |    2 +-
- fs/xfs/xfs_bmap_util.c   |    8 ++++----
- fs/xfs/xfs_reflink.c     |    6 +++---
- 5 files changed, 28 insertions(+), 36 deletions(-)
+ fs/xfs/scrub/repair.c |  115 ++++++++++++++++++++++++++++---------------------
+ fs/xfs/scrub/repair.h |    2 -
+ 2 files changed, 67 insertions(+), 50 deletions(-)
 
