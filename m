@@ -2,129 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63DFDC433DB
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Jan 2021 21:55:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0425C4332D
+	for <linux-xfs@archiver.kernel.org>; Sat,  2 Jan 2021 15:22:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BB482222D
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Jan 2021 21:55:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 804F8224D2
+	for <linux-xfs@archiver.kernel.org>; Sat,  2 Jan 2021 15:22:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727296AbhAAVyk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Jan 2021 16:54:40 -0500
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:33908 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727173AbhAAVyj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jan 2021 16:54:39 -0500
-Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 0D56D8BF5;
-        Sat,  2 Jan 2021 08:53:54 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kvSMr-00244f-HB; Sat, 02 Jan 2021 08:53:53 +1100
-Date:   Sat, 2 Jan 2021 08:53:53 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Yafang Shao <laoar.shao@gmail.com>
-Cc:     kernel test robot <oliver.sang@intel.com>,
-        0day robot <lkp@intel.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Michal Hocko <mhocko@kernel.org>,
-        David Howells <dhowells@redhat.com>,
-        Jeff Layton <jlayton@redhat.com>,
-        LKML <linux-kernel@vger.kernel.org>, lkp@lists.01.org,
+        id S1726811AbhABPWL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 2 Jan 2021 10:22:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47494 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726766AbhABPWK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Jan 2021 10:22:10 -0500
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C29F1C0613ED;
+        Sat,  2 Jan 2021 07:21:27 -0800 (PST)
+Received: by mail-wr1-x431.google.com with SMTP id 91so26566410wrj.7;
+        Sat, 02 Jan 2021 07:21:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=7FOerU/+uiaLOx8IjnYNL5LXRoiyAnmqji55A4AV5Zs=;
+        b=LBsSYTbjwdI3QmQu4IbgQ7olNGDMBAqElqxAyPsojxLe7NcTh8El+Pke0BmUM22eYb
+         AuZq9SBpNP53WKEFTQdHVDQPCC/8PDYsWLnhkSG7Q2av8EAE8APyACuUnwA3w3t7JqWh
+         R4mCXlk4y9W+n2bx+NU4V6SqSobRuYDWexgtwJuMlhnrLQQMDddC3lR9NTJlDYGo4U1G
+         Yntmje7tslRu50v12yeP/tlquNu8wXFd0g77n+FLG0DNgXfWPtBPtB8SMzz/3+rhpWhR
+         Epwmsr+CSoG9EWj2xUflykAOxhsPhi2ABMO72oHO7eo5cj09XjFAKrK+DFY/UA4J8N0y
+         OWaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=7FOerU/+uiaLOx8IjnYNL5LXRoiyAnmqji55A4AV5Zs=;
+        b=H54ehalIm4pDyQ20WUtcI4FW9hSb/7osqZR9HBk+rzMD32OM0cWqAMMMZMfZA57Cf3
+         vQi8Sj5yv6SHhQS95nr2OUK1mjnpOtKZUG8PVsCw6PAvEy4fiUmny0scjRb6fl4SZsZy
+         o4b40qV+ruSi90OC0jZjPHrZI6g1T/dgX2Ugeb1HBzf4S7IUbhnmDMNmF/PFl5yVX7xm
+         4IclwqlzPwjK8Jg3lMyiNZjYTz12SBI0ZyCg2AAfZz7YYJAWa6rkZfXxuPDihImJn4Nu
+         Gq7GXbvd2PkE5TkzKNekGWANcuToq2oH/VBogzBNfn+XvvXfUT84qfH/bendRWDaRiUF
+         /zew==
+X-Gm-Message-State: AOAM532vVaNBSbbz8b10LLhrk1DTnnHmFPlkojsPahgQLncNsDl1DcF0
+        +NvOfaLIqM84eM+Qv+AfvBJCAsRBSy/3UQ==
+X-Google-Smtp-Source: ABdhPJzvzXyfPCTdTGrqpyWR+n7zH7gi0rGiGb6+ilO2BRa7Nk9Cv57P3HckjnOAEWjCCb1q8AjWLg==
+X-Received: by 2002:a5d:6789:: with SMTP id v9mr71303602wru.86.1609600886321;
+        Sat, 02 Jan 2021 07:21:26 -0800 (PST)
+Received: from localhost.localdomain ([85.255.236.0])
+        by smtp.gmail.com with ESMTPSA id h13sm78671243wrm.28.2021.01.02.07.21.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 02 Jan 2021 07:21:25 -0800 (PST)
+From:   Pavel Begunkov <asml.silence@gmail.com>
+To:     linux-block@vger.kernel.org
+Cc:     Jens Axboe <axboe@kernel.dk>,
         Christoph Hellwig <hch@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
-        linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>
-Subject: Re: [xfs] db962cd266: Assertion_failed
-Message-ID: <20210101215353.GB331610@dread.disaster.area>
-References: <20201222012131.47020-5-laoar.shao@gmail.com>
- <20201231030158.GB379@xsang-OptiPlex-9020>
- <CALOAHbD+mLMJSizToKPsx0iUd5Z71sJBOyMaV2enVvUHfHwLzg@mail.gmail.com>
+        Matthew Wilcox <willy@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: [PATCH v2 3/7] block/psi: remove PSI annotations from direct IO
+Date:   Sat,  2 Jan 2021 15:17:35 +0000
+Message-Id: <c77839347f1f3fdf917ac2bc251310f1c1f26044.1609461359.git.asml.silence@gmail.com>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <cover.1609461359.git.asml.silence@gmail.com>
+References: <cover.1609461359.git.asml.silence@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CALOAHbD+mLMJSizToKPsx0iUd5Z71sJBOyMaV2enVvUHfHwLzg@mail.gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
-        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
-        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=QyXUC8HyAAAA:8 a=7-415B0cAAAA:8
-        a=XA52iYJiZECpFeylV-IA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 01, 2021 at 05:10:49PM +0800, Yafang Shao wrote:
-> On Thu, Dec 31, 2020 at 10:46 AM kernel test robot
-> <oliver.sang@intel.com> wrote:
-.....
-> > [  552.905799] XFS: Assertion failed: !current->journal_info, file: fs/xfs/xfs_trans.h, line: 280
-> > [  553.104459]  xfs_trans_reserve+0x225/0x320 [xfs]
-> > [  553.110556]  xfs_trans_roll+0x6e/0xe0 [xfs]
-> > [  553.116134]  xfs_defer_trans_roll+0x104/0x2a0 [xfs]
-> > [  553.122489]  ? xfs_extent_free_create_intent+0x62/0xc0 [xfs]
-> > [  553.129780]  xfs_defer_finish_noroll+0xb8/0x620 [xfs]
-> > [  553.136299]  xfs_defer_finish+0x11/0xa0 [xfs]
-> > [  553.142017]  xfs_itruncate_extents_flags+0x141/0x440 [xfs]
-> > [  553.149053]  xfs_setattr_size+0x3da/0x480 [xfs]
-> > [  553.154939]  ? setattr_prepare+0x6a/0x1e0
-> > [  553.160250]  xfs_vn_setattr+0x70/0x120 [xfs]
-> > [  553.165833]  notify_change+0x364/0x500
-> > [  553.170820]  ? do_truncate+0x76/0xe0
-> > [  553.175673]  do_truncate+0x76/0xe0
-> > [  553.180184]  path_openat+0xe6c/0x10a0
-> > [  553.184981]  do_filp_open+0x91/0x100
-> > [  553.189707]  ? __check_object_size+0x136/0x160
-> > [  553.195493]  do_sys_openat2+0x20d/0x2e0
-> > [  553.200481]  do_sys_open+0x44/0x80
-> > [  553.204926]  do_syscall_64+0x33/0x40
-> > [  553.209588]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> 
-> Thanks for the report.
-> 
-> At a first glance, it seems we should make a similar change as we did
-> in xfs_trans_context_clear().
-> 
-> static inline void
-> xfs_trans_context_set(struct xfs_trans *tp)
-> {
->     /*
->      * We have already handed over the context via xfs_trans_context_swap().
->      */
->     if (current->journal_info)
->         return;
->     current->journal_info = tp;
->     tp->t_pflags = memalloc_nofs_save();
-> }
+Direct IO does not operate on the current working set of pages managed
+by the kernel, so it should not be accounted as memory stall to PSI
+infrastructure.
 
-Ah, no.
+The block layer and iomap direct IO use bio_iov_iter_get_pages()
+to build bios, and they are the only users of it, so to avoid PSI
+tracking for them clear out BIO_WORKINGSET flag. Do same for
+dio_bio_submit() because fs/direct_io constructs bios by hand directly
+calling bio_add_page().
 
-Remember how I said "split out the wrapping of transaction
-context setup in xfs_trans_reserve() from
-the lifting of the context setting into xfs_trans_alloc()"?
+Reported-by: Christoph Hellwig <hch@infradead.org>
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
+---
+ block/bio.c    | 6 ++++++
+ fs/direct-io.c | 2 ++
+ 2 files changed, 8 insertions(+)
 
-Well, you did the former and dropped the latter out of the patch
-set.
-
-Now when a transaction rolls after xfs_trans_context_swap(), it
-calls xfs_trans_reserve() and tries to do transaction context setup
-work inside a transaction context that already exists.  IOWs, you
-need to put the patch that lifts of the context setting up into
-xfs_trans_alloc() back into the patchset before adding the
-current->journal functionality patch.
-
-Also, you need to test XFS code with CONFIG_XFS_DEBUG=y so that
-asserts are actually built into the code and exercised, because this
-ASSERT should have fired on the first rolling transaction that the
-kernel executes...
-
-Cheers,
-
-Dave.
+diff --git a/block/bio.c b/block/bio.c
+index 1f2cc1fbe283..9f26984af643 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1099,6 +1099,9 @@ static int __bio_iov_append_get_pages(struct bio *bio, struct iov_iter *iter)
+  * fit into the bio, or are requested in @iter, whatever is smaller. If
+  * MM encounters an error pinning the requested pages, it stops. Error
+  * is returned only if 0 pages could be pinned.
++ *
++ * It's intended for direct IO, so doesn't do PSI tracking, the caller is
++ * responsible for setting BIO_WORKINGSET if necessary.
+  */
+ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ {
+@@ -1123,6 +1126,9 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 
+ 	if (is_bvec)
+ 		bio_set_flag(bio, BIO_NO_PAGE_REF);
++
++	/* don't account direct I/O as memory stall */
++	bio_clear_flag(bio, BIO_WORKINGSET);
+ 	return bio->bi_vcnt ? 0 : ret;
+ }
+ EXPORT_SYMBOL_GPL(bio_iov_iter_get_pages);
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index d53fa92a1ab6..0e689233f2c7 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -426,6 +426,8 @@ static inline void dio_bio_submit(struct dio *dio, struct dio_submit *sdio)
+ 	unsigned long flags;
+ 
+ 	bio->bi_private = dio;
++	/* don't account direct I/O as memory stall */
++	bio_clear_flag(bio, BIO_WORKINGSET);
+ 
+ 	spin_lock_irqsave(&dio->bio_lock, flags);
+ 	dio->refcount++;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.24.0
+
