@@ -5,169 +5,130 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 557EEC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 18:26:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D27FBC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 18:35:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00413221F1
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 18:26:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E50321D94
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 18:35:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726163AbhADS0e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Jan 2021 13:26:34 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:49686 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726072AbhADS0e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jan 2021 13:26:34 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 104IPXXv081980;
-        Mon, 4 Jan 2021 18:25:48 GMT
+        id S1727720AbhADSfL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Jan 2021 13:35:11 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:55426 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727674AbhADSfJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jan 2021 13:35:09 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 104IP5lL091190;
+        Mon, 4 Jan 2021 18:34:27 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=r+syGqC3dl8Rt+Cy7QBT32dfOCs/oo1YPJD0Uivpapw=;
- b=atP6CL+flAF2aLgztyBjwcxMYWU4Doc1LG8MNkiMQCkVEeqQbuKGXO4c4uLGtJIdS0DP
- TwHrE4QVm8BHvr4ZwHimogyJPGsCYldqGjwWiF/khrajdD2tccQ+GU4ADzX1j2yBP6uL
- v9fk+NnXHMcd4QLr7jgk6M+LOUq9W3frBRy2kd+NHRx2sLgchTNAlQuQzFRCQvsQATQV
- 6g8oSwWYjXDL1xQzE08r3N2CxlhJ0BVw7jszRStnWeXnb8fuC7C1kz85hhS3MToOwLd/
- vh6UaclP9N0GPc+FVMjY+tJdK7lNLk+aIEBhRFUd3EdbP6pEpc5tiRpfU7aMqUHTh6aA qg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 35tg8qwkgj-1
+ bh=7yPVJBok261C1tzUJCuLNeerUX+IAy+AetWgqSB5PVA=;
+ b=xvypDlMWjC+3GOql/vvF/1DkTyzylr46+tw6YPJXtF8mQjNVIbtEhWeXb3mLSuYaGdTQ
+ PbLGr19myZFY6zBrHYNiY+YOvD6nY/vLEXvDHrlNpEfxnP0dnSOgSsblbuyQSwcxRl1X
+ hsaAC0KVtxzOuPBe2avuQTJLCFoNYSqCrzhde9ue1lcc26tbptt38SZELJgEebKxIS7w
+ DfLna2urxPXK6pOnDlpj+wDzVSTI36zxj7ftJgXkzYWIIesy+af5oZI5ZyqLmJNzIRcr
+ 3UoFpSTMQF3Eo02a3zXJ2/dJ+c2HG32qVqT8t5krjfGp3wvh8hf3wqRFGyscG3A6OYJc DA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 35tgsknkva-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 04 Jan 2021 18:25:48 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 104I0Qow103650;
-        Mon, 4 Jan 2021 18:25:47 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 35v4rag794-1
+        Mon, 04 Jan 2021 18:34:27 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 104ISlkh093775;
+        Mon, 4 Jan 2021 18:34:26 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 35uxnrjkvu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 04 Jan 2021 18:25:47 +0000
+        Mon, 04 Jan 2021 18:34:26 +0000
 Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 104IPkQF020490;
-        Mon, 4 Jan 2021 18:25:46 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 104IYPml003598;
+        Mon, 4 Jan 2021 18:34:25 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 Jan 2021 10:25:46 -0800
-Date:   Mon, 4 Jan 2021 10:25:45 -0800
+        with ESMTP ; Mon, 04 Jan 2021 10:34:25 -0800
+Date:   Mon, 4 Jan 2021 10:34:24 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eryu Guan <guan@eryu.me>
-Cc:     Ritesh Harjani <riteshh@linux.ibm.com>, fstests@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        anju@linux.vnet.ibm.com
-Subject: Re: [PATCHv2 1/2] common/rc: Add whitelisted FS support in
- _require_scratch_swapfile()
-Message-ID: <20210104182545.GF6908@magnolia>
-References: <f161a49e6e3476d83c35b8e6a111644110ec4c8c.1608094988.git.riteshh@linux.ibm.com>
- <3bd1f738-93b7-038d-6db9-7bf6a330b1ea@linux.ibm.com>
- <20201220153906.GC3853@desktop>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] generic/388: randomly recover via read-only mounts
+Message-ID: <20210104183424.GA6919@magnolia>
+References: <20201217145941.2513069-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201220153906.GC3853@desktop>
+In-Reply-To: <20201217145941.2513069-1-bfoster@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9854 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 bulkscore=0
- suspectscore=0 spamscore=0 adultscore=0 malwarescore=0 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ malwarescore=0 mlxscore=0 mlxlogscore=999 suspectscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101040118
+ definitions=main-2101040119
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9854 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 phishscore=0 bulkscore=0
- spamscore=0 impostorscore=0 suspectscore=0 adultscore=0 mlxlogscore=999
- mlxscore=0 malwarescore=0 lowpriorityscore=0 priorityscore=1501
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 malwarescore=0
+ phishscore=0 impostorscore=0 bulkscore=0 clxscore=1015 priorityscore=1501
+ lowpriorityscore=0 adultscore=0 suspectscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2101040119
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Dec 20, 2020 at 11:39:06PM +0800, Eryu Guan wrote:
-> On Wed, Dec 16, 2020 at 10:53:45AM +0530, Ritesh Harjani wrote:
-> > 
-> > 
-> > On 12/16/20 10:47 AM, Ritesh Harjani wrote:
-> > > Filesystems e.g. ext4 and XFS supports swapon by default and an error
-> > > returned with swapon should be treated as a failure. Hence
-> > > add ext4/xfs as whitelisted fstype in _require_scratch_swapfile()
-> > > 
-> > > Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
-> > > ---
-> > > v1->v2: Addressed comments from Eryu @[1]
-> > > [1]: https://patchwork.kernel.org/project/fstests/cover/cover.1604000570.git.riteshh@linux.ibm.com/
-> > > 
-> > >   common/rc | 20 ++++++++++++++++----
-> > >   1 file changed, 16 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/common/rc b/common/rc
-> > > index 33b5b598a198..635b77a005c6 100644
-> > > --- a/common/rc
-> > > +++ b/common/rc
-> > > @@ -2380,6 +2380,7 @@ _format_swapfile() {
-> > >   # Check that the filesystem supports swapfiles
-> > >   _require_scratch_swapfile()
-> > >   {
-> > > +	local fstyp=$FSTYP
-> > >   	_require_scratch
-> > >   	_require_command "$MKSWAP_PROG" "mkswap"
-> > > 
-> > > @@ -2401,10 +2402,21 @@ _require_scratch_swapfile()
-> > >   	# Minimum size for mkswap is 10 pages
-> > >   	_format_swapfile "$SCRATCH_MNT/swap" $(($(get_page_size) * 10))
-> > > 
-> > > -	if ! swapon "$SCRATCH_MNT/swap" >/dev/null 2>&1; then
-> > > -		_scratch_unmount
-> > > -		_notrun "swapfiles are not supported"
-> > > -	fi
-> > > +	# For whitelisted fstyp swapon should not fail.
+On Thu, Dec 17, 2020 at 09:59:41AM -0500, Brian Foster wrote:
+> XFS has an issue where superblock counters may not be properly
+> synced when recovery occurs via a read-only mount. This causes the
+> filesystem to become inconsistent after unmount. To cover this test
+> case, update generic/388 to switch between read-only and read-write
+> mounts to perform log recovery.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> I didn't think it was worth duplicating generic/388 to a whole new test
+> just to invoke log recovery from a read-only mount. generic/388 is a
+> rather general log recovery test and this preserves historical behavior
+> of the test.
+> 
+> A prospective fix for the issue this reproduces on XFS is posted here:
+> 
+> https://lore.kernel.org/linux-xfs/20201217145334.2512475-1-bfoster@redhat.com/
+> 
+> Brian
+> 
+>  tests/generic/388 | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/tests/generic/388 b/tests/generic/388
+> index 451a6be2..cdd547f4 100755
+> --- a/tests/generic/388
+> +++ b/tests/generic/388
+> @@ -66,8 +66,14 @@ for i in $(seq 1 $((50 * TIME_FACTOR)) ); do
+>  		ps -e | grep fsstress > /dev/null 2>&1
+>  	done
+>  
+> -	# quit if mount fails so we don't shutdown the host fs
+> -	_scratch_cycle_mount || _fail "cycle mount failed"
+> +	# Toggle between rw and ro mounts for recovery. Quit if any mount
+> +	# attempt fails so we don't shutdown the host fs.
+> +	if [ $((RANDOM % 2)) -eq 0 ]; then
+> +		_scratch_cycle_mount || _fail "cycle mount failed"
+> +	else
+> +		_scratch_cycle_mount "ro" || _fail "cycle ro mount failed"
+> +		_scratch_cycle_mount || _fail "cycle mount failed"
 
-I would use a different phase than 'whitelisted', since that doesn't
-tell us why ext4 and xfs are special:
+I would change that third failure message to something distinct, like:
 
-# ext* and xfs have supported all variants of swap files since their
-# introduction, so swapon should not fail.
+_fail "cycle remount failed"
 
-> > > +	case "$fstyp" in
-
-$FSTYP, not $fstyp
-
-> > > +	ext4|xfs)
-
-I would also add a few more FSTYPs here, since at least ext2 and ext3
-supported swap files.  Are there other old fses that do?
+To give us extra clues as to which branch encountered failure.
+This looks like a fun way to find new bugs. :)
 
 --D
 
-> > > +		if ! swapon "$SCRATCH_MNT/swap" >/dev/null 2>&1; then
-> > > +			_scratch_unmount
-> > > +			_fail "swapon failed for $fstyp"
-> > 
-> > @Eryu,
-> > As of now I added _fail() if swapon failed for given whitelisting fstype.
-> > Do you think this is alright, or should I just ignore the error in
+> +	fi
+>  done
+>  
+>  # success, all done
+> -- 
+> 2.26.2
 > 
-> I think it's reasonable.
-> 
-> But I'd like to leave the patchset on the list for review for another
-> week, to see if ext4 and/or xfs folks will chime in and have different
-> thoughts.
-> 
-> Thanks,
-> Eryu
-> 
-> > case of such FS?
-> > 
-> > 
-> > 
-> > > +		fi
-> > > +		;;
-> > > +	*)
-> > > +		if ! swapon "$SCRATCH_MNT/swap" >/dev/null 2>&1; then
-> > > +			_scratch_unmount
-> > > +			_notrun "swapfiles are not supported"
-> > > +		fi
-> > > +		;;
-> > > +	esac
-> > > 
-> > >   	swapoff "$SCRATCH_MNT/swap" >/dev/null 2>&1
-> > >   	_scratch_unmount
-> > > --
-> > > 2.26.2
-> > > 
