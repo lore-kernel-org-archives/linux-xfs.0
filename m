@@ -2,67 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D82FC433E6
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 16:30:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FE9FC4332B
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 16:39:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D659B2245C
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 16:30:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 332B322515
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 16:39:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725840AbhADQaD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Jan 2021 11:30:03 -0500
-Received: from sandeen.net ([63.231.237.45]:59360 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726664AbhADQaD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Jan 2021 11:30:03 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4229B1164F;
-        Mon,  4 Jan 2021 10:28:00 -0600 (CST)
-Subject: Re: [PATCH] mkfs: make inobtcount visible
-From:   Eric Sandeen <sandeen@sandeen.net>
-To:     Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
-References: <20210104113006.328274-1-zlang@redhat.com>
- <3c682608-3ba8-83bb-8d16-49c798e7258c@sandeen.net>
-Message-ID: <3194df4e-267f-8fb1-c183-ead1d4080c85@sandeen.net>
-Date:   Mon, 4 Jan 2021 10:29:21 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.6.0
+        id S1727950AbhADQiq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Jan 2021 11:38:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51744 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727897AbhADQip (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jan 2021 11:38:45 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 685EFC061793;
+        Mon,  4 Jan 2021 08:38:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=jtkbapT8fmTkqdGfawodnxdn1L9OuJ2hV6kgW2yTqWk=; b=kPgHDr7sil9tk8p6Bt6Pg7BkoU
+        qgIFz+hKZQewdgVs5RRcTUS8US4wERe/1Ik9TLb7yss87lkLOSjfChOBjgFVcdJGJqGqKRcfOclCn
+        y+Fk/AajWS5n6Dnx+M7QBg4FrHcUBHQeD8KAxcb7SOO1nzdvOs9WceX3ackS4w9cx3Tr9zvtzhsMs
+        htyNAT7f4vdjSW0tQ1tiAZL2lOrexShD800pjnGRTvsN6+Ry9GtpShUREBOFDmPg5+NQLyPvkMlo/
+        Zvj67UkaUamUNM9aDHexzMNReovVddfdRhtk68Bhu+gEPy71ABUAOCUPs7K0PQdTbD7vZs4RR+NIJ
+        uNehDS9g==;
+Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1kwSrj-000JJd-C5; Mon, 04 Jan 2021 16:37:56 +0000
+Date:   Mon, 4 Jan 2021 16:37:55 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Pavel Begunkov <asml.silence@gmail.com>
+Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: Re: [PATCH v2 2/7] bvec/iter: disallow zero-length segment bvecs
+Message-ID: <20210104163755.GA22407@casper.infradead.org>
+References: <cover.1609461359.git.asml.silence@gmail.com>
+ <b46b8c1943bbefcb90ea5c4dd9beaad8bbc15448.1609461359.git.asml.silence@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <3c682608-3ba8-83bb-8d16-49c798e7258c@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b46b8c1943bbefcb90ea5c4dd9beaad8bbc15448.1609461359.git.asml.silence@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Sat, Jan 02, 2021 at 03:17:34PM +0000, Pavel Begunkov wrote:
+> --- a/Documentation/filesystems/porting.rst
+> +++ b/Documentation/filesystems/porting.rst
+> @@ -865,3 +865,10 @@ no matter what.  Everything is handled by the caller.
+>  
+>  clone_private_mount() returns a longterm mount now, so the proper destructor of
+>  its result is kern_unmount() or kern_unmount_array().
+> +
+> +---
+> +
+> +**mandatory**
+> +
+> +zero-length bvec segments are disallowed, they must be filtered out before
+> +passed on to an iterator.
 
-
-On 1/4/21 9:28 AM, Eric Sandeen wrote:
-> On 1/4/21 5:30 AM, Zorro Lang wrote:
->> When set inobtcount=1/0, we can't see it from xfs geometry report.
->> So make it visible.
->>
->> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> Hi Zorro - thanks for spotting this.
-> 
-> I think the libxfs changes need to hit the kernel first, then we can
-> pull it in and fix up the report_geom function.  Nothing calls
-> xfs_fs_geometry directly in userspace, FWIW.
-
-Hah, of course I forgot about libxfs_fs_geometry. o_O
-
-In any case, I think this should hit the kernel first, want to send
-that patch if it's not already on the list?
-
--Eric
-
-> Thanks,
-> -Eric
-> 
+Why are you putting this in filesystems/porting?  Filesystems don't usually
+generate bvecs ... there's nothing in this current series that stops them.
+I'd suggest Documentation/block/biovecs.rst or biodoc.rst (and frankly,
+biodoc.rst needs a good cleanup)
