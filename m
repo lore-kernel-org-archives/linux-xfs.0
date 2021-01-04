@@ -2,167 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46017C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 20:28:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C02B5C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 20:30:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA3252225E
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 20:28:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8911E22273
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 20:30:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726074AbhADU2v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Jan 2021 15:28:51 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50626 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725840AbhADU2v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jan 2021 15:28:51 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1609792045;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=JGwDtlV7tPH+Q2wgA6vAGbI2BojB6ZkCWJMkGaMOziI=;
-        b=Yjo5YMZ6SPcCZiznjiPzNKmrRkp6Xl+ZGx/q18cwijBtP/GhcI2mF+EpYBrT6gH5bB4YBR
-        XAYRCznXptZHgl7puLMl7NtpVvSyVv1FL5TwiO+N7Dsme7e5SqiLVrA6g5mwETPDH1iOnw
-        bQbfAkg7phCEZZ+u+dxBRJK1oxmYLv0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-405-GrhpHtUjMW-s9GzotF2F-g-1; Mon, 04 Jan 2021 15:27:21 -0500
-X-MC-Unique: GrhpHtUjMW-s9GzotF2F-g-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 30DCC801817;
-        Mon,  4 Jan 2021 20:27:20 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9A67E71C8F;
-        Mon,  4 Jan 2021 20:27:19 +0000 (UTC)
-Date:   Mon, 4 Jan 2021 15:27:14 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     wenli xie <wlxie7296@gmail.com>, xfs <linux-xfs@vger.kernel.org>,
-        chiluk@ubuntu.com
-Subject: Re: [PATCH] xfs: fix an ABBA deadlock in xfs_rename
-Message-ID: <20210104202714.GE254939@bfoster>
-References: <20210104194437.GJ38809@magnolia>
+        id S1726026AbhADUad (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Jan 2021 15:30:33 -0500
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:40677 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725840AbhADUad (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jan 2021 15:30:33 -0500
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailout.nyi.internal (Postfix) with ESMTP id C60945C01B2;
+        Mon,  4 Jan 2021 15:29:26 -0500 (EST)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute4.internal (MEProxy); Mon, 04 Jan 2021 15:29:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=anarazel.de; h=
+        date:from:to:cc:subject:message-id:references:mime-version
+        :content-type:in-reply-to; s=fm3; bh=L4o1gT+9Nmi0578JQUpjoRZokjP
+        2JxKpsVmdouqDL2Y=; b=VGQ0HerEoQmkJXMmFRbzzU4+J1AoRwwt0qwyTay2ZSx
+        5HK8iQdhi641M01S7QEONTthzMoXmjPKqQatTRjlvKi7A/Hiqsd3dGS4v4bXT3KU
+        Tzc9QwOTT3K2km12B/zoRjPIzrSiIb6j0xxKqhYoYNnk4fj/aI82Zypm5hpHVuD0
+        shsyxpjpPbyrWjcDPDy+H5sv2oyRdI/UYtyP7Qhms7WHeZg+7jmRCD0oeipwwpy6
+        PGTXWsa7z0f9oOB/NeTh6v+Fph/FOuulVX1hNilaQ6sSR11KnEAUC8A9kifHxXu/
+        mHxNLdm5AgOQZ+qQv+f74sC9CXSuwz8R8cMaNyIxYBA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-type:date:from:in-reply-to
+        :message-id:mime-version:references:subject:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=L4o1gT
+        +9Nmi0578JQUpjoRZokjP2JxKpsVmdouqDL2Y=; b=glCIRr71LLSuL9ADgG9Xa1
+        wtKFMKWtvFzUdYzJotxLLMBrnA/gosHywKpMb6uBrjXqdFdvccb91ty5xJnDJpHw
+        uOXe7mZ83fSingi18PcsKVyAYW4zjDwNVZUCvEKcz6QXA40j5WOdBiup66qFZYpQ
+        u9NgR/zy9vZWYqYtGFzovtlK3ZoRV0WTGQelBzLXljoawpb+Oo9qKMLm6QS8e8cs
+        UUc1A5LUG+pE4lD2XqIiaSAwQ4nSOXbn51Jipri+JrxYxEXJLplKk3kTmVwSgLKi
+        qF2ZWx5QLOVFagcqkEOWBvyfXXZYeQBGzQIfKleq2f0tjubOlmUqizFuOIXGFhzg
+        ==
+X-ME-Sender: <xms:pnrzXzyhJrO1xOFobn8G7-zRymlkjW6teC9ZEx23Cu7avuQajEUbBg>
+    <xme:pnrzX2vcNPYDHaonwd1-8vKRCjkmEWDU0GMfKeSchBTNHpjzQOtzggbpDwimWB7sR
+    LSMch-fESQTmOsb2g>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrvdeffedgudeflecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecunecujfgurhepfffhvffukfhfgggtuggjsehttd
+    ertddttddvnecuhfhrohhmpeetnhgurhgvshcuhfhrvghunhguuceorghnughrvghssegr
+    nhgrrhgriigvlhdruggvqeenucggtffrrghtthgvrhhnpedukefhkeelueegveetheelff
+    ffjeegleeuudelfeefuedtleffueejfffhueffudenucfkphepieejrdduiedtrddvudej
+    rddvhedtnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomh
+    eprghnughrvghssegrnhgrrhgriigvlhdruggv
+X-ME-Proxy: <xmx:pnrzXw0PGdeUb0WAG7DSLqsVlgBx3vc5-Gms6OWnuKK_kmmFEpVbDQ>
+    <xmx:pnrzXx_9WVqRoWRzMRlKMCMTzbMGt8GQGdiY1RRQYhsZ9pHiYXlmYg>
+    <xmx:pnrzXxMzYS89WK5idbN35yK-MYgpLXaY1DgwDRgBbt_Uiwlk2kghJg>
+    <xmx:pnrzX5FAbDIm30H8Jib0CLgS1agt5jZ1kBjQ_c1wnAHKx_Iu1Q_P1Q>
+Received: from intern.anarazel.de (c-67-160-217-250.hsd1.ca.comcast.net [67.160.217.250])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 3799D240057;
+        Mon,  4 Jan 2021 15:29:26 -0500 (EST)
+Date:   Mon, 4 Jan 2021 12:29:24 -0800
+From:   Andres Freund <andres@anarazel.de>
+To:     Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <willy@infradead.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: fallocate(FALLOC_FL_ZERO_RANGE_BUT_REALLY) to avoid unwritten
+ extents?
+Message-ID: <20210104202924.ugwjnbo376t3jad2@alap3.anarazel.de>
+References: <20201230062819.yinrrp6uwfegsqo3@alap3.anarazel.de>
+ <X/NpsZ8tSPkCwsYE@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210104194437.GJ38809@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <X/NpsZ8tSPkCwsYE@mit.edu>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 04, 2021 at 11:44:37AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> When overlayfs is running on top of xfs and the user unlinks a file in
-> the overlay, overlayfs will create a whiteout inode and ask xfs to
-> "rename" the whiteout file atop the one being unlinked.  If the file
-> being unlinked loses its one nlink, we then have to put the inode on the
-> unlinked list.
-> 
-> This requires us to grab the AGI buffer of the whiteout inode to take it
-> off the unlinked list (which is where whiteouts are created) and to grab
-> the AGI buffer of the file being deleted.  If the whiteout was created
-> in a higher numbered AG than the file being deleted, we'll lock the AGIs
-> in the wrong order and deadlock.
-> 
-> Therefore, grab all the AGI locks we think we'll need ahead of time, and
-> in the correct order.
-> 
-> Reported-by: wenli xie <wlxie7296@gmail.com>
-> Tested-by: wenli xie <wlxie7296@gmail.com>
-> Fixes: 93597ae8dac0 ("xfs: Fix deadlock between AGI and AGF when target_ip exists in xfs_rename()")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_inode.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 46 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index b7352bc4c815..dd419a1bc6ba 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3000,6 +3000,48 @@ xfs_rename_alloc_whiteout(
->  	return 0;
->  }
->  
-> +/*
-> + * For the general case of renaming files, lock all the AGI buffers we need to
-> + * handle bumping the nlink of the whiteout inode off the unlinked list and to
-> + * handle dropping the nlink of the target inode.  We have to do this in
-> + * increasing AG order to avoid deadlocks.
-> + */
-> +static int
-> +xfs_rename_lock_agis(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*wip,
-> +	struct xfs_inode	*target_ip)
-> +{
-> +	struct xfs_mount	*mp = tp->t_mountp;
-> +	struct xfs_buf		*bp;
-> +	xfs_agnumber_t		agi_locks[2] = { NULLAGNUMBER, NULLAGNUMBER };
-> +	int			error;
-> +
-> +	if (wip)
-> +		agi_locks[0] = XFS_INO_TO_AGNO(mp, wip->i_ino);
-> +
-> +	if (target_ip && VFS_I(target_ip)->i_nlink == 1)
-> +		agi_locks[1] = XFS_INO_TO_AGNO(mp, target_ip->i_ino);
-> +
-> +	if (agi_locks[0] != NULLAGNUMBER && agi_locks[1] != NULLAGNUMBER &&
-> +	    agi_locks[0] > agi_locks[1])
-> +		swap(agi_locks[0], agi_locks[1]);
-> +
-> +	if (agi_locks[0] != NULLAGNUMBER) {
-> +		error = xfs_read_agi(mp, tp, agi_locks[0], &bp);
-> +		if (error)
-> +			return error;
-> +	}
-> +
-> +	if (agi_locks[1] != NULLAGNUMBER) {
-> +		error = xfs_read_agi(mp, tp, agi_locks[1], &bp);
-> +		if (error)
-> +			return error;
-> +	}
-> +
-> +	return 0;
-> +}
+Hi,
 
-This all looks reasonable to me, but I wonder if we can simplify
-a bit by reusing the sorted inodes array we've already created earlier
-in xfs_rename(). E.g., something like:
+On 2021-01-04 14:17:05 -0500, Theodore Ts'o wrote:
+> One thing to note is that there are some devices which support a write
+> zeros operation, but where it is *less* performant than actually
+> writing zeros via DMA'ing zero pages.  Yes, that's insane.
+> Unfortunately, there are a insane devices out there....
 
-	for (i = 0; i < num_inodes; i++) {
-		if (inodes[i] != wip && inodes[i] != target_ip)
-			continue;
-		error = xfs_read_agi(...);
-		...
-	}
+That doesn't surprise me at all, unfortunately. I'm planning to send a
+proposal to allow disabling a device's use of fua for similar reasons...
 
-IOW, similar to how xfs_lock_inodes() and xfs_qm_vop_rename_dqattach()
-work.
 
-Brian
+> That doesn't meant that your proposal shouldn't be adopted.  But it
+> would be a good idea to have some kind of way to either allow some
+> kind of tuning knob to disable the user of zeroout (either in the
+> block device, file system, or in userspace), and/or some kind of way
+> to try to automatically figure out whether using zeroout is actually a
+> win, since most users aren't going to be up to adjusting a manual
+> tuning knob.
 
-> +
->  /*
->   * xfs_rename
->   */
-> @@ -3130,6 +3172,10 @@ xfs_rename(
->  		}
->  	}
->  
-> +	error = xfs_rename_lock_agis(tp, wip, target_ip);
-> +	if (error)
-> +		return error;
-> +
->  	/*
->  	 * Directory entry creation below may acquire the AGF. Remove
->  	 * the whiteout from the unlinked list first to preserve correct
-> 
+A block device know seems to make sense to me. There already is
+  /sys/block/*/queue/write_zeroes_max_bytes
+it seems like it could make sense to add a sibling entry to allow tuning
+that? Presumably with a quirks (as suggested by Matthew) to choose a
+sensible default?
 
+It's not quite analogous, but there's for
+max_hw_sectors_kb/max_sectors_kb and discard_max_bytes /
+discard_max_hw_bytes, and it seems like something vaguely in that
+direction could make sense?
+
+Greetings,
+
+Andres Freund
