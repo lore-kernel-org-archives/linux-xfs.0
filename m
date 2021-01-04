@@ -2,178 +2,278 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5830C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 23:20:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 823B7C433E6
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 23:33:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92B842255F
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 23:20:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5230522482
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 23:33:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727471AbhADXTz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Jan 2021 18:19:55 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:41112 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727234AbhADXTx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jan 2021 18:19:53 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 104N8pK7035383;
-        Mon, 4 Jan 2021 23:17:10 GMT
+        id S1726289AbhADXct (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Jan 2021 18:32:49 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:51140 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726098AbhADXcs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jan 2021 18:32:48 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 104NStH3180275;
+        Mon, 4 Jan 2021 23:31:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=4404Ut49WjuXqGqgQMYbqydPrceWr9QYH/0gripgiaM=;
- b=kY9c2CrQ2ozgCgPLN/YvampVq1U/1z9zq8m7vHU43NtjFwusfjwpo6Gm3z3gVyc0BFvH
- 113ErNNcwoaLntYltcA9tMyJHIYVSFhFFnYneWvHNXJDv0CwJl0ztYdKftMUZoqPu7Ax
- 5lq7ULUKxoTGJdY1pTZIcW4BGjQqRjTh+qJ+kJo0/E7rjjNvnn5KwWsAiGipo573wy7C
- l0kSq7LE4OF/Srok9DCEcgKp6Fxf7FhhGNli7xSb51v1BWISz0mW1nE6oJ1rVd37k3fN
- cxLBcmjAEhveZvUaeK01D43hm36rL4YLJRyaFDFxsXDuoPMM9T+WDIv/zQ6N4DpzULcq JQ== 
+ bh=vVs+eAl8TRmQb1+nM0NLAnLj6aIMlFfEaNzxzE8Ezkk=;
+ b=WQgb+pNNwg38aDMDNPrvVtZr1vKf9l3QiM15noDQGizT5uAMZzhL4aDFBJ2aOmwp52Lc
+ q1a+d8V+ZQiyTSnBL3n1665kXPBZ6SO0YCzHH3mSqoy6cptWqkz606ENRwrQJtIawyI2
+ qi+xpdVXjs+cUsU60m/IlWmpr730sJgXlxgPANR5WWmyhD/Aju/ReXb/2AKyQQJwSEwt
+ 1LkgiRe6cQ7G+hDYsuEzwx5BpBjXIgJ/1GPN+mD351UGVG1dFBLMYsWK22vfmN4Xh5i3
+ oCXECrhx3bHN5zL4YmZ0CoCA+NXGV/32ybTpCvcU0TjlGJX10ZAaTnA/Dan/9Qe9jhA6 Mg== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 35tgskpk3h-1
+        by aserp2130.oracle.com with ESMTP id 35tebappsu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 04 Jan 2021 23:17:10 +0000
+        Mon, 04 Jan 2021 23:31:50 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 104NAiu3015181;
-        Mon, 4 Jan 2021 23:15:10 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 35v1f7x7tp-1
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 104NVPbY056531;
+        Mon, 4 Jan 2021 23:31:49 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 35v1f7xgfg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 04 Jan 2021 23:15:10 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 104NF9oU022484;
-        Mon, 4 Jan 2021 23:15:09 GMT
+        Mon, 04 Jan 2021 23:31:49 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 104NM1eH026653;
+        Mon, 4 Jan 2021 23:22:01 GMT
 Received: from localhost (/10.159.152.204)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 Jan 2021 15:15:09 -0800
-Date:   Mon, 4 Jan 2021 15:15:08 -0800
+        with ESMTP ; Mon, 04 Jan 2021 15:22:00 -0800
+Date:   Mon, 4 Jan 2021 15:21:59 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     L A Walsh <xfs@tlinx.org>
-Cc:     bfoster@redhat.com, xfs-oss <xfs@e29208.dscx.akamaiedge.net>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: suggested patch to allow user to access their own file...
-Message-ID: <20210104231508.GP6918@magnolia>
-References: <5FEB204B.9090109@tlinx.org>
- <20210104170815.GB254939@bfoster>
- <20210104184442.GM6918@magnolia>
- <5FF3796E.5050409@tlinx.org>
+To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+        dan.j.williams@intel.com, david@fromorbit.com, hch@lst.de,
+        song@kernel.org, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
+        y-goto@fujitsu.com
+Subject: Re: [PATCH 09/10] xfs: Implement ->corrupted_range() for XFS
+Message-ID: <20210104232159.GQ6918@magnolia>
+References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
+ <20201230165601.845024-10-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5FF3796E.5050409@tlinx.org>
+In-Reply-To: <20201230165601.845024-10-ruansy.fnst@cn.fujitsu.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9854 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
  suspectscore=0 spamscore=0 bulkscore=0 adultscore=0 mlxscore=0
  malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101040140
+ engine=8.12.0-2009150000 definitions=main-2101040142
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9854 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 malwarescore=0
- phishscore=0 impostorscore=0 bulkscore=0 clxscore=1011 priorityscore=1501
- lowpriorityscore=0 adultscore=0 suspectscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101040140
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
+ priorityscore=1501 spamscore=0 mlxscore=0 clxscore=1015 bulkscore=0
+ lowpriorityscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101040142
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> Cc: bfoster@redhat.com, xfs-oss <xfs@e29208.dscx.akamaiedge.net>
-
-akamaiedge.net ??
-
-Er, did my mailer do that, or did yours?
-
-[re-adding linux-xfs to cc]
-
-On Mon, Jan 04, 2021 at 12:24:14PM -0800, L A Walsh wrote:
+On Thu, Dec 31, 2020 at 12:56:00AM +0800, Shiyang Ruan wrote:
+> This function is used to handle errors which may cause data lost in
+> filesystem.  Such as memory failure in fsdax mode.
 > 
+> In XFS, it requires "rmapbt" feature in order to query for files or
+> metadata which associated to the corrupted data.  Then we could call fs
+> recover functions to try to repair the corrupted data.(did not
+> implemented in this patchset)
 > 
-> On 2021/01/04 10:44, Darrick J. Wong wrote:
-> > This would open a huge security hole because users can use it to bypass
-> > directory access checks.
+> After that, the memory failure also needs to notify the processes who
+> are using those files.
+> 
+> Only support data device.  Realtime device is not supported for now.
+> 
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 > ---
-> 	Can't say I entirely disagree.  Though given the prevalence of that
-> behavior being "normal" on NT due to the "Bypass Traverse Checking" "right"
-> being on by default in a standard Windows setup,
-
-That might be true on Windows, but CAP_DAC_* isn't given out by default
-on Linux.
-
-> I would question it being a 'huge' security hole, though it would be
-> an unwanted change in behavior.
-
-I think people would consider it a hole of /some/ kind, since this patch
-wouldn't even require the process to hold CAP_DAC_* privilege.
-
-> 	If a user has a shell open to a directory that is made
-> inaccessible in the way you describe, though, simply staying connected
-> would seem to allow opening FD's that would be otherwise inaccessible.
+>  fs/xfs/xfs_fsops.c |   5 +++
+>  fs/xfs/xfs_mount.h |   1 +
+>  fs/xfs/xfs_super.c | 107 +++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 113 insertions(+)
 > 
-> 	Further, can't a user pass an open file descriptor through
-> some type of IPC call for the other side to use?  I may be misremembering
-> something similar, so I'd have to dig unless someone else remembers.
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index ef1d5bb88b93..0a2038875d32 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -501,6 +501,11 @@ xfs_do_force_shutdown(
+>  "Corruption of in-memory data detected.  Shutting down filesystem");
+>  		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
+>  			xfs_stack_trace();
+> +	} else if (flags & SHUTDOWN_CORRUPT_META) {
+> +		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
+> +"Corruption of on-disk metadata detected.  Shutting down filesystem");
+> +		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
+> +			xfs_stack_trace();
+>  	} else if (logerror) {
+>  		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
+>  			"Log I/O Error Detected. Shutting down filesystem");
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index dfa429b77ee2..8f0df67ffcc1 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -274,6 +274,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+>  #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
+>  #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
+>  #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
+> +#define SHUTDOWN_CORRUPT_META	0x0010  /* corrupt metadata on device */
+>  
+>  /*
+>   * Flags for xfs_mountfs
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index e3e229e52512..cbcad419bb9e 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -35,6 +35,11 @@
+>  #include "xfs_refcount_item.h"
+>  #include "xfs_bmap_item.h"
+>  #include "xfs_reflink.h"
+> +#include "xfs_alloc.h"
+> +#include "xfs_rmap.h"
+> +#include "xfs_rmap_btree.h"
+> +#include "xfs_rtalloc.h"
+> +#include "xfs_bit.h"
+>  
+>  #include <linux/magic.h>
+>  #include <linux/fs_context.h>
+> @@ -1103,6 +1108,107 @@ xfs_fs_free_cached_objects(
+>  	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
+>  }
+>  
+> +static int
+> +xfs_corrupt_helper(
+> +	struct xfs_btree_cur		*cur,
+> +	struct xfs_rmap_irec		*rec,
+> +	void				*data)
+> +{
+> +	struct xfs_inode		*ip;
+> +	struct address_space		*mapping;
+> +	int				rc = 0;
+> +	int				*flags = data;
+> +
+> +	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
+> +	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
+> +		// TODO check and try to fix metadata
+> +		rc = -EFSCORRUPTED;
+> +	} else {
+> +		/*
+> +		 * Get files that incore, filter out others that are not in use.
+> +		 */
+> +		rc = xfs_iget(cur->bc_mp, cur->bc_tp, rec->rm_owner,
+> +			      XFS_IGET_INCORE, 0, &ip);
+> +		if (rc || !ip)
+> +			return rc;
+> +		if (!VFS_I(ip)->i_mapping)
+> +			goto out;
+> +
+> +		mapping = VFS_I(ip)->i_mapping;
+> +		if (IS_DAX(VFS_I(ip)))
+> +			rc = mf_dax_mapping_kill_procs(mapping, rec->rm_offset,
+> +						       *flags);
+> +		else
+> +			mapping_set_error(mapping, -EFSCORRUPTED);
 
-Yes, they can do both of those things, since the Unix DAC only checks
-access at open time.
+Hm.  I don't know if EFSCORRUPTED is the right error code for corrupt
+file data, since we (so far) have only used it for corrupt metadata.
 
-> 	Though, in the following case:
-> > 
-> >  have a file /home/djwong/bin/pwnme, r/w by EBM (evil Bitcom minor).
-> > then someone issues chmod 0000 on a dir above it...
-> > Now I cannot access pwnme anymore, because I've been cut off from ~/bin.
-> ----
-> 	Oh...but if they hard linked it to someone else's open dir,
-> they still could.  It seems if you want to secure the object, you really
-> need to alter the perms on object, not on what might be 1 of
-> several paths to it.  It might be bind-mounted elsewhere as well.
+> +
+> +		// TODO try to fix data
+> +out:
+> +		xfs_irele(ip);
+> +	}
+> +
+> +	return rc;
+> +}
+> +
+> +static int
+> +xfs_fs_corrupted_range(
+> +	struct super_block	*sb,
+> +	struct block_device	*bdev,
+> +	loff_t			offset,
+> +	size_t			len,
+> +	void			*data)
+> +{
+> +	struct xfs_mount	*mp = XFS_M(sb);
+> +	struct xfs_trans	*tp = NULL;
+> +	struct xfs_btree_cur	*cur = NULL;
+> +	struct xfs_rmap_irec	rmap_low, rmap_high;
+> +	struct xfs_buf		*agf_bp = NULL;
+> +	xfs_fsblock_t		fsbno = XFS_B_TO_FSB(mp, offset);
+> +	xfs_filblks_t		bcnt = XFS_B_TO_FSB(mp, len);
+> +	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> +	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
+> +	int			error = 0;
+> +
+> +	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_bdev == bdev) {
+> +		xfs_warn(mp, "corrupted_range support not available for realtime device!");
+> +		return 0;
+> +	}
+> +	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_bdev == bdev &&
+> +	    mp->m_logdev_targp != mp->m_ddev_targp) {
+> +		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
+> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
+> +		return 0;
+> +	}
+> +
+> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> +		xfs_warn(mp, "corrupted_range needs rmapbt enabled!");
+> +		return 0;
+> +	}
+> +
+> +	error = xfs_trans_alloc_empty(mp, &tp);
+> +	if (error)
+> +		return error;
+> +
+> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
+> +	if (error)
+> +		return error;
+> +
+> +	cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agno);
+> +
+> +	/* Construct a range for rmap query */
+> +	memset(&rmap_low, 0, sizeof(rmap_low));
+> +	memset(&rmap_high, 0xFF, sizeof(rmap_high));
+> +	rmap_low.rm_startblock = rmap_high.rm_startblock = agbno;
+> +	rmap_low.rm_blockcount = rmap_high.rm_blockcount = bcnt;
+> +
+> +	error = xfs_rmap_query_range(cur, &rmap_low, &rmap_high, xfs_corrupt_helper, data);
+> +	if (error == -EFSCORRUPTED)
+> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
+> +
+> +	xfs_btree_del_cursor(cur, error);
+> +	xfs_trans_brelse(tp, agf_bp);
 
-I /did/ say that the BOFH omitted -r... ;)
-
-> 	Additionally you aren't dealing with removing more permissive
-> ACL's...  That said, you're still right in that it opens a new
-> potential security hole that anyone from MS would be used to/expecting
-> (that's not to be taken as a justification to do it, just as context
-> for expectations and level of the security hole.
-> 
-> 	Conversely, while users may have ownership rights in their
-> home dir, they may not have write permissions above that -- possibly
-> not even read permissions if that 'nt-right' is ever supported.
-> 
-> 	I'm guessing it's not easy to check if they might have path
-> permissions to get there, though the intervening files could be accessible
-> through a group ACL, that the user is a member of. Might
-> be good to keep such files only executable by owner.
-> 
-> 	So I'd beg off on supporting that change now, without some
-> other way of checking accessibility (which could be np-hard given
-> the number of ways its possible to get around a simple directory blockade).
-> 
-> 	Given the wide use of linux as a file server, I'm wondering
-> how one might support the extra 'right's from windows in some context.
-> 
-> 	Certainly, if the above scenario was used within a Linux-subsystem running
-> on windows, the resulting access modes could
-> be complicated.
-> 
-> 	This is way beyond this question (here, don't patch unless you
-> check other CAPs), but wouldn't it make sense to have the ability
-> to apply an LSM-model (or set of rules) only to some specific domain
-> (in this case path traversal/access over diverse file systems that
-> have different rules and capabilities)?
-
-Yeah.  As far as I can tell, CAP_DAC_OVERRIDE actually /does/ give you
-the security permissions that you want.  The sysadmin can then decide
-who gets to have that permission, so you /could/ propose doing that.
-
-> 	If it isn't possible already, I'm sure it soon will be
-> the case that users will be on systems that have different file
-> systems mounted.  If an xfs file system is mounted under an NT
-> file system and the user is running Windows, wouldn't NT-rights
-> (like ignoring traversal issues) apply by default, as NT would
-> be in charge of enforcing security as it walked through a locally
-> mounted XFS file system?
-
-When would NT be walking through a locally mounted XFS filesystem?
+The transaction needs to be committed (or cancelled) here, or else it
+leaks.
 
 --D
+
+> +	return error;
+> +}
+> +
+>  static const struct super_operations xfs_super_operations = {
+>  	.alloc_inode		= xfs_fs_alloc_inode,
+>  	.destroy_inode		= xfs_fs_destroy_inode,
+> @@ -1116,6 +1222,7 @@ static const struct super_operations xfs_super_operations = {
+>  	.show_options		= xfs_fs_show_options,
+>  	.nr_cached_objects	= xfs_fs_nr_cached_objects,
+>  	.free_cached_objects	= xfs_fs_free_cached_objects,
+> +	.corrupted_range	= xfs_fs_corrupted_range,
+>  };
+>  
+>  static int
+> -- 
+> 2.29.2
+> 
+> 
+> 
