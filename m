@@ -2,117 +2,164 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14FE6C433DB
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 17:10:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64697C43381
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 17:27:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5D9C224DE
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 17:10:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3635A2076D
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Jan 2021 17:27:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726163AbhADRJr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Jan 2021 12:09:47 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:29184 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726098AbhADRJq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jan 2021 12:09:46 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1609780100;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=RzeDgRDpSZ288RwSjcHTQSGtRUomGL0q+nMVShqbDvc=;
-        b=LieJano/kZyzjqSDtIvYfiF62ZrkPAcS1ILpFumwuVXsd3rzv2kNtQM+73jjAz7tECGLv9
-        JFhPr9TmDGx/VvvsufF/ISVOkDnEaPuuGt624tYBh1h+XPRwd136usUek+xNrWkI1cJ9ue
-        MnCyCkDTwPlwsTjJyMbN7I4L0qZjRmo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-412-_aMrFbwkMwSwykB6_AUJEg-1; Mon, 04 Jan 2021 12:08:18 -0500
-X-MC-Unique: _aMrFbwkMwSwykB6_AUJEg-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D93B919251A0;
-        Mon,  4 Jan 2021 17:08:17 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7BB5262461;
-        Mon,  4 Jan 2021 17:08:17 +0000 (UTC)
-Date:   Mon, 4 Jan 2021 12:08:15 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "L.A. Walsh" <xfs@tlinx.org>
-Cc:     xfs-oss <linux-xfs@vger.kernel.org>
-Subject: Re: suggested patch to allow user to access their own file...
-Message-ID: <20210104170815.GB254939@bfoster>
-References: <5FEB204B.9090109@tlinx.org>
+        id S1727317AbhADR1h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Jan 2021 12:27:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59296 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726189AbhADR1g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jan 2021 12:27:36 -0500
+Received: from mail-wm1-x329.google.com (mail-wm1-x329.google.com [IPv6:2a00:1450:4864:20::329])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E257BC061574;
+        Mon,  4 Jan 2021 09:26:55 -0800 (PST)
+Received: by mail-wm1-x329.google.com with SMTP id c133so19190460wme.4;
+        Mon, 04 Jan 2021 09:26:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:cc:references:from:autocrypt:subject:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=vhZcYxw85hQr217njjB88qNCX1pBfOIpilSgl/Wkqsk=;
+        b=lIvmXiWTK3tUPBqWNrMOzheIsKhz7ZK+Gj2aSDsVfam72rOuxAWCFOkzIuJi0UsLxv
+         xkwkBKgOZrfHKM85yWWIlww4h1ZvB7yUwzfOAux3kdtbgfSf7h8ivjwrcNh0p7y4HdNn
+         8itAJ2XuJmi6vDeWNuCqW8VYRh4gv8hdJgmnQoEqKbIWb+Z4KEXZAwuMyoNLr4IZR8jI
+         aTmi9sZmmEOpaM0ggqRxS6kazZP8OR3uyS96Lq6tPI2PfijJtUEAo1vQIINoegC9aWFy
+         S6BEMFntgGhUvDevrkxH3KYGt7t5GANVjxTQL/cE9qrO2Ya1x8yU1lytKf1xWEgbON8c
+         rbyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:references:from:autocrypt:subject
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=vhZcYxw85hQr217njjB88qNCX1pBfOIpilSgl/Wkqsk=;
+        b=R89yQVPBe9zPNaNQl9mzlOv6HbF/VlmlsMsVggmBS7xVQH/bKDC1G+tB1m6bRG/5Ro
+         1aMbVgv/mIHDR2qyfroYXiu/G4Ehe1xSoFe8KTs1JZ28phRzLYTBgyDdjiu91HtSjSa4
+         0H5SnLu62t91zlRxs0sq+R6vPhu6eWwSYWS34zjQ98Ag28bNLZsfLmE7F5F1RSNhtdrR
+         6XggWy2CI+dZLI3DwbGgNXhhKWnVquN9wXcL9SNrdXTQ89GIdOPfOPDoEWuXWNr3bTVs
+         BB+Ot7Q6/LESowPwk/25+6swQLHIh4mrRsikx3dRngz195xeUHVTAEDxlUhdyPYc0Q4Q
+         qTdw==
+X-Gm-Message-State: AOAM530gbRC2rybgYFCurWYF3oyFzyJSEi67AzJLEgxT/KrsgegYR3gA
+        ZkSguTF79uIQd183DS4EAV0eSW+uqZSQr7w0
+X-Google-Smtp-Source: ABdhPJwKi+A2PZ7gJsqOn5Ymq1PeYPvYx8txZ71YhsB/T4YTc39zWcuXj3Vp193rQV2REjlyyPEgXQ==
+X-Received: by 2002:a7b:cf30:: with SMTP id m16mr27225859wmg.145.1609781214488;
+        Mon, 04 Jan 2021 09:26:54 -0800 (PST)
+Received: from [192.168.8.190] ([85.255.233.205])
+        by smtp.gmail.com with ESMTPSA id n14sm5213wmi.1.2021.01.04.09.26.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 Jan 2021 09:26:54 -0800 (PST)
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+References: <cover.1609461359.git.asml.silence@gmail.com>
+ <b46b8c1943bbefcb90ea5c4dd9beaad8bbc15448.1609461359.git.asml.silence@gmail.com>
+ <20210104163755.GA22407@casper.infradead.org>
+From:   Pavel Begunkov <asml.silence@gmail.com>
+Autocrypt: addr=asml.silence@gmail.com; prefer-encrypt=mutual; keydata=
+ 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 bA==
+Subject: Re: [PATCH v2 2/7] bvec/iter: disallow zero-length segment bvecs
+Message-ID: <c535efd4-7c3d-22ab-9519-8bb34a10ae78@gmail.com>
+Date:   Mon, 4 Jan 2021 17:23:24 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5FEB204B.9090109@tlinx.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20210104163755.GA22407@casper.infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 29, 2020 at 04:25:47AM -0800, L.A. Walsh wrote:
-> xfs_io checks for CAP_SYS_ADMIN in order to open a
-> file_by_inode -- however, if the file one is opening
-> is owned by the user performing the call, the call should
-> not fail.
+On 04/01/2021 16:37, Matthew Wilcox wrote:
+> On Sat, Jan 02, 2021 at 03:17:34PM +0000, Pavel Begunkov wrote:
+>> --- a/Documentation/filesystems/porting.rst
+>> +++ b/Documentation/filesystems/porting.rst
+>> @@ -865,3 +865,10 @@ no matter what.  Everything is handled by the caller.
+>>  
+>>  clone_private_mount() returns a longterm mount now, so the proper destructor of
+>>  its result is kern_unmount() or kern_unmount_array().
+>> +
+>> +---
+>> +
+>> +**mandatory**
+>> +
+>> +zero-length bvec segments are disallowed, they must be filtered out before
+>> +passed on to an iterator.
 > 
-> (i.e. it opens the user's own file).
-> 
-> patch against 5.10.2 is attached.
-> 
-> It gets rid of some unnecessary error messages if you
-> run xfs_restore to restore one of your own files.
-> 
+> Why are you putting this in filesystems/porting?  Filesystems don't usually
 
-The current logic seems to go a ways back. Can you or somebody elaborate
-on whether there's any risks with loosening the permissions as such?
-E.g., any reason we might not want to allow regular users to perform
-handle lookups, etc.? If not, should some of the other _by_handle() ops
-get similar treatment?
+At least splice and a dozen of others do. As block apriori doesn't have them,
+it's mainly addressed to fs + net. 
 
-> --- fs/xfs/xfs_ioctl.c	2020-12-22 21:11:02.000000000 -0800
-> +++ fs/xfs/xfs_ioctl.c	2020-12-29 04:14:48.681102804 -0800
-> @@ -194,15 +194,21 @@
->  	struct dentry		*dentry;
->  	fmode_t			fmode;
->  	struct path		path;
-> +	bool conditional_perm = 0;
+> generate bvecs ... there's nothing in this current series that stops them.
 
-Variable name alignment and I believe we try to use true/false for
-boolean values.
+Yes, just mixing it with splice changes, which did all the work, looks
+awkward to me. Would you suggest another segregation for the patches?
 
->  
-> -	if (!capable(CAP_SYS_ADMIN))
-> -		return -EPERM;
-> +	if (!capable(CAP_SYS_ADMIN)) conditional_perm=1;
+> I'd suggest Documentation/block/biovecs.rst or biodoc.rst (and frankly,
+> biodoc.rst needs a good cleanup)
 
-This should remain two lines..
+I'll add a note to biovecs.rst
 
->  
->  	dentry = xfs_handlereq_to_dentry(parfilp, hreq);
->  	if (IS_ERR(dentry))
->  		return PTR_ERR(dentry);
->  	inode = d_inode(dentry);
->  
-> +	/* only allow user access to their own file */
-> +	if (conditional_perm && !inode_owner_or_capable(inode)) {
-> +		error = -EPERM;
-> +		goto out_dput;
-> +	}
-> +
-
-... but then again, is there any reason we couldn't just move the
-capable() check down to this hunk and avoid the new variable?
-
-Brian
-
->  	/* Restrict xfs_open_by_handle to directories & regular files. */
->  	if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode))) {
->  		error = -EPERM;
-
+-- 
+Pavel Begunkov
