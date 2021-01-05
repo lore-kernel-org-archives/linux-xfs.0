@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9AD6C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 00:56:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB867C43333
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 00:56:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88A012256F
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 00:56:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8A41225AC
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 00:56:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727555AbhAEA42 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Jan 2021 19:56:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38152 "EHLO mail.kernel.org"
+        id S1727656AbhAEA43 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Jan 2021 19:56:29 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38160 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726330AbhAEA42 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Jan 2021 19:56:28 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 775A0225AB;
-        Tue,  5 Jan 2021 00:55:09 +0000 (UTC)
+        id S1727514AbhAEA43 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Jan 2021 19:56:29 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BE7C122955;
+        Tue,  5 Jan 2021 00:55:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609808109;
-        bh=msnnxCLzPo2DYdIqcuEghPRawTGVOjAsHU3RAs/RXao=;
+        s=k20201202; t=1609808110;
+        bh=SwwC2tQmuzx2ECIC/aYAUe8sOHWx78XkiAxTAUcoLvs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Hohi5mOdPwavJo+wbNII2B4bRm29y9bMy1xU4F+Jc0L/sOVNQ1trYDZZpnkX/WiPg
-         TZokPX7i3KW5A6qMfqYlNo0CcI4aybTOLGBHD9wALvx1J8DilxPMxmG3OwPBUTAMAq
-         0Pbedq2YIJ2graQdydC7vnPV+w6iIgMnjZsfkqTsB/VMVQxPK6Htv4EA6AmuM1xkx5
-         PzYgNOn1ozvjDbtHlotxJRK4GJ78x9ldPbO601uaEuWL7bOkgs6ZlhoOzeSfPOQLR2
-         J2wtQdpijkV8cUN03mkDjecwwx0fXpzgLuJf2qx6Y35nJ4YPTU6rBdU5fH2Mfa91Mj
-         tiXtmTpPToffA==
+        b=Srdu4HxF1Bb9lEnR7JzmGw/pdJjgAOcpxaS4Evh8wreQR3/eN7eUek7cPFXHkcOaX
+         lP184SXS2dHBX1l/m6Xd4qXPeYU4JGmMqZHXpHz/62wMMlOf0dL21hMP0mh4xZFYrV
+         9JXvXG7cNpFUn1xaxZHWtAbrVZdWzyWRe2/n4Mz0NBqC0ZpRVkCsF4zucS4Bgq4luo
+         SMClFaef9S/mS8BcRvOz3HVeAsvDIYQWYC6Gbxjt2fQ65CbGPeOopGXTTzKkT9UQTb
+         l9n/P27mrwnTgHDHwtEkxO2GafO5eYYSKRVI3erirNDRVNH1/EGucH2wSlAOpnUTan
+         rUAdXIJZ1qfcw==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
         Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/13] fs: drop redundant checks from __writeback_single_inode()
-Date:   Mon,  4 Jan 2021 16:54:48 -0800
-Message-Id: <20210105005452.92521-10-ebiggers@kernel.org>
+Subject: [PATCH 13/13] xfs: implement lazytime_expired
+Date:   Mon,  4 Jan 2021 16:54:52 -0800
+Message-Id: <20210105005452.92521-14-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210105005452.92521-1-ebiggers@kernel.org>
 References: <20210105005452.92521-1-ebiggers@kernel.org>
@@ -50,32 +50,63 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-I_DIRTY_TIME and I_DIRTY_INODE are mutually exclusive in i_state.  So
-after seeing that I_DIRTY_TIME is set, there's no point in checking for
-I_DIRTY_INODE, as it must be clear.
+Implement the new ->lazytime_expired method to get notified of lazytime
+timestamp expirations, instead of relying on ->dirty_inode(inode,
+I_DIRTY_SYNC) which is potentially ambiguous.
 
-Separately, wbc->for_sync implies wbc->sync_mode == WB_SYNC_ALL.
-So there's no need to check for both.  Just check for WB_SYNC_ALL.
+This fixes a bug where XFS didn't write lazytime timestamps to disk upon
+a sync(), or after 24 hours (dirtytime_expire_interval * 2).  This is
+because it only wrote the timestamps if I_DIRTY_TIME was set in i_state.
+But actually when an inode's timestamps expire without the inode being
+marked I_DIRTY_SYNC first, then ->dirty_inode isn't called until
+__writeback_single_inode() has already cleared I_DIRTY_TIME in i_state.
 
+The new ->lazytime_expired method is unambiguous, so it removes any need
+to check for I_DIRTY_TIME, which avoids this bug.
+
+I've written an xfstest which reproduces this bug.
+
+Fixes: c3b1b13190ae ("xfs: implement the lazytime mount option")
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- fs/fs-writeback.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/xfs_super.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index f20daf4f5e19b..3f5a589399afe 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -1482,8 +1482,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 813be879a5e51..0b7623907b264 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -666,19 +666,13 @@ xfs_fs_destroy_inode(
+ }
  
- 	dirty = inode->i_state & I_DIRTY;
- 	if ((inode->i_state & I_DIRTY_TIME) &&
--	    ((dirty & I_DIRTY_INODE) ||
--	     wbc->sync_mode == WB_SYNC_ALL || wbc->for_sync ||
-+	    (wbc->sync_mode == WB_SYNC_ALL ||
- 	     time_after(jiffies, inode->dirtied_time_when +
- 			dirtytime_expire_interval * HZ))) {
- 		dirty |= I_DIRTY_TIME;
+ static void
+-xfs_fs_dirty_inode(
+-	struct inode			*inode,
+-	int				flag)
++xfs_fs_lazytime_expired(
++	struct inode			*inode)
+ {
+ 	struct xfs_inode		*ip = XFS_I(inode);
+ 	struct xfs_mount		*mp = ip->i_mount;
+ 	struct xfs_trans		*tp;
+ 
+-	if (!(inode->i_sb->s_flags & SB_LAZYTIME))
+-		return;
+-	if (flag != I_DIRTY_SYNC || !(inode->i_state & I_DIRTY_TIME))
+-		return;
+-
+ 	if (xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp))
+ 		return;
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+@@ -1108,7 +1102,7 @@ xfs_fs_free_cached_objects(
+ static const struct super_operations xfs_super_operations = {
+ 	.alloc_inode		= xfs_fs_alloc_inode,
+ 	.destroy_inode		= xfs_fs_destroy_inode,
+-	.dirty_inode		= xfs_fs_dirty_inode,
++	.lazytime_expired	= xfs_fs_lazytime_expired,
+ 	.drop_inode		= xfs_fs_drop_inode,
+ 	.put_super		= xfs_fs_put_super,
+ 	.sync_fs		= xfs_fs_sync_fs,
 -- 
 2.30.0
 
