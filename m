@@ -2,201 +2,257 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4CC1C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 21:50:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67732C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 22:04:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4875622D74
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 21:50:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D88222D75
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 22:04:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729647AbhAEVu2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Jan 2021 16:50:28 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:53594 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729629AbhAEVu2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jan 2021 16:50:28 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 105Lnd4Q046683
-        for <linux-xfs@vger.kernel.org>; Tue, 5 Jan 2021 21:49:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=OE4Cwgdg0rp250fYHVCAfp/fpLnJIk0eCgRzz1ynHjk=;
- b=Fm89HlZjwuhrNpGXOWRjwY3R3V5JFOjeFCrXKN+BSiG5CpxeTxm2CPluND+yT29QVo9x
- bqHhen2oD3e10Ps9aGXYxJlNnmPuEQaVPK9myqQDI7qGMbvd4LoQQfO3IZyxZIWag0dr
- X+exAhrtShx5hZFVEW4nIZD6dxQ6YNdBWAKvT42oKiMrGEF347NpBlehbHl1aYMPAzYc
- oP9Wo6qiPUcAe21RUoqUKY0aIU/IJsYu/QgKUEaz+kPEeksvNnWNUct0k04fGv91Qh/7
- aUwME6pj3vMRVjwf8/lWCsU6YijnCZUQTaDUleKAIXdJnZUjpCz7GoVqlKPpU0SJVcFG 4w== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 35tg8r2y14-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Jan 2021 21:49:47 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 105LjQd2084241
-        for <linux-xfs@vger.kernel.org>; Tue, 5 Jan 2021 21:49:46 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 35vct6ega8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Jan 2021 21:49:46 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 105Lnkeu026157
-        for <linux-xfs@vger.kernel.org>; Tue, 5 Jan 2021 21:49:46 GMT
-Received: from [192.168.1.226] (/67.1.214.41)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 05 Jan 2021 21:49:46 +0000
-Subject: Re: [PATCH v14 14/15] xfs: Add delattr mount option
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20201218072917.16805-1-allison.henderson@oracle.com>
- <20201218072917.16805-15-allison.henderson@oracle.com>
- <20210105054626.GV6918@magnolia>
-From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <18c7472c-598a-624a-7043-0a79ab017919@oracle.com>
-Date:   Tue, 5 Jan 2021 14:49:43 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1730129AbhAEWDt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Jan 2021 17:03:49 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:34796 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730122AbhAEWDt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jan 2021 17:03:49 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1609884142;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=g3L3LLJGU1g6CnBt8Zi9YtJ0mpwkeYoMvv2FC5rl5jk=;
+        b=VnnsmXOuS9pVLQiitAJ1ep2hMsubkp4Ui7vvFshNdQmCOKwTPQNf5BFX9WM3VaD4uPEZou
+        Iary/zGY3hsZyxAwyQ6qiC3oGrQgySR2G167xLVc/1VZC2VH5cn0BGJgI0nlA86ZfFRXBH
+        zK48NX9h4ALyFiiGDzZWncYI57LoZWA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-392-qNLlmzDbNLqfvGAuzBOo2g-1; Tue, 05 Jan 2021 17:02:20 -0500
+X-MC-Unique: qNLlmzDbNLqfvGAuzBOo2g-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 71919801817
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Jan 2021 22:02:19 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3ECBA5D9D2
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Jan 2021 22:02:19 +0000 (UTC)
+To:     xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfsprogs: cosmetic changes to libxfs_inode_alloc
+Message-ID: <a06e071c-be56-2e7d-cceb-82030f55e1f3@redhat.com>
+Date:   Tue, 5 Jan 2021 16:02:18 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.6.0
 MIME-Version: 1.0
-In-Reply-To: <20210105054626.GV6918@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9855 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- phishscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101050126
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9855 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 phishscore=0 bulkscore=0
- spamscore=0 impostorscore=0 suspectscore=0 adultscore=0 mlxlogscore=999
- mlxscore=0 malwarescore=0 lowpriorityscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101050126
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+This pre-patch helps make the next libxfs-sync for 5.11 a bit
+more clear.
 
+In reality, the libxfs_inode_alloc function matches the kernel's
+xfs_dir_ialloc so rename it for clarity before the rest of the
+sync, and change several variable names for the same reason.
 
-On 1/4/21 10:46 PM, Darrick J. Wong wrote:
-> On Fri, Dec 18, 2020 at 12:29:16AM -0700, Allison Henderson wrote:
->> This patch adds a mount option to enable delayed attributes. Eventually
->> this can be removed when delayed attrs becomes permanent.
->>
->> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr.h | 2 +-
->>   fs/xfs/xfs_mount.h       | 1 +
->>   fs/xfs/xfs_super.c       | 6 +++++-
->>   fs/xfs/xfs_xattr.c       | 2 ++
->>   4 files changed, 9 insertions(+), 2 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
->> index 4838094..edd008d 100644
->> --- a/fs/xfs/libxfs/xfs_attr.h
->> +++ b/fs/xfs/libxfs/xfs_attr.h
->> @@ -30,7 +30,7 @@ struct xfs_attr_list_context;
->>   
->>   static inline bool xfs_hasdelattr(struct xfs_mount *mp)
-> 
-> /me had a brain fart just now that ... since struct xfs_delattr_context
-> is ultimately going to be absorbed into struct xfs_attr_item, we really
-> should have called the control knob part of this 'logattr' instead of
-> 'delattr', because that's (IMIO) a better explanation of what the mount
-> option actually does for users.
-That's fine, honestly I figured I'd just throw some name out there just 
-to get it working initially, and if someone wants a different name, 
-they'd say so.  It is a temporary option after all.  :-)
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> 
-> An even better name would have been "logged attributes replayable"
-> because then you could use the prefix XFS_LARP for things. :P
-Yeah, I think the name scheme was something we mulled about a while ago, 
-though didn't really have a solid opinion on yet.  But we did feel that 
-DAS and DAC are sort of close to DA and DAX.
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 742aebc8..01a62daa 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -156,7 +156,7 @@ typedef struct cred {
+ 	gid_t	cr_gid;
+ } cred_t;
+ 
+-extern int	libxfs_inode_alloc (struct xfs_trans **, struct xfs_inode *,
++extern int	libxfs_dir_ialloc (struct xfs_trans **, struct xfs_inode *,
+ 				mode_t, nlink_t, xfs_dev_t, struct cred *,
+ 				struct fsxattr *, struct xfs_inode **);
+ extern void	libxfs_trans_inode_alloc_buf (struct xfs_trans *,
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 252cf91e..62eadaea 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -531,9 +531,9 @@ error0:	/* Cancel bmap, cancel trans */
+  * other in repair - now there is just the one.
+  */
+ int
+-libxfs_inode_alloc(
+-	xfs_trans_t	**tp,
+-	xfs_inode_t	*pip,
++libxfs_dir_ialloc(
++	xfs_trans_t	**tpp,
++	xfs_inode_t	*dp,
+ 	mode_t		mode,
+ 	nlink_t		nlink,
+ 	xfs_dev_t	rdev,
+@@ -541,16 +541,18 @@ libxfs_inode_alloc(
+ 	struct fsxattr	*fsx,
+ 	xfs_inode_t	**ipp)
+ {
+-	xfs_buf_t	*ialloc_context;
++	xfs_trans_t	*tp;
+ 	xfs_inode_t	*ip;
+-	int		error;
++	xfs_buf_t	*ialloc_context = NULL;
++	int		code;
++
++	tp = *tpp;
+ 
+-	ialloc_context = (xfs_buf_t *)0;
+-	error = libxfs_ialloc(*tp, pip, mode, nlink, rdev, cr, fsx,
++	code = libxfs_ialloc(tp, dp, mode, nlink, rdev, cr, fsx,
+ 			   &ialloc_context, &ip);
+-	if (error) {
++	if (code) {
+ 		*ipp = NULL;
+-		return error;
++		return code;
+ 	}
+ 	if (!ialloc_context && !ip) {
+ 		*ipp = NULL;
+@@ -559,25 +561,25 @@ libxfs_inode_alloc(
+ 
+ 	if (ialloc_context) {
+ 
+-		xfs_trans_bhold(*tp, ialloc_context);
++		xfs_trans_bhold(tp, ialloc_context);
+ 
+-		error = xfs_trans_roll(tp);
+-		if (error) {
++		code = xfs_trans_roll(tpp);
++		if (code) {
+ 			fprintf(stderr, _("%s: cannot duplicate transaction: %s\n"),
+-				progname, strerror(error));
++				progname, strerror(code));
+ 			exit(1);
+ 		}
+-		xfs_trans_bjoin(*tp, ialloc_context);
+-		error = libxfs_ialloc(*tp, pip, mode, nlink, rdev, cr,
++		xfs_trans_bjoin(tp, ialloc_context);
++		code = libxfs_ialloc(tp, dp, mode, nlink, rdev, cr,
+ 				   fsx, &ialloc_context, &ip);
+ 		if (!ip)
+-			error = -ENOSPC;
+-		if (error)
+-			return error;
++			code = -ENOSPC;
++		if (code)
++			return code;
+ 	}
+ 
+ 	*ipp = ip;
+-	return error;
++	return code;
+ }
+ 
+ void
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 0fa6ffb0..8439efc4 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -453,7 +453,7 @@ parseproto(
+ 	case IF_REGULAR:
+ 		buf = newregfile(pp, &len);
+ 		tp = getres(mp, XFS_B_TO_FSB(mp, len));
+-		error = -libxfs_inode_alloc(&tp, pip, mode|S_IFREG, 1, 0,
++		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFREG, 1, 0,
+ 					   &creds, fsxp, &ip);
+ 		if (error)
+ 			fail(_("Inode allocation failed"), error);
+@@ -477,7 +477,7 @@ parseproto(
+ 		}
+ 		tp = getres(mp, XFS_B_TO_FSB(mp, llen));
+ 
+-		error = -libxfs_inode_alloc(&tp, pip, mode|S_IFREG, 1, 0,
++		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFREG, 1, 0,
+ 					  &creds, fsxp, &ip);
+ 		if (error)
+ 			fail(_("Inode pre-allocation failed"), error);
+@@ -498,7 +498,7 @@ parseproto(
+ 		tp = getres(mp, 0);
+ 		majdev = getnum(getstr(pp), 0, 0, false);
+ 		mindev = getnum(getstr(pp), 0, 0, false);
+-		error = -libxfs_inode_alloc(&tp, pip, mode|S_IFBLK, 1,
++		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFBLK, 1,
+ 				IRIX_MKDEV(majdev, mindev), &creds, fsxp, &ip);
+ 		if (error) {
+ 			fail(_("Inode allocation failed"), error);
+@@ -513,7 +513,7 @@ parseproto(
+ 		tp = getres(mp, 0);
+ 		majdev = getnum(getstr(pp), 0, 0, false);
+ 		mindev = getnum(getstr(pp), 0, 0, false);
+-		error = -libxfs_inode_alloc(&tp, pip, mode|S_IFCHR, 1,
++		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFCHR, 1,
+ 				IRIX_MKDEV(majdev, mindev), &creds, fsxp, &ip);
+ 		if (error)
+ 			fail(_("Inode allocation failed"), error);
+@@ -525,7 +525,7 @@ parseproto(
+ 
+ 	case IF_FIFO:
+ 		tp = getres(mp, 0);
+-		error = -libxfs_inode_alloc(&tp, pip, mode|S_IFIFO, 1, 0,
++		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFIFO, 1, 0,
+ 				&creds, fsxp, &ip);
+ 		if (error)
+ 			fail(_("Inode allocation failed"), error);
+@@ -537,7 +537,7 @@ parseproto(
+ 		buf = getstr(pp);
+ 		len = (int)strlen(buf);
+ 		tp = getres(mp, XFS_B_TO_FSB(mp, len));
+-		error = -libxfs_inode_alloc(&tp, pip, mode|S_IFLNK, 1, 0,
++		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFLNK, 1, 0,
+ 				&creds, fsxp, &ip);
+ 		if (error)
+ 			fail(_("Inode allocation failed"), error);
+@@ -548,7 +548,7 @@ parseproto(
+ 		break;
+ 	case IF_DIRECTORY:
+ 		tp = getres(mp, 0);
+-		error = -libxfs_inode_alloc(&tp, pip, mode|S_IFDIR, 1, 0,
++		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFDIR, 1, 0,
+ 				&creds, fsxp, &ip);
+ 		if (error)
+ 			fail(_("Inode allocation failed"), error);
+@@ -640,7 +640,7 @@ rtinit(
+ 
+ 	memset(&creds, 0, sizeof(creds));
+ 	memset(&fsxattrs, 0, sizeof(fsxattrs));
+-	error = -libxfs_inode_alloc(&tp, NULL, S_IFREG, 1, 0,
++	error = -libxfs_dir_ialloc(&tp, NULL, S_IFREG, 1, 0,
+ 					&creds, &fsxattrs, &rbmip);
+ 	if (error) {
+ 		fail(_("Realtime bitmap inode allocation failed"), error);
+@@ -657,7 +657,7 @@ rtinit(
+ 	libxfs_trans_log_inode(tp, rbmip, XFS_ILOG_CORE);
+ 	libxfs_log_sb(tp);
+ 	mp->m_rbmip = rbmip;
+-	error = -libxfs_inode_alloc(&tp, NULL, S_IFREG, 1, 0,
++	error = -libxfs_dir_ialloc(&tp, NULL, S_IFREG, 1, 0,
+ 					&creds, &fsxattrs, &rsumip);
+ 	if (error) {
+ 		fail(_("Realtime summary inode allocation failed"), error);
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 682356f0..f69afac9 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -919,7 +919,7 @@ mk_orphanage(xfs_mount_t *mp)
+ 		do_error(_("%d - couldn't iget root inode to make %s\n"),
+ 			i, ORPHANAGE);*/
+ 
+-	error = -libxfs_inode_alloc(&tp, pip, mode|S_IFDIR,
++	error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFDIR,
+ 					1, 0, &zerocr, &zerofsx, &ip);
+ 	if (error) {
+ 		do_error(_("%s inode allocation failed %d\n"),
 
-I am ok with LARP.  I'll probably end up mistakenly referring to it as a 
-"Log Action Re-Play", but I'm fine with that.  :-)  Just as long as 
-everyone else is. Names seem to be something that everyone is really 
-opinionated on, and it peppers little changes all over the set, so it 
-would be nice to have a semi solid consensus  :-)
-
-Thanks for the reviews!
-
-Allison
-
-> 
-> Comments? :)
-> 
-> --D
-> 
-> 
->>   {
->> -	return false;
->> +	return mp->m_flags & XFS_MOUNT_DELATTR;
->>   }
->>   
->>   /*
->> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
->> index dfa429b..4794f27 100644
->> --- a/fs/xfs/xfs_mount.h
->> +++ b/fs/xfs/xfs_mount.h
->> @@ -254,6 +254,7 @@ typedef struct xfs_mount {
->>   #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
->>   #define XFS_MOUNT_DAX_ALWAYS	(1ULL << 26)
->>   #define XFS_MOUNT_DAX_NEVER	(1ULL << 27)
->> +#define XFS_MOUNT_DELATTR	(1ULL << 28)	/* enable delayed attributes */
->>   
->>   /*
->>    * Max and min values for mount-option defined I/O
->> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->> index 813be87..72169ee 100644
->> --- a/fs/xfs/xfs_super.c
->> +++ b/fs/xfs/xfs_super.c
->> @@ -92,7 +92,7 @@ enum {
->>   	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
->>   	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
->>   	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
->> -	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum,
->> +	Opt_discard, Opt_nodiscard, Opt_dax, Opt_dax_enum, Opt_delattr
->>   };
->>   
->>   static const struct fs_parameter_spec xfs_fs_parameters[] = {
->> @@ -137,6 +137,7 @@ static const struct fs_parameter_spec xfs_fs_parameters[] = {
->>   	fsparam_flag("nodiscard",	Opt_nodiscard),
->>   	fsparam_flag("dax",		Opt_dax),
->>   	fsparam_enum("dax",		Opt_dax_enum, dax_param_enums),
->> +	fsparam_flag("delattr",		Opt_delattr),
->>   	{}
->>   };
->>   
->> @@ -1292,6 +1293,9 @@ xfs_fs_parse_param(
->>   		xfs_mount_set_dax_mode(mp, result.uint_32);
->>   		return 0;
->>   #endif
->> +	case Opt_delattr:
->> +		mp->m_flags |= XFS_MOUNT_DELATTR;
->> +		return 0;
->>   	/* Following mount options will be removed in September 2025 */
->>   	case Opt_ikeep:
->>   		xfs_warn(mp, "%s mount option is deprecated.", param->key);
->> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
->> index 9b0c790..8ec61df 100644
->> --- a/fs/xfs/xfs_xattr.c
->> +++ b/fs/xfs/xfs_xattr.c
->> @@ -8,6 +8,8 @@
->>   #include "xfs_shared.h"
->>   #include "xfs_format.h"
->>   #include "xfs_log_format.h"
->> +#include "xfs_trans_resv.h"
->> +#include "xfs_mount.h"
->>   #include "xfs_da_format.h"
->>   #include "xfs_inode.h"
->>   #include "xfs_da_btree.h"
->> -- 
->> 2.7.4
->>
