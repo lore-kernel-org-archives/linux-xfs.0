@@ -2,197 +2,154 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9F04C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 09:02:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18178C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 11:02:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC2092255F
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 09:02:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAAEA229C6
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 11:02:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725831AbhAEJCx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Jan 2021 04:02:53 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:43511 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725822AbhAEJCw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jan 2021 04:02:52 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1609837285;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=pnuCFGuJ4IwBrNkY+vsONp8QIqfhHtVFbhZUNPAwNAQ=;
-        b=J8/E/i63oStbFFoSzSZeWlcdVLZoC5sHVy2+EwBVAHgCEmcnEEdShEZfDwLihrVQEt7qzo
-        tJ1zGTPwOp2wKAzMh5O9kh6A1oK9q1a4CVWnIp19wFYCc5+OGXKWb4B/C4Eh/RUysHZh4K
-        cN1cpPStyHySWOATfudZzmsdiskcSr0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-492-S0fW4BDfMqaBD9qeu1MGug-1; Tue, 05 Jan 2021 04:01:23 -0500
-X-MC-Unique: S0fW4BDfMqaBD9qeu1MGug-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2098D107ACE6;
-        Tue,  5 Jan 2021 09:01:22 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 782EB1349A;
-        Tue,  5 Jan 2021 09:01:21 +0000 (UTC)
-Date:   Tue, 5 Jan 2021 04:01:19 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     wenli xie <wlxie7296@gmail.com>, xfs <linux-xfs@vger.kernel.org>,
-        chiluk@ubuntu.com
-Subject: Re: [PATCH] xfs: fix an ABBA deadlock in xfs_rename
-Message-ID: <20210105090119.GA284433@bfoster>
-References: <20210104194437.GJ38809@magnolia>
- <20210104202714.GE254939@bfoster>
- <20210105011432.GS6918@magnolia>
+        id S1728959AbhAELCF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Jan 2021 06:02:05 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:11240 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728175AbhAELCD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jan 2021 06:02:03 -0500
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 105AVu1N038618;
+        Tue, 5 Jan 2021 06:01:17 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=p15zEV4D+9XYfzCqfaNsH+8wxq6VnaBwWqF0rU+ciI4=;
+ b=XbNtsGo8Kv4SQzajQLMR7i094c9kAgLbaCReqWihrI44V7OG/ubRO9wjyvmK8gN3fkek
+ SbU4IvwekjZg2g0sXhkegLRMdNfGtp/KedcyJNIrWjHnkuHXmaFlKk5DKdIws8gA0+dX
+ U6zfb60ZOBOJ/zJQ7lxkV3ffkNfjaFZGI+dBmaGMDnlS7MU8eQQyLAD+GGzHENPgp6FX
+ LTB8V5fw/JnpY2ybUKUeDC8DHBmkT00KVkEah5NolfV7/5P/tUHIzpiomH1cSULK8kO/
+ nTlvOHk3+2cCDerfaQGVxNqcBpvXXc6ZkRIAony8DoHeF/I0uyOfIONWV0HiG1S/RhG7 kQ== 
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 35vp6s9324-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 05 Jan 2021 06:01:16 -0500
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 105AwRLF003340;
+        Tue, 5 Jan 2021 11:00:31 GMT
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+        by ppma03ams.nl.ibm.com with ESMTP id 35tgf8assu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 05 Jan 2021 11:00:31 +0000
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 105B0TvI48759162
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 5 Jan 2021 11:00:29 GMT
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0B5B7A4066;
+        Tue,  5 Jan 2021 11:00:29 +0000 (GMT)
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id BE854A407A;
+        Tue,  5 Jan 2021 11:00:27 +0000 (GMT)
+Received: from [9.199.32.130] (unknown [9.199.32.130])
+        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Tue,  5 Jan 2021 11:00:27 +0000 (GMT)
+Subject: Re: [PATCHv2 1/2] common/rc: Add whitelisted FS support in
+ _require_scratch_swapfile()
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eryu Guan <guan@eryu.me>
+Cc:     fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, anju@linux.vnet.ibm.com
+References: <f161a49e6e3476d83c35b8e6a111644110ec4c8c.1608094988.git.riteshh@linux.ibm.com>
+ <3bd1f738-93b7-038d-6db9-7bf6a330b1ea@linux.ibm.com>
+ <20201220153906.GC3853@desktop> <20210104182545.GF6908@magnolia>
+From:   Ritesh Harjani <riteshh@linux.ibm.com>
+Message-ID: <24b16894-0ab5-b769-d05e-e55fa334706e@linux.ibm.com>
+Date:   Tue, 5 Jan 2021 16:30:27 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210105011432.GS6918@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <20210104182545.GF6908@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
+ definitions=2021-01-05_01:2021-01-05,2021-01-05 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 clxscore=1015
+ lowpriorityscore=0 impostorscore=0 phishscore=0 malwarescore=0
+ priorityscore=1501 adultscore=0 bulkscore=0 spamscore=0 mlxscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101050061
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 04, 2021 at 05:14:32PM -0800, Darrick J. Wong wrote:
-> On Mon, Jan 04, 2021 at 03:27:14PM -0500, Brian Foster wrote:
-> > On Mon, Jan 04, 2021 at 11:44:37AM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > When overlayfs is running on top of xfs and the user unlinks a file in
-> > > the overlay, overlayfs will create a whiteout inode and ask xfs to
-> > > "rename" the whiteout file atop the one being unlinked.  If the file
-> > > being unlinked loses its one nlink, we then have to put the inode on the
-> > > unlinked list.
-> > > 
-> > > This requires us to grab the AGI buffer of the whiteout inode to take it
-> > > off the unlinked list (which is where whiteouts are created) and to grab
-> > > the AGI buffer of the file being deleted.  If the whiteout was created
-> > > in a higher numbered AG than the file being deleted, we'll lock the AGIs
-> > > in the wrong order and deadlock.
-> > > 
-> > > Therefore, grab all the AGI locks we think we'll need ahead of time, and
-> > > in the correct order.
-> > > 
-> > > Reported-by: wenli xie <wlxie7296@gmail.com>
-> > > Tested-by: wenli xie <wlxie7296@gmail.com>
-> > > Fixes: 93597ae8dac0 ("xfs: Fix deadlock between AGI and AGF when target_ip exists in xfs_rename()")
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_inode.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
-> > >  1 file changed, 46 insertions(+)
-> > > 
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index b7352bc4c815..dd419a1bc6ba 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -3000,6 +3000,48 @@ xfs_rename_alloc_whiteout(
-> > >  	return 0;
-> > >  }
-> > >  
-> > > +/*
-> > > + * For the general case of renaming files, lock all the AGI buffers we need to
-> > > + * handle bumping the nlink of the whiteout inode off the unlinked list and to
-> > > + * handle dropping the nlink of the target inode.  We have to do this in
-> > > + * increasing AG order to avoid deadlocks.
-> > > + */
-> > > +static int
-> > > +xfs_rename_lock_agis(
-> > > +	struct xfs_trans	*tp,
-> > > +	struct xfs_inode	*wip,
-> > > +	struct xfs_inode	*target_ip)
-> > > +{
-> > > +	struct xfs_mount	*mp = tp->t_mountp;
-> > > +	struct xfs_buf		*bp;
-> > > +	xfs_agnumber_t		agi_locks[2] = { NULLAGNUMBER, NULLAGNUMBER };
-> > > +	int			error;
-> > > +
-> > > +	if (wip)
-> > > +		agi_locks[0] = XFS_INO_TO_AGNO(mp, wip->i_ino);
-> > > +
-> > > +	if (target_ip && VFS_I(target_ip)->i_nlink == 1)
-> > > +		agi_locks[1] = XFS_INO_TO_AGNO(mp, target_ip->i_ino);
-> > > +
-> > > +	if (agi_locks[0] != NULLAGNUMBER && agi_locks[1] != NULLAGNUMBER &&
-> > > +	    agi_locks[0] > agi_locks[1])
-> > > +		swap(agi_locks[0], agi_locks[1]);
-> > > +
-> > > +	if (agi_locks[0] != NULLAGNUMBER) {
-> > > +		error = xfs_read_agi(mp, tp, agi_locks[0], &bp);
-> > > +		if (error)
-> > > +			return error;
-> > > +	}
-> > > +
-> > > +	if (agi_locks[1] != NULLAGNUMBER) {
-> > > +		error = xfs_read_agi(mp, tp, agi_locks[1], &bp);
-> > > +		if (error)
-> > > +			return error;
-> > > +	}
-> > > +
-> > > +	return 0;
-> > > +}
-> > 
-> > This all looks reasonable to me, but I wonder if we can simplify
-> > a bit by reusing the sorted inodes array we've already created earlier
-> > in xfs_rename(). E.g., something like:
-> > 
-> > 	for (i = 0; i < num_inodes; i++) {
-> > 		if (inodes[i] != wip && inodes[i] != target_ip)
-> > 			continue;
-> > 		error = xfs_read_agi(...);
-> > 		...
-> > 	}
-> > 
-> > IOW, similar to how xfs_lock_inodes() and xfs_qm_vop_rename_dqattach()
-> > work.
+
+
+On 1/4/21 11:55 PM, Darrick J. Wong wrote:
+> On Sun, Dec 20, 2020 at 11:39:06PM +0800, Eryu Guan wrote:
+>> On Wed, Dec 16, 2020 at 10:53:45AM +0530, Ritesh Harjani wrote:
+>>>
+>>>
+>>> On 12/16/20 10:47 AM, Ritesh Harjani wrote:
+>>>> Filesystems e.g. ext4 and XFS supports swapon by default and an error
+>>>> returned with swapon should be treated as a failure. Hence
+>>>> add ext4/xfs as whitelisted fstype in _require_scratch_swapfile()
+>>>>
+>>>> Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
+>>>> ---
+>>>> v1->v2: Addressed comments from Eryu @[1]
+>>>> [1]: https://patchwork.kernel.org/project/fstests/cover/cover.1604000570.git.riteshh@linux.ibm.com/
+>>>>
+>>>>    common/rc | 20 ++++++++++++++++----
+>>>>    1 file changed, 16 insertions(+), 4 deletions(-)
+>>>>
+>>>> diff --git a/common/rc b/common/rc
+>>>> index 33b5b598a198..635b77a005c6 100644
+>>>> --- a/common/rc
+>>>> +++ b/common/rc
+>>>> @@ -2380,6 +2380,7 @@ _format_swapfile() {
+>>>>    # Check that the filesystem supports swapfiles
+>>>>    _require_scratch_swapfile()
+>>>>    {
+>>>> +	local fstyp=$FSTYP
+>>>>    	_require_scratch
+>>>>    	_require_command "$MKSWAP_PROG" "mkswap"
+>>>>
+>>>> @@ -2401,10 +2402,21 @@ _require_scratch_swapfile()
+>>>>    	# Minimum size for mkswap is 10 pages
+>>>>    	_format_swapfile "$SCRATCH_MNT/swap" $(($(get_page_size) * 10))
+>>>>
+>>>> -	if ! swapon "$SCRATCH_MNT/swap" >/dev/null 2>&1; then
+>>>> -		_scratch_unmount
+>>>> -		_notrun "swapfiles are not supported"
+>>>> -	fi
+>>>> +	# For whitelisted fstyp swapon should not fail.
 > 
-> I think it would be difficult to do that because we only need to grab
-> target_ip's AGI if we're going to droplink it, and we haven't yet taken
-> target_ip's ILOCK when we invoke the sorting hat so the link count isn't
-> stable.
+> I would use a different phase than 'whitelisted', since that doesn't
+> tell us why ext4 and xfs are special:
 > 
+> # ext* and xfs have supported all variants of swap files since their
+> # introduction, so swapon should not fail.
 
-I'm not following how using the inodes array affects this.
-xfs_sort_for_rename() simply puts the inodes in inode number order. That
-sorted array is reused for various purposes that require that ordering
-information (such as acquiring inode locks in the first place). This
-patch duplicates a subset of that sorting logic for the agnos of wip and
-target_ip to ensure the AGIs are read (if necessary) in order.
+Sounds ok to me.
 
-The suggestion above would just refer to the already sorted array to
-establish order of the associated AGI reads rather than checking and
-sorting the agnos explicitly. This would still occur in
-xfs_rename_lock_agis() where inode locks have already been acquired, and
-so ISTM that the logic could be enhanced to also consider ->i_nlink just
-as the original patch does. Hm?
 
-Brian
-
-> --D
 > 
-> > Brian
-> > 
-> > > +
-> > >  /*
-> > >   * xfs_rename
-> > >   */
-> > > @@ -3130,6 +3172,10 @@ xfs_rename(
-> > >  		}
-> > >  	}
-> > >  
-> > > +	error = xfs_rename_lock_agis(tp, wip, target_ip);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > >  	/*
-> > >  	 * Directory entry creation below may acquire the AGF. Remove
-> > >  	 * the whiteout from the unlinked list first to preserve correct
-> > > 
-> > 
+>>>> +	case "$fstyp" in
 > 
+> $FSTYP, not $fstyp
 
+sure I will use $FSTYP directly and remove local fstyp variable.
+
+> 
+>>>> +	ext4|xfs)
+> 
+> I would also add a few more FSTYPs here, since at least ext2 and ext3
+> supported swap files.  Are there other old fses that do?
+
+Sure, agreed. I will add ext2 & ext3 too.
+
+-ritesh
