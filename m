@@ -2,128 +2,123 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C1CC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 00:05:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06904C43332
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 00:56:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E82C2255F
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 00:05:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C996322573
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 00:56:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726657AbhAEAFg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Jan 2021 19:05:36 -0500
-Received: from ishtar.tlinx.org ([173.164.175.65]:50792 "EHLO
-        Ishtar.sc.tlinx.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726163AbhAEAFg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jan 2021 19:05:36 -0500
-Received: from [192.168.3.12] (Athenae [192.168.3.12])
-        by Ishtar.sc.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id 10504ieV071258;
-        Mon, 4 Jan 2021 16:04:46 -0800
-Message-ID: <5FF3ACCB.3030909@tlinx.org>
-Date:   Mon, 04 Jan 2021 16:03:23 -0800
-From:   L A Walsh <xfs@tlinx.org>
-User-Agent: Thunderbird 2.0.0.24 (Windows/20100228)
+        id S1727220AbhAEAzt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Jan 2021 19:55:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37944 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726258AbhAEAzs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Jan 2021 19:55:48 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 879B722582;
+        Tue,  5 Jan 2021 00:55:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1609808107;
+        bh=moPvKfHUYW5Xbk7fp9PqSrbSDfWUFwePDygO+DUtRFo=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=odLOb9jW7zdbgQ19pnxfQeV0LZCahNWh2pJHvvskuGhaoTAJINjva3sXgUpuQUx4C
+         9Q4jVEGDvC4JAbMDOb0ntyBgGZGYCD7D5RQ+uTFsyV3drMND3coDDlh3n+eJeaDR4P
+         hil5l822YPp+3ttvEctfsdcoutR9fY1zMzcy5DOf6/m5irfC1tIlgTw7cCQNZnYr2n
+         osSXWG3OuD+6/7zLbzpZ0kcTNtAhXkxI9E8LYaVMNzhVDRqwBsPc/DbKgZ8L/a763U
+         fTbNyD1NhYvp7LInib3/VaOfA36sk0VY6JASj7UsjCeOh2iBGsxYCeMQqSIOQuqYJT
+         QcZ5iZypbSAwA==
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/13] fs: only specify I_DIRTY_TIME when needed in generic_update_time()
+Date:   Mon,  4 Jan 2021 16:54:42 -0800
+Message-Id: <20210105005452.92521-4-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210105005452.92521-1-ebiggers@kernel.org>
+References: <20210105005452.92521-1-ebiggers@kernel.org>
 MIME-Version: 1.0
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-CC:     bfoster@redhat.com, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: suggested patch to allow user to access their own file...
-References: <5FEB204B.9090109@tlinx.org> <20210104170815.GB254939@bfoster> <20210104184442.GM6918@magnolia> <5FF3796E.5050409@tlinx.org> <20210104231508.GP6918@magnolia>
-In-Reply-To: <20210104231508.GP6918@magnolia>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+From: Eric Biggers <ebiggers@google.com>
 
+generic_update_time() always passes I_DIRTY_TIME to
+__mark_inode_dirty(), which doesn't really make sense because (a)
+generic_update_time() might be asked to do only an i_version update, not
+also a timestamps update; and (b) I_DIRTY_TIME is only supposed to be
+set in i_state if the filesystem has lazytime enabled, so using it
+unconditionally in generic_update_time() is inconsistent.
 
-On 2021/01/04 15:15, Darrick J. Wong wrote:
->> Cc: bfoster@redhat.com, xfs-oss <xfs@e29208.dscx.akamaiedge.net>
-> 
-> akamaiedge.net ??
+As a result there is a weird edge case where if only an i_version update
+was requested (not also a timestamps update) but it is no longer needed
+(i.e. inode_maybe_inc_iversion() returns false), then I_DIRTY_TIME will
+be set in i_state even if the filesystem isn't mounted with lazytime.
+
+Fix this by only passing I_DIRTY_TIME to __mark_inode_dirty() if the
+timestamps were updated and the filesystem has lazytime enabled.
+
+Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
-First I've seen that...
+ fs/inode.c | 38 ++++++++++++++++++++------------------
+ 1 file changed, 20 insertions(+), 18 deletions(-)
 
-> 
-> Er, did my mailer do that, or did yours?
-> 
-> [re-adding linux-xfs to cc]
-> 
-> On Mon, Jan 04, 2021 at 12:24:14PM -0800, L A Walsh wrote:
->>
->> On 2021/01/04 10:44, Darrick J. Wong wrote:
->>> This would open a huge security hole because users can use it to bypass
->>> directory access checks.
->> ---
->> 	Can't say I entirely disagree.  Though given the prevalence of that
->> behavior being "normal" on NT due to the "Bypass Traverse Checking" "right"
->> being on by default in a standard Windows setup,
-> 
-> That might be true on Windows, but CAP_DAC_* isn't given out by default
-> on Linux.
-----
-	Not quite the same as I understand it -- it allows ignoring 
-an 'X' permission of directories above the target, I believe, but not other
-DAC permissions.  I'd have to experiment to be sure.  In their security
-settings dialogue, they warn you against changing it away from the default
-as it might cause compatibility problems.
-
-
-> 
->> I would question it being a 'huge' security hole, though it would be
->> an unwanted change in behavior.
-> 
-> I think people would consider it a hole of /some/ kind, since this patch
-> wouldn't even require the process to hold CAP_DAC_* privilege.
----
-	Yeah, though it doesn't allow overriding DAC settings on files
-or directories that have them when trying to access them, just bypassing
-directory traversal permissions for items lower in the hierarchy.
-
-
-> 
-> Yeah.  As far as I can tell, CAP_DAC_OVERRIDE actually /does/ give you
-> the security permissions that you want.  The sysadmin can then decide
-> who gets to have that permission, so you /could/ propose doing that.
-----
-	Except that it does more than just allowing directory traversal
-to a set of files you own.  Like I think it might not be uncommon to have
-some common home dir set restrictively, so you couldn't read who else had
-home directories on the system, perhaps, but you could still cd through
-it to your own directory.  It may be more like allowing you to 'x' through
-parent directories without being able to read/write to them.  CAP_DAC_OVERRIDE
-would allow you to override any DAC permissions on any file -- not just
-ignore lack of 'X' on a directory.
-
-
-> 
->> 	If it isn't possible already, I'm sure it soon will be
->> the case that users will be on systems that have different file
->> systems mounted.  If an xfs file system is mounted under an NT
->> file system and the user is running Windows, wouldn't NT-rights
->> (like ignoring traversal issues) apply by default, as NT would
->> be in charge of enforcing security as it walked through a locally
->> mounted XFS file system?
-> 
-> When would NT be walking through a locally mounted XFS filesystem?
+diff --git a/fs/inode.c b/fs/inode.c
+index 6442d97d9a4ab..d0fa43d8e9d5c 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -1743,24 +1743,26 @@ static int relatime_need_update(struct vfsmount *mnt, struct inode *inode,
  
-Well, at least when it is mounted in a linux subsystem -- I haven't checked
-out what's possible, but am told explorer can then be used to move through 
-file systems that are locally mounted through the linux drivers.
+ int generic_update_time(struct inode *inode, struct timespec64 *time, int flags)
+ {
+-	int iflags = I_DIRTY_TIME;
+-	bool dirty = false;
+-
+-	if (flags & S_ATIME)
+-		inode->i_atime = *time;
+-	if (flags & S_VERSION)
+-		dirty = inode_maybe_inc_iversion(inode, false);
+-	if (flags & S_CTIME)
+-		inode->i_ctime = *time;
+-	if (flags & S_MTIME)
+-		inode->i_mtime = *time;
+-	if ((flags & (S_ATIME | S_CTIME | S_MTIME)) &&
+-	    !(inode->i_sb->s_flags & SB_LAZYTIME))
+-		dirty = true;
+-
+-	if (dirty)
+-		iflags |= I_DIRTY_SYNC;
+-	__mark_inode_dirty(inode, iflags);
++	int dirty_flags = 0;
++
++	if (flags & (S_ATIME | S_CTIME | S_MTIME)) {
++		if (flags & S_ATIME)
++			inode->i_atime = *time;
++		if (flags & S_CTIME)
++			inode->i_ctime = *time;
++		if (flags & S_MTIME)
++			inode->i_mtime = *time;
++
++		if (inode->i_sb->s_flags & SB_LAZYTIME)
++			dirty_flags |= I_DIRTY_TIME;
++		else
++			dirty_flags |= I_DIRTY_SYNC;
++	}
++
++	if ((flags & S_VERSION) && inode_maybe_inc_iversion(inode, false))
++		dirty_flags |= I_DIRTY_SYNC;
++
++	__mark_inode_dirty(inode, dirty_flags);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(generic_update_time);
+-- 
+2.30.0
 
-The other possibility -- is a stretch of locally mounted, in having
-an XFS drive mounted via CIFS as a "local" drive.  I'd think it would
-allow bypassing traverse checking in the same way that having
-NT-admin privileges can give you root access to exported drives, but
-you have to set it up so that your login has those privs on the target server,
-but less drastic privs, like bypassing traverse checking and having
-a read/write access for a user that has the backup+restore privs are likely
-also supported.  
-
-As an example, a Domain administrator on my NT workstation has root access
-to my server (not by accident, but because it is meant to be that way).
-
-I use Win as a desktop, but lin as my diskspace+server.  My Win desktop barely
-has enough diskspace for the OS + programs I have installed.
