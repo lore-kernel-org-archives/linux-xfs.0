@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B527C4321A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE20AC433DB
 	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 00:56:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 660A122573
+	by mail.kernel.org (Postfix) with ESMTP id C66CB2253A
 	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 00:56:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727599AbhAEA43 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Jan 2021 19:56:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38148 "EHLO mail.kernel.org"
+        id S1726163AbhAEA4g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Jan 2021 19:56:36 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38158 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726329AbhAEA42 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Jan 2021 19:56:28 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CD664225AA;
-        Tue,  5 Jan 2021 00:55:08 +0000 (UTC)
+        id S1726168AbhAEA43 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Jan 2021 19:56:29 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6F647227BF;
+        Tue,  5 Jan 2021 00:55:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609808109;
-        bh=H1ms59/bip1WURh53Z2hT3TghGoA+Y1uZAJZTjqPVbA=;
+        s=k20201202; t=1609808110;
+        bh=gNmDYe2Lw3Moz7fSm4TY9dr/5OhIQas+i4KMcztjpdA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jT5YHwMUgMCR7wlwaRdowKZM9R6gvPc5q8QsYcKqluLVv9qzVzb5ZLYpj+8BJinTA
-         1tYt5wwFZVp0RDAxpBlc63HhVpNF5Rk3zgXbvdiFBSWfIpLrDX8Mmfq1MVoz9YClb1
-         9Gr2aATxyaLdxZqNOHjdmFblPWbRTyzC/RA158eyh4sD8Aa3guZw/r8EudMGbINKUJ
-         w+1wvYWfRCLiPz4E7Qnid8lt7OG7jDwfbEzObQJGnso821wgCnsJYkDVJxNx555AOD
-         74UKgJtYKhCO2Xw93w+7ZABhUKMlAxqRerT5DGy3IKUeXa5hwHmJYWfpjPMb/kOHAy
-         7Gqk1iDUurBeg==
+        b=Iue5bgzUAw8lnkQhxntcvGe1ceXoW5GSJWYIHh3cLSi/unfeetrDIk3AEiLSYzXXM
+         YRQ0yms8cM/fhbIoNhu2BFHmIxs1KHKry2eno50f0+As0LpEMAFdE2jzEK6/I+t79x
+         q1xCXE9vM0AMyX4uOGz6HuPfUF9wxnuqjDGTfduCP/T8y+CI8WNZF+C6o8JGDmDuRb
+         6XujVxKjL7yeDT5YHWoAHOi3U46i46aTw1Z6B/hNUFzMJq+9EuadYpNdInK2x1Ora2
+         NDZjswrQjIOKf9F0DW31SasqoFVgS7ALAcH8xEZ6GQAEgUhyFzB2AoBeG23brpfA7v
+         i9mSTRbrzfsTA==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
         Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/13] fs: correctly document the inode dirty flags
-Date:   Mon,  4 Jan 2021 16:54:46 -0800
-Message-Id: <20210105005452.92521-8-ebiggers@kernel.org>
+Subject: [PATCH 12/13] xfs: remove a stale comment from xfs_file_aio_write_checks()
+Date:   Mon,  4 Jan 2021 16:54:51 -0800
+Message-Id: <20210105005452.92521-13-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210105005452.92521-1-ebiggers@kernel.org>
 References: <20210105005452.92521-1-ebiggers@kernel.org>
@@ -50,53 +50,36 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-The documentation for I_DIRTY_SYNC and I_DIRTY_DATASYNC is a bit
-misleading, and I_DIRTY_TIME isn't documented at all.  Fix this.
+The comment in xfs_file_aio_write_checks() about calling file_modified()
+after dropping the ilock doesn't make sense, because the code that
+unconditionally acquires and drops the ilock was removed by
+commit 467f78992a07 ("xfs: reduce ilock hold times in
+xfs_file_aio_write_checks").
+
+Remove this outdated comment.
 
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- include/linux/fs.h | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_file.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index fd47deea7c176..45a0303b2aeb6 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2084,8 +2084,8 @@ static inline void kiocb_clone(struct kiocb *kiocb, struct kiocb *kiocb_src,
- /*
-  * Inode state bits.  Protected by inode->i_lock
-  *
-- * Three bits determine the dirty state of the inode, I_DIRTY_SYNC,
-- * I_DIRTY_DATASYNC and I_DIRTY_PAGES.
-+ * Four bits determine the dirty state of the inode: I_DIRTY_SYNC,
-+ * I_DIRTY_DATASYNC, I_DIRTY_PAGES, and I_DIRTY_TIME.
-  *
-  * Four bits define the lifetime of an inode.  Initially, inodes are I_NEW,
-  * until that flag is cleared.  I_WILL_FREE, I_FREEING and I_CLEAR are set at
-@@ -2094,12 +2094,20 @@ static inline void kiocb_clone(struct kiocb *kiocb, struct kiocb *kiocb_src,
-  * Two bits are used for locking and completion notification, I_NEW and I_SYNC.
-  *
-  * I_DIRTY_SYNC		Inode is dirty, but doesn't have to be written on
-- *			fdatasync().  i_atime is the usual cause.
-- * I_DIRTY_DATASYNC	Data-related inode changes pending. We keep track of
-+ *			fdatasync() (unless I_DIRTY_DATASYNC is also set).
-+ *			Timestamp updates are the usual cause.
-+ * I_DIRTY_DATASYNC	Data-related inode changes pending.  We keep track of
-  *			these changes separately from I_DIRTY_SYNC so that we
-  *			don't have to write inode on fdatasync() when only
-- *			mtime has changed in it.
-+ *			e.g. the timestamps have changed.
-  * I_DIRTY_PAGES	Inode has dirty pages.  Inode itself may be clean.
-+ * I_DIRTY_TIME		The inode itself only has dirty timestamps, and the
-+ *			lazytime mount option is enabled.  We keep track of this
-+ *			separately from I_DIRTY_SYNC in order to implement
-+ *			lazytime.  This gets cleared if I_DIRTY_INODE
-+ *			(I_DIRTY_SYNC and/or I_DIRTY_DATASYNC) gets set.  I.e.
-+ *			either I_DIRTY_TIME *or* I_DIRTY_INODE can be set in
-+ *			i_state, but not both.  I_DIRTY_PAGES may still be set.
-  * I_NEW		Serves as both a mutex and completion notification.
-  *			New inodes set I_NEW.  If two processes both create
-  *			the same inode, one of them will release its inode and
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 5b0f93f738372..4927c6653f15d 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -389,12 +389,6 @@ xfs_file_aio_write_checks(
+ 	} else
+ 		spin_unlock(&ip->i_flags_lock);
+ 
+-	/*
+-	 * Updating the timestamps will grab the ilock again from
+-	 * xfs_fs_dirty_inode, so we have to call it after dropping the
+-	 * lock above.  Eventually we should look into a way to avoid
+-	 * the pointless lock roundtrip.
+-	 */
+ 	return file_modified(file);
+ }
+ 
 -- 
 2.30.0
 
