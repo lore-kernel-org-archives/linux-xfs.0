@@ -2,101 +2,270 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-15.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAD58C433E9
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 20:31:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D310EC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 21:07:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 828BE22DFA
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 20:31:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CA0C22D00
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 21:07:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731288AbhAEUb0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Jan 2021 15:31:26 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:51272 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729608AbhAEUbZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jan 2021 15:31:25 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 105KTMk3068731;
-        Tue, 5 Jan 2021 20:30:37 GMT
+        id S1727288AbhAEVHk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Jan 2021 16:07:40 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:43024 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727247AbhAEVHk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jan 2021 16:07:40 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 105L4ifb119943;
+        Tue, 5 Jan 2021 21:06:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=eZSBFhamGrQpMeqc4Oy2MNaowbrfBFp+pS4RKmYAnTc=;
- b=WU1yw3j4Sk7BiXNHZ+fLxnECk2T/4wZzZPPYWHcLf6I6LYKwvdE2A4JO9QjMkfLUetMc
- lV2F8YC6hTYWSDzqryNezjrT8XB712cnkOOM/D15XjkVMvxWmd+pj9thNX0v6OmPkpxl
- sKhm4bJB/N7C+8ap5ffxKQ93xmmH74yVHw2/rpIJPQvk2BT4shs91zh5H4Vdhppnodau
- /fEf9R0mf54C4BWbGFq6BDpGiUJyi4aIy3tCmQN8mObeBIPL2DGhUoIb1YZG82ONAgHJ
- MpczDF2w0A8i9+2Gl1lAYi68ftRgQyIfRGHxO9TbsULMbHm48/IDBSfDo5NJdIC9iy1W 4w== 
+ bh=RfO2FlqfxyTkR2cZlAUXy9JI/0fiQZ038xzuc+QV4dg=;
+ b=HIS4NS50UEmCuxQhNlBTn1e/o7xW1lGS3bp5CZD7vcXKQXWj2ApfenHgSCNPiOIy4d6i
+ IAxMbG59MzPgRovMQI2CF6PUNPQwjoKAk82ug4ysI5za05aqo0BQ1BxxdAvSoW052dfR
+ cG3OXsjRofY1Y0Xk7TqOX0d4uJifOW83nahvy+BRvLNPm9uPNfa1NzaOum5AuZ1u0G96
+ leJ1dU+QVixNGIysbkxx9k2jF3fHnGMcK36FWLXdofUiCNG4umNy4uq3B21gMhuYW8U8
+ 3C+81Eco7aBQVYupH1FM5deBD8o6kbZZUZrPQSldcZDzX1mkzWW3LRDrf5aitF368HfB 3g== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 35tg8r2nhr-1
+        by aserp2130.oracle.com with ESMTP id 35tebatuy3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 05 Jan 2021 20:30:37 +0000
+        Tue, 05 Jan 2021 21:06:59 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 105KUNLT152917;
-        Tue, 5 Jan 2021 20:30:37 GMT
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 105L6QKt050995;
+        Tue, 5 Jan 2021 21:06:58 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 35uxnt6kgc-1
+        by userp3020.oracle.com with ESMTP id 35uxnt7hpe-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Jan 2021 20:30:36 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 105KUUXH032624;
-        Tue, 5 Jan 2021 20:30:30 GMT
-Received: from [10.175.190.169] (/10.175.190.169)
+        Tue, 05 Jan 2021 21:06:58 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 105L6v9u023663;
+        Tue, 5 Jan 2021 21:06:57 GMT
+Received: from [192.168.1.226] (/67.1.214.41)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 05 Jan 2021 12:30:30 -0800
-Subject: Re: [LSFMMBPF 2021] A status update
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
-        Josef Bacik <josef@toxicpanda.com>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-        "bpf@vger.kernel.org" <bpf@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-nvme@vger.kernel.org" <linux-nvme@vger.kernel.org>
-References: <fd5264ac-c84d-e1d4-01e2-62b9c05af892@toxicpanda.com>
- <20201212172957.GE2443@casper.infradead.org>
-From:   Joao Martins <joao.m.martins@oracle.com>
-Message-ID: <0b356707-1ad1-a147-cd5e-224a1a8658a0@oracle.com>
-Date:   Tue, 5 Jan 2021 20:30:26 +0000
+        with ESMTP ; Tue, 05 Jan 2021 13:06:57 -0800
+Subject: Re: [PATCH v14 06/15] xfs: Add state machine tracepoints
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <20201218072917.16805-1-allison.henderson@oracle.com>
+ <20201218072917.16805-7-allison.henderson@oracle.com>
+ <4353133.qTs6tMSDRZ@garuda>
+From:   Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <4bd6f1c6-3e73-6665-3229-d00e88c1ac6a@oracle.com>
+Date:   Tue, 5 Jan 2021 14:06:56 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20201212172957.GE2443@casper.infradead.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4353133.qTs6tMSDRZ@garuda>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9855 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
  malwarescore=0 mlxscore=0 mlxlogscore=999 suspectscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101050119
+ definitions=main-2101050124
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9855 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1011 phishscore=0 bulkscore=0
- spamscore=0 impostorscore=0 suspectscore=0 adultscore=0 mlxlogscore=999
- mlxscore=0 malwarescore=0 lowpriorityscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101050119
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
+ priorityscore=1501 spamscore=0 mlxscore=0 clxscore=1015 bulkscore=0
+ lowpriorityscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101050124
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 12/12/20 5:29 PM, Matthew Wilcox wrote:
-> And most urgently, when should we have the GUP meeting?  On the call,
-> I suggested Friday the 8th of January, but I'm happy to set something
-> up for next week if we'd like to talk more urgently.  Please propose a
-> date & time.  I know we have people in Portugal and Nova Scotia who need
-> to be involved live, so a time friendly to UTC+0 and UTC-4 would be good.
 
-FWIW, I would suggest the same time as you had for PageFolio (18h GMT / 10pm PT / 13h ET)
-given it can cover many tz in a not-so-bothersome time.
 
-But instead of Jan 8 perhaps better for next week (Jan 15) in case folks
-are still in new year holidays (given we are in the first week of the year).
+On 1/4/21 9:50 PM, Chandan Babu R wrote:
+> On Fri, 18 Dec 2020 00:29:08 -0700, Allison Henderson wrote:
+>> This is a quick patch to add a new tracepoint: xfs_das_state_return.  We
+>> use this to track when ever a new state is set or -EAGAIN is returned
+>>
+> 
+> Looks good to me.
+> 
+> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Ok, thank you!
 
-	Joao
+Allison
+> 
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_attr.c        | 22 +++++++++++++++++++++-
+>>   fs/xfs/libxfs/xfs_attr_remote.c |  1 +
+>>   fs/xfs/xfs_trace.h              | 20 ++++++++++++++++++++
+>>   3 files changed, 42 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index cd72512..8ed00bc 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -263,6 +263,7 @@ xfs_attr_set_shortform(
+>>   	 * We're still in XFS_DAS_UNINIT state here.  We've converted the attr
+>>   	 * fork to leaf format and will restart with the leaf add.
+>>   	 */
+>> +	trace_xfs_das_state_return(XFS_DAS_UNINIT);
+>>   	return -EAGAIN;
+>>   }
+>>   
+>> @@ -409,9 +410,11 @@ xfs_attr_set_iter(
+>>   		 * down into the node handling code below
+>>   		 */
+>>   		dac->flags |= XFS_DAC_DEFER_FINISH;
+>> +		trace_xfs_das_state_return(dac->dela_state);
+>>   		return -EAGAIN;
+>>   	case 0:
+>>   		dac->dela_state = XFS_DAS_FOUND_LBLK;
+>> +		trace_xfs_das_state_return(dac->dela_state);
+>>   		return -EAGAIN;
+>>   	}
+>>   	return error;
+>> @@ -841,6 +844,7 @@ xfs_attr_leaf_addname(
+>>   			return error;
+>>   
+>>   		dac->flags |= XFS_DAC_DEFER_FINISH;
+>> +		trace_xfs_das_state_return(dac->dela_state);
+>>   		return -EAGAIN;
+>>   	}
+>>   
+>> @@ -874,6 +878,7 @@ xfs_attr_leaf_addname(
+>>   	 * Commit the flag value change and start the next trans in series.
+>>   	 */
+>>   	dac->dela_state = XFS_DAS_FLIP_LFLAG;
+>> +	trace_xfs_das_state_return(dac->dela_state);
+>>   	return -EAGAIN;
+>>   das_flip_flag:
+>>   	/*
+>> @@ -891,6 +896,8 @@ xfs_attr_leaf_addname(
+>>   das_rm_lblk:
+>>   	if (args->rmtblkno) {
+>>   		error = __xfs_attr_rmtval_remove(dac);
+>> +		if (error == -EAGAIN)
+>> +			trace_xfs_das_state_return(dac->dela_state);
+>>   		if (error)
+>>   			return error;
+>>   	}
+>> @@ -1142,6 +1149,7 @@ xfs_attr_node_addname(
+>>   			 * this point.
+>>   			 */
+>>   			dac->flags |= XFS_DAC_DEFER_FINISH;
+>> +			trace_xfs_das_state_return(dac->dela_state);
+>>   			return -EAGAIN;
+>>   		}
+>>   
+>> @@ -1175,6 +1183,7 @@ xfs_attr_node_addname(
+>>   	state = NULL;
+>>   
+>>   	dac->dela_state = XFS_DAS_FOUND_NBLK;
+>> +	trace_xfs_das_state_return(dac->dela_state);
+>>   	return -EAGAIN;
+>>   das_found_nblk:
+>>   
+>> @@ -1202,6 +1211,7 @@ xfs_attr_node_addname(
+>>   				return error;
+>>   
+>>   			dac->flags |= XFS_DAC_DEFER_FINISH;
+>> +			trace_xfs_das_state_return(dac->dela_state);
+>>   			return -EAGAIN;
+>>   		}
+>>   
+>> @@ -1236,6 +1246,7 @@ xfs_attr_node_addname(
+>>   	 * Commit the flag value change and start the next trans in series
+>>   	 */
+>>   	dac->dela_state = XFS_DAS_FLIP_NFLAG;
+>> +	trace_xfs_das_state_return(dac->dela_state);
+>>   	return -EAGAIN;
+>>   das_flip_flag:
+>>   	/*
+>> @@ -1253,6 +1264,10 @@ xfs_attr_node_addname(
+>>   das_rm_nblk:
+>>   	if (args->rmtblkno) {
+>>   		error = __xfs_attr_rmtval_remove(dac);
+>> +
+>> +		if (error == -EAGAIN)
+>> +			trace_xfs_das_state_return(dac->dela_state);
+>> +
+>>   		if (error)
+>>   			return error;
+>>   	}
+>> @@ -1396,6 +1411,8 @@ xfs_attr_node_remove_rmt (
+>>   	 * May return -EAGAIN to request that the caller recall this function
+>>   	 */
+>>   	error = __xfs_attr_rmtval_remove(dac);
+>> +	if (error == -EAGAIN)
+>> +		trace_xfs_das_state_return(dac->dela_state);
+>>   	if (error)
+>>   		return error;
+>>   
+>> @@ -1514,6 +1531,7 @@ xfs_attr_node_removename_iter(
+>>   
+>>   			dac->flags |= XFS_DAC_DEFER_FINISH;
+>>   			dac->dela_state = XFS_DAS_RM_SHRINK;
+>> +			trace_xfs_das_state_return(dac->dela_state);
+>>   			return -EAGAIN;
+>>   		}
+>>   
+>> @@ -1532,8 +1550,10 @@ xfs_attr_node_removename_iter(
+>>   		goto out;
+>>   	}
+>>   
+>> -	if (error == -EAGAIN)
+>> +	if (error == -EAGAIN) {
+>> +		trace_xfs_das_state_return(dac->dela_state);
+>>   		return error;
+>> +	}
+>>   out:
+>>   	if (state)
+>>   		xfs_da_state_free(state);
+>> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+>> index 6af86bf..4840de9 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+>> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+>> @@ -763,6 +763,7 @@ __xfs_attr_rmtval_remove(
+>>   	 */
+>>   	if (!done) {
+>>   		dac->flags |= XFS_DAC_DEFER_FINISH;
+>> +		trace_xfs_das_state_return(dac->dela_state);
+>>   		return -EAGAIN;
+>>   	}
+>>   
+>> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+>> index 9074b8b..4f6939b4 100644
+>> --- a/fs/xfs/xfs_trace.h
+>> +++ b/fs/xfs/xfs_trace.h
+>> @@ -3887,6 +3887,26 @@ DEFINE_EVENT(xfs_timestamp_range_class, name, \
+>>   DEFINE_TIMESTAMP_RANGE_EVENT(xfs_inode_timestamp_range);
+>>   DEFINE_TIMESTAMP_RANGE_EVENT(xfs_quota_expiry_range);
+>>   
+>> +
+>> +DECLARE_EVENT_CLASS(xfs_das_state_class,
+>> +	TP_PROTO(int das),
+>> +	TP_ARGS(das),
+>> +	TP_STRUCT__entry(
+>> +		__field(int, das)
+>> +	),
+>> +	TP_fast_assign(
+>> +		__entry->das = das;
+>> +	),
+>> +	TP_printk("state change %d",
+>> +		  __entry->das)
+>> +)
+>> +
+>> +#define DEFINE_DAS_STATE_EVENT(name) \
+>> +DEFINE_EVENT(xfs_das_state_class, name, \
+>> +	TP_PROTO(int das), \
+>> +	TP_ARGS(das))
+>> +DEFINE_DAS_STATE_EVENT(xfs_das_state_return);
+>> +
+>>   #endif /* _TRACE_XFS_H */
+>>   
+>>   #undef TRACE_INCLUDE_PATH
+>>
+> 
+> 
