@@ -2,84 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B83A6C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 04:51:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7C4AC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 05:32:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7960C229C9
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 04:51:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A96E12226A
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Jan 2021 05:32:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726834AbhAEEvm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Jan 2021 23:51:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51790 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726064AbhAEEvl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jan 2021 23:51:41 -0500
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DBE3C061574
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Jan 2021 20:51:01 -0800 (PST)
-Received: by mail-pl1-x634.google.com with SMTP id y8so15709677plp.8
-        for <linux-xfs@vger.kernel.org>; Mon, 04 Jan 2021 20:51:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=AZAh0Q57Fa9cg8jZ/6FNkWXJ0IlXU3XPZY2tO66aN4Y=;
-        b=FwQTsmMJol++IPZzxC8FsmtYQY3OnUyM18auvbCEprDck5qpGdyh6rvZKzBuhzwbua
-         IEUGkV9H9WR0kA7JM3UdcugKbu5+jee/19K1kUGX9Mhhu6wONJQv65qm0tdnjGU3GtLf
-         44S1Ven6rJp90mmrEDBojfTfZMuiJNS3Pt3w7xNsPgAnDA3fZ6UfmNirGw60ZNgKtFOG
-         J/kBZ5r+fiw9Dx9TjGpwXS2yBWpPVgsZU736ZGr6huL+RiEvDTYo9u/ui6WXZRM2kCt4
-         MOmUahvHVu9+FmT9/C9hihlvKQ4dQ8IiGBP5C5mQXzGZ1VzRvZ22g7SGAFJXam746aS/
-         nQug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=AZAh0Q57Fa9cg8jZ/6FNkWXJ0IlXU3XPZY2tO66aN4Y=;
-        b=SqKPf5pKuuj8fuejXwSt2y//MZwExhgbgpOaUTb8W+r3vowdnOfXVDZSAgzQ+ycqhx
-         CSwzTO31elGarGw+OLGZRd7FR59got9IeiP6Sls2fo/l5AWweD+35WFd8PMRrWeRs5j6
-         MuiL7N9XNjFYtTtqXvq9fz8zKK5OEUcDHJ8npH8A/Yasv7KMzWJnoKfrUvoFDv7wpD0N
-         c2shVYwzMibq2lcfWRwHmodz6bqM2l8cUX71eWBIUXyoT7X7BMuwSaXp5JrXVccoJW5q
-         iYVyXQSBEy16G9Iu9ICvas20ODPAO8o33sG74wO/ZNgfvboF7mzL57iBTcTy0CeZyS0g
-         IIkw==
-X-Gm-Message-State: AOAM533voR0/T2oqZDywsQh6KMZxqiEJOwXfk5f0wazZxfTAOWRvXI8t
-        Ply0T5cHZk0V4ekZlKaaQD1B/caUJO8=
-X-Google-Smtp-Source: ABdhPJx6UMi3VGvLJGkcUmr3E/D/iHQG6qRd9uHX22hSzr/vdoSOrohvrrVTsBE0H2h06NKz80Hwew==
-X-Received: by 2002:a17:90b:1987:: with SMTP id mv7mr2327170pjb.66.1609822261014;
-        Mon, 04 Jan 2021 20:51:01 -0800 (PST)
-Received: from garuda.localnet ([122.167.39.36])
-        by smtp.gmail.com with ESMTPSA id s29sm64547788pgn.65.2021.01.04.20.50.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Jan 2021 20:51:00 -0800 (PST)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
+        id S1725535AbhAEFcK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Jan 2021 00:32:10 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:55094 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725290AbhAEFcJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jan 2021 00:32:09 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1055PulM098603
+        for <linux-xfs@vger.kernel.org>; Tue, 5 Jan 2021 05:31:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=CXtn5JQbg4EA2AxRUipZXdnHaB86UIOXrR48Y3EX0k0=;
+ b=hA2rQ5TwqKuFrIA6vQb9EN45ZR6fKEmQC9OFgHAWuF8NQKgakazM6sjAJxIQ/uRJYRDS
+ 1FCk2rBw8tVI6aia1bs+IJFq5+4if1lX8ZxF+rEtL6JnzuzdUbrDS/lAE3L7+TQI32cL
+ FqM2pgd+U1zp24RSFBJLqItrpP0lPVjNZP8mZnV1tnBSsYJMIDfg7gmse3Y/ZG+i4kXT
+ EuqknmyR+A0RPNF5wzMC3+6K5GgBZfIjpwlZqHl6Wn6Xrq5DvxgeiocQGmRQoyR4z5ma
+ KdoVkQHq9Uc/lRvHftx5mdIfI7lwTBWdxI53GlnOW34Qsn+eyZugrsvu3AVrglsLDBjU Qw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 35tgskq8kv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Jan 2021 05:31:28 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1055VPDn101439
+        for <linux-xfs@vger.kernel.org>; Tue, 5 Jan 2021 05:31:27 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 35uxns5ht3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Jan 2021 05:31:24 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 1055S8MZ016047
+        for <linux-xfs@vger.kernel.org>; Tue, 5 Jan 2021 05:28:08 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 04 Jan 2021 21:28:07 -0800
+Date:   Mon, 4 Jan 2021 21:28:07 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 Subject: Re: [PATCH v14 06/15] xfs: Add state machine tracepoints
-Date:   Tue, 05 Jan 2021 10:20:57 +0530
-Message-ID: <4353133.qTs6tMSDRZ@garuda>
-In-Reply-To: <20201218072917.16805-7-allison.henderson@oracle.com>
-References: <20201218072917.16805-1-allison.henderson@oracle.com> <20201218072917.16805-7-allison.henderson@oracle.com>
+Message-ID: <20210105052807.GT6918@magnolia>
+References: <20201218072917.16805-1-allison.henderson@oracle.com>
+ <20201218072917.16805-7-allison.henderson@oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201218072917.16805-7-allison.henderson@oracle.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9854 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ malwarescore=0 mlxscore=0 mlxlogscore=999 suspectscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101050034
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9854 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 malwarescore=0
+ phishscore=0 impostorscore=0 bulkscore=0 clxscore=1015 priorityscore=1501
+ lowpriorityscore=0 adultscore=0 suspectscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101050033
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 18 Dec 2020 00:29:08 -0700, Allison Henderson wrote:
+On Fri, Dec 18, 2020 at 12:29:08AM -0700, Allison Henderson wrote:
 > This is a quick patch to add a new tracepoint: xfs_das_state_return.  We
 > use this to track when ever a new state is set or -EAGAIN is returned
->
-
-Looks good to me.
-
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
+> 
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
 >  fs/xfs/libxfs/xfs_attr.c        | 22 +++++++++++++++++++++-
@@ -96,6 +95,11 @@ Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 >  	 * fork to leaf format and will restart with the leaf add.
 >  	 */
 > +	trace_xfs_das_state_return(XFS_DAS_UNINIT);
+
+It would help to record the inode number in the trace data.  When
+someone encounters an xattr problem involving things like fsstress,
+it'll be /much/ easier to disentangle who's doing what.
+
 >  	return -EAGAIN;
 >  }
 >  
@@ -116,6 +120,18 @@ Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 >  
 >  		dac->flags |= XFS_DAC_DEFER_FINISH;
 > +		trace_xfs_das_state_return(dac->dela_state);
+
+Also, please consider capturing more info about /which/ of these
+xfs_das_state_return tracepoints fired, either by introducing more
+variants (e.g. xfs_attr_leaf_addname_das_return) or by feeding
+__this_address into the trace "call" and printing it in the TP_printk
+output (formatting string '%pS').
+
+Each declared tracepoint /does/ have a permanent memory cost, so I would
+think hard about trying #2...
+
+--D
+
 >  		return -EAGAIN;
 >  	}
 >  
@@ -251,11 +267,6 @@ Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 >  #endif /* _TRACE_XFS_H */
 >  
 >  #undef TRACE_INCLUDE_PATH
+> -- 
+> 2.7.4
 > 
-
-
--- 
-chandan
-
-
-
