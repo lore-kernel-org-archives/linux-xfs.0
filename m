@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C408FC4332E
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Jan 2021 17:43:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16B15C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Jan 2021 17:44:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B06323136
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Jan 2021 17:43:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF82022CAF
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Jan 2021 17:44:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727877AbhAFRnA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Jan 2021 12:43:00 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:51962 "EHLO
+        id S1726687AbhAFRoC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Jan 2021 12:44:02 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:20617 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727850AbhAFRnA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jan 2021 12:43:00 -0500
+        by vger.kernel.org with ESMTP id S1727905AbhAFRnD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jan 2021 12:43:03 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1609954893;
+        s=mimecast20190719; t=1609954897;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=uHFPF+2C+JoeoySIDU4zAENnKyGQI6NL/OIzh1SmyM4=;
-        b=GZhn/GdjLGJIEb/Ory11TGrXDaXq27NY2t03s626wTk/g+aSmHdGB3BFRDDJ7l27E4e2Vq
-        h89pqowi0d3dgtDVmbNNEguSH2+qtgIr7pt8TKaXycVE7PuZS98iOUejHUDyZ1DtDrgV5Z
-        R8OVJmT1F47NcJ0r/n5zcQZ4oiVjI3I=
+        bh=rSsPTF3UejAgkX4BWlxAdnPiK8QOL7CoO6EvpTCObN0=;
+        b=LmdPooqp0qO23yQlqs/vfGBm8wtcTLoJIosevPsZC5nAafVjzcdmvtPqmZPh/T6OcaYj7u
+        CAK3cDVAE02qHXxZMlBvJWIAkWZdwhsfh2r1dbRWFmszvV1SEG888jSLz4/7bZ7LjiLJIx
+        FcC4B3nXWKTmmdBFIjWrG/1vjQVvls0=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-142-EqCVikXIPg-wBFa6YLJ-mA-1; Wed, 06 Jan 2021 12:41:31 -0500
-X-MC-Unique: EqCVikXIPg-wBFa6YLJ-mA-1
+ us-mta-510-6-q88f3LNKCXJhOoHJFb8Q-1; Wed, 06 Jan 2021 12:41:35 -0500
+X-MC-Unique: 6-q88f3LNKCXJhOoHJFb8Q-1
 Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D3D0E1005E49
-        for <linux-xfs@vger.kernel.org>; Wed,  6 Jan 2021 17:41:30 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AFD7918C8C02
+        for <linux-xfs@vger.kernel.org>; Wed,  6 Jan 2021 17:41:34 +0000 (UTC)
 Received: from bfoster.redhat.com (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 97F8F19CBE
-        for <linux-xfs@vger.kernel.org>; Wed,  6 Jan 2021 17:41:30 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 7195318A9D
+        for <linux-xfs@vger.kernel.org>; Wed,  6 Jan 2021 17:41:29 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 6/9] xfs: fold sbcount quiesce logging into log covering
-Date:   Wed,  6 Jan 2021 12:41:24 -0500
-Message-Id: <20210106174127.805660-7-bfoster@redhat.com>
+Subject: [PATCH 3/9] xfs: separate log cleaning from log quiesce
+Date:   Wed,  6 Jan 2021 12:41:21 -0500
+Message-Id: <20210106174127.805660-4-bfoster@redhat.com>
 In-Reply-To: <20210106174127.805660-1-bfoster@redhat.com>
 References: <20210106174127.805660-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -55,164 +55,74 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_log_sbcount() calls xfs_sync_sb() to sync superblock counters to
-disk when lazy superblock accounting is enabled. This occurs on
-unmount, freeze, and read-only (re)mount and ensures the final
-values are calculated and persisted to disk before each form of
-quiesce completes.
-
-Now that log covering occurs in all of these contexts and uses the
-same xfs_sync_sb() mechanism to update log state, there is no need
-to log the superblock separately for any reason. Update the log
-quiesce path to sync the superblock at least once for any mount
-where lazy superblock accounting is enabled. If the log is already
-covered, it will remain in the covered state. Otherwise, the next
-sync as part of the normal covering sequence will carry the
-associated superblock update with it. Remove xfs_log_sbcount() now
-that it is no longer needed.
+Log quiesce is currently associated with cleaning the log, which is
+accomplished by writing an unmount record as the last step of the
+quiesce sequence. The quiesce codepath is a bit convoluted in this
+regard due to how it is reused from various contexts. In preparation
+to create separate log cleaning and log covering interfaces, lift
+the write of the unmount record into a new cleaning helper and call
+that wherever xfs_log_quiesce() is currently invoked. No functional
+changes.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log.c   | 20 ++++++++++++++++++--
- fs/xfs/xfs_mount.c | 31 -------------------------------
- fs/xfs/xfs_mount.h |  1 -
- fs/xfs/xfs_super.c |  8 --------
- 4 files changed, 18 insertions(+), 42 deletions(-)
+ fs/xfs/xfs_log.c   | 8 +++++++-
+ fs/xfs/xfs_log.h   | 1 +
+ fs/xfs/xfs_super.c | 2 +-
+ 3 files changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 9b8564f280b7..83e2697d4e38 100644
+index 4137ed007111..1b3227a033ad 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -1108,6 +1108,7 @@ xfs_log_cover(
- {
- 	struct xlog		*log = mp->m_log;
- 	int			error = 0;
-+	bool			need_covered;
+@@ -957,7 +957,13 @@ xfs_log_quiesce(
+ 	xfs_wait_buftarg(mp->m_ddev_targp);
+ 	xfs_buf_lock(mp->m_sb_bp);
+ 	xfs_buf_unlock(mp->m_sb_bp);
++}
  
- 	ASSERT((xlog_cil_empty(log) && xlog_iclogs_empty(log) &&
- 	        !xfs_ail_min_lsn(log->l_ailp)) ||
-@@ -1116,6 +1117,21 @@ xfs_log_cover(
- 	if (!xfs_log_writable(mp))
- 		return 0;
- 
-+	/*
-+	 * xfs_log_need_covered() is not idempotent because it progresses the
-+	 * state machine if the log requires covering. Therefore, we must call
-+	 * this function once and use the result until we've issued an sb sync.
-+	 * Do so first to make that abundantly clear.
-+	 *
-+	 * Fall into the covering sequence if the log needs covering or the
-+	 * mount has lazy superblock accounting to sync to disk. The sb sync
-+	 * used for covering accumulates the in-core counters, so covering
-+	 * handles this for us.
-+	 */
-+	need_covered = xfs_log_need_covered(mp);
-+	if (!need_covered && !xfs_sb_version_haslazysbcount(&mp->m_sb))
-+		return 0;
-+
- 	/*
- 	 * To cover the log, commit the superblock twice (at most) in
- 	 * independent checkpoints. The first serves as a reference for the
-@@ -1125,12 +1141,12 @@ xfs_log_cover(
- 	 * covering the log. Push the AIL one more time to leave it empty, as
- 	 * we found it.
- 	 */
--	while (xfs_log_need_covered(mp)) {
-+	do {
- 		error = xfs_sync_sb(mp, true);
- 		if (error)
- 			break;
- 		xfs_ail_push_all_sync(mp->m_ail);
--	}
-+	} while (xfs_log_need_covered(mp));
- 
- 	return error;
- }
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index a62b8a574409..f97b82d0e30f 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1124,12 +1124,6 @@ xfs_unmountfs(
- 		xfs_warn(mp, "Unable to free reserved block pool. "
- 				"Freespace may not be correct on next mount.");
- 
--	error = xfs_log_sbcount(mp);
--	if (error)
--		xfs_warn(mp, "Unable to update superblock counters. "
--				"Freespace may not be correct on next mount.");
--
--
- 	xfs_log_unmount(mp);
- 	xfs_da_unmount(mp);
- 	xfs_uuid_unmount(mp);
-@@ -1164,31 +1158,6 @@ xfs_fs_writable(
- 	return true;
++void
++xfs_log_clean(
++	struct xfs_mount	*mp)
++{
++	xfs_log_quiesce(mp);
+ 	xfs_log_unmount_write(mp);
  }
  
--/*
-- * xfs_log_sbcount
-- *
-- * Sync the superblock counters to disk.
-- *
-- * Note this code can be called during the process of freezing, so we use the
-- * transaction allocator that does not block when the transaction subsystem is
-- * in its frozen state.
-- */
--int
--xfs_log_sbcount(xfs_mount_t *mp)
--{
--	if (!xfs_log_writable(mp))
--		return 0;
--
--	/*
--	 * we don't need to do this if we are updating the superblock
--	 * counters on every modification.
--	 */
--	if (!xfs_sb_version_haslazysbcount(&mp->m_sb))
--		return 0;
--
--	return xfs_sync_sb(mp, true);
--}
--
- /*
-  * Deltas for the block count can vary from 1 to very large, but lock contention
-  * only occurs on frequent small block count updates such as in the delayed
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index dfa429b77ee2..452ca7654dc5 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -399,7 +399,6 @@ int xfs_buf_hash_init(xfs_perag_t *pag);
- void xfs_buf_hash_destroy(xfs_perag_t *pag);
- 
- extern void	xfs_uuid_table_free(void);
--extern int	xfs_log_sbcount(xfs_mount_t *);
- extern uint64_t xfs_default_resblks(xfs_mount_t *mp);
- extern int	xfs_mountfs(xfs_mount_t *mp);
- extern int	xfs_initialize_perag(xfs_mount_t *mp, xfs_agnumber_t agcount,
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 09d956e30fd8..75ada867c665 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -884,19 +884,11 @@ void
- xfs_quiesce_attr(
+@@ -972,7 +978,7 @@ void
+ xfs_log_unmount(
  	struct xfs_mount	*mp)
  {
--	int	error = 0;
--
- 	cancel_delayed_work_sync(&mp->m_log->l_work);
+-	xfs_log_quiesce(mp);
++	xfs_log_clean(mp);
  
- 	/* force the log to unpin objects from the now complete transactions */
- 	xfs_log_force(mp, XFS_LOG_SYNC);
+ 	xfs_trans_ail_destroy(mp);
  
--
--	/* Push the superblock and write an unmount record */
--	error = xfs_log_sbcount(mp);
--	if (error)
--		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
--				"Frozen image may not be consistent.");
- 	xfs_log_clean(mp);
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index 98c913da7587..b0400589f824 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -139,6 +139,7 @@ bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
+ 
+ void	xfs_log_work_queue(struct xfs_mount *mp);
+ void	xfs_log_quiesce(struct xfs_mount *mp);
++void	xfs_log_clean(struct xfs_mount *mp);
+ bool	xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
+ bool	xfs_log_in_recovery(struct xfs_mount *);
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 813be879a5e5..09d956e30fd8 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -897,7 +897,7 @@ xfs_quiesce_attr(
+ 	if (error)
+ 		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
+ 				"Frozen image may not be consistent.");
+-	xfs_log_quiesce(mp);
++	xfs_log_clean(mp);
  }
  
+ /*
 -- 
 2.26.2
 
