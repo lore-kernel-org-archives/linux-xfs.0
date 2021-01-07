@@ -2,279 +2,305 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E292C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 22:20:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8443EC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 23:29:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4E352343B
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 22:20:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EF4B23603
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 23:29:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726720AbhAGWUn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jan 2021 17:20:43 -0500
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:55600 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725944AbhAGWUn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 17:20:43 -0500
-Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 65437107BDA;
-        Fri,  8 Jan 2021 09:19:58 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kxddO-0047Iv-05; Fri, 08 Jan 2021 09:19:58 +1100
-Date:   Fri, 8 Jan 2021 09:19:57 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Donald Buczek <buczek@molgen.mpg.de>
-Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+linux-xfs@molgen.mpg.de
-Subject: Re: [PATCH] xfs: Wake CIL push waiters more reliably
-Message-ID: <20210107221957.GH331610@dread.disaster.area>
-References: <1705b481-16db-391e-48a8-a932d1f137e7@molgen.mpg.de>
- <20201229235627.33289-1-buczek@molgen.mpg.de>
- <20201230221611.GC164134@dread.disaster.area>
- <7bd30426-11dc-e482-dcc8-55d279bc75bd@molgen.mpg.de>
- <20201231215919.GA331610@dread.disaster.area>
- <def7bbfc-c57e-bcec-f81b-b5ccb0e562e8@molgen.mpg.de>
- <20210102224421.GC331610@dread.disaster.area>
- <f74bfdf9-d6ae-67eb-2dbd-559c6d58f45d@molgen.mpg.de>
+        id S1727624AbhAGX3I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jan 2021 18:29:08 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:35508 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727009AbhAGX3I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 18:29:08 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107NQ54o074618;
+        Thu, 7 Jan 2021 23:28:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=k78y12Jur+0+s1wSJPyPZW2Zon63/KMUveEXSz+5Img=;
+ b=sXWanZA47s5Y5jzNACeZzR+S6hzxF0Tz9oWS8ylMu4HXbl7pouKCShhCAWtrPDQPYw3y
+ mrje7+D14I5MbJNlQf/2C/j8CfR+Z3VKwkPcH8fgVA6FPdWOuVLTGZOvybhOUJEZN9G+
+ 3rEkROoEVoiMHBs6msv3UAnbO5pniH1tZgFlSZzGeSAEQqKxquvYmShX+naMrmmrJqAH
+ RHESzmD3YFaJ5ArwimWaUR+pzEokQHcFLlPgxdBFtDwmpWfh8Gsexdunmouk4dSBwryT
+ 8RZbcOARvYouhL3m61QCzzxPlSFXNeozNAfoldvtTy/8xX9Klxl+t4GEetH22Mkd7K2Q OA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 35wepmevg9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 07 Jan 2021 23:28:24 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107NPRuA033051;
+        Thu, 7 Jan 2021 23:28:23 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 35w3g3f8rp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 07 Jan 2021 23:28:23 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 107NSMmb010479;
+        Thu, 7 Jan 2021 23:28:22 GMT
+Received: from localhost (/10.159.138.126)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 07 Jan 2021 23:28:22 +0000
+Date:   Thu, 7 Jan 2021 15:28:21 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [RFC[RAP] PATCH] xfs: allow setting and clearing of log incompat
+ feature flags
+Message-ID: <20210107232821.GN6918@magnolia>
+References: <20201209155211.GB1860561@bfoster>
+ <20201209170428.GC1860561@bfoster>
+ <20201209205132.GA3913616@dread.disaster.area>
+ <20201210142358.GB1912831@bfoster>
+ <20201210215004.GC3913616@dread.disaster.area>
+ <20201211133901.GA2032335@bfoster>
+ <20201212211439.GC632069@dread.disaster.area>
+ <20201214155831.GB2244296@bfoster>
+ <20201214205456.GD632069@dread.disaster.area>
+ <20201215135003.GA2346012@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f74bfdf9-d6ae-67eb-2dbd-559c6d58f45d@molgen.mpg.de>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
-        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=7-415B0cAAAA:8
-        a=DL90HputOuFUeDB1QXYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20201215135003.GA2346012@bfoster>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 adultscore=0
+ phishscore=0 spamscore=0 mlxlogscore=999 suspectscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101070131
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 spamscore=0
+ impostorscore=0 phishscore=0 lowpriorityscore=0 suspectscore=0
+ priorityscore=1501 mlxscore=0 malwarescore=0 clxscore=1015 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101070131
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jan 03, 2021 at 05:03:33PM +0100, Donald Buczek wrote:
-> On 02.01.21 23:44, Dave Chinner wrote:
-> > On Sat, Jan 02, 2021 at 08:12:56PM +0100, Donald Buczek wrote:
-> > > On 31.12.20 22:59, Dave Chinner wrote:
-> > > > On Thu, Dec 31, 2020 at 12:48:56PM +0100, Donald Buczek wrote:
-> > > > > On 30.12.20 23:16, Dave Chinner wrote:
-> > 
-> > > > One could argue that, but one should also understand the design
-> > > > constraints for a particular algorithm are before suggesting
-> > > > that their solution is "robust". :)
-> > > 
-> > > Yes, but an understanding to the extend required by the
-> > > argument should be sufficient :-)
-> > 
-> > And that's the fundamental conceit described by Dunning-Kruger.
-> > 
-> > I.e. someone thinks they know enough to understand the argument,
-> > when in fact they don't understand enough about the subject matter
-> > to realise they don't understand what the expert at the other end is
-> > saying at all....
-> > 
-> > > > > # seq 29
+On Tue, Dec 15, 2020 at 08:50:03AM -0500, Brian Foster wrote:
+> On Tue, Dec 15, 2020 at 07:54:56AM +1100, Dave Chinner wrote:
+> > On Mon, Dec 14, 2020 at 10:58:31AM -0500, Brian Foster wrote:
+> > > On Sun, Dec 13, 2020 at 08:14:39AM +1100, Dave Chinner wrote:
+> > > > On Fri, Dec 11, 2020 at 08:39:01AM -0500, Brian Foster wrote:
+> > > > > On Fri, Dec 11, 2020 at 08:50:04AM +1100, Dave Chinner wrote:
+> > > > > > As for a mechanism for dynamically adding log incompat flags?
+> > > > > > Perhaps we just do that in xfs_trans_alloc() - add an log incompat
+> > > > > > flags field into the transaction reservation structure, and if
+> > > > > > xfs_trans_alloc() sees an incompat field set and the superblock
+> > > > > > doesn't have it set, the first thing it does is run a "set log
+> > > > > > incompat flag" transaction before then doing it's normal work...
+> > > > > > 
+> > > > > > This should be rare enough it doesn't have any measurable
+> > > > > > performance overhead, and it's flexible enough to support any log
+> > > > > > incompat feature we might need to implement...
+> > > > > > 
 > > > > > 
-> > > > > 2020-12-29T20:08:15.652167+01:00 deadbird kernel: [ 1053.860637] XXX trigger cil 00000000e374c6f1 ctx 000000004967d650  ctx->space_used=33554656      , push_seq=29, ctx->sequence=29
+> > > > > But I don't think that is sufficient. As Darrick pointed out up-thread,
+> > > > > the updated superblock has to be written back before we're allowed to
+> > > > > commit transactions with incompatible items. Otherwise, an older kernel
+> > > > > can attempt log recovery with incompatible items present if the
+> > > > > filesystem crashes before the superblock is written back.
 > > > > 
-> > > > So, at 20:08:15 we get a push trigger and the work is queued. But...
+> > > > Sure, that's what the hook in xfs_trans_alloc() would do. It can do
+> > > > the work in the context that is going to need it, and set a wait
+> > > > flag for all incoming transactions that need a log incompat flag to
+> > > > wait for it do it's work.  Once it's done and the flag is set, it
+> > > > can continue and wake all the waiters now that the log incompat flag
+> > > > has been set. Anything that doesn't need a log incompat flag can
+> > > > just keep going and doesn't ever get blocked....
 > > > > 
-> > > > .....
-> > > > > 2020-12-29T20:09:04.961088+01:00 deadbird kernel: [ 1103.168964] XXX wake    cil 00000000e374c6f1 ctx 000000004967d650  ctx->space_used=67109136 >= 67108864, push_seq=29, ctx->sequence=29
-> > > > 
-> > > > It takes the best part of *50 seconds* before the push work actually
-> > > > runs?
-> > > > 
-> > > > That's .... well and truly screwed up - the work should run on that
-> > > > CPU on the very next time it yeilds the CPU. If we're holding the
-> > > > CPU without yeilding it for that long, hangcheck and RCU warnings
-> > > > should be going off...
 > > > 
-> > > No such warnings.
-> > > 
-> > > But the load is probably I/O bound to the log:
-> > > 
-> > > - creates `cp -a` copies of a directory tree with small files (linux source repository)
-> > > - source tree probably completely cached.
-> > > - two copies in parallel
-> > > - slow log (on software raid6)
-> > > 
-> > > Isn't it to be expected that sooner or later you need to wait for
-> > > log writes when you write as fast as possible with lots of
-> > > metadata updates and not so much data?
+> > > It would have to be a sync transaction plus sync AIL force in
+> > > transaction allocation context if we were to log the superblock change,
+> > > which sounds a bit hairy...
 > > 
-> > No, incoming transactions waits for transaction reservation space,
-> > not log writes. Reservation space is freed up by metadata writeback.
-> > So if you have new transactions blocking in xfs_trans_reserve(),
-> > then we are blocking on metadata writeback.
+> > Well, we already do sync AIL forces in transaction reservation when
+> > we run out of log space, so there's no technical reason for this
+> > being a problem at all. xfs_trans_alloc() is expected to block
+> > waiting on AIL tail pushing....
 > > 
-> > The CIL worker thread may be waiting for log IO completion before it
-> > issues more log IO, and in that case it is waiting on iclog buffer
-> > space (i.e. only waiting on internal log state, not metadata
-> > writeback).  Can you find that kworker thread stack and paste it? If
-> > bound on log IO, it will be blocked in xlog_get_iclog_space().
-> > 
-> > Please paste the entire stack output, too, not just the bits you
-> > think are relevant or understand....
-> 
-> That would be a kworker on the "xfs-cil/%s" workqueue, correct?
-> And you mean before the lockup, when the I/O is still active, correct?
-> 
-> This is the usual stack output from that thread:
-> 
-> # # /proc/2080/task/2080: kworker/u82:3+xfs-cil/md0 :
-> # cat /proc/2080/task/2080/stack
-> 
-> [<0>] md_flush_request+0x87/0x190
-> [<0>] raid5_make_request+0x61b/0xb30
-> [<0>] md_handle_request+0x127/0x1a0
-> [<0>] md_submit_bio+0xbd/0x100
-> [<0>] submit_bio_noacct+0x151/0x410
-> [<0>] submit_bio+0x4b/0x1a0
-> [<0>] xlog_state_release_iclog+0x87/0xb0
-> [<0>] xlog_write+0x452/0x6d0
-> [<0>] xlog_cil_push_work+0x2e0/0x4d0
-> [<0>] process_one_work+0x1dd/0x3e0
-> [<0>] worker_thread+0x23f/0x3b0
-> [<0>] kthread+0x118/0x130
-> [<0>] ret_from_fork+0x22/0x30
-> 
-> sampled three times with a few seconds in between, stack identical.
-
-Yeah, so that is MD blocking waiting for a running device cache
-flush to finish before submitting the iclog IO. IOWs, it's waiting
-for hardware to flush volatile caches to stable storage. Every log
-IO has a cache flush preceding it, and if the device doesn't support
-FUA, then there is a post-IO cache flush as well. These flushes are
-necessary for correct IO ordering between the log and metadata/data
-writeback.
-
-Essentially, you're waiting for MD to flush all it's dirty stripe
-cache to the backing devices and then flush the backing device
-caches as well. Nothing can be done at the filesystem level to make
-this faster....
-
-> > Also, cp -a of a linux source tree is just as data intensive as it
-> > is metadata intensive. There's probably more data IO than metadata
-> > IO, so that's more likely to be what is slowing the disks down as
-> > metadata writeback is...
-> > 
-> > > I'm a bit concerned, though, that there seem to be a rather
-> > > unlimited (~ 1000) number of kernel worker threads waiting for the
-> > > cil push and indirectly for log writes.
-> > 
-> > That's normal - XFS is highly asynchronous and defers a lot of work
-> > to completion threads.
-> > 
-> > > > So it dropped by 16 bytes (seems to be common) which is
-> > > > unexpected.  I wonder if it filled a hole in a buffer and so
-> > > > needed one less xlog_op_header()? But then the size would have
-> > > > gone up by at least 128 bytes for the hole that was filled, so
-> > > > it still shouldn't go down in size.
+> > > > I suspect this is one of the rare occasions where an unlogged
+> > > > modification makes an awful lot of sense: we don't even log that we
+> > > > are adding a log incompat flag, we just do an atomic synchronous
+> > > > write straight to the superblock to set the incompat flag(s). The
+> > > > entire modification can be done under the superblock buffer lock to
+> > > > serialise multiple transactions all trying to set incompat bits, and
+> > > > we don't set the in-memory superblock incompat bit until after it
+> > > > has been set and written to disk. Hence multiple waits can check the
+> > > > flag after they've got the sb buffer lock, and they'll see that it's
+> > > > already been set and just continue...
 > > > > 
-> > > > I think you need to instrument xlog_cil_insert_items() and catch
-> > > > a negative length here:
-> > > > 
-> > > > 	/* account for space used by new iovec headers  */
-> > > > 	iovhdr_res = diff_iovecs * sizeof(xlog_op_header_t); len +=
-> > > > 	iovhdr_res; ctx->nvecs += diff_iovecs;
-> > > > 
-> > > > (diff_iovecs will be negative if the number of xlog_op_header
-> > > > structures goes down)
-> > > > 
-> > > > And if this happens, then dump the transaction ticket via
-> > > > xlog_print_trans(tp) so we can see all the log items types and
-> > > > vectors that the transaction has formatted...
 > > > 
-> > > I tried that, but the output was difficult to understand, because
-> > > at that point you can only log the complete transaction with the
-> > > items already updated.  And a shrinking item is not switched to the
-> > > shadow vector, so the formatted content is already overwritten and
-> > > not available for analysis.
+> > > Agreed. That is a notable simplification and I think much more
+> > > preferable than the above for the dynamic approach.
+> > > 
+> > > That said, note that dynamic feature bits might introduce complexity in
+> > > more subtle ways. For example, nothing that I can see currently
+> > > serializes idle log covering with an active transaction (that may have
+> > > just set an incompat bit via some hook yet not committed anything to the
+> > > log subsystem), so it might not be as simple as just adding a hook
+> > > somewhere.
 > > 
-> > Yes, that's exactly the information I need to see.
+> > Right, we had to make log covering away of the CIL to prevent it
+> > from idling while there were multiple active committed transactions
+> > in memory. So the state machine only progresses if both the CIL and
+> > AIL are empty. If we had some way of knowing that a transaction is
+> > in progress, we could check that in xfs_log_need_covered() and we'd
+> > stop the state machine progress at that point. But we got rid of the
+> > active transaction counter that we could use for that....
 > > 
-> > But the fact you think this is something I don't need to know about
-> > is classic Dunning-Kruger in action. You don't understand why I
-> > asked for this information, and found the information "difficult to
-> > understand", so you decided I didn't need it either, despite the
-> > fact I asked explicitly for it.
+> > [Hmmm, didn't I recently have a patch that re-introduced that
+> > counter to fix some other "we need to know if there's an active
+> > transaction running" issue? Can't remember what that was now...]
 > > 
-> > What I first need to know is what operations are being performed by
-> > the transaciton that shrunk and what all the items in it are, not
-> > which specific items shrunk and by how much. There can be tens to
-> > hundreds of items in a single transaction, and it's the combination
-> > of the transaction state, the reservation, the amount of the
-> > reservation that has been consumed, what items are consuming that
-> > reservation, etc. that I need to first see and analyse.
-> > 
-> > I don't ask for specific information just for fun - I ask for
-> > specific information because it is *necessary*. If you want the
-> > problem triaged and fixed, then please supply the information you
-> > are asked for, even if you don't understand why or what it means.
 > 
-> I see. I hope, you can make use of the following.
-
-....
-> Last two events before the lockup:
+> I think you removed it, actually, via commit b41b46c20c0bd ("xfs: remove
+> the m_active_trans counter"). We subsequently discussed reintroducing
+> the same concept for the quotaoff rework [1], which might be what you're
+> thinking of. That uses a percpu rwsem since we don't really need a
+> counter, but I suspect could be reused for serialization in this use
+> case as well (assuming I can get some reviews on it.. ;).
 > 
-> 2021-01-03T14:48:43.098887+01:00 deadbird kernel: [ 3194.831260] XFS (md0): XXX diff_iovecs 0 diff_len -16
-> 2021-01-03T14:48:43.109363+01:00 deadbird kernel: [ 3194.837364] XFS (md0): transaction summary:
-> 2021-01-03T14:48:43.109367+01:00 deadbird kernel: [ 3194.842544] XFS (md0):   log res   = 212728
-> 2021-01-03T14:48:43.118996+01:00 deadbird kernel: [ 3194.847617] XFS (md0):   log count = 8
-> 2021-01-03T14:48:43.119010+01:00 deadbird kernel: [ 3194.852193] XFS (md0):   flags     = 0x25
-> 2021-01-03T14:48:43.129701+01:00 deadbird kernel: [ 3194.857156] XFS (md0): ticket reservation summary:
-> 2021-01-03T14:48:43.129714+01:00 deadbird kernel: [ 3194.862890] XFS (md0):   unit res    = 225140 bytes
-> 2021-01-03T14:48:43.135515+01:00 deadbird kernel: [ 3194.868710] XFS (md0):   current res = 225140 bytes
-> 2021-01-03T14:48:43.148684+01:00 deadbird kernel: [ 3194.874702] XFS (md0):   total reg   = 0 bytes (o/flow = 0 bytes)
-> 2021-01-03T14:48:43.148700+01:00 deadbird kernel: [ 3194.881885] XFS (md0):   ophdrs      = 0 (ophdr space = 0 bytes)
-> 2021-01-03T14:48:43.155781+01:00 deadbird kernel: [ 3194.888975] XFS (md0):   ophdr + reg = 0 bytes
-> 2021-01-03T14:48:43.161210+01:00 deadbird kernel: [ 3194.894404] XFS (md0):   num regions = 0
-> 2021-01-03T14:48:43.165948+01:00 deadbird kernel: [ 3194.899141] XFS (md0): log item:
-> 2021-01-03T14:48:43.169996+01:00 deadbird kernel: [ 3194.903203] XFS (md0):   type      = 0x123b
-> 2021-01-03T14:48:43.174544+01:00 deadbird kernel: [ 3194.907741] XFS (md0):   flags     = 0x8
-> 2021-01-03T14:48:43.178996+01:00 deadbird kernel: [ 3194.912191] XFS (md0):   niovecs   = 3
-> 2021-01-03T14:48:43.183347+01:00 deadbird kernel: [ 3194.916546] XFS (md0):   size      = 696
-> 2021-01-03T14:48:43.187598+01:00 deadbird kernel: [ 3194.920791] XFS (md0):   bytes     = 248
-> 2021-01-03T14:48:43.191932+01:00 deadbird kernel: [ 3194.925131] XFS (md0):   buf len   = 248
-> 2021-01-03T14:48:43.196581+01:00 deadbird kernel: [ 3194.929776] XFS (md0):   iovec[0]
-> 2021-01-03T14:48:43.200633+01:00 deadbird kernel: [ 3194.933832] XFS (md0):     type    = 0x5
-> 2021-01-03T14:48:43.205069+01:00 deadbird kernel: [ 3194.938264] XFS (md0):     len     = 56
-> 2021-01-03T14:48:43.209293+01:00 deadbird kernel: [ 3194.942497] XFS (md0):     first 32 bytes of iovec[0]:
-> 2021-01-03T14:48:43.215494+01:00 deadbird kernel: [ 3194.948690] 00000000: 3b 12 03 00 05 00 00 00 00 00 10 00 00 00 00 00  ;...............
-> 2021-01-03T14:48:43.224801+01:00 deadbird kernel: [ 3194.957997] 00000010: 35 e3 ba 80 2e 00 00 00 00 00 00 00 00 00 00 00  5...............
-> 2021-01-03T14:48:43.234100+01:00 deadbird kernel: [ 3194.967297] XFS (md0):   iovec[1]
-> 2021-01-03T14:48:43.238293+01:00 deadbird kernel: [ 3194.971484] XFS (md0):     type    = 0x6
-> 2021-01-03T14:48:43.242744+01:00 deadbird kernel: [ 3194.975942] XFS (md0):     len     = 176
-> 2021-01-03T14:48:43.247108+01:00 deadbird kernel: [ 3194.980295] XFS (md0):     first 32 bytes of iovec[1]:
-> 2021-01-03T14:48:43.253304+01:00 deadbird kernel: [ 3194.986506] 00000000: 4e 49 b0 81 03 02 00 00 7d 00 00 00 7d 00 00 00  NI......}...}...
-> 2021-01-03T14:48:43.262648+01:00 deadbird kernel: [ 3194.995835] 00000010: 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> 2021-01-03T14:48:43.272064+01:00 deadbird kernel: [ 3195.005267] XFS (md0):   iovec[2]
-> 2021-01-03T14:48:43.276174+01:00 deadbird kernel: [ 3195.009366] XFS (md0):     type    = 0x7
-> 2021-01-03T14:48:43.280649+01:00 deadbird kernel: [ 3195.013848] XFS (md0):     len     = 16
-> 2021-01-03T14:48:43.285042+01:00 deadbird kernel: [ 3195.018243] XFS (md0):     first 16 bytes of iovec[2]:
-> 2021-01-03T14:48:43.291166+01:00 deadbird kernel: [ 3195.024364] 00000000: 00 00 00 00 00 00 00 00 00 ba 02 ef e0 01 23 ef  ..............#.
+> FWIW, I was considering putting those quotaoff patches ahead of the log
+> covering work so we could reuse that code again in attr quiesce, but I
+> think I'm pretty close to being able to remove that particular usage
+> entirely.
 
-Ok, they are all of this type - same transaction type/size, same
-form, all a reduction in the size of the inode data fork in extent
-format. I suspect this is trimming speculative block preallocation
-beyond EOF on final close of a written file.
+I was thinking about using a rwsem to protect the log incompat flags --
+code that thinks it might use a protected feature takes the lock in
+read mode until commit; and the log covering code only clears the
+flags if down_write_trylock succeeds.  That constrains the overhead to
+threads that are trying to use the feature, instead of making all
+threads pay the cost of bumping the counter.
 
-Ok, that matches the case from the root directory you gave earlier,
-where the inode data fork was reducing in size from unlinks in a
-shortform directory.  Different vector, different inode fork format,
-but it appears to result in the same thing where just an inode with
-a reducing inode fork size is relogged.
+> [1] https://lore.kernel.org/linux-xfs/20201001150310.141467-1-bfoster@redhat.com/
+> 
+> > > > This gets rid of the whole "what about a log containing an item that
+> > > > sets the incompat bit" problem, and it provides a simple means of
+> > > > serialising and co-ordinating setting of a log incompat flag....
+> > > > 
+> > > > > My question is how flexible do we really need to make incompatible log
+> > > > > recovery support? Why not just commit the superblock once at mount time
+> > > > > with however many bits the current kernel supports and clear them on
+> > > > > unmount? (Or perhaps consider a lazy setting variant where we set all
+> > > > > supported bits on the first modification..?)
+> > > > 
+> > > > We don't want to set the incompat bits if we don't need to. That
+> > > > just guarantees user horror stories that start with "boot system
+> > > > with new kernel, crash, go back to old kernel, can't mount root
+> > > > filesystem anymore".
+> > > > 
+> > > 
+> > > Indeed, that is a potential wart with just setting bits on mount. I do
+> > > think this is likely to be the case with or without dynamic feature
+> > > bits, because at least in certain cases we'll be setting incompat bits
+> > > in short order anyways. E.g., one of the primary use cases here is for
+> > > xattrs, which is likely to be active on any root filesystem via things
+> > > like SELinux, etc. Point being, all it takes is one feature bit
+> > > associated with some core operation to introduce this risky update
+> > > scenario in practice.
+> > 
+> > That may well be the case for some distros and some root
+> > filesystems, and that's an argument against using log incompat flags
+> > for the -xattr feature-. It's not an argument against
+> > dynamically setting and clearing log incompat features in general.
+> > 
+> 
+> Sure. I mentioned in past mails that my concerns/feedback depend heavily
+> on use case. xattrs is one of the two (?) or so motivating this work.
+> 
+> > That is, if xattrs are so wide spread that we expose users to
+> > "upgrade-fail-can't downgrade" by use of a dynamic log incompat
+> > flag, then we should not be making that feature dynamic and
+> > "autoset". In this situation, it needs to be opt-in and planned,
+> > likely done in maintenance downtime rather than a side effect of a
+> > kernel upgrade.
+> > 
+> > So, yeah, this discussion is making me think that the xattr logging
+> > upgrade is going to need a full ATTR3 feature bit like the other
+> > ATTR and ATTR2 feature bits, not just a log incompat bit...
+> > 
+> 
+> Perhaps. Not using this at all for xattrs does address quite a bit of my
+> concerns, but I think if we wanted the potential flexibility of the log
+> incompat bit down the road, it might be reasonable to manage the
+> experimental cycle "manually" as described above (i.e., essentially
+> don't set/clear that bit automatically for a period of time). I don't
+> feel strongly about one approach over the other in that regard, though,
+> just that we don't immediately turn the mechanism on right out of the
+> gate because the feature bit mechanism happens to support it.
 
-I'll think about this over the weekend and look at it more closely
-next week when I'm back from PTO...
+I suggested to Allison that enabling logged xattrs should be (for now) a
+CONFIG_XFS_DEBUG=y mount option so that only bleeding edge people
+actually get the new functionality.  As we build confidence in the
+feature we can think about letting the kernel turn it on automatically.
 
-Thanks for following up and providing this information, Donald!
+As for a persistent feature flag, let's use directory parent pointers
+since that will force us to create a new rocompat flag anyway.
 
-Cheers,
+> > > I dunno... I'm just trying to explore whether we can simplify this whole
+> > > concept to something more easily managed and less likely to cause us
+> > > headache. I'm a bit concerned that we're disregarding other tradeoffs
+> > > like the complexity noted above, the risk and cost of bugs in the
+> > > mechanism itself (because log recovery has historically been so well
+> > > tested.. :P) or whether the idea of new kernels immediately delivering
+> > > new incompat log formats is a robust/reliable solution in the first
+> > > place. IIRC, the last time we did this was ICREATE and that was hidden
+> > > behind the v5 update. IOW, for certain things like the xattr rework, I'd
+> > > think that kind of experimental stabilization cycle is warranted before
+> > > we'd consider enabling such a feature, even dynamically (which means a
+> > > revertible kernel should be available in common/incremental upgrade
+> > > cases).
+> > 
+> > IMO, the xattr logging rework is most definitely under the
+> > EXPERIMENTAL umbrella and that was always going to be the case.
+> > Also, I don't think we're ignoring the potential complexity of
+> > dynamically setting/clearing stuff - otherwise we wouldn't be having
+> > this conversation about how simple we can actually make it. If it
+> > turns out that we can't do it simply, then setting/clearing at
+> > mount/unmount should be considered "plan B"....
+> > 
+> 
+> I'm more approaching this from a "what are the requirements and how/why
+> do they justify the associated complexity?" angle. That's why I'm asking
+> things like how much difference does a dynamic bit really make for
+> something like xattrs. But I agree that's less of a concern when
+> associated with more obscure or rarely used operations, so on balance I
+> think that's a fair approach to this mechanism provided we consider
+> suitability on a per feature basis.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Hm.  If I had to peer into my crystal ball I'd guess that the current
+xattr logging scheme works fine for most xattr users, so I wouldn't
+worry much about the dynamic bit.
+
+However, I could see things like atomic range exchange being more
+popular, in which case people might notice the overhead of tracking when
+we can turn off the feature bit...
+
+--D
+
+> > But right now, I think the discussion has come up with some ideas to
+> > greatly simplify the dynamic flag setting + clearing....
+> > 
+> 
+> Agreed, thanks.
+> 
+> Brian
+> 
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> > 
+> 
