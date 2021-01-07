@@ -2,71 +2,87 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F114C433E6
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 13:14:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52B03C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 13:18:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2499D22285
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 13:14:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13D8D2312F
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 13:18:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728324AbhAGNOL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jan 2021 08:14:11 -0500
-Received: from mx2.suse.de ([195.135.220.15]:48360 "EHLO mx2.suse.de"
+        id S1728298AbhAGNSf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jan 2021 08:18:35 -0500
+Received: from mx2.suse.de ([195.135.220.15]:51454 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728171AbhAGNOK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Jan 2021 08:14:10 -0500
+        id S1726326AbhAGNSf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Jan 2021 08:18:35 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id E56F3AD12;
-        Thu,  7 Jan 2021 13:13:28 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id AA419AD12;
+        Thu,  7 Jan 2021 13:17:53 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 229D91E0872; Thu,  7 Jan 2021 14:13:28 +0100 (CET)
-Date:   Thu, 7 Jan 2021 14:13:28 +0100
+        id 7BA261E0872; Thu,  7 Jan 2021 14:17:53 +0100 (CET)
+Date:   Thu, 7 Jan 2021 14:17:53 +0100
 From:   Jan Kara <jack@suse.cz>
 To:     Eric Biggers <ebiggers@kernel.org>
 Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
         Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 04/13] fat: only specify I_DIRTY_TIME when needed in
- fat_update_time()
-Message-ID: <20210107131328.GC12990@quack2.suse.cz>
+Subject: Re: [PATCH 05/13] fs: don't call ->dirty_inode for lazytime
+ timestamp updates
+Message-ID: <20210107131753.GD12990@quack2.suse.cz>
 References: <20210105005452.92521-1-ebiggers@kernel.org>
- <20210105005452.92521-5-ebiggers@kernel.org>
+ <20210105005452.92521-6-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210105005452.92521-5-ebiggers@kernel.org>
+In-Reply-To: <20210105005452.92521-6-ebiggers@kernel.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 04-01-21 16:54:43, Eric Biggers wrote:
+On Mon 04-01-21 16:54:44, Eric Biggers wrote:
 > From: Eric Biggers <ebiggers@google.com>
 > 
-> As was done for generic_update_time(), only pass I_DIRTY_TIME to
-> __mark_inode_dirty() when the inode's timestamps were actually updated
-> and lazytime is enabled.  This avoids a weird edge case where
-> I_DIRTY_TIME could be set in i_state when lazytime isn't enabled.
+> There is no need to call ->dirty_inode for lazytime timestamp updates
+> (i.e. for __mark_inode_dirty(I_DIRTY_TIME)), since by the definition of
+> lazytime, filesystems must ignore these updates.  Filesystems only need
+> to care about the updated timestamps when they expire.
+> 
+> Therefore, only call ->dirty_inode when I_DIRTY_INODE is set.
+> 
+> Based on a patch from Christoph Hellwig:
+> https://lore.kernel.org/r/20200325122825.1086872-4-hch@lst.de
 > 
 > Signed-off-by: Eric Biggers <ebiggers@google.com>
 
 ...
-> +	if ((flags & S_VERSION) && inode_maybe_inc_iversion(inode, false))
-> +		dirty_flags |= I_DIRTY_SYNC;
->  
-> -	if (dirty)
-> -		iflags |= I_DIRTY_SYNC;
->  	__mark_inode_dirty(inode, iflags);
-				  ^^^ dirty_flags here?
 
-Otherwise the change looks good to me.
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index 081e335cdee47..e3347fd6eb13a 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -2264,16 +2264,16 @@ void __mark_inode_dirty(struct inode *inode, int flags)
+>  	 * Don't do this for I_DIRTY_PAGES - that doesn't actually
+>  	 * dirty the inode itself
+>  	 */
+> -	if (flags & (I_DIRTY_INODE | I_DIRTY_TIME)) {
+> +	if (flags & I_DIRTY_INODE) {
+>  		trace_writeback_dirty_inode_start(inode, flags);
+>  
+>  		if (sb->s_op->dirty_inode)
+>  			sb->s_op->dirty_inode(inode, flags);
+
+OK, but shouldn't we pass just (flags & I_DIRTY_INODE) to ->dirty_inode().
+Just to make it clear what the filesystem is supposed to consume in
+'flags'...
 
 								Honza
+
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
