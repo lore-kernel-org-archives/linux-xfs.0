@@ -2,186 +2,228 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9771C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:05:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8CA9C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:31:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9515D233CF
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:05:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B112D235DD
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:31:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726326AbhAGVFW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jan 2021 16:05:22 -0500
-Received: from sandeen.net ([63.231.237.45]:38182 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726052AbhAGVFV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Jan 2021 16:05:21 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 98B7411664
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jan 2021 15:03:13 -0600 (CST)
-To:     xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 167137fe
-Message-ID: <07dc2ed0-7328-73e0-9953-ba69bab362ac@sandeen.net>
-Date:   Thu, 7 Jan 2021 15:04:39 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.6.0
+        id S1725944AbhAGVb1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jan 2021 16:31:27 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:57854 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726073AbhAGVb1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 16:31:27 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107LTXIG194897;
+        Thu, 7 Jan 2021 21:30:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=rjv4oHE0rtsaJjCEdImwilTWU6TQ3k9QYoqTOpN+bic=;
+ b=TW8iV90XyYwfSJcxZKV5fUsHdEa0tBGzI+XLyGHjeMTQR7mYZNAnq0bcCQiccdDW2I0g
+ BK00/mNd45wUK20gGq+UPfrsd0bkiZvHqnPt/ttCmPdvcKQGfuaLN4T6uJgJn8HEMiwu
+ B7PQETe1GKHBZ9BBM5ajA0u6yCuPvuWlfSFI+TxOvW+Iqc3HD2TXTdPwJmMEfbYH0By+
+ vFohxmbh+Ztj15G2uySOYHV7i6EQILmSPHSZqTiSPuzLt93i9QrWEFPoyJ5JCFp2uOoD
+ rI6u/LsKwD24jUzgShOGL7Q5tUD2VCvEyFoJoIuiHO674rs0x9EQfJsDS43Hq2gY/9Pk zQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 35wftxe134-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 07 Jan 2021 21:30:43 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107LBRRB102226;
+        Thu, 7 Jan 2021 21:28:43 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 35w3g3awag-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 07 Jan 2021 21:28:43 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 107LSg4x021227;
+        Thu, 7 Jan 2021 21:28:42 GMT
+Received: from localhost (/10.159.138.126)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 07 Jan 2021 13:28:42 -0800
+Date:   Thu, 7 Jan 2021 13:28:41 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/9] xfs: lift writable fs check up into log worker task
+Message-ID: <20210107212841.GM6918@magnolia>
+References: <20210106174127.805660-1-bfoster@redhat.com>
+ <20210106174127.805660-3-bfoster@redhat.com>
+ <20210107183422.GN38809@magnolia>
+ <20210107195321.GA845369@bfoster>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="yv9G2Vqp4xuTEq5gL8knoz9xyQAMys0c9"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210107195321.GA845369@bfoster>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 adultscore=0
+ phishscore=0 spamscore=0 mlxlogscore=999 suspectscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101070123
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 mlxscore=0
+ bulkscore=0 priorityscore=1501 impostorscore=0 clxscore=1015
+ lowpriorityscore=0 mlxlogscore=999 malwarescore=0 spamscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101070124
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---yv9G2Vqp4xuTEq5gL8knoz9xyQAMys0c9
-Content-Type: multipart/mixed; boundary="hQ6tJfJqgkdsiClphljgE8eDleHbzd8z3";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <07dc2ed0-7328-73e0-9953-ba69bab362ac@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 167137fe
+On Thu, Jan 07, 2021 at 02:53:21PM -0500, Brian Foster wrote:
+> On Thu, Jan 07, 2021 at 10:34:22AM -0800, Darrick J. Wong wrote:
+> > On Wed, Jan 06, 2021 at 12:41:20PM -0500, Brian Foster wrote:
+> > > The log covering helper checks whether the filesystem is writable to
+> > > determine whether to cover the log. The helper is currently only
+> > > called from the background log worker. In preparation to reuse the
+> > > helper from freezing contexts, lift the check into xfs_log_worker().
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_log.c | 12 +++++-------
+> > >  1 file changed, 5 insertions(+), 7 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > > index b445e63cbc3c..4137ed007111 100644
+> > > --- a/fs/xfs/xfs_log.c
+> > > +++ b/fs/xfs/xfs_log.c
+> > > @@ -1050,13 +1050,11 @@ xfs_log_space_wake(
+> > >   * can't start trying to idle the log until both the CIL and AIL are empty.
+> > >   */
+> > >  static int
+> > 
+> > I think this is a predicate, right?  Should this function return a bool
+> > instead of an int?
+> > 
+> 
+> Yes, we could change that to return a bool.
+> 
+> > This function always confuses me slightly since it pushes us through the
+> > covering state machine, and (I think) assumes that someone will force
+> > the CIL and push the AIL if it returns zero. :)
+> > 
+> 
+> It basically assumes that the caller will issue a covering commit
+> (xfs_sync_sb()) if indicated, and so progresses ->l_covered_state along
+> in anticipation of that (i.e. NEED -> DONE). The log subsystem side
+> detects that covering commit and makes further state changes (such as
+> DONE -> NEED2) for the next time around in the background worker.
+> 
+> > To check my thinking further-- back in that thread I started about
+> > setting and clearing log incompat flags, I think Dave was pushing me to
+> > clear the log incompat flags just before we call xfs_sync_sb when the
+> > log is in NEED2 state, right?
+> > 
+> 
+> In general, I think so. I don't think it technically has to be NEED2 (as
+> opposed to NEED || NEED2), but in general the idea is to make any such
+> final superblock updates in-core just before the quiesce completes and
+> allow the log covering sequence to commit it for us. This is similar to
+> how this series handles the lazy superblock counters (with the caveat
+> that that stuff just happened to already be implemented inside
+> xfs_sync_sb()).
+> 
+> FWIW, we could also enforce that such final superblock updates reset
+> covered state of the log to NEED2 if we wanted to. I went back and forth
+> on that a bit but decided to leave out unnecessary complexity for the
+> first pass.
+> 
+> > AFAICT the net effect of this series is to reorder the log code so that
+> > xfs_log_quiesce covers the log (force cil, push ail, log two
+> > transactions containing only the superblock), and adds an xfs_log_clean
+> > that quiesces the log and then writes an unmount record after that.
+> > 
+> 
+> Yep.
+> 
+> > Two callers whose behavior does not change with this series are: 1) The
+> > log worker quiesces the log when it's idle; and 2) unmount quiesces the
+> > log and then writes an unmount record so that the next mount knows it
+> > can skip replay entirely.
+> > 
+> 
+> Right, though just to be clear, quiesce never covered the log before
+> this series. It effectively drained the log by forcing the log and
+> pushing the AIL until empty, but then just wrote the unmount record to
+> mark it clean...
 
---hQ6tJfJqgkdsiClphljgE8eDleHbzd8z3
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+<nod> Right, I should've echoed that old quiesce only did force cil and
+push ail, so freeze and unmount do more now.
 
-Hi folks,
+> > The big difference is 3) freeze now only covers the log, whereas before
+> > it would cover, write an unmount record, and immediately redirty the log
+> > to force replay of the snapshot, right?
+> > 
+> 
+> Yes. As above, unmount now also does a log cover -> unmount record
+> instead of just writing the unmount record. This is harmless because we
+> end up in the clean state either way, but I've tried to point this out
+> in the commit logs and whatnot so it's apparent to reviewers. We could
+> technically make the log cover during quiesce optional with a new
+> parameter or something, but it just didn't seem worth it once we start
+> overloading the covering sequence to handle things like lazy sb
+> accounting (or log incompat bits, etc.).
+>
+> > Assuming I understood all that, my next question is: Eric Sandeen was
+> > working on a patchset to process unlinked inodes unconditionally on
+> > mount so that frozen fs images can be written out with the unmount
+> > record (because I guess people make ro snapshots of live fs images and
+> > then balk when they have to make the snapshot rw to run log recovery.
+> > Any thoughts about /that/? :)
+> > 
+> 
+> Eric had mentioned that to me as well. I don't quite recall what the
+> impediment to making that change was the last time around (Eric?), but
+> my view was that is orthogonal to this series. IOW, the primary
+> motivations for this series are to clean up the whole xfs_quiesce_attr()
+> -> xfs_log_quiesce() mess and facilitate the reuse of covering for
+> things like lazy sb accounting and log incompat bit management. We can
+> decide whether to quiesce or clean the log on freeze independently and
+> that's really only a single line tweak to the last patch of the series
+> (i.e., continue to clean the log and just don't redirty it).
 
-The for-next branch of the xfsprogs repository at:
+Oh, it's totally orthogonal, but touched some of the same code parts. :)
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+IIRC I applied it then hit fstests regressions and kicked it out again.
 
-has just been updated.
+--D
 
-This is just the libxfs/ sync for 5.11; I should sweep up other outstandi=
-ng
-patches soon, but you are also welcome to resend if you like.
-
-The new head of the for-next branch is commit:
-
-167137fe xfs: remove xfs_buf_t typedef
-
-New Commits:
-
-Darrick J. Wong (7):
-      [40d39723] xfs: move kernel-specific superblock validation out of l=
-ibxfs
-      [094e2416] xfs: define a new "needrepair" feature
-      [fa9712a0] xfs: enable the needsrepair feature
-      [92415d01] xfs: detect overflows in bmbt records
-      [f28f7e4a] xfs: refactor data device extent validation
-      [23e306ae] xfs: refactor realtime volume extent validation
-      [7626c690] xfs: refactor file range validation
-
-Dave Chinner (5):
-      [9543cb30] xfs: introduce xfs_dialloc_roll()
-      [f0d5b500] xfs: move on-disk inode allocation out of xfs_ialloc()
-      [f7e5a7ae] xfs: move xfs_dialloc_roll() into xfs_dialloc()
-      [8f1e9017] xfs: spilt xfs_dialloc() into 2 functions
-      [167137fe] xfs: remove xfs_buf_t typedef
-
-Eric Sandeen (2):
-      [bbf6e32d] libxfs: cosmetic changes to libxfs_inode_alloc
-      [1671c6df] xfs: don't catch dax+reflink inodes as corruption in ver=
-ifier
-
-Gao Xiang (3):
-      [5e26c7ab] xfs: introduce xfs_validate_stripe_geometry()
-      [6e8b0988] xfs: convert noroom, okalloc in xfs_dialloc() to bool
-      [2cdc6e56] xfs: kill ialloced in xfs_dialloc()
-
-Joseph Qi (1):
-      [db9762f8] xfs: remove unneeded return value check for *init_cursor=
-()
-
-Kaixu Xia (2):
-      [fc5d59c2] xfs: check tp->t_dqinfo value instead of the XFS_TRANS_D=
-Q_DIRTY flag
-      [9e68bcae] xfs: remove the unused XFS_B_FSB_OFFSET macro
-
-Zheng Yongjun (1):
-      [d3ed327c] fs/xfs: convert comma to semicolon
-
-
-Code Diffstat:
-
- copy/xfs_copy.c           |   2 +-
- include/libxfs.h          |   2 +-
- include/libxlog.h         |   6 +-
- include/xfs_inode.h       |   2 +-
- include/xfs_trans.h       |  29 ++++----
- libxfs/init.c             |   2 +-
- libxfs/libxfs_io.h        |   6 +-
- libxfs/libxfs_priv.h      |   4 +-
- libxfs/logitem.c          |   4 +-
- libxfs/rdwr.c             |  26 +++----
- libxfs/trans.c            |  16 ++---
- libxfs/util.c             | 121 ++++++++++++---------------------
- libxfs/xfs_alloc.c        |  16 ++---
- libxfs/xfs_bmap.c         |  28 +++-----
- libxfs/xfs_bmap_btree.c   |   2 -
- libxfs/xfs_btree.c        |  12 ++--
- libxfs/xfs_format.h       |  11 ++-
- libxfs/xfs_ialloc.c       | 170 ++++++++++++++++++++++++----------------=
-------
- libxfs/xfs_ialloc.h       |  36 +++++-----
- libxfs/xfs_ialloc_btree.c |   5 --
- libxfs/xfs_inode_buf.c    |   4 --
- libxfs/xfs_refcount.c     |   9 ---
- libxfs/xfs_rmap.c         |   9 ---
- libxfs/xfs_rtbitmap.c     |  22 +++---
- libxfs/xfs_sb.c           |  84 ++++++++++++++++++-----
- libxfs/xfs_sb.h           |   3 +
- libxfs/xfs_shared.h       |   1 -
- libxfs/xfs_types.c        |  64 +++++++++++++++++
- libxfs/xfs_types.h        |   7 ++
- libxlog/xfs_log_recover.c |  12 ++--
- logprint/log_print_all.c  |   2 +-
- mkfs/proto.c              |  20 +++---
- mkfs/xfs_mkfs.c           |   2 +-
- repair/agheader.c         |   2 +-
- repair/attr_repair.c      |   4 +-
- repair/da_util.h          |   2 +-
- repair/dino_chunks.c      |   8 +--
- repair/incore.h           |   2 +-
- repair/phase5.c           |   2 +-
- repair/phase6.c           |   6 +-
- repair/prefetch.c         |  12 ++--
- repair/rt.c               |   4 +-
- repair/scan.c             |   4 +-
- repair/xfs_repair.c       |   2 +-
- 44 files changed, 425 insertions(+), 362 deletions(-)
-
-
---hQ6tJfJqgkdsiClphljgE8eDleHbzd8z3--
-
---yv9G2Vqp4xuTEq5gL8knoz9xyQAMys0c9
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl/3d2cFAwAAAAAACgkQIK4WkuE93uBG
-CQ/5AXDu6idbmquoOhgaulEHsLotHyhDj5pYUKdrhIvI8Ty7oLmwim4EIAiz2ZYQqpqrBRUl1Tvx
-Mkf6Xp87IkvPk5L1SCCEdlpufv+lZUKCBia5IMIO/zWIBVVuvqyg3DBZ1qn3vMu1oWuY1a4ASf4R
-J0A4yjV+1lPnx42rntLVJO4nIZQ9LWaqV/bDQYUZj3lXb7H5vWy+g0WBllG2gqA1lCFbs5RqX75m
-2Z0sORmHFflQkcU/Wm2m8nfSIf8AG47GSFtkmXo5NaGG6njEwcj3j6XJ/ovYMsmADSuMYamxFi95
-Yt/nGrdsTG/2dIWN/aeP5SEgYTUlMlDTMPWjlZk/MdE0CJ+HGVtx6fbOht7O1n2I1FKk22hLtD1u
-Y3kSxxKK0PwSiTVve1w10mYhfFyqFnDUjy03Q/TjlbxLeAbSWlHW4LgYxSNYxbTsTdVZU694f89Q
-/okfJg5aaKR8MErGnt4wvqHnCZnuOTWBaEJKOB+ht0GwIBb5eNUZ/GZvtrvAM80/2HlfnbKBF+6h
-C2IQOSanlWRGm0NOCTCiD7vL1XLWzpONr3xBCwQsHuhgxy2+xym7BzMSjnTTgQ4XEWjM1UzcbZ8X
-ZqcJzPvq15SMpEBy7tHP5AvRCdjf4/A8INFspWQHNshIvpB8yH6AEfpnzfuCYzN2eqwyfkVH+IBo
-qw8=
-=ZMGn
------END PGP SIGNATURE-----
-
---yv9G2Vqp4xuTEq5gL8knoz9xyQAMys0c9--
+> Brian
+> 
+> > --D
+> > 
+> > > -xfs_log_need_covered(xfs_mount_t *mp)
+> > > +xfs_log_need_covered(
+> > > +	struct xfs_mount	*mp)
+> > >  {
+> > > -	struct xlog	*log = mp->m_log;
+> > > -	int		needed = 0;
+> > > -
+> > > -	if (!xfs_fs_writable(mp, SB_FREEZE_WRITE))
+> > > -		return 0;
+> > > +	struct xlog		*log = mp->m_log;
+> > > +	int			needed = 0;
+> > >  
+> > >  	if (!xlog_cil_empty(log))
+> > >  		return 0;
+> > > @@ -1271,7 +1269,7 @@ xfs_log_worker(
+> > >  	struct xfs_mount	*mp = log->l_mp;
+> > >  
+> > >  	/* dgc: errors ignored - not fatal and nowhere to report them */
+> > > -	if (xfs_log_need_covered(mp)) {
+> > > +	if (xfs_fs_writable(mp, SB_FREEZE_WRITE) && xfs_log_need_covered(mp)) {
+> > >  		/*
+> > >  		 * Dump a transaction into the log that contains no real change.
+> > >  		 * This is needed to stamp the current tail LSN into the log
+> > > -- 
+> > > 2.26.2
+> > > 
+> > 
+> 
