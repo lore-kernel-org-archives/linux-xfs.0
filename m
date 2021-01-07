@@ -7,65 +7,64 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E704FC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 19:41:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CFA3C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 19:42:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5C13233CF
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 19:41:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E09B23443
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 19:42:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728066AbhAGTlW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jan 2021 14:41:22 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:51054 "EHLO
+        id S1726600AbhAGTmQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jan 2021 14:42:16 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:53014 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729384AbhAGTlW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 14:41:22 -0500
+        with ESMTP id S1726541AbhAGTmQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 14:42:16 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107JZvQL156476;
-        Thu, 7 Jan 2021 19:40:39 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107JZYML156356;
+        Thu, 7 Jan 2021 19:41:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=QenP+tBOGcZZ0lGV/kOtU0cWGKM3YjcSE1dn+bvo7NM=;
- b=vV40rcNF1utyL8X8mdqhFGwls+EiY4IyBUT+zxQeLqb0fTLr4mwmXO+dxTzfNNLzqt+P
- yo6E6qmDx8KF3y0FML7Y718HCjjtMgSdZW/qmSoA9d5vu3QZ9OxpzIMtXxIYgu9ZSGYg
- FQC/FsFwQoDaMDBiLAmOTipORusAjG+Cez9zAwhM6rDFDSPAYNFrl/KD7xoJc38YDYsY
- 1p+VLLMsc9MMx7rCKUtJCuy1Xsm4et43aZLbjHt+SZjw6bMb7lgE7+9nAAW6Xo91dDqC
- EAqegNTWfuTpRItsYiGwVM1BK3LounU92zNXeaZCrLDP2YZJf7fPZSCe4gxx45/X1S28 MQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 35wftxdkgw-1
+ bh=OTfWhLr0kFgPEHmxnrlpqr33awbNi2WzkPU36qsX1DM=;
+ b=ANOe122zdBrqd/fFYXy8mY/fJZeSWOsHB++onYdPQnSbk+fldstxzkYyhlOQZeNx6iYF
+ WvN3DQi+Xy6xxx2uPkl41f2fgrwZC9ts3N1AqRyIQrN+5whfODHcJU2u23fuCF867+2+
+ VoqAgwLjHWi1T4laEpxZO+P2IcL6Snx5m+jUkk7GXzCvF4qMQvfe+4bvkC0Lz+uYae2g
+ 36sn2a565N8FHRSdkKUI0ywYZE8oWbLUwVvb7FGWCEf3ZbBVZN6vcm2BhnwgZQLGI0ws
+ DoLMnfhKoVTOtkMwS82i1qh5LyvjZAC8jv1laKXevBl8tBsxZFff+UAGp+TGstC7MxGx Wg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 35wftxdkku-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 07 Jan 2021 19:40:39 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107JadDV136271;
-        Thu, 7 Jan 2021 19:38:39 GMT
+        Thu, 07 Jan 2021 19:41:33 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107JYtK9176190;
+        Thu, 7 Jan 2021 19:39:32 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 35w3qu5q6b-1
+        by aserp3020.oracle.com with ESMTP id 35v1fbmpdj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Jan 2021 19:38:39 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 107Jcc39025201;
-        Thu, 7 Jan 2021 19:38:38 GMT
+        Thu, 07 Jan 2021 19:39:32 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 107JdWdv025732;
+        Thu, 7 Jan 2021 19:39:32 GMT
 Received: from localhost (/10.159.138.126)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 07 Jan 2021 11:38:38 -0800
-Date:   Thu, 7 Jan 2021 11:38:37 -0800
+        with ESMTP ; Thu, 07 Jan 2021 19:39:31 +0000
+Date:   Thu, 7 Jan 2021 11:39:31 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/9] xfs: remove duplicate wq cancel and log force from
- attr quiesce
-Message-ID: <20210107193837.GJ6918@magnolia>
+Subject: Re: [PATCH 9/9] xfs: cover the log on freeze instead of cleaning it
+Message-ID: <20210107193931.GL6918@magnolia>
 References: <20210106174127.805660-1-bfoster@redhat.com>
- <20210106174127.805660-8-bfoster@redhat.com>
+ <20210106174127.805660-10-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210106174127.805660-8-bfoster@redhat.com>
+In-Reply-To: <20210106174127.805660-10-bfoster@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
- spamscore=0 mlxlogscore=999 phishscore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101070114
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ suspectscore=0 spamscore=0 bulkscore=0 adultscore=0 mlxscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101070114
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 mlxscore=0
  bulkscore=0 priorityscore=1501 impostorscore=0 clxscore=1015
@@ -76,37 +75,38 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 06, 2021 at 12:41:25PM -0500, Brian Foster wrote:
-> These two calls are repeated at the beginning of xfs_log_quiesce().
-> Drop them from xfs_quiesce_attr().
+On Wed, Jan 06, 2021 at 12:41:27PM -0500, Brian Foster wrote:
+> Filesystem freeze cleans the log and immediately redirties it so log
+> recovery runs if a crash occurs after the filesystem is frozen. Now
+> that log quiesce covers the log, there is no need to clean the log and
+> redirty it to trigger log recovery because covering has the same
+> effect. Update xfs_fs_freeze() to quiesce (and thus cover) the log.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Makes sense,
+Woot!
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/xfs_super.c | 5 -----
->  1 file changed, 5 deletions(-)
+>  fs/xfs/xfs_super.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 75ada867c665..8fc9044131fc 100644
+> index aedf622d221b..aed74a3fc787 100644
 > --- a/fs/xfs/xfs_super.c
 > +++ b/fs/xfs/xfs_super.c
-> @@ -884,11 +884,6 @@ void
->  xfs_quiesce_attr(
->  	struct xfs_mount	*mp)
->  {
-> -	cancel_delayed_work_sync(&mp->m_log->l_work);
-> -
-> -	/* force the log to unpin objects from the now complete transactions */
-> -	xfs_log_force(mp, XFS_LOG_SYNC);
-> -
->  	xfs_log_clean(mp);
+> @@ -889,8 +889,7 @@ xfs_fs_freeze(
+>  	flags = memalloc_nofs_save();
+>  	xfs_stop_block_reaping(mp);
+>  	xfs_save_resvblks(mp);
+> -	xfs_log_clean(mp);
+> -	ret = xfs_sync_sb(mp, true);
+> +	ret = xfs_log_quiesce(mp);
+>  	memalloc_nofs_restore(flags);
+>  	return ret;
 >  }
->  
 > -- 
 > 2.26.2
 > 
