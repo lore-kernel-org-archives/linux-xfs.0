@@ -2,180 +2,144 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4CEEC433E6
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:47:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BF6AC433DB
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:55:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9745623601
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:47:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07C9023435
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:55:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727835AbhAGVrU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jan 2021 16:47:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36892 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726386AbhAGVrU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Jan 2021 16:47:20 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 141AF23600;
-        Thu,  7 Jan 2021 21:46:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610055999;
-        bh=WqYF7Pa6ZpVpCcZ2vNf1J8/EbxAxiMgwAPAYvp5dLDQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Lk57fWw0z79gwMhVOUES/eP86vzr3eoEI13JEHAquGPwFwas2W3siRt/t7UyvBoKk
-         0tZgiXCWpFwJhLr8shFHtvIqoKowelEXDPU6e0dZ6R1u6ARcYKOd9SNWV9g3kC5htf
-         kyd9Hg9s3MnfzNZLAPo/fjFL1flAqcHiWzExB12FMq2kEedFYf8VvL20nn1L41t2fi
-         pHB2i4b1dJjDkZi0tEzeZKHGdToii/3IgBBrQDDmNIiKyk9yQFabb9H0Q/rRBcRv5O
-         UlxdU6I6DRf3tz3BpUzWboGLL0apdDkKuPASRbGjC7Aiv4eZLnpw459FLvyces5yDO
-         cQ0QFegKNrszQ==
-Date:   Thu, 7 Jan 2021 13:46:37 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>,
-        stable@vger.kernel.org
-Subject: Re: [PATCH 01/13] fs: avoid double-writing inodes on lazytime
- expiration
-Message-ID: <X/eBPZ+kLGuz2NDC@gmail.com>
-References: <20210105005452.92521-1-ebiggers@kernel.org>
- <20210105005452.92521-2-ebiggers@kernel.org>
- <20210107144709.GG12990@quack2.suse.cz>
+        id S1727966AbhAGVzc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jan 2021 16:55:32 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55822 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727835AbhAGVza (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 16:55:30 -0500
+Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id DDF833C28B5;
+        Fri,  8 Jan 2021 08:54:45 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kxdEy-0046v2-K7; Fri, 08 Jan 2021 08:54:44 +1100
+Date:   Fri, 8 Jan 2021 08:54:44 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Donald Buczek <buczek@molgen.mpg.de>, linux-xfs@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        it+linux-xfs@molgen.mpg.de
+Subject: Re: [PATCH] xfs: Wake CIL push waiters more reliably
+Message-ID: <20210107215444.GG331610@dread.disaster.area>
+References: <1705b481-16db-391e-48a8-a932d1f137e7@molgen.mpg.de>
+ <20201229235627.33289-1-buczek@molgen.mpg.de>
+ <20201230221611.GC164134@dread.disaster.area>
+ <20210104162353.GA254939@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210107144709.GG12990@quack2.suse.cz>
+In-Reply-To: <20210104162353.GA254939@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
+        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=7-415B0cAAAA:8
+        a=3RWKWmqAdg96zEk6hCgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 07, 2021 at 03:47:09PM +0100, Jan Kara wrote:
-> > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> > index acfb55834af23..081e335cdee47 100644
-> > --- a/fs/fs-writeback.c
-> > +++ b/fs/fs-writeback.c
-> > @@ -1509,11 +1509,22 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
-> >  
-> >  	spin_unlock(&inode->i_lock);
-> >  
-> > -	if (dirty & I_DIRTY_TIME)
-> > -		mark_inode_dirty_sync(inode);
-> >  	/* Don't write the inode if only I_DIRTY_PAGES was set */
-> >  	if (dirty & ~I_DIRTY_PAGES) {
-> > -		int err = write_inode(inode, wbc);
-> > +		int err;
-> > +
-> > +		/*
-> > +		 * If the inode is being written due to a lazytime timestamp
-> > +		 * expiration, then the filesystem needs to be notified about it
-> > +		 * so that e.g. the filesystem can update on-disk fields and
-> > +		 * journal the timestamp update.  Just calling write_inode()
-> > +		 * isn't enough.  Don't call mark_inode_dirty_sync(), as that
-> > +		 * would put the inode back on the dirty list.
-> > +		 */
-> > +		if ((dirty & I_DIRTY_TIME) && inode->i_sb->s_op->dirty_inode)
-> > +			inode->i_sb->s_op->dirty_inode(inode, I_DIRTY_SYNC);
-> > +
-> > +		err = write_inode(inode, wbc);
-> >  		if (ret == 0)
-> >  			ret = err;
-> >  	}
+On Mon, Jan 04, 2021 at 11:23:53AM -0500, Brian Foster wrote:
+> On Thu, Dec 31, 2020 at 09:16:11AM +1100, Dave Chinner wrote:
+> > On Wed, Dec 30, 2020 at 12:56:27AM +0100, Donald Buczek wrote:
+> > > If the value goes below the limit while some threads are
+> > > already waiting but before the push worker gets to it, these threads are
+> > > not woken.
+> > > 
+> > > Always wake all CIL push waiters. Test with waitqueue_active() as an
+> > > optimization. This is possible, because we hold the xc_push_lock
+> > > spinlock, which prevents additions to the waitqueue.
+> > > 
+> > > Signed-off-by: Donald Buczek <buczek@molgen.mpg.de>
+> > > ---
+> > >  fs/xfs/xfs_log_cil.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> > > index b0ef071b3cb5..d620de8e217c 100644
+> > > --- a/fs/xfs/xfs_log_cil.c
+> > > +++ b/fs/xfs/xfs_log_cil.c
+> > > @@ -670,7 +670,7 @@ xlog_cil_push_work(
+> > >  	/*
+> > >  	 * Wake up any background push waiters now this context is being pushed.
+> > >  	 */
+> > > -	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
+> > > +	if (waitqueue_active(&cil->xc_push_wait))
+> > >  		wake_up_all(&cil->xc_push_wait);
+> > 
+> > That just smells wrong to me. It *might* be correct, but this
+> > condition should pair with the sleep condition, as space used by a
+> > CIL context should never actually decrease....
+> > 
 > 
-> I have to say I dislike this special call of ->dirty_inode(). It works but
-> it makes me wonder, didn't we forget about something or won't we forget in
-> the future? Because it's very easy to miss this special case...
-> 
-> I think attached patch (compile-tested only) should actually fix the
-> problem as well without this special ->dirty_inode() call. It basically
-> only moves the mark_inode_dirty_sync() before inode->i_state clearing.
-> Because conceptually mark_inode_dirty_sync() is IMO the right function to
-> call. It will take care of clearing I_DIRTY_TIME flag (because we are
-> setting I_DIRTY_SYNC), it will also not touch inode->i_io_list if the inode
-> is queued for sync (I_SYNC_QUEUED is set in that case). The only problem
-> with calling it was that it was called *after* clearing dirty bits from
-> i_state... What do you think?
-> 
-> 								Honza
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+> ... but I'm a little confused by this assertion. The shadow buffer
+> allocation code refers to the possibility of shadow buffers falling out
+> that are smaller than currently allocated buffers. Further, the
+> _insert_format_items() code appears to explicitly optimize for this
+> possibility by reusing the active buffer, subtracting the old size/count
+> values from the diff variables and then reformatting the latest
+> (presumably smaller) item to the lv.
 
-> From 80ccc6a78d1c0532f600b98884f7a64e58333485 Mon Sep 17 00:00:00 2001
-> From: Jan Kara <jack@suse.cz>
-> Date: Thu, 7 Jan 2021 15:36:05 +0100
-> Subject: [PATCH] fs: Make sure inode is clean after __writeback_single_inode()
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/fs-writeback.c | 23 ++++++++++++-----------
->  1 file changed, 12 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> index acfb55834af2..b9356f470fae 100644
-> --- a/fs/fs-writeback.c
-> +++ b/fs/fs-writeback.c
-> @@ -1473,22 +1473,25 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
->  			ret = err;
->  	}
->  
-> +	/*
-> +	 * If inode has dirty timestamps and we need to write them, call
-> +	 * mark_inode_dirty_sync() to notify filesystem about it.
-> +	 */
-> +	if (inode->i_state & I_DIRTY_TIME &&
-> +	    (wbc->for_sync || wbc->sync_mode == WB_SYNC_ALL ||
-> +	     time_after(jiffies, inode->dirtied_time_when +
-> +			dirtytime_expire_interval * HZ))) {
-> +		trace_writeback_lazytime(inode);
-> +		mark_inode_dirty_sync(inode);
-> +	}
-> +
->  	/*
->  	 * Some filesystems may redirty the inode during the writeback
->  	 * due to delalloc, clear dirty metadata flags right before
->  	 * write_inode()
->  	 */
->  	spin_lock(&inode->i_lock);
-> -
->  	dirty = inode->i_state & I_DIRTY;
-> -	if ((inode->i_state & I_DIRTY_TIME) &&
-> -	    ((dirty & I_DIRTY_INODE) ||
-> -	     wbc->sync_mode == WB_SYNC_ALL || wbc->for_sync ||
-> -	     time_after(jiffies, inode->dirtied_time_when +
-> -			dirtytime_expire_interval * HZ))) {
-> -		dirty |= I_DIRTY_TIME;
-> -		trace_writeback_lazytime(inode);
-> -	}
->  	inode->i_state &= ~dirty;
->  
->  	/*
-> @@ -1509,8 +1512,6 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
->  
->  	spin_unlock(&inode->i_lock);
->  
-> -	if (dirty & I_DIRTY_TIME)
-> -		mark_inode_dirty_sync(inode);
->  	/* Don't write the inode if only I_DIRTY_PAGES was set */
->  	if (dirty & ~I_DIRTY_PAGES) {
->  		int err = write_inode(inode, wbc);
+Individual items might shrink, but the overall transaction should
+grow. Think of a extent to btree conversion of an inode fork. THe
+data in the inode fork decreases from a list of extents to a btree
+root block pointer, so the inode item shrinks. But then we add a new
+btree root block that contains all the extents + the btree block
+header, and it gets rounded up to ithe 128 byte buffer logging chunk
+size.
 
-It looks like that's going to work, and it fixes the XFS bug too.
+IOWs, while the inode item has decreased in size, the overall
+space consumed by the transaction has gone up and so the CIL ctx
+used_space should increase. Hence we can't just look at individual
+log items and whether they have decreased in size - we have to look
+at all the items in the transaction to understand how the space used
+in that transaction has changed. i.e. it's the aggregation of all
+items in the transaction that matter here, not so much the
+individual items.
 
-Note that if __writeback_single_inode() is called from writeback_single_inode()
-(rather than writeback_sb_inodes()), then the inode might not be queued for
-sync, in which case mark_inode_dirty_sync() will move it to a writeback list.
+> Of course this could just be implementation detail. I haven't dug into
+> the details in the remainder of this thread and I don't have specific
+> examples off the top of my head, but perhaps based on the ability of
+> various structures to change formats and the ability of log vectors to
+> shrink in size, shouldn't we expect the possibility of a CIL context to
+> shrink in size as well? Just from poking around the CIL it seems like
+> the surrounding code supports it (xlog_cil_insert_items() checks len > 0
+> for recalculating split res as well)...
 
-That's okay because afterwards, writeback_single_inode() will delete the inode
-from any writeback list if it's been fully cleaned, right?  So clean inodes
-won't get left on a writeback list.
+Yes, there may be situations where it decreases. It may be this is
+fine, but the assumption *I've made* in lots of the CIL push code is
+that ctx->used_space rarely, if ever, will go backwards.
 
-It's confusing because there are comments in writeback_single_inode() and above
-__writeback_single_inode() that say that the inode must not be moved between
-writeback lists.  I take it that those comments are outdated, as they predate
-I_SYNC_QUEUED being introduced by commit 5afced3bf281 ("writeback: Avoid
-skipping inode writeback")?
+e.g. we run the first transaction into the CIL, it steals the sapce
+needed for the cil checkpoint headers for the transaciton. Then if
+the space returned by the item formatting is negative (because it is
+in the AIL and being relogged), the CIL checkpoint now doesn't have
+the space reserved it needs to run a checkpoint. That transaction is
+a sync transaction, so it forces the log, and now we push the CIL
+without sufficient reservation to write out the log headers and the
+items we just formatted....
 
-- Eric
+So, yeah, shrinking transaction space usage definitely violates some
+of the assumptions the code makes about how relogging works. It's
+entirely possible the assumptions I've made are not entirely correct
+in some corner cases - those particular cases are what we need to
+ferret out here, and then decide if they are correct or not and deal
+with it from there...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
