@@ -2,92 +2,180 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7822C4360C
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:38:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4CEEC433E6
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:47:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBA5B23601
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:38:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9745623601
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:47:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727260AbhAGViE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jan 2021 16:38:04 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:59820 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726948AbhAGViE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 16:38:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1610055397;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=6y2EmEKtACttD78X+2J3drSE7+qMQxO5zbf7lMSi8Os=;
-        b=hb442w694CknWv5p8jGwk3I7aYRZWkWxMrg4tCfpRCqvMXkwcBOnUCXiYtvgU7/Q/Yhjg5
-        jITShiQj3WiGw0If6FSJDEo8jgSJHBebTLEssau68kmb8NfKcDGz6vtruIMoDAvN3fc9Ta
-        /DxNRVMXuv8gPzWmuRdBCEHuH6abyV4=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-591-KUy4Sxl5MbKcFNZN0YZAWw-1; Thu, 07 Jan 2021 16:36:35 -0500
-X-MC-Unique: KUy4Sxl5MbKcFNZN0YZAWw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B99568030AF;
-        Thu,  7 Jan 2021 21:36:34 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8196810013BD;
-        Thu,  7 Jan 2021 21:36:34 +0000 (UTC)
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>
-From:   Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH V2] xfs: do not allow reflinking inodes with the dax flag set
-Message-ID: <862a665f-3f1b-64e0-70eb-00cc35eaa2df@redhat.com>
-Date:   Thu, 7 Jan 2021 15:36:34 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.6.0
+        id S1727835AbhAGVrU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jan 2021 16:47:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36892 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726386AbhAGVrU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Jan 2021 16:47:20 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 141AF23600;
+        Thu,  7 Jan 2021 21:46:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610055999;
+        bh=WqYF7Pa6ZpVpCcZ2vNf1J8/EbxAxiMgwAPAYvp5dLDQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Lk57fWw0z79gwMhVOUES/eP86vzr3eoEI13JEHAquGPwFwas2W3siRt/t7UyvBoKk
+         0tZgiXCWpFwJhLr8shFHtvIqoKowelEXDPU6e0dZ6R1u6ARcYKOd9SNWV9g3kC5htf
+         kyd9Hg9s3MnfzNZLAPo/fjFL1flAqcHiWzExB12FMq2kEedFYf8VvL20nn1L41t2fi
+         pHB2i4b1dJjDkZi0tEzeZKHGdToii/3IgBBrQDDmNIiKyk9yQFabb9H0Q/rRBcRv5O
+         UlxdU6I6DRf3tz3BpUzWboGLL0apdDkKuPASRbGjC7Aiv4eZLnpw459FLvyces5yDO
+         cQ0QFegKNrszQ==
+Date:   Thu, 7 Jan 2021 13:46:37 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>,
+        stable@vger.kernel.org
+Subject: Re: [PATCH 01/13] fs: avoid double-writing inodes on lazytime
+ expiration
+Message-ID: <X/eBPZ+kLGuz2NDC@gmail.com>
+References: <20210105005452.92521-1-ebiggers@kernel.org>
+ <20210105005452.92521-2-ebiggers@kernel.org>
+ <20210107144709.GG12990@quack2.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210107144709.GG12990@quack2.suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Today, xfs_reflink_remap_prep() will reject inodes which are in the CPU
-direct access state, i.e. IS_DAX() is true.  However, it is possible to
-have inodes with the XFS_DIFLAG2_DAX set, but which are not activated as
-dax, due to the flag being set after the inode was loaded.
+On Thu, Jan 07, 2021 at 03:47:09PM +0100, Jan Kara wrote:
+> > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> > index acfb55834af23..081e335cdee47 100644
+> > --- a/fs/fs-writeback.c
+> > +++ b/fs/fs-writeback.c
+> > @@ -1509,11 +1509,22 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+> >  
+> >  	spin_unlock(&inode->i_lock);
+> >  
+> > -	if (dirty & I_DIRTY_TIME)
+> > -		mark_inode_dirty_sync(inode);
+> >  	/* Don't write the inode if only I_DIRTY_PAGES was set */
+> >  	if (dirty & ~I_DIRTY_PAGES) {
+> > -		int err = write_inode(inode, wbc);
+> > +		int err;
+> > +
+> > +		/*
+> > +		 * If the inode is being written due to a lazytime timestamp
+> > +		 * expiration, then the filesystem needs to be notified about it
+> > +		 * so that e.g. the filesystem can update on-disk fields and
+> > +		 * journal the timestamp update.  Just calling write_inode()
+> > +		 * isn't enough.  Don't call mark_inode_dirty_sync(), as that
+> > +		 * would put the inode back on the dirty list.
+> > +		 */
+> > +		if ((dirty & I_DIRTY_TIME) && inode->i_sb->s_op->dirty_inode)
+> > +			inode->i_sb->s_op->dirty_inode(inode, I_DIRTY_SYNC);
+> > +
+> > +		err = write_inode(inode, wbc);
+> >  		if (ret == 0)
+> >  			ret = err;
+> >  	}
+> 
+> I have to say I dislike this special call of ->dirty_inode(). It works but
+> it makes me wonder, didn't we forget about something or won't we forget in
+> the future? Because it's very easy to miss this special case...
+> 
+> I think attached patch (compile-tested only) should actually fix the
+> problem as well without this special ->dirty_inode() call. It basically
+> only moves the mark_inode_dirty_sync() before inode->i_state clearing.
+> Because conceptually mark_inode_dirty_sync() is IMO the right function to
+> call. It will take care of clearing I_DIRTY_TIME flag (because we are
+> setting I_DIRTY_SYNC), it will also not touch inode->i_io_list if the inode
+> is queued for sync (I_SYNC_QUEUED is set in that case). The only problem
+> with calling it was that it was called *after* clearing dirty bits from
+> i_state... What do you think?
+> 
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
 
-To avoid confusion and make the lack of dax+reflink crystal clear for the
-user, reject reflink requests for both IS_DAX and XFS_DIFLAG2_DAX inodes
-unless DAX mode is impossible due to mounting with -o dax=never.
+> From 80ccc6a78d1c0532f600b98884f7a64e58333485 Mon Sep 17 00:00:00 2001
+> From: Jan Kara <jack@suse.cz>
+> Date: Thu, 7 Jan 2021 15:36:05 +0100
+> Subject: [PATCH] fs: Make sure inode is clean after __writeback_single_inode()
+> 
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/fs-writeback.c | 23 ++++++++++++-----------
+>  1 file changed, 12 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index acfb55834af2..b9356f470fae 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -1473,22 +1473,25 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+>  			ret = err;
+>  	}
+>  
+> +	/*
+> +	 * If inode has dirty timestamps and we need to write them, call
+> +	 * mark_inode_dirty_sync() to notify filesystem about it.
+> +	 */
+> +	if (inode->i_state & I_DIRTY_TIME &&
+> +	    (wbc->for_sync || wbc->sync_mode == WB_SYNC_ALL ||
+> +	     time_after(jiffies, inode->dirtied_time_when +
+> +			dirtytime_expire_interval * HZ))) {
+> +		trace_writeback_lazytime(inode);
+> +		mark_inode_dirty_sync(inode);
+> +	}
+> +
+>  	/*
+>  	 * Some filesystems may redirty the inode during the writeback
+>  	 * due to delalloc, clear dirty metadata flags right before
+>  	 * write_inode()
+>  	 */
+>  	spin_lock(&inode->i_lock);
+> -
+>  	dirty = inode->i_state & I_DIRTY;
+> -	if ((inode->i_state & I_DIRTY_TIME) &&
+> -	    ((dirty & I_DIRTY_INODE) ||
+> -	     wbc->sync_mode == WB_SYNC_ALL || wbc->for_sync ||
+> -	     time_after(jiffies, inode->dirtied_time_when +
+> -			dirtytime_expire_interval * HZ))) {
+> -		dirty |= I_DIRTY_TIME;
+> -		trace_writeback_lazytime(inode);
+> -	}
+>  	inode->i_state &= ~dirty;
+>  
+>  	/*
+> @@ -1509,8 +1512,6 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+>  
+>  	spin_unlock(&inode->i_lock);
+>  
+> -	if (dirty & I_DIRTY_TIME)
+> -		mark_inode_dirty_sync(inode);
+>  	/* Don't write the inode if only I_DIRTY_PAGES was set */
+>  	if (dirty & ~I_DIRTY_PAGES) {
+>  		int err = write_inode(inode, wbc);
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-V2: Allow reflinking dax-flagged inodes in "mount -o dax=never" mode
+It looks like that's going to work, and it fixes the XFS bug too.
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 6fa05fb78189..e238a5b7b722 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1308,6 +1308,15 @@ xfs_reflink_remap_prep(
- 	if (IS_DAX(inode_in) || IS_DAX(inode_out))
- 		goto out_unlock;
- 
-+	/*
-+	 * Until we have dax+reflink, don't allow reflinking dax-flagged
-+	 * inodes unless we are in dax=never mode.
-+	 */
-+	if (!(mp->m_flags & XFS_MOUNT_DAX_NEVER) &&
-+	     (src->i_d.di_flags2 & XFS_DIFLAG2_DAX ||
-+	      dest->i_d.di_flags2 & XFS_DIFLAG2_DAX))
-+		goto out_unlock;
-+
- 	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
- 			len, remap_flags);
- 	if (ret || *len == 0)
+Note that if __writeback_single_inode() is called from writeback_single_inode()
+(rather than writeback_sb_inodes()), then the inode might not be queued for
+sync, in which case mark_inode_dirty_sync() will move it to a writeback list.
 
+That's okay because afterwards, writeback_single_inode() will delete the inode
+from any writeback list if it's been fully cleaned, right?  So clean inodes
+won't get left on a writeback list.
+
+It's confusing because there are comments in writeback_single_inode() and above
+__writeback_single_inode() that say that the inode must not be moved between
+writeback lists.  I take it that those comments are outdated, as they predate
+I_SYNC_QUEUED being introduced by commit 5afced3bf281 ("writeback: Avoid
+skipping inode writeback")?
+
+- Eric
