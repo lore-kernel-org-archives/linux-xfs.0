@@ -2,158 +2,131 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E23D1C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 19:40:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E77CC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 19:41:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A135B23444
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 19:40:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B553233CF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 19:41:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726650AbhAGTkB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jan 2021 14:40:01 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:44718 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725903AbhAGTkB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 14:40:01 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107JYxmt114833;
-        Thu, 7 Jan 2021 19:39:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=qn9Z+IbWEhKkdgZn/V2fh4nmEvyDWuTPUDH6rkAzjko=;
- b=CkYWZPB8mlKGCSxjkZi25hixiRE9dRuVGxg89qf715Gqi/WPF+1W+kzOZmN7rMS4lv+M
- V478Smy3yRZlS7gOMOunGVc9H38sqI0TWYLkN5a7Wger9eRuWG0kGKiaMuqkT3nzRzQS
- IwXWnBIS3sM3OyXsE6NsJqxReMRsY1p+QGfh0fMp06r9zA/Ro1Frnp4KIdkIWzVpP1LV
- O89ybiZopoq0yhVvK2HY1dDE/gxWXrFVrmwzOV0DkIIUSWkYJT4yUsP4V8/FJy5WbLnX
- JiWTb2ZExF6s50eDK4U0mlSsAY35UCwPTVRaTAa9t8kM+8Rm6A7XlTqlX3CzkAygKeWN 6A== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 35wcuxxcp7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 07 Jan 2021 19:39:19 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107JaWie024079;
-        Thu, 7 Jan 2021 19:39:19 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 35v4redqyb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Jan 2021 19:39:19 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 107JdIxb007380;
-        Thu, 7 Jan 2021 19:39:18 GMT
-Received: from localhost (/10.159.138.126)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 07 Jan 2021 19:39:17 +0000
-Date:   Thu, 7 Jan 2021 11:39:16 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/9] xfs: remove xfs_quiesce_attr()
-Message-ID: <20210107193916.GK6918@magnolia>
-References: <20210106174127.805660-1-bfoster@redhat.com>
- <20210106174127.805660-9-bfoster@redhat.com>
+        id S1729178AbhAGTky (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jan 2021 14:40:54 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:34029 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728240AbhAGTky (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 14:40:54 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1610048367;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=TTnE+e274J0XR116SYcFy+bmFzMf1rapQW1xp8qUHtY=;
+        b=A3MV/gcgJwiDHFmdT9TqQJ30jfei9RmCoKxrpobur0h1ObKJZEG4/wOn7jyuiWxVbl5bnr
+        k0qtBajwykezWoaVABbyuvpqNlOVl4gje0L6zdt3xY5PZzUdeNZ7kjLDk72GtCmgW+FMw/
+        Fx7YjNLZMmMylWbHCRGPIoLq5H96V68=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-268-j_d6GYuMPhaycW3wM0R20A-1; Thu, 07 Jan 2021 14:39:25 -0500
+X-MC-Unique: j_d6GYuMPhaycW3wM0R20A-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D2583107ACE3;
+        Thu,  7 Jan 2021 19:39:23 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 7ADF010002A6;
+        Thu,  7 Jan 2021 19:39:23 +0000 (UTC)
+Subject: Re: [PATCH V2] xfsprogs: cosmetic changes to libxfs_inode_alloc
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
+References: <3fa15760-2e68-2c64-3914-fafbdd0e41fd@redhat.com>
+ <20210107193724.GI6918@magnolia>
+From:   Eric Sandeen <sandeen@redhat.com>
+Message-ID: <b6b49681-faf8-b0e2-845b-4536abc769af@redhat.com>
+Date:   Thu, 7 Jan 2021 13:39:23 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210106174127.805660-9-bfoster@redhat.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 bulkscore=0
- suspectscore=0 spamscore=0 adultscore=0 malwarescore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101070114
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
- clxscore=1015 spamscore=0 impostorscore=0 priorityscore=1501 mlxscore=0
- adultscore=0 mlxlogscore=999 lowpriorityscore=0 phishscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101070114
+In-Reply-To: <20210107193724.GI6918@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 06, 2021 at 12:41:26PM -0500, Brian Foster wrote:
-> xfs_quiesce_attr() is now a wrapper for xfs_log_clean(). Remove it
-> and call xfs_log_clean() directly.
+On 1/7/21 1:37 PM, Darrick J. Wong wrote:
+> On Thu, Jan 07, 2021 at 01:20:49PM -0600, Eric Sandeen wrote:
+>> This pre-patch helps make the next libxfs-sync for 5.11 a bit
+>> more clear.
+>>
+>> In reality, the libxfs_inode_alloc function matches the kernel's
+>> xfs_dir_ialloc so rename it for clarity before the rest of the
+>> sync, and change several variable names for the same reason.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> V2: Fix up local transaction pointer problems pointed out by Brian.
+>>
+>> Essentially, use tp locally, and reassign tpp on return.
+>>
+>> diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+>> index 742aebc8..01a62daa 100644
+>> --- a/include/xfs_inode.h
+>> +++ b/include/xfs_inode.h
+>> @@ -156,7 +156,7 @@ typedef struct cred {
+>>  	gid_t	cr_gid;
+>>  } cred_t;
+>>  
+>> -extern int	libxfs_inode_alloc (struct xfs_trans **, struct xfs_inode *,
+>> +extern int	libxfs_dir_ialloc (struct xfs_trans **, struct xfs_inode *,
+>>  				mode_t, nlink_t, xfs_dev_t, struct cred *,
+>>  				struct fsxattr *, struct xfs_inode **);
+>>  extern void	libxfs_trans_inode_alloc_buf (struct xfs_trans *,
+>> diff --git a/libxfs/util.c b/libxfs/util.c
+>> index 252cf91e..376c5dac 100644
+>> --- a/libxfs/util.c
+>> +++ b/libxfs/util.c
+>> @@ -531,9 +531,9 @@ error0:	/* Cancel bmap, cancel trans */
+>>   * other in repair - now there is just the one.
+>>   */
+>>  int
+>> -libxfs_inode_alloc(
+>> -	xfs_trans_t	**tp,
+>> -	xfs_inode_t	*pip,
+>> +libxfs_dir_ialloc(
+>> +	xfs_trans_t	**tpp,
+>> +	xfs_inode_t	*dp,
+>>  	mode_t		mode,
+>>  	nlink_t		nlink,
+>>  	xfs_dev_t	rdev,
+>> @@ -541,16 +541,18 @@ libxfs_inode_alloc(
+>>  	struct fsxattr	*fsx,
+>>  	xfs_inode_t	**ipp)
+>>  {
+>> -	xfs_buf_t	*ialloc_context;
+>> +	xfs_trans_t	*tp;
+>>  	xfs_inode_t	*ip;
+>> -	int		error;
+>> +	xfs_buf_t	*ialloc_context = NULL;
+>> +	int		code;
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Maybe de-typedef this function too?  Though I guess if the next patch is
+> a backport of "xfs: move on-disk inode allocation out of xfs_ialloc" to
+> libxfs/util.c then maybe that doesn't matter and I'll just shut up.  :)
 
-Yay, I always found "quiesce attr" confusing...
+As Mr. Reznor says, "everything goes away, in the end."
+ 
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Thanks,
+-Eric
 
---D
-
-> ---
->  fs/xfs/xfs_mount.c |  2 +-
->  fs/xfs/xfs_super.c | 24 ++----------------------
->  2 files changed, 3 insertions(+), 23 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index f97b82d0e30f..4a26b48b18e4 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -946,7 +946,7 @@ xfs_mountfs(
->  	 */
->  	if ((mp->m_flags & (XFS_MOUNT_RDONLY|XFS_MOUNT_NORECOVERY)) ==
->  							XFS_MOUNT_RDONLY) {
-> -		xfs_quiesce_attr(mp);
-> +		xfs_log_clean(mp);
->  	}
->  
->  	/*
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 8fc9044131fc..aedf622d221b 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -867,26 +867,6 @@ xfs_restore_resvblks(struct xfs_mount *mp)
->  	xfs_reserve_blocks(mp, &resblks, NULL);
->  }
->  
-> -/*
-> - * Trigger writeback of all the dirty metadata in the file system.
-> - *
-> - * This ensures that the metadata is written to their location on disk rather
-> - * than just existing in transactions in the log. This means after a quiesce
-> - * there is no log replay required to write the inodes to disk - this is the
-> - * primary difference between a sync and a quiesce.
-> - *
-> - * We cancel log work early here to ensure all transactions the log worker may
-> - * run have finished before we clean up and log the superblock and write an
-> - * unmount record. The unfreeze process is responsible for restarting the log
-> - * worker correctly.
-> - */
-> -void
-> -xfs_quiesce_attr(
-> -	struct xfs_mount	*mp)
-> -{
-> -	xfs_log_clean(mp);
-> -}
-> -
->  /*
->   * Second stage of a freeze. The data is already frozen so we only
->   * need to take care of the metadata. Once that's done sync the superblock
-> @@ -909,7 +889,7 @@ xfs_fs_freeze(
->  	flags = memalloc_nofs_save();
->  	xfs_stop_block_reaping(mp);
->  	xfs_save_resvblks(mp);
-> -	xfs_quiesce_attr(mp);
-> +	xfs_log_clean(mp);
->  	ret = xfs_sync_sb(mp, true);
->  	memalloc_nofs_restore(flags);
->  	return ret;
-> @@ -1752,7 +1732,7 @@ xfs_remount_ro(
->  	 */
->  	xfs_save_resvblks(mp);
->  
-> -	xfs_quiesce_attr(mp);
-> +	xfs_log_clean(mp);
->  	mp->m_flags |= XFS_MOUNT_RDONLY;
->  
->  	return 0;
-> -- 
-> 2.26.2
-> 
