@@ -2,144 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BF6AC433DB
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:55:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B55B6C433E9
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 22:06:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07C9023435
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 21:55:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D8782343B
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 22:06:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727966AbhAGVzc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jan 2021 16:55:32 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55822 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727835AbhAGVza (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 16:55:30 -0500
-Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id DDF833C28B5;
-        Fri,  8 Jan 2021 08:54:45 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kxdEy-0046v2-K7; Fri, 08 Jan 2021 08:54:44 +1100
-Date:   Fri, 8 Jan 2021 08:54:44 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Donald Buczek <buczek@molgen.mpg.de>, linux-xfs@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+linux-xfs@molgen.mpg.de
-Subject: Re: [PATCH] xfs: Wake CIL push waiters more reliably
-Message-ID: <20210107215444.GG331610@dread.disaster.area>
-References: <1705b481-16db-391e-48a8-a932d1f137e7@molgen.mpg.de>
- <20201229235627.33289-1-buczek@molgen.mpg.de>
- <20201230221611.GC164134@dread.disaster.area>
- <20210104162353.GA254939@bfoster>
+        id S1727910AbhAGWGl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jan 2021 17:06:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39036 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726854AbhAGWGk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Jan 2021 17:06:40 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 61A192343B;
+        Thu,  7 Jan 2021 22:05:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610057159;
+        bh=8/Njk5My/xo58SgY5AEYrWu0cHTtA/f6rh9KDGGIO84=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=YqvO6VLFRUXCMoC7PXsrFxiGKcSo5KFcmgW+yA1wydzR95Nm9jMb/qeuHCgJDgfgt
+         q3nqfHHT5HSRkqUn4PlHxsRBI1KHccRyxUPjcI0LRC7kPMKYLaY3UebB/ga+Mh/YLE
+         pM2QS0Ers4Kun38cgeylE0HUj5Q9XblXT6D6smj9++abKWGB1WYFj+Yssy/xlhR53O
+         jMlwicEjdSSeDCtmHU+T8iqA31cq6bDE2u9ioKmR4bYPPNqj+IntLOTGjkS22CX47O
+         WZonqErVNV+e4n3zroK91TJ0+s+PFGcQIW5j/TZRfEap218U9aediX2r+c63ocXeEF
+         2oIGzJyMeAEiQ==
+Date:   Thu, 7 Jan 2021 14:05:57 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 11/13] fs: add a lazytime_expired method
+Message-ID: <X/eFxSh3ac6EGdYI@gmail.com>
+References: <20210105005452.92521-1-ebiggers@kernel.org>
+ <20210105005452.92521-12-ebiggers@kernel.org>
+ <20210107140228.GF12990@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210104162353.GA254939@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
-        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=7-415B0cAAAA:8
-        a=3RWKWmqAdg96zEk6hCgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210107140228.GF12990@quack2.suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 04, 2021 at 11:23:53AM -0500, Brian Foster wrote:
-> On Thu, Dec 31, 2020 at 09:16:11AM +1100, Dave Chinner wrote:
-> > On Wed, Dec 30, 2020 at 12:56:27AM +0100, Donald Buczek wrote:
-> > > If the value goes below the limit while some threads are
-> > > already waiting but before the push worker gets to it, these threads are
-> > > not woken.
-> > > 
-> > > Always wake all CIL push waiters. Test with waitqueue_active() as an
-> > > optimization. This is possible, because we hold the xc_push_lock
-> > > spinlock, which prevents additions to the waitqueue.
-> > > 
-> > > Signed-off-by: Donald Buczek <buczek@molgen.mpg.de>
-> > > ---
-> > >  fs/xfs/xfs_log_cil.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> > > index b0ef071b3cb5..d620de8e217c 100644
-> > > --- a/fs/xfs/xfs_log_cil.c
-> > > +++ b/fs/xfs/xfs_log_cil.c
-> > > @@ -670,7 +670,7 @@ xlog_cil_push_work(
-> > >  	/*
-> > >  	 * Wake up any background push waiters now this context is being pushed.
-> > >  	 */
-> > > -	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
-> > > +	if (waitqueue_active(&cil->xc_push_wait))
-> > >  		wake_up_all(&cil->xc_push_wait);
+On Thu, Jan 07, 2021 at 03:02:28PM +0100, Jan Kara wrote:
+> On Mon 04-01-21 16:54:50, Eric Biggers wrote:
+> > From: Eric Biggers <ebiggers@google.com>
 > > 
-> > That just smells wrong to me. It *might* be correct, but this
-> > condition should pair with the sleep condition, as space used by a
-> > CIL context should never actually decrease....
+> > Add a lazytime_expired method to 'struct super_operations'.  Filesystems
+> > can implement this to be notified when an inode's lazytime timestamps
+> > have expired and need to be written to disk.
 > > 
+> > This avoids any potential ambiguity with
+> > ->dirty_inode(inode, I_DIRTY_SYNC), which can also mean a generic
+> > dirtying of the inode, not just a lazytime timestamp expiration.
+> > In particular, this will be useful for XFS.
+> > 
+> > If not implemented, then ->dirty_inode(inode, I_DIRTY_SYNC) continues to
+> > be called.
+> > 
+> > Note that there are three cases where we have to make sure to call
+> > lazytime_expired():
+> > 
+> > - __writeback_single_inode(): inode is being written now
+> > - vfs_fsync_range(): inode is going to be synced
+> > - iput(): inode is going to be evicted
+> > 
+> > In the latter two cases, the inode still needs to be put on the
+> > writeback list.  So, we can't just replace the calls to
+> > mark_inode_dirty_sync() with lazytime_expired().  Instead, add a new
+> > flag I_DIRTY_TIME_EXPIRED which can be passed to __mark_inode_dirty().
+> > It's like I_DIRTY_SYNC, except it causes the filesystem to be notified
+> > of a lazytime expiration rather than a generic I_DIRTY_SYNC.
+> > 
+> > Signed-off-by: Eric Biggers <ebiggers@google.com>
 > 
-> ... but I'm a little confused by this assertion. The shadow buffer
-> allocation code refers to the possibility of shadow buffers falling out
-> that are smaller than currently allocated buffers. Further, the
-> _insert_format_items() code appears to explicitly optimize for this
-> possibility by reusing the active buffer, subtracting the old size/count
-> values from the diff variables and then reformatting the latest
-> (presumably smaller) item to the lv.
+> Hum, seeing this patch I kind of wonder: Why don't we dirty the inode after
+> expiring the lazytime timestamps with I_DIRTY_SYNC | I_DIRTY_TIME_EXPIRED
+> and propagate I_DIRTY_TIME_EXPIRED even to ->dirty_inode() where XFS can
+> catch it and act? Functionally it would be the same but we'd save a bunch
+> of generic code and ->lazytime_expired helper used just by a single
+> filesystem...
+> 
 
-Individual items might shrink, but the overall transaction should
-grow. Think of a extent to btree conversion of an inode fork. THe
-data in the inode fork decreases from a list of extents to a btree
-root block pointer, so the inode item shrinks. But then we add a new
-btree root block that contains all the extents + the btree block
-header, and it gets rounded up to ithe 128 byte buffer logging chunk
-size.
+Yes, that would be equivalent to what this patch does.
 
-IOWs, while the inode item has decreased in size, the overall
-space consumed by the transaction has gone up and so the CIL ctx
-used_space should increase. Hence we can't just look at individual
-log items and whether they have decreased in size - we have to look
-at all the items in the transaction to understand how the space used
-in that transaction has changed. i.e. it's the aggregation of all
-items in the transaction that matter here, not so much the
-individual items.
+Either way, note that if we also use your suggestion for patch #1, then that
+already fixes the XFS bug, since i_state will start containing I_DIRTY_TIME when
+->dirty_inode(I_DIRTY_SYNC) is called.  So xfs_fs_dirty_inode() will start
+working as intended.
 
-> Of course this could just be implementation detail. I haven't dug into
-> the details in the remainder of this thread and I don't have specific
-> examples off the top of my head, but perhaps based on the ability of
-> various structures to change formats and the ability of log vectors to
-> shrink in size, shouldn't we expect the possibility of a CIL context to
-> shrink in size as well? Just from poking around the CIL it seems like
-> the surrounding code supports it (xlog_cil_insert_items() checks len > 0
-> for recalculating split res as well)...
+That makes introducing ->lazytime_expired (or equivalently I_DIRTY_TIME_EXPIRED)
+kind of useless since it wouldn't actually fix anything.
 
-Yes, there may be situations where it decreases. It may be this is
-fine, but the assumption *I've made* in lots of the CIL push code is
-that ctx->used_space rarely, if ever, will go backwards.
+So I'm tempted to just drop it.
 
-e.g. we run the first transaction into the CIL, it steals the sapce
-needed for the cil checkpoint headers for the transaciton. Then if
-the space returned by the item formatting is negative (because it is
-in the AIL and being relogged), the CIL checkpoint now doesn't have
-the space reserved it needs to run a checkpoint. That transaction is
-a sync transaction, so it forces the log, and now we push the CIL
-without sufficient reservation to write out the log headers and the
-items we just formatted....
+The XFS developers might have a different opinion though, as they were the ones
+who requested it originally:
 
-So, yeah, shrinking transaction space usage definitely violates some
-of the assumptions the code makes about how relogging works. It's
-entirely possible the assumptions I've made are not entirely correct
-in some corner cases - those particular cases are what we need to
-ferret out here, and then decide if they are correct or not and deal
-with it from there...
+	https://lore.kernel.org/r/20200312143445.GA19160@infradead.org
+	https://lore.kernel.org/r/20200325092057.GA25483@infradead.org
+	https://lore.kernel.org/r/20200325154759.GY29339@magnolia
+	https://lore.kernel.org/r/20200312223913.GL10776@dread.disaster.area
 
-Cheers,
+Any thoughts from anyone about whether we should still introduce a separate
+notification for lazytime expiration, vs. just using ->dirty_inode(I_DIRTY_SYNC)
+with I_DIRTY_TIME in i_state?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+- Eric
