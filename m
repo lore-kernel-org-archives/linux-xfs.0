@@ -2,158 +2,187 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B743BC433E9
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 21:01:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1092C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 21:21:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F9392388B
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 21:01:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48F8723A80
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 21:21:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729631AbhAHVBE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jan 2021 16:01:04 -0500
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:60828 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728511AbhAHVBD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jan 2021 16:01:03 -0500
-Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 3438676566F;
-        Sat,  9 Jan 2021 08:00:17 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kxyrp-004RRw-51; Sat, 09 Jan 2021 08:00:17 +1100
-Date:   Sat, 9 Jan 2021 08:00:17 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH] fs: block_dev: compute nr_vecs hint for improving
- writeback bvecs allocation
-Message-ID: <20210108210017.GK331610@dread.disaster.area>
-References: <20210105132647.3818503-1-ming.lei@redhat.com>
- <20210105183938.GA3878@lst.de>
- <20210106084548.GA3845805@T590>
- <20210106222111.GE331610@dread.disaster.area>
- <20210108075922.GB3982620@T590>
+        id S1729414AbhAHVVD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jan 2021 16:21:03 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:35986 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729211AbhAHVVD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jan 2021 16:21:03 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 108L9AW0016200;
+        Fri, 8 Jan 2021 21:20:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=8zpSsjvJVaiKMwYBXgiTKd85NrDcNI/LAt8HG+tQgzo=;
+ b=UEOOdskS1etAOf2FEWD4M2ak0GlpRlxEzQOyN2NotXWDofgvsUOFVDz4ZuAYQYKRXZwS
+ Pl91lBLcLwPdryC0jk8DdUvzsgzzXsKE8ANFfICmuZYgXi5ZizPMD0PUeck+0zEDnRT6
+ H+hqMzwJ0lzzO9V/t5jaHwSE/LQNRDZaE7NNBF7C7DLPC0c0wHKgIbLjNR/nH1gUgE5D
+ Iw1sXqmMkA2MZjK+SbRTB6wbyNAOIDKcuGTOWl/eew+vKKBOgrOCco0Ks+OcdnilnXhf
+ 3koM9gCQwp1ThB05sFc6teZGQYoSCw1BFY8nwMyVIaVI38PZ5dSckzMBGHNAXD0m7O5O 9A== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 35wepmjyr9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 08 Jan 2021 21:20:18 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 108LAZ42191597;
+        Fri, 8 Jan 2021 21:20:18 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 35v4rfr0gm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 08 Jan 2021 21:20:18 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 108LKHAV025786;
+        Fri, 8 Jan 2021 21:20:17 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 08 Jan 2021 21:20:17 +0000
+Date:   Fri, 8 Jan 2021 13:20:16 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH v3 3/4] xfs: hoist out xfs_resizefs_init_new_ags()
+Message-ID: <20210108212016.GR38809@magnolia>
+References: <20210108190919.623672-1-hsiangkao@redhat.com>
+ <20210108190919.623672-4-hsiangkao@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210108075922.GB3982620@T590>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
-        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=7-415B0cAAAA:8
-        a=0TDAt5E3tB6VCO8953IA:9 a=qZgZfBh61L_KZ1-l:21 a=JzxU2LrYxQ7o857g:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210108190919.623672-4-hsiangkao@redhat.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9858 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 bulkscore=0
+ suspectscore=0 spamscore=0 adultscore=0 malwarescore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101080110
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9858 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 spamscore=0
+ impostorscore=0 phishscore=0 lowpriorityscore=0 suspectscore=0
+ priorityscore=1501 mlxscore=0 malwarescore=0 clxscore=1015 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101080110
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 08, 2021 at 03:59:22PM +0800, Ming Lei wrote:
-> On Thu, Jan 07, 2021 at 09:21:11AM +1100, Dave Chinner wrote:
-> > On Wed, Jan 06, 2021 at 04:45:48PM +0800, Ming Lei wrote:
-> > > On Tue, Jan 05, 2021 at 07:39:38PM +0100, Christoph Hellwig wrote:
-> > > > At least for iomap I think this is the wrong approach.  Between the
-> > > > iomap and writeback_control we know the maximum size of the writeback
-> > > > request and can just use that.
-> > > 
-> > > I think writeback_control can tell us nothing about max pages in single
-> > > bio:
-> > 
-> > By definition, the iomap tells us exactly how big the IO is going to
-> > be. i.e. an iomap spans a single contiguous range that we are going
-> > to issue IO on. Hence we can use that to size the bio exactly
-> > right for direct IO.
+On Sat, Jan 09, 2021 at 03:09:18AM +0800, Gao Xiang wrote:
+> Move out related logic for initializing new added AGs to a new helper
+> in preparation for shrinking. No logic changes.
 > 
-> When I trace wpc->iomap.length in iomap_add_to_ioend() on the following fio
-> randwrite/write, the length is 1GB most of times, maybe because it is
-> one fresh XFS.
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> ---
+>  fs/xfs/xfs_fsops.c | 74 +++++++++++++++++++++++++++-------------------
 
-Yes, that's exactly what I said it would do.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> Another reason is that pages in the range may be contiguous physically,
-> so lots of pages may share one single bvec.
+--D
 
-The iomap layer does not care about this, and there's no way this
-can be detected ahead of time, anyway, because we are only passed a
-single page at a time. When we get large pages from the page cache,
-we'll still only get one page at a time, but we'll get physically
-contiguous pages and so it will still be a 1 page : 1 bvec
-relationship at the iomap layer.
-
-> > > - wbc->nr_to_write controls how many pages to writeback, this pages
-> > >   usually don't belong to same bio. Also this number is often much
-> > >   bigger than BIO_MAX_PAGES.
-> > > 
-> > > - wbc->range_start/range_end is similar too, which is often much more
-> > >   bigger than BIO_MAX_PAGES.
-> > > 
-> > > Also page/blocks_in_page can be mapped to different extent too, which is
-> > > only available when wpc->ops->map_blocks() is returned,
-> > 
-> > We only allocate the bio -after- calling ->map_blocks() to obtain
-> > the iomap for the given writeback range request. Hence we
-> > already know how large the BIO could be before we allocate it.
-> > 
-> > > which looks not
-> > > different with mpage_writepages(), in which bio is allocated with
-> > > BIO_MAX_PAGES vecs too.
-> > 
-> > __mpage_writepage() only maps a page at a time, so it can't tell
-> > ahead of time how big the bio is going to need to be as it doesn't
-> > return/cache a contiguous extent range. So it's actually very
-> > different to the iomap writeback code, and effectively does require
-> > a BIO_MAX_PAGES vecs allocation all the time...
-> > 
-> > > Or you mean we can use iomap->length for this purpose? But iomap->length
-> > > still is still too big in case of xfs.
-> > 
-> > if we are doing small random writeback into large extents (i.e.
-> > iomap->length is large), then it is trivial to detect that we are
-> > doing random writes rather than sequential writes by checking if the
-> > current page is sequential to the last sector in the current bio.
-> > We already do this non-sequential IO checking to determine if a new
-> > bio needs to be allocated in iomap_can_add_to_ioend(), and we also
-> > know how large the current contiguous range mapped into the current
-> > bio chain is (ioend->io_size). Hence we've got everything we need to
-> > determine whether we should do a large or small bio vec allocation
-> > in the iomap writeback path...
+>  1 file changed, 44 insertions(+), 30 deletions(-)
 > 
-> page->index should tell us if the workload is random or sequential, however
-> still not easy to decide how many pages there will be in the next bio
-> when iomap->length is large.
-
-page->index doesn't tell us anything about what type of IO is being
-done - it just tells us where in the file we need to map to find the
-physical block we need to write it to. OTOH, the iomap writeback
-context contains all the information about current IO being build -
-offset, size, current bio, etc - and the page->index gets compared
-against the state in the iomap writepage context.
-
-So, if the wpc->iomap.length is large, current page->index does not
-map sequentially to the end of wpc->ioend->io_bio (or
-wpc->io_end->io_offset + wpc->ioend->io_size) and
-wpc->io_end->io_size == page_size(page) for the currently held bio,
-then we are clearly doing random single page writeback into a large
-allocated extent. Hence in that case we can do small bvec
-allocations for the new bio.
-
-Sure, the first bio in a ->writepages invocation doesn't have this
-information, so we've going to have to assume BIO_MAX_PAGES for the
-first bio. But for every bio after that in the ->writepages
-invocation we have the state of the previous contiguous writeback
-range held in the wpc structure and can use that info to optimise
-the thousands of random single pages that are written after then
-first one...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 6c5f6a50da2e..a792d1f0ac55 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -20,6 +20,49 @@
+>  #include "xfs_ag.h"
+>  #include "xfs_ag_resv.h"
+>  
+> +static int
+> +xfs_resizefs_init_new_ags(
+> +	xfs_mount_t		*mp,
+> +	struct aghdr_init_data	*id,
+> +	xfs_agnumber_t		oagcount,
+> +	xfs_agnumber_t		nagcount,
+> +	xfs_rfsblock_t		*delta)
+> +{
+> +	xfs_rfsblock_t		nb = mp->m_sb.sb_dblocks + *delta;
+> +	int			error;
+> +
+> +	/*
+> +	 * Write new AG headers to disk. Non-transactional, but need to be
+> +	 * written and completed prior to the growfs transaction being logged.
+> +	 * To do this, we use a delayed write buffer list and wait for
+> +	 * submission and IO completion of the list as a whole. This allows the
+> +	 * IO subsystem to merge all the AG headers in a single AG into a single
+> +	 * IO and hide most of the latency of the IO from us.
+> +	 *
+> +	 * This also means that if we get an error whilst building the buffer
+> +	 * list to write, we can cancel the entire list without having written
+> +	 * anything.
+> +	 */
+> +	INIT_LIST_HEAD(&id->buffer_list);
+> +	for (id->agno = nagcount - 1;
+> +	     id->agno >= oagcount;
+> +	     id->agno--, *delta -= id->agsize) {
+> +
+> +		if (id->agno == nagcount - 1)
+> +			id->agsize = nb - (id->agno *
+> +					(xfs_rfsblock_t)mp->m_sb.sb_agblocks);
+> +		else
+> +			id->agsize = mp->m_sb.sb_agblocks;
+> +
+> +		error = xfs_ag_init_headers(mp, id);
+> +		if (error) {
+> +			xfs_buf_delwri_cancel(&id->buffer_list);
+> +			return error;
+> +		}
+> +	}
+> +	return xfs_buf_delwri_submit(&id->buffer_list);
+> +}
+> +
+>  /*
+>   * growfs operations
+>   */
+> @@ -74,36 +117,7 @@ xfs_growfs_data_private(
+>  	if (error)
+>  		return error;
+>  
+> -	/*
+> -	 * Write new AG headers to disk. Non-transactional, but need to be
+> -	 * written and completed prior to the growfs transaction being logged.
+> -	 * To do this, we use a delayed write buffer list and wait for
+> -	 * submission and IO completion of the list as a whole. This allows the
+> -	 * IO subsystem to merge all the AG headers in a single AG into a single
+> -	 * IO and hide most of the latency of the IO from us.
+> -	 *
+> -	 * This also means that if we get an error whilst building the buffer
+> -	 * list to write, we can cancel the entire list without having written
+> -	 * anything.
+> -	 */
+> -	INIT_LIST_HEAD(&id.buffer_list);
+> -	for (id.agno = nagcount - 1;
+> -	     id.agno >= oagcount;
+> -	     id.agno--, delta -= id.agsize) {
+> -
+> -		if (id.agno == nagcount - 1)
+> -			id.agsize = nb -
+> -				(id.agno * (xfs_rfsblock_t)mp->m_sb.sb_agblocks);
+> -		else
+> -			id.agsize = mp->m_sb.sb_agblocks;
+> -
+> -		error = xfs_ag_init_headers(mp, &id);
+> -		if (error) {
+> -			xfs_buf_delwri_cancel(&id.buffer_list);
+> -			goto out_trans_cancel;
+> -		}
+> -	}
+> -	error = xfs_buf_delwri_submit(&id.buffer_list);
+> +	error = xfs_resizefs_init_new_ags(mp, &id, oagcount, nagcount, &delta);
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> -- 
+> 2.27.0
+> 
