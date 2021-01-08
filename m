@@ -2,305 +2,300 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8443EC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 23:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB984C433DB
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 01:18:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EF4B23603
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Jan 2021 23:29:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A742235F9
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 01:18:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727624AbhAGX3I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jan 2021 18:29:08 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:35508 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727009AbhAGX3I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 18:29:08 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107NQ54o074618;
-        Thu, 7 Jan 2021 23:28:24 GMT
+        id S1729786AbhAHBSF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Jan 2021 20:18:05 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:58404 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727634AbhAHBSF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 20:18:05 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10819Smb119748;
+        Fri, 8 Jan 2021 01:17:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=k78y12Jur+0+s1wSJPyPZW2Zon63/KMUveEXSz+5Img=;
- b=sXWanZA47s5Y5jzNACeZzR+S6hzxF0Tz9oWS8ylMu4HXbl7pouKCShhCAWtrPDQPYw3y
- mrje7+D14I5MbJNlQf/2C/j8CfR+Z3VKwkPcH8fgVA6FPdWOuVLTGZOvybhOUJEZN9G+
- 3rEkROoEVoiMHBs6msv3UAnbO5pniH1tZgFlSZzGeSAEQqKxquvYmShX+naMrmmrJqAH
- RHESzmD3YFaJ5ArwimWaUR+pzEokQHcFLlPgxdBFtDwmpWfh8Gsexdunmouk4dSBwryT
- 8RZbcOARvYouhL3m61QCzzxPlSFXNeozNAfoldvtTy/8xX9Klxl+t4GEetH22Mkd7K2Q OA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 35wepmevg9-1
+ bh=lK3kuF1PquyeXkyf+WBq/LrxU+pKu/yHm1BQr0dT4BA=;
+ b=Y9sVg7zlgfep/0mRHtDDPRhHvhvxl4DPqssRWI0cLTOKdIO90kYK+migXz++JKby/Wbg
+ ylmJrDGL6Ha4a84eVXufr8LjporU2RFz9QFzL5Vk0yRW/a+Wq1Wuev0bS/leGzcUYIOO
+ UuFJGiUz2Cjv5H2tThyHrE7gk0ZA497/14+ebHqQs1UYhEqFVpjYVQaePl6NsnZTzJOG
+ WeZ5rKdYmUIWaugAK32NFpvaZudhsW4YQAii915hXS2+FIIjmcezQqUoMp1WHfmSGERJ
+ AnZrsasQknUtGAcCIpWuY3xmevraiUZobMl6pgHH6wcX+bFawxWjn3mSw6d9RVUXN3bf fw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 35wftxepb1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 07 Jan 2021 23:28:24 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 107NPRuA033051;
-        Thu, 7 Jan 2021 23:28:23 GMT
+        Fri, 08 Jan 2021 01:17:18 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1081AWxa051914;
+        Fri, 8 Jan 2021 01:17:18 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 35w3g3f8rp-1
+        by aserp3030.oracle.com with ESMTP id 35v4rep9g8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Jan 2021 23:28:23 +0000
+        Fri, 08 Jan 2021 01:17:18 +0000
 Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 107NSMmb010479;
-        Thu, 7 Jan 2021 23:28:22 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 1081HEsP030087;
+        Fri, 8 Jan 2021 01:17:14 GMT
 Received: from localhost (/10.159.138.126)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 07 Jan 2021 23:28:22 +0000
-Date:   Thu, 7 Jan 2021 15:28:21 -0800
+        with ESMTP ; Fri, 08 Jan 2021 01:17:14 +0000
+Date:   Thu, 7 Jan 2021 17:17:13 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [RFC[RAP] PATCH] xfs: allow setting and clearing of log incompat
- feature flags
-Message-ID: <20210107232821.GN6918@magnolia>
-References: <20201209155211.GB1860561@bfoster>
- <20201209170428.GC1860561@bfoster>
- <20201209205132.GA3913616@dread.disaster.area>
- <20201210142358.GB1912831@bfoster>
- <20201210215004.GC3913616@dread.disaster.area>
- <20201211133901.GA2032335@bfoster>
- <20201212211439.GC632069@dread.disaster.area>
- <20201214155831.GB2244296@bfoster>
- <20201214205456.GD632069@dread.disaster.area>
- <20201215135003.GA2346012@bfoster>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, hch@lst.de, allison.henderson@oracle.com
+Subject: Re: [PATCH V12 04/14] xfs: Check for extent overflow when
+ adding/removing dir entries
+Message-ID: <20210108011713.GP38809@magnolia>
+References: <20210104103120.41158-1-chandanrlinux@gmail.com>
+ <20210104103120.41158-5-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201215135003.GA2346012@bfoster>
+In-Reply-To: <20210104103120.41158-5-chandanrlinux@gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 adultscore=0
- phishscore=0 spamscore=0 mlxlogscore=999 suspectscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=941 mlxscore=0 bulkscore=0
+ suspectscore=0 spamscore=0 adultscore=0 malwarescore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101070131
+ definitions=main-2101080003
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 spamscore=0
- impostorscore=0 phishscore=0 lowpriorityscore=0 suspectscore=0
- priorityscore=1501 mlxscore=0 malwarescore=0 clxscore=1015 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 mlxscore=0
+ bulkscore=0 priorityscore=1501 impostorscore=0 clxscore=1015
+ lowpriorityscore=0 mlxlogscore=952 malwarescore=0 spamscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101070131
+ definitions=main-2101080003
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 15, 2020 at 08:50:03AM -0500, Brian Foster wrote:
-> On Tue, Dec 15, 2020 at 07:54:56AM +1100, Dave Chinner wrote:
-> > On Mon, Dec 14, 2020 at 10:58:31AM -0500, Brian Foster wrote:
-> > > On Sun, Dec 13, 2020 at 08:14:39AM +1100, Dave Chinner wrote:
-> > > > On Fri, Dec 11, 2020 at 08:39:01AM -0500, Brian Foster wrote:
-> > > > > On Fri, Dec 11, 2020 at 08:50:04AM +1100, Dave Chinner wrote:
-> > > > > > As for a mechanism for dynamically adding log incompat flags?
-> > > > > > Perhaps we just do that in xfs_trans_alloc() - add an log incompat
-> > > > > > flags field into the transaction reservation structure, and if
-> > > > > > xfs_trans_alloc() sees an incompat field set and the superblock
-> > > > > > doesn't have it set, the first thing it does is run a "set log
-> > > > > > incompat flag" transaction before then doing it's normal work...
-> > > > > > 
-> > > > > > This should be rare enough it doesn't have any measurable
-> > > > > > performance overhead, and it's flexible enough to support any log
-> > > > > > incompat feature we might need to implement...
-> > > > > > 
-> > > > > 
-> > > > > But I don't think that is sufficient. As Darrick pointed out up-thread,
-> > > > > the updated superblock has to be written back before we're allowed to
-> > > > > commit transactions with incompatible items. Otherwise, an older kernel
-> > > > > can attempt log recovery with incompatible items present if the
-> > > > > filesystem crashes before the superblock is written back.
-> > > > 
-> > > > Sure, that's what the hook in xfs_trans_alloc() would do. It can do
-> > > > the work in the context that is going to need it, and set a wait
-> > > > flag for all incoming transactions that need a log incompat flag to
-> > > > wait for it do it's work.  Once it's done and the flag is set, it
-> > > > can continue and wake all the waiters now that the log incompat flag
-> > > > has been set. Anything that doesn't need a log incompat flag can
-> > > > just keep going and doesn't ever get blocked....
-> > > > 
-> > > 
-> > > It would have to be a sync transaction plus sync AIL force in
-> > > transaction allocation context if we were to log the superblock change,
-> > > which sounds a bit hairy...
-> > 
-> > Well, we already do sync AIL forces in transaction reservation when
-> > we run out of log space, so there's no technical reason for this
-> > being a problem at all. xfs_trans_alloc() is expected to block
-> > waiting on AIL tail pushing....
-> > 
-> > > > I suspect this is one of the rare occasions where an unlogged
-> > > > modification makes an awful lot of sense: we don't even log that we
-> > > > are adding a log incompat flag, we just do an atomic synchronous
-> > > > write straight to the superblock to set the incompat flag(s). The
-> > > > entire modification can be done under the superblock buffer lock to
-> > > > serialise multiple transactions all trying to set incompat bits, and
-> > > > we don't set the in-memory superblock incompat bit until after it
-> > > > has been set and written to disk. Hence multiple waits can check the
-> > > > flag after they've got the sb buffer lock, and they'll see that it's
-> > > > already been set and just continue...
-> > > > 
-> > > 
-> > > Agreed. That is a notable simplification and I think much more
-> > > preferable than the above for the dynamic approach.
-> > > 
-> > > That said, note that dynamic feature bits might introduce complexity in
-> > > more subtle ways. For example, nothing that I can see currently
-> > > serializes idle log covering with an active transaction (that may have
-> > > just set an incompat bit via some hook yet not committed anything to the
-> > > log subsystem), so it might not be as simple as just adding a hook
-> > > somewhere.
-> > 
-> > Right, we had to make log covering away of the CIL to prevent it
-> > from idling while there were multiple active committed transactions
-> > in memory. So the state machine only progresses if both the CIL and
-> > AIL are empty. If we had some way of knowing that a transaction is
-> > in progress, we could check that in xfs_log_need_covered() and we'd
-> > stop the state machine progress at that point. But we got rid of the
-> > active transaction counter that we could use for that....
-> > 
-> > [Hmmm, didn't I recently have a patch that re-introduced that
-> > counter to fix some other "we need to know if there's an active
-> > transaction running" issue? Can't remember what that was now...]
-> > 
+On Mon, Jan 04, 2021 at 04:01:10PM +0530, Chandan Babu R wrote:
+> Directory entry addition can cause the following,
+> 1. Data block can be added/removed.
+>    A new extent can cause extent count to increase by 1.
+> 2. Free disk block can be added/removed.
+>    Same behaviour as described above for Data block.
+> 3. Dabtree blocks.
+>    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these
+>    can be new extents. Hence extent count can increase by
+>    XFS_DA_NODE_MAXDEPTH.
 > 
-> I think you removed it, actually, via commit b41b46c20c0bd ("xfs: remove
-> the m_active_trans counter"). We subsequently discussed reintroducing
-> the same concept for the quotaoff rework [1], which might be what you're
-> thinking of. That uses a percpu rwsem since we don't really need a
-> counter, but I suspect could be reused for serialization in this use
-> case as well (assuming I can get some reviews on it.. ;).
+> Directory entry remove and rename (applicable only to the source
+> directory entry) operations are handled specially to allow them to
+> succeed in low extent count availability scenarios
+> i.e. xfs_bmap_del_extent_real() will now return -ENOSPC when a possible
+> extent count overflow is detected. -ENOSPC is already handled by higher
+> layers of XFS by letting,
+> 1. Empty Data/Free space index blocks to linger around until a future
+>    remove operation frees them.
+> 2. Dabtree blocks would be swapped with the last block in the leaf space
+>    followed by unmapping of the new last block.
 > 
-> FWIW, I was considering putting those quotaoff patches ahead of the log
-> covering work so we could reuse that code again in attr quiesce, but I
-> think I'm pretty close to being able to remove that particular usage
-> entirely.
-
-I was thinking about using a rwsem to protect the log incompat flags --
-code that thinks it might use a protected feature takes the lock in
-read mode until commit; and the log covering code only clears the
-flags if down_write_trylock succeeds.  That constrains the overhead to
-threads that are trying to use the feature, instead of making all
-threads pay the cost of bumping the counter.
-
-> [1] https://lore.kernel.org/linux-xfs/20201001150310.141467-1-bfoster@redhat.com/
+> Also, Extent overflow check is performed for the target directory entry
+> of the rename operation only when the entry does not exist and a
+> non-zero space reservation is obtained successfully.
 > 
-> > > > This gets rid of the whole "what about a log containing an item that
-> > > > sets the incompat bit" problem, and it provides a simple means of
-> > > > serialising and co-ordinating setting of a log incompat flag....
-> > > > 
-> > > > > My question is how flexible do we really need to make incompatible log
-> > > > > recovery support? Why not just commit the superblock once at mount time
-> > > > > with however many bits the current kernel supports and clear them on
-> > > > > unmount? (Or perhaps consider a lazy setting variant where we set all
-> > > > > supported bits on the first modification..?)
-> > > > 
-> > > > We don't want to set the incompat bits if we don't need to. That
-> > > > just guarantees user horror stories that start with "boot system
-> > > > with new kernel, crash, go back to old kernel, can't mount root
-> > > > filesystem anymore".
-> > > > 
-> > > 
-> > > Indeed, that is a potential wart with just setting bits on mount. I do
-> > > think this is likely to be the case with or without dynamic feature
-> > > bits, because at least in certain cases we'll be setting incompat bits
-> > > in short order anyways. E.g., one of the primary use cases here is for
-> > > xattrs, which is likely to be active on any root filesystem via things
-> > > like SELinux, etc. Point being, all it takes is one feature bit
-> > > associated with some core operation to introduce this risky update
-> > > scenario in practice.
-> > 
-> > That may well be the case for some distros and some root
-> > filesystems, and that's an argument against using log incompat flags
-> > for the -xattr feature-. It's not an argument against
-> > dynamically setting and clearing log incompat features in general.
-> > 
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c       | 15 ++++++++++++
+>  fs/xfs/libxfs/xfs_inode_fork.h | 13 ++++++++++
+>  fs/xfs/xfs_inode.c             | 45 ++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_symlink.c           |  5 ++++
+>  4 files changed, 78 insertions(+)
 > 
-> Sure. I mentioned in past mails that my concerns/feedback depend heavily
-> on use case. xattrs is one of the two (?) or so motivating this work.
-> 
-> > That is, if xattrs are so wide spread that we expose users to
-> > "upgrade-fail-can't downgrade" by use of a dynamic log incompat
-> > flag, then we should not be making that feature dynamic and
-> > "autoset". In this situation, it needs to be opt-in and planned,
-> > likely done in maintenance downtime rather than a side effect of a
-> > kernel upgrade.
-> > 
-> > So, yeah, this discussion is making me think that the xattr logging
-> > upgrade is going to need a full ATTR3 feature bit like the other
-> > ATTR and ATTR2 feature bits, not just a log incompat bit...
-> > 
-> 
-> Perhaps. Not using this at all for xattrs does address quite a bit of my
-> concerns, but I think if we wanted the potential flexibility of the log
-> incompat bit down the road, it might be reasonable to manage the
-> experimental cycle "manually" as described above (i.e., essentially
-> don't set/clear that bit automatically for a period of time). I don't
-> feel strongly about one approach over the other in that regard, though,
-> just that we don't immediately turn the mechanism on right out of the
-> gate because the feature bit mechanism happens to support it.
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 32aeacf6f055..5fd804534e67 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -5151,6 +5151,21 @@ xfs_bmap_del_extent_real(
+>  		/*
+>  		 * Deleting the middle of the extent.
+>  		 */
+> +
+> +		/*
+> +		 * For directories, -ENOSPC will be handled by higher layers of
+> +		 * XFS by letting the corresponding empty Data/Free blocks to
+> +		 * linger around until a future remove operation. Dabtree blocks
+> +		 * would be swapped with the last block in the leaf space and
+> +		 * then the new last block will be unmapped.
+> +		 */
+> +		if (S_ISDIR(VFS_I(ip)->i_mode) &&
+> +		    whichfork == XFS_DATA_FORK &&
+> +		    xfs_iext_count_may_overflow(ip, whichfork, 1)) {
+> +			error = -ENOSPC;
+> +			goto done;
 
-I suggested to Allison that enabling logged xattrs should be (for now) a
-CONFIG_XFS_DEBUG=y mount option so that only bleeding edge people
-actually get the new functionality.  As we build confidence in the
-feature we can think about letting the kernel turn it on automatically.
+Hmm... it strikes me as a little odd that we're checking file mode and
+fork type in the middle of the bmap code.  However, I think it's the
+case that the only place where anyone would punch a hole in the /middle/
+of an extent is xattr trees and regular files, right?  And both of those
+cases are checked before we end up in the bmap code, right?
 
-As for a persistent feature flag, let's use directory parent pointers
-since that will force us to create a new rocompat flag anyway.
+So we only really need this check to prevent extent count overflows when
+removing dirents from directories, like the comment says, and only
+because directories don't have a hard requirement that the bunmapi
+succeeds.  And I think this logic covers xfs_remove too?  That's a bit
+subtle, but as there's no extent count check in that function, there's
+not much to attach a comment to... :)
 
-> > > I dunno... I'm just trying to explore whether we can simplify this whole
-> > > concept to something more easily managed and less likely to cause us
-> > > headache. I'm a bit concerned that we're disregarding other tradeoffs
-> > > like the complexity noted above, the risk and cost of bugs in the
-> > > mechanism itself (because log recovery has historically been so well
-> > > tested.. :P) or whether the idea of new kernels immediately delivering
-> > > new incompat log formats is a robust/reliable solution in the first
-> > > place. IIRC, the last time we did this was ICREATE and that was hidden
-> > > behind the v5 update. IOW, for certain things like the xattr rework, I'd
-> > > think that kind of experimental stabilization cycle is warranted before
-> > > we'd consider enabling such a feature, even dynamically (which means a
-> > > revertible kernel should be available in common/incremental upgrade
-> > > cases).
-> > 
-> > IMO, the xattr logging rework is most definitely under the
-> > EXPERIMENTAL umbrella and that was always going to be the case.
-> > Also, I don't think we're ignoring the potential complexity of
-> > dynamically setting/clearing stuff - otherwise we wouldn't be having
-> > this conversation about how simple we can actually make it. If it
-> > turns out that we can't do it simply, then setting/clearing at
-> > mount/unmount should be considered "plan B"....
-> > 
-> 
-> I'm more approaching this from a "what are the requirements and how/why
-> do they justify the associated complexity?" angle. That's why I'm asking
-> things like how much difference does a dynamic bit really make for
-> something like xattrs. But I agree that's less of a concern when
-> associated with more obscure or rarely used operations, so on balance I
-> think that's a fair approach to this mechanism provided we consider
-> suitability on a per feature basis.
+Hm.  I think I'd like xfs_rename to get a brief comment that we're
+protected from extent count overflows in xfs_remove() by virtue of this
+"leave the dir block in place if we ENOSPC" capability:
 
-Hm.  If I had to peer into my crystal ball I'd guess that the current
-xattr logging scheme works fine for most xattr users, so I wouldn't
-worry much about the dynamic bit.
+	/*
+	 * NOTE: We don't need to check for extent overflows here
+	 * because the dir removename code will leave the dir block
+	 * in place if the extent count would overflow.
+	 */
+	error = xfs_dir_removename(...);
 
-However, I could see things like atomic range exchange being more
-popular, in which case people might notice the overhead of tracking when
-we can turn off the feature bit...
+Do xattr trees also have the same ability?  I think they do, at least
+for the dabtree part...?
+
+I think I would've split this patch into three pieces:
+
+ - create, link, and symlink in one patch (adding dirents),
+ - the xfs_bmap_del_extent_real change and a comment for xfs_remove
+   (removing dirents)
+ - all the xfs_rename changes (adding and removing dirents)
+
+Though I dunno, this series is already 14 patches, and the part that I
+care most about is not leaving that subtlety in xfs_remove(). :)
+
+Other than that, I follow the logic in this patch and will give it a
+testrun tonight.
 
 --D
 
-> > But right now, I think the discussion has come up with some ideas to
-> > greatly simplify the dynamic flag setting + clearing....
-> > 
-> 
-> Agreed, thanks.
-> 
-> Brian
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
+> +		}
+> +
+>  		old = got;
+>  
+>  		got.br_blockcount = del->br_startoff - got.br_startoff;
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index bcac769a7df6..ea1a9dd8a763 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -47,6 +47,19 @@ struct xfs_ifork {
+>   */
+>  #define XFS_IEXT_PUNCH_HOLE_CNT		(1)
+>  
+> +/*
+> + * Directory entry addition can cause the following,
+> + * 1. Data block can be added/removed.
+> + *    A new extent can cause extent count to increase by 1.
+> + * 2. Free disk block can be added/removed.
+> + *    Same behaviour as described above for Data block.
+> + * 3. Dabtree blocks.
+> + *    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these can be new
+> + *    extents. Hence extent count can increase by XFS_DA_NODE_MAXDEPTH.
+> + */
+> +#define XFS_IEXT_DIR_MANIP_CNT(mp) \
+> +	((XFS_DA_NODE_MAXDEPTH + 1 + 1) * (mp)->m_dir_geo->fsbcount)
+> +
+>  /*
+>   * Fork handling.
+>   */
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index b7352bc4c815..0db21368c7e1 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1042,6 +1042,11 @@ xfs_create(
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
+> +			XFS_IEXT_DIR_MANIP_CNT(mp));
+> +	if (error)
+> +		goto out_trans_cancel;
+> +
+>  	/*
+>  	 * A newly created regular or special file just has one directory
+>  	 * entry pointing to them, but a directory also the "." entry
+> @@ -1258,6 +1263,11 @@ xfs_link(
+>  	xfs_trans_ijoin(tp, sip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, tdp, XFS_ILOCK_EXCL);
+>  
+> +	error = xfs_iext_count_may_overflow(tdp, XFS_DATA_FORK,
+> +			XFS_IEXT_DIR_MANIP_CNT(mp));
+> +	if (error)
+> +		goto error_return;
+> +
+>  	/*
+>  	 * If we are using project inheritance, we only allow hard link
+>  	 * creation in our tree when the project IDs are the same; else
+> @@ -3106,6 +3116,35 @@ xfs_rename(
+>  	/*
+>  	 * Check for expected errors before we dirty the transaction
+>  	 * so we can return an error without a transaction abort.
+> +	 *
+> +	 * Extent count overflow check:
+> +	 *
+> +	 * From the perspective of src_dp, a rename operation is essentially a
+> +	 * directory entry remove operation. Hence the only place where we check
+> +	 * for extent count overflow for src_dp is in
+> +	 * xfs_bmap_del_extent_real(). xfs_bmap_del_extent_real() returns
+> +	 * -ENOSPC when it detects a possible extent count overflow and in
+> +	 * response, the higher layers of directory handling code do the
+> +	 * following:
+> +	 * 1. Data/Free blocks: XFS lets these blocks linger around until a
+> +	 *    future remove operation removes them.
+> +	 * 2. Dabtree blocks: XFS swaps the blocks with the last block in the
+> +	 *    Leaf space and unmaps the last block.
+> +	 *
+> +	 * For target_dp, there are two cases depending on whether the
+> +	 * destination directory entry exists or not.
+> +	 *
+> +	 * When destination directory entry does not exist (i.e. target_ip ==
+> +	 * NULL), extent count overflow check is performed only when transaction
+> +	 * has a non-zero sized space reservation associated with it.  With a
+> +	 * zero-sized space reservation, XFS allows a rename operation to
+> +	 * continue only when the directory has sufficient free space in its
+> +	 * data/leaf/free space blocks to hold the new entry.
+> +	 *
+> +	 * When destination directory entry exists (i.e. target_ip != NULL), all
+> +	 * we need to do is change the inode number associated with the already
+> +	 * existing entry. Hence there is no need to perform an extent count
+> +	 * overflow check.
+>  	 */
+>  	if (target_ip == NULL) {
+>  		/*
+> @@ -3116,6 +3155,12 @@ xfs_rename(
+>  			error = xfs_dir_canenter(tp, target_dp, target_name);
+>  			if (error)
+>  				goto out_trans_cancel;
+> +		} else {
+> +			error = xfs_iext_count_may_overflow(target_dp,
+> +					XFS_DATA_FORK,
+> +					XFS_IEXT_DIR_MANIP_CNT(mp));
+> +			if (error)
+> +				goto out_trans_cancel;
+>  		}
+>  	} else {
+>  		/*
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index 1f43fd7f3209..0b8136a32484 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -220,6 +220,11 @@ xfs_symlink(
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
+> +			XFS_IEXT_DIR_MANIP_CNT(mp));
+> +	if (error)
+> +		goto out_trans_cancel;
+> +
+>  	/*
+>  	 * Allocate an inode for the symlink.
+>  	 */
+> -- 
+> 2.29.2
 > 
