@@ -2,353 +2,775 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-17.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30282C433DB
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 04:56:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B261CC433DB
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 07:13:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E082722E02
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 04:56:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75B42233EE
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 07:13:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726869AbhAHE4U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Jan 2021 23:56:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50764 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726793AbhAHE4U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jan 2021 23:56:20 -0500
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCD9AC0612F4
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jan 2021 20:55:39 -0800 (PST)
-Received: by mail-pl1-x62e.google.com with SMTP id e2so5031628plt.12
-        for <linux-xfs@vger.kernel.org>; Thu, 07 Jan 2021 20:55:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=pQVcPsoXcSaGHmqWOwHWOM8wGM5nbwotSc34B0He78U=;
-        b=L/Ul5LKHPKGo4Nq7nX5+UCt+81WA/nQcDuF4R98YmF9uV6X4vtaWvivjtNZSpMSsXG
-         iECrb4+rJlRsweDCZHAPfef2bLALHYszHOggUCeo9Vt20Gn0BAoO2O3HhjMnQBD8eVCp
-         EztKaKWXA9nMeBQQ/Ai+/wbKNJocHqAd3YO/+U6NSsziuNw0bn+NdHd6RPEdwhv0bfSN
-         +ivWs/YCTdJDcXbE91B5s3lrzK1MPgXmnz0d3l8E+IwCasYIqihM/QZemBrJgVJiH6zv
-         eTEcC3/rxFoXoIR6vsZVjA1Be8Z+d7a20/NR9VndND0df7IfefF3v9ASMMSJinsxcNHN
-         jmZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=pQVcPsoXcSaGHmqWOwHWOM8wGM5nbwotSc34B0He78U=;
-        b=OjJPqco4pzNyWmLI0lTFwdTDtv7j0tVfcpThF9juTf0BXWFXII/GauCM49g5cziT4b
-         gI0bIEBE9laiDYETiUbjbfn+9+XZup00m5oHD2NdxikaA3QOqELbm249FzQ+foy73rb3
-         /Yl65xfEfaItazd7LWZ0e8kuz04y8paVwdt5TmlN18JrRPkRL/u5+i/0pWjZLndoOzBX
-         04AwB6dxMFRnkN4hpFdQmyuHDRvy4BDckCCYGKrVe16/8quVWlGDBeeSe8zi5RW9JcxB
-         oW2I+fMisK72bAMfPzITKB9NoMxxysm9VIMAZewbzzISIrrnzj2SV8Vta7ugK6W5dYgy
-         mhZA==
-X-Gm-Message-State: AOAM532EwX3K3boHVcWJKoOH+YSZrlwvseURMJbHxDyDn+YdcrUOqd6u
-        CMLhGEbhNvRVRdigb2PLNQyCJ5ooCns=
-X-Google-Smtp-Source: ABdhPJzIDcQDd3TKnHzKdAx/iZyZMg5Ef2DmrseKlUc/CR+6QSJdaNwW2MFwVky0wvGT44xU6eCOsg==
-X-Received: by 2002:a17:90a:fe8e:: with SMTP id co14mr1895793pjb.105.1610081739062;
-        Thu, 07 Jan 2021 20:55:39 -0800 (PST)
-Received: from garuda.localnet ([122.171.33.94])
-        by smtp.gmail.com with ESMTPSA id 6sm7415585pfj.216.2021.01.07.20.55.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Jan 2021 20:55:38 -0800 (PST)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, hch@lst.de, allison.henderson@oracle.com
-Subject: Re: [PATCH V12 04/14] xfs: Check for extent overflow when adding/removing dir entries
-Date:   Fri, 08 Jan 2021 10:25:35 +0530
-Message-ID: <2055679.3ixLThe9JB@garuda>
-In-Reply-To: <20210108011713.GP38809@magnolia>
-References: <20210104103120.41158-1-chandanrlinux@gmail.com> <20210104103120.41158-5-chandanrlinux@gmail.com> <20210108011713.GP38809@magnolia>
+        id S1727249AbhAHHNx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jan 2021 02:13:53 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:44266 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726784AbhAHHNw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jan 2021 02:13:52 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1086muhq159110;
+        Fri, 8 Jan 2021 07:13:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=Y6OAvikJlUfz1U7NQEzKhPZf17m/W+xvf+4DkqCFR9M=;
+ b=VwyZnGL73O6AjBGjyjsUKyElqNviJhe6jDkbbhZaffvxsMl3cu124CbexEnFz6heVQ6A
+ L2Xsi8ocpm0Oj44XSH+wNVolb9socl6FJyf1k2xC9LJHD7Uyq4MHwDf/NkFaw70ywdkx
+ zni2f9384egLS60O0u9XrSs6XCiZBfyqWux7+Mma/DfY7Lxgux8/jLNaaVmeFyx8FkPY
+ GBTiwrS4FXSgzKkjjNAFUI5JVHAmsEfauluvxe8gT3ZKR2hwmQJ654Q/xPmQnCdIFhm8
+ +Xz+9hw8nL86RCDkEPuIEVTeBk6h8+b9ovwHeFLcpTXkiNfWXYsOxKhl089/jRRNdQuH Cg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2130.oracle.com with ESMTP id 35wcuy06pg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 08 Jan 2021 07:13:06 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1086pUR6141480;
+        Fri, 8 Jan 2021 07:13:06 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 35w3g3wcd1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 08 Jan 2021 07:13:05 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 1087D5JY009079;
+        Fri, 8 Jan 2021 07:13:05 GMT
+Received: from [192.168.1.226] (/67.1.214.41)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 07 Jan 2021 23:13:04 -0800
+Subject: Re: [PATCH RFC] xfs: refactor xfs_attr_set() into incremental
+ components
+To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+References: <20210107161444.858242-1-bfoster@redhat.com>
+From:   Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <193dbb11-9a1d-5654-56f0-2f6a8347cca3@oracle.com>
+Date:   Fri, 8 Jan 2021 00:13:03 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20210107161444.858242-1-bfoster@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 adultscore=0
+ phishscore=0 spamscore=0 mlxlogscore=999 suspectscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101080036
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9857 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
+ clxscore=1015 spamscore=0 impostorscore=0 priorityscore=1501 mlxscore=0
+ adultscore=0 mlxlogscore=999 lowpriorityscore=0 phishscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101080036
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 07 Jan 2021 17:17:13 -0800, Darrick J. Wong wrote:
-> On Mon, Jan 04, 2021 at 04:01:10PM +0530, Chandan Babu R wrote:
-> > Directory entry addition can cause the following,
-> > 1. Data block can be added/removed.
-> >    A new extent can cause extent count to increase by 1.
-> > 2. Free disk block can be added/removed.
-> >    Same behaviour as described above for Data block.
-> > 3. Dabtree blocks.
-> >    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these
-> >    can be new extents. Hence extent count can increase by
-> >    XFS_DA_NODE_MAXDEPTH.
-> > 
-> > Directory entry remove and rename (applicable only to the source
-> > directory entry) operations are handled specially to allow them to
-> > succeed in low extent count availability scenarios
-> > i.e. xfs_bmap_del_extent_real() will now return -ENOSPC when a possible
-> > extent count overflow is detected. -ENOSPC is already handled by higher
-> > layers of XFS by letting,
-> > 1. Empty Data/Free space index blocks to linger around until a future
-> >    remove operation frees them.
-> > 2. Dabtree blocks would be swapped with the last block in the leaf space
-> >    followed by unmapping of the new last block.
-> > 
-> > Also, Extent overflow check is performed for the target directory entry
-> > of the rename operation only when the entry does not exist and a
-> > non-zero space reservation is obtained successfully.
-> > 
-> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c       | 15 ++++++++++++
-> >  fs/xfs/libxfs/xfs_inode_fork.h | 13 ++++++++++
-> >  fs/xfs/xfs_inode.c             | 45 ++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_symlink.c           |  5 ++++
-> >  4 files changed, 78 insertions(+)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 32aeacf6f055..5fd804534e67 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -5151,6 +5151,21 @@ xfs_bmap_del_extent_real(
-> >  		/*
-> >  		 * Deleting the middle of the extent.
-> >  		 */
-> > +
-> > +		/*
-> > +		 * For directories, -ENOSPC will be handled by higher layers of
-> > +		 * XFS by letting the corresponding empty Data/Free blocks to
-> > +		 * linger around until a future remove operation. Dabtree blocks
-> > +		 * would be swapped with the last block in the leaf space and
-> > +		 * then the new last block will be unmapped.
-> > +		 */
-> > +		if (S_ISDIR(VFS_I(ip)->i_mode) &&
-> > +		    whichfork == XFS_DATA_FORK &&
-> > +		    xfs_iext_count_may_overflow(ip, whichfork, 1)) {
-> > +			error = -ENOSPC;
-> > +			goto done;
+
+
+On 1/7/21 9:14 AM, Brian Foster wrote:
+> POC to explore whether xfs_attr_set() can be refactored into
+> incremental components to facilitate isolated state management.
 > 
-> Hmm... it strikes me as a little odd that we're checking file mode and
-> fork type in the middle of the bmap code.  However, I think it's the
-> case that the only place where anyone would punch a hole in the /middle/
-> of an extent is xattr trees and regular files, right?  And both of those
-> cases are checked before we end up in the bmap code, right?
-
-Yes, your observation is correct. I will remove the file mode and fork type
-checks.
-
+> Not-Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
 > 
-> So we only really need this check to prevent extent count overflows when
-> removing dirents from directories, like the comment says, and only
-> because directories don't have a hard requirement that the bunmapi
-> succeeds.  And I think this logic covers xfs_remove too?  That's a bit
-> subtle, but as there's no extent count check in that function, there's
-> not much to attach a comment to... :)
-
-Yes, To provide more clarity, I should replace the above comment with
-following,
-
-  /*
-   * -ENOSPC is returned since a directory entry remove operation must not fail
-   * due to low extent count availability. -ENOSPC will be handled by higher
-   * layers of XFS by letting the corresponding empty Data/Free blocks to linger
-   * around until a future remove operation. Dabtree blocks would be swapped with
-   * the last block in the leaf space and then the new last block will be
-   * unmapped.
-   *
-   * The above logic also applies to the source directory entry of a rename
-   * operation.
-   */
-
+> Hi all,
 > 
-> Hm.  I think I'd like xfs_rename to get a brief comment that we're
-> protected from extent count overflows in xfs_remove() by virtue of this
-> "leave the dir block in place if we ENOSPC" capability:
+> This is a followup to the ongoing discussion with Allison around delayed
+> attrs and the xfs_attr_set() path in particular. It is a continuation of
+> the RFC patch posted here[1]. One of the things that concerns me about
+> the current approach is not so much the state management, but the
+> resulting structure that the current xattr implementation imposes on the
+> state machine code. Earlier on in this effort, we discussed an objective
+> to keep the state management code as isolated as possible (ideally to a
+> single level) from the functional xattr code. The purpose of this RFC is
+> to explore whether the existing code can be refactored in such a way to
+> accommodate that.
 > 
-> 	/*
-> 	 * NOTE: We don't need to check for extent overflows here
-> 	 * because the dir removename code will leave the dir block
-> 	 * in place if the extent count would overflow.
-> 	 */
-> 	error = xfs_dir_removename(...);
-
-Sure, I will add that.
-
+> Note that this is patch is not intended to be functional. It is compile
+> tested only, takes intentional shortcuts, and is intended only to
+> illustrate an idea / potential approach. IOW, this was essentially a
+> blitz through the set codepath to try and determine whether this kind of
+> approach was feasible, not necessarily an attempt to implement it
+> correctly.
 > 
-> Do xattr trees also have the same ability?  I think they do, at least
-> for the dabtree part...?
+> Also note that some code has been borrowed from Allison's series, but
+> otherwise a crude state machine mechanism has been hacked in just to
+> support the associated refactoring. This state machine code is not
+> intended to replace the broader mechanism Allison has implemented. I
+> needed something to support breaking down the code into components and
+> didn't want to pull in a world of infrastructure, so I hacked in the
+> bare minimal mechanism necessary to support that effort. This state
+> management code should ultimately be thrown away and is not the focus of
+> the patch. I do have a local git branch with more granular commits, but
+> it's kind of a mess atm so I squashed this down to a single patch since
+> it is primarily intended to generate discussion.
+> 
+> The flow of development was generally as follows:
+> 
+> 1. Implement a basic transaction rolling and function reentry loop
+> (based on -EAGAIN). This is the primary loop in xfs_attr_set_iter() and
+> based on Allison's code.
+> 
+> 2. Tack on a crude mechanism to implement incremental states. This is
+> essentially the switch statement inside the aforementioned loop. Any
+> state that returns -EAGAIN is reentered after a transaction roll.
+> Otherwise a non-error return increments to the next state. Note that
+> some states are semi-artificial in that they don't ever repeat, so could
+> potentially be optimized away.
+> 
+> 3. With the above infrastructure in place, incrementally convert the
+> existing xattr set implementation into reentrant components. This is
+> accomplished by peeling off bits of the existing implemention that are
+> currently separated by explicit transaction rolls and working them into
+> the state management loop. On termination of the loop, we call into the
+> remainder of the explicit rolling implementation to maintain
+> functionality.
+> 
+> The state machine consists of the following high level states:
+> 
+> 0. Set the xattr fork format and add the attr name. This state repeats
+> as the fork is converted into something that can hold the requested
+> xattr. If the set completes in shortform format, the entire operation
+> completes.
+> 1. Find a hole for a remote value, if necessary. This state does not
+> repeat or roll the transaction.
+> 2. Allocate blocks for the remote value, if necessary. This state
+> repeats until all required blocks are allocated.
+> 3. Write the remote value, if necessary. This state does not repeat or
+> roll.
+> 4. Clear or flip the inactive flag depending on whether the set is a
+> rename. If !rename, the flag is cleared and the set returns. Otherwise,
+> the flag is flipped to the old xattr and we progress to the next state.
+> 5. Invalidate remote blocks for the old xattr, if necessary. This state
+> does not roll or repeat.
+> 6. Remove remote blocks from the old xattr. This state repeats until all
+> extents for the old remote value are removed.
+> 
+> Finally, we fall back into what remains of the existing leaf/node
+> implementations. At this point this consists of removing the old xattr
+> name and some final attr fork format cleanup, if necessary. This code
+> should ultimately be reworked as well, but I didn't see any transaction
+> rolls through here and so decided it was sufficient to stop at this
+> point for the purpose of the RFC.
+> 
+> To me, the primary takeaways from this are that it seems reasonably
+> possible to clean up the xattr set codepath such that we don't require a
+> large number of per-format states and that we can do so in a way that
+> state management code is isolated to a single function (or single switch
+> statement). This is demonstrated by explicitly containing throwaway
+> state management code within xfs_attr_set_iter() and refactoring the
+> functional code into components that either complete (return 0) or
+> repeat (return -EAGAIN). Though it may not be apparent from the squashed
+> together RFC patch, this also suggests a more incremental development
+> approach is possible, as this patch was developed in a manner that
+> implemented one (or several related) states at a time with the intent to
+> maintain functionality at each step. Thoughts? >
+> Brian
 
-The following code snippet from xfs_da_shrink_inode() does the special casing
-only for the data fork i.e. for blocks holding directory entries.
+Alrighty, I think I see what you mean to illustrate here.  Maybe I can 
+use what you have here as a sort of guide to get a functional version 
+working.  I think it may look a little cleaner once we get it there 
+since a lot of this is a bit of a substitute for the bigger set.  I will 
+see if I can work through it and post back.  Or if something doesnt 
+work, I'll make of note of it.
 
-   for (;;) {
-           /*
-            * Remove extents.  If we get ENOSPC for a dir we have to move
-            * the last block to the place we want to kill.
-            */
-           error = xfs_bunmapi(tp, dp, dead_blkno, count,
-                               xfs_bmapi_aflag(w), 0, &done);
-           if (error == -ENOSPC) {
-                   if (w != XFS_DATA_FORK)
-                           break;
-                   error = xfs_da3_swap_lastblock(args, &dead_blkno,
-                                                 &dead_buf);
+Thank you for all your help, I know it's a really complicated set, but 
+it feels like we're makeing progress :-)
 
-So this facility is available only for directory entries.
+Allison
 
-Hence for xattrs, if we ever reach the extent count limit, the only way out is
-to delete the corresponding file.
 
 > 
-> I think I would've split this patch into three pieces:
+> [1] https://urldefense.com/v3/__https://lore.kernel.org/linux-xfs/20201218072917.16805-1-allison.henderson@oracle.com/T/*m3fcf7be3a8154ab98ddc9e1d45bc764d79d39dc3__;Iw!!GqivPVa7Brio!Le5Q-6GnjBKTG_b64Oh7dGImvE5RQbKK0mrqUaxi0Bl7bWhrtqDKXuIh_j3_vIYI5ibg$
 > 
->  - create, link, and symlink in one patch (adding dirents),
->  - the xfs_bmap_del_extent_real change and a comment for xfs_remove
->    (removing dirents)
->  - all the xfs_rename changes (adding and removing dirents)
+>   fs/xfs/libxfs/xfs_attr.c        | 361 ++++++++++++--------------------
+>   fs/xfs/libxfs/xfs_attr_remote.c |  67 ++----
+>   fs/xfs/libxfs/xfs_attr_remote.h |   4 +-
+>   3 files changed, 154 insertions(+), 278 deletions(-)
 > 
-> Though I dunno, this series is already 14 patches, and the part that I
-> care most about is not leaving that subtlety in xfs_remove(). :)
-
-I think you are right about that. I will split this patch according to what
-you have mentioned above.
-
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index fd8e6418a0d3..216055b6ad0d 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -58,6 +58,9 @@ STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
+>   				 struct xfs_da_state **state);
+>   STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+>   STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+> +STATIC int xfs_attr_leaf_try_add(struct xfs_da_args *, struct xfs_buf *);
+> +STATIC int xfs_attr_node_addname_work(struct xfs_da_args *);
+> +STATIC void xfs_attr_restore_rmt_blk(struct xfs_da_args *args);
+>   
+>   int
+>   xfs_inode_hasattr(
+> @@ -216,118 +219,153 @@ xfs_attr_is_shortform(
+>   		ip->i_afp->if_nextents == 0);
+>   }
+>   
+> -/*
+> - * Attempts to set an attr in shortform, or converts short form to leaf form if
+> - * there is not enough room.  If the attr is set, the transaction is committed
+> - * and set to NULL.
+> - */
+> -STATIC int
+> -xfs_attr_set_shortform(
+> +int
+> +xfs_attr_set_fmt(
+>   	struct xfs_da_args	*args,
+> -	struct xfs_buf		**leaf_bp)
+> +	bool			*done)
+>   {
+>   	struct xfs_inode	*dp = args->dp;
+> -	int			error, error2 = 0;
+> +	struct xfs_buf		*leaf_bp = NULL;
+> +	int			error = 0;
+>   
+> -	/*
+> -	 * Try to add the attr to the attribute list in the inode.
+> -	 */
+> -	error = xfs_attr_try_sf_addname(dp, args);
+> -	if (error != -ENOSPC) {
+> -		error2 = xfs_trans_commit(args->trans);
+> -		args->trans = NULL;
+> -		return error ? error : error2;
+> +	if (xfs_attr_is_shortform(dp)) {
+> +		error = xfs_attr_try_sf_addname(dp, args);
+> +		if (!error)
+> +			*done = true;
+> +		if (error != -ENOSPC)
+> +			return error;
+> +
+> +		error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
+> +		if (error)
+> +			return error;
+> +		return -EAGAIN;
+>   	}
+> -	/*
+> -	 * It won't fit in the shortform, transform to a leaf block.  GROT:
+> -	 * another possible req'mt for a double-split btree op.
+> -	 */
+> -	error = xfs_attr_shortform_to_leaf(args, leaf_bp);
+> -	if (error)
+> -		return error;
+>   
+> -	/*
+> -	 * Prevent the leaf buffer from being unlocked so that a concurrent AIL
+> -	 * push cannot grab the half-baked leaf buffer and run into problems
+> -	 * with the write verifier. Once we're done rolling the transaction we
+> -	 * can release the hold and add the attr to the leaf.
+> -	 */
+> -	xfs_trans_bhold(args->trans, *leaf_bp);
+> -	error = xfs_defer_finish(&args->trans);
+> -	xfs_trans_bhold_release(args->trans, *leaf_bp);
+> -	if (error) {
+> -		xfs_trans_brelse(args->trans, *leaf_bp);
+> -		return error;
+> +	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+> +		struct xfs_buf	*bp = NULL;
+> +
+> +		error = xfs_attr_leaf_try_add(args, bp);
+> +		if (error != -ENOSPC)
+> +			return error;
+> +
+> +		error = xfs_attr3_leaf_to_node(args);
+> +		if (error)
+> +			return error;
+> +		return -EAGAIN;
+>   	}
+>   
+> -	return 0;
+> +	return xfs_attr_node_addname(args);
+>   }
+>   
+>   /*
+>    * Set the attribute specified in @args.
+>    */
+>   int
+> -xfs_attr_set_args(
+> +__xfs_attr_set_args(
+>   	struct xfs_da_args	*args)
+>   {
+>   	struct xfs_inode	*dp = args->dp;
+> -	struct xfs_buf          *leaf_bp = NULL;
+>   	int			error = 0;
+>   
+> -	/*
+> -	 * If the attribute list is already in leaf format, jump straight to
+> -	 * leaf handling.  Otherwise, try to add the attribute to the shortform
+> -	 * list; if there's no room then convert the list to leaf format and try
+> -	 * again.
+> -	 */
+> -	if (xfs_attr_is_shortform(dp)) {
+> -
+> -		/*
+> -		 * If the attr was successfully set in shortform, the
+> -		 * transaction is committed and set to NULL.  Otherwise, is it
+> -		 * converted from shortform to leaf, and the transaction is
+> -		 * retained.
+> -		 */
+> -		error = xfs_attr_set_shortform(args, &leaf_bp);
+> -		if (error || !args->trans)
+> -			return error;
+> -	}
+> -
+>   	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+>   		error = xfs_attr_leaf_addname(args);
+> -		if (error != -ENOSPC)
+> +		if (error)
+>   			return error;
+> +	}
+>   
+> -		/*
+> -		 * Promote the attribute list to the Btree format.
+> -		 */
+> -		error = xfs_attr3_leaf_to_node(args);
+> -		if (error)
+> +	error = xfs_attr_node_addname_work(args);
+> +	return error;
+> +}
+> +
+> +int
+> +xfs_attr_set_iter(
+> +	struct xfs_da_args	*args,
+> +	bool			*done)
+> +{
+> +	int			error;
+> +	int			state = 0;
+> +	xfs_dablk_t		lblkno;
+> +	int			blkcnt;
+> +
+> +	do {
+> +		switch (state) {
+> +		case 0:	/* SET_FMT */
+> +			error = xfs_attr_set_fmt(args, done);
+> +			if (*done)
+> +				return error;
+> +			break;
+> +		case 1: /* RMT_FIND_HOLE */
+> +			if (args->rmtblkno <= 0)
+> +				break;
+> +
+> +			trace_xfs_attr_rmtval_set(args);
+> +			error = xfs_attr_rmt_find_hole(args);
+> +			lblkno = (xfs_dablk_t)args->rmtblkno;
+> +			blkcnt = args->rmtblkcnt;
+> +			state++;
+> +			continue;
+> +		case 2: /* RMTVAL_ALLOC */
+> +			if (args->rmtblkno <= 0)
+> +				break;
+> +			error = xfs_attr_rmtval_set(args, &lblkno, &blkcnt);
+> +			break;
+> +		case 3: /* RMTVAL_SET */
+> +			if (args->rmtblkno <= 0)
+> +				break;
+> +			error = xfs_attr_rmtval_set_value(args);
+> +			state++;
+> +			continue;
+> +		case 4:	/* SET_FLAG */
+> +			if (args->op_flags & XFS_DA_OP_RENAME) {
+> +				error = xfs_attr3_leaf_flipflags(args);
+> +			} else {
+> +				if (args->rmtblkno > 0)
+> +					error = xfs_attr3_leaf_clearflag(args);
+> +				return error;
+> +			}
+> +			break;
+> +		case 5: /* RMT_INVALIDATE */
+> +			xfs_attr_restore_rmt_blk(args);
+> +			if (args->rmtblkno)
+> +				error = xfs_attr_rmtval_invalidate(args);
+> +			state++;
+> +			continue;
+> +		case 6: /* RMT_REMOVE */
+> +			error = __xfs_attr_rmtval_remove(args);
+> +			break;
+> +		default:
+>   			return error;
+> +		};
+>   
+> -		/*
+> -		 * Finish any deferred work items and roll the transaction once
+> -		 * more.  The goal here is to call node_addname with the inode
+> -		 * and transaction in the same state (inode locked and joined,
+> -		 * transaction clean) no matter how we got to this step.
+> -		 */
+> -		error = xfs_defer_finish(&args->trans);
+> -		if (error)
+> +		if (!error)
+> +			state++;
+> +		else if (error != -EAGAIN)
+>   			return error;
+>   
+> -		/*
+> -		 * Commit the current trans (including the inode) and
+> -		 * start a new one.
+> -		 */
+> -		error = xfs_trans_roll_inode(&args->trans, dp);
+> +		error = xfs_defer_finish(&args->trans);
+>   		if (error)
+> -			return error;
+> -	}
+> +			break;
+> +		error = xfs_trans_roll_inode(&args->trans, args->dp);
+> +	} while (!error);
+>   
+> -	error = xfs_attr_node_addname(args);
+>   	return error;
+>   }
+>   
+> +int
+> +xfs_attr_set_args(
+> +	struct xfs_da_args	*args)
+> +
+> +{
+> +	int			error;
+> +	bool			done = false;
+> +
+> +	error = xfs_attr_set_iter(args, &done);
+> +	if (error || done)
+> +		return error;
+> +
+> +	return __xfs_attr_set_args(args);
+> +}
+> +
+>   /*
+>    * Return EEXIST if attr is found, or ENOATTR if not
+>    */
+> @@ -676,76 +714,6 @@ xfs_attr_leaf_addname(
+>   
+>   	trace_xfs_attr_leaf_addname(args);
+>   
+> -	error = xfs_attr_leaf_try_add(args, bp);
+> -	if (error)
+> -		return error;
+> -
+> -	/*
+> -	 * Commit the transaction that added the attr name so that
+> -	 * later routines can manage their own transactions.
+> -	 */
+> -	error = xfs_trans_roll_inode(&args->trans, dp);
+> -	if (error)
+> -		return error;
+> -
+> -	/*
+> -	 * If there was an out-of-line value, allocate the blocks we
+> -	 * identified for its storage and copy the value.  This is done
+> -	 * after we create the attribute so that we don't overflow the
+> -	 * maximum size of a transaction and/or hit a deadlock.
+> -	 */
+> -	if (args->rmtblkno > 0) {
+> -		error = xfs_attr_rmtval_set(args);
+> -		if (error)
+> -			return error;
+> -	}
+> -
+> -	if (!(args->op_flags & XFS_DA_OP_RENAME)) {
+> -		/*
+> -		 * Added a "remote" value, just clear the incomplete flag.
+> -		 */
+> -		if (args->rmtblkno > 0)
+> -			error = xfs_attr3_leaf_clearflag(args);
+> -
+> -		return error;
+> -	}
+> -
+> -	/*
+> -	 * If this is an atomic rename operation, we must "flip" the incomplete
+> -	 * flags on the "new" and "old" attribute/value pairs so that one
+> -	 * disappears and one appears atomically.  Then we must remove the "old"
+> -	 * attribute/value pair.
+> -	 *
+> -	 * In a separate transaction, set the incomplete flag on the "old" attr
+> -	 * and clear the incomplete flag on the "new" attr.
+> -	 */
+> -
+> -	error = xfs_attr3_leaf_flipflags(args);
+> -	if (error)
+> -		return error;
+> -	/*
+> -	 * Commit the flag value change and start the next trans in series.
+> -	 */
+> -	error = xfs_trans_roll_inode(&args->trans, args->dp);
+> -	if (error)
+> -		return error;
+> -
+> -	/*
+> -	 * Dismantle the "old" attribute/value pair by removing a "remote" value
+> -	 * (if it exists).
+> -	 */
+> -	xfs_attr_restore_rmt_blk(args);
+> -
+> -	if (args->rmtblkno) {
+> -		error = xfs_attr_rmtval_invalidate(args);
+> -		if (error)
+> -			return error;
+> -
+> -		error = xfs_attr_rmtval_remove(args);
+> -		if (error)
+> -			return error;
+> -	}
+> -
+>   	/*
+>   	 * Read in the block containing the "old" attr, then remove the "old"
+>   	 * attr from that block (neat, huh!)
+> @@ -923,7 +891,7 @@ xfs_attr_node_addname(
+>   	 * Fill in bucket of arguments/results/context to carry around.
+>   	 */
+>   	dp = args->dp;
+> -restart:
+> +
+>   	/*
+>   	 * Search to see if name already exists, and get back a pointer
+>   	 * to where it should go.
+> @@ -967,21 +935,10 @@ xfs_attr_node_addname(
+>   			xfs_da_state_free(state);
+>   			state = NULL;
+>   			error = xfs_attr3_leaf_to_node(args);
+> -			if (error)
+> -				goto out;
+> -			error = xfs_defer_finish(&args->trans);
+> -			if (error)
+> -				goto out;
+> -
+> -			/*
+> -			 * Commit the node conversion and start the next
+> -			 * trans in the chain.
+> -			 */
+> -			error = xfs_trans_roll_inode(&args->trans, dp);
+>   			if (error)
+>   				goto out;
+>   
+> -			goto restart;
+> +			return -EAGAIN;
+>   		}
+>   
+>   		/*
+> @@ -993,9 +950,6 @@ xfs_attr_node_addname(
+>   		error = xfs_da3_split(state);
+>   		if (error)
+>   			goto out;
+> -		error = xfs_defer_finish(&args->trans);
+> -		if (error)
+> -			goto out;
+>   	} else {
+>   		/*
+>   		 * Addition succeeded, update Btree hashvals.
+> @@ -1010,70 +964,23 @@ xfs_attr_node_addname(
+>   	xfs_da_state_free(state);
+>   	state = NULL;
+>   
+> -	/*
+> -	 * Commit the leaf addition or btree split and start the next
+> -	 * trans in the chain.
+> -	 */
+> -	error = xfs_trans_roll_inode(&args->trans, dp);
+> -	if (error)
+> -		goto out;
+> -
+> -	/*
+> -	 * If there was an out-of-line value, allocate the blocks we
+> -	 * identified for its storage and copy the value.  This is done
+> -	 * after we create the attribute so that we don't overflow the
+> -	 * maximum size of a transaction and/or hit a deadlock.
+> -	 */
+> -	if (args->rmtblkno > 0) {
+> -		error = xfs_attr_rmtval_set(args);
+> -		if (error)
+> -			return error;
+> -	}
+> -
+> -	if (!(args->op_flags & XFS_DA_OP_RENAME)) {
+> -		/*
+> -		 * Added a "remote" value, just clear the incomplete flag.
+> -		 */
+> -		if (args->rmtblkno > 0)
+> -			error = xfs_attr3_leaf_clearflag(args);
+> -		retval = error;
+> -		goto out;
+> -	}
+> +	return 0;
+>   
+> -	/*
+> -	 * If this is an atomic rename operation, we must "flip" the incomplete
+> -	 * flags on the "new" and "old" attribute/value pairs so that one
+> -	 * disappears and one appears atomically.  Then we must remove the "old"
+> -	 * attribute/value pair.
+> -	 *
+> -	 * In a separate transaction, set the incomplete flag on the "old" attr
+> -	 * and clear the incomplete flag on the "new" attr.
+> -	 */
+> -	error = xfs_attr3_leaf_flipflags(args);
+> -	if (error)
+> -		goto out;
+> -	/*
+> -	 * Commit the flag value change and start the next trans in series
+> -	 */
+> -	error = xfs_trans_roll_inode(&args->trans, args->dp);
+> +out:
+> +	if (state)
+> +		xfs_da_state_free(state);
+>   	if (error)
+> -		goto out;
+> -
+> -	/*
+> -	 * Dismantle the "old" attribute/value pair by removing a "remote" value
+> -	 * (if it exists).
+> -	 */
+> -	xfs_attr_restore_rmt_blk(args);
+> -
+> -	if (args->rmtblkno) {
+> -		error = xfs_attr_rmtval_invalidate(args);
+> -		if (error)
+> -			return error;
+> +		return error;
+> +	return retval;
+> +}
+>   
+> -		error = xfs_attr_rmtval_remove(args);
+> -		if (error)
+> -			return error;
+> -	}
+> +STATIC int
+> +xfs_attr_node_addname_work(
+> +	struct xfs_da_args	*args)
+> +{
+> +	struct xfs_da_state	*state;
+> +	struct xfs_da_state_blk	*blk;
+> +	int			retval, error;
+>   
+>   	/*
+>   	 * Re-find the "old" attribute entry after any split ops. The INCOMPLETE
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> index 48d8e9caf86f..2c02875a4930 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> @@ -441,7 +441,7 @@ xfs_attr_rmtval_get(
+>    * Find a "hole" in the attribute address space large enough for us to drop the
+>    * new attribute's value into
+>    */
+> -STATIC int
+> +int
+>   xfs_attr_rmt_find_hole(
+>   	struct xfs_da_args	*args)
+>   {
+> @@ -468,7 +468,7 @@ xfs_attr_rmt_find_hole(
+>   	return 0;
+>   }
+>   
+> -STATIC int
+> +int
+>   xfs_attr_rmtval_set_value(
+>   	struct xfs_da_args	*args)
+>   {
+> @@ -567,64 +567,31 @@ xfs_attr_rmtval_stale(
+>    */
+>   int
+>   xfs_attr_rmtval_set(
+> -	struct xfs_da_args	*args)
+> +	struct xfs_da_args	*args,
+> +	xfs_dablk_t		*lblkno,
+> +	int			*blkcnt)
+>   {
+>   	struct xfs_inode	*dp = args->dp;
+>   	struct xfs_bmbt_irec	map;
+> -	xfs_dablk_t		lblkno;
+> -	int			blkcnt;
+>   	int			nmap;
+>   	int			error;
+>   
+> -	trace_xfs_attr_rmtval_set(args);
+> -
+> -	error = xfs_attr_rmt_find_hole(args);
+> +	nmap = 1;
+> +	error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)*lblkno,
+> +			  *blkcnt, XFS_BMAPI_ATTRFORK, args->total, &map,
+> +			  &nmap);
+>   	if (error)
+>   		return error;
+>   
+> -	blkcnt = args->rmtblkcnt;
+> -	lblkno = (xfs_dablk_t)args->rmtblkno;
+> -	/*
+> -	 * Roll through the "value", allocating blocks on disk as required.
+> -	 */
+> -	while (blkcnt > 0) {
+> -		/*
+> -		 * Allocate a single extent, up to the size of the value.
+> -		 *
+> -		 * Note that we have to consider this a data allocation as we
+> -		 * write the remote attribute without logging the contents.
+> -		 * Hence we must ensure that we aren't using blocks that are on
+> -		 * the busy list so that we don't overwrite blocks which have
+> -		 * recently been freed but their transactions are not yet
+> -		 * committed to disk. If we overwrite the contents of a busy
+> -		 * extent and then crash then the block may not contain the
+> -		 * correct metadata after log recovery occurs.
+> -		 */
+> -		nmap = 1;
+> -		error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)lblkno,
+> -				  blkcnt, XFS_BMAPI_ATTRFORK, args->total, &map,
+> -				  &nmap);
+> -		if (error)
+> -			return error;
+> -		error = xfs_defer_finish(&args->trans);
+> -		if (error)
+> -			return error;
+> -
+> -		ASSERT(nmap == 1);
+> -		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
+> -		       (map.br_startblock != HOLESTARTBLOCK));
+> -		lblkno += map.br_blockcount;
+> -		blkcnt -= map.br_blockcount;
+> +	ASSERT(nmap == 1);
+> +	ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
+> +	       (map.br_startblock != HOLESTARTBLOCK));
+> +	*lblkno += map.br_blockcount;
+> +	*blkcnt -= map.br_blockcount;
+>   
+> -		/*
+> -		 * Start the next trans in the chain.
+> -		 */
+> -		error = xfs_trans_roll_inode(&args->trans, dp);
+> -		if (error)
+> -			return error;
+> -	}
+> -
+> -	return xfs_attr_rmtval_set_value(args);
+> +	if (*blkcnt)
+> +		return -EAGAIN;
+> +	return 0;
+>   }
+>   
+>   /*
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+> index 9eee615da156..74d768dd8afa 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.h
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
+> @@ -7,9 +7,11 @@
+>   #define	__XFS_ATTR_REMOTE_H__
+>   
+>   int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
+> +int xfs_attr_rmt_find_hole(struct xfs_da_args *args);
+>   
+>   int xfs_attr_rmtval_get(struct xfs_da_args *args);
+> -int xfs_attr_rmtval_set(struct xfs_da_args *args);
+> +int xfs_attr_rmtval_set(struct xfs_da_args *args, xfs_dablk_t *, int *);
+> +int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
+>   int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+>   int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
+>   		xfs_buf_flags_t incore_flags);
 > 
-> Other than that, I follow the logic in this patch and will give it a
-> testrun tonight.
-
-Thank you!
-
-> 
-> --D
-> 
-> > +		}
-> > +
-> >  		old = got;
-> >  
-> >  		got.br_blockcount = del->br_startoff - got.br_startoff;
-> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> > index bcac769a7df6..ea1a9dd8a763 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> > +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> > @@ -47,6 +47,19 @@ struct xfs_ifork {
-> >   */
-> >  #define XFS_IEXT_PUNCH_HOLE_CNT		(1)
-> >  
-> > +/*
-> > + * Directory entry addition can cause the following,
-> > + * 1. Data block can be added/removed.
-> > + *    A new extent can cause extent count to increase by 1.
-> > + * 2. Free disk block can be added/removed.
-> > + *    Same behaviour as described above for Data block.
-> > + * 3. Dabtree blocks.
-> > + *    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these can be new
-> > + *    extents. Hence extent count can increase by XFS_DA_NODE_MAXDEPTH.
-> > + */
-> > +#define XFS_IEXT_DIR_MANIP_CNT(mp) \
-> > +	((XFS_DA_NODE_MAXDEPTH + 1 + 1) * (mp)->m_dir_geo->fsbcount)
-> > +
-> >  /*
-> >   * Fork handling.
-> >   */
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index b7352bc4c815..0db21368c7e1 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -1042,6 +1042,11 @@ xfs_create(
-> >  	if (error)
-> >  		goto out_trans_cancel;
-> >  
-> > +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
-> > +			XFS_IEXT_DIR_MANIP_CNT(mp));
-> > +	if (error)
-> > +		goto out_trans_cancel;
-> > +
-> >  	/*
-> >  	 * A newly created regular or special file just has one directory
-> >  	 * entry pointing to them, but a directory also the "." entry
-> > @@ -1258,6 +1263,11 @@ xfs_link(
-> >  	xfs_trans_ijoin(tp, sip, XFS_ILOCK_EXCL);
-> >  	xfs_trans_ijoin(tp, tdp, XFS_ILOCK_EXCL);
-> >  
-> > +	error = xfs_iext_count_may_overflow(tdp, XFS_DATA_FORK,
-> > +			XFS_IEXT_DIR_MANIP_CNT(mp));
-> > +	if (error)
-> > +		goto error_return;
-> > +
-> >  	/*
-> >  	 * If we are using project inheritance, we only allow hard link
-> >  	 * creation in our tree when the project IDs are the same; else
-> > @@ -3106,6 +3116,35 @@ xfs_rename(
-> >  	/*
-> >  	 * Check for expected errors before we dirty the transaction
-> >  	 * so we can return an error without a transaction abort.
-> > +	 *
-> > +	 * Extent count overflow check:
-> > +	 *
-> > +	 * From the perspective of src_dp, a rename operation is essentially a
-> > +	 * directory entry remove operation. Hence the only place where we check
-> > +	 * for extent count overflow for src_dp is in
-> > +	 * xfs_bmap_del_extent_real(). xfs_bmap_del_extent_real() returns
-> > +	 * -ENOSPC when it detects a possible extent count overflow and in
-> > +	 * response, the higher layers of directory handling code do the
-> > +	 * following:
-> > +	 * 1. Data/Free blocks: XFS lets these blocks linger around until a
-> > +	 *    future remove operation removes them.
-> > +	 * 2. Dabtree blocks: XFS swaps the blocks with the last block in the
-> > +	 *    Leaf space and unmaps the last block.
-> > +	 *
-> > +	 * For target_dp, there are two cases depending on whether the
-> > +	 * destination directory entry exists or not.
-> > +	 *
-> > +	 * When destination directory entry does not exist (i.e. target_ip ==
-> > +	 * NULL), extent count overflow check is performed only when transaction
-> > +	 * has a non-zero sized space reservation associated with it.  With a
-> > +	 * zero-sized space reservation, XFS allows a rename operation to
-> > +	 * continue only when the directory has sufficient free space in its
-> > +	 * data/leaf/free space blocks to hold the new entry.
-> > +	 *
-> > +	 * When destination directory entry exists (i.e. target_ip != NULL), all
-> > +	 * we need to do is change the inode number associated with the already
-> > +	 * existing entry. Hence there is no need to perform an extent count
-> > +	 * overflow check.
-> >  	 */
-> >  	if (target_ip == NULL) {
-> >  		/*
-> > @@ -3116,6 +3155,12 @@ xfs_rename(
-> >  			error = xfs_dir_canenter(tp, target_dp, target_name);
-> >  			if (error)
-> >  				goto out_trans_cancel;
-> > +		} else {
-> > +			error = xfs_iext_count_may_overflow(target_dp,
-> > +					XFS_DATA_FORK,
-> > +					XFS_IEXT_DIR_MANIP_CNT(mp));
-> > +			if (error)
-> > +				goto out_trans_cancel;
-> >  		}
-> >  	} else {
-> >  		/*
-> > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> > index 1f43fd7f3209..0b8136a32484 100644
-> > --- a/fs/xfs/xfs_symlink.c
-> > +++ b/fs/xfs/xfs_symlink.c
-> > @@ -220,6 +220,11 @@ xfs_symlink(
-> >  	if (error)
-> >  		goto out_trans_cancel;
-> >  
-> > +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
-> > +			XFS_IEXT_DIR_MANIP_CNT(mp));
-> > +	if (error)
-> > +		goto out_trans_cancel;
-> > +
-> >  	/*
-> >  	 * Allocate an inode for the symlink.
-> >  	 */
-> 
-
-
--- 
-chandan
-
-
-
