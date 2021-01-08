@@ -6,124 +6,148 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3079FC43381
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 20:33:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA560C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 20:46:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0EA9B23AC0
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 20:33:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 859C523A7F
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Jan 2021 20:46:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729272AbhAHUd1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jan 2021 15:33:27 -0500
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:53169 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729251AbhAHUd1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jan 2021 15:33:27 -0500
+        id S1728853AbhAHUpr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jan 2021 15:45:47 -0500
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:54731 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727055AbhAHUpr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jan 2021 15:45:47 -0500
 Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id EFAD17655CD;
-        Sat,  9 Jan 2021 07:32:43 +1100 (AEDT)
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id A9CBA85E8;
+        Sat,  9 Jan 2021 07:45:03 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kxyR7-004R24-RS; Sat, 09 Jan 2021 07:32:41 +1100
-Date:   Sat, 9 Jan 2021 07:32:41 +1100
+        id 1kxyd4-004R9x-Sr; Sat, 09 Jan 2021 07:45:02 +1100
+Date:   Sat, 9 Jan 2021 07:45:02 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Andres Freund <andres@anarazel.de>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: fallocate(FALLOC_FL_ZERO_RANGE_BUT_REALLY) to avoid unwritten
- extents?
-Message-ID: <20210108203241.GI331610@dread.disaster.area>
-References: <20201230062819.yinrrp6uwfegsqo3@alap3.anarazel.de>
- <20210106225201.GF331610@dread.disaster.area>
- <20210106234009.b6gbzl7bjm2evxj6@alap3.anarazel.de>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Avi Kivity <avi@scylladb.com>, linux-xfs@vger.kernel.org
+Subject: Re: Disk aligned (but not block aligned) DIO write woes
+Message-ID: <20210108204502.GJ331610@dread.disaster.area>
+References: <20ce6a14-94cf-c8ef-8219-7a051fb6e66a@scylladb.com>
+ <20210104150601.GA130750@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20210106234009.b6gbzl7bjm2evxj6@alap3.anarazel.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210104150601.GA130750@bfoster>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
         a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
-        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=7-415B0cAAAA:8
-        a=wut9VHP1pO6yiD9O2Z4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=8nJEP1OIZ-IA:10 a=EmqxpYm9HcoA:10 a=7-415B0cAAAA:8
+        a=XKtqyQ745IcFWCLiatoA:9 a=wPNLvfGTeEIA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 06, 2021 at 03:40:09PM -0800, Andres Freund wrote:
-> Hi,
-> 
-> On 2021-01-07 09:52:01 +1100, Dave Chinner wrote:
-> > On Tue, Dec 29, 2020 at 10:28:19PM -0800, Andres Freund wrote:
-> > > Which brings me to $subject:
-> > > 
-> > > Would it make sense to add a variant of FALLOC_FL_ZERO_RANGE that
-> > > doesn't convert extents into unwritten extents, but instead uses
-> > > blkdev_issue_zeroout() if supported?  Mostly interested in xfs/ext4
-> > > myself, but ...
+On Mon, Jan 04, 2021 at 10:06:01AM -0500, Brian Foster wrote:
+> On Mon, Dec 28, 2020 at 05:57:29PM +0200, Avi Kivity wrote:
+> > I observe that XFS takes an exclusive lock for DIO writes that are not block
+> > aligned:
 > > 
-> > We have explicit requests from users (think initialising large VM
-> > images) that FALLOC_FL_ZERO_RANGE must never fall back to writing
-> > zeroes manually.
+> > 
+> > xfs_file_dio_aio_write(
+> > 
+> > {
+> > 
+> > ...
+> > 
+> >        /*
+> >          * Don't take the exclusive iolock here unless the I/O is unaligned
+> > to
+> >          * the file system block size.  We don't need to consider the EOF
+> >          * extension case here because xfs_file_aio_write_checks() will
+> > relock
+> >          * the inode as necessary for EOF zeroing cases and fill out the new
+> >          * inode size as appropriate.
+> >          */
+> >         if ((iocb->ki_pos & mp->m_blockmask) ||
+> >             ((iocb->ki_pos + count) & mp->m_blockmask)) {
+> >                 unaligned_io = 1;
+> > 
+> >                 /*
+> >                  * We can't properly handle unaligned direct I/O to reflink
+> >                  * files yet, as we can't unshare a partial block.
+> >                  */
+> >                 if (xfs_is_cow_inode(ip)) {
+> >                         trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos,
+> > count);
+> >                         return -ENOTBLK;
+> >                 }
+> >                 iolock = XFS_IOLOCK_EXCL;
+> >         } else {
+> >                 iolock = XFS_IOLOCK_SHARED;
+> >         }
+> > 
+> > 
+> > I also see that such writes cause io_submit to block, even if they hit a
+> > written extent (and are also not size-changing, by implication) and
+> > therefore do not require a metadata write. Probably due to "|| unaligned_io"
+> > in
+> > 
+> > 
+> >         ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
+> >                            &xfs_dio_write_ops,
+> >                            is_sync_kiocb(iocb) || unaligned_io);
+> > 
+> > 
+> > Can this be relaxed to allow writes to written extents to proceed in
+> > parallel? I explain the motivation below.
+> > 
 > 
-> That behaviour makes a lot of sense for quite a few use cases - I wasn't
-> trying to make it sound like it should not be available. Nor that
-> FALLOC_FL_ZERO_RANGE should behave differently.
+> From the above code, it looks as though we require the exclusive lock to
+> accommodate sub-block zeroing that might occur down in the dio code.
+> Without it, concurrent sector granular I/Os to the same block could
+> presumably cause corruption if the data bios and associated zeroing bios
+> were reordered between two requests.
 > 
-> 
-> > IOWs, while you might want FALLOC_FL_ZERO_RANGE to explicitly write
-> > zeros, we have users who explicitly don't want it to do this.
-> 
-> Right - which is why I was asking for a variant of FALLOC_FL_ZERO_RANGE
-> (jokingly named FALLOC_FL_ZERO_RANGE_BUT_REALLY in the subject), rather
-> than changing the behaviour.
-> 
-> 
-> > Perhaps we should add want FALLOC_FL_CONVERT_RANGE, which tells the
-> > filesystem to convert an unwritten range of zeros to a written range
-> > by manually writing zeros. i.e. you do FALLOC_FL_ZERO_RANGE to zero
-> > the range and fill holes using metadata manipulation, followed by
-> > FALLOC_FL_WRITE_RANGE to then convert the "metadata zeros" to real
-> > written zeros.
-> 
-> Yep, something like that would do the trick. Perhaps
-> FALLOC_FL_MATERIALIZE_RANGE?
+> Looking down in the iomap/dio code, iomap_dio_bio_actor() triggers
+> sub-block zeroing if the associated range is unaligned and the mapping
+> is either unwritten or new (i.e. newly allocated for this write). So as
+> you note above, there is no such zeroing for a pre-existing written
+> block within EOF. From that, it seems reasonable to me that in principle
+> the filesystem could check for these conditions in the higher layer and
+> further restrict usage of the exclusive lock.
 
-[ FWIW, I really dislike the "RANGE" part of fallocate flag names.
-It's redundant (fallocate always operates on a range!) and just
-makes names unnecessarily longer. ]
+Yuck, no.
 
-I used "convert range" as the name explicitly because it has
-specific meaning for extent space manipulation. i.e. we "convert"
-extents from one state to another. "write range" is also has
-explicit meaning, in that it will convert extents from unwritten to
-written data.
+> That said, we'd probably
+> have to rework the above code to acquire the shared lock first,
+> read/check the extent state for the start/end blocks of the I/O and then
+> cycle out to the exclusive lock in the cases where it is required.
 
-In comparison, "materialise" is something undefined, and could be
-easily thought to take something ephemeral (such as a hole) and turn
-it into something real (an allocated extent). We wouldn't want this
-operation to allocate space, so I think "materialise" is just too
-much magic to encoding into an API for an explicit, well defined
-state change.
+Yes, that requires mapping lookups above the iomap layer, then
+repeating them again in the iomap layer and having to juggle the
+locking to ensure the iomap code gets the same result.  This also
+requires taking the ILOCK to decide how to lock the IOLOCK, which
+inverts all the IO path locking in nasty, bug prone ways. We tried
+very hard to get rid of all those layering violations and lock
+dances in the IO path with iomap - the old DIO code was a never
+ending source of locking bugs because we had to play locking games
+like this....
 
-We also have people asking for ZERO_RANGE to just flip existing
-extents from written to unwritten (rather than the punch/preallocate
-we do now). This is also a "convert" operation, just in the other
-direction (from data to zeros rather than from zeros to data).
+>
+> It's
+> not immediately clear to me if we'd still want to set the wait flag in
+> those unaligned-but-no-zeroing cases. Perhaps somebody who knows the dio
+> code a bit better can chime in further on all of this..
 
-The observation I'm making here is that these "convert" oeprations
-will both makes SEEK_HOLE/SEEK_DATA behave differently for the
-underlying data. preallocated space is considered a HOLE, written
-zeros are considered DATA. So we do expose the ability to check that
-a "convert" operation has actually changed the state of the
-underlying extents in either direction...
+As I explained quickly on #xfs over xmas/ny time - because it seems
+like 4 or 5 people all asked for this at the same time - I suspect
+we can do this with IOMAP_NOWAIT directives for unaligned IO under
+shared locking.
 
-CONVERT_TO_DATA/CONVERT_TO_ZERO as an operational pair whose
-behaviour is visible and easily testable via SEEK_HOLE/SEEK_DATA
-makes a lot more sense to me. Also defining them to fail fast if
-unwritten extents are not supported by the filesystem (i.e. they
-should -never- physically write anything) would also allow
-applications to fall back to ZERO_RANGE on filesystems that don't
-support unwritten extents to explicitly write zeros if
-CONVERT_TO_ZERO fails....
+That is, if the unaligned dio is going to require allocation or
+sub-block zeroing or would otherwise block, the filesystem mapping
+code returns EAGAIN to iomap_apply() which propagates back to the
+filesystem submitting the DIO which can then take exclusive lock and
+resubmit the unaligned DIO, this time without the nowait semantics.
 
 Cheers,
 
