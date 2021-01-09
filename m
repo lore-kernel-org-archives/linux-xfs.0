@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A30EC4360C
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:00:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8005AC433E0
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:01:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B4CA23A63
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:00:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4681323A5A
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:01:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725847AbhAIIA3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Jan 2021 03:00:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40978 "EHLO mail.kernel.org"
+        id S1726732AbhAIIBF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Jan 2021 03:01:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41204 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726593AbhAIIAZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 9 Jan 2021 03:00:25 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 039A823A63;
-        Sat,  9 Jan 2021 07:59:44 +0000 (UTC)
+        id S1726593AbhAIIBF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 9 Jan 2021 03:01:05 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A0A6F23A69;
+        Sat,  9 Jan 2021 07:59:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1610179185;
-        bh=/5CziqsFBf55uwSNubqu4qN4xKuBe9W+HNnHEDG6YgA=;
+        bh=X2D2mMHSYMvciNt0NX060b8SxOuVP637kMoRfSYm4hI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kyyBQ5JaPqg7f6gAr0U6h5XPq4Yu0YdR9z02SEkW8Bhy+RlGqWR4BmIpWnzVs7de+
-         wTl/w1EWyIe7Nc22bIFOXpgui7MJ9XplFddYt9QgHD84Wv0iTSenQ2f6l/F3728nyT
-         MHuxxqUG7jNI5tjO1JaGj4GiRjMTdTfqO0NQj5SEojNg7Rf9uvfJoVtY1zXAXK1KuR
-         UgRhWZiuaTsaNlOxMPKFXBcrGoYqCT3pWaxFQZBn14I2afW7TW/1ZF9na/pUewmINZ
-         s5xO7jsfntWdMkTCOCf5siZ5Jt5VoGfglrrYC3f17ywLAORHqzTJful8Uejer2w0wy
-         fdUJhCzLAPOUQ==
+        b=AFPYCSfxi6jt7dh452fvYOjRNnSMUXbz8Ldbrx5SGN7CEn0FfKd6trsAFH6tQSifw
+         d4qlNTLmPT8GouFL9FJAYI88pWWf957LV4l3E7E/hWtduFI7b0oTBCWRLrW2IK8Q/Q
+         FCYrgwqc99DymUEG7oKhjTY57v7R2vM5tY1REgj3cw1WSXDCdzFbBYrH25abQC2FwA
+         7Mj8WPo7PUw+i9I5wWi8QgDUN4e8vo+4PfdL9xmT961l8/fnOWLqQe4ByRF8EhrvtX
+         Ky/Db8yaRBXa3dDYRcex1xKhkKHxqEKY8OZ2hYIq64kX+WMXc00H9D9r6FOOuQHccH
+         SvjeFv8022L2A==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net,
         Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 04/12] fat: only specify I_DIRTY_TIME when needed in fat_update_time()
-Date:   Fri,  8 Jan 2021 23:58:55 -0800
-Message-Id: <20210109075903.208222-5-ebiggers@kernel.org>
+Subject: [PATCH v2 06/12] fs: pass only I_DIRTY_INODE flags to ->dirty_inode
+Date:   Fri,  8 Jan 2021 23:58:57 -0800
+Message-Id: <20210109075903.208222-7-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210109075903.208222-1-ebiggers@kernel.org>
 References: <20210109075903.208222-1-ebiggers@kernel.org>
@@ -50,55 +50,55 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-As was done for generic_update_time(), only pass I_DIRTY_TIME to
-__mark_inode_dirty() when the inode's timestamps were actually updated
-and lazytime is enabled.  This avoids a weird edge case where
-I_DIRTY_TIME could be set in i_state when lazytime isn't enabled.
+->dirty_inode is now only called when I_DIRTY_INODE (I_DIRTY_SYNC and/or
+I_DIRTY_DATASYNC) is set.  However it may still be passed other dirty
+flags at the same time, provided that these other flags happened to be
+passed to __mark_inode_dirty() at the same time as I_DIRTY_INODE.
 
+This doesn't make sense because there is no reason for filesystems to
+care about these extra flags.  Nor are filesystems notified about all
+updates to these other flags.
+
+Therefore, mask the flags before passing them to ->dirty_inode.
+
+Also properly document ->dirty_inode in vfs.rst.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- fs/fat/misc.c | 23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+ Documentation/filesystems/vfs.rst | 5 ++++-
+ fs/fs-writeback.c                 | 2 +-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/fs/fat/misc.c b/fs/fat/misc.c
-index f1b2a1fc2a6a4..18a50a46b57f8 100644
---- a/fs/fat/misc.c
-+++ b/fs/fat/misc.c
-@@ -329,22 +329,23 @@ EXPORT_SYMBOL_GPL(fat_truncate_time);
+diff --git a/Documentation/filesystems/vfs.rst b/Documentation/filesystems/vfs.rst
+index ca52c82e5bb54..287b80948a40b 100644
+--- a/Documentation/filesystems/vfs.rst
++++ b/Documentation/filesystems/vfs.rst
+@@ -270,7 +270,10 @@ or bottom half).
+ 	->alloc_inode.
  
- int fat_update_time(struct inode *inode, struct timespec64 *now, int flags)
- {
--	int iflags = I_DIRTY_TIME;
--	bool dirty = false;
-+	int dirty_flags = 0;
+ ``dirty_inode``
+-	this method is called by the VFS to mark an inode dirty.
++	this method is called by the VFS when an inode is marked dirty.
++	This is specifically for the inode itself being marked dirty,
++	not its data.  If the update needs to be persisted by fdatasync(),
++	then I_DIRTY_DATASYNC will be set in the flags argument.
  
- 	if (inode->i_ino == MSDOS_ROOT_INO)
- 		return 0;
+ ``write_inode``
+ 	this method is called when the VFS needs to write an inode to
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index b7616bbd55336..2e6064012f7d3 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -2259,7 +2259,7 @@ void __mark_inode_dirty(struct inode *inode, int flags)
+ 		trace_writeback_dirty_inode_start(inode, flags);
  
--	fat_truncate_time(inode, now, flags);
--	if (flags & S_VERSION)
--		dirty = inode_maybe_inc_iversion(inode, false);
--	if ((flags & (S_ATIME | S_CTIME | S_MTIME)) &&
--	    !(inode->i_sb->s_flags & SB_LAZYTIME))
--		dirty = true;
-+	if (flags & (S_ATIME | S_CTIME | S_MTIME)) {
-+		fat_truncate_time(inode, now, flags);
-+		if (inode->i_sb->s_flags & SB_LAZYTIME)
-+			dirty_flags |= I_DIRTY_TIME;
-+		else
-+			dirty_flags |= I_DIRTY_SYNC;
-+	}
-+
-+	if ((flags & S_VERSION) && inode_maybe_inc_iversion(inode, false))
-+		dirty_flags |= I_DIRTY_SYNC;
+ 		if (sb->s_op->dirty_inode)
+-			sb->s_op->dirty_inode(inode, flags);
++			sb->s_op->dirty_inode(inode, flags & I_DIRTY_INODE);
  
--	if (dirty)
--		iflags |= I_DIRTY_SYNC;
--	__mark_inode_dirty(inode, iflags);
-+	__mark_inode_dirty(inode, dirty_flags);
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(fat_update_time);
+ 		trace_writeback_dirty_inode(inode, flags);
+ 
 -- 
 2.30.0
 
