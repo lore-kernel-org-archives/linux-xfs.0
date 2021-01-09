@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48A3AC4361B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6C8BC433DB
 	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:01:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F31C23A5B
+	by mail.kernel.org (Postfix) with ESMTP id AC40F238E8
 	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:01:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726745AbhAIIBM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Jan 2021 03:01:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41210 "EHLO mail.kernel.org"
+        id S1726748AbhAIIBQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Jan 2021 03:01:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41202 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726748AbhAIIBG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 9 Jan 2021 03:01:06 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 971DF23A7C;
-        Sat,  9 Jan 2021 07:59:46 +0000 (UTC)
+        id S1726427AbhAIIBF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 9 Jan 2021 03:01:05 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 525FD23A68;
+        Sat,  9 Jan 2021 07:59:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610179186;
-        bh=D2cLsgvBZJFGW9YnFrwrA+vuwvsBuSsiyb+lhDCp2YA=;
+        s=k20201202; t=1610179185;
+        bh=xjhBwvsck2xldye/p1ipbKcdL2fe5kn+WPmc3PyBaCM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=r5QndVHWjZk6u7rqhVsoxams/JD8MNoS8E8134pGAOKcfy/W4HnDInVFwg8sbEEFp
-         7CHWAHWyQGIZoZ94yydkwzpAYhvMJVjbbgEVWlnMuxDKf7+Z2i0RO0Iv7oxCRhCAII
-         AAktC4bPG7raefyxI2t2J3xz9PNXgYIHwLsRDAy+EIJc4gnOYAEg9v30npfco7nljx
-         GorEyuHhWKODU/RpYM79+YYzl5L5vAf1Wdp0QxuBxG+91+l0APfc5JobO+OM+DATCD
-         12YJuHKBOJhm05uzuD/Za3XLnD6cU5qNsKwkodBMng8GKiyR1lQSs4XDmiU2uqfyk8
-         G/LTIYYbI+Svw==
+        b=MkviwhOnbQtnQ7zRPqJn3r3k0jVP814jRKJF9u7tgP1eaEBZcpAYsV4cQljL2+4TE
+         byJsLl6B5qpofY9e9+OTanUCP6iHIUYxwlT7fMxGxf4qyJPg+XziHNMIMTmuV4lB0E
+         XkPEWJfutVBkJiawphxzrQEvRKvEs5pijr5I4Vg2Njw2KZKHE0jKTh3E5fr4APN+eG
+         iRgQnJWzUzYNMyfR25VD18x/tmSzCyt8vStCy9uPa1KepLScLBFRmqh2/Jrmg9AeZV
+         GnL/Dic0UGvSFDS0Kc0vCb5n2J7lmQ83zRLHtfa8a9YP6zaTj/pNooGOBgbso04+e0
+         ARt1h1TPEaKKA==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net,
         Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 09/12] fs: improve comments for writeback_single_inode()
-Date:   Fri,  8 Jan 2021 23:59:00 -0800
-Message-Id: <20210109075903.208222-10-ebiggers@kernel.org>
+Subject: [PATCH v2 05/12] fs: don't call ->dirty_inode for lazytime timestamp updates
+Date:   Fri,  8 Jan 2021 23:58:56 -0800
+Message-Id: <20210109075903.208222-6-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210109075903.208222-1-ebiggers@kernel.org>
 References: <20210109075903.208222-1-ebiggers@kernel.org>
@@ -50,118 +50,108 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-Some comments for writeback_single_inode() and
-__writeback_single_inode() are outdated or not very helpful, especially
-with regards to writeback list handling.  Update them.
+There is no need to call ->dirty_inode for lazytime timestamp updates
+(i.e. for __mark_inode_dirty(I_DIRTY_TIME)), since by the definition of
+lazytime, filesystems must ignore these updates.  Filesystems only need
+to care about the updated timestamps when they expire.
 
+Therefore, only call ->dirty_inode when I_DIRTY_INODE is set.
+
+Based on a patch from Christoph Hellwig:
+https://lore.kernel.org/r/20200325122825.1086872-4-hch@lst.de
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- fs/fs-writeback.c | 57 +++++++++++++++++++++++++++--------------------
- 1 file changed, 33 insertions(+), 24 deletions(-)
+ fs/ext4/inode.c   | 12 +-----------
+ fs/f2fs/super.c   |  3 ---
+ fs/fs-writeback.c |  6 +++---
+ fs/gfs2/super.c   |  2 --
+ 4 files changed, 4 insertions(+), 19 deletions(-)
 
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 27946882d4ce4..4cc6c7834312f 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -5933,26 +5933,16 @@ int __ext4_mark_inode_dirty(handle_t *handle, struct inode *inode,
+  * If the inode is marked synchronous, we don't honour that here - doing
+  * so would cause a commit on atime updates, which we don't bother doing.
+  * We handle synchronous inodes at the highest possible level.
+- *
+- * If only the I_DIRTY_TIME flag is set, we can skip everything.  If
+- * I_DIRTY_TIME and I_DIRTY_SYNC is set, the only inode fields we need
+- * to copy into the on-disk inode structure are the timestamp files.
+  */
+ void ext4_dirty_inode(struct inode *inode, int flags)
+ {
+ 	handle_t *handle;
+ 
+-	if (flags == I_DIRTY_TIME)
+-		return;
+ 	handle = ext4_journal_start(inode, EXT4_HT_INODE, 2);
+ 	if (IS_ERR(handle))
+-		goto out;
+-
++		return;
+ 	ext4_mark_inode_dirty(handle, inode);
+-
+ 	ext4_journal_stop(handle);
+-out:
+-	return;
+ }
+ 
+ int ext4_change_inode_journal_flag(struct inode *inode, int val)
+diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+index b4a07fe62d1a5..cc98dc49f4a26 100644
+--- a/fs/f2fs/super.c
++++ b/fs/f2fs/super.c
+@@ -1196,9 +1196,6 @@ static void f2fs_dirty_inode(struct inode *inode, int flags)
+ 			inode->i_ino == F2FS_META_INO(sbi))
+ 		return;
+ 
+-	if (flags == I_DIRTY_TIME)
+-		return;
+-
+ 	if (is_inode_flag_set(inode, FI_AUTO_RECOVER))
+ 		clear_inode_flag(inode, FI_AUTO_RECOVER);
+ 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index cee1df6e3bd43..e91980f493884 100644
+index c41cb887eb7d3..b7616bbd55336 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -1442,9 +1442,15 @@ static void requeue_inode(struct inode *inode, struct bdi_writeback *wb,
- }
+@@ -2255,16 +2255,16 @@ void __mark_inode_dirty(struct inode *inode, int flags)
+ 	 * Don't do this for I_DIRTY_PAGES - that doesn't actually
+ 	 * dirty the inode itself
+ 	 */
+-	if (flags & (I_DIRTY_INODE | I_DIRTY_TIME)) {
++	if (flags & I_DIRTY_INODE) {
+ 		trace_writeback_dirty_inode_start(inode, flags);
  
- /*
-- * Write out an inode and its dirty pages. Do not update the writeback list
-- * linkage. That is left to the caller. The caller is also responsible for
-- * setting I_SYNC flag and calling inode_sync_complete() to clear it.
-+ * Write out an inode and its dirty pages (or some of its dirty pages, depending
-+ * on @wbc->nr_to_write), and clear the relevant dirty flags from i_state.
-+ *
-+ * This doesn't remove the inode from the writeback list it is on, except
-+ * potentially to move it from b_dirty_time to b_dirty due to timestamp
-+ * expiration.  The caller is otherwise responsible for writeback list handling.
-+ *
-+ * The caller is also responsible for setting the I_SYNC flag beforehand and
-+ * calling inode_sync_complete() to clear it afterwards.
-  */
- static int
- __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
-@@ -1487,9 +1493,10 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
- 	}
+ 		if (sb->s_op->dirty_inode)
+ 			sb->s_op->dirty_inode(inode, flags);
+ 
+ 		trace_writeback_dirty_inode(inode, flags);
+-	}
+-	if (flags & I_DIRTY_INODE)
++
+ 		flags &= ~I_DIRTY_TIME;
++	}
+ 	dirtytime = flags & I_DIRTY_TIME;
  
  	/*
--	 * Some filesystems may redirty the inode during the writeback
--	 * due to delalloc, clear dirty metadata flags right before
--	 * write_inode()
-+	 * Get and clear the dirty flags from i_state.  This needs to be done
-+	 * after calling writepages because some filesystems may redirty the
-+	 * inode during writepages due to delalloc.  It also needs to be done
-+	 * after handling timestamp expiration, as that may dirty the inode too.
- 	 */
- 	spin_lock(&inode->i_lock);
- 	dirty = inode->i_state & I_DIRTY;
-@@ -1524,12 +1531,13 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
- }
+diff --git a/fs/gfs2/super.c b/fs/gfs2/super.c
+index 2f56acc41c049..042b94288ff11 100644
+--- a/fs/gfs2/super.c
++++ b/fs/gfs2/super.c
+@@ -562,8 +562,6 @@ static void gfs2_dirty_inode(struct inode *inode, int flags)
+ 	int need_endtrans = 0;
+ 	int ret;
  
- /*
-- * Write out an inode's dirty pages. Either the caller has an active reference
-- * on the inode or the inode has I_WILL_FREE set.
-+ * Write out an inode's dirty data and metadata on-demand, i.e. separately from
-+ * the regular batched writeback done by the flusher threads in
-+ * writeback_sb_inodes().  @wbc controls various aspects of the write, such as
-+ * whether it is a data-integrity sync (%WB_SYNC_ALL) or not (%WB_SYNC_NONE).
-  *
-- * This function is designed to be called for writing back one inode which
-- * we go e.g. from filesystem. Flusher thread uses __writeback_single_inode()
-- * and does more profound writeback list handling in writeback_sb_inodes().
-+ * To prevent the inode from going away, either the caller must have a reference
-+ * to the inode, or the inode must have I_WILL_FREE or I_FREEING set.
-  */
- static int writeback_single_inode(struct inode *inode,
- 				  struct writeback_control *wbc)
-@@ -1544,23 +1552,23 @@ static int writeback_single_inode(struct inode *inode,
- 		WARN_ON(inode->i_state & I_WILL_FREE);
- 
- 	if (inode->i_state & I_SYNC) {
--		if (wbc->sync_mode != WB_SYNC_ALL)
--			goto out;
- 		/*
--		 * It's a data-integrity sync. We must wait. Since callers hold
--		 * inode reference or inode has I_WILL_FREE set, it cannot go
--		 * away under us.
-+		 * Writeback is already running on the inode.  For WB_SYNC_NONE,
-+		 * that's enough and we can just return.  For WB_SYNC_ALL, we
-+		 * must wait for the existing writeback to complete, then do
-+		 * writeback again if there's anything left.
- 		 */
-+		if (wbc->sync_mode != WB_SYNC_ALL)
-+			goto out;
- 		__inode_wait_for_writeback(inode);
- 	}
- 	WARN_ON(inode->i_state & I_SYNC);
- 	/*
--	 * Skip inode if it is clean and we have no outstanding writeback in
--	 * WB_SYNC_ALL mode. We don't want to mess with writeback lists in this
--	 * function since flusher thread may be doing for example sync in
--	 * parallel and if we move the inode, it could get skipped. So here we
--	 * make sure inode is on some writeback list and leave it there unless
--	 * we have completely cleaned the inode.
-+	 * If the inode is already fully clean, then there's nothing to do.
-+	 *
-+	 * For data-integrity syncs we also need to check whether any pages are
-+	 * still under writeback, e.g. due to prior WB_SYNC_NONE writeback.  If
-+	 * there are any such pages, we'll need to wait for them.
- 	 */
- 	if (!(inode->i_state & I_DIRTY_ALL) &&
- 	    (wbc->sync_mode != WB_SYNC_ALL ||
-@@ -1576,8 +1584,9 @@ static int writeback_single_inode(struct inode *inode,
- 	wb = inode_to_wb_and_lock_list(inode);
- 	spin_lock(&inode->i_lock);
- 	/*
--	 * If inode is clean, remove it from writeback lists. Otherwise don't
--	 * touch it. See comment above for explanation.
-+	 * If the inode is now fully clean, then it can be safely removed from
-+	 * its writeback list (if any).  Otherwise the flusher threads are
-+	 * responsible for the writeback lists.
- 	 */
- 	if (!(inode->i_state & I_DIRTY_ALL))
- 		inode_io_list_del_locked(inode, wb);
+-	if (!(flags & I_DIRTY_INODE))
+-		return;
+ 	if (unlikely(gfs2_withdrawn(sdp)))
+ 		return;
+ 	if (!gfs2_glock_is_locked_by_me(ip->i_gl)) {
 -- 
 2.30.0
 
