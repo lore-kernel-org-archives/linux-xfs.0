@@ -2,112 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,UNWANTED_LANGUAGE_BODY autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75D8FC433E0
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 06:47:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4AFDC433E0
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 07:01:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F8FC23A68
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 06:47:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6346A23A68
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 07:01:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725915AbhAIGq6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Jan 2021 01:46:58 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:40234 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725847AbhAIGq6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Jan 2021 01:46:58 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1096aJ9F096704;
-        Sat, 9 Jan 2021 06:46:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=qIFd+RbzzgUGRU/sSe0gzSQh1PgZQ2pc8EtqH2VrKxs=;
- b=y9/oB+OWRQ9Yx5BDbIHQ5OJ4IRrbhckasDzrR/JwInYIO7ptb6NcGnO82+yjBvvb5tl4
- 1iPbLyyGY0YT6iJmIZs14PvWv6rLS+i0TB45nYGeblrtUFMcEkqTnIEGcSAnt0ZSYl67
- R+hjTjT/uTblYajCGWnFgHalrLOGan9ajx69cxCN742KYqe5NeALgVyB+nOV0aZvF+XC
- P0zDfuaFk/a32ApjyewBz5jgXM2sGsNWKWpCoz/8qdwJVw5dSpt984IxezVdjF6dfIsY
- gWfpXYvGLCZ3pbGKMdg6jGspP2Ar5iCZZtM9s/6WKCOaUfvryInSgKTqUJ6yg+604XF0 Gw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 35y20agevb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 09 Jan 2021 06:46:09 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1096Yw6a080686;
-        Sat, 9 Jan 2021 06:46:08 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 35y49yuuyd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 09 Jan 2021 06:46:08 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 1096k38q004357;
-        Sat, 9 Jan 2021 06:46:03 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 09 Jan 2021 06:46:03 +0000
-Date:   Fri, 8 Jan 2021 22:46:02 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] maintainers: update my email address
-Message-ID: <20210109064602.GU6918@magnolia>
+        id S1725850AbhAIHBW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Jan 2021 02:01:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38146 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725847AbhAIHBW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 9 Jan 2021 02:01:22 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 054CC23A68;
+        Sat,  9 Jan 2021 07:00:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610175642;
+        bh=pZt971tQiS6yTmbimdBoWmyPfJPlNmH4Oy+GU94equg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=oUIZFvJybHyH92Ej73N/IFsVrPtI7uPSnw9/nZecYPfMinJW5LtkQjIVwQ3Xe/4ZM
+         ZiEZfhF0l/v4j47F11+rvdxSRdcsgeyhnDt4daUzpLr3hS4vgBF/qUXpXgBcmD04N1
+         IIaE9t+OAsopB0cnvyIY/810N/Ckt58q1GY6ygx5wsM0EjIp3KsaInrcXmy07A5lWu
+         tx1nqSJOV4BtRo7l5IrCd/MPrQp2GukKmzx6SkOckXCnOt//QSUlVxqNuZJZeNT19y
+         V4jkEy+d/5zkjcKm5zdmrfz4z4BSO53DfJydulWc6FuUKeJGND8HsLJMCv7IaTJdR9
+         mHbgIr2+BVFng==
+Date:   Fri, 8 Jan 2021 23:00:41 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs_scrub: detect infinite loops when scanning inodes
+Message-ID: <20210109070041.GV6918@magnolia>
+References: <161017367756.1141483.3709627869982359451.stgit@magnolia>
+ <161017368431.1141483.1015560955108076159.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9858 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
- phishscore=0 malwarescore=0 suspectscore=0 mlxscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101090041
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9858 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
- priorityscore=1501 bulkscore=0 mlxscore=0 adultscore=0 spamscore=0
- lowpriorityscore=0 impostorscore=0 mlxlogscore=999 malwarescore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101090041
+In-Reply-To: <161017368431.1141483.1015560955108076159.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jan 08, 2021 at 10:28:04PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> During an inode scan (aka phase 3) when we're scanning the inode btree
+> to find files to check, make sure that each invocation of inumbers
+> actually gives us an inobt record with a startino that's at least as
+> large as what we asked for so that we always make forward progress.
 
-Change my email contact ahead of a likely painful eleven-month migration
-to a certain cobalt enteprisey groupware cloud product that will totally
-break my workflow.  Some day I may get used to having to email being
-sequestered behind both claret and cerulean oath2+sms 2fa layers, but
-for now I'll stick with keying in one password to receive an email vs.
-the required four.
+Heh, this should have gone in the random fixes series.  Sigh...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- MAINTAINERS |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+--D
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6eff4f720c72..9ed3ec2aa1aa 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9273,7 +9273,7 @@ F:	drivers/net/ethernet/sgi/ioc3-eth.c
- 
- IOMAP FILESYSTEM LIBRARY
- M:	Christoph Hellwig <hch@infradead.org>
--M:	Darrick J. Wong <darrick.wong@oracle.com>
-+M:	Darrick J. Wong <djwong@kernel.org>
- M:	linux-xfs@vger.kernel.org
- M:	linux-fsdevel@vger.kernel.org
- L:	linux-xfs@vger.kernel.org
-@@ -19505,7 +19505,7 @@ F:	arch/x86/xen/*swiotlb*
- F:	drivers/xen/*swiotlb*
- 
- XFS FILESYSTEM
--M:	Darrick J. Wong <darrick.wong@oracle.com>
-+M:	Darrick J. Wong <djwong@kernel.org>
- M:	linux-xfs@vger.kernel.org
- L:	linux-xfs@vger.kernel.org
- S:	Supported
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  scrub/inodes.c |   16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> 
+> diff --git a/scrub/inodes.c b/scrub/inodes.c
+> index bdc12df3..4550db83 100644
+> --- a/scrub/inodes.c
+> +++ b/scrub/inodes.c
+> @@ -119,6 +119,7 @@ scan_ag_inodes(
+>  	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
+>  	struct xfs_bulkstat	*bs;
+>  	struct xfs_inumbers	*inumbers;
+> +	uint64_t		nextino = cvt_agino_to_ino(&ctx->mnt, agno, 0);
+>  	int			i;
+>  	int			error;
+>  	int			stale_count = 0;
+> @@ -153,6 +154,21 @@ scan_ag_inodes(
+>  	/* Find the inode chunk & alloc mask */
+>  	error = -xfrog_inumbers(&ctx->mnt, ireq);
+>  	while (!error && !si->aborted && ireq->hdr.ocount > 0) {
+> +		/*
+> +		 * Make sure that we always make forward progress while we
+> +		 * scan the inode btree.
+> +		 */
+> +		if (nextino > inumbers->xi_startino) {
+> +			str_corrupt(ctx, descr,
+> +	_("AG %u inode btree is corrupt near agino %lu, got %lu"), agno,
+> +				cvt_ino_to_agino(&ctx->mnt, nextino),
+> +				cvt_ino_to_agino(&ctx->mnt,
+> +						ireq->inumbers[0].xi_startino));
+> +			si->aborted = true;
+> +			break;
+> +		}
+> +		nextino = ireq->hdr.ino;
+> +
+>  		/*
+>  		 * We can have totally empty inode chunks on filesystems where
+>  		 * there are more than 64 inodes per block.  Skip these.
+> 
