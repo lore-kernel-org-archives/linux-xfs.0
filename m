@@ -2,101 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4AFDC433E0
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 07:01:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99FF0C433DB
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:00:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6346A23A68
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 07:01:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71F49238E8
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:00:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725850AbhAIHBW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Jan 2021 02:01:22 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38146 "EHLO mail.kernel.org"
+        id S1726443AbhAIIAY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Jan 2021 03:00:24 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40942 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725847AbhAIHBW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 9 Jan 2021 02:01:22 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 054CC23A68;
-        Sat,  9 Jan 2021 07:00:41 +0000 (UTC)
+        id S1725847AbhAIIAY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 9 Jan 2021 03:00:24 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A4A01238E8;
+        Sat,  9 Jan 2021 07:59:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610175642;
-        bh=pZt971tQiS6yTmbimdBoWmyPfJPlNmH4Oy+GU94equg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oUIZFvJybHyH92Ej73N/IFsVrPtI7uPSnw9/nZecYPfMinJW5LtkQjIVwQ3Xe/4ZM
-         ZiEZfhF0l/v4j47F11+rvdxSRdcsgeyhnDt4daUzpLr3hS4vgBF/qUXpXgBcmD04N1
-         IIaE9t+OAsopB0cnvyIY/810N/Ckt58q1GY6ygx5wsM0EjIp3KsaInrcXmy07A5lWu
-         tx1nqSJOV4BtRo7l5IrCd/MPrQp2GukKmzx6SkOckXCnOt//QSUlVxqNuZJZeNT19y
-         V4jkEy+d/5zkjcKm5zdmrfz4z4BSO53DfJydulWc6FuUKeJGND8HsLJMCv7IaTJdR9
-         mHbgIr2+BVFng==
-Date:   Fri, 8 Jan 2021 23:00:41 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs_scrub: detect infinite loops when scanning inodes
-Message-ID: <20210109070041.GV6918@magnolia>
-References: <161017367756.1141483.3709627869982359451.stgit@magnolia>
- <161017368431.1141483.1015560955108076159.stgit@magnolia>
+        s=k20201202; t=1610179183;
+        bh=ACg45O7fwl+jjbSXOKOgmB8S7GJDMNFMcVb39xwXyqc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=FUWwrKFxWbAldpKEGaeqArDF0GOisvWQyMA+9vwJkP4Bic2Uq485vNk3j8Xmtjzlu
+         4w/JNw6y22kZM6y+CvSS2vYHcsLC/LJ/N3mrIpb2Q0SsiAvgn/0KYmchTVoOf6aJAq
+         8vjVL2EEds2Iu/85xLzmecooyeyTMqUVpiZ/381FY3dgeNMe2M1GbuYGZp6wa0eIx6
+         /e8aOB7P2P1kY2v/z4a32ovGbtqrFPUp1xeZ/NvOuu+tbD6FOvKAC920ny3Z1ky7mV
+         RKnk6udMZy//aHEjWPnP6Lze4YLCscFq1/SlorEcOsou3Pl0TSpc+j2oHB51vPRerl
+         BcgHHVXXR3CVw==
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v2 00/12] lazytime fix and cleanups
+Date:   Fri,  8 Jan 2021 23:58:51 -0800
+Message-Id: <20210109075903.208222-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.30.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <161017368431.1141483.1015560955108076159.stgit@magnolia>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 08, 2021 at 10:28:04PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> During an inode scan (aka phase 3) when we're scanning the inode btree
-> to find files to check, make sure that each invocation of inumbers
-> actually gives us an inobt record with a startino that's at least as
-> large as what we asked for so that we always make forward progress.
+Hello,
 
-Heh, this should have gone in the random fixes series.  Sigh...
+Patch 1 fixes a bug in how __writeback_single_inode() handles lazytime
+expirations.  I originally reported this last year
+(https://lore.kernel.org/r/20200306004555.GB225345@gmail.com) because it
+causes the FS_IOC_REMOVE_ENCRYPTION_KEY ioctl to not work properly, as
+the bug causes inodes to remain dirty after a sync.
 
---D
+It also turns out that lazytime on XFS is partially broken because it
+doesn't actually write timestamps to disk after a sync() or after
+dirtytime_expire_interval.  This is fixed by the same fix.
 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  scrub/inodes.c |   16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> 
-> diff --git a/scrub/inodes.c b/scrub/inodes.c
-> index bdc12df3..4550db83 100644
-> --- a/scrub/inodes.c
-> +++ b/scrub/inodes.c
-> @@ -119,6 +119,7 @@ scan_ag_inodes(
->  	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
->  	struct xfs_bulkstat	*bs;
->  	struct xfs_inumbers	*inumbers;
-> +	uint64_t		nextino = cvt_agino_to_ino(&ctx->mnt, agno, 0);
->  	int			i;
->  	int			error;
->  	int			stale_count = 0;
-> @@ -153,6 +154,21 @@ scan_ag_inodes(
->  	/* Find the inode chunk & alloc mask */
->  	error = -xfrog_inumbers(&ctx->mnt, ireq);
->  	while (!error && !si->aborted && ireq->hdr.ocount > 0) {
-> +		/*
-> +		 * Make sure that we always make forward progress while we
-> +		 * scan the inode btree.
-> +		 */
-> +		if (nextino > inumbers->xi_startino) {
-> +			str_corrupt(ctx, descr,
-> +	_("AG %u inode btree is corrupt near agino %lu, got %lu"), agno,
-> +				cvt_ino_to_agino(&ctx->mnt, nextino),
-> +				cvt_ino_to_agino(&ctx->mnt,
-> +						ireq->inumbers[0].xi_startino));
-> +			si->aborted = true;
-> +			break;
-> +		}
-> +		nextino = ireq->hdr.ino;
-> +
->  		/*
->  		 * We can have totally empty inode chunks on filesystems where
->  		 * there are more than 64 inodes per block.  Skip these.
-> 
+This supersedes previously proposed fixes, including
+https://lore.kernel.org/r/20200307020043.60118-1-tytso@mit.edu and
+https://lore.kernel.org/r/20200325122825.1086872-3-hch@lst.de from last
+year (which had some issues and didn't fix the XFS bug), and v1 of this
+patchset which took a different approach
+(https://lore.kernel.org/r/20210105005452.92521-1-ebiggers@kernel.org).
+
+Patches 2-12 then clean up various things related to lazytime and
+writeback, such as clarifying the semantics of ->dirty_inode() and the
+inode dirty flags, and improving comments.  Most of these patches could
+be applied independently if needed.
+
+This patchset applies to v5.11-rc2.
+
+Changed since v1:
+  - Switched to the fix suggested by Jan Kara, and dropped the
+    patches which introduced ->lazytime_expired().
+  - Fixed bugs in the fat and ext4 patches.
+  - Added patch "fs: improve comments for writeback_single_inode()".
+  - Reordered the patches a bit.
+  - Added Reviewed-by's.
+
+Eric Biggers (12):
+  fs: fix lazytime expiration handling in __writeback_single_inode()
+  fs: correctly document the inode dirty flags
+  fs: only specify I_DIRTY_TIME when needed in generic_update_time()
+  fat: only specify I_DIRTY_TIME when needed in fat_update_time()
+  fs: don't call ->dirty_inode for lazytime timestamp updates
+  fs: pass only I_DIRTY_INODE flags to ->dirty_inode
+  fs: clean up __mark_inode_dirty() a bit
+  fs: drop redundant check from __writeback_single_inode()
+  fs: improve comments for writeback_single_inode()
+  gfs2: don't worry about I_DIRTY_TIME in gfs2_fsync()
+  ext4: simplify i_state checks in __ext4_update_other_inode_time()
+  xfs: remove a stale comment from xfs_file_aio_write_checks()
+
+ Documentation/filesystems/vfs.rst |   5 +-
+ fs/ext4/inode.c                   |  20 +----
+ fs/f2fs/super.c                   |   3 -
+ fs/fat/misc.c                     |  23 +++---
+ fs/fs-writeback.c                 | 132 +++++++++++++++++-------------
+ fs/gfs2/file.c                    |   4 +-
+ fs/gfs2/super.c                   |   2 -
+ fs/inode.c                        |  38 +++++----
+ fs/xfs/xfs_file.c                 |   6 --
+ include/linux/fs.h                |  18 ++--
+ 10 files changed, 132 insertions(+), 119 deletions(-)
+
+
+base-commit: e71ba9452f0b5b2e8dc8aa5445198cd9214a6a62
+-- 
+2.30.0
+
