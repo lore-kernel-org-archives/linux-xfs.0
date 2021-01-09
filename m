@@ -2,96 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B5E2C433E0
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 19:01:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACD87C433E0
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 21:14:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5622B2399C
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 19:01:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52908235FF
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 21:14:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725999AbhAITBB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Jan 2021 14:01:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46792 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726005AbhAITBA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Jan 2021 14:01:00 -0500
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F3AAC06179F
-        for <linux-xfs@vger.kernel.org>; Sat,  9 Jan 2021 11:00:20 -0800 (PST)
-Received: by mail-lf1-x12d.google.com with SMTP id x20so31019699lfe.12
-        for <linux-xfs@vger.kernel.org>; Sat, 09 Jan 2021 11:00:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=I6Uz/uNKuxv8kpeBK6zjNMwa2VjYpAJbjFDMrzffj6I=;
-        b=B5MuZOKUiCj7xkpKI58UwPgj+2Ygq8bPiwFnSM6GgJ3giVH0HlyrHQVOus3hpeAH+e
-         ihkFNtQrr7VFzpBW/oNSs7g/4YiRSUG5HnzO4DWt6vSIVmtECXfeVEUA3WxEVCPzhO83
-         q5CbQWf/kWSe6EhP4nvdYTWFSoqBeuXlzrhSs=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=I6Uz/uNKuxv8kpeBK6zjNMwa2VjYpAJbjFDMrzffj6I=;
-        b=MY2x//Aro6FSDnpmilH2eSp5BMn7CdPthOhzyMerEyCQSiDfVS+TmkNnlyjy03M93A
-         Sd1kXLouF3ukZXvWT7Bm0KdxUFWne0dXHTlEi2oOCYc4Yj95IO1rS8HdiqO3pKiYtABp
-         +bl429Ud3V0gcwPsolLJDTXrAyCHfml+3VCZ8YWGmEZcitwSQIdrKCQXuHa1O6VzBpGm
-         5XxoDxxlgrIdXvSQNPmAimGtw4pQk/rr7/5jTaMwCxsUFFpIw+9MZmnoGwWT8blIhAG5
-         CP+1koj8kWa29DJQym0+cPi8kvblVZqqWtreXJb6QmhWjRNuuwp38/2mlQU5i4YH/wUJ
-         +GOw==
-X-Gm-Message-State: AOAM53378oHBzHYMN433ibtIUKDjTw5f9aR3bMPGbldj5Ai+8n+cWLVf
-        BLMSbIv8EISHN6+6a+iQgA+b1416ZGo0HA==
-X-Google-Smtp-Source: ABdhPJz8ZPgZr/a35LRBIeM/52ccpqcJhk9+AJrj6/giCKLt4uFMpguBOHZ0/kBj7k62bejslniiQg==
-X-Received: by 2002:a19:4148:: with SMTP id o69mr3741010lfa.610.1610218818480;
-        Sat, 09 Jan 2021 11:00:18 -0800 (PST)
-Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com. [209.85.167.54])
-        by smtp.gmail.com with ESMTPSA id f18sm2423340lfh.137.2021.01.09.11.00.17
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 09 Jan 2021 11:00:17 -0800 (PST)
-Received: by mail-lf1-f54.google.com with SMTP id h205so31125047lfd.5
-        for <linux-xfs@vger.kernel.org>; Sat, 09 Jan 2021 11:00:17 -0800 (PST)
-X-Received: by 2002:a05:6512:338f:: with SMTP id h15mr3759713lfg.40.1610218817016;
- Sat, 09 Jan 2021 11:00:17 -0800 (PST)
+        id S1726001AbhAIVOb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Jan 2021 16:14:31 -0500
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:34269 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726005AbhAIVOb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Jan 2021 16:14:31 -0500
+Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id E5A4BE69760;
+        Sun, 10 Jan 2021 08:13:48 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kyLYR-004mhq-4Y; Sun, 10 Jan 2021 08:13:47 +1100
+Date:   Sun, 10 Jan 2021 08:13:47 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "L.A. Walsh" <xfs@tlinx.org>
+Cc:     xfs-oss <linux-xfs@vger.kernel.org>
+Subject: Re: suggested patch to allow user to access their own file...
+Message-ID: <20210109211347.GL331610@dread.disaster.area>
+References: <5FEB204B.9090109@tlinx.org>
 MIME-Version: 1.0
-References: <20210109064602.GU6918@magnolia>
-In-Reply-To: <20210109064602.GU6918@magnolia>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Sat, 9 Jan 2021 11:00:01 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wibYWuriC4m-zjU10J65peMDAFTjY2EGjTV=COgg1saPw@mail.gmail.com>
-Message-ID: <CAHk-=wibYWuriC4m-zjU10J65peMDAFTjY2EGjTV=COgg1saPw@mail.gmail.com>
-Subject: Re: [PATCH] maintainers: update my email address
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5FEB204B.9090109@tlinx.org>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
+        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=7-415B0cAAAA:8
+        a=Zh8UF6euKYRQSDcZ9McA:9 a=CjuIK1q_8ugA:10 a=nxFJi58FgSUA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 8, 2021 at 10:46 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> Change my email contact ahead of a likely painful eleven-month migration
-> to a certain cobalt enteprisey groupware cloud product that will totally
-> break my workflow.  Some day I may get used to having to email being
-> sequestered behind both claret and cerulean oath2+sms 2fa layers, but
-> for now I'll stick with keying in one password to receive an email vs.
-> the required four.
+On Tue, Dec 29, 2020 at 04:25:47AM -0800, L.A. Walsh wrote:
+> xfs_io checks for CAP_SYS_ADMIN in order to open a
+> file_by_inode -- however, if the file one is opening
+> is owned by the user performing the call, the call should
+> not fail.
 
-So I appreciate this email coming from your old email address, but I
-also just want to note that as long as you then use the oracle email
-address for sending email, commit authorship, and "Signed-off-by:" (or
-Acked-by etc) addresses, those tend to be the ones that _primarily_
-get used when people then CC you on issues.
+No. xfs_open_by_handle() requires root permissions because it
+bypasses lots of security checks, such as parent directory
+permissions, ACLs and security labels.
 
-Well, at least that's how I work. The MAINTAINERS file tends to be the
-secondary one.
+e.g. backups under a root-only directory heirarchy should not be
+accessible to users because users are not allowed to traverse into
+those root:root 0700 backup directories because permissions on the 
+directory inodes do not allow non-root users to enter them.
 
-But I wish you best of luck with the new email setup ;)
+Hence ...
 
-            Linus
+> (i.e. it opens the user's own file).
+
+... the user doesn't actually own that file, even though it has
+their own UID in it...
+
+> It gets rid of some unnecessary error messages if you
+> run xfs_restore to restore one of your own files.
+
+That's not really a user case xfs_restore is intended to support.
+It's an admin tool to be run by admins, not end users....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
