@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8005AC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0064C433DB
 	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:01:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4681323A5A
+	by mail.kernel.org (Postfix) with ESMTP id 664D723A63
 	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:01:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726732AbhAIIBF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Jan 2021 03:01:05 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41204 "EHLO mail.kernel.org"
+        id S1726787AbhAIIBG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Jan 2021 03:01:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41216 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726593AbhAIIBF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1726770AbhAIIBF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Sat, 9 Jan 2021 03:01:05 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A0A6F23A69;
-        Sat,  9 Jan 2021 07:59:45 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8D30123A82;
+        Sat,  9 Jan 2021 07:59:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610179185;
-        bh=X2D2mMHSYMvciNt0NX060b8SxOuVP637kMoRfSYm4hI=;
+        s=k20201202; t=1610179187;
+        bh=BCwJUP1PxHm+O0jkqtVgewHXBIFwwuWoM+6SlzLbD1w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AFPYCSfxi6jt7dh452fvYOjRNnSMUXbz8Ldbrx5SGN7CEn0FfKd6trsAFH6tQSifw
-         d4qlNTLmPT8GouFL9FJAYI88pWWf957LV4l3E7E/hWtduFI7b0oTBCWRLrW2IK8Q/Q
-         FCYrgwqc99DymUEG7oKhjTY57v7R2vM5tY1REgj3cw1WSXDCdzFbBYrH25abQC2FwA
-         7Mj8WPo7PUw+i9I5wWi8QgDUN4e8vo+4PfdL9xmT961l8/fnOWLqQe4ByRF8EhrvtX
-         Ky/Db8yaRBXa3dDYRcex1xKhkKHxqEKY8OZ2hYIq64kX+WMXc00H9D9r6FOOuQHccH
-         SvjeFv8022L2A==
+        b=ArXO1T/oIWyOTfDCrsPPsTG1yBnlHnDCu6k2UEfX488lMMwJfExpGvUj0SUXv+FxB
+         m4ezNQbMe1EjoHp4x6xZAqwQnJSutFewWYmT15xz2E7W9rZge00zn1wiBTkHoKkjpX
+         h0q3ZUNyUClP4o0l4Adozv5UZU1xRDgRi4a8KYTobDCDPUem4XuPgUkAUZRLvilK0p
+         eqkCQUmAzzvv1/uV2gd56CRPjA31IT7rcxaRnJAIkeJK674YuHSEp/arfRElObux6C
+         kowNTi50o7F/O3FyN+dOUKU+XyOqSdMy6/oSBna+IAyh0gZNZTrxjNpxTPIXXDY7Ue
+         Hj9ligQjmJIVg==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net,
         Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 06/12] fs: pass only I_DIRTY_INODE flags to ->dirty_inode
-Date:   Fri,  8 Jan 2021 23:58:57 -0800
-Message-Id: <20210109075903.208222-7-ebiggers@kernel.org>
+Subject: [PATCH v2 12/12] xfs: remove a stale comment from xfs_file_aio_write_checks()
+Date:   Fri,  8 Jan 2021 23:59:03 -0800
+Message-Id: <20210109075903.208222-13-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210109075903.208222-1-ebiggers@kernel.org>
 References: <20210109075903.208222-1-ebiggers@kernel.org>
@@ -50,54 +50,36 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-->dirty_inode is now only called when I_DIRTY_INODE (I_DIRTY_SYNC and/or
-I_DIRTY_DATASYNC) is set.  However it may still be passed other dirty
-flags at the same time, provided that these other flags happened to be
-passed to __mark_inode_dirty() at the same time as I_DIRTY_INODE.
+The comment in xfs_file_aio_write_checks() about calling file_modified()
+after dropping the ilock doesn't make sense, because the code that
+unconditionally acquires and drops the ilock was removed by
+commit 467f78992a07 ("xfs: reduce ilock hold times in
+xfs_file_aio_write_checks").
 
-This doesn't make sense because there is no reason for filesystems to
-care about these extra flags.  Nor are filesystems notified about all
-updates to these other flags.
-
-Therefore, mask the flags before passing them to ->dirty_inode.
-
-Also properly document ->dirty_inode in vfs.rst.
+Remove this outdated comment.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- Documentation/filesystems/vfs.rst | 5 ++++-
- fs/fs-writeback.c                 | 2 +-
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_file.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/Documentation/filesystems/vfs.rst b/Documentation/filesystems/vfs.rst
-index ca52c82e5bb54..287b80948a40b 100644
---- a/Documentation/filesystems/vfs.rst
-+++ b/Documentation/filesystems/vfs.rst
-@@ -270,7 +270,10 @@ or bottom half).
- 	->alloc_inode.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 5b0f93f738372..4927c6653f15d 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -389,12 +389,6 @@ xfs_file_aio_write_checks(
+ 	} else
+ 		spin_unlock(&ip->i_flags_lock);
  
- ``dirty_inode``
--	this method is called by the VFS to mark an inode dirty.
-+	this method is called by the VFS when an inode is marked dirty.
-+	This is specifically for the inode itself being marked dirty,
-+	not its data.  If the update needs to be persisted by fdatasync(),
-+	then I_DIRTY_DATASYNC will be set in the flags argument.
- 
- ``write_inode``
- 	this method is called when the VFS needs to write an inode to
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index b7616bbd55336..2e6064012f7d3 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -2259,7 +2259,7 @@ void __mark_inode_dirty(struct inode *inode, int flags)
- 		trace_writeback_dirty_inode_start(inode, flags);
- 
- 		if (sb->s_op->dirty_inode)
--			sb->s_op->dirty_inode(inode, flags);
-+			sb->s_op->dirty_inode(inode, flags & I_DIRTY_INODE);
- 
- 		trace_writeback_dirty_inode(inode, flags);
+-	/*
+-	 * Updating the timestamps will grab the ilock again from
+-	 * xfs_fs_dirty_inode, so we have to call it after dropping the
+-	 * lock above.  Eventually we should look into a way to avoid
+-	 * the pointless lock roundtrip.
+-	 */
+ 	return file_modified(file);
+ }
  
 -- 
 2.30.0
