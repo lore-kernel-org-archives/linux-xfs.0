@@ -2,112 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99FF0C433DB
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:00:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DE45C4332D
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:00:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71F49238E8
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:00:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 394C923A9B
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 08:00:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726443AbhAIIAY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Jan 2021 03:00:24 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40942 "EHLO mail.kernel.org"
+        id S1726699AbhAIIA0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Jan 2021 03:00:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40962 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725847AbhAIIAY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 9 Jan 2021 03:00:24 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A4A01238E8;
-        Sat,  9 Jan 2021 07:59:43 +0000 (UTC)
+        id S1726454AbhAIIAZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 9 Jan 2021 03:00:25 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5A4D023A5B;
+        Sat,  9 Jan 2021 07:59:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610179183;
-        bh=ACg45O7fwl+jjbSXOKOgmB8S7GJDMNFMcVb39xwXyqc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=FUWwrKFxWbAldpKEGaeqArDF0GOisvWQyMA+9vwJkP4Bic2Uq485vNk3j8Xmtjzlu
-         4w/JNw6y22kZM6y+CvSS2vYHcsLC/LJ/N3mrIpb2Q0SsiAvgn/0KYmchTVoOf6aJAq
-         8vjVL2EEds2Iu/85xLzmecooyeyTMqUVpiZ/381FY3dgeNMe2M1GbuYGZp6wa0eIx6
-         /e8aOB7P2P1kY2v/z4a32ovGbtqrFPUp1xeZ/NvOuu+tbD6FOvKAC920ny3Z1ky7mV
-         RKnk6udMZy//aHEjWPnP6Lze4YLCscFq1/SlorEcOsou3Pl0TSpc+j2oHB51vPRerl
-         BcgHHVXXR3CVw==
+        s=k20201202; t=1610179184;
+        bh=r+iSj8HBgvEzfJp78mWo1kCacxf8t3pr0DVy9t0EPKU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=PzwNpXPgzzhKMQZWWgDwsQPa8KffMcjNGPEaHSRXHIdDVvkTCc1tkTwLsQZgfzg71
+         84kj5xvzn6qcxO6wc/u0ZFxyNVfATA0XY849ko+2s2WWiIJEWvee7qgb/nyr7z9Rv2
+         2d2aDeJbgtqdWOVD5MiJ0gFX/ckdkChPtlgMpFQgPc5Cj0UlJaKkKB+eEqNows1uqY
+         SxJIWPAKdn6JVzXk38xPen8V/5iryIKn2Zf9WUqOHa662DbtNnuypkL0i1ofbK6UMz
+         4WVuyQ6Ddm3zz6l9R7o884+vHAK805R3dESA1NBRaA2noYYkhcP83g5t0aGKeWs17l
+         JA3uG2Bn29ncQ==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net,
         Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 00/12] lazytime fix and cleanups
-Date:   Fri,  8 Jan 2021 23:58:51 -0800
-Message-Id: <20210109075903.208222-1-ebiggers@kernel.org>
+Subject: [PATCH v2 02/12] fs: correctly document the inode dirty flags
+Date:   Fri,  8 Jan 2021 23:58:53 -0800
+Message-Id: <20210109075903.208222-3-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210109075903.208222-1-ebiggers@kernel.org>
+References: <20210109075903.208222-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+From: Eric Biggers <ebiggers@google.com>
 
-Patch 1 fixes a bug in how __writeback_single_inode() handles lazytime
-expirations.  I originally reported this last year
-(https://lore.kernel.org/r/20200306004555.GB225345@gmail.com) because it
-causes the FS_IOC_REMOVE_ENCRYPTION_KEY ioctl to not work properly, as
-the bug causes inodes to remain dirty after a sync.
+The documentation for I_DIRTY_SYNC and I_DIRTY_DATASYNC is a bit
+misleading, and I_DIRTY_TIME isn't documented at all.  Fix this.
 
-It also turns out that lazytime on XFS is partially broken because it
-doesn't actually write timestamps to disk after a sync() or after
-dirtytime_expire_interval.  This is fixed by the same fix.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ include/linux/fs.h | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
 
-This supersedes previously proposed fixes, including
-https://lore.kernel.org/r/20200307020043.60118-1-tytso@mit.edu and
-https://lore.kernel.org/r/20200325122825.1086872-3-hch@lst.de from last
-year (which had some issues and didn't fix the XFS bug), and v1 of this
-patchset which took a different approach
-(https://lore.kernel.org/r/20210105005452.92521-1-ebiggers@kernel.org).
-
-Patches 2-12 then clean up various things related to lazytime and
-writeback, such as clarifying the semantics of ->dirty_inode() and the
-inode dirty flags, and improving comments.  Most of these patches could
-be applied independently if needed.
-
-This patchset applies to v5.11-rc2.
-
-Changed since v1:
-  - Switched to the fix suggested by Jan Kara, and dropped the
-    patches which introduced ->lazytime_expired().
-  - Fixed bugs in the fat and ext4 patches.
-  - Added patch "fs: improve comments for writeback_single_inode()".
-  - Reordered the patches a bit.
-  - Added Reviewed-by's.
-
-Eric Biggers (12):
-  fs: fix lazytime expiration handling in __writeback_single_inode()
-  fs: correctly document the inode dirty flags
-  fs: only specify I_DIRTY_TIME when needed in generic_update_time()
-  fat: only specify I_DIRTY_TIME when needed in fat_update_time()
-  fs: don't call ->dirty_inode for lazytime timestamp updates
-  fs: pass only I_DIRTY_INODE flags to ->dirty_inode
-  fs: clean up __mark_inode_dirty() a bit
-  fs: drop redundant check from __writeback_single_inode()
-  fs: improve comments for writeback_single_inode()
-  gfs2: don't worry about I_DIRTY_TIME in gfs2_fsync()
-  ext4: simplify i_state checks in __ext4_update_other_inode_time()
-  xfs: remove a stale comment from xfs_file_aio_write_checks()
-
- Documentation/filesystems/vfs.rst |   5 +-
- fs/ext4/inode.c                   |  20 +----
- fs/f2fs/super.c                   |   3 -
- fs/fat/misc.c                     |  23 +++---
- fs/fs-writeback.c                 | 132 +++++++++++++++++-------------
- fs/gfs2/file.c                    |   4 +-
- fs/gfs2/super.c                   |   2 -
- fs/inode.c                        |  38 +++++----
- fs/xfs/xfs_file.c                 |   6 --
- include/linux/fs.h                |  18 ++--
- 10 files changed, 132 insertions(+), 119 deletions(-)
-
-
-base-commit: e71ba9452f0b5b2e8dc8aa5445198cd9214a6a62
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index fd47deea7c176..45a0303b2aeb6 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2084,8 +2084,8 @@ static inline void kiocb_clone(struct kiocb *kiocb, struct kiocb *kiocb_src,
+ /*
+  * Inode state bits.  Protected by inode->i_lock
+  *
+- * Three bits determine the dirty state of the inode, I_DIRTY_SYNC,
+- * I_DIRTY_DATASYNC and I_DIRTY_PAGES.
++ * Four bits determine the dirty state of the inode: I_DIRTY_SYNC,
++ * I_DIRTY_DATASYNC, I_DIRTY_PAGES, and I_DIRTY_TIME.
+  *
+  * Four bits define the lifetime of an inode.  Initially, inodes are I_NEW,
+  * until that flag is cleared.  I_WILL_FREE, I_FREEING and I_CLEAR are set at
+@@ -2094,12 +2094,20 @@ static inline void kiocb_clone(struct kiocb *kiocb, struct kiocb *kiocb_src,
+  * Two bits are used for locking and completion notification, I_NEW and I_SYNC.
+  *
+  * I_DIRTY_SYNC		Inode is dirty, but doesn't have to be written on
+- *			fdatasync().  i_atime is the usual cause.
+- * I_DIRTY_DATASYNC	Data-related inode changes pending. We keep track of
++ *			fdatasync() (unless I_DIRTY_DATASYNC is also set).
++ *			Timestamp updates are the usual cause.
++ * I_DIRTY_DATASYNC	Data-related inode changes pending.  We keep track of
+  *			these changes separately from I_DIRTY_SYNC so that we
+  *			don't have to write inode on fdatasync() when only
+- *			mtime has changed in it.
++ *			e.g. the timestamps have changed.
+  * I_DIRTY_PAGES	Inode has dirty pages.  Inode itself may be clean.
++ * I_DIRTY_TIME		The inode itself only has dirty timestamps, and the
++ *			lazytime mount option is enabled.  We keep track of this
++ *			separately from I_DIRTY_SYNC in order to implement
++ *			lazytime.  This gets cleared if I_DIRTY_INODE
++ *			(I_DIRTY_SYNC and/or I_DIRTY_DATASYNC) gets set.  I.e.
++ *			either I_DIRTY_TIME *or* I_DIRTY_INODE can be set in
++ *			i_state, but not both.  I_DIRTY_PAGES may still be set.
+  * I_NEW		Serves as both a mutex and completion notification.
+  *			New inodes set I_NEW.  If two processes both create
+  *			the same inode, one of them will release its inode and
 -- 
 2.30.0
 
