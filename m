@@ -7,373 +7,262 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1FA7C433DB
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 01:36:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48CD9C433E0
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 01:42:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E4E923A79
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 01:36:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF04623A79
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 01:42:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725817AbhAIBgc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jan 2021 20:36:32 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:53578 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725793AbhAIBgb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jan 2021 20:36:31 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1091Td2N082840;
-        Sat, 9 Jan 2021 01:35:44 GMT
+        id S1725817AbhAIBmi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jan 2021 20:42:38 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:35570 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725793AbhAIBmi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jan 2021 20:42:38 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1091eVrj170895;
+        Sat, 9 Jan 2021 01:41:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=UtSUDngftMq+/CxEyXeYhIG/oHhFM1Zo60B7quuX1Fw=;
- b=mKpNxnAo4LtVO8VN0kXM+gktWGV5i/Jc6R/cfxEn9S/48S3EBIYx7BtMdh8/0QskoZtH
- frTU1bcW+tB7e+dtHf22bqAxeet9TNJgS+tMysTyfq+RfLwh1Utgiqh6oHrziotDiBOv
- oxV0FMiRCVw8g7vfQ0DxAFZtt5rCqwJxxQxl41KB9FrzXpWmJe3b7avRC9PTCsairq6v
- rVNfNjTGHiTMNj4n9Ad9vcqZ24gRv18ps+dtibOUt3c8ohRfUOge5j2Ke+Ecz7Z7ZigH
- pDIPiLqiM5E0CoJLjDD7SQ/ChmQvlld+0OS7A3Jz2Q0O3mOIhthh2vzrjxzpISwNkUSc oA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 35y20ag2sk-1
+ bh=5amVmDT9b6OU/6z8E8SpSay60mSOdd+71bZ4xfe4bbU=;
+ b=cXkC1GT5i9JKlbpesYaG/HLoqcGGBzUwdxFsni+zPNrYYmJYdPeZE7SGbUsOYl+c8SfT
+ xt2Ocd2ThudDHc93DGWjphQxz163ELsNMrzmVsNrZIQsDw2LUHIDWzo53oo3ukxNBCUH
+ Fo8lxzR8sNippOt8QD9kYJUO3LuBgZ/NpIE+RyGOHPN7fY7H9+ezJUSOd8Dpp8b5QkZp
+ GluwUCnsveJh85kUrP6gO3FzoI+FKxF/9xTskj7XuUWshyX1MSNUVYMQD5195tXDux6d
+ ZqnOrG1UBTAOvQTeRli5740VJsXGT183sjHoTU6KRbEFRgVcCKrVtKokGpu4JprKn0l7 jA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 35wepmkg8s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 09 Jan 2021 01:35:44 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1091YYRJ143520;
-        Sat, 9 Jan 2021 01:35:44 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 35y2h9gdkn-1
+        Sat, 09 Jan 2021 01:41:51 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1091YxKG138590;
+        Sat, 9 Jan 2021 01:39:51 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 35v1fd7wqj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 09 Jan 2021 01:35:43 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 1091Zco2002722;
-        Sat, 9 Jan 2021 01:35:38 GMT
+        Sat, 09 Jan 2021 01:39:51 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 1091dnj3017081;
+        Sat, 9 Jan 2021 01:39:49 GMT
 Received: from localhost (/10.159.135.85)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 08 Jan 2021 17:33:52 -0800
-Date:   Fri, 8 Jan 2021 17:33:51 -0800
+        with ESMTP ; Fri, 08 Jan 2021 17:39:49 -0800
+Date:   Fri, 8 Jan 2021 17:39:48 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, hch@lst.de, allison.henderson@oracle.com
-Subject: Re: [PATCH V12 04/14] xfs: Check for extent overflow when
- adding/removing dir entries
-Message-ID: <20210109013351.GS6918@magnolia>
-References: <20210104103120.41158-1-chandanrlinux@gmail.com>
- <20210104103120.41158-5-chandanrlinux@gmail.com>
- <20210108011713.GP38809@magnolia>
- <2055679.3ixLThe9JB@garuda>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     wenli xie <wlxie7296@gmail.com>, xfs <linux-xfs@vger.kernel.org>,
+        chiluk@ubuntu.com, Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: fix an ABBA deadlock in xfs_rename
+Message-ID: <20210109013948.GT6918@magnolia>
+References: <20210108015648.GP6918@magnolia>
+ <20210108151858.GB893097@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2055679.3ixLThe9JB@garuda>
+In-Reply-To: <20210108151858.GB893097@bfoster>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9858 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 suspectscore=0
- mlxscore=0 spamscore=0 malwarescore=0 mlxlogscore=999 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ suspectscore=0 spamscore=0 bulkscore=0 adultscore=0 mlxscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101090008
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9858 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 spamscore=0
+ impostorscore=0 phishscore=0 lowpriorityscore=0 suspectscore=0
+ priorityscore=1501 mlxscore=0 malwarescore=0 clxscore=1015 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2101090008
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9858 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
- priorityscore=1501 bulkscore=0 mlxscore=0 adultscore=0 spamscore=0
- lowpriorityscore=0 impostorscore=0 mlxlogscore=999 malwarescore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101090007
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 08, 2021 at 10:25:35AM +0530, Chandan Babu R wrote:
-> On Thu, 07 Jan 2021 17:17:13 -0800, Darrick J. Wong wrote:
-> > On Mon, Jan 04, 2021 at 04:01:10PM +0530, Chandan Babu R wrote:
-> > > Directory entry addition can cause the following,
-> > > 1. Data block can be added/removed.
-> > >    A new extent can cause extent count to increase by 1.
-> > > 2. Free disk block can be added/removed.
-> > >    Same behaviour as described above for Data block.
-> > > 3. Dabtree blocks.
-> > >    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these
-> > >    can be new extents. Hence extent count can increase by
-> > >    XFS_DA_NODE_MAXDEPTH.
-> > > 
-> > > Directory entry remove and rename (applicable only to the source
-> > > directory entry) operations are handled specially to allow them to
-> > > succeed in low extent count availability scenarios
-> > > i.e. xfs_bmap_del_extent_real() will now return -ENOSPC when a possible
-> > > extent count overflow is detected. -ENOSPC is already handled by higher
-> > > layers of XFS by letting,
-> > > 1. Empty Data/Free space index blocks to linger around until a future
-> > >    remove operation frees them.
-> > > 2. Dabtree blocks would be swapped with the last block in the leaf space
-> > >    followed by unmapping of the new last block.
-> > > 
-> > > Also, Extent overflow check is performed for the target directory entry
-> > > of the rename operation only when the entry does not exist and a
-> > > non-zero space reservation is obtained successfully.
-> > > 
-> > > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_bmap.c       | 15 ++++++++++++
-> > >  fs/xfs/libxfs/xfs_inode_fork.h | 13 ++++++++++
-> > >  fs/xfs/xfs_inode.c             | 45 ++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/xfs_symlink.c           |  5 ++++
-> > >  4 files changed, 78 insertions(+)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > index 32aeacf6f055..5fd804534e67 100644
-> > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > @@ -5151,6 +5151,21 @@ xfs_bmap_del_extent_real(
-> > >  		/*
-> > >  		 * Deleting the middle of the extent.
-> > >  		 */
-> > > +
-> > > +		/*
-> > > +		 * For directories, -ENOSPC will be handled by higher layers of
-> > > +		 * XFS by letting the corresponding empty Data/Free blocks to
-> > > +		 * linger around until a future remove operation. Dabtree blocks
-> > > +		 * would be swapped with the last block in the leaf space and
-> > > +		 * then the new last block will be unmapped.
-> > > +		 */
-> > > +		if (S_ISDIR(VFS_I(ip)->i_mode) &&
-> > > +		    whichfork == XFS_DATA_FORK &&
-> > > +		    xfs_iext_count_may_overflow(ip, whichfork, 1)) {
-> > > +			error = -ENOSPC;
-> > > +			goto done;
+On Fri, Jan 08, 2021 at 10:18:58AM -0500, Brian Foster wrote:
+> On Thu, Jan 07, 2021 at 05:56:48PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Hmm... it strikes me as a little odd that we're checking file mode and
-> > fork type in the middle of the bmap code.  However, I think it's the
-> > case that the only place where anyone would punch a hole in the /middle/
-> > of an extent is xattr trees and regular files, right?  And both of those
-> > cases are checked before we end up in the bmap code, right?
-> 
-> Yes, your observation is correct. I will remove the file mode and fork type
-> checks.
-
-You might want to leave an assert there just in case someone else trips
-over that...
-
-> 
+> > When overlayfs is running on top of xfs and the user unlinks a file in
+> > the overlay, overlayfs will create a whiteout inode and ask xfs to
+> > "rename" the whiteout file atop the one being unlinked.  If the file
+> > being unlinked loses its one nlink, we then have to put the inode on the
+> > unlinked list.
 > > 
-> > So we only really need this check to prevent extent count overflows when
-> > removing dirents from directories, like the comment says, and only
-> > because directories don't have a hard requirement that the bunmapi
-> > succeeds.  And I think this logic covers xfs_remove too?  That's a bit
-> > subtle, but as there's no extent count check in that function, there's
-> > not much to attach a comment to... :)
-> 
-> Yes, To provide more clarity, I should replace the above comment with
-> following,
-> 
->   /*
->    * -ENOSPC is returned since a directory entry remove operation must not fail
->    * due to low extent count availability. -ENOSPC will be handled by higher
->    * layers of XFS by letting the corresponding empty Data/Free blocks to linger
-
-grammar nit: "...by letting the corresponding empty Data/Free blocks linger
-until a future remove operation."
-
->    * around until a future remove operation. Dabtree blocks would be swapped with
->    * the last block in the leaf space and then the new last block will be
->    * unmapped.
->    *
->    * The above logic also applies to the source directory entry of a rename
->    * operation.
->    */
-> 
+> > This requires us to grab the AGI buffer of the whiteout inode to take it
+> > off the unlinked list (which is where whiteouts are created) and to grab
+> > the AGI buffer of the file being deleted.  If the whiteout was created
+> > in a higher numbered AG than the file being deleted, we'll lock the AGIs
+> > in the wrong order and deadlock.
 > > 
-> > Hm.  I think I'd like xfs_rename to get a brief comment that we're
-> > protected from extent count overflows in xfs_remove() by virtue of this
-> > "leave the dir block in place if we ENOSPC" capability:
+> > Therefore, grab all the AGI locks we think we'll need ahead of time, and
+> > in order of increasing AG number per the locking rules.  Set
+> > t_firstblock so that a subsequent directory block allocation never tries
+> > to grab a lower-numbered AGF than the AGIs we grabbed.
 > > 
-> > 	/*
-> > 	 * NOTE: We don't need to check for extent overflows here
-> > 	 * because the dir removename code will leave the dir block
-> > 	 * in place if the extent count would overflow.
-> > 	 */
-> > 	error = xfs_dir_removename(...);
 > 
-> Sure, I will add that.
-> 
+> I don't see this patch do anything with t_firstblock... Even so, is that
+> necessary? I thought we had to lock AGIs before AGFs and always in agno
+> order, but not necessarily lock an AGF >= previously locked AGIs. Hm?
+
+Oops, heh.  Yeah, I'd added chunks to prevent block allocation, but on
+further analysis I don't think that was necessary.
+
+> > Reduce the likelihood that a directory expansion will ENOSPC by starting
+> > with AG 0 when allocating whiteout files.
 > > 
-> > Do xattr trees also have the same ability?  I think they do, at least
-> > for the dabtree part...?
-> 
-> The following code snippet from xfs_da_shrink_inode() does the special casing
-> only for the data fork i.e. for blocks holding directory entries.
-> 
->    for (;;) {
->            /*
->             * Remove extents.  If we get ENOSPC for a dir we have to move
->             * the last block to the place we want to kill.
->             */
->            error = xfs_bunmapi(tp, dp, dead_blkno, count,
->                                xfs_bmapi_aflag(w), 0, &done);
->            if (error == -ENOSPC) {
->                    if (w != XFS_DATA_FORK)
->                            break;
->                    error = xfs_da3_swap_lastblock(args, &dead_blkno,
->                                                  &dead_buf);
-> 
-> So this facility is available only for directory entries.
-> 
-> Hence for xattrs, if we ever reach the extent count limit, the only way out is
-> to delete the corresponding file.
-
-Ok.  Just checking. :)
-
+> > Reported-by: wenli xie <wlxie7296@gmail.com>
+> > Fixes: 93597ae8dac0 ("xfs: Fix deadlock between AGI and AGF when target_ip exists in xfs_rename()")
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> > v2: Make it more obvious that we're grabbing all the AGI locks ahead of
+> > the AGFs, and hide functions that we don't need to export anymore.
+> > ---
+> >  fs/xfs/libxfs/xfs_dir2.h    |    2 --
+> >  fs/xfs/libxfs/xfs_dir2_sf.c |    2 +-
+> >  fs/xfs/xfs_inode.c          |   57 ++++++++++++++++++++++++++++++-------------
+> >  3 files changed, 41 insertions(+), 20 deletions(-)
 > > 
-> > I think I would've split this patch into three pieces:
-> > 
-> >  - create, link, and symlink in one patch (adding dirents),
-> >  - the xfs_bmap_del_extent_real change and a comment for xfs_remove
-> >    (removing dirents)
-> >  - all the xfs_rename changes (adding and removing dirents)
-> > 
-> > Though I dunno, this series is already 14 patches, and the part that I
-> > care most about is not leaving that subtlety in xfs_remove(). :)
+> > diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> > index e55378640b05..d03e6098ded9 100644
+> > --- a/fs/xfs/libxfs/xfs_dir2.h
+> > +++ b/fs/xfs/libxfs/xfs_dir2.h
+> > @@ -47,8 +47,6 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+> >  extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+> >  				struct xfs_name *name, xfs_ino_t ino,
+> >  				xfs_extlen_t tot);
+> > -extern bool xfs_dir2_sf_replace_needblock(struct xfs_inode *dp,
+> > -				xfs_ino_t inum);
+> >  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+> >  				struct xfs_name *name, xfs_ino_t inum,
+> >  				xfs_extlen_t tot);
+> > diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+> > index 2463b5d73447..8c4f76bba88b 100644
+> > --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> > +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> > @@ -1018,7 +1018,7 @@ xfs_dir2_sf_removename(
+> >  /*
+> >   * Check whether the sf dir replace operation need more blocks.
+> >   */
+> > -bool
+> > +static bool
+> >  xfs_dir2_sf_replace_needblock(
+> >  	struct xfs_inode	*dp,
+> >  	xfs_ino_t		inum)
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index b7352bc4c815..528152770dc9 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -3000,6 +3000,24 @@ xfs_rename_alloc_whiteout(
+> >  	return 0;
+> >  }
+> >  
+> > +/* Decide if we need to lock the target IP's AGI as part of a rename. */
+> > +static inline bool
+> > +xfs_rename_lock_target_ip(
+> > +	struct xfs_inode	*src_ip,
+> > +	struct xfs_inode	*target_ip)
+> > +{
+> > +	unsigned int		tgt_nlink = VFS_I(target_ip)->i_nlink;
+> > +	bool			src_is_dir = S_ISDIR(VFS_I(src_ip)->i_mode);
+> > +
+> > +	/*
+> > +	 * We only need to lock the AGI if the target ip will end up on the
+> > +	 * unlinked list.
+> > +	 */
+> > +	if (src_is_dir)
+> > +		return tgt_nlink == 2;
 > 
-> I think you are right about that. I will split this patch according to what
-> you have mentioned above.
+> IIUC, we can't rename dirs over nondirs and vice versa. I.e.:
+> 
+> # mv dir file
+> mv: overwrite 'file'? y
+> mv: cannot overwrite non-directory 'file' with directory 'dir'
+> # mv -T file dir
+> mv: overwrite 'dir'? y
+> mv: cannot overwrite directory 'dir' with non-directory
+> 
+> That means that if src_is_dir is true, target must either be NULL or an
+> empty directory for the rename to succeed, right? If so, have we already
+> enforced that by this point? I'm wondering if we need to check the link
+> count == 2 in this case or could possibly just reduce the logic to
+> (tgt_nlink == 1 || src_is_dir) And if so, whether that still warrants an
+> inline helper (where I suppose we could still assert that nlink == 2).
 
+Hm.  I /think/ it's true that we can't ever rename atop an existing
+directory, so I think this cna go away:
 
-Thanks!
-
-FWIW I didn't see any regressions in fstests...
+$ mkdir /tmp/xx
+$ touch /tmp/yy
+$ strace -s99 -e renameat ./src/renameat2 /tmp/yy /tmp/xx
+renameat(AT_FDCWD, "/tmp/yy", AT_FDCWD, "/tmp/xx") = -1 EISDIR (Is a directory)
 
 --D
 
+> Brian
+> 
+> > +	return tgt_nlink == 1;
+> > +}
+> > +
+> >  /*
+> >   * xfs_rename
+> >   */
+> > @@ -3017,7 +3035,7 @@ xfs_rename(
+> >  	struct xfs_trans	*tp;
+> >  	struct xfs_inode	*wip = NULL;		/* whiteout inode */
+> >  	struct xfs_inode	*inodes[__XFS_SORT_INODES];
+> > -	struct xfs_buf		*agibp;
+> > +	int			i;
+> >  	int			num_inodes = __XFS_SORT_INODES;
+> >  	bool			new_parent = (src_dp != target_dp);
+> >  	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
+> > @@ -3130,6 +3148,27 @@ xfs_rename(
+> >  		}
+> >  	}
+> >  
+> > +	/*
+> > +	 * Lock the AGI buffers we need to handle bumping the nlink of the
+> > +	 * whiteout inode off the unlinked list and to handle dropping the
+> > +	 * nlink of the target inode.  We have to do this in increasing AG
+> > +	 * order to avoid deadlocks, and before directory block allocation
+> > +	 * tries to grab AGFs.
+> > +	 */
+> > +	for (i = 0; i < num_inodes && inodes[i] != NULL; i++) {
+> > +		if (inodes[i] == wip ||
+> > +		    (inodes[i] == target_ip &&
+> > +		     xfs_rename_lock_target_ip(src_ip, target_ip))) {
+> > +			struct xfs_buf	*bp;
+> > +			xfs_agnumber_t	agno;
+> > +
+> > +			agno = XFS_INO_TO_AGNO(mp, inodes[i]->i_ino);
+> > +			error = xfs_read_agi(mp, tp, agno, &bp);
+> > +			if (error)
+> > +				goto out_trans_cancel;
+> > +		}
+> > +	}
+> > +
+> >  	/*
+> >  	 * Directory entry creation below may acquire the AGF. Remove
+> >  	 * the whiteout from the unlinked list first to preserve correct
+> > @@ -3182,22 +3221,6 @@ xfs_rename(
+> >  		 * In case there is already an entry with the same
+> >  		 * name at the destination directory, remove it first.
+> >  		 */
+> > -
+> > -		/*
+> > -		 * Check whether the replace operation will need to allocate
+> > -		 * blocks.  This happens when the shortform directory lacks
+> > -		 * space and we have to convert it to a block format directory.
+> > -		 * When more blocks are necessary, we must lock the AGI first
+> > -		 * to preserve locking order (AGI -> AGF).
+> > -		 */
+> > -		if (xfs_dir2_sf_replace_needblock(target_dp, src_ip->i_ino)) {
+> > -			error = xfs_read_agi(mp, tp,
+> > -					XFS_INO_TO_AGNO(mp, target_ip->i_ino),
+> > -					&agibp);
+> > -			if (error)
+> > -				goto out_trans_cancel;
+> > -		}
+> > -
+> >  		error = xfs_dir_replace(tp, target_dp, target_name,
+> >  					src_ip->i_ino, spaceres);
+> >  		if (error)
 > > 
-> > Other than that, I follow the logic in this patch and will give it a
-> > testrun tonight.
-> 
-> Thank you!
-> 
-> > 
-> > --D
-> > 
-> > > +		}
-> > > +
-> > >  		old = got;
-> > >  
-> > >  		got.br_blockcount = del->br_startoff - got.br_startoff;
-> > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> > > index bcac769a7df6..ea1a9dd8a763 100644
-> > > --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> > > +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> > > @@ -47,6 +47,19 @@ struct xfs_ifork {
-> > >   */
-> > >  #define XFS_IEXT_PUNCH_HOLE_CNT		(1)
-> > >  
-> > > +/*
-> > > + * Directory entry addition can cause the following,
-> > > + * 1. Data block can be added/removed.
-> > > + *    A new extent can cause extent count to increase by 1.
-> > > + * 2. Free disk block can be added/removed.
-> > > + *    Same behaviour as described above for Data block.
-> > > + * 3. Dabtree blocks.
-> > > + *    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these can be new
-> > > + *    extents. Hence extent count can increase by XFS_DA_NODE_MAXDEPTH.
-> > > + */
-> > > +#define XFS_IEXT_DIR_MANIP_CNT(mp) \
-> > > +	((XFS_DA_NODE_MAXDEPTH + 1 + 1) * (mp)->m_dir_geo->fsbcount)
-> > > +
-> > >  /*
-> > >   * Fork handling.
-> > >   */
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index b7352bc4c815..0db21368c7e1 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -1042,6 +1042,11 @@ xfs_create(
-> > >  	if (error)
-> > >  		goto out_trans_cancel;
-> > >  
-> > > +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
-> > > +			XFS_IEXT_DIR_MANIP_CNT(mp));
-> > > +	if (error)
-> > > +		goto out_trans_cancel;
-> > > +
-> > >  	/*
-> > >  	 * A newly created regular or special file just has one directory
-> > >  	 * entry pointing to them, but a directory also the "." entry
-> > > @@ -1258,6 +1263,11 @@ xfs_link(
-> > >  	xfs_trans_ijoin(tp, sip, XFS_ILOCK_EXCL);
-> > >  	xfs_trans_ijoin(tp, tdp, XFS_ILOCK_EXCL);
-> > >  
-> > > +	error = xfs_iext_count_may_overflow(tdp, XFS_DATA_FORK,
-> > > +			XFS_IEXT_DIR_MANIP_CNT(mp));
-> > > +	if (error)
-> > > +		goto error_return;
-> > > +
-> > >  	/*
-> > >  	 * If we are using project inheritance, we only allow hard link
-> > >  	 * creation in our tree when the project IDs are the same; else
-> > > @@ -3106,6 +3116,35 @@ xfs_rename(
-> > >  	/*
-> > >  	 * Check for expected errors before we dirty the transaction
-> > >  	 * so we can return an error without a transaction abort.
-> > > +	 *
-> > > +	 * Extent count overflow check:
-> > > +	 *
-> > > +	 * From the perspective of src_dp, a rename operation is essentially a
-> > > +	 * directory entry remove operation. Hence the only place where we check
-> > > +	 * for extent count overflow for src_dp is in
-> > > +	 * xfs_bmap_del_extent_real(). xfs_bmap_del_extent_real() returns
-> > > +	 * -ENOSPC when it detects a possible extent count overflow and in
-> > > +	 * response, the higher layers of directory handling code do the
-> > > +	 * following:
-> > > +	 * 1. Data/Free blocks: XFS lets these blocks linger around until a
-> > > +	 *    future remove operation removes them.
-> > > +	 * 2. Dabtree blocks: XFS swaps the blocks with the last block in the
-> > > +	 *    Leaf space and unmaps the last block.
-> > > +	 *
-> > > +	 * For target_dp, there are two cases depending on whether the
-> > > +	 * destination directory entry exists or not.
-> > > +	 *
-> > > +	 * When destination directory entry does not exist (i.e. target_ip ==
-> > > +	 * NULL), extent count overflow check is performed only when transaction
-> > > +	 * has a non-zero sized space reservation associated with it.  With a
-> > > +	 * zero-sized space reservation, XFS allows a rename operation to
-> > > +	 * continue only when the directory has sufficient free space in its
-> > > +	 * data/leaf/free space blocks to hold the new entry.
-> > > +	 *
-> > > +	 * When destination directory entry exists (i.e. target_ip != NULL), all
-> > > +	 * we need to do is change the inode number associated with the already
-> > > +	 * existing entry. Hence there is no need to perform an extent count
-> > > +	 * overflow check.
-> > >  	 */
-> > >  	if (target_ip == NULL) {
-> > >  		/*
-> > > @@ -3116,6 +3155,12 @@ xfs_rename(
-> > >  			error = xfs_dir_canenter(tp, target_dp, target_name);
-> > >  			if (error)
-> > >  				goto out_trans_cancel;
-> > > +		} else {
-> > > +			error = xfs_iext_count_may_overflow(target_dp,
-> > > +					XFS_DATA_FORK,
-> > > +					XFS_IEXT_DIR_MANIP_CNT(mp));
-> > > +			if (error)
-> > > +				goto out_trans_cancel;
-> > >  		}
-> > >  	} else {
-> > >  		/*
-> > > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> > > index 1f43fd7f3209..0b8136a32484 100644
-> > > --- a/fs/xfs/xfs_symlink.c
-> > > +++ b/fs/xfs/xfs_symlink.c
-> > > @@ -220,6 +220,11 @@ xfs_symlink(
-> > >  	if (error)
-> > >  		goto out_trans_cancel;
-> > >  
-> > > +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
-> > > +			XFS_IEXT_DIR_MANIP_CNT(mp));
-> > > +	if (error)
-> > > +		goto out_trans_cancel;
-> > > +
-> > >  	/*
-> > >  	 * Allocate an inode for the symlink.
-> > >  	 */
-> > 
-> 
-> 
-> -- 
-> chandan
-> 
-> 
 > 
