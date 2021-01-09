@@ -2,125 +2,122 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F1CC43381
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 00:49:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D9C6C433E0
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 00:51:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9CB5523A75
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 00:49:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A0EB23A7C
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 Jan 2021 00:51:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726878AbhAIAtX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Jan 2021 19:49:23 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:44458 "EHLO
+        id S1726402AbhAIAvU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Jan 2021 19:51:20 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:60289 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726819AbhAIAtW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jan 2021 19:49:22 -0500
+        by vger.kernel.org with ESMTP id S1726396AbhAIAvR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jan 2021 19:51:17 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1610153276;
+        s=mimecast20190719; t=1610153389;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=19ORASWZtYUOOlk6kkfU5Qq9+wt4P8et1KjMnAKCcgw=;
-        b=hHtIQ9rZAN+Ue8UUw3PTzD5GWZuxugdOLnJTUPfoNEa+0rAT/98qJw+hsIBd23jeWyVhzv
-        +Jra51bFndVDZPDyGyMR6lN+Mtt7KTI7ObCnHRne3DhbXpX60w/GM02Zy4X+JV2s81W3mt
-        2UFlbTiDnol0589h+/zewbb/1uDUNAY=
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
- [209.85.216.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-373-UdkUwhLsPXSGyvcSI6Fgdw-1; Fri, 08 Jan 2021 19:47:53 -0500
-X-MC-Unique: UdkUwhLsPXSGyvcSI6Fgdw-1
-Received: by mail-pj1-f70.google.com with SMTP id mz17so7978450pjb.5
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Jan 2021 16:47:53 -0800 (PST)
+        bh=RBFlUZnsdmO2Au6CZ7NolIOh5pCNrGUAYiQ25Z5EI+Q=;
+        b=IAxra0NO9XsCpYxq8EuHKWXmmBVapNTbpk2RpN0HaFwAkTjvLBKV3NDeZNrqCbdxSAH7xB
+        wI/eynCa6UpAY/LkMXUaB3vGBQAg4b0VgRdJcK2pwStZkHM7073tcfUyblzdZMq5OY5kWQ
+        VFosCcMdV+FGnQL+SL64/srQBAHyNhg=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-300-UuY7qY6AOCSpr-FmH_H46Q-1; Fri, 08 Jan 2021 19:49:45 -0500
+X-MC-Unique: UuY7qY6AOCSpr-FmH_H46Q-1
+Received: by mail-pl1-f197.google.com with SMTP id l11so7312189plt.2
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Jan 2021 16:49:45 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=19ORASWZtYUOOlk6kkfU5Qq9+wt4P8et1KjMnAKCcgw=;
-        b=pfbR4ugHzKXDLBQ+vBw7NpmI6V3wIybURU7D5Jt/LX7IVXsdS7ZznVvoZPHUsUqsrQ
-         c6rMJdkg8hpsew6rdE5blMFtIdlUFizX80xWpwWQCyC1RIuESzKRie8FPIJfBU2QOKx6
-         /ZJGi8MO1kwgyYLaNhZJvqvVCiet6pgbNuSdUUhD32zSrlTdGsLaCY220/6vWTBfsWNZ
-         xKhekYrYjPS8elSnqoAFCa10+ZHsHpYIgzRQoO8Arde4qEfmsw3H48hN80kvltJij9m4
-         4hYRiWKxtNMRqtdoRoMJAXHaKeHHkrbW9OV96MRNwT4LVnErywd8WHsNntypJIzAOnE3
-         u35g==
-X-Gm-Message-State: AOAM533u2c1vIQ1L/5SOdf5XohZOFHQrT6rnsP0IaUkw7eomaNaiao6P
-        QDaNXWlXjwNU989l6BhtKAZZetYrX0nkqK11OinTLTzC4VBsVe7NhdFn7DgfrdhRTWQlcsvWLgP
-        ueDbcPZ2I1whI9xR9lCO1
-X-Received: by 2002:a17:902:e901:b029:dd:fa49:37f7 with SMTP id k1-20020a170902e901b02900ddfa4937f7mr4488244pld.51.1610153272197;
-        Fri, 08 Jan 2021 16:47:52 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJy9Wj1iOfF78KWma62s+R/SLnIl7+KlY5DZONnnLg7UM6DWEDCG+scHYA+2m4gZHH8JYQBHCQ==
-X-Received: by 2002:a17:902:e901:b029:dd:fa49:37f7 with SMTP id k1-20020a170902e901b02900ddfa4937f7mr4488227pld.51.1610153271947;
-        Fri, 08 Jan 2021 16:47:51 -0800 (PST)
+        bh=RBFlUZnsdmO2Au6CZ7NolIOh5pCNrGUAYiQ25Z5EI+Q=;
+        b=OPuvjKcfrQhbWbJNbAdqdKtHnz6qMLS8iTC0GzdVfNyYR3zPd+gaVEdoM8B826x+j7
+         vjvYSAXeLWfkjYjDvobcb1D5enKK83Ei9AguapjcRa5lFly5auYTJwJ9klTuwedddlJg
+         DarGpy24YcCDlKI0UyXGiFdisQu/iWnJgPzhwIeeUWM4Q0wUkJt8c1TbLeEHc41Bovg4
+         i+cquWkZQOABP59x1cFg0Js103C0FQsaKDsgcB9fSNlgL8Qjz0JnhnXfPh3qJXgw/LCa
+         OlKKXqHu8NUU3vH1abUxupKhHJzm6ScmKfayz7NLeQqJ8zkdD86oqTp7K/RRvQ8coz+4
+         nBog==
+X-Gm-Message-State: AOAM530ROOekEq6iuQSRKelZXvFQNCzoZf2RT7R5ZbnCwkQXhNLB5dZS
+        3RAAEWyFzV4jqeO+OwNGeypG+2crxUDrTg1FZbyIL06DdF5LpDqUjC7ph7siPwMCG8QeCaywrjq
+        ycDNAQIaW/Xp8SonCVnjn
+X-Received: by 2002:a17:90a:74cd:: with SMTP id p13mr6212432pjl.25.1610153384742;
+        Fri, 08 Jan 2021 16:49:44 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxM15KUDI+fwszRdBbR1bRldv3EqeR5ygdU0ZxakTu97L6VH3pfRLbfXVnpu0d7V8YUD9ZPSw==
+X-Received: by 2002:a17:90a:74cd:: with SMTP id p13mr6212418pjl.25.1610153384519;
+        Fri, 08 Jan 2021 16:49:44 -0800 (PST)
 Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id a22sm10081438pfg.49.2021.01.08.16.47.49
+        by smtp.gmail.com with ESMTPSA id e13sm10151367pfj.63.2021.01.08.16.49.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Jan 2021 16:47:51 -0800 (PST)
-Date:   Sat, 9 Jan 2021 08:47:41 +0800
+        Fri, 08 Jan 2021 16:49:44 -0800 (PST)
+Date:   Sat, 9 Jan 2021 08:49:34 +0800
 From:   Gao Xiang <hsiangkao@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH v3 4/4] xfs: support shrinking unused space in the last AG
-Message-ID: <20210109004741.GA660098@xiangao.remote.csb>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v3 2/4] xfs: get rid of xfs_growfs_{data,log}_t
+Message-ID: <20210109004934.GB660098@xiangao.remote.csb>
 References: <20210108190919.623672-1-hsiangkao@redhat.com>
- <20210108190919.623672-5-hsiangkao@redhat.com>
- <20210108211942.GQ38809@magnolia>
+ <20210108190919.623672-3-hsiangkao@redhat.com>
+ <20210108212132.GS38809@magnolia>
+ <f1b99677-aefa-a026-681a-e7d0ad515a8a@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210108211942.GQ38809@magnolia>
+In-Reply-To: <f1b99677-aefa-a026-681a-e7d0ad515a8a@sandeen.net>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
-
-On Fri, Jan 08, 2021 at 01:19:42PM -0800, Darrick J. Wong wrote:
-> On Sat, Jan 09, 2021 at 03:09:19AM +0800, Gao Xiang wrote:
-
-...
-
-> >  	delta = nb;	/* use delta as a temporary here */
+On Fri, Jan 08, 2021 at 03:27:21PM -0600, Eric Sandeen wrote:
+> On 1/8/21 3:21 PM, Darrick J. Wong wrote:
+> > On Sat, Jan 09, 2021 at 03:09:17AM +0800, Gao Xiang wrote:
+> >> Such usage isn't encouraged by the kernel coding style.
+> >>
+> >> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> >> ---
+> >>  fs/xfs/libxfs/xfs_fs.h |  4 ++--
+> >>  fs/xfs/xfs_fsops.c     | 12 ++++++------
+> >>  fs/xfs/xfs_fsops.h     |  4 ++--
+> >>  fs/xfs/xfs_ioctl.c     |  4 ++--
+> >>  4 files changed, 12 insertions(+), 12 deletions(-)
+> >>
+> >> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> >> index 2a2e3cfd94f0..a17313efc1fe 100644
+> >> --- a/fs/xfs/libxfs/xfs_fs.h
+> >> +++ b/fs/xfs/libxfs/xfs_fs.h
+> >> @@ -308,12 +308,12 @@ struct xfs_ag_geometry {
+> >>  typedef struct xfs_growfs_data {
+> >>  	__u64		newblocks;	/* new data subvol size, fsblocks */
+> >>  	__u32		imaxpct;	/* new inode space percentage limit */
+> >> -} xfs_growfs_data_t;
+> >> +};
+> > 
+> > So long as Eric is ok with fixing this up in xfs_fs_compat.h in
+> > userspace,
+> > 
+> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Yikes, can this become a separate variable please?
+> Sure, why not :) (tho is growfs really a public interface?  I guess so,
+> technically, though not documented as such.)
 
-Ok.
-
-> 
-> >  	nb_mod = do_div(delta, mp->m_sb.sb_agblocks);
-> > @@ -99,10 +102,18 @@ xfs_growfs_data_private(
-> >  	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
-> >  		nagcount--;
-> >  		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
-> > -		if (nb < mp->m_sb.sb_dblocks)
-> > +		if (nagcount < 2)
-> >  			return -EINVAL;
-> >  	}
-> > -	delta = nb - mp->m_sb.sb_dblocks;
-> > +
-> > +	if (nb > mp->m_sb.sb_dblocks) {
-> > +		delta = nb - mp->m_sb.sb_dblocks;
-> > +		extend = true;
-> > +	} else {
-> > +		delta = mp->m_sb.sb_dblocks - nb;
-> > +		extend = false;
-> 
-> /me wonders why delta isn't simply int64_t, and then you can do things
-> like:
-> 
-> if (delta > 0)
-> 	growfs
-> else if (delta < 0)
-> 	shrinkfs
-> 
-> ?
-
-Yeah, delta changed into a signed variable in mycurrent experimental
-shrinking entire AG hack as well. Will update this here in advance.
+Yeah, although I think nobody else uses it (I could leave the typedef
+definitions only if needed otherwise...)
 
 Thanks,
 Gao Xiang
+
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> -Eric
+> 
 
