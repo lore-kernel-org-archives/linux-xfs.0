@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 233F0C433E6
-	for <linux-xfs@archiver.kernel.org>; Sun, 10 Jan 2021 03:31:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28447C433DB
+	for <linux-xfs@archiver.kernel.org>; Sun, 10 Jan 2021 03:31:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAFC7229EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 10 Jan 2021 03:31:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3D3F22AAA
+	for <linux-xfs@archiver.kernel.org>; Sun, 10 Jan 2021 03:31:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726132AbhAJDbD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Jan 2021 22:31:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42392 "EHLO
+        id S1726475AbhAJDbF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Jan 2021 22:31:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726245AbhAJDbD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Jan 2021 22:31:03 -0500
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FA85C0617A6
-        for <linux-xfs@vger.kernel.org>; Sat,  9 Jan 2021 19:29:56 -0800 (PST)
-Received: by mail-pl1-x62e.google.com with SMTP id s15so7714790plr.9
-        for <linux-xfs@vger.kernel.org>; Sat, 09 Jan 2021 19:29:56 -0800 (PST)
+        with ESMTP id S1726245AbhAJDbF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Jan 2021 22:31:05 -0500
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF128C0617A7
+        for <linux-xfs@vger.kernel.org>; Sat,  9 Jan 2021 19:29:58 -0800 (PST)
+Received: by mail-pg1-x534.google.com with SMTP id v19so10294315pgj.12
+        for <linux-xfs@vger.kernel.org>; Sat, 09 Jan 2021 19:29:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=tPqQFUkTyQMKAVlwHoryKUGzUBtBK79OUw3IcgmGk9A=;
-        b=cVZpZZfZpswcSnjjeChlRTgJcEvrf2YczpaH/V0u/nP5RgYwR+6FTLvNcNh/96cfkT
-         WjsTPVNZVxkSPT2/WswOgQ6Qg2e1raZcZrevGB16VHcKirbrL6yeXy1m5JYsQVWxyfuO
-         2nzolLKLDOR8+rMlgHdMhvzJjH8H8on7M/uKIpyfAl4e83yNTmT5zNCMO76X4sBg4RV+
-         Z3IjnnRN3yGX5Wt8V13TkOj4Z/ylK//vIOZ9ltU9ZU3oIGTK2+ao0fRHCZ1YrXIWEQPD
-         7E52ehTuE5t0kJjARuJg2W8Ikx7sG910p+xSQgzxli2zj8RSX/B9oxPW+bmxFkaIYs/P
-         UOPw==
+        bh=ubOW171teC9ubdwQpqHiQv4fYIYHgh/wHn9tXIiatU4=;
+        b=SspcM/lfG5rAR7UJ0oLwrYXl8T14OZPsoEWQy0Qxun79eNq2tMQjDYJe0464vlmIac
+         PRgs/FC0WGfnS0O8q1skfyiRXmp5VVyAcemWhI7DEiCFm6CkWubmpWdK1t7spaZvcuO0
+         /yFpJd9CAOkNWvbylbzdmvIEeZOFtaIz/Atozjkxgh26IBIGk2l+eF+kjMblTWB0ZhkU
+         t0sQv2xv6vhcr5V5aBmiLH/jy1lVUSlnBRjoqzSok9yhQZ0koZ/SRj9Qic7utyuTqyeL
+         hsKWQJj5JDllqnRlomIb6PF6+/IdmteVzbNHCFD7Vdb4uxHGvz3JLBO8/SnBuFPrgpgO
+         pb1g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=tPqQFUkTyQMKAVlwHoryKUGzUBtBK79OUw3IcgmGk9A=;
-        b=J1uzCTGJ/xeEvfzlf4E+TB/AHgREcfwAQpiJ0wnIev+gRmFJY27GqIo5cmgxzJDDU2
-         fZUQ6/ZuEKkwjtiZiFjgyJ1R7uSs0nx+LC1U1vy1gcnaALkMmFLYmdRtxYmfcTV6Db1R
-         LbfBodpKJh/lHt/Axb935uCuzRkj6OKYwnsTsWfjoayqwCC1izgaI5/7oWZLtNlojOtr
-         mhUESUPiukMGpq9NIdaonjf1HBrKAxaz9MVzEdo20NmLzvo7u1pZmdDHQb24mEmM5JkB
-         XW/0CCFjlSbU2co9LIa2VoZK4QzD6IdcVlz55KNQbsPT3lIO5kELcNaGUQgwSvc45BJT
-         gkjg==
-X-Gm-Message-State: AOAM532ew8IdA8gDmmCrL2LsSXHBzthsgXSVOxecD5UR/z6zTkNW0pdW
-        548eUop0zI9kdvp9z9RhzDlTAkL+nJi8AA==
-X-Google-Smtp-Source: ABdhPJzP+kBhJYBan2bYg6amfp1ArhdOC9nbTYqklnEHhAQ8ieU/pVbhjabMV/KDvaQeUnOnYBwviw==
-X-Received: by 2002:a17:90b:1187:: with SMTP id gk7mr11305241pjb.162.1610249395731;
-        Sat, 09 Jan 2021 19:29:55 -0800 (PST)
+        bh=ubOW171teC9ubdwQpqHiQv4fYIYHgh/wHn9tXIiatU4=;
+        b=klKGTbvT+jO6Sj4Eae9f6eDfNDTqc54aI90aU9kt/0MJ21o4+GtsMkCAenaIwXefE2
+         OaBkpFDr8Tk2rLQD0LjVzqqeDYseg4Lkh8zEOllyaU1zyrV40wFmAelgSwhHHhQ2HB8J
+         0hE8v5a5XjaPsEcnRkzBP5diRnX7aDq+3z0xXby8ZfOOtbPaie/hz8vluSQOs432fqnV
+         M0GtPd/0tr/eWJJrYwcV3uZvwSuw2QT+5ymWSlAFLM+oIQhrR1vCvKODxeK39/LA6HiX
+         rdwim3PFU8ZVEEWnBo3c1hGXCAO6U8aAiOVHVQuxBsAbQ+gyLnqM0MMD48fcwfRRt6UR
+         u2JA==
+X-Gm-Message-State: AOAM5323hZT6KZt/rhixHexaXgUJA4KdXjNDYQyPkOD8Df2eTkjxS11l
+        v+sf+mASvb0dYdQ8iAM4MYsG/EUn65dWUw==
+X-Google-Smtp-Source: ABdhPJyoqI+imvtiPbv+SNjhbMna3TaQmPUMFZYAfREGyt6XCdUf4rEUKuj5v+YId0tpbhu0TIKlMw==
+X-Received: by 2002:a62:1816:0:b029:1ae:6d39:b92e with SMTP id 22-20020a6218160000b02901ae6d39b92emr10652994pfy.81.1610249398032;
+        Sat, 09 Jan 2021 19:29:58 -0800 (PST)
 Received: from localhost.localdomain ([122.179.92.100])
-        by smtp.gmail.com with ESMTPSA id x6sm14079861pfq.57.2021.01.09.19.29.53
+        by smtp.gmail.com with ESMTPSA id x6sm14079861pfq.57.2021.01.09.19.29.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 09 Jan 2021 19:29:55 -0800 (PST)
+        Sat, 09 Jan 2021 19:29:57 -0800 (PST)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>, darrick.wong@oracle.com,
         djwong@kernel.org, hch@lst.de, allison.henderson@oracle.com
-Subject: [PATCH V13 06/16] xfs: Check for extent overflow when renaming dir entries
-Date:   Sun, 10 Jan 2021 08:59:18 +0530
-Message-Id: <20210110032928.3120861-7-chandanrlinux@gmail.com>
+Subject: [PATCH V13 07/16] xfs: Check for extent overflow when adding/removing xattrs
+Date:   Sun, 10 Jan 2021 08:59:19 +0530
+Message-Id: <20210110032928.3120861-8-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210110032928.3120861-1-chandanrlinux@gmail.com>
 References: <20210110032928.3120861-1-chandanrlinux@gmail.com>
@@ -72,123 +72,84 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-A rename operation is essentially a directory entry remove operation
-from the perspective of parent directory (i.e. src_dp) of rename's
-source. Hence the only place where we check for extent count overflow
-for src_dp is in xfs_bmap_del_extent_real(). xfs_bmap_del_extent_real()
-returns -ENOSPC when it detects a possible extent count overflow and in
-response, the higher layers of directory handling code do the following:
-1. Data/Free blocks: XFS lets these blocks linger until a future remove
-   operation removes them.
-2. Dabtree blocks: XFS swaps the blocks with the last block in the Leaf
-   space and unmaps the last block.
+Adding/removing an xattr can cause XFS_DA_NODE_MAXDEPTH extents to be
+added. One extra extent for dabtree in case a local attr is large enough
+to cause a double split.  It can also cause extent count to increase
+proportional to the size of a remote xattr's value.
 
-For target_dp, there are two cases depending on whether the destination
-directory entry exists or not.
-
-When destination directory entry does not exist (i.e. target_ip ==
-NULL), extent count overflow check is performed only when transaction
-has a non-zero sized space reservation associated with it.  With a
-zero-sized space reservation, XFS allows a rename operation to continue
-only when the directory has sufficient free space in its data/leaf/free
-space blocks to hold the new entry.
-
-When destination directory entry exists (i.e. target_ip != NULL), all
-we need to do is change the inode number associated with the already
-existing entry. Hence there is no need to perform an extent count
-overflow check.
-
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c |  3 +++
- fs/xfs/xfs_inode.c       | 44 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 46 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_attr.c       | 13 +++++++++++++
+ fs/xfs/libxfs/xfs_inode_fork.h | 10 ++++++++++
+ 2 files changed, 23 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 94063ac1d085..44ed30d0f662 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5160,6 +5160,9 @@ xfs_bmap_del_extent_real(
- 		 * until a future remove operation. Dabtree blocks would be
- 		 * swapped with the last block in the leaf space and then the
- 		 * new last block will be unmapped.
-+		 *
-+		 * The above logic also applies to the source directory entry of
-+		 * a rename operation.
- 		 */
- 		error = xfs_iext_count_may_overflow(ip, whichfork, 1);
- 		if (error == -ENOSPC) {
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 4cc787cc4eee..f0a6d528cbc4 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3116,6 +3116,35 @@ xfs_rename(
- 	/*
- 	 * Check for expected errors before we dirty the transaction
- 	 * so we can return an error without a transaction abort.
-+	 *
-+	 * Extent count overflow check:
-+	 *
-+	 * From the perspective of src_dp, a rename operation is essentially a
-+	 * directory entry remove operation. Hence the only place where we check
-+	 * for extent count overflow for src_dp is in
-+	 * xfs_bmap_del_extent_real(). xfs_bmap_del_extent_real() returns
-+	 * -ENOSPC when it detects a possible extent count overflow and in
-+	 * response, the higher layers of directory handling code do the
-+	 * following:
-+	 * 1. Data/Free blocks: XFS lets these blocks linger until a
-+	 *    future remove operation removes them.
-+	 * 2. Dabtree blocks: XFS swaps the blocks with the last block in the
-+	 *    Leaf space and unmaps the last block.
-+	 *
-+	 * For target_dp, there are two cases depending on whether the
-+	 * destination directory entry exists or not.
-+	 *
-+	 * When destination directory entry does not exist (i.e. target_ip ==
-+	 * NULL), extent count overflow check is performed only when transaction
-+	 * has a non-zero sized space reservation associated with it.  With a
-+	 * zero-sized space reservation, XFS allows a rename operation to
-+	 * continue only when the directory has sufficient free space in its
-+	 * data/leaf/free space blocks to hold the new entry.
-+	 *
-+	 * When destination directory entry exists (i.e. target_ip != NULL), all
-+	 * we need to do is change the inode number associated with the already
-+	 * existing entry. Hence there is no need to perform an extent count
-+	 * overflow check.
- 	 */
- 	if (target_ip == NULL) {
- 		/*
-@@ -3126,6 +3155,12 @@ xfs_rename(
- 			error = xfs_dir_canenter(tp, target_dp, target_name);
- 			if (error)
- 				goto out_trans_cancel;
-+		} else {
-+			error = xfs_iext_count_may_overflow(target_dp,
-+					XFS_DATA_FORK,
-+					XFS_IEXT_DIR_MANIP_CNT(mp));
-+			if (error)
-+				goto out_trans_cancel;
- 		}
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index fd8e6418a0d3..be51e7068dcd 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -396,6 +396,7 @@ xfs_attr_set(
+ 	struct xfs_trans_res	tres;
+ 	bool			rsvd = (args->attr_filter & XFS_ATTR_ROOT);
+ 	int			error, local;
++	int			rmt_blks = 0;
+ 	unsigned int		total;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+@@ -442,11 +443,15 @@ xfs_attr_set(
+ 		tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
+ 		tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+ 		total = args->total;
++
++		if (!local)
++			rmt_blks = xfs_attr3_rmt_blocks(mp, args->valuelen);
  	} else {
- 		/*
-@@ -3283,9 +3318,16 @@ xfs_rename(
- 	if (wip) {
- 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
- 					spaceres);
--	} else
-+	} else {
-+		/*
-+		 * NOTE: We don't need to check for extent count overflow here
-+		 * because the dir remove name code will leave the dir block in
-+		 * place if the extent count would overflow.
-+		 */
- 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
- 					   spaceres);
+ 		XFS_STATS_INC(mp, xs_attr_remove);
+ 
+ 		tres = M_RES(mp)->tr_attrrm;
+ 		total = XFS_ATTRRM_SPACE_RES(mp);
++		rmt_blks = xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX);
+ 	}
+ 
+ 	/*
+@@ -460,6 +465,14 @@ xfs_attr_set(
+ 
+ 	xfs_ilock(dp, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(args->trans, dp, 0);
++
++	if (args->value || xfs_inode_hasattr(dp)) {
++		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
++				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
++		if (error)
++			goto out_trans_cancel;
 +	}
 +
- 	if (error)
- 		goto out_trans_cancel;
+ 	if (args->value) {
+ 		unsigned int	quota_flags = XFS_QMOPT_RES_REGBLKS;
  
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index ea1a9dd8a763..8d89838e23f8 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -60,6 +60,16 @@ struct xfs_ifork {
+ #define XFS_IEXT_DIR_MANIP_CNT(mp) \
+ 	((XFS_DA_NODE_MAXDEPTH + 1 + 1) * (mp)->m_dir_geo->fsbcount)
+ 
++/*
++ * Adding/removing an xattr can cause XFS_DA_NODE_MAXDEPTH extents to
++ * be added. One extra extent for dabtree in case a local attr is
++ * large enough to cause a double split.  It can also cause extent
++ * count to increase proportional to the size of a remote xattr's
++ * value.
++ */
++#define XFS_IEXT_ATTR_MANIP_CNT(rmt_blks) \
++	(XFS_DA_NODE_MAXDEPTH + max(1, rmt_blks))
++
+ /*
+  * Fork handling.
+  */
 -- 
 2.29.2
 
