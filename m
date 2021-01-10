@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 268EAC43332
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04B46C43333
 	for <linux-xfs@archiver.kernel.org>; Sun, 10 Jan 2021 16:11:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2141229C9
+	by mail.kernel.org (Postfix) with ESMTP id C8AC922AAD
 	for <linux-xfs@archiver.kernel.org>; Sun, 10 Jan 2021 16:11:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726517AbhAJQLN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 10 Jan 2021 11:11:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34484 "EHLO
+        id S1726418AbhAJQLH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 10 Jan 2021 11:11:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726415AbhAJQLN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jan 2021 11:11:13 -0500
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54BCBC0617BA
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jan 2021 08:10:12 -0800 (PST)
-Received: by mail-pj1-x1036.google.com with SMTP id n3so7224915pjm.1
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jan 2021 08:10:12 -0800 (PST)
+        with ESMTP id S1726394AbhAJQLG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jan 2021 11:11:06 -0500
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C77FC0617B1
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jan 2021 08:10:07 -0800 (PST)
+Received: by mail-pj1-x1035.google.com with SMTP id u4so7249149pjn.4
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jan 2021 08:10:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=9RFX+Qd9FVdvqPrdV46k1ZuK7hEANDWZXK+xcuNSlAA=;
-        b=UQ5fM50cL7GBVm0miqTcUCdZRLCU5b8imoLV2mKe0M7kS+v5B1Y5Og/VrsiPU539kF
-         fFQyt/j2GBbPkuOc5205wnHXGwFBaWf8UXvJR3t7tQyebYpEKiwqL/COHN5HC4TO/bIl
-         vaetpeLEShZzFlBJrdc9cMZq0kQHORbclN+DJ0TQvKPAIhWfifN7ljkaMWEIjK1vp0/m
-         eq2QNFkDOpThGbKLqGwvUhabs69DoajPpr6RShZx4XqYovJR5FSSggLEAl7pQL4S5Cl5
-         FauHhsfYiDgBK2RH8I99t1PmK+IwRR5pLtB01GuWeJ6Es9aAbXm/XrCMwVMDkv93v0LX
-         vioQ==
+        bh=qL5piTAh1aSsUUaP1sY2S+E5lRi3K6MY3JGZu20fr+0=;
+        b=hs8XJNB0CCyUaE932CYIhZb+0X+G8kK/WBIECZ9CX4QNYNzo9KlQj4GBnjKQKZHnVs
+         Ul/N9xybfXH47HYicFU24kc7S4BHNcwXDiFhJJUUuJtx+v1+dfgK1PYhxHWjw3DTzWLP
+         pociBO37Oe0+NfdyfCyRvzk/+5sMMuBTcnhOk0HnuxIVVg2v4+Ygy61PpOA9wscHdcUL
+         LEIgCMo7X3mjlDTOXdhKHk2lCGkfTgV6oPllSkmv69kNUGzGIrYq7Cm4reCnRZP8QjWY
+         oU5Z0GhxP2K7q5NN3hIy9iIhRicoJj1ItvR4A4Mna+riNpPwoQixVdcjz2hXkKEEWY2/
+         C5wA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=9RFX+Qd9FVdvqPrdV46k1ZuK7hEANDWZXK+xcuNSlAA=;
-        b=WBxTgvEG1GdXRj6qi8Yz/m0NttwEs/htbxupHwrMaOvAE1DTkSr/yh83iqDOiGbOTh
-         ZwXgWkTItzSzPOfPHL24kHKgsssWdOo5m1SL6dmmArvqk/HT7L7eIQjJ6JAQIMYC+u46
-         GOHSJbhJgBehXtQj6/V8LBKD1koZsf9ZwmJHWACkhl2Nm6rUugDHW4wVAAlTU0C1/yga
-         Z6zHdO9zzeNQf++XPCXcOhsOBehQpDSAObqEk19iiyoTDyWXngEKH7Iz6YvbquvpYLhg
-         tC8JL9HY8Y1wWsMeTJ3eHYwX/yeSWsSi28JxjwjSi0IoQcaceYzFUoN1G7G2jWgFyqVE
-         EfJA==
-X-Gm-Message-State: AOAM531qnRXr68HHDLsa+1KyJLThe5qxiRh4OerGGU3qLOuu7nmTHvnP
-        QTbMe3P8o89knq9rfiNLGAt4GKAIWCk=
-X-Google-Smtp-Source: ABdhPJw8sLryQQky4XaGPjmTW3ZZAIqL3v/hYjIu2oMoZ05YAQ8GmQ9CKabqiAhVzrOFZKOZ/7YVFw==
-X-Received: by 2002:a17:90a:638a:: with SMTP id f10mr13755514pjj.191.1610295011718;
-        Sun, 10 Jan 2021 08:10:11 -0800 (PST)
+        bh=qL5piTAh1aSsUUaP1sY2S+E5lRi3K6MY3JGZu20fr+0=;
+        b=p1X1IESNNNmwtFMsIPUcBhIeheaJEjfkdV5HBCZvMWbsq3IkFUFdWQn/6Tr0oe5WAx
+         iRVIx8EtMt0w6U0Z3/kcLOcjWNddrAa2olQ2ntJYtBhWtI/mHtllnTsql1o49b5CaJt/
+         zuCGLv2Fem1SSYcI9WxN0z2e34bjBYrZ1VVepBsC8G8AgksXH8ihbdH4HTdQHRcBUtCX
+         tipqKlRz8EevPIcGuG8lgSnAvyXj2/U74VOfg48DeuCpULhlSvKb6xQlMnGe50PmQwXe
+         wx/8cdbXMzXjhBVVYkSXj8K34Pl7XKO1ws/bzwwl5/8ap4fKgsPfNsm5YbGivrAIfwhU
+         EKTQ==
+X-Gm-Message-State: AOAM5301jrVyoC3T3sSPaiaPgHk/EuCMa6WBJ0p1oJ/VqkBUocKmQyRk
+        qxafQfsq7Fhfr7R5BNKgU0NJ0p/7oro=
+X-Google-Smtp-Source: ABdhPJyWqYyCbdk++yG4ZJO8H87CQPJsLbtPnXKZuIteroLz0GletjcpLczLUe5g9nnAJg2OoXUF+A==
+X-Received: by 2002:a17:902:6b01:b029:da:d295:2582 with SMTP id o1-20020a1709026b01b02900dad2952582mr12916007plk.14.1610295006812;
+        Sun, 10 Jan 2021 08:10:06 -0800 (PST)
 Received: from localhost.localdomain ([122.179.92.100])
-        by smtp.gmail.com with ESMTPSA id d6sm15525896pfo.199.2021.01.10.08.10.09
+        by smtp.gmail.com with ESMTPSA id d6sm15525896pfo.199.2021.01.10.08.10.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 10 Jan 2021 08:10:11 -0800 (PST)
+        Sun, 10 Jan 2021 08:10:06 -0800 (PST)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>, darrick.wong@oracle.com,
         djwong@kernel.org, hch@lst.de, allison.henderson@oracle.com
-Subject: [PATCH V14 15/16] xfs: Process allocated extent in a separate function
-Date:   Sun, 10 Jan 2021 21:37:19 +0530
-Message-Id: <20210110160720.3922965-16-chandanrlinux@gmail.com>
+Subject: [PATCH V14 13/16] xfs: Remove duplicate assert statement in xfs_bmap_btalloc()
+Date:   Sun, 10 Jan 2021 21:37:17 +0530
+Message-Id: <20210110160720.3922965-14-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210110160720.3922965-1-chandanrlinux@gmail.com>
 References: <20210110160720.3922965-1-chandanrlinux@gmail.com>
@@ -72,111 +72,30 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This commit moves over the code in xfs_bmap_btalloc() which is
-responsible for processing an allocated extent to a new function. Apart
-from xfs_bmap_btalloc(), the new function will be invoked by another
-function introduced in a future commit.
+The check for verifying if the allocated extent is from an AG whose
+index is greater than or equal to that of tp->t_firstblock is already
+done a couple of statements earlier in the same function. Hence this
+commit removes the redundant assert statement.
 
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 74 ++++++++++++++++++++++++----------------
- 1 file changed, 45 insertions(+), 29 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 8955a0a938d5..bf53a0b1eff3 100644
+index 8ebe5f13279c..0b15b1ff4bdd 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3510,6 +3510,48 @@ xfs_bmap_compute_alignments(
- 	return stripe_align;
- }
- 
-+static void
-+xfs_bmap_process_allocated_extent(
-+	struct xfs_bmalloca	*ap,
-+	struct xfs_alloc_arg	*args,
-+	xfs_fileoff_t		orig_offset,
-+	xfs_extlen_t		orig_length)
-+{
-+	int			nullfb;
-+
-+	nullfb = ap->tp->t_firstblock == NULLFSBLOCK;
-+
-+	/*
-+	 * check the allocation happened at the same or higher AG than
-+	 * the first block that was allocated.
-+	 */
-+	ASSERT(nullfb ||
-+		XFS_FSB_TO_AGNO(args->mp, ap->tp->t_firstblock) <=
-+		XFS_FSB_TO_AGNO(args->mp, args->fsbno));
-+
-+	ap->blkno = args->fsbno;
-+	if (nullfb)
-+		ap->tp->t_firstblock = args->fsbno;
-+	ap->length = args->len;
-+	/*
-+	 * If the extent size hint is active, we tried to round the
-+	 * caller's allocation request offset down to extsz and the
-+	 * length up to another extsz boundary.  If we found a free
-+	 * extent we mapped it in starting at this new offset.  If the
-+	 * newly mapped space isn't long enough to cover any of the
-+	 * range of offsets that was originally requested, move the
-+	 * mapping up so that we can fill as much of the caller's
-+	 * original request as possible.  Free space is apparently
-+	 * very fragmented so we're unlikely to be able to satisfy the
-+	 * hints anyway.
-+	 */
-+	if (ap->length <= orig_length)
-+		ap->offset = orig_offset;
-+	else if (ap->offset + ap->length < orig_offset + orig_length)
-+		ap->offset = orig_offset + orig_length - ap->length;
-+	xfs_bmap_btalloc_accounting(ap, args);
-+}
-+
- STATIC int
- xfs_bmap_btalloc(
- 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
-@@ -3702,36 +3744,10 @@ xfs_bmap_btalloc(
- 			return error;
- 		ap->tp->t_flags |= XFS_TRANS_LOWMODE;
- 	}
-+
- 	if (args.fsbno != NULLFSBLOCK) {
--		/*
--		 * check the allocation happened at the same or higher AG than
--		 * the first block that was allocated.
--		 */
--		ASSERT(ap->tp->t_firstblock == NULLFSBLOCK ||
--		       XFS_FSB_TO_AGNO(mp, ap->tp->t_firstblock) <=
--		       XFS_FSB_TO_AGNO(mp, args.fsbno));
--
--		ap->blkno = args.fsbno;
--		if (ap->tp->t_firstblock == NULLFSBLOCK)
--			ap->tp->t_firstblock = args.fsbno;
--		ap->length = args.len;
--		/*
--		 * If the extent size hint is active, we tried to round the
--		 * caller's allocation request offset down to extsz and the
--		 * length up to another extsz boundary.  If we found a free
--		 * extent we mapped it in starting at this new offset.  If the
--		 * newly mapped space isn't long enough to cover any of the
--		 * range of offsets that was originally requested, move the
--		 * mapping up so that we can fill as much of the caller's
--		 * original request as possible.  Free space is apparently
--		 * very fragmented so we're unlikely to be able to satisfy the
--		 * hints anyway.
--		 */
--		if (ap->length <= orig_length)
--			ap->offset = orig_offset;
--		else if (ap->offset + ap->length < orig_offset + orig_length)
--			ap->offset = orig_offset + orig_length - ap->length;
--		xfs_bmap_btalloc_accounting(ap, &args);
-+		xfs_bmap_process_allocated_extent(ap, &args, orig_offset,
-+			orig_length);
- 	} else {
- 		ap->blkno = NULLFSBLOCK;
- 		ap->length = 0;
+@@ -3699,7 +3699,6 @@ xfs_bmap_btalloc(
+ 		ap->blkno = args.fsbno;
+ 		if (ap->tp->t_firstblock == NULLFSBLOCK)
+ 			ap->tp->t_firstblock = args.fsbno;
+-		ASSERT(nullfb || fb_agno <= args.agno);
+ 		ap->length = args.len;
+ 		/*
+ 		 * If the extent size hint is active, we tried to round the
 -- 
 2.29.2
 
