@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 186C5C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D7FDC433DB
 	for <linux-xfs@archiver.kernel.org>; Sun, 10 Jan 2021 03:30:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CCE5F229EF
-	for <linux-xfs@archiver.kernel.org>; Sun, 10 Jan 2021 03:30:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E56E229EF
+	for <linux-xfs@archiver.kernel.org>; Sun, 10 Jan 2021 03:30:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726198AbhAJDaZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 Jan 2021 22:30:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42246 "EHLO
+        id S1726375AbhAJDac (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 Jan 2021 22:30:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726062AbhAJDaY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Jan 2021 22:30:24 -0500
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D6BFC06179F
-        for <linux-xfs@vger.kernel.org>; Sat,  9 Jan 2021 19:29:44 -0800 (PST)
-Received: by mail-pl1-x629.google.com with SMTP id g3so7748598plp.2
-        for <linux-xfs@vger.kernel.org>; Sat, 09 Jan 2021 19:29:44 -0800 (PST)
+        with ESMTP id S1726245AbhAJDab (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Jan 2021 22:30:31 -0500
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1212C0617A4
+        for <linux-xfs@vger.kernel.org>; Sat,  9 Jan 2021 19:29:51 -0800 (PST)
+Received: by mail-pf1-x429.google.com with SMTP id m6so3298252pfk.1
+        for <linux-xfs@vger.kernel.org>; Sat, 09 Jan 2021 19:29:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=UajVql0+fX8/PSAE042XQ9DAknMby2LMCreHtOKK9j0=;
-        b=b6NVTV1QqZmWwigPTR7SRWNUpxT9yFQVYU5USqU5ShDholW0FCCm0YDPLuUyIiD/x9
-         GNNI+MnxTbuk89ZmpAK/75Yw7HpAwGV0Mn+qVjQK1lEvyMBucv2CFh1/uZ+vmzzxuNZa
-         C1BSGgWFf3tNfO0OI9Orjt+n/nVSXqYlDf5HXt3A5pOwQRNJbb9lwksi5OqY1vLTLqAw
-         nbnwdB0XlhHUv5SaDuLyswTRmBM6LP78LS1DtasYKx3AwPLuzCrWGJ/rvOUEa5YKO1qh
-         terx32Rngk9XVJ9EWOp/YtlxJKMTUgYu1Z6KUF6g3Z58FGKMu0zLJtA5D4pfL1U9qzM6
-         V0Kg==
+        bh=CaaIKtEA+QkHkbNZmc4x83WOODezXN2Z3yH7D8rxDjE=;
+        b=H4070fxqkMR9HlRls+tyBn8hZAwxSjd2lU+s26ZTbY+HFrFDNfT4YKADERZUgffXyT
+         8DtXT2YNnG6HVUqg6+wQnTQIKzsGMniyfHRQDMsFKSR3uiEGUt0xtj1sEoc+oPg2Ib0X
+         bjsQJsW7YGgKV5aaqgQndeRY+2kfVizm2TRGTSJosVkdmlN6k8jz+7l4pGTV79Lxvr7I
+         f7sJ+14cunINePgfnc+u68vI2TtqNTidiV3xwNhwju+EQTTpS45H0TFiHbKFa9RlL0Pr
+         8yVIe43y2cDLFgrv+GSGsqWkel4TOG7+lEaVeBl2YxG4/h7bljcCRsnLgJJcQGyQtL1E
+         K4tA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=UajVql0+fX8/PSAE042XQ9DAknMby2LMCreHtOKK9j0=;
-        b=X2fMeMOz4suxeCKLxLu4KhaXQqhuBWhMusF4jYygU0P8okSYH2vlv7sO58Eq42+mAm
-         5fnuD+A1QXVL+X3zNbmV7dOPQcIMvlFe4r2X8rridgFBnQqmxgLUovc/ve7ZN0aPTkmx
-         uOlMQDkcGYK/nor/WUWjFNmGT8bm2+HCelZT0qWMd7RvUaUUc+8mMnqpbvUPz/CVREuN
-         7rxOlCNGNF6eBpzexQ9P277xFdR6yLx63yr90mguPwJVPIjnBvwkRtxX+oDOSKfkLYDg
-         M9LeeOA4INx3UJ5OwR5Em26aMaobUS5UmrnrG4TvawjJEjXn3e5Ewx7Zww1rgs8r+Dpe
-         c85Q==
-X-Gm-Message-State: AOAM531a18LxLKnthlxie1uEmGjcjdZsuvjzlJDKUmtqq7DgRAxCGa00
-        eHONuma5rdsL+AS1948xOfRNIeJLfWj3bw==
-X-Google-Smtp-Source: ABdhPJwABx3AhfRoeHIWbvxsD0i4cFL2MaNDgzA7GUeT84Sfv25oVqxMXXeUb2qORXWVlFRpBUEqfw==
-X-Received: by 2002:a17:902:ff0e:b029:da:d4ee:eca3 with SMTP id f14-20020a170902ff0eb02900dad4eeeca3mr10910918plj.41.1610249383940;
-        Sat, 09 Jan 2021 19:29:43 -0800 (PST)
+        bh=CaaIKtEA+QkHkbNZmc4x83WOODezXN2Z3yH7D8rxDjE=;
+        b=o+TBmlL1ID5kL2qpkQMxZKqTEGzAgMCTyQeFc7wuNIO4GZeObNUV4J7x8mpgosGEs2
+         V1OhkXL1vDZV/yvZF0IFlH5p/cLihc4bbD5nOkSRKUSh332rDau6QET0rsFjA+k38C9g
+         q7oNpxtC6zRwV7WLL9pvYdTz2keeRKCm5ynIsIGca5osLYv1m8dPC1dX6oFDmL9HzR6Y
+         LdpwcgjNQYnAlMshPkbqM4uj1aTspdVjA3va2GFxDJw8tsbBDy5b/4Zmaix5FPJTjX4Q
+         wbruH3NX4N1pEtpw3rY1E4m0xo82k4bwr6jXIyqupzACqrWYx324DQzbJnY1LE+jxZet
+         /RBw==
+X-Gm-Message-State: AOAM533Z/Yg4aFYuYqviUwTRX6VWywHtVD/FaVp44m8+SIYz32TcXX9S
+        9URVkFGIBduU905kfa+YnPNYgFv2uZKZWg==
+X-Google-Smtp-Source: ABdhPJwKgVkeE1m70tJODqBUm+eW65Y8lOkIZ8Ph9tz+7w4IUcQWFarY3DDh5qC5pLBApi3zTRD1Zg==
+X-Received: by 2002:a63:5416:: with SMTP id i22mr14057219pgb.43.1610249391001;
+        Sat, 09 Jan 2021 19:29:51 -0800 (PST)
 Received: from localhost.localdomain ([122.179.92.100])
-        by smtp.gmail.com with ESMTPSA id x6sm14079861pfq.57.2021.01.09.19.29.41
+        by smtp.gmail.com with ESMTPSA id x6sm14079861pfq.57.2021.01.09.19.29.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 09 Jan 2021 19:29:43 -0800 (PST)
+        Sat, 09 Jan 2021 19:29:50 -0800 (PST)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>, darrick.wong@oracle.com,
         djwong@kernel.org, hch@lst.de, allison.henderson@oracle.com
-Subject: [PATCH V13 01/16] xfs: Add helper for checking per-inode extent count overflow
-Date:   Sun, 10 Jan 2021 08:59:13 +0530
-Message-Id: <20210110032928.3120861-2-chandanrlinux@gmail.com>
+Subject: [PATCH V13 04/16] xfs: Check for extent overflow when adding dir entries
+Date:   Sun, 10 Jan 2021 08:59:16 +0530
+Message-Id: <20210110032928.3120861-5-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210110032928.3120861-1-chandanrlinux@gmail.com>
 References: <20210110032928.3120861-1-chandanrlinux@gmail.com>
@@ -72,92 +72,91 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-XFS does not check for possible overflow of per-inode extent counter
-fields when adding extents to either data or attr fork.
+Directory entry addition can cause the following,
+1. Data block can be added/removed.
+   A new extent can cause extent count to increase by 1.
+2. Free disk block can be added/removed.
+   Same behaviour as described above for Data block.
+3. Dabtree blocks.
+   XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these
+   can be new extents. Hence extent count can increase by
+   XFS_DA_NODE_MAXDEPTH.
 
-For e.g.
-1. Insert 5 million xattrs (each having a value size of 255 bytes) and
-   then delete 50% of them in an alternating manner.
-
-2. On a 4k block sized XFS filesystem instance, the above causes 98511
-   extents to be created in the attr fork of the inode.
-
-   xfsaild/loop0  2008 [003]  1475.127209: probe:xfs_inode_to_disk: (ffffffffa43fb6b0) if_nextents=98511 i_ino=131
-
-3. The incore inode fork extent counter is a signed 32-bit
-   quantity. However the on-disk extent counter is an unsigned 16-bit
-   quantity and hence cannot hold 98511 extents.
-
-4. The following incorrect value is stored in the attr extent counter,
-   # xfs_db -f -c 'inode 131' -c 'print core.naextents' /dev/loop0
-   core.naextents = -32561
-
-This commit adds a new helper function (i.e.
-xfs_iext_count_may_overflow()) to check for overflow of the per-inode
-data and xattr extent counters. Future patches will use this function to
-make sure that an FS operation won't cause the extent counter to
-overflow.
-
-Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- fs/xfs/libxfs/xfs_inode_fork.c | 23 +++++++++++++++++++++++
- fs/xfs/libxfs/xfs_inode_fork.h |  2 ++
- 2 files changed, 25 insertions(+)
+ fs/xfs/libxfs/xfs_inode_fork.h | 13 +++++++++++++
+ fs/xfs/xfs_inode.c             | 10 ++++++++++
+ fs/xfs/xfs_symlink.c           |  5 +++++
+ 3 files changed, 28 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 7575de5cecb1..8d48716547e5 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -23,6 +23,7 @@
- #include "xfs_da_btree.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_attr_leaf.h"
-+#include "xfs_types.h"
- 
- kmem_zone_t *xfs_ifork_zone;
- 
-@@ -728,3 +729,25 @@ xfs_ifork_verify_local_attr(
- 
- 	return 0;
- }
-+
-+int
-+xfs_iext_count_may_overflow(
-+	struct xfs_inode	*ip,
-+	int			whichfork,
-+	int			nr_to_add)
-+{
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-+	uint64_t		max_exts;
-+	uint64_t		nr_exts;
-+
-+	if (whichfork == XFS_COW_FORK)
-+		return 0;
-+
-+	max_exts = (whichfork == XFS_ATTR_FORK) ? MAXAEXTNUM : MAXEXTNUM;
-+
-+	nr_exts = ifp->if_nextents + nr_to_add;
-+	if (nr_exts < ifp->if_nextents || nr_exts > max_exts)
-+		return -EFBIG;
-+
-+	return 0;
-+}
 diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index a4953e95c4f3..0beb8e2a00be 100644
+index bcac769a7df6..ea1a9dd8a763 100644
 --- a/fs/xfs/libxfs/xfs_inode_fork.h
 +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -172,5 +172,7 @@ extern void xfs_ifork_init_cow(struct xfs_inode *ip);
+@@ -47,6 +47,19 @@ struct xfs_ifork {
+  */
+ #define XFS_IEXT_PUNCH_HOLE_CNT		(1)
  
- int xfs_ifork_verify_local_data(struct xfs_inode *ip);
- int xfs_ifork_verify_local_attr(struct xfs_inode *ip);
-+int xfs_iext_count_may_overflow(struct xfs_inode *ip, int whichfork,
-+		int nr_to_add);
++/*
++ * Directory entry addition can cause the following,
++ * 1. Data block can be added/removed.
++ *    A new extent can cause extent count to increase by 1.
++ * 2. Free disk block can be added/removed.
++ *    Same behaviour as described above for Data block.
++ * 3. Dabtree blocks.
++ *    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these can be new
++ *    extents. Hence extent count can increase by XFS_DA_NODE_MAXDEPTH.
++ */
++#define XFS_IEXT_DIR_MANIP_CNT(mp) \
++	((XFS_DA_NODE_MAXDEPTH + 1 + 1) * (mp)->m_dir_geo->fsbcount)
++
+ /*
+  * Fork handling.
+  */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index b7352bc4c815..4cc787cc4eee 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1042,6 +1042,11 @@ xfs_create(
+ 	if (error)
+ 		goto out_trans_cancel;
  
- #endif	/* __XFS_INODE_FORK_H__ */
++	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
++			XFS_IEXT_DIR_MANIP_CNT(mp));
++	if (error)
++		goto out_trans_cancel;
++
+ 	/*
+ 	 * A newly created regular or special file just has one directory
+ 	 * entry pointing to them, but a directory also the "." entry
+@@ -1258,6 +1263,11 @@ xfs_link(
+ 	xfs_trans_ijoin(tp, sip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, tdp, XFS_ILOCK_EXCL);
+ 
++	error = xfs_iext_count_may_overflow(tdp, XFS_DATA_FORK,
++			XFS_IEXT_DIR_MANIP_CNT(mp));
++	if (error)
++		goto error_return;
++
+ 	/*
+ 	 * If we are using project inheritance, we only allow hard link
+ 	 * creation in our tree when the project IDs are the same; else
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 1f43fd7f3209..0b8136a32484 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -220,6 +220,11 @@ xfs_symlink(
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
++	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
++			XFS_IEXT_DIR_MANIP_CNT(mp));
++	if (error)
++		goto out_trans_cancel;
++
+ 	/*
+ 	 * Allocate an inode for the symlink.
+ 	 */
 -- 
 2.29.2
 
