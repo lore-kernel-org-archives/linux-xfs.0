@@ -2,74 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38465C433E9
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 17:33:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36AA0C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 17:34:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11F6B22BEF
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 17:33:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02C0F22A83
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 17:34:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389590AbhAKRde (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Jan 2021 12:33:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48990 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728844AbhAKRdd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jan 2021 12:33:33 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C735C061794
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Jan 2021 09:32:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=z9GPfqtyXo0xTkAyAVH5YsAENFM3PxDe2QC1iNpPM50=; b=gat0549BoNBq6WkEAEzkJzutjs
-        8VOQUo/0iyLBuiX6MK6AcQ9jZO+5AsZ61N/rHI7LwxgxnJhDoR45sgp+901C3XXIlqmowweBWJWi3
-        SFFhyyV1dsEF4Kq/D3fqG0yYk3kR0ihnU1+wliieiZ/ZpdzfGx8uX45ovUwCuDpV2oJlf6JWY918C
-        0TVKHC3qSg4chKMAu84y6msDbu1zAM7HbMWLMuwi5Y+Rqx1N3L2MdQlNqfij42s1ZNM+3Qxwuz3AR
-        5lT7gY0Crkaxd6wYb7fQR2hrzTJX3D7KB1LSs570neJ95Vkx9d7Sfx1iZdGc81tUk0gyYQu/zxsHo
-        pr83Ih0w==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1kz13h-003Z3u-LW; Mon, 11 Jan 2021 17:32:50 +0000
-Date:   Mon, 11 Jan 2021 17:32:49 +0000
-From:   Christoph Hellwig <hch@infradead.org>
+        id S1730148AbhAKRe3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Jan 2021 12:34:29 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57540 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728844AbhAKRe2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Jan 2021 12:34:28 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0AB86229CA;
+        Mon, 11 Jan 2021 17:33:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610386428;
+        bh=rYLA10+aFN9VPFi+pMI7KUEcrsjjomOLRTJGd0KcYMA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=H3RFrH/efVR9yHofouxdf/JgksgF8m1s66OXodcminCLClzX88b78jo8HLoAvmUGv
+         +d31VMRPqaYZGrFAP4hYk7EqokE8IwDWCG591v9wIzoXWaIB/H/jrhZ44DAmoIKKm3
+         2NYMD6DtjM2A+E+Px8leihdt028shx1X+q28hiTgbF/J9vSHGcVgCGHDb5C8wsc1p5
+         4EZwqCcH8W8XsYDbTU0rM+mqDtZ8NJSOZVGI555hXGjK9A/gTQQXH9XylsWepZfd82
+         N4BviY5J6IVKaqc70ZdIYwZ1zvnL8TiwDFpWhb45YfrOIPE1A+daQkbk409RW5SW5S
+         wb23qa4OHpQrQ==
+Date:   Mon, 11 Jan 2021 09:33:47 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Gao Xiang <hsiangkao@redhat.com>
 Cc:     linux-xfs@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH v3 3/4] xfs: hoist out xfs_resizefs_init_new_ags()
-Message-ID: <20210111173249.GC848188@infradead.org>
-References: <20210108190919.623672-1-hsiangkao@redhat.com>
- <20210108190919.623672-4-hsiangkao@redhat.com>
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 1/4] xfs: rename `new' to `delta' in
+ xfs_growfs_data_private()
+Message-ID: <20210111173347.GB1164246@magnolia>
+References: <20210111132243.1180013-1-hsiangkao@redhat.com>
+ <20210111132243.1180013-2-hsiangkao@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210108190919.623672-4-hsiangkao@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20210111132243.1180013-2-hsiangkao@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> +	xfs_mount_t		*mp,
+On Mon, Jan 11, 2021 at 09:22:40PM +0800, Gao Xiang wrote:
+> It actually means the delta block count of growfs. Rename it in order
+> to make it clear. Also introduce nb_div to avoid reusing `delta`.
+> 
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 
-Please use the struct type here.
+Looks good now,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> +	/*
-> +	 * Write new AG headers to disk. Non-transactional, but need to be
-> +	 * written and completed prior to the growfs transaction being logged.
-> +	 * To do this, we use a delayed write buffer list and wait for
-> +	 * submission and IO completion of the list as a whole. This allows the
-> +	 * IO subsystem to merge all the AG headers in a single AG into a single
-> +	 * IO and hide most of the latency of the IO from us.
-> +	 *
-> +	 * This also means that if we get an error whilst building the buffer
-> +	 * list to write, we can cancel the entire list without having written
-> +	 * anything.
-> +	 */
+--D
 
-Maybe move the comment on top of the whole function, as it really
-explains what the function does.
-
+> ---
+>  fs/xfs/xfs_fsops.c | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 5870db855e8b..6ad31e6b4a04 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -32,8 +32,8 @@ xfs_growfs_data_private(
+>  	int			error;
+>  	xfs_agnumber_t		nagcount;
+>  	xfs_agnumber_t		nagimax = 0;
+> -	xfs_rfsblock_t		nb, nb_mod;
+> -	xfs_rfsblock_t		new;
+> +	xfs_rfsblock_t		nb, nb_div, nb_mod;
+> +	xfs_rfsblock_t		delta;
+>  	xfs_agnumber_t		oagcount;
+>  	xfs_trans_t		*tp;
+>  	struct aghdr_init_data	id = {};
+> @@ -50,16 +50,16 @@ xfs_growfs_data_private(
+>  		return error;
+>  	xfs_buf_relse(bp);
+>  
+> -	new = nb;	/* use new as a temporary here */
+> -	nb_mod = do_div(new, mp->m_sb.sb_agblocks);
+> -	nagcount = new + (nb_mod != 0);
+> +	nb_div = nb;
+> +	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
+> +	nagcount = nb_div + (nb_mod != 0);
+>  	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
+>  		nagcount--;
+>  		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
+>  		if (nb < mp->m_sb.sb_dblocks)
+>  			return -EINVAL;
+>  	}
+> -	new = nb - mp->m_sb.sb_dblocks;
+> +	delta = nb - mp->m_sb.sb_dblocks;
+>  	oagcount = mp->m_sb.sb_agcount;
+>  
+>  	/* allocate the new per-ag structures */
+> @@ -89,7 +89,7 @@ xfs_growfs_data_private(
+>  	INIT_LIST_HEAD(&id.buffer_list);
+>  	for (id.agno = nagcount - 1;
+>  	     id.agno >= oagcount;
+> -	     id.agno--, new -= id.agsize) {
+> +	     id.agno--, delta -= id.agsize) {
+>  
+>  		if (id.agno == nagcount - 1)
+>  			id.agsize = nb -
+> @@ -110,8 +110,8 @@ xfs_growfs_data_private(
+>  	xfs_trans_agblocks_delta(tp, id.nfree);
+>  
+>  	/* If there are new blocks in the old last AG, extend it. */
+> -	if (new) {
+> -		error = xfs_ag_extend_space(mp, tp, &id, new);
+> +	if (delta) {
+> +		error = xfs_ag_extend_space(mp, tp, &id, delta);
+>  		if (error)
+>  			goto out_trans_cancel;
+>  	}
+> @@ -143,7 +143,7 @@ xfs_growfs_data_private(
+>  	 * If we expanded the last AG, free the per-AG reservation
+>  	 * so we can reinitialize it with the new size.
+>  	 */
+> -	if (new) {
+> +	if (delta) {
+>  		struct xfs_perag	*pag;
+>  
+>  		pag = xfs_perag_get(mp, id.agno);
+> -- 
+> 2.27.0
+> 
