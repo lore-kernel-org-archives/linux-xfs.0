@@ -7,39 +7,38 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E55BC433E6
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 00:30:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEB1FC433E9
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 00:30:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F28E722E03
+	by mail.kernel.org (Postfix) with ESMTP id C949022DFA
 	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 00:30:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404046AbhALAZz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Jan 2021 19:25:55 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33622 "EHLO mail.kernel.org"
+        id S1729925AbhALAZ4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Jan 2021 19:25:56 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33764 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404061AbhAKXXz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jan 2021 18:23:55 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3E4D922D37;
-        Mon, 11 Jan 2021 23:23:11 +0000 (UTC)
+        id S2404100AbhAKXYd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Jan 2021 18:24:33 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E509122D49;
+        Mon, 11 Jan 2021 23:23:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610407391;
-        bh=QJ1vjUU8hSNBElVJHzrBgh2LOytQdHgIlpEAVGfWROs=;
+        s=k20201202; t=1610407433;
+        bh=/5fV5sYChufGBjTo3sip0G1ok6NTElT+pdnvRy7Dsxc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=NrmiC2vG4/WrcFUAM+7YLeDny/E6/skUmNPx5fCALB5AKU2jLoMal0IG+FdC14jq1
-         bKfL27jeAVWsdZ5WFEnXwJMv2Hp6sqzpRq8teN0gt6HVpxj/sPhZ6PkYni6NTQqV2L
-         i61XyRTrIWiY2M7jF5gdJFlx8w0bljn8pPdFFR95zkRhAnTqjfAFBGwYY9sv+7buVo
-         ZGemwLT04NFyldud65xN1xY4iqc1RGi3hmy9pEIm/Wbk6JewuIh3TaGPiVmJEJXbmq
-         ok3J2A0MBWlBsHWOvymIn3qULxsKPEIV9kC9WQIk8rlCN6Z5hfOdaBXMmxMpl6S8U8
-         JzWaFt8TEgaeg==
-Subject: [PATCH 6/6] xfs: flush speculative space allocations when we run out
- of space
+        b=ECJ33UMpj0mZwLMY7Uzz1VZrt6Z61vCPF7Xjmb2xpioNF5AW305xiXxp4rIAWOTh0
+         T1VWd9AraTeVm9KlHvm0l8lgWHuXNjIcpJpiLqQvzmgAY4kie+xt/yVnzjb+/12l6z
+         Gb5ASETQykn4GHqQecqtxwF4Z2E19SVyKpZdq6y7h5Z3T6bmdt3SOl7Cqb8+osf0Wa
+         o5hCrjmROx1t7W+lMW9L8CeCNvQLmSz38YM2XMn9cb4pLxZE/ef1fczr5D56jnCJF0
+         4UOqdMVEJmSTHluil9ogZAybceViLW94SLVYLrWqoWSzfiGW/CSuA8had2e2KK+ope
+         Edjpur7+nf7vA==
+Subject: [PATCH 6/7] xfs: rename block gc start and stop functions
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 11 Jan 2021 15:23:11 -0800
-Message-ID: <161040739114.1582114.73792904328533145.stgit@magnolia>
-In-Reply-To: <161040735389.1582114.15084485390769234805.stgit@magnolia>
-References: <161040735389.1582114.15084485390769234805.stgit@magnolia>
+Date:   Mon, 11 Jan 2021 15:23:52 -0800
+Message-ID: <161040743287.1582286.3961995540471736727.stgit@magnolia>
+In-Reply-To: <161040739544.1582286.11068012972712089066.stgit@magnolia>
+References: <161040739544.1582286.11068012972712089066.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,242 +49,153 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a fs modification (creation, file write, reflink, etc.) is unable to
-reserve enough space to handle the modification, try clearing whatever
-space the filesystem might have been hanging onto in the hopes of
-speeding up the filesystem.  The flushing behavior will become
-particularly important when we add deferred inode inactivation because
-that will increase the amount of space that isn't actively tied to user
-data.
+Shorten the names of the two functions that start and stop block
+preallocation garbage collection and move them up to the other blockgc
+functions.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_util.c |   13 ++++++++++++-
- fs/xfs/xfs_file.c      |   11 ++++-------
- fs/xfs/xfs_icache.c    |   37 ++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_icache.h    |    1 +
- fs/xfs/xfs_inode.c     |   12 ++++++++++--
- fs/xfs/xfs_iomap.c     |   13 +++++++++++++
- fs/xfs/xfs_reflink.c   |   23 +++++++++++++++++++++++
- fs/xfs/xfs_trace.h     |    1 +
- 8 files changed, 98 insertions(+), 13 deletions(-)
+ fs/xfs/scrub/common.c |    4 ++--
+ fs/xfs/xfs_icache.c   |   32 ++++++++++++++++----------------
+ fs/xfs/xfs_icache.h   |    4 ++--
+ fs/xfs/xfs_mount.c    |    2 +-
+ fs/xfs/xfs_super.c    |    8 ++++----
+ 5 files changed, 25 insertions(+), 25 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 437fdc8a8fbd..602011f06fb6 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -807,7 +807,18 @@ xfs_alloc_file_space(
- retry:
- 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
- 				resrtextents, 0, &tp);
--
-+		/*
-+		 * We weren't able to reserve enough space to handle fallocate.
-+		 * Flush any disk space that was being held in the hopes of
-+		 * speeding up the filesystem.  We hold the IOLOCK so we cannot
-+		 * do a synchronous scan.
-+		 */
-+		if (error == -ENOSPC && !cleared_space) {
-+			cleared_space = true;
-+			error = xfs_inode_free_blocks(ip->i_mount, false);
-+			if (!error)
-+				goto retry;
-+		}
- 		/*
- 		 * Check for running out of space
- 		 */
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 136fb5972acd..1333c65dd2b5 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -691,15 +691,12 @@ xfs_file_buffered_aio_write(
- 			goto write_retry;
- 		iolock = 0;
- 	} else if (ret == -ENOSPC && !cleared_space) {
--		struct xfs_eofblocks eofb = {0};
--
--		cleared_space = true;
- 		xfs_flush_inodes(ip->i_mount);
--
- 		xfs_iunlock(ip, iolock);
--		eofb.eof_flags = XFS_EOF_FLAGS_SYNC;
--		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
--		xfs_icache_free_cowblocks(ip->i_mount, &eofb);
-+		cleared_space = true;
-+		ret = xfs_inode_free_blocks(ip->i_mount, true);
-+		if (ret)
-+			return ret;
- 		goto write_retry;
- 	}
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 8ea6d4aa3f55..53456f3de881 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -888,7 +888,7 @@ xchk_stop_reaping(
+ 	struct xfs_scrub	*sc)
+ {
+ 	sc->flags |= XCHK_REAPING_DISABLED;
+-	xfs_stop_block_reaping(sc->mp);
++	xfs_blockgc_stop(sc->mp);
+ }
  
+ /* Restart background reaping of resources. */
+@@ -896,6 +896,6 @@ void
+ xchk_start_reaping(
+ 	struct xfs_scrub	*sc)
+ {
+-	xfs_start_block_reaping(sc->mp);
++	xfs_blockgc_start(sc->mp);
+ 	sc->flags &= ~XCHK_REAPING_DISABLED;
+ }
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index d6f7c3e85805..c3867b25e362 100644
+index 4f68375cf873..d1179f3e9d1f 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -950,6 +950,21 @@ xfs_queue_eofblocks(
- 	rcu_read_unlock();
+@@ -996,6 +996,22 @@ xfs_blockgc_worker(
+ 	xfs_queue_blockgc(mp);
  }
  
-+/* Scan all incore inodes for block preallocations that we can remove. */
-+static inline int
-+xfs_blockgc_scan(
-+	struct xfs_mount	*mp,
-+	struct xfs_eofblocks	*eofb)
++/* Disable post-EOF and CoW block auto-reclamation. */
++void
++xfs_blockgc_stop(
++	struct xfs_mount	*mp)
 +{
-+	int			error;
-+
-+	error = xfs_icache_free_eofblocks(mp, eofb);
-+	if (error && error != -EAGAIN)
-+		return error;
-+
-+	return xfs_icache_free_cowblocks(mp, eofb);
++	cancel_delayed_work_sync(&mp->m_blockgc_work);
 +}
 +
- void
- xfs_eofblocks_worker(
- 	struct work_struct *work)
-@@ -1470,9 +1485,25 @@ xfs_inode_free_quota_blocks(
- 
- 	trace_xfs_inode_free_quota_blocks(ip->i_mount, &eofb, _RET_IP_);
- 
--	xfs_icache_free_eofblocks(ip->i_mount, &eofb);
--	xfs_icache_free_cowblocks(ip->i_mount, &eofb);
--	return true;
-+	return xfs_blockgc_scan(ip->i_mount, &eofb) == 0;
++/* Enable post-EOF and CoW block auto-reclamation. */
++void
++xfs_blockgc_start(
++	struct xfs_mount	*mp)
++{
++	xfs_queue_blockgc(mp);
 +}
 +
-+/*
-+ * Try to free space in the filesystem by purging eofblocks and cowblocks.
-+ */
-+int
-+xfs_inode_free_blocks(
-+	struct xfs_mount	*mp,
-+	bool			sync)
-+{
-+	struct xfs_eofblocks	eofb = {0};
-+
-+	if (sync)
-+		eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
-+
-+	trace_xfs_inode_free_blocks(mp, &eofb, _RET_IP_);
-+
-+	return xfs_blockgc_scan(mp, &eofb);
+ /*
+  * Grab the inode for reclaim exclusively.
+  *
+@@ -1713,19 +1729,3 @@ xfs_inode_clear_cowblocks_tag(
+ 	trace_xfs_inode_clear_cowblocks_tag(ip);
+ 	return __xfs_inode_clear_blocks_tag(ip, XFS_ICOWBLOCKS);
  }
- 
- static inline unsigned long
+-
+-/* Disable post-EOF and CoW block auto-reclamation. */
+-void
+-xfs_stop_block_reaping(
+-	struct xfs_mount	*mp)
+-{
+-	cancel_delayed_work_sync(&mp->m_blockgc_work);
+-}
+-
+-/* Enable post-EOF and CoW block auto-reclamation. */
+-void
+-xfs_start_block_reaping(
+-	struct xfs_mount	*mp)
+-{
+-	xfs_queue_blockgc(mp);
+-}
 diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 88bbbc9f00f8..2f230d273a54 100644
+index 4ddb2c6de18b..5bcea900bc30 100644
 --- a/fs/xfs/xfs_icache.h
 +++ b/fs/xfs/xfs_icache.h
-@@ -50,6 +50,7 @@ long xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
- void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+@@ -68,7 +68,7 @@ int xfs_inode_walk(struct xfs_mount *mp,
+ int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
+ 				  xfs_ino_t ino, bool *inuse);
  
- bool xfs_inode_free_quota_blocks(struct xfs_inode *ip, bool sync);
-+int xfs_inode_free_blocks(struct xfs_mount *mp, bool sync);
+-void xfs_stop_block_reaping(struct xfs_mount *mp);
+-void xfs_start_block_reaping(struct xfs_mount *mp);
++void xfs_blockgc_stop(struct xfs_mount *mp);
++void xfs_blockgc_start(struct xfs_mount *mp);
  
- void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 09d97cf81f6d..0e6cc33a33ad 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1025,10 +1025,18 @@ xfs_create(
+ #endif
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 1e974106e58c..c3144cf5febe 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1054,7 +1054,7 @@ xfs_unmountfs(
+ 	uint64_t		resblks;
+ 	int			error;
+ 
+-	xfs_stop_block_reaping(mp);
++	xfs_blockgc_stop(mp);
+ 	xfs_fs_unreserve_ag_blocks(mp);
+ 	xfs_qm_unmount_quotas(mp);
+ 	xfs_rtunmount_inodes(mp);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 7fb024f96964..f72c1f473025 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -920,7 +920,7 @@ xfs_fs_freeze(
+ 	 * set a GFP_NOFS context here to avoid recursion deadlocks.
  	 */
- retry:
- 	error = xfs_trans_alloc(mp, tres, resblks, 0, 0, &tp);
--	if (error == -ENOSPC) {
-+	/*
-+	 * We weren't able to reserve enough space to add the inode.  Flush
-+	 * any disk space that was being held in the hopes of speeding up the
-+	 * filesystem.
-+	 */
-+	if (error == -ENOSPC && !cleared_space) {
-+		cleared_space = true;
- 		/* flush outstanding delalloc blocks and retry */
- 		xfs_flush_inodes(mp);
--		error = xfs_trans_alloc(mp, tres, resblks, 0, 0, &tp);
-+		error = xfs_inode_free_blocks(mp, true);
-+		if (!error)
-+			goto retry;
- 	}
- 	if (error)
- 		goto out_release_inode;
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index d83ee1406cea..cf651c70f22c 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -243,6 +243,19 @@ xfs_iomap_write_direct(
- retry:
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, resrtextents,
- 			tflags, &tp);
-+	/*
-+	 * We weren't able to reserve enough space for the direct write.  Flush
-+	 * any disk space that was being held in the hopes of speeding up the
-+	 * filesystem.  Historically, we expected callers to have preallocated
-+	 * all the space before a direct write, but this is not an absolute
-+	 * requirement.  We still hold the IOLOCK so we cannot do a sync scan.
-+	 */
-+	if (error == -ENOSPC && !cleared_space) {
-+		cleared_space = true;
-+		error = xfs_inode_free_blocks(ip->i_mount, false);
-+		if (!error)
-+			goto retry;
-+	}
- 	if (error)
+ 	flags = memalloc_nofs_save();
+-	xfs_stop_block_reaping(mp);
++	xfs_blockgc_stop(mp);
+ 	xfs_save_resvblks(mp);
+ 	xfs_quiesce_attr(mp);
+ 	ret = xfs_sync_sb(mp, true);
+@@ -936,7 +936,7 @@ xfs_fs_unfreeze(
+ 
+ 	xfs_restore_resvblks(mp);
+ 	xfs_log_work_queue(mp);
+-	xfs_start_block_reaping(mp);
++	xfs_blockgc_start(mp);
+ 	return 0;
+ }
+ 
+@@ -1720,7 +1720,7 @@ xfs_remount_rw(
+ 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
  		return error;
+ 	}
+-	xfs_start_block_reaping(mp);
++	xfs_blockgc_start(mp);
  
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 7be3cd3ee9bf..749d425603ca 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -379,6 +379,18 @@ xfs_reflink_allocate_cow(
- 	xfs_iunlock(ip, *lockmode);
- retry:
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
-+	/*
-+	 * We weren't able to reserve enough space to handle copy on write.
-+	 * Flush any disk space that was being held in the hopes of speeding up
-+	 * the filesystem.  We potentially hold the IOLOCK so we cannot do a
-+	 * synchronous scan.
-+	 */
-+	if (error == -ENOSPC && !cleared_space) {
-+		cleared_space = true;
-+		error = xfs_inode_free_blocks(ip->i_mount, false);
-+		if (!error)
-+			goto retry;
-+	}
- 	*lockmode = XFS_ILOCK_EXCL;
- 	xfs_ilock(ip, *lockmode);
+ 	/* Create the per-AG metadata reservation pool .*/
+ 	error = xfs_fs_reserve_ag_blocks(mp);
+@@ -1740,7 +1740,7 @@ xfs_remount_ro(
+ 	 * Cancel background eofb scanning so it cannot race with the final
+ 	 * log force+buftarg wait and deadlock the remount.
+ 	 */
+-	xfs_stop_block_reaping(mp);
++	xfs_blockgc_stop(mp);
  
-@@ -1028,6 +1040,17 @@ xfs_reflink_remap_extent(
- 	/* Start a rolling transaction to switch the mappings */
- 	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
-+	/*
-+	 * We weren't able to reserve enough space for the remapping.  Flush
-+	 * any disk space that was being held in the hopes of speeding up the
-+	 * filesystem.  We still hold the IOLOCK so we cannot do a sync scan.
-+	 */
-+	if (error == -ENOSPC && !cleared_space) {
-+		cleared_space = true;
-+		error = xfs_inode_free_blocks(mp, false);
-+		if (!error)
-+			goto retry;
-+	}
- 	if (error)
- 		goto out;
- 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 7b0dbbf6f4cc..9a29a5e18711 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3927,6 +3927,7 @@ DEFINE_EVENT(xfs_eofblocks_class, name,	\
- 	TP_ARGS(mp, eofb, caller_ip))
- DEFINE_EOFBLOCKS_EVENT(xfs_ioc_free_eofblocks);
- DEFINE_EOFBLOCKS_EVENT(xfs_inode_free_quota_blocks);
-+DEFINE_EOFBLOCKS_EVENT(xfs_inode_free_blocks);
- 
- #endif /* _TRACE_XFS_H */
- 
+ 	/* Get rid of any leftover CoW reservations... */
+ 	error = xfs_icache_free_cowblocks(mp, NULL);
 
