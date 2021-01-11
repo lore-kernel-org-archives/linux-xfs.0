@@ -2,122 +2,54 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7503FC433E9
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 15:16:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CC0CC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 16:13:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4744122795
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 15:16:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02DA122AAD
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 16:13:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730151AbhAKPQA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Jan 2021 10:16:00 -0500
-Received: from mx2.suse.de ([195.135.220.15]:33206 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728444AbhAKPP7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jan 2021 10:15:59 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 07C5BB7AC;
-        Mon, 11 Jan 2021 15:15:18 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id C51201E081B; Mon, 11 Jan 2021 16:15:17 +0100 (CET)
-Date:   Mon, 11 Jan 2021 16:15:17 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 00/12] lazytime fix and cleanups
-Message-ID: <20210111151517.GK18475@quack2.suse.cz>
-References: <20210109075903.208222-1-ebiggers@kernel.org>
+        id S1728569AbhAKQNR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Jan 2021 11:13:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59846 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728048AbhAKQNR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jan 2021 11:13:17 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B55C3C061786
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jan 2021 08:12:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=2IB5u/+0MMlSth10imzyhQUSsRz4eoLazCf021+MYxI=; b=VF0N6MLYZSyxcsmpZKWGo9517D
+        tJx1DTcTQnJZo2ht7cSkONxzHRr309WPbzfgzQp5m0UyuO0E5owbcQaLuO/wd50o9ZmbO19Ed6QiP
+        2NfVsy2MZRWzXdeDI5uxAQxiFVml2aHq/wLiAiqoVFETDDtxB1cvj0R9Iaz4tYor+zGtfVQknwrjh
+        4EiZHDZ/roUe0eFJZ4YdH37dclbXQQmPU5Uhp3gskO7edF9N3YMrC7MXkRNcNANXGF6shf/cZ5xRf
+        IniimKjTOhlXL+IZJ704opeoAQQVa2S5BtXWeWcetD7nUk/wfmdfX/6njVKNBNUIdqOFIp/2UJofV
+        twzgBeSA==;
+Received: from [2001:4bb8:19b:e528:814e:4181:3d37:5818] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1kyzni-003TUX-C8; Mon, 11 Jan 2021 16:12:21 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     linux-xfs@vger.kernel.org
+Cc:     Avi Kivity <avi@scylladb.com>
+Subject: improve sub-block size direct I/O concurrency
+Date:   Mon, 11 Jan 2021 17:12:09 +0100
+Message-Id: <20210111161212.1414034-1-hch@lst.de>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210109075903.208222-1-ebiggers@kernel.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi!
+Hi all,
 
-On Fri 08-01-21 23:58:51, Eric Biggers wrote:
-> Hello,
-> 
-> Patch 1 fixes a bug in how __writeback_single_inode() handles lazytime
-> expirations.  I originally reported this last year
-> (https://lore.kernel.org/r/20200306004555.GB225345@gmail.com) because it
-> causes the FS_IOC_REMOVE_ENCRYPTION_KEY ioctl to not work properly, as
-> the bug causes inodes to remain dirty after a sync.
-> 
-> It also turns out that lazytime on XFS is partially broken because it
-> doesn't actually write timestamps to disk after a sync() or after
-> dirtytime_expire_interval.  This is fixed by the same fix.
-> 
-> This supersedes previously proposed fixes, including
-> https://lore.kernel.org/r/20200307020043.60118-1-tytso@mit.edu and
-> https://lore.kernel.org/r/20200325122825.1086872-3-hch@lst.de from last
-> year (which had some issues and didn't fix the XFS bug), and v1 of this
-> patchset which took a different approach
-> (https://lore.kernel.org/r/20210105005452.92521-1-ebiggers@kernel.org).
-> 
-> Patches 2-12 then clean up various things related to lazytime and
-> writeback, such as clarifying the semantics of ->dirty_inode() and the
-> inode dirty flags, and improving comments.  Most of these patches could
-> be applied independently if needed.
-> 
-> This patchset applies to v5.11-rc2.
-
-The series look good to me. How do you plan to merge it (after resolving
-Christoph's remarks)? I guess either Ted can take it through the ext4 tree
-or I can take it through my tree...
-
-								Honza
-
-> 
-> Changed since v1:
->   - Switched to the fix suggested by Jan Kara, and dropped the
->     patches which introduced ->lazytime_expired().
->   - Fixed bugs in the fat and ext4 patches.
->   - Added patch "fs: improve comments for writeback_single_inode()".
->   - Reordered the patches a bit.
->   - Added Reviewed-by's.
-> 
-> Eric Biggers (12):
->   fs: fix lazytime expiration handling in __writeback_single_inode()
->   fs: correctly document the inode dirty flags
->   fs: only specify I_DIRTY_TIME when needed in generic_update_time()
->   fat: only specify I_DIRTY_TIME when needed in fat_update_time()
->   fs: don't call ->dirty_inode for lazytime timestamp updates
->   fs: pass only I_DIRTY_INODE flags to ->dirty_inode
->   fs: clean up __mark_inode_dirty() a bit
->   fs: drop redundant check from __writeback_single_inode()
->   fs: improve comments for writeback_single_inode()
->   gfs2: don't worry about I_DIRTY_TIME in gfs2_fsync()
->   ext4: simplify i_state checks in __ext4_update_other_inode_time()
->   xfs: remove a stale comment from xfs_file_aio_write_checks()
-> 
->  Documentation/filesystems/vfs.rst |   5 +-
->  fs/ext4/inode.c                   |  20 +----
->  fs/f2fs/super.c                   |   3 -
->  fs/fat/misc.c                     |  23 +++---
->  fs/fs-writeback.c                 | 132 +++++++++++++++++-------------
->  fs/gfs2/file.c                    |   4 +-
->  fs/gfs2/super.c                   |   2 -
->  fs/inode.c                        |  38 +++++----
->  fs/xfs/xfs_file.c                 |   6 --
->  include/linux/fs.h                |  18 ++--
->  10 files changed, 132 insertions(+), 119 deletions(-)
-> 
-> 
-> base-commit: e71ba9452f0b5b2e8dc8aa5445198cd9214a6a62
-> -- 
-> 2.30.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+this series avoids taking the iolock exclusively for direct I/O
+writes that are not file system block size aligned, but also do
+not require allocations or unwritten extent conversion.
