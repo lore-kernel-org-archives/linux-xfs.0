@@ -2,290 +2,383 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C0CBC433DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 19:01:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5940FC433E9
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 19:08:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF51A22795
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 19:01:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F5EB22A84
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Jan 2021 19:08:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390625AbhAKTAy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Jan 2021 14:00:54 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:21788 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2390531AbhAKTAx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jan 2021 14:00:53 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1610391566;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=g2GdxugnWr3ZKzDNa7wKoHZrbCSv3DhlAbpXvzRS6pY=;
-        b=FH3Rj7pUKT3hB9e2j+yqE4bxoQUj1tOiJfGdiu8gIlwXz69jdR4X5bSXi4y/he9nKoq/YV
-        6XxNnCrqHuvGlNlSYIc7XosWEfZxJc8hRvweeiqFevcESkRzUxRvvyTVlO9ZcEkS85yo/R
-        ugYuSclXR3KUD8QamKS8S1C+yYwZabA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-181-sXuHQNqlOdeD05WT_9Okdg-1; Mon, 11 Jan 2021 13:59:24 -0500
-X-MC-Unique: sXuHQNqlOdeD05WT_9Okdg-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 26365107ACFE;
-        Mon, 11 Jan 2021 18:59:23 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 82E4F60BE5;
-        Mon, 11 Jan 2021 18:59:22 +0000 (UTC)
-Date:   Mon, 11 Jan 2021 13:59:20 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, Avi Kivity <avi@scylladb.com>
-Subject: Re: [PATCH 3/3] xfs: try to avoid the iolock exclusive for
- non-aligned direct writes
-Message-ID: <20210111185920.GF1091932@bfoster>
-References: <20210111161212.1414034-1-hch@lst.de>
- <20210111161212.1414034-4-hch@lst.de>
+        id S2390658AbhAKTHx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Jan 2021 14:07:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45526 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2390773AbhAKTHx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Jan 2021 14:07:53 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C4E7822A84;
+        Mon, 11 Jan 2021 19:07:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610392030;
+        bh=mDHkawVCU9NAUxDEsLuXPt9WmgoGEqvbPp35BuMxBUY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fyvZroJ7fPMVn3tV+2PNnYkDvM+wkPgFp3yRZSlFaclIXkUKzLzYUmij4mHLH7RYG
+         ioxwvCUTxD4sYhTqHzV+LJswP5VkYMAxHG+Gk80KJYRY/UB7+n7V7Reg6Q1DrvBlVz
+         3jRs3HhOXvJeN/nocwWMZp0wQm+1FpgctqlBxEVrsBNA0lMtpK0lx3NDxDmfpsshSL
+         U9KA5xe1lzMZgKSLMHeWnUFhRwtf2EEuG/JzLLlwKkTmGR3LLS9b0WhntrbDZF6DQx
+         JffwH1SNBDv2P2RSJF/RIGeQC4kmuCj6gr0p5UUgqa6SxJpS7ZYez+/IaY9wEDqTFf
+         zU24HjVwvkLww==
+Date:   Mon, 11 Jan 2021 11:07:10 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 4/4] xfs: support shrinking unused space in the last AG
+Message-ID: <20210111190710.GD1164246@magnolia>
+References: <20210111132243.1180013-1-hsiangkao@redhat.com>
+ <20210111132243.1180013-5-hsiangkao@redhat.com>
+ <20210111181753.GC1164246@magnolia>
+ <20210111184835.GC1213845@xiangao.remote.csb>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210111161212.1414034-4-hch@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20210111184835.GC1213845@xiangao.remote.csb>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 11, 2021 at 05:12:12PM +0100, Christoph Hellwig wrote:
-> We only need the exclusive iolock for direct writes to protect sub-block
-> zeroing after an allocation or conversion of unwritten extents, and the
-> synchronous execution of these writes is also only needed because the
-> iolock is dropped early for the dodgy i_dio_count synchronisation.
+On Tue, Jan 12, 2021 at 02:48:35AM +0800, Gao Xiang wrote:
+> Hi Darrick,
 > 
-> Always start out with the shared iolock in xfs_file_dio_aio_write for
-> non-appending writes and only upgrade it to exclusive if the start and
-> end of the write range are not already allocated and in written
-> state.  This means one or two extra lookups in the in-core extent tree,
-> but with our btree data structure those lookups are very cheap and do
-> not show up in profiles on NVMe hardware for me.  On the other hand
-> avoiding the lock allows for a high concurrency using aio or io_uring.
+> On Mon, Jan 11, 2021 at 10:17:53AM -0800, Darrick J. Wong wrote:
+> > On Mon, Jan 11, 2021 at 09:22:43PM +0800, Gao Xiang wrote:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Avi Kivity <avi@scylladb.com>
-> Suggested-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_file.c | 127 +++++++++++++++++++++++++++++++++++-----------
->  1 file changed, 96 insertions(+), 31 deletions(-)
+> ...
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 1470fc4f2e0255..59d4c6e90f06c1 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -521,6 +521,57 @@ static const struct iomap_dio_ops xfs_dio_write_ops = {
->  	.end_io		= xfs_dio_write_end_io,
->  };
->  
-> +static int
-> +xfs_dio_write_exclusive(
-> +	struct kiocb		*iocb,
-> +	size_t			count,
-> +	bool			*exclusive_io)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_ifork	*ifp = &ip->i_df;
-> +	loff_t			offset = iocb->ki_pos;
-> +	loff_t			end = offset + count;
-> +	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, end);
-> +	struct xfs_bmbt_irec	got = { };
-> +	struct xfs_iext_cursor	icur;
-> +	int			ret;
-> +
-> +	*exclusive_io = true;
-> +
-> +	/*
-> +	 * Bmap information not read in yet or no blocks allocated at all?
-> +	 */
-> +	if (!(ifp->if_flags & XFS_IFEXTENTS) || !ip->i_d.di_nblocks)
-> +		return 0;
-> +
-> +	ret = xfs_ilock_iocb(iocb, XFS_ILOCK_SHARED);
-> +	if (ret)
-> +		return ret;
-
-It looks like this helper is only called with ILOCK_SHARED already held.
-
-> +
-> +	if (offset & mp->m_blockmask) {
-> +		if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got) ||
-> +		    got.br_startoff > offset_fsb ||
-> +		    got.br_state == XFS_EXT_UNWRITTEN)
-> +		    	goto out_unlock;
-> +	}
-> +
-> +	if ((end & mp->m_blockmask) &&
-> +	    got.br_startoff + got.br_blockcount <= end_fsb) {
-> +		if (!xfs_iext_lookup_extent(ip, ifp, end_fsb, &icur, &got) ||
-> +		    got.br_startoff > end_fsb ||
-> +		    got.br_state == XFS_EXT_UNWRITTEN)
-> +		    	goto out_unlock;
-
-This line and the same goto in the previous block are both whitespace
-damaged (tabs before spaces).
-
-> +	}
-> +
-> +	*exclusive_io = false;
-> +
-> +out_unlock:
-> +	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> +	return ret;
-> +}
-> +
->  /*
->   * xfs_file_dio_aio_write - handle direct IO writes
->   *
-> @@ -557,8 +608,9 @@ xfs_file_dio_aio_write(
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
->  	ssize_t			ret = 0;
-> -	int			unaligned_io = 0;
-> -	int			iolock;
-> +	int			iolock = XFS_IOLOCK_SHARED;
-> +	bool			subblock_io = false;
-> +	bool			exclusive_io = false;
->  	size_t			count = iov_iter_count(from);
->  	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
->  
-> @@ -566,45 +618,58 @@ xfs_file_dio_aio_write(
->  	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
->  		return -EINVAL;
->  
-> -	/*
-> -	 * Don't take the exclusive iolock here unless the I/O is unaligned to
-> -	 * the file system block size.  We don't need to consider the EOF
-> -	 * extension case here because xfs_file_aio_write_checks() will relock
-> -	 * the inode as necessary for EOF zeroing cases and fill out the new
-> -	 * inode size as appropriate.
-> -	 */
-> +	/* I/O that is not aligned to the fsblock size will need special care */
->  	if ((iocb->ki_pos & mp->m_blockmask) ||
-> -	    ((iocb->ki_pos + count) & mp->m_blockmask)) {
-> -		unaligned_io = 1;
-> +	    ((iocb->ki_pos + count) & mp->m_blockmask))
-> +		subblock_io = true;
->  
-> -		/*
-> -		 * We can't properly handle unaligned direct I/O to reflink
-> -		 * files yet, as we can't unshare a partial block.
-> -		 */
-> -		if (xfs_is_cow_inode(ip)) {
-> -			trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos, count);
-> -			return -ENOTBLK;
-> -		}
-> -		iolock = XFS_IOLOCK_EXCL;
-> -	} else {
-> -		iolock = XFS_IOLOCK_SHARED;
-> +	/*
-> +	 * We can't properly handle unaligned direct I/O to reflink files yet,
-> +	 * as we can't unshare a partial block.
-> +	 */
-> +	if (subblock_io && xfs_is_cow_inode(ip)) {
-> +		trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos, count);
-> +		return -ENOTBLK;
->  	}
->  
-> -	if (iocb->ki_flags & IOCB_NOWAIT) {
-> -		/* unaligned dio always waits, bail */
-> -		if (unaligned_io)
-> -			return -EAGAIN;
-> -		if (!xfs_ilock_nowait(ip, iolock))
-> +	/*
-> +	 * Racy shortcut for obvious appends to avoid too much relocking:
-
-s/:/./
-
-> +	 */
-> +	if (iocb->ki_pos > i_size_read(inode)) {
-> +		if (iocb->ki_flags & IOCB_NOWAIT)
->  			return -EAGAIN;
-
-Not sure why we need this check here if we'll eventually fall into the
-serialized check. It seems safer to me to just do 'iolock =
-XFS_IOLOCK_EXCL;' here and carry on.
-
-> -	} else {
-> -		xfs_ilock(ip, iolock);
-> +		iolock = XFS_IOLOCK_EXCL;
->  	}
->  
-> +relock:
-> +	ret = xfs_ilock_iocb(iocb, iolock);
-> +	if (ret)
-> +		return ret;
->  	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
->  	if (ret)
->  		goto out;
->  	count = iov_iter_count(from);
->  
-> +	/*
-> +	 * Upgrade to an exclusive lock and force synchronous completion if the
-> +	 * I/O will require partial block zeroing.
-> +	 * We don't need to consider the EOF extension case here because
-> +	 * xfs_file_aio_write_checks() will relock the inode as necessary for
-> +	 * EOF zeroing cases and fill out the new inode size as appropriate.
-> +	 */
-> +	if (iolock != XFS_IOLOCK_EXCL && subblock_io) {
-> +		ret = xfs_dio_write_exclusive(iocb, count, &exclusive_io);
-> +		if (ret)
-> +			goto out;
-> +		if (exclusive_io) {
-> +			xfs_iunlock(ip, iolock);
-> +			if (iocb->ki_flags & IOCB_NOWAIT)
-> +				return -EAGAIN;
-> +			iolock = XFS_IOLOCK_EXCL;
-> +			goto relock;
-> +		}
-> +	}
-> +
->  	/*
->  	 * If we are doing unaligned IO, we can't allow any other overlapping IO
->  	 * in-flight at the same time or we risk data corruption. Wait for all
-> @@ -612,7 +677,7 @@ xfs_file_dio_aio_write(
->  	 * iolock if we had to take the exclusive lock in
->  	 * xfs_file_aio_write_checks() for other reasons.
->  	 */
-> -	if (unaligned_io) {
-> +	if (exclusive_io) {
-
-Hmm.. so if we hold or upgrade to ILOCK_EXCL from the start for whatever
-reason, we'd never actually check whether the I/O is "exclusive" or not.
-Then we fall into here, demote the lock and the iomap layer may very
-well end up doing subblock zeroing. I suspect if we wanted to maintain
-this logic, the exclusive I/O check should occur for any subblock_io
-regardless of how the lock is held.
-
-Also, the comment above this check could use an update since it still refers
-to "unaligned IO."
-
-Brian
-
->  		inode_dio_wait(inode);
->  	} else if (iolock == XFS_IOLOCK_EXCL) {
->  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
-> @@ -626,7 +691,7 @@ xfs_file_dio_aio_write(
->  	 */
->  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
->  			   &xfs_dio_write_ops,
-> -			   is_sync_kiocb(iocb) || unaligned_io);
-> +			   is_sync_kiocb(iocb) || exclusive_io);
->  out:
->  	if (iolock)
->  		xfs_iunlock(ip, iolock);
-> -- 
-> 2.29.2
+> > > +int
+> > > +xfs_ag_shrink_space(
+> > > +	struct xfs_mount	*mp,
+> > > +	struct xfs_trans	*tp,
+> > > +	struct aghdr_init_data	*id,
+> > > +	xfs_extlen_t		len)
+> > > +{
+> > > +	struct xfs_buf		*agibp, *agfbp;
+> > > +	struct xfs_agi		*agi;
+> > > +	struct xfs_agf		*agf;
+> > > +	int			error, err2;
+> > > +	struct xfs_alloc_arg	args = {
+> > > +		.tp	= tp,
+> > > +		.mp	= mp,
+> > > +		.type	= XFS_ALLOCTYPE_THIS_BNO,
+> > > +		.minlen = len,
+> > > +		.maxlen = len,
+> > > +		.oinfo	= XFS_RMAP_OINFO_SKIP_UPDATE,
+> > > +		.resv	= XFS_AG_RESV_NONE,
+> > > +		.prod	= 1
+> > > +	};
+> > 
+> > Dumb style note: I usually put onstack structs at the top of the
+> > variable declaration list so that the variables are sorted in order of
+> > decreasing size.
 > 
+> Thanks for your detailed review!
+> 
+> Ok, will move upwards in the next version.
+> 
+> > 
+> > > +
+> > > +	ASSERT(id->agno == mp->m_sb.sb_agcount - 1);
+> > > +	error = xfs_ialloc_read_agi(mp, tp, id->agno, &agibp);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	agi = agibp->b_addr;
+> > > +
+> > > +	error = xfs_alloc_read_agf(mp, tp, id->agno, 0, &agfbp);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	args.fsbno = XFS_AGB_TO_FSB(mp, id->agno,
+> > > +				    be32_to_cpu(agi->agi_length) - len);
+> > > +
+> > > +	/* remove the preallocations before allocation and re-establish then */
+> > > +	error = xfs_ag_resv_free(agibp->b_pag);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	/* internal log shouldn't also show up in the free space btrees */
+> > > +	error = xfs_alloc_vextent(&args);
+> > > +	if (error)
+> > > +		goto out;
+> > > +
+> > > +	if (args.agbno == NULLAGBLOCK) {
+> > > +		error = -ENOSPC;
+> > > +		goto out;
+> > > +	}
+> > 
+> > Hmm.  So if the allocation above takes the last free space in the AG, we
+> > won't be able to satisfy the new per-AG allocation below, which could
+> > lead to a fs shutdown later (and even after subsequent mount attempts)
+> > until enough space gets freed.  That's not good.
+> > 
+> > I think we should update the length fields in agibp and agfbp, and then
+> > try to re-initialize the per-ag reservation.  If that succeeds, we can
+> > log the agi and agf and return.  If the reinitialization returns a
+> > non-ENOSPC error code then we of course just return the error code and
+> > let the fs shut down.
+> > 
+> > However, if the reinit returns ENOSPC, then we have to back out
+> > everything we've changed so far.  That means restore the old values of
+> > the agibp/agfbp lengths, log an EFI to free the space we just allocated,
+> > and return.  The caller then has to be smart enough to commit the
+> > transaction before passing the ENOSPC back to its own caller.
+> > 
+> 
+> I think I get the point. I might need to reconfirm such case first to
+> verify new modification. (Although I think new reserve sizes could have
+> some way to be calculated in advance, yet after having seen that, I
+> might not want to touch such logic, so will try the way you mentioned...
+> Thanks!)
+> 
+> > > +
+> > > +	/* Change the agi length */
+> > > +	be32_add_cpu(&agi->agi_length, -len);
+> > > +	xfs_ialloc_log_agi(tp, agibp, XFS_AGI_LENGTH);
+> > > +
+> > > +	/* Change agf length */
+> > > +	agf = agfbp->b_addr;
+> > > +	be32_add_cpu(&agf->agf_length, -len);
+> > > +	ASSERT(agf->agf_length == agi->agi_length);
+> > 
+> > Maybe we should check that these two lengths are the same right after we
+> > grab the AG[IF] buffers and return EFSCORRUPTED?
+> 
+> Honestly, the original purpose of this wasn't for sanity check.. So I only
+> left an ASSERT here...
+> 
+> If formal sanity check is needed, I will update this...
 
+Well, it's ondisk metadata, so it's perfectly valid to do a formal
+sanity check and bail out if things don't look right. :)
+
+--D
+
+> > 
+> > > +	xfs_alloc_log_agf(tp, agfbp, XFS_AGF_LENGTH);
+> > > +
+> > > +out:
+> > > +	err2 = xfs_ag_resv_init(agibp->b_pag, tp);
+> > > +	if (err2 && err2 != -ENOSPC) {
+> > 
+> > I think we need to warn if err2 is ENOSPC here, since we're now running
+> > with a (slightly) compromised filesystem.
+> 
+> Ok, will update.
+> 
+> > 
+> > > +		xfs_warn(mp,
+> > > +"Error %d reserving per-AG metadata reserve pool.", err2);
+> > > +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> > > +		return err2;
+> > > +	}
+> > > +	return error;
+> > > +}
+> > > +
+> > >  /*
+> > >   * Extent the AG indicated by the @id by the length passed in
+> > >   */
+> > > diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> > > index 5166322807e7..f3b5bbfeadce 100644
+> > > --- a/fs/xfs/libxfs/xfs_ag.h
+> > > +++ b/fs/xfs/libxfs/xfs_ag.h
+> > > @@ -24,6 +24,8 @@ struct aghdr_init_data {
+> > >  };
+> > >  
+> > >  int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
+> > > +int xfs_ag_shrink_space(struct xfs_mount *mp, struct xfs_trans *tp,
+> > > +			struct aghdr_init_data *id, xfs_extlen_t len);
+> > >  int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
+> > >  			struct aghdr_init_data *id, xfs_extlen_t len);
+> > >  int xfs_ag_get_geometry(struct xfs_mount *mp, xfs_agnumber_t agno,
+> > > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > > index 8fde7a2989ce..6ee9ea4d5a67 100644
+> > > --- a/fs/xfs/xfs_fsops.c
+> > > +++ b/fs/xfs/xfs_fsops.c
+> > > @@ -26,7 +26,7 @@ xfs_resizefs_init_new_ags(
+> > >  	struct aghdr_init_data	*id,
+> > >  	xfs_agnumber_t		oagcount,
+> > >  	xfs_agnumber_t		nagcount,
+> > > -	xfs_rfsblock_t		*delta)
+> > > +	int64_t			*delta)
+> > >  {
+> > >  	xfs_rfsblock_t		nb = mp->m_sb.sb_dblocks + *delta;
+> > >  	int			error;
+> > > @@ -76,22 +76,28 @@ xfs_growfs_data_private(
+> > >  	xfs_agnumber_t		nagcount;
+> > >  	xfs_agnumber_t		nagimax = 0;
+> > >  	xfs_rfsblock_t		nb, nb_div, nb_mod;
+> > > -	xfs_rfsblock_t		delta;
+> > > +	int64_t			delta;
+> > >  	xfs_agnumber_t		oagcount;
+> > >  	struct xfs_trans	*tp;
+> > > +	bool			extend;
+> > >  	struct aghdr_init_data	id = {};
+> > >  
+> > >  	nb = in->newblocks;
+> > > -	if (nb < mp->m_sb.sb_dblocks)
+> > > -		return -EINVAL;
+> > > -	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
+> > > +	if (nb == mp->m_sb.sb_dblocks)
+> > > +		return 0;
+> > > +
+> > > +	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
+> > > +	if (error)
+> > >  		return error;
+> > > -	error = xfs_buf_read_uncached(mp->m_ddev_targp,
+> > > +
+> > > +	if (nb > mp->m_sb.sb_dblocks) {
+> > > +		error = xfs_buf_read_uncached(mp->m_ddev_targp,
+> > >  				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
+> > >  				XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+> > > -	if (error)
+> > > -		return error;
+> > > -	xfs_buf_relse(bp);
+> > > +		if (error)
+> > > +			return error;
+> > > +		xfs_buf_relse(bp);
+> > > +	}
+> > >  
+> > >  	nb_div = nb;
+> > >  	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
+> > > @@ -99,10 +105,12 @@ xfs_growfs_data_private(
+> > >  	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
+> > >  		nagcount--;
+> > >  		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
+> > > -		if (nb < mp->m_sb.sb_dblocks)
+> > > +		if (nagcount < 2)
+> > >  			return -EINVAL;
+> > >  	}
+> > > +
+> > >  	delta = nb - mp->m_sb.sb_dblocks;
+> > > +	extend = (delta > 0);
+> > >  	oagcount = mp->m_sb.sb_agcount;
+> > >  
+> > >  	/* allocate the new per-ag structures */
+> > > @@ -110,22 +118,34 @@ xfs_growfs_data_private(
+> > >  		error = xfs_initialize_perag(mp, nagcount, &nagimax);
+> > >  		if (error)
+> > >  			return error;
+> > > +	} else if (nagcount != oagcount) {
+> > > +		/* TODO: shrinking the entire AGs hasn't yet completed */
+> > > +		return -EINVAL;
+> > >  	}
+> > >  
+> > >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
+> > > -			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
+> > > +			(extend ? XFS_GROWFS_SPACE_RES(mp) : -delta), 0,
+> > > +			XFS_TRANS_RESERVE, &tp);
+> > >  	if (error)
+> > >  		return error;
+> > >  
+> > > -	error = xfs_resizefs_init_new_ags(mp, &id, oagcount, nagcount, &delta);
+> > > -	if (error)
+> > > -		goto out_trans_cancel;
+> > > -
+> > > +	if (extend) {
+> > > +		error = xfs_resizefs_init_new_ags(mp, &id, oagcount,
+> > > +						  nagcount, &delta);
+> > > +		if (error)
+> > > +			goto out_trans_cancel;
+> > > +	}
+> > >  	xfs_trans_agblocks_delta(tp, id.nfree);
+> > >  
+> > > -	/* If there are new blocks in the old last AG, extend it. */
+> > > +	/* If there are some blocks in the last AG, resize it. */
+> > >  	if (delta) {
+> > > -		error = xfs_ag_extend_space(mp, tp, &id, delta);
+> > > +		if (extend) {
+> > > +			error = xfs_ag_extend_space(mp, tp, &id, delta);
+> > > +		} else {
+> > > +			id.agno = nagcount - 1;
+> > > +			error = xfs_ag_shrink_space(mp, tp, &id, -delta);
+> > > +		}
+> > > +
+> > >  		if (error)
+> > >  			goto out_trans_cancel;
+> > >  	}
+> > > @@ -137,11 +157,19 @@ xfs_growfs_data_private(
+> > >  	 */
+> > >  	if (nagcount > oagcount)
+> > >  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_AGCOUNT, nagcount - oagcount);
+> > > -	if (nb > mp->m_sb.sb_dblocks)
+> > > +	if (nb != mp->m_sb.sb_dblocks)
+> > >  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_DBLOCKS,
+> > >  				 nb - mp->m_sb.sb_dblocks);
+> > >  	if (id.nfree)
+> > >  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, id.nfree);
+> > > +
+> > > +	/*
+> > > +	 * update in-core counters (especially sb_fdblocks) now
+> > > +	 * so xfs_validate_sb_write() can pass.
+> > > +	 */
+> > > +	if (xfs_sb_version_haslazysbcount(&mp->m_sb))
+> > > +		xfs_log_sb(tp);
+> > > +
+> > >  	xfs_trans_set_sync(tp);
+> > >  	error = xfs_trans_commit(tp);
+> > >  	if (error)
+> > > @@ -157,7 +185,7 @@ xfs_growfs_data_private(
+> > >  	 * If we expanded the last AG, free the per-AG reservation
+> > >  	 * so we can reinitialize it with the new size.
+> > >  	 */
+> > > -	if (delta) {
+> > > +	if (delta > 0) {
+> > >  		struct xfs_perag	*pag;
+> > >  
+> > >  		pag = xfs_perag_get(mp, id.agno);
+> > > @@ -178,6 +206,10 @@ xfs_growfs_data_private(
+> > >  	return error;
+> > >  
+> > >  out_trans_cancel:
+> > > +	if (!extend && (tp->t_flags & XFS_TRANS_DIRTY)) {
+> > 
+> > If you're going to have a conditional commit in what looks like the
+> > error return cleanup path, it would be a good idea to leave a comment
+> > here explaining when we can end up in this condition.
+> 
+> Ok, Will add some words as well.
+> 
+> Thanks,
+> Gao Xiang
+> 
+> > 
+> > --D
+> > 
+> > > +		xfs_trans_commit(tp);
+> > > +		return error;
+> > > +	}
+> > >  	xfs_trans_cancel(tp);
+> > >  	return error;
+> > >  }
+> > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > > index e72730f85af1..fd2cbf414b80 100644
+> > > --- a/fs/xfs/xfs_trans.c
+> > > +++ b/fs/xfs/xfs_trans.c
+> > > @@ -419,7 +419,6 @@ xfs_trans_mod_sb(
+> > >  		tp->t_res_frextents_delta += delta;
+> > >  		break;
+> > >  	case XFS_TRANS_SB_DBLOCKS:
+> > > -		ASSERT(delta > 0);
+> > >  		tp->t_dblocks_delta += delta;
+> > >  		break;
+> > >  	case XFS_TRANS_SB_AGCOUNT:
+> > > -- 
+> > > 2.27.0
+> > > 
+> > 
+> 
