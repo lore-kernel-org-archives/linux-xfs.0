@@ -7,36 +7,37 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26029C43217
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 00:30:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FFCEC432C3
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 00:30:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2AA622DFA
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 00:30:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5538722DFA
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 00:30:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403822AbhALAZy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Jan 2021 19:25:54 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33544 "EHLO mail.kernel.org"
+        id S2390779AbhALAZz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Jan 2021 19:25:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33620 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404049AbhAKXX1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jan 2021 18:23:27 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6118422D08;
-        Mon, 11 Jan 2021 23:22:46 +0000 (UTC)
+        id S2404063AbhAKXXz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Jan 2021 18:23:55 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 042C622D2C;
+        Mon, 11 Jan 2021 23:23:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610407366;
-        bh=d3m+kqbInfCDqFDLeOn+bAGaNYfEDlp+cTagcRZ+gKM=;
+        s=k20201202; t=1610407385;
+        bh=tSe5VXVOSHBkyk3nAsf0UKHR+YdYs/XwzKhR7O51aWE=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=OgxgYSLj5+PsBvA0/7idp5lJ6W2iQw8Zi7Q+UBe9/0D6j7CtNMCWGJEI1/pLLl6PN
-         KWuTppIVFJhfSCe/Jtcif3W5td90P7uD6xEtybx/bMqCxtv+J8k9Y3Y7uX2M3cFEqc
-         VQG79jYB1LzrtG3uKPM4XINoeuvgJo2gtEm31NbUelit4uOhg5TxDhj+8vGOTC4I3d
-         +c7YpT15s9llCzU9Y1aEynh6Xe23IlIU/G5596SATbY9MjOXZyPTFh0intSPKoLmHn
-         hD0/O8yetA234emIVouwhDOutz7aq2nlUJNJ0f9texSSEKhgfTN8KHr0PO4m+JuHSe
-         ey3WqHWN2Kf1g==
-Subject: [PATCH 2/6] xfs: refactor messy xfs_inode_free_quota_* functions
+        b=k9tstssArSzWUvstyArja/k/PE350gnisiUzz9/LAa4otO0bqBAlb6o5QyGZq1aAB
+         rx8rkgPxibn7RM/5xCG3hHiVYlMLw4i9tfQL9ZqERjnnFfeIdyV034qFMmEizStoi7
+         T1n+2YxTGis6mBovUg9U6tusd9chwzMEbd5yTWQev+HhDV3uKlnFilvey6HPyUCdqy
+         XEpNPPikDJXfFRze7sWvfIwo48r8ua5TxnC6QtZeSnv1k3cVqBzSw7hCByh+elXjhz
+         U+ZIQ6ZA2Kkswo1NwYSw+6spTqZeGzjTjKi9AwZ5igNKMpIrYMj5vA68m9dcTgWk6i
+         ZpHvvYGMKpQmQ==
+Subject: [PATCH 5/6] xfs: flush speculative space allocations when we run out
+ of quota
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 11 Jan 2021 15:22:46 -0800
-Message-ID: <161040736645.1582114.5611056362119068032.stgit@magnolia>
+Date:   Mon, 11 Jan 2021 15:23:05 -0800
+Message-ID: <161040738496.1582114.17998753962128996136.stgit@magnolia>
 In-Reply-To: <161040735389.1582114.15084485390769234805.stgit@magnolia>
 References: <161040735389.1582114.15084485390769234805.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,173 +50,398 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The functions to run an eof/cowblocks scan to try to reduce quota usage
-are kind of a mess -- the logic repeatedly initializes an eofb structure
-and there are logic bugs in the code that result in the cowblocks scan
-never actually happening.
+If a fs modification (creation, file write, reflink, etc.) is unable to
+reserve enough quota to handle the modification, try clearing whatever
+space the filesystem might have been hanging onto in the hopes of
+speeding up the filesystem.  The flushing behavior will become
+particularly important when we add deferred inode inactivation because
+that will increase the amount of space that isn't actively tied to user
+data.
 
-Replace all three functions with a single function that fills out an
-eofb if we're low on quota and runs both eof and cowblocks scans.
-
-Fixes: 83104d449e8c4 ("xfs: garbage collect old cowextsz reservations")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_file.c   |   15 ++++++---------
- fs/xfs/xfs_icache.c |   46 ++++++++++++++++------------------------------
- fs/xfs/xfs_icache.h |    4 ++--
- 3 files changed, 24 insertions(+), 41 deletions(-)
+ fs/xfs/xfs_bmap_util.c |   16 ++++++++++++++++
+ fs/xfs/xfs_file.c      |    2 +-
+ fs/xfs/xfs_icache.c    |    9 +++++++--
+ fs/xfs/xfs_icache.h    |    2 +-
+ fs/xfs/xfs_inode.c     |   17 +++++++++++++++++
+ fs/xfs/xfs_ioctl.c     |    2 ++
+ fs/xfs/xfs_iomap.c     |   20 +++++++++++++++++++-
+ fs/xfs/xfs_reflink.c   |   40 +++++++++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_trace.c     |    1 +
+ fs/xfs/xfs_trace.h     |   40 ++++++++++++++++++++++++++++++++++++++++
+ 10 files changed, 141 insertions(+), 8 deletions(-)
 
 
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 7371a7f7c652..437fdc8a8fbd 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -761,6 +761,7 @@ xfs_alloc_file_space(
+ 	 */
+ 	while (allocatesize_fsb && !error) {
+ 		xfs_fileoff_t	s, e;
++		bool		cleared_space = false;
+ 
+ 		/*
+ 		 * Determine space reservations for data/realtime.
+@@ -803,6 +804,7 @@ xfs_alloc_file_space(
+ 		/*
+ 		 * Allocate and setup the transaction.
+ 		 */
++retry:
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
+ 				resrtextents, 0, &tp);
+ 
+@@ -819,6 +821,20 @@ xfs_alloc_file_space(
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks,
+ 						      0, quota_flag);
++		/*
++		 * We weren't able to reserve enough quota to handle fallocate.
++		 * Flush any disk space that was being held in the hopes of
++		 * speeding up the filesystem.  We hold the IOLOCK so we cannot
++		 * do a synchronous scan.
++		 */
++		if ((error == -ENOSPC || error == -EDQUOT) && !cleared_space) {
++			xfs_trans_cancel(tp);
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
++			cleared_space = xfs_inode_free_quota_blocks(ip, false);
++			if (cleared_space)
++				goto retry;
++			return error;
++		}
+ 		if (error)
+ 			goto error1;
+ 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 5b0f93f73837..5d5cf25668b5 100644
+index 5d5cf25668b5..136fb5972acd 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -652,7 +652,7 @@ xfs_file_buffered_aio_write(
- 	struct inode		*inode = mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	ssize_t			ret;
--	int			enospc = 0;
-+	bool			cleared_space = false;
- 	int			iolock;
- 
- 	if (iocb->ki_flags & IOCB_NOWAIT)
-@@ -684,19 +684,16 @@ xfs_file_buffered_aio_write(
- 	 * also behaves as a filter to prevent too many eofblocks scans from
- 	 * running at the same time.
+@@ -686,7 +686,7 @@ xfs_file_buffered_aio_write(
  	 */
--	if (ret == -EDQUOT && !enospc) {
-+	if (ret == -EDQUOT && !cleared_space) {
+ 	if (ret == -EDQUOT && !cleared_space) {
  		xfs_iunlock(ip, iolock);
--		enospc = xfs_inode_free_quota_eofblocks(ip);
--		if (enospc)
--			goto write_retry;
--		enospc = xfs_inode_free_quota_cowblocks(ip);
--		if (enospc)
-+		cleared_space = xfs_inode_free_quota_blocks(ip);
-+		if (cleared_space)
+-		cleared_space = xfs_inode_free_quota_blocks(ip);
++		cleared_space = xfs_inode_free_quota_blocks(ip, true);
+ 		if (cleared_space)
  			goto write_retry;
  		iolock = 0;
--	} else if (ret == -ENOSPC && !enospc) {
-+	} else if (ret == -ENOSPC && !cleared_space) {
- 		struct xfs_eofblocks eofb = {0};
- 
--		enospc = 1;
-+		cleared_space = true;
- 		xfs_flush_inodes(ip->i_mount);
- 
- 		xfs_iunlock(ip, iolock);
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index e6d704a30b29..66af84c578b5 100644
+index 703d26d04e0f..d6f7c3e85805 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1416,33 +1416,31 @@ xfs_icache_free_eofblocks(
- }
- 
- /*
-- * Run eofblocks scans on the quotas applicable to the inode. For inodes with
-- * multiple quotas, we don't know exactly which quota caused an allocation
-+ * Run cow/eofblocks scans on the quotas applicable to the inode. For inodes
-+ * with multiple quotas, we don't know exactly which quota caused an allocation
-  * failure. We make a best effort by including each quota under low free space
-  * conditions (less than 1% free space) in the scan.
+@@ -1423,7 +1423,8 @@ xfs_icache_free_eofblocks(
   */
--static int
--__xfs_inode_free_quota_eofblocks(
--	struct xfs_inode	*ip,
--	int			(*execute)(struct xfs_mount *mp,
--					   struct xfs_eofblocks	*eofb))
-+bool
-+xfs_inode_free_quota_blocks(
-+	struct xfs_inode	*ip)
+ bool
+ xfs_inode_free_quota_blocks(
+-	struct xfs_inode	*ip)
++	struct xfs_inode	*ip,
++	bool			sync)
  {
--	int scan = 0;
--	struct xfs_eofblocks eofb = {0};
--	struct xfs_dquot *dq;
-+	struct xfs_eofblocks	eofb = {0};
-+	struct xfs_dquot	*dq;
-+	bool			do_work = false;
- 
- 	/*
+ 	struct xfs_eofblocks	eofb = {0};
+ 	struct xfs_dquot	*dq;
+@@ -1433,7 +1434,9 @@ xfs_inode_free_quota_blocks(
  	 * Run a sync scan to increase effectiveness and use the union filter to
  	 * cover all applicable quotas in a single scan.
  	 */
--	eofb.eof_flags = XFS_EOF_FLAGS_UNION|XFS_EOF_FLAGS_SYNC;
-+	eofb.eof_flags = XFS_EOF_FLAGS_UNION | XFS_EOF_FLAGS_SYNC;
+-	eofb.eof_flags = XFS_EOF_FLAGS_UNION | XFS_EOF_FLAGS_SYNC;
++	eofb.eof_flags = XFS_EOF_FLAGS_UNION;
++	if (sync)
++		eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
  
  	if (XFS_IS_UQUOTA_ENFORCED(ip->i_mount)) {
  		dq = xfs_inode_dquot(ip, XFS_DQTYPE_USER);
- 		if (dq && xfs_dquot_lowsp(dq)) {
- 			eofb.eof_uid = VFS_I(ip)->i_uid;
- 			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
--			scan = 1;
-+			do_work = true;
- 		}
- 	}
+@@ -1465,6 +1468,8 @@ xfs_inode_free_quota_blocks(
+ 	if (!do_work)
+ 		return false;
  
-@@ -1451,21 +1449,16 @@ __xfs_inode_free_quota_eofblocks(
- 		if (dq && xfs_dquot_lowsp(dq)) {
- 			eofb.eof_gid = VFS_I(ip)->i_gid;
- 			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
--			scan = 1;
-+			do_work = true;
- 		}
- 	}
- 
--	if (scan)
--		execute(ip->i_mount, &eofb);
-+	if (!do_work)
-+		return false;
- 
--	return scan;
--}
--
--int
--xfs_inode_free_quota_eofblocks(
--	struct xfs_inode *ip)
--{
--	return __xfs_inode_free_quota_eofblocks(ip, xfs_icache_free_eofblocks);
-+	xfs_icache_free_eofblocks(ip->i_mount, &eofb);
-+	xfs_icache_free_cowblocks(ip->i_mount, &eofb);
-+	return true;
- }
- 
- static inline unsigned long
-@@ -1665,13 +1658,6 @@ xfs_icache_free_cowblocks(
- 			XFS_ICI_COWBLOCKS_TAG);
- }
- 
--int
--xfs_inode_free_quota_cowblocks(
--	struct xfs_inode *ip)
--{
--	return __xfs_inode_free_quota_eofblocks(ip, xfs_icache_free_cowblocks);
--}
--
- void
- xfs_inode_set_cowblocks_tag(
- 	xfs_inode_t	*ip)
++	trace_xfs_inode_free_quota_blocks(ip->i_mount, &eofb, _RET_IP_);
++
+ 	xfs_icache_free_eofblocks(ip->i_mount, &eofb);
+ 	xfs_icache_free_cowblocks(ip->i_mount, &eofb);
+ 	return true;
 diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 0d9f1b5d112c..b94a94e9a7a6 100644
+index b94a94e9a7a6..88bbbc9f00f8 100644
 --- a/fs/xfs/xfs_icache.h
 +++ b/fs/xfs/xfs_icache.h
-@@ -49,17 +49,17 @@ long xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
+@@ -49,7 +49,7 @@ long xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
  
  void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
  
-+bool xfs_inode_free_quota_blocks(struct xfs_inode *ip);
-+
+-bool xfs_inode_free_quota_blocks(struct xfs_inode *ip);
++bool xfs_inode_free_quota_blocks(struct xfs_inode *ip, bool sync);
+ 
  void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
  void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
- int xfs_icache_free_eofblocks(struct xfs_mount *, struct xfs_eofblocks *);
--int xfs_inode_free_quota_eofblocks(struct xfs_inode *ip);
- void xfs_eofblocks_worker(struct work_struct *);
- void xfs_queue_eofblocks(struct xfs_mount *);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e5dc41b10ebb..09d97cf81f6d 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -990,6 +990,7 @@ xfs_create(
+ 	struct xfs_dquot	*gdqp = NULL;
+ 	struct xfs_dquot	*pdqp = NULL;
+ 	struct xfs_trans_res	*tres;
++	bool			cleared_space = false;
+ 	uint			resblks;
  
- void xfs_inode_set_cowblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_cowblocks_tag(struct xfs_inode *ip);
- int xfs_icache_free_cowblocks(struct xfs_mount *, struct xfs_eofblocks *);
--int xfs_inode_free_quota_cowblocks(struct xfs_inode *ip);
- void xfs_cowblocks_worker(struct work_struct *);
- void xfs_queue_cowblocks(struct xfs_mount *);
+ 	trace_xfs_create(dp, name);
+@@ -1022,6 +1023,7 @@ xfs_create(
+ 	 * the case we'll drop the one we have and get a more
+ 	 * appropriate transaction later.
+ 	 */
++retry:
+ 	error = xfs_trans_alloc(mp, tres, resblks, 0, 0, &tp);
+ 	if (error == -ENOSPC) {
+ 		/* flush outstanding delalloc blocks and retry */
+@@ -1039,6 +1041,21 @@ xfs_create(
+ 	 */
+ 	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
+ 						pdqp, resblks, 1, 0);
++	/*
++	 * We weren't able to reserve enough quota to handle adding the inode.
++	 * Flush any disk space that was being held in the hopes of speeding up
++	 * the filesystem.
++	 */
++	if ((error == -EDQUOT || error == -ENOSPC) && !cleared_space) {
++		xfs_trans_cancel(tp);
++		if (unlock_dp_on_error)
++			xfs_iunlock(dp, XFS_ILOCK_EXCL);
++		unlock_dp_on_error = false;
++		cleared_space = xfs_inode_free_quota_blocks(dp, true);
++		if (cleared_space)
++			goto retry;
++		goto out_release_inode;
++	}
+ 	if (error)
+ 		goto out_trans_cancel;
  
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 3fbd98f61ea5..97e5b192d559 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -2348,6 +2348,8 @@ xfs_file_ioctl(
+ 		if (error)
+ 			return error;
+ 
++		trace_xfs_ioc_free_eofblocks(mp, &keofb, _RET_IP_);
++
+ 		sb_start_write(mp->m_super);
+ 		error = xfs_icache_free_eofblocks(mp, &keofb);
+ 		sb_end_write(mp->m_super);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 7b9ff824e82d..d83ee1406cea 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -27,7 +27,7 @@
+ #include "xfs_dquot_item.h"
+ #include "xfs_dquot.h"
+ #include "xfs_reflink.h"
+-
++#include "xfs_icache.h"
+ 
+ #define XFS_ALLOC_ALIGN(mp, off) \
+ 	(((off) >> mp->m_allocsize_log) << mp->m_allocsize_log)
+@@ -200,6 +200,7 @@ xfs_iomap_write_direct(
+ 	int			error;
+ 	int			bmapi_flags = XFS_BMAPI_PREALLOC;
+ 	uint			tflags = 0;
++	bool			cleared_space = false;
+ 
+ 	ASSERT(count_fsb > 0);
+ 
+@@ -239,6 +240,7 @@ xfs_iomap_write_direct(
+ 			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0) << 1;
+ 		}
+ 	}
++retry:
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, resrtextents,
+ 			tflags, &tp);
+ 	if (error)
+@@ -247,6 +249,22 @@ xfs_iomap_write_direct(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 
+ 	error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks, 0, quota_flag);
++	/*
++	 * We weren't able to reserve enough quota for the direct write.
++	 * Flush any disk space that was being held in the hopes of speeding up
++	 * the filesystem.  Historically, we expected callers to have
++	 * preallocated all the space before a direct write, but this is not an
++	 * absolute requirement.  We still hold the IOLOCK so we cannot do a
++	 * sync scan.
++	 */
++	if ((error == -ENOSPC || error == -EDQUOT) && !cleared_space) {
++		xfs_trans_cancel(tp);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		cleared_space = xfs_inode_free_quota_blocks(ip, false);
++		if (cleared_space)
++			goto retry;
++		return error;
++	}
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 6fa05fb78189..7be3cd3ee9bf 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -351,13 +351,14 @@ xfs_reflink_allocate_cow(
+ 	bool			convert_now)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
+ 	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+ 	xfs_filblks_t		count_fsb = imap->br_blockcount;
+-	struct xfs_trans	*tp;
+-	int			nimaps, error = 0;
+-	bool			found;
+ 	xfs_filblks_t		resaligned;
+ 	xfs_extlen_t		resblks = 0;
++	bool			found;
++	bool			cleared_space = false;
++	int			nimaps, error = 0;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	if (!ip->i_cowfp) {
+@@ -376,6 +377,7 @@ xfs_reflink_allocate_cow(
+ 	resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
+ 
+ 	xfs_iunlock(ip, *lockmode);
++retry:
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
+ 	*lockmode = XFS_ILOCK_EXCL;
+ 	xfs_ilock(ip, *lockmode);
+@@ -400,6 +402,23 @@ xfs_reflink_allocate_cow(
+ 
+ 	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
+ 			XFS_QMOPT_RES_REGBLKS);
++	/*
++	 * We weren't able to reserve enough quota to handle copy on write.
++	 * Flush any disk space that was being held in the hopes of speeding up
++	 * the filesystem.  We potentially hold the IOLOCK so we cannot do a
++	 * synchronous scan.
++	 */
++	if ((error == -ENOSPC || error == -EDQUOT) && !cleared_space) {
++		xfs_trans_cancel(tp);
++		xfs_iunlock(ip, *lockmode);
++		*lockmode = 0;
++		cleared_space = xfs_inode_free_quota_blocks(ip, false);
++		if (cleared_space)
++			goto retry;
++		*lockmode = XFS_ILOCK_EXCL;
++		xfs_ilock(ip, *lockmode);
++		return error;
++	}
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+@@ -1001,9 +1020,11 @@ xfs_reflink_remap_extent(
+ 	unsigned int		resblks;
+ 	bool			smap_real;
+ 	bool			dmap_written = xfs_bmap_is_written_extent(dmap);
++	bool			cleared_space = false;
+ 	int			nimaps;
+ 	int			error;
+ 
++retry:
+ 	/* Start a rolling transaction to switch the mappings */
+ 	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
+@@ -1081,6 +1102,11 @@ xfs_reflink_remap_extent(
+ 	 * count.  This is suboptimal, but the VFS flushed the dest range
+ 	 * before we started.  That should have removed all the delalloc
+ 	 * reservations, but we code defensively.
++	 *
++	 * If we fail with ENOSPC or EDQUOT, we weren't able to reserve enough
++	 * quota for the remapping.  Flush any disk space that was being held
++	 * in the hopes of speeding up the filesystem.  We still hold the
++	 * IOLOCK so we cannot do a sync scan.
+ 	 */
+ 	qres = qdelta = 0;
+ 	if (smap_real || dmap_written)
+@@ -1090,6 +1116,14 @@ xfs_reflink_remap_extent(
+ 	if (qres > 0) {
+ 		error = xfs_trans_reserve_quota_nblks(tp, ip, qres, 0,
+ 				XFS_QMOPT_RES_REGBLKS);
++		if ((error == -ENOSPC || error == -EDQUOT) && !cleared_space) {
++			xfs_trans_cancel(tp);
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
++			cleared_space = xfs_inode_free_quota_blocks(ip, false);
++			if (cleared_space)
++				goto retry;
++			goto out;
++		}
+ 		if (error)
+ 			goto out_cancel;
+ 	}
+diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+index 120398a37c2a..9b8d703dc9fd 100644
+--- a/fs/xfs/xfs_trace.c
++++ b/fs/xfs/xfs_trace.c
+@@ -29,6 +29,7 @@
+ #include "xfs_filestream.h"
+ #include "xfs_fsmap.h"
+ #include "xfs_btree_staging.h"
++#include "xfs_icache.h"
+ 
+ /*
+  * We include this last to have the helpers above available for the trace
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 5a263ae3d4f0..7b0dbbf6f4cc 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -37,6 +37,7 @@ struct xfs_trans_res;
+ struct xfs_inobt_rec_incore;
+ union xfs_btree_ptr;
+ struct xfs_dqtrx;
++struct xfs_eofblocks;
+ 
+ #define XFS_ATTR_FILTER_FLAGS \
+ 	{ XFS_ATTR_ROOT,	"ROOT" }, \
+@@ -3888,6 +3889,45 @@ DEFINE_EVENT(xfs_timestamp_range_class, name, \
+ DEFINE_TIMESTAMP_RANGE_EVENT(xfs_inode_timestamp_range);
+ DEFINE_TIMESTAMP_RANGE_EVENT(xfs_quota_expiry_range);
+ 
++DECLARE_EVENT_CLASS(xfs_eofblocks_class,
++	TP_PROTO(struct xfs_mount *mp, struct xfs_eofblocks *eofb,
++		 unsigned long caller_ip),
++	TP_ARGS(mp, eofb, caller_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(__u32, flags)
++		__field(uint32_t, uid)
++		__field(uint32_t, gid)
++		__field(prid_t, prid)
++		__field(__u64, min_file_size)
++		__field(unsigned long, caller_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->flags = eofb->eof_flags;
++		__entry->uid = from_kuid(mp->m_super->s_user_ns, eofb->eof_uid);
++		__entry->gid = from_kgid(mp->m_super->s_user_ns, eofb->eof_gid);
++		__entry->prid = eofb->eof_prid;
++		__entry->min_file_size = eofb->eof_min_file_size;
++		__entry->caller_ip = caller_ip;
++	),
++	TP_printk("dev %d:%d flags 0x%x uid %u gid %u prid %u minsize %llu caller %pS",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->flags,
++		  __entry->uid,
++		  __entry->gid,
++		  __entry->prid,
++		  __entry->min_file_size,
++		  (char *)__entry->caller_ip)
++);
++#define DEFINE_EOFBLOCKS_EVENT(name)	\
++DEFINE_EVENT(xfs_eofblocks_class, name,	\
++	TP_PROTO(struct xfs_mount *mp, struct xfs_eofblocks *eofb, \
++		 unsigned long caller_ip), \
++	TP_ARGS(mp, eofb, caller_ip))
++DEFINE_EOFBLOCKS_EVENT(xfs_ioc_free_eofblocks);
++DEFINE_EOFBLOCKS_EVENT(xfs_inode_free_quota_blocks);
++
+ #endif /* _TRACE_XFS_H */
+ 
+ #undef TRACE_INCLUDE_PATH
 
