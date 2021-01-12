@@ -7,23 +7,23 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC421C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:17:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EE46C41519
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:17:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A61F23127
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:17:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3348C23127
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:17:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438108AbhALWPw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 17:15:52 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:44659 "EHLO
+        id S2438002AbhALWPv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 17:15:51 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:44613 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2436786AbhALWPE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 17:15:04 -0500
+        with ESMTP id S2404252AbhALWOf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 17:14:35 -0500
 Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
         by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.86_2)
         (envelope-from <christian.brauner@ubuntu.com>)
-        id 1kzRlb-0003bd-4v; Tue, 12 Jan 2021 22:03:55 +0000
+        id 1kzRlP-0003bd-Ug; Tue, 12 Jan 2021 22:03:44 +0000
 From:   Christian Brauner <christian.brauner@ubuntu.com>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Christoph Hellwig <hch@infradead.org>,
@@ -61,22 +61,25 @@ Cc:     John Johansen <john.johansen@canonical.com>,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
         Christian Brauner <christian.brauner@ubuntu.com>,
         Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 26/42] fcntl: handle idmapped mounts
-Date:   Tue, 12 Jan 2021 23:01:08 +0100
-Message-Id: <20210112220124.837960-27-christian.brauner@ubuntu.com>
+Subject: [PATCH v5 22/42] open: handle idmapped mounts in do_truncate()
+Date:   Tue, 12 Jan 2021 23:01:04 +0100
+Message-Id: <20210112220124.837960-23-christian.brauner@ubuntu.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210112220124.837960-1-christian.brauner@ubuntu.com>
 References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-X-Patch-Hashes: v=1; h=sha256; i=79BfejdDgH1ldNWwCcl2HPMsbZ+QshNiYeRA/Vyc6bM=; m=FGBRqZW9kX+0QUrItseootp4lAC2KvbC1yD/fw9Fke8=; p=r9rGnrNawGj5+EUFX+OMWIOsx3y9vDbV91x7CMyj/xU=; g=764e8b39eed7589416effdff14896d5d3ca522b9
-X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCX/4YtwAKCRCRxhvAZXjcou+KAQDjcqJ hPMsUm7m6JtnmHbfrJ0uCy40qs0JWJolzFqK4ygD8CvIC1MHT52bxtny+mmxr9VZ096EUZAHp/ZXY Tdpyvg0=
+X-Patch-Hashes: v=1; h=sha256; i=luWr+VA/K8XJzgT4gX4nqMzEuQJylBRV32CcnmZlQJ8=; m=zihUaivpqCA4dvvv7oCB94rDjzWEIICAfJJq/K4EDho=; p=KfbmBmgWHl85flKsZy/AbgNujB/mqkPONcX1pd32kPc=; g=7e679aa791c5fb9885f599cc34e763b93247e60a
+X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCX/4YtwAKCRCRxhvAZXjcoqZdAP48OLZ aDDiOtxK0vClMT+iUjL5k3mIGJsk5lM/T5tH6/QD+KWIm8W5oXr/5hZUtS+8tH3pBZHZJzfiy1jyl hF94pA0=
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Enable the setfl() helper to handle idmapped mounts by passing down the
-mount's user namespace. If the initial user namespace is passed nothing
+When truncating files the vfs will verify that the caller is privileged
+over the inode. Extend it to handle idmapped mounts. If the inode is
+accessed through an idmapped mount it is mapped according to the mount's
+user namespace. Afterwards the permissions checks are identical to
+non-idmapped mounts. If the initial user namespace is passed nothing
 changes so non-idmapped mounts will see identical behavior as before.
 
 Cc: Christoph Hellwig <hch@lst.de>
@@ -86,41 +89,213 @@ Cc: linux-fsdevel@vger.kernel.org
 Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
 ---
 /* v2 */
-patch introduced
+unchanged
 
 /* v3 */
 unchanged
 
 /* v4 */
-unchanged
+- Serge Hallyn <serge@hallyn.com>:
+  - Use "mnt_userns" to refer to a vfsmount's userns everywhere to make
+    terminology consistent.
 
 /* v5 */
 base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
----
- fs/fcntl.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/fcntl.c b/fs/fcntl.c
-index 74d99731fd43..58706031e603 100644
---- a/fs/fcntl.c
-+++ b/fs/fcntl.c
-@@ -25,6 +25,7 @@
- #include <linux/user_namespace.h>
- #include <linux/memfd.h>
- #include <linux/compat.h>
-+#include <linux/mount.h>
+- Christoph Hellwig <hch@lst.de>:
+  - Use new file_userns_helper().
+---
+ fs/coredump.c      | 14 ++++++++++----
+ fs/inode.c         | 13 +++++++++----
+ fs/namei.c         |  6 +++---
+ fs/open.c          | 21 +++++++++++++--------
+ include/linux/fs.h |  4 ++--
+ 5 files changed, 37 insertions(+), 21 deletions(-)
+
+diff --git a/fs/coredump.c b/fs/coredump.c
+index a2f6ecc8e345..929d3f3bbe21 100644
+--- a/fs/coredump.c
++++ b/fs/coredump.c
+@@ -703,6 +703,7 @@ void do_coredump(const kernel_siginfo_t *siginfo)
+ 			goto close_fail;
+ 		}
+ 	} else {
++		struct user_namespace *mnt_userns;
+ 		struct inode *inode;
+ 		int open_flags = O_CREAT | O_RDWR | O_NOFOLLOW |
+ 				 O_LARGEFILE | O_EXCL;
+@@ -780,13 +781,14 @@ void do_coredump(const kernel_siginfo_t *siginfo)
+ 		 * a process dumps core while its cwd is e.g. on a vfat
+ 		 * filesystem.
+ 		 */
+-		if (!uid_eq(inode->i_uid, current_fsuid()))
++		mnt_userns = file_user_ns(cprm.file);
++		if (!uid_eq(i_uid_into_mnt(mnt_userns, inode), current_fsuid()))
+ 			goto close_fail;
+ 		if ((inode->i_mode & 0677) != 0600)
+ 			goto close_fail;
+ 		if (!(cprm.file->f_mode & FMODE_CAN_WRITE))
+ 			goto close_fail;
+-		if (do_truncate(cprm.file->f_path.dentry, 0, 0, cprm.file))
++		if (do_truncate(mnt_userns, cprm.file->f_path.dentry, 0, 0, cprm.file))
+ 			goto close_fail;
+ 	}
  
- #include <linux/poll.h>
- #include <asm/siginfo.h>
-@@ -46,7 +47,7 @@ static int setfl(int fd, struct file * filp, unsigned long arg)
+@@ -930,8 +932,12 @@ void dump_truncate(struct coredump_params *cprm)
  
- 	/* O_NOATIME can only be set by the owner or superuser */
- 	if ((arg & O_NOATIME) && !(filp->f_flags & O_NOATIME))
--		if (!inode_owner_or_capable(&init_user_ns, inode))
-+		if (!inode_owner_or_capable(mnt_user_ns(filp->f_path.mnt), inode))
- 			return -EPERM;
+ 	if (file->f_op->llseek && file->f_op->llseek != no_llseek) {
+ 		offset = file->f_op->llseek(file, 0, SEEK_CUR);
+-		if (i_size_read(file->f_mapping->host) < offset)
+-			do_truncate(file->f_path.dentry, offset, 0, file);
++		if (i_size_read(file->f_mapping->host) < offset) {
++			struct user_namespace *mnt_userns;
++
++			mnt_userns = file_user_ns(file);
++			do_truncate(mnt_userns, file->f_path.dentry, offset, 0, file);
++		}
+ 	}
+ }
+ EXPORT_SYMBOL(dump_truncate);
+diff --git a/fs/inode.c b/fs/inode.c
+index 46116ef44c9f..aefcfd31a9c7 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -1903,7 +1903,8 @@ int dentry_needs_remove_privs(struct dentry *dentry)
+ 	return mask;
+ }
  
- 	/* required for strict SunOS emulation */
+-static int __remove_privs(struct dentry *dentry, int kill)
++static int __remove_privs(struct user_namespace *mnt_userns, struct dentry *dentry,
++			  int kill)
+ {
+ 	struct iattr newattrs;
+ 
+@@ -1912,7 +1913,7 @@ static int __remove_privs(struct dentry *dentry, int kill)
+ 	 * Note we call this on write, so notify_change will not
+ 	 * encounter any conflicting delegations:
+ 	 */
+-	return notify_change(&init_user_ns, dentry, &newattrs, NULL);
++	return notify_change(mnt_userns, dentry, &newattrs, NULL);
+ }
+ 
+ /*
+@@ -1938,8 +1939,12 @@ int file_remove_privs(struct file *file)
+ 	kill = dentry_needs_remove_privs(dentry);
+ 	if (kill < 0)
+ 		return kill;
+-	if (kill)
+-		error = __remove_privs(dentry, kill);
++	if (kill) {
++		struct user_namespace *mnt_userns;
++
++		mnt_userns = file_user_ns(file);
++		error = __remove_privs(mnt_userns, dentry, kill);
++	}
+ 	if (!error)
+ 		inode_has_no_xattr(inode);
+ 
+diff --git a/fs/namei.c b/fs/namei.c
+index e085831c6b85..016d52fda656 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -3013,9 +3013,9 @@ static int handle_truncate(struct file *filp)
+ 	if (!error)
+ 		error = security_path_truncate(path);
+ 	if (!error) {
+-		error = do_truncate(path->dentry, 0,
+-				    ATTR_MTIME|ATTR_CTIME|ATTR_OPEN,
+-				    filp);
++		error = do_truncate(file_user_ns(filp),
++				    path->dentry, 0,
++				    ATTR_MTIME | ATTR_CTIME | ATTR_OPEN, filp);
+ 	}
+ 	put_write_access(inode);
+ 	return error;
+diff --git a/fs/open.c b/fs/open.c
+index bae00ee63af8..a9f3a3b46ef1 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -35,8 +35,8 @@
+ 
+ #include "internal.h"
+ 
+-int do_truncate(struct dentry *dentry, loff_t length, unsigned int time_attrs,
+-	struct file *filp)
++int do_truncate(struct user_namespace *mnt_userns, struct dentry *dentry,
++		loff_t length, unsigned int time_attrs, struct file *filp)
+ {
+ 	int ret;
+ 	struct iattr newattrs;
+@@ -61,13 +61,14 @@ int do_truncate(struct dentry *dentry, loff_t length, unsigned int time_attrs,
+ 
+ 	inode_lock(dentry->d_inode);
+ 	/* Note any delegations or leases have already been broken: */
+-	ret = notify_change(&init_user_ns, dentry, &newattrs, NULL);
++	ret = notify_change(mnt_userns, dentry, &newattrs, NULL);
+ 	inode_unlock(dentry->d_inode);
+ 	return ret;
+ }
+ 
+ long vfs_truncate(const struct path *path, loff_t length)
+ {
++	struct user_namespace *mnt_userns;
+ 	struct inode *inode;
+ 	long error;
+ 
+@@ -83,7 +84,8 @@ long vfs_truncate(const struct path *path, loff_t length)
+ 	if (error)
+ 		goto out;
+ 
+-	error = inode_permission(&init_user_ns, inode, MAY_WRITE);
++	mnt_userns = mnt_user_ns(path->mnt);
++	error = inode_permission(mnt_userns, inode, MAY_WRITE);
+ 	if (error)
+ 		goto mnt_drop_write_and_out;
+ 
+@@ -107,7 +109,7 @@ long vfs_truncate(const struct path *path, loff_t length)
+ 	if (!error)
+ 		error = security_path_truncate(path);
+ 	if (!error)
+-		error = do_truncate(path->dentry, length, 0, NULL);
++		error = do_truncate(mnt_userns, path->dentry, length, 0, NULL);
+ 
+ put_write_and_out:
+ 	put_write_access(inode);
+@@ -186,13 +188,16 @@ long do_sys_ftruncate(unsigned int fd, loff_t length, int small)
+ 	/* Check IS_APPEND on real upper inode */
+ 	if (IS_APPEND(file_inode(f.file)))
+ 		goto out_putf;
+-
+ 	sb_start_write(inode->i_sb);
+ 	error = locks_verify_truncate(inode, f.file, length);
+ 	if (!error)
+ 		error = security_path_truncate(&f.file->f_path);
+-	if (!error)
+-		error = do_truncate(dentry, length, ATTR_MTIME|ATTR_CTIME, f.file);
++	if (!error) {
++		struct user_namespace *mnt_userns;
++
++		mnt_userns = file_user_ns(f.file);
++		error = do_truncate(mnt_userns, dentry, length, ATTR_MTIME | ATTR_CTIME, f.file);
++	}
+ 	sb_end_write(inode->i_sb);
+ out_putf:
+ 	fdput(f);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index e74995558c31..168b8d3f5afb 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2584,8 +2584,8 @@ struct filename {
+ static_assert(offsetof(struct filename, iname) % sizeof(long) == 0);
+ 
+ extern long vfs_truncate(const struct path *, loff_t);
+-extern int do_truncate(struct dentry *, loff_t start, unsigned int time_attrs,
+-		       struct file *filp);
++extern int do_truncate(struct user_namespace *, struct dentry *, loff_t start,
++		       unsigned int time_attrs, struct file *filp);
+ extern int vfs_fallocate(struct file *file, int mode, loff_t offset,
+ 			loff_t len);
+ extern long do_sys_open(int dfd, const char __user *filename, int flags,
 -- 
 2.30.0
 
