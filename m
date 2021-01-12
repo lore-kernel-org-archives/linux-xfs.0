@@ -2,174 +2,181 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5144C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 02:19:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E450C433E6
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 02:56:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A83BC2250E
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 02:19:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29A3C22D37
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 02:56:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729598AbhALCTT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Jan 2021 21:19:19 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35736 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729041AbhALCTT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jan 2021 21:19:19 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1BA7622510;
-        Tue, 12 Jan 2021 02:18:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610417918;
-        bh=r2bDFuyJW83PShK4T+EcyRZ23xBML6ILSYEHY3NsVuM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SnM11zzuWZzWoHANXfPirhutms5ZqqFxMwJCCoURoHTa/yPqScIj4djOE3/qdrKEP
-         qcmYcU21LrhaAS6UnLq4aBPvZ6eCdF5cteky7EhECaHu1tcgaVog8V8+bU4ewQGt8A
-         DG8tjNJhfEnGb7To7vEYIoKcKcKDNg3wsc58zOKsQAS6QcWf5A9d18OrdrXZrWzJx1
-         w6T4V6HA20gJWDUL2NaHH5XzmJY1nf735FQzrXR0SQZlpn7+iAEhzFQ8X6G8URGQcn
-         vGWE45pPah8EVMtFxtVZwvq5r9B+8IP6v5Jii+edyFs7w2jrC/gvngnpBmxi8O2oaR
-         nXkE7HbJG90HQ==
-Date:   Mon, 11 Jan 2021 18:18:37 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/6] xfs: flush speculative space allocations when we run
- out of quota
-Message-ID: <20210112021837.GO1164246@magnolia>
-References: <161040735389.1582114.15084485390769234805.stgit@magnolia>
- <161040738496.1582114.17998753962128996136.stgit@magnolia>
- <20210112012249.GP331610@dread.disaster.area>
- <20210112013126.GJ1164246@magnolia>
- <20210112014045.GQ331610@dread.disaster.area>
+        id S1731462AbhALC4e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Jan 2021 21:56:34 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:57297 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728044AbhALC4d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jan 2021 21:56:33 -0500
+X-IronPort-AV: E=Sophos;i="5.79,340,1602518400"; 
+   d="scan'208";a="103383793"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 12 Jan 2021 10:55:38 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id C0A054CE602D;
+        Tue, 12 Jan 2021 10:55:35 +0800 (CST)
+Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
+ (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 12 Jan
+ 2021 10:55:36 +0800
+Subject: Re: [PATCH 04/10] mm, fsdax: Refactor memory-failure handler for dax
+ mapping
+To:     Jan Kara <jack@suse.cz>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
+        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
+        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
+References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
+ <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
+ <20210106154132.GC29271@quack2.suse.cz>
+From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
+Date:   Tue, 12 Jan 2021 10:55:34 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210112014045.GQ331610@dread.disaster.area>
+In-Reply-To: <20210106154132.GC29271@quack2.suse.cz>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) To
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
+X-yoursite-MailScanner-ID: C0A054CE602D.AADE7
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 12, 2021 at 12:40:45PM +1100, Dave Chinner wrote:
-> On Mon, Jan 11, 2021 at 05:31:26PM -0800, Darrick J. Wong wrote:
-> > On Tue, Jan 12, 2021 at 12:22:49PM +1100, Dave Chinner wrote:
-> > > On Mon, Jan 11, 2021 at 03:23:05PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > If a fs modification (creation, file write, reflink, etc.) is unable to
-> > > > reserve enough quota to handle the modification, try clearing whatever
-> > > > space the filesystem might have been hanging onto in the hopes of
-> > > > speeding up the filesystem.  The flushing behavior will become
-> > > > particularly important when we add deferred inode inactivation because
-> > > > that will increase the amount of space that isn't actively tied to user
-> > > > data.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  fs/xfs/xfs_bmap_util.c |   16 ++++++++++++++++
-> > > >  fs/xfs/xfs_file.c      |    2 +-
-> > > >  fs/xfs/xfs_icache.c    |    9 +++++++--
-> > > >  fs/xfs/xfs_icache.h    |    2 +-
-> > > >  fs/xfs/xfs_inode.c     |   17 +++++++++++++++++
-> > > >  fs/xfs/xfs_ioctl.c     |    2 ++
-> > > >  fs/xfs/xfs_iomap.c     |   20 +++++++++++++++++++-
-> > > >  fs/xfs/xfs_reflink.c   |   40 +++++++++++++++++++++++++++++++++++++---
-> > > >  fs/xfs/xfs_trace.c     |    1 +
-> > > >  fs/xfs/xfs_trace.h     |   40 ++++++++++++++++++++++++++++++++++++++++
-> > > >  10 files changed, 141 insertions(+), 8 deletions(-)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > > > index 7371a7f7c652..437fdc8a8fbd 100644
-> > > > --- a/fs/xfs/xfs_bmap_util.c
-> > > > +++ b/fs/xfs/xfs_bmap_util.c
-> > > > @@ -761,6 +761,7 @@ xfs_alloc_file_space(
-> > > >  	 */
-> > > >  	while (allocatesize_fsb && !error) {
-> > > >  		xfs_fileoff_t	s, e;
-> > > > +		bool		cleared_space = false;
-> > > >  
-> > > >  		/*
-> > > >  		 * Determine space reservations for data/realtime.
-> > > > @@ -803,6 +804,7 @@ xfs_alloc_file_space(
-> > > >  		/*
-> > > >  		 * Allocate and setup the transaction.
-> > > >  		 */
-> > > > +retry:
-> > > >  		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
-> > > >  				resrtextents, 0, &tp);
-> > > >  
-> > > > @@ -819,6 +821,20 @@ xfs_alloc_file_space(
-> > > >  		xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > > >  		error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks,
-> > > >  						      0, quota_flag);
-> > > > +		/*
-> > > > +		 * We weren't able to reserve enough quota to handle fallocate.
-> > > > +		 * Flush any disk space that was being held in the hopes of
-> > > > +		 * speeding up the filesystem.  We hold the IOLOCK so we cannot
-> > > > +		 * do a synchronous scan.
-> > > > +		 */
-> > > > +		if ((error == -ENOSPC || error == -EDQUOT) && !cleared_space) {
-> > > > +			xfs_trans_cancel(tp);
-> > > > +			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > > +			cleared_space = xfs_inode_free_quota_blocks(ip, false);
-> > > > +			if (cleared_space)
-> > > > +				goto retry;
-> > > > +			return error;
-> > > 
-> > > Can't say I'm a fan of repeating this everywhere.  Can we move this
-> > > into xfs_trans_reserve_quota_nblks() with a "retry" flag such that
-> > > we do:
-> > > 
-> > > 	error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks, 0,
-> > > 					quota_flag, &retry);
-> > > 	if (error) {
-> > > 		/* tp already cancelled, inode unlocked */
-> > > 		return error;
-> > > 	}
-> > > 	if (retry) {
-> > > 		/* tp already cancelled, inode unlocked */
-> > > 		goto retry;
-> > > 	}
-> > 
-> > Assuming you'd be interested in the same kind of change being applied to
-> > the next patch (kick the inode reclaim from xfs_trans_reserve on ENOSPC)
-> > then yes, that seems like a nice cleanup.
+
+
+On 2021/1/6 下午11:41, Jan Kara wrote:
+> On Thu 31-12-20 00:55:55, Shiyang Ruan wrote:
+>> The current memory_failure_dev_pagemap() can only handle single-mapped
+>> dax page for fsdax mode.  The dax page could be mapped by multiple files
+>> and offsets if we let reflink feature & fsdax mode work together.  So,
+>> we refactor current implementation to support handle memory failure on
+>> each file and offset.
+>>
+>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 > 
-> *nod*
+> Overall this looks OK to me, a few comments below.
 > 
-> It definitely seems to me to be cleaner to put all this GC stuff
-> into the transaction setup code that does the actual space
-> reservation, and then simply have the code that is setting up the
-> transactions handle failures appropriately.
+>> ---
+>>   fs/dax.c            | 21 +++++++++++
+>>   include/linux/dax.h |  1 +
+>>   include/linux/mm.h  |  9 +++++
+>>   mm/memory-failure.c | 91 ++++++++++++++++++++++++++++++++++-----------
+>>   4 files changed, 100 insertions(+), 22 deletions(-)
 
-I tried converting this and it wasn't as easy as I thought.
+...
 
-The downside is that now we have a function that sometimes consumes the
-transaction and the ILOCK, and there's still the question of what to do
-if xfs_inode_free_quota_blocks doesn't find any space to free.
-
-By leaving all the ugliness in the call sites, we maintain the property
-that the function that allocates the transaction and ilocks the inode
-also gets to iunlock and free the tp, and we can also skip the retry if
-the eofblocks flush doesn't clear anything.
-
-It might be easier to rework this as a xfs_trans_alloc_quota function
-wherein you feed it a tres, the inode, the number of blocks you want,
-and whether or not this is an rt extent; and either it reserves and
-locks everything for you, or returns failure.  The downside is that
-doesn't work for reflink since it doesn't always require quota
-reservation to remap an extent.
-
-But it's pretty late in the day and my brain is scrambled eggs so I'll
-defer until tomorrow.
-
---D
-
-> Cheers,
+>>   
+>> @@ -345,9 +348,12 @@ static void add_to_kill(struct task_struct *tsk, struct page *p,
+>>   	}
+>>   
+>>   	tk->addr = page_address_in_vma(p, vma);
+>> -	if (is_zone_device_page(p))
+>> -		tk->size_shift = dev_pagemap_mapping_shift(p, vma);
+>> -	else
+>> +	if (is_zone_device_page(p)) {
+>> +		if (is_device_fsdax_page(p))
+>> +			tk->addr = vma->vm_start +
+>> +					((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> It seems strange to use 'pgoff' for dax pages and not for any other page.
+> Why? I'd rather pass correct pgoff from all callers of add_to_kill() and
+> avoid this special casing...
+
+Because one fsdax page can be shared by multiple pgoffs.  I have to pass 
+each pgoff in each iteration to calculate the address in vma (for 
+tk->addr).  Other kinds of pages don't need this.  They can get their 
+unique address by calling "page_address_in_vma()".
+
+So, I added this fsdax case here.  This patchset only implemented the 
+fsdax case, other cases also need to be added here if to be implemented.
+
+
+--
+Thanks,
+Ruan Shiyang.
+
+> 
+>> +		tk->size_shift = dev_pagemap_mapping_shift(p, vma, tk->addr);
+>> +	} else
+>>   		tk->size_shift = page_shift(compound_head(p));
+>>   
+>>   	/*
+>> @@ -495,7 +501,7 @@ static void collect_procs_anon(struct page *page, struct list_head *to_kill,
+>>   			if (!page_mapped_in_vma(page, vma))
+>>   				continue;
+>>   			if (vma->vm_mm == t->mm)
+>> -				add_to_kill(t, page, vma, to_kill);
+>> +				add_to_kill(t, page, NULL, 0, vma, to_kill);
+>>   		}
+>>   	}
+>>   	read_unlock(&tasklist_lock);
+>> @@ -505,24 +511,19 @@ static void collect_procs_anon(struct page *page, struct list_head *to_kill,
+>>   /*
+>>    * Collect processes when the error hit a file mapped page.
+>>    */
+>> -static void collect_procs_file(struct page *page, struct list_head *to_kill,
+>> -				int force_early)
+>> +static void collect_procs_file(struct page *page, struct address_space *mapping,
+>> +		pgoff_t pgoff, struct list_head *to_kill, int force_early)
+>>   {
+>>   	struct vm_area_struct *vma;
+>>   	struct task_struct *tsk;
+>> -	struct address_space *mapping = page->mapping;
+>> -	pgoff_t pgoff;
+>>   
+>>   	i_mmap_lock_read(mapping);
+>>   	read_lock(&tasklist_lock);
+>> -	pgoff = page_to_pgoff(page);
+>>   	for_each_process(tsk) {
+>>   		struct task_struct *t = task_early_kill(tsk, force_early);
+>> -
+>>   		if (!t)
+>>   			continue;
+>> -		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
+>> -				      pgoff) {
+>> +		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, pgoff) {
+>>   			/*
+>>   			 * Send early kill signal to tasks where a vma covers
+>>   			 * the page but the corrupted page is not necessarily
+>> @@ -531,7 +532,7 @@ static void collect_procs_file(struct page *page, struct list_head *to_kill,
+>>   			 * to be informed of all such data corruptions.
+>>   			 */
+>>   			if (vma->vm_mm == t->mm)
+>> -				add_to_kill(t, page, vma, to_kill);
+>> +				add_to_kill(t, page, mapping, pgoff, vma, to_kill);
+>>   		}
+>>   	}
+>>   	read_unlock(&tasklist_lock);
+>> @@ -550,7 +551,8 @@ static void collect_procs(struct page *page, struct list_head *tokill,
+>>   	if (PageAnon(page))
+>>   		collect_procs_anon(page, tokill, force_early);
+>>   	else
+>> -		collect_procs_file(page, tokill, force_early);
+>> +		collect_procs_file(page, page->mapping, page_to_pgoff(page),
+> 
+> Why not use page_mapping() helper here? It would be safer for THPs if they
+> ever get here...
+> 
+> 								Honza
+> 
+
+
