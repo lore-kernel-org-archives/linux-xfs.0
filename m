@@ -2,128 +2,96 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 413A0C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CF4EC433E6
 	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 01:08:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDC09225AB
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 01:08:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50D6722E02
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 01:08:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731378AbhALBIf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1731428AbhALBIf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 11 Jan 2021 20:08:35 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:37063 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731224AbhALBIf (ORCPT
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:51142 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731223AbhALBIf (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jan 2021 20:08:35 -0500
 Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id F2FF33E5D08;
-        Tue, 12 Jan 2021 12:07:51 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A435E58D380;
+        Tue, 12 Jan 2021 12:07:50 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kz8A1-005WbG-IK; Tue, 12 Jan 2021 12:07:49 +1100
+        id 1kz8A1-005Wb8-EO; Tue, 12 Jan 2021 12:07:49 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1kz8A1-004qb5-B0; Tue, 12 Jan 2021 12:07:49 +1100
+        id 1kz8A1-004qat-4N; Tue, 12 Jan 2021 12:07:49 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, avi@scylladb.com, andres@anarazel.de
-Subject: [PATCH 4/6] xfs: make xfs_file_aio_write_checks IOCB_NOWAIT-aware
-Date:   Tue, 12 Jan 2021 12:07:44 +1100
-Message-Id: <20210112010746.1154363-5-david@fromorbit.com>
+Subject: [RFC] xfs: reduce sub-block DIO serialisation
+Date:   Tue, 12 Jan 2021 12:07:40 +1100
+Message-Id: <20210112010746.1154363-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20210112010746.1154363-1-david@fromorbit.com>
-References: <20210112010746.1154363-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
         a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
-        a=EmqxpYm9HcoA:10 a=BJ1VQgRmi8QOorsWphoA:9 a=pHzHmUro8NiASowvMSCR:22
-        a=nt3jZW36AmriUCFCBwmW:22
+        a=EmqxpYm9HcoA:10 a=fO6qUVe31NdUr43OTE4A:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+Hi folks,
 
-Ensure we don't block on the iolock, or waiting for I/O in
-xfs_file_aio_write_checks if the caller asked to avoid that.
+This is the XFS implementation on the sub-block DIO optimisations
+for written extents that I've mentioned on #xfs and a couple of
+times now on the XFS mailing list.
 
-Fixes: 29a5d29ec181 ("xfs: nowait aio support")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c | 25 +++++++++++++++++++++----
- 1 file changed, 21 insertions(+), 4 deletions(-)
+It takes the approach of using the IOMAP_NOWAIT non-blocking
+IO submission infrastructure to optimistically dispatch sub-block
+DIO without exclusive locking. If the extent mapping callback
+decides that it can't do the unaligned IO without extent
+manipulation, sub-block zeroing, blocking or splitting the IO into
+multiple parts, it aborts the IO with -EAGAIN. This allows the high
+level filesystem code to then take exclusive locks and resubmit the
+IO once it has guaranteed no other IO is in progress on the inode
+(the current implementation).
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 4eb4555516e4..512833ce1d41 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -341,7 +341,14 @@ xfs_file_aio_write_checks(
- 	if (error <= 0)
- 		return error;
- 
--	error = xfs_break_layouts(inode, iolock, BREAK_WRITE);
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		error = break_layout(inode, false);
-+		if (error == -EWOULDBLOCK)
-+			error = -EAGAIN;
-+	} else {
-+		error = xfs_break_layouts(inode, iolock, BREAK_WRITE);
-+	}
-+
- 	if (error)
- 		return error;
- 
-@@ -352,7 +359,11 @@ xfs_file_aio_write_checks(
- 	if (*iolock == XFS_IOLOCK_SHARED && !IS_NOSEC(inode)) {
- 		xfs_iunlock(ip, *iolock);
- 		*iolock = XFS_IOLOCK_EXCL;
--		xfs_ilock(ip, *iolock);
-+		error = xfs_ilock_iocb(iocb, *iolock);
-+		if (error) {
-+			*iolock = 0;
-+			return error;
-+		}
- 		goto restart;
- 	}
- 	/*
-@@ -374,6 +385,10 @@ xfs_file_aio_write_checks(
- 	isize = i_size_read(inode);
- 	if (iocb->ki_pos > isize) {
- 		spin_unlock(&ip->i_flags_lock);
-+
-+		if (iocb->ki_flags & IOCB_NOWAIT)
-+			return -EAGAIN;
-+
- 		if (!drained_dio) {
- 			if (*iolock == XFS_IOLOCK_SHARED) {
- 				xfs_iunlock(ip, *iolock);
-@@ -607,7 +622,8 @@ xfs_file_dio_aio_write(
- 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
- 	ret = iomap_dio_rw(&args);
- out:
--	xfs_iunlock(ip, iolock);
-+	if (iolock)
-+		xfs_iunlock(ip, iolock);
- 
- 	/*
- 	 * No fallback to buffered IO after short writes for XFS, direct I/O
-@@ -646,7 +662,8 @@ xfs_file_dax_write(
- 		error = xfs_setfilesize(ip, pos, ret);
- 	}
- out:
--	xfs_iunlock(ip, iolock);
-+	if (iolock)
-+		xfs_iunlock(ip, iolock);
- 	if (error)
- 		return error;
- 
--- 
-2.28.0
+This requires moving the IOMAP_NOWAIT setup decisions up into the
+filesystem, adding yet another parameter to iomap_dio_rw(). So first
+I convert iomap_dio_rw() to take an args structure so that we don't
+have to modify the API every time we want to add another setup
+parameter to the DIO submission code.
+
+I then include Christophs IOCB_NOWAIT fxies and cleanups to the XFS
+code, because they needed to be done regardless of the unaligned DIO
+issues and they make the changes simpler. Then I split the unaligned
+DIO path out from the aligned path, because all the extra complexity
+to support better unaligned DIO submission concurrency is not
+necessary for the block aligned path. Finally, I modify the
+unaligned IO path to first submit the unaligned IO using
+non-blocking semantics and provide a fallback to run the IO
+exclusively if that fails.
+
+This means that we consider sub-block dio into written a fast path
+that should almost always succeed with minimal overhead and we put
+all the overhead of failure into the slow path where exclusive
+locking is required. Unlike Christoph's proposed patch, this means
+we don't require an extra ILOCK cycle in the sub-block DIO setup
+fast path, so it should perform almost identically to the block
+aligned fast path.
+
+Tested using fio with AIO+DIO randrw to a written file. Performance
+increases from about 20k IOPS to 150k IOPS, which is the limit of
+the setup I was using for testing. Also passed fstests auto group
+on a both v4 and v5 XFS filesystems.
+
+Thoughts, comments?
+
+-Dave.
+
 
