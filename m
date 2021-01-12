@@ -7,137 +7,140 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFEE1C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 01:32:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 591FDC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 01:34:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 756BA22E01
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 01:32:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DA1A22AED
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 01:34:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729526AbhALBcI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Jan 2021 20:32:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53978 "EHLO mail.kernel.org"
+        id S1728791AbhALBeq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Jan 2021 20:34:46 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54206 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729495AbhALBcI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jan 2021 20:32:08 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 65C7222E01;
-        Tue, 12 Jan 2021 01:31:27 +0000 (UTC)
+        id S1728387AbhALBeq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Jan 2021 20:34:46 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2C7E322E01;
+        Tue, 12 Jan 2021 01:34:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610415087;
-        bh=/tMuqPaTZtwPCyhWyLsgcxPe2kBks6lgtSK0HLnn/co=;
+        s=k20201202; t=1610415245;
+        bh=/hs8hS7l2JtCfAkt6o1bXkFtj6FM0y/f1P9XwhKtnrs=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pG3fhanJf6XhxSJSDrlNXMiyW7uZGGsqR776qS935xBMYvr7eFEe6bYXmbU6yepQd
-         /5lc4EjI5lfi3/j3bUH5mLE+A/oym2rGPg1hQ5auX4Nab6aDTInrbs2DmUXP0a6V/h
-         IYYv7hEfP8DqIUgYNBaWtSED6YXDYmkzG1DXViTK9gAFIyhRyVSOmVG/pr+KLRqI/T
-         8KMGlXZhgQ3M9vAryToaHAqDJRRkzGwjR+Jp1AIp+MLCoaLZqMtjw9cb2YBo6hrNGh
-         Do8f25MTfG7fo3Bj9CqgXU+AMBBOq/5ZBcq1REaDr2k969rbJjNB6EiWLdUN+0+wOo
-         1ZuiQJEmeCTMQ==
-Date:   Mon, 11 Jan 2021 17:31:26 -0800
+        b=uNiuxPNu1WXFZgqIyQCXvtq+jVtsjjUaARgxqEZn01CJwPVg0+IxPXKoA8Atbq6Nn
+         x+WWSqIS7TA794NI8osaLdSl5fcF793D1pm/nvN9YhDcoQ1NXEpYmTFFfrIn5LvxyX
+         DZMVKXMoEjn6Wlpfu7JLd5UlygJFrfqkuIidPpF5Gq9R4FPzPbHKQzJGe5BIgsqkfC
+         7TC1HUmdikyxFJh/TFnQiwB8cFUABPIItglJE8z9Rw+fzNFMCx/hKOmVQ60aYDqznx
+         Y/fbHIRgWkrKes+VFDTA29Ph9DoYn/qAR6qvNQb3LY4pR+bDLe9KygTxwk5Uw0/Lam
+         yqlec03yPxzUQ==
+Date:   Mon, 11 Jan 2021 17:34:02 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/6] xfs: flush speculative space allocations when we run
- out of quota
-Message-ID: <20210112013126.GJ1164246@magnolia>
-References: <161040735389.1582114.15084485390769234805.stgit@magnolia>
- <161040738496.1582114.17998753962128996136.stgit@magnolia>
- <20210112012249.GP331610@dread.disaster.area>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com, hch@lst.de,
+        allison.henderson@oracle.com
+Subject: Re: [PATCH V14 04/16] xfs: Check for extent overflow when adding dir
+ entries
+Message-ID: <20210112013402.GK1164246@magnolia>
+References: <20210110160720.3922965-1-chandanrlinux@gmail.com>
+ <20210110160720.3922965-5-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210112012249.GP331610@dread.disaster.area>
+In-Reply-To: <20210110160720.3922965-5-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 12, 2021 at 12:22:49PM +1100, Dave Chinner wrote:
-> On Mon, Jan 11, 2021 at 03:23:05PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > If a fs modification (creation, file write, reflink, etc.) is unable to
-> > reserve enough quota to handle the modification, try clearing whatever
-> > space the filesystem might have been hanging onto in the hopes of
-> > speeding up the filesystem.  The flushing behavior will become
-> > particularly important when we add deferred inode inactivation because
-> > that will increase the amount of space that isn't actively tied to user
-> > data.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/xfs_bmap_util.c |   16 ++++++++++++++++
-> >  fs/xfs/xfs_file.c      |    2 +-
-> >  fs/xfs/xfs_icache.c    |    9 +++++++--
-> >  fs/xfs/xfs_icache.h    |    2 +-
-> >  fs/xfs/xfs_inode.c     |   17 +++++++++++++++++
-> >  fs/xfs/xfs_ioctl.c     |    2 ++
-> >  fs/xfs/xfs_iomap.c     |   20 +++++++++++++++++++-
-> >  fs/xfs/xfs_reflink.c   |   40 +++++++++++++++++++++++++++++++++++++---
-> >  fs/xfs/xfs_trace.c     |    1 +
-> >  fs/xfs/xfs_trace.h     |   40 ++++++++++++++++++++++++++++++++++++++++
-> >  10 files changed, 141 insertions(+), 8 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > index 7371a7f7c652..437fdc8a8fbd 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> > @@ -761,6 +761,7 @@ xfs_alloc_file_space(
-> >  	 */
-> >  	while (allocatesize_fsb && !error) {
-> >  		xfs_fileoff_t	s, e;
-> > +		bool		cleared_space = false;
-> >  
-> >  		/*
-> >  		 * Determine space reservations for data/realtime.
-> > @@ -803,6 +804,7 @@ xfs_alloc_file_space(
-> >  		/*
-> >  		 * Allocate and setup the transaction.
-> >  		 */
-> > +retry:
-> >  		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
-> >  				resrtextents, 0, &tp);
-> >  
-> > @@ -819,6 +821,20 @@ xfs_alloc_file_space(
-> >  		xfs_ilock(ip, XFS_ILOCK_EXCL);
-> >  		error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks,
-> >  						      0, quota_flag);
-> > +		/*
-> > +		 * We weren't able to reserve enough quota to handle fallocate.
-> > +		 * Flush any disk space that was being held in the hopes of
-> > +		 * speeding up the filesystem.  We hold the IOLOCK so we cannot
-> > +		 * do a synchronous scan.
-> > +		 */
-> > +		if ((error == -ENOSPC || error == -EDQUOT) && !cleared_space) {
-> > +			xfs_trans_cancel(tp);
-> > +			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > +			cleared_space = xfs_inode_free_quota_blocks(ip, false);
-> > +			if (cleared_space)
-> > +				goto retry;
-> > +			return error;
+On Sun, Jan 10, 2021 at 09:37:08PM +0530, Chandan Babu R wrote:
+> Directory entry addition can cause the following,
+> 1. Data block can be added/removed.
+>    A new extent can cause extent count to increase by 1.
+> 2. Free disk block can be added/removed.
+>    Same behaviour as described above for Data block.
+> 3. Dabtree blocks.
+>    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these
+>    can be new extents. Hence extent count can increase by
+>    XFS_DA_NODE_MAXDEPTH.
 > 
-> Can't say I'm a fan of repeating this everywhere.  Can we move this
-> into xfs_trans_reserve_quota_nblks() with a "retry" flag such that
-> we do:
-> 
-> 	error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks, 0,
-> 					quota_flag, &retry);
-> 	if (error) {
-> 		/* tp already cancelled, inode unlocked */
-> 		return error;
-> 	}
-> 	if (retry) {
-> 		/* tp already cancelled, inode unlocked */
-> 		goto retry;
-> 	}
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-Assuming you'd be interested in the same kind of change being applied to
-the next patch (kick the inode reclaim from xfs_trans_reserve on ENOSPC)
-then yes, that seems like a nice cleanup.
+OK, seems reasonably straight forward,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> Cheers,
+> ---
+>  fs/xfs/libxfs/xfs_inode_fork.h | 13 +++++++++++++
+>  fs/xfs/xfs_inode.c             | 10 ++++++++++
+>  fs/xfs/xfs_symlink.c           |  5 +++++
+>  3 files changed, 28 insertions(+)
 > 
-> Dave.
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index bcac769a7df6..ea1a9dd8a763 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -47,6 +47,19 @@ struct xfs_ifork {
+>   */
+>  #define XFS_IEXT_PUNCH_HOLE_CNT		(1)
+>  
+> +/*
+> + * Directory entry addition can cause the following,
+> + * 1. Data block can be added/removed.
+> + *    A new extent can cause extent count to increase by 1.
+> + * 2. Free disk block can be added/removed.
+> + *    Same behaviour as described above for Data block.
+> + * 3. Dabtree blocks.
+> + *    XFS_DA_NODE_MAXDEPTH blocks can be added. Each of these can be new
+> + *    extents. Hence extent count can increase by XFS_DA_NODE_MAXDEPTH.
+> + */
+> +#define XFS_IEXT_DIR_MANIP_CNT(mp) \
+> +	((XFS_DA_NODE_MAXDEPTH + 1 + 1) * (mp)->m_dir_geo->fsbcount)
+> +
+>  /*
+>   * Fork handling.
+>   */
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index b7352bc4c815..4cc787cc4eee 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1042,6 +1042,11 @@ xfs_create(
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
+> +			XFS_IEXT_DIR_MANIP_CNT(mp));
+> +	if (error)
+> +		goto out_trans_cancel;
+> +
+>  	/*
+>  	 * A newly created regular or special file just has one directory
+>  	 * entry pointing to them, but a directory also the "." entry
+> @@ -1258,6 +1263,11 @@ xfs_link(
+>  	xfs_trans_ijoin(tp, sip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, tdp, XFS_ILOCK_EXCL);
+>  
+> +	error = xfs_iext_count_may_overflow(tdp, XFS_DATA_FORK,
+> +			XFS_IEXT_DIR_MANIP_CNT(mp));
+> +	if (error)
+> +		goto error_return;
+> +
+>  	/*
+>  	 * If we are using project inheritance, we only allow hard link
+>  	 * creation in our tree when the project IDs are the same; else
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index 1f43fd7f3209..0b8136a32484 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -220,6 +220,11 @@ xfs_symlink(
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> +	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
+> +			XFS_IEXT_DIR_MANIP_CNT(mp));
+> +	if (error)
+> +		goto out_trans_cancel;
+> +
+>  	/*
+>  	 * Allocate an inode for the symlink.
+>  	 */
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.29.2
+> 
