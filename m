@@ -7,23 +7,23 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CD07C072B1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88EDDC41620
 	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:17:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEE9523122
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:17:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67A5E2312A
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:17:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438263AbhALWRP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 17:17:15 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:45021 "EHLO
+        id S2436785AbhALWPx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 17:15:53 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:44707 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2438227AbhALWRN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 17:17:13 -0500
+        with ESMTP id S2436942AbhALWP0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 17:15:26 -0500
 Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
         by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.86_2)
         (envelope-from <christian.brauner@ubuntu.com>)
-        id 1kzRm3-0003bd-7l; Tue, 12 Jan 2021 22:04:23 +0000
+        id 1kzRlu-0003bd-T8; Tue, 12 Jan 2021 22:04:15 +0000
 From:   Christian Brauner <christian.brauner@ubuntu.com>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Christoph Hellwig <hch@infradead.org>,
@@ -59,138 +59,28 @@ Cc:     John Johansen <john.johansen@canonical.com>,
         linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 36/42] ext4: support idmapped mounts
-Date:   Tue, 12 Jan 2021 23:01:18 +0100
-Message-Id: <20210112220124.837960-37-christian.brauner@ubuntu.com>
+        Christian Brauner <christian.brauner@ubuntu.com>
+Subject: [PATCH v5 33/42] apparmor: handle idmapped mounts
+Date:   Tue, 12 Jan 2021 23:01:15 +0100
+Message-Id: <20210112220124.837960-34-christian.brauner@ubuntu.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210112220124.837960-1-christian.brauner@ubuntu.com>
 References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Patch-Hashes: v=1; h=sha256; i=MJ7IH6zKWgQgezyytkJXRKJVy84sQxgK/KhvUxTmNLU=; m=utmclOhU86KDcJg/iYrF+bACZsL15dgEaJj3GxUTDfM=; p=AwwPnPT2tVbUKDDTygIwoT6rOKZoJVqaWKEF8K+lQeA=; g=45c263620df9e9f6bc2ef08fa6b6676c568147d2
-X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCX/4YuQAKCRCRxhvAZXjcotKXAP44ZWd brEvMlwRGHqUYcguiahYq/C/zcjRqFPX23Fix+wD+JF+oxF2sXkzBH0VrTbWcE54RXaqw3MgJy9RZ 7fN0cQw=
+X-Patch-Hashes: v=1; h=sha256; i=GtgWex55B/vr9cqlh7J1mRZi5HqOLuyw4/kbMFcnj44=; m=Q5L3+S6uMNfe06nKUTXtIKS5PrHz/ZnhwCjAid9lFbw=; p=J20qmlPkYZL+wxjaJC67jWA3EV8DnQILMlq1X9O05zU=; g=89ccfa3ded0a3bad947410be86c8179674d8f439
+X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCX/4YuAAKCRCRxhvAZXjcovWfAP434jG OozLelJRLwS5VVUjLPWx7UGVUe2krUFPLFnICrwEAzj0T9w7Qgbpfuhx2qFw/ljWyiC2cvisR9ADl G3Re9AE=
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Enable idmapped mounts for ext4. All dedicated helpers we need for this
-exist. The vfs will have already made sure that the caller's fsids are
-valid when mapped according to the mount's user namespace and that they
-and have a mapping in the filesystem's s_user_ns.
-So map the caller's fsids according to the mount's user namespace when
-initializing a new inode. The inode_init_owner() helper will already
-take care of this for the common case. If the initial user namespace is
-passed nothing changes so non-idmapped mounts will see identical
-behavior as before.
-It is also noteworthy that the idmapped mount implementation allows us
-to cleanly handle ioctls() too.
+The i_uid and i_gid are only ever used when logging for AppArmor. This
+is already broken in a bunch of places where the global root id is
+reported instead of the i_uid or i_gid of the file. Nonetheless, be kind
+and log the mapped inode if we're coming from an idmapped mount. If the
+initial user namespace is passed nothing changes so non-idmapped mounts
+will see identical behavior as before.
 
-Let's create simple example where we idmap an ext4 filesystem:
-
- root@f2-vm:~# truncate -s 5G ext4.img
-
- root@f2-vm:~# mkfs.ext4 ./ext4.img
- mke2fs 1.45.5 (07-Jan-2020)
- Discarding device blocks: done
- Creating filesystem with 1310720 4k blocks and 327680 inodes
- Filesystem UUID: 3fd91794-c6ca-4b0f-9964-289a000919cf
- Superblock backups stored on blocks:
-         32768, 98304, 163840, 229376, 294912, 819200, 884736
-
- Allocating group tables: done
- Writing inode tables: done
- Creating journal (16384 blocks): done
- Writing superblocks and filesystem accounting information: done
-
- root@f2-vm:~# losetup -f --show ./ext4.img
- /dev/loop0
-
- root@f2-vm:~# mount /dev/loop0 /mnt
-
- root@f2-vm:~# ls -al /mnt/
- total 24
- drwxr-xr-x  3 root root  4096 Oct 28 13:34 .
- drwxr-xr-x 30 root root  4096 Oct 28 13:22 ..
- drwx------  2 root root 16384 Oct 28 13:34 lost+found
-
- # Let's create an idmapped mount at /idmapped1 where we map uid and gid
- # 0 to uid and gid 1000
- root@f2-vm:/# ./mount-idmapped --map-mount b:0:1000:1 /mnt/ /idmapped1/
-
- root@f2-vm:/# ls -al /idmapped1/
- total 24
- drwxr-xr-x  3 ubuntu ubuntu  4096 Oct 28 13:34 .
- drwxr-xr-x 30 root   root    4096 Oct 28 13:22 ..
- drwx------  2 ubuntu ubuntu 16384 Oct 28 13:34 lost+found
-
- # Let's create an idmapped mount at /idmapped2 where we map uid and gid
- # 0 to uid and gid 2000
- root@f2-vm:/# ./mount-idmapped --map-mount b:0:2000:1 /mnt/ /idmapped2/
-
- root@f2-vm:/# ls -al /idmapped2/
- total 24
- drwxr-xr-x  3 2000 2000  4096 Oct 28 13:34 .
- drwxr-xr-x 31 root root  4096 Oct 28 13:39 ..
- drwx------  2 2000 2000 16384 Oct 28 13:34 lost+found
-
-Let's create another example where we idmap the rootfs filesystem
-without a mapping for uid 0 and gid 0:
-
- # Create an idmapped mount of for a full POSIX range of rootfs under
- # /mnt but without a mapping for uid 0 to reduce attack surface
-
- root@f2-vm:/# ./mount-idmapped --map-mount b:1:1:65536 / /mnt/
-
- # Since we don't have a mapping for uid and gid 0 all files owned by
- # uid and gid 0 should show up as uid and gid 65534:
- root@f2-vm:/# ls -al /mnt/
- total 664
- drwxr-xr-x 31 nobody nogroup   4096 Oct 28 13:39 .
- drwxr-xr-x 31 root   root      4096 Oct 28 13:39 ..
- lrwxrwxrwx  1 nobody nogroup      7 Aug 25 07:44 bin -> usr/bin
- drwxr-xr-x  4 nobody nogroup   4096 Oct 28 13:17 boot
- drwxr-xr-x  2 nobody nogroup   4096 Aug 25 07:48 dev
- drwxr-xr-x 81 nobody nogroup   4096 Oct 28 04:00 etc
- drwxr-xr-x  4 nobody nogroup   4096 Oct 28 04:00 home
- lrwxrwxrwx  1 nobody nogroup      7 Aug 25 07:44 lib -> usr/lib
- lrwxrwxrwx  1 nobody nogroup      9 Aug 25 07:44 lib32 -> usr/lib32
- lrwxrwxrwx  1 nobody nogroup      9 Aug 25 07:44 lib64 -> usr/lib64
- lrwxrwxrwx  1 nobody nogroup     10 Aug 25 07:44 libx32 -> usr/libx32
- drwx------  2 nobody nogroup  16384 Aug 25 07:47 lost+found
- drwxr-xr-x  2 nobody nogroup   4096 Aug 25 07:44 media
- drwxr-xr-x 31 nobody nogroup   4096 Oct 28 13:39 mnt
- drwxr-xr-x  2 nobody nogroup   4096 Aug 25 07:44 opt
- drwxr-xr-x  2 nobody nogroup   4096 Apr 15  2020 proc
- drwx--x--x  6 nobody nogroup   4096 Oct 28 13:34 root
- drwxr-xr-x  2 nobody nogroup   4096 Aug 25 07:46 run
- lrwxrwxrwx  1 nobody nogroup      8 Aug 25 07:44 sbin -> usr/sbin
- drwxr-xr-x  2 nobody nogroup   4096 Aug 25 07:44 srv
- drwxr-xr-x  2 nobody nogroup   4096 Apr 15  2020 sys
- drwxrwxrwt 10 nobody nogroup   4096 Oct 28 13:19 tmp
- drwxr-xr-x 14 nobody nogroup   4096 Oct 20 13:00 usr
- drwxr-xr-x 12 nobody nogroup   4096 Aug 25 07:45 var
-
- # Since we do have a mapping for uid and gid 1000 all files owned by
- # uid and gid 1000 should simply show up as uid and gid 1000:
- root@f2-vm:/# ls -al /mnt/home/ubuntu/
- total 40
- drwxr-xr-x 3 ubuntu ubuntu  4096 Oct 28 00:43 .
- drwxr-xr-x 4 nobody nogroup 4096 Oct 28 04:00 ..
- -rw------- 1 ubuntu ubuntu  2936 Oct 28 12:26 .bash_history
- -rw-r--r-- 1 ubuntu ubuntu   220 Feb 25  2020 .bash_logout
- -rw-r--r-- 1 ubuntu ubuntu  3771 Feb 25  2020 .bashrc
- -rw-r--r-- 1 ubuntu ubuntu   807 Feb 25  2020 .profile
- -rw-r--r-- 1 ubuntu ubuntu     0 Oct 16 16:11 .sudo_as_admin_successful
- -rw------- 1 ubuntu ubuntu  1144 Oct 28 00:43 .viminfo
-
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: linux-ext4@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
 Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
 ---
 /* v2 */
@@ -200,13 +90,6 @@ unchanged
 unchanged
 
 /* v4 */
-- Mauricio Vásquez Bernal <mauricio@kinvolk.io>:
-  - Fix spelling mistake in ext4's new idmapped mount config option.
-
-- Christoph Hellwig <hch@lst.de>:
-  - Drop the config option. If ever want an administrator to disable this
-    feature we can simply introduce a sysctl.
-
 - Serge Hallyn <serge@hallyn.com>:
   - Use "mnt_userns" to refer to a vfsmount's userns everywhere to make
     terminology consistent.
@@ -216,360 +99,131 @@ base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
 
 - Christoph Hellwig <hch@lst.de>:
   - Use new file_userns_helper().
-
-- Christian Brauner <christian.brauner@ubuntu.com>:
-  - Improve commit message.
 ---
- fs/ext4/acl.c    |  2 +-
- fs/ext4/ext4.h   | 13 +++++++------
- fs/ext4/ialloc.c |  7 ++++---
- fs/ext4/inode.c  | 11 ++++++-----
- fs/ext4/ioctl.c  | 19 +++++++++++--------
- fs/ext4/namei.c  | 30 ++++++++++++++++--------------
- fs/ext4/super.c  |  2 +-
- 7 files changed, 46 insertions(+), 38 deletions(-)
+ security/apparmor/domain.c |  9 ++++++---
+ security/apparmor/file.c   |  5 ++++-
+ security/apparmor/lsm.c    | 12 ++++++++----
+ 3 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/fs/ext4/acl.c b/fs/ext4/acl.c
-index 39f453ad05a0..c5eaffccecc3 100644
---- a/fs/ext4/acl.c
-+++ b/fs/ext4/acl.c
-@@ -246,7 +246,7 @@ ext4_set_acl(struct user_namespace *mnt_userns, struct inode *inode,
- 	ext4_fc_start_update(inode);
+diff --git a/security/apparmor/domain.c b/security/apparmor/domain.c
+index 16f184bc48de..9a1b31655d9e 100644
+--- a/security/apparmor/domain.c
++++ b/security/apparmor/domain.c
+@@ -10,12 +10,14 @@
  
- 	if ((type == ACL_TYPE_ACCESS) && acl) {
--		error = posix_acl_update_mode(&init_user_ns, inode, &mode, &acl);
-+		error = posix_acl_update_mode(mnt_userns, inode, &mode, &acl);
- 		if (error)
- 			goto out_stop;
- 		if (mode != inode->i_mode)
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 4846168249c2..58b62e08379b 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -2755,18 +2755,19 @@ extern int ext4fs_dirhash(const struct inode *dir, const char *name, int len,
+ #include <linux/errno.h>
+ #include <linux/fdtable.h>
++#include <linux/fs.h>
+ #include <linux/file.h>
+ #include <linux/mount.h>
+ #include <linux/syscalls.h>
+ #include <linux/tracehook.h>
+ #include <linux/personality.h>
+ #include <linux/xattr.h>
++#include <linux/user_namespace.h>
  
- /* ialloc.c */
- extern int ext4_mark_inode_used(struct super_block *sb, int ino);
--extern struct inode *__ext4_new_inode(handle_t *, struct inode *, umode_t,
-+extern struct inode *__ext4_new_inode(struct user_namespace *, handle_t *,
-+				      struct inode *, umode_t,
- 				      const struct qstr *qstr, __u32 goal,
- 				      uid_t *owner, __u32 i_flags,
- 				      int handle_type, unsigned int line_no,
- 				      int nblocks);
+ #include "include/audit.h"
+ #include "include/apparmorfs.h"
+@@ -858,8 +860,10 @@ int apparmor_bprm_creds_for_exec(struct linux_binprm *bprm)
+ 	const char *info = NULL;
+ 	int error = 0;
+ 	bool unsafe = false;
++	struct user_namespace *mnt_userns = file_user_ns(bprm->file);
++	kuid_t i_uid = i_uid_into_mnt(mnt_userns, file_inode(bprm->file));
+ 	struct path_cond cond = {
+-		file_inode(bprm->file)->i_uid,
++		i_uid,
+ 		file_inode(bprm->file)->i_mode
+ 	};
  
--#define ext4_new_inode(handle, dir, mode, qstr, goal, owner, i_flags) \
--	__ext4_new_inode((handle), (dir), (mode), (qstr), (goal), (owner), \
--			 i_flags, 0, 0, 0)
--#define ext4_new_inode_start_handle(dir, mode, qstr, goal, owner, \
-+#define ext4_new_inode(handle, dir, mode, qstr, goal, owner, i_flags)          \
-+	__ext4_new_inode(&init_user_ns, (handle), (dir), (mode), (qstr),       \
-+			 (goal), (owner), i_flags, 0, 0, 0)
-+#define ext4_new_inode_start_handle(mnt_userns, dir, mode, qstr, goal, owner, \
- 				    type, nblocks)		    \
--	__ext4_new_inode(NULL, (dir), (mode), (qstr), (goal), (owner), \
-+	__ext4_new_inode((mnt_userns), NULL, (dir), (mode), (qstr), (goal), (owner), \
- 			 0, (type), __LINE__, (nblocks))
- 
- 
-diff --git a/fs/ext4/ialloc.c b/fs/ext4/ialloc.c
-index 00c1ec6eee16..bf9028950a51 100644
---- a/fs/ext4/ialloc.c
-+++ b/fs/ext4/ialloc.c
-@@ -919,7 +919,8 @@ static int ext4_xattr_credits_for_new_inode(struct inode *dir, mode_t mode,
-  * For other inodes, search forward from the parent directory's block
-  * group to find a free inode.
-  */
--struct inode *__ext4_new_inode(handle_t *handle, struct inode *dir,
-+struct inode *__ext4_new_inode(struct user_namespace *mnt_userns,
-+			       handle_t *handle, struct inode *dir,
- 			       umode_t mode, const struct qstr *qstr,
- 			       __u32 goal, uid_t *owner, __u32 i_flags,
- 			       int handle_type, unsigned int line_no,
-@@ -969,10 +970,10 @@ struct inode *__ext4_new_inode(handle_t *handle, struct inode *dir,
- 		i_gid_write(inode, owner[1]);
- 	} else if (test_opt(sb, GRPID)) {
- 		inode->i_mode = mode;
--		inode->i_uid = current_fsuid();
-+		inode->i_uid = fsuid_into_mnt(mnt_userns);
- 		inode->i_gid = dir->i_gid;
- 	} else
--		inode_init_owner(&init_user_ns, inode, dir, mode);
-+		inode_init_owner(mnt_userns, inode, dir, mode);
- 
- 	if (ext4_has_feature_project(sb) &&
- 	    ext4_test_inode_flag(dir, EXT4_INODE_PROJINHERIT))
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 6e11e2d9d4a2..4139253fa37a 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -20,6 +20,7 @@
-  */
- 
- #include <linux/fs.h>
+@@ -967,8 +971,7 @@ int apparmor_bprm_creds_for_exec(struct linux_binprm *bprm)
+ 	error = fn_for_each(label, profile,
+ 			aa_audit_file(profile, &nullperms, OP_EXEC, MAY_EXEC,
+ 				      bprm->filename, NULL, new,
+-				      file_inode(bprm->file)->i_uid, info,
+-				      error));
++				      i_uid, info, error));
+ 	aa_put_label(new);
+ 	goto done;
+ }
+diff --git a/security/apparmor/file.c b/security/apparmor/file.c
+index 92acf9a49405..a00db7eaefc8 100644
+--- a/security/apparmor/file.c
++++ b/security/apparmor/file.c
+@@ -11,6 +11,8 @@
+ #include <linux/tty.h>
+ #include <linux/fdtable.h>
+ #include <linux/file.h>
++#include <linux/fs.h>
 +#include <linux/mount.h>
- #include <linux/time.h>
- #include <linux/highuid.h>
- #include <linux/pagemap.h>
-@@ -5334,7 +5335,7 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 				  ATTR_GID | ATTR_TIMES_SET))))
- 		return -EPERM;
  
--	error = setattr_prepare(&init_user_ns, dentry, attr);
-+	error = setattr_prepare(mnt_userns, dentry, attr);
- 	if (error)
- 		return error;
- 
-@@ -5509,7 +5510,7 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 	}
- 
- 	if (!error) {
--		setattr_copy(&init_user_ns, inode, attr);
-+		setattr_copy(mnt_userns, inode, attr);
- 		mark_inode_dirty(inode);
- 	}
- 
-@@ -5521,7 +5522,7 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 		ext4_orphan_del(NULL, inode);
- 
- 	if (!error && (ia_valid & ATTR_MODE))
--		rc = posix_acl_chmod(&init_user_ns, inode, inode->i_mode);
-+		rc = posix_acl_chmod(mnt_userns, inode, inode->i_mode);
- 
- err_out:
- 	if  (error)
-@@ -5568,7 +5569,7 @@ int ext4_getattr(struct user_namespace *mnt_userns, const struct path *path,
- 				  STATX_ATTR_NODUMP |
- 				  STATX_ATTR_VERITY);
- 
--	generic_fillattr(&init_user_ns, inode, stat);
-+	generic_fillattr(mnt_userns, inode, stat);
- 	return 0;
- }
- 
-@@ -5579,7 +5580,7 @@ int ext4_file_getattr(struct user_namespace *mnt_userns,
- 	struct inode *inode = d_inode(path->dentry);
- 	u64 delalloc_blocks;
- 
--	ext4_getattr(&init_user_ns, path, stat, request_mask, query_flags);
-+	ext4_getattr(mnt_userns, path, stat, request_mask, query_flags);
- 
- 	/*
- 	 * If there is inline data in the inode, the inode will normally not
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index 42335ae5dd94..bcd1e23736c2 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -107,10 +107,12 @@ void ext4_reset_inode_seed(struct inode *inode)
-  * important fields of the inodes.
-  *
-  * @sb:         the super block of the filesystem
-+ * @mnt_userns:	user namespace of the mount the inode was found from
-  * @inode:      the inode to swap with EXT4_BOOT_LOADER_INO
-  *
-  */
- static long swap_inode_boot_loader(struct super_block *sb,
-+				struct user_namespace *mnt_userns,
- 				struct inode *inode)
+ #include "include/apparmor.h"
+ #include "include/audit.h"
+@@ -508,8 +510,9 @@ static int __file_path_perm(const char *op, struct aa_label *label,
  {
- 	handle_t *handle;
-@@ -139,7 +141,7 @@ static long swap_inode_boot_loader(struct super_block *sb,
- 	}
+ 	struct aa_profile *profile;
+ 	struct aa_perms perms = {};
++	struct user_namespace *mnt_userns = file_user_ns(file);
+ 	struct path_cond cond = {
+-		.uid = file_inode(file)->i_uid,
++		.uid = i_uid_into_mnt(mnt_userns, file_inode(file)),
+ 		.mode = file_inode(file)->i_mode
+ 	};
+ 	char *buffer;
+diff --git a/security/apparmor/lsm.c b/security/apparmor/lsm.c
+index 1b0aba8eb723..7468d23c136e 100644
+--- a/security/apparmor/lsm.c
++++ b/security/apparmor/lsm.c
+@@ -224,7 +224,8 @@ static int common_perm(const char *op, const struct path *path, u32 mask,
+  */
+ static int common_perm_cond(const char *op, const struct path *path, u32 mask)
+ {
+-	struct path_cond cond = { d_backing_inode(path->dentry)->i_uid,
++	struct user_namespace *mnt_userns = mnt_user_ns(path->mnt);
++	struct path_cond cond = { i_uid_into_mnt(mnt_userns, d_backing_inode(path->dentry)),
+ 				  d_backing_inode(path->dentry)->i_mode
+ 	};
  
- 	if (IS_RDONLY(inode) || IS_APPEND(inode) || IS_IMMUTABLE(inode) ||
--	    !inode_owner_or_capable(&init_user_ns, inode) || !capable(CAP_SYS_ADMIN)) {
-+	    !inode_owner_or_capable(mnt_userns, inode) || !capable(CAP_SYS_ADMIN)) {
- 		err = -EPERM;
- 		goto journal_err_out;
- 	}
-@@ -814,6 +816,7 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 	struct inode *inode = file_inode(filp);
- 	struct super_block *sb = inode->i_sb;
- 	struct ext4_inode_info *ei = EXT4_I(inode);
-+	struct user_namespace *mnt_userns = file_user_ns(filp);
- 	unsigned int flags;
+@@ -266,12 +267,13 @@ static int common_perm_rm(const char *op, const struct path *dir,
+ 			  struct dentry *dentry, u32 mask)
+ {
+ 	struct inode *inode = d_backing_inode(dentry);
++	struct user_namespace *mnt_userns = mnt_user_ns(dir->mnt);
+ 	struct path_cond cond = { };
  
- 	ext4_debug("cmd = %u, arg = %lu\n", cmd, arg);
-@@ -829,7 +832,7 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 	case FS_IOC_SETFLAGS: {
- 		int err;
- 
--		if (!inode_owner_or_capable(&init_user_ns, inode))
-+		if (!inode_owner_or_capable(mnt_userns, inode))
- 			return -EACCES;
- 
- 		if (get_user(flags, (int __user *) arg))
-@@ -871,7 +874,7 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 		__u32 generation;
- 		int err;
- 
--		if (!inode_owner_or_capable(&init_user_ns, inode))
-+		if (!inode_owner_or_capable(mnt_userns, inode))
- 			return -EPERM;
- 
- 		if (ext4_has_metadata_csum(inode->i_sb)) {
-@@ -1010,7 +1013,7 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 	case EXT4_IOC_MIGRATE:
- 	{
- 		int err;
--		if (!inode_owner_or_capable(&init_user_ns, inode))
-+		if (!inode_owner_or_capable(mnt_userns, inode))
- 			return -EACCES;
- 
- 		err = mnt_want_write_file(filp);
-@@ -1032,7 +1035,7 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 	case EXT4_IOC_ALLOC_DA_BLKS:
- 	{
- 		int err;
--		if (!inode_owner_or_capable(&init_user_ns, inode))
-+		if (!inode_owner_or_capable(mnt_userns, inode))
- 			return -EACCES;
- 
- 		err = mnt_want_write_file(filp);
-@@ -1051,7 +1054,7 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 		err = mnt_want_write_file(filp);
- 		if (err)
- 			return err;
--		err = swap_inode_boot_loader(sb, inode);
-+		err = swap_inode_boot_loader(sb, mnt_userns, inode);
- 		mnt_drop_write_file(filp);
- 		return err;
- 	}
-@@ -1214,7 +1217,7 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 
- 	case EXT4_IOC_CLEAR_ES_CACHE:
- 	{
--		if (!inode_owner_or_capable(&init_user_ns, inode))
-+		if (!inode_owner_or_capable(mnt_userns, inode))
- 			return -EACCES;
- 		ext4_clear_inode_es(inode);
+ 	if (!inode || !path_mediated_fs(dentry))
  		return 0;
-@@ -1260,7 +1263,7 @@ static long __ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 			return -EFAULT;
  
- 		/* Make sure caller has proper permission */
--		if (!inode_owner_or_capable(&init_user_ns, inode))
-+		if (!inode_owner_or_capable(mnt_userns, inode))
- 			return -EACCES;
+-	cond.uid = inode->i_uid;
++	cond.uid = i_uid_into_mnt(mnt_userns, inode);
+ 	cond.mode = inode->i_mode;
  
- 		if (fa.fsx_xflags & ~EXT4_SUPPORTED_FS_XFLAGS)
-diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
-index e0eb5e37f65a..8272c8b1575f 100644
---- a/fs/ext4/namei.c
-+++ b/fs/ext4/namei.c
-@@ -2610,8 +2610,8 @@ static int ext4_create(struct user_namespace *mnt_userns, struct inode *dir,
- 	credits = (EXT4_DATA_TRANS_BLOCKS(dir->i_sb) +
- 		   EXT4_INDEX_EXTRA_TRANS_BLOCKS + 3);
- retry:
--	inode = ext4_new_inode_start_handle(dir, mode, &dentry->d_name, 0,
--					    NULL, EXT4_HT_DIR, credits);
-+	inode = ext4_new_inode_start_handle(mnt_userns, dir, mode, &dentry->d_name,
-+					    0, NULL, EXT4_HT_DIR, credits);
- 	handle = ext4_journal_current_handle();
- 	err = PTR_ERR(inode);
- 	if (!IS_ERR(inode)) {
-@@ -2645,8 +2645,8 @@ static int ext4_mknod(struct user_namespace *mnt_userns, struct inode *dir,
- 	credits = (EXT4_DATA_TRANS_BLOCKS(dir->i_sb) +
- 		   EXT4_INDEX_EXTRA_TRANS_BLOCKS + 3);
- retry:
--	inode = ext4_new_inode_start_handle(dir, mode, &dentry->d_name, 0,
--					    NULL, EXT4_HT_DIR, credits);
-+	inode = ext4_new_inode_start_handle(mnt_userns, dir, mode, &dentry->d_name,
-+					    0, NULL, EXT4_HT_DIR, credits);
- 	handle = ext4_journal_current_handle();
- 	err = PTR_ERR(inode);
- 	if (!IS_ERR(inode)) {
-@@ -2677,7 +2677,7 @@ static int ext4_tmpfile(struct user_namespace *mnt_userns, struct inode *dir,
- 		return err;
+ 	return common_perm_dir_dentry(op, dir, dentry, mask, &cond);
+@@ -361,11 +363,12 @@ static int apparmor_path_rename(const struct path *old_dir, struct dentry *old_d
  
- retry:
--	inode = ext4_new_inode_start_handle(dir, mode,
-+	inode = ext4_new_inode_start_handle(mnt_userns, dir, mode,
- 					    NULL, 0, NULL,
- 					    EXT4_HT_DIR,
- 			EXT4_MAXQUOTAS_INIT_BLOCKS(dir->i_sb) +
-@@ -2792,7 +2792,7 @@ static int ext4_mkdir(struct user_namespace *mnt_userns, struct inode *dir,
- 	credits = (EXT4_DATA_TRANS_BLOCKS(dir->i_sb) +
- 		   EXT4_INDEX_EXTRA_TRANS_BLOCKS + 3);
- retry:
--	inode = ext4_new_inode_start_handle(dir, S_IFDIR | mode,
-+	inode = ext4_new_inode_start_handle(mnt_userns, dir, S_IFDIR | mode,
- 					    &dentry->d_name,
- 					    0, NULL, EXT4_HT_DIR, credits);
- 	handle = ext4_journal_current_handle();
-@@ -3329,7 +3329,7 @@ static int ext4_symlink(struct user_namespace *mnt_userns, struct inode *dir,
- 			  EXT4_INDEX_EXTRA_TRANS_BLOCKS + 3;
- 	}
+ 	label = begin_current_label_crit_section();
+ 	if (!unconfined(label)) {
++		struct user_namespace *mnt_userns = mnt_user_ns(old_dir->mnt);
+ 		struct path old_path = { .mnt = old_dir->mnt,
+ 					 .dentry = old_dentry };
+ 		struct path new_path = { .mnt = new_dir->mnt,
+ 					 .dentry = new_dentry };
+-		struct path_cond cond = { d_backing_inode(old_dentry)->i_uid,
++		struct path_cond cond = { i_uid_into_mnt(mnt_userns, d_backing_inode(old_dentry)),
+ 					  d_backing_inode(old_dentry)->i_mode
+ 		};
  
--	inode = ext4_new_inode_start_handle(dir, S_IFLNK|S_IRWXUGO,
-+	inode = ext4_new_inode_start_handle(mnt_userns, dir, S_IFLNK|S_IRWXUGO,
- 					    &dentry->d_name, 0, NULL,
- 					    EXT4_HT_DIR, credits);
- 	handle = ext4_journal_current_handle();
-@@ -3661,7 +3661,8 @@ static void ext4_update_dir_count(handle_t *handle, struct ext4_renament *ent)
- 	}
- }
+@@ -420,8 +423,9 @@ static int apparmor_file_open(struct file *file)
  
--static struct inode *ext4_whiteout_for_rename(struct ext4_renament *ent,
-+static struct inode *ext4_whiteout_for_rename(struct user_namespace *mnt_userns,
-+					      struct ext4_renament *ent,
- 					      int credits, handle_t **h)
- {
- 	struct inode *wh;
-@@ -3675,7 +3676,8 @@ static struct inode *ext4_whiteout_for_rename(struct ext4_renament *ent,
- 	credits += (EXT4_MAXQUOTAS_TRANS_BLOCKS(ent->dir->i_sb) +
- 		    EXT4_XATTR_TRANS_BLOCKS + 4);
- retry:
--	wh = ext4_new_inode_start_handle(ent->dir, S_IFCHR | WHITEOUT_MODE,
-+	wh = ext4_new_inode_start_handle(mnt_userns, ent->dir,
-+					 S_IFCHR | WHITEOUT_MODE,
- 					 &ent->dentry->d_name, 0, NULL,
- 					 EXT4_HT_DIR, credits);
+ 	label = aa_get_newest_cred_label(file->f_cred);
+ 	if (!unconfined(label)) {
++		struct user_namespace *mnt_userns = file_user_ns(file);
+ 		struct inode *inode = file_inode(file);
+-		struct path_cond cond = { inode->i_uid, inode->i_mode };
++		struct path_cond cond = { i_uid_into_mnt(mnt_userns, inode), inode->i_mode };
  
-@@ -3702,9 +3704,9 @@ static struct inode *ext4_whiteout_for_rename(struct ext4_renament *ent,
-  * while new_{dentry,inode) refers to the destination dentry/inode
-  * This comes from rename(const char *oldpath, const char *newpath)
-  */
--static int ext4_rename(struct inode *old_dir, struct dentry *old_dentry,
--		       struct inode *new_dir, struct dentry *new_dentry,
--		       unsigned int flags)
-+static int ext4_rename(struct user_namespace *mnt_userns, struct inode *old_dir,
-+		       struct dentry *old_dentry, struct inode *new_dir,
-+		       struct dentry *new_dentry, unsigned int flags)
- {
- 	handle_t *handle = NULL;
- 	struct ext4_renament old = {
-@@ -3788,7 +3790,7 @@ static int ext4_rename(struct inode *old_dir, struct dentry *old_dentry,
- 			goto end_rename;
- 		}
- 	} else {
--		whiteout = ext4_whiteout_for_rename(&old, credits, &handle);
-+		whiteout = ext4_whiteout_for_rename(mnt_userns, &old, credits, &handle);
- 		if (IS_ERR(whiteout)) {
- 			retval = PTR_ERR(whiteout);
- 			whiteout = NULL;
-@@ -4103,7 +4105,7 @@ static int ext4_rename2(struct user_namespace *mnt_userns,
- 					 new_dir, new_dentry);
- 	}
- 
--	return ext4_rename(old_dir, old_dentry, new_dir, new_dentry, flags);
-+	return ext4_rename(mnt_userns, old_dir, old_dentry, new_dir, new_dentry, flags);
- }
- 
- /*
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 21121787c874..6d2f082c462d 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -6608,7 +6608,7 @@ static struct file_system_type ext4_fs_type = {
- 	.name		= "ext4",
- 	.mount		= ext4_mount,
- 	.kill_sb	= kill_block_super,
--	.fs_flags	= FS_REQUIRES_DEV,
-+	.fs_flags	= FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
- };
- MODULE_ALIAS_FS("ext4");
- 
+ 		error = aa_path_perm(OP_OPEN, label, &file->f_path, 0,
+ 				     aa_map_file_to_perms(file), &cond);
 -- 
 2.30.0
 
