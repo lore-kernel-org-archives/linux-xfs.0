@@ -3,27 +3,27 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53D2EC4160E
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:03:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1100DC4332B
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:03:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0ADD3221FF
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:03:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B1AC0221FF
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:03:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393902AbhALWDu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 17:03:50 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:42954 "EHLO
+        id S2393895AbhALWDr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 17:03:47 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:42911 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732008AbhALWDs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 17:03:48 -0500
+        with ESMTP id S2393847AbhALWDo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 17:03:44 -0500
 Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
         by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.86_2)
         (envelope-from <christian.brauner@ubuntu.com>)
-        id 1kzRkf-0003bd-Jk; Tue, 12 Jan 2021 22:02:57 +0000
+        id 1kzRkP-0003bd-Cd; Tue, 12 Jan 2021 22:02:41 +0000
 From:   Christian Brauner <christian.brauner@ubuntu.com>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Christoph Hellwig <hch@infradead.org>,
@@ -59,681 +59,818 @@ Cc:     John Johansen <john.johansen@canonical.com>,
         linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 06/42] fs: add mount_setattr()
-Date:   Tue, 12 Jan 2021 23:00:48 +0100
-Message-Id: <20210112220124.837960-7-christian.brauner@ubuntu.com>
+        Christian Brauner <christian.brauner@ubuntu.com>
+Subject: [PATCH v5 00/42] idmapped mounts
+Date:   Tue, 12 Jan 2021 23:00:42 +0100
+Message-Id: <20210112220124.837960-1-christian.brauner@ubuntu.com>
 X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210112220124.837960-1-christian.brauner@ubuntu.com>
-References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-X-Patch-Hashes: v=1; h=sha256; i=W+eEJHNrlkV/b8gMOjwmCnJaxH/2Jd0g2RrCW3G+aTQ=; m=QcgL0cjyvfcZKIrxSMNhdjdTnW09uylRO383w6MgQlU=; p=rflNSi8KbXDs975d5YeoJSwOhSr850AR5uEfCK3Tvlg=; g=5d732841496a08de53bce1e1adfbb590e89bff9c
-X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCX/4YtQAKCRCRxhvAZXjcotz9AQDx8YG iWatQjz46otACqmQQDc/+1yojdOoYx68RtxCSHAEAnlAeisLQCvKCYItrE4BpjT557n68NgdT74Ly +RhgBww=
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This implements the missing mount_setattr() syscall. While the new mount
-api allows to change the properties of a superblock there is currently
-no way to change the properties of a mount or a mount tree using file
-descriptors which the new mount api is based on. In addition the old
-mount api has the restriction that mount options cannot be applied
-recursively. This hasn't changed since changing mount options on a
-per-mount basis was implemented in [1] and has been a frequent request
-not just for convenience but also for security reasons. The legacy
-mount syscall is unable to accommodate this behavior without introducing
-a whole new set of flags because MS_REC | MS_REMOUNT | MS_BIND |
-MS_RDONLY | MS_NOEXEC | [...] only apply the mount option to the topmost
-mount. Changing MS_REC to apply to the whole mount tree would mean
-introducing a significant uapi change and would likely cause significant
-regressions.
+Hey everyone,
 
-The new mount_setattr() syscall allows to recursively clear and set
-mount options in one shot. Multiple calls to change mount options
-requesting the same changes are idempotent:
+The only major change is the inclusion of hch's patch to port XFS to
+support idmapped mounts. Thanks to Christoph for doing that work.
+(For a full list of major changes between versions see the end of this
+ cover letter.
+ Please also note the large xfstests testsuite in patch 42 that has been
+ kept as part of this series. It verifies correct vfs behavior with and
+ without idmapped mounts including covering newer vfs features such as
+ io_uring.
+ I currently still plan to target the v5.12 merge window.)
 
-int mount_setattr(int dfd, const char *path, unsigned flags,
-                  struct mount_attr *uattr, size_t usize);
+With this patchset we make it possible to attach idmappings to mounts,
+i.e. simply put different bind mounts can expose the same file or
+directory with different ownership.
+Shifting of ownership on a per-mount basis handles a wide range of
+long standing use-cases. Here are just a few:
+- Shifting of a subset of ownership-less filesystems (vfat) for use by
+  multiple users, effectively allowing for DAC on such devices
+  (systemd, Android, ...)
+- Allow remapping uid/gid on external filesystems or paths (USB sticks,
+  network filesystem, ...) to match the local system's user and groups.
+  (David Howells intends to port AFS as a first candidate.)
+- Shifting of a container rootfs or base image without having to mangle
+  every file (runc, Docker, containerd, k8s, LXD, systemd ...)
+- Sharing of data between host or privileged containers with
+  unprivileged containers (runC, Docker, containerd, k8s, LXD, ...)
+- Data sharing between multiple user namespaces with incompatible maps
+  (LXD, k8s, ...)
 
-Flags to modify path resolution behavior are specified in the @flags
-argument. Currently, AT_EMPTY_PATH, AT_RECURSIVE, AT_SYMLINK_NOFOLLOW,
-and AT_NO_AUTOMOUNT are supported. If useful, additional lookup flags to
-restrict path resolution as introduced with openat2() might be supported
-in the future.
+There has been significant interest in this patchset as evidenced by
+user commenting on previous version of this patchset. They include
+containerd, ChromeOS, systemd, LXD and a range of others. There is
+already a patchset up for containerd, the default Kubernetes container
+runtime https://github.com/containerd/containerd/pull/4734
+to make use of this. systemd intends to use it in their systemd-homed
+implementation for portable home directories. ChromeOS wants to make use
+of it to share data between the host and the Linux containers they run
+on Chrome- and Pixelbooks.
+(Fwiw, for fun and since I wanted to do this for a long time I've ported
+ my home directory to be completely portable with a simple service file
+ that now mounts my home directory on an ext4 formatted usb stick with
+ an id mapping mapping all files to the random uid I'm assigned at
+ login.)
 
-The mount_setattr() syscall can be expected to grow over time and is
-designed with extensibility in mind. It follows the extensible syscall
-pattern we have used with other syscalls such as openat2(), clone3(),
-sched_{set,get}attr(), and others.
-The set of mount options is passed in the uapi struct mount_attr which
-currently has the following layout:
+Making it possible to share directories and mounts between users with
+different uids and gids is itself quite an important use-case in
+distributed systems environments. It's of course especially useful in
+general for portable usb sticks, sharing data between multiple users in,
+and sharing home directories between multiple users. The last example is
+now elegantly expressed in systemd's homed concept for portable home
+directories. As mentioned above, idmapped mounts also allow data from
+the host to be shared with unprivileged containers, between privileged
+and unprivileged containers simultaneously and in addition also between
+unprivileged containers with different idmappings whenever they are used
+to isolate one container completely from another container.
 
-struct mount_attr {
-	__u64 attr_set;
-	__u64 attr_clr;
-	__u64 propagation;
-};
+We have implemented and proposed multiple solutions to this before. This
+included the introduction of fsid mappings, a tiny filesystem I've
+authored with Seth Forshee that is currently carried in Ubuntu that has
+shown to be the wrong approach, and the conceptual hack of calling
+override creds directly in the vfs. In addition, to some of these
+solutions being hacky none of these solutions have covered all of the
+above use-cases.
 
-The @attr_set and @attr_clr members are used to clear and set mount
-options. This way a user can e.g. request that a set of flags is to be
-raised such as turning mounts readonly by raising MOUNT_ATTR_RDONLY in
-@attr_set while at the same time requesting that another set of flags is
-to be lowered such as removing noexec from a mount tree by specifying
-MOUNT_ATTR_NOEXEC in @attr_clr.
+Idmappings become a property of struct vfsmount instead of tying it to a
+process being inside of a user namespace which has been the case for all
+other proposed approaches. It also allows to pass down the user
+namespace into the filesystems which is a clean way instead of violating
+calling conventions by strapping the user namespace information that is
+a property of the mount to the caller's credentials or similar hacks.
+Each mount can have a separate idmapping and idmapped mounts can even be
+created in the initial user namespace unblocking a range of use-cases.
 
-Note, since the MOUNT_ATTR_<atime> values are an enum starting from 0,
-not a bitmap, users wanting to transition to a different atime setting
-cannot simply specify the atime setting in @attr_set, but must also
-specify MOUNT_ATTR__ATIME in the @attr_clr field. So we ensure that
-MOUNT_ATTR__ATIME can't be partially set in @attr_clr and that @attr_set
-can't have any atime bits set if MOUNT_ATTR__ATIME isn't set in
-@attr_clr.
+To this end the vfsmount struct gains a new struct user_namespace
+member. The idmapping of the user namespace becomes the idmapping of the
+mount. A caller that is privileged with respect to the user namespace of
+the superblock of the underlying filesystem can create an idmapped
+mount. In the future, we can enable unprivileged use-cases by checking
+whether the caller is privileged wrt to the user namespace that an
+already idmapped mount has been marked with, allowing them to change the
+idmapping. For now, keep things simple until the need arises.
+Note, that with syscall interception it is already possible to intercept
+idmapped mount requests from unprivileged containers and handle them in
+a sufficiently privileged container manager. Support for this is already
+available in LXD and will be available in runC where syscall
+interception is currently in the process of becoming part of the runtime
+spec: https://github.com/opencontainers/runtime-spec/pull/1074.
 
-The @propagation field lets callers specify the propagation type of a
-mount tree. Propagation is a single property that has four different
-settings and as such is not really a flag argument but an enum.
-Specifically, it would be unclear what setting and clearing propagation
-settings in combination would amount to. The legacy mount() syscall thus
-forbids the combination of multiple propagation settings too. The goal
-is to keep the semantics of mount propagation somewhat simple as they
-are overly complex as it is.
+The user namespace the mount will be marked with can be specified by
+passing a file descriptor refering to the user namespace as an argument
+to the new mount_setattr() syscall together with the new
+MOUNT_ATTR_IDMAP flag. By default vfsmounts are marked with the initial
+user namespace and no behavioral or performance changes are observed.
+All mapping operations are nops for the initial user namespace. When a
+file/inode is accessed through an idmapped mount the i_uid and i_gid of
+the inode will be remapped according to the user namespace the mount has
+been marked with.
 
-[1]: commit 2e4b7fcd9260 ("[PATCH] r/o bind mounts: honor mount writer counts at remount")
-Cc: David Howells <dhowells@redhat.com>
-Cc: Aleksa Sarai <cyphar@cyphar.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
-Cc: linux-api@vger.kernel.org
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
----
-/* v2 */
-- Christoph Hellwig <hch@lst.de>:
-  - Split into multiple helpers.
+In order to support idmapped mounts, filesystems need to be changed and
+mark themselves with the FS_ALLOW_IDMAP flag in fs_flags. The initial
+version contains fat, ext4, and xfs including a list of examples.
+But patches for other filesystems are actively worked on and will be
+sent out separately. We are here to see this through and there are
+multiple people involved in converting filesystems. So filesystem
+developers are not left alone with this and are provided with a large
+testsuite to verify that their port is correct.
 
-/* v3 */
-- kernel test robot <lkp@intel.com>:
-  - Fix unknown __u64 type by including linux/types.h in linux/mount.h.
+There is a simple tool available at
+https://github.com/brauner/mount-idmapped that allows to create idmapped
+mounts so people can play with this patch series. Here are a few
+illustrations:
 
-/* v4 */
-- Christoph Hellwig <hch@lst.de>:
-  - Make sure lines wrap at 80 chars.
-  - Move struct mount_kattr out of the internal.h header and completely
-    into fs/namespace.c as it's not used outside of that file.
-  - Add missing space between ( and { when initializing mount_kattr.
-  - Split flag validation and calculation into separate preparatory
-    patch.
-  - Simplify flag validation in build_mount_kattr() to avoid
-    upper_32_bits() and lower_32_bits() calls. This will also lead to
-    better code generation.
-  - Remove new propagation enums and simply use the old flags.
-  - Strictly adhere to 80 char limit.
-  - Restructure the time setting code in build_mount_kattr().
+1. Create a simple idmapped mount of another user's home directory
+
+u1001@f2-vm:/$ sudo ./mount-idmapped --map-mount b:1000:1001:1 /home/ubuntu/ /mnt
+u1001@f2-vm:/$ ls -al /home/ubuntu/
+total 28
+drwxr-xr-x 2 ubuntu ubuntu 4096 Oct 28 22:07 .
+drwxr-xr-x 4 root   root   4096 Oct 28 04:00 ..
+-rw------- 1 ubuntu ubuntu 3154 Oct 28 22:12 .bash_history
+-rw-r--r-- 1 ubuntu ubuntu  220 Feb 25  2020 .bash_logout
+-rw-r--r-- 1 ubuntu ubuntu 3771 Feb 25  2020 .bashrc
+-rw-r--r-- 1 ubuntu ubuntu  807 Feb 25  2020 .profile
+-rw-r--r-- 1 ubuntu ubuntu    0 Oct 16 16:11 .sudo_as_admin_successful
+-rw------- 1 ubuntu ubuntu 1144 Oct 28 00:43 .viminfo
+u1001@f2-vm:/$ ls -al /mnt/
+total 28
+drwxr-xr-x  2 u1001 u1001 4096 Oct 28 22:07 .
+drwxr-xr-x 29 root  root  4096 Oct 28 22:01 ..
+-rw-------  1 u1001 u1001 3154 Oct 28 22:12 .bash_history
+-rw-r--r--  1 u1001 u1001  220 Feb 25  2020 .bash_logout
+-rw-r--r--  1 u1001 u1001 3771 Feb 25  2020 .bashrc
+-rw-r--r--  1 u1001 u1001  807 Feb 25  2020 .profile
+-rw-r--r--  1 u1001 u1001    0 Oct 16 16:11 .sudo_as_admin_successful
+-rw-------  1 u1001 u1001 1144 Oct 28 00:43 .viminfo
+u1001@f2-vm:/$ touch /mnt/my-file
+u1001@f2-vm:/$ setfacl -m u:1001:rwx /mnt/my-file
+u1001@f2-vm:/$ sudo setcap -n 1001 cap_net_raw+ep /mnt/my-file
+u1001@f2-vm:/$ ls -al /mnt/my-file
+-rw-rwxr--+ 1 u1001 u1001 0 Oct 28 22:14 /mnt/my-file
+u1001@f2-vm:/$ ls -al /home/ubuntu/my-file
+-rw-rwxr--+ 1 ubuntu ubuntu 0 Oct 28 22:14 /home/ubuntu/my-file
+u1001@f2-vm:/$ getfacl /mnt/my-file
+getfacl: Removing leading '/' from absolute path names
+# file: mnt/my-file
+# owner: u1001
+# group: u1001
+user::rw-
+user:u1001:rwx
+group::rw-
+mask::rwx
+other::r--
+u1001@f2-vm:/$ getfacl /home/ubuntu/my-file
+getfacl: Removing leading '/' from absolute path names
+# file: home/ubuntu/my-file
+# owner: ubuntu
+# group: ubuntu
+user::rw-
+user:ubuntu:rwx
+group::rw-
+mask::rwx
+other::r--
+
+2. Create mapping of the whole ext4 rootfs without a mapping for uid and gid 0
+
+ubuntu@f2-vm:~$ sudo /mount-idmapped --map-mount b:1:1:65536 / /mnt/
+ubuntu@f2-vm:~$ findmnt | grep mnt
+└─/mnt                                /dev/sda2  ext4       rw,relatime
+  └─/mnt/mnt                          /dev/sda2  ext4       rw,relatime
+ubuntu@f2-vm:~$ sudo mkdir /AS-ROOT-CAN-CREATE
+ubuntu@f2-vm:~$ sudo mkdir /mnt/AS-ROOT-CANT-CREATE
+mkdir: cannot create directory ‘/mnt/AS-ROOT-CANT-CREATE’: Value too large for defined data type
+ubuntu@f2-vm:~$ mkdir /mnt/home/ubuntu/AS-USER-1000-CAN-CREATE
+
+3. Create a vfat usb mount and expose to user 1001 and 5000
+
+ubuntu@f2-vm:/$ sudo mount /dev/sdb /mnt
+ubuntu@f2-vm:/$ findmnt  | grep mnt
+└─/mnt                                /dev/sdb vfat       rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro
+ubuntu@f2-vm:/$ ls -al /mnt
+total 12
+drwxr-xr-x  2 root root 4096 Jan  1  1970 .
+drwxr-xr-x 34 root root 4096 Oct 28 22:24 ..
+-rwxr-xr-x  1 root root    4 Oct 28 03:44 aaa
+-rwxr-xr-x  1 root root    0 Oct 28 01:09 bbb
+ubuntu@f2-vm:/$ sudo /mount-idmapped --map-mount b:0:1001:1 /mnt /mnt-1001/
+ubuntu@f2-vm:/$ ls -al /mnt-1001/
+total 12
+drwxr-xr-x  2 u1001 u1001 4096 Jan  1  1970 .
+drwxr-xr-x 34 root  root  4096 Oct 28 22:24 ..
+-rwxr-xr-x  1 u1001 u1001    4 Oct 28 03:44 aaa
+-rwxr-xr-x  1 u1001 u1001    0 Oct 28 01:09 bbb
+ubuntu@f2-vm:/$ sudo /mount-idmapped --map-mount b:0:5000:1 /mnt /mnt-5000/
+ubuntu@f2-vm:/$ ls -al /mnt-5000/
+total 12
+drwxr-xr-x  2 5000 5000 4096 Jan  1  1970 .
+drwxr-xr-x 34 root root 4096 Oct 28 22:24 ..
+-rwxr-xr-x  1 5000 5000    4 Oct 28 03:44 aaa
+-rwxr-xr-x  1 5000 5000    0 Oct 28 01:09 bbb
+
+4. Create an idmapped rootfs mount for a container
+
+root@f2-vm:~# ls -al /var/lib/lxc/f2/rootfs/
+total 68
+drwxr-xr-x 17 20000 20000 4096 Sep 24 07:48 .
+drwxrwx---  3 20000 20000 4096 Oct 16 19:26 ..
+lrwxrwxrwx  1 20000 20000    7 Sep 24 07:43 bin -> usr/bin
+drwxr-xr-x  2 20000 20000 4096 Apr 15  2020 boot
+drwxr-xr-x  3 20000 20000 4096 Oct 16 19:26 dev
+drwxr-xr-x 61 20000 20000 4096 Oct 16 19:26 etc
+drwxr-xr-x  3 20000 20000 4096 Sep 24 07:45 home
+lrwxrwxrwx  1 20000 20000    7 Sep 24 07:43 lib -> usr/lib
+lrwxrwxrwx  1 20000 20000    9 Sep 24 07:43 lib32 -> usr/lib32
+lrwxrwxrwx  1 20000 20000    9 Sep 24 07:43 lib64 -> usr/lib64
+lrwxrwxrwx  1 20000 20000   10 Sep 24 07:43 libx32 -> usr/libx32
+drwxr-xr-x  2 20000 20000 4096 Sep 24 07:43 media
+drwxr-xr-x  2 20000 20000 4096 Sep 24 07:43 mnt
+drwxr-xr-x  2 20000 20000 4096 Sep 24 07:43 opt
+drwxr-xr-x  2 20000 20000 4096 Apr 15  2020 proc
+drwx------  2 20000 20000 4096 Sep 24 07:43 root
+drwxr-xr-x  2 20000 20000 4096 Sep 24 07:45 run
+lrwxrwxrwx  1 20000 20000    8 Sep 24 07:43 sbin -> usr/sbin
+drwxr-xr-x  2 20000 20000 4096 Sep 24 07:43 srv
+drwxr-xr-x  2 20000 20000 4096 Apr 15  2020 sys
+drwxrwxrwt  2 20000 20000 4096 Sep 24 07:44 tmp
+drwxr-xr-x 13 20000 20000 4096 Sep 24 07:43 usr
+drwxr-xr-x 12 20000 20000 4096 Sep 24 07:44 var
+root@f2-vm:~# /mount-idmapped --map-mount b:20000:10000:100000 /var/lib/lxc/f2/rootfs/ /mnt
+root@f2-vm:~# ls -al /mnt
+total 68
+drwxr-xr-x 17 10000 10000 4096 Sep 24 07:48 .
+drwxr-xr-x 34 root  root  4096 Oct 28 22:24 ..
+lrwxrwxrwx  1 10000 10000    7 Sep 24 07:43 bin -> usr/bin
+drwxr-xr-x  2 10000 10000 4096 Apr 15  2020 boot
+drwxr-xr-x  3 10000 10000 4096 Oct 16 19:26 dev
+drwxr-xr-x 61 10000 10000 4096 Oct 16 19:26 etc
+drwxr-xr-x  3 10000 10000 4096 Sep 24 07:45 home
+lrwxrwxrwx  1 10000 10000    7 Sep 24 07:43 lib -> usr/lib
+lrwxrwxrwx  1 10000 10000    9 Sep 24 07:43 lib32 -> usr/lib32
+lrwxrwxrwx  1 10000 10000    9 Sep 24 07:43 lib64 -> usr/lib64
+lrwxrwxrwx  1 10000 10000   10 Sep 24 07:43 libx32 -> usr/libx32
+drwxr-xr-x  2 10000 10000 4096 Sep 24 07:43 media
+drwxr-xr-x  2 10000 10000 4096 Sep 24 07:43 mnt
+drwxr-xr-x  2 10000 10000 4096 Sep 24 07:43 opt
+drwxr-xr-x  2 10000 10000 4096 Apr 15  2020 proc
+drwx------  2 10000 10000 4096 Sep 24 07:43 root
+drwxr-xr-x  2 10000 10000 4096 Sep 24 07:45 run
+lrwxrwxrwx  1 10000 10000    8 Sep 24 07:43 sbin -> usr/sbin
+drwxr-xr-x  2 10000 10000 4096 Sep 24 07:43 srv
+drwxr-xr-x  2 10000 10000 4096 Apr 15  2020 sys
+drwxrwxrwt  2 10000 10000 4096 Sep 24 07:44 tmp
+drwxr-xr-x 13 10000 10000 4096 Sep 24 07:43 usr
+drwxr-xr-x 12 10000 10000 4096 Sep 24 07:44 var
+root@f2-vm:~# lxc-start f2 # uses /mnt as rootfs
+root@f2-vm:~# lxc-attach f2 -- cat /proc/1/uid_map
+         0      10000      10000
+root@f2-vm:~# lxc-attach f2 -- cat /proc/1/gid_map
+         0      10000      10000
+root@f2-vm:~# lxc-attach f2 -- ls -al /
+total 52
+drwxr-xr-x  17 root   root    4096 Sep 24 07:48 .
+drwxr-xr-x  17 root   root    4096 Sep 24 07:48 ..
+lrwxrwxrwx   1 root   root       7 Sep 24 07:43 bin -> usr/bin
+drwxr-xr-x   2 root   root    4096 Apr 15  2020 boot
+drwxr-xr-x   5 root   root     500 Oct 28 23:39 dev
+drwxr-xr-x  61 root   root    4096 Oct 28 23:39 etc
+drwxr-xr-x   3 root   root    4096 Sep 24 07:45 home
+lrwxrwxrwx   1 root   root       7 Sep 24 07:43 lib -> usr/lib
+lrwxrwxrwx   1 root   root       9 Sep 24 07:43 lib32 -> usr/lib32
+lrwxrwxrwx   1 root   root       9 Sep 24 07:43 lib64 -> usr/lib64
+lrwxrwxrwx   1 root   root      10 Sep 24 07:43 libx32 -> usr/libx32
+drwxr-xr-x   2 root   root    4096 Sep 24 07:43 media
+drwxr-xr-x   2 root   root    4096 Sep 24 07:43 mnt
+drwxr-xr-x   2 root   root    4096 Sep 24 07:43 opt
+dr-xr-xr-x 232 nobody nogroup    0 Oct 28 23:39 proc
+drwx------   2 root   root    4096 Oct 28 23:41 root
+drwxr-xr-x  12 root   root     360 Oct 28 23:39 run
+lrwxrwxrwx   1 root   root       8 Sep 24 07:43 sbin -> usr/sbin
+drwxr-xr-x   2 root   root    4096 Sep 24 07:43 srv
+dr-xr-xr-x  13 nobody nogroup    0 Oct 28 23:39 sys
+drwxrwxrwt  11 root   root    4096 Oct 28 23:40 tmp
+drwxr-xr-x  13 root   root    4096 Sep 24 07:43 usr
+drwxr-xr-x  12 root   root    4096 Sep 24 07:44 var
+root@f2-vm:~# lxc-attach f2 -- ls -al /my-file
+-rw-r--r-- 1 root root 0 Oct 28 23:43 /my-file
+root@f2-vm:~# ls -al /var/lib/lxc/f2/rootfs/my-file
+-rw-r--r-- 1 20000 20000 0 Oct 28 23:43 /var/lib/lxc/f2/rootfs/my-file
+
+I'd like to say thanks to:
+Al for pointing me into the direction to avoid inode alias issues during
+lookup. David for various discussions around this. Christoph for porting
+xfs, providing good reviews and for being involved in the original idea.
+Tycho for helping with this series and on future patches to convert
+filesystems. Alban Crequy and the Kinvolk peeps located just a few
+streets away from me in Berlin for providing use-case discussions and
+writing patches for containerd. Stéphane for his invaluable input on
+many things and level head and enabling me to work on this. Amir for
+explaining and discussing aspects of overlayfs with me. I'd like to
+especially thank Seth Forshee. He provided a lot of good analysis,
+suggestions, and participated in short-notice discussions in both chat
+and video for some nitty-gritty technical details.
+
+This series can be found and pulled from the three usual locations:
+https://git.kernel.org/pub/scm/linux/kernel/git/brauner/linux.git/log/?h=idmapped_mounts
+https://github.com/brauner/linux/tree/idmapped_mounts
+https://gitlab.com/brauner/linux/-/commits/idmapped_mounts
 
 /* v5 */
+- Adress Christoph's feedback.
+- Use v5.11-rc3 as new base.
+- Add Christoph's xfs port.
+
+/* v4 */
+- Split out several preparatory patches from the initial mount_setattr
+  patch as requested by Christoph.
+- Add new tests for file/directory creation in directories with the
+  setgid bit set. Specifically, verify that the setgid bit is correctly
+  ignored when creating a file with the setgid bit and the parent
+  directory's i_gid isn't in_group_p() and the caller isn't
+  capable_wrt_inode_uidgid() over the parent directory's inode when
+  inode_init_owner() is called.
+  Conversely, verify that the setgid bit is set when creating a file
+  with the setgid bit and the parent's i_gid is either in_group_p() or
+  the caller is capable_wrt_inode_uidgid() over the parent directory's
+  inode. In additiona, verify that the setgid bit is always inherited
+  when creating directories.
+  Test all of this on regular mounts, idmapped mounts, and on idmapped
+  mounts in user namespaces.
+- Add new tests to verify that the i_gid of newly created files or
+  directories is correctly set to the parent directory's i_gid when the
+  parent directory has the setgid bit set.
+- Use "mnt_userns" as the de facto name for a vfsmount's user namespace
+  everywhere as suggested by Serge.
+- Reuse existing propagation flags instead of introducing new ones as
+  suggested by Christoph. (This is in line with Linus request to not
+  introduce too many new flags as evidenced by prior discussions on
+  other patchsets such as openat2().)
+- Add first set of Acked-bys from Serge and Reviewed-bys from Christoph.
+- Fix commit messages to reflect the fact that we modify existing
+  vfs helpers but do not introduce new ones like we did in the first
+  version. Some commit messages still implied we were adding new
+  helpers.
+- Reformat all commit messages to adhere to 73 char length limit and
+  wrap all lines in commits at 80 chars whenever this doesn't hinder
+  legibility.
+- Simplify various codepaths with Christoph's suggestions.
+
+/* v3 */
+- The major change is the port of the test-suite from the
+  kernel-internal selftests framework to xfstests as requested by
+  Darrick and Christoph. The test-suite for xfstests is patch 38 in this
+  series. It has been kept as part of this series even though it belongs
+  to xfstests so it's easier to see what is tested and to keep it
+  in-sync.
+- Note, the test-suite now has been extended to cover io_uring and
+  idmapped mounts. The IORING_REGISTER_PERSONALITY feature allows to
+  register the caller's credentials with io_uring and returns an id
+  associated with these credentials. This is useful for applications
+  that wish to share a ring between separate users/processes. Callers
+  can pass in the credential id in the sqe personality field. If set,
+  that particular sqe will be issued with these credentials.
+  The test-suite now tests that the openat* operations with different
+  registered credentials work correctly and safely on regular mounts, on
+  regular mounts inside user namespaces, on idmapped mounts, and on
+  idmapped mounts inside user namespaces.
+
+/* v2 */
+- The major change is the rework requested by Christoph and others to
+  adapt all relevant helpers and inode_operations methods to account for
+  idmapped mounts instead of introducing new helpers and methods
+  specific to idmapped mounts like we did before. We've also moved the
+  overlayfs conversion to handle idmapped mounts into a separate
+  patchset that will be sent out separately after the core changes
+  landed. The converted filesytems in this series include fat and ext4.
+  As per Christoph's request the vfs-wide config option to disable
+  idmapped mounts has been removed. Instead the filesystems can decide
+  whether or not they want to allow idmap mounts through a config
+  option. These config options default to off. Having a config option
+  allows us to gain some confidence in the patchset over multiple kernel
+  releases.
+- This version introduces a large test-suite to test current vfs
+  behavior and idmapped mounts behavior. This test-suite is intended to
+  grow over time.
+- While while working on adapting this patchset to the requested
+  changes, the runC and containerd crowd was nice enough to adapt
+  containerd to this patchset to make use of idmapped mounts in one of
+  the most widely used container runtimes:
+  https://github.com/containerd/containerd/pull/4734
+
+The solution proposed here has it's origins in multiple discussions
+during Linux Plumbers 2017 during and after the end of the containers
+microconference.
+To the best of my knowledge this involved Aleksa, Stéphane, Eric, David,
+James, and myself.The original idea or a variant thereof has been
+discussed, again to the best of my knowledge, after a Linux conference
+in St. Petersburg in Russia in 2017 between Christoph, Tycho, and
+myself.
+We've taken the time to implement a working version of this solution
+over the last weeks to the best of my abilities. Tycho has signed up
+for this sligthly crazy endeavour as well and he has helped with the
+conversion of the xattr codepaths and will be involved with others in
+converting additional filesystems.
+
+Thanks!
+Christian
+
+Christian Brauner (39):
+  namespace: take lock_mount_hash() directly when changing flags
+  mount: make {lock,unlock}_mount_hash() static
+  namespace: only take read lock in do_reconfigure_mnt()
+  fs: split out functions to hold writers
+  fs: add attr_flags_to_mnt_flags helper
+  fs: add mount_setattr()
+  tests: add mount_setattr() selftests
+  fs: add id translation helpers
+  mount: attach mappings to mounts
+  capability: handle idmapped mounts
+  namei: make permission helpers idmapped mount aware
+  inode: make init and permission helpers idmapped mount aware
+  attr: handle idmapped mounts
+  acl: handle idmapped mounts
+  fs: add file_user_ns() helper
+  commoncap: handle idmapped mounts
+  stat: handle idmapped mounts
+  namei: handle idmapped mounts in may_*() helpers
+  namei: introduce struct renamedata
+  namei: prepare for idmapped mounts
+  open: handle idmapped mounts in do_truncate()
+  open: handle idmapped mounts
+  af_unix: handle idmapped mounts
+  utimes: handle idmapped mounts
+  fcntl: handle idmapped mounts
+  notify: handle idmapped mounts
+  init: handle idmapped mounts
+  ioctl: handle idmapped mounts
+  would_dump: handle idmapped mounts
+  exec: handle idmapped mounts
+  fs: make helpers idmap mount aware
+  apparmor: handle idmapped mounts
+  ima: handle idmapped mounts
+  fat: handle idmapped mounts
+  ext4: support idmapped mounts
+  ecryptfs: do not mount on top of idmapped mounts
+  overlayfs: do not mount on top of idmapped mounts
+  fs: introduce MOUNT_ATTR_IDMAP
+  tests: extend mount_setattr tests
+
+Christoph Hellwig (1):
+  xfs: support idmapped mounts
+
+Tycho Andersen (1):
+  xattr: handle idmapped mounts
+
+ Documentation/filesystems/locking.rst         |    6 +-
+ Documentation/filesystems/porting.rst         |    2 +
+ Documentation/filesystems/vfs.rst             |   19 +-
+ arch/alpha/kernel/syscalls/syscall.tbl        |    1 +
+ arch/arm/tools/syscall.tbl                    |    1 +
+ arch/arm64/include/asm/unistd32.h             |    2 +
+ arch/ia64/kernel/syscalls/syscall.tbl         |    1 +
+ arch/m68k/kernel/syscalls/syscall.tbl         |    1 +
+ arch/microblaze/kernel/syscalls/syscall.tbl   |    1 +
+ arch/mips/kernel/syscalls/syscall_n32.tbl     |    1 +
+ arch/mips/kernel/syscalls/syscall_n64.tbl     |    1 +
+ arch/mips/kernel/syscalls/syscall_o32.tbl     |    1 +
+ arch/parisc/kernel/syscalls/syscall.tbl       |    1 +
+ arch/powerpc/kernel/syscalls/syscall.tbl      |    1 +
+ arch/powerpc/platforms/cell/spufs/inode.c     |    5 +-
+ arch/s390/kernel/syscalls/syscall.tbl         |    1 +
+ arch/sh/kernel/syscalls/syscall.tbl           |    1 +
+ arch/sparc/kernel/syscalls/syscall.tbl        |    1 +
+ arch/x86/entry/syscalls/syscall_32.tbl        |    1 +
+ arch/x86/entry/syscalls/syscall_64.tbl        |    1 +
+ arch/xtensa/kernel/syscalls/syscall.tbl       |    1 +
+ drivers/android/binderfs.c                    |    6 +-
+ drivers/base/devtmpfs.c                       |   12 +-
+ fs/9p/acl.c                                   |    8 +-
+ fs/9p/v9fs.h                                  |    3 +-
+ fs/9p/v9fs_vfs.h                              |    2 +-
+ fs/9p/vfs_inode.c                             |   36 +-
+ fs/9p/vfs_inode_dotl.c                        |   39 +-
+ fs/9p/xattr.c                                 |    1 +
+ fs/adfs/adfs.h                                |    3 +-
+ fs/adfs/inode.c                               |    5 +-
+ fs/affs/affs.h                                |   10 +-
+ fs/affs/inode.c                               |    7 +-
+ fs/affs/namei.c                               |   15 +-
+ fs/afs/dir.c                                  |   34 +-
+ fs/afs/inode.c                                |    9 +-
+ fs/afs/internal.h                             |    7 +-
+ fs/afs/security.c                             |    2 +-
+ fs/afs/xattr.c                                |    2 +
+ fs/attr.c                                     |  124 +-
+ fs/autofs/root.c                              |   13 +-
+ fs/bad_inode.c                                |   36 +-
+ fs/bfs/dir.c                                  |   12 +-
+ fs/btrfs/acl.c                                |    5 +-
+ fs/btrfs/ctree.h                              |    3 +-
+ fs/btrfs/inode.c                              |   45 +-
+ fs/btrfs/ioctl.c                              |   25 +-
+ fs/btrfs/tests/btrfs-tests.c                  |    2 +-
+ fs/btrfs/xattr.c                              |    2 +
+ fs/cachefiles/interface.c                     |    4 +-
+ fs/cachefiles/namei.c                         |   19 +-
+ fs/cachefiles/xattr.c                         |   16 +-
+ fs/ceph/acl.c                                 |    5 +-
+ fs/ceph/dir.c                                 |   23 +-
+ fs/ceph/inode.c                               |   17 +-
+ fs/ceph/super.h                               |   12 +-
+ fs/ceph/xattr.c                               |    1 +
+ fs/cifs/cifsfs.c                              |    4 +-
+ fs/cifs/cifsfs.h                              |   21 +-
+ fs/cifs/dir.c                                 |    8 +-
+ fs/cifs/inode.c                               |   26 +-
+ fs/cifs/link.c                                |    3 +-
+ fs/cifs/xattr.c                               |    1 +
+ fs/coda/coda_linux.h                          |    6 +-
+ fs/coda/dir.c                                 |   17 +-
+ fs/coda/inode.c                               |    9 +-
+ fs/coda/pioctl.c                              |    6 +-
+ fs/configfs/configfs_internal.h               |    7 +-
+ fs/configfs/dir.c                             |    3 +-
+ fs/configfs/inode.c                           |    5 +-
+ fs/configfs/symlink.c                         |    5 +-
+ fs/coredump.c                                 |   14 +-
+ fs/crypto/policy.c                            |    2 +-
+ fs/debugfs/inode.c                            |    9 +-
+ fs/ecryptfs/crypto.c                          |    4 +-
+ fs/ecryptfs/inode.c                           |   80 +-
+ fs/ecryptfs/main.c                            |    6 +
+ fs/ecryptfs/mmap.c                            |    4 +-
+ fs/efivarfs/file.c                            |    2 +-
+ fs/efivarfs/inode.c                           |    4 +-
+ fs/erofs/inode.c                              |    7 +-
+ fs/erofs/internal.h                           |    5 +-
+ fs/exec.c                                     |   12 +-
+ fs/exfat/exfat_fs.h                           |    8 +-
+ fs/exfat/file.c                               |   14 +-
+ fs/exfat/namei.c                              |   14 +-
+ fs/ext2/acl.c                                 |    5 +-
+ fs/ext2/acl.h                                 |    3 +-
+ fs/ext2/ext2.h                                |    5 +-
+ fs/ext2/ialloc.c                              |    2 +-
+ fs/ext2/inode.c                               |   15 +-
+ fs/ext2/ioctl.c                               |    6 +-
+ fs/ext2/namei.c                               |   22 +-
+ fs/ext2/xattr_security.c                      |    1 +
+ fs/ext2/xattr_trusted.c                       |    1 +
+ fs/ext2/xattr_user.c                          |    1 +
+ fs/ext4/acl.c                                 |    5 +-
+ fs/ext4/acl.h                                 |    3 +-
+ fs/ext4/ext4.h                                |   21 +-
+ fs/ext4/ialloc.c                              |    7 +-
+ fs/ext4/inode.c                               |   21 +-
+ fs/ext4/ioctl.c                               |   19 +-
+ fs/ext4/namei.c                               |   49 +-
+ fs/ext4/super.c                               |    2 +-
+ fs/ext4/xattr_hurd.c                          |    1 +
+ fs/ext4/xattr_security.c                      |    1 +
+ fs/ext4/xattr_trusted.c                       |    1 +
+ fs/ext4/xattr_user.c                          |    1 +
+ fs/f2fs/acl.c                                 |    5 +-
+ fs/f2fs/acl.h                                 |    3 +-
+ fs/f2fs/f2fs.h                                |    7 +-
+ fs/f2fs/file.c                                |   35 +-
+ fs/f2fs/namei.c                               |   23 +-
+ fs/f2fs/xattr.c                               |    4 +-
+ fs/fat/fat.h                                  |    6 +-
+ fs/fat/file.c                                 |   24 +-
+ fs/fat/namei_msdos.c                          |   12 +-
+ fs/fat/namei_vfat.c                           |   15 +-
+ fs/fcntl.c                                    |    3 +-
+ fs/fuse/acl.c                                 |    3 +-
+ fs/fuse/dir.c                                 |   45 +-
+ fs/fuse/fuse_i.h                              |    4 +-
+ fs/fuse/xattr.c                               |    2 +
+ fs/gfs2/acl.c                                 |    5 +-
+ fs/gfs2/acl.h                                 |    3 +-
+ fs/gfs2/file.c                                |    4 +-
+ fs/gfs2/inode.c                               |   59 +-
+ fs/gfs2/inode.h                               |    3 +-
+ fs/gfs2/xattr.c                               |    1 +
+ fs/hfs/attr.c                                 |    1 +
+ fs/hfs/dir.c                                  |   13 +-
+ fs/hfs/hfs_fs.h                               |    2 +-
+ fs/hfs/inode.c                                |    7 +-
+ fs/hfsplus/dir.c                              |   25 +-
+ fs/hfsplus/hfsplus_fs.h                       |    5 +-
+ fs/hfsplus/inode.c                            |   16 +-
+ fs/hfsplus/ioctl.c                            |    2 +-
+ fs/hfsplus/xattr.c                            |    1 +
+ fs/hfsplus/xattr_security.c                   |    1 +
+ fs/hfsplus/xattr_trusted.c                    |    1 +
+ fs/hfsplus/xattr_user.c                       |    1 +
+ fs/hostfs/hostfs_kern.c                       |   29 +-
+ fs/hpfs/hpfs_fn.h                             |    2 +-
+ fs/hpfs/inode.c                               |    7 +-
+ fs/hpfs/namei.c                               |   20 +-
+ fs/hugetlbfs/inode.c                          |   31 +-
+ fs/init.c                                     |   27 +-
+ fs/inode.c                                    |   50 +-
+ fs/internal.h                                 |    2 +-
+ fs/jffs2/acl.c                                |    5 +-
+ fs/jffs2/acl.h                                |    3 +-
+ fs/jffs2/dir.c                                |   32 +-
+ fs/jffs2/fs.c                                 |    7 +-
+ fs/jffs2/os-linux.h                           |    2 +-
+ fs/jffs2/security.c                           |    1 +
+ fs/jffs2/xattr_trusted.c                      |    1 +
+ fs/jffs2/xattr_user.c                         |    1 +
+ fs/jfs/acl.c                                  |    5 +-
+ fs/jfs/file.c                                 |    9 +-
+ fs/jfs/ioctl.c                                |    2 +-
+ fs/jfs/jfs_acl.h                              |    3 +-
+ fs/jfs/jfs_inode.c                            |    2 +-
+ fs/jfs/jfs_inode.h                            |    2 +-
+ fs/jfs/namei.c                                |   21 +-
+ fs/jfs/xattr.c                                |    2 +
+ fs/kernfs/dir.c                               |    7 +-
+ fs/kernfs/inode.c                             |   19 +-
+ fs/kernfs/kernfs-internal.h                   |    9 +-
+ fs/libfs.c                                    |   28 +-
+ fs/minix/bitmap.c                             |    2 +-
+ fs/minix/file.c                               |    7 +-
+ fs/minix/inode.c                              |    6 +-
+ fs/minix/minix.h                              |    3 +-
+ fs/minix/namei.c                              |   24 +-
+ fs/mount.h                                    |   10 -
+ fs/namei.c                                    |  513 ++++--
+ fs/namespace.c                                |  484 +++++-
+ fs/nfs/dir.c                                  |   25 +-
+ fs/nfs/inode.c                                |    9 +-
+ fs/nfs/internal.h                             |   10 +-
+ fs/nfs/namespace.c                            |   14 +-
+ fs/nfs/nfs3_fs.h                              |    3 +-
+ fs/nfs/nfs3acl.c                              |    3 +-
+ fs/nfs/nfs4proc.c                             |    3 +
+ fs/nfsd/nfs2acl.c                             |    4 +-
+ fs/nfsd/nfs3acl.c                             |    4 +-
+ fs/nfsd/nfs4acl.c                             |    4 +-
+ fs/nfsd/nfs4recover.c                         |    6 +-
+ fs/nfsd/nfsfh.c                               |    2 +-
+ fs/nfsd/nfsproc.c                             |    2 +-
+ fs/nfsd/vfs.c                                 |   47 +-
+ fs/nilfs2/inode.c                             |   13 +-
+ fs/nilfs2/ioctl.c                             |    2 +-
+ fs/nilfs2/namei.c                             |   19 +-
+ fs/nilfs2/nilfs.h                             |    4 +-
+ fs/notify/fanotify/fanotify_user.c            |    2 +-
+ fs/notify/inotify/inotify_user.c              |    3 +-
+ fs/ntfs/inode.c                               |    6 +-
+ fs/ntfs/inode.h                               |    3 +-
+ fs/ocfs2/acl.c                                |    5 +-
+ fs/ocfs2/acl.h                                |    3 +-
+ fs/ocfs2/dlmfs/dlmfs.c                        |   17 +-
+ fs/ocfs2/file.c                               |   17 +-
+ fs/ocfs2/file.h                               |   11 +-
+ fs/ocfs2/ioctl.c                              |    2 +-
+ fs/ocfs2/namei.c                              |   21 +-
+ fs/ocfs2/refcounttree.c                       |    4 +-
+ fs/ocfs2/xattr.c                              |    3 +
+ fs/omfs/dir.c                                 |   13 +-
+ fs/omfs/file.c                                |    7 +-
+ fs/omfs/inode.c                               |    2 +-
+ fs/open.c                                     |   50 +-
+ fs/orangefs/acl.c                             |    5 +-
+ fs/orangefs/inode.c                           |   20 +-
+ fs/orangefs/namei.c                           |   12 +-
+ fs/orangefs/orangefs-kernel.h                 |   13 +-
+ fs/orangefs/xattr.c                           |    1 +
+ fs/overlayfs/copy_up.c                        |   20 +-
+ fs/overlayfs/dir.c                            |   31 +-
+ fs/overlayfs/file.c                           |    6 +-
+ fs/overlayfs/inode.c                          |   26 +-
+ fs/overlayfs/overlayfs.h                      |   44 +-
+ fs/overlayfs/super.c                          |   19 +-
+ fs/overlayfs/util.c                           |    4 +-
+ fs/posix_acl.c                                |  101 +-
+ fs/proc/base.c                                |   28 +-
+ fs/proc/fd.c                                  |    5 +-
+ fs/proc/fd.h                                  |    3 +-
+ fs/proc/generic.c                             |   12 +-
+ fs/proc/internal.h                            |    5 +-
+ fs/proc/proc_net.c                            |    5 +-
+ fs/proc/proc_sysctl.c                         |   15 +-
+ fs/proc/root.c                                |    5 +-
+ fs/proc_namespace.c                           |    3 +
+ fs/ramfs/file-nommu.c                         |    9 +-
+ fs/ramfs/inode.c                              |   18 +-
+ fs/reiserfs/acl.h                             |    3 +-
+ fs/reiserfs/inode.c                           |    7 +-
+ fs/reiserfs/ioctl.c                           |    4 +-
+ fs/reiserfs/namei.c                           |   21 +-
+ fs/reiserfs/reiserfs.h                        |    3 +-
+ fs/reiserfs/xattr.c                           |   12 +-
+ fs/reiserfs/xattr.h                           |    3 +-
+ fs/reiserfs/xattr_acl.c                       |    7 +-
+ fs/reiserfs/xattr_security.c                  |    3 +-
+ fs/reiserfs/xattr_trusted.c                   |    3 +-
+ fs/reiserfs/xattr_user.c                      |    3 +-
+ fs/remap_range.c                              |    7 +-
+ fs/stat.c                                     |   26 +-
+ fs/sysv/file.c                                |    7 +-
+ fs/sysv/ialloc.c                              |    2 +-
+ fs/sysv/itree.c                               |    6 +-
+ fs/sysv/namei.c                               |   21 +-
+ fs/sysv/sysv.h                                |    3 +-
+ fs/tracefs/inode.c                            |    4 +-
+ fs/ubifs/dir.c                                |   30 +-
+ fs/ubifs/file.c                               |    5 +-
+ fs/ubifs/ioctl.c                              |    2 +-
+ fs/ubifs/ubifs.h                              |    5 +-
+ fs/ubifs/xattr.c                              |    1 +
+ fs/udf/file.c                                 |    9 +-
+ fs/udf/ialloc.c                               |    2 +-
+ fs/udf/namei.c                                |   24 +-
+ fs/udf/symlink.c                              |    7 +-
+ fs/ufs/ialloc.c                               |    2 +-
+ fs/ufs/inode.c                                |    7 +-
+ fs/ufs/namei.c                                |   19 +-
+ fs/ufs/ufs.h                                  |    3 +-
+ fs/utimes.c                                   |    4 +-
+ fs/vboxsf/dir.c                               |   12 +-
+ fs/vboxsf/utils.c                             |    9 +-
+ fs/vboxsf/vfsmod.h                            |    8 +-
+ fs/verity/enable.c                            |    2 +-
+ fs/xattr.c                                    |  136 +-
+ fs/xfs/xfs_acl.c                              |    5 +-
+ fs/xfs/xfs_acl.h                              |    3 +-
+ fs/xfs/xfs_file.c                             |    4 +-
+ fs/xfs/xfs_inode.c                            |   26 +-
+ fs/xfs/xfs_inode.h                            |   16 +-
+ fs/xfs/xfs_ioctl.c                            |   23 +-
+ fs/xfs/xfs_iops.c                             |   98 +-
+ fs/xfs/xfs_iops.h                             |    3 +-
+ fs/xfs/xfs_qm.c                               |    3 +-
+ fs/xfs/xfs_super.c                            |    2 +-
+ fs/xfs/xfs_symlink.c                          |    5 +-
+ fs/xfs/xfs_symlink.h                          |    5 +-
+ fs/xfs/xfs_xattr.c                            |    3 +-
+ fs/zonefs/super.c                             |    9 +-
+ include/linux/capability.h                    |   15 +-
+ include/linux/fs.h                            |  158 +-
+ include/linux/ima.h                           |   17 +-
+ include/linux/lsm_hook_defs.h                 |   15 +-
+ include/linux/lsm_hooks.h                     |    1 +
+ include/linux/mount.h                         |    7 +
+ include/linux/nfs_fs.h                        |    7 +-
+ include/linux/posix_acl.h                     |   15 +-
+ include/linux/posix_acl_xattr.h               |   12 +-
+ include/linux/security.h                      |   46 +-
+ include/linux/syscalls.h                      |    4 +
+ include/linux/xattr.h                         |   30 +-
+ include/uapi/asm-generic/unistd.h             |    4 +-
+ include/uapi/linux/mount.h                    |   17 +
+ ipc/mqueue.c                                  |    8 +-
+ kernel/auditsc.c                              |    5 +-
+ kernel/bpf/inode.c                            |   13 +-
+ kernel/capability.c                           |   14 +-
+ kernel/cgroup/cgroup.c                        |    2 +-
+ kernel/sys.c                                  |    2 +-
+ mm/madvise.c                                  |    4 +-
+ mm/memcontrol.c                               |    2 +-
+ mm/mincore.c                                  |    4 +-
+ mm/shmem.c                                    |   48 +-
+ net/socket.c                                  |    6 +-
+ net/unix/af_unix.c                            |    4 +-
+ security/apparmor/apparmorfs.c                |    3 +-
+ security/apparmor/domain.c                    |   13 +-
+ security/apparmor/file.c                      |    5 +-
+ security/apparmor/lsm.c                       |   12 +-
+ security/commoncap.c                          |  109 +-
+ security/integrity/evm/evm_crypto.c           |   11 +-
+ security/integrity/evm/evm_main.c             |    4 +-
+ security/integrity/evm/evm_secfs.c            |    2 +-
+ security/integrity/ima/ima.h                  |   19 +-
+ security/integrity/ima/ima_api.c              |   10 +-
+ security/integrity/ima/ima_appraise.c         |   22 +-
+ security/integrity/ima/ima_asymmetric_keys.c  |    2 +-
+ security/integrity/ima/ima_main.c             |   31 +-
+ security/integrity/ima/ima_policy.c           |   19 +-
+ security/integrity/ima/ima_queue_keys.c       |    2 +-
+ security/security.c                           |   25 +-
+ security/selinux/hooks.c                      |   22 +-
+ security/smack/smack_lsm.c                    |   18 +-
+ tools/include/uapi/asm-generic/unistd.h       |    4 +-
+ tools/testing/selftests/Makefile              |    1 +
+ .../selftests/mount_setattr/.gitignore        |    1 +
+ .../testing/selftests/mount_setattr/Makefile  |    7 +
+ tools/testing/selftests/mount_setattr/config  |    1 +
+ .../mount_setattr/mount_setattr_test.c        | 1424 +++++++++++++++++
+ 338 files changed, 4718 insertions(+), 1731 deletions(-)
+ create mode 100644 tools/testing/selftests/mount_setattr/.gitignore
+ create mode 100644 tools/testing/selftests/mount_setattr/Makefile
+ create mode 100644 tools/testing/selftests/mount_setattr/config
+ create mode 100644 tools/testing/selftests/mount_setattr/mount_setattr_test.c
+
+
 base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
-
-- Christoph Hellwig <hch@lst.de>:
-  - Simplify mount propagation flag checking.
-  - Wrap overly long line.
----
- arch/alpha/kernel/syscalls/syscall.tbl      |   1 +
- arch/arm/tools/syscall.tbl                  |   1 +
- arch/arm64/include/asm/unistd32.h           |   2 +
- arch/ia64/kernel/syscalls/syscall.tbl       |   1 +
- arch/m68k/kernel/syscalls/syscall.tbl       |   1 +
- arch/microblaze/kernel/syscalls/syscall.tbl |   1 +
- arch/mips/kernel/syscalls/syscall_n32.tbl   |   1 +
- arch/mips/kernel/syscalls/syscall_n64.tbl   |   1 +
- arch/mips/kernel/syscalls/syscall_o32.tbl   |   1 +
- arch/parisc/kernel/syscalls/syscall.tbl     |   1 +
- arch/powerpc/kernel/syscalls/syscall.tbl    |   1 +
- arch/s390/kernel/syscalls/syscall.tbl       |   1 +
- arch/sh/kernel/syscalls/syscall.tbl         |   1 +
- arch/sparc/kernel/syscalls/syscall.tbl      |   1 +
- arch/x86/entry/syscalls/syscall_32.tbl      |   1 +
- arch/x86/entry/syscalls/syscall_64.tbl      |   1 +
- arch/xtensa/kernel/syscalls/syscall.tbl     |   1 +
- fs/namespace.c                              | 260 ++++++++++++++++++++
- include/linux/syscalls.h                    |   4 +
- include/uapi/asm-generic/unistd.h           |   4 +-
- include/uapi/linux/mount.h                  |  14 ++
- tools/include/uapi/asm-generic/unistd.h     |   4 +-
- 22 files changed, 302 insertions(+), 2 deletions(-)
-
-diff --git a/arch/alpha/kernel/syscalls/syscall.tbl b/arch/alpha/kernel/syscalls/syscall.tbl
-index a6617067dbe6..02f0244e005c 100644
---- a/arch/alpha/kernel/syscalls/syscall.tbl
-+++ b/arch/alpha/kernel/syscalls/syscall.tbl
-@@ -481,3 +481,4 @@
- 549	common	faccessat2			sys_faccessat2
- 550	common	process_madvise			sys_process_madvise
- 551	common	epoll_pwait2			sys_epoll_pwait2
-+552	common	mount_setattr			sys_mount_setattr
-diff --git a/arch/arm/tools/syscall.tbl b/arch/arm/tools/syscall.tbl
-index 20e1170e2e0a..dcc1191291a2 100644
---- a/arch/arm/tools/syscall.tbl
-+++ b/arch/arm/tools/syscall.tbl
-@@ -455,3 +455,4 @@
- 439	common	faccessat2			sys_faccessat2
- 440	common	process_madvise			sys_process_madvise
- 441	common	epoll_pwait2			sys_epoll_pwait2
-+442	common	mount_setattr			sys_mount_setattr
-diff --git a/arch/arm64/include/asm/unistd32.h b/arch/arm64/include/asm/unistd32.h
-index cccfbbefbf95..3d874f624056 100644
---- a/arch/arm64/include/asm/unistd32.h
-+++ b/arch/arm64/include/asm/unistd32.h
-@@ -891,6 +891,8 @@ __SYSCALL(__NR_faccessat2, sys_faccessat2)
- __SYSCALL(__NR_process_madvise, sys_process_madvise)
- #define __NR_epoll_pwait2 441
- __SYSCALL(__NR_epoll_pwait2, compat_sys_epoll_pwait2)
-+#define __NR_mount_setattr 442
-+__SYSCALL(__NR_mount_setattr, sys_mount_setattr)
- 
- /*
-  * Please add new compat syscalls above this comment and update
-diff --git a/arch/ia64/kernel/syscalls/syscall.tbl b/arch/ia64/kernel/syscalls/syscall.tbl
-index bfc00f2bd437..d89231166e19 100644
---- a/arch/ia64/kernel/syscalls/syscall.tbl
-+++ b/arch/ia64/kernel/syscalls/syscall.tbl
-@@ -362,3 +362,4 @@
- 439	common	faccessat2			sys_faccessat2
- 440	common	process_madvise			sys_process_madvise
- 441	common	epoll_pwait2			sys_epoll_pwait2
-+442	common	mount_setattr			sys_mount_setattr
-diff --git a/arch/m68k/kernel/syscalls/syscall.tbl b/arch/m68k/kernel/syscalls/syscall.tbl
-index 7fe4e45c864c..72bde6707dd3 100644
---- a/arch/m68k/kernel/syscalls/syscall.tbl
-+++ b/arch/m68k/kernel/syscalls/syscall.tbl
-@@ -441,3 +441,4 @@
- 439	common	faccessat2			sys_faccessat2
- 440	common	process_madvise			sys_process_madvise
- 441	common	epoll_pwait2			sys_epoll_pwait2
-+442	common	mount_setattr			sys_mount_setattr
-diff --git a/arch/microblaze/kernel/syscalls/syscall.tbl b/arch/microblaze/kernel/syscalls/syscall.tbl
-index a522adf194ab..d603a5ec9338 100644
---- a/arch/microblaze/kernel/syscalls/syscall.tbl
-+++ b/arch/microblaze/kernel/syscalls/syscall.tbl
-@@ -447,3 +447,4 @@
- 439	common	faccessat2			sys_faccessat2
- 440	common	process_madvise			sys_process_madvise
- 441	common	epoll_pwait2			sys_epoll_pwait2
-+442	common	mount_setattr			sys_mount_setattr
-diff --git a/arch/mips/kernel/syscalls/syscall_n32.tbl b/arch/mips/kernel/syscalls/syscall_n32.tbl
-index 0f03ad223f33..8fd8c1790941 100644
---- a/arch/mips/kernel/syscalls/syscall_n32.tbl
-+++ b/arch/mips/kernel/syscalls/syscall_n32.tbl
-@@ -380,3 +380,4 @@
- 439	n32	faccessat2			sys_faccessat2
- 440	n32	process_madvise			sys_process_madvise
- 441	n32	epoll_pwait2			compat_sys_epoll_pwait2
-+442	n32	mount_setattr			sys_mount_setattr
-diff --git a/arch/mips/kernel/syscalls/syscall_n64.tbl b/arch/mips/kernel/syscalls/syscall_n64.tbl
-index 91649690b52f..169f21438065 100644
---- a/arch/mips/kernel/syscalls/syscall_n64.tbl
-+++ b/arch/mips/kernel/syscalls/syscall_n64.tbl
-@@ -356,3 +356,4 @@
- 439	n64	faccessat2			sys_faccessat2
- 440	n64	process_madvise			sys_process_madvise
- 441	n64	epoll_pwait2			sys_epoll_pwait2
-+442	n64	mount_setattr			sys_mount_setattr
-diff --git a/arch/mips/kernel/syscalls/syscall_o32.tbl b/arch/mips/kernel/syscalls/syscall_o32.tbl
-index 4bad0c40aed6..090d29ca80ff 100644
---- a/arch/mips/kernel/syscalls/syscall_o32.tbl
-+++ b/arch/mips/kernel/syscalls/syscall_o32.tbl
-@@ -429,3 +429,4 @@
- 439	o32	faccessat2			sys_faccessat2
- 440	o32	process_madvise			sys_process_madvise
- 441	o32	epoll_pwait2			sys_epoll_pwait2		compat_sys_epoll_pwait2
-+442	o32	mount_setattr			sys_mount_setattr
-diff --git a/arch/parisc/kernel/syscalls/syscall.tbl b/arch/parisc/kernel/syscalls/syscall.tbl
-index 6bcc31966b44..271a92519683 100644
---- a/arch/parisc/kernel/syscalls/syscall.tbl
-+++ b/arch/parisc/kernel/syscalls/syscall.tbl
-@@ -439,3 +439,4 @@
- 439	common	faccessat2			sys_faccessat2
- 440	common	process_madvise			sys_process_madvise
- 441	common	epoll_pwait2			sys_epoll_pwait2		compat_sys_epoll_pwait2
-+442	common	mount_setattr			sys_mount_setattr
-diff --git a/arch/powerpc/kernel/syscalls/syscall.tbl b/arch/powerpc/kernel/syscalls/syscall.tbl
-index f744eb5cba88..72e5aa67ab8a 100644
---- a/arch/powerpc/kernel/syscalls/syscall.tbl
-+++ b/arch/powerpc/kernel/syscalls/syscall.tbl
-@@ -531,3 +531,4 @@
- 439	common	faccessat2			sys_faccessat2
- 440	common	process_madvise			sys_process_madvise
- 441	common	epoll_pwait2			sys_epoll_pwait2		compat_sys_epoll_pwait2
-+442	common	mount_setattr			sys_mount_setattr
-diff --git a/arch/s390/kernel/syscalls/syscall.tbl b/arch/s390/kernel/syscalls/syscall.tbl
-index d443423495e5..3abef2144dac 100644
---- a/arch/s390/kernel/syscalls/syscall.tbl
-+++ b/arch/s390/kernel/syscalls/syscall.tbl
-@@ -444,3 +444,4 @@
- 439  common	faccessat2		sys_faccessat2			sys_faccessat2
- 440  common	process_madvise		sys_process_madvise		sys_process_madvise
- 441  common	epoll_pwait2		sys_epoll_pwait2		compat_sys_epoll_pwait2
-+442  common	mount_setattr		sys_mount_setattr		sys_mount_setattr
-diff --git a/arch/sh/kernel/syscalls/syscall.tbl b/arch/sh/kernel/syscalls/syscall.tbl
-index 9df40ac0ebc0..d08eebad6b7f 100644
---- a/arch/sh/kernel/syscalls/syscall.tbl
-+++ b/arch/sh/kernel/syscalls/syscall.tbl
-@@ -444,3 +444,4 @@
- 439	common	faccessat2			sys_faccessat2
- 440	common	process_madvise			sys_process_madvise
- 441	common	epoll_pwait2			sys_epoll_pwait2
-+442	common	mount_setattr			sys_mount_setattr
-diff --git a/arch/sparc/kernel/syscalls/syscall.tbl b/arch/sparc/kernel/syscalls/syscall.tbl
-index 40d8c7cd8298..84403a99039c 100644
---- a/arch/sparc/kernel/syscalls/syscall.tbl
-+++ b/arch/sparc/kernel/syscalls/syscall.tbl
-@@ -487,3 +487,4 @@
- 439	common	faccessat2			sys_faccessat2
- 440	common	process_madvise			sys_process_madvise
- 441	common	epoll_pwait2			sys_epoll_pwait2		compat_sys_epoll_pwait2
-+442	common	mount_setattr			sys_mount_setattr
-diff --git a/arch/x86/entry/syscalls/syscall_32.tbl b/arch/x86/entry/syscalls/syscall_32.tbl
-index 874aeacde2dd..a1c9f496fca6 100644
---- a/arch/x86/entry/syscalls/syscall_32.tbl
-+++ b/arch/x86/entry/syscalls/syscall_32.tbl
-@@ -446,3 +446,4 @@
- 439	i386	faccessat2		sys_faccessat2
- 440	i386	process_madvise		sys_process_madvise
- 441	i386	epoll_pwait2		sys_epoll_pwait2		compat_sys_epoll_pwait2
-+442	i386	mount_setattr		sys_mount_setattr
-diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
-index 78672124d28b..7bf01cbe582f 100644
---- a/arch/x86/entry/syscalls/syscall_64.tbl
-+++ b/arch/x86/entry/syscalls/syscall_64.tbl
-@@ -363,6 +363,7 @@
- 439	common	faccessat2		sys_faccessat2
- 440	common	process_madvise		sys_process_madvise
- 441	common	epoll_pwait2		sys_epoll_pwait2
-+442	common	mount_setattr		sys_mount_setattr
- 
- #
- # Due to a historical design error, certain syscalls are numbered differently
-diff --git a/arch/xtensa/kernel/syscalls/syscall.tbl b/arch/xtensa/kernel/syscalls/syscall.tbl
-index 46116a28eeed..365a9b849224 100644
---- a/arch/xtensa/kernel/syscalls/syscall.tbl
-+++ b/arch/xtensa/kernel/syscalls/syscall.tbl
-@@ -412,3 +412,4 @@
- 439	common	faccessat2			sys_faccessat2
- 440	common	process_madvise			sys_process_madvise
- 441	common	epoll_pwait2			sys_epoll_pwait2
-+442	common	mount_setattr			sys_mount_setattr
-diff --git a/fs/namespace.c b/fs/namespace.c
-index a1cfcab217e1..6efae2681bcd 100644
---- a/fs/namespace.c
-+++ b/fs/namespace.c
-@@ -73,6 +73,14 @@ static DECLARE_RWSEM(namespace_sem);
- static HLIST_HEAD(unmounted);	/* protected by namespace_sem */
- static LIST_HEAD(ex_mountpoints); /* protected by namespace_sem */
- 
-+struct mount_kattr {
-+	unsigned int attr_set;
-+	unsigned int attr_clr;
-+	unsigned int propagation;
-+	unsigned int lookup_flags;
-+	bool recurse;
-+};
-+
- /* /sys/fs */
- struct kobject *fs_kobj;
- EXPORT_SYMBOL_GPL(fs_kobj);
-@@ -3457,6 +3465,11 @@ SYSCALL_DEFINE5(mount, char __user *, dev_name, char __user *, dir_name,
- 	(MOUNT_ATTR_RDONLY | MOUNT_ATTR_NOSUID | MOUNT_ATTR_NODEV | \
- 	 MOUNT_ATTR_NOEXEC | MOUNT_ATTR__ATIME | MOUNT_ATTR_NODIRATIME)
- 
-+#define MOUNT_SETATTR_VALID_FLAGS FSMOUNT_VALID_FLAGS
-+
-+#define MOUNT_SETATTR_PROPAGATION_FLAGS \
-+	(MS_UNBINDABLE | MS_PRIVATE | MS_SLAVE | MS_SHARED)
-+
- static unsigned int attr_flags_to_mnt_flags(u64 attr_flags)
- {
- 	unsigned int mnt_flags = 0;
-@@ -3808,6 +3821,253 @@ SYSCALL_DEFINE2(pivot_root, const char __user *, new_root,
- 	return error;
- }
- 
-+static unsigned int recalc_flags(struct mount_kattr *kattr, struct mount *mnt)
-+{
-+	unsigned int flags = mnt->mnt.mnt_flags;
-+
-+	/*  flags to clear */
-+	flags &= ~kattr->attr_clr;
-+	/* flags to raise */
-+	flags |= kattr->attr_set;
-+
-+	return flags;
-+}
-+
-+static struct mount *mount_setattr_prepare(struct mount_kattr *kattr,
-+					   struct mount *mnt, int *err)
-+{
-+	struct mount *m = mnt, *last = NULL;
-+
-+	if (!is_mounted(&m->mnt)) {
-+		*err = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (!(mnt_has_parent(m) ? check_mnt(m) : is_anon_ns(m->mnt_ns))) {
-+		*err = -EINVAL;
-+		goto out;
-+	}
-+
-+	do {
-+		unsigned int flags;
-+
-+		flags = recalc_flags(kattr, m);
-+		if (!can_change_locked_flags(m, flags)) {
-+			*err = -EPERM;
-+			goto out;
-+		}
-+
-+		last = m;
-+
-+		if ((kattr->attr_set & MNT_READONLY) &&
-+		    !(m->mnt.mnt_flags & MNT_READONLY)) {
-+			*err = mnt_hold_writers(m);
-+			if (*err)
-+				goto out;
-+		}
-+	} while (kattr->recurse && (m = next_mnt(m, mnt)));
-+
-+out:
-+	return last;
-+}
-+
-+static void mount_setattr_commit(struct mount_kattr *kattr,
-+				 struct mount *mnt, struct mount *last,
-+				 int err)
-+{
-+	struct mount *m = mnt;
-+
-+	do {
-+		if (!err) {
-+			unsigned int flags;
-+
-+			flags = recalc_flags(kattr, m);
-+			WRITE_ONCE(m->mnt.mnt_flags, flags);
-+		}
-+
-+		/*
-+		 * We either set MNT_READONLY above so make it visible
-+		 * before ~MNT_WRITE_HOLD or we failed to recursively
-+		 * apply mount options.
-+		 */
-+		if ((kattr->attr_set & MNT_READONLY) &&
-+		    (m->mnt.mnt_flags & MNT_WRITE_HOLD))
-+			mnt_unhold_writers(m);
-+
-+		if (!err && kattr->propagation)
-+			change_mnt_propagation(m, kattr->propagation);
-+
-+		/*
-+		 * On failure, only cleanup until we found the first mount
-+		 * we failed to handle.
-+		 */
-+		if (err && m == last)
-+			break;
-+	} while (kattr->recurse && (m = next_mnt(m, mnt)));
-+
-+	if (!err)
-+		touch_mnt_namespace(mnt->mnt_ns);
-+}
-+
-+static int do_mount_setattr(struct path *path, struct mount_kattr *kattr)
-+{
-+	struct mount *mnt = real_mount(path->mnt), *last = NULL;
-+	int err = 0;
-+
-+	if (path->dentry != mnt->mnt.mnt_root)
-+		return -EINVAL;
-+
-+	if (kattr->propagation) {
-+		/*
-+		 * Only take namespace_lock() if we're actually changing
-+		 * propagation.
-+		 */
-+		namespace_lock();
-+		if (kattr->propagation == MS_SHARED) {
-+			err = invent_group_ids(mnt, kattr->recurse);
-+			if (err) {
-+				namespace_unlock();
-+				return err;
-+			}
-+		}
-+	}
-+
-+	lock_mount_hash();
-+
-+	/*
-+	 * Get the mount tree in a shape where we can change mount
-+	 * properties without failure.
-+	 */
-+	last = mount_setattr_prepare(kattr, mnt, &err);
-+	if (last) /* Commit all changes or revert to the old state. */
-+		mount_setattr_commit(kattr, mnt, last, err);
-+
-+	unlock_mount_hash();
-+
-+	if (kattr->propagation) {
-+		namespace_unlock();
-+		if (err)
-+			cleanup_group_ids(mnt, NULL);
-+	}
-+
-+	return err;
-+}
-+
-+static int build_mount_kattr(const struct mount_attr *attr,
-+			     struct mount_kattr *kattr, unsigned int flags)
-+{
-+	unsigned int lookup_flags = LOOKUP_AUTOMOUNT | LOOKUP_FOLLOW;
-+
-+	if (flags & AT_NO_AUTOMOUNT)
-+		lookup_flags &= ~LOOKUP_AUTOMOUNT;
-+	if (flags & AT_SYMLINK_NOFOLLOW)
-+		lookup_flags &= ~LOOKUP_FOLLOW;
-+	if (flags & AT_EMPTY_PATH)
-+		lookup_flags |= LOOKUP_EMPTY;
-+
-+	*kattr = (struct mount_kattr) {
-+		.lookup_flags	= lookup_flags,
-+		.recurse	= !!(flags & AT_RECURSIVE),
-+	};
-+
-+	if (attr->propagation & ~MOUNT_SETATTR_PROPAGATION_FLAGS)
-+		return -EINVAL;
-+	if (hweight32(attr->propagation & MOUNT_SETATTR_PROPAGATION_FLAGS) > 1)
-+		return -EINVAL;
-+	kattr->propagation = attr->propagation;
-+
-+	if ((attr->attr_set | attr->attr_clr) & ~MOUNT_SETATTR_VALID_FLAGS)
-+		return -EINVAL;
-+
-+	kattr->attr_set = attr_flags_to_mnt_flags(attr->attr_set);
-+	kattr->attr_clr = attr_flags_to_mnt_flags(attr->attr_clr);
-+
-+	/*
-+	 * Since the MOUNT_ATTR_<atime> values are an enum, not a bitmap,
-+	 * users wanting to transition to a different atime setting cannot
-+	 * simply specify the atime setting in @attr_set, but must also
-+	 * specify MOUNT_ATTR__ATIME in the @attr_clr field.
-+	 * So ensure that MOUNT_ATTR__ATIME can't be partially set in
-+	 * @attr_clr and that @attr_set can't have any atime bits set if
-+	 * MOUNT_ATTR__ATIME isn't set in @attr_clr.
-+	 */
-+	if (attr->attr_clr & MOUNT_ATTR__ATIME) {
-+		if ((attr->attr_clr & MOUNT_ATTR__ATIME) != MOUNT_ATTR__ATIME)
-+			return -EINVAL;
-+
-+		/*
-+		 * Clear all previous time settings as they are mutually
-+		 * exclusive.
-+		 */
-+		kattr->attr_clr |= MNT_RELATIME | MNT_NOATIME;
-+		switch (attr->attr_set & MOUNT_ATTR__ATIME) {
-+		case MOUNT_ATTR_RELATIME:
-+			kattr->attr_set |= MNT_RELATIME;
-+			break;
-+		case MOUNT_ATTR_NOATIME:
-+			kattr->attr_set |= MNT_NOATIME;
-+			break;
-+		case MOUNT_ATTR_STRICTATIME:
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+	} else {
-+		if (attr->attr_set & MOUNT_ATTR__ATIME)
-+			return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+SYSCALL_DEFINE5(mount_setattr, int, dfd, const char __user *, path,
-+		unsigned int, flags, struct mount_attr __user *, uattr,
-+		size_t, usize)
-+{
-+	int err;
-+	struct path target;
-+	struct mount_attr attr;
-+	struct mount_kattr kattr;
-+
-+	BUILD_BUG_ON(sizeof(struct mount_attr) != MOUNT_ATTR_SIZE_VER0);
-+
-+	if (flags & ~(AT_EMPTY_PATH |
-+		      AT_RECURSIVE |
-+		      AT_SYMLINK_NOFOLLOW |
-+		      AT_NO_AUTOMOUNT))
-+		return -EINVAL;
-+
-+	if (unlikely(usize > PAGE_SIZE))
-+		return -E2BIG;
-+	if (unlikely(usize < MOUNT_ATTR_SIZE_VER0))
-+		return -EINVAL;
-+
-+	if (!may_mount())
-+		return -EPERM;
-+
-+	err = copy_struct_from_user(&attr, sizeof(attr), uattr, usize);
-+	if (err)
-+		return err;
-+
-+	/* Don't bother walking through the mounts if this is a nop. */
-+	if (attr.attr_set == 0 &&
-+	    attr.attr_clr == 0 &&
-+	    attr.propagation == 0)
-+		return 0;
-+
-+	err = build_mount_kattr(&attr, &kattr, flags);
-+	if (err)
-+		return err;
-+
-+	err = user_path_at(dfd, path, kattr.lookup_flags, &target);
-+	if (err)
-+		return err;
-+
-+	err = do_mount_setattr(&target, &kattr);
-+	path_put(&target);
-+	return err;
-+}
-+
- static void __init init_mount_tree(void)
- {
- 	struct vfsmount *mnt;
-diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index 7688bc983de5..cd7b5c817ba2 100644
---- a/include/linux/syscalls.h
-+++ b/include/linux/syscalls.h
-@@ -68,6 +68,7 @@ union bpf_attr;
- struct io_uring_params;
- struct clone_args;
- struct open_how;
-+struct mount_attr;
- 
- #include <linux/types.h>
- #include <linux/aio_abi.h>
-@@ -1028,6 +1029,9 @@ asmlinkage long sys_open_tree(int dfd, const char __user *path, unsigned flags);
- asmlinkage long sys_move_mount(int from_dfd, const char __user *from_path,
- 			       int to_dfd, const char __user *to_path,
- 			       unsigned int ms_flags);
-+asmlinkage long sys_mount_setattr(int dfd, const char __user *path,
-+				  unsigned int flags,
-+				  struct mount_attr __user *uattr, size_t usize);
- asmlinkage long sys_fsopen(const char __user *fs_name, unsigned int flags);
- asmlinkage long sys_fsconfig(int fs_fd, unsigned int cmd, const char __user *key,
- 			     const void __user *value, int aux);
-diff --git a/include/uapi/asm-generic/unistd.h b/include/uapi/asm-generic/unistd.h
-index 728752917785..ce58cff99b66 100644
---- a/include/uapi/asm-generic/unistd.h
-+++ b/include/uapi/asm-generic/unistd.h
-@@ -861,9 +861,11 @@ __SYSCALL(__NR_faccessat2, sys_faccessat2)
- __SYSCALL(__NR_process_madvise, sys_process_madvise)
- #define __NR_epoll_pwait2 441
- __SC_COMP(__NR_epoll_pwait2, sys_epoll_pwait2, compat_sys_epoll_pwait2)
-+#define __NR_mount_setattr 442
-+__SYSCALL(__NR_mount_setattr, sys_mount_setattr)
- 
- #undef __NR_syscalls
--#define __NR_syscalls 442
-+#define __NR_syscalls 443
- 
- /*
-  * 32 bit systems traditionally used different
-diff --git a/include/uapi/linux/mount.h b/include/uapi/linux/mount.h
-index dd8306ea336c..2255624e91c8 100644
---- a/include/uapi/linux/mount.h
-+++ b/include/uapi/linux/mount.h
-@@ -1,6 +1,8 @@
- #ifndef _UAPI_LINUX_MOUNT_H
- #define _UAPI_LINUX_MOUNT_H
- 
-+#include <linux/types.h>
-+
- /*
-  * These are the fs-independent mount-flags: up to 32 flags are supported
-  *
-@@ -118,4 +120,16 @@ enum fsconfig_command {
- #define MOUNT_ATTR_STRICTATIME	0x00000020 /* - Always perform atime updates */
- #define MOUNT_ATTR_NODIRATIME	0x00000080 /* Do not update directory access times */
- 
-+/*
-+ * mount_setattr()
-+ */
-+struct mount_attr {
-+	__u64 attr_set;
-+	__u64 attr_clr;
-+	__u64 propagation;
-+};
-+
-+/* List of all mount_attr versions. */
-+#define MOUNT_ATTR_SIZE_VER0	24 /* sizeof first published struct */
-+
- #endif /* _UAPI_LINUX_MOUNT_H */
-diff --git a/tools/include/uapi/asm-generic/unistd.h b/tools/include/uapi/asm-generic/unistd.h
-index 728752917785..ce58cff99b66 100644
---- a/tools/include/uapi/asm-generic/unistd.h
-+++ b/tools/include/uapi/asm-generic/unistd.h
-@@ -861,9 +861,11 @@ __SYSCALL(__NR_faccessat2, sys_faccessat2)
- __SYSCALL(__NR_process_madvise, sys_process_madvise)
- #define __NR_epoll_pwait2 441
- __SC_COMP(__NR_epoll_pwait2, sys_epoll_pwait2, compat_sys_epoll_pwait2)
-+#define __NR_mount_setattr 442
-+__SYSCALL(__NR_mount_setattr, sys_mount_setattr)
- 
- #undef __NR_syscalls
--#define __NR_syscalls 442
-+#define __NR_syscalls 443
- 
- /*
-  * 32 bit systems traditionally used different
 -- 
 2.30.0
 
