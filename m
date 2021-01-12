@@ -7,23 +7,23 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8735C43603
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:03:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98433C4360C
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:03:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 630F6223E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:03:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53749223E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:03:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393886AbhALWDk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 17:03:40 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:42922 "EHLO
+        id S2389678AbhALWDx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 17:03:53 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:43004 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732008AbhALWDj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 17:03:39 -0500
+        with ESMTP id S2393847AbhALWDv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 17:03:51 -0500
 Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
         by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.86_2)
         (envelope-from <christian.brauner@ubuntu.com>)
-        id 1kzRkd-0003bd-8g; Tue, 12 Jan 2021 22:02:55 +0000
+        id 1kzRko-0003bd-DF; Tue, 12 Jan 2021 22:03:06 +0000
 From:   Christian Brauner <christian.brauner@ubuntu.com>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Christoph Hellwig <hch@infradead.org>,
@@ -61,108 +61,151 @@ Cc:     John Johansen <john.johansen@canonical.com>,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
         Christian Brauner <christian.brauner@ubuntu.com>,
         Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 05/42] fs: add attr_flags_to_mnt_flags helper
-Date:   Tue, 12 Jan 2021 23:00:47 +0100
-Message-Id: <20210112220124.837960-6-christian.brauner@ubuntu.com>
+Subject: [PATCH v5 09/42] mount: attach mappings to mounts
+Date:   Tue, 12 Jan 2021 23:00:51 +0100
+Message-Id: <20210112220124.837960-10-christian.brauner@ubuntu.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210112220124.837960-1-christian.brauner@ubuntu.com>
 References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-X-Patch-Hashes: v=1; h=sha256; i=e2Flmg4jYrA1/8xjvTMZVbDsoqOcpDdlFS5OCvIgQko=; m=j8IYdqF5TyXvVdakkdM1Yy728RCVQaFxu74H75eIEr4=; p=ookErxTPvXKLHiKI8N1UF+F7LAbqJ0lYoRIToMAm7ho=; g=f364f419030f1b33d11154114b1ba3e23cb27139
-X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCX/4YtQAKCRCRxhvAZXjcorDrAQCEJk/ yRc+oltxarCyNyLv2069AFVsG/aLvco1LfYiPaQD+N9dUDwte64sa/Qg/9sztLw1Cd3AaxMsQxSED 5kFOGgM=
+X-Patch-Hashes: v=1; h=sha256; i=RNdtgoKaLGCMkof4zQAU3N/xXjoHA/9IvgBRCO94lyQ=; m=m4sUTX63tJxvlN1Z3yC4IXx3n9AwTpPsjK1VR2fo7TE=; p=ACCirFhhOVkzdjl4ucxJqbt+8lVejkyYQx6FbUt2W0Y=; g=4082bc07095b82d49722a5cf3c1cbde1a8cff890
+X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCX/4YtQAKCRCRxhvAZXjcojOHAPwJ60p Jde8zuYoECLqnZgXBRFHaHLBnEA7sZmKWUf76yQD/d0wHNPoB6SEzYiVZsKY/YVpkPJYpt2GB76b9 R2Jp6g4=
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add a simple helper to translate uapi MOUNT_ATTR_* flags to MNT_* flags
-which we will use in follow-up patches too.
+In order to support per-mount idmappings vfsmounts will be marked with
+user namespaces. The idmapping associated with that user namespace will
+be used to map the ids of vfs objects when they are accessed through
+that mount. By default all vfsmounts are marked with the initial user
+namespace. The initial user namespace is used to indicate that a mount
+is not idmapped. All operations behave as before.
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
+Based on prior discussions we want to attach the whole user namespace
+and not just a dedicated idmapping struct. This allows us to reuse all
+the helpers that already exist for dealing with idmappings instead of
+introducing a whole new range of helpers. In addition, if we decide in
+the future that we are confident enough to enable unprivileged users to
+setup idmapped mounts we can allow the user namespace an already
+idmapped mounts has been marked with to be replaced with another one.
+The permission checking would then take into account whether the caller
+is privileged in the user namespace the mount is currently marked with
+and that is about to be replaced with another one. For now, we will
+enforce in later patches that once a mount has been idmapped it can't be
+remapped. This keeps permission checking and life-cycle management
+simple, especially since users can always create a new mount with a
+different idmapping anyway.
+
+The idea to attach user namespaces to vfsmounts has been floated around
+in various forms at Linux Plumbers in ~2018 with the original idea
+tracing back to a discussion during a conference in St. Petersburg
+between Christoph, Tycho, and myself.
+
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: David Howells <dhowells@redhat.com>
 Cc: Al Viro <viro@zeniv.linux.org.uk>
 Cc: linux-fsdevel@vger.kernel.org
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
 ---
 /* v2 */
-patch not present
+patch introduced
+- Christoph Hellwig <hch@lst.de>:
+  - Split internal implementation into separate patch and move syscall
+    implementation later.
 
 /* v3 */
-patch not present
+- David Howells <dhowells@redhat.com>:
+  - Remove MNT_IDMAPPED flag. We can simply check the pointer and use
+    smp_load_acquire() in later patches.
+
+- Tycho Andersen <tycho@tycho.pizza>:
+  - Use READ_ONCE() in mnt_user_ns().
 
 /* v4 */
-patch introduced
+- Serge Hallyn <serge@hallyn.com>:
+  - Use "mnt_userns" to refer to a vfsmount's userns everywhere to make
+    terminology consistent.
+
+- Christoph Hellwig <hch@lst.de>:
+  - Drop the READ_ONCE() from this patch. At this point in the series we
+    don't allowing changing the vfsmount's userns. The infra to do that
+    is only introduced as almost the last patch in the series and there
+    we immediately use smp_load_acquire() and smp_store_release().
 
 /* v5 */
 base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
-
-- Christoph Hellwig <hch@lst.de>:
-  - Align "\" in defines further in.
 ---
- fs/namespace.c | 40 ++++++++++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 16 deletions(-)
+ fs/namespace.c        | 9 +++++++++
+ include/linux/fs.h    | 1 +
+ include/linux/mount.h | 6 ++++++
+ 3 files changed, 16 insertions(+)
 
 diff --git a/fs/namespace.c b/fs/namespace.c
-index 4aab396e5f21..a1cfcab217e1 100644
+index 6efae2681bcd..ceb2943f8458 100644
 --- a/fs/namespace.c
 +++ b/fs/namespace.c
-@@ -3453,6 +3453,28 @@ SYSCALL_DEFINE5(mount, char __user *, dev_name, char __user *, dir_name,
- 	return ret;
- }
+@@ -228,6 +228,7 @@ static struct mount *alloc_vfsmnt(const char *name)
+ 		INIT_HLIST_NODE(&mnt->mnt_mp_list);
+ 		INIT_LIST_HEAD(&mnt->mnt_umounting);
+ 		INIT_HLIST_HEAD(&mnt->mnt_stuck_children);
++		mnt->mnt.mnt_userns = &init_user_ns;
+ 	}
+ 	return mnt;
  
-+#define FSMOUNT_VALID_FLAGS \
-+	(MOUNT_ATTR_RDONLY | MOUNT_ATTR_NOSUID | MOUNT_ATTR_NODEV | \
-+	 MOUNT_ATTR_NOEXEC | MOUNT_ATTR__ATIME | MOUNT_ATTR_NODIRATIME)
+@@ -567,6 +568,11 @@ int sb_prepare_remount_readonly(struct super_block *sb)
+ 
+ static void free_vfsmnt(struct mount *mnt)
+ {
++	struct user_namespace *mnt_userns;
 +
-+static unsigned int attr_flags_to_mnt_flags(u64 attr_flags)
++	mnt_userns = mnt_user_ns(&mnt->mnt);
++	if (mnt_userns != &init_user_ns)
++		put_user_ns(mnt_userns);
+ 	kfree_const(mnt->mnt_devname);
+ #ifdef CONFIG_SMP
+ 	free_percpu(mnt->mnt_pcp);
+@@ -1075,6 +1081,9 @@ static struct mount *clone_mnt(struct mount *old, struct dentry *root,
+ 	mnt->mnt.mnt_flags &= ~(MNT_WRITE_HOLD|MNT_MARKED|MNT_INTERNAL);
+ 
+ 	atomic_inc(&sb->s_active);
++	mnt->mnt.mnt_userns = mnt_user_ns(&old->mnt);
++	if (mnt->mnt.mnt_userns != &init_user_ns)
++		mnt->mnt.mnt_userns = get_user_ns(mnt->mnt.mnt_userns);
+ 	mnt->mnt.mnt_sb = sb;
+ 	mnt->mnt.mnt_root = dget(root);
+ 	mnt->mnt_mountpoint = mnt->mnt.mnt_root;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 1da4c21fb588..0e2b8d235dca 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2278,6 +2278,7 @@ struct file_system_type {
+ #define FS_HAS_SUBTYPE		4
+ #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
+ #define FS_DISALLOW_NOTIFY_PERM	16	/* Disable fanotify permission events */
++#define FS_ALLOW_IDMAP         32      /* FS has been updated to handle vfs idmappings. */
+ #define FS_THP_SUPPORT		8192	/* Remove once all fs converted */
+ #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
+ 	int (*init_fs_context)(struct fs_context *);
+diff --git a/include/linux/mount.h b/include/linux/mount.h
+index aaf343b38671..52de25e08319 100644
+--- a/include/linux/mount.h
++++ b/include/linux/mount.h
+@@ -72,8 +72,14 @@ struct vfsmount {
+ 	struct dentry *mnt_root;	/* root of the mounted tree */
+ 	struct super_block *mnt_sb;	/* pointer to superblock */
+ 	int mnt_flags;
++	struct user_namespace *mnt_userns;
+ } __randomize_layout;
+ 
++static inline struct user_namespace *mnt_user_ns(const struct vfsmount *mnt)
 +{
-+	unsigned int mnt_flags = 0;
-+
-+	if (attr_flags & MOUNT_ATTR_RDONLY)
-+		mnt_flags |= MNT_READONLY;
-+	if (attr_flags & MOUNT_ATTR_NOSUID)
-+		mnt_flags |= MNT_NOSUID;
-+	if (attr_flags & MOUNT_ATTR_NODEV)
-+		mnt_flags |= MNT_NODEV;
-+	if (attr_flags & MOUNT_ATTR_NOEXEC)
-+		mnt_flags |= MNT_NOEXEC;
-+	if (attr_flags & MOUNT_ATTR_NODIRATIME)
-+		mnt_flags |= MNT_NODIRATIME;
-+
-+	return mnt_flags;
++	return mnt->mnt_userns;
 +}
 +
- /*
-  * Create a kernel mount representation for a new, prepared superblock
-  * (specified by fs_fd) and attach to an open_tree-like file descriptor.
-@@ -3475,24 +3497,10 @@ SYSCALL_DEFINE3(fsmount, int, fs_fd, unsigned int, flags,
- 	if ((flags & ~(FSMOUNT_CLOEXEC)) != 0)
- 		return -EINVAL;
+ struct file; /* forward dec */
+ struct path;
  
--	if (attr_flags & ~(MOUNT_ATTR_RDONLY |
--			   MOUNT_ATTR_NOSUID |
--			   MOUNT_ATTR_NODEV |
--			   MOUNT_ATTR_NOEXEC |
--			   MOUNT_ATTR__ATIME |
--			   MOUNT_ATTR_NODIRATIME))
-+	if (attr_flags & ~FSMOUNT_VALID_FLAGS)
- 		return -EINVAL;
- 
--	if (attr_flags & MOUNT_ATTR_RDONLY)
--		mnt_flags |= MNT_READONLY;
--	if (attr_flags & MOUNT_ATTR_NOSUID)
--		mnt_flags |= MNT_NOSUID;
--	if (attr_flags & MOUNT_ATTR_NODEV)
--		mnt_flags |= MNT_NODEV;
--	if (attr_flags & MOUNT_ATTR_NOEXEC)
--		mnt_flags |= MNT_NOEXEC;
--	if (attr_flags & MOUNT_ATTR_NODIRATIME)
--		mnt_flags |= MNT_NODIRATIME;
-+	mnt_flags = attr_flags_to_mnt_flags(attr_flags);
- 
- 	switch (attr_flags & MOUNT_ATTR__ATIME) {
- 	case MOUNT_ATTR_STRICTATIME:
 -- 
 2.30.0
 
