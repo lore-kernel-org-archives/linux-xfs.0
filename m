@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95EF1C43381
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 19:05:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B042C4332B
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 19:05:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6407823102
+	by mail.kernel.org (Postfix) with ESMTP id E0B7723102
 	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 19:05:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406056AbhALTFb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 14:05:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42284 "EHLO mail.kernel.org"
+        id S2406646AbhALTFd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 14:05:33 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42274 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2406589AbhALTF3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S2406182AbhALTF3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Tue, 12 Jan 2021 14:05:29 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 44D8F23134;
-        Tue, 12 Jan 2021 19:04:12 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 250CD23123;
+        Tue, 12 Jan 2021 19:04:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610478252;
-        bh=6FqWuQrXV+HGHkzTR42Ape3on4H7NKo1rahsTeQDI4c=;
+        s=k20201202; t=1610478250;
+        bh=m55hWuVO7Kccok6ZKvWfkDaBgW4VZjCcVIhDde63id4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RZNZ7JkkNHWRoE3L2XHIBFGDbwLmXQ+WYmrSQ2HH5mrAH3MtFyOQ0LJ3XzuG+BY4y
-         Ji+rdyAJ/Veytz+4dA94ERGnUigqHy0UnTkMBHX3hMM1lpgpo62tkwB8hq57YCbBS2
-         mSpxDL4QT3QnH5GgvYEHuAvdrKqC/sWHNDwlpy7hlUjEyBW/VUJPoonFZt7omR5ygJ
-         u+3VdJWj6zeBFzD0LHf+ThYBySvpcxA7LHRs2EujZ9L/va74iZnRNhyVvauDdUf+To
-         kefvDtvLXHBcCaVR/JzpiX8n8OVbP6jRDf4CZ8F0mW0jGMkcAqjwaEqOQF2vg/QhvM
-         gWcEr3/JZZHjA==
+        b=SqmyZM1Vj4rj6sk7BL3j8N7ZxNNj5YrQ6sKSXeRtRZ6nEUbcEB1ey4UKjs7cUY0QG
+         3jxnnBrbLgk4sXulh/DgD1DBjmtZ0CLGGML2I3z87lQKnRpduuqFUjsCX3QRhmejIl
+         YhOFSXc6h7XSjclkhNOndP7FEHXZ03VeUzzY89KWgPTOZ038eWia/aJgKdMtDnLct+
+         vu10MdmUHnd2pxllFbzEcIaFAWeVwvyYGnTmK0j+u/MnIw6B58gbgyG2O1VZVH1uxs
+         iNPiJPIxWn7IrfelsMbBi6ghOsWhcPVe7NaSltWvUEXJslJnMwukVpKAcluIldXwu2
+         jSTjCkEox99zw==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net,
-        Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 11/11] ext4: simplify i_state checks in __ext4_update_other_inode_time()
-Date:   Tue, 12 Jan 2021 11:02:53 -0800
-Message-Id: <20210112190253.64307-12-ebiggers@kernel.org>
+        Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>,
+        Jan Kara <jack@suse.cz>
+Subject: [PATCH v3 07/11] fs: clean up __mark_inode_dirty() a bit
+Date:   Tue, 12 Jan 2021 11:02:49 -0800
+Message-Id: <20210112190253.64307-8-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210112190253.64307-1-ebiggers@kernel.org>
 References: <20210112190253.64307-1-ebiggers@kernel.org>
@@ -50,66 +51,110 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-Since I_DIRTY_TIME and I_DIRTY_INODE are mutually exclusive in i_state,
-there's no need to check for I_DIRTY_TIME && !I_DIRTY_INODE.  Just check
-for I_DIRTY_TIME.
+Improve some comments, and don't bother checking for the I_DIRTY_TIME
+flag in the case where we just cleared it.
 
-Also introduce a helper function in include/linux/fs.h to do this check.
+Also, warn if I_DIRTY_TIME and I_DIRTY_PAGES are passed to
+__mark_inode_dirty() at the same time, as this case isn't handled.
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- fs/ext4/inode.c    |  8 ++------
- include/linux/fs.h | 15 +++++++++++++++
- 2 files changed, 17 insertions(+), 6 deletions(-)
+ fs/fs-writeback.c | 49 +++++++++++++++++++++++++++++------------------
+ 1 file changed, 30 insertions(+), 19 deletions(-)
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 4cc6c7834312f..d809a06b6ef7f 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -4961,15 +4961,11 @@ static void __ext4_update_other_inode_time(struct super_block *sb,
- 	if (!inode)
- 		return;
- 
--	if ((inode->i_state & (I_FREEING | I_WILL_FREE | I_NEW |
--			       I_DIRTY_INODE)) ||
--	    ((inode->i_state & I_DIRTY_TIME) == 0))
-+	if (!inode_is_dirtytime_only(inode))
- 		return;
- 
- 	spin_lock(&inode->i_lock);
--	if (((inode->i_state & (I_FREEING | I_WILL_FREE | I_NEW |
--				I_DIRTY_INODE)) == 0) &&
--	    (inode->i_state & I_DIRTY_TIME)) {
-+	if (inode_is_dirtytime_only(inode)) {
- 		struct ext4_inode_info	*ei = EXT4_I(inode);
- 
- 		inode->i_state &= ~I_DIRTY_TIME;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 45a0303b2aeb6..de0c789104c26 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2194,6 +2194,21 @@ static inline void mark_inode_dirty_sync(struct inode *inode)
- 	__mark_inode_dirty(inode, I_DIRTY_SYNC);
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 2e6064012f7d3..80ee9816d9df5 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -2219,23 +2219,24 @@ static noinline void block_dump___mark_inode_dirty(struct inode *inode)
  }
  
-+/*
-+ * Returns true if the given inode itself only has dirty timestamps (its pages
-+ * may still be dirty) and isn't currently being allocated or freed.
-+ * Filesystems should call this if when writing an inode when lazytime is
-+ * enabled, they want to opportunistically write the timestamps of other inodes
-+ * located very nearby on-disk, e.g. in the same inode block.  This returns true
-+ * if the given inode is in need of such an opportunistic update.  Requires
-+ * i_lock, or at least later re-checking under i_lock.
-+ */
-+static inline bool inode_is_dirtytime_only(struct inode *inode)
-+{
-+	return (inode->i_state & (I_DIRTY_TIME | I_NEW |
-+				  I_FREEING | I_WILL_FREE)) == I_DIRTY_TIME;
-+}
-+
- extern void inc_nlink(struct inode *inode);
- extern void drop_nlink(struct inode *inode);
- extern void clear_nlink(struct inode *inode);
+ /**
+- * __mark_inode_dirty -	internal function
++ * __mark_inode_dirty -	internal function to mark an inode dirty
+  *
+  * @inode: inode to mark
+- * @flags: what kind of dirty (i.e. I_DIRTY_SYNC)
++ * @flags: what kind of dirty, e.g. I_DIRTY_SYNC.  This can be a combination of
++ *	   multiple I_DIRTY_* flags, except that I_DIRTY_TIME can't be combined
++ *	   with I_DIRTY_PAGES.
+  *
+- * Mark an inode as dirty. Callers should use mark_inode_dirty or
+- * mark_inode_dirty_sync.
++ * Mark an inode as dirty.  We notify the filesystem, then update the inode's
++ * dirty flags.  Then, if needed we add the inode to the appropriate dirty list.
+  *
+- * Put the inode on the super block's dirty list.
++ * Most callers should use mark_inode_dirty() or mark_inode_dirty_sync()
++ * instead of calling this directly.
+  *
+- * CAREFUL! We mark it dirty unconditionally, but move it onto the
+- * dirty list only if it is hashed or if it refers to a blockdev.
+- * If it was not hashed, it will never be added to the dirty list
+- * even if it is later hashed, as it will have been marked dirty already.
++ * CAREFUL!  We only add the inode to the dirty list if it is hashed or if it
++ * refers to a blockdev.  Unhashed inodes will never be added to the dirty list
++ * even if they are later hashed, as they will have been marked dirty already.
+  *
+- * In short, make sure you hash any inodes _before_ you start marking
+- * them dirty.
++ * In short, ensure you hash any inodes _before_ you start marking them dirty.
+  *
+  * Note that for blockdevs, inode->dirtied_when represents the dirtying time of
+  * the block-special inode (/dev/hda1) itself.  And the ->dirtied_when field of
+@@ -2247,25 +2248,34 @@ static noinline void block_dump___mark_inode_dirty(struct inode *inode)
+ void __mark_inode_dirty(struct inode *inode, int flags)
+ {
+ 	struct super_block *sb = inode->i_sb;
+-	int dirtytime;
++	int dirtytime = 0;
+ 
+ 	trace_writeback_mark_inode_dirty(inode, flags);
+ 
+-	/*
+-	 * Don't do this for I_DIRTY_PAGES - that doesn't actually
+-	 * dirty the inode itself
+-	 */
+ 	if (flags & I_DIRTY_INODE) {
++		/*
++		 * Notify the filesystem about the inode being dirtied, so that
++		 * (if needed) it can update on-disk fields and journal the
++		 * inode.  This is only needed when the inode itself is being
++		 * dirtied now.  I.e. it's only needed for I_DIRTY_INODE, not
++		 * for just I_DIRTY_PAGES or I_DIRTY_TIME.
++		 */
+ 		trace_writeback_dirty_inode_start(inode, flags);
+-
+ 		if (sb->s_op->dirty_inode)
+ 			sb->s_op->dirty_inode(inode, flags & I_DIRTY_INODE);
+-
+ 		trace_writeback_dirty_inode(inode, flags);
+ 
++		/* I_DIRTY_INODE supersedes I_DIRTY_TIME. */
+ 		flags &= ~I_DIRTY_TIME;
++	} else {
++		/*
++		 * Else it's either I_DIRTY_PAGES, I_DIRTY_TIME, or nothing.
++		 * (We don't support setting both I_DIRTY_PAGES and I_DIRTY_TIME
++		 * in one call to __mark_inode_dirty().)
++		 */
++		dirtytime = flags & I_DIRTY_TIME;
++		WARN_ON_ONCE(dirtytime && flags != I_DIRTY_TIME);
+ 	}
+-	dirtytime = flags & I_DIRTY_TIME;
+ 
+ 	/*
+ 	 * Paired with smp_mb() in __writeback_single_inode() for the
+@@ -2288,6 +2298,7 @@ void __mark_inode_dirty(struct inode *inode, int flags)
+ 
+ 		inode_attach_wb(inode, NULL);
+ 
++		/* I_DIRTY_INODE supersedes I_DIRTY_TIME. */
+ 		if (flags & I_DIRTY_INODE)
+ 			inode->i_state &= ~I_DIRTY_TIME;
+ 		inode->i_state |= flags;
 -- 
 2.30.0
 
