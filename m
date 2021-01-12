@@ -4,193 +4,116 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C722DC433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 07:41:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40B54C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 07:41:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EB9820789
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 07:41:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3A1D20789
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 07:41:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731889AbhALHl3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 02:41:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33644 "EHLO
+        id S1732521AbhALHlb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 02:41:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730190AbhALHl2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 02:41:28 -0500
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BF8BC061786;
-        Mon, 11 Jan 2021 23:40:48 -0800 (PST)
-Received: by mail-pl1-x62b.google.com with SMTP id b8so974133plx.0;
-        Mon, 11 Jan 2021 23:40:48 -0800 (PST)
+        with ESMTP id S1730190AbhALHlb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 02:41:31 -0500
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAD63C061794;
+        Mon, 11 Jan 2021 23:40:50 -0800 (PST)
+Received: by mail-pf1-x435.google.com with SMTP id h10so880091pfo.9;
+        Mon, 11 Jan 2021 23:40:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=FziieGX35lUGsDSIa+9jDQm1LpdgmV6iOVPeNYo1+wU=;
-        b=cGraoOV7+cmytk/MYRVVQPvIL6NkuniXpxFQbSdDmoag3E/SoYKqimkYDeAlyBubHI
-         qi7mpV64unFLfkNQeDSOeCDnsUh2fbw5A7V2QWAWGAYUqD1sWaJSUHbhl/n/yNiaQ6JK
-         txlis2A8B4UDkzQAXkVDQuUsEF5dBNfffRq4e8h4W+otWZdBsRbOfZGHJ7EKaL9jnMpb
-         YhpdcB4+1vuYyTKs+7NaOk2l29a40Mg05yrwQI87pJkOfLx1DRgOPHYyl81IqzhcEmit
-         mT0JlE7sl6Monm3NexwSlyg4666DRhybEJHhDi2p+PnfWpZsCKjRDOW6MGPAa6qOaTje
-         TLPw==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=tuRANglPuvCThAaGoAF4a7CUchGXxnbMIAXQeoen4YY=;
+        b=usisPELkuG/Xu6/jsf3bH44hLVmemTJ5aR1XYtDtUYKfiQZ194Oho+KUmN/e5Q3zkB
+         zRhsCvv8g9jgY0A9PzdHJJYT707A1mp+i6voKfEBQW9YAln7C4Ji+zAP+Z2iZl782tYt
+         4ckFyMUfQw+8ryp5we1NrKLbCixxudCcBYyFE6cPqsfJjINXPVhyKntnXJhF1RUzXQjw
+         QW/QHZO96o9AX0xI7baLdL8ej5DgtRhbmucRzTOZ+9wccAlrXMknJHNou5VlPf4qNm3B
+         kwlbY9PhmZEGWTkJzQ7nxXl1wAWhBRVRe9Aa9nvoVJPsXZ/G79UoK9762cQu78zo+Mr0
+         qfYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=FziieGX35lUGsDSIa+9jDQm1LpdgmV6iOVPeNYo1+wU=;
-        b=PosvuNTTNW70xnlS/VZJn3MODdSKotYkFsAMcWzYmvt0Dwqn6/gCBpdClDa56s7l2r
-         wp/rW+fjDpj49oeBtvcumrc6jfi0QfrsdmjRP+oKlxRJaVh1oNdiBuKijcBZHK7kLwGP
-         AjsxeSczj3ZO/QELKAyUg0jUzin3G83JvAuzjAmbNljLPBXxPh+odX2pxa5FxFJNcJGY
-         u2hgKIzYjpgaWeFJb57xpt7QueOjlKHySQZ7k5WDHbH+u1AtGyzelX0ygcTbsBIi2U43
-         08pi9eMOc0CtiZrh+hAIyAm2gvDA7uu8yiIZ+DzEuib85SWU6vhgty2rXVL1a5HCN7Yu
-         sADQ==
-X-Gm-Message-State: AOAM533R17GvHs3rI3wkFo5/WlMNFVyagNy/mSW5DZeBglmp++NRzZ8M
-        E+D4zY80tGh6Xz7Gx/bhz6TVnrBm9+Q=
-X-Google-Smtp-Source: ABdhPJwT6k63t2Y7HkHq/o78E8irrcQl2UX4oufewXX2k7sSEAR9DoeZrL7rrRy0kC/8isyWOxSXTQ==
-X-Received: by 2002:a17:90b:4ad2:: with SMTP id mh18mr3190106pjb.137.1610437247987;
-        Mon, 11 Jan 2021 23:40:47 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=tuRANglPuvCThAaGoAF4a7CUchGXxnbMIAXQeoen4YY=;
+        b=COZudaLD/svagusHcdP8y15Uo2lbgt3tTFgikefKL4P4VKr6TsnyOuy/bS+JDRIUE6
+         3RAJX/M98TWUL2N7/ulV/c6SwgiynGN83AOtCmE9KtOk3jOUDU3c566ZjXPoRnwZWTRT
+         0SHhYZKqjZLDm4y1O7mH2NVHVFEPr8C04nm9N5rTXWuuIoMIAJcj85hDVA/sActuH57c
+         /9sa3Bkk3GupNHvVLVQYumfrqSnsK581ejBGAAqJUG9hg0xbEnG7p8RYDX4WTkVmZMVl
+         /OaJ19jXHhzU7WP3F6xWEEDM0APaKu3wj/D6C039D35yZiAyE1xM69jjLtN3UshVmwth
+         jh2w==
+X-Gm-Message-State: AOAM532X4Br1W67k5nBW/OWVQJWh1mvtCuqIxbO+RH30q5YASiSlGHaY
+        UA1lGoau9+V+es51N4kijSy/rTNJXlQ=
+X-Google-Smtp-Source: ABdhPJx/uKACnT/2cOSEuLPYCacSgUn/7w8kRTqa+VKtlGX2Gp3T4us6iqqSKOk/sU6ex/8z0H4AoQ==
+X-Received: by 2002:a62:14d3:0:b029:19e:88c0:8c67 with SMTP id 202-20020a6214d30000b029019e88c08c67mr3318651pfu.69.1610437250259;
+        Mon, 11 Jan 2021 23:40:50 -0800 (PST)
 Received: from localhost.localdomain ([122.171.39.105])
-        by smtp.gmail.com with ESMTPSA id mj5sm1962340pjb.20.2021.01.11.23.40.45
+        by smtp.gmail.com with ESMTPSA id mj5sm1962340pjb.20.2021.01.11.23.40.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Jan 2021 23:40:47 -0800 (PST)
+        Mon, 11 Jan 2021 23:40:49 -0800 (PST)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     fstests@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
         linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
         djwong@kernel.org
-Subject: [PATCH V3 00/11] xfs: Tests to verify inode fork extent count overflow detection
-Date:   Tue, 12 Jan 2021 13:10:16 +0530
-Message-Id: <20210112074027.10311-1-chandanrlinux@gmail.com>
+Subject: [PATCH V3 01/11] common/xfs: Add a helper to get an inode fork's extent count
+Date:   Tue, 12 Jan 2021 13:10:17 +0530
+Message-Id: <20210112074027.10311-2-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210112074027.10311-1-chandanrlinux@gmail.com>
+References: <20210112074027.10311-1-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The patchset at
-https://lore.kernel.org/linux-xfs/20210110160720.3922965-1-chandanrlinux@gmail.com/T/
-added support for XFS to detect inode extent count overflow when
-performing various filesystem operations. The patchset also added
-new error injection tags for,
-1. Reducing maximum extent count to 10.
-2. Allocating only single block sized extents.
+This commit adds the helper _scratch_get_iext_count() which returns an
+inode fork's extent count.
 
-The corresponding code for xfsprogs can be obtained from
-https://lore.kernel.org/linux-xfs/20201104114900.172147-1-chandanrlinux@gmail.com/.
+Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+---
+ common/xfs | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-The patches posted along with this cover letter add tests to verify
-the correctness of in-kernel inode extent count overflow detection
-mechanism.
-
-These patches can also be obtained from
-https://github.com/chandanr/xfstests.git at branch
-extent-overflow-tests.
-
-Changelog:
-V2 -> V3:
-  1. Kernel's max pseudo extent count is once again set to 10. Hence
-     change the tests back to using 10 as the maximum extent count.
-  2. The following tests associated with directories have been removed
-     since directory remove and rename operations are not expected to
-     fail (with -EFBIG error code) in low inode extent count
-     scenarios:
-     - Populate source directory and mv one entry to destination
-       directory.
-     - Populate a directory and remove one entry.
-
-V1 -> V2:
-  1. Obtain extent count for inodes accessible through filesystem path
-     names via "xfs_io -c 'stat' ..." command line. This gets rid of
-     unmount/mount cycles from most of the tests.
-  2. Use _fill_fs() to consume free space of a filesystem.
-  3. Use _scratch_inject_error() helper to enable/disable error tags.
-  4. Use sizeof(struct xfs_dqblk) to calculate number of quotas inside
-     one filesystem block.
-  5. Write once to every block of the quota inode instead of
-     sequentially filling up each block.
-  6. Use _get_file_block_size() for tests involving regular files.
-  7. Modify tests to suit the new pseudo max extent count of 35.
-  8. Replace xfs_io with $XFS_IO_PROG.
-  9. Remove code that extended a realtime file since this takes the
-     same path as direct I/O to a regular file.
-  10. For xattr, do not execute test script when block size is < 4k.
-  11. Add code to test if removing an xattr from a full attribute fork
-      succeeds.
-  12. Add code to test if removing a file whose attribute fork is full
-      succeeds.
-  13. Add code to test if removing a entry from a full directory
-      succeeds.
-  14. Add code to test if removing a full directory succeeds.
-  15. Writing to unwritten extents: Integrate buffered and direct I/O
-      tests into a for loop.
-  16. Writing to a shared extent test: Add test to check funshare
-      operation.
-  17. Use _scale_fsstress_args() to scale values for "-p" and "-n"
-      arguments for fsstress.
-
-Chandan Babu R (11):
-  common/xfs: Add a helper to get an inode fork's extent count
-  xfs: Check for extent overflow when trivally adding a new extent
-  xfs: Check for extent overflow when growing realtime bitmap/summary
-    inodes
-  xfs: Check for extent overflow when punching a hole
-  xfs: Check for extent overflow when adding/removing xattrs
-  xfs: Check for extent overflow when adding/removing dir entries
-  xfs: Check for extent overflow when writing to unwritten extent
-  xfs: Check for extent overflow when moving extent from cow to data
-    fork
-  xfs: Check for extent overflow when remapping an extent
-  xfs: Check for extent overflow when swapping extents
-  xfs: Stress test with bmap_alloc_minlen_extent error tag enabled
-
- common/xfs        |  22 ++++++
- tests/xfs/522     | 173 ++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/522.out |  20 +++++
- tests/xfs/523     | 119 +++++++++++++++++++++++++++++
- tests/xfs/523.out |  11 +++
- tests/xfs/524     |  84 +++++++++++++++++++++
- tests/xfs/524.out |  19 +++++
- tests/xfs/525     | 141 +++++++++++++++++++++++++++++++++++
- tests/xfs/525.out |  18 +++++
- tests/xfs/526     | 186 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/526.out |  17 +++++
- tests/xfs/527     |  89 ++++++++++++++++++++++
- tests/xfs/527.out |  11 +++
- tests/xfs/528     | 110 +++++++++++++++++++++++++++
- tests/xfs/528.out |  12 +++
- tests/xfs/529     |  82 ++++++++++++++++++++
- tests/xfs/529.out |   8 ++
- tests/xfs/530     | 109 +++++++++++++++++++++++++++
- tests/xfs/530.out |  13 ++++
- tests/xfs/531     |  84 +++++++++++++++++++++
- tests/xfs/531.out |   7 ++
- tests/xfs/group   |  10 +++
- 22 files changed, 1345 insertions(+)
- create mode 100755 tests/xfs/522
- create mode 100644 tests/xfs/522.out
- create mode 100755 tests/xfs/523
- create mode 100644 tests/xfs/523.out
- create mode 100755 tests/xfs/524
- create mode 100644 tests/xfs/524.out
- create mode 100755 tests/xfs/525
- create mode 100644 tests/xfs/525.out
- create mode 100755 tests/xfs/526
- create mode 100644 tests/xfs/526.out
- create mode 100755 tests/xfs/527
- create mode 100644 tests/xfs/527.out
- create mode 100755 tests/xfs/528
- create mode 100644 tests/xfs/528.out
- create mode 100755 tests/xfs/529
- create mode 100644 tests/xfs/529.out
- create mode 100755 tests/xfs/530
- create mode 100644 tests/xfs/530.out
- create mode 100755 tests/xfs/531
- create mode 100644 tests/xfs/531.out
-
+diff --git a/common/xfs b/common/xfs
+index 3f5c14ba..641d6195 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -903,6 +903,28 @@ _scratch_get_bmx_prefix() {
+ 	return 1
+ }
+ 
++_scratch_get_iext_count()
++{
++	ino=$1
++	whichfork=$2
++
++	case $whichfork in
++		"attr")
++			field=core.naextents
++			;;
++		"data")
++			field=core.nextents
++			;;
++		*)
++			return 1
++	esac
++
++	nextents=$(_scratch_xfs_db  -c "inode $ino" -c "print $field")
++	nextents=${nextents##${field} = }
++
++	echo $nextents
++}
++
+ #
+ # Ensures that we don't pass any mount options incompatible with XFS v4
+ #
 -- 
 2.29.2
 
