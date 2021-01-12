@@ -2,235 +2,141 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DB63C43603
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 07:42:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 381F9C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 08:02:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47018230F9
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 07:42:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E630022DD3
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 08:02:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392037AbhALHmQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 02:42:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33840 "EHLO
+        id S1730429AbhALICU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 03:02:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387522AbhALHmQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 02:42:16 -0500
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0887C0617AA;
-        Mon, 11 Jan 2021 23:41:11 -0800 (PST)
-Received: by mail-pj1-x1036.google.com with SMTP id m5so1119399pjv.5;
-        Mon, 11 Jan 2021 23:41:11 -0800 (PST)
+        with ESMTP id S1729258AbhALICU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 03:02:20 -0500
+Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 809DFC061786
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Jan 2021 00:01:39 -0800 (PST)
+Received: by mail-wr1-x42a.google.com with SMTP id a12so1407931wrv.8
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Jan 2021 00:01:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=cfGsCj6MkXBBxVARbxSja/PAQC29R0bS584DXGVe8lk=;
-        b=SQsZBWrMsXPsn9bdBtcgA8Um5ZaBFRCXxAJbHTHqdMve7ZN0V6I7vOheAF6onIX+lK
-         mLlRaP+koyOZUiEIJvwTNYBj/YcFsFZMDcE3D9tXueHmiRgGcAgZWdXPoQO1a/ZQMLG+
-         3toIFYo2iQZqs9JWr7YQn07JrxNNAnnGyJhNcRKoK7buyASu7iFnZTID/za6vMdJu5kc
-         LPe/masb7vcdbQWd3wUe6gyXGxGBlBy0j3PFSceIRe+tYnyIICJ+BmZPdmfWDDzJ9dJq
-         6oyZAmMp6hqZoD2JOqjVCIKR4nZyQUcTJSsKY7TwPggHQSs9TwdEADSbu4GdMf9JSfvn
-         ohMw==
+        d=scylladb-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=PFKDtPo1a0FSfTRkDcyQMlgZTLN7NgoxHkQCz7hEfCA=;
+        b=GESr4r8n0hvRkUoSIrlidgelHHjZnaVoSA8VcIUX1g6MPjLaCoWkNBk138OchoNgz3
+         rHmZ3fpEfXzLtvLuB2hJDRZF2U6AMEAbF5RQLlonvOh5BQzWDLMebDFLEFy6FGaMN34U
+         9haYz1Za50Dx/7BDZzRgUIwHLBnN0jaT9J7k2Ie4QcgQ0LdNV371TUDe3bBfN1bUYQm7
+         eirEmoYgZpfXTg9VH6qNa77N7giE9G9R4BbpV3LOn/Amxa5NPURbiIcIcw4wdawlKDdd
+         r6PI9Fgdpi0HAcK/Km+kbUhP6vA7imLjzadFEVCjrMzHXuexj0My48/DauJQ//zP9fH9
+         shGQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=cfGsCj6MkXBBxVARbxSja/PAQC29R0bS584DXGVe8lk=;
-        b=NYNAStftYKG1ePzF0r5j52IL4qxc6akAi7S+fvtkBkyXwZzJsZIcrazTrxwmnWfYaF
-         B8REkiQfs44secEz1WLsllvuN3CjmfaxqdCoHnYxA/Q3NzL1DoQBdLeyAXhqHs65nmIt
-         VmyZzzvcpR5cUjheHmzIAAcBlpneXVtrGvpYY8FkgsAZh5VIUAc8V6l3I6bJeGmHf72U
-         scwXtrfYE/RxyrZerHdDy8tFfjVdukTyd3j9xazVSkJVH7UnmGW8gm8y+okg3qmyUQjD
-         ALNiBexFRrwWiHAbMnY4mRSnIfjQdMWpKcLG8k6Azqa4rvIcEDrT8Be6b0Boi90GIjR0
-         7YeA==
-X-Gm-Message-State: AOAM531xiIFsvW9QCmOlt6Fpiaih0GOzMu8r+nwtx81eMgz59n9tL1Wc
-        YDGUlzkHKRc9jUzft7Db5zpou5mMsiY=
-X-Google-Smtp-Source: ABdhPJxp3v1CeWqPBA9ogNx2zCpuP5gnt5cQAeVGKkHRSNoCG/WXKhwC3slaiH2xTG/Oee7AFJboSA==
-X-Received: by 2002:a17:902:fe87:b029:da:5d3b:4a84 with SMTP id x7-20020a170902fe87b02900da5d3b4a84mr3994491plm.51.1610437271285;
-        Mon, 11 Jan 2021 23:41:11 -0800 (PST)
-Received: from localhost.localdomain ([122.171.39.105])
-        by smtp.gmail.com with ESMTPSA id mj5sm1962340pjb.20.2021.01.11.23.41.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Jan 2021 23:41:10 -0800 (PST)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     fstests@vger.kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
-        linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        djwong@kernel.org
-Subject: [PATCH V3 10/11] xfs: Check for extent overflow when swapping extents
-Date:   Tue, 12 Jan 2021 13:10:26 +0530
-Message-Id: <20210112074027.10311-11-chandanrlinux@gmail.com>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210112074027.10311-1-chandanrlinux@gmail.com>
-References: <20210112074027.10311-1-chandanrlinux@gmail.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=PFKDtPo1a0FSfTRkDcyQMlgZTLN7NgoxHkQCz7hEfCA=;
+        b=Vh8bwmks9KO34nchSyn1CPHLv0ciIZFrUVxjPlxRnF/vVSaUAqjLotpH91JTKdjRu7
+         W3MYk6aqBRYYVxLRQGSRrzpvAgZVYGYyUb1VxTDShtwWYf0uF03qQmO6acVzuhEbiOq6
+         BhFZuFN+ML2VPg2inaZ4jdfU3nIruHhTakUvI+9AS4wk8+piBKizNisJTe+TkjDhomQl
+         yvfeDsz2tmMhnVj10FWseKlG5lADA4v/6ptPhVWeefG0RXNah+lla+8kOA3Pa2nKMijw
+         G06Ir/+j4CZLQ3Mu0Q3XvvAzsYm/+/VVyppw3oHl3v/g0kdv768ITzpbwt7oSZEoIvhk
+         kDAQ==
+X-Gm-Message-State: AOAM533Lvo2e6vOXGmKAttTXmlmctikQcv1HcGCxFBTRPqXKYJ0s99au
+        xNu9K9hHqm5/pA99JY8lnE2vlQ==
+X-Google-Smtp-Source: ABdhPJxN3fb/tsJE+RL8P1VlM1dktkxRYvrs4nrV6ook5U7bcQx1dhKDwLo0Fs/7+/mEl8PzKrVpew==
+X-Received: by 2002:adf:fccb:: with SMTP id f11mr2877260wrs.3.1610438498101;
+        Tue, 12 Jan 2021 00:01:38 -0800 (PST)
+Received: from tmp.scylladb.com (bzq-79-182-3-66.red.bezeqint.net. [79.182.3.66])
+        by smtp.googlemail.com with ESMTPSA id g14sm3108482wrd.32.2021.01.12.00.01.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 12 Jan 2021 00:01:37 -0800 (PST)
+Subject: Re: [RFC] xfs: reduce sub-block DIO serialisation
+To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, andres@anarazel.de
+References: <20210112010746.1154363-1-david@fromorbit.com>
+From:   Avi Kivity <avi@scylladb.com>
+Message-ID: <32f99253-fe56-9198-e47c-7eb0e24fdf73@scylladb.com>
+Date:   Tue, 12 Jan 2021 10:01:35 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210112010746.1154363-1-david@fromorbit.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This test verifies that XFS does not cause inode fork's extent count to
-overflow when swapping forks across two files.
+On 1/12/21 3:07 AM, Dave Chinner wrote:
+> Hi folks,
+>
+> This is the XFS implementation on the sub-block DIO optimisations
+> for written extents that I've mentioned on #xfs and a couple of
+> times now on the XFS mailing list.
+>
+> It takes the approach of using the IOMAP_NOWAIT non-blocking
+> IO submission infrastructure to optimistically dispatch sub-block
+> DIO without exclusive locking. If the extent mapping callback
+> decides that it can't do the unaligned IO without extent
+> manipulation, sub-block zeroing, blocking or splitting the IO into
+> multiple parts, it aborts the IO with -EAGAIN. This allows the high
+> level filesystem code to then take exclusive locks and resubmit the
+> IO once it has guaranteed no other IO is in progress on the inode
+> (the current implementation).
 
-Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
----
- tests/xfs/530     | 109 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/530.out |  13 ++++++
- tests/xfs/group   |   1 +
- 3 files changed, 123 insertions(+)
- create mode 100755 tests/xfs/530
- create mode 100644 tests/xfs/530.out
 
-diff --git a/tests/xfs/530 b/tests/xfs/530
-new file mode 100755
-index 00000000..0986d8bf
---- /dev/null
-+++ b/tests/xfs/530
-@@ -0,0 +1,109 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
-+#
-+# FS QA Test 530
-+#
-+# Verify that XFS does not cause inode fork's extent count to overflow when
-+# swapping forks between files
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/inject
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+_supported_fs xfs
-+_require_scratch
-+_require_xfs_debug
-+_require_xfs_scratch_rmapbt
-+_require_xfs_io_command "fcollapse"
-+_require_xfs_io_command "swapext"
-+_require_xfs_io_error_injection "reduce_max_iextents"
-+
-+echo "* Swap extent forks"
-+
-+echo "Format and mount fs"
-+_scratch_mkfs >> $seqres.full
-+_scratch_mount >> $seqres.full
-+
-+bsize=$(_get_block_size $SCRATCH_MNT)
-+
-+srcfile=${SCRATCH_MNT}/srcfile
-+donorfile=${SCRATCH_MNT}/donorfile
-+
-+echo "Create \$donorfile having an extent of length 67 blocks"
-+$XFS_IO_PROG -f -s -c "pwrite -b $((17 * bsize)) 0 $((17 * bsize))" $donorfile \
-+       >> $seqres.full
-+
-+# After the for loop the donor file will have the following extent layout
-+# | 0-4 | 5 | 6 | 7 | 8 | 9 | 10 |
-+echo "Fragment \$donorfile"
-+for i in $(seq 5 10); do
-+	start_offset=$((i * bsize))
-+	$XFS_IO_PROG -f -c "fcollapse $start_offset $bsize" $donorfile >> $seqres.full
-+done
-+
-+echo "Create \$srcfile having an extent of length 18 blocks"
-+$XFS_IO_PROG -f -s -c "pwrite -b $((18 * bsize)) 0 $((18 * bsize))" $srcfile \
-+       >> $seqres.full
-+
-+echo "Fragment \$srcfile"
-+# After the for loop the src file will have the following extent layout
-+# | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7-10 |
-+for i in $(seq 1 7); do
-+	start_offset=$((i * bsize))
-+	$XFS_IO_PROG -f -c "fcollapse $start_offset $bsize" $srcfile >> $seqres.full
-+done
-+
-+echo "Collect \$donorfile's extent count"
-+donor_nr_exts=$($XFS_IO_PROG -c 'stat' $donorfile | grep nextents)
-+donor_nr_exts=${donor_nr_exts##fsxattr.nextents = }
-+
-+echo "Collect \$srcfile's extent count"
-+src_nr_exts=$($XFS_IO_PROG -c 'stat' $srcfile | grep nextents)
-+src_nr_exts=${src_nr_exts##fsxattr.nextents = }
-+
-+echo "Inject reduce_max_iextents error tag"
-+_scratch_inject_error reduce_max_iextents 1
-+
-+echo "Swap \$srcfile's and \$donorfile's extent forks"
-+$XFS_IO_PROG -f -c "swapext $donorfile" $srcfile >> $seqres.full 2>&1
-+
-+echo "Check for \$donorfile's extent count overflow"
-+nextents=$($XFS_IO_PROG -c 'stat' $donorfile | grep nextents)
-+nextents=${nextents##fsxattr.nextents = }
-+
-+if (( $nextents == $src_nr_exts )); then
-+	echo "\$donorfile: Extent count overflow check failed"
-+fi
-+
-+echo "Check for \$srcfile's extent count overflow"
-+nextents=$($XFS_IO_PROG -c 'stat' $srcfile | grep nextents)
-+nextents=${nextents##fsxattr.nextents = }
-+
-+if (( $nextents == $donor_nr_exts )); then
-+	echo "\$srcfile: Extent count overflow check failed"
-+fi
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/530.out b/tests/xfs/530.out
-new file mode 100644
-index 00000000..9f55608b
---- /dev/null
-+++ b/tests/xfs/530.out
-@@ -0,0 +1,13 @@
-+QA output created by 530
-+* Swap extent forks
-+Format and mount fs
-+Create $donorfile having an extent of length 67 blocks
-+Fragment $donorfile
-+Create $srcfile having an extent of length 18 blocks
-+Fragment $srcfile
-+Collect $donorfile's extent count
-+Collect $srcfile's extent count
-+Inject reduce_max_iextents error tag
-+Swap $srcfile's and $donorfile's extent forks
-+Check for $donorfile's extent count overflow
-+Check for $srcfile's extent count overflow
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 96e40901..289a082d 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -527,6 +527,7 @@
- 527 auto quick
- 528 auto quick reflink
- 529 auto quick reflink
-+530 auto quick
- 758 auto quick rw attr realtime
- 759 auto quick rw realtime
- 760 auto quick rw collapse punch insert zero prealloc
--- 
-2.29.2
+Can you expand on the no-splitting requirement? Does it involve only 
+splitting by XFS (IO spans >1 extents) or lower layers (RAID)?
+
+
+The reason I'm concerned is that it's the constraint that the 
+application has least control over. I guess I could use RWF_NOWAIT to 
+avoid blocking my main thread (but last time I tried I'd get occasional 
+EIOs that frightened me off that). It also seems to me to be the one 
+easiest to resolve - perhaps do two passes, with the first verifying the 
+other constraints are achieved, or one pass that copies the results in a 
+temporary structure that is discarded if the other constraints fail.
+
+
+> This requires moving the IOMAP_NOWAIT setup decisions up into the
+> filesystem, adding yet another parameter to iomap_dio_rw(). So first
+> I convert iomap_dio_rw() to take an args structure so that we don't
+> have to modify the API every time we want to add another setup
+> parameter to the DIO submission code.
+>
+> I then include Christophs IOCB_NOWAIT fxies and cleanups to the XFS
+> code, because they needed to be done regardless of the unaligned DIO
+> issues and they make the changes simpler. Then I split the unaligned
+> DIO path out from the aligned path, because all the extra complexity
+> to support better unaligned DIO submission concurrency is not
+> necessary for the block aligned path. Finally, I modify the
+> unaligned IO path to first submit the unaligned IO using
+> non-blocking semantics and provide a fallback to run the IO
+> exclusively if that fails.
+>
+> This means that we consider sub-block dio into written a fast path
+> that should almost always succeed with minimal overhead and we put
+> all the overhead of failure into the slow path where exclusive
+> locking is required. Unlike Christoph's proposed patch, this means
+> we don't require an extra ILOCK cycle in the sub-block DIO setup
+> fast path, so it should perform almost identically to the block
+> aligned fast path.
+>
+> Tested using fio with AIO+DIO randrw to a written file. Performance
+> increases from about 20k IOPS to 150k IOPS, which is the limit of
+> the setup I was using for testing. Also passed fstests auto group
+> on a both v4 and v5 XFS filesystems.
+>
+> Thoughts, comments?
+>
+> -Dave.
+>
+>
 
