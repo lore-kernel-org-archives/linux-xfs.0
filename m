@@ -2,69 +2,45 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E80C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 17:11:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5561FC433E6
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 17:13:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CF5123120
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 17:11:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 182D223120
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 17:13:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406056AbhALRLn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 12:11:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43692 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406000AbhALRLm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 12:11:42 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6FD3C061786;
-        Tue, 12 Jan 2021 09:11:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=z5sovJ1D8yiiPMIt5GhFymgVyYeX6GsIc/qWYNKOx2s=; b=XL6FVDzLgqfICkrWI7V4LpWIkO
-        ShzAIqAqaHhTo/ifER5Mxh/BaXXGs092mEgJccHGi64qWZPBr2a31koUYxiO79Et0sjfSCCJWIZdy
-        jNoJaT/+Gd45/TNtU8oOJQMWdcT9vk0HKEr2qk33777E28b5Llp30McOUMDT1DBMygzzX9CA8GZ3o
-        kDGBFavGSS4hsVvwh8eQ+9oYOhgLkqRQlN3qNBPAAECJz7u2DVz8dxF5f7OKL9nDy9CkEi/rmq6sv
-        xRdgd3Tc8DeGQBIzOgLRnz4wJmniBpvTCDjCcXAhjTmU6r0M9DZfiyOOBhHFtNAI+VLPuwfi/v+Wq
-        IdXkf+eQ==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1kzNBQ-0055E8-Dh; Tue, 12 Jan 2021 17:10:20 +0000
-Date:   Tue, 12 Jan 2021 17:10:16 +0000
-From:   Christoph Hellwig <hch@infradead.org>
+        id S2404668AbhALRNi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 12:13:38 -0500
+Received: from verein.lst.de ([213.95.11.211]:56478 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2404475AbhALRNi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Jan 2021 12:13:38 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id DBF0367373; Tue, 12 Jan 2021 18:12:55 +0100 (CET)
+Date:   Tue, 12 Jan 2021 18:12:55 +0100
+From:   Christoph Hellwig <hch@lst.de>
 To:     Brian Foster <bfoster@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, avi@scylladb.com, andres@anarazel.de
-Subject: Re: [PATCH 6/6] xfs: reduce exclusive locking on unaligned dio
-Message-ID: <20210112171016.GA1210850@infradead.org>
-References: <20210112010746.1154363-1-david@fromorbit.com>
- <20210112010746.1154363-7-david@fromorbit.com>
- <X/19MZHQtcnj9NDc@infradead.org>
- <20210112170133.GD1137163@bfoster>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: refactor xfs_file_fsync
+Message-ID: <20210112171255.GA31287@lst.de>
+References: <20210111161544.1414409-1-hch@lst.de> <20210111161544.1414409-2-hch@lst.de> <20210112153347.GB1137163@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210112170133.GD1137163@bfoster>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20210112153347.GB1137163@bfoster>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 12, 2021 at 12:01:33PM -0500, Brian Foster wrote:
-> > I think this is in many ways wrong.  As far as I can tell you want this
-> > so that we get the imap_spans_range in xfs_direct_write_iomap_begin. But
-> > we should not trigger any of the other checks, so we'd really need
-> > another flag instead of reusing this one.
-> > 
-> 
-> It's really the br_state != XFS_EXT_NORM check that we want for the
-> unaligned case, isn't it?
+On Tue, Jan 12, 2021 at 10:33:47AM -0500, Brian Foster wrote:
+> Looks fine, though it might be nice to find some commonality with
+> xfs_log_force_inode():
 
-Inherently, yes.  But if we want to avoid the extra irec lookup outside
-->iomap_begin we have to limit us to a single I/O, as we'll do a partial
-write otherwise if only the extent that the end of write falls into is
-unwritten and not block aligned.
+The common logic is called xfs_log_force_lsn :)
+
+The fact that fsync checks and modifies ili_fsync_fields makes it rather
+impractival to share more code unfortunately.
