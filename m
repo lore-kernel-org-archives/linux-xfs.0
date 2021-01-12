@@ -2,134 +2,210 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 003E8C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 11:16:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6903AC433E6
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 12:51:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6F9223104
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 11:16:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2178B23110
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 12:51:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726636AbhALLQU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 06:16:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51712 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726635AbhALLQT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 06:16:19 -0500
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61DDAC061794
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Jan 2021 03:15:39 -0800 (PST)
-Received: by mail-pj1-x102b.google.com with SMTP id w1so1403589pjc.0
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Jan 2021 03:15:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=vCuENauhKiupbK3Hw0UhWADZCZ5iItrCDcBWq75EVw0=;
-        b=olxVbswX5M1hNknJ7UzcD1PjgpA4tT+dtFFRDc7ZIJh2ZIF6gnVIHpMO0DzP3kRo9t
-         urOQQVlVPpZPP4gzzRnwbCap+2/snz4rNJfh/OmZdLFr4m3u/8eg66+H1l4SNWC3c+d2
-         lsWLf4UbLHdwVfZcwld58RP3ysIGc9iv1xH34oR6W4oXYLimhBNE8iVp1P/FIAA9g0/H
-         0IXi708x7AF1ckKhHniCH/QENrujydvKrLb11gST0lgTn/gq0esx+pZZQeD7O4bzBoJT
-         gXQBVB4AmSbyH+s4FUxt8USO8hYn6SIbPau5iUGu8km1rJQ6S2V2LPMg43e0Gnqdzu0p
-         NHUA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=vCuENauhKiupbK3Hw0UhWADZCZ5iItrCDcBWq75EVw0=;
-        b=KmoOpRjHwEJ9ZbryeorAmLeXGIGUnZIBcgXBfYilj//oyaYotnX44bc8capxG+MH4e
-         SrgEd1yV/vPaQNQSz5PPPrlXZm1scy8cFTNzIn0E+WKuNlW+sZKxASTPNhIgFjdSDC27
-         0M8UjF0QI3hQ9IAYs7pQCnZBEnsrp7l5+FXycAU/Rd87e3RBEZAdKM790c5EMnd+1gsF
-         QzPHIuObvUp9LSP3KFxU3UhwsKFM2kxO3riQs0Yt/blap7KiHsUTbA6ex8pLL0EOn3kx
-         DNTwfOupcCkS3WvJc20WFZSkJQcUSQRT311NqOQTr2kHTrEFVaNJYojo/lpkjX+Tv4ov
-         MTCA==
-X-Gm-Message-State: AOAM533AJEgJJYTgyYtnql7OvKt2hqbAvcjD2el11OuhRBfrQynzakdh
-        06LxNlmxk2SgVbRlu6YYG6GjFGszvHQ=
-X-Google-Smtp-Source: ABdhPJx2BIJD5evOsl3i6lrJYFtxNx7EragpaJZkpf+9vXie/KWuBrz9Zt/5tRIf4Bcf9h6PI1QDfg==
-X-Received: by 2002:a17:902:9681:b029:db:fd65:d10e with SMTP id n1-20020a1709029681b02900dbfd65d10emr4751342plp.6.1610450138824;
-        Tue, 12 Jan 2021 03:15:38 -0800 (PST)
-Received: from garuda ([122.171.39.105])
-        by smtp.gmail.com with ESMTPSA id g30sm2756230pfr.152.2021.01.12.03.15.37
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 12 Jan 2021 03:15:38 -0800 (PST)
-References: <161017371478.1142776.6610535704942901172.stgit@magnolia> <161017373322.1142776.5174880606166253807.stgit@magnolia>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     sandeen@sandeen.net, darrick.wong@oracle.com,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs_scrub: handle concurrent directory updates during name scan
-In-reply-to: <161017373322.1142776.5174880606166253807.stgit@magnolia>
-Date:   Tue, 12 Jan 2021 16:45:35 +0530
-Message-ID: <87a6tev220.fsf@garuda>
+        id S2388284AbhALMvQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 07:51:16 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:20199 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2388277AbhALMvO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 07:51:14 -0500
+X-IronPort-AV: E=Sophos;i="5.79,341,1602518400"; 
+   d="scan'208";a="103404320"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 12 Jan 2021 20:45:45 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id 713454CE602E;
+        Tue, 12 Jan 2021 20:45:40 +0800 (CST)
+Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
+ (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 12 Jan
+ 2021 20:45:40 +0800
+Subject: Re: [PATCH 08/10] md: Implement ->corrupted_range()
+To:     Jan Kara <jack@suse.cz>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
+        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
+        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
+References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
+ <20201230165601.845024-9-ruansy.fnst@cn.fujitsu.com>
+ <20210106171429.GE29271@quack2.suse.cz>
+From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <fdabf9b7-33ef-db52-2697-8452a47518b7@cn.fujitsu.com>
+Date:   Tue, 12 Jan 2021 20:45:38 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20210106171429.GE29271@quack2.suse.cz>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) To
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
+X-yoursite-MailScanner-ID: 713454CE602E.AB184
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 
-On 09 Jan 2021 at 11:58, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> The name scanner in xfs_scrub cannot lock a namespace (dirent or xattr)
-> and the kernel does not provide a stable cursor interface, which means
-> that we can see the same byte sequence multiple times during a scan.
-> This isn't a confusing name error since the kernel enforces uniqueness
-> on the byte sequence, so all we need to do here is update the old entry.
->
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  scrub/unicrash.c |   16 +++++++++++++++-
->  1 file changed, 15 insertions(+), 1 deletion(-)
->
->
-> diff --git a/scrub/unicrash.c b/scrub/unicrash.c
-> index de3217c2..f5407b5e 100644
-> --- a/scrub/unicrash.c
-> +++ b/scrub/unicrash.c
-> @@ -68,7 +68,7 @@ struct name_entry {
->
->  	xfs_ino_t		ino;
->
-> -	/* Raw UTF8 name */
-> +	/* Raw dirent name */
->  	size_t			namelen;
->  	char			name[0];
->  };
-> @@ -627,6 +627,20 @@ unicrash_add(
->  	uc->buckets[bucket] = new_entry;
->
->  	while (entry != NULL) {
-> +		/*
-> +		 * If we see the same byte sequence then someone's modifying
-> +		 * the namespace while we're scanning it.  Update the existing
-> +		 * entry's inode mapping and erase the new entry from existence.
-> +		 */
-> +		if (new_entry->namelen == entry->namelen &&
-> +		    !memcmp(new_entry->name, entry->name, entry->namelen)) {
-> +			entry->ino = new_entry->ino;
-> +			uc->buckets[bucket] = new_entry->next;
-> +			name_entry_free(new_entry);
-> +			*badflags = 0;
-> +			continue;
 
-If the above condition evaluates to true, the memory pointed to by "new_entry"
-is freed. The "continue" statement would cause the while loop to be executed
-once more. At this stage, "entry" will still have the previously held non-NULL
-value and hence the while loop is executed once more causing the invalid
-address in "new_entry" to be dereferenced.
+On 2021/1/7 上午1:14, Jan Kara wrote:
+> On Thu 31-12-20 00:55:59, Shiyang Ruan wrote:
+>> With the support of ->rmap(), it is possible to obtain the superblock on
+>> a mapped device.
+>>
+>> If a pmem device is used as one target of mapped device, we cannot
+>> obtain its superblock directly.  With the help of SYSFS, the mapped
+>> device can be found on the target devices.  So, we iterate the
+>> bdev->bd_holder_disks to obtain its mapped device.
+>>
+>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+> 
+> Thanks for the patch. Two comments below.
+> 
+>> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+>> index 4688bff19c20..9f9a2f3bf73b 100644
+>> --- a/drivers/nvdimm/pmem.c
+>> +++ b/drivers/nvdimm/pmem.c
+>> @@ -256,21 +256,16 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
+>>   static int pmem_corrupted_range(struct gendisk *disk, struct block_device *bdev,
+>>   				loff_t disk_offset, size_t len, void *data)
+>>   {
+>> -	struct super_block *sb;
+>>   	loff_t bdev_offset;
+>>   	sector_t disk_sector = disk_offset >> SECTOR_SHIFT;
+>> -	int rc = 0;
+>> +	int rc = -ENODEV;
+>>   
+>>   	bdev = bdget_disk_sector(disk, disk_sector);
+>>   	if (!bdev)
+>> -		return -ENODEV;
+>> +		return rc;
+>>   
+>>   	bdev_offset = (disk_sector - get_start_sect(bdev)) << SECTOR_SHIFT;
+>> -	sb = get_super(bdev);
+>> -	if (sb && sb->s_op->corrupted_range) {
+>> -		rc = sb->s_op->corrupted_range(sb, bdev, bdev_offset, len, data);
+>> -		drop_super(sb);
+>> -	}
+>> +	rc = bd_corrupted_range(bdev, bdev_offset, bdev_offset, len, data);
+>>   
+>>   	bdput(bdev);
+>>   	return rc;
+> 
+> This (and the fs/block_dev.c change below) is just refining the function
+> you've implemented in the patch 6. I think it's confusing to split changes
+> like this - why not implement things correctly from the start in patch 6?
 
-> +		}
-> +
->  		/* Same normalization? */
->  		if (new_entry->normstrlen == entry->normstrlen &&
->  		    !u_strcmp(new_entry->normstr, entry->normstr) &&
+This change added a helper function to find the md devices created on a 
+low-level block device, such as a LVM on /dev/pmem0, and calls 
+->corrupted_range() for each md device.  The md parts were introduced 
+starts from patch 7.  So, I add this change in this patch.
+
+> 
+>> diff --git a/fs/block_dev.c b/fs/block_dev.c
+>> index 9e84b1928b94..0e50f0e8e8af 100644
+>> --- a/fs/block_dev.c
+>> +++ b/fs/block_dev.c
+>> @@ -1171,6 +1171,27 @@ struct bd_holder_disk {
+>>   	int			refcnt;
+>>   };
+>>   
+>> +static int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off,
+>> +					  size_t len, void *data)
+>> +{
+>> +	struct bd_holder_disk *holder;
+>> +	struct gendisk *disk;
+>> +	int rc = 0;
+>> +
+>> +	if (list_empty(&(bdev->bd_holder_disks)))
+>> +		return -ENODEV;
+> 
+> This will not compile for !CONFIG_SYSFS kernels. Not that it would be
+> common but still. Also I'm not sure whether using bd_holder_disks like this
+> is really the right thing to do (when it seems to be only a sysfs thing),
+> although admittedly I'm not aware of a better way of getting this
+> information.
+
+I did a lot of tries and finally found this way.  I think I should add a 
+judgement that whether CONFIG_SYSFS is turned on.
 
 
 --
-chandan
+Thanks,
+Ruan Shiyang.
+
+> 
+> 								Honza
+> 
+>> +
+>> +	list_for_each_entry(holder, &bdev->bd_holder_disks, list) {
+>> +		disk = holder->disk;
+>> +		if (disk->fops->corrupted_range) {
+>> +			rc = disk->fops->corrupted_range(disk, bdev, off, len, data);
+>> +			if (rc != -ENODEV)
+>> +				break;
+>> +		}
+>> +	}
+>> +	return rc;
+>> +}
+>> +
+>>   static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
+>>   						  struct gendisk *disk)
+>>   {
+>> @@ -1378,6 +1399,22 @@ void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors)
+>>   }
+>>   EXPORT_SYMBOL(bd_set_nr_sectors);
+>>   
+>> +int bd_corrupted_range(struct block_device *bdev, loff_t disk_off, loff_t bdev_off, size_t len, void *data)
+>> +{
+>> +	struct super_block *sb = get_super(bdev);
+>> +	int rc = 0;
+>> +
+>> +	if (!sb) {
+>> +		rc = bd_disk_holder_corrupted_range(bdev, disk_off, len, data);
+>> +		return rc;
+>> +	} else if (sb->s_op->corrupted_range)
+>> +		rc = sb->s_op->corrupted_range(sb, bdev, bdev_off, len, data);
+>> +	drop_super(sb);
+>> +
+>> +	return rc;
+>> +}
+>> +EXPORT_SYMBOL(bd_corrupted_range);
+>> +
+>>   static void __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part);
+>>   
+>>   int bdev_disk_changed(struct block_device *bdev, bool invalidate)
+>> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+>> index ed06209008b8..42290470810d 100644
+>> --- a/include/linux/genhd.h
+>> +++ b/include/linux/genhd.h
+>> @@ -376,6 +376,8 @@ void revalidate_disk_size(struct gendisk *disk, bool verbose);
+>>   bool bdev_check_media_change(struct block_device *bdev);
+>>   int __invalidate_device(struct block_device *bdev, bool kill_dirty);
+>>   void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors);
+>> +int bd_corrupted_range(struct block_device *bdev, loff_t disk_off,
+>> +		       loff_t bdev_off, size_t len, void *data);
+>>   
+>>   /* for drivers/char/raw.c: */
+>>   int blkdev_ioctl(struct block_device *, fmode_t, unsigned, unsigned long);
+>> -- 
+>> 2.29.2
+>>
+>>
+>>
+
+
