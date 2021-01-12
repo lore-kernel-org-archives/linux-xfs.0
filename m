@@ -2,66 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 530C3C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 01:23:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9CEAC433E6
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 01:23:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1379622DCC
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 01:23:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B06FC22E02
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 01:23:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729129AbhALBXO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Jan 2021 20:23:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52942 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728893AbhALBXO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jan 2021 20:23:14 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7DC9022EBE;
-        Tue, 12 Jan 2021 01:22:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610414553;
-        bh=QHgmuAaUbF7wm+8JwJemZ/y7Tolh68UlZintgOkldKw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=R1xafNa6M/9suhXGSRYw/3wAEO4IeUfHCRiCYUto44NENufJUyTRlTnoDE3Br35qw
-         NpAH8747s+0ERVMJoF+mEBW5AwfIgsTv2OqcJ4swyuMjIV4/0kEiZ5eJDGrj7S6NEP
-         elhtv2T1iA1LSnIBFutPjAwmLikJQcuI3FGiY33CKCOuSO2dp4o83IwlPJ9xYrbLTu
-         I7kXi5poaMXU7ujhVjQ6czfBxJlKv7fTZ3NJIXOOxQeaYVXlwOMTOiRuBdMwS0qJM8
-         BnPpQtN8UC0e8Pq6jOy5GZOfPGxeP7xeKKlXho9UHhUVbjrzt6N93znWvhWf8LufJn
-         qGnX7+1qvQWzQ==
-Date:   Mon, 11 Jan 2021 17:22:33 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     sandeen@sandeen.net, darrick.wong@oracle.com,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] misc: fix valgrind complaints
-Message-ID: <20210112012233.GI1164246@magnolia>
-References: <161017371478.1142776.6610535704942901172.stgit@magnolia>
- <161017372088.1142776.17470250928392025583.stgit@magnolia>
- <20210111172746.GA848188@infradead.org>
+        id S1728771AbhALBXf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Jan 2021 20:23:35 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:36246 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729455AbhALBXc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jan 2021 20:23:32 -0500
+Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id BCB9A1067F5;
+        Tue, 12 Jan 2021 12:22:50 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kz8OX-005Wky-3t; Tue, 12 Jan 2021 12:22:49 +1100
+Date:   Tue, 12 Jan 2021 12:22:49 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/6] xfs: flush speculative space allocations when we run
+ out of quota
+Message-ID: <20210112012249.GP331610@dread.disaster.area>
+References: <161040735389.1582114.15084485390769234805.stgit@magnolia>
+ <161040738496.1582114.17998753962128996136.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210111172746.GA848188@infradead.org>
+In-Reply-To: <161040738496.1582114.17998753962128996136.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
+        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=lZrigLarfUVsci1iMhYA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 11, 2021 at 05:27:46PM +0000, Christoph Hellwig wrote:
-> On Fri, Jan 08, 2021 at 10:28:40PM -0800, Darrick J. Wong wrote:
-> >  	char		hbuf [MAXHANSIZ];
-> >  	int		ret;
-> > -	uint32_t	handlen;
-> > +	uint32_t	handlen = 0;
-> >  	xfs_fsop_handlereq_t hreq;
-> >  
-> > +	memset(&hreq, 0, sizeof(hreq));
-> > +	memset(hbuf, 0, MAXHANSIZ);
+On Mon, Jan 11, 2021 at 03:23:05PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Using empty initializers at declaration time is simpler and sometimes
-> more efficient.  But either way will work fine.
+> If a fs modification (creation, file write, reflink, etc.) is unable to
+> reserve enough quota to handle the modification, try clearing whatever
+> space the filesystem might have been hanging onto in the hopes of
+> speeding up the filesystem.  The flushing behavior will become
+> particularly important when we add deferred inode inactivation because
+> that will increase the amount of space that isn't actively tied to user
+> data.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_bmap_util.c |   16 ++++++++++++++++
+>  fs/xfs/xfs_file.c      |    2 +-
+>  fs/xfs/xfs_icache.c    |    9 +++++++--
+>  fs/xfs/xfs_icache.h    |    2 +-
+>  fs/xfs/xfs_inode.c     |   17 +++++++++++++++++
+>  fs/xfs/xfs_ioctl.c     |    2 ++
+>  fs/xfs/xfs_iomap.c     |   20 +++++++++++++++++++-
+>  fs/xfs/xfs_reflink.c   |   40 +++++++++++++++++++++++++++++++++++++---
+>  fs/xfs/xfs_trace.c     |    1 +
+>  fs/xfs/xfs_trace.h     |   40 ++++++++++++++++++++++++++++++++++++++++
+>  10 files changed, 141 insertions(+), 8 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 7371a7f7c652..437fdc8a8fbd 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -761,6 +761,7 @@ xfs_alloc_file_space(
+>  	 */
+>  	while (allocatesize_fsb && !error) {
+>  		xfs_fileoff_t	s, e;
+> +		bool		cleared_space = false;
+>  
+>  		/*
+>  		 * Determine space reservations for data/realtime.
+> @@ -803,6 +804,7 @@ xfs_alloc_file_space(
+>  		/*
+>  		 * Allocate and setup the transaction.
+>  		 */
+> +retry:
+>  		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
+>  				resrtextents, 0, &tp);
+>  
+> @@ -819,6 +821,20 @@ xfs_alloc_file_space(
+>  		xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  		error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks,
+>  						      0, quota_flag);
+> +		/*
+> +		 * We weren't able to reserve enough quota to handle fallocate.
+> +		 * Flush any disk space that was being held in the hopes of
+> +		 * speeding up the filesystem.  We hold the IOLOCK so we cannot
+> +		 * do a synchronous scan.
+> +		 */
+> +		if ((error == -ENOSPC || error == -EDQUOT) && !cleared_space) {
+> +			xfs_trans_cancel(tp);
+> +			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +			cleared_space = xfs_inode_free_quota_blocks(ip, false);
+> +			if (cleared_space)
+> +				goto retry;
+> +			return error;
 
-I'll fix that then, and get rid of two more typedef usages.
+Can't say I'm a fan of repeating this everywhere.  Can we move this
+into xfs_trans_reserve_quota_nblks() with a "retry" flag such that
+we do:
 
---D
+	error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks, 0,
+					quota_flag, &retry);
+	if (error) {
+		/* tp already cancelled, inode unlocked */
+		return error;
+	}
+	if (retry) {
+		/* tp already cancelled, inode unlocked */
+		goto retry;
+	}
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
