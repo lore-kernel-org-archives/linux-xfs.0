@@ -7,23 +7,23 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0288C072AF
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:18:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 044FFC07542
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:18:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B5142312F
+	by mail.kernel.org (Postfix) with ESMTP id DDDFB23127
 	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:18:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405587AbhALWRs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 17:17:48 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:45133 "EHLO
+        id S2438296AbhALWRo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 17:17:44 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:45122 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2438270AbhALWRo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 17:17:44 -0500
+        with ESMTP id S2437163AbhALWRj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 17:17:39 -0500
 Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
         by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.86_2)
         (envelope-from <christian.brauner@ubuntu.com>)
-        id 1kzRld-0003bd-DP; Tue, 12 Jan 2021 22:03:57 +0000
+        id 1kzRlV-0003bd-9W; Tue, 12 Jan 2021 22:03:49 +0000
 From:   Christian Brauner <christian.brauner@ubuntu.com>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Christoph Hellwig <hch@infradead.org>,
@@ -61,24 +61,25 @@ Cc:     John Johansen <john.johansen@canonical.com>,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
         Christian Brauner <christian.brauner@ubuntu.com>,
         Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 27/42] notify: handle idmapped mounts
-Date:   Tue, 12 Jan 2021 23:01:09 +0100
-Message-Id: <20210112220124.837960-28-christian.brauner@ubuntu.com>
+Subject: [PATCH v5 24/42] af_unix: handle idmapped mounts
+Date:   Tue, 12 Jan 2021 23:01:06 +0100
+Message-Id: <20210112220124.837960-25-christian.brauner@ubuntu.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210112220124.837960-1-christian.brauner@ubuntu.com>
 References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-X-Patch-Hashes: v=1; h=sha256; i=m4dSb1vZZyg/6OFc1HkrzZoINWVfXi6fEBCLScH9qO8=; m=L41rIL7rk4mTNxft12WYGnDO5UtEpl+ZRCRY1mXiFD4=; p=llIL77s1jziMeTXIOvn4NXU9WjoPCcFX94fV2iuBuAE=; g=251f87afe6b169e0d3ecada7420b76fa9931ce4f
-X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCX/4YtwAKCRCRxhvAZXjcorEWAQC71l+ QLOLv+C2pRpl8uUNOVG8zRFchwfy6QElf2fHIyQEA4ZumE87DNQH0HrIO30nTP/w8RRjNy/LP24gV QqajeQg=
+X-Patch-Hashes: v=1; h=sha256; i=bTjAWrcqQEv0S0d4FYAs3/GqS1T6sx1KbcrCQIdbMQ0=; m=PW2GEMJupmFRQwqgQB7xOoleAqfp7VFtnUtVvLqr8u4=; p=dgP8cuWlJveUhxS/52mzPRIcTb9iQYL13P/6xTWp/W8=; g=076397a88a8e9760309cf71739c9f57e47ff41b1
+X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCX/4YtwAKCRCRxhvAZXjcosT7AQC8x2b mym3qoBDLlklwDs759tng21Cgfx9XiGYXHDOCoQD/Y/4rxkN0xXVX8YjdyPWiBF3/Ci/CNw/F8TXK HzFg2w4=
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Enable notify implementations to handle idmapped mounts by passing down
-the mount's user namespace. If the initial user namespace is passed
-nothing changes so non-idmapped mounts will see identical behavior as
-before.
+When binding a non-abstract AF_UNIX socket it will gain a representation
+in the filesystem. Enable the socket infrastructure to handle idmapped
+mounts by passing down the user namespace of the mount the socket will
+be created from. If the initial user namespace is passed nothing changes
+so non-idmapped mounts will see identical behavior as before.
 
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: David Howells <dhowells@redhat.com>
@@ -87,7 +88,7 @@ Cc: linux-fsdevel@vger.kernel.org
 Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
 ---
 /* v2 */
-patch introduced
+unchanged
 
 /* v3 */
 unchanged
@@ -98,44 +99,22 @@ unchanged
 /* v5 */
 base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
 ---
- fs/notify/fanotify/fanotify_user.c | 2 +-
- fs/notify/inotify/inotify_user.c   | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ net/unix/af_unix.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
-index 4ca13fb33c7c..c60b8cc1f94d 100644
---- a/fs/notify/fanotify/fanotify_user.c
-+++ b/fs/notify/fanotify/fanotify_user.c
-@@ -702,7 +702,7 @@ static int fanotify_find_path(int dfd, const char __user *filename,
- 	}
- 
- 	/* you can only watch an inode if you have read permissions on it */
--	ret = inode_permission(&init_user_ns, path->dentry->d_inode, MAY_READ);
-+	ret = inode_permission(mnt_user_ns(path->mnt), path->dentry->d_inode, MAY_READ);
- 	if (ret) {
- 		path_put(path);
- 		goto out;
-diff --git a/fs/notify/inotify/inotify_user.c b/fs/notify/inotify/inotify_user.c
-index 18e7024207a9..cecff22549d7 100644
---- a/fs/notify/inotify/inotify_user.c
-+++ b/fs/notify/inotify/inotify_user.c
-@@ -31,6 +31,7 @@
- #include <linux/wait.h>
- #include <linux/memcontrol.h>
- #include <linux/security.h>
-+#include <linux/mount.h>
- 
- #include "inotify.h"
- #include "../fdinfo.h"
-@@ -352,7 +353,7 @@ static int inotify_find_inode(const char __user *dirname, struct path *path,
- 	if (error)
- 		return error;
- 	/* you can only watch an inode if you have read permissions on it */
--	error = inode_permission(&init_user_ns, path->dentry->d_inode, MAY_READ);
-+	error = inode_permission(mnt_user_ns(path->mnt), path->dentry->d_inode, MAY_READ);
- 	if (error) {
- 		path_put(path);
- 		return error;
+diff --git a/net/unix/af_unix.c b/net/unix/af_unix.c
+index b4987805e5e5..4be33240e9cc 100644
+--- a/net/unix/af_unix.c
++++ b/net/unix/af_unix.c
+@@ -996,7 +996,7 @@ static int unix_mknod(const char *sun_path, umode_t mode, struct path *res)
+ 	 */
+ 	err = security_path_mknod(&path, dentry, mode, 0);
+ 	if (!err) {
+-		err = vfs_mknod(&init_user_ns, d_inode(path.dentry), dentry, mode, 0);
++		err = vfs_mknod(mnt_user_ns(path.mnt), d_inode(path.dentry), dentry, mode, 0);
+ 		if (!err) {
+ 			res->mnt = mntget(path.mnt);
+ 			res->dentry = dget(dentry);
 -- 
 2.30.0
 
