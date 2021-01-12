@@ -2,220 +2,230 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6945C43333
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:17:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53330C43381
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 17:51:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D28923127
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 22:17:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A280230FC
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 17:51:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437348AbhALWPu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 17:15:50 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:44480 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2394514AbhALWNp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 17:13:45 -0500
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1kzRm0-0003bd-Q3; Tue, 12 Jan 2021 22:04:20 +0000
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-fsdevel@vger.kernel.org
-Cc:     John Johansen <john.johansen@canonical.com>,
-        James Morris <jmorris@namei.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Geoffrey Thomas <geofft@ldpreload.com>,
-        Mrunal Patel <mpatel@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        David Howells <dhowells@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        =?UTF-8?q?St=C3=A9phane=20Graber?= <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        Lennart Poettering <lennart@poettering.net>,
-        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
-        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
-        Kees Cook <keescook@chromium.org>,
-        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        containers@lists.linux-foundation.org,
-        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 35/42] fat: handle idmapped mounts
-Date:   Tue, 12 Jan 2021 23:01:17 +0100
-Message-Id: <20210112220124.837960-36-christian.brauner@ubuntu.com>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210112220124.837960-1-christian.brauner@ubuntu.com>
-References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
+        id S2391614AbhALRvr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 12:51:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52418 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391608AbhALRvr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 12:51:47 -0500
+Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F147FC061795
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Jan 2021 09:51:06 -0800 (PST)
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
+        (envelope-from <debbugs@buxtehude.debian.org>)
+        id 1kzNov-0002iD-98; Tue, 12 Jan 2021 17:51:05 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#979653: xfsprogs: Incomplete debian/copyright
+Reply-To: "Darrick J. Wong" <djwong@kernel.org>, 979653@bugs.debian.org
+X-Loop: owner@bugs.debian.org
+X-Debian-PR-Message: followup 979653
+X-Debian-PR-Package: src:xfsprogs
+X-Debian-PR-Keywords: 
+References: <90d12c70-6679-85aa-b835-e2db9d1eb441@fishpost.de> <90d12c70-6679-85aa-b835-e2db9d1eb441@fishpost.de> <90d12c70-6679-85aa-b835-e2db9d1eb441@fishpost.de> <59b797fa-21b2-b733-88b2-81735bc7d2f5@fishpost.de> <a7a0a016-c031-4532-1292-ad12d16415cf@sandeen.net> <90d12c70-6679-85aa-b835-e2db9d1eb441@fishpost.de> <793e1519-b3d9-db3e-4a71-bb6da8ff2ff2@fishpost.de> <90d12c70-6679-85aa-b835-e2db9d1eb441@fishpost.de>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 979653-submit@bugs.debian.org id=B979653.16104736078400
+          (code B ref 979653); Tue, 12 Jan 2021 17:51:04 +0000
+Received: (at 979653) by bugs.debian.org; 12 Jan 2021 17:46:47 +0000
+Received: from mail.kernel.org ([198.145.29.99]:38294)
+        by buxtehude.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <djwong@kernel.org>)
+        id 1kzNkk-0002BC-Af
+        for 979653@bugs.debian.org; Tue, 12 Jan 2021 17:46:47 +0000
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B586622CE3;
+        Tue, 12 Jan 2021 17:46:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610473604;
+        bh=2Y17WBbbG78ojmHMmvEScRtY7PMTmViXrZvM01Ki/ZA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SJ2avJPxASRMJi+P6Sr7ElCNFa7n4aLQQLVyjDmnRMCwcJ8luV0XQDlApfWkhBC5Y
+         6bexdHEVePj/1hoW7yZ6Z7PbtpThc+98hjhEGcRlwAgCsTLd2dvn6WPT6P96r4hUGi
+         T2+tLpv/EVAPj7QRGJno7JgP+7nFKy1hpXwGFO65sEGI4J4O3Qb6e1MS/AJifebnop
+         98Bx2uQTTY47H1NuHzq/MvVRZi2ZICO77juYbphgZQs8hV4DyNcjDzkxpGZUXzXKzl
+         F5qTI6pN58iPxq2jH3V6U1Jp36nyBSwr/DDmaV+3ka1XDpiPfXJrAuCUVrITR4jlMT
+         FP2apqUyhj7FA==
+Date:   Tue, 12 Jan 2021 09:46:44 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Bastian Germann <bastiangermann@fishpost.de>,
+        979653@bugs.debian.org
+Cc:     Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <20210112174644.GR1164246@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Patch-Hashes: v=1; h=sha256; i=wF1t0OLeehpDD/Or8zja7KrHnkwazZpHv9hvAGPb0LU=; m=IzKHY5UlBsKA0pPEwB9A/OnVkasfk4B8OCNzZgzMRzQ=; p=W4xT6agIbCGbQ8L3psvuVW/ITKb4ltRLzEUwTwuzS3I=; g=b83c1538a9fca485d728fb60a703fb616e8fd418
-X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCX/4YuAAKCRCRxhvAZXjcou6sAQDySkZ L7ZLE/Uxetr6HsqPvqdlEn9zH1QTBH8F1nvuqfQEAh+rG7S7mSaekCQKygAYunPLO7s6jK3u5CuAr 8VVgEQA=
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <793e1519-b3d9-db3e-4a71-bb6da8ff2ff2@fishpost.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Let fat handle idmapped mounts. This allows to have the same fat mount
-appear in multiple locations with different id mappings. This allows to
-expose a vfat formatted USB stick to multiple user with different ids on
-the host or in user namespaces allowing for dac permissions:
+On Sun, Jan 10, 2021 at 01:23:58AM +0100, Bastian Germann wrote:
+> Am 09.01.21 um 23:53 schrieb Eric Sandeen:
+> > On 1/9/21 2:42 PM, Bastian Germann wrote:
+> > > On Sat, 9 Jan 2021 19:31:50 +0100 Bastian Germann <bastiangermann@fishpost.de> wrote:
+> > > > xfsprogs' debian/copyright only mentions Silicon Graphics, Inc.'s copyright. There are other copyright holders, e.g. Oracle, Red Hat, Google LLC, and several individuals. Please provide a complete copyright file and convert it to the machine-readable format.
+> > > 
+> > > Please find a copyright file enclosed.
+> > 
+> > Hi Bastian -
+> > 
+> > I'll take an update to this file, but what are the /minimum/ requirements
+> > per Debian policy?
+> 
+> https://www.debian.org/doc/debian-policy/ch-archive.html#copyright-considerations
+> 
+> The minimum requirements are that you include the license info.
+> The copyright info also has to be included in some cases, essentially for
+> each file that is included in compiled form in a binary package you have to
+> reproduce its copyright info if the license requires the copyright to be
+> retained in binary distributions.
+> 
+> > 
+> > Tracking everything by file+name(s)+year seems rather pointless - it's all
+> > present in the accompanying source, and keeping it up to date at this
+> > granularity seems like make-work doomed to be perpetually out of sync.
+> 
+> You can get rid of all the file names. The license info has to be included
+> (GPL-2, LGPL-2.1, GPL-3+ with autoconf exception). One can argue that the
+> FSF unlimited permission license text (m4/*) also has to be included by
+> Policy.
+> 
+> The (L)GPL requires the copyright statements to be included.
+> 
+> I have reduced the given copyright file to a more maintainable version. It
+> still keeps some file names (not required) so that one can identify the
+> primary copyright holders and the LGPL parts easily.
+> 
+> > I'd prefer to populate it with the minimum required information in
+> > order to minimize churn and maximize ongoing correctness if possible.
+> > 
+> > Thanks,
+> > -Eric
+> > 
 
-mount -o uid=1000,gid=1000 /dev/sdb /mnt
+> Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+> Upstream-Name: xfsprogs
+> Comment: This package was debianized by Nathan Scott <nathans@debian.org>
+> Source: https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/
+> 
+> Files: *
+> Copyright:
+>  1995-2013 Silicon Graphics, Inc.
+>  2010-2018 Red Hat, Inc.
+>  2016-2020 Oracle.  All Rights Reserved.
 
-u1001@f2-vm:/lower1$ ls -ln /mnt/
-total 4
--rwxr-xr-x 1 1000 1000 4 Oct 28 03:44 aaa
--rwxr-xr-x 1 1000 1000 0 Oct 28 01:09 bbb
--rwxr-xr-x 1 1000 1000 0 Oct 28 01:10 ccc
--rwxr-xr-x 1 1000 1000 0 Oct 28 03:46 ddd
--rwxr-xr-x 1 1000 1000 0 Oct 28 04:01 eee
+/me notes that a lot of the Oracle-copyright files are actually GPL-2+,
+not GPL-2.  That might not be obvious because I bungled some of the SPDX
+tags when spdx deprecated the "GPL-2.0+" tag and we had to replace them
+all with "GPL-2.0-or-later", though it looks like they've all been
+cleaned up at this point.
 
-mount-idmapped --map-mount b:1000:1001:1
+Question: How can we autogenerate debian/copyright from the source files
+in the git repo?  In the long run I think it best that this becomes
+something we can automate when tagging a new upstream release.
 
-u1001@f2-vm:/lower1$ ls -ln /lower1/
-total 4
--rwxr-xr-x 1 1001 1001 4 Oct 28 03:44 aaa
--rwxr-xr-x 1 1001 1001 0 Oct 28 01:09 bbb
--rwxr-xr-x 1 1001 1001 0 Oct 28 01:10 ccc
--rwxr-xr-x 1 1001 1001 0 Oct 28 03:46 ddd
--rwxr-xr-x 1 1001 1001 0 Oct 28 04:01 eee
+--D
 
-u1001@f2-vm:/lower1$ touch /lower1/fff
-
-u1001@f2-vm:/lower1$ ls -ln /lower1/fff
--rwxr-xr-x 1 1001 1001 0 Oct 28 04:03 /lower1/fff
-
-u1001@f2-vm:/lower1$ ls -ln /mnt/fff
--rwxr-xr-x 1 1000 1000 0 Oct 28 04:03 /mnt/fff
-
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
-Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
----
-/* v2 */
-unchanged
-
-/* v3 */
-unchanged
-
-/* v4 */
-- Mauricio Vásquez Bernal <mauricio@kinvolk.io>:
-  - Fix mount example in commit message.
-
-- Serge Hallyn <serge@hallyn.com>:
-  - Use "mnt_userns" to refer to a vfsmount's userns everywhere to make
-    terminology consistent.
-
-/* v5 */
-base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
----
- fs/fat/file.c        | 15 ++++++++-------
- fs/fat/namei_msdos.c |  2 +-
- fs/fat/namei_vfat.c  |  2 +-
- 3 files changed, 10 insertions(+), 9 deletions(-)
-
-diff --git a/fs/fat/file.c b/fs/fat/file.c
-index 80fbf1b5bb6c..107e9ece1a7c 100644
---- a/fs/fat/file.c
-+++ b/fs/fat/file.c
-@@ -398,7 +398,7 @@ int fat_getattr(struct user_namespace *mnt_userns, const struct path *path,
- 		struct kstat *stat, u32 request_mask, unsigned int flags)
- {
- 	struct inode *inode = d_inode(path->dentry);
--	generic_fillattr(&init_user_ns, inode, stat);
-+	generic_fillattr(mnt_userns, inode, stat);
- 	stat->blksize = MSDOS_SB(inode->i_sb)->cluster_size;
- 
- 	if (MSDOS_SB(inode->i_sb)->options.nfs == FAT_NFS_NOSTALE_RO) {
-@@ -447,12 +447,13 @@ static int fat_sanitize_mode(const struct msdos_sb_info *sbi,
- 	return 0;
- }
- 
--static int fat_allow_set_time(struct msdos_sb_info *sbi, struct inode *inode)
-+static int fat_allow_set_time(struct user_namespace *mnt_userns,
-+			      struct msdos_sb_info *sbi, struct inode *inode)
- {
- 	umode_t allow_utime = sbi->options.allow_utime;
- 
--	if (!uid_eq(current_fsuid(), inode->i_uid)) {
--		if (in_group_p(inode->i_gid))
-+	if (!uid_eq(current_fsuid(), i_uid_into_mnt(mnt_userns, inode))) {
-+		if (in_group_p(i_gid_into_mnt(mnt_userns, inode)))
- 			allow_utime >>= 3;
- 		if (allow_utime & MAY_WRITE)
- 			return 1;
-@@ -477,11 +478,11 @@ int fat_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 	/* Check for setting the inode time. */
- 	ia_valid = attr->ia_valid;
- 	if (ia_valid & TIMES_SET_FLAGS) {
--		if (fat_allow_set_time(sbi, inode))
-+		if (fat_allow_set_time(mnt_userns, sbi, inode))
- 			attr->ia_valid &= ~TIMES_SET_FLAGS;
- 	}
- 
--	error = setattr_prepare(&init_user_ns, dentry, attr);
-+	error = setattr_prepare(mnt_userns, dentry, attr);
- 	attr->ia_valid = ia_valid;
- 	if (error) {
- 		if (sbi->options.quiet)
-@@ -551,7 +552,7 @@ int fat_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 		fat_truncate_time(inode, &attr->ia_mtime, S_MTIME);
- 	attr->ia_valid &= ~(ATTR_ATIME|ATTR_CTIME|ATTR_MTIME);
- 
--	setattr_copy(&init_user_ns, inode, attr);
-+	setattr_copy(mnt_userns, inode, attr);
- 	mark_inode_dirty(inode);
- out:
- 	return error;
-diff --git a/fs/fat/namei_msdos.c b/fs/fat/namei_msdos.c
-index a8f3375d9d10..efba301d68ae 100644
---- a/fs/fat/namei_msdos.c
-+++ b/fs/fat/namei_msdos.c
-@@ -667,7 +667,7 @@ static struct file_system_type msdos_fs_type = {
- 	.name		= "msdos",
- 	.mount		= msdos_mount,
- 	.kill_sb	= kill_block_super,
--	.fs_flags	= FS_REQUIRES_DEV,
-+	.fs_flags	= FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
- };
- MODULE_ALIAS_FS("msdos");
- 
-diff --git a/fs/fat/namei_vfat.c b/fs/fat/namei_vfat.c
-index 23936ecf79a5..5369d82e0bfb 100644
---- a/fs/fat/namei_vfat.c
-+++ b/fs/fat/namei_vfat.c
-@@ -1063,7 +1063,7 @@ static struct file_system_type vfat_fs_type = {
- 	.name		= "vfat",
- 	.mount		= vfat_mount,
- 	.kill_sb	= kill_block_super,
--	.fs_flags	= FS_REQUIRES_DEV,
-+	.fs_flags	= FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
- };
- MODULE_ALIAS_FS("vfat");
- 
--- 
-2.30.0
-
+> Comment: For most files, only one of the copyrights applies.
+> License: GPL-2
+> 
+> Files:
+>  libhandle/*.c
+> Copyright: 1995, 2001-2002, 2005 Silicon Graphics, Inc.
+> Comment: This also applies to some header files.
+> License: LGPL-2.1
+>  This library is free software; you can redistribute it and/or modify it
+>  under the terms of the GNU Lesser General Public License as published by
+>  the Free Software Foundation; version 2.1 of the License.
+>  .
+>  This library is distributed in the hope that it will be useful, but WITHOUT
+>  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+>  FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+>  for more details.
+>  .
+>  On Debian systems, refer to /usr/share/common-licenses/LGPL-2.1
+>  for the complete text of the GNU Lesser General Public License.
+> 
+> Files: config.*
+> Copyright: 1992-2013 Free Software Foundation, Inc.
+> License: GPL-3+ with autoconf exception
+>  This file is free software; you can redistribute it and/or modify it
+>  under the terms of the GNU General Public License as published by
+>  the Free Software Foundation; either version 3 of the License, or
+>  (at your option) any later version.
+>  .
+>  This program is distributed in the hope that it will be useful, but
+>  WITHOUT ANY WARRANTY; without even the implied warranty of
+>  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+>  General Public License for more details.
+>  .
+>  You should have received a copy of the GNU General Public License
+>  along with this program; if not, see <http://www.gnu.org/licenses/>.
+>  .
+>  As a special exception to the GNU General Public License, if you
+>  distribute this file as part of a program that contains a
+>  configuration script generated by Autoconf, you may include it under
+>  the same distribution terms that you use for the rest of that
+>  program.  This Exception is an additional permission under section 7
+>  of the GNU General Public License, version 3 ("GPLv3").
+>  .
+>  On Debian systems, the full text of the GNU General Public License version 3
+>  License can be found in /usr/share/common-licenses/GPL-3 file.
+> 
+> Files: io/copy_file_range.c
+> Copyright: 2016 Netapp, Inc. All rights reserved.
+> License: GPL-2
+> 
+> Files: io/encrypt.c
+> Copyright: 2016, 2019 Google LLC
+> License: GPL-2
+> 
+> Files:
+>  io/link.c
+>  libxfs/xfs_iext_tree.c
+> Copyright: 2014, 2017 Christoph Hellwig.
+> License: GPL-2
+> 
+> Files: io/log_writes.c
+> Copyright: 2017 Intel Corporation.
+> License: GPL-2
+> 
+> Files: io/utimes.c
+> Copyright: 2016 Deepa Dinamani
+> License: GPL-2
+> 
+> Files: libfrog/radix-tree.*
+> Copyright:
+>  2001 Momchil Velikov
+>  2001 Christoph Hellwig
+>  2005 SGI, Christoph Lameter <clameter@sgi.com>
+> License: GPL-2
+> 
+> Files: libxfs/xfs_log_rlimit.c
+> Copyright: 2013 Jie Liu.
+> License: GPL-2
+> 
+> License: GPL-2
+>  This program is free software; you can redistribute it and/or modify it under
+>  the terms of the GNU General Public License as published by the Free Software
+>  Foundation; version 2 of the License.
+>  .
+>  This program is distributed in the hope that it will be useful, but WITHOUT
+>  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+>  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+>  .
+>  You should have received a copy of the GNU General Public License along with
+>  this package; if not, write to the Free Software Foundation, Inc., 51 Franklin
+>  St, Fifth Floor, Boston, MA  02110-1301 USA
+>  .
+>  On Debian systems, the full text of the GNU General Public License version 2
+>  License can be found in /usr/share/common-licenses/GPL-2 file.
