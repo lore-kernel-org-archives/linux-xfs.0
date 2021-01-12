@@ -2,162 +2,157 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52E86C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 18:52:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 870E9C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 19:04:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 032BB22C9F
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 18:52:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 479F223107
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Jan 2021 19:04:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392158AbhALSvw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Jan 2021 13:51:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37272 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732584AbhALSvv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jan 2021 13:51:51 -0500
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DAB4C061786
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Jan 2021 10:51:11 -0800 (PST)
-Received: by mail-pl1-x632.google.com with SMTP id r4so1871639pls.11
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Jan 2021 10:51:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dilger-ca.20150623.gappssmtp.com; s=20150623;
-        h=from:message-id:mime-version:subject:date:in-reply-to:cc:to
-         :references;
-        bh=jwDUMG4BDwtkjKCfx8pA65u580qvrwCaIPtk3Y8ItLQ=;
-        b=D1Rngjrb3LUnyMG8JdR20Ets0jZss6q7ARfCNDySerYlxXsb87TyHJM9jDKcUNYqTe
-         I9rlrRVqxoeNOhcT6rRhbdKU7hoXBIBHlgwigOdY+Hp4q0JtNOCocy3vyCRWyHIK+DbW
-         sI5yvoeGlHvSpXQ96g4FNHAMAd02kwXRkO9E7CfQHR1gjRyqleWPkQiE+viGiTuA2DXE
-         /eDf7QRtrqUN+DYPG7NeUKKQR1kv+9KWC1qdYAFpPEpWHOdI/wt5WDM4FDuZSSAx7HWh
-         Dr02UExOlhOJoA5r+j7aoBFbtZPQWl/tkPBRAl9WVKvja3ZMgsQctlYekYvRMxVVZBaK
-         S7Iw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:message-id:mime-version:subject:date
-         :in-reply-to:cc:to:references;
-        bh=jwDUMG4BDwtkjKCfx8pA65u580qvrwCaIPtk3Y8ItLQ=;
-        b=THKNrZt6XT2YzX/jp/kvbfs0Fsp0PbxgcVpH6c7euk2IPmHOc79XIup43bFySDBzNa
-         LPCvi1KzQzuutv4ogaqfgCtdA3E9GIbkSzOJYc0YCkSW+ELwhtxCFKzdknjymWDnT76a
-         jnE36hbDaw8ObQnRn2A2eJBcE7TAspahPhV5wwpn0Y+xftvbPfIosdOZUWEhwHBFH1Ev
-         Q/K9yC1qaCwLL/ug7tNSBjeIlYR5YOxrLXfQd8X/VKpOdcfD6/b03zGtakPktuNQvQU9
-         hzNE7nq82msxdoDRSYEgX74cPLxw/TjAXTPPHjD8Zzo3sAl0MK4ONUvwvsJrTgvAujKH
-         7PcA==
-X-Gm-Message-State: AOAM5320YmvbP7Bu9Ah1OmANoXIyozDtMIF6llyKDg4LdXDpiXFtqR42
-        Hmfven8nCQH7JbgYTEVLDs9akg==
-X-Google-Smtp-Source: ABdhPJwUVpeMz64khBbzgbJo42H3YjSS8MRHzeXxb+inQgHD+G5+FrutcdGHJ0yvdM6BUHca3/LrFg==
-X-Received: by 2002:a17:90a:c396:: with SMTP id h22mr564062pjt.84.1610477470988;
-        Tue, 12 Jan 2021 10:51:10 -0800 (PST)
-Received: from cabot.adilger.int (S01061cabc081bf83.cg.shawcable.net. [70.77.221.9])
-        by smtp.gmail.com with ESMTPSA id b125sm3896128pfg.165.2021.01.12.10.51.09
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 12 Jan 2021 10:51:10 -0800 (PST)
-From:   Andreas Dilger <adilger@dilger.ca>
-Message-Id: <1C33DEE4-8BE9-4BF3-A589-E11532382B36@dilger.ca>
-Content-Type: multipart/signed;
- boundary="Apple-Mail=_B1E9DB15-6634-4823-95B4-E91F40111E15";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: fallocate(FALLOC_FL_ZERO_RANGE_BUT_REALLY) to avoid unwritten
- extents?
-Date:   Tue, 12 Jan 2021 11:51:07 -0700
-In-Reply-To: <20210112184339.GA1238746@infradead.org>
-Cc:     Avi Kivity <avi@scylladb.com>, Andres Freund <andres@anarazel.de>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-block@vger.kernel.org
-To:     Christoph Hellwig <hch@infradead.org>
-References: <20201230062819.yinrrp6uwfegsqo3@alap3.anarazel.de>
- <20210104181958.GE6908@magnolia>
- <20210104191058.sryksqjnjjnn5raa@alap3.anarazel.de>
- <f6f75f11-5d5b-ae63-d584-4b6f09ff401e@scylladb.com>
- <20210112181600.GA1228497@infradead.org>
- <C8811877-48A9-4199-9F28-20F5B071AE36@dilger.ca>
- <20210112184339.GA1238746@infradead.org>
-X-Mailer: Apple Mail (2.3273)
+        id S2392653AbhALTEs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Jan 2021 14:04:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41920 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726387AbhALTEs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Jan 2021 14:04:48 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 146C723122;
+        Tue, 12 Jan 2021 19:04:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610478247;
+        bh=uysMXhLZXAuo/mSxEqV+P4QVsQJXJfSW39mwx9woK3o=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=QIDskA3pVkFs/x6CipzZbX0v6kEn6sSrJCtM5eE81Z6NjmSUeIPNqUXfQgDimHu6e
+         AM2BJUcd86cKKBl5XGNDz50wdzBsrVEIcGPUhvDjsFS3vlTql1t0CQ0/Q57gzKTNeW
+         g3sK93c2eDJxPkUrt6+YXJkxqUovGeYi5UFcTPDX1nd5A8RD5LH/I1K/53hZfwBcx8
+         vwnOSjs8fzC199bdyHADqspNJvz9wbY/jxC4O5cCGwWRQl1C48M4ZD58B4lV5C8/1T
+         Y3R6plqiLykaNOr/uoOxmVL3DuVvVPDUeVJ9xSigF1l72OGqAD0P/M2f7LtTA6zKq0
+         BDzQBd86oWl3g==
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>,
+        stable@vger.kernel.org, Jan Kara <jack@suse.cz>
+Subject: [PATCH v3 01/11] fs: fix lazytime expiration handling in __writeback_single_inode()
+Date:   Tue, 12 Jan 2021 11:02:43 -0800
+Message-Id: <20210112190253.64307-2-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210112190253.64307-1-ebiggers@kernel.org>
+References: <20210112190253.64307-1-ebiggers@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+From: Eric Biggers <ebiggers@google.com>
 
---Apple-Mail=_B1E9DB15-6634-4823-95B4-E91F40111E15
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+When lazytime is enabled and an inode is being written due to its
+in-memory updated timestamps having expired, either due to a sync() or
+syncfs() system call or due to dirtytime_expire_interval having elapsed,
+the VFS needs to inform the filesystem so that the filesystem can copy
+the inode's timestamps out to the on-disk data structures.
 
-On Jan 12, 2021, at 11:43 AM, Christoph Hellwig <hch@infradead.org> =
-wrote:
->=20
-> On Tue, Jan 12, 2021 at 11:39:58AM -0700, Andreas Dilger wrote:
->>> XFS already has a XFS_IOC_ALLOCSP64 that is defined to actually
->>> allocate written extents.  It does not currently use
->>> blkdev_issue_zeroout, but could be changed pretty trivially to do =
-so.
->>>=20
->>>> But note it will need to be plumbed down to md and dm to be =
-generally
->>>> useful.
->>>=20
->>> DM and MD already support mddev_check_write_zeroes, at least for the
->>> usual targets.
->>=20
->> Similarly, ext4 also has EXT4_GET_BLOCKS_CREATE_ZERO that can =
-allocate zero
->> filled extents rather than unwritten extents (without clobbering =
-existing
->> data like FALLOC_FL_ZERO_RANGE does), and just needs a flag from =
-fallocate()
->> to trigger it.  This is plumbed down to blkdev_issue_zeroout() as =
-well.
->=20
-> XFS_IOC_ALLOCSP64 actually is an ioctl that has been around since 1995
-> on IRIX (as an fcntl).
+This is done by __writeback_single_inode() calling
+mark_inode_dirty_sync(), which then calls ->dirty_inode(I_DIRTY_SYNC).
 
-I'm not against adding XFS_IOC_ALLOCSP64 to ext4, if applications are =
-actually
-using that.
+However, this occurs after __writeback_single_inode() has already
+cleared the dirty flags from ->i_state.  This causes two bugs:
 
-It also makes sense to me that there also be an fallocate() mode for =
-allocating
-zeroed blocks (which was the original request), since fallocate() is =
-already
-doing very similar things and is the central interface for managing =
-block
-allocation instead of having a filesystem-specific ioctl() to do this.
+- mark_inode_dirty_sync() redirties the inode, causing it to remain
+  dirty.  This wastefully causes the inode to be written twice.  But
+  more importantly, it breaks cases where sync_filesystem() is expected
+  to clean dirty inodes.  This includes the FS_IOC_REMOVE_ENCRYPTION_KEY
+  ioctl (as reported at
+  https://lore.kernel.org/r/20200306004555.GB225345@gmail.com), as well
+  as possibly filesystem freezing (freeze_super()).
 
-Cheers, Andreas
+- Since ->i_state doesn't contain I_DIRTY_TIME when ->dirty_inode() is
+  called from __writeback_single_inode() for lazytime expiration,
+  xfs_fs_dirty_inode() ignores the notification.  (XFS only cares about
+  lazytime expirations, and it assumes that i_state will contain
+  I_DIRTY_TIME during those.)  Therefore, lazy timestamps aren't
+  persisted by sync(), syncfs(), or dirtytime_expire_interval on XFS.
 
+Fix this by moving the call to mark_inode_dirty_sync() to earlier in
+__writeback_single_inode(), before the dirty flags are cleared from
+i_state.  This makes filesystems be properly notified of the timestamp
+expiration, and it avoids incorrectly redirtying the inode.
 
+This fixes xfstest generic/580 (which tests
+FS_IOC_REMOVE_ENCRYPTION_KEY) when run on ext4 or f2fs with lazytime
+enabled.  It also fixes the new lazytime xfstest I've proposed, which
+reproduces the above-mentioned XFS bug
+(https://lore.kernel.org/r/20210105005818.92978-1-ebiggers@kernel.org).
 
+Alternatively, we could call ->dirty_inode(I_DIRTY_SYNC) directly.  But
+due to the introduction of I_SYNC_QUEUED, mark_inode_dirty_sync() is the
+right thing to do because mark_inode_dirty_sync() now knows not to move
+the inode to a writeback list if it is currently queued for sync.
 
+Fixes: 0ae45f63d4ef ("vfs: add support for a lazytime mount option")
+Cc: stable@vger.kernel.org
+Depends-on: 5afced3bf281 ("writeback: Avoid skipping inode writeback")
+Suggested-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ fs/fs-writeback.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index acfb55834af23..c41cb887eb7d3 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -1474,21 +1474,25 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+ 	}
+ 
+ 	/*
+-	 * Some filesystems may redirty the inode during the writeback
+-	 * due to delalloc, clear dirty metadata flags right before
+-	 * write_inode()
++	 * If the inode has dirty timestamps and we need to write them, call
++	 * mark_inode_dirty_sync() to notify the filesystem about it and to
++	 * change I_DIRTY_TIME into I_DIRTY_SYNC.
+ 	 */
+-	spin_lock(&inode->i_lock);
+-
+-	dirty = inode->i_state & I_DIRTY;
+ 	if ((inode->i_state & I_DIRTY_TIME) &&
+-	    ((dirty & I_DIRTY_INODE) ||
+-	     wbc->sync_mode == WB_SYNC_ALL || wbc->for_sync ||
++	    (wbc->sync_mode == WB_SYNC_ALL || wbc->for_sync ||
+ 	     time_after(jiffies, inode->dirtied_time_when +
+ 			dirtytime_expire_interval * HZ))) {
+-		dirty |= I_DIRTY_TIME;
+ 		trace_writeback_lazytime(inode);
++		mark_inode_dirty_sync(inode);
+ 	}
++
++	/*
++	 * Some filesystems may redirty the inode during the writeback
++	 * due to delalloc, clear dirty metadata flags right before
++	 * write_inode()
++	 */
++	spin_lock(&inode->i_lock);
++	dirty = inode->i_state & I_DIRTY;
+ 	inode->i_state &= ~dirty;
+ 
+ 	/*
+@@ -1509,8 +1513,6 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+ 
+ 	spin_unlock(&inode->i_lock);
+ 
+-	if (dirty & I_DIRTY_TIME)
+-		mark_inode_dirty_sync(inode);
+ 	/* Don't write the inode if only I_DIRTY_PAGES was set */
+ 	if (dirty & ~I_DIRTY_PAGES) {
+ 		int err = write_inode(inode, wbc);
+-- 
+2.30.0
 
---Apple-Mail=_B1E9DB15-6634-4823-95B4-E91F40111E15
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAl/975wACgkQcqXauRfM
-H+BruxAAmI4YBd36T8vUfDYrZnmu8DwDgBzYxTkN75N3juxfevosnpWgH8yGGXPA
-QD1k+mG0jPlidO1J766sBdGV8CHL4Q2ZYfiUA2C8z9yTfgi2uDcXmhYmG7rQWQcV
-tHZ3PcgW/u5TKpvicrtQKbdXt2teZPjUvIaR7B/6vr5SE+4gR/BsdmfdNKp4mCBQ
-0KWJyGXrTOeUwg+Ezaq6xPCRh4+2ToUcUA6ryKn3nIvBZ7ppuDSpTrix+ZZLLE/H
-++xbZWfCmIcZIrHR7rSitYV/CYZASMPffmFNJo76PYGLJ5l8HYU5GBI/rZ/VbjSd
-b6eO34V4+7DyEzgPv+iMX3G+BlHxUTJrNmKCuPlpbEtj6rPMkN3AUhfsKq0pqseW
-sSxECwRhNz27c4AfYOr13PVhPLRTMoaMhSWuRxpNGOssqYVBP1W184eOSPV3M6lh
-hEFsR7fopFWACc2jyp8XFWpvnDr3ScVRcVyzUB9FO6/AyaftvfugPhBH5j+X9pb1
-SkBIofHYYEYZDeMcnr4TjcMKrT5Pyc7oYR4wHjr1a52Aa0qUk+e3szxzK8zxa4uT
-qZLf7hmB1E2elCyZ67QoLcV4uYGVcpL4oVYMMzIzHixM0mRNadMQHDoEvT80Nmmq
-3Blf2NjzZh1l8GYzLA6GCFrtlZMkmzopFNNhbUnfOH7w6V8Dfr0=
-=eOkz
------END PGP SIGNATURE-----
-
---Apple-Mail=_B1E9DB15-6634-4823-95B4-E91F40111E15--
