@@ -7,80 +7,69 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C11D2C433E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 07:45:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0A4CC433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 08:01:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F5C023329
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 07:45:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5592E23333
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 08:01:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725895AbhAMHpH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jan 2021 02:45:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34638 "EHLO
+        id S1725984AbhAMIBV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jan 2021 03:01:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725878AbhAMHpH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 02:45:07 -0500
-Received: from mail-wm1-x32b.google.com (mail-wm1-x32b.google.com [IPv6:2a00:1450:4864:20::32b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56CB6C061786
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Jan 2021 23:44:27 -0800 (PST)
-Received: by mail-wm1-x32b.google.com with SMTP id 3so659261wmg.4
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Jan 2021 23:44:27 -0800 (PST)
+        with ESMTP id S1725681AbhAMIBV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 03:01:21 -0500
+Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5DF1C061786
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jan 2021 00:00:40 -0800 (PST)
+Received: by mail-wm1-x333.google.com with SMTP id y23so698768wmi.1
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jan 2021 00:00:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=scylladb-com.20150623.gappssmtp.com; s=20150623;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=/heJO8JuiwWynfejNELMn+jLslnfJcq2KDsfSuPxcbQ=;
-        b=NlBz7GVjb4Q/1HDjQyOub+gmJxqQSKqZzMYL+oIcjfWmhVRv86zhY78pV2mUQnbeNE
-         C6o8QTcUX5LXssfy0z+a3QnvkkVCq0goZjMG31/G+Fb/fEpbbKtaONOyXkID4KP/1EmN
-         BoLKvrnZfEn+IZhtVloV3cYc1nzfSgC4FGCsvEu/jeFDp78J06XcY94XuRGkEqJp5fEE
-         zEb4Cum1WFYXjtT3OAt3B1hKEXJfQ/251AUXSc+82KfcNIBAJB+Z8nlz7XcgkE2IcCcM
-         QcY+yavRAYeO+fMqEsglH+I+w0KQtSkKNJZy5xzMjMs5IcDFkjGr7tUg4g13j9gdnC2c
-         /HnA==
+        bh=j+phcGccWNYx6CuN2i6dA9HCxl9zcXue5WemNAndSR0=;
+        b=cARf7HljFW5Yrth+pVwecZH3HEmgbx4u7O9KacJBI+WN5tF63+X3bG0JEVmq5FhAwx
+         CaZvAa7yRj7CqQ3fU5KZDbmNF4BBgwjaiVzn7ZnyJ73Df2mfI/LonkmLj/DlWWP1VCcR
+         x1F8SORPdBgaL6457xIOCRZvm9XCTUJC+QBD4odwyXR/JjgPO+Rx3tUbR2HDSa7GNCzO
+         EM+zmp0+7e0bYviqFCyjjWD3dIUG3amzlEsAsCwS9An2Ez6WMQwJR3Pkw9ertSXSIabW
+         hmSxY4vTndp+67ctlavJkZnRTANmxzCm0oAS+7H7S3YrGZelFNcIxuZAjn2UT2AeY0G6
+         WL8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding
          :content-language;
-        bh=/heJO8JuiwWynfejNELMn+jLslnfJcq2KDsfSuPxcbQ=;
-        b=FpWnfmnQbujyRzP4TPyFlSKK9pJyluT8+23nFrk6NiJL5vtVt2xmQO+Cy+iIwKwZSA
-         yzU0kut42kwiuJfk2NXRNe3bYtL1b8bO2OT7nVEKbKyjG0beF0Oqb+kZ+bb7xq3vHdjk
-         gTiV+i1r+qS9sIwkIEjs/ni/Z8Jbb+GVqRv5vst+z7N/S3GthUdwmI+ZtD2IiktaFyQG
-         X8fBJOiJpLrtBggma9F/W1s02FWpnO5zjGE0T0GW02AWun/tAgNLFYLLTpQhKU/iW0RH
-         0FUBeNG/iQr8NKGYNbYy9R90V1D7Nulv4+PyWaWvOrdCCgW6dVrH/2KzYlYAOq3PLqC9
-         h8VQ==
-X-Gm-Message-State: AOAM530FJIdpjukiYWXoxwklZgXwzjtZrIFREhVwlIp1M1arqNeArOC1
-        KCNyoVDkv+EvkxFJxL05S8FxK9u5TJhU0g==
-X-Google-Smtp-Source: ABdhPJx7MW2aMt8z2+SBIHQjiNmjoSXt1hhH/So7B4H/JbgwgN6T6eFxrkIFaEv5nlsFLYOBoXX31Q==
-X-Received: by 2002:a1c:3d56:: with SMTP id k83mr666672wma.25.1610523865907;
-        Tue, 12 Jan 2021 23:44:25 -0800 (PST)
+        bh=j+phcGccWNYx6CuN2i6dA9HCxl9zcXue5WemNAndSR0=;
+        b=FAYKTgz4Wtk10PApR7NvUhMQpoZmm2/LvQWf1fNUPnnUl8PHLhdoQ6Jj/XwOUPnL0V
+         UeEyCYXsxCFj8zOk20QN3hKGowziO5x9WGf9I+kLiVF106ayNPNT+zNlmgcB7I0hu01W
+         G9fUuOTTUFrDUA6RA0uhW6gy1LiqeE01EA6T4nWZcI2h7pehuboI5rUMz49ukRMrtM0z
+         S6u2rn5lggp8MCKpH+GAvEPwOdUdS6WnA2E8HpufEZ/ijv/Q1W37hAzxp65puB4w3AYt
+         3OcT3UVDRFXVruagdEnpvP0ExhiQRVh0uB7gvB5VP6ziQbnmBV9luZZOJXv0MNXKonqu
+         K9Yg==
+X-Gm-Message-State: AOAM530bR8qL150KY1QLjhJnP+Hl3F0bRx2Ou6FK/ye2PpafvnKr3rNs
+        +pic8D9g6HDLCmql4/TOuE/+0w==
+X-Google-Smtp-Source: ABdhPJwGRoLRhdGi9jS2nK8zn5OEff7vam08vOEyi3454sLkZp1si8PGowRWXBGj1TqE9r/+CHVlYA==
+X-Received: by 2002:a1c:68c4:: with SMTP id d187mr915864wmc.53.1610524839540;
+        Wed, 13 Jan 2021 00:00:39 -0800 (PST)
 Received: from tmp.scylladb.com (bzq-79-182-3-66.red.bezeqint.net. [79.182.3.66])
-        by smtp.googlemail.com with ESMTPSA id r20sm1902245wrg.66.2021.01.12.23.44.23
+        by smtp.googlemail.com with ESMTPSA id z15sm1764353wrv.67.2021.01.13.00.00.38
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 12 Jan 2021 23:44:24 -0800 (PST)
-Subject: Re: fallocate(FALLOC_FL_ZERO_RANGE_BUT_REALLY) to avoid unwritten
- extents?
-To:     Andres Freund <andres@anarazel.de>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Andreas Dilger <adilger@dilger.ca>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-block@vger.kernel.org
-References: <20201230062819.yinrrp6uwfegsqo3@alap3.anarazel.de>
- <20210104181958.GE6908@magnolia>
- <20210104191058.sryksqjnjjnn5raa@alap3.anarazel.de>
- <f6f75f11-5d5b-ae63-d584-4b6f09ff401e@scylladb.com>
- <20210112181600.GA1228497@infradead.org>
- <C8811877-48A9-4199-9F28-20F5B071AE36@dilger.ca>
- <20210112184339.GA1238746@infradead.org>
- <1C33DEE4-8BE9-4BF3-A589-E11532382B36@dilger.ca>
- <20210112211445.GC1164248@magnolia>
- <20210112213633.fb4tjlgvo6tznfr4@alap3.anarazel.de>
+        Wed, 13 Jan 2021 00:00:38 -0800 (PST)
+Subject: Re: [RFC] xfs: reduce sub-block DIO serialisation
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        andres@anarazel.de
+References: <20210112010746.1154363-1-david@fromorbit.com>
+ <32f99253-fe56-9198-e47c-7eb0e24fdf73@scylladb.com>
+ <20210112221324.GU331610@dread.disaster.area>
 From:   Avi Kivity <avi@scylladb.com>
-Message-ID: <6d982635-d978-e044-4cca-c140401eb0d3@scylladb.com>
-Date:   Wed, 13 Jan 2021 09:44:22 +0200
+Message-ID: <0f0706f9-92ab-6b38-f3ab-b91aaf4343d1@scylladb.com>
+Date:   Wed, 13 Jan 2021 10:00:37 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.6.0
 MIME-Version: 1.0
-In-Reply-To: <20210112213633.fb4tjlgvo6tznfr4@alap3.anarazel.de>
+In-Reply-To: <20210112221324.GU331610@dread.disaster.area>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
@@ -88,27 +77,51 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/12/21 11:36 PM, Andres Freund wrote:
-> Hi,
+On 1/13/21 12:13 AM, Dave Chinner wrote:
+> On Tue, Jan 12, 2021 at 10:01:35AM +0200, Avi Kivity wrote:
+>> On 1/12/21 3:07 AM, Dave Chinner wrote:
+>>> Hi folks,
+>>>
+>>> This is the XFS implementation on the sub-block DIO optimisations
+>>> for written extents that I've mentioned on #xfs and a couple of
+>>> times now on the XFS mailing list.
+>>>
+>>> It takes the approach of using the IOMAP_NOWAIT non-blocking
+>>> IO submission infrastructure to optimistically dispatch sub-block
+>>> DIO without exclusive locking. If the extent mapping callback
+>>> decides that it can't do the unaligned IO without extent
+>>> manipulation, sub-block zeroing, blocking or splitting the IO into
+>>> multiple parts, it aborts the IO with -EAGAIN. This allows the high
+>>> level filesystem code to then take exclusive locks and resubmit the
+>>> IO once it has guaranteed no other IO is in progress on the inode
+>>> (the current implementation).
+>>
+>> Can you expand on the no-splitting requirement? Does it involve only
+>> splitting by XFS (IO spans >1 extents) or lower layers (RAID)?
+> XFS only.
+
+
+Ok, that is somewhat under control as I can provide an extent hint, and 
+wish really hard that the filesystem isn't fragmented.
+
+
+>> The reason I'm concerned is that it's the constraint that the application
+>> has least control over. I guess I could use RWF_NOWAIT to avoid blocking my
+>> main thread (but last time I tried I'd get occasional EIOs that frightened
+>> me off that).
+> Spurious EIO from RWF_NOWAIT is a bug that needs to be fixed. DO you
+> have any details?
 >
-> On 2021-01-12 13:14:45 -0800, Darrick J. Wong wrote:
->> ALLOCSP64 can only allocate pre-zeroed blocks as part of extending EOF,
->> whereas a new FZERO flag means that we can pre-zero an arbitrary range
->> of bytes in a file.  I don't know if Avi or Andres' usecases demand that
->> kind of flexibilty but I know I'd rather go for the more powerful
->> interface.
-> Postgres/I don't at the moment have a need to allocate "written" zeroed
-> space anywhere but EOF. I can see some potential uses for more flexible
-> pre-zeroing in the future though, but not very near term.
->
 
-Same here.
+I reported it in [1]. It's long since gone since I disabled RWF_NOWAIT. 
+It was relatively rare, sometimes happening in continuous integration 
+runs that take hours, and sometimes not.
 
 
-I also agree that it's better not to have the kernel fall back 
-internally on writing zeros, letting userspace do that. The assumption 
-is that WRITE SAME will be O(1)-ish and so can bypass scheduling 
-decisions, but if we need to write zeros, better let the application 
-throttle the rate.
+I expect it's fixed by now since io_uring relies on it. Maybe I should 
+turn it on for kernels > some_random_version.
 
+
+[1] 
+https://lore.kernel.org/lkml/9bab0f40-5748-f147-efeb-5aac4fd44533@scylladb.com/t/#u
 
