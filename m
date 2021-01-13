@@ -3,101 +3,178 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 110DEC432C3
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 02:13:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF30C432C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 02:14:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E03ED2242A
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 02:13:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A73E235FA
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 02:14:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728450AbhANCN0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jan 2021 21:13:26 -0500
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:39735 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729159AbhAMVqA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 16:46:00 -0500
+        id S1726288AbhANCOI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jan 2021 21:14:08 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48980 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729143AbhAMVcL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 16:32:11 -0500
 Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id BB84511042C;
-        Thu, 14 Jan 2021 08:44:37 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id EA35882BEC6;
+        Thu, 14 Jan 2021 08:31:06 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kznwS-006ADD-F8; Thu, 14 Jan 2021 08:44:36 +1100
-Date:   Thu, 14 Jan 2021 08:44:36 +1100
+        id 1kznjN-006A5Q-OU; Thu, 14 Jan 2021 08:31:05 +1100
+Date:   Thu, 14 Jan 2021 08:31:05 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Donald Buczek <buczek@molgen.mpg.de>, linux-xfs@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+linux-xfs@molgen.mpg.de
-Subject: Re: [PATCH] xfs: Wake CIL push waiters more reliably
-Message-ID: <20210113214436.GH331610@dread.disaster.area>
-References: <1705b481-16db-391e-48a8-a932d1f137e7@molgen.mpg.de>
- <20201229235627.33289-1-buczek@molgen.mpg.de>
- <20201230221611.GC164134@dread.disaster.area>
- <20210104162353.GA254939@bfoster>
- <20210107215444.GG331610@dread.disaster.area>
- <20210108165657.GC893097@bfoster>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [RFC[RAP] PATCH] xfs: allow setting and clearing of log incompat
+ feature flags
+Message-ID: <20210113213105.GG331610@dread.disaster.area>
+References: <20201209170428.GC1860561@bfoster>
+ <20201209205132.GA3913616@dread.disaster.area>
+ <20201210142358.GB1912831@bfoster>
+ <20201210215004.GC3913616@dread.disaster.area>
+ <20201211133901.GA2032335@bfoster>
+ <20201212211439.GC632069@dread.disaster.area>
+ <20201214155831.GB2244296@bfoster>
+ <20201214205456.GD632069@dread.disaster.area>
+ <20201215135003.GA2346012@bfoster>
+ <20210107232821.GN6918@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210108165657.GC893097@bfoster>
+In-Reply-To: <20210107232821.GN6918@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
         a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
         a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=7-415B0cAAAA:8
-        a=HcGIDgX5mWfwRt8FoaAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kaczqaxK7GXxzBSzrM4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 08, 2021 at 11:56:57AM -0500, Brian Foster wrote:
-> On Fri, Jan 08, 2021 at 08:54:44AM +1100, Dave Chinner wrote:
-> > e.g. we run the first transaction into the CIL, it steals the sapce
-> > needed for the cil checkpoint headers for the transaciton. Then if
-> > the space returned by the item formatting is negative (because it is
-> > in the AIL and being relogged), the CIL checkpoint now doesn't have
-> > the space reserved it needs to run a checkpoint. That transaction is
-> > a sync transaction, so it forces the log, and now we push the CIL
-> > without sufficient reservation to write out the log headers and the
-> > items we just formatted....
+On Thu, Jan 07, 2021 at 03:28:21PM -0800, Darrick J. Wong wrote:
+> On Tue, Dec 15, 2020 at 08:50:03AM -0500, Brian Foster wrote:
+> > On Tue, Dec 15, 2020 at 07:54:56AM +1100, Dave Chinner wrote:
+> > > On Mon, Dec 14, 2020 at 10:58:31AM -0500, Brian Foster wrote:
+> > > > On Sun, Dec 13, 2020 at 08:14:39AM +1100, Dave Chinner wrote:
+> > > > > On Fri, Dec 11, 2020 at 08:39:01AM -0500, Brian Foster wrote:
+> > > > > > On Fri, Dec 11, 2020 at 08:50:04AM +1100, Dave Chinner wrote:
+> > > > > > > As for a mechanism for dynamically adding log incompat flags?
+> > > > > > > Perhaps we just do that in xfs_trans_alloc() - add an log incompat
+> > > > > > > flags field into the transaction reservation structure, and if
+> > > > > > > xfs_trans_alloc() sees an incompat field set and the superblock
+> > > > > > > doesn't have it set, the first thing it does is run a "set log
+> > > > > > > incompat flag" transaction before then doing it's normal work...
+> > > > > > > 
+> > > > > > > This should be rare enough it doesn't have any measurable
+> > > > > > > performance overhead, and it's flexible enough to support any log
+> > > > > > > incompat feature we might need to implement...
+> > > > > > > 
+> > > > > > 
+> > > > > > But I don't think that is sufficient. As Darrick pointed out up-thread,
+> > > > > > the updated superblock has to be written back before we're allowed to
+> > > > > > commit transactions with incompatible items. Otherwise, an older kernel
+> > > > > > can attempt log recovery with incompatible items present if the
+> > > > > > filesystem crashes before the superblock is written back.
+> > > > > 
+> > > > > Sure, that's what the hook in xfs_trans_alloc() would do. It can do
+> > > > > the work in the context that is going to need it, and set a wait
+> > > > > flag for all incoming transactions that need a log incompat flag to
+> > > > > wait for it do it's work.  Once it's done and the flag is set, it
+> > > > > can continue and wake all the waiters now that the log incompat flag
+> > > > > has been set. Anything that doesn't need a log incompat flag can
+> > > > > just keep going and doesn't ever get blocked....
+> > > > > 
+> > > > 
+> > > > It would have to be a sync transaction plus sync AIL force in
+> > > > transaction allocation context if we were to log the superblock change,
+> > > > which sounds a bit hairy...
+> > > 
+> > > Well, we already do sync AIL forces in transaction reservation when
+> > > we run out of log space, so there's no technical reason for this
+> > > being a problem at all. xfs_trans_alloc() is expected to block
+> > > waiting on AIL tail pushing....
+> > > 
+> > > > > I suspect this is one of the rare occasions where an unlogged
+> > > > > modification makes an awful lot of sense: we don't even log that we
+> > > > > are adding a log incompat flag, we just do an atomic synchronous
+> > > > > write straight to the superblock to set the incompat flag(s). The
+> > > > > entire modification can be done under the superblock buffer lock to
+> > > > > serialise multiple transactions all trying to set incompat bits, and
+> > > > > we don't set the in-memory superblock incompat bit until after it
+> > > > > has been set and written to disk. Hence multiple waits can check the
+> > > > > flag after they've got the sb buffer lock, and they'll see that it's
+> > > > > already been set and just continue...
+> > > > > 
+> > > > 
+> > > > Agreed. That is a notable simplification and I think much more
+> > > > preferable than the above for the dynamic approach.
+> > > > 
+> > > > That said, note that dynamic feature bits might introduce complexity in
+> > > > more subtle ways. For example, nothing that I can see currently
+> > > > serializes idle log covering with an active transaction (that may have
+> > > > just set an incompat bit via some hook yet not committed anything to the
+> > > > log subsystem), so it might not be as simple as just adding a hook
+> > > > somewhere.
+> > > 
+> > > Right, we had to make log covering away of the CIL to prevent it
+> > > from idling while there were multiple active committed transactions
+> > > in memory. So the state machine only progresses if both the CIL and
+> > > AIL are empty. If we had some way of knowing that a transaction is
+> > > in progress, we could check that in xfs_log_need_covered() and we'd
+> > > stop the state machine progress at that point. But we got rid of the
+> > > active transaction counter that we could use for that....
+> > > 
+> > > [Hmmm, didn't I recently have a patch that re-introduced that
+> > > counter to fix some other "we need to know if there's an active
+> > > transaction running" issue? Can't remember what that was now...]
+> > > 
 > > 
+> > I think you removed it, actually, via commit b41b46c20c0bd ("xfs: remove
+> > the m_active_trans counter"). We subsequently discussed reintroducing
+> > the same concept for the quotaoff rework [1], which might be what you're
+> > thinking of. That uses a percpu rwsem since we don't really need a
+> > counter, but I suspect could be reused for serialization in this use
+> > case as well (assuming I can get some reviews on it.. ;).
+> > 
+> > FWIW, I was considering putting those quotaoff patches ahead of the log
+> > covering work so we could reuse that code again in attr quiesce, but I
+> > think I'm pretty close to being able to remove that particular usage
+> > entirely.
 > 
-> Hmmm... that seems like an odd scenario because I'd expect the space
-> usage delta to reflect what might or might not have already been added
-> to the CIL context, not necessarily the AIL. IOW, shouldn't a negative
-> delta only occur for items being relogged while still CIL resident
-> (regardless of AIL residency)?
->
-> From a code standpoint, the way a particular log item delta comes out
-> negative is from having a shadow lv size smaller than the ->li_lv size.
-> Thus, xlog_cil_insert_format_items() subtracts the currently formatted
-> lv size from the delta, formats the current state of the item, and
-> xfs_cil_prepare_item() adds the new (presumably smaller) size to the
-> delta. We reuse ->li_lv in this scenario so both it and the shadow
-> buffer remain, but a CIL push pulls ->li_lv from all log items and
-> chains them to the CIL context for writing, so I don't see how we could
-> have an item return a negative delta on an empty CIL. Hm?
+> I was thinking about using a rwsem to protect the log incompat flags --
+> code that thinks it might use a protected feature takes the lock in
+> read mode until commit; and the log covering code only clears the
+> flags if down_write_trylock succeeds.  That constrains the overhead to
+> threads that are trying to use the feature, instead of making all
+> threads pay the cost of bumping the counter.
 
-In theory, yes. But like I said, I've made a bunch of assumptions
-that this won't happen, and so without actually auditting the code
-I'm not actually sure that it won't. i.e. I need to go check what
-happens with items being marked stale, how shadow buffer
-reallocation interacts with items that end up being smaller than the
-existing buffer, etc. I've paged a lot of this detail out of my
-brain, so until I spend the time to go over it all again I'm not
-going to be able to answer definitively.
+If you are going to do that, make it a per-cpu rwsem, because we
+really only care about the global shared read overhead in the hot
+paths and not the overhead of taking it in write mode if
+it is only the log covering code that does that...
 
-> (I was also wondering whether repeated smaller relogs of an item could
-> be a vector for this to go wrong, but it looks like
-> xlog_cil_insert_format_items() always uses the formatted size of the
-> current buffer...).
+> > I'm more approaching this from a "what are the requirements and how/why
+> > do they justify the associated complexity?" angle. That's why I'm asking
+> > things like how much difference does a dynamic bit really make for
+> > something like xattrs. But I agree that's less of a concern when
+> > associated with more obscure or rarely used operations, so on balance I
+> > think that's a fair approach to this mechanism provided we consider
+> > suitability on a per feature basis.
+> 
+> Hm.  If I had to peer into my crystal ball I'd guess that the current
+> xattr logging scheme works fine for most xattr users, so I wouldn't
+> worry much about the dynamic bit.
+> 
+> However, I could see things like atomic range exchange being more
+> popular, in which case people might notice the overhead of tracking when
+> we can turn off the feature bit...
 
-That's my nagging doubt about all this - that there's an interaction
-of this nature that I haven't considered due to the assumptions I've
-made that allows underflow to occur. That would be much worse than
-the current situation of hanging on a missing wakeup when the CIL is
-full and used_space goes backwards....
+Hence a per-cpu rwsem... :)
 
 Cheers,
 
