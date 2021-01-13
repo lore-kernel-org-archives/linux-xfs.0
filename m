@@ -2,126 +2,187 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0A4CC433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 08:01:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5589C433E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 10:05:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5592E23333
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 08:01:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FF0E23382
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 10:05:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725984AbhAMIBV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jan 2021 03:01:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38130 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725681AbhAMIBV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 03:01:21 -0500
-Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5DF1C061786
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Jan 2021 00:00:40 -0800 (PST)
-Received: by mail-wm1-x333.google.com with SMTP id y23so698768wmi.1
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Jan 2021 00:00:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=scylladb-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=j+phcGccWNYx6CuN2i6dA9HCxl9zcXue5WemNAndSR0=;
-        b=cARf7HljFW5Yrth+pVwecZH3HEmgbx4u7O9KacJBI+WN5tF63+X3bG0JEVmq5FhAwx
-         CaZvAa7yRj7CqQ3fU5KZDbmNF4BBgwjaiVzn7ZnyJ73Df2mfI/LonkmLj/DlWWP1VCcR
-         x1F8SORPdBgaL6457xIOCRZvm9XCTUJC+QBD4odwyXR/JjgPO+Rx3tUbR2HDSa7GNCzO
-         EM+zmp0+7e0bYviqFCyjjWD3dIUG3amzlEsAsCwS9An2Ez6WMQwJR3Pkw9ertSXSIabW
-         hmSxY4vTndp+67ctlavJkZnRTANmxzCm0oAS+7H7S3YrGZelFNcIxuZAjn2UT2AeY0G6
-         WL8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=j+phcGccWNYx6CuN2i6dA9HCxl9zcXue5WemNAndSR0=;
-        b=FAYKTgz4Wtk10PApR7NvUhMQpoZmm2/LvQWf1fNUPnnUl8PHLhdoQ6Jj/XwOUPnL0V
-         UeEyCYXsxCFj8zOk20QN3hKGowziO5x9WGf9I+kLiVF106ayNPNT+zNlmgcB7I0hu01W
-         G9fUuOTTUFrDUA6RA0uhW6gy1LiqeE01EA6T4nWZcI2h7pehuboI5rUMz49ukRMrtM0z
-         S6u2rn5lggp8MCKpH+GAvEPwOdUdS6WnA2E8HpufEZ/ijv/Q1W37hAzxp65puB4w3AYt
-         3OcT3UVDRFXVruagdEnpvP0ExhiQRVh0uB7gvB5VP6ziQbnmBV9luZZOJXv0MNXKonqu
-         K9Yg==
-X-Gm-Message-State: AOAM530bR8qL150KY1QLjhJnP+Hl3F0bRx2Ou6FK/ye2PpafvnKr3rNs
-        +pic8D9g6HDLCmql4/TOuE/+0w==
-X-Google-Smtp-Source: ABdhPJwGRoLRhdGi9jS2nK8zn5OEff7vam08vOEyi3454sLkZp1si8PGowRWXBGj1TqE9r/+CHVlYA==
-X-Received: by 2002:a1c:68c4:: with SMTP id d187mr915864wmc.53.1610524839540;
-        Wed, 13 Jan 2021 00:00:39 -0800 (PST)
-Received: from tmp.scylladb.com (bzq-79-182-3-66.red.bezeqint.net. [79.182.3.66])
-        by smtp.googlemail.com with ESMTPSA id z15sm1764353wrv.67.2021.01.13.00.00.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Jan 2021 00:00:38 -0800 (PST)
-Subject: Re: [RFC] xfs: reduce sub-block DIO serialisation
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        andres@anarazel.de
-References: <20210112010746.1154363-1-david@fromorbit.com>
- <32f99253-fe56-9198-e47c-7eb0e24fdf73@scylladb.com>
- <20210112221324.GU331610@dread.disaster.area>
-From:   Avi Kivity <avi@scylladb.com>
-Message-ID: <0f0706f9-92ab-6b38-f3ab-b91aaf4343d1@scylladb.com>
-Date:   Wed, 13 Jan 2021 10:00:37 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S1727152AbhAMKFg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jan 2021 05:05:36 -0500
+Received: from out30-43.freemail.mail.aliyun.com ([115.124.30.43]:42756 "EHLO
+        out30-43.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725873AbhAMKFg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 05:05:36 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R811e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04420;MF=zhongjiang-ali@linux.alibaba.com;NM=1;PH=DS;RN=16;SR=0;TI=SMTPD_---0ULc.JMJ_1610532286;
+Received: from L-X1DSLVDL-1420.local(mailfrom:zhongjiang-ali@linux.alibaba.com fp:SMTPD_---0ULc.JMJ_1610532286)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Wed, 13 Jan 2021 18:04:47 +0800
+Subject: Re: [PATCH 04/10] mm, fsdax: Refactor memory-failure handler for dax
+ mapping
+To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>, Jan Kara <jack@suse.cz>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+        darrick.wong@oracle.com, dan.j.williams@intel.com,
+        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
+        qi.fuli@fujitsu.com, y-goto@fujitsu.com
+References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
+ <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
+ <20210106154132.GC29271@quack2.suse.cz>
+ <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
+From:   zhong jiang <zhongjiang-ali@linux.alibaba.com>
+Message-ID: <781f276b-afdd-091c-3dba-048e415431ab@linux.alibaba.com>
+Date:   Wed, 13 Jan 2021 18:04:46 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:85.0)
+ Gecko/20100101 Thunderbird/85.0
 MIME-Version: 1.0
-In-Reply-To: <20210112221324.GU331610@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/13/21 12:13 AM, Dave Chinner wrote:
-> On Tue, Jan 12, 2021 at 10:01:35AM +0200, Avi Kivity wrote:
->> On 1/12/21 3:07 AM, Dave Chinner wrote:
->>> Hi folks,
->>>
->>> This is the XFS implementation on the sub-block DIO optimisations
->>> for written extents that I've mentioned on #xfs and a couple of
->>> times now on the XFS mailing list.
->>>
->>> It takes the approach of using the IOMAP_NOWAIT non-blocking
->>> IO submission infrastructure to optimistically dispatch sub-block
->>> DIO without exclusive locking. If the extent mapping callback
->>> decides that it can't do the unaligned IO without extent
->>> manipulation, sub-block zeroing, blocking or splitting the IO into
->>> multiple parts, it aborts the IO with -EAGAIN. This allows the high
->>> level filesystem code to then take exclusive locks and resubmit the
->>> IO once it has guaranteed no other IO is in progress on the inode
->>> (the current implementation).
->>
->> Can you expand on the no-splitting requirement? Does it involve only
->> splitting by XFS (IO spans >1 extents) or lower layers (RAID)?
-> XFS only.
 
-
-Ok, that is somewhat under control as I can provide an extent hint, and 
-wish really hard that the filesystem isn't fragmented.
-
-
->> The reason I'm concerned is that it's the constraint that the application
->> has least control over. I guess I could use RWF_NOWAIT to avoid blocking my
->> main thread (but last time I tried I'd get occasional EIOs that frightened
->> me off that).
-> Spurious EIO from RWF_NOWAIT is a bug that needs to be fixed. DO you
-> have any details?
+On 2021/1/12 10:55 上午, Ruan Shiyang wrote:
 >
+>
+> On 2021/1/6 下午11:41, Jan Kara wrote:
+>> On Thu 31-12-20 00:55:55, Shiyang Ruan wrote:
+>>> The current memory_failure_dev_pagemap() can only handle single-mapped
+>>> dax page for fsdax mode.  The dax page could be mapped by multiple 
+>>> files
+>>> and offsets if we let reflink feature & fsdax mode work together.  So,
+>>> we refactor current implementation to support handle memory failure on
+>>> each file and offset.
+>>>
+>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+>>
+>> Overall this looks OK to me, a few comments below.
+>>
+>>> ---
+>>>   fs/dax.c            | 21 +++++++++++
+>>>   include/linux/dax.h |  1 +
+>>>   include/linux/mm.h  |  9 +++++
+>>>   mm/memory-failure.c | 91 
+>>> ++++++++++++++++++++++++++++++++++-----------
+>>>   4 files changed, 100 insertions(+), 22 deletions(-)
+>
+> ...
+>
+>>>   @@ -345,9 +348,12 @@ static void add_to_kill(struct task_struct 
+>>> *tsk, struct page *p,
+>>>       }
+>>>         tk->addr = page_address_in_vma(p, vma);
+>>> -    if (is_zone_device_page(p))
+>>> -        tk->size_shift = dev_pagemap_mapping_shift(p, vma);
+>>> -    else
+>>> +    if (is_zone_device_page(p)) {
+>>> +        if (is_device_fsdax_page(p))
+>>> +            tk->addr = vma->vm_start +
+>>> +                    ((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
+>>
+>> It seems strange to use 'pgoff' for dax pages and not for any other 
+>> page.
+>> Why? I'd rather pass correct pgoff from all callers of add_to_kill() and
+>> avoid this special casing...
+>
+> Because one fsdax page can be shared by multiple pgoffs.  I have to 
+> pass each pgoff in each iteration to calculate the address in vma (for 
+> tk->addr).  Other kinds of pages don't need this. They can get their 
+> unique address by calling "page_address_in_vma()".
+>
+IMO,   an fsdax page can be shared by multiple files rather than 
+multiple pgoffs if fs query support reflink.   Because an page only 
+located in an mapping(page->mapping is exclusive),  hence it  only has 
+an pgoff or index pointing at the node.
 
-I reported it in [1]. It's long since gone since I disabled RWF_NOWAIT. 
-It was relatively rare, sometimes happening in continuous integration 
-runs that take hours, and sometimes not.
+  or  I miss something for the feature ?  thanks,
 
-
-I expect it's fixed by now since io_uring relies on it. Maybe I should 
-turn it on for kernels > some_random_version.
-
-
-[1] 
-https://lore.kernel.org/lkml/9bab0f40-5748-f147-efeb-5aac4fd44533@scylladb.com/t/#u
-
+> So, I added this fsdax case here.  This patchset only implemented the 
+> fsdax case, other cases also need to be added here if to be implemented.
+>
+>
+> -- 
+> Thanks,
+> Ruan Shiyang.
+>
+>>
+>>> +        tk->size_shift = dev_pagemap_mapping_shift(p, vma, tk->addr);
+>>> +    } else
+>>>           tk->size_shift = page_shift(compound_head(p));
+>>>         /*
+>>> @@ -495,7 +501,7 @@ static void collect_procs_anon(struct page 
+>>> *page, struct list_head *to_kill,
+>>>               if (!page_mapped_in_vma(page, vma))
+>>>                   continue;
+>>>               if (vma->vm_mm == t->mm)
+>>> -                add_to_kill(t, page, vma, to_kill);
+>>> +                add_to_kill(t, page, NULL, 0, vma, to_kill);
+>>>           }
+>>>       }
+>>>       read_unlock(&tasklist_lock);
+>>> @@ -505,24 +511,19 @@ static void collect_procs_anon(struct page 
+>>> *page, struct list_head *to_kill,
+>>>   /*
+>>>    * Collect processes when the error hit a file mapped page.
+>>>    */
+>>> -static void collect_procs_file(struct page *page, struct list_head 
+>>> *to_kill,
+>>> -                int force_early)
+>>> +static void collect_procs_file(struct page *page, struct 
+>>> address_space *mapping,
+>>> +        pgoff_t pgoff, struct list_head *to_kill, int force_early)
+>>>   {
+>>>       struct vm_area_struct *vma;
+>>>       struct task_struct *tsk;
+>>> -    struct address_space *mapping = page->mapping;
+>>> -    pgoff_t pgoff;
+>>>         i_mmap_lock_read(mapping);
+>>>       read_lock(&tasklist_lock);
+>>> -    pgoff = page_to_pgoff(page);
+>>>       for_each_process(tsk) {
+>>>           struct task_struct *t = task_early_kill(tsk, force_early);
+>>> -
+>>>           if (!t)
+>>>               continue;
+>>> -        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
+>>> -                      pgoff) {
+>>> +        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, 
+>>> pgoff) {
+>>>               /*
+>>>                * Send early kill signal to tasks where a vma covers
+>>>                * the page but the corrupted page is not necessarily
+>>> @@ -531,7 +532,7 @@ static void collect_procs_file(struct page 
+>>> *page, struct list_head *to_kill,
+>>>                * to be informed of all such data corruptions.
+>>>                */
+>>>               if (vma->vm_mm == t->mm)
+>>> -                add_to_kill(t, page, vma, to_kill);
+>>> +                add_to_kill(t, page, mapping, pgoff, vma, to_kill);
+>>>           }
+>>>       }
+>>>       read_unlock(&tasklist_lock);
+>>> @@ -550,7 +551,8 @@ static void collect_procs(struct page *page, 
+>>> struct list_head *tokill,
+>>>       if (PageAnon(page))
+>>>           collect_procs_anon(page, tokill, force_early);
+>>>       else
+>>> -        collect_procs_file(page, tokill, force_early);
+>>> +        collect_procs_file(page, page->mapping, page_to_pgoff(page),
+>>
+>> Why not use page_mapping() helper here? It would be safer for THPs if 
+>> they
+>> ever get here...
+>>
+>>                                 Honza
+>>
+>
