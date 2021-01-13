@@ -2,187 +2,171 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5589C433E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 10:05:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A504C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 10:23:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FF0E23382
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 10:05:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 625E122B4B
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 10:23:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727152AbhAMKFg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jan 2021 05:05:36 -0500
-Received: from out30-43.freemail.mail.aliyun.com ([115.124.30.43]:42756 "EHLO
-        out30-43.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725873AbhAMKFg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 05:05:36 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R811e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04420;MF=zhongjiang-ali@linux.alibaba.com;NM=1;PH=DS;RN=16;SR=0;TI=SMTPD_---0ULc.JMJ_1610532286;
-Received: from L-X1DSLVDL-1420.local(mailfrom:zhongjiang-ali@linux.alibaba.com fp:SMTPD_---0ULc.JMJ_1610532286)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Wed, 13 Jan 2021 18:04:47 +0800
-Subject: Re: [PATCH 04/10] mm, fsdax: Refactor memory-failure handler for dax
- mapping
-To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>, Jan Kara <jack@suse.cz>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
-        qi.fuli@fujitsu.com, y-goto@fujitsu.com
-References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
- <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
- <20210106154132.GC29271@quack2.suse.cz>
- <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
-From:   zhong jiang <zhongjiang-ali@linux.alibaba.com>
-Message-ID: <781f276b-afdd-091c-3dba-048e415431ab@linux.alibaba.com>
-Date:   Wed, 13 Jan 2021 18:04:46 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:85.0)
- Gecko/20100101 Thunderbird/85.0
+        id S1727058AbhAMKXs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jan 2021 05:23:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40574 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726645AbhAMKXr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 05:23:47 -0500
+Received: from mail-ot1-x32d.google.com (mail-ot1-x32d.google.com [IPv6:2607:f8b0:4864:20::32d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17ACDC061575;
+        Wed, 13 Jan 2021 02:23:07 -0800 (PST)
+Received: by mail-ot1-x32d.google.com with SMTP id i6so1434642otr.2;
+        Wed, 13 Jan 2021 02:23:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=EZdWjEiE6JU4dDIJ/Pyi7n34O5hqZ+ARLNb+PckQnXM=;
+        b=ietyQfRtI0nge5UQtyiDTZ4uIxLua/JTSqhCwmUcofLsKnXoXIqW4xcVZLIkvMQlhh
+         dw+gB7uRVgSVbdYO06x/2BoZSXSB7UDAQjy0Js/U/MC2nHXmT1IJ0KkUB+Zq8cyyrEmv
+         xnoyDbBoPyJXaaKf53GCftPPJLk+qYPS9qzGTvZhBnMARFBkU1IaoHjdebJY3b7pClZE
+         CtYtzSnXlL6/ya7ETA2RymcBQRNaqNmXNqR33Bp6fdy4BXkkOnlEUzA7z0qLzb0r/sdC
+         Vm2ticv8iP8sgApOKjBBbpbvJahWeqnX1sfLeYDbOi8ynZtpK7GQ1zcf+3BkrPdfy+lt
+         iPUA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=EZdWjEiE6JU4dDIJ/Pyi7n34O5hqZ+ARLNb+PckQnXM=;
+        b=tFaNob8tKCYm5iHXB9upvX2gSoDs0JomC7Q1DyOJmntKOO2k8QiMAqqYbZMrw/AU2u
+         CAnWaPsJwNVRq2X6FCa4mT9qaI1EJq2hgVeJkK83sWXUg8uSFZnPkSgi3lVoJg88xcBX
+         6/aLwwySukX/c185kwo9PO43QW3BNvtOOstO9gVxjo+HLJEwBPW+Dpg4RbZYyvTc7W4k
+         bpmYysHeKsqAi2QkNRUqlZHtrSh/uaCkuax6sRbYYdcH94dVxmxYsZdzLUYNQmZpjcAR
+         IVAtXEYpuMJsxJpiVnQl7Wspc69IubLDTcJnvGiyUvBs6aCo+OQwCkOzZGijBoREuMMq
+         kYKA==
+X-Gm-Message-State: AOAM5319jg7fsQjhuCfjP9HbNCtQhV8phL7QFQgEUGM3lLLVJ9Dw9Qag
+        b3o/JgVclzCHGKAnj7jklzM=
+X-Google-Smtp-Source: ABdhPJxzpcZ6oajkxTk/IqALwgCtGfZtB6bXMnDlhxhsoNwGNY4Zv4RvzAHa0fEt2VE6pimAVRh7CA==
+X-Received: by 2002:a9d:19cb:: with SMTP id k69mr732136otk.75.1610533386389;
+        Wed, 13 Jan 2021 02:23:06 -0800 (PST)
+Received: from localhost.localdomain ([50.236.19.102])
+        by smtp.gmail.com with ESMTPSA id z8sm335571oon.10.2021.01.13.02.22.58
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 13 Jan 2021 02:23:05 -0800 (PST)
+From:   Yafang Shao <laoar.shao@gmail.com>
+To:     darrick.wong@oracle.com, willy@infradead.org, david@fromorbit.com,
+        hch@infradead.org, mhocko@kernel.org, akpm@linux-foundation.org,
+        dhowells@redhat.com, jlayton@redhat.com
+Cc:     linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        oliver.sang@intel.com, Yafang Shao <laoar.shao@gmail.com>
+Subject: [PATCH v15 0/4] xfs: avoid transaction reservation recursion
+Date:   Wed, 13 Jan 2021 18:22:20 +0800
+Message-Id: <20210113102224.13655-1-laoar.shao@gmail.com>
+X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 MIME-Version: 1.0
-In-Reply-To: <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+PF_FSTRANS which is used to avoid transaction reservation recursion, is
+dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
+PF_MEMALLOC_NOFS") and commit 7dea19f9ee63 ("mm: introduce
+memalloc_nofs_{save,restore} API"), and replaced by PF_MEMALLOC_NOFS which
+means to avoid filesystem reclaim recursion.
 
-On 2021/1/12 10:55 上午, Ruan Shiyang wrote:
->
->
-> On 2021/1/6 下午11:41, Jan Kara wrote:
->> On Thu 31-12-20 00:55:55, Shiyang Ruan wrote:
->>> The current memory_failure_dev_pagemap() can only handle single-mapped
->>> dax page for fsdax mode.  The dax page could be mapped by multiple 
->>> files
->>> and offsets if we let reflink feature & fsdax mode work together.  So,
->>> we refactor current implementation to support handle memory failure on
->>> each file and offset.
->>>
->>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
->>
->> Overall this looks OK to me, a few comments below.
->>
->>> ---
->>>   fs/dax.c            | 21 +++++++++++
->>>   include/linux/dax.h |  1 +
->>>   include/linux/mm.h  |  9 +++++
->>>   mm/memory-failure.c | 91 
->>> ++++++++++++++++++++++++++++++++++-----------
->>>   4 files changed, 100 insertions(+), 22 deletions(-)
->
-> ...
->
->>>   @@ -345,9 +348,12 @@ static void add_to_kill(struct task_struct 
->>> *tsk, struct page *p,
->>>       }
->>>         tk->addr = page_address_in_vma(p, vma);
->>> -    if (is_zone_device_page(p))
->>> -        tk->size_shift = dev_pagemap_mapping_shift(p, vma);
->>> -    else
->>> +    if (is_zone_device_page(p)) {
->>> +        if (is_device_fsdax_page(p))
->>> +            tk->addr = vma->vm_start +
->>> +                    ((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
->>
->> It seems strange to use 'pgoff' for dax pages and not for any other 
->> page.
->> Why? I'd rather pass correct pgoff from all callers of add_to_kill() and
->> avoid this special casing...
->
-> Because one fsdax page can be shared by multiple pgoffs.  I have to 
-> pass each pgoff in each iteration to calculate the address in vma (for 
-> tk->addr).  Other kinds of pages don't need this. They can get their 
-> unique address by calling "page_address_in_vma()".
->
-IMO,   an fsdax page can be shared by multiple files rather than 
-multiple pgoffs if fs query support reflink.   Because an page only 
-located in an mapping(page->mapping is exclusive),  hence it  only has 
-an pgoff or index pointing at the node.
+As these two flags have different meanings, we'd better reintroduce
+PF_FSTRANS back. To avoid wasting the space of PF_* flags in task_struct,
+we can reuse the current->journal_info to do that, per Willy. As the 
+check of transaction reservation recursion is used by XFS only, we can 
+move the check into xfs_vm_writepage(s), per Dave.
 
-  or  I miss something for the feature ?  thanks,
+Patch #1 and #2 are to use the memalloc_nofs_{save,restore} API 
+Patch #1 is picked form Willy's patchset "Overhaul memalloc_no*"[1]
 
-> So, I added this fsdax case here.  This patchset only implemented the 
-> fsdax case, other cases also need to be added here if to be implemented.
->
->
-> -- 
-> Thanks,
-> Ruan Shiyang.
->
->>
->>> +        tk->size_shift = dev_pagemap_mapping_shift(p, vma, tk->addr);
->>> +    } else
->>>           tk->size_shift = page_shift(compound_head(p));
->>>         /*
->>> @@ -495,7 +501,7 @@ static void collect_procs_anon(struct page 
->>> *page, struct list_head *to_kill,
->>>               if (!page_mapped_in_vma(page, vma))
->>>                   continue;
->>>               if (vma->vm_mm == t->mm)
->>> -                add_to_kill(t, page, vma, to_kill);
->>> +                add_to_kill(t, page, NULL, 0, vma, to_kill);
->>>           }
->>>       }
->>>       read_unlock(&tasklist_lock);
->>> @@ -505,24 +511,19 @@ static void collect_procs_anon(struct page 
->>> *page, struct list_head *to_kill,
->>>   /*
->>>    * Collect processes when the error hit a file mapped page.
->>>    */
->>> -static void collect_procs_file(struct page *page, struct list_head 
->>> *to_kill,
->>> -                int force_early)
->>> +static void collect_procs_file(struct page *page, struct 
->>> address_space *mapping,
->>> +        pgoff_t pgoff, struct list_head *to_kill, int force_early)
->>>   {
->>>       struct vm_area_struct *vma;
->>>       struct task_struct *tsk;
->>> -    struct address_space *mapping = page->mapping;
->>> -    pgoff_t pgoff;
->>>         i_mmap_lock_read(mapping);
->>>       read_lock(&tasklist_lock);
->>> -    pgoff = page_to_pgoff(page);
->>>       for_each_process(tsk) {
->>>           struct task_struct *t = task_early_kill(tsk, force_early);
->>> -
->>>           if (!t)
->>>               continue;
->>> -        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
->>> -                      pgoff) {
->>> +        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, 
->>> pgoff) {
->>>               /*
->>>                * Send early kill signal to tasks where a vma covers
->>>                * the page but the corrupted page is not necessarily
->>> @@ -531,7 +532,7 @@ static void collect_procs_file(struct page 
->>> *page, struct list_head *to_kill,
->>>                * to be informed of all such data corruptions.
->>>                */
->>>               if (vma->vm_mm == t->mm)
->>> -                add_to_kill(t, page, vma, to_kill);
->>> +                add_to_kill(t, page, mapping, pgoff, vma, to_kill);
->>>           }
->>>       }
->>>       read_unlock(&tasklist_lock);
->>> @@ -550,7 +551,8 @@ static void collect_procs(struct page *page, 
->>> struct list_head *tokill,
->>>       if (PageAnon(page))
->>>           collect_procs_anon(page, tokill, force_early);
->>>       else
->>> -        collect_procs_file(page, tokill, force_early);
->>> +        collect_procs_file(page, page->mapping, page_to_pgoff(page),
->>
->> Why not use page_mapping() helper here? It would be safer for THPs if 
->> they
->> ever get here...
->>
->>                                 Honza
->>
->
+Patch #3 is the refactor of xfs_trans context, which is activated when
+xfs_trans is allocated and deactivated when xfs_trans is freed.
+
+Patch #4 is the implementation of reusing current->journal_info to
+avoid transaction reservation recursion.
+
+No obvious error occurred after running xfstests
+(with CONFIG_XFS_ASSERT_FATAL enabled).
+
+[1]. https://lore.kernel.org/linux-mm/20200625113122.7540-1-willy@infradead.org
+
+v15:
+- fix Assertion_failed reported by kernel test robot
+- run xfstests with CONFIG_XFS_ASSERT_FATAL enabled
+
+v14:
+- minor optimze in restore_kswapd(), per Dave.
+- don't need to refactor xfs_trans_context_{set,clear} 
+- remove redundant comments in patch #4
+
+v13:
+- move xfs_trans_context_swap() into patch #3 and set NOFS to the old 
+  transaction
+
+v12:
+Per Darrick's suggestion,
+- add the check before calling xfs_trans_context_clear() in
+  xfs_trans_context_free().
+- move t_pflags into xfs_trans_context_swap()
+
+v11:
+- add the warning at the callsite of xfs_trans_context_active()
+- improve the commit log of patch #2
+
+v10:
+- refactor the code, per Dave.
+
+v9:
+- rebase it on xfs tree.
+- Darrick fixed an error occurred in xfs/141
+- run xfstests, and no obvious error occurred.
+
+v8:
+- check xfs_trans_context_active() in xfs_vm_writepage(s), per Dave.
+
+v7:
+- check fstrans recursion for XFS only, by introducing a new member in
+  struct writeback_control.
+
+v6:
+- add Michal's ack and comment in patch #1.
+
+v5:
+- pick one of Willy's patch
+- introduce four new helpers, per Dave
+
+v4:
+- retitle from "xfs: introduce task->in_fstrans for transaction reservation
+  recursion protection"
+- reuse current->journal_info, per Willy
+
+Matthew Wilcox (Oracle) (1):
+  mm: Add become_kswapd and restore_kswapd
+
+Yafang Shao (3):
+  xfs: use memalloc_nofs_{save,restore} in xfs transaction
+  xfs: refactor the usage around xfs_trans_context_{set,clear}
+  xfs: use current->journal_info to avoid transaction reservation
+    recursion
+
+ fs/iomap/buffered-io.c    |  7 -------
+ fs/xfs/libxfs/xfs_btree.c | 14 ++++++++------
+ fs/xfs/xfs_aops.c         | 14 ++++++++++++--
+ fs/xfs/xfs_linux.h        |  4 ----
+ fs/xfs/xfs_trans.c        | 26 ++++++++++++--------------
+ fs/xfs/xfs_trans.h        | 36 ++++++++++++++++++++++++++++++++++++
+ include/linux/sched/mm.h  | 22 ++++++++++++++++++++++
+ mm/vmscan.c               | 16 +---------------
+ 8 files changed, 91 insertions(+), 48 deletions(-)
+
+-- 
+2.17.1
+
