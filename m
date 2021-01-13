@@ -7,59 +7,58 @@ X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA187C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 15:11:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EF51C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 15:25:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80D2A23383
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 15:11:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 118EF23383
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 15:25:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725843AbhAMPLA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jan 2021 10:11:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45930 "EHLO
+        id S1726011AbhAMPZa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jan 2021 10:25:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725747AbhAMPLA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 10:11:00 -0500
+        with ESMTP id S1725747AbhAMPZa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 10:25:30 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10B68C061794
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Jan 2021 07:10:20 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A50B6C061795
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jan 2021 07:24:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=NMJXl9AHO5s1SEcI05e2niWs7FQaydoGkbplLmIIoLQ=; b=Dnwdc6zXnX40WjZTRBuv80Miem
-        ChBA69aCPWS51kAOtNTZPBIXEmneR8OfQ0wwpPB5/b0tjUCHvTfXMFzZSF5ycKdTAaatK8sv3kZTD
-        n+vh/QvGJMA1qSKm472TFrm1RF7K58tA4g8zf5aq31PE6YVin0+jeJbyJW8U7iIgHN+kmhRffsZFs
-        bQK9RWZ6QYPiWaB1vvGuDgdD/YGgkHCoUGsU7mDACChf/a73dvgXS3AzK8AW+NwGxNUGJWh5s/5wJ
-        Me4Tyric2vqq4se8FJVctkqO4dfn//ZnDBQscz2Ubpcq7wSUbUX8gYkFhTaA+NmzpUxTv+tmLPfaO
-        b41oVT/w==;
+        bh=vDBqRzPjSiwj+Bh7zJjs9wvmqU3kFPqcd8has4r+t3s=; b=XDoAjqyRXgl0uEfP/vboqUPa7C
+        /gZgxe5HgiFV9Yj+merjpqXAMZqgjPchDqpDC8TuMfBdFMMXJAIn1aDBweXkxzg45lTZDbQ6a4Iei
+        1T8LjZIove8HCHPvacK1YoT/GwRa201CHpZuyNXWypjaKVWsPHvVI0LOaIGJB2Xu0IFp250A/uUot
+        mn8E1szdHT2m6SDvO3vtTRidwjlBPKm7nWP+9471h8eaQ3z7DSLaZKfkoOUaAuK3dip2+kCfX31pO
+        4ybUM2is0Ne44yy5Y+KbRlu8l1l3OOG2b7QoJewqsBmx/ssyDUyB8e+wScDaZGNXF77kEHxpaXEXU
+        9ttqcUXQ==;
 Received: from 213-225-33-181.nat.highway.a1.net ([213.225.33.181] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1kzhmP-006Oe7-Ay; Wed, 13 Jan 2021 15:09:54 +0000
-Date:   Wed, 13 Jan 2021 16:09:46 +0100
+        id 1kzi0T-006PNe-MW; Wed, 13 Jan 2021 15:24:27 +0000
+Date:   Wed, 13 Jan 2021 16:24:20 +0100
 From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs: parallelize block preallocation garbage
- collection
-Message-ID: <X/8NOl0vwCvEOjrI@infradead.org>
-References: <161040739544.1582286.11068012972712089066.stgit@magnolia>
- <161040743914.1582286.9059958538368033662.stgit@magnolia>
+Subject: Re: [PATCH 2/9] xfs: lift writable fs check up into log worker task
+Message-ID: <X/8QpEDaRN2djf6i@infradead.org>
+References: <20210106174127.805660-1-bfoster@redhat.com>
+ <20210106174127.805660-3-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161040743914.1582286.9059958538368033662.stgit@magnolia>
+In-Reply-To: <20210106174127.805660-3-bfoster@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 11, 2021 at 03:23:59PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Jan 06, 2021 at 12:41:20PM -0500, Brian Foster wrote:
+> The log covering helper checks whether the filesystem is writable to
+> determine whether to cover the log. The helper is currently only
+> called from the background log worker. In preparation to reuse the
+> helper from freezing contexts, lift the check into xfs_log_worker().
 > 
-> Split the block preallocation garbage collection work into per-AG work
-> items so that we can take advantage of parallelization.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
 Looks good,
 
