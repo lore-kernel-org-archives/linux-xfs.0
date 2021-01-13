@@ -2,106 +2,85 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A452C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 18:47:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E190C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 18:50:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53E3220780
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 18:47:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AB04208B8
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 18:50:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728195AbhAMSrc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jan 2021 13:47:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36648 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728164AbhAMSrc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 13:47:32 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 789F0C061575
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Jan 2021 10:46:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=rpud7yqRBKIq7xqd8ntQkXzkr9Ox3QgImdZKzaXPhxI=; b=uYdlLujcK6/jvM8h2HD1TsGzWd
-        w6Q/TFnEN9pDVZqQjPYML0315pjIKuCNn0g4pnbDsMqK0rmjbONZWWQOUW7NZArxD9QwFiDhVDbft
-        Q0bVx6qq8HbtOENLYlVrJuU5P1OXJCxvh/FKrv7Du4MN+lfWUxXLqe/hYwiEt6H+MR7gV7qYys2JD
-        XpMVn/h/+3xWo+Fz4p1eHEN7mj+6AoEYvcb21pbgE7mAtwL4QCRZchve33rSSYy5mWF4Yn7We54h+
-        lL6mpyYEtCdmGE0NeaJpFpAh6QPCTLQFwmRXMT7GzSb0F5jC+c1PXgwvPqPufpLD1NgDCANwAqQat
-        N9Ovkulg==;
-Received: from [2001:4bb8:188:1954:9210:ceb9:6c0a:40fe] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1kzlA7-006aIb-O0; Wed, 13 Jan 2021 18:46:43 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     Christian Brauner <christian.brauner@ubuntu.com>
-Subject: [PATCH] xfs: fix up non-directory creation in SGID directories
-Date:   Wed, 13 Jan 2021 19:46:30 +0100
-Message-Id: <20210113184630.2285768-1-hch@lst.de>
-X-Mailer: git-send-email 2.29.2
+        id S1728470AbhAMSuX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jan 2021 13:50:23 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43838 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728311AbhAMSuX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Jan 2021 13:50:23 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6D0DB207A3;
+        Wed, 13 Jan 2021 18:49:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610563782;
+        bh=jxqvBKT6pKQlxpXnEcXRV+aAp3XKL18v0jD9gTxQod8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=XRBnyiwLdpRSOKPhWinMw36N+TRus/Bi7up7HkQNZcTu2N7ZEE5asNNB3uZspYeQg
+         XcCoNUuqI1V2/BmdZLbkPwyHPtPbzjGpWZw4eczh/1yXQQQGrbs8A4z3LiXQRkI5MK
+         O4SkOlqoZUA7DfFx5rFh2kHxEveVBymvHDMPzvsr7WQo31jKRyCrV8y82pcbuy7nZG
+         dsN2Xo37P+r1DIWl/vx3NhN6Aa9WEwnVax+49O6+LlCfiTiRrH6vhe/2U27DOG+0RX
+         sf3TdtlncT9iMYdzLxzujczxx3cNDXyhlEGX4np6afd/3GFHuniQgAjnR64Gy18mt4
+         MZJUIPQ0MGpPA==
+Date:   Wed, 13 Jan 2021 10:49:40 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 00/11] lazytime fix and cleanups
+Message-ID: <X/9AxL5Mrt+CiKHx@sol.localdomain>
+References: <20210112190253.64307-1-ebiggers@kernel.org>
+ <20210113162957.GA26686@quack2.suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210113162957.GA26686@quack2.suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-XFS always inherits the SGID bit if it is set on the parent inode, while
-the generic inode_init_owner does not do this in a few cases where it can
-create a possible security problem, see commit 0fa3ecd87848
-("Fix up non-directory creation in SGID directories") for details.
+On Wed, Jan 13, 2021 at 05:29:58PM +0100, Jan Kara wrote:
+> Hello!
+> 
+> On Tue 12-01-21 11:02:42, Eric Biggers wrote:
+> > Patch 1 fixes a bug in how __writeback_single_inode() handles lazytime
+> > expirations.  I originally reported this last year
+> > (https://lore.kernel.org/r/20200306004555.GB225345@gmail.com) because it
+> > causes the FS_IOC_REMOVE_ENCRYPTION_KEY ioctl to not work properly, as
+> > the bug causes inodes to remain dirty after a sync.
+> > 
+> > It also turns out that lazytime on XFS is partially broken because it
+> > doesn't actually write timestamps to disk after a sync() or after
+> > dirtytime_expire_interval.  This is fixed by the same fix.
+> > 
+> > This supersedes previously proposed fixes, including
+> > https://lore.kernel.org/r/20200307020043.60118-1-tytso@mit.edu and
+> > https://lore.kernel.org/r/20200325122825.1086872-3-hch@lst.de from last
+> > year (which had some issues and didn't fix the XFS bug), and v1 of this
+> > patchset which took a different approach
+> > (https://lore.kernel.org/r/20210105005452.92521-1-ebiggers@kernel.org).
+> > 
+> > Patches 2-11 then clean up various things related to lazytime and
+> > writeback, such as clarifying the semantics of ->dirty_inode() and the
+> > inode dirty flags, and improving comments.
+> > 
+> > This patchset applies to v5.11-rc2.
+> 
+> Thanks for the patches. I've picked the patches to my tree. I plan to push
+> patch 1/11 to Linus later this week, the rest of the cleanups will go to
+> him during the next merge window.
+> 
+> 								Honza
 
-Switch XFS to use the generic helper for the normal path to fix this,
-just keeping the simple field inheritance open coded for the case of the
-non-sgid case with the bsdgrpid mount option.
+Sounds good, thanks!
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Reported-by: Christian Brauner <christian.brauner@ubuntu.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_inode.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index b7352bc4c81527..7289325aa5c7c0 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -775,6 +775,7 @@ xfs_init_new_inode(
- 	prid_t			prid,
- 	struct xfs_inode	**ipp)
- {
-+	struct inode		*dir = pip ? VFS_I(pip) : NULL;
- 	struct xfs_mount	*mp = tp->t_mountp;
- 	struct xfs_inode	*ip;
- 	unsigned int		flags;
-@@ -804,18 +805,17 @@ xfs_init_new_inode(
- 
- 	ASSERT(ip != NULL);
- 	inode = VFS_I(ip);
--	inode->i_mode = mode;
- 	set_nlink(inode, nlink);
--	inode->i_uid = current_fsuid();
- 	inode->i_rdev = rdev;
- 	ip->i_d.di_projid = prid;
- 
--	if (pip && XFS_INHERIT_GID(pip)) {
--		inode->i_gid = VFS_I(pip)->i_gid;
--		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
--			inode->i_mode |= S_ISGID;
-+	if (dir && !(dir->i_mode & S_ISGID) &&
-+	    (mp->m_flags & XFS_MOUNT_GRPID)) {
-+		inode->i_uid = current_fsuid();
-+		inode->i_gid = dir->i_gid;
-+		inode->i_mode = mode;
- 	} else {
--		inode->i_gid = current_fsgid();
-+		inode_init_owner(inode, dir, mode);
- 	}
- 
- 	/*
--- 
-2.29.2
-
+- Eric
