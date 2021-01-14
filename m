@@ -2,191 +2,226 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB46BC433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 02:26:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D10C3C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 03:27:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8F2023447
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 02:26:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A492E23770
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 03:27:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725857AbhANC0a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jan 2021 21:26:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46820 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725801AbhANC03 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 Jan 2021 21:26:29 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id F38A523447;
-        Thu, 14 Jan 2021 02:25:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610591148;
-        bh=6WUFXDiRo6t5ZdhV2Odye794Z+XP+c6eXd+ZUkxuNgI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=s7n12ZqGnu9LramFyXMLS9fRRs2XfkNq6JYAaUGyIqjsePFFhPbxzeZv4BuYObi1B
-         Nt6hAM9BRMT3VuJKVI24uLpiaOqV3MM32tmUvUsaHgBLp3vVD7s6JZhDXbkUGnCyex
-         XaM8uCYMF/7PNHynwztqzI9xdpmuva9fntCsMO4FZZ1BqcQe+CS7xraTWycrg7YYDG
-         MP3slwG3AfUs3fPh257yhzn8Lj/jnqJZ2FjtlC2ftnunB4Lsq547I+Mb6R5K8wG//9
-         QiHt9OWYwck+taqd/ZWsTY+gs+TO5oc290fEPAp53JLaWSd0wWF3ISLWySqvz/39a5
-         xVhjkFFobqybQ==
-Date:   Wed, 13 Jan 2021 18:25:47 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [RFC[RAP] PATCH] xfs: allow setting and clearing of log incompat
- feature flags
-Message-ID: <20210114022547.GX1164246@magnolia>
-References: <20201209205132.GA3913616@dread.disaster.area>
- <20201210142358.GB1912831@bfoster>
- <20201210215004.GC3913616@dread.disaster.area>
- <20201211133901.GA2032335@bfoster>
- <20201212211439.GC632069@dread.disaster.area>
- <20201214155831.GB2244296@bfoster>
- <20201214205456.GD632069@dread.disaster.area>
- <20201215135003.GA2346012@bfoster>
- <20210107232821.GN6918@magnolia>
- <20210113213105.GG331610@dread.disaster.area>
+        id S1727187AbhAND1U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jan 2021 22:27:20 -0500
+Received: from out30-132.freemail.mail.aliyun.com ([115.124.30.132]:46102 "EHLO
+        out30-132.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726110AbhAND1T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 22:27:19 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R201e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04426;MF=zhongjiang-ali@linux.alibaba.com;NM=1;PH=DS;RN=16;SR=0;TI=SMTPD_---0ULg9Uqv_1610594791;
+Received: from L-X1DSLVDL-1420.local(mailfrom:zhongjiang-ali@linux.alibaba.com fp:SMTPD_---0ULg9Uqv_1610594791)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Thu, 14 Jan 2021 11:26:32 +0800
+Subject: Re: [PATCH 04/10] mm, fsdax: Refactor memory-failure handler for dax
+ mapping
+To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>, Jan Kara <jack@suse.cz>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+        darrick.wong@oracle.com, dan.j.williams@intel.com,
+        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
+        qi.fuli@fujitsu.com, y-goto@fujitsu.com
+References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
+ <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
+ <20210106154132.GC29271@quack2.suse.cz>
+ <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
+ <781f276b-afdd-091c-3dba-048e415431ab@linux.alibaba.com>
+ <ef29ba5c-96d7-d0bb-e405-c7472a518b32@cn.fujitsu.com>
+From:   zhong jiang <zhongjiang-ali@linux.alibaba.com>
+Message-ID: <e2f7ad16-8162-4933-9091-72e690e9877e@linux.alibaba.com>
+Date:   Thu, 14 Jan 2021 11:26:31 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:85.0)
+ Gecko/20100101 Thunderbird/85.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210113213105.GG331610@dread.disaster.area>
+In-Reply-To: <ef29ba5c-96d7-d0bb-e405-c7472a518b32@cn.fujitsu.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 14, 2021 at 08:31:05AM +1100, Dave Chinner wrote:
-> On Thu, Jan 07, 2021 at 03:28:21PM -0800, Darrick J. Wong wrote:
-> > On Tue, Dec 15, 2020 at 08:50:03AM -0500, Brian Foster wrote:
-> > > On Tue, Dec 15, 2020 at 07:54:56AM +1100, Dave Chinner wrote:
-> > > > On Mon, Dec 14, 2020 at 10:58:31AM -0500, Brian Foster wrote:
-> > > > > On Sun, Dec 13, 2020 at 08:14:39AM +1100, Dave Chinner wrote:
-> > > > > > On Fri, Dec 11, 2020 at 08:39:01AM -0500, Brian Foster wrote:
-> > > > > > > On Fri, Dec 11, 2020 at 08:50:04AM +1100, Dave Chinner wrote:
-> > > > > > > > As for a mechanism for dynamically adding log incompat flags?
-> > > > > > > > Perhaps we just do that in xfs_trans_alloc() - add an log incompat
-> > > > > > > > flags field into the transaction reservation structure, and if
-> > > > > > > > xfs_trans_alloc() sees an incompat field set and the superblock
-> > > > > > > > doesn't have it set, the first thing it does is run a "set log
-> > > > > > > > incompat flag" transaction before then doing it's normal work...
-> > > > > > > > 
-> > > > > > > > This should be rare enough it doesn't have any measurable
-> > > > > > > > performance overhead, and it's flexible enough to support any log
-> > > > > > > > incompat feature we might need to implement...
-> > > > > > > > 
-> > > > > > > 
-> > > > > > > But I don't think that is sufficient. As Darrick pointed out up-thread,
-> > > > > > > the updated superblock has to be written back before we're allowed to
-> > > > > > > commit transactions with incompatible items. Otherwise, an older kernel
-> > > > > > > can attempt log recovery with incompatible items present if the
-> > > > > > > filesystem crashes before the superblock is written back.
-> > > > > > 
-> > > > > > Sure, that's what the hook in xfs_trans_alloc() would do. It can do
-> > > > > > the work in the context that is going to need it, and set a wait
-> > > > > > flag for all incoming transactions that need a log incompat flag to
-> > > > > > wait for it do it's work.  Once it's done and the flag is set, it
-> > > > > > can continue and wake all the waiters now that the log incompat flag
-> > > > > > has been set. Anything that doesn't need a log incompat flag can
-> > > > > > just keep going and doesn't ever get blocked....
-> > > > > > 
-> > > > > 
-> > > > > It would have to be a sync transaction plus sync AIL force in
-> > > > > transaction allocation context if we were to log the superblock change,
-> > > > > which sounds a bit hairy...
-> > > > 
-> > > > Well, we already do sync AIL forces in transaction reservation when
-> > > > we run out of log space, so there's no technical reason for this
-> > > > being a problem at all. xfs_trans_alloc() is expected to block
-> > > > waiting on AIL tail pushing....
-> > > > 
-> > > > > > I suspect this is one of the rare occasions where an unlogged
-> > > > > > modification makes an awful lot of sense: we don't even log that we
-> > > > > > are adding a log incompat flag, we just do an atomic synchronous
-> > > > > > write straight to the superblock to set the incompat flag(s). The
-> > > > > > entire modification can be done under the superblock buffer lock to
-> > > > > > serialise multiple transactions all trying to set incompat bits, and
-> > > > > > we don't set the in-memory superblock incompat bit until after it
-> > > > > > has been set and written to disk. Hence multiple waits can check the
-> > > > > > flag after they've got the sb buffer lock, and they'll see that it's
-> > > > > > already been set and just continue...
-> > > > > > 
-> > > > > 
-> > > > > Agreed. That is a notable simplification and I think much more
-> > > > > preferable than the above for the dynamic approach.
-> > > > > 
-> > > > > That said, note that dynamic feature bits might introduce complexity in
-> > > > > more subtle ways. For example, nothing that I can see currently
-> > > > > serializes idle log covering with an active transaction (that may have
-> > > > > just set an incompat bit via some hook yet not committed anything to the
-> > > > > log subsystem), so it might not be as simple as just adding a hook
-> > > > > somewhere.
-> > > > 
-> > > > Right, we had to make log covering away of the CIL to prevent it
-> > > > from idling while there were multiple active committed transactions
-> > > > in memory. So the state machine only progresses if both the CIL and
-> > > > AIL are empty. If we had some way of knowing that a transaction is
-> > > > in progress, we could check that in xfs_log_need_covered() and we'd
-> > > > stop the state machine progress at that point. But we got rid of the
-> > > > active transaction counter that we could use for that....
-> > > > 
-> > > > [Hmmm, didn't I recently have a patch that re-introduced that
-> > > > counter to fix some other "we need to know if there's an active
-> > > > transaction running" issue? Can't remember what that was now...]
-> > > > 
-> > > 
-> > > I think you removed it, actually, via commit b41b46c20c0bd ("xfs: remove
-> > > the m_active_trans counter"). We subsequently discussed reintroducing
-> > > the same concept for the quotaoff rework [1], which might be what you're
-> > > thinking of. That uses a percpu rwsem since we don't really need a
-> > > counter, but I suspect could be reused for serialization in this use
-> > > case as well (assuming I can get some reviews on it.. ;).
-> > > 
-> > > FWIW, I was considering putting those quotaoff patches ahead of the log
-> > > covering work so we could reuse that code again in attr quiesce, but I
-> > > think I'm pretty close to being able to remove that particular usage
-> > > entirely.
-> > 
-> > I was thinking about using a rwsem to protect the log incompat flags --
-> > code that thinks it might use a protected feature takes the lock in
-> > read mode until commit; and the log covering code only clears the
-> > flags if down_write_trylock succeeds.  That constrains the overhead to
-> > threads that are trying to use the feature, instead of making all
-> > threads pay the cost of bumping the counter.
-> 
-> If you are going to do that, make it a per-cpu rwsem, because we
-> really only care about the global shared read overhead in the hot
-> paths and not the overhead of taking it in write mode if
-> it is only the log covering code that does that...
-> 
-> > > I'm more approaching this from a "what are the requirements and how/why
-> > > do they justify the associated complexity?" angle. That's why I'm asking
-> > > things like how much difference does a dynamic bit really make for
-> > > something like xattrs. But I agree that's less of a concern when
-> > > associated with more obscure or rarely used operations, so on balance I
-> > > think that's a fair approach to this mechanism provided we consider
-> > > suitability on a per feature basis.
-> > 
-> > Hm.  If I had to peer into my crystal ball I'd guess that the current
-> > xattr logging scheme works fine for most xattr users, so I wouldn't
-> > worry much about the dynamic bit.
-> > 
-> > However, I could see things like atomic range exchange being more
-> > popular, in which case people might notice the overhead of tracking when
-> > we can turn off the feature bit...
-> 
-> Hence a per-cpu rwsem... :)
 
-Yup, it seems to work fine, though now I'm distracted over the posteof
-cleanup serieses... :)
+On 2021/1/14 9:44 上午, Ruan Shiyang wrote:
+>
+>
+> On 2021/1/13 下午6:04, zhong jiang wrote:
+>>
+>> On 2021/1/12 10:55 上午, Ruan Shiyang wrote:
+>>>
+>>>
+>>> On 2021/1/6 下午11:41, Jan Kara wrote:
+>>>> On Thu 31-12-20 00:55:55, Shiyang Ruan wrote:
+>>>>> The current memory_failure_dev_pagemap() can only handle 
+>>>>> single-mapped
+>>>>> dax page for fsdax mode.  The dax page could be mapped by multiple 
+>>>>> files
+>>>>> and offsets if we let reflink feature & fsdax mode work together.  
+>>>>> So,
+>>>>> we refactor current implementation to support handle memory 
+>>>>> failure on
+>>>>> each file and offset.
+>>>>>
+>>>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+>>>>
+>>>> Overall this looks OK to me, a few comments below.
+>>>>
+>>>>> ---
+>>>>>   fs/dax.c            | 21 +++++++++++
+>>>>>   include/linux/dax.h |  1 +
+>>>>>   include/linux/mm.h  |  9 +++++
+>>>>>   mm/memory-failure.c | 91 
+>>>>> ++++++++++++++++++++++++++++++++++-----------
+>>>>>   4 files changed, 100 insertions(+), 22 deletions(-)
+>>>
+>>> ...
+>>>
+>>>>>   @@ -345,9 +348,12 @@ static void add_to_kill(struct task_struct 
+>>>>> *tsk, struct page *p,
+>>>>>       }
+>>>>>         tk->addr = page_address_in_vma(p, vma);
+>>>>> -    if (is_zone_device_page(p))
+>>>>> -        tk->size_shift = dev_pagemap_mapping_shift(p, vma);
+>>>>> -    else
+>>>>> +    if (is_zone_device_page(p)) {
+>>>>> +        if (is_device_fsdax_page(p))
+>>>>> +            tk->addr = vma->vm_start +
+>>>>> +                    ((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
+>>>>
+>>>> It seems strange to use 'pgoff' for dax pages and not for any other 
+>>>> page.
+>>>> Why? I'd rather pass correct pgoff from all callers of 
+>>>> add_to_kill() and
+>>>> avoid this special casing...
+>>>
+>>> Because one fsdax page can be shared by multiple pgoffs.  I have to 
+>>> pass each pgoff in each iteration to calculate the address in vma 
+>>> (for tk->addr).  Other kinds of pages don't need this. They can get 
+>>> their unique address by calling "page_address_in_vma()".
+>>>
+>> IMO,   an fsdax page can be shared by multiple files rather than 
+>> multiple pgoffs if fs query support reflink.   Because an page only 
+>> located in an mapping(page->mapping is exclusive), hence it  only has 
+>> an pgoff or index pointing at the node.
+>>
+>>   or  I miss something for the feature ?  thanks,
+>
+> Yes, a fsdax page is shared by multiple files because of reflink. I 
+> think my description of 'pgoff' here is not correct.  This 'pgoff' 
+> means the offset within the a file.  (We use rmap to find out all the 
+> sharing files and their offsets.)  So, I said that "can be shared by 
+> multiple pgoffs".  It's my bad.
+>
+> I think I should name it another word to avoid misunderstandings.
+>
+IMO,  All the sharing files should be the same offset to share the fsdax 
+page.  why not that ?  As you has said,  a shared fadax page should be 
+inserted to different mapping files.  but page->index and page->mapping 
+is exclusive.  hence an page only should be placed in an mapping tree.
 
---D
+And In the current patch,  we failed to found out that all process use 
+the fsdax page shared by multiple files and kill them.
 
-> Cheers,
-> 
-> Dave.
+
+Thanks,
+
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> Thanks,
+> Ruan Shiyang.
+>
+>>
+>>> So, I added this fsdax case here.  This patchset only implemented 
+>>> the fsdax case, other cases also need to be added here if to be 
+>>> implemented.
+>>>
+>>>
+>>> -- 
+>>> Thanks,
+>>> Ruan Shiyang.
+>>>
+>>>>
+>>>>> +        tk->size_shift = dev_pagemap_mapping_shift(p, vma, 
+>>>>> tk->addr);
+>>>>> +    } else
+>>>>>           tk->size_shift = page_shift(compound_head(p));
+>>>>>         /*
+>>>>> @@ -495,7 +501,7 @@ static void collect_procs_anon(struct page 
+>>>>> *page, struct list_head *to_kill,
+>>>>>               if (!page_mapped_in_vma(page, vma))
+>>>>>                   continue;
+>>>>>               if (vma->vm_mm == t->mm)
+>>>>> -                add_to_kill(t, page, vma, to_kill);
+>>>>> +                add_to_kill(t, page, NULL, 0, vma, to_kill);
+>>>>>           }
+>>>>>       }
+>>>>>       read_unlock(&tasklist_lock);
+>>>>> @@ -505,24 +511,19 @@ static void collect_procs_anon(struct page 
+>>>>> *page, struct list_head *to_kill,
+>>>>>   /*
+>>>>>    * Collect processes when the error hit a file mapped page.
+>>>>>    */
+>>>>> -static void collect_procs_file(struct page *page, struct 
+>>>>> list_head *to_kill,
+>>>>> -                int force_early)
+>>>>> +static void collect_procs_file(struct page *page, struct 
+>>>>> address_space *mapping,
+>>>>> +        pgoff_t pgoff, struct list_head *to_kill, int force_early)
+>>>>>   {
+>>>>>       struct vm_area_struct *vma;
+>>>>>       struct task_struct *tsk;
+>>>>> -    struct address_space *mapping = page->mapping;
+>>>>> -    pgoff_t pgoff;
+>>>>>         i_mmap_lock_read(mapping);
+>>>>>       read_lock(&tasklist_lock);
+>>>>> -    pgoff = page_to_pgoff(page);
+>>>>>       for_each_process(tsk) {
+>>>>>           struct task_struct *t = task_early_kill(tsk, force_early);
+>>>>> -
+>>>>>           if (!t)
+>>>>>               continue;
+>>>>> -        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
+>>>>> -                      pgoff) {
+>>>>> +        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, 
+>>>>> pgoff) {
+>>>>>               /*
+>>>>>                * Send early kill signal to tasks where a vma covers
+>>>>>                * the page but the corrupted page is not necessarily
+>>>>> @@ -531,7 +532,7 @@ static void collect_procs_file(struct page 
+>>>>> *page, struct list_head *to_kill,
+>>>>>                * to be informed of all such data corruptions.
+>>>>>                */
+>>>>>               if (vma->vm_mm == t->mm)
+>>>>> -                add_to_kill(t, page, vma, to_kill);
+>>>>> +                add_to_kill(t, page, mapping, pgoff, vma, to_kill);
+>>>>>           }
+>>>>>       }
+>>>>>       read_unlock(&tasklist_lock);
+>>>>> @@ -550,7 +551,8 @@ static void collect_procs(struct page *page, 
+>>>>> struct list_head *tokill,
+>>>>>       if (PageAnon(page))
+>>>>>           collect_procs_anon(page, tokill, force_early);
+>>>>>       else
+>>>>> -        collect_procs_file(page, tokill, force_early);
+>>>>> +        collect_procs_file(page, page->mapping, page_to_pgoff(page),
+>>>>
+>>>> Why not use page_mapping() helper here? It would be safer for THPs 
+>>>> if they
+>>>> ever get here...
+>>>>
+>>>>                                 Honza
+>>>>
+>>>
+>>
+>>
+>
