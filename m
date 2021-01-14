@@ -2,173 +2,221 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C677C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 01:11:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF580C43332
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 01:45:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F034C2343B
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 01:11:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF0D92343E
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 01:45:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727109AbhANBKO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jan 2021 20:10:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60808 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727051AbhANBJz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 Jan 2021 20:09:55 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0ABB423370;
-        Thu, 14 Jan 2021 01:08:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610586516;
-        bh=wxig7LQqnrX4waHh7G9uJFtZlURotXXE9diWiccso+4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=KfDCSdxaRetC4jBtC3eQT70rVEWIB6d/nw5g5aSMNOczvIfPG2XtXn+9ts0RWPzXc
-         5hPk1q8M8qV4X3Rv1Pyc5UqWO+/JeF11coED3QX8IEIgsyK5VYoPrfeez3cbIesOAz
-         xKECFJpskPYDMH59Iy2Az7f74s2bOmuiou8pAKtunF26gADf5+6jD/2BdUDqLuzN0T
-         56AeYwPXHs7jYi6OtWGUmi5Rwub8oVoKOd0Ym3IwHEAVv8hLxtcfQUiTPKlXcByZxr
-         sMzirgUD+6/aHRFyKIka1IUrGoZjSJAuKt5mB/hQE4N9zIJIZgxusovVkOnP+/foKz
-         JrrxXLI3PlLEQ==
-Date:   Wed, 13 Jan 2021 17:08:35 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     sandeen@sandeen.net, darrick.wong@oracle.com,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs_db: add inobtcnt upgrade path
-Message-ID: <20210114010835.GW1164246@magnolia>
-References: <161017369911.1142690.8979186737828708317.stgit@magnolia>
- <161017370529.1142690.11100691491331155224.stgit@magnolia>
- <20210113183505.GD1284163@bfoster>
+        id S1728011AbhANBoy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jan 2021 20:44:54 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:59185 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727047AbhANBox (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 20:44:53 -0500
+X-IronPort-AV: E=Sophos;i="5.79,345,1602518400"; 
+   d="scan'208";a="103460770"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 14 Jan 2021 09:44:21 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id 6AB404CE1A08;
+        Thu, 14 Jan 2021 09:44:16 +0800 (CST)
+Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
+ (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 14 Jan
+ 2021 09:44:17 +0800
+Subject: Re: [PATCH 04/10] mm, fsdax: Refactor memory-failure handler for dax
+ mapping
+To:     zhong jiang <zhongjiang-ali@linux.alibaba.com>,
+        Jan Kara <jack@suse.cz>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
+        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
+        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
+References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
+ <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
+ <20210106154132.GC29271@quack2.suse.cz>
+ <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
+ <781f276b-afdd-091c-3dba-048e415431ab@linux.alibaba.com>
+From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <ef29ba5c-96d7-d0bb-e405-c7472a518b32@cn.fujitsu.com>
+Date:   Thu, 14 Jan 2021 09:44:14 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210113183505.GD1284163@bfoster>
+In-Reply-To: <781f276b-afdd-091c-3dba-048e415431ab@linux.alibaba.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) To
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
+X-yoursite-MailScanner-ID: 6AB404CE1A08.AD0C5
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 13, 2021 at 01:35:05PM -0500, Brian Foster wrote:
-> On Fri, Jan 08, 2021 at 10:28:25PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Enable users to upgrade their filesystems to support inode btree block
-> > counters.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> 
-> These two look Ok to me, but I noticed that both commands have weird
-> error semantics when run through xfs_admin and the associated features
-> are already set. E.g.:
-> 
-> # xfs_admin -O inobtcount /dev/test/tmp 
-> Upgrading V5 filesystem
-> Upgraded V5 filesystem.  Please run xfs_repair.
-> versionnum [0xb4a5+0x18a] = V5,NLINK,DIRV2,ALIGN,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT,PROJID32BIT,CRC,FTYPE,FINOBT,SPARSE_INODES,REFLINK,INOBTCNT
-> Running xfs_repair to ensure filesystem consistency.
-> # xfs_admin -O inobtcount /dev/test/tmp 
-> inode btree counter feature is already enabled
-> Running xfs_repair to ensure filesystem consistency.
-> Conversion failed, is the filesystem unmounted?
-> # mount /dev/test/tmp /mnt/
-> # umount /mnt/
-> 
-> So it looks like we run repair again the second time around even though
-> the bit was already set, which is probably unnecessary, but then also
-> for some reason report the result as failed.
 
-Hm.  I guess I could define a second exitcode that means "no action
-taken", and have xfs_admin exit.
 
-> (I also realized that repair is fixing up some agi metadata in this
-> case, so my previous thought around a special repair verify mode is
-> probably not relevant..).
-
-<nod>
-
---D
-
-> Brian
+On 2021/1/13 下午6:04, zhong jiang wrote:
 > 
-> >  db/sb.c              |   22 ++++++++++++++++++++++
-> >  man/man8/xfs_admin.8 |    7 +++++++
-> >  man/man8/xfs_db.8    |    3 +++
-> >  3 files changed, 32 insertions(+)
-> > 
-> > 
-> > diff --git a/db/sb.c b/db/sb.c
-> > index 93e4c405..b89ccdbe 100644
-> > --- a/db/sb.c
-> > +++ b/db/sb.c
-> > @@ -597,6 +597,7 @@ version_help(void)
-> >  " 'version attr2'    - enable v2 inline extended attributes\n"
-> >  " 'version log2'     - enable v2 log format\n"
-> >  " 'version needsrepair' - flag filesystem as requiring repair\n"
-> > +" 'version inobtcount' - enable inode btree counters\n"
-> >  "\n"
-> >  "The version function prints currently enabled features for a filesystem\n"
-> >  "according to the version field of its primary superblock.\n"
-> > @@ -857,6 +858,27 @@ version_f(
-> >  			}
-> >  
-> >  			v5features.incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-> > +		} else if (!strcasecmp(argv[1], "inobtcount")) {
-> > +			if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
-> > +				dbprintf(
-> > +		_("inode btree counter feature is already enabled\n"));
-> > +				exitcode = 1;
-> > +				return 1;
-> > +			}
-> > +			if (!xfs_sb_version_hasfinobt(&mp->m_sb)) {
-> > +				dbprintf(
-> > +		_("inode btree counter feature cannot be enabled on filesystems lacking free inode btrees\n"));
-> > +				exitcode = 1;
-> > +				return 1;
-> > +			}
-> > +			if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-> > +				dbprintf(
-> > +		_("inode btree counter feature cannot be enabled on pre-V5 filesystems\n"));
-> > +				exitcode = 1;
-> > +				return 1;
-> > +			}
-> > +
-> > +			v5features.ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
-> >  		} else if (!strcasecmp(argv[1], "extflg")) {
-> >  			switch (XFS_SB_VERSION_NUM(&mp->m_sb)) {
-> >  			case XFS_SB_VERSION_1:
-> > diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-> > index b423981d..a776b375 100644
-> > --- a/man/man8/xfs_admin.8
-> > +++ b/man/man8/xfs_admin.8
-> > @@ -116,6 +116,13 @@ If this is a V5 filesystem, flag the filesystem as needing repairs.
-> >  Until
-> >  .BR xfs_repair (8)
-> >  is run, the filesystem will not be mountable.
-> > +.TP
-> > +.B inobtcount
-> > +Upgrade a V5 filesystem to support the inode btree counters feature.
-> > +This reduces mount time by caching the size of the inode btrees in the
-> > +allocation group metadata.
-> > +Once enabled, the filesystem will not be writable by older kernels.
-> > +The filesystem cannot be downgraded after this feature is enabled.
-> >  .RE
-> >  .TP
-> >  .BI \-U " uuid"
-> > diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-> > index 7331cf19..1b826e5d 100644
-> > --- a/man/man8/xfs_db.8
-> > +++ b/man/man8/xfs_db.8
-> > @@ -976,6 +976,9 @@ The filesystem can be flagged as requiring a run through
-> >  if the
-> >  .B needsrepair
-> >  option is specified and the filesystem is formatted with the V5 format.
-> > +Support for the inode btree counters feature can be enabled by using the
-> > +.B inobtcount
-> > +option if the filesystem is formatted with the V5 format.
-> >  .IP
-> >  If no argument is given, the current version and feature bits are printed.
-> >  With one argument, this command will write the updated version number
-> > 
+> On 2021/1/12 10:55 上午, Ruan Shiyang wrote:
+>>
+>>
+>> On 2021/1/6 下午11:41, Jan Kara wrote:
+>>> On Thu 31-12-20 00:55:55, Shiyang Ruan wrote:
+>>>> The current memory_failure_dev_pagemap() can only handle single-mapped
+>>>> dax page for fsdax mode.  The dax page could be mapped by multiple 
+>>>> files
+>>>> and offsets if we let reflink feature & fsdax mode work together.  So,
+>>>> we refactor current implementation to support handle memory failure on
+>>>> each file and offset.
+>>>>
+>>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+>>>
+>>> Overall this looks OK to me, a few comments below.
+>>>
+>>>> ---
+>>>>   fs/dax.c            | 21 +++++++++++
+>>>>   include/linux/dax.h |  1 +
+>>>>   include/linux/mm.h  |  9 +++++
+>>>>   mm/memory-failure.c | 91 
+>>>> ++++++++++++++++++++++++++++++++++-----------
+>>>>   4 files changed, 100 insertions(+), 22 deletions(-)
+>>
+>> ...
+>>
+>>>>   @@ -345,9 +348,12 @@ static void add_to_kill(struct task_struct 
+>>>> *tsk, struct page *p,
+>>>>       }
+>>>>         tk->addr = page_address_in_vma(p, vma);
+>>>> -    if (is_zone_device_page(p))
+>>>> -        tk->size_shift = dev_pagemap_mapping_shift(p, vma);
+>>>> -    else
+>>>> +    if (is_zone_device_page(p)) {
+>>>> +        if (is_device_fsdax_page(p))
+>>>> +            tk->addr = vma->vm_start +
+>>>> +                    ((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
+>>>
+>>> It seems strange to use 'pgoff' for dax pages and not for any other 
+>>> page.
+>>> Why? I'd rather pass correct pgoff from all callers of add_to_kill() and
+>>> avoid this special casing...
+>>
+>> Because one fsdax page can be shared by multiple pgoffs.  I have to 
+>> pass each pgoff in each iteration to calculate the address in vma (for 
+>> tk->addr).  Other kinds of pages don't need this. They can get their 
+>> unique address by calling "page_address_in_vma()".
+>>
+> IMO,   an fsdax page can be shared by multiple files rather than 
+> multiple pgoffs if fs query support reflink.   Because an page only 
+> located in an mapping(page->mapping is exclusive),  hence it  only has 
+> an pgoff or index pointing at the node.
 > 
+>   or  I miss something for the feature ?  thanks,
+
+Yes, a fsdax page is shared by multiple files because of reflink.  I 
+think my description of 'pgoff' here is not correct.  This 'pgoff' means 
+the offset within the a file.  (We use rmap to find out all the sharing 
+files and their offsets.)  So, I said that "can be shared by multiple 
+pgoffs".  It's my bad.
+
+I think I should name it another word to avoid misunderstandings.
+
+
+--
+Thanks,
+Ruan Shiyang.
+
+> 
+>> So, I added this fsdax case here.  This patchset only implemented the 
+>> fsdax case, other cases also need to be added here if to be implemented.
+>>
+>>
+>> -- 
+>> Thanks,
+>> Ruan Shiyang.
+>>
+>>>
+>>>> +        tk->size_shift = dev_pagemap_mapping_shift(p, vma, tk->addr);
+>>>> +    } else
+>>>>           tk->size_shift = page_shift(compound_head(p));
+>>>>         /*
+>>>> @@ -495,7 +501,7 @@ static void collect_procs_anon(struct page 
+>>>> *page, struct list_head *to_kill,
+>>>>               if (!page_mapped_in_vma(page, vma))
+>>>>                   continue;
+>>>>               if (vma->vm_mm == t->mm)
+>>>> -                add_to_kill(t, page, vma, to_kill);
+>>>> +                add_to_kill(t, page, NULL, 0, vma, to_kill);
+>>>>           }
+>>>>       }
+>>>>       read_unlock(&tasklist_lock);
+>>>> @@ -505,24 +511,19 @@ static void collect_procs_anon(struct page 
+>>>> *page, struct list_head *to_kill,
+>>>>   /*
+>>>>    * Collect processes when the error hit a file mapped page.
+>>>>    */
+>>>> -static void collect_procs_file(struct page *page, struct list_head 
+>>>> *to_kill,
+>>>> -                int force_early)
+>>>> +static void collect_procs_file(struct page *page, struct 
+>>>> address_space *mapping,
+>>>> +        pgoff_t pgoff, struct list_head *to_kill, int force_early)
+>>>>   {
+>>>>       struct vm_area_struct *vma;
+>>>>       struct task_struct *tsk;
+>>>> -    struct address_space *mapping = page->mapping;
+>>>> -    pgoff_t pgoff;
+>>>>         i_mmap_lock_read(mapping);
+>>>>       read_lock(&tasklist_lock);
+>>>> -    pgoff = page_to_pgoff(page);
+>>>>       for_each_process(tsk) {
+>>>>           struct task_struct *t = task_early_kill(tsk, force_early);
+>>>> -
+>>>>           if (!t)
+>>>>               continue;
+>>>> -        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
+>>>> -                      pgoff) {
+>>>> +        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, 
+>>>> pgoff) {
+>>>>               /*
+>>>>                * Send early kill signal to tasks where a vma covers
+>>>>                * the page but the corrupted page is not necessarily
+>>>> @@ -531,7 +532,7 @@ static void collect_procs_file(struct page 
+>>>> *page, struct list_head *to_kill,
+>>>>                * to be informed of all such data corruptions.
+>>>>                */
+>>>>               if (vma->vm_mm == t->mm)
+>>>> -                add_to_kill(t, page, vma, to_kill);
+>>>> +                add_to_kill(t, page, mapping, pgoff, vma, to_kill);
+>>>>           }
+>>>>       }
+>>>>       read_unlock(&tasklist_lock);
+>>>> @@ -550,7 +551,8 @@ static void collect_procs(struct page *page, 
+>>>> struct list_head *tokill,
+>>>>       if (PageAnon(page))
+>>>>           collect_procs_anon(page, tokill, force_early);
+>>>>       else
+>>>> -        collect_procs_file(page, tokill, force_early);
+>>>> +        collect_procs_file(page, page->mapping, page_to_pgoff(page),
+>>>
+>>> Why not use page_mapping() helper here? It would be safer for THPs if 
+>>> they
+>>> ever get here...
+>>>
+>>>                                 Honza
+>>>
+>>
+> 
+> 
+
+
