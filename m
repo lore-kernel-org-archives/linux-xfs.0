@@ -2,147 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-21.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C743EC4332D
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 20:53:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAFA9C433E6
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 20:57:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD50E23A9A
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 20:53:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7545923A9D
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 20:57:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728564AbhANUwo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Jan 2021 15:52:44 -0500
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:43884 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726578AbhANUwn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jan 2021 15:52:43 -0500
-X-Greylist: delayed 489 seconds by postgrey-1.27 at vger.kernel.org; Thu, 14 Jan 2021 15:52:40 EST
-Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 03E40105E38;
-        Fri, 15 Jan 2021 07:51:54 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1l09b0-006Uat-5I; Fri, 15 Jan 2021 07:51:54 +1100
-Date:   Fri, 15 Jan 2021 07:51:54 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christian Brauner <christian.brauner@ubuntu.com>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-fsdevel@vger.kernel.org,
-        John Johansen <john.johansen@canonical.com>,
-        James Morris <jmorris@namei.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Geoffrey Thomas <geofft@ldpreload.com>,
-        Mrunal Patel <mpatel@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        David Howells <dhowells@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        =?iso-8859-1?Q?St=E9phane?= Graber <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        Lennart Poettering <lennart@poettering.net>,
-        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
-        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
-        Kees Cook <keescook@chromium.org>,
-        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        containers@lists.linux-foundation.org,
-        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v5 37/42] xfs: support idmapped mounts
-Message-ID: <20210114205154.GL331610@dread.disaster.area>
-References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
- <20210112220124.837960-38-christian.brauner@ubuntu.com>
+        id S1728358AbhANU5A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Jan 2021 15:57:00 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44088 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726049AbhANU5A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Jan 2021 15:57:00 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 606D6238EC;
+        Thu, 14 Jan 2021 20:56:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610657779;
+        bh=yt/Rbp2ghAH9oExHCcvLK5hy3fwtJqv82de7HN1e/5E=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mZGzpDpy++Wfkdv2Z+AMXNs1H2gawpIiB98bDEAhTNgLy2oJhTEWdxvAGK3RdScAL
+         ISVUeoRN6U+SRQj7dLDAMgZTMiZ+vnZpdhqwLe/ID4DwbqQDFYLJrUrrDqCvzdRE9d
+         LLJlc+grVILg2UQlrI55mEJBq9ekwcDXWWl59kH0qFBC1WHOuxVjtUxiyTb1Ac8BiL
+         HBMxnh6aoB/Vv92EKY/0/1jsBQzVhNSVn4dR8hBBo+t/arDyDBJohpB8MlnPWYimF4
+         fFABB7HiCgtqQg7I/BLfjwd1/HINTK0Xi+HeNeTA12fD00Lz+TSlRdNM44GyadHIlX
+         nXWOrieWsxEjA==
+Date:   Thu, 14 Jan 2021 12:56:18 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Bastian Germann <bastiangermann@fishpost.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/6] debian: new changelog entry
+Message-ID: <20210114205618.GE1164246@magnolia>
+References: <20210114183747.2507-1-bastiangermann@fishpost.de>
+ <20210114183747.2507-7-bastiangermann@fishpost.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210112220124.837960-38-christian.brauner@ubuntu.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
-        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
-        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=7-415B0cAAAA:8
-        a=44ec6t6cGFOkeLdKtF4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210114183747.2507-7-bastiangermann@fishpost.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 12, 2021 at 11:01:19PM +0100, Christian Brauner wrote:
-> From: Christoph Hellwig <hch@lst.de>
+On Thu, Jan 14, 2021 at 07:37:47PM +0100, Bastian Germann wrote:
+> Signed-off-by: Bastian Germann <bastiangermann@fishpost.de>
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+FWIW I've been carrying a patch[1] to bump the compat level to 11 so
+that the xfs_scrub systemd services can take advantage of
+dh_installsystemd.  I /think/ doing so will break builds on Debian
+oldstable and oldoldstable and Ubuntu 16.04, but those are now 5+
+years old so maybe I should send it for reals?
+
+--D
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/commit/?h=scrub-iscan-rebalance&id=d09bda8abc2c4ebcaedff4f21cbb79c79f572b0a
+> ---
+>  debian/changelog | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
 > 
-> Enable idmapped mounts for xfs. This basically just means passing down
-> the user_namespace argument from the VFS methods down to where it is
-> passed to helper.
+> diff --git a/debian/changelog b/debian/changelog
+> index 5d46f0a3..ce4a224d 100644
+> --- a/debian/changelog
+> +++ b/debian/changelog
+> @@ -1,3 +1,14 @@
+> +xfsprogs (5.10.0-2) unstable; urgency=low
+> +
+> +  * Team upload
+> +  * debian: cryptographically verify upstream tarball (Closes: #979644)
+> +  * debian: remove dependency on essential util-linux
+> +  * debian: remove "Priority: extra"
+> +  * debian: use Package-Type over its predecessor
+> +  * debian: add missing copyright info (Closes: #979653)
+> +
+> + -- Bastian Germann <bastiangermann@fishpost.de>  Thu, 14 Jan 2021 18:59:14 +0100
+> +
+>  xfsprogs (5.10.0-1) unstable; urgency=low
+>  
+>    * New upstream release
+> -- 
+> 2.30.0
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-....
-> @@ -654,6 +658,7 @@ xfs_vn_change_ok(
->   */
->  static int
->  xfs_setattr_nonsize(
-> +	struct user_namespace	*mnt_userns,
->  	struct xfs_inode	*ip,
->  	struct iattr		*iattr)
->  {
-> @@ -813,7 +818,7 @@ xfs_setattr_nonsize(
->  	 * 	     Posix ACL code seems to care about this issue either.
->  	 */
->  	if (mask & ATTR_MODE) {
-> -		error = posix_acl_chmod(&init_user_ns, inode, inode->i_mode);
-> +		error = posix_acl_chmod(mnt_userns, inode, inode->i_mode);
->  		if (error)
->  			return error;
->  	}
-> @@ -868,7 +873,7 @@ xfs_setattr_size(
->  		 * Use the regular setattr path to update the timestamps.
->  		 */
->  		iattr->ia_valid &= ~ATTR_SIZE;
-> -		return xfs_setattr_nonsize(ip, iattr);
-> +		return xfs_setattr_nonsize(&init_user_ns, ip, iattr);
-
-Shouldn't that be passing mnt_userns?
-
->  	}
->  
->  	/*
-> @@ -1037,6 +1042,7 @@ xfs_setattr_size(
->  
->  int
->  xfs_vn_setattr_size(
-> +	struct user_namespace	*mnt_userns,
->  	struct dentry		*dentry,
->  	struct iattr		*iattr)
->  {
-> @@ -1045,7 +1051,7 @@ xfs_vn_setattr_size(
->  
->  	trace_xfs_setattr(ip);
->  
-> -	error = xfs_vn_change_ok(dentry, iattr);
-> +	error = xfs_vn_change_ok(mnt_userns, dentry, iattr);
->  	if (error)
->  		return error;
->  	return xfs_setattr_size(ip, iattr);
-
-And this passing mnt_userns down into xfs_setattr_size()?  Seems
-like a bit of a landmine...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
