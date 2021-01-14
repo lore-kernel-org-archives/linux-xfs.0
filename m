@@ -2,221 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF580C43332
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 01:45:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DFD8C432C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 01:45:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF0D92343E
+	by mail.kernel.org (Postfix) with ESMTP id DB6CF2343B
 	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 01:45:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728011AbhANBoy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jan 2021 20:44:54 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:59185 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727047AbhANBox (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 20:44:53 -0500
-X-IronPort-AV: E=Sophos;i="5.79,345,1602518400"; 
-   d="scan'208";a="103460770"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 14 Jan 2021 09:44:21 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 6AB404CE1A08;
-        Thu, 14 Jan 2021 09:44:16 +0800 (CST)
-Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
- (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 14 Jan
- 2021 09:44:17 +0800
-Subject: Re: [PATCH 04/10] mm, fsdax: Refactor memory-failure handler for dax
- mapping
-To:     zhong jiang <zhongjiang-ali@linux.alibaba.com>,
-        Jan Kara <jack@suse.cz>
-CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
-        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
-References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
- <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
- <20210106154132.GC29271@quack2.suse.cz>
- <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
- <781f276b-afdd-091c-3dba-048e415431ab@linux.alibaba.com>
-From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
-Message-ID: <ef29ba5c-96d7-d0bb-e405-c7472a518b32@cn.fujitsu.com>
-Date:   Thu, 14 Jan 2021 09:44:14 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
+        id S1725897AbhANBpP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jan 2021 20:45:15 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60668 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725943AbhANBGi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Jan 2021 20:06:38 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BF91B23370;
+        Thu, 14 Jan 2021 01:05:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610586348;
+        bh=RrDpm8yFhzGzF7bhoikN682riQj5qdRscSZNTF9HTfg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=lJBHObuLjMOXLnf040sBGuFW8f3vn6u0KUEuZVJhAq0Kt9Iuzky55RLPFEfr6L5Ap
+         1dwGauv69fRcQyLSNqvjZ1a5STUKmCODZajmXZHDkTrCFF0u7bpFKGS/2vvUwrup+p
+         oukFy5pZOe6N0mhI/v80SD9P93bF1N0Gb3k8jn+TXIcBgQOosV5O9j5DmFPLmyCEO+
+         BoeQ15GR7w6SdamhWNZfp5dZKmz/yUBXB15fpgnRoaF/hR1FsUlx+tFCjIzTiyBWRL
+         52TFOI8SYM1iNm0XMkI+cXiJ4Tqo0/naHtuOkNO43nY/crRvk63Y2pL/xvrCtRbUau
+         x2599+Njf6PrQ==
+Date:   Wed, 13 Jan 2021 17:05:48 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     sandeen@sandeen.net, darrick.wong@oracle.com,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs_repair: clear the needsrepair flag
+Message-ID: <20210114010548.GV1164246@magnolia>
+References: <161017367756.1141483.3709627869982359451.stgit@magnolia>
+ <161017369673.1141483.6381128502951229066.stgit@magnolia>
+ <20210113181749.GC1284163@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <781f276b-afdd-091c-3dba-048e415431ab@linux.alibaba.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.225.141]
-X-ClientProxiedBy: G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) To
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
-X-yoursite-MailScanner-ID: 6AB404CE1A08.AD0C5
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210113181749.GC1284163@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 2021/1/13 下午6:04, zhong jiang wrote:
+On Wed, Jan 13, 2021 at 01:17:49PM -0500, Brian Foster wrote:
+> On Fri, Jan 08, 2021 at 10:28:16PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Clear the needsrepair flag, since it's used to prevent mounting of an
+> > inconsistent filesystem.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  repair/agheader.c |   11 +++++++++++
+> >  1 file changed, 11 insertions(+)
+> > 
+> > 
+> > diff --git a/repair/agheader.c b/repair/agheader.c
+> > index 8bb99489..f6174dbf 100644
+> > --- a/repair/agheader.c
+> > +++ b/repair/agheader.c
+> > @@ -452,6 +452,17 @@ secondary_sb_whack(
+> >  			rval |= XR_AG_SB_SEC;
+> >  	}
+> >  
+> > +	if (xfs_sb_version_needsrepair(sb)) {
+> > +		if (!no_modify)
+> > +			sb->sb_features_incompat &=
+> > +					~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> > +		if (!do_bzero) {
+> > +			rval |= XR_AG_SB;
+> > +			do_warn(_("needsrepair flag set in sb %d\n"), i);
+> > +		} else
+> > +			rval |= XR_AG_SB_SEC;
+> > +	}
+> > +
 > 
-> On 2021/1/12 10:55 上午, Ruan Shiyang wrote:
->>
->>
->> On 2021/1/6 下午11:41, Jan Kara wrote:
->>> On Thu 31-12-20 00:55:55, Shiyang Ruan wrote:
->>>> The current memory_failure_dev_pagemap() can only handle single-mapped
->>>> dax page for fsdax mode.  The dax page could be mapped by multiple 
->>>> files
->>>> and offsets if we let reflink feature & fsdax mode work together.  So,
->>>> we refactor current implementation to support handle memory failure on
->>>> each file and offset.
->>>>
->>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
->>>
->>> Overall this looks OK to me, a few comments below.
->>>
->>>> ---
->>>>   fs/dax.c            | 21 +++++++++++
->>>>   include/linux/dax.h |  1 +
->>>>   include/linux/mm.h  |  9 +++++
->>>>   mm/memory-failure.c | 91 
->>>> ++++++++++++++++++++++++++++++++++-----------
->>>>   4 files changed, 100 insertions(+), 22 deletions(-)
->>
->> ...
->>
->>>>   @@ -345,9 +348,12 @@ static void add_to_kill(struct task_struct 
->>>> *tsk, struct page *p,
->>>>       }
->>>>         tk->addr = page_address_in_vma(p, vma);
->>>> -    if (is_zone_device_page(p))
->>>> -        tk->size_shift = dev_pagemap_mapping_shift(p, vma);
->>>> -    else
->>>> +    if (is_zone_device_page(p)) {
->>>> +        if (is_device_fsdax_page(p))
->>>> +            tk->addr = vma->vm_start +
->>>> +                    ((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
->>>
->>> It seems strange to use 'pgoff' for dax pages and not for any other 
->>> page.
->>> Why? I'd rather pass correct pgoff from all callers of add_to_kill() and
->>> avoid this special casing...
->>
->> Because one fsdax page can be shared by multiple pgoffs.  I have to 
->> pass each pgoff in each iteration to calculate the address in vma (for 
->> tk->addr).  Other kinds of pages don't need this. They can get their 
->> unique address by calling "page_address_in_vma()".
->>
-> IMO,   an fsdax page can be shared by multiple files rather than 
-> multiple pgoffs if fs query support reflink.   Because an page only 
-> located in an mapping(page->mapping is exclusive),  hence it  only has 
-> an pgoff or index pointing at the node.
+> Looks reasonable modulo the questions on the previous patch. When I give
+> this a test, one thing that stands out is that the needsrepair state
+> itself sort of presents as corruption. I.e.,
 > 
->   or  I miss something for the feature ?  thanks,
-
-Yes, a fsdax page is shared by multiple files because of reflink.  I 
-think my description of 'pgoff' here is not correct.  This 'pgoff' means 
-the offset within the a file.  (We use rmap to find out all the sharing 
-files and their offsets.)  So, I said that "can be shared by multiple 
-pgoffs".  It's my bad.
-
-I think I should name it another word to avoid misunderstandings.
-
-
---
-Thanks,
-Ruan Shiyang.
-
+> # ./db/xfs_db -x -c "version needsrepair" <dev>
+> Upgrading V5 filesystem
+> Upgraded V5 filesystem.  Please run xfs_repair.
+> versionnum [0xb4a5+0x18a] =
+> V5,NLINK,DIRV2,ALIGN,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT,PROJID32BIT,CRC,FTYPE,FINOBT,SPARSE_INODES,REFLINK,NEEDSREPAIR
+> # ./repair/xfs_repair <dev>
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+> needsrepair flag set in sb 1
+> reset bad sb for ag 1
+> needsrepair flag set in sb 2
+> reset bad sb for ag 2
+> needsrepair flag set in sb 0
+> reset bad sb for ag 0
+> needsrepair flag set in sb 3
+> reset bad sb for ag 3
+>         - found root inode chunk
+> Phase 3 - for each AG...
+> ...
 > 
->> So, I added this fsdax case here.  This patchset only implemented the 
->> fsdax case, other cases also need to be added here if to be implemented.
->>
->>
->> -- 
->> Thanks,
->> Ruan Shiyang.
->>
->>>
->>>> +        tk->size_shift = dev_pagemap_mapping_shift(p, vma, tk->addr);
->>>> +    } else
->>>>           tk->size_shift = page_shift(compound_head(p));
->>>>         /*
->>>> @@ -495,7 +501,7 @@ static void collect_procs_anon(struct page 
->>>> *page, struct list_head *to_kill,
->>>>               if (!page_mapped_in_vma(page, vma))
->>>>                   continue;
->>>>               if (vma->vm_mm == t->mm)
->>>> -                add_to_kill(t, page, vma, to_kill);
->>>> +                add_to_kill(t, page, NULL, 0, vma, to_kill);
->>>>           }
->>>>       }
->>>>       read_unlock(&tasklist_lock);
->>>> @@ -505,24 +511,19 @@ static void collect_procs_anon(struct page 
->>>> *page, struct list_head *to_kill,
->>>>   /*
->>>>    * Collect processes when the error hit a file mapped page.
->>>>    */
->>>> -static void collect_procs_file(struct page *page, struct list_head 
->>>> *to_kill,
->>>> -                int force_early)
->>>> +static void collect_procs_file(struct page *page, struct 
->>>> address_space *mapping,
->>>> +        pgoff_t pgoff, struct list_head *to_kill, int force_early)
->>>>   {
->>>>       struct vm_area_struct *vma;
->>>>       struct task_struct *tsk;
->>>> -    struct address_space *mapping = page->mapping;
->>>> -    pgoff_t pgoff;
->>>>         i_mmap_lock_read(mapping);
->>>>       read_lock(&tasklist_lock);
->>>> -    pgoff = page_to_pgoff(page);
->>>>       for_each_process(tsk) {
->>>>           struct task_struct *t = task_early_kill(tsk, force_early);
->>>> -
->>>>           if (!t)
->>>>               continue;
->>>> -        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
->>>> -                      pgoff) {
->>>> +        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, 
->>>> pgoff) {
->>>>               /*
->>>>                * Send early kill signal to tasks where a vma covers
->>>>                * the page but the corrupted page is not necessarily
->>>> @@ -531,7 +532,7 @@ static void collect_procs_file(struct page 
->>>> *page, struct list_head *to_kill,
->>>>                * to be informed of all such data corruptions.
->>>>                */
->>>>               if (vma->vm_mm == t->mm)
->>>> -                add_to_kill(t, page, vma, to_kill);
->>>> +                add_to_kill(t, page, mapping, pgoff, vma, to_kill);
->>>>           }
->>>>       }
->>>>       read_unlock(&tasklist_lock);
->>>> @@ -550,7 +551,8 @@ static void collect_procs(struct page *page, 
->>>> struct list_head *tokill,
->>>>       if (PageAnon(page))
->>>>           collect_procs_anon(page, tokill, force_early);
->>>>       else
->>>> -        collect_procs_file(page, tokill, force_early);
->>>> +        collect_procs_file(page, page->mapping, page_to_pgoff(page),
->>>
->>> Why not use page_mapping() helper here? It would be safer for THPs if 
->>> they
->>> ever get here...
->>>
->>>                                 Honza
->>>
->>
-> 
-> 
+> So nothing was ever done to this fs besides set and clear the bit. Not a
+> huge deal, but I wonder if we should print something more user friendly
+> to indicate that repair found and cleared the needsrepair state, or at
+> least just avoid the "reset bad sb ..." message for the needsrepair
+> case.
 
+Hm.  For the backup supers I guess there's really not much point in
+saying anything about the bit being set, because the only time they get
+used is when repair tries to use one to fix a filesystem.
 
+As for AG 0, I guess I could change that to say:
+
+	dbprintf(_("Thank you for running xfs_repair!"));
+
+:D Or maybe there's no need to say anything at all.
+
+--D
+
+> Brian
+> 
+> >  	return(rval);
+> >  }
+> >  
+> > 
+> 
