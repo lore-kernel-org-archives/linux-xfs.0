@@ -4,221 +4,213 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE50DC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 10:25:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89674C433E9
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 10:32:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B32023A3A
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 10:25:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52B5123A59
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 10:32:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728570AbhANKZX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Jan 2021 05:25:23 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:38998 "EHLO
+        id S1726419AbhANKcV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Jan 2021 05:32:21 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:42877 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728496AbhANKZU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jan 2021 05:25:20 -0500
+        by vger.kernel.org with ESMTP id S1726518AbhANKcU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jan 2021 05:32:20 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1610619833;
+        s=mimecast20190719; t=1610620252;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=+MMb1/G417jh9jG0BhfvlCwuED50p5s62EpK3Ii+ar8=;
-        b=TX8+CDoZfj5fPzD9EWFBp8Xo7p2qsHeSOtIrMyOkCQvL7nvk4fIJ4oUqDsgL14zdvwyPXA
-        Jjs6klDJ1DtPyXJLK+QNLAzszGUiiDVJ1nMyPHyTxByz+Ja1p7nzxV7aOsFhuXjf8zKYRc
-        2obHRZo711hyy6V08viAB2E2Bkz3SyU=
+        bh=o597FpWZTLk/+NWS/FEAxctfbFnFMD4/zicOs6RTJUI=;
+        b=QDUaAyrCixuqHva1YR2u9goJ75QsAOeXF0T11XG9XV1mFu0Fcv1Osq1Cmyhm364XC/r1zK
+        6ytDiExBU1MJzcNGgctak3acp7tMVoU+M5GyubL1N7r+8HKwKriixvQIlrRdivIYlUvCLq
+        wEQWcdYyG88KR7B6DpkNDtPoWlGM28o=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-26-VirEnoeyPVi0Wfw776grDQ-1; Thu, 14 Jan 2021 05:23:51 -0500
-X-MC-Unique: VirEnoeyPVi0Wfw776grDQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-577-1YzMzocHNxGMJJbdif578g-1; Thu, 14 Jan 2021 05:30:50 -0500
+X-MC-Unique: 1YzMzocHNxGMJJbdif578g-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3551C190A7A3;
-        Thu, 14 Jan 2021 10:23:50 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 97792107ACF7;
+        Thu, 14 Jan 2021 10:30:49 +0000 (UTC)
 Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 76BC674AA0;
-        Thu, 14 Jan 2021 10:23:49 +0000 (UTC)
-Date:   Thu, 14 Jan 2021 05:23:47 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E016B669EC;
+        Thu, 14 Jan 2021 10:30:48 +0000 (UTC)
+Date:   Thu, 14 Jan 2021 05:30:47 -0500
 From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, avi@scylladb.com
-Subject: Re: [PATCH 09/10] iomap: add a IOMAP_DIO_NOALLOC flag
-Message-ID: <20210114102347.GD1333929@bfoster>
-References: <20210112162616.2003366-1-hch@lst.de>
- <20210112162616.2003366-10-hch@lst.de>
- <20210112232923.GD331610@dread.disaster.area>
- <20210113153215.GA1284163@bfoster>
- <20210113224935.GJ331610@dread.disaster.area>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [RFC[RAP] PATCH] xfs: allow setting and clearing of log incompat
+ feature flags
+Message-ID: <20210114103047.GE1333929@bfoster>
+References: <20201210142358.GB1912831@bfoster>
+ <20201210215004.GC3913616@dread.disaster.area>
+ <20201211133901.GA2032335@bfoster>
+ <20201212211439.GC632069@dread.disaster.area>
+ <20201214155831.GB2244296@bfoster>
+ <20201214205456.GD632069@dread.disaster.area>
+ <20201215135003.GA2346012@bfoster>
+ <20210107232821.GN6918@magnolia>
+ <20210113213105.GG331610@dread.disaster.area>
+ <20210114022547.GX1164246@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210113224935.GJ331610@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <20210114022547.GX1164246@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 14, 2021 at 09:49:35AM +1100, Dave Chinner wrote:
-> On Wed, Jan 13, 2021 at 10:32:15AM -0500, Brian Foster wrote:
-> > On Wed, Jan 13, 2021 at 10:29:23AM +1100, Dave Chinner wrote:
-> > > On Tue, Jan 12, 2021 at 05:26:15PM +0100, Christoph Hellwig wrote:
-> > > > Add a flag to request that the iomap instances do not allocate blocks
-> > > > by translating it to another new IOMAP_NOALLOC flag.
+On Wed, Jan 13, 2021 at 06:25:47PM -0800, Darrick J. Wong wrote:
+> On Thu, Jan 14, 2021 at 08:31:05AM +1100, Dave Chinner wrote:
+> > On Thu, Jan 07, 2021 at 03:28:21PM -0800, Darrick J. Wong wrote:
+> > > On Tue, Dec 15, 2020 at 08:50:03AM -0500, Brian Foster wrote:
+> > > > On Tue, Dec 15, 2020 at 07:54:56AM +1100, Dave Chinner wrote:
+> > > > > On Mon, Dec 14, 2020 at 10:58:31AM -0500, Brian Foster wrote:
+> > > > > > On Sun, Dec 13, 2020 at 08:14:39AM +1100, Dave Chinner wrote:
+> > > > > > > On Fri, Dec 11, 2020 at 08:39:01AM -0500, Brian Foster wrote:
+> > > > > > > > On Fri, Dec 11, 2020 at 08:50:04AM +1100, Dave Chinner wrote:
+> > > > > > > > > As for a mechanism for dynamically adding log incompat flags?
+> > > > > > > > > Perhaps we just do that in xfs_trans_alloc() - add an log incompat
+> > > > > > > > > flags field into the transaction reservation structure, and if
+> > > > > > > > > xfs_trans_alloc() sees an incompat field set and the superblock
+> > > > > > > > > doesn't have it set, the first thing it does is run a "set log
+> > > > > > > > > incompat flag" transaction before then doing it's normal work...
+> > > > > > > > > 
+> > > > > > > > > This should be rare enough it doesn't have any measurable
+> > > > > > > > > performance overhead, and it's flexible enough to support any log
+> > > > > > > > > incompat feature we might need to implement...
+> > > > > > > > > 
+> > > > > > > > 
+> > > > > > > > But I don't think that is sufficient. As Darrick pointed out up-thread,
+> > > > > > > > the updated superblock has to be written back before we're allowed to
+> > > > > > > > commit transactions with incompatible items. Otherwise, an older kernel
+> > > > > > > > can attempt log recovery with incompatible items present if the
+> > > > > > > > filesystem crashes before the superblock is written back.
+> > > > > > > 
+> > > > > > > Sure, that's what the hook in xfs_trans_alloc() would do. It can do
+> > > > > > > the work in the context that is going to need it, and set a wait
+> > > > > > > flag for all incoming transactions that need a log incompat flag to
+> > > > > > > wait for it do it's work.  Once it's done and the flag is set, it
+> > > > > > > can continue and wake all the waiters now that the log incompat flag
+> > > > > > > has been set. Anything that doesn't need a log incompat flag can
+> > > > > > > just keep going and doesn't ever get blocked....
+> > > > > > > 
+> > > > > > 
+> > > > > > It would have to be a sync transaction plus sync AIL force in
+> > > > > > transaction allocation context if we were to log the superblock change,
+> > > > > > which sounds a bit hairy...
+> > > > > 
+> > > > > Well, we already do sync AIL forces in transaction reservation when
+> > > > > we run out of log space, so there's no technical reason for this
+> > > > > being a problem at all. xfs_trans_alloc() is expected to block
+> > > > > waiting on AIL tail pushing....
+> > > > > 
+> > > > > > > I suspect this is one of the rare occasions where an unlogged
+> > > > > > > modification makes an awful lot of sense: we don't even log that we
+> > > > > > > are adding a log incompat flag, we just do an atomic synchronous
+> > > > > > > write straight to the superblock to set the incompat flag(s). The
+> > > > > > > entire modification can be done under the superblock buffer lock to
+> > > > > > > serialise multiple transactions all trying to set incompat bits, and
+> > > > > > > we don't set the in-memory superblock incompat bit until after it
+> > > > > > > has been set and written to disk. Hence multiple waits can check the
+> > > > > > > flag after they've got the sb buffer lock, and they'll see that it's
+> > > > > > > already been set and just continue...
+> > > > > > > 
+> > > > > > 
+> > > > > > Agreed. That is a notable simplification and I think much more
+> > > > > > preferable than the above for the dynamic approach.
+> > > > > > 
+> > > > > > That said, note that dynamic feature bits might introduce complexity in
+> > > > > > more subtle ways. For example, nothing that I can see currently
+> > > > > > serializes idle log covering with an active transaction (that may have
+> > > > > > just set an incompat bit via some hook yet not committed anything to the
+> > > > > > log subsystem), so it might not be as simple as just adding a hook
+> > > > > > somewhere.
+> > > > > 
+> > > > > Right, we had to make log covering away of the CIL to prevent it
+> > > > > from idling while there were multiple active committed transactions
+> > > > > in memory. So the state machine only progresses if both the CIL and
+> > > > > AIL are empty. If we had some way of knowing that a transaction is
+> > > > > in progress, we could check that in xfs_log_need_covered() and we'd
+> > > > > stop the state machine progress at that point. But we got rid of the
+> > > > > active transaction counter that we could use for that....
+> > > > > 
+> > > > > [Hmmm, didn't I recently have a patch that re-introduced that
+> > > > > counter to fix some other "we need to know if there's an active
+> > > > > transaction running" issue? Can't remember what that was now...]
+> > > > > 
+> > > > 
+> > > > I think you removed it, actually, via commit b41b46c20c0bd ("xfs: remove
+> > > > the m_active_trans counter"). We subsequently discussed reintroducing
+> > > > the same concept for the quotaoff rework [1], which might be what you're
+> > > > thinking of. That uses a percpu rwsem since we don't really need a
+> > > > counter, but I suspect could be reused for serialization in this use
+> > > > case as well (assuming I can get some reviews on it.. ;).
+> > > > 
+> > > > FWIW, I was considering putting those quotaoff patches ahead of the log
+> > > > covering work so we could reuse that code again in attr quiesce, but I
+> > > > think I'm pretty close to being able to remove that particular usage
+> > > > entirely.
 > > > 
-> > > Except "no allocation" that is not what XFS needs for concurrent
-> > > sub-block DIO.
-> > > 
-> > > We are trying to avoid external sub-block IO outside the range of
-> > > the user data IO (COW, sub-block zeroing, etc) so that we don't
-> > > trash adjacent sub-block IO in flight. This means we can't do
-> > > sub-block zeroing and that then means we can't map unwritten extents
-> > > or allocate new extents for the sub-block IO.  It also means the IO
-> > > range cannot span EOF because that triggers unconditional sub-block
-> > > zeroing in iomap_dio_rw_actor().
-> > > 
-> > > And because we may have to map multiple extents to fully span an IO
-> > > range, we have to guarantee that subsequent extents for the IO are
-> > > also written otherwise we have a partial write abort case. Hence we
-> > > have single extent limitations as well.
-> > > 
-> > > So "no allocation" really doesn't describe what we want this flag to
-> > > at all.
-> > > 
-> > > If we're going to use a flag for this specific functionality, let's
-> > > call it what it is: IOMAP_DIO_UNALIGNED/IOMAP_UNALIGNED and do two
-> > > things with it.
-> > > 
-> > > 	1. Make unaligned IO a formal part of the iomap_dio_rw()
-> > > 	behaviour so it can do the common checks to for things that
-> > > 	need exclusive serialisation for unaligned IO (i.e. avoid IO
-> > > 	spanning EOF, abort if there are cached pages over the
-> > > 	range, etc).
-> > > 
-> > > 	2. require the filesystem mapping callback do only allow
-> > > 	unaligned IO into ranges that are contiguous and don't
-> > > 	require mapping state changes or sub-block zeroing to be
-> > > 	performed during the sub-block IO.
-> > > 
-> > > 
+> > > I was thinking about using a rwsem to protect the log incompat flags --
+> > > code that thinks it might use a protected feature takes the lock in
+> > > read mode until commit; and the log covering code only clears the
+> > > flags if down_write_trylock succeeds.  That constrains the overhead to
+> > > threads that are trying to use the feature, instead of making all
+> > > threads pay the cost of bumping the counter.
 > > 
-> > Something I hadn't thought about before is whether applications might
-> > depend on current unaligned dio serialization for coherency and thus
-> > break if the kernel suddenly allows concurrent unaligned dio to pass
-> > through. Should this be something that is explicitly requested by
-> > userspace?
+> > If you are going to do that, make it a per-cpu rwsem, because we
+> > really only care about the global shared read overhead in the hot
+> > paths and not the overhead of taking it in write mode if
+> > it is only the log covering code that does that...
+> > 
+> > > > I'm more approaching this from a "what are the requirements and how/why
+> > > > do they justify the associated complexity?" angle. That's why I'm asking
+> > > > things like how much difference does a dynamic bit really make for
+> > > > something like xattrs. But I agree that's less of a concern when
+> > > > associated with more obscure or rarely used operations, so on balance I
+> > > > think that's a fair approach to this mechanism provided we consider
+> > > > suitability on a per feature basis.
+> > > 
+> > > Hm.  If I had to peer into my crystal ball I'd guess that the current
+> > > xattr logging scheme works fine for most xattr users, so I wouldn't
+> > > worry much about the dynamic bit.
+> > > 
+> > > However, I could see things like atomic range exchange being more
+> > > popular, in which case people might notice the overhead of tracking when
+> > > we can turn off the feature bit...
+> > 
+> > Hence a per-cpu rwsem... :)
 > 
-> If applications are relying on an undocumented, implementation
-> specific behaviour of a filesystem that only occurs for IOs of a
-> certain size for implicit data coherency between independent,
-> non-overlapping DIOs and/or page cache IO, then they are already
-> broken and need fixing because that behaviour is not guaranteed to
-> occur. e.g. 512 byte block size filesystem does not provide such
-> serialisation, so if the app depends on 512 byte DIOs being
-> serialised completely by the filesytem then it already fails on 512
-> byte block size filesystems.
-> 
-
-I'm not sure how the block size relates beyond just changing the
-alignment requirements..?
-
-> So, no, we simply don't care about breaking broken applications that
-> are already broken.
-> 
-
-I agree in general, but I'm not sure that helps us on the "don't break
-userspace" front. We can call userspace broken all we want, but if some
-application has such a workload that historically functions correctly
-due to this serialization and all of a sudden starts to cause data
-corruption because we decide to remove it, I fear we'd end up taking the
-blame regardless. :/
-
-I wonder if other fs' provide similar concurrent unaligned dio
-support..? A quick look at ext4 shows it has similar logic to XFS, btrfs
-looks like it falls back to buffered I/O...
-
-> > That aside, I agree that the DIO_UNALIGNED approach seems a bit more
-> > clear than NOALLOC, but TBH the more I look at this the more Christoph's
-> > first approach seems cleanest to me. It is a bit unfortunate to
-> > duplicate the mapping lookups and have the extra ILOCK cycle, but the
-> > lock is shared and only taken when I/O is unaligned. I don't really see
-> > why that is a show stopper yet it's acceptable to fall back to exclusive
-> > dio if the target range happens to be discontiguous (but otherwise
-> > mapped/written).
-> 
-> Unnecessary lock cycles in the fast path are always bad. The whole
-> reason this change is being done is for performance to bring it up
-> to par with block aligned IO. Adding an extra lock cycle to the
-> ILOCK on every IO will halve the performance on high IOPs hardware
-> because the ILOCK will be directly exposed to userspace IO
-> submission and hence become the contention point instead of the
-> IOLOCK.
-> 
-> IOWs, the fact taht we take the ILOCK 2x per IO instead of once
-> means that the ILOCK becomes the performance limiting lock (because
-> even shared locking causes cacheline contention) and changes the
-> entire lock profile for the IO path when unaligned IO is being done.
-> 
-> This is also ignoring the fact that the ILOCK is held in exclusive
-> mode during IO completion while doing file size and extent
-> manipulation transactions. IOWs we can block waiting on IO
-> completion before we even decide if we can do the IO with shared
-> locking. Hence there are new IO submission serialisation points in
-> the fast path that will also slow down the cases where we have to do
-> exclusive locking....
-> 
-> So, yeah, I can only see bad things occurring by lifting the ILOCK
-> up into the high level IO path. And, of course, once it's taken
-> there, people will find new reasons to expand it's scope and the
-> problems will only get worse...
+> Yup, it seems to work fine, though now I'm distracted over the posteof
+> cleanup serieses... :)
 > 
 
-I'm not saying the extra ilock cycle is free or even ideal. I'm
-questioning that the proposed alternatives provide complete
-functionality when things like unaligned dio that span mappings are
-always going to fall back to exclusive I/O. There's an obvious tradeoff
-there between performance and predictability that IMO isn't as cut and
-dry as you describe. I certainly don't consider that as bringing
-unaligned dio performance up to par with block aligned dio.
+FWIW, I have a patch on the list from a few months ago that introduces a
+transaction percpu rwsem for the quotaoff rework:
 
-> > So I dunno... to me, I would start with that approach and then as the
-> > implementation soaks, perhaps see if we can find a way to optimize away
-> > the extra cycle and lookup.
-> 
-> I don't see how we can determine if we can do the unlaigned IO
-> holding a shared lock without doing an extent lookup. It's the
-> underlying extent state that makes shared locking possible, and I
-> can't think of any other state we can look at to make this decision.
-> 
+https://lore.kernel.org/linux-xfs/20201001150310.141467-3-bfoster@redhat.com/
 
-Not sure how you got "without doing an extent lookup" from my comment.
-:P I was referring to the extra/early lookup and lock cycle that we're
-discussing above wrt to the original series. These subsequent series
-already do without it, but to me they sacrifice functionality. I'm
-basically saying that it might be worth to try and make it work first,
-make it fast(er) second (or otherwise find a way to address the issue in
-the latest series).
-
-Of course, based on the behavior of other fs' I'm not totally convinced
-this is a great idea in the first place, at least not without some kind
-of opt-in from userspace or perhaps broader community consensus..
+Perhaps I should repost?
 
 Brian
 
-> Hence I think this path is simply a dead end with no possibility of
-> further optimisation. Of course, if you can solve the problem
-> without needing an extent lookup, then we can talk about how to
-> avoid racing with actual extent mapping changes done under the
-> ILOCK... :)
+> --D
 > 
-> Cheers,
-> 
-> Dave.
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
 > 
 
