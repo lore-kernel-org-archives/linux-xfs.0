@@ -2,182 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4D9AC433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 21:58:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C677C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 01:11:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6309C23136
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Jan 2021 21:58:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F034C2343B
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 01:11:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726903AbhAMVzt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Jan 2021 16:55:49 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:42426 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729229AbhAMVzK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jan 2021 16:55:10 -0500
-Received: from dread.disaster.area (pa49-179-167-107.pa.nsw.optusnet.com.au [49.179.167.107])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id A94981ACDFD;
-        Thu, 14 Jan 2021 08:53:49 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kzo5M-006AIU-SC; Thu, 14 Jan 2021 08:53:48 +1100
-Date:   Thu, 14 Jan 2021 08:53:48 +1100
-From:   Dave Chinner <david@fromorbit.com>
+        id S1727109AbhANBKO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Jan 2021 20:10:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60808 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727051AbhANBJz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Jan 2021 20:09:55 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0ABB423370;
+        Thu, 14 Jan 2021 01:08:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610586516;
+        bh=wxig7LQqnrX4waHh7G9uJFtZlURotXXE9diWiccso+4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KfDCSdxaRetC4jBtC3eQT70rVEWIB6d/nw5g5aSMNOczvIfPG2XtXn+9ts0RWPzXc
+         5hPk1q8M8qV4X3Rv1Pyc5UqWO+/JeF11coED3QX8IEIgsyK5VYoPrfeez3cbIesOAz
+         xKECFJpskPYDMH59Iy2Az7f74s2bOmuiou8pAKtunF26gADf5+6jD/2BdUDqLuzN0T
+         56AeYwPXHs7jYi6OtWGUmi5Rwub8oVoKOd0Ym3IwHEAVv8hLxtcfQUiTPKlXcByZxr
+         sMzirgUD+6/aHRFyKIka1IUrGoZjSJAuKt5mB/hQE4N9zIJIZgxusovVkOnP+/foKz
+         JrrxXLI3PlLEQ==
+Date:   Wed, 13 Jan 2021 17:08:35 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Brian Foster <bfoster@redhat.com>
-Cc:     Donald Buczek <buczek@molgen.mpg.de>, linux-xfs@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+linux-xfs@molgen.mpg.de
-Subject: Re: [PATCH] xfs: Wake CIL push waiters more reliably
-Message-ID: <20210113215348.GI331610@dread.disaster.area>
-References: <1705b481-16db-391e-48a8-a932d1f137e7@molgen.mpg.de>
- <20201229235627.33289-1-buczek@molgen.mpg.de>
- <20201230221611.GC164134@dread.disaster.area>
- <20210104162353.GA254939@bfoster>
- <20210107215444.GG331610@dread.disaster.area>
- <20210108165657.GC893097@bfoster>
- <20210111163848.GC1091932@bfoster>
+Cc:     sandeen@sandeen.net, darrick.wong@oracle.com,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs_db: add inobtcnt upgrade path
+Message-ID: <20210114010835.GW1164246@magnolia>
+References: <161017369911.1142690.8979186737828708317.stgit@magnolia>
+ <161017370529.1142690.11100691491331155224.stgit@magnolia>
+ <20210113183505.GD1284163@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210111163848.GC1091932@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=+wqVUQIkAh0lLYI+QRsciw==:117 a=+wqVUQIkAh0lLYI+QRsciw==:17
-        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=7-415B0cAAAA:8
-        a=jeGTqxCbE2Z_5-kZt_IA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210113183505.GD1284163@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 11, 2021 at 11:38:48AM -0500, Brian Foster wrote:
-> On Fri, Jan 08, 2021 at 11:56:57AM -0500, Brian Foster wrote:
-> > On Fri, Jan 08, 2021 at 08:54:44AM +1100, Dave Chinner wrote:
-> > > On Mon, Jan 04, 2021 at 11:23:53AM -0500, Brian Foster wrote:
-> > > > On Thu, Dec 31, 2020 at 09:16:11AM +1100, Dave Chinner wrote:
-> > > > > On Wed, Dec 30, 2020 at 12:56:27AM +0100, Donald Buczek wrote:
-> > > > > > If the value goes below the limit while some threads are
-> > > > > > already waiting but before the push worker gets to it, these threads are
-> > > > > > not woken.
-> > > > > > 
-> > > > > > Always wake all CIL push waiters. Test with waitqueue_active() as an
-> > > > > > optimization. This is possible, because we hold the xc_push_lock
-> > > > > > spinlock, which prevents additions to the waitqueue.
-> > > > > > 
-> > > > > > Signed-off-by: Donald Buczek <buczek@molgen.mpg.de>
-> > > > > > ---
-> > > > > >  fs/xfs/xfs_log_cil.c | 2 +-
-> > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> > > > > > index b0ef071b3cb5..d620de8e217c 100644
-> > > > > > --- a/fs/xfs/xfs_log_cil.c
-> > > > > > +++ b/fs/xfs/xfs_log_cil.c
-> > > > > > @@ -670,7 +670,7 @@ xlog_cil_push_work(
-> > > > > >  	/*
-> > > > > >  	 * Wake up any background push waiters now this context is being pushed.
-> > > > > >  	 */
-> > > > > > -	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
-> > > > > > +	if (waitqueue_active(&cil->xc_push_wait))
-> > > > > >  		wake_up_all(&cil->xc_push_wait);
-> > > > > 
-> > > > > That just smells wrong to me. It *might* be correct, but this
-> > > > > condition should pair with the sleep condition, as space used by a
-> > > > > CIL context should never actually decrease....
-> > > > > 
-> > > > 
-> > > > ... but I'm a little confused by this assertion. The shadow buffer
-> > > > allocation code refers to the possibility of shadow buffers falling out
-> > > > that are smaller than currently allocated buffers. Further, the
-> > > > _insert_format_items() code appears to explicitly optimize for this
-> > > > possibility by reusing the active buffer, subtracting the old size/count
-> > > > values from the diff variables and then reformatting the latest
-> > > > (presumably smaller) item to the lv.
-> > > 
-> > > Individual items might shrink, but the overall transaction should
-> > > grow. Think of a extent to btree conversion of an inode fork. THe
-> > > data in the inode fork decreases from a list of extents to a btree
-> > > root block pointer, so the inode item shrinks. But then we add a new
-> > > btree root block that contains all the extents + the btree block
-> > > header, and it gets rounded up to ithe 128 byte buffer logging chunk
-> > > size.
-> > > 
-> > > IOWs, while the inode item has decreased in size, the overall
-> > > space consumed by the transaction has gone up and so the CIL ctx
-> > > used_space should increase. Hence we can't just look at individual
-> > > log items and whether they have decreased in size - we have to look
-> > > at all the items in the transaction to understand how the space used
-> > > in that transaction has changed. i.e. it's the aggregation of all
-> > > items in the transaction that matter here, not so much the
-> > > individual items.
-> > > 
+On Wed, Jan 13, 2021 at 01:35:05PM -0500, Brian Foster wrote:
+> On Fri, Jan 08, 2021 at 10:28:25PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Ok, that makes more sense...
+> > Enable users to upgrade their filesystems to support inode btree block
+> > counters.
 > > 
-> > > > Of course this could just be implementation detail. I haven't dug into
-> > > > the details in the remainder of this thread and I don't have specific
-> > > > examples off the top of my head, but perhaps based on the ability of
-> > > > various structures to change formats and the ability of log vectors to
-> > > > shrink in size, shouldn't we expect the possibility of a CIL context to
-> > > > shrink in size as well? Just from poking around the CIL it seems like
-> > > > the surrounding code supports it (xlog_cil_insert_items() checks len > 0
-> > > > for recalculating split res as well)...
-> > > 
-> > > Yes, there may be situations where it decreases. It may be this is
-> > > fine, but the assumption *I've made* in lots of the CIL push code is
-> > > that ctx->used_space rarely, if ever, will go backwards.
-> > > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> 
+> These two look Ok to me, but I noticed that both commands have weird
+> error semantics when run through xfs_admin and the associated features
+> are already set. E.g.:
+> 
+> # xfs_admin -O inobtcount /dev/test/tmp 
+> Upgrading V5 filesystem
+> Upgraded V5 filesystem.  Please run xfs_repair.
+> versionnum [0xb4a5+0x18a] = V5,NLINK,DIRV2,ALIGN,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT,PROJID32BIT,CRC,FTYPE,FINOBT,SPARSE_INODES,REFLINK,INOBTCNT
+> Running xfs_repair to ensure filesystem consistency.
+> # xfs_admin -O inobtcount /dev/test/tmp 
+> inode btree counter feature is already enabled
+> Running xfs_repair to ensure filesystem consistency.
+> Conversion failed, is the filesystem unmounted?
+> # mount /dev/test/tmp /mnt/
+> # umount /mnt/
+> 
+> So it looks like we run repair again the second time around even though
+> the bit was already set, which is probably unnecessary, but then also
+> for some reason report the result as failed.
+
+Hm.  I guess I could define a second exitcode that means "no action
+taken", and have xfs_admin exit.
+
+> (I also realized that repair is fixing up some agi metadata in this
+> case, so my previous thought around a special repair verify mode is
+> probably not relevant..).
+
+<nod>
+
+--D
+
+> Brian
+> 
+> >  db/sb.c              |   22 ++++++++++++++++++++++
+> >  man/man8/xfs_admin.8 |    7 +++++++
+> >  man/man8/xfs_db.8    |    3 +++
+> >  3 files changed, 32 insertions(+)
 > > 
-> > ... and rarely seems a bit more pragmatic than never.
+> > 
+> > diff --git a/db/sb.c b/db/sb.c
+> > index 93e4c405..b89ccdbe 100644
+> > --- a/db/sb.c
+> > +++ b/db/sb.c
+> > @@ -597,6 +597,7 @@ version_help(void)
+> >  " 'version attr2'    - enable v2 inline extended attributes\n"
+> >  " 'version log2'     - enable v2 log format\n"
+> >  " 'version needsrepair' - flag filesystem as requiring repair\n"
+> > +" 'version inobtcount' - enable inode btree counters\n"
+> >  "\n"
+> >  "The version function prints currently enabled features for a filesystem\n"
+> >  "according to the version field of its primary superblock.\n"
+> > @@ -857,6 +858,27 @@ version_f(
+> >  			}
+> >  
+> >  			v5features.incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> > +		} else if (!strcasecmp(argv[1], "inobtcount")) {
+> > +			if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
+> > +				dbprintf(
+> > +		_("inode btree counter feature is already enabled\n"));
+> > +				exitcode = 1;
+> > +				return 1;
+> > +			}
+> > +			if (!xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> > +				dbprintf(
+> > +		_("inode btree counter feature cannot be enabled on filesystems lacking free inode btrees\n"));
+> > +				exitcode = 1;
+> > +				return 1;
+> > +			}
+> > +			if (!xfs_sb_version_hascrc(&mp->m_sb)) {
+> > +				dbprintf(
+> > +		_("inode btree counter feature cannot be enabled on pre-V5 filesystems\n"));
+> > +				exitcode = 1;
+> > +				return 1;
+> > +			}
+> > +
+> > +			v5features.ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
+> >  		} else if (!strcasecmp(argv[1], "extflg")) {
+> >  			switch (XFS_SB_VERSION_NUM(&mp->m_sb)) {
+> >  			case XFS_SB_VERSION_1:
+> > diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+> > index b423981d..a776b375 100644
+> > --- a/man/man8/xfs_admin.8
+> > +++ b/man/man8/xfs_admin.8
+> > @@ -116,6 +116,13 @@ If this is a V5 filesystem, flag the filesystem as needing repairs.
+> >  Until
+> >  .BR xfs_repair (8)
+> >  is run, the filesystem will not be mountable.
+> > +.TP
+> > +.B inobtcount
+> > +Upgrade a V5 filesystem to support the inode btree counters feature.
+> > +This reduces mount time by caching the size of the inode btrees in the
+> > +allocation group metadata.
+> > +Once enabled, the filesystem will not be writable by older kernels.
+> > +The filesystem cannot be downgraded after this feature is enabled.
+> >  .RE
+> >  .TP
+> >  .BI \-U " uuid"
+> > diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> > index 7331cf19..1b826e5d 100644
+> > --- a/man/man8/xfs_db.8
+> > +++ b/man/man8/xfs_db.8
+> > @@ -976,6 +976,9 @@ The filesystem can be flagged as requiring a run through
+> >  if the
+> >  .B needsrepair
+> >  option is specified and the filesystem is formatted with the V5 format.
+> > +Support for the inode btree counters feature can be enabled by using the
+> > +.B inobtcount
+> > +option if the filesystem is formatted with the V5 format.
+> >  .IP
+> >  If no argument is given, the current version and feature bits are printed.
+> >  With one argument, this command will write the updated version number
 > > 
 > 
-> FWIW, a cursory look at the inode size/format code (motivated by
-> Donald's recent log dump that appears to show inode log items changing
-> size) suggested that a simple local format size change might be enough
-> to cause this condition on an item. A subsequent test to create and
-> immediately remove a file from an otherwise empty directory triggers a
-> tracepoint I injected in xlog_cil_insert_items() to detect a negative
-> transaction delta. As expected, the absolute value of the delta does
-> seem to increase with a larger filename. This also produces a negative
-> iovec delta, fwiw. E.g.:
-> 
-> # touch `for i in $(seq 0 63); do echo -n a; done`
-> # rm -f `for i in $(seq 0 63); do echo -n a; done`
-> #
-> 
-> rm-9265    [001] ....  4660.177806: xfs_log_commit_cil: 409: len -72 diff_iovecs 0
-> rm-9265    [001] .N.1  4660.177913: xfs_log_commit_cil: 419: len -72 diff_iovecs 0
-> rm-9265    [001] ....  4660.178313: xfs_log_commit_cil: 409: len -52 diff_iovecs -1
-> rm-9265    [001] ...1  4660.178336: xfs_log_commit_cil: 419: len -64 diff_iovecs -1
-> 
-> ... and this only seems to occur when the unlink occurs before the CIL
-> has been checkpointed and pushed out the inode (i.e. a freeze/unfreeze
-> cycle prevents it).
-
-Yeha, it's a shortform directory removal that triggers it easily
-because the other items being modified in the transaction aren't
-changing size on relogging (AGI unlink list pointer, unlinked inode
-core for nlink change). Hence the reduction in size of the directory
-inode reduces the overall CIL size...
-
-> I've not dug into the transaction details and have no idea if this is
-> the variant that Donald reproduces; it wouldn't surprise me a ton if
-> there were various others. This is pretty straightforward, however, and
-> shows the negative item delta carry through the transaction. IMO, that
-> seems to justify a throttling fix...
-
-I agree that a throttling fix is needed, but I'm trying to
-understand the scope and breadth of the problem first instead of
-jumping the gun and making the wrong fix for the wrong reasons that
-just papers over the underlying problems that the throttling bug has
-made us aware of...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
