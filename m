@@ -2,168 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C45DEC433E6
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 10:44:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84CD0C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 10:46:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8AA1923A51
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 10:44:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FDB123A3B
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 10:46:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727292AbhANKoW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Jan 2021 05:44:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44574 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727207AbhANKoV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jan 2021 05:44:21 -0500
-Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8022EC061573
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Jan 2021 02:43:41 -0800 (PST)
-Received: by mail-wm1-x32a.google.com with SMTP id g10so4242353wmh.2
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Jan 2021 02:43:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=scylladb-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=EY/OBeJen7sdgCW1BZgBQtPwEY/HgrmWptbvaLexLNI=;
-        b=ljRJP4KqAApPR4HSu8r4oFmFSwyLGkMy5UZ896nNaRgzci+1TvF6+2tuDYX26a5ff2
-         oqJCw4HXaVjUK9oo6O6SR3Deqba+vJV35y1nx4mQXMBo04WydEKP1EniQ9bB65EAIMu0
-         OvFexBS/TPpOKvB6Ei1vH889X3Ai1bqamjy2jz5Y2LvGYmBRynQztBnC/LH3yc5Sq6+I
-         UClRZ9IuMWG6qJjVEcqNHOOZK1ehCJCZALm5hhitUML80apZPx4izhpajWH+1581+q+j
-         8eFBioCHPAEXpE4GUH27cRS1JDpcOYMKIvfVQbaPWkvG1DhHxtxuqFWkQJvCW88yeHzB
-         MX1g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=EY/OBeJen7sdgCW1BZgBQtPwEY/HgrmWptbvaLexLNI=;
-        b=b6MpZc1F5b8riaR1ibzD0dn+JJHv+iYDB1XO0pK2duPFVCLcovJ8XVx73S3E22Bwt/
-         mssQZe2u1MMWbOwwFIbnJboAZe/Q4r7fQRn80aqvl7wVuoqt7mqxUMWnChHz9lMgMyAZ
-         egRpehrte37aRyLHQ1CfUMGjalitQYUCURm8boppkvEpsxB8psTNLPHoTK+4kZAL+CU4
-         80IejBl57biGWwobXMFozM6b0f1eOrT1taG0VbPQiVneog5UftPdnsj2x7iw2gumsjn9
-         q41BV4LZHqqg4OF7M4rUhMnnXs1xdixIMue5wgaDGnsEmffMk5LmlW04gJYP8NCGlEkK
-         r6FA==
-X-Gm-Message-State: AOAM530b20XZWBO9WjWNPNaVBEUuy7MbL+guXsb7xZIkk83WVSVmSGkV
-        pbC89AEGnF1hhXrlwcRwTNXfZQ==
-X-Google-Smtp-Source: ABdhPJyzyXFqFrH6mL1HYTp2X0sHFK6uOtvOrwN12p732Z1aOSYGSuYZMXgT7lB0JekGUYfdVqagdg==
-X-Received: by 2002:a7b:c415:: with SMTP id k21mr1239903wmi.96.1610621020123;
-        Thu, 14 Jan 2021 02:43:40 -0800 (PST)
-Received: from tmp.scylladb.com (bzq-79-182-3-66.red.bezeqint.net. [79.182.3.66])
-        by smtp.googlemail.com with ESMTPSA id l11sm8467243wrt.23.2021.01.14.02.43.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 14 Jan 2021 02:43:39 -0800 (PST)
-Subject: Re: [PATCH 09/10] iomap: add a IOMAP_DIO_NOALLOC flag
-To:     Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20210112162616.2003366-1-hch@lst.de>
- <20210112162616.2003366-10-hch@lst.de>
- <20210112232923.GD331610@dread.disaster.area>
- <20210113153215.GA1284163@bfoster>
- <20210113224935.GJ331610@dread.disaster.area>
- <20210114102347.GD1333929@bfoster>
-From:   Avi Kivity <avi@scylladb.com>
-Message-ID: <8ed44546-e5bd-dd60-a16b-ab185de3d5b9@scylladb.com>
-Date:   Thu, 14 Jan 2021 12:43:37 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S1727857AbhANKqB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Jan 2021 05:46:01 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:50201 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727778AbhANKqB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jan 2021 05:46:01 -0500
+Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <christian.brauner@ubuntu.com>)
+        id 1l007v-00065N-2G; Thu, 14 Jan 2021 10:45:19 +0000
+Date:   Thu, 14 Jan 2021 11:45:11 +0100
+From:   Christian Brauner <christian.brauner@ubuntu.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix up non-directory creation in SGID directories
+Message-ID: <20210114104511.kekdiqumjvo2lo7v@wittgenstein>
+References: <20210113184630.2285768-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20210114102347.GD1333929@bfoster>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20210113184630.2285768-1-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/14/21 12:23 PM, Brian Foster wrote:
-> On Thu, Jan 14, 2021 at 09:49:35AM +1100, Dave Chinner wrote:
->> On Wed, Jan 13, 2021 at 10:32:15AM -0500, Brian Foster wrote:
->>> On Wed, Jan 13, 2021 at 10:29:23AM +1100, Dave Chinner wrote:
->>>> On Tue, Jan 12, 2021 at 05:26:15PM +0100, Christoph Hellwig wrote:
->>>>> Add a flag to request that the iomap instances do not allocate blocks
->>>>> by translating it to another new IOMAP_NOALLOC flag.
->>>> Except "no allocation" that is not what XFS needs for concurrent
->>>> sub-block DIO.
->>>>
->>>> We are trying to avoid external sub-block IO outside the range of
->>>> the user data IO (COW, sub-block zeroing, etc) so that we don't
->>>> trash adjacent sub-block IO in flight. This means we can't do
->>>> sub-block zeroing and that then means we can't map unwritten extents
->>>> or allocate new extents for the sub-block IO.  It also means the IO
->>>> range cannot span EOF because that triggers unconditional sub-block
->>>> zeroing in iomap_dio_rw_actor().
->>>>
->>>> And because we may have to map multiple extents to fully span an IO
->>>> range, we have to guarantee that subsequent extents for the IO are
->>>> also written otherwise we have a partial write abort case. Hence we
->>>> have single extent limitations as well.
->>>>
->>>> So "no allocation" really doesn't describe what we want this flag to
->>>> at all.
->>>>
->>>> If we're going to use a flag for this specific functionality, let's
->>>> call it what it is: IOMAP_DIO_UNALIGNED/IOMAP_UNALIGNED and do two
->>>> things with it.
->>>>
->>>> 	1. Make unaligned IO a formal part of the iomap_dio_rw()
->>>> 	behaviour so it can do the common checks to for things that
->>>> 	need exclusive serialisation for unaligned IO (i.e. avoid IO
->>>> 	spanning EOF, abort if there are cached pages over the
->>>> 	range, etc).
->>>>
->>>> 	2. require the filesystem mapping callback do only allow
->>>> 	unaligned IO into ranges that are contiguous and don't
->>>> 	require mapping state changes or sub-block zeroing to be
->>>> 	performed during the sub-block IO.
->>>>
->>>>
->>> Something I hadn't thought about before is whether applications might
->>> depend on current unaligned dio serialization for coherency and thus
->>> break if the kernel suddenly allows concurrent unaligned dio to pass
->>> through. Should this be something that is explicitly requested by
->>> userspace?
->> If applications are relying on an undocumented, implementation
->> specific behaviour of a filesystem that only occurs for IOs of a
->> certain size for implicit data coherency between independent,
->> non-overlapping DIOs and/or page cache IO, then they are already
->> broken and need fixing because that behaviour is not guaranteed to
->> occur. e.g. 512 byte block size filesystem does not provide such
->> serialisation, so if the app depends on 512 byte DIOs being
->> serialised completely by the filesytem then it already fails on 512
->> byte block size filesystems.
->>
-> I'm not sure how the block size relates beyond just changing the
-> alignment requirements..?
->
->> So, no, we simply don't care about breaking broken applications that
->> are already broken.
->>
-> I agree in general, but I'm not sure that helps us on the "don't break
-> userspace" front. We can call userspace broken all we want, but if some
-> application has such a workload that historically functions correctly
-> due to this serialization and all of a sudden starts to cause data
-> corruption because we decide to remove it, I fear we'd end up taking the
-> blame regardless. :/
+On Wed, Jan 13, 2021 at 07:46:30PM +0100, Christoph Hellwig wrote:
+> XFS always inherits the SGID bit if it is set on the parent inode, while
+> the generic inode_init_owner does not do this in a few cases where it can
+> create a possible security problem, see commit 0fa3ecd87848
+> ("Fix up non-directory creation in SGID directories") for details.
+> 
+> Switch XFS to use the generic helper for the normal path to fix this,
+> just keeping the simple field inheritance open coded for the case of the
+> non-sgid case with the bsdgrpid mount option.
+> 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Reported-by: Christian Brauner <christian.brauner@ubuntu.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+
+Reviewed-by: Christian Brauner <christian.brauner@ubuntu.com>
+
+I ran the idmapped mounts xfstests on this patchset. With this patch
+applied I was able to remove the special casing for xfs (apart from the
+irix compatibility check) and got clean test runs:
 
 
-I think it's unlikely. Application writers rarely know about such 
-issues, so they can't knowingly depend on them. The sub-sub-genre of 
-application writers who rely on dio/aio will be a lot more careful and 
-wary of the filesystem.
+1. with regular setgid inheritance rules
+root@f2-vm:/xfstests# ./check generic/622
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/x86_64 f2-vm 5.11.0-rc3-brauner-idmapped-mounts-xfs #311 SMP Thu Jan 14 09:55:14 UTC 2021
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop7
+MOUNT_OPTIONS -- /dev/loop7 /mnt/scratch
 
+generic/622 1s ...  2s
+Ran: generic/622
+Passed all 1 tests
 
-In this particular case, triggering serialization also triggers blocking 
-in io_submit, which is the aio/dio user's worst nightmare, by several 
-orders of magnitude than the runner up. I have code to detect these 
-cases and try to prevent serialization, or, when serialization is 
-inevitable, do the serialization in userspace so my io_submits don't get 
-blocked.
+2. with irix_sgid_inherit setgid inheritance rules
+root@f2-vm:/xfstests# echo 1 > /proc/sys/fs/xfs/irix_sgid_inherit
+root@f2-vm:/xfstests# ./check generic/622
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/x86_64 f2-vm 5.11.0-rc3-brauner-idmapped-mounts-xfs #311 SMP Thu Jan 14 09:55:14 UTC 2021
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop7
+MOUNT_OPTIONS -- /dev/loop7 /mnt/scratch
 
+generic/622 2s ...  1s
+Ran: generic/622
+Passed all 1 tests
 
-
+Thanks!
+Christian
