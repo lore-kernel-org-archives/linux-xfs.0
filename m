@@ -2,160 +2,265 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 129FEC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 06:49:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18562C4332B
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 09:40:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C59A720DD4
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 06:49:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1B5123A22
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 09:40:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727021AbhANGt1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Jan 2021 01:49:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50566 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725975AbhANGt0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jan 2021 01:49:26 -0500
-Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79852C061786
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Jan 2021 22:48:40 -0800 (PST)
-Received: by mail-wm1-x32a.google.com with SMTP id k10so3547793wmi.3
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Jan 2021 22:48:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=scylladb-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=rEByY9VwYO/ilF16a6/hn85Ky4LITGY/WfKgegfD5ho=;
-        b=mN9jnHc8tUpRqXrUDJc0JxMGzXaGqq4riLHE0OaQcOKz40MOnCBzwuJavypl9SPtgl
-         29BFRuKL5m7sLlMgFiVseBvw8HIyTz11jGZ2DELghCcvEaeH5Ii9HsAvHrv9+P0VCuDz
-         lHwbGyzFLKzquJ38sVEytN/higd0/lG2rV7iSQ2PhQ6jzjxgGnmEliR3uyO/UbBQab2E
-         4hJZ7f3zycYrfg2nBIqLEv6Kt9M25rmVNqdbea+lHKB9QcZINxBGu4ROdtcR/yp4gLn9
-         WpTkVk1tmlMy40+7AbXJifdKVXsU6eVFZ9Ho3NHnVM9DThzmGy5Aki8+XTYGZYqmLLbW
-         PXkw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=rEByY9VwYO/ilF16a6/hn85Ky4LITGY/WfKgegfD5ho=;
-        b=NpbGaxNQI8jwhZlsfdQArLiIcE8kN0bFY2IsWrmBjuxzO+lHTcz5X7sL81wNC3E2aS
-         i70bozzSrq+wMwpWFQBIvs0NFfpOLZM9T670PewrKOz31TGOvgCidI6rH4XiUGPscXYb
-         VumfMdNNzxtd1D+LUaopvx45tisNn+pfoNb0H2syWkg3BJ7puPA/EIzfj64HxRpyK5Wl
-         rY9DI72dybH5+nu+9TtQCVIpFF/wnF4Vw00BNsM1rEjnnbrVtzJ6diAU+6gUphbWgP39
-         niGQQ/bWaXSNeNq/d12HgneYN1zrw1Zcg53ZWJBMbOqWJeySgqXbvBsseFeT0kB3sMPg
-         BC4w==
-X-Gm-Message-State: AOAM5333pleKEZsl7GxqYrntvFsl6yuyW+tISz/mPks5fP7K2a5PxZjS
-        5Es9D2cadANH1zc/TSCZ1TTgV75dJRRmaw==
-X-Google-Smtp-Source: ABdhPJzpECKyW4ZabeXsvmWWwG6DkSOugAgOdBizZb0+5sBQkqNqqRrIXmZaoDxsfry1lJbglM2+2Q==
-X-Received: by 2002:a05:600c:2117:: with SMTP id u23mr2337658wml.153.1610606918861;
-        Wed, 13 Jan 2021 22:48:38 -0800 (PST)
-Received: from tmp.scylladb.com (bzq-79-182-3-66.red.bezeqint.net. [79.182.3.66])
-        by smtp.googlemail.com with ESMTPSA id v20sm8141086wra.19.2021.01.13.22.48.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Jan 2021 22:48:37 -0800 (PST)
-Subject: Re: [RFC] xfs: reduce sub-block DIO serialisation
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        andres@anarazel.de
-References: <20210112010746.1154363-1-david@fromorbit.com>
- <32f99253-fe56-9198-e47c-7eb0e24fdf73@scylladb.com>
- <20210112221324.GU331610@dread.disaster.area>
- <0f0706f9-92ab-6b38-f3ab-b91aaf4343d1@scylladb.com>
- <20210113203809.GF331610@dread.disaster.area>
-From:   Avi Kivity <avi@scylladb.com>
-Message-ID: <50362fc8-3d5e-cd93-4e55-f3ecddc21780@scylladb.com>
-Date:   Thu, 14 Jan 2021 08:48:36 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S1727634AbhANJk3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Jan 2021 04:40:29 -0500
+Received: from out30-133.freemail.mail.aliyun.com ([115.124.30.133]:58723 "EHLO
+        out30-133.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726551AbhANJkZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jan 2021 04:40:25 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04394;MF=zhongjiang-ali@linux.alibaba.com;NM=1;PH=DS;RN=16;SR=0;TI=SMTPD_---0ULi6zbO_1610617113;
+Received: from L-X1DSLVDL-1420.local(mailfrom:zhongjiang-ali@linux.alibaba.com fp:SMTPD_---0ULi6zbO_1610617113)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Thu, 14 Jan 2021 17:38:34 +0800
+Subject: Re: [PATCH 04/10] mm, fsdax: Refactor memory-failure handler for dax
+ mapping
+To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>, Jan Kara <jack@suse.cz>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+        darrick.wong@oracle.com, dan.j.williams@intel.com,
+        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
+        qi.fuli@fujitsu.com, y-goto@fujitsu.com
+References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
+ <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
+ <20210106154132.GC29271@quack2.suse.cz>
+ <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
+ <781f276b-afdd-091c-3dba-048e415431ab@linux.alibaba.com>
+ <ef29ba5c-96d7-d0bb-e405-c7472a518b32@cn.fujitsu.com>
+ <e2f7ad16-8162-4933-9091-72e690e9877e@linux.alibaba.com>
+ <4f184987-3cc2-c72d-0774-5d20ea2e1d49@cn.fujitsu.com>
+From:   zhong jiang <zhongjiang-ali@linux.alibaba.com>
+Message-ID: <53ecb7e2-8f59-d1a5-df75-4780620ce91f@linux.alibaba.com>
+Date:   Thu, 14 Jan 2021 17:38:33 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:85.0)
+ Gecko/20100101 Thunderbird/85.0
 MIME-Version: 1.0
-In-Reply-To: <20210113203809.GF331610@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <4f184987-3cc2-c72d-0774-5d20ea2e1d49@cn.fujitsu.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/13/21 10:38 PM, Dave Chinner wrote:
-> On Wed, Jan 13, 2021 at 10:00:37AM +0200, Avi Kivity wrote:
->> On 1/13/21 12:13 AM, Dave Chinner wrote:
->>> On Tue, Jan 12, 2021 at 10:01:35AM +0200, Avi Kivity wrote:
->>>> On 1/12/21 3:07 AM, Dave Chinner wrote:
->>>>> Hi folks,
->>>>>
->>>>> This is the XFS implementation on the sub-block DIO optimisations
->>>>> for written extents that I've mentioned on #xfs and a couple of
->>>>> times now on the XFS mailing list.
->>>>>
->>>>> It takes the approach of using the IOMAP_NOWAIT non-blocking
->>>>> IO submission infrastructure to optimistically dispatch sub-block
->>>>> DIO without exclusive locking. If the extent mapping callback
->>>>> decides that it can't do the unaligned IO without extent
->>>>> manipulation, sub-block zeroing, blocking or splitting the IO into
->>>>> multiple parts, it aborts the IO with -EAGAIN. This allows the high
->>>>> level filesystem code to then take exclusive locks and resubmit the
->>>>> IO once it has guaranteed no other IO is in progress on the inode
->>>>> (the current implementation).
->>>> Can you expand on the no-splitting requirement? Does it involve only
->>>> splitting by XFS (IO spans >1 extents) or lower layers (RAID)?
->>> XFS only.
+
+On 2021/1/14 11:52 上午, Ruan Shiyang wrote:
+>
+>
+> On 2021/1/14 上午11:26, zhong jiang wrote:
 >>
->> Ok, that is somewhat under control as I can provide an extent hint, and wish
->> really hard that the filesystem isn't fragmented.
->>
->>
->>>> The reason I'm concerned is that it's the constraint that the application
->>>> has least control over. I guess I could use RWF_NOWAIT to avoid blocking my
->>>> main thread (but last time I tried I'd get occasional EIOs that frightened
->>>> me off that).
->>> Spurious EIO from RWF_NOWAIT is a bug that needs to be fixed. DO you
->>> have any details?
+>> On 2021/1/14 9:44 上午, Ruan Shiyang wrote:
 >>>
->> I reported it in [1]. It's long since gone since I disabled RWF_NOWAIT. It
->> was relatively rare, sometimes happening in continuous integration runs that
->> take hours, and sometimes not.
+>>>
+>>> On 2021/1/13 下午6:04, zhong jiang wrote:
+>>>>
+>>>> On 2021/1/12 10:55 上午, Ruan Shiyang wrote:
+>>>>>
+>>>>>
+>>>>> On 2021/1/6 下午11:41, Jan Kara wrote:
+>>>>>> On Thu 31-12-20 00:55:55, Shiyang Ruan wrote:
+>>>>>>> The current memory_failure_dev_pagemap() can only handle 
+>>>>>>> single-mapped
+>>>>>>> dax page for fsdax mode.  The dax page could be mapped by 
+>>>>>>> multiple files
+>>>>>>> and offsets if we let reflink feature & fsdax mode work 
+>>>>>>> together. So,
+>>>>>>> we refactor current implementation to support handle memory 
+>>>>>>> failure on
+>>>>>>> each file and offset.
+>>>>>>>
+>>>>>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+>>>>>>
+>>>>>> Overall this looks OK to me, a few comments below.
+>>>>>>
+>>>>>>> ---
+>>>>>>>   fs/dax.c            | 21 +++++++++++
+>>>>>>>   include/linux/dax.h |  1 +
+>>>>>>>   include/linux/mm.h  |  9 +++++
+>>>>>>>   mm/memory-failure.c | 91 
+>>>>>>> ++++++++++++++++++++++++++++++++++-----------
+>>>>>>>   4 files changed, 100 insertions(+), 22 deletions(-)
+>>>>>
+>>>>> ...
+>>>>>
+>>>>>>>   @@ -345,9 +348,12 @@ static void add_to_kill(struct 
+>>>>>>> task_struct *tsk, struct page *p,
+>>>>>>>       }
+>>>>>>>         tk->addr = page_address_in_vma(p, vma);
+>>>>>>> -    if (is_zone_device_page(p))
+>>>>>>> -        tk->size_shift = dev_pagemap_mapping_shift(p, vma);
+>>>>>>> -    else
+>>>>>>> +    if (is_zone_device_page(p)) {
+>>>>>>> +        if (is_device_fsdax_page(p))
+>>>>>>> +            tk->addr = vma->vm_start +
+>>>>>>> +                    ((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
+>>>>>>
+>>>>>> It seems strange to use 'pgoff' for dax pages and not for any 
+>>>>>> other page.
+>>>>>> Why? I'd rather pass correct pgoff from all callers of 
+>>>>>> add_to_kill() and
+>>>>>> avoid this special casing...
+>>>>>
+>>>>> Because one fsdax page can be shared by multiple pgoffs. I have to 
+>>>>> pass each pgoff in each iteration to calculate the address in vma 
+>>>>> (for tk->addr).  Other kinds of pages don't need this. They can 
+>>>>> get their unique address by calling "page_address_in_vma()".
+>>>>>
+>>>> IMO,   an fsdax page can be shared by multiple files rather than 
+>>>> multiple pgoffs if fs query support reflink.   Because an page only 
+>>>> located in an mapping(page->mapping is exclusive), hence it  only 
+>>>> has an pgoff or index pointing at the node.
+>>>>
+>>>>   or  I miss something for the feature ?  thanks,
+>>>
+>>> Yes, a fsdax page is shared by multiple files because of reflink. I 
+>>> think my description of 'pgoff' here is not correct.  This 'pgoff' 
+>>> means the offset within the a file. (We use rmap to find out all the 
+>>> sharing files and their offsets.)  So, I said that "can be shared by 
+>>> multiple pgoffs".  It's my bad.
+>>>
+>>> I think I should name it another word to avoid misunderstandings.
+>>>
+>> IMO,  All the sharing files should be the same offset to share the 
+>> fsdax page.  why not that ? 
+>
+> The dedupe operation can let different files share their same data 
+> extent, though offsets are not same.  So, files can share one fsdax 
+> page at different offset.
+Ok,  Get it.
+>
+>> As you has said,  a shared fadax page should be inserted to different 
+>> mapping files.  but page->index and page->mapping is exclusive.  
+>> hence an page only should be placed in an mapping tree.
+>
+> We can't use page->mapping and page->index here for reflink & fsdax. 
+> And that's this patchset aims to solve.  I introduced a series of 
+> ->corrupted_range(), from mm to pmem driver to block device and 
+> finally to filesystem, to use rmap feature of filesystem to find out 
+> all files sharing same data extent (fsdax page).
+
+ From this patch,  each file has mapping tree,  the shared page will be 
+inserted into multiple file mapping tree.  then filesystem use file and 
+offset to get the killed process.   Is it correct?
+
+Thanks,
+
+>
+>
+> -- 
+> Thanks,
+> Ruan Shiyang.
+>
+>>
+>> And In the current patch,  we failed to found out that all process 
+>> use the fsdax page shared by multiple files and kill them.
 >>
 >>
->> I expect it's fixed by now since io_uring relies on it. Maybe I should turn
->> it on for kernels > some_random_version.
+>> Thanks,
+>>
+>>> -- 
+>>> Thanks,
+>>> Ruan Shiyang.
+>>>
+>>>>
+>>>>> So, I added this fsdax case here. This patchset only implemented 
+>>>>> the fsdax case, other cases also need to be added here if to be 
+>>>>> implemented.
+>>>>>
+>>>>>
+>>>>> -- 
+>>>>> Thanks,
+>>>>> Ruan Shiyang.
+>>>>>
+>>>>>>
+>>>>>>> +        tk->size_shift = dev_pagemap_mapping_shift(p, vma, 
+>>>>>>> tk->addr);
+>>>>>>> +    } else
+>>>>>>>           tk->size_shift = page_shift(compound_head(p));
+>>>>>>>         /*
+>>>>>>> @@ -495,7 +501,7 @@ static void collect_procs_anon(struct page 
+>>>>>>> *page, struct list_head *to_kill,
+>>>>>>>               if (!page_mapped_in_vma(page, vma))
+>>>>>>>                   continue;
+>>>>>>>               if (vma->vm_mm == t->mm)
+>>>>>>> -                add_to_kill(t, page, vma, to_kill);
+>>>>>>> +                add_to_kill(t, page, NULL, 0, vma, to_kill);
+>>>>>>>           }
+>>>>>>>       }
+>>>>>>>       read_unlock(&tasklist_lock);
+>>>>>>> @@ -505,24 +511,19 @@ static void collect_procs_anon(struct page 
+>>>>>>> *page, struct list_head *to_kill,
+>>>>>>>   /*
+>>>>>>>    * Collect processes when the error hit a file mapped page.
+>>>>>>>    */
+>>>>>>> -static void collect_procs_file(struct page *page, struct 
+>>>>>>> list_head *to_kill,
+>>>>>>> -                int force_early)
+>>>>>>> +static void collect_procs_file(struct page *page, struct 
+>>>>>>> address_space *mapping,
+>>>>>>> +        pgoff_t pgoff, struct list_head *to_kill, int force_early)
+>>>>>>>   {
+>>>>>>>       struct vm_area_struct *vma;
+>>>>>>>       struct task_struct *tsk;
+>>>>>>> -    struct address_space *mapping = page->mapping;
+>>>>>>> -    pgoff_t pgoff;
+>>>>>>>         i_mmap_lock_read(mapping);
+>>>>>>>       read_lock(&tasklist_lock);
+>>>>>>> -    pgoff = page_to_pgoff(page);
+>>>>>>>       for_each_process(tsk) {
+>>>>>>>           struct task_struct *t = task_early_kill(tsk, 
+>>>>>>> force_early);
+>>>>>>> -
+>>>>>>>           if (!t)
+>>>>>>>               continue;
+>>>>>>> -        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
+>>>>>>> -                      pgoff) {
+>>>>>>> +        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, 
+>>>>>>> pgoff) {
+>>>>>>>               /*
+>>>>>>>                * Send early kill signal to tasks where a vma covers
+>>>>>>>                * the page but the corrupted page is not necessarily
+>>>>>>> @@ -531,7 +532,7 @@ static void collect_procs_file(struct page 
+>>>>>>> *page, struct list_head *to_kill,
+>>>>>>>                * to be informed of all such data corruptions.
+>>>>>>>                */
+>>>>>>>               if (vma->vm_mm == t->mm)
+>>>>>>> -                add_to_kill(t, page, vma, to_kill);
+>>>>>>> +                add_to_kill(t, page, mapping, pgoff, vma, 
+>>>>>>> to_kill);
+>>>>>>>           }
+>>>>>>>       }
+>>>>>>>       read_unlock(&tasklist_lock);
+>>>>>>> @@ -550,7 +551,8 @@ static void collect_procs(struct page *page, 
+>>>>>>> struct list_head *tokill,
+>>>>>>>       if (PageAnon(page))
+>>>>>>>           collect_procs_anon(page, tokill, force_early);
+>>>>>>>       else
+>>>>>>> -        collect_procs_file(page, tokill, force_early);
+>>>>>>> +        collect_procs_file(page, page->mapping, 
+>>>>>>> page_to_pgoff(page),
+>>>>>>
+>>>>>> Why not use page_mapping() helper here? It would be safer for 
+>>>>>> THPs if they
+>>>>>> ever get here...
+>>>>>>
+>>>>>>                                 Honza
+>>>>>>
+>>>>>
+>>>>
+>>>>
+>>>
 >>
 >>
->> [1] https://lore.kernel.org/lkml/9bab0f40-5748-f147-efeb-5aac4fd44533@scylladb.com/t/#u
-> Yeah, as I thought. Usage of REQ_NOWAIT with filesystem based IO is
-> simply broken - it causes spurious IO failures to be reported to IO
-> completion callbacks and so are very difficult to track and/or
-> retry. iomap does not use REQ_NOWAIT at all, so you should not ever
-> see this from XFS or ext4 DIO anymore...
-
-
-What kernel version would be good?
-
-
-Searching the log I found
-
-
-commit 4503b7676a2e0abe69c2f2c0d8b03aec53f2f048
-Author: Jens Axboe <axboe@kernel.dk>
-Date:   Mon Jun 1 10:00:27 2020 -0600
-
-     io_uring: catch -EIO from buffered issue request failure
-
-     -EIO bubbles up like -EAGAIN if we fail to allocate a request at the
-     lower level. Play it safe and treat it like -EAGAIN in terms of sync
-     retry, to avoid passing back an errant -EIO.
-
-     Catch some of these early for block based file, as non-mq devices
-     generally do not support NOWAIT. That saves us some overhead by
-     not first trying, then retrying from async context. We can go straight
-     to async punt instead.
-
-     Signed-off-by: Jens Axboe <axboe@kernel.dk>
-
-but this looks to be io_uring specific fix (somewhat frightening too), 
-not removal of REQ_NOWAIT.
-
-
-
+>
