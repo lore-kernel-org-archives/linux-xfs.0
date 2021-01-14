@@ -2,112 +2,162 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74CEAC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 19:34:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70D6FC433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 20:39:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E14623B6C
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 19:34:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2779023A9A
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Jan 2021 20:39:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726997AbhANTeY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Jan 2021 14:34:24 -0500
-Received: from sandeen.net ([63.231.237.45]:55250 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726198AbhANTeY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Jan 2021 14:34:24 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 40D51479AFE;
-        Thu, 14 Jan 2021 13:32:06 -0600 (CST)
-To:     Brian Foster <bfoster@redhat.com>, Yumei Huang <yuhuang@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <1599642077.64707510.1610619249861.JavaMail.zimbra@redhat.com>
- <487974076.64709077.1610619629992.JavaMail.zimbra@redhat.com>
- <20210114172928.GA1351833@bfoster> <20210114182414.GB1351833@bfoster>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: XFS: Assertion failed
-Message-ID: <fe6e1cf9-6678-1329-ef58-9fa2eac75ad0@sandeen.net>
-Date:   Thu, 14 Jan 2021 13:33:42 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.6.1
+        id S1726461AbhANUjX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Jan 2021 15:39:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60194 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726695AbhANUjX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jan 2021 15:39:23 -0500
+Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD59EC061757
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Jan 2021 12:38:42 -0800 (PST)
+Received: by mail-ed1-x52a.google.com with SMTP id g1so6526716edu.4
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Jan 2021 12:38:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=HW2Gy+bmbScdrUiihPvmqmOfoBoJ371Y9lVdMFUmq+Y=;
+        b=yGOdyQNILINypQm/2jqXO6AfJMafn21XGw8EuGb3Op3CFg1tTZMSAR0rEasGJ1fNOS
+         yLllo/9Y8iS/xZYU6AxccWxMPTpSMM8D6QvzzM4jMSGwEs9hnHIlBnLno7KTxzdYF3Kp
+         KwtNyxup1uOWxXyQrcBBAo2o9U51ITkYAiriKkt2QNr2JX6HrELaFQgxFhhCA8zYidBs
+         k7aOmIV3u5QzjG0umzVAbcSHGi2o9GzSnc7gS6T59a8K4b8xbNr8QhTa7Jy5EYUITqET
+         o40thjAjGnsgi1R5vPAh+U9Vvz+toY/DwyAl8fonbO5ueCyy/1GYAeVF73/Ndh+roNVD
+         9VQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=HW2Gy+bmbScdrUiihPvmqmOfoBoJ371Y9lVdMFUmq+Y=;
+        b=R9sSHsYAWArpbU7bWcqLWeQyC6fFEo8LA7pmNOgZzVV+dc776KX9EalKNJJ8ySZ5bv
+         k6T+WMuGKIN9SWJfYb8XHaqa3EqJHxvTMK//c58D/BqcFHS/CFy+5Q8p1OsojmLORL8X
+         9dTkuPMsKkKa+0xPzju7P1MU9ogyNHA+Nt/fcIadBxOko1gaHVvlXyUWZg/RV3Y3dwjl
+         iDvl7NWDS3avVK9oa+THexRA066BlOHSQkAAVZjAeY8k4UbFS7ITkWsK+m6pd8bJejcX
+         7HubG5E7Itp7L4D7vN4aeRfe2/o3JQ71qsX00GxorJLumTYdHG2OWITRjo9PSONKT9Dq
+         1MDw==
+X-Gm-Message-State: AOAM5307DBA+NWt9jlKpPNltuZ8IsD+wYQncCt1dgG8+fMgxcJutH1Gl
+        EMy0bsptuww8yMlGU3iFagx+w3/hXH09IhF4wkfTMu3QWhJ4WA==
+X-Google-Smtp-Source: ABdhPJw/UE18mcptuTTaq48ZA3l/slnXhk/5uHJysnrWQLOxkXl0WkGF7VK5q6iTBMceXPuJ8xY9V/7LnANIuvkLoIM=
+X-Received: by 2002:a50:b282:: with SMTP id p2mr7358432edd.210.1610656721518;
+ Thu, 14 Jan 2021 12:38:41 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20210114182414.GB1351833@bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com> <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
+In-Reply-To: <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Thu, 14 Jan 2021 12:38:30 -0800
+Message-ID: <CAPcyv4hD1aeVGQ33j54o8jKi41qtAVkAhTgrx64C=WPZ0SvNQg@mail.gmail.com>
+Subject: Re: [PATCH 04/10] mm, fsdax: Refactor memory-failure handler for dax mapping
+To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        david <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
+        song@kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        qi.fuli@fujitsu.com, y-goto@fujitsu.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Wed, Dec 30, 2020 at 8:59 AM Shiyang Ruan <ruansy.fnst@cn.fujitsu.com> wrote:
+>
+> The current memory_failure_dev_pagemap() can only handle single-mapped
+> dax page for fsdax mode.  The dax page could be mapped by multiple files
+> and offsets if we let reflink feature & fsdax mode work together.  So,
+> we refactor current implementation to support handle memory failure on
+> each file and offset.
+>
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+> ---
+>  fs/dax.c            | 21 +++++++++++
+>  include/linux/dax.h |  1 +
+>  include/linux/mm.h  |  9 +++++
+>  mm/memory-failure.c | 91 ++++++++++++++++++++++++++++++++++-----------
+>  4 files changed, 100 insertions(+), 22 deletions(-)
+>
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 5b47834f2e1b..799210cfa687 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -378,6 +378,27 @@ static struct page *dax_busy_page(void *entry)
+>         return NULL;
+>  }
+>
+> +/*
+> + * dax_load_pfn - Load pfn of the DAX entry corresponding to a page
+> + * @mapping: The file whose entry we want to load
+> + * @index:   The offset where the DAX entry located in
+> + *
+> + * Return:   pfn of the DAX entry
+> + */
+> +unsigned long dax_load_pfn(struct address_space *mapping, unsigned long index)
+> +{
+> +       XA_STATE(xas, &mapping->i_pages, index);
+> +       void *entry;
+> +       unsigned long pfn;
+> +
+> +       xas_lock_irq(&xas);
+> +       entry = xas_load(&xas);
+> +       pfn = dax_to_pfn(entry);
+> +       xas_unlock_irq(&xas);
+> +
+> +       return pfn;
+> +}
+> +
+>  /*
+>   * dax_lock_mapping_entry - Lock the DAX entry corresponding to a page
+>   * @page: The page whose entry we want to lock
+> diff --git a/include/linux/dax.h b/include/linux/dax.h
+> index b52f084aa643..89e56ceeffc7 100644
+> --- a/include/linux/dax.h
+> +++ b/include/linux/dax.h
+> @@ -150,6 +150,7 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+>
+>  struct page *dax_layout_busy_page(struct address_space *mapping);
+>  struct page *dax_layout_busy_page_range(struct address_space *mapping, loff_t start, loff_t end);
+> +unsigned long dax_load_pfn(struct address_space *mapping, unsigned long index);
+>  dax_entry_t dax_lock_page(struct page *page);
+>  void dax_unlock_page(struct page *page, dax_entry_t cookie);
+>  #else
+> diff --git a/include/linux/mm.h b/include/linux/mm.h
+> index db6ae4d3fb4e..db3059a1853e 100644
+> --- a/include/linux/mm.h
+> +++ b/include/linux/mm.h
+> @@ -1141,6 +1141,14 @@ static inline bool is_device_private_page(const struct page *page)
+>                 page->pgmap->type == MEMORY_DEVICE_PRIVATE;
+>  }
+>
+> +static inline bool is_device_fsdax_page(const struct page *page)
+> +{
+> +       return IS_ENABLED(CONFIG_DEV_PAGEMAP_OPS) &&
+> +               IS_ENABLED(CONFIG_DEVICE_PRIVATE) &&
+> +               is_zone_device_page(page) &&
+> +               page->pgmap->type == MEMORY_DEVICE_FS_DAX;
+> +}
+> +
 
+Have a look at the recent fixes to pfn_to_online_page() vs DAX pages [1].
 
-On 1/14/21 12:24 PM, Brian Foster wrote:
-> On Thu, Jan 14, 2021 at 12:29:28PM -0500, Brian Foster wrote:
->> On Thu, Jan 14, 2021 at 05:20:29AM -0500, Yumei Huang wrote:
->>> Hit the issue when doing syzkaller test with kernel 5.11.0-rc3(65f0d241). The C reproducer is attached.
->>>
->>> Steps to Reproduce:
->>> 1. # gcc -pthread -o reproducer reproducer.c 
->>> 2. # ./reproducer 
->>>
->>>
->>> Test results:
->>> [  131.726790] XFS: Assertion failed: (iattr->ia_valid & (ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET| ATTR_MTIME_SET|ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0, file: fs/xfs/xfs_iops.c, line: 849
->>> [  131.743687] ------------[ cut here ]------------
->>
->> Some quick initial analysis from a run of the reproducer... It looks
->> like it calls into xfs_setattr_size() with ATTR_KILL_PRIV set in
->> ->ia_valid. This appears to originate in the VFS via handle_truncate()
->> -> do_truncate() -> dentry_needs_remove_privs().
->>
->> An strace of the reproducer shows the following calls:
->>
->> ...
->> [pid  1524] creat("./file0", 010)       = 3
->> ...
->> [pid  1524] fsetxattr(3, "security.capability", "\0\0\0\3b\27\0\0\10\0\0\0\2\0\0\0\377\377\377\377\0\356\0", 24, 0 <unfinished ...>
->> ...
->> [pid  1524] creat("./file0", 010 <unfinished ...>
->> ...
->>
->> So I'm guessing there's an attempt to open this file with O_TRUNC with
->> this particular xattr set (unexpectedly?). Indeed, after the reproducer
->> leaves file01 around with the xattr, a subsequent xfs_io -c "open -t
->> ..." attempt triggers the assert again, and then the xattr disappears.
->> I'd have to dig more into the associated vfs code to grok the expected
->> behavior and whether there's a problem here..
->>
-> 
-> The reproducer seems to boil down to this:
-> 
-> touch <file>
-> setfattr -n security.capability -v 0sAAAAA2IXAAAIAAAAAgAAAP////8A7gAA <file>
-> xfs_io -c "open -t <file>"
-> 
-> ... and afaict, the behavior is as expected. do_truncate() sets
-> ATTR_KILL_PRIV via dentry_needs_remove_privs() and calls into
-> notify_change(). That eventually gets to xfs_vn_setattr_size(), which
-> calls xfs_vn_change_ok() -> setattr_prepare(). setattr_prepare() handles
-> ATTR_KILL_PRIV (which remains set in ->ia_valid), and then we return,
-> fall into xfs_setattr_size() and that triggers the assert failure. ISTM
-> we should probably just drop ATTR_KILL_PRIV from the assert.
+This above page type check is racy given that the pfn could stop being
+pfn_valid() while this check is running. I think hwpoison_filter()
+needs an explicit check for whether the page is already referenced or
+not. For example the current call to hwpoison_filter() from
+memory_failure_dev_pagemap() is safe because the page has already been
+validated as ZONE_DEVICE and is safe to de-reference page->pgmap.
 
-I dumped the ia_valid value, and it's got these bits set:
-
-3       ATTR_SIZE
-5       ATTR_MTIME
-6       ATTR_CTIME
-9       ATTR_FORCE
-13      ATTR_FILE
-14      ATTR_KILL_PRIV
-15      ATTR_OPEN
-
-so you are right about ATTR_KILL_PRIV
-
-It's been in the assert forever, though, which is interesting?
-
--Eric
+[1]: http://lore.kernel.org/r/161058499000.1840162.702316708443239771.stgit@dwillia2-desk3.amr.corp.intel.com
