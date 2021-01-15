@@ -2,91 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 993EEC433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 11:41:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56181C4332B
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 16:24:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 613792371F
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 11:41:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B9F8238EF
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 16:24:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727302AbhAOLlE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Jan 2021 06:41:04 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:34372 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726918AbhAOLlD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jan 2021 06:41:03 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1610710777;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=cs0P/dtG4sLropojkxzJlys8PJnnneu/nHPVHN2xyis=;
-        b=a6qsP8ZLyt/lKa0gyHONb04ELXk/11uT5wGUR+yLtqyxg3cMdlD1kLkqt3RrBf61WvW3ur
-        2L5bmYyg+k0jbGzyfK6I/mGpsX2TrA0SuicRXwLdegYDp7+6/FyjNXapoIco7UfWAWWRhV
-        Q3vvB2Ix68W63aOmywo5/F5QuCh4BtY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-211-hU2HZBp1OPawbAFjESfFOw-1; Fri, 15 Jan 2021 06:39:35 -0500
-X-MC-Unique: hU2HZBp1OPawbAFjESfFOw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3E2391034B22;
-        Fri, 15 Jan 2021 11:39:34 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 97B0210023BE;
-        Fri, 15 Jan 2021 11:39:33 +0000 (UTC)
-Date:   Fri, 15 Jan 2021 06:39:31 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Yumei Huang <yuhuang@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, sandeen@sandeen.net
-Subject: Re: [PATCH] xfs: Fix assert failure in xfs_setattr_size()
-Message-ID: <20210115113931.GA1405324@bfoster>
-References: <316142100.64829455.1610706461022.JavaMail.zimbra@redhat.com>
- <1492355130.64829487.1610706535069.JavaMail.zimbra@redhat.com>
+        id S1729927AbhAOQYU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Jan 2021 11:24:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60844 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725946AbhAOQYT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jan 2021 11:24:19 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2766C0613C1;
+        Fri, 15 Jan 2021 08:23:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=EUWYO0kUNOPL0+8rq+jqNdckkmjaAICmJuUUQfapnmg=; b=JYVtCComagNhb7hqCp7+K8cypw
+        3uzb/XWKSiI2wd079jfEh54E6UXbFNCkIXVtdMz85yoJmiYJ9S2w+4QoKhU1MSjyIOqb1p214g57v
+        OYst5auFjT2CF13mk3P4uIRmdte6st+AwYPpwos0v4T/lMifmY9WrdQQJ/mDBdVXp56iuYGKsQtWe
+        O2pK8U4clVUk2Sb9MeZFm3JHZxeH3A33eY9EJJ0tIyij6zOm4YqyFbZOyr+g0qLdX/iyHinGps0g6
+        AsBdYcDqwjotOAlFnNds/nv+o8gK+6xKbVC4xJsqmvstk6kUedtXelBk3y7JipjaWC7Ly0vyoHz+5
+        /kQvaNBw==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1l0RsA-0099BH-9Q; Fri, 15 Jan 2021 16:22:55 +0000
+Date:   Fri, 15 Jan 2021 16:22:50 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Christian Brauner <christian.brauner@ubuntu.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-fsdevel@vger.kernel.org,
+        John Johansen <john.johansen@canonical.com>,
+        James Morris <jmorris@namei.org>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Casey Schaufler <casey@schaufler-ca.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Geoffrey Thomas <geofft@ldpreload.com>,
+        Mrunal Patel <mpatel@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
+        Tycho Andersen <tycho@tycho.ws>,
+        David Howells <dhowells@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        St?phane Graber <stgraber@ubuntu.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aleksa Sarai <cyphar@cyphar.com>,
+        Lennart Poettering <lennart@poettering.net>,
+        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
+        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
+        Kees Cook <keescook@chromium.org>,
+        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        containers@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v5 37/42] xfs: support idmapped mounts
+Message-ID: <20210115162250.GA2179337@infradead.org>
+References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
+ <20210112220124.837960-38-christian.brauner@ubuntu.com>
+ <20210114205154.GL331610@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1492355130.64829487.1610706535069.JavaMail.zimbra@redhat.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20210114205154.GL331610@dread.disaster.area>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 15, 2021 at 05:28:55AM -0500, Yumei Huang wrote:
-> An assert failure is triggered by syzkaller test due to
-> ATTR_KILL_PRIV is not cleared before xfs_setattr_size.
-> As ATTR_KILL_PRIV is not checked/used by xfs_setattr_size,
-> just remove it from the assert.
+On Fri, Jan 15, 2021 at 07:51:54AM +1100, Dave Chinner wrote:
+> > @@ -813,7 +818,7 @@ xfs_setattr_nonsize(
+> >  	 * 	     Posix ACL code seems to care about this issue either.
+> >  	 */
+> >  	if (mask & ATTR_MODE) {
+> > -		error = posix_acl_chmod(&init_user_ns, inode, inode->i_mode);
+> > +		error = posix_acl_chmod(mnt_userns, inode, inode->i_mode);
+> >  		if (error)
+> >  			return error;
+> >  	}
+> > @@ -868,7 +873,7 @@ xfs_setattr_size(
+> >  		 * Use the regular setattr path to update the timestamps.
+> >  		 */
+> >  		iattr->ia_valid &= ~ATTR_SIZE;
+> > -		return xfs_setattr_nonsize(ip, iattr);
+> > +		return xfs_setattr_nonsize(&init_user_ns, ip, iattr);
 > 
-> Signed-off-by: Yumei Huang <yuhuang@redhat.com>
-> ---
+> Shouldn't that be passing mnt_userns?
 
-LGTM. Thanks for the patch.
+As Christian already explained we an't hit this with anything related
+to uids/gids, the only thing that will be updated are the timestamps,
+as also mentioned in the comment that only makes it partially into the
+diff context.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_iops.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> >  	trace_xfs_setattr(ip);
+> >  
+> > -	error = xfs_vn_change_ok(dentry, iattr);
+> > +	error = xfs_vn_change_ok(mnt_userns, dentry, iattr);
+> >  	if (error)
+> >  		return error;
+> >  	return xfs_setattr_size(ip, iattr);
 > 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 67c8dc9..f1e21b6 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -846,7 +846,7 @@
->          ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
->          ASSERT(S_ISREG(inode->i_mode));
->          ASSERT((iattr->ia_valid & (ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
-> -                ATTR_MTIME_SET|ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
-> +                ATTR_MTIME_SET|ATTR_TIMES_SET)) == 0);
->  
->          oldsize = inode->i_size;
->          newsize = iattr->ia_size;
-> -- 
-> 1.8.3.1
-> 
+> And this passing mnt_userns down into xfs_setattr_size()?  Seems
+> like a bit of a landmine...
 
+That being said we could just pass down the argument, even if it doesn't
+make much sense for the size update.
