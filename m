@@ -2,141 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38B01C43381
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 00:40:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78B2EC433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 03:42:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0615023AC2
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 00:40:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4228823AC0
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 03:42:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731418AbhAOAkN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Jan 2021 19:40:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49990 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731392AbhAOAkI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Jan 2021 19:40:08 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3F3D223A5E;
-        Fri, 15 Jan 2021 00:39:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610671167;
-        bh=FpNYRjh/pq5wh5A71F1m4fK2a0n0689CHrop+no5hig=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gIGAGAT6TSFOSuUj+aPAAC7XomypxWp+AqoW1pn0vvjV53qmrzC1Khyu0piN/vfC1
-         iTU4sxXApRkxIab633xYTEQE29/CE7QmMX9+1nz1OrQmxTeeatphO4qdQ+QM/af4xE
-         ywsMBxB9qg/4tsFtV1YVVPk64zWbwwmwe4K4gXT2vmSTvLwBb/uCbAj3HodM+9lyBM
-         aMhICLv1p6caDELhV7QH7FzePBUBytnp7OVDdnKA8T06faFDTfr02C/OWC4cKLnUk0
-         RwUR98NI6/2GLQA7d8zak2YtDMk4ICsL5u5BAT+G0C2956puBy6KAUuWyiviPokeAi
-         jJAUckAVAOEkA==
-Date:   Thu, 14 Jan 2021 16:39:26 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     John 'Warthog9' Hawley <warthog9@kernel.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, postmaster@vger.kernel.org,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Undelivered Mail Returned to Sender
-Message-ID: <20210115003926.GH1164248@magnolia>
-References: <20210114204233.4E53323AFC@mail.kernel.org>
- <20210114210253.GE1164248@magnolia>
- <87455a93-7f61-d056-df10-9d574303f875@kernel.org>
+        id S1730476AbhAODmT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Jan 2021 22:42:19 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:60829 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730161AbhAODmT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jan 2021 22:42:19 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1610682053;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+         content-type:content-type:in-reply-to:in-reply-to:  references:references;
+        bh=4HmbeR3vIN4bc+Jk+FjVwiVY7cEzgTCkTqSNjw9bJ4Q=;
+        b=ccJ0cRHMehUpUXLyNxlLVQuZfBlpQVK6Wj3terao2Bmi0DqyYjiFKqK4DGNqVEp0dBWQur
+        JF6/SOME+Qn/qtm10Q+jrODIVmiHaiFUVYJCTvfMsiOp4kbtjb+Ihn+jsNsRYz9ilw2G/0
+        M8IngR/M1qkp8/KNaxe/F+0IGzyauIc=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-178-pc170LZwMG2aLtx2SCSHCg-1; Thu, 14 Jan 2021 22:40:51 -0500
+X-MC-Unique: pc170LZwMG2aLtx2SCSHCg-1
+Received: by mail-ed1-f71.google.com with SMTP id dh21so3246402edb.6
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Jan 2021 19:40:51 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=4HmbeR3vIN4bc+Jk+FjVwiVY7cEzgTCkTqSNjw9bJ4Q=;
+        b=ngis8i6IPkB0W6gpWk76dQXoXtX7B5hJElrjHrEr+xJiefBdQmtdwL/68pks98hB3g
+         dfLjsoABXBgP/TWU1qkFdhjgBAMOq5ipWguqHqAuVzU+j3+tZH8yP1yY2U8SEy+HsHWS
+         jIfWXmOGgK8UddKMR0BuidRchiTX4VZRJJkrEDnNf+OGj+SraBShSD0cUxcZ5SExLE5x
+         8RSQMhvVA/fPqeGL+aBFXNJj9LbEoEOycz/tZWJtI0cMMCLtcPIo7ujmhHoBH1FAOgLw
+         ll2O6C5s3OCbuOIkTCrNcGecN61WR8c+Uqc0mXOZZXhYAJA9kdMT9kRd99pJlGD8Iob2
+         ouCQ==
+X-Gm-Message-State: AOAM533lrJQX6JorJEzB+IGB8PEt7VR5WT4tkt8FIySL3iArePLVk7LI
+        ScMohMLxex9Z6lev+K3+u17JMy2tIWAH1J2/cTaZ/0uny/zCffNH0jlJ1v55q51JI5oMYSV4CYb
+        rPi0RxanjQ94FJByfyHWjU9ZmhHtdj43Nynfs
+X-Received: by 2002:a17:906:8597:: with SMTP id v23mr3320949ejx.72.1610682050248;
+        Thu, 14 Jan 2021 19:40:50 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJySaL46k70T+WoOOwPlCffUuAT06Zw4JszaVw22THRhXWtTkORkrfY0gCcem7IMllM/y5+2WuCYCgBaVx4tULI=
+X-Received: by 2002:a17:906:8597:: with SMTP id v23mr3320941ejx.72.1610682050108;
+ Thu, 14 Jan 2021 19:40:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87455a93-7f61-d056-df10-9d574303f875@kernel.org>
+References: <20210114183747.2507-1-bastiangermann@fishpost.de>
+In-Reply-To: <20210114183747.2507-1-bastiangermann@fishpost.de>
+Reply-To: nathans@redhat.com
+From:   Nathan Scott <nathans@redhat.com>
+Date:   Fri, 15 Jan 2021 14:40:39 +1100
+Message-ID: <CAFMei7Pg2b1vs7WkV=JEUA_sZQ_8bedCaDcc+=eur-EaEwF7=w@mail.gmail.com>
+Subject: Re: [PATCH 0/6] debian: xfsprogs package clean-up
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Bastian Germann <bastiangermann@fishpost.de>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[cc linux-xfs so that I don't get accused of sending private replies to
-patch submissions]
+Heya,
 
-On Thu, Jan 14, 2021 at 01:20:46PM -0800, John 'Warthog9' Hawley wrote:
-> So I'm not sure how this isn't self explanatory: the message tripped the
-> bayesian spam filter used on vger.
+On Fri, Jan 15, 2021 at 5:39 AM Bastian Germann
+<bastiangermann@fishpost.de> wrote:
+>
+> Apply some minor changes to the xfsprogs debian packages, including
+> missing copyright notices that are required by Debian Policy.
+>
+> Bastian Germann (6):
+>   debian: cryptographically verify upstream tarball
+>   debian: remove dependency on essential util-linux
+>   debian: remove "Priority: extra"
+>   debian: use Package-Type over its predecessor
+>   debian: add missing copyright info
+>   debian: new changelog entry
 
-Yes, the fact that a bayesian spam filter was tripped is obvious, but
-the question is, what sort of training data was put into the bayesian
-filter such that it tripped?  And what has that model internalized?
+Having reviewed each of these, please add for each:
 
-> The ascii armoured gpg key is likely what tripped it up as that just
-> looks like a big blob of data to the filter, likely similar to a base64
-> encoded block and it decided that it was likely spam as a result.
+Signed-off-by: Nathan Scott <nathans@debian.org>
 
-There we go ^^^, that's the kind of insight I was looking for.  I'm a bit
-surprised that it triggered on my *reply*, seeing as it let the original
-through:
 
-https://lore.kernel.org/linux-xfs/20210114183747.2507-2-bastiangermann@fishpost.de/T/#u
+Also, please add Bastion to the list of deb uploaders - thanks!
 
-> Just because it was sent through kernel.org doesn't bypass the spam
-> filter.
-> 
-> As the bounce suggests, if you save the message and send it to us as an
-> attachment we can use it to help train the filter so it doesn't trigger
-> on that in the future.
+diff --git a/debian/control b/debian/control
+index 49ffd340..06b92400 100644
+--- a/debian/control
++++ b/debian/control
+@@ -2,7 +2,7 @@ Source: xfsprogs
+ Section: admin
+ Priority: optional
+ Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+-Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar
+<anibal@debian.org>
++Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar
+<anibal@debian.org>, Bastian Germann <bastiangermann@fishpost.de>
+ Build-Depends: libinih-dev, uuid-dev, dh-autoreconf, debhelper (>=
+5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17),
+linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, dh-python,
+pkg-config
+ Standards-Version: 4.0.0
+ Homepage: https://xfs.wiki.kernel.org/
 
-OK, I'll resend the message as an attachment....
-
---D
-
-> - John 'Warthog9' Hawley
-> 
-> On 1/14/21 1:02 PM, Darrick J. Wong wrote:
-> > Um, hi.  I sent this message through kernel.org; why does that get
-> > bounced by vger?  "Bayes statistical bogofilter" doesn't help diagnose
-> > this...
-> > 
-> > --D
-> > 
-> > On Thu, Jan 14, 2021 at 08:42:33PM +0000, Mail Delivery System wrote:
-> >> This is the mail system at host mail.kernel.org.
-> >>
-> >> I'm sorry to have to inform you that your message could not
-> >> be delivered to one or more recipients. It's attached below.
-> >>
-> >> For further assistance, please send mail to postmaster.
-> >>
-> >> If you do so, please include this problem report. You can
-> >> delete your own text from the attached returned message.
-> >>
-> >>                    The mail system
-> >>
-> >> <linux-xfs@vger.kernel.org>: host vger.kernel.org[23.128.96.18] said: 550 5.7.1
-> >>     Content-Policy accept-into-freezer-1 msg: Bayes Statistical Bogofilter
-> >>     considers this message SPAM.  BF:<S 1>  In case you disagree, send the
-> >>     ENTIRE message plus this error message to <postmaster@vger.kernel.org> ;
-> >>     S1726461AbhANUmc (in reply to end of DATA command)
-> > 
-> >> Reporting-MTA: dns; mail.kernel.org
-> >> X-Postfix-Queue-ID: BCE3A23A9D
-> >> X-Postfix-Sender: rfc822; djwong@kernel.org
-> >> Arrival-Date: Thu, 14 Jan 2021 20:41:51 +0000 (UTC)
-> >>
-> >> Final-Recipient: rfc822; linux-xfs@vger.kernel.org
-> >> Original-Recipient: rfc822;linux-xfs@vger.kernel.org
-> >> Action: failed
-> >> Status: 5.7.1
-> >> Remote-MTA: dns; vger.kernel.org
-> >> Diagnostic-Code: smtp; 550 5.7.1 Content-Policy accept-into-freezer-1 msg:
-> >>     Bayes Statistical Bogofilter considers this message SPAM.  BF:<S 1>  In
-> >>     case you disagree, send the ENTIRE message plus this error message to
-> >>     <postmaster@vger.kernel.org> ; S1726461AbhANUmc
-> > 
-> >> Date: Thu, 14 Jan 2021 12:41:51 -0800
-> >> From: "Darrick J. Wong" <djwong@kernel.org>
-> >> To: Bastian Germann <bastiangermann@fishpost.de>
-> >> Cc: linux-xfs@vger.kernel.org
-> >> Subject: Re: [PATCH 1/6] debian: cryptographically verify upstream tarball
-> >>
-> >> On Thu, Jan 14, 2021 at 07:37:42PM +0100, Bastian Germann wrote:
-> >>> Debian's uscan utility can verify a downloaded tarball. As the
-> >>> uncompressed tarball is signed, the decompress rule has to be applied.
-> >>
-> >> Er.... whose key is below?  Eric Sandeen's, I guess?
-> >>
-> >> (Please state where this keyblock came from in the commit message...)
-> >>
-> >> --D
-
-<the rest of the message is snipped>
