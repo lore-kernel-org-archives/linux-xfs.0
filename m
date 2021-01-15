@@ -7,205 +7,148 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06B76C433DB
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 20:41:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E175C433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 20:43:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C0A0C23A75
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 20:41:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8CC223AA7
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Jan 2021 20:43:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728805AbhAOUlG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Jan 2021 15:41:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56902 "EHLO mail.kernel.org"
+        id S1727791AbhAOUnM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Jan 2021 15:43:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57120 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731435AbhAOUlE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Jan 2021 15:41:04 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C373D23A5E;
-        Fri, 15 Jan 2021 20:40:23 +0000 (UTC)
+        id S1726136AbhAOUnL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Jan 2021 15:43:11 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8824323A9C;
+        Fri, 15 Jan 2021 20:42:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610743223;
-        bh=0GngSGsXT5OkdPU/5JOVgltcB+KYlosWTLCYE+CujRo=;
+        s=k20201202; t=1610743350;
+        bh=GU+hi9SNPH7Jwvmt97xnjJHmgHpAifMfZMU2zwiGfOE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=LsVvNfuCA/+TFIII3PUq10aBrZR0rToHWd8IM5Fhc0FU2fNeFXd8Q6I41WYErnAme
-         Vb/dVF2GkJat25Cu1Mi0Cut/ai45Et+bGuAjqRaaPPJOaHSM8G1ED2YzOmSSmjF1yB
-         n3K/O0nY41QneY3oRwMPar1QDi1mHWiaCSbnn8h4P+WhPNH5TvHVwvc2p12z37Zv7y
-         yY6Y+gZNdQiTXXO3ijbnloqR5Uc9JstJN9P0kajd85gFX9La2M6aPkB40JZ9T8AljS
-         iiXboFBU2bDBMV3nP2PgApPtnW58jb3GtaWhJrnrBVo9z7rV1JEjJyqhw5JQeSbpcr
-         XATP/YhLNyX8g==
-Date:   Fri, 15 Jan 2021 12:40:22 -0800
+        b=GW/l9bTUvKuDyek7F6rCbKaUzNQjiqdedoVnyxp2aZPD8q6etNWcSsdhALayoeSc2
+         wjwM2AflA/xS4/nSRasV/iKWtPkwQtbfNjgiQZ6UDLWdsF/0yyJHs73twlRAUaA7rd
+         g7bz6ZY4AiTiiz/VE2DbYe+OBdkoJmtprFFrD3cw0YKsgvA40qYpkI/QFsomK+x7mj
+         Yc+6dUpYEinU8pgNKI+Io52BenOd6FC2hIypeGdgxUYQsHG2CBBNR5mrb4tCoUOjKO
+         W8laf6S3c+AstmaQHdPNCzsGkclcFbJ1dsKTf86v8tRhjmx0cXCfCbRwRMGqFZy095
+         TGZjnPswHLblA==
+Date:   Fri, 15 Jan 2021 12:42:29 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     sandeen@sandeen.net, darrick.wong@oracle.com,
         linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs_db: add inobtcnt upgrade path
-Message-ID: <20210115204022.GB3134581@magnolia>
-References: <161017369911.1142690.8979186737828708317.stgit@magnolia>
- <161017370529.1142690.11100691491331155224.stgit@magnolia>
- <20210113183505.GD1284163@bfoster>
- <20210114010835.GW1164246@magnolia>
- <20210114094057.GC1333929@bfoster>
+Subject: Re: [PATCH 3/3] xfs_repair: clear the needsrepair flag
+Message-ID: <20210115204229.GC3134581@magnolia>
+References: <161017367756.1141483.3709627869982359451.stgit@magnolia>
+ <161017369673.1141483.6381128502951229066.stgit@magnolia>
+ <20210113181749.GC1284163@bfoster>
+ <20210114010548.GV1164246@magnolia>
+ <20210114093942.GB1333929@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210114094057.GC1333929@bfoster>
+In-Reply-To: <20210114093942.GB1333929@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 14, 2021 at 04:40:57AM -0500, Brian Foster wrote:
-> On Wed, Jan 13, 2021 at 05:08:35PM -0800, Darrick J. Wong wrote:
-> > On Wed, Jan 13, 2021 at 01:35:05PM -0500, Brian Foster wrote:
-> > > On Fri, Jan 08, 2021 at 10:28:25PM -0800, Darrick J. Wong wrote:
+On Thu, Jan 14, 2021 at 04:39:42AM -0500, Brian Foster wrote:
+> On Wed, Jan 13, 2021 at 05:05:48PM -0800, Darrick J. Wong wrote:
+> > On Wed, Jan 13, 2021 at 01:17:49PM -0500, Brian Foster wrote:
+> > > On Fri, Jan 08, 2021 at 10:28:16PM -0800, Darrick J. Wong wrote:
 > > > > From: Darrick J. Wong <djwong@kernel.org>
 > > > > 
-> > > > Enable users to upgrade their filesystems to support inode btree block
-> > > > counters.
+> > > > Clear the needsrepair flag, since it's used to prevent mounting of an
+> > > > inconsistent filesystem.
 > > > > 
 > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > > > ---
+> > > >  repair/agheader.c |   11 +++++++++++
+> > > >  1 file changed, 11 insertions(+)
+> > > > 
+> > > > 
+> > > > diff --git a/repair/agheader.c b/repair/agheader.c
+> > > > index 8bb99489..f6174dbf 100644
+> > > > --- a/repair/agheader.c
+> > > > +++ b/repair/agheader.c
+> > > > @@ -452,6 +452,17 @@ secondary_sb_whack(
+> > > >  			rval |= XR_AG_SB_SEC;
+> > > >  	}
+> > > >  
+> > > > +	if (xfs_sb_version_needsrepair(sb)) {
+> > > > +		if (!no_modify)
+> > > > +			sb->sb_features_incompat &=
+> > > > +					~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> > > > +		if (!do_bzero) {
+> > > > +			rval |= XR_AG_SB;
+> > > > +			do_warn(_("needsrepair flag set in sb %d\n"), i);
+> > > > +		} else
+> > > > +			rval |= XR_AG_SB_SEC;
+> > > > +	}
+> > > > +
 > > > 
-> > > These two look Ok to me, but I noticed that both commands have weird
-> > > error semantics when run through xfs_admin and the associated features
-> > > are already set. E.g.:
+> > > Looks reasonable modulo the questions on the previous patch. When I give
+> > > this a test, one thing that stands out is that the needsrepair state
+> > > itself sort of presents as corruption. I.e.,
 > > > 
-> > > # xfs_admin -O inobtcount /dev/test/tmp 
+> > > # ./db/xfs_db -x -c "version needsrepair" <dev>
 > > > Upgrading V5 filesystem
 > > > Upgraded V5 filesystem.  Please run xfs_repair.
-> > > versionnum [0xb4a5+0x18a] = V5,NLINK,DIRV2,ALIGN,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT,PROJID32BIT,CRC,FTYPE,FINOBT,SPARSE_INODES,REFLINK,INOBTCNT
-> > > Running xfs_repair to ensure filesystem consistency.
-> > > # xfs_admin -O inobtcount /dev/test/tmp 
-> > > inode btree counter feature is already enabled
-> > > Running xfs_repair to ensure filesystem consistency.
-> > > Conversion failed, is the filesystem unmounted?
-> > > # mount /dev/test/tmp /mnt/
-> > > # umount /mnt/
+> > > versionnum [0xb4a5+0x18a] =
+> > > V5,NLINK,DIRV2,ALIGN,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT,PROJID32BIT,CRC,FTYPE,FINOBT,SPARSE_INODES,REFLINK,NEEDSREPAIR
+> > > # ./repair/xfs_repair <dev>
+> > > Phase 1 - find and verify superblock...
+> > > Phase 2 - using internal log
+> > >         - zero log...
+> > >         - scan filesystem freespace and inode maps...
+> > > needsrepair flag set in sb 1
+> > > reset bad sb for ag 1
+> > > needsrepair flag set in sb 2
+> > > reset bad sb for ag 2
+> > > needsrepair flag set in sb 0
+> > > reset bad sb for ag 0
+> > > needsrepair flag set in sb 3
+> > > reset bad sb for ag 3
+> > >         - found root inode chunk
+> > > Phase 3 - for each AG...
+> > > ...
 > > > 
-> > > So it looks like we run repair again the second time around even though
-> > > the bit was already set, which is probably unnecessary, but then also
-> > > for some reason report the result as failed.
+> > > So nothing was ever done to this fs besides set and clear the bit. Not a
+> > > huge deal, but I wonder if we should print something more user friendly
+> > > to indicate that repair found and cleared the needsrepair state, or at
+> > > least just avoid the "reset bad sb ..." message for the needsrepair
+> > > case.
 > > 
-> > Hm.  I guess I could define a second exitcode that means "no action
-> > taken", and have xfs_admin exit.
+> > Hm.  For the backup supers I guess there's really not much point in
+> > saying anything about the bit being set, because the only time they get
+> > used is when repair tries to use one to fix a filesystem.
+> > 
+> > As for AG 0, I guess I could change that to say:
+> > 
+> > 	dbprintf(_("Thank you for running xfs_repair!"));
+> > 
+> > :D Or maybe there's no need to say anything at all.
 > > 
 > 
-> It's not totally clear to me what the expected flow is supposed to be if
-> a particular feature upgrade fails or is otherwise interrupted partway
-> through.
+> Heh. FWIW, the "needsrepair flag set ..." messages didn't seem as
+> alarming as the "reset bad sb ..." ones, but that's just me. I'd be fine
+> with making this entirely silent too, or at least starting that way
+> until some user complains with a good enough reason for a new message..
+> ;)
 
-Me neither.  But let me try to work through some outcomes:
-
-Upgrade succeeds -- xfs_db returns 0, needsrepair is set, repair runs
-Cannot upgrade -- xfs_db returns 2, fs untouched
-Feature already set -- xfs_db returns 2, fs untouched
-FS corrupt -- xfs_db returns 1, fs untouched, repair runs
-primary super write fails -- xfs_db returns 1, fs untouched, repair runs
-secondary sb write fails -- xfs_db returns 1, primary super has
-			    needsrepair set, repair runs
-
-Does that seem thorough enough?  That's, uh, what the code in my dev
-tree does now.  Will send out a v++ in a bit.
-
-> If the expectation is for the user to rerun the xfs_admin
-> command, it might be worth making sure that we somehow or another fall
-> back through to repair when appropriate (whether it be unconditionally,
-> by checking if NEEDSREPAIR is still set, etc.)..
-
-My expectation is that if xfs_db fails, the admin should run xfs_repair
-to fix anything that's wrong with the fs.  Maybe they can skip that if
-the primary super write fails with EIO, but that's up to the sysadmin's
-judgment.
+I changed it so repair says "clearing needsrepair flag and regenerating
+metadata" and omits the "reset bad sb" warnings.
 
 --D
 
 > Brian
 > 
-> > > (I also realized that repair is fixing up some agi metadata in this
-> > > case, so my previous thought around a special repair verify mode is
-> > > probably not relevant..).
-> > 
-> > <nod>
-> > 
 > > --D
 > > 
 > > > Brian
 > > > 
-> > > >  db/sb.c              |   22 ++++++++++++++++++++++
-> > > >  man/man8/xfs_admin.8 |    7 +++++++
-> > > >  man/man8/xfs_db.8    |    3 +++
-> > > >  3 files changed, 32 insertions(+)
-> > > > 
-> > > > 
-> > > > diff --git a/db/sb.c b/db/sb.c
-> > > > index 93e4c405..b89ccdbe 100644
-> > > > --- a/db/sb.c
-> > > > +++ b/db/sb.c
-> > > > @@ -597,6 +597,7 @@ version_help(void)
-> > > >  " 'version attr2'    - enable v2 inline extended attributes\n"
-> > > >  " 'version log2'     - enable v2 log format\n"
-> > > >  " 'version needsrepair' - flag filesystem as requiring repair\n"
-> > > > +" 'version inobtcount' - enable inode btree counters\n"
-> > > >  "\n"
-> > > >  "The version function prints currently enabled features for a filesystem\n"
-> > > >  "according to the version field of its primary superblock.\n"
-> > > > @@ -857,6 +858,27 @@ version_f(
-> > > >  			}
+> > > >  	return(rval);
+> > > >  }
 > > > >  
-> > > >  			v5features.incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-> > > > +		} else if (!strcasecmp(argv[1], "inobtcount")) {
-> > > > +			if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
-> > > > +				dbprintf(
-> > > > +		_("inode btree counter feature is already enabled\n"));
-> > > > +				exitcode = 1;
-> > > > +				return 1;
-> > > > +			}
-> > > > +			if (!xfs_sb_version_hasfinobt(&mp->m_sb)) {
-> > > > +				dbprintf(
-> > > > +		_("inode btree counter feature cannot be enabled on filesystems lacking free inode btrees\n"));
-> > > > +				exitcode = 1;
-> > > > +				return 1;
-> > > > +			}
-> > > > +			if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-> > > > +				dbprintf(
-> > > > +		_("inode btree counter feature cannot be enabled on pre-V5 filesystems\n"));
-> > > > +				exitcode = 1;
-> > > > +				return 1;
-> > > > +			}
-> > > > +
-> > > > +			v5features.ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
-> > > >  		} else if (!strcasecmp(argv[1], "extflg")) {
-> > > >  			switch (XFS_SB_VERSION_NUM(&mp->m_sb)) {
-> > > >  			case XFS_SB_VERSION_1:
-> > > > diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-> > > > index b423981d..a776b375 100644
-> > > > --- a/man/man8/xfs_admin.8
-> > > > +++ b/man/man8/xfs_admin.8
-> > > > @@ -116,6 +116,13 @@ If this is a V5 filesystem, flag the filesystem as needing repairs.
-> > > >  Until
-> > > >  .BR xfs_repair (8)
-> > > >  is run, the filesystem will not be mountable.
-> > > > +.TP
-> > > > +.B inobtcount
-> > > > +Upgrade a V5 filesystem to support the inode btree counters feature.
-> > > > +This reduces mount time by caching the size of the inode btrees in the
-> > > > +allocation group metadata.
-> > > > +Once enabled, the filesystem will not be writable by older kernels.
-> > > > +The filesystem cannot be downgraded after this feature is enabled.
-> > > >  .RE
-> > > >  .TP
-> > > >  .BI \-U " uuid"
-> > > > diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-> > > > index 7331cf19..1b826e5d 100644
-> > > > --- a/man/man8/xfs_db.8
-> > > > +++ b/man/man8/xfs_db.8
-> > > > @@ -976,6 +976,9 @@ The filesystem can be flagged as requiring a run through
-> > > >  if the
-> > > >  .B needsrepair
-> > > >  option is specified and the filesystem is formatted with the V5 format.
-> > > > +Support for the inode btree counters feature can be enabled by using the
-> > > > +.B inobtcount
-> > > > +option if the filesystem is formatted with the V5 format.
-> > > >  .IP
-> > > >  If no argument is given, the current version and feature bits are printed.
-> > > >  With one argument, this command will write the updated version number
 > > > > 
 > > > 
 > > 
