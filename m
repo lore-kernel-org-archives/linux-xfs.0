@@ -2,129 +2,77 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD91EC433E9
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Jan 2021 00:28:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63155C433DB
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Jan 2021 01:25:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84CF123A5E
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Jan 2021 00:28:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A32D23A34
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Jan 2021 01:25:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726977AbhAPA2N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Jan 2021 19:28:13 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:60998 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726176AbhAPA2N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jan 2021 19:28:13 -0500
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1l0ZR2-0002Mr-95; Sat, 16 Jan 2021 00:27:20 +0000
-Date:   Sat, 16 Jan 2021 01:27:18 +0100
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     Theodore Ts'o <tytso@mit.edu>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-fsdevel@vger.kernel.org,
-        John Johansen <john.johansen@canonical.com>,
-        James Morris <jmorris@namei.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Geoffrey Thomas <geofft@ldpreload.com>,
-        Mrunal Patel <mpatel@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        David Howells <dhowells@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        St?phane Graber <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        Lennart Poettering <lennart@poettering.net>,
-        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
-        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
-        Kees Cook <keescook@chromium.org>,
-        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        containers@lists.linux-foundation.org,
-        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-integrity@vger.kernel.org, selinux@vger.kernel.org
-Subject: Re: [PATCH v5 00/42] idmapped mounts
-Message-ID: <20210116002718.jjs6eov65cvwrata@wittgenstein>
-References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
- <20210114171241.GA1164240@magnolia>
- <20210114204334.GK331610@dread.disaster.area>
- <20210115162423.GB2179337@infradead.org>
- <YAHWGMb9rTehRsRz@mit.edu>
+        id S1725933AbhAPBZH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Jan 2021 20:25:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33036 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725919AbhAPBZH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Jan 2021 20:25:07 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9E31E207B6;
+        Sat, 16 Jan 2021 01:24:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610760266;
+        bh=Ri2KTRIos0OhfZ8wOQ3huUm+B3sPBNIVxEWSJyhUNY8=;
+        h=Subject:From:To:Cc:Date:From;
+        b=TN/8enVsEM27AgLRv4fBA5voEZGurX66IMyUD+naxIXKEgXhiMxMOLCQSMjrZwF4Q
+         BTjPaotPQPnW6BrkoPZBNrr3EEqkE/GRKQ1xYYg1c7r0VBvRqq+SLJ7j/qHodNra9e
+         CXhYYvmgKIErk92dgWCdUntFENAqKPLLo0yvztZhd/i+7T9Ro68JeBvI5zRtZdrQXC
+         kOMLNKsQAqAaLQmk3ziZYAix0FzzvalP+VUlkcRZcW1DZeGMUmu7ryulEZcysGySOv
+         +K78WBX+XCbYn94zqgWH77Khcf9sDxAp/QWKZuHwEuy7QKliuaSTeZHfV/lGyKHyyZ
+         rsFUA/2ejBslQ==
+Subject: [PATCHSET v3 0/2] xfs_db: add minimal directory navigation
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     sandeen@sandeen.net, djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Date:   Fri, 15 Jan 2021 17:24:25 -0800
+Message-ID: <161076026570.3386403.8299786881687962135.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <YAHWGMb9rTehRsRz@mit.edu>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 15, 2021 at 12:51:20PM -0500, Theodore Ts'o wrote:
-> On Fri, Jan 15, 2021 at 04:24:23PM +0000, Christoph Hellwig wrote:
-> > 
-> > That is what the capabilities are designed for and we already check
-> > for them.
-> 
-> So perhaps I'm confused, but my understanding is that in the
-> containers world, capabilities are a lot more complicated.  There is:
-> 
-> 1) The initial namespace capability set
-> 
-> 2) The container's user-namespace capability set
-> 
-> 3) The namespace in which the file system is mounted --- which is
->       "usually, but not necessarily the initial namespace" and
->       presumably could potentially not necessarily be the current
->       container's user name space, is namespaces can be hierarchically
->       arranged.
-> 
-> Is that correct?  If so, how does this patch set change things (if
-> any), and and how does this interact with quota administration
-> operations?
+Hi all,
 
-The cases you listed are correct. The patchset doesn't change them.
-Simply put, the patchset doesn't alter capability checking in any way.
+This patchset improves the usability of xfs_db by enabling users to
+navigate to inodes by path and to list the contents of directories.
 
-> 
-> On a related note, ext4 specifies a "reserved user" or "reserved
-> group" which can access the reserved blocks.  If we have a file system
-> which is mounted in a namespace running a container which is running
-> RHEL or SLES, and in that container, we have a file system mounted (so
-> it was not mounted in the initial namespace), with id-mapping --- and
-> then there is a further sub-container created with its own user
-> sub-namespace further mapping uids/gids --- will the right thing
-> happen?  For that matter, how *is* the "right thing" defined?
+v2: Various cleanups and reorganizing suggested by dchinner
+v3: Rebase to 5.10-rc0
 
-In short, nothing changes. Whatever happened before happens now.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-Specifically s_resuid/s_resgid are superblock mount options and so never
-change on a per-mount basis and thus also aren't affected by idmapped
-mounts.
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-> 
-> Sorry if this is a potentially stupid question, but I find user
-> namespaces and id and capability mapping to be hopefully confusing for
-> my tiny brain.  :-)
+--D
 
-No, I really appreciate the questions. :) My brain can most likely
-handle less. :)
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfs_db-directory-navigation
 
-Christian
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=xfs_db-directory-navigation
+---
+ db/Makefile              |    3 
+ db/command.c             |    1 
+ db/command.h             |    1 
+ db/namei.c               |  612 ++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/libxfs_api_defs.h |    1 
+ man/man8/xfs_db.8        |   20 ++
+ 6 files changed, 637 insertions(+), 1 deletion(-)
+ create mode 100644 db/namei.c
+
