@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98AB4C433E6
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Jan 2021 01:26:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5D84C433E0
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Jan 2021 01:26:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 65CDD229F0
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 Jan 2021 01:26:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AEC90207B6
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 Jan 2021 01:26:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725922AbhAPB0A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Jan 2021 20:26:00 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33260 "EHLO mail.kernel.org"
+        id S1729043AbhAPB0G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Jan 2021 20:26:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33398 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729034AbhAPB0A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Jan 2021 20:26:00 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 38881229F0;
-        Sat, 16 Jan 2021 01:25:19 +0000 (UTC)
+        id S1729034AbhAPB0F (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Jan 2021 20:26:05 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 206A523A34;
+        Sat, 16 Jan 2021 01:25:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610760319;
-        bh=cZ5drM9IgOKJtmewC7XC0cV9w9ENTyxewYG+zbXRRjg=;
+        s=k20201202; t=1610760325;
+        bh=ojNwOriUnwm63bH7ZjrFzFrG0iqxg6ivv4QGaCSiyyk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=mkzaetSMDU0hMacIWQCPJ0yANgCB73QqU+1SWws8F7lNlSTthTbByyFjMPviOB0a0
-         0O81BzH3fzXftIyqE2o1TQcnzD2xX1RUXLBPbBqNf2JJoJ5w76lsahKstjGjFNjyJn
-         yl5TNEA8rWGSmq/ERKBJaNrB+sPKUI8mIxOSMJum99/f7GAxsZ7Utui7yZbfKIZlM2
-         KF2vXLyEKkI84RYIg56Q91uP4cihiv5ztyYobqgr0267x18XuQ6m+dowejOwOuGXkg
-         uYz3RVRIi3wcuMrcQGeSXBk3CEHoVDJa8pQCrfKlR7pnCDHNG7IbiObrqdb+Bo36eq
-         tBdjyyru9efRg==
-Subject: [PATCH 1/4] misc: fix valgrind complaints
+        b=dpakNLV5IbLvp4ReMkNdG8bY05oI9IHmLzcOFklFkr3FqnLlGkKe8HRLdfToQiyWO
+         yOVqXL8QAQhjc0vVIGc3k2n9MAWIfNY+5QuX6YLf8pLvLb53wwluYbjYd5/Yxm5+qp
+         Hoi8RmkIn+za36VDM8yLvxRqqDtlSo5HOWCI/LdiYB0WpWnILDcZNbxu67z5ircwfP
+         CDgqcN5Y1ZigdO6lh88NEFvt12ChtsUWqmXtF4+yz4IcDx6S8KC6Cqjs0xDkrg84lR
+         DNL/nn1gsZ6eyGcfZcUiIH9YuU43dqGvkcQhb+b4eV94jRzkmUzGjRjDaP4ROQqET4
+         3gwJlq/ReMwuQ==
+Subject: [PATCH 2/4] xfs_scrub: detect infinite loops when scanning inodes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 15 Jan 2021 17:25:18 -0800
-Message-ID: <161076031855.3386689.6419632333068855983.stgit@magnolia>
+Date:   Fri, 15 Jan 2021 17:25:24 -0800
+Message-ID: <161076032453.3386689.17554565086009869010.stgit@magnolia>
 In-Reply-To: <161076031261.3386689.3320804567045193864.stgit@magnolia>
 References: <161076031261.3386689.3320804567045193864.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,81 +49,49 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Zero the memory that we pass to the kernel via ioctls so that we never
-pass userspace heap/stack garbage around.  This silences valgrind
-complaints about uninitialized padding areas.
+During an inode scan (aka phase 3) when we're scanning the inode btree
+to find files to check, make sure that each invocation of inumbers
+actually gives us an inobt record with a startino that's at least as
+large as what we asked for so that we always make forward progress.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libhandle/handle.c |   10 ++++++----
- scrub/inodes.c     |    2 +-
- scrub/spacemap.c   |    3 +--
- 3 files changed, 8 insertions(+), 7 deletions(-)
+ scrub/inodes.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
 
-diff --git a/libhandle/handle.c b/libhandle/handle.c
-index 5c1686b3..27abc6b2 100644
---- a/libhandle/handle.c
-+++ b/libhandle/handle.c
-@@ -235,8 +235,10 @@ obj_to_handle(
- {
- 	char		hbuf [MAXHANSIZ];
- 	int		ret;
--	uint32_t	handlen;
--	xfs_fsop_handlereq_t hreq;
-+	uint32_t	handlen = 0;
-+	struct xfs_fsop_handlereq hreq = { };
-+
-+	memset(hbuf, 0, MAXHANSIZ);
- 
- 	if (opcode == XFS_IOC_FD_TO_HANDLE) {
- 		hreq.fd      = obj.fd;
-@@ -275,7 +277,7 @@ open_by_fshandle(
- {
- 	int		fsfd;
- 	char		*path;
--	xfs_fsop_handlereq_t hreq;
-+	struct xfs_fsop_handlereq hreq = { };
- 
- 	if ((fsfd = handle_to_fsfd(fshanp, &path)) < 0)
- 		return -1;
-@@ -382,7 +384,7 @@ attr_list_by_handle(
- {
- 	int		error, fd;
- 	char		*path;
--	xfs_fsop_attrlist_handlereq_t alhreq;
-+	struct xfs_fsop_attrlist_handlereq alhreq = { };
- 
- 	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
- 		return -1;
 diff --git a/scrub/inodes.c b/scrub/inodes.c
-index bdc12df3..63865113 100644
+index 63865113..cc73da7f 100644
 --- a/scrub/inodes.c
 +++ b/scrub/inodes.c
-@@ -111,7 +111,7 @@ scan_ag_inodes(
- 	xfs_agnumber_t		agno,
- 	void			*arg)
- {
--	struct xfs_handle	handle;
-+	struct xfs_handle	handle = { };
- 	char			descr[DESCR_BUFSZ];
- 	struct xfs_inumbers_req	*ireq;
- 	struct xfs_bulkstat_req	*breq;
-diff --git a/scrub/spacemap.c b/scrub/spacemap.c
-index 9653916d..a5508d56 100644
---- a/scrub/spacemap.c
-+++ b/scrub/spacemap.c
-@@ -47,11 +47,10 @@ scrub_iterate_fsmap(
+@@ -119,6 +119,7 @@ scan_ag_inodes(
+ 	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
+ 	struct xfs_bulkstat	*bs;
+ 	struct xfs_inumbers	*inumbers;
++	uint64_t		nextino = cvt_agino_to_ino(&ctx->mnt, agno, 0);
  	int			i;
  	int			error;
- 
--	head = malloc(fsmap_sizeof(FSMAP_NR));
-+	head = calloc(1, fsmap_sizeof(FSMAP_NR));
- 	if (!head)
- 		return errno;
- 
--	memset(head, 0, sizeof(*head));
- 	memcpy(head->fmh_keys, keys, sizeof(struct fsmap) * 2);
- 	head->fmh_count = FSMAP_NR;
- 
+ 	int			stale_count = 0;
+@@ -153,6 +154,21 @@ scan_ag_inodes(
+ 	/* Find the inode chunk & alloc mask */
+ 	error = -xfrog_inumbers(&ctx->mnt, ireq);
+ 	while (!error && !si->aborted && ireq->hdr.ocount > 0) {
++		/*
++		 * Make sure that we always make forward progress while we
++		 * scan the inode btree.
++		 */
++		if (nextino > inumbers->xi_startino) {
++			str_corrupt(ctx, descr,
++	_("AG %u inode btree is corrupt near agino %lu, got %lu"), agno,
++				cvt_ino_to_agino(&ctx->mnt, nextino),
++				cvt_ino_to_agino(&ctx->mnt,
++						ireq->inumbers[0].xi_startino));
++			si->aborted = true;
++			break;
++		}
++		nextino = ireq->hdr.ino;
++
+ 		/*
+ 		 * We can have totally empty inode chunks on filesystems where
+ 		 * there are more than 64 inodes per block.  Skip these.
 
