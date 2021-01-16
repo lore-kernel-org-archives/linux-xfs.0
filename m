@@ -3,40 +3,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63155C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 664A0C433E6
 	for <linux-xfs@archiver.kernel.org>; Sat, 16 Jan 2021 01:25:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A32D23A34
+	by mail.kernel.org (Postfix) with ESMTP id 327D323A3C
 	for <linux-xfs@archiver.kernel.org>; Sat, 16 Jan 2021 01:25:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725933AbhAPBZH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Jan 2021 20:25:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33036 "EHLO mail.kernel.org"
+        id S1725934AbhAPBZN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Jan 2021 20:25:13 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33060 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725919AbhAPBZH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Jan 2021 20:25:07 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9E31E207B6;
-        Sat, 16 Jan 2021 01:24:26 +0000 (UTC)
+        id S1725919AbhAPBZN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Jan 2021 20:25:13 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 981E9229F0;
+        Sat, 16 Jan 2021 01:24:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610760266;
-        bh=Ri2KTRIos0OhfZ8wOQ3huUm+B3sPBNIVxEWSJyhUNY8=;
-        h=Subject:From:To:Cc:Date:From;
-        b=TN/8enVsEM27AgLRv4fBA5voEZGurX66IMyUD+naxIXKEgXhiMxMOLCQSMjrZwF4Q
-         BTjPaotPQPnW6BrkoPZBNrr3EEqkE/GRKQ1xYYg1c7r0VBvRqq+SLJ7j/qHodNra9e
-         CXhYYvmgKIErk92dgWCdUntFENAqKPLLo0yvztZhd/i+7T9Ro68JeBvI5zRtZdrQXC
-         kOMLNKsQAqAaLQmk3ziZYAix0FzzvalP+VUlkcRZcW1DZeGMUmu7ryulEZcysGySOv
-         +K78WBX+XCbYn94zqgWH77Khcf9sDxAp/QWKZuHwEuy7QKliuaSTeZHfV/lGyKHyyZ
-         rsFUA/2ejBslQ==
-Subject: [PATCHSET v3 0/2] xfs_db: add minimal directory navigation
+        s=k20201202; t=1610760272;
+        bh=ShEbMcpO9nOxMEwQrwVAjvLApR91DvSIubabchhNn4U=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=PXnVDimMSxAz3KaWjRu9NtCpHRl4huwO20hBQ9aDMjzjk4HkxiU1HVf6/KXFniFT0
+         tW460SULZkbwW69Zpb3JVgIMoNVIRgl8QtgbkB7kzr8d63ikxde0a74fYL0uwMZqkC
+         RG6amz1RqqjBGIsdl0iX+PmTIuIxxzSaCgtemN7iiyL75PvCaNoIyT7WMuu0WcMv5a
+         cyTWW9azlmYHVTZgIn6JPjuFuev/SotjDSHwfItHNmTvEW3VACnU57K7Ujafqg/lMJ
+         B9qa36jECv4X15+SD+ydxneOA7csDGiGYXtrLGBA7u2TE7jW9LCZ68ymVZeeFN+rSu
+         HZYzQf3MUsGgA==
+Subject: [PATCH 1/2] xfs_db: add a directory path lookup command
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 15 Jan 2021 17:24:25 -0800
-Message-ID: <161076026570.3386403.8299786881687962135.stgit@magnolia>
+Date:   Fri, 15 Jan 2021 17:24:31 -0800
+Message-ID: <161076027195.3386403.12700317703299129248.stgit@magnolia>
+In-Reply-To: <161076026570.3386403.8299786881687962135.stgit@magnolia>
+References: <161076026570.3386403.8299786881687962135.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -45,34 +47,298 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This patchset improves the usability of xfs_db by enabling users to
-navigate to inodes by path and to list the contents of directories.
+Add a command to xfs_db so that we can navigate to inodes by path.
 
-v2: Various cleanups and reorganizing suggested by dchinner
-v3: Rebase to 5.10-rc0
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfs_db-directory-navigation
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=xfs_db-directory-navigation
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/Makefile              |    3 
- db/command.c             |    1 
- db/command.h             |    1 
- db/namei.c               |  612 ++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/libxfs_api_defs.h |    1 
- man/man8/xfs_db.8        |   20 ++
- 6 files changed, 637 insertions(+), 1 deletion(-)
+ db/Makefile       |    3 -
+ db/command.c      |    1 
+ db/command.h      |    1 
+ db/namei.c        |  223 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_db.8 |    4 +
+ 5 files changed, 231 insertions(+), 1 deletion(-)
  create mode 100644 db/namei.c
+
+
+diff --git a/db/Makefile b/db/Makefile
+index 9d502bf0..beafb105 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -14,7 +14,8 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+ 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+ 	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
+ 	fuzz.h
+-CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c timelimit.c
++CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c \
++	timelimit.c
+ LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+ 
+ LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+diff --git a/db/command.c b/db/command.c
+index 43828369..02f778b9 100644
+--- a/db/command.c
++++ b/db/command.c
+@@ -131,6 +131,7 @@ init_commands(void)
+ 	logformat_init();
+ 	io_init();
+ 	metadump_init();
++	namei_init();
+ 	output_init();
+ 	print_init();
+ 	quit_init();
+diff --git a/db/command.h b/db/command.h
+index 6913c817..498983ff 100644
+--- a/db/command.h
++++ b/db/command.h
+@@ -33,3 +33,4 @@ extern void		btdump_init(void);
+ extern void		info_init(void);
+ extern void		btheight_init(void);
+ extern void		timelimit_init(void);
++extern void		namei_init(void);
+diff --git a/db/namei.c b/db/namei.c
+new file mode 100644
+index 00000000..eebebe15
+--- /dev/null
++++ b/db/namei.c
+@@ -0,0 +1,223 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2021 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "libxfs.h"
++#include "command.h"
++#include "output.h"
++#include "init.h"
++#include "io.h"
++#include "type.h"
++#include "input.h"
++#include "faddr.h"
++#include "fprint.h"
++#include "field.h"
++#include "inode.h"
++
++/* Path lookup */
++
++/* Key for looking up metadata inodes. */
++struct dirpath {
++	/* Array of string pointers. */
++	char		**path;
++
++	/* Number of strings in path. */
++	unsigned int	depth;
++};
++
++static void
++path_free(
++	struct dirpath	*dirpath)
++{
++	unsigned int	i;
++
++	for (i = 0; i < dirpath->depth; i++)
++		free(dirpath->path[i]);
++	free(dirpath->path);
++	free(dirpath);
++}
++
++/* Chop a freeform string path into a structured path. */
++static struct dirpath *
++path_parse(
++	const char	*path)
++{
++	struct dirpath	*dirpath;
++	const char	*p = path;
++	const char	*endp = path + strlen(path);
++
++	dirpath = calloc(sizeof(*dirpath), 1);
++	if (!dirpath)
++		return NULL;
++
++	while (p < endp) {
++		char		**new_path;
++		const char	*next_slash;
++
++		next_slash = strchr(p, '/');
++		if (next_slash == p) {
++			p++;
++			continue;
++		}
++		if (!next_slash)
++			next_slash = endp;
++
++		new_path = realloc(dirpath->path,
++				(dirpath->depth + 1) * sizeof(char *));
++		if (!new_path) {
++			path_free(dirpath);
++			return NULL;
++		}
++
++		dirpath->path = new_path;
++		dirpath->path[dirpath->depth] = strndup(p, next_slash - p);
++		dirpath->depth++;
++
++		p = next_slash + 1;
++	}
++
++	return dirpath;
++}
++
++/* Given a directory and a structured path, walk the path and set the cursor. */
++static int
++path_navigate(
++	struct xfs_mount	*mp,
++	xfs_ino_t		rootino,
++	struct dirpath		*dirpath)
++{
++	struct xfs_inode	*dp;
++	xfs_ino_t		ino = rootino;
++	unsigned int		i;
++	int			error;
++
++	error = -libxfs_iget(mp, NULL, ino, 0, &dp);
++	if (error)
++		return error;
++
++	for (i = 0; i < dirpath->depth; i++) {
++		struct xfs_name	xname = {
++			.name	= dirpath->path[i],
++			.len	= strlen(dirpath->path[i]),
++		};
++
++		if (!S_ISDIR(VFS_I(dp)->i_mode)) {
++			error = ENOTDIR;
++			goto rele;
++		}
++
++		error = -libxfs_dir_lookup(NULL, dp, &xname, &ino, NULL);
++		if (error)
++			goto rele;
++		if (!xfs_verify_ino(mp, ino)) {
++			error = EFSCORRUPTED;
++			goto rele;
++		}
++
++		libxfs_irele(dp);
++		dp = NULL;
++
++		error = -libxfs_iget(mp, NULL, ino, 0, &dp);
++		switch (error) {
++		case EFSCORRUPTED:
++		case EFSBADCRC:
++		case 0:
++			break;
++		default:
++			return error;
++		}
++	}
++
++	set_cur_inode(ino);
++rele:
++	if (dp)
++		libxfs_irele(dp);
++	return error;
++}
++
++/* Walk a directory path to an inode and set the io cursor to that inode. */
++static int
++path_walk(
++	char		*path)
++{
++	struct dirpath	*dirpath;
++	char		*p = path;
++	xfs_ino_t	rootino = mp->m_sb.sb_rootino;
++	int		error = 0;
++
++	if (*p == '/') {
++		/* Absolute path, start from the root inode. */
++		p++;
++	} else {
++		/* Relative path, start from current dir. */
++		if (iocur_top->typ != &typtab[TYP_INODE] ||
++		    !S_ISDIR(iocur_top->mode))
++			return ENOTDIR;
++
++		rootino = iocur_top->ino;
++	}
++
++	dirpath = path_parse(p);
++	if (!dirpath)
++		return ENOMEM;
++
++	error = path_navigate(mp, rootino, dirpath);
++	if (error)
++		return error;
++
++	path_free(dirpath);
++	return 0;
++}
++
++static void
++path_help(void)
++{
++	dbprintf(_(
++"\n"
++" Navigate to an inode via directory path.\n"
++	));
++}
++
++static int
++path_f(
++	int		argc,
++	char		**argv)
++{
++	int		c;
++	int		error;
++
++	while ((c = getopt(argc, argv, "")) != -1) {
++		switch (c) {
++		default:
++			path_help();
++			return 0;
++		}
++	}
++
++	error = path_walk(argv[optind]);
++	if (error) {
++		dbprintf("%s: %s\n", argv[optind], strerror(error));
++		exitcode = 1;
++	}
++
++	return 0;
++}
++
++static struct cmdinfo path_cmd = {
++	.name		= "path",
++	.altname	= NULL,
++	.cfunc		= path_f,
++	.argmin		= 1,
++	.argmax		= 1,
++	.canpush	= 0,
++	.args		= "",
++	.help		= path_help,
++};
++
++void
++namei_init(void)
++{
++	path_cmd.oneline = _("navigate to an inode by path");
++	add_command(&path_cmd);
++}
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 55388be6..4df265ec 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -831,6 +831,10 @@ See the
+ .B print
+ command.
+ .TP
++.BI "path " dir_path
++Walk the directory tree to an inode using the supplied path.
++Absolute and relative paths are supported.
++.TP
+ .B pop
+ Pop location from the stack.
+ .TP
 
