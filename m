@@ -2,75 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5078DC433E0
-	for <linux-xfs@archiver.kernel.org>; Sun, 17 Jan 2021 01:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEF2BC433DB
+	for <linux-xfs@archiver.kernel.org>; Sun, 17 Jan 2021 21:07:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1996920723
-	for <linux-xfs@archiver.kernel.org>; Sun, 17 Jan 2021 01:10:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 956F52247F
+	for <linux-xfs@archiver.kernel.org>; Sun, 17 Jan 2021 21:07:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726864AbhAQBJr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 16 Jan 2021 20:09:47 -0500
-Received: from sandeen.net ([63.231.237.45]:55890 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726785AbhAQBJr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Jan 2021 20:09:47 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 7D8D8483534;
-        Sat, 16 Jan 2021 19:07:24 -0600 (CST)
-Subject: Re: [PATCH v2 0/6] debian: xfsprogs package clean-up
-To:     Bastian Germann <bastiangermann@fishpost.de>,
-        linux-xfs@vger.kernel.org, Nathan Scott <nathans@redhat.com>
-References: <20210114183747.2507-1-bastiangermann@fishpost.de>
- <20210116092328.2667-1-bastiangermann@fishpost.de>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <efbffecf-9dcd-79fd-4fe6-8f0e67d307c0@sandeen.net>
-Date:   Sat, 16 Jan 2021 19:09:04 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.6.1
+        id S1730348AbhAQVHY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 17 Jan 2021 16:07:24 -0500
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:44711 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726785AbhAQVHW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Jan 2021 16:07:22 -0500
+Received: from dread.disaster.area (pa49-181-54-82.pa.nsw.optusnet.com.au [49.181.54.82])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id AB1B4D5ED06;
+        Mon, 18 Jan 2021 08:06:22 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1l1FFd-0011Hk-2N; Mon, 18 Jan 2021 08:06:21 +1100
+Date:   Mon, 18 Jan 2021 08:06:21 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christian Brauner <christian.brauner@ubuntu.com>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-fsdevel@vger.kernel.org,
+        John Johansen <john.johansen@canonical.com>,
+        James Morris <jmorris@namei.org>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Casey Schaufler <casey@schaufler-ca.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Geoffrey Thomas <geofft@ldpreload.com>,
+        Mrunal Patel <mpatel@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
+        Tycho Andersen <tycho@tycho.ws>,
+        David Howells <dhowells@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        =?iso-8859-1?Q?St=E9phane?= Graber <stgraber@ubuntu.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aleksa Sarai <cyphar@cyphar.com>,
+        Lennart Poettering <lennart@poettering.net>,
+        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
+        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
+        Kees Cook <keescook@chromium.org>,
+        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        containers@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v5 37/42] xfs: support idmapped mounts
+Message-ID: <20210117210621.GA78941@dread.disaster.area>
+References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
+ <20210112220124.837960-38-christian.brauner@ubuntu.com>
+ <20210114205154.GL331610@dread.disaster.area>
+ <20210114221048.ppf2pfuxrjak4kvm@wittgenstein>
 MIME-Version: 1.0
-In-Reply-To: <20210116092328.2667-1-bastiangermann@fishpost.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210114221048.ppf2pfuxrjak4kvm@wittgenstein>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=NAd5MxazP4FGoF8nXO8esw==:117 a=NAd5MxazP4FGoF8nXO8esw==:17
+        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=7-415B0cAAAA:8
+        a=QsOiS33c3F2EFrvaDEcA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 1/16/21 3:23 AM, Bastian Germann wrote:
-> Apply some minor changes to the xfsprogs debian packages, including
-> missing copyright notices that are required by Debian Policy.
+On Thu, Jan 14, 2021 at 11:10:48PM +0100, Christian Brauner wrote:
+> On Fri, Jan 15, 2021 at 07:51:54AM +1100, Dave Chinner wrote:
+> > On Tue, Jan 12, 2021 at 11:01:19PM +0100, Christian Brauner wrote:
+> > > From: Christoph Hellwig <hch@lst.de>
+> > > 
+> > > Enable idmapped mounts for xfs. This basically just means passing down
+> > > the user_namespace argument from the VFS methods down to where it is
+> > > passed to helper.
+> > > 
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ....
+> > > @@ -654,6 +658,7 @@ xfs_vn_change_ok(
+> > >   */
+> > >  static int
+> > >  xfs_setattr_nonsize(
+> > > +	struct user_namespace	*mnt_userns,
+> > >  	struct xfs_inode	*ip,
+> > >  	struct iattr		*iattr)
+> > >  {
+> > > @@ -813,7 +818,7 @@ xfs_setattr_nonsize(
+> > >  	 * 	     Posix ACL code seems to care about this issue either.
+> > >  	 */
+> > >  	if (mask & ATTR_MODE) {
+> > > -		error = posix_acl_chmod(&init_user_ns, inode, inode->i_mode);
+> > > +		error = posix_acl_chmod(mnt_userns, inode, inode->i_mode);
+> > >  		if (error)
+> > >  			return error;
+> > >  	}
+> > > @@ -868,7 +873,7 @@ xfs_setattr_size(
+> > >  		 * Use the regular setattr path to update the timestamps.
+> > >  		 */
+> > >  		iattr->ia_valid &= ~ATTR_SIZE;
+> > > -		return xfs_setattr_nonsize(ip, iattr);
+> > > +		return xfs_setattr_nonsize(&init_user_ns, ip, iattr);
+> > 
+> > Shouldn't that be passing mnt_userns?
 > 
-> v2:
->   resend with Reviewed-by annotations applied, Nathan actually sent:
->   "Signed-off-by: Nathan Scott <nathans@debian.org>"
-
-Heya Nate - please confirm that this was your intent.
-
--Eric
-
+> Hey Dave,
 > 
-> Bastian Germann (6):
->   debian: cryptographically verify upstream tarball
->   debian: remove dependency on essential util-linux
->   debian: remove "Priority: extra"
->   debian: use Package-Type over its predecessor
->   debian: add missing copyright info
->   debian: new changelog entry
+> Thanks for taking a look.
 > 
->  debian/changelog                |  11 ++++
->  debian/control                  |   5 +-
->  debian/copyright                | 111 ++++++++++++++++++++++++++++----
->  debian/upstream/signing-key.asc |  63 ++++++++++++++++++
->  debian/watch                    |   2 +-
->  5 files changed, 175 insertions(+), 17 deletions(-)
->  create mode 100644 debian/upstream/signing-key.asc
-> 
+> This is the time updating codepath.
+
+Yes, I understand the code path, that's why I asked the question and
+commented that it's a landmine. That is, if in future we ever need
+to do anything that is is in any way namespace related in the
+truncate path, the wrong thing will happen because we are passing
+the wrong namespace into that function.
+
+Please just pass down the correct namespace for the operation even
+though we don't currently require it for the operations being
+performed in that path.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
