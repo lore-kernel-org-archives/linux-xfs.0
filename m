@@ -5,65 +5,65 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21EC3C433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39A5AC433DB
 	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 06:22:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E34B92256F
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 06:22:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 086E3227C3
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 06:22:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730994AbhARGVm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 01:21:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33796 "EHLO
+        id S1731928AbhARGVu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 01:21:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731533AbhARGV3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 01:21:29 -0500
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3EF4C061575;
-        Sun, 17 Jan 2021 22:20:48 -0800 (PST)
-Received: by mail-pl1-x62e.google.com with SMTP id t6so8083761plq.1;
-        Sun, 17 Jan 2021 22:20:48 -0800 (PST)
+        with ESMTP id S1731683AbhARGVd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 01:21:33 -0500
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B60CC0613C1;
+        Sun, 17 Jan 2021 22:20:53 -0800 (PST)
+Received: by mail-pj1-x1031.google.com with SMTP id md11so8812383pjb.0;
+        Sun, 17 Jan 2021 22:20:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=PiR5XrPCo/8xBvKQBroN3k2T97ViDnryhS0HS238Hls=;
-        b=ipM311vg29EgSI2l/OoABjfl4peqVJUfi/nB6hE5azNYH4UZ5H9Ijo28RF6p4RwkQW
-         QO2Y06tBSkwBJBCNI9oxNK2lRzG0oMhkHxWMbLPDS6NiZWwtgGaVzCvRnQecMIXHw22m
-         Kru8li2oN6SJdQ6e1uL2BlkyuOSOmaRw+cQFVyrFmLS5yyM4TI4qmhIEEFFLnjnFrT1j
-         fGZ68a8fEp7gKGFI7jxY6YOxPwkzWSuVCj7WoK4K7bPT8V7a6ccz2WlFpBks6TW0dmHm
-         m5KENSXd/gGpSFfImerbzKpf61eWatDrS6AtQT7yfTJi1c1WBYJqx1jrjsaMrOhmtu3R
-         dfbg==
+        bh=JlURlfQZpNNMmIPVRCThz8X9YsyM5LYX1Ylt4W4EDyQ=;
+        b=pcFugMYS3wNtzR95ji4Zbv5ID49y8ttQgdD58gB8DuACr04d0SecAk36ed4OhaSEEc
+         D34mndn+ZSCFQi/rZtJi2c2e5TG3LK1PGHnSVp/gIs1IFgBxCLqnb6pYOzdHLrqPYkSa
+         KCVBwKpN+pJFyJWsIDB47fuq59AEI7AduOle1ZL3tVVSyG0Hq9GE/mTh0q+gZo18ahHW
+         VarL9Lui16le7izjmikSpRRCoqIxV04MfQE4s2fEUx5SAdiTWGw6Zv85GmtJ2AxyM44g
+         wilT7J7bwd6MZBJo9M9tTyc6qf5fdVPdKIDrbJ1Js2GpxFt4LGeXhezm2pZtAjxdADQe
+         E6bw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=PiR5XrPCo/8xBvKQBroN3k2T97ViDnryhS0HS238Hls=;
-        b=CKhsAebLfnGrjKbHj6PIp+94iwZ7iWWEWQhQBM26+g0ZUHb67a6rPpRCkK4YXChw7Y
-         CIUiPV6zNgRlf7YYskP4sPwMJw+h1imHXhlYyH4vHqpqd9IAbFkUxStuAx81IQGSjHlp
-         oJCdLrf+U6kF6c0/QNEvmhZWlZz9ExBGX2ParXpYZx1UsvUYt/P0q6bMg6vXq1iEhU09
-         ngdg7IA0feCI4xJzhoadf82de6hMtI9vPVS/XC27O2E/ASQeAasZmW6bTmsWdXSvn2h5
-         evWZBaiFo6wDArv51tReFt5PA7VGBIep5QZcNMkr9XGs0+TOnFDf8hVFLUe2Vil91cK2
-         c3Vg==
-X-Gm-Message-State: AOAM533A9GDf/hSKAsvpavNsqd9TeSSa4LmPOpTrOY+Cyct4eXseS4BL
-        LIb55EDPaq1HcjPUnp/cg2jI9c8tFfI=
-X-Google-Smtp-Source: ABdhPJyIck67e6xUi/cLcmkT6qxvBrB0v1egA4gzaSAOlmQQbYoVTc3F/LjcdwiFlLzpiE/TvMbQ1g==
-X-Received: by 2002:a17:90a:4cc5:: with SMTP id k63mr24412960pjh.202.1610950848316;
-        Sun, 17 Jan 2021 22:20:48 -0800 (PST)
+        bh=JlURlfQZpNNMmIPVRCThz8X9YsyM5LYX1Ylt4W4EDyQ=;
+        b=TrJxUAeVdPMrDl7iaXpJVLgsJ5FxUKQeNUKXKi3o46n89IIGktfZv7zzQRirjqlmsU
+         Btex/Ng/U3GYQFwYAJWdP95vqEJAj3RMEy2U8n2krP8ISHwTnfu7vd1W72oT5JCinLvV
+         wxbJHl5t3Da/b0nq0jy8RqR74CRBXwjdNvYDXXcxkaxwdydNjTIZ5hFsDdCi5kmViNbA
+         7eYY3K17AALRoxar7P6PyzZ1O5IgKN40it25F4ZYNJlSg+mu63QDcApcW+ZhKwnoXHzO
+         R0kBQowE+w48dOUSsSTyPG8mghj0efUhV9sqTzXBwQbtpvs51OHyjtge79p2XRnQFUSD
+         nBiA==
+X-Gm-Message-State: AOAM533eyYcOuLnpxgI5kcVYPIN4d88l9qwxFw5W1iZmp7tbc0rmuXBt
+        O9eZuOlKwacKjL6yBHJNV7jpLkbw1+I=
+X-Google-Smtp-Source: ABdhPJxWDp5OK8xYKlQR2XMtaDMmErLCZeRB/0eMc43rM7eV7TKL859Y1R67PgZeoXJsLlXjk3lkQw==
+X-Received: by 2002:a17:90b:e15:: with SMTP id ge21mr23777305pjb.185.1610950852914;
+        Sun, 17 Jan 2021 22:20:52 -0800 (PST)
 Received: from localhost.localdomain ([122.179.96.31])
-        by smtp.gmail.com with ESMTPSA id t1sm14608423pfq.154.2021.01.17.22.20.46
+        by smtp.gmail.com with ESMTPSA id t1sm14608423pfq.154.2021.01.17.22.20.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 17 Jan 2021 22:20:47 -0800 (PST)
+        Sun, 17 Jan 2021 22:20:52 -0800 (PST)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     fstests@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
         linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
         djwong@kernel.org
-Subject: [PATCH V4 02/11] xfs: Check for extent overflow when trivally adding a new extent
-Date:   Mon, 18 Jan 2021 11:50:13 +0530
-Message-Id: <20210118062022.15069-3-chandanrlinux@gmail.com>
+Subject: [PATCH V4 04/11] xfs: Check for extent overflow when punching a hole
+Date:   Mon, 18 Jan 2021 11:50:15 +0530
+Message-Id: <20210118062022.15069-5-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210118062022.15069-1-chandanrlinux@gmail.com>
 References: <20210118062022.15069-1-chandanrlinux@gmail.com>
@@ -74,34 +74,31 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 This test verifies that XFS does not cause inode fork's extent count to
-overflow when adding a single extent while there's no possibility of
-splitting an existing mapping.
+overflow when punching out an extent.
 
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- tests/xfs/522     | 173 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/522.out |  20 ++++++
- tests/xfs/group   |   1 +
- 3 files changed, 194 insertions(+)
- create mode 100755 tests/xfs/522
- create mode 100644 tests/xfs/522.out
+ tests/xfs/524     | 84 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/524.out | 19 +++++++++++
+ tests/xfs/group   |  1 +
+ 3 files changed, 104 insertions(+)
+ create mode 100755 tests/xfs/524
+ create mode 100644 tests/xfs/524.out
 
-diff --git a/tests/xfs/522 b/tests/xfs/522
+diff --git a/tests/xfs/524 b/tests/xfs/524
 new file mode 100755
-index 00000000..33f0591e
+index 00000000..79fa31d8
 --- /dev/null
-+++ b/tests/xfs/522
-@@ -0,0 +1,173 @@
++++ b/tests/xfs/524
+@@ -0,0 +1,84 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
 +#
-+# FS QA Test 522
++# FS QA Test 524
 +#
 +# Verify that XFS does not cause inode fork's extent count to overflow when
-+# adding a single extent while there's no possibility of splitting an existing
-+# mapping.
-+
++# punching out an extent.
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
 +echo "QA output created by $seq"
@@ -120,9 +117,7 @@ index 00000000..33f0591e
 +# get standard environment, filters and checks
 +. ./common/rc
 +. ./common/filter
-+. ./common/quota
 +. ./common/inject
-+. ./common/populate
 +
 +# remove previous $seqres.full before test
 +rm -f $seqres.full
@@ -131,175 +126,89 @@ index 00000000..33f0591e
 +
 +_supported_fs xfs
 +_require_scratch
-+_require_xfs_quota
 +_require_xfs_debug
-+_require_test_program "punch-alternating"
-+_require_xfs_io_command "falloc"
++_require_xfs_io_command "fpunch"
++_require_xfs_io_command "finsert"
++_require_xfs_io_command "fcollapse"
++_require_xfs_io_command "fzero"
 +_require_xfs_io_error_injection "reduce_max_iextents"
-+_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
 +
 +echo "Format and mount fs"
-+_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full
-+_scratch_mount -o uquota >> $seqres.full
++_scratch_mkfs >> $seqres.full
++_scratch_mount >> $seqres.full
 +
 +bsize=$(_get_file_block_size $SCRATCH_MNT)
-+
-+echo "* Delalloc to written extent conversion"
++nr_blks=30
 +
 +testfile=$SCRATCH_MNT/testfile
 +
 +echo "Inject reduce_max_iextents error tag"
 +_scratch_inject_error reduce_max_iextents 1
 +
-+nr_blks=$((15 * 2))
++for op in fpunch finsert fcollapse fzero; do
++	echo "* $op regular file"
 +
-+echo "Create fragmented file"
-+for i in $(seq 0 2 $((nr_blks - 1))); do
-+	$XFS_IO_PROG -f -s -c "pwrite $((i * bsize)) $bsize" $testfile \
-+	       >> $seqres.full 2>&1
-+	[[ $? != 0 ]] && break
++	echo "Create \$testfile"
++	$XFS_IO_PROG -f -s \
++		     -c "pwrite -b $((nr_blks * bsize)) 0 $((nr_blks * bsize))" \
++		     $testfile  >> $seqres.full
++
++	echo "$op alternating blocks"
++	for i in $(seq 1 2 $((nr_blks - 1))); do
++		$XFS_IO_PROG -f -c "$op $((i * bsize)) $bsize" $testfile \
++		       >> $seqres.full 2>&1
++		[[ $? != 0 ]] && break
++	done
++
++	echo "Verify \$testfile's extent count"
++
++	nextents=$($XFS_IO_PROG -f -c 'stat' $testfile | grep -i nextents)
++	nextents=${nextents##fsxattr.nextents = }
++	if (( $nextents > 10 )); then
++		echo "Extent count overflow check failed: nextents = $nextents"
++		exit 1
++	fi
++
++	rm $testfile
 +done
-+
-+echo "Verify \$testfile's extent count"
-+
-+nextents=$($XFS_IO_PROG -f -c 'stat' $testfile | grep -i nextents)
-+nextents=${nextents##fsxattr.nextents = }
-+if (( $nextents > 10 )); then
-+	echo "Extent count overflow check failed: nextents = $nextents"
-+	exit 1
-+fi
-+
-+rm $testfile
-+
-+echo "* Fallocate unwritten extents"
-+
-+echo "Fallocate fragmented file"
-+for i in $(seq 0 2 $((nr_blks - 1))); do
-+	$XFS_IO_PROG -f -c "falloc $((i * bsize)) $bsize" $testfile \
-+	       >> $seqres.full 2>&1
-+	[[ $? != 0 ]] && break
-+done
-+
-+echo "Verify \$testfile's extent count"
-+
-+nextents=$($XFS_IO_PROG -f -c 'stat' $testfile | grep -i nextents)
-+nextents=${nextents##fsxattr.nextents = }
-+if (( $nextents > 10 )); then
-+	echo "Extent count overflow check failed: nextents = $nextents"
-+	exit 1
-+fi
-+
-+rm $testfile
-+
-+echo "* Directio write"
-+
-+echo "Create fragmented file via directio writes"
-+for i in $(seq 0 2 $((nr_blks - 1))); do
-+	$XFS_IO_PROG -d -s -f -c "pwrite $((i * bsize)) $bsize" $testfile \
-+	       >> $seqres.full 2>&1
-+	[[ $? != 0 ]] && break
-+done
-+
-+echo "Verify \$testfile's extent count"
-+
-+nextents=$($XFS_IO_PROG -f -c 'stat' $testfile | grep -i nextents)
-+nextents=${nextents##fsxattr.nextents = }
-+if (( $nextents > 10 )); then
-+	echo "Extent count overflow check failed: nextents = $nextents"
-+	exit 1
-+fi
-+
-+rm $testfile
-+
-+echo "* Extend quota inodes"
-+
-+echo "Disable reduce_max_iextents error tag"
-+_scratch_inject_error reduce_max_iextents 0
-+
-+echo "Consume free space"
-+fillerdir=$SCRATCH_MNT/fillerdir
-+nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
-+nr_free_blks=$((nr_free_blks * 90 / 100))
-+
-+_fill_fs $((bsize * nr_free_blks)) $fillerdir $bsize 0 >> $seqres.full 2>&1
-+
-+echo "Create fragmented filesystem"
-+for dentry in $(ls -1 $fillerdir/); do
-+	$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
-+done
-+
-+echo "Inject reduce_max_iextents error tag"
-+_scratch_inject_error reduce_max_iextents 1
-+
-+echo "Inject bmap_alloc_minlen_extent error tag"
-+_scratch_inject_error bmap_alloc_minlen_extent 1
-+
-+nr_blks=20
-+
-+# This is a rough calculation; It doesn't take block headers into
-+# consideration.
-+# gdb -batch vmlinux -ex 'print sizeof(struct xfs_dqblk)'
-+# $1 = 136
-+nr_quotas_per_block=$((bsize / 136))
-+nr_quotas=$((nr_quotas_per_block * nr_blks))
-+
-+echo "Extend uquota file"
-+for i in $(seq 0 $nr_quotas_per_block $nr_quotas); do
-+	chown $i $testfile >> $seqres.full 2>&1
-+	[[ $? != 0 ]] && break
-+done
-+
-+_scratch_unmount >> $seqres.full
-+
-+echo "Verify uquota inode's extent count"
-+uquotino=$(_scratch_xfs_db -c sb -c "print uquotino")
-+uquotino=${uquotino##uquotino = }
-+
-+nextents=$(_scratch_get_iext_count $uquotino data || \
-+		   _fail "Unable to obtain inode fork's extent count")
-+if (( $nextents > 10 )); then
-+	echo "Extent count overflow check failed: nextents = $nextents"
-+	exit 1
-+fi
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/522.out b/tests/xfs/522.out
+diff --git a/tests/xfs/524.out b/tests/xfs/524.out
 new file mode 100644
-index 00000000..debeb004
+index 00000000..a957f9c7
 --- /dev/null
-+++ b/tests/xfs/522.out
-@@ -0,0 +1,20 @@
-+QA output created by 522
++++ b/tests/xfs/524.out
+@@ -0,0 +1,19 @@
++QA output created by 524
 +Format and mount fs
-+* Delalloc to written extent conversion
 +Inject reduce_max_iextents error tag
-+Create fragmented file
++* fpunch regular file
++Create $testfile
++fpunch alternating blocks
 +Verify $testfile's extent count
-+* Fallocate unwritten extents
-+Fallocate fragmented file
++* finsert regular file
++Create $testfile
++finsert alternating blocks
 +Verify $testfile's extent count
-+* Directio write
-+Create fragmented file via directio writes
++* fcollapse regular file
++Create $testfile
++fcollapse alternating blocks
 +Verify $testfile's extent count
-+* Extend quota inodes
-+Disable reduce_max_iextents error tag
-+Consume free space
-+Create fragmented filesystem
-+Inject reduce_max_iextents error tag
-+Inject bmap_alloc_minlen_extent error tag
-+Extend uquota file
-+Verify uquota inode's extent count
++* fzero regular file
++Create $testfile
++fzero alternating blocks
++Verify $testfile's extent count
 diff --git a/tests/xfs/group b/tests/xfs/group
-index b89c0a4e..1831f0b5 100644
+index 018c70ef..3fa38c36 100644
 --- a/tests/xfs/group
 +++ b/tests/xfs/group
-@@ -519,3 +519,4 @@
- 519 auto quick reflink
- 520 auto quick reflink
+@@ -521,3 +521,4 @@
  521 auto quick realtime growfs
-+522 auto quick quota
+ 522 auto quick quota
+ 523 auto quick realtime growfs
++524 auto quick punch zero insert collapse
 -- 
 2.29.2
 
