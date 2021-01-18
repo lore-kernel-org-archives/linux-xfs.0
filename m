@@ -4,40 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 523EAC43331
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62E4FC4332E
 	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:14:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2961820707
+	by mail.kernel.org (Postfix) with ESMTP id 442E5207C4
 	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:14:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732635AbhARWOY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 17:14:24 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34496 "EHLO mail.kernel.org"
+        id S1733228AbhARWO2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 17:14:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34518 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388409AbhARWOP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Jan 2021 17:14:15 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9E6A322CB1;
-        Mon, 18 Jan 2021 22:13:34 +0000 (UTC)
+        id S2388459AbhARWOV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Jan 2021 17:14:21 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2DEA922E00;
+        Mon, 18 Jan 2021 22:13:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611008014;
-        bh=0Goao9Ew6xlrf3qTp3wQGkVFSlaIg3hHLqrzjvrrA/s=;
+        s=k20201202; t=1611008020;
+        bh=b9kMSQPxrOAbmf2n91BWeXLL6GT6Eiztb6Y4mmi79fo=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=CjraM4mqFm0Q9182CRtmWogVZJ0kB9cLHZFzGpKExvl5ONFyvAFa0+zZQgba34L7I
-         2LDRZE2xKX1iU6tidPgun2MPYpL4dqcUs3z9DxJc/PqMHFWXjMhPsp0XBFnW8jxk0f
-         zj4MUGvKlOzkTqyBP8veoCaZKmeMp2bdj0wINntqYVt7zrajomR04zspGb9lYSacuK
-         TWmU8uk+EgS9dCkKeMigMaIrKvQk+XHGz+RLPdF8BIwvn6yLzowFe/4EhMzM/NhSzI
-         Rg8BiY2X6KTRMnZreZee6U5YzDaCYlQDrPbZfx2eaxtpdAnmYNLUcMtHdjzye0aP7n
-         ctsGVR7UA/JRg==
-Subject: [PATCH 06/10] xfs: consolidate incore inode radix tree
- posteof/cowblocks tags
+        b=s1IFjEzfmxZM6trj4OyVXtC7voVVpzeZH916dbD26MjpLtUJkBGeqV3O0x0rtIuyu
+         IybjhNqMz5oW5GsRLtuwz2H19t2HAsMDiwxvhUyg4BBJQDfSRD9aMn27Z9VeGhl7ae
+         BF3jAqoIo0AJeEJi2KThLHL2DLu15adxDQanYzOyr0GlR5ppe1wzqoGIiQVEmgsO7R
+         RggUP6GP//GWVHuFOr/9TMTYcRdYPW+PYNjlWg1nHCw1AgsePV19VmyWJj0yfR3/Hc
+         3e5a2OwaTIm/Abpxg3kfGBG/wdOzK4//05um18uUNHPo2BmDqbf6NxVu5TrWG647pm
+         +R3uFFGhGnCyQ==
+Subject: [PATCH 07/10] xfs: consolidate the eofblocks and cowblocks workers
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Date:   Mon, 18 Jan 2021 14:13:34 -0800
-Message-ID: <161100801432.90204.7455040190450914889.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Mon, 18 Jan 2021 14:13:39 -0800
+Message-ID: <161100801985.90204.3010648139775304166.stgit@magnolia>
 In-Reply-To: <161100798100.90204.7839064495063223590.stgit@magnolia>
 References: <161100798100.90204.7839064495063223590.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,293 +49,356 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The clearing of posteof blocks and cowblocks serve the same purpose:
-removing speculative block preallocations from inactive files.  We don't
-need to burn two radix tree tags on this, so combine them into one.
+Remove the separate cowblocks work items and knob so that we can control
+and run everything from a single blockgc work queue.  Note that the
+speculative_prealloc_lifetime sysfs knob retains its historical name
+even though the functions move to prefix xfs_blockgc_*.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_icache.c |  114 ++++++++++++++++++++++++---------------------------
- fs/xfs/xfs_icache.h |    4 +-
- fs/xfs/xfs_trace.h  |    6 +--
- 3 files changed, 58 insertions(+), 66 deletions(-)
+ fs/xfs/xfs_globals.c |    7 ++--
+ fs/xfs/xfs_icache.c  |   96 ++++++++++++++++----------------------------------
+ fs/xfs/xfs_icache.h  |    6 +--
+ fs/xfs/xfs_linux.h   |    3 +-
+ fs/xfs/xfs_mount.h   |    6 +--
+ fs/xfs/xfs_super.c   |   11 +++---
+ fs/xfs/xfs_sysctl.c  |   15 ++------
+ fs/xfs/xfs_sysctl.h  |    3 +-
+ 8 files changed, 48 insertions(+), 99 deletions(-)
 
 
+diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+index fa55ab8b8d80..f62fa652c2fd 100644
+--- a/fs/xfs/xfs_globals.c
++++ b/fs/xfs/xfs_globals.c
+@@ -8,8 +8,8 @@
+ /*
+  * Tunable XFS parameters.  xfs_params is required even when CONFIG_SYSCTL=n,
+  * other XFS code uses these values.  Times are measured in centisecs (i.e.
+- * 100ths of a second) with the exception of eofb_timer and cowb_timer, which
+- * are measured in seconds.
++ * 100ths of a second) with the exception of blockgc_timer, which is measured
++ * in seconds.
+  */
+ xfs_param_t xfs_params = {
+ 			  /*	MIN		DFLT		MAX	*/
+@@ -28,8 +28,7 @@ xfs_param_t xfs_params = {
+ 	.rotorstep	= {	1,		1,		255	},
+ 	.inherit_nodfrg	= {	0,		1,		1	},
+ 	.fstrm_timer	= {	1,		30*100,		3600*100},
+-	.eofb_timer	= {	1,		300,		3600*24},
+-	.cowb_timer	= {	1,		1800,		3600*24},
++	.blockgc_timer	= {	1,		300,		3600*24},
+ };
+ 
+ struct xfs_globals xfs_globals = {
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 1d06dcc4339e..8b7d73121739 100644
+index 8b7d73121739..cb53a0c2221d 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1291,6 +1291,9 @@ xfs_inode_free_eofblocks(
- 
- 	wait = eofb && (eofb->eof_flags & XFS_EOF_FLAGS_SYNC);
- 
-+	if (!xfs_iflags_test(ip, XFS_IEOFBLOCKS))
-+		return 0;
-+
- 	if (!xfs_can_free_eofblocks(ip, false)) {
- 		/* inode could be preallocated or append-only */
- 		trace_xfs_inode_free_eofblocks_invalid(ip);
-@@ -1333,7 +1336,7 @@ xfs_queue_eofblocks(
- 	struct xfs_mount *mp)
- {
- 	rcu_read_lock();
--	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_EOFBLOCKS_TAG))
-+	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_BLOCKGC_TAG))
- 		queue_delayed_work(mp->m_eofblocks_workqueue,
- 				   &mp->m_eofblocks_work,
- 				   msecs_to_jiffies(xfs_eofb_secs * 1000));
-@@ -1350,67 +1353,54 @@ xfs_eofblocks_worker(
- 	if (!sb_start_write_trylock(mp->m_super))
- 		return;
- 	xfs_inode_walk(mp, 0, xfs_inode_free_eofblocks, NULL,
--			XFS_ICI_EOFBLOCKS_TAG);
-+			XFS_ICI_BLOCKGC_TAG);
- 	sb_end_write(mp->m_super);
- 
- 	xfs_queue_eofblocks(mp);
+@@ -1328,41 +1328,24 @@ xfs_inode_free_eofblocks(
  }
  
--static inline unsigned long
--xfs_iflag_for_tag(
--	int		tag)
+ /*
+- * Background scanning to trim post-EOF preallocated space. This is queued
+- * based on the 'speculative_prealloc_lifetime' tunable (5m by default).
++ * Background scanning to trim preallocated space. This is queued based on the
++ * 'speculative_prealloc_lifetime' tunable (5m by default).
+  */
+-void
+-xfs_queue_eofblocks(
+-	struct xfs_mount *mp)
++static inline void
++xfs_blockgc_queue(
++	struct xfs_mount	*mp)
+ {
+ 	rcu_read_lock();
+ 	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_BLOCKGC_TAG))
+-		queue_delayed_work(mp->m_eofblocks_workqueue,
+-				   &mp->m_eofblocks_work,
+-				   msecs_to_jiffies(xfs_eofb_secs * 1000));
++		queue_delayed_work(mp->m_blockgc_workqueue,
++				   &mp->m_blockgc_work,
++				   msecs_to_jiffies(xfs_blockgc_secs * 1000));
+ 	rcu_read_unlock();
+ }
+ 
+-void
+-xfs_eofblocks_worker(
+-	struct work_struct *work)
 -{
--	switch (tag) {
--	case XFS_ICI_EOFBLOCKS_TAG:
--		return XFS_IEOFBLOCKS;
--	case XFS_ICI_COWBLOCKS_TAG:
--		return XFS_ICOWBLOCKS;
--	default:
--		ASSERT(0);
--		return 0;
--	}
+-	struct xfs_mount *mp = container_of(to_delayed_work(work),
+-				struct xfs_mount, m_eofblocks_work);
+-
+-	if (!sb_start_write_trylock(mp->m_super))
+-		return;
+-	xfs_inode_walk(mp, 0, xfs_inode_free_eofblocks, NULL,
+-			XFS_ICI_BLOCKGC_TAG);
+-	sb_end_write(mp->m_super);
+-
+-	xfs_queue_eofblocks(mp);
 -}
 -
  static void
--__xfs_inode_set_blocks_tag(
--	xfs_inode_t	*ip,
--	void		(*execute)(struct xfs_mount *mp),
--	void		(*set_tp)(struct xfs_mount *mp, xfs_agnumber_t agno,
--				  int error, unsigned long caller_ip),
--	int		tag)
-+xfs_blockgc_set_iflag(
-+	struct xfs_inode	*ip,
-+	void			(*execute)(struct xfs_mount *mp),
-+	unsigned long		iflag)
+ xfs_blockgc_set_iflag(
+ 	struct xfs_inode	*ip,
+-	void			(*execute)(struct xfs_mount *mp),
+ 	unsigned long		iflag)
  {
--	struct xfs_mount *mp = ip->i_mount;
--	struct xfs_perag *pag;
--	int tagged;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_perag	*pag;
-+	int			tagged;
-+
-+	ASSERT((iflag & ~(XFS_IEOFBLOCKS | XFS_ICOWBLOCKS)) == 0);
- 
- 	/*
- 	 * Don't bother locking the AG and looking up in the radix trees
- 	 * if we already know that we have the tag set.
- 	 */
--	if (ip->i_flags & xfs_iflag_for_tag(tag))
-+	if (ip->i_flags & iflag)
- 		return;
- 	spin_lock(&ip->i_flags_lock);
--	ip->i_flags |= xfs_iflag_for_tag(tag);
-+	ip->i_flags |= iflag;
- 	spin_unlock(&ip->i_flags_lock);
- 
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
- 	spin_lock(&pag->pag_ici_lock);
- 
--	tagged = radix_tree_tagged(&pag->pag_ici_root, tag);
-+	tagged = radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG);
- 	radix_tree_tag_set(&pag->pag_ici_root,
--			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino), tag);
-+			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
-+			   XFS_ICI_BLOCKGC_TAG);
- 	if (!tagged) {
--		/* propagate the eofblocks tag up into the perag radix tree */
-+		/* propagate the blockgc tag up into the perag radix tree */
- 		spin_lock(&ip->i_mount->m_perag_lock);
- 		radix_tree_tag_set(&ip->i_mount->m_perag_tree,
- 				   XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
--				   tag);
-+				   XFS_ICI_BLOCKGC_TAG);
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -1397,7 +1380,7 @@ xfs_blockgc_set_iflag(
  		spin_unlock(&ip->i_mount->m_perag_lock);
  
  		/* kick off background trimming */
- 		execute(ip->i_mount);
+-		execute(ip->i_mount);
++		xfs_blockgc_queue(ip->i_mount);
  
--		set_tp(ip->i_mount, pag->pag_agno, -1, _RET_IP_);
-+		trace_xfs_perag_set_blockgc(ip->i_mount, pag->pag_agno, -1,
-+				_RET_IP_);
- 	}
- 
- 	spin_unlock(&pag->pag_ici_lock);
-@@ -1422,38 +1412,43 @@ xfs_inode_set_eofblocks_tag(
+ 		trace_xfs_perag_set_blockgc(ip->i_mount, pag->pag_agno, -1,
+ 				_RET_IP_);
+@@ -1412,7 +1395,7 @@ xfs_inode_set_eofblocks_tag(
  	xfs_inode_t	*ip)
  {
  	trace_xfs_inode_set_eofblocks_tag(ip);
--	return __xfs_inode_set_blocks_tag(ip, xfs_queue_eofblocks,
--			trace_xfs_perag_set_eofblocks,
--			XFS_ICI_EOFBLOCKS_TAG);
-+	return xfs_blockgc_set_iflag(ip, xfs_queue_eofblocks, XFS_IEOFBLOCKS);
+-	return xfs_blockgc_set_iflag(ip, xfs_queue_eofblocks, XFS_IEOFBLOCKS);
++	return xfs_blockgc_set_iflag(ip, XFS_IEOFBLOCKS);
  }
  
  static void
--__xfs_inode_clear_blocks_tag(
--	xfs_inode_t	*ip,
--	void		(*clear_tp)(struct xfs_mount *mp, xfs_agnumber_t agno,
--				    int error, unsigned long caller_ip),
--	int		tag)
-+xfs_blockgc_clear_iflag(
-+	struct xfs_inode	*ip,
-+	unsigned long		iflag)
- {
--	struct xfs_mount *mp = ip->i_mount;
--	struct xfs_perag *pag;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_perag	*pag;
-+	bool			clear_tag;
-+
-+	ASSERT((iflag & ~(XFS_IEOFBLOCKS | XFS_ICOWBLOCKS)) == 0);
- 
- 	spin_lock(&ip->i_flags_lock);
--	ip->i_flags &= ~xfs_iflag_for_tag(tag);
-+	ip->i_flags &= ~iflag;
-+	clear_tag = (ip->i_flags & (XFS_IEOFBLOCKS | XFS_ICOWBLOCKS)) == 0;
- 	spin_unlock(&ip->i_flags_lock);
- 
-+	if (!clear_tag)
-+		return;
-+
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
- 	spin_lock(&pag->pag_ici_lock);
- 
- 	radix_tree_tag_clear(&pag->pag_ici_root,
--			     XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino), tag);
--	if (!radix_tree_tagged(&pag->pag_ici_root, tag)) {
--		/* clear the eofblocks tag from the perag radix tree */
-+			     XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
-+			     XFS_ICI_BLOCKGC_TAG);
-+	if (!radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG)) {
-+		/* clear the blockgc tag from the perag radix tree */
- 		spin_lock(&ip->i_mount->m_perag_lock);
- 		radix_tree_tag_clear(&ip->i_mount->m_perag_tree,
- 				     XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
--				     tag);
-+				     XFS_ICI_BLOCKGC_TAG);
- 		spin_unlock(&ip->i_mount->m_perag_lock);
--		clear_tp(ip->i_mount, pag->pag_agno, -1, _RET_IP_);
-+		trace_xfs_perag_clear_blockgc(ip->i_mount, pag->pag_agno, -1,
-+				_RET_IP_);
- 	}
- 
- 	spin_unlock(&pag->pag_ici_lock);
-@@ -1465,8 +1460,7 @@ xfs_inode_clear_eofblocks_tag(
- 	xfs_inode_t	*ip)
- {
- 	trace_xfs_inode_clear_eofblocks_tag(ip);
--	return __xfs_inode_clear_blocks_tag(ip,
--			trace_xfs_perag_clear_eofblocks, XFS_ICI_EOFBLOCKS_TAG);
-+	return xfs_blockgc_clear_iflag(ip, XFS_IEOFBLOCKS);
+@@ -1556,45 +1539,12 @@ xfs_inode_free_cowblocks(
+ 	return ret;
  }
  
- /*
-@@ -1524,6 +1518,9 @@ xfs_inode_free_cowblocks(
- 
- 	wait = eofb && (eofb->eof_flags & XFS_EOF_FLAGS_SYNC);
- 
-+	if (!xfs_iflags_test(ip, XFS_ICOWBLOCKS))
-+		return 0;
-+
- 	if (!xfs_prep_free_cowblocks(ip))
- 		return 0;
- 
-@@ -1569,7 +1566,7 @@ xfs_queue_cowblocks(
- 	struct xfs_mount *mp)
- {
- 	rcu_read_lock();
--	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_COWBLOCKS_TAG))
-+	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_BLOCKGC_TAG))
- 		queue_delayed_work(mp->m_eofblocks_workqueue,
- 				   &mp->m_cowblocks_work,
- 				   msecs_to_jiffies(xfs_cowb_secs * 1000));
-@@ -1586,7 +1583,7 @@ xfs_cowblocks_worker(
- 	if (!sb_start_write_trylock(mp->m_super))
- 		return;
- 	xfs_inode_walk(mp, 0, xfs_inode_free_cowblocks, NULL,
--			XFS_ICI_COWBLOCKS_TAG);
-+			XFS_ICI_BLOCKGC_TAG);
- 	sb_end_write(mp->m_super);
- 
- 	xfs_queue_cowblocks(mp);
-@@ -1597,9 +1594,7 @@ xfs_inode_set_cowblocks_tag(
+-/*
+- * Background scanning to trim preallocated CoW space. This is queued
+- * based on the 'speculative_cow_prealloc_lifetime' tunable (5m by default).
+- * (We'll just piggyback on the post-EOF prealloc space workqueue.)
+- */
+-void
+-xfs_queue_cowblocks(
+-	struct xfs_mount *mp)
+-{
+-	rcu_read_lock();
+-	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_BLOCKGC_TAG))
+-		queue_delayed_work(mp->m_eofblocks_workqueue,
+-				   &mp->m_cowblocks_work,
+-				   msecs_to_jiffies(xfs_cowb_secs * 1000));
+-	rcu_read_unlock();
+-}
+-
+-void
+-xfs_cowblocks_worker(
+-	struct work_struct *work)
+-{
+-	struct xfs_mount *mp = container_of(to_delayed_work(work),
+-				struct xfs_mount, m_cowblocks_work);
+-
+-	if (!sb_start_write_trylock(mp->m_super))
+-		return;
+-	xfs_inode_walk(mp, 0, xfs_inode_free_cowblocks, NULL,
+-			XFS_ICI_BLOCKGC_TAG);
+-	sb_end_write(mp->m_super);
+-
+-	xfs_queue_cowblocks(mp);
+-}
+-
+ void
+ xfs_inode_set_cowblocks_tag(
  	xfs_inode_t	*ip)
  {
  	trace_xfs_inode_set_cowblocks_tag(ip);
--	return __xfs_inode_set_blocks_tag(ip, xfs_queue_cowblocks,
--			trace_xfs_perag_set_cowblocks,
--			XFS_ICI_COWBLOCKS_TAG);
-+	return xfs_blockgc_set_iflag(ip, xfs_queue_cowblocks, XFS_ICOWBLOCKS);
+-	return xfs_blockgc_set_iflag(ip, xfs_queue_cowblocks, XFS_ICOWBLOCKS);
++	return xfs_blockgc_set_iflag(ip, XFS_ICOWBLOCKS);
  }
  
  void
-@@ -1607,8 +1602,7 @@ xfs_inode_clear_cowblocks_tag(
- 	xfs_inode_t	*ip)
+@@ -1610,8 +1560,7 @@ void
+ xfs_stop_block_reaping(
+ 	struct xfs_mount	*mp)
  {
- 	trace_xfs_inode_clear_cowblocks_tag(ip);
--	return __xfs_inode_clear_blocks_tag(ip,
--			trace_xfs_perag_clear_cowblocks, XFS_ICI_COWBLOCKS_TAG);
-+	return xfs_blockgc_clear_iflag(ip, XFS_ICOWBLOCKS);
+-	cancel_delayed_work_sync(&mp->m_eofblocks_work);
+-	cancel_delayed_work_sync(&mp->m_cowblocks_work);
++	cancel_delayed_work_sync(&mp->m_blockgc_work);
  }
  
- /* Disable post-EOF and CoW block auto-reclamation. */
-@@ -1638,12 +1632,12 @@ xfs_blockgc_scan(
- 	int			error;
+ /* Enable post-EOF and CoW block auto-reclamation. */
+@@ -1619,8 +1568,7 @@ void
+ xfs_start_block_reaping(
+ 	struct xfs_mount	*mp)
+ {
+-	xfs_queue_eofblocks(mp);
+-	xfs_queue_cowblocks(mp);
++	xfs_blockgc_queue(mp);
+ }
  
- 	error = xfs_inode_walk(mp, 0, xfs_inode_free_eofblocks, eofb,
--			XFS_ICI_EOFBLOCKS_TAG);
-+			XFS_ICI_BLOCKGC_TAG);
- 	if (error)
- 		return error;
+ /* Scan all incore inodes for block preallocations that we can remove. */
+@@ -1644,6 +1592,24 @@ xfs_blockgc_scan(
+ 	return 0;
+ }
  
- 	error = xfs_inode_walk(mp, 0, xfs_inode_free_cowblocks, eofb,
--			XFS_ICI_COWBLOCKS_TAG);
-+			XFS_ICI_BLOCKGC_TAG);
- 	if (error)
- 		return error;
- 
++/* Background worker that trims preallocated space. */
++void
++xfs_blockgc_worker(
++	struct work_struct	*work)
++{
++	struct xfs_mount	*mp = container_of(to_delayed_work(work),
++					struct xfs_mount, m_blockgc_work);
++	int			error;
++
++	if (!sb_start_write_trylock(mp->m_super))
++		return;
++	error = xfs_blockgc_scan(mp, NULL);
++	if (error)
++		xfs_info(mp, "preallocation gc worker failed, err=%d", error);
++	sb_end_write(mp->m_super);
++	xfs_blockgc_queue(mp);
++}
++
+ /*
+  * Try to free space in the filesystem by purging eofblocks and cowblocks.
+  */
 diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index a48c70008e5c..df22bf4b65bb 100644
+index df22bf4b65bb..e5c3306da05b 100644
 --- a/fs/xfs/xfs_icache.h
 +++ b/fs/xfs/xfs_icache.h
-@@ -23,8 +23,8 @@ struct xfs_eofblocks {
- #define XFS_ICI_NO_TAG		(-1)	/* special flag for an untagged lookup
- 					   in xfs_inode_walk */
- #define XFS_ICI_RECLAIM_TAG	0	/* inode is to be reclaimed */
--#define XFS_ICI_EOFBLOCKS_TAG	1	/* inode has blocks beyond EOF */
--#define XFS_ICI_COWBLOCKS_TAG	2	/* inode can have cow blocks to gc */
-+/* Inode has speculative preallocations (posteof or cow) to clean. */
-+#define XFS_ICI_BLOCKGC_TAG	1
+@@ -63,13 +63,11 @@ int xfs_blockgc_free_space(struct xfs_mount *mp, struct xfs_eofblocks *eofb);
+ 
+ void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
+ void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
+-void xfs_eofblocks_worker(struct work_struct *);
+-void xfs_queue_eofblocks(struct xfs_mount *);
+ 
+ void xfs_inode_set_cowblocks_tag(struct xfs_inode *ip);
+ void xfs_inode_clear_cowblocks_tag(struct xfs_inode *ip);
+-void xfs_cowblocks_worker(struct work_struct *);
+-void xfs_queue_cowblocks(struct xfs_mount *);
++
++void xfs_blockgc_worker(struct work_struct *work);
+ 
+ int xfs_inode_walk(struct xfs_mount *mp, int iter_flags,
+ 	int (*execute)(struct xfs_inode *ip, void *args),
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 5b7a1e201559..af6be9b9ccdf 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -98,8 +98,7 @@ typedef __u32			xfs_nlink_t;
+ #define xfs_rotorstep		xfs_params.rotorstep.val
+ #define xfs_inherit_nodefrag	xfs_params.inherit_nodfrg.val
+ #define xfs_fstrm_centisecs	xfs_params.fstrm_timer.val
+-#define xfs_eofb_secs		xfs_params.eofb_timer.val
+-#define xfs_cowb_secs		xfs_params.cowb_timer.val
++#define xfs_blockgc_secs	xfs_params.blockgc_timer.val
+ 
+ #define current_cpu()		(raw_smp_processor_id())
+ #define current_set_flags_nested(sp, f)		\
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index dfa429b77ee2..e625bece169b 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -93,7 +93,7 @@ typedef struct xfs_mount {
+ 	struct workqueue_struct	*m_unwritten_workqueue;
+ 	struct workqueue_struct	*m_cil_workqueue;
+ 	struct workqueue_struct	*m_reclaim_workqueue;
+-	struct workqueue_struct *m_eofblocks_workqueue;
++	struct workqueue_struct *m_blockgc_workqueue;
+ 	struct workqueue_struct	*m_sync_workqueue;
+ 
+ 	int			m_bsize;	/* fs logical block size */
+@@ -177,9 +177,7 @@ typedef struct xfs_mount {
+ 	uint64_t		m_resblks_avail;/* available reserved blocks */
+ 	uint64_t		m_resblks_save;	/* reserved blks @ remount,ro */
+ 	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
+-	struct delayed_work	m_eofblocks_work; /* background eof blocks
+-						     trimming */
+-	struct delayed_work	m_cowblocks_work; /* background cow blocks
++	struct delayed_work	m_blockgc_work; /* background prealloc blocks
+ 						     trimming */
+ 	struct xfs_kobj		m_kobj;
+ 	struct xfs_kobj		m_error_kobj;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index d17fbdb2a656..89a6c9bf6ae9 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -515,9 +515,9 @@ xfs_init_mount_workqueues(
+ 	if (!mp->m_reclaim_workqueue)
+ 		goto out_destroy_cil;
+ 
+-	mp->m_eofblocks_workqueue = alloc_workqueue("xfs-eofblocks/%s",
++	mp->m_blockgc_workqueue = alloc_workqueue("xfs-blockgc/%s",
+ 			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_super->s_id);
+-	if (!mp->m_eofblocks_workqueue)
++	if (!mp->m_blockgc_workqueue)
+ 		goto out_destroy_reclaim;
+ 
+ 	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s", WQ_FREEZABLE, 0,
+@@ -528,7 +528,7 @@ xfs_init_mount_workqueues(
+ 	return 0;
+ 
+ out_destroy_eofb:
+-	destroy_workqueue(mp->m_eofblocks_workqueue);
++	destroy_workqueue(mp->m_blockgc_workqueue);
+ out_destroy_reclaim:
+ 	destroy_workqueue(mp->m_reclaim_workqueue);
+ out_destroy_cil:
+@@ -546,7 +546,7 @@ xfs_destroy_mount_workqueues(
+ 	struct xfs_mount	*mp)
+ {
+ 	destroy_workqueue(mp->m_sync_workqueue);
+-	destroy_workqueue(mp->m_eofblocks_workqueue);
++	destroy_workqueue(mp->m_blockgc_workqueue);
+ 	destroy_workqueue(mp->m_reclaim_workqueue);
+ 	destroy_workqueue(mp->m_cil_workqueue);
+ 	destroy_workqueue(mp->m_unwritten_workqueue);
+@@ -1872,8 +1872,7 @@ static int xfs_init_fs_context(
+ 	mutex_init(&mp->m_growlock);
+ 	INIT_WORK(&mp->m_flush_inodes_work, xfs_flush_inodes_worker);
+ 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+-	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
+-	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
++	INIT_DELAYED_WORK(&mp->m_blockgc_work, xfs_blockgc_worker);
+ 	mp->m_kobj.kobject.kset = xfs_kset;
+ 	/*
+ 	 * We don't create the finobt per-ag space reservation until after log
+diff --git a/fs/xfs/xfs_sysctl.c b/fs/xfs/xfs_sysctl.c
+index fac9de7ee6d0..145e06c47744 100644
+--- a/fs/xfs/xfs_sysctl.c
++++ b/fs/xfs/xfs_sysctl.c
+@@ -194,21 +194,12 @@ static struct ctl_table xfs_table[] = {
+ 	},
+ 	{
+ 		.procname	= "speculative_prealloc_lifetime",
+-		.data		= &xfs_params.eofb_timer.val,
++		.data		= &xfs_params.blockgc_timer.val,
+ 		.maxlen		= sizeof(int),
+ 		.mode		= 0644,
+ 		.proc_handler	= proc_dointvec_minmax,
+-		.extra1		= &xfs_params.eofb_timer.min,
+-		.extra2		= &xfs_params.eofb_timer.max,
+-	},
+-	{
+-		.procname	= "speculative_cow_prealloc_lifetime",
+-		.data		= &xfs_params.cowb_timer.val,
+-		.maxlen		= sizeof(int),
+-		.mode		= 0644,
+-		.proc_handler	= proc_dointvec_minmax,
+-		.extra1		= &xfs_params.cowb_timer.min,
+-		.extra2		= &xfs_params.cowb_timer.max,
++		.extra1		= &xfs_params.blockgc_timer.min,
++		.extra2		= &xfs_params.blockgc_timer.max,
+ 	},
+ 	/* please keep this the last entry */
+ #ifdef CONFIG_PROC_FS
+diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
+index 8abf4640f1d5..7692e76ead33 100644
+--- a/fs/xfs/xfs_sysctl.h
++++ b/fs/xfs/xfs_sysctl.h
+@@ -35,8 +35,7 @@ typedef struct xfs_param {
+ 	xfs_sysctl_val_t rotorstep;	/* inode32 AG rotoring control knob */
+ 	xfs_sysctl_val_t inherit_nodfrg;/* Inherit the "nodefrag" inode flag. */
+ 	xfs_sysctl_val_t fstrm_timer;	/* Filestream dir-AG assoc'n timeout. */
+-	xfs_sysctl_val_t eofb_timer;	/* Interval between eofb scan wakeups */
+-	xfs_sysctl_val_t cowb_timer;	/* Interval between cowb scan wakeups */
++	xfs_sysctl_val_t blockgc_timer;	/* Interval between blockgc scans */
+ } xfs_param_t;
  
  /*
-  * Flags for xfs_iget()
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 7ec9d4d703a6..2ffe55f36b47 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -155,10 +155,8 @@ DEFINE_PERAG_REF_EVENT(xfs_perag_get_tag);
- DEFINE_PERAG_REF_EVENT(xfs_perag_put);
- DEFINE_PERAG_REF_EVENT(xfs_perag_set_reclaim);
- DEFINE_PERAG_REF_EVENT(xfs_perag_clear_reclaim);
--DEFINE_PERAG_REF_EVENT(xfs_perag_set_eofblocks);
--DEFINE_PERAG_REF_EVENT(xfs_perag_clear_eofblocks);
--DEFINE_PERAG_REF_EVENT(xfs_perag_set_cowblocks);
--DEFINE_PERAG_REF_EVENT(xfs_perag_clear_cowblocks);
-+DEFINE_PERAG_REF_EVENT(xfs_perag_set_blockgc);
-+DEFINE_PERAG_REF_EVENT(xfs_perag_clear_blockgc);
- 
- DECLARE_EVENT_CLASS(xfs_ag_class,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno),
 
