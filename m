@@ -2,64 +2,67 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 479BEC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:52:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78945C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:52:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D77022CA1
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:52:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B3E222C9D
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:52:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437376AbhARTvu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 14:51:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49396 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2437773AbhARTvf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Jan 2021 14:51:35 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B0A0E22257;
-        Mon, 18 Jan 2021 19:50:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610999454;
-        bh=u4gd8b0U9dSoeofG9PQy35/GhV9TdEDK/yGXrzNYi6o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sUlFkVIsX1BVWTpFNu9b8u4bpmf561ynitaD0UFCVT0KHmDxBDiHDoEk0PkrVMJAq
-         pv/Dpl6aOc321oeAjeyPYv+LBn7EJ2UXnRcQcvUXP98iSnVe70it7LyeLGgTHuThyV
-         j9W96A9Uk0lULOyQsEOrX9I1RQqfK3dUhNQ+bBmRyfgqKKDngk3jfG7dbRSUoXP8sn
-         H6f2BGLqXih39PhzQTXY/nWeszUfJoxADk1C5mfL2i1rrCQPTM6hhIifH6gRZdDJZU
-         o9PmbjI46UyVe9jMqctDH1UUds/aL7EsiEG+SMy26hwL80TsxSQMV52uB9mBE6zTDW
-         yS3/IDvyN0fbQ==
-Date:   Mon, 18 Jan 2021 11:50:54 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: hide most of the incore inode walk interface
-Message-ID: <20210118195054.GK3134581@magnolia>
+        id S2437470AbhARTwE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 14:52:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38846 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2437175AbhARTwB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 14:52:01 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4EE5C061573
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Jan 2021 11:51:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=ubl3+NtdOJfGNKhQld4kYcV65Z+k11p6erna1oaxhdY=; b=dNRvjDK2kSUz/Dmai4xUyAQ2q8
+        8Nim/zajzFg2rgwDmiL5gmRjBpPB1iNtJ9Ex1Tq9ZBzxLbTfTBcRwzWz8xHocNBshHOs76u7ZEnxy
+        BN0UyOnFZWWbDjCfwnU9aUTLy05Fc3leKTvwQrkh+gQzknBYxH3ef0Z6sGv/wez4pP7YlYF9k5Rf3
+        KvMZ13pyKOmXQXZPahkqLotI2pDSlvUyowDCdYhm7uoc+WHHn39HblhuM6L1lyCOw2Y3SwnJWKJQ0
+        aLZ3VmmwVqZQQMdQP5h3APfGr5vhhes8FCpb77gRhJO2z5nqx5/cyamsCdF0eWsxvhGX49TcsIHsQ
+        09CVF1hg==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1l1aYJ-00DJvN-NK; Mon, 18 Jan 2021 19:51:13 +0000
+Date:   Mon, 18 Jan 2021 19:51:03 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/6] xfs: don't stall cowblocks scan if we can't take
+ locks
+Message-ID: <20210118195103.GA3174212@infradead.org>
 References: <161040735389.1582114.15084485390769234805.stgit@magnolia>
- <161040736028.1582114.17043927663737160536.stgit@magnolia>
- <X/8E6jcpKD6TzUO7@infradead.org>
+ <161040737263.1582114.4973977520111925461.stgit@magnolia>
+ <X/8HLQGzXSbC2IIn@infradead.org>
+ <20210114215453.GG1164246@magnolia>
+ <20210118173412.GA3134885@infradead.org>
+ <20210118193718.GI3134581@magnolia>
+ <20210118193958.GA3171275@infradead.org>
+ <20210118194422.GJ3134581@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <X/8E6jcpKD6TzUO7@infradead.org>
+In-Reply-To: <20210118194422.GJ3134581@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 13, 2021 at 03:34:18PM +0100, Christoph Hellwig wrote:
-> On Mon, Jan 11, 2021 at 03:22:40PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Hide the incore inode walk interface because callers outside of the
-> > icache code don't need to know about iter_flags and radix tags and other
-> > implementation details of the incore inode cache.
-> 
-> This looks correct, but I'm still rather lukewarm on all the extra code
-> just to hide a single flags argument.
+On Mon, Jan 18, 2021 at 11:44:22AM -0800, Darrick J. Wong wrote:
+> D'oh.  I tried making that change, but ran into the problem that *args
+> isn't necessarily an eofb structure, and xfs_qm_dqrele_all_inodes passes
+> a uint pointer.  I could define a new XFS_INODE_WALK_SYNC flag and
+> update the blockgc callers to set that if EOF_FLAGS_SYNC is set...
 
-Yeah, I looked at the extra patches that are now in this series to deal
-with the cleanups mentioned in other review comments and decided to drop
-this.
-
---D
+That does actually sound cleaner to me, but I don't want to burden that
+work on you.  Feel free to stick to the current version and we can
+clean this up later.
