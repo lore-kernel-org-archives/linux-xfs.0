@@ -2,116 +2,266 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBAFFC433DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 20:03:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FE9AC433DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 20:03:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 848F322C9D
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 20:03:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E34EB22B49
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 20:03:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437702AbhARUDF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 15:03:05 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:31356 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2437800AbhARUC6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 15:02:58 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611000089;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CRU3/z6+AU5PH5tPnFaH5EDbP82Ap0b58KhWRQdCdA4=;
-        b=I+qyU8w/YgL3KjRmEzTPGetBmmom1W3HDZO7x2r7mh1A1KgBQ495awu3gMrDEI5s8JORBW
-        y94ZTktEg5Uym+J3Zs/PjbxxAtF+iPIBp19Q2SA5PmgBKsulfxmNERN1VbRCDCwnK0bm5m
-        onO2r3t+/SgOog9xMqcPU1US20JQauw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-418-bxiMWi4aPseGotF_UllEsw-1; Mon, 18 Jan 2021 15:01:27 -0500
-X-MC-Unique: bxiMWi4aPseGotF_UllEsw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 005F6192FDA2;
-        Mon, 18 Jan 2021 20:01:26 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A41AE5E1A8;
-        Mon, 18 Jan 2021 20:01:25 +0000 (UTC)
-Date:   Mon, 18 Jan 2021 15:01:23 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: assertation failures in generic/388
-Message-ID: <20210118200123.GA1537873@bfoster>
-References: <20210118192547.GA3167248@infradead.org>
+        id S2437721AbhARUDT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 15:03:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41066 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2437882AbhARUCP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 15:02:15 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C995C061574;
+        Mon, 18 Jan 2021 12:01:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=p0cORD1RPUmhWWSnG/FGqT6kyVoIKDSSa6QISQ0aNrM=; b=Ys0fCfHxyQmA+vM8whfvU68fmm
+        70PdG28B6/0ZXaBcRT7UKK1NdmZa9Ki0V145psoNHR7gC7ZZFpa/XGwaGwYiITabntStgn25F/vpp
+        rdT1fh13vgGzLrsQM6wg8Cm2QeJtg3ROAKslkKeWUDQBDdnXVw92/LmOGq8+i7VuvtG+jiRWJlSpb
+        ytRdF0/3J8ftJZ8CdTLkPGIyok46EygTshorc+a7easqc4UtVvpW/tiyv4o4c4R5CaNo/LLE1p/0n
+        lZe6QV+AH0b1aww2ezoQ9kyNu1b6h/CwKR6q+2qcGYlgrJrd+wNhwpd/k4nY1sDATInBBCRPHwSxT
+        RXDWR4ag==;
+Received: from [2001:4bb8:188:1954:cede:2e6d:2fd9:db4d] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1l1aiO-00DKer-ED; Mon, 18 Jan 2021 20:01:30 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     linux-xfs@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, avi@scylladb.com,
+        Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH 11/11] xfs: reduce exclusive locking on unaligned dio
+Date:   Mon, 18 Jan 2021 20:35:16 +0100
+Message-Id: <20210118193516.2915706-12-hch@lst.de>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210118193516.2915706-1-hch@lst.de>
+References: <20210118193516.2915706-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210118192547.GA3167248@infradead.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 18, 2021 at 07:25:47PM +0000, Christoph Hellwig wrote:
-> Hi all,
-> 
-> latest Linus' tree crashes every few runs for me when running on x86_64,
-> 4k block size, virtio-blk, CONFIG_XFS_DEBUG enabled:
-> 
-> Dmesg:
-> [   93.950923] XFS: Assertion failed: percpu_counter_compare(&mp->m_ifree, 0) >5
+From: Dave Chinner <dchinner@redhat.com>
 
-This is likely fixed by the first patch [1] in my log covering rework
-series. generic/388 was recently modified to reproduce.
+Attempt shared locking for unaligned DIO, but only if the the
+underlying extent is already allocated and in written state. On
+failure, retry with the existing exclusive locking.
 
-Brian
+Test case is fio randrw of 512 byte IOs using AIO and an iodepth of
+32 IOs.
 
-[1] https://lore.kernel.org/linux-xfs/20210106174127.805660-2-bfoster@redhat.com/
+Vanilla:
 
-> [   93.953038] ------------[ cut here ]------------
-> [   93.953688] kernel BUG at fs/xfs/xfs_message.c:110!
-> [   93.954960] invalid opcode: 0000 [#1] PREEMPT SMP PTI
-> [   93.955765] CPU: 2 PID: 5064 Comm: fsstress Not tainted 5.11.0-rc4 #445
-> [   93.956857] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.144
-> [   93.958310] RIP: 0010:assfail+0x1e/0x23
-> [   93.958912] Code: a0 87 04 83 e8 85 fc ff ff 0f 0b c3 41 89 c8 48 89 d1 48 84
-> [   93.962114] RSP: 0018:ffffc90002dc3a40 EFLAGS: 00010202
-> [   93.962828] RAX: 0000000000000000 RBX: ffff88810ce39000 RCX: 0000000000000000
-> [   93.963809] RDX: 00000000ffffffc0 RSI: 0000000000000000 RDI: ffffffff82fb4471
-> [   93.964799] RBP: ffff88810d7d0258 R08: 0000000000000000 R09: 000000000000000a
-> [   93.965764] R10: 000000000000000a R11: f000000000000000 R12: 0000000000000000
-> [   93.966698] R13: ffff88810ce39520 R14: ffffffffffffffff R15: ffff88810d7d0310
-> [   93.967593] FS:  00007fd84a28db80(0000) GS:ffff88813bd00000(0000) knlGS:00000
-> [   93.968605] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [   93.969354] CR2: 00007fd84a492000 CR3: 000000010d7da000 CR4: 00000000000006e0
-> [   93.970290] Call Trace:
-> [   93.970607]  xfs_trans_unreserve_and_mod_sb+0x1ed/0x270
-> [   93.971423]  xfs_log_commit_cil+0x598/0xac0
-> [   93.972222]  __xfs_trans_commit+0xbe/0x3e0
-> [   93.972820]  xfs_create+0x551/0x630
-> [   93.973333]  xfs_generic_create+0x240/0x320
-> [   93.973941]  ? d_splice_alias+0x169/0x490
-> [   93.974473]  lookup_open.isra.0+0x2da/0x610
-> [   93.975011]  path_openat+0x261/0x920
-> [   93.975466]  do_filp_open+0x83/0x130
-> [   93.975922]  ? _raw_spin_unlock+0x24/0x40
-> [   93.976434]  ? alloc_fd+0xf1/0x1e0
-> [   93.976917]  do_sys_openat2+0x92/0x150
-> [   93.977558]  __x64_sys_creat+0x44/0x60
-> [   93.978125]  do_syscall_64+0x33/0x40
-> [   93.978585]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> [   93.979241] RIP: 0033:0x7fd84a379cc4
-> [   93.979717] Code: 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 4c
-> [   93.982051] RSP: 002b:00007ffe6f490268 EFLAGS: 00000246 ORIG_RAX: 00000000005
-> [   93.983068] RAX: ffffffffffffffda RBX: 0000000000000047 RCX: 00007fd84a379cc4
-> [   93.984079] RDX: 0000000000000000 RSI: 00000000000001b6 RDI: 0000559463b37ff0
-> [   93.984993] RBP: 00007ffe6f4903d0 R08: fefefefefefefeff R09: fefeff36ff603365
-> [   93.985916] R10: 0000000000000000 R11: 0000000000000246 R12: 00000000000001b6
-> [   93.986935] R13: 0000000000000001 R14: 00007ffe6f490470 R15: 00005594625041c0
-> [   93.987971] Modules linked in:
-> 
+  READ: bw=4560KiB/s (4670kB/s), 4560KiB/s-4560KiB/s (4670kB/s-4670kB/s), io=134MiB (140MB), run=30001-30001msec
+  WRITE: bw=4567KiB/s (4676kB/s), 4567KiB/s-4567KiB/s (4676kB/s-4676kB/s), io=134MiB (140MB), run=30001-30001msec
+
+Patched:
+   READ: bw=37.6MiB/s (39.4MB/s), 37.6MiB/s-37.6MiB/s (39.4MB/s-39.4MB/s), io=1127MiB (1182MB), run=30002-30002msec
+  WRITE: bw=37.6MiB/s (39.4MB/s), 37.6MiB/s-37.6MiB/s (39.4MB/s-39.4MB/s), io=1128MiB (1183MB), run=30002-30002msec
+
+That's an improvement from ~18k IOPS to a ~150k IOPS, which is
+about the IOPS limit of the VM block device setup I'm testing on.
+
+4kB block IO comparison:
+
+   READ: bw=296MiB/s (310MB/s), 296MiB/s-296MiB/s (310MB/s-310MB/s), io=8868MiB (9299MB), run=30002-30002msec
+  WRITE: bw=296MiB/s (310MB/s), 296MiB/s-296MiB/s (310MB/s-310MB/s), io=8878MiB (9309MB), run=30002-30002msec
+
+Which is ~150k IOPS, same as what the test gets for sub-block
+AIO+DIO writes with this patch.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[hch: rebased, split unaligned from nowait]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_file.c  | 87 ++++++++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_iomap.c | 31 ++++++++++++-----
+ 2 files changed, 84 insertions(+), 34 deletions(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index b181db42f2f32f..4e475e750148db 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -544,22 +544,35 @@ xfs_file_dio_write_aligned(
+ /*
+  * Handle block unaligned direct IO writes
+  *
+- * In most cases direct IO writes will be done holding IOLOCK_SHARED, allowing
+- * them to be done in parallel with reads and other direct IO writes.  However,
+- * if the I/O is not aligned to filesystem blocks, the direct I/O layer may
+- * need to do sub-block zeroing and that requires serialisation against other
+- * direct I/Os to the same block. In this case we need to serialise the
+- * submission of the unaligned I/Os so that we don't get racing block zeroing in
+- * the dio layer.
++ * In most cases direct IO writes will be done holding IOLOCK_SHARED
++ * allowing them to be done in parallel with reads and other direct IO writes.
++ * However, if the IO is not aligned to filesystem blocks, the direct IO layer
++ * may need to do sub-block zeroing and that requires serialisation against other
++ * direct IOs to the same block. In the case where sub-block zeroing is not
++ * required, we can do concurrent sub-block dios to the same block successfully.
+  *
+- * To provide the same serialisation for AIO, we also need to wait for
++ * Hence we have two cases here - the shared, optimisitic fast path for written
++ * extents, and everything else that needs exclusive IO path access across the
++ * entire IO.
++ *
++ * For the first case, we do all the checks we need at the mapping layer in the
++ * DIO code as part of the existing NOWAIT infrastructure. Hence all we need to
++ * do to support concurrent subblock dio is first try a non-blocking submission.
++ * If that returns -EAGAIN, then we simply repeat the IO submission with full
++ * IO exclusivity guaranteed so that we avoid racing sub-block zeroing.
++ *
++ * The only wrinkle in this case is that the iomap DIO code always does
++ * partial tail sub-block zeroing for post-EOF writes. Hence for any IO that
++ * _ends_ past the current EOF we need to run with full exclusivity. Note that
++ * we also check for the start of IO being beyond EOF because then zeroing
++ * between the old EOF and the start of the IO is required and that also
++ * requires exclusivity. Hence we avoid lock cycles and blocking under
++ * IOCB_NOWAIT for this situation, too.
++ *
++ * To provide the exclusivity required when using AIO, we also need to wait for
+  * outstanding IOs to complete so that unwritten extent conversion is completed
+  * before we try to map the overlapping block. This is currently implemented by
+  * hitting it with a big hammer (i.e. inode_dio_wait()).
+- *
+- * This means that unaligned dio writes always block. There is no "nowait" fast
+- * path in this code - if IOCB_NOWAIT is set we simply return -EAGAIN up front
+- * and we don't have to worry about that anymore.
+  */
+ static noinline ssize_t
+ xfs_file_dio_write_unaligned(
+@@ -567,13 +580,27 @@ xfs_file_dio_write_unaligned(
+ 	struct kiocb		*iocb,
+ 	struct iov_iter		*from)
+ {
+-	int			iolock = XFS_IOLOCK_EXCL;
++	size_t			isize = i_size_read(VFS_I(ip));
++	size_t			count = iov_iter_count(from);
++	int			iolock = XFS_IOLOCK_SHARED;
++	unsigned int		flags = IOMAP_DIO_UNALIGNED;
+ 	ssize_t			ret;
+ 
+-	/* unaligned dio always waits, bail */
+-	if (iocb->ki_flags & IOCB_NOWAIT)
+-		return -EAGAIN;
+-	xfs_ilock(ip, iolock);
++	/*
++	 * Extending writes need exclusivity because of the sub-block zeroing
++	 * that the DIO code always does for partial tail blocks beyond EOF.
++	 */
++	if (iocb->ki_pos > isize || iocb->ki_pos + count >= isize) {
++retry_exclusive:
++		if (iocb->ki_flags & IOCB_NOWAIT)
++			return -EAGAIN;
++		iolock = XFS_IOLOCK_EXCL;
++		flags = IOMAP_DIO_FORCE_WAIT;
++	}
++
++	ret = xfs_ilock_iocb(iocb, iolock);
++	if (ret)
++		return ret;
+ 
+ 	/*
+ 	 * We can't properly handle unaligned direct I/O to reflink files yet,
+@@ -590,19 +617,27 @@ xfs_file_dio_write_unaligned(
+ 		goto out_unlock;
+ 
+ 	/*
+-	 * If we are doing unaligned I/O, we can't allow any other overlapping
+-	 * I/O in-flight at the same time or we risk data corruption. Wait for
+-	 * all other I/O to drain before we submit.
++	 * If we are doing exclusive unaligned IO, we can't allow any other
++	 * overlapping IO in-flight at the same time or we risk data corruption.
++	 * Wait for all other IO to drain before we submit.
+ 	 */
+-	inode_dio_wait(VFS_I(ip));
++	if (!(flags & IOMAP_DIO_UNALIGNED))
++		inode_dio_wait(VFS_I(ip));
+ 
+-	/*
+-	 * This must be the only I/O in-flight. Wait on it before we release the
+-	 * iolock to prevent subsequent overlapping I/O.
+-	 */
+ 	trace_xfs_file_direct_write(iocb, from);
+ 	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
+-			   &xfs_dio_write_ops, IOMAP_DIO_FORCE_WAIT);
++			   &xfs_dio_write_ops, flags);
++	/*
++	 * Retry unaligned IO with exclusive blocking semantics if the DIO
++	 * layer rejected it for mapping or locking reasons. If we are doing
++	 * nonblocking user IO, propagate the error.
++	 */
++	if (ret == -EAGAIN && !(iocb->ki_flags & IOCB_NOWAIT)) {
++		ASSERT(flags & IOMAP_DIO_UNALIGNED);
++		xfs_iunlock(ip, iolock);
++		goto retry_exclusive;
++	}
++
+ out_unlock:
+ 	if (iolock)
+ 		xfs_iunlock(ip, iolock);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 7b9ff824e82d48..dc8c86e98b99bf 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -784,15 +784,30 @@ xfs_direct_write_iomap_begin(
+ 		goto allocate_blocks;
+ 
+ 	/*
+-	 * NOWAIT IO needs to span the entire requested IO with a single map so
+-	 * that we avoid partial IO failures due to the rest of the IO range not
+-	 * covered by this map triggering an EAGAIN condition when it is
+-	 * subsequently mapped and aborting the IO.
++	 * NOWAIT and unaligned IO needs to span the entire requested IO with a
++	 * single map so that we avoid partial IO failures due to the rest of
++	 * the IO range not covered by this map triggering an EAGAIN condition
++	 * when it is subsequently mapped and aborting the IO.
+ 	 */
+-	if ((flags & IOMAP_NOWAIT) &&
+-	    !imap_spans_range(&imap, offset_fsb, end_fsb)) {
++	if (flags & (IOMAP_NOWAIT | IOMAP_UNALIGNED)) {
+ 		error = -EAGAIN;
+-		goto out_unlock;
++		if (!imap_spans_range(&imap, offset_fsb, end_fsb))
++			goto out_unlock;
++	}
++
++	/*
++	 * For unsigned I/O we can't convert an unwritten extents if the I/O is
++	 * not block size aligned, as such a conversion would have to do
++	 * sub-block zeroing, and that can only be done under an exclusive
++	 * IOLOCK. Hence if this is not a written extent, return EAGAIN to tell
++	 * the caller to try again.
++	 */
++	if (flags & IOMAP_UNALIGNED) {
++		error = -EAGAIN;
++		if (imap.br_state != XFS_EXT_NORM &&
++		    ((offset & mp->m_blockmask) ||
++		     ((offset + length) & mp->m_blockmask)))
++			goto out_unlock;
+ 	}
+ 
+ 	xfs_iunlock(ip, lockmode);
+@@ -801,7 +816,7 @@ xfs_direct_write_iomap_begin(
+ 
+ allocate_blocks:
+ 	error = -EAGAIN;
+-	if (flags & IOMAP_NOWAIT)
++	if (flags & (IOMAP_NOWAIT | IOMAP_UNALIGNED))
+ 		goto out_unlock;
+ 
+ 	/*
+-- 
+2.29.2
 
