@@ -2,86 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1343C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:45:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 184BAC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:48:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6473A20848
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:45:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF49322C9D
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:48:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437500AbhARTp2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 14:45:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48498 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2437465AbhARTpD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Jan 2021 14:45:03 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A2C5A22C9D;
-        Mon, 18 Jan 2021 19:44:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610999062;
-        bh=54v7JgUJQ/GigbXDV787YQ3aLOv+x51remyNEXbnY44=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=h8gQ0h6IzTX0nCae3F+D9qbtw9wNmHXkuphBiPnY6ghO5D/SUWKcORCC/IQrLl1AV
-         v2IUIz9toxbO2sAc8+5fA0s5AfjT9Df/mQ/Kf7fm/hQQcB3jKwAoxLNF0aymYYwDPw
-         HIK98FjQcL8V/836NuQjUdbGpWvwn+k2BVoyewRe54b2B8BCDlfPVPpOzep7dA56gA
-         cTuWylRRhWFD3B4qzYLb73p+jGL3njZGnPST8JjTv2B0CMpou0ndlIXpEaKD6meBBA
-         WMV/bVWjk3SJuDN7HjYV+eRKuaaPty8JkLKAZsEoYW8TBVO31bBkMWphAtsAYVNI4P
-         RTM1xNyRWxefA==
-Date:   Mon, 18 Jan 2021 11:44:22 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/6] xfs: don't stall cowblocks scan if we can't take
- locks
-Message-ID: <20210118194422.GJ3134581@magnolia>
-References: <161040735389.1582114.15084485390769234805.stgit@magnolia>
- <161040737263.1582114.4973977520111925461.stgit@magnolia>
- <X/8HLQGzXSbC2IIn@infradead.org>
- <20210114215453.GG1164246@magnolia>
- <20210118173412.GA3134885@infradead.org>
- <20210118193718.GI3134581@magnolia>
- <20210118193958.GA3171275@infradead.org>
+        id S2437601AbhARTsa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 14:48:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37928 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2437390AbhARTrq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 14:47:46 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E07E2C061573;
+        Mon, 18 Jan 2021 11:47:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=IOUkrZ/GxkPaQGTKTJtehA0aySabPrU71HfB48HErxI=; b=ZikdTwGEBxmDMkbXJ7Tk5QKrDF
+        6eMhQAK87Qm2YpgtDHf2nmX8Ik4hrPD2vGmQm9RlB85YMjwv5B+6VOwrMvrHwE/Hm2yoX6lZhSQuS
+        xeRddXI67ULBGI47PHgviFH2mI59j0ZiXt5zIOadWm9CE7kf7BczeR6GxMyEe2q7Hjy7mrD963lIg
+        ZYpou8J1+AbXTFhVphdfvhNpTIpDD94xcU09D0BR2uw9sZhpiZVwiqnEyF5A+UvWyRCoB+lTXcxx/
+        PsI7e55XbbFULBfTFOAUbakvfj64dPkuo7WjP+2uKHCpJULhbI5xfFlzY/zJvh7XudWydNwSMPGrm
+        mM6LgQgA==;
+Received: from 089144206130.atnat0015.highway.bob.at ([89.144.206.130] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1l1aUC-00DJZ8-Di; Mon, 18 Jan 2021 19:46:58 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     linux-xfs@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, avi@scylladb.com,
+        Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH 04/11] xfs: remove the buffered I/O fallback assert
+Date:   Mon, 18 Jan 2021 20:35:09 +0100
+Message-Id: <20210118193516.2915706-5-hch@lst.de>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210118193516.2915706-1-hch@lst.de>
+References: <20210118193516.2915706-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210118193958.GA3171275@infradead.org>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 18, 2021 at 07:39:58PM +0000, Christoph Hellwig wrote:
-> On Mon, Jan 18, 2021 at 11:37:18AM -0800, Darrick J. Wong wrote:
-> > Ah, I see, you're asking why don't I make xfs_inode_walk responsible for
-> > deciding what to do about EAGAIN, instead of open-coding that in the
-> > ->execute function.  That would be a nice cleanup since the walk
-> > function already has special casing for EFSCORRUPTED.
-> > 
-> > If I read you correctly, the relevant part of xfs_inode_walk becomes:
-> > 
-> > 	error = execute(batch[i]...);
-> > 	xfs_irele(batch[i]);
-> > 	if (error == -EAGAIN) {
-> > 		if (args->flags & EOF_SYNC)
-> > 			skipped++;
-> > 		continue;
-> > 	}
-> > 
-> > and the relevant part of xfs_inode_free_eofblocks becomes:
-> > 
-> > 	if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL))
-> > 		return -EAGAIN;
-> > 
-> > I think that would work, and afaict it won't cause any serious problems
-> > with the deferred inactivation series.
-> 
-> Exactly!
+The iomap code has been designed from the start not to do magic fallback,
+so remove the assert in preparation for further code cleanups.
 
-D'oh.  I tried making that change, but ran into the problem that *args
-isn't necessarily an eofb structure, and xfs_qm_dqrele_all_inodes passes
-a uint pointer.  I could define a new XFS_INODE_WALK_SYNC flag and
-update the blockgc callers to set that if EOF_FLAGS_SYNC is set...
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_file.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
---D
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index ae7313ccaa11ed..97836ec53397d4 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -610,12 +610,6 @@ xfs_file_dio_write(
+ out:
+ 	if (iolock)
+ 		xfs_iunlock(ip, iolock);
+-
+-	/*
+-	 * No fallback to buffered IO after short writes for XFS, direct I/O
+-	 * will either complete fully or return an error.
+-	 */
+-	ASSERT(ret < 0 || ret == count);
+ 	return ret;
+ }
+ 
+-- 
+2.29.2
+
