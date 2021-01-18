@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 673B0C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:13:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A541C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:14:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3401B22EBD
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:13:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E807207C4
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:14:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387998AbhARWNh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 17:13:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34214 "EHLO mail.kernel.org"
+        id S2388051AbhARWOF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 17:14:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34380 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387977AbhARWNa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Jan 2021 17:13:30 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 377AB22E00;
-        Mon, 18 Jan 2021 22:12:48 +0000 (UTC)
+        id S2388385AbhARWOE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Jan 2021 17:14:04 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 999CC22DD3;
+        Mon, 18 Jan 2021 22:13:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611007968;
-        bh=0KS4Iftf7vCQRcEmNbB7OYT+CdPqJJrpWBcELw26W78=;
+        s=k20201202; t=1611008003;
+        bh=GYndIRUE5HUNFstT9X5Mojm5wZ7DhH8MoiiK10bvbMM=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=rhcwwlmYDuhLReN/bm+PVcsh2BxN7FDDUVBefKdbdNwpqeKKMBqj1Aie8mQ2DF3QZ
-         gLqZ72Eg5tJMjF9yRxaMO0TH7cmARvIXgX4r3nKEetBwVUqdnVZ4ZAooJSwVLMHMQN
-         +XlszIvCoGgzBjpJMXY0Y4re6lZyLmndmGD0QglfO3NMx9DEa0tuEnFcalQi2RKRfg
-         uvXRPxBmPHwOljwzfFNPwWH8gZAZQuJkf/WUHW9X9ZAMc1TKHB87RXlaUe3ivyxu7p
-         RGoLgReauh3ynCHN+zmeK1P1QrMXAoqF3ni86jcSnsBapnW6sEWT3sg6sSb0XXhbgZ
-         8RQcNz4nDCX+A==
-Subject: [PATCH 09/11] xfs: add a tracepoint for blockgc scans
+        b=e2p6yVl6gSop3IrZ6yTgteaT7J7hQq8LDZR6iL24LHmxx4g0ObcNBis9ZGLjlUPUn
+         mfrcZ277tCEwUJe4yx0jf63LrLv5/nxZGRf3MqucwAhfcqC6tCZHdNTwgOkNIpML6s
+         5ka4tRbFruN4EsDF5r01MqfpKIP6tMSE0K/Ay6rJ67LF31kY4d5NPw3pxI3h9/6qzm
+         gtLmgNwEmzC//UjCezhRqWLvir895Zy6c04MwfwGroxrQCOnYTiwBoe7kLT7J1NOK7
+         05em8KR/zHNw9HTe4ZUJuCKJlW8kNMQ81f4s14xZccHRLVo7FEGbhlbM2HsD/uDsCu
+         ya32QX7K//uhQ==
+Subject: [PATCH 04/10] xfs: remove trivial eof/cowblocks functions
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 18 Jan 2021 14:12:47 -0800
-Message-ID: <161100796788.88816.11790817696681055920.stgit@magnolia>
-In-Reply-To: <161100791789.88816.10902093186807310995.stgit@magnolia>
-References: <161100791789.88816.10902093186807310995.stgit@magnolia>
+Date:   Mon, 18 Jan 2021 14:13:23 -0800
+Message-ID: <161100800330.90204.7868136774892860968.stgit@magnolia>
+In-Reply-To: <161100798100.90204.7839064495063223590.stgit@magnolia>
+References: <161100798100.90204.7839064495063223590.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,97 +49,84 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some tracepoints so that we can observe when the speculative
-preallocation garbage collector runs.
+Get rid of these trivial helpers.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_ioctl.c |    2 ++
- fs/xfs/xfs_trace.c |    1 +
- fs/xfs/xfs_trace.h |   39 +++++++++++++++++++++++++++++++++++++++
- 3 files changed, 42 insertions(+)
+ fs/xfs/xfs_icache.c |   30 ++++++++----------------------
+ 1 file changed, 8 insertions(+), 22 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 70d9637b7806..ccff1f9ca6e9 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -2356,6 +2356,8 @@ xfs_file_ioctl(
- 		if (error)
- 			return error;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 097dd979e182..1d06dcc4339e 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1324,15 +1324,6 @@ xfs_inode_free_eofblocks(
+ 	return ret;
+ }
  
-+		trace_xfs_ioc_free_eofblocks(mp, &keofb, _RET_IP_);
-+
- 		sb_start_write(mp->m_super);
- 		error = xfs_icache_free_eofblocks(mp, &keofb);
- 		sb_end_write(mp->m_super);
-diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
-index 120398a37c2a..9b8d703dc9fd 100644
---- a/fs/xfs/xfs_trace.c
-+++ b/fs/xfs/xfs_trace.c
-@@ -29,6 +29,7 @@
- #include "xfs_filestream.h"
- #include "xfs_fsmap.h"
- #include "xfs_btree_staging.h"
-+#include "xfs_icache.h"
- 
+-static int
+-xfs_icache_free_eofblocks(
+-	struct xfs_mount	*mp,
+-	struct xfs_eofblocks	*eofb)
+-{
+-	return xfs_inode_walk(mp, 0, xfs_inode_free_eofblocks, eofb,
+-			XFS_ICI_EOFBLOCKS_TAG);
+-}
+-
  /*
-  * We include this last to have the helpers above available for the trace
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 5a263ae3d4f0..3f761f33099b 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -37,6 +37,7 @@ struct xfs_trans_res;
- struct xfs_inobt_rec_incore;
- union xfs_btree_ptr;
- struct xfs_dqtrx;
-+struct xfs_eofblocks;
+  * Background scanning to trim post-EOF preallocated space. This is queued
+  * based on the 'speculative_prealloc_lifetime' tunable (5m by default).
+@@ -1358,7 +1349,8 @@ xfs_eofblocks_worker(
  
- #define XFS_ATTR_FILTER_FLAGS \
- 	{ XFS_ATTR_ROOT,	"ROOT" }, \
-@@ -3888,6 +3889,44 @@ DEFINE_EVENT(xfs_timestamp_range_class, name, \
- DEFINE_TIMESTAMP_RANGE_EVENT(xfs_inode_timestamp_range);
- DEFINE_TIMESTAMP_RANGE_EVENT(xfs_quota_expiry_range);
+ 	if (!sb_start_write_trylock(mp->m_super))
+ 		return;
+-	xfs_icache_free_eofblocks(mp, NULL);
++	xfs_inode_walk(mp, 0, xfs_inode_free_eofblocks, NULL,
++			XFS_ICI_EOFBLOCKS_TAG);
+ 	sb_end_write(mp->m_super);
  
-+DECLARE_EVENT_CLASS(xfs_eofblocks_class,
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_eofblocks *eofb,
-+		 unsigned long caller_ip),
-+	TP_ARGS(mp, eofb, caller_ip),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(__u32, flags)
-+		__field(uint32_t, uid)
-+		__field(uint32_t, gid)
-+		__field(prid_t, prid)
-+		__field(__u64, min_file_size)
-+		__field(unsigned long, caller_ip)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->flags = eofb->eof_flags;
-+		__entry->uid = from_kuid(mp->m_super->s_user_ns, eofb->eof_uid);
-+		__entry->gid = from_kgid(mp->m_super->s_user_ns, eofb->eof_gid);
-+		__entry->prid = eofb->eof_prid;
-+		__entry->min_file_size = eofb->eof_min_file_size;
-+		__entry->caller_ip = caller_ip;
-+	),
-+	TP_printk("dev %d:%d flags 0x%x uid %u gid %u prid %u minsize %llu caller %pS",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->flags,
-+		  __entry->uid,
-+		  __entry->gid,
-+		  __entry->prid,
-+		  __entry->min_file_size,
-+		  (char *)__entry->caller_ip)
-+);
-+#define DEFINE_EOFBLOCKS_EVENT(name)	\
-+DEFINE_EVENT(xfs_eofblocks_class, name,	\
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_eofblocks *eofb, \
-+		 unsigned long caller_ip), \
-+	TP_ARGS(mp, eofb, caller_ip))
-+DEFINE_EOFBLOCKS_EVENT(xfs_ioc_free_eofblocks);
-+
- #endif /* _TRACE_XFS_H */
+ 	xfs_queue_eofblocks(mp);
+@@ -1567,15 +1559,6 @@ xfs_inode_free_cowblocks(
+ 	return ret;
+ }
  
- #undef TRACE_INCLUDE_PATH
+-static int
+-xfs_icache_free_cowblocks(
+-	struct xfs_mount	*mp,
+-	struct xfs_eofblocks	*eofb)
+-{
+-	return xfs_inode_walk(mp, 0, xfs_inode_free_cowblocks, eofb,
+-			XFS_ICI_COWBLOCKS_TAG);
+-}
+-
+ /*
+  * Background scanning to trim preallocated CoW space. This is queued
+  * based on the 'speculative_cow_prealloc_lifetime' tunable (5m by default).
+@@ -1602,7 +1585,8 @@ xfs_cowblocks_worker(
+ 
+ 	if (!sb_start_write_trylock(mp->m_super))
+ 		return;
+-	xfs_icache_free_cowblocks(mp, NULL);
++	xfs_inode_walk(mp, 0, xfs_inode_free_cowblocks, NULL,
++			XFS_ICI_COWBLOCKS_TAG);
+ 	sb_end_write(mp->m_super);
+ 
+ 	xfs_queue_cowblocks(mp);
+@@ -1653,11 +1637,13 @@ xfs_blockgc_scan(
+ {
+ 	int			error;
+ 
+-	error = xfs_icache_free_eofblocks(mp, eofb);
++	error = xfs_inode_walk(mp, 0, xfs_inode_free_eofblocks, eofb,
++			XFS_ICI_EOFBLOCKS_TAG);
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_icache_free_cowblocks(mp, eofb);
++	error = xfs_inode_walk(mp, 0, xfs_inode_free_cowblocks, eofb,
++			XFS_ICI_COWBLOCKS_TAG);
+ 	if (error)
+ 		return error;
+ 
 
