@@ -6,58 +6,84 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73F3DC433DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 17:39:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00B9AC4332B
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 17:54:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34CBF22CA1
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 17:39:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC11C2222A
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 17:54:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436594AbhARRhW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 12:37:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37982 "EHLO
+        id S2436747AbhARRyo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 12:54:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2436603AbhARRhM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 12:37:12 -0500
+        with ESMTP id S2407196AbhARRjr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 12:39:47 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CE04C061573
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Jan 2021 09:36:32 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DFB2C0613C1
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Jan 2021 09:38:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=jdoJIv/lnB5Cs6DtF/pHTjYP84lUOpa20Tsa9Bprz10=; b=ad+j5Jpqo6bFzm8NDVo2N+l9is
-        bZsSa5Qsw+a6W/ONW1JJEaPezhZxKSXFEcPHyw3vb2GsY4T78O5SziWdz5tmEUXqCe/DBKgjhl1hA
-        eve0DxsQME3O/mJmOqjAv6lIGJqPlTDvgGaVieSK1pnJ9v4Zxcz4Y3w3u06jn4hlG75f0VgXHZxI5
-        WyjW/wlrPyffcdMiSyCFvqM/JJKikKHrbRUDXbb+FAVcZ0JAGEKFHnoLvsb3dGbJDYuZR5mPgARKp
-        eyD88LTeIbO1L8Uhn5hrtk8HLxiY1c2KV+wZzyBqIMpFIi9L7+Fr2QBkYAg4kQPnMROUkT93RD2UL
-        iCCS/hhQ==;
+        bh=arNQA0yrAJYn2Sy7bjubn0srkVAw0hZajwhmB5pCdfI=; b=cc0trx8Pla20S/THq9U5VUPC/m
+        Ku5nLywWBwOom+YN6E7f1of9uKMhVjeIkuC3ykIlEputPH/NQIAtWZIwY0MpmUOMFO4L8JtoogagI
+        ndPLPREiRnsWiipiD0dOzOjKSF19yOPosAvDFsHkQ3eMKUWPc0irZiZsXmYQ8/5SoY1JJuCte2jBG
+        336uLZlMB2ywX4dW6e2DgDug3hdFLHRUfjAUFaBer3sNZhvRy2UlWUIVvyV8RBvOQhoeEDbGvpMP7
+        r4eiSxU4j0kUT8/Yspr6v/bAuNKiK302ORZalEBcZUPeLz0T7lkQnd0ZLlhXFghIaRIIb8NkRdXoW
+        k8baAC3w==;
 Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1l1YS4-00D9st-1g; Mon, 18 Jan 2021 17:36:28 +0000
-Date:   Mon, 18 Jan 2021 17:36:28 +0000
+        id 1l1YUJ-00D9zt-2l; Mon, 18 Jan 2021 17:38:47 +0000
+Date:   Mon, 18 Jan 2021 17:38:47 +0000
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/7] xfs: increase the default parallelism levels of
- pwork clients
-Message-ID: <20210118173628.GB3134885@infradead.org>
+Subject: Re: [PATCH 2/7] xfs: refactor the predicate part of
+ xfs_free_eofblocks
+Message-ID: <20210118173847.GC3134885@infradead.org>
 References: <161040739544.1582286.11068012972712089066.stgit@magnolia>
- <161040740189.1582286.17385075679159461086.stgit@magnolia>
- <X/8IfJj+qgnl303O@infradead.org>
- <20210114213259.GF1164246@magnolia>
- <20210114223849.GI1164246@magnolia>
+ <161040740813.1582286.3253329052236449810.stgit@magnolia>
+ <X/8KS4it5LAkN6Xr@infradead.org>
+ <20210114224953.GJ1164246@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210114223849.GI1164246@magnolia>
+In-Reply-To: <20210114224953.GJ1164246@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 14, 2021 at 02:38:49PM -0800, Darrick J. Wong wrote:
-> There already /is/ a pwork_threads sysctl knob for controlling
-> quotacheck parallelism; and for the block gc workqueue I add WQ_SYSFS so
-> that you can set /sys/bus/workqueue/devices/xfs-*/max_active.
+On Thu, Jan 14, 2021 at 02:49:53PM -0800, Darrick J. Wong wrote:
+> > > +	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
+> > > +	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+> > > +	if (last_fsb <= end_fsb)
+> > > +		return 0;
+> > 
+> > Where does this strange magic come from?
+> 
+> It comes straight from xfs_free_eofblocks.
+> 
+> I /think/ the purpose of this is to avoid touching any file that's
+> larger than the page cache supports (i.e. 16T on 32-bit) because inode
+> inactivation causes pagecache invalidation, and trying to invalidate
+> with too high a pgoff causes weird integer truncation problems.
 
-Hmm.  A single know that is named to describe that it deals with the
-expected device parallelism might be easier to understand for users.
+Hmm.  At very least we need to document this, but we really should not
+allow to even read in an inode successfully under this condition..
+
+Screams for a nice little test case..
+
+> > 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+> > 	if (ip->i_delayed_blks) {
+> > 		*has = true;
+> > 		goto out_unlock;
+> > 	}
+> > 	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
+> > 		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+> 
+> Is it even worth reading in the bmap btree to clear posteof blocks if we
+> haven't loaded it already?
+
+True, we can return early in that case.  I'm also not sure what the
+i_delayed_blks check is supposed to do, as delalloc extents do show
+up in the iext tree just like normal extents.
