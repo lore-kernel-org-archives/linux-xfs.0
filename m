@@ -2,63 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88B93C433E6
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 21:44:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58E35C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:12:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C25322E00
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 21:44:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DD9C22D58
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:12:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389762AbhARVnl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 16:43:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34526 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388645AbhARVnA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 16:43:00 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 241C7C061573;
-        Mon, 18 Jan 2021 13:42:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=jyoij0RsS5818dRxwbFzHUwXraId823WtMIOT0DRHDU=; b=VzVcYihCG2lQP/J+Q1f+x03Lb9
-        t98+gi+/CgDqKJW57GasOmXfZ3X/Ontf1Jy+h/Vufi5B7DBL/HO/K7pli0GoxlhgV4CWuP8HVAA+p
-        UEsGaHbKjGVwlYGofoUPnuvNO73ROV5shc4ls71ZVzf2Dh11tGvjQ+id/8rPf6jHuBSAKONc3bR6i
-        Rzn2GPfmu17eKyqf8RZUDJBIXZv6b54wvSN8Mhm05NsnaCjlAF5rUJ7Z+lpbUgR5IQ18hs+ZoxhDn
-        zbAHC8NJ+gHgwD7F5WV/s27g3iR6VIXzaHQaQtXv2xZT50RWD4R4/xzGZzwMaf6TpjBHnMTqwhVci
-        YdKB8mjQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1l1cHJ-00DRHV-4I; Mon, 18 Jan 2021 21:41:39 +0000
-Date:   Mon, 18 Jan 2021 21:41:37 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        avi@scylladb.com
-Subject: Re: [PATCH 10/11] iomap: add a IOMAP_DIO_UNALIGNED flag
-Message-ID: <20210118214137.GG2260413@casper.infradead.org>
-References: <20210118193516.2915706-1-hch@lst.de>
- <20210118193516.2915706-11-hch@lst.de>
+        id S1728923AbhARWMP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 17:12:15 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33938 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728289AbhARWMO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Jan 2021 17:12:14 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1D81422CB1;
+        Mon, 18 Jan 2021 22:11:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611007894;
+        bh=H/5ADvI7VUmiyBpaPwYuztTFYCoZN6mLFlcfL1jNNEo=;
+        h=Subject:From:To:Cc:Date:From;
+        b=OOSDQwLSI6GEoeUXzVqtk0N5TceGrUJ9vFz2PSfk5BWJ8d17Pxi8HHJKCNOvGNfXS
+         WwbrVaOyoghJwdu4Pvz3JQVOmvSJGNe9gGFKQ8eAjWbeWcw3PBNFCwH7owKvXpVns3
+         D2MBZsI8hgpUAytfF5o08ShIdRTJav97xwruRU5ReovrYrsy+VMb3ulzSFid1HNCLx
+         ZuM2oad2lgcmc1arkUcN84rZwW3l0PJ6XUgjgEenwdaOLtc14RL6pRq2yNYRdkPrmH
+         aTWYj8VnXfTAO1hZvjJsaAsWJtvpjwhPSFk4Fj6iApZpv0Nil3lKXTTV/RaTrXimRI
+         cL3Gc8cGeEStw==
+Subject: [PATCHSET 0/4] xfs: minor cleanups of the quota functions
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Date:   Mon, 18 Jan 2021 14:11:33 -0800
+Message-ID: <161100789347.88678.17195697099723545426.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210118193516.2915706-11-hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 18, 2021 at 08:35:15PM +0100, Christoph Hellwig wrote:
-> Add a flag to signal an I/O that is not file system block aligned.
-> +	if (dio_flags & IOMAP_DIO_UNALIGNED) {
+Hi all,
 
-There are a number of things that DIO has to be aligned to -- memory
-addresses, for example.  Can we be a little more verbose about what is
-unaligned here?  eg
+This series reworks some of the internal quota APIs and cleans up some
+of the function calls so that we have a clean(er) place to start the
+space reclamation patchset.  There should be no behavioral changes in
+this series.
 
-	if (dio_flags & IOMAP_DIO_FS_UNALIGNED)
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-(or FSBLK_UNALIGNED, or ... something).
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=quota-function-cleanups-5.12
+---
+ fs/xfs/libxfs/xfs_bmap.c |    9 +++------
+ fs/xfs/xfs_bmap_util.c   |    4 ++--
+ fs/xfs/xfs_inode.c       |    8 ++++----
+ fs/xfs/xfs_quota.h       |   40 +++++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_reflink.c     |    3 +--
+ fs/xfs/xfs_symlink.c     |    4 ++--
+ fs/xfs/xfs_trans_dquot.c |   21 +++++++++++++++++++++
+ 7 files changed, 68 insertions(+), 21 deletions(-)
 
