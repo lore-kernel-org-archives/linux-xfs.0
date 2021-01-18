@@ -2,102 +2,67 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32A05C433DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:57:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AA3BC433E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:58:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB44322C9D
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:57:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2F4922D2C
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 19:58:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394010AbhART5X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 14:57:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39966 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390223AbhART5N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 14:57:13 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CAFFC061573;
-        Mon, 18 Jan 2021 11:56:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=CMLhf7QfjVVPxYqPIGZc4GL8WQClfgTC8bfupQgTGuM=; b=Hun+MHQAleUvzf4Xb/Ehiy4uPU
-        07BFH3dPhi+RyWtte58V7mThzljjBAZD43ixFvzb1V5lIphds18kcEY1vxQc3OXwWc8VDq+uZuhjJ
-        mGIcHZ5YFhRR+Xy1k1yMax1ZO+a52ufEmSWoovjmB5ReXoQ570oZLgzCGJpG+3hP38E3qb6jkwFag
-        W6APySu5REbOmqPHKV+Ju8jfg/BiAPzJmPdRSPR2eBut211hda7pHTWDiokovWifGvuD6reLCPOEK
-        YB++o1Y48om0JbzHw9a+TzJVq6z2BrzZJsOnZczAZBdGqWcSA9BVOnAZBa7xeSDfKzNOXvdS8cS6c
-        VSZUKSDQ==;
-Received: from 089144206130.atnat0015.highway.bob.at ([89.144.206.130] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1l1adR-00DKKY-Rn; Mon, 18 Jan 2021 19:56:27 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org, avi@scylladb.com
-Subject: [PATCH 08/11] iomap: rename the flags variable in __iomap_dio_rw
-Date:   Mon, 18 Jan 2021 20:35:13 +0100
-Message-Id: <20210118193516.2915706-9-hch@lst.de>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210118193516.2915706-1-hch@lst.de>
-References: <20210118193516.2915706-1-hch@lst.de>
+        id S2437257AbhART6R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 14:58:17 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50414 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2407188AbhART5v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Jan 2021 14:57:51 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3313622B49;
+        Mon, 18 Jan 2021 19:57:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610999831;
+        bh=HD7BApLOD9OZ+/qAw5hpcG059FYFGqjKGZ2CZAkohic=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=oCaF5MQJDsx26VDrruv/6AaWXA8YTL3znQcq5S0lTU15yLwi8Te3haVtSXorbqKEE
+         AYqleXfmMdt4Wf2EnukYU1fsiEmCRNg1UiQl337JkERtXKGNIXfEWg337Oqr16hA++
+         4UzgayT9pUqutXJReUn6sY8VGv6v8HzV0rBJcB8+co5pf3DxYxA5AdYyc7/Jgio/wx
+         c2REFY2gNhtla2TPO5FXpTvg3J1wEDQm7R7CNSzhZPxS5kBfkQ8j7YH7g0cUnBuaHS
+         zEQ5A7SPwGPcog5oGtmh/uqhTo7wt1hBYfKSzkk/SgDgN0uYu4in0EWtOwytp3JrKs
+         AM3HZWI3z4IOQ==
+Date:   Mon, 18 Jan 2021 11:57:10 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/7] xfs: increase the default parallelism levels of
+ pwork clients
+Message-ID: <20210118195710.GL3134581@magnolia>
+References: <161040739544.1582286.11068012972712089066.stgit@magnolia>
+ <161040740189.1582286.17385075679159461086.stgit@magnolia>
+ <X/8IfJj+qgnl303O@infradead.org>
+ <20210114213259.GF1164246@magnolia>
+ <20210114223849.GI1164246@magnolia>
+ <20210118173628.GB3134885@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210118173628.GB3134885@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Rename flags to iomap_flags to make the usage a little more clear.
+On Mon, Jan 18, 2021 at 05:36:28PM +0000, Christoph Hellwig wrote:
+> On Thu, Jan 14, 2021 at 02:38:49PM -0800, Darrick J. Wong wrote:
+> > There already /is/ a pwork_threads sysctl knob for controlling
+> > quotacheck parallelism; and for the block gc workqueue I add WQ_SYSFS so
+> > that you can set /sys/bus/workqueue/devices/xfs-*/max_active.
+> 
+> Hmm.  A single know that is named to describe that it deals with the
+> expected device parallelism might be easier to understand for users.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap/direct-io.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Where should I add a sysfs attributes for per-fs configuration knobs?  I
+don't really want to add "expected parallelism" to /sys/fs/xfs/*/error
+because that seems like the wrong place, and /proc/sys/fs/xfs/ is too
+global for something that could depend on the device.
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 933f234d5becd0..604103ab76f9c5 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -427,7 +427,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	size_t count = iov_iter_count(iter);
- 	loff_t pos = iocb->ki_pos;
- 	loff_t end = iocb->ki_pos + count - 1, ret = 0;
--	unsigned int flags = IOMAP_DIRECT;
-+	unsigned int iomap_flags = IOMAP_DIRECT;
- 	struct blk_plug plug;
- 	struct iomap_dio *dio;
- 
-@@ -461,7 +461,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		if (iter_is_iovec(iter))
- 			dio->flags |= IOMAP_DIO_DIRTY;
- 	} else {
--		flags |= IOMAP_WRITE;
-+		iomap_flags |= IOMAP_WRITE;
- 		dio->flags |= IOMAP_DIO_WRITE;
- 
- 		/* for data sync or sync, we need sync completion processing */
-@@ -483,7 +483,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 			ret = -EAGAIN;
- 			goto out_free_dio;
- 		}
--		flags |= IOMAP_NOWAIT;
-+		iomap_flags |= IOMAP_NOWAIT;
- 	}
- 
- 	ret = filemap_write_and_wait_range(mapping, pos, end);
-@@ -514,7 +514,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 
- 	blk_start_plug(&plug);
- 	do {
--		ret = iomap_apply(inode, pos, count, flags, ops, dio,
-+		ret = iomap_apply(inode, pos, count, iomap_flags, ops, dio,
- 				iomap_dio_actor);
- 		if (ret <= 0) {
- 			/* magic error code to fall back to buffered I/O */
--- 
-2.29.2
-
+--D
