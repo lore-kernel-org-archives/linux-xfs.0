@@ -3,42 +3,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 520A5C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:12:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CE31C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:13:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2787D22E00
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:12:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E913922E03
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 22:13:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729183AbhARWMh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 17:12:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34016 "EHLO mail.kernel.org"
+        id S1733193AbhARWNF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 17:13:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34072 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727436AbhARWMg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Jan 2021 17:12:36 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 37C0722E00;
-        Mon, 18 Jan 2021 22:11:56 +0000 (UTC)
+        id S1732848AbhARWMz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Jan 2021 17:12:55 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 728B722E02;
+        Mon, 18 Jan 2021 22:11:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611007916;
-        bh=Fdpgrg5xZTJNj2MOT+d4BsSmzJNMnzEVa67ntpHk3y0=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=i2qVHJprKAQgszYhjBWYUmc1H0KIjUnQWEWpcxu4gLm3LeCZ/+qoB6yqEJU6O46mp
-         EKCL/aymEEIGR5x4enup6EBtFeAJVpURqw0DTnjb/ffluTELoWd4PwcFsRIckB482j
-         jedqTAoIIXA5sLPdpx4mv5h4eL2kw9FueoGOOc6ArHZkLBn/T2QdGGm6iB9SaFoviI
-         FrBMmiFb1Dj4wEKm4uL+RR2MSLBrFVXmKcf6AsXucBQlw1G7CFlyDnZ9h226wx2I6S
-         wdQcY8sDKwEgp8wEOLHliKUnpDcBZzEOOrUFLeneQkBSCPFJRrCKkcFj3ZSlRsZlPW
-         BkdBAtoZOn8ew==
-Subject: [PATCH 4/4] xfs: clean up icreate quota reservation calls
+        s=k20201202; t=1611007918;
+        bh=GuLXwWYoCQpA63SFtFGSTw78z2pw02olhHJrsLG7tOM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=CBT/UJwMUwwPpiZT/kMZxWs+rZ5A7sHLNnzJKofDnsStlIb0gVbDn23PmhSz8+Szh
+         JxEC2ecYssDpsS6k1GN5CPN8zhrWnHN+7nMbE1T1T97ciKjhdlPWiHTuIq/AzIoR9/
+         6xU53ICN4qM6QMxPLeXc0U2Fih0428B9WEjF80erBN8p0cm3NsuvqxxAESEFpGVqGC
+         Icq4YlacrcCAUguv/eB6n6c30lI3gSoRmqq3tQJu+UTmFdfc+NNGsAXo0k+GKkLtFb
+         bOFyApGy+2ddnyLSt+0PX+iuuERYCULac2k7AcEF0mng5DDmqZ0p6aPK2XLsfpK0H1
+         Ub0pBgoHxKaDA==
+Subject: [PATCHSET v3 00/11] xfs: try harder to reclaim space when we run out
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 18 Jan 2021 14:11:55 -0800
-Message-ID: <161100791592.88678.7280544229099188181.stgit@magnolia>
-In-Reply-To: <161100789347.88678.17195697099723545426.stgit@magnolia>
-References: <161100789347.88678.17195697099723545426.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Date:   Mon, 18 Jan 2021 14:11:58 -0800
+Message-ID: <161100791789.88816.10902093186807310995.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,130 +45,50 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-Create a proper helper so that inode creation calls can reserve quota
-with a dedicated function.
+Historically, when users ran out of space or quota when trying to write
+to the filesystem, XFS didn't try very hard to reclaim space that it
+might have speculatively allocated for the purpose of speeding up
+front-end filesystem operations (appending writes, cow staging).  The
+upcoming deferred inactivation series will greatly increase the amount
+of allocated space that isn't actively being used to store user data.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Therefore, try to reduce the circumstances where we return EDQUOT or
+ENOSPC to userspace by teaching the write paths to try to clear space
+and retry the operation one time before giving up.
+
+v2: clean up and rebase against 5.11.
+v3: restructure the retry loops per dchinner suggestion
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=reclaim-space-harder-5.12
 ---
- fs/xfs/xfs_inode.c       |    8 ++++----
- fs/xfs/xfs_quota.h       |   14 ++++++++++----
- fs/xfs/xfs_symlink.c     |    4 ++--
- fs/xfs/xfs_trans_dquot.c |   21 +++++++++++++++++++++
- 4 files changed, 37 insertions(+), 10 deletions(-)
-
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index e5dc41b10ebb..43cff78c20c4 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1037,8 +1037,8 @@ xfs_create(
- 	/*
- 	 * Reserve disk quota and the inode.
- 	 */
--	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
--						pdqp, resblks, 1, 0);
-+	error = xfs_trans_reserve_quota_icreate(tp, dp, udqp, gdqp, pdqp,
-+			resblks);
- 	if (error)
- 		goto out_trans_cancel;
- 
-@@ -1164,8 +1164,8 @@ xfs_create_tmpfile(
- 	if (error)
- 		goto out_release_inode;
- 
--	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
--						pdqp, resblks, 1, 0);
-+	error = xfs_trans_reserve_quota_icreate(tp, dp, udqp, gdqp, pdqp,
-+			resblks);
- 	if (error)
- 		goto out_trans_cancel;
- 
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index b1411d25c9e5..1c37b5be60c3 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -86,6 +86,9 @@ extern int xfs_trans_reserve_quota_nblks(struct xfs_trans *,
- extern int xfs_trans_reserve_quota_bydquots(struct xfs_trans *,
- 		struct xfs_mount *, struct xfs_dquot *,
- 		struct xfs_dquot *, struct xfs_dquot *, int64_t, long, uint);
-+int xfs_trans_reserve_quota_icreate(struct xfs_trans *tp, struct xfs_inode *dp,
-+		struct xfs_dquot *udqp, struct xfs_dquot *gdqp,
-+		struct xfs_dquot *pdqp, int64_t nblks);
- 
- extern int xfs_qm_vop_dqalloc(struct xfs_inode *, kuid_t, kgid_t,
- 		prid_t, uint, struct xfs_dquot **, struct xfs_dquot **,
-@@ -141,6 +144,13 @@ static inline int xfs_quota_reserve_blkres(struct xfs_inode *ip,
- {
- 	return 0;
- }
-+static inline int
-+xfs_trans_reserve_quota_icreate(struct xfs_trans *tp, struct xfs_inode *dp,
-+		struct xfs_dquot *udqp, struct xfs_dquot *gdqp,
-+		struct xfs_dquot *pdqp, int64_t nblks)
-+{
-+	return 0;
-+}
- #define xfs_qm_vop_create_dqattach(tp, ip, u, g, p)
- #define xfs_qm_vop_rename_dqattach(it)					(0)
- #define xfs_qm_vop_chown(tp, ip, old, new)				(NULL)
-@@ -163,10 +173,6 @@ xfs_trans_unreserve_quota_nblks(struct xfs_trans *tp, struct xfs_inode *ip,
- 	return xfs_trans_reserve_quota_nblks(tp, ip, -nblks, -ninos, flags);
- }
- 
--#define xfs_trans_reserve_quota(tp, mp, ud, gd, pd, nb, ni, f) \
--	xfs_trans_reserve_quota_bydquots(tp, mp, ud, gd, pd, nb, ni, \
--				f | XFS_QMOPT_RES_REGBLKS)
--
- static inline int
- xfs_quota_reserve_blkres(struct xfs_inode *ip, int64_t nblks,
- 		unsigned int flags)
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 1f43fd7f3209..e53f7bc2b820 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -215,8 +215,8 @@ xfs_symlink(
- 	/*
- 	 * Reserve disk quota : blocks and inode.
- 	 */
--	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
--						pdqp, resblks, 1, 0);
-+	error = xfs_trans_reserve_quota_icreate(tp, dp, udqp, gdqp, pdqp,
-+			resblks);
- 	if (error)
- 		goto out_trans_cancel;
- 
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 28b8ac701919..3315498a6fa1 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -804,6 +804,27 @@ xfs_trans_reserve_quota_nblks(
- 						nblks, ninos, flags);
- }
- 
-+/* Change the quota reservations for an inode creation activity. */
-+int
-+xfs_trans_reserve_quota_icreate(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	struct xfs_dquot	*udqp,
-+	struct xfs_dquot	*gdqp,
-+	struct xfs_dquot	*pdqp,
-+	int64_t			nblks)
-+{
-+	struct xfs_mount	*mp = dp->i_mount;
-+
-+	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
-+		return 0;
-+
-+	ASSERT(!xfs_is_quota_inode(&mp->m_sb, dp->i_ino));
-+
-+	return xfs_trans_reserve_quota_bydquots(tp, dp->i_mount, udqp, gdqp,
-+			pdqp, nblks, 1, XFS_QMOPT_RES_REGBLKS);
-+}
-+
- /*
-  * This routine is called to allocate a quotaoff log item.
-  */
+ fs/xfs/libxfs/xfs_attr.c |   10 ++
+ fs/xfs/libxfs/xfs_bmap.c |   10 ++
+ fs/xfs/xfs_bmap_util.c   |   22 +++--
+ fs/xfs/xfs_file.c        |   26 ++++--
+ fs/xfs/xfs_icache.c      |  189 +++++++++++++++++++++++++++++++---------------
+ fs/xfs/xfs_icache.h      |    9 ++
+ fs/xfs/xfs_inode.c       |   22 ++++-
+ fs/xfs/xfs_ioctl.c       |   18 +++-
+ fs/xfs/xfs_iomap.c       |   24 ++++--
+ fs/xfs/xfs_iops.c        |   20 +++--
+ fs/xfs/xfs_qm.c          |   36 +++++++--
+ fs/xfs/xfs_quota.h       |   36 +++++----
+ fs/xfs/xfs_reflink.c     |   31 +++++---
+ fs/xfs/xfs_symlink.c     |   12 ++-
+ fs/xfs/xfs_trace.c       |    1 
+ fs/xfs/xfs_trace.h       |   40 ++++++++++
+ fs/xfs/xfs_trans.c       |   20 +++++
+ fs/xfs/xfs_trans_dquot.c |  108 +++++++++++++++++++++++---
+ 18 files changed, 466 insertions(+), 168 deletions(-)
 
