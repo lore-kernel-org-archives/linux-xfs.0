@@ -2,170 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13FCBC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 07:42:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77F4FC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 08:39:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C561222241
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 07:42:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 211A4229C7
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 08:39:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732378AbhARHmk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 02:42:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51200 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732980AbhARHme (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 02:42:34 -0500
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD11EC061573
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Jan 2021 23:41:53 -0800 (PST)
-Received: by mail-wm1-x32c.google.com with SMTP id v184so8663256wma.1
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Jan 2021 23:41:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=scylladb-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=84dQpBdUvbIU1uNKQMOyaKOFiyJs/52YsIkFh9uvJ+Y=;
-        b=O5BFpyPzwQd7fsJtJNdf2tQRv/ZVUh/UBwqTnQAv3z6TZHvO5vA+fZfmOapJzhyn7t
-         cXUL0RoPzEEKD+gh0AQ9QcnkU5Spk+Gmgny/9qv0KbZ+rc+NI8XEJb1IH/1wEIWnvIzH
-         EaHIe4Mvn2lPczFbod3V+WmyT/z/GHK0PNkBYjIXXXBcZnEShmSMHiCA3iS1Mb4+U9uM
-         s6msVYYfzwQZq/CEGcRxWwuu2Rmi7dRIHAMv9zorZkzXxl9i+rHCcTssKJoHAdM5mXyz
-         EKgMgl66cBuhKs0nVHZv5E0hVwsUhF97NBbORZcpFX2DuwbSAF/ade0VmzPSJnlpfjHY
-         IFaA==
+        id S2387722AbhARIi7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 03:38:59 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:37509 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2387851AbhARIi5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 03:38:57 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1610959051;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=XiloATaYbpCajaLQqF1MtOHDfTmGddB2aqqrXnEViD8=;
+        b=CBtEdpK3XQ/RHPfEQtvc+GIu6MI8vOetVVrgdjHrO6QvyFe0MsMaw1FEXnN9tXD+GdwkTw
+        DnXV05uiqOLFYfeJJPSKg3xPgpm7d3pbZtjYjhg0sOnBim/h585d5ko7GsGMNEIygLCDJp
+        2qzw2TVnamj3sbXV9Jy8n8SoLKfL3ec=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-562-KtoXehknOOCnQ0Zsjb8GOg-1; Mon, 18 Jan 2021 03:37:29 -0500
+X-MC-Unique: KtoXehknOOCnQ0Zsjb8GOg-1
+Received: by mail-pl1-f200.google.com with SMTP id m9so10930122plt.5
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Jan 2021 00:37:29 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=84dQpBdUvbIU1uNKQMOyaKOFiyJs/52YsIkFh9uvJ+Y=;
-        b=M3YiBIiZnhHQNCtPdJz0WzS5/xOcyl2LjSx6TzMoq9HBADkV2ATxQtsT7b7oGTfqFi
-         krQjvNEDBTuA4immT1tOJxs14ZEneCbVkMQm0JGTjft5V/SPz6rsetrMVc1mmxzfcsZI
-         CraqXwu9O9dcuM1RO35qMIFvD8Nlx/i88MJ4QX74VKFK260F2OfxsP1BQULZ8dQQgUeq
-         gWFfzG3gsSYk4l1nR4I8DvsCiYSSojBG0H48fcQMJEUj7zvmtQKw+i1H839aAFm8B3rW
-         5Q+mxJMmYIvvYwCqVtgdW/ocTsjPRCIK5dDgL2SifbzhqaJj6CCYN0kDoZ8vWioCINfE
-         Fv2A==
-X-Gm-Message-State: AOAM530FSb0IAm29ZKMY0/kPM5inpMagvIMhWnm2ifKrdrOvLr2hkSht
-        pZi0I0CkNuJq8ptTtCXxZ0do5w==
-X-Google-Smtp-Source: ABdhPJz4WbmpfxQu29FsmDFc4bQeHOvi1sibHHrLgyfJ3N5TghOxZtvsv3pOyjJRpCr80KVyt/UbZw==
-X-Received: by 2002:a7b:c5d6:: with SMTP id n22mr18784934wmk.70.1610955712600;
-        Sun, 17 Jan 2021 23:41:52 -0800 (PST)
-Received: from tmp.scylladb.com (bzq-79-182-3-66.red.bezeqint.net. [79.182.3.66])
-        by smtp.googlemail.com with ESMTPSA id w4sm23953270wmc.13.2021.01.17.23.41.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 17 Jan 2021 23:41:51 -0800 (PST)
-Subject: Re: [RFC] xfs: reduce sub-block DIO serialisation
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        andres@anarazel.de
-References: <20210112010746.1154363-1-david@fromorbit.com>
- <32f99253-fe56-9198-e47c-7eb0e24fdf73@scylladb.com>
- <20210112221324.GU331610@dread.disaster.area>
- <0f0706f9-92ab-6b38-f3ab-b91aaf4343d1@scylladb.com>
- <20210113203809.GF331610@dread.disaster.area>
- <50362fc8-3d5e-cd93-4e55-f3ecddc21780@scylladb.com>
- <20210117213401.GB78941@dread.disaster.area>
-From:   Avi Kivity <avi@scylladb.com>
-Message-ID: <c6f25213-233e-3f0e-a6c9-f5e2d5122c34@scylladb.com>
-Date:   Mon, 18 Jan 2021 09:41:44 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=XiloATaYbpCajaLQqF1MtOHDfTmGddB2aqqrXnEViD8=;
+        b=a2ZgG9Kq9hlNPQk5I2u7QSjeFctys0ZARge/YMIW1bmIldUYw8mrdLKzy+eAyHeamx
+         mfwmNQ3iTv9zCcHvSCyMzpj97px920kPXu79lLgWof2c0OC+1BHTFHbtpVE44qXXLLyA
+         KXnfE4Y1gWU6Z/u5HMJFxw6vcima9cRiMvTRs8DFVqzFamlVT2xXXTcexiNMZghUFZi4
+         1MKmQUI9AmGMGU8leLwo42AePqjBozs1wwDCG1Ri6//dfF73XVRSrJ7F1lvHVTcZk5nu
+         aWCOA/G0gFGFL61N2rr5pqhDVhGUw1unxjqLu0d/Id//cOzWKQKpt7MMEl5kt6ayliMk
+         kGGg==
+X-Gm-Message-State: AOAM5313WZrO7T7wA1x5ycstX0ApOIytaq1+RGx1WOPptpEof0+wBiV4
+        IS4oByaYMvt+zZ+G4jD1++4l/Qk4nTdSloMHMuvOhQE8XqlFAsy3blrJB0/shMxR5yQQEM003Wo
+        oBNjdE76twnnyhgfhkar7nkK7kLC92Mj9tdsL9oAqbUgEf2hMCIs2Lbc/jws3Oz2a8h4gv2O3gg
+        ==
+X-Received: by 2002:a17:90a:d58c:: with SMTP id v12mr25621688pju.37.1610959048561;
+        Mon, 18 Jan 2021 00:37:28 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJzC6oITeuwll1OqDi4QhL2bCUxRgehm04et3QmDyv8BC17u/GHtxZ8qTys+494tqpIY6Eb8oA==
+X-Received: by 2002:a17:90a:d58c:: with SMTP id v12mr25621665pju.37.1610959048245;
+        Mon, 18 Jan 2021 00:37:28 -0800 (PST)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id e5sm16293916pjs.0.2021.01.18.00.37.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Jan 2021 00:37:27 -0800 (PST)
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH v5 0/5] xfs: support shrinking free space in the last AG
+Date:   Mon, 18 Jan 2021 16:36:55 +0800
+Message-Id: <20210118083700.2384277-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-In-Reply-To: <20210117213401.GB78941@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/17/21 11:34 PM, Dave Chinner wrote:
-> On Thu, Jan 14, 2021 at 08:48:36AM +0200, Avi Kivity wrote:
->> On 1/13/21 10:38 PM, Dave Chinner wrote:
->>> On Wed, Jan 13, 2021 at 10:00:37AM +0200, Avi Kivity wrote:
->>>> On 1/13/21 12:13 AM, Dave Chinner wrote:
->>>>> On Tue, Jan 12, 2021 at 10:01:35AM +0200, Avi Kivity wrote:
->>>>>> On 1/12/21 3:07 AM, Dave Chinner wrote:
->>>>>>> Hi folks,
->>>>>>>
->>>>>>> This is the XFS implementation on the sub-block DIO optimisations
->>>>>>> for written extents that I've mentioned on #xfs and a couple of
->>>>>>> times now on the XFS mailing list.
->>>>>>>
->>>>>>> It takes the approach of using the IOMAP_NOWAIT non-blocking
->>>>>>> IO submission infrastructure to optimistically dispatch sub-block
->>>>>>> DIO without exclusive locking. If the extent mapping callback
->>>>>>> decides that it can't do the unaligned IO without extent
->>>>>>> manipulation, sub-block zeroing, blocking or splitting the IO into
->>>>>>> multiple parts, it aborts the IO with -EAGAIN. This allows the high
->>>>>>> level filesystem code to then take exclusive locks and resubmit the
->>>>>>> IO once it has guaranteed no other IO is in progress on the inode
->>>>>>> (the current implementation).
->>>>>> Can you expand on the no-splitting requirement? Does it involve only
->>>>>> splitting by XFS (IO spans >1 extents) or lower layers (RAID)?
->>>>> XFS only.
->>>> Ok, that is somewhat under control as I can provide an extent hint, and wish
->>>> really hard that the filesystem isn't fragmented.
->>>>
->>>>
->>>>>> The reason I'm concerned is that it's the constraint that the application
->>>>>> has least control over. I guess I could use RWF_NOWAIT to avoid blocking my
->>>>>> main thread (but last time I tried I'd get occasional EIOs that frightened
->>>>>> me off that).
->>>>> Spurious EIO from RWF_NOWAIT is a bug that needs to be fixed. DO you
->>>>> have any details?
->>>>>
->>>> I reported it in [1]. It's long since gone since I disabled RWF_NOWAIT. It
->>>> was relatively rare, sometimes happening in continuous integration runs that
->>>> take hours, and sometimes not.
->>>>
->>>>
->>>> I expect it's fixed by now since io_uring relies on it. Maybe I should turn
->>>> it on for kernels > some_random_version.
->>>>
->>>>
->>>> [1] https://lore.kernel.org/lkml/9bab0f40-5748-f147-efeb-5aac4fd44533@scylladb.com/t/#u
->>> Yeah, as I thought. Usage of REQ_NOWAIT with filesystem based IO is
->>> simply broken - it causes spurious IO failures to be reported to IO
->>> completion callbacks and so are very difficult to track and/or
->>> retry. iomap does not use REQ_NOWAIT at all, so you should not ever
->>> see this from XFS or ext4 DIO anymore...
->> What kernel version would be good?
-> For ext4? >= 5.5 was when it was converted to the iomap DIO path
-> should be safe.  Before taht it would use the old DIO path which
-> sets REQ_NOWAIT when IOCB_NOWAIT (i.e. RWF_NOWAIT) was set for the
-> IO.
->
-> Btrfs is an even more recent convert to iomap-based dio (5.9?).
->
-> The REQ_NOWAIT behaviour was introduced into the old DIO path back
-> in 4.13 by commit 03a07c92a9ed ("block: return on congested block
-> device") and was intended to support RWF_NOWAIT on raw block
-> devices.  Hence it was not added to the iomap path as block devices
-> don't use that path.
->
-> Other examples of how REQ_NOWAIT breaks filesystems was a io_uring
-> hack to force REQ_NOWAIT IO behaviour through filesystems via
-> "nowait block plugs" resulted in XFS filesystem shutdowns because
-> of unexpected IO errors during journal writes:
->
-> https://lore.kernel.org/linux-xfs/20200915113327.GA1554921@bfoster/
->
-> There have been patches proposed to add REQ_NOWAIT to the iomap DIO
-> code proporsed, but they've all been NACKed because of the fact it
-> will break filesystem-based RWF_NOWAIT DIO.
->
-> So, long story short: On XFS you are fine on all kernels. On all
-> other block based filesystems you need <4.13, except for ext4 where
->> = 5.5 and btrfs where >=5.9 will work correctly.
+Hi folks,
 
+v4: https://lore.kernel.org/r/20210111132243.1180013-1-hsiangkao@redhat.com
 
-My report mentions XFS though it was so long ago I'm willing to treat it 
-as measurement error. I'll incorporate these numbers into the code, and 
-we'll see. Luckily I was already forced to have filesystem specific code 
-so the ugliness is already there.
+This patchset attempts to support shrinking free space in the last AG.
+This version mainly updates the per-ag reservation fail case mentioned
+by Darrick, also add error injection point to observe such path...
+If I'm still missing something (e.g. not sure of the log reservation
+calculation due to another free extent dfop) or something goes wrong,
+please kindly point out...
 
+xfsprogs: https://lore.kernel.org/r/20201028114010.545331-1-hsiangkao@redhat.com
+xfstests: https://lore.kernel.org/r/20201028230909.639698-1-hsiangkao@redhat.com
 
+Changes since v4:
+ - [3/5] update a missing typedef case and move the comment to the top
+         of the whole function (Christoph);
+ - [4/5] put onstack structs at the top of the declaration list;
+         handling the per-ag reservation fail case;
+         do agf->agf_length, agi->agi_length sanity check;
+         leave a comment in the error handing path above
+         xfs_trans_commit() (Darrick);
+ - [5/5] add an error injection path to observe the per-ag reservation
+         fail path (Darrick).
+
+Thanks,
+Gao Xiang
+
+Gao Xiang (5):
+  xfs: rename `new' to `delta' in xfs_growfs_data_private()
+  xfs: get rid of xfs_growfs_{data,log}_t
+  xfs: hoist out xfs_resizefs_init_new_ags()
+  xfs: support shrinking unused space in the last AG
+  xfs: add error injection for per-AG resv failure when shrinkfs
+
+ fs/xfs/libxfs/xfs_ag.c       |  93 +++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h       |   2 +
+ fs/xfs/libxfs/xfs_errortag.h |   2 +
+ fs/xfs/xfs_error.c           |   2 +
+ fs/xfs/xfs_fsops.c           | 167 ++++++++++++++++++++++-------------
+ fs/xfs/xfs_fsops.h           |   4 +-
+ fs/xfs/xfs_ioctl.c           |   4 +-
+ fs/xfs/xfs_trans.c           |   1 -
+ 8 files changed, 211 insertions(+), 64 deletions(-)
+
+-- 
+2.27.0
 
