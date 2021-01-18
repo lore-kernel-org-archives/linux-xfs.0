@@ -2,122 +2,63 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ACDEC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 21:37:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88B93C433E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 21:44:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4511222228
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 21:37:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C25322E00
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 21:44:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394773AbhARVhL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 16:37:11 -0500
-Received: from sandeen.net ([63.231.237.45]:59696 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2394827AbhARVg0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Jan 2021 16:36:26 -0500
-Received: from liberator.local (unknown [10.0.1.163])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 334CC4872F3
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Jan 2021 15:34:02 -0600 (CST)
-To:     xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 851038ba
-Message-ID: <8704ea2f-84ae-d73f-862e-94d21388c0ef@sandeen.net>
-Date:   Mon, 18 Jan 2021 15:35:44 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.6.1
+        id S2389762AbhARVnl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 16:43:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34526 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388645AbhARVnA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 16:43:00 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 241C7C061573;
+        Mon, 18 Jan 2021 13:42:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=jyoij0RsS5818dRxwbFzHUwXraId823WtMIOT0DRHDU=; b=VzVcYihCG2lQP/J+Q1f+x03Lb9
+        t98+gi+/CgDqKJW57GasOmXfZ3X/Ontf1Jy+h/Vufi5B7DBL/HO/K7pli0GoxlhgV4CWuP8HVAA+p
+        UEsGaHbKjGVwlYGofoUPnuvNO73ROV5shc4ls71ZVzf2Dh11tGvjQ+id/8rPf6jHuBSAKONc3bR6i
+        Rzn2GPfmu17eKyqf8RZUDJBIXZv6b54wvSN8Mhm05NsnaCjlAF5rUJ7Z+lpbUgR5IQ18hs+ZoxhDn
+        zbAHC8NJ+gHgwD7F5WV/s27g3iR6VIXzaHQaQtXv2xZT50RWD4R4/xzGZzwMaf6TpjBHnMTqwhVci
+        YdKB8mjQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1l1cHJ-00DRHV-4I; Mon, 18 Jan 2021 21:41:39 +0000
+Date:   Mon, 18 Jan 2021 21:41:37 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        avi@scylladb.com
+Subject: Re: [PATCH 10/11] iomap: add a IOMAP_DIO_UNALIGNED flag
+Message-ID: <20210118214137.GG2260413@casper.infradead.org>
+References: <20210118193516.2915706-1-hch@lst.de>
+ <20210118193516.2915706-11-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="BPjrAUEqrYixgCLbliQbCygkHdFs9jqWM"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210118193516.2915706-11-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---BPjrAUEqrYixgCLbliQbCygkHdFs9jqWM
-Content-Type: multipart/mixed; boundary="J5uKtoKJKEyyNZs4iVIuj7hq5Ag73UTnm";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <8704ea2f-84ae-d73f-862e-94d21388c0ef@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 851038ba
+On Mon, Jan 18, 2021 at 08:35:15PM +0100, Christoph Hellwig wrote:
+> Add a flag to signal an I/O that is not file system block aligned.
+> +	if (dio_flags & IOMAP_DIO_UNALIGNED) {
 
---J5uKtoKJKEyyNZs4iVIuj7hq5Ag73UTnm
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+There are a number of things that DIO has to be aligned to -- memory
+addresses, for example.  Can we be a little more verbose about what is
+unaligned here?  eg
 
-Hi folks,
+	if (dio_flags & IOMAP_DIO_FS_UNALIGNED)
 
-The for-next branch of the xfsprogs repository at:
+(or FSBLK_UNALIGNED, or ... something).
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-This is just the debian/ infrastructure updates.
-
-Thanks,
--Eric
-
-The new head of the for-next branch is commit:
-
-851038ba (HEAD -> for-next, korg/for-next, refs/patches/for-next/fix-cont=
-rol) debian: Update Uploaders list
-
-New Commits:
-
-Bastian Germann (6):
-      [f808d107] debian: cryptographically verify upstream tarball
-      [849e3b65] debian: remove dependency on essential util-linux
-      [0a435d0f] debian: remove "Priority: extra"
-      [1a86c04a] debian: use Package-Type over its predecessor
-      [cac1e96b] debian: add missing copyright info
-      [f86541b7] debian: new changelog entry
-
-Nathan Scott (1):
-      [851038ba] debian: Update Uploaders list
-
-
-Code Diffstat:
-
- debian/changelog                |  11 ++++
- debian/control                  |   7 ++-
- debian/copyright                | 111 ++++++++++++++++++++++++++++++++++=
-++-----
- debian/upstream/signing-key.asc |  63 +++++++++++++++++++++++
- debian/watch                    |   2 +-
- 5 files changed, 176 insertions(+), 18 deletions(-)
- create mode 100644 debian/upstream/signing-key.asc
-
-
---J5uKtoKJKEyyNZs4iVIuj7hq5Ag73UTnm--
-
---BPjrAUEqrYixgCLbliQbCygkHdFs9jqWM
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmAF/zAFAwAAAAAACgkQIK4WkuE93uDn
-KRAAqbnXvF24Vv0ewgg9VYfZ/A81nQsnUcW0u573eeBEYVCsbb5CAENx1RaqTVFL3EuoLYd9d63a
-QiMrHucw7/nQQZ6seZWljhFdapV7Aynpp6EBkoGATffYlLUgyNMZbjP4/9ejxsuu8MuV3AFN2NaS
-PBWG8Tad4wpRyg6G2L3TuSq6frYKYmrBa3WCJFi/jqhZZRNuAfpq/U2k8vE2OF+vLuG1RVCuqoqY
-A6rhy1QA8jbBb2NR/r1FfEMQ7YmJjdyQFnN76psAOfWY+5QSf/UQyJgMPGoFAq9KeJaGDU+9VTZQ
-EH1tv1zRM+5WrWqGgUSzJDbN75BM60VaNclfJXQlj7/7iukywqEAIwcqMh+GBiyC5JqG7ddfYoyK
-wAlg4rQkaOP5D0jSD/UTLys4c3IEOI0v2DNWlp8zspRXWR7lvpcRgnj4S8M73Tc35IvknlYRQ3px
-sox+++VHHtev4kjxbFU6wUphTK80bmz7BjcPIAzN9z6b06F8pPxUiPAl47Gw39rghnvJ0/BX/CCT
-YwG19t03qQhY3tz4y0JtHmPVyNfuiVQUaxnycF2sWOHyZzZ2bIOujY1Iozw6xrq2dJiM+G7O0VRk
-eRV17ettVxUvUrvDN2lPo9XN3YrpnFBparGBMZ6IDVMZT69G/550sYdPvFsnM2GD6ei7AOXgNWUX
-Ef8=
-=cUfS
------END PGP SIGNATURE-----
-
---BPjrAUEqrYixgCLbliQbCygkHdFs9jqWM--
