@@ -6,84 +6,71 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00B9AC4332B
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 17:54:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C12ABC433DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 17:55:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC11C2222A
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 17:54:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C23522BEA
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Jan 2021 17:55:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436747AbhARRyo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Jan 2021 12:54:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38472 "EHLO
+        id S2407074AbhARRgU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Jan 2021 12:36:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2407196AbhARRjr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 12:39:47 -0500
+        with ESMTP id S2436550AbhARRe4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jan 2021 12:34:56 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DFB2C0613C1
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Jan 2021 09:38:50 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F347C061573
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Jan 2021 09:34:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=arNQA0yrAJYn2Sy7bjubn0srkVAw0hZajwhmB5pCdfI=; b=cc0trx8Pla20S/THq9U5VUPC/m
-        Ku5nLywWBwOom+YN6E7f1of9uKMhVjeIkuC3ykIlEputPH/NQIAtWZIwY0MpmUOMFO4L8JtoogagI
-        ndPLPREiRnsWiipiD0dOzOjKSF19yOPosAvDFsHkQ3eMKUWPc0irZiZsXmYQ8/5SoY1JJuCte2jBG
-        336uLZlMB2ywX4dW6e2DgDug3hdFLHRUfjAUFaBer3sNZhvRy2UlWUIVvyV8RBvOQhoeEDbGvpMP7
-        r4eiSxU4j0kUT8/Yspr6v/bAuNKiK302ORZalEBcZUPeLz0T7lkQnd0ZLlhXFghIaRIIb8NkRdXoW
-        k8baAC3w==;
+        bh=QtDfHpPOYXJmzOJD78mNKA8VY9r1amAbaaODmIjU0Kw=; b=kmwEWe7ieIWsvF+1kksVqmdmPj
+        4Xs1CjcyFAHvoW8OkEQp/TywTz6DiplV+JgYs0qy0GKISHSKPLQR+jmE19Y3VhWA+6eHcAfKYnY7Y
+        W9ToQRCoVvCl75jhN4bvvskk/wRb2XQqktLyB0ZwU8/w/j/pEffX+EbA6VdQotPdBKaIBFz07gcIS
+        VuZwFjKjA3lb3foxMOwssi5121g5IVlWSU3gqvfCndRW/hkozlAe94B+TIhPLOpR/84o49PVht8NU
+        hDQF/40ikQ3QjEvGOLOwo1NGuy4bT/hV/59PP4Zwq1ooCZSMjmj4BTWt9AvnBQw5gOg4IoIR4eSvF
+        tHHPgdLw==;
 Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1l1YUJ-00D9zt-2l; Mon, 18 Jan 2021 17:38:47 +0000
-Date:   Mon, 18 Jan 2021 17:38:47 +0000
+        id 1l1YPs-00D9i6-Dh; Mon, 18 Jan 2021 17:34:13 +0000
+Date:   Mon, 18 Jan 2021 17:34:12 +0000
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/7] xfs: refactor the predicate part of
- xfs_free_eofblocks
-Message-ID: <20210118173847.GC3134885@infradead.org>
-References: <161040739544.1582286.11068012972712089066.stgit@magnolia>
- <161040740813.1582286.3253329052236449810.stgit@magnolia>
- <X/8KS4it5LAkN6Xr@infradead.org>
- <20210114224953.GJ1164246@magnolia>
+Subject: Re: [PATCH 3/6] xfs: don't stall cowblocks scan if we can't take
+ locks
+Message-ID: <20210118173412.GA3134885@infradead.org>
+References: <161040735389.1582114.15084485390769234805.stgit@magnolia>
+ <161040737263.1582114.4973977520111925461.stgit@magnolia>
+ <X/8HLQGzXSbC2IIn@infradead.org>
+ <20210114215453.GG1164246@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210114224953.GJ1164246@magnolia>
+In-Reply-To: <20210114215453.GG1164246@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 14, 2021 at 02:49:53PM -0800, Darrick J. Wong wrote:
-> > > +	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
-> > > +	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
-> > > +	if (last_fsb <= end_fsb)
-> > > +		return 0;
+On Thu, Jan 14, 2021 at 01:54:53PM -0800, Darrick J. Wong wrote:
+> On Wed, Jan 13, 2021 at 03:43:57PM +0100, Christoph Hellwig wrote:
+> > On Mon, Jan 11, 2021 at 03:22:52PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Don't stall the cowblocks scan on a locked inode if we possibly can.
+> > > We'd much rather the background scanner keep moving.
 > > 
-> > Where does this strange magic come from?
+> > Wouldn't it make more sense to move the logic to ignore the -EAGAIN
+> > for not-sync calls into xfs_inode_walk_ag?
 > 
-> It comes straight from xfs_free_eofblocks.
-> 
-> I /think/ the purpose of this is to avoid touching any file that's
-> larger than the page cache supports (i.e. 16T on 32-bit) because inode
-> inactivation causes pagecache invalidation, and trying to invalidate
-> with too high a pgoff causes weird integer truncation problems.
+> I'm not sure what you're asking here?  _free_cowblocks only returns
+> EAGAIN for sync calls.  Locking failure for a not-sync call results in a
+> return 0, which means that _walk_ag just moves on to the next inode.
 
-Hmm.  At very least we need to document this, but we really should not
-allow to even read in an inode successfully under this condition..
+What I mean is:
 
-Screams for a nice little test case..
-
-> > 	xfs_ilock(ip, XFS_ILOCK_SHARED);
-> > 	if (ip->i_delayed_blks) {
-> > 		*has = true;
-> > 		goto out_unlock;
-> > 	}
-> > 	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
-> > 		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> 
-> Is it even worth reading in the bmap btree to clear posteof blocks if we
-> haven't loaded it already?
-
-True, we can return early in that case.  I'm also not sure what the
-i_delayed_blks check is supposed to do, as delalloc extents do show
-up in the iext tree just like normal extents.
+ - always return -EAGAIN when taking the locks fails
+ - don't exit early on -EAGAIN in xfs_inode_walk at least for sync
+   calls, although thinking loud I see no good reason to exit early
+   even for non-sync invocations
