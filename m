@@ -2,63 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A21C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 06:47:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0AA6C433E6
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 06:49:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20FD623120
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 06:47:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACED923121
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 06:49:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729991AbhASGrN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 01:47:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37956 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727569AbhASGrE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 01:47:04 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3807C061757
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Jan 2021 22:46:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=a8nSY6Fi+/dtJD8UBZU0mMngBvhu3ugCtwLpn9ClBpU=; b=TPDNc4y5j/bjZGa6hOsh4n1zIq
-        nUNpErExsAw2yTITkKRCI1eLKfGL58fcpaJWJlD7RDKG55/HE2v38unuaNPRF9UbMJsqSHKQfCgf7
-        0l2bIzf7/40rKqcokhiAplHKaqm4qdxHrOFVvCk0gBN0x3nCBE3sVVGlFO8mrr+ZdeFwoiGRtuDuS
-        biT/ZEUiZ9tTXRyq8ELDIpXHskZHZMTvliIbsjO6laJrv30BpvnFD3oDw/fi/rHMVaR1c4Vyhi661
-        /pC6GBWpR170lpzIXEFSm7cHSmL+GUyjjhwDeM6gtX7FD5bkupwRzfW7QKggPhFrg/LOrfElTbD3k
-        INZzsJkw==;
-Received: from 089144206130.atnat0015.highway.bob.at ([89.144.206.130] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1l1kmL-00Dv1D-9s; Tue, 19 Jan 2021 06:46:14 +0000
-Date:   Tue, 19 Jan 2021 07:44:03 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: create convenience wrappers for incore quota
- block reservations
-Message-ID: <YAZ/s1a0c7drWZv3@infradead.org>
-References: <161100789347.88678.17195697099723545426.stgit@magnolia>
- <161100791039.88678.6897577495997060048.stgit@magnolia>
+        id S2387841AbhASFhV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 00:37:21 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:34702 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731930AbhASFJn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 00:09:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1611032983; x=1642568983;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=7b7Ba/mkSpgZ58joyvKPrAaGG8qz0lkQcstbC0iRpPI=;
+  b=hoCPR6+JPwXb4NUidO7PPWk6+QxAL1MfjG31vE0x/o2DtQQXtFLjxavg
+   JXYklM0do/i5rnr42DwRO0LJZh7j9s5QtXDNdkTQ0emYyx6n/Vv2hV98u
+   xZGz1W1S+Psydrb+82nhBTe6iyPEtJbFjaXItDiQpp4WBnW8n9n8WHycs
+   ysd+uazr8/pR/nKtHF+qsZg6yHIrCQ1MpayDWC3HQQ2gZgwF9wsAQCwi3
+   kqoHGMXNejyNklDwAm79q3aFi9cWuVfpYB76me4nBcksW/+3Kondk0ne2
+   zzAXddAS1ysJIcdx1t9LyQPrITia+P1UsUJckefqF+nmrIoSJ8RCh4u3C
+   w==;
+IronPort-SDR: eZ9GzOW6ryJEvDPSNJqna3IvNIoXm61TE9qccZ3A3l0qmG08arebgpnGe4kLVuQsBPR7ZlrD8u
+ UvchH8taBhvY5zEWi9e4IOEJD9hG7i4I3ZG8QB7h43S84atVVxLtmmgfRPpCaZuM3fsjvdA7EA
+ gUIUzcrJeTnsLFD2RCMV0RXt1xXmVUQI6p3ZMiO8atB9eEcRFUcylw81NPqZYNdKwga+KFG9Tp
+ eJcnf4Quruy1olcCSupPGVivQvP6/IfTZwpMs1okEl9+IDIdyEDbx59Evu416ZMKXGG4B+fTgV
+ XLU=
+X-IronPort-AV: E=Sophos;i="5.79,357,1602518400"; 
+   d="scan'208";a="268081044"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:08:30 +0800
+IronPort-SDR: ZMezbSDwWuYFWdC7DWvizZCfAHGg6wc/P1xL8z2y/3gZ2MDS36R+ED/AN2d7MSfFTGU+KGsiJL
+ +uJi0muOvTBGiCF9Wy+AJTqelwkp5kX4JQMwxwztJ2uwunGJesMrzeuUkNUfD1SklAw6GlsZZN
+ vT5Xxu2TQheAm8IQIuqHGtM2AIbLzWY9/jqw9FSj8aVW7fwS2iL56l8SlIwznFL5rLPVA4BlHM
+ 37iXVQRXW/cdlYLd59mZfeRYpY8NO4JpvGekPR+HYFfy6DHlZ5Y9oKvTjCuf+qcbcHTniJk/zD
+ gbRMPSotBf3S4fA2IxleOW+p
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:53:07 -0800
+IronPort-SDR: P5c68+r5a8DOSQsRGC/PLvFBWof3CYBSZ78/AjZxxbqEhqAxt84O9ZWicHnuz+rOOqV7roKTgj
+ twniYUPk2fiAD8Xe2xt0+bCng/kmhe4tRAPsXmMChVmLYeVESDqX1Ch12ppq+swuJrohwMf670
+ nW4oFOXw5mZvfoBvM6DRJldmElTkBvSEiHsn4Z6Lj6HNC6nwKfOy7ls60P38dBSPu32aUdCyrJ
+ 9Xni8CwHGVPZR+TCQgcaFbT87hN7DOlLc38PrOokHP4ypmvZX5OCF+2Q9DRTOOHIgCBKFlVNcC
+ QQI=
+WDCIronportException: Internal
+Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
+  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:08:30 -0800
+From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        cluster-devel@redhat.com
+Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
+        axboe@kernel.dk, philipp.reisner@linbit.com,
+        lars.ellenberg@linbit.com, efremov@linux.com, colyli@suse.de,
+        kent.overstreet@gmail.com, agk@redhat.com, snitzer@redhat.com,
+        song@kernel.org, hch@lst.de, sagi@grimberg.me,
+        martin.petersen@oracle.com, viro@zeniv.linux.org.uk, clm@fb.com,
+        josef@toxicpanda.com, dsterba@suse.com, tytso@mit.edu,
+        adilger.kernel@dilger.ca, rpeterso@redhat.com, agruenba@redhat.com,
+        darrick.wong@oracle.com, shaggy@kernel.org, damien.lemoal@wdc.com,
+        naohiro.aota@wdc.com, jth@kernel.org, tj@kernel.org,
+        osandov@fb.com, bvanassche@acm.org, gustavo@embeddedor.com,
+        asml.silence@gmail.com, jefflexu@linux.alibaba.com,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 16/37] floppy: use bio_init_fields
+Date:   Mon, 18 Jan 2021 21:06:10 -0800
+Message-Id: <20210119050631.57073-17-chaitanya.kulkarni@wdc.com>
+X-Mailer: git-send-email 2.22.1
+In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
+References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <161100791039.88678.6897577495997060048.stgit@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> -	error = xfs_trans_reserve_quota_nblks(NULL, ip, (long)alen, 0,
-> -						XFS_QMOPT_RES_REGBLKS);
-> +	error = xfs_quota_reserve_blkres(ip, alen, XFS_QMOPT_RES_REGBLKS);
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ drivers/block/floppy.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-This is the only callsite outside of xfs_quota_unreserve_blkres,
-so I'm not sure how useful the wrapper is.  Also even on the unreserved
-side we always pass XFS_QMOPT_RES_REGBLKS except for one case that
-conditionally passes XFS_QMOPT_RES_RTBLKS.  So if we think these helpers
-are useful enough I'd at least just pass a bool is_rt argument and hide
-the flags entirely.
+diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
+index dfe1dfc901cc..1237b64bb37b 100644
+--- a/drivers/block/floppy.c
++++ b/drivers/block/floppy.c
+@@ -4219,13 +4219,10 @@ static int __floppy_read_block_0(struct block_device *bdev, int drive)
+ 	cbdata.drive = drive;
+ 
+ 	bio_init(&bio, &bio_vec, 1);
+-	bio_set_dev(&bio, bdev);
++	bio_init_fields(&bio, bdev, 0, &cbdata, floppy_rb0_cb, 0, 0);
+ 	bio_add_page(&bio, page, block_size(bdev), 0);
+ 
+-	bio.bi_iter.bi_sector = 0;
+ 	bio.bi_flags |= (1 << BIO_QUIET);
+-	bio.bi_private = &cbdata;
+-	bio.bi_end_io = floppy_rb0_cb;
+ 	bio_set_op_attrs(&bio, REQ_OP_READ, 0);
+ 
+ 	init_completion(&cbdata.complete);
+-- 
+2.22.1
+
