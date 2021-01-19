@@ -2,43 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0369C41621
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA0B1C0044D
 	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 14:33:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7A16206E5
+	by mail.kernel.org (Postfix) with ESMTP id D350023135
 	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 14:33:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405465AbhASOcp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 09:32:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48396 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388296AbhASJqw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 04:46:52 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4F57C061573;
-        Tue, 19 Jan 2021 01:46:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=NR8j/MWlkQlAYWwyyPe6lVQHJ6
-        XfT8RXMPsqC8HiUId2Y1GeAidCIEcQHEfncYgXLiQOxRWRAlEcFZ6FtUIdqtL/j/dzO4zawfrgGIC
-        lK4D9Z1XIw05z3hikMSe4Ai93vwZp50zj+2irALoFKEE3bqQ6YhQIcUwq24CVI9PWpn1Zfjfs0g9H
-        z/5YMqP9BkrKUrAvSdrW/dVGuwyweDBUbbQhlP0TO7RjtK0B72F34/iv/0489cVtW44S8sLeiY6qp
-        QPDOqCCtXIy77rLnmGjIlf5bA89o5USVB0StJ0/pxLrwnAkZM56pU1yNSqqiJhmyP+n8f7N57gy6Z
-        E4G1wXPg==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1l1na6-00E8VU-Iz; Tue, 19 Jan 2021 09:45:51 +0000
-Date:   Tue, 19 Jan 2021 09:45:46 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Christian Brauner <christian.brauner@ubuntu.com>
+        id S2405484AbhASOcr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 09:32:47 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:57716 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391918AbhASLtU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 06:49:20 -0500
+Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <christian.brauner@ubuntu.com>)
+        id 1l1pQY-0005xg-BD; Tue, 19 Jan 2021 11:44:02 +0000
+Date:   Tue, 19 Jan 2021 12:43:57 +0100
+From:   Christian Brauner <christian.brauner@ubuntu.com>
+To:     Christoph Hellwig <hch@infradead.org>
 Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
         linux-fsdevel@vger.kernel.org,
         John Johansen <john.johansen@canonical.com>,
         James Morris <jmorris@namei.org>,
@@ -71,20 +59,24 @@ Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v5 32/42] fs: make helpers idmap mount aware
-Message-ID: <20210119094546.GP3364550@infradead.org>
+        Christoph Hellwig <hch@lst.de>,
+        Mauricio V??squez Bernal <mauricio@kinvolk.io>
+Subject: Re: [PATCH v5 40/42] fs: introduce MOUNT_ATTR_IDMAP
+Message-ID: <20210119114357.w553czxsnelyph6g@wittgenstein>
 References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
- <20210112220124.837960-33-christian.brauner@ubuntu.com>
+ <20210112220124.837960-41-christian.brauner@ubuntu.com>
+ <20210119094750.GQ3364550@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210112220124.837960-33-christian.brauner@ubuntu.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20210119094750.GQ3364550@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good,
+On Tue, Jan 19, 2021 at 09:47:50AM +0000, Christoph Hellwig wrote:
+> Generally looks good, but wouldn't it make sense to introduce the
+> userns_fd in version 0 of the mount_attr structure instead of having
+> two versions from the start?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I agree.
