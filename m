@@ -5,277 +5,201 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F942C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:28:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB053C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:30:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19DB323110
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:28:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B89EF2311C
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:30:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728316AbhASP1b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 10:27:31 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:60631 "EHLO
+        id S2389426AbhASP1e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 10:27:34 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:25723 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2391464AbhASPZ2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 10:25:28 -0500
+        by vger.kernel.org with ESMTP id S2391409AbhASPYk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 10:24:40 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611069842;
+        s=mimecast20190719; t=1611069794;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=EG4O0ujJn/mAWAXt6JtUbPmD4HQVxe9/zEf8ebvAMU0=;
-        b=Pk5EJ5texvXgwhbI4mcHYep1BaTyO8FnOWNgzZxlgYr2wzN19njOSPV60M563d+wfSMF9j
-        I/0T4+pvuMKIRxOh6k1lTzH5twUVmMJIv4cEf0SuL4Op+5SoLLWTJRJILOHWQ00kX/PxUz
-        Yhtwa9VeSmTvphtkx2kUoVWLAYRy+9k=
+        bh=s9RbCrtn53b3CeRcYuUYD71valu6+pdVw5hOh6A/cdY=;
+        b=JjnkpaflbmLyUpLDPJGEiH1McEZh7ysZG+PgMkKp10zxROomz0/fvoj24AOndU+ps5xPSn
+        S8m/T09bHs/8ToaEHk6UPLI8j1kuuZVv1L7cNFcXwo4twoFfmscrqI6awSJEHfg0vLJ0HY
+        X72BRDwlDV7wVFjVex4NVglnS9NvZQo=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-360-bLE8l5WvOxu03FRy1cUT1A-1; Tue, 19 Jan 2021 10:24:00 -0500
-X-MC-Unique: bLE8l5WvOxu03FRy1cUT1A-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+ us-mta-580-dAQpbTE1M5-C2zr5tN0rxg-1; Tue, 19 Jan 2021 10:23:12 -0500
+X-MC-Unique: dAQpbTE1M5-C2zr5tN0rxg-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 31FE384E242;
-        Tue, 19 Jan 2021 15:23:59 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id F2E0B800D53;
+        Tue, 19 Jan 2021 15:23:10 +0000 (UTC)
 Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7AAE169320;
-        Tue, 19 Jan 2021 15:23:58 +0000 (UTC)
-Date:   Tue, 19 Jan 2021 10:23:56 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3CB8819CA8;
+        Tue, 19 Jan 2021 15:23:10 +0000 (UTC)
+Date:   Tue, 19 Jan 2021 10:23:08 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        avi@scylladb.com
-Subject: Re: [PATCH 09/11] iomap: pass a flags argument to iomap_dio_rw
-Message-ID: <20210119152356.GI1646807@bfoster>
+        avi@scylladb.com, Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH 03/11] xfs: cleanup the read/write helper naming
+Message-ID: <20210119152308.GC1646807@bfoster>
 References: <20210118193516.2915706-1-hch@lst.de>
- <20210118193516.2915706-10-hch@lst.de>
+ <20210118193516.2915706-4-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210118193516.2915706-10-hch@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20210118193516.2915706-4-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 18, 2021 at 08:35:14PM +0100, Christoph Hellwig wrote:
-> Pass a set of flags to iomap_dio_rw instead of the boolean
-> wait_for_completion argument.  The IOMAP_DIO_FORCE_WAIT flag
-> replaces the wait_for_completion, but only needs to be passed
-> when the iocb isn't synchronous to start with to simplify the
-> callers.
+On Mon, Jan 18, 2021 at 08:35:08PM +0100, Christoph Hellwig wrote:
+> Drop a few pointless aio_ prefixes.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/btrfs/file.c       |  7 +++----
->  fs/ext4/file.c        |  5 ++---
->  fs/gfs2/file.c        |  7 ++-----
->  fs/iomap/direct-io.c  | 11 +++++------
->  fs/xfs/xfs_file.c     |  7 +++----
->  fs/zonefs/super.c     |  4 ++--
->  include/linux/iomap.h | 10 ++++++++--
->  7 files changed, 25 insertions(+), 26 deletions(-)
+>  fs/xfs/xfs_file.c | 30 +++++++++++++++---------------
+>  1 file changed, 15 insertions(+), 15 deletions(-)
 > 
-> diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-> index 0e41459b8de667..ddfd2e2adedf58 100644
-> --- a/fs/btrfs/file.c
-> +++ b/fs/btrfs/file.c
-> @@ -1949,8 +1949,8 @@ static ssize_t btrfs_direct_write(struct kiocb *iocb, struct iov_iter *from)
->  		goto buffered;
->  	}
->  
-> -	dio = __iomap_dio_rw(iocb, from, &btrfs_dio_iomap_ops,
-> -			     &btrfs_dio_ops, is_sync_kiocb(iocb));
-> +	dio = __iomap_dio_rw(iocb, from, &btrfs_dio_iomap_ops, &btrfs_dio_ops,
-> +			     0);
->  
->  	btrfs_inode_unlock(inode, ilock_flags);
->  
-> @@ -3622,8 +3622,7 @@ static ssize_t btrfs_direct_read(struct kiocb *iocb, struct iov_iter *to)
->  		return 0;
->  
->  	btrfs_inode_lock(inode, BTRFS_ILOCK_SHARED);
-> -	ret = iomap_dio_rw(iocb, to, &btrfs_dio_iomap_ops, &btrfs_dio_ops,
-> -			   is_sync_kiocb(iocb));
-> +	ret = iomap_dio_rw(iocb, to, &btrfs_dio_iomap_ops, &btrfs_dio_ops, 0);
->  	btrfs_inode_unlock(inode, BTRFS_ILOCK_SHARED);
->  	return ret;
->  }
-> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-> index 349b27f0dda0cb..194f5d00fa3267 100644
-> --- a/fs/ext4/file.c
-> +++ b/fs/ext4/file.c
-> @@ -74,8 +74,7 @@ static ssize_t ext4_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
->  		return generic_file_read_iter(iocb, to);
->  	}
->  
-> -	ret = iomap_dio_rw(iocb, to, &ext4_iomap_ops, NULL,
-> -			   is_sync_kiocb(iocb));
-> +	ret = iomap_dio_rw(iocb, to, &ext4_iomap_ops, NULL, 0);
->  	inode_unlock_shared(inode);
->  
->  	file_accessed(iocb->ki_filp);
-> @@ -550,7 +549,7 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  	if (ilock_shared)
->  		iomap_ops = &ext4_iomap_overwrite_ops;
->  	ret = iomap_dio_rw(iocb, from, iomap_ops, &ext4_dio_write_ops,
-> -			   is_sync_kiocb(iocb) || unaligned_io || extend);
-> +			   (unaligned_io || extend) ? IOMAP_DIO_FORCE_WAIT : 0);
->  	if (ret == -ENOTBLK)
->  		ret = 0;
->  
-> diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
-> index b39b339feddc93..89609c2997177a 100644
-> --- a/fs/gfs2/file.c
-> +++ b/fs/gfs2/file.c
-> @@ -797,9 +797,7 @@ static ssize_t gfs2_file_direct_read(struct kiocb *iocb, struct iov_iter *to,
->  	if (ret)
->  		goto out_uninit;
->  
-> -	ret = iomap_dio_rw(iocb, to, &gfs2_iomap_ops, NULL,
-> -			   is_sync_kiocb(iocb));
-> -
-> +	ret = iomap_dio_rw(iocb, to, &gfs2_iomap_ops, NULL, 0);
->  	gfs2_glock_dq(gh);
->  out_uninit:
->  	gfs2_holder_uninit(gh);
-> @@ -833,8 +831,7 @@ static ssize_t gfs2_file_direct_write(struct kiocb *iocb, struct iov_iter *from,
->  	if (offset + len > i_size_read(&ip->i_inode))
->  		goto out;
->  
-> -	ret = iomap_dio_rw(iocb, from, &gfs2_iomap_ops, NULL,
-> -			   is_sync_kiocb(iocb));
-> +	ret = iomap_dio_rw(iocb, from, &gfs2_iomap_ops, NULL, 0);
->  	if (ret == -ENOTBLK)
->  		ret = 0;
->  out:
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 604103ab76f9c5..32dbbf7dd4aadb 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -420,13 +420,15 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
->  struct iomap_dio *
->  __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
-> -		bool wait_for_completion)
-> +		unsigned int dio_flags)
->  {
->  	struct address_space *mapping = iocb->ki_filp->f_mapping;
->  	struct inode *inode = file_inode(iocb->ki_filp);
->  	size_t count = iov_iter_count(iter);
->  	loff_t pos = iocb->ki_pos;
->  	loff_t end = iocb->ki_pos + count - 1, ret = 0;
-> +	bool wait_for_completion =
-> +		is_sync_kiocb(iocb) || (dio_flags & IOMAP_DIO_FORCE_WAIT);
->  	unsigned int iomap_flags = IOMAP_DIRECT;
->  	struct blk_plug plug;
->  	struct iomap_dio *dio;
-> @@ -434,9 +436,6 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	if (!count)
->  		return NULL;
->  
-> -	if (WARN_ON(is_sync_kiocb(iocb) && !wait_for_completion))
-> -		return ERR_PTR(-EIO);
-> -
->  	dio = kmalloc(sizeof(*dio), GFP_KERNEL);
->  	if (!dio)
->  		return ERR_PTR(-ENOMEM);
-> @@ -598,11 +597,11 @@ EXPORT_SYMBOL_GPL(__iomap_dio_rw);
->  ssize_t
->  iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
-> -		bool wait_for_completion)
-> +		unsigned int flags)
->  {
->  	struct iomap_dio *dio;
->  
-> -	dio = __iomap_dio_rw(iocb, iter, ops, dops, wait_for_completion);
-> +	dio = __iomap_dio_rw(iocb, iter, ops, dops, flags);
->  	if (IS_ERR_OR_NULL(dio))
->  		return PTR_ERR_OR_ZERO(dio);
->  	return iomap_dio_complete(dio);
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index bffd7240cefb7f..b181db42f2f32f 100644
+> index fb4e6f2852bb8b..ae7313ccaa11ed 100644
 > --- a/fs/xfs/xfs_file.c
 > +++ b/fs/xfs/xfs_file.c
-> @@ -232,8 +232,7 @@ xfs_file_dio_read(
->  	ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
->  	if (ret)
->  		return ret;
-> -	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL,
-> -			is_sync_kiocb(iocb));
-> +	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL, 0);
->  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> @@ -215,7 +215,7 @@ xfs_ilock_iocb(
+>  }
 >  
->  	return ret;
-> @@ -535,7 +534,7 @@ xfs_file_dio_write_aligned(
->  	}
->  	trace_xfs_file_direct_write(iocb, from);
->  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
-> -			   &xfs_dio_write_ops, is_sync_kiocb(iocb));
-> +			   &xfs_dio_write_ops, 0);
->  out_unlock:
->  	if (iolock)
->  		xfs_iunlock(ip, iolock);
-> @@ -603,7 +602,7 @@ xfs_file_dio_write_unaligned(
->  	 */
->  	trace_xfs_file_direct_write(iocb, from);
->  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
-> -			   &xfs_dio_write_ops, true);
-> +			   &xfs_dio_write_ops, IOMAP_DIO_FORCE_WAIT);
->  out_unlock:
->  	if (iolock)
->  		xfs_iunlock(ip, iolock);
-> diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
-> index bec47f2d074beb..0e7ab0bc00ae8e 100644
-> --- a/fs/zonefs/super.c
-> +++ b/fs/zonefs/super.c
-> @@ -780,7 +780,7 @@ static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
->  		ret = zonefs_file_dio_append(iocb, from);
+>  STATIC ssize_t
+> -xfs_file_dio_aio_read(
+> +xfs_file_dio_read(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*to)
+>  {
+> @@ -265,7 +265,7 @@ xfs_file_dax_read(
+>  }
+>  
+>  STATIC ssize_t
+> -xfs_file_buffered_aio_read(
+> +xfs_file_buffered_read(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*to)
+>  {
+> @@ -300,9 +300,9 @@ xfs_file_read_iter(
+>  	if (IS_DAX(inode))
+>  		ret = xfs_file_dax_read(iocb, to);
+>  	else if (iocb->ki_flags & IOCB_DIRECT)
+> -		ret = xfs_file_dio_aio_read(iocb, to);
+> +		ret = xfs_file_dio_read(iocb, to);
 >  	else
->  		ret = iomap_dio_rw(iocb, from, &zonefs_iomap_ops,
-> -				   &zonefs_write_dio_ops, sync);
-> +				   &zonefs_write_dio_ops, 0);
->  	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ &&
->  	    (ret > 0 || ret == -EIOCBQUEUED)) {
->  		if (ret > 0)
-> @@ -917,7 +917,7 @@ static ssize_t zonefs_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
->  		}
->  		file_accessed(iocb->ki_filp);
->  		ret = iomap_dio_rw(iocb, to, &zonefs_iomap_ops,
-> -				   &zonefs_read_dio_ops, is_sync_kiocb(iocb));
-> +				   &zonefs_read_dio_ops, 0);
->  	} else {
->  		ret = generic_file_read_iter(iocb, to);
->  		if (ret == -EIO)
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 5bd3cac4df9cb4..b322598dc10ec0 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -256,12 +256,18 @@ struct iomap_dio_ops {
->  			struct bio *bio, loff_t file_offset);
+> -		ret = xfs_file_buffered_aio_read(iocb, to);
+> +		ret = xfs_file_buffered_read(iocb, to);
+>  
+>  	if (ret > 0)
+>  		XFS_STATS_ADD(mp, xs_read_bytes, ret);
+> @@ -317,7 +317,7 @@ xfs_file_read_iter(
+>   * if called for a direct write beyond i_size.
+>   */
+>  STATIC ssize_t
+> -xfs_file_aio_write_checks(
+> +xfs_file_write_checks(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*from,
+>  	int			*iolock)
+> @@ -502,7 +502,7 @@ static const struct iomap_dio_ops xfs_dio_write_ops = {
 >  };
 >  
-> +/*
-> + * Wait for the I/O to complete in iomap_dio_rw even if the kiocb is not
-> + * synchronous.
-> + */
-> +#define IOMAP_DIO_FORCE_WAIT	(1 << 0)
-> +
->  ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
-> -		bool wait_for_completion);
-> +		unsigned int flags);
->  struct iomap_dio *__iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
-> -		bool wait_for_completion);
-> +		unsigned int flags);
->  ssize_t iomap_dio_complete(struct iomap_dio *dio);
->  int iomap_dio_iopoll(struct kiocb *kiocb, bool spin);
+>  /*
+> - * xfs_file_dio_aio_write - handle direct IO writes
+> + * xfs_file_dio_write - handle direct IO writes
+>   *
+>   * Lock the inode appropriately to prepare for and issue a direct IO write.
+>   * By separating it from the buffered write path we remove all the tricky to
+> @@ -527,7 +527,7 @@ static const struct iomap_dio_ops xfs_dio_write_ops = {
+>   * negative return values.
+>   */
+>  STATIC ssize_t
+> -xfs_file_dio_aio_write(
+> +xfs_file_dio_write(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*from)
+>  {
+> @@ -549,7 +549,7 @@ xfs_file_dio_aio_write(
+>  	/*
+>  	 * Don't take the exclusive iolock here unless the I/O is unaligned to
+>  	 * the file system block size.  We don't need to consider the EOF
+> -	 * extension case here because xfs_file_aio_write_checks() will relock
+> +	 * extension case here because xfs_file_write_checks() will relock
+>  	 * the inode as necessary for EOF zeroing cases and fill out the new
+>  	 * inode size as appropriate.
+>  	 */
+> @@ -580,7 +580,7 @@ xfs_file_dio_aio_write(
+>  		xfs_ilock(ip, iolock);
+>  	}
 >  
+> -	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+> +	ret = xfs_file_write_checks(iocb, from, &iolock);
+>  	if (ret)
+>  		goto out;
+>  	count = iov_iter_count(from);
+> @@ -590,7 +590,7 @@ xfs_file_dio_aio_write(
+>  	 * in-flight at the same time or we risk data corruption. Wait for all
+>  	 * other IO to drain before we submit. If the IO is aligned, demote the
+>  	 * iolock if we had to take the exclusive lock in
+> -	 * xfs_file_aio_write_checks() for other reasons.
+> +	 * xfs_file_write_checks() for other reasons.
+>  	 */
+>  	if (unaligned_io) {
+>  		inode_dio_wait(inode);
+> @@ -634,7 +634,7 @@ xfs_file_dax_write(
+>  	ret = xfs_ilock_iocb(iocb, iolock);
+>  	if (ret)
+>  		return ret;
+> -	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+> +	ret = xfs_file_write_checks(iocb, from, &iolock);
+>  	if (ret)
+>  		goto out;
+>  
+> @@ -663,7 +663,7 @@ xfs_file_dax_write(
+>  }
+>  
+>  STATIC ssize_t
+> -xfs_file_buffered_aio_write(
+> +xfs_file_buffered_write(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*from)
+>  {
+> @@ -682,7 +682,7 @@ xfs_file_buffered_aio_write(
+>  	iolock = XFS_IOLOCK_EXCL;
+>  	xfs_ilock(ip, iolock);
+>  
+> -	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+> +	ret = xfs_file_write_checks(iocb, from, &iolock);
+>  	if (ret)
+>  		goto out;
+>  
+> @@ -769,12 +769,12 @@ xfs_file_write_iter(
+>  		 * CoW.  In all other directio scenarios we do not
+>  		 * allow an operation to fall back to buffered mode.
+>  		 */
+> -		ret = xfs_file_dio_aio_write(iocb, from);
+> +		ret = xfs_file_dio_write(iocb, from);
+>  		if (ret != -ENOTBLK)
+>  			return ret;
+>  	}
+>  
+> -	return xfs_file_buffered_aio_write(iocb, from);
+> +	return xfs_file_buffered_write(iocb, from);
+>  }
+>  
+>  static void
 > -- 
 > 2.29.2
 > 
