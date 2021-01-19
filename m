@@ -3,38 +3,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1125AC4332E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59CF9C43331
 	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 14:33:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D48032070B
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 14:33:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37773206E5
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 14:33:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405122AbhASOcX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 09:32:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45818 "EHLO
+        id S2405148AbhASOcd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 09:32:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387587AbhASJez (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 04:34:55 -0500
+        with ESMTP id S2387665AbhASJiH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 04:38:07 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B1F0C0613C1;
-        Tue, 19 Jan 2021 01:34:14 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0F81C061573;
+        Tue, 19 Jan 2021 01:37:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=dEpfJCWBeTDzsQGes9dJr7Z/yQ
-        nJeBreR+8+I5Yd1g3E1upZjaEHLadWZJOOojOGR7mZB0SGRfTL3SaJKle3AqZWTTcPF6DbB5Eb41o
-        STFS5OFCNDSeHPqkXo+MI6x1p2YIfBNT2oYwuNpLKce6jjl5GbCxoB9JShWwjP3z6+khLJX5kxGbv
-        z51UbqtKzmAsUJxssJxlX987FEZHGpL2NXJ5e4grZTXKOdpsbx0rJAgOvJYgUv2KGyRBd0gcl5GCg
-        /FfMPzPVfAfl1RBaOxwWPl8gu3zEDecBPxsyeXJ0YC/nLUMsmO7GlsVCL9y7EXWFJNdQQ7mhSMyrl
-        /eThp4JQ==;
+        bh=lkd5BoXRXZXegz0OAW0KP/ZWkeXWrChLRnyeG1Ce6eM=; b=Mh9s8AHw1yhDl8mLTSrmKY92NR
+        qApA5C2Sos5Xw/oxVQZ4P5QVp9lEKDefhVdmrQUrH4hnXHygg1L6hlz7MR64dWZ0fsWJrBcgjJat8
+        A5SrHVAImT3UUPZBGl78jzF32nOeqYKjCVEZ1wMgFhr3vrU9LvZSW8jcXxQcavpg7ztYyySly00pg
+        syGJXrpNCNL+2IkOt4s8RfVfDqcT0PH+xeiBhjJx43VBcL0Sm8DSEFFPDMpoBCr68OnYzR00zBD0/
+        0VSK5NkCJvCBzhPLkK/E46VBpO/yV08GyBZYo/yhBPdrQDK4UM4EgtrJTiNuUNzDrJ9vbVDl8ra5x
+        PZFa4w3g==;
 Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1l1nOr-00E7bT-To; Tue, 19 Jan 2021 09:34:10 +0000
-Date:   Tue, 19 Jan 2021 09:34:09 +0000
+        id 1l1nRw-00E7p7-2E; Tue, 19 Jan 2021 09:37:21 +0000
+Date:   Tue, 19 Jan 2021 09:37:20 +0000
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Christian Brauner <christian.brauner@ubuntu.com>
 Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -72,19 +72,33 @@ Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
         Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v5 20/42] namei: introduce struct renamedata
-Message-ID: <20210119093409.GE3364550@infradead.org>
+Subject: Re: [PATCH v5 22/42] open: handle idmapped mounts in do_truncate()
+Message-ID: <20210119093720.GG3364550@infradead.org>
 References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
- <20210112220124.837960-21-christian.brauner@ubuntu.com>
+ <20210112220124.837960-23-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210112220124.837960-21-christian.brauner@ubuntu.com>
+In-Reply-To: <20210112220124.837960-23-christian.brauner@ubuntu.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good,
+On Tue, Jan 12, 2021 at 11:01:04PM +0100, Christian Brauner wrote:
+> @@ -930,8 +932,12 @@ void dump_truncate(struct coredump_params *cprm)
+>  
+>  	if (file->f_op->llseek && file->f_op->llseek != no_llseek) {
+>  		offset = file->f_op->llseek(file, 0, SEEK_CUR);
+> -		if (i_size_read(file->f_mapping->host) < offset)
+> -			do_truncate(file->f_path.dentry, offset, 0, file);
+> +		if (i_size_read(file->f_mapping->host) < offset) {
+> +			struct user_namespace *mnt_userns;
+> +
+> +			mnt_userns = file_user_ns(file);
+> +			do_truncate(mnt_userns, file->f_path.dentry, offset, 0, file);
+> +		}
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I think we can skip the local variable here.  In fact for all callers
+of do_truncate except vfs_truncate a little file_truncate helper that
+takes a struct file would help readability a lot.
