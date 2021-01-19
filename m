@@ -2,166 +2,144 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD40C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 23:51:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F8DC433E9
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 00:08:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9992A23104
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 23:51:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DB1822CE3
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 00:08:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729161AbhASXvB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 18:51:01 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35586 "EHLO mail.kernel.org"
+        id S1730076AbhATABC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 19:01:02 -0500
+Received: from mx2.suse.de ([195.135.220.15]:41684 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730551AbhASXuj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Jan 2021 18:50:39 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2EC0B23104;
-        Tue, 19 Jan 2021 23:49:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611100198;
-        bh=SzpYA5D7cyTsFviroTvonSPoLp+R1pVcppRf/1zKFy8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Aj2cef+drrK7snwJZIesaDbH8/JFyqFKC16G0aFUA0WVvRe9AkkKp1pMt8vma4WKv
-         KCwQC4/DXDcBSpVhRHa5kHQZ9rxO7ukEIQeNGc2/RvXZ0dIrEokanuVZ2Ukb25OLS2
-         xaT7BDXqauNuS4G6sooyAXcTooDqyIumu3L7wyUAW5VFIRpUN7YswkAUCGp+lReXuz
-         UK6LA8W33X/kXC55rFL3c9SUYyPFmpyCW4MROaOvnWal5Q1abj06vGYXhk4e9PIF7O
-         ULs4LLSu5GN1fWhwMkz4W2+CKjsJmF/shTRElQfHaULM13MnuUmn+auVnuPdhURRhJ
-         BYfz6AkmzmIkA==
-Date:   Tue, 19 Jan 2021 15:49:57 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs_repair: clear the needsrepair flag
-Message-ID: <20210119234819.GV3134581@magnolia>
-References: <161076028124.3386490.8050189989277321393.stgit@magnolia>
- <161076029319.3386490.2011901341184065451.stgit@magnolia>
- <20210119143754.GB1646807@bfoster>
- <20210119180318.GP3134581@magnolia>
- <20210119194406.GJ1646807@bfoster>
- <20210119203110.GT3134581@magnolia>
+        id S2394964AbhASNx3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Jan 2021 08:53:29 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1611064351; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+        bh=iHKhjDkg2elRSLCRxcs3JrLM+Cwcg+VKeqaH+Rb+H6c=;
+        b=rDTgZ7xM0AN8Ucse2v7mBg8l0Jc0DJBU5I16P+0kPu6Ll3d1MYjww4/OSPhb827NAQfP3a
+        AICZcyHBf6nEypATvwx9kRZbFb+EuDroiPciU7vbGZXpZWf5BQXuaB+OroVtJXg0PBeUIO
+        NBdb1UgiuuGaVIXgCdiitPnNeC32Gk4=
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 5E644B247;
+        Tue, 19 Jan 2021 13:52:31 +0000 (UTC)
+Subject: Re: [RFC PATCH 04/37] btrfs: use bio_init_fields in volumes
+To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        cluster-devel@redhat.com
+Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
+        axboe@kernel.dk, philipp.reisner@linbit.com,
+        lars.ellenberg@linbit.com, efremov@linux.com, colyli@suse.de,
+        kent.overstreet@gmail.com, agk@redhat.com, snitzer@redhat.com,
+        song@kernel.org, hch@lst.de, sagi@grimberg.me,
+        martin.petersen@oracle.com, viro@zeniv.linux.org.uk, clm@fb.com,
+        josef@toxicpanda.com, dsterba@suse.com, tytso@mit.edu,
+        adilger.kernel@dilger.ca, rpeterso@redhat.com, agruenba@redhat.com,
+        darrick.wong@oracle.com, shaggy@kernel.org, damien.lemoal@wdc.com,
+        naohiro.aota@wdc.com, jth@kernel.org, tj@kernel.org,
+        osandov@fb.com, bvanassche@acm.org, gustavo@embeddedor.com,
+        asml.silence@gmail.com, jefflexu@linux.alibaba.com
+References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
+ <20210119050631.57073-5-chaitanya.kulkarni@wdc.com>
+From:   Nikolay Borisov <nborisov@suse.com>
+Autocrypt: addr=nborisov@suse.com; prefer-encrypt=mutual; keydata=
+ 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
+Message-ID: <89feb998-8c60-dbae-92a6-15a9ad4fd594@suse.com>
+Date:   Tue, 19 Jan 2021 15:52:28 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210119203110.GT3134581@magnolia>
+In-Reply-To: <20210119050631.57073-5-chaitanya.kulkarni@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 19, 2021 at 12:31:10PM -0800, Darrick J. Wong wrote:
-> On Tue, Jan 19, 2021 at 02:44:06PM -0500, Brian Foster wrote:
-> > On Tue, Jan 19, 2021 at 10:15:49AM -0800, Darrick J. Wong wrote:
-> > > On Tue, Jan 19, 2021 at 09:37:54AM -0500, Brian Foster wrote:
-> > > > On Fri, Jan 15, 2021 at 05:24:53PM -0800, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > > 
-> > > > > Clear the needsrepair flag, since it's used to prevent mounting of an
-> > > > > inconsistent filesystem.
-> > > > > 
-> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > > ---
-> > > > 
-> > > > Code/errors look much cleaner. Though looking at the repair code again,
-> > > > I wonder... if we clear the needsrepair bit and dirty/write the sb in
-> > > > phase 2 and then xfs_repair happens to crash, do we risk clearing the
-> > > > bit and thus allowing a potential mount before whatever requisite
-> > > > metadata updates have been made?
-> > > 
-> > > [Oh good, now mail.kernel.org is having problems...]
-> > > 
-> > > Yes, though I think that falls into the realm of "sysadmins should be
-> > > sufficiently self-aware not to expect mount to work after repair
-> > > fails/system crashes during an upgrade".
-> > > 
-> > > I've thought about how to solve the general problem of preventing people
-> > > from mounting filesystems if repair doesn't run to completion.  I think
-> > > xfs_repair could be modified so that once it finds the primary super, it
-> > > writes it back out with NEEDSREPAIR set (V5) or inprogress set (V4).
-> > > Once we've finished the buffer cache flush at the end of repair, we
-> > > clear needsrepair/inprogress and write the primary super again.
-> > > 
-> > 
-> > That's kind of what I was thinking.. set a global flag if/when we come
-> > across the bit set on disk and clear it as a final step.
-> 
-> I think if I found it set on the primary sb I would leave it alone, and
-> if the bit wasn't set then I'd set it and bwrite the buffer immediately.
-> Probably we're talking about more or less the same thing...
 
-...though after talking to Eric some more, I think I should change this
-patch to clear needsrepair at the end of repair, like you said.
 
---D
+On 19.01.21 г. 7:05 ч., Chaitanya Kulkarni wrote:
+> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+> ---
+>  fs/btrfs/volumes.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
+> index ee086fc56c30..836167212252 100644
+> --- a/fs/btrfs/volumes.c
+> +++ b/fs/btrfs/volumes.c
+> @@ -6371,14 +6371,12 @@ static void submit_stripe_bio(struct btrfs_bio *bbio, struct bio *bio,
+>  
+>  	bio->bi_private = bbio;
+This line can be removed as ->private is initialized by bio_init_fields.
 
-> > > An optimization on that would be to find a way to avoid that first super
-> > > write until we flush the first dirty buffer.
-> > > 
-> > > Another way to make repair more "transactional" would be to do it would
-> > > be to fiddle with the buffer manager so that writes are sent to a
-> > > metadump file which could be mdrestore'd if repair completes
-> > > successfully.  But that's a short-circuit around the even bigger project
-> > > of porting the kernel logging code to userspace and use that in repair.
-> > > 
-> > 
-> > Yeah, I wouldn't want to have clearing a feature bit depend on such a
-> > significant rework of core functionality. The bit is not going to be set
-> > in most cases, so I'd suspect an extra superblock write at the end of
-> > repair wouldn't be much of a problem. In fact, it looks like main()
-> > already has an unconditional sb write before the final libxfs_unmount()
-> > call. Perhaps we could just hitch onto that for the primary super
-> > update (and continue to clear the secondaries earlier as the current
-> > patch does)..?
+>  	btrfs_io_bio(bio)->device = dev;
+> -	bio->bi_end_io = btrfs_end_bio;
+> -	bio->bi_iter.bi_sector = physical >> 9;
+> +	bio_init_fields(bio, dev->bdev, physical >> 9, bbio, btrfs_end_bio, 0, 0);
+>  	btrfs_debug_in_rcu(fs_info,
+>  	"btrfs_map_bio: rw %d 0x%x, sector=%llu, dev=%lu (%s id %llu), size=%u",
+>  		bio_op(bio), bio->bi_opf, bio->bi_iter.bi_sector,
+>  		(unsigned long)dev->bdev->bd_dev, rcu_str_deref(dev->name),
+>  		dev->devid, bio->bi_iter.bi_size);
+> -	bio_set_dev(bio, dev->bdev);
+>  
+>  	btrfs_bio_counter_inc_noblocked(fs_info);
+>  
 > 
-> Clearing the bit has to happen after the bcache purge and disk flush,
-> because we need to make sure that everything else we wrote actually made
-> it to stable storage.
-> 
-> Hm, I guess we could export libxfs_flush_mount so that repair could call
-> that, clear the fields in the sb, and then go ahead with the
-> libxfs_umount.
-> 
-> --D
-> 
-> > Brian
-> > 
-> > > --D
-> > > 
-> > > > Brian
-> > > > 
-> > > > >  repair/agheader.c |   15 +++++++++++++++
-> > > > >  1 file changed, 15 insertions(+)
-> > > > > 
-> > > > > 
-> > > > > diff --git a/repair/agheader.c b/repair/agheader.c
-> > > > > index 8bb99489..d9b72d3a 100644
-> > > > > --- a/repair/agheader.c
-> > > > > +++ b/repair/agheader.c
-> > > > > @@ -452,6 +452,21 @@ secondary_sb_whack(
-> > > > >  			rval |= XR_AG_SB_SEC;
-> > > > >  	}
-> > > > >  
-> > > > > +	if (xfs_sb_version_needsrepair(sb)) {
-> > > > > +		if (!no_modify)
-> > > > > +			sb->sb_features_incompat &=
-> > > > > +					~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-> > > > > +		if (i == 0) {
-> > > > > +			if (!no_modify)
-> > > > > +				do_warn(
-> > > > > +	_("clearing needsrepair flag and regenerating metadata\n"));
-> > > > > +			else
-> > > > > +				do_warn(
-> > > > > +	_("would clear needsrepair flag and regenerate metadata\n"));
-> > > > > +		}
-> > > > > +		rval |= XR_AG_SB_SEC;
-> > > > > +	}
-> > > > > +
-> > > > >  	return(rval);
-> > > > >  }
-> > > > >  
-> > > > > 
-> > > > 
-> > > 
-> > 
