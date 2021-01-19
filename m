@@ -2,64 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1CA1C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 06:41:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C142C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 06:42:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C62EE2311F
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 06:41:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0015723120
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 06:42:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727135AbhASGl4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 01:41:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36804 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729314AbhASGlx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 01:41:53 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 783F0C061573
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Jan 2021 22:41:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ye6UiiHQpZQPSnah7v03pk3zYLz+t33FxqMVH2IHlyk=; b=bNzIy5E3eRF/KzBL5YY2BXqBjH
-        H5+O3/GlkGs7hQ2rZ42z8YyNXVfvlv8Mqjcufayr9YWwwzwRJf2l/8TAJFwa1rwBCYkDgTvwaaAjW
-        hER+J57/MZ58iNMjnU6MAUYa/1qgUXsPR1C+GdnOlXFFM7i2mFXectofttY9yxBVTFWD13d0gn3vT
-        VJqvzNFbtMIIiIIyLWM/clrOtEozl3ldnQPkTCBd6FVb52GuzHknDhWpmGSYgzCCU+ivorIZUj5Hi
-        kRJJXg2XFQ2ikyVjV+fXdM5WtgH3whyluaogdCaowxDq0FynOZtcCYxeIHiK1hu7um7pog4Xnvc5I
-        C/Cdwu/g==;
-Received: from 089144206130.atnat0015.highway.bob.at ([89.144.206.130] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1l1kgz-00DugF-Ho; Tue, 19 Jan 2021 06:40:46 +0000
-Date:   Tue, 19 Jan 2021 07:38:31 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs: clean up quota reservation wrappers
-Message-ID: <YAZ+Z4DxkbPUnTFk@infradead.org>
-References: <161100789347.88678.17195697099723545426.stgit@magnolia>
- <161100790484.88678.13971476776021338640.stgit@magnolia>
+        id S2390932AbhASFiK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 00:38:10 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:51835 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389840AbhASFPY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 00:15:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1611033324; x=1642569324;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=7vt16PAj1e5r0qMNupRL0U4T3eLDEFSlTSo46YPqSAM=;
+  b=GDQJVCZTBwXcPjv1RdwSi2yVINbHIZ+aFdYJalPM3TPZIH8OpPuiYpEi
+   YqacQA5F5HqMnHH1qOV7+vbWnOFuuaEV4xpuK8T2kyvVdwzK6sAoNKz+D
+   YGBBkppZrqG97SRpuqkh8Oz1dLNDpAYwfRD8Lu9hyFGB6YWh1W00Kiamy
+   487YmLaa1bY/6I31qE1OvzyoHPlxUh7KNlhDH5Hxqe1/kKLnpUeOwXxb4
+   0XQpoYQXvnGzy3c+evleRvEMqGtX02QoTUQXjcmOVaPZW/MPoscPm7CSA
+   0GS9JYUEngtkbQlp9CPV8ws14am0gsQ0gfvyzJSSvtw3UsquxBhFYSw4y
+   w==;
+IronPort-SDR: /lt97+fSfzNGesrGlpa798p3tsYkBJLz++x6b7k8BP/l7NCEFMZQ60qJE+eAhekMEmhiNLGa8D
+ 8h1kNBptR9qTGAkhZWoM/Dj4ZLmQdrKodnmqdT9qCMXg7LTZ3wTXrpNs2zAi8cArsoDmiPMLd+
+ Eb13gXq0PQwekKaxA4+fGSzKQHjdRkDeq4sX00687Fkynq7b9apf0QG3ebet/E3DsgR1OixgtR
+ odFNBsifiRFKym5ucU3/B+8NLdxZcljnR3EJhWQOB35Gc0HJdeXeVQpWbGs6EvaN5OGOp2/N+R
+ UyA=
+X-IronPort-AV: E=Sophos;i="5.79,357,1602518400"; 
+   d="scan'208";a="157764109"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:10:58 +0800
+IronPort-SDR: 1MUmC29YfeWLN0P2AdC/XQlwfAhcurVLfpQpZrOXtQIMW3Iu8XZ1LQG0lVwsyKKNPKjaTC3iAO
+ ptU5uDbZG/EH/WwqmRcBEM03B+ih8ai6HGfLWtzwLmDvSduPGw86Bb8cWyFdAsf4qivGBPrfu+
+ tHgn5QxHfLUbWpggz7rkjhj0DT6TswLStwuRIdlNQ7xL1P6ceemlImTobSwT1V1GHbLcGlvK5x
+ QNQrKzqzsUUNeBcL7JSEOadptSkB+hUyZ4wahEbd7Ctf6W90Tei1jtkHegHHJRxFfK/zGmMHTr
+ 4G6rTk6cEJzHqOFiurDhkqWS
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:55:35 -0800
+IronPort-SDR: YVg4oetj669oXGPyen5Yz7/4lwwknpBuwOHqtYisxWomXA6swBTRl0Q6a9GaHjktx9T2m6JStb
+ CDvwa7TZCZ4M9GVWSo4RbtmgfurnOujjvD4svcphbEiZT+7y+gglJ9ZlIF/tnwxqJkfJFxncIx
+ g5wm4nu8oJyzJ24M9klTWymj61zMdpHfpxs6XcMjZOa3vIqm+lJQ5C0tB3xkI9dYlB+E3Ul943
+ D49b5EPSkdl17MTuiUi4ULzuOqSv9X94gCd9MvAo2Xb2yDb8OLgPVo7IBgCR+uA44u4+72LP4B
+ OSs=
+WDCIronportException: Internal
+Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
+  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:10:58 -0800
+From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        cluster-devel@redhat.com
+Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
+        axboe@kernel.dk, philipp.reisner@linbit.com,
+        lars.ellenberg@linbit.com, efremov@linux.com, colyli@suse.de,
+        kent.overstreet@gmail.com, agk@redhat.com, snitzer@redhat.com,
+        song@kernel.org, hch@lst.de, sagi@grimberg.me,
+        martin.petersen@oracle.com, viro@zeniv.linux.org.uk, clm@fb.com,
+        josef@toxicpanda.com, dsterba@suse.com, tytso@mit.edu,
+        adilger.kernel@dilger.ca, rpeterso@redhat.com, agruenba@redhat.com,
+        darrick.wong@oracle.com, shaggy@kernel.org, damien.lemoal@wdc.com,
+        naohiro.aota@wdc.com, jth@kernel.org, tj@kernel.org,
+        osandov@fb.com, bvanassche@acm.org, gustavo@embeddedor.com,
+        asml.silence@gmail.com, jefflexu@linux.alibaba.com,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 36/37] xfs: use bio_init_fields in xfs_buf
+Date:   Mon, 18 Jan 2021 21:06:30 -0800
+Message-Id: <20210119050631.57073-37-chaitanya.kulkarni@wdc.com>
+X-Mailer: git-send-email 2.22.1
+In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
+References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <161100790484.88678.13971476776021338640.stgit@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 18, 2021 at 02:11:44PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Replace a couple of quota reservation macros with properly typechecked
-> static inline functions ahead of more restructuring in the next patches.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ fs/xfs/xfs_buf.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Looks good,
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index f8400bbd6473..1c157cfc5f8f 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1508,10 +1508,8 @@ xfs_buf_ioapply_map(
+ 	nr_pages = min(total_nr_pages, BIO_MAX_PAGES);
+ 
+ 	bio = bio_alloc(GFP_NOIO, nr_pages);
+-	bio_set_dev(bio, bp->b_target->bt_bdev);
+-	bio->bi_iter.bi_sector = sector;
+-	bio->bi_end_io = xfs_buf_bio_end_io;
+-	bio->bi_private = bp;
++	bio_init_fields(bio, bp->b_target->bt_bdev, sector, bp,
++			xfs_buf_bio_end_io, 0, 0);
+ 	bio->bi_opf = op;
+ 
+ 	for (; size && nr_pages; nr_pages--, page_index++) {
+-- 
+2.22.1
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
