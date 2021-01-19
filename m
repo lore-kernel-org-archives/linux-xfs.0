@@ -2,107 +2,89 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81B9FC433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 22:25:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75AF0C4321A
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 22:40:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6441022E01
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 22:25:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4754A23121
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 22:40:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729303AbhASWYu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 17:24:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42528 "EHLO
+        id S2405473AbhASOcq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 09:32:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728496AbhASWYr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 17:24:47 -0500
-Received: from muffat.debian.org (muffat.debian.org [IPv6:2607:f8f0:614:1::1274:33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65928C0613C1
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Jan 2021 14:24:07 -0800 (PST)
-Received: from fasolo.debian.org ([138.16.160.17]:37376)
-        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
-        by muffat.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <envelope@ftp-master.debian.org>)
-        id 1l1zPy-00071M-7W; Tue, 19 Jan 2021 22:24:06 +0000
-Received: from dak by fasolo.debian.org with local (Exim 4.92)
-        (envelope-from <envelope@ftp-master.debian.org>)
-        id 1l1zPx-0005hM-B4; Tue, 19 Jan 2021 22:24:05 +0000
-From:   Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-To:     XFS Development Team <linux-xfs@vger.kernel.org>,
-        Bastian Germann <bastiangermann@fishpost.de>
-X-DAK:  dak process-upload
-X-Debian: DAK
-X-Debian-Package: xfsprogs
-Auto-Submitted: auto-generated
+        with ESMTP id S2388605AbhASJse (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 04:48:34 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8613C061573;
+        Tue, 19 Jan 2021 01:47:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=KBLdqigwXHa9zb4IKHjzXYIBtipeYgH3IvVF9mKe8Wc=; b=rkMudNvWO66HMSQr1C/riYx6VA
+        ITPbSZKgiBW4KcAtUmJmkUr1dBGlA/LNN3BGZBcxy4D6iuF9UCTZW8+fvX6Fs2HjXaH7Id164/C6p
+        8aX7aQWKUIb43BuHAt825NJDtfHZ03eFtv7j69IJStn2YxsSOCpKR6Ec83TqhIMYX2rT5ua6MVffv
+        dkDjTkT8HY7yNCIjlZIOXXuGVjfTfypwT0jzue7d0zu6Oqjhs9YmICue9ulItMg+VcpccEHVuyhvT
+        Git07uadZsjuEsjKkGCVR9P2D1ctpz0L0F93Xqf5Qcom70CCTkD4H7p/+v1MyKeAUkCnqLSoSIzQN
+        d/kOWGMA==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1l1nc6-00E8cK-3V; Tue, 19 Jan 2021 09:47:50 +0000
+Date:   Tue, 19 Jan 2021 09:47:50 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Christian Brauner <christian.brauner@ubuntu.com>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-fsdevel@vger.kernel.org,
+        John Johansen <john.johansen@canonical.com>,
+        James Morris <jmorris@namei.org>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Casey Schaufler <casey@schaufler-ca.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Geoffrey Thomas <geofft@ldpreload.com>,
+        Mrunal Patel <mpatel@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
+        Tycho Andersen <tycho@tycho.ws>,
+        David Howells <dhowells@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        St??phane Graber <stgraber@ubuntu.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aleksa Sarai <cyphar@cyphar.com>,
+        Lennart Poettering <lennart@poettering.net>,
+        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
+        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
+        Kees Cook <keescook@chromium.org>,
+        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        containers@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Mauricio V??squez Bernal <mauricio@kinvolk.io>
+Subject: Re: [PATCH v5 40/42] fs: introduce MOUNT_ATTR_IDMAP
+Message-ID: <20210119094750.GQ3364550@infradead.org>
+References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
+ <20210112220124.837960-41-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: xfsprogs_5.10.0-2_source.changes ACCEPTED into unstable
-Message-Id: <E1l1zPx-0005hM-B4@fasolo.debian.org>
-Date:   Tue, 19 Jan 2021 22:24:05 +0000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210112220124.837960-41-christian.brauner@ubuntu.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-Accepted:
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-Format: 1.8
-Date: Thu, 14 Jan 2021 18:59:14 +0100
-Source: xfsprogs
-Architecture: source
-Version: 5.10.0-2
-Distribution: unstable
-Urgency: low
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Bastian Germann <bastiangermann@fishpost.de>
-Closes: 979644 979653
-Changes:
- xfsprogs (5.10.0-2) unstable; urgency=low
- .
-   * Team upload
-   * debian: cryptographically verify upstream tarball (Closes: #979644)
-   * debian: remove dependency on essential util-linux
-   * debian: remove "Priority: extra"
-   * debian: use Package-Type over its predecessor
-   * debian: add missing copyright info (Closes: #979653)
-Checksums-Sha1:
- 9c7923ea5735242a29b8481cbd38059c850433b9 2034 xfsprogs_5.10.0-2.dsc
- 9e5cbf9b3a561c3b9b391f0b1330bcb4b3537d38 1273332 xfsprogs_5.10.0.orig.tar.xz
- 7240aa6c2fb907b9f1aeec8ae6d19fb8c62c1585 13792 xfsprogs_5.10.0-2.debian.tar.xz
- 87001ed58e1229bb8b9c7cc4348b5e07646675ef 6593 xfsprogs_5.10.0-2_source.buildinfo
-Checksums-Sha256:
- d4b995161ecfc754895c3a91931db9787fffc924fbc2a5cd51abb11a28ac1522 2034 xfsprogs_5.10.0-2.dsc
- e04017e46d43e4d54b9a560fd7cea922520f8f6ef882404969d20cd4e5c790e9 1273332 xfsprogs_5.10.0.orig.tar.xz
- 3f144a529ec274ffd720ad70c347b294c9a787868b2119ecacbf0c16bcb642f1 13792 xfsprogs_5.10.0-2.debian.tar.xz
- a022f266d04946b600fdb12815a4197d4dbb70ae8bfe92e5c682803bba9ac42d 6593 xfsprogs_5.10.0-2_source.buildinfo
-Files:
- 49fad22f902144635cd5a7c06de1fb1e 2034 admin optional xfsprogs_5.10.0-2.dsc
- f4156af67a0e247833be88efaa2869f9 1273332 admin optional xfsprogs_5.10.0.orig.tar.xz
- 6bb054391ad11b6d23d883a907e099be 13792 admin optional xfsprogs_5.10.0-2.debian.tar.xz
- 853ed7390e20376455676cf65ba4137d 6593 admin optional xfsprogs_5.10.0-2_source.buildinfo
-
------BEGIN PGP SIGNATURE-----
-
-iQHPBAEBCgA5FiEEQGIgyLhVKAI3jM5BH1x6i0VWQxQFAmAHV+cbHGJhc3RpYW5n
-ZXJtYW5uQGZpc2hwb3N0LmRlAAoJEB9ceotFVkMUZCIL+wXFyjxnBr2VGlTj+BVU
-taQwxuvEZoFwxvNwZ4Z5s38FBi6DzPWLF2jxCv4M0UTOpDPstg5WXebhfOnOdp4D
-0WW8G39jMIB2J+b0OQEGcMKdwuXKYKfDdBdOa+lesUoUU8AZEazS/whzMa7FD7wB
-/av/28PvYdWFK/ddERfujPIa6BtoIE2QszggOCHqCbUt3egQLCTxA+2qPR+f5Nrs
-VT/xgDrkkHC9ypkU8kypv4XhetHKwwxDyp+4PLja0OSnuH6/KzmiV8gI/Hq4Y4/l
-lYzXiWWjz5ofEHc3haGxqsKxabyRT6h31INdxfKjFhnFVrEyh3l+KjJL4AXcn8wH
-fB/DL2uquJkWBJ+N7xD/UYvDylwNaqnkyYOMCy+JyKE1lJZv5AfAGlsZ3VAnOeGT
-Rn8e7XF+4lPWsckPZ+YZWqGDmLbRxAeg5xGQ2iFKFPfwq0grKjARF+33JWkHR3Jk
-O/MWldWzIuogu77fsZbPlRPgG7dj8eA2pjscQJOXo/yb6g==
-=IDLF
------END PGP SIGNATURE-----
-
-
-Thank you for your contribution to Debian.
+Generally looks good, but wouldn't it make sense to introduce the
+userns_fd in version 0 of the mount_attr structure instead of having
+two versions from the start?
