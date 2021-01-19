@@ -7,60 +7,60 @@ X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A149C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:26:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D8A6C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:27:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 487FE23121
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:26:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35D0623110
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:27:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389567AbhASPZj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 10:25:39 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:41080 "EHLO
+        id S2391622AbhASP0S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 10:26:18 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:37000 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2391480AbhASPYu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 10:24:50 -0500
+        by vger.kernel.org with ESMTP id S2387522AbhASPZI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 10:25:08 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611069804;
+        s=mimecast20190719; t=1611069821;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=cMfoMfj22BY1KKl54jQ/V7G1fwpSus/XU7Im4QVgTno=;
-        b=FibEfAoFPxmqzhcgR88xEmxXHUcYtv9qbGd3H8IMusI7eeqX7fD55IwDTc9X5mdnoGn+8d
-        JWeH3tFospnbW49QSs/dy9LhAnf+ahGeHmAVvkOuNkaupF7Wx46GzOO/M6y/MBf7hXtnid
-        tF2itE9m+iKzH9na2EpBxf0Yk495jGc=
+        bh=6IOCzEEZmUBeZWP6WWqnV6vKo2Y6IOb3KpA7/jr14dc=;
+        b=app9wpUmhTBthHmLwsKKXBWm2emwA00GFgP179+akCx8/OeX+ZYyVd1URpNNFPdcCTqSWP
+        xVz74snSQBuH0zgMI6XsUqGVBItPDGb8KwBi4/YmNF7jJ++6CFK3bTha8r8Tez8wNcN1jI
+        QztrIT5+PLtI+kxbqyTC6dvTgfoKf2g=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-209-RIXTcbs-MVm5fnHrFtQVRg-1; Tue, 19 Jan 2021 10:23:20 -0500
-X-MC-Unique: RIXTcbs-MVm5fnHrFtQVRg-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+ us-mta-597-npNQoGZ1MTq9SYFFB1BAAg-1; Tue, 19 Jan 2021 10:23:36 -0500
+X-MC-Unique: npNQoGZ1MTq9SYFFB1BAAg-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 73C87107ACE6;
-        Tue, 19 Jan 2021 15:23:19 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 61F6D1005D5F;
+        Tue, 19 Jan 2021 15:23:35 +0000 (UTC)
 Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C656B6A914;
-        Tue, 19 Jan 2021 15:23:18 +0000 (UTC)
-Date:   Tue, 19 Jan 2021 10:23:17 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1A7645D968;
+        Tue, 19 Jan 2021 15:23:34 +0000 (UTC)
+Date:   Tue, 19 Jan 2021 10:23:32 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         avi@scylladb.com, Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 04/11] xfs: remove the buffered I/O fallback assert
-Message-ID: <20210119152317.GD1646807@bfoster>
+Subject: Re: [PATCH 06/11] xfs: improve the reflink_bounce_dio_write
+ tracepoint
+Message-ID: <20210119152332.GF1646807@bfoster>
 References: <20210118193516.2915706-1-hch@lst.de>
- <20210118193516.2915706-5-hch@lst.de>
+ <20210118193516.2915706-7-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210118193516.2915706-5-hch@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20210118193516.2915706-7-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 18, 2021 at 08:35:09PM +0100, Christoph Hellwig wrote:
-> The iomap code has been designed from the start not to do magic fallback,
-> so remove the assert in preparation for further code cleanups.
+On Mon, Jan 18, 2021 at 08:35:11PM +0100, Christoph Hellwig wrote:
+> Use a more suitable event class.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Dave Chinner <dchinner@redhat.com>
@@ -68,26 +68,45 @@ On Mon, Jan 18, 2021 at 08:35:09PM +0100, Christoph Hellwig wrote:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_file.c | 6 ------
->  1 file changed, 6 deletions(-)
+>  fs/xfs/xfs_file.c  | 2 +-
+>  fs/xfs/xfs_trace.h | 4 ++--
+>  2 files changed, 3 insertions(+), 3 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index ae7313ccaa11ed..97836ec53397d4 100644
+> index aa64e78fc3c467..a696bd34f71d21 100644
 > --- a/fs/xfs/xfs_file.c
 > +++ b/fs/xfs/xfs_file.c
-> @@ -610,12 +610,6 @@ xfs_file_dio_write(
->  out:
->  	if (iolock)
->  		xfs_iunlock(ip, iolock);
-> -
-> -	/*
-> -	 * No fallback to buffered IO after short writes for XFS, direct I/O
-> -	 * will either complete fully or return an error.
-> -	 */
-> -	ASSERT(ret < 0 || ret == count);
->  	return ret;
->  }
+> @@ -560,7 +560,7 @@ xfs_file_dio_write(
+>  		 * files yet, as we can't unshare a partial block.
+>  		 */
+>  		if (xfs_is_cow_inode(ip)) {
+> -			trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos, count);
+> +			trace_xfs_reflink_bounce_dio_write(iocb, from);
+>  			return -ENOTBLK;
+>  		}
+>  		iolock = XFS_IOLOCK_EXCL;
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index a6d04d860a565e..0cfd65cd67c190 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -1321,6 +1321,8 @@ DEFINE_RW_EVENT(xfs_file_dax_read);
+>  DEFINE_RW_EVENT(xfs_file_buffered_write);
+>  DEFINE_RW_EVENT(xfs_file_direct_write);
+>  DEFINE_RW_EVENT(xfs_file_dax_write);
+> +DEFINE_RW_EVENT(xfs_reflink_bounce_dio_write);
+> +
 >  
+>  DECLARE_EVENT_CLASS(xfs_imap_class,
+>  	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
+> @@ -3294,8 +3296,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_found);
+>  DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_enospc);
+>  DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
+>  
+> -DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
+> -
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
+>  DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap);
 > -- 
 > 2.29.2
 > 
