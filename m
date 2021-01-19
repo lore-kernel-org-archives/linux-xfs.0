@@ -2,114 +2,56 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30E40C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:30:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27074C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:41:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06C082311C
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:30:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C19E523137
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:41:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391089AbhASP13 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 10:27:29 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:27079 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389122AbhASPZY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 10:25:24 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611069836;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=a+cxKsMKCCjDUZToTcmQ9jZuDcH5xKSPCL0jMRb9jEE=;
-        b=dxX+iSaL7BvmQm1ursKYWZRIHR7ZU7SfeSBgUV4cBAEG0XD7uMD+/o4Lo6HUCqQUIkxiNM
-        5XI8TUL/qjAjhMR0Wf8RPQxr/icnq6KOZgLindbtAqHazpVwsITJtRLNkYDU6+ru6CQute
-        sWveUSGeF4QPP8zcCT70zm68WNhYjFI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-600-IAbgqDAXMxSsABLmqtGZlg-1; Tue, 19 Jan 2021 10:23:52 -0500
-X-MC-Unique: IAbgqDAXMxSsABLmqtGZlg-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A45471081B38;
-        Tue, 19 Jan 2021 15:23:51 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1FAAE5D9FC;
-        Tue, 19 Jan 2021 15:23:51 +0000 (UTC)
-Date:   Tue, 19 Jan 2021 10:23:49 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        avi@scylladb.com
-Subject: Re: [PATCH 08/11] iomap: rename the flags variable in __iomap_dio_rw
-Message-ID: <20210119152349.GH1646807@bfoster>
-References: <20210118193516.2915706-1-hch@lst.de>
- <20210118193516.2915706-9-hch@lst.de>
+        id S1731601AbhASPlU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 10:41:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39036 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390277AbhASPhY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 10:37:24 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8398C061574
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Jan 2021 07:36:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=C3X4txeQ7lGyC88FvVq6TH8NaB
+        xBoo8zz4z9FlUGOXy8snb/kTCB7AufH5RxH5nk9MSB8UQXEtNZhsAsLP+O/abCAlUSJOec/fFSP3w
+        +NhCBPA3ZS9NpNvcgRPc1OMtBA+o9u19PAed9XXFzibbvjAudWiH6ATswH/8KbErOfc29oxW5zgPV
+        5CJaLRfZ5g4BNNLU/WBL1p19p3fTNTjx25hxol2F9D3eAwbx0F30VnjrXEvwwT9r9tStGqWNcw2ol
+        8TjBeVHn4oY+q6+E+uWr9ufefHyUEYAaQgUj4zD77erCqyBQMCXMFi9NTUEnNrd6v2+Xyu63Q7klI
+        QKY/0R4w==;
+Received: from [2001:4bb8:188:1954:3126:9c25:fe7d:c7d6] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1l1t2J-00EVFJ-4r; Tue, 19 Jan 2021 15:35:58 +0000
+Date:   Tue, 19 Jan 2021 16:35:14 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/9] xfs: cover the log during log quiesce
+Message-ID: <YAb8Mp2QCNp9Cv0g@infradead.org>
+References: <20210106174127.805660-1-bfoster@redhat.com>
+ <20210106174127.805660-5-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210118193516.2915706-9-hch@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <20210106174127.805660-5-bfoster@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 18, 2021 at 08:35:13PM +0100, Christoph Hellwig wrote:
-> Rename flags to iomap_flags to make the usage a little more clear.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+Looks good,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/iomap/direct-io.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 933f234d5becd0..604103ab76f9c5 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -427,7 +427,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	size_t count = iov_iter_count(iter);
->  	loff_t pos = iocb->ki_pos;
->  	loff_t end = iocb->ki_pos + count - 1, ret = 0;
-> -	unsigned int flags = IOMAP_DIRECT;
-> +	unsigned int iomap_flags = IOMAP_DIRECT;
->  	struct blk_plug plug;
->  	struct iomap_dio *dio;
->  
-> @@ -461,7 +461,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		if (iter_is_iovec(iter))
->  			dio->flags |= IOMAP_DIO_DIRTY;
->  	} else {
-> -		flags |= IOMAP_WRITE;
-> +		iomap_flags |= IOMAP_WRITE;
->  		dio->flags |= IOMAP_DIO_WRITE;
->  
->  		/* for data sync or sync, we need sync completion processing */
-> @@ -483,7 +483,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  			ret = -EAGAIN;
->  			goto out_free_dio;
->  		}
-> -		flags |= IOMAP_NOWAIT;
-> +		iomap_flags |= IOMAP_NOWAIT;
->  	}
->  
->  	ret = filemap_write_and_wait_range(mapping, pos, end);
-> @@ -514,7 +514,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  
->  	blk_start_plug(&plug);
->  	do {
-> -		ret = iomap_apply(inode, pos, count, flags, ops, dio,
-> +		ret = iomap_apply(inode, pos, count, iomap_flags, ops, dio,
->  				iomap_dio_actor);
->  		if (ret <= 0) {
->  			/* magic error code to fall back to buffered I/O */
-> -- 
-> 2.29.2
-> 
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
