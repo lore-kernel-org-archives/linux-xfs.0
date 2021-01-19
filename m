@@ -2,81 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA0B1C0044D
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 14:33:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37FC9C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:04:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D350023135
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 14:33:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09A6E2250E
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 15:04:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405484AbhASOcr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 09:32:47 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:57716 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391918AbhASLtU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 06:49:20 -0500
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1l1pQY-0005xg-BD; Tue, 19 Jan 2021 11:44:02 +0000
-Date:   Tue, 19 Jan 2021 12:43:57 +0100
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-fsdevel@vger.kernel.org,
-        John Johansen <john.johansen@canonical.com>,
-        James Morris <jmorris@namei.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Geoffrey Thomas <geofft@ldpreload.com>,
-        Mrunal Patel <mpatel@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        David Howells <dhowells@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        St??phane Graber <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        Lennart Poettering <lennart@poettering.net>,
-        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
-        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
-        Kees Cook <keescook@chromium.org>,
-        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        containers@lists.linux-foundation.org,
-        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Mauricio V??squez Bernal <mauricio@kinvolk.io>
-Subject: Re: [PATCH v5 40/42] fs: introduce MOUNT_ATTR_IDMAP
-Message-ID: <20210119114357.w553czxsnelyph6g@wittgenstein>
-References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
- <20210112220124.837960-41-christian.brauner@ubuntu.com>
- <20210119094750.GQ3364550@infradead.org>
+        id S1729307AbhASPDw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 10:03:52 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:50698 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2390548AbhASOj0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 09:39:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611067079;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4X0aSRcZWHASUcoiod1Bmt8ZeZURe34BJDJA1CdM9Ho=;
+        b=ItRBXqhyxySvoQ7gAjKAYKacLR1tHrMElPxhaEJmAEL+BhPIqulzrlJ4pKc0d19S9UBM6G
+        S9M7GbNo5sjXrCH9lKLf5wCXl6lK7arvX0jfsv+8cmCT4T/rN2GHY7rbOwoDKuYi6kat1l
+        8R16yaFZ3J+gST+iwmUlYjSkQNGIKEU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-98-1LxMpFeSM4OsuV1J6Msi7w-1; Tue, 19 Jan 2021 09:37:57 -0500
+X-MC-Unique: 1LxMpFeSM4OsuV1J6Msi7w-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 825C3801817;
+        Tue, 19 Jan 2021 14:37:56 +0000 (UTC)
+Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0844062A25;
+        Tue, 19 Jan 2021 14:37:55 +0000 (UTC)
+Date:   Tue, 19 Jan 2021 09:37:54 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs_repair: clear the needsrepair flag
+Message-ID: <20210119143754.GB1646807@bfoster>
+References: <161076028124.3386490.8050189989277321393.stgit@magnolia>
+ <161076029319.3386490.2011901341184065451.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210119094750.GQ3364550@infradead.org>
+In-Reply-To: <161076029319.3386490.2011901341184065451.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 19, 2021 at 09:47:50AM +0000, Christoph Hellwig wrote:
-> Generally looks good, but wouldn't it make sense to introduce the
-> userns_fd in version 0 of the mount_attr structure instead of having
-> two versions from the start?
+On Fri, Jan 15, 2021 at 05:24:53PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Clear the needsrepair flag, since it's used to prevent mounting of an
+> inconsistent filesystem.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-I agree.
+Code/errors look much cleaner. Though looking at the repair code again,
+I wonder... if we clear the needsrepair bit and dirty/write the sb in
+phase 2 and then xfs_repair happens to crash, do we risk clearing the
+bit and thus allowing a potential mount before whatever requisite
+metadata updates have been made?
+
+Brian
+
+>  repair/agheader.c |   15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
+> 
+> 
+> diff --git a/repair/agheader.c b/repair/agheader.c
+> index 8bb99489..d9b72d3a 100644
+> --- a/repair/agheader.c
+> +++ b/repair/agheader.c
+> @@ -452,6 +452,21 @@ secondary_sb_whack(
+>  			rval |= XR_AG_SB_SEC;
+>  	}
+>  
+> +	if (xfs_sb_version_needsrepair(sb)) {
+> +		if (!no_modify)
+> +			sb->sb_features_incompat &=
+> +					~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> +		if (i == 0) {
+> +			if (!no_modify)
+> +				do_warn(
+> +	_("clearing needsrepair flag and regenerating metadata\n"));
+> +			else
+> +				do_warn(
+> +	_("would clear needsrepair flag and regenerate metadata\n"));
+> +		}
+> +		rval |= XR_AG_SB_SEC;
+> +	}
+> +
+>  	return(rval);
+>  }
+>  
+> 
+
