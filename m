@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90D93C4332E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C31FCC43333
 	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 05:39:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 65AE1207A0
+	by mail.kernel.org (Postfix) with ESMTP id A0AEC207A0
 	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 05:39:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389611AbhASFh5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 00:37:57 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:51850 "EHLO
+        id S2389718AbhASFh7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 00:37:59 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:51811 "EHLO
         esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388688AbhASFLK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 00:11:10 -0500
+        with ESMTP id S2389393AbhASFLc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 00:11:32 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611033069; x=1642569069;
+  t=1611033092; x=1642569092;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=SmRmSEecsPl0dNDxe5lwcfSlZzCbmw+NJIUAkJff7lg=;
-  b=TTvy6az7YfZu3I6RHd9uyLCVnwXWebTAMf6S3xktUuhs2h78+C557uVM
-   OXZgNjJv/UDCvBCzFeQfbVEXTWjwsOvM+wlLiXN8UA9BjePci4j0t4P41
-   phrft7eVbfhtyXDCj8lo7A8of6OfMNgxv2DFo7mf9/Hcz1ROOc/dWQ7aJ
-   sjlri9n9IXMxZCXufh9lcUrMV/GrBq9rB+RBN/dh2BXwLgojReARvZtdh
-   qoDyg8ZTm1hovQHzy3pIMGTJL5bbZ+BsLhyh8yrsjvi2VmHkE7RpD2XL1
-   ZVxncMm2bbNwqwib8zyO5q19tpa36deIcvYCjXIHeeTHQWVL3s59PjfBp
-   Q==;
-IronPort-SDR: kdIIt2x5PMEjTb4EGFggpfl2dYfQSP2xDtYm8mdeYH9f7qSSxJPAzzb88WjlqscRztf9vZyP+b
- vhQOor71N7fuZ/YmXovuKjf11uBcQFvNusA2qzMpBdFq+cf7QDww22iX65ytM5RuX4K7cbXjvK
- Npe4W67SABEJgoC8q6QzihocwyA2irnL2mDeWA5NH0apI8P5RftybOIQpALQclkBz0qdcMkLWn
- QHlxUgOOs3s7xwVoq8aFuBuyQPYX4HYZrBd451ytL2c0kFFHZzRQGh2SvdzQIK090J1FNiMJmF
- DL4=
+  bh=qoLn2/rcoIe5Xy1n1hC3Lt6hQmgoOhAQmKsRVXN2pPE=;
+  b=KoF7KWQBPdGWGHFA65SbXnOdhUqaL3slSuZod9pGPHFjUfmAVD3NmS6n
+   1uK3cMo1BqS00wSrxw2aD3H9f0zIM42pQ3HipI80wM84BXnFnxw5T0Jfn
+   m4ZF+36CRCeTfIt8NdlOyGC65OZ2V6p48gNQnNFS16SZLrhLtifUx0Rst
+   lugCPmT/XxFnTV3vyLfVSSmaRuUNiArPc6WJqi2cbHEK8Fumq+xVBwSjs
+   6MoCesfjkTIhEith4mGQMaJzrHDuCevd+8mazJ8Bd0hhbubgTDjUbO2AM
+   4boDZHIMJgwNmKAUzzHWL6ntFOvAwhTWIuQmXGpctLUvvKGFHNjDI/P4/
+   g==;
+IronPort-SDR: Sc1cagcp05wNi2gPdQB66ZrsusaAKJdzIDe8CzUtmgYSVeCWffOGB4WamBfNMqdybt8inn5CFE
+ 4c4eaVNL/mxAhB4VNOta4avTywzNn1LZHVlhQjwF+r5TtB/utQTB/kD+QlEOH3BdF18S1Nb4WS
+ YWHMv0vZxi1o0bBsjOLaEru9HdlhdWPIWW8QMHhuTvPa7TwtfzyPWgSszh1c4DZrUZqOGggoKg
+ Jsxg/mlpDBbAS2i0FBx23xPliBUIcVqCj1c4YNtIomXUOeisByIUhducn7/0CbpMmvHpMnBj9h
+ 7Vs=
 X-IronPort-AV: E=Sophos;i="5.79,357,1602518400"; 
-   d="scan'208";a="157763889"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:08:14 +0800
-IronPort-SDR: LRuwxLsfABgj/FCitJ0WnK7Gjvqvg6JtsxJOwfFIj2l4BDUeLDVqxwb8vvGjnII3F0zTIsz7Hg
- rNlUiU8qFPgYVZGXHuLfVWEAHJO+lSgJKLtPPd9OLxtfSHEkOJpPWoWQ77jERR+EHu+2SEdrDR
- 2gck+Umd+1Ctbn6H/dAAkP5xYvUnceNTw8BphGocZ4LPmS8SKHdNy7IALc/BjWXNTwK4VP+G5Q
- Rz8YIopnF85w26xAJHC88oJJ2QoWS2RMnI7cw41qWtr1PAnqyv+ix63ozfXpfgTrp48v0vSPbG
- efVVa6oioVUBcBumGIvxib5f
+   d="scan'208";a="157763964"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:09:06 +0800
+IronPort-SDR: l0fGcm/mOaOvrk3ufBaX+Z/JgvxI9YqtJPwTy7GsQJFIw+iHk2No+n9cg2xF3/o1kj41JtgFoy
+ KgqJ5FUZvI7zi5KU/Y1P55lf9RcNzP0Ipuh5OQYWlzhIQdbSkO+NBnXNTFsREg+DOVFKYwVPE3
+ 673Y2brb4YkMXNlnLa3fTxM/hxCJrtRJtqk7KclrfCGAQS632iQYaCXGQWK3FDUqqdKyQa3hHL
+ 85lBTtP5HoxeeunvXyGizhknf6hV66hPA/ZmJXnnLBOF781krzjsvPFwrSAt4qSmMt0kosYvZz
+ wVJ5mlUHv3PO8nmWRIAhnwu7
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:52:52 -0800
-IronPort-SDR: p1tcnYwAx/l/NVCOSE++cI0sO4XNQ+lbfc67fxaPGZ0Kwcqxhdz9+u3CPNrCwOw83oDaMA1Qjm
- ESU3xmsUtmMt60eRcgdVRVFxzLHWW7CqjKNcfNh1+RIHGbsJ3Ai97YW6MaxhVDB0yLEg9IysxE
- 83VZ2vSeY/l/vgDGSUb38hhYRsZT54dyq7c3WndcswTCZVlwVMvWGE4bWezbXz6r57OZtdR1bX
- 3lpkUR2AIs9h1PW1353M+8ODhhBWH9ueZ25tUnouwQQq8n8IP+3JRSYVgmwudbuVJ26I/RNNul
- ogs=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:51:42 -0800
+IronPort-SDR: YTx2sPI+S6B3s0zwLxmE9JLYYaAYYdsBlTi/QBtBxd/WH8egWo/s2t318EELWraWDHn4aYbSz+
+ GTI/c0RV1f+ot/Yyog9omiJsfpSR5vK5KT4IJoKlPtJElbAfKckX/OVaF06ki+8DfWwezcFUha
+ cQceDg9EfnRtvtgEBcHMkJqbMz+Hf9lDezVT3gRBkt4FXtAK8F0+3Jw8Dlu3r3MJXdxsm4oEy7
+ lej+XAjPd2ZdZGUr333NTWzmm/vXM3I7gj6chGIMLH1v36uCSVr35WYHxwt+NXTGuosML8y4Lr
+ Cxg=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:08:14 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:09:06 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -77,9 +77,9 @@ Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
         osandov@fb.com, bvanassche@acm.org, gustavo@embeddedor.com,
         asml.silence@gmail.com, jefflexu@linux.alibaba.com,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [RFC PATCH 14/37] drdb: use bio_init_fields in bitmap
-Date:   Mon, 18 Jan 2021 21:06:08 -0800
-Message-Id: <20210119050631.57073-15-chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 21/37] dm-bufio: use bio_init_fields
+Date:   Mon, 18 Jan 2021 21:06:15 -0800
+Message-Id: <20210119050631.57073-22-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1
 In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
 References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
@@ -91,28 +91,26 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- drivers/block/drbd/drbd_bitmap.c | 5 +----
+ drivers/md/dm-bufio.c | 5 +----
  1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/block/drbd/drbd_bitmap.c b/drivers/block/drbd/drbd_bitmap.c
-index df53dca5d02c..4fd9746af469 100644
---- a/drivers/block/drbd/drbd_bitmap.c
-+++ b/drivers/block/drbd/drbd_bitmap.c
-@@ -1006,13 +1006,10 @@ static void bm_page_io_async(struct drbd_bm_aio_ctx *ctx, int page_nr) __must_ho
- 		bm_store_page_idx(page, page_nr);
- 	} else
- 		page = b->bm_pages[page_nr];
--	bio_set_dev(bio, device->ldev->md_bdev);
--	bio->bi_iter.bi_sector = on_disk_sector;
-+	bio_init_fields(bio, device->ldev->md_bdev, on_disk_sector, ctx, drbd_bm_endio, 0, 0);
- 	/* bio_add_page of a single page to an empty bio will always succeed,
- 	 * according to api.  Do we want to assert that? */
- 	bio_add_page(bio, page, len, 0);
--	bio->bi_private = ctx;
--	bio->bi_end_io = drbd_bm_endio;
- 	bio_set_op_attrs(bio, op, 0);
+diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+index 9c1a86bde658..1295e7e33e06 100644
+--- a/drivers/md/dm-bufio.c
++++ b/drivers/md/dm-bufio.c
+@@ -633,11 +633,8 @@ static void use_bio(struct dm_buffer *b, int rw, sector_t sector,
+ 		return;
+ 	}
  
- 	if (drbd_insert_fault(device, (op == REQ_OP_WRITE) ? DRBD_FAULT_MD_WR : DRBD_FAULT_MD_RD)) {
+-	bio->bi_iter.bi_sector = sector;
+-	bio_set_dev(bio, b->c->bdev);
+ 	bio_set_op_attrs(bio, rw, 0);
+-	bio->bi_end_io = bio_complete;
+-	bio->bi_private = b;
++	bio_init_fields(bio, b->c->bdev, sector, b, bio_complete, 0, 0);
+ 
+ 	ptr = (char *)b->data + offset;
+ 	len = n_sectors << SECTOR_SHIFT;
 -- 
 2.22.1
 
