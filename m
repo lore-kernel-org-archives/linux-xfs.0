@@ -7,65 +7,67 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54028C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 22:34:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA27C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 22:34:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 25A3923104
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 22:34:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16D5A22E01
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 22:34:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727783AbhASWdu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 17:33:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44500 "EHLO
+        id S1726110AbhASWev (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 17:34:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728883AbhASWdm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 17:33:42 -0500
+        with ESMTP id S1727959AbhASWeA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 17:34:00 -0500
 Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2905CC061757
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Jan 2021 14:33:05 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 134CCC061575
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Jan 2021 14:33:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=bugs.debian.org; s=smtpauto.buxtehude; h=Content-Type:Date:Reply-To:
         References:Message-ID:Subject:To:From:MIME-Version:Cc:
         Content-Transfer-Encoding:Content-ID:Content-Description:In-Reply-To;
-        bh=uWEsZmeT0HtykdOVPIbdZjo7tW6vGPirv0D1xFLqVA0=; b=g3Z5SeZNEm5UNCo0TWpqNNWgaE
-        8ZhF6USn2bTsS+JQHUV/vnylKFb1WhHaIftEqOF7ecpIELtoAQAPpwlU3Afie6ygboTdHtOq3fJM2
-        ls1hr+hWofDs4g71lMNolRRRLjdPJcVuwSX6w+xrWVEy47/KpD9e0r8Lk1mEc5h07wt1apWlqShfc
-        wIUVBGBjjooLXKe9xCc6ba0ArOht3PUjSnNEyYdHhgchdXuD6EdWOL1nt5dIVq2llhlEdLTrAV/DS
-        knUcyDYEi/Plw/TY8w4IOqIxRJ1d8+mmhApA5CjS4/nfwswQNu3BLAKNbYqHGCjKkSYFzNxVdGCjC
-        3YoyyWqQ==;
+        bh=qug7uDba06iSft/n5pee2mul0OItXucd7ykS4eh3O3U=; b=coGVz1qdtFz0MkcICrdHx9CM0U
+        FyTITCtpoO0f1vgyxaxXHkInOP42o1y3zunykQFDyl/KIXLqMpxwTSP3CXmITuObdbMbzNe/RMqMM
+        nEGuuwnAeYo9pZZDR9GRYrPGETuXmXefNt1tRqishPmd7d0GuIOwbYgpH8rpvAyT7DdtAGttOhMgV
+        eZ5/+Oo+uSYA65gK9+XaEkObNZAq3NyqIiboHeNrWB5fZ7Z+a24B5y+1IqWrH2tQx+zlNXJxvWBaS
+        PYELXIohCLYYv3PD1082BAmlCicHDViB2DC5DIFwm6sqqPxvS1gttzooHEI8U/iXfiUHcM4o8Z8pe
+        /J6dN61w==;
 Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
         (envelope-from <debbugs@buxtehude.debian.org>)
-        id 1l1zYf-0002IC-2g; Tue, 19 Jan 2021 22:33:05 +0000
+        id 1l1zYd-0002Hv-BS; Tue, 19 Jan 2021 22:33:03 +0000
 MIME-Version: 1.0
 X-Mailer: MIME-tools 5.509 (Entity 5.509)
 X-Loop: owner@bugs.debian.org
 From:   "Debian Bug Tracking System" <owner@bugs.debian.org>
 To:     Bastian Germann <bastiangermann@fishpost.de>
-Subject: Bug#976683: marked as done (xfsprogs: Import new upstream version)
-Message-ID: <handler.976683.D976683.16110955418641.ackdone@bugs.debian.org>
-References: <c4d44454-6b3f-c0df-c660-b625750d971c@fishpost.de>
- <8b769e38-3ffd-5e8c-7a57-d451daa30e67@fishpost.de>
-X-Debian-PR-Message: closed 976683
-X-Debian-PR-Package: src:xfsprogs
+Subject: Bug#695875: marked as done (Build with libedit rather than
+ libreadline5)
+Message-ID: <handler.695875.D695875.16110954648370.ackdone@bugs.debian.org>
+References: <a2e94dea-73f1-ca64-8426-bd4e65864e44@fishpost.de>
+ <20121213212730.25675.16201.reportbug@localhost>
+X-Debian-PR-Message: closed 695875
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Keywords: patch
 X-Debian-PR-Source: xfsprogs
-Reply-To: 976683@bugs.debian.org
-Date:   Tue, 19 Jan 2021 22:33:05 +0000
-Content-Type: multipart/mixed; boundary="----------=_1611095585-8809-0"
+Reply-To: 695875@bugs.debian.org
+Date:   Tue, 19 Jan 2021 22:33:03 +0000
+Content-Type: multipart/mixed; boundary="----------=_1611095583-8797-0"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 This is a multi-part message in MIME format...
 
-------------=_1611095585-8809-0
+------------=_1611095583-8797-0
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="utf-8"
 
-Your message dated Tue, 19 Jan 2021 23:32:17 +0100
-with message-id <c4d44454-6b3f-c0df-c660-b625750d971c@fishpost.de>
-and subject line Done: xfsprogs: Import new upstream version
-has caused the Debian Bug report #976683,
-regarding xfsprogs: Import new upstream version
+Your message dated Tue, 19 Jan 2021 23:30:59 +0100
+with message-id <a2e94dea-73f1-ca64-8426-bd4e65864e44@fishpost.de>
+and subject line Done: Build with libedit rather than libreadline5
+has caused the Debian Bug report #695875,
+regarding Build with libedit rather than libreadline5
 to be marked as done.
 
 This means that you claim that the problem has been dealt with.
@@ -79,100 +81,92 @@ immediately.)
 
 
 --=20
-976683: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D976683
+695875: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D695875
 Debian Bug Tracking System
 Contact owner@bugs.debian.org with problems
 
-------------=_1611095585-8809-0
+------------=_1611095583-8797-0
 Content-Type: message/rfc822
 Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 
-Received: (at submit) by bugs.debian.org; 6 Dec 2020 22:13:46 +0000
-X-Spam-Checker-Version: SpamAssassin 3.4.2-bugs.debian.org_2005_01_02
-	(2018-09-13) on buxtehude.debian.org
+Received: (at submit) by bugs.debian.org; 13 Dec 2012 21:27:22 +0000
+X-Spam-Checker-Version: SpamAssassin 3.3.1-bugs.debian.org_2005_01_02
+	(2010-03-16) on buxtehude.debian.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=4.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,RCVD_IN_DNSWL_NONE,SPF_HELO_NONE,SPF_NONE,TXREP
-	autolearn=ham autolearn_force=no
-	version=3.4.2-bugs.debian.org_2005_01_02
-X-Spam-Bayes: score:0.0000 Tokens: new, 12; hammy, 135; neutral, 21; spammy,
-	0. spammytokens: hammytokens:0.000-+--H*r:TLS1_3,
-	0.000-+--UD:gappssmtp.com, 0.000-+--UD:20150623.gappssmtp.com,
-	0.000-+--H*RU:2003, 0.000-+--Hx-spam-relays-external:2003
-Return-path: <bastiangermann@fishpost.de>
-Received: from mail-ej1-x62b.google.com ([2a00:1450:4864:20::62b]:41570)
-	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	(Exim 4.92)
-	(envelope-from <bastiangermann@fishpost.de>)
-	id 1km2Hp-0000Cp-Ss
-	for submit@bugs.debian.org; Sun, 06 Dec 2020 22:13:46 +0000
-Received: by mail-ej1-x62b.google.com with SMTP id ce23so12962033ejb.8
-        for <submit@bugs.debian.org>; Sun, 06 Dec 2020 14:13:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fishpost-de.20150623.gappssmtp.com; s=20150623;
-        h=to:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=7XyBYEuDH7KxfNM09ZMLweVPh3nQx8w3P3weebfdA+U=;
-        b=S3/Hzdn2nvzz7IAMmADt1qFcQ4PeGQCKqyqxdomamn+eIZSZ64cZbAvz/BNqGbLYcb
-         ijZF0SXFtSc9M7UNZpzpNGqSKBjAJu4VbAcWYBSERcdmN1z8wEhVsth/yFh01IIYVcs2
-         xvCspnMB47B+ohXkEtGu9PxrSFTdx5lTSUz5Cx76YZkeju5O1Bs/7HeXKVNDUKJlY4da
-         RpSFELc9WoTILjFSNekn5lWwqjE7fVynl5lSS2RaTHaW6p9R5vgP6kcXFCKcZ1ffyZ4Y
-         cuz3o23Bygkxu3cTiuHFEf/bEQr5t/4cc3W7m1CRK85Xeu3IHJ5JDcTBZ3uif5tfrOHb
-         XZ5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=7XyBYEuDH7KxfNM09ZMLweVPh3nQx8w3P3weebfdA+U=;
-        b=V253Bfwe0WfwWx+SS7jeBtHQsBHgrui1IKqnXP5pUXdLYFHdZe6sjhLq4DDu+6gHZJ
-         1zWskLqol9Aimz1DOt5ZlUR3HFk0xDwbn8wjf2gK89HuHWWyS+Ce2SfkB0DqcBCwS4Gu
-         UI1Jq7Jdp/LwsP4Up5mWvAELzW8JKWc//kQc47QLX2pBHYvJq/dPn0/tr27S4Dc4T9Hi
-         yE/gquNSbNMPplcMEs4CMTifFFJIm2yGi142ugYslpQzaiwd9qpYQ2yFoKn0g6WOmW72
-         WBwuM1B1rLCc1rlj9vdy1TzIK/Y3c7fUFsy8Obu5cd9X8CvXVDXCvYA6fFWbgShDh/yC
-         BzrA==
-X-Gm-Message-State: AOAM532vVBlX1gsKTmTuZsyFzG4sb9gnBzo+VO81ryZhULxnOnhsZRIQ
-	4v5RgzKpsVu7X5MdhXmZi6M1W/k77nFOBg==
-X-Google-Smtp-Source: ABdhPJyq2AbVR6b5P76QqTeN8Ky3Z+9/V2hBzBsaDbbEB20SPYKx7JuFoOQ7OS+LR5qKdE7XXkklrw==
-X-Received: by 2002:a17:906:1151:: with SMTP id i17mr16865523eja.250.1607292820777;
-        Sun, 06 Dec 2020 14:13:40 -0800 (PST)
-Received: from ?IPv6:2003:d0:6f35:5400:9d4a:a26f:7cc6:6e27? (p200300d06f3554009d4aa26f7cc66e27.dip0.t-ipconnect.de. [2003:d0:6f35:5400:9d4a:a26f:7cc6:6e27])
-        by smtp.gmail.com with ESMTPSA id a6sm10213085edv.74.2020.12.06.14.13.39
-        for <submit@bugs.debian.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 06 Dec 2020 14:13:40 -0800 (PST)
-To: submit@bugs.debian.org
-From: Bastian Germann <bastiangermann@fishpost.de>
-Subject: xfsprogs: Import new upstream version
-Message-ID: <8b769e38-3ffd-5e8c-7a57-d451daa30e67@fishpost.de>
-Date: Sun, 6 Dec 2020 23:13:38 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.0
+X-Spam-Status: No, score=-9.9 required=4.0 tests=BAYES_00,FOURLA,HAS_PACKAGE,
+	MURPHY_DRUGS_REL8,RCVD_IN_PBL,RCVD_IN_SORBS_DUL,RDNS_DYNAMIC,SPF_SOFTFAIL,
+	XMAILER_REPORTBUG,X_DEBBUGS_CC autolearn=ham
+	version=3.3.1-bugs.debian.org_2005_01_02
+X-Spam-Bayes: score:0.0000 Tokens: new, 6; hammy, 147; neutral, 41; spammy, 1.
+	spammytokens:0.960-+--(unknown) hammytokens:0.000-+--(unknown),
+	0.000-+--(unknown), 0.000-+--(unknown), 0.000-+--(unknown), 0.000-+--(unknown)
+Return-path: <nick.black@sprezzatech.com>
+Received: from z65-50-38-158.ips.direcpath.com ([65.50.38.158] helo=[127.0.0.1])
+	by buxtehude.debian.org with esmtp (Exim 4.72)
+	(envelope-from <nick.black@sprezzatech.com>)
+	id 1TjGJO-0007Y3-9A
+	for submit@bugs.debian.org; Thu, 13 Dec 2012 21:27:22 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: de-DE-frami
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+From: Nick Black <nick.black@sprezzatech.com>
+To: Debian Bug Tracking System <submit@bugs.debian.org>
+Subject: xfsprogs: Build-Depend on libreadline6 rather than libreadline5
+Message-ID: <20121213212730.25675.16201.reportbug@localhost>
+X-Mailer: reportbug 6.4.3
+Date: Thu, 13 Dec 2012 16:27:30 -0500
+X-Debbugs-Cc: dank@qemfd.net
 Delivered-To: submit@bugs.debian.org
 
-Source: xfsprogs
-Version: xfsprogs/5.6.0-1
-Severity: important
+Package: xfsprogs
+Version: 3.1.9
+Severity: normal
+Tags: patch
 
-Hi,
+Dear Maintainer,
 
-Please update the package to a new upstream version, preferrably the 
-latest 5.9.0. As 5.7.0 removed libreadline support, this will imply 
-building with libedit as filed in #695875.
+Hello! During development of SprezzOS, I noticed that the xfsprogs
+package Build-Depends on
 
-Thanks,
-Bastian
+	     libreadline-gplv2-dev | libreadline5-dev
 
-------------=_1611095585-8809-0
+libreadline5-dev no longer exists in the archive; the current
+implementation is libreadline6-dev. Please make this change, so that
+machines with libreadline6-dev installed can build the package.
+
+-- System Information:
+Debian Release: turing-β/sid
+  APT prefers unstable
+  APT policy: (500, 'unstable'), (1, 'experimental')
+Architecture: amd64 (x86_64)
+
+Kernel: Linux 3.7.0 (SMP w/8 CPU cores)
+Locale: LANG=en_US.UTF-8, LC_CTYPE=en_US.UTF-8 (charmap=UTF-8)
+Shell: /bin/sh linked to /bin/bash
+
+Versions of packages xfsprogs depends on:
+ii  libblkid1     2.22.1-SprezzOS3
+ii  libc6         2.13-37
+ii  libreadline5  5.2-12
+ii  libuuid1      2.22.1-SprezzOS3
+
+xfsprogs recommends no packages.
+
+Versions of packages xfsprogs suggests:
+ii  acl      2.2.51-8
+pn  attr     <none>
+pn  quota    <none>
+pn  xfsdump  <none>
+
+-- no debconf information
+
+------------=_1611095583-8797-0
 Content-Type: message/rfc822
 Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 
-Received: (at 976683-done) by bugs.debian.org; 19 Jan 2021 22:32:21 +0000
+Received: (at 695875-done) by bugs.debian.org; 19 Jan 2021 22:31:04 +0000
 X-Spam-Checker-Version: SpamAssassin 3.4.2-bugs.debian.org_2005_01_02
 	(2018-09-13) on buxtehude.debian.org
 X-Spam-Level: 
@@ -180,63 +174,62 @@ X-Spam-Status: No, score=-12.7 required=4.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,RCVD_IN_DNSWL_NONE,SPF_HELO_NONE,SPF_NONE,TXREP
 	autolearn=ham autolearn_force=no
 	version=3.4.2-bugs.debian.org_2005_01_02
-X-Spam-Bayes: score:0.0000 Tokens: new, 15; hammy, 116; neutral, 16; spammy,
+X-Spam-Bayes: score:0.0000 Tokens: new, 14; hammy, 118; neutral, 16; spammy,
 	0. spammytokens: hammytokens:0.000-+--H*r:TLS1_3, 0.000-+--H*u:78.0,
 	0.000-+--sourceversion, 0.000-+--source-version, 0.000-+--SourceVersion
 Return-path: <bastiangermann@fishpost.de>
-Received: from mail-wr1-x42c.google.com ([2a00:1450:4864:20::42c]:44799)
+Received: from mail-wr1-x436.google.com ([2a00:1450:4864:20::436]:36540)
 	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
 	(Exim 4.92)
 	(envelope-from <bastiangermann@fishpost.de>)
-	id 1l1zXx-0002F3-N7
-	for 976683-done@bugs.debian.org; Tue, 19 Jan 2021 22:32:21 +0000
-Received: by mail-wr1-x42c.google.com with SMTP id w5so21238412wrm.11
-        for <976683-done@bugs.debian.org>; Tue, 19 Jan 2021 14:32:21 -0800 (PST)
+	id 1l1zWh-0002AR-QT
+	for 695875-done@bugs.debian.org; Tue, 19 Jan 2021 22:31:04 +0000
+Received: by mail-wr1-x436.google.com with SMTP id 6so13983193wri.3
+        for <695875-done@bugs.debian.org>; Tue, 19 Jan 2021 14:31:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fishpost-de.20150623.gappssmtp.com; s=20150623;
         h=to:from:subject:message-id:date:user-agent:mime-version
          :content-language:content-transfer-encoding;
         bh=5dqybwTQ3p2Cii/r9O0dHIN5whU/SUM2GPK8aCJPbEs=;
-        b=zQWNdUoYiYD1aH6Dz09rFDL8OUnIEWjX7PCiDj18QRYSBaJAxcL6b+DV3Vl5TWGyEG
-         wz6PJ+oAmO+mNN3KcK6Ug+w4M7as1DE4phCbAGas5MivBjMNG/02VtfRq9muu+S+YuJk
-         o2kxIZuDyi3sYj1yEOh8OnYcg6ZZSl3lwGYKMOo/rkt6LX/cY7OV7uz3Ip2KtjhRpn19
-         CbtUJfwy6RhJG4UY9WteD+p0CCET0Xipl/sDxYgWpZj7lroQdhD9WkqcLhP+41lfwgxJ
-         o4LeuMhZfgfJOt7EigvUNPrAWNnLj/cdgcaeLGs0ULUi6ZqlGwOkhjcYl6t+zpisTxVk
-         yJLQ==
+        b=pTFgZ76l8eXbGQgOxNF7yG4sjwvgXfOWnFH3pvjqnApFYGslYoNBSkxIcUQKEeOXF7
+         t98SL/9xQmFoLzrW0v/Zj486ol6MdlJVRu6jJCkPZ0ElsmNwdR0HB7gve7fkwp29TiwB
+         6ABLfG6WmsfgcJEJLrqt6staPYnGO5QuVc1Wj+I769A0Ez2NISzvu/zxxGttQGYNXLG3
+         tbwwmH1UwGhAPP8IlDQT6p/WWrrYh1YHuYk74TpMUNmMWllm3hDxpjea5X+reK+Tfdnd
+         YAiBfdGa16vR8T9wsu9o9CyDqxdpaAYtbkk5QGuAWqbbg1hzvTrUHkMpXp3pBvomb/uA
+         x1+A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:to:from:subject:message-id:date:user-agent
          :mime-version:content-language:content-transfer-encoding;
         bh=5dqybwTQ3p2Cii/r9O0dHIN5whU/SUM2GPK8aCJPbEs=;
-        b=XlTUfa7BfR8z+BLKPA3AMlvZoNeDXFyxpZuWiLXM4g5l0pd9tFkztOFck3ZK3kUpbC
-         mkACC/4vz0vCchMXs759JWNO4pK2jfH6AanlLjrjtAAAMaZGq729i4mAZ90JCcAR8Jo9
-         cFF/+HAS3S7IFGSHXyEauMRE7kBXdJ5ayzGCjunyLxxFPPhQ6/Oh2EH6RgySJCt5b7Dz
-         rpb6Fd1ZFGbblPKSUP0Z/xsTUkeqNu7duqzCl12CmHgX1qM9cMad1gmRSL9dri2q0bpd
-         uZ8q9Nwg/u8xT3g8HTr1r2VE0LKjiVgqTImV9hZIy46dSWlGD7/TysluQyp4Uv/0KYo1
-         YnFg==
-X-Gm-Message-State: AOAM533XLtPKV3dmLmJFoeEaEPhRWzDMABeuZEO+SeVUMlYyeld3Xpqu
-	2tu8+G6QL07ZH9eZLGVvd8fzfh8cvv0emJ3U
-X-Google-Smtp-Source: ABdhPJziVqCwWbHtyHZSoNP5R9z9Z2h5uqQf9T9j76+dF9CyYc5MgNuL81KTU/9i9sgc2Aepza4+Fw==
-X-Received: by 2002:a05:6000:1788:: with SMTP id e8mr6334695wrg.171.1611095539040;
-        Tue, 19 Jan 2021 14:32:19 -0800 (PST)
+        b=gzuakGMGuN4AIQT5QhUSoNgAM8IvZIqCFV7cdh+s7XR0thRRKVXKscbO4ktqPToG+h
+         7UKq5ypYEWsqUZv+UZ59sWtQ/aTAFv7fvpgLfMLVZ1DHh0cDxa7L13VMOXmdOR+wtB5G
+         5djmrwvWtPcSP7Qjpmx+DQadHVbKm+fFGPQkumsYru6dRu3rkVsXx8V0jt2Ln0RyrhCE
+         mgbcrREFUJZKd8ablfkQ7qvRhmd50rWR3tLk0yrUqjbeGRh2RAJG4+W28F74VfiLEdD3
+         qjp0fnMGOqET/Pts8XWNyrmy7usc0IMHQ/xIQHtLu6ERmhrPIxMsahBowaSd2sNx9eAf
+         nhMQ==
+X-Gm-Message-State: AOAM533EVw/rKICRB9w/Mvmfwa4X5uTTsgn8xMYdbMeRiWYRFHsT2esL
+	bGnPhOFSmr+l3O/z279c4pLK2TDvRZzdRaAx
+X-Google-Smtp-Source: ABdhPJz3QUwymRk1mhk6LG28O3DaebFMiDMeqE9ccXq/wwB9gAsxu2AVh3ayi2cZ2K0ImwmZhObamA==
+X-Received: by 2002:a5d:4d8b:: with SMTP id b11mr6325104wru.215.1611095461195;
+        Tue, 19 Jan 2021 14:31:01 -0800 (PST)
 Received: from ?IPv6:2003:d0:6f35:5400:ebbc:e7b1:bde:1433? (p200300d06f355400ebbce7b10bde1433.dip0.t-ipconnect.de. [2003:d0:6f35:5400:ebbc:e7b1:bde:1433])
-        by smtp.gmail.com with ESMTPSA id g7sm145176wrx.62.2021.01.19.14.32.18
-        for <976683-done@bugs.debian.org>
+        by smtp.gmail.com with ESMTPSA id h16sm237445wmb.41.2021.01.19.14.31.00
+        for <695875-done@bugs.debian.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 19 Jan 2021 14:32:18 -0800 (PST)
-To: 976683-done@bugs.debian.org
+        Tue, 19 Jan 2021 14:31:00 -0800 (PST)
+To: 695875-done@bugs.debian.org
 From: Bastian Germann <bastiangermann@fishpost.de>
-Subject: Done: xfsprogs: Import new upstream version
-Message-ID: <c4d44454-6b3f-c0df-c660-b625750d971c@fishpost.de>
-Date: Tue, 19 Jan 2021 23:32:17 +0100
+Subject: Done: Build with libedit rather than libreadline5
+Message-ID: <a2e94dea-73f1-ca64-8426-bd4e65864e44@fishpost.de>
+Date: Tue, 19 Jan 2021 23:30:59 +0100
 User-Agent: Mozilla/5.0 (X11; Linux i686; rv:78.0) Gecko/20100101
  Thunderbird/78.6.1
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-CrossAssassin-Score: 2
 
 Source: xfsprogs
 Source-Version: 5.10.0-2
-------------=_1611095585-8809-0--
+------------=_1611095583-8797-0--
