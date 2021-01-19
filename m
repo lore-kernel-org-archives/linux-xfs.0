@@ -2,125 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F0C4C282C7
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 18:29:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 586C7C2BA19
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 18:29:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDF7F22CAD
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 18:29:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 281012312D
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 18:29:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388061AbhASRt7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 12:49:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60740 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390044AbhASPG5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 10:06:57 -0500
-Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3293C061757
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Jan 2021 07:05:28 -0800 (PST)
-Received: by mail-lf1-x133.google.com with SMTP id h205so29460755lfd.5
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Jan 2021 07:05:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=gOmgvCPsNvi85/TpBsHHlznh/AXeaDwbv8LGPCZK7GU=;
-        b=jHOv7ZfcUJDyBrUH8oJXnGIi8zR/GVQigV9JsU3VOD2zVPzE8Qi8FcxCv3RN2B9A6r
-         xugkjyegXRk25clhQPkHPl6Bgq5is0HjaMKTdere1dxwfXiSoujavM6bCqwMy7DZTLAY
-         XzwyrYIOx+UbZ4taCEFKeVgvzFkPqWMiBrHN0cesc58X2THa+V2gdhqFGvQ0m5hl69PP
-         86p4cNSHXci62Q5bRCDCUjqJlCKurpnZ2KQ8/bUtutXFEHhOZcuBiBOGHUyG7S3P/OJ0
-         UhrskVG5YmmxTBCZMbabr3ZIzMkK81tYRiWGV1k3KMjBXOmM5Zrq6ssCUVgGucgyhjVM
-         mc6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=gOmgvCPsNvi85/TpBsHHlznh/AXeaDwbv8LGPCZK7GU=;
-        b=VrhY+nivybB68E04pQeCCisJZce96qOcHfORrOZgUo9WckIWUrPbZ68Nlks3ZFsoNF
-         F8WZAZCYk++VObp2dMDpei+LcXJHKZQdM3X0B/JIwiEXUIa59HYQgtUmassKha23ZoX8
-         G97iEDSMZZ78rnp0eDGwELXUp2eUDCVs+w65ZZg/83hIntzTpPcH43hXyCdEBREh9ByL
-         LArutq+D8gvu87ZeSWzJQfmIB2CDUy2Y0569L6Xainh3STKe1Tcsh3QselQctJKAnASf
-         QrYWw0qB6+3NYc1yyGfzxf0kRyT1h398UQ3qotvRLjS14JkXeqK+G6Tab3ZuAWk4Vgkh
-         PkVw==
-X-Gm-Message-State: AOAM531OguhPZaFjsbVrazJm5DX0/FTB4CGkhoitCldz4nbofAEIEXD/
-        Rq9sXAQvQSwOoEKeqGAyEBQrvjmPUVceCm+3/ePvRw==
-X-Google-Smtp-Source: ABdhPJxFxS+hG4x6TwLiOwPtHwa+9Zao0MvjeAr8yET1CRB9c/HolYwSYvtkLR07E5CI/h61T92ZT6GwaxlT4i6ykfk=
-X-Received: by 2002:a19:197:: with SMTP id 145mr2043470lfb.352.1611068727150;
- Tue, 19 Jan 2021 07:05:27 -0800 (PST)
+        id S2392189AbhASSQ5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 13:16:57 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:49710 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392416AbhASSQf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 13:16:35 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10JIAPJ3079482;
+        Tue, 19 Jan 2021 18:15:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : reply-to : references : mime-version :
+ content-type : in-reply-to; s=corp-2020-01-29;
+ bh=u78pb4rUqotNubZsWb2K90m1cMSnQLh16IpjHAt5kvE=;
+ b=VMzmj17L2zWCbMBWnEXmeY8xLP8hBouWo6bYlZy1tLwrpLWYNdjdLmTbd4Zqesw0wIIA
+ DiOtlRw4mNDhEw64H1P6mpvHtIScPwY1waMpo1X6EJRA/Ktp87U8HjDMNSAzQwqyzzwq
+ 6/KIZku7WaW4roSrzeC2/AFOtU3Ca5dTERaLm1q/HEz1pC7YqURJgdRabtFdbsxRzpFV
+ cVuaQJbvEqoVOe/Bq6uy3yI1+/BP7a4RWTOIYi5VsIjkC8q5XzxQvyK3OKggr8yFa4y/
+ E4wmUBxEYVkySrBk8x0Hcn/Re75aoJF8TJz1IL9kGGtCigyQ4gd+mcBL6KhtqTzRjQX8 +A== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 363nnajjps-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 19 Jan 2021 18:15:51 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10JIAZLG063686;
+        Tue, 19 Jan 2021 18:15:51 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 3649qppmcq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 19 Jan 2021 18:15:51 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 10JIFom3018378;
+        Tue, 19 Jan 2021 18:15:50 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 19 Jan 2021 10:15:50 -0800
+Date:   Tue, 19 Jan 2021 10:15:49 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs_repair: clear the needsrepair flag
+Message-ID: <20210119180318.GP3134581@magnolia>
+Reply-To: "Darrick J. Wong" <djwong@kernel.org>
+References: <161076028124.3386490.8050189989277321393.stgit@magnolia>
+ <161076029319.3386490.2011901341184065451.stgit@magnolia>
+ <20210119143754.GB1646807@bfoster>
 MIME-Version: 1.0
-References: <20210112220124.837960-1-christian.brauner@ubuntu.com> <20210112220124.837960-16-christian.brauner@ubuntu.com>
-In-Reply-To: <20210112220124.837960-16-christian.brauner@ubuntu.com>
-From:   Jann Horn <jannh@google.com>
-Date:   Tue, 19 Jan 2021 16:05:00 +0100
-Message-ID: <CAG48ez3Ccr77+zH56YGimESf9jdy_xnQrebypn1TXEP3Q+xw=w@mail.gmail.com>
-Subject: Re: [PATCH v5 15/42] fs: add file_user_ns() helper
-To:     Christian Brauner <christian.brauner@ubuntu.com>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        John Johansen <john.johansen@canonical.com>,
-        James Morris <jmorris@namei.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Geoffrey Thomas <geofft@ldpreload.com>,
-        Mrunal Patel <mpatel@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        David Howells <dhowells@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        =?UTF-8?Q?St=C3=A9phane_Graber?= <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        Lennart Poettering <lennart@poettering.net>,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Stephen Barber <smbarber@chromium.org>,
-        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
-        Kees Cook <keescook@chromium.org>,
-        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Linux Containers <containers@lists.linux-foundation.org>,
-        linux-security-module <linux-security-module@vger.kernel.org>,
-        Linux API <linux-api@vger.kernel.org>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
-        linux-xfs@vger.kernel.org, linux-integrity@vger.kernel.org,
-        SElinux list <selinux@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210119143754.GB1646807@bfoster>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9869 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 adultscore=0
+ malwarescore=0 bulkscore=0 spamscore=0 phishscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101190102
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9869 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 spamscore=0
+ mlxlogscore=999 clxscore=1015 bulkscore=0 adultscore=0 lowpriorityscore=0
+ suspectscore=0 phishscore=0 mlxscore=0 malwarescore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2101190102
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 13, 2021 at 1:52 AM Christian Brauner
-<christian.brauner@ubuntu.com> wrote:
-> Add a simple helper to retrieve the user namespace associated with the
-> vfsmount of a file. Christoph correctly points out that this makes
-> codepaths (e.g. ioctls) way easier to follow that would otherwise
-> dereference via mnt_user_ns(file->f_path.mnt).
->
-> In order to make file_user_ns() static inline we'd need to include
-> mount.h in either file.h or fs.h which seems undesirable so let's simply
-> not force file_user_ns() to be inline.
-[...]
-> +struct user_namespace *file_user_ns(struct file *file)
-> +{
-> +       return mnt_user_ns(file->f_path.mnt);
-> +}
+On Tue, Jan 19, 2021 at 09:37:54AM -0500, Brian Foster wrote:
+> On Fri, Jan 15, 2021 at 05:24:53PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Clear the needsrepair flag, since it's used to prevent mounting of an
+> > inconsistent filesystem.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> 
+> Code/errors look much cleaner. Though looking at the repair code again,
+> I wonder... if we clear the needsrepair bit and dirty/write the sb in
+> phase 2 and then xfs_repair happens to crash, do we risk clearing the
+> bit and thus allowing a potential mount before whatever requisite
+> metadata updates have been made?
 
-That name is confusing to me, because when I think of "the userns of a
-file", it's file->f_cred->user_ns. There are a bunch of places that
-look at that, as you can see from grepping for "f_cred->user_ns".
+[Oh good, now mail.kernel.org is having problems...]
 
-If you really want this to be a separate helper, can you maybe give it
-a clearer name? file_mnt_user_ns(), or something like that, idk.
+Yes, though I think that falls into the realm of "sysadmins should be
+sufficiently self-aware not to expect mount to work after repair
+fails/system crashes during an upgrade".
+
+I've thought about how to solve the general problem of preventing people
+from mounting filesystems if repair doesn't run to completion.  I think
+xfs_repair could be modified so that once it finds the primary super, it
+writes it back out with NEEDSREPAIR set (V5) or inprogress set (V4).
+Once we've finished the buffer cache flush at the end of repair, we
+clear needsrepair/inprogress and write the primary super again.
+
+An optimization on that would be to find a way to avoid that first super
+write until we flush the first dirty buffer.
+
+Another way to make repair more "transactional" would be to do it would
+be to fiddle with the buffer manager so that writes are sent to a
+metadump file which could be mdrestore'd if repair completes
+successfully.  But that's a short-circuit around the even bigger project
+of porting the kernel logging code to userspace and use that in repair.
+
+--D
+
+> Brian
+> 
+> >  repair/agheader.c |   15 +++++++++++++++
+> >  1 file changed, 15 insertions(+)
+> > 
+> > 
+> > diff --git a/repair/agheader.c b/repair/agheader.c
+> > index 8bb99489..d9b72d3a 100644
+> > --- a/repair/agheader.c
+> > +++ b/repair/agheader.c
+> > @@ -452,6 +452,21 @@ secondary_sb_whack(
+> >  			rval |= XR_AG_SB_SEC;
+> >  	}
+> >  
+> > +	if (xfs_sb_version_needsrepair(sb)) {
+> > +		if (!no_modify)
+> > +			sb->sb_features_incompat &=
+> > +					~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> > +		if (i == 0) {
+> > +			if (!no_modify)
+> > +				do_warn(
+> > +	_("clearing needsrepair flag and regenerating metadata\n"));
+> > +			else
+> > +				do_warn(
+> > +	_("would clear needsrepair flag and regenerate metadata\n"));
+> > +		}
+> > +		rval |= XR_AG_SB_SEC;
+> > +	}
+> > +
+> >  	return(rval);
+> >  }
+> >  
+> > 
+> 
