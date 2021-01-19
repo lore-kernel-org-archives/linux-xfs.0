@@ -7,50 +7,61 @@ X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EBF0C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 07:13:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B3FBC433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 07:17:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59BE42312B
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 07:13:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C38392312D
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Jan 2021 07:17:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729934AbhASHN2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Jan 2021 02:13:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43562 "EHLO
+        id S1727131AbhASHQb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Jan 2021 02:16:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729495AbhASHNR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 02:13:17 -0500
+        with ESMTP id S1726317AbhASHOu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jan 2021 02:14:50 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37494C061574
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Jan 2021 23:12:37 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FC91C061573
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Jan 2021 23:14:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=l+283mN8745iaj2VEgYIf5yzNl
-        gztGKgdDkG3hlAWMAxD8pmO45+d3Q/XZAgdXWxwn3B3ebqczkS0bWBEfMTUyVjE08auWYF0fnvNDN
-        zWJUy6wf0Je9ydJwv1QxE7uCkSkon5wIzFXm1Uui3ztKt1IKQjAIQNYoqomdiCYD2Z66V63ZyNja1
-        4ej6QwWvbBn8nCQtDy1mtie5Pn2LsiK1bwlICcvlxWai+OREwBIFikeNg+aSdstp5bOvtF3uQhoFb
-        IEn8X0zj1kA249+oe7F8tPMD85Z0eWp1Ixq5KYlLuXBHXjWPyt+VqNUhUEoWeaevORGqXv8ICB7wR
-        TnmkFB0w==;
+        bh=6IkzSpqIg0GwPlCV5ab90izFJnvPhDdstpXJzKacwdY=; b=nk08psxMcUjOd4cqeVvhft4vd3
+        DKVCSB9NJAWnD9gBXj/+19QJZMPICSCkPdVeLYFjxEvY43P8fgE3e4cgOQR07w8CaCNC33cykvxhn
+        Bd4IwviAZKYywFalh4TdfjsTddnDGPkjmkW0ZkEDUjyGPT93u7hu/GX+dwBvzV2XEH77B9+eriSzZ
+        J8FzyCC6UAHHa3IEAQRqDqxYjnkWBH2WoE7m+I9ijBAITAAYz6MXn9Yhb5KTI/uMDW1NLr1GiCDgZ
+        0dcTgKiA3bsnXI60PQnslc1l9KdTOvxflajkG0O5raUDCPVcHB18FStrRKVChJnHByDq9rX/4FlwI
+        WKd7G47w==;
 Received: from [2001:4bb8:188:1954:b440:557a:2a9e:a981] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1l1lBl-00Dwga-KT; Tue, 19 Jan 2021 07:12:32 +0000
-Date:   Tue, 19 Jan 2021 08:12:28 +0100
+        id 1l1lCp-00Dwkj-BL; Tue, 19 Jan 2021 07:13:44 +0000
+Date:   Tue, 19 Jan 2021 08:13:34 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/10] xfs: relocate the eofb/cowb workqueue functions
-Message-ID: <YAaGXCEw82n6FKWB@infradead.org>
+Subject: Re: [PATCH 02/10] xfs: hide xfs_icache_free_eofblocks
+Message-ID: <YAaGng4oszs/SVsA@infradead.org>
 References: <161100798100.90204.7839064495063223590.stgit@magnolia>
- <161100798676.90204.16460265222758873473.stgit@magnolia>
+ <161100799230.90204.6358063643921626790.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161100798676.90204.16460265222758873473.stgit@magnolia>
+In-Reply-To: <161100799230.90204.6358063643921626790.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
+
+On Mon, Jan 18, 2021 at 02:13:12PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Change the one remaining caller of xfs_icache_free_eofblocks to use our
+> new combined blockgc scan function instead, since we will soon be
+> combining the two scans.  This introduces a slight behavior change,
+> since the XFS_IOC_FREE_EOFBLOCKS now clears out speculative CoW
+> reservations in addition to post-eof blocks.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 Looks good,
 
