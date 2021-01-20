@@ -2,103 +2,376 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68672C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 13:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA36CC433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 14:16:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 323C723355
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 13:00:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71ACF207D2
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 14:16:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731999AbhATM75 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jan 2021 07:59:57 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:42418 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727325AbhATMIH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jan 2021 07:08:07 -0500
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1l2CCh-0006rZ-My; Wed, 20 Jan 2021 12:03:15 +0000
-Date:   Wed, 20 Jan 2021 13:03:10 +0100
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     Jann Horn <jannh@google.com>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        John Johansen <john.johansen@canonical.com>,
-        James Morris <jmorris@namei.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Geoffrey Thomas <geofft@ldpreload.com>,
-        Mrunal Patel <mpatel@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        David Howells <dhowells@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        =?utf-8?B?U3TDqXBoYW5l?= Graber <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        Lennart Poettering <lennart@poettering.net>,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Stephen Barber <smbarber@chromium.org>,
-        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
-        Kees Cook <keescook@chromium.org>,
-        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Linux Containers <containers@lists.linux-foundation.org>,
-        linux-security-module <linux-security-module@vger.kernel.org>,
-        Linux API <linux-api@vger.kernel.org>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
-        linux-xfs@vger.kernel.org, linux-integrity@vger.kernel.org,
-        SElinux list <selinux@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v5 15/42] fs: add file_user_ns() helper
-Message-ID: <20210120120310.6tczonwl3rdtnyu3@wittgenstein>
-References: <20210112220124.837960-1-christian.brauner@ubuntu.com>
- <20210112220124.837960-16-christian.brauner@ubuntu.com>
- <CAG48ez3Ccr77+zH56YGimESf9jdy_xnQrebypn1TXEP3Q+xw=w@mail.gmail.com>
+        id S1729053AbhATOQ1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jan 2021 09:16:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56738 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388391AbhATMgZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jan 2021 07:36:25 -0500
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 512B4C0613C1
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jan 2021 04:35:39 -0800 (PST)
+Received: by mail-pl1-x62e.google.com with SMTP id b8so12459686plx.0
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jan 2021 04:35:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=Wyrel8tVMPDNmnijEzid7KktGZjgrvGxpPiTMu/xK2I=;
+        b=I68AsjRRqqWa11PhGMYZ/8GQLNhJE4YvQzcgu2KHp3uadFpT2Yk/xlsVG+9XOH75ih
+         7tXbzw4YxIZT1kLBKDkbpoLPu1avgpeTjSGka904UPN/ZOyecwpdg3Dh7TWdT85nRn9g
+         2eOiTqYoduoWs6fdvX6/VKj7g3rfxv+NkE/Fz3MKDXwKYf9Kps0rlEhAF6N+YY4qfEIT
+         LXg90oPHrSlJhAcO8QV2EFK7Z/hfbZLtUwApo+1B5CK10KKJoEO7weSPMzTur2DdteES
+         ZrYajaSN2OG51Olc9f0qeNeHGtPKSoVWw3/GMVKLKLQEqCksUthjOATzFWxHzINzVA2B
+         T4vQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=Wyrel8tVMPDNmnijEzid7KktGZjgrvGxpPiTMu/xK2I=;
+        b=hdj/OZwDGA5w9vdd4JFRY9IsuCGD80jyUKSYbGPv+1rpEhNX+RqAQ69sord0e68ran
+         onfJqjJeLvh2EWA14k+M1CO0T3S0AsbztCzC7NVkmOxEO8hCmBvoUH0joPTYkFMMDQkF
+         LLkRM+WYdJtgFRVDdmEn4aFKMzAOi2SurRHzyFZrfavZn2bKocW18XaN9XQWFrBzh+KE
+         2qS7Z26hN5CFDFtsR929WM2i06yLho/+iAUHakvPfSUkPWMAH/vBxURTPXpmLzG1JvHM
+         1lAs8215JMzHteqBHQV5l3uG6WYKo79WvufdTCs3ziaCYCPsxBEtuDe4ofou1KgDIZKl
+         wiOw==
+X-Gm-Message-State: AOAM530yzdNs5plvPf9Cll0ZRjgLKmsSrdL5l9ctJdu8nkXeOxyjhBnW
+        gFvzRRq5D/cHzrWZ4bysVZXS7AAMN9k=
+X-Google-Smtp-Source: ABdhPJy0XBR85EOLcbNAxnQ2dy1GQvOjFmHHYbdxyFUqsBFA9ZGofePTSbpbkz5Ujuq2xzV1sqrwow==
+X-Received: by 2002:a17:90a:5581:: with SMTP id c1mr5625275pji.86.1611146138633;
+        Wed, 20 Jan 2021 04:35:38 -0800 (PST)
+Received: from garuda ([122.171.200.115])
+        by smtp.gmail.com with ESMTPSA id u12sm2194159pgi.91.2021.01.20.04.35.36
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 20 Jan 2021 04:35:38 -0800 (PST)
+References: <161076026570.3386403.8299786881687962135.stgit@magnolia> <161076027195.3386403.12700317703299129248.stgit@magnolia>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs_db: add a directory path lookup command
+In-reply-to: <161076027195.3386403.12700317703299129248.stgit@magnolia>
+Date:   Wed, 20 Jan 2021 18:05:35 +0530
+Message-ID: <87k0s723c8.fsf@garuda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <CAG48ez3Ccr77+zH56YGimESf9jdy_xnQrebypn1TXEP3Q+xw=w@mail.gmail.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 19, 2021 at 04:05:00PM +0100, Jann Horn wrote:
-> On Wed, Jan 13, 2021 at 1:52 AM Christian Brauner
-> <christian.brauner@ubuntu.com> wrote:
-> > Add a simple helper to retrieve the user namespace associated with the
-> > vfsmount of a file. Christoph correctly points out that this makes
-> > codepaths (e.g. ioctls) way easier to follow that would otherwise
-> > dereference via mnt_user_ns(file->f_path.mnt).
-> >
-> > In order to make file_user_ns() static inline we'd need to include
-> > mount.h in either file.h or fs.h which seems undesirable so let's simply
-> > not force file_user_ns() to be inline.
-> [...]
-> > +struct user_namespace *file_user_ns(struct file *file)
-> > +{
-> > +       return mnt_user_ns(file->f_path.mnt);
-> > +}
-> 
-> That name is confusing to me, because when I think of "the userns of a
-> file", it's file->f_cred->user_ns. There are a bunch of places that
-> look at that, as you can see from grepping for "f_cred->user_ns".
-> 
-> If you really want this to be a separate helper, can you maybe give it
-> a clearer name? file_mnt_user_ns(), or something like that, idk.
 
-Done.
+On 16 Jan 2021 at 06:54, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> Add a command to xfs_db so that we can navigate to inodes by path.
+>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  db/Makefile       |    3 -
+>  db/command.c      |    1
+>  db/command.h      |    1
+>  db/namei.c        |  223 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  man/man8/xfs_db.8 |    4 +
+>  5 files changed, 231 insertions(+), 1 deletion(-)
+>  create mode 100644 db/namei.c
+>
+>
+> diff --git a/db/Makefile b/db/Makefile
+> index 9d502bf0..beafb105 100644
+> --- a/db/Makefile
+> +++ b/db/Makefile
+> @@ -14,7 +14,8 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+>  	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+>  	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
+>  	fuzz.h
+> -CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c timelimit.c
+> +CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c \
+> +	timelimit.c
+>  LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+>
+>  LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+> diff --git a/db/command.c b/db/command.c
+> index 43828369..02f778b9 100644
+> --- a/db/command.c
+> +++ b/db/command.c
+> @@ -131,6 +131,7 @@ init_commands(void)
+>  	logformat_init();
+>  	io_init();
+>  	metadump_init();
+> +	namei_init();
+>  	output_init();
+>  	print_init();
+>  	quit_init();
+> diff --git a/db/command.h b/db/command.h
+> index 6913c817..498983ff 100644
+> --- a/db/command.h
+> +++ b/db/command.h
+> @@ -33,3 +33,4 @@ extern void		btdump_init(void);
+>  extern void		info_init(void);
+>  extern void		btheight_init(void);
+>  extern void		timelimit_init(void);
+> +extern void		namei_init(void);
+> diff --git a/db/namei.c b/db/namei.c
+> new file mode 100644
+> index 00000000..eebebe15
+> --- /dev/null
+> +++ b/db/namei.c
+> @@ -0,0 +1,223 @@
+> +// SPDX-License-Identifier: GPL-2.0-or-later
+> +/*
+> + * Copyright (C) 2021 Oracle.  All Rights Reserved.
+> + * Author: Darrick J. Wong <djwong@kernel.org>
+> + */
+> +#include "libxfs.h"
+> +#include "command.h"
+> +#include "output.h"
+> +#include "init.h"
+> +#include "io.h"
+> +#include "type.h"
+> +#include "input.h"
+> +#include "faddr.h"
+> +#include "fprint.h"
+> +#include "field.h"
+> +#include "inode.h"
+> +
+> +/* Path lookup */
+> +
+> +/* Key for looking up metadata inodes. */
+> +struct dirpath {
+> +	/* Array of string pointers. */
+> +	char		**path;
+> +
+> +	/* Number of strings in path. */
+> +	unsigned int	depth;
+> +};
+> +
+> +static void
+> +path_free(
+> +	struct dirpath	*dirpath)
+> +{
+> +	unsigned int	i;
+> +
+> +	for (i = 0; i < dirpath->depth; i++)
+> +		free(dirpath->path[i]);
+> +	free(dirpath->path);
+> +	free(dirpath);
+> +}
+> +
+> +/* Chop a freeform string path into a structured path. */
+> +static struct dirpath *
+> +path_parse(
+> +	const char	*path)
+> +{
+> +	struct dirpath	*dirpath;
+> +	const char	*p = path;
+> +	const char	*endp = path + strlen(path);
+> +
+> +	dirpath = calloc(sizeof(*dirpath), 1);
+> +	if (!dirpath)
+> +		return NULL;
+> +
+> +	while (p < endp) {
+> +		char		**new_path;
+> +		const char	*next_slash;
+> +
+> +		next_slash = strchr(p, '/');
+> +		if (next_slash == p) {
+> +			p++;
+> +			continue;
+> +		}
+> +		if (!next_slash)
+> +			next_slash = endp;
+> +
+> +		new_path = realloc(dirpath->path,
+> +				(dirpath->depth + 1) * sizeof(char *));
+> +		if (!new_path) {
+> +			path_free(dirpath);
+> +			return NULL;
+> +		}
+> +
+> +		dirpath->path = new_path;
+> +		dirpath->path[dirpath->depth] = strndup(p, next_slash - p);
+> +		dirpath->depth++;
+> +
+> +		p = next_slash + 1;
+> +	}
+> +
+> +	return dirpath;
+> +}
+> +
+> +/* Given a directory and a structured path, walk the path and set the cursor. */
+> +static int
+> +path_navigate(
+> +	struct xfs_mount	*mp,
+> +	xfs_ino_t		rootino,
+> +	struct dirpath		*dirpath)
+> +{
+> +	struct xfs_inode	*dp;
+> +	xfs_ino_t		ino = rootino;
+> +	unsigned int		i;
+> +	int			error;
+> +
+> +	error = -libxfs_iget(mp, NULL, ino, 0, &dp);
+> +	if (error)
+> +		return error;
+> +
+> +	for (i = 0; i < dirpath->depth; i++) {
+> +		struct xfs_name	xname = {
+> +			.name	= dirpath->path[i],
+> +			.len	= strlen(dirpath->path[i]),
+> +		};
+> +
+> +		if (!S_ISDIR(VFS_I(dp)->i_mode)) {
+> +			error = ENOTDIR;
+> +			goto rele;
+> +		}
+> +
+> +		error = -libxfs_dir_lookup(NULL, dp, &xname, &ino, NULL);
+> +		if (error)
+> +			goto rele;
+> +		if (!xfs_verify_ino(mp, ino)) {
+> +			error = EFSCORRUPTED;
+> +			goto rele;
+> +		}
+> +
+> +		libxfs_irele(dp);
+> +		dp = NULL;
+> +
+> +		error = -libxfs_iget(mp, NULL, ino, 0, &dp);
+> +		switch (error) {
+> +		case EFSCORRUPTED:
+> +		case EFSBADCRC:
+> +		case 0:
+> +			break;
+> +		default:
+> +			return error;
+> +		}
+> +	}
+> +
+> +	set_cur_inode(ino);
+> +rele:
+> +	if (dp)
+> +		libxfs_irele(dp);
+> +	return error;
+> +}
+> +
+> +/* Walk a directory path to an inode and set the io cursor to that inode. */
+> +static int
+> +path_walk(
+> +	char		*path)
+> +{
+> +	struct dirpath	*dirpath;
+> +	char		*p = path;
+> +	xfs_ino_t	rootino = mp->m_sb.sb_rootino;
+> +	int		error = 0;
+> +
+> +	if (*p == '/') {
+> +		/* Absolute path, start from the root inode. */
+> +		p++;
+> +	} else {
+> +		/* Relative path, start from current dir. */
+> +		if (iocur_top->typ != &typtab[TYP_INODE] ||
+> +		    !S_ISDIR(iocur_top->mode))
+> +			return ENOTDIR;
+> +
+> +		rootino = iocur_top->ino;
+> +	}
+> +
+> +	dirpath = path_parse(p);
+> +	if (!dirpath)
+> +		return ENOMEM;
+> +
+> +	error = path_navigate(mp, rootino, dirpath);
+> +	if (error)
+> +		return error;
+
+Memory pointed by dirpath (and its members) is not freed if the call to
+path_navigate() returns a non-zero error value.
+
+> +
+> +	path_free(dirpath);
+> +	return 0;
+> +}
+> +
+> +static void
+> +path_help(void)
+> +{
+> +	dbprintf(_(
+> +"\n"
+> +" Navigate to an inode via directory path.\n"
+> +	));
+> +}
+> +
+> +static int
+> +path_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	int		c;
+> +	int		error;
+> +
+> +	while ((c = getopt(argc, argv, "")) != -1) {
+> +		switch (c) {
+> +		default:
+> +			path_help();
+> +			return 0;
+> +		}
+> +	}
+> +
+> +	error = path_walk(argv[optind]);
+> +	if (error) {
+> +		dbprintf("%s: %s\n", argv[optind], strerror(error));
+> +		exitcode = 1;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static struct cmdinfo path_cmd = {
+> +	.name		= "path",
+> +	.altname	= NULL,
+> +	.cfunc		= path_f,
+> +	.argmin		= 1,
+> +	.argmax		= 1,
+> +	.canpush	= 0,
+> +	.args		= "",
+> +	.help		= path_help,
+> +};
+> +
+> +void
+> +namei_init(void)
+> +{
+> +	path_cmd.oneline = _("navigate to an inode by path");
+> +	add_command(&path_cmd);
+> +}
+> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> index 55388be6..4df265ec 100644
+> --- a/man/man8/xfs_db.8
+> +++ b/man/man8/xfs_db.8
+> @@ -831,6 +831,10 @@ See the
+>  .B print
+>  command.
+>  .TP
+> +.BI "path " dir_path
+> +Walk the directory tree to an inode using the supplied path.
+> +Absolute and relative paths are supported.
+> +.TP
+>  .B pop
+>  Pop location from the stack.
+>  .TP
+
+
+--
+chandan
