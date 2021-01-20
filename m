@@ -2,67 +2,79 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55F98C433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 19:43:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 425BEC433E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 19:51:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10E4423441
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 19:43:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1B7623441
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 19:51:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388179AbhATTmE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jan 2021 14:42:04 -0500
-Received: from verein.lst.de ([213.95.11.211]:57139 "EHLO verein.lst.de"
+        id S2388610AbhATTvf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jan 2021 14:51:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34620 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388101AbhATSoo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 Jan 2021 13:44:44 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id ED2DA68B05; Wed, 20 Jan 2021 19:44:00 +0100 (CET)
-Date:   Wed, 20 Jan 2021 19:44:00 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, avi@scylladb.com,
-        Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 11/11] xfs: reduce exclusive locking on unaligned dio
-Message-ID: <20210120184400.GA29173@lst.de>
-References: <20210118193516.2915706-1-hch@lst.de> <20210118193516.2915706-12-hch@lst.de> <20210120184056.GC3133414@magnolia>
+        id S2388291AbhATTmv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Jan 2021 14:42:51 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2233923441;
+        Wed, 20 Jan 2021 19:42:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611171727;
+        bh=upIieIVmVSKrAazkCHlVjdXOGsmxIMKuz7y+gnDNlsg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Faj2q43xJDpVw+gDq3QAAHW5JQWnx5p7Pl1D8bLXpyd8HRG0OpOdw0v5dCVAM+hkz
+         NTONlW++DABbMVxndCfztVbcopwRuoodUm9su/KowUR67BM+iOJ1ppHPKNtA60LTAP
+         RCi57bGd/XGC+pBK8WB3H/RnYoeBS2oKtbnJf8eECQhXLeeVEhCmXCttbppW0EojJp
+         4HwsK93co1mf+V0OhrS9mQ0O+ngxxldFV0UQhP8nKGdxsNyezyLPfWo8mJQAh3bbct
+         MPAuu8DiLNQvepeD/SO3app2aGB0DB8e+eoV6UK1//vXxt9OwXuDSWXzQS7j0+0BhP
+         XH2tTI1sxXsyg==
+Date:   Wed, 20 Jan 2021 11:42:06 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zheng Yongjun <zhengyongjun3@huawei.com>
+Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -next] fs/xfs: convert comma to semicolon
+Message-ID: <20210120194206.GP3134581@magnolia>
+References: <20201211084112.1931-1-zhengyongjun3@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210120184056.GC3133414@magnolia>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20201211084112.1931-1-zhengyongjun3@huawei.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[another full quote removed, guys please send properly formatted email]
-
-On Wed, Jan 20, 2021 at 10:40:56AM -0800, Darrick J. Wong wrote:
-> > +	if (!(flags & IOMAP_DIO_UNALIGNED))
-> > +		inode_dio_wait(VFS_I(ip));
+On Fri, Dec 11, 2020 at 04:41:12PM +0800, Zheng Yongjun wrote:
+> Replace a comma between expression statements by a semicolon.
 > 
-> Er... this really confused me when I read it -- my first thought was
-> "How can we be in the unaligned direct write function but DIO_UNALIGNED
-> isn't set?  Wouldn't we be in some other function if we're doing an
-> aligned direct write?"
-> 
-> Then I looked upthread to where Christph said he'd renamed it
-> IOMAP_DIO_SUBBLOCK, but I didn't think that was sufficiently better:
-> 
-> 	if (!(flags & IOMAP_DIO_SUBBLOCK))
-> 		iomap_dio_wait(...);
-> 
-> This flag doesn't have a 1:1 relationship with the iocb asking for an
-> (fsblock-)unaligned write or the iocb saying that the write involves
-> sub-block io -- this flag really means "I require a stable written
-> mapping, no post-processing (of the disk block) allowed".
+> Signed-off-by: Zheng Yongjun <zhengyongjun3@huawei.com>
 
-Would:
+Apparently I forgot to ack this before merging it...
 
-	if (flags & IOMAP_DIO_FORCE_WAIT)
-		inode_dio_wait(VFS_I(ip));
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-look any better to you?  Behavior would be the same.
+--D
+
+> ---
+>  fs/xfs/libxfs/xfs_btree.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 2d25bab68764..51dbff9b0908 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -4070,7 +4070,7 @@ xfs_btree_delrec(
+>  	 * surviving block, and log it.
+>  	 */
+>  	xfs_btree_set_numrecs(left, lrecs + rrecs);
+> -	xfs_btree_get_sibling(cur, right, &cptr, XFS_BB_RIGHTSIB),
+> +	xfs_btree_get_sibling(cur, right, &cptr, XFS_BB_RIGHTSIB);
+>  	xfs_btree_set_sibling(cur, left, &cptr, XFS_BB_RIGHTSIB);
+>  	xfs_btree_log_block(cur, lbp, XFS_BB_NUMRECS | XFS_BB_RIGHTSIB);
+>  
+> -- 
+> 2.22.0
+> 
