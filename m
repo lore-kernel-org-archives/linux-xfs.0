@@ -2,87 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C461C433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D46D4C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:49:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E0ACE206FA
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:47:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 811A8233ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:49:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388965AbhATSqf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jan 2021 13:46:35 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:36526 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2390374AbhATRkW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jan 2021 12:40:22 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611164334;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=vQExF8hba+wyyPUOefLsEShCcoVczw6WTxx3dmlpxrc=;
-        b=Rv48YZGd/5RG+j2yV+XyIRafwLwXPHAE1DevmyN13Ud5qUJprvk8mzkH2iKM5VWX7xVUpA
-        c06qlS8czqu5Yc3atDqLSTOw+2P+w/GhuoA/Sh1iILXk204VwtZ28XYizhxGULR6PyZbwV
-        eZKcdVdUcapGjOo7mGi380PGjl+AEzI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-263-vGnxP0qmO4mrFijyWfgwgA-1; Wed, 20 Jan 2021 12:38:46 -0500
-X-MC-Unique: vGnxP0qmO4mrFijyWfgwgA-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 84153EC1A4;
-        Wed, 20 Jan 2021 17:38:45 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id F28CD5C8AB;
-        Wed, 20 Jan 2021 17:38:43 +0000 (UTC)
-Date:   Wed, 20 Jan 2021 12:38:39 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/2] xfs_repair: fix unmount error message to have a
- newline
-Message-ID: <20210120173839.GB1722880@bfoster>
-References: <161076028124.3386490.8050189989277321393.stgit@magnolia>
- <20210120043157.GY3134581@magnolia>
+        id S2390953AbhATSsy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jan 2021 13:48:54 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54102 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2390089AbhATSsR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Jan 2021 13:48:17 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4C40E206FA;
+        Wed, 20 Jan 2021 18:47:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611168456;
+        bh=uKH9o6h1e+z801UsuzTij2Y7mpQx/UJmcChVgkZfWnA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=nv9BKKChNeDxmg4bqcVy+4lB22JTCv4c7rFXxBDGa+3WNc4KTipKGs7yB8IZTOeg9
+         1HwuaSaPUI5EfktqOJrLr85zI+sWHOI7JHu4+DZhv+hsE+ImMdgrvOka+j+QNXUlRF
+         6+OLNwWCc96LX9NOXQGhqjRtmRDBKoZXqyHNE3GNYF/QItcv7UfwCOtrjFARV4Hjyu
+         kPeAgu9NqDuUS/R6thbWkI8s51VL96TCMYLGM5RfR63Efqs38pC2qTK+g736A7FSki
+         Bpr92Q3D+iKjClKQbxem2HslxAYM+9EhneF5kUJS72+gIVIb2TlXLqVbUnC0uWp1X3
+         cVAa3YvCSSx/g==
+Date:   Wed, 20 Jan 2021 10:47:35 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        avi@scylladb.com
+Subject: Re: [PATCH 10/11] iomap: add a IOMAP_DIO_UNALIGNED flag
+Message-ID: <20210120184735.GK3134581@magnolia>
+References: <20210118193516.2915706-1-hch@lst.de>
+ <20210118193516.2915706-11-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210120043157.GY3134581@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <20210118193516.2915706-11-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 19, 2021 at 08:31:57PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jan 18, 2021 at 08:35:15PM +0100, Christoph Hellwig wrote:
+> Add a flag to signal an I/O that is not file system block aligned.
 > 
-> Add a newline so that this is consistent with the other error messages.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  repair/xfs_repair.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/iomap/direct-io.c  | 7 +++++++
+>  include/linux/iomap.h | 8 ++++++++
+>  2 files changed, 15 insertions(+)
 > 
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 724661d8..9409f0d8 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -1136,7 +1136,7 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
->  	error = -libxfs_umount(mp);
->  	if (error)
->  		do_error(
-> -	_("File system metadata writeout failed, err=%d.  Re-run xfs_repair."),
-> +	_("File system metadata writeout failed, err=%d.  Re-run xfs_repair.\n"),
->  				error);
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index 32dbbf7dd4aadb..d93019ee4c9e3e 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -485,6 +485,13 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		iomap_flags |= IOMAP_NOWAIT;
+>  	}
 >  
->  	libxfs_destroy(&x);
-> 
+> +	if (dio_flags & IOMAP_DIO_UNALIGNED) {
+> +		ret = -EAGAIN;
+> +		if (pos >= dio->i_size)
+> +			goto out_free_dio;
+> +		iomap_flags |= IOMAP_UNALIGNED;
+> +	}
+> +
+>  	ret = filemap_write_and_wait_range(mapping, pos, end);
+>  	if (ret)
+>  		goto out_free_dio;
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index b322598dc10ec0..2fa94ec9583d0a 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -122,6 +122,7 @@ struct iomap_page_ops {
+>  #define IOMAP_FAULT		(1 << 3) /* mapping for page fault */
+>  #define IOMAP_DIRECT		(1 << 4) /* direct I/O */
+>  #define IOMAP_NOWAIT		(1 << 5) /* do not block */
+> +#define IOMAP_UNALIGNED		(1 << 6) /* do not allocate blocks */
+>  
+>  struct iomap_ops {
+>  	/*
+> @@ -262,6 +263,13 @@ struct iomap_dio_ops {
+>   */
+>  #define IOMAP_DIO_FORCE_WAIT	(1 << 0)
+>  
+> +/*
+> + * Direct I/O that is not aligned to the file system block.  Do not allocate
+> + * blocks and do not zero partial blocks, fall back to the caller by returning
+> + * -EAGAIN instead.
+> + */
+> +#define IOMAP_DIO_UNALIGNED	(1 << 1)
 
+The code changes look fine, but as for the name, I found it a little
+confusing even after changing it to IOMAP_DIO_SUBBLOCK.
+
+See my reply to patch 11 for more details.
+
+--D
+
+> +
+>  ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
+>  		unsigned int flags);
+> -- 
+> 2.29.2
+> 
