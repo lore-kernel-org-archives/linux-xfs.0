@@ -2,197 +2,292 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2DADC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 19:21:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7359C4332B
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 19:21:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 873BA233EB
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 19:21:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 866AB233FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 19:21:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727517AbhATSqZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jan 2021 13:46:25 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:21521 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388965AbhATRj7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jan 2021 12:39:59 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611164313;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=L4k6mYOUBvekOQSxfNUv8CxiBqTioNGNisyLbIZ0ifA=;
-        b=T7BBVvPoY2AL79ztbTvENcxf2WFLGX4QPuT/jERCJn7GXFEUxJJLfCEDfOXp1OQsCN9ahz
-        M/RvETs2Ur/CInx8Xy5NXQL42fDCdQWNGypHhLCDntfqMIxwBToIBm8AKj80OFwrsHu9ks
-        7/t0J4g4WqgIlu27M4fw5swkKmrt4sk=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-377-DfxDD0MwP4eY3YvvVJT2JQ-1; Wed, 20 Jan 2021 12:38:31 -0500
-X-MC-Unique: DfxDD0MwP4eY3YvvVJT2JQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 04A4A1800D42;
-        Wed, 20 Jan 2021 17:38:30 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2F6B35D6AD;
-        Wed, 20 Jan 2021 17:38:28 +0000 (UTC)
-Date:   Wed, 20 Jan 2021 12:38:20 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2.1 2/2] xfs_repair: clear the needsrepair flag
-Message-ID: <20210120173820.GA1722880@bfoster>
-References: <161076028124.3386490.8050189989277321393.stgit@magnolia>
- <161076029319.3386490.2011901341184065451.stgit@magnolia>
- <20210120043128.GX3134581@magnolia>
+        id S1733269AbhATSqo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jan 2021 13:46:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52806 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388660AbhATSli (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Jan 2021 13:41:38 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4A1FC23403;
+        Wed, 20 Jan 2021 18:40:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611168057;
+        bh=OpTAjWEt0SW3XTOe0Ax+oySwBwckCVg2zQyHp5ImymA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=g8pDmsiw1cwlF61rQtnZzuAjx6HjuUChZojqn4cZ3jPMDIqYhNjr0A1nIE1MnoRaU
+         tyEurnBZVL5sXxQExYOoIdxx4DswHCpPfwzzIu+4grHSelmT2O+C5OUhaGVu1df/mD
+         Mnz6QrRPKW4qMc13dE4Gvz5kvEjkOObq0vQnViiLVAMufhjdft687FsYMANBHdqZYl
+         85sFJSkQFqq31aJWEfDJkC+Xm4vD1r7Dw2rQxNgQZR6jMsGFYfWYhC0jrcBoBc//lh
+         j3Z5NaJMbndwI5G7lK0xS6x5kLSq56DAP/qrt4xly1iAp8VgkUMC3k/zj5hzHIFC4C
+         Ki2lbtVYjgKEw==
+Date:   Wed, 20 Jan 2021 10:40:56 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        avi@scylladb.com, Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH 11/11] xfs: reduce exclusive locking on unaligned dio
+Message-ID: <20210120184056.GC3133414@magnolia>
+References: <20210118193516.2915706-1-hch@lst.de>
+ <20210118193516.2915706-12-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210120043128.GX3134581@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20210118193516.2915706-12-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 19, 2021 at 08:31:28PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jan 18, 2021 at 08:35:16PM +0100, Christoph Hellwig wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Clear the needsrepair flag, since it's used to prevent mounting of an
-> inconsistent filesystem.
+> Attempt shared locking for unaligned DIO, but only if the the
+> underlying extent is already allocated and in written state. On
+> failure, retry with the existing exclusive locking.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Test case is fio randrw of 512 byte IOs using AIO and an iodepth of
+> 32 IOs.
+> 
+> Vanilla:
+> 
+>   READ: bw=4560KiB/s (4670kB/s), 4560KiB/s-4560KiB/s (4670kB/s-4670kB/s), io=134MiB (140MB), run=30001-30001msec
+>   WRITE: bw=4567KiB/s (4676kB/s), 4567KiB/s-4567KiB/s (4676kB/s-4676kB/s), io=134MiB (140MB), run=30001-30001msec
+> 
+> Patched:
+>    READ: bw=37.6MiB/s (39.4MB/s), 37.6MiB/s-37.6MiB/s (39.4MB/s-39.4MB/s), io=1127MiB (1182MB), run=30002-30002msec
+>   WRITE: bw=37.6MiB/s (39.4MB/s), 37.6MiB/s-37.6MiB/s (39.4MB/s-39.4MB/s), io=1128MiB (1183MB), run=30002-30002msec
+> 
+> That's an improvement from ~18k IOPS to a ~150k IOPS, which is
+> about the IOPS limit of the VM block device setup I'm testing on.
+> 
+> 4kB block IO comparison:
+> 
+>    READ: bw=296MiB/s (310MB/s), 296MiB/s-296MiB/s (310MB/s-310MB/s), io=8868MiB (9299MB), run=30002-30002msec
+>   WRITE: bw=296MiB/s (310MB/s), 296MiB/s-296MiB/s (310MB/s-310MB/s), io=8878MiB (9309MB), run=30002-30002msec
+> 
+> Which is ~150k IOPS, same as what the test gets for sub-block
+> AIO+DIO writes with this patch.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> [hch: rebased, split unaligned from nowait]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-> v2.1: only remove needsrepair at the end of the xfs_repair run
-> ---
->  include/xfs_mount.h |    1 +
->  libxfs/init.c       |    2 +-
->  repair/agheader.c   |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  repair/agheader.h   |    2 ++
->  repair/xfs_repair.c |    4 +++-
->  5 files changed, 62 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_file.c  | 87 ++++++++++++++++++++++++++++++++--------------
+>  fs/xfs/xfs_iomap.c | 31 ++++++++++++-----
+>  2 files changed, 84 insertions(+), 34 deletions(-)
 > 
-...
-> diff --git a/repair/agheader.c b/repair/agheader.c
-> index 8bb99489..56a7f45c 100644
-> --- a/repair/agheader.c
-> +++ b/repair/agheader.c
-> @@ -220,6 +220,40 @@ compare_sb(xfs_mount_t *mp, xfs_sb_t *sb)
->  	return(XR_OK);
->  }
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index b181db42f2f32f..4e475e750148db 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -544,22 +544,35 @@ xfs_file_dio_write_aligned(
+>  /*
+>   * Handle block unaligned direct IO writes
+>   *
+> - * In most cases direct IO writes will be done holding IOLOCK_SHARED, allowing
+> - * them to be done in parallel with reads and other direct IO writes.  However,
+> - * if the I/O is not aligned to filesystem blocks, the direct I/O layer may
+> - * need to do sub-block zeroing and that requires serialisation against other
+> - * direct I/Os to the same block. In this case we need to serialise the
+> - * submission of the unaligned I/Os so that we don't get racing block zeroing in
+> - * the dio layer.
+> + * In most cases direct IO writes will be done holding IOLOCK_SHARED
+> + * allowing them to be done in parallel with reads and other direct IO writes.
+> + * However, if the IO is not aligned to filesystem blocks, the direct IO layer
+> + * may need to do sub-block zeroing and that requires serialisation against other
+> + * direct IOs to the same block. In the case where sub-block zeroing is not
+> + * required, we can do concurrent sub-block dios to the same block successfully.
+>   *
+> - * To provide the same serialisation for AIO, we also need to wait for
+> + * Hence we have two cases here - the shared, optimisitic fast path for written
+> + * extents, and everything else that needs exclusive IO path access across the
+> + * entire IO.
+> + *
+> + * For the first case, we do all the checks we need at the mapping layer in the
+> + * DIO code as part of the existing NOWAIT infrastructure. Hence all we need to
+> + * do to support concurrent subblock dio is first try a non-blocking submission.
+> + * If that returns -EAGAIN, then we simply repeat the IO submission with full
+> + * IO exclusivity guaranteed so that we avoid racing sub-block zeroing.
+> + *
+> + * The only wrinkle in this case is that the iomap DIO code always does
+> + * partial tail sub-block zeroing for post-EOF writes. Hence for any IO that
+> + * _ends_ past the current EOF we need to run with full exclusivity. Note that
+> + * we also check for the start of IO being beyond EOF because then zeroing
+> + * between the old EOF and the start of the IO is required and that also
+> + * requires exclusivity. Hence we avoid lock cycles and blocking under
+> + * IOCB_NOWAIT for this situation, too.
+> + *
+> + * To provide the exclusivity required when using AIO, we also need to wait for
+>   * outstanding IOs to complete so that unwritten extent conversion is completed
+>   * before we try to map the overlapping block. This is currently implemented by
+>   * hitting it with a big hammer (i.e. inode_dio_wait()).
+> - *
+> - * This means that unaligned dio writes always block. There is no "nowait" fast
+> - * path in this code - if IOCB_NOWAIT is set we simply return -EAGAIN up front
+> - * and we don't have to worry about that anymore.
+>   */
+>  static noinline ssize_t
+>  xfs_file_dio_write_unaligned(
+> @@ -567,13 +580,27 @@ xfs_file_dio_write_unaligned(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*from)
+>  {
+> -	int			iolock = XFS_IOLOCK_EXCL;
+> +	size_t			isize = i_size_read(VFS_I(ip));
+> +	size_t			count = iov_iter_count(from);
+> +	int			iolock = XFS_IOLOCK_SHARED;
+> +	unsigned int		flags = IOMAP_DIO_UNALIGNED;
+>  	ssize_t			ret;
 >  
-> +/* Clear needsrepair after a successful repair run. */
-> +int
-> +clear_needsrepair(
-> +	struct xfs_mount	*mp)
-> +{
-> +	struct xfs_buf		*bp;
-> +	int			error;
-> +
-> +	if (!xfs_sb_version_needsrepair(&mp->m_sb) || no_modify)
-> +		return 0;
-> +
-> +	/* We must succeed at flushing all dirty buffers to disk. */
-> +	error = -libxfs_flush_mount(mp);
-> +	if (error)
-> +		return error;
-> +
-
-Do we really need a new helper and buf get/relse cycle just to
-incorporate the above flush? ISTM we could either lift the
-libxfs_bcache_flush() call above the superblock update in the caller,
-insert the libxfs_flush_mount() right after that, and just do:
-
-	dsb->sb_features_incompat &= ~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-
-... in the hunk that also updates the quota flags.
-
-Though perhaps cleaner would be to keep the helper, but genericize it a
-bit to something like final_sb_update() and fold in the qflags update
-and whatever flush/ordering is required for the feature bit.
-
-> +	/* Clear needsrepair from the superblock. */
-> +	bp = libxfs_getsb(mp);
-> +	if (!bp)
-> +		return ENOMEM;
-> +	if (bp->b_error) {
-> +		error = bp->b_error;
-> +		libxfs_buf_relse(bp);
-> +		return -error;
+> -	/* unaligned dio always waits, bail */
+> -	if (iocb->ki_flags & IOCB_NOWAIT)
+> -		return -EAGAIN;
+> -	xfs_ilock(ip, iolock);
+> +	/*
+> +	 * Extending writes need exclusivity because of the sub-block zeroing
+> +	 * that the DIO code always does for partial tail blocks beyond EOF.
+> +	 */
+> +	if (iocb->ki_pos > isize || iocb->ki_pos + count >= isize) {
+> +retry_exclusive:
+> +		if (iocb->ki_flags & IOCB_NOWAIT)
+> +			return -EAGAIN;
+> +		iolock = XFS_IOLOCK_EXCL;
+> +		flags = IOMAP_DIO_FORCE_WAIT;
 > +	}
 > +
-> +	mp->m_sb.sb_features_incompat &= ~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> +	ret = xfs_ilock_iocb(iocb, iolock);
+> +	if (ret)
+> +		return ret;
+>  
+>  	/*
+>  	 * We can't properly handle unaligned direct I/O to reflink files yet,
+> @@ -590,19 +617,27 @@ xfs_file_dio_write_unaligned(
+>  		goto out_unlock;
+>  
+>  	/*
+> -	 * If we are doing unaligned I/O, we can't allow any other overlapping
+> -	 * I/O in-flight at the same time or we risk data corruption. Wait for
+> -	 * all other I/O to drain before we submit.
+> +	 * If we are doing exclusive unaligned IO, we can't allow any other
+> +	 * overlapping IO in-flight at the same time or we risk data corruption.
+> +	 * Wait for all other IO to drain before we submit.
+>  	 */
+> -	inode_dio_wait(VFS_I(ip));
+> +	if (!(flags & IOMAP_DIO_UNALIGNED))
+> +		inode_dio_wait(VFS_I(ip));
+
+Er... this really confused me when I read it -- my first thought was
+"How can we be in the unaligned direct write function but DIO_UNALIGNED
+isn't set?  Wouldn't we be in some other function if we're doing an
+aligned direct write?"
+
+Then I looked upthread to where Christph said he'd renamed it
+IOMAP_DIO_SUBBLOCK, but I didn't think that was sufficiently better:
+
+	if (!(flags & IOMAP_DIO_SUBBLOCK))
+		iomap_dio_wait(...);
+
+This flag doesn't have a 1:1 relationship with the iocb asking for an
+(fsblock-)unaligned write or the iocb saying that the write involves
+sub-block io -- this flag really means "I require a stable written
+mapping, no post-processing (of the disk block) allowed".
+
+Admittedly the comment above the definition of IOMAP_DIO_UNALIGNED
+actually says this, but as we all know I sometimes like to review
+patchsets backwards. :P
+
+How about...
+
+IOMAP_DIO_REQUIRE_OVERWRITE ?
+
+IOMAP_DIO_REQUIRE_STABLE ?
+
+--D
+
+>  
+> -	/*
+> -	 * This must be the only I/O in-flight. Wait on it before we release the
+> -	 * iolock to prevent subsequent overlapping I/O.
+> -	 */
+>  	trace_xfs_file_direct_write(iocb, from);
+>  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
+> -			   &xfs_dio_write_ops, IOMAP_DIO_FORCE_WAIT);
+> +			   &xfs_dio_write_ops, flags);
+> +	/*
+> +	 * Retry unaligned IO with exclusive blocking semantics if the DIO
+> +	 * layer rejected it for mapping or locking reasons. If we are doing
+> +	 * nonblocking user IO, propagate the error.
+> +	 */
+> +	if (ret == -EAGAIN && !(iocb->ki_flags & IOCB_NOWAIT)) {
+> +		ASSERT(flags & IOMAP_DIO_UNALIGNED);
+> +		xfs_iunlock(ip, iolock);
+> +		goto retry_exclusive;
+> +	}
 > +
-> +	libxfs_sb_to_disk(bp->b_addr, &mp->m_sb);
-> +	libxfs_buf_mark_dirty(bp);
-> +	libxfs_buf_relse(bp);
-> +	return 0;
-> +}
+>  out_unlock:
+>  	if (iolock)
+>  		xfs_iunlock(ip, iolock);
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 7b9ff824e82d48..dc8c86e98b99bf 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -784,15 +784,30 @@ xfs_direct_write_iomap_begin(
+>  		goto allocate_blocks;
+>  
+>  	/*
+> -	 * NOWAIT IO needs to span the entire requested IO with a single map so
+> -	 * that we avoid partial IO failures due to the rest of the IO range not
+> -	 * covered by this map triggering an EAGAIN condition when it is
+> -	 * subsequently mapped and aborting the IO.
+> +	 * NOWAIT and unaligned IO needs to span the entire requested IO with a
+> +	 * single map so that we avoid partial IO failures due to the rest of
+> +	 * the IO range not covered by this map triggering an EAGAIN condition
+> +	 * when it is subsequently mapped and aborting the IO.
+>  	 */
+> -	if ((flags & IOMAP_NOWAIT) &&
+> -	    !imap_spans_range(&imap, offset_fsb, end_fsb)) {
+> +	if (flags & (IOMAP_NOWAIT | IOMAP_UNALIGNED)) {
+>  		error = -EAGAIN;
+> -		goto out_unlock;
+> +		if (!imap_spans_range(&imap, offset_fsb, end_fsb))
+> +			goto out_unlock;
+> +	}
 > +
->  /*
->   * Possible fields that may have been set at mkfs time,
->   * sb_inoalignmt, sb_unit, sb_width and sb_dirblklog.
-> @@ -452,6 +486,27 @@ secondary_sb_whack(
->  			rval |= XR_AG_SB_SEC;
+> +	/*
+> +	 * For unsigned I/O we can't convert an unwritten extents if the I/O is
+> +	 * not block size aligned, as such a conversion would have to do
+> +	 * sub-block zeroing, and that can only be done under an exclusive
+> +	 * IOLOCK. Hence if this is not a written extent, return EAGAIN to tell
+> +	 * the caller to try again.
+> +	 */
+> +	if (flags & IOMAP_UNALIGNED) {
+> +		error = -EAGAIN;
+> +		if (imap.br_state != XFS_EXT_NORM &&
+> +		    ((offset & mp->m_blockmask) ||
+> +		     ((offset + length) & mp->m_blockmask)))
+> +			goto out_unlock;
 >  	}
 >  
-> +	if (xfs_sb_version_needsrepair(sb)) {
-> +		if (!no_modify)
-> +			sb->sb_features_incompat &=
-> +					~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-
-I suspect this should be folded into the check below so we don't modify
-the primary sb by accident (should some other check dirty it).
-
-Brian
-
-> +		if (i == 0) {
-> +			if (!no_modify)
-> +				do_warn(
-> +	_("clearing needsrepair flag and regenerating metadata\n"));
-> +			else
-> +				do_warn(
-> +	_("would clear needsrepair flag and regenerate metadata\n"));
-> +		} else {
-> +			/*
-> +			 * Quietly clear needsrepair on the secondary supers as
-> +			 * part of ensuring them.  If needsrepair is set on the
-> +			 * primary, it will be done at the very end of repair.
-> +			 */
-> +			rval |= XR_AG_SB_SEC;
-> +		}
-> +	}
-> +
->  	return(rval);
->  }
+>  	xfs_iunlock(ip, lockmode);
+> @@ -801,7 +816,7 @@ xfs_direct_write_iomap_begin(
 >  
-> diff --git a/repair/agheader.h b/repair/agheader.h
-> index a63827c8..552c1f70 100644
-> --- a/repair/agheader.h
-> +++ b/repair/agheader.h
-> @@ -82,3 +82,5 @@ typedef struct fs_geo_list  {
->  #define XR_AG_AGF	0x2
->  #define XR_AG_AGI	0x4
->  #define XR_AG_SB_SEC	0x8
-> +
-> +int clear_needsrepair(struct xfs_mount *mp);
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 9409f0d8..d36c5a21 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -1133,7 +1133,9 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
->  	format_log_max_lsn(mp);
+>  allocate_blocks:
+>  	error = -EAGAIN;
+> -	if (flags & IOMAP_NOWAIT)
+> +	if (flags & (IOMAP_NOWAIT | IOMAP_UNALIGNED))
+>  		goto out_unlock;
 >  
->  	/* Report failure if anything failed to get written to our fs. */
-> -	error = -libxfs_umount(mp);
-> +	error = clear_needsrepair(mp);
-> +	if (!error)
-> +		error = -libxfs_umount(mp);
->  	if (error)
->  		do_error(
->  	_("File system metadata writeout failed, err=%d.  Re-run xfs_repair.\n"),
+>  	/*
+> -- 
+> 2.29.2
 > 
-
