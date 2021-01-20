@@ -2,106 +2,64 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37078C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:49:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B7F9C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:55:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D8E6F206FA
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:49:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF9BF233EA
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:55:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390668AbhATSsw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jan 2021 13:48:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53958 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392020AbhATSrV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 Jan 2021 13:47:21 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A7D01233EA;
-        Wed, 20 Jan 2021 18:46:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611168400;
-        bh=0L+9Z7TxhvnO24tvSrUyiMec+6BmfJQQX8l3ljHDSkw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RACTKIL7Qe/jw++fUDPKipGugQslCpVPSKhsveCoL89BONLWS90JfVejnM7yHspRj
-         H4ToyRbMBbTN35EU0mxRR7jz8sB3g/XnPLlp+XoG9I4wjVja5OJNWYxGLNwqfxbFOO
-         E6DtzOasBS8vbw5+wfGoXv9cYc+Amrmr88Ok2OwtGi6lHdM7BNSTJ0KMnc/kd8F65B
-         XRzzAhDqp4tttwj+zsaQ6TJsaMv31mZluD/Ij8zPc+WuZjZii20tOvR0EAtDJuHWXg
-         opHOLz6ocAdCWohsCE6oq+LHqgyVsjUu4BlmQ6NeCTt2Hk7OsgDotFptY2pzc7nWNL
-         Oyz7drUhiHTEA==
-Date:   Wed, 20 Jan 2021 10:46:40 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        avi@scylladb.com
-Subject: Re: [PATCH 08/11] iomap: rename the flags variable in __iomap_dio_rw
-Message-ID: <20210120184640.GJ3134581@magnolia>
-References: <20210118193516.2915706-1-hch@lst.de>
- <20210118193516.2915706-9-hch@lst.de>
+        id S1731075AbhATSzB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jan 2021 13:55:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53674 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391908AbhATSyU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jan 2021 13:54:20 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7537C061757
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Jan 2021 10:53:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=1yh4choBOJVXGyp29sKvMDgBCQIuSDq7Ilxv56fOFtI=; b=q+bP8K07+WZfMTPKnrRFzQnh1i
+        50HZG0jEKn0JWaHM8upj8VT5SnLwa/Cen1V2s1GfKOZixrXll+6nUeQp50u91Fdfak4kozAJsWuSo
+        FSR2GHUERROuqSc16YBIVDXExj1Cy9vQYpmJM5iX+oh3Aj2h0sErJvzoAtaVfmNQJQ2agT6PfKHHV
+        ledtZDgOCtFRX+YKIBLNjpGG2C1BcQAfcDr/UOcQpKoCbUthAQnuIhvFtM03j3+54SfdDdewvQhFR
+        ssU4eCjkNEmeD6PjhBSztMdwdVkIfXBbDegn/nvARvyB8opMobZr5BC8xGiIAL+0PakUM1Fuy8mBB
+        2sebFCLA==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1l2Ibi-00G5Hh-Iz; Wed, 20 Jan 2021 18:53:32 +0000
+Date:   Wed, 20 Jan 2021 18:53:30 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Yumei Huang <yuhuang@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+        sandeen@sandeen.net, bfoster@redhat.com
+Subject: Re: [PATCH] xfs: Fix assert failure in xfs_setattr_size()
+Message-ID: <20210120185330.GA3832968@infradead.org>
+References: <316142100.64829455.1610706461022.JavaMail.zimbra@redhat.com>
+ <1492355130.64829487.1610706535069.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210118193516.2915706-9-hch@lst.de>
+In-Reply-To: <1492355130.64829487.1610706535069.JavaMail.zimbra@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 18, 2021 at 08:35:13PM +0100, Christoph Hellwig wrote:
-> Rename flags to iomap_flags to make the usage a little more clear.
+On Fri, Jan 15, 2021 at 05:28:55AM -0500, Yumei Huang wrote:
+> An assert failure is triggered by syzkaller test due to
+> ATTR_KILL_PRIV is not cleared before xfs_setattr_size.
+> As ATTR_KILL_PRIV is not checked/used by xfs_setattr_size,
+> just remove it from the assert.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Yumei Huang <yuhuang@redhat.com>
 
-Pretty straightforward...
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Looks good,
 
---D
-
-> ---
->  fs/iomap/direct-io.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 933f234d5becd0..604103ab76f9c5 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -427,7 +427,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	size_t count = iov_iter_count(iter);
->  	loff_t pos = iocb->ki_pos;
->  	loff_t end = iocb->ki_pos + count - 1, ret = 0;
-> -	unsigned int flags = IOMAP_DIRECT;
-> +	unsigned int iomap_flags = IOMAP_DIRECT;
->  	struct blk_plug plug;
->  	struct iomap_dio *dio;
->  
-> @@ -461,7 +461,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		if (iter_is_iovec(iter))
->  			dio->flags |= IOMAP_DIO_DIRTY;
->  	} else {
-> -		flags |= IOMAP_WRITE;
-> +		iomap_flags |= IOMAP_WRITE;
->  		dio->flags |= IOMAP_DIO_WRITE;
->  
->  		/* for data sync or sync, we need sync completion processing */
-> @@ -483,7 +483,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  			ret = -EAGAIN;
->  			goto out_free_dio;
->  		}
-> -		flags |= IOMAP_NOWAIT;
-> +		iomap_flags |= IOMAP_NOWAIT;
->  	}
->  
->  	ret = filemap_write_and_wait_range(mapping, pos, end);
-> @@ -514,7 +514,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  
->  	blk_start_plug(&plug);
->  	do {
-> -		ret = iomap_apply(inode, pos, count, flags, ops, dio,
-> +		ret = iomap_apply(inode, pos, count, iomap_flags, ops, dio,
->  				iomap_dio_actor);
->  		if (ret <= 0) {
->  			/* magic error code to fall back to buffered I/O */
-> -- 
-> 2.29.2
-> 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
