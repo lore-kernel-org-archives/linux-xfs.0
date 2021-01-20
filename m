@@ -2,147 +2,87 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9D26C433E9
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:46:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C461C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:47:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9247C23428
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:46:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0ACE206FA
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Jan 2021 18:47:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388731AbhATSpp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jan 2021 13:45:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38872 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387710AbhATRjr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 Jan 2021 12:39:47 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A5C872070A;
-        Wed, 20 Jan 2021 17:39:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611164346;
-        bh=o6ayQgk+I4RGpW8DPAJHrUbUv9ou5WB2+43toSTtSIQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Oi3oWApa9ysreerizFoiZ/Ps4ndskMk9e6I9yX1rolhzv8REp9AqO7dOleHndkQPn
-         FC6W5FeedbhX/EfUt3221mOTPP1dJVz2pxzbYFHGJ9Hhx3vTfFdzIrzFWAlONlXNeu
-         Et6cDmxjlI5dnScH+/Y+AbX5oqjs2HJ/iG4nU7counoHalyxMSVWdUERSGO4m0zEOg
-         RG0q+JKayJgjZGaxso4N7ztSsgcPTkBwOZnEwK7LcqroKkSZjGrYuwUvurUfFj3+J3
-         bWvjG7bqHxlAdA66v/7Gs0xBF6Fn/mmGDd58Sjyr9j/S+gmsXkxiwpNJnPoGvJkEsc
-         +alL8fomDtGYg==
-Date:   Wed, 20 Jan 2021 09:39:05 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
+        id S2388965AbhATSqf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jan 2021 13:46:35 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:36526 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2390374AbhATRkW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jan 2021 12:40:22 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611164334;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=vQExF8hba+wyyPUOefLsEShCcoVczw6WTxx3dmlpxrc=;
+        b=Rv48YZGd/5RG+j2yV+XyIRafwLwXPHAE1DevmyN13Ud5qUJprvk8mzkH2iKM5VWX7xVUpA
+        c06qlS8czqu5Yc3atDqLSTOw+2P+w/GhuoA/Sh1iILXk204VwtZ28XYizhxGULR6PyZbwV
+        eZKcdVdUcapGjOo7mGi380PGjl+AEzI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-263-vGnxP0qmO4mrFijyWfgwgA-1; Wed, 20 Jan 2021 12:38:46 -0500
+X-MC-Unique: vGnxP0qmO4mrFijyWfgwgA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 84153EC1A4;
+        Wed, 20 Jan 2021 17:38:45 +0000 (UTC)
+Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id F28CD5C8AB;
+        Wed, 20 Jan 2021 17:38:43 +0000 (UTC)
+Date:   Wed, 20 Jan 2021 12:38:39 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs_db: add a directory path lookup command
-Message-ID: <20210120173905.GA3134581@magnolia>
-References: <161076026570.3386403.8299786881687962135.stgit@magnolia>
- <161076027195.3386403.12700317703299129248.stgit@magnolia>
- <87k0s723c8.fsf@garuda>
+Subject: Re: [PATCH 3/2] xfs_repair: fix unmount error message to have a
+ newline
+Message-ID: <20210120173839.GB1722880@bfoster>
+References: <161076028124.3386490.8050189989277321393.stgit@magnolia>
+ <20210120043157.GY3134581@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87k0s723c8.fsf@garuda>
+In-Reply-To: <20210120043157.GY3134581@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 20, 2021 at 06:05:35PM +0530, Chandan Babu R wrote:
+On Tue, Jan 19, 2021 at 08:31:57PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> On 16 Jan 2021 at 06:54, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> >
-> > Add a command to xfs_db so that we can navigate to inodes by path.
-> >
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  db/Makefile       |    3 -
-> >  db/command.c      |    1
-> >  db/command.h      |    1
-> >  db/namei.c        |  223 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  man/man8/xfs_db.8 |    4 +
-> >  5 files changed, 231 insertions(+), 1 deletion(-)
-> >  create mode 100644 db/namei.c
-> >
-> >
-> > diff --git a/db/Makefile b/db/Makefile
-> > index 9d502bf0..beafb105 100644
-> > --- a/db/Makefile
-> > +++ b/db/Makefile
-> > @@ -14,7 +14,8 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
-> >  	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
-> >  	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
-> >  	fuzz.h
-> > -CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c timelimit.c
-> > +CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c \
-> > +	timelimit.c
-> >  LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
-> >
-> >  LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-> > diff --git a/db/command.c b/db/command.c
-> > index 43828369..02f778b9 100644
-> > --- a/db/command.c
-> > +++ b/db/command.c
-> > @@ -131,6 +131,7 @@ init_commands(void)
-> >  	logformat_init();
-> >  	io_init();
-> >  	metadump_init();
-> > +	namei_init();
-> >  	output_init();
-> >  	print_init();
-> >  	quit_init();
-> > diff --git a/db/command.h b/db/command.h
-> > index 6913c817..498983ff 100644
-> > --- a/db/command.h
-> > +++ b/db/command.h
-> > @@ -33,3 +33,4 @@ extern void		btdump_init(void);
-> >  extern void		info_init(void);
-> >  extern void		btheight_init(void);
-> >  extern void		timelimit_init(void);
-> > +extern void		namei_init(void);
-> > diff --git a/db/namei.c b/db/namei.c
-> > new file mode 100644
-> > index 00000000..eebebe15
-> > --- /dev/null
-> > +++ b/db/namei.c
-> > @@ -0,0 +1,223 @@
-
-<snip some of this out>
-
-> > +/* Walk a directory path to an inode and set the io cursor to that inode. */
-> > +static int
-> > +path_walk(
-> > +	char		*path)
-> > +{
-> > +	struct dirpath	*dirpath;
-> > +	char		*p = path;
-> > +	xfs_ino_t	rootino = mp->m_sb.sb_rootino;
-> > +	int		error = 0;
-> > +
-> > +	if (*p == '/') {
-> > +		/* Absolute path, start from the root inode. */
-> > +		p++;
-> > +	} else {
-> > +		/* Relative path, start from current dir. */
-> > +		if (iocur_top->typ != &typtab[TYP_INODE] ||
-> > +		    !S_ISDIR(iocur_top->mode))
-> > +			return ENOTDIR;
-> > +
-> > +		rootino = iocur_top->ino;
-> > +	}
-> > +
-> > +	dirpath = path_parse(p);
-> > +	if (!dirpath)
-> > +		return ENOMEM;
-> > +
-> > +	error = path_navigate(mp, rootino, dirpath);
-> > +	if (error)
-> > +		return error;
+> Add a newline so that this is consistent with the other error messages.
 > 
-> Memory pointed by dirpath (and its members) is not freed if the call to
-> path_navigate() returns a non-zero error value.
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-Good catch, thanks!
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
---D
+>  repair/xfs_repair.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index 724661d8..9409f0d8 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -1136,7 +1136,7 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
+>  	error = -libxfs_umount(mp);
+>  	if (error)
+>  		do_error(
+> -	_("File system metadata writeout failed, err=%d.  Re-run xfs_repair."),
+> +	_("File system metadata writeout failed, err=%d.  Re-run xfs_repair.\n"),
+>  				error);
+>  
+>  	libxfs_destroy(&x);
+> 
+
