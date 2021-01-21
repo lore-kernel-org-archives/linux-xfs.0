@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B77BC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 09:10:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EEB1C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 09:11:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00E3423888
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 09:10:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1BA80235E4
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 09:11:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728194AbhAUJKG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 04:10:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39742 "EHLO
+        id S1726935AbhAUJLA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 04:11:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728150AbhAUJJw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 04:09:52 -0500
+        with ESMTP id S1728128AbhAUJKj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 04:10:39 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A07C4C061575;
-        Thu, 21 Jan 2021 01:09:04 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C8DFC0613D3;
+        Thu, 21 Jan 2021 01:09:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=7yDv+i0eIg8ZvTjuDWGz32b4qM8yWB/b7IST0cofvso=; b=FZ1kFHbfoe6Eijy1a6AQSl0HSk
-        PiUtI+lXZh1Xa03Neap3pBwAPPUIAYM3tkbjjTkYWEAXnu6O2rq1SUrAtN1alefsjj3TU0Lk9ZLSo
-        ASTa5IO8JsH/JvrHIzwogE8ClZednMGKMG+W/Adyd0pzOtwzHKghvdM3+6bgyY0sYypEHmyw6dMo+
-        v0YYr6pJfry15Af1CvSc0DpUVsvup9ZKTAKtP7+CRO9hdsjQaD3u4iL2+30F2bf0pc9y8f2w7qgT1
-        kUrAAyeF44xRrM2BEP1c2OkxELH1rmKwklaUbHLDDaK7KCiJYcqrIHeeO61NPNV/mIFiYpipNiD21
-        mocMK3mQ==;
-Received: from 089144206130.atnat0015.highway.bob.at ([89.144.206.130] helo=localhost)
+        bh=RohE3O4jp6xBmHfxCrVqtW9l+skkoRowNmJukDDdVSI=; b=tnbO/J1xElXjuoHAEuAHgUCnZv
+        p0v7V12zDLGMfbMHqfiwNUbQDswOr4DKmLATgw8QhBUe/2RsHYruvzoR4v0/EB9R/LPEtLLD5cudC
+        wvGmgV+GXfOQfaa6skpKvC/zWdeGMkmkMlfMxBDtpMf1zKpYtJs3O4DsCP0cSAKsjIbSEvEcg+2rK
+        /xpO1XI17+M8qpm6qnqIjm4QKAeJ57+5P2iKI/TLS6IVHETRpQ8lL4grsJXekZTARhK6SinWYibLt
+        PbOV5J7Xto5Pnm4hsj0ySxwU5g7ZgkryfCio1OknPmoT/YRdX9yZfFMxcxZDGEyxnyOyqD7mzoKWM
+        Jb4R9uVg==;
+Received: from [2001:4bb8:188:1954:d5b3:2657:287:e45f] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1l2VxD-00GqVK-Q8; Thu, 21 Jan 2021 09:08:51 +0000
+        id 1l2VyB-00GqYE-Gk; Thu, 21 Jan 2021 09:09:38 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, avi@scylladb.com,
         Dave Chinner <dchinner@redhat.com>,
         Brian Foster <bfoster@redhat.com>,
         "Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH 03/11] xfs: cleanup the read/write helper naming
-Date:   Thu, 21 Jan 2021 09:58:58 +0100
-Message-Id: <20210121085906.322712-4-hch@lst.de>
+Subject: [PATCH 07/11] xfs: split unaligned DIO write code out
+Date:   Thu, 21 Jan 2021 09:59:02 +0100
+Message-Id: <20210121085906.322712-8-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210121085906.322712-1-hch@lst.de>
 References: <20210121085906.322712-1-hch@lst.de>
@@ -54,146 +54,236 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Drop a few pointless aio_ prefixes.
+From: Dave Chinner <dchinner@redhat.com>
 
+The unaligned DIO write path is more convolted than the normal path,
+and we are about to make it more complex. Keep the block aligned
+fast path dio write code trim and simple by splitting out the
+unaligned DIO code from it.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[hch: rebased, fixed a few minor nits]
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_file.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_file.c | 168 +++++++++++++++++++++++++---------------------
+ 1 file changed, 92 insertions(+), 76 deletions(-)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index fb4e6f2852bb8b..ae7313ccaa11ed 100644
+index a696bd34f71d21..bffd7240cefb7f 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -215,7 +215,7 @@ xfs_ilock_iocb(
- }
- 
- STATIC ssize_t
--xfs_file_dio_aio_read(
-+xfs_file_dio_read(
- 	struct kiocb		*iocb,
- 	struct iov_iter		*to)
- {
-@@ -265,7 +265,7 @@ xfs_file_dax_read(
- }
- 
- STATIC ssize_t
--xfs_file_buffered_aio_read(
-+xfs_file_buffered_read(
- 	struct kiocb		*iocb,
- 	struct iov_iter		*to)
- {
-@@ -300,9 +300,9 @@ xfs_file_read_iter(
- 	if (IS_DAX(inode))
- 		ret = xfs_file_dax_read(iocb, to);
- 	else if (iocb->ki_flags & IOCB_DIRECT)
--		ret = xfs_file_dio_aio_read(iocb, to);
-+		ret = xfs_file_dio_read(iocb, to);
- 	else
--		ret = xfs_file_buffered_aio_read(iocb, to);
-+		ret = xfs_file_buffered_read(iocb, to);
- 
- 	if (ret > 0)
- 		XFS_STATS_ADD(mp, xs_read_bytes, ret);
-@@ -317,7 +317,7 @@ xfs_file_read_iter(
-  * if called for a direct write beyond i_size.
-  */
- STATIC ssize_t
--xfs_file_aio_write_checks(
-+xfs_file_write_checks(
- 	struct kiocb		*iocb,
- 	struct iov_iter		*from,
- 	int			*iolock)
-@@ -502,7 +502,7 @@ static const struct iomap_dio_ops xfs_dio_write_ops = {
+@@ -500,117 +500,133 @@ static const struct iomap_dio_ops xfs_dio_write_ops = {
  };
  
  /*
-- * xfs_file_dio_aio_write - handle direct IO writes
-+ * xfs_file_dio_write - handle direct IO writes
+- * xfs_file_dio_write - handle direct IO writes
++ * Handle block aligned direct IO writes
   *
   * Lock the inode appropriately to prepare for and issue a direct IO write.
-  * By separating it from the buffered write path we remove all the tricky to
-@@ -527,7 +527,7 @@ static const struct iomap_dio_ops xfs_dio_write_ops = {
-  * negative return values.
-  */
- STATIC ssize_t
--xfs_file_dio_aio_write(
-+xfs_file_dio_write(
- 	struct kiocb		*iocb,
- 	struct iov_iter		*from)
- {
-@@ -549,7 +549,7 @@ xfs_file_dio_aio_write(
- 	/*
- 	 * Don't take the exclusive iolock here unless the I/O is unaligned to
- 	 * the file system block size.  We don't need to consider the EOF
--	 * extension case here because xfs_file_aio_write_checks() will relock
-+	 * extension case here because xfs_file_write_checks() will relock
- 	 * the inode as necessary for EOF zeroing cases and fill out the new
- 	 * inode size as appropriate.
- 	 */
-@@ -580,7 +580,7 @@ xfs_file_dio_aio_write(
- 		xfs_ilock(ip, iolock);
- 	}
- 
--	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+- * By separating it from the buffered write path we remove all the tricky to
+- * follow locking changes and looping.
+  *
+  * If there are cached pages or we're extending the file, we need IOLOCK_EXCL
+  * until we're sure the bytes at the new EOF have been zeroed and/or the cached
+  * pages are flushed out.
++ */
++static noinline ssize_t
++xfs_file_dio_write_aligned(
++	struct xfs_inode	*ip,
++	struct kiocb		*iocb,
++	struct iov_iter		*from)
++{
++	int			iolock = XFS_IOLOCK_SHARED;
++	ssize_t			ret;
++
++	ret = xfs_ilock_iocb(iocb, iolock);
++	if (ret)
++		return ret;
 +	ret = xfs_file_write_checks(iocb, from, &iolock);
- 	if (ret)
- 		goto out;
- 	count = iov_iter_count(from);
-@@ -590,7 +590,7 @@ xfs_file_dio_aio_write(
- 	 * in-flight at the same time or we risk data corruption. Wait for all
- 	 * other IO to drain before we submit. If the IO is aligned, demote the
- 	 * iolock if we had to take the exclusive lock in
--	 * xfs_file_aio_write_checks() for other reasons.
++	if (ret)
++		goto out_unlock;
++
++	/*
++	 * We don't need to hold the IOLOCK exclusively across the IO, so demote
++	 * the iolock back to shared if we had to take the exclusive lock in
 +	 * xfs_file_write_checks() for other reasons.
- 	 */
- 	if (unaligned_io) {
- 		inode_dio_wait(inode);
-@@ -634,7 +634,7 @@ xfs_file_dax_write(
- 	ret = xfs_ilock_iocb(iocb, iolock);
- 	if (ret)
- 		return ret;
--	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
-+	ret = xfs_file_write_checks(iocb, from, &iolock);
- 	if (ret)
- 		goto out;
- 
-@@ -663,7 +663,7 @@ xfs_file_dax_write(
- }
- 
- STATIC ssize_t
--xfs_file_buffered_aio_write(
-+xfs_file_buffered_write(
++	 */
++	if (iolock == XFS_IOLOCK_EXCL) {
++		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
++		iolock = XFS_IOLOCK_SHARED;
++	}
++	trace_xfs_file_direct_write(iocb, from);
++	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
++			   &xfs_dio_write_ops, is_sync_kiocb(iocb));
++out_unlock:
++	if (iolock)
++		xfs_iunlock(ip, iolock);
++	return ret;
++}
++
++/*
++ * Handle block unaligned direct IO writes
++ *
++ * In most cases direct IO writes will be done holding IOLOCK_SHARED, allowing
++ * them to be done in parallel with reads and other direct IO writes.  However,
++ * if the I/O is not aligned to filesystem blocks, the direct I/O layer may
++ * need to do sub-block zeroing and that requires serialisation against other
++ * direct I/Os to the same block. In this case we need to serialise the
++ * submission of the unaligned I/Os so that we don't get racing block zeroing in
++ * the dio layer.
+  *
+- * In most cases the direct IO writes will be done holding IOLOCK_SHARED
+- * allowing them to be done in parallel with reads and other direct IO writes.
+- * However, if the IO is not aligned to filesystem blocks, the direct IO layer
+- * needs to do sub-block zeroing and that requires serialisation against other
+- * direct IOs to the same block. In this case we need to serialise the
+- * submission of the unaligned IOs so that we don't get racing block zeroing in
+- * the dio layer.  To avoid the problem with aio, we also need to wait for
++ * To provide the same serialisation for AIO, we also need to wait for
+  * outstanding IOs to complete so that unwritten extent conversion is completed
+  * before we try to map the overlapping block. This is currently implemented by
+  * hitting it with a big hammer (i.e. inode_dio_wait()).
+  *
+- * Returns with locks held indicated by @iolock and errors indicated by
+- * negative return values.
++ * This means that unaligned dio writes always block. There is no "nowait" fast
++ * path in this code - if IOCB_NOWAIT is set we simply return -EAGAIN up front
++ * and we don't have to worry about that anymore.
+  */
+-STATIC ssize_t
+-xfs_file_dio_write(
++static noinline ssize_t
++xfs_file_dio_write_unaligned(
++	struct xfs_inode	*ip,
  	struct kiocb		*iocb,
  	struct iov_iter		*from)
  {
-@@ -682,7 +682,7 @@ xfs_file_buffered_aio_write(
- 	iolock = XFS_IOLOCK_EXCL;
- 	xfs_ilock(ip, iolock);
+-	struct file		*file = iocb->ki_filp;
+-	struct address_space	*mapping = file->f_mapping;
+-	struct inode		*inode = mapping->host;
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_mount	*mp = ip->i_mount;
+-	ssize_t			ret = 0;
+-	int			unaligned_io = 0;
+-	int			iolock;
+-	size_t			count = iov_iter_count(from);
+-	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
++	int			iolock = XFS_IOLOCK_EXCL;
++	ssize_t			ret;
  
--	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
-+	ret = xfs_file_write_checks(iocb, from, &iolock);
- 	if (ret)
- 		goto out;
+-	/* DIO must be aligned to device logical sector size */
+-	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
+-		return -EINVAL;
++	/* unaligned dio always waits, bail */
++	if (iocb->ki_flags & IOCB_NOWAIT)
++		return -EAGAIN;
++	xfs_ilock(ip, iolock);
  
-@@ -769,12 +769,12 @@ xfs_file_write_iter(
- 		 * CoW.  In all other directio scenarios we do not
- 		 * allow an operation to fall back to buffered mode.
- 		 */
--		ret = xfs_file_dio_aio_write(iocb, from);
-+		ret = xfs_file_dio_write(iocb, from);
- 		if (ret != -ENOTBLK)
- 			return ret;
+ 	/*
+-	 * Don't take the exclusive iolock here unless the I/O is unaligned to
+-	 * the file system block size.  We don't need to consider the EOF
+-	 * extension case here because xfs_file_write_checks() will relock
+-	 * the inode as necessary for EOF zeroing cases and fill out the new
+-	 * inode size as appropriate.
++	 * We can't properly handle unaligned direct I/O to reflink files yet,
++	 * as we can't unshare a partial block.
+ 	 */
+-	if ((iocb->ki_pos & mp->m_blockmask) ||
+-	    ((iocb->ki_pos + count) & mp->m_blockmask)) {
+-		unaligned_io = 1;
+-
+-		/*
+-		 * We can't properly handle unaligned direct I/O to reflink
+-		 * files yet, as we can't unshare a partial block.
+-		 */
+-		if (xfs_is_cow_inode(ip)) {
+-			trace_xfs_reflink_bounce_dio_write(iocb, from);
+-			return -ENOTBLK;
+-		}
+-		iolock = XFS_IOLOCK_EXCL;
+-	} else {
+-		iolock = XFS_IOLOCK_SHARED;
+-	}
+-
+-	if (iocb->ki_flags & IOCB_NOWAIT) {
+-		/* unaligned dio always waits, bail */
+-		if (unaligned_io)
+-			return -EAGAIN;
+-		if (!xfs_ilock_nowait(ip, iolock))
+-			return -EAGAIN;
+-	} else {
+-		xfs_ilock(ip, iolock);
++	if (xfs_is_cow_inode(ip)) {
++		trace_xfs_reflink_bounce_dio_write(iocb, from);
++		ret = -ENOTBLK;
++		goto out_unlock;
  	}
  
--	return xfs_file_buffered_aio_write(iocb, from);
-+	return xfs_file_buffered_write(iocb, from);
+ 	ret = xfs_file_write_checks(iocb, from, &iolock);
+ 	if (ret)
+-		goto out;
+-	count = iov_iter_count(from);
++		goto out_unlock;
+ 
+ 	/*
+-	 * If we are doing unaligned IO, we can't allow any other overlapping IO
+-	 * in-flight at the same time or we risk data corruption. Wait for all
+-	 * other IO to drain before we submit. If the IO is aligned, demote the
+-	 * iolock if we had to take the exclusive lock in
+-	 * xfs_file_write_checks() for other reasons.
++	 * If we are doing unaligned I/O, we can't allow any other overlapping
++	 * I/O in-flight at the same time or we risk data corruption. Wait for
++	 * all other I/O to drain before we submit.
+ 	 */
+-	if (unaligned_io) {
+-		inode_dio_wait(inode);
+-	} else if (iolock == XFS_IOLOCK_EXCL) {
+-		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+-		iolock = XFS_IOLOCK_SHARED;
+-	}
++	inode_dio_wait(VFS_I(ip));
+ 
+-	trace_xfs_file_direct_write(iocb, from);
+ 	/*
+-	 * If unaligned, this is the only IO in-flight. Wait on it before we
+-	 * release the iolock to prevent subsequent overlapping IO.
++	 * This must be the only I/O in-flight. Wait on it before we release the
++	 * iolock to prevent subsequent overlapping I/O.
+ 	 */
++	trace_xfs_file_direct_write(iocb, from);
+ 	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
+-			   &xfs_dio_write_ops,
+-			   is_sync_kiocb(iocb) || unaligned_io);
+-out:
++			   &xfs_dio_write_ops, true);
++out_unlock:
+ 	if (iolock)
+ 		xfs_iunlock(ip, iolock);
+ 	return ret;
  }
  
- static void
++static ssize_t
++xfs_file_dio_write(
++	struct kiocb		*iocb,
++	struct iov_iter		*from)
++{
++	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
++	struct xfs_buftarg      *target = xfs_inode_buftarg(ip);
++	size_t			count = iov_iter_count(from);
++
++	/* DIO must be aligned to device logical sector size */
++	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
++		return -EINVAL;
++	if ((iocb->ki_pos | count) & ip->i_mount->m_blockmask)
++		return xfs_file_dio_write_unaligned(ip, iocb, from);
++	return xfs_file_dio_write_aligned(ip, iocb, from);
++}
++
+ static noinline ssize_t
+ xfs_file_dax_write(
+ 	struct kiocb		*iocb,
 -- 
 2.29.2
 
