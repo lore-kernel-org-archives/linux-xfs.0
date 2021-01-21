@@ -2,176 +2,174 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1547C433E6
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:10:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B864AC433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:21:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 83D7D238E3
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:10:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D94F239EF
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:21:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732487AbhAUPKJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 10:10:09 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:47350 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732433AbhAUPJ7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 10:09:59 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611241712;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1lJet+P0lT9FPSA70dyGLAGDoRlDCzeKef42/VdmsdQ=;
-        b=OFrHfHPZnDYJE288VryibshWVSd2duo+GgVTsaTUFuuk3hQTC4omFZ4eGtGUbKX0SCV3K2
-        UZQAttQ0sZ3JKKbnAjqJnaUBQh+ibZAFSFgfv3Q+cggugZdtgVtj6IYlm6xqhlYTSWb1c6
-        sIv7zrCwFHp0T06p/ES+LaH7gMeiuTc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-460-KoQaJVwRN_K5KZatE1nJYQ-1; Thu, 21 Jan 2021 10:08:30 -0500
-X-MC-Unique: KoQaJVwRN_K5KZatE1nJYQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B93AF107ACFB
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:08:29 +0000 (UTC)
-Received: from redhat.com (ovpn-113-255.rdu2.redhat.com [10.10.113.255])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 39C2660BF3;
-        Thu, 21 Jan 2021 15:08:29 +0000 (UTC)
-Date:   Thu, 21 Jan 2021 09:08:27 -0600
-From:   Bill O'Donnell <billodo@redhat.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/9] xfs: sync lazy sb accounting on quiesce of read-only
- mounts
-Message-ID: <20210121150827.GA1118971@redhat.com>
-References: <20210106174127.805660-1-bfoster@redhat.com>
- <20210106174127.805660-2-bfoster@redhat.com>
+        id S1732247AbhAUPUx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 10:20:53 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:54651 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732219AbhAUN0O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:26:14 -0500
+Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <christian.brauner@ubuntu.com>)
+        id 1l2Zu9-0005g7-Nn; Thu, 21 Jan 2021 13:21:41 +0000
+From:   Christian Brauner <christian.brauner@ubuntu.com>
+To:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org
+Cc:     John Johansen <john.johansen@canonical.com>,
+        James Morris <jmorris@namei.org>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Casey Schaufler <casey@schaufler-ca.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Geoffrey Thomas <geofft@ldpreload.com>,
+        Mrunal Patel <mpatel@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
+        Tycho Andersen <tycho@tycho.ws>,
+        David Howells <dhowells@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        =?UTF-8?q?St=C3=A9phane=20Graber?= <stgraber@ubuntu.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aleksa Sarai <cyphar@cyphar.com>,
+        Lennart Poettering <lennart@poettering.net>,
+        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
+        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
+        Kees Cook <keescook@chromium.org>,
+        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        containers@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
+        Christian Brauner <christian.brauner@ubuntu.com>
+Subject: [PATCH v6 20/40] init: handle idmapped mounts
+Date:   Thu, 21 Jan 2021 14:19:39 +0100
+Message-Id: <20210121131959.646623-21-christian.brauner@ubuntu.com>
+X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210121131959.646623-1-christian.brauner@ubuntu.com>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210106174127.805660-2-bfoster@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Patch-Hashes: v=1; h=sha256; i=K1Mmb+2iBnpojBmIU4SJaafXPX8O2CFx1CDw+utpuOU=; m=S5fr/22/m+WbOwFrUpUHXheqOF01JiKNUA5zB/hY/Is=; p=MZSdRyOX771MwH+GLlcjB+0DrEr2A+58o5/RX/qOHFw=; g=45d6fad6f6d32f07d4014060b83492f4e5803561
+X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCYAl9pQAKCRCRxhvAZXjcovuOAQD0vz6 qwrpIJ0cuKYpZaxNYnIKAkRlsiy3S2ImpIjxs5wEAx6MHynYZhSK9hn2FPNdNgboF6ArU1F+IBR0A AU0LGgo=
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 06, 2021 at 12:41:19PM -0500, Brian Foster wrote:
-> xfs_log_sbcount() syncs the superblock specifically to accumulate
-> the in-core percpu superblock counters and commit them to disk. This
-> is required to maintain filesystem consistency across quiesce
-> (freeze, read-only mount/remount) or unmount when lazy superblock
-> accounting is enabled because individual transactions do not update
-> the superblock directly.
-> 
-> This mechanism works as expected for writable mounts, but
-> xfs_log_sbcount() skips the update for read-only mounts. Read-only
-> mounts otherwise still allow log recovery and write out an unmount
-> record during log quiesce. If a read-only mount performs log
-> recovery, it can modify the in-core superblock counters and write an
-> unmount record when the filesystem unmounts without ever syncing the
-> in-core counters. This leaves the filesystem with a clean log but in
-> an inconsistent state with regard to lazy sb counters.
-> 
-> Update xfs_log_sbcount() to use the same logic
-> xfs_log_unmount_write() uses to determine when to write an unmount
-> record. We can drop the freeze state check because the update is
-> already allowed during the freezing process and no context calls
-> this function on an already frozen fs. This ensures that lazy
-> accounting is always synced before the log is cleaned. Refactor this
-> logic into a new helper to distinguish between a writable filesystem
-> and a writable log. Specifically, the log is writable unless the
-> filesystem is mounted with the norecovery mount option, the
-> underlying log device is read-only, or the filesystem is shutdown.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Gao Xiang <hsiangkao@redhat.com>
+Enable the init helpers to handle idmapped mounts by passing down the
+mount's user namespace. If the initial user namespace is passed nothing
+changes so non-idmapped mounts will see identical behavior as before.
 
-works for me.
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Link: https://lore.kernel.org/r/20210112220124.837960-29-christian.brauner@ubuntu.com
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org
+Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
+---
+/* v2 */
+patch introduced
 
-> ---
->  fs/xfs/xfs_log.c   | 28 ++++++++++++++++++++--------
->  fs/xfs/xfs_log.h   |  1 +
->  fs/xfs/xfs_mount.c |  3 +--
->  3 files changed, 22 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index fa2d05e65ff1..b445e63cbc3c 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -347,6 +347,25 @@ xlog_tic_add_region(xlog_ticket_t *tic, uint len, uint type)
->  	tic->t_res_num++;
->  }
->  
-> +bool
-> +xfs_log_writable(
-> +	struct xfs_mount	*mp)
-> +{
-> +	/*
-> +	 * Never write to the log on norecovery mounts, if the block device is
-> +	 * read-only, or if the filesystem is shutdown. Read-only mounts still
-> +	 * allow internal writes for log recovery and unmount purposes, so don't
-> +	 * restrict that case here.
-> +	 */
-> +	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
-> +		return false;
-> +	if (xfs_readonly_buftarg(mp->m_log->l_targ))
-> +		return false;
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return false;
-> +	return true;
-> +}
-> +
->  /*
->   * Replenish the byte reservation required by moving the grant write head.
->   */
-> @@ -886,15 +905,8 @@ xfs_log_unmount_write(
->  {
->  	struct xlog		*log = mp->m_log;
->  
-> -	/*
-> -	 * Don't write out unmount record on norecovery mounts or ro devices.
-> -	 * Or, if we are doing a forced umount (typically because of IO errors).
-> -	 */
-> -	if (mp->m_flags & XFS_MOUNT_NORECOVERY ||
-> -	    xfs_readonly_buftarg(log->l_targ)) {
-> -		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
-> +	if (!xfs_log_writable(mp))
->  		return;
-> -	}
->  
->  	xfs_log_force(mp, XFS_LOG_SYNC);
->  
-> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-> index 58c3fcbec94a..98c913da7587 100644
-> --- a/fs/xfs/xfs_log.h
-> +++ b/fs/xfs/xfs_log.h
-> @@ -127,6 +127,7 @@ int	  xfs_log_reserve(struct xfs_mount *mp,
->  int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
->  void      xfs_log_unmount(struct xfs_mount *mp);
->  int	  xfs_log_force_umount(struct xfs_mount *mp, int logerror);
-> +bool	xfs_log_writable(struct xfs_mount *mp);
->  
->  struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
->  void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 7110507a2b6b..a62b8a574409 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1176,8 +1176,7 @@ xfs_fs_writable(
->  int
->  xfs_log_sbcount(xfs_mount_t *mp)
->  {
-> -	/* allow this to proceed during the freeze sequence... */
-> -	if (!xfs_fs_writable(mp, SB_FREEZE_COMPLETE))
-> +	if (!xfs_log_writable(mp))
->  		return 0;
->  
->  	/*
-> -- 
-> 2.26.2
-> 
+/* v3 */
+unchanged
+
+/* v4 */
+unchanged
+
+/* v5 */
+unchanged
+base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
+
+/* v6 */
+base-commit: 19c329f6808995b142b3966301f217c831e7cf31
+
+- Christoph Hellwig <hch@lst.de>:
+  - Use new path_permission() helper.
+---
+ fs/init.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/fs/init.c b/fs/init.c
+index e65452750fa5..5c36adaa9b44 100644
+--- a/fs/init.c
++++ b/fs/init.c
+@@ -157,8 +157,8 @@ int __init init_mknod(const char *filename, umode_t mode, unsigned int dev)
+ 		mode &= ~current_umask();
+ 	error = security_path_mknod(&path, dentry, mode, dev);
+ 	if (!error)
+-		error = vfs_mknod(&init_user_ns, path.dentry->d_inode, dentry,
+-				  mode, new_decode_dev(dev));
++		error = vfs_mknod(mnt_user_ns(path.mnt), path.dentry->d_inode,
++				  dentry, mode, new_decode_dev(dev));
+ 	done_path_create(&path, dentry);
+ 	return error;
+ }
+@@ -167,6 +167,7 @@ int __init init_link(const char *oldname, const char *newname)
+ {
+ 	struct dentry *new_dentry;
+ 	struct path old_path, new_path;
++	struct user_namespace *mnt_userns;
+ 	int error;
+ 
+ 	error = kern_path(oldname, 0, &old_path);
+@@ -181,14 +182,15 @@ int __init init_link(const char *oldname, const char *newname)
+ 	error = -EXDEV;
+ 	if (old_path.mnt != new_path.mnt)
+ 		goto out_dput;
+-	error = may_linkat(&init_user_ns, &old_path);
++	mnt_userns = mnt_user_ns(new_path.mnt);
++	error = may_linkat(mnt_userns, &old_path);
+ 	if (unlikely(error))
+ 		goto out_dput;
+ 	error = security_path_link(old_path.dentry, &new_path, new_dentry);
+ 	if (error)
+ 		goto out_dput;
+-	error = vfs_link(old_path.dentry, &init_user_ns,
+-			 new_path.dentry->d_inode, new_dentry, NULL);
++	error = vfs_link(old_path.dentry, mnt_userns, new_path.dentry->d_inode,
++			 new_dentry, NULL);
+ out_dput:
+ 	done_path_create(&new_path, new_dentry);
+ out:
+@@ -207,8 +209,8 @@ int __init init_symlink(const char *oldname, const char *newname)
+ 		return PTR_ERR(dentry);
+ 	error = security_path_symlink(&path, dentry, oldname);
+ 	if (!error)
+-		error = vfs_symlink(&init_user_ns, path.dentry->d_inode, dentry,
+-				    oldname);
++		error = vfs_symlink(mnt_user_ns(path.mnt), path.dentry->d_inode,
++				    dentry, oldname);
+ 	done_path_create(&path, dentry);
+ 	return error;
+ }
+@@ -231,8 +233,8 @@ int __init init_mkdir(const char *pathname, umode_t mode)
+ 		mode &= ~current_umask();
+ 	error = security_path_mkdir(&path, dentry, mode);
+ 	if (!error)
+-		error = vfs_mkdir(&init_user_ns, path.dentry->d_inode, dentry,
+-				  mode);
++		error = vfs_mkdir(mnt_user_ns(path.mnt), path.dentry->d_inode,
++				  dentry, mode);
+ 	done_path_create(&path, dentry);
+ 	return error;
+ }
+-- 
+2.30.0
 
