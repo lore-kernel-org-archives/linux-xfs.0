@@ -2,139 +2,121 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6768C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E6CBC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:54:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACC7F238A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:52:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3135C238A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:54:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731715AbhAUOvl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 09:51:41 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:55443 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732415AbhAUNen (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:34:43 -0500
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1l2ZuE-0005g7-1n; Thu, 21 Jan 2021 13:21:46 +0000
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org
-Cc:     John Johansen <john.johansen@canonical.com>,
-        James Morris <jmorris@namei.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Geoffrey Thomas <geofft@ldpreload.com>,
-        Mrunal Patel <mpatel@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        David Howells <dhowells@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        =?UTF-8?q?St=C3=A9phane=20Graber?= <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        Lennart Poettering <lennart@poettering.net>,
-        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
-        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
-        Kees Cook <keescook@chromium.org>,
-        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        containers@lists.linux-foundation.org,
-        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
-        Christian Brauner <christian.brauner@ubuntu.com>
-Subject: [PATCH v6 21/40] ioctl: handle idmapped mounts
-Date:   Thu, 21 Jan 2021 14:19:40 +0100
-Message-Id: <20210121131959.646623-22-christian.brauner@ubuntu.com>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210121131959.646623-1-christian.brauner@ubuntu.com>
-References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
+        id S1731472AbhAUOya (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 09:54:30 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:35258 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729920AbhAUNe1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:34:27 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611235980;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=12iaQxRicJBtk/goRWyLEa0IAVmcZ6kH+1xu6r4dq1Y=;
+        b=IIHLDNtHYGJC1klMvjoDSZ9WavQyOmLMLM89cddLEgf3qDozszRIJC0i+iTYKK5TgYgZxA
+        4qetZOCoUF9B0Srea4FB3+x2xIfIjzfeDj7k9pB3XXa6NEt/ZDyBAnCg2tYZi+WpQQ2lBs
+        Bgbh+apWBgb9Qm4/YjiKkmx8czUlN1I=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-540-3ThOr7cpNguDhInZTGgG0Q-1; Thu, 21 Jan 2021 08:32:58 -0500
+X-MC-Unique: 3ThOr7cpNguDhInZTGgG0Q-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 52BF4107ACE4;
+        Thu, 21 Jan 2021 13:32:57 +0000 (UTC)
+Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id ADD7A5D9D5;
+        Thu, 21 Jan 2021 13:32:56 +0000 (UTC)
+Date:   Thu, 21 Jan 2021 08:32:54 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        avi@scylladb.com
+Subject: Re: [PATCH 10/11] iomap: add a IOMAP_DIO_OVERWRITE_ONLY flag
+Message-ID: <20210121133254.GA1793795@bfoster>
+References: <20210121085906.322712-1-hch@lst.de>
+ <20210121085906.322712-11-hch@lst.de>
 MIME-Version: 1.0
-X-Patch-Hashes: v=1; h=sha256; i=kAwitCaU5Zsp+82CuxVVPm6U8xXlPPtQ0Z0Dh6WXu44=; m=UpfceT5PbXKo01hKHANNfX4pv3prk2UbtbeKFcGNyNE=; p=y//6XjR+zTD631rX6/gWz3LAiLcFvTajhF27PIxpIdA=; g=5e16b077c672ef24b7f183b0ccacbaa0635cf469
-X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCYAl9pQAKCRCRxhvAZXjcoiCtAP4zbuF Pr97jUAmAEgwFyFaqCOgEAAlveG4nc9eQ6WkxKwEAm9NBL+olb3bocl29AH+ZFzzGApRcmiIIQ2hh +n1ZcQQ=
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210121085906.322712-11-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Enable generic ioctls to handle idmapped mounts by passing down the
-mount's user namespace. If the initial user namespace is passed nothing
-changes so non-idmapped mounts will see identical behavior as before.
+On Thu, Jan 21, 2021 at 09:59:05AM +0100, Christoph Hellwig wrote:
+> Add a flag to signal an only pure overwrites are allowed.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-Link: https://lore.kernel.org/r/20210112220124.837960-30-christian.brauner@ubuntu.com
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
----
-/* v2 */
-patch introduced
+Agreed that the explicit flag name is much more clear:
 
-/* v3 */
-unchanged
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-/* v4 */
-- Serge Hallyn <serge@hallyn.com>:
-  - Use "mnt_userns" to refer to a vfsmount's userns everywhere to make
-    terminology consistent.
-
-/* v5 */
-unchanged
-base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
-
-- Christoph Hellwig <hch@lst.de>:
-  - Use new file_mnt_user_ns() helper.
-
-/* v6 */
-base-commit: 19c329f6808995b142b3966301f217c831e7cf31
-
-- Christoph Hellwig <hch@lst.de>:
-  - Make use of file_permission() helper.
----
- fs/remap_range.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/fs/remap_range.c b/fs/remap_range.c
-index 29a4a4dbfe12..e4a5fdd7ad7b 100644
---- a/fs/remap_range.c
-+++ b/fs/remap_range.c
-@@ -432,13 +432,16 @@ EXPORT_SYMBOL(vfs_clone_file_range);
- /* Check whether we are allowed to dedupe the destination file */
- static bool allow_file_dedupe(struct file *file)
- {
-+	struct user_namespace *mnt_userns = file_mnt_user_ns(file);
-+	struct inode *inode = file_inode(file);
-+
- 	if (capable(CAP_SYS_ADMIN))
- 		return true;
- 	if (file->f_mode & FMODE_WRITE)
- 		return true;
--	if (uid_eq(current_fsuid(), file_inode(file)->i_uid))
-+	if (uid_eq(current_fsuid(), i_uid_into_mnt(mnt_userns, inode)))
- 		return true;
--	if (!inode_permission(&init_user_ns, file_inode(file), MAY_WRITE))
-+	if (!inode_permission(mnt_userns, inode, MAY_WRITE))
- 		return true;
- 	return false;
- }
--- 
-2.30.0
+>  fs/iomap/direct-io.c  | 7 +++++++
+>  include/linux/iomap.h | 8 ++++++++
+>  2 files changed, 15 insertions(+)
+> 
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index 947343730e2c93..65d32364345d22 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -485,6 +485,13 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		iomap_flags |= IOMAP_NOWAIT;
+>  	}
+>  
+> +	if (dio_flags & IOMAP_DIO_OVERWRITE_ONLY) {
+> +		ret = -EAGAIN;
+> +		if (pos >= dio->i_size || pos + count > dio->i_size)
+> +			goto out_free_dio;
+> +		iomap_flags |= IOMAP_OVERWRITE_ONLY;
+> +	}
+> +
+>  	ret = filemap_write_and_wait_range(mapping, pos, end);
+>  	if (ret)
+>  		goto out_free_dio;
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index be4e1e1e01e801..cfa20afd7d5b87 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -122,6 +122,7 @@ struct iomap_page_ops {
+>  #define IOMAP_FAULT		(1 << 3) /* mapping for page fault */
+>  #define IOMAP_DIRECT		(1 << 4) /* direct I/O */
+>  #define IOMAP_NOWAIT		(1 << 5) /* do not block */
+> +#define IOMAP_OVERWRITE_ONLY	(1 << 6) /* purely overwrites allowed */
+>  
+>  struct iomap_ops {
+>  	/*
+> @@ -262,6 +263,13 @@ struct iomap_dio_ops {
+>   */
+>  #define IOMAP_DIO_FORCE_WAIT	(1 << 0)
+>  
+> +/*
+> + * Do not allocate blocks or zero partial blocks, but instead fall back to
+> + * the caller by returning -EAGAIN.  Used to optimize direct I/O writes that
+> + * are not aligned to the file system block size.
+> +  */
+> +#define IOMAP_DIO_OVERWRITE_ONLY	(1 << 1)
+> +
+>  ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
+>  		unsigned int dio_flags);
+> -- 
+> 2.29.2
+> 
 
