@@ -2,93 +2,202 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-21.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
+	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7989FC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 20:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 581E7C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 23:04:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36C9123A56
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 20:00:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3000623A3A
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 23:04:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726576AbhAUUAW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 15:00:22 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:28475 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726533AbhAUUAP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 15:00:15 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611259129;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=S97i6C/rmHOY7co2zGc5iztRw+fgKvtpyG/eEee82jc=;
-        b=bH7NFdW+nS1Vvim7V84PSH17icTpgFc1aWHLu20sv/h1T6jxcYHPzha4SfIsYMuzdN4CDe
-        wMNx2AdJllG1+XVr0B4shH5FjeZWDDGPbnPXC0nziknXOaWm7o0KppkNCZZZO25+NR9BMO
-        dnMl3ApP7Q/feNpk/lPbReUCvaAo3ic=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-420-30ztVgtON1KTodTJEFfTvA-1; Thu, 21 Jan 2021 14:58:47 -0500
-X-MC-Unique: 30ztVgtON1KTodTJEFfTvA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A942B801817;
-        Thu, 21 Jan 2021 19:58:45 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1F58560BF3;
-        Thu, 21 Jan 2021 19:58:45 +0000 (UTC)
-Date:   Thu, 21 Jan 2021 14:58:43 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Jeffrey Mitchell <jeffrey.mitchell@starlab.io>
-Cc:     "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: set inode size after creating symlink
-Message-ID: <20210121195843.GD1793795@bfoster>
-References: <20210121151912.4429-1-jeffrey.mitchell@starlab.io>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210121151912.4429-1-jeffrey.mitchell@starlab.io>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+        id S1725969AbhAUXEd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 18:04:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50568 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725294AbhAUXE1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 18:04:27 -0500
+Received: from mail-qt1-x849.google.com (mail-qt1-x849.google.com [IPv6:2607:f8b0:4864:20::849])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1D41C061756
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:03:40 -0800 (PST)
+Received: by mail-qt1-x849.google.com with SMTP id b8so2472262qtr.18
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:03:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=sender:date:message-id:mime-version:subject:from:to:cc;
+        bh=a86C6J2KAGK7N8gUuXwqncIpGvzm+wukETDy7ToYVa4=;
+        b=KEMt5GTLgB0F309NJ/ui9d0wbtXY4Ffss7tcitx4GSvL1eI92Um9URMa1KANG05fa0
+         dGOGUizaeQuZP45yQNN1mwXHpoQ2ga4p6mQ2OSu+G6FP10NkEVjxX0v3pkY07cEpYbo1
+         1jS28VTJSRoOgzn9XCUORVbCqccHajlNmMdwm3zIloJEx8q03KemuwG+iQvN17z1ciag
+         2TsJ6dVRI3QxFldm74zyost/zy86a8f84h+wVu0DKP8jeu9CbX0JZDhktdWNYxxOrsLE
+         IL0hye+W51IPiYxGrtf4yrCRqjq03ACkItiXwBfTiVrVb7XRmsDRhYYLvQ/Pq4WHXolm
+         K/cQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:message-id:mime-version:subject:from
+         :to:cc;
+        bh=a86C6J2KAGK7N8gUuXwqncIpGvzm+wukETDy7ToYVa4=;
+        b=QWql1KprnsBFphN04bmOtzeGrKrmhHtFJKgn0vRX/Oo/uOfdVT+cGx7Lud5mme/cSG
+         Zy5g3hMvv1uAaKCw7SNiRa875IF7CmGNgbm+v+2V+Ajv6iDdkYtEb4dC3/9629usPH4L
+         PkzaDJ9yF6hLmszLt9DaqnTTxVG7XrdhViaAeLLRqAr579OeFVYvnS0JhK5xMZV6kUnt
+         LBa9ASrPomOku84YMd9aDj1y3Xd6p3Tnx7Q/WoVL2mc/mqQuUdGgoqJnW3IlUpj30RgW
+         qVz3IFyztPpVVXK8yWvfN7YfZ/ZVULDv5BMctqgWwTzJStBJwm9CRoQNCOEfyqN7+YT7
+         d08A==
+X-Gm-Message-State: AOAM5315hAQZkGmPlhdNJzkvAggeyGvKsgmygyY4/JkFApu/G19F6lCK
+        tmvlHUhw7rPiToWfukwQuk+rQTjuYBg=
+X-Google-Smtp-Source: ABdhPJxWxaz7w6s2m6FBn5/tpe7d7n0Ntq7IDWS5vtwLqnUB2fZpoE5VgKC3P+2iYBpAUdhnybwb2HfbgUE=
+Sender: "satyat via sendgmr" <satyat@satyaprateek.c.googlers.com>
+X-Received: from satyaprateek.c.googlers.com ([fda3:e722:ac3:10:24:72f4:c0a8:1092])
+ (user=satyat job=sendgmr) by 2002:a05:6214:4e2:: with SMTP id
+ cl2mr1744643qvb.27.1611270219738; Thu, 21 Jan 2021 15:03:39 -0800 (PST)
+Date:   Thu, 21 Jan 2021 23:03:28 +0000
+Message-Id: <20210121230336.1373726-1-satyat@google.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.30.0.280.ga3ce27912f-goog
+Subject: [PATCH v8 0/8] add support for direct I/O with fscrypt using blk-crypto
+From:   Satya Tangirala <satyat@google.com>
+To:     "Theodore Y . Ts'o" <tytso@mit.edu>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Eric Biggers <ebiggers@kernel.org>, Chao Yu <chao@kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc:     linux-kernel@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Satya Tangirala <satyat@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 21, 2021 at 09:19:12AM -0600, Jeffrey Mitchell wrote:
-> When XFS creates a new symlink, it writes its size to disk but not to the
-> VFS inode. This causes i_size_read() to return 0 for that symlink until
-> it is re-read from disk, for example when the system is rebooted.
-> 
-> I found this inconsistency while protecting directories with eCryptFS.
-> The command "stat path/to/symlink/in/ecryptfs" will report "Size: 0" if
-> the symlink was created after the last reboot on an XFS root.
-> 
-> Call i_size_write() in xfs_symlink()
-> 
-> Signed-off-by: Jeffrey Mitchell <jeffrey.mitchell@starlab.io>
-> ---
+This patch series adds support for direct I/O with fscrypt using
+blk-crypto.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Till now, the blk-crypto-fallback expected the offset and length of each
+bvec in a bio to be aligned to the crypto data unit size. This in turn
+would mean that any user buffer used to read/write encrypted data using the
+blk-crypto framework would need to be aligned to the crypto data unit size.
+Patch 1 enables blk-crypto-fallback to work without this requirement. It
+also relaxes the alignment requirement that blk-crypto checks for - now,
+blk-crypto only requires that the length of the I/O is aligned to the
+crypto data unit size. This allows direct I/O support introduced in the
+later patches in this series to require extra alignment restrictions on
+user buffers.
 
->  fs/xfs/xfs_symlink.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index 1f43fd7f3209..c835827ae389 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -300,6 +300,7 @@ xfs_symlink(
->  		}
->  		ASSERT(pathlen == 0);
->  	}
-> +	i_size_write(VFS_I(ip), ip->i_d.di_size);
->  
->  	/*
->  	 * Create the directory entry for the symlink.
-> -- 
-> 2.25.1
-> 
+Patch 2 relaxes the alignment check that blk-crypto performs on bios.
+blk-crypto would check that the offset and length of each bvec in a bio is
+aligned to the data unit size, since the blk-crypto-fallback required it.
+As this is no longer the case, blk-crypto now only checks that the total
+length of the bio is data unit size aligned.
+
+Patch 3 adds two functions to fscrypt that need to be called to determine
+if direct I/O is supported for a request.
+
+Patches 4 and 5 modify direct-io and iomap respectively to set bio crypt
+contexts on bios when appropriate by calling into fscrypt.
+
+Patches 6 and 7 allow ext4 and f2fs direct I/O to support fscrypt without
+falling back to buffered I/O.
+
+Patch 8 updates the fscrypt documentation for direct I/O support.
+The documentation now notes the required conditions for inline encryption
+and direct I/O on encrypted files.
+
+This patch series was tested by running xfstests with test_dummy_encryption
+with and without the 'inlinecrypt' mount option, and there were no
+meaningful regressions. Without any modification, xfstests skip any
+direct I/O test when using ext4/encrypt and f2fs/encrypt, so I modified
+xfstests not to skip those tests.
+
+Among those tests, generic/465 fails with ext4/encrypt because a bio ends
+up being split in the middle of a crypto data unit.  Patch 1 from v7 (which
+has been sent out as a separate patch series) fixes this.
+
+Note that the blk-crypto-fallback changes (Patch 1 in v8 in this series)
+were also tested through xfstests by using this series along with the patch
+series that ensures bios aren't split in the middle of a data unit (Patch 1
+from v7) - Some tests (such as generic/465 again) result in bvecs that
+don't contain a complete data unit (so a data unit is split across multiple
+bvecs), and only pass with this patch.
+
+Changes v7 => v8:
+ - Patch 1 from v7 (which ensured that bios aren't split in the middle of
+   a data unit) has been sent out in a separate patch series, as it's
+   required even without this patch series. That patch series can now
+   be found at
+   https://lore.kernel.org/linux-block/20210114154723.2495814-1-satyat@google.com/
+ - Patch 2 from v7 has been split into 2 patches (Patch 1 and 2 in v8).
+ - Update docs
+
+Changes v6 => v7:
+ - add patches 1 and 2 to allow blk-crypto to work with user buffers not
+   aligned to crypto data unit size, so that direct I/O doesn't require
+   that alignment either.
+ - some cleanups
+
+Changes v5 => v6:
+ - fix bug with fscrypt_limit_io_blocks() and make it ready for 64 bit
+   block numbers.
+ - remove Reviewed-by for Patch 1 due to significant changes from when
+   the Reviewed-by was given.
+
+Changes v4 => v5:
+ - replace fscrypt_limit_io_pages() with fscrypt_limit_io_block(), which
+   is now called by individual filesystems (currently only ext4) instead
+   of the iomap code. This new function serves the same end purpose as
+   the one it replaces (ensuring that DUNs within a bio are contiguous)
+   but operates purely with blocks instead of with pages.
+ - make iomap_dio_zero() set bio_crypt_ctx's again, instead of just a
+   WARN_ON() since some folks prefer that instead.
+ - add Reviewed-by's
+
+Changes v3 => v4:
+ - Fix bug in iomap_dio_bio_actor() where fscrypt_limit_io_pages() was
+   being called too early (thanks Eric!)
+ - Improve comments and fix formatting in documentation
+ - iomap_dio_zero() is only called to zero out partial blocks, but
+   direct I/O is only supported on encrypted files when I/O is
+   blocksize aligned, so it doesn't need to set encryption contexts on
+   bios. Replace setting the encryption context with a WARN_ON(). (Eric)
+
+Changes v2 => v3:
+ - add changelog to coverletter
+
+Changes v1 => v2:
+ - Fix bug in f2fs caused by replacing f2fs_post_read_required() with
+   !fscrypt_dio_supported() since the latter doesn't check for
+   compressed inodes unlike the former.
+ - Add patches 6 and 7 for fscrypt documentation
+ - cleanups and comments
+
+Eric Biggers (5):
+  fscrypt: add functions for direct I/O support
+  direct-io: add support for fscrypt using blk-crypto
+  iomap: support direct I/O with fscrypt using blk-crypto
+  ext4: support direct I/O with fscrypt using blk-crypto
+  f2fs: support direct I/O with fscrypt using blk-crypto
+
+Satya Tangirala (3):
+  block: blk-crypto-fallback: handle data unit split across multiple
+    bvecs
+  block: blk-crypto: relax alignment requirements for bvecs in bios
+  fscrypt: update documentation for direct I/O support
+
+ Documentation/filesystems/fscrypt.rst |  21 ++-
+ block/blk-crypto-fallback.c           | 203 ++++++++++++++++++++------
+ block/blk-crypto.c                    |  19 +--
+ fs/crypto/crypto.c                    |   8 +
+ fs/crypto/inline_crypt.c              |  74 ++++++++++
+ fs/direct-io.c                        |  15 +-
+ fs/ext4/file.c                        |  10 +-
+ fs/ext4/inode.c                       |   7 +
+ fs/f2fs/f2fs.h                        |   6 +-
+ fs/iomap/direct-io.c                  |   6 +
+ include/linux/fscrypt.h               |  18 +++
+ 11 files changed, 315 insertions(+), 72 deletions(-)
+
+-- 
+2.30.0.280.ga3ce27912f-goog
 
