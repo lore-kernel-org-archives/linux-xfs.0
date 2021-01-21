@@ -7,23 +7,23 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4B24C433E9
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:58:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EE51C4332D
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:58:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82C4423A03
+	by mail.kernel.org (Postfix) with ESMTP id D453C238A1
 	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:58:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732260AbhAUO6E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 09:58:04 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:54948 "EHLO
+        id S1731460AbhAUN36 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 08:29:58 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:54848 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731743AbhAUNaO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:30:14 -0500
+        with ESMTP id S1731849AbhAUN2z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:28:55 -0500
 Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
         by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.86_2)
         (envelope-from <christian.brauner@ubuntu.com>)
-        id 1l2Zv5-0005g7-Up; Thu, 21 Jan 2021 13:22:40 +0000
+        id 1l2Zv1-0005g7-OF; Thu, 21 Jan 2021 13:22:36 +0000
 From:   Christian Brauner <christian.brauner@ubuntu.com>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org
@@ -59,24 +59,25 @@ Cc:     John Johansen <john.johansen@canonical.com>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
         Christian Brauner <christian.brauner@ubuntu.com>
-Subject: [PATCH v6 33/40] fs: add attr_flags_to_mnt_flags helper
-Date:   Thu, 21 Jan 2021 14:19:52 +0100
-Message-Id: <20210121131959.646623-34-christian.brauner@ubuntu.com>
+Subject: [PATCH v6 32/40] fs: split out functions to hold writers
+Date:   Thu, 21 Jan 2021 14:19:51 +0100
+Message-Id: <20210121131959.646623-33-christian.brauner@ubuntu.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210121131959.646623-1-christian.brauner@ubuntu.com>
 References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-X-Patch-Hashes: v=1; h=sha256; i=e2Flmg4jYrA1/8xjvTMZVbDsoqOcpDdlFS5OCvIgQko=; m=u2M4i3oMTrdlKn+85wXLpp6CTMaMeluzJmUp7YHjalg=; p=JfaZUhuTz6XFrBAP3FKbw5UfGeFYsRx1RlcZfKhbBn0=; g=f364f419030f1b33d11154114b1ba3e23cb27139
-X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCYAl9pgAKCRCRxhvAZXjcouLeAQCwN0L UMzAc+b2wV9R/1ubGXmwbf3c4wOilRFaNYGjMKAD+MRD1HJobIaj05yjpH2QI+aqS5YhdQvfZFIk0 1fZgYQU=
+X-Patch-Hashes: v=1; h=sha256; i=tA4kasRGHqyT9lXmq5D7y93eprXCx71LRmCCdBBaY00=; m=2P9QxGW5j9Gq1FDqQ9VOsGhxiGp7JnaAG+ByI0DSFV8=; p=egydutQfW0nGvx0F36pqwyJBppD2EC/7d89kCjy4PoQ=; g=4b5ff4be4775a50ca22b9c4a0244a22bea618b32
+X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCYAl9pgAKCRCRxhvAZXjcoqjbAP4wUMI fNstV28+AZ0P4V2umLoL0UwEE8n0RGDEBht+T0QEAgX/jR0FXNADf4RmodEOgVma92wzmUuRl8/4p dLJ5PAo=
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add a simple helper to translate uapi MOUNT_ATTR_* flags to MNT_* flags
-which we will use in follow-up patches too.
+When a mount is marked read-only we set MNT_WRITE_HOLD on it if there
+aren't currently any active writers. Split this logic out into simple
+helpers that we can use in follow-up patches.
 
-Link: https://lore.kernel.org/r/20210112220124.837960-6-christian.brauner@ubuntu.com
+Link: https://lore.kernel.org/r/20210112220124.837960-5-christian.brauner@ubuntu.com
 Cc: David Howells <dhowells@redhat.com>
 Cc: Al Viro <viro@zeniv.linux.org.uk>
 Cc: linux-fsdevel@vger.kernel.org
@@ -101,69 +102,58 @@ base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
 unchanged
 base-commit: 19c329f6808995b142b3966301f217c831e7cf31
 ---
- fs/namespace.c | 40 ++++++++++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 16 deletions(-)
+ fs/namespace.c | 24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
 
 diff --git a/fs/namespace.c b/fs/namespace.c
-index 774ae5f74716..00ed0d6cb2ee 100644
+index 367f1c7cb6db..774ae5f74716 100644
 --- a/fs/namespace.c
 +++ b/fs/namespace.c
-@@ -3465,6 +3465,28 @@ SYSCALL_DEFINE5(mount, char __user *, dev_name, char __user *, dir_name,
+@@ -470,10 +470,8 @@ void mnt_drop_write_file(struct file *file)
+ }
+ EXPORT_SYMBOL(mnt_drop_write_file);
+ 
+-static int mnt_make_readonly(struct mount *mnt)
++static inline int mnt_hold_writers(struct mount *mnt)
+ {
+-	int ret = 0;
+-
+ 	mnt->mnt.mnt_flags |= MNT_WRITE_HOLD;
+ 	/*
+ 	 * After storing MNT_WRITE_HOLD, we'll read the counters. This store
+@@ -498,15 +496,29 @@ static int mnt_make_readonly(struct mount *mnt)
+ 	 * we're counting up here.
+ 	 */
+ 	if (mnt_get_writers(mnt) > 0)
+-		ret = -EBUSY;
+-	else
+-		mnt->mnt.mnt_flags |= MNT_READONLY;
++		return -EBUSY;
++
++	return 0;
++}
++
++static inline void mnt_unhold_writers(struct mount *mnt)
++{
+ 	/*
+ 	 * MNT_READONLY must become visible before ~MNT_WRITE_HOLD, so writers
+ 	 * that become unheld will see MNT_READONLY.
+ 	 */
+ 	smp_wmb();
+ 	mnt->mnt.mnt_flags &= ~MNT_WRITE_HOLD;
++}
++
++static int mnt_make_readonly(struct mount *mnt)
++{
++	int ret;
++
++	ret = mnt_hold_writers(mnt);
++	if (!ret)
++		mnt->mnt.mnt_flags |= MNT_READONLY;
++	mnt_unhold_writers(mnt);
  	return ret;
  }
  
-+#define FSMOUNT_VALID_FLAGS \
-+	(MOUNT_ATTR_RDONLY | MOUNT_ATTR_NOSUID | MOUNT_ATTR_NODEV | \
-+	 MOUNT_ATTR_NOEXEC | MOUNT_ATTR__ATIME | MOUNT_ATTR_NODIRATIME)
-+
-+static unsigned int attr_flags_to_mnt_flags(u64 attr_flags)
-+{
-+	unsigned int mnt_flags = 0;
-+
-+	if (attr_flags & MOUNT_ATTR_RDONLY)
-+		mnt_flags |= MNT_READONLY;
-+	if (attr_flags & MOUNT_ATTR_NOSUID)
-+		mnt_flags |= MNT_NOSUID;
-+	if (attr_flags & MOUNT_ATTR_NODEV)
-+		mnt_flags |= MNT_NODEV;
-+	if (attr_flags & MOUNT_ATTR_NOEXEC)
-+		mnt_flags |= MNT_NOEXEC;
-+	if (attr_flags & MOUNT_ATTR_NODIRATIME)
-+		mnt_flags |= MNT_NODIRATIME;
-+
-+	return mnt_flags;
-+}
-+
- /*
-  * Create a kernel mount representation for a new, prepared superblock
-  * (specified by fs_fd) and attach to an open_tree-like file descriptor.
-@@ -3487,24 +3509,10 @@ SYSCALL_DEFINE3(fsmount, int, fs_fd, unsigned int, flags,
- 	if ((flags & ~(FSMOUNT_CLOEXEC)) != 0)
- 		return -EINVAL;
- 
--	if (attr_flags & ~(MOUNT_ATTR_RDONLY |
--			   MOUNT_ATTR_NOSUID |
--			   MOUNT_ATTR_NODEV |
--			   MOUNT_ATTR_NOEXEC |
--			   MOUNT_ATTR__ATIME |
--			   MOUNT_ATTR_NODIRATIME))
-+	if (attr_flags & ~FSMOUNT_VALID_FLAGS)
- 		return -EINVAL;
- 
--	if (attr_flags & MOUNT_ATTR_RDONLY)
--		mnt_flags |= MNT_READONLY;
--	if (attr_flags & MOUNT_ATTR_NOSUID)
--		mnt_flags |= MNT_NOSUID;
--	if (attr_flags & MOUNT_ATTR_NODEV)
--		mnt_flags |= MNT_NODEV;
--	if (attr_flags & MOUNT_ATTR_NOEXEC)
--		mnt_flags |= MNT_NOEXEC;
--	if (attr_flags & MOUNT_ATTR_NODIRATIME)
--		mnt_flags |= MNT_NODIRATIME;
-+	mnt_flags = attr_flags_to_mnt_flags(attr_flags);
- 
- 	switch (attr_flags & MOUNT_ATTR__ATIME) {
- 	case MOUNT_ATTR_STRICTATIME:
 -- 
 2.30.0
 
