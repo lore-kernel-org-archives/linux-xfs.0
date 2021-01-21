@@ -3,27 +3,27 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 971AEC433E6
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:44:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27DAFC433E9
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:49:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5334923A1E
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:44:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1A7C23A40
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:49:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733297AbhAUPoI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 10:44:08 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:53777 "EHLO
+        id S2387437AbhAUPoF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 10:44:05 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:53826 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731809AbhAUNVc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:21:32 -0500
+        with ESMTP id S1731713AbhAUNVa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:21:30 -0500
 Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
         by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.86_2)
         (envelope-from <christian.brauner@ubuntu.com>)
-        id 1l2Zsp-0005g7-Ri; Thu, 21 Jan 2021 13:20:20 +0000
+        id 1l2ZtA-0005g7-9J; Thu, 21 Jan 2021 13:20:40 +0000
 From:   Christian Brauner <christian.brauner@ubuntu.com>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org
@@ -59,825 +59,1061 @@ Cc:     John Johansen <john.johansen@canonical.com>,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
         Christian Brauner <christian.brauner@ubuntu.com>
-Subject: [PATCH v6 00/40] idmapped mounts
-Date:   Thu, 21 Jan 2021 14:19:19 +0100
-Message-Id: <20210121131959.646623-1-christian.brauner@ubuntu.com>
+Subject: [PATCH v6 05/39] namei: make permission helpers idmapped mount aware
+Date:   Thu, 21 Jan 2021 14:19:24 +0100
+Message-Id: <20210121131959.646623-6-christian.brauner@ubuntu.com>
 X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210121131959.646623-1-christian.brauner@ubuntu.com>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+X-Patch-Hashes: v=1; h=sha256; i=JgugUmcvVzbtzeqJr5O15Nzp+W5QX9ZcyABXeiG+Shk=; m=o77OoMU+EZmWfEdmfA9oQUJBcFwoNwu1/tdanBByf/s=; p=XxPaHwsZQcBhQd6ox5k0EJg1iyXp0XTnU8vye0yX2kA=; g=ae8eaaaf678acbbe0217ae09f07d7567d892dc8d
+X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCYAl9owAKCRCRxhvAZXjcogNlAPsGE2P a/wA7ob8vWUfUkuP/+rNZWx2LwVNm1VBIg2A4XQD8CCrq0DmgzcBQuFCs+cE7xK2H35gexREWUFkU 9kMGAwQ=
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hey everyone,
+The two helpers inode_permission() and generic_permission() are used by
+the vfs to perform basic permission checking by verifying that the
+caller is privileged over an inode. In order to handle idmapped mounts
+we extend the two helpers with an additional user namespace argument.
+On idmapped mounts the two helpers will make sure to map the inode
+according to the mount's user namespace and then peform identical
+permission checks to inode_permission() and generic_permission(). If the
+initial user namespace is passed nothing changes so non-idmapped mounts
+will see identical behavior as before.
 
-The only major change is the updated version of hch's pach to port xfs
-to support idmapped mounts. Thanks again to Christoph for doing that
-work.
-(Otherwise Acked-bys and Reviewed-bys were added and the tree reordered
- to decouple filesystem specific conversion from the vfs work so they
- can proceed independent.
- For a full list of major changes between versions see the end of this
- cover letter. Please also note the large xfstests testsuite in patch 42
- that has been kept as part of this series. It verifies correct vfs
- behavior with and without idmapped mounts including covering newer vfs
- features such as io_uring.
- I currently still plan to target the v5.12 merge window.)
-
-With this patchset we make it possible to attach idmappings to mounts,
-i.e. simply put different bind mounts can expose the same file or
-directory with different ownership.
-Shifting of ownership on a per-mount basis handles a wide range of
-long standing use-cases. Here are just a few:
-- Shifting of a subset of ownership-less filesystems (vfat) for use by
-  multiple users, effectively allowing for DAC on such devices
-  (systemd, Android, ...)
-- Allow remapping uid/gid on external filesystems or paths (USB sticks,
-  network filesystem, ...) to match the local system's user and groups.
-  (David Howells intends to port AFS as a first candidate.)
-- Shifting of a container rootfs or base image without having to mangle
-  every file (runc, Docker, containerd, k8s, LXD, systemd ...)
-- Sharing of data between host or privileged containers with
-  unprivileged containers (runC, Docker, containerd, k8s, LXD, ...)
-- Data sharing between multiple user namespaces with incompatible maps
-  (LXD, k8s, ...)
-
-There has been significant interest in this patchset as evidenced by
-user commenting on previous version of this patchset. They include
-containerd, ChromeOS, systemd, LXD and a range of others. There is
-already a patchset up for containerd, the default Kubernetes container
-runtime https://github.com/containerd/containerd/pull/4734
-to make use of this. systemd intends to use it in their systemd-homed
-implementation for portable home directories. ChromeOS wants to make use
-of it to share data between the host and the Linux containers they run
-on Chrome- and Pixelbooks. There's also a few talks that of people who
-are going to make use of this. The most recent one was a CNCF webinar
-https://www.cncf.io/wp-content/uploads/2020/12/Rootless-Containers-in-Gitpod.pdf
-and upcoming talk during FOSDEM.
-(Fwiw, for fun and since I wanted to do this for a long time I've ported
- my home directory to be completely portable with a simple service file
- that now mounts my home directory on an ext4 formatted usb stick with
- an id mapping mapping all files to the random uid I'm assigned at
- login.)
-
-Making it possible to share directories and mounts between users with
-different uids and gids is itself quite an important use-case in
-distributed systems environments. It's of course especially useful in
-general for portable usb sticks, sharing data between multiple users in,
-and sharing home directories between multiple users. The last example is
-now elegantly expressed in systemd's homed concept for portable home
-directories. As mentioned above, idmapped mounts also allow data from
-the host to be shared with unprivileged containers, between privileged
-and unprivileged containers simultaneously and in addition also between
-unprivileged containers with different idmappings whenever they are used
-to isolate one container completely from another container.
-
-We have implemented and proposed multiple solutions to this before. This
-included the introduction of fsid mappings, a tiny filesystem I've
-authored with Seth Forshee that is currently carried in Ubuntu that has
-shown to be the wrong approach, and the conceptual hack of calling
-override creds directly in the vfs. In addition, to some of these
-solutions being hacky none of these solutions have covered all of the
-above use-cases.
-
-Idmappings become a property of struct vfsmount instead of tying it to a
-process being inside of a user namespace which has been the case for all
-other proposed approaches. It also allows to pass down the user
-namespace into the filesystems which is a clean way instead of violating
-calling conventions by strapping the user namespace information that is
-a property of the mount to the caller's credentials or similar hacks.
-Each mount can have a separate idmapping and idmapped mounts can even be
-created in the initial user namespace unblocking a range of use-cases.
-
-To this end the vfsmount struct gains a new struct user_namespace
-member. The idmapping of the user namespace becomes the idmapping of the
-mount. A caller that is privileged with respect to the user namespace of
-the superblock of the underlying filesystem can create an idmapped
-mount. In the future, we can enable unprivileged use-cases by checking
-whether the caller is privileged wrt to the user namespace that an
-already idmapped mount has been marked with, allowing them to change the
-idmapping. For now, keep things simple until the need arises.
-Note, that with syscall interception it is already possible to intercept
-idmapped mount requests from unprivileged containers and handle them in
-a sufficiently privileged container manager. Support for this is already
-available in LXD and will be available in runC where syscall
-interception is currently in the process of becoming part of the runtime
-spec: https://github.com/opencontainers/runtime-spec/pull/1074.
-
-The user namespace the mount will be marked with can be specified by
-passing a file descriptor refering to the user namespace as an argument
-to the new mount_setattr() syscall together with the new
-MOUNT_ATTR_IDMAP flag. By default vfsmounts are marked with the initial
-user namespace and no behavioral or performance changes are observed.
-All mapping operations are nops for the initial user namespace. When a
-file/inode is accessed through an idmapped mount the i_uid and i_gid of
-the inode will be remapped according to the user namespace the mount has
-been marked with.
-
-In order to support idmapped mounts, filesystems need to be changed and
-mark themselves with the FS_ALLOW_IDMAP flag in fs_flags. The initial
-version contains fat, ext4, and xfs including a list of examples.
-But patches for other filesystems are actively worked on and will be
-sent out separately. We are here to see this through and there are
-multiple people involved in converting filesystems. So filesystem
-developers are not left alone with this and are provided with a large
-testsuite to verify that their port is correct.
-
-There is a simple tool available at
-https://github.com/brauner/mount-idmapped that allows to create idmapped
-mounts so people can play with this patch series. Here are a few
-illustrations:
-
-1. Create a simple idmapped mount of another user's home directory
-
-u1001@f2-vm:/$ sudo ./mount-idmapped --map-mount b:1000:1001:1 /home/ubuntu/ /mnt
-u1001@f2-vm:/$ ls -al /home/ubuntu/
-total 28
-drwxr-xr-x 2 ubuntu ubuntu 4096 Oct 28 22:07 .
-drwxr-xr-x 4 root   root   4096 Oct 28 04:00 ..
--rw------- 1 ubuntu ubuntu 3154 Oct 28 22:12 .bash_history
--rw-r--r-- 1 ubuntu ubuntu  220 Feb 25  2020 .bash_logout
--rw-r--r-- 1 ubuntu ubuntu 3771 Feb 25  2020 .bashrc
--rw-r--r-- 1 ubuntu ubuntu  807 Feb 25  2020 .profile
--rw-r--r-- 1 ubuntu ubuntu    0 Oct 16 16:11 .sudo_as_admin_successful
--rw------- 1 ubuntu ubuntu 1144 Oct 28 00:43 .viminfo
-u1001@f2-vm:/$ ls -al /mnt/
-total 28
-drwxr-xr-x  2 u1001 u1001 4096 Oct 28 22:07 .
-drwxr-xr-x 29 root  root  4096 Oct 28 22:01 ..
--rw-------  1 u1001 u1001 3154 Oct 28 22:12 .bash_history
--rw-r--r--  1 u1001 u1001  220 Feb 25  2020 .bash_logout
--rw-r--r--  1 u1001 u1001 3771 Feb 25  2020 .bashrc
--rw-r--r--  1 u1001 u1001  807 Feb 25  2020 .profile
--rw-r--r--  1 u1001 u1001    0 Oct 16 16:11 .sudo_as_admin_successful
--rw-------  1 u1001 u1001 1144 Oct 28 00:43 .viminfo
-u1001@f2-vm:/$ touch /mnt/my-file
-u1001@f2-vm:/$ setfacl -m u:1001:rwx /mnt/my-file
-u1001@f2-vm:/$ sudo setcap -n 1001 cap_net_raw+ep /mnt/my-file
-u1001@f2-vm:/$ ls -al /mnt/my-file
--rw-rwxr--+ 1 u1001 u1001 0 Oct 28 22:14 /mnt/my-file
-u1001@f2-vm:/$ ls -al /home/ubuntu/my-file
--rw-rwxr--+ 1 ubuntu ubuntu 0 Oct 28 22:14 /home/ubuntu/my-file
-u1001@f2-vm:/$ getfacl /mnt/my-file
-getfacl: Removing leading '/' from absolute path names
-# file: mnt/my-file
-# owner: u1001
-# group: u1001
-user::rw-
-user:u1001:rwx
-group::rw-
-mask::rwx
-other::r--
-u1001@f2-vm:/$ getfacl /home/ubuntu/my-file
-getfacl: Removing leading '/' from absolute path names
-# file: home/ubuntu/my-file
-# owner: ubuntu
-# group: ubuntu
-user::rw-
-user:ubuntu:rwx
-group::rw-
-mask::rwx
-other::r--
-
-2. Create mapping of the whole ext4 rootfs without a mapping for uid and gid 0
-
-ubuntu@f2-vm:~$ sudo /mount-idmapped --map-mount b:1:1:65536 / /mnt/
-ubuntu@f2-vm:~$ findmnt | grep mnt
-└─/mnt                                /dev/sda2  ext4       rw,relatime
-  └─/mnt/mnt                          /dev/sda2  ext4       rw,relatime
-ubuntu@f2-vm:~$ sudo mkdir /AS-ROOT-CAN-CREATE
-ubuntu@f2-vm:~$ sudo mkdir /mnt/AS-ROOT-CANT-CREATE
-mkdir: cannot create directory ‘/mnt/AS-ROOT-CANT-CREATE’: Value too large for defined data type
-ubuntu@f2-vm:~$ mkdir /mnt/home/ubuntu/AS-USER-1000-CAN-CREATE
-
-3. Create a vfat usb mount and expose to user 1001 and 5000
-
-ubuntu@f2-vm:/$ sudo mount /dev/sdb /mnt
-ubuntu@f2-vm:/$ findmnt  | grep mnt
-└─/mnt                                /dev/sdb vfat       rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro
-ubuntu@f2-vm:/$ ls -al /mnt
-total 12
-drwxr-xr-x  2 root root 4096 Jan  1  1970 .
-drwxr-xr-x 34 root root 4096 Oct 28 22:24 ..
--rwxr-xr-x  1 root root    4 Oct 28 03:44 aaa
--rwxr-xr-x  1 root root    0 Oct 28 01:09 bbb
-ubuntu@f2-vm:/$ sudo /mount-idmapped --map-mount b:0:1001:1 /mnt /mnt-1001/
-ubuntu@f2-vm:/$ ls -al /mnt-1001/
-total 12
-drwxr-xr-x  2 u1001 u1001 4096 Jan  1  1970 .
-drwxr-xr-x 34 root  root  4096 Oct 28 22:24 ..
--rwxr-xr-x  1 u1001 u1001    4 Oct 28 03:44 aaa
--rwxr-xr-x  1 u1001 u1001    0 Oct 28 01:09 bbb
-ubuntu@f2-vm:/$ sudo /mount-idmapped --map-mount b:0:5000:1 /mnt /mnt-5000/
-ubuntu@f2-vm:/$ ls -al /mnt-5000/
-total 12
-drwxr-xr-x  2 5000 5000 4096 Jan  1  1970 .
-drwxr-xr-x 34 root root 4096 Oct 28 22:24 ..
--rwxr-xr-x  1 5000 5000    4 Oct 28 03:44 aaa
--rwxr-xr-x  1 5000 5000    0 Oct 28 01:09 bbb
-
-4. Create an idmapped rootfs mount for a container
-
-root@f2-vm:~# ls -al /var/lib/lxc/f2/rootfs/
-total 68
-drwxr-xr-x 17 20000 20000 4096 Sep 24 07:48 .
-drwxrwx---  3 20000 20000 4096 Oct 16 19:26 ..
-lrwxrwxrwx  1 20000 20000    7 Sep 24 07:43 bin -> usr/bin
-drwxr-xr-x  2 20000 20000 4096 Apr 15  2020 boot
-drwxr-xr-x  3 20000 20000 4096 Oct 16 19:26 dev
-drwxr-xr-x 61 20000 20000 4096 Oct 16 19:26 etc
-drwxr-xr-x  3 20000 20000 4096 Sep 24 07:45 home
-lrwxrwxrwx  1 20000 20000    7 Sep 24 07:43 lib -> usr/lib
-lrwxrwxrwx  1 20000 20000    9 Sep 24 07:43 lib32 -> usr/lib32
-lrwxrwxrwx  1 20000 20000    9 Sep 24 07:43 lib64 -> usr/lib64
-lrwxrwxrwx  1 20000 20000   10 Sep 24 07:43 libx32 -> usr/libx32
-drwxr-xr-x  2 20000 20000 4096 Sep 24 07:43 media
-drwxr-xr-x  2 20000 20000 4096 Sep 24 07:43 mnt
-drwxr-xr-x  2 20000 20000 4096 Sep 24 07:43 opt
-drwxr-xr-x  2 20000 20000 4096 Apr 15  2020 proc
-drwx------  2 20000 20000 4096 Sep 24 07:43 root
-drwxr-xr-x  2 20000 20000 4096 Sep 24 07:45 run
-lrwxrwxrwx  1 20000 20000    8 Sep 24 07:43 sbin -> usr/sbin
-drwxr-xr-x  2 20000 20000 4096 Sep 24 07:43 srv
-drwxr-xr-x  2 20000 20000 4096 Apr 15  2020 sys
-drwxrwxrwt  2 20000 20000 4096 Sep 24 07:44 tmp
-drwxr-xr-x 13 20000 20000 4096 Sep 24 07:43 usr
-drwxr-xr-x 12 20000 20000 4096 Sep 24 07:44 var
-root@f2-vm:~# /mount-idmapped --map-mount b:20000:10000:100000 /var/lib/lxc/f2/rootfs/ /mnt
-root@f2-vm:~# ls -al /mnt
-total 68
-drwxr-xr-x 17 10000 10000 4096 Sep 24 07:48 .
-drwxr-xr-x 34 root  root  4096 Oct 28 22:24 ..
-lrwxrwxrwx  1 10000 10000    7 Sep 24 07:43 bin -> usr/bin
-drwxr-xr-x  2 10000 10000 4096 Apr 15  2020 boot
-drwxr-xr-x  3 10000 10000 4096 Oct 16 19:26 dev
-drwxr-xr-x 61 10000 10000 4096 Oct 16 19:26 etc
-drwxr-xr-x  3 10000 10000 4096 Sep 24 07:45 home
-lrwxrwxrwx  1 10000 10000    7 Sep 24 07:43 lib -> usr/lib
-lrwxrwxrwx  1 10000 10000    9 Sep 24 07:43 lib32 -> usr/lib32
-lrwxrwxrwx  1 10000 10000    9 Sep 24 07:43 lib64 -> usr/lib64
-lrwxrwxrwx  1 10000 10000   10 Sep 24 07:43 libx32 -> usr/libx32
-drwxr-xr-x  2 10000 10000 4096 Sep 24 07:43 media
-drwxr-xr-x  2 10000 10000 4096 Sep 24 07:43 mnt
-drwxr-xr-x  2 10000 10000 4096 Sep 24 07:43 opt
-drwxr-xr-x  2 10000 10000 4096 Apr 15  2020 proc
-drwx------  2 10000 10000 4096 Sep 24 07:43 root
-drwxr-xr-x  2 10000 10000 4096 Sep 24 07:45 run
-lrwxrwxrwx  1 10000 10000    8 Sep 24 07:43 sbin -> usr/sbin
-drwxr-xr-x  2 10000 10000 4096 Sep 24 07:43 srv
-drwxr-xr-x  2 10000 10000 4096 Apr 15  2020 sys
-drwxrwxrwt  2 10000 10000 4096 Sep 24 07:44 tmp
-drwxr-xr-x 13 10000 10000 4096 Sep 24 07:43 usr
-drwxr-xr-x 12 10000 10000 4096 Sep 24 07:44 var
-root@f2-vm:~# lxc-start f2 # uses /mnt as rootfs
-root@f2-vm:~# lxc-attach f2 -- cat /proc/1/uid_map
-         0      10000      10000
-root@f2-vm:~# lxc-attach f2 -- cat /proc/1/gid_map
-         0      10000      10000
-root@f2-vm:~# lxc-attach f2 -- ls -al /
-total 52
-drwxr-xr-x  17 root   root    4096 Sep 24 07:48 .
-drwxr-xr-x  17 root   root    4096 Sep 24 07:48 ..
-lrwxrwxrwx   1 root   root       7 Sep 24 07:43 bin -> usr/bin
-drwxr-xr-x   2 root   root    4096 Apr 15  2020 boot
-drwxr-xr-x   5 root   root     500 Oct 28 23:39 dev
-drwxr-xr-x  61 root   root    4096 Oct 28 23:39 etc
-drwxr-xr-x   3 root   root    4096 Sep 24 07:45 home
-lrwxrwxrwx   1 root   root       7 Sep 24 07:43 lib -> usr/lib
-lrwxrwxrwx   1 root   root       9 Sep 24 07:43 lib32 -> usr/lib32
-lrwxrwxrwx   1 root   root       9 Sep 24 07:43 lib64 -> usr/lib64
-lrwxrwxrwx   1 root   root      10 Sep 24 07:43 libx32 -> usr/libx32
-drwxr-xr-x   2 root   root    4096 Sep 24 07:43 media
-drwxr-xr-x   2 root   root    4096 Sep 24 07:43 mnt
-drwxr-xr-x   2 root   root    4096 Sep 24 07:43 opt
-dr-xr-xr-x 232 nobody nogroup    0 Oct 28 23:39 proc
-drwx------   2 root   root    4096 Oct 28 23:41 root
-drwxr-xr-x  12 root   root     360 Oct 28 23:39 run
-lrwxrwxrwx   1 root   root       8 Sep 24 07:43 sbin -> usr/sbin
-drwxr-xr-x   2 root   root    4096 Sep 24 07:43 srv
-dr-xr-xr-x  13 nobody nogroup    0 Oct 28 23:39 sys
-drwxrwxrwt  11 root   root    4096 Oct 28 23:40 tmp
-drwxr-xr-x  13 root   root    4096 Sep 24 07:43 usr
-drwxr-xr-x  12 root   root    4096 Sep 24 07:44 var
-root@f2-vm:~# lxc-attach f2 -- ls -al /my-file
--rw-r--r-- 1 root root 0 Oct 28 23:43 /my-file
-root@f2-vm:~# ls -al /var/lib/lxc/f2/rootfs/my-file
--rw-r--r-- 1 20000 20000 0 Oct 28 23:43 /var/lib/lxc/f2/rootfs/my-file
-
-I'd like to say thanks to:
-Al for pointing me into the direction to avoid inode alias issues during
-lookup. David for various discussions around this. Christoph for porting
-xfs, providing good reviews and for being involved in the original idea.
-Tycho for helping with this series and on future patches to convert
-filesystems. Alban Crequy and the Kinvolk peeps located just a few
-streets away from me in Berlin for providing use-case discussions and
-writing patches for containerd. Stéphane for his invaluable input on
-many things and level head and enabling me to work on this. Amir for
-explaining and discussing aspects of overlayfs with me. I'd like to
-especially thank Seth Forshee. He provided a lot of good analysis,
-suggestions, and participated in short-notice discussions in both chat
-and video for some nitty-gritty technical details.
-
-This series can be found and pulled from the three usual locations:
-https://git.kernel.org/pub/scm/linux/kernel/git/brauner/linux.git/log/?h=idmapped_mounts
-https://github.com/brauner/linux/tree/idmapped_mounts
-https://gitlab.com/brauner/linux/-/commits/idmapped_mounts
-
-/* v5 */
-- Adress Christoph's feedback.
-- Use v5.11-rc3 as new base.
-- Add Christoph's xfs port.
-
-/* v4 */
-- Split out several preparatory patches from the initial mount_setattr
-  patch as requested by Christoph.
-- Add new tests for file/directory creation in directories with the
-  setgid bit set. Specifically, verify that the setgid bit is correctly
-  ignored when creating a file with the setgid bit and the parent
-  directory's i_gid isn't in_group_p() and the caller isn't
-  capable_wrt_inode_uidgid() over the parent directory's inode when
-  inode_init_owner() is called.
-  Conversely, verify that the setgid bit is set when creating a file
-  with the setgid bit and the parent's i_gid is either in_group_p() or
-  the caller is capable_wrt_inode_uidgid() over the parent directory's
-  inode. In additiona, verify that the setgid bit is always inherited
-  when creating directories.
-  Test all of this on regular mounts, idmapped mounts, and on idmapped
-  mounts in user namespaces.
-- Add new tests to verify that the i_gid of newly created files or
-  directories is correctly set to the parent directory's i_gid when the
-  parent directory has the setgid bit set.
-- Use "mnt_userns" as the de facto name for a vfsmount's user namespace
-  everywhere as suggested by Serge.
-- Reuse existing propagation flags instead of introducing new ones as
-  suggested by Christoph. (This is in line with Linus request to not
-  introduce too many new flags as evidenced by prior discussions on
-  other patchsets such as openat2().)
-- Add first set of Acked-bys from Serge and Reviewed-bys from Christoph.
-- Fix commit messages to reflect the fact that we modify existing
-  vfs helpers but do not introduce new ones like we did in the first
-  version. Some commit messages still implied we were adding new
-  helpers.
-- Reformat all commit messages to adhere to 73 char length limit and
-  wrap all lines in commits at 80 chars whenever this doesn't hinder
-  legibility.
-- Simplify various codepaths with Christoph's suggestions.
+Link: https://lore.kernel.org/r/20210112220124.837960-12-christian.brauner@ubuntu.com
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Serge Hallyn <serge@hallyn.com>
+Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
+---
+/* v2 */
+- Christoph Hellwig <hch@lst.de>:
+  - Don't pollute the vfs with additional helpers simply extend the existing
+    helpers with an additional argument and switch all callers.
 
 /* v3 */
-- The major change is the port of the test-suite from the
-  kernel-internal selftests framework to xfstests as requested by
-  Darrick and Christoph. The test-suite for xfstests is patch 38 in this
-  series. It has been kept as part of this series even though it belongs
-  to xfstests so it's easier to see what is tested and to keep it
-  in-sync.
-- Note, the test-suite now has been extended to cover io_uring and
-  idmapped mounts. The IORING_REGISTER_PERSONALITY feature allows to
-  register the caller's credentials with io_uring and returns an id
-  associated with these credentials. This is useful for applications
-  that wish to share a ring between separate users/processes. Callers
-  can pass in the credential id in the sqe personality field. If set,
-  that particular sqe will be issued with these credentials.
-  The test-suite now tests that the openat* operations with different
-  registered credentials work correctly and safely on regular mounts, on
-  regular mounts inside user namespaces, on idmapped mounts, and on
-  idmapped mounts inside user namespaces.
+unchanged
 
-/* v2 */
-- The major change is the rework requested by Christoph and others to
-  adapt all relevant helpers and inode_operations methods to account for
-  idmapped mounts instead of introducing new helpers and methods
-  specific to idmapped mounts like we did before. We've also moved the
-  overlayfs conversion to handle idmapped mounts into a separate
-  patchset that will be sent out separately after the core changes
-  landed. The converted filesytems in this series include fat and ext4.
-  As per Christoph's request the vfs-wide config option to disable
-  idmapped mounts has been removed. Instead the filesystems can decide
-  whether or not they want to allow idmap mounts through a config
-  option. These config options default to off. Having a config option
-  allows us to gain some confidence in the patchset over multiple kernel
-  releases.
-- This version introduces a large test-suite to test current vfs
-  behavior and idmapped mounts behavior. This test-suite is intended to
-  grow over time.
-- While while working on adapting this patchset to the requested
-  changes, the runC and containerd crowd was nice enough to adapt
-  containerd to this patchset to make use of idmapped mounts in one of
-  the most widely used container runtimes:
-  https://github.com/containerd/containerd/pull/4734
+/* v4 */
+- "Serge E. Hallyn" <serge@hallyn.com>:
+  - Add proper documentation for all the changed permission checking helpers and
+    adjust terminology to avoid any potential confusion.
+  - Use "mnt_userns" to refer to a vfsmount's userns everywhere to make
+    terminology consistent.
 
-The solution proposed here has it's origins in multiple discussions
-during Linux Plumbers 2017 during and after the end of the containers
-microconference.
-To the best of my knowledge this involved Aleksa, Stéphane, Eric, David,
-James, and myself.The original idea or a variant thereof has been
-discussed, again to the best of my knowledge, after a Linux conference
-in St. Petersburg in Russia in 2017 between Christoph, Tycho, and
-myself.
-We've taken the time to implement a working version of this solution
-over the last weeks to the best of my abilities. Tycho has signed up
-for this sligthly crazy endeavour as well and he has helped with the
-conversion of the xattr codepaths and will be involved with others in
-converting additional filesystems.
+- Christoph Hellwig <hch@lst.de>:
+  - Change commit message to reflect the fact that no new permission helpers are
+    introduced but only the existing ones changed.
 
-Thanks!
-Christian
+/* v5 */
+unchanged
+base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
 
-Christian Brauner (37):
-  mount: attach mappings to mounts
-  fs: add id translation helpers
-  fs: add file and path permissions helpers
-  capability: handle idmapped mounts
-  namei: make permission helpers idmapped mount aware
-  inode: make init and permission helpers idmapped mount aware
-  attr: handle idmapped mounts
-  acl: handle idmapped mounts
-  commoncap: handle idmapped mounts
-  stat: handle idmapped mounts
-  namei: handle idmapped mounts in may_*() helpers
-  namei: introduce struct renamedata
-  namei: prepare for idmapped mounts
-  open: handle idmapped mounts in do_truncate()
-  open: handle idmapped mounts
-  af_unix: handle idmapped mounts
-  utimes: handle idmapped mounts
-  fcntl: handle idmapped mounts
-  init: handle idmapped mounts
-  ioctl: handle idmapped mounts
-  would_dump: handle idmapped mounts
-  exec: handle idmapped mounts
-  fs: make helpers idmap mount aware
-  apparmor: handle idmapped mounts
-  ima: handle idmapped mounts
-  ecryptfs: do not mount on top of idmapped mounts
-  overlayfs: do not mount on top of idmapped mounts
-  namespace: take lock_mount_hash() directly when changing flags
-  mount: make {lock,unlock}_mount_hash() static
-  namespace: only take read lock in do_reconfigure_mnt()
-  fs: split out functions to hold writers
-  fs: add attr_flags_to_mnt_flags helper
-  fs: add mount_setattr()
-  fs: introduce MOUNT_ATTR_IDMAP
-  tests: add mount_setattr() selftests
-  fat: handle idmapped mounts
-  ext4: support idmapped mounts
-
-Christoph Hellwig (1):
-  xfs: support idmapped mounts
-
-Tycho Andersen (1):
-  xattr: handle idmapped mounts
-
- Documentation/filesystems/locking.rst         |    7 +-
- Documentation/filesystems/porting.rst         |    2 +
- Documentation/filesystems/vfs.rst             |   19 +-
- arch/alpha/kernel/syscalls/syscall.tbl        |    1 +
- arch/arm/tools/syscall.tbl                    |    1 +
- arch/arm64/include/asm/unistd.h               |    2 +-
- arch/arm64/include/asm/unistd32.h             |    2 +
- arch/ia64/kernel/syscalls/syscall.tbl         |    1 +
- arch/m68k/kernel/syscalls/syscall.tbl         |    1 +
- arch/microblaze/kernel/syscalls/syscall.tbl   |    1 +
- arch/mips/kernel/syscalls/syscall_n32.tbl     |    1 +
- arch/mips/kernel/syscalls/syscall_n64.tbl     |    1 +
- arch/mips/kernel/syscalls/syscall_o32.tbl     |    1 +
- arch/parisc/kernel/syscalls/syscall.tbl       |    1 +
- arch/powerpc/kernel/syscalls/syscall.tbl      |    1 +
- arch/powerpc/platforms/cell/spufs/inode.c     |    5 +-
- arch/s390/kernel/syscalls/syscall.tbl         |    1 +
- arch/sh/kernel/syscalls/syscall.tbl           |    1 +
- arch/sparc/kernel/syscalls/syscall.tbl        |    1 +
- arch/x86/entry/syscalls/syscall_32.tbl        |    1 +
- arch/x86/entry/syscalls/syscall_64.tbl        |    1 +
- arch/xtensa/kernel/syscalls/syscall.tbl       |    1 +
- drivers/android/binderfs.c                    |    6 +-
- drivers/base/devtmpfs.c                       |   15 +-
- fs/9p/acl.c                                   |    8 +-
- fs/9p/v9fs.h                                  |    3 +-
- fs/9p/v9fs_vfs.h                              |    3 +-
- fs/9p/vfs_inode.c                             |   36 +-
- fs/9p/vfs_inode_dotl.c                        |   39 +-
- fs/9p/xattr.c                                 |    1 +
- fs/adfs/adfs.h                                |    3 +-
- fs/adfs/inode.c                               |    5 +-
- fs/affs/affs.h                                |   24 +-
- fs/affs/inode.c                               |    7 +-
- fs/affs/namei.c                               |   15 +-
- fs/afs/dir.c                                  |   34 +-
- fs/afs/inode.c                                |    9 +-
- fs/afs/internal.h                             |    7 +-
- fs/afs/security.c                             |    3 +-
- fs/afs/xattr.c                                |    2 +
- fs/attr.c                                     |  126 +-
- fs/autofs/root.c                              |   17 +-
- fs/bad_inode.c                                |   36 +-
- fs/bfs/dir.c                                  |   12 +-
- fs/btrfs/acl.c                                |    6 +-
- fs/btrfs/ctree.h                              |    3 +-
- fs/btrfs/inode.c                              |   46 +-
- fs/btrfs/ioctl.c                              |   27 +-
- fs/btrfs/tests/btrfs-tests.c                  |    2 +-
- fs/btrfs/xattr.c                              |    2 +
- fs/cachefiles/interface.c                     |    4 +-
- fs/cachefiles/namei.c                         |   21 +-
- fs/cachefiles/xattr.c                         |   29 +-
- fs/ceph/acl.c                                 |    6 +-
- fs/ceph/dir.c                                 |   23 +-
- fs/ceph/inode.c                               |   18 +-
- fs/ceph/super.h                               |   12 +-
- fs/ceph/xattr.c                               |    1 +
- fs/cifs/cifsfs.c                              |    5 +-
- fs/cifs/cifsfs.h                              |   25 +-
- fs/cifs/dir.c                                 |    8 +-
- fs/cifs/inode.c                               |   26 +-
- fs/cifs/link.c                                |    3 +-
- fs/cifs/xattr.c                               |    1 +
- fs/coda/coda_linux.h                          |    8 +-
- fs/coda/dir.c                                 |   18 +-
- fs/coda/inode.c                               |    9 +-
- fs/coda/pioctl.c                              |    6 +-
- fs/configfs/configfs_internal.h               |    6 +-
- fs/configfs/dir.c                             |    3 +-
- fs/configfs/inode.c                           |    5 +-
- fs/configfs/symlink.c                         |    6 +-
- fs/coredump.c                                 |   10 +-
- fs/crypto/policy.c                            |    2 +-
- fs/debugfs/inode.c                            |    9 +-
- fs/ecryptfs/crypto.c                          |    4 +-
- fs/ecryptfs/inode.c                           |   85 +-
- fs/ecryptfs/main.c                            |    6 +
- fs/ecryptfs/mmap.c                            |    4 +-
- fs/efivarfs/file.c                            |    2 +-
- fs/efivarfs/inode.c                           |    4 +-
- fs/erofs/inode.c                              |    7 +-
- fs/erofs/internal.h                           |    5 +-
- fs/exec.c                                     |   12 +-
- fs/exfat/exfat_fs.h                           |    8 +-
- fs/exfat/file.c                               |   14 +-
- fs/exfat/namei.c                              |   14 +-
- fs/ext2/acl.c                                 |    6 +-
- fs/ext2/acl.h                                 |    3 +-
- fs/ext2/ext2.h                                |    5 +-
- fs/ext2/ialloc.c                              |    2 +-
- fs/ext2/inode.c                               |   15 +-
- fs/ext2/ioctl.c                               |    6 +-
- fs/ext2/namei.c                               |   22 +-
- fs/ext2/xattr_security.c                      |    1 +
- fs/ext2/xattr_trusted.c                       |    1 +
- fs/ext2/xattr_user.c                          |    1 +
- fs/ext4/acl.c                                 |    5 +-
- fs/ext4/acl.h                                 |    3 +-
- fs/ext4/ext4.h                                |   22 +-
- fs/ext4/ialloc.c                              |    7 +-
- fs/ext4/inode.c                               |   21 +-
- fs/ext4/ioctl.c                               |   20 +-
- fs/ext4/namei.c                               |   49 +-
- fs/ext4/super.c                               |    2 +-
- fs/ext4/xattr_hurd.c                          |    1 +
- fs/ext4/xattr_security.c                      |    1 +
- fs/ext4/xattr_trusted.c                       |    1 +
- fs/ext4/xattr_user.c                          |    1 +
- fs/f2fs/acl.c                                 |    6 +-
- fs/f2fs/acl.h                                 |    3 +-
- fs/f2fs/f2fs.h                                |    7 +-
- fs/f2fs/file.c                                |   36 +-
- fs/f2fs/namei.c                               |   23 +-
- fs/f2fs/xattr.c                               |    4 +-
- fs/fat/fat.h                                  |    6 +-
- fs/fat/file.c                                 |   24 +-
- fs/fat/namei_msdos.c                          |   12 +-
- fs/fat/namei_vfat.c                           |   15 +-
- fs/fcntl.c                                    |    3 +-
- fs/fuse/acl.c                                 |    3 +-
- fs/fuse/dir.c                                 |   46 +-
- fs/fuse/fuse_i.h                              |    4 +-
- fs/fuse/xattr.c                               |    2 +
- fs/gfs2/acl.c                                 |    5 +-
- fs/gfs2/acl.h                                 |    3 +-
- fs/gfs2/file.c                                |    4 +-
- fs/gfs2/inode.c                               |   64 +-
- fs/gfs2/inode.h                               |    3 +-
- fs/gfs2/xattr.c                               |    1 +
- fs/hfs/attr.c                                 |    1 +
- fs/hfs/dir.c                                  |   13 +-
- fs/hfs/hfs_fs.h                               |    3 +-
- fs/hfs/inode.c                                |    8 +-
- fs/hfsplus/dir.c                              |   22 +-
- fs/hfsplus/hfsplus_fs.h                       |    5 +-
- fs/hfsplus/inode.c                            |   16 +-
- fs/hfsplus/ioctl.c                            |    2 +-
- fs/hfsplus/xattr.c                            |    1 +
- fs/hfsplus/xattr_security.c                   |    1 +
- fs/hfsplus/xattr_trusted.c                    |    1 +
- fs/hfsplus/xattr_user.c                       |    1 +
- fs/hostfs/hostfs_kern.c                       |   29 +-
- fs/hpfs/hpfs_fn.h                             |    2 +-
- fs/hpfs/inode.c                               |    7 +-
- fs/hpfs/namei.c                               |   20 +-
- fs/hugetlbfs/inode.c                          |   35 +-
- fs/init.c                                     |   24 +-
- fs/inode.c                                    |   44 +-
- fs/internal.h                                 |    2 +-
- fs/jffs2/acl.c                                |    6 +-
- fs/jffs2/acl.h                                |    3 +-
- fs/jffs2/dir.c                                |   33 +-
- fs/jffs2/fs.c                                 |    7 +-
- fs/jffs2/os-linux.h                           |    2 +-
- fs/jffs2/security.c                           |    1 +
- fs/jffs2/xattr_trusted.c                      |    1 +
- fs/jffs2/xattr_user.c                         |    1 +
- fs/jfs/acl.c                                  |    5 +-
- fs/jfs/file.c                                 |    9 +-
- fs/jfs/ioctl.c                                |    2 +-
- fs/jfs/jfs_acl.h                              |    3 +-
- fs/jfs/jfs_inode.c                            |    2 +-
- fs/jfs/jfs_inode.h                            |    2 +-
- fs/jfs/namei.c                                |   21 +-
- fs/jfs/xattr.c                                |    2 +
- fs/kernfs/dir.c                               |    6 +-
- fs/kernfs/inode.c                             |   19 +-
- fs/kernfs/kernfs-internal.h                   |    9 +-
- fs/libfs.c                                    |   28 +-
- fs/minix/bitmap.c                             |    2 +-
- fs/minix/file.c                               |    7 +-
- fs/minix/inode.c                              |    6 +-
- fs/minix/minix.h                              |    3 +-
- fs/minix/namei.c                              |   24 +-
- fs/mount.h                                    |   10 -
- fs/namei.c                                    |  512 ++++--
- fs/namespace.c                                |  480 +++++-
- fs/nfs/dir.c                                  |   25 +-
- fs/nfs/inode.c                                |    9 +-
- fs/nfs/internal.h                             |   14 +-
- fs/nfs/namespace.c                            |   15 +-
- fs/nfs/nfs3_fs.h                              |    3 +-
- fs/nfs/nfs3acl.c                              |    3 +-
- fs/nfs/nfs4proc.c                             |    3 +
- fs/nfsd/nfs2acl.c                             |    6 +-
- fs/nfsd/nfs3acl.c                             |    6 +-
- fs/nfsd/nfs4acl.c                             |    5 +-
- fs/nfsd/nfs4recover.c                         |    6 +-
- fs/nfsd/nfsfh.c                               |    3 +-
- fs/nfsd/nfsproc.c                             |    2 +-
- fs/nfsd/vfs.c                                 |   50 +-
- fs/nilfs2/inode.c                             |   14 +-
- fs/nilfs2/ioctl.c                             |    2 +-
- fs/nilfs2/namei.c                             |   19 +-
- fs/nilfs2/nilfs.h                             |    6 +-
- fs/notify/fanotify/fanotify_user.c            |    2 +-
- fs/notify/inotify/inotify_user.c              |    2 +-
- fs/ntfs/inode.c                               |    6 +-
- fs/ntfs/inode.h                               |    3 +-
- fs/ocfs2/acl.c                                |    6 +-
- fs/ocfs2/acl.h                                |    3 +-
- fs/ocfs2/dlmfs/dlmfs.c                        |   17 +-
- fs/ocfs2/file.c                               |   18 +-
- fs/ocfs2/file.h                               |   11 +-
- fs/ocfs2/ioctl.c                              |    2 +-
- fs/ocfs2/namei.c                              |   21 +-
- fs/ocfs2/refcounttree.c                       |    4 +-
- fs/ocfs2/xattr.c                              |    3 +
- fs/omfs/dir.c                                 |   13 +-
- fs/omfs/file.c                                |    7 +-
- fs/omfs/inode.c                               |    2 +-
- fs/open.c                                     |   35 +-
- fs/orangefs/acl.c                             |    6 +-
- fs/orangefs/inode.c                           |   20 +-
- fs/orangefs/namei.c                           |   12 +-
- fs/orangefs/orangefs-kernel.h                 |   13 +-
- fs/orangefs/xattr.c                           |    1 +
- fs/overlayfs/copy_up.c                        |   22 +-
- fs/overlayfs/dir.c                            |   31 +-
- fs/overlayfs/file.c                           |    6 +-
- fs/overlayfs/inode.c                          |   27 +-
- fs/overlayfs/overlayfs.h                      |   45 +-
- fs/overlayfs/super.c                          |   21 +-
- fs/overlayfs/util.c                           |    4 +-
- fs/posix_acl.c                                |  103 +-
- fs/proc/base.c                                |   28 +-
- fs/proc/fd.c                                  |    5 +-
- fs/proc/fd.h                                  |    3 +-
- fs/proc/generic.c                             |   12 +-
- fs/proc/internal.h                            |    6 +-
- fs/proc/proc_net.c                            |    5 +-
- fs/proc/proc_sysctl.c                         |   15 +-
- fs/proc/root.c                                |    5 +-
- fs/proc_namespace.c                           |    3 +
- fs/ramfs/file-nommu.c                         |    9 +-
- fs/ramfs/inode.c                              |   18 +-
- fs/reiserfs/acl.h                             |    3 +-
- fs/reiserfs/inode.c                           |    7 +-
- fs/reiserfs/ioctl.c                           |    4 +-
- fs/reiserfs/namei.c                           |   21 +-
- fs/reiserfs/reiserfs.h                        |    3 +-
- fs/reiserfs/xattr.c                           |   13 +-
- fs/reiserfs/xattr.h                           |    3 +-
- fs/reiserfs/xattr_acl.c                       |    8 +-
- fs/reiserfs/xattr_security.c                  |    3 +-
- fs/reiserfs/xattr_trusted.c                   |    3 +-
- fs/reiserfs/xattr_user.c                      |    3 +-
- fs/remap_range.c                              |    7 +-
- fs/stat.c                                     |   26 +-
- fs/sysv/file.c                                |    7 +-
- fs/sysv/ialloc.c                              |    2 +-
- fs/sysv/itree.c                               |    6 +-
- fs/sysv/namei.c                               |   21 +-
- fs/sysv/sysv.h                                |    3 +-
- fs/tracefs/inode.c                            |    4 +-
- fs/ubifs/dir.c                                |   30 +-
- fs/ubifs/file.c                               |    5 +-
- fs/ubifs/ioctl.c                              |    2 +-
- fs/ubifs/ubifs.h                              |    5 +-
- fs/ubifs/xattr.c                              |    1 +
- fs/udf/file.c                                 |    9 +-
- fs/udf/ialloc.c                               |    2 +-
- fs/udf/namei.c                                |   24 +-
- fs/udf/symlink.c                              |    7 +-
- fs/ufs/ialloc.c                               |    2 +-
- fs/ufs/inode.c                                |    7 +-
- fs/ufs/namei.c                                |   19 +-
- fs/ufs/ufs.h                                  |    3 +-
- fs/utimes.c                                   |    3 +-
- fs/vboxsf/dir.c                               |   12 +-
- fs/vboxsf/utils.c                             |    9 +-
- fs/vboxsf/vfsmod.h                            |    8 +-
- fs/verity/enable.c                            |    2 +-
- fs/xattr.c                                    |  139 +-
- fs/xfs/xfs_acl.c                              |    5 +-
- fs/xfs/xfs_acl.h                              |    3 +-
- fs/xfs/xfs_file.c                             |    4 +-
- fs/xfs/xfs_inode.c                            |   26 +-
- fs/xfs/xfs_inode.h                            |   16 +-
- fs/xfs/xfs_ioctl.c                            |   35 +-
- fs/xfs/xfs_ioctl32.c                          |    6 +-
- fs/xfs/xfs_iops.c                             |  101 +-
- fs/xfs/xfs_iops.h                             |    3 +-
- fs/xfs/xfs_itable.c                           |   17 +-
- fs/xfs/xfs_itable.h                           |    1 +
- fs/xfs/xfs_qm.c                               |    3 +-
- fs/xfs/xfs_super.c                            |    2 +-
- fs/xfs/xfs_symlink.c                          |    5 +-
- fs/xfs/xfs_symlink.h                          |    5 +-
- fs/xfs/xfs_xattr.c                            |    7 +-
- fs/zonefs/super.c                             |    9 +-
- include/linux/capability.h                    |   14 +-
- include/linux/fs.h                            |  186 ++-
- include/linux/ima.h                           |   18 +-
- include/linux/lsm_hook_defs.h                 |   15 +-
- include/linux/lsm_hooks.h                     |    1 +
- include/linux/mount.h                         |    7 +
- include/linux/nfs_fs.h                        |    7 +-
- include/linux/posix_acl.h                     |   21 +-
- include/linux/posix_acl_xattr.h               |   12 +-
- include/linux/security.h                      |   54 +-
- include/linux/syscalls.h                      |    4 +
- include/linux/xattr.h                         |   30 +-
- include/uapi/asm-generic/unistd.h             |    4 +-
- include/uapi/linux/mount.h                    |   16 +
- ipc/mqueue.c                                  |    9 +-
- kernel/auditsc.c                              |    5 +-
- kernel/bpf/inode.c                            |   13 +-
- kernel/capability.c                           |   14 +-
- kernel/cgroup/cgroup.c                        |    2 +-
- kernel/sys.c                                  |    2 +-
- mm/madvise.c                                  |    5 +-
- mm/memcontrol.c                               |    2 +-
- mm/mincore.c                                  |    5 +-
- mm/shmem.c                                    |   50 +-
- net/socket.c                                  |    6 +-
- net/unix/af_unix.c                            |    5 +-
- security/apparmor/apparmorfs.c                |    3 +-
- security/apparmor/domain.c                    |   13 +-
- security/apparmor/file.c                      |    4 +-
- security/apparmor/lsm.c                       |   21 +-
- security/commoncap.c                          |  108 +-
- security/integrity/evm/evm_crypto.c           |   11 +-
- security/integrity/evm/evm_main.c             |    4 +-
- security/integrity/evm/evm_secfs.c            |    2 +-
- security/integrity/ima/ima.h                  |   19 +-
- security/integrity/ima/ima_api.c              |   10 +-
- security/integrity/ima/ima_appraise.c         |   23 +-
- security/integrity/ima/ima_asymmetric_keys.c  |    3 +-
- security/integrity/ima/ima_main.c             |   37 +-
- security/integrity/ima/ima_policy.c           |   20 +-
- security/integrity/ima/ima_queue_keys.c       |    4 +-
- security/security.c                           |   25 +-
- security/selinux/hooks.c                      |   23 +-
- security/smack/smack_lsm.c                    |   22 +-
- tools/include/uapi/asm-generic/unistd.h       |    4 +-
- tools/testing/selftests/Makefile              |    1 +
- .../selftests/mount_setattr/.gitignore        |    1 +
- .../testing/selftests/mount_setattr/Makefile  |    7 +
- tools/testing/selftests/mount_setattr/config  |    1 +
- .../mount_setattr/mount_setattr_test.c        | 1424 +++++++++++++++++
- 342 files changed, 4888 insertions(+), 1750 deletions(-)
- create mode 100644 tools/testing/selftests/mount_setattr/.gitignore
- create mode 100644 tools/testing/selftests/mount_setattr/Makefile
- create mode 100644 tools/testing/selftests/mount_setattr/config
- create mode 100644 tools/testing/selftests/mount_setattr/mount_setattr_test.c
-
-
+/* v6 */
 base-commit: 19c329f6808995b142b3966301f217c831e7cf31
+
+- Christoph Hellwig <hch@lst.de>:
+  - Drop "extern"s in headers.
+  - Wrap lines > 80 chars.
+---
+ fs/attr.c                 |   3 +-
+ fs/btrfs/inode.c          |   2 +-
+ fs/btrfs/ioctl.c          |  12 ++--
+ fs/ceph/inode.c           |   2 +-
+ fs/cifs/cifsfs.c          |   2 +-
+ fs/configfs/symlink.c     |   3 +-
+ fs/ecryptfs/inode.c       |   3 +-
+ fs/exec.c                 |   2 +-
+ fs/fuse/dir.c             |   5 +-
+ fs/gfs2/inode.c           |   2 +-
+ fs/hostfs/hostfs_kern.c   |   2 +-
+ fs/kernfs/inode.c         |   2 +-
+ fs/libfs.c                |   7 ++-
+ fs/namei.c                | 121 +++++++++++++++++++++++++++-----------
+ fs/nfs/dir.c              |   2 +-
+ fs/nfsd/nfsfh.c           |   3 +-
+ fs/nfsd/vfs.c             |   5 +-
+ fs/nilfs2/inode.c         |   2 +-
+ fs/ocfs2/file.c           |   2 +-
+ fs/ocfs2/refcounttree.c   |   4 +-
+ fs/open.c                 |   4 +-
+ fs/orangefs/inode.c       |   2 +-
+ fs/overlayfs/file.c       |   2 +-
+ fs/overlayfs/inode.c      |   4 +-
+ fs/overlayfs/util.c       |   2 +-
+ fs/posix_acl.c            |  17 ++++--
+ fs/proc/base.c            |   4 +-
+ fs/proc/fd.c              |   2 +-
+ fs/reiserfs/xattr.c       |   2 +-
+ fs/remap_range.c          |   2 +-
+ fs/xattr.c                |   2 +-
+ include/linux/fs.h        |  10 ++--
+ include/linux/posix_acl.h |   7 ++-
+ ipc/mqueue.c              |   2 +-
+ kernel/bpf/inode.c        |   2 +-
+ kernel/cgroup/cgroup.c    |   2 +-
+ 36 files changed, 164 insertions(+), 88 deletions(-)
+
+diff --git a/fs/attr.c b/fs/attr.c
+index d270f640a192..c9e29e589cec 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -244,7 +244,8 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
+ 			return -EPERM;
+ 
+ 		if (!inode_owner_or_capable(inode)) {
+-			error = inode_permission(inode, MAY_WRITE);
++			error = inode_permission(&init_user_ns, inode,
++						 MAY_WRITE);
+ 			if (error)
+ 				return error;
+ 		}
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index a8e0a6b038d3..512ee2650bbb 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -9889,7 +9889,7 @@ static int btrfs_permission(struct inode *inode, int mask)
+ 		if (BTRFS_I(inode)->flags & BTRFS_INODE_READONLY)
+ 			return -EACCES;
+ 	}
+-	return generic_permission(inode, mask);
++	return generic_permission(&init_user_ns, inode, mask);
+ }
+ 
+ static int btrfs_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
+diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+index dde49a791f3e..8ced6dfefee4 100644
+--- a/fs/btrfs/ioctl.c
++++ b/fs/btrfs/ioctl.c
+@@ -922,7 +922,7 @@ static int btrfs_may_delete(struct inode *dir, struct dentry *victim, int isdir)
+ 	BUG_ON(d_inode(victim->d_parent) != dir);
+ 	audit_inode_child(dir, victim, AUDIT_TYPE_CHILD_DELETE);
+ 
+-	error = inode_permission(dir, MAY_WRITE | MAY_EXEC);
++	error = inode_permission(&init_user_ns, dir, MAY_WRITE | MAY_EXEC);
+ 	if (error)
+ 		return error;
+ 	if (IS_APPEND(dir))
+@@ -951,7 +951,7 @@ static inline int btrfs_may_create(struct inode *dir, struct dentry *child)
+ 		return -EEXIST;
+ 	if (IS_DEADDIR(dir))
+ 		return -ENOENT;
+-	return inode_permission(dir, MAY_WRITE | MAY_EXEC);
++	return inode_permission(&init_user_ns, dir, MAY_WRITE | MAY_EXEC);
+ }
+ 
+ /*
+@@ -2538,7 +2538,8 @@ static int btrfs_search_path_in_tree_user(struct inode *inode,
+ 				ret = PTR_ERR(temp_inode);
+ 				goto out_put;
+ 			}
+-			ret = inode_permission(temp_inode, MAY_READ | MAY_EXEC);
++			ret = inode_permission(&init_user_ns, temp_inode,
++					       MAY_READ | MAY_EXEC);
+ 			iput(temp_inode);
+ 			if (ret) {
+ 				ret = -EACCES;
+@@ -3068,7 +3069,8 @@ static noinline int btrfs_ioctl_snap_destroy(struct file *file,
+ 		if (root == dest)
+ 			goto out_dput;
+ 
+-		err = inode_permission(inode, MAY_WRITE | MAY_EXEC);
++		err = inode_permission(&init_user_ns, inode,
++				       MAY_WRITE | MAY_EXEC);
+ 		if (err)
+ 			goto out_dput;
+ 	}
+@@ -3139,7 +3141,7 @@ static int btrfs_ioctl_defrag(struct file *file, void __user *argp)
+ 		 * running and allows defrag on files open in read-only mode.
+ 		 */
+ 		if (!capable(CAP_SYS_ADMIN) &&
+-		    inode_permission(inode, MAY_WRITE)) {
++		    inode_permission(&init_user_ns, inode, MAY_WRITE)) {
+ 			ret = -EPERM;
+ 			goto out;
+ 		}
+diff --git a/fs/ceph/inode.c b/fs/ceph/inode.c
+index adc8fc3c5d85..e8a15ee09bc1 100644
+--- a/fs/ceph/inode.c
++++ b/fs/ceph/inode.c
+@@ -2331,7 +2331,7 @@ int ceph_permission(struct inode *inode, int mask)
+ 	err = ceph_do_getattr(inode, CEPH_CAP_AUTH_SHARED, false);
+ 
+ 	if (!err)
+-		err = generic_permission(inode, mask);
++		err = generic_permission(&init_user_ns, inode, mask);
+ 	return err;
+ }
+ 
+diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+index ce0d0037fd0a..ce14e6f8adb6 100644
+--- a/fs/cifs/cifsfs.c
++++ b/fs/cifs/cifsfs.c
+@@ -320,7 +320,7 @@ static int cifs_permission(struct inode *inode, int mask)
+ 		on the client (above and beyond ACL on servers) for
+ 		servers which do not support setting and viewing mode bits,
+ 		so allowing client to check permissions is useful */
+-		return generic_permission(inode, mask);
++		return generic_permission(&init_user_ns, inode, mask);
+ }
+ 
+ static struct kmem_cache *cifs_inode_cachep;
+diff --git a/fs/configfs/symlink.c b/fs/configfs/symlink.c
+index cb61467478ca..8ca36394fa30 100644
+--- a/fs/configfs/symlink.c
++++ b/fs/configfs/symlink.c
+@@ -197,7 +197,8 @@ int configfs_symlink(struct inode *dir, struct dentry *dentry, const char *symna
+ 	if (dentry->d_inode || d_unhashed(dentry))
+ 		ret = -EEXIST;
+ 	else
+-		ret = inode_permission(dir, MAY_WRITE | MAY_EXEC);
++		ret = inode_permission(&init_user_ns, dir,
++				       MAY_WRITE | MAY_EXEC);
+ 	if (!ret)
+ 		ret = type->ct_item_ops->allow_link(parent_item, target_item);
+ 	if (!ret) {
+diff --git a/fs/ecryptfs/inode.c b/fs/ecryptfs/inode.c
+index e23752d9a79f..0b346baf110d 100644
+--- a/fs/ecryptfs/inode.c
++++ b/fs/ecryptfs/inode.c
+@@ -864,7 +864,8 @@ int ecryptfs_truncate(struct dentry *dentry, loff_t new_length)
+ static int
+ ecryptfs_permission(struct inode *inode, int mask)
+ {
+-	return inode_permission(ecryptfs_inode_to_lower(inode), mask);
++	return inode_permission(&init_user_ns,
++				ecryptfs_inode_to_lower(inode), mask);
+ }
+ 
+ /**
+diff --git a/fs/exec.c b/fs/exec.c
+index 89d4780ff48f..a8ec371cd3cd 100644
+--- a/fs/exec.c
++++ b/fs/exec.c
+@@ -1404,7 +1404,7 @@ EXPORT_SYMBOL(begin_new_exec);
+ void would_dump(struct linux_binprm *bprm, struct file *file)
+ {
+ 	struct inode *inode = file_inode(file);
+-	if (inode_permission(inode, MAY_READ) < 0) {
++	if (inode_permission(&init_user_ns, inode, MAY_READ) < 0) {
+ 		struct user_namespace *old, *user_ns;
+ 		bprm->interp_flags |= BINPRM_FLAGS_ENFORCE_NONDUMP;
+ 
+diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
+index 78f9f209078c..7497009a5a45 100644
+--- a/fs/fuse/dir.c
++++ b/fs/fuse/dir.c
+@@ -1280,7 +1280,7 @@ static int fuse_permission(struct inode *inode, int mask)
+ 	}
+ 
+ 	if (fc->default_permissions) {
+-		err = generic_permission(inode, mask);
++		err = generic_permission(&init_user_ns, inode, mask);
+ 
+ 		/* If permission is denied, try to refresh file
+ 		   attributes.  This is also needed, because the root
+@@ -1288,7 +1288,8 @@ static int fuse_permission(struct inode *inode, int mask)
+ 		if (err == -EACCES && !refreshed) {
+ 			err = fuse_perm_getattr(inode, mask);
+ 			if (!err)
+-				err = generic_permission(inode, mask);
++				err = generic_permission(&init_user_ns,
++							 inode, mask);
+ 		}
+ 
+ 		/* Note: the opposite of the above test does not
+diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
+index c1b77e8d6b1c..5b2ff0c74b67 100644
+--- a/fs/gfs2/inode.c
++++ b/fs/gfs2/inode.c
+@@ -1852,7 +1852,7 @@ int gfs2_permission(struct inode *inode, int mask)
+ 	if ((mask & MAY_WRITE) && IS_IMMUTABLE(inode))
+ 		error = -EPERM;
+ 	else
+-		error = generic_permission(inode, mask);
++		error = generic_permission(&init_user_ns, inode, mask);
+ 	if (gfs2_holder_initialized(&i_gh))
+ 		gfs2_glock_dq_uninit(&i_gh);
+ 
+diff --git a/fs/hostfs/hostfs_kern.c b/fs/hostfs/hostfs_kern.c
+index aea35459d390..b841a05a2b8c 100644
+--- a/fs/hostfs/hostfs_kern.c
++++ b/fs/hostfs/hostfs_kern.c
+@@ -779,7 +779,7 @@ static int hostfs_permission(struct inode *ino, int desired)
+ 		err = access_file(name, r, w, x);
+ 	__putname(name);
+ 	if (!err)
+-		err = generic_permission(ino, desired);
++		err = generic_permission(&init_user_ns, ino, desired);
+ 	return err;
+ }
+ 
+diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
+index fc2469a20fed..ff5598cc1de0 100644
+--- a/fs/kernfs/inode.c
++++ b/fs/kernfs/inode.c
+@@ -285,7 +285,7 @@ int kernfs_iop_permission(struct inode *inode, int mask)
+ 	kernfs_refresh_inode(kn, inode);
+ 	mutex_unlock(&kernfs_mutex);
+ 
+-	return generic_permission(inode, mask);
++	return generic_permission(&init_user_ns, inode, mask);
+ }
+ 
+ int kernfs_xattr_get(struct kernfs_node *kn, const char *name,
+diff --git a/fs/libfs.c b/fs/libfs.c
+index d1c3bade9f30..f8b3c02b4f0f 100644
+--- a/fs/libfs.c
++++ b/fs/libfs.c
+@@ -1318,9 +1318,14 @@ static ssize_t empty_dir_listxattr(struct dentry *dentry, char *list, size_t siz
+ 	return -EOPNOTSUPP;
+ }
+ 
++static int empty_dir_permission(struct inode *inode, int mask)
++{
++	return generic_permission(&init_user_ns, inode, mask);
++}
++
+ static const struct inode_operations empty_dir_inode_operations = {
+ 	.lookup		= empty_dir_lookup,
+-	.permission	= generic_permission,
++	.permission	= empty_dir_permission,
+ 	.setattr	= empty_dir_setattr,
+ 	.getattr	= empty_dir_getattr,
+ 	.listxattr	= empty_dir_listxattr,
+diff --git a/fs/namei.c b/fs/namei.c
+index fd4724bce4f5..d78d74f5f5af 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -259,7 +259,24 @@ void putname(struct filename *name)
+ 		__putname(name);
+ }
+ 
+-static int check_acl(struct inode *inode, int mask)
++/**
++ * check_acl - perform ACL permission checking
++ * @mnt_userns:	user namespace of the mount the inode was found from
++ * @inode:	inode to check permissions on
++ * @mask:	right to check for (%MAY_READ, %MAY_WRITE, %MAY_EXEC ...)
++ *
++ * This function performs the ACL permission checking. Since this function
++ * retrieve POSIX acls it needs to know whether it is called from a blocking or
++ * non-blocking context and thus cares about the MAY_NOT_BLOCK bit.
++ *
++ * If the inode has been found through an idmapped mount the user namespace of
++ * the vfsmount must be passed through @mnt_userns. This function will then take
++ * care to map the inode according to @mnt_userns before checking permissions.
++ * On non-idmapped mounts or if permission checking is to be performed on the
++ * raw inode simply passs init_user_ns.
++ */
++static int check_acl(struct user_namespace *mnt_userns,
++		     struct inode *inode, int mask)
+ {
+ #ifdef CONFIG_FS_POSIX_ACL
+ 	struct posix_acl *acl;
+@@ -271,14 +288,14 @@ static int check_acl(struct inode *inode, int mask)
+ 		/* no ->get_acl() calls in RCU mode... */
+ 		if (is_uncached_acl(acl))
+ 			return -ECHILD;
+-	        return posix_acl_permission(inode, acl, mask);
++	        return posix_acl_permission(mnt_userns, inode, acl, mask);
+ 	}
+ 
+ 	acl = get_acl(inode, ACL_TYPE_ACCESS);
+ 	if (IS_ERR(acl))
+ 		return PTR_ERR(acl);
+ 	if (acl) {
+-	        int error = posix_acl_permission(inode, acl, mask);
++	        int error = posix_acl_permission(mnt_userns, inode, acl, mask);
+ 	        posix_acl_release(acl);
+ 	        return error;
+ 	}
+@@ -287,18 +304,31 @@ static int check_acl(struct inode *inode, int mask)
+ 	return -EAGAIN;
+ }
+ 
+-/*
+- * This does the basic UNIX permission checking.
++/**
++ * acl_permission_check - perform basic UNIX permission checking
++ * @mnt_userns:	user namespace of the mount the inode was found from
++ * @inode:	inode to check permissions on
++ * @mask:	right to check for (%MAY_READ, %MAY_WRITE, %MAY_EXEC ...)
++ *
++ * This function performs the basic UNIX permission checking. Since this
++ * function may retrieve POSIX acls it needs to know whether it is called from a
++ * blocking or non-blocking context and thus cares about the MAY_NOT_BLOCK bit.
+  *
+- * Note that the POSIX ACL check cares about the MAY_NOT_BLOCK bit,
+- * for RCU walking.
++ * If the inode has been found through an idmapped mount the user namespace of
++ * the vfsmount must be passed through @mnt_userns. This function will then take
++ * care to map the inode according to @mnt_userns before checking permissions.
++ * On non-idmapped mounts or if permission checking is to be performed on the
++ * raw inode simply passs init_user_ns.
+  */
+-static int acl_permission_check(struct inode *inode, int mask)
++static int acl_permission_check(struct user_namespace *mnt_userns,
++				struct inode *inode, int mask)
+ {
+ 	unsigned int mode = inode->i_mode;
++	kuid_t i_uid;
+ 
+ 	/* Are we the owner? If so, ACL's don't matter */
+-	if (likely(uid_eq(current_fsuid(), inode->i_uid))) {
++	i_uid = i_uid_into_mnt(mnt_userns, inode);
++	if (likely(uid_eq(current_fsuid(), i_uid))) {
+ 		mask &= 7;
+ 		mode >>= 6;
+ 		return (mask & ~mode) ? -EACCES : 0;
+@@ -306,7 +336,7 @@ static int acl_permission_check(struct inode *inode, int mask)
+ 
+ 	/* Do we have ACL's? */
+ 	if (IS_POSIXACL(inode) && (mode & S_IRWXG)) {
+-		int error = check_acl(inode, mask);
++		int error = check_acl(mnt_userns, inode, mask);
+ 		if (error != -EAGAIN)
+ 			return error;
+ 	}
+@@ -320,7 +350,8 @@ static int acl_permission_check(struct inode *inode, int mask)
+ 	 * about? Need to check group ownership if so.
+ 	 */
+ 	if (mask & (mode ^ (mode >> 3))) {
+-		if (in_group_p(inode->i_gid))
++		kgid_t kgid = i_gid_into_mnt(mnt_userns, inode);
++		if (in_group_p(kgid))
+ 			mode >>= 3;
+ 	}
+ 
+@@ -330,6 +361,7 @@ static int acl_permission_check(struct inode *inode, int mask)
+ 
+ /**
+  * generic_permission -  check for access rights on a Posix-like filesystem
++ * @mnt_userns:	user namespace of the mount the inode was found from
+  * @inode:	inode to check access rights for
+  * @mask:	right to check for (%MAY_READ, %MAY_WRITE, %MAY_EXEC,
+  *		%MAY_NOT_BLOCK ...)
+@@ -342,25 +374,32 @@ static int acl_permission_check(struct inode *inode, int mask)
+  * generic_permission is rcu-walk aware. It returns -ECHILD in case an rcu-walk
+  * request cannot be satisfied (eg. requires blocking or too much complexity).
+  * It would then be called again in ref-walk mode.
++ *
++ * If the inode has been found through an idmapped mount the user namespace of
++ * the vfsmount must be passed through @mnt_userns. This function will then take
++ * care to map the inode according to @mnt_userns before checking permissions.
++ * On non-idmapped mounts or if permission checking is to be performed on the
++ * raw inode simply passs init_user_ns.
+  */
+-int generic_permission(struct inode *inode, int mask)
++int generic_permission(struct user_namespace *mnt_userns, struct inode *inode,
++		       int mask)
+ {
+ 	int ret;
+ 
+ 	/*
+ 	 * Do the basic permission checks.
+ 	 */
+-	ret = acl_permission_check(inode, mask);
++	ret = acl_permission_check(mnt_userns, inode, mask);
+ 	if (ret != -EACCES)
+ 		return ret;
+ 
+ 	if (S_ISDIR(inode->i_mode)) {
+ 		/* DACs are overridable for directories */
+ 		if (!(mask & MAY_WRITE))
+-			if (capable_wrt_inode_uidgid(&init_user_ns, inode,
++			if (capable_wrt_inode_uidgid(mnt_userns, inode,
+ 						     CAP_DAC_READ_SEARCH))
+ 				return 0;
+-		if (capable_wrt_inode_uidgid(&init_user_ns, inode,
++		if (capable_wrt_inode_uidgid(mnt_userns, inode,
+ 					     CAP_DAC_OVERRIDE))
+ 			return 0;
+ 		return -EACCES;
+@@ -371,7 +410,7 @@ int generic_permission(struct inode *inode, int mask)
+ 	 */
+ 	mask &= MAY_READ | MAY_WRITE | MAY_EXEC;
+ 	if (mask == MAY_READ)
+-		if (capable_wrt_inode_uidgid(&init_user_ns, inode,
++		if (capable_wrt_inode_uidgid(mnt_userns, inode,
+ 					     CAP_DAC_READ_SEARCH))
+ 			return 0;
+ 	/*
+@@ -380,7 +419,7 @@ int generic_permission(struct inode *inode, int mask)
+ 	 * at least one exec bit set.
+ 	 */
+ 	if (!(mask & MAY_EXEC) || (inode->i_mode & S_IXUGO))
+-		if (capable_wrt_inode_uidgid(&init_user_ns, inode,
++		if (capable_wrt_inode_uidgid(mnt_userns, inode,
+ 					     CAP_DAC_OVERRIDE))
+ 			return 0;
+ 
+@@ -388,13 +427,19 @@ int generic_permission(struct inode *inode, int mask)
+ }
+ EXPORT_SYMBOL(generic_permission);
+ 
+-/*
++/**
++ * do_inode_permission - UNIX permission checking
++ * @mnt_userns:	user namespace of the mount the inode was found from
++ * @inode:	inode to check permissions on
++ * @mask:	right to check for (%MAY_READ, %MAY_WRITE, %MAY_EXEC ...)
++ *
+  * We _really_ want to just do "generic_permission()" without
+  * even looking at the inode->i_op values. So we keep a cache
+  * flag in inode->i_opflags, that says "this has not special
+  * permission function, use the fast case".
+  */
+-static inline int do_inode_permission(struct inode *inode, int mask)
++static inline int do_inode_permission(struct user_namespace *mnt_userns,
++				      struct inode *inode, int mask)
+ {
+ 	if (unlikely(!(inode->i_opflags & IOP_FASTPERM))) {
+ 		if (likely(inode->i_op->permission))
+@@ -405,7 +450,7 @@ static inline int do_inode_permission(struct inode *inode, int mask)
+ 		inode->i_opflags |= IOP_FASTPERM;
+ 		spin_unlock(&inode->i_lock);
+ 	}
+-	return generic_permission(inode, mask);
++	return generic_permission(mnt_userns, inode, mask);
+ }
+ 
+ /**
+@@ -430,8 +475,9 @@ static int sb_permission(struct super_block *sb, struct inode *inode, int mask)
+ 
+ /**
+  * inode_permission - Check for access rights to a given inode
+- * @inode: Inode to check permission on
+- * @mask: Right to check for (%MAY_READ, %MAY_WRITE, %MAY_EXEC)
++ * @mnt_userns:	User namespace of the mount the inode was found from
++ * @inode:	Inode to check permission on
++ * @mask:	Right to check for (%MAY_READ, %MAY_WRITE, %MAY_EXEC)
+  *
+  * Check for read/write/execute permissions on an inode.  We use fs[ug]id for
+  * this, letting us set arbitrary permissions for filesystem access without
+@@ -439,7 +485,8 @@ static int sb_permission(struct super_block *sb, struct inode *inode, int mask)
+  *
+  * When checking for MAY_APPEND, MAY_WRITE must also be set in @mask.
+  */
+-int inode_permission(struct inode *inode, int mask)
++int inode_permission(struct user_namespace *mnt_userns,
++		     struct inode *inode, int mask)
+ {
+ 	int retval;
+ 
+@@ -463,7 +510,7 @@ int inode_permission(struct inode *inode, int mask)
+ 			return -EACCES;
+ 	}
+ 
+-	retval = do_inode_permission(inode, mask);
++	retval = do_inode_permission(mnt_userns, inode, mask);
+ 	if (retval)
+ 		return retval;
+ 
+@@ -1009,7 +1056,7 @@ static bool safe_hardlink_source(struct inode *inode)
+ 		return false;
+ 
+ 	/* Hardlinking to unreadable or unwritable sources is dangerous. */
+-	if (inode_permission(inode, MAY_READ | MAY_WRITE))
++	if (inode_permission(&init_user_ns, inode, MAY_READ | MAY_WRITE))
+ 		return false;
+ 
+ 	return true;
+@@ -1569,13 +1616,14 @@ static struct dentry *lookup_slow(const struct qstr *name,
+ static inline int may_lookup(struct nameidata *nd)
+ {
+ 	if (nd->flags & LOOKUP_RCU) {
+-		int err = inode_permission(nd->inode, MAY_EXEC|MAY_NOT_BLOCK);
++		int err = inode_permission(&init_user_ns, nd->inode,
++					   MAY_EXEC | MAY_NOT_BLOCK);
+ 		if (err != -ECHILD)
+ 			return err;
+ 		if (unlazy_walk(nd))
+ 			return -ECHILD;
+ 	}
+-	return inode_permission(nd->inode, MAY_EXEC);
++	return inode_permission(&init_user_ns, nd->inode, MAY_EXEC);
+ }
+ 
+ static int reserve_stack(struct nameidata *nd, struct path *link, unsigned seq)
+@@ -2509,7 +2557,7 @@ static int lookup_one_len_common(const char *name, struct dentry *base,
+ 			return err;
+ 	}
+ 
+-	return inode_permission(base->d_inode, MAY_EXEC);
++	return inode_permission(&init_user_ns, base->d_inode, MAY_EXEC);
+ }
+ 
+ /**
+@@ -2703,7 +2751,7 @@ static int may_delete(struct inode *dir, struct dentry *victim, bool isdir)
+ 
+ 	audit_inode_child(dir, victim, AUDIT_TYPE_CHILD_DELETE);
+ 
+-	error = inode_permission(dir, MAY_WRITE | MAY_EXEC);
++	error = inode_permission(&init_user_ns, dir, MAY_WRITE | MAY_EXEC);
+ 	if (error)
+ 		return error;
+ 	if (IS_APPEND(dir))
+@@ -2747,7 +2795,7 @@ static inline int may_create(struct inode *dir, struct dentry *child)
+ 	if (!kuid_has_mapping(s_user_ns, current_fsuid()) ||
+ 	    !kgid_has_mapping(s_user_ns, current_fsgid()))
+ 		return -EOVERFLOW;
+-	return inode_permission(dir, MAY_WRITE | MAY_EXEC);
++	return inode_permission(&init_user_ns, dir, MAY_WRITE | MAY_EXEC);
+ }
+ 
+ /*
+@@ -2877,7 +2925,7 @@ static int may_open(const struct path *path, int acc_mode, int flag)
+ 		break;
+ 	}
+ 
+-	error = inode_permission(inode, MAY_OPEN | acc_mode);
++	error = inode_permission(&init_user_ns, inode, MAY_OPEN | acc_mode);
+ 	if (error)
+ 		return error;
+ 
+@@ -2939,7 +2987,8 @@ static int may_o_create(const struct path *dir, struct dentry *dentry, umode_t m
+ 	    !kgid_has_mapping(s_user_ns, current_fsgid()))
+ 		return -EOVERFLOW;
+ 
+-	error = inode_permission(dir->dentry->d_inode, MAY_WRITE | MAY_EXEC);
++	error = inode_permission(&init_user_ns, dir->dentry->d_inode,
++				 MAY_WRITE | MAY_EXEC);
+ 	if (error)
+ 		return error;
+ 
+@@ -3276,7 +3325,7 @@ struct dentry *vfs_tmpfile(struct dentry *dentry, umode_t mode, int open_flag)
+ 	int error;
+ 
+ 	/* we want directory to be writable */
+-	error = inode_permission(dir, MAY_WRITE | MAY_EXEC);
++	error = inode_permission(&init_user_ns, dir, MAY_WRITE | MAY_EXEC);
+ 	if (error)
+ 		goto out_err;
+ 	error = -EOPNOTSUPP;
+@@ -4267,12 +4316,14 @@ int vfs_rename(struct inode *old_dir, struct dentry *old_dentry,
+ 	 */
+ 	if (new_dir != old_dir) {
+ 		if (is_dir) {
+-			error = inode_permission(source, MAY_WRITE);
++			error = inode_permission(&init_user_ns, source,
++						 MAY_WRITE);
+ 			if (error)
+ 				return error;
+ 		}
+ 		if ((flags & RENAME_EXCHANGE) && new_is_dir) {
+-			error = inode_permission(target, MAY_WRITE);
++			error = inode_permission(&init_user_ns, target,
++						 MAY_WRITE);
+ 			if (error)
+ 				return error;
+ 		}
+diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
+index ef827ae193d2..727e01a84503 100644
+--- a/fs/nfs/dir.c
++++ b/fs/nfs/dir.c
+@@ -2987,7 +2987,7 @@ int nfs_permission(struct inode *inode, int mask)
+ 
+ 	res = nfs_revalidate_inode(NFS_SERVER(inode), inode);
+ 	if (res == 0)
+-		res = generic_permission(inode, mask);
++		res = generic_permission(&init_user_ns, inode, mask);
+ 	goto out;
+ }
+ EXPORT_SYMBOL_GPL(nfs_permission);
+diff --git a/fs/nfsd/nfsfh.c b/fs/nfsd/nfsfh.c
+index 66f2ef67792a..8d90796e236a 100644
+--- a/fs/nfsd/nfsfh.c
++++ b/fs/nfsd/nfsfh.c
+@@ -40,7 +40,8 @@ static int nfsd_acceptable(void *expv, struct dentry *dentry)
+ 		/* make sure parents give x permission to user */
+ 		int err;
+ 		parent = dget_parent(tdentry);
+-		err = inode_permission(d_inode(parent), MAY_EXEC);
++		err = inode_permission(&init_user_ns,
++				       d_inode(parent), MAY_EXEC);
+ 		if (err < 0) {
+ 			dput(parent);
+ 			break;
+diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
+index 04937e51de56..0edf11258aaa 100644
+--- a/fs/nfsd/vfs.c
++++ b/fs/nfsd/vfs.c
+@@ -2391,13 +2391,14 @@ nfsd_permission(struct svc_rqst *rqstp, struct svc_export *exp,
+ 		return 0;
+ 
+ 	/* This assumes  NFSD_MAY_{READ,WRITE,EXEC} == MAY_{READ,WRITE,EXEC} */
+-	err = inode_permission(inode, acc & (MAY_READ|MAY_WRITE|MAY_EXEC));
++	err = inode_permission(&init_user_ns, inode,
++			       acc & (MAY_READ | MAY_WRITE | MAY_EXEC));
+ 
+ 	/* Allow read access to binaries even when mode 111 */
+ 	if (err == -EACCES && S_ISREG(inode->i_mode) &&
+ 	     (acc == (NFSD_MAY_READ | NFSD_MAY_OWNER_OVERRIDE) ||
+ 	      acc == (NFSD_MAY_READ | NFSD_MAY_READ_IF_EXEC)))
+-		err = inode_permission(inode, MAY_EXEC);
++		err = inode_permission(&init_user_ns, inode, MAY_EXEC);
+ 
+ 	return err? nfserrno(err) : 0;
+ }
+diff --git a/fs/nilfs2/inode.c b/fs/nilfs2/inode.c
+index 745d371d6fea..b6517220cad5 100644
+--- a/fs/nilfs2/inode.c
++++ b/fs/nilfs2/inode.c
+@@ -851,7 +851,7 @@ int nilfs_permission(struct inode *inode, int mask)
+ 	    root->cno != NILFS_CPTREE_CURRENT_CNO)
+ 		return -EROFS; /* snapshot is not writable */
+ 
+-	return generic_permission(inode, mask);
++	return generic_permission(&init_user_ns, inode, mask);
+ }
+ 
+ int nilfs_load_inode_block(struct inode *inode, struct buffer_head **pbh)
+diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
+index 85979e2214b3..0c75619adf54 100644
+--- a/fs/ocfs2/file.c
++++ b/fs/ocfs2/file.c
+@@ -1355,7 +1355,7 @@ int ocfs2_permission(struct inode *inode, int mask)
+ 		dump_stack();
+ 	}
+ 
+-	ret = generic_permission(inode, mask);
++	ret = generic_permission(&init_user_ns, inode, mask);
+ 
+ 	ocfs2_inode_unlock_tracker(inode, 0, &oh, had_lock);
+ out:
+diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
+index 3b397fa9c9e8..c26937824be1 100644
+--- a/fs/ocfs2/refcounttree.c
++++ b/fs/ocfs2/refcounttree.c
+@@ -4346,7 +4346,7 @@ static inline int ocfs2_may_create(struct inode *dir, struct dentry *child)
+ 		return -EEXIST;
+ 	if (IS_DEADDIR(dir))
+ 		return -ENOENT;
+-	return inode_permission(dir, MAY_WRITE | MAY_EXEC);
++	return inode_permission(&init_user_ns, dir, MAY_WRITE | MAY_EXEC);
+ }
+ 
+ /**
+@@ -4400,7 +4400,7 @@ static int ocfs2_vfs_reflink(struct dentry *old_dentry, struct inode *dir,
+ 	 * file.
+ 	 */
+ 	if (!preserve) {
+-		error = inode_permission(inode, MAY_READ);
++		error = inode_permission(&init_user_ns, inode, MAY_READ);
+ 		if (error)
+ 			return error;
+ 	}
+diff --git a/fs/open.c b/fs/open.c
+index cd1efd254cad..a6dac6d97988 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -83,7 +83,7 @@ long vfs_truncate(const struct path *path, loff_t length)
+ 	if (error)
+ 		goto out;
+ 
+-	error = inode_permission(inode, MAY_WRITE);
++	error = inode_permission(&init_user_ns, inode, MAY_WRITE);
+ 	if (error)
+ 		goto mnt_drop_write_and_out;
+ 
+@@ -436,7 +436,7 @@ static long do_faccessat(int dfd, const char __user *filename, int mode, int fla
+ 			goto out_path_release;
+ 	}
+ 
+-	res = inode_permission(inode, mode | MAY_ACCESS);
++	res = inode_permission(&init_user_ns, inode, mode | MAY_ACCESS);
+ 	/* SuS v2 requires we report a read only fs too */
+ 	if (res || !(mode & S_IWOTH) || special_file(inode->i_mode))
+ 		goto out_path_release;
+diff --git a/fs/orangefs/inode.c b/fs/orangefs/inode.c
+index 48f0547d4850..4c790cc8042d 100644
+--- a/fs/orangefs/inode.c
++++ b/fs/orangefs/inode.c
+@@ -933,7 +933,7 @@ int orangefs_permission(struct inode *inode, int mask)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	return generic_permission(inode, mask);
++	return generic_permission(&init_user_ns, inode, mask);
+ }
+ 
+ int orangefs_update_time(struct inode *inode, struct timespec64 *time, int flags)
+diff --git a/fs/overlayfs/file.c b/fs/overlayfs/file.c
+index bd9dd38347ae..b2948e7b3210 100644
+--- a/fs/overlayfs/file.c
++++ b/fs/overlayfs/file.c
+@@ -50,7 +50,7 @@ static struct file *ovl_open_realfile(const struct file *file,
+ 		acc_mode |= MAY_APPEND;
+ 
+ 	old_cred = ovl_override_creds(inode->i_sb);
+-	err = inode_permission(realinode, MAY_OPEN | acc_mode);
++	err = inode_permission(&init_user_ns, realinode, MAY_OPEN | acc_mode);
+ 	if (err) {
+ 		realfile = ERR_PTR(err);
+ 	} else {
+diff --git a/fs/overlayfs/inode.c b/fs/overlayfs/inode.c
+index d739e14c6814..c101ebbb7a77 100644
+--- a/fs/overlayfs/inode.c
++++ b/fs/overlayfs/inode.c
+@@ -294,7 +294,7 @@ int ovl_permission(struct inode *inode, int mask)
+ 	 * Check overlay inode with the creds of task and underlying inode
+ 	 * with creds of mounter
+ 	 */
+-	err = generic_permission(inode, mask);
++	err = generic_permission(&init_user_ns, inode, mask);
+ 	if (err)
+ 		return err;
+ 
+@@ -305,7 +305,7 @@ int ovl_permission(struct inode *inode, int mask)
+ 		/* Make sure mounter can read file for copy up later */
+ 		mask |= MAY_READ;
+ 	}
+-	err = inode_permission(realinode, mask);
++	err = inode_permission(&init_user_ns, realinode, mask);
+ 	revert_creds(old_cred);
+ 
+ 	return err;
+diff --git a/fs/overlayfs/util.c b/fs/overlayfs/util.c
+index 6569031af3cd..de5c2047a0e9 100644
+--- a/fs/overlayfs/util.c
++++ b/fs/overlayfs/util.c
+@@ -479,7 +479,7 @@ struct file *ovl_path_open(struct path *path, int flags)
+ 		BUG();
+ 	}
+ 
+-	err = inode_permission(inode, acc_mode | MAY_OPEN);
++	err = inode_permission(&init_user_ns, inode, acc_mode | MAY_OPEN);
+ 	if (err)
+ 		return ERR_PTR(err);
+ 
+diff --git a/fs/posix_acl.c b/fs/posix_acl.c
+index 4ca6d53c6f0a..5d9fe2fb2953 100644
+--- a/fs/posix_acl.c
++++ b/fs/posix_acl.c
+@@ -345,10 +345,13 @@ EXPORT_SYMBOL(posix_acl_from_mode);
+  * by the acl. Returns -E... otherwise.
+  */
+ int
+-posix_acl_permission(struct inode *inode, const struct posix_acl *acl, int want)
++posix_acl_permission(struct user_namespace *mnt_userns, struct inode *inode,
++		     const struct posix_acl *acl, int want)
+ {
+ 	const struct posix_acl_entry *pa, *pe, *mask_obj;
+ 	int found = 0;
++	kuid_t uid;
++	kgid_t gid;
+ 
+ 	want &= MAY_READ | MAY_WRITE | MAY_EXEC;
+ 
+@@ -356,22 +359,26 @@ posix_acl_permission(struct inode *inode, const struct posix_acl *acl, int want)
+                 switch(pa->e_tag) {
+                         case ACL_USER_OBJ:
+ 				/* (May have been checked already) */
+-				if (uid_eq(inode->i_uid, current_fsuid()))
++				uid = i_uid_into_mnt(mnt_userns, inode);
++				if (uid_eq(uid, current_fsuid()))
+                                         goto check_perm;
+                                 break;
+                         case ACL_USER:
+-				if (uid_eq(pa->e_uid, current_fsuid()))
++				uid = kuid_into_mnt(mnt_userns, pa->e_uid);
++				if (uid_eq(uid, current_fsuid()))
+                                         goto mask;
+ 				break;
+                         case ACL_GROUP_OBJ:
+-                                if (in_group_p(inode->i_gid)) {
++				gid = i_gid_into_mnt(mnt_userns, inode);
++				if (in_group_p(gid)) {
+ 					found = 1;
+ 					if ((pa->e_perm & want) == want)
+ 						goto mask;
+                                 }
+ 				break;
+                         case ACL_GROUP:
+-				if (in_group_p(pa->e_gid)) {
++				gid = kgid_into_mnt(mnt_userns, pa->e_gid);
++				if (in_group_p(gid)) {
+ 					found = 1;
+ 					if ((pa->e_perm & want) == want)
+ 						goto mask;
+diff --git a/fs/proc/base.c b/fs/proc/base.c
+index b3422cda2a91..b4ec9293625e 100644
+--- a/fs/proc/base.c
++++ b/fs/proc/base.c
+@@ -751,7 +751,7 @@ static int proc_pid_permission(struct inode *inode, int mask)
+ 
+ 		return -EPERM;
+ 	}
+-	return generic_permission(inode, mask);
++	return generic_permission(&init_user_ns, inode, mask);
+ }
+ 
+ 
+@@ -3492,7 +3492,7 @@ static int proc_tid_comm_permission(struct inode *inode, int mask)
+ 		return 0;
+ 	}
+ 
+-	return generic_permission(inode, mask);
++	return generic_permission(&init_user_ns, inode, mask);
+ }
+ 
+ static const struct inode_operations proc_tid_comm_inode_operations = {
+diff --git a/fs/proc/fd.c b/fs/proc/fd.c
+index cb51763ed554..d6e76461e135 100644
+--- a/fs/proc/fd.c
++++ b/fs/proc/fd.c
+@@ -281,7 +281,7 @@ int proc_fd_permission(struct inode *inode, int mask)
+ 	struct task_struct *p;
+ 	int rv;
+ 
+-	rv = generic_permission(inode, mask);
++	rv = generic_permission(&init_user_ns, inode, mask);
+ 	if (rv == 0)
+ 		return rv;
+ 
+diff --git a/fs/reiserfs/xattr.c b/fs/reiserfs/xattr.c
+index fe63a7c3e0da..ec440d1957a1 100644
+--- a/fs/reiserfs/xattr.c
++++ b/fs/reiserfs/xattr.c
+@@ -957,7 +957,7 @@ int reiserfs_permission(struct inode *inode, int mask)
+ 	if (IS_PRIVATE(inode))
+ 		return 0;
+ 
+-	return generic_permission(inode, mask);
++	return generic_permission(&init_user_ns, inode, mask);
+ }
+ 
+ static int xattr_hide_revalidate(struct dentry *dentry, unsigned int flags)
+diff --git a/fs/remap_range.c b/fs/remap_range.c
+index 77dba3a49e65..29a4a4dbfe12 100644
+--- a/fs/remap_range.c
++++ b/fs/remap_range.c
+@@ -438,7 +438,7 @@ static bool allow_file_dedupe(struct file *file)
+ 		return true;
+ 	if (uid_eq(current_fsuid(), file_inode(file)->i_uid))
+ 		return true;
+-	if (!inode_permission(file_inode(file), MAY_WRITE))
++	if (!inode_permission(&init_user_ns, file_inode(file), MAY_WRITE))
+ 		return true;
+ 	return false;
+ }
+diff --git a/fs/xattr.c b/fs/xattr.c
+index fd57153b1f61..56151bd9e642 100644
+--- a/fs/xattr.c
++++ b/fs/xattr.c
+@@ -131,7 +131,7 @@ xattr_permission(struct inode *inode, const char *name, int mask)
+ 			return -EPERM;
+ 	}
+ 
+-	return inode_permission(inode, mask);
++	return inode_permission(&init_user_ns, inode, mask);
+ }
+ 
+ /*
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index bcd17097d441..a85dfe6962df 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2810,15 +2810,17 @@ static inline int bmap(struct inode *inode,  sector_t *block)
+ #endif
+ 
+ extern int notify_change(struct dentry *, struct iattr *, struct inode **);
+-extern int inode_permission(struct inode *, int);
+-extern int generic_permission(struct inode *, int);
++int inode_permission(struct user_namespace *, struct inode *, int);
++int generic_permission(struct user_namespace *, struct inode *, int);
+ static inline int file_permission(struct file *file, int mask)
+ {
+-	return inode_permission(file_inode(file), mask);
++	return inode_permission(file_mnt_user_ns(file),
++				file_inode(file), mask);
+ }
+ static inline int path_permission(const struct path *path, int mask)
+ {
+-	return inode_permission(d_inode(path->dentry), mask);
++	return inode_permission(mnt_user_ns(path->mnt),
++				d_inode(path->dentry), mask);
+ }
+ extern int __check_sticky(struct inode *dir, struct inode *inode);
+ 
+diff --git a/include/linux/posix_acl.h b/include/linux/posix_acl.h
+index 90797f1b421d..85fb4c0c650a 100644
+--- a/include/linux/posix_acl.h
++++ b/include/linux/posix_acl.h
+@@ -15,6 +15,8 @@
+ #include <linux/refcount.h>
+ #include <uapi/linux/posix_acl.h>
+ 
++struct user_namespace;
++
+ struct posix_acl_entry {
+ 	short			e_tag;
+ 	unsigned short		e_perm;
+@@ -61,8 +63,6 @@ posix_acl_release(struct posix_acl *acl)
+ 
+ extern void posix_acl_init(struct posix_acl *, int);
+ extern struct posix_acl *posix_acl_alloc(int, gfp_t);
+-extern int posix_acl_valid(struct user_namespace *, const struct posix_acl *);
+-extern int posix_acl_permission(struct inode *, const struct posix_acl *, int);
+ extern struct posix_acl *posix_acl_from_mode(umode_t, gfp_t);
+ extern int posix_acl_equiv_mode(const struct posix_acl *, umode_t *);
+ extern int __posix_acl_create(struct posix_acl **, gfp_t, umode_t *);
+@@ -85,6 +85,9 @@ struct posix_acl *get_cached_acl_rcu(struct inode *inode, int type);
+ void set_cached_acl(struct inode *inode, int type, struct posix_acl *acl);
+ void forget_cached_acl(struct inode *inode, int type);
+ void forget_all_cached_acls(struct inode *inode);
++int posix_acl_valid(struct user_namespace *, const struct posix_acl *);
++int posix_acl_permission(struct user_namespace *, struct inode *,
++			 const struct posix_acl *, int);
+ 
+ static inline void cache_no_acl(struct inode *inode)
+ {
+diff --git a/ipc/mqueue.c b/ipc/mqueue.c
+index beff0cfcd1e8..693f01fe1216 100644
+--- a/ipc/mqueue.c
++++ b/ipc/mqueue.c
+@@ -873,7 +873,7 @@ static int prepare_open(struct dentry *dentry, int oflag, int ro,
+ 	if ((oflag & O_ACCMODE) == (O_RDWR | O_WRONLY))
+ 		return -EINVAL;
+ 	acc = oflag2acc[oflag & O_ACCMODE];
+-	return inode_permission(d_inode(dentry), acc);
++	return inode_permission(&init_user_ns, d_inode(dentry), acc);
+ }
+ 
+ static int do_mq_open(const char __user *u_name, int oflag, umode_t mode,
+diff --git a/kernel/bpf/inode.c b/kernel/bpf/inode.c
+index 8962f139521e..e3226b65f5dc 100644
+--- a/kernel/bpf/inode.c
++++ b/kernel/bpf/inode.c
+@@ -558,7 +558,7 @@ int bpf_obj_get_user(const char __user *pathname, int flags)
+ static struct bpf_prog *__get_prog_inode(struct inode *inode, enum bpf_prog_type type)
+ {
+ 	struct bpf_prog *prog;
+-	int ret = inode_permission(inode, MAY_READ);
++	int ret = inode_permission(&init_user_ns, inode, MAY_READ);
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 613845769103..091ffb5d2939 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4670,7 +4670,7 @@ static int cgroup_may_write(const struct cgroup *cgrp, struct super_block *sb)
+ 	if (!inode)
+ 		return -ENOMEM;
+ 
+-	ret = inode_permission(inode, MAY_WRITE);
++	ret = inode_permission(&init_user_ns, inode, MAY_WRITE);
+ 	iput(inode);
+ 	return ret;
+ }
 -- 
 2.30.0
 
