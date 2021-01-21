@@ -2,108 +2,63 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEA7AC433E9
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 09:36:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8187EC433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 09:39:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7DDBA23975
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 09:36:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A1DD23975
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 09:39:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728757AbhAUJgk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 04:36:40 -0500
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:51558 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728438AbhAUJgh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 04:36:37 -0500
-Received: from dread.disaster.area (pa49-180-243-77.pa.nsw.optusnet.com.au [49.180.243.77])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id B5D24114066A;
-        Thu, 21 Jan 2021 20:35:49 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1l2WNZ-000pA8-1m; Thu, 21 Jan 2021 20:35:49 +1100
-Date:   Thu, 21 Jan 2021 20:35:49 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        avi@scylladb.com, Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 11/11] xfs: reduce exclusive locking on unaligned dio
-Message-ID: <20210121093549.GC4662@dread.disaster.area>
-References: <20210121085906.322712-1-hch@lst.de>
- <20210121085906.322712-12-hch@lst.de>
+        id S1728328AbhAUJ3Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 04:29:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38140 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728077AbhAUJCT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 04:02:19 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 889E7C061757;
+        Thu, 21 Jan 2021 01:01:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=t3P41GTC5sgFHY2Hkmcr/32W5vs+9zP8VqnGZlHPGkg=; b=It4aKNtN3agIdmytmBjugTgFXa
+        pONcSxMG4EF7bYav7AWYi5n9NyKdA3rF32dc7NsDhFJXeGuVIh656iggo+rWOAjg8+cUonVE66ktS
+        GMM5Ylk+UgGCz4VHqcfWnQBD9Of8KXqR/JOQeLIwMqkfIIKTUU6/pznA1V30buT1CYpzAnUw22aBS
+        VpIzct/hUzYUH6IWulQhvhVI4tjMs+voA0ZFAEwtMPgwdPF/9bvaUJA2MwrwdpNjC4la5PYW1FwcG
+        sjr8s4Iywt+iIixV+sf0bN4szmpnJFd2YReNa9Yn10huHQn8eDT0a13c7QnlIBuq45M4UxXlUOX+/
+        yWrSpWDg==;
+Received: from 089144206130.atnat0015.highway.bob.at ([89.144.206.130] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1l2VqB-00Gpv9-J1; Thu, 21 Jan 2021 09:01:26 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     linux-xfs@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, avi@scylladb.com
+Subject: reduce sub-block DIO serialisation v3
+Date:   Thu, 21 Jan 2021 09:58:55 +0100
+Message-Id: <20210121085906.322712-1-hch@lst.de>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210121085906.322712-12-hch@lst.de>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
-        a=juxvdbeFDU67v5YkIhU0sw==:117 a=juxvdbeFDU67v5YkIhU0sw==:17
-        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=20KFwNOVAAAA:8 a=in2YdIHcAAAA:8
-        a=7-415B0cAAAA:8 a=OdnFOmsemsuJ_AWq354A:9 a=CjuIK1q_8ugA:10
-        a=jvJaD-jWAXz1fu1h5wd8:22 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 21, 2021 at 09:59:06AM +0100, Christoph Hellwig wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Attempt shared locking for unaligned DIO, but only if the the
-> underlying extent is already allocated and in written state. On
-> failure, retry with the existing exclusive locking.
-> 
-> Test case is fio randrw of 512 byte IOs using AIO and an iodepth of
-> 32 IOs.
-> 
-> Vanilla:
-> 
->   READ: bw=4560KiB/s (4670kB/s), 4560KiB/s-4560KiB/s (4670kB/s-4670kB/s), io=134MiB (140MB), run=30001-30001msec
->   WRITE: bw=4567KiB/s (4676kB/s), 4567KiB/s-4567KiB/s (4676kB/s-4676kB/s), io=134MiB (140MB), run=30001-30001msec
-> 
-> Patched:
->    READ: bw=37.6MiB/s (39.4MB/s), 37.6MiB/s-37.6MiB/s (39.4MB/s-39.4MB/s), io=1127MiB (1182MB), run=30002-30002msec
->   WRITE: bw=37.6MiB/s (39.4MB/s), 37.6MiB/s-37.6MiB/s (39.4MB/s-39.4MB/s), io=1128MiB (1183MB), run=30002-30002msec
-> 
-> That's an improvement from ~18k IOPS to a ~150k IOPS, which is
-> about the IOPS limit of the VM block device setup I'm testing on.
-> 
-> 4kB block IO comparison:
-> 
->    READ: bw=296MiB/s (310MB/s), 296MiB/s-296MiB/s (310MB/s-310MB/s), io=8868MiB (9299MB), run=30002-30002msec
->   WRITE: bw=296MiB/s (310MB/s), 296MiB/s-296MiB/s (310MB/s-310MB/s), io=8878MiB (9309MB), run=30002-30002msec
-> 
-> Which is ~150k IOPS, same as what the test gets for sub-block
-> AIO+DIO writes with this patch.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> [hch: rebased, split unaligned from nowait]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+This takes the approach from Dave, but adds a new flag instead of abusing
+the nowait one, and keeps a simpler calling convention for iomap_dio_rw.
 
-Looks good, minor nit:
+Changes since v2:
+ - add another sanity check in __iomap_dio_rw
+ - rename IOMAP_DIO_UNALIGNED to IOMAP_DIO_OVERWRITE_ONLY
+ - use more consistent parameter naming
+ - improve a few comments
+ - cleanup an if statement
 
-> +	/*
-> +	 * For overwrite only I/O, we cannot convert unwritten extents without
-> +	 * requiring sub-block zeroing.  This can only be done under an
-> +	 * exclusive IOLOCK, hence return -EAGAIN if this is not a written
-> +	 * extent to tell the caller to try again.
-> +	 */
-> +	if (flags & IOMAP_OVERWRITE_ONLY) {
-> +		error = -EAGAIN;
-> +		if (imap.br_state != XFS_EXT_NORM &&
-> +		    ((offset & mp->m_blockmask) ||
-> +		     ((offset + length) & mp->m_blockmask)))
-> +			goto out_unlock;
-
-Why not use the ((offset | length) & mp->blockmask) form of
-alignment checking here?
-
-Other than that,
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+Changes since v1:
+ - rename the new flags
+ - add an EOF check for subblock I/O
+ - minor cleanups
