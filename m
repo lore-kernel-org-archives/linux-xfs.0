@@ -2,137 +2,154 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44005C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:22:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F1D3C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:26:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F007123A01
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:22:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA45C23A22
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:26:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732856AbhAUPWN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 10:22:13 -0500
-Received: from mail-dm3gcc02on2124.outbound.protection.outlook.com ([40.107.91.124]:9473
-        "EHLO GCC02-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732816AbhAUPWL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Jan 2021 10:22:11 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fpMoeXeB+EEuy3IOkWMEMAKSJZkyKVcf4eCO9XJgXOm0lMogyjLQSPO/lxgo7CSEF36yYSxLWRgvd/TjqEz71iEkQqOjmlJ4rl3FOhOiI20CNowUmc2EX9t+R9fzj73gd/hyRI+KGtNXVm+Nqj2hdRR/FLudSKZiy6xSXUJ2jhjeKEkaeYtQ+YPY+bVklr9tTRrAmLhx6ZIER2acB0oloqZLMqzJfctoVMK0G5Dc/dWB4h9/Jb1guLX99RRM+Q2paWV/zjas5CMZA4eMbfOfmTDFFg+TfJLI2N5ffiqErZWxoX/mOOV6MsZBlrTK7wgSv0NvWhG0JFHJmy6MZFMAYg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9S8iJSn8UNaWvTGmsPAdSoE2CeJdUZXi/9w6ogznaHY=;
- b=MnuoL9ljW4lPJqb/d2hczlpGaFtuTADVG9jg/6EpGIyl22LxWM3t67R+DVaouzR0SOsP+lBgC+CcEUt6Tjuc1lL/uwC/IgmvVWMLf58AkGyrex0gqt3YvtrXOazfveEjcTeFvm+Ugx9RUqfOoMOtXhUy+3lpuICEX51aADZxtk6fV7OjACUR3Jv4iGlP0hqdiy/zW6jBbHRNRoeet6Gaf3/4yWHKe1528FU8N3yqHEByt1qJMOvZtDUyBwHIes1aM4UBQxkaMrKRiGGA0FP7ShBgjJOcNknMP2kNNNBAnEXfJ6XHXjR0t/xr7cLWbbI9e58xE5DBGSiBUZaulnQtew==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=starlab.io; dmarc=pass action=none header.from=starlab.io;
- dkim=pass header.d=starlab.io; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=starlab.io;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9S8iJSn8UNaWvTGmsPAdSoE2CeJdUZXi/9w6ogznaHY=;
- b=HCfqxQbKMXqyyqJgjkyfa/UsYvcZGHCLopsKDN+TjL4aGayZ93MdC7TXZg67e5KzwuLKrxdVCxyvKxwVSiBn8m0baCq9dg8wMD53MXJzJABK3tusLZcK8VlQhEA6jL6BAgODM5FR/bgVR2qV13fddT1e28w31h4rHAMpPStZqJ8=
-Authentication-Results: starlab.io; dkim=none (message not signed)
- header.d=none;starlab.io; dmarc=none action=none header.from=starlab.io;
-Received: from DM8PR09MB6997.namprd09.prod.outlook.com (2603:10b6:5:2e0::10)
- by DM6PR09MB4383.namprd09.prod.outlook.com (2603:10b6:5:1ba::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.12; Thu, 21 Jan
- 2021 15:21:17 +0000
-Received: from DM8PR09MB6997.namprd09.prod.outlook.com
- ([fe80::d16d:8c95:983d:28f9]) by DM8PR09MB6997.namprd09.prod.outlook.com
- ([fe80::d16d:8c95:983d:28f9%5]) with mapi id 15.20.3784.014; Thu, 21 Jan 2021
- 15:21:17 +0000
-From:   Jeffrey Mitchell <jeffrey.mitchell@starlab.io>
-To:     "Darrick J . Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jeffrey Mitchell <jeffrey.mitchell@starlab.io>
-Subject: [PATCH] xfs: set inode size after creating symlink
-Date:   Thu, 21 Jan 2021 09:19:12 -0600
-Message-Id: <20210121151912.4429-1-jeffrey.mitchell@starlab.io>
-X-Mailer: git-send-email 2.25.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [47.218.202.86]
-X-ClientProxiedBy: SN2PR01CA0037.prod.exchangelabs.com (2603:10b6:804:2::47)
- To DM8PR09MB6997.namprd09.prod.outlook.com (2603:10b6:5:2e0::10)
+        id S1732898AbhAUP0E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 10:26:04 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:54575 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731852AbhAUNYt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:24:49 -0500
+Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <christian.brauner@ubuntu.com>)
+        id 1l2Zuu-0005g7-0W; Thu, 21 Jan 2021 13:22:28 +0000
+From:   Christian Brauner <christian.brauner@ubuntu.com>
+To:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org
+Cc:     John Johansen <john.johansen@canonical.com>,
+        James Morris <jmorris@namei.org>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Casey Schaufler <casey@schaufler-ca.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Geoffrey Thomas <geofft@ldpreload.com>,
+        Mrunal Patel <mpatel@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
+        Tycho Andersen <tycho@tycho.ws>,
+        David Howells <dhowells@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        =?UTF-8?q?St=C3=A9phane=20Graber?= <stgraber@ubuntu.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aleksa Sarai <cyphar@cyphar.com>,
+        Lennart Poettering <lennart@poettering.net>,
+        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
+        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
+        Kees Cook <keescook@chromium.org>,
+        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        containers@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
+        Christian Brauner <christian.brauner@ubuntu.com>
+Subject: [PATCH v6 30/40] mount: make {lock,unlock}_mount_hash() static
+Date:   Thu, 21 Jan 2021 14:19:49 +0100
+Message-Id: <20210121131959.646623-31-christian.brauner@ubuntu.com>
+X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210121131959.646623-1-christian.brauner@ubuntu.com>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from jeffrey-work-20 (47.218.202.86) by SN2PR01CA0037.prod.exchangelabs.com (2603:10b6:804:2::47) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.12 via Frontend Transport; Thu, 21 Jan 2021 15:21:17 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 844c8eef-5fa4-4ece-af88-08d8be2032d7
-X-MS-TrafficTypeDiagnostic: DM6PR09MB4383:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DM6PR09MB43830ED8A8DF5001D723C02AF8A19@DM6PR09MB4383.namprd09.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: FU0OfbPpKTe6aAGYgl63ZqM2ObCAiblXCFffiO1vkVBL7YrCxUYPTmcCV0e5ZtKTOD5lGHSEQugGv5GE9lNc78liAsJ2l3x03pC034GREXlFLPxoUWAJ/vOFkDHR/Y+UmGl2dgNHTDrznyMIPhT6tsd8Wp2yc7PTnQj68KxUV4xzqt/BHtulztTEmsNDSJ50QIJcNMg7pqkFhNQ82IFz3BQQqMif41eG8QfTlI4GCVCV6b3r5YOpJtdUjkGObWYTYujOKYzaRmgnam0sLAwXciCY4wU+Vpvg0vK4zH8l7h+dcWogYuce2rSOQ3+30uq1pYXvtKpF6dc6s/163wQ4ENRI4E7V1lA+ABtZM3EZ7fHili1yyoLMOF7UwL5MEst5hFU7P4xd8fdnABsitpz3X2eh2Ust16KC1oK67LFsTS0KSLJnbv7bMfpy9wCdIyHcIze4lhPpiYs+lJFoS7MxQskm22qmxE1M4+LGuVJMgyv4DMlaO1bv10JqR83ZmHxZuKScEQeuhuVe9kPXXCUoZg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM8PR09MB6997.namprd09.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(346002)(366004)(39830400003)(396003)(376002)(8676002)(4326008)(52116002)(6496006)(107886003)(6666004)(86362001)(44832011)(956004)(2906002)(4744005)(2616005)(5660300002)(26005)(186003)(16526019)(8936002)(6486002)(1076003)(6916009)(478600001)(316002)(66946007)(36756003)(66556008)(66476007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?4H7M4mB83xYN4Xlgnj2j29VJ7Mp/IP1fjlcki+iYBEXaiuu0pMjsWtgR1MaC?=
- =?us-ascii?Q?Lrg3qYGhKPAqvgo+6flS8g196PIh7h+xMWY9eSzFByLVN5CZyKFiRJUYYyXP?=
- =?us-ascii?Q?Kj2bdzUrKhiF4Jm1unWi9dQdh0TfN3dX6Y6BhRrMyAMEs+gycnNqZXyadwNo?=
- =?us-ascii?Q?kgq6xdIFykdWTMHcngUOV/85E2KINvAyXSs8XU89th/2mz9dM3m+4V+Bp7YD?=
- =?us-ascii?Q?5kCQc0KNQF5NL/eTno+vBGJmTMsN6wbH55ynXAo6RlVQI902xlfx5/q6/lLV?=
- =?us-ascii?Q?MvA8BZLVe5YRDJNmSO6o961AKF5PUSYjZLl18SAagDrS9RkhZzRj5YfeQ7Ph?=
- =?us-ascii?Q?GZKbWzxHl4zcnEXNNTgRR80vQSOQNe+iUZ4fS3VQuevvWJnJtPmfRFE8zPui?=
- =?us-ascii?Q?vhpFiDG/kaN88pKW2pDzK4Obd24/n72VPkptGNMbnSWauQ9U6LVBTwAwssUj?=
- =?us-ascii?Q?H9VHU5wDxnzZzN+j7/sBElXCBztNmFepKnrFFE9s9wJksgQkCBqtzDEAEg/0?=
- =?us-ascii?Q?zlPciq56fPAsio78RrGfFu2gVw+47B4gm8kw0VhTEscZ1eUgidIya+64owK+?=
- =?us-ascii?Q?wfEPs65b8JguiBcVQWQdotObSNdB9GN6m2p4tGdrLq4UdC8B//9FP/QTVjCe?=
- =?us-ascii?Q?AI8+WgZrAQJ/+bn84AOzIaD6fdFC4qzCUoevtEWBFeOtzUWfYm8rq47zzniI?=
- =?us-ascii?Q?IMVDswvo73iHo+VZFkPvU21u8iwkDUVaeSmhXeU2MHuODAEufPtinLBRfl7H?=
- =?us-ascii?Q?GH6MKotC+PQ5M33emjPdpSYrNsxNO1OmYCEi9hKoxsMjWyDkigh6EwMWcNRn?=
- =?us-ascii?Q?qn34vMNB7iCxUPyf2m4BDEMhPNk4P7sdhfVy7C3mM15wqnWlFv1//hT4eO0n?=
- =?us-ascii?Q?mURGIAVvKX2Qw5ZD/fGJFQ3Y5uulqf17j5NLyIAl9X/eDZ/KYqOYPYhvHyQ3?=
- =?us-ascii?Q?z6wjR1Jf5aEwZgP0YuFzZQg9WwoIuOniD0Man1xN4gdvdsDDjuoZsAmNjRqI?=
- =?us-ascii?Q?kqxY?=
-X-OriginatorOrg: starlab.io
-X-MS-Exchange-CrossTenant-Network-Message-Id: 844c8eef-5fa4-4ece-af88-08d8be2032d7
-X-MS-Exchange-CrossTenant-AuthSource: DM8PR09MB6997.namprd09.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jan 2021 15:21:17.5157
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 5e611933-986f-4838-a403-4acb432ce224
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: RCswuIndXV9RnCF5A0zW+RmaayyWSMhCkNEYSKcWQHAm5G1zy3PkWA2ZqyTz1MRFf5O+Mn+k/Dl1GUTmFRcmOVNvFMZXR2s8RhN7lqiT04s=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR09MB4383
+X-Patch-Hashes: v=1; h=sha256; i=vO6mqD1pvztvOW1otxIX/33XHCNZr+llU/zGWpmgRcU=; m=KhvaMUT1cjYCcf89U9v9dgojtWEDCI7+j8N/vrPJ2d8=; p=m+f5GyiYf302pJENuNE7M1OLXAwtO2DVQ+DZIMIfwu0=; g=a01f7f9b00b67a1698d6ed6ffbed46e285973451
+X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCYAl9pgAKCRCRxhvAZXjcov5nAP417zG 11bQQEUJ0ysdrJok04PLyXR+Mhb6D2/2E4h91CgEAijXaDc6Gi6RigHFF4y2Xjov9EzuvRHTYz5It xL3Ybgw=
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When XFS creates a new symlink, it writes its size to disk but not to the
-VFS inode. This causes i_size_read() to return 0 for that symlink until
-it is re-read from disk, for example when the system is rebooted.
+The lock_mount_hash() and unlock_mount_hash() helpers are never called
+outside a single file. Remove them from the header and make them static
+to reflect this fact. There's no need to have them callable from other
+places right now, as Christoph observed.
 
-I found this inconsistency while protecting directories with eCryptFS.
-The command "stat path/to/symlink/in/ecryptfs" will report "Size: 0" if
-the symlink was created after the last reboot on an XFS root.
-
-Call i_size_write() in xfs_symlink()
-
-Signed-off-by: Jeffrey Mitchell <jeffrey.mitchell@starlab.io>
+Link: https://lore.kernel.org/r/20210112220124.837960-3-christian.brauner@ubuntu.com
+Cc: David Howells <dhowells@redhat.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
 ---
- fs/xfs/xfs_symlink.c | 1 +
- 1 file changed, 1 insertion(+)
+/* v2 */
+- Christoph Hellwig <hch@lst.de>:
+  - Add a patch to make {lock,unlock)_mount_hash() static.
 
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 1f43fd7f3209..c835827ae389 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -300,6 +300,7 @@ xfs_symlink(
- 		}
- 		ASSERT(pathlen == 0);
- 	}
-+	i_size_write(VFS_I(ip), ip->i_d.di_size);
+/* v3 */
+unchanged
+
+/* v4 */
+unchanged
+
+/* v5 */
+unchanged
+base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
+
+/* v6 */
+unchanged
+base-commit: 19c329f6808995b142b3966301f217c831e7cf31
+---
+ fs/mount.h     | 10 ----------
+ fs/namespace.c | 10 ++++++++++
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/fs/mount.h b/fs/mount.h
+index ce6c376e0bc2..0b6e08cf8afb 100644
+--- a/fs/mount.h
++++ b/fs/mount.h
+@@ -124,16 +124,6 @@ static inline void get_mnt_ns(struct mnt_namespace *ns)
  
- 	/*
- 	 * Create the directory entry for the symlink.
+ extern seqlock_t mount_lock;
+ 
+-static inline void lock_mount_hash(void)
+-{
+-	write_seqlock(&mount_lock);
+-}
+-
+-static inline void unlock_mount_hash(void)
+-{
+-	write_sequnlock(&mount_lock);
+-}
+-
+ struct proc_mounts {
+ 	struct mnt_namespace *ns;
+ 	struct path root;
+diff --git a/fs/namespace.c b/fs/namespace.c
+index bdfb130f2c3c..5fceb2854395 100644
+--- a/fs/namespace.c
++++ b/fs/namespace.c
+@@ -87,6 +87,16 @@ EXPORT_SYMBOL_GPL(fs_kobj);
+  */
+ __cacheline_aligned_in_smp DEFINE_SEQLOCK(mount_lock);
+ 
++static inline void lock_mount_hash(void)
++{
++	write_seqlock(&mount_lock);
++}
++
++static inline void unlock_mount_hash(void)
++{
++	write_sequnlock(&mount_lock);
++}
++
+ static inline struct hlist_head *m_hash(struct vfsmount *mnt, struct dentry *dentry)
+ {
+ 	unsigned long tmp = ((unsigned long)mnt / L1_CACHE_BYTES);
 -- 
-2.25.1
+2.30.0
 
