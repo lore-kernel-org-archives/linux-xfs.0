@@ -2,194 +2,288 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BAD4C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:06:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8251DC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:40:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E39AA239D4
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:06:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38CCD20691
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:40:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732490AbhAUNfa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 08:35:30 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:55222 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732124AbhAUNcZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:32:25 -0500
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1l2Zup-0005g7-G5; Thu, 21 Jan 2021 13:22:23 +0000
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org
-Cc:     John Johansen <john.johansen@canonical.com>,
-        James Morris <jmorris@namei.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Geoffrey Thomas <geofft@ldpreload.com>,
-        Mrunal Patel <mpatel@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        David Howells <dhowells@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        =?UTF-8?q?St=C3=A9phane=20Graber?= <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        Lennart Poettering <lennart@poettering.net>,
-        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
-        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
-        Kees Cook <keescook@chromium.org>,
-        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        containers@lists.linux-foundation.org,
-        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
-        Christian Brauner <christian.brauner@ubuntu.com>
-Subject: [PATCH v6 29/40] namespace: take lock_mount_hash() directly when changing flags
-Date:   Thu, 21 Jan 2021 14:19:48 +0100
-Message-Id: <20210121131959.646623-30-christian.brauner@ubuntu.com>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210121131959.646623-1-christian.brauner@ubuntu.com>
-References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
+        id S1726898AbhAUOkP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 09:40:15 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:27447 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732447AbhAUNfI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:35:08 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611236020;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=osaOkMQC5TBliM3TcAepWHeIDX6eGu5zaKc4yWEOYyM=;
+        b=d5ZYvt7iBoXXyEjmPsACPbv6oGp0lNv0ufGRlvhojntXDy3sRieOrS7Qi6XiRVtNYF/q5T
+        CRoOh2l/+nJwP7B95weu3hqXXd8T88Phw7aqwoRaKRmWOfqUc8Ae82rOSzaeeeUnRYK9He
+        99uj0haX4C/OxCpC++JYDRC9uNNIMiM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-573-3oMWyCF2N2SJgyQN1fMVDw-1; Thu, 21 Jan 2021 08:33:38 -0500
+X-MC-Unique: 3oMWyCF2N2SJgyQN1fMVDw-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DE0EE879500;
+        Thu, 21 Jan 2021 13:33:36 +0000 (UTC)
+Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D73935D9C6;
+        Thu, 21 Jan 2021 13:33:35 +0000 (UTC)
+Date:   Thu, 21 Jan 2021 08:33:34 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        avi@scylladb.com, Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH 11/11] xfs: reduce exclusive locking on unaligned dio
+Message-ID: <20210121133334.GB1793795@bfoster>
+References: <20210121085906.322712-1-hch@lst.de>
+ <20210121085906.322712-12-hch@lst.de>
 MIME-Version: 1.0
-X-Patch-Hashes: v=1; h=sha256; i=+EOqvkSOxu9JCGW0Rc3vZBIUJjJSA6JSNVX4DwVrmRY=; m=jQ3B4I/0GzMv1ZZe0jmdtmfmOHRzatt37dzxqk6Qdsc=; p=Mp4MtJhhaaTxXITxZKDXxRqUdiEtcBdAeOB5TynuHHo=; g=8e89644d361e75b82524365516392cf4a074a9c9
-X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCYAl9pgAKCRCRxhvAZXjcog36AP9/Sa5 9EdObRqhxptULowV09x7R5qICtoXkclbKqjLwLwD+MBZ/eqJRlC/5CmIQTO+0gCtFyTfPUEmH584k 0VtBpAE=
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210121085906.322712-12-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Changing mount options always ends up taking lock_mount_hash() but when
-MNT_READONLY is requested and neither the mount nor the superblock are
-MNT_READONLY we end up taking the lock, dropping it, and retaking it to
-change the other mount attributes. Instead, let's acquire the lock once
-when changing the mount attributes. This simplifies the locking in these
-codepath, makes them easier to reason about and avoids having to
-reacquire the lock right after dropping it.
+On Thu, Jan 21, 2021 at 09:59:06AM +0100, Christoph Hellwig wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Attempt shared locking for unaligned DIO, but only if the the
+> underlying extent is already allocated and in written state. On
+> failure, retry with the existing exclusive locking.
+> 
+> Test case is fio randrw of 512 byte IOs using AIO and an iodepth of
+> 32 IOs.
+> 
+> Vanilla:
+> 
+>   READ: bw=4560KiB/s (4670kB/s), 4560KiB/s-4560KiB/s (4670kB/s-4670kB/s), io=134MiB (140MB), run=30001-30001msec
+>   WRITE: bw=4567KiB/s (4676kB/s), 4567KiB/s-4567KiB/s (4676kB/s-4676kB/s), io=134MiB (140MB), run=30001-30001msec
+> 
+> Patched:
+>    READ: bw=37.6MiB/s (39.4MB/s), 37.6MiB/s-37.6MiB/s (39.4MB/s-39.4MB/s), io=1127MiB (1182MB), run=30002-30002msec
+>   WRITE: bw=37.6MiB/s (39.4MB/s), 37.6MiB/s-37.6MiB/s (39.4MB/s-39.4MB/s), io=1128MiB (1183MB), run=30002-30002msec
+> 
+> That's an improvement from ~18k IOPS to a ~150k IOPS, which is
+> about the IOPS limit of the VM block device setup I'm testing on.
+> 
+> 4kB block IO comparison:
+> 
+>    READ: bw=296MiB/s (310MB/s), 296MiB/s-296MiB/s (310MB/s-310MB/s), io=8868MiB (9299MB), run=30002-30002msec
+>   WRITE: bw=296MiB/s (310MB/s), 296MiB/s-296MiB/s (310MB/s-310MB/s), io=8878MiB (9309MB), run=30002-30002msec
+> 
+> Which is ~150k IOPS, same as what the test gets for sub-block
+> AIO+DIO writes with this patch.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> [hch: rebased, split unaligned from nowait]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_file.c  | 87 ++++++++++++++++++++++++++++++++--------------
+>  fs/xfs/xfs_iomap.c | 30 +++++++++++-----
+>  2 files changed, 83 insertions(+), 34 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index b181db42f2f32f..33899a5cca53f9 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -544,22 +544,35 @@ xfs_file_dio_write_aligned(
+>  /*
+>   * Handle block unaligned direct IO writes
+>   *
+> - * In most cases direct IO writes will be done holding IOLOCK_SHARED, allowing
+> - * them to be done in parallel with reads and other direct IO writes.  However,
+> - * if the I/O is not aligned to filesystem blocks, the direct I/O layer may
+> - * need to do sub-block zeroing and that requires serialisation against other
+> - * direct I/Os to the same block. In this case we need to serialise the
+> - * submission of the unaligned I/Os so that we don't get racing block zeroing in
+> - * the dio layer.
+> + * In most cases direct IO writes will be done holding IOLOCK_SHARED
+> + * allowing them to be done in parallel with reads and other direct IO writes.
+> + * However, if the IO is not aligned to filesystem blocks, the direct IO layer
+> + * may need to do sub-block zeroing and that requires serialisation against other
+> + * direct IOs to the same block. In the case where sub-block zeroing is not
+> + * required, we can do concurrent sub-block dios to the same block successfully.
+>   *
+> - * To provide the same serialisation for AIO, we also need to wait for
+> + * Hence we have two cases here - the shared, optimisitic fast path for written
+> + * extents, and everything else that needs exclusive IO path access across the
+> + * entire IO.
+> + *
+> + * For the first case, we do all the checks we need at the mapping layer in the
+> + * DIO code as part of the existing NOWAIT infrastructure. Hence all we need to
+> + * do to support concurrent subblock dio is first try a non-blocking submission.
+> + * If that returns -EAGAIN, then we simply repeat the IO submission with full
+> + * IO exclusivity guaranteed so that we avoid racing sub-block zeroing.
+> + *
 
-Link: https://lore.kernel.org/r/20210112220124.837960-2-christian.brauner@ubuntu.com
-Cc: David Howells <dhowells@redhat.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
----
-/* v2 */
-- Christoph Hellwig <hch@lst.de>:
-  - Remove pointless __mnt_unmake_readonly() helper.
-  - Even though Christoph suggested to lockdep_assert_held() into places that
-    require {lock,unlock}_mount_hash() it seems that seqlock's don't support
-    it.
+The above paragraph still implicitly refers to the original NOWAIT based
+implementation. I'd suggest to tweak it to something like:
 
-/* v3 */
-unchanged
+"The mapping layer of the dio code performs all the checks required to
+distinguish between the shared (overwrite) and exclusive cases. Hence to
+support concurrent unaligned dio, first submit the request in overwrite
+only mode. If that returns -EAGAIN, sub-block zeroing is required.
+Repeat the submission with full IO exclusivity to avoid races."
 
-/* v4 */
-unchanged
+That aside, I still find the single mapping requirement a bit
+unfortunate, but otherwise the code LGTM:
 
-/* v5 */
-unchanged
-base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-/* v6 */
-unchanged
-base-commit: 19c329f6808995b142b3966301f217c831e7cf31
----
- fs/namespace.c | 22 ++++++++--------------
- 1 file changed, 8 insertions(+), 14 deletions(-)
-
-diff --git a/fs/namespace.c b/fs/namespace.c
-index ecdc63ef881c..bdfb130f2c3c 100644
---- a/fs/namespace.c
-+++ b/fs/namespace.c
-@@ -464,7 +464,6 @@ static int mnt_make_readonly(struct mount *mnt)
- {
- 	int ret = 0;
- 
--	lock_mount_hash();
- 	mnt->mnt.mnt_flags |= MNT_WRITE_HOLD;
- 	/*
- 	 * After storing MNT_WRITE_HOLD, we'll read the counters. This store
-@@ -498,18 +497,9 @@ static int mnt_make_readonly(struct mount *mnt)
- 	 */
- 	smp_wmb();
- 	mnt->mnt.mnt_flags &= ~MNT_WRITE_HOLD;
--	unlock_mount_hash();
- 	return ret;
- }
- 
--static int __mnt_unmake_readonly(struct mount *mnt)
--{
--	lock_mount_hash();
--	mnt->mnt.mnt_flags &= ~MNT_READONLY;
--	unlock_mount_hash();
--	return 0;
--}
--
- int sb_prepare_remount_readonly(struct super_block *sb)
- {
- 	struct mount *mnt;
-@@ -2523,7 +2513,8 @@ static int change_mount_ro_state(struct mount *mnt, unsigned int mnt_flags)
- 	if (readonly_request)
- 		return mnt_make_readonly(mnt);
- 
--	return __mnt_unmake_readonly(mnt);
-+	mnt->mnt.mnt_flags &= ~MNT_READONLY;
-+	return 0;
- }
- 
- /*
-@@ -2532,11 +2523,9 @@ static int change_mount_ro_state(struct mount *mnt, unsigned int mnt_flags)
-  */
- static void set_mount_attributes(struct mount *mnt, unsigned int mnt_flags)
- {
--	lock_mount_hash();
- 	mnt_flags |= mnt->mnt.mnt_flags & ~MNT_USER_SETTABLE_MASK;
- 	mnt->mnt.mnt_flags = mnt_flags;
- 	touch_mnt_namespace(mnt->mnt_ns);
--	unlock_mount_hash();
- }
- 
- static void mnt_warn_timestamp_expiry(struct path *mountpoint, struct vfsmount *mnt)
-@@ -2582,9 +2571,11 @@ static int do_reconfigure_mnt(struct path *path, unsigned int mnt_flags)
- 		return -EPERM;
- 
- 	down_write(&sb->s_umount);
-+	lock_mount_hash();
- 	ret = change_mount_ro_state(mnt, mnt_flags);
- 	if (ret == 0)
- 		set_mount_attributes(mnt, mnt_flags);
-+	unlock_mount_hash();
- 	up_write(&sb->s_umount);
- 
- 	mnt_warn_timestamp_expiry(path, &mnt->mnt);
-@@ -2625,8 +2616,11 @@ static int do_remount(struct path *path, int ms_flags, int sb_flags,
- 		err = -EPERM;
- 		if (ns_capable(sb->s_user_ns, CAP_SYS_ADMIN)) {
- 			err = reconfigure_super(fc);
--			if (!err)
-+			if (!err) {
-+				lock_mount_hash();
- 				set_mount_attributes(mnt, mnt_flags);
-+				unlock_mount_hash();
-+			}
- 		}
- 		up_write(&sb->s_umount);
- 	}
--- 
-2.30.0
+> + * The only wrinkle in this case is that the iomap DIO code always does
+> + * partial tail sub-block zeroing for post-EOF writes. Hence for any IO that
+> + * _ends_ past the current EOF we need to run with full exclusivity. Note that
+> + * we also check for the start of IO being beyond EOF because then zeroing
+> + * between the old EOF and the start of the IO is required and that also
+> + * requires exclusivity. Hence we avoid lock cycles and blocking under
+> + * IOCB_NOWAIT for this situation, too.
+> + *
+> + * To provide the exclusivity required when using AIO, we also need to wait for
+>   * outstanding IOs to complete so that unwritten extent conversion is completed
+>   * before we try to map the overlapping block. This is currently implemented by
+>   * hitting it with a big hammer (i.e. inode_dio_wait()).
+> - *
+> - * This means that unaligned dio writes always block. There is no "nowait" fast
+> - * path in this code - if IOCB_NOWAIT is set we simply return -EAGAIN up front
+> - * and we don't have to worry about that anymore.
+>   */
+>  static noinline ssize_t
+>  xfs_file_dio_write_unaligned(
+> @@ -567,13 +580,27 @@ xfs_file_dio_write_unaligned(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*from)
+>  {
+> -	int			iolock = XFS_IOLOCK_EXCL;
+> +	size_t			isize = i_size_read(VFS_I(ip));
+> +	size_t			count = iov_iter_count(from);
+> +	int			iolock = XFS_IOLOCK_SHARED;
+> +	unsigned int		flags = IOMAP_DIO_OVERWRITE_ONLY;
+>  	ssize_t			ret;
+>  
+> -	/* unaligned dio always waits, bail */
+> -	if (iocb->ki_flags & IOCB_NOWAIT)
+> -		return -EAGAIN;
+> -	xfs_ilock(ip, iolock);
+> +	/*
+> +	 * Extending writes need exclusivity because of the sub-block zeroing
+> +	 * that the DIO code always does for partial tail blocks beyond EOF.
+> +	 */
+> +	if (iocb->ki_pos > isize || iocb->ki_pos + count >= isize) {
+> +retry_exclusive:
+> +		if (iocb->ki_flags & IOCB_NOWAIT)
+> +			return -EAGAIN;
+> +		iolock = XFS_IOLOCK_EXCL;
+> +		flags = IOMAP_DIO_FORCE_WAIT;
+> +	}
+> +
+> +	ret = xfs_ilock_iocb(iocb, iolock);
+> +	if (ret)
+> +		return ret;
+>  
+>  	/*
+>  	 * We can't properly handle unaligned direct I/O to reflink files yet,
+> @@ -590,19 +617,27 @@ xfs_file_dio_write_unaligned(
+>  		goto out_unlock;
+>  
+>  	/*
+> -	 * If we are doing unaligned I/O, we can't allow any other overlapping
+> -	 * I/O in-flight at the same time or we risk data corruption. Wait for
+> -	 * all other I/O to drain before we submit.
+> +	 * If we are doing exclusive unaligned IO, we can't allow any other
+> +	 * overlapping IO in-flight at the same time or we risk data corruption.
+> +	 * Wait for all other IO to drain before we submit.
+>  	 */
+> -	inode_dio_wait(VFS_I(ip));
+> +	if (flags & IOMAP_DIO_FORCE_WAIT)
+> +		inode_dio_wait(VFS_I(ip));
+>  
+> -	/*
+> -	 * This must be the only I/O in-flight. Wait on it before we release the
+> -	 * iolock to prevent subsequent overlapping I/O.
+> -	 */
+>  	trace_xfs_file_direct_write(iocb, from);
+>  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
+> -			   &xfs_dio_write_ops, IOMAP_DIO_FORCE_WAIT);
+> +			   &xfs_dio_write_ops, flags);
+> +	/*
+> +	 * Retry unaligned IO with exclusive blocking semantics if the DIO
+> +	 * layer rejected it for mapping or locking reasons. If we are doing
+> +	 * nonblocking user IO, propagate the error.
+> +	 */
+> +	if (ret == -EAGAIN && !(iocb->ki_flags & IOCB_NOWAIT)) {
+> +		ASSERT(flags & IOMAP_DIO_OVERWRITE_ONLY);
+> +		xfs_iunlock(ip, iolock);
+> +		goto retry_exclusive;
+> +	}
+> +
+>  out_unlock:
+>  	if (iolock)
+>  		xfs_iunlock(ip, iolock);
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 7b9ff824e82d48..596af78f910596 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -784,15 +784,29 @@ xfs_direct_write_iomap_begin(
+>  		goto allocate_blocks;
+>  
+>  	/*
+> -	 * NOWAIT IO needs to span the entire requested IO with a single map so
+> -	 * that we avoid partial IO failures due to the rest of the IO range not
+> -	 * covered by this map triggering an EAGAIN condition when it is
+> -	 * subsequently mapped and aborting the IO.
+> +	 * NOWAIT and OVERWRITE needs to span the entire requested IO with a
+> +	 * single map so that we avoid partial IO failures due to the rest of
+> +	 * the IO range not covered by this map triggering an EAGAIN condition
+> +	 * when it is subsequently mapped and aborting the IO.
+>  	 */
+> -	if ((flags & IOMAP_NOWAIT) &&
+> -	    !imap_spans_range(&imap, offset_fsb, end_fsb)) {
+> +	if (flags & (IOMAP_NOWAIT | IOMAP_OVERWRITE_ONLY)) {
+>  		error = -EAGAIN;
+> -		goto out_unlock;
+> +		if (!imap_spans_range(&imap, offset_fsb, end_fsb))
+> +			goto out_unlock;
+> +	}
+> +
+> +	/*
+> +	 * For overwrite only I/O, we cannot convert unwritten extents without
+> +	 * requiring sub-block zeroing.  This can only be done under an
+> +	 * exclusive IOLOCK, hence return -EAGAIN if this is not a written
+> +	 * extent to tell the caller to try again.
+> +	 */
+> +	if (flags & IOMAP_OVERWRITE_ONLY) {
+> +		error = -EAGAIN;
+> +		if (imap.br_state != XFS_EXT_NORM &&
+> +		    ((offset & mp->m_blockmask) ||
+> +		     ((offset + length) & mp->m_blockmask)))
+> +			goto out_unlock;
+>  	}
+>  
+>  	xfs_iunlock(ip, lockmode);
+> @@ -801,7 +815,7 @@ xfs_direct_write_iomap_begin(
+>  
+>  allocate_blocks:
+>  	error = -EAGAIN;
+> -	if (flags & IOMAP_NOWAIT)
+> +	if (flags & (IOMAP_NOWAIT | IOMAP_OVERWRITE_ONLY))
+>  		goto out_unlock;
+>  
+>  	/*
+> -- 
+> 2.29.2
+> 
 
