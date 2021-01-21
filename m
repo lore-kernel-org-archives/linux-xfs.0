@@ -2,121 +2,239 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E6CBC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:54:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CB62C433E9
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:56:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3135C238A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:54:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3ABAD238A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 14:56:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731472AbhAUOya (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 09:54:30 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:35258 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729920AbhAUNe1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:34:27 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611235980;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=12iaQxRicJBtk/goRWyLEa0IAVmcZ6kH+1xu6r4dq1Y=;
-        b=IIHLDNtHYGJC1klMvjoDSZ9WavQyOmLMLM89cddLEgf3qDozszRIJC0i+iTYKK5TgYgZxA
-        4qetZOCoUF9B0Srea4FB3+x2xIfIjzfeDj7k9pB3XXa6NEt/ZDyBAnCg2tYZi+WpQQ2lBs
-        Bgbh+apWBgb9Qm4/YjiKkmx8czUlN1I=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-540-3ThOr7cpNguDhInZTGgG0Q-1; Thu, 21 Jan 2021 08:32:58 -0500
-X-MC-Unique: 3ThOr7cpNguDhInZTGgG0Q-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 52BF4107ACE4;
-        Thu, 21 Jan 2021 13:32:57 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id ADD7A5D9D5;
-        Thu, 21 Jan 2021 13:32:56 +0000 (UTC)
-Date:   Thu, 21 Jan 2021 08:32:54 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        avi@scylladb.com
-Subject: Re: [PATCH 10/11] iomap: add a IOMAP_DIO_OVERWRITE_ONLY flag
-Message-ID: <20210121133254.GA1793795@bfoster>
-References: <20210121085906.322712-1-hch@lst.de>
- <20210121085906.322712-11-hch@lst.de>
+        id S1732107AbhAUOzz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 09:55:55 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:55010 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731799AbhAUNar (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 08:30:47 -0500
+Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <christian.brauner@ubuntu.com>)
+        id 1l2ZuW-0005g7-Be; Thu, 21 Jan 2021 13:22:04 +0000
+From:   Christian Brauner <christian.brauner@ubuntu.com>
+To:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org
+Cc:     John Johansen <john.johansen@canonical.com>,
+        James Morris <jmorris@namei.org>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Casey Schaufler <casey@schaufler-ca.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Geoffrey Thomas <geofft@ldpreload.com>,
+        Mrunal Patel <mpatel@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
+        Tycho Andersen <tycho@tycho.ws>,
+        David Howells <dhowells@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        =?UTF-8?q?St=C3=A9phane=20Graber?= <stgraber@ubuntu.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aleksa Sarai <cyphar@cyphar.com>,
+        Lennart Poettering <lennart@poettering.net>,
+        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
+        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
+        Kees Cook <keescook@chromium.org>,
+        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        containers@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
+        Christian Brauner <christian.brauner@ubuntu.com>
+Subject: [PATCH v6 25/40] apparmor: handle idmapped mounts
+Date:   Thu, 21 Jan 2021 14:19:44 +0100
+Message-Id: <20210121131959.646623-26-christian.brauner@ubuntu.com>
+X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210121131959.646623-1-christian.brauner@ubuntu.com>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210121085906.322712-11-hch@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Patch-Hashes: v=1; h=sha256; i=GtgWex55B/vr9cqlh7J1mRZi5HqOLuyw4/kbMFcnj44=; m=G863wdSzzxhRYEpZlvcjCbMqjfGM+EzHMZj4lH97kdQ=; p=v7Dghu+PiQNoHUqBfojnajWdiF8zQ4FI7zes967ESpE=; g=fc621525654f36c1288ae9a7dafdb8a10f48567e
+X-Patch-Sig: m=pgp; i=christian.brauner@ubuntu.com; s=0x0x91C61BC06578DCA2; b=iHUEABYKAB0WIQRAhzRXHqcMeLMyaSiRxhvAZXjcogUCYAl9pQAKCRCRxhvAZXjcoqNaAQCNXL8 2C3FlJ8IguPio5GOjWPN/I3KwFRh0CZtHysuIBwD+I1uY/vmqPZjOR4pN2LjQHd1zK40rDWSRiq1v oA9J2AM=
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 21, 2021 at 09:59:05AM +0100, Christoph Hellwig wrote:
-> Add a flag to signal an only pure overwrites are allowed.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+The i_uid and i_gid are mostly used when logging for AppArmor. This is
+broken in a bunch of places where the global root id is reported instead
+of the i_uid or i_gid of the file. Nonetheless, be kind and log the
+mapped inode if we're coming from an idmapped mount. If the initial user
+namespace is passed nothing changes so non-idmapped mounts will see
+identical behavior as before.
 
-Agreed that the explicit flag name is much more clear:
+Link: https://lore.kernel.org/r/20210112220124.837960-34-christian.brauner@ubuntu.com
+Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
+---
+/* v2 */
+unchanged
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+/* v3 */
+unchanged
 
->  fs/iomap/direct-io.c  | 7 +++++++
->  include/linux/iomap.h | 8 ++++++++
->  2 files changed, 15 insertions(+)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 947343730e2c93..65d32364345d22 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -485,6 +485,13 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		iomap_flags |= IOMAP_NOWAIT;
->  	}
->  
-> +	if (dio_flags & IOMAP_DIO_OVERWRITE_ONLY) {
-> +		ret = -EAGAIN;
-> +		if (pos >= dio->i_size || pos + count > dio->i_size)
-> +			goto out_free_dio;
-> +		iomap_flags |= IOMAP_OVERWRITE_ONLY;
-> +	}
-> +
->  	ret = filemap_write_and_wait_range(mapping, pos, end);
->  	if (ret)
->  		goto out_free_dio;
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index be4e1e1e01e801..cfa20afd7d5b87 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -122,6 +122,7 @@ struct iomap_page_ops {
->  #define IOMAP_FAULT		(1 << 3) /* mapping for page fault */
->  #define IOMAP_DIRECT		(1 << 4) /* direct I/O */
->  #define IOMAP_NOWAIT		(1 << 5) /* do not block */
-> +#define IOMAP_OVERWRITE_ONLY	(1 << 6) /* purely overwrites allowed */
->  
->  struct iomap_ops {
->  	/*
-> @@ -262,6 +263,13 @@ struct iomap_dio_ops {
->   */
->  #define IOMAP_DIO_FORCE_WAIT	(1 << 0)
->  
-> +/*
-> + * Do not allocate blocks or zero partial blocks, but instead fall back to
-> + * the caller by returning -EAGAIN.  Used to optimize direct I/O writes that
-> + * are not aligned to the file system block size.
-> +  */
-> +#define IOMAP_DIO_OVERWRITE_ONLY	(1 << 1)
-> +
->  ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
->  		unsigned int dio_flags);
-> -- 
-> 2.29.2
-> 
+/* v4 */
+- Serge Hallyn <serge@hallyn.com>:
+  - Use "mnt_userns" to refer to a vfsmount's userns everywhere to make
+    terminology consistent.
+
+/* v5 */
+base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
+
+- Christoph Hellwig <hch@lst.de>:
+  - Use new file_mnt_user_ns() helper.
+
+/* v6 */
+unchanged
+base-commit: 19c329f6808995b142b3966301f217c831e7cf31
+---
+ security/apparmor/domain.c |  9 ++++++---
+ security/apparmor/file.c   |  4 +++-
+ security/apparmor/lsm.c    | 21 +++++++++++++++------
+ 3 files changed, 24 insertions(+), 10 deletions(-)
+
+diff --git a/security/apparmor/domain.c b/security/apparmor/domain.c
+index 16f184bc48de..583680f6cd81 100644
+--- a/security/apparmor/domain.c
++++ b/security/apparmor/domain.c
+@@ -10,12 +10,14 @@
+ 
+ #include <linux/errno.h>
+ #include <linux/fdtable.h>
++#include <linux/fs.h>
+ #include <linux/file.h>
+ #include <linux/mount.h>
+ #include <linux/syscalls.h>
+ #include <linux/tracehook.h>
+ #include <linux/personality.h>
+ #include <linux/xattr.h>
++#include <linux/user_namespace.h>
+ 
+ #include "include/audit.h"
+ #include "include/apparmorfs.h"
+@@ -858,8 +860,10 @@ int apparmor_bprm_creds_for_exec(struct linux_binprm *bprm)
+ 	const char *info = NULL;
+ 	int error = 0;
+ 	bool unsafe = false;
++	kuid_t i_uid = i_uid_into_mnt(file_mnt_user_ns(bprm->file),
++				      file_inode(bprm->file));
+ 	struct path_cond cond = {
+-		file_inode(bprm->file)->i_uid,
++		i_uid,
+ 		file_inode(bprm->file)->i_mode
+ 	};
+ 
+@@ -967,8 +971,7 @@ int apparmor_bprm_creds_for_exec(struct linux_binprm *bprm)
+ 	error = fn_for_each(label, profile,
+ 			aa_audit_file(profile, &nullperms, OP_EXEC, MAY_EXEC,
+ 				      bprm->filename, NULL, new,
+-				      file_inode(bprm->file)->i_uid, info,
+-				      error));
++				      i_uid, info, error));
+ 	aa_put_label(new);
+ 	goto done;
+ }
+diff --git a/security/apparmor/file.c b/security/apparmor/file.c
+index 92acf9a49405..e1b7e93602e4 100644
+--- a/security/apparmor/file.c
++++ b/security/apparmor/file.c
+@@ -11,6 +11,8 @@
+ #include <linux/tty.h>
+ #include <linux/fdtable.h>
+ #include <linux/file.h>
++#include <linux/fs.h>
++#include <linux/mount.h>
+ 
+ #include "include/apparmor.h"
+ #include "include/audit.h"
+@@ -509,7 +511,7 @@ static int __file_path_perm(const char *op, struct aa_label *label,
+ 	struct aa_profile *profile;
+ 	struct aa_perms perms = {};
+ 	struct path_cond cond = {
+-		.uid = file_inode(file)->i_uid,
++		.uid = i_uid_into_mnt(file_mnt_user_ns(file), file_inode(file)),
+ 		.mode = file_inode(file)->i_mode
+ 	};
+ 	char *buffer;
+diff --git a/security/apparmor/lsm.c b/security/apparmor/lsm.c
+index 1b0aba8eb723..240a53387e6b 100644
+--- a/security/apparmor/lsm.c
++++ b/security/apparmor/lsm.c
+@@ -224,8 +224,10 @@ static int common_perm(const char *op, const struct path *path, u32 mask,
+  */
+ static int common_perm_cond(const char *op, const struct path *path, u32 mask)
+ {
+-	struct path_cond cond = { d_backing_inode(path->dentry)->i_uid,
+-				  d_backing_inode(path->dentry)->i_mode
++	struct user_namespace *mnt_userns = mnt_user_ns(path->mnt);
++	struct path_cond cond = {
++		i_uid_into_mnt(mnt_userns, d_backing_inode(path->dentry)),
++		d_backing_inode(path->dentry)->i_mode
+ 	};
+ 
+ 	if (!path_mediated_fs(path->dentry))
+@@ -266,12 +268,13 @@ static int common_perm_rm(const char *op, const struct path *dir,
+ 			  struct dentry *dentry, u32 mask)
+ {
+ 	struct inode *inode = d_backing_inode(dentry);
++	struct user_namespace *mnt_userns = mnt_user_ns(dir->mnt);
+ 	struct path_cond cond = { };
+ 
+ 	if (!inode || !path_mediated_fs(dentry))
+ 		return 0;
+ 
+-	cond.uid = inode->i_uid;
++	cond.uid = i_uid_into_mnt(mnt_userns, inode);
+ 	cond.mode = inode->i_mode;
+ 
+ 	return common_perm_dir_dentry(op, dir, dentry, mask, &cond);
+@@ -361,12 +364,14 @@ static int apparmor_path_rename(const struct path *old_dir, struct dentry *old_d
+ 
+ 	label = begin_current_label_crit_section();
+ 	if (!unconfined(label)) {
++		struct user_namespace *mnt_userns = mnt_user_ns(old_dir->mnt);
+ 		struct path old_path = { .mnt = old_dir->mnt,
+ 					 .dentry = old_dentry };
+ 		struct path new_path = { .mnt = new_dir->mnt,
+ 					 .dentry = new_dentry };
+-		struct path_cond cond = { d_backing_inode(old_dentry)->i_uid,
+-					  d_backing_inode(old_dentry)->i_mode
++		struct path_cond cond = {
++			i_uid_into_mnt(mnt_userns, d_backing_inode(old_dentry)),
++			d_backing_inode(old_dentry)->i_mode
+ 		};
+ 
+ 		error = aa_path_perm(OP_RENAME_SRC, label, &old_path, 0,
+@@ -420,8 +425,12 @@ static int apparmor_file_open(struct file *file)
+ 
+ 	label = aa_get_newest_cred_label(file->f_cred);
+ 	if (!unconfined(label)) {
++		struct user_namespace *mnt_userns = file_mnt_user_ns(file);
+ 		struct inode *inode = file_inode(file);
+-		struct path_cond cond = { inode->i_uid, inode->i_mode };
++		struct path_cond cond = {
++			i_uid_into_mnt(mnt_userns, inode),
++			inode->i_mode
++		};
+ 
+ 		error = aa_path_perm(OP_OPEN, label, &file->f_path, 0,
+ 				     aa_map_file_to_perms(file), &cond);
+-- 
+2.30.0
 
