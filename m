@@ -5,63 +5,63 @@ X-Spam-Level:
 X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
+	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D39E8C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 23:25:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C81C4C43381
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 23:27:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D43123A5E
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 23:25:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8962F2087E
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 23:27:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726497AbhAUXZM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 18:25:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51006 "EHLO
+        id S1725823AbhAUXFd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 18:05:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726194AbhAUXG0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 18:06:26 -0500
-Received: from mail-pg1-x54a.google.com (mail-pg1-x54a.google.com [IPv6:2607:f8b0:4864:20::54a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FB76C061225
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:03:51 -0800 (PST)
-Received: by mail-pg1-x54a.google.com with SMTP id w4so2172912pgc.7
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:03:51 -0800 (PST)
+        with ESMTP id S1726042AbhAUXFP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 18:05:15 -0500
+Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEF7EC0617A9
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:03:43 -0800 (PST)
+Received: by mail-yb1-xb4a.google.com with SMTP id 67so3652841ybh.22
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:03:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=sender:date:in-reply-to:message-id:mime-version:references:subject
          :from:to:cc;
-        bh=9aiKVbqQYlPIThgTQ82dzvRvheXuBHM9UbbX1NZZwXQ=;
-        b=PDwCDzUeRrtiDbzP8R+ZzFNkDbG94q487W93Pzf3+343mIFOYQTDkuNfSKH3Njmgwk
-         Y1YPBbC6QmPRr4Alpg0Kx5Fm+v1IdyCTm0Yg+e6vqeauAts8m3c9NJ8uXTDII+85pRDd
-         2zUYu2cZLlMKY7g0UyvFFR98CJuJd0CliHcYVfg1y0sE3TBQVxqi4Mn51kTipxxQG9lG
-         SAQqsDMxW+8p4X4CfWdq2yc9jdOF0n7jVQ9JmayBBNV1rw54mgpTduxHdebVkhVQO2xM
-         HGr4GC96GJ5HXmQ+RoPWclxW98DPjcCU93GdDJbQ7hQnKT4gdwYR/sa5P6nZIJsn4WW3
-         1bXg==
+        bh=BAlJPK4qVbFO+YocbKUqMkxk0C4PzWuOV8MSNSKCIhI=;
+        b=QpJhHzvp1GXeEjDGYNxaJ+4dbtZiUzLq85/2LS484mjd4YFHF0DMU88K4lo+zwGWkM
+         9LWilqjyHM5F5TtGZpKac7DrVr7HfcqlaVQK2F+DnPn7HQ1OpLiTN2syMLwN6sUYSfyq
+         kMRuDoXMZo7mTk3nzJtbmwY7+bGtriVPvGjQkk+MnGqGoiLkOelUThpM6hXWK0x36ohG
+         e4kaG1rglU1iTZ1tDhy7HPk7x9BjPJ8bIRyrdO3svNhEMvqS/Hns9be4EINUxvy/KNns
+         rOQqszDYyJegCrtkYY9PpwY9HTVsvA0YScQQg5XyqxRJ8fMZK7LQEekKi+Z66tBXsO7I
+         6JBA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=9aiKVbqQYlPIThgTQ82dzvRvheXuBHM9UbbX1NZZwXQ=;
-        b=b+8PfJNoRCKglk9iEZlPhm6htfUHC6nv+kJZpv4y/bLvzftkQPZ3V4MkUo2MRf9f07
-         1dK88n77+0HhbQyGc6yZ93xCOhQrheVyRMNB4mBBK0XDml/uSfPfazZnid6evmbrzXfl
-         LF7exBOSxB7YQIxHtb5iwuPu9gl3aHBupmDZESa1QlQ1pQWwSpKZUJup0UEaj8sHzBHG
-         uICV6tjH9FmHeOasaL0cn44r5xePPrpFVn9vrgwCKVLyiDDN2jwFgwvdountYwd4M9HL
-         Wo5QnUFmoLIUSYgdKPqGe3rjFSbRJNpThQZNA3Hoo6qB5ZJE7IormrBZdFIkfKaxYBey
-         LwWA==
-X-Gm-Message-State: AOAM531fTBG+4tyH4IPVBOElbbzmwQZ7doUKD6EpbYCD0436GSX6+Li0
-        eSx/JfLru1qILrVsecZFyIELT/iqFh0=
-X-Google-Smtp-Source: ABdhPJwXyycuFLMhL7lKL1NWCjYBJKBgLzmFW+8+TaABQDqzzJuvNirg4GTlA554HwKIFpRGe7RJFJ2TUyQ=
+        bh=BAlJPK4qVbFO+YocbKUqMkxk0C4PzWuOV8MSNSKCIhI=;
+        b=a351f9bQgT/ENI0Ag2vcY3pFRrfweSp7TwakkYkMONPszCNDcVEQJVyGRs/Guesxsf
+         4xFIBfUrrADVKkVVY7F602HSLsI32ZwYyT1rgFmxZ9QRNa4o7G/2J5f3fxzP4secW9ZI
+         mOFVFYcj+H3MJhD5MeL91CzNduC08p9YPBVZBBR/+rXjxBiVFfwO/rIY8x1ordFwAzKJ
+         xJNYO0kY465mTQVjXrstI+joYsdfsItULXMTtWqFaYso8RdhSWb7CdgIrDkc9qrwiC6M
+         epG6pCtaYoeLBwXuNueWz643Yby+SJF+86fNsqohHB2VbFbEYZ/XZ3TfPfvgJKYndPV/
+         //nQ==
+X-Gm-Message-State: AOAM533whyCrFKYlYaqlz517rPET4RdLCQ2qF2Ck9kNIY42EuRTNlnUQ
+        7hqbKQdU/81YgTzQbwEPhGkOO//ht7E=
+X-Google-Smtp-Source: ABdhPJwxayAKSF6mXmBJ8++TA75KLd08uhG910WxJC5CctiAVx3ai3oKRw6joRzYaCJBGp4lZOg1Q76giQM=
 Sender: "satyat via sendgmr" <satyat@satyaprateek.c.googlers.com>
 X-Received: from satyaprateek.c.googlers.com ([fda3:e722:ac3:10:24:72f4:c0a8:1092])
- (user=satyat job=sendgmr) by 2002:a62:37c7:0:b029:1aa:22ea:537d with SMTP id
- e190-20020a6237c70000b02901aa22ea537dmr1803778pfa.56.1611270230981; Thu, 21
- Jan 2021 15:03:50 -0800 (PST)
-Date:   Thu, 21 Jan 2021 23:03:34 +0000
+ (user=satyat job=sendgmr) by 2002:a25:9d83:: with SMTP id v3mr2313605ybp.368.1611270223182;
+ Thu, 21 Jan 2021 15:03:43 -0800 (PST)
+Date:   Thu, 21 Jan 2021 23:03:30 +0000
 In-Reply-To: <20210121230336.1373726-1-satyat@google.com>
-Message-Id: <20210121230336.1373726-7-satyat@google.com>
+Message-Id: <20210121230336.1373726-3-satyat@google.com>
 Mime-Version: 1.0
 References: <20210121230336.1373726-1-satyat@google.com>
 X-Mailer: git-send-email 2.30.0.280.ga3ce27912f-goog
-Subject: [PATCH v8 6/8] ext4: support direct I/O with fscrypt using blk-crypto
+Subject: [PATCH v8 2/8] block: blk-crypto: relax alignment requirements for
+ bvecs in bios
 From:   Satya Tangirala <satyat@google.com>
 To:     "Theodore Y . Ts'o" <tytso@mit.edu>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
@@ -71,94 +71,65 @@ To:     "Theodore Y . Ts'o" <tytso@mit.edu>,
 Cc:     linux-kernel@vger.kernel.org, linux-fscrypt@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
         linux-block@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Eric Biggers <ebiggers@google.com>,
-        Satya Tangirala <satyat@google.com>
+        Satya Tangirala <satyat@google.com>,
+        Eric Biggers <ebiggers@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+blk-crypto only accepted bios whose bvecs' offsets and lengths were aligned
+to the crypto data unit size, since blk-crypto-fallback required that to
+work correctly.
 
-Wire up ext4 with fscrypt direct I/O support. Direct I/O with fscrypt is
-only supported through blk-crypto (i.e. CONFIG_BLK_INLINE_ENCRYPTION must
-have been enabled, the 'inlinecrypt' mount option must have been specified,
-and either hardware inline encryption support must be present or
-CONFIG_BLK_INLINE_ENCYRPTION_FALLBACK must have been enabled). Further,
-direct I/O on encrypted files is only supported when the *length* of the
-I/O is aligned to the filesystem block size (which is *not* necessarily the
-same as the block device's block size).
+Now that the blk-crypto-fallback has been updated to work without that
+assumption, we relax the alignment requirement - blk-crypto now only needs
+the total size of the bio to be aligned to the crypto data unit size.
 
-fscrypt_limit_io_blocks() is called before setting up the iomap to ensure
-that the blocks of each bio that iomap will submit will have contiguous
-DUNs. Note that fscrypt_limit_io_blocks() is normally a no-op, as normally
-the DUNs simply increment along with the logical blocks. But it's needed
-to handle an edge case in one of the fscrypt IV generation methods.
-
+Co-developed-by: Eric Biggers <ebiggers@google.com>
 Signed-off-by: Eric Biggers <ebiggers@google.com>
-Co-developed-by: Satya Tangirala <satyat@google.com>
 Signed-off-by: Satya Tangirala <satyat@google.com>
-Reviewed-by: Jaegeuk Kim <jaegeuk@kernel.org>
-Acked-by: Theodore Ts'o <tytso@mit.edu>
 ---
- fs/ext4/file.c  | 10 ++++++----
- fs/ext4/inode.c |  7 +++++++
- 2 files changed, 13 insertions(+), 4 deletions(-)
+ block/blk-crypto.c | 19 ++-----------------
+ 1 file changed, 2 insertions(+), 17 deletions(-)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 349b27f0dda0..77681ba5e6cc 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -36,9 +36,11 @@
- #include "acl.h"
- #include "truncate.h"
+diff --git a/block/blk-crypto.c b/block/blk-crypto.c
+index 5da43f0973b4..fcee0038f7e0 100644
+--- a/block/blk-crypto.c
++++ b/block/blk-crypto.c
+@@ -200,22 +200,6 @@ bool bio_crypt_ctx_mergeable(struct bio_crypt_ctx *bc1, unsigned int bc1_bytes,
+ 	return !bc1 || bio_crypt_dun_is_contiguous(bc1, bc1_bytes, bc2->bc_dun);
+ }
  
--static bool ext4_dio_supported(struct inode *inode)
-+static bool ext4_dio_supported(struct kiocb *iocb, struct iov_iter *iter)
+-/* Check that all I/O segments are data unit aligned. */
+-static bool bio_crypt_check_alignment(struct bio *bio)
+-{
+-	const unsigned int data_unit_size =
+-		bio->bi_crypt_context->bc_key->crypto_cfg.data_unit_size;
+-	struct bvec_iter iter;
+-	struct bio_vec bv;
+-
+-	bio_for_each_segment(bv, bio, iter) {
+-		if (!IS_ALIGNED(bv.bv_len | bv.bv_offset, data_unit_size))
+-			return false;
+-	}
+-
+-	return true;
+-}
+-
+ blk_status_t __blk_crypto_init_request(struct request *rq)
  {
--	if (IS_ENABLED(CONFIG_FS_ENCRYPTION) && IS_ENCRYPTED(inode))
-+	struct inode *inode = file_inode(iocb->ki_filp);
-+
-+	if (!fscrypt_dio_supported(iocb, iter))
- 		return false;
- 	if (fsverity_active(inode))
- 		return false;
-@@ -61,7 +63,7 @@ static ssize_t ext4_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 		inode_lock_shared(inode);
+ 	return blk_ksm_get_slot_for_key(rq->q->ksm, rq->crypt_ctx->bc_key,
+@@ -271,7 +255,8 @@ bool __blk_crypto_bio_prep(struct bio **bio_ptr)
+ 		goto fail;
  	}
  
--	if (!ext4_dio_supported(inode)) {
-+	if (!ext4_dio_supported(iocb, to)) {
- 		inode_unlock_shared(inode);
- 		/*
- 		 * Fallback to buffered I/O if the operation being performed on
-@@ -495,7 +497,7 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
+-	if (!bio_crypt_check_alignment(bio)) {
++	if (!IS_ALIGNED(bio->bi_iter.bi_size,
++			bc_key->crypto_cfg.data_unit_size)) {
+ 		bio->bi_status = BLK_STS_IOERR;
+ 		goto fail;
  	}
- 
- 	/* Fallback to buffered I/O if the inode does not support direct I/O. */
--	if (!ext4_dio_supported(inode)) {
-+	if (!ext4_dio_supported(iocb, from)) {
- 		if (ilock_shared)
- 			inode_unlock_shared(inode);
- 		else
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index c173c8405856..e5407699ce92 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3482,6 +3482,13 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 	if (ret < 0)
- 		return ret;
- out:
-+	/*
-+	 * When inline encryption is enabled, sometimes I/O to an encrypted file
-+	 * has to be broken up to guarantee DUN contiguity. Handle this by
-+	 * limiting the length of the mapping returned.
-+	 */
-+	map.m_len = fscrypt_limit_io_blocks(inode, map.m_lblk, map.m_len);
-+
- 	ext4_set_iomap(inode, iomap, &map, offset, length);
- 
- 	return 0;
 -- 
 2.30.0.280.ga3ce27912f-goog
 
