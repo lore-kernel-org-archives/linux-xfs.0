@@ -2,214 +2,214 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9D75C433E9
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 00:33:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F350C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 01:45:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C92923718
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 00:33:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF20C23730
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 01:45:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733134AbhAUAcu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Jan 2021 19:32:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48092 "EHLO mail.kernel.org"
+        id S1727697AbhAUAzl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Jan 2021 19:55:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56010 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404204AbhATXfV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 Jan 2021 18:35:21 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E9F8F22B2A
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Jan 2021 23:34:38 +0000 (UTC)
+        id S1729581AbhAUAND (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Jan 2021 19:13:03 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5606023441;
+        Thu, 21 Jan 2021 00:12:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611185679;
-        bh=xnG1wb+uee2AEHJht5uSn/Ag8gAj3gHXrjWx84cVe/4=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=P5T5Zd9B+5wNf+vZKtJ43NaXtD/1TXdFc5/Dxr3GuNDXCKnqIkJFDz0VSGOfC/INB
-         CmGT99ZNv4EEUajWFoLSwUb6dUuPKpwFsLiQhqhDgkR1D2JE5P4Suk5Igbbrt5Im+R
-         J1iXjXx81uWqzpbDuh+c7w1N6m2yc6Abwh/ac4ejVRaDlre/XGmGDzuPDD43sFWtYU
-         8Q6398qT3au1K/tl97KeMw88NWE9uGjBRBlutpSRXITUfRnlrE+vu4yDR5szd1fRGY
-         tiIaJaLfC67YVhtdRCPIp6mr+KIx32JeeJA70osei2cNp52cHE2XwkwJI7okaJKMgW
-         3hSIzKDsJ1h/g==
-Date:   Wed, 20 Jan 2021 15:34:39 -0800
+        s=k20201202; t=1611187941;
+        bh=XlWxO0NXO3BXrgArLq7ZgVApXQLlrH6RnWCaTEEmRlc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=QyRznmcuWlKh2IOs1PYtW6dFjSc95t00FKWpcP1mHu2fV+oJFU1tPgEYQMN9yuB4j
+         7IE/0iYKcGsh3kp3Ig6M6SPKrIojunscBRMZSB8wiepZq6Uk6LjpM1puTBg1grGD7L
+         DGPU2XjYctxzbC+9rKaJZHvJVJEm8wqnBN4Gx92SQ6QMcsV4HYoSAp8u+bebymjbka
+         8PUJ6Ch/ySudXmXjfgF4BIzrwWPErg8Wxn/l7TUIHbk6i7q2kGiWVmu89akd9zb6W4
+         r7zu/tBc331PQaWIkopSik4noE1ZCdX4hWim5E4CEuXe1kZopBNH8MALrb8vW36QU4
+         Y2fLNxWcd7iZA==
+Date:   Wed, 20 Jan 2021 16:12:22 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/10] xfs: increase the default parallelism levels of
- pwork clients
-Message-ID: <20210120233439.GT3134581@magnolia>
-References: <161100798100.90204.7839064495063223590.stgit@magnolia>
- <161100800882.90204.6003697594198832699.stgit@magnolia>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [RFC[RAP] PATCH] xfs: allow setting and clearing of log incompat
+ feature flags
+Message-ID: <20210121001222.GU3134581@magnolia>
+References: <20201210215004.GC3913616@dread.disaster.area>
+ <20201211133901.GA2032335@bfoster>
+ <20201212211439.GC632069@dread.disaster.area>
+ <20201214155831.GB2244296@bfoster>
+ <20201214205456.GD632069@dread.disaster.area>
+ <20201215135003.GA2346012@bfoster>
+ <20210107232821.GN6918@magnolia>
+ <20210113213105.GG331610@dread.disaster.area>
+ <20210114022547.GX1164246@magnolia>
+ <20210114103047.GE1333929@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161100800882.90204.6003697594198832699.stgit@magnolia>
+In-Reply-To: <20210114103047.GE1333929@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 18, 2021 at 02:13:28PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Jan 14, 2021 at 05:30:47AM -0500, Brian Foster wrote:
+> On Wed, Jan 13, 2021 at 06:25:47PM -0800, Darrick J. Wong wrote:
+> > On Thu, Jan 14, 2021 at 08:31:05AM +1100, Dave Chinner wrote:
+> > > On Thu, Jan 07, 2021 at 03:28:21PM -0800, Darrick J. Wong wrote:
+> > > > On Tue, Dec 15, 2020 at 08:50:03AM -0500, Brian Foster wrote:
+> > > > > On Tue, Dec 15, 2020 at 07:54:56AM +1100, Dave Chinner wrote:
+> > > > > > On Mon, Dec 14, 2020 at 10:58:31AM -0500, Brian Foster wrote:
+> > > > > > > On Sun, Dec 13, 2020 at 08:14:39AM +1100, Dave Chinner wrote:
+> > > > > > > > On Fri, Dec 11, 2020 at 08:39:01AM -0500, Brian Foster wrote:
+> > > > > > > > > On Fri, Dec 11, 2020 at 08:50:04AM +1100, Dave Chinner wrote:
+> > > > > > > > > > As for a mechanism for dynamically adding log incompat flags?
+> > > > > > > > > > Perhaps we just do that in xfs_trans_alloc() - add an log incompat
+> > > > > > > > > > flags field into the transaction reservation structure, and if
+> > > > > > > > > > xfs_trans_alloc() sees an incompat field set and the superblock
+> > > > > > > > > > doesn't have it set, the first thing it does is run a "set log
+> > > > > > > > > > incompat flag" transaction before then doing it's normal work...
+> > > > > > > > > > 
+> > > > > > > > > > This should be rare enough it doesn't have any measurable
+> > > > > > > > > > performance overhead, and it's flexible enough to support any log
+> > > > > > > > > > incompat feature we might need to implement...
+> > > > > > > > > > 
+> > > > > > > > > 
+> > > > > > > > > But I don't think that is sufficient. As Darrick pointed out up-thread,
+> > > > > > > > > the updated superblock has to be written back before we're allowed to
+> > > > > > > > > commit transactions with incompatible items. Otherwise, an older kernel
+> > > > > > > > > can attempt log recovery with incompatible items present if the
+> > > > > > > > > filesystem crashes before the superblock is written back.
+> > > > > > > > 
+> > > > > > > > Sure, that's what the hook in xfs_trans_alloc() would do. It can do
+> > > > > > > > the work in the context that is going to need it, and set a wait
+> > > > > > > > flag for all incoming transactions that need a log incompat flag to
+> > > > > > > > wait for it do it's work.  Once it's done and the flag is set, it
+> > > > > > > > can continue and wake all the waiters now that the log incompat flag
+> > > > > > > > has been set. Anything that doesn't need a log incompat flag can
+> > > > > > > > just keep going and doesn't ever get blocked....
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > It would have to be a sync transaction plus sync AIL force in
+> > > > > > > transaction allocation context if we were to log the superblock change,
+> > > > > > > which sounds a bit hairy...
+> > > > > > 
+> > > > > > Well, we already do sync AIL forces in transaction reservation when
+> > > > > > we run out of log space, so there's no technical reason for this
+> > > > > > being a problem at all. xfs_trans_alloc() is expected to block
+> > > > > > waiting on AIL tail pushing....
+> > > > > > 
+> > > > > > > > I suspect this is one of the rare occasions where an unlogged
+> > > > > > > > modification makes an awful lot of sense: we don't even log that we
+> > > > > > > > are adding a log incompat flag, we just do an atomic synchronous
+> > > > > > > > write straight to the superblock to set the incompat flag(s). The
+> > > > > > > > entire modification can be done under the superblock buffer lock to
+> > > > > > > > serialise multiple transactions all trying to set incompat bits, and
+> > > > > > > > we don't set the in-memory superblock incompat bit until after it
+> > > > > > > > has been set and written to disk. Hence multiple waits can check the
+> > > > > > > > flag after they've got the sb buffer lock, and they'll see that it's
+> > > > > > > > already been set and just continue...
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > Agreed. That is a notable simplification and I think much more
+> > > > > > > preferable than the above for the dynamic approach.
+> > > > > > > 
+> > > > > > > That said, note that dynamic feature bits might introduce complexity in
+> > > > > > > more subtle ways. For example, nothing that I can see currently
+> > > > > > > serializes idle log covering with an active transaction (that may have
+> > > > > > > just set an incompat bit via some hook yet not committed anything to the
+> > > > > > > log subsystem), so it might not be as simple as just adding a hook
+> > > > > > > somewhere.
+> > > > > > 
+> > > > > > Right, we had to make log covering away of the CIL to prevent it
+> > > > > > from idling while there were multiple active committed transactions
+> > > > > > in memory. So the state machine only progresses if both the CIL and
+> > > > > > AIL are empty. If we had some way of knowing that a transaction is
+> > > > > > in progress, we could check that in xfs_log_need_covered() and we'd
+> > > > > > stop the state machine progress at that point. But we got rid of the
+> > > > > > active transaction counter that we could use for that....
+> > > > > > 
+> > > > > > [Hmmm, didn't I recently have a patch that re-introduced that
+> > > > > > counter to fix some other "we need to know if there's an active
+> > > > > > transaction running" issue? Can't remember what that was now...]
+> > > > > > 
+> > > > > 
+> > > > > I think you removed it, actually, via commit b41b46c20c0bd ("xfs: remove
+> > > > > the m_active_trans counter"). We subsequently discussed reintroducing
+> > > > > the same concept for the quotaoff rework [1], which might be what you're
+> > > > > thinking of. That uses a percpu rwsem since we don't really need a
+> > > > > counter, but I suspect could be reused for serialization in this use
+> > > > > case as well (assuming I can get some reviews on it.. ;).
+> > > > > 
+> > > > > FWIW, I was considering putting those quotaoff patches ahead of the log
+> > > > > covering work so we could reuse that code again in attr quiesce, but I
+> > > > > think I'm pretty close to being able to remove that particular usage
+> > > > > entirely.
+> > > > 
+> > > > I was thinking about using a rwsem to protect the log incompat flags --
+> > > > code that thinks it might use a protected feature takes the lock in
+> > > > read mode until commit; and the log covering code only clears the
+> > > > flags if down_write_trylock succeeds.  That constrains the overhead to
+> > > > threads that are trying to use the feature, instead of making all
+> > > > threads pay the cost of bumping the counter.
+> > > 
+> > > If you are going to do that, make it a per-cpu rwsem, because we
+> > > really only care about the global shared read overhead in the hot
+> > > paths and not the overhead of taking it in write mode if
+> > > it is only the log covering code that does that...
+> > > 
+> > > > > I'm more approaching this from a "what are the requirements and how/why
+> > > > > do they justify the associated complexity?" angle. That's why I'm asking
+> > > > > things like how much difference does a dynamic bit really make for
+> > > > > something like xattrs. But I agree that's less of a concern when
+> > > > > associated with more obscure or rarely used operations, so on balance I
+> > > > > think that's a fair approach to this mechanism provided we consider
+> > > > > suitability on a per feature basis.
+> > > > 
+> > > > Hm.  If I had to peer into my crystal ball I'd guess that the current
+> > > > xattr logging scheme works fine for most xattr users, so I wouldn't
+> > > > worry much about the dynamic bit.
+> > > > 
+> > > > However, I could see things like atomic range exchange being more
+> > > > popular, in which case people might notice the overhead of tracking when
+> > > > we can turn off the feature bit...
+> > > 
+> > > Hence a per-cpu rwsem... :)
+> > 
+> > Yup, it seems to work fine, though now I'm distracted over the posteof
+> > cleanup serieses... :)
+
+Well ok, it works with the /huge/ exception that there is no
+percpu_rwsem_down_write_trylock, which means that we can't have the log
+opportunistically try to grab it while covering.  That's kind of a
+bummer, since I don't think that's at all desirable.
+
+> FWIW, I have a patch on the list from a few months ago that introduces a
+> transaction percpu rwsem for the quotaoff rework:
 > 
-> Increase the default parallelism level for pwork clients so that we can
-> take advantage of computers with a lot of CPUs and a lot of hardware.
-> The posteof/cowblocks cleanup series will use the functionality
-> presented in this patch to constrain the number of background per-ag gc
-> threads to our best estimate of the amount of parallelism that the
-> filesystem can sustain.
+> https://lore.kernel.org/linux-xfs/20201001150310.141467-3-bfoster@redhat.com/
+> 
+> Perhaps I should repost?
 
-Dave and I had a conversation on IRC about this trying to figure out the
-"desired" parallelism of filesystem threads in which he pointed out that
-we can't easily figure out the real iops capacity of the storage --
-devices don't report "nonrotational" status correctly, hardware raid
-with caches and nvram don't neatly fit our "spinning floppy" vs "ssd"
-dichotomy, and in the end the device concurrency is the queue depth of
-the underlying hardware.  For really fast storage, even one io submitter
-per cpu isn't enough to saturate the device.
-
-So rather than try to figure out the magic optimal number and introduce
-override knobs, XFS should not articially limit its concurrency levels.
-Wherever it is that the bottlenecks lie (data device, log device, log
-grants, locks) we might as well schedule work items as they come so that
-we can see all the hot spots as they arise.
-
-I will rework this patch to remove the artificial limits, convert the
-quotacheck pworker to be unbound (since we actually /want/ the workers
-to spread out among the CPUs and we don't care about bounding), and add
-WQ_SYSFS to all the workqueues so we can examine them in
-/sys/bus/workqueue/devices.
+Ok?  Though /me is busy collecting things for 5.12 ATM... :)
 
 --D
 
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_iwalk.c |    2 +
->  fs/xfs/xfs_pwork.c |   80 +++++++++++++++++++++++++++++++++++++++++++++++-----
->  fs/xfs/xfs_pwork.h |    3 +-
->  3 files changed, 76 insertions(+), 9 deletions(-)
+> Brian
 > 
-> 
-> diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-> index eae3aff9bc97..bb31ef870cdc 100644
-> --- a/fs/xfs/xfs_iwalk.c
-> +++ b/fs/xfs/xfs_iwalk.c
-> @@ -624,7 +624,7 @@ xfs_iwalk_threaded(
->  	ASSERT(agno < mp->m_sb.sb_agcount);
->  	ASSERT(!(flags & ~XFS_IWALK_FLAGS_ALL));
->  
-> -	nr_threads = xfs_pwork_guess_datadev_parallelism(mp);
-> +	nr_threads = xfs_pwork_guess_workqueue_threads(mp);
->  	error = xfs_pwork_init(mp, &pctl, xfs_iwalk_ag_work, "xfs_iwalk",
->  			nr_threads);
->  	if (error)
-> diff --git a/fs/xfs/xfs_pwork.c b/fs/xfs/xfs_pwork.c
-> index b03333f1c84a..53606397ff54 100644
-> --- a/fs/xfs/xfs_pwork.c
-> +++ b/fs/xfs/xfs_pwork.c
-> @@ -118,19 +118,85 @@ xfs_pwork_poll(
->  		touch_softlockup_watchdog();
->  }
->  
-> +/* Estimate the amount of parallelism available for a storage device. */
-> +static unsigned int
-> +xfs_guess_buftarg_parallelism(
-> +	struct xfs_buftarg	*btp)
-> +{
-> +	int			iomin;
-> +	int			ioopt;
-> +
-> +	/*
-> +	 * The device tells us that it is non-rotational, and we take that to
-> +	 * mean there are no moving parts and that the device can handle all
-> +	 * the CPUs throwing IO requests at it.
-> +	 */
-> +	if (blk_queue_nonrot(btp->bt_bdev->bd_disk->queue))
-> +		return num_online_cpus();
-> +
-> +	/*
-> +	 * The device has a preferred and minimum IO size that suggest a RAID
-> +	 * setup, so infer the number of disks and assume that the parallelism
-> +	 * is equal to the disk count.
-> +	 */
-> +	iomin = bdev_io_min(btp->bt_bdev);
-> +	ioopt = bdev_io_opt(btp->bt_bdev);
-> +	if (iomin > 0 && ioopt > iomin)
-> +		return ioopt / iomin;
-> +
-> +	/*
-> +	 * The device did not indicate that it has any capabilities beyond that
-> +	 * of a rotating disk with a single drive head, so we estimate no
-> +	 * parallelism at all.
-> +	 */
-> +	return 1;
-> +}
-> +
->  /*
-> - * Return the amount of parallelism that the data device can handle, or 0 for
-> - * no limit.
-> + * Estimate the amount of parallelism that is available for metadata operations
-> + * on this filesystem.
->   */
->  unsigned int
-> -xfs_pwork_guess_datadev_parallelism(
-> +xfs_pwork_guess_metadata_threads(
->  	struct xfs_mount	*mp)
->  {
-> -	struct xfs_buftarg	*btp = mp->m_ddev_targp;
-> +	unsigned int		threads;
->  
->  	/*
-> -	 * For now we'll go with the most conservative setting possible,
-> -	 * which is two threads for an SSD and 1 thread everywhere else.
-> +	 * Estimate the amount of parallelism for metadata operations from the
-> +	 * least capable of the two devices that handle metadata.  Cap that
-> +	 * estimate to the number of AGs to avoid unnecessary lock contention.
->  	 */
-> -	return blk_queue_nonrot(btp->bt_bdev->bd_disk->queue) ? 2 : 1;
-> +	threads = xfs_guess_buftarg_parallelism(mp->m_ddev_targp);
-> +	if (mp->m_logdev_targp != mp->m_ddev_targp)
-> +		threads = min(xfs_guess_buftarg_parallelism(mp->m_logdev_targp),
-> +			      threads);
-> +	threads = min(mp->m_sb.sb_agcount, threads);
-> +
-> +	/* If the storage told us it has fancy capabilities, we're done. */
-> +	if (threads > 1)
-> +		goto clamp;
-> +
-> +	/*
-> +	 * Metadata storage did not even hint that it has any parallel
-> +	 * capability.  If the filesystem was formatted with a stripe unit and
-> +	 * width, we'll treat that as evidence of a RAID setup and estimate
-> +	 * the number of disks.
-> +	 */
-> +	if (mp->m_sb.sb_unit > 0 && mp->m_sb.sb_width > mp->m_sb.sb_unit)
-> +		threads = mp->m_sb.sb_width / mp->m_sb.sb_unit;
-> +
-> +clamp:
-> +	/* Don't return an estimate larger than the CPU count. */
-> +	return min(num_online_cpus(), threads);
-> +}
-> +
-> +/* Estimate how many threads we need for a parallel work queue. */
-> +unsigned int
-> +xfs_pwork_guess_workqueue_threads(
-> +	struct xfs_mount	*mp)
-> +{
-> +	/* pwork queues are not unbounded, so we have to abide WQ_MAX_ACTIVE. */
-> +	return min_t(unsigned int, xfs_pwork_guess_metadata_threads(mp),
-> +			WQ_MAX_ACTIVE);
->  }
-> diff --git a/fs/xfs/xfs_pwork.h b/fs/xfs/xfs_pwork.h
-> index 8133124cf3bb..6320bca9c554 100644
-> --- a/fs/xfs/xfs_pwork.h
-> +++ b/fs/xfs/xfs_pwork.h
-> @@ -56,6 +56,7 @@ int xfs_pwork_init(struct xfs_mount *mp, struct xfs_pwork_ctl *pctl,
->  void xfs_pwork_queue(struct xfs_pwork_ctl *pctl, struct xfs_pwork *pwork);
->  int xfs_pwork_destroy(struct xfs_pwork_ctl *pctl);
->  void xfs_pwork_poll(struct xfs_pwork_ctl *pctl);
-> -unsigned int xfs_pwork_guess_datadev_parallelism(struct xfs_mount *mp);
-> +unsigned int xfs_pwork_guess_metadata_threads(struct xfs_mount *mp);
-> +unsigned int xfs_pwork_guess_workqueue_threads(struct xfs_mount *mp);
->  
->  #endif /* __XFS_PWORK_H__ */
+> > --D
+> > 
+> > > Cheers,
+> > > 
+> > > Dave.
+> > > -- 
+> > > Dave Chinner
+> > > david@fromorbit.com
+> > 
 > 
