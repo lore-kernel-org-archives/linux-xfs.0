@@ -7,288 +7,268 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65FE8C4332D
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 19:12:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3883C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 19:17:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 390B323A1C
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 19:12:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6840623136
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 19:17:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726073AbhAUTMY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 14:12:24 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38906 "EHLO mail.kernel.org"
+        id S1727121AbhAUTRb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 14:17:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39726 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726576AbhAUTMU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Jan 2021 14:12:20 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CDF9723A5E;
-        Thu, 21 Jan 2021 19:01:38 +0000 (UTC)
+        id S1727120AbhAUTRT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jan 2021 14:17:19 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 721C223136;
+        Thu, 21 Jan 2021 18:53:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611255698;
-        bh=ddH61A7+enAHtNbwBP89IPjITRYDat/cDncWCEptzO0=;
+        s=k20201202; t=1611255215;
+        bh=t4/uV51BVDZZJNH0464zaiT+avbcZsim2cFKf5yq/Rg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ur7QdmIPow1LEEw7wuJF00G+0sLhAYWmr2I3UTToXWNiap7JMQHJaj871zIPncFPV
-         ImvhTu9tgsFsQ+APRILQqC9JQK6SImreE5GD3i3LB3NWAX/iFX3UmvkoDZw7ZgfnNx
-         21x3/gzN6PuNhxETCzOTL/ybS1vNGofoZSCEYINQMkumDAwcvHfT/h7P+VeAX1Ztuj
-         QpA2pOF0DEtcQUIJBDu0V/iR8TI72FgckwSEpZIsvrFrgB1WPlEibjCYqQ7KPLtM++
-         OILdfvBVgh6KDrBauXCQ5PrrknGP0VZrG8AEe+BEwViNHk+YDWSVvZUkLrIzIAGExn
-         TW3BNFkT/khiw==
-Date:   Thu, 21 Jan 2021 11:01:38 -0800
+        b=qiAx2akzlgaIsmsRkwRfRNFUAR5MOJ6mTig102LV3OyalPSKd3UEptytwlCYTmY3Z
+         8shyLy65liDmwR97zQerDgWY1AyenAxHmY3iMpNDAHuS6x3FLgzhTMVVqmgezkDYMR
+         ntyksrnf+iYY0OoVsSmfqJIoKjlWwcQYBiHDLZK2crTv1a7E5M4Zno5qKhSXd5ChLN
+         9qs9KYU3Hk9Z4azJ5dIXMA2cp7FFJymrFWZyFB+fJpHMhtnWfN+f/dT8VT2dXxD7Ee
+         UJ9VHOi6hKmjmq9ntkS/W0nUVEzCqY7439hGnZ3M4RU+OCeyUosnqA45eMdOpTabPz
+         YOgegBtsFTvjA==
+Date:   Thu, 21 Jan 2021 10:53:34 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, avi@scylladb.com,
-        Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 11/11] xfs: reduce exclusive locking on unaligned dio
-Message-ID: <20210121190138.GE1282159@magnolia>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        avi@scylladb.com, Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 09/11] iomap: pass a flags argument to iomap_dio_rw
+Message-ID: <20210121185334.GC1282159@magnolia>
 References: <20210121085906.322712-1-hch@lst.de>
- <20210121085906.322712-12-hch@lst.de>
- <20210121133334.GB1793795@bfoster>
+ <20210121085906.322712-10-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210121133334.GB1793795@bfoster>
+In-Reply-To: <20210121085906.322712-10-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 21, 2021 at 08:33:34AM -0500, Brian Foster wrote:
-> On Thu, Jan 21, 2021 at 09:59:06AM +0100, Christoph Hellwig wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Attempt shared locking for unaligned DIO, but only if the the
-> > underlying extent is already allocated and in written state. On
-> > failure, retry with the existing exclusive locking.
-> > 
-> > Test case is fio randrw of 512 byte IOs using AIO and an iodepth of
-> > 32 IOs.
-> > 
-> > Vanilla:
-> > 
-> >   READ: bw=4560KiB/s (4670kB/s), 4560KiB/s-4560KiB/s (4670kB/s-4670kB/s), io=134MiB (140MB), run=30001-30001msec
-> >   WRITE: bw=4567KiB/s (4676kB/s), 4567KiB/s-4567KiB/s (4676kB/s-4676kB/s), io=134MiB (140MB), run=30001-30001msec
-> > 
-> > Patched:
-> >    READ: bw=37.6MiB/s (39.4MB/s), 37.6MiB/s-37.6MiB/s (39.4MB/s-39.4MB/s), io=1127MiB (1182MB), run=30002-30002msec
-> >   WRITE: bw=37.6MiB/s (39.4MB/s), 37.6MiB/s-37.6MiB/s (39.4MB/s-39.4MB/s), io=1128MiB (1183MB), run=30002-30002msec
-> > 
-> > That's an improvement from ~18k IOPS to a ~150k IOPS, which is
-> > about the IOPS limit of the VM block device setup I'm testing on.
-> > 
-> > 4kB block IO comparison:
-> > 
-> >    READ: bw=296MiB/s (310MB/s), 296MiB/s-296MiB/s (310MB/s-310MB/s), io=8868MiB (9299MB), run=30002-30002msec
-> >   WRITE: bw=296MiB/s (310MB/s), 296MiB/s-296MiB/s (310MB/s-310MB/s), io=8878MiB (9309MB), run=30002-30002msec
-> > 
-> > Which is ~150k IOPS, same as what the test gets for sub-block
-> > AIO+DIO writes with this patch.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > [hch: rebased, split unaligned from nowait]
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/xfs_file.c  | 87 ++++++++++++++++++++++++++++++++--------------
-> >  fs/xfs/xfs_iomap.c | 30 +++++++++++-----
-> >  2 files changed, 83 insertions(+), 34 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > index b181db42f2f32f..33899a5cca53f9 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -544,22 +544,35 @@ xfs_file_dio_write_aligned(
-> >  /*
-> >   * Handle block unaligned direct IO writes
-> >   *
-> > - * In most cases direct IO writes will be done holding IOLOCK_SHARED, allowing
-> > - * them to be done in parallel with reads and other direct IO writes.  However,
-> > - * if the I/O is not aligned to filesystem blocks, the direct I/O layer may
-> > - * need to do sub-block zeroing and that requires serialisation against other
-> > - * direct I/Os to the same block. In this case we need to serialise the
-> > - * submission of the unaligned I/Os so that we don't get racing block zeroing in
-> > - * the dio layer.
-> > + * In most cases direct IO writes will be done holding IOLOCK_SHARED
-> > + * allowing them to be done in parallel with reads and other direct IO writes.
-> > + * However, if the IO is not aligned to filesystem blocks, the direct IO layer
-> > + * may need to do sub-block zeroing and that requires serialisation against other
-> > + * direct IOs to the same block. In the case where sub-block zeroing is not
-> > + * required, we can do concurrent sub-block dios to the same block successfully.
-> >   *
-> > - * To provide the same serialisation for AIO, we also need to wait for
-> > + * Hence we have two cases here - the shared, optimisitic fast path for written
-
-"optimistic"
-
-> > + * extents, and everything else that needs exclusive IO path access across the
-> > + * entire IO.
-> > + *
-> > + * For the first case, we do all the checks we need at the mapping layer in the
-> > + * DIO code as part of the existing NOWAIT infrastructure. Hence all we need to
-> > + * do to support concurrent subblock dio is first try a non-blocking submission.
-> > + * If that returns -EAGAIN, then we simply repeat the IO submission with full
-> > + * IO exclusivity guaranteed so that we avoid racing sub-block zeroing.
-> > + *
+On Thu, Jan 21, 2021 at 09:59:04AM +0100, Christoph Hellwig wrote:
+> Pass a set of flags to iomap_dio_rw instead of the boolean
+> wait_for_completion argument.  The IOMAP_DIO_FORCE_WAIT flag
+> replaces the wait_for_completion, but only needs to be passed
+> when the iocb isn't synchronous to start with to simplify the
+> callers.
 > 
-> The above paragraph still implicitly refers to the original NOWAIT based
-> implementation. I'd suggest to tweak it to something like:
-> 
-> "The mapping layer of the dio code performs all the checks required to
-> distinguish between the shared (overwrite) and exclusive cases. Hence to
-> support concurrent unaligned dio, first submit the request in overwrite
-> only mode. If that returns -EAGAIN, sub-block zeroing is required.
-> Repeat the submission with full IO exclusivity to avoid races."
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-FWIW I like this version better, because the fact that we reuse the
-existing 'nowait' switching to handle unaligned direct writes is a minor
-implementation detail here.
-
-I think I'm about ready to RVB this, but there are enough small loose
-ends that I'll wait for the next version. :)
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> That aside, I still find the single mapping requirement a bit
-> unfortunate, but otherwise the code LGTM:
+> ---
+>  fs/btrfs/file.c       |  7 +++----
+>  fs/ext4/file.c        |  5 ++---
+>  fs/gfs2/file.c        |  7 ++-----
+>  fs/iomap/direct-io.c  | 11 +++++------
+>  fs/xfs/xfs_file.c     |  7 +++----
+>  fs/zonefs/super.c     |  4 ++--
+>  include/linux/iomap.h | 10 ++++++++--
+>  7 files changed, 25 insertions(+), 26 deletions(-)
 > 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> > + * The only wrinkle in this case is that the iomap DIO code always does
-> > + * partial tail sub-block zeroing for post-EOF writes. Hence for any IO that
-> > + * _ends_ past the current EOF we need to run with full exclusivity. Note that
-> > + * we also check for the start of IO being beyond EOF because then zeroing
-> > + * between the old EOF and the start of the IO is required and that also
-> > + * requires exclusivity. Hence we avoid lock cycles and blocking under
-> > + * IOCB_NOWAIT for this situation, too.
-> > + *
-> > + * To provide the exclusivity required when using AIO, we also need to wait for
-> >   * outstanding IOs to complete so that unwritten extent conversion is completed
-> >   * before we try to map the overlapping block. This is currently implemented by
-> >   * hitting it with a big hammer (i.e. inode_dio_wait()).
-> > - *
-> > - * This means that unaligned dio writes always block. There is no "nowait" fast
-> > - * path in this code - if IOCB_NOWAIT is set we simply return -EAGAIN up front
-> > - * and we don't have to worry about that anymore.
-> >   */
-> >  static noinline ssize_t
-> >  xfs_file_dio_write_unaligned(
-> > @@ -567,13 +580,27 @@ xfs_file_dio_write_unaligned(
-> >  	struct kiocb		*iocb,
-> >  	struct iov_iter		*from)
-> >  {
-> > -	int			iolock = XFS_IOLOCK_EXCL;
-> > +	size_t			isize = i_size_read(VFS_I(ip));
-> > +	size_t			count = iov_iter_count(from);
-> > +	int			iolock = XFS_IOLOCK_SHARED;
-> > +	unsigned int		flags = IOMAP_DIO_OVERWRITE_ONLY;
-> >  	ssize_t			ret;
-> >  
-> > -	/* unaligned dio always waits, bail */
-> > -	if (iocb->ki_flags & IOCB_NOWAIT)
-> > -		return -EAGAIN;
-> > -	xfs_ilock(ip, iolock);
-> > +	/*
-> > +	 * Extending writes need exclusivity because of the sub-block zeroing
-> > +	 * that the DIO code always does for partial tail blocks beyond EOF.
-> > +	 */
-> > +	if (iocb->ki_pos > isize || iocb->ki_pos + count >= isize) {
-> > +retry_exclusive:
-> > +		if (iocb->ki_flags & IOCB_NOWAIT)
-> > +			return -EAGAIN;
-> > +		iolock = XFS_IOLOCK_EXCL;
-> > +		flags = IOMAP_DIO_FORCE_WAIT;
-> > +	}
-> > +
-> > +	ret = xfs_ilock_iocb(iocb, iolock);
-> > +	if (ret)
-> > +		return ret;
-> >  
-> >  	/*
-> >  	 * We can't properly handle unaligned direct I/O to reflink files yet,
-> > @@ -590,19 +617,27 @@ xfs_file_dio_write_unaligned(
-> >  		goto out_unlock;
-> >  
-> >  	/*
-> > -	 * If we are doing unaligned I/O, we can't allow any other overlapping
-> > -	 * I/O in-flight at the same time or we risk data corruption. Wait for
-> > -	 * all other I/O to drain before we submit.
-> > +	 * If we are doing exclusive unaligned IO, we can't allow any other
-> > +	 * overlapping IO in-flight at the same time or we risk data corruption.
-> > +	 * Wait for all other IO to drain before we submit.
-> >  	 */
-> > -	inode_dio_wait(VFS_I(ip));
-> > +	if (flags & IOMAP_DIO_FORCE_WAIT)
-> > +		inode_dio_wait(VFS_I(ip));
-> >  
-> > -	/*
-> > -	 * This must be the only I/O in-flight. Wait on it before we release the
-> > -	 * iolock to prevent subsequent overlapping I/O.
-> > -	 */
-> >  	trace_xfs_file_direct_write(iocb, from);
-> >  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
-> > -			   &xfs_dio_write_ops, IOMAP_DIO_FORCE_WAIT);
-> > +			   &xfs_dio_write_ops, flags);
-> > +	/*
-> > +	 * Retry unaligned IO with exclusive blocking semantics if the DIO
-> > +	 * layer rejected it for mapping or locking reasons. If we are doing
-> > +	 * nonblocking user IO, propagate the error.
-> > +	 */
-> > +	if (ret == -EAGAIN && !(iocb->ki_flags & IOCB_NOWAIT)) {
-> > +		ASSERT(flags & IOMAP_DIO_OVERWRITE_ONLY);
-> > +		xfs_iunlock(ip, iolock);
-> > +		goto retry_exclusive;
-> > +	}
-> > +
-> >  out_unlock:
-> >  	if (iolock)
-> >  		xfs_iunlock(ip, iolock);
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index 7b9ff824e82d48..596af78f910596 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -784,15 +784,29 @@ xfs_direct_write_iomap_begin(
-> >  		goto allocate_blocks;
-> >  
-> >  	/*
-> > -	 * NOWAIT IO needs to span the entire requested IO with a single map so
-> > -	 * that we avoid partial IO failures due to the rest of the IO range not
-> > -	 * covered by this map triggering an EAGAIN condition when it is
-> > -	 * subsequently mapped and aborting the IO.
-> > +	 * NOWAIT and OVERWRITE needs to span the entire requested IO with a
-> > +	 * single map so that we avoid partial IO failures due to the rest of
-> > +	 * the IO range not covered by this map triggering an EAGAIN condition
-> > +	 * when it is subsequently mapped and aborting the IO.
-> >  	 */
-> > -	if ((flags & IOMAP_NOWAIT) &&
-> > -	    !imap_spans_range(&imap, offset_fsb, end_fsb)) {
-> > +	if (flags & (IOMAP_NOWAIT | IOMAP_OVERWRITE_ONLY)) {
-> >  		error = -EAGAIN;
-> > -		goto out_unlock;
-> > +		if (!imap_spans_range(&imap, offset_fsb, end_fsb))
-> > +			goto out_unlock;
-> > +	}
-> > +
-> > +	/*
-> > +	 * For overwrite only I/O, we cannot convert unwritten extents without
-> > +	 * requiring sub-block zeroing.  This can only be done under an
-> > +	 * exclusive IOLOCK, hence return -EAGAIN if this is not a written
-> > +	 * extent to tell the caller to try again.
-> > +	 */
-> > +	if (flags & IOMAP_OVERWRITE_ONLY) {
-> > +		error = -EAGAIN;
-> > +		if (imap.br_state != XFS_EXT_NORM &&
-> > +		    ((offset & mp->m_blockmask) ||
-> > +		     ((offset + length) & mp->m_blockmask)))
-> > +			goto out_unlock;
-> >  	}
-> >  
-> >  	xfs_iunlock(ip, lockmode);
-> > @@ -801,7 +815,7 @@ xfs_direct_write_iomap_begin(
-> >  
-> >  allocate_blocks:
-> >  	error = -EAGAIN;
-> > -	if (flags & IOMAP_NOWAIT)
-> > +	if (flags & (IOMAP_NOWAIT | IOMAP_OVERWRITE_ONLY))
-> >  		goto out_unlock;
-> >  
-> >  	/*
-> > -- 
-> > 2.29.2
-> > 
+> diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+> index 0e41459b8de667..ddfd2e2adedf58 100644
+> --- a/fs/btrfs/file.c
+> +++ b/fs/btrfs/file.c
+> @@ -1949,8 +1949,8 @@ static ssize_t btrfs_direct_write(struct kiocb *iocb, struct iov_iter *from)
+>  		goto buffered;
+>  	}
+>  
+> -	dio = __iomap_dio_rw(iocb, from, &btrfs_dio_iomap_ops,
+> -			     &btrfs_dio_ops, is_sync_kiocb(iocb));
+> +	dio = __iomap_dio_rw(iocb, from, &btrfs_dio_iomap_ops, &btrfs_dio_ops,
+> +			     0);
+>  
+>  	btrfs_inode_unlock(inode, ilock_flags);
+>  
+> @@ -3622,8 +3622,7 @@ static ssize_t btrfs_direct_read(struct kiocb *iocb, struct iov_iter *to)
+>  		return 0;
+>  
+>  	btrfs_inode_lock(inode, BTRFS_ILOCK_SHARED);
+> -	ret = iomap_dio_rw(iocb, to, &btrfs_dio_iomap_ops, &btrfs_dio_ops,
+> -			   is_sync_kiocb(iocb));
+> +	ret = iomap_dio_rw(iocb, to, &btrfs_dio_iomap_ops, &btrfs_dio_ops, 0);
+>  	btrfs_inode_unlock(inode, BTRFS_ILOCK_SHARED);
+>  	return ret;
+>  }
+> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> index 349b27f0dda0cb..194f5d00fa3267 100644
+> --- a/fs/ext4/file.c
+> +++ b/fs/ext4/file.c
+> @@ -74,8 +74,7 @@ static ssize_t ext4_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
+>  		return generic_file_read_iter(iocb, to);
+>  	}
+>  
+> -	ret = iomap_dio_rw(iocb, to, &ext4_iomap_ops, NULL,
+> -			   is_sync_kiocb(iocb));
+> +	ret = iomap_dio_rw(iocb, to, &ext4_iomap_ops, NULL, 0);
+>  	inode_unlock_shared(inode);
+>  
+>  	file_accessed(iocb->ki_filp);
+> @@ -550,7 +549,7 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>  	if (ilock_shared)
+>  		iomap_ops = &ext4_iomap_overwrite_ops;
+>  	ret = iomap_dio_rw(iocb, from, iomap_ops, &ext4_dio_write_ops,
+> -			   is_sync_kiocb(iocb) || unaligned_io || extend);
+> +			   (unaligned_io || extend) ? IOMAP_DIO_FORCE_WAIT : 0);
+>  	if (ret == -ENOTBLK)
+>  		ret = 0;
+>  
+> diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
+> index b39b339feddc93..89609c2997177a 100644
+> --- a/fs/gfs2/file.c
+> +++ b/fs/gfs2/file.c
+> @@ -797,9 +797,7 @@ static ssize_t gfs2_file_direct_read(struct kiocb *iocb, struct iov_iter *to,
+>  	if (ret)
+>  		goto out_uninit;
+>  
+> -	ret = iomap_dio_rw(iocb, to, &gfs2_iomap_ops, NULL,
+> -			   is_sync_kiocb(iocb));
+> -
+> +	ret = iomap_dio_rw(iocb, to, &gfs2_iomap_ops, NULL, 0);
+>  	gfs2_glock_dq(gh);
+>  out_uninit:
+>  	gfs2_holder_uninit(gh);
+> @@ -833,8 +831,7 @@ static ssize_t gfs2_file_direct_write(struct kiocb *iocb, struct iov_iter *from,
+>  	if (offset + len > i_size_read(&ip->i_inode))
+>  		goto out;
+>  
+> -	ret = iomap_dio_rw(iocb, from, &gfs2_iomap_ops, NULL,
+> -			   is_sync_kiocb(iocb));
+> +	ret = iomap_dio_rw(iocb, from, &gfs2_iomap_ops, NULL, 0);
+>  	if (ret == -ENOTBLK)
+>  		ret = 0;
+>  out:
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index 604103ab76f9c5..947343730e2c93 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -420,13 +420,15 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+>  struct iomap_dio *
+>  __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
+> -		bool wait_for_completion)
+> +		unsigned int dio_flags)
+>  {
+>  	struct address_space *mapping = iocb->ki_filp->f_mapping;
+>  	struct inode *inode = file_inode(iocb->ki_filp);
+>  	size_t count = iov_iter_count(iter);
+>  	loff_t pos = iocb->ki_pos;
+>  	loff_t end = iocb->ki_pos + count - 1, ret = 0;
+> +	bool wait_for_completion =
+> +		is_sync_kiocb(iocb) || (dio_flags & IOMAP_DIO_FORCE_WAIT);
+>  	unsigned int iomap_flags = IOMAP_DIRECT;
+>  	struct blk_plug plug;
+>  	struct iomap_dio *dio;
+> @@ -434,9 +436,6 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  	if (!count)
+>  		return NULL;
+>  
+> -	if (WARN_ON(is_sync_kiocb(iocb) && !wait_for_completion))
+> -		return ERR_PTR(-EIO);
+> -
+>  	dio = kmalloc(sizeof(*dio), GFP_KERNEL);
+>  	if (!dio)
+>  		return ERR_PTR(-ENOMEM);
+> @@ -598,11 +597,11 @@ EXPORT_SYMBOL_GPL(__iomap_dio_rw);
+>  ssize_t
+>  iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
+> -		bool wait_for_completion)
+> +		unsigned int dio_flags)
+>  {
+>  	struct iomap_dio *dio;
+>  
+> -	dio = __iomap_dio_rw(iocb, iter, ops, dops, wait_for_completion);
+> +	dio = __iomap_dio_rw(iocb, iter, ops, dops, dio_flags);
+>  	if (IS_ERR_OR_NULL(dio))
+>  		return PTR_ERR_OR_ZERO(dio);
+>  	return iomap_dio_complete(dio);
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index bffd7240cefb7f..b181db42f2f32f 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -232,8 +232,7 @@ xfs_file_dio_read(
+>  	ret = xfs_ilock_iocb(iocb, XFS_IOLOCK_SHARED);
+>  	if (ret)
+>  		return ret;
+> -	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL,
+> -			is_sync_kiocb(iocb));
+> +	ret = iomap_dio_rw(iocb, to, &xfs_read_iomap_ops, NULL, 0);
+>  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+>  
+>  	return ret;
+> @@ -535,7 +534,7 @@ xfs_file_dio_write_aligned(
+>  	}
+>  	trace_xfs_file_direct_write(iocb, from);
+>  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
+> -			   &xfs_dio_write_ops, is_sync_kiocb(iocb));
+> +			   &xfs_dio_write_ops, 0);
+>  out_unlock:
+>  	if (iolock)
+>  		xfs_iunlock(ip, iolock);
+> @@ -603,7 +602,7 @@ xfs_file_dio_write_unaligned(
+>  	 */
+>  	trace_xfs_file_direct_write(iocb, from);
+>  	ret = iomap_dio_rw(iocb, from, &xfs_direct_write_iomap_ops,
+> -			   &xfs_dio_write_ops, true);
+> +			   &xfs_dio_write_ops, IOMAP_DIO_FORCE_WAIT);
+>  out_unlock:
+>  	if (iolock)
+>  		xfs_iunlock(ip, iolock);
+> diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
+> index bec47f2d074beb..0e7ab0bc00ae8e 100644
+> --- a/fs/zonefs/super.c
+> +++ b/fs/zonefs/super.c
+> @@ -780,7 +780,7 @@ static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
+>  		ret = zonefs_file_dio_append(iocb, from);
+>  	else
+>  		ret = iomap_dio_rw(iocb, from, &zonefs_iomap_ops,
+> -				   &zonefs_write_dio_ops, sync);
+> +				   &zonefs_write_dio_ops, 0);
+>  	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ &&
+>  	    (ret > 0 || ret == -EIOCBQUEUED)) {
+>  		if (ret > 0)
+> @@ -917,7 +917,7 @@ static ssize_t zonefs_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+>  		}
+>  		file_accessed(iocb->ki_filp);
+>  		ret = iomap_dio_rw(iocb, to, &zonefs_iomap_ops,
+> -				   &zonefs_read_dio_ops, is_sync_kiocb(iocb));
+> +				   &zonefs_read_dio_ops, 0);
+>  	} else {
+>  		ret = generic_file_read_iter(iocb, to);
+>  		if (ret == -EIO)
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 5bd3cac4df9cb4..be4e1e1e01e801 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -256,12 +256,18 @@ struct iomap_dio_ops {
+>  			struct bio *bio, loff_t file_offset);
+>  };
+>  
+> +/*
+> + * Wait for the I/O to complete in iomap_dio_rw even if the kiocb is not
+> + * synchronous.
+> + */
+> +#define IOMAP_DIO_FORCE_WAIT	(1 << 0)
+> +
+>  ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
+> -		bool wait_for_completion);
+> +		unsigned int dio_flags);
+>  struct iomap_dio *__iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
+> -		bool wait_for_completion);
+> +		unsigned int dio_flags);
+>  ssize_t iomap_dio_complete(struct iomap_dio *dio);
+>  int iomap_dio_iopoll(struct kiocb *kiocb, bool spin);
+>  
+> -- 
+> 2.29.2
 > 
