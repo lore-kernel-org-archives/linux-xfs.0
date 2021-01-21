@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60C3EC43381
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:50:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CC4AC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:50:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 139F423A31
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:50:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42A4922C9F
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 15:50:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387538AbhAUPuL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 10:50:11 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:22074 "EHLO
+        id S2387507AbhAUPuP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 10:50:15 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:58726 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2387537AbhAUPq7 (ORCPT
+        by vger.kernel.org with ESMTP id S2387520AbhAUPq7 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 10:46:59 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611243933;
+        s=mimecast20190719; t=1611243930;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Fv7jQQxjdjzToF25OI4PbimF9JtPTQ8Q8yiprj/ZhcY=;
-        b=U21WL5Tbj5grfLw3jh4rTWJtJWJ6c2Lq/RE7xU3k1iT/uSxvUujxofJdHi09t6NfZlR0J6
-        RP4JLVPyUd+223foH5S03MRHdI5+YPSCU8YkE+B+pr75w6zO9UcnI6qNKrIZSzf7yIxii1
-        fKQobXGzj4ogkAMN+D8F2PdSAi7PeCc=
+        bh=7F+MKJpSsSAx3XYA+TG9L6GOj5sciunpkZs1lLbjims=;
+        b=Vs5i36+DNsNxuXC5HgZ4phjD1PSCoznLsj6HYKaJfFLcaoRIilaRGV2Sn6U+7ACHdByfe2
+        /bA3f/dBChbbGKRV3WaYPzJ2SuDI5VFtzPoJj2xVEZT+nMaQCFajXW0y8CBI7c0Qzj7L/H
+        syeiqHSb9yNB3GHgI3yJmfGvxkENz5A=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-595-HYB_7WYCNBKvmvcuIbwVnQ-1; Thu, 21 Jan 2021 10:45:30 -0500
-X-MC-Unique: HYB_7WYCNBKvmvcuIbwVnQ-1
+ us-mta-465-jIdeUhVKM3CscmTul33thw-1; Thu, 21 Jan 2021 10:45:28 -0500
+X-MC-Unique: jIdeUhVKM3CscmTul33thw-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 73C5451DF
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:45:29 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D9FBA100C60A
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:45:27 +0000 (UTC)
 Received: from bfoster.redhat.com (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3203B46
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:45:29 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9C89719486
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:45:27 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 5/9] xfs: don't reset log idle state on covering checkpoints
-Date:   Thu, 21 Jan 2021 10:45:22 -0500
-Message-Id: <20210121154526.1852176-6-bfoster@redhat.com>
+Subject: [PATCH v2 1/9] xfs: sync lazy sb accounting on quiesce of read-only mounts
+Date:   Thu, 21 Jan 2021 10:45:18 -0500
+Message-Id: <20210121154526.1852176-2-bfoster@redhat.com>
 In-Reply-To: <20210121154526.1852176-1-bfoster@redhat.com>
 References: <20210121154526.1852176-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -55,67 +55,120 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Now that log covering occurs on quiesce, we'd like to reuse the
-underlying superblock sync for final superblock updates. This
-includes things like lazy superblock counter updates, log feature
-incompat bits in the future, etc. One quirk to this approach is that
-once the log is in the IDLE (i.e. already covered) state, any
-subsequent log write resets the state back to NEED. This means that
-a final superblock sync to an already covered log requires two more
-sb syncs to return the log back to IDLE again.
+xfs_log_sbcount() syncs the superblock specifically to accumulate
+the in-core percpu superblock counters and commit them to disk. This
+is required to maintain filesystem consistency across quiesce
+(freeze, read-only mount/remount) or unmount when lazy superblock
+accounting is enabled because individual transactions do not update
+the superblock directly.
 
-For example, if a lazy superblock enabled filesystem is mount cycled
-without any modifications, the unmount path syncs the superblock
-once and writes an unmount record. With the desired log quiesce
-covering behavior, we sync the superblock three times at unmount
-time: once for the lazy superblock counter update and twice more to
-cover the log. By contrast, if the log is active or only partially
-covered at unmount time, a final superblock sync would doubly serve
-as the one or two remaining syncs required to cover the log.
+This mechanism works as expected for writable mounts, but
+xfs_log_sbcount() skips the update for read-only mounts. Read-only
+mounts otherwise still allow log recovery and write out an unmount
+record during log quiesce. If a read-only mount performs log
+recovery, it can modify the in-core superblock counters and write an
+unmount record when the filesystem unmounts without ever syncing the
+in-core counters. This leaves the filesystem with a clean log but in
+an inconsistent state with regard to lazy sb counters.
 
-This duplicate covering sequence is unnecessary because the
-filesystem remains consistent if a crash occurs at any point. The
-superblock will either be recovered in the event of a crash or
-written back before the log is quiesced and potentially cleaned with
-an unmount record.
-
-Update the log covering state machine to remain in the IDLE state if
-additional covering checkpoints pass through the log. This
-facilitates final superblock updates (such as lazy superblock
-counters) via a single sb sync without losing covered status. This
-provides some consistency with the active and partially covered
-cases and also avoids harmless, but spurious checkpoints when
-quiescing the log.
+Update xfs_log_sbcount() to use the same logic
+xfs_log_unmount_write() uses to determine when to write an unmount
+record. This ensures that lazy accounting is always synced before
+the log is cleaned. Refactor this logic into a new helper to
+distinguish between a writable filesystem and a writable log.
+Specifically, the log is writable unless the filesystem is mounted
+with the norecovery mount option, the underlying log device is
+read-only, or the filesystem is shutdown. Drop the freeze state
+check because the update is already allowed during the freezing
+process and no context calls this function on an already frozen fs.
+Also, retain the shutdown check in xfs_log_unmount_write() to catch
+the case where the preceding log force might have triggered a
+shutdown.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Gao Xiang <hsiangkao@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 ---
- fs/xfs/xfs_log.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_log.c   | 28 ++++++++++++++++++++--------
+ fs/xfs/xfs_log.h   |  1 +
+ fs/xfs/xfs_mount.c |  3 +--
+ 3 files changed, 22 insertions(+), 10 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 7c31b046e790..6db65a4513a6 100644
+index fa2d05e65ff1..b445e63cbc3c 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -2597,12 +2597,15 @@ xlog_covered_state(
- 	int			iclogs_changed)
+@@ -347,6 +347,25 @@ xlog_tic_add_region(xlog_ticket_t *tic, uint len, uint type)
+ 	tic->t_res_num++;
+ }
+ 
++bool
++xfs_log_writable(
++	struct xfs_mount	*mp)
++{
++	/*
++	 * Never write to the log on norecovery mounts, if the block device is
++	 * read-only, or if the filesystem is shutdown. Read-only mounts still
++	 * allow internal writes for log recovery and unmount purposes, so don't
++	 * restrict that case here.
++	 */
++	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
++		return false;
++	if (xfs_readonly_buftarg(mp->m_log->l_targ))
++		return false;
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return false;
++	return true;
++}
++
+ /*
+  * Replenish the byte reservation required by moving the grant write head.
+  */
+@@ -886,15 +905,8 @@ xfs_log_unmount_write(
  {
+ 	struct xlog		*log = mp->m_log;
+ 
+-	/*
+-	 * Don't write out unmount record on norecovery mounts or ro devices.
+-	 * Or, if we are doing a forced umount (typically because of IO errors).
+-	 */
+-	if (mp->m_flags & XFS_MOUNT_NORECOVERY ||
+-	    xfs_readonly_buftarg(log->l_targ)) {
+-		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
++	if (!xfs_log_writable(mp))
+ 		return;
+-	}
+ 
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
+ 
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index 58c3fcbec94a..98c913da7587 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -127,6 +127,7 @@ int	  xfs_log_reserve(struct xfs_mount *mp,
+ int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
+ void      xfs_log_unmount(struct xfs_mount *mp);
+ int	  xfs_log_force_umount(struct xfs_mount *mp, int logerror);
++bool	xfs_log_writable(struct xfs_mount *mp);
+ 
+ struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
+ void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 7110507a2b6b..a62b8a574409 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1176,8 +1176,7 @@ xfs_fs_writable(
+ int
+ xfs_log_sbcount(xfs_mount_t *mp)
+ {
+-	/* allow this to proceed during the freeze sequence... */
+-	if (!xfs_fs_writable(mp, SB_FREEZE_COMPLETE))
++	if (!xfs_log_writable(mp))
+ 		return 0;
+ 
  	/*
--	 * We usually go to NEED. But we go to NEED2 if the changed indicates we
--	 * are done writing the dummy record.  If we are done with the second
--	 * dummy recored (DONE2), then we go to IDLE.
-+	 * We go to NEED for any non-covering writes. We go to NEED2 if we just
-+	 * wrote the first covering record (DONE). We go to IDLE if we just
-+	 * wrote the second covering record (DONE2) and remain in IDLE until a
-+	 * non-covering write occurs.
- 	 */
- 	switch (prev_state) {
- 	case XLOG_STATE_COVER_IDLE:
-+		if (iclogs_changed == 1)
-+			return XLOG_STATE_COVER_IDLE;
- 	case XLOG_STATE_COVER_NEED:
- 	case XLOG_STATE_COVER_NEED2:
- 		break;
 -- 
 2.26.2
 
