@@ -2,61 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB11EC433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 21:10:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C44FEC4332B
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 22:29:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82C8723A7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 21:10:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CE5723B46
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 22:29:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728368AbhAVVKg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Jan 2021 16:10:36 -0500
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:43513 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730555AbhAVVJK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jan 2021 16:09:10 -0500
-Received: from dread.disaster.area (pa49-180-243-77.pa.nsw.optusnet.com.au [49.180.243.77])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 68B1E8DD1;
-        Sat, 23 Jan 2021 08:08:22 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1l33fI-001KyH-Kv; Sat, 23 Jan 2021 08:08:20 +1100
-Date:   Sat, 23 Jan 2021 08:08:20 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: refactor xfs_file_fsync
-Message-ID: <20210122210820.GE4662@dread.disaster.area>
-References: <20210122164643.620257-1-hch@lst.de>
- <20210122164643.620257-2-hch@lst.de>
+        id S1729827AbhAVW2v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Jan 2021 17:28:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42278 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728339AbhAVW1P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jan 2021 17:27:15 -0500
+Received: from fieldses.org (fieldses.org [IPv6:2600:3c00:e000:2f7::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F28C6C0613D6;
+        Fri, 22 Jan 2021 14:26:33 -0800 (PST)
+Received: by fieldses.org (Postfix, from userid 2815)
+        id 7A21F6E97; Fri, 22 Jan 2021 17:26:32 -0500 (EST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 fieldses.org 7A21F6E97
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fieldses.org;
+        s=default; t=1611354392;
+        bh=tn+w8soQQzYWtoSEcV96aJkWCYx83kxrSGAkTTiabXA=;
+        h=Date:To:Cc:Subject:References:In-Reply-To:From:From;
+        b=X95z07vjZOjjzvjgzPtwDISRZ7bvRExOKROMoiBfzTUzhunQZq5I6fG0Ld2Gva7Mh
+         uhaRbZ9MkPgDEawpF8wGyueWVNQbXPl+6a+P6MAo2vQtm02J9ggMsib5nOD7Na/V0s
+         n9s4jAoDv+n/KWmXQQLflLSFjjV3dqCb/wYkVXv0=
+Date:   Fri, 22 Jan 2021 17:26:32 -0500
+To:     Christian Brauner <christian.brauner@ubuntu.com>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
+        John Johansen <john.johansen@canonical.com>,
+        James Morris <jmorris@namei.org>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Casey Schaufler <casey@schaufler-ca.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Geoffrey Thomas <geofft@ldpreload.com>,
+        Mrunal Patel <mpatel@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
+        Tycho Andersen <tycho@tycho.ws>,
+        David Howells <dhowells@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        =?utf-8?B?U3TDqXBoYW5l?= Graber <stgraber@ubuntu.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aleksa Sarai <cyphar@cyphar.com>,
+        Lennart Poettering <lennart@poettering.net>,
+        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
+        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
+        Kees Cook <keescook@chromium.org>,
+        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        containers@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-integrity@vger.kernel.org, selinux@vger.kernel.org
+Subject: Re: [PATCH v6 05/39] namei: make permission helpers idmapped mount
+ aware
+Message-ID: <20210122222632.GB25405@fieldses.org>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
+ <20210121131959.646623-6-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210122164643.620257-2-hch@lst.de>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
-        a=juxvdbeFDU67v5YkIhU0sw==:117 a=juxvdbeFDU67v5YkIhU0sw==:17
-        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=in2YdIHcAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=9axWC5lwl49RHUwTxuIA:9 a=CjuIK1q_8ugA:10
-        a=jvJaD-jWAXz1fu1h5wd8:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210121131959.646623-6-christian.brauner@ubuntu.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+From:   bfields@fieldses.org (J. Bruce Fields)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 22, 2021 at 05:46:42PM +0100, Christoph Hellwig wrote:
-> Factor out the log syncing logic into two helpers to make the code easier
-> to read and more maintainable.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+If I NFS-exported an idmapped mount, I think I'd expect idmapped clients
+to see the mapped IDs.
 
-LGTM.
+Looks like that means taking the user namespace from the struct
+svc_export everwhere, for example:
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+On Thu, Jan 21, 2021 at 02:19:24PM +0100, Christian Brauner wrote:
+> index 66f2ef67792a..8d90796e236a 100644
+> --- a/fs/nfsd/nfsfh.c
+> +++ b/fs/nfsd/nfsfh.c
+> @@ -40,7 +40,8 @@ static int nfsd_acceptable(void *expv, struct dentry *dentry)
+>  		/* make sure parents give x permission to user */
+>  		int err;
+>  		parent = dget_parent(tdentry);
+> -		err = inode_permission(d_inode(parent), MAY_EXEC);
+> +		err = inode_permission(&init_user_ns,
+> +				       d_inode(parent), MAY_EXEC);
+
+		err = inode_permission(exp->ex_path.mnt->mnt_userns,
+				      d_inode(parent, MAY_EXEC);
+
+?
+
+--b.
