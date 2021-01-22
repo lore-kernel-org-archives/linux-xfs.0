@@ -2,392 +2,372 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08CFEC433E6
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 23:28:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0738C433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 01:46:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C9BB323A54
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Jan 2021 23:28:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4B3623877
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 01:46:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726475AbhAUX1z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 18:27:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50760 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725984AbhAUXFP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 18:05:15 -0500
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C52EC061793
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:03:42 -0800 (PST)
-Received: by mail-yb1-xb4a.google.com with SMTP id b62so3703938ybg.1
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jan 2021 15:03:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=sender:date:in-reply-to:message-id:mime-version:references:subject
-         :from:to:cc;
-        bh=tsvK1rDY/RlLBS3dgT5AwWIiim6Sn26CCHt+oR69tjk=;
-        b=H/ahfyxTlyAPoLQaLRVWHEfSuE2axSrjqhW9z2Mnk7WuoPj/ZKZko57raR77rpxVUS
-         vGwJPkad8WqGC5uNEHe2PllgE4DRbRX8ULPa/2hGY4Fjce2VmuAtEDmj9sxB+1HQd2Ij
-         huFtfko8gVOilXe/PCJHJrALQh78niqaraqp7KGQbD2bAWxCJaBB820SMYDvaiJX3gva
-         K8wTvNwsa7X/XHG9dnqW+3ZXusKESAnS9SCMqrpp24B2LurLmupOFgYBP9bgq6d5PE8t
-         xOg1b8z4ACYb29jVYDdbIIaDsLqXtnJG+q87KfmXxu6L+6QG9jaQ45Pprba2uC92gd7v
-         UJRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=tsvK1rDY/RlLBS3dgT5AwWIiim6Sn26CCHt+oR69tjk=;
-        b=QJHxxYCENFZ5o+Cnph5OAwEnYi6RzqzWeKpZu1yRGsIyyQJrej1CFDspIAj6Cji1EJ
-         2+nDjuZY1AjqMN95dfswP+dtPNXqFXSRGkfeU33Ovr+iCUt4EzqvWHfLxhE/hc/0Ve1+
-         uMWoc0BjiuCD7nPvcSdzjkEoOFsgxfewZyr8XQUqz3Bjvy8R0ropsxMPBS7/tsddjFh3
-         cZ0eEat61zdpr7hu0GW3wCJspH2xw5gmHPKLXNQRKxnf3Cm3wSdsdSvU+2Mn+U3/ioX8
-         f1Wn19WVu8x84aTEr9lzkMSFWj0OiFkiiwmfC39BiEE0gH4d5sZVqtPQBpXq1vL4kCt8
-         wmJg==
-X-Gm-Message-State: AOAM531HV/eZoAWU2XT1A9BYV0RQ/CI3LFfJ55XAQd3YMyIjFKmoxMH8
-        jbq30jIyDNbNd8g9bP3Vy222eplzyo0=
-X-Google-Smtp-Source: ABdhPJwhHYNflZk74TDje1JUFLXpn0ipWHt439v307Cf6eQCsO/Pjj34D7D9GE7Px3U3bAbbcwFM4hcAPjI=
-Sender: "satyat via sendgmr" <satyat@satyaprateek.c.googlers.com>
-X-Received: from satyaprateek.c.googlers.com ([fda3:e722:ac3:10:24:72f4:c0a8:1092])
- (user=satyat job=sendgmr) by 2002:a25:ced0:: with SMTP id x199mr2493767ybe.448.1611270221473;
- Thu, 21 Jan 2021 15:03:41 -0800 (PST)
-Date:   Thu, 21 Jan 2021 23:03:29 +0000
-In-Reply-To: <20210121230336.1373726-1-satyat@google.com>
-Message-Id: <20210121230336.1373726-2-satyat@google.com>
-Mime-Version: 1.0
-References: <20210121230336.1373726-1-satyat@google.com>
-X-Mailer: git-send-email 2.30.0.280.ga3ce27912f-goog
-Subject: [PATCH v8 1/8] block: blk-crypto-fallback: handle data unit split
- across multiple bvecs
-From:   Satya Tangirala <satyat@google.com>
-To:     "Theodore Y . Ts'o" <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Eric Biggers <ebiggers@kernel.org>, Chao Yu <chao@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc:     linux-kernel@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Satya Tangirala <satyat@google.com>,
-        Eric Biggers <ebiggers@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        id S1726623AbhAVBpz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 20:45:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52520 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726630AbhAVBpx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jan 2021 20:45:53 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 37F63223C8;
+        Fri, 22 Jan 2021 01:45:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611279910;
+        bh=tIZKoD9FjEGIJuhgcCASN9kC2KnJio/calleGdZuYP4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=rqCUIPR+3AJEvhGVYBa7+P7zQet+Bsx6FaeKJ1eUl5JPf0MIgaNf4DYRtPlS07Coy
+         4wnyYditKQpqPttZE3jwcUPYosaJUOa8DTC21eU/lBxiSKnrC7tlDz14P8z/yGHDmg
+         KQeJlS4lMKkdfB5ba3lm1YnEvOdPf5U8flJ7ohsq55rY4HLbbGdtV14F4goRWSC3EX
+         ZZitiJJaR8WrSwG9bZS6P0Hgv0PP5U/Mb1usCWZ+PiGOalYBqXMqfLA+uI/jQNF3ug
+         Xo6fInsXMXCIkU0RdzDJcXAJnblefHGYFUKJWEKwkapgoD28zbH09ojyjY9GwoEzpR
+         j0VYcyJIbhY1A==
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     fstests@vger.kernel.org
+Cc:     linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-xfs@vger.kernel.org
+Subject: [xfstests PATCH v2] generic: test for lazytime timestamp updates
+Date:   Thu, 21 Jan 2021 17:44:34 -0800
+Message-Id: <20210122014434.110196-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.30.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Till now, the blk-crypto-fallback required each crypto data unit to be
-contained within a single bvec. It also required the starting offset
-of each bvec to be aligned to the data unit size. This patch removes
-both restrictions, so that blk-crypto-fallback can handle crypto data
-units split across multiple bvecs. blk-crypto-fallback now only requires
-that the total size of the bio be aligned to the crypto data unit size.
-The buffer that is being read/written to no longer needs to be data unit
-size aligned.
+From: Eric Biggers <ebiggers@google.com>
 
-This is useful for making the alignment requirements for direct I/O on
-encrypted files similar to those for direct I/O on unencrypted files.
+Test that when the lazytime mount option is enabled, updates to atime,
+mtime, and ctime get persisted in the cases when they should be.
 
-Co-developed-by: Eric Biggers <ebiggers@google.com>
+This test currently runs on ext4, f2fs, and xfs, since it's limited to
+filesystems that support the shutdown ioctl.
+
+This test currently passes on ext4 and f2fs.  On xfs, kernel
+commit 1e249cb5b7fc ("fs: fix lazytime expiration handling in
+__writeback_single_inode()") is needed for the test to pass, since xfs
+had a bug where it didn't persist timestamps when it should have.
+
 Signed-off-by: Eric Biggers <ebiggers@google.com>
-Signed-off-by: Satya Tangirala <satyat@google.com>
 ---
- block/blk-crypto-fallback.c | 203 +++++++++++++++++++++++++++---------
- 1 file changed, 156 insertions(+), 47 deletions(-)
 
-diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
-index c162b754efbd..663579d0783f 100644
---- a/block/blk-crypto-fallback.c
-+++ b/block/blk-crypto-fallback.c
-@@ -249,6 +249,65 @@ static void blk_crypto_dun_to_iv(const u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE],
- 		iv->dun[i] = cpu_to_le64(dun[i]);
- }
- 
-+/*
-+ * If the length of any bio segment isn't a multiple of data_unit_size
-+ * (which can happen if data_unit_size > logical_block_size), then each
-+ * encryption/decryption might need to be passed multiple scatterlist elements.
-+ * If that will be the case, this function allocates and initializes src and dst
-+ * scatterlists (or a combined src/dst scatterlist) with the needed length.
-+ *
-+ * If 1 element is guaranteed to be enough (which is usually the case, and is
-+ * guaranteed when data_unit_size <= logical_block_size), then this function
-+ * just initializes the on-stack scatterlist(s).
-+ */
-+static bool blk_crypto_alloc_sglists(struct bio *bio,
-+				     const struct bvec_iter *start_iter,
-+				     unsigned int data_unit_size,
-+				     struct scatterlist **src_p,
-+				     struct scatterlist **dst_p)
+v2: updated comments and commit message, including to add a mention of a
+    related kernel commit.
+
+ tests/generic/900     | 239 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/900.out |  37 +++++++
+ tests/generic/group   |   1 +
+ 3 files changed, 277 insertions(+)
+ create mode 100755 tests/generic/900
+ create mode 100644 tests/generic/900.out
+
+diff --git a/tests/generic/900 b/tests/generic/900
+new file mode 100755
+index 00000000..d9756158
+--- /dev/null
++++ b/tests/generic/900
+@@ -0,0 +1,239 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-only
++# Copyright 2021 Google LLC
++#
++# FS QA Test No. 900
++#
++# Test that when the lazytime mount option is enabled, updates to atime, mtime,
++# and ctime are persisted in (at least) the four cases when they should be:
++#
++# - The inode needs to be updated for some change unrelated to file timestamps
++# - Userspace calls fsync(), syncfs(), or sync()
++# - The inode is evicted from memory
++# - More than dirtytime_expire_seconds have elapsed
++#
++# This is in part a regression test for kernel commit 1e249cb5b7fc
++# ("fs: fix lazytime expiration handling in __writeback_single_inode()").
++# This test failed on XFS without that commit.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++DIRTY_EXPIRE_CENTISECS_ORIG=$(</proc/sys/vm/dirty_expire_centisecs)
++DIRTY_WRITEBACK_CENTISECS_ORIG=$(</proc/sys/vm/dirty_writeback_centisecs)
++DIRTYTIME_EXPIRE_SECONDS_ORIG=$(</proc/sys/vm/dirtytime_expire_seconds)
++
++restore_expiration_settings()
 +{
-+	struct bio_vec bv;
-+	struct bvec_iter iter;
-+	bool aligned = true;
-+	unsigned int count = 0;
-+
-+	__bio_for_each_segment(bv, bio, iter, *start_iter) {
-+		count++;
-+		aligned &= IS_ALIGNED(bv.bv_len, data_unit_size);
-+	}
-+	if (aligned) {
-+		count = 1;
-+	} else {
-+		/*
-+		 * We can't need more elements than bio segments, and we can't
-+		 * need more than the number of sectors per data unit.  This may
-+		 * overestimate the required length by a bit, but that's okay.
-+		 */
-+		count = min(count, data_unit_size >> SECTOR_SHIFT);
-+	}
-+
-+	if (count > 1) {
-+		*src_p = kmalloc_array(count, sizeof(struct scatterlist),
-+				       GFP_NOIO);
-+		if (!*src_p)
-+			return false;
-+		if (dst_p) {
-+			*dst_p = kmalloc_array(count,
-+					       sizeof(struct scatterlist),
-+					       GFP_NOIO);
-+			if (!*dst_p) {
-+				kfree(*src_p);
-+				*src_p = NULL;
-+				return false;
-+			}
-+		}
-+	}
-+	sg_init_table(*src_p, count);
-+	if (dst_p)
-+		sg_init_table(*dst_p, count);
-+	return true;
++	echo "$DIRTY_EXPIRE_CENTISECS_ORIG" > /proc/sys/vm/dirty_expire_centisecs
++	echo "$DIRTY_WRITEBACK_CENTISECS_ORIG" > /proc/sys/vm/dirty_writeback_centisecs
++	echo "$DIRTYTIME_EXPIRE_SECONDS_ORIG" > /proc/sys/vm/dirtytime_expire_seconds
 +}
 +
- /*
-  * The crypto API fallback's encryption routine.
-  * Allocate a bounce bio for encryption, encrypt the input bio using crypto API,
-@@ -265,9 +324,12 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
- 	struct skcipher_request *ciph_req = NULL;
- 	DECLARE_CRYPTO_WAIT(wait);
- 	u64 curr_dun[BLK_CRYPTO_DUN_ARRAY_SIZE];
--	struct scatterlist src, dst;
-+	struct scatterlist _src, *src = &_src;
-+	struct scatterlist _dst, *dst = &_dst;
- 	union blk_crypto_iv iv;
--	unsigned int i, j;
-+	unsigned int i;
-+	unsigned int sg_idx = 0;
-+	unsigned int du_filled = 0;
- 	bool ret = false;
- 	blk_status_t blk_st;
- 
-@@ -279,11 +341,18 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
- 	bc = src_bio->bi_crypt_context;
- 	data_unit_size = bc->bc_key->crypto_cfg.data_unit_size;
- 
-+	/* Allocate scatterlists if needed */
-+	if (!blk_crypto_alloc_sglists(src_bio, &src_bio->bi_iter,
-+				      data_unit_size, &src, &dst)) {
-+		src_bio->bi_status = BLK_STS_RESOURCE;
-+		return false;
-+	}
++# Enable continuous writeback of dirty inodes, so that we don't have to wait
++# for the typical 30 seconds default.
++__expire_inodes()
++{
++	echo 1 > /proc/sys/vm/dirty_expire_centisecs
++	echo 1 > /proc/sys/vm/dirty_writeback_centisecs
++}
 +
- 	/* Allocate bounce bio for encryption */
- 	enc_bio = blk_crypto_clone_bio(src_bio);
- 	if (!enc_bio) {
- 		src_bio->bi_status = BLK_STS_RESOURCE;
--		return false;
-+		goto out_free_sglists;
- 	}
- 
- 	/*
-@@ -303,45 +372,58 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
- 	}
- 
- 	memcpy(curr_dun, bc->bc_dun, sizeof(curr_dun));
--	sg_init_table(&src, 1);
--	sg_init_table(&dst, 1);
- 
--	skcipher_request_set_crypt(ciph_req, &src, &dst, data_unit_size,
-+	skcipher_request_set_crypt(ciph_req, src, dst, data_unit_size,
- 				   iv.bytes);
- 
--	/* Encrypt each page in the bounce bio */
-+	/*
-+	 * Encrypt each data unit in the bounce bio.
-+	 *
-+	 * Take care to handle the case where a data unit spans bio segments.
-+	 * This can happen when data_unit_size > logical_block_size.
-+	 */
- 	for (i = 0; i < enc_bio->bi_vcnt; i++) {
--		struct bio_vec *enc_bvec = &enc_bio->bi_io_vec[i];
--		struct page *plaintext_page = enc_bvec->bv_page;
-+		struct bio_vec *bv = &enc_bio->bi_io_vec[i];
-+		struct page *plaintext_page = bv->bv_page;
- 		struct page *ciphertext_page =
- 			mempool_alloc(blk_crypto_bounce_page_pool, GFP_NOIO);
-+		unsigned int offset_in_bv = 0;
- 
--		enc_bvec->bv_page = ciphertext_page;
-+		bv->bv_page = ciphertext_page;
- 
- 		if (!ciphertext_page) {
- 			src_bio->bi_status = BLK_STS_RESOURCE;
- 			goto out_free_bounce_pages;
- 		}
- 
--		sg_set_page(&src, plaintext_page, data_unit_size,
--			    enc_bvec->bv_offset);
--		sg_set_page(&dst, ciphertext_page, data_unit_size,
--			    enc_bvec->bv_offset);
--
--		/* Encrypt each data unit in this page */
--		for (j = 0; j < enc_bvec->bv_len; j += data_unit_size) {
--			blk_crypto_dun_to_iv(curr_dun, &iv);
--			if (crypto_wait_req(crypto_skcipher_encrypt(ciph_req),
--					    &wait)) {
--				i++;
--				src_bio->bi_status = BLK_STS_IOERR;
--				goto out_free_bounce_pages;
-+		while (offset_in_bv < bv->bv_len) {
-+			unsigned int n = min(bv->bv_len - offset_in_bv,
-+					     data_unit_size - du_filled);
-+			sg_set_page(&src[sg_idx], plaintext_page, n,
-+				    bv->bv_offset + offset_in_bv);
-+			sg_set_page(&dst[sg_idx], ciphertext_page, n,
-+				    bv->bv_offset + offset_in_bv);
-+			sg_idx++;
-+			offset_in_bv += n;
-+			du_filled += n;
-+			if (du_filled == data_unit_size) {
-+				blk_crypto_dun_to_iv(curr_dun, &iv);
-+				if (crypto_wait_req(crypto_skcipher_encrypt(ciph_req),
-+						    &wait)) {
-+					src_bio->bi_status = BLK_STS_IOERR;
-+					i++;
-+					goto out_free_bounce_pages;
-+				}
-+				bio_crypt_dun_increment(curr_dun, 1);
-+				sg_idx = 0;
-+				du_filled = 0;
- 			}
--			bio_crypt_dun_increment(curr_dun, 1);
--			src.offset += data_unit_size;
--			dst.offset += data_unit_size;
- 		}
- 	}
-+	if (WARN_ON_ONCE(du_filled != 0)) {
-+		src_bio->bi_status = BLK_STS_IOERR;
-+		goto out_free_bounce_pages;
-+	}
- 
- 	enc_bio->bi_private = src_bio;
- 	enc_bio->bi_end_io = blk_crypto_fallback_encrypt_endio;
-@@ -362,7 +444,11 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
- out_put_enc_bio:
- 	if (enc_bio)
- 		bio_put(enc_bio);
--
-+out_free_sglists:
-+	if (src != &_src)
-+		kfree(src);
-+	if (dst != &_dst)
-+		kfree(dst);
- 	return ret;
- }
- 
-@@ -381,13 +467,21 @@ static void blk_crypto_fallback_decrypt_bio(struct work_struct *work)
- 	DECLARE_CRYPTO_WAIT(wait);
- 	u64 curr_dun[BLK_CRYPTO_DUN_ARRAY_SIZE];
- 	union blk_crypto_iv iv;
--	struct scatterlist sg;
-+	struct scatterlist _sg, *sg = &_sg;
- 	struct bio_vec bv;
- 	struct bvec_iter iter;
- 	const int data_unit_size = bc->bc_key->crypto_cfg.data_unit_size;
--	unsigned int i;
-+	unsigned int sg_idx = 0;
-+	unsigned int du_filled = 0;
- 	blk_status_t blk_st;
- 
-+	/* Allocate scatterlist if needed */
-+	if (!blk_crypto_alloc_sglists(bio, &f_ctx->crypt_iter, data_unit_size,
-+				      &sg, NULL)) {
-+		bio->bi_status = BLK_STS_RESOURCE;
-+		goto out_no_sglists;
-+	}
++# Trigger and wait for writeback of any dirty inodes (not dirtytime inodes).
++expire_inodes()
++{
++	__expire_inodes
++	# Userspace doesn't have direct visibility into when inodes are dirty,
++	# so the best we can do is sleep for a couple seconds.
++	sleep 2
++	restore_expiration_settings
++}
 +
- 	/*
- 	 * Use the crypto API fallback keyslot manager to get a crypto_skcipher
- 	 * for the algorithm and key specified for this bio.
-@@ -405,33 +499,48 @@ static void blk_crypto_fallback_decrypt_bio(struct work_struct *work)
- 	}
- 
- 	memcpy(curr_dun, bc->bc_dun, sizeof(curr_dun));
--	sg_init_table(&sg, 1);
--	skcipher_request_set_crypt(ciph_req, &sg, &sg, data_unit_size,
--				   iv.bytes);
-+	skcipher_request_set_crypt(ciph_req, sg, sg, data_unit_size, iv.bytes);
- 
--	/* Decrypt each segment in the bio */
-+	/*
-+	 * Decrypt each data unit in the bio.
-+	 *
-+	 * Take care to handle the case where a data unit spans bio segments.
-+	 * This can happen when data_unit_size > logical_block_size.
-+	 */
- 	__bio_for_each_segment(bv, bio, iter, f_ctx->crypt_iter) {
--		struct page *page = bv.bv_page;
--
--		sg_set_page(&sg, page, data_unit_size, bv.bv_offset);
--
--		/* Decrypt each data unit in the segment */
--		for (i = 0; i < bv.bv_len; i += data_unit_size) {
--			blk_crypto_dun_to_iv(curr_dun, &iv);
--			if (crypto_wait_req(crypto_skcipher_decrypt(ciph_req),
--					    &wait)) {
--				bio->bi_status = BLK_STS_IOERR;
--				goto out;
-+		unsigned int offset_in_bv = 0;
++# Trigger and wait for writeback of any dirtytime inodes.
++expire_timestamps()
++{
++	# Enable immediate expiration of lazytime timestamps, so that we don't
++	# have to wait for the typical 24 hours default.  This should quickly
++	# turn dirtytime inodes into regular dirty inodes.
++	echo 1 > /proc/sys/vm/dirtytime_expire_seconds
 +
-+		while (offset_in_bv < bv.bv_len) {
-+			unsigned int n = min(bv.bv_len - offset_in_bv,
-+					     data_unit_size - du_filled);
-+			sg_set_page(&sg[sg_idx++], bv.bv_page, n,
-+				    bv.bv_offset + offset_in_bv);
-+			offset_in_bv += n;
-+			du_filled += n;
-+			if (du_filled == data_unit_size) {
-+				blk_crypto_dun_to_iv(curr_dun, &iv);
-+				if (crypto_wait_req(crypto_skcipher_decrypt(ciph_req),
-+						    &wait)) {
-+					bio->bi_status = BLK_STS_IOERR;
-+					goto out;
-+				}
-+				bio_crypt_dun_increment(curr_dun, 1);
-+				sg_idx = 0;
-+				du_filled = 0;
- 			}
--			bio_crypt_dun_increment(curr_dun, 1);
--			sg.offset += data_unit_size;
- 		}
- 	}
--
-+	if (WARN_ON_ONCE(du_filled != 0)) {
-+		bio->bi_status = BLK_STS_IOERR;
-+		goto out;
-+	}
- out:
- 	skcipher_request_free(ciph_req);
- 	blk_ksm_put_slot(slot);
- out_no_keyslot:
-+	if (sg != &_sg)
-+		kfree(sg);
-+out_no_sglists:
- 	mempool_free(f_ctx, bio_fallback_crypt_ctx_pool);
- 	bio_endio(bio);
- }
++	# Enable continuous writeback of dirty inodes.
++	__expire_inodes
++
++	# Userspace doesn't have direct visibility into when inodes are dirty,
++	# so the best we can do is sleep for a couple seconds.
++	sleep 2
++	restore_expiration_settings
++}
++
++_cleanup()
++{
++	restore_expiration_settings
++	rm -f $tmp.*
++}
++
++. ./common/rc
++. ./common/filter
++
++rm -f $seqres.full
++
++_supported_fs generic
++# This test uses the shutdown command, so it has to use the scratch filesystem
++# rather than the test filesystem.
++_require_scratch
++_require_scratch_shutdown
++_require_xfs_io_command "pwrite"
++_require_xfs_io_command "fsync"
++_require_xfs_io_command "syncfs"
++# Note that this test doesn't have to check that the filesystem supports
++# "lazytime", since "lazytime" is a VFS-level option, and at worst it just will
++# be ignored.  This test will still pass if lazytime is ignored, as it only
++# tests that timestamp updates are persisted when they should be; it doesn't
++# test that timestamp updates aren't persisted when they shouldn't be.
++
++_scratch_mkfs &>> $seqres.full
++_scratch_mount
++
++# Create the test file for which we'll update and check the timestamps.
++file=$SCRATCH_MNT/file
++$XFS_IO_PROG -f $file -c "pwrite 0 100" > /dev/null
++
++# Get the specified timestamp of $file in nanoseconds since the epoch.
++get_timestamp()
++{
++	local timestamp_type=$1
++
++	local arg
++	case $timestamp_type in
++	atime)	arg=X ;;
++	mtime)	arg=Y ;;
++	ctime)	arg=Z ;;
++	*)	_fail "Unhandled timestamp_type: $timestamp_type" ;;
++	esac
++	stat -c "%.9${arg}" $file | tr -d '.'
++}
++
++do_test()
++{
++	local timestamp_type=$1
++	local persist_method=$2
++
++	echo -e "\n# Testing that lazytime $timestamp_type update is persisted by $persist_method"
++
++	# Mount the filesystem with lazytime.  If atime is being tested, then
++	# also use strictatime, since otherwise the filesystem may default to
++	# relatime and not do the atime updates.
++	if [[ $timestamp_type == atime ]]; then
++		_scratch_cycle_mount lazytime,strictatime
++	else
++		_scratch_cycle_mount lazytime
++	fi
++
++	# Update the specified timestamp on the file.
++	local orig_time=$(get_timestamp $timestamp_type)
++	sleep 0.1
++	case $timestamp_type in
++	atime)
++		# Read from the file to update its atime.
++		cat $file > /dev/null
++		;;
++	mtime)
++		# Write to the file to update its mtime.  Make sure to not write
++		# past the end of the file, as that would change i_size, which
++		# would be an inode change which would cause the timestamp to
++		# always be written -- thus making the test not detect bugs
++		# where the timestamp doesn't get written.
++		#
++		# Also do the write twice, since XFS updates i_version the first
++		# time, which likewise causes mtime to be written.  We want the
++		# last thing done to just update mtime.
++		$XFS_IO_PROG -f $file -c "pwrite 0 100" > /dev/null
++		$XFS_IO_PROG -f $file -c "pwrite 0 100" > /dev/null
++		;;
++	ctime)
++		# It isn't possible to update just ctime, so use 'touch -a'
++		# to update both atime and ctime.
++		touch -a $file
++		;;
++	esac
++	local expected_time=$(get_timestamp $timestamp_type)
++	if (( expected_time <= orig_time )); then
++		echo "FAIL: $timestamp_type didn't increase after updating it (in-memory)"
++	fi
++
++	# Do something that should cause the timestamp to be persisted.
++	case $persist_method in
++	other_inode_change)
++		# Make a non-timestamp-related change to the inode.
++		chmod 777 $file
++		if [[ $timestamp_type == ctime ]]; then
++			# The inode change will have updated ctime again.
++			expected_time=$(get_timestamp ctime)
++		fi
++		# The inode may have been marked dirty but not actually written
++		# yet.  Expire it by tweaking the VM settings and waiting.
++		expire_inodes
++		;;
++	sync)
++		# Execute the sync() system call.
++		sync
++		;;
++	fsync)
++		# Execute the fsync() system call on the file.
++		$XFS_IO_PROG -r $file -c fsync
++		;;
++	syncfs)
++		# Execute the syncfs() system call on the filesystem.
++		$XFS_IO_PROG $SCRATCH_MNT -c syncfs
++		;;
++	eviction)
++		# Evict the inode from memory.  In theory, drop_caches should do
++		# the trick by itself.  But that actually just dirties the
++		# inodes that need a lazytime update.  So we still need to wait
++		# for inode writeback too.
++		echo 2 > /proc/sys/vm/drop_caches
++		expire_inodes
++		;;
++	expiration)
++		# Expire the lazy timestamps via dirtytime_expire_seconds.
++		expire_timestamps
++		;;
++	*)
++		_fail "Unhandled persist_method: $persist_method"
++	esac
++
++	# Use the shutdown ioctl to abort the filesystem.
++	#
++	# The timestamp might have just been written to the log and not *fully*
++	# persisted yet, so use -f to ensure the log gets flushed.
++	_scratch_shutdown -f
++
++	# Now remount the filesystem and verify that the timestamp really got
++	# updated as expected.
++	_scratch_cycle_mount
++	local ondisk_time=$(get_timestamp $timestamp_type)
++	if (( ondisk_time != expected_time )); then
++		# Fail the test by printing unexpected output rather than by
++		# calling _fail(), since we can still run the other test cases.
++		echo "FAIL: lazytime $timestamp_type wasn't persisted by $persist_method"
++		echo "ondisk_time ($ondisk_time) != expected_time ($expected_time)"
++	fi
++}
++
++for timestamp_type in atime mtime ctime; do
++	do_test $timestamp_type other_inode_change
++	do_test $timestamp_type sync
++	do_test $timestamp_type fsync
++	do_test $timestamp_type syncfs
++	do_test $timestamp_type eviction
++	do_test $timestamp_type expiration
++done
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/900.out b/tests/generic/900.out
+new file mode 100644
+index 00000000..53bd2e29
+--- /dev/null
++++ b/tests/generic/900.out
+@@ -0,0 +1,37 @@
++QA output created by 900
++
++# Testing that lazytime atime update is persisted by other_inode_change
++
++# Testing that lazytime atime update is persisted by sync
++
++# Testing that lazytime atime update is persisted by fsync
++
++# Testing that lazytime atime update is persisted by syncfs
++
++# Testing that lazytime atime update is persisted by eviction
++
++# Testing that lazytime atime update is persisted by expiration
++
++# Testing that lazytime mtime update is persisted by other_inode_change
++
++# Testing that lazytime mtime update is persisted by sync
++
++# Testing that lazytime mtime update is persisted by fsync
++
++# Testing that lazytime mtime update is persisted by syncfs
++
++# Testing that lazytime mtime update is persisted by eviction
++
++# Testing that lazytime mtime update is persisted by expiration
++
++# Testing that lazytime ctime update is persisted by other_inode_change
++
++# Testing that lazytime ctime update is persisted by sync
++
++# Testing that lazytime ctime update is persisted by fsync
++
++# Testing that lazytime ctime update is persisted by syncfs
++
++# Testing that lazytime ctime update is persisted by eviction
++
++# Testing that lazytime ctime update is persisted by expiration
+diff --git a/tests/generic/group b/tests/generic/group
+index 30a73605..00b75b42 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -624,3 +624,4 @@
+ 619 auto rw enospc
+ 620 auto mount quick
+ 621 auto quick encrypt
++900 auto
 -- 
-2.30.0.280.ga3ce27912f-goog
+2.30.0
 
