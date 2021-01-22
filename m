@@ -7,22 +7,22 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 157F8C433DB
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:29:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EFE5C4332B
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:30:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC92923888
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:29:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 587CB23888
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:30:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726433AbhAVD3N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 22:29:13 -0500
-Received: from namei.org ([65.99.196.166]:52658 "EHLO mail.namei.org"
+        id S1726502AbhAVDai (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 22:30:38 -0500
+Received: from namei.org ([65.99.196.166]:52706 "EHLO mail.namei.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726127AbhAVD3E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Jan 2021 22:29:04 -0500
+        id S1726016AbhAVDaS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jan 2021 22:30:18 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by mail.namei.org (Postfix) with ESMTPS id 39EC949C;
-        Fri, 22 Jan 2021 03:27:31 +0000 (UTC)
-Date:   Fri, 22 Jan 2021 14:27:31 +1100 (AEDT)
+        by mail.namei.org (Postfix) with ESMTPS id 3328849C;
+        Fri, 22 Jan 2021 03:28:46 +0000 (UTC)
+Date:   Fri, 22 Jan 2021 14:28:46 +1100 (AEDT)
 From:   James Morris <jmorris@namei.org>
 To:     Christian Brauner <christian.brauner@ubuntu.com>
 cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -57,10 +57,10 @@ cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org
-Subject: Re: [PATCH v6 10/40] commoncap: handle idmapped mounts
-In-Reply-To: <20210121131959.646623-11-christian.brauner@ubuntu.com>
-Message-ID: <9ce6066-6162-2398-342b-d18f99c3970@namei.org>
-References: <20210121131959.646623-1-christian.brauner@ubuntu.com> <20210121131959.646623-11-christian.brauner@ubuntu.com>
+Subject: Re: [PATCH v6 11/40] stat: handle idmapped mounts
+In-Reply-To: <20210121131959.646623-12-christian.brauner@ubuntu.com>
+Message-ID: <841ffb88-b1a6-2497-a68a-f89ad903dd8@namei.org>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com> <20210121131959.646623-12-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
@@ -69,7 +69,14 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 On Thu, 21 Jan 2021, Christian Brauner wrote:
 
-> Link: https://lore.kernel.org/r/20210112220124.837960-18-christian.brauner@ubuntu.com
+> The generic_fillattr() helper fills in the basic attributes associated
+> with an inode. Enable it to handle idmapped mounts. If the inode is
+> accessed through an idmapped mount map it into the mount's user
+> namespace before we store the uid and gid. If the initial user namespace
+> is passed nothing changes so non-idmapped mounts will see identical
+> behavior as before.
+> 
+> Link: https://lore.kernel.org/r/20210112220124.837960-19-christian.brauner@ubuntu.com
 > Cc: Christoph Hellwig <hch@lst.de>
 > Cc: David Howells <dhowells@redhat.com>
 > Cc: Al Viro <viro@zeniv.linux.org.uk>
@@ -77,8 +84,7 @@ On Thu, 21 Jan 2021, Christian Brauner wrote:
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
 
-
-Acked-by: James Morris <jamorris@linux.microsoft.com>
+Reviewed-by: James Morris <jamorris@linux.microsoft.com>
 
 
 -- 
