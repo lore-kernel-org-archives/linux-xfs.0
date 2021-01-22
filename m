@@ -7,22 +7,22 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51444C433E6
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 04:16:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 120CBC433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 04:19:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 04504221E5
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 04:16:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3297239EE
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 04:19:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726806AbhAVEQn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 23:16:43 -0500
-Received: from namei.org ([65.99.196.166]:52958 "EHLO mail.namei.org"
+        id S1726834AbhAVETQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 23:19:16 -0500
+Received: from namei.org ([65.99.196.166]:53028 "EHLO mail.namei.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726735AbhAVEQk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Jan 2021 23:16:40 -0500
+        id S1726127AbhAVETO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jan 2021 23:19:14 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by mail.namei.org (Postfix) with ESMTPS id A31BC49C;
-        Fri, 22 Jan 2021 04:15:05 +0000 (UTC)
-Date:   Fri, 22 Jan 2021 15:15:05 +1100 (AEDT)
+        by mail.namei.org (Postfix) with ESMTPS id 278651BC;
+        Fri, 22 Jan 2021 04:17:41 +0000 (UTC)
+Date:   Fri, 22 Jan 2021 15:17:41 +1100 (AEDT)
 From:   James Morris <jmorris@namei.org>
 To:     Christian Brauner <christian.brauner@ubuntu.com>
 cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -57,10 +57,10 @@ cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org
-Subject: Re: [PATCH v6 18/40] utimes: handle idmapped mounts
-In-Reply-To: <20210121131959.646623-19-christian.brauner@ubuntu.com>
-Message-ID: <5165ca90-df52-ee82-7d17-f63639065b@namei.org>
-References: <20210121131959.646623-1-christian.brauner@ubuntu.com> <20210121131959.646623-19-christian.brauner@ubuntu.com>
+Subject: Re: [PATCH v6 19/40] fcntl: handle idmapped mounts
+In-Reply-To: <20210121131959.646623-20-christian.brauner@ubuntu.com>
+Message-ID: <eb912eb9-8eca-46c3-18c0-ebb7a0dde65e@namei.org>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com> <20210121131959.646623-20-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
@@ -69,12 +69,11 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 On Thu, 21 Jan 2021, Christian Brauner wrote:
 
-> Enable the vfs_utimes() helper to handle idmapped mounts by passing down
-> the mount's user namespace. If the initial user namespace is passed
-> nothing changes so non-idmapped mounts will see identical behavior as
-> before.
+> Enable the setfl() helper to handle idmapped mounts by passing down the
+> mount's user namespace. If the initial user namespace is passed nothing
+> changes so non-idmapped mounts will see identical behavior as before.
 > 
-> Link: https://lore.kernel.org/r/20210112220124.837960-26-christian.brauner@ubuntu.com
+> Link: https://lore.kernel.org/r/20210112220124.837960-27-christian.brauner@ubuntu.com
 > Cc: Christoph Hellwig <hch@lst.de>
 > Cc: David Howells <dhowells@redhat.com>
 > Cc: Al Viro <viro@zeniv.linux.org.uk>
