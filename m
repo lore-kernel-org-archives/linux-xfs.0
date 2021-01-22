@@ -4,25 +4,25 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 828D5C433E6
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:04:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36B69C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:12:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43DB922C7D
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:04:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 090DB23884
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:12:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726765AbhAVDE2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 22:04:28 -0500
-Received: from namei.org ([65.99.196.166]:52460 "EHLO mail.namei.org"
+        id S1726753AbhAVDLq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 22:11:46 -0500
+Received: from namei.org ([65.99.196.166]:52526 "EHLO mail.namei.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726676AbhAVDEZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Jan 2021 22:04:25 -0500
+        id S1726704AbhAVDLk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jan 2021 22:11:40 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by mail.namei.org (Postfix) with ESMTPS id 054BEC92;
-        Fri, 22 Jan 2021 03:02:52 +0000 (UTC)
-Date:   Fri, 22 Jan 2021 14:02:51 +1100 (AEDT)
+        by mail.namei.org (Postfix) with ESMTPS id 30E8249C;
+        Fri, 22 Jan 2021 03:10:07 +0000 (UTC)
+Date:   Fri, 22 Jan 2021 14:10:07 +1100 (AEDT)
 From:   James Morris <jmorris@namei.org>
 To:     Christian Brauner <christian.brauner@ubuntu.com>
 cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -57,11 +57,11 @@ cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org
-Subject: Re: [PATCH v6 05/39] namei: make permission helpers idmapped mount
- aware
-In-Reply-To: <20210121131959.646623-6-christian.brauner@ubuntu.com>
-Message-ID: <f4b5102b-529-7e43-c35b-bf956359461a@namei.org>
-References: <20210121131959.646623-1-christian.brauner@ubuntu.com> <20210121131959.646623-6-christian.brauner@ubuntu.com>
+Subject: Re: [PATCH v6 06/40] inode: make init and permission helpers idmapped
+ mount aware
+In-Reply-To: <20210121131959.646623-7-christian.brauner@ubuntu.com>
+Message-ID: <27cf2bc-6f4b-289-d691-4f8845cf671c@namei.org>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com> <20210121131959.646623-7-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
@@ -70,23 +70,26 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 On Thu, 21 Jan 2021, Christian Brauner wrote:
 
-> The two helpers inode_permission() and generic_permission() are used by
-> the vfs to perform basic permission checking by verifying that the
-> caller is privileged over an inode. In order to handle idmapped mounts
-> we extend the two helpers with an additional user namespace argument.
-> On idmapped mounts the two helpers will make sure to map the inode
-> according to the mount's user namespace and then peform identical
-> permission checks to inode_permission() and generic_permission(). If the
+> The inode_owner_or_capable() helper determines whether the caller is the
+> owner of the inode or is capable with respect to that inode. Allow it to
+> handle idmapped mounts. If the inode is accessed through an idmapped
+> mount it according to the mount's user namespace. Afterwards the checks
+> are identical to non-idmapped mounts. If the initial user namespace is
+> passed nothing changes so non-idmapped mounts will see identical
+> behavior as before.
+> 
+> Similarly, allow the inode_init_owner() helper to handle idmapped
+> mounts. It initializes a new inode on idmapped mounts by mapping the
+> fsuid and fsgid of the caller from the mount's user namespace. If the
 > initial user namespace is passed nothing changes so non-idmapped mounts
 > will see identical behavior as before.
 > 
-> Link: https://lore.kernel.org/r/20210112220124.837960-12-christian.brauner@ubuntu.com
+> Link: https://lore.kernel.org/r/20210112220124.837960-13-christian.brauner@ubuntu.com
 > Cc: Christoph Hellwig <hch@lst.de>
 > Cc: David Howells <dhowells@redhat.com>
 > Cc: Al Viro <viro@zeniv.linux.org.uk>
 > Cc: linux-fsdevel@vger.kernel.org
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Acked-by: Serge Hallyn <serge@hallyn.com>
 > Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
 
 
