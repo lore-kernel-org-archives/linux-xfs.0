@@ -8,140 +8,140 @@ X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAAB5C433DB
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:14:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B8CC433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:14:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6723A23888
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:14:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9056623884
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 03:14:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726586AbhAVDOF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 22:14:05 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:50142 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726149AbhAVDOD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 22:14:03 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10M3B0LT079211;
-        Fri, 22 Jan 2021 03:13:19 GMT
+        id S1725984AbhAVDOI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 22:14:08 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:39922 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726644AbhAVDOG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jan 2021 22:14:06 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10M3AQIm009265;
+        Fri, 22 Jan 2021 03:13:23 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=7c+Vkwwq+9NTwDKMQTZ3HUlYYSEh4OGNirdtOYtYN/Q=;
- b=dgSleeMl6wgujfLuQ1BfxLxJkFF7tiYTCMPRlYAoODsxGv5SDGHVjGCznB98daBK1Pww
- eZsu4D3XRX+OjYMt/J+A4besqlwamH2boU8Ha/jQUdtT8txPIzT+LVzhtZaQUFOL+hh2
- jIvetAU5DnyC1R+12TEQH8biB09rNBdqG/YjG1WQC+FFm0WL7V2B9qXtmx/1C3p8sWb+
- uqdKsFiCIObk7U6n6M2SfmYI9I1VK0IUfOJVguXiEXBx1vvQQ90WpPAW5Is2BIMSc9y5
- p+bGoH6IV3NFJ0U3E8WPfOwobK3kCX4Ciwts23NywvnasTclLBrKPSy0p9Amh2xqYHfz Jw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 3668qn2679-1
+ bh=rnLBhRxK6D1VCB7gPFgnOg6y4aQFBQXJfv3tyEMsGSI=;
+ b=a91psglwWrvAHI+8h1cjjXmChhmNRAjsAFepUR/TcALJBVwqaxI3V1ewO+xRvu7RDW8F
+ PGfHIwAQoom3/qCB4WF0YyuJ00X9ZgeMOknzuFnX6EUJmlX5zXZzYVpxmPYtSTLMBWQv
+ 83l5DEVI2JubIjC9IN32H8LYksjqtOKGH5LBoclXnUSrIefmBkirVu2cx9d6JgJFc5f/
+ jOLFWkN34nwhh0zp4a8f25TYZxEeMe6ETRlFj1QH1yeWUdaguebNs5d+PGjvZDfytxom
+ 9G+T1mfJXmYf8ndFzb3D4Ux6pCvgjbElmcyJSgYzaVbcGfonJ39NJzygAI3ueKiVgK4k 1A== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 3668qaj7dm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Jan 2021 03:13:18 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10M3AtFJ101239;
-        Fri, 22 Jan 2021 03:13:18 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2175.outbound.protection.outlook.com [104.47.55.175])
-        by userp3020.oracle.com with ESMTP id 3668r07jnx-1
+        Fri, 22 Jan 2021 03:13:23 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 10M3AlcU055917;
+        Fri, 22 Jan 2021 03:13:22 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2171.outbound.protection.outlook.com [104.47.55.171])
+        by aserp3030.oracle.com with ESMTP id 3668qy3ss8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Jan 2021 03:13:17 +0000
+        Fri, 22 Jan 2021 03:13:22 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=n23bzvA3n41q0ozI2XXWwXIpmrWTmjB6gsrBMqN6kuxlFf7VDRUnfAbzlDS6I4EPhPeT84qP+hmYSdYx5VzmdZlj1wdhrtIgkDvOgaZZDRlBV6KeDO9M/i3X6e2fptM87mwHy/CggKFGWI02sW/zF03PMQWGM9lOMhAfKw25OHCuU9YAex5bh4sV6/TZ+DKRB0DEUdmRU+CsRDb4m0keZM2OtRU/ek7DY2UnMpwRVQPnnx7KtdqHTQEW8iRKanWUWDRhlq4zyBVUU4pXl8zB4SVjVuium8LeivqsVwKSJfliw3DF67fXTS45proMJlHZf/SRPsQMFGOu2DBrBDVmFA==
+ b=Grh79JTO/P7hIJpzZDxjTKAkP6K+m89WBqmaZxunrBjR7Hez98JFVwLUMM/EzBSRmBEqCs/CBvYwYNfaMTBLZUqYhLdPGIJoeNChI9GknzAPpWn8h1HBQYcqZ7OvVcTtksJ67GER1gd5Jyks8VKkmTSwDTc7YBl/ICN4JbzdkK7oaaH5vaUSm2ORtywGWBmqKRjt6eQTXabtxstz8pzZTayRVwPiJxu1D8o1VsHNpTWEr77LZoqqsmOva7KZjbOPEODJ2CWNGlf6etlkttUuZlRh2WmcjjZgd0uZ/Cp4D3JWD29gxUYq6g0UoUFpbQKVc0gxY0N6RKnBxwrbMkp/ng==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7c+Vkwwq+9NTwDKMQTZ3HUlYYSEh4OGNirdtOYtYN/Q=;
- b=KlU0C8snizWS+Bo2tmAEFGn/Aw4BfwZjRg4Odo3Q8Vua+XahA9dhYqrNyofjl8K7Mh3WpvlYP49P3by1FNk9C/JKsBRhcOArAIYcetEc9u7tHIWCABNRU6pKSlwsksm5LEN4+mum6cB7sVbkg68xdHIs/Nk91YMiW/uUYmKImrdF+S20TnmKvNfYmsWrlP66dMiCJPwXXV0u9CtJ5M5MCgUYv3lABllJoCtrNUhOpDC4Gbyq9wJ9AgpYkGWCZwZZo6ZymaHd9wtuzR+uFWQRUcKLcsJjpnLG0AYzp1eEUD8nSZqNaBRsvsXcK0czVgeGntj74DWAHKFiUUBcCnTV9w==
+ bh=rnLBhRxK6D1VCB7gPFgnOg6y4aQFBQXJfv3tyEMsGSI=;
+ b=koVNn7ZHiq0qx5hsfZMzEzgf65vQzoTIUsf/pcXtsl8oMXttT0NDgCWb5cNVpRrS4QlRlqeG1LRwKUqczlU1EJor/4MQt6N/mTsVMoq9aiBLnStzPvYMRg8HttLDnxMT2b/K7wwniITy4gkSYzCFdLpd4bnsqp9SGUdq8HEcKOAUvE5wSn2XsVjkOxK+jCZm/PIilJjDDBDoKs4aWZvRAxIayJs619CijbG538RvvdB44DL/a8G33crPPm4w2V8vhV6hGFpz7z5ZlkwJwECH9VhiqJsh5Y+TG3ws+tz/Tw0bDRPI2dZ1z7fb/OreXNpZwKcI4B6LnL38Qfb/wf8pJw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7c+Vkwwq+9NTwDKMQTZ3HUlYYSEh4OGNirdtOYtYN/Q=;
- b=x/Cw0fC0eCvQXGQlAPfbN69MIHa1tz+vbgHG2JZ4wcj08lgPBhNQgsk1xjMDp/SDO64xV8/1vIQDaIEjymDxFLwJB6tdEXpSnT/iwJMnfhZPuQOhfv4OFk9zI+2u0Ygle1YMzHY95t21EB13tWO/eHMKIZi6VFJhOxelD1v1Rac=
+ bh=rnLBhRxK6D1VCB7gPFgnOg6y4aQFBQXJfv3tyEMsGSI=;
+ b=Q3pRjnuoqrnUkZ0AUd4q5/9dkBQB6QWVrQmMZ8huWsrSEKXz1RIFMk2c6iYZ6Pq6CfsyXrItFQYIZN1ukqKzDMraporyNKG01qo36Qi8Vt110UCUz54bY36SvwWu+53yGaMaN2WA5bFjfgG5/SXVfI/7TFo03N8KzG5HrqPzKoU=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
  by BYAPR10MB3045.namprd10.prod.outlook.com (2603:10b6:a03:86::28) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3763.11; Fri, 22 Jan
- 2021 03:13:15 +0000
+ 2021 03:13:20 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::9105:a68f:48fc:5d09]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::9105:a68f:48fc:5d09%6]) with mapi id 15.20.3763.014; Fri, 22 Jan 2021
- 03:13:15 +0000
-Subject: Re: [PATCH v2 6/9] xfs: fold sbcount quiesce logging into log
- covering
+ 03:13:19 +0000
+Subject: Re: [PATCH v2 7/9] xfs: remove duplicate wq cancel and log force from
+ attr quiesce
 To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 References: <20210121154526.1852176-1-bfoster@redhat.com>
- <20210121154526.1852176-7-bfoster@redhat.com>
+ <20210121154526.1852176-8-bfoster@redhat.com>
 From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <4e30532c-e734-8a00-158f-9c2d20e32c6a@oracle.com>
-Date:   Thu, 21 Jan 2021 20:13:04 -0700
+Message-ID: <5bab6971-03b2-6929-ba70-0e79aca9f8d9@oracle.com>
+Date:   Thu, 21 Jan 2021 20:13:18 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.6.1
-In-Reply-To: <20210121154526.1852176-7-bfoster@redhat.com>
+In-Reply-To: <20210121154526.1852176-8-bfoster@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [67.1.214.41]
-X-ClientProxiedBy: BY3PR10CA0019.namprd10.prod.outlook.com
- (2603:10b6:a03:255::24) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: BY3PR10CA0001.namprd10.prod.outlook.com
+ (2603:10b6:a03:255::6) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.226] (67.1.214.41) by BY3PR10CA0019.namprd10.prod.outlook.com (2603:10b6:a03:255::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.12 via Frontend Transport; Fri, 22 Jan 2021 03:13:15 +0000
+Received: from [192.168.1.226] (67.1.214.41) by BY3PR10CA0001.namprd10.prod.outlook.com (2603:10b6:a03:255::6) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.12 via Frontend Transport; Fri, 22 Jan 2021 03:13:19 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b524f6f3-b9d4-4568-28b5-08d8be83a89e
+X-MS-Office365-Filtering-Correlation-Id: 35755767-3f81-41f3-3ce6-08d8be83ab58
 X-MS-TrafficTypeDiagnostic: BYAPR10MB3045:
-X-Microsoft-Antispam-PRVS: <BYAPR10MB3045722CE24560725936C11695A00@BYAPR10MB3045.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:3383;
+X-Microsoft-Antispam-PRVS: <BYAPR10MB30451777C08A1D5CA7DB55BB95A00@BYAPR10MB3045.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:826;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: eIpT/M4Oj9jx0BagZyGa7Y/lDI81rdkQTGbjw1+UER2CB3yHqo47aJiXQW35+W5JcE6nBaw3foh9szEKtZimKNIyYEzKAT0XfPTKTp/XShS458L6nEN/7ieSgqe4T5Etwua4x2U6+vgYywiRXaKHvgG/YL/GSY6lq36pucTTFTZMUU5upo3Rf8MWIV8ny3Z4e/qiV/JnuYXabscKNaN1b4ZeCXcoHBIzUM4F4wC8hXbxym03M/NklCTXz9MhPcFkI0n8IoLkYHxkaH33wYl/znGJO/gFr+3hvA/Q8L16GMyMSsIUWD4KhjzA5irFkHT+O8Ao4ZCeanpREtYDdS3qL10VTTYz6U+uRtDJeLrdZ96a/5ZnXKvIDM6/i3J7dRvNiSB24fcSMwJdrbe1iqVD5yixzCcgPruLKKHVaY/nFWnm+t7QAhzZgYZciEUls+2RzFAcm5JsQLfLkOht4rVKFT6dyWcvZ3+4fsD+8wxudAI=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(366004)(396003)(346002)(39860400002)(136003)(66946007)(83380400001)(44832011)(5660300002)(66476007)(66556008)(52116002)(2906002)(31686004)(8936002)(316002)(16576012)(36756003)(2616005)(26005)(508600001)(53546011)(16526019)(6666004)(956004)(6486002)(186003)(86362001)(8676002)(31696002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?bmM2TEZFQlhOcWQ0aU1VVFlOTDVhdTFLRXdSYlRWVy9ydjZnQWVjZHZYUkZQ?=
- =?utf-8?B?ZDhDVm4yTXQ2Z3pzWEdtU24ycXNEV3F1bHdsWEJGRWNJeWt3a01pWS9kczEr?=
- =?utf-8?B?emVmakdXZm5FRE80VHdvNDFLZFcwSitQT3pLbnpENjlSWGRLZjlqeWorVXcy?=
- =?utf-8?B?eXlGdEJjVzNBWTB1WXc1QjNMSUJwMGQ4elllTFZBU2d4R2J4b0NOZnM1bTZm?=
- =?utf-8?B?QmxvdGpUSWdzcUFtcjFEMHc0MTJhMWxDd245VHl2R1M2RFRkRkhpb3hFODRt?=
- =?utf-8?B?YzVac09PMG5mcVFjY2trYTBBMDVWNmMxdi9Rb3hCdkN4SzcwUHRnMzJCeWtr?=
- =?utf-8?B?QUNScFNrRHlCckI0N3V4dlZpUkdhdDU3Mk5LdU1aLzVaWWthWmNNLzRYZHlS?=
- =?utf-8?B?RG1uY3drZjZFL2x0VG01djFObEx0S2pnTTBLL29VMFhUbjZYeW56OWlmbjkx?=
- =?utf-8?B?THlham53RzFOVGVFd0JoNGFWWDRRSGNvcjBhK2pUTXpyUVIwZjFKNUVrN3Jy?=
- =?utf-8?B?Sml4ZTh2M1NqZlozUEVteTFjcDQzcU1tSjIxd2daR1VFL1FsdkdiYlBhZUtN?=
- =?utf-8?B?dkQxdjZZR0x6ZGwweGRaaWl4RnZrbGs1cHlGTDRsbzNrNjgwWXh0RVJFY2My?=
- =?utf-8?B?M1hIejhyRENCeDJZWXRraTd2MUJ3ejVPdUMzNzEwM2dOVFdES2xETFlaQmFK?=
- =?utf-8?B?aHVaNitRajNlTVJlNGN0VERJZDlRcGdqM0RjNklzNWI5enc1SVdZZnpsZ2NR?=
- =?utf-8?B?ODVyRUNPaC8rYXFsWDFXbzM1czdsUDF5UzZzVE5TTzJaSE5BR3lZOW10cCth?=
- =?utf-8?B?QVF5cExKYWJYUzIwVGl1MVI0NnNJMGc4UnEzYlhHLzNPa2VoY1hqR3VWMjBz?=
- =?utf-8?B?bm5LTUhSZ1JXYzlNSUJCQXJsa3l2WEwvOVQvSDAvZTErelpibHBsNXc0TFdV?=
- =?utf-8?B?R1F0NFJZVWdOQkR4QlMyOElpTnlDcEpRSFVXWkVKM3hDVi9TZEg1UkwyTE9T?=
- =?utf-8?B?clJOelFxYU11YkQ1bHBLWDNhZHllY1M1aEVYTUhwcVBGM0hIZHkwbFdkZDNT?=
- =?utf-8?B?YUlGNzZFOU5ZcWtKV2J6Z1ZqS3VlL0dEWU45Qm1GM0VhOXFvM2U5emxRczFQ?=
- =?utf-8?B?VW4yVWdtVGV1WXNPUnNjREU1TXl3SHc2blZJTzdHRnpVRS9UVWVkdlBIZkMz?=
- =?utf-8?B?WDBzZm1xQ2NmODJiWmRPdDZ2bmgwSUFpT1VKRkpLVHkvb0tXMDFIQUFZRGk2?=
- =?utf-8?B?ditISmRjVjdvSHdDQ3BocUlqV01xWnJiS29CdW5QM0xEaXIrV3haNzRvZXBD?=
- =?utf-8?Q?tu4hpzkegi7Hs=3D?=
+X-Microsoft-Antispam-Message-Info: f/YDbfhk1by4Ojp4Dlre1TAMAAoIzhNEDWRGKxlvPZ36+4mhC+tSP6nHacH8aJoK1ie5SB4aXgGrMdHGMjfi/peFO2qcUWiCJ09gCIpeZrHkA4GhOVnsbMXIWhPF6Ux87FxuUxJgFzSVrFYE30mdu4HRCfFwWCPMt9YBNuf1MpEp9RTAqiQuMi/iwG9ySwg9KJjK1sGlQFHuDTzT7iifHlzgaTzJ4sZzDeJV9MLaZQgXVLoH0jSWr8kBlntaEc4guQhaNsTIX9KUiy562P3yTwqL9MQsMOR2afAI4GCSoXv1FXyF8ReoZRLA5T0AlFwzvuVQOhJ+Qir88PPRivrdykvGMjOwregqCRrUBL9GufuCjGeKo8IGoFenYkV2mJPbGOO3CZavaarC7+uy2WZtAO2xDPyLwaJBMN3OIn0Q2WF3QfcWNI5lftwoTNc1hIQZLLsWfGksgw3IhynYpYDvMaCMQ0tTTme/sz42y8wL/h8=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(366004)(396003)(346002)(39860400002)(136003)(66946007)(83380400001)(44832011)(5660300002)(66476007)(66556008)(52116002)(2906002)(31686004)(8936002)(316002)(4744005)(16576012)(36756003)(2616005)(26005)(508600001)(53546011)(16526019)(956004)(6486002)(186003)(86362001)(8676002)(31696002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?OW1FRXc1dzQyUEY4S1ZSMTczS1hjRk1VR3BhOEJMaUd4dHh2dVBDQ3ZPRnNO?=
+ =?utf-8?B?a0dJSjNOMmtObmd1MHJYcnp1Tm5KU28zM2xiWGlodVZ6d3FwaDUwTjRoQVM5?=
+ =?utf-8?B?ZGJYbm1xL05CSjdXVWliTWRiVWdDYSszN04vSGp4dVFIQy9CekowWHpLOUta?=
+ =?utf-8?B?aXdrMUc4K3BwMVRDL0NjVUpCM0tWK0F6NFF2STRSaS9DNm5ML0NKK1VENnNh?=
+ =?utf-8?B?dmtsYmxVY2RqczlOTG1qZVJkZjVUU2ZrNmFCTHQ4cUxNcWJhQVpWQzZZTnIz?=
+ =?utf-8?B?WWtiR3lPc3pKVXQ3bmdsZ1VMaC9qRXMvUTNkK2RqVlBxdmYraE1lQjg1S3NU?=
+ =?utf-8?B?V0lQQkh1Wk5jVEVwTmZxVGh6UzZYTWRKaWxwUG5tbnVLQVY0RmNvNzBxNHBQ?=
+ =?utf-8?B?Rys2akkyYndPa2J2S2ZuWmRwSndnMFY1RVJnMHhlVE54a3hmcFlWTnZtUW5Q?=
+ =?utf-8?B?Ykd6aUpkOEd6UTd3WVk5enhoSDRlUmltRTVURDI0SjVCZ21XSUhidEl1aU9R?=
+ =?utf-8?B?MEdGR25XSTZYWExCWWI3bkhxeTdjN3pZMDZWc1BTTGp1a1VDS2tRckRvYmxs?=
+ =?utf-8?B?OUc5QXVXUFlpRWJlSmk3ZHZUR041NWZJWlNKZjdHMjVURDRuc3VTN2RpZ1Bm?=
+ =?utf-8?B?WjhBY0l6QlE1Q1lwNmphb0dvS1kxWFk4bDBkemlIT3hqNnB6V0VIODdqK3kz?=
+ =?utf-8?B?eEhRWklZN2k5d3RucGpWYkZvNHgzaWo5czExSnRJZXZCUEhYeXR0eGFXU21O?=
+ =?utf-8?B?cjRDdFpMVjZST1ZYK1Fzd3VlZy8zUjBxNWVEZkxFK0JkSk5ZWjJaYUNFYjJp?=
+ =?utf-8?B?R2g5L1BEeG5JVDZoQ0JGcEFzVnNnclVQelRZcVcxakNmVXhXcG95NXg5b2lN?=
+ =?utf-8?B?QzdhZUpNQkc1cURwLzNXU1luRFFUWGJHNUxzMmRrZG1UakllRHpyYVR3OFAw?=
+ =?utf-8?B?WDBiayt2TlBVSGlGclBSVEJabHcrdTFtSk1YNGFDMzhjeGJ4TG9EaU1RK1kw?=
+ =?utf-8?B?UHkvbktRaWNETDBJem15N2VOaUZiRFBYUkJjTDVraDIxREcvVHNzZnQ4Y2hL?=
+ =?utf-8?B?Zk00T0dPZERuZHhuRDJoZkRvazQ2NGc4RjdXeWJmSnJnaEtoa29QWkZGTnl3?=
+ =?utf-8?B?SU1UMGMya3h6dWpFdmhJYXVyUWJ0YW5JZnZ0VktiYmJILzN4NTdUZktVWVEx?=
+ =?utf-8?B?Q1V5MCtBVWxSb0JRSmNuc29UWStkY2hYUnY4OVZTOFBjNE0zdkRjN0kwcVJW?=
+ =?utf-8?B?bERoeUJvTnJaczhQSHpYR2VNblZHM2xEazdkRk5UZE53Wnp4Mi9CWnc4TWVS?=
+ =?utf-8?Q?NEBOcv26IuEoU=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b524f6f3-b9d4-4568-28b5-08d8be83a89e
+X-MS-Exchange-CrossTenant-Network-Message-Id: 35755767-3f81-41f3-3ce6-08d8be83ab58
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2021 03:13:15.3747
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2021 03:13:19.8351
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: wknTi0P7sz/anyeipPvdFPxIvAuilJbi6SSZtxlyqapBVjN7Rf/fy/26XMkhCBkzrvAt/fS4wsamcaT735jhB2Iyys253Alf/utFQWmkteg=
+X-MS-Exchange-CrossTenant-UserPrincipalName: XrinKVz7g8gwvsKIUPn6uh+vLaoIEy+Wmsvf21hchVcT5Xv6Rost9KgD4D13+46MOE10weLXAcXCr6oCIsD3mN8Jz8TFNnyI5+KN3s3jsjk=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3045
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9871 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 adultscore=0
- malwarescore=0 mlxscore=0 mlxlogscore=999 spamscore=0 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 bulkscore=0
+ mlxlogscore=999 spamscore=0 suspectscore=0 malwarescore=0 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2101220015
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9871 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 priorityscore=1501
- adultscore=0 impostorscore=0 mlxlogscore=999 spamscore=0 suspectscore=0
- phishscore=0 clxscore=1015 bulkscore=0 mlxscore=0 lowpriorityscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
+ impostorscore=0 mlxscore=0 priorityscore=1501 phishscore=0 mlxlogscore=999
+ lowpriorityscore=0 malwarescore=0 adultscore=0 clxscore=1015 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2101220015
 Precedence: bulk
@@ -151,164 +151,30 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 On 1/21/21 8:45 AM, Brian Foster wrote:
-> xfs_log_sbcount() calls xfs_sync_sb() to sync superblock counters to
-> disk when lazy superblock accounting is enabled. This occurs on
-> unmount, freeze, and read-only (re)mount and ensures the final
-> values are calculated and persisted to disk before each form of
-> quiesce completes.
-> 
-> Now that log covering occurs in all of these contexts and uses the
-> same xfs_sync_sb() mechanism to update log state, there is no need
-> to log the superblock separately for any reason. Update the log
-> quiesce path to sync the superblock at least once for any mount
-> where lazy superblock accounting is enabled. If the log is already
-> covered, it will remain in the covered state. Otherwise, the next
-> sync as part of the normal covering sequence will carry the
-> associated superblock update with it. Remove xfs_log_sbcount() now
-> that it is no longer needed.
+> These two calls are repeated at the beginning of xfs_log_quiesce().
+> Drop them from xfs_quiesce_attr().
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Ok, looks ok
+Looks ok to me
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->   fs/xfs/xfs_log.c   | 20 ++++++++++++++++++--
->   fs/xfs/xfs_mount.c | 31 -------------------------------
->   fs/xfs/xfs_mount.h |  1 -
->   fs/xfs/xfs_super.c |  8 --------
->   4 files changed, 18 insertions(+), 42 deletions(-)
+>   fs/xfs/xfs_super.c | 5 -----
+>   1 file changed, 5 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 6db65a4513a6..9479a5d0d785 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1108,6 +1108,7 @@ xfs_log_cover(
->   {
->   	struct xlog		*log = mp->m_log;
->   	int			error = 0;
-> +	bool			need_covered;
->   
->   	ASSERT((xlog_cil_empty(log) && xlog_iclogs_empty(log) &&
->   	        !xfs_ail_min_lsn(log->l_ailp)) ||
-> @@ -1116,6 +1117,21 @@ xfs_log_cover(
->   	if (!xfs_log_writable(mp))
->   		return 0;
->   
-> +	/*
-> +	 * xfs_log_need_covered() is not idempotent because it progresses the
-> +	 * state machine if the log requires covering. Therefore, we must call
-> +	 * this function once and use the result until we've issued an sb sync.
-> +	 * Do so first to make that abundantly clear.
-> +	 *
-> +	 * Fall into the covering sequence if the log needs covering or the
-> +	 * mount has lazy superblock accounting to sync to disk. The sb sync
-> +	 * used for covering accumulates the in-core counters, so covering
-> +	 * handles this for us.
-> +	 */
-> +	need_covered = xfs_log_need_covered(mp);
-> +	if (!need_covered && !xfs_sb_version_haslazysbcount(&mp->m_sb))
-> +		return 0;
-> +
->   	/*
->   	 * To cover the log, commit the superblock twice (at most) in
->   	 * independent checkpoints. The first serves as a reference for the
-> @@ -1125,12 +1141,12 @@ xfs_log_cover(
->   	 * covering the log. Push the AIL one more time to leave it empty, as
->   	 * we found it.
->   	 */
-> -	while (xfs_log_need_covered(mp)) {
-> +	do {
->   		error = xfs_sync_sb(mp, true);
->   		if (error)
->   			break;
->   		xfs_ail_push_all_sync(mp->m_ail);
-> -	}
-> +	} while (xfs_log_need_covered(mp));
->   
->   	return error;
->   }
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index a62b8a574409..f97b82d0e30f 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1124,12 +1124,6 @@ xfs_unmountfs(
->   		xfs_warn(mp, "Unable to free reserved block pool. "
->   				"Freespace may not be correct on next mount.");
->   
-> -	error = xfs_log_sbcount(mp);
-> -	if (error)
-> -		xfs_warn(mp, "Unable to update superblock counters. "
-> -				"Freespace may not be correct on next mount.");
-> -
-> -
->   	xfs_log_unmount(mp);
->   	xfs_da_unmount(mp);
->   	xfs_uuid_unmount(mp);
-> @@ -1164,31 +1158,6 @@ xfs_fs_writable(
->   	return true;
->   }
->   
-> -/*
-> - * xfs_log_sbcount
-> - *
-> - * Sync the superblock counters to disk.
-> - *
-> - * Note this code can be called during the process of freezing, so we use the
-> - * transaction allocator that does not block when the transaction subsystem is
-> - * in its frozen state.
-> - */
-> -int
-> -xfs_log_sbcount(xfs_mount_t *mp)
-> -{
-> -	if (!xfs_log_writable(mp))
-> -		return 0;
-> -
-> -	/*
-> -	 * we don't need to do this if we are updating the superblock
-> -	 * counters on every modification.
-> -	 */
-> -	if (!xfs_sb_version_haslazysbcount(&mp->m_sb))
-> -		return 0;
-> -
-> -	return xfs_sync_sb(mp, true);
-> -}
-> -
->   /*
->    * Deltas for the block count can vary from 1 to very large, but lock contention
->    * only occurs on frequent small block count updates such as in the delayed
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index dfa429b77ee2..452ca7654dc5 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -399,7 +399,6 @@ int xfs_buf_hash_init(xfs_perag_t *pag);
->   void xfs_buf_hash_destroy(xfs_perag_t *pag);
->   
->   extern void	xfs_uuid_table_free(void);
-> -extern int	xfs_log_sbcount(xfs_mount_t *);
->   extern uint64_t xfs_default_resblks(xfs_mount_t *mp);
->   extern int	xfs_mountfs(xfs_mount_t *mp);
->   extern int	xfs_initialize_perag(xfs_mount_t *mp, xfs_agnumber_t agcount,
 > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 09d956e30fd8..75ada867c665 100644
+> index 75ada867c665..8fc9044131fc 100644
 > --- a/fs/xfs/xfs_super.c
 > +++ b/fs/xfs/xfs_super.c
-> @@ -884,19 +884,11 @@ void
+> @@ -884,11 +884,6 @@ void
 >   xfs_quiesce_attr(
 >   	struct xfs_mount	*mp)
 >   {
-> -	int	error = 0;
+> -	cancel_delayed_work_sync(&mp->m_log->l_work);
 > -
->   	cancel_delayed_work_sync(&mp->m_log->l_work);
->   
->   	/* force the log to unpin objects from the now complete transactions */
->   	xfs_log_force(mp, XFS_LOG_SYNC);
->   
+> -	/* force the log to unpin objects from the now complete transactions */
+> -	xfs_log_force(mp, XFS_LOG_SYNC);
 > -
-> -	/* Push the superblock and write an unmount record */
-> -	error = xfs_log_sbcount(mp);
-> -	if (error)
-> -		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
-> -				"Frozen image may not be consistent.");
 >   	xfs_log_clean(mp);
 >   }
 >   
