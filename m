@@ -2,91 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EA56C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 17:42:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D06C7C433E9
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 17:50:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E138A23A68
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 17:42:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9805223A79
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 17:50:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729329AbhAVRmj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Jan 2021 12:42:39 -0500
-Received: from verein.lst.de ([213.95.11.211]:37560 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729413AbhAVRfY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Jan 2021 12:35:24 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 4C3BC68BFE; Fri, 22 Jan 2021 18:34:40 +0100 (CET)
-Date:   Fri, 22 Jan 2021 18:34:40 +0100
+        id S1728644AbhAVR1U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Jan 2021 12:27:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53666 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729501AbhAVQsU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jan 2021 11:48:20 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7D4CC061788
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Jan 2021 08:46:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:
+        Content-Type:Content-ID:Content-Description;
+        bh=Xt/4VePDBBA1eN6G2ZG7tbUsafp1TF2lfBN4a5cT+7Y=; b=UkpriqQ4qmDZ6Hoeg53iOt1Oll
+        7Y6H7i+l/eDtio+MzuhiR5JjHobAVk0JLjVgiPele3hvMVkZ4FQQ9Wkb0eTOVHmKV/k2IJH3vqGxa
+        4EYrMHpCIx3MBgq6rymC6BCaCBgndFa8rotCOghdJ3atDX1aEIxLPzH63EYVwJzormbTRAFxtnQ/g
+        eCnka5y6LIAWHpuyZmhTSZc2S/AFEJQzaU/xL0ddPhaTOpJQbLC6yAJs5O9MfeBOlgku1UaBUOh6e
+        vQPmFkxtcdFPj8+OSU5qGhiuDpldVsbI1sf3mkdu2vubilI+y7VS7MouYSBvkQL/nRm8cDJy4nR5B
+        ja9EYudg==;
+Received: from [2001:4bb8:188:1954:662b:86d3:ab5f:ac21] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1l2zaH-000yXx-3L
+        for linux-xfs@vger.kernel.org; Fri, 22 Jan 2021 16:46:54 +0000
 From:   Christoph Hellwig <hch@lst.de>
-To:     Christian Brauner <christian.brauner@ubuntu.com>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
-        John Johansen <john.johansen@canonical.com>,
-        James Morris <jmorris@namei.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Geoffrey Thomas <geofft@ldpreload.com>,
-        Mrunal Patel <mpatel@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        David Howells <dhowells@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        =?iso-8859-1?Q?St=E9phane?= Graber <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        Lennart Poettering <lennart@poettering.net>,
-        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
-        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
-        Kees Cook <keescook@chromium.org>,
-        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        containers@lists.linux-foundation.org,
-        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-integrity@vger.kernel.org, selinux@vger.kernel.org,
-        Mauricio =?iso-8859-1?Q?V=E1squez?= Bernal 
-        <mauricio@kinvolk.io>
-Subject: Re: [PATCH v6 35/40] fs: introduce MOUNT_ATTR_IDMAP
-Message-ID: <20210122173440.GA20821@lst.de>
-References: <20210121131959.646623-1-christian.brauner@ubuntu.com> <20210121131959.646623-36-christian.brauner@ubuntu.com> <20210122173340.GA20658@lst.de>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 2/2] xfs: reduce ilock acquisitions in xfs_file_fsync
+Date:   Fri, 22 Jan 2021 17:46:43 +0100
+Message-Id: <20210122164643.620257-3-hch@lst.de>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210122164643.620257-1-hch@lst.de>
+References: <20210122164643.620257-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210122173340.GA20658@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 22, 2021 at 06:33:40PM +0100, Christoph Hellwig wrote:
-> >  /*
-> >   * mount_setattr()
-> > @@ -127,9 +128,10 @@ struct mount_attr {
-> >  	__u64 attr_set;
-> >  	__u64 attr_clr;
-> >  	__u64 propagation;
-> > +	__u64 userns_fd;
-> >  };
-> >  
-> >  /* List of all mount_attr versions. */
-> > -#define MOUNT_ATTR_SIZE_VER0	24 /* sizeof first published struct */
-> > +#define MOUNT_ATTR_SIZE_VER0	32 /* sizeof first published struct */
-> 
-> I think this hunk needs to go into the patch adding the structure.
+If the inode is not pinned by the time fsync is called we don't need the
+ilock to protect against concurrent clearing of ili_fsync_fields as the
+inode won't need a log flush or clearing of these fields.  Not taking
+the iolock allows for full concurrency of fsync and thus O_DSYNC
+completions with io_uring/aio write submissions.
 
-But except for that the patch looks fine:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_file.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 588232c77f11e0..ffe2d7c37e26cd 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -200,7 +200,14 @@ xfs_file_fsync(
+ 	else if (mp->m_logdev_targp != mp->m_ddev_targp)
+ 		xfs_blkdev_issue_flush(mp->m_ddev_targp);
+ 
+-	error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
++	/*
++	 * Any inode that has dirty modifications in the log is pinned.  The
++	 * racy check here for a pinned inode while not catch modifications
++	 * that happen concurrently to the fsync call, but fsync semantics
++	 * only require to sync previously completed I/O.
++	 */
++	if (xfs_ipincount(ip))
++		error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
+ 
+ 	/*
+ 	 * If we only have a single device, and the log force about was
+-- 
+2.29.2
+
