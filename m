@@ -2,56 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C5AFC433DB
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 17:27:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B078BC433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 17:27:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C4A423A9C
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 17:27:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74E1C23A9C
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 17:27:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729051AbhAVR1B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Jan 2021 12:27:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53634 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729355AbhAVQrm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jan 2021 11:47:42 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 715DDC0613D6
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Jan 2021 08:46:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=EyCKuoy9Xe2a7OBh2j60XGSQD0swzGxeMqVggN2mwvY=; b=Y3igfn8WsnnaDNlpw4nk9/urW2
-        Bl3i5Vg4gmTgtJ97/423F5PmAb12m0BDKsVhYutZTzu5/OCcJ3vjolHPU0Nz4lcFuysekBZWbSIot
-        xhyjW0j4SN9LsXfAJk5snLHegMwvRO/xm0NmgGCS2BXqJt5FXSaOgy1ZzP+EfyASpLBYyH/uh5QTS
-        9L7QwiSfSYcy1RnZNPu+GqPFmr0m6P/bXD++cgTTKWSPWEqW3SxJNNxgmwvr+c9aLwFcjj0D+0be2
-        5466E2Cnh1csKhg+TXvJVsYlHQTJwt2B+QkjH5dlZ8iF44fSl+mmIkjEh9Nihzf+Rtj1oby1EqZpQ
-        14pnC3MQ==;
-Received: from [2001:4bb8:188:1954:662b:86d3:ab5f:ac21] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1l2za8-000yVj-7T
-        for linux-xfs@vger.kernel.org; Fri, 22 Jan 2021 16:46:46 +0000
+        id S1729501AbhAVR1e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Jan 2021 12:27:34 -0500
+Received: from verein.lst.de ([213.95.11.211]:37413 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729850AbhAVRVO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Jan 2021 12:21:14 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 573FD68B05; Fri, 22 Jan 2021 18:20:27 +0100 (CET)
+Date:   Fri, 22 Jan 2021 18:20:27 +0100
 From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Subject: avoid taking the iolock in fsync unless actually needed v2
-Date:   Fri, 22 Jan 2021 17:46:41 +0100
-Message-Id: <20210122164643.620257-1-hch@lst.de>
-X-Mailer: git-send-email 2.29.2
+To:     Christian Brauner <christian.brauner@ubuntu.com>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
+        John Johansen <john.johansen@canonical.com>,
+        James Morris <jmorris@namei.org>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Casey Schaufler <casey@schaufler-ca.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Geoffrey Thomas <geofft@ldpreload.com>,
+        Mrunal Patel <mpatel@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
+        Tycho Andersen <tycho@tycho.ws>,
+        David Howells <dhowells@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        =?iso-8859-1?Q?St=E9phane?= Graber <stgraber@ubuntu.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aleksa Sarai <cyphar@cyphar.com>,
+        Lennart Poettering <lennart@poettering.net>,
+        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
+        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
+        Kees Cook <keescook@chromium.org>,
+        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        containers@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-integrity@vger.kernel.org, selinux@vger.kernel.org
+Subject: Re: [PATCH v6 15/40] open: handle idmapped mounts in do_truncate()
+Message-ID: <20210122172027.GA20347@lst.de>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com> <20210121131959.646623-16-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210121131959.646623-16-christian.brauner@ubuntu.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+Looks good,
 
-this series avoids taking the iolock in fsync if there is no dirty
-metadata.
-
-Changes since v1:
- - add a comment explaining the ipincount check
+Reviewed-by: Christoph Hellwig <hch@lst.de>
