@@ -7,22 +7,22 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54C42C433DB
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 04:16:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51444C433E6
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 04:16:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 118F823787
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 04:16:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04504221E5
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Jan 2021 04:16:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726760AbhAVEQT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Jan 2021 23:16:19 -0500
-Received: from namei.org ([65.99.196.166]:52910 "EHLO mail.namei.org"
+        id S1726806AbhAVEQn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Jan 2021 23:16:43 -0500
+Received: from namei.org ([65.99.196.166]:52958 "EHLO mail.namei.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726030AbhAVEQP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Jan 2021 23:16:15 -0500
+        id S1726735AbhAVEQk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jan 2021 23:16:40 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by mail.namei.org (Postfix) with ESMTPS id E799DC92;
-        Fri, 22 Jan 2021 04:14:42 +0000 (UTC)
-Date:   Fri, 22 Jan 2021 15:14:42 +1100 (AEDT)
+        by mail.namei.org (Postfix) with ESMTPS id A31BC49C;
+        Fri, 22 Jan 2021 04:15:05 +0000 (UTC)
+Date:   Fri, 22 Jan 2021 15:15:05 +1100 (AEDT)
 From:   James Morris <jmorris@namei.org>
 To:     Christian Brauner <christian.brauner@ubuntu.com>
 cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -57,10 +57,10 @@ cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-integrity@vger.kernel.org, selinux@vger.kernel.org
-Subject: Re: [PATCH v6 17/40] af_unix: handle idmapped mounts
-In-Reply-To: <20210121131959.646623-18-christian.brauner@ubuntu.com>
-Message-ID: <3e79875e-a32b-2974-b922-a2ed116305b@namei.org>
-References: <20210121131959.646623-1-christian.brauner@ubuntu.com> <20210121131959.646623-18-christian.brauner@ubuntu.com>
+Subject: Re: [PATCH v6 18/40] utimes: handle idmapped mounts
+In-Reply-To: <20210121131959.646623-19-christian.brauner@ubuntu.com>
+Message-ID: <5165ca90-df52-ee82-7d17-f63639065b@namei.org>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com> <20210121131959.646623-19-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
@@ -69,13 +69,12 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 On Thu, 21 Jan 2021, Christian Brauner wrote:
 
-> When binding a non-abstract AF_UNIX socket it will gain a representation
-> in the filesystem. Enable the socket infrastructure to handle idmapped
-> mounts by passing down the user namespace of the mount the socket will
-> be created from. If the initial user namespace is passed nothing changes
-> so non-idmapped mounts will see identical behavior as before.
+> Enable the vfs_utimes() helper to handle idmapped mounts by passing down
+> the mount's user namespace. If the initial user namespace is passed
+> nothing changes so non-idmapped mounts will see identical behavior as
+> before.
 > 
-> Link: https://lore.kernel.org/r/20210112220124.837960-25-christian.brauner@ubuntu.com
+> Link: https://lore.kernel.org/r/20210112220124.837960-26-christian.brauner@ubuntu.com
 > Cc: Christoph Hellwig <hch@lst.de>
 > Cc: David Howells <dhowells@redhat.com>
 > Cc: Al Viro <viro@zeniv.linux.org.uk>
