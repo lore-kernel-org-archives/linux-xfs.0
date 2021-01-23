@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5CE5C433DB
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 Jan 2021 18:54:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B94F3C433DB
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 Jan 2021 18:54:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7DBDE22DBF
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 Jan 2021 18:54:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8484B22D57
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 Jan 2021 18:54:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726370AbhAWSyN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 23 Jan 2021 13:54:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35512 "EHLO mail.kernel.org"
+        id S1726375AbhAWSyd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 23 Jan 2021 13:54:33 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35770 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725932AbhAWSyJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 23 Jan 2021 13:54:09 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B8DA723340;
-        Sat, 23 Jan 2021 18:53:53 +0000 (UTC)
+        id S1726374AbhAWSy2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Jan 2021 13:54:28 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7B89D22D50;
+        Sat, 23 Jan 2021 18:54:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611428033;
-        bh=SkleBSCUyE8WQhA1UPce6ss4ukvQ+8MZrVbmockvp80=;
+        s=k20201202; t=1611428050;
+        bh=iCK8RwchSHsQwmLCEyJ5t0KdZy3KAhmwbhPloaCLB7s=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=TPO3jrD/L+iw0PhmTM1lJ8l6mR2k7nC9ueMdLUibBCiWCOGCEk3f10AnGL7UICCeM
-         QoZo1JNXyxqvqzLnbMxyOqMekKByPhKcwFntoVNYhQ70b8a3f9ocJnJYbt/V0SnnWP
-         3tXMC7a02SClAV7lUBaclKxLbE2wsTDDU/eAbrfNJ3WzoGVVZEToVmEAKb1P5BzchV
-         37oVcqj0ClbCesHAzdMRrP8kvoLc47HthgBjbev2YOhjKiMygRrW7wnibHxLWnxMQ3
-         PT4/4Z0g8IMdm3tB/JeG8QhDMZzzFLbVa6DdSSRmgF6eAMXymEoArxnQk3J0z7hH3O
-         EbHFlUBe4XKdA==
-Subject: [PATCH 6/9] xfs: consolidate the eofblocks and cowblocks workers
+        b=psjoyUR0JbzSMJWMMmwsM2N1QF/YvhEuEN2k5bjM5N0BxVEnhfmRJNJ2CK2Wwlgl4
+         oHjXmgrC1aeiOjkyn9MkNqP3JSvi68qhinbgoyFuaNoiJqPJLG8U/ViRBOvrg7KwN/
+         yubIg8MFW+KoJgNf6yBXZjPgijwRmztwIeDUy1cQXtxR9sdiEEK2F1wqKfs9cyW5cO
+         Psuf26fv6TERfrrrlawK2pR7qX4eWkpn1q7j0Wc4vib9aeyAmsGJ5r2+GZIv1TICZl
+         tjEOWG+5pqlPA+gyk+vEByi/GJpJzzOmsRVY5qTHpJnJcvqYSf9f3uk2gx4Ri4EjVJ
+         ggCZ6jrUg8+OQ==
+Subject: [PATCH 9/9] xfs: parallelize block preallocation garbage collection
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
         hch@infradead.org, david@fromorbit.com
-Date:   Sat, 23 Jan 2021 10:53:55 -0800
-Message-ID: <161142803536.2173480.15960879269785652095.stgit@magnolia>
+Date:   Sat, 23 Jan 2021 10:54:12 -0800
+Message-ID: <161142805211.2173480.18150564632716126076.stgit@magnolia>
 In-Reply-To: <161142800187.2173480.17415824680111946713.stgit@magnolia>
 References: <161142800187.2173480.17415824680111946713.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,358 +50,197 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Remove the separate cowblocks work items and knob so that we can control
-and run everything from a single blockgc work queue.  Note that the
-speculative_prealloc_lifetime sysfs knob retains its historical name
-even though the functions move to prefix xfs_blockgc_*.
+Split the block preallocation garbage collection work into per-AG work
+items so that we can take advantage of parallelization.
+
+Note that sysadmins /can/ tweak the max concurrency level of the blockgc
+workqueue via /sys/bus/workqueue/devices/xfs-conv!${device}/max_active.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_globals.c |    7 ++--
- fs/xfs/xfs_icache.c  |   96 ++++++++++++++++----------------------------------
- fs/xfs/xfs_icache.h  |    6 +--
- fs/xfs/xfs_linux.h   |    3 +-
- fs/xfs/xfs_mount.h   |    6 +--
- fs/xfs/xfs_super.c   |   11 +++---
- fs/xfs/xfs_sysctl.c  |   15 ++------
- fs/xfs/xfs_sysctl.h  |    3 +-
- 8 files changed, 48 insertions(+), 99 deletions(-)
+ fs/xfs/xfs_icache.c |   42 ++++++++++++++++++++++++++++++------------
+ fs/xfs/xfs_mount.c  |    3 +++
+ fs/xfs/xfs_mount.h  |    5 +++--
+ fs/xfs/xfs_super.c  |    6 +++---
+ 4 files changed, 39 insertions(+), 17 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-index fa55ab8b8d80..f62fa652c2fd 100644
---- a/fs/xfs/xfs_globals.c
-+++ b/fs/xfs/xfs_globals.c
-@@ -8,8 +8,8 @@
- /*
-  * Tunable XFS parameters.  xfs_params is required even when CONFIG_SYSCTL=n,
-  * other XFS code uses these values.  Times are measured in centisecs (i.e.
-- * 100ths of a second) with the exception of eofb_timer and cowb_timer, which
-- * are measured in seconds.
-+ * 100ths of a second) with the exception of blockgc_timer, which is measured
-+ * in seconds.
-  */
- xfs_param_t xfs_params = {
- 			  /*	MIN		DFLT		MAX	*/
-@@ -28,8 +28,7 @@ xfs_param_t xfs_params = {
- 	.rotorstep	= {	1,		1,		255	},
- 	.inherit_nodfrg	= {	0,		1,		1	},
- 	.fstrm_timer	= {	1,		30*100,		3600*100},
--	.eofb_timer	= {	1,		300,		3600*24},
--	.cowb_timer	= {	1,		1800,		3600*24},
-+	.blockgc_timer	= {	1,		300,		3600*24},
- };
- 
- struct xfs_globals xfs_globals = {
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 1bc05cf4a263..038e0b764aa8 100644
+index 34cee5fc2d95..f23e90fea12c 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1328,41 +1328,24 @@ xfs_inode_free_eofblocks(
- }
- 
- /*
-- * Background scanning to trim post-EOF preallocated space. This is queued
-- * based on the 'speculative_prealloc_lifetime' tunable (5m by default).
-+ * Background scanning to trim preallocated space. This is queued based on the
-+ * 'speculative_prealloc_lifetime' tunable (5m by default).
+@@ -1333,12 +1333,12 @@ xfs_inode_free_eofblocks(
   */
--void
--xfs_queue_eofblocks(
--	struct xfs_mount *mp)
-+static inline void
-+xfs_blockgc_queue(
-+	struct xfs_mount	*mp)
+ static inline void
+ xfs_blockgc_queue(
+-	struct xfs_mount	*mp)
++	struct xfs_perag	*pag)
  {
  	rcu_read_lock();
- 	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_BLOCKGC_TAG))
--		queue_delayed_work(mp->m_eofblocks_workqueue,
--				   &mp->m_eofblocks_work,
--				   msecs_to_jiffies(xfs_eofb_secs * 1000));
-+		queue_delayed_work(mp->m_blockgc_workqueue,
-+				   &mp->m_blockgc_work,
-+				   msecs_to_jiffies(xfs_blockgc_secs * 1000));
+-	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_BLOCKGC_TAG))
+-		queue_delayed_work(mp->m_blockgc_workqueue,
+-				   &mp->m_blockgc_work,
++	if (radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG))
++		queue_delayed_work(pag->pag_mount->m_blockgc_workqueue,
++				   &pag->pag_blockgc_work,
+ 				   msecs_to_jiffies(xfs_blockgc_secs * 1000));
  	rcu_read_unlock();
  }
- 
--void
--xfs_eofblocks_worker(
--	struct work_struct *work)
--{
--	struct xfs_mount *mp = container_of(to_delayed_work(work),
--				struct xfs_mount, m_eofblocks_work);
--
--	if (!sb_start_write_trylock(mp->m_super))
--		return;
--	xfs_inode_walk(mp, 0, xfs_inode_free_eofblocks, NULL,
--			XFS_ICI_BLOCKGC_TAG);
--	sb_end_write(mp->m_super);
--
--	xfs_queue_eofblocks(mp);
--}
--
- static void
- xfs_blockgc_set_iflag(
- 	struct xfs_inode	*ip,
--	void			(*execute)(struct xfs_mount *mp),
- 	unsigned long		iflag)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -1397,7 +1380,7 @@ xfs_blockgc_set_iflag(
+@@ -1380,7 +1380,7 @@ xfs_blockgc_set_iflag(
  		spin_unlock(&ip->i_mount->m_perag_lock);
  
  		/* kick off background trimming */
--		execute(ip->i_mount);
-+		xfs_blockgc_queue(ip->i_mount);
+-		xfs_blockgc_queue(ip->i_mount);
++		xfs_blockgc_queue(pag);
  
  		trace_xfs_perag_set_blockgc(ip->i_mount, pag->pag_agno, -1,
  				_RET_IP_);
-@@ -1412,7 +1395,7 @@ xfs_inode_set_eofblocks_tag(
- 	xfs_inode_t	*ip)
- {
- 	trace_xfs_inode_set_eofblocks_tag(ip);
--	return xfs_blockgc_set_iflag(ip, xfs_queue_eofblocks, XFS_IEOFBLOCKS);
-+	return xfs_blockgc_set_iflag(ip, XFS_IEOFBLOCKS);
+@@ -1555,12 +1555,24 @@ xfs_inode_clear_cowblocks_tag(
+ 	return xfs_blockgc_clear_iflag(ip, XFS_ICOWBLOCKS);
  }
  
- static void
-@@ -1556,45 +1539,12 @@ xfs_inode_free_cowblocks(
- 	return ret;
- }
- 
--/*
-- * Background scanning to trim preallocated CoW space. This is queued
-- * based on the 'speculative_cow_prealloc_lifetime' tunable (5m by default).
-- * (We'll just piggyback on the post-EOF prealloc space workqueue.)
-- */
--void
--xfs_queue_cowblocks(
--	struct xfs_mount *mp)
--{
--	rcu_read_lock();
--	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_BLOCKGC_TAG))
--		queue_delayed_work(mp->m_eofblocks_workqueue,
--				   &mp->m_cowblocks_work,
--				   msecs_to_jiffies(xfs_cowb_secs * 1000));
--	rcu_read_unlock();
--}
--
--void
--xfs_cowblocks_worker(
--	struct work_struct *work)
--{
--	struct xfs_mount *mp = container_of(to_delayed_work(work),
--				struct xfs_mount, m_cowblocks_work);
--
--	if (!sb_start_write_trylock(mp->m_super))
--		return;
--	xfs_inode_walk(mp, 0, xfs_inode_free_cowblocks, NULL,
--			XFS_ICI_BLOCKGC_TAG);
--	sb_end_write(mp->m_super);
--
--	xfs_queue_cowblocks(mp);
--}
--
++#define for_each_perag_tag(mp, next_agno, pag, tag) \
++	for ((next_agno) = 0, (pag) = xfs_perag_get_tag((mp), 0, (tag)); \
++		(pag) != NULL; \
++		(next_agno) = (pag)->pag_agno + 1, \
++		xfs_perag_put(pag), \
++		(pag) = xfs_perag_get_tag((mp), (next_agno), (tag)))
++
++
+ /* Disable post-EOF and CoW block auto-reclamation. */
  void
- xfs_inode_set_cowblocks_tag(
- 	xfs_inode_t	*ip)
- {
- 	trace_xfs_inode_set_cowblocks_tag(ip);
--	return xfs_blockgc_set_iflag(ip, xfs_queue_cowblocks, XFS_ICOWBLOCKS);
-+	return xfs_blockgc_set_iflag(ip, XFS_ICOWBLOCKS);
- }
- 
- void
-@@ -1610,8 +1560,7 @@ void
- xfs_stop_block_reaping(
+ xfs_blockgc_stop(
  	struct xfs_mount	*mp)
  {
--	cancel_delayed_work_sync(&mp->m_eofblocks_work);
--	cancel_delayed_work_sync(&mp->m_cowblocks_work);
-+	cancel_delayed_work_sync(&mp->m_blockgc_work);
+-	cancel_delayed_work_sync(&mp->m_blockgc_work);
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno;
++
++	for_each_perag_tag(mp, agno, pag, XFS_ICI_BLOCKGC_TAG)
++		cancel_delayed_work_sync(&pag->pag_blockgc_work);
  }
  
  /* Enable post-EOF and CoW block auto-reclamation. */
-@@ -1619,8 +1568,7 @@ void
- xfs_start_block_reaping(
+@@ -1568,7 +1580,11 @@ void
+ xfs_blockgc_start(
  	struct xfs_mount	*mp)
  {
--	xfs_queue_eofblocks(mp);
--	xfs_queue_cowblocks(mp);
-+	xfs_blockgc_queue(mp);
+-	xfs_blockgc_queue(mp);
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno;
++
++	for_each_perag_tag(mp, agno, pag, XFS_ICI_BLOCKGC_TAG)
++		xfs_blockgc_queue(pag);
  }
  
- /* Scan all incore inodes for block preallocations that we can remove. */
-@@ -1644,6 +1592,24 @@ xfs_blockgc_scan(
- 	return 0;
+ /* Scan one incore inode for block preallocations that we can remove. */
+@@ -1595,18 +1611,20 @@ void
+ xfs_blockgc_worker(
+ 	struct work_struct	*work)
+ {
+-	struct xfs_mount	*mp = container_of(to_delayed_work(work),
+-					struct xfs_mount, m_blockgc_work);
++	struct xfs_perag	*pag = container_of(to_delayed_work(work),
++					struct xfs_perag, pag_blockgc_work);
++	struct xfs_mount	*mp = pag->pag_mount;
+ 	int			error;
+ 
+ 	if (!sb_start_write_trylock(mp->m_super))
+ 		return;
+-	error = xfs_inode_walk(mp, 0, xfs_blockgc_scan_inode, NULL,
++	error = xfs_inode_walk_ag(pag, 0, xfs_blockgc_scan_inode, NULL,
+ 			XFS_ICI_BLOCKGC_TAG);
+ 	if (error)
+-		xfs_info(mp, "preallocation gc worker failed, err=%d", error);
++		xfs_info(mp, "AG %u preallocation gc worker failed, err=%d",
++				pag->pag_agno, error);
+ 	sb_end_write(mp->m_super);
+-	xfs_blockgc_queue(mp);
++	xfs_blockgc_queue(pag);
  }
  
-+/* Background worker that trims preallocated space. */
-+void
-+xfs_blockgc_worker(
-+	struct work_struct	*work)
-+{
-+	struct xfs_mount	*mp = container_of(to_delayed_work(work),
-+					struct xfs_mount, m_blockgc_work);
-+	int			error;
-+
-+	if (!sb_start_write_trylock(mp->m_super))
-+		return;
-+	error = xfs_blockgc_scan(mp, NULL);
-+	if (error)
-+		xfs_info(mp, "preallocation gc worker failed, err=%d", error);
-+	sb_end_write(mp->m_super);
-+	xfs_blockgc_queue(mp);
-+}
-+
  /*
-  * Try to free space in the filesystem by purging eofblocks and cowblocks.
-  */
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index d2ef1ef75e7a..d781703af025 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -61,13 +61,11 @@ int xfs_blockgc_free_space(struct xfs_mount *mp, struct xfs_eofblocks *eofb);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index be9ce114527f..52370d0a3f43 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -126,6 +126,7 @@ __xfs_free_perag(
+ {
+ 	struct xfs_perag *pag = container_of(head, struct xfs_perag, rcu_head);
  
- void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
--void xfs_eofblocks_worker(struct work_struct *);
--void xfs_queue_eofblocks(struct xfs_mount *);
++	ASSERT(!delayed_work_pending(&pag->pag_blockgc_work));
+ 	ASSERT(atomic_read(&pag->pag_ref) == 0);
+ 	kmem_free(pag);
+ }
+@@ -146,6 +147,7 @@ xfs_free_perag(
+ 		spin_unlock(&mp->m_perag_lock);
+ 		ASSERT(pag);
+ 		ASSERT(atomic_read(&pag->pag_ref) == 0);
++		cancel_delayed_work_sync(&pag->pag_blockgc_work);
+ 		xfs_iunlink_destroy(pag);
+ 		xfs_buf_hash_destroy(pag);
+ 		call_rcu(&pag->rcu_head, __xfs_free_perag);
+@@ -201,6 +203,7 @@ xfs_initialize_perag(
+ 		pag->pag_agno = index;
+ 		pag->pag_mount = mp;
+ 		spin_lock_init(&pag->pag_ici_lock);
++		INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
+ 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
  
- void xfs_inode_set_cowblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_cowblocks_tag(struct xfs_inode *ip);
--void xfs_cowblocks_worker(struct work_struct *);
--void xfs_queue_cowblocks(struct xfs_mount *);
-+
-+void xfs_blockgc_worker(struct work_struct *work);
- 
- int xfs_inode_walk(struct xfs_mount *mp, int iter_flags,
- 	int (*execute)(struct xfs_inode *ip, void *args),
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 5b7a1e201559..af6be9b9ccdf 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -98,8 +98,7 @@ typedef __u32			xfs_nlink_t;
- #define xfs_rotorstep		xfs_params.rotorstep.val
- #define xfs_inherit_nodefrag	xfs_params.inherit_nodfrg.val
- #define xfs_fstrm_centisecs	xfs_params.fstrm_timer.val
--#define xfs_eofb_secs		xfs_params.eofb_timer.val
--#define xfs_cowb_secs		xfs_params.cowb_timer.val
-+#define xfs_blockgc_secs	xfs_params.blockgc_timer.val
- 
- #define current_cpu()		(raw_smp_processor_id())
- #define current_set_flags_nested(sp, f)		\
+ 		error = xfs_buf_hash_init(pag);
 diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 452ca7654dc5..316e0d79cc40 100644
+index 316e0d79cc40..659ad95fe3e0 100644
 --- a/fs/xfs/xfs_mount.h
 +++ b/fs/xfs/xfs_mount.h
-@@ -93,7 +93,7 @@ typedef struct xfs_mount {
- 	struct workqueue_struct	*m_unwritten_workqueue;
- 	struct workqueue_struct	*m_cil_workqueue;
- 	struct workqueue_struct	*m_reclaim_workqueue;
--	struct workqueue_struct *m_eofblocks_workqueue;
-+	struct workqueue_struct *m_blockgc_workqueue;
- 	struct workqueue_struct	*m_sync_workqueue;
- 
- 	int			m_bsize;	/* fs logical block size */
-@@ -177,9 +177,7 @@ typedef struct xfs_mount {
+@@ -177,8 +177,6 @@ typedef struct xfs_mount {
  	uint64_t		m_resblks_avail;/* available reserved blocks */
  	uint64_t		m_resblks_save;	/* reserved blks @ remount,ro */
  	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
--	struct delayed_work	m_eofblocks_work; /* background eof blocks
+-	struct delayed_work	m_blockgc_work; /* background prealloc blocks
 -						     trimming */
--	struct delayed_work	m_cowblocks_work; /* background cow blocks
-+	struct delayed_work	m_blockgc_work; /* background prealloc blocks
- 						     trimming */
  	struct xfs_kobj		m_kobj;
  	struct xfs_kobj		m_error_kobj;
+ 	struct xfs_kobj		m_error_meta_kobj;
+@@ -367,6 +365,9 @@ typedef struct xfs_perag {
+ 	/* Blocks reserved for the reverse mapping btree. */
+ 	struct xfs_ag_resv	pag_rmapbt_resv;
+ 
++	/* background prealloc block trimming */
++	struct delayed_work	pag_blockgc_work;
++
+ 	/* reference count */
+ 	uint8_t			pagf_refcount_level;
+ 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e440065ec503..143d54f61974 100644
+index 40bfb7074e50..c4ed1cb54d4e 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -518,10 +518,10 @@ xfs_init_mount_workqueues(
- 	if (!mp->m_reclaim_workqueue)
+@@ -35,6 +35,7 @@
+ #include "xfs_refcount_item.h"
+ #include "xfs_bmap_item.h"
+ #include "xfs_reflink.h"
++#include "xfs_pwork.h"
+ 
+ #include <linux/magic.h>
+ #include <linux/fs_context.h>
+@@ -519,8 +520,8 @@ xfs_init_mount_workqueues(
  		goto out_destroy_cil;
  
--	mp->m_eofblocks_workqueue = alloc_workqueue("xfs-eofblocks/%s",
-+	mp->m_blockgc_workqueue = alloc_workqueue("xfs-blockgc/%s",
- 			WQ_SYSFS | WQ_MEM_RECLAIM | WQ_FREEZABLE, 0,
- 			mp->m_super->s_id);
--	if (!mp->m_eofblocks_workqueue)
-+	if (!mp->m_blockgc_workqueue)
+ 	mp->m_blockgc_workqueue = alloc_workqueue("xfs-blockgc/%s",
+-			WQ_SYSFS | WQ_MEM_RECLAIM | WQ_FREEZABLE, 0,
+-			mp->m_super->s_id);
++			WQ_UNBOUND | WQ_SYSFS | WQ_MEM_RECLAIM | WQ_FREEZABLE,
++			0, mp->m_super->s_id);
+ 	if (!mp->m_blockgc_workqueue)
  		goto out_destroy_reclaim;
  
- 	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s",
-@@ -532,7 +532,7 @@ xfs_init_mount_workqueues(
- 	return 0;
- 
- out_destroy_eofb:
--	destroy_workqueue(mp->m_eofblocks_workqueue);
-+	destroy_workqueue(mp->m_blockgc_workqueue);
- out_destroy_reclaim:
- 	destroy_workqueue(mp->m_reclaim_workqueue);
- out_destroy_cil:
-@@ -550,7 +550,7 @@ xfs_destroy_mount_workqueues(
- 	struct xfs_mount	*mp)
- {
- 	destroy_workqueue(mp->m_sync_workqueue);
--	destroy_workqueue(mp->m_eofblocks_workqueue);
-+	destroy_workqueue(mp->m_blockgc_workqueue);
- 	destroy_workqueue(mp->m_reclaim_workqueue);
- 	destroy_workqueue(mp->m_cil_workqueue);
- 	destroy_workqueue(mp->m_unwritten_workqueue);
-@@ -1842,8 +1842,7 @@ static int xfs_init_fs_context(
+@@ -1842,7 +1843,6 @@ static int xfs_init_fs_context(
  	mutex_init(&mp->m_growlock);
  	INIT_WORK(&mp->m_flush_inodes_work, xfs_flush_inodes_worker);
  	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
--	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
--	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
-+	INIT_DELAYED_WORK(&mp->m_blockgc_work, xfs_blockgc_worker);
+-	INIT_DELAYED_WORK(&mp->m_blockgc_work, xfs_blockgc_worker);
  	mp->m_kobj.kobject.kset = xfs_kset;
  	/*
  	 * We don't create the finobt per-ag space reservation until after log
-diff --git a/fs/xfs/xfs_sysctl.c b/fs/xfs/xfs_sysctl.c
-index fac9de7ee6d0..145e06c47744 100644
---- a/fs/xfs/xfs_sysctl.c
-+++ b/fs/xfs/xfs_sysctl.c
-@@ -194,21 +194,12 @@ static struct ctl_table xfs_table[] = {
- 	},
- 	{
- 		.procname	= "speculative_prealloc_lifetime",
--		.data		= &xfs_params.eofb_timer.val,
-+		.data		= &xfs_params.blockgc_timer.val,
- 		.maxlen		= sizeof(int),
- 		.mode		= 0644,
- 		.proc_handler	= proc_dointvec_minmax,
--		.extra1		= &xfs_params.eofb_timer.min,
--		.extra2		= &xfs_params.eofb_timer.max,
--	},
--	{
--		.procname	= "speculative_cow_prealloc_lifetime",
--		.data		= &xfs_params.cowb_timer.val,
--		.maxlen		= sizeof(int),
--		.mode		= 0644,
--		.proc_handler	= proc_dointvec_minmax,
--		.extra1		= &xfs_params.cowb_timer.min,
--		.extra2		= &xfs_params.cowb_timer.max,
-+		.extra1		= &xfs_params.blockgc_timer.min,
-+		.extra2		= &xfs_params.blockgc_timer.max,
- 	},
- 	/* please keep this the last entry */
- #ifdef CONFIG_PROC_FS
-diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
-index 8abf4640f1d5..7692e76ead33 100644
---- a/fs/xfs/xfs_sysctl.h
-+++ b/fs/xfs/xfs_sysctl.h
-@@ -35,8 +35,7 @@ typedef struct xfs_param {
- 	xfs_sysctl_val_t rotorstep;	/* inode32 AG rotoring control knob */
- 	xfs_sysctl_val_t inherit_nodfrg;/* Inherit the "nodefrag" inode flag. */
- 	xfs_sysctl_val_t fstrm_timer;	/* Filestream dir-AG assoc'n timeout. */
--	xfs_sysctl_val_t eofb_timer;	/* Interval between eofb scan wakeups */
--	xfs_sysctl_val_t cowb_timer;	/* Interval between cowb scan wakeups */
-+	xfs_sysctl_val_t blockgc_timer;	/* Interval between blockgc scans */
- } xfs_param_t;
- 
- /*
 
