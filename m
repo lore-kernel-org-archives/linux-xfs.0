@@ -2,181 +2,76 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC895C433E0
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 Jan 2021 13:11:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6836C433E0
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 Jan 2021 18:52:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D4B3230FC
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 Jan 2021 13:11:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A65B523159
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 Jan 2021 18:52:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725768AbhAWNLB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 23 Jan 2021 08:11:01 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:45691 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725268AbhAWNK7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Jan 2021 08:10:59 -0500
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1l3Ify-0007vJ-RG; Sat, 23 Jan 2021 13:10:03 +0000
-Date:   Sat, 23 Jan 2021 14:09:58 +0100
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     "J. Bruce Fields" <bfields@fieldses.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
-        John Johansen <john.johansen@canonical.com>,
-        James Morris <jmorris@namei.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Geoffrey Thomas <geofft@ldpreload.com>,
-        Mrunal Patel <mpatel@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        David Howells <dhowells@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        =?utf-8?B?U3TDqXBoYW5l?= Graber <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        Lennart Poettering <lennart@poettering.net>,
-        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
-        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
-        Kees Cook <keescook@chromium.org>,
-        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        containers@lists.linux-foundation.org,
-        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-integrity@vger.kernel.org, selinux@vger.kernel.org
-Subject: Re: [PATCH v6 05/39] namei: make permission helpers idmapped mount
- aware
-Message-ID: <20210123130958.3t6kvgkl634njpsm@wittgenstein>
-References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
- <20210121131959.646623-6-christian.brauner@ubuntu.com>
- <20210122222632.GB25405@fieldses.org>
+        id S1725910AbhAWSwP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 23 Jan 2021 13:52:15 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34904 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725765AbhAWSwO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Jan 2021 13:52:14 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9B2BD224DE;
+        Sat, 23 Jan 2021 18:51:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611427893;
+        bh=qIQdHADMvOygeMWtA66i0gCmTQ+uYQ4mVuBIx17LJpc=;
+        h=Subject:From:To:Cc:Date:From;
+        b=mFLUxYhuHLjJn34btgwCyGr1r/Sp2KbalSGtjjZntdA32FMokhjS4y+kfJUoTOPBd
+         CvixzPeR4DtKY4CS0PQTz7jaku3aooz9SYXdbeTGWv7SRRH/7Oas1ESv9RhXstO2SO
+         uqIBfiV4U/WEZE4gEEuex3BN0QiwprOq4uBNiW+1kRbY6FxsoZT/ANXWa4eBEZnqmQ
+         7DO3CbXXmR+WGVbX6C/3EqyAeCWC8lIXdBpUuq1uVLN4emeCamJQvco3VQb8j0W63b
+         fBrT8S8vpVszX8gcKUOEfqhXZWPOf3BXJF/cf2GlZEvLvMai8Rt4pkggAy4dPmx+lT
+         tlTKKfyPaXB5A==
+Subject: [PATCHSET v2 0/4] xfs: minor cleanups of the quota functions
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        hch@infradead.org, david@fromorbit.com
+Date:   Sat, 23 Jan 2021 10:51:35 -0800
+Message-ID: <161142789504.2170981.1372317837643770452.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20210122222632.GB25405@fieldses.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 22, 2021 at 05:26:32PM -0500, J. Bruce Fields wrote:
-> If I NFS-exported an idmapped mount, I think I'd expect idmapped clients
-> to see the mapped IDs.
-> 
-> Looks like that means taking the user namespace from the struct
-> svc_export everwhere, for example:
-> 
-> On Thu, Jan 21, 2021 at 02:19:24PM +0100, Christian Brauner wrote:
-> > index 66f2ef67792a..8d90796e236a 100644
-> > --- a/fs/nfsd/nfsfh.c
-> > +++ b/fs/nfsd/nfsfh.c
-> > @@ -40,7 +40,8 @@ static int nfsd_acceptable(void *expv, struct dentry *dentry)
-> >  		/* make sure parents give x permission to user */
-> >  		int err;
-> >  		parent = dget_parent(tdentry);
-> > -		err = inode_permission(d_inode(parent), MAY_EXEC);
-> > +		err = inode_permission(&init_user_ns,
-> > +				       d_inode(parent), MAY_EXEC);
-> 
-> 		err = inode_permission(exp->ex_path.mnt->mnt_userns,
-> 				      d_inode(parent, MAY_EXEC);
+Hi all,
 
-Hey Bruce, thanks! Imho, the clean approach for now is to not export
-idmapped mounts until we have ported that part of nfs similar to what we
-do for stacking filesystems for now. I've tested and taken this patch
-into my tree:
+This series reworks some of the internal quota APIs and cleans up some
+of the function calls so that we have a clean(er) place to start the
+space reclamation patchset.  There should be no behavioral changes in
+this series.
 
+v2: rework the xfs_quota_reserve_blkres calling conventions per hch
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=quota-function-cleanups-5.12
 ---
-From 7a6a53bca1ecd8db872de1ee81d1a57e1829e525 Mon Sep 17 00:00:00 2001
-From: Christian Brauner <christian.brauner@ubuntu.com>
-Date: Sat, 23 Jan 2021 12:00:02 +0100
-Subject: [PATCH] nfs: do not export idmapped mounts
-
-Prevent nfs from exporting idmapped mounts until we have ported it to
-support exporting idmapped mounts.
-
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: David Howells <dhowells@redhat.com>
-Cc: "J. Bruce Fields" <bfields@redhat.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
-Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
----
-/* v2 */
-
-/* v3 */
-
-/* v4 */
-
-/* v5 */
-
-/* v5 */
-patch introduced
-base-commit: 19c329f6808995b142b3966301f217c831e7cf31
----
- fs/nfsd/export.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/fs/nfsd/export.c b/fs/nfsd/export.c
-index 81e7bb12aca6..e456421f68b4 100644
---- a/fs/nfsd/export.c
-+++ b/fs/nfsd/export.c
-@@ -369,8 +369,9 @@ static struct svc_export *svc_export_update(struct svc_export *new,
- 					    struct svc_export *old);
- static struct svc_export *svc_export_lookup(struct svc_export *);
- 
--static int check_export(struct inode *inode, int *flags, unsigned char *uuid)
-+static int check_export(struct path *path, int *flags, unsigned char *uuid)
- {
-+	struct inode *inode = d_inode(path->dentry);
- 
- 	/*
- 	 * We currently export only dirs, regular files, and (for v4
-@@ -394,6 +395,7 @@ static int check_export(struct inode *inode, int *flags, unsigned char *uuid)
- 	 *       or an FSID number (so NFSEXP_FSID or ->uuid is needed).
- 	 * 2:  We must be able to find an inode from a filehandle.
- 	 *       This means that s_export_op must be set.
-+	 * 3: We must not currently be on an idmapped mount.
- 	 */
- 	if (!(inode->i_sb->s_type->fs_flags & FS_REQUIRES_DEV) &&
- 	    !(*flags & NFSEXP_FSID) &&
-@@ -408,6 +410,11 @@ static int check_export(struct inode *inode, int *flags, unsigned char *uuid)
- 		return -EINVAL;
- 	}
- 
-+	if (mnt_user_ns(path->mnt) != &init_user_ns) {
-+		dprintk("exp_export: export of idmapped mounts not yet supported.\n");
-+		return -EINVAL;
-+	}
-+
- 	if (inode->i_sb->s_export_op->flags & EXPORT_OP_NOSUBTREECHK &&
- 	    !(*flags & NFSEXP_NOSUBTREECHECK)) {
- 		dprintk("%s: %s does not support subtree checking!\n",
-@@ -636,8 +643,7 @@ static int svc_export_parse(struct cache_detail *cd, char *mesg, int mlen)
- 				goto out4;
- 		}
- 
--		err = check_export(d_inode(exp.ex_path.dentry), &exp.ex_flags,
--				   exp.ex_uuid);
-+		err = check_export(&exp.ex_path, &exp.ex_flags, exp.ex_uuid);
- 		if (err)
- 			goto out4;
- 		/*
--- 
-2.30.0
+ fs/xfs/libxfs/xfs_bmap.c |   13 ++++++-------
+ fs/xfs/xfs_bmap_util.c   |    4 ++--
+ fs/xfs/xfs_inode.c       |    8 ++++----
+ fs/xfs/xfs_quota.h       |   41 ++++++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_reflink.c     |    6 +++---
+ fs/xfs/xfs_symlink.c     |    4 ++--
+ fs/xfs/xfs_trans_dquot.c |   21 +++++++++++++++++++++
+ 7 files changed, 74 insertions(+), 23 deletions(-)
 
