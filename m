@@ -2,125 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF0EDC432C3
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 Jan 2021 22:46:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43F13C433DB
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 Jan 2021 22:56:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B8E5622C9F
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 Jan 2021 22:46:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07E1322C9F
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 Jan 2021 22:56:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726740AbhAXWpv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 24 Jan 2021 17:45:51 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:47673 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726127AbhAXWps (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Jan 2021 17:45:48 -0500
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1l3o7r-0007VN-AX; Sun, 24 Jan 2021 22:44:55 +0000
-Date:   Sun, 24 Jan 2021 23:44:50 +0100
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     "J. Bruce Fields" <bfields@fieldses.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
-        John Johansen <john.johansen@canonical.com>,
-        James Morris <jmorris@namei.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Geoffrey Thomas <geofft@ldpreload.com>,
-        Mrunal Patel <mpatel@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        David Howells <dhowells@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        =?utf-8?B?U3TDqXBoYW5l?= Graber <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        Lennart Poettering <lennart@poettering.net>,
-        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
-        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
-        Kees Cook <keescook@chromium.org>,
-        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        containers@lists.linux-foundation.org,
-        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-integrity@vger.kernel.org, selinux@vger.kernel.org
-Subject: Re: [PATCH v6 05/39] namei: make permission helpers idmapped mount
- aware
-Message-ID: <20210124224450.3dtdgvwxpdf5niuz@wittgenstein>
-References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
- <20210121131959.646623-6-christian.brauner@ubuntu.com>
- <20210122222632.GB25405@fieldses.org>
- <20210123130958.3t6kvgkl634njpsm@wittgenstein>
- <20210124221854.GA1487@fieldses.org>
+        id S1726612AbhAXW4X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 24 Jan 2021 17:56:23 -0500
+Received: from bilbo.ozlabs.org ([203.11.71.1]:46895 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725968AbhAXW4R (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 24 Jan 2021 17:56:17 -0500
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4DP7d13dfKz9sS8;
+        Mon, 25 Jan 2021 09:55:33 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1611528934;
+        bh=/NzEvyjtigECWZ2dvwFVQNAwqXCeHO1nSFdNbxltmTY=;
+        h=Date:From:To:Cc:Subject:From;
+        b=GGMvaF4kDSJ2CUFWc937aF30qz+F0kdZYVr7i2G2+5N/dbDkRhHT1XrzONUSwgRlX
+         sapMnt4YenZB76B8alzeSEpFkj+TsqpABi02Xk1wyoAa5AvNxD5wA4HIh1CTIT6wAG
+         IzrdGiAL63FESiUoqRxd+p4P47s0k/93Y11Kh0dPoT37wulEhBGWNZPK9DwPxPpnGa
+         AHvjqNlqryQxkXnVWTFNd58xT0D9RsdsDoWHIreBWD4BF9jKuAFKoDiPjO5k1AwAHy
+         aZa54O1Oeoz8HTVdjUjtuqP6xdOD09LI34GnuGI3FTVOXdqKrvBNaH2WMX4K9dq1zu
+         YOU0fogfRhWRA==
+Date:   Mon, 25 Jan 2021 09:55:32 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: linux-next: build warning after merge of the xfs tree
+Message-ID: <20210125095532.64288d47@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20210124221854.GA1487@fieldses.org>
+Content-Type: multipart/signed; boundary="Sig_/8Q/zRPTTLO8vyMwY3iusJm8";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jan 24, 2021 at 05:18:54PM -0500, J. Bruce Fields wrote:
-> On Sat, Jan 23, 2021 at 02:09:58PM +0100, Christian Brauner wrote:
-> > On Fri, Jan 22, 2021 at 05:26:32PM -0500, J. Bruce Fields wrote:
-> > > If I NFS-exported an idmapped mount, I think I'd expect idmapped clients
-> > > to see the mapped IDs.
-> > > 
-> > > Looks like that means taking the user namespace from the struct
-> > > svc_export everwhere, for example:
-> > > 
-> > > On Thu, Jan 21, 2021 at 02:19:24PM +0100, Christian Brauner wrote:
-> > > > index 66f2ef67792a..8d90796e236a 100644
-> > > > --- a/fs/nfsd/nfsfh.c
-> > > > +++ b/fs/nfsd/nfsfh.c
-> > > > @@ -40,7 +40,8 @@ static int nfsd_acceptable(void *expv, struct dentry *dentry)
-> > > >  		/* make sure parents give x permission to user */
-> > > >  		int err;
-> > > >  		parent = dget_parent(tdentry);
-> > > > -		err = inode_permission(d_inode(parent), MAY_EXEC);
-> > > > +		err = inode_permission(&init_user_ns,
-> > > > +				       d_inode(parent), MAY_EXEC);
-> > > 
-> > > 		err = inode_permission(exp->ex_path.mnt->mnt_userns,
-> > > 				      d_inode(parent, MAY_EXEC);
-> > 
-> > Hey Bruce, thanks! Imho, the clean approach for now is to not export
-> > idmapped mounts until we have ported that part of nfs similar to what we
-> > do for stacking filesystems for now. I've tested and taken this patch
-> > into my tree:
-> 
-> Oh good, thanks.  My real fear was that we'd fix this up later and leave
-> users in a situation where the server exposes different IDs depending on
-> kernel version, which would be a mess.  Looks like this should avoid
-> that.
-> 
-> As for making idmapped mounts actually work with nfsd--are you planning
-> to do that, or do you need me to?  I hope the patch is straightforward;
+--Sig_/8Q/zRPTTLO8vyMwY3iusJm8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I'm happy to do it or help and there's other people I know who are also
-interested in that and would likely be happy to do the work too.
+Hi all,
 
-> I'm more worried testing it.
+After merging the xfs tree, today's linux-next build (powerpc
+ppc64_defconfig) produced this warning:
 
-This whole series has a large xfstest patch associated with it that
-tests regular vfs behavior and vfs behavior with idmapped mounts. Iirc,
-xfstests also has infrastructure to test nfs. So I'd expect we expand
-the idmapped mounts testsuite to test nfs behavior as well.
-So far it has proven pretty helpful and has already unconvered an
-unrelated setgid-inheritance xfs bug that Christoph fixed a short time
-ago.
+fs/xfs/xfs_log.c: In function 'xfs_log_cover':
+fs/xfs/xfs_log.c:1111:16: warning: unused variable 'log' [-Wunused-variable]
+ 1111 |  struct xlog  *log =3D mp->m_log;
+      |                ^~~
+
+Introduced by commit
+
+  303591a0a947 ("xfs: cover the log during log quiesce")
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/8Q/zRPTTLO8vyMwY3iusJm8
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmAN+uQACgkQAVBC80lX
+0Gycgwf/XH6jV1tvDRU/LUvL2RrVWltOTd97TlKsllXA1fR0lchA0Uya4GaqdTVT
+vKGQjBjNl9I2PUUTFgJBCTXSfKb8DPjLYk6N9fpYY65IJIDaJdrrkxNC6zx/tVQ6
+WsG8vaiWLcWVCw41p03/0hdk5Bv47skNeiuWL01Fa8dwAlW1w0ch4D/ZxhEmepFn
+cd6gzLIOQWYSAoVvpwwRdn2VhHA50yKvcd97PAWSkswVJX7G14NoGEC2/0kJowfR
+h0syd5ABohMci9M/eWMwpHSCbbMTzBm3hkuknGlsWJltgGDiKIc8/4Wh8hhhwthY
+afB9FTHlxTwxyiiGwy4bOGMP1qPQJQ==
+=E7Ks
+-----END PGP SIGNATURE-----
+
+--Sig_/8Q/zRPTTLO8vyMwY3iusJm8--
