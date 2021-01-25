@@ -2,97 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89702C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 02:42:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04E55C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 03:02:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33A6322D58
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 02:42:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C113D230FF
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 03:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728532AbhAYQAK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Jan 2021 11:00:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36098 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730596AbhAYP7X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jan 2021 10:59:23 -0500
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53AABC06178C
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 07:58:43 -0800 (PST)
-Received: by mail-pj1-x102a.google.com with SMTP id e9so1580185pjj.0
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 07:58:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=ydjA7lxNDcY9m5HH4n1Isbc66o3HKVgUPIygbXwoUMM=;
-        b=bI02x67oVJOucPOxKOB9n3X6KcNxCqIpxk5n0fxC4X/uFlQaaUy+xP+qcDK0qgJA7t
-         mWFK2tKkiqtuWxZJvB44mpmemEF/S+YGxTW9vjz8KWnzcutGYJEs+vjezSfpdlvaat30
-         NrMsLYnxAPDb/60yNPxEjnOGe2XeZLZa2qteFs3BDDpQq8v+NYEA0j27JKKvD8Jo9hGB
-         m1FubjB+dKRDuIvGoJ5Krq3haj3y4rnOv+TQTyR+lsKZVtOzTkhokVPN9B3vqb9Kf/tF
-         OgnBEzoTN7wXg3qcCOF4/ajnPQb9aZOpN8ShjkT8r+GX28FyVyVD2Nsgv5WX9h7sZf9A
-         iVhw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ydjA7lxNDcY9m5HH4n1Isbc66o3HKVgUPIygbXwoUMM=;
-        b=sRJyYROziieLOAPMi1P86gjEqsvfMDrixO8ctBLt4ldrbcD5EzvKSK2CboaSSiLZ3q
-         H0ofRcaW2hWqNHTycCdZVaMQCIDz0GeaIKCZU8oBxHzFZtdoTwc+hxOjyPYOu6t3tUug
-         AJg2z1wc6VziPl5MmUwkG2PylAyzRqRWMhHWaOx/DjamIJG3kRABfS2JIhRzhmN0O9bk
-         r1C6t+S08GRQmYXjfSHsny51AGG44K6ADUnxAR3VeHs2nrnOi4lPFOck3useKu0aDehh
-         Q2E1ryEmdJ+sGPr/MrH1lp5B31oja292xBVCgYrJRMSUxVGT5Qw9JhQ7klPkzFa3zMgh
-         4ktA==
-X-Gm-Message-State: AOAM530IHV9iGSY6Ygujl5cFWsBxHgv8so7dqZeBKKS47yGUAOfsNMcM
-        gy/qnQP7hP/qjbrOhfg6ghN6wA==
-X-Google-Smtp-Source: ABdhPJxvYFudM0/t7uvN4OEM1XLPVgOQbMzfZischKww36TwjmQpcH3dkzLr1QJ1pvzT7oKrjCpfaw==
-X-Received: by 2002:a17:90a:6f05:: with SMTP id d5mr843071pjk.145.1611590322691;
-        Mon, 25 Jan 2021 07:58:42 -0800 (PST)
-Received: from [192.168.4.41] (cpe-72-132-29-68.dc.res.rr.com. [72.132.29.68])
-        by smtp.gmail.com with ESMTPSA id i25sm16942011pgb.33.2021.01.25.07.58.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Jan 2021 07:58:41 -0800 (PST)
-Subject: Re: [PATCH v3 0/7] no-copy bvec
-To:     Pavel Begunkov <asml.silence@gmail.com>,
-        linux-block@vger.kernel.org
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Ming Lei <ming.lei@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
-        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
-References: <cover.1610170479.git.asml.silence@gmail.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <b1d0ae2a-a4ca-2b41-b8df-4c8036afe781@kernel.dk>
-Date:   Mon, 25 Jan 2021 08:58:38 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1728657AbhAYNR5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Jan 2021 08:17:57 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:42084 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728742AbhAYNRt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jan 2021 08:17:49 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611580583;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/Rf/zmDx3KbTAWfh7isQuBh9MORfky0bg2e0fYoTGQw=;
+        b=WhMWtI3gl+hrI5qIQAfif3wVyFkK1Qso7yvy1G6EV85JFre/GcGUmaLdLg/bPT4nNfY7uo
+        1Xlu3Ltjd7RHV3IWZIJug9dZyl8hxZrP6nAxhVshwf2SSeu0dOu7YiI6T6CohYyCN1QSEM
+        vM+5RVTh2XytwKk1ZfWtq1bgNP3yyFI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-52-2rtBcTY8PKG3Q55ObeW0Iw-1; Mon, 25 Jan 2021 08:16:21 -0500
+X-MC-Unique: 2rtBcTY8PKG3Q55ObeW0Iw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8EFED1005504;
+        Mon, 25 Jan 2021 13:16:20 +0000 (UTC)
+Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 32D065C1C5;
+        Mon, 25 Jan 2021 13:16:19 +0000 (UTC)
+Date:   Mon, 25 Jan 2021 08:16:18 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: reduce ilock acquisitions in xfs_file_fsync
+Message-ID: <20210125131618.GA2047559@bfoster>
+References: <20210122164643.620257-1-hch@lst.de>
+ <20210122164643.620257-3-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <cover.1610170479.git.asml.silence@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210122164643.620257-3-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/9/21 9:02 AM, Pavel Begunkov wrote:
-> Currently, when iomap and block direct IO gets a bvec based iterator
-> the bvec will be copied, with all other accounting that takes much
-> CPU time and causes additional allocation for larger bvecs. The
-> patchset makes it to reuse the passed in iter bvec.
+On Fri, Jan 22, 2021 at 05:46:43PM +0100, Christoph Hellwig wrote:
+> If the inode is not pinned by the time fsync is called we don't need the
+> ilock to protect against concurrent clearing of ili_fsync_fields as the
+> inode won't need a log flush or clearing of these fields.  Not taking
+> the iolock allows for full concurrency of fsync and thus O_DSYNC
+> completions with io_uring/aio write submissions.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_file.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 588232c77f11e0..ffe2d7c37e26cd 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -200,7 +200,14 @@ xfs_file_fsync(
+>  	else if (mp->m_logdev_targp != mp->m_ddev_targp)
+>  		xfs_blkdev_issue_flush(mp->m_ddev_targp);
+>  
+> -	error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
+> +	/*
+> +	 * Any inode that has dirty modifications in the log is pinned.  The
+> +	 * racy check here for a pinned inode while not catch modifications
 
-Applied, thanks.
+s/while/will/ ?
 
--- 
-Jens Axboe
+Otherwise looks good:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +	 * that happen concurrently to the fsync call, but fsync semantics
+> +	 * only require to sync previously completed I/O.
+> +	 */
+> +	if (xfs_ipincount(ip))
+> +		error = xfs_fsync_flush_log(ip, datasync, &log_flushed);
+>  
+>  	/*
+>  	 * If we only have a single device, and the log force about was
+> -- 
+> 2.29.2
+> 
 
