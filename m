@@ -2,159 +2,268 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2AD4C433E6
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 20:08:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54BADC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 21:00:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6809C2256F
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 20:08:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 193D2207B1
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 21:00:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726468AbhAYUGu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Jan 2021 15:06:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37392 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732129AbhAYUGO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Jan 2021 15:06:14 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2899D2256F;
-        Mon, 25 Jan 2021 20:05:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611605133;
-        bh=wkDbYeKsRn8HwxdmZsARzT8h8vPg1Cc5yFk5/VNY0wg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=u2FJn+28ty3dOcK9H7CV6Ad8nhLNwJwTgd3N2dL8XDRS7rlyVaUE7gdDmduIraleu
-         OFR+nBTmdWq0OyH6QasmClwkCq6ImUDJuZNjjG7JSaQ0ZifjGrSVPWTIyLn8WX6ZgD
-         isVEmguHo0JhNOq8f1/SAWx13wD1SicGbh5mlftkicuuYi9P5DXggJ2JfaFeTdpeZ2
-         vy/j+kotj7GerZ6R7bh+vBScowWZcmGMbsrIGLbTW3PSs9dBDTHi1jeoHRfNRVH9P3
-         1eEJmEFb9ZCqR+lgvptVzU64zPcQbxQhQf9Cd6Pb/fA+i66L89gbHqek06C9vJsYtH
-         ga5Slbp4IgBmA==
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     stable@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4.19 2/2] fs: fix lazytime expiration handling in __writeback_single_inode()
-Date:   Mon, 25 Jan 2021 12:05:09 -0800
-Message-Id: <20210125200509.261295-3-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210125200509.261295-1-ebiggers@kernel.org>
-References: <20210125200509.261295-1-ebiggers@kernel.org>
+        id S1732182AbhAYVAA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Jan 2021 16:00:00 -0500
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:39491 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732128AbhAYU7x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jan 2021 15:59:53 -0500
+Received: from dread.disaster.area (pa49-180-243-77.pa.nsw.optusnet.com.au [49.180.243.77])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 1370BD5EB9B;
+        Tue, 26 Jan 2021 07:58:57 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1l48wq-002MG2-GP; Tue, 26 Jan 2021 07:58:56 +1100
+Date:   Tue, 26 Jan 2021 07:58:56 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Rick Warner <rick@microway.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Huge reduction in write bandwidth with filesystem vs direct
+ block device
+Message-ID: <20210125205856.GG4662@dread.disaster.area>
+References: <fdc3fca3-f6e9-d484-b0c5-9e7c8b71dfc4@microway.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <fdc3fca3-f6e9-d484-b0c5-9e7c8b71dfc4@microway.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=juxvdbeFDU67v5YkIhU0sw==:117 a=juxvdbeFDU67v5YkIhU0sw==:17
+        a=8nJEP1OIZ-IA:10 a=EmqxpYm9HcoA:10 a=nt1UNTH2AAAA:8 a=7-415B0cAAAA:8
+        a=7HJZp2KAovuVgaKeN-QA:9 a=wPNLvfGTeEIA:10 a=1jnEqRSf4vEA:10
+        a=7AW3Uk2BEroXwU7YnAE8:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+On Mon, Jan 25, 2021 at 12:23:57PM -0500, Rick Warner wrote:
+> Hi all,
+> 
+> We're working with NVME storage systems and are seeing a significant
+> reduction in write speed with an XFS filesystem vs direct access to the
+> block device.
+> 
+> Using a 5 disk software RAID5, we're able to get ~16GB/s write speed direct
+> to the device.  If we put an XFS filesystem on the software RAID and run the
+> same fio command (except --directory /xfs instead of --filename /dev/md11)
+> we only get ~2.5GB/s write speed.
 
-commit 1e249cb5b7fc09ff216aa5a12f6c302e434e88f9 upstream.
+What kernel? What's the RAID configuration? What's the mkfs.xfs output?
 
-When lazytime is enabled and an inode is being written due to its
-in-memory updated timestamps having expired, either due to a sync() or
-syncfs() system call or due to dirtytime_expire_interval having elapsed,
-the VFS needs to inform the filesystem so that the filesystem can copy
-the inode's timestamps out to the on-disk data structures.
+https://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-This is done by __writeback_single_inode() calling
-mark_inode_dirty_sync(), which then calls ->dirty_inode(I_DIRTY_SYNC).
 
-However, this occurs after __writeback_single_inode() has already
-cleared the dirty flags from ->i_state.  This causes two bugs:
+> Are there any tunables that could improve this? Is performance degradation
+> this big considered a bug?
 
-- mark_inode_dirty_sync() redirties the inode, causing it to remain
-  dirty.  This wastefully causes the inode to be written twice.  But
-  more importantly, it breaks cases where sync_filesystem() is expected
-  to clean dirty inodes.  This includes the FS_IOC_REMOVE_ENCRYPTION_KEY
-  ioctl (as reported at
-  https://lore.kernel.org/r/20200306004555.GB225345@gmail.com), as well
-  as possibly filesystem freezing (freeze_super()).
+No evidence that there's a bug yet. You're not testing apples to
+apples.
 
-- Since ->i_state doesn't contain I_DIRTY_TIME when ->dirty_inode() is
-  called from __writeback_single_inode() for lazytime expiration,
-  xfs_fs_dirty_inode() ignores the notification.  (XFS only cares about
-  lazytime expirations, and it assumes that i_state will contain
-  I_DIRTY_TIME during those.)  Therefore, lazy timestamps aren't
-  persisted by sync(), syncfs(), or dirtytime_expire_interval on XFS.
+> 
+> The fio runs showing this are below:
+> 
+> *******Direct to /dev/md11 block device
+> [root@flashstore ~]# fio --filename=/dev/md11 --rw=write --numjobs=32
+> --size=12G --bs=1M --name=1m --group_reporting
+> 1m: (g=0): rw=write, bs=(R) 1024KiB-1024KiB, (W) 1024KiB-1024KiB, (T)
+> 1024KiB-1024KiB, ioengine=psync, iodepth=1
 
-Fix this by moving the call to mark_inode_dirty_sync() to earlier in
-__writeback_single_inode(), before the dirty flags are cleared from
-i_state.  This makes filesystems be properly notified of the timestamp
-expiration, and it avoids incorrectly redirtying the inode.
+This is writing 32 concurrent jobs all running from offset 0 in the
+block device doing single, synchronous IOs. IOWs, 32 IOs from offset
+0, 32 IOs from offset 1MB, etc all the way through the block device.
 
-This fixes xfstest generic/580 (which tests
-FS_IOC_REMOVE_ENCRYPTION_KEY) when run on ext4 or f2fs with lazytime
-enabled.  It also fixes the new lazytime xfstest I've proposed, which
-reproduces the above-mentioned XFS bug
-(https://lore.kernel.org/r/20210105005818.92978-1-ebiggers@kernel.org).
+It's not the same thing as doing 32 concurrent IOs to 32 different
+files, all of which will be located in different physical offsets in
+the RAID device. You've got a 32x increase in dirty LBAs for the
+filesystem test, and no overlap between any of the jobs. So the RAID
+device and all the storage devices are doing 32x as much work as the
+block device job...
 
-Alternatively, we could call ->dirty_inode(I_DIRTY_SYNC) directly.  But
-due to the introduction of I_SYNC_QUEUED, mark_inode_dirty_sync() is the
-right thing to do because mark_inode_dirty_sync() now knows not to move
-the inode to a writeback list if it is currently queued for sync.
+To replicate the same IO on the block device, each job writing to
+the block device needs to be allocated it's own 12GB region in the
+block device (i.e. job 0 at offset 0, job 1 at offset 12GB, etc) so
+there is no overlapping, concurrent IO to the same device offset....
 
-Fixes: 0ae45f63d4ef ("vfs: add support for a lazytime mount option")
-Cc: stable@vger.kernel.org
-Depends-on: 5afced3bf281 ("writeback: Avoid skipping inode writeback")
-Link: https://lore.kernel.org/r/20210112190253.64307-2-ebiggers@kernel.org
-Suggested-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Eric Biggers <ebiggers@google.com>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/fs-writeback.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+Also, synchronous IO is the key here: individual job throughput is
+IO latency bound for synchronous IO and device queue depths are
+greatly limited. Hence any submission or completion delay is going
+to greatly impact test throughput. Nobody uses synchronous IO for
+high throughput applications these days...
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 96cdce0144efc..f2d0c4acb3cbb 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -1393,21 +1393,25 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
- 	}
- 
- 	/*
--	 * Some filesystems may redirty the inode during the writeback
--	 * due to delalloc, clear dirty metadata flags right before
--	 * write_inode()
-+	 * If the inode has dirty timestamps and we need to write them, call
-+	 * mark_inode_dirty_sync() to notify the filesystem about it and to
-+	 * change I_DIRTY_TIME into I_DIRTY_SYNC.
- 	 */
--	spin_lock(&inode->i_lock);
--
--	dirty = inode->i_state & I_DIRTY;
- 	if ((inode->i_state & I_DIRTY_TIME) &&
--	    ((dirty & I_DIRTY_INODE) ||
--	     wbc->sync_mode == WB_SYNC_ALL || wbc->for_sync ||
-+	    (wbc->sync_mode == WB_SYNC_ALL || wbc->for_sync ||
- 	     time_after(jiffies, inode->dirtied_time_when +
- 			dirtytime_expire_interval * HZ))) {
--		dirty |= I_DIRTY_TIME;
- 		trace_writeback_lazytime(inode);
-+		mark_inode_dirty_sync(inode);
- 	}
-+
-+	/*
-+	 * Some filesystems may redirty the inode during the writeback
-+	 * due to delalloc, clear dirty metadata flags right before
-+	 * write_inode()
-+	 */
-+	spin_lock(&inode->i_lock);
-+	dirty = inode->i_state & I_DIRTY;
- 	inode->i_state &= ~dirty;
- 
- 	/*
-@@ -1428,8 +1432,6 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
- 
- 	spin_unlock(&inode->i_lock);
- 
--	if (dirty & I_DIRTY_TIME)
--		mark_inode_dirty_sync(inode);
- 	/* Don't write the inode if only I_DIRTY_PAGES was set */
- 	if (dirty & ~I_DIRTY_PAGES) {
- 		int err = write_inode(inode, wbc);
+> Starting 32 processes
+> Jobs: 26 (f=26): [f(1),_(1),f(16),_(1),f(3),_(2),f(3),_(1),f(2),_(1),f(1)][100.0%][r=0KiB/s,w=0KiB/s][r=0,w=0
+> IOPS][eta 00m:00s]
+> 1m: (groupid=0, jobs=32): err= 0: pid=74592: Mon Jan 25 12:13:28 2021
+>   write: IOPS=15.4k, BW=15.0GiB/s (16.1GB/s)(384GiB/25551msec)
+>     clat (usec): min=230, max=31691, avg=2044.43, stdev=778.36
+>      lat (usec): min=245, max=31710, avg=2067.97, stdev=783.21
+>     clat percentiles (usec):
+>      |  1.00th=[  420],  5.00th=[ 1745], 10.00th=[ 1811], 20.00th=[ 1860],
+>      | 30.00th=[ 1893], 40.00th=[ 1926], 50.00th=[ 1942], 60.00th=[ 1975],
+>      | 70.00th=[ 2024], 80.00th=[ 2089], 90.00th=[ 2180], 95.00th=[ 2900],
+>      | 99.00th=[ 4490], 99.50th=[ 4883], 99.90th=[13829], 99.95th=[14746],
+>      | 99.99th=[20841]
+
+Note the IO latencies....
+
+>    bw (  KiB/s): min=400606, max=679936, per=3.13%, avg=492489.85,
+> stdev=53436.36, samples=1632
+>    iops        : min=  391, max=  664, avg=480.90, stdev=52.18, samples=1632
+>   lat (usec)   : 250=0.01%, 500=1.72%, 750=0.80%, 1000=0.09%
+>   lat (msec)   : 2=62.47%, 4=32.77%, 10=1.94%, 20=0.20%, 50=0.01%
+>   cpu          : usr=1.37%, sys=62.91%, ctx=38028757, majf=0, minf=60496
+>   IO depths    : 1=100.0%, 2=0.0%, 4=0.0%, 8=0.0%, 16=0.0%, 32=0.0%,
+> >=64=0.0%
+>      submit    : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%,
+> >=64=0.0%
+>      complete  : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%,
+> >=64=0.0%
+>      issued rwts: total=0,393216,0,0 short=0,0,0,0 dropped=0,0,0,0
+>      latency   : target=0, window=0, percentile=100.00%, depth=1
+> 
+> Run status group 0 (all jobs):
+>   WRITE: bw=15.0GiB/s (16.1GB/s), 15.0GiB/s-15.0GiB/s (16.1GB/s-16.1GB/s),
+> io=384GiB (412GB), run=25551-25551msec
+> 
+> Disk stats (read/write):
+>     md11: ios=98/2237881, merge=0/0, ticks=0/0, in_queue=0, util=0.00%,
+> aggrios=10252/73455, aggrmerge=20863/582117, aggrticks=4425/138224,
+> aggrin_queue=130116, aggrutil=17.71%
+>   nvme2n1: ios=12427/88141, merge=25370/698549, ticks=5030/163534,
+> in_queue=153382, util=16.71%
+>   nvme3n1: ios=12210/88148, merge=24728/698544, ticks=4979/162745,
+> in_queue=152592, util=16.84%
+>   nvme4n1: ios=12246/88150, merge=24861/698524, ticks=4875/165703,
+> in_queue=156034, util=16.81%
+>   nvme5n1: ios=12289/88146, merge=25200/698533, ticks=5013/164900,
+> in_queue=154398, util=16.96%
+>   nvme6n1: ios=12343/88149, merge=25021/698553, ticks=6655/172464,
+> in_queue=164291, util=17.71%
+
+Note the IOs reaching the disks here - ~90k writes each disk for the
+entire test, so ~450,000 1MB IOs gives ~450GB which roughly matches
+with the amount written when parity overhead is taken into account.
+
+>   nvme22n1: ios=0/0, merge=0/0, ticks=0/0, in_queue=0, util=0.00%
+> 
+> ******* mkfs.xfs on /dev/md11 (w/ no flags) and fio run on that mount
+> [root@flashstore ~]# fio --directory=/xfs --rw=write --numjobs=32 --size=12G
+> --bs=1M --name=1m --group_reporting
+
+--fallocate=none is needed to make the filesystem workload a pure
+overwrite workload the same as the block device. Otherwise
+preallocation is used to lay out the files, and that then requires
+unwritten conversion of the IO range during IO completion. Unwritten
+conversion increases IO completion latency, which reduces bandwidth
+for synchronous IO submission/completion.
+
+> 1m: (g=0): rw=write, bs=(R) 1024KiB-1024KiB, (W) 1024KiB-1024KiB, (T)
+> 1024KiB-1024KiB, ioengine=psync, iodepth=1
+> ...
+> fio-3.7
+> Starting 32 processes
+> 1m: Laying out IO file (1 file / 12288MiB)
+.....
+> 1m: Laying out IO file (1 file / 12288MiB)
+> Jobs: 11 (f=11): [_(6),W(1),_(4),W(1),_(8),W(1),_(3),W(8)][99.4%][r=0KiB/s,w=1213MiB/s][r=0,w=1213
+> IOPS][eta 00m:01s]
+> 1m: (groupid=0, jobs=32): err= 0: pid=74782: Mon Jan 25 12:20:32 2021
+>   write: IOPS=2431, BW=2432MiB/s (2550MB/s)(384GiB/161704msec)
+>     clat (usec): min=251, max=117777, avg=13006.54, stdev=23856.18
+>      lat (usec): min=270, max=117787, avg=13027.39, stdev=23851.96
+>     clat percentiles (usec):
+>      |  1.00th=[  359],  5.00th=[  371], 10.00th=[  383], 20.00th=[ 408],
+>      | 30.00th=[  424], 40.00th=[  453], 50.00th=[  537], 60.00th=[ 578],
+>      | 70.00th=[  619], 80.00th=[55313], 90.00th=[58459], 95.00th=[60556],
+>      | 99.00th=[63177], 99.50th=[64226], 99.90th=[66323], 99.95th=[68682],
+>      | 99.99th=[80217]
+
+Compare the IO latencies with the block device. Average is 13ms per
+1MB IO for XFS vs 2ms for the block device. There's the entire
+performance difference right there - 6x longer IO latency on XFS
+means it will only acheive 1/6th the bandwidth of the block device
+because synchronous IO.
+
+It could just be that the filesystem isn't aligned to the underlying
+RAID geometry, and so every 1MB IO the filesystem issues to the md
+device is misaligned to the RAID stripe and so MD is doing huge
+numbers of partial stripe writes and that's what is killing
+performance....
+
+That said, 13ms latency for a single 1MB IO on a device that should
+take 2ms is potentially indicative of a scheduler bug: we've had
+bugs in completion workqueue task scheduling that have caused
+exactly this issue (10ms delays in IO completion task scheduling) in
+recent times. This scheduler commit fixed multiple performance
+regressions in XFS:
+
+52262ee567ad ("sched/fair: Allow a per-CPU kthread waking a task to
+stack on the same CPU, to fix XFS performance regression")
+
+Which brings me back to "what kernel and platform are you
+testing?"...
+
+>    bw (  KiB/s): min=55296, max=1054720, per=3.15%, avg=78557.24,
+> stdev=41896.99, samples=10233
+>    iops        : min=   54, max= 1030, avg=76.67, stdev=40.92, samples=10233
+
+Note that the per-job throughput peaked at over 1GB/s for a specific
+job - that's what I'd expect to see on XFS for all jobs, not just an
+occasional sample....
+
+>   lat (usec)   : 500=46.14%, 750=31.31%, 1000=0.78%
+>   lat (msec)   : 2=0.03%, 4=0.01%, 10=0.01%, 20=0.01%, 50=0.59%
+>   lat (msec)   : 100=21.13%, 250=0.01%
+>   cpu          : usr=0.12%, sys=3.83%, ctx=86515, majf=0, minf=22227
+>   IO depths    : 1=100.0%, 2=0.0%, 4=0.0%, 8=0.0%, 16=0.0%, 32=0.0%,
+> >=64=0.0%
+>      submit    : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%,
+> >=64=0.0%
+>      complete  : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%,
+> >=64=0.0%
+>      issued rwts: total=0,393216,0,0 short=0,0,0,0 dropped=0,0,0,0
+>      latency   : target=0, window=0, percentile=100.00%, depth=1
+> 
+> Run status group 0 (all jobs):
+>   WRITE: bw=2432MiB/s (2550MB/s), 2432MiB/s-2432MiB/s (2550MB/s-2550MB/s),
+> io=384GiB (412GB), run=161704-161704msec
+> 
+> Disk stats (read/write):
+>     md11: ios=1/6097731, merge=0/0, ticks=0/0, in_queue=0, util=0.00%,
+> aggrios=23774/2849499, aggrmerge=34232/17493878, aggrticks=28040/18125298,
+> aggrin_queue=18363574, aggrutil=80.03%
+>   nvme2n1: ios=28860/3419298, merge=41127/20992122, ticks=39496/23053174,
+> in_queue=23421586, util=75.76%
+>   nvme3n1: ios=28440/3419396, merge=41081/20992524, ticks=34881/23067448,
+> in_queue=23411872, util=80.03%
+>   nvme4n1: ios=28457/3419413, merge=41361/20992713, ticks=30990/21139316,
+> in_queue=21420720, util=78.03%
+>   nvme5n1: ios=28131/3419446, merge=40331/20992920, ticks=29288/20184431,
+> in_queue=20418749, util=77.00%
+>   nvme6n1: ios=28759/3419446, merge=41496/20992991, ticks=33587/21307424,
+> in_queue=21508518, util=77.04%
+
+That's not pretty. That looks like partial stripe writes - 3.4
+million write IOs per device (instead of ~90,000) and 20m merges per
+device is indicative of MD slicing and dicing the IO it is receiving
+from the higher level up into a huge number of tiny IOs. i.e. the
+devices are not getting well formed/well aligned IO so working out
+why this is happening is probably the first thing to look at.
+
+Cheers,
+
+Dave.
 -- 
-2.30.0
-
+Dave Chinner
+david@fromorbit.com
