@@ -2,96 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59EFDC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 23:31:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5480AC433DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 23:47:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0EC05227BF
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 23:31:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2780A229C4
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 23:47:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732613AbhAYXa5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Jan 2021 18:30:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36654 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732735AbhAYXap (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Jan 2021 18:30:45 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 83F66206D4;
-        Mon, 25 Jan 2021 23:30:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611617402;
-        bh=F6KbvQPNTe4mcL8taJXBGxRGGAIQd/VudrdGwuvBanY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Potcfy5fVKtNQBD+9sd29/eZUfcGQLksdI7cwv3Ts74CltULBmXGkS3zsDjGJXEFL
-         D1lZAWFjWrEGYJC5MCVBkP6nXncUiCMYrzFc3NbdAaLJo3obbBKePw9DMpWrFXwLe1
-         hGdmVRSsleWV7ZvDKbcJWxKe8szpo3gCCmNdMeKvfA5haKKKfh4sXfxocdKDhiXBpi
-         +kzJ3hdlhW3skypGg6JTxl1HqLwTl7o6R31voRxwcr1c3KavaQKv1aNK2Idw4BsM5i
-         vwDqwgrLkd+AAU7I/QUmHQ3z/V7mj2Eq3L9PQAAW7Tip3WekUkuzwItwlxHJJc/TVl
-         5+EdX0B8lXwPg==
-Date:   Mon, 25 Jan 2021 15:30:02 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH 3/3] xfs: set WQ_SYSFS on all workqueues
-Message-ID: <20210125233002.GH7698@magnolia>
-References: <161142798284.2173328.11591192629841647898.stgit@magnolia>
- <161142799960.2173328.12558377173737512680.stgit@magnolia>
- <20210124095454.GG670331@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        id S1732735AbhAYXqy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Jan 2021 18:46:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49342 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732395AbhAYVSt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jan 2021 16:18:49 -0500
+Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFFB1C061573
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 13:18:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
+        :CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
+        Content-ID:Content-Description:In-Reply-To;
+        bh=0ziUlydmgO067K67B0n+P2M3zyZIbPLD9gUuwPvwlWs=; b=pgcw1Ex72JgvyXO32T8miWE51T
+        M1zoFJtuwnykN0JM1DsQQKa3N/VWj0q2C8KPBAo1zVnF9BN8M+PCRuo8YqgtzcqCCS+2hXHVP7gc3
+        T0X3lXscXu80N5AQQ9lBB1gC0EqE0Aw4ptVOYKgFbzipIaLd5I5tWiwdvnpkUoC9vFqWu04ARht3Q
+        4h21j/SRR25gJlx2Nqo8elYy8JDBhHl8wLZaelHVBu4CS+79yEWiY+u5G2DryQulnfcV0630J1DXT
+        N09mwKWW/dO8MI9xUSz4B2wouSbKepG6G62NNUwMXp3pQtIGPqNIVi+GxrnvcHonEbQDShVtZnNL9
+        kh8A0thA==;
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
+        (envelope-from <debbugs@buxtehude.debian.org>)
+        id 1l49FP-0005j0-OK; Mon, 25 Jan 2021 21:18:07 +0000
+X-Loop: owner@bugs.debian.org
 Content-Disposition: inline
-In-Reply-To: <20210124095454.GG670331@infradead.org>
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-Mailer: MIME-tools 5.509 (Entity 5.509)
+Content-Type: text/plain; charset=utf-8
+From:   "Debian Bug Tracking System" <owner@bugs.debian.org>
+To:     Bastian Germann <bastiangermann@fishpost.de>
+CC:     linux-xfs@vger.kernel.org
+Subject: Processed: Correct dists in tags
+Message-ID: <handler.s.C.161160938021640.transcript@bugs.debian.org>
+References: <3064077e-4323-f4bb-4e9a-0c14ec05c6a2@fishpost.de>
+X-Debian-PR-Package: src:xfsprogs
+X-Debian-PR-Source: xfsprogs
+X-Debian-PR-Message: transcript
+X-Loop: owner@bugs.debian.org
+Date:   Mon, 25 Jan 2021 21:18:07 +0000
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jan 24, 2021 at 09:54:54AM +0000, Christoph Hellwig wrote:
-> >  	log->l_ioend_workqueue = alloc_workqueue("xfs-log/%s",
-> > -			WQ_MEM_RECLAIM | WQ_FREEZABLE | WQ_HIGHPRI, 0,
-> > -			mp->m_super->s_id);
-> > +			WQ_SYSFS | WQ_MEM_RECLAIM | WQ_FREEZABLE | WQ_HIGHPRI,
-> > +			0, mp->m_super->s_id);
-> 
-> This is just used for log I/O completions which are effectlively single
-> thread.  I don't see any reason to adjust the parameters here.
-> 
-> >  	if (!log->l_ioend_workqueue)
-> >  		goto out_free_iclog;
-> >  
-> > diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
-> > index a06661dac5be..b6dab34e361d 100644
-> > --- a/fs/xfs/xfs_mru_cache.c
-> > +++ b/fs/xfs/xfs_mru_cache.c
-> > @@ -294,7 +294,7 @@ int
-> >  xfs_mru_cache_init(void)
-> >  {
-> >  	xfs_mru_reap_wq = alloc_workqueue("xfs_mru_cache",
-> > -				WQ_MEM_RECLAIM|WQ_FREEZABLE, 1);
-> > +				WQ_SYSFS | WQ_MEM_RECLAIM | WQ_FREEZABLE, 1);
-> >  	if (!xfs_mru_reap_wq)
-> >  		return -ENOMEM;
-> 
-> This one also hasn't ever been something we tune, so I don't think there
-> is a good case for enabling WQ_SYSFS.
+Processing commands for control@bugs.debian.org:
 
-Yeah, the only ones I want to push for (and hence document) are
-quotacheck, background blockgc, and (in 5.13) background inode
-inactivation.
+> tags 890716 - bullseye buster sid
+Bug #890716 [src:xfsprogs] xfsprogs: FTBFS with glibc 2.27: error: conflict=
+ing types for 'copy_file_range'
+Removed tag(s) bullseye, buster, and sid.
+>
+End of message, stopping processing here.
 
-> I've stopped here.  I think we should have a good use case for making
-> workqueues show up in sysfs based on that we:
-> 
->  a) have resons to adjust them ever
->  b) actually having them easily discoverable and documented for adminds
->     to tune
-
-TBH I think the only workqueues we really ought to expose publicly are
-the unbound ones, since they represent kernel threads that can log
-transactions, and hence are known to have a performance impact that
-sysadmins could tune reasonably.
-
-Dave suggests exposing them all on a debug kernel, of course. :)
-
---D
+Please contact me if you need assistance.
+--=20
+890716: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D890716
+Debian Bug Tracking System
+Contact owner@bugs.debian.org with problems
