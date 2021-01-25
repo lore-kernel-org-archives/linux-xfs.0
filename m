@@ -2,83 +2,67 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE522C433DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 23:05:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7AAFC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 23:09:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9982C229C4
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 23:05:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D0C9229C4
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 23:09:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732031AbhAYXFH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Jan 2021 18:05:07 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:13713 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1732585AbhAYW4d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jan 2021 17:56:33 -0500
-X-IronPort-AV: E=Sophos;i="5.79,374,1602518400"; 
-   d="scan'208";a="103820570"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 26 Jan 2021 06:55:32 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id BB90D4CE678B;
-        Tue, 26 Jan 2021 06:55:32 +0800 (CST)
-Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Tue, 26 Jan 2021 06:55:33 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Tue, 26 Jan 2021 06:55:31 +0800
-From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>
-CC:     <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
-        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
-Subject: [PATCH v2 02/10] blk: Introduce ->corrupted_range() for block device
-Date:   Tue, 26 Jan 2021 06:55:18 +0800
-Message-ID: <20210125225526.1048877-3-ruansy.fnst@cn.fujitsu.com>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210125225526.1048877-1-ruansy.fnst@cn.fujitsu.com>
-References: <20210125225526.1048877-1-ruansy.fnst@cn.fujitsu.com>
+        id S1732794AbhAYXIA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Jan 2021 18:08:00 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33318 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732129AbhAYXH6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 25 Jan 2021 18:07:58 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BA1F6227BF;
+        Mon, 25 Jan 2021 23:07:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611616036;
+        bh=+8+4oZVyPgHyJQpHrryE5eMLpSgChfB9UY8ZGh1R/n8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Z2yvUu5xyCv2IpvncK3vxMeqcWOx0l/owBEoMT3U9HDpTiK05mRRxN4A8MeNQFGR9
+         zQ8iIDlOpdzGZWO77PFpz38FQWSrc02Nzi2nXvQMlK1GYlNVaiSlSAuKIosPWHSqsb
+         tREgQvqT4RrVgBto+qzkas7Sv5h63ey9mvOADEPknnYEQ8UsWtLp1MLSOYEECSMbVc
+         TgOjDRbZmL4/Pw7nJ9wVkfz6ull9X0GWvmDuCjWk1PPQE0k6HO1t+rHAGl9Rg97E6C
+         JnNvnzx4cAYiNgQQQUpmxDs8nh9DfImXruZRnZGgvLQ53r50krsJV7GZeukKR67qdR
+         rAgvR0bZ/WFCg==
+Date:   Mon, 25 Jan 2021 15:07:16 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 1/3] xfs: increase the default parallelism levels of
+ pwork clients
+Message-ID: <20210125230716.GF7698@magnolia>
+References: <161142798284.2173328.11591192629841647898.stgit@magnolia>
+ <161142798840.2173328.10025204233532508235.stgit@magnolia>
+ <20210124095717.GH670331@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: BB90D4CE678B.AC883
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210124095717.GH670331@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In fsdax mode, the memory failure happens on block device.  So, it is
-needed to introduce an interface for block devices.  Each kind of block
-device can handle the memory failure in ther own ways.
+On Sun, Jan 24, 2021 at 09:57:17AM +0000, Christoph Hellwig wrote:
+> On Sat, Jan 23, 2021 at 10:53:08AM -0800, Darrick J. Wong wrote:
+> >  	ASSERT(agno < mp->m_sb.sb_agcount);
+> >  	ASSERT(!(flags & ~XFS_IWALK_FLAGS_ALL));
+> >  
+> > -	nr_threads = xfs_pwork_guess_datadev_parallelism(mp);
+> > -	error = xfs_pwork_init(mp, &pctl, xfs_iwalk_ag_work, "xfs_iwalk",
+> > -			nr_threads);
+> > +	error = xfs_pwork_init(mp, &pctl, xfs_iwalk_ag_work, "xfs_iwalk", 0);
+> 
+> 
+> Why not drop the last argument to xfs_pwork_init as well?  Also I don't
+> think this makes sense as a standalone step without the changes in the
+> next patch.
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
----
- include/linux/blkdev.h | 2 ++
- 1 file changed, 2 insertions(+)
+Ok, I'll combine these two.
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index f94ee3089e01..e0f5585aa06f 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1867,6 +1867,8 @@ struct block_device_operations {
- 	int (*report_zones)(struct gendisk *, sector_t sector,
- 			unsigned int nr_zones, report_zones_cb cb, void *data);
- 	char *(*devnode)(struct gendisk *disk, umode_t *mode);
-+	int (*corrupted_range)(struct gendisk *disk, struct block_device *bdev,
-+			       loff_t offset, size_t len, void *data);
- 	struct module *owner;
- 	const struct pr_ops *pr_ops;
- };
--- 
-2.30.0
-
-
-
+--D
