@@ -2,143 +2,122 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F274FC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 20:22:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC875C433E9
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 20:22:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A318C22A83
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 20:22:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E2F822A85
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 20:22:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730214AbhAZFTC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:19:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33428 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730810AbhAZBpL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Jan 2021 20:45:11 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E1AEA230FF;
-        Tue, 26 Jan 2021 00:29:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611620943;
-        bh=umEP6264tJiQQq+8Lg6Cx26qTba/MjF85eUxJ11rzhI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Kf4L7TSHQMXI4qdbmGty7v/eeQ4Y7Nv7HH/SiVh59KB1Ir/+/dH5uWlrx2zxUQNjd
-         yv4v4/b63bkx95LAg19jZCfY0itir8lgKxERI7zA9CBF4maeVSgsPBNXaW87vg2xqp
-         Tt46O9XXCHRlt6zO52wCwFht6N3JXNhH4Ir++38rXT9CcTF4T/4bzEIMF+Qjyy7Mck
-         bBcF0gpCS8hFPV4a0iZRU6yKOoLWdPmoR7DxScdDM7UkQT2fOjqW+LcfuYE7sncdrb
-         mxuKB6euJGFZnfGv0Uw3kbD3ftUxhJeQCY3FU5ANWJnh0B8RHlpEkPeydo2g7mpUOF
-         vzCDkW9Ne1OIg==
-Date:   Mon, 25 Jan 2021 16:29:01 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+        id S1727843AbhAZFSy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Jan 2021 00:18:54 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:37463 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730607AbhAYSsA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jan 2021 13:48:00 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611600392;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=wYXW6owGMrMXzO6b4yjCzvhJhtVuXSm8n1/BYYrygyI=;
+        b=BNL2aMefb8ReEymyXn99zNbVnlLno+O8bcY5LZP1gc5tjtDGdPivNTeFjoWBKoXwjMYnLU
+        ASY4HBl0Wd5yY000cuej4OEzUuFZ9rWuaUeV10A24PuyHAciYbz/j68TE2F57NHL1+6VQq
+        tgt62tIJRGJuwI2BmSPeo00PdZvWK8w=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-477-CaahO_lCPxysTxU5IzZiuA-1; Mon, 25 Jan 2021 13:46:30 -0500
+X-MC-Unique: CaahO_lCPxysTxU5IzZiuA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C2A828144E0;
+        Mon, 25 Jan 2021 18:46:29 +0000 (UTC)
+Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 402965D734;
+        Mon, 25 Jan 2021 18:46:29 +0000 (UTC)
+Date:   Mon, 25 Jan 2021 13:46:27 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
         david@fromorbit.com
 Subject: Re: [PATCH 11/11] xfs: flush speculative space allocations when we
  run out of space
-Message-ID: <20210126002901.GI7698@magnolia>
+Message-ID: <20210125184627.GO2047559@bfoster>
 References: <161142791950.2171939.3320927557987463636.stgit@magnolia>
  <161142798066.2171939.9311024588681972086.stgit@magnolia>
  <20210124094816.GE670331@infradead.org>
- <20210125200216.GE7698@magnolia>
- <20210125210628.GP2047559@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210125210628.GP2047559@bfoster>
+In-Reply-To: <20210124094816.GE670331@infradead.org>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 25, 2021 at 04:06:28PM -0500, Brian Foster wrote:
-> On Mon, Jan 25, 2021 at 12:02:16PM -0800, Darrick J. Wong wrote:
-> > On Sun, Jan 24, 2021 at 09:48:16AM +0000, Christoph Hellwig wrote:
-> > > > +retry:
-> > > >  	/*
-> > > >  	 * Allocate the handle before we do our freeze accounting and setting up
-> > > >  	 * GFP_NOFS allocation context so that we avoid lockdep false positives
-> > > > @@ -285,6 +289,22 @@ xfs_trans_alloc(
-> > > >  	tp->t_firstblock = NULLFSBLOCK;
-> > > >  
-> > > >  	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
-> > > > +	if (error == -ENOSPC && tries > 0) {
-> > > > +		xfs_trans_cancel(tp);
-> > > > +
-> > > > +		/*
-> > > > +		 * We weren't able to reserve enough space for the transaction.
-> > > > +		 * Flush the other speculative space allocations to free space.
-> > > > +		 * Do not perform a synchronous scan because callers can hold
-> > > > +		 * other locks.
-> > > > +		 */
-> > > > +		error = xfs_blockgc_free_space(mp, NULL);
-> > > > +		if (error)
-> > > > +			return error;
-> > > > +
-> > > > +		tries--;
-> > > > +		goto retry;
-> > > > +	}
-> > > >  	if (error) {
-> > > >  		xfs_trans_cancel(tp);
-> > > >  		return error;
-> > > 
-> > > Why do we need to restart the whole function?  A failing
-> > > xfs_trans_reserve should restore tp to its initial state, and keeping
-> > > the SB_FREEZE_FS counter increased also doesn't look harmful as far as
-
-I'm curious about your motivation for letting transaction nest here.
-Seeing as the ENOSPC return should be infrequent, are you simply not
-wanting to cycle the memory allocators and the FREEZE_FS counters?
-
-Hm.  I guess at this point the only resources we hold are the FREEZE_FS
-counter and *tp itself.  The transaction doesn't have any log space
-grants or block reservation associated with it, and I guess we're not in
-PF_MEMALLOC_NOFS mode either.  So I guess this is ok, except...
-
-> > > I can tell.  So why not:
-> > > 
-> > > 	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
-> > > 	if (error == -ENOSPC) {
-> > > 		/*
-> > > 		 * We weren't able to reserve enough space for the transaction.
-> > > 		 * Flush the other speculative space allocations to free space.
-> > > 		 * Do not perform a synchronous scan because callers can hold
-> > > 		 * other locks.
-> > > 		 */
-> > > 		error = xfs_blockgc_free_space(mp, NULL);
-> > 
-> > xfs_blockgc_free_space runs the blockgc scan directly, which means that
-> > it creates transactions to free blocks.  Since we can't have nested
-> > transactions, we have to drop tp here.
-> > 
+On Sun, Jan 24, 2021 at 09:48:16AM +0000, Christoph Hellwig wrote:
+> > +retry:
+> >  	/*
+> >  	 * Allocate the handle before we do our freeze accounting and setting up
+> >  	 * GFP_NOFS allocation context so that we avoid lockdep false positives
+> > @@ -285,6 +289,22 @@ xfs_trans_alloc(
+> >  	tp->t_firstblock = NULLFSBLOCK;
+> >  
+> >  	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
+> > +	if (error == -ENOSPC && tries > 0) {
+> > +		xfs_trans_cancel(tp);
+> > +
+> > +		/*
+> > +		 * We weren't able to reserve enough space for the transaction.
+> > +		 * Flush the other speculative space allocations to free space.
+> > +		 * Do not perform a synchronous scan because callers can hold
+> > +		 * other locks.
+> > +		 */
+> > +		error = xfs_blockgc_free_space(mp, NULL);
+> > +		if (error)
+> > +			return error;
+> > +
+> > +		tries--;
+> > +		goto retry;
+> > +	}
+> >  	if (error) {
+> >  		xfs_trans_cancel(tp);
+> >  		return error;
 > 
-> Technically, I don't think it's a problem to hold a transaction memory
-> allocation (and superblock write access?) while diving into the scanning
-> mechanism.
-
-...except that doing so will collide with what we've been telling Yafang
-(as part of his series to detect nested transactions) as far as when is
-the appropriate time to set current->journal_info/PF_MEMALLOC_NOFS.
-
-> BTW, this also looks like a landmine passing a NULL eofb into
-> the xfs_blockgc_free_space() tracepoint.
-
-Errk, will fix that.
-
---D
-
-> Brian
+> Why do we need to restart the whole function?  A failing
+> xfs_trans_reserve should restore tp to its initial state, and keeping
+> the SB_FREEZE_FS counter increased also doesn't look harmful as far as
+> I can tell.  So why not:
 > 
-> > --D
-> > 
-> > > 		if (error)
-> > > 			return error;
-> > > 		error = xfs_trans_reserve(tp, resp, blocks, rtextents);
-> > > 	}
-> > >  	if (error) {
-> > >   		xfs_trans_cancel(tp);
-> > >   		return error;
-> > > 
-> > > ?
-> > 
+> 	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
+> 	if (error == -ENOSPC) {
+> 		/*
+> 		 * We weren't able to reserve enough space for the transaction.
+> 		 * Flush the other speculative space allocations to free space.
+> 		 * Do not perform a synchronous scan because callers can hold
+> 		 * other locks.
+> 		 */
+> 		error = xfs_blockgc_free_space(mp, NULL);
+> 		if (error)
+> 			return error;
+> 		error = xfs_trans_reserve(tp, resp, blocks, rtextents);
+> 	}
+>  	if (error) {
+>   		xfs_trans_cancel(tp);
+>   		return error;
 > 
+> ?
+> 
+
+That looks cleaner to me, but similar to the earlier quota res patch I'm
+wondering if this should be pushed down into xfs_trans_reserve() (or
+lifted into a new xfs_trans_reserve_blks() helper called from there)
+such that it can handle the various scan/retry scenarios in one place.
+
+Brian
+
