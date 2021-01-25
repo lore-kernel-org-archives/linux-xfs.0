@@ -2,173 +2,97 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C055C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 02:24:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89702C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 02:42:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0FE9622ADF
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 02:24:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33A6322D58
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 02:42:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726871AbhAYSro (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Jan 2021 13:47:44 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:25845 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726780AbhAYSrf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jan 2021 13:47:35 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611600369;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8r+QdiDK4IV0GctN4NYR3jVnL7sFCP3GPBHlx6eXL18=;
-        b=AoTkurbKpgklKiPJh1Qvrfx1cR0xhAM1DgdX+lOnj2fSRk+skIHFTWMyOoSOFrLfxbSD5w
-        dkpUBA+PhmFGpCGYNDOFz8XW2TCMyAHZBPztM46cbB02VrH+kUlFMlpeas57KIIlH072m8
-        9wg71ylWYWqJ67pYPgFJ6Im4s5qdNxs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-557-hbi_Z4mtOUuW-fl4BIDB-w-1; Mon, 25 Jan 2021 13:46:04 -0500
-X-MC-Unique: hbi_Z4mtOUuW-fl4BIDB-w-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A8F0959;
-        Mon, 25 Jan 2021 18:46:03 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1ABF519C47;
-        Mon, 25 Jan 2021 18:46:03 +0000 (UTC)
-Date:   Mon, 25 Jan 2021 13:46:01 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com
-Subject: Re: [PATCH 10/11] xfs: refactor xfs_icache_free_{eof,cow}blocks call
- sites
-Message-ID: <20210125184601.GN2047559@bfoster>
-References: <161142791950.2171939.3320927557987463636.stgit@magnolia>
- <161142797509.2171939.4924852652653930954.stgit@magnolia>
+        id S1728532AbhAYQAK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Jan 2021 11:00:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36098 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730596AbhAYP7X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jan 2021 10:59:23 -0500
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53AABC06178C
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 07:58:43 -0800 (PST)
+Received: by mail-pj1-x102a.google.com with SMTP id e9so1580185pjj.0
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 07:58:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ydjA7lxNDcY9m5HH4n1Isbc66o3HKVgUPIygbXwoUMM=;
+        b=bI02x67oVJOucPOxKOB9n3X6KcNxCqIpxk5n0fxC4X/uFlQaaUy+xP+qcDK0qgJA7t
+         mWFK2tKkiqtuWxZJvB44mpmemEF/S+YGxTW9vjz8KWnzcutGYJEs+vjezSfpdlvaat30
+         NrMsLYnxAPDb/60yNPxEjnOGe2XeZLZa2qteFs3BDDpQq8v+NYEA0j27JKKvD8Jo9hGB
+         m1FubjB+dKRDuIvGoJ5Krq3haj3y4rnOv+TQTyR+lsKZVtOzTkhokVPN9B3vqb9Kf/tF
+         OgnBEzoTN7wXg3qcCOF4/ajnPQb9aZOpN8ShjkT8r+GX28FyVyVD2Nsgv5WX9h7sZf9A
+         iVhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ydjA7lxNDcY9m5HH4n1Isbc66o3HKVgUPIygbXwoUMM=;
+        b=sRJyYROziieLOAPMi1P86gjEqsvfMDrixO8ctBLt4ldrbcD5EzvKSK2CboaSSiLZ3q
+         H0ofRcaW2hWqNHTycCdZVaMQCIDz0GeaIKCZU8oBxHzFZtdoTwc+hxOjyPYOu6t3tUug
+         AJg2z1wc6VziPl5MmUwkG2PylAyzRqRWMhHWaOx/DjamIJG3kRABfS2JIhRzhmN0O9bk
+         r1C6t+S08GRQmYXjfSHsny51AGG44K6ADUnxAR3VeHs2nrnOi4lPFOck3useKu0aDehh
+         Q2E1ryEmdJ+sGPr/MrH1lp5B31oja292xBVCgYrJRMSUxVGT5Qw9JhQ7klPkzFa3zMgh
+         4ktA==
+X-Gm-Message-State: AOAM530IHV9iGSY6Ygujl5cFWsBxHgv8so7dqZeBKKS47yGUAOfsNMcM
+        gy/qnQP7hP/qjbrOhfg6ghN6wA==
+X-Google-Smtp-Source: ABdhPJxvYFudM0/t7uvN4OEM1XLPVgOQbMzfZischKww36TwjmQpcH3dkzLr1QJ1pvzT7oKrjCpfaw==
+X-Received: by 2002:a17:90a:6f05:: with SMTP id d5mr843071pjk.145.1611590322691;
+        Mon, 25 Jan 2021 07:58:42 -0800 (PST)
+Received: from [192.168.4.41] (cpe-72-132-29-68.dc.res.rr.com. [72.132.29.68])
+        by smtp.gmail.com with ESMTPSA id i25sm16942011pgb.33.2021.01.25.07.58.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 Jan 2021 07:58:41 -0800 (PST)
+Subject: Re: [PATCH v3 0/7] no-copy bvec
+To:     Pavel Begunkov <asml.silence@gmail.com>,
+        linux-block@vger.kernel.org
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+References: <cover.1610170479.git.asml.silence@gmail.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <b1d0ae2a-a4ca-2b41-b8df-4c8036afe781@kernel.dk>
+Date:   Mon, 25 Jan 2021 08:58:38 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <161142797509.2171939.4924852652653930954.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <cover.1610170479.git.asml.silence@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jan 23, 2021 at 10:52:55AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> In anticipation of more restructuring of the eof/cowblocks gc code,
-> refactor calling of those two functions into a single internal helper
-> function, then present a new standard interface to purge speculative
-> block preallocations and start shifting higher level code to use that.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_file.c   |    3 +--
->  fs/xfs/xfs_icache.c |   39 +++++++++++++++++++++++++++++++++------
->  fs/xfs/xfs_icache.h |    1 +
->  fs/xfs/xfs_trace.h  |    1 +
->  4 files changed, 36 insertions(+), 8 deletions(-)
-> 
-> 
-...
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 7f999f9dd80a..0d228a5e879f 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1645,6 +1645,38 @@ xfs_start_block_reaping(
->  	xfs_queue_cowblocks(mp);
->  }
->  
-> +/* Scan all incore inodes for block preallocations that we can remove. */
-> +static inline int
-> +xfs_blockgc_scan(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_eofblocks	*eofb)
-> +{
-> +	int			error;
-> +
-> +	error = xfs_icache_free_eofblocks(mp, eofb);
-> +	if (error)
-> +		return error;
-> +
-> +	error = xfs_icache_free_cowblocks(mp, eofb);
-> +	if (error)
-> +		return error;
-> +
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Try to free space in the filesystem by purging eofblocks and cowblocks.
-> + */
-> +int
-> +xfs_blockgc_free_space(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_eofblocks	*eofb)
-> +{
-> +	trace_xfs_blockgc_free_space(mp, eofb, _RET_IP_);
-> +
-> +	return xfs_blockgc_scan(mp, eofb);
-> +}
-> +
+On 1/9/21 9:02 AM, Pavel Begunkov wrote:
+> Currently, when iomap and block direct IO gets a bvec based iterator
+> the bvec will be copied, with all other accounting that takes much
+> CPU time and causes additional allocation for larger bvecs. The
+> patchset makes it to reuse the passed in iter bvec.
 
-What's the need for two helpers instead of just
-xfs_blockgc_free_space()? Otherwise seems fine.
+Applied, thanks.
 
-Brian
-
->  /*
->   * Run cow/eofblocks scans on the supplied dquots.  We don't know exactly which
->   * quota caused an allocation failure, so we make a best effort by including
-> @@ -1661,7 +1693,6 @@ xfs_blockgc_free_dquots(
->  	struct xfs_eofblocks	eofb = {0};
->  	struct xfs_mount	*mp = NULL;
->  	bool			do_work = false;
-> -	int			error;
->  
->  	if (!udqp && !gdqp && !pdqp)
->  		return 0;
-> @@ -1699,11 +1730,7 @@ xfs_blockgc_free_dquots(
->  	if (!do_work)
->  		return 0;
->  
-> -	error = xfs_icache_free_eofblocks(mp, &eofb);
-> -	if (error)
-> -		return error;
-> -
-> -	return xfs_icache_free_cowblocks(mp, &eofb);
-> +	return xfs_blockgc_free_space(mp, &eofb);
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-> index 5f520de637f6..583c132ae0fb 100644
-> --- a/fs/xfs/xfs_icache.h
-> +++ b/fs/xfs/xfs_icache.h
-> @@ -57,6 +57,7 @@ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
->  int xfs_blockgc_free_dquots(struct xfs_dquot *udqp, struct xfs_dquot *gdqp,
->  		struct xfs_dquot *pdqp, unsigned int eof_flags);
->  int xfs_blockgc_free_quota(struct xfs_inode *ip, unsigned int eof_flags);
-> +int xfs_blockgc_free_space(struct xfs_mount *mp, struct xfs_eofblocks *eofb);
->  
->  void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
->  void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 4cbf446bae9a..c3fd344aaf5b 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3926,6 +3926,7 @@ DEFINE_EVENT(xfs_eofblocks_class, name,	\
->  		 unsigned long caller_ip), \
->  	TP_ARGS(mp, eofb, caller_ip))
->  DEFINE_EOFBLOCKS_EVENT(xfs_ioc_free_eofblocks);
-> +DEFINE_EOFBLOCKS_EVENT(xfs_blockgc_free_space);
->  
->  #endif /* _TRACE_XFS_H */
->  
-> 
+-- 
+Jens Axboe
 
