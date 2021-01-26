@@ -7,239 +7,195 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E108DC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 23:02:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A74EC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 23:03:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 993E22065E
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 23:02:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F63320679
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 23:03:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729394AbhAZXCs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Jan 2021 18:02:48 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53706 "EHLO mail.kernel.org"
+        id S1725802AbhAZXDF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Jan 2021 18:03:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55550 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727016AbhAZE4d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Jan 2021 23:56:33 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 738FC22D58;
-        Tue, 26 Jan 2021 04:55:52 +0000 (UTC)
+        id S1731405AbhAZFFd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Jan 2021 00:05:33 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B2618221E7;
+        Tue, 26 Jan 2021 05:04:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611636952;
-        bh=UKoEVwc3wHv+Touk9EMwiwY3LFryYMt8X1bECD+V4/Y=;
+        s=k20201202; t=1611637492;
+        bh=2XCDiilTGYCm9oD11g4DuWR7sWgFHudXHdRynDx7sG0=;
         h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=PPwUpBbyHebnBZi4Fq1XoLLaaGn1P7M7d2z8d3ymyVj3QxuOmJpd2pJJlTL6FDPsx
-         lLCmjHYV2nB5y3kb/AeB2+wB0A1AGK3BHM6qIiUrYN61aY2TjqsV2yTzb1Op0bOGfi
-         HZB5ZD0QTyBIt0pM4FfN7rpX1JnGasaPJPguNsDNqjsM0Haf2WtC9twah8JMJY6KWN
-         momcwq3V/njyLKnjGY/wDQAFCBIMGK0jSGnje1XHBzqm1K9OgA1VJ65gwGbYm2wEob
-         enJov8aqWpuMLyGQtOYLUuf8NtQT5pVDVeTyAe54zDKVhrfka0ihSjZLsC9W8b4CFX
-         gHg3bOH4Nx0HQ==
-Date:   Mon, 25 Jan 2021 20:55:51 -0800
+        b=ENv29U1Rga9EY9/e/ZSljmnrTio27OhSAjPq/jFucQVrwn0QhfvLJhNPoPfx10oH6
+         S6hNOZOU3Rq4zbaQX9m+WQIgAj4+bpLfjZL2v77Rhb4IQB3DgaK3J5mlky/sMbSqp6
+         zWtnVhmNKtortAn/j8kyJWvFBxu76NijU0xB1DfbtjWeU/54P49YsFGcwGgnyu2/xB
+         EpDRlpBeI+BhPRYOvJMwtPkpVn1iigJm7vXTZQJbqhqP++4Z27XbmmVOMBXeWV3bEC
+         ewuu9gopK5/hRmLNswXF78vVBp10iQIXps18vTrJnnLcGWV9HfF6C/i43qcomzs0vs
+         s6JGqg+tDTjVA==
+Date:   Mon, 25 Jan 2021 21:04:52 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
-        Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4.1 08/11] xfs: flush eof/cowblocks if we can't reserve
- quota for chown
-Message-ID: <20210126045551.GP7698@magnolia>
-References: <161142791950.2171939.3320927557987463636.stgit@magnolia>
- <161142796398.2171939.8342732885181707528.stgit@magnolia>
+To:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com
+Subject: [PATCH v2.1 1/3] xfs: increase the default parallelism levels of
+ pwork clients
+Message-ID: <20210126050452.GS7698@magnolia>
+References: <161142798284.2173328.11591192629841647898.stgit@magnolia>
+ <161142798840.2173328.10025204233532508235.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161142796398.2171939.8342732885181707528.stgit@magnolia>
+In-Reply-To: <161142798840.2173328.10025204233532508235.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a file user, group, or project change is unable to reserve enough
-quota to handle the modification, try clearing whatever space the
-filesystem might have been hanging onto in the hopes of speeding up the
-filesystem.  The flushing behavior will become particularly important
-when we add deferred inode inactivation because that will increase the
-amount of space that isn't actively tied to user data.
+Increase the parallelism level for pwork clients to the workqueue
+defaults so that we can take advantage of computers with a lot of CPUs
+and a lot of hardware.  On fast systems this will speed up quotacheck by
+a large factor, and the following posteof/cowblocks cleanup series will
+use the functionality presented in this patch to run garbage collection
+as quickly as possible.
+
+We do this by switching the pwork workqueue to unbounded, since the
+current user (quotacheck) runs lengthy scans for each work item and we
+don't care about dispatching the work on a warm cpu cache or anything
+like that.  Also set WQ_SYSFS so that we can monitor where the wq is
+running.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
-v4.1: fix the unconventional return conventions here too
+v2.1: document the workqueue knobs, kill the nr_threads argument to
+pwork, and convert it to unbounded all in one patch
 ---
- fs/xfs/xfs_ioctl.c |   13 ++++++++++++-
- fs/xfs/xfs_iops.c  |   14 ++++++++++++--
- fs/xfs/xfs_qm.c    |   23 +++++++++++++++++------
- fs/xfs/xfs_quota.h |    8 ++++----
- 4 files changed, 45 insertions(+), 13 deletions(-)
+ Documentation/admin-guide/xfs.rst |   33 +++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_iwalk.c                |    5 +----
+ fs/xfs/xfs_pwork.c                |   25 +++++--------------------
+ fs/xfs/xfs_pwork.h                |    4 +---
+ 4 files changed, 40 insertions(+), 27 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 3fbd98f61ea5..dab525c2437c 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1436,6 +1436,7 @@ xfs_ioctl_setattr(
- 	struct xfs_trans	*tp;
- 	struct xfs_dquot	*pdqp = NULL;
- 	struct xfs_dquot	*olddquot = NULL;
-+	bool			quota_retry = false;
- 	int			code;
- 
- 	trace_xfs_ioctl_setattr(ip);
-@@ -1462,6 +1463,7 @@ xfs_ioctl_setattr(
- 
- 	xfs_ioctl_setattr_prepare_dax(ip, fa);
- 
-+retry:
- 	tp = xfs_ioctl_setattr_get_trans(ip);
- 	if (IS_ERR(tp)) {
- 		code = PTR_ERR(tp);
-@@ -1470,10 +1472,19 @@ xfs_ioctl_setattr(
- 
- 	if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp) &&
- 	    ip->i_d.di_projid != fa->fsx_projid) {
-+		unsigned int	flags = 0;
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+index 86de8a1ad91c..5fd14556c6fe 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -495,3 +495,36 @@ the class and error context. For example, the default values for
+ "metadata/ENODEV" are "0" rather than "-1" so that this error handler defaults
+ to "fail immediately" behaviour. This is done because ENODEV is a fatal,
+ unrecoverable error no matter how many times the metadata IO is retried.
 +
-+		if (capable(CAP_FOWNER))
-+			flags |= XFS_QMOPT_FORCE_RES;
- 		code = xfs_qm_vop_chown_reserve(tp, ip, NULL, NULL, pdqp,
--				capable(CAP_FOWNER) ?  XFS_QMOPT_FORCE_RES : 0);
-+				flags, &quota_retry);
- 		if (code)	/* out of quota */
- 			goto error_trans_cancel;
-+		if (quota_retry) {
-+			xfs_trans_cancel_qretry_dquots(tp, ip, NULL, NULL,
-+					pdqp);
-+			goto retry;
-+		}
- 	}
- 
- 	xfs_fill_fsxattr(ip, false, &old_fa);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index f1e21b6cfa48..907952009c2d 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -660,6 +660,7 @@ xfs_setattr_nonsize(
- 	kgid_t			gid = GLOBAL_ROOT_GID, igid = GLOBAL_ROOT_GID;
- 	struct xfs_dquot	*udqp = NULL, *gdqp = NULL;
- 	struct xfs_dquot	*olddquot1 = NULL, *olddquot2 = NULL;
-+	bool			quota_retry = false;
- 
- 	ASSERT((mask & ATTR_SIZE) == 0);
- 
-@@ -700,6 +701,7 @@ xfs_setattr_nonsize(
- 			return error;
- 	}
- 
-+retry:
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
- 	if (error)
- 		goto out_dqrele;
-@@ -729,12 +731,20 @@ xfs_setattr_nonsize(
- 		if (XFS_IS_QUOTA_RUNNING(mp) &&
- 		    ((XFS_IS_UQUOTA_ON(mp) && !uid_eq(iuid, uid)) ||
- 		     (XFS_IS_GQUOTA_ON(mp) && !gid_eq(igid, gid)))) {
-+			unsigned int	flags = 0;
++Workqueue Concurrency
++=====================
 +
-+			if (capable(CAP_FOWNER))
-+				flags |= XFS_QMOPT_FORCE_RES;
- 			ASSERT(tp);
- 			error = xfs_qm_vop_chown_reserve(tp, ip, udqp, gdqp,
--						NULL, capable(CAP_FOWNER) ?
--						XFS_QMOPT_FORCE_RES : 0);
-+					NULL, flags, &quota_retry);
- 			if (error)	/* out of quota */
- 				goto out_cancel;
-+			if (quota_retry) {
-+				xfs_trans_cancel_qretry_dquots(tp, ip, udqp,
-+						gdqp, NULL);
-+				goto retry;
-+			}
- 		}
- 
- 		/*
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index c134eb4aeaa8..4e02609c063d 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1795,7 +1795,8 @@ xfs_qm_vop_chown(
- }
- 
- /*
-- * Quota reservations for setattr(AT_UID|AT_GID|AT_PROJID).
-+ * Quota reservations for setattr(AT_UID|AT_GID|AT_PROJID).  This function has
-+ * the same return behavior as xfs_trans_reserve_quota_nblks.
-  */
- int
- xfs_qm_vop_chown_reserve(
-@@ -1804,15 +1805,16 @@ xfs_qm_vop_chown_reserve(
- 	struct xfs_dquot	*udqp,
- 	struct xfs_dquot	*gdqp,
- 	struct xfs_dquot	*pdqp,
--	uint			flags)
-+	unsigned int		flags,
-+	bool			*retry)
++XFS uses kernel workqueues to parallelize metadata update processes.  This
++enables it to take advantage of storage hardware that can service many IO
++operations simultaneously.
++
++The control knobs for a filesystem's workqueues are organized by task at hand
++and the short name of the data device.  They all can be found in:
++
++  /sys/bus/workqueue/devices/${task}!${device}
++
++================  ===========
++  Task            Description
++================  ===========
++  xfs_iwalk-$pid  Inode scans of the entire filesystem. Currently limited to
++                  mount time quotacheck.
++================  ===========
++
++For example, the knobs for the quotacheck workqueue for /dev/nvme0n1 would be
++found in /sys/bus/workqueue/devices/xfs_iwalk-1111!nvme0n1/.
++
++The interesting knobs for XFS workqueues are as follows:
++
++============     ===========
++  Knob           Description
++============     ===========
++  max_active     Maximum number of background threads that can be started to
++                 run the work.
++  cpumask        CPUs upon which the threads are allowed to run.
++  nice           Relative priority of scheduling the threads.  These are the
++                 same nice levels that can be applied to userspace processes.
+diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+index eae3aff9bc97..c4a340f1f1e1 100644
+--- a/fs/xfs/xfs_iwalk.c
++++ b/fs/xfs/xfs_iwalk.c
+@@ -618,15 +618,12 @@ xfs_iwalk_threaded(
  {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	uint64_t		delblks;
- 	unsigned int		blkflags;
--	struct xfs_dquot	*udq_unres = NULL;
-+	struct xfs_dquot	*udq_unres = NULL; /* old dquots */
- 	struct xfs_dquot	*gdq_unres = NULL;
- 	struct xfs_dquot	*pdq_unres = NULL;
--	struct xfs_dquot	*udq_delblks = NULL;
-+	struct xfs_dquot	*udq_delblks = NULL; /* new dquots */
- 	struct xfs_dquot	*gdq_delblks = NULL;
- 	struct xfs_dquot	*pdq_delblks = NULL;
+ 	struct xfs_pwork_ctl	pctl;
+ 	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
+-	unsigned int		nr_threads;
  	int			error;
-@@ -1860,7 +1862,7 @@ xfs_qm_vop_chown_reserve(
- 				udq_delblks, gdq_delblks, pdq_delblks,
- 				ip->i_d.di_nblocks, 1, flags | blkflags);
+ 
+ 	ASSERT(agno < mp->m_sb.sb_agcount);
+ 	ASSERT(!(flags & ~XFS_IWALK_FLAGS_ALL));
+ 
+-	nr_threads = xfs_pwork_guess_datadev_parallelism(mp);
+-	error = xfs_pwork_init(mp, &pctl, xfs_iwalk_ag_work, "xfs_iwalk",
+-			nr_threads);
++	error = xfs_pwork_init(mp, &pctl, xfs_iwalk_ag_work, "xfs_iwalk");
  	if (error)
--		return error;
-+		goto err;
+ 		return error;
  
- 	/*
- 	 * Do the delayed blks reservations/unreservations now. Since, these
-@@ -1878,12 +1880,21 @@ xfs_qm_vop_chown_reserve(
- 			    udq_delblks, gdq_delblks, pdq_delblks,
- 			    (xfs_qcnt_t)delblks, 0, flags | blkflags);
- 		if (error)
--			return error;
-+			goto err;
- 		xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
- 				udq_unres, gdq_unres, pdq_unres,
- 				-((xfs_qcnt_t)delblks), 0, blkflags);
- 	}
- 
-+	return 0;
-+err:
-+	/* We only allow one retry for EDQUOT/ENOSPC. */
-+	if (*retry || (error != -EDQUOT && error != -ENOSPC)) {
-+		*retry = false;
-+		return error;
-+	}
+diff --git a/fs/xfs/xfs_pwork.c b/fs/xfs/xfs_pwork.c
+index b03333f1c84a..c283b801cc5d 100644
+--- a/fs/xfs/xfs_pwork.c
++++ b/fs/xfs/xfs_pwork.c
+@@ -61,16 +61,18 @@ xfs_pwork_init(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_pwork_ctl	*pctl,
+ 	xfs_pwork_work_fn	work_fn,
+-	const char		*tag,
+-	unsigned int		nr_threads)
++	const char		*tag)
+ {
++	unsigned int		nr_threads = 0;
 +
-+	*retry = true;
- 	return 0;
+ #ifdef DEBUG
+ 	if (xfs_globals.pwork_threads >= 0)
+ 		nr_threads = xfs_globals.pwork_threads;
+ #endif
+ 	trace_xfs_pwork_init(mp, nr_threads, current->pid);
+ 
+-	pctl->wq = alloc_workqueue("%s-%d", WQ_FREEZABLE, nr_threads, tag,
++	pctl->wq = alloc_workqueue("%s-%d",
++			WQ_UNBOUND | WQ_SYSFS | WQ_FREEZABLE, nr_threads, tag,
+ 			current->pid);
+ 	if (!pctl->wq)
+ 		return -ENOMEM;
+@@ -117,20 +119,3 @@ xfs_pwork_poll(
+ 				atomic_read(&pctl->nr_work) == 0, HZ) == 0)
+ 		touch_softlockup_watchdog();
+ }
+-
+-/*
+- * Return the amount of parallelism that the data device can handle, or 0 for
+- * no limit.
+- */
+-unsigned int
+-xfs_pwork_guess_datadev_parallelism(
+-	struct xfs_mount	*mp)
+-{
+-	struct xfs_buftarg	*btp = mp->m_ddev_targp;
+-
+-	/*
+-	 * For now we'll go with the most conservative setting possible,
+-	 * which is two threads for an SSD and 1 thread everywhere else.
+-	 */
+-	return blk_queue_nonrot(btp->bt_bdev->bd_disk->queue) ? 2 : 1;
+-}
+diff --git a/fs/xfs/xfs_pwork.h b/fs/xfs/xfs_pwork.h
+index 8133124cf3bb..c0ef81fc85dd 100644
+--- a/fs/xfs/xfs_pwork.h
++++ b/fs/xfs/xfs_pwork.h
+@@ -51,11 +51,9 @@ xfs_pwork_want_abort(
  }
  
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index c5bbe7e3e259..42b79d0829f7 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -103,9 +103,9 @@ extern void xfs_qm_vop_create_dqattach(struct xfs_trans *, struct xfs_inode *,
- extern int xfs_qm_vop_rename_dqattach(struct xfs_inode **);
- extern struct xfs_dquot *xfs_qm_vop_chown(struct xfs_trans *,
- 		struct xfs_inode *, struct xfs_dquot **, struct xfs_dquot *);
--extern int xfs_qm_vop_chown_reserve(struct xfs_trans *, struct xfs_inode *,
--		struct xfs_dquot *, struct xfs_dquot *,
--		struct xfs_dquot *, uint);
-+int xfs_qm_vop_chown_reserve(struct xfs_trans *tp, struct xfs_inode *ip,
-+		struct xfs_dquot *udqp, struct xfs_dquot *gdqp,
-+		struct xfs_dquot *pdqp, unsigned int flags, bool *retry);
- extern int xfs_qm_dqattach(struct xfs_inode *);
- extern int xfs_qm_dqattach_locked(struct xfs_inode *ip, bool doalloc);
- extern void xfs_qm_dqdetach(struct xfs_inode *);
-@@ -189,7 +189,7 @@ xfs_trans_cancel_qretry_dquots(
- #define xfs_qm_vop_create_dqattach(tp, ip, u, g, p)
- #define xfs_qm_vop_rename_dqattach(it)					(0)
- #define xfs_qm_vop_chown(tp, ip, old, new)				(NULL)
--#define xfs_qm_vop_chown_reserve(tp, ip, u, g, p, fl)			(0)
-+#define xfs_qm_vop_chown_reserve(tp, ip, u, g, p, fl, retry)		(0)
- #define xfs_qm_dqattach(ip)						(0)
- #define xfs_qm_dqattach_locked(ip, fl)					(0)
- #define xfs_qm_dqdetach(ip)
+ int xfs_pwork_init(struct xfs_mount *mp, struct xfs_pwork_ctl *pctl,
+-		xfs_pwork_work_fn work_fn, const char *tag,
+-		unsigned int nr_threads);
++		xfs_pwork_work_fn work_fn, const char *tag);
+ void xfs_pwork_queue(struct xfs_pwork_ctl *pctl, struct xfs_pwork *pwork);
+ int xfs_pwork_destroy(struct xfs_pwork_ctl *pctl);
+ void xfs_pwork_poll(struct xfs_pwork_ctl *pctl);
+-unsigned int xfs_pwork_guess_datadev_parallelism(struct xfs_mount *mp);
+ 
+ #endif /* __XFS_PWORK_H__ */
