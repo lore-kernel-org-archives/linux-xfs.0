@@ -2,129 +2,244 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36C34C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 23:02:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E108DC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 23:02:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D967E2065E
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 23:02:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 993E22065E
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 23:02:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727249AbhAZXCj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Jan 2021 18:02:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59874 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726340AbhAZEnM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jan 2021 23:43:12 -0500
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECE61C061574
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 20:42:30 -0800 (PST)
-Received: by mail-pj1-x1032.google.com with SMTP id a20so1317924pjs.1
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 20:42:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=zK+Yus/H/KQ8mPXL2NFdDyAQre6Cuae1VDxVQMZwHV4=;
-        b=UNhREswgSUU7IWpmldgMrKkMcUKoq+tMCsiQGUBmodfPUrtPcMykX77XjWkIGhIcUd
-         SCLaaDC5ARY8VHjcdMrwyegjb22tYyDp9KrEweJ9FUIPmfbFljOGizeEHKVgU0/tBp4V
-         Yst08XdW8MpQ5LvM5EQGRz9AQzLP0+9rLL7EejsQlGSD9vc2gBwBAOUaHDFB5xI/9cQT
-         PBijNQNWTNJgp0AqgPrzeZ2hmG2uqET6iUm9cUUdyCel+nT0bSvp+BC+CzONzL3u9HJL
-         DKpPjqSNQBd8yNhjXfvVhDq8yT4kdJdIzAVCF9ThmGzqljZcmvpMn1Xx0U7RPuHZopya
-         syyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=zK+Yus/H/KQ8mPXL2NFdDyAQre6Cuae1VDxVQMZwHV4=;
-        b=m8t47yFmG+cMUtp8/rMWyVSqwF2mL77+cP/Eqy5iCrqCRyio+hlG5qVgZwy3GQ2qXC
-         WIH3b22rbX/ipiNmwqdLAuh0HfDA+CD54R/DsrCTwkraTlPcuKxSxcs3Xv/43+JKe+/f
-         ZQFMJAgSUKptxpjvNL21/hunHjc5VQKhJrZI8Eb5aqL72YafS1SJdJVfcWkN1DFbVAS3
-         dfftNsxg9izlDToe6tGNkhgb4EJeJbxwayI/ab1pxmqlIqOEigOjm0kXIbEMyo8WBcN7
-         PsHOIie8u9qhPg63Oe4P7RFqAvkA/HTrPNgyPPXmthDtrYG2Lw3Sc8475zCmlSJ2TYLU
-         YMVA==
-X-Gm-Message-State: AOAM531dU4JoFzuI/opGDPg8iL+CCJ66ZHL5RG6DS4PHHj047WmeM9g5
-        pabakLsarygSbdXmHTw1iIxD22Nuj3U=
-X-Google-Smtp-Source: ABdhPJxyc5UQFQr4p7yEjMn6hX8J3rSzbob+aQC9ESKZAVY2JwdssbQEMTopIICc8JKIOFMplD0hpQ==
-X-Received: by 2002:a17:90a:6c26:: with SMTP id x35mr4033242pjj.52.1611636150416;
-        Mon, 25 Jan 2021 20:42:30 -0800 (PST)
-Received: from localhost.localdomain ([122.167.33.191])
-        by smtp.gmail.com with ESMTPSA id j3sm832581pjs.50.2021.01.25.20.42.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Jan 2021 20:42:29 -0800 (PST)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>, sandeen@sandeen.net
-Subject: [PATCH V1.1] xfsprogs: xfs_fsr: Limit the scope of cmp()
-Date:   Tue, 26 Jan 2021 10:12:22 +0530
-Message-Id: <20210126044222.2676922-1-chandanrlinux@gmail.com>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <eec86b5f-7a4c-c6e6-e8a0-1e4e9a7e042e@sandeen.net>
-References: <eec86b5f-7a4c-c6e6-e8a0-1e4e9a7e042e@sandeen.net>
+        id S1729394AbhAZXCs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Jan 2021 18:02:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53706 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727016AbhAZE4d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 25 Jan 2021 23:56:33 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 738FC22D58;
+        Tue, 26 Jan 2021 04:55:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611636952;
+        bh=UKoEVwc3wHv+Touk9EMwiwY3LFryYMt8X1bECD+V4/Y=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=PPwUpBbyHebnBZi4Fq1XoLLaaGn1P7M7d2z8d3ymyVj3QxuOmJpd2pJJlTL6FDPsx
+         lLCmjHYV2nB5y3kb/AeB2+wB0A1AGK3BHM6qIiUrYN61aY2TjqsV2yTzb1Op0bOGfi
+         HZB5ZD0QTyBIt0pM4FfN7rpX1JnGasaPJPguNsDNqjsM0Haf2WtC9twah8JMJY6KWN
+         momcwq3V/njyLKnjGY/wDQAFCBIMGK0jSGnje1XHBzqm1K9OgA1VJ65gwGbYm2wEob
+         enJov8aqWpuMLyGQtOYLUuf8NtQT5pVDVeTyAe54zDKVhrfka0ihSjZLsC9W8b4CFX
+         gHg3bOH4Nx0HQ==
+Date:   Mon, 25 Jan 2021 20:55:51 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
+        Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v4.1 08/11] xfs: flush eof/cowblocks if we can't reserve
+ quota for chown
+Message-ID: <20210126045551.GP7698@magnolia>
+References: <161142791950.2171939.3320927557987463636.stgit@magnolia>
+ <161142796398.2171939.8342732885181707528.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <161142796398.2171939.8342732885181707528.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-cmp() function is being referred to from within fsr/xfs_fsr.c. Hence
-this commit limits its scope to the current file.
+From: Darrick J. Wong <djwong@kernel.org>
 
-Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+If a file user, group, or project change is unable to reserve enough
+quota to handle the modification, try clearing whatever space the
+filesystem might have been hanging onto in the hopes of speeding up the
+filesystem.  The flushing behavior will become particularly important
+when we add deferred inode inactivation because that will increase the
+amount of space that isn't actively tied to user data.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fsr/xfs_fsr.c | 21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+v4.1: fix the unconventional return conventions here too
+---
+ fs/xfs/xfs_ioctl.c |   13 ++++++++++++-
+ fs/xfs/xfs_iops.c  |   14 ++++++++++++--
+ fs/xfs/xfs_qm.c    |   23 +++++++++++++++++------
+ fs/xfs/xfs_quota.h |    8 ++++----
+ 4 files changed, 45 insertions(+), 13 deletions(-)
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 635e4c70..b885395e 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -81,7 +81,6 @@ char * gettmpname(char *fname);
- char * getparent(char *fname);
- int fsrprintf(const char *fmt, ...);
- int read_fd_bmap(int, struct xfs_bstat *, int *);
--int cmp(const void *, const void *);
- static void tmp_init(char *mnt);
- static char * tmp_next(char *mnt);
- static void tmp_close(char *mnt);
-@@ -577,6 +576,16 @@ fsrall_cleanup(int timeout)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 3fbd98f61ea5..dab525c2437c 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1436,6 +1436,7 @@ xfs_ioctl_setattr(
+ 	struct xfs_trans	*tp;
+ 	struct xfs_dquot	*pdqp = NULL;
+ 	struct xfs_dquot	*olddquot = NULL;
++	bool			quota_retry = false;
+ 	int			code;
+ 
+ 	trace_xfs_ioctl_setattr(ip);
+@@ -1462,6 +1463,7 @@ xfs_ioctl_setattr(
+ 
+ 	xfs_ioctl_setattr_prepare_dax(ip, fa);
+ 
++retry:
+ 	tp = xfs_ioctl_setattr_get_trans(ip);
+ 	if (IS_ERR(tp)) {
+ 		code = PTR_ERR(tp);
+@@ -1470,10 +1472,19 @@ xfs_ioctl_setattr(
+ 
+ 	if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp) &&
+ 	    ip->i_d.di_projid != fa->fsx_projid) {
++		unsigned int	flags = 0;
++
++		if (capable(CAP_FOWNER))
++			flags |= XFS_QMOPT_FORCE_RES;
+ 		code = xfs_qm_vop_chown_reserve(tp, ip, NULL, NULL, pdqp,
+-				capable(CAP_FOWNER) ?  XFS_QMOPT_FORCE_RES : 0);
++				flags, &quota_retry);
+ 		if (code)	/* out of quota */
+ 			goto error_trans_cancel;
++		if (quota_retry) {
++			xfs_trans_cancel_qretry_dquots(tp, ip, NULL, NULL,
++					pdqp);
++			goto retry;
++		}
  	}
+ 
+ 	xfs_fill_fsxattr(ip, false, &old_fa);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index f1e21b6cfa48..907952009c2d 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -660,6 +660,7 @@ xfs_setattr_nonsize(
+ 	kgid_t			gid = GLOBAL_ROOT_GID, igid = GLOBAL_ROOT_GID;
+ 	struct xfs_dquot	*udqp = NULL, *gdqp = NULL;
+ 	struct xfs_dquot	*olddquot1 = NULL, *olddquot2 = NULL;
++	bool			quota_retry = false;
+ 
+ 	ASSERT((mask & ATTR_SIZE) == 0);
+ 
+@@ -700,6 +701,7 @@ xfs_setattr_nonsize(
+ 			return error;
+ 	}
+ 
++retry:
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
+ 	if (error)
+ 		goto out_dqrele;
+@@ -729,12 +731,20 @@ xfs_setattr_nonsize(
+ 		if (XFS_IS_QUOTA_RUNNING(mp) &&
+ 		    ((XFS_IS_UQUOTA_ON(mp) && !uid_eq(iuid, uid)) ||
+ 		     (XFS_IS_GQUOTA_ON(mp) && !gid_eq(igid, gid)))) {
++			unsigned int	flags = 0;
++
++			if (capable(CAP_FOWNER))
++				flags |= XFS_QMOPT_FORCE_RES;
+ 			ASSERT(tp);
+ 			error = xfs_qm_vop_chown_reserve(tp, ip, udqp, gdqp,
+-						NULL, capable(CAP_FOWNER) ?
+-						XFS_QMOPT_FORCE_RES : 0);
++					NULL, flags, &quota_retry);
+ 			if (error)	/* out of quota */
+ 				goto out_cancel;
++			if (quota_retry) {
++				xfs_trans_cancel_qretry_dquots(tp, ip, udqp,
++						gdqp, NULL);
++				goto retry;
++			}
+ 		}
+ 
+ 		/*
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index c134eb4aeaa8..4e02609c063d 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1795,7 +1795,8 @@ xfs_qm_vop_chown(
  }
  
-+/*
-+ * To compare bstat structs for qsort.
-+ */
-+static int
-+cmp(const void *s1, const void *s2)
-+{
-+	return( ((struct xfs_bulkstat *)s2)->bs_extents -
-+	        ((struct xfs_bulkstat *)s1)->bs_extents);
-+}
-+
  /*
-  * fsrfs -- reorganize a file system
+- * Quota reservations for setattr(AT_UID|AT_GID|AT_PROJID).
++ * Quota reservations for setattr(AT_UID|AT_GID|AT_PROJID).  This function has
++ * the same return behavior as xfs_trans_reserve_quota_nblks.
   */
-@@ -696,16 +705,6 @@ out0:
+ int
+ xfs_qm_vop_chown_reserve(
+@@ -1804,15 +1805,16 @@ xfs_qm_vop_chown_reserve(
+ 	struct xfs_dquot	*udqp,
+ 	struct xfs_dquot	*gdqp,
+ 	struct xfs_dquot	*pdqp,
+-	uint			flags)
++	unsigned int		flags,
++	bool			*retry)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	uint64_t		delblks;
+ 	unsigned int		blkflags;
+-	struct xfs_dquot	*udq_unres = NULL;
++	struct xfs_dquot	*udq_unres = NULL; /* old dquots */
+ 	struct xfs_dquot	*gdq_unres = NULL;
+ 	struct xfs_dquot	*pdq_unres = NULL;
+-	struct xfs_dquot	*udq_delblks = NULL;
++	struct xfs_dquot	*udq_delblks = NULL; /* new dquots */
+ 	struct xfs_dquot	*gdq_delblks = NULL;
+ 	struct xfs_dquot	*pdq_delblks = NULL;
+ 	int			error;
+@@ -1860,7 +1862,7 @@ xfs_qm_vop_chown_reserve(
+ 				udq_delblks, gdq_delblks, pdq_delblks,
+ 				ip->i_d.di_nblocks, 1, flags | blkflags);
+ 	if (error)
+-		return error;
++		goto err;
+ 
+ 	/*
+ 	 * Do the delayed blks reservations/unreservations now. Since, these
+@@ -1878,12 +1880,21 @@ xfs_qm_vop_chown_reserve(
+ 			    udq_delblks, gdq_delblks, pdq_delblks,
+ 			    (xfs_qcnt_t)delblks, 0, flags | blkflags);
+ 		if (error)
+-			return error;
++			goto err;
+ 		xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
+ 				udq_unres, gdq_unres, pdq_unres,
+ 				-((xfs_qcnt_t)delblks), 0, blkflags);
+ 	}
+ 
++	return 0;
++err:
++	/* We only allow one retry for EDQUOT/ENOSPC. */
++	if (*retry || (error != -EDQUOT && error != -ENOSPC)) {
++		*retry = false;
++		return error;
++	}
++
++	*retry = true;
  	return 0;
  }
  
--/*
-- * To compare bstat structs for qsort.
-- */
--int
--cmp(const void *s1, const void *s2)
--{
--	return( ((struct xfs_bulkstat *)s2)->bs_extents -
--	        ((struct xfs_bulkstat *)s1)->bs_extents);
--}
--
- /*
-  * reorganize by directory hierarchy.
-  * Stay in dev (a restriction based on structure of this program -- either
--- 
-2.29.2
-
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index c5bbe7e3e259..42b79d0829f7 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -103,9 +103,9 @@ extern void xfs_qm_vop_create_dqattach(struct xfs_trans *, struct xfs_inode *,
+ extern int xfs_qm_vop_rename_dqattach(struct xfs_inode **);
+ extern struct xfs_dquot *xfs_qm_vop_chown(struct xfs_trans *,
+ 		struct xfs_inode *, struct xfs_dquot **, struct xfs_dquot *);
+-extern int xfs_qm_vop_chown_reserve(struct xfs_trans *, struct xfs_inode *,
+-		struct xfs_dquot *, struct xfs_dquot *,
+-		struct xfs_dquot *, uint);
++int xfs_qm_vop_chown_reserve(struct xfs_trans *tp, struct xfs_inode *ip,
++		struct xfs_dquot *udqp, struct xfs_dquot *gdqp,
++		struct xfs_dquot *pdqp, unsigned int flags, bool *retry);
+ extern int xfs_qm_dqattach(struct xfs_inode *);
+ extern int xfs_qm_dqattach_locked(struct xfs_inode *ip, bool doalloc);
+ extern void xfs_qm_dqdetach(struct xfs_inode *);
+@@ -189,7 +189,7 @@ xfs_trans_cancel_qretry_dquots(
+ #define xfs_qm_vop_create_dqattach(tp, ip, u, g, p)
+ #define xfs_qm_vop_rename_dqattach(it)					(0)
+ #define xfs_qm_vop_chown(tp, ip, old, new)				(NULL)
+-#define xfs_qm_vop_chown_reserve(tp, ip, u, g, p, fl)			(0)
++#define xfs_qm_vop_chown_reserve(tp, ip, u, g, p, fl, retry)		(0)
+ #define xfs_qm_dqattach(ip)						(0)
+ #define xfs_qm_dqattach_locked(ip, fl)					(0)
+ #define xfs_qm_dqdetach(ip)
