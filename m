@@ -2,194 +2,215 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDCECC433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 13:31:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 267B7C433E6
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 17:24:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A76F32247F
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 13:31:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC31E2229C
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 17:24:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404356AbhAZNbv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Jan 2021 08:31:51 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:35550 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2404367AbhAZN1d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jan 2021 08:27:33 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611667566;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=4DxTYwltXo6SOHgCTUbVMWGCeoebM3A8z7epLTPRlgs=;
-        b=THYKGPJWPV7xiFaqYNIiVbexj1kQMzx5psZkvAfXaStz/PqWqV9kzIwdqwlwHoxfOGfrxk
-        /wtCA5UFsx1B/JKefvmmXsbilX+jr0gxB+TqYIXhRaAjLIUyrPw3lRA271Fn+uyHlIRP7P
-        b4PVNwfCKTPFOAQWsNehBTOi0y9mal0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-328-OxWTpTvoM_mGLaGvz4Vgkw-1; Tue, 26 Jan 2021 08:26:04 -0500
-X-MC-Unique: OxWTpTvoM_mGLaGvz4Vgkw-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0F3681005513;
-        Tue, 26 Jan 2021 13:26:03 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7AB3A60C6A;
-        Tue, 26 Jan 2021 13:26:02 +0000 (UTC)
-Date:   Tue, 26 Jan 2021 08:26:00 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        david@fromorbit.com
-Subject: Re: [PATCH 06/11] xfs: flush eof/cowblocks if we can't reserve quota
- for file blocks
-Message-ID: <20210126132600.GB2158252@bfoster>
-References: <161142791950.2171939.3320927557987463636.stgit@magnolia>
- <161142795294.2171939.2305516748220731694.stgit@magnolia>
- <20210124093953.GC670331@infradead.org>
- <20210125181623.GL2047559@bfoster>
- <20210125185735.GB7698@magnolia>
+        id S1728612AbhAZRYj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Jan 2021 12:24:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55384 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731798AbhAZGdh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jan 2021 01:33:37 -0500
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AA6DC061756
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 22:32:56 -0800 (PST)
+Received: by mail-pf1-x436.google.com with SMTP id i63so9899959pfg.7
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 22:32:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=f2y3tRispCdnrzAnaMKzGUWJKa7b7cfGubZ2uu6yCUg=;
+        b=soKHSUCqjOcfGAuIGEIJmkd5a7ko6XXyVVSezAoED3GPGTrwZUhxbSwrfDfdp87j8t
+         foWCLuL4WklccmIneKV1o6pFUGsvTDA6BeZq8RwPFyIl9ZUGI/P56OVCKSLjoyCdHaPS
+         fccX0QUWnKZSSIS8U+mJSLnDenJukR4FQRkwm8bfFi8BJvZCKqBM+4t8LsyAiEcy/bDe
+         7+3IYCZqUv9zWtjs61JplIu+U5Y6b5dTXCT2upvUUMzJi/wvsYVabpiCNaNLTG6+kt8k
+         J4qkt/db8EgMoSOWgjcqFhCRt0XL9w5lUxuLF+3fnk/v/S1nluOfRH8aYAHt999luErW
+         7a4g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=f2y3tRispCdnrzAnaMKzGUWJKa7b7cfGubZ2uu6yCUg=;
+        b=BJojQ8KiOTW0JcrLLgJU6B9WOmnH8YEJvN6vr8bIsVZqUXcbprulhFK25TxbZ1uLjz
+         MjKQVO6sZ9gsxS746sneHtwCeYHrvPWO6RZXsEIPmVHwfxrul1VDNdGEMiqI2r6YafHz
+         whFWrae2Oat4XJK/z6DUCF2P+TZXw7SRW8Hr3wCBk4vDjs2XINIxIZEDE05bE/r01Jnh
+         oUyn5XR27Pq9XClFsrawYTFqrih/5tgVYKMiNrQy69YBTiIK7Mgawpa0qQkWPg6vR3Bm
+         tjGp+V2MSMP3Aoojon1K09fqpX/nkmvbYflp01Ed0lC2sZTXxtG7Bhv7r4D8XJxb7Bxl
+         YU3g==
+X-Gm-Message-State: AOAM533P6UKP4EBq3wnaeSxq8WONbj1uagXoZzYAEPpRIe0fQuniTeFF
+        7q0BJ0ttwMo880UCHavqPB8v6qvQI9k=
+X-Google-Smtp-Source: ABdhPJwiRY8PmKS53W6C7KXBb3Mk9uVP37QDjcQMuS7EBYi5Vz72Xv8wTo8+1GNmRc8lWwVcvB7idA==
+X-Received: by 2002:a63:cb01:: with SMTP id p1mr4297742pgg.406.1611642775773;
+        Mon, 25 Jan 2021 22:32:55 -0800 (PST)
+Received: from localhost.localdomain ([122.167.33.191])
+        by smtp.gmail.com with ESMTPSA id w21sm17296578pff.220.2021.01.25.22.32.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Jan 2021 22:32:55 -0800 (PST)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>, djwong@kernel.org,
+        hch@lst.de, allison.henderson@oracle.com,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: [PATCH V15 02/16] xfs: Check for extent overflow when trivally adding a new extent
+Date:   Tue, 26 Jan 2021 12:02:18 +0530
+Message-Id: <20210126063232.3648053-3-chandanrlinux@gmail.com>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210126063232.3648053-1-chandanrlinux@gmail.com>
+References: <20210126063232.3648053-1-chandanrlinux@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210125185735.GB7698@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 25, 2021 at 10:57:35AM -0800, Darrick J. Wong wrote:
-> On Mon, Jan 25, 2021 at 01:16:23PM -0500, Brian Foster wrote:
-> > On Sun, Jan 24, 2021 at 09:39:53AM +0000, Christoph Hellwig wrote:
-> > > > +	/* We only allow one retry for EDQUOT/ENOSPC. */
-> > > > +	if (*retry || (error != -EDQUOT && error != -ENOSPC)) {
-> > > > +		*retry = false;
-> > > > +		return error;
-> > > > +	}
-> > > 
-> > > > +	/* Release resources, prepare for scan. */
-> > > > +	xfs_trans_cancel(*tpp);
-> > > > +	*tpp = NULL;
-> > > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > > +
-> > > > +	/* Try to free some quota for this file's dquots. */
-> > > > +	*retry = true;
-> > > > +	xfs_blockgc_free_quota(ip, 0);
-> > > > +	return 0;
-> > > 
-> > > I till have grave reservations about this calling conventions.  And if
-> > > you just remove the unlock and th call to xfs_blockgc_free_quota here
-> > > we don't equire a whole lot of boilerplate code in the callers while
-> > > making the code possible to reason about for a mere human.
-> > > 
-> > 
-> > I agree that the retry pattern is rather odd. I'm curious, is there a
-> > specific reason this scanning task has to execute outside of transaction
-> > context in the first place?
-> 
-> Dave didn't like the open-coded retry and told me to shrink the call
-> sites to:
-> 
-> 	error = xfs_trans_reserve_quota(...);
-> 	if (error)
-> 		goto out_trans_cancel;
-> 	if (quota_retry)
-> 		goto retry;
-> 
-> So here we are, slowly putting things almost all the way back to where
-> they were originally.  Now I have a little utility function:
-> 
-> /*
->  * Cancel a transaction and try to clear some space so that we can
->  * reserve some quota.  The caller must hold the ILOCK; when this
->  * function returns, the transaction will be cancelled and the ILOCK
->  * will have been released.
->  */
-> int
-> xfs_trans_cancel_qretry(
-> 	struct xfs_trans	*tp,
-> 	struct xfs_inode	*ip)
-> {
-> 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> 
-> 	xfs_trans_cancel(tp);
-> 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> 
-> 	return xfs_blockgc_free_quota(ip, 0);
-> }
-> 
-> Which I guess reduces the amount of call site boilerplate from 4 lines
-> to two, only now I've spent half of last week on this.
-> 
-> > Assuming it does because the underlying work
-> > may involve more transactions or whatnot, I'm wondering if this logic
-> > could be buried further down in the transaction allocation path.
-> > 
-> > For example, if we passed the quota reservation and inode down into a
-> > new variant of xfs_trans_alloc(), it could acquire the ilock and attempt
-> > the quota reservation as a final step (to avoid adding an extra
-> > unconditional ilock cycle). If quota res fails, iunlock and release the
-> > log res internally and perform the scan. From there, perhaps we could
-> > retry the quota reservation immediately without logres or the ilock by
-> > saving references to the dquots, and then only reacquire logres/ilock on
-> > success..? Just thinking out loud so that might require further
-> > thought...
-> 
-> Yes, that's certainly possible, and probably a good design goal to have
-> a xfs_trans_alloc_quota(tres, ip, whichfork, nblks, &tp) that one could
-> call to reserve a transaction, lock the inode, and reserve the
-> appropriate amounts of quota to handle mapping nblks into an inode fork.
-> 
-> However, there are complications that don't make this a trivial switch:
-> 
-> 1. Reflink and (new) swapext don't actually know how many blocks they
-> need to reserve until after they've grabbed the two ILOCKs, which means
-> that the wrapper is of no use here.
-> 
+When adding a new data extent (without modifying an inode's existing
+extents) the extent count increases only by 1. This commit checks for
+extent count overflow in such cases.
 
-IMO, it's preferable to define a clean/usable interface if we can find
-one that covers the majority of use cases and have to open code a
-handful of outliers than define a cumbersome interface that must be used
-everywhere to accommodate the outliers. Perhaps we'll find cleaner ways
-to deal with open coded outliers over time..? Perhaps (at least in the
-reflink case) we could attempt a worst case quota reservation with the
-helper, knowing that it will have invoked the scan on -EDQUOT, and then
-fall back to a more accurate open-coded xfs_trans_reserve_() call (that
-will no longer fall into retry loops on failure)..?
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c       | 6 ++++++
+ fs/xfs/libxfs/xfs_inode_fork.h | 6 ++++++
+ fs/xfs/xfs_bmap_item.c         | 7 +++++++
+ fs/xfs/xfs_bmap_util.c         | 5 +++++
+ fs/xfs/xfs_dquot.c             | 8 +++++++-
+ fs/xfs/xfs_iomap.c             | 5 +++++
+ fs/xfs/xfs_rtalloc.c           | 5 +++++
+ 7 files changed, 41 insertions(+), 1 deletion(-)
 
-> 2. For the remaining quota reservation callsites, you have to deal with
-> the bmap code that computes qblocks for reservation against the realtime
-> device.  This is opening a huge can of worms because:
-> 
-> 3. Realtime and quota are not supported, which means that none of that
-> code ever gets properly QA'd.  It would be totally stupid to rework most
-> of the quota reservation callsites and still leave that logic bomb.
-> This gigantic piece of technical debt needs to be paid off, either by
-> fixing the functionality and getting it under test, or by dropping rt
-> quota support completely and officially.
-> 
-
-I'm not following what you're referring to here. Can you point to
-examples in the code for reference, please?
-
-Brian
-
-> My guess is that fixing rt quota is probably going to take 10-15
-> patches, and doing more small cleanups to convert the callsites will be
-> another 10 or so.
-> 
-> 4. We're already past -rc5, and what started as two cleanup patchsets of
-> 13 is now four patchsets of 27 patches, and I /really/ would just like
-> to get these patches merged without expanding the scope of work even
-> further.
-> 
-> --D
-> 
-> > Brian
-> > 
-> 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index bc446418e227..32aeacf6f055 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4527,6 +4527,12 @@ xfs_bmapi_convert_delalloc(
+ 		return error;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
++
++	error = xfs_iext_count_may_overflow(ip, whichfork,
++			XFS_IEXT_ADD_NOSPLIT_CNT);
++	if (error)
++		goto out_trans_cancel;
++
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+ 	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &bma.icur, &bma.got) ||
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 0beb8e2a00be..7fc2b129a2e7 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -34,6 +34,12 @@ struct xfs_ifork {
+ #define	XFS_IFEXTENTS	0x02	/* All extent pointers are read in */
+ #define	XFS_IFBROOT	0x04	/* i_broot points to the bmap b-tree root */
+ 
++/*
++ * Worst-case increase in the fork extent count when we're adding a single
++ * extent to a fork and there's no possibility of splitting an existing mapping.
++ */
++#define XFS_IEXT_ADD_NOSPLIT_CNT	(1)
++
+ /*
+  * Fork handling.
+  */
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 93e4d8ae6e92..0534304ed0a7 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -508,6 +508,13 @@ xfs_bui_item_recover(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
++	if (bui_type == XFS_BMAP_MAP) {
++		error = xfs_iext_count_may_overflow(ip, whichfork,
++				XFS_IEXT_ADD_NOSPLIT_CNT);
++		if (error)
++			goto err_cancel;
++	}
++
+ 	count = bmap->me_len;
+ 	error = xfs_trans_log_finish_bmap_update(tp, budp, bui_type, ip,
+ 			whichfork, bmap->me_startoff, bmap->me_startblock,
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 7371a7f7c652..db44bfaabe88 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -822,6 +822,11 @@ xfs_alloc_file_space(
+ 		if (error)
+ 			goto error1;
+ 
++		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++				XFS_IEXT_ADD_NOSPLIT_CNT);
++		if (error)
++			goto error0;
++
+ 		xfs_trans_ijoin(tp, ip, 0);
+ 
+ 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 1d95ed387d66..175f544f7c45 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -314,8 +314,14 @@ xfs_dquot_disk_alloc(
+ 		return -ESRCH;
+ 	}
+ 
+-	/* Create the block mapping. */
+ 	xfs_trans_ijoin(tp, quotip, XFS_ILOCK_EXCL);
++
++	error = xfs_iext_count_may_overflow(quotip, XFS_DATA_FORK,
++			XFS_IEXT_ADD_NOSPLIT_CNT);
++	if (error)
++		return error;
++
++	/* Create the block mapping. */
+ 	error = xfs_bmapi_write(tp, quotip, dqp->q_fileoffset,
+ 			XFS_DQUOT_CLUSTER_SIZE_FSB, XFS_BMAPI_METADATA, 0, &map,
+ 			&nmaps);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 7b9ff824e82d..f53690febb22 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -250,6 +250,11 @@ xfs_iomap_write_direct(
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
++	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++			XFS_IEXT_ADD_NOSPLIT_CNT);
++	if (error)
++		goto out_trans_cancel;
++
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index b4999fb01ff7..161b0e8992ba 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -804,6 +804,11 @@ xfs_growfs_rt_alloc(
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 
++		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++				XFS_IEXT_ADD_NOSPLIT_CNT);
++		if (error)
++			goto out_trans_cancel;
++
+ 		/*
+ 		 * Allocate blocks to the bitmap file.
+ 		 */
+-- 
+2.29.2
 
