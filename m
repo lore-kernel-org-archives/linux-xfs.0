@@ -2,101 +2,129 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A35B5C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 06:38:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2117DC433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 12:59:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B026206F7
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 06:38:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C379A22EBF
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 12:59:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732316AbhAZGhr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Jan 2021 01:37:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55858 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732174AbhAZGfq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jan 2021 01:35:46 -0500
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FD9BC0617A7
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 22:33:23 -0800 (PST)
-Received: by mail-pl1-x62f.google.com with SMTP id b8so9236271plh.12
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 22:33:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=qL5piTAh1aSsUUaP1sY2S+E5lRi3K6MY3JGZu20fr+0=;
-        b=qdHT8QLXTz7VAgb6N6I4mrEnakz5Zk7Wye1w9OwAsRhwqOjGwt5UCfJ6ms3R02ST4T
-         vBBCgAm+EMUHesU+OAvd6Pe/S39ckTBKbXNd5wax2FCDLxTiyUDaBkVl/qAsQ3CIVfTY
-         vp3oAXM2h+45T91bYsCYhCvehUPPWna33uF1nGhHT9UG0kDXGhm3P+FO7IddQOo/ByoI
-         VfVbdeSacj99F+GstWC0fEihaGIngpUYmZvyJDkIpXDMbTV/EeZF1KEfht0xN5AF4wZ4
-         wxSmvFxKZLODIreYNoJv8qK/h68wcdd9baB+PZmOTasUC8Y/ANV8NDk1WoZzpGGn0jGh
-         3zAA==
+        id S2392499AbhAZM7D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Jan 2021 07:59:03 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:49434 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2404055AbhAZM6g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jan 2021 07:58:36 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611665826;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=6gokyX20rgR4YjLR/5QZrMGr4vkvE0xFuErdNlDjns4=;
+        b=JG0zeq9BdGCzy/oXz9KWoibHuRk2blfVmXNJ25ndEerzSVk+fG4Jpef7ZQX2vXp1yTVD1L
+        xKAxfAUTOEEgtA7AgH4yrSUbSaKNBnC66/aYZsyvyBIPDOy4J08R96cTsmdV6ueqov0K4c
+        cevO8EDUCP1w9s81BZeXkVxg/JhhLQ8=
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
+ [209.85.215.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-2-bxmuEJrbMuqdT0xbsefq8A-1; Tue, 26 Jan 2021 07:57:02 -0500
+X-MC-Unique: bxmuEJrbMuqdT0xbsefq8A-1
+Received: by mail-pg1-f198.google.com with SMTP id i124so8214563pgd.4
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Jan 2021 04:57:01 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=qL5piTAh1aSsUUaP1sY2S+E5lRi3K6MY3JGZu20fr+0=;
-        b=QxCOmrlKcSc1nRUtFklrTFLibXoGxrznWO0nDHN6D6QvehEMDrOnFLRSrpHMEyjeW9
-         6VZQg1kJOId0lAiootBJQtAUIoPluwdQtYTvsSjpS8QWxMzvMUT5B3Uh0ZkMpW2hQLdf
-         XjWQe5gtVBTZgDx9B+96dhu6zC49F5tXxKE2YIloSk72hK1+UTUuW7e0x4e2m0hXR5bI
-         EfPoq9cT5xBo0WtCej7klVljq+/D7ts6FgPFtGPhXIfzPXPWs8mGhvNfcoqK9t3CcT1H
-         nFxS9Ln13dpikbg4DDDPhB+M2d4+E4FM960xfRx/vNOXHFrtSwb5SxNZBKK9/CFpTD7S
-         plXw==
-X-Gm-Message-State: AOAM533tcttDkXo3P+4IqZsdgON/yu1+tZVcixp0C5kZPYGzgVHB2EwM
-        IyhEXeLb7XREDXD0eW5jq/o2XvdsyyA=
-X-Google-Smtp-Source: ABdhPJxqhu3+9gpdaBmHgUfCfAQvNZAYoURv3Ej9GAzFqzMEnPcfc8ihQtmVk+D5hT66j+r2dZysaQ==
-X-Received: by 2002:a17:902:348:b029:df:fa69:1ef0 with SMTP id 66-20020a1709020348b02900dffa691ef0mr4395944pld.41.1611642802722;
-        Mon, 25 Jan 2021 22:33:22 -0800 (PST)
-Received: from localhost.localdomain ([122.167.33.191])
-        by smtp.gmail.com with ESMTPSA id w21sm17296578pff.220.2021.01.25.22.33.20
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=6gokyX20rgR4YjLR/5QZrMGr4vkvE0xFuErdNlDjns4=;
+        b=pTmRbhCD+YDPDXU4HrJQKamk5wSZLX7hElJAdiIDtRbJjEMInfe3Aj1h3UEXE8QynV
+         cEqtOn1zjw0OjU9Tn59VPJsvfRUW61hZgf7V9oyaF6z3n0ZTZmJDUY2hH+kKt7micl2V
+         48wgs5A+Z74DsF33HyxsH5Pw9INaS9kxPdBQuUFjCU1FJtxN5XTkS/91zJfxtbnYttCX
+         k9kWtH1CXbmrN9gWXuAAfW9TgTD31zWHDrTYDm8m5AsGLe2pNk5ZY1coZ8B9pGNUyhfq
+         SlsccKpIVsqaoydO2782BGmmoRoU8BHEAkGVDWZC99b1dC4w54VRx5MWXBdoSyi/d3o0
+         b/Zw==
+X-Gm-Message-State: AOAM530sFa7+gzB+8z4XYlJylVID+L3VLYKwJi09BQ/uyhQ3ltfWwt51
+        KZK8/rx8mGd/i/Om2gtNBTtqaZFLQqRd7Iohl99f3xCQiaEivxgffbIxP3X8Pr6LqEX8HiTh6hK
+        5pwkVUWWlbAI0FJ/93QT0thIQJxwbjqwxU776roAVkjYOjSpLw5LfS38F+JsKUZO4TRD8ekWPSQ
+        ==
+X-Received: by 2002:a62:1b95:0:b029:19b:178f:84d7 with SMTP id b143-20020a621b950000b029019b178f84d7mr5277752pfb.70.1611665820600;
+        Tue, 26 Jan 2021 04:57:00 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJzTetDFrPUoSllEZZf7glpfY3TRqvrB1FHwH53QKLN9EssgVP9upOxlTTKTOqBBhsfkOhpBcA==
+X-Received: by 2002:a62:1b95:0:b029:19b:178f:84d7 with SMTP id b143-20020a621b950000b029019b178f84d7mr5277727pfb.70.1611665820211;
+        Tue, 26 Jan 2021 04:57:00 -0800 (PST)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id b203sm19243174pfb.11.2021.01.26.04.56.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Jan 2021 22:33:22 -0800 (PST)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
+        Tue, 26 Jan 2021 04:56:59 -0800 (PST)
+From:   Gao Xiang <hsiangkao@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>, djwong@kernel.org,
-        hch@lst.de, allison.henderson@oracle.com,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH V15 13/16] xfs: Remove duplicate assert statement in xfs_bmap_btalloc()
-Date:   Tue, 26 Jan 2021 12:02:29 +0530
-Message-Id: <20210126063232.3648053-14-chandanrlinux@gmail.com>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210126063232.3648053-1-chandanrlinux@gmail.com>
-References: <20210126063232.3648053-1-chandanrlinux@gmail.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH v6 0/7] xfs: support shrinking free space in the last AG
+Date:   Tue, 26 Jan 2021 20:56:14 +0800
+Message-Id: <20210126125621.3846735-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The check for verifying if the allocated extent is from an AG whose
-index is greater than or equal to that of tp->t_firstblock is already
-done a couple of statements earlier in the same function. Hence this
-commit removes the redundant assert statement.
+Hi folks,
 
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 1 -
- 1 file changed, 1 deletion(-)
+v5: https://lore.kernel.org/r/20210118083700.2384277-1-hsiangkao@redhat.com
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 8ebe5f13279c..0b15b1ff4bdd 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3699,7 +3699,6 @@ xfs_bmap_btalloc(
- 		ap->blkno = args.fsbno;
- 		if (ap->tp->t_firstblock == NULLFSBLOCK)
- 			ap->tp->t_firstblock = args.fsbno;
--		ASSERT(nullfb || fb_agno <= args.agno);
- 		ap->length = args.len;
- 		/*
- 		 * If the extent size hint is active, we tried to round the
+This patchset attempts to support shrinking free space in the last AG.
+This version addresses Darrick's review of v5, aside from that I'm not
+sure if seperating the whole shrink functionality is a good idea (I just
+tried but it seemed that ~90% is duplicated code.) IMHO, It'd be better
+to separate when needed (I'm investigating shrinking the whole AGs as
+well, it seems not too much invasive than the current approach...) Yet
+if people have strong opinion of this, I will resend the next version
+instead.
+
+Thanks for the time!
+
+Thanks,
+Gao Xiang
+
+xfsprogs: https://lore.kernel.org/r/20201028114010.545331-1-hsiangkao@redhat.com
+xfstests: https://lore.kernel.org/r/20201028230909.639698-1-hsiangkao@redhat.com
+
+Changes since v5 (Darrick):
+ - [3/7] use a separate patch to update lazy sb counters;
+ - [5/7] introduce the xfs_ag_shrink_space() helper first
+         as a seperate patch... I think it'd be better to "define
+         xfs_ag_shrink_space() as a stub that returns EOPNOSUPP..."
+ - [5/7] roll the transaction in advance so the new trans can be
+         canceled safely.
+ - [6/7] "nagcount != oagcount" ==> "nagcount < oagcount"
+
+Gao Xiang (7):
+  xfs: rename `new' to `delta' in xfs_growfs_data_private()
+  xfs: get rid of xfs_growfs_{data,log}_t
+  xfs: update lazy sb counters immediately for resizefs
+  xfs: hoist out xfs_resizefs_init_new_ags()
+  xfs: introduce xfs_ag_shrink_space()
+  xfs: support shrinking unused space in the last AG
+  xfs: add error injection for per-AG resv failure when shrinkfs
+
+ fs/xfs/libxfs/xfs_ag.c       | 113 +++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h       |   2 +
+ fs/xfs/libxfs/xfs_errortag.h |   4 +-
+ fs/xfs/xfs_error.c           |   2 +
+ fs/xfs/xfs_fsops.c           | 158 ++++++++++++++++++++++-------------
+ fs/xfs/xfs_fsops.h           |   4 +-
+ fs/xfs/xfs_ioctl.c           |   4 +-
+ fs/xfs/xfs_trans.c           |   1 -
+ 8 files changed, 224 insertions(+), 64 deletions(-)
+
 -- 
-2.29.2
+2.27.0
 
