@@ -7,92 +7,75 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE011C433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4B4DC4332B
 	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 10:21:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5701820757
+	by mail.kernel.org (Postfix) with ESMTP id B44F720731
 	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 10:21:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S313959AbhAZXC6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Jan 2021 18:02:58 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54698 "EHLO mail.kernel.org"
+        id S313957AbhAZXC5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Jan 2021 18:02:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54600 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725802AbhAZFAd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Jan 2021 00:00:33 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ECCAA22573;
-        Tue, 26 Jan 2021 04:59:52 +0000 (UTC)
+        id S1730497AbhAZFAL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Jan 2021 00:00:11 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EF57222B2C;
+        Tue, 26 Jan 2021 04:51:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611637193;
-        bh=gY1HrTBzr4j3Le3oF0SZAkabF7RMF6LqkNUvF/2JMGk=;
+        s=k20201202; t=1611636689;
+        bh=H5Bd24pqMbMofDbBIoiTClFy4h+2Zy2uKRkMvNh8H1o=;
         h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=mFNg3RqBxzl+saE/hfomnweHnsTPPVfir04XUS5EZ74rijg5R5bDlTHXb/aTpgH2E
-         XCMxg18GxP8oVEL7M8xP/h7cBWQHgBjRIznYQgYlV+/0GqjRQdL5tVMiaslYtwPPPR
-         sYeHjAOXCMUG5UlgXS5k0oB3MtH/VqJW4UMr3GZq72r/nB/2U3GmDnpqetlSdJPEFa
-         EZYUXZooj39LHotOf1/wKVUpi+HTVlicX2e5DUOk5glp6iM5ZqpBVBqSLXtHJkclIL
-         F0P9u04apvzixhu0XQJ14gWiREBqEZ5OcElR9R02Mb3Cg5I97sAMopYplQj/P/Elfb
-         kZvjxG8iXW7Lw==
-Date:   Mon, 25 Jan 2021 20:59:52 -0800
+        b=Tt4d7urCW102j+6wKVfF7c8tnMR5P2Dq6ytmYwkkOa/H6xassqPfJ8oYDoRcf4pDy
+         8ifJ+sIt8ElMZhFWButtZo3TZGzBPf/VrWnNxcabZ71JPOUlSFVa9JnBw/dEkSnYGr
+         0GPXQSNtDQdzhSVdlfTjEr57MzyXUlAAuNMhs4Rnvlkj+G292Ry4VIXahUe0MKXyR6
+         MW5WjrBUBIN6oMOXCTURmIGSZ5ztBDE5FocnUKCnR8IsrP9cRsOQcmjIrf3c9lv7sI
+         XSbWCDFDJ+8+AamJV1kexNXeV47i3vNs0Sp6+duYil3oz5c4x9RCSoh1l4e1uElLUq
+         olVuUZuQ+pYLQ==
+Date:   Mon, 25 Jan 2021 20:51:28 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com
-Subject: [PATCH v4.1 11/11] xfs: flush speculative space allocations when we
- run out of space
-Message-ID: <20210126045952.GR7698@magnolia>
-References: <161142791950.2171939.3320927557987463636.stgit@magnolia>
- <161142798066.2171939.9311024588681972086.stgit@magnolia>
+To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        hch@infradead.org, david@fromorbit.com
+Subject: [PATCH 5/4] xfs: fix up build warnings when quotas are disabled
+Message-ID: <20210126045128.GL7698@magnolia>
+References: <161142789504.2170981.1372317837643770452.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161142798066.2171939.9311024588681972086.stgit@magnolia>
+In-Reply-To: <161142789504.2170981.1372317837643770452.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a fs modification (creation, file write, reflink, etc.) is unable to
-reserve enough space to handle the modification, try clearing whatever
-space the filesystem might have been hanging onto in the hopes of
-speeding up the filesystem.  The flushing behavior will become
-particularly important when we add deferred inode inactivation because
-that will increase the amount of space that isn't actively tied to user
-data.
+Fix some build warnings on gcc 10.2 when quotas are disabled.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
-v4.1: don't free the transaction, since it's not pinning log resources
----
- fs/xfs/xfs_trans.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ fs/xfs/xfs_quota.h |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index e72730f85af1..79ef904c5698 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -20,6 +20,8 @@
- #include "xfs_trace.h"
- #include "xfs_error.h"
- #include "xfs_defer.h"
-+#include "xfs_inode.h"
-+#include "xfs_icache.h"
- 
- kmem_zone_t	*xfs_trans_zone;
- 
-@@ -285,6 +287,18 @@ xfs_trans_alloc(
- 	tp->t_firstblock = NULLFSBLOCK;
- 
- 	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
-+	if (error == -ENOSPC) {
-+		/*
-+		 * We weren't able to reserve enough space for the transaction.
-+		 * Flush the other speculative space allocations to free space.
-+		 * Do not perform a synchronous scan because callers can hold
-+		 * other locks.
-+		 */
-+		error = xfs_blockgc_free_space(mp, NULL);
-+		if (error)
-+			return error;
-+		error = xfs_trans_reserve(tp, resp, blocks, rtextents);
-+	}
- 	if (error) {
- 		xfs_trans_cancel(tp);
- 		return error;
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index 16a2e7adf4da..4cafc1c78879 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -130,7 +130,7 @@ xfs_qm_vop_dqalloc(struct xfs_inode *ip, kuid_t kuid, kgid_t kgid,
+ }
+ #define xfs_trans_dup_dqinfo(tp, tp2)
+ #define xfs_trans_free_dqinfo(tp)
+-#define xfs_trans_mod_dquot_byino(tp, ip, fields, delta)
++#define xfs_trans_mod_dquot_byino(tp, ip, fields, delta) do { } while (0)
+ #define xfs_trans_apply_dquot_deltas(tp)
+ #define xfs_trans_unreserve_and_mod_dquots(tp)
+ static inline int xfs_trans_reserve_quota_nblks(struct xfs_trans *tp,
+@@ -167,8 +167,8 @@ xfs_trans_reserve_quota_icreate(struct xfs_trans *tp, struct xfs_inode *dp,
+ #define xfs_qm_dqattach(ip)						(0)
+ #define xfs_qm_dqattach_locked(ip, fl)					(0)
+ #define xfs_qm_dqdetach(ip)
+-#define xfs_qm_dqrele(d)
+-#define xfs_qm_statvfs(ip, s)
++#define xfs_qm_dqrele(d)			do { (d) = (d); } while(0)
++#define xfs_qm_statvfs(ip, s)			do { } while(0)
+ #define xfs_qm_newmount(mp, a, b)					(0)
+ #define xfs_qm_mount_quotas(mp)
+ #define xfs_qm_unmount(mp)
