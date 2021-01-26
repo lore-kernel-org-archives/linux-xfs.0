@@ -7,167 +7,82 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96A1DC43381
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 10:20:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBFF4C433E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 10:19:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5344B2072C
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 10:20:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFF502076D
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 10:19:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S314281AbhAZXD1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Jan 2021 18:03:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55820 "EHLO mail.kernel.org"
+        id S313707AbhAZXDq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Jan 2021 18:03:46 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42860 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729892AbhAZFHA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Jan 2021 00:07:00 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6368922B2C;
-        Tue, 26 Jan 2021 05:06:20 +0000 (UTC)
+        id S2392644AbhAZR7g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Jan 2021 12:59:36 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F057422240;
+        Tue, 26 Jan 2021 17:58:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611637580;
-        bh=seNEh6F77jRSrNt3D2a6TaTjv1CcLsuAH5qhIgzk3y0=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=Ln5L1Tz8vliN5HKfNUJ/MJcASu2ZRaDvmAMNzu0YXZokHNKR0yR6hIKycZAPCX3v/
-         hoEg42MHIIbZXCIhqa39fqIHU9k2Dm1gsewry48/7p8FTeh+Knplvs171/nO171Bvr
-         sF2UdXXTl5lgsZg6raTWHX0YTXFQh2mqVntwNK6XdtkUFQPydC2X0/Kv9abkwj6DLo
-         Hnmct4OMBWGQmaDzp9dLsL4NkXXAmowdP00vVGgxE5PHzdTEuVPACzT5eXNwZBzS2H
-         u9PXC/X2VZ1JJTyN87fWXdlT1Cq7efgOVq7Ob99OrC/4m2Lf44BEu8bsQHNkbuBcj3
-         MS5YjSnEMX3+g==
-Date:   Mon, 25 Jan 2021 21:06:19 -0800
+        s=k20201202; t=1611683936;
+        bh=r4NFXtZvH4j/ZSA4bw3YwcYY0oEkZ+mU0yKX0PYo1Rs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=bDvyIYAjmmt5Bd8f7uxuNf/SJaXAXEW1MV7lwr7lwnhet7YFSRPLNdpOihwvwiCD+
+         zl2N6YGaqatM7YeLjEKq5gKCso/3Bncf8OzuWOTKeamfBLacRff4mTCkkcfzKe0V7I
+         0gYHcdL3O+eMfzLa2pLRPf2E7UgAJP+UepfdXq3OU4gWMr/+t30nzkKY0IVe1mhwnr
+         pN+/mPLSrADY3d+WBUEDuYq/rgMT/4NX1/gu260zsFLD82DcLRLVUnLG7N5BRba1H9
+         FYxlPGgk4h5Tdo9+dkipGu4BkcuHCsjr8kYt+fFkRDO0uGcILLWg+pagPLl6g5k/Q6
+         dEengOYnXOhBg==
+Date:   Tue, 26 Jan 2021 09:58:55 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com
-Subject: [PATCH 4/3] xfs: set WQ_SYSFS on all workqueues in debug mode
-Message-ID: <20210126050619.GT7698@magnolia>
-References: <161142798284.2173328.11591192629841647898.stgit@magnolia>
- <161142799960.2173328.12558377173737512680.stgit@magnolia>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, sandeen@sandeen.net
+Subject: Re: [PATCH 1/2] xfsprogs: xfs_fsr: Interpret arguments of qsort's
+ compare function correctly
+Message-ID: <20210126175855.GW7698@magnolia>
+References: <20210125095809.219833-1-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161142799960.2173328.12558377173737512680.stgit@magnolia>
+In-Reply-To: <20210125095809.219833-1-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jan 25, 2021 at 03:28:08PM +0530, Chandan Babu R wrote:
+> The first argument passed to qsort() in fsrfs() is an array of "struct
+> xfs_bulkstat". Hence the two arguments to the cmp() function must be
+> interpreted as being of type "struct xfs_bulkstat *" as against "struct
+> xfs_bstat *" that is being used to currently typecast them.
+> 
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> ---
+>  fsr/xfs_fsr.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index 77a10a1d..635e4c70 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -702,9 +702,8 @@ out0:
+>  int
+>  cmp(const void *s1, const void *s2)
+>  {
+> -	return( ((struct xfs_bstat *)s2)->bs_extents -
+> -	        ((struct xfs_bstat *)s1)->bs_extents);
+> -
+> +	return( ((struct xfs_bulkstat *)s2)->bs_extents -
+> +	        ((struct xfs_bulkstat *)s1)->bs_extents);
 
-When CONFIG_XFS_DEBUG=y, set WQ_SYSFS on all workqueues that we create
-so that we (developers) have a means to monitor cpu affinity and whatnot
-for background workers.  In the next patchset we'll expose knobs for
-some of the workqueues publicly and document it, but not now.
+It might be a good idea to check bs_version here to avoid future
+maintainer screwups <coughs this maintainer>
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_log.c       |    5 +++--
- fs/xfs/xfs_mru_cache.c |    2 +-
- fs/xfs/xfs_super.c     |   23 ++++++++++++++---------
- fs/xfs/xfs_super.h     |    6 ++++++
- 4 files changed, 24 insertions(+), 12 deletions(-)
+Thanks for catching this,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 58699881c100..0da019a4a7f9 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1493,8 +1493,9 @@ xlog_alloc_log(
- 	log->l_iclog->ic_prev = prev_iclog;	/* re-write 1st prev ptr */
- 
- 	log->l_ioend_workqueue = alloc_workqueue("xfs-log/%s",
--			WQ_MEM_RECLAIM | WQ_FREEZABLE | WQ_HIGHPRI, 0,
--			mp->m_super->s_id);
-+			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM |
-+				    WQ_HIGHPRI),
-+			0, mp->m_super->s_id);
- 	if (!log->l_ioend_workqueue)
- 		goto out_free_iclog;
- 
-diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
-index a06661dac5be..34c3b16f834f 100644
---- a/fs/xfs/xfs_mru_cache.c
-+++ b/fs/xfs/xfs_mru_cache.c
-@@ -294,7 +294,7 @@ int
- xfs_mru_cache_init(void)
- {
- 	xfs_mru_reap_wq = alloc_workqueue("xfs_mru_cache",
--				WQ_MEM_RECLAIM|WQ_FREEZABLE, 1);
-+			XFS_WQFLAGS(WQ_MEM_RECLAIM | WQ_FREEZABLE), 1);
- 	if (!xfs_mru_reap_wq)
- 		return -ENOMEM;
- 	return 0;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index aed74a3fc787..8959561351ca 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -495,33 +495,37 @@ xfs_init_mount_workqueues(
- 	struct xfs_mount	*mp)
- {
- 	mp->m_buf_workqueue = alloc_workqueue("xfs-buf/%s",
--			WQ_MEM_RECLAIM|WQ_FREEZABLE, 1, mp->m_super->s_id);
-+			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM),
-+			1, mp->m_super->s_id);
- 	if (!mp->m_buf_workqueue)
- 		goto out;
- 
- 	mp->m_unwritten_workqueue = alloc_workqueue("xfs-conv/%s",
--			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_super->s_id);
-+			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM),
-+			0, mp->m_super->s_id);
- 	if (!mp->m_unwritten_workqueue)
- 		goto out_destroy_buf;
- 
- 	mp->m_cil_workqueue = alloc_workqueue("xfs-cil/%s",
--			WQ_MEM_RECLAIM | WQ_FREEZABLE | WQ_UNBOUND,
-+			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM | WQ_UNBOUND),
- 			0, mp->m_super->s_id);
- 	if (!mp->m_cil_workqueue)
- 		goto out_destroy_unwritten;
- 
- 	mp->m_reclaim_workqueue = alloc_workqueue("xfs-reclaim/%s",
--			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_super->s_id);
-+			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM),
-+			0, mp->m_super->s_id);
- 	if (!mp->m_reclaim_workqueue)
- 		goto out_destroy_cil;
- 
- 	mp->m_eofblocks_workqueue = alloc_workqueue("xfs-eofblocks/%s",
--			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_super->s_id);
-+			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM),
-+			0, mp->m_super->s_id);
- 	if (!mp->m_eofblocks_workqueue)
- 		goto out_destroy_reclaim;
- 
--	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s", WQ_FREEZABLE, 0,
--					       mp->m_super->s_id);
-+	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s",
-+			XFS_WQFLAGS(WQ_FREEZABLE), 0, mp->m_super->s_id);
- 	if (!mp->m_sync_workqueue)
- 		goto out_destroy_eofb;
- 
-@@ -2085,11 +2089,12 @@ xfs_init_workqueues(void)
- 	 * max_active value for this workqueue.
- 	 */
- 	xfs_alloc_wq = alloc_workqueue("xfsalloc",
--			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0);
-+			XFS_WQFLAGS(WQ_MEM_RECLAIM | WQ_FREEZABLE), 0);
- 	if (!xfs_alloc_wq)
- 		return -ENOMEM;
- 
--	xfs_discard_wq = alloc_workqueue("xfsdiscard", WQ_UNBOUND, 0);
-+	xfs_discard_wq = alloc_workqueue("xfsdiscard", XFS_WQFLAGS(WQ_UNBOUND),
-+			0);
- 	if (!xfs_discard_wq)
- 		goto out_free_alloc_wq;
- 
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index b552cf6d3379..1ca484b8357f 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -75,6 +75,12 @@ extern void xfs_qm_exit(void);
- 				XFS_ASSERT_FATAL_STRING \
- 				XFS_DBG_STRING /* DBG must be last */
- 
-+#ifdef DEBUG
-+# define XFS_WQFLAGS(wqflags)	(WQ_SYSFS | (wqflags))
-+#else
-+# define XFS_WQFLAGS(wqflags)	(wqflags)
-+#endif
-+
- struct xfs_inode;
- struct xfs_mount;
- struct xfs_buftarg;
+--D
+
+>  }
+>  
+>  /*
+> -- 
+> 2.29.2
+> 
