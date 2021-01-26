@@ -2,117 +2,177 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D688C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 22:58:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF1CFC433E9
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 13:05:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1FB78227BF
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Jan 2021 22:58:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 983252312E
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Jan 2021 13:05:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732185AbhAYW5u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Jan 2021 17:57:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42354 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732154AbhAYW5o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jan 2021 17:57:44 -0500
-Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6D3FC061573
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Jan 2021 14:57:03 -0800 (PST)
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
-        (envelope-from <debbugs@buxtehude.debian.org>)
-        id 1l4An8-0000eI-Ma; Mon, 25 Jan 2021 22:57:02 +0000
-X-Loop: owner@bugs.debian.org
-Subject: Bug#897387: xfslibs-dev needs to include .la files
-Reply-To: Bastian Germann <bastiangermann@fishpost.de>,
-          897387@bugs.debian.org
-X-Loop: owner@bugs.debian.org
-X-Debian-PR-Message: followup 897387
-X-Debian-PR-Package: xfslibs-dev
-X-Debian-PR-Keywords: 
-References: <20180501190311.GA30840@bombadil.infradead.org> <20180501190311.GA30840@bombadil.infradead.org> <20180501190311.GA30840@bombadil.infradead.org>
-X-Debian-PR-Source: xfsprogs
-Received: via spool by 897387-submit@bugs.debian.org id=B897387.16116152941680
-          (code B ref 897387); Mon, 25 Jan 2021 22:57:01 +0000
-Received: (at 897387) by bugs.debian.org; 25 Jan 2021 22:54:54 +0000
-Received: from mail-wr1-x444.google.com ([2a00:1450:4864:20::444]:33056)
-        by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.92)
-        (envelope-from <bastiangermann@fishpost.de>)
-        id 1l4Al4-0000Qt-GM
-        for 897387@bugs.debian.org; Mon, 25 Jan 2021 22:54:54 +0000
-Received: by mail-wr1-x444.google.com with SMTP id 7so14607274wrz.0
-        for <897387@bugs.debian.org>; Mon, 25 Jan 2021 14:54:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fishpost-de.20150623.gappssmtp.com; s=20150623;
-        h=to:references:subject:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=RIYXj9oc6TApFxTYKjM0hi7AgQEg20CChJmWQ9GCFYs=;
-        b=fJgLeDSXhVM4y8mib9HQL2P+DNd2HRjXE4apQyAo5qbgarwQooD5uCLIQoToRT5eBO
-         FaCv7M3RTOUs4gYdC2DHjlm2b1JLpDeKuJy085CkB1d2r+Fv4MySA/xMa5jomnCz9R+5
-         27/fsdZek1ppjl/uE1fJF+M2PU39H6S2bpHsnzsoXsO3Jo1BecprjRXPsnUr7F6ybuY8
-         fv99XTsii3Toc/f7oIWhaJJ5wUJlQRyDvFKe+HHHL6Uh4ZN0c5QhmRgKRu38jEhsfpG+
-         Zf9udb66zsOzwE49aQfp7Se/nCMZrwIBP5G4g3ELkQ0bYjtSNONPPxMlhwmGdbijr6Nf
-         Naxg==
+        id S1727964AbhAZNFN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Jan 2021 08:05:13 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:56415 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2392452AbhAZM6m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jan 2021 07:58:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611665835;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KJdGSnBzSu18VjehFOROpG0iRoxMea584ylyyu64ZCg=;
+        b=XHGr+HDTa6hNB3IpGThv9jlBHvIJeBF1zEjZopfUoSP5GpPOlPg4sYtdP8DAY2uadlJj2s
+        dMhGCulVqlSgDWL24TfmMr5RdQhd/ApYBp6Thd4tXZWigac9Axhp4RFps6Uj076IpljthH
+        oFeHV8fAyioiQauvTEw5Cxm5z4Sr7P8=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-276-ff22R4nFPpeqPF4iAwFKGA-1; Tue, 26 Jan 2021 07:57:14 -0500
+X-MC-Unique: ff22R4nFPpeqPF4iAwFKGA-1
+Received: by mail-pf1-f198.google.com with SMTP id x206so8009240pfc.16
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Jan 2021 04:57:12 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:references:subject:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=RIYXj9oc6TApFxTYKjM0hi7AgQEg20CChJmWQ9GCFYs=;
-        b=sS64xmL9FS1pFgGDvH/OEvkD7iN5cJUulB3dLNk5o5obvIXxpKNCCt79ty+Rk99Hje
-         +Ho/LjU9QtKAzFLaMVC11mntxgR4nnvSBzW0tvRFJN6foAEBQ9mf/iGvjToIsNkB2D0t
-         vlWCskEzZBLQFlNcs0Ce9D0w8RLQc1iDy7YOdVcA0Ya/rCOg4mi4iFCyncVzioA2y5HE
-         sN3209dNwU5purXdsopTwKNV79jk9ymGAfe+xj3bIJzYK0WlYMJ7E6z7zdtGP2pjPmM1
-         yoz2EQf5714ux9HyTENgO479zZLAJldho0+dageFkgaZjIL8JB2eTasb3bWbEzBsC9LX
-         pagA==
-X-Gm-Message-State: AOAM533q4BgQxLqJ2iKd8v7C8SbzFGFosTokxNAS3ExYMTaRNy/JzAXQ
-        CC5MVpXKPVk4vQ4uJGdKziojCNtHChSAm2UR
-X-Google-Smtp-Source: ABdhPJxnl64wI/kYLGmmk7Roe7bGEnXPwlQiqk7GW5decOxhlq5LNT7HJuFgPnp+fJqjQyHvDUTDvg==
-X-Received: by 2002:adf:ec52:: with SMTP id w18mr3159220wrn.65.1611615291743;
-        Mon, 25 Jan 2021 14:54:51 -0800 (PST)
-Received: from ?IPv6:2003:d0:6f35:5400:9d4a:a26f:7cc6:6e27? (p200300d06f3554009d4aa26f7cc66e27.dip0.t-ipconnect.de. [2003:d0:6f35:5400:9d4a:a26f:7cc6:6e27])
-        by smtp.gmail.com with ESMTPSA id m8sm21840434wrv.37.2021.01.25.14.54.51
-        for <897387@bugs.debian.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Jan 2021 14:54:51 -0800 (PST)
-To:     897387@bugs.debian.org
-From:   Bastian Germann <bastiangermann@fishpost.de>
-Message-ID: <4c267c5f-df65-3c67-0f52-08bbe95928bf@fishpost.de>
-Date:   Mon, 25 Jan 2021 23:54:50 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=KJdGSnBzSu18VjehFOROpG0iRoxMea584ylyyu64ZCg=;
+        b=qYj4fc+JQbNusc7Wm6fm8v6avYBDKJInqu9c4oFuTNJhlVoElhIwC08o32eOZD37hJ
+         DUvpTm3ExeN2EEtgldvi2FO/2N8bRwJlAWasUuWo1N4LPS9jwtG5ZoNpOzaT1WzmSBDx
+         iNjqccieIZ8NT4DZmYEY9/OHBtzNqWBGMRFpZuxbTWcb8sWZCrLAn7nzsZkztm+XJWhF
+         DOf3yzloEBfoZzE1TnORegeJYdqay8/aloAKUZqP0VXtOn0sX3lohTMv+sPgZHgGX9D3
+         LcS4bcVv3hgxStaOLWClMWBbybql/L9AUBv/Z9z81T5PPCZKwHzIHmb+SHET4NYVcKyA
+         ztPA==
+X-Gm-Message-State: AOAM533u+94SbRK1eU85t9q4gPjr/tp9vwaRYFMgYkprFBjoHoQyCNBq
+        E90iZlvc4vfaCXzdieoutApzd4VsOen1OYjPezdNqHVInYMcR1vL7BGUkHbMfXzf4J+CtJ9Jnf9
+        X3gIiLDXJgoJv53REUjgNEOgmv8g4NGZ3cZRIjz3TwmqQhGX5980OxddiE75AiUbCWAs9FzXBsg
+        ==
+X-Received: by 2002:a65:6119:: with SMTP id z25mr5528669pgu.17.1611665831775;
+        Tue, 26 Jan 2021 04:57:11 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwdagUpQeiZlFQ7p3wAM5hWMfm2adzsyMkrKi3BY9LG/pxJwTi0HIhpBL11ImWzbk0GZZbhYQ==
+X-Received: by 2002:a65:6119:: with SMTP id z25mr5528645pgu.17.1611665831465;
+        Tue, 26 Jan 2021 04:57:11 -0800 (PST)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id b203sm19243174pfb.11.2021.01.26.04.57.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Jan 2021 04:57:11 -0800 (PST)
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Gao Xiang <hsiangkao@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH v6 2/7] xfs: get rid of xfs_growfs_{data,log}_t
+Date:   Tue, 26 Jan 2021 20:56:16 +0800
+Message-Id: <20210126125621.3846735-3-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20210126125621.3846735-1-hsiangkao@redhat.com>
+References: <20210126125621.3846735-1-hsiangkao@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180501190311.GA30840@bombadil.infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: de-DE-frami
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Tags: wontfix
+Such usage isn't encouraged by the kernel coding style. Leave the
+definitions alone in case of userspace users.
 
-On Tue, 1 May 2018 12:03:11 -0700 Matthew Wilcox <willy@infradead.org> 
-wrote:
-> Package: xfslibs-dev
-> Version: 4.15.1-1
-> 
-> trying to build the latest from
-> git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> 
->     [CC]    t_truncate_self
-> /bin/bash ../libtool --quiet --tag=CC --mode=link gcc t_truncate_self.c -o t_truncate_self -g -O2 -g -O2 -DDEBUG  -I../include -DVERSION=\"1.1.1\" -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall -DHAVE_FALLOCATE   -lattr /usr/lib/libhandle.la -lacl -lpthread   ../lib/libtest.la
-> libtool:   error: cannot find the library '/usr/lib/libhandle.la' or unhandled argument '/usr/lib/libhandle.la'
-> 
-> I downloaded the debian package of xfslibs-dev, built it, then
-> manually copied libhandle/libhandle.la into /lib and then I could build
-> xfstests-dev.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+---
+ fs/xfs/xfs_fsops.c | 12 ++++++------
+ fs/xfs/xfs_fsops.h |  4 ++--
+ fs/xfs/xfs_ioctl.c |  4 ++--
+ 3 files changed, 10 insertions(+), 10 deletions(-)
 
-Please see https://wiki.debian.org/ReleaseGoals/LAFileRemoval for a 
-reason not to include the .la file. In fact, it is explicitly removed 
-during the Debian package build. Most probably, you can configure 
-xfstests-dev not to require a libhandle.la file.
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 62600d78bbf1..a2a407039227 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -25,8 +25,8 @@
+  */
+ static int
+ xfs_growfs_data_private(
+-	xfs_mount_t		*mp,		/* mount point for filesystem */
+-	xfs_growfs_data_t	*in)		/* growfs data input struct */
++	struct xfs_mount	*mp,		/* mount point for filesystem */
++	struct xfs_growfs_data	*in)		/* growfs data input struct */
+ {
+ 	struct xfs_buf		*bp;
+ 	int			error;
+@@ -35,7 +35,7 @@ xfs_growfs_data_private(
+ 	xfs_rfsblock_t		nb, nb_div, nb_mod;
+ 	xfs_rfsblock_t		delta;
+ 	xfs_agnumber_t		oagcount;
+-	xfs_trans_t		*tp;
++	struct xfs_trans	*tp;
+ 	struct aghdr_init_data	id = {};
+ 
+ 	nb = in->newblocks;
+@@ -170,8 +170,8 @@ xfs_growfs_data_private(
+ 
+ static int
+ xfs_growfs_log_private(
+-	xfs_mount_t		*mp,	/* mount point for filesystem */
+-	xfs_growfs_log_t	*in)	/* growfs log input struct */
++	struct xfs_mount	*mp,	/* mount point for filesystem */
++	struct xfs_growfs_log	*in)	/* growfs log input struct */
+ {
+ 	xfs_extlen_t		nb;
+ 
+@@ -268,7 +268,7 @@ xfs_growfs_data(
+ int
+ xfs_growfs_log(
+ 	xfs_mount_t		*mp,
+-	xfs_growfs_log_t	*in)
++	struct xfs_growfs_log	*in)
+ {
+ 	int error;
+ 
+diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+index 92869f6ec8d3..2cffe51a31e8 100644
+--- a/fs/xfs/xfs_fsops.h
++++ b/fs/xfs/xfs_fsops.h
+@@ -6,8 +6,8 @@
+ #ifndef __XFS_FSOPS_H__
+ #define	__XFS_FSOPS_H__
+ 
+-extern int xfs_growfs_data(xfs_mount_t *mp, xfs_growfs_data_t *in);
+-extern int xfs_growfs_log(xfs_mount_t *mp, xfs_growfs_log_t *in);
++extern int xfs_growfs_data(struct xfs_mount *mp, struct xfs_growfs_data *in);
++extern int xfs_growfs_log(struct xfs_mount *mp, struct xfs_growfs_log *in);
+ extern void xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
+ extern int xfs_reserve_blocks(xfs_mount_t *mp, uint64_t *inval,
+ 				xfs_fsop_resblks_t *outval);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 3fbd98f61ea5..a62520f49ec5 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -2260,7 +2260,7 @@ xfs_file_ioctl(
+ 	}
+ 
+ 	case XFS_IOC_FSGROWFSDATA: {
+-		xfs_growfs_data_t in;
++		struct xfs_growfs_data in;
+ 
+ 		if (copy_from_user(&in, arg, sizeof(in)))
+ 			return -EFAULT;
+@@ -2274,7 +2274,7 @@ xfs_file_ioctl(
+ 	}
+ 
+ 	case XFS_IOC_FSGROWFSLOG: {
+-		xfs_growfs_log_t in;
++		struct xfs_growfs_log in;
+ 
+ 		if (copy_from_user(&in, arg, sizeof(in)))
+ 			return -EFAULT;
+-- 
+2.27.0
+
