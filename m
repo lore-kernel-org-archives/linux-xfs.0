@@ -2,325 +2,482 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25A4AC433E9
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 17:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EC70C433E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 18:00:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D923864DA9
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 17:21:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E48AB64D9A
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 18:00:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343553AbhA0RVN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Jan 2021 12:21:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40798 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233847AbhA0RUf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 27 Jan 2021 12:20:35 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 533DD64D99;
-        Wed, 27 Jan 2021 17:19:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611767994;
-        bh=E7HoDvLDBIPU0YObMTnIEYMs8EIMFfjSFRfGVZYpsgg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=WEsGN1mBPg5al0hQp2ZgIraLsGmNOzFMiMUgYCPWCkI2NQIo36rXxHukAOA3/X9/i
-         SPifMU0Ia5UTxfgdXovxrGhZtjtBxayPmIbgAsmEh3wNDwTjUxkc+bpF8eEqkgk0oz
-         IFn4DGs+FO0GMbzqfLIJL20EqIxoWZZGu4pOPeTghExD7CtBa4a6i4Kd386T4rexGO
-         von7MsmI8d15HXoO3tU4XLJRJdMLA3Py24H6rIFEieRUnroP5/iXRCg4RQ+CzfiujW
-         heJVE01itl571Q6nx8GrDubV2aC2nyx7SxaqXAA7w5QcXzZImtW+AuPc5aJXNwMcaB
-         oLN+68Gh4UnSQ==
-Date:   Wed, 27 Jan 2021 09:19:53 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        david@fromorbit.com
-Subject: Re: [PATCH 06/11] xfs: flush eof/cowblocks if we can't reserve quota
- for file blocks
-Message-ID: <20210127171953.GJ7698@magnolia>
-References: <161142791950.2171939.3320927557987463636.stgit@magnolia>
- <161142795294.2171939.2305516748220731694.stgit@magnolia>
- <20210124093953.GC670331@infradead.org>
- <20210125181623.GL2047559@bfoster>
- <20210125185735.GB7698@magnolia>
- <20210126132600.GB2158252@bfoster>
- <20210126211259.GB7698@magnolia>
- <20210127141910.GA2549435@bfoster>
+        id S1344381AbhA0R7n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Jan 2021 12:59:43 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49813 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1344363AbhA0R7P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jan 2021 12:59:15 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611770267;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=GXFii9oGNudyImX8YxkiQJt2C7edeJDfXDZ8OhGoRU4=;
+        b=FgoqBeeaQ1tPmNydjJpenkGK1Y/Me6fqoFkX5bh0HREfU0tt4fwy4Rx1a3aOO4yKTG4kKD
+        4bmpvHH4buAwe3LZXmZt8W3wI5J5u2KZ9bry20LirZt2zlqE6Hiy0V0S0FBYUqvE8kcfTG
+        l0siJob2W9etXFwP1SJjhQ3IUE6BfDU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-395-cjAWJ4itOBys_W8JW7HB5Q-1; Wed, 27 Jan 2021 12:57:38 -0500
+X-MC-Unique: cjAWJ4itOBys_W8JW7HB5Q-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7CEBC8066F1;
+        Wed, 27 Jan 2021 17:57:37 +0000 (UTC)
+Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E48F35D6A1;
+        Wed, 27 Jan 2021 17:57:36 +0000 (UTC)
+Date:   Wed, 27 Jan 2021 12:57:35 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RFC 1/1] xfs: refactor xfs_attr_set follow up
+Message-ID: <20210127175735.GA2555063@bfoster>
+References: <20210116081240.12478-1-allison.henderson@oracle.com>
+ <20210121184720.GC1793795@bfoster>
+ <ee542ded-3894-5511-bb83-beac5543ac6a@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210127141910.GA2549435@bfoster>
+In-Reply-To: <ee542ded-3894-5511-bb83-beac5543ac6a@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 27, 2021 at 09:19:10AM -0500, Brian Foster wrote:
-> On Tue, Jan 26, 2021 at 01:12:59PM -0800, Darrick J. Wong wrote:
-> > On Tue, Jan 26, 2021 at 08:26:00AM -0500, Brian Foster wrote:
-> > > On Mon, Jan 25, 2021 at 10:57:35AM -0800, Darrick J. Wong wrote:
-> > > > On Mon, Jan 25, 2021 at 01:16:23PM -0500, Brian Foster wrote:
-> > > > > On Sun, Jan 24, 2021 at 09:39:53AM +0000, Christoph Hellwig wrote:
-> > > > > > > +	/* We only allow one retry for EDQUOT/ENOSPC. */
-> > > > > > > +	if (*retry || (error != -EDQUOT && error != -ENOSPC)) {
-> > > > > > > +		*retry = false;
-> > > > > > > +		return error;
-> > > > > > > +	}
-> > > > > > 
-> > > > > > > +	/* Release resources, prepare for scan. */
-> > > > > > > +	xfs_trans_cancel(*tpp);
-> > > > > > > +	*tpp = NULL;
-> > > > > > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > > > > > +
-> > > > > > > +	/* Try to free some quota for this file's dquots. */
-> > > > > > > +	*retry = true;
-> > > > > > > +	xfs_blockgc_free_quota(ip, 0);
-> > > > > > > +	return 0;
-> > > > > > 
-> > > > > > I till have grave reservations about this calling conventions.  And if
-> > > > > > you just remove the unlock and th call to xfs_blockgc_free_quota here
-> > > > > > we don't equire a whole lot of boilerplate code in the callers while
-> > > > > > making the code possible to reason about for a mere human.
-> > > > > > 
-> > > > > 
-> > > > > I agree that the retry pattern is rather odd. I'm curious, is there a
-> > > > > specific reason this scanning task has to execute outside of transaction
-> > > > > context in the first place?
-> > > > 
-> > > > Dave didn't like the open-coded retry and told me to shrink the call
-> > > > sites to:
-> > > > 
-> > > > 	error = xfs_trans_reserve_quota(...);
-> > > > 	if (error)
-> > > > 		goto out_trans_cancel;
-> > > > 	if (quota_retry)
-> > > > 		goto retry;
-> > > > 
-> > > > So here we are, slowly putting things almost all the way back to where
-> > > > they were originally.  Now I have a little utility function:
-> > > > 
-> > > > /*
-> > > >  * Cancel a transaction and try to clear some space so that we can
-> > > >  * reserve some quota.  The caller must hold the ILOCK; when this
-> > > >  * function returns, the transaction will be cancelled and the ILOCK
-> > > >  * will have been released.
-> > > >  */
-> > > > int
-> > > > xfs_trans_cancel_qretry(
-> > > > 	struct xfs_trans	*tp,
-> > > > 	struct xfs_inode	*ip)
-> > > > {
-> > > > 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> > > > 
-> > > > 	xfs_trans_cancel(tp);
-> > > > 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > > 
-> > > > 	return xfs_blockgc_free_quota(ip, 0);
-> > > > }
-> > > > 
-> > > > Which I guess reduces the amount of call site boilerplate from 4 lines
-> > > > to two, only now I've spent half of last week on this.
-> > > > 
-> > > > > Assuming it does because the underlying work
-> > > > > may involve more transactions or whatnot, I'm wondering if this logic
-> > > > > could be buried further down in the transaction allocation path.
-> > > > > 
-> > > > > For example, if we passed the quota reservation and inode down into a
-> > > > > new variant of xfs_trans_alloc(), it could acquire the ilock and attempt
-> > > > > the quota reservation as a final step (to avoid adding an extra
-> > > > > unconditional ilock cycle). If quota res fails, iunlock and release the
-> > > > > log res internally and perform the scan. From there, perhaps we could
-> > > > > retry the quota reservation immediately without logres or the ilock by
-> > > > > saving references to the dquots, and then only reacquire logres/ilock on
-> > > > > success..? Just thinking out loud so that might require further
-> > > > > thought...
-> > > > 
-> > > > Yes, that's certainly possible, and probably a good design goal to have
-> > > > a xfs_trans_alloc_quota(tres, ip, whichfork, nblks, &tp) that one could
-> > > > call to reserve a transaction, lock the inode, and reserve the
-> > > > appropriate amounts of quota to handle mapping nblks into an inode fork.
-> > > > 
-> > > > However, there are complications that don't make this a trivial switch:
-> > > > 
-> > > > 1. Reflink and (new) swapext don't actually know how many blocks they
-> > > > need to reserve until after they've grabbed the two ILOCKs, which means
-> > > > that the wrapper is of no use here.
-> > > > 
+On Mon, Jan 25, 2021 at 03:22:59PM -0700, Allison Henderson wrote:
+> 
+> 
+> On 1/21/21 11:47 AM, Brian Foster wrote:
+> > On Sat, Jan 16, 2021 at 01:12:40AM -0700, Allison Henderson wrote:
+> > > Hi all,
 > > > 
-> > > IMO, it's preferable to define a clean/usable interface if we can find
-> > > one that covers the majority of use cases and have to open code a
-> > > handful of outliers than define a cumbersome interface that must be used
-> > > everywhere to accommodate the outliers. Perhaps we'll find cleaner ways
-> > > to deal with open coded outliers over time..?
-> > 
-> > Sure, we might, but let's not delay this cleanup, since these are the
-> > last two pieces that I need to get merged before I can send out deferred
-> > inode inactivation for review.  Deferred inode inactivation adds yet
-> > another button that we can push to reclaim free space when something hits
-> > EDQUOT/ENOSPC.
-> > 
-> 
-> Not sure I see the need to rush in a particular interface that multiple
-> reviewers have expressed reservations about just because there are more
-> patches coming built on top. That just creates more churn and cleanup
-> work for later, which means more review/test cycles and more work
-> indirectly for people who might have to deal with backports, etc. I'm
-> not dead set against what this patch does if there's no better
-> alternative, but IMO it's better to get it right than get it fast so we
-> should at least give fair consideration to some alternatives if ideas
-> are being presented.
-> 
-> > FWIW I did start down the path of building a better interface last week,
-> > but quickly became mired in (1) how do we allocate rt quota with a new
-> > interface and (2) do we care?  And then I started looking at what rt
-> > allocations do wrt quota and decided that fixing that (or even removing
-> > it) would be an entire patchset.
-> > 
-> > Hence I'm trying to constrain this patchset to updating the existing
-> > callsites to do the scan+retry, and no more.
-> > 
-> 
-> Ok, well I think that helps me understand the situation, but I'm still
-> not really following if/how that conflicts with any of the previous
-> suggestions (which is why I was asking for example code to consider).
-> 
-> > > Perhaps (at least in the
-> > > reflink case) we could attempt a worst case quota reservation with the
-> > > helper, knowing that it will have invoked the scan on -EDQUOT, and then
-> > > fall back to a more accurate open-coded xfs_trans_reserve_() call (that
-> > > will no longer fall into retry loops on failure)..?
-> > 
-> > Making a worst case reservation and backing off creates more ways for
-> > things to fail unnecessarily.
-> > 
-> > For a remap operation, the worst case is if the source file range has an
-> > allocated mapping and the destination file range is a hole, because we
-> > have to increment quota by the size of that allocated mapping.  If we
-> > run out of quota we'll have to flush the fs and try again.  If we fail
-> > the quota reservation a second time, the whole operation fails.
-> > 
-> 
-> Right...
-> 
-> > This is not good behavior for all the other cases -- if both mappings
-> > are holes or both allocated, we just failed an operation that would have
-> > made no net change to the quota allocations.  If the source file range
-> > is a hole and the destination range is allocated, we actually would have
-> > /decreased/ the quota usage, but instead we fail with EDQUOT.
-> > 
-> 
-> But that wasn't the suggestion. The suggestion was to do something along
-> the lines of the following in the reflink case:
-> 
-> 	error = xfs_trans_alloc_quota(..., ip, resblks, worstqres, ...);
-> 	if (error == -EDQUOT) {
-> 		worstqres = 0;
-> 		error = xfs_trans_alloc(..., resblks, ...);
-> 		...
-> 	}
-
-OH.  I misread that sentence with "fall back to a more accurate reserve
-call", and totally thought that your suggestion was to use
-xfs_trans_alloc_quota on its own, then later when we know how much quota
-we really want, using xfs_trans_reserve_quota to adjust the transaction.
-
-I am totally ok with doing it this way.
-
-> 	if (!worstqres) {
-> 		worstqres = <calculate actual quota res>
-> 		error = xfs_trans_reserve_quota(...);
-> 		if (error)
-> 			return error;
-> 	}
-> 
-> 	...
-> 
-> ... where the initial transaction allocation failure would have failed
-> on the worst case qres, but also would have run the internal reclaim
-> scan and retried before it returned. Therefore, we could still attempt
-> the open coded non-worst case reservation and either proceed or return
-> -EDQUOT with generally similar scan->retry semantics as this patch, just
-> without the open coded goto loops everywhere we attach quota reservation
-> to a transaction. This of course assumes that the
-> xfs_trans_alloc_quota() interface works well enough for the majority of
-> other cases without need for open coded reservation...
-
-I think it will.
-
-> > Right now the remap code handles those cases just fine, at a cost of
-> > open coded logic.
-> > 
-> > > > 2. For the remaining quota reservation callsites, you have to deal with
-> > > > the bmap code that computes qblocks for reservation against the realtime
-> > > > device.  This is opening a huge can of worms because:
-> > > > 
-> > > > 3. Realtime and quota are not supported, which means that none of that
-> > > > code ever gets properly QA'd.  It would be totally stupid to rework most
-> > > > of the quota reservation callsites and still leave that logic bomb.
-> > > > This gigantic piece of technical debt needs to be paid off, either by
-> > > > fixing the functionality and getting it under test, or by dropping rt
-> > > > quota support completely and officially.
-> > > > 
+> > > This is a follow up to Brians earlier patch
+> > > "[PATCH RFC] xfs: refactor xfs_attr_set() into incremental components"
 > > > 
-> > > I'm not following what you're referring to here. Can you point to
-> > > examples in the code for reference, please?
-> > 
-> > If you format a filesystem with realtime and mount it with -oquota, xfs
-> > will ignore the 'quota' mount option completely.  Some code exists to
-> > do rt quota accounting (xfs_alloc_file_space and xfs_iomap_write_direct
-> > are examples) but since we never allow rt+quota, the code coverage on
-> > that is 0%.
-> > 
-> 
-> Ok, but how is that any different for what this patch does?
-
-In the end there isn't any practical difference; I had to get over my
-reluctance to fiddle around with code that can't ever be run.  Whatever
-the state of rt quota, at least users can't get to it.
-
-With that... between the long delivery delays and replies arriving out
-of order and with unpredictable lag time, it might just be time for me
-to tidy up my patchsets and send a v5.
-
---D
-
-> Brian
-> 
-> > I've also noticed that those functions seem to have this odd behavior
-> > where for rt files, they'll reserve quota for the allocated blocks
-> > themselves but not the bmbt blocks; but for regular files, they reserve
-> > quota for both the allocated blocks and the bmbt blocks.  The quota code
-> > makes various allowances for transactions that try to commit quota count
-> > updates but have zero quota reservation attached to the transaction,
-> > which I /think/ could have been an attempt to work around that quirk.
-> > 
-> > I also just noticed that xfs_bmapi_reserve_delalloc only works with
-> > non-rt files.  I guess that's fine since rt files don't use the delalloc
-> > mechanism anyway (and I think the  reason they don't is that xfs can't
-> > currently do write-around to handle rextsize>1 filesystems) but that's
-> > another mess to sort.
-> > 
-> > (FWIW I'm slowly working through all those rt issues as part of maturing
-> > the rt reflink patchset, but that's at the far end of my dev tree...)
-> > 
-> > --D
-> > 
+> > > This patch resembles the earlier patch, but it is seated at the top of
+> > > the parent pointers set rather than the bottom to give a better
+> > > illustraion of what this approach might end up looking like in the
+> > > bigger picture.  This patch is both compiled and tested, and is meant to
+> > > be more of an exploratory effort than anything.
 > > > 
-> > > Brian
+> > > Most of the state management is collapsed into the *_iter functions
+> > > similar to Brians patch which collapsed them into the *_args routines.
+> > > Though there are a few states that a still in a few subfunctions.
 > > > 
-> > > > My guess is that fixing rt quota is probably going to take 10-15
-> > > > patches, and doing more small cleanups to convert the callsites will be
-> > > > another 10 or so.
-> > > > 
-> > > > 4. We're already past -rc5, and what started as two cleanup patchsets of
-> > > > 13 is now four patchsets of 27 patches, and I /really/ would just like
-> > > > to get these patches merged without expanding the scope of work even
-> > > > further.
-> > > > 
-> > > > --D
-> > > > 
-> > > > > Brian
-> > > > > 
-> > > > 
+> > > In anycase, I think it gives decent idea of what the solution might
+> > > look like in practice.  Questions, comments and feedback appreciated.
 > > > 
 > > 
+> > Thanks for the patch. By and large, I think the centralized state
+> > management of __xfs_attr_set_iter() is much more clear than the label
+> > management approach of jumping up and down through multiple levels of
+> > helper functions. For the most part, I'm able to walk through the iter
+> > function and follow the sequence of steps involved in the set. I did
+> > have some higher level comments on various parts of the patch,
+> > particularly where we seem to deviate from centralized state management.
+> > 
+> > Note that if we were to take this approach, a primary goal was to
+> > incrementally port the existing xfs_attr_set_args() implementation into
+> > states. For example, such that we could split the current monstrous
+> > xfs_attr_set() patch into multiple patches that introduce infrastructure
+> > first, and then convert the existing code a state or so at a time. That
+> > eliminates churn from factoring code into one scheme only to immediately
+> > refactor into another. It also facilitates testing because I think the
+> > rework should be able to maintain functionality across each step.
+> > 
+> > Porting on top of the whole thing certainly helps to get an advanced
+> > look at the final result. However, if we do use this approach and start
+> > getting into the details of individual states and whatnot, I do think it
+> > would be better to start breaking things down into smaller patches that
+> > replace some of the earlier code rather than use it as a baseline.
+> Sure, I think doing quick and dirty patches on top moves a little faster
+> just because the infastructure is already setup, and I'm not working through
+> merge conflicts, plus it cuts out the userspace side and just the misc nits
+> that are probably best done after the greater architectural descisions are
+> set.  The idea being to just establish an end goal of course.  It is tougher
+> to review like this though, maybe we can do a few spins of this and I'll try
+> to break it down into smaller chunks if that's ok.
 > 
+> 
+> > Further comments inline...
+> > 
+> > > Thanks!
+> > > Allison
+> > > 
+> > > ---
+> > >   fs/xfs/libxfs/xfs_attr.c | 596 +++++++++++++++++++----------------------------
+> > >   fs/xfs/libxfs/xfs_attr.h |   4 +-
+> > >   2 files changed, 247 insertions(+), 353 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > > index 6ba8f4b..356e35c 100644
+> > > --- a/fs/xfs/libxfs/xfs_attr.c
+> > > +++ b/fs/xfs/libxfs/xfs_attr.c
+...
+> > > @@ -274,108 +300,197 @@ xfs_attr_set_shortform(
+...
+> > > +int xfs_attr_set_iter(
+> > > +	struct xfs_attr_item	*attr)
+> > > +{
+> > > +	bool	done = true;
+> > > +	int 	error;
+> > > +
+> > > +	error =  __xfs_attr_set_iter(attr, &done);
+> > > +	if (error || done)
+> > > +		return error;
+> > > +
+> > > +	return xfs_attr_node_addname(attr);
+> > 
+> > Note that this was also intended to go away and get folded into the
+> > state code in __xfs_attr_set_iter(), I just left off here because it
+> > looked like there might have been opportunity to fall into the remove
+> > path, and that was getting a bit more involved than I wanted to. This
+> > variant looks a little different in that we can presumably fall into
+> > this function and then back into the state machine. Even if we didn't
+> > immediately reuse the remove path, I suspect we should probably continue
+> > chunking off the remainder of the operation into proper states.
+> Yes, I'm thinking maybe I could chop this down into a few patches that just
+> sort of hoist everything up and then try to collapse down any duplicated
+> code in a successive patch.  It'll create bit of a monster function at
+> first, but I think it might help us find the an arrangement we like.
+> 
+
+FWIW, I've seen enough that the design seems sane and reasonable to me.
+It addresses my primary gripe with the current implementation of
+spreading the state management code around a bit too much. My previous
+comments on this patch were around some of the detailed state breakdown
+and management logic, but I don't think that really requires seeing the
+whole thing completely done and functional to resolve. In fact, I'd
+rather not get too deep into detailed functional and state review with
+an RFC patch based on top of the current implementation, as this patch
+is, because that will just have to be repeated when broken down into
+smaller patches and rebased.
+
+Of course, that is not to say we shouldn't continue down this RFC path
+if you have other reasons to do so, aren't sold on the approach, have
+design concerns, etc. I'm not totally clear on where we stand on that
+tbh. This is just an FYI that if you want my .02, I think the design is
+reasonable and I'd probably reserve detailed review for a proper non-rfc
+series.
+
+Brian
+
+> Thanks for the reviews!  I know its complicated!!
+> Allison
+> 
+> > 
+> > Brian
+> > 
+> > > +}
+> > > +
+> > >   /*
+> > >    * Return EEXIST if attr is found, or ENOATTR if not
+> > >    */
+> > > @@ -773,145 +888,6 @@ xfs_attr_leaf_try_add(
+> > >   /*
+> > > - * Add a name to the leaf attribute list structure
+> > > - *
+> > > - * This leaf block cannot have a "remote" value, we only call this routine
+> > > - * if bmap_one_block() says there is only one block (ie: no remote blks).
+> > > - *
+> > > - * This routine is meant to function as a delayed operation, and may return
+> > > - * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
+> > > - * to handle this, and recall the function until a successful error code is
+> > > - * returned.
+> > > - */
+> > > -STATIC int
+> > > -xfs_attr_leaf_addname(
+> > > -	struct xfs_attr_item		*attr)
+> > > -{
+> > > -	struct xfs_da_args		*args = attr->xattri_da_args;
+> > > -	struct xfs_buf			*bp = NULL;
+> > > -	int				error, forkoff;
+> > > -	struct xfs_inode		*dp = args->dp;
+> > > -	struct xfs_mount		*mp = args->dp->i_mount;
+> > > -
+> > > -	/* State machine switch */
+> > > -	switch (attr->xattri_dela_state) {
+> > > -	case XFS_DAS_FLIP_LFLAG:
+> > > -		goto das_flip_flag;
+> > > -	case XFS_DAS_RM_LBLK:
+> > > -		goto das_rm_lblk;
+> > > -	default:
+> > > -		break;
+> > > -	}
+> > > -
+> > > -	/*
+> > > -	 * If there was an out-of-line value, allocate the blocks we
+> > > -	 * identified for its storage and copy the value.  This is done
+> > > -	 * after we create the attribute so that we don't overflow the
+> > > -	 * maximum size of a transaction and/or hit a deadlock.
+> > > -	 */
+> > > -
+> > > -	/* Open coded xfs_attr_rmtval_set without trans handling */
+> > > -	if ((attr->xattri_flags & XFS_DAC_LEAF_ADDNAME_INIT) == 0) {
+> > > -		attr->xattri_flags |= XFS_DAC_LEAF_ADDNAME_INIT;
+> > > -		if (args->rmtblkno > 0) {
+> > > -			error = xfs_attr_rmtval_find_space(attr);
+> > > -			if (error)
+> > > -				return error;
+> > > -		}
+> > > -	}
+> > > -
+> > > -	/*
+> > > -	 * Roll through the "value", allocating blocks on disk as
+> > > -	 * required.
+> > > -	 */
+> > > -	if (attr->xattri_blkcnt > 0) {
+> > > -		error = xfs_attr_rmtval_set_blk(attr);
+> > > -		if (error)
+> > > -			return error;
+> > > -
+> > > -		trace_xfs_das_state_return(attr->xattri_dela_state);
+> > > -		return -EAGAIN;
+> > > -	}
+> > > -
+> > > -	error = xfs_attr_rmtval_set_value(args);
+> > > -	if (error)
+> > > -		return error;
+> > > -
+> > > -	if (!(args->op_flags & XFS_DA_OP_RENAME)) {
+> > > -		/*
+> > > -		 * Added a "remote" value, just clear the incomplete flag.
+> > > -		 */
+> > > -		if (args->rmtblkno > 0)
+> > > -			error = xfs_attr3_leaf_clearflag(args);
+> > > -
+> > > -		return error;
+> > > -	}
+> > > -
+> > > -	/*
+> > > -	 * If this is an atomic rename operation, we must "flip" the incomplete
+> > > -	 * flags on the "new" and "old" attribute/value pairs so that one
+> > > -	 * disappears and one appears atomically.  Then we must remove the "old"
+> > > -	 * attribute/value pair.
+> > > -	 *
+> > > -	 * In a separate transaction, set the incomplete flag on the "old" attr
+> > > -	 * and clear the incomplete flag on the "new" attr.
+> > > -	 */
+> > > -	if (!xfs_hasdelattr(mp)) {
+> > > -		error = xfs_attr3_leaf_flipflags(args);
+> > > -		if (error)
+> > > -			return error;
+> > > -		/*
+> > > -		 * Commit the flag value change and start the next trans in series.
+> > > -		 */
+> > > -		attr->xattri_dela_state = XFS_DAS_FLIP_LFLAG;
+> > > -		trace_xfs_das_state_return(attr->xattri_dela_state);
+> > > -		return -EAGAIN;
+> > > -	}
+> > > -das_flip_flag:
+> > > -	/*
+> > > -	 * Dismantle the "old" attribute/value pair by removing a "remote" value
+> > > -	 * (if it exists).
+> > > -	 */
+> > > -	xfs_attr_restore_rmt_blk(args);
+> > > -
+> > > -	error = xfs_attr_rmtval_invalidate(args);
+> > > -	if (error)
+> > > -		return error;
+> > > -
+> > > -	/* Set state in case xfs_attr_rmtval_remove returns -EAGAIN */
+> > > -	attr->xattri_dela_state = XFS_DAS_RM_LBLK;
+> > > -das_rm_lblk:
+> > > -	if (args->rmtblkno) {
+> > > -		error = xfs_attr_rmtval_remove(attr);
+> > > -		if (error == -EAGAIN)
+> > > -			trace_xfs_das_state_return(attr->xattri_dela_state);
+> > > -		if (error)
+> > > -			return error;
+> > > -	}
+> > > -
+> > > -	/*
+> > > -	 * Read in the block containing the "old" attr, then remove the "old"
+> > > -	 * attr from that block (neat, huh!)
+> > > -	 */
+> > > -	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno,
+> > > -				   &bp);
+> > > -	if (error)
+> > > -		return error;
+> > > -
+> > > -	xfs_attr3_leaf_remove(bp, args);
+> > > -
+> > > -	/*
+> > > -	 * If the result is small enough, shrink it all into the inode.
+> > > -	 */
+> > > -	forkoff = xfs_attr_shortform_allfit(bp, dp);
+> > > -	if (forkoff)
+> > > -		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+> > > -		/* bp is gone due to xfs_da_shrink_inode */
+> > > -
+> > > -	return error;
+> > > -}
+> > > -
+> > > -/*
+> > >    * Return EEXIST if attr is found, or ENOATTR if not
+> > >    */
+> > >   STATIC int
+> > > @@ -1065,24 +1041,9 @@ xfs_attr_node_addname(
+> > >   	struct xfs_da_state_blk		*blk;
+> > >   	int				retval = 0;
+> > >   	int				error = 0;
+> > > -	struct xfs_mount		*mp = args->dp->i_mount;
+> > >   	trace_xfs_attr_node_addname(args);
+> > > -	/* State machine switch */
+> > > -	switch (attr->xattri_dela_state) {
+> > > -	case XFS_DAS_FLIP_NFLAG:
+> > > -		goto das_flip_flag;
+> > > -	case XFS_DAS_FOUND_NBLK:
+> > > -		goto das_found_nblk;
+> > > -	case XFS_DAS_ALLOC_NODE:
+> > > -		goto das_alloc_node;
+> > > -	case XFS_DAS_RM_NBLK:
+> > > -		goto das_rm_nblk;
+> > > -	default:
+> > > -		break;
+> > > -	}
+> > > -
+> > >   	/*
+> > >   	 * Search to see if name already exists, and get back a pointer
+> > >   	 * to where it should go.
+> > > @@ -1171,93 +1132,24 @@ xfs_attr_node_addname(
+> > >   	attr->xattri_dela_state = XFS_DAS_FOUND_NBLK;
+> > >   	trace_xfs_das_state_return(attr->xattri_dela_state);
+> > >   	return -EAGAIN;
+> > > -das_found_nblk:
+> > > -
+> > > -	/*
+> > > -	 * If there was an out-of-line value, allocate the blocks we
+> > > -	 * identified for its storage and copy the value.  This is done
+> > > -	 * after we create the attribute so that we don't overflow the
+> > > -	 * maximum size of a transaction and/or hit a deadlock.
+> > > -	 */
+> > > -	if (args->rmtblkno > 0) {
+> > > -		/* Open coded xfs_attr_rmtval_set without trans handling */
+> > > -		error = xfs_attr_rmtval_find_space(attr);
+> > > -		if (error)
+> > > -			return error;
+> > > -
+> > > -		/*
+> > > -		 * Roll through the "value", allocating blocks on disk as
+> > > -		 * required.  Set the state in case of -EAGAIN return code
+> > > -		 */
+> > > -		attr->xattri_dela_state = XFS_DAS_ALLOC_NODE;
+> > > -das_alloc_node:
+> > > -		if (attr->xattri_blkcnt > 0) {
+> > > -			error = xfs_attr_rmtval_set_blk(attr);
+> > > -			if (error)
+> > > -				return error;
+> > > -
+> > > -			trace_xfs_das_state_return(attr->xattri_dela_state);
+> > > -			return -EAGAIN;
+> > > -		}
+> > > -
+> > > -		error = xfs_attr_rmtval_set_value(args);
+> > > -		if (error)
+> > > -			return error;
+> > > -	}
+> > > -
+> > > -	if (!(args->op_flags & XFS_DA_OP_RENAME)) {
+> > > -		/*
+> > > -		 * Added a "remote" value, just clear the incomplete flag.
+> > > -		 */
+> > > -		if (args->rmtblkno > 0)
+> > > -			error = xfs_attr3_leaf_clearflag(args);
+> > > -		retval = error;
+> > > -		goto out;
+> > > -	}
+> > > -
+> > > -	/*
+> > > -	 * If this is an atomic rename operation, we must "flip" the incomplete
+> > > -	 * flags on the "new" and "old" attribute/value pairs so that one
+> > > -	 * disappears and one appears atomically.  Then we must remove the "old"
+> > > -	 * attribute/value pair.
+> > > -	 *
+> > > -	 * In a separate transaction, set the incomplete flag on the "old" attr
+> > > -	 * and clear the incomplete flag on the "new" attr.
+> > > -	 */
+> > > -	if (!xfs_hasdelattr(mp)) {
+> > > -		error = xfs_attr3_leaf_flipflags(args);
+> > > -		if (error)
+> > > -			goto out;
+> > > -		/*
+> > > -		 * Commit the flag value change and start the next trans in series
+> > > -		 */
+> > > -		attr->xattri_dela_state = XFS_DAS_FLIP_NFLAG;
+> > > -		trace_xfs_das_state_return(attr->xattri_dela_state);
+> > > -		return -EAGAIN;
+> > > -	}
+> > > -das_flip_flag:
+> > > -	/*
+> > > -	 * Dismantle the "old" attribute/value pair by removing a "remote" value
+> > > -	 * (if it exists).
+> > > -	 */
+> > > -	xfs_attr_restore_rmt_blk(args);
+> > > +out:
+> > > +	if (state)
+> > > +		xfs_da_state_free(state);
+> > > -	error = xfs_attr_rmtval_invalidate(args);
+> > >   	if (error)
+> > >   		return error;
+> > > +	return retval;
+> > > +}
+> > > -	/* Set state in case xfs_attr_rmtval_remove returns -EAGAIN */
+> > > -	attr->xattri_dela_state = XFS_DAS_RM_NBLK;
+> > > -das_rm_nblk:
+> > > -	if (args->rmtblkno) {
+> > > -		error = xfs_attr_rmtval_remove(attr);
+> > > -
+> > > -		if (error == -EAGAIN)
+> > > -			trace_xfs_das_state_return(attr->xattri_dela_state);
+> > > -
+> > > -		if (error)
+> > > -			return error;
+> > > -	}
+> > > +STATIC
+> > > +int xfs_attr_node_addname_work(
+> > > +	struct xfs_attr_item		*attr)
+> > > +{
+> > > +	struct xfs_da_args		*args = attr->xattri_da_args;
+> > > +	struct xfs_da_state		*state = NULL;
+> > > +	struct xfs_da_state_blk		*blk;
+> > > +	int				retval = 0;
+> > > +	int				error = 0;
+> > >   	/*
+> > >   	 * Re-find the "old" attribute entry after any split ops. The INCOMPLETE
+> > > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> > > index c80575a..050e5be 100644
+> > > --- a/fs/xfs/libxfs/xfs_attr.h
+> > > +++ b/fs/xfs/libxfs/xfs_attr.h
+> > > @@ -376,8 +376,10 @@ enum xfs_delattr_state {
+> > >   	XFS_DAS_UNINIT		= 0,  /* No state has been set yet */
+> > >   	XFS_DAS_RM_SHRINK,	      /* We are shrinking the tree */
+> > >   	XFS_DAS_FOUND_LBLK,	      /* We found leaf blk for attr */
+> > > +	XFS_DAS_ALLOC_LBLK,
+> > > +	XFS_DAS_SET_LBLK,
+> > >   	XFS_DAS_FOUND_NBLK,	      /* We found node blk for attr */
+> > > -	XFS_DAS_FLIP_LFLAG,	      /* Flipped leaf INCOMPLETE attr flag */
+> > > +	XFS_DAS_INVAL_LBLK,	      /* Invalidate leaf blks */
+> > >   	XFS_DAS_RM_LBLK,	      /* A rename is removing leaf blocks */
+> > >   	XFS_DAS_ALLOC_NODE,	      /* We are allocating node blocks */
+> > >   	XFS_DAS_FLIP_NFLAG,	      /* Flipped node INCOMPLETE attr flag */
+> > > -- 
+> > > 2.7.4
+> > > 
+> > 
+> 
+
