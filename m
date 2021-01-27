@@ -2,75 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 438BAC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 06:03:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE35FC433E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 06:03:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 046492070A
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 06:03:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FFF920719
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 06:03:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234982AbhA0GDW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Jan 2021 01:03:22 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56753 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232307AbhA0FVC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jan 2021 00:21:02 -0500
-Received: from dread.disaster.area (pa49-180-243-77.pa.nsw.optusnet.com.au [49.180.243.77])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BE9CB3C33EB;
-        Wed, 27 Jan 2021 16:20:10 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1l4dFR-002s4R-9G; Wed, 27 Jan 2021 16:20:09 +1100
-Date:   Wed, 27 Jan 2021 16:20:09 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: test message
-Message-ID: <20210127052009.GL4662@dread.disaster.area>
-References: <20210127033444.GG7698@magnolia>
+        id S234999AbhA0GDa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Jan 2021 01:03:30 -0500
+Received: from mail.hallyn.com ([178.63.66.53]:60370 "EHLO mail.hallyn.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233843AbhA0FwB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Jan 2021 00:52:01 -0500
+Received: by mail.hallyn.com (Postfix, from userid 1001)
+        id 55466864; Tue, 26 Jan 2021 23:50:12 -0600 (CST)
+Date:   Tue, 26 Jan 2021 23:50:12 -0600
+From:   "Serge E. Hallyn" <serge@hallyn.com>
+To:     Christian Brauner <christian.brauner@ubuntu.com>
+Cc:     "Eric W. Biederman" <ebiederm@xmission.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
+        John Johansen <john.johansen@canonical.com>,
+        James Morris <jmorris@namei.org>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Casey Schaufler <casey@schaufler-ca.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Geoffrey Thomas <geofft@ldpreload.com>,
+        Mrunal Patel <mpatel@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
+        Tycho Andersen <tycho@tycho.ws>,
+        David Howells <dhowells@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        =?iso-8859-1?Q?St=E9phane?= Graber <stgraber@ubuntu.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aleksa Sarai <cyphar@cyphar.com>,
+        Lennart Poettering <lennart@poettering.net>,
+        smbarber@chromium.org, Phil Estes <estesp@gmail.com>,
+        Serge Hallyn <serge@hallyn.com>,
+        Kees Cook <keescook@chromium.org>,
+        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        containers@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-integrity@vger.kernel.org, selinux@vger.kernel.org
+Subject: Re: [PATCH v6 23/40] exec: handle idmapped mounts
+Message-ID: <20210127055012.GA32153@mail.hallyn.com>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
+ <20210121131959.646623-24-christian.brauner@ubuntu.com>
+ <875z3l0y56.fsf@x220.int.ebiederm.org>
+ <20210125164404.aullgl3vlajgkef3@wittgenstein>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210127033444.GG7698@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=juxvdbeFDU67v5YkIhU0sw==:117 a=juxvdbeFDU67v5YkIhU0sw==:17
-        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=ccxrXydFMuOqjcuLF0cA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210125164404.aullgl3vlajgkef3@wittgenstein>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 26, 2021 at 07:34:44PM -0800, Darrick J. Wong wrote:
-> Hm.  I'm missing a substantial amount of list traffic, and I can't tell
-> if vger is still slow or if it's mail.kernel.org forwarding that's
-> busted.
+On Mon, Jan 25, 2021 at 05:44:04PM +0100, Christian Brauner wrote:
+> On Mon, Jan 25, 2021 at 10:39:01AM -0600, Eric W. Biederman wrote:
+> > Christian Brauner <christian.brauner@ubuntu.com> writes:
+> > 
+> > > When executing a setuid binary the kernel will verify in bprm_fill_uid()
+> > > that the inode has a mapping in the caller's user namespace before
+> > > setting the callers uid and gid. Let bprm_fill_uid() handle idmapped
+> > > mounts. If the inode is accessed through an idmapped mount it is mapped
+> > > according to the mount's user namespace. Afterwards the checks are
+> > > identical to non-idmapped mounts. If the initial user namespace is
+> > > passed nothing changes so non-idmapped mounts will see identical
+> > > behavior as before.
+> > 
+> > This does not handle the v3 capabilites xattr with embeds a uid.
+> > So at least at that level you are missing some critical conversions.
+> 
+> Thanks for looking. Vfs v3 caps are handled earlier in the series. I'm
+> not sure what you're referring to here. There are tests in xfstests that
+> verify vfs3 capability behavior.
+> 
+> Christian
 
-It took a minute to get to vger, half an hour to get through vger,
-and then another minute to get to me. You can see that in the
-headers here:
+So fwiw I just tested it manually as well.  Scenario:
 
-Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231340AbhA0FF0 (ORCPT <rfc822;david@fromorbit.com>);
-        Wed, 27 Jan 2021 00:05:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34390 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233401AbhA0Df0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Jan 2021 22:35:26 -0500
+uid 1000 user ubuntu
+uid 1001 user u2
+sudo ./mount-idmapped --map-mount b:1000:1001:1 /home/ubuntu/ /mnt
+su - u2
+  cp /usr/bin/id /mnt/
+  unshare -Urm
+    setcap cap_setuid=pe /mnt/id
+At this point, from init_user_ns,
+ubuntu@fscaps:~/mount-idmapped$ /home/u2/rcap /mnt/id
+v3, rootid is 1001
+ubuntu@fscaps:~/mount-idmapped$ /home/u2/rcap //home/ubuntu/id
+v3, rootid is 1000
 
-> Hmm, a message I just sent to my oracle address works fine, so I guess
-> it's vger that's broken?  Maybe?  I guess we'll see when this shows
-> up; the vger queue doesn't seem to have anything for xfs right now.
-
-yeah, vger still seems to be causing issues...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-serge
