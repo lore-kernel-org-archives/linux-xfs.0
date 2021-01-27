@@ -2,111 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=BAYES_00,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08928C433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 22:18:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0A8AC433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 23:31:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB67864D9F
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 22:18:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B66FD64D7F
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 23:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236007AbhA0WSt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Jan 2021 17:18:49 -0500
-Received: from relayout04-q02.e.movistar.es ([86.109.101.172]:26791 "EHLO
-        relayout04-q02.e.movistar.es" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236397AbhA0WSr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jan 2021 17:18:47 -0500
-X-Greylist: delayed 541 seconds by postgrey-1.27 at vger.kernel.org; Wed, 27 Jan 2021 17:18:46 EST
-Received: from relayout04-redir.e.movistar.es (unknown [86.109.101.204])
-        by relayout04-out.e.movistar.es (Postfix) with ESMTP id 4DQyRy2mZ0z20kG
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Jan 2021 23:09:02 +0100 (CET)
-Received: from Telcontar.valinor (39.red-83-53-59.dynamicip.rima-tde.net [83.53.59.39])
-        (using TLSv1.2 with cipher ADH-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: robin.listas2@telefonica.net)
-        by relayout04.e.movistar.es (Postfix) with ESMTPSA id 4DQyRt0XKjz11kJ
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Jan 2021 23:08:57 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id 96E173225EB
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Jan 2021 23:08:57 +0100 (CET)
-X-Virus-Scanned: amavisd-new at valinor
-Received: from Telcontar.valinor ([127.0.0.1])
-        by localhost (telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-        with LMTP id brviHXOIEDHE for <linux-xfs@vger.kernel.org>;
-        Wed, 27 Jan 2021 23:08:57 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id 7A3383225EA
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Jan 2021 23:08:57 +0100 (CET)
-Date:   Wed, 27 Jan 2021 23:08:50 +0100 (CET)
-From:   "Carlos E. R." <robin.listas@telefonica.net>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: test message
-In-Reply-To: <20210127033444.GG7698@magnolia>
-Message-ID: <19702ced-8be-213f-a32-93354dd492c@telefonica.net>
-References: <20210127033444.GG7698@magnolia>
+        id S231695AbhA0XbN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Jan 2021 18:31:13 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:50298 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233243AbhA0Xa2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jan 2021 18:30:28 -0500
+Received: from dread.disaster.area (pa49-181-52-82.pa.nsw.optusnet.com.au [49.181.52.82])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 0EFB7108C00;
+        Thu, 28 Jan 2021 10:29:44 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1l4uFq-003A3H-Fc; Thu, 28 Jan 2021 10:29:42 +1100
+Date:   Thu, 28 Jan 2021 10:29:42 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/3] xfs: set WQ_SYSFS on all workqueues in debug mode
+Message-ID: <20210127232942.GM4662@dread.disaster.area>
+References: <161142798284.2173328.11591192629841647898.stgit@magnolia>
+ <161142799960.2173328.12558377173737512680.stgit@magnolia>
+ <20210126050619.GT7698@magnolia>
+ <20210127170306.GC1730140@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-X-TnetOut-Country: IP: 83.53.59.39 | Country: ES
-X-TnetOut-Information: AntiSPAM and AntiVIRUS on relayout04
-X-TnetOut-MsgID: 4DQyRt0XKjz11kJ.A1E72
-X-TnetOut-SpamCheck: no es spam (whitelisted), clean
-X-TnetOut-From: robin.listas@telefonica.net
-X-TnetOut-Watermark: 1612390140.81335@lPTWWGOX3jgOUN5aDMSdpw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210127170306.GC1730140@infradead.org>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
+        a=7pwokN52O8ERr2y46pWGmQ==:117 a=7pwokN52O8ERr2y46pWGmQ==:17
+        a=kj9zAlcOel0A:10 a=EmqxpYm9HcoA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=nvjG-RciOjDVOkIEdOEA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Wed, Jan 27, 2021 at 05:03:06PM +0000, Christoph Hellwig wrote:
+> On Mon, Jan 25, 2021 at 09:06:19PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > When CONFIG_XFS_DEBUG=y, set WQ_SYSFS on all workqueues that we create
+> > so that we (developers) have a means to monitor cpu affinity and whatnot
+> > for background workers.  In the next patchset we'll expose knobs for
+> > some of the workqueues publicly and document it, but not now.
+> 
+> I don't really think this is a very good idea.  If we want something like
+> this it should be kernel-wide and coordinated with the workqueue 
+> maintainer, but I'm a little doubtful about the use case.
 
+I don't think it is particular useful kernel wide. If it was, the
+maintainer wouldn't have introduced a per-workqueue flag for this
+functionality.
 
+The reality is that very few workqueues in the system can expand out
+into running thousands of kworker threads like the XFS workqueues
+often do. And, really, there's nothing useful a typical user can do
+at this point with the workqueue knobs to "tune" the behaviour - the
+visibility/control the workqueue sysfs knobs provide at this point
+is really only useful to XFS developers running tests in controlled
+conditions...
 
-On Tuesday, 2021-01-26 at 19:34 -0800, Darrick J. Wong wrote:
-
-> Hm.  I'm missing a substantial amount of list traffic, and I can't tell
-> if vger is still slow or if it's mail.kernel.org forwarding that's
-> busted.
->
-> Hmm, a message I just sent to my oracle address works fine, so I guess
-> it's vger that's broken?  Maybe?  I guess we'll see when this shows
-> up; the vger queue doesn't seem to have anything for xfs right now.
->
-> <grumble>
-
-I see your post took an hour and a half to arrive to me.
-
-
-(2021-01-27T03:34:44+00:00 UTC)    Tue, 26 Jan 2021 19:34:44 -0800  Sent.
-
-(2021-01-27T03:34:45+00:00 UTC)    Wed, 27 Jan 2021 03:34:45 +0000 (UTC)       mail.kernel.org (Postfix) got it
-
-(2021-01-27T03:35:26+00:00 UTC)    Tue, 26 Jan 2021 22:35:26 -0500             vger.kernel.org with ESMTP got it from mail.kernel.org ([198.145.29.99]:34390)
-
-(2021-01-27T05:05:26+00:00 UTC)    Wed, 27 Jan 2021 00:05:26 -0500             vger.kernel.org via listexpand got it from (majordomo@vger.kernel.org)
-
-(2021-01-27T05:06:09+00:00 UTC)    Wed, 27 Jan 2021 06:06:09 +0100 (CET)       relayin02.e.movistar.es (Postfix) with ESMTP got it from vger.kernel.org ([23.128.96.18])
-
-
-I used this command to normalize timestamps:
-
-cer@Telcontar:~> TZ=UTC date --iso-8601=seconds -d "Wed, 27 Jan 2021 06:06:09 +0100"
-2021-01-27T05:06:09+00:00
-cer@Telcontar:~>
-
-
-
-- -- 
 Cheers,
-        Carlos E. R.
-        (from openSUSE 15.2 x86_64 at Telcontar)
 
------BEGIN PGP SIGNATURE-----
-
-iHoEARECADoWIQQZEb51mJKK1KpcU/W1MxgcbY1H1QUCYBHkchwccm9iaW4ubGlz
-dGFzQHRlbGVmb25pY2EubmV0AAoJELUzGBxtjUfVA6AAnRpaN1Np9g4moqR3ulIj
-aKTeJd9gAJ9tAE4r0jiAo4+tH/koS/dkwi34ZA==
-=Wewu
------END PGP SIGNATURE-----
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
