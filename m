@@ -2,136 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB548C433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 07:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21945C433E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 09:09:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE9E42065D
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 07:33:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA47620756
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Jan 2021 09:09:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234207AbhA0Hcm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Jan 2021 02:32:42 -0500
-Received: from ozlabs.org ([203.11.71.1]:45449 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S317618AbhA0AZ2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Jan 2021 19:25:28 -0500
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4DQPVz6zzKz9sVn;
-        Wed, 27 Jan 2021 11:24:43 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1611707084;
-        bh=wxcrmcFKLcpmBfDwHHqxzsVjsKMNHYMHtVTwR7K7A8M=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=KBqDiHsTqz6q07nKZ/c4wL2/JyZRz3SAZNgRtdXBQ7TPEhQfFbiuPew74EIRRu73U
-         m+quntsAzwvjgIaHUsJEOI81gmx2vWNNeXC1hGM3cF2UcX8MLxNsKOOcky60sOWBqD
-         H7ZdowInjEY9Pk+RfrV7TIDivRmnlwKy/0fyvV7HulDdcDkWi+wF/hJsWUiA2NZTke
-         2MCG8cEkScqna03raVHJMeU09ViL4TAMmoY2Lh1fsW/k9bOLlKSG6cSTRJ07qF5qwr
-         BCcH6U1CwDHIFsy5d/GU0wLD9EMLt7NidO9zQhvQK4OAsHBscanrI693mrFXSxbf9e
-         3jwctmL3DyfsQ==
-Date:   Wed, 27 Jan 2021 11:24:41 +1100
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     Christian Brauner <christian@brauner.io>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc:     Christian Brauner <christian.brauner@ubuntu.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: Re: linux-next: manual merge of the pidfd tree with the xfs tree
-Message-ID: <20210127112441.1d07c1d4@canb.auug.org.au>
-In-Reply-To: <20210125171414.41ed957a@canb.auug.org.au>
-References: <20210125171414.41ed957a@canb.auug.org.au>
+        id S232134AbhA0JJB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Jan 2021 04:09:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59784 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232723AbhA0JGg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jan 2021 04:06:36 -0500
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 371B8C061793
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Jan 2021 01:05:55 -0800 (PST)
+Received: by mail-pl1-x62d.google.com with SMTP id u11so664879plg.13
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Jan 2021 01:05:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=FlRBrXghcoL+QMaCJ226ytHaCVFUZumYdVE9mAWKET0=;
+        b=B/Jr7xkOugvS4sC+bhGkVYPuo2Bm2B8hEnFFq3F9a3HKBJtDC2i/1Zz3NGUWiEs3hZ
+         Nxw4PXIqromF3rZATC3NCjBLGjgoHiuwkRWQlEHEEr4VrGaAupFmRQf6/HpCloUVIVSM
+         cyWLe0pbh2DyqcutBSkvDoEev66jrBNh3gINOLxcCm8jifeYbTwYEOSILC41qFM2VS8s
+         ZEEQeUkhRb3zS1RTBeJ/mO/OlLETZ3KWMCAhXIhohficLBdpPJc7FQlYDmZF2OhSxmAz
+         A4641MCdxylEGJX6jTQOJcVqo39ybbOuU43X74BzsJA2vOmOrPiDTCB6k060VZbhpIVF
+         O2oQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=FlRBrXghcoL+QMaCJ226ytHaCVFUZumYdVE9mAWKET0=;
+        b=f57cUQWisiCieR3w+EjUVFZdJDagZ6MfYkHVT+ZfazDsvbevqgexbmEcw5EwUr+9sO
+         NbmYefAfKdRqTi1M6oXkjwj73oS7vQTnz4925T12avbUSIrEbnQd7xc9qPzkULT2Bif5
+         2tcYt53lvJKTn95wNclE85tJuRalHljmLYBs10cHnVdO1MpXS33I+ccdCgqr3TMe+c95
+         Iyr99OtWq4t0SclK2fJAwfP47ZWlGX4uGDRKqVYBnmpuyVMXiP804clCqfU9UIwxeTnB
+         gT+mclCylaZk7h1TofjfTjkkEVbSaxNXoJwoZhyNRUZxBvaNDqZh8T9DzC0LvvyG9z26
+         uSQA==
+X-Gm-Message-State: AOAM533l/FtM4a3odY2oJ5u6Yn4LPCkrOrLRnhzec5ZUck1+MeU9rmjZ
+        ejWNEEUVFNNU7i7Km2QAGSDA/D0MwCc=
+X-Google-Smtp-Source: ABdhPJzLEHPnXA4svfNxKxCCPIof/6VywcUni4o0uVQ80IlKfRWPsejO5rKVJgab9jEH/dIg2vAyXw==
+X-Received: by 2002:a17:902:aa8f:b029:df:c8a9:f8b4 with SMTP id d15-20020a170902aa8fb02900dfc8a9f8b4mr10435696plr.48.1611738354659;
+        Wed, 27 Jan 2021 01:05:54 -0800 (PST)
+Received: from localhost.localdomain ([122.171.171.5])
+        by smtp.gmail.com with ESMTPSA id c3sm1711830pfj.105.2021.01.27.01.05.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Jan 2021 01:05:54 -0800 (PST)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>, djwong@kernel.org,
+        allison.henderson@oracle.com, kernel test robot <lkp@intel.com>
+Subject: [PATCH] xfs: Fix 'set but not used' warning in xfs_bmap_compute_alignments()
+Date:   Wed, 27 Jan 2021 14:35:37 +0530
+Message-Id: <20210127090537.2640164-1-chandanrlinux@gmail.com>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/is=.Kudvs87+PhegErpkY=s";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/is=.Kudvs87+PhegErpkY=s
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+With both CONFIG_XFS_DEBUG and CONFIG_XFS_WARN disabled, the only reference to
+local variable "error" in xfs_bmap_compute_alignments() gets eliminated during
+pre-processing stage of the compilation process. This causes the compiler to
+generate a "set but not used" warning.
 
-Hi all,
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+---
+This patch is applicable on top of current xfs-linux/for-next branch.
 
-On Mon, 25 Jan 2021 17:14:14 +1100 Stephen Rothwell <sfr@canb.auug.org.au> =
-wrote:
->
-> Today's linux-next merge of the pidfd tree got a conflict in:
->=20
->   fs/xfs/xfs_inode.c
->=20
-> between commit:
->=20
->   01ea173e103e ("xfs: fix up non-directory creation in SGID directories")
->=20
-> from the xfs tree and commit:
->=20
->   f736d93d76d3 ("xfs: support idmapped mounts")
->=20
-> from the pidfd tree.
->=20
-> I fixed it up (see below) and can carry the fix as necessary. This
-> is now fixed as far as linux-next is concerned, but any non trivial
-> conflicts should be mentioned to your upstream maintainer when your tree
-> is submitted for merging.  You may also want to consider cooperating
-> with the maintainer of the conflicting tree to minimise any particularly
-> complex conflicts.
->=20
-> diff --cc fs/xfs/xfs_inode.c
-> index e2a1db4cee43,95b7f2ba4e06..000000000000
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@@ -809,13 -810,13 +810,13 @@@ xfs_init_new_inode
->   	inode->i_rdev =3D rdev;
->   	ip->i_d.di_projid =3D prid;
->  =20
->  -	if (pip && XFS_INHERIT_GID(pip)) {
->  -		inode->i_gid =3D VFS_I(pip)->i_gid;
->  -		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
->  -			inode->i_mode |=3D S_ISGID;
->  +	if (dir && !(dir->i_mode & S_ISGID) &&
->  +	    (mp->m_flags & XFS_MOUNT_GRPID)) {
->  +		inode->i_uid =3D current_fsuid();
+ fs/xfs/libxfs/xfs_bmap.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-Looking a bit harder, I replaced the above line with
-		inode->i_uid =3D fsuid_into_mnt(mnt_userns);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 2cd24bb06040..ba56554e8c05 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3471,7 +3471,6 @@ xfs_bmap_compute_alignments(
+ 	struct xfs_mount	*mp = args->mp;
+ 	xfs_extlen_t		align = 0; /* minimum allocation alignment */
+ 	int			stripe_align = 0;
+-	int			error;
+ 
+ 	/* stripe alignment for allocation is determined by mount parameters */
+ 	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
+@@ -3484,10 +3483,10 @@ xfs_bmap_compute_alignments(
+ 	else if (ap->datatype & XFS_ALLOC_USERDATA)
+ 		align = xfs_get_extsz_hint(ap->ip);
+ 	if (align) {
+-		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+-						align, 0, ap->eof, 0, ap->conv,
+-						&ap->offset, &ap->length);
+-		ASSERT(!error);
++		if (xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
++			align, 0, ap->eof, 0, ap->conv, &ap->offset,
++			&ap->length))
++			ASSERT(0);
+ 		ASSERT(ap->length);
+ 	}
+ 
+-- 
+2.29.2
 
->  +		inode->i_gid =3D dir->i_gid;
->  +		inode->i_mode =3D mode;
->   	} else {
-> - 		inode_init_owner(inode, dir, mode);
->  -		inode->i_gid =3D fsgid_into_mnt(mnt_userns);
-> ++		inode_init_owner(mnt_userns, inode, dir, mode);
->   	}
->  =20
->   	/*
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/is=.Kudvs87+PhegErpkY=s
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmAQsskACgkQAVBC80lX
-0Gyopwf+MTSEq9Q8h1tsi2YkgSc6nKqer6DFyTX7rMlvCMpiDX8OpVp54nZ7oZAl
-HDo4Q4soJs887yjd23HL+4nLBIl4xYx39IRbJnkfPjPROu56xGgUKEwESBU3daLn
-KFIQX26KvxK6y7Sl9iwTJWom0kwQBJSkGb7GSSrwLoerAdvil7vUwROV3Pbqg0+L
-Fr59B/5cP6PfJpk6YqxBI3MrLn5q+y1ANyBU87RWTnCc6pIeqvHR6ppIqIRf19vA
-XOGoHJ6T+mzoxxW9L6juii11MT0u8+MGnAjSKJJH/12T4WGXViiZw9NP2m5qB3nZ
-ja6ck9FfT24AHQQlMpxEjhm3kQEbaw==
-=Dkxo
------END PGP SIGNATURE-----
-
---Sig_/is=.Kudvs87+PhegErpkY=s--
