@@ -2,145 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 437B4C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 16:56:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 596E7C43381
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 17:01:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E566164E11
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 16:56:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24F5364E1A
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 17:01:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231436AbhA1Q4I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Jan 2021 11:56:08 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:44131 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229786AbhA1Q4H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jan 2021 11:56:07 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611852881;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=awBZI6Hbq+gIfouKn2xpRHgUt+TOlkNJLWfnHCKXvVg=;
-        b=OtYHe1z7Jk4TNNzas46qNe408MZZtrAUMiQx0Zs7PHz981uixePfl287pmtE6ZiZdWg4eJ
-        D7rugVWjPEnT4mHxHGSVM8exNGHQxOxQHPxQKUcr3PWDZfk1FNV4vNaHBnhOlFk2NIQEOS
-        wLvGDnclJx7MdlD7NZ0hklnAKc9GeLs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-80-nyvqlH-JPyaHhXq6fLvoBw-1; Thu, 28 Jan 2021 11:54:38 -0500
-X-MC-Unique: nyvqlH-JPyaHhXq6fLvoBw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C7CF0107ACF8;
-        Thu, 28 Jan 2021 16:54:37 +0000 (UTC)
-Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7534766D2E;
-        Thu, 28 Jan 2021 16:54:37 +0000 (UTC)
-Date:   Thu, 28 Jan 2021 11:54:35 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/5] xfs: reduce buffer log item shadow allocations
-Message-ID: <20210128165435.GF2599027@bfoster>
-References: <20210128044154.806715-1-david@fromorbit.com>
- <20210128044154.806715-6-david@fromorbit.com>
+        id S232858AbhA1RBV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Jan 2021 12:01:21 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47062 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232683AbhA1RA2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jan 2021 12:00:28 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0EEE564E0E;
+        Thu, 28 Jan 2021 16:59:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611853187;
+        bh=f6FDYR+2fbZ3ZjuVDKmJrkeFHlqyA4P3vGdmoyOPa1M=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Rzag2xxRHgFBGSJ365/QUldWd9CTCZVGt3cs71rJutBhKs94QB4O0wVHJ78U0xIF9
+         n96V7cXtAmPsB9hu9gUYvKXwcH1SXtYNdkFw15Hr/lW1MQ6ApKzq4voIl5psE+u1SS
+         oIYlBt3CEfmzYKr/W9GKeV1ES9XtHwmC1KiXTL4cmN2/9EoY9kXCbDD71u9sIp+Nfr
+         FbyyfdHM+E5ZA+F8801PzzCElIq3kyLXwweF8LRAnfmH79wwG+57YuSijr3uE7kbk9
+         /DpcS6Ckt3f1RwDjmwI1QhKt/MkNHods9aX+BJj1ComGJOXJH3o25qnvlVltgShwCo
+         r/bA/dJbtb2Sw==
+Date:   Thu, 28 Jan 2021 08:59:46 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com,
+        xen-devel@lists.xenproject.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org,
+        jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
+        ocfs2-devel@oss.oracle.com, linux-pm@vger.kernel.org,
+        linux-mm@kvack.org, axboe@kernel.dk, philipp.reisner@linbit.com,
+        lars.ellenberg@linbit.com, konrad.wilk@oracle.com,
+        roger.pau@citrix.com, minchan@kernel.org, ngupta@vflare.org,
+        sergey.senozhatsky.work@gmail.com, agk@redhat.com,
+        snitzer@redhat.com, hch@lst.de, sagi@grimberg.me,
+        martin.petersen@oracle.com, viro@zeniv.linux.org.uk, tytso@mit.edu,
+        jaegeuk@kernel.org, ebiggers@kernel.org, shaggy@kernel.org,
+        konishi.ryusuke@gmail.com, mark@fasheh.com, jlbec@evilplan.org,
+        joseph.qi@linux.alibaba.com, damien.lemoal@wdc.com,
+        naohiro.aota@wdc.com, jth@kernel.org, rjw@rjwysocki.net,
+        len.brown@intel.com, pavel@ucw.cz, akpm@linux-foundation.org,
+        hare@suse.de, gustavoars@kernel.org, tiwai@suse.de,
+        alex.shi@linux.alibaba.com, asml.silence@gmail.com,
+        ming.lei@redhat.com, tj@kernel.org, osandov@fb.com,
+        bvanassche@acm.org, jefflexu@linux.alibaba.com
+Subject: Re: [RFC PATCH 17/34] iomap: use bio_new in iomap_dio_zero
+Message-ID: <20210128165946.GL7698@magnolia>
+References: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
+ <20210128071133.60335-18-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210128044154.806715-6-david@fromorbit.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <20210128071133.60335-18-chaitanya.kulkarni@wdc.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 28, 2021 at 03:41:54PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When we modify btrees repeatedly, we regularly increase the size of
-> the logged region by a single chunk at a time (per transaction
-> commit). This results in the CIL formatting code having to
-> reallocate the log vector buffer every time the buffer dirty region
-> grows. Hence over a typical 4kB btree buffer, we might grow the log
-> vector 4096/128 = 32x over a short period where we repeatedly add
-> or remove records to/from the buffer over a series of running
-> transaction. This means we are doing 32 memory allocations and frees
-> over this time during a performance critical path in the journal.
-> 
-> The amount of space tracked in the CIL for the object is calculated
-> during the ->iop_format() call for the buffer log item, but the
-> buffer memory allocated for it is calculated by the ->iop_size()
-> call. The size callout determines the size of the buffer, the format
-> call determines the space used in the buffer.
-> 
-> Hence we can oversize the buffer space required in the size
-> calculation without impacting the amount of space used and accounted
-> to the CIL for the changes being logged. This allows us to reduce
-> the number of allocations by rounding up the buffer size to allow
-> for future growth. This can safe a substantial amount of CPU time in
-> this path:
-> 
-> -   46.52%     2.02%  [kernel]                  [k] xfs_log_commit_cil
->    - 44.49% xfs_log_commit_cil
->       - 30.78% _raw_spin_lock
->          - 30.75% do_raw_spin_lock
->               30.27% __pv_queued_spin_lock_slowpath
-> 
-> (oh, ouch!)
-> ....
->       - 1.05% kmem_alloc_large
->          - 1.02% kmem_alloc
->               0.94% __kmalloc
-> 
-> This overhead here us what this patch is aimed at. After:
-> 
->       - 0.76% kmem_alloc_large                                                                                                                                      ▒
->          - 0.75% kmem_alloc                                                                                                                                         ▒
->               0.70% __kmalloc                                                                                                                                       ▒
-> 
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+On Wed, Jan 27, 2021 at 11:11:16PM -0800, Chaitanya Kulkarni wrote:
+> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+
+Looks ok to me,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
 > ---
->  fs/xfs/xfs_buf_item.c | 13 +++++++++++--
->  1 file changed, 11 insertions(+), 2 deletions(-)
+>  fs/iomap/direct-io.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 17960b1ce5ef..0628a65d9c55 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-...
-> @@ -181,10 +182,18 @@ xfs_buf_item_size(
->  	 * count for the extra buf log format structure that will need to be
->  	 * written.
->  	 */
-> +	bytes = 0;
->  	for (i = 0; i < bip->bli_format_count; i++) {
->  		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
-> -					  nvecs, nbytes);
-> +					  nvecs, &bytes);
->  	}
-> +
-> +	/*
-> +	 * Round up the buffer size required to minimise the number of memory
-> +	 * allocations that need to be done as this item grows when relogged by
-> +	 * repeated modifications.
-> +	 */
-> +	*nbytes = round_up(bytes, 512);
-
-If nbytes starts out as zero anyways, what's the need for the new
-variable? Otherwise looks reasonable.
-
-Brian
-
->  	trace_xfs_buf_item_size(bip);
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index ea1e8f696076..f6c557a1bd25 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -189,15 +189,13 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
+>  	int flags = REQ_SYNC | REQ_IDLE;
+>  	struct bio *bio;
+>  
+> -	bio = bio_alloc(GFP_KERNEL, 1);
+> -	bio_set_dev(bio, iomap->bdev);
+> -	bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
+> +	bio = bio_new(iomap->bdev, iomap_sector(iomap, pos), REQ_OP_WRITE,
+> +		      flags, 1, GFP_KERNEL);
+>  	bio->bi_private = dio;
+>  	bio->bi_end_io = iomap_dio_bio_end_io;
+>  
+>  	get_page(page);
+>  	__bio_add_page(bio, page, len, 0);
+> -	bio_set_op_attrs(bio, REQ_OP_WRITE, flags);
+>  	iomap_dio_submit_bio(dio, iomap, bio, pos);
 >  }
 >  
 > -- 
-> 2.28.0
+> 2.22.1
 > 
-
