@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B40C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:02:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADAC7C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:02:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D19D064DD6
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:02:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78E6564DDF
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:02:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229786AbhA1GCG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Jan 2021 01:02:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37658 "EHLO mail.kernel.org"
+        id S229870AbhA1GCN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Jan 2021 01:02:13 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37684 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229791AbhA1GCF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jan 2021 01:02:05 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0B18864DD9;
-        Thu, 28 Jan 2021 06:01:25 +0000 (UTC)
+        id S229462AbhA1GCM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jan 2021 01:02:12 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B0DC764DDB;
+        Thu, 28 Jan 2021 06:01:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611813685;
-        bh=X+KxnvMiQ5h4YYj55TIbC4bgFYAmjWIoQ6ntBO93xL0=;
+        s=k20201202; t=1611813690;
+        bh=Af4Z2Ab7712yueavikvl7L7E6I/m044j1qevfzgiGAM=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=KXhwY8sIndyLa5k4AABa17xu8ZaSdg7Z/borTjv3HPzheMMVA4UvHguW7pdeLSsr0
-         M0BbjmpTRhSBOJJ/Nqnq5DMzLWqqUsxvykxRdiH6FTvShSq2XeOwh4lCoeTjXfoLeF
-         0OMNELepmYqPszu7pkOV2ojeY0ucX+vaYWKvxF28APG8qdiaWxD/LkLEJhUztAd2Je
-         Ja1A75pN+5R08P6yh4Z9G7+XYpS+y8U6BibEpEPnI67OR+4VrQOV2g5QpjRwsArv/N
-         F4kFqbgQOeLsastp8Gdxae01HCHjTX+kAgxPrPapoOg1Mn7qrqLc/2sCAqDuVd3opM
-         VTHEP/AbZi4EQ==
-Subject: [PATCH 03/13] xfs: remove xfs_trans_unreserve_quota_nblks completely
+        b=VFBSh6MYBIMz3dW7BULxdSZ1jNnjYJt8iuHh7jB9+EC5c1Shqk8sctuEzWNdVox7W
+         quDj0/RmPdOKbGaFZvNQ1Bhd8R+Z1Slm+M6kbNffD8TYKd4W8tYBjIyLagB5jeJEQk
+         IQC7a3wPbIiJdsJkTP4RHwCkKFskyMghagl5uxoeDtlcz6y/QmPIcGzt+YV5Fh9YhS
+         WN0yLlOX4qA+42T5ws/cXEfD85f6CffecVV6DL77iIUbz7qTOs6l4UKbkl1y6fpSc0
+         kYhRsgopqF0KZTnUoUEZuGnfMn6q7mBfyL18TZzJ8WdQsmEqCFrCWSzePQ7j0kuzCL
+         4q/hPXxlguTEQ==
+Subject: [PATCH 04/13] xfs: clean up icreate quota reservation calls
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
-        bfoster@redhat.com
-Date:   Wed, 27 Jan 2021 22:01:21 -0800
-Message-ID: <161181368129.1523592.7737855214929870215.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        hch@infradead.org, david@fromorbit.com, bfoster@redhat.com
+Date:   Wed, 27 Jan 2021 22:01:27 -0800
+Message-ID: <161181368696.1523592.6258324822467913689.stgit@magnolia>
 In-Reply-To: <161181366379.1523592.9213241916555622577.stgit@magnolia>
 References: <161181366379.1523592.9213241916555622577.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,115 +50,123 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-xfs_trans_cancel will release all the quota resources that were reserved
-on behalf of the transaction, so get rid of the explicit unreserve step.
+Create a proper helper so that inode creation calls can reserve quota
+with a dedicated function.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_bmap_util.c |    7 ++-----
- fs/xfs/xfs_iomap.c     |    6 ++----
- fs/xfs/xfs_quota.h     |    2 --
- fs/xfs/xfs_reflink.c   |    5 +----
- 4 files changed, 5 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_inode.c       |    6 ++----
+ fs/xfs/xfs_quota.h       |   14 ++++++++++----
+ fs/xfs/xfs_symlink.c     |    3 +--
+ fs/xfs/xfs_trans_dquot.c |   18 ++++++++++++++++++
+ 4 files changed, 31 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 792809debaaa..f0a8f3377281 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -825,7 +825,7 @@ xfs_alloc_file_space(
- 		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
- 				XFS_IEXT_ADD_NOSPLIT_CNT);
- 		if (error)
--			goto error0;
-+			goto error1;
- 
- 		xfs_trans_ijoin(tp, ip, 0);
- 
-@@ -833,7 +833,7 @@ xfs_alloc_file_space(
- 					allocatesize_fsb, alloc_type, 0, imapp,
- 					&nimaps);
- 		if (error)
--			goto error0;
-+			goto error1;
- 
- 		/*
- 		 * Complete the transaction
-@@ -856,9 +856,6 @@ xfs_alloc_file_space(
- 
- 	return error;
- 
--error0:	/* unlock inode, unreserve quota blocks, cancel trans */
--	xfs_trans_unreserve_quota_nblks(tp, ip, (long)qblocks, 0, quota_flag);
--
- error1:	/* Just cancel transaction */
- 	xfs_trans_cancel(tp);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 514e6ae010e0..de0e371ba4dd 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -253,7 +253,7 @@ xfs_iomap_write_direct(
- 	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
- 			XFS_IEXT_ADD_NOSPLIT_CNT);
- 	if (error)
--		goto out_res_cancel;
-+		goto out_trans_cancel;
- 
- 	xfs_trans_ijoin(tp, ip, 0);
- 
-@@ -265,7 +265,7 @@ xfs_iomap_write_direct(
- 	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb, bmapi_flags, 0,
- 				imap, &nimaps);
- 	if (error)
--		goto out_res_cancel;
-+		goto out_trans_cancel;
- 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e2a1db4cee43..4bbd2fb628f7 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1037,8 +1037,7 @@ xfs_create(
  	/*
- 	 * Complete the transaction
-@@ -289,8 +289,6 @@ xfs_iomap_write_direct(
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return error;
+ 	 * Reserve disk quota and the inode.
+ 	 */
+-	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
+-						pdqp, resblks, 1, 0);
++	error = xfs_trans_reserve_quota_icreate(tp, udqp, gdqp, pdqp, resblks);
+ 	if (error)
+ 		goto out_trans_cancel;
  
--out_res_cancel:
--	xfs_trans_unreserve_quota_nblks(tp, ip, (long)qblocks, 0, quota_flag);
- out_trans_cancel:
- 	xfs_trans_cancel(tp);
- 	goto out_unlock;
+@@ -1169,8 +1168,7 @@ xfs_create_tmpfile(
+ 	if (error)
+ 		goto out_release_inode;
+ 
+-	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
+-						pdqp, resblks, 1, 0);
++	error = xfs_trans_reserve_quota_icreate(tp, udqp, gdqp, pdqp, resblks);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
 diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index 159d338bf161..a395dabee033 100644
+index a395dabee033..d1e3f94140b4 100644
 --- a/fs/xfs/xfs_quota.h
 +++ b/fs/xfs/xfs_quota.h
-@@ -164,8 +164,6 @@ xfs_quota_reserve_blkres(struct xfs_inode *ip, int64_t dblocks)
+@@ -86,6 +86,9 @@ extern int xfs_trans_reserve_quota_nblks(struct xfs_trans *,
+ extern int xfs_trans_reserve_quota_bydquots(struct xfs_trans *,
+ 		struct xfs_mount *, struct xfs_dquot *,
+ 		struct xfs_dquot *, struct xfs_dquot *, int64_t, long, uint);
++int xfs_trans_reserve_quota_icreate(struct xfs_trans *tp,
++		struct xfs_dquot *udqp, struct xfs_dquot *gdqp,
++		struct xfs_dquot *pdqp, int64_t dblocks);
+ 
+ extern int xfs_qm_vop_dqalloc(struct xfs_inode *, kuid_t, kgid_t,
+ 		prid_t, uint, struct xfs_dquot **, struct xfs_dquot **,
+@@ -149,6 +152,13 @@ xfs_quota_reserve_blkres(struct xfs_inode *ip, int64_t dblocks)
+ 	return 0;
+ }
+ 
++static inline int
++xfs_trans_reserve_quota_icreate(struct xfs_trans *tp, struct xfs_dquot *udqp,
++		struct xfs_dquot *gdqp, struct xfs_dquot *pdqp, int64_t dblocks)
++{
++	return 0;
++}
++
+ #define xfs_qm_vop_create_dqattach(tp, ip, u, g, p)
+ #define xfs_qm_vop_rename_dqattach(it)					(0)
+ #define xfs_qm_vop_chown(tp, ip, old, new)				(NULL)
+@@ -164,10 +174,6 @@ xfs_quota_reserve_blkres(struct xfs_inode *ip, int64_t dblocks)
  #define xfs_qm_unmount_quotas(mp)
  #endif /* CONFIG_XFS_QUOTA */
  
--#define xfs_trans_unreserve_quota_nblks(tp, ip, nblks, ninos, flags) \
--	xfs_trans_reserve_quota_nblks(tp, ip, -(nblks), -(ninos), flags)
- #define xfs_trans_reserve_quota(tp, mp, ud, gd, pd, nb, ni, f) \
- 	xfs_trans_reserve_quota_bydquots(tp, mp, ud, gd, pd, nb, ni, \
- 				f | XFS_QMOPT_RES_REGBLKS)
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index bea64ed5a57f..15435229bc1f 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -411,7 +411,7 @@ xfs_reflink_allocate_cow(
- 			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, 0, cmap,
- 			&nimaps);
+-#define xfs_trans_reserve_quota(tp, mp, ud, gd, pd, nb, ni, f) \
+-	xfs_trans_reserve_quota_bydquots(tp, mp, ud, gd, pd, nb, ni, \
+-				f | XFS_QMOPT_RES_REGBLKS)
+-
+ static inline int
+ xfs_quota_unreserve_blkres(struct xfs_inode *ip, int64_t dblocks)
+ {
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 7f96649e918a..d5dee8f409b2 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -215,8 +215,7 @@ xfs_symlink(
+ 	/*
+ 	 * Reserve disk quota : blocks and inode.
+ 	 */
+-	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
+-						pdqp, resblks, 1, 0);
++	error = xfs_trans_reserve_quota_icreate(tp, udqp, gdqp, pdqp, resblks);
  	if (error)
--		goto out_unreserve;
-+		goto out_trans_cancel;
+ 		goto out_trans_cancel;
  
- 	xfs_inode_set_cowblocks_tag(ip);
- 	error = xfs_trans_commit(tp);
-@@ -436,9 +436,6 @@ xfs_reflink_allocate_cow(
- 	trace_xfs_reflink_convert_cow(ip, cmap);
- 	return xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index 28b8ac701919..22aa875b84f7 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -804,6 +804,24 @@ xfs_trans_reserve_quota_nblks(
+ 						nblks, ninos, flags);
+ }
  
--out_unreserve:
--	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
--			XFS_QMOPT_RES_REGBLKS);
- out_trans_cancel:
- 	xfs_trans_cancel(tp);
- 	return error;
++/* Change the quota reservations for an inode creation activity. */
++int
++xfs_trans_reserve_quota_icreate(
++	struct xfs_trans	*tp,
++	struct xfs_dquot	*udqp,
++	struct xfs_dquot	*gdqp,
++	struct xfs_dquot	*pdqp,
++	int64_t			dblocks)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++
++	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
++		return 0;
++
++	return xfs_trans_reserve_quota_bydquots(tp, mp, udqp, gdqp, pdqp,
++			dblocks, 1, XFS_QMOPT_RES_REGBLKS);
++}
++
+ /*
+  * This routine is called to allocate a quotaoff log item.
+  */
 
