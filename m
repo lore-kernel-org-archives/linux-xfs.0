@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 706EDC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:06:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B93D5C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:06:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 250DA64DD6
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:06:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E5A664DD1
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:06:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231289AbhA1GGK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Jan 2021 01:06:10 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38752 "EHLO mail.kernel.org"
+        id S231299AbhA1GGM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Jan 2021 01:06:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38814 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231292AbhA1GFJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jan 2021 01:05:09 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8605764DD1;
-        Thu, 28 Jan 2021 06:04:28 +0000 (UTC)
+        id S231231AbhA1GFU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jan 2021 01:05:20 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E69E164DDB;
+        Thu, 28 Jan 2021 06:04:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611813868;
-        bh=MRaG2Ug2DUg770dkXoUz2VCZV42V87UxFZQICJwb6Mg=;
+        s=k20201202; t=1611813880;
+        bh=rCeDqS/414CAE5m7HLkNTPNjEtLTYMUPXF6m8ra+2D0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=C3WxveYxZ89w2AdSGAZV+Syin0hqTdRPD+Czguv/IQfnX+3/QZarnlV042GeWVY8V
-         G44UMP267I67VHXcqB5pF9D0bsE7v8yw6XM4X9dGpydc2ZuZRxsJBJILghjCyTnF31
-         gX0+i6u1IElyAaHE/1qmMMignk+W4RLWfdu1hOk+0f9yVUyoSPR7fqE7UMHZVepWav
-         73ity2T6U79QKgnYXc4lSBc6IjDSaeA/EJPpZb61z2m19/tcVJBIrOY58NFvFJIPbE
-         RNP63VCyxNiSEvClVve+a6O1EIKWsW7gaG3ZvLrUXJOCGzW7HsZcOr+y372fH5jE19
-         BHWZjmjoQroMA==
-Subject: [PATCH 08/11] xfs: rename block gc start and stop functions
+        b=qE5JYCvX9oJHZ77Q4mnAxWyqQnKCdUHUToBzHTspL5Hwa27/SwoP7pQwXJvHupGF5
+         rNMLJ4U0fxkRT5u/0b6nLJkqzP5UIilrReIIxFMZywnpl9YAni+emx013u9jY7Vsnl
+         VCtl5sDBV8ase6W0STfqb8cN55y8zIwBov2kjjRoPtz2l+cDCWE4EOXVYT5lsR5ORC
+         bZo+RXTGKp6jmMiTPglWuW0WcMTDuh4cxPr1+CQMPowsaLXdj3+8ulijyuchK9adV7
+         OkN0OEAhU9cmScQlD2VBSc/wCIOy2PBt8YVXRPLKH5oOGis6/Evv0jN9VugyZUMzOa
+         x/3AiRzq6DxQg==
+Subject: [PATCH 10/11] xfs: expose the blockgc workqueue knobs publicly
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
         hch@infradead.org, david@fromorbit.com, bfoster@redhat.com
-Date:   Wed, 27 Jan 2021 22:04:24 -0800
-Message-ID: <161181386476.1525433.8339178086850291529.stgit@magnolia>
+Date:   Wed, 27 Jan 2021 22:04:36 -0800
+Message-ID: <161181387617.1525433.4270885610040303455.stgit@magnolia>
 In-Reply-To: <161181381898.1525433.10723801103841220046.stgit@magnolia>
 References: <161181381898.1525433.10723801103841220046.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,129 +50,42 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Shorten the names of the two functions that start and stop block
-preallocation garbage collection and move them up to the other blockgc
-functions.
+Expose the workqueue sysfs knobs for the speculative preallocation gc
+workers on all kernels, and update the sysadmin information.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/common.c |    4 ++--
- fs/xfs/xfs_icache.c   |    4 ++--
- fs/xfs/xfs_icache.h   |    4 ++--
- fs/xfs/xfs_mount.c    |    2 +-
- fs/xfs/xfs_super.c    |    8 ++++----
- 5 files changed, 11 insertions(+), 11 deletions(-)
+ Documentation/admin-guide/xfs.rst |    3 +++
+ fs/xfs/xfs_super.c                |    2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 8ea6d4aa3f55..53456f3de881 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -888,7 +888,7 @@ xchk_stop_reaping(
- 	struct xfs_scrub	*sc)
- {
- 	sc->flags |= XCHK_REAPING_DISABLED;
--	xfs_stop_block_reaping(sc->mp);
-+	xfs_blockgc_stop(sc->mp);
- }
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+index b00b1eece9de..d2064a52811b 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -518,6 +518,9 @@ and the short name of the data device.  They all can be found in:
+ ================  ===========
+   xfs_iwalk-$pid  Inode scans of the entire filesystem. Currently limited to
+                   mount time quotacheck.
++  xfs-blockgc     Background garbage collection of disk space that have been
++                  speculatively allocated beyond EOF or for staging copy on
++                  write operations.
+ ================  ===========
  
- /* Restart background reaping of resources. */
-@@ -896,6 +896,6 @@ void
- xchk_start_reaping(
- 	struct xfs_scrub	*sc)
- {
--	xfs_start_block_reaping(sc->mp);
-+	xfs_blockgc_start(sc->mp);
- 	sc->flags &= ~XCHK_REAPING_DISABLED;
- }
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index b32400b8e1ee..675c9e17dac0 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1557,7 +1557,7 @@ xfs_inode_clear_cowblocks_tag(
- 
- /* Disable post-EOF and CoW block auto-reclamation. */
- void
--xfs_stop_block_reaping(
-+xfs_blockgc_stop(
- 	struct xfs_mount	*mp)
- {
- 	cancel_delayed_work_sync(&mp->m_blockgc_work);
-@@ -1565,7 +1565,7 @@ xfs_stop_block_reaping(
- 
- /* Enable post-EOF and CoW block auto-reclamation. */
- void
--xfs_start_block_reaping(
-+xfs_blockgc_start(
- 	struct xfs_mount	*mp)
- {
- 	xfs_blockgc_queue(mp);
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index d781703af025..6ffb2fc5e458 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -74,7 +74,7 @@ int xfs_inode_walk(struct xfs_mount *mp, int iter_flags,
- int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
- 				  xfs_ino_t ino, bool *inuse);
- 
--void xfs_stop_block_reaping(struct xfs_mount *mp);
--void xfs_start_block_reaping(struct xfs_mount *mp);
-+void xfs_blockgc_stop(struct xfs_mount *mp);
-+void xfs_blockgc_start(struct xfs_mount *mp);
- 
- #endif
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 53b8ccab7235..be9ce114527f 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1054,7 +1054,7 @@ xfs_unmountfs(
- 	uint64_t		resblks;
- 	int			error;
- 
--	xfs_stop_block_reaping(mp);
-+	xfs_blockgc_stop(mp);
- 	xfs_fs_unreserve_ag_blocks(mp);
- 	xfs_qm_unmount_quotas(mp);
- 	xfs_rtunmount_inodes(mp);
+ For example, the knobs for the quotacheck workqueue for /dev/nvme0n1 would be
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 471592e8dba6..ea942089d074 100644
+index 2b04818627e9..21b1d034aca3 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -891,7 +891,7 @@ xfs_fs_freeze(
- 	 * set a GFP_NOFS context here to avoid recursion deadlocks.
- 	 */
- 	flags = memalloc_nofs_save();
--	xfs_stop_block_reaping(mp);
-+	xfs_blockgc_stop(mp);
- 	xfs_save_resvblks(mp);
- 	ret = xfs_log_quiesce(mp);
- 	memalloc_nofs_restore(flags);
-@@ -906,7 +906,7 @@ xfs_fs_unfreeze(
+@@ -520,7 +520,7 @@ xfs_init_mount_workqueues(
+ 		goto out_destroy_cil;
  
- 	xfs_restore_resvblks(mp);
- 	xfs_log_work_queue(mp);
--	xfs_start_block_reaping(mp);
-+	xfs_blockgc_start(mp);
- 	return 0;
- }
- 
-@@ -1690,7 +1690,7 @@ xfs_remount_rw(
- 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- 		return error;
- 	}
--	xfs_start_block_reaping(mp);
-+	xfs_blockgc_start(mp);
- 
- 	/* Create the per-AG metadata reservation pool .*/
- 	error = xfs_fs_reserve_ag_blocks(mp);
-@@ -1710,7 +1710,7 @@ xfs_remount_ro(
- 	 * Cancel background eofb scanning so it cannot race with the final
- 	 * log force+buftarg wait and deadlock the remount.
- 	 */
--	xfs_stop_block_reaping(mp);
-+	xfs_blockgc_stop(mp);
- 
- 	/* Get rid of any leftover CoW reservations... */
- 	error = xfs_blockgc_free_space(mp, NULL);
+ 	mp->m_blockgc_workqueue = alloc_workqueue("xfs-blockgc/%s",
+-			XFS_WQFLAGS(WQ_UNBOUND | WQ_FREEZABLE | WQ_MEM_RECLAIM),
++			WQ_SYSFS | WQ_UNBOUND | WQ_FREEZABLE | WQ_MEM_RECLAIM,
+ 			0, mp->m_super->s_id);
+ 	if (!mp->m_blockgc_workqueue)
+ 		goto out_destroy_reclaim;
 
