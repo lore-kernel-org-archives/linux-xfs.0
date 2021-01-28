@@ -4,319 +4,142 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA666C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 16:55:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 437B4C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 16:56:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC74964E11
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 16:55:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E566164E11
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 16:56:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232552AbhA1QzX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Jan 2021 11:55:23 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:44149 "EHLO
+        id S231436AbhA1Q4I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Jan 2021 11:56:08 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:44131 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232589AbhA1QzW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jan 2021 11:55:22 -0500
+        by vger.kernel.org with ESMTP id S229786AbhA1Q4H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jan 2021 11:56:07 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611852835;
+        s=mimecast20190719; t=1611852881;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=0KzHwS+XoFlZQH7QtrabO5K3t6oEQ8pLFPcQFKIqRLE=;
-        b=Y+uSq7ejbV41RLwNMEk4qWADkB+/rGPRZFfCNJHMXDt6JWltVF1v6J2nir++/W90CdpEk2
-        Dnf+a4Tx2lePdMqSV6hRoXinzXK3QUjyyKRoNAqvkhoJH50hPBoJtBfOCtxkqRIPC9qGgv
-        wPiXSddyNAXe60eveN8pO4Bevo2QpQ4=
+        bh=awBZI6Hbq+gIfouKn2xpRHgUt+TOlkNJLWfnHCKXvVg=;
+        b=OtYHe1z7Jk4TNNzas46qNe408MZZtrAUMiQx0Zs7PHz981uixePfl287pmtE6ZiZdWg4eJ
+        D7rugVWjPEnT4mHxHGSVM8exNGHQxOxQHPxQKUcr3PWDZfk1FNV4vNaHBnhOlFk2NIQEOS
+        wLvGDnclJx7MdlD7NZ0hklnAKc9GeLs=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-462-_1TnXabEM6yaO4dfJWkFrQ-1; Thu, 28 Jan 2021 11:53:50 -0500
-X-MC-Unique: _1TnXabEM6yaO4dfJWkFrQ-1
+ us-mta-80-nyvqlH-JPyaHhXq6fLvoBw-1; Thu, 28 Jan 2021 11:54:38 -0500
+X-MC-Unique: nyvqlH-JPyaHhXq6fLvoBw-1
 Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 763331927801;
-        Thu, 28 Jan 2021 16:53:49 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C7CF0107ACF8;
+        Thu, 28 Jan 2021 16:54:37 +0000 (UTC)
 Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id EB7205C1BB;
-        Thu, 28 Jan 2021 16:53:48 +0000 (UTC)
-Date:   Thu, 28 Jan 2021 11:53:47 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7534766D2E;
+        Thu, 28 Jan 2021 16:54:37 +0000 (UTC)
+Date:   Thu, 28 Jan 2021 11:54:35 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/5] xfs: Fix CIL throttle hang when CIL space used going
- backwards
-Message-ID: <20210128165347.GE2599027@bfoster>
+Subject: Re: [PATCH 5/5] xfs: reduce buffer log item shadow allocations
+Message-ID: <20210128165435.GF2599027@bfoster>
 References: <20210128044154.806715-1-david@fromorbit.com>
- <20210128044154.806715-5-david@fromorbit.com>
+ <20210128044154.806715-6-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210128044154.806715-5-david@fromorbit.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210128044154.806715-6-david@fromorbit.com>
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 28, 2021 at 03:41:53PM +1100, Dave Chinner wrote:
+On Thu, Jan 28, 2021 at 03:41:54PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> A hang with tasks stuck on the CIL hard throttle was reported and
-> largely diagnosed by Donald Buczek, who discovered that it was a
-> result of the CIL context space usage decrementing in committed
-> transactions once the hard throttle limit had been hit and processes
-> were already blocked.  This resulted in the CIL push not waking up
-> those waiters because the CIL context was no longer over the hard
-> throttle limit.
+> When we modify btrees repeatedly, we regularly increase the size of
+> the logged region by a single chunk at a time (per transaction
+> commit). This results in the CIL formatting code having to
+> reallocate the log vector buffer every time the buffer dirty region
+> grows. Hence over a typical 4kB btree buffer, we might grow the log
+> vector 4096/128 = 32x over a short period where we repeatedly add
+> or remove records to/from the buffer over a series of running
+> transaction. This means we are doing 32 memory allocations and frees
+> over this time during a performance critical path in the journal.
 > 
-> The surprising aspect of this was the CIL space usage going
-> backwards regularly enough to trigger this situation. Assumptions
-> had been made in design that the relogging process would only
-> increase the size of the objects in the CIL, and so that space would
-> only increase.
+> The amount of space tracked in the CIL for the object is calculated
+> during the ->iop_format() call for the buffer log item, but the
+> buffer memory allocated for it is calculated by the ->iop_size()
+> call. The size callout determines the size of the buffer, the format
+> call determines the space used in the buffer.
 > 
-> This change and commit message fixes the issue and documents the
-> result of an audit of the triggers that can cause the CIL space to
-> go backwards, how large the backwards steps tend to be, the
-> frequency in which they occur, and what the impact on the CIL
-> accounting code is.
+> Hence we can oversize the buffer space required in the size
+> calculation without impacting the amount of space used and accounted
+> to the CIL for the changes being logged. This allows us to reduce
+> the number of allocations by rounding up the buffer size to allow
+> for future growth. This can safe a substantial amount of CPU time in
+> this path:
 > 
-> Even though the CIL ctx->space_used can go backwards, it will only
-> do so if the log item is already logged to the CIL and contains a
-> space reservation for it's entire logged state. This is tracked by
-> the shadow buffer state on the log item. If the item is not
-> previously logged in the CIL it has no shadow buffer nor log vector,
-> and hence the entire size of the logged item copied to the log
-> vector is accounted to the CIL space usage. i.e.  it will always go
-> up in this case.
+> -   46.52%     2.02%  [kernel]                  [k] xfs_log_commit_cil
+>    - 44.49% xfs_log_commit_cil
+>       - 30.78% _raw_spin_lock
+>          - 30.75% do_raw_spin_lock
+>               30.27% __pv_queued_spin_lock_slowpath
 > 
-> If the item has a log vector (i.e. already in the CIL) and the size
-> decreases, then the existing log vector will be overwritten and the
-> space usage will go down. This is the only condition where the space
-> usage reduces, and it can only occur when an item is already tracked
-> in the CIL. Hence we are safe from CIL space usage underruns as a
-> result of log items decreasing in size when they are relogged.
+> (oh, ouch!)
+> ....
+>       - 1.05% kmem_alloc_large
+>          - 1.02% kmem_alloc
+>               0.94% __kmalloc
 > 
-> Typically this reduction in CIL usage occurs from metadta blocks
-> being free, such as when a btree block merge
-> occurs or a directory enter/xattr entry is removed and the da-tree
-> is reduced in size. This generally results in a reduction in size of
-> around a single block in the CIL, but also tends to increase the
-> number of log vectors because the parent and sibling nodes in the
-> tree needs to be updated when a btree block is removed. If a
-> multi-level merge occurs, then we see reduction in size of 2+
-> blocks, but again the log vector count goes up.
+> This overhead here us what this patch is aimed at. After:
 > 
-> The other vector is inode fork size changes, which only log the
-> current size of the fork and ignore the previously logged size when
-> the fork is relogged. Hence if we are removing items from the inode
-> fork (dir/xattr removal in shortform, extent record removal in
-> extent form, etc) the relogged size of the inode for can decrease.
+>       - 0.76% kmem_alloc_large                                                                                                                                      ▒
+>          - 0.75% kmem_alloc                                                                                                                                         ▒
+>               0.70% __kmalloc                                                                                                                                       ▒
 > 
-> No other log items can decrease in size either because they are a
-> fixed size (e.g. dquots) or they cannot be relogged (e.g. relogging
-> an intent actually creates a new intent log item and doesn't relog
-> the old item at all.) Hence the only two vectors for CIL context
-> size reduction are relogging inode forks and marking buffers active
-> in the CIL as stale.
 > 
-> Long story short: the majority of the code does the right thing and
-> handles the reduction in log item size correctly, and only the CIL
-> hard throttle implementation is problematic and needs fixing. This
-> patch makes that fix, as well as adds comments in the log item code
-> that result in items shrinking in size when they are relogged as a
-> clear reminder that this can and does happen frequently.
-> 
-> The throttle fix is based upon the change Donald proposed, though it
-> goes further to ensure that once the throttle is activated, it
-> captures all tasks until the CIL push issues a wakeup, regardless of
-> whether the CIL space used has gone back under the throttle
-> threshold.
-> 
-> This ensures that we prevent tasks reducing the CIL slightly under
-> the throttle threshold and then making more changes that push it
-> well over the throttle limit. This is acheived by checking if the
-> throttle wait queue is already active as a condition of throttling.
-> Hence once we start throttling, we continue to apply the throttle
-> until the CIL context push wakes everything on the wait queue.
-> 
-> We can use waitqueue_active() for the waitqueue manipulations and
-> checks as they are all done under the ctx->xc_push_lock. Hence the
-> waitqueue has external serialisation and we can safely peek inside
-> the wait queue without holding the internal waitqueue locks.
-> 
-> Many thanks to Donald for his diagnostic and analysis work to
-> isolate the cause of this hang.
-> 
-> Reported-by: Donald Buczek <buczek@molgen.mpg.de>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_buf_item.c   | 37 ++++++++++++++++++-------------------
->  fs/xfs/xfs_inode_item.c | 14 ++++++++++++++
->  fs/xfs/xfs_log_cil.c    | 22 +++++++++++++++++-----
->  3 files changed, 49 insertions(+), 24 deletions(-)
+>  fs/xfs/xfs_buf_item.c | 13 +++++++++++--
+>  1 file changed, 11 insertions(+), 2 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index dc0be2a639cc..17960b1ce5ef 100644
+> index 17960b1ce5ef..0628a65d9c55 100644
 > --- a/fs/xfs/xfs_buf_item.c
 > +++ b/fs/xfs/xfs_buf_item.c
-> @@ -56,14 +56,12 @@ xfs_buf_log_format_size(
+...
+> @@ -181,10 +182,18 @@ xfs_buf_item_size(
+>  	 * count for the extra buf log format structure that will need to be
+>  	 * written.
+>  	 */
+> +	bytes = 0;
+>  	for (i = 0; i < bip->bli_format_count; i++) {
+>  		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
+> -					  nvecs, nbytes);
+> +					  nvecs, &bytes);
+>  	}
+> +
+> +	/*
+> +	 * Round up the buffer size required to minimise the number of memory
+> +	 * allocations that need to be done as this item grows when relogged by
+> +	 * repeated modifications.
+> +	 */
+> +	*nbytes = round_up(bytes, 512);
+
+If nbytes starts out as zero anyways, what's the need for the new
+variable? Otherwise looks reasonable.
+
+Brian
+
+>  	trace_xfs_buf_item_size(bip);
 >  }
 >  
->  /*
-> - * This returns the number of log iovecs needed to log the
-> - * given buf log item.
-> + * Return the number of log iovecs and space needed to log the given buf log
-> + * item segment.
->   *
-> - * It calculates this as 1 iovec for the buf log format structure
-> - * and 1 for each stretch of non-contiguous chunks to be logged.
-> - * Contiguous chunks are logged in a single iovec.
-> - *
-> - * If the XFS_BLI_STALE flag has been set, then log nothing.
-> + * It calculates this as 1 iovec for the buf log format structure and 1 for each
-> + * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
-> + * in a single iovec.
->   */
->  STATIC void
->  xfs_buf_item_size_segment(
-> @@ -119,11 +117,8 @@ xfs_buf_item_size_segment(
->  }
->  
->  /*
-> - * This returns the number of log iovecs needed to log the given buf log item.
-> - *
-> - * It calculates this as 1 iovec for the buf log format structure and 1 for each
-> - * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
-> - * in a single iovec.
-> + * Return the number of log iovecs and space needed to log the given buf log
-> + * item.
->   *
->   * Discontiguous buffers need a format structure per region that is being
->   * logged. This makes the changes in the buffer appear to log recovery as though
-> @@ -133,7 +128,11 @@ xfs_buf_item_size_segment(
->   * what ends up on disk.
->   *
->   * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
-> - * format structures.
-> + * format structures. If the item has previously been logged and has dirty
-> + * regions, we do not relog them in stale buffers. This has the effect of
-> + * reducing the size of the relogged item by the amount of dirty data tracked
-> + * by the log item. This can result in the committing transaction reducing the
-> + * amount of space being consumed by the CIL.
->   */
->  STATIC void
->  xfs_buf_item_size(
-> @@ -147,9 +146,9 @@ xfs_buf_item_size(
->  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
->  	if (bip->bli_flags & XFS_BLI_STALE) {
->  		/*
-> -		 * The buffer is stale, so all we need to log
-> -		 * is the buf log format structure with the
-> -		 * cancel flag in it.
-> +		 * The buffer is stale, so all we need to log is the buf log
-> +		 * format structure with the cancel flag in it as we are never
-> +		 * going to replay the changes tracked in the log item.
->  		 */
->  		trace_xfs_buf_item_size_stale(bip);
->  		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
-> @@ -164,9 +163,9 @@ xfs_buf_item_size(
->  
->  	if (bip->bli_flags & XFS_BLI_ORDERED) {
->  		/*
-> -		 * The buffer has been logged just to order it.
-> -		 * It is not being included in the transaction
-> -		 * commit, so no vectors are used at all.
-> +		 * The buffer has been logged just to order it. It is not being
-> +		 * included in the transaction commit, so no vectors are used at
-> +		 * all.
->  		 */
->  		trace_xfs_buf_item_size_ordered(bip);
->  		*nvecs = XFS_LOG_VEC_ORDERED;
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 17e20a6d8b4e..6ff91e5bf3cd 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -28,6 +28,20 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
->  	return container_of(lip, struct xfs_inode_log_item, ili_item);
->  }
->  
-> +/*
-> + * The logged size of an inode fork is always the current size of the inode
-> + * fork. This means that when an inode fork is relogged, the size of the logged
-> + * region is determined by the current state, not the combination of the
-> + * previously logged state + the current state. This is different relogging
-> + * behaviour to most other log items which will retain the size of the
-> + * previously logged changes when smaller regions are relogged.
-> + *
-> + * Hence operations that remove data from the inode fork (e.g. shortform
-
-"Hence for ..." ?
-
-> + * dir/attr remove, extent form extent removal, etc), the size of the relogged
-> + * inode gets -smaller- rather than stays the same size as the previously logged
-> + * size and this can result in the committing transaction reducing the amount of
-> + * space being consumed by the CIL.
-> + */
->  STATIC void
->  xfs_inode_item_data_fork_size(
->  	struct xfs_inode_log_item *iip,
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index c5cc1b7ad25e..daf1f3eb24a8 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -668,9 +668,14 @@ xlog_cil_push_work(
->  	ASSERT(push_seq <= ctx->sequence);
->  
->  	/*
-> -	 * Wake up any background push waiters now this context is being pushed.
-> +	 * As we are about to switch to a new CILi, empty context, we no longer
-
-s/CILi, empty context/CIL empty context/ ?
-
-Nits aside, the rest LGTM:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> +	 * need to throttle tasks on CIL space overruns. Wake any waiters that
-> +	 * the hard push throttle may have caught so they can start committing
-> +	 * to the new context. The ctx->xc_push_lock provides the serialisation
-> +	 * necessary for safely using the lockless waitqueue_active() check in
-> +	 * this context.
->  	 */
-> -	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
-> +	if (waitqueue_active(&cil->xc_push_wait))
->  		wake_up_all(&cil->xc_push_wait);
->  
->  	/*
-> @@ -914,7 +919,7 @@ xlog_cil_push_background(
->  	ASSERT(!list_empty(&cil->xc_cil));
->  
->  	/*
-> -	 * don't do a background push if we haven't used up all the
-> +	 * Don't do a background push if we haven't used up all the
->  	 * space available yet.
->  	 */
->  	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
-> @@ -938,9 +943,16 @@ xlog_cil_push_background(
->  
->  	/*
->  	 * If we are well over the space limit, throttle the work that is being
-> -	 * done until the push work on this context has begun.
-> +	 * done until the push work on this context has begun. Enforce the hard
-> +	 * throttle on all transaction commits once it has been activated, even
-> +	 * if the committing transactions have resulted in the space usage
-> +	 * dipping back down under the hard limit.
-> +	 *
-> +	 * The ctx->xc_push_lock provides the serialisation necessary for safely
-> +	 * using the lockless waitqueue_active() check in this context.
->  	 */
-> -	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
-> +	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log) ||
-> +	    waitqueue_active(&cil->xc_push_wait)) {
->  		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
->  		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
->  		xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
 > -- 
 > 2.28.0
 > 
