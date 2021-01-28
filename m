@@ -7,40 +7,39 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 019BAC433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:04:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23C30C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:04:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB87A64DDC
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:04:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE38D64DD8
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:04:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231160AbhA1GED (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Jan 2021 01:04:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38354 "EHLO mail.kernel.org"
+        id S231163AbhA1GEF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Jan 2021 01:04:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38238 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229774AbhA1GEC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jan 2021 01:04:02 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5CF2A64DDA;
-        Thu, 28 Jan 2021 06:03:21 +0000 (UTC)
+        id S229774AbhA1GEE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jan 2021 01:04:04 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A455764DD1;
+        Thu, 28 Jan 2021 06:03:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611813801;
-        bh=IkR9KkZMpbkGceud4If+C+B7p+/y2pP/T/nYjTyFVY4=;
+        s=k20201202; t=1611813828;
+        bh=m8Qh7VKkX1Rs8QNA/v6iLHdDI1w6AptEeDAgveOeLEk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=dM2gZVAJAY5oaIaHo9DVd5Q/+wMIGR+aj+PWHh6360J6XiVKEd2JyCQJO/Mob5m+d
-         nCN7Z//tbjTgGqsB9SQ08KQSu+AKosq26QNFMUcCElscEOBzyLStl1A2Hj+g2BEMJg
-         0yqoK6ihvFfiWTKcBFxLNADG6GAgx5eXI1vlT7SgCvaxdiqggbNdv5M4MZTculikHK
-         PIe5vPZPOgMMcWrMrpNj7phIusQoeNb9zVyMTPIPU579nYw6GZpaZRLF46EgJaWEP3
-         aRVnLWzRlZxyfaaHl2vZrwY7bEevkAcruuZD2AIsc55bFae3hgBDMnNSygXnSwpkNr
-         PKM6pprekzMBQ==
-Subject: [PATCH 10/11] xfs: refactor xfs_icache_free_{eof,cow}blocks call
- sites
+        b=FD+oX2f7f1dsVAlUNerO9tFOnQfZJZXjdSG/Hxpd81ngR6nxhgM0bDapwkfPsO2xM
+         nco2S/1ShsbbDjaZ7T6RnMScf0LxlD/OwvNJ/t6qTYAW7uByqo5DV/0WqORWIE6R4d
+         5xgziVYPu5CZmjv6PAHKhnDN+8gK8jrhaqJ9Odjy48EgYfrhXHfGrz6Cy1w6n+43jf
+         T6LvplC/gkYlZJHBG2XKBHgZ0Iv+JBgi86IOd8bgfm0KsvjyyM4EfBPDcNw2Xb6irS
+         qeKnTVYcSIAEX9MCUXIvpw94k6SmOa+TD0ztRHlbIk/bUAmQBI3k7vSBo7ZpKyi3Zr
+         YI3INcghU/5rA==
+Subject: [PATCH 01/11] xfs: relocate the eofb/cowb workqueue functions
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
         hch@infradead.org, david@fromorbit.com, bfoster@redhat.com
-Date:   Wed, 27 Jan 2021 22:03:17 -0800
-Message-ID: <161181379764.1525026.7294780140646492910.stgit@magnolia>
-In-Reply-To: <161181374062.1525026.14717838769921652940.stgit@magnolia>
-References: <161181374062.1525026.14717838769921652940.stgit@magnolia>
+Date:   Wed, 27 Jan 2021 22:03:44 -0800
+Message-ID: <161181382488.1525433.10026562489938948192.stgit@magnolia>
+In-Reply-To: <161181381898.1525433.10723801103841220046.stgit@magnolia>
+References: <161181381898.1525433.10723801103841220046.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -51,121 +50,167 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In anticipation of more restructuring of the eof/cowblocks gc code,
-refactor calling of those two functions into a single internal helper
-function, then present a new standard interface to purge speculative
-block preallocations and start shifting higher level code to use that.
+Move the xfs_{eof,cow}blocks_worker and xfs_queue_{eof,cow}blocks
+functions further down in the file so that the cleanups in the next
+patches won't have to pre-declare static functions.  No functional
+changes.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_file.c   |    3 +--
- fs/xfs/xfs_icache.c |   39 +++++++++++++++++++++++++++++++++------
- fs/xfs/xfs_icache.h |    1 +
- fs/xfs/xfs_trace.h  |    1 +
- 4 files changed, 36 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_icache.c |  126 ++++++++++++++++++++++++++-------------------------
+ 1 file changed, 63 insertions(+), 63 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 3be0b1d81325..dc91973c0b4f 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -759,8 +759,7 @@ xfs_file_buffered_write(
- 
- 		xfs_iunlock(ip, iolock);
- 		eofb.eof_flags = XFS_EOF_FLAGS_SYNC;
--		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
--		xfs_icache_free_cowblocks(ip->i_mount, &eofb);
-+		xfs_blockgc_free_space(ip->i_mount, &eofb);
- 		goto write_retry;
- 	}
- 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index cd369dd48818..97c15fcdd6f7 100644
+index 97c15fcdd6f7..15dcf57b4b19 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1645,6 +1645,38 @@ xfs_start_block_reaping(
- 	xfs_queue_cowblocks(mp);
+@@ -915,69 +915,6 @@ xfs_inode_walk(
+ 	return last_error;
  }
  
-+/* Scan all incore inodes for block preallocations that we can remove. */
-+static inline int
-+xfs_blockgc_scan(
-+	struct xfs_mount	*mp,
-+	struct xfs_eofblocks	*eofb)
-+{
-+	int			error;
-+
-+	error = xfs_icache_free_eofblocks(mp, eofb);
-+	if (error)
-+		return error;
-+
-+	error = xfs_icache_free_cowblocks(mp, eofb);
-+	if (error)
-+		return error;
-+
-+	return 0;
-+}
-+
-+/*
-+ * Try to free space in the filesystem by purging eofblocks and cowblocks.
-+ */
-+int
-+xfs_blockgc_free_space(
-+	struct xfs_mount	*mp,
-+	struct xfs_eofblocks	*eofb)
-+{
-+	trace_xfs_blockgc_free_space(mp, eofb, _RET_IP_);
-+
-+	return xfs_blockgc_scan(mp, eofb);
-+}
-+
- /*
-  * Run cow/eofblocks scans on the supplied dquots.  We don't know exactly which
-  * quota caused an allocation failure, so we make a best effort by including
-@@ -1665,7 +1697,6 @@ xfs_blockgc_free_dquots(
- 	struct xfs_eofblocks	eofb = {0};
- 	struct xfs_mount	*mp = NULL;
- 	bool			do_work = false;
--	int			error;
- 
- 	if (!udqp && !gdqp && !pdqp)
- 		return 0;
-@@ -1703,11 +1734,7 @@ xfs_blockgc_free_dquots(
- 	if (!do_work)
- 		return 0;
- 
--	error = xfs_icache_free_eofblocks(mp, &eofb);
--	if (error)
--		return error;
+-/*
+- * Background scanning to trim post-EOF preallocated space. This is queued
+- * based on the 'speculative_prealloc_lifetime' tunable (5m by default).
+- */
+-void
+-xfs_queue_eofblocks(
+-	struct xfs_mount *mp)
+-{
+-	rcu_read_lock();
+-	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_EOFBLOCKS_TAG))
+-		queue_delayed_work(mp->m_eofblocks_workqueue,
+-				   &mp->m_eofblocks_work,
+-				   msecs_to_jiffies(xfs_eofb_secs * 1000));
+-	rcu_read_unlock();
+-}
 -
--	return xfs_icache_free_cowblocks(mp, &eofb);
-+	return xfs_blockgc_free_space(mp, &eofb);
+-void
+-xfs_eofblocks_worker(
+-	struct work_struct *work)
+-{
+-	struct xfs_mount *mp = container_of(to_delayed_work(work),
+-				struct xfs_mount, m_eofblocks_work);
+-
+-	if (!sb_start_write_trylock(mp->m_super))
+-		return;
+-	xfs_icache_free_eofblocks(mp, NULL);
+-	sb_end_write(mp->m_super);
+-
+-	xfs_queue_eofblocks(mp);
+-}
+-
+-/*
+- * Background scanning to trim preallocated CoW space. This is queued
+- * based on the 'speculative_cow_prealloc_lifetime' tunable (5m by default).
+- * (We'll just piggyback on the post-EOF prealloc space workqueue.)
+- */
+-void
+-xfs_queue_cowblocks(
+-	struct xfs_mount *mp)
+-{
+-	rcu_read_lock();
+-	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_COWBLOCKS_TAG))
+-		queue_delayed_work(mp->m_eofblocks_workqueue,
+-				   &mp->m_cowblocks_work,
+-				   msecs_to_jiffies(xfs_cowb_secs * 1000));
+-	rcu_read_unlock();
+-}
+-
+-void
+-xfs_cowblocks_worker(
+-	struct work_struct *work)
+-{
+-	struct xfs_mount *mp = container_of(to_delayed_work(work),
+-				struct xfs_mount, m_cowblocks_work);
+-
+-	if (!sb_start_write_trylock(mp->m_super))
+-		return;
+-	xfs_icache_free_cowblocks(mp, NULL);
+-	sb_end_write(mp->m_super);
+-
+-	xfs_queue_cowblocks(mp);
+-}
+-
+ /*
+  * Grab the inode for reclaim exclusively.
+  *
+@@ -1396,6 +1333,37 @@ xfs_icache_free_eofblocks(
+ 			XFS_ICI_EOFBLOCKS_TAG);
  }
  
- /* Run cow/eofblocks scans on the quotas attached to the inode. */
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 5f520de637f6..583c132ae0fb 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -57,6 +57,7 @@ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
- int xfs_blockgc_free_dquots(struct xfs_dquot *udqp, struct xfs_dquot *gdqp,
- 		struct xfs_dquot *pdqp, unsigned int eof_flags);
- int xfs_blockgc_free_quota(struct xfs_inode *ip, unsigned int eof_flags);
-+int xfs_blockgc_free_space(struct xfs_mount *mp, struct xfs_eofblocks *eofb);
++/*
++ * Background scanning to trim post-EOF preallocated space. This is queued
++ * based on the 'speculative_prealloc_lifetime' tunable (5m by default).
++ */
++void
++xfs_queue_eofblocks(
++	struct xfs_mount *mp)
++{
++	rcu_read_lock();
++	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_EOFBLOCKS_TAG))
++		queue_delayed_work(mp->m_eofblocks_workqueue,
++				   &mp->m_eofblocks_work,
++				   msecs_to_jiffies(xfs_eofb_secs * 1000));
++	rcu_read_unlock();
++}
++
++void
++xfs_eofblocks_worker(
++	struct work_struct *work)
++{
++	struct xfs_mount *mp = container_of(to_delayed_work(work),
++				struct xfs_mount, m_eofblocks_work);
++
++	if (!sb_start_write_trylock(mp->m_super))
++		return;
++	xfs_icache_free_eofblocks(mp, NULL);
++	sb_end_write(mp->m_super);
++
++	xfs_queue_eofblocks(mp);
++}
++
+ static inline unsigned long
+ xfs_iflag_for_tag(
+ 	int		tag)
+@@ -1608,6 +1576,38 @@ xfs_icache_free_cowblocks(
+ 			XFS_ICI_COWBLOCKS_TAG);
+ }
  
- void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 38649e3341cb..27929c6ca43a 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3928,6 +3928,7 @@ DEFINE_EVENT(xfs_eofblocks_class, name,	\
- 		 unsigned long caller_ip), \
- 	TP_ARGS(mp, eofb, caller_ip))
- DEFINE_EOFBLOCKS_EVENT(xfs_ioc_free_eofblocks);
-+DEFINE_EOFBLOCKS_EVENT(xfs_blockgc_free_space);
- 
- #endif /* _TRACE_XFS_H */
- 
++/*
++ * Background scanning to trim preallocated CoW space. This is queued
++ * based on the 'speculative_cow_prealloc_lifetime' tunable (5m by default).
++ * (We'll just piggyback on the post-EOF prealloc space workqueue.)
++ */
++void
++xfs_queue_cowblocks(
++	struct xfs_mount *mp)
++{
++	rcu_read_lock();
++	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_COWBLOCKS_TAG))
++		queue_delayed_work(mp->m_eofblocks_workqueue,
++				   &mp->m_cowblocks_work,
++				   msecs_to_jiffies(xfs_cowb_secs * 1000));
++	rcu_read_unlock();
++}
++
++void
++xfs_cowblocks_worker(
++	struct work_struct *work)
++{
++	struct xfs_mount *mp = container_of(to_delayed_work(work),
++				struct xfs_mount, m_cowblocks_work);
++
++	if (!sb_start_write_trylock(mp->m_super))
++		return;
++	xfs_icache_free_cowblocks(mp, NULL);
++	sb_end_write(mp->m_super);
++
++	xfs_queue_cowblocks(mp);
++}
++
+ void
+ xfs_inode_set_cowblocks_tag(
+ 	xfs_inode_t	*ip)
 
