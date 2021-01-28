@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF44C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:03:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40F17C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:03:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF1BF64DDB
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:03:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E31CD64DD1
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:03:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229866AbhA1GD1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Jan 2021 01:03:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37784 "EHLO mail.kernel.org"
+        id S231199AbhA1GDp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Jan 2021 01:03:45 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38204 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229804AbhA1GD0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jan 2021 01:03:26 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1024F64DD9;
-        Thu, 28 Jan 2021 06:03:10 +0000 (UTC)
+        id S229804AbhA1GDk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jan 2021 01:03:40 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C95EC64DD8;
+        Thu, 28 Jan 2021 06:02:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611813790;
-        bh=PJlk3qxzrnwoA9J9lm7//PGCAxhTKvM0I/wEcnbGbKE=;
+        s=k20201202; t=1611813778;
+        bh=FiQBKBbRlJioc+/SUbKeUYhQMTMkFu1pi8WunyZNsEI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=jmj8l7Y+IxhST0vUlfARyyzwP6xRiwGzlKhE+/ooAmVAXiivGNdNwFBplb5W05U6V
-         7Smq2KLrA2sqHh8p/94jOVW2I1aQEcSGG+90Nu6nZMxUGlI9EM16ErgODUnCOEo/v2
-         xGLQowll8AME6vXa/j4QXoip9d9SY2Anln7xXTqDc7QSgIYLEh2pSxAlLnEvDgv/Dz
-         OHN1p1mlWVWJQBDjfstLnEpfwsqFSUraotovHlfPRysVqiaZLpaJ8CNyWEAOWmA8bX
-         A2fHVjRaw2+vWjfpqf6s4jRZz9VCwOXHAe76pgtwKVaUPngO8iIHbgGEoGs7wZbHeR
-         5ScLZl9TqKWUQ==
-Subject: [PATCH 08/11] xfs: flush eof/cowblocks if we can't reserve quota for
- chown
+        b=bD2cFCIcSjPs6t56+lEkChWMZFzhlxON1Ul2CsTr/Yqu76QKS7RIREKDUp5xfSBc6
+         PjLp0XgyQ6VPjmcshVXY39xwEavwU9e63Ekkpb6Py90WjWD5hlmXAIlPNXEU66pV7v
+         hoZhxJGuJ87KJBITiJV6pn3YlBCEhXjNM3UPhJOxq2YbaB2Leyq+ZK2qfrZf3hisZZ
+         owcFkmPhjEV4PkLeBXytoYAMGVZbA+OcetnpAcfNlunLrR2bRQ0k9FEtDQXvly6Sgt
+         q0uS0c30Z3rvbuVhjE6rNBYsJw4Rh5Aol6FyKiEthkEIGZZlFdLYxyCJZvs1i3iVlB
+         cLob7pMHkhK7Q==
+Subject: [PATCH 06/11] xfs: flush eof/cowblocks if we can't reserve quota for
+ file blocks
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
         bfoster@redhat.com
-Date:   Wed, 27 Jan 2021 22:03:06 -0800
-Message-ID: <161181378627.1525026.5498292649869722057.stgit@magnolia>
+Date:   Wed, 27 Jan 2021 22:02:55 -0800
+Message-ID: <161181377500.1525026.4807452419379444724.stgit@magnolia>
 In-Reply-To: <161181374062.1525026.14717838769921652940.stgit@magnolia>
 References: <161181374062.1525026.14717838769921652940.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,126 +51,63 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a file user, group, or project change is unable to reserve enough
-quota to handle the modification, try clearing whatever space the
-filesystem might have been hanging onto in the hopes of speeding up the
-filesystem.  The flushing behavior will become particularly important
-when we add deferred inode inactivation because that will increase the
-amount of space that isn't actively tied to user data.
-
-Note that the retry loop is open-coded here because there are only two
-places in the codebase where we ever change [ugp]id; and the setattr and
-setxattr code is already tricky enough.
+If a fs modification (data write, reflink, xattr set, fallocate, etc.)
+is unable to reserve enough quota to handle the modification, try
+clearing whatever space the filesystem might have been hanging onto in
+the hopes of speeding up the filesystem.  The flushing behavior will
+become particularly important when we add deferred inode inactivation
+because that will increase the amount of space that isn't actively tied
+to user data.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_ioctl.c       |    9 ++++++++-
- fs/xfs/xfs_iops.c        |   10 +++++++++-
- fs/xfs/xfs_quota.h       |   18 ++++++++++++++++--
- fs/xfs/xfs_trans_dquot.c |   46 ++++++++++++++++++++++++++++++++++++++++++----
- 4 files changed, 75 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_quota.h       |   15 ++++++--
+ fs/xfs/xfs_reflink.c     |    7 +++-
+ fs/xfs/xfs_trans.c       |    9 ++++-
+ fs/xfs/xfs_trans_dquot.c |   87 +++++++++++++++++++++++++++++++++++++++++++---
+ 4 files changed, 107 insertions(+), 11 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 73cfee8007a8..6adfc8541d61 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1436,6 +1436,7 @@ xfs_ioctl_setattr(
- 	struct xfs_trans	*tp;
- 	struct xfs_dquot	*pdqp = NULL;
- 	struct xfs_dquot	*olddquot = NULL;
-+	unsigned int		quota_retry = 0;
- 	int			code;
- 
- 	trace_xfs_ioctl_setattr(ip);
-@@ -1462,6 +1463,7 @@ xfs_ioctl_setattr(
- 
- 	xfs_ioctl_setattr_prepare_dax(ip, fa);
- 
-+retry:
- 	tp = xfs_ioctl_setattr_get_trans(ip);
- 	if (IS_ERR(tp)) {
- 		code = PTR_ERR(tp);
-@@ -1471,9 +1473,14 @@ xfs_ioctl_setattr(
- 	if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp) &&
- 	    ip->i_d.di_projid != fa->fsx_projid) {
- 		code = xfs_trans_reserve_quota_chown(tp, ip, NULL, NULL, pdqp,
--				capable(CAP_FOWNER));
-+				capable(CAP_FOWNER), &quota_retry);
- 		if (code)	/* out of quota */
- 			goto error_trans_cancel;
-+		if (quota_retry) {
-+			xfs_trans_cancel_qretry_chown(tp, ip, NULL, NULL,
-+					pdqp);
-+			goto retry;
-+		}
- 	}
- 
- 	xfs_fill_fsxattr(ip, false, &old_fa);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 51c877ce90bc..9453c984d715 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -660,6 +660,7 @@ xfs_setattr_nonsize(
- 	kgid_t			gid = GLOBAL_ROOT_GID, igid = GLOBAL_ROOT_GID;
- 	struct xfs_dquot	*udqp = NULL, *gdqp = NULL;
- 	struct xfs_dquot	*olddquot1 = NULL, *olddquot2 = NULL;
-+	unsigned int		quota_retry = 0;
- 
- 	ASSERT((mask & ATTR_SIZE) == 0);
- 
-@@ -700,6 +701,7 @@ xfs_setattr_nonsize(
- 			return error;
- 	}
- 
-+retry:
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
- 	if (error)
- 		goto out_dqrele;
-@@ -731,9 +733,15 @@ xfs_setattr_nonsize(
- 		     (XFS_IS_GQUOTA_ON(mp) && !gid_eq(igid, gid)))) {
- 			ASSERT(tp);
- 			error = xfs_trans_reserve_quota_chown(tp, ip, udqp,
--					gdqp, NULL, capable(CAP_FOWNER));
-+					gdqp, NULL, capable(CAP_FOWNER),
-+					&quota_retry);
- 			if (error)	/* out of quota */
- 				goto out_cancel;
-+			if (quota_retry) {
-+				xfs_trans_cancel_qretry_chown(tp, ip, udqp,
-+						gdqp, NULL);
-+				goto retry;
-+			}
- 		}
- 
- 		/*
 diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index 7d87a1244256..4f45e7feb841 100644
+index c3a5b48f5860..dcdc3cd0361a 100644
 --- a/fs/xfs/xfs_quota.h
 +++ b/fs/xfs/xfs_quota.h
-@@ -105,7 +105,10 @@ extern struct xfs_dquot *xfs_qm_vop_chown(struct xfs_trans *,
- 		struct xfs_inode *, struct xfs_dquot **, struct xfs_dquot *);
- int xfs_trans_reserve_quota_chown(struct xfs_trans *tp, struct xfs_inode *ip,
- 		struct xfs_dquot *udqp, struct xfs_dquot *gdqp,
--		struct xfs_dquot *pdqp, bool force);
-+		struct xfs_dquot *pdqp, bool force, unsigned int *retry);
-+void xfs_trans_cancel_qretry_chown(struct xfs_trans *tp, struct xfs_inode *ip,
-+		struct xfs_dquot *udqp, struct xfs_dquot *gdqp,
-+		struct xfs_dquot *pdqp);
- extern int xfs_qm_dqattach(struct xfs_inode *);
- extern int xfs_qm_dqattach_locked(struct xfs_inode *ip, bool doalloc);
- extern void xfs_qm_dqdetach(struct xfs_inode *);
-@@ -182,13 +185,24 @@ xfs_trans_cancel_qretry_icreate(
- 	ASSERT(0);
+@@ -82,7 +82,9 @@ extern void xfs_trans_mod_dquot_byino(struct xfs_trans *, struct xfs_inode *,
+ extern void xfs_trans_apply_dquot_deltas(struct xfs_trans *);
+ extern void xfs_trans_unreserve_and_mod_dquots(struct xfs_trans *);
+ int xfs_trans_reserve_quota_nblks(struct xfs_trans *tp, struct xfs_inode *ip,
+-		int64_t dblocks, int64_t rblocks, bool force);
++		int64_t dblocks, int64_t rblocks, bool force,
++		unsigned int *retry);
++void xfs_trans_cancel_qretry_nblks(struct xfs_trans *tp, struct xfs_inode *ip);
+ extern int xfs_trans_reserve_quota_bydquots(struct xfs_trans *,
+ 		struct xfs_mount *, struct xfs_dquot *,
+ 		struct xfs_dquot *, struct xfs_dquot *, int64_t, long, uint);
+@@ -114,7 +116,8 @@ extern void xfs_qm_unmount_quotas(struct xfs_mount *);
+ static inline int
+ xfs_quota_reserve_blkres(struct xfs_inode *ip, int64_t dblocks)
+ {
+-	return xfs_trans_reserve_quota_nblks(NULL, ip, dblocks, 0, false);
++	return xfs_trans_reserve_quota_nblks(NULL, ip, dblocks, 0, false,
++			NULL);
+ }
+ #else
+ static inline int
+@@ -134,7 +137,7 @@ xfs_qm_vop_dqalloc(struct xfs_inode *ip, kuid_t kuid, kgid_t kgid,
+ #define xfs_trans_unreserve_and_mod_dquots(tp)
+ static inline int xfs_trans_reserve_quota_nblks(struct xfs_trans *tp,
+ 		struct xfs_inode *ip, int64_t dblocks, int64_t rblocks,
+-		bool force)
++		bool force, unsigned int *retry)
+ {
+ 	return 0;
+ }
+@@ -159,6 +162,12 @@ xfs_trans_reserve_quota_icreate(struct xfs_trans *tp, struct xfs_dquot *udqp,
+ 	return 0;
  }
  
 +static inline void
-+xfs_trans_cancel_qretry_chown(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	struct xfs_dquot	*udqp,
-+	struct xfs_dquot	*gdqp,
-+	struct xfs_dquot	*pdqp)
++xfs_trans_cancel_qretry_nblks(struct xfs_trans *tp, struct xfs_inode *ip)
 +{
 +	ASSERT(0);
 +}
@@ -178,96 +115,190 @@ index 7d87a1244256..4f45e7feb841 100644
  #define xfs_qm_vop_create_dqattach(tp, ip, u, g, p)
  #define xfs_qm_vop_rename_dqattach(it)					(0)
  #define xfs_qm_vop_chown(tp, ip, old, new)				(NULL)
- static inline int
- xfs_trans_reserve_quota_chown(struct xfs_trans *tp, struct xfs_inode *ip,
- 		struct xfs_dquot *udqp, struct xfs_dquot *gdqp,
--		struct xfs_dquot *pdqp, bool force)
-+		struct xfs_dquot *pdqp, bool force, unsigned int *retry)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index c6296fd1512f..068e70d7a3bc 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1093,10 +1093,15 @@ xfs_reflink_remap_extent(
+ 	 * count.  This is suboptimal, but the VFS flushed the dest range
+ 	 * before we started.  That should have removed all the delalloc
+ 	 * reservations, but we code defensively.
++	 *
++	 * xfs_trans_alloc_inode above already tried to grab an even larger
++	 * quota reservation, and kicked off a blockgc scan if it couldn't.
++	 * If we can't get a potentially smaller quota reservation now, we're
++	 * done.
+ 	 */
+ 	if (!quota_reserved && !smap_real && dmap_written) {
+ 		error = xfs_trans_reserve_quota_nblks(tp, ip,
+-				dmap->br_blockcount, 0, false);
++				dmap->br_blockcount, 0, false, NULL);
+ 		if (error)
+ 			goto out_cancel;
+ 	}
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index bfb8b2a1594f..3d1f745b721a 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1046,8 +1046,10 @@ xfs_trans_alloc_inode(
  {
+ 	struct xfs_trans	*tp;
+ 	struct xfs_mount	*mp = ip->i_mount;
++	unsigned int		qretry = 0;
+ 	int			error;
+ 
++retry:
+ 	error = xfs_trans_alloc(mp, resv, dblocks,
+ 			rblocks / mp->m_sb.sb_rextsize,
+ 			force ? XFS_TRANS_RESERVE : 0, &tp);
+@@ -1064,9 +1066,14 @@ xfs_trans_alloc_inode(
+ 		goto out_cancel;
+ 	}
+ 
+-	error = xfs_trans_reserve_quota_nblks(tp, ip, dblocks, rblocks, force);
++	error = xfs_trans_reserve_quota_nblks(tp, ip, dblocks, rblocks, force,
++			&qretry);
+ 	if (error)
+ 		goto out_cancel;
++	if (qretry) {
++		xfs_trans_cancel_qretry_nblks(tp, ip);
++		goto retry;
++	}
+ 
+ 	*tpp = tp;
  	return 0;
- }
 diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 2358c9e35be8..7518424ee8b4 100644
+index 73ef5994d09d..229e2a20889f 100644
 --- a/fs/xfs/xfs_trans_dquot.c
 +++ b/fs/xfs/xfs_trans_dquot.c
-@@ -942,7 +942,15 @@ xfs_trans_cancel_qretry_icreate(
+@@ -16,6 +16,7 @@
+ #include "xfs_quota.h"
+ #include "xfs_qm.h"
+ #include "xfs_trace.h"
++#include "xfs_icache.h"
+ 
+ STATIC void	xfs_trans_alloc_dqinfo(xfs_trans_t *);
+ 
+@@ -770,11 +771,67 @@ xfs_trans_reserve_quota_bydquots(
+ 	return error;
  }
  
++/*
++ * Decide what to do after an attempt to reserve some quota.  This will set
++ * the retry and error parameters as needed, and returns true if the quota
++ * reservation succeeded.
++ */
++static inline bool
++reservation_success(
++	unsigned int		qflag,
++	unsigned int		*retry,
++	int			*error)
++{
++	/*
++	 * The caller is not interested in retries.  Return whether or not we
++	 * got an error code.
++	 */
++	if (retry == NULL)
++		return *error == 0;
++
++	if (*error == -EDQUOT || *error == -ENOSPC) {
++		/*
++		 * There isn't enough quota left to allow the reservation.
++		 *
++		 * If none of the retry bits are set, this is the first time
++		 * that we failed a quota reservation.  Zero the error code and
++		 * set the appropriate quota flag in *retry to encourage the
++		 * xfs_trans_reserve_quota_nblks caller to clear some space and
++		 * call back.
++		 *
++		 * If any of the retry bits are set, this means that we failed
++		 * the quota reservation once before, tried to free some quota,
++		 * and have now failed the second quota reservation attempt.
++		 * Pass the error back to the caller; we're done.
++		 */
++		if (!(*retry))
++			*error = 0;
++
++		*retry |= qflag;
++		return false;
++	}
++
++	/* A non-quota error occurred; there is no retry. */
++	if (error)
++		return false;
++
++	/*
++	 * The reservation succeeded.  Clear the quota flag from the retry
++	 * state because there is nothing to retry.
++	 */
++	*retry &= ~qflag;
++	return true;
++}
+ 
  /*
-- * Quota reservations for setattr(AT_UID|AT_GID|AT_PROJID).
-+ * Chagnge quota reservations for setattr(AT_UID|AT_GID|AT_PROJID).  This
-+ * doesn't change the actual usage, just the reservation.  The caller must hold
-+ * ILOCK_EXCL on the inode.  If @retry is not a NULL pointer, the caller must
-+ * ensure that *retry is set to zero before the first time this function is
-+ * called.
+- * Lock the dquot and change the reservation if we can.
+- * This doesn't change the actual usage, just the reservation.
+- * The inode sent in is locked.
++ * Lock the dquot and change the reservation if we can.  This doesn't change
++ * the actual usage, just the reservation.  The caller must hold ILOCK_EXCL on
++ * the inode.  If @retry is not a NULL pointer, the caller must ensure that
++ * *retry is set to 0 before the first time this function is called.
 + *
 + * If the quota reservation fails because we hit a quota limit (and retry is
 + * not a NULL pointer, and *retry is zero), this function will set *retry to
 + * nonzero and return zero.
   */
  int
- xfs_trans_reserve_quota_chown(
-@@ -951,7 +959,8 @@ xfs_trans_reserve_quota_chown(
- 	struct xfs_dquot	*udqp,
- 	struct xfs_dquot	*gdqp,
- 	struct xfs_dquot	*pdqp,
+ xfs_trans_reserve_quota_nblks(
+@@ -782,7 +839,8 @@ xfs_trans_reserve_quota_nblks(
+ 	struct xfs_inode	*ip,
+ 	int64_t			dblocks,
+ 	int64_t			rblocks,
 -	bool			force)
 +	bool			force,
 +	unsigned int		*retry)
  {
  	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_dquot	*udq_unres = NULL;	/* old dquots */
-@@ -1011,7 +1020,7 @@ xfs_trans_reserve_quota_chown(
- 			gdq_delblks, pdq_delblks, ip->i_d.di_nblocks, 1,
- 			qflags);
- 	if (error)
--		return error;
-+		goto err;
+ 	unsigned int		qflags = 0;
+@@ -801,14 +859,14 @@ xfs_trans_reserve_quota_nblks(
+ 	error = xfs_trans_reserve_quota_bydquots(tp, mp, ip->i_udquot,
+ 			ip->i_gdquot, ip->i_pdquot, dblocks, 0,
+ 			XFS_QMOPT_RES_REGBLKS | qflags);
+-	if (error)
++	if (!reservation_success(XFS_QMOPT_RES_REGBLKS, retry, &error))
+ 		return error;
  
- 	/*
- 	 * Do the delayed blks reservations/unreservations now. Since, these
-@@ -1029,13 +1038,42 @@ xfs_trans_reserve_quota_chown(
- 				udq_delblks, gdq_delblks, pdq_delblks,
- 				(xfs_qcnt_t)delblks, 0, qflags);
- 		if (error)
--			return error;
-+			goto err;
- 		xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount, udq_unres,
- 				gdq_unres, pdq_unres, -((xfs_qcnt_t)delblks),
- 				0, qflags);
- 	}
- 
+ 	/* Do the same but for realtime blocks. */
+ 	error = xfs_trans_reserve_quota_bydquots(tp, mp, ip->i_udquot,
+ 			ip->i_gdquot, ip->i_pdquot, rblocks, 0,
+ 			XFS_QMOPT_RES_RTBLKS | qflags);
+-	if (error) {
++	if (!reservation_success(XFS_QMOPT_RES_RTBLKS, retry, &error)) {
+ 		xfs_trans_reserve_quota_bydquots(tp, mp, ip->i_udquot,
+ 				ip->i_gdquot, ip->i_pdquot, -dblocks, 0,
+ 				XFS_QMOPT_RES_REGBLKS);
+@@ -818,6 +876,23 @@ xfs_trans_reserve_quota_nblks(
  	return 0;
-+err:
-+	/*
-+	 * Handle all quota reservation failures in the same place because we
-+	 * don't want the success predicate to clear REGBLKS from the retry
-+	 * flags after we _reserve_quota for the ondisk blocks but before we
-+	 * _reserve_quota for the delalloc blocks.  If we were called with a
-+	 * nonzero *retry, that means we failed to get the quota reservation
-+	 * once before and do not want to schedule a retry on a second error.
-+	 */
-+	reservation_success(XFS_QMOPT_RES_REGBLKS, retry, &error);
-+	return error;
-+}
-+
-+/*
-+ * Cancel a transaction and try to clear some space so that we can reserve some
-+ * quota.  When this function returns, the transaction will be cancelled and
-+ * ILOCK_EXCL will no longer be held.
-+ */
-+void
-+xfs_trans_cancel_qretry_chown(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	struct xfs_dquot	*udqp,
-+	struct xfs_dquot	*gdqp,
-+	struct xfs_dquot	*pdqp)
-+{
-+	xfs_trans_cancel(tp);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	xfs_blockgc_free_dquots(udqp, gdqp, pdqp, 0);
  }
  
- /*
++/*
++ * Cancel a transaction and try to clear some space so that we can reserve some
++ * quota.  The caller must hold the ILOCK; when this function returns, the
++ * transaction will be cancelled and the ILOCK will have been released.
++ */
++void
++xfs_trans_cancel_qretry_nblks(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip)
++{
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++
++	xfs_trans_cancel(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_blockgc_free_quota(ip, 0);
++}
++
+ /* Change the quota reservations for an inode creation activity. */
+ int
+ xfs_trans_reserve_quota_icreate(
 
