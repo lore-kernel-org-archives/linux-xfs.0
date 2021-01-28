@@ -2,147 +2,261 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48709C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:57:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9698C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 07:13:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D83DB64D9D
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 06:57:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B12664DD8
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 07:13:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229578AbhA1G5m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Jan 2021 01:57:42 -0500
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:36335 "EHLO
+        id S231599AbhA1HNK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Jan 2021 02:13:10 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:56944 "EHLO
         esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229504AbhA1G5l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jan 2021 01:57:41 -0500
+        with ESMTP id S231573AbhA1HMx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jan 2021 02:12:53 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611817060; x=1643353060;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=jxw3XcqfHEsfnNHxpaGpfaz3/8OJJnMpObO7siL5sR0=;
-  b=Mjf77OS5sqKmDv2pe9ZPlJVhUeORsSRuEfH/fQKAyEgWYo8Tn+5h6Mjt
-   yktGOAgK09Z9pBhNeKu6X4CesZ5y57HQLngd68mBOry93ZUs4ylN/enGF
-   aAevlf+kP1sAvzqauE2xrVrITvaGWc74Hy9hH88ekdNo7euPZZzbYusZP
-   DNXRz3cJoBifMoZ5JJbMRKbGy0B5VB4nhAmGnjLJQcHLlAQCIsCoan/j2
-   Aev7jmGrBCDo8b6wwWwpcQvbRepGKKyl8WvO0FvGrMEKovn8RG1taeq6u
-   Yn/Qi9BlTDkMib2bITo6t0GLD1y3pBN/0k30AzG472iodgvMTDIquzc7u
-   A==;
-IronPort-SDR: VgU4vY35iJZI/xKxF/thEkLdxnej+9gXNh4QiJ+ohAtRc0kI2sMd5Dm/5yGsU0E+eeiIXvMza7
- Zqwa/a+Z9ywv7myudMjZ6adrnax2DEsvF4ryYxq7wYBv3rd/fgUxw9EkpjBsq2BFWX8fbZzd3W
- btBu+wI8bZfqo3fwpyRNtFVefo76Ke9qEfr7m77XC2H8SleSr4KKWdy6+3JuZuGIAV60KIAPQp
- HLcopj+OtZ1C+n64p6516K0PxCHIsDsAxFfSF4pvyliVdJpH5UqVvgHSvGKKNipUEOBVkdwHQq
- qeI=
+  t=1611817972; x=1643353972;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=eWet3+GOqUNRw+dCyihtl3LTOeV3gTTJDd7Ea4w+clg=;
+  b=Z/Q/cUp0WjHW0/lDDrnZrBSMEvXgwTaDGuz0J9tHZJUsGZFzV7s1108c
+   S+9Ktd9IqfC4q8MEMKcUwP8pIiborwfE9f55DmOJzEoA2z+9z2UbHCBHW
+   lkGBCiCFTlmGDqwnfnUjHFnUhYv9oBsGNXlag10HfGuWulMoq7Ph842RM
+   zVDc6WugewgZuzmJUqmzZJb1uYjnG19Go7dyNwG9aSVkpSkuHtgoe/ZLn
+   PgI3M2TkDt+BpysBa6La2LsyzVaiMP1Uw1BiqcVYOR91qAL88gzALLVhH
+   lklyx3edGIKGPCXfi4RNYbtS7zpRL4xO8FVcPmX2fOmlQIcWx+cUyvVg6
+   Q==;
+IronPort-SDR: ikNxmrVd4pwwh9DAjzr/LPzb+8iZpOWSAf7j1UmN+9YPo/Q9Hgwj9iv8q63yUqErhhbmn3Ohb1
+ BIe+r6fj+Q0NyBetUFvZ+s1CHpwD1hX0j3aMVTHtWxtetANKcESVkceh9Zscoqq3M0xJsz8gPc
+ BbnHAeVrltkIOPxDicfZXoHByODQzD3BzQ/I33bhmbWGOBipy6qy6LeIR4yvKMX+4UMDIcWOY1
+ DzgKH9EXYhfAldCiM3Schs9DOEW8pLjJG2lETbz3kEikUjv49plpcm9cRt1ekRoYYQmvhjfAsg
+ 0Ww=
 X-IronPort-AV: E=Sophos;i="5.79,381,1602518400"; 
-   d="scan'208";a="162961994"
-Received: from mail-dm6nam12lp2169.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.169])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2021 14:56:34 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=A6HFgvFiZQYPY/yagewtYx462iYp2l/z7nxZyzfaNusUv2AWFIPgHHGVkKwweocvisDkCJBkqg7QjXkATSVQxa/a9BB4sgIsotOvfCbj1933HmLMbByCF6XMQWW75W04xLBZiuEHsIo2isw5dOwS2oLLqR72/KoN972kVG5kIY0YQ6i46jTRU7upZU047Ay1sCI4S6IKvKfjylIhwIc+nkSZWPK3uGl633gvEl66UKk3ZioZocBsn80d9Jo/KmXSE6RaWn7jBAe7wbOo7Fxj5E2q/B5KI6lpumaO41Q5I5ufNdf1fLn73tZKws0Kran/vJvTG2WRNTskPVKnkO170g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jxw3XcqfHEsfnNHxpaGpfaz3/8OJJnMpObO7siL5sR0=;
- b=RFzku4eU3NTE9CwR2obQ+O7y8XfdxY0VXO6XD/X0Uj2JA9WbsNUDrHCuOFfP31+61fKV11QImlWmsHwKomAAALulpuZ4GxBGc4wUnmiGOItg0cyQBj9IJns8br+A0KUZXoJ6Ytulpx1wn6a3XCfxzOcXDfV1OWw36NeHtIl5DrcE9Kawl50G3BFcCDNk5mYlrkAxhi8LLKkdwzjPSJjwq7Gu7/wYuGF+OXtsonH3iuGW/Qcztp+uuMxFlHuFM+EEwrUh383m1il7s1BJhirnUKpX94lIWo+bwpeL0Rxw0ia9bmYKGbEKOQ4FXMFIc8Dgi6sUlR6mjRaNL3/nb/Pvyg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jxw3XcqfHEsfnNHxpaGpfaz3/8OJJnMpObO7siL5sR0=;
- b=qzkIdN0KopYUPALMz0BXKNQyDwH/Yksih+mVxBlSp9qauPIe8L2eENAjtiEn0pT99Cn0acsukMylbfK+GunP5qZEuLWsT1mPeLqo8JEHJmlCxcsvdsp1sF6EZPWpCgMfub3YboJz/q2EL9jprklXDI+cJvuDXT+nbla7vgbvXvI=
-Received: from DM6PR04MB4972.namprd04.prod.outlook.com (2603:10b6:5:fc::10) by
- DM6PR04MB6730.namprd04.prod.outlook.com (2603:10b6:5:229::9) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3784.13; Thu, 28 Jan 2021 06:56:34 +0000
-Received: from DM6PR04MB4972.namprd04.prod.outlook.com
- ([fe80::9a1:f2ba:2679:8188]) by DM6PR04MB4972.namprd04.prod.outlook.com
- ([fe80::9a1:f2ba:2679:8188%7]) with mapi id 15.20.3784.017; Thu, 28 Jan 2021
- 06:56:34 +0000
-From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-To:     Chandan Babu R <chandanrlinux@gmail.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-CC:     "sandeen@sandeen.net" <sandeen@sandeen.net>,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH V2] xfsprogs: xfs_fsr: Verify bulkstat version information
- in qsort's cmp()
-Thread-Topic: [PATCH V2] xfsprogs: xfs_fsr: Verify bulkstat version
- information in qsort's cmp()
-Thread-Index: AQHW9TW34VKBr0Zkpk6ClA1FXo0MlQ==
-Date:   Thu, 28 Jan 2021 06:56:34 +0000
-Message-ID: <DM6PR04MB4972E9523F3EE5F72CE397B786BA9@DM6PR04MB4972.namprd04.prod.outlook.com>
-References: <20210128052058.30328-1-chandanrlinux@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2600:8802:270c:4b00:19c6:a569:8749:44eb]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 3cff2c73-8726-4972-8762-08d8c359d98d
-x-ms-traffictypediagnostic: DM6PR04MB6730:
-x-microsoft-antispam-prvs: <DM6PR04MB6730D665505B6E79CEFB7CC686BA9@DM6PR04MB6730.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:60;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: rcalHjos9mGM/fg82R9TPmVZHftfSSk0nuNNAcNs4TxKaJJitCj/RAnnzOROs44gcEXeDelZgl8EJWFg/417U7zNEFfzONmBmeB2j+f4bPMZDphzHFr25niSLU0Ei5cOLVBWJobhHAM+H//hUfXQt1FtMo5VPEUFPOkxq4oiIjx9od5YfPs0169SDtto5e1N/rFbneiD5WBRGINPzWKUTforfWSKWiRHZqfhLfh5jMrMz/dNF+KNwN2NYufCTEQoKTufT/yvH0qLHM30Llq1h11bsbkZt1+anRbRPDjvGlr1Zl9tv/Ew3YatJF8l4v26y7xuC8PGGCJPhRUtbz7dJjyPrJ8UjGw3EaNYL+phn7hIRGILRgElOORT39AjauxME9xNofx4mySNCR65HoEyKLlfHLCxvyXdtW/2oS6FrsppXqfEIL86d/TwiSoXrfZjH7gViyghYYuphA9K1MNpmYNIpEbJvEKHMJws1JWZd4GEaJKCfXmfEFm+3vQMz75ebwUdrcmsfxd3sIhBgkVssA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB4972.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(376002)(366004)(39860400002)(346002)(396003)(316002)(110136005)(52536014)(54906003)(8936002)(186003)(8676002)(86362001)(55016002)(478600001)(66946007)(7696005)(33656002)(9686003)(5660300002)(66446008)(2906002)(64756008)(53546011)(91956017)(66476007)(76116006)(83380400001)(558084003)(4326008)(66556008)(15650500001)(71200400001)(6506007);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?AA4n+VQxi/T0bMBpM8sS9c6dV1X0wzxMtVAc9seFFbEQ5SmIAkZN5s9Mzpbd?=
- =?us-ascii?Q?PK0+/bHyE1zIXaeq2Y9E4nHv2gnn25qmCFCRauQQwRe4z/BIWbThEzooqXdq?=
- =?us-ascii?Q?dLrNrOSjw6kHMU0lsn/IRkslUtDTLqw0T+gTLjWjRwIaz9fRxgwQNtlEDQPp?=
- =?us-ascii?Q?11wQTA9qIbcOM/YWrexr7gsXVOgH7pDb7KE6kB7isQMqOBo2jV5a/SZwqWsu?=
- =?us-ascii?Q?VlXEfpyYIOPQk8e+4tfQ9BjewfgS4dbh1ojBfEMFzdwebOIfTJXgZTVlfO4y?=
- =?us-ascii?Q?a7JSdeVmv+j0tVgP7pzH0JkoJDA2gvfVokFRjf8y7J955sel/rb9MZh2CFEl?=
- =?us-ascii?Q?6FBPUbymLEDYpVLVZwJC+F6n34BzdINzFcTLuo2fe+xLYqyulYyZjXGyr1Gi?=
- =?us-ascii?Q?PUDTkQgZCdI9dH++faRDCdOmmyP46muqXaq6zptgfjmOyfcXBiLenKlI1eW5?=
- =?us-ascii?Q?vq0H3sV9kVrr5bxfc8ZaVuYgFt8Pf16ewwsiAd7q9CfuNUG+eQwA+nspqlMu?=
- =?us-ascii?Q?ZWTkuq8fkT6xnDytLQdI9j9cqUrqhYSDQhTp5KLQ4SS0lMosBcl0emv5ZmtM?=
- =?us-ascii?Q?QSNHA9IEK1tmJsSdxZR85crklINvY+H1x/zJhlW+Nrkf6kNwUahzYkT4eJiZ?=
- =?us-ascii?Q?DKFR4bfqxYl64HjcEgP2tSjUXGYiSID0TBItxYqvhjIn8dhybuihvxRiisE5?=
- =?us-ascii?Q?i3A7xLxkh+imno1Lbvgl/OYIwZo50EBqXPXjQSPLfN5h2DcEixgQkmjOlVGC?=
- =?us-ascii?Q?svSopqkF3Hw/zTNUb8WsAInNXXAQAIEoDTwiZp+nyCazBy9f/rB6DkAjokiL?=
- =?us-ascii?Q?dKPe9qCbn4UaXESr6IcQBArClsGiv7DnCMwwxxK+daMrUddinzx8hog76yMy?=
- =?us-ascii?Q?qY4t+J9wRlK4uNe5kZW2ZeAVDARtsM1ilMAa9ejy6u7UVltGTb45J92IPnkF?=
- =?us-ascii?Q?OYN6FGM0rLsRb6TUnD29N3ZN+nvJDREMMq8GoEh+tqVUoXqcjw3rdFcTkyfu?=
- =?us-ascii?Q?NIuN9C7dzEC//VFbLaaXweCXq0vliPkxPYdgD5whlJbnufFXUdhBbJ+3mJXI?=
- =?us-ascii?Q?q3v5PIepXZKrvwU2oDwTSVpb8zxx4aF2TRnWZJiVe0mCPoe9oQI/OAh+VC6T?=
- =?us-ascii?Q?kxm3bGhbU4Y51DfOTF1FqNF+nHEC6bwoRg=3D=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+   d="scan'208";a="162963087"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2021 15:11:47 +0800
+IronPort-SDR: CXLJyjvTh2ozBl0J0n3M4HTJHZaOclzT/km/bBWAGtt9xOPAeCc3hLIeKdi+Dc/On1SogoRxoU
+ EMMcGWgpUm5mk+9NMMMxvPjZxf7VfSUqVBGSfi5qQjym9Vz0j3F5DspBQQpxCLeJ+5+Uf9ywWc
+ wb+xVHjIHBeHee4O0H7pPo8wUu19sXKcfCThMlKQx0s2unmCSBIKccvZzm9Gc9C/j10PEMJSjP
+ SUINTY43+C6IN75F5uccJvtsTWMn9BklriausM1MKzr8/ixMeOJxaforDPXXe56NSl346LNYnX
+ QBGAd3szpraHEF9bnD1PB8uA
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2021 22:54:05 -0800
+IronPort-SDR: UO027L+w2LmrSv+r4jHc7V6MfhclxochZ4q/gKoOnHb/alTZT7F9/4KjZrNCZAKJPJHjEl8zjQ
+ btfDHq8ntGB6arYkxikoGObA79gqCi3nJZAFBbpTjKtHzOWqNheZit1SHeKrnOkOlZqda10wHA
+ lKzVa+peWlZiSXNoZnitf2s3YH424/Lf6Od0Q5TvGZLxtIxoLSsxIGie29rcLN/atLab1ULG9S
+ UmjXPLLRWItiporouoLkwAzUh8fELyClcBeyT3S1PWdOuFAmZ6ShYxhRystXSbBeBsPW0LixEL
+ geY=
+WDCIronportException: Internal
+Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
+  by uls-op-cesaip02.wdc.com with ESMTP; 27 Jan 2021 23:11:46 -0800
+From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com,
+        xen-devel@lists.xenproject.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org,
+        jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
+        ocfs2-devel@oss.oracle.com, linux-pm@vger.kernel.org,
+        linux-mm@kvack.org
+Cc:     axboe@kernel.dk, philipp.reisner@linbit.com,
+        lars.ellenberg@linbit.com, konrad.wilk@oracle.com,
+        roger.pau@citrix.com, minchan@kernel.org, ngupta@vflare.org,
+        sergey.senozhatsky.work@gmail.com, agk@redhat.com,
+        snitzer@redhat.com, hch@lst.de, sagi@grimberg.me,
+        chaitanya.kulkarni@wdc.com, martin.petersen@oracle.com,
+        viro@zeniv.linux.org.uk, tytso@mit.edu, jaegeuk@kernel.org,
+        ebiggers@kernel.org, djwong@kernel.org, shaggy@kernel.org,
+        konishi.ryusuke@gmail.com, mark@fasheh.com, jlbec@evilplan.org,
+        joseph.qi@linux.alibaba.com, damien.lemoal@wdc.com,
+        naohiro.aota@wdc.com, jth@kernel.org, rjw@rjwysocki.net,
+        len.brown@intel.com, pavel@ucw.cz, akpm@linux-foundation.org,
+        hare@suse.de, gustavoars@kernel.org, tiwai@suse.de,
+        alex.shi@linux.alibaba.com, asml.silence@gmail.com,
+        ming.lei@redhat.com, tj@kernel.org, osandov@fb.com,
+        bvanassche@acm.org, jefflexu@linux.alibaba.com
+Subject: [RFC PATCH 01/34] block: move common code into blk_next_bio()
+Date:   Wed, 27 Jan 2021 23:11:00 -0800
+Message-Id: <20210128071133.60335-2-chaitanya.kulkarni@wdc.com>
+X-Mailer: git-send-email 2.22.1
+In-Reply-To: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
+References: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB4972.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3cff2c73-8726-4972-8762-08d8c359d98d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Jan 2021 06:56:34.1538
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: kwfOLxYXxbcbpPXGVw46mvLeTUcO18WCTsNwa7rWM9wWsGHc1dMbvNVHrij+dADdoEEZl1bVnckNrUW1sFKPm9OFJRTcuGTEOm1KZgWupPo=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB6730
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 1/27/21 9:23 PM, Chandan Babu R wrote:=0A=
-> This commit introduces a check to verify that correct bulkstat structures=
- are=0A=
-> being processed by qsort's cmp() function.=0A=
->=0A=
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>=0A=
-> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>=0A=
-=0A=
-Looks good.=0A=
-=0A=
-Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>=0A=
-=0A=
+blk_next_bio() is the central function which allocates the bios for
+discard, write-same, write-zeroes and zone-mgmt. The initialization of
+various bio members is duplicated in disacrd, write-same, write-zeores.
+In this preparation patch we add bdev, sector, op, and opf arguments to
+the blk_next_bio() to reduce the duplication. 
+
+In the next patch we introduce bio_new(), this prepration patch allows
+us to call it inside blk_next_bio().
+
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ block/blk-lib.c   | 36 +++++++++++++++---------------------
+ block/blk-zoned.c |  4 +---
+ block/blk.h       |  5 +++--
+ 3 files changed, 19 insertions(+), 26 deletions(-)
+
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index 752f9c722062..fb486a0bdb58 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -10,7 +10,9 @@
+ 
+ #include "blk.h"
+ 
+-struct bio *blk_next_bio(struct bio *bio, unsigned int nr_pages, gfp_t gfp)
++struct bio *blk_next_bio(struct bio *bio, struct block_device *bdev,
++			sector_t sect, unsigned op, unsigned opf,
++			unsigned int nr_pages, gfp_t gfp)
+ {
+ 	struct bio *new = bio_alloc(gfp, nr_pages);
+ 
+@@ -19,6 +21,10 @@ struct bio *blk_next_bio(struct bio *bio, unsigned int nr_pages, gfp_t gfp)
+ 		submit_bio(bio);
+ 	}
+ 
++	new->bi_iter.bi_sector = sect;
++	bio_set_dev(new, bdev);
++	bio_set_op_attrs(new, op, opf);
++
+ 	return new;
+ }
+ 
+@@ -94,11 +100,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 
+ 		WARN_ON_ONCE((req_sects << 9) > UINT_MAX);
+ 
+-		bio = blk_next_bio(bio, 0, gfp_mask);
+-		bio->bi_iter.bi_sector = sector;
+-		bio_set_dev(bio, bdev);
+-		bio_set_op_attrs(bio, op, 0);
+-
++		bio = blk_next_bio(bio, bdev, sector, op, 0, 0, gfp_mask);
+ 		bio->bi_iter.bi_size = req_sects << 9;
+ 		sector += req_sects;
+ 		nr_sects -= req_sects;
+@@ -168,6 +170,7 @@ static int __blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+ {
+ 	struct request_queue *q = bdev_get_queue(bdev);
+ 	unsigned int max_write_same_sectors;
++	unsigned int op = REQ_OP_WRITE_SAME;
+ 	struct bio *bio = *biop;
+ 	sector_t bs_mask;
+ 
+@@ -188,14 +191,11 @@ static int __blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+ 	max_write_same_sectors = bio_allowed_max_sectors(q);
+ 
+ 	while (nr_sects) {
+-		bio = blk_next_bio(bio, 1, gfp_mask);
+-		bio->bi_iter.bi_sector = sector;
+-		bio_set_dev(bio, bdev);
++		bio = blk_next_bio(bio, bdev, sector, op, 0, 1, gfp_mask);
+ 		bio->bi_vcnt = 1;
+ 		bio->bi_io_vec->bv_page = page;
+ 		bio->bi_io_vec->bv_offset = 0;
+ 		bio->bi_io_vec->bv_len = bdev_logical_block_size(bdev);
+-		bio_set_op_attrs(bio, REQ_OP_WRITE_SAME, 0);
+ 
+ 		if (nr_sects > max_write_same_sectors) {
+ 			bio->bi_iter.bi_size = max_write_same_sectors << 9;
+@@ -249,7 +249,9 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
+ {
+ 	struct bio *bio = *biop;
+ 	unsigned int max_write_zeroes_sectors;
++	unsigned int op = REQ_OP_WRITE_ZEROES;
+ 	struct request_queue *q = bdev_get_queue(bdev);
++	unsigned int opf = flags & BLKDEV_ZERO_NOUNMAP ? REQ_NOUNMAP : 0;
+ 
+ 	if (!q)
+ 		return -ENXIO;
+@@ -264,13 +266,7 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
+ 		return -EOPNOTSUPP;
+ 
+ 	while (nr_sects) {
+-		bio = blk_next_bio(bio, 0, gfp_mask);
+-		bio->bi_iter.bi_sector = sector;
+-		bio_set_dev(bio, bdev);
+-		bio->bi_opf = REQ_OP_WRITE_ZEROES;
+-		if (flags & BLKDEV_ZERO_NOUNMAP)
+-			bio->bi_opf |= REQ_NOUNMAP;
+-
++		bio = blk_next_bio(bio, bdev, sector, op, opf, 0, gfp_mask);
+ 		if (nr_sects > max_write_zeroes_sectors) {
+ 			bio->bi_iter.bi_size = max_write_zeroes_sectors << 9;
+ 			nr_sects -= max_write_zeroes_sectors;
+@@ -303,6 +299,7 @@ static int __blkdev_issue_zero_pages(struct block_device *bdev,
+ 		sector_t sector, sector_t nr_sects, gfp_t gfp_mask,
+ 		struct bio **biop)
+ {
++	unsigned int nr_pages = __blkdev_sectors_to_bio_pages(nr_sects);
+ 	struct request_queue *q = bdev_get_queue(bdev);
+ 	struct bio *bio = *biop;
+ 	int bi_size = 0;
+@@ -315,11 +312,8 @@ static int __blkdev_issue_zero_pages(struct block_device *bdev,
+ 		return -EPERM;
+ 
+ 	while (nr_sects != 0) {
+-		bio = blk_next_bio(bio, __blkdev_sectors_to_bio_pages(nr_sects),
++		bio = blk_next_bio(bio, bdev, sector, REQ_OP_WRITE, 0, nr_pages,
+ 				   gfp_mask);
+-		bio->bi_iter.bi_sector = sector;
+-		bio_set_dev(bio, bdev);
+-		bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
+ 
+ 		while (nr_sects != 0) {
+ 			sz = min((sector_t) PAGE_SIZE, nr_sects << 9);
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 7a68b6e4300c..68e77628348d 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -231,8 +231,7 @@ int blkdev_zone_mgmt(struct block_device *bdev, enum req_opf op,
+ 		return -EINVAL;
+ 
+ 	while (sector < end_sector) {
+-		bio = blk_next_bio(bio, 0, gfp_mask);
+-		bio_set_dev(bio, bdev);
++		bio = blk_next_bio(bio, bdev, 0 , op, REQ_SYNC, 0, gfp_mask);
+ 
+ 		/*
+ 		 * Special case for the zone reset operation that reset all
+@@ -244,7 +243,6 @@ int blkdev_zone_mgmt(struct block_device *bdev, enum req_opf op,
+ 			break;
+ 		}
+ 
+-		bio->bi_opf = op | REQ_SYNC;
+ 		bio->bi_iter.bi_sector = sector;
+ 		sector += zone_sectors;
+ 
+diff --git a/block/blk.h b/block/blk.h
+index 0198335c5838..0a278bae5478 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -329,8 +329,9 @@ extern int blk_iolatency_init(struct request_queue *q);
+ static inline int blk_iolatency_init(struct request_queue *q) { return 0; }
+ #endif
+ 
+-struct bio *blk_next_bio(struct bio *bio, unsigned int nr_pages, gfp_t gfp);
+-
++struct bio *blk_next_bio(struct bio *bio, struct block_device *bdev,
++			sector_t sect, unsigned op, unsigned opf,
++			unsigned int nr_pages, gfp_t gfp);
+ #ifdef CONFIG_BLK_DEV_ZONED
+ void blk_queue_free_zone_bitmaps(struct request_queue *q);
+ #else
+-- 
+2.22.1
+
