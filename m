@@ -2,213 +2,322 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88351C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 16:50:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA666C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 16:55:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3DC3B64DED
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 16:50:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC74964E11
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Jan 2021 16:55:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232698AbhA1Qt4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Jan 2021 11:49:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44542 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232715AbhA1Qsf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jan 2021 11:48:35 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90211C061756;
-        Thu, 28 Jan 2021 08:47:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ok1YlK16MaIquA7ZYUHxK/CMaFxxxwNWazaMAgFieLU=; b=vuOaMGbyB7/+Dg91fNUqvgBiBD
-        4apxS7jU5nU9b/DveQFuS18fYHTQPOpBZxMrv3tCqxWOuQg228bSNlkmvJ1gQneLnOfM3WL1ObNGi
-        MTuz8xXL3LKzE+DH7errCMxepgPQ3Thh2HpLy2Nat9DQOLy35B1FC3UkIZuvmKmdZzwX86t+WV5Mk
-        /pCa23DxPP5a3Rlkwfqrn59vty95NQBRWyuZpKNZRkjNLQlQ2KJrMub6IYLsf3IL2tz3nuZRbVWe7
-        TKvbqzYB3UBc6MLrjn2HVQGE6rKRMshHOwu50Myfj/erONbRzfW9chvly9np7Q4o+a4JR4iRTNdIG
-        5mKhGc+Q==;
-Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1l5ARp-008hlF-CH; Thu, 28 Jan 2021 16:47:23 +0000
-Date:   Thu, 28 Jan 2021 16:47:09 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
-        "jfs-discussion@lists.sourceforge.net" 
-        <jfs-discussion@lists.sourceforge.net>,
-        "linux-nilfs@vger.kernel.org" <linux-nilfs@vger.kernel.org>,
-        "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "shaggy@kernel.org" <shaggy@kernel.org>,
-        "sergey.senozhatsky.work@gmail.com" 
-        <sergey.senozhatsky.work@gmail.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "len.brown@intel.com" <len.brown@intel.com>,
-        "tiwai@suse.de" <tiwai@suse.de>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "gustavoars@kernel.org" <gustavoars@kernel.org>,
-        "pavel@ucw.cz" <pavel@ucw.cz>,
-        "alex.shi@linux.alibaba.com" <alex.shi@linux.alibaba.com>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "osandov@fb.com" <osandov@fb.com>,
-        "ebiggers@kernel.org" <ebiggers@kernel.org>,
-        "ngupta@vflare.org" <ngupta@vflare.org>,
-        Naohiro Aota <Naohiro.Aota@wdc.com>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "hare@suse.de" <hare@suse.de>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
-        "jaegeuk@kernel.org" <jaegeuk@kernel.org>,
-        "konishi.ryusuke@gmail.com" <konishi.ryusuke@gmail.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "jth@kernel.org" <jth@kernel.org>, "tytso@mit.edu" <tytso@mit.edu>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>,
-        "minchan@kernel.org" <minchan@kernel.org>,
-        "tj@kernel.org" <tj@kernel.org>,
-        "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>,
-        "roger.pau@citrix.com" <roger.pau@citrix.com>,
-        "asml.silence@gmail.com" <asml.silence@gmail.com>
-Subject: Re: [Ocfs2-devel] [RFC PATCH 02/34] block: introduce and use bio_new
-Message-ID: <20210128164709.GZ308988@casper.infradead.org>
-References: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
- <20210128071133.60335-3-chaitanya.kulkarni@wdc.com>
- <BL0PR04MB6514C554B4AC96866BC1B16FE7BA9@BL0PR04MB6514.namprd04.prod.outlook.com>
- <DM6PR04MB4972DA86892CF4531440064F86BA9@DM6PR04MB4972.namprd04.prod.outlook.com>
+        id S232552AbhA1QzX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Jan 2021 11:55:23 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:44149 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232589AbhA1QzW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jan 2021 11:55:22 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611852835;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=0KzHwS+XoFlZQH7QtrabO5K3t6oEQ8pLFPcQFKIqRLE=;
+        b=Y+uSq7ejbV41RLwNMEk4qWADkB+/rGPRZFfCNJHMXDt6JWltVF1v6J2nir++/W90CdpEk2
+        Dnf+a4Tx2lePdMqSV6hRoXinzXK3QUjyyKRoNAqvkhoJH50hPBoJtBfOCtxkqRIPC9qGgv
+        wPiXSddyNAXe60eveN8pO4Bevo2QpQ4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-462-_1TnXabEM6yaO4dfJWkFrQ-1; Thu, 28 Jan 2021 11:53:50 -0500
+X-MC-Unique: _1TnXabEM6yaO4dfJWkFrQ-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 763331927801;
+        Thu, 28 Jan 2021 16:53:49 +0000 (UTC)
+Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id EB7205C1BB;
+        Thu, 28 Jan 2021 16:53:48 +0000 (UTC)
+Date:   Thu, 28 Jan 2021 11:53:47 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/5] xfs: Fix CIL throttle hang when CIL space used going
+ backwards
+Message-ID: <20210128165347.GE2599027@bfoster>
+References: <20210128044154.806715-1-david@fromorbit.com>
+ <20210128044154.806715-5-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <DM6PR04MB4972DA86892CF4531440064F86BA9@DM6PR04MB4972.namprd04.prod.outlook.com>
+In-Reply-To: <20210128044154.806715-5-david@fromorbit.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-FYI your email is completely unreadable to those not using html.
-I can't tell what you wrote and what Damien wrote.
-
-On Thu, Jan 28, 2021 at 08:33:10AM +0000, Chaitanya Kulkarni wrote:
-> On 1/27/21 11:21 PM, Damien Le Moal wrote:
+On Thu, Jan 28, 2021 at 03:41:53PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> On 2021/01/28 16:12, Chaitanya Kulkarni wrote:
+> A hang with tasks stuck on the CIL hard throttle was reported and
+> largely diagnosed by Donald Buczek, who discovered that it was a
+> result of the CIL context space usage decrementing in committed
+> transactions once the hard throttle limit had been hit and processes
+> were already blocked.  This resulted in the CIL push not waking up
+> those waiters because the CIL context was no longer over the hard
+> throttle limit.
 > 
+> The surprising aspect of this was the CIL space usage going
+> backwards regularly enough to trigger this situation. Assumptions
+> had been made in design that the relogging process would only
+> increase the size of the objects in the CIL, and so that space would
+> only increase.
 > 
-> Introduce bio_new() helper and use it in blk-lib.c to allocate and
-> initialize various non-optional or semi-optional members of the bio
-> along with bio allocation done with bio_alloc(). Here we also calmp the
-> max_bvecs for bio with BIO_MAX_PAGES before we pass to bio_alloc().
+> This change and commit message fixes the issue and documents the
+> result of an audit of the triggers that can cause the CIL space to
+> go backwards, how large the backwards steps tend to be, the
+> frequency in which they occur, and what the impact on the CIL
+> accounting code is.
 > 
-> Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com><mailto:chaitanya.kulkarni@wdc.com>
+> Even though the CIL ctx->space_used can go backwards, it will only
+> do so if the log item is already logged to the CIL and contains a
+> space reservation for it's entire logged state. This is tracked by
+> the shadow buffer state on the log item. If the item is not
+> previously logged in the CIL it has no shadow buffer nor log vector,
+> and hence the entire size of the logged item copied to the log
+> vector is accounted to the CIL space usage. i.e.  it will always go
+> up in this case.
+> 
+> If the item has a log vector (i.e. already in the CIL) and the size
+> decreases, then the existing log vector will be overwritten and the
+> space usage will go down. This is the only condition where the space
+> usage reduces, and it can only occur when an item is already tracked
+> in the CIL. Hence we are safe from CIL space usage underruns as a
+> result of log items decreasing in size when they are relogged.
+> 
+> Typically this reduction in CIL usage occurs from metadta blocks
+> being free, such as when a btree block merge
+> occurs or a directory enter/xattr entry is removed and the da-tree
+> is reduced in size. This generally results in a reduction in size of
+> around a single block in the CIL, but also tends to increase the
+> number of log vectors because the parent and sibling nodes in the
+> tree needs to be updated when a btree block is removed. If a
+> multi-level merge occurs, then we see reduction in size of 2+
+> blocks, but again the log vector count goes up.
+> 
+> The other vector is inode fork size changes, which only log the
+> current size of the fork and ignore the previously logged size when
+> the fork is relogged. Hence if we are removing items from the inode
+> fork (dir/xattr removal in shortform, extent record removal in
+> extent form, etc) the relogged size of the inode for can decrease.
+> 
+> No other log items can decrease in size either because they are a
+> fixed size (e.g. dquots) or they cannot be relogged (e.g. relogging
+> an intent actually creates a new intent log item and doesn't relog
+> the old item at all.) Hence the only two vectors for CIL context
+> size reduction are relogging inode forks and marking buffers active
+> in the CIL as stale.
+> 
+> Long story short: the majority of the code does the right thing and
+> handles the reduction in log item size correctly, and only the CIL
+> hard throttle implementation is problematic and needs fixing. This
+> patch makes that fix, as well as adds comments in the log item code
+> that result in items shrinking in size when they are relogged as a
+> clear reminder that this can and does happen frequently.
+> 
+> The throttle fix is based upon the change Donald proposed, though it
+> goes further to ensure that once the throttle is activated, it
+> captures all tasks until the CIL push issues a wakeup, regardless of
+> whether the CIL space used has gone back under the throttle
+> threshold.
+> 
+> This ensures that we prevent tasks reducing the CIL slightly under
+> the throttle threshold and then making more changes that push it
+> well over the throttle limit. This is acheived by checking if the
+> throttle wait queue is already active as a condition of throttling.
+> Hence once we start throttling, we continue to apply the throttle
+> until the CIL context push wakes everything on the wait queue.
+> 
+> We can use waitqueue_active() for the waitqueue manipulations and
+> checks as they are all done under the ctx->xc_push_lock. Hence the
+> waitqueue has external serialisation and we can safely peek inside
+> the wait queue without holding the internal waitqueue locks.
+> 
+> Many thanks to Donald for his diagnostic and analysis work to
+> isolate the cause of this hang.
+> 
+> Reported-by: Donald Buczek <buczek@molgen.mpg.de>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  block/blk-lib.c     |  6 +-----
->  include/linux/bio.h | 25 +++++++++++++++++++++++++
->  2 files changed, 26 insertions(+), 5 deletions(-)
+>  fs/xfs/xfs_buf_item.c   | 37 ++++++++++++++++++-------------------
+>  fs/xfs/xfs_inode_item.c | 14 ++++++++++++++
+>  fs/xfs/xfs_log_cil.c    | 22 +++++++++++++++++-----
+>  3 files changed, 49 insertions(+), 24 deletions(-)
 > 
-> diff --git a/block/blk-lib.c b/block/blk-lib.c
-> index fb486a0bdb58..ec29415f00dd 100644
-> --- a/block/blk-lib.c
-> +++ b/block/blk-lib.c
-> @@ -14,17 +14,13 @@ struct bio *blk_next_bio(struct bio *bio, struct block_device *bdev,
->                         sector_t sect, unsigned op, unsigned opf,
->                         unsigned int nr_pages, gfp_t gfp)
->  {
-> -       struct bio *new = bio_alloc(gfp, nr_pages);
-> +       struct bio *new = bio_new(bdev, sect, op, opf, gfp, nr_pages);
-> 
->         if (bio) {
->                 bio_chain(bio, new);
->                 submit_bio(bio);
->         }
-> 
-> -       new->bi_iter.bi_sector = sect;
-> -       bio_set_dev(new, bdev);
-> -       bio_set_op_attrs(new, op, opf);
-> -
->         return new;
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index dc0be2a639cc..17960b1ce5ef 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -56,14 +56,12 @@ xfs_buf_log_format_size(
 >  }
-> 
-> diff --git a/include/linux/bio.h b/include/linux/bio.h
-> index c74857cf1252..2a09ba100546 100644
-> --- a/include/linux/bio.h
-> +++ b/include/linux/bio.h
-> @@ -826,5 +826,30 @@ static inline void bio_set_polled(struct bio *bio, struct kiocb *kiocb)
->         if (!is_sync_kiocb(kiocb))
->                 bio->bi_opf |= REQ_NOWAIT;
+>  
+>  /*
+> - * This returns the number of log iovecs needed to log the
+> - * given buf log item.
+> + * Return the number of log iovecs and space needed to log the given buf log
+> + * item segment.
+>   *
+> - * It calculates this as 1 iovec for the buf log format structure
+> - * and 1 for each stretch of non-contiguous chunks to be logged.
+> - * Contiguous chunks are logged in a single iovec.
+> - *
+> - * If the XFS_BLI_STALE flag has been set, then log nothing.
+> + * It calculates this as 1 iovec for the buf log format structure and 1 for each
+> + * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
+> + * in a single iovec.
+>   */
+>  STATIC void
+>  xfs_buf_item_size_segment(
+> @@ -119,11 +117,8 @@ xfs_buf_item_size_segment(
 >  }
-> +/**
-> + * bio_new -   allcate and initialize new bio
-> + * @bdev:      blockdev to issue discard for
-> + * @sector:    start sector
-> + * @op:                REQ_OP_XXX from enum req_opf
-> + * @op_flags:  REQ_XXX from enum req_flag_bits
-> + * @max_bvecs: maximum bvec to be allocated for this bio
-> + * @gfp_mask:  memory allocation flags (for bio_alloc)
+>  
+>  /*
+> - * This returns the number of log iovecs needed to log the given buf log item.
+> - *
+> - * It calculates this as 1 iovec for the buf log format structure and 1 for each
+> - * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
+> - * in a single iovec.
+> + * Return the number of log iovecs and space needed to log the given buf log
+> + * item.
+>   *
+>   * Discontiguous buffers need a format structure per region that is being
+>   * logged. This makes the changes in the buffer appear to log recovery as though
+> @@ -133,7 +128,11 @@ xfs_buf_item_size_segment(
+>   * what ends up on disk.
+>   *
+>   * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
+> - * format structures.
+> + * format structures. If the item has previously been logged and has dirty
+> + * regions, we do not relog them in stale buffers. This has the effect of
+> + * reducing the size of the relogged item by the amount of dirty data tracked
+> + * by the log item. This can result in the committing transaction reducing the
+> + * amount of space being consumed by the CIL.
+>   */
+>  STATIC void
+>  xfs_buf_item_size(
+> @@ -147,9 +146,9 @@ xfs_buf_item_size(
+>  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+>  	if (bip->bli_flags & XFS_BLI_STALE) {
+>  		/*
+> -		 * The buffer is stale, so all we need to log
+> -		 * is the buf log format structure with the
+> -		 * cancel flag in it.
+> +		 * The buffer is stale, so all we need to log is the buf log
+> +		 * format structure with the cancel flag in it as we are never
+> +		 * going to replay the changes tracked in the log item.
+>  		 */
+>  		trace_xfs_buf_item_size_stale(bip);
+>  		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
+> @@ -164,9 +163,9 @@ xfs_buf_item_size(
+>  
+>  	if (bip->bli_flags & XFS_BLI_ORDERED) {
+>  		/*
+> -		 * The buffer has been logged just to order it.
+> -		 * It is not being included in the transaction
+> -		 * commit, so no vectors are used at all.
+> +		 * The buffer has been logged just to order it. It is not being
+> +		 * included in the transaction commit, so no vectors are used at
+> +		 * all.
+>  		 */
+>  		trace_xfs_buf_item_size_ordered(bip);
+>  		*nvecs = XFS_LOG_VEC_ORDERED;
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 17e20a6d8b4e..6ff91e5bf3cd 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -28,6 +28,20 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
+>  	return container_of(lip, struct xfs_inode_log_item, ili_item);
+>  }
+>  
+> +/*
+> + * The logged size of an inode fork is always the current size of the inode
+> + * fork. This means that when an inode fork is relogged, the size of the logged
+> + * region is determined by the current state, not the combination of the
+> + * previously logged state + the current state. This is different relogging
+> + * behaviour to most other log items which will retain the size of the
+> + * previously logged changes when smaller regions are relogged.
 > + *
-> + * Description:
-> + *    Allocates, initializes common members, and returns a new bio.
-> + */
-> +static inline struct bio *bio_new(struct block_device *bdev, sector_t sector,
-> +                                 unsigned int op, unsigned int op_flags,
-> +                                 unsigned int max_bvecs, gfp_t gfp_mask)
-> +{
-> +       unsigned nr_bvec = clamp_t(unsigned int, max_bvecs, 0, BIO_MAX_PAGES);
-> +       struct bio *bio = bio_alloc(gfp_mask, nr_bvec);
-> 
-> 
-> I think that depending on the gfp_mask passed, bio can be NULL. So this should
-> be checked.
-> 
-> 
-> true, I'll add that check.
-> 
-> 
-> 
-> 
-> +
-> +       bio_set_dev(bio, bdev);
-> +       bio->bi_iter.bi_sector = sector;
-> +       bio_set_op_attrs(bio, op, op_flags);
-> 
-> 
-> This function is obsolete. Open code this.
-> 
-> 
-> true, will do.
-> 
-> 
-> 
-> 
-> +
-> +       return bio;
-> +}
-> 
->  #endif /* __LINUX_BIO_H */
-> 
-> 
-> 
-> Thanks for the comments Damien.
+> + * Hence operations that remove data from the inode fork (e.g. shortform
 
-> _______________________________________________
-> Ocfs2-devel mailing list
-> Ocfs2-devel@oss.oracle.com
-> https://oss.oracle.com/mailman/listinfo/ocfs2-devel
+"Hence for ..." ?
+
+> + * dir/attr remove, extent form extent removal, etc), the size of the relogged
+> + * inode gets -smaller- rather than stays the same size as the previously logged
+> + * size and this can result in the committing transaction reducing the amount of
+> + * space being consumed by the CIL.
+> + */
+>  STATIC void
+>  xfs_inode_item_data_fork_size(
+>  	struct xfs_inode_log_item *iip,
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index c5cc1b7ad25e..daf1f3eb24a8 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -668,9 +668,14 @@ xlog_cil_push_work(
+>  	ASSERT(push_seq <= ctx->sequence);
+>  
+>  	/*
+> -	 * Wake up any background push waiters now this context is being pushed.
+> +	 * As we are about to switch to a new CILi, empty context, we no longer
+
+s/CILi, empty context/CIL empty context/ ?
+
+Nits aside, the rest LGTM:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +	 * need to throttle tasks on CIL space overruns. Wake any waiters that
+> +	 * the hard push throttle may have caught so they can start committing
+> +	 * to the new context. The ctx->xc_push_lock provides the serialisation
+> +	 * necessary for safely using the lockless waitqueue_active() check in
+> +	 * this context.
+>  	 */
+> -	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
+> +	if (waitqueue_active(&cil->xc_push_wait))
+>  		wake_up_all(&cil->xc_push_wait);
+>  
+>  	/*
+> @@ -914,7 +919,7 @@ xlog_cil_push_background(
+>  	ASSERT(!list_empty(&cil->xc_cil));
+>  
+>  	/*
+> -	 * don't do a background push if we haven't used up all the
+> +	 * Don't do a background push if we haven't used up all the
+>  	 * space available yet.
+>  	 */
+>  	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
+> @@ -938,9 +943,16 @@ xlog_cil_push_background(
+>  
+>  	/*
+>  	 * If we are well over the space limit, throttle the work that is being
+> -	 * done until the push work on this context has begun.
+> +	 * done until the push work on this context has begun. Enforce the hard
+> +	 * throttle on all transaction commits once it has been activated, even
+> +	 * if the committing transactions have resulted in the space usage
+> +	 * dipping back down under the hard limit.
+> +	 *
+> +	 * The ctx->xc_push_lock provides the serialisation necessary for safely
+> +	 * using the lockless waitqueue_active() check in this context.
+>  	 */
+> -	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
+> +	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log) ||
+> +	    waitqueue_active(&cil->xc_push_wait)) {
+>  		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
+>  		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
+>  		xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
+> -- 
+> 2.28.0
+> 
 
