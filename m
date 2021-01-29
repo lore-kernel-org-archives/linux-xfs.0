@@ -2,244 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE997C433E6
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jan 2021 06:32:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FBFDC433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jan 2021 07:41:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77E6D64DFB
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jan 2021 06:32:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C755064E00
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jan 2021 07:41:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232084AbhA2Gb6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Jan 2021 01:31:58 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:4875 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S232195AbhA2G3p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jan 2021 01:29:45 -0500
-X-IronPort-AV: E=Sophos;i="5.79,384,1602518400"; 
-   d="scan'208";a="103973636"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 29 Jan 2021 14:28:18 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id EA97F4CE6788;
-        Fri, 29 Jan 2021 14:28:13 +0800 (CST)
-Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Fri, 29 Jan 2021 14:28:13 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Fri, 29 Jan 2021 14:28:14 +0800
-From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>, <dm-devel@redhat.com>
-CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <agk@redhat.com>,
-        <snitzer@redhat.com>, <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>,
-        <y-goto@fujitsu.com>
-Subject: [PATCH RESEND v2 09/10] xfs: Implement ->corrupted_range() for XFS
-Date:   Fri, 29 Jan 2021 14:27:56 +0800
-Message-ID: <20210129062757.1594130-10-ruansy.fnst@cn.fujitsu.com>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210129062757.1594130-1-ruansy.fnst@cn.fujitsu.com>
-References: <20210129062757.1594130-1-ruansy.fnst@cn.fujitsu.com>
+        id S232369AbhA2HlF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Jan 2021 02:41:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38152 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232311AbhA2Hko (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jan 2021 02:40:44 -0500
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8058BC061574
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jan 2021 23:40:04 -0800 (PST)
+Received: by mail-pl1-x633.google.com with SMTP id b8so4772092plh.12
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jan 2021 23:40:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=pYYybBG2C9S7p4z+n/PiwccRT9EQZ6w2jFMutEaSBrI=;
+        b=Fg+0xDbYs1Jtis/+zcjo4Wb1hV3TC3ON7E0aq2F8oRIzPkl6CuSXaTFcXn7wMQq/0H
+         9KW+TiQ5eD8lD16dmYJlcgN69mE4fHNvdKlV6kvNJeeQlvrRiWhUNHr0CDF8gbSIsbLM
+         kjgDGxU53zKSvU5KE2xCs2+kMCRWqI3EfC3B0OJoTNm24W20dqs4/NMLUnQgFB0q7liM
+         eIqq1iI9VUx6QW21hMoCigcEf4HEqLXKE2EgKdsLj6UgllVwQM3tVNvuxRdPC9ysmr9G
+         LvH4cl6MFaC/jKktl+P0HO9ZDJhnyz6mk7tCh+9dN9q98oBFC/pvn016Z9MFXQkBDfJ/
+         dRVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=pYYybBG2C9S7p4z+n/PiwccRT9EQZ6w2jFMutEaSBrI=;
+        b=Btf7qIvEYb31Y/7fumjv7xqWqnfaaALgAz21G8u8Lu+yrBNMao/vjQmw7w7cOd8rE7
+         ATlY+AepJWZnOi+iO9as2fnIu6ZcdImKPWLSNOaYmvAPEwkxESL/fQUoloH7kGq0+Meg
+         odC9UXwXkVxgvvpEq35vOboZCaajiovy8NIk/iIxpNwklFf6CB7hRlOYTl9vUihKMQiT
+         AJQwpYPe9VQe0AWNyEkzQ1sfxkpmkdCDnZPiZJsN7KxBxbQ422ucfzR953pJnOljpFcW
+         0xv91Fbhja24ZjAVhyIMyQI3mIPsYHdn8U1rDNgspVJaayM0NhY3it8f7cWLKs3bgEyb
+         rHbA==
+X-Gm-Message-State: AOAM532EjpUr7vwv9UQsVYr6DkT8ol5zybeK2zC6GQiU2K8+i/fJR9q4
+        jDbO9sgRv1OIxDt1MxhSkLY=
+X-Google-Smtp-Source: ABdhPJzLvwBUdfSSb+RG755RRa3/xzPmOOCV+nY6kqKjByuRNNtsNZ3CuiuYySHt2CmVAcQDd2zf8Q==
+X-Received: by 2002:a17:90b:4d06:: with SMTP id mw6mr3363699pjb.24.1611906004087;
+        Thu, 28 Jan 2021 23:40:04 -0800 (PST)
+Received: from garuda ([122.179.112.28])
+        by smtp.gmail.com with ESMTPSA id z13sm7891451pgf.89.2021.01.28.23.40.02
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 28 Jan 2021 23:40:03 -0800 (PST)
+References: <20210127090537.2640164-1-chandanrlinux@gmail.com> <20210128153412.GD2599027@bfoster> <20210128174447.GS7698@magnolia>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        allison.henderson@oracle.com, kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH] xfs: Fix 'set but not used' warning in xfs_bmap_compute_alignments()
+In-reply-to: <20210128174447.GS7698@magnolia>
+Date:   Fri, 29 Jan 2021 13:10:00 +0530
+Message-ID: <87k0rwi433.fsf@garuda>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: EA97F4CE6788.AE8AA
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This function is used to handle errors which may cause data lost in
-filesystem.  Such as memory failure in fsdax mode.
+On 28 Jan 2021 at 23:14, Darrick J. Wong wrote:
+> On Thu, Jan 28, 2021 at 10:34:12AM -0500, Brian Foster wrote:
+>> On Wed, Jan 27, 2021 at 02:35:37PM +0530, Chandan Babu R wrote:
+>> > With both CONFIG_XFS_DEBUG and CONFIG_XFS_WARN disabled, the only reference to
+>> > local variable "error" in xfs_bmap_compute_alignments() gets eliminated during
+>> > pre-processing stage of the compilation process. This causes the compiler to
+>> > generate a "set but not used" warning.
+>> >
+>> > Reported-by: kernel test robot <lkp@intel.com>
+>> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+>> > ---
+>> > This patch is applicable on top of current xfs-linux/for-next branch.
+>> >
+>> >  fs/xfs/libxfs/xfs_bmap.c | 9 ++++-----
+>> >  1 file changed, 4 insertions(+), 5 deletions(-)
+>> >
+>> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+>> > index 2cd24bb06040..ba56554e8c05 100644
+>> > --- a/fs/xfs/libxfs/xfs_bmap.c
+>> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+>> > @@ -3471,7 +3471,6 @@ xfs_bmap_compute_alignments(
+>> >  	struct xfs_mount	*mp = args->mp;
+>> >  	xfs_extlen_t		align = 0; /* minimum allocation alignment */
+>> >  	int			stripe_align = 0;
+>> > -	int			error;
+>> >
+>> >  	/* stripe alignment for allocation is determined by mount parameters */
+>> >  	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
+>> > @@ -3484,10 +3483,10 @@ xfs_bmap_compute_alignments(
+>> >  	else if (ap->datatype & XFS_ALLOC_USERDATA)
+>> >  		align = xfs_get_extsz_hint(ap->ip);
+>> >  	if (align) {
+>> > -		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+>> > -						align, 0, ap->eof, 0, ap->conv,
+>> > -						&ap->offset, &ap->length);
+>> > -		ASSERT(!error);
+>> > +		if (xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+>> > +			align, 0, ap->eof, 0, ap->conv, &ap->offset,
+>> > +			&ap->length))
+>> > +			ASSERT(0);
+>>
+>> I was wondering if we should just make xfs_bmap_extsize_align() return
+>> void and push the asserts down into the function itself, but it looks
+>> like xfs_bmap_rtalloc() actually handles the error. Any idea on why we
+>> might have that inconsistency?
+>
+> It only returns nonzero if isrt (the fifth parameter) is nonzero, and
+> only if the requested range is still not aligned to the rt extent size
+> after aligning it and eliminating any overlaps with existing extents.
+>
 
-In XFS, it requires "rmapbt" feature in order to query for files or
-metadata which associated to the corrupted data.  Then we could call fs
-recover functions to try to repair the corrupted data.(did not
-implemented in this patchset)
+Adding to what Darrick has mentioned above ...
 
-After that, the memory failure also needs to notify the processes who
-are using those files.
+Space on realtime devices are tracked at a granularity of "rextsize"
+bytes. Each bit held in the data blocks of xfs_mount->m_rbmip represents usage
+status of a single rextsized block. Most likely this seems to be underlying
+reason for strict allocation alignment requirements for realtime files.
 
-Only support data device.  Realtime device is not supported for now.
-
-Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
----
- fs/xfs/xfs_fsops.c |   5 +++
- fs/xfs/xfs_mount.h |   1 +
- fs/xfs/xfs_super.c | 109 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 115 insertions(+)
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 959ce91a3755..f03901a5c673 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -498,6 +498,11 @@ xfs_do_force_shutdown(
- "Corruption of in-memory data detected.  Shutting down filesystem");
- 		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
- 			xfs_stack_trace();
-+	} else if (flags & SHUTDOWN_CORRUPT_META) {
-+		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
-+"Corruption of on-disk metadata detected.  Shutting down filesystem");
-+		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
-+			xfs_stack_trace();
- 	} else if (logerror) {
- 		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
- 			"Log I/O Error Detected. Shutting down filesystem");
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index dfa429b77ee2..8f0df67ffcc1 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -274,6 +274,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
- #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
- #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
-+#define SHUTDOWN_CORRUPT_META	0x0010  /* corrupt metadata on device */
- 
- /*
-  * Flags for xfs_mountfs
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 813be879a5e5..93093fe0ee8a 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -35,6 +35,11 @@
- #include "xfs_refcount_item.h"
- #include "xfs_bmap_item.h"
- #include "xfs_reflink.h"
-+#include "xfs_alloc.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_bit.h"
- 
- #include <linux/magic.h>
- #include <linux/fs_context.h>
-@@ -1105,6 +1110,109 @@ xfs_fs_free_cached_objects(
- 	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
- }
- 
-+static int
-+xfs_corrupt_helper(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*data)
-+{
-+	struct xfs_inode		*ip;
-+	struct address_space		*mapping;
-+	int				rc = 0;
-+	int				*flags = data;
-+
-+	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
-+	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-+		// TODO check and try to fix metadata
-+		rc = -EFSCORRUPTED;
-+	} else {
-+		/*
-+		 * Get files that incore, filter out others that are not in use.
-+		 */
-+		rc = xfs_iget(cur->bc_mp, cur->bc_tp, rec->rm_owner,
-+			      XFS_IGET_INCORE, 0, &ip);
-+		if (rc || !ip)
-+			return rc;
-+		if (!VFS_I(ip)->i_mapping)
-+			goto out;
-+
-+		mapping = VFS_I(ip)->i_mapping;
-+		if (IS_DAX(VFS_I(ip)))
-+			rc = mf_dax_mapping_kill_procs(mapping, rec->rm_offset,
-+						       *flags);
-+		else
-+			mapping_set_error(mapping, -EIO);
-+
-+		// TODO try to fix data
-+out:
-+		xfs_irele(ip);
-+	}
-+
-+	return rc;
-+}
-+
-+static int
-+xfs_fs_corrupted_range(
-+	struct super_block	*sb,
-+	struct block_device	*bdev,
-+	loff_t			offset,
-+	size_t			len,
-+	void			*data)
-+{
-+	struct xfs_mount	*mp = XFS_M(sb);
-+	struct xfs_trans	*tp = NULL;
-+	struct xfs_btree_cur	*cur = NULL;
-+	struct xfs_rmap_irec	rmap_low, rmap_high;
-+	struct xfs_buf		*agf_bp = NULL;
-+	xfs_fsblock_t		fsbno = XFS_B_TO_FSB(mp, offset);
-+	xfs_filblks_t		bcnt = XFS_B_TO_FSB(mp, len);
-+	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	int			error = 0;
-+
-+	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_bdev == bdev) {
-+		xfs_warn(mp, "corrupted_range support not available for realtime device!");
-+		return 0;
-+	}
-+	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_bdev == bdev &&
-+	    mp->m_logdev_targp != mp->m_ddev_targp) {
-+		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
-+		return 0;
-+	}
-+
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		xfs_warn(mp, "corrupted_range needs rmapbt enabled!");
-+		return 0;
-+	}
-+
-+	error = xfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
-+	if (error)
-+		goto out_cancel_tp;
-+
-+	cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agno);
-+
-+	/* Construct a range for rmap query */
-+	memset(&rmap_low, 0, sizeof(rmap_low));
-+	memset(&rmap_high, 0xFF, sizeof(rmap_high));
-+	rmap_low.rm_startblock = rmap_high.rm_startblock = agbno;
-+	rmap_low.rm_blockcount = rmap_high.rm_blockcount = bcnt;
-+
-+	error = xfs_rmap_query_range(cur, &rmap_low, &rmap_high, xfs_corrupt_helper, data);
-+	if (error == -EFSCORRUPTED)
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
-+
-+	xfs_btree_del_cursor(cur, error);
-+	xfs_trans_brelse(tp, agf_bp);
-+out_cancel_tp:
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-@@ -1118,6 +1226,7 @@ static const struct super_operations xfs_super_operations = {
- 	.show_options		= xfs_fs_show_options,
- 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
- 	.free_cached_objects	= xfs_fs_free_cached_objects,
-+	.corrupted_range	= xfs_fs_corrupted_range,
- };
- 
- static int
--- 
-2.30.0
-
-
-
+--
+chandan
