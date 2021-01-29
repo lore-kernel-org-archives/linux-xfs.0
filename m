@@ -2,91 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D34B9C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jan 2021 02:19:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B359C433E6
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jan 2021 05:58:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A799C64E00
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jan 2021 02:19:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0BB764DED
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Jan 2021 05:58:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231513AbhA2CTg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Jan 2021 21:19:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58362 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229757AbhA2CTf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jan 2021 21:19:35 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4040264E02;
-        Fri, 29 Jan 2021 02:18:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611886735;
-        bh=SbGdaTAygv4nC81vT/tXM+peDBYFSDsdyv/zW6Qi8h0=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=M0OUxHQeIjFNBbxuOseQcHUJEPNKwRG4RII9Ff//rPkCqTV14KJ1xgBshdVAG6ro3
-         fomLg5SOoYG82n4Wml4RwER0OJhpYDYSgIuHKPwm+XBhdmgrk8jA1h7AUvOFXy/aZm
-         7GLQ3lg7gomfK0SNFtUbsjEjkKv7fqHpqRJbCE5uQ8XpLcBU9c+jomp8xVaCCBXDhe
-         x0IwHM4NvxqdTyj4EUwUOCJ1nUnSdbpS8Jsv2Skxo8zANMPGJP3HDqmHeWO7VKDZJY
-         +A5z0iBOEXo9XMF1kV6j16xwLT10tfPHSXIJuwxETWgeT7of9RURp5jx0WbIWSTrhW
-         6l2j6WIV4ZmBg==
-Subject: [PATCH 12/12] xfs: flush speculative space allocations when we run
- out of space
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        hch@infradead.org, david@fromorbit.com, bfoster@redhat.com
-Date:   Thu, 28 Jan 2021 18:18:54 -0800
-Message-ID: <161188673444.1943978.15159087396736987395.stgit@magnolia>
-In-Reply-To: <161188666613.1943978.971196931920996596.stgit@magnolia>
-References: <161188666613.1943978.971196931920996596.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S231287AbhA2F6I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Jan 2021 00:58:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44396 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229927AbhA2F6H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jan 2021 00:58:07 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C7D1C061573
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jan 2021 21:57:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=kH8+XvwQcoFQOXOKSejkD+P2JzLaVQyOjJJGpIGLh5Y=; b=RmpedheKbRx7pOjUYrMkk4+3VP
+        JFAWgDC4Wt2f7iLzji1UDDDQG3yN5bToo88fai/pf7awJTcosr1JjdnFVr+lAyI+jjeLrcX3tXIU2
+        trmZTPyL9iMLa+VUscqZ6sfxVeMxaD84NS7Acd7+TmdGe40HQx91WYbw8ReoZRLkUl27dhJATYMox
+        kkbfCs4hBBzXxQmI+btET5cydRVATuotozXH+3zDyT/sdQATjibdNiuhq1vAULqj+L/SmANve6JGe
+        xSF0kUVgtAcebaGM97k8bsbU6A5CWRy+3OuSbWDrSjgvJRZjPYiFB7O41kSNHm3s+eOdHl6Lb/GV9
+        eGD0EjAw==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1l5MmZ-009S51-2X; Fri, 29 Jan 2021 05:57:23 +0000
+Date:   Fri, 29 Jan 2021 05:57:23 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
+        bfoster@redhat.com
+Subject: Re: [PATCH 06/13] xfs: reduce quota reservation when doing a dax
+ unwritten extent conversion
+Message-ID: <20210129055723.GA2252837@infradead.org>
+References: <161188658869.1943645.4527151504893870676.stgit@magnolia>
+ <161188662355.1943645.4498589995636729261.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <161188662355.1943645.4498589995636729261.stgit@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Jan 28, 2021 at 06:17:03PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> In commit 3b0fe47805802, we reduced the free space requirement to
+> perform a pre-write unwritten extent conversion on an S_DAX file.  Since
+> we're not actually allocating any space, the logic goes, we only need
+> enough reservation to handle shape changes in the bmbt.
+> 
+> The same logic should have been applied to quota -- we're not allocating
+> any space, so we only need to reserve enough quota to handle the bmbt
+> shape changes.
+> 
+> Fixes: 3b0fe4780580 ("xfs: Don't use reserved blocks for data blocks with DAX")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-If a fs modification (creation, file write, reflink, etc.) is unable to
-reserve enough space to handle the modification, try clearing whatever
-space the filesystem might have been hanging onto in the hopes of
-speeding up the filesystem.  The flushing behavior will become
-particularly important when we add deferred inode inactivation because
-that will increase the amount of space that isn't actively tied to user
-data.
+Looks good,
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_trans.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index b08bb5a8fb60..3c2b26a21c6d 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -289,6 +289,18 @@ xfs_trans_alloc(
- 	tp->t_firstblock = NULLFSBLOCK;
- 
- 	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
-+	if (error == -ENOSPC) {
-+		/*
-+		 * We weren't able to reserve enough space for the transaction.
-+		 * Flush the other speculative space allocations to free space.
-+		 * Do not perform a synchronous scan because callers can hold
-+		 * other locks.
-+		 */
-+		error = xfs_blockgc_free_space(mp, NULL);
-+		if (error)
-+			return error;
-+		error = xfs_trans_reserve(tp, resp, blocks, rtextents);
-+	}
- 	if (error) {
- 		xfs_trans_cancel(tp);
- 		return error;
-
