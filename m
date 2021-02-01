@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 767CBC433DB
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 02:06:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93F50C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 02:06:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3937164E33
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 02:06:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B60F64E2E
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 02:06:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231268AbhBACGq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 31 Jan 2021 21:06:46 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34266 "EHLO mail.kernel.org"
+        id S231296AbhBACGx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 31 Jan 2021 21:06:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33992 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231296AbhBACGN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 31 Jan 2021 21:06:13 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8662D64E2E;
-        Mon,  1 Feb 2021 02:05:32 +0000 (UTC)
+        id S231265AbhBACGQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 31 Jan 2021 21:06:16 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B462464E34;
+        Mon,  1 Feb 2021 02:06:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612145132;
-        bh=Si8vMX+OQoXDakQd/gkDqMFJIdBapgrQcjGopok50C8=;
+        s=k20201202; t=1612145160;
+        bh=O7Vyr5Zym1YbEihMTe7dZfD8eoSIcgpINz5eCD4/Z4Y=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=gMnnU5wH17i6hoTAC/6W7aNPvxcAe4AtEHolvL6qXsK3SQP9lIhAZeqRX4Pdxr6yv
-         w6B3ru7wQgaJntLnz8NqmrBMO6s5zmTRX3E0NZhgU9SjdfmMHY7u5olDAnwVxnt/ky
-         GX+IJlBzKxuDi9GZ1tjpOMP0aWgKZQnh8GSrROEYwYP+HZbftpoJyuuN0U6qyQvssw
-         vvzCSHbxNagcO6SX+qwJz8obs6DBrPWDrtVeYUbew/om1AqhGj9Ro+SCo2OJD1R/oa
-         RgiselOy2jIsn9Flasbl75FegeCx6FQmuvtG8Jceb56tDFjnjFfRaPQF44g/aMEX3q
-         vGKBR/wRorAog==
-Subject: [PATCH 01/12] xfs: trigger all block gc scans when low on quota space
+        b=pLdrzC+nh+DEL+0JV25CQaLs3cuZFi8XC8NY2DadSYRcKJrFbgJQP26bC65nXgOHe
+         ThPhpFXtqQVgmtU/tzJyH9SULPzByYOdNnah6v1QuylAZ4mBGBVG9o1PSLHiGeSz77
+         564f3oLiZeJneo8KBTuPPJHyNIJSxJFnl/cEdR1KGvY8FwiMWQsNSIJkxLx7i3LJWA
+         2UdxNwK2jlaZIAujKsAp8seD8w+O5iuZ7J67kJizby7r9sGhsXgAVh91cecdg4/mHG
+         OiUs9jGLgjDpMTAN+AbEy3fcKLX2pDIEuOyd9Df8586o6tiB+7B3NR1zJgS03qdTbq
+         0Heklvsc1IXOw==
+Subject: [PATCH 06/12] xfs: try worst case space reservation upfront in
+ xfs_reflink_remap_extent
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>,
-        linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
-        bfoster@redhat.com
-Date:   Sun, 31 Jan 2021 18:05:32 -0800
-Message-ID: <161214513219.140945.234933673356369688.stgit@magnolia>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        hch@infradead.org, david@fromorbit.com, bfoster@redhat.com
+Date:   Sun, 31 Jan 2021 18:06:00 -0800
+Message-ID: <161214516033.140945.16191685638325519980.stgit@magnolia>
 In-Reply-To: <161214512641.140945.11651856181122264773.stgit@magnolia>
 References: <161214512641.140945.11651856181122264773.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,174 +51,85 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The functions to run an eof/cowblocks scan to try to reduce quota usage
-are kind of a mess -- the logic repeatedly initializes an eofb structure
-and there are logic bugs in the code that result in the cowblocks scan
-never actually happening.
+Now that we've converted xfs_reflink_remap_extent to use the new
+xfs_trans_alloc_inode API, we can focus on its slightly unusual behavior
+with regard to quota reservations.
 
-Replace all three functions with a single function that fills out an
-eofb and runs both eof and cowblocks scans.
+Since it's valid to remap written blocks into a hole, we must be able to
+increase the quota count by the number of blocks in the mapping.
+However, the incore space reservation process requires us to supply an
+asymptotic guess before we can gain exclusive access to resources.  We'd
+like to reserve all the quota we need up front, but we also don't want
+to fail a written -> allocated remap operation unnecessarily.
+
+The solution is to make the remap_extents function call the transaction
+allocation function twice.  The first time we ask to reserve enough
+space and quota to handle the absolute worst case situation, but if that
+fails, we can fall back to the old strategy: ask for the bare minimum
+space reservation upfront and increase the quota reservation later if we
+need to.
+
+Later in this patchset we change the transaction and quota code to try
+to reclaim space if we cannot reserve free space or quota.
+Restructuring the remap_extent function in this manner means that if the
+fallback increase fails, we can pass that back to the caller knowing
+that the transaction allocation already tried freeing space.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_file.c   |   15 ++++++---------
- fs/xfs/xfs_icache.c |   46 ++++++++++++++++------------------------------
- fs/xfs/xfs_icache.h |    4 ++--
- 3 files changed, 24 insertions(+), 41 deletions(-)
+ fs/xfs/xfs_reflink.c |   23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 5d4a66c72c78..69879237533b 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -713,7 +713,7 @@ xfs_file_buffered_write(
- 	struct inode		*inode = mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	ssize_t			ret;
--	int			enospc = 0;
-+	bool			cleared_space = false;
- 	int			iolock;
- 
- 	if (iocb->ki_flags & IOCB_NOWAIT)
-@@ -745,19 +745,16 @@ xfs_file_buffered_write(
- 	 * also behaves as a filter to prevent too many eofblocks scans from
- 	 * running at the same time.
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 27f875fa7a0d..086866f6e71f 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -991,6 +991,7 @@ xfs_reflink_remap_extent(
+ 	xfs_off_t		newlen;
+ 	int64_t			qdelta = 0;
+ 	unsigned int		resblks;
++	bool			quota_reserved = true;
+ 	bool			smap_real;
+ 	bool			dmap_written = xfs_bmap_is_written_extent(dmap);
+ 	int			iext_delta = 0;
+@@ -1006,10 +1007,26 @@ xfs_reflink_remap_extent(
+ 	 * the same index in the bmap btree, so we only need a reservation for
+ 	 * one bmbt split if either thing is happening.  However, we haven't
+ 	 * locked the inode yet, so we reserve assuming this is the case.
++	 *
++	 * The first allocation call tries to reserve enough space to handle
++	 * mapping dmap into a sparse part of the file plus the bmbt split.  We
++	 * haven't locked the inode or read the existing mapping yet, so we do
++	 * not know for sure that we need the space.  This should succeed most
++	 * of the time.
++	 *
++	 * If the first attempt fails, try again but reserving only enough
++	 * space to handle a bmbt split.  This is the hard minimum requirement,
++	 * and we revisit quota reservations later when we know more about what
++	 * we're remapping.
  	 */
--	if (ret == -EDQUOT && !enospc) {
-+	if (ret == -EDQUOT && !cleared_space) {
- 		xfs_iunlock(ip, iolock);
--		enospc = xfs_inode_free_quota_eofblocks(ip);
--		if (enospc)
--			goto write_retry;
--		enospc = xfs_inode_free_quota_cowblocks(ip);
--		if (enospc)
-+		cleared_space = xfs_inode_free_quota_blocks(ip);
-+		if (cleared_space)
- 			goto write_retry;
- 		iolock = 0;
--	} else if (ret == -ENOSPC && !enospc) {
-+	} else if (ret == -ENOSPC && !cleared_space) {
- 		struct xfs_eofblocks eofb = {0};
+ 	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+-	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, resblks, 0,
+-			false, &tp);
++	error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
++			resblks + dmap->br_blockcount, 0, false, &tp);
++	if (error == -EDQUOT || error == -ENOSPC) {
++		quota_reserved = false;
++		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write,
++				resblks, 0, false, &tp);
++	}
+ 	if (error)
+ 		goto out;
  
--		enospc = 1;
-+		cleared_space = true;
- 		xfs_flush_inodes(ip->i_mount);
- 
- 		xfs_iunlock(ip, iolock);
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index deb99300d171..c71eb15e3835 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1397,33 +1397,31 @@ xfs_icache_free_eofblocks(
- }
- 
- /*
-- * Run eofblocks scans on the quotas applicable to the inode. For inodes with
-- * multiple quotas, we don't know exactly which quota caused an allocation
-+ * Run cow/eofblocks scans on the quotas applicable to the inode. For inodes
-+ * with multiple quotas, we don't know exactly which quota caused an allocation
-  * failure. We make a best effort by including each quota under low free space
-  * conditions (less than 1% free space) in the scan.
-  */
--static int
--__xfs_inode_free_quota_eofblocks(
--	struct xfs_inode	*ip,
--	int			(*execute)(struct xfs_mount *mp,
--					   struct xfs_eofblocks	*eofb))
-+bool
-+xfs_inode_free_quota_blocks(
-+	struct xfs_inode	*ip)
- {
--	int scan = 0;
--	struct xfs_eofblocks eofb = {0};
--	struct xfs_dquot *dq;
-+	struct xfs_eofblocks	eofb = {0};
-+	struct xfs_dquot	*dq;
-+	bool			do_work = false;
- 
- 	/*
- 	 * Run a sync scan to increase effectiveness and use the union filter to
- 	 * cover all applicable quotas in a single scan.
+@@ -1076,7 +1093,7 @@ xfs_reflink_remap_extent(
+ 	 * before we started.  That should have removed all the delalloc
+ 	 * reservations, but we code defensively.
  	 */
--	eofb.eof_flags = XFS_EOF_FLAGS_UNION|XFS_EOF_FLAGS_SYNC;
-+	eofb.eof_flags = XFS_EOF_FLAGS_UNION | XFS_EOF_FLAGS_SYNC;
- 
- 	if (XFS_IS_UQUOTA_ENFORCED(ip->i_mount)) {
- 		dq = xfs_inode_dquot(ip, XFS_DQTYPE_USER);
- 		if (dq && xfs_dquot_lowsp(dq)) {
- 			eofb.eof_uid = VFS_I(ip)->i_uid;
- 			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
--			scan = 1;
-+			do_work = true;
- 		}
- 	}
- 
-@@ -1432,21 +1430,16 @@ __xfs_inode_free_quota_eofblocks(
- 		if (dq && xfs_dquot_lowsp(dq)) {
- 			eofb.eof_gid = VFS_I(ip)->i_gid;
- 			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
--			scan = 1;
-+			do_work = true;
- 		}
- 	}
- 
--	if (scan)
--		execute(ip->i_mount, &eofb);
-+	if (!do_work)
-+		return false;
- 
--	return scan;
--}
--
--int
--xfs_inode_free_quota_eofblocks(
--	struct xfs_inode *ip)
--{
--	return __xfs_inode_free_quota_eofblocks(ip, xfs_icache_free_eofblocks);
-+	xfs_icache_free_eofblocks(ip->i_mount, &eofb);
-+	xfs_icache_free_cowblocks(ip->i_mount, &eofb);
-+	return true;
- }
- 
- static inline unsigned long
-@@ -1646,13 +1639,6 @@ xfs_icache_free_cowblocks(
- 			XFS_ICI_COWBLOCKS_TAG);
- }
- 
--int
--xfs_inode_free_quota_cowblocks(
--	struct xfs_inode *ip)
--{
--	return __xfs_inode_free_quota_eofblocks(ip, xfs_icache_free_cowblocks);
--}
--
- void
- xfs_inode_set_cowblocks_tag(
- 	xfs_inode_t	*ip)
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 3a4c8b382cd0..3f7ddbca8638 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -54,17 +54,17 @@ long xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
- 
- void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
- 
-+bool xfs_inode_free_quota_blocks(struct xfs_inode *ip);
-+
- void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
- int xfs_icache_free_eofblocks(struct xfs_mount *, struct xfs_eofblocks *);
--int xfs_inode_free_quota_eofblocks(struct xfs_inode *ip);
- void xfs_eofblocks_worker(struct work_struct *);
- void xfs_queue_eofblocks(struct xfs_mount *);
- 
- void xfs_inode_set_cowblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_cowblocks_tag(struct xfs_inode *ip);
- int xfs_icache_free_cowblocks(struct xfs_mount *, struct xfs_eofblocks *);
--int xfs_inode_free_quota_cowblocks(struct xfs_inode *ip);
- void xfs_cowblocks_worker(struct work_struct *);
- void xfs_queue_cowblocks(struct xfs_mount *);
- 
+-	if (!smap_real && dmap_written) {
++	if (!quota_reserved && !smap_real && dmap_written) {
+ 		error = xfs_trans_reserve_quota_nblks(tp, ip,
+ 				dmap->br_blockcount, 0, false);
+ 		if (error)
 
