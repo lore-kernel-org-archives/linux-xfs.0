@@ -4,41 +4,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BA32C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 02:07:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DD54C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 02:07:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 270C164E30
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 02:07:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BEEE64E2E
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 02:07:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231327AbhBACHL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 31 Jan 2021 21:07:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34084 "EHLO mail.kernel.org"
+        id S231305AbhBACHQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 31 Jan 2021 21:07:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34354 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231305AbhBACGX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 31 Jan 2021 21:06:23 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 58D7464E27;
-        Mon,  1 Feb 2021 02:06:06 +0000 (UTC)
+        id S229765AbhBACGY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 31 Jan 2021 21:06:24 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B0E3F64E32;
+        Mon,  1 Feb 2021 02:05:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612145166;
-        bh=Wz9irf4CKJxCMnu15KxIJHbnjBfJYW5tF/0QseheH5o=;
+        s=k20201202; t=1612145143;
+        bh=zcIeRXJpU8rlv7dzSb2+rlWghhHlJHh2AbARBmOZG7A=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=eGZ0NEjKHHfKWVtrR9IQZNJV0vwles4Nvb0/SpCc8d4n/kNfdeAPb4FuUjbKUrQh6
-         5Mrj5Lhk4smUCBq9Fk8Q8mD0rptlSx2HpYclUukean8/6Lb/oLyxiTTLMce7r5Dayf
-         DM/6btRT7UoKBwKeLyf5Bc16Qen/hquDTJ0aVoZ8xsik5sU4Xcagds2vTTH+7Su839
-         TIqrYwRf7YrZdx5g9xZ1eZbcf/UlmhBIWmnlVsD2TZ34UAfRhnYIdUTsQ7lFnVpKpI
-         It0HOQAoAg9uYaPoubCKfwajgpZjnnEnw7FCkiEZ/stHj3Lv75O3rJU1DOfZ1Xumm8
-         9vTwlQF105BMA==
-Subject: [PATCH 07/12] xfs: flush eof/cowblocks if we can't reserve quota for
- file blocks
+        b=D7FlR3yfIKpOThp1JdFW3drGVJRrEnSTovfueirJRT8A99RnkVbqsJDN8mSxfV/Ng
+         Q9gAH/jb0o0zSbOGfFmXZUiqo10awDxyIrfSEQry2hva53p4SoxUjroJh1QSi1bZ4d
+         eTKPO7lII46QjMNdN7urp6fc2L2xUuXxVMAhE5ntXrscYqv39ghO6LIld+Tr8ZV+Zi
+         ov55AISCpqasJa1KhZMui2wo1ZVl/wzutbTBvOxIqQnXAdGBaIF4A4HvfLtgmdK6lv
+         qw/hJAJA+AeOmPTbZZug3casWACXYJoqjvolOkFWvRFdNuv9H2/OJASyq5qhAw0Uzb
+         yEyT7E6ISDgIQ==
+Subject: [PATCH 03/12] xfs: xfs_inode_free_quota_blocks should scan project
+ quota
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
+Cc:     Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>,
+        linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com,
         bfoster@redhat.com
-Date:   Sun, 31 Jan 2021 18:06:06 -0800
-Message-ID: <161214516600.140945.4401509001858536727.stgit@magnolia>
+Date:   Sun, 31 Jan 2021 18:05:43 -0800
+Message-ID: <161214514329.140945.12811277568414319413.stgit@magnolia>
 In-Reply-To: <161214512641.140945.11651856181122264773.stgit@magnolia>
 References: <161214512641.140945.11651856181122264773.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,72 +52,42 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a fs modification (data write, reflink, xattr set, fallocate, etc.)
-is unable to reserve enough quota to handle the modification, try
-clearing whatever space the filesystem might have been hanging onto in
-the hopes of speeding up the filesystem.  The flushing behavior will
-become particularly important when we add deferred inode inactivation
-because that will increase the amount of space that isn't actively tied
-to user data.
+Buffered writers who have run out of quota reservation call
+xfs_inode_free_quota_blocks to try to free any space reservations that
+might reduce the quota usage.  Unfortunately, the buffered write path
+treats "out of project quota" the same as "out of overall space" so this
+function has never supported scanning for space that might ease an "out
+of project quota" condition.
+
+We're about to start using this function for cases where we actually
+/can/ tell if we're out of project quota, so add in this functionality.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_reflink.c |    5 +++++
- fs/xfs/xfs_trans.c   |   10 ++++++++++
- 2 files changed, 15 insertions(+)
+ fs/xfs/xfs_icache.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 086866f6e71f..725c7d8e4438 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1092,6 +1092,11 @@ xfs_reflink_remap_extent(
- 	 * count.  This is suboptimal, but the VFS flushed the dest range
- 	 * before we started.  That should have removed all the delalloc
- 	 * reservations, but we code defensively.
-+	 *
-+	 * xfs_trans_alloc_inode above already tried to grab an even larger
-+	 * quota reservation, and kicked off a blockgc scan if it couldn't.
-+	 * If we can't get a potentially smaller quota reservation now, we're
-+	 * done.
- 	 */
- 	if (!quota_reserved && !smap_real && dmap_written) {
- 		error = xfs_trans_reserve_quota_nblks(tp, ip,
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 466e1c86767f..f62c1c5f210f 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -23,6 +23,7 @@
- #include "xfs_inode.h"
- #include "xfs_dquot_item.h"
- #include "xfs_dquot.h"
-+#include "xfs_icache.h"
- 
- kmem_zone_t	*xfs_trans_zone;
- 
-@@ -1046,8 +1047,10 @@ xfs_trans_alloc_inode(
- {
- 	struct xfs_trans	*tp;
- 	struct xfs_mount	*mp = ip->i_mount;
-+	bool			retried = false;
- 	int			error;
- 
-+retry:
- 	error = xfs_trans_alloc(mp, resv, dblocks,
- 			rblocks / mp->m_sb.sb_rextsize,
- 			force ? XFS_TRANS_RESERVE : 0, &tp);
-@@ -1065,6 +1068,13 @@ xfs_trans_alloc_inode(
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 89f9e692fde7..10c1a0dee17d 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1434,6 +1434,15 @@ xfs_inode_free_quota_blocks(
+ 		}
  	}
  
- 	error = xfs_trans_reserve_quota_nblks(tp, ip, dblocks, rblocks, force);
-+	if (!retried && (error == -EDQUOT || error == -ENOSPC)) {
-+		xfs_trans_cancel(tp);
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		xfs_blockgc_free_quota(ip, 0);
-+		retried = true;
-+		goto retry;
++	if (XFS_IS_PQUOTA_ENFORCED(ip->i_mount)) {
++		dq = xfs_inode_dquot(ip, XFS_DQTYPE_PROJ);
++		if (dq && xfs_dquot_lowsp(dq)) {
++			eofb.eof_prid = ip->i_d.di_projid;
++			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
++			do_work = true;
++		}
 +	}
- 	if (error)
- 		goto out_cancel;
++
+ 	if (!do_work)
+ 		return false;
  
 
