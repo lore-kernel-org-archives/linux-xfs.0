@@ -2,91 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9B5AC433E9
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 18:04:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39115C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 18:28:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADFF464EA0
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 18:04:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED59E64EA0
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Feb 2021 18:28:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230346AbhBASEn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Feb 2021 13:04:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54148 "EHLO mail.kernel.org"
+        id S232871AbhBAS22 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Feb 2021 13:28:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59570 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230110AbhBASEl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Feb 2021 13:04:41 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ECA3864E9C;
-        Mon,  1 Feb 2021 18:03:59 +0000 (UTC)
+        id S232813AbhBAS2Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Feb 2021 13:28:24 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ECAB564EA1;
+        Mon,  1 Feb 2021 18:27:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612202640;
-        bh=l0UnMls/Ow7WCULb5zS5VrYMEZ5XwZigGHZcMSZecIw=;
+        s=k20201202; t=1612204064;
+        bh=0SPHpD3StofXv0KY4XjnUsparE1lw/vjcIs83H0vekc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pWsyePdhaeoR72UrEXdDiajgUgcofDnHEmjRSOBh9H67gQifg1P84TWIZk+M0r10v
-         63SEIManCCBrXqQh70cWljOWVf+FnPUQN5Xkcq7uAeFs5EOj7BzpWidkkHjPqNOFWu
-         YT++dDdHzXCnIJklGYFXBlNWNi1QgLwyT7XrjJ80S/awIGyTy7oXQlq66Fdk5W0+hU
-         qy/Ny4u28VLwzkkilTjDYKEW7uaKyOMi4XxGnzI/8QVUqO+5cTCam9yS7gb+ZC1Dco
-         RgysS/Iiq2w+6dyb18FYOembII6XtZT3qSNs+DG0vxVC92MLTWI4WF1gJHlADSQLgy
-         te45yckgEwJhA==
-Date:   Mon, 1 Feb 2021 10:03:59 -0800
+        b=HTCemX85d7mj9gfjba2Sr66V6JgGFjg8jvQQDlVMZfjtcil8q1LCr3IMeMEQ5Piqv
+         q8shDUJHZ7bECaFx7PxhWKLXQeRAlVMgNun2TyEJszQzWePjtzTRRnHmD0qcWloghW
+         +TMlvHW5SOe393p6Bv/86Qe++8bSdU6fwzP+jAL3xJpUvBk2GghPnjSZuxwf3MUcb6
+         0AcVQF9ru5A3dGVc3ezqFWeZf1QjgxQ3pwfzHiBTX3cg5g67g4qt608juBt9q4Q52y
+         6byaCx7EwY6SyY/rtuvhcyUf7Pp3QCZxrxVfC976pavpQ4zHCVXyvE81IyMf1ojPiT
+         tY+GttF3zSaVg==
+Date:   Mon, 1 Feb 2021 10:27:43 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, bfoster@redhat.com
-Subject: Re: [PATCH 01/17] xfs: fix xquota chown transactionality wrt
- delalloc blocks
-Message-ID: <20210201180359.GA7193@magnolia>
+Subject: Re: [PATCH 14/17] xfs: clean up xfs_trans_reserve_quota_chown a bit
+Message-ID: <20210201182743.GC7193@magnolia>
 References: <161214502818.139387.7678025647736002500.stgit@magnolia>
- <161214503452.139387.3026688558992670901.stgit@magnolia>
- <20210201121425.GA3271714@infradead.org>
+ <161214510730.139387.4000977461727812094.stgit@magnolia>
+ <20210201121834.GC3271714@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210201121425.GA3271714@infradead.org>
+In-Reply-To: <20210201121834.GC3271714@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 01, 2021 at 12:14:25PM +0000, Christoph Hellwig wrote:
-> On Sun, Jan 31, 2021 at 06:03:54PM -0800, Darrick J. Wong wrote:
-> > @@ -1785,6 +1785,28 @@ xfs_qm_vop_chown(
-> >  	xfs_trans_mod_dquot(tp, newdq, bfield, ip->i_d.di_nblocks);
-> >  	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_ICOUNT, 1);
+On Mon, Feb 01, 2021 at 12:18:34PM +0000, Christoph Hellwig wrote:
 > >  
-> > +	/*
-> > +	 * Back when we made quota reservations for the chown, we reserved the
-> > +	 * ondisk blocks + delalloc blocks with the new dquot.  Now that we've
-> > +	 * switched the dquots, decrease the new dquot's block reservation
-> > +	 * (having already bumped up the real counter) so that we don't have
-> > +	 * any reservation to give back when we commit.
-> > +	 */
-> > +	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_RES_BLKS,
-> > +			-ip->i_delayed_blks);
-> > +
-> > +	/*
-> > +	 * Give the incore reservation for delalloc blocks back to the old
-> > +	 * dquot.  We don't normally handle delalloc quota reservations
-> > +	 * transactionally, so just lock the dquot and subtract from the
-> > +	 * reservation.  We've dirtied the transaction, so it's too late to
-> > +	 * turn back now.
-> > +	 */
-> > +	tp->t_flags |= XFS_TRANS_DIRTY;
-> > +	xfs_dqlock(prevdq);
-> > +	prevdq->q_blk.reserved -= ip->i_delayed_blks;
-> > +	xfs_dqunlock(prevdq);
+> >  	if (XFS_IS_UQUOTA_ON(mp) && udqp &&
+> >  	    i_uid_read(VFS_I(ip)) != udqp->q_id)
+> > -		udq_delblks = udqp;
+> > +		new_udqp = udqp;
 > 
-> Any particular reason for this order of operations vs grouping it with
-> the existing prevdq and newdq sections?
+> We don't even need two variables for each type, instead we can just
+> clear the original pointer to NULL if the conditions aren't met.
 
-None aside from maintaining a similar order (ondisk blocks, then
-delalloc) as the code that was moved from the reservation function.
-Though the newdq side is entirely dqtrx manipulations so I don't
-think it matters much.  Thanks for the review!
+Once I've made xfs_trans_alloc_ichange the only caller of
+xfs_trans_reserve_quota_chown, I think we could get rid of these checks
+entirely, since there ought to be a 1:1 correspondence between (i_udquot
+== new_udqp) and (i_uid_read(VFS_I(ip)) == new_udqp->q_id), if the
+caller even passed in a new_udqp.
+
+Though... if I take your (later) suggestion to move the call to
+xfs_trans_reserve_quota_bydquots into xfs_trans_alloc_ichange, then it
+makes more sense to drop all these patches.
 
 --D
 
-> Otherwise loooks fine:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
