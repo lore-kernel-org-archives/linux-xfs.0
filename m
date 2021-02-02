@@ -2,178 +2,314 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-15.4 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE460C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 12:02:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87A97C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 12:50:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99ED164F54
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 12:02:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53EA964F4E
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 12:50:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229525AbhBBMC1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Feb 2021 07:02:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52280 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229554AbhBBMCV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Feb 2021 07:02:21 -0500
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06FFAC0613D6
-        for <linux-xfs@vger.kernel.org>; Tue,  2 Feb 2021 04:01:41 -0800 (PST)
-Received: by mail-pf1-x42c.google.com with SMTP id m6so14192478pfk.1
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Feb 2021 04:01:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=9Elq8hmCZzS3vWUKXd7rOVUX4T0XG8HWeaKl9SHLJjE=;
-        b=fJS90jFYDiH+7RpSQLmF99NB9asC18RZQ318/XDDoMjDFKMb1iDuAyDLoZ84B8QMhA
-         4ojtkJKnJlQUd9bwtEyHXWIhOwcXoICiUBPoIMvHPtGzf692GxQBZKSdF6Uw0fqdF53u
-         INttfcm8uVmX73al33i4VCg+SaQjDvvbq5b0QbuIYBak67oFk9Sv7zPZTp6v9p38oU5a
-         D7TDAas6k+wBxHZdP/R2vEvtcnsdMThoPGFPzNHCsPVXLuMVpVerDTgZGVCX2TFyHlR/
-         yefjdkpSr/klYhR5+UvyVvyioXiscB6TzX1N9CIIm5MIlGp1agg8KdcjRObXXrnLj/5g
-         0UJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version:content-transfer-encoding;
-        bh=9Elq8hmCZzS3vWUKXd7rOVUX4T0XG8HWeaKl9SHLJjE=;
-        b=GRnrY38Z7YfjbPIMhth5twYnJ5mdXF1Fx2Vsf+tnjvK6SJQXKueooQVCK24d65eXXq
-         5wzIl26lUOAP7WNGlGw4OO6deHXKTcnPUC4uO0rEmCItB9ccnGukCkBg/mBGcVHAzXye
-         Py7kknaK1IfphN3Y/9fuRAhYhTxaPPLkgUyRvDNBhLkuMvnPQgtW8ofO4pvZiHlckI9u
-         c+cKmdpY2qoeXMRLotkRKnP/f1o5PPfNPx42PE30tlVXLGYE1/yPrpxFL3JOwUE6dWkk
-         JHOTACU8ku4A7eZ2CMQmkgKxFdyBAloC+xFAccdqC5ZHx6dH66BajSaE6yGjCcHNDae6
-         UKQw==
-X-Gm-Message-State: AOAM531azXLHgGsCyyGiGzaIdJkQrNSGxw3G30QgHZY6ZdVcV0wvYYCW
-        TkBlsFw2miwZL5IibR5vMRUh66e9VFA=
-X-Google-Smtp-Source: ABdhPJzlrl6dGh2GPBphl3xZ4A1LH1PrrCb3ML4P/0tDEtpflBXi0P1NzOzrZAEtuI5WQjrCz0riTw==
-X-Received: by 2002:a65:4288:: with SMTP id j8mr21429404pgp.346.1612267300463;
-        Tue, 02 Feb 2021 04:01:40 -0800 (PST)
-Received: from garuda ([122.167.157.84])
-        by smtp.gmail.com with ESMTPSA id fh15sm2754156pjb.32.2021.02.02.04.01.39
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 02 Feb 2021 04:01:40 -0800 (PST)
-References: <20210128044154.806715-1-david@fromorbit.com> <20210128044154.806715-6-david@fromorbit.com>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/5] xfs: reduce buffer log item shadow allocations
-In-reply-to: <20210128044154.806715-6-david@fromorbit.com>
-Date:   Tue, 02 Feb 2021 17:31:37 +0530
-Message-ID: <87im7an0f2.fsf@garuda>
+        id S231649AbhBBMt7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Feb 2021 07:49:59 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:58826 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231879AbhBBMtz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Feb 2021 07:49:55 -0500
+X-IronPort-AV: E=Sophos;i="5.79,394,1602518400"; 
+   d="scan'208";a="104103944"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 02 Feb 2021 20:48:06 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id C3DA44CE6D68;
+        Tue,  2 Feb 2021 20:48:02 +0800 (CST)
+Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
+ (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 2 Feb
+ 2021 20:48:03 +0800
+Subject: Re: [PATCH RESEND v2 09/10] xfs: Implement ->corrupted_range() for
+ XFS
+To:     "Darrick J. Wong" <djwong@kernel.org>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <dm-devel@redhat.com>,
+        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <agk@redhat.com>,
+        <snitzer@redhat.com>, <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>,
+        <y-goto@fujitsu.com>
+References: <20210129062757.1594130-1-ruansy.fnst@cn.fujitsu.com>
+ <20210129062757.1594130-10-ruansy.fnst@cn.fujitsu.com>
+ <20210202024147.GI7193@magnolia>
+From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <d9c989bc-be7d-4771-4cd8-2e4653648b4d@cn.fujitsu.com>
+Date:   Tue, 2 Feb 2021 20:48:01 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20210202024147.GI7193@magnolia>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) To
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
+X-yoursite-MailScanner-ID: C3DA44CE6D68.AE3BA
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 28 Jan 2021 at 10:11, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> When we modify btrees repeatedly, we regularly increase the size of
-> the logged region by a single chunk at a time (per transaction
-> commit). This results in the CIL formatting code having to
-> reallocate the log vector buffer every time the buffer dirty region
-> grows. Hence over a typical 4kB btree buffer, we might grow the log
-> vector 4096/128 =3D 32x over a short period where we repeatedly add
-> or remove records to/from the buffer over a series of running
-> transaction. This means we are doing 32 memory allocations and frees
-> over this time during a performance critical path in the journal.
->
-> The amount of space tracked in the CIL for the object is calculated
-> during the ->iop_format() call for the buffer log item, but the
-> buffer memory allocated for it is calculated by the ->iop_size()
-> call. The size callout determines the size of the buffer, the format
-> call determines the space used in the buffer.
->
-> Hence we can oversize the buffer space required in the size
-> calculation without impacting the amount of space used and accounted
-> to the CIL for the changes being logged. This allows us to reduce
-> the number of allocations by rounding up the buffer size to allow
-> for future growth. This can safe a substantial amount of CPU time in
-> this path:
->
-> -   46.52%     2.02%  [kernel]                  [k] xfs_log_commit_cil
->    - 44.49% xfs_log_commit_cil
->       - 30.78% _raw_spin_lock
->          - 30.75% do_raw_spin_lock
->               30.27% __pv_queued_spin_lock_slowpath
->
-> (oh, ouch!)
-> ....
->       - 1.05% kmem_alloc_large
->          - 1.02% kmem_alloc
->               0.94% __kmalloc
->
-> This overhead here us what this patch is aimed at. After:
->
->       - 0.76% kmem_alloc_large                                           =
-                                                                           =
-                =E2=96=92
->          - 0.75% kmem_alloc                                              =
-                                                                           =
-                =E2=96=92
->               0.70% __kmalloc                                            =
-                                                                           =
-                =E2=96=92
-
-Apart from the trailing whitespace above,
-
-The changes look good to me.
-
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_buf_item.c | 13 +++++++++++--
->  1 file changed, 11 insertions(+), 2 deletions(-)
->
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 17960b1ce5ef..0628a65d9c55 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -142,6 +142,7 @@ xfs_buf_item_size(
->  {
->  	struct xfs_buf_log_item	*bip =3D BUF_ITEM(lip);
->  	int			i;
-> +	int			bytes;
->=20=20
->  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
->  	if (bip->bli_flags & XFS_BLI_STALE) {
-> @@ -173,7 +174,7 @@ xfs_buf_item_size(
->  	}
->=20=20
->  	/*
-> -	 * the vector count is based on the number of buffer vectors we have
-> +	 * The vector count is based on the number of buffer vectors we have
->  	 * dirty bits in. This will only be greater than one when we have a
->  	 * compound buffer with more than one segment dirty. Hence for compound
->  	 * buffers we need to track which segment the dirty bits correspond to,
-> @@ -181,10 +182,18 @@ xfs_buf_item_size(
->  	 * count for the extra buf log format structure that will need to be
->  	 * written.
->  	 */
-> +	bytes =3D 0;
->  	for (i =3D 0; i < bip->bli_format_count; i++) {
->  		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
-> -					  nvecs, nbytes);
-> +					  nvecs, &bytes);
->  	}
-> +
-> +	/*
-> +	 * Round up the buffer size required to minimise the number of memory
-> +	 * allocations that need to be done as this item grows when relogged by
-> +	 * repeated modifications.
-> +	 */
-> +	*nbytes =3D round_up(bytes, 512);
->  	trace_xfs_buf_item_size(bip);
->  }
 
 
---=20
-chandan
+On 2021/2/2 上午10:41, Darrick J. Wong wrote:
+> On Fri, Jan 29, 2021 at 02:27:56PM +0800, Shiyang Ruan wrote:
+>> This function is used to handle errors which may cause data lost in
+>> filesystem.  Such as memory failure in fsdax mode.
+>>
+>> In XFS, it requires "rmapbt" feature in order to query for files or
+>> metadata which associated to the corrupted data.  Then we could call fs
+>> recover functions to try to repair the corrupted data.(did not
+>> implemented in this patchset)
+> 
+> I would suggest:
+> "If the rmap feature of XFS enabled, we can query it to find files and
+> metadata which are associated with the corrupt data.  For now all we do
+> is kill processes with that file mapped into their address spaces, but
+> future patches could actually do something about corrupt metadata."
+> 
+
+Yes, this is better.
+
+>> After that, the memory failure also needs to notify the processes who
+>> are using those files.
+>>
+>> Only support data device.  Realtime device is not supported for now.
+>>
+>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+>> ---
+>>   fs/xfs/xfs_fsops.c |   5 +++
+>>   fs/xfs/xfs_mount.h |   1 +
+>>   fs/xfs/xfs_super.c | 109 +++++++++++++++++++++++++++++++++++++++++++++
+>>   3 files changed, 115 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+>> index 959ce91a3755..f03901a5c673 100644
+>> --- a/fs/xfs/xfs_fsops.c
+>> +++ b/fs/xfs/xfs_fsops.c
+>> @@ -498,6 +498,11 @@ xfs_do_force_shutdown(
+>>   "Corruption of in-memory data detected.  Shutting down filesystem");
+>>   		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
+>>   			xfs_stack_trace();
+>> +	} else if (flags & SHUTDOWN_CORRUPT_META) {
+>> +		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
+>> +"Corruption of on-disk metadata detected.  Shutting down filesystem");
+>> +		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
+>> +			xfs_stack_trace();
+>>   	} else if (logerror) {
+>>   		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
+>>   			"Log I/O Error Detected. Shutting down filesystem");
+>> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+>> index dfa429b77ee2..8f0df67ffcc1 100644
+>> --- a/fs/xfs/xfs_mount.h
+>> +++ b/fs/xfs/xfs_mount.h
+>> @@ -274,6 +274,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+>>   #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
+>>   #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
+>>   #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
+>> +#define SHUTDOWN_CORRUPT_META	0x0010  /* corrupt metadata on device */
+>>   
+>>   /*
+>>    * Flags for xfs_mountfs
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index 813be879a5e5..93093fe0ee8a 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -35,6 +35,11 @@
+>>   #include "xfs_refcount_item.h"
+>>   #include "xfs_bmap_item.h"
+>>   #include "xfs_reflink.h"
+>> +#include "xfs_alloc.h"
+>> +#include "xfs_rmap.h"
+>> +#include "xfs_rmap_btree.h"
+>> +#include "xfs_rtalloc.h"
+>> +#include "xfs_bit.h"
+>>   
+>>   #include <linux/magic.h>
+>>   #include <linux/fs_context.h>
+>> @@ -1105,6 +1110,109 @@ xfs_fs_free_cached_objects(
+>>   	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
+>>   }
+>>   
+>> +static int
+>> +xfs_corrupt_helper(
+>> +	struct xfs_btree_cur		*cur,
+>> +	struct xfs_rmap_irec		*rec,
+>> +	void				*data)
+>> +{
+>> +	struct xfs_inode		*ip;
+>> +	struct address_space		*mapping;
+>> +	int				rc = 0;
+>> +	int				*flags = data;
+>> +
+>> +	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
+>> +	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
+>> +		// TODO check and try to fix metadata
+>> +		rc = -EFSCORRUPTED;
+> 
+> The xfs_force_shutdown() call should go here, since SHUTDOWN_CORRUPT_META
+> is specific to this case.
+
+OK.
+> 
+> I guess one could also dig through the buffer cache and delwri_submit
+> those buffers or something.
+> 
+>> +	} else {
+>> +		/*
+>> +		 * Get files that incore, filter out others that are not in use.
+>> +		 */
+>> +		rc = xfs_iget(cur->bc_mp, cur->bc_tp, rec->rm_owner,
+>> +			      XFS_IGET_INCORE, 0, &ip);
+>> +		if (rc || !ip)
+>> +			return rc;
+>> +		if (!VFS_I(ip)->i_mapping)
+>> +			goto out;
+>> +
+>> +		mapping = VFS_I(ip)->i_mapping;
+>> +		if (IS_DAX(VFS_I(ip)))
+>> +			rc = mf_dax_mapping_kill_procs(mapping, rec->rm_offset,
+>> +						       *flags);
+>> +		else
+>> +			mapping_set_error(mapping, -EIO);
+>> +
+>> +		// TODO try to fix data
+> 
+> What could we do to fix the data?  If we're not in S_DAX mode and
+> there's actually pagecache mapped in, does that imply that we could
+> mark it dirty and kick off dirty pagecache writeback?
+
+But in this case, the dax page is already broken, it seems that page 
+cache should not be written back to the origin dax page.  I think 
+another dax page need to be allocate for the writeback.
+
+> 
+>> +out:
+>> +		xfs_irele(ip);
+>> +	}
+>> +
+>> +	return rc;
+>> +}
+>> +
+>> +static int
+>> +xfs_fs_corrupted_range(
+>> +	struct super_block	*sb,
+>> +	struct block_device	*bdev,
+>> +	loff_t			offset,
+>> +	size_t			len,
+>> +	void			*data)
+>> +{
+>> +	struct xfs_mount	*mp = XFS_M(sb);
+>> +	struct xfs_trans	*tp = NULL;
+>> +	struct xfs_btree_cur	*cur = NULL;
+>> +	struct xfs_rmap_irec	rmap_low, rmap_high;
+>> +	struct xfs_buf		*agf_bp = NULL;
+>> +	xfs_fsblock_t		fsbno = XFS_B_TO_FSB(mp, offset);
+>> +	xfs_filblks_t		bcnt = XFS_B_TO_FSB(mp, len);
+>> +	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
+>> +	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
+>> +	int			error = 0;
+>> +
+>> +	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_bdev == bdev) {
+>> +		xfs_warn(mp, "corrupted_range support not available for realtime device!");
+>> +		return 0;
+>> +	}
+>> +	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_bdev == bdev &&
+>> +	    mp->m_logdev_targp != mp->m_ddev_targp) {
+>> +		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
+>> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
+> 
+> Longer term question for the rest of the xfs community: Can we do better
+> than this?  If the ail has checkpointed past this part of the log then
+> we could just write zeroes into dead area, right?
+> 
+> Also, if one of the log buffers points to a dead log area and isn't the
+> one that's currently being written into, can we just submit_bio it to
+> rewrite the lost part of the log??
+
+Yes, We should also fix the log rather than shutdown it directly.  I 
+will take that into consideration in future patches.
+
+> 
+>> +		return 0;
+>> +	}
+>> +
+>> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+>> +		xfs_warn(mp, "corrupted_range needs rmapbt enabled!");
+>> +		return 0;
+>> +	}
+>> +
+>> +	error = xfs_trans_alloc_empty(mp, &tp);
+>> +	if (error)
+>> +		return error;
+>> +
+>> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
+>> +	if (error)
+>> +		goto out_cancel_tp;
+>> +
+>> +	cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agno);
+>> +
+>> +	/* Construct a range for rmap query */
+>> +	memset(&rmap_low, 0, sizeof(rmap_low));
+>> +	memset(&rmap_high, 0xFF, sizeof(rmap_high));
+>> +	rmap_low.rm_startblock = rmap_high.rm_startblock = agbno;
+>> +	rmap_low.rm_blockcount = rmap_high.rm_blockcount = bcnt;
+>> +
+>> +	error = xfs_rmap_query_range(cur, &rmap_low, &rmap_high, xfs_corrupt_helper, data);
+> 
+> Long line here...
+> 
+>> +	if (error == -EFSCORRUPTED)
+>> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
+> 
+> This should go in xfs_corrupt_helper as I mentioned above.
+
+OK.
+
+
+--
+Thanks,
+Ruan Shiyang.
+> 
+> --D
+> 
+>> +
+>> +	xfs_btree_del_cursor(cur, error);
+>> +	xfs_trans_brelse(tp, agf_bp);
+>> +out_cancel_tp:
+>> +	xfs_trans_cancel(tp);
+>> +	return error;
+>> +}
+>> +
+>>   static const struct super_operations xfs_super_operations = {
+>>   	.alloc_inode		= xfs_fs_alloc_inode,
+>>   	.destroy_inode		= xfs_fs_destroy_inode,
+>> @@ -1118,6 +1226,7 @@ static const struct super_operations xfs_super_operations = {
+>>   	.show_options		= xfs_fs_show_options,
+>>   	.nr_cached_objects	= xfs_fs_nr_cached_objects,
+>>   	.free_cached_objects	= xfs_fs_free_cached_objects,
+>> +	.corrupted_range	= xfs_fs_corrupted_range,
+>>   };
+>>   
+>>   static int
+>> -- 
+>> 2.30.0
+>>
+>>
+>>
+> 
+> 
+
+
