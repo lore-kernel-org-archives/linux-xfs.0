@@ -2,167 +2,278 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3023C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 02:15:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96971C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 02:42:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7ED264EE4
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 02:15:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F39964E9C
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 02:42:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229657AbhBBCPI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Feb 2021 21:15:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56764 "EHLO mail.kernel.org"
+        id S229797AbhBBCmc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Feb 2021 21:42:32 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59832 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229543AbhBBCPD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Feb 2021 21:15:03 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C13F564EE0;
-        Tue,  2 Feb 2021 02:14:21 +0000 (UTC)
+        id S231156AbhBBCm3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Feb 2021 21:42:29 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3F2FA64E9C;
+        Tue,  2 Feb 2021 02:41:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612232061;
-        bh=+ZRvQlcK8Bf3QyDyR755TqYz7atQMiQIefWvaXw7Gb8=;
+        s=k20201202; t=1612233708;
+        bh=naWXAFU+6TKdKkVuNGQRwpVvCUYGZXnZdcMsBtOH4uQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oYHlHd/Zs7iiqJ8rbWLFBPcBOQuTavvhiXHfBsmE5hJtfPeESgCyTKptT9BiQflhx
-         Sl/Ph6t1FQXKcuFF1ugb1/5p/lwrd2dwh54M4RC+llxb2utYYvHPmZqVFHAis0OJrS
-         DLxTRFBRndkw6bkfo54LGojv0D1QWqDOyIL83ZC1EJQDCFblL9ux6cBm2SdNWv5UJl
-         1pCwTb1MzEmsIZfUaoa2mSCF9f2awDd8zR9E27X8jb1Gwo1Va0Hn2nxhJaY0Pf2TJ+
-         EJ0oBfUhd9IHx+CN4Z/Ww9zKlWXoe8cNe0tzb3ziZA0F4rjVPBsZ0HiL32hy5xbVmS
-         NYGQEyF3yR+Zw==
-Date:   Mon, 1 Feb 2021 18:14:21 -0800
+        b=NgstTYgkenP2WnTOGFSdOSUmp7Bqp7OocOMpJX+lO9rew99J9DVyEpZ9WUJooO74B
+         Gv/w/hXObsFeCONTnY19zTJmgdlD0IVdGuP1ZUtpZp2A8kIZk3RgzIaYHaHX/LFDn9
+         4x3Sk7AQgkZMzX7WbKW737wbpXEuK5LrYzBZum1eKz4mkWayd2Dot5GybmlgnbRHfT
+         T1QgwnVtJXepOkmuCfdvyO072Y2+pw1cf7FSokRFvCW8JoMEUs8vhgjAm7fxHgsLq1
+         fgiRYdptfwW+DRAhATquyPQAon2Nz5Ulc1rBe6VDNe0a9Ay3H9Sb5TrkHRt3CmFfDx
+         GhihJCHCZUe4A==
+Date:   Mon, 1 Feb 2021 18:41:47 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-btrfs@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: Unexpected reflink/subvol snapshot behaviour
-Message-ID: <20210202021421.GA7181@magnolia>
-References: <20210121222051.GB4626@dread.disaster.area>
+To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
+        darrick.wong@oracle.com, dan.j.williams@intel.com,
+        david@fromorbit.com, hch@lst.de, agk@redhat.com,
+        snitzer@redhat.com, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
+        y-goto@fujitsu.com
+Subject: Re: [PATCH RESEND v2 09/10] xfs: Implement ->corrupted_range() for
+ XFS
+Message-ID: <20210202024147.GI7193@magnolia>
+References: <20210129062757.1594130-1-ruansy.fnst@cn.fujitsu.com>
+ <20210129062757.1594130-10-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210121222051.GB4626@dread.disaster.area>
+In-Reply-To: <20210129062757.1594130-10-ruansy.fnst@cn.fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 22, 2021 at 09:20:51AM +1100, Dave Chinner wrote:
-> Hi btrfs-gurus,
+On Fri, Jan 29, 2021 at 02:27:56PM +0800, Shiyang Ruan wrote:
+> This function is used to handle errors which may cause data lost in
+> filesystem.  Such as memory failure in fsdax mode.
 > 
-> I'm running a simple reflink/snapshot/COW scalability test at the
-> moment. It is just a loop that does "fio overwrite of 10,000 4kB
-> random direct IOs in a 4GB file; snapshot" and I want to check a
-> couple of things I'm seeing with btrfs. fio config file is appended
-> to the email.
+> In XFS, it requires "rmapbt" feature in order to query for files or
+> metadata which associated to the corrupted data.  Then we could call fs
+> recover functions to try to repair the corrupted data.(did not
+> implemented in this patchset)
+
+I would suggest:
+"If the rmap feature of XFS enabled, we can query it to find files and
+metadata which are associated with the corrupt data.  For now all we do
+is kill processes with that file mapped into their address spaces, but
+future patches could actually do something about corrupt metadata."
+
+> After that, the memory failure also needs to notify the processes who
+> are using those files.
 > 
-> Firstly, what is the expected "space amplification" of such a
-> workload over 1000 iterations on btrfs? This will write 40GB of user
-> data, and I'm seeing btrfs consume ~220GB of space for the workload
-> regardless of whether I use subvol snapshot or file clones
-> (reflink).  That's a space amplification of ~5.5x (a lot!) so I'm
-> wondering if this is expected or whether there's something else
-> going on. XFS amplification for 1000 iterations using reflink is
-> only 1.4x, so 5.5x seems somewhat excessive to me.
+> Only support data device.  Realtime device is not supported for now.
 > 
-> On a similar note, the IO bandwidth consumed by btrfs is way out of
-> proportion with the amount of user data being written. I'm seeing
-> multiple GBs being written by btrfs on every iteration - easily
-> exceeding 5GB of writes per cycle in the later iterations of the
-> test. Given that only 40MB of user data is being written per cycle,
-> there's a write amplification factor of well over 100x ocurring
-> here. In comparison, XFS is writing roughly consistently at 80MB/s
-> to disk over the course of the entire workload, largely because of
-> journal traffic for the transactions run during COW and clone
-> operations.  Is such a huge amount of of IO expected for btrfs in
-> this situation?
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+> ---
+>  fs/xfs/xfs_fsops.c |   5 +++
+>  fs/xfs/xfs_mount.h |   1 +
+>  fs/xfs/xfs_super.c | 109 +++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 115 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 959ce91a3755..f03901a5c673 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -498,6 +498,11 @@ xfs_do_force_shutdown(
+>  "Corruption of in-memory data detected.  Shutting down filesystem");
+>  		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
+>  			xfs_stack_trace();
+> +	} else if (flags & SHUTDOWN_CORRUPT_META) {
+> +		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
+> +"Corruption of on-disk metadata detected.  Shutting down filesystem");
+> +		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
+> +			xfs_stack_trace();
+>  	} else if (logerror) {
+>  		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
+>  			"Log I/O Error Detected. Shutting down filesystem");
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index dfa429b77ee2..8f0df67ffcc1 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -274,6 +274,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+>  #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
+>  #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
+>  #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
+> +#define SHUTDOWN_CORRUPT_META	0x0010  /* corrupt metadata on device */
+>  
+>  /*
+>   * Flags for xfs_mountfs
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 813be879a5e5..93093fe0ee8a 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -35,6 +35,11 @@
+>  #include "xfs_refcount_item.h"
+>  #include "xfs_bmap_item.h"
+>  #include "xfs_reflink.h"
+> +#include "xfs_alloc.h"
+> +#include "xfs_rmap.h"
+> +#include "xfs_rmap_btree.h"
+> +#include "xfs_rtalloc.h"
+> +#include "xfs_bit.h"
+>  
+>  #include <linux/magic.h>
+>  #include <linux/fs_context.h>
+> @@ -1105,6 +1110,109 @@ xfs_fs_free_cached_objects(
+>  	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
+>  }
+>  
+> +static int
+> +xfs_corrupt_helper(
+> +	struct xfs_btree_cur		*cur,
+> +	struct xfs_rmap_irec		*rec,
+> +	void				*data)
+> +{
+> +	struct xfs_inode		*ip;
+> +	struct address_space		*mapping;
+> +	int				rc = 0;
+> +	int				*flags = data;
+> +
+> +	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
+> +	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
+> +		// TODO check and try to fix metadata
+> +		rc = -EFSCORRUPTED;
 
-<just gonna snip this part>
+The xfs_force_shutdown() call should go here, since SHUTDOWN_CORRUPT_META
+is specific to this case.
 
-> FYI, I've compared btrfs reflink to XFS reflink, too, and XFS fio
-> performance stays largely consistent across all 1000 iterations at
-> around 13-14k +/-2k IOPS. The reflink time also scales linearly with
-> the number of extents in the source file and levels off at about
-> 10-11s per cycle as the extent count in the source file levels off
-> at ~850,000 extents. XFS completes the 1000 iterations of
-> write/clone in about 4 hours, btrfs completels the same part of the
-> workload in about 9 hours.
+I guess one could also dig through the buffer cache and delwri_submit
+those buffers or something.
 
-Just out of curiosity, do any of the patches in [1] improve those
-numbers for xfs?  As you noted a long time ago, the transaction
-reservations are kind of huge, so I fixed those and shook out a few
-other warts while I was at it.
+> +	} else {
+> +		/*
+> +		 * Get files that incore, filter out others that are not in use.
+> +		 */
+> +		rc = xfs_iget(cur->bc_mp, cur->bc_tp, rec->rm_owner,
+> +			      XFS_IGET_INCORE, 0, &ip);
+> +		if (rc || !ip)
+> +			return rc;
+> +		if (!VFS_I(ip)->i_mapping)
+> +			goto out;
+> +
+> +		mapping = VFS_I(ip)->i_mapping;
+> +		if (IS_DAX(VFS_I(ip)))
+> +			rc = mf_dax_mapping_kill_procs(mapping, rec->rm_offset,
+> +						       *flags);
+> +		else
+> +			mapping_set_error(mapping, -EIO);
+> +
+> +		// TODO try to fix data
+
+What could we do to fix the data?  If we're not in S_DAX mode and
+there's actually pagecache mapped in, does that imply that we could
+mark it dirty and kick off dirty pagecache writeback?
+
+> +out:
+> +		xfs_irele(ip);
+> +	}
+> +
+> +	return rc;
+> +}
+> +
+> +static int
+> +xfs_fs_corrupted_range(
+> +	struct super_block	*sb,
+> +	struct block_device	*bdev,
+> +	loff_t			offset,
+> +	size_t			len,
+> +	void			*data)
+> +{
+> +	struct xfs_mount	*mp = XFS_M(sb);
+> +	struct xfs_trans	*tp = NULL;
+> +	struct xfs_btree_cur	*cur = NULL;
+> +	struct xfs_rmap_irec	rmap_low, rmap_high;
+> +	struct xfs_buf		*agf_bp = NULL;
+> +	xfs_fsblock_t		fsbno = XFS_B_TO_FSB(mp, offset);
+> +	xfs_filblks_t		bcnt = XFS_B_TO_FSB(mp, len);
+> +	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> +	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
+> +	int			error = 0;
+> +
+> +	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_bdev == bdev) {
+> +		xfs_warn(mp, "corrupted_range support not available for realtime device!");
+> +		return 0;
+> +	}
+> +	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_bdev == bdev &&
+> +	    mp->m_logdev_targp != mp->m_ddev_targp) {
+> +		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
+> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
+
+Longer term question for the rest of the xfs community: Can we do better
+than this?  If the ail has checkpointed past this part of the log then
+we could just write zeroes into dead area, right?
+
+Also, if one of the log buffers points to a dead log area and isn't the
+one that's currently being written into, can we just submit_bio it to
+rewrite the lost part of the log??
+
+> +		return 0;
+> +	}
+> +
+> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> +		xfs_warn(mp, "corrupted_range needs rmapbt enabled!");
+> +		return 0;
+> +	}
+> +
+> +	error = xfs_trans_alloc_empty(mp, &tp);
+> +	if (error)
+> +		return error;
+> +
+> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
+> +	if (error)
+> +		goto out_cancel_tp;
+> +
+> +	cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agno);
+> +
+> +	/* Construct a range for rmap query */
+> +	memset(&rmap_low, 0, sizeof(rmap_low));
+> +	memset(&rmap_high, 0xFF, sizeof(rmap_high));
+> +	rmap_low.rm_startblock = rmap_high.rm_startblock = agbno;
+> +	rmap_low.rm_blockcount = rmap_high.rm_blockcount = bcnt;
+> +
+> +	error = xfs_rmap_query_range(cur, &rmap_low, &rmap_high, xfs_corrupt_helper, data);
+
+Long line here...
+
+> +	if (error == -EFSCORRUPTED)
+> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
+
+This should go in xfs_corrupt_helper as I mentioned above.
 
 --D
 
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=reflink-speedups
-> 
-> Oh, I almost forget - FIEMAP performance. After the reflink test, I
-> map all the extents in all the cloned files to a) count the extents
-> and b) confirm that the difference between clones is correct (~10000
-> extents not shared with the previous iteration). Pulling the extent
-> maps out of XFS takes about 3s a clone (~850,000 extents), or 30
-> minutes for the whole set when run serialised. btrfs takes 90-100s
-> per clone - after 8 hours it had only managed to map 380 files and
-> was running at 6-7000 read IOPS the entire time. IOWs, it was taking
-> _half a million_ read IOs to map the extents of a single clone that
-> only had a million extents in it. Is it expected that FIEMAP is so
-> slow and IO intensive on cloned files?
-> 
-> As there are no performance anomolies or memory reclaim issues with
-> XFS running this workload, I suspect the issues I note above are
-> btrfs issues, not expected behaviour.  I'm not sure what the
-> expected scalability of btrfs file clones and snapshots are though,
-> so I'm interested to hear if these results are expected or not.
-> 
-> Cheers,
-> 
-> Dave.
+> +
+> +	xfs_btree_del_cursor(cur, error);
+> +	xfs_trans_brelse(tp, agf_bp);
+> +out_cancel_tp:
+> +	xfs_trans_cancel(tp);
+> +	return error;
+> +}
+> +
+>  static const struct super_operations xfs_super_operations = {
+>  	.alloc_inode		= xfs_fs_alloc_inode,
+>  	.destroy_inode		= xfs_fs_destroy_inode,
+> @@ -1118,6 +1226,7 @@ static const struct super_operations xfs_super_operations = {
+>  	.show_options		= xfs_fs_show_options,
+>  	.nr_cached_objects	= xfs_fs_nr_cached_objects,
+>  	.free_cached_objects	= xfs_fs_free_cached_objects,
+> +	.corrupted_range	= xfs_fs_corrupted_range,
+>  };
+>  
+>  static int
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.30.0
 > 
-> JOBS=4
-> IODEPTH=4
-> IOCOUNT=$((10000 / $JOBS))
-> FILESIZE=4g
 > 
-> cat >$fio_config <<EOF
-> [global]
-> name=${DST}.name
-> directory=${DST}
-> size=${FILESIZE}
-> randrepeat=0
-> bs=4k
-> ioengine=libaio
-> iodepth=${IODEPTH}
-> iodepth_low=2
-> direct=1
-> end_fsync=1
-> fallocate=none
-> overwrite=1
-> number_ios=${IOCOUNT}
-> runtime=30s
-> group_reporting=1
-> disable_lat=1
-> lat_percentiles=0
-> clat_percentiles=0
-> slat_percentiles=0
-> disk_util=0
-> 
-> [j1]
-> filename=testfile
-> rw=randwrite
-> 
-> [j2]
-> filename=testfile
-> rw=randwrite
-> 
-> [j3]
-> filename=testfile
-> rw=randwrite
-> 
-> [j4]
-> filename=testfile
-> rw=randwrite
-> EOF
 > 
