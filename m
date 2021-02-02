@@ -2,212 +2,164 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0906C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 19:39:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05735C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 19:40:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 72A0A64E4D
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 19:39:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7DEE64E56
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 19:40:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239978AbhBBTjh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Feb 2021 14:39:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52134 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239977AbhBBTjO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Feb 2021 14:39:14 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6123A64E08;
-        Tue,  2 Feb 2021 19:38:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612294713;
-        bh=rQIy6Dxri5AUTf3N4VegWhpHt9fwrtLhwK1/fyysohg=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=epHMh2keihasK4OmUg4hWT4cae+nAMku9q56e28m9tG7MfUWM0fSqj+yMf1A/15Bw
-         hT0oGnclKqAeXDQcMxX90vvZ6d98PRbLR36qBSjvsSWwnQdHP89I57Yd/VAY56wU7f
-         FmS2gDUyuQRLGdke6EbE09BfPUnpoDgtgoaKY/blAtNTKwU1SGmp9pV96d0khHWb9k
-         ryDFV3F6GJ/X4aKqu6/X8S85Jbe88IetMrK2878D+iMbZXN3v1RqaBViDdJfwsGVQ+
-         4UPkPhEOo4vLwsHFeYA7lZxiUY5UMMoPsuoChP0w4gd8zSKaIYM6PdEsnVtw5ZxmCG
-         E6eJOrz2aVTOA==
-Date:   Tue, 2 Feb 2021 11:38:32 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        hch@infradead.org, david@fromorbit.com, bfoster@redhat.com
-Subject: [PATCH v6.1 01/16] xfs: fix chown leaking delalloc quota blocks when
- fssetxattr fails
-Message-ID: <20210202193832.GO7193@magnolia>
-References: <161223139756.491593.10895138838199018804.stgit@magnolia>
- <161223140369.491593.14536007914189520446.stgit@magnolia>
+        id S233357AbhBBTjr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Feb 2021 14:39:47 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:54217 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233576AbhBBTj0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Feb 2021 14:39:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1612294680;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PLhH3UO/C9sVU+Gk6ErHSHU1/zgxhDPylJpuUvFxKts=;
+        b=JUmOOA80eDSsd9/aPb4LhCFlxUBQk0HFrgiIutblwvrAPue8+wMxE9yxsZ+4wQ1JQT0IT1
+        mH0/qZ4zDztDkWYcZaDYKvz4rFfKvUVRmNx8PaI4RCZFWvvhfCjAJGX25K5iblrf6yxymO
+        dUbbwTSIPrzV+1vw3tAdR7N7FhGy2v0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-147-_0zSGNpeNl-xOTr7A3GHrw-1; Tue, 02 Feb 2021 14:37:58 -0500
+X-MC-Unique: _0zSGNpeNl-xOTr7A3GHrw-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 39D43134C44;
+        Tue,  2 Feb 2021 19:37:57 +0000 (UTC)
+Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A266B1F0;
+        Tue,  2 Feb 2021 19:37:50 +0000 (UTC)
+Date:   Tue, 2 Feb 2021 14:37:48 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Eric Sandeen <sandeen@redhat.com>
+Subject: Re: [PATCH v6 2/7] xfs: get rid of xfs_growfs_{data,log}_t
+Message-ID: <20210202193748.GM3336100@bfoster>
+References: <20210126125621.3846735-1-hsiangkao@redhat.com>
+ <20210126125621.3846735-3-hsiangkao@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161223140369.491593.14536007914189520446.stgit@magnolia>
+In-Reply-To: <20210126125621.3846735-3-hsiangkao@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jan 26, 2021 at 08:56:16PM +0800, Gao Xiang wrote:
+> Such usage isn't encouraged by the kernel coding style. Leave the
+> definitions alone in case of userspace users.
+> 
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> ---
 
-While refactoring the quota code to create a function to allocate inode
-change transactions, I noticed that xfs_qm_vop_chown_reserve does more
-than just make reservations: it also *modifies* the incore counts
-directly to handle the owner id change for the delalloc blocks.
-
-I then observed that the fssetxattr code continues validating input
-arguments after making the quota reservation but before dirtying the
-transaction.  If the routine decides to error out, it fails to undo the
-accounting switch!  This leads to incorrect quota reservation and
-failure down the line.
-
-We can fix this by making the reservation function do only that -- for
-the new dquot, it reserves ondisk and delalloc blocks to the
-transaction, and the old dquot hangs on to its incore reservation for
-now.  Once we actually switch the dquots, we can then update the incore
-reservations because we've dirtied the transaction and it's too late to
-turn back now.
-
-No fixes tag because this has been broken since the start of git.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
----
-v6.1: I added an debugging assert to make sure we're not totally fouling
-up the incore reservations when we chown
----
- fs/xfs/xfs_qm.c |   92 +++++++++++++++++++++----------------------------------
- 1 file changed, 35 insertions(+), 57 deletions(-)
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index c134eb4aeaa8..c2e4d3a27469 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1785,6 +1785,29 @@ xfs_qm_vop_chown(
- 	xfs_trans_mod_dquot(tp, newdq, bfield, ip->i_d.di_nblocks);
- 	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_ICOUNT, 1);
- 
-+	/*
-+	 * Back when we made quota reservations for the chown, we reserved the
-+	 * ondisk blocks + delalloc blocks with the new dquot.  Now that we've
-+	 * switched the dquots, decrease the new dquot's block reservation
-+	 * (having already bumped up the real counter) so that we don't have
-+	 * any reservation to give back when we commit.
-+	 */
-+	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_RES_BLKS,
-+			-ip->i_delayed_blks);
-+
-+	/*
-+	 * Give the incore reservation for delalloc blocks back to the old
-+	 * dquot.  We don't normally handle delalloc quota reservations
-+	 * transactionally, so just lock the dquot and subtract from the
-+	 * reservation.  Dirty the transaction because it's too late to turn
-+	 * back now.
-+	 */
-+	tp->t_flags |= XFS_TRANS_DIRTY;
-+	xfs_dqlock(prevdq);
-+	ASSERT(prevdq->q_blk.reserved >= ip->i_delayed_blks);
-+	prevdq->q_blk.reserved -= ip->i_delayed_blks;
-+	xfs_dqunlock(prevdq);
-+
- 	/*
- 	 * Take an extra reference, because the inode is going to keep
- 	 * this dquot pointer even after the trans_commit.
-@@ -1807,84 +1830,39 @@ xfs_qm_vop_chown_reserve(
- 	uint			flags)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
--	uint64_t		delblks;
- 	unsigned int		blkflags;
--	struct xfs_dquot	*udq_unres = NULL;
--	struct xfs_dquot	*gdq_unres = NULL;
--	struct xfs_dquot	*pdq_unres = NULL;
- 	struct xfs_dquot	*udq_delblks = NULL;
- 	struct xfs_dquot	*gdq_delblks = NULL;
- 	struct xfs_dquot	*pdq_delblks = NULL;
--	int			error;
--
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
- 
--	delblks = ip->i_delayed_blks;
- 	blkflags = XFS_IS_REALTIME_INODE(ip) ?
- 			XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS;
- 
- 	if (XFS_IS_UQUOTA_ON(mp) && udqp &&
--	    i_uid_read(VFS_I(ip)) != udqp->q_id) {
-+	    i_uid_read(VFS_I(ip)) != udqp->q_id)
- 		udq_delblks = udqp;
--		/*
--		 * If there are delayed allocation blocks, then we have to
--		 * unreserve those from the old dquot, and add them to the
--		 * new dquot.
--		 */
--		if (delblks) {
--			ASSERT(ip->i_udquot);
--			udq_unres = ip->i_udquot;
--		}
--	}
-+
- 	if (XFS_IS_GQUOTA_ON(ip->i_mount) && gdqp &&
--	    i_gid_read(VFS_I(ip)) != gdqp->q_id) {
-+	    i_gid_read(VFS_I(ip)) != gdqp->q_id)
- 		gdq_delblks = gdqp;
--		if (delblks) {
--			ASSERT(ip->i_gdquot);
--			gdq_unres = ip->i_gdquot;
--		}
--	}
- 
- 	if (XFS_IS_PQUOTA_ON(ip->i_mount) && pdqp &&
--	    ip->i_d.di_projid != pdqp->q_id) {
-+	    ip->i_d.di_projid != pdqp->q_id)
- 		pdq_delblks = pdqp;
--		if (delblks) {
--			ASSERT(ip->i_pdquot);
--			pdq_unres = ip->i_pdquot;
--		}
--	}
--
--	error = xfs_trans_reserve_quota_bydquots(tp, ip->i_mount,
--				udq_delblks, gdq_delblks, pdq_delblks,
--				ip->i_d.di_nblocks, 1, flags | blkflags);
--	if (error)
--		return error;
- 
- 	/*
--	 * Do the delayed blks reservations/unreservations now. Since, these
--	 * are done without the help of a transaction, if a reservation fails
--	 * its previous reservations won't be automatically undone by trans
--	 * code. So, we have to do it manually here.
-+	 * Reserve enough quota to handle blocks on disk and reserved for a
-+	 * delayed allocation.  We'll actually transfer the delalloc
-+	 * reservation between dquots at chown time, even though that part is
-+	 * only semi-transactional.
- 	 */
--	if (delblks) {
--		/*
--		 * Do the reservations first. Unreservation can't fail.
--		 */
--		ASSERT(udq_delblks || gdq_delblks || pdq_delblks);
--		ASSERT(udq_unres || gdq_unres || pdq_unres);
--		error = xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
--			    udq_delblks, gdq_delblks, pdq_delblks,
--			    (xfs_qcnt_t)delblks, 0, flags | blkflags);
--		if (error)
--			return error;
--		xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
--				udq_unres, gdq_unres, pdq_unres,
--				-((xfs_qcnt_t)delblks), 0, blkflags);
--	}
--
--	return 0;
-+	return xfs_trans_reserve_quota_bydquots(tp, ip->i_mount, udq_delblks,
-+			gdq_delblks, pdq_delblks,
-+			ip->i_d.di_nblocks + ip->i_delayed_blks,
-+			1, blkflags | flags);
- }
- 
- int
+>  fs/xfs/xfs_fsops.c | 12 ++++++------
+>  fs/xfs/xfs_fsops.h |  4 ++--
+>  fs/xfs/xfs_ioctl.c |  4 ++--
+>  3 files changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 62600d78bbf1..a2a407039227 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -25,8 +25,8 @@
+>   */
+>  static int
+>  xfs_growfs_data_private(
+> -	xfs_mount_t		*mp,		/* mount point for filesystem */
+> -	xfs_growfs_data_t	*in)		/* growfs data input struct */
+> +	struct xfs_mount	*mp,		/* mount point for filesystem */
+> +	struct xfs_growfs_data	*in)		/* growfs data input struct */
+>  {
+>  	struct xfs_buf		*bp;
+>  	int			error;
+> @@ -35,7 +35,7 @@ xfs_growfs_data_private(
+>  	xfs_rfsblock_t		nb, nb_div, nb_mod;
+>  	xfs_rfsblock_t		delta;
+>  	xfs_agnumber_t		oagcount;
+> -	xfs_trans_t		*tp;
+> +	struct xfs_trans	*tp;
+>  	struct aghdr_init_data	id = {};
+>  
+>  	nb = in->newblocks;
+> @@ -170,8 +170,8 @@ xfs_growfs_data_private(
+>  
+>  static int
+>  xfs_growfs_log_private(
+> -	xfs_mount_t		*mp,	/* mount point for filesystem */
+> -	xfs_growfs_log_t	*in)	/* growfs log input struct */
+> +	struct xfs_mount	*mp,	/* mount point for filesystem */
+> +	struct xfs_growfs_log	*in)	/* growfs log input struct */
+>  {
+>  	xfs_extlen_t		nb;
+>  
+> @@ -268,7 +268,7 @@ xfs_growfs_data(
+>  int
+>  xfs_growfs_log(
+>  	xfs_mount_t		*mp,
+> -	xfs_growfs_log_t	*in)
+> +	struct xfs_growfs_log	*in)
+>  {
+>  	int error;
+>  
+> diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+> index 92869f6ec8d3..2cffe51a31e8 100644
+> --- a/fs/xfs/xfs_fsops.h
+> +++ b/fs/xfs/xfs_fsops.h
+> @@ -6,8 +6,8 @@
+>  #ifndef __XFS_FSOPS_H__
+>  #define	__XFS_FSOPS_H__
+>  
+> -extern int xfs_growfs_data(xfs_mount_t *mp, xfs_growfs_data_t *in);
+> -extern int xfs_growfs_log(xfs_mount_t *mp, xfs_growfs_log_t *in);
+> +extern int xfs_growfs_data(struct xfs_mount *mp, struct xfs_growfs_data *in);
+> +extern int xfs_growfs_log(struct xfs_mount *mp, struct xfs_growfs_log *in);
+>  extern void xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
+>  extern int xfs_reserve_blocks(xfs_mount_t *mp, uint64_t *inval,
+>  				xfs_fsop_resblks_t *outval);
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 3fbd98f61ea5..a62520f49ec5 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -2260,7 +2260,7 @@ xfs_file_ioctl(
+>  	}
+>  
+>  	case XFS_IOC_FSGROWFSDATA: {
+> -		xfs_growfs_data_t in;
+> +		struct xfs_growfs_data in;
+>  
+>  		if (copy_from_user(&in, arg, sizeof(in)))
+>  			return -EFAULT;
+> @@ -2274,7 +2274,7 @@ xfs_file_ioctl(
+>  	}
+>  
+>  	case XFS_IOC_FSGROWFSLOG: {
+> -		xfs_growfs_log_t in;
+> +		struct xfs_growfs_log in;
+>  
+>  		if (copy_from_user(&in, arg, sizeof(in)))
+>  			return -EFAULT;
+> -- 
+> 2.27.0
+> 
+
