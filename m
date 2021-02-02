@@ -7,38 +7,37 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A2A4C433E9
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 19:41:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64081C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 19:42:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34EE064F4D
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 19:41:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 267CF64E56
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 19:42:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232740AbhBBTkj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Feb 2021 14:40:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52518 "EHLO mail.kernel.org"
+        id S233441AbhBBTmT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Feb 2021 14:42:19 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52894 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238455AbhBBTk2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Feb 2021 14:40:28 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 324F264E08;
-        Tue,  2 Feb 2021 19:39:46 +0000 (UTC)
+        id S233318AbhBBTlm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Feb 2021 14:41:42 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5165064F51;
+        Tue,  2 Feb 2021 19:41:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612294786;
-        bh=/JgFLIMu9HP9DJJQ/5lbw4wJG2ANWcRUcTjCut8fgTE=;
+        s=k20201202; t=1612294861;
+        bh=IMvAUtMc73E+O/bcxQ0FL9XmI09d1UXthaE6IPvMMZ4=;
         h=Date:From:To:Cc:Subject:From;
-        b=OzEceWpSi6J2/XXz+Uo2v7XJ7VNld0XoZvqfJOXo8xRVD/eFEr/V6blUux667pwse
-         mp3lA1sTm9NDWF9DxgtwlYoU4VLFyyvxtqn7LITYr0jOt0JeWF39pSJu5e7YC2TnfQ
-         8dW3T9ONGqd5Mmwua8EtuUsYBnBDOhvArUrVT40I3KG6NufXFuTGZklkqEKB06mTjX
-         7MgGtJvCTb0EtmZBhTnjZkiq8IigXgYzQxp2wYV3rTbT02ftsHXwwU2DoyWpbJopkQ
-         kUk0d6W+j8pV4IWq441Akze+Yw9QGmuNXMlgqJDtEcGMH4GZs0towf0D7PbbJOyrDn
-         wOWq8997/mwHw==
-Date:   Tue, 2 Feb 2021 11:39:45 -0800
+        b=TYs0FWlpvTXX+DqMGz6eQbWLwF3atdaXjSNwwTetn8JV/5/YaHfMwckxCzk2mpZ8E
+         +Z0Iy9Dhw2mVlRnV809OEpbck1llAIGjo1c1mog0Gc/kswJloatBvE3RakcJ7JSlzi
+         mSaNihuLYv91wdOujuLuoqqL2rNJeUYfiIklyTDBx8HALjiRiNV9lGYTLtSUw9ATRF
+         J+GrFdGvuGfwNLiXjok38pZNcM62r7SrKz9Z1S0MCT3WaawGDYGruaQ+c/+IRnlgC0
+         0tlDJ6ykqBtnfzdnr1EXguitAzkwrRSoyxHaRn+JZebLL50Tdjus9UjegYYZEbZdiP
+         cfH5oV921Hpqg==
+Date:   Tue, 2 Feb 2021 11:41:01 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>, chandanrlinux@gmail.com
-Subject: [PATCH] xfs: fix incorrect root dquot corruption error when
- switching group/project quota types
-Message-ID: <20210202193945.GP7193@magnolia>
+To:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: test delalloc quota leak when chprojid fails
+Message-ID: <20210202194101.GQ7193@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -48,84 +47,231 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-While writing up a regression test for broken behavior when a chprojid
-request fails, I noticed that we were logging corruption notices about
-the root dquot of the group/project quota file at mount time when
-testing V4 filesystems.
+This is a regression test for a bug in the XFS implementation of
+FSSETXATTR.  When we try to change a file's project id, the quota
+reservation code will update the incore quota reservations for delayed
+allocation blocks.  Unfortunately, it does this before we finish
+validating all the FSSETXATTR parameters, which means that if we decide
+to bail out, we also fail to undo the incore changes.
 
-In commit afeda6000b0c, I was trying to improve ondisk dquot validation
-by making sure that when we load an ondisk dquot into memory on behalf
-of an incore dquot, the dquot id and type matches.  Unfortunately, I
-forgot that V4 filesystems only have two quota files, and can switch
-that file between group and project quota types at mount time.  When we
-perform that switch, we'll try to load the default quota limits from the
-root dquot prior to running quotacheck and log a corruption error when
-the types don't match.
-
-This is inconsequential because quotacheck will reset the second quota
-file as part of doing the switch, but we shouldn't leave scary messages
-in the kernel log.
-
-Fixes: afeda6000b0c ("xfs: validate ondisk/incore dquot flags")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_dquot.c |   39 +++++++++++++++++++++++++++++++++++++--
- 1 file changed, 37 insertions(+), 2 deletions(-)
+ .gitignore          |    1 +
+ src/Makefile        |    3 +-
+ src/chprojid_fail.c |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/765       |   63 +++++++++++++++++++++++++++++++++++++
+ tests/xfs/765.out   |    3 ++
+ tests/xfs/group     |    1 +
+ 6 files changed, 156 insertions(+), 1 deletion(-)
+ create mode 100644 src/chprojid_fail.c
+ create mode 100755 tests/xfs/765
+ create mode 100644 tests/xfs/765.out
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 175f544f7c45..bd8379b98374 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -506,6 +506,42 @@ xfs_dquot_alloc(
- 	return dqp;
- }
+diff --git a/.gitignore b/.gitignore
+index f988a44a..6d5c4ba6 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -58,6 +58,7 @@
+ /src/bulkstat_null_ocount
+ /src/bulkstat_unlink_test
+ /src/bulkstat_unlink_test_modified
++/src/chprojid_fail
+ /src/cloner
+ /src/dbtest
+ /src/devzero
+diff --git a/src/Makefile b/src/Makefile
+index 28789915..435c1e8a 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -29,7 +29,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
+ 	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
+ 	attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles \
+-	fscrypt-crypt-util bulkstat_null_ocount splice-test immutable_write
++	fscrypt-crypt-util bulkstat_null_ocount splice-test immutable_write \
++	chprojid_fail
  
-+/* Check the ondisk dquot's id and type match what the incore dquot expects. */
-+static bool
-+xfs_dquot_check_type(
-+	struct xfs_dquot	*dqp,
-+	struct xfs_disk_dquot	*ddqp)
+ SUBDIRS = log-writes perf
+ 
+diff --git a/src/chprojid_fail.c b/src/chprojid_fail.c
+new file mode 100644
+index 00000000..e7467372
+--- /dev/null
++++ b/src/chprojid_fail.c
+@@ -0,0 +1,86 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (c) 2021 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ *
++ * Regression test for failing to undo delalloc quota reservations when
++ * changing project id and we fail some other FSSETXATTR validation.
++ */
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <sys/ioctl.h>
++#include <stdio.h>
++#include <string.h>
++#include <errno.h>
++#include <linux/fs.h>
++
++static char zerobuf[65536];
++
++int
++main(
++	int		argc,
++	char		*argv[])
 +{
-+	uint8_t			ddqp_type;
-+	uint8_t			dqp_type;
++	struct fsxattr	fa;
++	ssize_t		sz;
++	int		fd, ret;
 +
-+	ddqp_type = ddqp->d_type & XFS_DQTYPE_REC_MASK;
-+	dqp_type = xfs_dquot_type(dqp);
++	if (argc < 2) {
++		printf("Usage: %s filename\n", argv[0]);
++		return 1;
++	}
 +
-+	if (be32_to_cpu(ddqp->d_id) != dqp->q_id)
-+		return false;
++	fd = open(argv[1], O_CREAT | O_TRUNC | O_RDWR, 0600);
++	if (fd < 0) {
++		perror(argv[1]);
++		return 2;
++	}
++
++	/* Zero the project id and the extent size hint. */
++	ret = ioctl(fd, FS_IOC_FSGETXATTR, &fa);
++	if (ret) {
++		perror("FSGETXATTR check file");
++		return 2;
++	}
++
++	if (fa.fsx_projid != 0 || fa.fsx_extsize != 0) {
++		fa.fsx_projid = 0;
++		fa.fsx_extsize = 0;
++		ret = ioctl(fd, FS_IOC_FSSETXATTR, &fa);
++		if (ret) {
++			perror("FSSETXATTR zeroing");
++			return 2;
++		}
++	}
++
++	/* Dirty a few kb of a file to create delalloc extents. */
++	sz = write(fd, zerobuf, sizeof(zerobuf));
++	if (sz != sizeof(zerobuf)) {
++		perror("delalloc write");
++		return 2;
++	}
 +
 +	/*
-+	 * V5 filesystems always expect an exact type match.  V4 filesystems
-+	 * expect an exact match for user dquots and for non-root group and
-+	 * project dquots.
++	 * Fail to chprojid and set an extent size hint after we wrote the file.
 +	 */
-+	if (xfs_sb_version_hascrc(&dqp->q_mount->m_sb) ||
-+	    dqp_type == XFS_DQTYPE_USER || dqp->q_id != 0)
-+		return ddqp_type == dqp_type;
++	ret = ioctl(fd, FS_IOC_FSGETXATTR, &fa);
++	if (ret) {
++		perror("FSGETXATTR");
++		return 2;
++	}
 +
-+	/*
-+	 * V4 filesystems support either group or project quotas, but not both
-+	 * at the same time.  The non-user quota file can be switched between
-+	 * group and project quota uses depending on the mount options, which
-+	 * means that we can encounter the other type when we try to load quota
-+	 * defaults.  Quotacheck will soon reset the the entire quota file
-+	 * (including the root dquot) anyway, but don't log scary corruption
-+	 * reports to dmesg.
-+	 */
-+	return ddqp_type == XFS_DQTYPE_GROUP || ddqp_type == XFS_DQTYPE_PROJ;
++	fa.fsx_projid = 23652;
++	fa.fsx_extsize = 2;
++	fa.fsx_xflags |= FS_XFLAG_EXTSIZE;
++
++	ret = ioctl(fd, FS_IOC_FSSETXATTR, &fa);
++	if (ret) {
++		printf("FSSETXATTRR should fail: %s\n", strerror(errno));
++		return 0;
++	}
++
++	/* Uhoh, that FSSETXATTR call should have failed! */
++	return 3;
++}
+diff --git a/tests/xfs/765 b/tests/xfs/765
+new file mode 100755
+index 00000000..769b545b
+--- /dev/null
++++ b/tests/xfs/765
+@@ -0,0 +1,63 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2021 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 765
++#
++# Regression test for failing to undo delalloc quota reservations when changing
++# project id but we fail some other part of FSSETXATTR validation.  If we fail
++# the test, we trip debugging assertions in dmesg.
++#
++# The appropriate XFS patch is:
++# xfs: fix chown leaking delalloc quota blocks when fssetxattr fails
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
 +}
 +
- /* Copy the in-core quota fields in from the on-disk buffer. */
- STATIC int
- xfs_dquot_from_disk(
-@@ -518,8 +554,7 @@ xfs_dquot_from_disk(
- 	 * Ensure that we got the type and ID we were looking for.
- 	 * Everything else was checked by the dquot buffer verifier.
- 	 */
--	if ((ddqp->d_type & XFS_DQTYPE_REC_MASK) != xfs_dquot_type(dqp) ||
--	    be32_to_cpu(ddqp->d_id) != dqp->q_id) {
-+	if (!xfs_dquot_check_type(dqp, ddqp)) {
- 		xfs_alert_tag(bp->b_mount, XFS_PTAG_VERIFIER_ERROR,
- 			  "Metadata corruption detected at %pS, quota %u",
- 			  __this_address, dqp->q_id);
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/quota
++
++# real QA test starts here
++_supported_fs xfs
++_require_xfs_debug
++_require_command "$FILEFRAG_PROG" filefrag
++_require_test_program "chprojid_fail"
++_require_quota
++_require_scratch
++
++rm -f $seqres.full
++
++echo "Format filesystem" | tee -a $seqres.full
++_scratch_mkfs > $seqres.full
++_qmount_option 'prjquota'
++_qmount
++_require_prjquota $SCRATCH_DEV
++
++echo "Run test program"
++$XFS_QUOTA_PROG -f -x -c 'report -ap' $SCRATCH_MNT >> $seqres.full
++$here/src/chprojid_fail $SCRATCH_MNT/blah >> $seqres.full
++res=$?
++if [ $res -ne 0 ]; then
++	echo "chprojid_fail returned $res, expected 0"
++fi
++$XFS_QUOTA_PROG -f -x -c 'report -ap' $SCRATCH_MNT >> $seqres.full
++$FILEFRAG_PROG -v $SCRATCH_MNT/blah >> $seqres.full
++$FILEFRAG_PROG -v $SCRATCH_MNT/blah 2>&1 | grep -q delalloc || \
++	echo "file didn't get delalloc extents?"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/765.out b/tests/xfs/765.out
+new file mode 100644
+index 00000000..f44ba43e
+--- /dev/null
++++ b/tests/xfs/765.out
+@@ -0,0 +1,3 @@
++QA output created by 765
++Format filesystem
++Run test program
+diff --git a/tests/xfs/group b/tests/xfs/group
+index f406a9b9..fb78b0d7 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -544,6 +544,7 @@
+ 762 auto quick rw scrub realtime
+ 763 auto quick rw realtime
+ 764 auto quick repair
++765 auto quick quota
+ 908 auto quick bigtime
+ 909 auto quick bigtime quota
+ 910 auto quick inobtcount
