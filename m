@@ -3,99 +3,139 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6A36C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 16:50:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A775FC433DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 16:56:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 974B364F96
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 16:50:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68B2464F72
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 16:56:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236875AbhBBQu1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Feb 2021 11:50:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34786 "EHLO mail.kernel.org"
+        id S236940AbhBBQ4n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Feb 2021 11:56:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36180 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236818AbhBBQs2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Feb 2021 11:48:28 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C1C5F64F76;
-        Tue,  2 Feb 2021 16:47:47 +0000 (UTC)
+        id S236945AbhBBQyj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Feb 2021 11:54:39 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2D85C64E9A;
+        Tue,  2 Feb 2021 16:53:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612284467;
-        bh=AIcsbrupvZLYfxKEEm9bMUc8wyAjniIIqMRpSSXcyLc=;
-        h=Date:From:To:Subject:From;
-        b=c/YUGelPpCgrAcKKfIIfKfFp9zz/hi4cTfHy/9+x99z9SHXBntSzCvRmCrtpsDBWg
-         hAahX9P+sOTA72SGTg2W9CEopP/8N+4yFWuCJchCcIW1z0Atg0UMIOGU+R5MD5G0RH
-         YxxbT9G/ZIExaenjOkkZxUkDnWRymNprNXniGVAOOUQCKWPaMFWntXnFc2rOXtGWb5
-         IDNCisJjRkVr3s5WyYDxemWgivoNuQ88ywOMDEWk/D9NOlKkYoVb1L29pecgHOkXJd
-         zEulTeAshXMtOCWSk4M/azHJ0NYHxBX766Q7BttLAl2Sb1GXOhEze8VQ7ioslzY06s
-         kQ43y102i27ZA==
-Date:   Tue, 2 Feb 2021 08:47:47 -0800
+        s=k20201202; t=1612284838;
+        bh=LnlwFCD0mcOuCD4hOyuzXNpADb3VoFIkgV7Ir1BojhE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=nO+eRpTJAlECYdlM/Mfg7N4Ojp9TVqwoomuIV4FeHh/+qEB2dwh7Aq7x9iF42n/fY
+         aHsUNl+U1kyPk9hwhbaE4ElYsWduQATGfCstLziICiaLvBZZxXF0i3J9B+IU97/EtT
+         rUViWQlh7Gpxozg1QjNIv2C4qUkoO1Jt7pkc13w/qyAWpQj+CXkymkRcy+bOLsYjjb
+         OWefQDDFDVPjmxIfUL3lBdo1lfCnzvga2EKkAr9aXXpYvafBd1GGpBXawL5dPzokrd
+         9Rl6IYweJCxK3sYOT3qKNjUqBxSfOUlbMBsDSsC1xq2QH2LjEaiORJoRFVzfH73AAf
+         Yk8KRCYwEkdbA==
+Date:   Tue, 2 Feb 2021 08:53:58 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to ed1128c2d0c8
-Message-ID: <20210202164747.GK7193@magnolia>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com
+Subject: Re: [PATCH 07/12] xfs: flush eof/cowblocks if we can't reserve quota
+ for file blocks
+Message-ID: <20210202165358.GL7193@magnolia>
+References: <161214512641.140945.11651856181122264773.stgit@magnolia>
+ <161214516600.140945.4401509001858536727.stgit@magnolia>
+ <20210202153859.GG3336100@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20210202153859.GG3336100@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Tue, Feb 02, 2021 at 10:38:59AM -0500, Brian Foster wrote:
+> On Sun, Jan 31, 2021 at 06:06:06PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > If a fs modification (data write, reflink, xattr set, fallocate, etc.)
+> > is unable to reserve enough quota to handle the modification, try
+> > clearing whatever space the filesystem might have been hanging onto in
+> > the hopes of speeding up the filesystem.  The flushing behavior will
+> > become particularly important when we add deferred inode inactivation
+> > because that will increase the amount of space that isn't actively tied
+> > to user data.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> 
+> (FWIW, I'm reviewing the patches from your reclaim-space-harder-5.12
+> branch as of this morning, which look like they have some deltas from
+> the posted versions based on Christoph's feedback.)
 
-The iomap-for-next branch of the xfs-linux repository at:
+Yes, it does. :(
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+I pushed the branches and had sent the first of the two patchsets
+last night, and then the power went out so I gave up and went to bed.
 
-has just been updated.
+But thanks for the review. :)
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  I've been testing the xfs dio changes for a couple of
-weeks now, but forgot to push them out until Christoph prompted me
-yesterday.
+--D
 
-Note that Naohiro Aota's btrfs patchset to add zoned block support will
-perform some slight refactoring of fs/iomap/directio.c to add support
-for REQ_OP_ZONE_APPEND.  I don't know if they're planning to push that
-for 5.12, but AFAICT it should have minimal impact to everyone else.
-
-The new head of the iomap-for-next branch is commit:
-
-ed1128c2d0c8 xfs: reduce exclusive locking on unaligned dio
-
-New Commits:
-
-Christoph Hellwig (9):
-      [5724be5de88f] iomap: rename the flags variable in __iomap_dio_rw
-      [2f63296578ca] iomap: pass a flags argument to iomap_dio_rw
-      [213f627104da] iomap: add a IOMAP_DIO_OVERWRITE_ONLY flag
-      [f50b8f475a2c] xfs: factor out a xfs_ilock_iocb helper
-      [354be7e3b2ba] xfs: make xfs_file_aio_write_checks IOCB_NOWAIT-aware
-      [ee1b218b0956] xfs: cleanup the read/write helper naming
-      [670654b004b0] xfs: remove the buffered I/O fallback assert
-      [3e40b13c3b57] xfs: simplify the read/write tracepoints
-      [896f72d067a5] xfs: improve the reflink_bounce_dio_write tracepoint
-
-Dave Chinner (2):
-      [caa89dbc4303] xfs: split the unaligned DIO write code out
-      [ed1128c2d0c8] xfs: reduce exclusive locking on unaligned dio
-
-
-Code Diffstat:
-
- fs/btrfs/file.c       |   7 +-
- fs/ext4/file.c        |   5 +-
- fs/gfs2/file.c        |   7 +-
- fs/iomap/direct-io.c  |  26 ++--
- fs/xfs/xfs_file.c     | 351 ++++++++++++++++++++++++++++----------------------
- fs/xfs/xfs_iomap.c    |  29 +++--
- fs/xfs/xfs_trace.h    |  22 ++--
- fs/zonefs/super.c     |   4 +-
- include/linux/iomap.h |  18 ++-
- 9 files changed, 269 insertions(+), 200 deletions(-)
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> >  fs/xfs/xfs_reflink.c |    5 +++++
+> >  fs/xfs/xfs_trans.c   |   10 ++++++++++
+> >  2 files changed, 15 insertions(+)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 086866f6e71f..725c7d8e4438 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -1092,6 +1092,11 @@ xfs_reflink_remap_extent(
+> >  	 * count.  This is suboptimal, but the VFS flushed the dest range
+> >  	 * before we started.  That should have removed all the delalloc
+> >  	 * reservations, but we code defensively.
+> > +	 *
+> > +	 * xfs_trans_alloc_inode above already tried to grab an even larger
+> > +	 * quota reservation, and kicked off a blockgc scan if it couldn't.
+> > +	 * If we can't get a potentially smaller quota reservation now, we're
+> > +	 * done.
+> >  	 */
+> >  	if (!quota_reserved && !smap_real && dmap_written) {
+> >  		error = xfs_trans_reserve_quota_nblks(tp, ip,
+> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > index 466e1c86767f..f62c1c5f210f 100644
+> > --- a/fs/xfs/xfs_trans.c
+> > +++ b/fs/xfs/xfs_trans.c
+> > @@ -23,6 +23,7 @@
+> >  #include "xfs_inode.h"
+> >  #include "xfs_dquot_item.h"
+> >  #include "xfs_dquot.h"
+> > +#include "xfs_icache.h"
+> >  
+> >  kmem_zone_t	*xfs_trans_zone;
+> >  
+> > @@ -1046,8 +1047,10 @@ xfs_trans_alloc_inode(
+> >  {
+> >  	struct xfs_trans	*tp;
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> > +	bool			retried = false;
+> >  	int			error;
+> >  
+> > +retry:
+> >  	error = xfs_trans_alloc(mp, resv, dblocks,
+> >  			rblocks / mp->m_sb.sb_rextsize,
+> >  			force ? XFS_TRANS_RESERVE : 0, &tp);
+> > @@ -1065,6 +1068,13 @@ xfs_trans_alloc_inode(
+> >  	}
+> >  
+> >  	error = xfs_trans_reserve_quota_nblks(tp, ip, dblocks, rblocks, force);
+> > +	if (!retried && (error == -EDQUOT || error == -ENOSPC)) {
+> > +		xfs_trans_cancel(tp);
+> > +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > +		xfs_blockgc_free_quota(ip, 0);
+> > +		retried = true;
+> > +		goto retry;
+> > +	}
+> >  	if (error)
+> >  		goto out_cancel;
+> >  
+> > 
+> 
