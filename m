@@ -2,102 +2,167 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92687C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 02:05:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3023C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 02:15:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 55DC364ED9
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 02:05:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7ED264EE4
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 02:15:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231211AbhBBCFb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Feb 2021 21:05:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55646 "EHLO mail.kernel.org"
+        id S229657AbhBBCPI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Feb 2021 21:15:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56764 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231209AbhBBCF3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Feb 2021 21:05:29 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0C30D64ED9;
-        Tue,  2 Feb 2021 02:04:49 +0000 (UTC)
+        id S229543AbhBBCPD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Feb 2021 21:15:03 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C13F564EE0;
+        Tue,  2 Feb 2021 02:14:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612231489;
-        bh=eLUB5G6G34erkbbwFGCmj1KMwItfA/oxO0iOQbR0Z2Y=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=qnswkn5SbPq/3QVOd4ZpVQNhm1i57r1nIFgIIynLwjESNtkgCZH92aAn4MdFjEaaj
-         rFth27MujvjOFo6UWpHlrGC01vOOH2i44Eq0ObA0zRWGtYIkh7UltZn1sOvP0WH61Z
-         TsGQA/3+Dts7iagk9SYTumIImOJNz78XOoQAkUlAXMWDmGl7S4GpXuNjj9KXVDogD9
-         xoB6wG4sqTcNmWD6vC7hYwMsx/fXMdMg7WiK2irb/oCgbjwdSJHuwpnUqxLmQGkmyW
-         vXPxRBFKjGUXxZq0LvqVn4Alkop0rIN9Js/HZnuYPSZcC8G8jWioTF5K8tPon5C5nL
-         IJuLo6qnuA7cw==
-Subject: [PATCH 16/16] xfs: shut down the filesystem if we screw up quota
- errors
+        s=k20201202; t=1612232061;
+        bh=+ZRvQlcK8Bf3QyDyR755TqYz7atQMiQIefWvaXw7Gb8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=oYHlHd/Zs7iiqJ8rbWLFBPcBOQuTavvhiXHfBsmE5hJtfPeESgCyTKptT9BiQflhx
+         Sl/Ph6t1FQXKcuFF1ugb1/5p/lwrd2dwh54M4RC+llxb2utYYvHPmZqVFHAis0OJrS
+         DLxTRFBRndkw6bkfo54LGojv0D1QWqDOyIL83ZC1EJQDCFblL9ux6cBm2SdNWv5UJl
+         1pCwTb1MzEmsIZfUaoa2mSCF9f2awDd8zR9E27X8jb1Gwo1Va0Hn2nxhJaY0Pf2TJ+
+         EJ0oBfUhd9IHx+CN4Z/Ww9zKlWXoe8cNe0tzb3ziZA0F4rjVPBsZ0HiL32hy5xbVmS
+         NYGQEyF3yR+Zw==
+Date:   Mon, 1 Feb 2021 18:14:21 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        hch@infradead.org, david@fromorbit.com, bfoster@redhat.com
-Date:   Mon, 01 Feb 2021 18:04:48 -0800
-Message-ID: <161223148857.491593.12074155866887169690.stgit@magnolia>
-In-Reply-To: <161223139756.491593.10895138838199018804.stgit@magnolia>
-References: <161223139756.491593.10895138838199018804.stgit@magnolia>
-User-Agent: StGit/0.19
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-btrfs@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: Unexpected reflink/subvol snapshot behaviour
+Message-ID: <20210202021421.GA7181@magnolia>
+References: <20210121222051.GB4626@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210121222051.GB4626@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Jan 22, 2021 at 09:20:51AM +1100, Dave Chinner wrote:
+> Hi btrfs-gurus,
+> 
+> I'm running a simple reflink/snapshot/COW scalability test at the
+> moment. It is just a loop that does "fio overwrite of 10,000 4kB
+> random direct IOs in a 4GB file; snapshot" and I want to check a
+> couple of things I'm seeing with btrfs. fio config file is appended
+> to the email.
+> 
+> Firstly, what is the expected "space amplification" of such a
+> workload over 1000 iterations on btrfs? This will write 40GB of user
+> data, and I'm seeing btrfs consume ~220GB of space for the workload
+> regardless of whether I use subvol snapshot or file clones
+> (reflink).  That's a space amplification of ~5.5x (a lot!) so I'm
+> wondering if this is expected or whether there's something else
+> going on. XFS amplification for 1000 iterations using reflink is
+> only 1.4x, so 5.5x seems somewhat excessive to me.
+> 
+> On a similar note, the IO bandwidth consumed by btrfs is way out of
+> proportion with the amount of user data being written. I'm seeing
+> multiple GBs being written by btrfs on every iteration - easily
+> exceeding 5GB of writes per cycle in the later iterations of the
+> test. Given that only 40MB of user data is being written per cycle,
+> there's a write amplification factor of well over 100x ocurring
+> here. In comparison, XFS is writing roughly consistently at 80MB/s
+> to disk over the course of the entire workload, largely because of
+> journal traffic for the transactions run during COW and clone
+> operations.  Is such a huge amount of of IO expected for btrfs in
+> this situation?
 
-If we ever screw up the quota reservations enough to trip the
-assertions, something's wrong with the quota code.  Shut down the
-filesystem when this happens, because this is corruption.
+<just gonna snip this part>
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_trans_dquot.c |   13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+> FYI, I've compared btrfs reflink to XFS reflink, too, and XFS fio
+> performance stays largely consistent across all 1000 iterations at
+> around 13-14k +/-2k IOPS. The reflink time also scales linearly with
+> the number of extents in the source file and levels off at about
+> 10-11s per cycle as the extent count in the source file levels off
+> at ~850,000 extents. XFS completes the 1000 iterations of
+> write/clone in about 4 hours, btrfs completels the same part of the
+> workload in about 9 hours.
 
+Just out of curiosity, do any of the patches in [1] improve those
+numbers for xfs?  As you noted a long time ago, the transaction
+reservations are kind of huge, so I fixed those and shook out a few
+other warts while I was at it.
 
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index a1a72b7900c5..48e09ea30ee5 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -16,6 +16,7 @@
- #include "xfs_quota.h"
- #include "xfs_qm.h"
- #include "xfs_trace.h"
-+#include "xfs_error.h"
- 
- STATIC void	xfs_trans_alloc_dqinfo(xfs_trans_t *);
- 
-@@ -691,9 +692,11 @@ xfs_trans_dqresv(
- 				    nblks);
- 		xfs_trans_mod_dquot(tp, dqp, XFS_TRANS_DQ_RES_INOS, ninos);
- 	}
--	ASSERT(dqp->q_blk.reserved >= dqp->q_blk.count);
--	ASSERT(dqp->q_rtb.reserved >= dqp->q_rtb.count);
--	ASSERT(dqp->q_ino.reserved >= dqp->q_ino.count);
-+
-+	if (XFS_IS_CORRUPT(mp, dqp->q_blk.reserved < dqp->q_blk.count) ||
-+	    XFS_IS_CORRUPT(mp, dqp->q_rtb.reserved < dqp->q_rtb.count) ||
-+	    XFS_IS_CORRUPT(mp, dqp->q_ino.reserved < dqp->q_ino.count))
-+		goto error_corrupt;
- 
- 	xfs_dqunlock(dqp);
- 	return 0;
-@@ -703,6 +706,10 @@ xfs_trans_dqresv(
- 	if (xfs_dquot_type(dqp) == XFS_DQTYPE_PROJ)
- 		return -ENOSPC;
- 	return -EDQUOT;
-+error_corrupt:
-+	xfs_dqunlock(dqp);
-+	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+	return -EFSCORRUPTED;
- }
- 
- 
+--D
 
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=reflink-speedups
+> 
+> Oh, I almost forget - FIEMAP performance. After the reflink test, I
+> map all the extents in all the cloned files to a) count the extents
+> and b) confirm that the difference between clones is correct (~10000
+> extents not shared with the previous iteration). Pulling the extent
+> maps out of XFS takes about 3s a clone (~850,000 extents), or 30
+> minutes for the whole set when run serialised. btrfs takes 90-100s
+> per clone - after 8 hours it had only managed to map 380 files and
+> was running at 6-7000 read IOPS the entire time. IOWs, it was taking
+> _half a million_ read IOs to map the extents of a single clone that
+> only had a million extents in it. Is it expected that FIEMAP is so
+> slow and IO intensive on cloned files?
+> 
+> As there are no performance anomolies or memory reclaim issues with
+> XFS running this workload, I suspect the issues I note above are
+> btrfs issues, not expected behaviour.  I'm not sure what the
+> expected scalability of btrfs file clones and snapshots are though,
+> so I'm interested to hear if these results are expected or not.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> JOBS=4
+> IODEPTH=4
+> IOCOUNT=$((10000 / $JOBS))
+> FILESIZE=4g
+> 
+> cat >$fio_config <<EOF
+> [global]
+> name=${DST}.name
+> directory=${DST}
+> size=${FILESIZE}
+> randrepeat=0
+> bs=4k
+> ioengine=libaio
+> iodepth=${IODEPTH}
+> iodepth_low=2
+> direct=1
+> end_fsync=1
+> fallocate=none
+> overwrite=1
+> number_ios=${IOCOUNT}
+> runtime=30s
+> group_reporting=1
+> disable_lat=1
+> lat_percentiles=0
+> clat_percentiles=0
+> slat_percentiles=0
+> disk_util=0
+> 
+> [j1]
+> filename=testfile
+> rw=randwrite
+> 
+> [j2]
+> filename=testfile
+> rw=randwrite
+> 
+> [j3]
+> filename=testfile
+> rw=randwrite
+> 
+> [j4]
+> filename=testfile
+> rw=randwrite
+> EOF
+> 
