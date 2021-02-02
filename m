@@ -4,138 +4,252 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A775FC433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 16:56:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA898C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 17:50:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68B2464F72
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 16:56:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8206964DCC
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 17:50:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236940AbhBBQ4n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Feb 2021 11:56:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36180 "EHLO mail.kernel.org"
+        id S234128AbhBBRuI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Feb 2021 12:50:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50566 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236945AbhBBQyj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Feb 2021 11:54:39 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2D85C64E9A;
-        Tue,  2 Feb 2021 16:53:58 +0000 (UTC)
+        id S237893AbhBBRsH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Feb 2021 12:48:07 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 789E764DCC;
+        Tue,  2 Feb 2021 17:47:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612284838;
-        bh=LnlwFCD0mcOuCD4hOyuzXNpADb3VoFIkgV7Ir1BojhE=;
+        s=k20201202; t=1612288046;
+        bh=YFIR1EdG4Nzg3bjyh/l5VuicO2tjqC91d1183HWfT0g=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=nO+eRpTJAlECYdlM/Mfg7N4Ojp9TVqwoomuIV4FeHh/+qEB2dwh7Aq7x9iF42n/fY
-         aHsUNl+U1kyPk9hwhbaE4ElYsWduQATGfCstLziICiaLvBZZxXF0i3J9B+IU97/EtT
-         rUViWQlh7Gpxozg1QjNIv2C4qUkoO1Jt7pkc13w/qyAWpQj+CXkymkRcy+bOLsYjjb
-         OWefQDDFDVPjmxIfUL3lBdo1lfCnzvga2EKkAr9aXXpYvafBd1GGpBXawL5dPzokrd
-         9Rl6IYweJCxK3sYOT3qKNjUqBxSfOUlbMBsDSsC1xq2QH2LjEaiORJoRFVzfH73AAf
-         Yk8KRCYwEkdbA==
-Date:   Tue, 2 Feb 2021 08:53:58 -0800
+        b=ctipVz52oQRaSljz8wz6+Fp9IDl/nLQvcd4islsLrYBFXiO3UZrhbJtR59Ty3wd2E
+         5YyFW+ljxwywIcPL2UonEGr9OeEbqe24i7jDzXUfgmXSJpvA8ajyQGKWfNafefb9sv
+         K3nBldUH1n4SA8p/lO293Y+pNpf+bouFAFA8q5yOh/EGMxoEfe+NqkwcVUcdQiODAa
+         SBa+q0DK2FMqGhfqtnMyLND34ThKT/gHHVXb6L7UOdvq7aXfnVm3a6w2XAa01P59yw
+         2bxhh9/jBP1Ybz1O42qC9nEtjAZYaikR2+03jYG0a9gasBBaO0m8Oz5wX1kGCtBdff
+         cuu7g2P5BqfCA==
+Date:   Tue, 2 Feb 2021 09:47:26 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, david@fromorbit.com
-Subject: Re: [PATCH 07/12] xfs: flush eof/cowblocks if we can't reserve quota
- for file blocks
-Message-ID: <20210202165358.GL7193@magnolia>
-References: <161214512641.140945.11651856181122264773.stgit@magnolia>
- <161214516600.140945.4401509001858536727.stgit@magnolia>
- <20210202153859.GG3336100@bfoster>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        hch@infradead.org, david@fromorbit.com
+Subject: Re: [PATCH 01/16] xfs: fix chown leaking delalloc quota blocks when
+ fssetxattr fails
+Message-ID: <20210202174726.GM7193@magnolia>
+References: <161223139756.491593.10895138838199018804.stgit@magnolia>
+ <161223140369.491593.14536007914189520446.stgit@magnolia>
+ <20210202131315.GB3336100@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210202153859.GG3336100@bfoster>
+In-Reply-To: <20210202131315.GB3336100@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 02, 2021 at 10:38:59AM -0500, Brian Foster wrote:
-> On Sun, Jan 31, 2021 at 06:06:06PM -0800, Darrick J. Wong wrote:
+On Tue, Feb 02, 2021 at 08:13:15AM -0500, Brian Foster wrote:
+> On Mon, Feb 01, 2021 at 06:03:23PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > If a fs modification (data write, reflink, xattr set, fallocate, etc.)
-> > is unable to reserve enough quota to handle the modification, try
-> > clearing whatever space the filesystem might have been hanging onto in
-> > the hopes of speeding up the filesystem.  The flushing behavior will
-> > become particularly important when we add deferred inode inactivation
-> > because that will increase the amount of space that isn't actively tied
-> > to user data.
+> > While refactoring the quota code to create a function to allocate inode
+> > change transactions, I noticed that xfs_qm_vop_chown_reserve does more
+> > than just make reservations: it also *modifies* the incore counts
+> > directly to handle the owner id change for the delalloc blocks.
 > > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
+> > I then observed that the fssetxattr code continues validating input
+> > arguments after making the quota reservation but before dirtying the
+> > transaction.  If the routine decides to error out, it fails to undo the
+> > accounting switch!  This leads to incorrect quota reservation and
+> > failure down the line.
+> > 
+> > We can fix this by making the reservation function do only that -- for
+> > the new dquot, it reserves ondisk and delalloc blocks to the
+> > transaction, and the old dquot hangs on to its incore reservation for
+> > now.  Once we actually switch the dquots, we can then update the incore
+> > reservations because we've dirtied the transaction and it's too late to
+> > turn back now.
+> > 
+> > No fixes tag because this has been broken since the start of git.
+> > 
 > 
-> (FWIW, I'm reviewing the patches from your reclaim-space-harder-5.12
-> branch as of this morning, which look like they have some deltas from
-> the posted versions based on Christoph's feedback.)
+> Do we have any test coverage for this problem?
 
-Yes, it does. :(
+Working on it, yeah.  The tricky part is finding a combination of
+FSSETXATTR values that will reliably trigger an error return.  I think
+it can be done by allocating delalloc blocks and then trying to set an
+extent size hint and change the project id in a single call.
 
-I pushed the branches and had sent the first of the two patchsets
-last night, and then the power went out so I gave up and went to bed.
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_qm.c |   91 +++++++++++++++++++++----------------------------------
+> >  1 file changed, 34 insertions(+), 57 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> > index c134eb4aeaa8..322d337b5dca 100644
+> > --- a/fs/xfs/xfs_qm.c
+> > +++ b/fs/xfs/xfs_qm.c
+> > @@ -1785,6 +1785,28 @@ xfs_qm_vop_chown(
+> >  	xfs_trans_mod_dquot(tp, newdq, bfield, ip->i_d.di_nblocks);
+> >  	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_ICOUNT, 1);
+> >  
+> > +	/*
+> > +	 * Back when we made quota reservations for the chown, we reserved the
+> > +	 * ondisk blocks + delalloc blocks with the new dquot.  Now that we've
+> > +	 * switched the dquots, decrease the new dquot's block reservation
+> > +	 * (having already bumped up the real counter) so that we don't have
+> > +	 * any reservation to give back when we commit.
+> > +	 */
+> > +	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_RES_BLKS,
+> > +			-ip->i_delayed_blks);
+> > +
+> 
+> Ok, so the reservation code code below continues to reserve di_blocks
+> and delalloc blocks as it did before, but associates it with the
+> transaction and no longer reduces delalloc reservation from the old
+> dquots. Instead, this function increases the consumption of reserved
+> blocks for di_blocks and then removes the additional quota reservation
+> from the transaction, but not the new dquots. Thus when the transaction
+> commits, this has the side effect of leaving additional reservation on
+> the new dquots that correspond to the delalloc blocks on the inode. Am I
+> following that correctly?
 
-But thanks for the review. :)
+Correct.
+
+> > +	/*
+> > +	 * Give the incore reservation for delalloc blocks back to the old
+> > +	 * dquot.  We don't normally handle delalloc quota reservations
+> > +	 * transactionally, so just lock the dquot and subtract from the
+> > +	 * reservation.  We've dirtied the transaction, so it's too late to
+> > +	 * turn back now.
+> > +	 */
+> > +	tp->t_flags |= XFS_TRANS_DIRTY;
+> > +	xfs_dqlock(prevdq);
+> > +	prevdq->q_blk.reserved -= ip->i_delayed_blks;
+> > +	xfs_dqunlock(prevdq);
+> > +
+> 
+> What's the reason for not using xfs_trans_reserve_quota_bydquots(NULL,
+> ...) here like the original code?
+
+xfs_trans_reserve_quota_bydquots() makes the caller pass in user, group,
+and project dquots.  It's not difficult to add more code to declare and
+route parameters, but that just felt overdone.
+
+Given that this is the only place in the codebase where we want to
+change the incore quota reservation on a single dquot, I also didn't
+think it was worth making a whole new function.
+
+FWIW I don't really mind doing it, it just seemed like more work.
+Alternately I suppose I could expose xfs_trans_dqresv.
 
 --D
 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Brian
 > 
-> >  fs/xfs/xfs_reflink.c |    5 +++++
-> >  fs/xfs/xfs_trans.c   |   10 ++++++++++
-> >  2 files changed, 15 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 086866f6e71f..725c7d8e4438 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -1092,6 +1092,11 @@ xfs_reflink_remap_extent(
-> >  	 * count.  This is suboptimal, but the VFS flushed the dest range
-> >  	 * before we started.  That should have removed all the delalloc
-> >  	 * reservations, but we code defensively.
-> > +	 *
-> > +	 * xfs_trans_alloc_inode above already tried to grab an even larger
-> > +	 * quota reservation, and kicked off a blockgc scan if it couldn't.
-> > +	 * If we can't get a potentially smaller quota reservation now, we're
-> > +	 * done.
-> >  	 */
-> >  	if (!quota_reserved && !smap_real && dmap_written) {
-> >  		error = xfs_trans_reserve_quota_nblks(tp, ip,
-> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > index 466e1c86767f..f62c1c5f210f 100644
-> > --- a/fs/xfs/xfs_trans.c
-> > +++ b/fs/xfs/xfs_trans.c
-> > @@ -23,6 +23,7 @@
-> >  #include "xfs_inode.h"
-> >  #include "xfs_dquot_item.h"
-> >  #include "xfs_dquot.h"
-> > +#include "xfs_icache.h"
-> >  
-> >  kmem_zone_t	*xfs_trans_zone;
-> >  
-> > @@ -1046,8 +1047,10 @@ xfs_trans_alloc_inode(
+> >  	/*
+> >  	 * Take an extra reference, because the inode is going to keep
+> >  	 * this dquot pointer even after the trans_commit.
+> > @@ -1807,84 +1829,39 @@ xfs_qm_vop_chown_reserve(
+> >  	uint			flags)
 > >  {
-> >  	struct xfs_trans	*tp;
 > >  	struct xfs_mount	*mp = ip->i_mount;
-> > +	bool			retried = false;
-> >  	int			error;
+> > -	uint64_t		delblks;
+> >  	unsigned int		blkflags;
+> > -	struct xfs_dquot	*udq_unres = NULL;
+> > -	struct xfs_dquot	*gdq_unres = NULL;
+> > -	struct xfs_dquot	*pdq_unres = NULL;
+> >  	struct xfs_dquot	*udq_delblks = NULL;
+> >  	struct xfs_dquot	*gdq_delblks = NULL;
+> >  	struct xfs_dquot	*pdq_delblks = NULL;
+> > -	int			error;
+> > -
 > >  
-> > +retry:
-> >  	error = xfs_trans_alloc(mp, resv, dblocks,
-> >  			rblocks / mp->m_sb.sb_rextsize,
-> >  			force ? XFS_TRANS_RESERVE : 0, &tp);
-> > @@ -1065,6 +1068,13 @@ xfs_trans_alloc_inode(
-> >  	}
+> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+> >  	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
 > >  
-> >  	error = xfs_trans_reserve_quota_nblks(tp, ip, dblocks, rblocks, force);
-> > +	if (!retried && (error == -EDQUOT || error == -ENOSPC)) {
-> > +		xfs_trans_cancel(tp);
-> > +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > +		xfs_blockgc_free_quota(ip, 0);
-> > +		retried = true;
-> > +		goto retry;
-> > +	}
-> >  	if (error)
-> >  		goto out_cancel;
+> > -	delblks = ip->i_delayed_blks;
+> >  	blkflags = XFS_IS_REALTIME_INODE(ip) ?
+> >  			XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS;
 > >  
+> >  	if (XFS_IS_UQUOTA_ON(mp) && udqp &&
+> > -	    i_uid_read(VFS_I(ip)) != udqp->q_id) {
+> > +	    i_uid_read(VFS_I(ip)) != udqp->q_id)
+> >  		udq_delblks = udqp;
+> > -		/*
+> > -		 * If there are delayed allocation blocks, then we have to
+> > -		 * unreserve those from the old dquot, and add them to the
+> > -		 * new dquot.
+> > -		 */
+> > -		if (delblks) {
+> > -			ASSERT(ip->i_udquot);
+> > -			udq_unres = ip->i_udquot;
+> > -		}
+> > -	}
+> > +
+> >  	if (XFS_IS_GQUOTA_ON(ip->i_mount) && gdqp &&
+> > -	    i_gid_read(VFS_I(ip)) != gdqp->q_id) {
+> > +	    i_gid_read(VFS_I(ip)) != gdqp->q_id)
+> >  		gdq_delblks = gdqp;
+> > -		if (delblks) {
+> > -			ASSERT(ip->i_gdquot);
+> > -			gdq_unres = ip->i_gdquot;
+> > -		}
+> > -	}
+> >  
+> >  	if (XFS_IS_PQUOTA_ON(ip->i_mount) && pdqp &&
+> > -	    ip->i_d.di_projid != pdqp->q_id) {
+> > +	    ip->i_d.di_projid != pdqp->q_id)
+> >  		pdq_delblks = pdqp;
+> > -		if (delblks) {
+> > -			ASSERT(ip->i_pdquot);
+> > -			pdq_unres = ip->i_pdquot;
+> > -		}
+> > -	}
+> > -
+> > -	error = xfs_trans_reserve_quota_bydquots(tp, ip->i_mount,
+> > -				udq_delblks, gdq_delblks, pdq_delblks,
+> > -				ip->i_d.di_nblocks, 1, flags | blkflags);
+> > -	if (error)
+> > -		return error;
+> >  
+> >  	/*
+> > -	 * Do the delayed blks reservations/unreservations now. Since, these
+> > -	 * are done without the help of a transaction, if a reservation fails
+> > -	 * its previous reservations won't be automatically undone by trans
+> > -	 * code. So, we have to do it manually here.
+> > +	 * Reserve enough quota to handle blocks on disk and reserved for a
+> > +	 * delayed allocation.  We'll actually transfer the delalloc
+> > +	 * reservation between dquots at chown time, even though that part is
+> > +	 * only semi-transactional.
+> >  	 */
+> > -	if (delblks) {
+> > -		/*
+> > -		 * Do the reservations first. Unreservation can't fail.
+> > -		 */
+> > -		ASSERT(udq_delblks || gdq_delblks || pdq_delblks);
+> > -		ASSERT(udq_unres || gdq_unres || pdq_unres);
+> > -		error = xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
+> > -			    udq_delblks, gdq_delblks, pdq_delblks,
+> > -			    (xfs_qcnt_t)delblks, 0, flags | blkflags);
+> > -		if (error)
+> > -			return error;
+> > -		xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
+> > -				udq_unres, gdq_unres, pdq_unres,
+> > -				-((xfs_qcnt_t)delblks), 0, blkflags);
+> > -	}
+> > -
+> > -	return 0;
+> > +	return xfs_trans_reserve_quota_bydquots(tp, ip->i_mount, udq_delblks,
+> > +			gdq_delblks, pdq_delblks,
+> > +			ip->i_d.di_nblocks + ip->i_delayed_blks,
+> > +			1, blkflags | flags);
+> >  }
+> >  
+> >  int
 > > 
 > 
