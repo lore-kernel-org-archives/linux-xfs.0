@@ -2,297 +2,330 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6DCCC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 03:18:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CA92C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 05:53:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB31F64EAA
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 03:18:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0397C64EDE
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 05:53:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231180AbhBBDRy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Feb 2021 22:17:54 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34470 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230430AbhBBDRx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Feb 2021 22:17:53 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E898964E9C;
-        Tue,  2 Feb 2021 03:17:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612235832;
-        bh=KqT5sV58OfOcgZt1gzImRolrfPMRYQ/G5RzlrJTMeTU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=uG9sLlW6g7AQsBZLmv4nvu1ZfNnkyP00j21VtpKSUM7DceLjKkCaJfWBX89ym5Zjq
-         oLpdSdwK+aWyWB/Fv3bn63TyXmMIYEEVh30Wx6sZUSkqpxnTRpvqy/nPWi4JLBgC1X
-         WAlPl3TtOV8M7Vld596n4ZxxrfPS/jPQTPfQepTMauSE0EkxJIVLC8cydyQkcjtLQ7
-         uvveDvK1vlo8TRIzkbfZg4rJTwtrJnXi5+/9dRnvAbJXX4f6ge4iR+jyFPo364Oouz
-         CRYPEaIf8bGpmog32WarErABPMFRavjXIyxzQ5CxdJZiyuTL2IQNImfYyTagz4KWwy
-         5zRdGequ1Xx6w==
-Date:   Mon, 1 Feb 2021 19:17:11 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@lst.de, agk@redhat.com,
-        snitzer@redhat.com, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
-        y-goto@fujitsu.com
-Subject: Re: [PATCH RESEND v2 08/10] md: Implement ->corrupted_range()
-Message-ID: <20210202031711.GJ7193@magnolia>
-References: <20210129062757.1594130-1-ruansy.fnst@cn.fujitsu.com>
- <20210129062757.1594130-9-ruansy.fnst@cn.fujitsu.com>
+        id S231546AbhBBFxf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Feb 2021 00:53:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57904 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231469AbhBBFxe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Feb 2021 00:53:34 -0500
+Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E25E1C061573
+        for <linux-xfs@vger.kernel.org>; Mon,  1 Feb 2021 21:52:53 -0800 (PST)
+Received: by mail-pg1-x536.google.com with SMTP id z21so14189799pgj.4
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Feb 2021 21:52:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=LWdMxZ1KVVBBHEhEq3++d0sM9qSeuWE1IsmgJa01/RY=;
+        b=g9BR79EylIMgSrExCG9EIg4xju23RHfC14nHWOEv+A3wFsgdseHjqD7GS3wwzA98L6
+         QnOg1GCt6RLEUCAkeJxegziFss46Afb+NIejmmHgE2BysfdzSNA6DN5b43rGNKReS4+r
+         zFxABB7t3lHhsUKSAgd3aBm+nvyQuOPaO8+RayAd9ve+D6Z8s+7xp3ZrzC+9dDg6cASi
+         yXPcFOsVt1xnPvNQRN6zJw016vAMELQLdkFsbP5lKw65KUOMVVOJ3TCPanq1lsxL4vf4
+         R3+/5+s8oSvhnSPjDOEAZMPoNIBAC77kFbXpHX9rv4+5hpD5qbPKhp7AUB9AoRV1k06Y
+         d/jQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=LWdMxZ1KVVBBHEhEq3++d0sM9qSeuWE1IsmgJa01/RY=;
+        b=i+0eFib2OSoTzzORypyaj1VktuDAyzAiB+6yIQDrP5P/RLGkzyVsenUZo7qIgZVtwH
+         zqBCgoF5iQxYcTF5ln2baQa3zA4jDmr9p16nfGXK5kZxYk+tszXOKPGkX0inCtajj8Ak
+         1E+VdCxUm0Wl5Yb2oXQILmDQCm0TLW6cvziZ6kexyqtY+eQF/KtzXqwem9tebXZOIMJo
+         lv91GhvV6EexTsBCvbKxCL9s2jQ+NJbsQ3KG09/xsPgtDXxL9+W6p24ECyU9S/0AoSAt
+         WCQekBM0xIviuTcaP3bS7S5HMOVTWHIWkM+jvBXVcldD+UdV9ubHXprfyhr9MbofY9sB
+         t0SQ==
+X-Gm-Message-State: AOAM531vhqRVikagcObA9eQGRdPppr6T3pGOMW5KuVnWdKbQRxzJ/YVB
+        ub/m+xcqOiX6cydVZaA6auDFG7VIcqY=
+X-Google-Smtp-Source: ABdhPJydNXztye0Vt50l3haH0fq50yq5BsyLoAOlUpAKSo9ofu4mJ4phpcnDvWkVY/ZkaH24Vi6h1A==
+X-Received: by 2002:a63:4084:: with SMTP id n126mr20343261pga.80.1612245173080;
+        Mon, 01 Feb 2021 21:52:53 -0800 (PST)
+Received: from garuda ([122.182.251.1])
+        by smtp.gmail.com with ESMTPSA id fa12sm1366839pjb.13.2021.02.01.21.52.51
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 01 Feb 2021 21:52:52 -0800 (PST)
+References: <20210128044154.806715-1-david@fromorbit.com> <20210128044154.806715-5-david@fromorbit.com>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/5] xfs: Fix CIL throttle hang when CIL space used going backwards
+In-reply-to: <20210128044154.806715-5-david@fromorbit.com>
+Date:   Tue, 02 Feb 2021 11:22:49 +0530
+Message-ID: <87eehz583y.fsf@garuda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210129062757.1594130-9-ruansy.fnst@cn.fujitsu.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 29, 2021 at 02:27:55PM +0800, Shiyang Ruan wrote:
-> With the support of ->rmap(), it is possible to obtain the superblock on
-> a mapped device.
-> 
-> If a pmem device is used as one target of mapped device, we cannot
-> obtain its superblock directly.  With the help of SYSFS, the mapped
-> device can be found on the target devices.  So, we iterate the
-> bdev->bd_holder_disks to obtain its mapped device.
-> 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+On 28 Jan 2021 at 10:11, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> A hang with tasks stuck on the CIL hard throttle was reported and
+> largely diagnosed by Donald Buczek, who discovered that it was a
+> result of the CIL context space usage decrementing in committed
+> transactions once the hard throttle limit had been hit and processes
+> were already blocked.  This resulted in the CIL push not waking up
+> those waiters because the CIL context was no longer over the hard
+> throttle limit.
+>
+> The surprising aspect of this was the CIL space usage going
+> backwards regularly enough to trigger this situation. Assumptions
+> had been made in design that the relogging process would only
+> increase the size of the objects in the CIL, and so that space would
+> only increase.
+>
+> This change and commit message fixes the issue and documents the
+> result of an audit of the triggers that can cause the CIL space to
+> go backwards, how large the backwards steps tend to be, the
+> frequency in which they occur, and what the impact on the CIL
+> accounting code is.
+>
+> Even though the CIL ctx->space_used can go backwards, it will only
+> do so if the log item is already logged to the CIL and contains a
+> space reservation for it's entire logged state. This is tracked by
+> the shadow buffer state on the log item. If the item is not
+> previously logged in the CIL it has no shadow buffer nor log vector,
+> and hence the entire size of the logged item copied to the log
+> vector is accounted to the CIL space usage. i.e.  it will always go
+> up in this case.
+>
+> If the item has a log vector (i.e. already in the CIL) and the size
+> decreases, then the existing log vector will be overwritten and the
+> space usage will go down. This is the only condition where the space
+> usage reduces, and it can only occur when an item is already tracked
+> in the CIL. Hence we are safe from CIL space usage underruns as a
+> result of log items decreasing in size when they are relogged.
+>
+> Typically this reduction in CIL usage occurs from metadta blocks
+> being free, such as when a btree block merge
+> occurs or a directory enter/xattr entry is removed and the da-tree
+> is reduced in size. This generally results in a reduction in size of
+> around a single block in the CIL, but also tends to increase the
+> number of log vectors because the parent and sibling nodes in the
+> tree needs to be updated when a btree block is removed. If a
+> multi-level merge occurs, then we see reduction in size of 2+
+> blocks, but again the log vector count goes up.
+>
+> The other vector is inode fork size changes, which only log the
+> current size of the fork and ignore the previously logged size when
+> the fork is relogged. Hence if we are removing items from the inode
+> fork (dir/xattr removal in shortform, extent record removal in
+> extent form, etc) the relogged size of the inode for can decrease.
+>
+> No other log items can decrease in size either because they are a
+> fixed size (e.g. dquots) or they cannot be relogged (e.g. relogging
+> an intent actually creates a new intent log item and doesn't relog
+> the old item at all.) Hence the only two vectors for CIL context
+> size reduction are relogging inode forks and marking buffers active
+> in the CIL as stale.
+>
+> Long story short: the majority of the code does the right thing and
+> handles the reduction in log item size correctly, and only the CIL
+> hard throttle implementation is problematic and needs fixing. This
+> patch makes that fix, as well as adds comments in the log item code
+> that result in items shrinking in size when they are relogged as a
+> clear reminder that this can and does happen frequently.
+>
+> The throttle fix is based upon the change Donald proposed, though it
+> goes further to ensure that once the throttle is activated, it
+> captures all tasks until the CIL push issues a wakeup, regardless of
+> whether the CIL space used has gone back under the throttle
+> threshold.
+>
+> This ensures that we prevent tasks reducing the CIL slightly under
+> the throttle threshold and then making more changes that push it
+> well over the throttle limit. This is acheived by checking if the
+> throttle wait queue is already active as a condition of throttling.
+> Hence once we start throttling, we continue to apply the throttle
+> until the CIL context push wakes everything on the wait queue.
+>
+> We can use waitqueue_active() for the waitqueue manipulations and
+> checks as they are all done under the ctx->xc_push_lock. Hence the
+> waitqueue has external serialisation and we can safely peek inside
+> the wait queue without holding the internal waitqueue locks.
+>
+> Many thanks to Donald for his diagnostic and analysis work to
+> isolate the cause of this hang.
+>
+
+W.r.t correctness of the changes in this patch,
+
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+
+> Reported-by: Donald Buczek <buczek@molgen.mpg.de>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  drivers/md/dm.c       | 61 +++++++++++++++++++++++++++++++++++++++++++
->  drivers/nvdimm/pmem.c | 11 +++-----
->  fs/block_dev.c        | 42 ++++++++++++++++++++++++++++-
-
-I feel like this ^^^ part that implements the generic ability for a block
-device with a bad sector to notify whatever's holding onto it (fs, other
-block device) should be in patch 2.  That's generic block layer code,
-and it's hard to tell (when you're looking at patch 2) what the bare
-function declaration in it is really supposed to do.
-
-Also, this patch is still difficult to review because it mixes device
-mapper, nvdimm, and block layer changes!
-
->  include/linux/genhd.h |  2 ++
->  4 files changed, 107 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index 7bac564f3faa..31b0c340b695 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -507,6 +507,66 @@ static int dm_blk_report_zones(struct gendisk *disk, sector_t sector,
->  #define dm_blk_report_zones		NULL
->  #endif /* CONFIG_BLK_DEV_ZONED */
->  
-> +struct corrupted_hit_info {
-> +	struct block_device *bdev;
-> +	sector_t offset;
-> +};
-> +
-> +static int dm_blk_corrupted_hit(struct dm_target *ti, struct dm_dev *dev,
-> +				sector_t start, sector_t count, void *data)
-> +{
-> +	struct corrupted_hit_info *bc = data;
-> +
-> +	return bc->bdev == (void *)dev->bdev &&
-> +			(start <= bc->offset && bc->offset < start + count);
-> +
-> +}
-> +
-> +struct corrupted_do_info {
-> +	size_t length;
-> +	void *data;
-> +};
-> +
-> +static int dm_blk_corrupted_do(struct dm_target *ti, struct block_device *bdev,
-> +			       sector_t disk_sect, void *data)
-> +{
-> +	struct corrupted_do_info *bc = data;
-> +	loff_t disk_off = to_bytes(disk_sect);
-> +	loff_t bdev_off = to_bytes(disk_sect - get_start_sect(bdev));
-> +
-> +	return bd_corrupted_range(bdev, disk_off, bdev_off, bc->length, bc->data);
-> +}
-> +
-> +static int dm_blk_corrupted_range(struct gendisk *disk,
-> +				  struct block_device *target_bdev,
-> +				  loff_t target_offset, size_t len, void *data)
-> +{
-> +	struct mapped_device *md = disk->private_data;
-> +	struct dm_table *map;
-> +	struct dm_target *ti;
-> +	sector_t target_sect = to_sector(target_offset);
-> +	struct corrupted_hit_info hi = {target_bdev, target_sect};
-> +	struct corrupted_do_info di = {len, data};
-> +	int srcu_idx, i, rc = -ENODEV;
-> +
-> +	map = dm_get_live_table(md, &srcu_idx);
-> +	if (!map)
-> +		return rc;
-> +
-> +	for (i = 0; i < dm_table_get_num_targets(map); i++) {
-> +		ti = dm_table_get_target(map, i);
-> +		if (!(ti->type->iterate_devices && ti->type->rmap))
-> +			continue;
-> +		if (!ti->type->iterate_devices(ti, dm_blk_corrupted_hit, &hi))
-> +			continue;
-> +
-> +		rc = ti->type->rmap(ti, target_sect, dm_blk_corrupted_do, &di);
-
-Why is it necessary to call ->iterate_devices here?
-
-If you pass the target_bdev, offset, and length to the dm-target's
-->rmap function, it should be able to work backwards through its mapping
-logic to come up with all the LBA ranges of the mapped_device that
-are affected, and then it can call bd_corrupted_range on each of those
-reverse mappings.
-
-It would be helpful to have the changes to dm-linear.c in this patch
-too, since that's the only real implementation at this point.
-
-> +		break;
-> +	}
-> +
-> +	dm_put_live_table(md, srcu_idx);
-> +	return rc;
-> +}
-> +
->  static int dm_prepare_ioctl(struct mapped_device *md, int *srcu_idx,
->  			    struct block_device **bdev)
->  {
-> @@ -3062,6 +3122,7 @@ static const struct block_device_operations dm_blk_dops = {
->  	.getgeo = dm_blk_getgeo,
->  	.report_zones = dm_blk_report_zones,
->  	.pr_ops = &dm_pr_ops,
-> +	.corrupted_range = dm_blk_corrupted_range,
->  	.owner = THIS_MODULE
->  };
->  
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index 501959947d48..3d9f4ccbbd9e 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -256,21 +256,16 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
->  static int pmem_corrupted_range(struct gendisk *disk, struct block_device *bdev,
->  				loff_t disk_offset, size_t len, void *data)
->  {
-> -	struct super_block *sb;
->  	loff_t bdev_offset;
->  	sector_t disk_sector = disk_offset >> SECTOR_SHIFT;
-> -	int rc = 0;
-> +	int rc = -ENODEV;
->  
->  	bdev = bdget_disk_sector(disk, disk_sector);
->  	if (!bdev)
-> -		return -ENODEV;
-> +		return rc;
->  
->  	bdev_offset = (disk_sector - get_start_sect(bdev)) << SECTOR_SHIFT;
-> -	sb = get_super(bdev);
-> -	if (sb && sb->s_op->corrupted_range) {
-> -		rc = sb->s_op->corrupted_range(sb, bdev, bdev_offset, len, data);
-> -		drop_super(sb);
-> -	}
-> +	rc = bd_corrupted_range(bdev, bdev_offset, bdev_offset, len, data);
->  
->  	bdput(bdev);
->  	return rc;
-> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> index 3b8963e228a1..3cc2b2911e3a 100644
-> --- a/fs/block_dev.c
-> +++ b/fs/block_dev.c
-> @@ -1079,6 +1079,27 @@ struct bd_holder_disk {
->  	int			refcnt;
->  };
->  
-> +static int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off,
-> +					  size_t len, void *data)
-> +{
-> +	struct bd_holder_disk *holder;
-> +	struct gendisk *disk;
-> +	int rc = 0;
-> +
-> +	if (list_empty(&(bdev->bd_holder_disks)))
-> +		return -ENODEV;
-> +
-> +	list_for_each_entry(holder, &bdev->bd_holder_disks, list) {
-> +		disk = holder->disk;
-> +		if (disk->fops->corrupted_range) {
-> +			rc = disk->fops->corrupted_range(disk, bdev, off, len, data);
-> +			if (rc != -ENODEV)
-> +				break;
-> +		}
-> +	}
-> +	return rc;
-> +}
-> +
->  static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
->  						  struct gendisk *disk)
->  {
-> @@ -1212,7 +1233,26 @@ void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
->  	mutex_unlock(&bdev->bd_mutex);
+>  fs/xfs/xfs_buf_item.c   | 37 ++++++++++++++++++-------------------
+>  fs/xfs/xfs_inode_item.c | 14 ++++++++++++++
+>  fs/xfs/xfs_log_cil.c    | 22 +++++++++++++++++-----
+>  3 files changed, 49 insertions(+), 24 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index dc0be2a639cc..17960b1ce5ef 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -56,14 +56,12 @@ xfs_buf_log_format_size(
 >  }
->  EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
-> -#endif
-> +#endif /* CONFIG_SYSFS */
-> +
-> +int bd_corrupted_range(struct block_device *bdev, loff_t disk_off,
-> +		       loff_t bdev_off, size_t len, void *data)
-> +{
-> +	struct super_block *sb = get_super(bdev);
-> +	int rc = -EOPNOTSUPP;
-> +
-> +	if (!sb) {
-> +#ifdef CONFIG_SYSFS
-> +		rc = bd_disk_holder_corrupted_range(bdev, disk_off, len, data);
-> +#endif /* CONFIG_SYSFS */
-
-Normal kernel convention is that you'd provide a empty shell for the
-CONFIG_SYSFS=n case, e.g.
-
-#ifdef CONFIG_SYSFS
-int bd_corrupted_range(...) {
-	/* real code */
-}
-#else
-static inline bd_corrupted_range(...) { return -EOPNOTSUPP; }
-#endif
-
-so that you don't have preprocessor directives making this function
-choppy.
-
---D
-
-> +		return rc;
-> +	} else if (sb->s_op->corrupted_range)
-> +		rc = sb->s_op->corrupted_range(sb, bdev, bdev_off, len, data);
-> +	drop_super(sb);
-> +
-> +	return rc;
-> +}
-> +EXPORT_SYMBOL(bd_corrupted_range);
 >  
->  static void __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part);
+>  /*
+> - * This returns the number of log iovecs needed to log the
+> - * given buf log item.
+> + * Return the number of log iovecs and space needed to log the given buf log
+> + * item segment.
+>   *
+> - * It calculates this as 1 iovec for the buf log format structure
+> - * and 1 for each stretch of non-contiguous chunks to be logged.
+> - * Contiguous chunks are logged in a single iovec.
+> - *
+> - * If the XFS_BLI_STALE flag has been set, then log nothing.
+> + * It calculates this as 1 iovec for the buf log format structure and 1 for each
+> + * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
+> + * in a single iovec.
+>   */
+>  STATIC void
+>  xfs_buf_item_size_segment(
+> @@ -119,11 +117,8 @@ xfs_buf_item_size_segment(
+>  }
 >  
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index 4da480798955..996f91b08d48 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -315,6 +315,8 @@ void unregister_blkdev(unsigned int major, const char *name);
->  bool bdev_check_media_change(struct block_device *bdev);
->  int __invalidate_device(struct block_device *bdev, bool kill_dirty);
->  void set_capacity(struct gendisk *disk, sector_t size);
-> +int bd_corrupted_range(struct block_device *bdev, loff_t disk_off,
-> +		       loff_t bdev_off, size_t len, void *data);
+>  /*
+> - * This returns the number of log iovecs needed to log the given buf log item.
+> - *
+> - * It calculates this as 1 iovec for the buf log format structure and 1 for each
+> - * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
+> - * in a single iovec.
+> + * Return the number of log iovecs and space needed to log the given buf log
+> + * item.
+>   *
+>   * Discontiguous buffers need a format structure per region that is being
+>   * logged. This makes the changes in the buffer appear to log recovery as though
+> @@ -133,7 +128,11 @@ xfs_buf_item_size_segment(
+>   * what ends up on disk.
+>   *
+>   * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
+> - * format structures.
+> + * format structures. If the item has previously been logged and has dirty
+> + * regions, we do not relog them in stale buffers. This has the effect of
+> + * reducing the size of the relogged item by the amount of dirty data tracked
+> + * by the log item. This can result in the committing transaction reducing the
+> + * amount of space being consumed by the CIL.
+>   */
+>  STATIC void
+>  xfs_buf_item_size(
+> @@ -147,9 +146,9 @@ xfs_buf_item_size(
+>  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+>  	if (bip->bli_flags & XFS_BLI_STALE) {
+>  		/*
+> -		 * The buffer is stale, so all we need to log
+> -		 * is the buf log format structure with the
+> -		 * cancel flag in it.
+> +		 * The buffer is stale, so all we need to log is the buf log
+> +		 * format structure with the cancel flag in it as we are never
+> +		 * going to replay the changes tracked in the log item.
+>  		 */
+>  		trace_xfs_buf_item_size_stale(bip);
+>  		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
+> @@ -164,9 +163,9 @@ xfs_buf_item_size(
 >  
->  /* for drivers/char/raw.c: */
->  int blkdev_ioctl(struct block_device *, fmode_t, unsigned, unsigned long);
-> -- 
-> 2.30.0
-> 
-> 
-> 
+>  	if (bip->bli_flags & XFS_BLI_ORDERED) {
+>  		/*
+> -		 * The buffer has been logged just to order it.
+> -		 * It is not being included in the transaction
+> -		 * commit, so no vectors are used at all.
+> +		 * The buffer has been logged just to order it. It is not being
+> +		 * included in the transaction commit, so no vectors are used at
+> +		 * all.
+>  		 */
+>  		trace_xfs_buf_item_size_ordered(bip);
+>  		*nvecs = XFS_LOG_VEC_ORDERED;
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 17e20a6d8b4e..6ff91e5bf3cd 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -28,6 +28,20 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
+>  	return container_of(lip, struct xfs_inode_log_item, ili_item);
+>  }
+>  
+> +/*
+> + * The logged size of an inode fork is always the current size of the inode
+> + * fork. This means that when an inode fork is relogged, the size of the logged
+> + * region is determined by the current state, not the combination of the
+> + * previously logged state + the current state. This is different relogging
+> + * behaviour to most other log items which will retain the size of the
+> + * previously logged changes when smaller regions are relogged.
+> + *
+> + * Hence operations that remove data from the inode fork (e.g. shortform
+> + * dir/attr remove, extent form extent removal, etc), the size of the relogged
+> + * inode gets -smaller- rather than stays the same size as the previously logged
+> + * size and this can result in the committing transaction reducing the amount of
+> + * space being consumed by the CIL.
+> + */
+>  STATIC void
+>  xfs_inode_item_data_fork_size(
+>  	struct xfs_inode_log_item *iip,
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index c5cc1b7ad25e..daf1f3eb24a8 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -668,9 +668,14 @@ xlog_cil_push_work(
+>  	ASSERT(push_seq <= ctx->sequence);
+>  
+>  	/*
+> -	 * Wake up any background push waiters now this context is being pushed.
+> +	 * As we are about to switch to a new CILi, empty context, we no longer
+> +	 * need to throttle tasks on CIL space overruns. Wake any waiters that
+> +	 * the hard push throttle may have caught so they can start committing
+> +	 * to the new context. The ctx->xc_push_lock provides the serialisation
+> +	 * necessary for safely using the lockless waitqueue_active() check in
+> +	 * this context.
+>  	 */
+> -	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
+> +	if (waitqueue_active(&cil->xc_push_wait))
+>  		wake_up_all(&cil->xc_push_wait);
+>  
+>  	/*
+> @@ -914,7 +919,7 @@ xlog_cil_push_background(
+>  	ASSERT(!list_empty(&cil->xc_cil));
+>  
+>  	/*
+> -	 * don't do a background push if we haven't used up all the
+> +	 * Don't do a background push if we haven't used up all the
+>  	 * space available yet.
+>  	 */
+>  	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
+> @@ -938,9 +943,16 @@ xlog_cil_push_background(
+>  
+>  	/*
+>  	 * If we are well over the space limit, throttle the work that is being
+> -	 * done until the push work on this context has begun.
+> +	 * done until the push work on this context has begun. Enforce the hard
+> +	 * throttle on all transaction commits once it has been activated, even
+> +	 * if the committing transactions have resulted in the space usage
+> +	 * dipping back down under the hard limit.
+> +	 *
+> +	 * The ctx->xc_push_lock provides the serialisation necessary for safely
+> +	 * using the lockless waitqueue_active() check in this context.
+>  	 */
+> -	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
+> +	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log) ||
+> +	    waitqueue_active(&cil->xc_push_wait)) {
+>  		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
+>  		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
+>  		xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
+
+
+-- 
+chandan
