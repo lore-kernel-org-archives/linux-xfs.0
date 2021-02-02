@@ -4,115 +4,173 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23E27C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47D4FC433DB
 	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 13:20:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6C5D64F6E
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 13:20:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DE5F64F70
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Feb 2021 13:20:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232257AbhBBNTy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Feb 2021 08:19:54 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:29054 "EHLO
+        id S232249AbhBBNTz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Feb 2021 08:19:55 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:52227 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232249AbhBBNTw (ORCPT
+        by vger.kernel.org with ESMTP id S231220AbhBBNTw (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Feb 2021 08:19:52 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
         s=mimecast20190719; t=1612271905;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=JvoD0lP03jUr8ghFuuGJuQQSOnijvVpZ8DO+bgbhj1k=;
-        b=N0H7WLQ+KjjLmbRTwYcEo3/o5MMqyLJcP5KVuuslhumJMpVKC6QXaK9hxwDjhhqS9GpDRq
-        Qz7LhCWIAWlgdHJqKgThvDr9f7P590ohS2PogYgX+HljrCeU5n24VH6xqdaxu6OkF/Ki/u
-        4kBvx4JH1X9pFg7otDg9NxARzU287Ew=
+        bh=1pjU10uRigMeOgmBaF0haJZINH9sDUk+AMaAUolbIrM=;
+        b=UvN7SRpnoofy80JQ8HoN31kY4XYqkO2+0OT9l2uASDmbGa6jdmVhGKXLXijJdno/32QcB/
+        eRYrhaMNwz9iRB96lMl28HNcrmmjjn8Tg4wBc1TfAWj2+64wzdidCArSJuC1hMGvr+59WH
+        u7EPTcHVpLlrnaz2n17HKrV2oZ2BObE=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-348-q-OaW6QDNaWJRYQhz7-F3A-1; Tue, 02 Feb 2021 08:13:53 -0500
-X-MC-Unique: q-OaW6QDNaWJRYQhz7-F3A-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+ us-mta-531-yu76t3WUOnCGi--1pnArzg-1; Tue, 02 Feb 2021 08:13:47 -0500
+X-MC-Unique: yu76t3WUOnCGi--1pnArzg-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7EDAB9CDA2;
-        Tue,  2 Feb 2021 13:13:52 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CF506196632C;
+        Tue,  2 Feb 2021 13:13:44 +0000 (UTC)
 Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DB3AC5D763;
-        Tue,  2 Feb 2021 13:13:51 +0000 (UTC)
-Date:   Tue, 2 Feb 2021 08:13:50 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 09EB75D9C6;
+        Tue,  2 Feb 2021 13:13:43 +0000 (UTC)
+Date:   Tue, 2 Feb 2021 08:13:37 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+Cc:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
         hch@infradead.org, david@fromorbit.com
-Subject: Re: [PATCH 16/16] xfs: shut down the filesystem if we screw up quota
- errors
-Message-ID: <20210202131350.GF3336100@bfoster>
+Subject: Re: [PATCH 15/16] xfs: rename code to error in xfs_ioctl_setattr
+Message-ID: <20210202131337.GE3336100@bfoster>
 References: <161223139756.491593.10895138838199018804.stgit@magnolia>
- <161223148857.491593.12074155866887169690.stgit@magnolia>
+ <161223148300.491593.4733623201150889540.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161223148857.491593.12074155866887169690.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <161223148300.491593.4733623201150889540.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 01, 2021 at 06:04:48PM -0800, Darrick J. Wong wrote:
+On Mon, Feb 01, 2021 at 06:04:43PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> If we ever screw up the quota reservations enough to trip the
-> assertions, something's wrong with the quota code.  Shut down the
-> filesystem when this happens, because this is corruption.
+> Rename the 'code' variable to 'error' to follow the naming convention of
+> most other functions in xfs.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_trans_dquot.c |   13 ++++++++++---
->  1 file changed, 10 insertions(+), 3 deletions(-)
+>  fs/xfs/xfs_ioctl.c |   38 +++++++++++++++++++-------------------
+>  1 file changed, 19 insertions(+), 19 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> index a1a72b7900c5..48e09ea30ee5 100644
-> --- a/fs/xfs/xfs_trans_dquot.c
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -16,6 +16,7 @@
->  #include "xfs_quota.h"
->  #include "xfs_qm.h"
->  #include "xfs_trace.h"
-> +#include "xfs_error.h"
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 78ee201eb7cb..38ee66d999d8 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1435,13 +1435,13 @@ xfs_ioctl_setattr(
+>  	struct xfs_trans	*tp;
+>  	struct xfs_dquot	*pdqp = NULL;
+>  	struct xfs_dquot	*olddquot = NULL;
+> -	int			code;
+> +	int			error;
 >  
->  STATIC void	xfs_trans_alloc_dqinfo(xfs_trans_t *);
+>  	trace_xfs_ioctl_setattr(ip);
 >  
-> @@ -691,9 +692,11 @@ xfs_trans_dqresv(
->  				    nblks);
->  		xfs_trans_mod_dquot(tp, dqp, XFS_TRANS_DQ_RES_INOS, ninos);
+> -	code = xfs_ioctl_setattr_check_projid(ip, fa);
+> -	if (code)
+> -		return code;
+> +	error = xfs_ioctl_setattr_check_projid(ip, fa);
+> +	if (error)
+> +		return error;
+>  
+>  	/*
+>  	 * If disk quotas is on, we make sure that the dquots do exist on disk,
+> @@ -1452,36 +1452,36 @@ xfs_ioctl_setattr(
+>  	 * because the i_*dquot fields will get updated anyway.
+>  	 */
+>  	if (XFS_IS_QUOTA_ON(mp)) {
+> -		code = xfs_qm_vop_dqalloc(ip, VFS_I(ip)->i_uid,
+> +		error = xfs_qm_vop_dqalloc(ip, VFS_I(ip)->i_uid,
+>  				VFS_I(ip)->i_gid, fa->fsx_projid,
+>  				XFS_QMOPT_PQUOTA, NULL, NULL, &pdqp);
+> -		if (code)
+> -			return code;
+> +		if (error)
+> +			return error;
 >  	}
-> -	ASSERT(dqp->q_blk.reserved >= dqp->q_blk.count);
-> -	ASSERT(dqp->q_rtb.reserved >= dqp->q_rtb.count);
-> -	ASSERT(dqp->q_ino.reserved >= dqp->q_ino.count);
-> +
-> +	if (XFS_IS_CORRUPT(mp, dqp->q_blk.reserved < dqp->q_blk.count) ||
-> +	    XFS_IS_CORRUPT(mp, dqp->q_rtb.reserved < dqp->q_rtb.count) ||
-> +	    XFS_IS_CORRUPT(mp, dqp->q_ino.reserved < dqp->q_ino.count))
-> +		goto error_corrupt;
 >  
->  	xfs_dqunlock(dqp);
->  	return 0;
-> @@ -703,6 +706,10 @@ xfs_trans_dqresv(
->  	if (xfs_dquot_type(dqp) == XFS_DQTYPE_PROJ)
->  		return -ENOSPC;
->  	return -EDQUOT;
-> +error_corrupt:
-> +	xfs_dqunlock(dqp);
-> +	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> +	return -EFSCORRUPTED;
+>  	xfs_ioctl_setattr_prepare_dax(ip, fa);
+>  
+>  	tp = xfs_ioctl_setattr_get_trans(ip, pdqp);
+>  	if (IS_ERR(tp)) {
+> -		code = PTR_ERR(tp);
+> +		error = PTR_ERR(tp);
+>  		goto error_free_dquots;
+>  	}
+>  
+>  	xfs_fill_fsxattr(ip, false, &old_fa);
+> -	code = vfs_ioc_fssetxattr_check(VFS_I(ip), &old_fa, fa);
+> -	if (code)
+> +	error = vfs_ioc_fssetxattr_check(VFS_I(ip), &old_fa, fa);
+> +	if (error)
+>  		goto error_trans_cancel;
+>  
+> -	code = xfs_ioctl_setattr_check_extsize(ip, fa);
+> -	if (code)
+> +	error = xfs_ioctl_setattr_check_extsize(ip, fa);
+> +	if (error)
+>  		goto error_trans_cancel;
+>  
+> -	code = xfs_ioctl_setattr_check_cowextsize(ip, fa);
+> -	if (code)
+> +	error = xfs_ioctl_setattr_check_cowextsize(ip, fa);
+> +	if (error)
+>  		goto error_trans_cancel;
+>  
+> -	code = xfs_ioctl_setattr_xflags(tp, ip, fa);
+> -	if (code)
+> +	error = xfs_ioctl_setattr_xflags(tp, ip, fa);
+> +	if (error)
+>  		goto error_trans_cancel;
+>  
+>  	/*
+> @@ -1521,7 +1521,7 @@ xfs_ioctl_setattr(
+>  	else
+>  		ip->i_d.di_cowextsize = 0;
+>  
+> -	code = xfs_trans_commit(tp);
+> +	error = xfs_trans_commit(tp);
+>  
+>  	/*
+>  	 * Release any dquot(s) the inode had kept before chown.
+> @@ -1529,13 +1529,13 @@ xfs_ioctl_setattr(
+>  	xfs_qm_dqrele(olddquot);
+>  	xfs_qm_dqrele(pdqp);
+>  
+> -	return code;
+> +	return error;
+>  
+>  error_trans_cancel:
+>  	xfs_trans_cancel(tp);
+>  error_free_dquots:
+>  	xfs_qm_dqrele(pdqp);
+> -	return code;
+> +	return error;
 >  }
 >  
->  
+>  STATIC int
 > 
 
