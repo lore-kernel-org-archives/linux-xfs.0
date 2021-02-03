@@ -4,143 +4,206 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B164C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 19:51:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D533DC433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 20:39:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C094E64E3E
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 19:51:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A44364F6C
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 20:39:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231359AbhBCTvR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Feb 2021 14:51:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45600 "EHLO mail.kernel.org"
+        id S231532AbhBCUjY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Feb 2021 15:39:24 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52082 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229785AbhBCTvM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Feb 2021 14:51:12 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E009664F60;
-        Wed,  3 Feb 2021 19:50:31 +0000 (UTC)
+        id S231215AbhBCUjX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Feb 2021 15:39:23 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3E7A564F58;
+        Wed,  3 Feb 2021 20:38:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612381832;
-        bh=wdF/Fc9jwsa9b0DUVfemfcMAk2So9pKCLCNGeFH1QUs=;
-        h=Date:From:To:Cc:Subject:From;
-        b=UPb6z9eaUbxSvlzuZ1YHYLUsOLxdJhycSIaGc6TnN9uxpaot1UoyFZ/FSPGUO4WJc
-         a73nrZ9cy+YZwrrSLndqgqTLXSa80yq2/HFKS3VBFSNEZmz146qxJD1u1xzQQoq6Rj
-         okb0kiyeEJFTZ84up5ajjThJwLMXzd2KDL0S2fh5viSV6nAMoX5af5AUlZ7mQ3AuI3
-         UUqhG2umo4+VihZ+8NFHpjznrtPyFaEe3q+EOICyN5uVHioHavRHqB9xxGCLfTAPrh
-         HY9uFai7NWjEDayqJUyqqzzD0VLKX/HjWGhe6D4nmNBOOpeXf8dc0+WW7ZWFW83eXh
-         1Ts1S4dRinUkA==
-Date:   Wed, 3 Feb 2021 11:50:31 -0800
+        s=k20201202; t=1612384722;
+        bh=vo1/95+sR6LudrZMJ++ZNxoOJrmz4ZZ7s4ZKgTZQ/Q8=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=vBOd7o7hyRikz7k2PnN0+vW4cYg/oSbuLrJ5C6sOOW9a4X2604C0yYJSsK/54caeN
+         j3nuu8H8IBhLQEoXA4y6swRePgYfRQbcnJQFZ3fnZVKmnfZkumP6xLKrUTPA/hqANk
+         S1W858S1xgVtESdHNDR2J7dXsPWF2VK6U9qu/eZG8Vr5q2MtW9DxOLQj8d2U0/z6AS
+         /wVKYEMCkmth6myU/SYCR3z3uT8qDTABhSxLwxHuD6x1Fm/tvViHtJLaji7bIYn7M4
+         U8w3QGHftyXL0MoaAtxom0cpB+6Eek/50J1sgxwcWzfU3UBTaa6BXnZJW9FNpjnHNe
+         7KZwKvO1DSj8g==
+Date:   Wed, 3 Feb 2021 12:38:41 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs_repair: check dquot id and type
-Message-ID: <20210203195031.GD7193@magnolia>
+To:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: test delalloc quota leak when chprojid fails
+Message-ID: <20210203203841.GE7193@magnolia>
+References: <20210202194101.GQ7193@magnolia>
+ <20210203160115.GE14354@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20210203160115.GE14354@localhost.localdomain>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Feb 04, 2021 at 12:01:16AM +0800, Zorro Lang wrote:
+> On Tue, Feb 02, 2021 at 11:41:01AM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > This is a regression test for a bug in the XFS implementation of
+> > FSSETXATTR.  When we try to change a file's project id, the quota
+> > reservation code will update the incore quota reservations for delayed
+> > allocation blocks.  Unfortunately, it does this before we finish
+> > validating all the FSSETXATTR parameters, which means that if we decide
+> > to bail out, we also fail to undo the incore changes.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> 
+> Looks like this patch comes from djwong-devel :) It can't be merged into
+> xfstests-dev mainline directly.
 
-Make sure that we actually check the type and id of an ondisk dquot.
+Yeah, applying patches to fstests is annoying like that. :(
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- repair/quotacheck.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 55 insertions(+), 3 deletions(-)
+>   Applying: xfs: test delalloc quota leak when chprojid fails
+>   error: patch failed: src/Makefile:29
+>   error: src/Makefile: patch does not apply
+>   error: patch failed: tests/xfs/group:544
+>   error: tests/xfs/group: patch does not apply
+> 
+> Anyway, I think Eryu can solve it. I just have another question below.
+> 
+> >  .gitignore          |    1 +
+> >  src/Makefile        |    3 +-
+> >  src/chprojid_fail.c |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/765       |   63 +++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/765.out   |    3 ++
+> >  tests/xfs/group     |    1 +
+> >  6 files changed, 156 insertions(+), 1 deletion(-)
+> >  create mode 100644 src/chprojid_fail.c
+> >  create mode 100755 tests/xfs/765
+> >  create mode 100644 tests/xfs/765.out
+> > 
+> 
+> [snip]
+> 
+> > +# FS QA Test No. 765
+> > +#
+> > +# Regression test for failing to undo delalloc quota reservations when changing
+> > +# project id but we fail some other part of FSSETXATTR validation.  If we fail
+> > +# the test, we trip debugging assertions in dmesg.
+> > +#
+> > +# The appropriate XFS patch is:
+> > +# xfs: fix chown leaking delalloc quota blocks when fssetxattr fails
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1    # failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/quota
+> > +
+> > +# real QA test starts here
+> > +_supported_fs xfs
+> > +_require_xfs_debug
+> 
+> Why CONFIG_XFS_DEBUG=y is necessary for this case? Maybe I miss something, but
+> I didn't see any debug injection in this case. If a kernel is only built with
+> CONFIG_XFS_WARN=y, I still can reproduce this bug [1].
 
-diff --git a/repair/quotacheck.c b/repair/quotacheck.c
-index 55bcc048..0ea2deb5 100644
---- a/repair/quotacheck.c
-+++ b/repair/quotacheck.c
-@@ -234,12 +234,48 @@ quotacheck_adjust(
- 	libxfs_irele(ip);
- }
- 
-+/* Check the ondisk dquot's id and type match what the incore dquot expects. */
-+static bool
-+qc_dquot_check_type(
-+	struct xfs_mount	*mp,
-+	xfs_dqtype_t		type,
-+	xfs_dqid_t		id,
-+	struct xfs_disk_dquot	*ddq)
-+{
-+	uint8_t			ddq_type;
-+
-+	ddq_type = ddq->d_type & XFS_DQTYPE_REC_MASK;
-+
-+	if (be32_to_cpu(ddq->d_id) != id)
-+		return false;
-+
-+	/*
-+	 * V5 filesystems always expect an exact type match.  V4 filesystems
-+	 * expect an exact match for user dquots and for non-root group and
-+	 * project dquots.
-+	 */
-+	if (xfs_sb_version_hascrc(&mp->m_sb) || type == XFS_DQTYPE_USER || !id)
-+		return ddq_type == type;
-+
-+	/*
-+	 * V4 filesystems support either group or project quotas, but not both
-+	 * at the same time.  The non-user quota file can be switched between
-+	 * group and project quota uses depending on the mount options, which
-+	 * means that we can encounter the other type when we try to load quota
-+	 * defaults.  Quotacheck will soon reset the the entire quota file
-+	 * (including the root dquot) anyway, but don't log scary corruption
-+	 * reports to dmesg.
-+	 */
-+	return ddq_type == XFS_DQTYPE_GROUP || ddq_type == XFS_DQTYPE_PROJ;
-+}
-+
- /* Compare this on-disk dquot against whatever we observed. */
- static void
- qc_check_dquot(
- 	struct xfs_mount	*mp,
- 	struct xfs_disk_dquot	*ddq,
--	struct qc_dquots	*dquots)
-+	struct qc_dquots	*dquots,
-+	xfs_dqid_t		dqid)
- {
- 	struct qc_rec		*qrec;
- 	struct qc_rec		empty = {
-@@ -253,6 +289,22 @@ qc_check_dquot(
- 	if (!qrec)
- 		qrec = &empty;
- 
-+	if (!qc_dquot_check_type(mp, dquots->type, dqid, ddq)) {
-+		const char	*dqtypestr;
-+
-+		dqtypestr = qflags_typestr(ddq->d_type & XFS_DQTYPE_REC_MASK);
-+		if (dqtypestr)
-+			do_warn(_("%s id %u saw type %s id %u\n"),
-+					qflags_typestr(dquots->type), dqid,
-+					dqtypestr, be32_to_cpu(ddq->d_id));
-+		else
-+			do_warn(_("%s id %u saw type %x id %u\n"),
-+					qflags_typestr(dquots->type), dqid,
-+					ddq->d_type & XFS_DQTYPE_REC_MASK,
-+					be32_to_cpu(ddq->d_id));
-+		chkd_flags = 0;
-+	}
-+
- 	if (be64_to_cpu(ddq->d_bcount) != qrec->bcount) {
- 		do_warn(_("%s id %u has bcount %llu, expected %"PRIu64"\n"),
- 				qflags_typestr(dquots->type), id,
-@@ -327,11 +379,11 @@ _("cannot read %s inode %"PRIu64", block %"PRIu64", disk block %"PRIu64", err=%d
- 		}
- 
- 		dqb = bp->b_addr;
--		dqid = map->br_startoff * dqperchunk;
-+		dqid = (map->br_startoff + bno) * dqperchunk;
- 		for (dqnr = 0;
- 		     dqnr < dqperchunk && dqid <= UINT_MAX;
- 		     dqnr++, dqb++, dqid++)
--			qc_check_dquot(mp, &dqb->dd_diskdq, dquots);
-+			qc_check_dquot(mp, &dqb->dd_diskdq, dquots, dqid);
- 		libxfs_buf_relse(bp);
- 	}
- 
+Heh, I forgot that asserts can trigger even if debug is disabled.
+
+> Even if the XFS_WARN and XFS_DEUBG are all unset, I think this case can be run
+> without any failures. So why not just let it run? We could recommand using
+> debug xfs kernel, but general kernel don't need to skip this test.
+
+Ok.  I'll get rid of it then.
+
+--D
+
+> Thanks,
+> Zorro
+> 
+> [1]
+> # ./check xfs/765
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 hp-dl380pg8-01 4.18.0 #1 SMP Sat Jan 23 14:15:14 EST 2021
+> MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1 /dev/mapper/xfscratch
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/xfscratch /mnt/scratch
+> 
+> xfs/765 _check_dmesg: something found in dmesg (see /home/xfstests-dev/results//xfs/765.dmesg)
+> 
+> Ran: xfs/765
+> Failures: xfs/765
+> Failed 1 of 1 tests
+> 
+> [root@hp-dl380pg8-01 xfstests-dev]# less /home/xfstests-dev/results//xfs/765.dmesg
+> [30020.559403] run fstests xfs/765 at 2021-02-03 10:36:02
+> ...
+> [30028.411797] XFS: Assertion failed: dqp->q_res_bcount >= be64_to_cpu(dqp->q_core.d_bcount), file: fs/xfs/xfs_trans_dquot.c, line: 471
+> 
+> > +_require_command "$FILEFRAG_PROG" filefrag
+> > +_require_test_program "chprojid_fail"
+> > +_require_quota
+> > +_require_scratch
+> > +
+> > +rm -f $seqres.full
+> > +
+> > +echo "Format filesystem" | tee -a $seqres.full
+> > +_scratch_mkfs > $seqres.full
+> > +_qmount_option 'prjquota'
+> > +_qmount
+> > +_require_prjquota $SCRATCH_DEV
+> > +
+> > +echo "Run test program"
+> > +$XFS_QUOTA_PROG -f -x -c 'report -ap' $SCRATCH_MNT >> $seqres.full
+> > +$here/src/chprojid_fail $SCRATCH_MNT/blah >> $seqres.full
+> > +res=$?
+> > +if [ $res -ne 0 ]; then
+> > +	echo "chprojid_fail returned $res, expected 0"
+> > +fi
+> > +$XFS_QUOTA_PROG -f -x -c 'report -ap' $SCRATCH_MNT >> $seqres.full
+> > +$FILEFRAG_PROG -v $SCRATCH_MNT/blah >> $seqres.full
+> > +$FILEFRAG_PROG -v $SCRATCH_MNT/blah 2>&1 | grep -q delalloc || \
+> > +	echo "file didn't get delalloc extents?"
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/765.out b/tests/xfs/765.out
+> > new file mode 100644
+> > index 00000000..f44ba43e
+> > --- /dev/null
+> > +++ b/tests/xfs/765.out
+> > @@ -0,0 +1,3 @@
+> > +QA output created by 765
+> > +Format filesystem
+> > +Run test program
+> > diff --git a/tests/xfs/group b/tests/xfs/group
+> > index f406a9b9..fb78b0d7 100644
+> > --- a/tests/xfs/group
+> > +++ b/tests/xfs/group
+> > @@ -544,6 +544,7 @@
+> >  762 auto quick rw scrub realtime
+> >  763 auto quick rw realtime
+> >  764 auto quick repair
+> > +765 auto quick quota
+> >  908 auto quick bigtime
+> >  909 auto quick bigtime quota
+> >  910 auto quick inobtcount
+> > 
+> 
