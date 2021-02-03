@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D533DC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 20:39:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A25D7C433E6
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 20:54:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A44364F6C
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 20:39:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CF0864F6C
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 20:54:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231532AbhBCUjY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Feb 2021 15:39:24 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52082 "EHLO mail.kernel.org"
+        id S232073AbhBCUxp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Feb 2021 15:53:45 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58650 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231215AbhBCUjX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Feb 2021 15:39:23 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3E7A564F58;
-        Wed,  3 Feb 2021 20:38:42 +0000 (UTC)
+        id S232701AbhBCUwp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Feb 2021 15:52:45 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 21F0364F5C;
+        Wed,  3 Feb 2021 20:52:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612384722;
-        bh=vo1/95+sR6LudrZMJ++ZNxoOJrmz4ZZ7s4ZKgTZQ/Q8=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=vBOd7o7hyRikz7k2PnN0+vW4cYg/oSbuLrJ5C6sOOW9a4X2604C0yYJSsK/54caeN
-         j3nuu8H8IBhLQEoXA4y6swRePgYfRQbcnJQFZ3fnZVKmnfZkumP6xLKrUTPA/hqANk
-         S1W858S1xgVtESdHNDR2J7dXsPWF2VK6U9qu/eZG8Vr5q2MtW9DxOLQj8d2U0/z6AS
-         /wVKYEMCkmth6myU/SYCR3z3uT8qDTABhSxLwxHuD6x1Fm/tvViHtJLaji7bIYn7M4
-         U8w3QGHftyXL0MoaAtxom0cpB+6Eek/50J1sgxwcWzfU3UBTaa6BXnZJW9FNpjnHNe
-         7KZwKvO1DSj8g==
-Date:   Wed, 3 Feb 2021 12:38:41 -0800
+        s=k20201202; t=1612385524;
+        bh=Cmx6O0A+0fS53bYklYizQ5Fl//NjYi2+nmePBWdk3tg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=uuHvX5z95G3A9TrH2xPGq6UEgrzITBZxw9CnauvXxTWdx9ak8pNS5X44dfoLUU+ej
+         eOllMic2FSjQXK/vcM28Qv7U9pBtf9t+rnc4t/xm+Pmg56zvJ2XyUQFSYZl/VuG/Xd
+         wpHi6ayXXD/Db1K6MavzR3oTMhLuuxi/Xm9Ah0vvNTvgpm0tToROpQwBmHuDlJFwcz
+         hU5kcgqRKLoaAhG29XFsj/NrYbTXizhk3R+tHX7YRPVQYxCTXevKZALwbj45YRmBj1
+         w2IaO8g2of627k33K+vPYl9caB1a0+bSNX2JyIKctdk2FA8v7pIgHu8b2zCPq2l49d
+         rQoA+KRvi8e6A==
+Date:   Wed, 3 Feb 2021 12:52:03 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] xfs: test delalloc quota leak when chprojid fails
-Message-ID: <20210203203841.GE7193@magnolia>
+Message-ID: <20210203205203.GF7193@magnolia>
 References: <20210202194101.GQ7193@magnolia>
- <20210203160115.GE14354@localhost.localdomain>
+ <20210203161155.GF3647012@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210203160115.GE14354@localhost.localdomain>
+In-Reply-To: <20210203161155.GF3647012@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 04, 2021 at 12:01:16AM +0800, Zorro Lang wrote:
+On Wed, Feb 03, 2021 at 11:11:55AM -0500, Brian Foster wrote:
 > On Tue, Feb 02, 2021 at 11:41:01AM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
@@ -61,20 +61,6 @@ On Thu, Feb 04, 2021 at 12:01:16AM +0800, Zorro Lang wrote:
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> 
-> Looks like this patch comes from djwong-devel :) It can't be merged into
-> xfstests-dev mainline directly.
-
-Yeah, applying patches to fstests is annoying like that. :(
-
->   Applying: xfs: test delalloc quota leak when chprojid fails
->   error: patch failed: src/Makefile:29
->   error: src/Makefile: patch does not apply
->   error: patch failed: tests/xfs/group:544
->   error: tests/xfs/group: patch does not apply
-> 
-> Anyway, I think Eryu can solve it. I just have another question below.
-> 
 > >  .gitignore          |    1 +
 > >  src/Makefile        |    3 +-
 > >  src/chprojid_fail.c |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -86,9 +72,114 @@ Yeah, applying patches to fstests is annoying like that. :(
 > >  create mode 100755 tests/xfs/765
 > >  create mode 100644 tests/xfs/765.out
 > > 
+> ...
+> > diff --git a/src/chprojid_fail.c b/src/chprojid_fail.c
+> > new file mode 100644
+> > index 00000000..e7467372
+> > --- /dev/null
+> > +++ b/src/chprojid_fail.c
+> > @@ -0,0 +1,86 @@
+> > +// SPDX-License-Identifier: GPL-2.0-or-later
+> > +/*
+> > + * Copyright (c) 2021 Oracle.  All Rights Reserved.
+> > + * Author: Darrick J. Wong <djwong@kernel.org>
+> > + *
+> > + * Regression test for failing to undo delalloc quota reservations when
+> > + * changing project id and we fail some other FSSETXATTR validation.
+> > + */
+> > +#include <sys/types.h>
+> > +#include <sys/stat.h>
+> > +#include <fcntl.h>
+> > +#include <unistd.h>
+> > +#include <sys/ioctl.h>
+> > +#include <stdio.h>
+> > +#include <string.h>
+> > +#include <errno.h>
+> > +#include <linux/fs.h>
+> > +
+> > +static char zerobuf[65536];
+> > +
+> > +int
+> > +main(
+> > +	int		argc,
+> > +	char		*argv[])
+> > +{
+> > +	struct fsxattr	fa;
+> > +	ssize_t		sz;
+> > +	int		fd, ret;
+> > +
+> > +	if (argc < 2) {
+> > +		printf("Usage: %s filename\n", argv[0]);
+> > +		return 1;
+> > +	}
+> > +
+> > +	fd = open(argv[1], O_CREAT | O_TRUNC | O_RDWR, 0600);
+> > +	if (fd < 0) {
+> > +		perror(argv[1]);
+> > +		return 2;
+> > +	}
+> > +
+> > +	/* Zero the project id and the extent size hint. */
+> > +	ret = ioctl(fd, FS_IOC_FSGETXATTR, &fa);
+> > +	if (ret) {
+> > +		perror("FSGETXATTR check file");
+> > +		return 2;
+> > +	}
+> > +
+> > +	if (fa.fsx_projid != 0 || fa.fsx_extsize != 0) {
+> > +		fa.fsx_projid = 0;
+> > +		fa.fsx_extsize = 0;
+> > +		ret = ioctl(fd, FS_IOC_FSSETXATTR, &fa);
+> > +		if (ret) {
+> > +			perror("FSSETXATTR zeroing");
+> > +			return 2;
+> > +		}
+> > +	}
+> > +
+> > +	/* Dirty a few kb of a file to create delalloc extents. */
+> > +	sz = write(fd, zerobuf, sizeof(zerobuf));
+> > +	if (sz != sizeof(zerobuf)) {
+> > +		perror("delalloc write");
+> > +		return 2;
+> > +	}
+> > +
+> > +	/*
+> > +	 * Fail to chprojid and set an extent size hint after we wrote the file.
+> > +	 */
 > 
-> [snip]
-> 
+> Might be helpful to document exactly why this command should fail.
+
+Fixed.
+
+> > +	ret = ioctl(fd, FS_IOC_FSGETXATTR, &fa);
+> > +	if (ret) {
+> > +		perror("FSGETXATTR");
+> > +		return 2;
+> > +	}
+> > +
+> > +	fa.fsx_projid = 23652;
+> > +	fa.fsx_extsize = 2;
+> > +	fa.fsx_xflags |= FS_XFLAG_EXTSIZE;
+> > +
+> > +	ret = ioctl(fd, FS_IOC_FSSETXATTR, &fa);
+> > +	if (ret) {
+> > +		printf("FSSETXATTRR should fail: %s\n", strerror(errno));
+> > +		return 0;
+> > +	}
+> > +
+> > +	/* Uhoh, that FSSETXATTR call should have failed! */
+> > +	return 3;
+> > +}
+> > diff --git a/tests/xfs/765 b/tests/xfs/765
+> > new file mode 100755
+> > index 00000000..769b545b
+> > --- /dev/null
+> > +++ b/tests/xfs/765
+> > @@ -0,0 +1,63 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0-or-later
+> > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> > +#
 > > +# FS QA Test No. 765
 > > +#
 > > +# Regression test for failing to undo delalloc quota reservations when changing
@@ -121,41 +212,11 @@ Yeah, applying patches to fstests is annoying like that. :(
 > > +_supported_fs xfs
 > > +_require_xfs_debug
 > 
-> Why CONFIG_XFS_DEBUG=y is necessary for this case? Maybe I miss something, but
-> I didn't see any debug injection in this case. If a kernel is only built with
-> CONFIG_XFS_WARN=y, I still can reproduce this bug [1].
+> I agree with Zorro that we might as well just let this run with or
+> without debug mode..
 
-Heh, I forgot that asserts can trigger even if debug is disabled.
+<nod> Fixed.
 
-> Even if the XFS_WARN and XFS_DEUBG are all unset, I think this case can be run
-> without any failures. So why not just let it run? We could recommand using
-> debug xfs kernel, but general kernel don't need to skip this test.
-
-Ok.  I'll get rid of it then.
-
---D
-
-> Thanks,
-> Zorro
-> 
-> [1]
-> # ./check xfs/765
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/x86_64 hp-dl380pg8-01 4.18.0 #1 SMP Sat Jan 23 14:15:14 EST 2021
-> MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1 /dev/mapper/xfscratch
-> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/xfscratch /mnt/scratch
-> 
-> xfs/765 _check_dmesg: something found in dmesg (see /home/xfstests-dev/results//xfs/765.dmesg)
-> 
-> Ran: xfs/765
-> Failures: xfs/765
-> Failed 1 of 1 tests
-> 
-> [root@hp-dl380pg8-01 xfstests-dev]# less /home/xfstests-dev/results//xfs/765.dmesg
-> [30020.559403] run fstests xfs/765 at 2021-02-03 10:36:02
-> ...
-> [30028.411797] XFS: Assertion failed: dqp->q_res_bcount >= be64_to_cpu(dqp->q_core.d_bcount), file: fs/xfs/xfs_trans_dquot.c, line: 471
-> 
 > > +_require_command "$FILEFRAG_PROG" filefrag
 > > +_require_test_program "chprojid_fail"
 > > +_require_quota
@@ -176,10 +237,36 @@ Ok.  I'll get rid of it then.
 > > +if [ $res -ne 0 ]; then
 > > +	echo "chprojid_fail returned $res, expected 0"
 > > +fi
+> 
+> Can we just use the output from the test program as the golden test
+> output?
+
+Hm, I guess so?  Not sure I want to encode the exact failure in the
+test, but I don't see why not.
+
+Admittedly it's done that way because originally I was going to wire
+this up as a generic test, but then noticed that not all the other
+fssetxattr implementations actually error out on nonzero extent size and
+decided to pull this back into tests/xfs/.
+
 > > +$XFS_QUOTA_PROG -f -x -c 'report -ap' $SCRATCH_MNT >> $seqres.full
 > > +$FILEFRAG_PROG -v $SCRATCH_MNT/blah >> $seqres.full
 > > +$FILEFRAG_PROG -v $SCRATCH_MNT/blah 2>&1 | grep -q delalloc || \
 > > +	echo "file didn't get delalloc extents?"
+> 
+> This could technically cause a failure even if the test did the right
+> thing if writeback happens to occur, right? I suppose that's exceedingly
+> unlikely, but might at least be worth documenting in the event that
+> somebody has to deal with that scenario sometime in the future.
+
+Yeah.  I'll add a comment explaining that the delalloc grep is to check
+that we even set up the test correctly.
+
+--D
+
+> 
+> Brian
+> 
 > > +
 > > +# success, all done
 > > +status=0
