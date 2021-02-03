@@ -3,88 +3,218 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F77BC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 18:18:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 222B2C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 18:21:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DAED764F91
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 18:18:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A96F64E2E
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 18:21:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232230AbhBCSSg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Feb 2021 13:18:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58016 "EHLO mail.kernel.org"
+        id S231648AbhBCSVX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Feb 2021 13:21:23 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58494 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232839AbhBCSR4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Feb 2021 13:17:56 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4088964DE1;
-        Wed,  3 Feb 2021 18:17:15 +0000 (UTC)
+        id S229631AbhBCSVW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Feb 2021 13:21:22 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2874964DE1
+        for <linux-xfs@vger.kernel.org>; Wed,  3 Feb 2021 18:20:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612376235;
-        bh=3PZWrawlCui7Hs06Vvx9o/4uusP+QuYWvNi+tFsbHIs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TDQ5L/FnQGlwuyMjSCyMOZqQf4IcVuvjpnTCJxfjavJCnDKLHpLa9vFCXJgU/nI1n
-         frcdiKU3Ha4nmAq6w6EiNfCRPgY+99FPECLIC7ac6Wi9lUBdb3TI4xl0pnx93Hv5MF
-         zthIFJTMQs3hx4Dq3Vk7/irJu4xPHBP9iQYdCNJ83sykL5rhALGxyczYTfh7jA3gRt
-         35i0P81iDQ+QxHjb/5KYPikTpniNP11Ex07Cu7/GvL+9cIYtfw1WUhtc7CW+5snCr4
-         0rzt00gS/UA/tzVPekwlScpOaaGH2Oyp8Z+CoKW2LvA6Vj9hBwoa9+FMa7rV40mqxl
-         15Xqicc8ftReA==
-Date:   Wed, 3 Feb 2021 10:17:14 -0800
+        s=k20201202; t=1612376441;
+        bh=0pbtghIPfjnBvC4XSsWSkYFNCTOil52qTOuVJ/upLt8=;
+        h=Date:From:To:Subject:From;
+        b=GFBmxnIH0JKeqGE522xQzup/MJyxvLMzk5kRoA8DIojbrucBpIWhHQVugB4wwYXDM
+         fjONMNS1gOiqlKMk09/DXoH04DHGzoRD5YVbYhydxi1tFx1ZFcuOl1hBz1RIRL/lz6
+         JBgEDcMAkb2bGEE8yspzf9TYXHof/z3PWF3cHeek4Ns2dBShKL3ZVqtYOLxtR3UOGY
+         nKP2gF5V0r8pwpOqq0NSdFRRy472X9Y3Lbt1ye3pS3mT35wX06ttyeSe9yOqVKpD2J
+         hC5GT6JJt/wKLOYYC7C6qEDXXUYa4ZiZJkd8XxaNH5Yxp1lZQFdsT3PWYs26jtHi7S
+         fZ50nbgcxt8VA==
+Date:   Wed, 3 Feb 2021 10:20:40 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christian Brauner <christian.brauner@ubuntu.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Shaokun Zhang <zhangshaokun@hisilicon.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH -next] xfs: remove the possibly unused mp variable in
- xfs_file_compat_ioctl
-Message-ID: <20210203181714.GB7193@magnolia>
-References: <https://lore.kernel.org/linux-xfs/20210203171633.GX7193@magnolia>
- <20210203173009.462205-1-christian.brauner@ubuntu.com>
- <20210203173835.GY7193@magnolia>
- <20210203174215.c3htzz3rqva26hgz@wittgenstein>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 07aabd9c4a88
+Message-ID: <20210203182040.GC7193@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210203174215.c3htzz3rqva26hgz@wittgenstein>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 03, 2021 at 06:42:15PM +0100, Christian Brauner wrote:
-> On Wed, Feb 03, 2021 at 09:38:35AM -0800, Darrick J. Wong wrote:
-> > On Wed, Feb 03, 2021 at 06:30:10PM +0100, Christian Brauner wrote:
-> > > From: Christoph Hellwig <hch@lst.de>
-> > > 
-> > > The mp variable in xfs_file_compat_ioctl is only used when
-> > > BROKEN_X86_ALIGNMENT is define.  Remove it and just open code the
-> > > dereference in a few places.
-> > > 
-> > > Fixes: f736d93d76d3 ("xfs: support idmapped mounts")
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > Acked-by: Christian Brauner <christian.brauner@ubuntu.com>
-> > > ---
-> > > As mentioned in the thread, I'd take this on top of Christoph's patch if
-> > > people are ok with this:
-> > > https://git.kernel.org/brauner/h/idmapped_mounts
-> > 
-> > I don't mind taking this via the xfs tree, unless merging through the
-> > idmapped mounts series is easier/causes less rebase mess?
-> 
-> It's caused by Christoph's xfs conversion patch as he's changing the one
-> place where "mp" was passed outside the BROKEN_X86_ALIGNMENT ifdef to a
-> struct file as arg. So I'd just apply it on top of that if you don't
-> mind. Would make it easier for Stephen Rothwell too as he's dealing with
-> all the merge conflicts. :)
+Hi folks,
 
-Works for me; I'm 100% ok with it going through your tree. :)
+The for-next branch of the xfs-linux repository at:
 
---D
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-> 
-> > 
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> Tyvm!
-> Christian
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  I'll add the dquot corruption fix tomorrow, but I
+wanted to get this megaupdate into for-next today for a little more
+magic smoke leakage testing.
+
+The new head of the for-next branch is commit:
+
+07aabd9c4a88 xfs: get rid of xfs_growfs_{data,log}_t
+
+New Commits:
+
+Brian Foster (12):
+      [10fb9ac1251f] xfs: rename xfs_wait_buftarg() to xfs_buftarg_drain()
+      [8321ddb2fa29] xfs: don't drain buffer lru on freeze and read-only remount
+      [50d25484bebe] xfs: sync lazy sb accounting on quiesce of read-only mounts
+      [37444fc4cc39] xfs: lift writable fs check up into log worker task
+      [9e54ee0fc9ef] xfs: separate log cleaning from log quiesce
+      [303591a0a947] xfs: cover the log during log quiesce
+      [b0eb9e118266] xfs: don't reset log idle state on covering checkpoints
+      [f46e5a174655] xfs: fold sbcount quiesce logging into log covering
+      [5232b9315034] xfs: remove duplicate wq cancel and log force from attr quiesce
+      [ea2064da4592] xfs: remove xfs_quiesce_attr()
+      [5b0ad7c2a52d] xfs: cover the log on freeze instead of cleaning it
+      [4533fc631547] xfs: fix unused log variable in xfs_log_cover()
+
+Chandan Babu R (17):
+      [b9b7e1dc56c5] xfs: Add helper for checking per-inode extent count overflow
+      [727e1acd297c] xfs: Check for extent overflow when trivally adding a new extent
+      [85ef08b5a667] xfs: Check for extent overflow when punching a hole
+      [f5d927491914] xfs: Check for extent overflow when adding dir entries
+      [0dbc5cb1a91c] xfs: Check for extent overflow when removing dir entries
+      [02092a2f034f] xfs: Check for extent overflow when renaming dir entries
+      [3a19bb147c72] xfs: Check for extent overflow when adding/removing xattrs
+      [c442f3086d5a] xfs: Check for extent overflow when writing to unwritten extent
+      [5f1d5bbfb2e6] xfs: Check for extent overflow when moving extent from cow to data fork
+      [ee898d78c354] xfs: Check for extent overflow when remapping an extent
+      [bcc561f21f11] xfs: Check for extent overflow when swapping extents
+      [f9fa87169d2b] xfs: Introduce error injection to reduce maximum inode fork extent count
+      [aff4db57d510] xfs: Remove duplicate assert statement in xfs_bmap_btalloc()
+      [0961fddfdd3f] xfs: Compute bmap extent alignments in a separate function
+      [07c72e556299] xfs: Process allocated extent in a separate function
+      [301519674699] xfs: Introduce error injection to allocate only minlen size extents for files
+      [560ab6c0d12e] xfs: Fix 'set but not used' warning in xfs_bmap_compute_alignments()
+
+Christoph Hellwig (3):
+      [01ea173e103e] xfs: fix up non-directory creation in SGID directories
+      [f22c7f877773] xfs: refactor xfs_file_fsync
+      [ae29e4220fd3] xfs: reduce ilock acquisitions in xfs_file_fsync
+
+Darrick J. Wong (42):
+      [6da1b4b1ab36] xfs: fix an ABBA deadlock in xfs_rename
+      [1aecf3734a95] xfs: fix chown leaking delalloc quota blocks when fssetxattr fails
+      [b8055ed6779d] xfs: reduce quota reservation when doing a dax unwritten extent conversion
+      [4abe21ad67a7] xfs: clean up quota reservation callsites
+      [8554650003b8] xfs: create convenience wrappers for incore quota block reservations
+      [35b1101099e8] xfs: remove xfs_trans_unreserve_quota_nblks completely
+      [ad4a74739708] xfs: clean up icreate quota reservation calls
+      [7ac6eb46c9f3] xfs: fix up build warnings when quotas are disabled
+      [02b7ee4eb613] xfs: reserve data and rt quota at the same time
+      [3a1af6c317d0] xfs: refactor common transaction/inode/quota allocation idiom
+      [3de4eb106fcc] xfs: allow reservation of rtblocks with xfs_trans_alloc_inode
+      [f273387b0485] xfs: refactor reflink functions to use xfs_trans_alloc_inode
+      [f2f7b9ff62a2] xfs: refactor inode creation transaction/inode/quota allocation idiom
+      [7317a03df703] xfs: refactor inode ownership change transaction/inode/quota allocation idiom
+      [5c615f0feb9a] xfs: remove xfs_qm_vop_chown_reserve
+      [fea7aae6cecf] xfs: rename code to error in xfs_ioctl_setattr
+      [2a4bdfa8558c] xfs: shut down the filesystem if we screw up quota reservation
+      [a636b1d1cf73] xfs: trigger all block gc scans when low on quota space
+      [f41a0716f4b0] xfs: don't stall cowblocks scan if we can't take locks
+      [9a537de3b009] xfs: xfs_inode_free_quota_blocks should scan project quota
+      [3d4feec00673] xfs: move and rename xfs_inode_free_quota_blocks to avoid conflicts
+      [111068f80eac] xfs: pass flags and return gc errors from xfs_blockgc_free_quota
+      [4ca74205685e] xfs: try worst case space reservation upfront in xfs_reflink_remap_extent
+      [766aabd59929] xfs: flush eof/cowblocks if we can't reserve quota for file blocks
+      [c237dd7c7094] xfs: flush eof/cowblocks if we can't reserve quota for inode creation
+      [758303d14499] xfs: flush eof/cowblocks if we can't reserve quota for chown
+      [38899f809994] xfs: add a tracepoint for blockgc scans
+      [85c5b27075ba] xfs: refactor xfs_icache_free_{eof,cow}blocks call sites
+      [a1a7d05a0576] xfs: flush speculative space allocations when we run out of space
+      [f83d436aef5d] xfs: increase the default parallelism levels of pwork clients
+      [05a302a17062] xfs: set WQ_SYSFS on all workqueues in debug mode
+      [f9296569837c] xfs: relocate the eofb/cowb workqueue functions
+      [0461a320e33a] xfs: hide xfs_icache_free_eofblocks
+      [b943c0cd5615] xfs: hide xfs_icache_free_cowblocks
+      [865ac8e253c9] xfs: remove trivial eof/cowblocks functions
+      [ce2d3bbe0647] xfs: consolidate incore inode radix tree posteof/cowblocks tags
+      [9669f51de5c0] xfs: consolidate the eofblocks and cowblocks workers
+      [419567534e16] xfs: only walk the incore inode tree once per blockgc scan
+      [c9a6526fe7ae] xfs: rename block gc start and stop functions
+      [894ecacf0f27] xfs: parallelize block preallocation garbage collection
+      [47bd6d3457fb] xfs: expose the blockgc workqueue knobs publicly
+      [0fa4a10a2f5f] xfs: don't bounce the iolock between free_{eof,cow}blocks
+
+Eric Biggers (1):
+      [eaf92540a918] xfs: remove a stale comment from xfs_file_aio_write_checks()
+
+Gao Xiang (2):
+      [ce5e1062e253] xfs: rename `new' to `delta' in xfs_growfs_data_private()
+      [07aabd9c4a88] xfs: get rid of xfs_growfs_{data,log}_t
+
+Jeffrey Mitchell (1):
+      [8aa921a95335] xfs: set inode size after creating symlink
+
+Yumei Huang (1):
+      [88a9e03beef2] xfs: Fix assert failure in xfs_setattr_size()
+
+Zorro Lang (1):
+      [bc41fa5321f9] libxfs: expose inobtcount in xfs geometry
+
+
+Code Diffstat:
+
+ Documentation/admin-guide/xfs.rst |  41 ++++
+ fs/xfs/libxfs/xfs_alloc.c         |  50 +++++
+ fs/xfs/libxfs/xfs_alloc.h         |   3 +
+ fs/xfs/libxfs/xfs_attr.c          |  22 +-
+ fs/xfs/libxfs/xfs_bmap.c          | 315 ++++++++++++++++++---------
+ fs/xfs/libxfs/xfs_dir2.h          |   2 -
+ fs/xfs/libxfs/xfs_dir2_sf.c       |   2 +-
+ fs/xfs/libxfs/xfs_errortag.h      |   6 +-
+ fs/xfs/libxfs/xfs_fs.h            |   1 +
+ fs/xfs/libxfs/xfs_inode_fork.c    |  27 +++
+ fs/xfs/libxfs/xfs_inode_fork.h    |  63 ++++++
+ fs/xfs/libxfs/xfs_sb.c            |   2 +
+ fs/xfs/scrub/common.c             |   4 +-
+ fs/xfs/xfs_bmap_item.c            |  10 +
+ fs/xfs/xfs_bmap_util.c            |  81 ++++---
+ fs/xfs/xfs_buf.c                  |  30 ++-
+ fs/xfs/xfs_buf.h                  |  11 +-
+ fs/xfs/xfs_dquot.c                |   8 +-
+ fs/xfs/xfs_error.c                |   6 +
+ fs/xfs/xfs_file.c                 | 114 +++++-----
+ fs/xfs/xfs_fsops.c                |  32 +--
+ fs/xfs/xfs_fsops.h                |   4 +-
+ fs/xfs/xfs_globals.c              |   7 +-
+ fs/xfs/xfs_icache.c               | 438 ++++++++++++++++++++------------------
+ fs/xfs/xfs_icache.h               |  24 +--
+ fs/xfs/xfs_inode.c                | 134 ++++++++----
+ fs/xfs/xfs_ioctl.c                |  75 +++----
+ fs/xfs/xfs_iomap.c                |  50 ++---
+ fs/xfs/xfs_iops.c                 |  28 +--
+ fs/xfs/xfs_iwalk.c                |   5 +-
+ fs/xfs/xfs_linux.h                |   3 +-
+ fs/xfs/xfs_log.c                  | 140 +++++++++---
+ fs/xfs/xfs_log.h                  |   4 +-
+ fs/xfs/xfs_mount.c                |  43 +---
+ fs/xfs/xfs_mount.h                |  10 +-
+ fs/xfs/xfs_mru_cache.c            |   2 +-
+ fs/xfs/xfs_pwork.c                |  25 +--
+ fs/xfs/xfs_pwork.h                |   4 +-
+ fs/xfs/xfs_qm.c                   | 116 ++--------
+ fs/xfs/xfs_quota.h                |  49 +++--
+ fs/xfs/xfs_reflink.c              | 109 ++++++----
+ fs/xfs/xfs_rtalloc.c              |   5 +
+ fs/xfs/xfs_super.c                |  82 +++----
+ fs/xfs/xfs_super.h                |   6 +
+ fs/xfs/xfs_symlink.c              |  15 +-
+ fs/xfs/xfs_sysctl.c               |  15 +-
+ fs/xfs/xfs_sysctl.h               |   3 +-
+ fs/xfs/xfs_trace.c                |   1 +
+ fs/xfs/xfs_trace.h                |  50 ++++-
+ fs/xfs/xfs_trans.c                | 195 +++++++++++++++++
+ fs/xfs/xfs_trans.h                |  13 ++
+ fs/xfs/xfs_trans_dquot.c          |  73 +++++--
+ 52 files changed, 1600 insertions(+), 958 deletions(-)
