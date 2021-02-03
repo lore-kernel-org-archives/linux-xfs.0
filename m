@@ -2,184 +2,267 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7C4AC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 13:49:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B0C1C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 14:26:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DFC564DE8
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 13:49:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20EA264F53
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 14:26:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232374AbhBCNtV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Feb 2021 08:49:21 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:37478 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232319AbhBCNsY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Feb 2021 08:48:24 -0500
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1l7IVN-00005y-Nw; Wed, 03 Feb 2021 13:47:38 +0000
-Date:   Wed, 3 Feb 2021 14:47:34 +0100
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Shaokun Zhang <zhangshaokun@hisilicon.com>,
-        linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH -next] xfs: Fix unused variable 'mp' warning
-Message-ID: <20210203134734.4oameuq262qdejwl@wittgenstein>
-References: <1612341558-22171-1-git-send-email-zhangshaokun@hisilicon.com>
- <20210203093037.v2bhmjqrq7n5mlxx@wittgenstein>
- <20210203124117.GA16923@lst.de>
+        id S232903AbhBCOZp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Feb 2021 09:25:45 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:55302 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232014AbhBCOZO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Feb 2021 09:25:14 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1612362226;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=8FNrciBzY0ur516m6hODkmTd/J2pbDTwO2ioGp9YwF0=;
+        b=R54Mk3028B7jNfyYXfn5awKrap0g0gysuH4kCfZyrtFssBvyKgFaOdJCpAVRuEOfT4ZxjQ
+        AwIThZMYNtSsgFpoGGsmQfLMnaqWmmrFJ3A3bEbnMlXFiPafl0ScgzZ1A7IGbECl7Hsw9b
+        5cws/v/8VfpCH25XJTAcLetDfEXnuM4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-404-QDvjYnlaOPWm9cGEHdgu3w-1; Wed, 03 Feb 2021 09:23:45 -0500
+X-MC-Unique: QDvjYnlaOPWm9cGEHdgu3w-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8A0CA195D565;
+        Wed,  3 Feb 2021 14:23:43 +0000 (UTC)
+Received: from bfoster (ovpn-114-23.rdu2.redhat.com [10.10.114.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C8BA95D6A8;
+        Wed,  3 Feb 2021 14:23:38 +0000 (UTC)
+Date:   Wed, 3 Feb 2021 09:23:37 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v6 6/7] xfs: support shrinking unused space in the last AG
+Message-ID: <20210203142337.GB3647012@bfoster>
+References: <20210126125621.3846735-1-hsiangkao@redhat.com>
+ <20210126125621.3846735-7-hsiangkao@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210203124117.GA16923@lst.de>
+In-Reply-To: <20210126125621.3846735-7-hsiangkao@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 03, 2021 at 01:41:17PM +0100, Christoph Hellwig wrote:
-> I don't think declaring a variable inside a switch statement is a good
-
-Yeah. (I would think that the compiler would complain about this.)
-
-> idea.  This is what I had lying around but never got around finishing
-> up and submitting:
+On Tue, Jan 26, 2021 at 08:56:20PM +0800, Gao Xiang wrote:
+> As the first step of shrinking, this attempts to enable shrinking
+> unused space in the last allocation group by fixing up freespace
+> btree, agi, agf and adjusting super block and use a helper
+> xfs_ag_shrink_space() to fixup the last AG.
 > 
+> This can be all done in one transaction for now, so I think no
+> additional protection is needed.
+> 
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 > ---
-> From 5e79886f08ca4dd96c9a508a380dfeb73cd4b529 Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Wed, 3 Feb 2021 13:38:27 +0100
-> Subject: xfs: remove the possibly unused mp variable in xfs_file_compat_ioctl
+>  fs/xfs/xfs_fsops.c | 64 ++++++++++++++++++++++++++++++----------------
+>  fs/xfs/xfs_trans.c |  1 -
+>  2 files changed, 42 insertions(+), 23 deletions(-)
 > 
-> The mp variable in xfs_file_compat_ioctl is only used when
-> BROKEN_X86_ALIGNMENT is define.  Remove it and just open code the
-> dereference in a few places.
-> 
-> Fixes: f736d93d76d3 ("xfs: support idmapped mounts")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_ioctl32.c | 9 ++++-----
->  1 file changed, 4 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index e11139e18021c1..daf73cb53a05bb 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -420,7 +420,6 @@ xfs_file_compat_ioctl(
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 6c4ab5e31054..4bcea22f7b3f 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -38,7 +38,7 @@ xfs_resizefs_init_new_ags(
+>  	struct aghdr_init_data	*id,
+>  	xfs_agnumber_t		oagcount,
+>  	xfs_agnumber_t		nagcount,
+> -	xfs_rfsblock_t		*delta)
+> +	int64_t			*delta)
 >  {
->  	struct inode		*inode = file_inode(filp);
->  	struct xfs_inode	*ip = XFS_I(inode);
-> -	struct xfs_mount	*mp = ip->i_mount;
->  	void			__user *arg = compat_ptr(p);
+>  	xfs_rfsblock_t		nb = mp->m_sb.sb_dblocks + *delta;
 >  	int			error;
+> @@ -76,33 +76,41 @@ xfs_growfs_data_private(
+>  	xfs_agnumber_t		nagcount;
+>  	xfs_agnumber_t		nagimax = 0;
+>  	xfs_rfsblock_t		nb, nb_div, nb_mod;
+> -	xfs_rfsblock_t		delta;
+> +	int64_t			delta;
+>  	xfs_agnumber_t		oagcount;
+>  	struct xfs_trans	*tp;
+> +	bool			extend;
+>  	struct aghdr_init_data	id = {};
 >  
-> @@ -429,7 +428,7 @@ xfs_file_compat_ioctl(
->  	switch (cmd) {
->  #if defined(BROKEN_X86_ALIGNMENT)
->  	case XFS_IOC_FSGEOMETRY_V1_32:
-> -		return xfs_compat_ioc_fsgeometry_v1(mp, arg);
-> +		return xfs_compat_ioc_fsgeometry_v1(ip->i_mount, arg);
->  	case XFS_IOC_FSGROWFSDATA_32: {
->  		struct xfs_growfs_data	in;
+>  	nb = in->newblocks;
+> -	if (nb < mp->m_sb.sb_dblocks)
+> -		return -EINVAL;
+> -	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
+> +	if (nb == mp->m_sb.sb_dblocks)
+> +		return 0;
+> +
+> +	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
+> +	if (error)
+>  		return error;
+> -	error = xfs_buf_read_uncached(mp->m_ddev_targp,
+> +
+> +	if (nb > mp->m_sb.sb_dblocks) {
+> +		error = xfs_buf_read_uncached(mp->m_ddev_targp,
+>  				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
+>  				XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+> -	if (error)
+> -		return error;
+> -	xfs_buf_relse(bp);
+> +		if (error)
+> +			return error;
+> +		xfs_buf_relse(bp);
+> +	}
 >  
-> @@ -438,7 +437,7 @@ xfs_file_compat_ioctl(
->  		error = mnt_want_write_file(filp);
+>  	nb_div = nb;
+>  	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
+>  	nagcount = nb_div + (nb_mod != 0);
+>  	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
+>  		nagcount--;
+> -		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
+> -		if (nb < mp->m_sb.sb_dblocks)
+> +		if (nagcount < 2)
+>  			return -EINVAL;
+
+What's the reason for the nagcount < 2 check? IIRC we warn about this
+configuration at mkfs time, but allow it to proceed. Is it just that we
+don't want to accidentally put the fs into an agcount == 1 state that
+was originally formatted with >1 AGs?
+
+What about the case where we attempt to grow an agcount == 1 fs but
+don't enlarge enough to add the second AG? Does this change error
+behavior in that case?
+
+> +		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
+>  	}
+> +
+>  	delta = nb - mp->m_sb.sb_dblocks;
+> +	extend = (delta > 0);
+>  	oagcount = mp->m_sb.sb_agcount;
+>  
+>  	/* allocate the new per-ag structures */
+> @@ -110,22 +118,34 @@ xfs_growfs_data_private(
+>  		error = xfs_initialize_perag(mp, nagcount, &nagimax);
 >  		if (error)
 >  			return error;
-> -		error = xfs_growfs_data(mp, &in);
-> +		error = xfs_growfs_data(ip->i_mount, &in);
->  		mnt_drop_write_file(filp);
->  		return error;
+> +	} else if (nagcount < oagcount) {
+> +		/* TODO: shrinking the entire AGs hasn't yet completed */
+> +		return -EINVAL;
 >  	}
-> @@ -450,7 +449,7 @@ xfs_file_compat_ioctl(
->  		error = mnt_want_write_file(filp);
+>  
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
+> -			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
+> +			(extend ? XFS_GROWFS_SPACE_RES(mp) : -delta), 0,
+> +			XFS_TRANS_RESERVE, &tp);
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_resizefs_init_new_ags(mp, &id, oagcount, nagcount, &delta);
+> -	if (error)
+> -		goto out_trans_cancel;
+> -
+> +	if (extend) {
+> +		error = xfs_resizefs_init_new_ags(mp, &id, oagcount,
+> +						  nagcount, &delta);
+> +		if (error)
+> +			goto out_trans_cancel;
+> +	}
+>  	xfs_trans_agblocks_delta(tp, id.nfree);
+
+It looks like id isn't used until the resize call above. Is this call
+relevant for the shrink case?
+
+>  
+> -	/* If there are new blocks in the old last AG, extend it. */
+> +	/* If there are some blocks in the last AG, resize it. */
+>  	if (delta) {
+
+This patch added a (nb == mp->m_sb.sb_dblocks) shortcut check at the top
+of the function. Should we ever get to this point with delta == 0? (If
+not, maybe convert it to an assert just to be safe.)
+
+> -		error = xfs_ag_extend_space(mp, tp, &id, delta);
+> +		if (extend) {
+> +			error = xfs_ag_extend_space(mp, tp, &id, delta);
+> +		} else {
+> +			id.agno = nagcount - 1;
+> +			error = xfs_ag_shrink_space(mp, &tp, &id, -delta);
+
+xfs_ag_shrink_space() looks like it only accesses id->agno. Perhaps just
+pass in agno for now..?
+
+> +		}
+> +
 >  		if (error)
->  			return error;
-> -		error = xfs_growfs_rt(mp, &in);
-> +		error = xfs_growfs_rt(ip->i_mount, &in);
->  		mnt_drop_write_file(filp);
->  		return error;
+>  			goto out_trans_cancel;
 >  	}
-> @@ -480,7 +479,7 @@ xfs_file_compat_ioctl(
->  	case XFS_IOC_FSBULKSTAT_32:
->  	case XFS_IOC_FSBULKSTAT_SINGLE_32:
->  	case XFS_IOC_FSINUMBERS_32:
-> -		return xfs_compat_ioc_fsbulkstat(mp, cmd, arg);
-> +		return xfs_compat_ioc_fsbulkstat(ip->i_mount, cmd, arg);
+> @@ -137,15 +157,15 @@ xfs_growfs_data_private(
+>  	 */
+>  	if (nagcount > oagcount)
+>  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_AGCOUNT, nagcount - oagcount);
+> -	if (nb > mp->m_sb.sb_dblocks)
+> +	if (nb != mp->m_sb.sb_dblocks)
+>  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_DBLOCKS,
+>  				 nb - mp->m_sb.sb_dblocks);
 
-In the final version of you conversion (after the file_user_ns()
-introduction) we simply pass down the fp so the patch needs to be?
+Maybe use delta here?
 
-If you're happy with it I can apply it on top. I don't want to rebase
-this late. I can also send it separate as a reply in case this too much
-in the body of this mail.
+>  	if (id.nfree)
+>  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, id.nfree);
+>  
 
-Patch passes cross-compilation for arm64 and native x864-64 and xfstests
-pass too:
+id.nfree tracks newly added free space in the growfs space. Is it not
+used in the shrink case because the allocation handles this for us?
 
----
-From a364f6e9de91cea671765cbd0e33fb823ebbba3c Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Wed, 3 Feb 2021 14:34:16 +0100
-Subject: [PATCH] xfs: remove the possibly unused mp variable in
- xfs_file_compat_ioctl
+>  	/*
+> -	 * update in-core counters now to reflect the real numbers
+> -	 * (especially sb_fdblocks)
+> +	 * update in-core counters now to reflect the real numbers (especially
+> +	 * sb_fdblocks). And xfs_validate_sb_write() can pass for shrinkfs.
+>  	 */
+>  	if (xfs_sb_version_haslazysbcount(&mp->m_sb))
+>  		xfs_log_sb(tp);
+> @@ -165,7 +185,7 @@ xfs_growfs_data_private(
+>  	 * If we expanded the last AG, free the per-AG reservation
+>  	 * so we can reinitialize it with the new size.
+>  	 */
+> -	if (delta) {
+> +	if (extend && delta) {
+>  		struct xfs_perag	*pag;
+>  
+>  		pag = xfs_perag_get(mp, id.agno);
 
-The mp variable in xfs_file_compat_ioctl is only used when
-BROKEN_X86_ALIGNMENT is define.  Remove it and just open code the
-dereference in a few places.
+We call xfs_fs_reserve_ag_blocks() a bit further down before we exit
+this function. xfs_ag_shrink_space() from the previous patch is intended
+to deal with perag reservation changes for shrink, but it looks like the
+reserve call further down could potentially reset mp->m_finobt_nores to
+false if it previously might have been set to true.
 
-Fixes: f736d93d76d3 ("xfs: support idmapped mounts")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_ioctl32.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+Brian
 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 926427b19573..33c09ec8e6c0 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -438,7 +438,6 @@ xfs_file_compat_ioctl(
- {
- 	struct inode		*inode = file_inode(filp);
- 	struct xfs_inode	*ip = XFS_I(inode);
--	struct xfs_mount	*mp = ip->i_mount;
- 	void			__user *arg = compat_ptr(p);
- 	int			error;
- 
-@@ -458,7 +457,7 @@ xfs_file_compat_ioctl(
- 		return xfs_ioc_space(filp, &bf);
- 	}
- 	case XFS_IOC_FSGEOMETRY_V1_32:
--		return xfs_compat_ioc_fsgeometry_v1(mp, arg);
-+		return xfs_compat_ioc_fsgeometry_v1(ip->i_mount, arg);
- 	case XFS_IOC_FSGROWFSDATA_32: {
- 		struct xfs_growfs_data	in;
- 
-@@ -467,7 +466,7 @@ xfs_file_compat_ioctl(
- 		error = mnt_want_write_file(filp);
- 		if (error)
- 			return error;
--		error = xfs_growfs_data(mp, &in);
-+		error = xfs_growfs_data(ip->i_mount, &in);
- 		mnt_drop_write_file(filp);
- 		return error;
- 	}
-@@ -479,7 +478,7 @@ xfs_file_compat_ioctl(
- 		error = mnt_want_write_file(filp);
- 		if (error)
- 			return error;
--		error = xfs_growfs_rt(mp, &in);
-+		error = xfs_growfs_rt(ip->i_mount, &in);
- 		mnt_drop_write_file(filp);
- 		return error;
- 	}
-
-base-commit: f736d93d76d3e97d6986c6d26c8eaa32536ccc5c
--- 
-2.30.0
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index e72730f85af1..fd2cbf414b80 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -419,7 +419,6 @@ xfs_trans_mod_sb(
+>  		tp->t_res_frextents_delta += delta;
+>  		break;
+>  	case XFS_TRANS_SB_DBLOCKS:
+> -		ASSERT(delta > 0);
+>  		tp->t_dblocks_delta += delta;
+>  		break;
+>  	case XFS_TRANS_SB_AGCOUNT:
+> -- 
+> 2.27.0
+> 
 
