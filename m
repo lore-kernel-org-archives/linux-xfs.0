@@ -2,295 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A25D7C433E6
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 20:54:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0F01C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 21:21:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5CF0864F6C
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 20:54:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 418E564F68
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 21:21:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232073AbhBCUxp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Feb 2021 15:53:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58650 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232701AbhBCUwp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Feb 2021 15:52:45 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 21F0364F5C;
-        Wed,  3 Feb 2021 20:52:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612385524;
-        bh=Cmx6O0A+0fS53bYklYizQ5Fl//NjYi2+nmePBWdk3tg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=uuHvX5z95G3A9TrH2xPGq6UEgrzITBZxw9CnauvXxTWdx9ak8pNS5X44dfoLUU+ej
-         eOllMic2FSjQXK/vcM28Qv7U9pBtf9t+rnc4t/xm+Pmg56zvJ2XyUQFSYZl/VuG/Xd
-         wpHi6ayXXD/Db1K6MavzR3oTMhLuuxi/Xm9Ah0vvNTvgpm0tToROpQwBmHuDlJFwcz
-         hU5kcgqRKLoaAhG29XFsj/NrYbTXizhk3R+tHX7YRPVQYxCTXevKZALwbj45YRmBj1
-         w2IaO8g2of627k33K+vPYl9caB1a0+bSNX2JyIKctdk2FA8v7pIgHu8b2zCPq2l49d
-         rQoA+KRvi8e6A==
-Date:   Wed, 3 Feb 2021 12:52:03 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: test delalloc quota leak when chprojid fails
-Message-ID: <20210203205203.GF7193@magnolia>
-References: <20210202194101.GQ7193@magnolia>
- <20210203161155.GF3647012@bfoster>
+        id S229966AbhBCVVA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Feb 2021 16:21:00 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:41263 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229973AbhBCVU7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Feb 2021 16:20:59 -0500
+Received: from dread.disaster.area (pa49-181-52-82.pa.nsw.optusnet.com.au [49.181.52.82])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 0D2D6100A99;
+        Thu,  4 Feb 2021 08:20:14 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1l7PZN-005qjZ-Nm; Thu, 04 Feb 2021 08:20:13 +1100
+Date:   Thu, 4 Feb 2021 08:20:13 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/5] xfs: various log stuff...
+Message-ID: <20210203212013.GV4662@dread.disaster.area>
+References: <20210128044154.806715-1-david@fromorbit.com>
+ <20210201123943.GA3281245@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210203161155.GF3647012@bfoster>
+In-Reply-To: <20210201123943.GA3281245@infradead.org>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=7pwokN52O8ERr2y46pWGmQ==:117 a=7pwokN52O8ERr2y46pWGmQ==:17
+        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=7-415B0cAAAA:8
+        a=jEHcYJ-KuxDvHgv19YUA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 03, 2021 at 11:11:55AM -0500, Brian Foster wrote:
-> On Tue, Feb 02, 2021 at 11:41:01AM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Feb 01, 2021 at 12:39:43PM +0000, Christoph Hellwig wrote:
+> On Thu, Jan 28, 2021 at 03:41:49PM +1100, Dave Chinner wrote:
+> > Hi folks,
 > > 
-> > This is a regression test for a bug in the XFS implementation of
-> > FSSETXATTR.  When we try to change a file's project id, the quota
-> > reservation code will update the incore quota reservations for delayed
-> > allocation blocks.  Unfortunately, it does this before we finish
-> > validating all the FSSETXATTR parameters, which means that if we decide
-> > to bail out, we also fail to undo the incore changes.
+> > Quick patch dump for y'all. A couple of minor cleanups to the
+> > log behaviour, a fix for the CIL throttle hang and a couple of
+> > patches to rework the cache flushing that journal IO does to reduce
+> > the number of cache flushes by a couple of orders of magnitude.
 > > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  .gitignore          |    1 +
-> >  src/Makefile        |    3 +-
-> >  src/chprojid_fail.c |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/765       |   63 +++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/765.out   |    3 ++
-> >  tests/xfs/group     |    1 +
-> >  6 files changed, 156 insertions(+), 1 deletion(-)
-> >  create mode 100644 src/chprojid_fail.c
-> >  create mode 100755 tests/xfs/765
-> >  create mode 100644 tests/xfs/765.out
-> > 
-> ...
-> > diff --git a/src/chprojid_fail.c b/src/chprojid_fail.c
-> > new file mode 100644
-> > index 00000000..e7467372
-> > --- /dev/null
-> > +++ b/src/chprojid_fail.c
-> > @@ -0,0 +1,86 @@
-> > +// SPDX-License-Identifier: GPL-2.0-or-later
-> > +/*
-> > + * Copyright (c) 2021 Oracle.  All Rights Reserved.
-> > + * Author: Darrick J. Wong <djwong@kernel.org>
-> > + *
-> > + * Regression test for failing to undo delalloc quota reservations when
-> > + * changing project id and we fail some other FSSETXATTR validation.
-> > + */
-> > +#include <sys/types.h>
-> > +#include <sys/stat.h>
-> > +#include <fcntl.h>
-> > +#include <unistd.h>
-> > +#include <sys/ioctl.h>
-> > +#include <stdio.h>
-> > +#include <string.h>
-> > +#include <errno.h>
-> > +#include <linux/fs.h>
-> > +
-> > +static char zerobuf[65536];
-> > +
-> > +int
-> > +main(
-> > +	int		argc,
-> > +	char		*argv[])
-> > +{
-> > +	struct fsxattr	fa;
-> > +	ssize_t		sz;
-> > +	int		fd, ret;
-> > +
-> > +	if (argc < 2) {
-> > +		printf("Usage: %s filename\n", argv[0]);
-> > +		return 1;
-> > +	}
-> > +
-> > +	fd = open(argv[1], O_CREAT | O_TRUNC | O_RDWR, 0600);
-> > +	if (fd < 0) {
-> > +		perror(argv[1]);
-> > +		return 2;
-> > +	}
-> > +
-> > +	/* Zero the project id and the extent size hint. */
-> > +	ret = ioctl(fd, FS_IOC_FSGETXATTR, &fa);
-> > +	if (ret) {
-> > +		perror("FSGETXATTR check file");
-> > +		return 2;
-> > +	}
-> > +
-> > +	if (fa.fsx_projid != 0 || fa.fsx_extsize != 0) {
-> > +		fa.fsx_projid = 0;
-> > +		fa.fsx_extsize = 0;
-> > +		ret = ioctl(fd, FS_IOC_FSSETXATTR, &fa);
-> > +		if (ret) {
-> > +			perror("FSSETXATTR zeroing");
-> > +			return 2;
-> > +		}
-> > +	}
-> > +
-> > +	/* Dirty a few kb of a file to create delalloc extents. */
-> > +	sz = write(fd, zerobuf, sizeof(zerobuf));
-> > +	if (sz != sizeof(zerobuf)) {
-> > +		perror("delalloc write");
-> > +		return 2;
-> > +	}
-> > +
-> > +	/*
-> > +	 * Fail to chprojid and set an extent size hint after we wrote the file.
-> > +	 */
+> > All passes fstests with no regressions, no performance regressions
+> > from fsmark, dbench and various fio workloads, some big gains even
+> > on fast storage.
 > 
-> Might be helpful to document exactly why this command should fail.
+> Can you elaborate on the big gains?
 
-Fixed.
+See the commit messages. dbench simulates fileserver behaviour with
+extremely frequent fsync/->commit_metadata flush pointsi and that
+shows gains at high client counts when logbsize=32k. fsmark is a
+highly concurrent metadata modification worklaod designed to push
+the journal to it's performance and scalability limits, etc, and
+that shows 25% gains on logbsize=32k, bringing it up to the same
+performance as logbsize=256k on the test machine.
 
-> > +	ret = ioctl(fd, FS_IOC_FSGETXATTR, &fa);
-> > +	if (ret) {
-> > +		perror("FSGETXATTR");
-> > +		return 2;
-> > +	}
-> > +
-> > +	fa.fsx_projid = 23652;
-> > +	fa.fsx_extsize = 2;
-> > +	fa.fsx_xflags |= FS_XFLAG_EXTSIZE;
-> > +
-> > +	ret = ioctl(fd, FS_IOC_FSSETXATTR, &fa);
-> > +	if (ret) {
-> > +		printf("FSSETXATTRR should fail: %s\n", strerror(errno));
-> > +		return 0;
-> > +	}
-> > +
-> > +	/* Uhoh, that FSSETXATTR call should have failed! */
-> > +	return 3;
-> > +}
-> > diff --git a/tests/xfs/765 b/tests/xfs/765
-> > new file mode 100755
-> > index 00000000..769b545b
-> > --- /dev/null
-> > +++ b/tests/xfs/765
-> > @@ -0,0 +1,63 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0-or-later
-> > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 765
-> > +#
-> > +# Regression test for failing to undo delalloc quota reservations when changing
-> > +# project id but we fail some other part of FSSETXATTR validation.  If we fail
-> > +# the test, we trip debugging assertions in dmesg.
-> > +#
-> > +# The appropriate XFS patch is:
-> > +# xfs: fix chown leaking delalloc quota blocks when fssetxattr fails
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1    # failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/quota
-> > +
-> > +# real QA test starts here
-> > +_supported_fs xfs
-> > +_require_xfs_debug
-> 
-> I agree with Zorro that we might as well just let this run with or
-> without debug mode..
+> Workloads for one, but also
+> what kind of storage.  For less FUA/flush to matter the device needs
+> to have a write cache, which none of the really fast SSDs even has.
 
-<nod> Fixed.
+The gains are occurring on devices that have volatile caches. 
+But that doesn't mean devices that have volatile caches are slow,
+just that they can be faster with a better cache flushing strategy.
 
-> > +_require_command "$FILEFRAG_PROG" filefrag
-> > +_require_test_program "chprojid_fail"
-> > +_require_quota
-> > +_require_scratch
-> > +
-> > +rm -f $seqres.full
-> > +
-> > +echo "Format filesystem" | tee -a $seqres.full
-> > +_scratch_mkfs > $seqres.full
-> > +_qmount_option 'prjquota'
-> > +_qmount
-> > +_require_prjquota $SCRATCH_DEV
-> > +
-> > +echo "Run test program"
-> > +$XFS_QUOTA_PROG -f -x -c 'report -ap' $SCRATCH_MNT >> $seqres.full
-> > +$here/src/chprojid_fail $SCRATCH_MNT/blah >> $seqres.full
-> > +res=$?
-> > +if [ $res -ne 0 ]; then
-> > +	echo "chprojid_fail returned $res, expected 0"
-> > +fi
-> 
-> Can we just use the output from the test program as the golden test
-> output?
+And yes, as you would expect, I don't see any change in behaviour on
+data center SSDs that have no volatile caches because the block
+layer elides cache flushes for them anyway.
 
-Hm, I guess so?  Not sure I want to encode the exact failure in the
-test, but I don't see why not.
+But, really, device performance improvements really aren't the
+motivation for this. The real motivation is removing orders of
+magnitude of flush points from the software layers below the
+filesystem. Stuff like software RAID, thin provisioning and other
+functionality that must obey the flush/fua IOs they receive
+regardless of whether the underlying hardware needs them or not.
 
-Admittedly it's done that way because originally I was going to wire
-this up as a generic test, but then noticed that not all the other
-fssetxattr implementations actually error out on nonzero extent size and
-decided to pull this back into tests/xfs/.
+Avoiding flush/fua for the journal IO means that RAID5/6 can cache
+partial stripe writes from the XFS journal rather than having to
+flush the partial stripe update for every journal IO. dm-thin
+doesn't need to commit open transactions and flush all the dirty
+data over newly allocated regions on every journal IO to a device
+pool (i.e. cache flushes from one thinp device in a pool cause all
+other thinp devices in the pool to stall new allocations until the
+flush/fua is done). And so on.
 
-> > +$XFS_QUOTA_PROG -f -x -c 'report -ap' $SCRATCH_MNT >> $seqres.full
-> > +$FILEFRAG_PROG -v $SCRATCH_MNT/blah >> $seqres.full
-> > +$FILEFRAG_PROG -v $SCRATCH_MNT/blah 2>&1 | grep -q delalloc || \
-> > +	echo "file didn't get delalloc extents?"
-> 
-> This could technically cause a failure even if the test did the right
-> thing if writeback happens to occur, right? I suppose that's exceedingly
-> unlikely, but might at least be worth documenting in the event that
-> somebody has to deal with that scenario sometime in the future.
+There's no question at all that reducing the number of flush/fua
+triggers is a good thing to be doing, regardless of the storage or
+workloads that I've done validation testing on. The fact I've found
+that on a decent performance SSD (120k randr IOPS, 60k randw IOPS)
+shows a 25% increase in performance for journal IO bound workload
+indicates just how much default configurations can be bound by the
+journal cache flushes...
 
-Yeah.  I'll add a comment explaining that the delalloc grep is to check
-that we even set up the test correctly.
+> So I'd only really expect gains from that on consumer grade SSDs and
+> hard drives.
 
---D
+Sure, but those are exactly the devices we have always optimised
+cache flushing for....
 
-> 
-> Brian
-> 
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/765.out b/tests/xfs/765.out
-> > new file mode 100644
-> > index 00000000..f44ba43e
-> > --- /dev/null
-> > +++ b/tests/xfs/765.out
-> > @@ -0,0 +1,3 @@
-> > +QA output created by 765
-> > +Format filesystem
-> > +Run test program
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index f406a9b9..fb78b0d7 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -544,6 +544,7 @@
-> >  762 auto quick rw scrub realtime
-> >  763 auto quick rw realtime
-> >  764 auto quick repair
-> > +765 auto quick quota
-> >  908 auto quick bigtime
-> >  909 auto quick bigtime quota
-> >  910 auto quick inobtcount
-> > 
-> 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
