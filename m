@@ -5,135 +5,211 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 471AAC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 15:03:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FEF7C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 15:46:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CB5564F86
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 15:03:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDE6B64F91
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 15:46:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233617AbhBCPDW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Feb 2021 10:03:22 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:28796 "EHLO
+        id S233837AbhBCPqu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Feb 2021 10:46:50 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:52273 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233210AbhBCPDP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Feb 2021 10:03:15 -0500
+        by vger.kernel.org with ESMTP id S234491AbhBCPpm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Feb 2021 10:45:42 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612364507;
+        s=mimecast20190719; t=1612367052;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=d7YFEMkh/ZwxqCF94V1CuYOkLJQVwRqXnixKpPLudTU=;
-        b=T1/Nt8bQaJuXozxl6+QJCep0Fp2X+Ua8LyeOPdxxWMWo9B1qA8jNmo+R6Qkrx05u/Z/NJV
-        yZx70FBrbtq7eI5E85r7c6yiHYyuzz7GTwyiK6oWJPYfpXlwSXs6MIXhT9ByQdgbpc59vY
-        40RB/QHvzcLJDwEN+gPZnvVdNMiK9s8=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-30-48c9ex72N-CdSMuVaowaYA-1; Wed, 03 Feb 2021 10:01:45 -0500
-X-MC-Unique: 48c9ex72N-CdSMuVaowaYA-1
-Received: by mail-pl1-f197.google.com with SMTP id 42so21041plb.10
-        for <linux-xfs@vger.kernel.org>; Wed, 03 Feb 2021 07:01:44 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=d7YFEMkh/ZwxqCF94V1CuYOkLJQVwRqXnixKpPLudTU=;
-        b=CFd/yoL4YMwRewGNlVSBToNMVLUi6z+qyBm3PouBsLoNouyTPdXuO3RfLXML5MYNHj
-         NsIFsppWVV57ZZ2qKfvfowSt3HoswaMzQnoCAcw7jKk2s/2x/c7S+bOBlRPvZ4j540q/
-         m7KWTN0lIJMi+lYhlWd/QmaErS0bLAv7DidCDwGldmKLZbZFhneA0QHQUAn+YsEqEIgL
-         PNBNRuVBpa/HSmWH85iAiJYKcRv5QNtczix1OsWRpvV2vYW0Gd29rIcURLL3L+rftB51
-         +5DZF01v5s6wUELE9QxhCPJyYeD8zxSmttGShfw+QhwMT90XnF4a2D/19dnESoGB0djK
-         pO+Q==
-X-Gm-Message-State: AOAM5328rFC9LLJ8oKWypE62uy19UIGDcrwrxnCtLHrWfkIim4QUqgZF
-        F9+RISOnvgUlEegsuOPtCnuesAsNaT1eNPeXN8dCot/ChDFRHBCOki9DP43l43TvHaMK6obHPti
-        SLMDh3XJRl1koGDjrIGLv
-X-Received: by 2002:a62:aa0a:0:b029:1c2:1baa:eaea with SMTP id e10-20020a62aa0a0000b02901c21baaeaeamr3593696pff.52.1612364503825;
-        Wed, 03 Feb 2021 07:01:43 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJza+4YmHc6QinzaAHYjq/YHAHgQgLrfT/TwRjhXwKvDifzzUt2nLmAdCz8mLn+O5OklCgdEBw==
-X-Received: by 2002:a62:aa0a:0:b029:1c2:1baa:eaea with SMTP id e10-20020a62aa0a0000b02901c21baaeaeamr3593681pff.52.1612364503605;
-        Wed, 03 Feb 2021 07:01:43 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id n7sm2483026pjm.49.2021.02.03.07.01.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Feb 2021 07:01:42 -0800 (PST)
-Date:   Wed, 3 Feb 2021 23:01:32 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Dave Chinner <david@fromorbit.com>,
+        bh=ugg+CWM5SkNKzVb2MG10+l6bncTiK6LEIm5bJrWNBnM=;
+        b=VL9N9tjs8knOq4HlOLo8d2qOA60lVgaeo/QIwSMoiepyQIJLqGLoTwGRUaUuU2bkepDGFW
+        ION3vMW7lfFn43ZCQ1fZSCTkCOrdPJF/ZCS2caBa/7VH2gXVQudEO+ahgArgjGBSMscpS7
+        MaKWS8RqolDWv2zca18ShUv/T0ZV+I0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-494-ksRcdiFDM6CJ24HFd2xX7Q-1; Wed, 03 Feb 2021 10:44:10 -0500
+X-MC-Unique: ksRcdiFDM6CJ24HFd2xX7Q-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1AD155127;
+        Wed,  3 Feb 2021 15:44:09 +0000 (UTC)
+Received: from localhost (unknown [10.66.61.36])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8DC6A7046A;
+        Wed,  3 Feb 2021 15:44:08 +0000 (UTC)
+Date:   Thu, 4 Feb 2021 00:01:16 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>,
         Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v6 7/7] xfs: add error injection for per-AG resv failure
- when shrinkfs
-Message-ID: <20210203150132.GB935062@xiangao.remote.csb>
-References: <20210126125621.3846735-1-hsiangkao@redhat.com>
- <20210126125621.3846735-8-hsiangkao@redhat.com>
- <20210203142359.GC3647012@bfoster>
+        Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: test delalloc quota leak when chprojid fails
+Message-ID: <20210203160115.GE14354@localhost.localdomain>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Brian Foster <bfoster@redhat.com>
+References: <20210202194101.GQ7193@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210203142359.GC3647012@bfoster>
+In-Reply-To: <20210202194101.GQ7193@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Brian,
-
-On Wed, Feb 03, 2021 at 09:23:59AM -0500, Brian Foster wrote:
-> On Tue, Jan 26, 2021 at 08:56:21PM +0800, Gao Xiang wrote:
-> > per-AG resv failure after fixing up freespace is hard to test in an
-> > effective way, so directly add an error injection path to observe
-> > such error handling path works as expected.
-> > 
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_ag.c       | 5 +++++
-> >  fs/xfs/libxfs/xfs_errortag.h | 4 +++-
-> >  fs/xfs/xfs_error.c           | 2 ++
-> >  3 files changed, 10 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> > index c6e68e265269..5076913c153f 100644
-> > --- a/fs/xfs/libxfs/xfs_ag.c
-> > +++ b/fs/xfs/libxfs/xfs_ag.c
-> > @@ -23,6 +23,7 @@
-> >  #include "xfs_ag_resv.h"
-> >  #include "xfs_health.h"
-> >  #include "xfs_error.h"
-> > +#include "xfs_errortag.h"
-> >  #include "xfs_bmap.h"
-> >  #include "xfs_defer.h"
-> >  #include "xfs_log_format.h"
-> > @@ -559,6 +560,10 @@ xfs_ag_shrink_space(
-> >  	be32_add_cpu(&agf->agf_length, -len);
-> >  
-> >  	err2 = xfs_ag_resv_init(agibp->b_pag, *tpp);
-> > +
-> > +	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_SHRINKFS_AG_RESV_FAIL))
-> > +		err2 = -ENOSPC;
-> > +
+On Tue, Feb 02, 2021 at 11:41:01AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Seems reasonable, but I feel like this could be broadened to serve as a
-> generic perag reservation error tag. I suppose we might not be able to
-> use it on a clean mount, but perhaps it could be reused for growfs and
-> remount. Hm?
+> This is a regression test for a bug in the XFS implementation of
+> FSSETXATTR.  When we try to change a file's project id, the quota
+> reservation code will update the incore quota reservations for delayed
+> allocation blocks.  Unfortunately, it does this before we finish
+> validating all the FSSETXATTR parameters, which means that if we decide
+> to bail out, we also fail to undo the incore changes.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-I think it could be done in that way, yet currently the logic is just to
-verify the shrink error handling case above rather than extend to actually
-error inject per-AG reservation for now... I could rename the errortag
-for later reuse (some better naming? I'm not good at this...) in advance
-yet real per-AG reservation error injection might be more complicated
-than just error out with -ENOSPC, and it's somewhat out of scope of this
-patchset for now...
+Looks like this patch comes from djwong-devel :) It can't be merged into
+xfstests-dev mainline directly.
+
+  Applying: xfs: test delalloc quota leak when chprojid fails
+  error: patch failed: src/Makefile:29
+  error: src/Makefile: patch does not apply
+  error: patch failed: tests/xfs/group:544
+  error: tests/xfs/group: patch does not apply
+
+Anyway, I think Eryu can solve it. I just have another question below.
+
+>  .gitignore          |    1 +
+>  src/Makefile        |    3 +-
+>  src/chprojid_fail.c |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/765       |   63 +++++++++++++++++++++++++++++++++++++
+>  tests/xfs/765.out   |    3 ++
+>  tests/xfs/group     |    1 +
+>  6 files changed, 156 insertions(+), 1 deletion(-)
+>  create mode 100644 src/chprojid_fail.c
+>  create mode 100755 tests/xfs/765
+>  create mode 100644 tests/xfs/765.out
+> 
+
+[snip]
+
+> +# FS QA Test No. 765
+> +#
+> +# Regression test for failing to undo delalloc quota reservations when changing
+> +# project id but we fail some other part of FSSETXATTR validation.  If we fail
+> +# the test, we trip debugging assertions in dmesg.
+> +#
+> +# The appropriate XFS patch is:
+> +# xfs: fix chown leaking delalloc quota blocks when fssetxattr fails
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/quota
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_xfs_debug
+
+Why CONFIG_XFS_DEBUG=y is necessary for this case? Maybe I miss something, but
+I didn't see any debug injection in this case. If a kernel is only built with
+CONFIG_XFS_WARN=y, I still can reproduce this bug [1].
+
+Even if the XFS_WARN and XFS_DEUBG are all unset, I think this case can be run
+without any failures. So why not just let it run? We could recommand using
+debug xfs kernel, but general kernel don't need to skip this test.
 
 Thanks,
-Gao Xiang
+Zorro
 
+[1]
+# ./check xfs/765
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/x86_64 hp-dl380pg8-01 4.18.0 #1 SMP Sat Jan 23 14:15:14 EST 2021
+MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1 /dev/mapper/xfscratch
+MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/xfscratch /mnt/scratch
+
+xfs/765 _check_dmesg: something found in dmesg (see /home/xfstests-dev/results//xfs/765.dmesg)
+
+Ran: xfs/765
+Failures: xfs/765
+Failed 1 of 1 tests
+
+[root@hp-dl380pg8-01 xfstests-dev]# less /home/xfstests-dev/results//xfs/765.dmesg
+[30020.559403] run fstests xfs/765 at 2021-02-03 10:36:02
+...
+[30028.411797] XFS: Assertion failed: dqp->q_res_bcount >= be64_to_cpu(dqp->q_core.d_bcount), file: fs/xfs/xfs_trans_dquot.c, line: 471
+
+> +_require_command "$FILEFRAG_PROG" filefrag
+> +_require_test_program "chprojid_fail"
+> +_require_quota
+> +_require_scratch
+> +
+> +rm -f $seqres.full
+> +
+> +echo "Format filesystem" | tee -a $seqres.full
+> +_scratch_mkfs > $seqres.full
+> +_qmount_option 'prjquota'
+> +_qmount
+> +_require_prjquota $SCRATCH_DEV
+> +
+> +echo "Run test program"
+> +$XFS_QUOTA_PROG -f -x -c 'report -ap' $SCRATCH_MNT >> $seqres.full
+> +$here/src/chprojid_fail $SCRATCH_MNT/blah >> $seqres.full
+> +res=$?
+> +if [ $res -ne 0 ]; then
+> +	echo "chprojid_fail returned $res, expected 0"
+> +fi
+> +$XFS_QUOTA_PROG -f -x -c 'report -ap' $SCRATCH_MNT >> $seqres.full
+> +$FILEFRAG_PROG -v $SCRATCH_MNT/blah >> $seqres.full
+> +$FILEFRAG_PROG -v $SCRATCH_MNT/blah 2>&1 | grep -q delalloc || \
+> +	echo "file didn't get delalloc extents?"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/765.out b/tests/xfs/765.out
+> new file mode 100644
+> index 00000000..f44ba43e
+> --- /dev/null
+> +++ b/tests/xfs/765.out
+> @@ -0,0 +1,3 @@
+> +QA output created by 765
+> +Format filesystem
+> +Run test program
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index f406a9b9..fb78b0d7 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -544,6 +544,7 @@
+>  762 auto quick rw scrub realtime
+>  763 auto quick rw realtime
+>  764 auto quick repair
+> +765 auto quick quota
+>  908 auto quick bigtime
+>  909 auto quick bigtime quota
+>  910 auto quick inobtcount
 > 
-> Brian
 
