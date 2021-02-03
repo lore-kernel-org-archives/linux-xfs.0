@@ -4,126 +4,143 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 808A5C433E6
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 19:44:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B164C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 19:51:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3EEBB64F8D
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 19:44:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C094E64E3E
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 19:51:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230386AbhBCTon (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Feb 2021 14:44:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44840 "EHLO mail.kernel.org"
+        id S231359AbhBCTvR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Feb 2021 14:51:17 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45600 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231153AbhBCToh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Feb 2021 14:44:37 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AC4F864F93;
-        Wed,  3 Feb 2021 19:43:54 +0000 (UTC)
+        id S229785AbhBCTvM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Feb 2021 14:51:12 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E009664F60;
+        Wed,  3 Feb 2021 19:50:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612381434;
-        bh=ZUpAQYI1TBt/lULUtGTnMdIuF9w5lxxqT6Rc8h4naKI=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=KBUu+jmQ+cLaZsYvV/8m21K5nmyhSTl1q1gR/uh56g8b5aZJair8HX6Crlqabnh2L
-         w6PRB+9ucG7x1ltVyRCQxPtfnk0JNhQvp13z8Kwvcc9ye24be9r99ltfDy+VdVrgmb
-         GqLg62A07Zr5oiQSx6565p1BkDmV8H9qr8OdhdDyL0HsPE0WmnbAOh7uqtn+EBwtVI
-         y6YXMg+nNZtq0Y6KawnjJkeFCyPUhbe/fky1QeRcL+z64bwltJfJRe9B5JQRwAiQkI
-         uOgUCrIgdda6qzqNAhoYVjAfzgG0AHJE08ix4EmOfay4rt+c59lBxsRdOPBaixruh4
-         O7gCOwsFxO90A==
-Subject: [PATCH 2/2] xfs_db: add bigtime upgrade path
+        s=k20201202; t=1612381832;
+        bh=wdF/Fc9jwsa9b0DUVfemfcMAk2So9pKCLCNGeFH1QUs=;
+        h=Date:From:To:Cc:Subject:From;
+        b=UPb6z9eaUbxSvlzuZ1YHYLUsOLxdJhycSIaGc6TnN9uxpaot1UoyFZ/FSPGUO4WJc
+         a73nrZ9cy+YZwrrSLndqgqTLXSa80yq2/HFKS3VBFSNEZmz146qxJD1u1xzQQoq6Rj
+         okb0kiyeEJFTZ84up5ajjThJwLMXzd2KDL0S2fh5viSV6nAMoX5af5AUlZ7mQ3AuI3
+         UUqhG2umo4+VihZ+8NFHpjznrtPyFaEe3q+EOICyN5uVHioHavRHqB9xxGCLfTAPrh
+         HY9uFai7NWjEDayqJUyqqzzD0VLKX/HjWGhe6D4nmNBOOpeXf8dc0+WW7ZWFW83eXh
+         1Ts1S4dRinUkA==
+Date:   Wed, 3 Feb 2021 11:50:31 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        hch@lst.de
-Date:   Wed, 03 Feb 2021 11:43:54 -0800
-Message-ID: <161238143420.1278478.12499496658916932300.stgit@magnolia>
-In-Reply-To: <161238142268.1278478.11531156340909081942.stgit@magnolia>
-References: <161238142268.1278478.11531156340909081942.stgit@magnolia>
-User-Agent: StGit/0.19
+To:     sandeen@sandeen.net
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs_repair: check dquot id and type
+Message-ID: <20210203195031.GD7193@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enable users to upgrade their filesystems to bigtime support.
+Make sure that we actually check the type and id of an ondisk dquot.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/sb.c              |   15 +++++++++++++++
- man/man8/xfs_admin.8 |    6 ++++++
- man/man8/xfs_db.8    |    4 ++++
- 3 files changed, 25 insertions(+)
+ repair/quotacheck.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 55 insertions(+), 3 deletions(-)
 
-
-diff --git a/db/sb.c b/db/sb.c
-index c303c321..2e94bed1 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -597,6 +597,7 @@ version_help(void)
- " 'version log2'     - enable v2 log format\n"
- " 'version needsrepair' - flag filesystem as requiring repair\n"
- " 'version inobtcount' - enable inode btree counters\n"
-+" 'version bigtime'  - enable timestamps beyond year 2038\n"
- "\n"
- "The version function prints currently enabled features for a filesystem\n"
- "according to the version field of its primary superblock.\n"
-@@ -877,6 +878,20 @@ version_f(
- 			}
+diff --git a/repair/quotacheck.c b/repair/quotacheck.c
+index 55bcc048..0ea2deb5 100644
+--- a/repair/quotacheck.c
++++ b/repair/quotacheck.c
+@@ -234,12 +234,48 @@ quotacheck_adjust(
+ 	libxfs_irele(ip);
+ }
  
- 			v5features.ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
-+		} else if (!strcasecmp(argv[1], "bigtime")) {
-+			if (xfs_sb_version_hasbigtime(&mp->m_sb)) {
-+				dbprintf(
-+		_("bigtime feature is already enabled\n"));
-+				return 1;
-+			}
-+			if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-+				dbprintf(
-+		_("bigtime feature cannot be enabled on pre-V5 filesystems\n"));
-+				exitcode = 2;
-+				return 1;
-+			}
++/* Check the ondisk dquot's id and type match what the incore dquot expects. */
++static bool
++qc_dquot_check_type(
++	struct xfs_mount	*mp,
++	xfs_dqtype_t		type,
++	xfs_dqid_t		id,
++	struct xfs_disk_dquot	*ddq)
++{
++	uint8_t			ddq_type;
 +
-+			v5features.incompat |= XFS_SB_FEAT_INCOMPAT_BIGTIME;
- 		} else if (!strcasecmp(argv[1], "extflg")) {
- 			switch (XFS_SB_VERSION_NUM(&mp->m_sb)) {
- 			case XFS_SB_VERSION_1:
-diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-index 8421e28f..f3b97b02 100644
---- a/man/man8/xfs_admin.8
-+++ b/man/man8/xfs_admin.8
-@@ -138,6 +138,12 @@ This reduces mount time by speeding up metadata space reservation calculations.
- The filesystem cannot be downgraded after this feature is enabled.
- Once enabled, the filesystem will not be writable by older kernels.
- This feature was added to Linux 5.10.
-+.TP
-+.B bigtime
-+Upgrade a filesystem to support larger timestamps up to the year 2486.
-+The filesystem cannot be downgraded after this feature is enabled.
-+Once enabled, the filesystem will not be mountable by older kernels.
-+This feature was added to Linux 5.10.
- .RE
- .TP
- .BI \-U " uuid"
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 0335317e..ca959d16 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -979,6 +979,10 @@ option is specified and the filesystem is formatted with the V5 format.
- Support for the inode btree counters feature can be enabled by using the
- .B inobtcount
- option if the filesystem is formatted with the V5 format.
-+Support for timestamps between the years 2038 and 2486 can be enabled by
-+using the
-+.B bigtime
-+option if the filesystem is formatted with the V5 format.
- .IP
- If no argument is given, the current version and feature bits are printed.
- With one argument, this command will write the updated version number
-
++	ddq_type = ddq->d_type & XFS_DQTYPE_REC_MASK;
++
++	if (be32_to_cpu(ddq->d_id) != id)
++		return false;
++
++	/*
++	 * V5 filesystems always expect an exact type match.  V4 filesystems
++	 * expect an exact match for user dquots and for non-root group and
++	 * project dquots.
++	 */
++	if (xfs_sb_version_hascrc(&mp->m_sb) || type == XFS_DQTYPE_USER || !id)
++		return ddq_type == type;
++
++	/*
++	 * V4 filesystems support either group or project quotas, but not both
++	 * at the same time.  The non-user quota file can be switched between
++	 * group and project quota uses depending on the mount options, which
++	 * means that we can encounter the other type when we try to load quota
++	 * defaults.  Quotacheck will soon reset the the entire quota file
++	 * (including the root dquot) anyway, but don't log scary corruption
++	 * reports to dmesg.
++	 */
++	return ddq_type == XFS_DQTYPE_GROUP || ddq_type == XFS_DQTYPE_PROJ;
++}
++
+ /* Compare this on-disk dquot against whatever we observed. */
+ static void
+ qc_check_dquot(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_disk_dquot	*ddq,
+-	struct qc_dquots	*dquots)
++	struct qc_dquots	*dquots,
++	xfs_dqid_t		dqid)
+ {
+ 	struct qc_rec		*qrec;
+ 	struct qc_rec		empty = {
+@@ -253,6 +289,22 @@ qc_check_dquot(
+ 	if (!qrec)
+ 		qrec = &empty;
+ 
++	if (!qc_dquot_check_type(mp, dquots->type, dqid, ddq)) {
++		const char	*dqtypestr;
++
++		dqtypestr = qflags_typestr(ddq->d_type & XFS_DQTYPE_REC_MASK);
++		if (dqtypestr)
++			do_warn(_("%s id %u saw type %s id %u\n"),
++					qflags_typestr(dquots->type), dqid,
++					dqtypestr, be32_to_cpu(ddq->d_id));
++		else
++			do_warn(_("%s id %u saw type %x id %u\n"),
++					qflags_typestr(dquots->type), dqid,
++					ddq->d_type & XFS_DQTYPE_REC_MASK,
++					be32_to_cpu(ddq->d_id));
++		chkd_flags = 0;
++	}
++
+ 	if (be64_to_cpu(ddq->d_bcount) != qrec->bcount) {
+ 		do_warn(_("%s id %u has bcount %llu, expected %"PRIu64"\n"),
+ 				qflags_typestr(dquots->type), id,
+@@ -327,11 +379,11 @@ _("cannot read %s inode %"PRIu64", block %"PRIu64", disk block %"PRIu64", err=%d
+ 		}
+ 
+ 		dqb = bp->b_addr;
+-		dqid = map->br_startoff * dqperchunk;
++		dqid = (map->br_startoff + bno) * dqperchunk;
+ 		for (dqnr = 0;
+ 		     dqnr < dqperchunk && dqid <= UINT_MAX;
+ 		     dqnr++, dqb++, dqid++)
+-			qc_check_dquot(mp, &dqb->dd_diskdq, dquots);
++			qc_check_dquot(mp, &dqb->dd_diskdq, dquots, dqid);
+ 		libxfs_buf_relse(bp);
+ 	}
+ 
