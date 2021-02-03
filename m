@@ -3,218 +3,282 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 222B2C433DB
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 18:21:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4EFCC433DB
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 18:31:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A96F64E2E
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 18:21:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9260A64F50
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Feb 2021 18:31:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231648AbhBCSVX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Feb 2021 13:21:23 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58494 "EHLO mail.kernel.org"
+        id S231363AbhBCSbk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Feb 2021 13:31:40 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59872 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229631AbhBCSVW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Feb 2021 13:21:22 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2874964DE1
-        for <linux-xfs@vger.kernel.org>; Wed,  3 Feb 2021 18:20:41 +0000 (UTC)
+        id S232159AbhBCSbj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Feb 2021 13:31:39 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D022664DE1;
+        Wed,  3 Feb 2021 18:30:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612376441;
-        bh=0pbtghIPfjnBvC4XSsWSkYFNCTOil52qTOuVJ/upLt8=;
-        h=Date:From:To:Subject:From;
-        b=GFBmxnIH0JKeqGE522xQzup/MJyxvLMzk5kRoA8DIojbrucBpIWhHQVugB4wwYXDM
-         fjONMNS1gOiqlKMk09/DXoH04DHGzoRD5YVbYhydxi1tFx1ZFcuOl1hBz1RIRL/lz6
-         JBgEDcMAkb2bGEE8yspzf9TYXHof/z3PWF3cHeek4Ns2dBShKL3ZVqtYOLxtR3UOGY
-         nKP2gF5V0r8pwpOqq0NSdFRRy472X9Y3Lbt1ye3pS3mT35wX06ttyeSe9yOqVKpD2J
-         hC5GT6JJt/wKLOYYC7C6qEDXXUYa4ZiZJkd8XxaNH5Yxp1lZQFdsT3PWYs26jtHi7S
-         fZ50nbgcxt8VA==
-Date:   Wed, 3 Feb 2021 10:20:40 -0800
+        s=k20201202; t=1612377058;
+        bh=P8zcKTA8sj6sS1alAy5qPER50f0PPWDn8JiZzyFF9Iw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=pbz5CfE3t6bnc9ol6T9LxGbw35aNeGFqqqAbdNFEEBcHvikYU0gqLEVEh15TjJTeO
+         MLoAKd05x9qUqPajAz1Lz2EeE5zp6RH0kv19OGprfVzGa46/p7ZYPpWxzRZSdeCNhU
+         sHg3/hlV7wyOHMxpjvl6iNReRho8rcno22mrUmRf6SprQwkvYVjtUi3O3rAuQDUVux
+         h0wTZ3gAYGHI4SIRpiMzCCETpHmhJGaaHbGTEuD5DvNfy83S5RStUEt5PlbKy5MXIO
+         qraezLj2SBV219C3DufAzYb58VlUX9+SIG3iXjLCWYI1Q4BmHyCBBMhIsfLJ8FIMmz
+         HuZ01a+RPFrhw==
+Date:   Wed, 3 Feb 2021 10:30:57 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 07aabd9c4a88
-Message-ID: <20210203182040.GC7193@magnolia>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs_db: support the needsrepair feature flag in the
+ version command
+Message-ID: <20210203183057.GB7190@magnolia>
+References: <161076028124.3386490.8050189989277321393.stgit@magnolia>
+ <161076028723.3386490.10074737936252642930.stgit@magnolia>
+ <20210119143714.GA1646807@bfoster>
+ <20210202210915.GV7193@magnolia>
+ <20210203130721.GA3647012@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20210203130721.GA3647012@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Wed, Feb 03, 2021 at 08:07:21AM -0500, Brian Foster wrote:
+> On Tue, Feb 02, 2021 at 01:09:15PM -0800, Darrick J. Wong wrote:
+> > On Tue, Jan 19, 2021 at 09:37:14AM -0500, Brian Foster wrote:
+> > > On Fri, Jan 15, 2021 at 05:24:47PM -0800, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > Teach the xfs_db version command about the 'needsrepair' flag, which can
+> > > > be used to force the system administrator to repair the filesystem with
+> > > > xfs_repair.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  db/check.c           |    5 ++
+> > > >  db/sb.c              |  153 ++++++++++++++++++++++++++++++++++++++++++++++++--
+> > > >  db/xfs_admin.sh      |   10 ++-
+> > > >  man/man8/xfs_admin.8 |   15 +++++
+> > > >  man/man8/xfs_db.8    |    5 ++
+> > > >  5 files changed, 178 insertions(+), 10 deletions(-)
+> > > > 
+> > > > 
+> ...
+> > > > diff --git a/db/sb.c b/db/sb.c
+> > > > index d09f653d..fcc2a0ed 100644
+> > > > --- a/db/sb.c
+> > > > +++ b/db/sb.c
+> ...
+> > > > @@ -717,8 +836,23 @@ version_f(
+> > > >  			return 0;
+> > > >  		}
+> > > >  
+> > > > +		if (xfs_sb_version_needsrepair(&mp->m_sb)) {
+> > > > +			dbprintf(_("%s: filesystem needs xfs_repair\n"),
+> > > > +				progname);
+> > > > +			return 0;
+> > > > +		}
+> > > > +
+> > > >  		/* Logic here derived from the IRIX xfs_chver(1M) script. */
+> > > > -		if (!strcasecmp(argv[1], "extflg")) {
+> > > > +		if (!strcasecmp(argv[1], "needsrepair")) {
+> > > > +			if (!xfs_sb_version_hascrc(&mp->m_sb)) {
+> > > > +				dbprintf(
+> > > > +		_("needsrepair flag cannot be enabled on pre-V5 filesystems\n"));
+> > > > +				exitcode = 2;
+> > > > +				return 1;
+> > > 
+> > > Hmm.. I see that exitcode 1 means error && xfs_repair while exitcode 2
+> > > means error && !xfs_repair, but I'm still not sure I follow the high
+> > > level error semantics, particularly if we happen to fail updating
+> > > secondary supers. I wonder if it would be more straightforward to have
+> > > xfs_db only return an error when an update attempt occurs and fails and
+> > > then let xfs_admin run xfs_repair if status == 0 && NEEDSREPAIR is set.
+> > 
+> > Hm.  I'd be even more tempted to make it run if xfs_db just failed.
+> > 
+> > > I suppose the various other ".. bit already set" or "v5 super required"
+> > > conditions don't really need to be errors and thus repair would only run
+> > > in those cases if NEEDSREPAIR was still set on the fs. Otherwise if
+> > > xfs_db fails we dump an error message and encourage the user to run
+> > > xfs_repair themselves.
+> > 
+> > Yeah, that does seem more reasonable.  I'll change xfs_admin to force a
+> > run through repair if the NEEDSREPAIR feature is set or if the xfs_db
+> > command failed, since that probably means something's wrong with the fs.
+> > 
+> 
+> Perhaps, or the storage if an I/O happens to fail or something. I'm not
+> sure we should go that route where if the version upgrade happens to
+> fail we do a "well this operation failed, but something is probably
+> wrong so let me try and repair that for you." I'd personally be kind of
+> annoyed by that if I didn't have an opportunity to analyze the problem
+> before making the decision to run a (potentially destructive) repair
+> operation. I agree it's an unlikely situation, but IMO the automatically
+> invoked repair should be isolated to the specific case that warrants it
+> and everything else should probably just bail out.
 
-The for-next branch of the xfs-linux repository at:
+Hm, good point, considering how long it can take to run repair.  I'm
+sure there's some sysadmin out there who would actually prefer to nuke
+the whole fs/node if the upgrade fails.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> The user really doesn't need to know or care that a repair is involved
+> in the first place, so ISTM that either "upgrade operation succeeded" or
+> "upgrade operation failed, fs has problems" is fairly expected failure
+> handling behavior (as opposed to allowing things like "upgrade operation
+> failed, we ran repair anyways and fixed some other stuff, maybe try that
+> upgrade again since the last one basically just invoked xfs_repair?").
+> If we really wanted to be careful, we could even run a repair -n first
+> and require it succeed before attempting to touch the superblock. That
+> might be annoying in cases where repair takes forever, but at least if
+> the user bails on it it would likely be before we've modified anything.
 
-has just been updated.
+...or make it more likely that the user ^Cs and never uses our
+scurrilous upgrader tool. :)
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  I'll add the dquot corruption fix tomorrow, but I
-wanted to get this megaupdate into for-next today for a little more
-magic smoke leakage testing.
+I dunno, I've a slight preference for /knowing/ that the fs isn't a
+crazy tangle of crap before we try to upgrade it.  Though as I've
+mentioned before, resize2fs has weird heuristics to guesstimate if a
+filesystem is clean "enough", and ext4 even tracks the last fsck and
+mount times.  I don't really want to go down that path.
 
-The new head of the for-next branch is commit:
+Perhaps we should simply document xfs_repair -n as a preparation step?
 
-07aabd9c4a88 xfs: get rid of xfs_growfs_{data,log}_t
+--D
 
-New Commits:
-
-Brian Foster (12):
-      [10fb9ac1251f] xfs: rename xfs_wait_buftarg() to xfs_buftarg_drain()
-      [8321ddb2fa29] xfs: don't drain buffer lru on freeze and read-only remount
-      [50d25484bebe] xfs: sync lazy sb accounting on quiesce of read-only mounts
-      [37444fc4cc39] xfs: lift writable fs check up into log worker task
-      [9e54ee0fc9ef] xfs: separate log cleaning from log quiesce
-      [303591a0a947] xfs: cover the log during log quiesce
-      [b0eb9e118266] xfs: don't reset log idle state on covering checkpoints
-      [f46e5a174655] xfs: fold sbcount quiesce logging into log covering
-      [5232b9315034] xfs: remove duplicate wq cancel and log force from attr quiesce
-      [ea2064da4592] xfs: remove xfs_quiesce_attr()
-      [5b0ad7c2a52d] xfs: cover the log on freeze instead of cleaning it
-      [4533fc631547] xfs: fix unused log variable in xfs_log_cover()
-
-Chandan Babu R (17):
-      [b9b7e1dc56c5] xfs: Add helper for checking per-inode extent count overflow
-      [727e1acd297c] xfs: Check for extent overflow when trivally adding a new extent
-      [85ef08b5a667] xfs: Check for extent overflow when punching a hole
-      [f5d927491914] xfs: Check for extent overflow when adding dir entries
-      [0dbc5cb1a91c] xfs: Check for extent overflow when removing dir entries
-      [02092a2f034f] xfs: Check for extent overflow when renaming dir entries
-      [3a19bb147c72] xfs: Check for extent overflow when adding/removing xattrs
-      [c442f3086d5a] xfs: Check for extent overflow when writing to unwritten extent
-      [5f1d5bbfb2e6] xfs: Check for extent overflow when moving extent from cow to data fork
-      [ee898d78c354] xfs: Check for extent overflow when remapping an extent
-      [bcc561f21f11] xfs: Check for extent overflow when swapping extents
-      [f9fa87169d2b] xfs: Introduce error injection to reduce maximum inode fork extent count
-      [aff4db57d510] xfs: Remove duplicate assert statement in xfs_bmap_btalloc()
-      [0961fddfdd3f] xfs: Compute bmap extent alignments in a separate function
-      [07c72e556299] xfs: Process allocated extent in a separate function
-      [301519674699] xfs: Introduce error injection to allocate only minlen size extents for files
-      [560ab6c0d12e] xfs: Fix 'set but not used' warning in xfs_bmap_compute_alignments()
-
-Christoph Hellwig (3):
-      [01ea173e103e] xfs: fix up non-directory creation in SGID directories
-      [f22c7f877773] xfs: refactor xfs_file_fsync
-      [ae29e4220fd3] xfs: reduce ilock acquisitions in xfs_file_fsync
-
-Darrick J. Wong (42):
-      [6da1b4b1ab36] xfs: fix an ABBA deadlock in xfs_rename
-      [1aecf3734a95] xfs: fix chown leaking delalloc quota blocks when fssetxattr fails
-      [b8055ed6779d] xfs: reduce quota reservation when doing a dax unwritten extent conversion
-      [4abe21ad67a7] xfs: clean up quota reservation callsites
-      [8554650003b8] xfs: create convenience wrappers for incore quota block reservations
-      [35b1101099e8] xfs: remove xfs_trans_unreserve_quota_nblks completely
-      [ad4a74739708] xfs: clean up icreate quota reservation calls
-      [7ac6eb46c9f3] xfs: fix up build warnings when quotas are disabled
-      [02b7ee4eb613] xfs: reserve data and rt quota at the same time
-      [3a1af6c317d0] xfs: refactor common transaction/inode/quota allocation idiom
-      [3de4eb106fcc] xfs: allow reservation of rtblocks with xfs_trans_alloc_inode
-      [f273387b0485] xfs: refactor reflink functions to use xfs_trans_alloc_inode
-      [f2f7b9ff62a2] xfs: refactor inode creation transaction/inode/quota allocation idiom
-      [7317a03df703] xfs: refactor inode ownership change transaction/inode/quota allocation idiom
-      [5c615f0feb9a] xfs: remove xfs_qm_vop_chown_reserve
-      [fea7aae6cecf] xfs: rename code to error in xfs_ioctl_setattr
-      [2a4bdfa8558c] xfs: shut down the filesystem if we screw up quota reservation
-      [a636b1d1cf73] xfs: trigger all block gc scans when low on quota space
-      [f41a0716f4b0] xfs: don't stall cowblocks scan if we can't take locks
-      [9a537de3b009] xfs: xfs_inode_free_quota_blocks should scan project quota
-      [3d4feec00673] xfs: move and rename xfs_inode_free_quota_blocks to avoid conflicts
-      [111068f80eac] xfs: pass flags and return gc errors from xfs_blockgc_free_quota
-      [4ca74205685e] xfs: try worst case space reservation upfront in xfs_reflink_remap_extent
-      [766aabd59929] xfs: flush eof/cowblocks if we can't reserve quota for file blocks
-      [c237dd7c7094] xfs: flush eof/cowblocks if we can't reserve quota for inode creation
-      [758303d14499] xfs: flush eof/cowblocks if we can't reserve quota for chown
-      [38899f809994] xfs: add a tracepoint for blockgc scans
-      [85c5b27075ba] xfs: refactor xfs_icache_free_{eof,cow}blocks call sites
-      [a1a7d05a0576] xfs: flush speculative space allocations when we run out of space
-      [f83d436aef5d] xfs: increase the default parallelism levels of pwork clients
-      [05a302a17062] xfs: set WQ_SYSFS on all workqueues in debug mode
-      [f9296569837c] xfs: relocate the eofb/cowb workqueue functions
-      [0461a320e33a] xfs: hide xfs_icache_free_eofblocks
-      [b943c0cd5615] xfs: hide xfs_icache_free_cowblocks
-      [865ac8e253c9] xfs: remove trivial eof/cowblocks functions
-      [ce2d3bbe0647] xfs: consolidate incore inode radix tree posteof/cowblocks tags
-      [9669f51de5c0] xfs: consolidate the eofblocks and cowblocks workers
-      [419567534e16] xfs: only walk the incore inode tree once per blockgc scan
-      [c9a6526fe7ae] xfs: rename block gc start and stop functions
-      [894ecacf0f27] xfs: parallelize block preallocation garbage collection
-      [47bd6d3457fb] xfs: expose the blockgc workqueue knobs publicly
-      [0fa4a10a2f5f] xfs: don't bounce the iolock between free_{eof,cow}blocks
-
-Eric Biggers (1):
-      [eaf92540a918] xfs: remove a stale comment from xfs_file_aio_write_checks()
-
-Gao Xiang (2):
-      [ce5e1062e253] xfs: rename `new' to `delta' in xfs_growfs_data_private()
-      [07aabd9c4a88] xfs: get rid of xfs_growfs_{data,log}_t
-
-Jeffrey Mitchell (1):
-      [8aa921a95335] xfs: set inode size after creating symlink
-
-Yumei Huang (1):
-      [88a9e03beef2] xfs: Fix assert failure in xfs_setattr_size()
-
-Zorro Lang (1):
-      [bc41fa5321f9] libxfs: expose inobtcount in xfs geometry
-
-
-Code Diffstat:
-
- Documentation/admin-guide/xfs.rst |  41 ++++
- fs/xfs/libxfs/xfs_alloc.c         |  50 +++++
- fs/xfs/libxfs/xfs_alloc.h         |   3 +
- fs/xfs/libxfs/xfs_attr.c          |  22 +-
- fs/xfs/libxfs/xfs_bmap.c          | 315 ++++++++++++++++++---------
- fs/xfs/libxfs/xfs_dir2.h          |   2 -
- fs/xfs/libxfs/xfs_dir2_sf.c       |   2 +-
- fs/xfs/libxfs/xfs_errortag.h      |   6 +-
- fs/xfs/libxfs/xfs_fs.h            |   1 +
- fs/xfs/libxfs/xfs_inode_fork.c    |  27 +++
- fs/xfs/libxfs/xfs_inode_fork.h    |  63 ++++++
- fs/xfs/libxfs/xfs_sb.c            |   2 +
- fs/xfs/scrub/common.c             |   4 +-
- fs/xfs/xfs_bmap_item.c            |  10 +
- fs/xfs/xfs_bmap_util.c            |  81 ++++---
- fs/xfs/xfs_buf.c                  |  30 ++-
- fs/xfs/xfs_buf.h                  |  11 +-
- fs/xfs/xfs_dquot.c                |   8 +-
- fs/xfs/xfs_error.c                |   6 +
- fs/xfs/xfs_file.c                 | 114 +++++-----
- fs/xfs/xfs_fsops.c                |  32 +--
- fs/xfs/xfs_fsops.h                |   4 +-
- fs/xfs/xfs_globals.c              |   7 +-
- fs/xfs/xfs_icache.c               | 438 ++++++++++++++++++++------------------
- fs/xfs/xfs_icache.h               |  24 +--
- fs/xfs/xfs_inode.c                | 134 ++++++++----
- fs/xfs/xfs_ioctl.c                |  75 +++----
- fs/xfs/xfs_iomap.c                |  50 ++---
- fs/xfs/xfs_iops.c                 |  28 +--
- fs/xfs/xfs_iwalk.c                |   5 +-
- fs/xfs/xfs_linux.h                |   3 +-
- fs/xfs/xfs_log.c                  | 140 +++++++++---
- fs/xfs/xfs_log.h                  |   4 +-
- fs/xfs/xfs_mount.c                |  43 +---
- fs/xfs/xfs_mount.h                |  10 +-
- fs/xfs/xfs_mru_cache.c            |   2 +-
- fs/xfs/xfs_pwork.c                |  25 +--
- fs/xfs/xfs_pwork.h                |   4 +-
- fs/xfs/xfs_qm.c                   | 116 ++--------
- fs/xfs/xfs_quota.h                |  49 +++--
- fs/xfs/xfs_reflink.c              | 109 ++++++----
- fs/xfs/xfs_rtalloc.c              |   5 +
- fs/xfs/xfs_super.c                |  82 +++----
- fs/xfs/xfs_super.h                |   6 +
- fs/xfs/xfs_symlink.c              |  15 +-
- fs/xfs/xfs_sysctl.c               |  15 +-
- fs/xfs/xfs_sysctl.h               |   3 +-
- fs/xfs/xfs_trace.c                |   1 +
- fs/xfs/xfs_trace.h                |  50 ++++-
- fs/xfs/xfs_trans.c                | 195 +++++++++++++++++
- fs/xfs/xfs_trans.h                |  13 ++
- fs/xfs/xfs_trans_dquot.c          |  73 +++++--
- 52 files changed, 1600 insertions(+), 958 deletions(-)
+> 
+> Brian
+> 
+> > > There are still corner cases I guess, but that does _seem_ a bit more
+> > > elegant to me. Otherwise I suppose a comment somewhere that explains
+> > > when/why to use which error code would be helpful.
+> > 
+> > <nod> I'll put them in.
+> > 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > > +			}
+> > > > +
+> > > > +			v5features.incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> > > > +		} else if (!strcasecmp(argv[1], "extflg")) {
+> > > >  			switch (XFS_SB_VERSION_NUM(&mp->m_sb)) {
+> > > >  			case XFS_SB_VERSION_1:
+> > > >  				version = 0x0004 | XFS_SB_VERSION_EXTFLGBIT;
+> > > > @@ -809,6 +943,11 @@ version_f(
+> > > >  			mp->m_sb.sb_versionnum = version;
+> > > >  			mp->m_sb.sb_features2 = features;
+> > > >  		}
+> > > > +
+> > > > +		if (!upgrade_v5_features(mp, &v5features)) {
+> > > > +			exitcode = 1;
+> > > > +			return 1;
+> > > > +		}
+> > > >  	}
+> > > >  
+> > > >  	if (argc == 3) {	/* VERSIONNUM + FEATURES2 */
+> > > > diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+> > > > index bd325da2..0e79bbf9 100755
+> > > > --- a/db/xfs_admin.sh
+> > > > +++ b/db/xfs_admin.sh
+> > > > @@ -7,9 +7,9 @@
+> > > >  status=0
+> > > >  DB_OPTS=""
+> > > >  REPAIR_OPTS=""
+> > > > -USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-U uuid] device [logdev]"
+> > > > +USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-U uuid] [-O v5_feature] device [logdev]"
+> > > >  
+> > > > -while getopts "efjlpuc:L:U:V" c
+> > > > +while getopts "efjlpuc:L:O:U:V" c
+> > > >  do
+> > > >  	case $c in
+> > > >  	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG;;
+> > > > @@ -19,6 +19,9 @@ do
+> > > >  	l)	DB_OPTS=$DB_OPTS" -r -c label";;
+> > > >  	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";;
+> > > >  	p)	DB_OPTS=$DB_OPTS" -c 'version projid32bit'";;
+> > > > +	O)	DB_OPTS=$DB_OPTS" -c 'version "$OPTARG"'";
+> > > > +		# Force repair to run by adding a single space to REPAIR_OPTS
+> > > > +		REPAIR_OPTS="$REPAIR_OPTS ";;
+> > > >  	u)	DB_OPTS=$DB_OPTS" -r -c uuid";;
+> > > >  	U)	DB_OPTS=$DB_OPTS" -c 'uuid "$OPTARG"'";;
+> > > >  	V)	xfs_db -p xfs_admin -V
+> > > > @@ -34,6 +37,7 @@ set -- extra $@
+> > > >  shift $OPTIND
+> > > >  case $# in
+> > > >  	1|2)
+> > > > +		status=0
+> > > >  		# Pick up the log device, if present
+> > > >  		if [ -n "$2" ]; then
+> > > >  			DB_OPTS=$DB_OPTS" -l '$2'"
+> > > > @@ -46,7 +50,7 @@ case $# in
+> > > >  			eval xfs_db -x -p xfs_admin $DB_OPTS $1
+> > > >  			status=$?
+> > > >  		fi
+> > > > -		if [ -n "$REPAIR_OPTS" ]
+> > > > +		if [ -n "$REPAIR_OPTS" ] && [ $status -ne 2 ]
+> > > >  		then
+> > > >  			# Hide normal repair output which is sent to stderr
+> > > >  			# assuming the filesystem is fine when a user is
+> > > > diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+> > > > index 8afc873f..b423981d 100644
+> > > > --- a/man/man8/xfs_admin.8
+> > > > +++ b/man/man8/xfs_admin.8
+> > > > @@ -6,6 +6,8 @@ xfs_admin \- change parameters of an XFS filesystem
+> > > >  [
+> > > >  .B \-eflpu
+> > > >  ] [
+> > > > +.BI \-O " feature"
+> > > > +] [
+> > > >  .BR "\-c 0" | 1
+> > > >  ] [
+> > > >  .B \-L
+> > > > @@ -103,6 +105,19 @@ The filesystem label can be cleared using the special "\c
+> > > >  " value for
+> > > >  .IR label .
+> > > >  .TP
+> > > > +.BI \-O " feature"
+> > > > +Add a new feature to the filesystem.
+> > > > +Only one feature can be specified at a time.
+> > > > +Features are as follows:
+> > > > +.RS 0.7i
+> > > > +.TP
+> > > > +.B needsrepair
+> > > > +If this is a V5 filesystem, flag the filesystem as needing repairs.
+> > > > +Until
+> > > > +.BR xfs_repair (8)
+> > > > +is run, the filesystem will not be mountable.
+> > > > +.RE
+> > > > +.TP
+> > > >  .BI \-U " uuid"
+> > > >  Set the UUID of the filesystem to
+> > > >  .IR uuid .
+> > > > diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> > > > index 58727495..7331cf19 100644
+> > > > --- a/man/man8/xfs_db.8
+> > > > +++ b/man/man8/xfs_db.8
+> > > > @@ -971,6 +971,11 @@ may toggle between
+> > > >  and
+> > > >  .B attr2
+> > > >  at will (older kernels may not support the newer version).
+> > > > +The filesystem can be flagged as requiring a run through
+> > > > +.BR xfs_repair (8)
+> > > > +if the
+> > > > +.B needsrepair
+> > > > +option is specified and the filesystem is formatted with the V5 format.
+> > > >  .IP
+> > > >  If no argument is given, the current version and feature bits are printed.
+> > > >  With one argument, this command will write the updated version number
+> > > > 
+> > > 
+> > 
+> 
