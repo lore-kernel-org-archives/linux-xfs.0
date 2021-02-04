@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 433AEC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Feb 2021 22:27:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DEB9C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Feb 2021 22:34:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC98B64FAE
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Feb 2021 22:27:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C13B164FAC
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Feb 2021 22:34:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229681AbhBDW1u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Feb 2021 17:27:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44460 "EHLO
+        id S229537AbhBDWdu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Feb 2021 17:33:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229537AbhBDW1t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Feb 2021 17:27:49 -0500
+        with ESMTP id S229511AbhBDWds (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Feb 2021 17:33:48 -0500
 Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21224C0613D6
-        for <linux-xfs@vger.kernel.org>; Thu,  4 Feb 2021 14:27:09 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F41E8C0613D6
+        for <linux-xfs@vger.kernel.org>; Thu,  4 Feb 2021 14:33:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
         :CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
         Content-ID:Content-Description:In-Reply-To;
-        bh=C6hbzntBnwy0FWvdJXFyLzMRNyCEuNeOYU8tLZC/AQA=; b=htIPv7eeIz2GdBMuvu9Q/qxgJm
-        TEOeqrUunHEqSxtrca8rugCdD5LrsG11K/dktfRMHOOkW+DnXodq+1gmztNo6D8qJp9KiDkciuxOy
-        CY9+4DPCdeOLWGMmd1VZgHO6egn/Wb6uo2fFjYPBPLj1GP6D9u9MtsMAWF8ipmMda3kj+5fgrsyKr
-        FlGwUW9a+FYS++XJK2+wGkJui/d2ZxK0GfVJvLiW593IkqduMZavhyhlBIbEobsWvPzAVBnS6pbpR
-        SNOg1qQ3IAP66qwVuEGsi7V2V0OVXzNTi+uNjUgk5IcaHHzOs7ZskrnYR+n3KDJgwGHzqbuJY31hA
-        SSX5V5sw==;
+        bh=G4DtHgK0CRyU6pnHvH3QyR0fwGjehUhzMxYZAeHtjek=; b=SFcu3P1pEeBCEd4B6jkpF0O4zt
+        xCPw7uL2cWfP7/DuuNqXUTX0O3C6yg2TF7bI8LoVBUcGh+nlOHEtVf1EW3Cph8Ev6JCWd17NbEczZ
+        5OmDup6uy6apX9hpnEhX7+5CnN7FacvKLPJjOM8fkeXOlQN5WKoDtwakEExxQwAUCBTJr0UZaucm0
+        l+2KRdGhohnrHs8LmmA87qtdP0BYBjK77kbzd6rV3mmRwVUzvXAxEy87JxduGRDoBbNbEvuLvB83u
+        U0GRKs21zIaIJKvZds5JeTmFXdSone/wG7LujmljrcFQX74XwWMmlAFW+2chE6KMdBF/0FEzgqqxt
+        c3YjRe2A==;
 Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
         (envelope-from <debbugs@buxtehude.debian.org>)
-        id 1l7n5f-00036D-CX; Thu, 04 Feb 2021 22:27:07 +0000
+        id 1l7nBT-0003o8-3e; Thu, 04 Feb 2021 22:33:07 +0000
 X-Loop: owner@bugs.debian.org
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
@@ -42,115 +42,60 @@ X-Mailer: MIME-tools 5.509 (Entity 5.509)
 Content-Type: text/plain; charset=utf-8
 From:   "Debian Bug Tracking System" <owner@bugs.debian.org>
 To:     Bastian Germann <bastiangermann@fishpost.de>
-CC:     debian-bugs-closed@lists.debian.org, linux-xfs@vger.kernel.org
-Subject: Processed (with 6 errors): xfsprogs: categorize issues
-Message-ID: <handler.s.C.161247743710530.transcript@bugs.debian.org>
-References: <242c3aec-10b9-105d-c1e7-85d5ef00851b@fishpost.de>
+CC:     linux-xfs@vger.kernel.org
+Subject: Processed: xfsprogs: confirm issues
+Message-ID: <handler.s.C.161247773813500.transcript@bugs.debian.org>
+References: <90d9e92f-1e19-0ba4-5467-73c78d161eb4@fishpost.de>
 X-Debian-PR-Package: xfsprogs
 X-Debian-PR-Source: xfsprogs
 X-Debian-PR-Message: transcript
 X-Loop: owner@bugs.debian.org
-Date:   Thu, 04 Feb 2021 22:27:07 +0000
+Date:   Thu, 04 Feb 2021 22:33:07 +0000
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 Processing commands for control@bugs.debian.org:
 
-> tags 484069 confirm
-Unknown tag/s: confirm.
-Recognized are: patch wontfix moreinfo unreproducible help security upstrea=
-m pending confirmed ipv6 lfs d-i l10n newcomer a11y ftbfs fixed-upstream fi=
-xed fixed-in-experimental sid experimental potato woody sarge sarge-ignore =
-etch etch-ignore lenny lenny-ignore squeeze squeeze-ignore wheezy wheezy-ig=
-nore jessie jessie-ignore stretch stretch-ignore buster buster-ignore bulls=
-eye bullseye-ignore bookworm bookworm-ignore trixie trixie-ignore.
-
-> tags 528356 confirm
-Unknown tag/s: confirm.
-Recognized are: patch wontfix moreinfo unreproducible help security upstrea=
-m pending confirmed ipv6 lfs d-i l10n newcomer a11y ftbfs fixed-upstream fi=
-xed fixed-in-experimental sid experimental potato woody sarge sarge-ignore =
-etch etch-ignore lenny lenny-ignore squeeze squeeze-ignore wheezy wheezy-ig=
-nore jessie jessie-ignore stretch stretch-ignore buster buster-ignore bulls=
-eye bullseye-ignore bookworm bookworm-ignore trixie trixie-ignore.
-
-> tags 570704 confirm
-Unknown tag/s: confirm.
-Recognized are: patch wontfix moreinfo unreproducible help security upstrea=
-m pending confirmed ipv6 lfs d-i l10n newcomer a11y ftbfs fixed-upstream fi=
-xed fixed-in-experimental sid experimental potato woody sarge sarge-ignore =
-etch etch-ignore lenny lenny-ignore squeeze squeeze-ignore wheezy wheezy-ig=
-nore jessie jessie-ignore stretch stretch-ignore buster buster-ignore bulls=
-eye bullseye-ignore bookworm bookworm-ignore trixie trixie-ignore.
-
-> tags 584256 moreinfo
-Bug #584256 [xfsprogs] xfsprogs: xfs_repair -n segfaults after "This is a b=
-ug"
-Added tag(s) moreinfo.
-> tags 915124 confirm
-Unknown tag/s: confirm.
-Recognized are: patch wontfix moreinfo unreproducible help security upstrea=
-m pending confirmed ipv6 lfs d-i l10n newcomer a11y ftbfs fixed-upstream fi=
-xed fixed-in-experimental sid experimental potato woody sarge sarge-ignore =
-etch etch-ignore lenny lenny-ignore squeeze squeeze-ignore wheezy wheezy-ig=
-nore jessie jessie-ignore stretch stretch-ignore buster buster-ignore bulls=
-eye bullseye-ignore bookworm bookworm-ignore trixie trixie-ignore.
-
-> tags 293275 confirm
-Unknown tag/s: confirm.
-Recognized are: patch wontfix moreinfo unreproducible help security upstrea=
-m pending confirmed ipv6 lfs d-i l10n newcomer a11y ftbfs fixed-upstream fi=
-xed fixed-in-experimental sid experimental potato woody sarge sarge-ignore =
-etch etch-ignore lenny lenny-ignore squeeze squeeze-ignore wheezy wheezy-ig=
-nore jessie jessie-ignore stretch stretch-ignore buster buster-ignore bulls=
-eye bullseye-ignore bookworm bookworm-ignore trixie trixie-ignore.
-
-> close 470706
-Bug #470706 [xfsprogs] xfsprogs: xfs_repair crashes during attempted repair
-Marked Bug as done
-> close 598908 5.10.0-2
-Bug #598908 [xfsprogs] xfs_growfs: -I is an option in the help but if used =
-"Invalid Option" is returned
-Marked as fixed in versions xfsprogs/5.10.0-2.
-Bug #598908 [xfsprogs] xfs_growfs: -I is an option in the help but if used =
-"Invalid Option" is returned
-Marked Bug as done
-> found 518637 5.10.0-2
+> tags 484069 confirmed
+Bug #484069 [xfsprogs] xfsdump: cronscript to run xfs_fsr
+Added tag(s) confirmed.
+> tags 528356 confirmed
+Bug #528356 [xfsprogs] xfsprogs: xfs_admin assumes that xfs_db is in the PA=
+TH
+Added tag(s) confirmed.
+> tags 570704 confirmed
+Bug #570704 [xfsprogs] duplicate /usr/share/doc/xfsprogs/changelog{,.Debian=
+}.gz
+Added tag(s) confirmed.
+> tags 915124 confirmed
+Bug #915124 [xfsprogs] xfsprogs: frequent misdetection of atari partition t=
+ype
+Added tag(s) confirmed.
+> tags 293275 confirmed
+Bug #293275 [xfsprogs] xfsprogs: no-op fsck.xfs doesn't allow to explicitly=
+ check with shutdown -F
+Bug #525132 [xfsprogs] forced fsck did not find and repair FS problems
+Bug #904086 [xfsprogs] Add fsck.xfs and xfs_repair to the initramfs
+Added tag(s) confirmed.
+Added tag(s) confirmed.
+Added tag(s) confirmed.
+> tags 518637 confirmed
 Bug #518637 [xfsprogs] xfsprogs: xfs_admin -c1 fails with unhelpful error m=
 essage
-Marked as found in versions xfsprogs/5.10.0-2.
-> tags 518637 confirm
-Unknown tag/s: confirm.
-Recognized are: patch wontfix moreinfo unreproducible help security upstrea=
-m pending confirmed ipv6 lfs d-i l10n newcomer a11y ftbfs fixed-upstream fi=
-xed fixed-in-experimental sid experimental potato woody sarge sarge-ignore =
-etch etch-ignore lenny lenny-ignore squeeze squeeze-ignore wheezy wheezy-ig=
-nore jessie jessie-ignore stretch stretch-ignore buster buster-ignore bulls=
-eye bullseye-ignore bookworm bookworm-ignore trixie trixie-ignore.
-
-> tags 695640 patch
-Bug #695640 [xfsprogs] xfs_quota: cannot find mount point for path: Success
-Added tag(s) patch.
-> tags 807879 wontfix
-Bug #807879 [xfsprogs] xfsprogs: Cannot mount XFS filesystem formated with =
-mkfs.xfs newer than 3.2.1
-Added tag(s) wontfix.
-> tags 839129 moreinfo
-Bug #839129 [xfsprogs] xfsprogs: xfs_fsr XFS_IOC_SWAPEXT failed: ino=3D[xxx=
-xxxx]: Invalid argument
-Added tag(s) moreinfo.
+Added tag(s) confirmed.
 >
 End of message, stopping processing here.
 
 Please contact me if you need assistance.
 --=20
-470706: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D470706
+293275: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D293275
+484069: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D484069
 518637: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D518637
-584256: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D584256
-598908: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D598908
-695640: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D695640
-807879: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D807879
-839129: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D839129
+525132: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D525132
+528356: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D528356
+570704: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D570704
+904086: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D904086
+915124: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D915124
 Debian Bug Tracking System
 Contact owner@bugs.debian.org with problems
