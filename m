@@ -2,115 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 432CCC433DB
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 20:36:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBB3AC433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 20:37:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C94664D9E
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 20:36:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 855BD64EE8
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 20:37:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233085AbhBESwx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Feb 2021 13:52:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44178 "EHLO
+        id S230307AbhBESwt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Feb 2021 13:52:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233256AbhBESwd (ORCPT
+        with ESMTP id S233231AbhBESwd (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Feb 2021 13:52:33 -0500
-Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E47ECC061756
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Feb 2021 12:34:17 -0800 (PST)
-Received: by mail-wm1-x333.google.com with SMTP id a16so8543425wmm.0
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Feb 2021 12:34:17 -0800 (PST)
+Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE4C0C06174A
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Feb 2021 12:34:16 -0800 (PST)
+Received: by mail-wm1-x32e.google.com with SMTP id c127so6898466wmf.5
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Feb 2021 12:34:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fishpost-de.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=OcmqGlL8Q1hkrktRoFCdNeODFYg2FXVGz/AXTvHlrzY=;
-        b=fHI/D+waf6/vbDLut4cbNjGp07a0BO1pcl5VGFTAUloTyHKm1Y07zEl7zlIt348/KL
-         vm5r3R0ov3P/67zRQN4a5SjO4sO9IfzrKx2ehg3zHfh0HFVP2Pfm0nWywNvlEt1CcSIa
-         4mE6EfSAre6vzpTgE82ydkHdXRJKhAVpuyE89JAWp4offqlsRsEfixweW2p/6tyBjFhN
-         Oaxz1rXUUcFiT/ADb8rsWEZsXKaJCjGAPxiaUGnur1URR+uLyB5liRhsNGwkhGSKNEQV
-         HJoKvk4KjbMI7qR4J6GCAd64TOjqFl0NZyZ7WkKHOrYFB9nvwYim6wi0DNJDkCvnuIWd
-         guLQ==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=v6nlP1w1UDl73559MvBbgFYy6HvG/HEBs2Gz7EQUBD4=;
+        b=dbkfREIgrBwG/ke9Um1CnwTX3PhTK/9YWTT8GntYc52T2DPx3Q6PvRQiB262rTtPpx
+         LwoaKdbpF+3x7NKH/J9ixEXece8U4BqVpz2MhtsiySjtSVtT0JtydGV8MKO2VU3U6iZb
+         avYQLlVpbmXKk1wIW2JvHFbHhM0VxUMnsncm+bspDgIt2RmQJa7r5YV1xW3iAt04A173
+         V0ceBexjU1zfYuqCkgJS4XfFXPfAH7pdSuwj2k0ED3u9g9wMvXjCBiLupwilph4iRi3G
+         DJ7XSZq7d6msHzF7ODS/FgCW1jZNZ5aitccnnlmabR2qospy0uyzkMFjAi6LF7x4G0wT
+         1IjQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=OcmqGlL8Q1hkrktRoFCdNeODFYg2FXVGz/AXTvHlrzY=;
-        b=ahjq5rfRXKnSjCyBvUO2Tz2c07TAwHpoYtIPTh2k7cksdIdtHoponYHIWMPQEcO44A
-         /DUCjgWJN6lHvkwHz2IGg4Xd7QUR7OqpFO93me/6RLgJZql2tsCZ0Zfkbh5hjXdLPIts
-         f+EXw/m3u4h9nUJ0VAvyzelQzKgfy+MMa1/Kk2jhha2V0jNV22EvCwh0L9PKTWLxnLYt
-         VoCM22wM/5VPjRxYzijkCu3x6sK49+9eIzLJx0T9uWAyPyv1OdBYGOBFFIPd6nm3HMFl
-         tzGA1pQRUSxqD15o94u0E6Uaf1wpNlinArOR/JcZ/EIGflsRu1MDKs8MOXo3mQWmCkGt
-         yzVA==
-X-Gm-Message-State: AOAM530KhE7fHf40AXS7e+nEu139drQ0we3loda6zDDPHBjyR1ORWEZ1
-        CbZFjMaHgoM1S/xSItOfnSu4sb3JH0rSk1t2oog=
-X-Google-Smtp-Source: ABdhPJxiAZr3UiiP2b3rOUPphbkRiUpRf1MWMzNwvaugbqJquHlvxewQky3mr7q8tyL9J7YiZC/sWw==
-X-Received: by 2002:a1c:5412:: with SMTP id i18mr4918329wmb.152.1612557256643;
-        Fri, 05 Feb 2021 12:34:16 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=v6nlP1w1UDl73559MvBbgFYy6HvG/HEBs2Gz7EQUBD4=;
+        b=DS/MjFd6shB1mR5FB1Zf8igE0bVFaowQiT1ZITLxU4skSyiQcYRXqBBFyNsFaRU+3n
+         K7ZWpBdG4zLkLZMg7n7CZBSusNRvTXLtNqApNljMe+Zr/v6bHkWNUVxT7b7HStUSoVOo
+         zm2K4PWK5tjsvowPfiYmQ/w3Uuk+FptLTG3vkFnvpi1I4OgNnhW5P/QRuazol7v890oz
+         6fd+COFFBFk0ntCs1oQta7zVc1+QumgEixDJoXOAfk7O8a+kbEp1WKf+0t5CviJix2oa
+         MQ4CiBW95dMfQFKH0E0NFCq3VO4O5B6sX5pCigTW5Jl5Cv0jsDoW4Ln/Yb/kspPVa99N
+         n0QQ==
+X-Gm-Message-State: AOAM531IAHkKnqlVonPWUu+X8kzYpuITpgeNdxzLAN4oAe6FAxczZ/PR
+        1wl0GalccTVbAvi+uxBj/jjymChGtmPbOwrXpDI=
+X-Google-Smtp-Source: ABdhPJwUzPYbgL6SHXuczbiw2+GBonFsYiZ1wqmxk5CUpprWSzYH0p5ulfLaRnhyvX8QsFZmwyxXAw==
+X-Received: by 2002:a1c:3286:: with SMTP id y128mr4975336wmy.104.1612557255569;
+        Fri, 05 Feb 2021 12:34:15 -0800 (PST)
 Received: from thinkbage.fritz.box (p200300d06f2cdf002a7b928337dce408.dip0.t-ipconnect.de. [2003:d0:6f2c:df00:2a7b:9283:37dc:e408])
-        by smtp.gmail.com with ESMTPSA id j14sm15664985wrd.36.2021.02.05.12.34.15
+        by smtp.gmail.com with ESMTPSA id j14sm15664985wrd.36.2021.02.05.12.34.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Feb 2021 12:34:16 -0800 (PST)
+        Fri, 05 Feb 2021 12:34:15 -0800 (PST)
 From:   Bastian Germann <bastiangermann@fishpost.de>
 To:     linux-xfs@vger.kernel.org
-Cc:     Bastian Germann <bastiangermann@fishpost.de>,
-        Helmut Grohne <helmut@subdivi.de>,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH v2 1/3] debian: Drop unused dh-python from Build-Depends
-Date:   Fri,  5 Feb 2021 21:34:03 +0100
-Message-Id: <20210205203405.1955-2-bastiangermann@fishpost.de>
+Cc:     Bastian Germann <bastiangermann@fishpost.de>
+Subject: [PATCH v2 0/3] debian: minor fixes
+Date:   Fri,  5 Feb 2021 21:34:02 +0100
+Message-Id: <20210205203405.1955-1-bastiangermann@fishpost.de>
 X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210205203405.1955-1-bastiangermann@fishpost.de>
-References: <20210205203405.1955-1-bastiangermann@fishpost.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfsprogs participates in dependency loops relevant to architecture
-bootstrap. Identifying easily droppable dependencies, it was found
-that xfsprogs does not use dh-python in any way.
+This series contains unrelated changes for the xfsprogs Debian package.
 
-Reported-by: Helmut Grohne <helmut@subdivi.de>
-Signed-off-by: Bastian Germann <bastiangermann@fishpost.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- debian/changelog | 6 ++++++
- debian/control   | 2 +-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+v2: Resend with Reviewed-bys applied.
 
-diff --git a/debian/changelog b/debian/changelog
-index ce4a224d..7b0120c2 100644
---- a/debian/changelog
-+++ b/debian/changelog
-@@ -1,3 +1,9 @@
-+xfsprogs (5.10.0-3) unstable; urgency=medium
-+
-+  * Drop unused dh-python from Build-Depends (Closes: #981361)
-+
-+ -- Bastian Germann <bastiangermann@fishpost.de>  Fri, 05 Feb 2021 00:18:31 +0100
-+
- xfsprogs (5.10.0-2) unstable; urgency=low
- 
-   * Team upload
-diff --git a/debian/control b/debian/control
-index b0eb1566..8975bd13 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,7 +3,7 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>, Bastian Germann <bastiangermann@fishpost.de>
--Build-Depends: libinih-dev, uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, dh-python, pkg-config
-+Build-Depends: libinih-dev, uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, pkg-config
- Standards-Version: 4.0.0
- Homepage: https://xfs.wiki.kernel.org/
- 
+Bastian Germann (3):
+  debian: Drop unused dh-python from Build-Depends
+  debian: Only build for Linux
+  debian: Prevent installing duplicate changelog
+
+ debian/changelog | 8 ++++++++
+ debian/control   | 8 ++++----
+ debian/rules     | 2 +-
+ 3 files changed, 13 insertions(+), 5 deletions(-)
+
 -- 
 2.30.0
 
