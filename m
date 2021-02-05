@@ -2,70 +2,71 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D908C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 21:11:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 283EEC433DB
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 21:11:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEE9664FBB
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 21:11:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB56D64FC0
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 21:11:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229608AbhBEVLm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Feb 2021 16:11:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51676 "EHLO
+        id S232956AbhBEVLn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Feb 2021 16:11:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233808AbhBEVJw (ORCPT
+        with ESMTP id S233814AbhBEVJw (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Feb 2021 16:09:52 -0500
 Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAD97C061756
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Feb 2021 13:09:06 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC22BC061786
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Feb 2021 13:09:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=bugs.debian.org; s=smtpauto.buxtehude; h=Content-Type:Date:Reply-To:
         References:Message-ID:Subject:To:From:MIME-Version:Cc:
         Content-Transfer-Encoding:Content-ID:Content-Description:In-Reply-To;
-        bh=Cw9tr4tLTj+QpUKhsH2o9LztgDcGxoi8PjJYggnoo64=; b=u7UdXrz/R65x6zI1UWwnl4qHHm
-        bzIQlBQ4GFIRoy6qCbcSIwliLGYDFqTnCi1ol4cAFj7JkLQyAFXRFTdJ1h4L1dt7lLvlrUKK9IUAJ
-        gZYox1wGrC6w7+UynjaByK4FO+5CzdFSd1W9WsnNJPv3Z+hrQzF7TSoXvzwsSYZttvmhzirxTbqmH
-        aPdji3B7sylxI4UMapzlRSk7wH7cy08+HzjYApmM5mcD8oRz8ck3XhGno+Wo+qs192+ceyJ3ocgGb
-        DXEo0jjsomCxPfKiaAffIbaeny8IUleW/vsmT5j1wxt+iQVl46eOTIGEsWib+bgniF8kRtIbISisY
-        6XmyP+Zw==;
+        bh=HjJBrqLqpzRRK6gZbeI1rk0Pn323olWcht/uzEUG6iw=; b=UxdxySbkTxDw/NeORMR/F2ruml
+        Z8sr2AeyvF6ohoHjC3OPC9r4/lLMmhXdbqS7XlfrIRlPgQAPhTUh6cYW1ESPINTSQtpiKC3eA13aQ
+        HjB6gJrkWkP/wLKN7Rf5Ey5mSepPdlWUBYyCKnPaX5s0m+TheWZDXVaprdawrIyofmn6ji13mH8Vh
+        1wT6NKKMCehp0xI0IN4b70nhdqC8gAXCr+472t7zqdycAHg71DO3djV08KiH1aGEQg02/zQi9k4G/
+        G50tuVAx8kOh9JTBM4VJPE1grklO/pG2CjAtvtrDIZ2x7dBrEfPd87cGYyhjXzupZ9HZUP5NBB2CT
+        vr5oYZNQ==;
 Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
         (envelope-from <debbugs@buxtehude.debian.org>)
-        id 1l88Lh-0000EN-LW; Fri, 05 Feb 2021 21:09:05 +0000
+        id 1l88Ll-0000FD-Mj; Fri, 05 Feb 2021 21:09:09 +0000
 MIME-Version: 1.0
 X-Mailer: MIME-tools 5.509 (Entity 5.509)
 X-Loop: owner@bugs.debian.org
 From:   "Debian Bug Tracking System" <owner@bugs.debian.org>
 To:     Bastian Germann <bastiangermann@fishpost.de>
-Subject: Bug#570704: marked as done (duplicate /usr/share/doc/xfsprogs/changelog{,.Debian}.gz)
-Message-ID: <handler.570704.D570704.161255912831407.ackdone@bugs.debian.org>
-References: <E1l88IA-0006Cf-Py@fasolo.debian.org>
- <814371d61002201153w2201b4bdteaa3fb0f301607e0@mail.gmail.com>
-X-Debian-PR-Message: closed 570704
-X-Debian-PR-Package: xfsprogs
-X-Debian-PR-Keywords: confirmed
+Subject: Bug#981361: marked as done (xfsprogs: drop unused dh-python from
+ Build-Depends)
+Message-ID: <handler.981361.D981361.161255912831398.ackdone@bugs.debian.org>
+References: <E1l88IA-0006Ck-Qh@fasolo.debian.org> <YBROMk+U0++mH4qh@alf.mars>
+X-Debian-PR-Message: closed 981361
+X-Debian-PR-Package: src:xfsprogs
+X-Debian-PR-Keywords: patch
 X-Debian-PR-Source: xfsprogs
-Reply-To: 570704@bugs.debian.org
-Date:   Fri, 05 Feb 2021 21:09:05 +0000
-Content-Type: multipart/mixed; boundary="----------=_1612559345-866-0"
+Reply-To: 981361@bugs.debian.org
+Date:   Fri, 05 Feb 2021 21:09:09 +0000
+Content-Type: multipart/mixed; boundary="----------=_1612559349-931-0"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 This is a multi-part message in MIME format...
 
-------------=_1612559345-866-0
+------------=_1612559349-931-0
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="utf-8"
 
 Your message dated Fri, 05 Feb 2021 21:05:26 +0000
-with message-id <E1l88IA-0006Cf-Py@fasolo.debian.org>
-and subject line Bug#570704: fixed in xfsprogs 5.10.0-3
-has caused the Debian Bug report #570704,
-regarding duplicate /usr/share/doc/xfsprogs/changelog{,.Debian}.gz
+with message-id <E1l88IA-0006Ck-Qh@fasolo.debian.org>
+and subject line Bug#981361: fixed in xfsprogs 5.10.0-3
+has caused the Debian Bug report #981361,
+regarding xfsprogs: drop unused dh-python from Build-Depends
 to be marked as done.
 
 This means that you claim that the problem has been dealt with.
@@ -79,103 +80,104 @@ immediately.)
 
 
 --=20
-570704: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D570704
+981361: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D981361
 Debian Bug Tracking System
 Contact owner@bugs.debian.org with problems
 
-------------=_1612559345-866-0
+------------=_1612559349-931-0
 Content-Type: message/rfc822
 Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 
-Received: (at submit) by bugs.debian.org; 20 Feb 2010 19:53:47 +0000
-X-Spam-Checker-Version: SpamAssassin 3.2.3-bugs.debian.org_2005_01_02
-	(2007-08-08) on rietz.debian.org
+Received: (at submit) by bugs.debian.org; 29 Jan 2021 21:39:24 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.2-bugs.debian.org_2005_01_02
+	(2018-09-13) on buxtehude.debian.org
 X-Spam-Level: 
-X-Spam-Bayes: score:0.0000 Tokens: new, 3; hammy, 148; neutral, 44; spammy, 0.
-	spammytokens: hammytokens:0.000-+--2.10.2-2, 0.000-+--UD:UTF-8,
-	0.000-+--libc6, 0.000-+--x86_64, 0.000-+--Severity
-X-Spam-Status: No, score=-9.9 required=4.0 tests=BAYES_00,FOURLA,HAS_PACKAGE,
-	SPF_PASS autolearn=ham version=3.2.3-bugs.debian.org_2005_01_02
-Return-path: <inkerman42@gmail.com>
-Received: from mail-ew0-f210.google.com ([209.85.219.210])
-	by rietz.debian.org with esmtp (Exim 4.63)
-	(envelope-from <inkerman42@gmail.com>)
-	id 1NivOd-0001RE-Eq
-	for submit@bugs.debian.org; Sat, 20 Feb 2010 19:53:47 +0000
-Received: by ewy2 with SMTP id 2so1267217ewy.5
-        for <submit@bugs.debian.org>; Sat, 20 Feb 2010 11:53:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=gamma;
-        h=domainkey-signature:mime-version:received:date:message-id:subject
-         :from:to:content-type;
-        bh=Dv+TFj+PwgP4tdVTviPTvCuduD4pN7+KOkwKe8kg+9s=;
-        b=E+lVECDGPKMVZ/A1j1RaSR/Ep7dIc2YAxH4tLkOkXbwbadRg+OrvsSOtVhCFGmOvhV
-         k0dFZLapcZ4vmsGzVdp8/qL2CWydG2dn9iTQX4I/f5JJFRgW+u+rtzWr4JhY8F1nShYM
-         9hk9c5bmaofvKXY4k3qGEBRHfYYwfMYuygheU=
-DomainKey-Signature: a=rsa-sha1; c=nofws;
-        d=gmail.com; s=gamma;
-        h=mime-version:date:message-id:subject:from:to:content-type;
-        b=J1RYV0kL8UNjN+5V7A+Eqfi914zZP57GHTJSZ/i1g1Ts7CP3lkJnj4TszJlzvTOoqR
-         k7cIDIp1zmpfGojrAMewG8cxlzUMEKqurbDEaUaoT+ToCc8ia/ZVo4vABG1AIUT6LyR/
-         htPcLJHlrKxRJB4CU6WHipHzo5Corw3YmR+kg=
+X-Spam-Status: No, score=-9.0 required=4.0 tests=BAYES_00,DATE_IN_PAST_03_06,
+	MURPHY_DRUGS_REL8,SPF_HELO_NONE,SPF_NONE,TXREP autolearn=no
+	autolearn_force=no version=3.4.2-bugs.debian.org_2005_01_02
+X-Spam-Bayes: score:0.0000 Tokens: new, 11; hammy, 150; neutral, 110; spammy,
+	0. spammytokens: hammytokens:0.000-+--UD:kernel.org, 0.000-+--grohne,
+	0.000-+--Grohne, 0.000-+--dhpython, 0.000-+--dh-python
+Return-path: <helmut@subdivi.de>
+Received: from isilmar-4.linta.de ([136.243.71.142]:44752)
+	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <helmut@subdivi.de>)
+	id 1l5bUC-0005zI-Kv
+	for submit@bugs.debian.org; Fri, 29 Jan 2021 21:39:24 +0000
+Received: from isilmar-4.linta.de (isilmar.linta [10.0.0.1])
+	by isilmar-4.linta.de (Postfix) with ESMTP id E0A2A200E60
+	for <submit@bugs.debian.org>; Fri, 29 Jan 2021 21:39:21 +0000 (UTC)
+Date: Fri, 29 Jan 2021 19:04:34 +0100
+From: Helmut Grohne <helmut@subdivi.de>
+To: Debian Bug Tracking System <submit@bugs.debian.org>
+Subject: xfsprogs: drop unused dh-python from Build-Depends
+Message-ID: <YBROMk+U0++mH4qh@alf.mars>
 MIME-Version: 1.0
-Received: by 10.213.96.132 with SMTP id h4mr42205ebn.70.1266695618005; Sat, 20 
-	Feb 2010 11:53:38 -0800 (PST)
-Date: Sat, 20 Feb 2010 20:53:37 +0100
-Message-ID: <814371d61002201153w2201b4bdteaa3fb0f301607e0@mail.gmail.com>
-Subject: duplicate /usr/share/doc/xfsprogs/changelog{,.Debian}.gz
-From: Piotr Engelking <inkerman42@gmail.com>
-To: Debian BTS <submit@bugs.debian.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/mixed; boundary="hfS82wKdIbknczqu"
+Content-Disposition: inline
+X-Reportbug-Version: 7.9.0
 Delivered-To: submit@bugs.debian.org
 
-Package: xfsprogs
-Version: 3.1.1
-Severity: minor
 
-There are two identical Debian changelogs in the xfsprogs binary
-package:
+--hfS82wKdIbknczqu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-/usr/share/doc/xfsprogs/changelog.Debian.gz
-/usr/share/doc/xfsprogs/changelog.gz
+Source: xfsprogs
+Version: 5.10.0-2
+Tags: patch
+User: helmutg@debian.org
+Usertags: rebootstrap
 
-Please remove one of them.
+xfsprogs participates in dependency loops relevant to architecture
+bootstrap. Instead of looking into such a difficult problem, I looked
+into easily droppable dependencies and found that xfsprogs does not use
+dh-python in any way. Please consider applying the attached patch to
+drop it.
 
+Helmut
 
--- System Information:
-Debian Release: squeeze/sid
-  APT prefers testing
-  APT policy: (500, 'testing'), (400, 'unstable'), (300, 'experimental')
-Architecture: i386 (x86_64)
+--hfS82wKdIbknczqu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="xfsprogs_5.10.0-2.1.debdiff"
 
-Kernel: Linux 2.6.33-rc8 (SMP w/2 CPU cores)
-Locale: LANG=C, LC_CTYPE=pl_PL.UTF-8 (charmap=UTF-8)
-Shell: /bin/sh linked to /bin/bash
+diff --minimal -Nru xfsprogs-5.10.0/debian/changelog xfsprogs-5.10.0/debian/changelog
+--- xfsprogs-5.10.0/debian/changelog	2021-01-14 18:59:14.000000000 +0100
++++ xfsprogs-5.10.0/debian/changelog	2021-01-29 19:02:30.000000000 +0100
+@@ -1,3 +1,10 @@
++xfsprogs (5.10.0-2.1) UNRELEASED; urgency=medium
++
++  * Non-maintainer upload.
++  * Drop unused dh-python from Build-Depends. (Closes: #-1)
++
++ -- Helmut Grohne <helmut@subdivi.de>  Fri, 29 Jan 2021 19:02:30 +0100
++
+ xfsprogs (5.10.0-2) unstable; urgency=low
+ 
+   * Team upload
+diff --minimal -Nru xfsprogs-5.10.0/debian/control xfsprogs-5.10.0/debian/control
+--- xfsprogs-5.10.0/debian/control	2021-01-14 18:59:14.000000000 +0100
++++ xfsprogs-5.10.0/debian/control	2021-01-29 19:02:15.000000000 +0100
+@@ -3,7 +3,7 @@
+ Priority: optional
+ Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>, Bastian Germann <bastiangermann@fishpost.de>
+-Build-Depends: libinih-dev, uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, dh-python, pkg-config
++Build-Depends: libinih-dev, uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, pkg-config
+ Standards-Version: 4.0.0
+ Homepage: https://xfs.wiki.kernel.org/
+ 
 
-Versions of packages xfsprogs depends on:
-ii  libc6                         2.10.2-2   GNU C Library: Shared libraries
-ii  libreadline5                  5.2-7      GNU readline and history libraries
-ii  libuuid1                      2.16.2-0   Universally Unique ID library
+--hfS82wKdIbknczqu--
 
-xfsprogs recommends no packages.
-
-Versions of packages xfsprogs suggests:
-ii  acl                           2.2.49-2   Access control list utilities
-ii  attr                          1:2.4.44-1 Utilities for manipulating filesys
-pn  quota                         <none>     (no description available)
-ii  xfsdump                       3.0.4      Administrative utilities for the X
-
--- no debconf information
-
-
-
-------------=_1612559345-866-0
+------------=_1612559349-931-0
 Content-Type: message/rfc822
 Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 
-Received: (at 570704-close) by bugs.debian.org; 5 Feb 2021 21:05:28 +0000
+Received: (at 981361-close) by bugs.debian.org; 5 Feb 2021 21:05:28 +0000
 X-Spam-Checker-Version: SpamAssassin 3.4.2-bugs.debian.org_2005_01_02
 	(2018-09-13) on buxtehude.debian.org
 X-Spam-Level: 
@@ -183,40 +185,39 @@ X-Spam-Status: No, score=-20.2 required=4.0 tests=BAYES_00,DIGITS_LETTERS,
 	FVGT_m_MULTI_ODD,HAS_BUG_NUMBER,MD5_SHA1_SUM,PGPSIGNATURE,
 	RCVD_IN_DNSWL_MED,SPF_HELO_NONE,SPF_NONE,TXREP autolearn=ham
 	autolearn_force=no version=3.4.2-bugs.debian.org_2005_01_02
-X-Spam-Bayes: score:0.0000 Tokens: new, 9; hammy, 150; neutral, 207; spammy,
+X-Spam-Bayes: score:0.0000 Tokens: new, 82; hammy, 150; neutral, 134; spammy,
 	0. spammytokens: hammytokens:0.000-+--HX-Debian:DAK,
 	0.000-+--H*rp:D*ftp-master.debian.org, 0.000-+--HX-DAK:process-upload,
 	0.000-+--Hx-spam-relays-external:sk:envelop, 0.000-+--H*r:138.16.160
 Return-path: <envelope@ftp-master.debian.org>
-Received: from muffat.debian.org ([2607:f8f0:614:1::1274:33]:40994)
+Received: from muffat.debian.org ([2607:f8f0:614:1::1274:33]:40992)
 	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=muffat.debian.org,EMAIL=hostmaster@muffat.debian.org (verified)
 	by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
 	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1l88IC-0008AC-FD
-	for 570704-close@bugs.debian.org; Fri, 05 Feb 2021 21:05:28 +0000
-Received: from fasolo.debian.org ([138.16.160.17]:51906)
+	id 1l88IC-0008AD-Ei
+	for 981361-close@bugs.debian.org; Fri, 05 Feb 2021 21:05:28 +0000
+Received: from fasolo.debian.org ([138.16.160.17]:51908)
 	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
 	by muffat.debian.org with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
 	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1l88IB-000549-KX; Fri, 05 Feb 2021 21:05:27 +0000
+	id 1l88IB-00054A-Lh; Fri, 05 Feb 2021 21:05:27 +0000
 Received: from dak by fasolo.debian.org with local (Exim 4.92)
 	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1l88IA-0006Cf-Py; Fri, 05 Feb 2021 21:05:26 +0000
+	id 1l88IA-0006Ck-Qh; Fri, 05 Feb 2021 21:05:26 +0000
 From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
 Reply-To: Bastian Germann <bastiangermann@fishpost.de>
-To: 570704-close@bugs.debian.org
+To: 981361-close@bugs.debian.org
 X-DAK: dak process-upload
 X-Debian: DAK
 X-Debian-Package: xfsprogs
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Subject: Bug#570704: fixed in xfsprogs 5.10.0-3
-Message-Id: <E1l88IA-0006Cf-Py@fasolo.debian.org>
+Subject: Bug#981361: fixed in xfsprogs 5.10.0-3
+Message-Id: <E1l88IA-0006Ck-Qh@fasolo.debian.org>
 Date: Fri, 05 Feb 2021 21:05:26 +0000
-X-CrossAssassin-Score: 2
 
 Source: xfsprogs
 Source-Version: 5.10.0-3
@@ -229,7 +230,7 @@ A summary of the changes between this version and the previous one is
 attached.
 
 Thank you for reporting the bug, which will now be closed.  If you
-have further comments please address them to 570704@bugs.debian.org,
+have further comments please address them to 981361@bugs.debian.org,
 and the maintainer will reopen the bug report if appropriate.
 
 Debian distribution maintenance software
@@ -287,4 +288,4 @@ dovtOxiVyh/jj2XTaR42l8XiR6mF1vdnWB5+A8Uom1FkykOfNE4JMmRVp9++DyH5
 F8DcQabeYYPttu+C+i+llhqhJVOQGm7E6rltXpy4IX1Eaw==
 =n4pB
 -----END PGP SIGNATURE-----
-------------=_1612559345-866-0--
+------------=_1612559349-931-0--
