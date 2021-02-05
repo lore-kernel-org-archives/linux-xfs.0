@@ -2,99 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF458C433DB
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 00:51:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CB11C433DB
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 03:19:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8AC5B64E0F
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 00:51:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2203264F8C
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 03:19:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232086AbhBEAvn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Feb 2021 19:51:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59226 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232083AbhBEAvm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Feb 2021 19:51:42 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ADAFA64F51;
-        Fri,  5 Feb 2021 00:51:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612486261;
-        bh=48oXFnU2W1ESwt6xX6RiNefLV1vvd+Gz+GpbNCnuVzw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Z/ZKzfcZiIEdg4S2gECMiEgXvTkAnSvcCwTJHJ3BEGQxEUDFA6PU+O1fDizXwpKOe
-         BgRgFbxI0vklt//UMoUiAuLurFCbR1OgUrQ0iWhANDx7rxulbuyQ4yJiBH2nUuWHpF
-         jvK+nFnlthS6ygaoFlhN7U2cz6B1okdkmnRM6qxKIyvpfejfpJ1bdJfoqwZnawUynb
-         J8GH/EB8OfSpvBhrQRBQ6SrSMfhHDoLLh08Xfj9/SaKCCFyaQUK3V+BN8loSLWGyBA
-         DygunJMptoI6ggWwVgJeDvA0etKWIsINhSbtto8nxr7wxjZLmIiPnzTdFoKAEzEsfg
-         30kAoGMhv46OA==
-Date:   Thu, 4 Feb 2021 16:51:00 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Bastian Germann <bastiangermann@fishpost.de>
-Cc:     linux-xfs@vger.kernel.org, Helmut Grohne <helmut@subdivi.de>
-Subject: Re: [PATCH 1/3] debian: Drop unused dh-python from Build-Depends
-Message-ID: <20210205005100.GK7193@magnolia>
-References: <20210205003125.24463-1-bastiangermann@fishpost.de>
- <20210205003125.24463-2-bastiangermann@fishpost.de>
+        id S229876AbhBEDT0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Feb 2021 22:19:26 -0500
+Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:18130 "EHLO
+        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229772AbhBEDTY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Feb 2021 22:19:24 -0500
+Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
+        id <B601cb9130000>; Thu, 04 Feb 2021 19:18:43 -0800
+Received: from HQMAIL105.nvidia.com (172.20.187.12) by HQMAIL111.nvidia.com
+ (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Fri, 5 Feb
+ 2021 03:18:43 +0000
+Received: from sandstorm.attlocal.net (172.20.145.6) by mail.nvidia.com
+ (172.20.187.12) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
+ Transport; Fri, 5 Feb 2021 03:18:43 +0000
+From:   John Hubbard <jhubbard@nvidia.com>
+To:     Stephen Rothwell <sfr@canb.auug.org.au>
+CC:     <linux-xfs@vger.kernel.org>,
+        Linux Next <linux-next@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        John Hubbard <jhubbard@nvidia.com>,
+        "Brian Foster" <bfoster@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH] xfs: fix unused variable build warning in xfs_log.c
+Date:   Thu, 4 Feb 2021 19:18:14 -0800
+Message-ID: <20210205031814.414649-1-jhubbard@nvidia.com>
+X-Mailer: git-send-email 2.30.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210205003125.24463-2-bastiangermann@fishpost.de>
+X-NVConfidentiality: public
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1612495123; bh=ASnYnjm4ba2tgEUkk1b0klQ5FfM48WwNnO1q6DJgM1c=;
+        h=From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+         X-NVConfidentiality:Content-Transfer-Encoding:Content-Type;
+        b=SL4/B2oMY4KpQU9uD3g6V1R6HO00UTizJybPXf7jx0BGfgUyiofPP8/aW+P0LZ4Lx
+         R/FqZ8FwdgYv7F8tu4lz139P63b9cqZqYPJJ7ht0YZf6ydJ8AmYxDZkQMeqiuOFETo
+         8BmwfeOJPxnRPWfLvzfDz3l86fEABAExGzenMMqnTo6oI0rSrqPjbAyd2OAUyJhE3F
+         +dh4Z8mtcbJeBOxdsIpbzH+o1xSXvryzCyZ8V/uUOWVaqxHXFy7ra0s0RxRO+LKkwN
+         cYqMmDJG8yuKrq6fmQDfleUgvC2MfSwerZiIH6fw+bpSvgAZ9Dtr2Ry2ZSyDpoNeLz
+         irz+1iu3ooFHg==
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 05, 2021 at 01:31:23AM +0100, Bastian Germann wrote:
-> xfsprogs participates in dependency loops relevant to architecture
-> bootstrap. Identifying easily droppable dependencies, it was found
-> that xfsprogs does not use dh-python in any way.
+Delete the unused "log" variable in xfs_log_cover().
 
-scrub/xfs_scrub_all.in and tools/xfsbuflock.py are the only python
-scripts in xfsprogs.  We ship the first one as-is in the xfsprogs
-package and we don't ship the second one at all (it's a debugger tool).
+Fixes: 303591a0a9473 ("xfs: cover the log during log quiesce")
+Cc: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Darrick J. Wong <djwong@kernel.org>
+Cc: Allison Henderson <allison.henderson@oracle.com>
+Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+---
+Hi,
 
-AFAICT neither of them really use dh-python, right?
+I just ran into this on today's linux-next, so here you go!
 
---D
+thanks,
+John Hubbard
+NVIDIA
 
-> 
-> Reported-by: Helmut Grohne <helmut@subdivi.de>
-> Signed-off-by: Bastian Germann <bastiangermann@fishpost.de>
-> ---
->  debian/changelog | 6 ++++++
->  debian/control   | 2 +-
->  2 files changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/debian/changelog b/debian/changelog
-> index ce4a224d..7b0120c2 100644
-> --- a/debian/changelog
-> +++ b/debian/changelog
-> @@ -1,3 +1,9 @@
-> +xfsprogs (5.10.0-3) unstable; urgency=medium
-> +
-> +  * Drop unused dh-python from Build-Depends (Closes: #981361)
-> +
-> + -- Bastian Germann <bastiangermann@fishpost.de>  Fri, 05 Feb 2021 00:18:31 +0100
-> +
->  xfsprogs (5.10.0-2) unstable; urgency=low
->  
->    * Team upload
-> diff --git a/debian/control b/debian/control
-> index b0eb1566..8975bd13 100644
-> --- a/debian/control
-> +++ b/debian/control
-> @@ -3,7 +3,7 @@ Section: admin
->  Priority: optional
->  Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
->  Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>, Bastian Germann <bastiangermann@fishpost.de>
-> -Build-Depends: libinih-dev, uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, dh-python, pkg-config
-> +Build-Depends: libinih-dev, uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, pkg-config
->  Standards-Version: 4.0.0
->  Homepage: https://xfs.wiki.kernel.org/
->  
-> -- 
-> 2.30.0
-> 
+ fs/xfs/xfs_log.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 58699881c100..5a9cca3f7cbf 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1108,7 +1108,6 @@ static int
+ xfs_log_cover(
+ 	struct xfs_mount	*mp)
+ {
+-	struct xlog		*log =3D mp->m_log;
+ 	int			error =3D 0;
+ 	bool			need_covered;
+=20
+
+base-commit: 0e2c50f40b7ffb73a039157f7c38495c6d99e86f
+--=20
+2.30.0
+
