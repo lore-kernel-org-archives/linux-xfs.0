@@ -7,90 +7,94 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45F3CC433DB
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 00:49:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF458C433DB
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 00:51:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F332364F7C
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 00:49:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AC5B64E0F
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Feb 2021 00:51:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232063AbhBEAt5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Feb 2021 19:49:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58988 "EHLO mail.kernel.org"
+        id S232086AbhBEAvn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Feb 2021 19:51:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59226 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232032AbhBEAt5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Feb 2021 19:49:57 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B878764F51;
-        Fri,  5 Feb 2021 00:49:16 +0000 (UTC)
+        id S232083AbhBEAvm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Feb 2021 19:51:42 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ADAFA64F51;
+        Fri,  5 Feb 2021 00:51:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612486156;
-        bh=uOfKQVftWvbzIDkZtVVtNbP7lYoo3snGAK2lfBY7XZM=;
+        s=k20201202; t=1612486261;
+        bh=48oXFnU2W1ESwt6xX6RiNefLV1vvd+Gz+GpbNCnuVzw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JnLX8z78aJYmuVvo/4M5RcpsD+tX/sfKT8GJ2qJxygQPFiUEZAzS164X4lZlsxxDj
-         G+Myiz2VARF6VqYnVW2/kSlySOJaqGX+FTZrn2s6whpLmCp9Dlyvg+cDwNEl8qY+1R
-         dGEisp1gxRe67xv4B4YGCknXdBE3g2aKMdQ5Pl5lkvC0A6+CsKqClGh/DTWbwNVErd
-         2AMFPfAGFbIULk+5bDTZPAluUMRj0fgfuNFG8IKe8Eois7Wmpy4fjv20mzu27Pf+UB
-         1Hnbc0UvU7VtayUYCNGkyE1RDsO0xE14xwwhG98lR6qBOOCH9N1vQGtPq+zJxvZNlP
-         aPcN6Wgg+S3TA==
-Date:   Thu, 4 Feb 2021 16:49:15 -0800
+        b=Z/ZKzfcZiIEdg4S2gECMiEgXvTkAnSvcCwTJHJ3BEGQxEUDFA6PU+O1fDizXwpKOe
+         BgRgFbxI0vklt//UMoUiAuLurFCbR1OgUrQ0iWhANDx7rxulbuyQ4yJiBH2nUuWHpF
+         jvK+nFnlthS6ygaoFlhN7U2cz6B1okdkmnRM6qxKIyvpfejfpJ1bdJfoqwZnawUynb
+         J8GH/EB8OfSpvBhrQRBQ6SrSMfhHDoLLh08Xfj9/SaKCCFyaQUK3V+BN8loSLWGyBA
+         DygunJMptoI6ggWwVgJeDvA0etKWIsINhSbtto8nxr7wxjZLmIiPnzTdFoKAEzEsfg
+         30kAoGMhv46OA==
+Date:   Thu, 4 Feb 2021 16:51:00 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Bastian Germann <bastiangermann@fishpost.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] debian: Prevent installing duplicate changelog
-Message-ID: <20210205004915.GJ7193@magnolia>
+Cc:     linux-xfs@vger.kernel.org, Helmut Grohne <helmut@subdivi.de>
+Subject: Re: [PATCH 1/3] debian: Drop unused dh-python from Build-Depends
+Message-ID: <20210205005100.GK7193@magnolia>
 References: <20210205003125.24463-1-bastiangermann@fishpost.de>
- <20210205003125.24463-4-bastiangermann@fishpost.de>
+ <20210205003125.24463-2-bastiangermann@fishpost.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210205003125.24463-4-bastiangermann@fishpost.de>
+In-Reply-To: <20210205003125.24463-2-bastiangermann@fishpost.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 05, 2021 at 01:31:25AM +0100, Bastian Germann wrote:
-> The doc/CHANGES file is both processed by dh_installdocs and
-> dh_installchangelogs. So it ends up as changelog.gz and CHANGES.gz.
-> Prevent that by excluding it from dh_installdocs.
-> 
-> Signed-off-by: Bastian Germann <bastiangermann@fishpost.de>
+On Fri, Feb 05, 2021 at 01:31:23AM +0100, Bastian Germann wrote:
+> xfsprogs participates in dependency loops relevant to architecture
+> bootstrap. Identifying easily droppable dependencies, it was found
+> that xfsprogs does not use dh-python in any way.
 
-/me wonders if a wider cleanup (isn't debhelper up to v12 now?) is in
-order but for now,
+scrub/xfs_scrub_all.in and tools/xfsbuflock.py are the only python
+scripts in xfsprogs.  We ship the first one as-is in the xfsprogs
+package and we don't ship the second one at all (it's a debugger tool).
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+AFAICT neither of them really use dh-python, right?
 
 --D
 
+> 
+> Reported-by: Helmut Grohne <helmut@subdivi.de>
+> Signed-off-by: Bastian Germann <bastiangermann@fishpost.de>
 > ---
->  debian/changelog | 1 +
->  debian/rules     | 2 +-
->  2 files changed, 2 insertions(+), 1 deletion(-)
+>  debian/changelog | 6 ++++++
+>  debian/control   | 2 +-
+>  2 files changed, 7 insertions(+), 1 deletion(-)
 > 
 > diff --git a/debian/changelog b/debian/changelog
-> index 2da58f30..5421aed6 100644
+> index ce4a224d..7b0120c2 100644
 > --- a/debian/changelog
 > +++ b/debian/changelog
-> @@ -2,6 +2,7 @@ xfsprogs (5.10.0-3) unstable; urgency=medium
+> @@ -1,3 +1,9 @@
+> +xfsprogs (5.10.0-3) unstable; urgency=medium
+> +
+> +  * Drop unused dh-python from Build-Depends (Closes: #981361)
+> +
+> + -- Bastian Germann <bastiangermann@fishpost.de>  Fri, 05 Feb 2021 00:18:31 +0100
+> +
+>  xfsprogs (5.10.0-2) unstable; urgency=low
 >  
->    * Drop unused dh-python from Build-Depends (Closes: #981361)
->    * Only build for Linux
-> +  * Prevent installing duplicate changelog (Closes: #570704)
+>    * Team upload
+> diff --git a/debian/control b/debian/control
+> index b0eb1566..8975bd13 100644
+> --- a/debian/control
+> +++ b/debian/control
+> @@ -3,7 +3,7 @@ Section: admin
+>  Priority: optional
+>  Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+>  Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>, Bastian Germann <bastiangermann@fishpost.de>
+> -Build-Depends: libinih-dev, uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, dh-python, pkg-config
+> +Build-Depends: libinih-dev, uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, pkg-config
+>  Standards-Version: 4.0.0
+>  Homepage: https://xfs.wiki.kernel.org/
 >  
->   -- Bastian Germann <bastiangermann@fishpost.de>  Fri, 05 Feb 2021 00:18:31 +0100
->  
-> diff --git a/debian/rules b/debian/rules
-> index 7304222c..c6ca5491 100755
-> --- a/debian/rules
-> +++ b/debian/rules
-> @@ -87,7 +87,7 @@ binary-arch: checkroot built
->  	rm -f debian/xfslibs-dev/lib/libhandle.la
->  	rm -f debian/xfslibs-dev/lib/libhandle.a
->  	rm -fr debian/xfslibs-dev/usr/lib
-> -	dh_installdocs
-> +	dh_installdocs -XCHANGES
->  	dh_installchangelogs
->  	dh_strip
->  	dh_compress
 > -- 
 > 2.30.0
 > 
