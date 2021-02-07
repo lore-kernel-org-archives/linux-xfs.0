@@ -2,289 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1951C43332
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Feb 2021 17:11:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F1A4C433E0
+	for <linux-xfs@archiver.kernel.org>; Sun,  7 Feb 2021 22:16:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A4F464DDC
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Feb 2021 17:11:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E236864DE8
+	for <linux-xfs@archiver.kernel.org>; Sun,  7 Feb 2021 22:16:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229876AbhBGRLL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 7 Feb 2021 12:11:11 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:52559 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229821AbhBGRK7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Feb 2021 12:10:59 -0500
-X-IronPort-AV: E=Sophos;i="5.81,160,1610380800"; 
-   d="scan'208";a="104299372"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 08 Feb 2021 01:09:38 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id EE5B64CE6033;
-        Mon,  8 Feb 2021 01:09:33 +0800 (CST)
-Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Mon, 8 Feb 2021 01:09:36 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Mon, 8 Feb 2021 01:09:35 +0800
-From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>
-CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <willy@infradead.org>, <jack@suse.cz>, <viro@zeniv.linux.org.uk>,
-        <linux-btrfs@vger.kernel.org>, <ocfs2-devel@oss.oracle.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <rgoldwyn@suse.de>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>
-Subject: [PATCH 5/7] fsdax: Dedup file range to use a compare function
-Date:   Mon, 8 Feb 2021 01:09:22 +0800
-Message-ID: <20210207170924.2933035-6-ruansy.fnst@cn.fujitsu.com>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210207170924.2933035-1-ruansy.fnst@cn.fujitsu.com>
-References: <20210207170924.2933035-1-ruansy.fnst@cn.fujitsu.com>
+        id S229609AbhBGWPw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 7 Feb 2021 17:15:52 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59353 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229506AbhBGWPv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Feb 2021 17:15:51 -0500
+Received: from dread.disaster.area (pa49-181-52-82.pa.nsw.optusnet.com.au [49.181.52.82])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E2C1F827F36;
+        Mon,  8 Feb 2021 09:15:06 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1l8sKf-00BeBj-Af; Mon, 08 Feb 2021 09:15:05 +1100
+Date:   Mon, 8 Feb 2021 09:15:05 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     bugzilla-daemon@bugzilla.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug 211605] New: Re-mount XFS causes "noattr2 mount option is
+ deprecated" warning
+Message-ID: <20210207221505.GW4662@dread.disaster.area>
+References: <bug-211605-201763@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: EE5B64CE6033.AF9D0
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bug-211605-201763@https.bugzilla.kernel.org/>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=7pwokN52O8ERr2y46pWGmQ==:117 a=7pwokN52O8ERr2y46pWGmQ==:17
+        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8
+        a=7-415B0cAAAA:8 a=IaQNggFhbr6_QPJ8trUA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-With dax we cannot deal with readpage() etc. So, we create a
-funciton callback to perform the file data comparison and pass
-it to generic_remap_file_range_prep() so it can use iomap-based
-functions.
+On Sun, Feb 07, 2021 at 05:06:36AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=211605
+> 
+>             Bug ID: 211605
+>            Summary: Re-mount XFS causes "noattr2 mount option is
+>                     deprecated" warning
+>            Product: File System
+>            Version: 2.5
+>     Kernel Version: 5.10.13
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: low
+>           Priority: P1
+>          Component: XFS
+>           Assignee: filesystem_xfs@kernel-bugs.kernel.org
+>           Reporter: cuihao.leo@gmail.com
+>         Regression: No
+> 
+> Created attachment 295103
+>   --> https://bugzilla.kernel.org/attachment.cgi?id=295103&action=edit
+> proposed fix
+> 
+> After recent kernel update, I notice "XFS: noattr2 mount option is deprecated."
+> kernel message every time I shutdown the system. It turns out that remounting a
+> XFS causes the warning.
+> 
+> Steps to Reproduce:
+> 1) Mount a XFS and remount it with different options:
+> > $ mount some_xfs.img /mnt/test
+> > $ mount -o remount,ro /mnt/test
+> 2) Check kernel message. Remounting causes a line of warning:
+> > XFS: noattr2 mount option is deprecated.
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
----
- fs/btrfs/reflink.c   |  3 +-
- fs/dax.c             | 67 ++++++++++++++++++++++++++++++++++++++++++++
- fs/ocfs2/file.c      |  2 +-
- fs/remap_range.c     | 14 +++++----
- fs/xfs/xfs_reflink.c |  2 +-
- include/linux/dax.h  |  5 ++++
- include/linux/fs.h   |  9 +++++-
- 7 files changed, 92 insertions(+), 10 deletions(-)
+That sounds like a mount(1) bug, not a kernel bug. Something is
+adding the "noattr2" option to the remount line. Running you test
+on my system doesn't show that warning. I'm running a 5.11-rc5 kernel
+and:
 
-diff --git a/fs/btrfs/reflink.c b/fs/btrfs/reflink.c
-index 99aa87c08912..efe094f7f748 100644
---- a/fs/btrfs/reflink.c
-+++ b/fs/btrfs/reflink.c
-@@ -783,7 +783,8 @@ static int btrfs_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 		return ret;
- 
- 	return generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
--					    len, remap_flags);
-+					    len, remap_flags,
-+					    vfs_dedupe_file_range_compare);
- }
- 
- loff_t btrfs_remap_file_range(struct file *src_file, loff_t off,
-diff --git a/fs/dax.c b/fs/dax.c
-index 29698a3d2e37..6e9391845057 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -30,6 +30,8 @@
- #define CREATE_TRACE_POINTS
- #include <trace/events/fs_dax.h>
- 
-+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-+
- static inline unsigned int pe_order(enum page_entry_size pe_size)
- {
- 	if (pe_size == PE_SIZE_PTE)
-@@ -1827,3 +1829,68 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
- 	return dax_insert_pfn_mkwrite(vmf, pfn, order);
- }
- EXPORT_SYMBOL_GPL(dax_finish_sync_fault);
-+
-+int dax_file_range_compare(struct inode *src, loff_t srcoff, struct inode *dest,
-+		loff_t destoff, loff_t len, bool *is_same,
-+		const struct iomap_ops *ops)
-+{
-+	void *saddr, *daddr;
-+	struct iomap smap = { 0 };
-+	struct iomap dmap = { 0 };
-+	bool same = false;
-+	loff_t cmp_len;
-+	int id, ret = 0;
-+
-+	id = dax_read_lock();
-+	while (len) {
-+		ret = ops->iomap_begin(src, srcoff, len, 0, &smap, NULL);
-+		if (ret < 0)
-+			goto out_src;
-+		cmp_len = MIN(len, smap.offset + smap.length - srcoff);
-+
-+		ret = ops->iomap_begin(dest, destoff, cmp_len, 0, &dmap, NULL);
-+		if (ret < 0)
-+			goto out_dest;
-+		cmp_len = MIN(cmp_len, dmap.offset + dmap.length - destoff);
-+
-+		if (smap.type == IOMAP_HOLE && dmap.type == IOMAP_HOLE)
-+			goto next;
-+
-+		if (smap.type == IOMAP_HOLE || dmap.type == IOMAP_HOLE) {
-+			same = false;
-+			goto next;
-+		}
-+
-+		ret = dax_iomap_direct_access(&smap, srcoff,
-+			  ALIGN(srcoff + cmp_len, PAGE_SIZE), &saddr, NULL);
-+		if (ret < 0)
-+			goto out_dest;
-+
-+		ret = dax_iomap_direct_access(&dmap, destoff,
-+			  ALIGN(destoff + cmp_len, PAGE_SIZE), &daddr, NULL);
-+		if (ret < 0)
-+			goto out_dest;
-+
-+		same = !memcmp(saddr, daddr, cmp_len);
-+		if (!same)
-+			break;
-+next:
-+		len -= cmp_len;
-+		srcoff += cmp_len;
-+		destoff += cmp_len;
-+out_dest:
-+		if (ops->iomap_end)
-+			ops->iomap_end(dest, destoff, cmp_len, 0, 0, &dmap);
-+out_src:
-+		if (ops->iomap_end)
-+			ops->iomap_end(src, srcoff, len, 0, 0, &smap);
-+
-+		if (ret < 0)
-+			goto out;
-+	}
-+	*is_same = same;
-+out:
-+	dax_read_unlock(id);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(dax_file_range_compare);
-diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
-index 85979e2214b3..9d101f129d16 100644
---- a/fs/ocfs2/file.c
-+++ b/fs/ocfs2/file.c
-@@ -2591,7 +2591,7 @@ static loff_t ocfs2_remap_file_range(struct file *file_in, loff_t pos_in,
- 		goto out_unlock;
- 
- 	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
--			&len, remap_flags);
-+			&len, remap_flags, vfs_dedupe_file_range_compare);
- 	if (ret < 0 || len == 0)
- 		goto out_unlock;
- 
-diff --git a/fs/remap_range.c b/fs/remap_range.c
-index e6099beefa97..fc64f7e2af5a 100644
---- a/fs/remap_range.c
-+++ b/fs/remap_range.c
-@@ -199,9 +199,9 @@ static void vfs_unlock_two_pages(struct page *page1, struct page *page2)
-  * Compare extents of two files to see if they are the same.
-  * Caller must have locked both inodes to prevent write races.
-  */
--static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
--					 struct inode *dest, loff_t destoff,
--					 loff_t len, bool *is_same)
-+int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-+				  struct inode *dest, loff_t destoff,
-+				  loff_t len, bool *is_same)
- {
- 	loff_t src_poff;
- 	loff_t dest_poff;
-@@ -280,6 +280,7 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
- out_error:
- 	return error;
- }
-+EXPORT_SYMBOL(vfs_dedupe_file_range_compare);
- 
- /*
-  * Check that the two inodes are eligible for cloning, the ranges make
-@@ -291,7 +292,8 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-  */
- int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 				  struct file *file_out, loff_t pos_out,
--				  loff_t *len, unsigned int remap_flags)
-+				  loff_t *len, unsigned int remap_flags,
-+				  compare_range_t compare_range_fn)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
-@@ -351,8 +353,8 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 	if (remap_flags & REMAP_FILE_DEDUP) {
- 		bool		is_same = false;
- 
--		ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
--				inode_out, pos_out, *len, &is_same);
-+		ret = compare_range_fn(inode_in, pos_in, inode_out, pos_out,
-+				       *len, &is_same);
- 		if (ret)
- 			return ret;
- 		if (!is_same)
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 6fa05fb78189..26708c01fd78 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1309,7 +1309,7 @@ xfs_reflink_remap_prep(
- 		goto out_unlock;
- 
- 	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
--			len, remap_flags);
-+			len, remap_flags, vfs_dedupe_file_range_compare);
- 	if (ret || *len == 0)
- 		goto out_unlock;
- 
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index b52f084aa643..183e084c2ac7 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -238,6 +238,11 @@ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
- s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap);
-+int dax_file_range_compare(struct inode *src, loff_t srcoff,
-+			   struct inode *dest, loff_t destoff,
-+			   loff_t len, bool *is_same,
-+			   const struct iomap_ops *ops);
-+
- static inline bool dax_mapping(struct address_space *mapping)
- {
- 	return mapping->host && IS_DAX(mapping->host);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 8667d0cdc71e..159ec755e47b 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1912,13 +1912,20 @@ extern ssize_t vfs_read(struct file *, char __user *, size_t, loff_t *);
- extern ssize_t vfs_write(struct file *, const char __user *, size_t, loff_t *);
- extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
- 				   loff_t, size_t, unsigned int);
-+extern int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-+					 struct inode *dest, loff_t destoff,
-+					 loff_t len, bool *is_same);
-+typedef int (*compare_range_t)(struct inode *src, loff_t srcpos,
-+			       struct inode *dest, loff_t destpos,
-+			       loff_t len, bool *is_same);
- extern ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
- 				       struct file *file_out, loff_t pos_out,
- 				       size_t len, unsigned int flags);
- extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 					 struct file *file_out, loff_t pos_out,
- 					 loff_t *count,
--					 unsigned int remap_flags);
-+					 unsigned int remap_flags,
-+					 compare_range_t compare_range_fn);
- extern loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
- 				  struct file *file_out, loff_t pos_out,
- 				  loff_t len, unsigned int remap_flags);
+$ mount -V
+mount from util-linux 2.36 (libmount 2.36.0: selinux, smack, btrfs, namespaces, assert, debug)
+$
+
+And there is no such "noattr2 is deprecated" output. What version of
+mount are you running?
+
+What we really need from your system is debug that tells us exactly
+what the mount option string that the mount command is handing the
+mount syscall.
+
+> I had checked my fstab and kernel params and didn't found any use of "attr2"
+> option. It doesn't break things, but is a little confusing.
+
+"attr2" != "noattr2"
+
+The kernel is warning about a mount option being specified that
+isn't even in the set emitted in /proc/mounts. Nor is it on your
+command line. Yet the kernel is warning about it, and that implies
+that mount has passed it to the kernel incorrectly.
+
+Cheers,
+
+Dave.
+
 -- 
-2.30.0
-
-
-
+Dave Chinner
+david@fromorbit.com
