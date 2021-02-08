@@ -2,88 +2,164 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 741ECC4332B
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Feb 2021 23:37:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77CFCC433E6
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Feb 2021 11:07:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2005564DF6
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Feb 2021 23:37:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3448264E3F
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Feb 2021 11:07:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229609AbhBGXhC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 7 Feb 2021 18:37:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38016 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229537AbhBGXhB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 7 Feb 2021 18:37:01 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPS id 036B964E3A
-        for <linux-xfs@vger.kernel.org>; Sun,  7 Feb 2021 23:36:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612740981;
-        bh=nIflwO8ys5MPPDrXbHc9kra0fO9lE5cfAg9LOKPqFLM=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=Ik2gham6EWYyhm0PrV3eSVluaMq7ZsTw3o1R0Z0lf+MatbFaKn0J8NAV+p3SdtJ3t
-         R4aiE5Rrfk5N32MLCbPfIaOHLvG7+Ws457DgvJdVPr2qReWSrik8IpfdRADfjUv8+N
-         9f1wBT+odWupQGI2VB0LItt998zhju5oClNuXsk8ubGAcWuB7vG2ytsii3p8+e5J+B
-         jXIpWzEW+xesciELlqcKdYy6fBCsIa6MhoIdV5U5AJ0eFD954SZ5zlAhc8QxOeJFQ7
-         U+901Oo6vK05AOwwjM3Hm/0w6W8ilgOqoUiOELc/L6y2pkGhKH1ZJt78ieiGpHk0C2
-         Wjf8tUD0izSwg==
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 211605] Re-mount XFS causes "attr2 mount option is deprecated"
- warning
-Date:   Sun, 07 Feb 2021 23:36:20 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: low
-X-Bugzilla-Who: sandeen@sandeen.net
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-211605-201763-xkwFOStpFO@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-211605-201763@https.bugzilla.kernel.org/>
-References: <bug-211605-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S232762AbhBHLHU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Feb 2021 06:07:20 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:37633 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S233034AbhBHLEC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Feb 2021 06:04:02 -0500
+X-IronPort-AV: E=Sophos;i="5.81,161,1610380800"; 
+   d="scan'208";a="104328064"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 08 Feb 2021 18:55:40 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id 58EDC4CE6F82;
+        Mon,  8 Feb 2021 18:55:37 +0800 (CST)
+Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Mon, 8 Feb 2021 18:55:40 +0800
+Received: from irides.mr.mr.mr (10.167.225.141) by
+ G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Mon, 8 Feb 2021 18:55:39 +0800
+From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <dm-devel@redhat.com>
+CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <agk@redhat.com>,
+        <snitzer@redhat.com>, <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>,
+        <y-goto@fujitsu.com>
+Subject: [PATCH v3 04/11] block_dev: Introduce bd_corrupted_range() for block device
+Date:   Mon, 8 Feb 2021 18:55:23 +0800
+Message-ID: <20210208105530.3072869-5-ruansy.fnst@cn.fujitsu.com>
+X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210208105530.3072869-1-ruansy.fnst@cn.fujitsu.com>
+References: <20210208105530.3072869-1-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 58EDC4CE6F82.A0C98
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D211605
+As is show in the call tree:
+ ...
+ pgmap->ops->memory_failure()
+  gendisk->fops->corrupted_range()
+   sb->s_ops->currupted_range()
+    ...
+currupted_range() is called from disk(pmem) to superblock(filesystem).
+Thus, we need to introduce a helper function to obtain the superblock
+from a given disk.
 
---- Comment #7 from Eric Sandeen (sandeen@sandeen.net) ---
-On 2/7/21 4:53 PM, Eric Sandeen wrote:
->=20
-> Pavel, can you fix this up, since your patch did the deprecations? I gues=
-s we
-> missed this on review.
+Normally, a filesystem can be created by mkfs directly on a block device
+or a parted disk. We can obtain the superblock by calling get_super().
 
-Scratch that, Dave points out that they need to stay until they are removed.
+But get_super() is not suitable for mapped device, such as LVM. To
+obtain MD's superblock, we can iterate bd_holder_disks of a block device
+to find out the MD that contains it. By this way, MD is able to call
+corrupted_range() from its target block device.
 
-> Ideally the xfs(5) man page in xfsprogs should be updated as well to refl=
-ect
-> the
-> deprecated items.
+Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+---
+ fs/block_dev.c        | 47 ++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/genhd.h |  2 ++
+ 2 files changed, 48 insertions(+), 1 deletion(-)
 
-man page probably should still be updated tho (unless I missed a patch...)
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 3b8963e228a1..755b0d351479 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -1079,6 +1079,28 @@ struct bd_holder_disk {
+ 	int			refcnt;
+ };
+ 
++static int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off,
++					  size_t len, void *data)
++{
++	struct bd_holder_disk *holder;
++	struct gendisk *disk;
++	int rc = 0;
++
++	if (list_empty(&(bdev->bd_holder_disks)))
++		return -ENODEV;
++
++	list_for_each_entry(holder, &bdev->bd_holder_disks, list) {
++		disk = holder->disk;
++		if (disk->fops->corrupted_range) {
++			rc = disk->fops->corrupted_range(disk, bdev, off,
++							 len, data);
++			if (rc != -ENODEV)
++				break;
++		}
++	}
++	return rc;
++}
++
+ static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
+ 						  struct gendisk *disk)
+ {
+@@ -1212,7 +1234,30 @@ void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ 	mutex_unlock(&bdev->bd_mutex);
+ }
+ EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
+-#endif
++#else
++static inline int bd_disk_holder_corrupted_range(struct block_device *bdev,
++					loff_t off, size_t len, void *data)
++{
++	return -EOPNOTSUPP;
++}
++#endif /* CONFIG_SYSFS */
++
++int bd_corrupted_range(struct block_device *bdev, loff_t disk_off,
++		       loff_t bdev_off, size_t len, void *data)
++{
++	struct super_block *sb = get_super(bdev);
++	int rc = -EOPNOTSUPP;
++
++	if (!sb) {
++		rc = bd_disk_holder_corrupted_range(bdev, disk_off, len, data);
++		return rc;
++	} else if (sb->s_op->corrupted_range)
++		rc = sb->s_op->corrupted_range(sb, bdev, bdev_off, len, data);
++	drop_super(sb);
++
++	return rc;
++}
++EXPORT_SYMBOL(bd_corrupted_range);
+ 
+ static void __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part);
+ 
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 809aaa32d53c..751cbd559bba 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -314,6 +314,8 @@ void unregister_blkdev(unsigned int major, const char *name);
+ bool bdev_check_media_change(struct block_device *bdev);
+ int __invalidate_device(struct block_device *bdev, bool kill_dirty);
+ void set_capacity(struct gendisk *disk, sector_t size);
++int bd_corrupted_range(struct block_device *bdev, loff_t disk_off,
++		       loff_t bdev_off, size_t len, void *data);
+ 
+ /* for drivers/char/raw.c: */
+ int blkdev_ioctl(struct block_device *, fmode_t, unsigned, unsigned long);
+-- 
+2.30.0
 
--Eric
 
---=20
-You may reply to this email to add a comment.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
