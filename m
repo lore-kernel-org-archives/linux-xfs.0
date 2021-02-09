@@ -7,38 +7,40 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7FEDC43331
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:17:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 754B0C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:18:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9257E64EC3
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:17:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B19364EB1
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:18:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230340AbhBIERr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Feb 2021 23:17:47 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48568 "EHLO mail.kernel.org"
+        id S229725AbhBIERv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Feb 2021 23:17:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48454 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229843AbhBIEO5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Feb 2021 23:14:57 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6D61B64EC9;
-        Tue,  9 Feb 2021 04:11:14 +0000 (UTC)
+        id S230192AbhBIEPj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Feb 2021 23:15:39 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D5D9464ECD;
+        Tue,  9 Feb 2021 04:11:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612843874;
-        bh=zMbn7XOkMktKuXzrMJ/e/WoGZx6IuhPx3/3wvAs8kSk=;
+        s=k20201202; t=1612843888;
+        bh=t893qcb9jWSkUlEZugOvpZt1CG6f3kLN3tpCFmmeBNc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=VDKoMWQO4vxXV2gSk8cTTNf3xdM8bfpiX0nxrArG1RqJDlIuTAqADjkF/CM2lcT3x
-         gqQ6YOCZKEv9JGZgsz5svulw2yIkaOEz4g273fvUxkHApzA1jOUdXyA8WOV4B84w0W
-         4XiwjzOUlhSWEihDJt3EdAHhIw0MzB56d95pa11HNbXL0/LTLVBtuzCzqasZjnXkvd
-         7JmhA3rOFEeyvBLVnqRM4FsOBvFKkbIbv81Z6O9e6/b1UwRyHGK+6X7wqNBKyVtrwM
-         j4UJtTkE4AbtYBvCZ9obnloAiLbkGRbMhqo+H/Wc/7kREx2AmkDHLqk6psaIhSpNhE
-         FVvW1a1DtXp1g==
-Subject: [PATCH 2/2] xfs_repair: enable bigtime upgrade via repair
+        b=GH4d+Nu/5O83Deu7bph02oh1GwaDDjisT3R7bCqQaDPl+llVpDKgTJqDSxPblMSNl
+         LNXyyyWIQ+8BS+WCpG4tA7L0lOy0WSFwM9+TIyMQxV8NEoGvwaYb8wl+5P54XT8ocu
+         P41yzFFT+8erd2/ItWds/KB0snKBt2Yd0ZZBowgYjkjQr4z3BEP3q+PCSQcfnyGK+f
+         z93fQigErhWmYthFafQYizd25Bw/M7cQ10WCPzpCrmIDe7pMfwRZGQIga2Kxy0AClR
+         Ox7WDEfu48Y6woadp6RLc+Y9JNpGjxD4+bG7aW+4FkMXJGKLOCCJMk+56RGUcTABrB
+         51Si/kfjMCXKA==
+Subject: [PATCH 2/6] xfs_scrub: detect infinite loops when scanning inodes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, hch@lst.de, bfoster@redhat.com
-Date:   Mon, 08 Feb 2021 20:11:14 -0800
-Message-ID: <161284387398.3058138.5317754248430984165.stgit@magnolia>
-In-Reply-To: <161284386265.3058138.14199712814454514885.stgit@magnolia>
-References: <161284386265.3058138.14199712814454514885.stgit@magnolia>
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, chandanrlinux@gmail.com,
+        Chaitanya.Kulkarni@wdc.com
+Date:   Mon, 08 Feb 2021 20:11:27 -0800
+Message-ID: <161284388746.3058224.2675575511596158478.stgit@magnolia>
+In-Reply-To: <161284387610.3058224.6236053293202575597.stgit@magnolia>
+References: <161284387610.3058224.6236053293202575597.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,134 +51,50 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Upgrade existing V5 filesystems to support large timestamps up to 2486.
+During an inode scan (aka phase 3) when we're scanning the inode btree
+to find files to check, make sure that each invocation of inumbers
+actually gives us an inobt record with a startino that's at least as
+large as what we asked for so that we always make forward progress.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- man/man8/xfs_admin.8 |    6 ++++++
- repair/globals.c     |    1 +
- repair/globals.h     |    1 +
- repair/phase1.c      |   23 +++++++++++++++++++++++
- repair/xfs_repair.c  |   11 +++++++++++
- 5 files changed, 42 insertions(+)
+ scrub/inodes.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
 
-diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-index da05171d..13d71643 100644
---- a/man/man8/xfs_admin.8
-+++ b/man/man8/xfs_admin.8
-@@ -135,6 +135,12 @@ This reduces mount time by speeding up metadata space reservation calculations.
- The filesystem cannot be downgraded after this feature is enabled.
- Once enabled, the filesystem will not be writable by older kernels.
- This feature was added to Linux 5.10.
-+.TP 0.4i
-+.B bigtime
-+Upgrade a filesystem to support larger timestamps up to the year 2486.
-+The filesystem cannot be downgraded after this feature is enabled.
-+Once enabled, the filesystem will not be mountable by older kernels.
-+This feature was added to Linux 5.10.
- .RE
- .TP
- .BI \-U " uuid"
-diff --git a/repair/globals.c b/repair/globals.c
-index 89063b10..28f0b6a0 100644
---- a/repair/globals.c
-+++ b/repair/globals.c
-@@ -52,6 +52,7 @@ int	lazy_count;		/* What to set if to if converting */
- 
- bool	add_needsrepair;	/* forcibly set needsrepair while repairing */
- bool	add_inobtcount;		/* add inode btree counts to AGI */
-+bool	add_bigtime;		/* add support for timestamps up to 2486 */
- 
- /* misc status variables */
- 
-diff --git a/repair/globals.h b/repair/globals.h
-index a0051794..be784cf6 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -94,6 +94,7 @@ extern int	lazy_count;		/* What to set if to if converting */
- 
- extern bool	add_needsrepair;
- extern bool	add_inobtcount;
-+extern bool	add_bigtime;
- 
- /* misc status variables */
- 
-diff --git a/repair/phase1.c b/repair/phase1.c
-index 96661c6b..89056215 100644
---- a/repair/phase1.c
-+++ b/repair/phase1.c
-@@ -77,6 +77,27 @@ set_inobtcount(
- 	sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
- }
- 
-+static void
-+set_bigtime(
-+	struct xfs_sb	*sb)
-+{
-+	if (!xfs_sb_version_hascrc(sb)) {
-+		printf(
-+	_("Large timestamp feature only supported on V5 filesystems.\n"));
-+		exit(0);
-+	}
+diff --git a/scrub/inodes.c b/scrub/inodes.c
+index 63865113..cc73da7f 100644
+--- a/scrub/inodes.c
++++ b/scrub/inodes.c
+@@ -119,6 +119,7 @@ scan_ag_inodes(
+ 	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
+ 	struct xfs_bulkstat	*bs;
+ 	struct xfs_inumbers	*inumbers;
++	uint64_t		nextino = cvt_agino_to_ino(&ctx->mnt, agno, 0);
+ 	int			i;
+ 	int			error;
+ 	int			stale_count = 0;
+@@ -153,6 +154,21 @@ scan_ag_inodes(
+ 	/* Find the inode chunk & alloc mask */
+ 	error = -xfrog_inumbers(&ctx->mnt, ireq);
+ 	while (!error && !si->aborted && ireq->hdr.ocount > 0) {
++		/*
++		 * Make sure that we always make forward progress while we
++		 * scan the inode btree.
++		 */
++		if (nextino > inumbers->xi_startino) {
++			str_corrupt(ctx, descr,
++	_("AG %u inode btree is corrupt near agino %lu, got %lu"), agno,
++				cvt_ino_to_agino(&ctx->mnt, nextino),
++				cvt_ino_to_agino(&ctx->mnt,
++						ireq->inumbers[0].xi_startino));
++			si->aborted = true;
++			break;
++		}
++		nextino = ireq->hdr.ino;
 +
-+	if (xfs_sb_version_hasbigtime(sb)) {
-+		printf(_("Filesystem already supports large timestamps.\n"));
-+		return;
-+	}
-+
-+	printf(_("Adding large timestamp support to filesystem.\n"));
-+	primary_sb_modified = 1;
-+	sb->sb_features_incompat |= (XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR |
-+				     XFS_SB_FEAT_INCOMPAT_BIGTIME);
-+}
-+
- /*
-  * this has got to be big enough to hold 4 sectors
-  */
-@@ -177,6 +198,8 @@ _("Cannot disable lazy-counters on V5 fs\n"));
- 		set_needsrepair(sb);
- 	if (add_inobtcount)
- 		set_inobtcount(sb);
-+	if (add_bigtime)
-+		set_bigtime(sb);
- 
- 	/* shared_vn should be zero */
- 	if (sb->sb_shared_vn) {
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 0ff2e2bc..60f97e8c 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -69,6 +69,7 @@ enum c_opt_nums {
- 	CONVERT_LAZY_COUNT = 0,
- 	CONVERT_NEEDSREPAIR,
- 	CONVERT_INOBTCOUNT,
-+	CONVERT_BIGTIME,
- 	C_MAX_OPTS,
- };
- 
-@@ -76,6 +77,7 @@ static char *c_opts[] = {
- 	[CONVERT_LAZY_COUNT]	= "lazycount",
- 	[CONVERT_NEEDSREPAIR]	= "needsrepair",
- 	[CONVERT_INOBTCOUNT]	= "inobtcount",
-+	[CONVERT_BIGTIME]	= "bigtime",
- 	[C_MAX_OPTS]		= NULL,
- };
- 
-@@ -327,6 +329,15 @@ process_args(int argc, char **argv)
- 		_("-c inobtcount only supports upgrades\n"));
- 					add_inobtcount = true;
- 					break;
-+				case CONVERT_BIGTIME:
-+					if (!val)
-+						do_abort(
-+		_("-c bigtime requires a parameter\n"));
-+					if (strtol(val, NULL, 0) != 1)
-+						do_abort(
-+		_("-c bigtime only supports upgrades\n"));
-+					add_bigtime = true;
-+					break;
- 				default:
- 					unknown('c', val);
- 					break;
+ 		/*
+ 		 * We can have totally empty inode chunks on filesystems where
+ 		 * there are more than 64 inodes per block.  Skip these.
 
