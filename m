@@ -3,41 +3,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4FB8C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:15:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13886C433E6
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:15:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9BD8D64E4F
+	by mail.kernel.org (Postfix) with ESMTP id C42FB64EBC
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:15:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229800AbhBIEOt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Feb 2021 23:14:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47952 "EHLO mail.kernel.org"
+        id S229891AbhBIEOy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Feb 2021 23:14:54 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48464 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229891AbhBIEKm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Feb 2021 23:10:42 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D705964EA4;
-        Tue,  9 Feb 2021 04:09:50 +0000 (UTC)
+        id S230225AbhBIEN0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Feb 2021 23:13:26 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5D5B364EBF;
+        Tue,  9 Feb 2021 04:10:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612843791;
-        bh=M4IyBRF44ERg674GGecpkJpkr5AQWSTrEuO5KYbTYus=;
-        h=Subject:From:To:Cc:Date:From;
-        b=MwG6pp8UJqI/KtqUssyKgNVS/WjajLOnleuFb3oXUggoVcsmitLibEbJ2RBgyafdQ
-         BZa7TDXWu9f6b7HIbXTkANe0z3MbHItIAmi3TH7N6mp1513S7dO72e9VHfXoHtnb1i
-         9u2o+XWgIcE4Exr3rlpcNRQwb8AW4RxVGt5zUqtRRAiS0y15OQJNHjLUqkT/rWJtKf
-         o0F8xIRkax81Lkpk1Rlq+q1Icrx5S75yQdRsPd4gua1l0d0GiDnrXsBE+RfYMgA9s/
-         N0m1vh3dwkxr89Qx8+Cw5SKpQsprXT3lqV6cTOBgBmwsyJk3+iKVZSQeSbOsyzaGG9
-         7U5EF5xrQmb6Q==
-Subject: [PATCHSET v5 0/2] xfs_db: add minimal directory navigation
+        s=k20201202; t=1612843827;
+        bh=wth1mPw6zDUfJmHmaklJbpm4fEomTnWcWyStpH68IP8=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=aDwxM1+BuAFRUPPZ8UongACsk91z2dl2ibF8xWk4/XjdEVyRMy+Gw4L+IwWnebpwN
+         Ce8L9EqRaX1Z/+WhTIjCXQMM3g9YJYrcYFNrvUu/vAAKC6eESiWWPxq8rE9M+rYDPD
+         5g9CEIT3zAlmdiZ+zOqLUGwmpEsC19fjukzkFESQMKs+IclFz/8bm7N8ulD1tE4aez
+         yY/ztLeHsO0ug5KsDQP0Sv47cpk39vLu3Mv0evufhG7hdDfPU5GGL3xFR2zn0ARJcb
+         3Cycp63ivddGeZAhfSE0FT846Zmr8QdMM0J32olJZhiYRg9YzM5F1Z1mnyVUmNxtm/
+         vW7fpZEbFOyyQ==
+Subject: [PATCH 04/10] xfs_repair: fix unmount error message to have a newline
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
-        linux-xfs@vger.kernel.org, chandanrlinux@gmail.com
-Date:   Mon, 08 Feb 2021 20:09:50 -0800
-Message-ID: <161284379028.3056690.9453785606632527710.stgit@magnolia>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        bfoster@redhat.com
+Date:   Mon, 08 Feb 2021 20:10:26 -0800
+Message-ID: <161284382691.3057868.2014492091458444565.stgit@magnolia>
+In-Reply-To: <161284380403.3057868.11153586180065627226.stgit@magnolia>
+References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -46,36 +48,28 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This patchset improves the usability of xfs_db by enabling users to
-navigate to inodes by path and to list the contents of directories.
+Add a newline so that this is consistent with the other error messages.
 
-v2: Various cleanups and reorganizing suggested by dchinner
-v3: Rebase to 5.10-rc0
-v4: fix memory leak
-v5: pick up a review from Chandan; no other changes
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfs_db-directory-navigation
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=xfs_db-directory-navigation
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- db/Makefile              |    3 
- db/command.c             |    1 
- db/command.h             |    1 
- db/namei.c               |  609 ++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/libxfs_api_defs.h |    1 
- man/man8/xfs_db.8        |   20 ++
- 6 files changed, 634 insertions(+), 1 deletion(-)
- create mode 100644 db/namei.c
+ repair/xfs_repair.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 724661d8..9409f0d8 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -1136,7 +1136,7 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
+ 	error = -libxfs_umount(mp);
+ 	if (error)
+ 		do_error(
+-	_("File system metadata writeout failed, err=%d.  Re-run xfs_repair."),
++	_("File system metadata writeout failed, err=%d.  Re-run xfs_repair.\n"),
+ 				error);
+ 
+ 	libxfs_destroy(&x);
 
