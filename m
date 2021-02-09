@@ -4,149 +4,134 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB338C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:24:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2F48C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:38:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A47C264E31
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:24:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A611E64EC2
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:38:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233267AbhBISYQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Feb 2021 13:24:16 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42232 "EHLO mail.kernel.org"
+        id S233320AbhBISgv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Feb 2021 13:36:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42474 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233308AbhBISV4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Feb 2021 13:21:56 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BD3CE64EC8;
-        Tue,  9 Feb 2021 18:10:01 +0000 (UTC)
+        id S233348AbhBISXC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Feb 2021 13:23:02 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 183E564E3F;
+        Tue,  9 Feb 2021 18:22:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612894201;
-        bh=TBFMhu13t7ubOIbrMsnWDvixdoVYp0esbt1RtnOBwUE=;
+        s=k20201202; t=1612894942;
+        bh=3bKxg86PZL5c3EXAF83hazrz2vnN6ui4lvT7vDn9YD4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=VSN9s7Cni9yKR732Xm/vZK+XLcIxfE6V4ZWewcr5qaKKDEidVNS7rmUHsMv3ImoBI
-         uXSqpBZILHGLgkG1zeqsT5t8hlehfKT8qqB+Y7CsBqM3stzDiZYybBH5Vsl+QeVr5R
-         eUygpw9fjf9wqU8dEroZXN7q50vAu9hpe8rPxzMRDFnujdpHAL903MbQf6PdX3kovO
-         /gM5sHwVEANjJv4OfGdz3IFm5lPm2mdRD98tD2jeW48/9WsLqkzQFab0rNZFf76R33
-         MZA5MWIlEABJ6gi2U+BdFmDX1kEfLYq33Z5rHVJlzm/7xmvAjA0q6zj/u96s3YczQ6
-         IhR5Q1zZwkqjQ==
-Date:   Tue, 9 Feb 2021 10:10:01 -0800
+        b=QNc+J63gzYL8nXHZ28asUphKb0RBfYZ82pEn3/OconByoGt4CG2NO6+nc6iSC6Usc
+         ueSX/rjABG776cJ30J827h4uzrY024gF8AvvZZiP5bgRpV2FlVB5cJzCB2X5L6pmKv
+         +l8Tn67LkMiZWr0qqJ51OdYY1vKP742xd+uL032ERAhDFrFQlyiTsgg+Coa8Xvz2+p
+         P5Wh10n/3ZUMqYxAn2Q/9uQkM9PccPSkcCZsPDokWuTHRDBtUzxEHvZkL2f5ZKxvgR
+         RSdx8VAL0W5+SSsmHhdkxukNyU5zD/HVKPdRbtnWWkN0B6xPcNoJzhRYfE4C66M8Zc
+         6rjz0tTUBsAUQ==
+Date:   Tue, 9 Feb 2021 10:22:21 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/10] xfs_repair: allow setting the needsrepair flag
-Message-ID: <20210209181001.GT7193@magnolia>
+Subject: Re: [PATCH 10/10] xfs_admin: support adding features to V5
+ filesystems
+Message-ID: <20210209182221.GV7193@magnolia>
 References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
- <161284384955.3057868.8076509276356847362.stgit@magnolia>
- <20210209172121.GF14273@bfoster>
+ <161284386088.3057868.16559496991921219277.stgit@magnolia>
+ <20210209172204.GH14273@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210209172121.GF14273@bfoster>
+In-Reply-To: <20210209172204.GH14273@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 09, 2021 at 12:21:21PM -0500, Brian Foster wrote:
-> On Mon, Feb 08, 2021 at 08:10:49PM -0800, Darrick J. Wong wrote:
+On Tue, Feb 09, 2021 at 12:22:04PM -0500, Brian Foster wrote:
+> On Mon, Feb 08, 2021 at 08:11:00PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Quietly set up the ability to tell xfs_repair to set NEEDSREPAIR at
-> > program start and (presumably) clear it by the end of the run.  This
-> > code isn't terribly useful to users; it's mainly here so that fstests
-> > can exercise the functionality.
+> > Teach the xfs_admin script how to add features to V5 filesystems.
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  repair/globals.c    |    2 ++
-> >  repair/globals.h    |    2 ++
-> >  repair/phase1.c     |   23 +++++++++++++++++++++++
-> >  repair/xfs_repair.c |    9 +++++++++
-> >  4 files changed, 36 insertions(+)
+> >  db/xfs_admin.sh      |    6 ++++--
+> >  man/man8/xfs_admin.8 |   22 ++++++++++++++++++++++
+> >  2 files changed, 26 insertions(+), 2 deletions(-)
 > > 
 > > 
+> > diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+> > index 430872ef..7a467dbe 100755
+> > --- a/db/xfs_admin.sh
+> > +++ b/db/xfs_admin.sh
+> > @@ -8,9 +8,10 @@ status=0
+> >  DB_OPTS=""
+> >  REPAIR_OPTS=""
+> >  REPAIR_DEV_OPTS=""
+> > -USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-r rtdev] [-U uuid] device [logdev]"
+> > +DB_LOG_OPTS=""
+> > +USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
+> 
+> Technically this would pass through the lazy counter variant on a v4
+> super, right? I wonder if we should just call it "[-O feature]" here.
+> 
+> >  
+> > -while getopts "c:efjlL:pr:uU:V" c
+> > +while getopts "c:efjlL:O:pr:uU:V" c
+> >  do
+> >  	case $c in
+> >  	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG;;
 > ...
-> > diff --git a/repair/phase1.c b/repair/phase1.c
-> > index 00b98584..b26d25f8 100644
-> > --- a/repair/phase1.c
-> > +++ b/repair/phase1.c
-> > @@ -30,6 +30,26 @@ alloc_ag_buf(int size)
-> >  	return(bp);
-> >  }
-> >  
-> > +static void
-> > +set_needsrepair(
-> > +	struct xfs_sb	*sb)
-> > +{
-> > +	if (!xfs_sb_version_hascrc(sb)) {
-> > +		printf(
-> > +	_("needsrepair flag only supported on V5 filesystems.\n"));
-> > +		exit(0);
-> > +	}
-> > +
-> > +	if (xfs_sb_version_needsrepair(sb)) {
-> > +		printf(_("Filesystem already marked as needing repair.\n"));
-> > +		return;
-> > +	}
+> > diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+> > index cccbb224..3f3aeea8 100644
+> > --- a/man/man8/xfs_admin.8
+> > +++ b/man/man8/xfs_admin.8
+> ...
+> > @@ -106,6 +108,26 @@ The filesystem label can be cleared using the special "\c
+> >  " value for
+> >  .IR label .
+> >  .TP
+> > +.BI \-O " feature1" = "status" , "feature2" = "status..."
+> > +Add or remove features on an existing a V5 filesystem.
 > 
-> Any reason this doesn't exit the repair like the lazy counter logic
-> does? Otherwise seems fine:
+> s/existing a/existing/
 
-No particular reason.  Will fix for consistency's sake.
+Fixed, thanks.
 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Also, similar question around the lazycount variant. If it works, should
+> it not be documented here?
+
+It would work, but I'd rather stick to the existing narrative that
+"xfs_admin -c 0|1" is how one changes the lazycount feature.  Mentioning
+both avenues in the manpage introduces the potential for confusion as to
+whether one is particularly better than the other.
+
+--D
+
+> Brian
 > 
-> > +
-> > +	printf(_("Marking filesystem in need of repair.\n"));
-> > +	primary_sb_modified = 1;
-> > +	sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-> > +}
-> > +
-> >  /*
-> >   * this has got to be big enough to hold 4 sectors
-> >   */
-> > @@ -126,6 +146,9 @@ _("Cannot disable lazy-counters on V5 fs\n"));
-> >  		}
-> >  	}
-> >  
-> > +	if (add_needsrepair)
-> > +		set_needsrepair(sb);
-> > +
-> >  	/* shared_vn should be zero */
-> >  	if (sb->sb_shared_vn) {
-> >  		do_warn(_("resetting shared_vn to zero\n"));
-> > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> > index 9dc73854..ee377e8a 100644
-> > --- a/repair/xfs_repair.c
-> > +++ b/repair/xfs_repair.c
-> > @@ -65,11 +65,13 @@ static char *o_opts[] = {
-> >   */
-> >  enum c_opt_nums {
-> >  	CONVERT_LAZY_COUNT = 0,
-> > +	CONVERT_NEEDSREPAIR,
-> >  	C_MAX_OPTS,
-> >  };
-> >  
-> >  static char *c_opts[] = {
-> >  	[CONVERT_LAZY_COUNT]	= "lazycount",
-> > +	[CONVERT_NEEDSREPAIR]	= "needsrepair",
-> >  	[C_MAX_OPTS]		= NULL,
-> >  };
-> >  
-> > @@ -302,6 +304,13 @@ process_args(int argc, char **argv)
-> >  					lazy_count = (int)strtol(val, NULL, 0);
-> >  					convert_lazy_count = 1;
-> >  					break;
-> > +				case CONVERT_NEEDSREPAIR:
-> > +					if (!val)
-> > +						do_abort(
-> > +		_("-c needsrepair requires a parameter\n"));
-> > +					if (strtol(val, NULL, 0) == 1)
-> > +						add_needsrepair = true;
-> > +					break;
-> >  				default:
-> >  					unknown('c', val);
-> >  					break;
+> > +The features should be specified as a comma-separated list.
+> > +.I status
+> > +should be either 0 to disable the feature or 1 to enable the feature.
+> > +Note, however, that most features cannot be disabled.
+> > +.IP
+> > +.B NOTE:
+> > +Administrators must ensure the filesystem is clean by running
+> > +.B xfs_repair -n
+> > +to inspect the filesystem before performing the upgrade.
+> > +If corruption is found, recovery procedures (e.g. reformat followed by
+> > +restoration from backup; or running
+> > +.B xfs_repair
+> > +without the
+> > +.BR -n )
+> > +must be followed to clean the filesystem.
+> > +.IP
+> > +There are currently no feature options.
+> > +.TP
+> >  .BI \-U " uuid"
+> >  Set the UUID of the filesystem to
+> >  .IR uuid .
 > > 
 > 
