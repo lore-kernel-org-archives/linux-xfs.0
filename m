@@ -2,152 +2,342 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64F71C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:07:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA3D6C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:14:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E8B064EAA
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:07:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5166764EB1
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:14:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229629AbhBIEGe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Feb 2021 23:06:34 -0500
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:11282 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229807AbhBIEFe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Feb 2021 23:05:34 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1612843533; x=1644379533;
-  h=from:to:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=jbiJ/tMYoacV1OWimltfMA/aSqUCHPK4fmRx/X0t1Zg=;
-  b=JresYT7nE2gomFMQ4/ZxEmPB/HoecbDWgvo6CYRji5WzWnKDd55qWIrU
-   UpwmGSXpO1oQlmpgYbjT7THa9vmUQfsxVxuVIvqLhZcEaJnWTb1S+rbtr
-   NidBw2WeqkWHLDSIX4rxirjsv0yNXOP8YzJmVXHpyP+s0htB4rnYttKRw
-   7p3M2No0y9CGvIsn6nN5+xQyOm8sfZVpBanx6JQeKpWCD3ACkT3ojgn+S
-   0KulrF45AnPGnHiLNpcXmIbxYLyWZxd/ajYq+KwOX3phqsEssbSEe5TB2
-   gBnUxorJpFOgqHuM8TSVQuZjvI78rqMBLaqKSmORpDUKUQSfwWUpLbAVx
-   w==;
-IronPort-SDR: thmNbnDaQiCyRGQdCUXzUaQBX+TKVz25MV2zcUzUYkz9A//rYQ1qXbITiStBSP3rCPbN/PeJJY
- y+zkrgEnYJj/rCoQawLdwWH4ZkM8tMj5FkY0ViK4uwFOmUBjbj8snWUia4NkyTdY7b7ebaJJMg
- FRqvsBsBWxZtu/fbqIM5Bms42LrEprz+jiESOgsu/FubuhdQ7wTEoLCUF7dDjnL08IZRf671Zl
- hH4HB/70cRXs+uozOuuH4+NFmjtz6lRSCkvc01sMH+4BOrq2XusbXW5TQ+OGrLMG+MdeM2rqrQ
- 3zw=
-X-IronPort-AV: E=Sophos;i="5.81,164,1610380800"; 
-   d="scan'208";a="163963147"
-Received: from mail-mw2nam12lp2042.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.42])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Feb 2021 12:04:03 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=F6M6CPN5bu/lpeU90VswjFtiEpsmdO6TqHkRHwCzvR9r8/61atLSotIxBI0RR9aHuH1ZnfK6RlVeGvTC8a1iLvbfRVdI21zQWms/B7vI7x8Q1G5RoMxPzEGROy4942AE92Qneo8vzAFeeY2auNBc0yWwzbev83a1QI7+77n3MkdPKIuoSjkHH1vGjySr+FCnFa7TlWpOxVeeXdBctyn2RR8Z0z1Sac80FvWLXA46dvO7gGr8ogk5cxDsYAAeF8b6IrI986IqPOGOu3mUP5jMSX9QztoUcYxjZFeitam+XRa+Es6fOLVouC+21XUtcB7spWE7BXQQFh/EI8GuKxLM/w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RsZRQJxTe/68c2f2KeOCoFqpt9jLHErQzOJ1ZxVkeoQ=;
- b=MwD3Ve700BbnMCg+Q8ckXwtHQMIwOuM668G8DgdGVfHE3qe+43n5tw7ZTteaInCTTLNHCw/cPNVQZp0GiB6fUz7dGvyMESrJ+Tz7E4/ZSF+AnENOU1AiDjmYB44E4t/beWfhxsm5cXRNUqiEU8r36z16869DnJhCHSTAR66waxWpHn6hLTJpG1nADZ6mSgb7aXb06SlvHcE/rLLN+mRk7+vfq2Q291ocXVzw7QjBcjcAC+L9deriQANzDv/6iC7CW9c/o97bhpgjRe9KXZc8nqau0A/Uv0XO+hdTXdS4wGYWagJM0YHqLNwfeOSaQwX5QLFhgzy1rhtJIgDGJgryZA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RsZRQJxTe/68c2f2KeOCoFqpt9jLHErQzOJ1ZxVkeoQ=;
- b=XXMT3RX/IMZSJ60Wdri4uIckNzOBt0RiwR5FLPpGB7Sa1qzeT9dTIsrjcOB3pbNVQ0z7llMirfzERZkaKGXrNceytqTDGQVZGw+7w7zpWGyaCoZr4WAi23OSk3nqzlgzKbqED73t4VxVCJewNU6K9GwnSFtWrDYbbPsP4gR6bm8=
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
- by BYAPR04MB4328.namprd04.prod.outlook.com (2603:10b6:a02:ef::33) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3825.30; Tue, 9 Feb
- 2021 04:04:03 +0000
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::1d83:38d9:143:4c9c]) by BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::1d83:38d9:143:4c9c%5]) with mapi id 15.20.3825.027; Tue, 9 Feb 2021
- 04:04:03 +0000
-From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: fix rst syntax error in admin guide
-Thread-Topic: [PATCH] xfs: fix rst syntax error in admin guide
-Thread-Index: AQHW/oojgst2JYYYbkiy1ho1ObXEBQ==
-Date:   Tue, 9 Feb 2021 04:04:02 +0000
-Message-ID: <BYAPR04MB49659152BB28D63D99AB7C27868E9@BYAPR04MB4965.namprd04.prod.outlook.com>
-References: <20210209021843.GP7193@magnolia>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [199.255.45.62]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: e50bd71b-3faa-4a0c-e6ca-08d8ccafbcb4
-x-ms-traffictypediagnostic: BYAPR04MB4328:
-x-microsoft-antispam-prvs: <BYAPR04MB432895078026AF58D3D90657868E9@BYAPR04MB4328.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: YwV+D0xIE+I+J6zzEVwAFqpt8K+XU9jxeSTv3fiOELT6MJ4KE1dLqUrK476r7WKwq5UEthgVXorpWm3P+hg0vPw+i0IrgBxlxB24Nu48y0LjaaOgwHJmFF36AfBi5D+4pOQfPRTUClAFXBVquUDifR5LQacxzfq+AtuASO95i0WAJO/zBoR3w32EwOLp2XUpZqlGZD4cpMfkJqr3M3Ku8J/Txp0FW6Fufa4idCXCiXS2ab7vEYAth4fhSC5dyMac81CjONUnnEiteh4nqOagWR6Dt90WNJefFPf+oMt2bdunrTteeq7eAx/GnyB+eca+qsyzEPV/JyjegS93JChZc/ohm9+fhVjpA8G0n9WSw+N2n2dMDPbBBaCHJTkwPcrMxhNDJN1rLYzhrD1UkGWYpWVmZnVK9xWIZH0nLaKcZKrOfHFbArSxDhz3joZK0xlwxZIRZLHH8iLK4bbqCBjIKUsTvCnXonG92CBbqmkfzcnwkKxdSHbnmfzUGkYE6Da7K04OWK7rFiaGcZ5YKH57ww==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(136003)(366004)(376002)(39860400002)(396003)(52536014)(76116006)(478600001)(5660300002)(9686003)(6506007)(316002)(64756008)(66946007)(66556008)(66476007)(66446008)(110136005)(55016002)(86362001)(53546011)(7696005)(186003)(8676002)(26005)(71200400001)(83380400001)(33656002)(8936002)(4744005)(2906002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?E7+dhR7lCPv2mlWGl7skYR1a2+WP/LFJxA/fQSWc1tnrk21g1nfOKb3GCrMh?=
- =?us-ascii?Q?cfnEr+iCi9yerNodsemYG5Y9xzHgER281FLC4ShFJ1ErcnClogj5sUl0+DPk?=
- =?us-ascii?Q?If/FSKE6XSIFXd67N1HWsn1n8WZQEpqp0I4DbDHjp5LLwuO0Q1Ca2PJgYtbW?=
- =?us-ascii?Q?1PbGaeXalWxIAimN0sgdAnYJn9h1Q9gxmJLnTPamVQ+qusiWK83OhALNajzj?=
- =?us-ascii?Q?H0CSztelWNRetTi20gqS2m52x4KSiOzaae1hcfgO8m/73tOkFNw/NQbqdpf2?=
- =?us-ascii?Q?U+/MI/CbFO3fraHGK6GmZgnacuzp6wGNp2dJLcpPGjbIOOF0i+VzYI8+NUUV?=
- =?us-ascii?Q?cVPKhheFAlTzvgssOBnN1KDr2SdjRmXENZa+9ZC5Wx0ZcnJQLgUFBtIa88or?=
- =?us-ascii?Q?dAqoLfJALcECBovUFYerbZjBrSQxxb2ZBxjgAF0pPcmofOHbm9YoFtQ2Kxl5?=
- =?us-ascii?Q?lTDs+EMLOftiOCtTX6E37lneFoPmktm5gVCIjz3ZJPEBYAD4g1ErhIlo/Y+C?=
- =?us-ascii?Q?6t9vuBBRnTq+FX0WYl5+Xml+59iNCSxKL9SidVpyBH9MIBXh7Xln6nv6HJte?=
- =?us-ascii?Q?hkAQpzWC+qrbfJPlVTwLZnc7/IM4RcJ+Zd4mifmsC8Fw0dnjhk6h/L9Fm2W7?=
- =?us-ascii?Q?L9HINVJPjbSejlSyX7BYxgBnoJOiVCZfzgKbxdhNKX3UjwrDKPKNhWElUTyw?=
- =?us-ascii?Q?ypNIWSW1t+u2qoxcvibXQey7S/EqqWHvamFxNRMOm7B8971iEkWCtXxoheBC?=
- =?us-ascii?Q?7BLe7SVvjzVfrXXGYgdeHdgtkXNeTMLdwB5/TxiQMsykAxm94kJc1CpDBeA/?=
- =?us-ascii?Q?WS2sYxqQuFtmi0lwiXXAB14AkFYO6uL+Aw8GFRi8cWAE6e1U/gNhh5IF++6p?=
- =?us-ascii?Q?A2z4oVPZG0uQ80QmFEwFzMHkTy1XASIs0m0QbJgUBEZk5GgTwoaLG0MBEU8S?=
- =?us-ascii?Q?3Iqq4WOnC7xXJR3/0o8uq1ft1KjkUIzFDmNR/1ZJIQVtTcW7xFVvptKW4ZTr?=
- =?us-ascii?Q?ENug8e7+KF9YPHGrlnRtweKVTegHrH5tAHtvKHZv2Hbf/PUQS0zMLJ/TyuNr?=
- =?us-ascii?Q?VsqSkApJN4NO37V+DCJ1qn2IwvR6E8hFNrZfHSnw7OAHwk79ZQncu7GWGqpF?=
- =?us-ascii?Q?GjNe8o7dHJjUqiEYxLKoYYenfPta+p+Ju1gNsFGMgz1NSAHI9SgBAyx9YHeQ?=
- =?us-ascii?Q?vWH0/LZXnGYbA12c5YlCWi0c5Y8j48X2aBA007mno9fCbg/ARW7YsFDJYvA0?=
- =?us-ascii?Q?BO9tUoICz+bCPFvpUMdur+pbzkWvX9I2p2fy+jEuxAiL2jfuJqCBXCdKiiwq?=
- =?us-ascii?Q?tqKhUS3sUpuzs2urDdTraosL?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S229733AbhBIEN7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Feb 2021 23:13:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47972 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230043AbhBIEKn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Feb 2021 23:10:43 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9C04664EB1;
+        Tue,  9 Feb 2021 04:09:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612843796;
+        bh=Ombxv7QEh+RQSPH528NcL2y2ehYbXT9pJvi89Q+kAfU=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=f2uopyOPJzvZD9TuiY/oCImrsV+wzKaMM3rA1OB5ZAXOMjLS8MAhebt/6YOO9q+4d
+         5gakUWZIB2Y1s2NAbWWUh81d/7yE/1d4Zw79TO4GdnP6uty/TQAnkvgFaUstV/2F+5
+         /Na4wGPf/kLQPfrewHTntHoNKv02kqK452WXdz9sE4829XgC6UQKCVAkGDHPWmU43J
+         VWbDRQ6Tk1I5xjpMkwT84gdsx5qno2g12OCzwXfKLt5b0jvrKKYphdyGGXBLdvqHvT
+         60VlSfXe6INr8w4F4kh40xqM74xnknJFTZDug0WSBQf5m+ifs9chqeT5a3Skt2QyJO
+         rhEqep8XjXFVg==
+Subject: [PATCH 1/2] xfs_db: add a directory path lookup command
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     sandeen@sandeen.net, djwong@kernel.org
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, chandanrlinux@gmail.com
+Date:   Mon, 08 Feb 2021 20:09:56 -0800
+Message-ID: <161284379615.3056690.1394366028989837229.stgit@magnolia>
+In-Reply-To: <161284379028.3056690.9453785606632527710.stgit@magnolia>
+References: <161284379028.3056690.9453785606632527710.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e50bd71b-3faa-4a0c-e6ca-08d8ccafbcb4
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Feb 2021 04:04:02.9660
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 5YktK8Qg1BPHgvobj8bM0dUTS0P8VVueJvqaBiIyVaJ+SSRrDZ0LOZ8jeYgxdMQwmvbpSTUY5eHJYZrMRmwQzeanamNARsgGECoi1ZeR+Eg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4328
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/8/21 18:20, Darrick J. Wong wrote:=0A=
-> From: Darrick J. Wong <djwong@kernel.org>=0A=
->=0A=
-> Tables are supposed to have a matching line of "=3D=3D=3D" to signal the =
-end=0A=
-> of a table.  The rst compiler gets grouchy if it encounters EOF instead,=
-=0A=
-> so fix this warning.=0A=
->=0A=
-> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>=0A=
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>=0A=
-Indeed the last line "=3D=3D=3D" is missing from xfs/for-next branch.=0A=
-=0A=
-Looks good.=0A=
-=0A=
-Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>=0A=
-=0A=
+From: Darrick J. Wong <djwong@kernel.org>
+
+Add a command to xfs_db so that we can navigate to inodes by path.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+---
+ db/Makefile       |    3 -
+ db/command.c      |    1 
+ db/command.h      |    1 
+ db/namei.c        |  220 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_db.8 |    4 +
+ 5 files changed, 228 insertions(+), 1 deletion(-)
+ create mode 100644 db/namei.c
+
+
+diff --git a/db/Makefile b/db/Makefile
+index 9d502bf0..beafb105 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -14,7 +14,8 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+ 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+ 	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
+ 	fuzz.h
+-CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c timelimit.c
++CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c \
++	timelimit.c
+ LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+ 
+ LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+diff --git a/db/command.c b/db/command.c
+index 43828369..02f778b9 100644
+--- a/db/command.c
++++ b/db/command.c
+@@ -131,6 +131,7 @@ init_commands(void)
+ 	logformat_init();
+ 	io_init();
+ 	metadump_init();
++	namei_init();
+ 	output_init();
+ 	print_init();
+ 	quit_init();
+diff --git a/db/command.h b/db/command.h
+index 6913c817..498983ff 100644
+--- a/db/command.h
++++ b/db/command.h
+@@ -33,3 +33,4 @@ extern void		btdump_init(void);
+ extern void		info_init(void);
+ extern void		btheight_init(void);
+ extern void		timelimit_init(void);
++extern void		namei_init(void);
+diff --git a/db/namei.c b/db/namei.c
+new file mode 100644
+index 00000000..6fddbc4a
+--- /dev/null
++++ b/db/namei.c
+@@ -0,0 +1,220 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2021 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "libxfs.h"
++#include "command.h"
++#include "output.h"
++#include "init.h"
++#include "io.h"
++#include "type.h"
++#include "input.h"
++#include "faddr.h"
++#include "fprint.h"
++#include "field.h"
++#include "inode.h"
++
++/* Path lookup */
++
++/* Key for looking up metadata inodes. */
++struct dirpath {
++	/* Array of string pointers. */
++	char		**path;
++
++	/* Number of strings in path. */
++	unsigned int	depth;
++};
++
++static void
++path_free(
++	struct dirpath	*dirpath)
++{
++	unsigned int	i;
++
++	for (i = 0; i < dirpath->depth; i++)
++		free(dirpath->path[i]);
++	free(dirpath->path);
++	free(dirpath);
++}
++
++/* Chop a freeform string path into a structured path. */
++static struct dirpath *
++path_parse(
++	const char	*path)
++{
++	struct dirpath	*dirpath;
++	const char	*p = path;
++	const char	*endp = path + strlen(path);
++
++	dirpath = calloc(sizeof(*dirpath), 1);
++	if (!dirpath)
++		return NULL;
++
++	while (p < endp) {
++		char		**new_path;
++		const char	*next_slash;
++
++		next_slash = strchr(p, '/');
++		if (next_slash == p) {
++			p++;
++			continue;
++		}
++		if (!next_slash)
++			next_slash = endp;
++
++		new_path = realloc(dirpath->path,
++				(dirpath->depth + 1) * sizeof(char *));
++		if (!new_path) {
++			path_free(dirpath);
++			return NULL;
++		}
++
++		dirpath->path = new_path;
++		dirpath->path[dirpath->depth] = strndup(p, next_slash - p);
++		dirpath->depth++;
++
++		p = next_slash + 1;
++	}
++
++	return dirpath;
++}
++
++/* Given a directory and a structured path, walk the path and set the cursor. */
++static int
++path_navigate(
++	struct xfs_mount	*mp,
++	xfs_ino_t		rootino,
++	struct dirpath		*dirpath)
++{
++	struct xfs_inode	*dp;
++	xfs_ino_t		ino = rootino;
++	unsigned int		i;
++	int			error;
++
++	error = -libxfs_iget(mp, NULL, ino, 0, &dp);
++	if (error)
++		return error;
++
++	for (i = 0; i < dirpath->depth; i++) {
++		struct xfs_name	xname = {
++			.name	= dirpath->path[i],
++			.len	= strlen(dirpath->path[i]),
++		};
++
++		if (!S_ISDIR(VFS_I(dp)->i_mode)) {
++			error = ENOTDIR;
++			goto rele;
++		}
++
++		error = -libxfs_dir_lookup(NULL, dp, &xname, &ino, NULL);
++		if (error)
++			goto rele;
++		if (!xfs_verify_ino(mp, ino)) {
++			error = EFSCORRUPTED;
++			goto rele;
++		}
++
++		libxfs_irele(dp);
++		dp = NULL;
++
++		error = -libxfs_iget(mp, NULL, ino, 0, &dp);
++		switch (error) {
++		case EFSCORRUPTED:
++		case EFSBADCRC:
++		case 0:
++			break;
++		default:
++			return error;
++		}
++	}
++
++	set_cur_inode(ino);
++rele:
++	if (dp)
++		libxfs_irele(dp);
++	return error;
++}
++
++/* Walk a directory path to an inode and set the io cursor to that inode. */
++static int
++path_walk(
++	char		*path)
++{
++	struct dirpath	*dirpath;
++	char		*p = path;
++	xfs_ino_t	rootino = mp->m_sb.sb_rootino;
++	int		error = 0;
++
++	if (*p == '/') {
++		/* Absolute path, start from the root inode. */
++		p++;
++	} else {
++		/* Relative path, start from current dir. */
++		if (iocur_top->typ != &typtab[TYP_INODE] ||
++		    !S_ISDIR(iocur_top->mode))
++			return ENOTDIR;
++
++		rootino = iocur_top->ino;
++	}
++
++	dirpath = path_parse(p);
++	if (!dirpath)
++		return ENOMEM;
++
++	error = path_navigate(mp, rootino, dirpath);
++	path_free(dirpath);
++	return error;
++}
++
++static void
++path_help(void)
++{
++	dbprintf(_(
++"\n"
++" Navigate to an inode via directory path.\n"
++	));
++}
++
++static int
++path_f(
++	int		argc,
++	char		**argv)
++{
++	int		c;
++	int		error;
++
++	while ((c = getopt(argc, argv, "")) != -1) {
++		switch (c) {
++		default:
++			path_help();
++			return 0;
++		}
++	}
++
++	error = path_walk(argv[optind]);
++	if (error) {
++		dbprintf("%s: %s\n", argv[optind], strerror(error));
++		exitcode = 1;
++	}
++
++	return 0;
++}
++
++static struct cmdinfo path_cmd = {
++	.name		= "path",
++	.altname	= NULL,
++	.cfunc		= path_f,
++	.argmin		= 1,
++	.argmax		= 1,
++	.canpush	= 0,
++	.args		= "",
++	.help		= path_help,
++};
++
++void
++namei_init(void)
++{
++	path_cmd.oneline = _("navigate to an inode by path");
++	add_command(&path_cmd);
++}
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 55388be6..4df265ec 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -831,6 +831,10 @@ See the
+ .B print
+ command.
+ .TP
++.BI "path " dir_path
++Walk the directory tree to an inode using the supplied path.
++Absolute and relative paths are supported.
++.TP
+ .B pop
+ Pop location from the stack.
+ .TP
+
