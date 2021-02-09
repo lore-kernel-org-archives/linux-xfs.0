@@ -7,221 +7,256 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25715C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 19:29:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 943ECC433E9
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 19:29:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCDC564ED9
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 19:29:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C67B64EDB
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 19:29:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233271AbhBIT1T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Feb 2021 14:27:19 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30105 "EHLO
+        id S232974AbhBIT2y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Feb 2021 14:28:54 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:31147 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233577AbhBITFd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Feb 2021 14:05:33 -0500
+        by vger.kernel.org with ESMTP id S233650AbhBITQK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Feb 2021 14:16:10 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612897399;
+        s=mimecast20190719; t=1612898069;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=VER7rbHR6WxkzrrT5HKNwD1LKKNevHwojJ7zqwx0inU=;
-        b=XyyEEvE0H6qsGFbDuGGrznsR5nuZruPzmgxiSiO7kzE714VPgUZ7GOSwWOUk3Zb6vDs8wv
-        9q4jVG7NPyU5oqPbPqNBotVLh9czix/ktiHm/RDCVeHv2kZeQ2FINSW5zPz8eLvaF1oPhn
-        qjs1dvC9bNxLaCHxsTZMFMvUtMGBdLA=
+        bh=NUKNmhjrKlXPWIXHosHufjFHK/IY7iArqkOy7fgzgwo=;
+        b=fkvY8qAIqREPw16zf7JwUpEVrKnyV2YW5VIOyYoXm+xtHBr7DKBmxixJk+Dsd7o/ACQS+F
+        BtVJJ2K+JH4KX078BlArszRegg2zaVDdag261iehNR1p1D2y4VU5EOq1pzCMKdBToHeswB
+        kZwxrj6zt54ykQMSDZW8pSSKYrAMj6c=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-219-j7JPwBZIN0aXise-zlXekw-1; Tue, 09 Feb 2021 13:59:43 -0500
-X-MC-Unique: j7JPwBZIN0aXise-zlXekw-1
+ us-mta-557-xq5GCmatOD2tZ7SjYTFrlA-1; Tue, 09 Feb 2021 14:14:25 -0500
+X-MC-Unique: xq5GCmatOD2tZ7SjYTFrlA-1
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1A343106BB2A;
-        Tue,  9 Feb 2021 18:59:42 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A9279107ACE3;
+        Tue,  9 Feb 2021 19:14:24 +0000 (UTC)
 Received: from bfoster (ovpn-113-234.rdu2.redhat.com [10.10.113.234])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8C95D10013D7;
-        Tue,  9 Feb 2021 18:59:41 +0000 (UTC)
-Date:   Tue, 9 Feb 2021 13:59:39 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 21B83100164C;
+        Tue,  9 Feb 2021 19:14:24 +0000 (UTC)
+Date:   Tue, 9 Feb 2021 14:14:22 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/10] xfs_repair: add a testing hook for NEEDSREPAIR
-Message-ID: <20210209185939.GK14273@bfoster>
+Subject: Re: [PATCH 07/10] xfs_repair: set NEEDSREPAIR when we deliberately
+ corrupt directories
+Message-ID: <20210209191422.GL14273@bfoster>
 References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
- <161284385516.3057868.355176047687079022.stgit@magnolia>
- <20210209172131.GG14273@bfoster>
- <20210209181738.GU7193@magnolia>
+ <161284384405.3057868.8114203697655713495.stgit@magnolia>
+ <20210209172059.GE14273@bfoster>
+ <20210209183542.GW7193@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210209181738.GU7193@magnolia>
+In-Reply-To: <20210209183542.GW7193@magnolia>
 X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 09, 2021 at 10:17:38AM -0800, Darrick J. Wong wrote:
-> On Tue, Feb 09, 2021 at 12:21:31PM -0500, Brian Foster wrote:
-> > On Mon, Feb 08, 2021 at 08:10:55PM -0800, Darrick J. Wong wrote:
+On Tue, Feb 09, 2021 at 10:35:42AM -0800, Darrick J. Wong wrote:
+> On Tue, Feb 09, 2021 at 12:20:59PM -0500, Brian Foster wrote:
+> > On Mon, Feb 08, 2021 at 08:10:44PM -0800, Darrick J. Wong wrote:
 > > > From: Darrick J. Wong <djwong@kernel.org>
 > > > 
-> > > Simulate a crash when anyone calls force_needsrepair.  This is a debug
-> > > knob so that we can test that the kernel won't mount after setting
-> > > needsrepair and that a re-run of xfs_repair will clear the flag.
+> > > There are a few places in xfs_repair's directory checking code where we
+> > > deliberately corrupt a directory entry as a sentinel to trigger a
+> > > correction in later repair phase.  In the mean time, the filesystem is
+> > > inconsistent, so set the needsrepair flag to force a re-run of repair if
+> > > the system goes down.
 > > > 
 > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > > ---
 > > 
-> > Can't we just use db to manually set the bit on the superblock?
+> > Hmm.. this seems orthogonal to the rest of the series. I'm sure we can
+> > come up with various additional uses for the bit, but it seems a little
+> > odd to me that repair might set it in some cases after a crash but not
+> > others (if the filesystem happens to already be corrupt, for example).
 > 
-> No, because the fstest uses this debug knob to simulate the following:
-> 
-> 1) sysadmin issues 'xfs_admin -O inobtcount /dev/sda1'
-> 2) xfs_repair flips on INOBTCOUNT and NEEDSREPAIR
-> 3) system goes down and repair never completes
-> 4) verify that we can't mount
-> 5) verify that repair clears NEEDSREPAIR and gives us a clean fs
-> 6) verify that mount works again
+> <nod> Another option I thought of is to add a hook to the buffer cache
+> so that the first time anyone tries to bwrite a buffer (either directly
+> or via a delwri list or normal buffer cache writeback) we'll also set
+> needsrepair on the ondisk primary super.  That would protect us against
+> other scenarios like crashing after writing a new AGF but before writing
+> the new AGI, where the fs is left in an indeterminate state.
 > 
 
-Ok, but that seems like circular reasoning. It wouldn't be quite the
-same as a simulated repair failure, but ISTM that if we set the bit
-manually, we can still verify steps 4, 5 and 6 as is (with the caveat
-that the repair invocation performs a feature upgrade). I'm not sure how
-important it really is to verify that a feature upgrade sequence sets
-the bit if it happens to fail provided we have independent tests that 1.
-verify the needsrepair bit works as expected and 2. verify the feature
-upgrades work appropriately, since that is the primary functionality.
-
-I wanted to think about that a little more before replying, but I also
-just realized something odd when digging into the debug code:
-
-# ./repair/xfs_repair -c needsrepair=1 /dev/test/scratch 
-Phase 1 - find and verify superblock...
-Marking filesystem in need of repair.
-writing modified primary superblock
-Phase 2 - using internal log
-        - zero log...
-ERROR: The filesystem has valuable metadata changes in a log which needs to
-...
-# mount /dev/test/scratch /mnt/
-mount: /mnt: wrong fs type, bad option, bad superblock on /dev/mapper/test-scratch, missing codepage or helper program, or other error.
-#
-
-It looks like we can set a feature upgrade bit on the superblock before
-we've examined the log and potentially discovered that it's dirty (phase
-2). If the log is recoverable, that puts the user in a bit of a bind..
+Yeah, that _seems_ more appropriate to me. It's not immediately clear to
+me what the implementation should look like, but in general behavior
+that sets needsrepair on first modification and clears it as a final
+step sounds more practical. Then the behavior can be easily explained as
+"once repair starts on an fs, it must be completed before it is allowed
+to mount." I do think this should be lifted off for a followon series so
+we can make progress on the feature upgrade bits without growing more
+requirements and complexity..
 
 Brian
 
-> and the other scenario is:
-> 
-> 1) fuzz a directory entry in such a way that repair will decide to
->    blow out the dirent and rebuild the directory later
-> 2) sysadmin issues 'xfs_repair /dev/sda1'
-> 2) xfs_repair flips on NEEDSREPAIR at the same time it corrupts the
->    dirent to trigger the rebuild later
-> 3) system goes down and repair never completes
-> 4) verify that we can't mount
-> 5) verify that repair clears NEEDSREPAIR and gives us a clean fs
-> 6) verify that mount works again
-> 
-> Both cases reflect what I think are the most likely failure scenarios,
-> hence the knob needs to be in xfs_repair to prevent it from running to
-> completion.
-> 
-> (And yes, I've been recently very bad at sending fstests out for review
-> the past few months; I will get that done by this afternoon.)
+> Hmm, maybe I should pursue /that/ instead.
 > 
 > --D
 > 
 > > Brian
 > > 
-> > >  repair/globals.c    |    1 +
-> > >  repair/globals.h    |    2 ++
-> > >  repair/phase1.c     |    5 +++++
-> > >  repair/xfs_repair.c |    7 +++++++
-> > >  4 files changed, 15 insertions(+)
+> > >  repair/agheader.h   |    2 ++
+> > >  repair/dir2.c       |    3 +++
+> > >  repair/phase6.c     |    7 +++++++
+> > >  repair/xfs_repair.c |   37 +++++++++++++++++++++++++++++++++++++
+> > >  4 files changed, 49 insertions(+)
 > > > 
 > > > 
-> > > diff --git a/repair/globals.c b/repair/globals.c
-> > > index 699a96ee..b0e23864 100644
-> > > --- a/repair/globals.c
-> > > +++ b/repair/globals.c
-> > > @@ -40,6 +40,7 @@ int	dangerously;		/* live dangerously ... fix ro mount */
-> > >  int	isa_file;
-> > >  int	zap_log;
-> > >  int	dumpcore;		/* abort, not exit on fatal errs */
-> > > +bool	abort_after_force_needsrepair;
-> > >  int	force_geo;		/* can set geo on low confidence info */
-> > >  int	assume_xfs;		/* assume we have an xfs fs */
-> > >  char	*log_name;		/* Name of log device */
-> > > diff --git a/repair/globals.h b/repair/globals.h
-> > > index 043b3e8e..9fa73b2c 100644
-> > > --- a/repair/globals.h
-> > > +++ b/repair/globals.h
-> > > @@ -82,6 +82,8 @@ extern int	isa_file;
-> > >  extern int	zap_log;
-> > >  extern int	dumpcore;		/* abort, not exit on fatal errs */
-> > >  extern int	force_geo;		/* can set geo on low confidence info */
-> > > +/* Abort after forcing NEEDSREPAIR to test its functionality */
-> > > +extern bool	abort_after_force_needsrepair;
-> > >  extern int	assume_xfs;		/* assume we have an xfs fs */
-> > >  extern char	*log_name;		/* Name of log device */
-> > >  extern int	log_spec;		/* Log dev specified as option */
-> > > diff --git a/repair/phase1.c b/repair/phase1.c
-> > > index b26d25f8..57f72cd0 100644
-> > > --- a/repair/phase1.c
-> > > +++ b/repair/phase1.c
-> > > @@ -170,5 +170,10 @@ _("Cannot disable lazy-counters on V5 fs\n"));
-> > >  	 */
-> > >  	sb_ifree = sb_icount = sb_fdblocks = sb_frextents = 0;
-> > >  
-> > > +	/* Simulate a crash after setting needsrepair. */
-> > > +	if (primary_sb_modified && add_needsrepair &&
-> > > +	    abort_after_force_needsrepair)
-> > > +		exit(55);
+> > > diff --git a/repair/agheader.h b/repair/agheader.h
+> > > index a63827c8..fa6fe596 100644
+> > > --- a/repair/agheader.h
+> > > +++ b/repair/agheader.h
+> > > @@ -82,3 +82,5 @@ typedef struct fs_geo_list  {
+> > >  #define XR_AG_AGF	0x2
+> > >  #define XR_AG_AGI	0x4
+> > >  #define XR_AG_SB_SEC	0x8
 > > > +
-> > >  	free(sb);
-> > >  }
+> > > +void force_needsrepair(struct xfs_mount *mp);
+> > > diff --git a/repair/dir2.c b/repair/dir2.c
+> > > index eabdb4f2..922b8a3e 100644
+> > > --- a/repair/dir2.c
+> > > +++ b/repair/dir2.c
+> > > @@ -15,6 +15,7 @@
+> > >  #include "da_util.h"
+> > >  #include "prefetch.h"
+> > >  #include "progress.h"
+> > > +#include "agheader.h"
+> > >  
+> > >  /*
+> > >   * Known bad inode list.  These are seen when the leaf and node
+> > > @@ -774,6 +775,7 @@ _("entry at block %u offset %" PRIdPTR " in directory inode %" PRIu64
+> > >  				do_warn(
+> > >  _("\tclearing inode number in entry at offset %" PRIdPTR "...\n"),
+> > >  					(intptr_t)ptr - (intptr_t)d);
+> > > +				force_needsrepair(mp);
+> > >  				dep->name[0] = '/';
+> > >  				*dirty = 1;
+> > >  			} else {
+> > > @@ -914,6 +916,7 @@ _("entry \"%*.*s\" in directory inode %" PRIu64 " points to self: "),
+> > >  		 */
+> > >  		if (junkit) {
+> > >  			if (!no_modify) {
+> > > +				force_needsrepair(mp);
+> > >  				dep->name[0] = '/';
+> > >  				*dirty = 1;
+> > >  				do_warn(_("clearing entry\n"));
+> > > diff --git a/repair/phase6.c b/repair/phase6.c
+> > > index 14464bef..5ecbe9b2 100644
+> > > --- a/repair/phase6.c
+> > > +++ b/repair/phase6.c
+> > > @@ -1649,6 +1649,7 @@ longform_dir2_entry_check_data(
+> > >  			if (entry_junked(
+> > >  	_("entry \"%s\" in directory inode %" PRIu64 " points to non-existent inode %" PRIu64 ""),
+> > >  					fname, ip->i_ino, inum)) {
+> > > +				force_needsrepair(mp);
+> > >  				dep->name[0] = '/';
+> > >  				libxfs_dir2_data_log_entry(&da, bp, dep);
+> > >  			}
+> > > @@ -1666,6 +1667,7 @@ longform_dir2_entry_check_data(
+> > >  			if (entry_junked(
+> > >  	_("entry \"%s\" in directory inode %" PRIu64 " points to free inode %" PRIu64),
+> > >  					fname, ip->i_ino, inum)) {
+> > > +				force_needsrepair(mp);
+> > >  				dep->name[0] = '/';
+> > >  				libxfs_dir2_data_log_entry(&da, bp, dep);
+> > >  			}
+> > > @@ -1684,6 +1686,7 @@ longform_dir2_entry_check_data(
+> > >  				if (entry_junked(
+> > >  	_("%s (ino %" PRIu64 ") in root (%" PRIu64 ") is not a directory"),
+> > >  						ORPHANAGE, inum, ip->i_ino)) {
+> > > +					force_needsrepair(mp);
+> > >  					dep->name[0] = '/';
+> > >  					libxfs_dir2_data_log_entry(&da, bp, dep);
+> > >  				}
+> > > @@ -1706,6 +1709,7 @@ longform_dir2_entry_check_data(
+> > >  			if (entry_junked(
+> > >  	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
+> > >  					fname, inum, ip->i_ino)) {
+> > > +				force_needsrepair(mp);
+> > >  				dep->name[0] = '/';
+> > >  				libxfs_dir2_data_log_entry(&da, bp, dep);
+> > >  			}
+> > > @@ -1737,6 +1741,7 @@ longform_dir2_entry_check_data(
+> > >  				if (entry_junked(
+> > >  	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is not in the the first block"), fname,
+> > >  						inum, ip->i_ino)) {
+> > > +					force_needsrepair(mp);
+> > >  					dep->name[0] = '/';
+> > >  					libxfs_dir2_data_log_entry(&da, bp, dep);
+> > >  				}
+> > > @@ -1764,6 +1769,7 @@ longform_dir2_entry_check_data(
+> > >  				if (entry_junked(
+> > >  	_("entry \"%s\" in dir %" PRIu64 " is not the first entry"),
+> > >  						fname, inum, ip->i_ino)) {
+> > > +					force_needsrepair(mp);
+> > >  					dep->name[0] = '/';
+> > >  					libxfs_dir2_data_log_entry(&da, bp, dep);
+> > >  				}
+> > > @@ -1852,6 +1858,7 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
+> > >  				orphanage_ino = 0;
+> > >  			nbad++;
+> > >  			if (!no_modify)  {
+> > > +				force_needsrepair(mp);
+> > >  				dep->name[0] = '/';
+> > >  				libxfs_dir2_data_log_entry(&da, bp, dep);
+> > >  				if (verbose)
 > > > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> > > index ee377e8a..ae7106a6 100644
+> > > index f607afcb..9dc73854 100644
 > > > --- a/repair/xfs_repair.c
 > > > +++ b/repair/xfs_repair.c
-> > > @@ -44,6 +44,7 @@ enum o_opt_nums {
-> > >  	BLOAD_LEAF_SLACK,
-> > >  	BLOAD_NODE_SLACK,
-> > >  	NOQUOTA,
-> > > +	FORCE_NEEDSREPAIR_ABORT,
-> > >  	O_MAX_OPTS,
-> > >  };
-> > >  
-> > > @@ -57,6 +58,7 @@ static char *o_opts[] = {
-> > >  	[BLOAD_LEAF_SLACK]	= "debug_bload_leaf_slack",
-> > >  	[BLOAD_NODE_SLACK]	= "debug_bload_node_slack",
-> > >  	[NOQUOTA]		= "noquota",
-> > > +	[FORCE_NEEDSREPAIR_ABORT] = "debug_force_needsrepair_abort",
-> > >  	[O_MAX_OPTS]		= NULL,
-> > >  };
-> > >  
-> > > @@ -282,6 +284,9 @@ process_args(int argc, char **argv)
-> > >  		_("-o debug_bload_node_slack requires a parameter\n"));
-> > >  					bload_node_slack = (int)strtol(val, NULL, 0);
-> > >  					break;
-> > > +				case FORCE_NEEDSREPAIR_ABORT:
-> > > +					abort_after_force_needsrepair = true;
-> > > +					break;
-> > >  				case NOQUOTA:
-> > >  					quotacheck_skip();
-> > >  					break;
-> > > @@ -795,6 +800,8 @@ force_needsrepair(
-> > >  		error = -libxfs_bwrite(bp);
-> > >  		if (error)
-> > >  			do_log(_("couldn't force needsrepair, err=%d\n"), error);
-> > > +		if (abort_after_force_needsrepair)
-> > > +			exit(55);
-> > >  	}
-> > >  	if (bp)
+> > > @@ -754,6 +754,43 @@ clear_needsrepair(
 > > >  		libxfs_buf_relse(bp);
+> > >  }
+> > >  
+> > > +/*
+> > > + * Mark the filesystem as needing repair.  This should only be called by code
+> > > + * that deliberately sets invalid sentinel values in the on-disk metadata to
+> > > + * trigger a later reconstruction, and only after we've settled the primary
+> > > + * super contents (i.e. after phase 1).
+> > > + */
+> > > +void
+> > > +force_needsrepair(
+> > > +	struct xfs_mount	*mp)
+> > > +{
+> > > +	struct xfs_buf		*bp;
+> > > +	int			error;
+> > > +
+> > > +	if (!xfs_sb_version_hascrc(&mp->m_sb) ||
+> > > +	    xfs_sb_version_needsrepair(&mp->m_sb))
+> > > +		return;
+> > > +
+> > > +	bp = libxfs_getsb(mp);
+> > > +	if (!bp || bp->b_error) {
+> > > +		do_log(
+> > > +	_("couldn't get superblock to set needsrepair, err=%d\n"),
+> > > +				bp ? bp->b_error : ENOMEM);
+> > > +		return;
+> > > +	} else {
+> > > +		mp->m_sb.sb_features_incompat |=
+> > > +				XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> > > +		libxfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+> > > +
+> > > +		/* Force the primary super to disk immediately. */
+> > > +		error = -libxfs_bwrite(bp);
+> > > +		if (error)
+> > > +			do_log(_("couldn't force needsrepair, err=%d\n"), error);
+> > > +	}
+> > > +	if (bp)
+> > > +		libxfs_buf_relse(bp);
+> > > +}
+> > > +
+> > >  int
+> > >  main(int argc, char **argv)
+> > >  {
 > > > 
 > > 
 > 
