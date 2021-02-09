@@ -7,66 +7,62 @@ X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC112C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 09:13:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76813C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 09:17:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8AF5864EBA
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 09:13:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28E3364EBD
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 09:17:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230196AbhBIJNK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Feb 2021 04:13:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57524 "EHLO
+        id S230019AbhBIJRb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Feb 2021 04:17:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230360AbhBIJLA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Feb 2021 04:11:00 -0500
+        with ESMTP id S230332AbhBIJNM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Feb 2021 04:13:12 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 157A3C06178C
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Feb 2021 01:10:20 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44B5EC061794
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Feb 2021 01:12:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=QarM1sllOayEKAFMp/UHRXKGPPrUXeXlQnAbut7oKqY=; b=cnLSJ5vdj04oLi8G3GK4wMOKN8
-        29WOSLAFRVCj1hTmS3xBq75PF1otky6fGVgBUSMgK1hikMNDqfzUuapAnQEjDlsNe1pzveEluG4mw
-        GNmkuNIGB05Wk/g+ySRpGLHeP0GKKupdmaNFMQYmLtO4rQAyuPajrZDb0gnIOqT5LWGdYRaPqFJZS
-        bbiPb2k0+Qst14XXT5S4Q+MFkYuKyhsnSQkNAx/Shz5D74UmsV3sOlTsr8mg/+2RsKRJmmksEEu7d
-        QBIWsR/rH9EHv8ZvYYLDjLNEJLYVBr3n4O1UFDz6pdqg22afMsoAQJi7CB9C+3kPk7lvSdkuOnwwV
-        AzWN2GMg==;
+        bh=URErjoVyfSzT9rTQ/hNesIKOctv86XKQCvvnNR0suGQ=; b=Hn1Bq4X9Uc5O3lnvSwLbN4AlZB
+        za8FM2JkMXLqcRSWWyATG1qJhcXpY5hbxrR5WlDH0kvPedUWwyTiKLy4q78RDTT37lXSi2JLnw8zS
+        jWwNQKHZ39U2p4y4D5Ujy5+W11w/+s6eEV/pm18jl7C0xKVsynfoPrthsE5O6OEiChEyXZ0/MSeW1
+        G+8ZKM2gmCv5WtYkOQ1kSpPhpcsipa6dgRMItXOIMQfFk9u4YeR/hz8ikl4YTzOAJs1fVJgh42+kx
+        1QA7+bPPGi1irt4yFRkG8LCGR1bfR+kbADjb87S8cHWMJN2FUi3+1hUrfQWoWUAOt7VOaRPENaTqW
+        zIgTFl4w==;
 Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1l9P2G-007DBm-HM; Tue, 09 Feb 2021 09:10:16 +0000
-Date:   Tue, 9 Feb 2021 09:10:16 +0000
+        id 1l9P4J-007DLF-O3; Tue, 09 Feb 2021 09:12:24 +0000
+Date:   Tue, 9 Feb 2021 09:12:23 +0000
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org, bfoster@redhat.com
-Subject: Re: [PATCH 05/10] xfs_repair: clear quota CHKD flags on the incore
- superblock too
-Message-ID: <20210209091016.GE1718132@infradead.org>
+Subject: Re: [PATCH 06/10] xfs_repair: clear the needsrepair flag
+Message-ID: <20210209091223.GF1718132@infradead.org>
 References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
- <161284383258.3057868.6167060787728229726.stgit@magnolia>
+ <161284383828.3057868.1762356472271947821.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161284383258.3057868.6167060787728229726.stgit@magnolia>
+In-Reply-To: <161284383828.3057868.1762356472271947821.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 08, 2021 at 08:10:32PM -0800, Darrick J. Wong wrote:
+On Mon, Feb 08, 2021 at 08:10:38PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> At the end of a repair run, xfs_repair clears the superblock's quota
-> checked flags if it found mistakes in the quota accounting to force a
-> quotacheck at the next mount.  This is currently the last time repair
-> modifies the primary superblock, so it is sufficient to update the
-> ondisk buffer and not the incore mount structure.
+> Clear the needsrepair flag, since it's used to prevent mounting of an
+> inconsistent filesystem.  We only do this if we make it to the end of
+> repair with a non-zero error code, and all the rebuilt indices and
+> corrected metadata are persisted correctly.
 > 
-> However, we're about to introduce code to clear the needsrepair feature
-> at the very end of repair, after all metadata blocks have been written
-> to disk and all disk caches flush.  Since the convention everywhere else
-> in xfs is to update the incore superblock, call libxfs_sb_to_disk to
-> translate that into the ondisk buffer, and then write the buffer to
-> disk, switch the quota CHKD code to use this mechanism too.
+> Note that we cannot combine clearing needsrepair with clearing the quota
+> checked flags because we need to clear the quota flags even if
+> reformatting the log fails, whereas we can't clear needsrepair if the
+> log reformat fails.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
