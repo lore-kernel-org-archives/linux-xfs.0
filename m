@@ -7,37 +7,38 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3513C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:20:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61FA1C433E9
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:20:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80C0364EB1
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:20:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34A7664EB4
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:20:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230166AbhBIETL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Feb 2021 23:19:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48744 "EHLO mail.kernel.org"
+        id S229959AbhBIETj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Feb 2021 23:19:39 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48742 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229959AbhBIEQS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Feb 2021 23:16:18 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A5A5D64ED0;
-        Tue,  9 Feb 2021 04:11:44 +0000 (UTC)
+        id S230088AbhBIEQR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Feb 2021 23:16:17 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 81CFB64ECE;
+        Tue,  9 Feb 2021 04:11:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612843904;
-        bh=GnlZY/3mOVfmPQ9biLLARdwZSTWcxVryyl9AoJoG+lk=;
+        s=k20201202; t=1612843893;
+        bh=7gTwqibLFyk45k9HtBOPPnfeZjkEv7vyLWCVVnXOcIc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=kGXuajRv2/XTA9vXPos9o+43cIOJ/FBBtJ5hSVQAjwcngt50XpK7MdQ9XUOhgapve
-         2YJIzuKSkT3aaUPvyQftH9bvMgdNOG7rB42KvIDQ0ZjAURxpzbA8QqlDdwGThWRu3L
-         Be9Tqd2igJmS2eVruRWgmIedXdojvUszp3Ee4wlwcTre71jcz9pzcyb6Q1sAC9rFw9
-         MBcsa6REXbnQou4MHoVqYjun6EyZ8jocMqu8/nfj6pgleJ1076DU/o8ZIefSWjmAZJ
-         sQVJ2B4gnx3xnQXa8CputpPwnGh9d8TKNvSMwD/gXJbs8DmZGh+EqNNqEBpaznlfNA
-         UTY5FTZUs16fA==
-Subject: [PATCH 5/6] xfs_repair: check dquot id and type
+        b=D+IdcTPJd/myeKzbmaTPMB6Q7bzr0FWtLqkhQ0qCYCj0sIdC+6dO0GOn5Po5/5SMG
+         AlV3MKLA3UOuorpLkdaTluO3sGA/MJyKTX383H7aYZmh1KFUB9eM9QBOK77qpxoo8P
+         r+NqpOwWMdaCZ29r5B9KaLjvvp70yafGsW6rBJf8Yb2PXhUTXwrmj7n2IKSWNUH49k
+         5sGS1Sd5raA01gWSBsznqaxVQ/areDhge1j1CZ8WypJMbVSIzp+cm2R0TelbJMjyUa
+         UUSPHcWVCf6jRStLSFdMWzJnsrd5a/Iw6sYPT5TnCb/fS/tWA72NUSYvAsVVY4J0/4
+         SsxybzlHSjS7w==
+Subject: [PATCH 3/6] xfs_scrub: load and unload libicu properly
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, chandanrlinux@gmail.com,
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, chandanrlinux@gmail.com,
         Chaitanya.Kulkarni@wdc.com
-Date:   Mon, 08 Feb 2021 20:11:44 -0800
-Message-ID: <161284390433.3058224.6853671538193339438.stgit@magnolia>
+Date:   Mon, 08 Feb 2021 20:11:33 -0800
+Message-ID: <161284389311.3058224.3454694766420244067.stgit@magnolia>
 In-Reply-To: <161284387610.3058224.6236053293202575597.stgit@magnolia>
 References: <161284387610.3058224.6236053293202575597.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,103 +51,89 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that we actually check the type and id of an ondisk dquot.
+Make sure we actually load and unload libicu properly.  This isn't
+strictly required since the library can bootstrap itself, but unloading
+means fewer things for valgrind to complain about.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- repair/quotacheck.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 55 insertions(+), 3 deletions(-)
+ scrub/unicrash.c  |   17 +++++++++++++++++
+ scrub/unicrash.h  |    4 ++++
+ scrub/xfs_scrub.c |    7 +++++++
+ 3 files changed, 28 insertions(+)
 
 
-diff --git a/repair/quotacheck.c b/repair/quotacheck.c
-index 55bcc048..0ea2deb5 100644
---- a/repair/quotacheck.c
-+++ b/repair/quotacheck.c
-@@ -234,12 +234,48 @@ quotacheck_adjust(
- 	libxfs_irele(ip);
+diff --git a/scrub/unicrash.c b/scrub/unicrash.c
+index d5d2cf20..de3217c2 100644
+--- a/scrub/unicrash.c
++++ b/scrub/unicrash.c
+@@ -722,3 +722,20 @@ unicrash_check_fs_label(
+ 	return __unicrash_check_name(uc, dsc, _("filesystem label"),
+ 			label, 0);
  }
- 
-+/* Check the ondisk dquot's id and type match what the incore dquot expects. */
-+static bool
-+qc_dquot_check_type(
-+	struct xfs_mount	*mp,
-+	xfs_dqtype_t		type,
-+	xfs_dqid_t		id,
-+	struct xfs_disk_dquot	*ddq)
++
++/* Load libicu and initialize it. */
++bool
++unicrash_load(void)
 +{
-+	uint8_t			ddq_type;
++	UErrorCode		uerr = U_ZERO_ERROR;
 +
-+	ddq_type = ddq->d_type & XFS_DQTYPE_REC_MASK;
-+
-+	if (be32_to_cpu(ddq->d_id) != id)
-+		return false;
-+
-+	/*
-+	 * V5 filesystems always expect an exact type match.  V4 filesystems
-+	 * expect an exact match for user dquots and for non-root group and
-+	 * project dquots.
-+	 */
-+	if (xfs_sb_version_hascrc(&mp->m_sb) || type == XFS_DQTYPE_USER || !id)
-+		return ddq_type == type;
-+
-+	/*
-+	 * V4 filesystems support either group or project quotas, but not both
-+	 * at the same time.  The non-user quota file can be switched between
-+	 * group and project quota uses depending on the mount options, which
-+	 * means that we can encounter the other type when we try to load quota
-+	 * defaults.  Quotacheck will soon reset the the entire quota file
-+	 * (including the root dquot) anyway, but don't log scary corruption
-+	 * reports to dmesg.
-+	 */
-+	return ddq_type == XFS_DQTYPE_GROUP || ddq_type == XFS_DQTYPE_PROJ;
++	u_init(&uerr);
++	return U_FAILURE(uerr);
 +}
 +
- /* Compare this on-disk dquot against whatever we observed. */
- static void
- qc_check_dquot(
- 	struct xfs_mount	*mp,
- 	struct xfs_disk_dquot	*ddq,
--	struct qc_dquots	*dquots)
-+	struct qc_dquots	*dquots,
-+	xfs_dqid_t		dqid)
- {
- 	struct qc_rec		*qrec;
- 	struct qc_rec		empty = {
-@@ -253,6 +289,22 @@ qc_check_dquot(
- 	if (!qrec)
- 		qrec = &empty;
++/* Unload libicu once we're done with it. */
++void
++unicrash_unload(void)
++{
++	u_cleanup();
++}
+diff --git a/scrub/unicrash.h b/scrub/unicrash.h
+index c3a7f385..755afaef 100644
+--- a/scrub/unicrash.h
++++ b/scrub/unicrash.h
+@@ -25,6 +25,8 @@ int unicrash_check_xattr_name(struct unicrash *uc, struct descr *dsc,
+ 		const char *attrname);
+ int unicrash_check_fs_label(struct unicrash *uc, struct descr *dsc,
+ 		const char *label);
++bool unicrash_load(void);
++void unicrash_unload(void);
+ #else
+ # define unicrash_dir_init(u, c, b)		(0)
+ # define unicrash_xattr_init(u, c, b)		(0)
+@@ -33,6 +35,8 @@ int unicrash_check_fs_label(struct unicrash *uc, struct descr *dsc,
+ # define unicrash_check_dir_name(u, d, n)	(0)
+ # define unicrash_check_xattr_name(u, d, n)	(0)
+ # define unicrash_check_fs_label(u, d, n)	(0)
++# define unicrash_load()			(0)
++# define unicrash_unload()			do { } while (0)
+ #endif /* HAVE_LIBICU */
  
-+	if (!qc_dquot_check_type(mp, dquots->type, dqid, ddq)) {
-+		const char	*dqtypestr;
-+
-+		dqtypestr = qflags_typestr(ddq->d_type & XFS_DQTYPE_REC_MASK);
-+		if (dqtypestr)
-+			do_warn(_("%s id %u saw type %s id %u\n"),
-+					qflags_typestr(dquots->type), dqid,
-+					dqtypestr, be32_to_cpu(ddq->d_id));
-+		else
-+			do_warn(_("%s id %u saw type %x id %u\n"),
-+					qflags_typestr(dquots->type), dqid,
-+					ddq->d_type & XFS_DQTYPE_REC_MASK,
-+					be32_to_cpu(ddq->d_id));
-+		chkd_flags = 0;
+ #endif /* XFS_SCRUB_UNICRASH_H_ */
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 1edeb150..bc2e84a7 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -603,6 +603,12 @@ main(
+ 	setlocale(LC_ALL, "");
+ 	bindtextdomain(PACKAGE, LOCALEDIR);
+ 	textdomain(PACKAGE);
++	if (unicrash_load()) {
++		fprintf(stderr,
++	_("%s: couldn't initialize Unicode library.\n"),
++				progname);
++		goto out;
 +	}
-+
- 	if (be64_to_cpu(ddq->d_bcount) != qrec->bcount) {
- 		do_warn(_("%s id %u has bcount %llu, expected %"PRIu64"\n"),
- 				qflags_typestr(dquots->type), id,
-@@ -327,11 +379,11 @@ _("cannot read %s inode %"PRIu64", block %"PRIu64", disk block %"PRIu64", err=%d
- 		}
  
- 		dqb = bp->b_addr;
--		dqid = map->br_startoff * dqperchunk;
-+		dqid = (map->br_startoff + bno) * dqperchunk;
- 		for (dqnr = 0;
- 		     dqnr < dqperchunk && dqid <= UINT_MAX;
- 		     dqnr++, dqb++, dqid++)
--			qc_check_dquot(mp, &dqb->dd_diskdq, dquots);
-+			qc_check_dquot(mp, &dqb->dd_diskdq, dquots, dqid);
- 		libxfs_buf_relse(bp);
- 	}
+ 	pthread_mutex_init(&ctx.lock, NULL);
+ 	ctx.mode = SCRUB_MODE_REPAIR;
+@@ -788,6 +794,7 @@ main(
+ 	phase_end(&all_pi, 0);
+ 	if (progress_fp)
+ 		fclose(progress_fp);
++	unicrash_unload();
  
+ 	/*
+ 	 * If we're being run as a service, the return code must fit the LSB
 
