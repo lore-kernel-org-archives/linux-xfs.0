@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEFC8C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:17:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D900C433E6
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:17:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98EFB64E4F
+	by mail.kernel.org (Postfix) with ESMTP id BEC2164EB4
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:17:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230253AbhBIEQy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Feb 2021 23:16:54 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48556 "EHLO mail.kernel.org"
+        id S229772AbhBIERE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Feb 2021 23:17:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48558 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230320AbhBIENr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S230329AbhBIENr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Mon, 8 Feb 2021 23:13:47 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A446064EC6;
-        Tue,  9 Feb 2021 04:10:55 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 512FB64EC8;
+        Tue,  9 Feb 2021 04:11:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612843855;
-        bh=7/HQ9xhCLOMhJSCaFz7ZOmPJ5lxK46e95CihtSZ4pbI=;
+        s=k20201202; t=1612843861;
+        bh=BE0Xuc6MpJBj7P96gIU9iko52AIbq+5qJW2aRKUIXGc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=iBPBHK7B7ih7GguIKB2pK7l4q3cqj3b8kz+GDtLADLzGdRrq6Nva5zgGp2jP/PGRm
-         bXD85E4BQjWFXUXhuVCrcqasFp74CbI22UBbe2uXuSBWROaAtsYUwQWOh8B6y+jWVB
-         ZQ1XOMn46CKDykQEHTHpF0vi8gF+KE89IaSfNKiVNV59sPYAINYBPHsAsg0RNzSR9i
-         J0YAM7HFm64ABFkO3hJhDUedIhq5vUlwBqO6bQvI5bPzyhHisUP1/kcZxWD8Znoh0Y
-         RhxmU948tsXYORjss8xJBpelU9m2erZkH0md3AN3DaaEx/xSYwKt48gzK/3gWbiWdV
-         tkaInvLXyuyEQ==
-Subject: [PATCH 09/10] xfs_repair: add a testing hook for NEEDSREPAIR
+        b=Ic627t3GZcZb5PId+JmWVbMuizXimQb5ATuB5bcMPuhtMh46SGRYwbryqIwEURUUy
+         y33MO/NWz8kFpcoUu1LedHZVT0qt3GvX9BAmVcVSkGhxNIgQ2gxhJ6p/QRqCMhMzY6
+         pDBhN2tD5IJhuwO6JM28/OtEtNsNPWU5/mjaHW5oKGTRVOLT6VVy9jPcsXLvtKpByn
+         NT68Av5CEIK5znwpxfgQGMNTC3vwlf0qUeifsKSOLJrZZow/ezWuRdToXhZgq1aVNv
+         As0JSCmLhl9uVlWu5VchwG/rQ9CCokWdt7Mqq0c/cTykUIilKmIXzXX133xuYhhZ5n
+         i+B1AYudIRwUQ==
+Subject: [PATCH 10/10] xfs_admin: support adding features to V5 filesystems
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Date:   Mon, 08 Feb 2021 20:10:55 -0800
-Message-ID: <161284385516.3057868.355176047687079022.stgit@magnolia>
+Date:   Mon, 08 Feb 2021 20:11:00 -0800
+Message-ID: <161284386088.3057868.16559496991921219277.stgit@magnolia>
 In-Reply-To: <161284380403.3057868.11153586180065627226.stgit@magnolia>
 References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,96 +49,78 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Simulate a crash when anyone calls force_needsrepair.  This is a debug
-knob so that we can test that the kernel won't mount after setting
-needsrepair and that a re-run of xfs_repair will clear the flag.
+Teach the xfs_admin script how to add features to V5 filesystems.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/globals.c    |    1 +
- repair/globals.h    |    2 ++
- repair/phase1.c     |    5 +++++
- repair/xfs_repair.c |    7 +++++++
- 4 files changed, 15 insertions(+)
+ db/xfs_admin.sh      |    6 ++++--
+ man/man8/xfs_admin.8 |   22 ++++++++++++++++++++++
+ 2 files changed, 26 insertions(+), 2 deletions(-)
 
 
-diff --git a/repair/globals.c b/repair/globals.c
-index 699a96ee..b0e23864 100644
---- a/repair/globals.c
-+++ b/repair/globals.c
-@@ -40,6 +40,7 @@ int	dangerously;		/* live dangerously ... fix ro mount */
- int	isa_file;
- int	zap_log;
- int	dumpcore;		/* abort, not exit on fatal errs */
-+bool	abort_after_force_needsrepair;
- int	force_geo;		/* can set geo on low confidence info */
- int	assume_xfs;		/* assume we have an xfs fs */
- char	*log_name;		/* Name of log device */
-diff --git a/repair/globals.h b/repair/globals.h
-index 043b3e8e..9fa73b2c 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -82,6 +82,8 @@ extern int	isa_file;
- extern int	zap_log;
- extern int	dumpcore;		/* abort, not exit on fatal errs */
- extern int	force_geo;		/* can set geo on low confidence info */
-+/* Abort after forcing NEEDSREPAIR to test its functionality */
-+extern bool	abort_after_force_needsrepair;
- extern int	assume_xfs;		/* assume we have an xfs fs */
- extern char	*log_name;		/* Name of log device */
- extern int	log_spec;		/* Log dev specified as option */
-diff --git a/repair/phase1.c b/repair/phase1.c
-index b26d25f8..57f72cd0 100644
---- a/repair/phase1.c
-+++ b/repair/phase1.c
-@@ -170,5 +170,10 @@ _("Cannot disable lazy-counters on V5 fs\n"));
- 	 */
- 	sb_ifree = sb_icount = sb_fdblocks = sb_frextents = 0;
+diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+index 430872ef..7a467dbe 100755
+--- a/db/xfs_admin.sh
++++ b/db/xfs_admin.sh
+@@ -8,9 +8,10 @@ status=0
+ DB_OPTS=""
+ REPAIR_OPTS=""
+ REPAIR_DEV_OPTS=""
+-USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-r rtdev] [-U uuid] device [logdev]"
++DB_LOG_OPTS=""
++USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
  
-+	/* Simulate a crash after setting needsrepair. */
-+	if (primary_sb_modified && add_needsrepair &&
-+	    abort_after_force_needsrepair)
-+		exit(55);
-+
- 	free(sb);
- }
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index ee377e8a..ae7106a6 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -44,6 +44,7 @@ enum o_opt_nums {
- 	BLOAD_LEAF_SLACK,
- 	BLOAD_NODE_SLACK,
- 	NOQUOTA,
-+	FORCE_NEEDSREPAIR_ABORT,
- 	O_MAX_OPTS,
- };
- 
-@@ -57,6 +58,7 @@ static char *o_opts[] = {
- 	[BLOAD_LEAF_SLACK]	= "debug_bload_leaf_slack",
- 	[BLOAD_NODE_SLACK]	= "debug_bload_node_slack",
- 	[NOQUOTA]		= "noquota",
-+	[FORCE_NEEDSREPAIR_ABORT] = "debug_force_needsrepair_abort",
- 	[O_MAX_OPTS]		= NULL,
- };
- 
-@@ -282,6 +284,9 @@ process_args(int argc, char **argv)
- 		_("-o debug_bload_node_slack requires a parameter\n"));
- 					bload_node_slack = (int)strtol(val, NULL, 0);
- 					break;
-+				case FORCE_NEEDSREPAIR_ABORT:
-+					abort_after_force_needsrepair = true;
-+					break;
- 				case NOQUOTA:
- 					quotacheck_skip();
- 					break;
-@@ -795,6 +800,8 @@ force_needsrepair(
- 		error = -libxfs_bwrite(bp);
- 		if (error)
- 			do_log(_("couldn't force needsrepair, err=%d\n"), error);
-+		if (abort_after_force_needsrepair)
-+			exit(55);
- 	}
- 	if (bp)
- 		libxfs_buf_relse(bp);
+-while getopts "c:efjlL:pr:uU:V" c
++while getopts "c:efjlL:O:pr:uU:V" c
+ do
+ 	case $c in
+ 	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG;;
+@@ -19,6 +20,7 @@ do
+ 	j)	DB_OPTS=$DB_OPTS" -c 'version log2'";;
+ 	l)	DB_OPTS=$DB_OPTS" -r -c label";;
+ 	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";;
++	O)	REPAIR_OPTS=$REPAIR_OPTS" -c $OPTARG=1";;
+ 	p)	DB_OPTS=$DB_OPTS" -c 'version projid32bit'";;
+ 	r)	REPAIR_DEV_OPTS=" -r '$OPTARG'";;
+ 	u)	DB_OPTS=$DB_OPTS" -r -c uuid";;
+diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+index cccbb224..3f3aeea8 100644
+--- a/man/man8/xfs_admin.8
++++ b/man/man8/xfs_admin.8
+@@ -6,6 +6,8 @@ xfs_admin \- change parameters of an XFS filesystem
+ [
+ .B \-eflpu
+ ] [
++.BI \-O " featurelist"
++] [
+ .BR "\-c 0" | 1
+ ] [
+ .B \-L
+@@ -106,6 +108,26 @@ The filesystem label can be cleared using the special "\c
+ " value for
+ .IR label .
+ .TP
++.BI \-O " feature1" = "status" , "feature2" = "status..."
++Add or remove features on an existing a V5 filesystem.
++The features should be specified as a comma-separated list.
++.I status
++should be either 0 to disable the feature or 1 to enable the feature.
++Note, however, that most features cannot be disabled.
++.IP
++.B NOTE:
++Administrators must ensure the filesystem is clean by running
++.B xfs_repair -n
++to inspect the filesystem before performing the upgrade.
++If corruption is found, recovery procedures (e.g. reformat followed by
++restoration from backup; or running
++.B xfs_repair
++without the
++.BR -n )
++must be followed to clean the filesystem.
++.IP
++There are currently no feature options.
++.TP
+ .BI \-U " uuid"
+ Set the UUID of the filesystem to
+ .IR uuid .
 
