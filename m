@@ -2,104 +2,65 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05A07C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 01:54:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D7FFC433E9
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 02:19:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A661764E66
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 01:54:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E928C64EC5
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 02:19:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230400AbhBIByG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Feb 2021 20:54:06 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:35967 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229763AbhBIByC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Feb 2021 20:54:02 -0500
-X-IronPort-AV: E=Sophos;i="5.81,163,1610380800"; 
-   d="scan'208";a="104350575"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 09 Feb 2021 09:53:15 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 9EFD34CE6F82;
-        Tue,  9 Feb 2021 09:53:10 +0800 (CST)
-Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
- (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 9 Feb
- 2021 09:53:08 +0800
-Subject: Re: [PATCH 3/7] fsdax: Copy data before write
-To:     Christoph Hellwig <hch@lst.de>
-CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>,
-        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <willy@infradead.org>, <jack@suse.cz>, <viro@zeniv.linux.org.uk>,
-        <linux-btrfs@vger.kernel.org>, <ocfs2-devel@oss.oracle.com>,
-        <david@fromorbit.com>, <rgoldwyn@suse.de>
-References: <20210207170924.2933035-1-ruansy.fnst@cn.fujitsu.com>
- <20210207170924.2933035-4-ruansy.fnst@cn.fujitsu.com>
- <20210208151419.GC12872@lst.de>
-From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
-Message-ID: <3f2826a8-df98-e7b0-6ab8-0f410488bc55@cn.fujitsu.com>
-Date:   Tue, 9 Feb 2021 09:53:10 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S230124AbhBICT0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Feb 2021 21:19:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59646 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229544AbhBICTZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Feb 2021 21:19:25 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ED2A764EBA
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Feb 2021 02:18:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612837125;
+        bh=Ozof2NXbpjpuG4oZUadGkdvWanyQkqbodRiSmVq7mOA=;
+        h=Date:From:To:Subject:From;
+        b=G6yCjIBVt3IygGFo8EziNKp9Nr2/bvIDv8rE7y5PVbY70UpAYmtMaJxWi2xdyHOd6
+         9dnZvSYkhFxiAOlcOirxBADMTvhUITdamZqma0B9LK/5r5PUu6XIm5GKQ3Sssa4BPI
+         k72kD0n2CuksRVT0r0HN8l9TcBOFel6IiI5+uW3EDf166OL2Ny90PFw/GQEhnO0h38
+         DK5qHL0foNglDodyJUpOGFwPgdW3CUtoduaJFobCC/TvBYS5LIE2F4EsmhagPTEpUu
+         znwyPVuaNcIoSVad/IQfRfH5vNOg1OVogLVT9gGrGYZ+r2c2XBOgJuww/Z+eYw9Lov
+         VT98s4eOjOkuw==
+Date:   Mon, 8 Feb 2021 18:18:43 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: fix rst syntax error in admin guide
+Message-ID: <20210209021843.GP7193@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20210208151419.GC12872@lst.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.225.141]
-X-ClientProxiedBy: G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) To
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
-X-yoursite-MailScanner-ID: 9EFD34CE6F82.AF079
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+From: Darrick J. Wong <djwong@kernel.org>
 
+Tables are supposed to have a matching line of "===" to signal the end
+of a table.  The rst compiler gets grouchy if it encounters EOF instead,
+so fix this warning.
 
-On 2021/2/8 下午11:14, Christoph Hellwig wrote:
->>   	switch (iomap.type) {
->>   	case IOMAP_MAPPED:
->> +cow:
->>   		if (iomap.flags & IOMAP_F_NEW) {
->>   			count_vm_event(PGMAJFAULT);
->>   			count_memcg_event_mm(vma->vm_mm, PGMAJFAULT);
->>   			major = VM_FAULT_MAJOR;
->>   		}
->>   		error = dax_iomap_direct_access(&iomap, pos, PAGE_SIZE,
->> -						NULL, &pfn);
->> +						&kaddr, &pfn);
-> 
-> Any chance you could look into factoring out this code into a helper
-> to avoid the goto magic, which is a little too convoluted?
-> 
->>   	switch (iomap.type) {
->>   	case IOMAP_MAPPED:
->> +cow:
->>   		error = dax_iomap_direct_access(&iomap, pos, PMD_SIZE,
->> -						NULL, &pfn);
->> +						&kaddr, &pfn);
->>   		if (error < 0)
->>   			goto finish_iomap;
->>   
->>   		entry = dax_insert_entry(&xas, mapping, vmf, entry, pfn,
->>   						DAX_PMD, write && !sync);
->>   
->> +		if (srcmap.type != IOMAP_HOLE) {
-> 
-> Same here.
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ Documentation/admin-guide/xfs.rst |    1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks for suggestion.  I'll try it.
-
-
---
-Thanks,
-Ruan Shiyang.
-> 
-> 
-
-
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+index d2064a52811b..6178153d3320 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -536,3 +536,4 @@ The interesting knobs for XFS workqueues are as follows:
+   cpumask        CPUs upon which the threads are allowed to run.
+   nice           Relative priority of scheduling the threads.  These are the
+                  same nice levels that can be applied to userspace processes.
++============     ===========
