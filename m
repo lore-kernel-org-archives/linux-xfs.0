@@ -4,44 +4,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29466C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:19:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4457EC433DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:19:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D824364EB1
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:19:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 065EE64EB9
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:19:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230018AbhBIESH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Feb 2021 23:18:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48466 "EHLO mail.kernel.org"
+        id S229866AbhBIESv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Feb 2021 23:18:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48558 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230202AbhBIEPp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Feb 2021 23:15:45 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 20CCE64E70;
-        Tue,  9 Feb 2021 04:11:39 +0000 (UTC)
+        id S230239AbhBIEPq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Feb 2021 23:15:46 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3DA5964EBD;
+        Tue,  9 Feb 2021 04:10:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612843899;
-        bh=JiqHVRVE/L/BZD4KLgEejOLuwi+sNl71aTUiUZHR8+0=;
+        s=k20201202; t=1612843810;
+        bh=8afJyPp9xTxAEmiZ0k/3umEdYcDe0sowGQQ76U+dY4Y=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=JGaHKCYG/lFDmN2LCsDCmRt5vK606lKUJUN5l0L0bbXwxTgbhq4M5l7f08Jpo4AVr
-         QyBe4fcmdKxMEDJMkJStOkHLh9lAfNkj7zysLkirUnWGsUdEl2G7lRAUAfUr+TOA0Z
-         RZIJ+D5c71HT1el4SVzcwAyG3RUsokbQKVz+uLIStOUy7HNFu702eNh0gvLL5R8hmm
-         sOvO1kRigi0knKdrIx5srL0WDg35Bn7hle1Ra2yqly/5hspGBY8R+rz9EKn4B+ssiC
-         g6jGm/qiS0boK8l6Eql1LAdgYZ29DrLmq5z8aycM69747LHf9gbJdbyp+SU65xSjc1
-         fz8FP88+S4xDw==
-Subject: [PATCH 4/6] xfs_scrub: handle concurrent directory updates during
- name scan
+        b=kcu3uJJtIkqoKk80DRQPRfKfdOEcbjVVvgP+zQnCgeA5dg5Hb8z0lkltJJqedC+83
+         7XfAf5L6ZdaawdZz7+mAK8LyLH1a5K/Ts7jS33J7hn/Nq1UF2wYlh1ChI9iXHO5qK+
+         QxC9Yp1mNLqA6JSk9UAXMF/9xZgy+9qn6x22IYFTCmXfKZDCMdLIbgzIXSaaBWmpfO
+         +DgMuCVocmN6pMpwdN2tsySwXIiFO7cE+6eTpvVVkaKVyKP9zMPQFZbjgeQfcyv/L3
+         xbMWDWMnXLNB/2QJfp3Nlj7B8MKdLSnn6ddktJDd93ZEmVExQMH7V0CKTErcWDFBu6
+         Ii7ecsoELT9JQ==
+Subject: [PATCH 01/10] xfs_admin: clean up string quoting
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
-        linux-xfs@vger.kernel.org, chandanrlinux@gmail.com,
-        Chaitanya.Kulkarni@wdc.com
-Date:   Mon, 08 Feb 2021 20:11:38 -0800
-Message-ID: <161284389874.3058224.15020913005905277309.stgit@magnolia>
-In-Reply-To: <161284387610.3058224.6236053293202575597.stgit@magnolia>
-References: <161284387610.3058224.6236053293202575597.stgit@magnolia>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        bfoster@redhat.com
+Date:   Mon, 08 Feb 2021 20:10:09 -0800
+Message-ID: <161284380981.3057868.13051897080577307586.stgit@magnolia>
+In-Reply-To: <161284380403.3057868.11153586180065627226.stgit@magnolia>
+References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -52,51 +50,36 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The name scanner in xfs_scrub cannot lock a namespace (dirent or xattr)
-and the kernel does not provide a stable cursor interface, which means
-that we can see the same byte sequence multiple times during a scan.
-This isn't a confusing name error since the kernel enforces uniqueness
-on the byte sequence, so all we need to do here is update the old entry.
+Clean up the string quoting in this script so that we don't trip over
+users feeding us arguments like "/dev/sd ha ha ha lol".
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- scrub/unicrash.c |   16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ db/xfs_admin.sh |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/scrub/unicrash.c b/scrub/unicrash.c
-index de3217c2..cb0880c1 100644
---- a/scrub/unicrash.c
-+++ b/scrub/unicrash.c
-@@ -68,7 +68,7 @@ struct name_entry {
+diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+index bd325da2..71a9aa98 100755
+--- a/db/xfs_admin.sh
++++ b/db/xfs_admin.sh
+@@ -43,7 +43,7 @@ case $# in
  
- 	xfs_ino_t		ino;
- 
--	/* Raw UTF8 name */
-+	/* Raw dirent name */
- 	size_t			namelen;
- 	char			name[0];
- };
-@@ -627,6 +627,20 @@ unicrash_add(
- 	uc->buckets[bucket] = new_entry;
- 
- 	while (entry != NULL) {
-+		/*
-+		 * If we see the same byte sequence then someone's modifying
-+		 * the namespace while we're scanning it.  Update the existing
-+		 * entry's inode mapping and erase the new entry from existence.
-+		 */
-+		if (new_entry->namelen == entry->namelen &&
-+		    !memcmp(new_entry->name, entry->name, entry->namelen)) {
-+			entry->ino = new_entry->ino;
-+			uc->buckets[bucket] = new_entry->next;
-+			name_entry_free(new_entry);
-+			*badflags = 0;
-+			return;
-+		}
-+
- 		/* Same normalization? */
- 		if (new_entry->normstrlen == entry->normstrlen &&
- 		    !u_strcmp(new_entry->normstr, entry->normstr) &&
+ 		if [ -n "$DB_OPTS" ]
+ 		then
+-			eval xfs_db -x -p xfs_admin $DB_OPTS $1
++			eval xfs_db -x -p xfs_admin $DB_OPTS "$1"
+ 			status=$?
+ 		fi
+ 		if [ -n "$REPAIR_OPTS" ]
+@@ -53,7 +53,7 @@ case $# in
+ 			# running xfs_admin.
+ 			# Ideally, we need to improve the output behaviour
+ 			# of repair for this purpose (say a "quiet" mode).
+-			eval xfs_repair $REPAIR_OPTS $1 2> /dev/null
++			eval xfs_repair $REPAIR_OPTS "$1" 2> /dev/null
+ 			status=`expr $? + $status`
+ 			if [ $status -ne 0 ]
+ 			then
 
