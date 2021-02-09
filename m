@@ -3,43 +3,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79B9EC4332B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A032C4332D
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:17:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45BF864EC8
+	by mail.kernel.org (Postfix) with ESMTP id 6DA1F64EB1
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:17:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230318AbhBIERp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Feb 2021 23:17:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48464 "EHLO mail.kernel.org"
+        id S230326AbhBIERq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Feb 2021 23:17:46 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48570 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229913AbhBIEON (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Feb 2021 23:14:13 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8FA6964DF0;
-        Tue,  9 Feb 2021 04:11:16 +0000 (UTC)
+        id S230138AbhBIEO4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Feb 2021 23:14:56 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3C68364ECC;
+        Tue,  9 Feb 2021 04:11:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612843876;
-        bh=DLB889KwWSMMDh1V7dPp2XqQ5UmPQt2+kdMktKE4CiM=;
-        h=Subject:From:To:Cc:Date:From;
-        b=axFiLFMrLxE++6t1KAj5Q4+Yq9vhupSYj/qUGPUIxIGi7rNgkvfJuvQVEDL1a5gop
-         u8HHhy2dX3erRLdpc2nKsz/p9CeEqmDGtlDltzskotgXzaCGmNHKgJM+akMB0QWFsA
-         q7MSrV8LHqUBy/55BqHwOfiGX2Q4Dfi1Hni9ILn3ajqeomEUS1rYt0Pd1IQzmITdsl
-         sB6xt2szAl48ZXlTv4V3dG8G5TYJxuE6U2YwFK8fhruOZ2osu5gFWeekVy2AuyX5ok
-         WdZ/0Diqa2g5szp/1w6meLWn/nTlsNRvbfQIp86HBWU62wmFe39NmOOZX8kKXZXVc9
-         4VOM7s2vCDxQQ==
-Subject: [PATCHSET v4 0/6] various: random fixes
+        s=k20201202; t=1612843882;
+        bh=kg56HX3+02MUwMlodr4rQH+WHK16YmF11Rvn3WYJm3k=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=IbkMathkmeCbDq9Rrg2UoGtqrh7qfPIZYYA0CjWeZg+vlORXxs0oL/dQXMIzWtq0E
+         aOEkSuO2MPev90ImE0vsYxfqcMI+n/VwkewL07ENeafk48c0o0oefF8NXa6G8HbK8z
+         bIazE4ihwc+yhCrcJeHld5KWRjp8wxfyJunBUjb9XeIYvijW83jWppbWkPRdiA2BGi
+         fREhCM4L0/PKXe59SVgS5bOptIQtjHPMPXPFYQvsHDkS2ULYtD7LJmpxqraxG0ITrK
+         PyAIdJC15vO4cZOJBmlkol9FcQKDIKTc2OLv16KiAjBFo5HzKlAF7Uej1a8kEAXHEi
+         VyTNjbhVPblrA==
+Subject: [PATCH 1/6] misc: fix valgrind complaints
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
         linux-xfs@vger.kernel.org, chandanrlinux@gmail.com,
         Chaitanya.Kulkarni@wdc.com
-Date:   Mon, 08 Feb 2021 20:11:16 -0800
-Message-ID: <161284387610.3058224.6236053293202575597.stgit@magnolia>
+Date:   Mon, 08 Feb 2021 20:11:21 -0800
+Message-ID: <161284388183.3058224.7213452888406393105.stgit@magnolia>
+In-Reply-To: <161284387610.3058224.6236053293202575597.stgit@magnolia>
+References: <161284387610.3058224.6236053293202575597.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -48,43 +50,85 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here are some random fixes to the utilities: the first shuts up valgrind
-warnings about uninitialized userspace memory being passed into kernel
-ioctls; the second fixes warnings about libicu not being released at the
-end of scrub; and the third fixes false collision reports during scrub
-phase 5 if someone is replacing directory items while the scanner is
-running.
+Zero the memory that we pass to the kernel via ioctls so that we never
+pass userspace heap/stack garbage around.  This silences valgrind
+complaints about uninitialized padding areas.
 
-v2: respond to reviewer comments
-v3: make repair check dquot types and ids
-v4: add a minor code cleanup in xfs_scrub
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- libhandle/handle.c  |   10 +++++----
- repair/quotacheck.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++++---
- scrub/inodes.c      |   18 +++++++++++++++-
- scrub/phase5.c      |   10 +++++----
- scrub/spacemap.c    |    3 +--
- scrub/unicrash.c    |   33 ++++++++++++++++++++++++++++-
- scrub/unicrash.h    |    4 ++++
- scrub/xfs_scrub.c   |    7 ++++++
- 8 files changed, 128 insertions(+), 15 deletions(-)
+ libhandle/handle.c |   10 ++++++----
+ scrub/inodes.c     |    2 +-
+ scrub/spacemap.c   |    3 +--
+ 3 files changed, 8 insertions(+), 7 deletions(-)
+
+
+diff --git a/libhandle/handle.c b/libhandle/handle.c
+index 5c1686b3..27abc6b2 100644
+--- a/libhandle/handle.c
++++ b/libhandle/handle.c
+@@ -235,8 +235,10 @@ obj_to_handle(
+ {
+ 	char		hbuf [MAXHANSIZ];
+ 	int		ret;
+-	uint32_t	handlen;
+-	xfs_fsop_handlereq_t hreq;
++	uint32_t	handlen = 0;
++	struct xfs_fsop_handlereq hreq = { };
++
++	memset(hbuf, 0, MAXHANSIZ);
+ 
+ 	if (opcode == XFS_IOC_FD_TO_HANDLE) {
+ 		hreq.fd      = obj.fd;
+@@ -275,7 +277,7 @@ open_by_fshandle(
+ {
+ 	int		fsfd;
+ 	char		*path;
+-	xfs_fsop_handlereq_t hreq;
++	struct xfs_fsop_handlereq hreq = { };
+ 
+ 	if ((fsfd = handle_to_fsfd(fshanp, &path)) < 0)
+ 		return -1;
+@@ -382,7 +384,7 @@ attr_list_by_handle(
+ {
+ 	int		error, fd;
+ 	char		*path;
+-	xfs_fsop_attrlist_handlereq_t alhreq;
++	struct xfs_fsop_attrlist_handlereq alhreq = { };
+ 
+ 	if ((fd = handle_to_fsfd(hanp, &path)) < 0)
+ 		return -1;
+diff --git a/scrub/inodes.c b/scrub/inodes.c
+index bdc12df3..63865113 100644
+--- a/scrub/inodes.c
++++ b/scrub/inodes.c
+@@ -111,7 +111,7 @@ scan_ag_inodes(
+ 	xfs_agnumber_t		agno,
+ 	void			*arg)
+ {
+-	struct xfs_handle	handle;
++	struct xfs_handle	handle = { };
+ 	char			descr[DESCR_BUFSZ];
+ 	struct xfs_inumbers_req	*ireq;
+ 	struct xfs_bulkstat_req	*breq;
+diff --git a/scrub/spacemap.c b/scrub/spacemap.c
+index 9653916d..a5508d56 100644
+--- a/scrub/spacemap.c
++++ b/scrub/spacemap.c
+@@ -47,11 +47,10 @@ scrub_iterate_fsmap(
+ 	int			i;
+ 	int			error;
+ 
+-	head = malloc(fsmap_sizeof(FSMAP_NR));
++	head = calloc(1, fsmap_sizeof(FSMAP_NR));
+ 	if (!head)
+ 		return errno;
+ 
+-	memset(head, 0, sizeof(*head));
+ 	memcpy(head->fmh_keys, keys, sizeof(struct fsmap) * 2);
+ 	head->fmh_count = FSMAP_NR;
+ 
 
