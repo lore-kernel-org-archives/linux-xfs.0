@@ -7,177 +7,146 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD50CC433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:21:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB338C433E6
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:24:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90DAC64E3F
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:21:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A47C264E31
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:24:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233293AbhBISUq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Feb 2021 13:20:46 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41810 "EHLO mail.kernel.org"
+        id S233267AbhBISYQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Feb 2021 13:24:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42232 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233214AbhBISSi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Feb 2021 13:18:38 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 518AE64E3F;
-        Tue,  9 Feb 2021 18:17:39 +0000 (UTC)
+        id S233308AbhBISV4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Feb 2021 13:21:56 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BD3CE64EC8;
+        Tue,  9 Feb 2021 18:10:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612894659;
-        bh=0fnqd3rGcBFr/ipr8xqKJAXANXGwidNqaPPuxjuEkZ0=;
+        s=k20201202; t=1612894201;
+        bh=TBFMhu13t7ubOIbrMsnWDvixdoVYp0esbt1RtnOBwUE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=irqtHppp3OMgjq4gLq9DOIH8j9QRj6qjOimE0iFzvKTpw1B1X2Xn67A83SkT8NONg
-         4mJOo62wFjsF36J4uXU1ewwPXImjaAINKWuG2qac/wKrLyC9LjVe6uvA7QZQxehDHy
-         Oh4Koq4k5KnDZxdPJnoeN/E0FVuq0T1B6dTNzucP7ipuIH5jn6zjDpccnQ607NTyf8
-         U3UkfD4f3AHx5SNYCxWEbkaJNbjz6MeiuNFY1MaF+IZJW4RKfOQ187o2ciOSgcBBqK
-         dUN7boJ/ZYYfG/AucZnYuJTeS0eGjvTyS4VoLVVb/yz2E2+pzPFswOX77XgnSuDla8
-         IV3HFdh/ua0hw==
-Date:   Tue, 9 Feb 2021 10:17:38 -0800
+        b=VSN9s7Cni9yKR732Xm/vZK+XLcIxfE6V4ZWewcr5qaKKDEidVNS7rmUHsMv3ImoBI
+         uXSqpBZILHGLgkG1zeqsT5t8hlehfKT8qqB+Y7CsBqM3stzDiZYybBH5Vsl+QeVr5R
+         eUygpw9fjf9wqU8dEroZXN7q50vAu9hpe8rPxzMRDFnujdpHAL903MbQf6PdX3kovO
+         /gM5sHwVEANjJv4OfGdz3IFm5lPm2mdRD98tD2jeW48/9WsLqkzQFab0rNZFf76R33
+         MZA5MWIlEABJ6gi2U+BdFmDX1kEfLYq33Z5rHVJlzm/7xmvAjA0q6zj/u96s3YczQ6
+         IhR5Q1zZwkqjQ==
+Date:   Tue, 9 Feb 2021 10:10:01 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/10] xfs_repair: add a testing hook for NEEDSREPAIR
-Message-ID: <20210209181738.GU7193@magnolia>
+Subject: Re: [PATCH 08/10] xfs_repair: allow setting the needsrepair flag
+Message-ID: <20210209181001.GT7193@magnolia>
 References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
- <161284385516.3057868.355176047687079022.stgit@magnolia>
- <20210209172131.GG14273@bfoster>
+ <161284384955.3057868.8076509276356847362.stgit@magnolia>
+ <20210209172121.GF14273@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210209172131.GG14273@bfoster>
+In-Reply-To: <20210209172121.GF14273@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 09, 2021 at 12:21:31PM -0500, Brian Foster wrote:
-> On Mon, Feb 08, 2021 at 08:10:55PM -0800, Darrick J. Wong wrote:
+On Tue, Feb 09, 2021 at 12:21:21PM -0500, Brian Foster wrote:
+> On Mon, Feb 08, 2021 at 08:10:49PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Simulate a crash when anyone calls force_needsrepair.  This is a debug
-> > knob so that we can test that the kernel won't mount after setting
-> > needsrepair and that a re-run of xfs_repair will clear the flag.
+> > Quietly set up the ability to tell xfs_repair to set NEEDSREPAIR at
+> > program start and (presumably) clear it by the end of the run.  This
+> > code isn't terribly useful to users; it's mainly here so that fstests
+> > can exercise the functionality.
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> 
-> Can't we just use db to manually set the bit on the superblock?
-
-No, because the fstest uses this debug knob to simulate the following:
-
-1) sysadmin issues 'xfs_admin -O inobtcount /dev/sda1'
-2) xfs_repair flips on INOBTCOUNT and NEEDSREPAIR
-3) system goes down and repair never completes
-4) verify that we can't mount
-5) verify that repair clears NEEDSREPAIR and gives us a clean fs
-6) verify that mount works again
-
-and the other scenario is:
-
-1) fuzz a directory entry in such a way that repair will decide to
-   blow out the dirent and rebuild the directory later
-2) sysadmin issues 'xfs_repair /dev/sda1'
-2) xfs_repair flips on NEEDSREPAIR at the same time it corrupts the
-   dirent to trigger the rebuild later
-3) system goes down and repair never completes
-4) verify that we can't mount
-5) verify that repair clears NEEDSREPAIR and gives us a clean fs
-6) verify that mount works again
-
-Both cases reflect what I think are the most likely failure scenarios,
-hence the knob needs to be in xfs_repair to prevent it from running to
-completion.
-
-(And yes, I've been recently very bad at sending fstests out for review
-the past few months; I will get that done by this afternoon.)
-
---D
-
-> Brian
-> 
-> >  repair/globals.c    |    1 +
+> >  repair/globals.c    |    2 ++
 > >  repair/globals.h    |    2 ++
-> >  repair/phase1.c     |    5 +++++
-> >  repair/xfs_repair.c |    7 +++++++
-> >  4 files changed, 15 insertions(+)
+> >  repair/phase1.c     |   23 +++++++++++++++++++++++
+> >  repair/xfs_repair.c |    9 +++++++++
+> >  4 files changed, 36 insertions(+)
 > > 
 > > 
-> > diff --git a/repair/globals.c b/repair/globals.c
-> > index 699a96ee..b0e23864 100644
-> > --- a/repair/globals.c
-> > +++ b/repair/globals.c
-> > @@ -40,6 +40,7 @@ int	dangerously;		/* live dangerously ... fix ro mount */
-> >  int	isa_file;
-> >  int	zap_log;
-> >  int	dumpcore;		/* abort, not exit on fatal errs */
-> > +bool	abort_after_force_needsrepair;
-> >  int	force_geo;		/* can set geo on low confidence info */
-> >  int	assume_xfs;		/* assume we have an xfs fs */
-> >  char	*log_name;		/* Name of log device */
-> > diff --git a/repair/globals.h b/repair/globals.h
-> > index 043b3e8e..9fa73b2c 100644
-> > --- a/repair/globals.h
-> > +++ b/repair/globals.h
-> > @@ -82,6 +82,8 @@ extern int	isa_file;
-> >  extern int	zap_log;
-> >  extern int	dumpcore;		/* abort, not exit on fatal errs */
-> >  extern int	force_geo;		/* can set geo on low confidence info */
-> > +/* Abort after forcing NEEDSREPAIR to test its functionality */
-> > +extern bool	abort_after_force_needsrepair;
-> >  extern int	assume_xfs;		/* assume we have an xfs fs */
-> >  extern char	*log_name;		/* Name of log device */
-> >  extern int	log_spec;		/* Log dev specified as option */
+> ...
 > > diff --git a/repair/phase1.c b/repair/phase1.c
-> > index b26d25f8..57f72cd0 100644
+> > index 00b98584..b26d25f8 100644
 > > --- a/repair/phase1.c
 > > +++ b/repair/phase1.c
-> > @@ -170,5 +170,10 @@ _("Cannot disable lazy-counters on V5 fs\n"));
-> >  	 */
-> >  	sb_ifree = sb_icount = sb_fdblocks = sb_frextents = 0;
-> >  
-> > +	/* Simulate a crash after setting needsrepair. */
-> > +	if (primary_sb_modified && add_needsrepair &&
-> > +	    abort_after_force_needsrepair)
-> > +		exit(55);
-> > +
-> >  	free(sb);
+> > @@ -30,6 +30,26 @@ alloc_ag_buf(int size)
+> >  	return(bp);
 > >  }
+> >  
+> > +static void
+> > +set_needsrepair(
+> > +	struct xfs_sb	*sb)
+> > +{
+> > +	if (!xfs_sb_version_hascrc(sb)) {
+> > +		printf(
+> > +	_("needsrepair flag only supported on V5 filesystems.\n"));
+> > +		exit(0);
+> > +	}
+> > +
+> > +	if (xfs_sb_version_needsrepair(sb)) {
+> > +		printf(_("Filesystem already marked as needing repair.\n"));
+> > +		return;
+> > +	}
+> 
+> Any reason this doesn't exit the repair like the lazy counter logic
+> does? Otherwise seems fine:
+
+No particular reason.  Will fix for consistency's sake.
+
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> > +
+> > +	printf(_("Marking filesystem in need of repair.\n"));
+> > +	primary_sb_modified = 1;
+> > +	sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> > +}
+> > +
+> >  /*
+> >   * this has got to be big enough to hold 4 sectors
+> >   */
+> > @@ -126,6 +146,9 @@ _("Cannot disable lazy-counters on V5 fs\n"));
+> >  		}
+> >  	}
+> >  
+> > +	if (add_needsrepair)
+> > +		set_needsrepair(sb);
+> > +
+> >  	/* shared_vn should be zero */
+> >  	if (sb->sb_shared_vn) {
+> >  		do_warn(_("resetting shared_vn to zero\n"));
 > > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> > index ee377e8a..ae7106a6 100644
+> > index 9dc73854..ee377e8a 100644
 > > --- a/repair/xfs_repair.c
 > > +++ b/repair/xfs_repair.c
-> > @@ -44,6 +44,7 @@ enum o_opt_nums {
-> >  	BLOAD_LEAF_SLACK,
-> >  	BLOAD_NODE_SLACK,
-> >  	NOQUOTA,
-> > +	FORCE_NEEDSREPAIR_ABORT,
-> >  	O_MAX_OPTS,
+> > @@ -65,11 +65,13 @@ static char *o_opts[] = {
+> >   */
+> >  enum c_opt_nums {
+> >  	CONVERT_LAZY_COUNT = 0,
+> > +	CONVERT_NEEDSREPAIR,
+> >  	C_MAX_OPTS,
 > >  };
 > >  
-> > @@ -57,6 +58,7 @@ static char *o_opts[] = {
-> >  	[BLOAD_LEAF_SLACK]	= "debug_bload_leaf_slack",
-> >  	[BLOAD_NODE_SLACK]	= "debug_bload_node_slack",
-> >  	[NOQUOTA]		= "noquota",
-> > +	[FORCE_NEEDSREPAIR_ABORT] = "debug_force_needsrepair_abort",
-> >  	[O_MAX_OPTS]		= NULL,
+> >  static char *c_opts[] = {
+> >  	[CONVERT_LAZY_COUNT]	= "lazycount",
+> > +	[CONVERT_NEEDSREPAIR]	= "needsrepair",
+> >  	[C_MAX_OPTS]		= NULL,
 > >  };
 > >  
-> > @@ -282,6 +284,9 @@ process_args(int argc, char **argv)
-> >  		_("-o debug_bload_node_slack requires a parameter\n"));
-> >  					bload_node_slack = (int)strtol(val, NULL, 0);
+> > @@ -302,6 +304,13 @@ process_args(int argc, char **argv)
+> >  					lazy_count = (int)strtol(val, NULL, 0);
+> >  					convert_lazy_count = 1;
 > >  					break;
-> > +				case FORCE_NEEDSREPAIR_ABORT:
-> > +					abort_after_force_needsrepair = true;
+> > +				case CONVERT_NEEDSREPAIR:
+> > +					if (!val)
+> > +						do_abort(
+> > +		_("-c needsrepair requires a parameter\n"));
+> > +					if (strtol(val, NULL, 0) == 1)
+> > +						add_needsrepair = true;
 > > +					break;
-> >  				case NOQUOTA:
-> >  					quotacheck_skip();
+> >  				default:
+> >  					unknown('c', val);
 > >  					break;
-> > @@ -795,6 +800,8 @@ force_needsrepair(
-> >  		error = -libxfs_bwrite(bp);
-> >  		if (error)
-> >  			do_log(_("couldn't force needsrepair, err=%d\n"), error);
-> > +		if (abort_after_force_needsrepair)
-> > +			exit(55);
-> >  	}
-> >  	if (bp)
-> >  		libxfs_buf_relse(bp);
 > > 
 > 
