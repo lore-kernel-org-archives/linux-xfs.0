@@ -7,37 +7,36 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B63C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:17:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEFC8C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:17:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59D4E64E4F
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:17:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98EFB64E4F
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:17:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230270AbhBIEQf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Feb 2021 23:16:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48552 "EHLO mail.kernel.org"
+        id S230253AbhBIEQy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Feb 2021 23:16:54 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48556 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230306AbhBIENq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Feb 2021 23:13:46 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 59E5964EC4;
-        Tue,  9 Feb 2021 04:10:44 +0000 (UTC)
+        id S230320AbhBIENr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Feb 2021 23:13:47 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A446064EC6;
+        Tue,  9 Feb 2021 04:10:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612843844;
-        bh=BobK22ALq2mAE0XGYr7SJs943WVxlEAnJyutLwMQaak=;
+        s=k20201202; t=1612843855;
+        bh=7/HQ9xhCLOMhJSCaFz7ZOmPJ5lxK46e95CihtSZ4pbI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=aobLEQPD1rFwj4Av2puHoWsX4Huxp6JClcnOD3Xkqq65lDJ4uhqOJUohbANLqEQZN
-         8qBxMRY5AdaistlVDekitj8d765pX39Z3fgNcjqGE8gjAuFWchWcm4nsUk73qYNRHX
-         OSWTkQLSSGBU+p9HUURsReTUjsKtsRyUhf0ZjUNoFMyWXQ1xyz0btbNlb+i56HTURF
-         gabGMtr+p4lyUFtrGUmrBd/AQ3humWfnWzyZnXEv9ensQUEPIM7CY05UVYgcGr783Q
-         0O8segsilybxNl/CGXut/Re4Y4nR78gqlq6aWvncA8BDIxx+QS/0c2JvhtLscKEf5K
-         byZIGrkuVRfyw==
-Subject: [PATCH 07/10] xfs_repair: set NEEDSREPAIR when we deliberately
- corrupt directories
+        b=iBPBHK7B7ih7GguIKB2pK7l4q3cqj3b8kz+GDtLADLzGdRrq6Nva5zgGp2jP/PGRm
+         bXD85E4BQjWFXUXhuVCrcqasFp74CbI22UBbe2uXuSBWROaAtsYUwQWOh8B6y+jWVB
+         ZQ1XOMn46CKDykQEHTHpF0vi8gF+KE89IaSfNKiVNV59sPYAINYBPHsAsg0RNzSR9i
+         J0YAM7HFm64ABFkO3hJhDUedIhq5vUlwBqO6bQvI5bPzyhHisUP1/kcZxWD8Znoh0Y
+         RhxmU948tsXYORjss8xJBpelU9m2erZkH0md3AN3DaaEx/xSYwKt48gzK/3gWbiWdV
+         tkaInvLXyuyEQ==
+Subject: [PATCH 09/10] xfs_repair: add a testing hook for NEEDSREPAIR
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Date:   Mon, 08 Feb 2021 20:10:44 -0800
-Message-ID: <161284384405.3057868.8114203697655713495.stgit@magnolia>
+Date:   Mon, 08 Feb 2021 20:10:55 -0800
+Message-ID: <161284385516.3057868.355176047687079022.stgit@magnolia>
 In-Reply-To: <161284380403.3057868.11153586180065627226.stgit@magnolia>
 References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,165 +49,96 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-There are a few places in xfs_repair's directory checking code where we
-deliberately corrupt a directory entry as a sentinel to trigger a
-correction in later repair phase.  In the mean time, the filesystem is
-inconsistent, so set the needsrepair flag to force a re-run of repair if
-the system goes down.
+Simulate a crash when anyone calls force_needsrepair.  This is a debug
+knob so that we can test that the kernel won't mount after setting
+needsrepair and that a re-run of xfs_repair will clear the flag.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/agheader.h   |    2 ++
- repair/dir2.c       |    3 +++
- repair/phase6.c     |    7 +++++++
- repair/xfs_repair.c |   37 +++++++++++++++++++++++++++++++++++++
- 4 files changed, 49 insertions(+)
+ repair/globals.c    |    1 +
+ repair/globals.h    |    2 ++
+ repair/phase1.c     |    5 +++++
+ repair/xfs_repair.c |    7 +++++++
+ 4 files changed, 15 insertions(+)
 
 
-diff --git a/repair/agheader.h b/repair/agheader.h
-index a63827c8..fa6fe596 100644
---- a/repair/agheader.h
-+++ b/repair/agheader.h
-@@ -82,3 +82,5 @@ typedef struct fs_geo_list  {
- #define XR_AG_AGF	0x2
- #define XR_AG_AGI	0x4
- #define XR_AG_SB_SEC	0x8
-+
-+void force_needsrepair(struct xfs_mount *mp);
-diff --git a/repair/dir2.c b/repair/dir2.c
-index eabdb4f2..922b8a3e 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -15,6 +15,7 @@
- #include "da_util.h"
- #include "prefetch.h"
- #include "progress.h"
-+#include "agheader.h"
+diff --git a/repair/globals.c b/repair/globals.c
+index 699a96ee..b0e23864 100644
+--- a/repair/globals.c
++++ b/repair/globals.c
+@@ -40,6 +40,7 @@ int	dangerously;		/* live dangerously ... fix ro mount */
+ int	isa_file;
+ int	zap_log;
+ int	dumpcore;		/* abort, not exit on fatal errs */
++bool	abort_after_force_needsrepair;
+ int	force_geo;		/* can set geo on low confidence info */
+ int	assume_xfs;		/* assume we have an xfs fs */
+ char	*log_name;		/* Name of log device */
+diff --git a/repair/globals.h b/repair/globals.h
+index 043b3e8e..9fa73b2c 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -82,6 +82,8 @@ extern int	isa_file;
+ extern int	zap_log;
+ extern int	dumpcore;		/* abort, not exit on fatal errs */
+ extern int	force_geo;		/* can set geo on low confidence info */
++/* Abort after forcing NEEDSREPAIR to test its functionality */
++extern bool	abort_after_force_needsrepair;
+ extern int	assume_xfs;		/* assume we have an xfs fs */
+ extern char	*log_name;		/* Name of log device */
+ extern int	log_spec;		/* Log dev specified as option */
+diff --git a/repair/phase1.c b/repair/phase1.c
+index b26d25f8..57f72cd0 100644
+--- a/repair/phase1.c
++++ b/repair/phase1.c
+@@ -170,5 +170,10 @@ _("Cannot disable lazy-counters on V5 fs\n"));
+ 	 */
+ 	sb_ifree = sb_icount = sb_fdblocks = sb_frextents = 0;
  
- /*
-  * Known bad inode list.  These are seen when the leaf and node
-@@ -774,6 +775,7 @@ _("entry at block %u offset %" PRIdPTR " in directory inode %" PRIu64
- 				do_warn(
- _("\tclearing inode number in entry at offset %" PRIdPTR "...\n"),
- 					(intptr_t)ptr - (intptr_t)d);
-+				force_needsrepair(mp);
- 				dep->name[0] = '/';
- 				*dirty = 1;
- 			} else {
-@@ -914,6 +916,7 @@ _("entry \"%*.*s\" in directory inode %" PRIu64 " points to self: "),
- 		 */
- 		if (junkit) {
- 			if (!no_modify) {
-+				force_needsrepair(mp);
- 				dep->name[0] = '/';
- 				*dirty = 1;
- 				do_warn(_("clearing entry\n"));
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 14464bef..5ecbe9b2 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1649,6 +1649,7 @@ longform_dir2_entry_check_data(
- 			if (entry_junked(
- 	_("entry \"%s\" in directory inode %" PRIu64 " points to non-existent inode %" PRIu64 ""),
- 					fname, ip->i_ino, inum)) {
-+				force_needsrepair(mp);
- 				dep->name[0] = '/';
- 				libxfs_dir2_data_log_entry(&da, bp, dep);
- 			}
-@@ -1666,6 +1667,7 @@ longform_dir2_entry_check_data(
- 			if (entry_junked(
- 	_("entry \"%s\" in directory inode %" PRIu64 " points to free inode %" PRIu64),
- 					fname, ip->i_ino, inum)) {
-+				force_needsrepair(mp);
- 				dep->name[0] = '/';
- 				libxfs_dir2_data_log_entry(&da, bp, dep);
- 			}
-@@ -1684,6 +1686,7 @@ longform_dir2_entry_check_data(
- 				if (entry_junked(
- 	_("%s (ino %" PRIu64 ") in root (%" PRIu64 ") is not a directory"),
- 						ORPHANAGE, inum, ip->i_ino)) {
-+					force_needsrepair(mp);
- 					dep->name[0] = '/';
- 					libxfs_dir2_data_log_entry(&da, bp, dep);
- 				}
-@@ -1706,6 +1709,7 @@ longform_dir2_entry_check_data(
- 			if (entry_junked(
- 	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
- 					fname, inum, ip->i_ino)) {
-+				force_needsrepair(mp);
- 				dep->name[0] = '/';
- 				libxfs_dir2_data_log_entry(&da, bp, dep);
- 			}
-@@ -1737,6 +1741,7 @@ longform_dir2_entry_check_data(
- 				if (entry_junked(
- 	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is not in the the first block"), fname,
- 						inum, ip->i_ino)) {
-+					force_needsrepair(mp);
- 					dep->name[0] = '/';
- 					libxfs_dir2_data_log_entry(&da, bp, dep);
- 				}
-@@ -1764,6 +1769,7 @@ longform_dir2_entry_check_data(
- 				if (entry_junked(
- 	_("entry \"%s\" in dir %" PRIu64 " is not the first entry"),
- 						fname, inum, ip->i_ino)) {
-+					force_needsrepair(mp);
- 					dep->name[0] = '/';
- 					libxfs_dir2_data_log_entry(&da, bp, dep);
- 				}
-@@ -1852,6 +1858,7 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
- 				orphanage_ino = 0;
- 			nbad++;
- 			if (!no_modify)  {
-+				force_needsrepair(mp);
- 				dep->name[0] = '/';
- 				libxfs_dir2_data_log_entry(&da, bp, dep);
- 				if (verbose)
++	/* Simulate a crash after setting needsrepair. */
++	if (primary_sb_modified && add_needsrepair &&
++	    abort_after_force_needsrepair)
++		exit(55);
++
+ 	free(sb);
+ }
 diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index f607afcb..9dc73854 100644
+index ee377e8a..ae7106a6 100644
 --- a/repair/xfs_repair.c
 +++ b/repair/xfs_repair.c
-@@ -754,6 +754,43 @@ clear_needsrepair(
- 		libxfs_buf_relse(bp);
- }
+@@ -44,6 +44,7 @@ enum o_opt_nums {
+ 	BLOAD_LEAF_SLACK,
+ 	BLOAD_NODE_SLACK,
+ 	NOQUOTA,
++	FORCE_NEEDSREPAIR_ABORT,
+ 	O_MAX_OPTS,
+ };
  
-+/*
-+ * Mark the filesystem as needing repair.  This should only be called by code
-+ * that deliberately sets invalid sentinel values in the on-disk metadata to
-+ * trigger a later reconstruction, and only after we've settled the primary
-+ * super contents (i.e. after phase 1).
-+ */
-+void
-+force_needsrepair(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_buf		*bp;
-+	int			error;
-+
-+	if (!xfs_sb_version_hascrc(&mp->m_sb) ||
-+	    xfs_sb_version_needsrepair(&mp->m_sb))
-+		return;
-+
-+	bp = libxfs_getsb(mp);
-+	if (!bp || bp->b_error) {
-+		do_log(
-+	_("couldn't get superblock to set needsrepair, err=%d\n"),
-+				bp ? bp->b_error : ENOMEM);
-+		return;
-+	} else {
-+		mp->m_sb.sb_features_incompat |=
-+				XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-+		libxfs_sb_to_disk(bp->b_addr, &mp->m_sb);
-+
-+		/* Force the primary super to disk immediately. */
-+		error = -libxfs_bwrite(bp);
-+		if (error)
-+			do_log(_("couldn't force needsrepair, err=%d\n"), error);
-+	}
-+	if (bp)
-+		libxfs_buf_relse(bp);
-+}
-+
- int
- main(int argc, char **argv)
- {
+@@ -57,6 +58,7 @@ static char *o_opts[] = {
+ 	[BLOAD_LEAF_SLACK]	= "debug_bload_leaf_slack",
+ 	[BLOAD_NODE_SLACK]	= "debug_bload_node_slack",
+ 	[NOQUOTA]		= "noquota",
++	[FORCE_NEEDSREPAIR_ABORT] = "debug_force_needsrepair_abort",
+ 	[O_MAX_OPTS]		= NULL,
+ };
+ 
+@@ -282,6 +284,9 @@ process_args(int argc, char **argv)
+ 		_("-o debug_bload_node_slack requires a parameter\n"));
+ 					bload_node_slack = (int)strtol(val, NULL, 0);
+ 					break;
++				case FORCE_NEEDSREPAIR_ABORT:
++					abort_after_force_needsrepair = true;
++					break;
+ 				case NOQUOTA:
+ 					quotacheck_skip();
+ 					break;
+@@ -795,6 +800,8 @@ force_needsrepair(
+ 		error = -libxfs_bwrite(bp);
+ 		if (error)
+ 			do_log(_("couldn't force needsrepair, err=%d\n"), error);
++		if (abort_after_force_needsrepair)
++			exit(55);
+ 	}
+ 	if (bp)
+ 		libxfs_buf_relse(bp);
 
