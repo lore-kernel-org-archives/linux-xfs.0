@@ -7,127 +7,102 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62A90C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:21:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6219C433E6
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:21:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 169BF64E5A
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:21:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83D5664DF2
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:21:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232787AbhBIRVd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Feb 2021 12:21:33 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:55203 "EHLO
+        id S232912AbhBIRVo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Feb 2021 12:21:44 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:36176 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232912AbhBIRVb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Feb 2021 12:21:31 -0500
+        by vger.kernel.org with ESMTP id S232868AbhBIRVn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Feb 2021 12:21:43 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612891205;
+        s=mimecast20190719; t=1612891217;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=y/Nvxyh5eV8y01vtjk7yk6YW4Yfvey4fgk2wAI+1ZKU=;
-        b=DhfPsr0u7d1tVeGCghbmgator/1i+UxtuST+XnJ3qVyHZw5oXjKJ9+7VUJ9nZ7GE3GsILo
-        dHoCVTufK5AehoZBtG1JgOaC6IJuJ7O4LJwcN3kYd31NCTWdKbME1wduGzb2f9VoePOhIR
-        5o1jWzR9S+OoRU757yCs97Mq1PmfiS4=
+        bh=AtZdqpo6aB6H51HC+6gWuFXmjz5/Qu5JraGjWVk9O90=;
+        b=G4alU07kjnJigw8n/z66mQ6JJdXoKAQ3yXouoWWqOka1UYdtf84j0Vb+Cb+KUqNuthag8S
+        4fKdXdrZOYnzrMJnAYY5VDEZBOpXVUVS/L+0SvEykCCTEMKwz9/KEGaHgGnrmHu4lCMqcu
+        OzrqjoP/lPn0vbM3Y0bZeY/8/LjrfeM=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-94-6xiet4a7O-S2bn1L11DxSg-1; Tue, 09 Feb 2021 12:20:03 -0500
-X-MC-Unique: 6xiet4a7O-S2bn1L11DxSg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-406-wH47Om96Nb6cvjBnTgq_Vg-1; Tue, 09 Feb 2021 12:20:15 -0500
+X-MC-Unique: wH47Om96Nb6cvjBnTgq_Vg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 17C79803F4F;
-        Tue,  9 Feb 2021 17:20:02 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E27781009618;
+        Tue,  9 Feb 2021 17:20:13 +0000 (UTC)
 Received: from bfoster (ovpn-113-234.rdu2.redhat.com [10.10.113.234])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 998E260CE0;
-        Tue,  9 Feb 2021 17:20:01 +0000 (UTC)
-Date:   Tue, 9 Feb 2021 12:19:59 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 746BE171F4;
+        Tue,  9 Feb 2021 17:20:13 +0000 (UTC)
+Date:   Tue, 9 Feb 2021 12:20:11 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 03/10] xfs_db: support the needsrepair feature flag in
- the version command
-Message-ID: <20210209171959.GB14273@bfoster>
+Subject: Re: [PATCH 05/10] xfs_repair: clear quota CHKD flags on the incore
+ superblock too
+Message-ID: <20210209172011.GC14273@bfoster>
 References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
- <161284382116.3057868.4021834592988203500.stgit@magnolia>
+ <161284383258.3057868.6167060787728229726.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161284382116.3057868.4021834592988203500.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <161284383258.3057868.6167060787728229726.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 08, 2021 at 08:10:21PM -0800, Darrick J. Wong wrote:
+On Mon, Feb 08, 2021 at 08:10:32PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Teach the xfs_db version command about the 'needsrepair' flag, which can
-> be used to force the system administrator to repair the filesystem with
-> xfs_repair.
+> At the end of a repair run, xfs_repair clears the superblock's quota
+> checked flags if it found mistakes in the quota accounting to force a
+> quotacheck at the next mount.  This is currently the last time repair
+> modifies the primary superblock, so it is sufficient to update the
+> ondisk buffer and not the incore mount structure.
+> 
+> However, we're about to introduce code to clear the needsrepair feature
+> at the very end of repair, after all metadata blocks have been written
+> to disk and all disk caches flush.  Since the convention everywhere else
+> in xfs is to update the incore superblock, call libxfs_sb_to_disk to
+> translate that into the ondisk buffer, and then write the buffer to
+> disk, switch the quota CHKD code to use this mechanism too.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
+>  repair/xfs_repair.c |    7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> 
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index 9409f0d8..32755821 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -1108,10 +1108,9 @@ _("Warning:  project quota information would be cleared.\n"
+>  	if ((mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD) != quotacheck_results()) {
+>  		do_warn(_("Note - quota info will be regenerated on next "
+>  			"quota mount.\n"));
+> -		dsb->sb_qflags &= cpu_to_be16(~(XFS_UQUOTA_CHKD |
+> -						XFS_GQUOTA_CHKD |
+> -						XFS_PQUOTA_CHKD |
+> -						XFS_OQUOTA_CHKD));
+> +		mp->m_sb.sb_qflags &= ~(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD |
+> +					XFS_PQUOTA_CHKD | XFS_OQUOTA_CHKD);
+> +		libxfs_sb_to_disk(sbp->b_addr, &mp->m_sb);
+
+Nit: we can still use dsb here instead of open-coding the buffer
+address. Otherwise:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  db/check.c |    5 +++++
->  db/sb.c    |   13 +++++++++++++
->  2 files changed, 18 insertions(+)
-> 
-> 
-> diff --git a/db/check.c b/db/check.c
-> index 33736e33..485e855e 100644
-> --- a/db/check.c
-> +++ b/db/check.c
-> @@ -3970,6 +3970,11 @@ scan_ag(
->  			dbprintf(_("mkfs not completed successfully\n"));
->  		error++;
 >  	}
-> +	if (xfs_sb_version_needsrepair(sb)) {
-> +		if (!sflag)
-> +			dbprintf(_("filesystem needs xfs_repair\n"));
-> +		error++;
-> +	}
->  	set_dbmap(agno, XFS_SB_BLOCK(mp), 1, DBM_SB, agno, XFS_SB_BLOCK(mp));
->  	if (sb->sb_logstart && XFS_FSB_TO_AGNO(mp, sb->sb_logstart) == agno)
->  		set_dbmap(agno, XFS_FSB_TO_AGBNO(mp, sb->sb_logstart),
-> diff --git a/db/sb.c b/db/sb.c
-> index d09f653d..cec7dce9 100644
-> --- a/db/sb.c
-> +++ b/db/sb.c
-> @@ -379,6 +379,11 @@ uuid_f(
->  				progname);
->  			return 0;
->  		}
-> +		if (xfs_sb_version_needsrepair(&mp->m_sb)) {
-> +			dbprintf(_("%s: filesystem needs xfs_repair\n"),
-> +				progname);
-> +			return 0;
-> +		}
 >  
->  		if (!strcasecmp(argv[1], "generate")) {
->  			platform_uuid_generate(&uu);
-> @@ -543,6 +548,12 @@ label_f(
->  			return 0;
->  		}
->  
-> +		if (xfs_sb_version_needsrepair(&mp->m_sb)) {
-> +			dbprintf(_("%s: filesystem needs xfs_repair\n"),
-> +				progname);
-> +			return 0;
-> +		}
-> +
->  		dbprintf(_("writing all SBs\n"));
->  		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++)
->  			if ((p = do_label(ag, argv[1])) == NULL) {
-> @@ -691,6 +702,8 @@ version_string(
->  		strcat(s, ",INOBTCNT");
->  	if (xfs_sb_version_hasbigtime(sbp))
->  		strcat(s, ",BIGTIME");
-> +	if (xfs_sb_version_needsrepair(sbp))
-> +		strcat(s, ",NEEDSREPAIR");
->  	return s;
->  }
->  
+>  	if (copied_sunit) {
 > 
 
