@@ -2,131 +2,58 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E26DC433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9F78C43381
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 09:24:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 289ED64EBA
+	by mail.kernel.org (Postfix) with ESMTP id 7FFE464DA1
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 09:24:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230251AbhBIJYA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Feb 2021 04:24:00 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:8547 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229894AbhBIJTA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Feb 2021 04:19:00 -0500
-X-IronPort-AV: E=Sophos;i="5.81,164,1610380800"; 
-   d="scan'208";a="104367244"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 09 Feb 2021 17:15:20 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id A2C304CE6F86;
-        Tue,  9 Feb 2021 17:15:13 +0800 (CST)
-Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
- (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 9 Feb
- 2021 17:15:12 +0800
-Subject: Re: [PATCH 5/7] fsdax: Dedup file range to use a compare function
-To:     Christoph Hellwig <hch@lst.de>
-CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>,
-        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <willy@infradead.org>, <jack@suse.cz>, <viro@zeniv.linux.org.uk>,
-        <linux-btrfs@vger.kernel.org>, <ocfs2-devel@oss.oracle.com>,
-        <david@fromorbit.com>, <rgoldwyn@suse.de>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>
-References: <20210207170924.2933035-1-ruansy.fnst@cn.fujitsu.com>
- <20210207170924.2933035-6-ruansy.fnst@cn.fujitsu.com>
- <20210208151920.GE12872@lst.de>
-From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
-Message-ID: <9193e305-22a1-3928-0675-af1cecd28942@cn.fujitsu.com>
-Date:   Tue, 9 Feb 2021 17:15:13 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S229985AbhBIJYD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Feb 2021 04:24:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59580 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230033AbhBIJU2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Feb 2021 04:20:28 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8389C06178B
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Feb 2021 01:19:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=JICusPuiJELB6kW0aLAeGHw2BxiQRpcIc3oLGA0/Zss=; b=COy9sbZ3phFumsbjsPz0CXnMfp
+        0rRLboMfICtMfOLeGKWI/o+b+M5hoCxbDWrkZVPCYpwYSHQSLyTb39ppS9gyfPTlF3gGoYS2EeNL5
+        1jAEQKoD552SYZJQXjwRU+uIKPSCiKEP+Mf7qxq7UaA0tQzj36g7eh7oFaDkowh+t7nKAh18mHJiM
+        VXGQV84ENAIJQFlMnLLS6wYoYcV40VNLm5UIveZtRm9GxydybVHBDk8S0bKaZSsrNvv2lwwx7Lf20
+        xUmxWKnrTS/XiTYhFwTGPCnu8utha9IekbTtTp9ppShWNERSYgBkFmf95qsscR9xTDhPilnp+39p8
+        lNhpBZWg==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1l9PBI-007Dqd-T3; Tue, 09 Feb 2021 09:19:40 +0000
+Date:   Tue, 9 Feb 2021 09:19:36 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     sandeen@sandeen.net, Chandan Babu R <chandanrlinux@gmail.com>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] misc: fix valgrind complaints
+Message-ID: <20210209091936.GM1718132@infradead.org>
+References: <161284387610.3058224.6236053293202575597.stgit@magnolia>
+ <161284388183.3058224.7213452888406393105.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20210208151920.GE12872@lst.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.225.141]
-X-ClientProxiedBy: G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) To
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
-X-yoursite-MailScanner-ID: A2C304CE6F86.ACFE6
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <161284388183.3058224.7213452888406393105.stgit@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+We could also use the "= {}" method for hbuf, but otherwise this looks
+good:
 
-
-On 2021/2/8 下午11:19, Christoph Hellwig wrote:
-> On Mon, Feb 08, 2021 at 01:09:22AM +0800, Shiyang Ruan wrote:
->> With dax we cannot deal with readpage() etc. So, we create a
->> funciton callback to perform the file data comparison and pass
-> 
-> s/funciton/function/g
-> 
->> +#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-> 
-> This should use the existing min or min_t helpers.
-> 
-> 
->>   int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
->>   				  struct file *file_out, loff_t pos_out,
->> -				  loff_t *len, unsigned int remap_flags)
->> +				  loff_t *len, unsigned int remap_flags,
->> +				  compare_range_t compare_range_fn)
-> 
-> Can we keep generic_remap_file_range_prep as-is, and add a new
-> dax_remap_file_range_prep, both sharing a low-level
-> __generic_remap_file_range_prep implementation?  And for that
-> implementation I'd also go for classic if/else instead of the function
-> pointer.
-
-The dax dedupe comparison need the iomap_ops pointer as argument, so my 
-understanding is that we don't modify the argument list of 
-generic_remap_file_range_prep(), but move its code into 
-__generic_remap_file_range_prep() whose argument list can be modified to 
-accepts the iomap_ops pointer.  Then it looks like this:
-
-```
-int dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-				  struct file *file_out, loff_t pos_out,
-				  loff_t *len, unsigned int remap_flags,
-				  const struct iomap_ops *ops)
-{
-	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
-			pos_out, len, remap_flags, ops);
-}
-EXPORT_SYMBOL(dax_remap_file_range_prep);
-
-int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-				  struct file *file_out, loff_t pos_out,
-				  loff_t *len, unsigned int remap_flags)
-{
-	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
-			pos_out, len, remap_flags, NULL);
-}
-EXPORT_SYMBOL(generic_remap_file_range_prep);
-```
-
-Am i right?
-
-
---
-Thanks,
-Ruan Shiyang.
-
-> 
->> +extern int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
->> +					 struct inode *dest, loff_t destoff,
->> +					 loff_t len, bool *is_same);
-> 
-> no need for the extern.
-> 
-> 
-
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
