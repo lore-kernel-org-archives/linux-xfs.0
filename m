@@ -7,37 +7,39 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11088C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29466C433E0
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:19:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B74F864E4F
+	by mail.kernel.org (Postfix) with ESMTP id D824364EB1
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 04:19:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229862AbhBIESh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Feb 2021 23:18:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48554 "EHLO mail.kernel.org"
+        id S230018AbhBIESH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Feb 2021 23:18:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48466 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230231AbhBIEPq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Feb 2021 23:15:46 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5316D64ED1;
-        Tue,  9 Feb 2021 04:11:50 +0000 (UTC)
+        id S230202AbhBIEPp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Feb 2021 23:15:45 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 20CCE64E70;
+        Tue,  9 Feb 2021 04:11:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612843910;
-        bh=BMNuSXxFHaU1RWlxw5KUtZejymyyRxkRwaNaeuuoLO4=;
+        s=k20201202; t=1612843899;
+        bh=JiqHVRVE/L/BZD4KLgEejOLuwi+sNl71aTUiUZHR8+0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Okf+TXse3omaAmLb15fHooZhwWKDrKmPYaQSh+ICcmonZvW/GjgyhnxVhNwyCTUUI
-         AjXv1FyxZPYuhmc8fIDq5FqqYs5o6gioM79NIuwRekbFPwoOTQXp7gvRG8FB5vIGuH
-         0/f5JM7kUF7PB3e11VYuE88XPrvzF97xJEWEifPtYO+U5e5h7Kbi7EgQMkmpYhs0s5
-         r43g5oYGlJC2ts/9d6OF40s4htG6FiZUYORC6NkKD24Ip6wBG4WO2XmLDpAr/NyRQY
-         71skvI/PSchWMVwt1C0cNhHBaI1f6gZ+VfnyjuQhK9E/3w3By6CQiXyTkL4wvE+/fJ
-         eG0y+44rkpW9w==
-Subject: [PATCH 6/6] xfs_scrub: fix weirdness in directory name check code
+        b=JGaHKCYG/lFDmN2LCsDCmRt5vK606lKUJUN5l0L0bbXwxTgbhq4M5l7f08Jpo4AVr
+         QyBe4fcmdKxMEDJMkJStOkHLh9lAfNkj7zysLkirUnWGsUdEl2G7lRAUAfUr+TOA0Z
+         RZIJ+D5c71HT1el4SVzcwAyG3RUsokbQKVz+uLIStOUy7HNFu702eNh0gvLL5R8hmm
+         sOvO1kRigi0knKdrIx5srL0WDg35Bn7hle1Ra2yqly/5hspGBY8R+rz9EKn4B+ssiC
+         g6jGm/qiS0boK8l6Eql1LAdgYZ29DrLmq5z8aycM69747LHf9gbJdbyp+SU65xSjc1
+         fz8FP88+S4xDw==
+Subject: [PATCH 4/6] xfs_scrub: handle concurrent directory updates during
+ name scan
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, chandanrlinux@gmail.com,
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, chandanrlinux@gmail.com,
         Chaitanya.Kulkarni@wdc.com
-Date:   Mon, 08 Feb 2021 20:11:49 -0800
-Message-ID: <161284390991.3058224.12921304382202456726.stgit@magnolia>
+Date:   Mon, 08 Feb 2021 20:11:38 -0800
+Message-ID: <161284389874.3058224.15020913005905277309.stgit@magnolia>
 In-Reply-To: <161284387610.3058224.6236053293202575597.stgit@magnolia>
 References: <161284387610.3058224.6236053293202575597.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,43 +52,51 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Remove the redundant second check of fd and ISDIR in check_inode_names,
-and rework the comment to describe why we can't run phase 5 if we found
-other corruptions in the filesystem.
+The name scanner in xfs_scrub cannot lock a namespace (dirent or xattr)
+and the kernel does not provide a stable cursor interface, which means
+that we can see the same byte sequence multiple times during a scan.
+This isn't a confusing name error since the kernel enforces uniqueness
+on the byte sequence, so all we need to do here is update the old entry.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- scrub/phase5.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ scrub/unicrash.c |   16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
 
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index ee1e5d6c..1ef234bf 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -278,7 +278,12 @@ check_inode_names(
- 			goto out;
- 	}
+diff --git a/scrub/unicrash.c b/scrub/unicrash.c
+index de3217c2..cb0880c1 100644
+--- a/scrub/unicrash.c
++++ b/scrub/unicrash.c
+@@ -68,7 +68,7 @@ struct name_entry {
  
--	/* Open the dir, let the kernel try to reconnect it to the root. */
-+	/*
-+	 * Warn about naming problems in the directory entries.  Opening the
-+	 * dir by handle means the kernel will try to reconnect it to the root.
-+	 * If the reconnection fails due to corruption in the parents we get
-+	 * ESTALE, which is why we skip phase 5 if we found corruption.
-+	 */
- 	if (S_ISDIR(bstat->bs_mode)) {
- 		fd = scrub_open_handle(handle);
- 		if (fd < 0) {
-@@ -288,10 +293,7 @@ check_inode_names(
- 			str_errno(ctx, descr_render(&dsc));
- 			goto out;
- 		}
--	}
+ 	xfs_ino_t		ino;
  
--	/* Warn about naming problems in the directory entries. */
--	if (fd >= 0 && S_ISDIR(bstat->bs_mode)) {
- 		error = check_dirent_names(ctx, &dsc, &fd, bstat);
- 		if (error)
- 			goto out;
+-	/* Raw UTF8 name */
++	/* Raw dirent name */
+ 	size_t			namelen;
+ 	char			name[0];
+ };
+@@ -627,6 +627,20 @@ unicrash_add(
+ 	uc->buckets[bucket] = new_entry;
+ 
+ 	while (entry != NULL) {
++		/*
++		 * If we see the same byte sequence then someone's modifying
++		 * the namespace while we're scanning it.  Update the existing
++		 * entry's inode mapping and erase the new entry from existence.
++		 */
++		if (new_entry->namelen == entry->namelen &&
++		    !memcmp(new_entry->name, entry->name, entry->namelen)) {
++			entry->ino = new_entry->ino;
++			uc->buckets[bucket] = new_entry->next;
++			name_entry_free(new_entry);
++			*badflags = 0;
++			return;
++		}
++
+ 		/* Same normalization? */
+ 		if (new_entry->normstrlen == entry->normstrlen &&
+ 		    !u_strcmp(new_entry->normstr, entry->normstr) &&
 
