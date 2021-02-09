@@ -7,213 +7,224 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA91BC433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:38:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 016E7C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:50:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF9D364EC4
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:38:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCEAF64EC7
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 18:50:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233137AbhBIShJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Feb 2021 13:37:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43222 "EHLO mail.kernel.org"
+        id S233450AbhBIStg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Feb 2021 13:49:36 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44728 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233440AbhBIS1k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Feb 2021 13:27:40 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 40D9064EC4;
-        Tue,  9 Feb 2021 18:01:11 +0000 (UTC)
+        id S233538AbhBISgi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Feb 2021 13:36:38 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2119B64E54;
+        Tue,  9 Feb 2021 18:35:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612893671;
-        bh=pp+Qh4JGxaG2nivfx1zsPeYoa05JEl5NG23/FJ5Y6Jc=;
+        s=k20201202; t=1612895743;
+        bh=0JLHQWea8whKxvhs4fI5b6yr809HOOj9VEXIChahdlA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ht3qFD9iARNKgsJ/Re3A3qC9Jnh55FSvLUVYNQarfq+3V4d1BZsItj+VqJa0eQmYE
-         S33o2JqF5PHZ88XwSxQvJWZ7pt8JFW5WfobZ6LELYTLhUmPZ2/n2i0PtDeSRa8T1ur
-         EFQCmvbshnIlAFqIJIXwzQFZ3BWSXB9J0Kn1W/POtqIe+mr5hUSMXfeQP3AgNchqcc
-         0XADPUh8xFF9ooWByYlb13/pfGYEOLTBFg3pePPfknRc39vjpEBXfPjmkT68ISYRYL
-         zh/hewsn5/hru6PO3Fy+5unP4oJgIKzFtWokLFWlZJmC/4y7n096hsrrK3UzyInjOx
-         7H5DfojprNgVQ==
-Date:   Tue, 9 Feb 2021 10:01:10 -0800
+        b=R++g5PYC+jzOYbSEe1oG8v62Tr8PLZuVOsX0K3OOkpvd6Jay5NWMZoJgFkFHCZxwA
+         n0CCsnCNAfnlwFcadCU5B870q7+ajBcs/08Wlilyu2ng3Q38MtOdbGtYUkhsjT2pfW
+         kN5pKvcSCi740OJAT8BLeAith9acLuSaDboOFh5/CFQ5hCrTytvA84PmcTl4RMiLpi
+         HtXJvw62UYiHNPsoDCoY86ocCdKnEBSR24nss1nnjBI6LUBgt4H5Vkd01qf0TlH1y3
+         t63DuGv0yxbtyDbCT8AUZ4U40PDbS5oudktaTkLR954ECMyQ5FYLF+4VooPHppd1nH
+         RPa5mqddMoV3g==
+Date:   Tue, 9 Feb 2021 10:35:42 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/10] xfs_repair: clear the needsrepair flag
-Message-ID: <20210209180110.GS7193@magnolia>
+Subject: Re: [PATCH 07/10] xfs_repair: set NEEDSREPAIR when we deliberately
+ corrupt directories
+Message-ID: <20210209183542.GW7193@magnolia>
 References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
- <161284383828.3057868.1762356472271947821.stgit@magnolia>
- <20210209172029.GD14273@bfoster>
+ <161284384405.3057868.8114203697655713495.stgit@magnolia>
+ <20210209172059.GE14273@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210209172029.GD14273@bfoster>
+In-Reply-To: <20210209172059.GE14273@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 09, 2021 at 12:20:29PM -0500, Brian Foster wrote:
-> On Mon, Feb 08, 2021 at 08:10:38PM -0800, Darrick J. Wong wrote:
+On Tue, Feb 09, 2021 at 12:20:59PM -0500, Brian Foster wrote:
+> On Mon, Feb 08, 2021 at 08:10:44PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Clear the needsrepair flag, since it's used to prevent mounting of an
-> > inconsistent filesystem.  We only do this if we make it to the end of
-> > repair with a non-zero error code, and all the rebuilt indices and
-> > corrected metadata are persisted correctly.
-> > 
-> > Note that we cannot combine clearing needsrepair with clearing the quota
-> > checked flags because we need to clear the quota flags even if
-> > reformatting the log fails, whereas we can't clear needsrepair if the
-> > log reformat fails.
+> > There are a few places in xfs_repair's directory checking code where we
+> > deliberately corrupt a directory entry as a sentinel to trigger a
+> > correction in later repair phase.  In the mean time, the filesystem is
+> > inconsistent, so set the needsrepair flag to force a re-run of repair if
+> > the system goes down.
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  include/xfs_mount.h |    1 +
-> >  libxfs/init.c       |   25 +++++++++++++------------
-> >  repair/agheader.c   |   21 +++++++++++++++++++++
-> >  repair/xfs_repair.c |   45 +++++++++++++++++++++++++++++++++++++++++++++
-> >  4 files changed, 80 insertions(+), 12 deletions(-)
-> > 
-> > 
-> ...
-> > diff --git a/libxfs/init.c b/libxfs/init.c
-> > index 9fe13b8d..98057b78 100644
-> > --- a/libxfs/init.c
-> > +++ b/libxfs/init.c
-> > @@ -867,25 +867,17 @@ _("%s: Flushing the %s failed, err=%d!\n"),
-> >  }
-> >  
-> >  /*
-> > - * Flush all dirty buffers to stable storage and report on writes that didn't
-> > - * make it to stable storage.
-> > + * Persist all disk write caches and report on writes that didn't make it to
-> > + * stable storage.  Callers should flush (or purge) the libxfs buffer caches
-> > + * before calling this function.
-> >   */
-> > -static int
-> > +int
-> >  libxfs_flush_mount(
-> >  	struct xfs_mount	*mp)
-> >  {
-> >  	int			error = 0;
-> >  	int			err2;
-> >  
-> > -	/*
-> > -	 * Purge the buffer cache to write all dirty buffers to disk and free
-> > -	 * all incore buffers.  Buffers that fail write verification will cause
-> > -	 * the CORRUPT_WRITE flag to be set in the buftarg.  Buffers that
-> > -	 * cannot be written will cause the LOST_WRITE flag to be set in the
-> > -	 * buftarg.
-> > -	 */
-> > -	libxfs_bcache_purge();
-> > -
 > 
-> FWIW, my comment on the previous version was that I think it's
-> reasonable to call libxfs_bcache_flush() here instead of the purge so
-> callers don't necessarily have to do anything special. The one caller
-> that does the purge is free to do so before calling
-> libxfs_flush_mount(), as that essentially supercedes the flush that
-> would otherwise occur here. Either way, the patch looks fine to me:
+> Hmm.. this seems orthogonal to the rest of the series. I'm sure we can
+> come up with various additional uses for the bit, but it seems a little
+> odd to me that repair might set it in some cases after a crash but not
+> others (if the filesystem happens to already be corrupt, for example).
 
-Ah, yeah.  That's a pretty simple change to make.  Thanks for the
-review.
+<nod> Another option I thought of is to add a hook to the buffer cache
+so that the first time anyone tries to bwrite a buffer (either directly
+or via a delwri list or normal buffer cache writeback) we'll also set
+needsrepair on the ondisk primary super.  That would protect us against
+other scenarios like crashing after writing a new AGF but before writing
+the new AGI, where the fs is left in an indeterminate state.
+
+Hmm, maybe I should pursue /that/ instead.
 
 --D
 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Brian
 > 
-> >  	/* Flush all kernel and disk write caches, and report failures. */
-> >  	if (mp->m_ddev_targp) {
-> >  		err2 = libxfs_flush_buftarg(mp->m_ddev_targp, _("data device"));
-> > @@ -923,6 +915,15 @@ libxfs_umount(
-> >  
-> >  	libxfs_rtmount_destroy(mp);
-> >  
-> > +	/*
-> > +	 * Purge the buffer cache to write all dirty buffers to disk and free
-> > +	 * all incore buffers.  Buffers that fail write verification will cause
-> > +	 * the CORRUPT_WRITE flag to be set in the buftarg.  Buffers that
-> > +	 * cannot be written will cause the LOST_WRITE flag to be set in the
-> > +	 * buftarg.  Once that's done, instruct the disks to persist their
-> > +	 * write caches.
-> > +	 */
-> > +	libxfs_bcache_purge();
-> >  	error = libxfs_flush_mount(mp);
-> >  
-> >  	for (agno = 0; agno < mp->m_maxagi; agno++) {
-> > diff --git a/repair/agheader.c b/repair/agheader.c
-> > index 8bb99489..2af24106 100644
-> > --- a/repair/agheader.c
-> > +++ b/repair/agheader.c
-> > @@ -452,6 +452,27 @@ secondary_sb_whack(
-> >  			rval |= XR_AG_SB_SEC;
-> >  	}
-> >  
-> > +	if (xfs_sb_version_needsrepair(sb)) {
-> > +		if (i == 0) {
-> > +			if (!no_modify)
-> > +				do_warn(
-> > +	_("clearing needsrepair flag and regenerating metadata\n"));
-> > +			else
-> > +				do_warn(
-> > +	_("would clear needsrepair flag and regenerate metadata\n"));
-> > +		} else {
-> > +			/*
-> > +			 * Quietly clear needsrepair on the secondary supers as
-> > +			 * part of ensuring them.  If needsrepair is set on the
-> > +			 * primary, it will be cleared at the end of repair
-> > +			 * once we've flushed all other dirty blocks to disk.
-> > +			 */
-> > +			sb->sb_features_incompat &=
-> > +					~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-> > +			rval |= XR_AG_SB_SEC;
-> > +		}
-> > +	}
+> >  repair/agheader.h   |    2 ++
+> >  repair/dir2.c       |    3 +++
+> >  repair/phase6.c     |    7 +++++++
+> >  repair/xfs_repair.c |   37 +++++++++++++++++++++++++++++++++++++
+> >  4 files changed, 49 insertions(+)
+> > 
+> > 
+> > diff --git a/repair/agheader.h b/repair/agheader.h
+> > index a63827c8..fa6fe596 100644
+> > --- a/repair/agheader.h
+> > +++ b/repair/agheader.h
+> > @@ -82,3 +82,5 @@ typedef struct fs_geo_list  {
+> >  #define XR_AG_AGF	0x2
+> >  #define XR_AG_AGI	0x4
+> >  #define XR_AG_SB_SEC	0x8
 > > +
-> >  	return(rval);
-> >  }
+> > +void force_needsrepair(struct xfs_mount *mp);
+> > diff --git a/repair/dir2.c b/repair/dir2.c
+> > index eabdb4f2..922b8a3e 100644
+> > --- a/repair/dir2.c
+> > +++ b/repair/dir2.c
+> > @@ -15,6 +15,7 @@
+> >  #include "da_util.h"
+> >  #include "prefetch.h"
+> >  #include "progress.h"
+> > +#include "agheader.h"
 > >  
+> >  /*
+> >   * Known bad inode list.  These are seen when the leaf and node
+> > @@ -774,6 +775,7 @@ _("entry at block %u offset %" PRIdPTR " in directory inode %" PRIu64
+> >  				do_warn(
+> >  _("\tclearing inode number in entry at offset %" PRIdPTR "...\n"),
+> >  					(intptr_t)ptr - (intptr_t)d);
+> > +				force_needsrepair(mp);
+> >  				dep->name[0] = '/';
+> >  				*dirty = 1;
+> >  			} else {
+> > @@ -914,6 +916,7 @@ _("entry \"%*.*s\" in directory inode %" PRIu64 " points to self: "),
+> >  		 */
+> >  		if (junkit) {
+> >  			if (!no_modify) {
+> > +				force_needsrepair(mp);
+> >  				dep->name[0] = '/';
+> >  				*dirty = 1;
+> >  				do_warn(_("clearing entry\n"));
+> > diff --git a/repair/phase6.c b/repair/phase6.c
+> > index 14464bef..5ecbe9b2 100644
+> > --- a/repair/phase6.c
+> > +++ b/repair/phase6.c
+> > @@ -1649,6 +1649,7 @@ longform_dir2_entry_check_data(
+> >  			if (entry_junked(
+> >  	_("entry \"%s\" in directory inode %" PRIu64 " points to non-existent inode %" PRIu64 ""),
+> >  					fname, ip->i_ino, inum)) {
+> > +				force_needsrepair(mp);
+> >  				dep->name[0] = '/';
+> >  				libxfs_dir2_data_log_entry(&da, bp, dep);
+> >  			}
+> > @@ -1666,6 +1667,7 @@ longform_dir2_entry_check_data(
+> >  			if (entry_junked(
+> >  	_("entry \"%s\" in directory inode %" PRIu64 " points to free inode %" PRIu64),
+> >  					fname, ip->i_ino, inum)) {
+> > +				force_needsrepair(mp);
+> >  				dep->name[0] = '/';
+> >  				libxfs_dir2_data_log_entry(&da, bp, dep);
+> >  			}
+> > @@ -1684,6 +1686,7 @@ longform_dir2_entry_check_data(
+> >  				if (entry_junked(
+> >  	_("%s (ino %" PRIu64 ") in root (%" PRIu64 ") is not a directory"),
+> >  						ORPHANAGE, inum, ip->i_ino)) {
+> > +					force_needsrepair(mp);
+> >  					dep->name[0] = '/';
+> >  					libxfs_dir2_data_log_entry(&da, bp, dep);
+> >  				}
+> > @@ -1706,6 +1709,7 @@ longform_dir2_entry_check_data(
+> >  			if (entry_junked(
+> >  	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
+> >  					fname, inum, ip->i_ino)) {
+> > +				force_needsrepair(mp);
+> >  				dep->name[0] = '/';
+> >  				libxfs_dir2_data_log_entry(&da, bp, dep);
+> >  			}
+> > @@ -1737,6 +1741,7 @@ longform_dir2_entry_check_data(
+> >  				if (entry_junked(
+> >  	_("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is not in the the first block"), fname,
+> >  						inum, ip->i_ino)) {
+> > +					force_needsrepair(mp);
+> >  					dep->name[0] = '/';
+> >  					libxfs_dir2_data_log_entry(&da, bp, dep);
+> >  				}
+> > @@ -1764,6 +1769,7 @@ longform_dir2_entry_check_data(
+> >  				if (entry_junked(
+> >  	_("entry \"%s\" in dir %" PRIu64 " is not the first entry"),
+> >  						fname, inum, ip->i_ino)) {
+> > +					force_needsrepair(mp);
+> >  					dep->name[0] = '/';
+> >  					libxfs_dir2_data_log_entry(&da, bp, dep);
+> >  				}
+> > @@ -1852,6 +1858,7 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
+> >  				orphanage_ino = 0;
+> >  			nbad++;
+> >  			if (!no_modify)  {
+> > +				force_needsrepair(mp);
+> >  				dep->name[0] = '/';
+> >  				libxfs_dir2_data_log_entry(&da, bp, dep);
+> >  				if (verbose)
 > > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> > index 32755821..f607afcb 100644
+> > index f607afcb..9dc73854 100644
 > > --- a/repair/xfs_repair.c
 > > +++ b/repair/xfs_repair.c
-> > @@ -712,6 +712,48 @@ check_fs_vs_host_sectsize(
-> >  	}
+> > @@ -754,6 +754,43 @@ clear_needsrepair(
+> >  		libxfs_buf_relse(bp);
 > >  }
 > >  
-> > +/* Clear needsrepair after a successful repair run. */
+> > +/*
+> > + * Mark the filesystem as needing repair.  This should only be called by code
+> > + * that deliberately sets invalid sentinel values in the on-disk metadata to
+> > + * trigger a later reconstruction, and only after we've settled the primary
+> > + * super contents (i.e. after phase 1).
+> > + */
 > > +void
-> > +clear_needsrepair(
+> > +force_needsrepair(
 > > +	struct xfs_mount	*mp)
 > > +{
 > > +	struct xfs_buf		*bp;
 > > +	int			error;
 > > +
-> > +	/*
-> > +	 * If we're going to clear NEEDSREPAIR, we need to make absolutely sure
-> > +	 * that everything is ok with the ondisk filesystem.  At this point
-> > +	 * we've flushed the filesystem metadata out of the buffer cache and
-> > +	 * possibly rewrote the log, but we haven't forced the disks to persist
-> > +	 * the writes to stable storage.  Do that now, and if anything goes
-> > +	 * wrong, leave NEEDSREPAIR in place.  Don't purge the buffer cache
-> > +	 * here since we're not done yet.
-> > +	 */
-> > +	libxfs_bcache_flush();
-> > +	error = -libxfs_flush_mount(mp);
-> > +	if (error) {
-> > +		do_warn(
-> > +	_("Cannot clear needsrepair due to flush failure, err=%d.\n"),
-> > +			error);
+> > +	if (!xfs_sb_version_hascrc(&mp->m_sb) ||
+> > +	    xfs_sb_version_needsrepair(&mp->m_sb))
 > > +		return;
-> > +	}
 > > +
-> > +	/* Clear needsrepair from the superblock. */
 > > +	bp = libxfs_getsb(mp);
 > > +	if (!bp || bp->b_error) {
-> > +		do_warn(
-> > +	_("Cannot clear needsrepair from primary super, err=%d.\n"),
-> > +			bp ? bp->b_error : ENOMEM);
+> > +		do_log(
+> > +	_("couldn't get superblock to set needsrepair, err=%d\n"),
+> > +				bp ? bp->b_error : ENOMEM);
+> > +		return;
 > > +	} else {
-> > +		mp->m_sb.sb_features_incompat &=
-> > +				~XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> > +		mp->m_sb.sb_features_incompat |=
+> > +				XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
 > > +		libxfs_sb_to_disk(bp->b_addr, &mp->m_sb);
-> > +		libxfs_buf_mark_dirty(bp);
+> > +
+> > +		/* Force the primary super to disk immediately. */
+> > +		error = -libxfs_bwrite(bp);
+> > +		if (error)
+> > +			do_log(_("couldn't force needsrepair, err=%d\n"), error);
 > > +	}
 > > +	if (bp)
 > > +		libxfs_buf_relse(bp);
@@ -222,15 +233,5 @@ review.
 > >  int
 > >  main(int argc, char **argv)
 > >  {
-> > @@ -1131,6 +1173,9 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
-> >  	libxfs_bcache_flush();
-> >  	format_log_max_lsn(mp);
-> >  
-> > +	if (xfs_sb_version_needsrepair(&mp->m_sb))
-> > +		clear_needsrepair(mp);
-> > +
-> >  	/* Report failure if anything failed to get written to our fs. */
-> >  	error = -libxfs_umount(mp);
-> >  	if (error)
 > > 
 > 
