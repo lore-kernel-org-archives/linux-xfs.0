@@ -7,152 +7,130 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44440C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:23:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58607C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:23:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F41E564EA6
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:23:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F66564EA6
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:23:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232909AbhBIRXM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Feb 2021 12:23:12 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:53649 "EHLO
+        id S233001AbhBIRXi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Feb 2021 12:23:38 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:21507 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231845AbhBIRXJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Feb 2021 12:23:09 -0500
+        by vger.kernel.org with ESMTP id S232633AbhBIRXg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Feb 2021 12:23:36 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612891286;
+        s=mimecast20190719; t=1612891330;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=7HqNct6GOkXnAAPChwUOyWEpZusngdeF3EtMPcxGajI=;
-        b=hACZWj+Xl0vewuY2rKINtY1F7yNDbukaSuQG92M/R3oINpSeTGnsb1tBNbzydaXjaHSpNn
-        wqIwk/tiQk/gI3Ha9ZIsWfk/r/Ayg0OhropcHCVtTeS3Hg+M02d+D82cqOgflDjP88UR0Y
-        PyVYR1NqZyUZZx5o8bNtSlWDD7zxSSU=
+        bh=OUyQprqzWQqUxDW4uEMGYCKtZ8RzU5r2qsChYwndY9s=;
+        b=gd2CKuqOjOL7WZt8fq2+9kq1TTyE7h9rzDQ+/JLBBSjX1uaqhxW3kG0z8uRWcH8SHUXLi+
+        hit1Vy105P1A0ETYeWGYHInMpVHrnWlapBnK4Jv6YhUrrdxsigfHdOv6Wmwgx9N2rd7ojd
+        K4JF96Jz4zUy/aFUYzYYnxMit4QgeKY=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-24--EUa9IuHMZeF9tiBAUxCHw-1; Tue, 09 Feb 2021 12:21:24 -0500
-X-MC-Unique: -EUa9IuHMZeF9tiBAUxCHw-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+ us-mta-200-aX4jVSNZPb-d8yK2vQhV9g-1; Tue, 09 Feb 2021 12:22:08 -0500
+X-MC-Unique: aX4jVSNZPb-d8yK2vQhV9g-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9CB9281425C;
-        Tue,  9 Feb 2021 17:21:23 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EFF631005501;
+        Tue,  9 Feb 2021 17:22:06 +0000 (UTC)
 Received: from bfoster (ovpn-113-234.rdu2.redhat.com [10.10.113.234])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 21D655D9D0;
-        Tue,  9 Feb 2021 17:21:23 +0000 (UTC)
-Date:   Tue, 9 Feb 2021 12:21:21 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7ADAB10016F5;
+        Tue,  9 Feb 2021 17:22:06 +0000 (UTC)
+Date:   Tue, 9 Feb 2021 12:22:04 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/10] xfs_repair: allow setting the needsrepair flag
-Message-ID: <20210209172121.GF14273@bfoster>
+Subject: Re: [PATCH 10/10] xfs_admin: support adding features to V5
+ filesystems
+Message-ID: <20210209172204.GH14273@bfoster>
 References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
- <161284384955.3057868.8076509276356847362.stgit@magnolia>
+ <161284386088.3057868.16559496991921219277.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161284384955.3057868.8076509276356847362.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <161284386088.3057868.16559496991921219277.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 08, 2021 at 08:10:49PM -0800, Darrick J. Wong wrote:
+On Mon, Feb 08, 2021 at 08:11:00PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Quietly set up the ability to tell xfs_repair to set NEEDSREPAIR at
-> program start and (presumably) clear it by the end of the run.  This
-> code isn't terribly useful to users; it's mainly here so that fstests
-> can exercise the functionality.
+> Teach the xfs_admin script how to add features to V5 filesystems.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  repair/globals.c    |    2 ++
->  repair/globals.h    |    2 ++
->  repair/phase1.c     |   23 +++++++++++++++++++++++
->  repair/xfs_repair.c |    9 +++++++++
->  4 files changed, 36 insertions(+)
+>  db/xfs_admin.sh      |    6 ++++--
+>  man/man8/xfs_admin.8 |   22 ++++++++++++++++++++++
+>  2 files changed, 26 insertions(+), 2 deletions(-)
 > 
 > 
+> diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+> index 430872ef..7a467dbe 100755
+> --- a/db/xfs_admin.sh
+> +++ b/db/xfs_admin.sh
+> @@ -8,9 +8,10 @@ status=0
+>  DB_OPTS=""
+>  REPAIR_OPTS=""
+>  REPAIR_DEV_OPTS=""
+> -USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-r rtdev] [-U uuid] device [logdev]"
+> +DB_LOG_OPTS=""
+> +USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
+
+Technically this would pass through the lazy counter variant on a v4
+super, right? I wonder if we should just call it "[-O feature]" here.
+
+>  
+> -while getopts "c:efjlL:pr:uU:V" c
+> +while getopts "c:efjlL:O:pr:uU:V" c
+>  do
+>  	case $c in
+>  	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG;;
 ...
-> diff --git a/repair/phase1.c b/repair/phase1.c
-> index 00b98584..b26d25f8 100644
-> --- a/repair/phase1.c
-> +++ b/repair/phase1.c
-> @@ -30,6 +30,26 @@ alloc_ag_buf(int size)
->  	return(bp);
->  }
->  
-> +static void
-> +set_needsrepair(
-> +	struct xfs_sb	*sb)
-> +{
-> +	if (!xfs_sb_version_hascrc(sb)) {
-> +		printf(
-> +	_("needsrepair flag only supported on V5 filesystems.\n"));
-> +		exit(0);
-> +	}
-> +
-> +	if (xfs_sb_version_needsrepair(sb)) {
-> +		printf(_("Filesystem already marked as needing repair.\n"));
-> +		return;
-> +	}
+> diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+> index cccbb224..3f3aeea8 100644
+> --- a/man/man8/xfs_admin.8
+> +++ b/man/man8/xfs_admin.8
+...
+> @@ -106,6 +108,26 @@ The filesystem label can be cleared using the special "\c
+>  " value for
+>  .IR label .
+>  .TP
+> +.BI \-O " feature1" = "status" , "feature2" = "status..."
+> +Add or remove features on an existing a V5 filesystem.
 
-Any reason this doesn't exit the repair like the lazy counter logic
-does? Otherwise seems fine:
+s/existing a/existing/
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Also, similar question around the lazycount variant. If it works, should
+it not be documented here?
 
-> +
-> +	printf(_("Marking filesystem in need of repair.\n"));
-> +	primary_sb_modified = 1;
-> +	sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-> +}
-> +
->  /*
->   * this has got to be big enough to hold 4 sectors
->   */
-> @@ -126,6 +146,9 @@ _("Cannot disable lazy-counters on V5 fs\n"));
->  		}
->  	}
->  
-> +	if (add_needsrepair)
-> +		set_needsrepair(sb);
-> +
->  	/* shared_vn should be zero */
->  	if (sb->sb_shared_vn) {
->  		do_warn(_("resetting shared_vn to zero\n"));
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 9dc73854..ee377e8a 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -65,11 +65,13 @@ static char *o_opts[] = {
->   */
->  enum c_opt_nums {
->  	CONVERT_LAZY_COUNT = 0,
-> +	CONVERT_NEEDSREPAIR,
->  	C_MAX_OPTS,
->  };
->  
->  static char *c_opts[] = {
->  	[CONVERT_LAZY_COUNT]	= "lazycount",
-> +	[CONVERT_NEEDSREPAIR]	= "needsrepair",
->  	[C_MAX_OPTS]		= NULL,
->  };
->  
-> @@ -302,6 +304,13 @@ process_args(int argc, char **argv)
->  					lazy_count = (int)strtol(val, NULL, 0);
->  					convert_lazy_count = 1;
->  					break;
-> +				case CONVERT_NEEDSREPAIR:
-> +					if (!val)
-> +						do_abort(
-> +		_("-c needsrepair requires a parameter\n"));
-> +					if (strtol(val, NULL, 0) == 1)
-> +						add_needsrepair = true;
-> +					break;
->  				default:
->  					unknown('c', val);
->  					break;
+Brian
+
+> +The features should be specified as a comma-separated list.
+> +.I status
+> +should be either 0 to disable the feature or 1 to enable the feature.
+> +Note, however, that most features cannot be disabled.
+> +.IP
+> +.B NOTE:
+> +Administrators must ensure the filesystem is clean by running
+> +.B xfs_repair -n
+> +to inspect the filesystem before performing the upgrade.
+> +If corruption is found, recovery procedures (e.g. reformat followed by
+> +restoration from backup; or running
+> +.B xfs_repair
+> +without the
+> +.BR -n )
+> +must be followed to clean the filesystem.
+> +.IP
+> +There are currently no feature options.
+> +.TP
+>  .BI \-U " uuid"
+>  Set the UUID of the filesystem to
+>  .IR uuid .
 > 
 
