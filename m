@@ -2,196 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ADB7C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:39:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04681C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:59:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26DC164E15
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:39:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C00C964EC4
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Feb 2021 17:59:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233348AbhBIRjL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Feb 2021 12:39:11 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:35045 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233295AbhBIRhI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Feb 2021 12:37:08 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612892139;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=l2q43GRgwR7HZKQMWir7ZbVctQLznNQzzmZQMlUsFRE=;
-        b=JYDGPrOhRFIiKtthSv5385pqEbMZWiioT8+jmQ7YuLgXvweWD9qrrfVYEon+6rQ543iK7k
-        OWF268NIeP4lo0A4tq8N4hQwv9oRy2aCDUDmh9DiDs5z7DF/gx//0aNwu8aSdRatBDQxzE
-        vcJto1vtKdTJyyEYDElYD2yuO50NlVA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-253-l8wiIFmZMT-mtoWlm5seCQ-1; Tue, 09 Feb 2021 12:35:36 -0500
-X-MC-Unique: l8wiIFmZMT-mtoWlm5seCQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 32901195D565;
-        Tue,  9 Feb 2021 17:35:35 +0000 (UTC)
-Received: from bfoster (ovpn-113-234.rdu2.redhat.com [10.10.113.234])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id AFCD660C4D;
-        Tue,  9 Feb 2021 17:35:34 +0000 (UTC)
-Date:   Tue, 9 Feb 2021 12:35:32 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 2/2] xfs_repair: enable bigtime upgrade via repair
-Message-ID: <20210209173532.GJ14273@bfoster>
-References: <161284386265.3058138.14199712814454514885.stgit@magnolia>
- <161284387398.3058138.5317754248430984165.stgit@magnolia>
+        id S233204AbhBIR5O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Feb 2021 12:57:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60916 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232879AbhBIRrY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Feb 2021 12:47:24 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 70AAA64E2F;
+        Tue,  9 Feb 2021 17:46:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612892803;
+        bh=AY91+AiyhR9+rAv4ZeuYOztQyVne23NId8HLV42jfxI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=AU61t7hKCPsmbU/QeCCOKegBIB4xriX8ckOrYybRlDNc0mmBX1oaLyp/4dq0dfyld
+         YZR0eSLMfb2D9P/ulluFUAv1c4zlQ+VlbM0CokUuIMfE4MhSiRJJba7O6fjXP/D/i5
+         DIy/RHrBxosW4XVSnGz0O7IqsirlK/bZPFw78FGpdtD3as/EsMS2Ii7Z1NIjsKQ/AM
+         OYmD1Z0b0xMqNGwxFNqoiMAFuN+4LQELXWwyi6535QJkhHZVMa6bHWEzIxDiQlSXgD
+         CcoloDQ+gSkpbpoc9RdlSg6DSIDxmGtC2giCnNkaA4XvlJPyQ3KN4Sh//zu/Rm1Zgn
+         nByMLrN8F41xA==
+Date:   Tue, 9 Feb 2021 09:46:42 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 05/10] xfs_repair: clear quota CHKD flags on the incore
+ superblock too
+Message-ID: <20210209174642.GR7193@magnolia>
+References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
+ <161284383258.3057868.6167060787728229726.stgit@magnolia>
+ <20210209172011.GC14273@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161284387398.3058138.5317754248430984165.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20210209172011.GC14273@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 08, 2021 at 08:11:14PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Feb 09, 2021 at 12:20:11PM -0500, Brian Foster wrote:
+> On Mon, Feb 08, 2021 at 08:10:32PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > At the end of a repair run, xfs_repair clears the superblock's quota
+> > checked flags if it found mistakes in the quota accounting to force a
+> > quotacheck at the next mount.  This is currently the last time repair
+> > modifies the primary superblock, so it is sufficient to update the
+> > ondisk buffer and not the incore mount structure.
+> > 
+> > However, we're about to introduce code to clear the needsrepair feature
+> > at the very end of repair, after all metadata blocks have been written
+> > to disk and all disk caches flush.  Since the convention everywhere else
+> > in xfs is to update the incore superblock, call libxfs_sb_to_disk to
+> > translate that into the ondisk buffer, and then write the buffer to
+> > disk, switch the quota CHKD code to use this mechanism too.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  repair/xfs_repair.c |    7 +++----
+> >  1 file changed, 3 insertions(+), 4 deletions(-)
+> > 
+> > 
+> > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> > index 9409f0d8..32755821 100644
+> > --- a/repair/xfs_repair.c
+> > +++ b/repair/xfs_repair.c
+> > @@ -1108,10 +1108,9 @@ _("Warning:  project quota information would be cleared.\n"
+> >  	if ((mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD) != quotacheck_results()) {
+> >  		do_warn(_("Note - quota info will be regenerated on next "
+> >  			"quota mount.\n"));
+> > -		dsb->sb_qflags &= cpu_to_be16(~(XFS_UQUOTA_CHKD |
+> > -						XFS_GQUOTA_CHKD |
+> > -						XFS_PQUOTA_CHKD |
+> > -						XFS_OQUOTA_CHKD));
+> > +		mp->m_sb.sb_qflags &= ~(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD |
+> > +					XFS_PQUOTA_CHKD | XFS_OQUOTA_CHKD);
+> > +		libxfs_sb_to_disk(sbp->b_addr, &mp->m_sb);
 > 
-> Upgrade existing V5 filesystems to support large timestamps up to 2486.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
+> Nit: we can still use dsb here instead of open-coding the buffer
+> address. Otherwise:
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Or I could remove dsb entirely, since the xfs_mount's sb_unit/sb_width
+should reflect the values copied from the backup super during phase 1
+(aka before we actually libxfs_mount) when we set copied_sunit=1.
 
->  man/man8/xfs_admin.8 |    6 ++++++
->  repair/globals.c     |    1 +
->  repair/globals.h     |    1 +
->  repair/phase1.c      |   23 +++++++++++++++++++++++
->  repair/xfs_repair.c  |   11 +++++++++++
->  5 files changed, 42 insertions(+)
-> 
-> 
-> diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-> index da05171d..13d71643 100644
-> --- a/man/man8/xfs_admin.8
-> +++ b/man/man8/xfs_admin.8
-> @@ -135,6 +135,12 @@ This reduces mount time by speeding up metadata space reservation calculations.
->  The filesystem cannot be downgraded after this feature is enabled.
->  Once enabled, the filesystem will not be writable by older kernels.
->  This feature was added to Linux 5.10.
-> +.TP 0.4i
-> +.B bigtime
-> +Upgrade a filesystem to support larger timestamps up to the year 2486.
-> +The filesystem cannot be downgraded after this feature is enabled.
-> +Once enabled, the filesystem will not be mountable by older kernels.
-> +This feature was added to Linux 5.10.
->  .RE
->  .TP
->  .BI \-U " uuid"
-> diff --git a/repair/globals.c b/repair/globals.c
-> index 89063b10..28f0b6a0 100644
-> --- a/repair/globals.c
-> +++ b/repair/globals.c
-> @@ -52,6 +52,7 @@ int	lazy_count;		/* What to set if to if converting */
->  
->  bool	add_needsrepair;	/* forcibly set needsrepair while repairing */
->  bool	add_inobtcount;		/* add inode btree counts to AGI */
-> +bool	add_bigtime;		/* add support for timestamps up to 2486 */
->  
->  /* misc status variables */
->  
-> diff --git a/repair/globals.h b/repair/globals.h
-> index a0051794..be784cf6 100644
-> --- a/repair/globals.h
-> +++ b/repair/globals.h
-> @@ -94,6 +94,7 @@ extern int	lazy_count;		/* What to set if to if converting */
->  
->  extern bool	add_needsrepair;
->  extern bool	add_inobtcount;
-> +extern bool	add_bigtime;
->  
->  /* misc status variables */
->  
-> diff --git a/repair/phase1.c b/repair/phase1.c
-> index 96661c6b..89056215 100644
-> --- a/repair/phase1.c
-> +++ b/repair/phase1.c
-> @@ -77,6 +77,27 @@ set_inobtcount(
->  	sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
->  }
->  
-> +static void
-> +set_bigtime(
-> +	struct xfs_sb	*sb)
-> +{
-> +	if (!xfs_sb_version_hascrc(sb)) {
-> +		printf(
-> +	_("Large timestamp feature only supported on V5 filesystems.\n"));
-> +		exit(0);
-> +	}
-> +
-> +	if (xfs_sb_version_hasbigtime(sb)) {
-> +		printf(_("Filesystem already supports large timestamps.\n"));
-> +		return;
-> +	}
-> +
-> +	printf(_("Adding large timestamp support to filesystem.\n"));
-> +	primary_sb_modified = 1;
-> +	sb->sb_features_incompat |= (XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR |
-> +				     XFS_SB_FEAT_INCOMPAT_BIGTIME);
-> +}
-> +
->  /*
->   * this has got to be big enough to hold 4 sectors
->   */
-> @@ -177,6 +198,8 @@ _("Cannot disable lazy-counters on V5 fs\n"));
->  		set_needsrepair(sb);
->  	if (add_inobtcount)
->  		set_inobtcount(sb);
-> +	if (add_bigtime)
-> +		set_bigtime(sb);
->  
->  	/* shared_vn should be zero */
->  	if (sb->sb_shared_vn) {
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 0ff2e2bc..60f97e8c 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -69,6 +69,7 @@ enum c_opt_nums {
->  	CONVERT_LAZY_COUNT = 0,
->  	CONVERT_NEEDSREPAIR,
->  	CONVERT_INOBTCOUNT,
-> +	CONVERT_BIGTIME,
->  	C_MAX_OPTS,
->  };
->  
-> @@ -76,6 +77,7 @@ static char *c_opts[] = {
->  	[CONVERT_LAZY_COUNT]	= "lazycount",
->  	[CONVERT_NEEDSREPAIR]	= "needsrepair",
->  	[CONVERT_INOBTCOUNT]	= "inobtcount",
-> +	[CONVERT_BIGTIME]	= "bigtime",
->  	[C_MAX_OPTS]		= NULL,
->  };
->  
-> @@ -327,6 +329,15 @@ process_args(int argc, char **argv)
->  		_("-c inobtcount only supports upgrades\n"));
->  					add_inobtcount = true;
->  					break;
-> +				case CONVERT_BIGTIME:
-> +					if (!val)
-> +						do_abort(
-> +		_("-c bigtime requires a parameter\n"));
-> +					if (strtol(val, NULL, 0) != 1)
-> +						do_abort(
-> +		_("-c bigtime only supports upgrades\n"));
-> +					add_bigtime = true;
-> +					break;
->  				default:
->  					unknown('c', val);
->  					break;
-> 
+--D
 
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> >  	}
+> >  
+> >  	if (copied_sunit) {
+> > 
+> 
