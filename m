@@ -2,102 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADFC5C433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 21:04:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC776C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 21:42:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7E1E064ECF
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 21:04:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 909BB60233
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 21:42:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232487AbhBJVEa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Feb 2021 16:04:30 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56899 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233009AbhBJVET (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Feb 2021 16:04:19 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612990973;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=xk9P6dEasN8ZToBGbelxXk0DU9VLucwPVrbS6IoXDQ4=;
-        b=AK7epefnWiwV9uifoX1pA0WzSXPt5Wz0LjD+yOQ9Ad9r5qCIsE6/WFZhwKMjdx/2U5Mwzj
-        eqIEi1eCVQxNVbiEtQ4bcXTDAMhBtuDcVveziHQljT8qPTjrTDCaUjXAaZs/FgHQ5QiQUO
-        LlxdyCHcbuf/G85YkwJxueBL4Av08Uk=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-405-3xhQsXSLOWKSi6-AbbIipA-1; Wed, 10 Feb 2021 16:02:49 -0500
-X-MC-Unique: 3xhQsXSLOWKSi6-AbbIipA-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S232208AbhBJVmg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Feb 2021 16:42:36 -0500
+Received: from sandeen.net ([63.231.237.45]:49036 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232439AbhBJVme (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Feb 2021 16:42:34 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 32E3A91273;
-        Wed, 10 Feb 2021 21:02:48 +0000 (UTC)
-Received: from bfoster (ovpn-113-234.rdu2.redhat.com [10.10.113.234])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8C97A10013D7;
-        Wed, 10 Feb 2021 21:02:45 +0000 (UTC)
-Date:   Wed, 10 Feb 2021 16:02:43 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     kernel test robot <lkp@intel.com>
-Cc:     kbuild-all@lists.01.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix boolreturn.cocci warnings
-Message-ID: <20210210210243.GB90895@bfoster>
-References: <202102110412.GVAOIBVp-lkp@intel.com>
- <20210210200916.GA96657@7319c0dab462>
+        by sandeen.net (Postfix) with ESMTPSA id 48E644872E4;
+        Wed, 10 Feb 2021 15:41:52 -0600 (CST)
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
+ <161284385516.3057868.355176047687079022.stgit@magnolia>
+ <20210209172131.GG14273@bfoster> <20210209181738.GU7193@magnolia>
+ <20210209185939.GK14273@bfoster> <20210209195920.GZ7193@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH 09/10] xfs_repair: add a testing hook for NEEDSREPAIR
+Message-ID: <acfe3b90-9364-85d5-84e7-7a1b888bae9e@sandeen.net>
+Date:   Wed, 10 Feb 2021 15:41:52 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.7.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210210200916.GA96657@7319c0dab462>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20210209195920.GZ7193@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 11, 2021 at 04:09:16AM +0800, kernel test robot wrote:
-> From: kernel test robot <lkp@intel.com>
+On 2/9/21 1:59 PM, Darrick J. Wong wrote:
+>> # ./repair/xfs_repair -c needsrepair=1 /dev/test/scratch 
+>> Phase 1 - find and verify superblock...
+>> Marking filesystem in need of repair.
+>> writing modified primary superblock
+>> Phase 2 - using internal log
+>>         - zero log...
+>> ERROR: The filesystem has valuable metadata changes in a log which needs to
+>> ...
+>> # mount /dev/test/scratch /mnt/
+>> mount: /mnt: wrong fs type, bad option, bad superblock on /dev/mapper/test-scratch, missing codepage or helper program, or other error.
+>> #
+>>
+>> It looks like we can set a feature upgrade bit on the superblock before
+>> we've examined the log and potentially discovered that it's dirty (phase
+>> 2). If the log is recoverable, that puts the user in a bit of a bind..
+> Heh, funny that I was thinking that the upgrades shouldn't really be
+> happening in phase 1 anyway--
 > 
-> fs/xfs/xfs_log.c:1062:9-10: WARNING: return of 0/1 in function 'xfs_log_need_covered' with return type bool
+> I've (separately) started working on a patch to make it so that you can
+> add reflink and finobt to a filesystem.  Those upgrades require somewhat
+> more intensive checks of the filesystem (such as checking free space in
+> each AG), so I ended up dumping them into phase 2, since the xfs_mount
+> and buffer cache aren't fully initialized until after phase 1.
 > 
->  Return statements in functions returning bool should use
->  true/false instead of 1/0.
-> Generated by: scripts/coccinelle/misc/boolreturn.cocci
-> 
-> Fixes: 37444fc4cc39 ("xfs: lift writable fs check up into log worker task")
-> CC: Brian Foster <bfoster@redhat.com>
-> Reported-by: kernel test robot <lkp@intel.com>
-> Signed-off-by: kernel test robot <lkp@intel.com>
-> ---
+> So, yeah, the upgrade code should move to phase2() after log zeroing and
+> before the AG scan.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Oh, whoops - 
 
-> 
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git xfs-5.12-merge
-> head:   560ab6c0d12ebccabb83638abe23a7875b946f9a
-> commit: 37444fc4cc398266fe0f71a9c0925620d44fb76a [25/36] xfs: lift writable fs check up into log worker task
-> 
->  xfs_log.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1059,7 +1059,7 @@ xfs_log_need_covered(
->  	bool			needed = false;
->  
->  	if (!xlog_cil_empty(log))
-> -		return 0;
-> +		return false;
->  
->  	spin_lock(&log->l_icloglock);
->  	switch (log->l_covered_state) {
-> 
+based on this, I think that the prior patch
+[PATCH 08/10] xfs_repair: allow setting the needsrepair flag
+needs to be adjusted as well, right; we don't want to set it in phase 1
+or we might set it then abort on a dirty log and the user is stuck.
 
+So maybe I should merge up through 
+
+[PATCH 07/10] xfs_repair: set NEEDSREPAIR when we deliberately corrupt directories
+
+and hold off on the rest? Or should I just hold off on the series and let
+you reassemble (again?)
+
+(Am I right that the upgrade bits will need to be moved and the series resent?)
+
+-Eric
