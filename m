@@ -2,55 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37F3AC433E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 20:45:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADFC5C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 21:04:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2A6360235
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 20:45:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E1E064ECF
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 21:04:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233391AbhBJUpF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Feb 2021 15:45:05 -0500
-Received: from sandeen.net ([63.231.237.45]:46198 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233336AbhBJUo7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Feb 2021 15:44:59 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S232487AbhBJVEa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Feb 2021 16:04:30 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56899 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233009AbhBJVET (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Feb 2021 16:04:19 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1612990973;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=xk9P6dEasN8ZToBGbelxXk0DU9VLucwPVrbS6IoXDQ4=;
+        b=AK7epefnWiwV9uifoX1pA0WzSXPt5Wz0LjD+yOQ9Ad9r5qCIsE6/WFZhwKMjdx/2U5Mwzj
+        eqIEi1eCVQxNVbiEtQ4bcXTDAMhBtuDcVveziHQljT8qPTjrTDCaUjXAaZs/FgHQ5QiQUO
+        LlxdyCHcbuf/G85YkwJxueBL4Av08Uk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-405-3xhQsXSLOWKSi6-AbbIipA-1; Wed, 10 Feb 2021 16:02:49 -0500
+X-MC-Unique: 3xhQsXSLOWKSi6-AbbIipA-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B17EE15D9D;
-        Wed, 10 Feb 2021 14:44:17 -0600 (CST)
-Subject: Re: [PATCH 08/10] xfs_repair: allow setting the needsrepair flag
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        bfoster@redhat.com
-References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
- <161284384955.3057868.8076509276356847362.stgit@magnolia>
- <20210209091534.GH1718132@infradead.org>
- <f52ff4e2-16c3-89dd-30aa-a29f56cd29d1@sandeen.net>
- <20210209164713.GE7190@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d6db1430-82e7-5d01-6c9d-7cdedd4d1612@sandeen.net>
-Date:   Wed, 10 Feb 2021 14:44:17 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.7.1
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 32E3A91273;
+        Wed, 10 Feb 2021 21:02:48 +0000 (UTC)
+Received: from bfoster (ovpn-113-234.rdu2.redhat.com [10.10.113.234])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8C97A10013D7;
+        Wed, 10 Feb 2021 21:02:45 +0000 (UTC)
+Date:   Wed, 10 Feb 2021 16:02:43 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     kernel test robot <lkp@intel.com>
+Cc:     kbuild-all@lists.01.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix boolreturn.cocci warnings
+Message-ID: <20210210210243.GB90895@bfoster>
+References: <202102110412.GVAOIBVp-lkp@intel.com>
+ <20210210200916.GA96657@7319c0dab462>
 MIME-Version: 1.0
-In-Reply-To: <20210209164713.GE7190@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210210200916.GA96657@7319c0dab462>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/9/21 10:47 AM, Darrick J. Wong wrote:
-> "We don't document this flag in the manual pages at all because repair
-> clears needsrepair at exit, which means the knobs only exist for fstests
-> to exercise the functionality."
+On Thu, Feb 11, 2021 at 04:09:16AM +0800, kernel test robot wrote:
+> From: kernel test robot <lkp@intel.com>
+> 
+> fs/xfs/xfs_log.c:1062:9-10: WARNING: return of 0/1 in function 'xfs_log_need_covered' with return type bool
+> 
+>  Return statements in functions returning bool should use
+>  true/false instead of 1/0.
+> Generated by: scripts/coccinelle/misc/boolreturn.cocci
+> 
+> Fixes: 37444fc4cc39 ("xfs: lift writable fs check up into log worker task")
+> CC: Brian Foster <bfoster@redhat.com>
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: kernel test robot <lkp@intel.com>
+> ---
 
-I can add that and save you a re-send.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
--Eric
+> 
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git xfs-5.12-merge
+> head:   560ab6c0d12ebccabb83638abe23a7875b946f9a
+> commit: 37444fc4cc398266fe0f71a9c0925620d44fb76a [25/36] xfs: lift writable fs check up into log worker task
+> 
+>  xfs_log.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1059,7 +1059,7 @@ xfs_log_need_covered(
+>  	bool			needed = false;
+>  
+>  	if (!xlog_cil_empty(log))
+> -		return 0;
+> +		return false;
+>  
+>  	spin_lock(&log->l_icloglock);
+>  	switch (log->l_covered_state) {
+> 
+
