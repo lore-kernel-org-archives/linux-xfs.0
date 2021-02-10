@@ -2,171 +2,181 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B034C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 02:57:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16A45C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 09:50:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E171764E50
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 02:57:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B916F64E02
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 09:50:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233732AbhBJC5y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Feb 2021 21:57:54 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41626 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233689AbhBJC5x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Feb 2021 21:57:53 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7759764E2F;
-        Wed, 10 Feb 2021 02:57:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612925826;
-        bh=fnidSCwyHYpkmrjKIOFgQsFly1KLTEmN/tNMdNdz6dY=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=qy2CJapuBYANVwdQEIA+t3YywT+4RVnd0RI8EbzAnCuf07Q6ySnwLlDMSDevFQNZA
-         GKaQ6eVweE/W/jfWdmaYfV4jJv7jINt5Hn/dSbhN2mLQvxHmrizhbeW7i5pn1uk0Ke
-         dshGz5Z8T/g+9LGpDzPPKsl2SzFWapoQ+j9BJtdKmnnAtHV2vUT+aOA5cx9kU6KNCA
-         GtwTmvLWmpQ2dcz+LU7uBJX+x82uGoNd7ZQROkBg//69710DAx0y+AiA4bKqYN6dFU
-         FKx0rfyqQZJHXA/8rAN439Y6Vgo7+VPyxs7Lwaq2k80j1N60q1qn4UoAapmlu7bm9A
-         esURI/VQ42+pA==
-Subject: [PATCH 2/2] common: remove _require_no_rtinherit
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 09 Feb 2021 18:57:06 -0800
-Message-ID: <161292582611.3504701.17311358222740363123.stgit@magnolia>
-In-Reply-To: <161292581498.3504701.4053663562108530233.stgit@magnolia>
-References: <161292581498.3504701.4053663562108530233.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S229598AbhBJJub (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Feb 2021 04:50:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37696 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229646AbhBJJtM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Feb 2021 04:49:12 -0500
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0018C0613D6
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Feb 2021 01:48:31 -0800 (PST)
+Received: by mail-pj1-x102d.google.com with SMTP id nm1so806312pjb.3
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Feb 2021 01:48:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=QvShEvKKvyf/xvra8Wgmbysam4FYNOmffc4DlrcOl6o=;
+        b=PxkX4OZZNQI2mZ/0A+hqQ8WYmtevO32Li9RCyA9g0o3DXGUooscEOw8pxDH1N5akNP
+         75USk/OJYrKWGaIV/A6IoTogxvKEn4pU9oKohEbhFq2w01H6uQNrU3w7o6vnP/isrITF
+         hithn3CJtv8r/ZMPwsoC+tZEbFhlvA34pAYHHRhdfSlkJSdBAwE4iQ1IItu/p7LOs+/T
+         hEmZUmzrZ5aP5urARSXWoKp/BuHP2k9NSdF5ygvhcvNbbwjibstREMHjbIVh3S5dyM8V
+         176+l01TW+VJL7SurDtZiAXHCd29kr4z/FdA4g6FkkM87cDTXR2WPdOAyxRggcgObLSP
+         nxSA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=QvShEvKKvyf/xvra8Wgmbysam4FYNOmffc4DlrcOl6o=;
+        b=FVMzLAMTgaICKCsda7KnnqESSnTL8ib40A1La9BlqZ5BbnOcB+ooQZgYqIGFbGurpe
+         HtdUTzJcN9Fb14zWfUJo47FCl7JwyiUlo8veu9N9Q2i0xbV1kv0l4gHSYa1uXufAJB29
+         GHdx/16V4E41t0WbYFCwlKg7UQ/+wyj52P+diyT6oWSF/RG+WDT8vA+hjfvU+ijK0RtR
+         +j4AAdGFPzCS7j9Xu4npJh7mQU3usZzRCeyUZwYxGav/oOg5bnOcjL2VQdTRCcq9yEwS
+         bqTGvAXTbFgkUYQjPuWKJ3mz9DpIR6T1illLKe1FKgeLbcE/SWYgrp/reAco9lEqemXF
+         ldNg==
+X-Gm-Message-State: AOAM533SWgcsgK9v3YJn3onZVk4Y3Tr9FpErRkfiHlEJLXufHSDGVjh+
+        l09ci9RB+x4wLSn6qohiZ+k=
+X-Google-Smtp-Source: ABdhPJy2mrUNIWhSMzRrjTrucz1Bs9q1TLXUfF9jANkr7Vt3DN06vCAWpLJYCoLD2ksYwMv70EJsoQ==
+X-Received: by 2002:a17:902:eccf:b029:de:72a2:f1f8 with SMTP id a15-20020a170902eccfb02900de72a2f1f8mr2465977plh.17.1612950511514;
+        Wed, 10 Feb 2021 01:48:31 -0800 (PST)
+Received: from garuda ([122.182.225.93])
+        by smtp.gmail.com with ESMTPSA id 9sm1790537pgw.61.2021.02.10.01.48.29
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 10 Feb 2021 01:48:31 -0800 (PST)
+References: <161284387610.3058224.6236053293202575597.stgit@magnolia> <161284390433.3058224.6853671538193339438.stgit@magnolia>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org,
+        Chaitanya.Kulkarni@wdc.com
+Subject: Re: [PATCH 5/6] xfs_repair: check dquot id and type
+In-reply-to: <161284390433.3058224.6853671538193339438.stgit@magnolia>
+Date:   Wed, 10 Feb 2021 15:18:28 +0530
+Message-ID: <877dngp82b.fsf@garuda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On 09 Feb 2021 at 09:41, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> Make sure that we actually check the type and id of an ondisk dquot.
+>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  repair/quotacheck.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 55 insertions(+), 3 deletions(-)
+>
+>
+> diff --git a/repair/quotacheck.c b/repair/quotacheck.c
+> index 55bcc048..0ea2deb5 100644
+> --- a/repair/quotacheck.c
+> +++ b/repair/quotacheck.c
+> @@ -234,12 +234,48 @@ quotacheck_adjust(
+>  	libxfs_irele(ip);
+>  }
+>  
+> +/* Check the ondisk dquot's id and type match what the incore dquot expects. */
+> +static bool
+> +qc_dquot_check_type(
+> +	struct xfs_mount	*mp,
+> +	xfs_dqtype_t		type,
+> +	xfs_dqid_t		id,
+> +	struct xfs_disk_dquot	*ddq)
+> +{
+> +	uint8_t			ddq_type;
+> +
+> +	ddq_type = ddq->d_type & XFS_DQTYPE_REC_MASK;
+> +
+> +	if (be32_to_cpu(ddq->d_id) != id)
+> +		return false;
+> +
+> +	/*
+> +	 * V5 filesystems always expect an exact type match.  V4 filesystems
+> +	 * expect an exact match for user dquots and for non-root group and
+> +	 * project dquots.
+> +	 */
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) || type == XFS_DQTYPE_USER || !id)
 
-All the remaining tests that use _require_no_rtinherit can be adapted to
-ignore SCRATCH_RTDEV or to force files to be created on the data device.
-This makes the helper unnecessary and increases test coverage, so remove
-this helper.
+The above check should have been "id" instead of "!id".
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- common/rc     |   10 ----------
- tests/xfs/205 |    5 ++++-
- tests/xfs/306 |    5 ++++-
- tests/xfs/318 |    5 ++++-
- tests/xfs/444 |    6 +++++-
- 5 files changed, 17 insertions(+), 14 deletions(-)
+> +		return ddq_type == type;
+> +
+> +	/*
+> +	 * V4 filesystems support either group or project quotas, but not both
+> +	 * at the same time.  The non-user quota file can be switched between
+> +	 * group and project quota uses depending on the mount options, which
+> +	 * means that we can encounter the other type when we try to load quota
+> +	 * defaults.  Quotacheck will soon reset the the entire quota file
+> +	 * (including the root dquot) anyway, but don't log scary corruption
+> +	 * reports to dmesg.
+> +	 */
+> +	return ddq_type == XFS_DQTYPE_GROUP || ddq_type == XFS_DQTYPE_PROJ;
+> +}
+> +
+>  /* Compare this on-disk dquot against whatever we observed. */
+>  static void
+>  qc_check_dquot(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_disk_dquot	*ddq,
+> -	struct qc_dquots	*dquots)
+> +	struct qc_dquots	*dquots,
+> +	xfs_dqid_t		dqid)
+>  {
+>  	struct qc_rec		*qrec;
+>  	struct qc_rec		empty = {
+> @@ -253,6 +289,22 @@ qc_check_dquot(
+>  	if (!qrec)
+>  		qrec = &empty;
+>  
+> +	if (!qc_dquot_check_type(mp, dquots->type, dqid, ddq)) {
+> +		const char	*dqtypestr;
+> +
+> +		dqtypestr = qflags_typestr(ddq->d_type & XFS_DQTYPE_REC_MASK);
+> +		if (dqtypestr)
+> +			do_warn(_("%s id %u saw type %s id %u\n"),
+> +					qflags_typestr(dquots->type), dqid,
+> +					dqtypestr, be32_to_cpu(ddq->d_id));
+> +		else
+> +			do_warn(_("%s id %u saw type %x id %u\n"),
+> +					qflags_typestr(dquots->type), dqid,
+> +					ddq->d_type & XFS_DQTYPE_REC_MASK,
+> +					be32_to_cpu(ddq->d_id));
+> +		chkd_flags = 0;
+> +	}
+> +
+>  	if (be64_to_cpu(ddq->d_bcount) != qrec->bcount) {
+>  		do_warn(_("%s id %u has bcount %llu, expected %"PRIu64"\n"),
+>  				qflags_typestr(dquots->type), id,
+> @@ -327,11 +379,11 @@ _("cannot read %s inode %"PRIu64", block %"PRIu64", disk block %"PRIu64", err=%d
+>  		}
+>  
+>  		dqb = bp->b_addr;
+> -		dqid = map->br_startoff * dqperchunk;
+> +		dqid = (map->br_startoff + bno) * dqperchunk;
+>  		for (dqnr = 0;
+>  		     dqnr < dqperchunk && dqid <= UINT_MAX;
+>  		     dqnr++, dqb++, dqid++)
+> -			qc_check_dquot(mp, &dqb->dd_diskdq, dquots);
+> +			qc_check_dquot(mp, &dqb->dd_diskdq, dquots, dqid);
+>  		libxfs_buf_relse(bp);
+>  	}
+>  
 
-
-diff --git a/common/rc b/common/rc
-index ad54b3de..25cbac0b 100644
---- a/common/rc
-+++ b/common/rc
-@@ -6,16 +6,6 @@
- 
- BC=$(which bc 2> /dev/null) || BC=
- 
--# Some tests are not relevant or functional when testing XFS realtime
--# subvolumes along with the rtinherit=1 mkfs option.  In these cases,
--# this test will opt-out of the test.
--_require_no_rtinherit()
--{
--	[ "$FSTYP" = "xfs" ] && echo "$MKFS_OPTIONS" |
--		egrep -q "rtinherit([^=]|=1|$)" && \
--		_notrun "rtinherit mkfs option is not supported by this test."
--}
--
- _require_math()
- {
- 	if [ -z "$BC" ]; then
-diff --git a/tests/xfs/205 b/tests/xfs/205
-index da022f19..1f7ce3d8 100755
---- a/tests/xfs/205
-+++ b/tests/xfs/205
-@@ -23,10 +23,13 @@ _supported_fs xfs
- 
- # single AG will cause xfs_repair to fail checks.
- _require_scratch_nocheck
--_require_no_rtinherit
- 
- rm -f $seqres.full
- 
-+# Disable the scratch rt device to avoid test failures relating to the rt
-+# bitmap consuming all the free space in our small data device.
-+unset SCRATCH_RTDEV
-+
- fsblksz=1024
- _scratch_mkfs_xfs -d size=$((32768*fsblksz)) -b size=$fsblksz >> $seqres.full 2>&1
- _scratch_mount
-diff --git a/tests/xfs/306 b/tests/xfs/306
-index e1993c08..e98eda4b 100755
---- a/tests/xfs/306
-+++ b/tests/xfs/306
-@@ -34,12 +34,15 @@ _cleanup()
- _supported_fs xfs
- 
- _require_scratch_nocheck	# check complains about single AG fs
--_require_no_rtinherit
- _require_xfs_io_command "fpunch"
- _require_command $UUIDGEN_PROG uuidgen
- 
- rm -f $seqres.full
- 
-+# Disable the scratch rt device to avoid test failures relating to the rt
-+# bitmap consuming all the free space in our small data device.
-+unset SCRATCH_RTDEV
-+
- # Create a small fs with a large directory block size. We want to fill up the fs
- # quickly and then create multi-fsb dirblocks over fragmented free space.
- _scratch_mkfs_xfs -d size=20m -n size=64k >> $seqres.full 2>&1
-diff --git a/tests/xfs/318 b/tests/xfs/318
-index 90771ade..07375b1f 100755
---- a/tests/xfs/318
-+++ b/tests/xfs/318
-@@ -32,7 +32,6 @@ _supported_fs xfs
- _require_scratch
- _require_error_injection
- _require_xfs_io_error_injection "rmap_finish_one"
--_require_no_rtinherit
- 
- rm -f $seqres.full
- 
-@@ -43,6 +42,10 @@ echo "Format filesystem"
- _scratch_mkfs >/dev/null 2>&1
- _scratch_mount >> $seqres.full
- 
-+# This test depends on specific behaviors of the data device, so create all
-+# files on it.
-+$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
-+
- echo "Create files"
- touch $SCRATCH_MNT/file1
- 
-diff --git a/tests/xfs/444 b/tests/xfs/444
-index f103b793..e4c987f8 100755
---- a/tests/xfs/444
-+++ b/tests/xfs/444
-@@ -39,11 +39,15 @@ _require_scratch
- _require_test_program "punch-alternating"
- _require_xfs_io_command "falloc"
- _require_xfs_db_write_array
--_require_no_rtinherit
- 
- # This is only a v5 filesystem problem
- _require_scratch_xfs_crc
- 
-+# Disable the scratch rt device to avoid test failures relating to the rt
-+# bitmap consuming free space in our small data device and throwing off the
-+# filestreams allocator.
-+unset SCRATCH_RTDEV
-+
- mount_loop() {
- 	if ! _try_scratch_mount >> $seqres.full 2>&1; then
- 		echo "scratch mount failed" >> $seqres.full
-
+-- 
+chandan
