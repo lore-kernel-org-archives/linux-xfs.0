@@ -2,25 +2,26 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAF15C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 13:22:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66211C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 13:34:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B83B64DE7
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 13:22:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FE5564D73
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 13:34:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229806AbhBJNWa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Feb 2021 08:22:30 -0500
-Received: from verein.lst.de ([213.95.11.211]:51121 "EHLO verein.lst.de"
+        id S230267AbhBJNee (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Feb 2021 08:34:34 -0500
+Received: from verein.lst.de ([213.95.11.211]:51165 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229917AbhBJNWX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Feb 2021 08:22:23 -0500
+        id S229610AbhBJNed (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Feb 2021 08:34:33 -0500
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 9C95C68B02; Wed, 10 Feb 2021 14:21:39 +0100 (CET)
-Date:   Wed, 10 Feb 2021 14:21:39 +0100
+        id BABDE68B02; Wed, 10 Feb 2021 14:33:47 +0100 (CET)
+Date:   Wed, 10 Feb 2021 14:33:47 +0100
 From:   Christoph Hellwig <hch@lst.de>
 To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
@@ -30,24 +31,49 @@ Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
         david@fromorbit.com, hch@lst.de, agk@redhat.com,
         snitzer@redhat.com, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
         y-goto@fujitsu.com
-Subject: Re: [PATCH v3 02/11] blk: Introduce ->corrupted_range() for block
- device
-Message-ID: <20210210132139.GC30109@lst.de>
-References: <20210208105530.3072869-1-ruansy.fnst@cn.fujitsu.com> <20210208105530.3072869-3-ruansy.fnst@cn.fujitsu.com>
+Subject: Re: [PATCH v3 05/11] mm, fsdax: Refactor memory-failure handler
+ for dax mapping
+Message-ID: <20210210133347.GD30109@lst.de>
+References: <20210208105530.3072869-1-ruansy.fnst@cn.fujitsu.com> <20210208105530.3072869-6-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210208105530.3072869-3-ruansy.fnst@cn.fujitsu.com>
+In-Reply-To: <20210208105530.3072869-6-ruansy.fnst@cn.fujitsu.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 08, 2021 at 06:55:21PM +0800, Shiyang Ruan wrote:
-> In fsdax mode, the memory failure happens on block device.  So, it is
-> needed to introduce an interface for block devices.  Each kind of block
-> device can handle the memory failure in ther own ways.
+> +extern int mf_dax_mapping_kill_procs(struct address_space *mapping, pgoff_t index, int flags);
 
-As told before: DAX operations please do not add anything to the block
-device.  We've been working very hard to decouple DAX from the block
-device, and while we're not done regressing the split should not happen.
+No nee for the extern, please avoid the overly long line.
+
+> @@ -120,6 +121,13 @@ static int hwpoison_filter_dev(struct page *p)
+>  	if (PageSlab(p))
+>  		return -EINVAL;
+>  
+> +	if (pfn_valid(page_to_pfn(p))) {
+> +		if (is_device_fsdax_page(p))
+> +			return 0;
+> +		else
+> +			return -EINVAL;
+> +	}
+> +
+
+This looks odd.  For one there is no need for an else after a return.
+But more importantly page_mapping() as called below pretty much assumes
+a valid PFN, so something is fishy in this function.
+
+> +	if (is_zone_device_page(p)) {
+> +		if (is_device_fsdax_page(p))
+> +			tk->addr = vma->vm_start +
+> +					((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
+
+The arithmetics here scream for a common helper, I suspect there might
+be other places that could use the same helper.
+
+> +int mf_dax_mapping_kill_procs(struct address_space *mapping, pgoff_t index, int flags)
+
+Overly long line.  Also the naming scheme with the mf_ seems rather
+unusual. Maybe dax_kill_mapping_procs?  Also please add a kerneldoc
+comment describing the function given that it exported.
