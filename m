@@ -3,42 +3,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B80FBC433E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 02:57:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69FE9C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 02:57:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89ADD64E6F
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 02:57:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DA8864E53
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Feb 2021 02:57:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233637AbhBJC5l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Feb 2021 21:57:41 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41586 "EHLO mail.kernel.org"
+        id S233704AbhBJC5r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Feb 2021 21:57:47 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41612 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233554AbhBJC5l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Feb 2021 21:57:41 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A0CAB64E58;
-        Wed, 10 Feb 2021 02:56:53 +0000 (UTC)
+        id S233686AbhBJC5q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Feb 2021 21:57:46 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4CD0A64E5A;
+        Wed, 10 Feb 2021 02:56:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612925813;
-        bh=Jctu2w3c0AYOfZudWG8jQ0l2prBCLIylzSLUqaa1HKM=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=cSpZv64dSSHVFvqQLyZ66nxfUMrRiqr9s5h1kewUCEGUhwC8qlT1YoQHfPsHCbrVJ
-         QXgvw+IbDUelqDuIHj7OT872DfDbrZU+3OWd0GG1Ju3Gj+KfQeu12QWijel4UhTzTy
-         u0xOsbteUM/N8O/KXf2pEtPc4MWhttmnGSN1yRQMmibNppedHYvSrM1pF1h0aVKrED
-         t+ckEr+lQK93dNMyGYWwXN5+nVOuAVN7LG/EVy/dWblQnzA0wWqZxKeX0jdusqfYT0
-         gw5m4SA0Q8MK7zSrkq902WHBx+EsM5XZ0476GGluiO9JDb92xqQvglSBfSM/qZhigk
-         X7GkGj4HAnswA==
-Subject: [PATCH 6/6] fuzzy: capture core dumps from repair utilities
+        s=k20201202; t=1612925815;
+        bh=r4zXr6F+6DrIHr61QynQV4M0MZwg4T+IOnZGUZNxQCM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=cFw3l+2o0Xgh5cydIuFJoHVxDKTPj4OitdA4iIv3I0xPm47dAclUuA2roGQxn/AYA
+         T8Kq0p1w/IzrNVYJdjGpABH07cVbMSK//gvliMnhoCL6CBZCq7gRdqugWCD2Cju6d9
+         2fMosH3khk3MeZ+lFP3pAt0qKHJXz9S1vAWNaWAqTm3vqljPOcuKexkklYdXv0szut
+         eikJj1R7/waQn0/MefHXRHLiMUp2cPo/jQNK9NEAm/fsrLbI4Qh/b9+ihjlFiR4JUO
+         kQ6IeE8ZRASJ9Jh8dVfBjorpXSuuKIVXIlxkio0rk7bX28Cy7Cg7GKW0ANa0BNz2wq
+         MVrc7L+/F6b0Q==
+Subject: [PATCHSET 0/2] fstests: remove _require_no_rtinherit from xfs tests
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 09 Feb 2021 18:56:53 -0800
-Message-ID: <161292581331.3504537.1750366426922427428.stgit@magnolia>
-In-Reply-To: <161292577956.3504537.3260962158197387248.stgit@magnolia>
-References: <161292577956.3504537.3260962158197387248.stgit@magnolia>
+Date:   Tue, 09 Feb 2021 18:56:55 -0800
+Message-ID: <161292581498.3504701.4053663562108530233.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,29 +45,38 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-Always capture the core dumps when we run repair tools against a fuzzed
-filesystem.
+The _require_no_rtinherit helper is rather bogus -- it disables a test
+if the fs was formatted with -drtinherit=1 to avoid failure reports.
+The failure reports themselves are usually due to the test requiring
+some feature of the data device (e.g. filestreams, AGFL fiddling), and
+have nothing to do with realtime at all.  Since we /also/ have a means
+for working around rtinherit=1, we should do that instead of skipping
+the test.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=remove-no-rtinherit
 ---
- common/fuzzy |    3 +++
- 1 file changed, 3 insertions(+)
-
-
-diff --git a/common/fuzzy b/common/fuzzy
-index bd08af1c..809dee54 100644
---- a/common/fuzzy
-+++ b/common/fuzzy
-@@ -307,6 +307,9 @@ _scratch_xfs_fuzz_metadata() {
- 	echo "Verbs we propose to fuzz with:"
- 	echo $(echo "${verbs}")
- 
-+	# Always capture full core dumps from crashing tools
-+	ulimit -c unlimited
-+
- 	echo "${fields}" | while read field; do
- 		echo "${verbs}" | while read fuzzverb; do
- 			__scratch_xfs_fuzz_mdrestore
+ common/filestreams |    5 +++++
+ common/rc          |   10 ----------
+ tests/xfs/170      |    1 -
+ tests/xfs/171      |    1 -
+ tests/xfs/172      |    1 -
+ tests/xfs/173      |    1 -
+ tests/xfs/174      |    1 -
+ tests/xfs/205      |    5 ++++-
+ tests/xfs/306      |    5 ++++-
+ tests/xfs/318      |    5 ++++-
+ tests/xfs/444      |    6 +++++-
+ tests/xfs/445      |    5 +++++
+ 12 files changed, 27 insertions(+), 19 deletions(-)
 
