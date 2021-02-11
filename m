@@ -7,85 +7,125 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F17CFC43332
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 14:05:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21174C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 14:50:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC88764E87
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 14:05:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAEBC64E8B
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 14:50:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232066AbhBKOFD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Feb 2021 09:05:03 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:31152 "EHLO
+        id S229958AbhBKOtD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Feb 2021 09:49:03 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:51864 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232133AbhBKOCb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Feb 2021 09:02:31 -0500
+        by vger.kernel.org with ESMTP id S229879AbhBKOkp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Feb 2021 09:40:45 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1613052059;
+        s=mimecast20190719; t=1613054355;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UUGzK3UEoyscV+QUxhckkZUx3TDOUzmiNSZMU4IFcQY=;
-        b=djAFOAqu6eeQ71otx8HW9uor6dBn8O9YTWv9bQq3jskFOPfAUPY7A7H3tM/4FY5lOG+rqh
-        GQgvOhEk55XhoH/VW2XhUkCFLyooKL6VEy5nz3V03KnpZstcVLlIhdxC2kJ20v7Fwh7B2Q
-        mTOCiYDLuElaKrQvJ0agvfvpLVKYM7A=
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=brwTVKwC27kBrbOCR9ZehGaZTm2TDB/2XjwNcyYznsk=;
+        b=Bbg8w16meulKox8INKJwtKlfIrnsuBq9UdaTjpso8WcFxMP/KjkwKVrEpZjW99E+sKTqGS
+        F+CLJL40TTj4wK8Y4h/R+HQuV3v1dEQ+KV84PV8J705ke6bCIzMLO3ExakET7MZvXYj2Pq
+        bfuN0+5i4OM7EVBdUvmlT/YBY0g4r+Q=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-571-BCBeDeLZMkee-pduzSXLRg-1; Thu, 11 Feb 2021 09:00:55 -0500
-X-MC-Unique: BCBeDeLZMkee-pduzSXLRg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-241-SR2Ju4nNPMa8GO23JmUxKQ-1; Thu, 11 Feb 2021 09:39:12 -0500
+X-MC-Unique: SR2Ju4nNPMa8GO23JmUxKQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A4ED78710EC;
-        Thu, 11 Feb 2021 14:00:54 +0000 (UTC)
-Received: from bfoster (ovpn-113-234.rdu2.redhat.com [10.10.113.234])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1623310023AB;
-        Thu, 11 Feb 2021 14:00:54 +0000 (UTC)
-Date:   Thu, 11 Feb 2021 09:00:52 -0500
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id F355E80197D
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Feb 2021 14:39:11 +0000 (UTC)
+Received: from bfoster.redhat.com (ovpn-113-234.rdu2.redhat.com [10.10.113.234])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A34155D76F
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Feb 2021 14:39:11 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 6/6] fuzzy: capture core dumps from repair utilities
-Message-ID: <20210211140052.GF222065@bfoster>
-References: <161292577956.3504537.3260962158197387248.stgit@magnolia>
- <161292581331.3504537.1750366426922427428.stgit@magnolia>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: consider shutdown in bmapbt cursor delete assert
+Date:   Thu, 11 Feb 2021 09:39:11 -0500
+Message-Id: <20210211143911.289537-1-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <161292581331.3504537.1750366426922427428.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 09, 2021 at 06:56:53PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Always capture the core dumps when we run repair tools against a fuzzed
-> filesystem.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
+The assert in xfs_btree_del_cursor() checks that the bmapbt block
+allocation field has been handled correctly before the cursor is
+freed. This field is used for accurate calculation of indirect block
+reservation requirements (for delayed allocations), for example.
+generic/019 reproduces a scenario where this assert fails because
+the filesystem has shutdown while in the middle of a bmbt record
+insertion. This occurs after a bmbt block has been allocated via the
+cursor but before the higher level bmap function (i.e.
+xfs_bmap_add_extent_hole_real()) completes and resets the field.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Update the assert to accommodate the transient state if the
+filesystem has shutdown. While here, clean up the indentation and
+comments in the function.
 
->  common/fuzzy |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> 
-> diff --git a/common/fuzzy b/common/fuzzy
-> index bd08af1c..809dee54 100644
-> --- a/common/fuzzy
-> +++ b/common/fuzzy
-> @@ -307,6 +307,9 @@ _scratch_xfs_fuzz_metadata() {
->  	echo "Verbs we propose to fuzz with:"
->  	echo $(echo "${verbs}")
->  
-> +	# Always capture full core dumps from crashing tools
-> +	ulimit -c unlimited
-> +
->  	echo "${fields}" | while read field; do
->  		echo "${verbs}" | while read fuzzverb; do
->  			__scratch_xfs_fuzz_mdrestore
-> 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_btree.c | 33 ++++++++++++---------------------
+ 1 file changed, 12 insertions(+), 21 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index c4d7a9241dc3..b56ff451adce 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -353,20 +353,17 @@ xfs_btree_free_block(
+  */
+ void
+ xfs_btree_del_cursor(
+-	xfs_btree_cur_t	*cur,		/* btree cursor */
+-	int		error)		/* del because of error */
++	struct xfs_btree_cur	*cur,		/* btree cursor */
++	int			error)		/* del because of error */
+ {
+-	int		i;		/* btree level */
++	int			i;		/* btree level */
+ 
+ 	/*
+-	 * Clear the buffer pointers, and release the buffers.
+-	 * If we're doing this in the face of an error, we
+-	 * need to make sure to inspect all of the entries
+-	 * in the bc_bufs array for buffers to be unlocked.
+-	 * This is because some of the btree code works from
+-	 * level n down to 0, and if we get an error along
+-	 * the way we won't have initialized all the entries
+-	 * down to 0.
++	 * Clear the buffer pointers and release the buffers. If we're doing
++	 * this because of an error, inspect all of the entries in the bc_bufs
++	 * array for buffers to be unlocked. This is because some of the btree
++	 * code works from level n down to 0, and if we get an error along the
++	 * way we won't have initialized all the entries down to 0.
+ 	 */
+ 	for (i = 0; i < cur->bc_nlevels; i++) {
+ 		if (cur->bc_bufs[i])
+@@ -374,17 +371,11 @@ xfs_btree_del_cursor(
+ 		else if (!error)
+ 			break;
+ 	}
+-	/*
+-	 * Can't free a bmap cursor without having dealt with the
+-	 * allocated indirect blocks' accounting.
+-	 */
+-	ASSERT(cur->bc_btnum != XFS_BTNUM_BMAP ||
+-	       cur->bc_ino.allocated == 0);
+-	/*
+-	 * Free the cursor.
+-	 */
++
++	ASSERT(cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_ino.allocated == 0 ||
++	       XFS_FORCED_SHUTDOWN(cur->bc_mp));
+ 	if (unlikely(cur->bc_flags & XFS_BTREE_STAGING))
+-		kmem_free((void *)cur->bc_ops);
++		kmem_free(cur->bc_ops);
+ 	kmem_cache_free(xfs_btree_cur_zone, cur);
+ }
+ 
+-- 
+2.26.2
 
