@@ -7,94 +7,132 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57764C433E6
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 17:29:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79631C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 17:30:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EF0264E7D
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 17:29:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C68164E7D
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 17:30:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230318AbhBKR3U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Feb 2021 12:29:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45932 "EHLO mail.kernel.org"
+        id S231818AbhBKRao (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Feb 2021 12:30:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46098 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232344AbhBKR1q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Feb 2021 12:27:46 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CFA03601FF;
-        Thu, 11 Feb 2021 17:27:05 +0000 (UTC)
+        id S229889AbhBKR2t (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Feb 2021 12:28:49 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 364DE61493;
+        Thu, 11 Feb 2021 17:28:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613064425;
-        bh=rzq03sKab5HVpQ0GhuFlAoJuGXOLVLhiWbKr8XSZdvQ=;
+        s=k20201202; t=1613064487;
+        bh=2dU4Fvykv/3aU3OZgrTPyiKys+ZkrSJtdCPOQTjJAkg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HQETWM3/g2nz+qcSdFC21f24XXyc1/g5MXNG6sqRfZP7zRrFa3fC9eV/MGX6mRSyw
-         gPEJrstI/26VS7PCcLsdkwpj2ONLZ9hXfNOJh5a8QrkAlBw5GhpO853CadbNb1BPN9
-         /Vpa9yII4Wj9L5b4wDVkEkgKUfV+IS6jHnIDe83YVYB1T3UhvDXEGpBYRHhCUKjsvL
-         vGVL3rHtjI0Fi15rDNdPNl8M0cQdH22DjfLIL36unHJhqV0yCdJRJL1nQAI0HO1FpH
-         PqG/6Uace9v+DnmH/xS2JvxAuBGYq/mkZCMLujiGlKB8G5SDB9D6A0RlUari6NTgrm
-         5esQkH5CKyzZw==
-Date:   Thu, 11 Feb 2021 09:27:05 -0800
+        b=CMLqCoPY3Z43NP5+4fWW8CYLhDWHTLPl3TK/3CR+9Rp3rUujw5HTGwH8WUWh2xI0X
+         OgWlR8OuAhNhcr06YkeL6iQIXtH1IGCXuHyO7ZBj1GfV6HIi+u0EwHt+J7hwZTXIAZ
+         gR8cAEaU8ikpd5A82jvvxqyR/W2+GGOvGJ8lN1Gc53yk37A4sJEohU350BF8JJSSOB
+         3IulsQA+7ILKgQByNwA/dtYZQzYFpwTBtAWf0tDfUlGpXhJLd5mTmzND9w/YMHM1EL
+         YhO1Cpx6BxjRZf/VIvVQzEK1fS2xdG7/k4mI2XHCHtFrU55TZoLQekqcOh/4XBQ/44
+         6ZxOwV3tqHCsg==
+Date:   Thu, 11 Feb 2021 09:28:06 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 4/6] check: don't abort on non-existent excluded groups
-Message-ID: <20210211172705.GI7190@magnolia>
+Subject: Re: [PATCH 5/6] check: run tests in exactly the order specified
+Message-ID: <20210211172806.GJ7190@magnolia>
 References: <161292577956.3504537.3260962158197387248.stgit@magnolia>
- <161292580215.3504537.12419725496679954055.stgit@magnolia>
- <20210211140019.GD222065@bfoster>
+ <161292580772.3504537.14460569826738892955.stgit@magnolia>
+ <20210211140045.GE222065@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210211140019.GD222065@bfoster>
+In-Reply-To: <20210211140045.GE222065@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 11, 2021 at 09:00:19AM -0500, Brian Foster wrote:
-> On Tue, Feb 09, 2021 at 06:56:42PM -0800, Darrick J. Wong wrote:
+On Thu, Feb 11, 2021 at 09:00:45AM -0500, Brian Foster wrote:
+> On Tue, Feb 09, 2021 at 06:56:47PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Don't abort the whole test run if we asked to exclude groups that aren't
-> > included in the candidate group list, since we actually /are/ satisfying
-> > the user's request.
+> > Introduce a new --exact-order switch to disable all sorting, filtering
+> > of repeated lines, and shuffling of test order.  The goal of this is to
+> > be able to run tests in a specific order, namely to try to reproduce
+> > test failures that could be the result of a -r(andomize) run getting
+> > lucky.
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  check |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >  check |   36 ++++++++++++++++++++++++++++--------
+> >  1 file changed, 28 insertions(+), 8 deletions(-)
 > > 
 > > 
 > > diff --git a/check b/check
-> > index e51cbede..6f8db858 100755
+> > index 6f8db858..106ec8e1 100755
 > > --- a/check
 > > +++ b/check
-> > @@ -243,7 +243,7 @@ _prepare_test_list()
-> >  		list=$(get_group_list $xgroup)
-> >  		if [ -z "$list" ]; then
-> >  			echo "Group \"$xgroup\" is empty or not defined?"
-> > -			exit 1
-> > +			continue
+> ...
+> > @@ -249,17 +251,22 @@ _prepare_test_list()
+> >  		trim_test_list $list
+> >  	done
+> >  
+> > -	# sort the list of tests into numeric order
+> > -	if $randomize; then
+> > -		if type shuf >& /dev/null; then
+> > -			sorter="shuf"
+> > +	# sort the list of tests into numeric order unless we're running tests
+> > +	# in the exact order specified
+> > +	if ! $exact_order; then
+> > +		if $randomize; then
+> > +			if type shuf >& /dev/null; then
+> > +				sorter="shuf"
+> > +			else
+> > +				sorter="awk -v seed=$RANDOM -f randomize.awk"
+> > +			fi
+> >  		else
+> > -			sorter="awk -v seed=$RANDOM -f randomize.awk"
+> > +			sorter="cat"
 > >  		fi
+> > +		list=`sort -n $tmp.list | uniq | $sorter`
+> >  	else
+> > -		sorter="cat"
+> > +		list=`cat $tmp.list`
 > 
-> Is this only for a nonexistent group? I.e., 'check -x nosuchgroup ...' ?
-> If so, what's the advantage?
+> Do we want to still filter out duplicates (i.e. uniq) in exact order
+> mode? LGTM either way:
 
-I wrote this for groups that exist somewhere but would never have been
-selected for this filesystem type in the first place.  For example,
-'dangerous_scrub' (aka fuzz testing for xfs_scrub) is only found in
-tests/xfs/group, so running:
-
-# FSTYP=ext4 ./check -x dangerous_scrub
-
-fails because ./check cannot select any of the dangerous_scrub tests for
-an ext4 run so it doesn't recognize the group name.  IOWs, it's too
-stupid to realize that excluding a group that can't be selected should
-be a no-op.
+I figure --exact-order means to run exactly what the user specified,
+duplicates and all.
 
 --D
 
-> Brian
 > 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> >  	fi
+> > -	list=`sort -n $tmp.list | uniq | $sorter`
+> >  	rm -f $tmp.list
+> >  }
 > >  
-> >  		trim_test_list $list
+> > @@ -304,7 +311,20 @@ while [ $# -gt 0 ]; do
+> >  	-udiff)	diff="$diff -u" ;;
+> >  
+> >  	-n)	showme=true ;;
+> > -        -r)	randomize=true ;;
+> > +	-r)
+> > +		if $exact_order; then
+> > +			echo "Cannot specify -r and --exact-order."
+> > +			exit 1
+> > +		fi
+> > +		randomize=true
+> > +		;;
+> > +	--exact-order)
+> > +		if $randomize; then
+> > +			echo "Cannnot specify --exact-order and -r."
+> > +			exit 1
+> > +		fi
+> > +		exact_order=true
+> > +		;;
+> >  	-i)	iterations=$2; shift ;;
+> >  	-T)	timestamp=true ;;
+> >  	-d)	DUMP_OUTPUT=true ;;
 > > 
 > 
