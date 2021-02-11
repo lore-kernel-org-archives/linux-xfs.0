@@ -2,95 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48503C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 01:28:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3AB7C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 01:31:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13D5264DAE
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 01:28:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F92164DAE
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 01:31:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231367AbhBKB1l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Feb 2021 20:27:41 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43272 "EHLO mail.kernel.org"
+        id S229800AbhBKBa7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Feb 2021 20:30:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43782 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229972AbhBKB1j (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Feb 2021 20:27:39 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3EF7A64DAE;
-        Thu, 11 Feb 2021 01:26:59 +0000 (UTC)
+        id S229745AbhBKBa7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Feb 2021 20:30:59 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C44B564EC9;
+        Thu, 11 Feb 2021 01:30:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613006819;
-        bh=2eT3H6OVGscwuquZl5yDwZ/tUjtTKYUVyK4/eXbYJIg=;
+        s=k20201202; t=1613007018;
+        bh=xoV3cBZWeb9t5cwuiKsu77GD/GGNNChUf8ef+6fC0v8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RXs7lYUNJypVlKSdvf/xDIRtizLI7tFPzuiWu+RzOJqPNN66sQeElYKsP9vr8lFSv
-         ALyTGDW+EVa4p/gcfJFJDNGm8VwWDFoohpBZ3sjCtdB+RnsSBik766KJDKzwDjxdK+
-         WJrkRP3/mgLeBWTlvgrifpvgzKWy6f5DBS/JjoZ3cU+TWwi7C6XFDfv7WfJLXcIM2l
-         ZQvM+r88pMSPoFvdmiFgy/5rpFyhLrjPXsvmKDKgDxL2ASV9t65U8jaeHEOu/uoxbh
-         V4m1zkQf5Yg2XR0xa0jJR6cAPLkZVvDgeG3FHS8sl5Dq3vWnI/uSkl4PB7nCFVs3NW
-         1dUWjhXReXMbg==
-Date:   Wed, 10 Feb 2021 17:27:00 -0800
+        b=oyzF9P6LHwbiQfC9f50KdkTYyl0rkji2A9NVTIAtwY6mh+78MpxvlMKp8e3Qtefyc
+         NFuH/FFfS1kfx3sCv8kw7JeLuLJRtRw4TMHX0nk5gf5TKS4tGAePa/f1QAgnhfsa7V
+         Gx5u0NumKilVwPcY4fjVMSr3gtsdFJuBnvRAFDy7O5Z67ZCG2QRvKlBMI52ZhYED5Y
+         94DvBU7abTwrprDC2blfadXfz0gUDZy0k9S4YRsoHKXN56oaIq8ElW999HjDhgystt
+         1DqRZ3xyVjJv2BGVsmBYvUc3fY4yqKjx5u08Mlyv3I6pNg2S2/c86Ap2JI9SxquyQu
+         6QtLZC8gG5Usg==
+Date:   Wed, 10 Feb 2021 17:30:17 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: restore shutdown check in mapped write fault path
-Message-ID: <20210211012700.GA7193@magnolia>
-References: <20210210170112.172734-1-bfoster@redhat.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/10] xfs_repair: add a testing hook for NEEDSREPAIR
+Message-ID: <20210211013017.GB7193@magnolia>
+References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
+ <161284385516.3057868.355176047687079022.stgit@magnolia>
+ <20210209172131.GG14273@bfoster>
+ <20210209181738.GU7193@magnolia>
+ <20210209185939.GK14273@bfoster>
+ <20210209195920.GZ7193@magnolia>
+ <acfe3b90-9364-85d5-84e7-7a1b888bae9e@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210210170112.172734-1-bfoster@redhat.com>
+In-Reply-To: <acfe3b90-9364-85d5-84e7-7a1b888bae9e@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 10, 2021 at 12:01:12PM -0500, Brian Foster wrote:
-> XFS triggers an iomap warning in the write fault path due to a
-> !PageUptodate() page if a write fault happens to occur on a page
-> that recently failed writeback. The iomap writeback error handling
-> code can clear the Uptodate flag if no portion of the page is
-> submitted for I/O. This is reproduced by fstest generic/019, which
-> combines various forms of I/O with simulated disk failures that
-> inevitably lead to filesystem shutdown (which then unconditionally
-> fails page writeback).
+On Wed, Feb 10, 2021 at 03:41:52PM -0600, Eric Sandeen wrote:
+> On 2/9/21 1:59 PM, Darrick J. Wong wrote:
+> >> # ./repair/xfs_repair -c needsrepair=1 /dev/test/scratch 
+> >> Phase 1 - find and verify superblock...
+> >> Marking filesystem in need of repair.
+> >> writing modified primary superblock
+> >> Phase 2 - using internal log
+> >>         - zero log...
+> >> ERROR: The filesystem has valuable metadata changes in a log which needs to
+> >> ...
+> >> # mount /dev/test/scratch /mnt/
+> >> mount: /mnt: wrong fs type, bad option, bad superblock on /dev/mapper/test-scratch, missing codepage or helper program, or other error.
+> >> #
+> >>
+> >> It looks like we can set a feature upgrade bit on the superblock before
+> >> we've examined the log and potentially discovered that it's dirty (phase
+> >> 2). If the log is recoverable, that puts the user in a bit of a bind..
+> > Heh, funny that I was thinking that the upgrades shouldn't really be
+> > happening in phase 1 anyway--
+> > 
+> > I've (separately) started working on a patch to make it so that you can
+> > add reflink and finobt to a filesystem.  Those upgrades require somewhat
+> > more intensive checks of the filesystem (such as checking free space in
+> > each AG), so I ended up dumping them into phase 2, since the xfs_mount
+> > and buffer cache aren't fully initialized until after phase 1.
+> > 
+> > So, yeah, the upgrade code should move to phase2() after log zeroing and
+> > before the AG scan.
 > 
-> This is a regression introduced by commit f150b4234397 ("xfs: split
-> the iomap ops for buffered vs direct writes") due to the removal of
-> a shutdown check and explicit error return in the ->iomap_begin()
-> path used by the write fault path. The explicit error return
-> historically translated to a SIGBUS, but now carries on with iomap
-> processing where it complains about the unexpected state. Restore
-> the shutdown check to xfs_buffered_write_iomap_begin() to restore
-> historical behavior.
+> Oh, whoops - 
 > 
-> Fixes: f150b4234397 ("xfs: split the iomap ops for buffered vs direct writes")
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> based on this, I think that the prior patch
+> [PATCH 08/10] xfs_repair: allow setting the needsrepair flag
+> needs to be adjusted as well, right; we don't want to set it in phase 1
+> or we might set it then abort on a dirty log and the user is stuck.
+> 
+> So maybe I should merge up through 
+> 
+> [PATCH 07/10] xfs_repair: set NEEDSREPAIR when we deliberately corrupt directories
+> 
+> and hold off on the rest? Or should I just hold off on the series and let
+> you reassemble (again?)
 
-Looks fine,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Yeah, I'll push out v5 tomorrow morning with all this cleaned up.
 
 --D
 
-> ---
->  fs/xfs/xfs_iomap.c | 3 +++
->  1 file changed, 3 insertions(+)
+> (Am I right that the upgrade bits will need to be moved and the series resent?)
 > 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 70c341658c01..6594f572096e 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -860,6 +860,9 @@ xfs_buffered_write_iomap_begin(
->  	int			allocfork = XFS_DATA_FORK;
->  	int			error = 0;
->  
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return -EIO;
-> +
->  	/* we can't use delayed allocations when using extent size hints */
->  	if (xfs_get_extsz_hint(ip))
->  		return xfs_direct_write_iomap_begin(inode, offset, count,
-> -- 
-> 2.26.2
-> 
+> -Eric
