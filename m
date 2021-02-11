@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE1AFC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 23:00:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE4A2C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 23:00:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 91AFF64E55
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 23:00:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CCB964E4B
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 23:00:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230005AbhBKXAA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Feb 2021 18:00:00 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45900 "EHLO mail.kernel.org"
+        id S230001AbhBKXAP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Feb 2021 18:00:15 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45996 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229994AbhBKW77 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Feb 2021 17:59:59 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EC6DA64E45;
-        Thu, 11 Feb 2021 22:59:18 +0000 (UTC)
+        id S229989AbhBKXAO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Feb 2021 18:00:14 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A47C364E4A;
+        Thu, 11 Feb 2021 22:59:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613084359;
-        bh=EQyv+2tV702VcR7DfyihyF5UejBebc12Ks4An41ZuP4=;
+        s=k20201202; t=1613084364;
+        bh=eYTE8MxWR0l0+sBxedArH65I5fhuR0B+OsSJpCSB5iU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ijmyLI0Cc4bQMyhCr/t9PyltnAXDjL/sol7QBycIJ5OI+23C/UZN03OTC0S3eMa+v
-         OV/9M+HkkTN6fysR/mwMQbujilChAJ26yezb+LdWOKpYazOVUdEGtZLFEAfXdhypnD
-         ZNvUiQvRCMLqfGpPFNd19WlRTnX/y92Qxoi08CjQHy61kWbLEr4NCwrq6n4BbhnTst
-         w/m5naC/gA0FR0CMOp+uxqKGxlAm2SCYjEkKKeYbSLp4v7gC1Qahfr0LWnE1KqH8Cz
-         h5xjOeF77RGbD9vGiTuc6PbaFpNW5R55Ox95a1NCTDrDqnwAJPrNRU9L/lzTKmMQ3B
-         G96IEjcYOlOVg==
-Subject: [PATCH 03/11] xfs_db: report the needsrepair flag in check and
- version commands
+        b=lx1ZipNtFdnn8QHS1gLN797aeyKB2Y+HKrg2mqrjYrvMmgOS6gzKwGk9D6TbgVIEA
+         n5EUQey2JNqZx457RxxQKK7yHwIE3kz9Xxj0+kpYxm4mmedIhweHEkoXDMOYZdMXeR
+         ZhMgORnLUxYAdj0gP3c4WKwOof1x2YGPifYRe2YloLNV6oWmGXIydKQOL50av8bA3w
+         RFamkzJrkALxPCYPXKF47x6xNdFGdT5A//8p2z73jfQI2kvqVICFpnP6Bd17luwelG
+         Wr1hIitjfMU1Ax2qm5/Gte+wzSrKpohPXUjs2Wbn89+tCm7gFXyZ1EPx/aIwvVh1PH
+         b6VvHEnb7hM8w==
+Subject: [PATCH 04/11] xfs_db: don't allow label/uuid setting if the
+ needsrepair flag is set
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
         bfoster@redhat.com
-Date:   Thu, 11 Feb 2021 14:59:18 -0800
-Message-ID: <161308435838.3850286.1999965170245294704.stgit@magnolia>
+Date:   Thu, 11 Feb 2021 14:59:24 -0800
+Message-ID: <161308436401.3850286.10329324186479058348.stgit@magnolia>
 In-Reply-To: <161308434132.3850286.13801623440532587184.stgit@magnolia>
 References: <161308434132.3850286.13801623440532587184.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,44 +51,49 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Teach the version and check commands to report the presence of the
-NEEDSREPAIR flag.
+The NEEDSREPAIR flag can be set on filesystems where we /know/ that
+there's something wrong with the metadata and want to force the sysadmin
+to run xfs_repair before the next mount.  The goal here is to prevent
+non-repair changes to a filesystem when we are confident of its
+instability.  Normally we wouldn't bother with such safety checks for
+the debugger, but the label and uuid functions can be called from
+xfs_admin, so we should prevent these administrative tasks until the
+filesystem can be repaired.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- db/check.c |    5 +++++
- db/sb.c    |    2 ++
- 2 files changed, 7 insertions(+)
+ db/sb.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
 
-diff --git a/db/check.c b/db/check.c
-index 33736e33..485e855e 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -3970,6 +3970,11 @@ scan_ag(
- 			dbprintf(_("mkfs not completed successfully\n"));
- 		error++;
- 	}
-+	if (xfs_sb_version_needsrepair(sb)) {
-+		if (!sflag)
-+			dbprintf(_("filesystem needs xfs_repair\n"));
-+		error++;
-+	}
- 	set_dbmap(agno, XFS_SB_BLOCK(mp), 1, DBM_SB, agno, XFS_SB_BLOCK(mp));
- 	if (sb->sb_logstart && XFS_FSB_TO_AGNO(mp, sb->sb_logstart) == agno)
- 		set_dbmap(agno, XFS_FSB_TO_AGBNO(mp, sb->sb_logstart),
 diff --git a/db/sb.c b/db/sb.c
-index d09f653d..d7111e92 100644
+index d7111e92..cec7dce9 100644
 --- a/db/sb.c
 +++ b/db/sb.c
-@@ -691,6 +691,8 @@ version_string(
- 		strcat(s, ",INOBTCNT");
- 	if (xfs_sb_version_hasbigtime(sbp))
- 		strcat(s, ",BIGTIME");
-+	if (xfs_sb_version_needsrepair(sbp))
-+		strcat(s, ",NEEDSREPAIR");
- 	return s;
- }
+@@ -379,6 +379,11 @@ uuid_f(
+ 				progname);
+ 			return 0;
+ 		}
++		if (xfs_sb_version_needsrepair(&mp->m_sb)) {
++			dbprintf(_("%s: filesystem needs xfs_repair\n"),
++				progname);
++			return 0;
++		}
  
+ 		if (!strcasecmp(argv[1], "generate")) {
+ 			platform_uuid_generate(&uu);
+@@ -543,6 +548,12 @@ label_f(
+ 			return 0;
+ 		}
+ 
++		if (xfs_sb_version_needsrepair(&mp->m_sb)) {
++			dbprintf(_("%s: filesystem needs xfs_repair\n"),
++				progname);
++			return 0;
++		}
++
+ 		dbprintf(_("writing all SBs\n"));
+ 		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++)
+ 			if ((p = do_label(ag, argv[1])) == NULL) {
 
