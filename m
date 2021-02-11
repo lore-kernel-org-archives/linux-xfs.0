@@ -4,40 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C15E2C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 23:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 049A8C433E6
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 23:01:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F68864E3E
+	by mail.kernel.org (Postfix) with ESMTP id CA0BE64E3D
 	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 23:00:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229960AbhBKXAo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Feb 2021 18:00:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46230 "EHLO mail.kernel.org"
+        id S230159AbhBKXAt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Feb 2021 18:00:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46388 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230132AbhBKXAg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Feb 2021 18:00:36 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4E4C964E56;
-        Thu, 11 Feb 2021 22:59:53 +0000 (UTC)
+        id S230132AbhBKXAp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Feb 2021 18:00:45 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C6E2464E42;
+        Thu, 11 Feb 2021 23:00:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613084393;
-        bh=mqUbxIPBUA/n7QCoXV1GrEjb+C10PTYhbrk4IEF2qx8=;
+        s=k20201202; t=1613084404;
+        bh=TV1mSUbbsX7PqotkP5J3piXutJZ5GX45hm6y3jEWHKI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Hu+8+ucd2C0tCeAQqRZGBTwH1hFoE/NRFqdDqtlrVWNYv+zMDKERAEjp39UNeeBTz
-         D0zC8ObVhAw3/W8EVI5dbn8SXx1Vs71JgBM5KfEcKD6CD0aF1Iff264ll0fwAPzD7a
-         4mcmZvyCkr3aN843cmn6lWvP96jgt/gABEIYhyfT49h8EynZNjVsmlvkZUCH0mWCXw
-         cnye76Pe3x+Ru4Z2liQaiM4rEizeVr+EtVPkOElnohD4HnSkM4qeHFt/KPd9+iSRFd
-         t9AfffHsGKAlhbDam0pQXCgmV/9Ch94lPsZ7dwWzc2dXw1mew+apaXWCwmskK2f2s9
-         sgMjymZe2i4gA==
-Subject: [PATCH 09/11] xfs_repair: add a testing hook for NEEDSREPAIR
+        b=llbiZn7m8RSHAsfzl0Vv1uV5Dwe5E+soqFpSFZOWRSseo+NkCSVn42YqjywTiCB9Q
+         4BtL6MGoSVgCcHTvRm2taxNtOkk1eiIWnkolD06aaNrUigigZzZtTa5mhK81haUiFU
+         uOnXhzbA5VaIfVtpvSKgQ3Mll6ZIPFBLApJRoBH0+eRT6sWlWeAk2F4zL/ANEkyTG1
+         SBN7IR4oXrnyKTNwnUCAUZNBvN6v4CbCYJ46/eoDPXSwAMlp7zMxcn0xIiM6x0siGa
+         2A2xarzBzWcGVj/eq99XLonIOus8lxEmDA1HY5MVWKqWkPsqSEL1eh+5EANMovLwx+
+         UF9K21im40pFQ==
+Subject: [PATCH 11/11] man: mark all deprecated V4 format options
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        bfoster@redhat.com
-Date:   Thu, 11 Feb 2021 14:59:52 -0800
-Message-ID: <161308439253.3850286.5243500865602980663.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
+Date:   Thu, 11 Feb 2021 15:00:04 -0800
+Message-ID: <161308440412.3850286.3647885169553854136.stgit@magnolia>
 In-Reply-To: <161308434132.3850286.13801623440532587184.stgit@magnolia>
 References: <161308434132.3850286.13801623440532587184.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,88 +49,132 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Simulate a crash when anyone calls force_needsrepair.  This is a debug
-knob so that we can test that the kernel won't mount after setting
-needsrepair and that a re-run of xfs_repair will clear the flag.
+Update the manual pages for the most popular tools to note which options
+are only useful with the V4 XFS format, and that the V4 format is
+deprecated and will be removed no later than September 2030.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/globals.c    |    1 +
- repair/globals.h    |    2 ++
- repair/phase2.c     |    4 ++++
- repair/xfs_repair.c |    5 +++++
- 4 files changed, 12 insertions(+)
+ man/man8/mkfs.xfs.8  |   16 ++++++++++++++++
+ man/man8/xfs_admin.8 |   10 ++++++++++
+ 2 files changed, 26 insertions(+)
 
 
-diff --git a/repair/globals.c b/repair/globals.c
-index 699a96ee..b0e23864 100644
---- a/repair/globals.c
-+++ b/repair/globals.c
-@@ -40,6 +40,7 @@ int	dangerously;		/* live dangerously ... fix ro mount */
- int	isa_file;
- int	zap_log;
- int	dumpcore;		/* abort, not exit on fatal errs */
-+bool	abort_after_force_needsrepair;
- int	force_geo;		/* can set geo on low confidence info */
- int	assume_xfs;		/* assume we have an xfs fs */
- char	*log_name;		/* Name of log device */
-diff --git a/repair/globals.h b/repair/globals.h
-index 043b3e8e..9fa73b2c 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -82,6 +82,8 @@ extern int	isa_file;
- extern int	zap_log;
- extern int	dumpcore;		/* abort, not exit on fatal errs */
- extern int	force_geo;		/* can set geo on low confidence info */
-+/* Abort after forcing NEEDSREPAIR to test its functionality */
-+extern bool	abort_after_force_needsrepair;
- extern int	assume_xfs;		/* assume we have an xfs fs */
- extern char	*log_name;		/* Name of log device */
- extern int	log_spec;		/* Log dev specified as option */
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 9a8d42e1..177e0831 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -183,6 +183,10 @@ upgrade_filesystem(
-                         do_error(
- 	_("filesystem feature upgrade failed, err=%d\n"),
-                                         error);
-+
-+		/* Simulate a crash after setting needsrepair. */
-+		if (abort_after_force_needsrepair)
-+			exit(55);
-         }
-         if (bp)
-                 libxfs_buf_relse(bp);
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index a613505f..293d89b1 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -44,6 +44,7 @@ enum o_opt_nums {
- 	BLOAD_LEAF_SLACK,
- 	BLOAD_NODE_SLACK,
- 	NOQUOTA,
-+	FORCE_NEEDSREPAIR_ABORT,
- 	O_MAX_OPTS,
- };
- 
-@@ -57,6 +58,7 @@ static char *o_opts[] = {
- 	[BLOAD_LEAF_SLACK]	= "debug_bload_leaf_slack",
- 	[BLOAD_NODE_SLACK]	= "debug_bload_node_slack",
- 	[NOQUOTA]		= "noquota",
-+	[FORCE_NEEDSREPAIR_ABORT] = "debug_force_needsrepair_abort",
- 	[O_MAX_OPTS]		= NULL,
- };
- 
-@@ -282,6 +284,9 @@ process_args(int argc, char **argv)
- 		_("-o debug_bload_node_slack requires a parameter\n"));
- 					bload_node_slack = (int)strtol(val, NULL, 0);
- 					break;
-+				case FORCE_NEEDSREPAIR_ABORT:
-+					abort_after_force_needsrepair = true;
-+					break;
- 				case NOQUOTA:
- 					quotacheck_skip();
- 					break;
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index fac82d74..df25abaa 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -223,6 +223,11 @@ of calculating and checking the CRCs is not noticeable in normal operation.
+ By default,
+ .B mkfs.xfs
+ will enable metadata CRCs.
++.IP
++Formatting a filesystem without CRCs selects the V4 format, which is deprecated
++and will be removed from upstream in September 2030.
++Distributors may choose to withdraw support for the V4 format earlier than
++this date.
+ .TP
+ .BI finobt= value
+ This option enables the use of a separate free inode btree index in each
+@@ -592,6 +597,8 @@ This option can be used to turn off inode alignment when the
+ filesystem needs to be mountable by a version of IRIX
+ that does not have the inode alignment feature
+ (any release of IRIX before 6.2, and IRIX 6.2 without XFS patches).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI attr= value
+ This is used to specify the version of extended attribute inline
+@@ -602,6 +609,8 @@ between attribute and extent data.
+ The previous version 1, which has fixed regions for attribute and
+ extent data, is kept for backwards compatibility with kernels older
+ than version 2.6.16.
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI projid32bit[= value ]
+ This is used to enable 32bit quota project identifiers. The
+@@ -609,6 +618,8 @@ This is used to enable 32bit quota project identifiers. The
+ is either 0 or 1, with 1 signifying that 32bit projid are to be enabled.
+ If the value is omitted, 1 is assumed.  (This default changed
+ in release version 3.2.0.)
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI sparse[= value ]
+ Enable sparse inode chunk allocation. The
+@@ -690,6 +701,7 @@ stripe-aligned log writes (see the sunit and su options, below).
+ The previous version 1, which is limited to 32k log buffers and does
+ not support stripe-aligned writes, is kept for backwards compatibility
+ with very old 2.4 kernels.
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI sunit= value
+ This specifies the alignment to be used for log writes. The
+@@ -744,6 +756,8 @@ is 1 (on) so you must specify
+ .B lazy-count=0
+ if you want to disable this feature for older kernels which don't support
+ it.
++.IP
++This option only applies to the deprecated V4 format.
+ .RE
+ .PP
+ .PD 0
+@@ -803,6 +817,8 @@ will be stored in the directory structure.  The default value is 1.
+ When CRCs are enabled (the default), the ftype functionality is always
+ enabled, and cannot be turned off.
+ .IP
++This option only applies to the deprecated V4 format.
++.IP
+ .RE
+ .TP
+ .BI \-p " protofile"
+diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+index 055a502a..be5c189f 100644
+--- a/man/man8/xfs_admin.8
++++ b/man/man8/xfs_admin.8
+@@ -56,6 +56,8 @@ for a detailed description of the XFS log.
+ Enables unwritten extent support on a filesystem that does not
+ already have this enabled (for legacy filesystems, it can't be
+ disabled anymore at mkfs time).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .B \-f
+ Specifies that the filesystem image to be processed is stored in a
+@@ -69,12 +71,16 @@ option).
+ .B \-j
+ Enables version 2 log format (journal format supporting larger
+ log buffers).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .B \-l
+ Print the current filesystem label.
+ .TP
+ .B \-p
+ Enable 32bit project identifier support (PROJID32BIT feature).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .B \-u
+ Print the current filesystem UUID (Universally Unique IDentifier).
+@@ -85,6 +91,8 @@ Enable (1) or disable (0) lazy-counters in the filesystem.
+ Lazy-counters may not be disabled on Version 5 superblock filesystems
+ (i.e. those with metadata CRCs enabled).
+ .IP
++In other words, this option only applies to the deprecated V4 format.
++.IP
+ This operation may take quite a bit of time on large filesystems as the
+ entire filesystem needs to be scanned when this option is changed.
+ .IP
+@@ -94,6 +102,8 @@ information is kept in other parts of the filesystem to be able to
+ maintain the counter values without needing to keep them in the
+ superblock. This gives significant improvements in performance on some
+ configurations and metadata intensive workloads.
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI \-L " label"
+ Set the filesystem label to
 
