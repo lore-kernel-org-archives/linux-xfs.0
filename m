@@ -2,102 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3AB7C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 01:31:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13AC0C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 07:03:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F92164DAE
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 01:31:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D435064E66
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Feb 2021 07:03:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229800AbhBKBa7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Feb 2021 20:30:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43782 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229745AbhBKBa7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Feb 2021 20:30:59 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C44B564EC9;
-        Thu, 11 Feb 2021 01:30:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613007018;
-        bh=xoV3cBZWeb9t5cwuiKsu77GD/GGNNChUf8ef+6fC0v8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oyzF9P6LHwbiQfC9f50KdkTYyl0rkji2A9NVTIAtwY6mh+78MpxvlMKp8e3Qtefyc
-         NFuH/FFfS1kfx3sCv8kw7JeLuLJRtRw4TMHX0nk5gf5TKS4tGAePa/f1QAgnhfsa7V
-         Gx5u0NumKilVwPcY4fjVMSr3gtsdFJuBnvRAFDy7O5Z67ZCG2QRvKlBMI52ZhYED5Y
-         94DvBU7abTwrprDC2blfadXfz0gUDZy0k9S4YRsoHKXN56oaIq8ElW999HjDhgystt
-         1DqRZ3xyVjJv2BGVsmBYvUc3fY4yqKjx5u08Mlyv3I6pNg2S2/c86Ap2JI9SxquyQu
-         6QtLZC8gG5Usg==
-Date:   Wed, 10 Feb 2021 17:30:17 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/10] xfs_repair: add a testing hook for NEEDSREPAIR
-Message-ID: <20210211013017.GB7193@magnolia>
-References: <161284380403.3057868.11153586180065627226.stgit@magnolia>
- <161284385516.3057868.355176047687079022.stgit@magnolia>
- <20210209172131.GG14273@bfoster>
- <20210209181738.GU7193@magnolia>
- <20210209185939.GK14273@bfoster>
- <20210209195920.GZ7193@magnolia>
- <acfe3b90-9364-85d5-84e7-7a1b888bae9e@sandeen.net>
+        id S229501AbhBKHCp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Feb 2021 02:02:45 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:59526 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229478AbhBKHCo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Feb 2021 02:02:44 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1613026877;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DtPTAUtlE21tFkP6Zd1aV7+l7NlCjYwR1s7OnWR9No8=;
+        b=AW9cHSzI8t8ul70NFp/LFPxEO+QnZtgdiGlIjR6R3zu+AUHoeU3BzWz3IQZgNObtBAvcyc
+        et8IbXVoAdSX/aT7r72uNdtejhNgqSb7D6Ir2v72JpG4MSf//OG/TJsh3Rd2P91Gn+cUXQ
+        EcmuCRRzpww2mN7mtNW4Aoq9puNQhjs=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-430-qdLVJpJDN1yaAIldDgtYrA-1; Thu, 11 Feb 2021 02:01:15 -0500
+X-MC-Unique: qdLVJpJDN1yaAIldDgtYrA-1
+Received: by mail-pg1-f199.google.com with SMTP id p6so3840387pgj.11
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Feb 2021 23:01:15 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=DtPTAUtlE21tFkP6Zd1aV7+l7NlCjYwR1s7OnWR9No8=;
+        b=MzDLAu1pom0JnhJgdcp910p7zwVflrjqA2xwJn2akNJJVGJsDfhwvf6V1DX0GiPPVM
+         ct5E7e73ASeNtVbjkUKUH5mw5kAr+Iyv/EIbvH6cD0rxIU9iTD7y0Kn0NXnKWOsz/ETe
+         40Jber3BvoDBImzEogduh64lf5KrLzrq6yKBIp5dTyuBVkZ5H8I05P3aSFzcApTSlHDe
+         TMfR0LfXI0L+WB4gDgyl/B9KrP8Z9sXO8MhhbttwPH6I5GXtDcuM7qoiTBYrX/Y/RTmW
+         dkKBlwSQxMviABr5DwBK+JT+OhwfeUZO0wcivtWibEH46BZq8FhmFIStxXJVx3zkr7tZ
+         Gn/Q==
+X-Gm-Message-State: AOAM531IsR2jhMyWHEvlefHsuvXg3BDIQvOu1tkhHLnvgOm/u5BQaxgG
+        OAuqzg2k9zfJNA4O4zkqerSU0AeAHlvlXVPYcz5qkXcgZW/R5xTLS+4eosWNJUUFDTZedFEUpkh
+        koLyi5RCcHXiMO5wMrm4Y
+X-Received: by 2002:a65:6246:: with SMTP id q6mr6916191pgv.6.1613026874617;
+        Wed, 10 Feb 2021 23:01:14 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJzzi2Mph15LV/suzZerw3RxAVxOZxX/Tim1iZoLKj4qWDAEjAnR3eaaRrUbxYYZqCzE2KFA3Q==
+X-Received: by 2002:a65:6246:: with SMTP id q6mr6916171pgv.6.1613026874413;
+        Wed, 10 Feb 2021 23:01:14 -0800 (PST)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id e26sm4500728pfm.87.2021.02.10.23.01.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 Feb 2021 23:01:14 -0800 (PST)
+Date:   Thu, 11 Feb 2021 15:01:03 +0800
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: restore shutdown check in mapped write fault path
+Message-ID: <20210211070103.GA1297249@xiangao.remote.csb>
+References: <20210210170112.172734-1-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <acfe3b90-9364-85d5-84e7-7a1b888bae9e@sandeen.net>
+In-Reply-To: <20210210170112.172734-1-bfoster@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 10, 2021 at 03:41:52PM -0600, Eric Sandeen wrote:
-> On 2/9/21 1:59 PM, Darrick J. Wong wrote:
-> >> # ./repair/xfs_repair -c needsrepair=1 /dev/test/scratch 
-> >> Phase 1 - find and verify superblock...
-> >> Marking filesystem in need of repair.
-> >> writing modified primary superblock
-> >> Phase 2 - using internal log
-> >>         - zero log...
-> >> ERROR: The filesystem has valuable metadata changes in a log which needs to
-> >> ...
-> >> # mount /dev/test/scratch /mnt/
-> >> mount: /mnt: wrong fs type, bad option, bad superblock on /dev/mapper/test-scratch, missing codepage or helper program, or other error.
-> >> #
-> >>
-> >> It looks like we can set a feature upgrade bit on the superblock before
-> >> we've examined the log and potentially discovered that it's dirty (phase
-> >> 2). If the log is recoverable, that puts the user in a bit of a bind..
-> > Heh, funny that I was thinking that the upgrades shouldn't really be
-> > happening in phase 1 anyway--
-> > 
-> > I've (separately) started working on a patch to make it so that you can
-> > add reflink and finobt to a filesystem.  Those upgrades require somewhat
-> > more intensive checks of the filesystem (such as checking free space in
-> > each AG), so I ended up dumping them into phase 2, since the xfs_mount
-> > and buffer cache aren't fully initialized until after phase 1.
-> > 
-> > So, yeah, the upgrade code should move to phase2() after log zeroing and
-> > before the AG scan.
+On Wed, Feb 10, 2021 at 12:01:12PM -0500, Brian Foster wrote:
+> XFS triggers an iomap warning in the write fault path due to a
+> !PageUptodate() page if a write fault happens to occur on a page
+> that recently failed writeback. The iomap writeback error handling
+> code can clear the Uptodate flag if no portion of the page is
+> submitted for I/O. This is reproduced by fstest generic/019, which
+> combines various forms of I/O with simulated disk failures that
+> inevitably lead to filesystem shutdown (which then unconditionally
+> fails page writeback).
 > 
-> Oh, whoops - 
+> This is a regression introduced by commit f150b4234397 ("xfs: split
+> the iomap ops for buffered vs direct writes") due to the removal of
+> a shutdown check and explicit error return in the ->iomap_begin()
+> path used by the write fault path. The explicit error return
+> historically translated to a SIGBUS, but now carries on with iomap
+> processing where it complains about the unexpected state. Restore
+> the shutdown check to xfs_buffered_write_iomap_begin() to restore
+> historical behavior.
 > 
-> based on this, I think that the prior patch
-> [PATCH 08/10] xfs_repair: allow setting the needsrepair flag
-> needs to be adjusted as well, right; we don't want to set it in phase 1
-> or we might set it then abort on a dirty log and the user is stuck.
-> 
-> So maybe I should merge up through 
-> 
-> [PATCH 07/10] xfs_repair: set NEEDSREPAIR when we deliberately corrupt directories
-> 
-> and hold off on the rest? Or should I just hold off on the series and let
-> you reassemble (again?)
+> Fixes: f150b4234397 ("xfs: split the iomap ops for buffered vs direct writes")
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Yeah, I'll push out v5 tomorrow morning with all this cleaned up.
+Taking some time on the internal discussion thread, I also think
+SIGBUS is also appropriate after fs shutdown rather than dirty
+this page anyway.
 
---D
+Reviewed-by: Gao Xiang <hsiangkao@redhat.com>
 
-> (Am I right that the upgrade bits will need to be moved and the series resent?)
-> 
-> -Eric
+Thanks,
+Gao Xiang
+
