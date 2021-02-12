@@ -2,166 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DDBFC433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Feb 2021 21:48:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D77ADC433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Feb 2021 21:57:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C0B164DC3
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Feb 2021 21:48:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 977F864E36
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Feb 2021 21:57:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229648AbhBLVso (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 12 Feb 2021 16:48:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35936 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229602AbhBLVsn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 Feb 2021 16:48:43 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C9CE064DC3;
-        Fri, 12 Feb 2021 21:48:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613166482;
-        bh=PaEhtZNw/6m7RfukWTZDqlnxa7G2EodoUxUING0NStU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=J8oT/3k9IgkSAq2xBQV0ZVFPfuFU91b/TUPk2qZ9yKntGHDRbc/AyeQO3+qYZLpDq
-         ac6R6rIHz8pauT8KoSoLofiquK6uuJSDkZqMc+94pbn1IkDm4yVUbaUzZ01fP/y5V/
-         9M1j3Z07+vtDUgoFEtFIDHDoSqR+DMUCDGgvPvjbIwvzZt4dtoq3S7B9Y+eVvyko2X
-         aGD9agXtrTnI1TfnITd6nbHYLk8zb3QG5rbZK76yx1MKWDUWzhsqUm40vOdlMNelKe
-         KFlHxplQn4/W4CS6/FlamI3HlqUiF2r3GPO8GipHv+PcHok48KWzYrdVsV2dLNjpQm
-         bhdQOFZp0WoxQ==
-Date:   Fri, 12 Feb 2021 13:48:02 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>
-Subject: [PATCH v2] xfs: restore speculative_cow_prealloc_lifetime sysctl
-Message-ID: <20210212214802.GN7193@magnolia>
-References: <20210212172436.GK7193@magnolia>
+        id S230421AbhBLV5F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 12 Feb 2021 16:57:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48970 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231430AbhBLV4d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Feb 2021 16:56:33 -0500
+Received: from mail-qv1-xf35.google.com (mail-qv1-xf35.google.com [IPv6:2607:f8b0:4864:20::f35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 935C1C061574
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Feb 2021 13:55:18 -0800 (PST)
+Received: by mail-qv1-xf35.google.com with SMTP id y10so499401qvo.6
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Feb 2021 13:55:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=nwI0wtbgdnusA2pYcigLlKl6qfisAE5u0jQBxRw+r/k=;
+        b=GSiFci1852kbhXR3wVgP7fFNvx5oyDNqHQjPG7LPJdVzmq+JuLjfMfBpsu15MBF8/8
+         sHjvU7h2sB0fPsc2vpOZ0MSliK+nAkujWFazUpfZtUF8t3cozRRB+aZq/s1VCKpD1jFA
+         8ne8cyICGMUff4lWJtOtuaQXFeE2nHM6Nn+gI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=nwI0wtbgdnusA2pYcigLlKl6qfisAE5u0jQBxRw+r/k=;
+        b=f2eDV5fmM5YSrQCWxdbAf5aGnJKu6C9LdofUr8z2R2CcNWxkS7ZsRu/e+2Bgh7AOkD
+         genUVDSEKRJOm1UOYMWl1TaBNUJrle+IR4wOLGF5J4jvvyC0ClDHpND/OSQoc1GGjCIV
+         /GRj2k4GHpZ2TSwJ6ges0MY15+E9iTzl9iHiqFftXFgAYDho51P64zFhTMkzfSBu/l0s
+         vIgb06JA9utvO8pKBRybor33qk5zNTuiEO1Xr2c/dkWKakG3fSagztlvTZwQ7yeEY4DU
+         9tDGItC5459WTITP4AqpzI6E5cVZk3UZPtRlEAMHttydiUJzqYkHKplP2CJVrm03+nXg
+         Z0SQ==
+X-Gm-Message-State: AOAM530r02DwZ51oURNcQCbCcotXb8n0H7WPuBlhL0IaKh0PSMq4pDbW
+        fANuM1EowJbmSchRw9j1BIyU1eXxQee3F/e6ZD7VXKmJpSpV/BWf
+X-Google-Smtp-Source: ABdhPJxUYttEGohSBQfkpsuIXgBMSMeGpwIRxQbFgyZ/DHb5cf8SosH57FUPUDFpuGZveA0IOEJCOt+Rd+cvKFju7L4=
+X-Received: by 2002:a0c:b611:: with SMTP id f17mr4452917qve.42.1613166917595;
+ Fri, 12 Feb 2021 13:55:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210212172436.GK7193@magnolia>
+References: <20210212204849.1556406-1-mmayer@broadcom.com> <CAGt4E5tbyHpDEPtEGK8SYoB4w4srAfHpiBADkR+PpkQyguiLPg@mail.gmail.com>
+ <36f95877-ad2d-a392-cacd-0a128d08fb44@sandeen.net>
+In-Reply-To: <36f95877-ad2d-a392-cacd-0a128d08fb44@sandeen.net>
+From:   Markus Mayer <mmayer@broadcom.com>
+Date:   Fri, 12 Feb 2021 13:55:06 -0800
+Message-ID: <CAGt4E5uA6futY0+AySLJTHsmoUp7OceNca=7ReXAg-o8mw0=7Q@mail.gmail.com>
+Subject: Re: [PATCH] include/buildrules: substitute ".o" for ".lo" only at the
+ very end
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Linux XFS <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Fri, 12 Feb 2021 at 13:29, Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+> On 2/12/21 2:51 PM, Markus Mayer wrote:
+> >> To prevent issues when the ".o" extension appears in a directory path,
+> >> ensure that the ".o" -> ".lo" substitution is only performed for the
+> >> final file extension.
+> >
+> > If the subject should be "[PATCH] xfsprogs: ...", please let me know.
+>
+> Nah, that's fine, I noticed it.
+>
+> So did you have a path component that had ".o" in it that got substituted=
+?
+> Is that what the bugfix is?
 
-In commit 9669f51de5c0 I tried to get rid of the undocumented cow gc
-lifetime knob.  The knob's function was never documented and it now
-doesn't really have a function since eof and cow gc have been
-consolidated.
+Yes and yes.
 
-Regrettably, xfs/231 relies on it and regresses on for-next.  I did not
-succeed at getting far enough through fstests patch review for the fixup
-to land in time.
+Specifically, I was asked to name the build directory in our build
+system "workspace.o" (or something else ending in .o) because that
+causes the automated backup to skip backing up temporary build
+directories, which is what we want. There is an existing exclusion
+pattern that skips .o files during backup runs, and they didn't want
+to create specialized rules for different projects. Hence the request
+for the oddly named directory to make it match the existing pattern.
 
-Restore the sysctl knob, document what it did (does?), put it on the
-deprecation schedule, and rip out a redundant function.
+We also have a symlink without the ".o" extension (workspace ->
+workspace.o) which is commonly used to access the work space, but
+symlinks  frequently get expanded when scripts run. In the end, the
+xfsprogs build system saw the full path without the symlink
+(".../workspace.o/.../xfsprogs-5.8.0/...") and started substituting
+workspace.o with workspace.lo. And then the build died.
 
-Fixes: 9669f51de5c0 ("xfs: consolidate the eofblocks and cowblocks workers")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
-v2: use printk_ratelimited
----
- Documentation/admin-guide/xfs.rst |    4 ++++
- fs/xfs/xfs_sysctl.c               |   35 ++++++++++++++---------------------
- 2 files changed, 18 insertions(+), 21 deletions(-)
+Like this:
 
-diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
-index 6178153d3320..e188d0ea7b5b 100644
---- a/Documentation/admin-guide/xfs.rst
-+++ b/Documentation/admin-guide/xfs.rst
-@@ -284,6 +284,9 @@ The following sysctls are available for the XFS filesystem:
- 	removes unused preallocation from clean inodes and releases
- 	the unused space back to the free pool.
- 
-+  fs.xfs.speculative_cow_prealloc_lifetime
-+	This is an alias for speculative_prealloc_lifetime.
-+
-   fs.xfs.error_level		(Min: 0  Default: 3  Max: 11)
- 	A volume knob for error reporting when internal errors occur.
- 	This will generate detailed messages & backtraces for filesystem
-@@ -361,6 +364,7 @@ Deprecated Sysctls
- ===========================     ================
- fs.xfs.irix_sgid_inherit        September 2025
- fs.xfs.irix_symlink_mode        September 2025
-+fs.xfs.speculative_cow_prealloc_lifetime   September 2025
- ===========================     ================
- 
- 
-diff --git a/fs/xfs/xfs_sysctl.c b/fs/xfs/xfs_sysctl.c
-index 145e06c47744..546a6cd96729 100644
---- a/fs/xfs/xfs_sysctl.c
-+++ b/fs/xfs/xfs_sysctl.c
-@@ -51,7 +51,7 @@ xfs_panic_mask_proc_handler(
- #endif /* CONFIG_PROC_FS */
- 
- STATIC int
--xfs_deprecate_irix_sgid_inherit_proc_handler(
-+xfs_deprecated_dointvec_minmax(
- 	struct ctl_table	*ctl,
- 	int			write,
- 	void			*buffer,
-@@ -59,24 +59,8 @@ xfs_deprecate_irix_sgid_inherit_proc_handler(
- 	loff_t			*ppos)
- {
- 	if (write) {
--		printk_once(KERN_WARNING
--				"XFS: " "%s sysctl option is deprecated.\n",
--				ctl->procname);
--	}
--	return proc_dointvec_minmax(ctl, write, buffer, lenp, ppos);
--}
--
--STATIC int
--xfs_deprecate_irix_symlink_mode_proc_handler(
--	struct ctl_table	*ctl,
--	int			write,
--	void			*buffer,
--	size_t			*lenp,
--	loff_t			*ppos)
--{
--	if (write) {
--		printk_once(KERN_WARNING
--				"XFS: " "%s sysctl option is deprecated.\n",
-+		printk_ratelimited(KERN_WARNING
-+				"XFS: %s sysctl option is deprecated.\n",
- 				ctl->procname);
- 	}
- 	return proc_dointvec_minmax(ctl, write, buffer, lenp, ppos);
-@@ -88,7 +72,7 @@ static struct ctl_table xfs_table[] = {
- 		.data		= &xfs_params.sgid_inherit.val,
- 		.maxlen		= sizeof(int),
- 		.mode		= 0644,
--		.proc_handler	= xfs_deprecate_irix_sgid_inherit_proc_handler,
-+		.proc_handler	= xfs_deprecated_dointvec_minmax,
- 		.extra1		= &xfs_params.sgid_inherit.min,
- 		.extra2		= &xfs_params.sgid_inherit.max
- 	},
-@@ -97,7 +81,7 @@ static struct ctl_table xfs_table[] = {
- 		.data		= &xfs_params.symlink_mode.val,
- 		.maxlen		= sizeof(int),
- 		.mode		= 0644,
--		.proc_handler	= xfs_deprecate_irix_symlink_mode_proc_handler,
-+		.proc_handler	= xfs_deprecated_dointvec_minmax,
- 		.extra1		= &xfs_params.symlink_mode.min,
- 		.extra2		= &xfs_params.symlink_mode.max
- 	},
-@@ -201,6 +185,15 @@ static struct ctl_table xfs_table[] = {
- 		.extra1		= &xfs_params.blockgc_timer.min,
- 		.extra2		= &xfs_params.blockgc_timer.max,
- 	},
-+	{
-+		.procname	= "speculative_cow_prealloc_lifetime",
-+		.data		= &xfs_params.blockgc_timer.val,
-+		.maxlen		= sizeof(int),
-+		.mode		= 0644,
-+		.proc_handler	= xfs_deprecated_dointvec_minmax,
-+		.extra1		= &xfs_params.blockgc_timer.min,
-+		.extra2		= &xfs_params.blockgc_timer.max,
-+	},
- 	/* please keep this the last entry */
- #ifdef CONFIG_PROC_FS
- 	{
+>>> xfsprogs 5.8.0 Building
+PATH=3D"/local/users/jenkins/workspace.o/buildroot_linux-5.4_llvm/output/ar=
+m64/host/bin:/local/users/jenkins/workspace.o/buildroot_linux-5.4_llvm/outp=
+ut/arm64/host/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:=
+/bin:/usr/games:/usr/local/games:/snap/bin"
+ /usr/bin/make -j33  -C
+/local/users/jenkins/workspace.o/buildroot_linux-5.4_llvm/output/arm64/buil=
+d/xfsprogs-5.8.0/
+   [HEADERS] include
+   [HEADERS] libxfs
+Building include
+    [LN]     disk
+make[3]: Nothing to be done for 'include'.
+Building libfrog
+    [CC]     gen_crc32table
+    [GENERATE] crc32table.h
+make[4]: *** No rule to make target
+'/local/users/jenkins/workspace.lo/buildroot_linux-5.4_llvm/output/arm64/ta=
+rget/usr/include/uuid/uuid.h',
+needed by 'bitmap.lo'.  Stop.
+make[4]: *** Waiting for unfinished jobs....
+    [CC]     avl64.lo
+include/buildrules:35: recipe for target 'libfrog' failed
+make[3]: *** [libfrog] Error 2
+Makefile:91: recipe for target 'default' failed
+make[2]: *** [default] Error 2
+package/pkg-generic.mk:247: recipe for target
+'/local/users/jenkins/workspace.o/buildroot_linux-5.4_llvm/output/arm64/bui=
+ld/xfsprogs-5.8.0/.stamp_built'
+failed
+make[1]: *** [/local/users/jenkins/workspace.o/buildroot_linux-5.4_llvm/out=
+put/arm64/build/xfsprogs-5.8.0/.stamp_built]
+Error 2
+
+Regards,
+-Markus
