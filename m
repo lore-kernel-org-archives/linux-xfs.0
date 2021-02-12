@@ -2,122 +2,62 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F240C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Feb 2021 21:29:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F365C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Feb 2021 21:30:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 336E064E05
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Feb 2021 21:29:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3083664E3D
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Feb 2021 21:30:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232057AbhBLV25 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 12 Feb 2021 16:28:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33788 "EHLO mail.kernel.org"
+        id S229718AbhBLVaB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 12 Feb 2021 16:30:01 -0500
+Received: from sandeen.net ([63.231.237.45]:47230 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232054AbhBLV24 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 Feb 2021 16:28:56 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1FBFE64E26;
-        Fri, 12 Feb 2021 21:28:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613165296;
-        bh=MZRKcrJ3AFgHNFsG0Ha+6qcPmuEFo1Q4UrL9zTScTtE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Tuy+DlaQoYliGeAeVWrcnQbj62SfvrpYznE2mapQDLpPIBSwCDWXI9VTDIXrvib2w
-         3En86nGCdDNQmlR5EbrPlLM7PVGY05whONT5PZ06ahEuKurdMjIAXAtk+UnnHVPu5K
-         7hRmhLGLDbCk3Bif0HXUZ8Wq/Bo/V8RWTP1Wr1tTQY+xRMbK2xosv31UzSPxS0eXJ/
-         QHz85p/IVFfkiKLoCjBJtPsgjb19ToeBlLfRdSW8ElK+fTBps1ClQXjmoiI5lU879/
-         36xFPhAsJwlxv8a/zPYjfA8H5uPTZUlEzqD78CSAupoK8tZvrBthNahoBSB28LvA3Q
-         u/k3yxwBJKuEg==
-Date:   Fri, 12 Feb 2021 13:28:15 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: restore speculative_cow_prealloc_lifetime sysctl
-Message-ID: <20210212212815.GM7193@magnolia>
-References: <20210212172436.GK7193@magnolia>
- <20210212212147.GZ4662@dread.disaster.area>
+        id S231335AbhBLV36 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 Feb 2021 16:29:58 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 6699215D6E;
+        Fri, 12 Feb 2021 15:29:09 -0600 (CST)
+To:     Markus Mayer <mmayer@broadcom.com>,
+        Linux XFS <linux-xfs@vger.kernel.org>
+References: <20210212204849.1556406-1-mmayer@broadcom.com>
+ <CAGt4E5tbyHpDEPtEGK8SYoB4w4srAfHpiBADkR+PpkQyguiLPg@mail.gmail.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH] include/buildrules: substitute ".o" for ".lo" only at the
+ very end
+Message-ID: <36f95877-ad2d-a392-cacd-0a128d08fb44@sandeen.net>
+Date:   Fri, 12 Feb 2021 15:29:11 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.7.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210212212147.GZ4662@dread.disaster.area>
+In-Reply-To: <CAGt4E5tbyHpDEPtEGK8SYoB4w4srAfHpiBADkR+PpkQyguiLPg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Feb 13, 2021 at 08:21:47AM +1100, Dave Chinner wrote:
-> On Fri, Feb 12, 2021 at 09:24:36AM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > In commit 9669f51de5c0 I tried to get rid of the undocumented cow gc
-> > lifetime knob.  The knob's function was never documented and it now
-> > doesn't really have a function since eof and cow gc have been
-> > consolidated.
-> > 
-> > Regrettably, xfs/231 relies on it and regresses on for-next.  I did not
-> > succeed at getting far enough through fstests patch review for the fixup
-> > to land in time.
-> > 
-> > Restore the sysctl knob, document what it did (does?), put it on the
-> > deprecation schedule, and rip out a redundant function.
-> > 
-> > Fixes: 9669f51de5c0 ("xfs: consolidate the eofblocks and cowblocks workers")
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+On 2/12/21 2:51 PM, Markus Mayer wrote:
+>> To prevent issues when the ".o" extension appears in a directory path,
+>> ensure that the ".o" -> ".lo" substitution is only performed for the
+>> final file extension.
 > 
-> Thnanks for doing this, Darrick!
-> 
-> >  STATIC int
-> > -xfs_deprecate_irix_sgid_inherit_proc_handler(
-> > +xfs_deprecated_dointvec_minmax(
-> >  	struct ctl_table	*ctl,
-> >  	int			write,
-> >  	void			*buffer,
-> > @@ -60,23 +60,7 @@ xfs_deprecate_irix_sgid_inherit_proc_handler(
-> >  {
-> >  	if (write) {
-> >  		printk_once(KERN_WARNING
-> > -				"XFS: " "%s sysctl option is deprecated.\n",
-> > -				ctl->procname);
-> > -	}
-> > -	return proc_dointvec_minmax(ctl, write, buffer, lenp, ppos);
-> > -}
-> > -
-> > -STATIC int
-> > -xfs_deprecate_irix_symlink_mode_proc_handler(
-> > -	struct ctl_table	*ctl,
-> > -	int			write,
-> > -	void			*buffer,
-> > -	size_t			*lenp,
-> > -	loff_t			*ppos)
-> > -{
-> > -	if (write) {
-> > -		printk_once(KERN_WARNING
-> > -				"XFS: " "%s sysctl option is deprecated.\n",
-> > +				"XFS: %s sysctl option is deprecated.\n",
-> >  				ctl->procname);
-> >  	}
-> 
-> The use of printk_once means it will only warn on the first
-> deprecated sysctl written to, not the first write to each of the
-> deprecated sysctls.
-> 
-> Is there any evidence that anyone is writing these with any regualr
-> frequency, and if not, maybe just a ratelimited warning is
-> sufficient here?
+> If the subject should be "[PATCH] xfsprogs: ...", please let me know.
 
-I've never seen any evidence that people hammer on sysctls with great
-frequency.  Will change to printk_ratelimited.
+Nah, that's fine, I noticed it.
 
---D
+So did you have a path component that had ".o" in it that got substituted?
+Is that what the bugfix is?
 
-> Otherwise looks fine.
+Thanks,
+-Eric
+
+> Regards,
+> -Markus
 > 
-> Cheers,
-> 
-> Dave.
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
