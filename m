@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A354C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFBE9C433DB
 	for <linux-xfs@archiver.kernel.org>; Sat, 13 Feb 2021 05:48:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5315564D9D
+	by mail.kernel.org (Postfix) with ESMTP id 8332064E74
 	for <linux-xfs@archiver.kernel.org>; Sat, 13 Feb 2021 05:48:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230391AbhBMFsH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 13 Feb 2021 00:48:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57550 "EHLO mail.kernel.org"
+        id S229718AbhBMFsI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 13 Feb 2021 00:48:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57548 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229718AbhBMFsG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 13 Feb 2021 00:48:06 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E31E164E68;
-        Sat, 13 Feb 2021 05:47:14 +0000 (UTC)
+        id S230117AbhBMFsH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 13 Feb 2021 00:48:07 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 656C864E9C;
+        Sat, 13 Feb 2021 05:47:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613195235;
-        bh=UA8/ii9uQrgYeWSnepEVu0MxU4ibDoot2yHuZ3RMjpg=;
+        s=k20201202; t=1613195229;
+        bh=xu4I7Zho5aatS468G2ieDU6Sn9deTfMztZnfSIbgVX0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=FwUId7uYtgAgdWgrIZZ6K5JYMkxwQc0Zp34jAOa2MvY1uAqOwqrVy4X1xNo2Mac7j
-         HYX0qKQIfpZ0CcG+mthuB/EZxmdgjKQAuzHkJtrb/5BWPdwTFmTT23mmRIiLFfGskG
-         YDM9WjCPViqVwNfSS/4/XcVKJr7ISambIFr9F9+R/3n3EJJfbuxZ+xZW1ENryJLJIR
-         SBRdhtx7YqF56p6y/mV/9gkkEB3+3LRLpdixWOyFo7LzY9JOXRtqs/PdLw5qKJYHrd
-         X547PDnMim2RdM3zRisEBOf/53IogaLuSNayWFXCaTMgKhCCLUKsWXR7xqJG2uCMJZ
-         8FaGYw79uaTLw==
-Subject: [PATCH 2/5] xfs_repair: allow upgrades to v5 filesystems
+        b=lSe83WgQg1/1YreFaBpED0tGInFYPTrfSiDhTlmo2cokz6nwCzfjrDx5Yiqb7w20d
+         VhOf2f6JZ31TdYG9rjPnhZYdswcsJ9OIhnKIUJxSV/dXTJZ9DQF2jFh5xyr/iMD39+
+         Rn/rRwiOeFNs2pCKuqQ0bMp3W7O4GMsns/C1HTqNxBng21pjJVGwEandyKVtsE7ANm
+         r9JFD0wW/sTrp+ekyCTyFc7+QBb3j/0UNB9ggcMLXTIXARMY/PoVvrudda9TtG2fKY
+         mWSny9Dw2I6pYsHdKyYQyq8ayH490l2Je3nGT05el6VD90VheVj8UH8ehzwBkHtulE
+         n3+lXIYdTZQTQ==
+Subject: [PATCH 1/5] man: mark all deprecated V4 format options
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, hch@lst.de, bfoster@redhat.com
-Date:   Fri, 12 Feb 2021 21:47:14 -0800
-Message-ID: <161319523460.423010.11387475504369174814.stgit@magnolia>
+Date:   Fri, 12 Feb 2021 21:47:09 -0800
+Message-ID: <161319522904.423010.55854460196587153.stgit@magnolia>
 In-Reply-To: <161319522350.423010.5768275226481994478.stgit@magnolia>
 References: <161319522350.423010.5768275226481994478.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,70 +49,132 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some helper functions so that we can allow users to upgrade V5
-filesystems in a sane manner.  This just lands the boilerplate; the
-actual feature validation and whatnot will land in the next patches.
+Update the manual pages for the most popular tools to note which options
+are only useful with the V4 XFS format, and that the V4 format is
+deprecated and will be removed no later than September 2030.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/phase2.c |   40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ man/man8/mkfs.xfs.8  |   16 ++++++++++++++++
+ man/man8/xfs_admin.8 |   10 ++++++++++
+ 2 files changed, 26 insertions(+)
 
 
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 952ac4a5..f654edcc 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -131,6 +131,40 @@ zero_log(
- 		libxfs_max_lsn = log->l_last_sync_lsn;
- }
- 
-+/* Perform the user's requested upgrades on filesystem. */
-+static void
-+upgrade_filesystem(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_buf		*bp;
-+	bool			dirty = false;
-+	int			error;
-+
-+        if (no_modify || !dirty)
-+                return;
-+
-+        bp = libxfs_getsb(mp);
-+        if (!bp || bp->b_error) {
-+                do_error(
-+	_("couldn't get superblock for feature upgrade, err=%d\n"),
-+                                bp ? bp->b_error : ENOMEM);
-+        } else {
-+                libxfs_sb_to_disk(bp->b_addr, &mp->m_sb);
-+
-+                /*
-+		 * Write the primary super to disk immediately so that
-+		 * needsrepair will be set if repair doesn't complete.
-+		 */
-+                error = -libxfs_bwrite(bp);
-+                if (error)
-+                        do_error(
-+	_("filesystem feature upgrade failed, err=%d\n"),
-+                                        error);
-+        }
-+        if (bp)
-+                libxfs_buf_relse(bp);
-+}
-+
- /*
-  * ok, at this point, the fs is mounted but the root inode may be
-  * trashed and the ag headers haven't been checked.  So we have
-@@ -235,4 +269,10 @@ phase2(
- 				do_warn(_("would correct\n"));
- 		}
- 	}
-+
-+	/*
-+	 * Upgrade the filesystem now that we've done a preliminary check of
-+	 * the superblocks, the AGs, the log, and the metadata inodes.
-+	 */
-+	upgrade_filesystem(mp);
- }
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index fac82d74..df25abaa 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -223,6 +223,11 @@ of calculating and checking the CRCs is not noticeable in normal operation.
+ By default,
+ .B mkfs.xfs
+ will enable metadata CRCs.
++.IP
++Formatting a filesystem without CRCs selects the V4 format, which is deprecated
++and will be removed from upstream in September 2030.
++Distributors may choose to withdraw support for the V4 format earlier than
++this date.
+ .TP
+ .BI finobt= value
+ This option enables the use of a separate free inode btree index in each
+@@ -592,6 +597,8 @@ This option can be used to turn off inode alignment when the
+ filesystem needs to be mountable by a version of IRIX
+ that does not have the inode alignment feature
+ (any release of IRIX before 6.2, and IRIX 6.2 without XFS patches).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI attr= value
+ This is used to specify the version of extended attribute inline
+@@ -602,6 +609,8 @@ between attribute and extent data.
+ The previous version 1, which has fixed regions for attribute and
+ extent data, is kept for backwards compatibility with kernels older
+ than version 2.6.16.
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI projid32bit[= value ]
+ This is used to enable 32bit quota project identifiers. The
+@@ -609,6 +618,8 @@ This is used to enable 32bit quota project identifiers. The
+ is either 0 or 1, with 1 signifying that 32bit projid are to be enabled.
+ If the value is omitted, 1 is assumed.  (This default changed
+ in release version 3.2.0.)
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI sparse[= value ]
+ Enable sparse inode chunk allocation. The
+@@ -690,6 +701,7 @@ stripe-aligned log writes (see the sunit and su options, below).
+ The previous version 1, which is limited to 32k log buffers and does
+ not support stripe-aligned writes, is kept for backwards compatibility
+ with very old 2.4 kernels.
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI sunit= value
+ This specifies the alignment to be used for log writes. The
+@@ -744,6 +756,8 @@ is 1 (on) so you must specify
+ .B lazy-count=0
+ if you want to disable this feature for older kernels which don't support
+ it.
++.IP
++This option only applies to the deprecated V4 format.
+ .RE
+ .PP
+ .PD 0
+@@ -803,6 +817,8 @@ will be stored in the directory structure.  The default value is 1.
+ When CRCs are enabled (the default), the ftype functionality is always
+ enabled, and cannot be turned off.
+ .IP
++This option only applies to the deprecated V4 format.
++.IP
+ .RE
+ .TP
+ .BI \-p " protofile"
+diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+index cccbb224..5ef99316 100644
+--- a/man/man8/xfs_admin.8
++++ b/man/man8/xfs_admin.8
+@@ -54,6 +54,8 @@ for a detailed description of the XFS log.
+ Enables unwritten extent support on a filesystem that does not
+ already have this enabled (for legacy filesystems, it can't be
+ disabled anymore at mkfs time).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .B \-f
+ Specifies that the filesystem image to be processed is stored in a
+@@ -67,12 +69,16 @@ option).
+ .B \-j
+ Enables version 2 log format (journal format supporting larger
+ log buffers).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .B \-l
+ Print the current filesystem label.
+ .TP
+ .B \-p
+ Enable 32bit project identifier support (PROJID32BIT feature).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .B \-u
+ Print the current filesystem UUID (Universally Unique IDentifier).
+@@ -83,6 +89,8 @@ Enable (1) or disable (0) lazy-counters in the filesystem.
+ Lazy-counters may not be disabled on Version 5 superblock filesystems
+ (i.e. those with metadata CRCs enabled).
+ .IP
++In other words, this option only applies to the deprecated V4 format.
++.IP
+ This operation may take quite a bit of time on large filesystems as the
+ entire filesystem needs to be scanned when this option is changed.
+ .IP
+@@ -92,6 +100,8 @@ information is kept in other parts of the filesystem to be able to
+ maintain the counter values without needing to keep them in the
+ superblock. This gives significant improvements in performance on some
+ configurations and metadata intensive workloads.
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI \-L " label"
+ Set the filesystem label to
 
