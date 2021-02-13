@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E30BAC433E6
-	for <linux-xfs@archiver.kernel.org>; Sat, 13 Feb 2021 05:34:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5290C433E0
+	for <linux-xfs@archiver.kernel.org>; Sat, 13 Feb 2021 05:35:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDA53601FC
-	for <linux-xfs@archiver.kernel.org>; Sat, 13 Feb 2021 05:34:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC5AA64E68
+	for <linux-xfs@archiver.kernel.org>; Sat, 13 Feb 2021 05:35:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230458AbhBMFe6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 13 Feb 2021 00:34:58 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56352 "EHLO mail.kernel.org"
+        id S230467AbhBMFe7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 13 Feb 2021 00:34:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56354 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230460AbhBMFe5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 13 Feb 2021 00:34:57 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 528F864E68;
-        Sat, 13 Feb 2021 05:34:07 +0000 (UTC)
+        id S230462AbhBMFe6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 13 Feb 2021 00:34:58 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D58AA601FC;
+        Sat, 13 Feb 2021 05:34:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613194447;
-        bh=75Tytqmf8MEBUHfeLNpB8j3oC9+n9ebyyaCdxVi8uJg=;
+        s=k20201202; t=1613194452;
+        bh=evBbsTAF5FmnaAYzO142P7JPBOe97EHRgRudQx2yc6M=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=XVifbqdoDOAMsqeW7JkAOCmeXCd1/IVumFmaSfU9yu8Z630ljAfD54NSGrE3CBemP
-         zOHTXxTbiccxodK8CEsfeeAmao3ps0OStOk/FUR/2IHOCpeWvDncsiQdZhyoaD66ku
-         xAH5HHwXitR3eVMqJ/Bivou6GS4zp2V7f/73Kqj9I7hFfkHMar8pbGxu2SlJ+jV6ZG
-         5AmdktLmET2dLJWinyzuFD7fQx18OxDVWcuFahZfrMgxFvA4Nhc1GXWsU5eKr4ykfd
-         ZL2qkkx1e43/9EWclq+jgiXKU9UPP4g6+Se444Kct2lExk5n2whCtPYQGvTg0EzQhh
-         BM1ubkGMJ8Twg==
-Subject: [PATCH 3/4] xfs: detect time limits from filesystem
+        b=M98cT5TTDdTziMSdlDHDnj5LLTRkixaS6jr5rqA2Rocz6p46SRFYS6aXTGLzW1hrf
+         8+kIwPiSQAjl4NjtEKQu+lbIsNPsFiq0UCYDZemGnrOEMZqSqI6E2lkcyZmWDLlhuH
+         x/IKvliJODWbbRzIlhze0wUDUwkAM4CWxWTokMsyk7F35OvHJD+2T3Uk2Y4Ii0SDCz
+         Rp3uvsmmNkAdvIlTuanEovU2LuR1i+yxs+q+O425gcaTpK9uaJSVHMh97A3TCmFciE
+         53MgTNuajuPNr2ylZZl3WGegytGEH6Kw0fXinlkD/9z+NxnkZyYwRzI+RGxOo8Kk7C
+         qNpouXpxQ5SIQ==
+Subject: [PATCH 4/4] xfs: test upgrading filesystem to bigtime
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org
-Date:   Fri, 12 Feb 2021 21:34:07 -0800
-Message-ID: <161319444701.403615.1697502862999284423.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Fri, 12 Feb 2021 21:34:12 -0800
+Message-ID: <161319445254.403615.3608204162643621319.stgit@magnolia>
 In-Reply-To: <161319443045.403615.18346950431837086632.stgit@magnolia>
 References: <161319443045.403615.18346950431837086632.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,77 +49,58 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Teach fstests to extract timestamp limits of a filesystem using the new
-xfs_db timelimit command.
+Test that we can upgrade an existing filesystem to use bigtime.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
- common/rc         |    2 +-
- common/xfs        |   19 +++++++++++++++++++
- tests/xfs/911     |   44 ++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/911.out |   15 +++++++++++++++
- tests/xfs/group   |    1 +
- 5 files changed, 80 insertions(+), 1 deletion(-)
- create mode 100755 tests/xfs/911
- create mode 100644 tests/xfs/911.out
+ common/xfs        |   13 +++++
+ tests/xfs/908     |   95 ++++++++++++++++++++++++++++++++++
+ tests/xfs/908.out |   14 +++++
+ tests/xfs/909     |  150 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/909.out |    4 +
+ tests/xfs/group   |    2 +
+ 6 files changed, 278 insertions(+)
+ create mode 100755 tests/xfs/908
+ create mode 100644 tests/xfs/908.out
+ create mode 100755 tests/xfs/909
+ create mode 100644 tests/xfs/909.out
 
 
-diff --git a/common/rc b/common/rc
-index 082699bb..e1f96393 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2066,7 +2066,7 @@ _filesystem_timestamp_range()
- 		echo "0 $u32max"
- 		;;
- 	xfs)
--		echo "$s32min $s32max"
-+		_xfs_timestamp_range "$device"
- 		;;
- 	btrfs)
- 		echo "$s64min $s64max"
 diff --git a/common/xfs b/common/xfs
-index 30544f88..294b8c4d 100644
+index 294b8c4d..68a0b348 100644
 --- a/common/xfs
 +++ b/common/xfs
-@@ -1065,3 +1065,22 @@ _require_xfs_scratch_inobtcount()
- 		_notrun "inobtcount not supported by scratch filesystem type: $FSTYP"
- 	_scratch_unmount
+@@ -1084,3 +1084,16 @@ _xfs_timestamp_range()
+ 			awk '{printf("%s %s", $1, $2);}'
+ 	fi
  }
 +
-+_xfs_timestamp_range()
++_require_xfs_scratch_bigtime()
 +{
-+	local device="$1"
-+	local use_db=0
-+	local dbprog="$XFS_DB_PROG $device"
-+	test "$device" = "$SCRATCH_DEV" && dbprog=_scratch_xfs_db
++	_require_scratch
 +
-+	$dbprog -f -c 'help timelimit' | grep -v -q 'not found' && use_db=1
-+	if [ $use_db -eq 0 ]; then
-+		# The "timelimit" command was added to xfs_db at the same time
-+		# that bigtime was added to xfsprogs.  Therefore, we can assume
-+		# the old timestamp range if the command isn't present.
-+		echo "-$((1<<31)) $(((1<<31)-1))"
-+	else
-+		$dbprog -f -c 'timelimit --compact' | \
-+			awk '{printf("%s %s", $1, $2);}'
-+	fi
++	_scratch_mkfs -m bigtime=1 &>/dev/null || \
++		_notrun "mkfs.xfs doesn't have bigtime feature"
++	_try_scratch_mount || \
++		_notrun "bigtime not supported by scratch filesystem type: $FSTYP"
++	$XFS_INFO_PROG "$SCRATCH_MNT" | grep -q "bigtime=1" || \
++		_notrun "bigtime feature not advertised on mount?"
++	_scratch_unmount
 +}
-diff --git a/tests/xfs/911 b/tests/xfs/911
+diff --git a/tests/xfs/908 b/tests/xfs/908
 new file mode 100755
-index 00000000..01ddb856
+index 00000000..dbb41b1d
 --- /dev/null
-+++ b/tests/xfs/911
-@@ -0,0 +1,44 @@
++++ b/tests/xfs/908
+@@ -0,0 +1,95 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0-or-later
 +# Copyright (c) 2021 Oracle.  All Rights Reserved.
 +#
-+# FS QA Test No. 911
++# FS QA Test No. 908
 +#
-+# Check that the xfs_db timelimit command prints the ranges that we expect.
-+# This in combination with an xfs_ondisk.h build time check in the kernel
-+# ensures that the kernel agrees with userspace.
++# Check that we can upgrade a filesystem to support bigtime and that inode
++# timestamps work properly after the upgrade.
 +
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
@@ -133,59 +114,277 @@ index 00000000..01ddb856
 +_cleanup()
 +{
 +	cd /
++	rm -f $tmp.*
 +}
 +
 +# get standard environment, filters and checks
 +. ./common/rc
++. ./common/filter
 +
 +# real QA test starts here
 +_supported_fs xfs
-+_require_scratch
-+_require_xfs_db_command timelimit
++_require_command "$XFS_ADMIN_PROG" "xfs_admin"
++_require_xfs_scratch_bigtime
++_require_xfs_repair_upgrade bigtime
++
++date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
++	_notrun "Userspace does not support dates past 2038."
 +
 +rm -f $seqres.full
 +
-+# Format filesystem without bigtime support and populate it
-+_scratch_mkfs > $seqres.full
-+echo classic xfs timelimits
-+_scratch_xfs_db -c 'timelimit --classic'
-+echo bigtime xfs timelimits
-+_scratch_xfs_db -c 'timelimit --bigtime'
++# Make sure we can't upgrade a V4 filesystem
++_scratch_mkfs -m crc=0 >> $seqres.full
++_scratch_xfs_admin -O bigtime
++_scratch_xfs_db -c 'version' | grep -q BIGTIME && \
++	echo "Should not be able to upgrade to bigtime without V5."
++
++# Can we add bigtime and inobtcount at the same time?
++_scratch_mkfs -m crc=1,bigtime=0,inobtcount=0 >> $seqres.full
++_scratch_xfs_admin -O bigtime=1,inobtcount=1
++
++# Format V5 filesystem without bigtime support and populate it
++_scratch_mkfs -m crc=1,bigtime=0 >> $seqres.full
++_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
++_scratch_mount >> $seqres.full
++
++touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/a
++touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/b
++ls -la $SCRATCH_MNT/* >> $seqres.full
++
++echo before upgrade:
++TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
++TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
++
++_scratch_unmount
++_check_scratch_fs
++
++# Now upgrade to bigtime support
++_scratch_xfs_admin -O bigtime=1
++_scratch_xfs_db -c 'version' | grep -q BIGTIME || \
++	echo "Cannot detect new feature?"
++_check_scratch_fs
++_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
++
++# Mount again, look at our files
++_scratch_mount >> $seqres.full
++ls -la $SCRATCH_MNT/* >> $seqres.full
++
++# Modify one of the timestamps to stretch beyond 2038
++touch -d 'Feb 22 22:22:22 UTC 2222' $SCRATCH_MNT/b
++
++echo after upgrade:
++TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
++TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
++
++_scratch_cycle_mount
++
++# Did the timestamp survive the remount?
++ls -la $SCRATCH_MNT/* >> $seqres.full
++
++echo after upgrade and remount:
++TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
++TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/911.out b/tests/xfs/911.out
+diff --git a/tests/xfs/908.out b/tests/xfs/908.out
 new file mode 100644
-index 00000000..84dc475b
+index 00000000..f9152439
 --- /dev/null
-+++ b/tests/xfs/911.out
-@@ -0,0 +1,15 @@
-+QA output created by 911
-+classic xfs timelimits
-+time.min = -2147483648
-+time.max = 2147483647
-+dqtimer.min = 1
-+dqtimer.max = 4294967295
-+dqgrace.min = 0
-+dqgrace.min = 4294967295
-+bigtime xfs timelimits
-+time.min = -2147483648
-+time.max = 16299260424
-+dqtimer.min = 4
-+dqtimer.max = 16299260424
-+dqgrace.min = 0
-+dqgrace.min = 4294967295
++++ b/tests/xfs/908.out
+@@ -0,0 +1,14 @@
++QA output created by 908
++Large timestamp feature only supported on V5 filesystems.
++Adding inode btree counts to filesystem.
++Adding large timestamp support to filesystem.
++before upgrade:
++915909559
++915909559
++Adding large timestamp support to filesystem.
++after upgrade:
++915909559
++7956915742
++after upgrade and remount:
++915909559
++7956915742
+diff --git a/tests/xfs/909 b/tests/xfs/909
+new file mode 100755
+index 00000000..849ac738
+--- /dev/null
++++ b/tests/xfs/909
+@@ -0,0 +1,150 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2021 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 909
++#
++# Check that we can upgrade a filesystem to support bigtime and that quota
++# timers work properly after the upgrade.
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/quota
++
++# real QA test starts here
++_supported_fs xfs
++_require_command "$XFS_ADMIN_PROG" "xfs_admin"
++_require_quota
++_require_xfs_scratch_bigtime
++_require_xfs_repair_upgrade bigtime
++
++date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
++	_notrun "Userspace does not support dates past 2038."
++
++rm -f $seqres.full
++
++# Format V5 filesystem without bigtime support and populate it
++_scratch_mkfs -m crc=1,bigtime=0 >> $seqres.full
++_qmount_option "usrquota"
++_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
++_scratch_mount >> $seqres.full
++
++# Force the block counters for uid 1 and 2 above zero
++_pwrite_byte 0x61 0 64k $SCRATCH_MNT/a >> $seqres.full
++_pwrite_byte 0x61 0 64k $SCRATCH_MNT/b >> $seqres.full
++sync
++chown 1 $SCRATCH_MNT/a
++chown 2 $SCRATCH_MNT/b
++
++# Set quota limits on uid 1 before upgrading
++$XFS_QUOTA_PROG -x -c 'limit -u bsoft=12k bhard=1m 1' $SCRATCH_MNT
++
++# Make sure the grace period is at /some/ point in the future.  We have to
++# use bc because not all bashes can handle integer comparisons with 64-bit
++# numbers.
++repquota -upn $SCRATCH_MNT > $tmp.repquota
++cat $tmp.repquota >> $seqres.full
++grace="$(cat $tmp.repquota | grep '^#1' | awk '{print $6}')"
++now="$(date +%s)"
++res="$(echo "${grace} > ${now}" | $BC_PROG)"
++test $res -eq 1 || echo "Expected timer expiry (${grace}) to be after now (${now})."
++
++_scratch_unmount
++
++# Now upgrade to bigtime support
++_scratch_xfs_admin -O bigtime=1
++_scratch_xfs_db -c 'version' | grep -q BIGTIME || \
++	echo "Cannot detect new feature?"
++_check_scratch_fs
++_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
++
++# Mount again, see if our quota timer survived
++_scratch_mount
++
++# Set a very generous grace period and quota limits on uid 2 after upgrading
++$XFS_QUOTA_PROG -x -c 'timer -u -b -d 2147483647' $SCRATCH_MNT
++$XFS_QUOTA_PROG -x -c 'limit -u bsoft=10000 bhard=150000 2' $SCRATCH_MNT
++
++# Query the grace periods to see if they got set properly after the upgrade.
++repquota -upn $SCRATCH_MNT > $tmp.repquota
++cat $tmp.repquota >> $seqres.full
++grace1="$(repquota -upn $SCRATCH_MNT | grep '^#1' | awk '{print $6}')"
++grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
++now="$(date +%s)"
++
++# Make sure that uid 1's expiration is in the future...
++res1="$(echo "${grace} > ${now}" | $BC_PROG)"
++test "${res1}" -eq 1 || echo "Expected uid 1 expiry (${grace1}) to be after now (${now})."
++
++# ...and that uid 2's expiration is after uid 1's...
++res2="$(echo "${grace2} > ${grace1}" | $BC_PROG)"
++test "${res2}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after uid 1 (${grace1})."
++
++# ...and that uid 2's expiration is after 2038 if right now is far enough
++# past 1970 that our generous grace period would provide for that.
++res3="$(echo "(${now} < 100) || (${grace2} > 2147483648)" | $BC_PROG)"
++test "${res3}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after 2038."
++
++_scratch_cycle_mount
++
++# Query the grace periods to see if they survived a remount.
++repquota -upn $SCRATCH_MNT > $tmp.repquota
++cat $tmp.repquota >> $seqres.full
++grace1="$(repquota -upn $SCRATCH_MNT | grep '^#1' | awk '{print $6}')"
++grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
++now="$(date +%s)"
++
++# Make sure that uid 1's expiration is in the future...
++res1="$(echo "${grace} > ${now}" | $BC_PROG)"
++test "${res1}" -eq 1 || echo "Expected uid 1 expiry (${grace1}) to be after now (${now})."
++
++# ...and that uid 2's expiration is after uid 1's...
++res2="$(echo "${grace2} > ${grace1}" | $BC_PROG)"
++test "${res2}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after uid 1 (${grace1})."
++
++# ...and that uid 2's expiration is after 2038 if right now is far enough
++# past 1970 that our generous grace period would provide for that.
++res3="$(echo "(${now} < 100) || (${grace2} > 2147483648)" | $BC_PROG)"
++test "${res3}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after 2038."
++
++# Now try setting uid 2's expiration to Feb 22 22:22:22 UTC 2222
++new_expiry=$(date -d 'Feb 22 22:22:22 UTC 2222' +%s)
++now=$(date +%s)
++test $now -ge $new_expiry && \
++	echo "Now is after February 2222?  Expect problems."
++expiry_delta=$((new_expiry - now))
++
++echo "setting expiration to $new_expiry - $now = $expiry_delta" >> $seqres.full
++$XFS_QUOTA_PROG -x -c "timer -u $expiry_delta 2" -c 'report' $SCRATCH_MNT >> $seqres.full
++
++# Did we get an expiration within 5s of the target range?
++grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
++echo "grace2 is $grace2" >> $seqres.full
++_within_tolerance "grace2 expiry" $grace2 $new_expiry 5 -v
++
++_scratch_cycle_mount
++
++# ...and is it still within 5s after a remount?
++grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
++echo "grace2 is $grace2" >> $seqres.full
++_within_tolerance "grace2 expiry after remount" $grace2 $new_expiry 5 -v
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/909.out b/tests/xfs/909.out
+new file mode 100644
+index 00000000..88898408
+--- /dev/null
++++ b/tests/xfs/909.out
+@@ -0,0 +1,4 @@
++QA output created by 909
++Adding large timestamp support to filesystem.
++grace2 expiry is in range
++grace2 expiry after remount is in range
 diff --git a/tests/xfs/group b/tests/xfs/group
-index 90d2098f..a585c3b4 100644
+index a585c3b4..58b17ca7 100644
 --- a/tests/xfs/group
 +++ b/tests/xfs/group
-@@ -510,6 +510,7 @@
+@@ -509,6 +509,8 @@
+ 765 auto quick quota
  768 auto quick repair
  770 auto repair
++908 auto quick bigtime
++909 auto quick bigtime quota
  910 auto quick inobtcount
-+911 auto quick bigtime
+ 911 auto quick bigtime
  915 auto quick quota
- 917 auto quick db
- 918 auto quick db
 
