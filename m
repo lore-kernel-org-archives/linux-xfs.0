@@ -2,183 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2D39C433DB
-	for <linux-xfs@archiver.kernel.org>; Sat, 13 Feb 2021 05:48:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05436C433DB
+	for <linux-xfs@archiver.kernel.org>; Sat, 13 Feb 2021 15:25:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B43F264D9D
-	for <linux-xfs@archiver.kernel.org>; Sat, 13 Feb 2021 05:48:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2E6164E39
+	for <linux-xfs@archiver.kernel.org>; Sat, 13 Feb 2021 15:25:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230460AbhBMFsT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 13 Feb 2021 00:48:19 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57584 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230397AbhBMFsS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 13 Feb 2021 00:48:18 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7C50364E9D;
-        Sat, 13 Feb 2021 05:47:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613195251;
-        bh=BxvOtBu3s4NGGg0KSeTA17OYiBE+m793npTh3O45m10=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=FIRnHE/SqN26N0KxRLL0ietFo0U8j+WtnxNvQWYwRRyJ3XMKvzepgd5O9L+oDCGDS
-         7x0GV8PprY+dDsf4gyI3KJXTwkfrk8W2k1GZLyKdRX3MjntrJqd/GAgNQZTwXU6XLs
-         R5uXoawPZ2YJk/gniKdYRWtXfFUvH7ZIyjwBg+g6XR5iojvs4Jg/jX5TYqCj3pDPU4
-         UIJxtozoVbHMEwXsmLwC3gJHAXCXNDefgV+7+lFcuSG6J0W0gd3moavYvzfhNqJNgr
-         9btKQqctzPGhNHtICLPE6+l+9PKn3MRse+efqqfze0jscp0jawCgOnv/dQPxW4KfXJ
-         kA0XF2TNK14og==
-Subject: [PATCH 5/5] xfs_repair: enable bigtime upgrade via repair
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>,
-        linux-xfs@vger.kernel.org, hch@lst.de, bfoster@redhat.com
-Date:   Fri, 12 Feb 2021 21:47:31 -0800
-Message-ID: <161319525117.423010.6467565288868099323.stgit@magnolia>
-In-Reply-To: <161319522350.423010.5768275226481994478.stgit@magnolia>
-References: <161319522350.423010.5768275226481994478.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S229625AbhBMPZj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 13 Feb 2021 10:25:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46386 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229531AbhBMPZi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Feb 2021 10:25:38 -0500
+Received: from mail-qk1-x733.google.com (mail-qk1-x733.google.com [IPv6:2607:f8b0:4864:20::733])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1B36C061756;
+        Sat, 13 Feb 2021 07:24:57 -0800 (PST)
+Received: by mail-qk1-x733.google.com with SMTP id b14so2589634qkk.0;
+        Sat, 13 Feb 2021 07:24:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=cn5DRnKZtx+N/DSDNbOr35OtZ897mnYK7r3wNoPvGrE=;
+        b=mBEe7x8c7sg1v2IOuf7iKnCnu/OrkoNoI3jLoweh/k6aEQ8Q6BIeY41h91NFmHB6Sn
+         E9EUPaynbDYubK0BbamxIRmbBRKW5DO5BmZUyGw4epYc009pgCkl4WaAn6dixmGl9FeT
+         HsBJ1Zys5ax9XGIEaPm7t079uQ/kj5vmlDUVIl7LbF/Xvg4SeRcfmiNFuVnRpvqQIBQZ
+         p9bSbG+3L/i4vr1wG0lyCUIeJZX8AsP7MIpCuOQTvxnCrg1+5j1PSS3JDHJSxTiPouAu
+         uJmOAbOPkOzqCgvMyvHHKU/01l7u34PAcjCm/NMRDViHW9XBa3SQCVcDxo8paxlcOIbh
+         p92Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=cn5DRnKZtx+N/DSDNbOr35OtZ897mnYK7r3wNoPvGrE=;
+        b=f9mNmKvl8JkKXBks5ZGxSg7c/Gt/f3xmH5TZKDzyRVssuOIiaVDY4hthNo1BGFVyyK
+         CoeJQBWs6mOAF7KoN65qhi/OY/pYlkmZlMVbLykm01LmnqEnaspRJL3mUNHc7EJ7zTOt
+         HUIhBH9CvsNRssTuU4y304XW8GNbIqZ0o1heD4TwTvyQWjRtWOCp5VpP54CFJ2JGgVhp
+         Vw51QH0q0K1caogXqVqo8TCMAPSKaXvCbZUzYJB+2VL+rGUCDZrLvQ2lxFJgpCGBU4t/
+         WcKZ0sMxuCjfEgeUTepctkwszpwcPOEPg3EpeBHf6gZjYZgRC0rBIbU1azYRMazuZdhg
+         CI8w==
+X-Gm-Message-State: AOAM530W5Q0MEfyMseU5xQnoyKn/DMEolvtJUBoXXk3KWVL7M6Glwrm1
+        +Vq2LWcBwFF0hKS53ehBD+k=
+X-Google-Smtp-Source: ABdhPJzW1XzZh5FgqguEfGBJYHJROuJiGxy4PoqBqhXpi5nlPZUp86aVInua2ljljbvn6FPdH4EO4Q==
+X-Received: by 2002:a05:620a:204b:: with SMTP id d11mr7528350qka.429.1613229897120;
+        Sat, 13 Feb 2021 07:24:57 -0800 (PST)
+Received: from localhost.localdomain ([156.146.55.129])
+        by smtp.gmail.com with ESMTPSA id q3sm8364417qkb.73.2021.02.13.07.24.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 13 Feb 2021 07:24:56 -0800 (PST)
+From:   Bhaskar Chowdhury <unixbhaskar@gmail.com>
+To:     djwong@kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     rdunlap@infradead.org, Bhaskar Chowdhury <unixbhaskar@gmail.com>
+Subject: [PATCH] docs: ABI: Fix the spelling oustanding to outstanding in the file sysfs-fs-xfs
+Date:   Sat, 13 Feb 2021 20:54:36 +0530
+Message-Id: <20210213152436.1639458-1-unixbhaskar@gmail.com>
+X-Mailer: git-send-email 2.30.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
 
-Upgrade existing V5 filesystems to support large timestamps up to 2486.
+s/oustanding/outstanding/
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
 ---
- man/man8/xfs_admin.8 |    6 ++++++
- repair/globals.c     |    1 +
- repair/globals.h     |    1 +
- repair/phase2.c      |   23 +++++++++++++++++++++++
- repair/xfs_repair.c  |   11 +++++++++++
- 5 files changed, 42 insertions(+)
+ Documentation/ABI/testing/sysfs-fs-xfs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-index 4ba718d8..25437ff1 100644
---- a/man/man8/xfs_admin.8
-+++ b/man/man8/xfs_admin.8
-@@ -145,6 +145,12 @@ This reduces mount time by speeding up metadata space reservation calculations.
- The filesystem cannot be downgraded after this feature is enabled.
- Once enabled, the filesystem will not be writable by older kernels.
- This feature was added to Linux 5.10.
-+.TP 0.4i
-+.B bigtime
-+Upgrade a filesystem to support larger timestamps up to the year 2486.
-+The filesystem cannot be downgraded after this feature is enabled.
-+Once enabled, the filesystem will not be mountable by older kernels.
-+This feature was added to Linux 5.10.
- .RE
- .TP
- .BI \-U " uuid"
-diff --git a/repair/globals.c b/repair/globals.c
-index 47d90bd3..506a4e72 100644
---- a/repair/globals.c
-+++ b/repair/globals.c
-@@ -49,6 +49,7 @@ int	rt_spec;		/* Realtime dev specified as option */
- int	convert_lazy_count;	/* Convert lazy-count mode on/off */
- int	lazy_count;		/* What to set if to if converting */
- bool	add_inobtcount;		/* add inode btree counts to AGI */
-+bool	add_bigtime;		/* add support for timestamps up to 2486 */
- 
- /* misc status variables */
- 
-diff --git a/repair/globals.h b/repair/globals.h
-index 5b6fe4d4..929b82be 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -90,6 +90,7 @@ extern int	rt_spec;		/* Realtime dev specified as option */
- extern int	convert_lazy_count;	/* Convert lazy-count mode on/off */
- extern int	lazy_count;		/* What to set if to if converting */
- extern bool	add_inobtcount;		/* add inode btree counts to AGI */
-+extern bool	add_bigtime;		/* add support for timestamps up to 2486 */
- 
- /* misc status variables */
- 
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 96074a1d..cb9adf1d 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -158,6 +158,27 @@ set_inobtcount(
- 	return true;
- }
- 
-+static bool
-+set_bigtime(
-+	struct xfs_mount	*mp)
-+{
-+	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-+		printf(
-+	_("Large timestamp feature only supported on V5 filesystems.\n"));
-+		exit(0);
-+	}
-+
-+	if (xfs_sb_version_hasbigtime(&mp->m_sb)) {
-+		printf(_("Filesystem already supports large timestamps.\n"));
-+		exit(0);
-+	}
-+
-+	printf(_("Adding large timestamp support to filesystem.\n"));
-+	mp->m_sb.sb_features_incompat |= (XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR |
-+					  XFS_SB_FEAT_INCOMPAT_BIGTIME);
-+	return true;
-+}
-+
- /* Perform the user's requested upgrades on filesystem. */
- static void
- upgrade_filesystem(
-@@ -169,6 +190,8 @@ upgrade_filesystem(
- 
- 	if (add_inobtcount)
- 		dirty |= set_inobtcount(mp);
-+	if (add_bigtime)
-+		dirty |= set_bigtime(mp);
- 
-         if (no_modify || !dirty)
-                 return;
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 2d9dca6b..e6c29dca 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -66,12 +66,14 @@ static char *o_opts[] = {
- enum c_opt_nums {
- 	CONVERT_LAZY_COUNT = 0,
- 	CONVERT_INOBTCOUNT,
-+	CONVERT_BIGTIME,
- 	C_MAX_OPTS,
- };
- 
- static char *c_opts[] = {
- 	[CONVERT_LAZY_COUNT]	= "lazycount",
- 	[CONVERT_INOBTCOUNT]	= "inobtcount",
-+	[CONVERT_BIGTIME]	= "bigtime",
- 	[C_MAX_OPTS]		= NULL,
- };
- 
-@@ -313,6 +315,15 @@ process_args(int argc, char **argv)
- 		_("-c inobtcount only supports upgrades\n"));
- 					add_inobtcount = true;
- 					break;
-+				case CONVERT_BIGTIME:
-+					if (!val)
-+						do_abort(
-+		_("-c bigtime requires a parameter\n"));
-+					if (strtol(val, NULL, 0) != 1)
-+						do_abort(
-+		_("-c bigtime only supports upgrades\n"));
-+					add_bigtime = true;
-+					break;
- 				default:
- 					unknown('c', val);
- 					break;
+diff --git a/Documentation/ABI/testing/sysfs-fs-xfs b/Documentation/ABI/testing/sysfs-fs-xfs
+index ea0cc8c42093..f704925f6fe9 100644
+--- a/Documentation/ABI/testing/sysfs-fs-xfs
++++ b/Documentation/ABI/testing/sysfs-fs-xfs
+@@ -33,7 +33,7 @@ Contact:	xfs@oss.sgi.com
+ Description:
+ 		The current state of the log write grant head. It
+ 		represents the total log reservation of all currently
+-		oustanding transactions, including regrants due to
++		outstanding transactions, including regrants due to
+ 		rolling transactions. The grant head is exported in
+ 		"cycle:bytes" format.
+ Users:		xfstests
+--
+2.30.1
 
