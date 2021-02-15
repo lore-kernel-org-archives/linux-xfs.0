@@ -2,133 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FDDEC433E6
-	for <linux-xfs@archiver.kernel.org>; Sun, 14 Feb 2021 23:39:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB469C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Feb 2021 14:00:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0BF864DEA
-	for <linux-xfs@archiver.kernel.org>; Sun, 14 Feb 2021 23:38:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4F0E64E31
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Feb 2021 14:00:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229899AbhBNXin (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 14 Feb 2021 18:38:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37776 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229881AbhBNXin (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 14 Feb 2021 18:38:43 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0AB1F64DEA;
-        Sun, 14 Feb 2021 23:38:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613345882;
-        bh=1mL3FqIW/Z1riGHUFrBcsw/2g74ZNcTC1MqizKwV19w=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=WjiMcPyCy45EoxTMt1Ljqlw7WOkm8rKVrzJVhNGDlOL4IaJVeE2Nsf88qw/SGnN1c
-         v8/IK8PmVhcj984yYj7dxjy05U/yJKVpSLh3Vf3hsgCyDsJNey3DwcsA4okE0xA731
-         6Dc+Em0hPRnfEYOkmBU8sDlUzbifSKnzE8DAr8m8IRx36v9YhqJIMQurII6EHxa5br
-         o+dlxGosGEqktna/DQR6VknJCiOIr/y+jqN5w07JcKS6ROJEZW/GgfNibOKvUv2jW6
-         BkBNQmT1mkvEZ2J30wv8tDzYLPz4hxDSUJG7qMct85rU5eS68XKT+7LnZjMrkFEy1l
-         2wNtU29qrsNYA==
-Date:   Sun, 14 Feb 2021 15:38:01 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Stephen Rothwell <sfr@canb.auug.org.au>
-Cc:     David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        Christoph Hellwig <hch@lst.de>,
+        id S229802AbhBOOAV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 Feb 2021 09:00:21 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:40977 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229908AbhBOOAU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 15 Feb 2021 09:00:20 -0500
+Received: from [192.168.0.5] (ip5f5aed2c.dynamic.kabel-deutschland.de [95.90.237.44])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id BDAB32064792F;
+        Mon, 15 Feb 2021 14:36:38 +0100 (CET)
+Subject: Re: [PATCH] xfs: Wake CIL push waiters more reliably
+To:     Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: Re: linux-next: manual merge of the xfs tree with the pidfd tree
-Message-ID: <20210214233801.GP7193@magnolia>
-References: <20210208103348.1a0beef9@canb.auug.org.au>
- <20210215094131.7b47c1c5@canb.auug.org.au>
+        it+linux-xfs@molgen.mpg.de
+References: <1705b481-16db-391e-48a8-a932d1f137e7@molgen.mpg.de>
+ <20201229235627.33289-1-buczek@molgen.mpg.de>
+ <20201230221611.GC164134@dread.disaster.area>
+ <20210104162353.GA254939@bfoster>
+ <20210107215444.GG331610@dread.disaster.area>
+ <20210108165657.GC893097@bfoster> <20210111163848.GC1091932@bfoster>
+ <20210113215348.GI331610@dread.disaster.area>
+From:   Donald Buczek <buczek@molgen.mpg.de>
+Message-ID: <8416da5f-e8e5-8ec6-df3e-5ca89339359c@molgen.mpg.de>
+Date:   Mon, 15 Feb 2021 14:36:38 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210215094131.7b47c1c5@canb.auug.org.au>
+In-Reply-To: <20210113215348.GI331610@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 15, 2021 at 09:41:31AM +1100, Stephen Rothwell wrote:
-> Hi all,
-> 
-> On Mon, 8 Feb 2021 10:33:48 +1100 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> >
-> > Today's linux-next merge of the xfs tree got a conflict in:
-> > 
-> >   fs/xfs/xfs_ioctl.c
-> > 
-> > between commit:
-> > 
-> >   f736d93d76d3 ("xfs: support idmapped mounts")
-> > 
-> > from the pidfd tree and commit:
-> > 
-> >   7317a03df703 ("xfs: refactor inode ownership change transaction/inode/quota allocation idiom")
-> > 
-> > from the xfs tree.
-> > 
-> > I fixed it up (see below) and can carry the fix as necessary. This
-> > is now fixed as far as linux-next is concerned, but any non trivial
-> > conflicts should be mentioned to your upstream maintainer when your tree
-> > is submitted for merging.  You may also want to consider cooperating
-> > with the maintainer of the conflicting tree to minimise any particularly
-> > complex conflicts.
+On 13.01.21 22:53, Dave Chinner wrote:
+> [...]
+> I agree that a throttling fix is needed, but I'm trying to
+> understand the scope and breadth of the problem first instead of
+> jumping the gun and making the wrong fix for the wrong reasons that
+> just papers over the underlying problems that the throttling bug has
+> made us aware of...
 
-Oops, sorry, this email fell off my radar.  Your fixup looks good to me;
-thanks for the reminder.
+Are you still working on this?
 
---D
+If it takes more time to understand the potential underlying problem, the fix for the problem at hand should be applied.
 
-> > 
-> > diff --cc fs/xfs/xfs_ioctl.c
-> > index 3d4c7ca080fb,248083ea0276..000000000000
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@@ -1280,9 -1275,9 +1280,10 @@@ xfs_ioctl_setattr_prepare_dax
-> >    */
-> >   static struct xfs_trans *
-> >   xfs_ioctl_setattr_get_trans(
-> > - 	struct file		*file)
-> >  -	struct xfs_inode	*ip,
-> > ++	struct file		*file,
-> > + 	struct xfs_dquot	*pdqp)
-> >   {
-> >  +	struct xfs_inode	*ip = XFS_I(file_inode(file));
-> >   	struct xfs_mount	*mp = ip->i_mount;
-> >   	struct xfs_trans	*tp;
-> >   	int			error = -EROFS;
-> > @@@ -1470,9 -1461,9 +1469,9 @@@ xfs_ioctl_setattr
-> >   
-> >   	xfs_ioctl_setattr_prepare_dax(ip, fa);
-> >   
-> > - 	tp = xfs_ioctl_setattr_get_trans(file);
-> >  -	tp = xfs_ioctl_setattr_get_trans(ip, pdqp);
-> > ++	tp = xfs_ioctl_setattr_get_trans(file, pdqp);
-> >   	if (IS_ERR(tp)) {
-> > - 		code = PTR_ERR(tp);
-> > + 		error = PTR_ERR(tp);
-> >   		goto error_free_dquots;
-> >   	}
-> >   
-> > @@@ -1615,7 -1599,7 +1606,7 @@@ xfs_ioc_setxflags
-> >   
-> >   	xfs_ioctl_setattr_prepare_dax(ip, &fa);
-> >   
-> > - 	tp = xfs_ioctl_setattr_get_trans(filp);
-> >  -	tp = xfs_ioctl_setattr_get_trans(ip, NULL);
-> > ++	tp = xfs_ioctl_setattr_get_trans(filp, NULL);
-> >   	if (IS_ERR(tp)) {
-> >   		error = PTR_ERR(tp);
-> >   		goto out_drop_write;
-> 
-> With the merge window about to open, this is a reminder that this
-> conflict still exists.
-> 
-> -- 
+This is a real world problem, accidentally found in the wild. It appears very rarely, but it freezes a filesystem or the whole system. It exists in 5.7 , 5.8 , 5.9 , 5.10 and 5.11 and is caused by c7f87f3984cf ("xfs: fix use-after-free on CIL context on shutdown") which silently added a condition to the wakeup. The condition is based on a wrong assumption.
+
+Why is this "papering over"? If a reminder was needed, there were better ways than randomly hanging the system.
+
+Why is
+
+     if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
+         wake_up_all(&cil->xc_push_wait);
+
+, which doesn't work reliably, preferable to
+
+     if (waitqueue_active(&cil->xc_push_wait))
+         wake_up_all(&cil->xc_push_wait);
+
+which does?
+
+Best
+   Donald
+
 > Cheers,
-> Stephen Rothwell
-
-
+> 
+> Dave
