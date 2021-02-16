@@ -2,111 +2,214 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B90CC433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Feb 2021 11:20:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EAC0C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Feb 2021 11:57:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C89CA64DE0
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Feb 2021 11:20:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19C0564DDA
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Feb 2021 11:57:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229742AbhBPLUL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Feb 2021 06:20:11 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:22103 "EHLO
+        id S229830AbhBPL5L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Feb 2021 06:57:11 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:58844 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230081AbhBPLTw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Feb 2021 06:19:52 -0500
+        by vger.kernel.org with ESMTP id S230257AbhBPL5I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Feb 2021 06:57:08 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1613474307;
+        s=mimecast20190719; t=1613476539;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=o502SusQ/VEabZ3Jb79gv77bHufENRAKQniPP2zan0o=;
-        b=RgkDRhUYI27xRXZJ5Nb184V2meSCCn0IvQSwg1oaP7whitSwOGFKEaNJtH2CkvbfTzZ1Zv
-        ZMXwL5KaeW5bm5rI7yoJ4afsiGdY1u8IGkgl6bZi5iIMrnL+v+FwgXqDrnj+fpOIUts2M4
-        jwTkS+9QQvGGty5ct6OWs3yLUNr7Kkg=
+        bh=Q313n2HGCFE/utrby92DTKNpmxY3y1mO8GfF31woKAg=;
+        b=BfYJbQ0tnEtqlXmYCPOmPUq7zKvUAssVWH+7LbKMp+Km202IVkIq2NKPF0EoKgz+Y8DM+i
+        2bcj5yTOpxk6EHeBstofnwU89UD838oBWlNRcr2QYYLN20VRCPjAiK74kHIORHn16l8ssD
+        QH5exb5/eOWflLodjXaiHB98MOTTBy8=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-145-9TKQoWd2N_CGqJh0Y9c6LQ-1; Tue, 16 Feb 2021 06:18:25 -0500
-X-MC-Unique: 9TKQoWd2N_CGqJh0Y9c6LQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-397-moHFaP23PVuHY8Kgp7juCg-1; Tue, 16 Feb 2021 06:55:37 -0500
+X-MC-Unique: moHFaP23PVuHY8Kgp7juCg-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AD9F8195D566;
-        Tue, 16 Feb 2021 11:18:23 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CA32F801965;
+        Tue, 16 Feb 2021 11:55:36 +0000 (UTC)
 Received: from bfoster (ovpn-113-234.rdu2.redhat.com [10.10.113.234])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id CBDD019712;
-        Tue, 16 Feb 2021 11:18:22 +0000 (UTC)
-Date:   Tue, 16 Feb 2021 06:18:20 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 404A21002382;
+        Tue, 16 Feb 2021 11:55:36 +0000 (UTC)
+Date:   Tue, 16 Feb 2021 06:55:34 -0500
 From:   Brian Foster <bfoster@redhat.com>
-To:     Donald Buczek <buczek@molgen.mpg.de>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+linux-xfs@molgen.mpg.de
-Subject: Re: [PATCH] xfs: Wake CIL push waiters more reliably
-Message-ID: <20210216111820.GA534175@bfoster>
-References: <1705b481-16db-391e-48a8-a932d1f137e7@molgen.mpg.de>
- <20201229235627.33289-1-buczek@molgen.mpg.de>
- <20201230221611.GC164134@dread.disaster.area>
- <20210104162353.GA254939@bfoster>
- <20210107215444.GG331610@dread.disaster.area>
- <20210108165657.GC893097@bfoster>
- <20210111163848.GC1091932@bfoster>
- <20210113215348.GI331610@dread.disaster.area>
- <8416da5f-e8e5-8ec6-df3e-5ca89339359c@molgen.mpg.de>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs_repair: set NEEDSREPAIR the first time we write
+ to a filesystem
+Message-ID: <20210216115534.GB534175@bfoster>
+References: <161319520460.422860.10568013013578673175.stgit@magnolia>
+ <161319521070.422860.2540813932323979688.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <8416da5f-e8e5-8ec6-df3e-5ca89339359c@molgen.mpg.de>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <161319521070.422860.2540813932323979688.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 15, 2021 at 02:36:38PM +0100, Donald Buczek wrote:
-> On 13.01.21 22:53, Dave Chinner wrote:
-> > [...]
-> > I agree that a throttling fix is needed, but I'm trying to
-> > understand the scope and breadth of the problem first instead of
-> > jumping the gun and making the wrong fix for the wrong reasons that
-> > just papers over the underlying problems that the throttling bug has
-> > made us aware of...
+On Fri, Feb 12, 2021 at 09:46:50PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Are you still working on this?
+> Add a hook to the buffer cache so that xfs_repair can intercept the
+> first write to a V5 filesystem to set the NEEDSREPAIR flag.  In the
+> event that xfs_repair dirties the filesystem and goes down, this ensures
+> that the sysadmin will have to re-start repair before mounting.
 > 
-> If it takes more time to understand the potential underlying problem, the fix for the problem at hand should be applied.
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  include/xfs_mount.h |    4 ++
+>  libxfs/rdwr.c       |    4 ++
+>  repair/xfs_repair.c |   95 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 103 insertions(+)
 > 
-> This is a real world problem, accidentally found in the wild. It appears very rarely, but it freezes a filesystem or the whole system. It exists in 5.7 , 5.8 , 5.9 , 5.10 and 5.11 and is caused by c7f87f3984cf ("xfs: fix use-after-free on CIL context on shutdown") which silently added a condition to the wakeup. The condition is based on a wrong assumption.
 > 
-> Why is this "papering over"? If a reminder was needed, there were better ways than randomly hanging the system.
-> 
-> Why is
-> 
->     if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
->         wake_up_all(&cil->xc_push_wait);
-> 
-> , which doesn't work reliably, preferable to
-> 
->     if (waitqueue_active(&cil->xc_push_wait))
->         wake_up_all(&cil->xc_push_wait);
-> 
-> which does?
-> 
+...
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index 90d1a95a..12e319ae 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -720,6 +720,8 @@ clear_needsrepair(
+>  	struct xfs_buf		*bp;
+>  	int			error;
+>  
+> +	mp->m_buf_writeback_fn = NULL;
+> +
 
-JFYI, Dave followed up with a patch a couple weeks or so ago:
+Slight impedence mismatch in that we set the callback unconditionally
+(assuming crc=1) but we only get to this call if needsrepair is set.
 
-https://lore.kernel.org/linux-xfs/20210128044154.806715-5-david@fromorbit.com/
+>  	/*
+>  	 * If we're going to clear NEEDSREPAIR, we need to make absolutely sure
+>  	 * that everything is ok with the ondisk filesystem.  Make sure any
+> @@ -751,6 +753,95 @@ clear_needsrepair(
+>  		libxfs_buf_relse(bp);
+>  }
+>  
+> +static void
+> +update_sb_crc_only(
+> +	struct xfs_buf		*bp)
+> +{
+> +	xfs_buf_update_cksum(bp, XFS_SB_CRC_OFF);
+> +}
+> +
+> +/* Forcibly write the primary superblock with the NEEDSREPAIR flag set. */
+> +static void
+> +force_needsrepair(
+> +	struct xfs_mount	*mp)
+> +{
+> +	struct xfs_buf_ops	fake_ops;
+> +	struct xfs_buf		*bp;
+> +	int			error;
+> +
+> +	if (!xfs_sb_version_hascrc(&mp->m_sb) ||
+> +	    xfs_sb_version_needsrepair(&mp->m_sb))
+> +		return;
+> +
+> +	bp = libxfs_getsb(mp);
+> +	if (!bp || bp->b_error) {
+> +		do_log(
+> +	_("couldn't get superblock to set needsrepair, err=%d\n"),
+> +				bp ? bp->b_error : ENOMEM);
+> +		return;
+> +	} else {
+> +		/*
+> +		 * It's possible that we need to set NEEDSREPAIR before we've
+> +		 * had a chance to fix the summary counters in the primary sb.
+> +		 * With the exception of those counters, phase 1 already
+> +		 * ensured that the geometry makes sense.
+> +		 *
+> +		 * Bad summary counters in the primary super can cause the
+> +		 * write verifier to fail, so substitute a dummy that only sets
+> +		 * the CRC.  In the event of a crash, NEEDSREPAIR will prevent
+> +		 * the kernel from mounting our potentially damaged filesystem
+> +		 * until repair is run again, so it's ok to bypass the usual
+> +		 * verification in this one case.
+> +		 */
+> +		fake_ops = xfs_sb_buf_ops; /* struct copy */
+> +		fake_ops.verify_write = update_sb_crc_only;
+> +
+> +		mp->m_sb.sb_features_incompat |=
+> +				XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> +		libxfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+> +
+> +		/* Force the primary super to disk immediately. */
+> +		bp->b_ops = &fake_ops;
+> +		error = -libxfs_bwrite(bp);
+
+This looks like it calls back into the writeback hook before it's been
+cleared. I'm guessing the xfs_sb_version_needsrepair() check above cuts
+off any recursion issues, but it might be cleaner to clear the callback
+pointer first.
+
+> +		bp->b_ops = &xfs_sb_buf_ops;
+> +		if (error)
+> +			do_log(_("couldn't force needsrepair, err=%d\n"), error);
+> +	}
+> +	if (bp)
+> +		libxfs_buf_relse(bp);
+
+Doesn't appear we can get here with bp == NULL. Otherwise the rest looks
+reasonable to me.
 
 Brian
 
-> Best
->   Donald
-> 
-> > Cheers,
-> > 
-> > Dave
+> +}
+> +
+> +/* Intercept the first write to the filesystem so we can set NEEDSREPAIR. */
+> +static void
+> +repair_capture_writeback(
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_mount	*mp = bp->b_mount;
+> +	static pthread_mutex_t	wb_mutex = PTHREAD_MUTEX_INITIALIZER;
+> +
+> +	/* Higher level code modifying a superblock must set NEEDSREPAIR. */
+> +	if (bp->b_ops == &xfs_sb_buf_ops || bp->b_bn == XFS_SB_DADDR)
+> +		return;
+> +
+> +	pthread_mutex_lock(&wb_mutex);
+> +
+> +	/*
+> +	 * If someone else already dropped the hook, then needsrepair has
+> +	 * already been set on the filesystem and we can unlock.
+> +	 */
+> +	if (mp->m_buf_writeback_fn != repair_capture_writeback)
+> +		goto unlock;
+> +
+> +	/*
+> +	 * If we get here, the buffer being written is not a superblock, and
+> +	 * needsrepair needs to be set.
+> +	 */
+> +	force_needsrepair(mp);
+> +	mp->m_buf_writeback_fn = NULL;
+> +unlock:
+> +	pthread_mutex_unlock(&wb_mutex);
+> +}
+> +
+>  int
+>  main(int argc, char **argv)
+>  {
+> @@ -847,6 +938,10 @@ main(int argc, char **argv)
+>  	if (verbose > 2)
+>  		mp->m_flags |= LIBXFS_MOUNT_WANT_CORRUPTED;
+>  
+> +	/* Capture the first writeback so that we can set needsrepair. */
+> +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> +		mp->m_buf_writeback_fn = repair_capture_writeback;
+> +
+>  	/*
+>  	 * set XFS-independent status vars from the mount/sb structure
+>  	 */
 > 
 
