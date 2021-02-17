@@ -2,168 +2,120 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF918C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Feb 2021 19:16:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D03B2C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Feb 2021 02:57:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8336E64E79
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Feb 2021 19:16:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8970E64DBD
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Feb 2021 02:57:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229780AbhBPTQI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Feb 2021 14:16:08 -0500
-Received: from sandeen.net ([63.231.237.45]:39028 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229761AbhBPTQH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 16 Feb 2021 14:16:07 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 9F7124872E4;
-        Tue, 16 Feb 2021 13:15:19 -0600 (CST)
-To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc:     nathans@redhat.com
-References: <20200930063532.142256-1-david@fromorbit.com>
- <20200930063532.142256-2-david@fromorbit.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH 1/2] xfs: stats expose padding value at end of qm line
-Message-ID: <8cc99c4b-df46-046a-b4a7-57654f3fb5d4@sandeen.net>
-Date:   Tue, 16 Feb 2021 13:15:25 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.7.1
+        id S230071AbhBQC5D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Feb 2021 21:57:03 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:9771 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229544AbhBQC5B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Feb 2021 21:57:01 -0500
+X-IronPort-AV: E=Sophos;i="5.81,184,1610380800"; 
+   d="scan'208";a="104561557"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 17 Feb 2021 10:56:13 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id 374484CE72EC;
+        Wed, 17 Feb 2021 10:56:13 +0800 (CST)
+Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
+ (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 17 Feb
+ 2021 10:56:11 +0800
+Subject: Re: [PATCH v3 05/11] mm, fsdax: Refactor memory-failure handler for
+ dax mapping
+To:     Christoph Hellwig <hch@lst.de>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <dm-devel@redhat.com>,
+        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <agk@redhat.com>, <snitzer@redhat.com>,
+        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
+References: <20210208105530.3072869-1-ruansy.fnst@cn.fujitsu.com>
+ <20210208105530.3072869-6-ruansy.fnst@cn.fujitsu.com>
+ <20210210133347.GD30109@lst.de>
+From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <45a20d88-63ee-d678-ad86-6ccd8cdf7453@cn.fujitsu.com>
+Date:   Wed, 17 Feb 2021 10:56:11 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200930063532.142256-2-david@fromorbit.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20210210133347.GD30109@lst.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) To
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
+X-yoursite-MailScanner-ID: 374484CE72EC.AB75D
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/30/20 1:35 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> There are 8 quota stats exposed, but:
-> 
-> $ grep qm /proc/fs/xfs/stat
-> qm 0 0 0 1889 308893 0 0 0 0
-> $
-> 
-> There are 9 values exposed. Code inspection reveals that the struct
-> xfsstats has a hole in the structure where the values change from 32
-> bit counters to 64 bit counters. pahole output:
-> 
-> ....
-> uint32_t                   xs_qm_dquot;          /*   748     4 */
-> uint32_t                   xs_qm_dquot_unused;   /*   752     4 */
-> 
-> /* XXX 4 bytes hole, try to pack */
-> 
-> uint64_t                   xs_xstrat_bytes;      /*   760     8 */
-> ....
-> 
-> Fix this by defining an "end of 32 bit variables" variable that
-> we then use to define the end of the quota line. This will then
-> ensure that we print the correct number of values regardless of
-> structure layout.
-> 
-> However, ABI requirements for userspace parsers mean we cannot
-> remove the output that results from this hole, so we also need to
-> explicitly define this unused value until such time that we actually
-> add a new stat that makes the output meaningful.
-> 
-> And now we have a defined end of 32bit variables, update the  stats
-> union to be sized to match all the 32 bit variables correctly.
-> 
-> Output with this patch:
-> 
-> $ grep qm /proc/fs/xfs/stat
-> qm 0 0 0 326 1802 0 6 3 0
-> $
-> 
-> Reported-by: Nathan Scott <nathans@redhat.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-This makes sense, and fixes a real bug, so seems like it could
-get merged:
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 
-Now, I could bikeshed by suggesting that we avoid holes by doing something like:
-
-
-        static const struct xstats_entry {
-                char    *desc;
-                int     last;
-        } xstats[] = {
-                { "extent_alloc",       xfsstats_last(xs_freeb)  },
-                { "abt",                xfsstats_last(xs_abt_insrec)    },
-...
-
-#define xfsstats_last(f)      ((offsetof(struct __xfsstats, f)+sizeof(f))/sizeof(uint32_t))
-
-etc, so that we point to the last group item, instead of pointing to the next
-group's first item, possibly exposing a hole in between.
-
-but maybe that's just rearranging deck chairs, and I don't have a very strong
-opinion on this.
-
--Eric
-
-
-> ---
->  fs/xfs/xfs_stats.c |  2 +-
->  fs/xfs/xfs_stats.h | 15 +++++++++++++--
->  2 files changed, 14 insertions(+), 3 deletions(-)
+On 2021/2/10 下午9:33, Christoph Hellwig wrote:
+>> +extern int mf_dax_mapping_kill_procs(struct address_space *mapping, pgoff_t index, int flags);
 > 
-> diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-> index f70f1255220b..3409b273f00a 100644
-> --- a/fs/xfs/xfs_stats.c
-> +++ b/fs/xfs/xfs_stats.c
-> @@ -51,7 +51,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
->  		{ "rmapbt",		xfsstats_offset(xs_refcbt_2)	},
->  		{ "refcntbt",		xfsstats_offset(xs_qm_dqreclaims)},
->  		/* we print both series of quota information together */
-> -		{ "qm",			xfsstats_offset(xs_xstrat_bytes)},
-> +		{ "qm",			xfsstats_offset(xs_end_of_32bit_counts)},
->  	};
->  
->  	/* Loop over all stats groups */
-> diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-> index 34d704f703d2..861acf84cb3c 100644
-> --- a/fs/xfs/xfs_stats.h
-> +++ b/fs/xfs/xfs_stats.h
-> @@ -133,6 +133,17 @@ struct __xfsstats {
->  	uint32_t		xs_qm_dqwants;
->  	uint32_t		xs_qm_dquot;
->  	uint32_t		xs_qm_dquot_unused;
-> +	uint32_t		xs_qm_zero_until_next_stat_is_added;
-> +
-> +/*
-> + * Define the end of 32 bit counters as a 32 bit variable so that we don't
-> + * end up exposing an implicit structure padding hole due to the next counters
-> + * being 64bit values. If the number of coutners is odd, this fills the hole. If
-> + * the number of coutners is even the hole is after this variable and the stats
-> + * line will terminate printing at this offset and not print the hole.
-> + */
-> +	uint32_t		xs_end_of_32bit_counts;
-> +
->  /* Extra precision counters */
->  	uint64_t		xs_xstrat_bytes;
->  	uint64_t		xs_write_bytes;
-> @@ -143,8 +154,8 @@ struct __xfsstats {
->  
->  struct xfsstats {
->  	union {
-> -		struct __xfsstats	s;
-> -		uint32_t		a[xfsstats_offset(xs_qm_dquot)];
-> +		struct __xfsstats s;
-> +		uint32_t	a[xfsstats_offset(xs_end_of_32bit_counts)];
->  	};
->  };
->  
+> No nee for the extern, please avoid the overly long line.
+
+OK.
+
+I'd like to confirm one thing...  I have checked all of this patchset by 
+checkpatch.pl and it did not report the overly long line warning.  So, I 
+should still obey the rule of 80 chars one line?
+
 > 
+>> @@ -120,6 +121,13 @@ static int hwpoison_filter_dev(struct page *p)
+>>   	if (PageSlab(p))
+>>   		return -EINVAL;
+>>   
+>> +	if (pfn_valid(page_to_pfn(p))) {
+>> +		if (is_device_fsdax_page(p))
+>> +			return 0;
+>> +		else
+>> +			return -EINVAL;
+>> +	}
+>> +
+> 
+> This looks odd.  For one there is no need for an else after a return.
+> But more importantly page_mapping() as called below pretty much assumes
+> a valid PFN, so something is fishy in this function.
+
+Yes, a mistake here.  I'll fix it.
+
+> 
+>> +	if (is_zone_device_page(p)) {
+>> +		if (is_device_fsdax_page(p))
+>> +			tk->addr = vma->vm_start +
+>> +					((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
+> 
+> The arithmetics here scream for a common helper, I suspect there might
+> be other places that could use the same helper.
+> 
+>> +int mf_dax_mapping_kill_procs(struct address_space *mapping, pgoff_t index, int flags)
+> 
+> Overly long line.  Also the naming scheme with the mf_ seems rather
+> unusual. Maybe dax_kill_mapping_procs?  Also please add a kerneldoc
+> comment describing the function given that it exported.
+> 
+
+OK.  Thanks for your guidance.
+
+
+--
+Thanks,
+Ruan Shiyang.
+
+> 
+
+
