@@ -2,113 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A1D8C433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Feb 2021 22:04:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F13DEC433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Feb 2021 22:27:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C99D64E7A
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Feb 2021 22:04:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5CBF61494
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Feb 2021 22:27:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232948AbhBQWEH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Feb 2021 17:04:07 -0500
-Received: from jabberwock.ucw.cz ([46.255.230.98]:41148 "EHLO
-        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231483AbhBQWED (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Feb 2021 17:04:03 -0500
-Received: by jabberwock.ucw.cz (Postfix, from userid 1017)
-        id 88A821C0B8E; Wed, 17 Feb 2021 23:02:59 +0100 (CET)
-Date:   Wed, 17 Feb 2021 23:02:58 +0100
-From:   Pavel Machek <pavel@ucw.cz>
-To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        dm-devel@redhat.com, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com,
-        xen-devel@lists.xenproject.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org,
-        jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
-        ocfs2-devel@oss.oracle.com, linux-pm@vger.kernel.org,
-        linux-mm@kvack.org, axboe@kernel.dk, philipp.reisner@linbit.com,
-        lars.ellenberg@linbit.com, konrad.wilk@oracle.com,
-        roger.pau@citrix.com, minchan@kernel.org, ngupta@vflare.org,
-        sergey.senozhatsky.work@gmail.com, agk@redhat.com,
-        snitzer@redhat.com, hch@lst.de, sagi@grimberg.me,
-        martin.petersen@oracle.com, viro@zeniv.linux.org.uk, tytso@mit.edu,
-        jaegeuk@kernel.org, ebiggers@kernel.org, djwong@kernel.org,
-        shaggy@kernel.org, konishi.ryusuke@gmail.com, mark@fasheh.com,
-        jlbec@evilplan.org, joseph.qi@linux.alibaba.com,
-        damien.lemoal@wdc.com, naohiro.aota@wdc.com, jth@kernel.org,
-        rjw@rjwysocki.net, len.brown@intel.com, akpm@linux-foundation.org,
-        hare@suse.de, gustavoars@kernel.org, tiwai@suse.de,
-        alex.shi@linux.alibaba.com, asml.silence@gmail.com,
-        ming.lei@redhat.com, tj@kernel.org, osandov@fb.com,
-        bvanassche@acm.org, jefflexu@linux.alibaba.com
-Subject: Re: [RFC PATCH 29/34] power/swap: use bio_new in hib_submit_io
-Message-ID: <20210217220257.GA10791@amd>
-References: <20210128071133.60335-1-chaitanya.kulkarni@wdc.com>
- <20210128071133.60335-30-chaitanya.kulkarni@wdc.com>
+        id S232885AbhBQW1m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Feb 2021 17:27:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38128 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232871AbhBQW1k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Feb 2021 17:27:40 -0500
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9963EC061574
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Feb 2021 14:27:00 -0800 (PST)
+Received: by mail-pg1-x535.google.com with SMTP id p21so3751396pgl.12
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Feb 2021 14:27:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=892G3qKDpz/5gRCzV0/+a3FQcJ0YSGO+MCpBh5ooPEU=;
+        b=dJgZjO2lR3aAW1KhB5+C00IIIBI/vGU6hugyRbRGn5c+IHiRHRiEJCo4fV9EYeX1bX
+         OnG6Vs4AyI8Q/6LIrcq5sw72iaFi7tBYLsIZzJrH1usePdVTfUGMQwMFJalHOWvhdIvL
+         KmxB7vtac9J9lWdlRf1EAgOPcB6bFJd4JcJ9g=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=892G3qKDpz/5gRCzV0/+a3FQcJ0YSGO+MCpBh5ooPEU=;
+        b=gQ9zn2BrGWDi4RnKmrYFx7/ofSNs5HBfubdoHrwDkACkVFd36G7VNQHwVBjFdd5sJU
+         4DnJx23W50vJ3vea3wgWGgZo439VPuk5BnRTvEFKXk+s0hrdKzeP+fyLlONyZrztGueT
+         5KNZZPhLrjZ+eftX5xoYAQ/CSqB2LZxiSQKdIsVDqrz3UyP9auCS6n5yC8mf4CNgpMmj
+         wE0ThSY48A0QBJ/U1oqaASISVhtp5RLwBbttlveeB4s0n8w8LhP9Pz94AqwhZ0qIkrqm
+         CO2V9n3S20ST6bMhEW3gy2nSoSCCAbSGpN9/uoURXJk74zrQ61TGH7yQrMx3YuotEdCW
+         yllw==
+X-Gm-Message-State: AOAM533YcjIEGCiUoj+ZZ6ViV1IgxIZQKD3d2HjV+OfPpJV/Fvars3Xb
+        do1gwyISUB5tV9lA/Z0C0yu4fvoSirvS3pm5
+X-Google-Smtp-Source: ABdhPJzV9PLDnFU1a58nKDKiPsXDT24pi1Mr/DKUbml8PhEY5qKGxZ8uTSmMWa0JUOPBGgLDgBu6HA==
+X-Received: by 2002:a63:d502:: with SMTP id c2mr1259893pgg.353.1613600819996;
+        Wed, 17 Feb 2021 14:26:59 -0800 (PST)
+Received: from lbrmn-mmayer.ric.broadcom.net ([192.19.228.250])
+        by smtp.gmail.com with ESMTPSA id b25sm3442803pfp.26.2021.02.17.14.26.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Feb 2021 14:26:59 -0800 (PST)
+Received: by lbrmn-mmayer.ric.broadcom.net (Postfix, from userid 1000)
+        id 2BC7E251A6F5; Wed, 17 Feb 2021 14:26:58 -0800 (PST)
+From:   Markus Mayer <mmayer@broadcom.com>
+To:     Linux XFS <linux-xfs@vger.kernel.org>
+Cc:     Markus Mayer <mmayer@broadcom.com>
+Subject: [PATCH v2] include/buildrules: substitute ".o" for ".lo" only at the very end
+Date:   Wed, 17 Feb 2021 14:26:56 -0800
+Message-Id: <20210217222656.1762426-1-mmayer@broadcom.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
-Content-Disposition: inline
-In-Reply-To: <20210128071133.60335-30-chaitanya.kulkarni@wdc.com>
-User-Agent: Mutt/1.5.23 (2014-03-12)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+To prevent issues when the ".o" extension appears in a directory path,
+ensure that the ".o" -> ".lo" substitution is only performed for the
+file extension immediately preceeding the ":" of a makefile rule.
 
---LQksG6bCIzRHxTLp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Markus Mayer <mmayer@broadcom.com>
+---
 
-Hi!
->=20
-> diff --git a/kernel/power/swap.c b/kernel/power/swap.c
-> index c73f2e295167..e92e36c053a6 100644
-> --- a/kernel/power/swap.c
-> +++ b/kernel/power/swap.c
-> @@ -271,13 +271,12 @@ static int hib_submit_io(int op, int op_flags, pgof=
-f_t page_off, void *addr,
->  		struct hib_bio_batch *hb)
->  {
->  	struct page *page =3D virt_to_page(addr);
-> +	sector_t sect =3D page_off * (PAGE_SIZE >> 9);
->  	struct bio *bio;
->  	int error =3D 0;
-> =20
-> -	bio =3D bio_alloc(GFP_NOIO | __GFP_HIGH, 1);
-> -	bio->bi_iter.bi_sector =3D page_off * (PAGE_SIZE >> 9);
-> -	bio_set_dev(bio, hib_resume_bdev);
-> -	bio_set_op_attrs(bio, op, op_flags);
-> +	bio =3D bio_new(hib_resume_bdev, sect, op, op_flags, 1,
-> +		      GFP_NOIO | __GFP_HIGH);
-> =20
+Change since v1:
+    - reworked the regex as suggested by David
+      https://www.spinics.net/lists/linux-xfs/msg49712.html
 
-C function with 6 arguments... dunno. Old version looks comparable or
-even more readable...
+ include/buildrules | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Best regards,
-							Pavel
+diff --git a/include/buildrules b/include/buildrules
+index 7a139ff07de8..f6663615d278 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -133,7 +133,7 @@ rmltdep:
+ 	$(Q)rm -f .ltdep
+ 
+ .ltdep: $(CFILES) $(HFILES)
+-	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,' > .ltdep
++	$(Q)$(MAKEDEP) $(CFILES) | $(SED) -e 's,^\([^:]*\)\.o: ,\1.lo: ,' > .ltdep
+ 
+ depend: rmdep .dep
+ 
+-- 
+2.25.1
 
---=20
-http://www.livejournal.com/~pavelmachek
-
---LQksG6bCIzRHxTLp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAmAtkpEACgkQMOfwapXb+vL5ywCguk9XRtMJ4/rJgwKlR42qzH7B
-ww4AoK8H3c5uHgpu/eHAUqpvoYMrxHuL
-=Rk1V
------END PGP SIGNATURE-----
-
---LQksG6bCIzRHxTLp--
