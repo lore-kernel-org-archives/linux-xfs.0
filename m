@@ -7,72 +7,72 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54747C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF807C433E9
 	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 18:47:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07E5B64EB7
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 18:47:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88EF864ED2
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 18:47:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231718AbhBRSrH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Feb 2021 13:47:07 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:41604 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233368AbhBRQrl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Feb 2021 11:47:41 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11IGTHxI155892
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:46:22 GMT
+        id S232905AbhBRSrZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Feb 2021 13:47:25 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:36054 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233355AbhBRQrm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Feb 2021 11:47:42 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11IGU5H8040952
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:46:17 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references : content-type :
  mime-version; s=corp-2020-01-29;
- bh=lGYBoDBmpKjTzN8PgK/eWkvN4S2Y4sIwPgNIZB3NL3o=;
- b=HZB4USXeIkNzemmgaDFpiWLivnIUu2DbjNd2DRzQYWut4P4CHcCQPvP0FgtNfGerQiJc
- r/rb5maYT+Dhy7aUsZna2PRwe8Y/0wfZhM6vx6iz/rV9B5WmENZ8srBqHQpPQrbVjEFu
- cO8XbNIx7nHOjRZV2QovYzZXoJQR5elpLvk7hGf2ixouZRjIjxkU4xEC22YGcOuf0gBj
- nstG4Obis9fZu57YNiiHmH0eSrX1fi3D6s3JesljiKTSAm/5+0vRxYn2Oebg3nejEkRH
- l2PX9Y7YKxwyzqys8Ho2C9LeFcp1BHpZgZk++zvgcnRkhxHjem8guOXokZAnX7Tmtb4b cA== 
+ bh=7U9lInub3rHv2j79ris2E9htjChPcfas/rDl+FXYeSw=;
+ b=ypNFwvyAeZVPy9YRhr9mqKt6GAVzsqy748DJ41CcR/kIMWiWnYF345LlQGoBECrOxxLm
+ eiPbdco0LFOEFIYymmyTZ9B1mZNqNI1j83M5sYoA+X5R9KVWvlwFsFbYJjx78q2av5lx
+ GPScwq+Fox5x0GGzvI8gD4LidQLeDjIj9Ak9bgdRdn/LG09CFL+noxWALdrZOp/PrV1v
+ KOQWwqHEMjYBac1VQymQo/US5qBpR51cQppZ+bGXclQyqgRKlCbqArOYXcKqbqK+/yj+
+ 6VWgyOQ8Cgz8OWy4RbBCN+pKi1vmwCVDE3I7ugKyJwFkRdFm0ThgVE9+M6SZfWa3Wm0A Ng== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 36p66r6m7b-1
+        by aserp2120.oracle.com with ESMTP id 36pd9ae3kv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:46:22 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:46:17 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11IGUJtF067888
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:46:21 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2171.outbound.protection.outlook.com [104.47.59.171])
-        by aserp3020.oracle.com with ESMTP id 36prp1rkpw-2
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11IGUJtF067880
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:46:17 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2041.outbound.protection.outlook.com [104.47.66.41])
+        by aserp3020.oracle.com with ESMTP id 36prp1rkmw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:46:21 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:46:17 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=f1MNQhBDPP/Tzj8NpAk30dLmP6pC/VtUOQgElhv/aYA1K8B94LBC91c2POrRm+9mo+YdZYExmU2BatzVO2C+sRzqtUrZ+FywUIai3J2i2f1cx/Hjz1ujkUDTbeCqUpYTTNGj4GQy301rcuQwwKfDSCZlL41Liv29FtcXTEOXCuYYITzt+WW0xsaDh7vAwIHMEONTqnr/j96fFaHZxNvbthCU5F6rzmCbzyWYTAErCC30nc+htkEmEBW46yarKbcAn9A1Apjb/LYjOaTvajNagWw73/YLdCG75SuTSexWsdwu1UYVinvaCkoOPZM0F4QQvYuXWSYt77PfnX5SCxwiug==
+ b=kU49W6v2qpUYNPZgXj0Xf1lJQI/r+vc+BOB5Mdiac31xS+o4PpUWax98H2FUZ77VvQ9qtKEEp0nFT4M6+O1iUDZfPZ/+cFimJzuREJljMlm3cqGP6R89GpXatDi7DpqUZYcnQ4J1FtSfJuratBdyah4BEAxtHagscc5yGEShDne4dEkrhejlaXBHEpnc0S04RD3f50+wXE9WI+xzyDBmRnWnZSdjLqKT4Gg3l0YTdBkrRdDkiXRmFy8t8pTqBeStqE7t9y0fY+d3KC5Gx71F3R1SUgiEkfyGYPNS0P1UwfaHjPVprl4AGdL5Gxm/ofiHFaiPy+2CqoMUalEN2DZlkg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lGYBoDBmpKjTzN8PgK/eWkvN4S2Y4sIwPgNIZB3NL3o=;
- b=TbM/f4RLu7Udv73UCCTOMK3hre+E4Y3l7ZYB6fmdGy6PX8rNjbDbss/ClDzo22wJPfJ66GSUgiLU78qkf4d6hoJn8W6eXU9Np5tYvE+nA/kbKAn4btUcLXJsKQWPbpjzcVEuEhxPdCzFWZDce4z+01BZUyB4gqRHj4fHY+RMH6XyK7ZevQo0tJM0zoJQquDitxHsBvMcZcpiIJg5r9B4uDWDopIWuC70eqgQ4t32ElgxaOnMJjW4gJ/hhe66NQB8MwMmhCfR20ObuS6Q+J5ilbitSJJUZRZXS37SatRw5ej7TIbhbv7G3A2jQG1JTPF2HREMD4+mvSQ9ZUCgit8mZA==
+ bh=7U9lInub3rHv2j79ris2E9htjChPcfas/rDl+FXYeSw=;
+ b=M2nPk/BKR+1ufMZYMeXBkIcQvBsKdFlIhnuvUL4ShGEndPED9x/fn39xsQxs/LvfqmYGTy7WB4eEfA6FgIGlitrENUn+hi4e5PIf+VKYdXB+snVX5WWYwt6bkpBOBgyxUkPX2GE1vzRzS4Paj1UCBRs7kG7s8WL/QcexWW2yhVGpdeHC7keUZtA81gqtfgVbO5qwQKH4dGFJmQw4sUkhvwfNV5fYgHypBssHZgA4utN6axs8IiTbLHxqI439TbnC2adFXYb+8VJwH8fZKqB2g4HvM79HSkdrkiQpxSvybXLil8IM9YuSF1cHps+uQbbkvHoVSsywBAYXHOCiNSe5Jw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lGYBoDBmpKjTzN8PgK/eWkvN4S2Y4sIwPgNIZB3NL3o=;
- b=Ffq3eYCLHoMRKDt3IBYdStMutAA0owzw4cu3Tqi0o/GW4BeuItZ7pacjj+OwmwKBt1Lqkb1LHq+xJjVRFZG69ZRgFvKspR99y2560ZaFU1uQ9WvZhUijRP5s/9BGRTa76nLxqNvJozvKT0VgAXN+kNurY0imw43ZaWMD3seEryg=
+ bh=7U9lInub3rHv2j79ris2E9htjChPcfas/rDl+FXYeSw=;
+ b=dL6KhlSdMabNDgd91rgvodH+DyPfjN8wTym4p0U6psfBKxqDILdhCUswaHUvwGnbMfSLtJS1gxqAt0T4KFOW4A1ZPhwPs9A+dlyuJoml7Df+kcejIFPD11R/H6CyHjLFNDyawGHImb+W4gYclclKn8AFD+m2Jl1rM56bpkXuVFc=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by SJ0PR10MB4813.namprd10.prod.outlook.com (2603:10b6:a03:2d2::7) with
+ by BYAPR10MB2965.namprd10.prod.outlook.com (2603:10b6:a03:90::21) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.27; Thu, 18 Feb
- 2021 16:46:19 +0000
+ 2021 16:46:15 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::f4a1:6643:4c93:2a9f]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::f4a1:6643:4c93:2a9f%3]) with mapi id 15.20.3846.042; Thu, 18 Feb 2021
- 16:46:19 +0000
+ 16:46:15 +0000
 From:   Allison Henderson <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v15 36/37] xfsprogs: Add delayed attributes error tag
-Date:   Thu, 18 Feb 2021 09:45:11 -0700
-Message-Id: <20210218164512.4659-37-allison.henderson@oracle.com>
+Subject: [PATCH v15 30/37] xfsprogs: Add state machine tracepoints
+Date:   Thu, 18 Feb 2021 09:45:05 -0700
+Message-Id: <20210218164512.4659-31-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210218164512.4659-1-allison.henderson@oracle.com>
 References: <20210218164512.4659-1-allison.henderson@oracle.com>
@@ -83,108 +83,236 @@ X-ClientProxiedBy: BYAPR11CA0088.namprd11.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (67.1.223.248) by BYAPR11CA0088.namprd11.prod.outlook.com (2603:10b6:a03:f4::29) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.27 via Frontend Transport; Thu, 18 Feb 2021 16:45:47 +0000
+Received: from localhost.localdomain (67.1.223.248) by BYAPR11CA0088.namprd11.prod.outlook.com (2603:10b6:a03:f4::29) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.27 via Frontend Transport; Thu, 18 Feb 2021 16:45:44 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 22901117-8743-4628-2c23-08d8d42ca478
-X-MS-TrafficTypeDiagnostic: SJ0PR10MB4813:
-X-Microsoft-Antispam-PRVS: <SJ0PR10MB4813AC7F6C89C8D48B2EA8AE95859@SJ0PR10MB4813.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2512;
+X-MS-Office365-Filtering-Correlation-Id: 6c7b93d0-cc9b-4154-05e5-08d8d42ca2e1
+X-MS-TrafficTypeDiagnostic: BYAPR10MB2965:
+X-Microsoft-Antispam-PRVS: <BYAPR10MB29650A84E60A3F9C9CE17D6195859@BYAPR10MB2965.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:221;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: N6aubQSZaFqGzfKCIDjZ4F/SJ0DHikdJdvrJk1LTFYcXnit4B3sIczzOZheYLKYmWpTmsjbNTPmv2xy7dpVi4QGyy9ASU47sKPizMzVzNsAJSSFk7NEKvIZFbmEvbuFbeRbId73goC1/z1E4JzSn4iRoIzQERecVC3fxormHDP8n8fJOXGwHkIbX0pEnTTyhHhjK3VbeMnzNpk3ySYH9nl05+TkTAva1Ju+ZYlrpElleXs+QVrVNnhVhD7ibzeaS1+R/1PjFh6RJczkb15DgNNLfxfaEajxwx3ghbP1j3Wu84SUtL6wHiLS4EX/A09k1y5x9f0V9InbCRB96bPPkEQ6eK55lfXkIBUX+FsPnl6TARWHVcA4FmCs43O4/MTgKttW9ej9ZJnJC1dJEUWNj6grBNGOCz5Ers929Q3AE7t4QTPEEjtC49gDXM6vZcZR42lrfhJs8OE+5AJp0qQYDNkKGHCpdck1kotZwITcFSXYXoODsXzmWLKtnWXSRAToEt5coZbak+u2ccizxtcT0A23S0QXapVLmi1Jj+uMIlllKKsmrkQhUJBnioQ0NyHthpqv5bgykeMA4DyqZ2ObeKg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(376002)(136003)(396003)(366004)(39860400002)(6506007)(83380400001)(478600001)(2616005)(2906002)(66946007)(66556008)(16526019)(956004)(8676002)(86362001)(26005)(1076003)(52116002)(6916009)(66476007)(8936002)(6486002)(6666004)(316002)(6512007)(5660300002)(186003)(44832011)(36756003)(69590400012);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?sTNHCuDeWZfQP1ijqLe4uXTZlgYY4fstIZBalfQbKOXsMaIJJ32NmQADvwqB?=
- =?us-ascii?Q?rEB51TutE3ERI1ns7CAYjejVNWdY+1MJ/DCshxE7pcdpgHAEyy3hTlg4tnGo?=
- =?us-ascii?Q?GbckPeF3rsi9eP59KTbAUin4Ps3DczdFMZQmRvYxvGw9HjY2IVgNkL2sXQrF?=
- =?us-ascii?Q?+dTCpdksE0mmRJlCLvu4Hkc2oJG5zKXePeB2KMH6n3m+sg8wOF6OxQOk37Bx?=
- =?us-ascii?Q?iyZO5D3wje0njtFs8ohfMXT6fjS+y4I31Lfp1lIs0iq+KAPesvXGwOjjXJak?=
- =?us-ascii?Q?ghhxmi7UYTUKqsWIaiLkMW2a7p3HIqrOhjJdartJTD0esLKVmWFA754GYcu/?=
- =?us-ascii?Q?n+YdAgTsA3Qdme5jOQ5IffiWw2oNdJhYjmmu7dVrcvfgNp50jWEp2W0aJm2U?=
- =?us-ascii?Q?avlioQQ5ihUhTxVA6PNBHzRmg8LwnIdI4N0wVhPTxmsmlI7oS9i+rS2NCsbA?=
- =?us-ascii?Q?TeKjv9hc5gUtyodn8YUcBMs9q6QA9UZCW+zbAt/4ZyffqSujf8RaNH7WtlUS?=
- =?us-ascii?Q?GXyzyKwpNXBUcZ1yrk/KiwLMaAx+AhDLSudZ+gUMZLURYZWPYqgBaJq4K6Ip?=
- =?us-ascii?Q?Yj6E4BzeGQKEsAUjnE7NMCPqNifFc5oylg56AqfjdRAaylltqiOYMOApJfBu?=
- =?us-ascii?Q?t3DDF41NYuGTjb43u8mEPxT37RZ0yh+F5FdTgd9QhSN+zr0H+PdFY1fKKioO?=
- =?us-ascii?Q?gxQZUN2B1gzvGFeWbHQXfhrTVWFR/GLfxzkm0pG4HA3H+glLpJNnBHqJXX1g?=
- =?us-ascii?Q?tgnJEFFnkL055Sq4wCKUjkZn+XWA4z8iWbJH7t5DXcCHR4bznzbuBxCnBn+3?=
- =?us-ascii?Q?ZNpd264iijWQXkpZ+S39xRDG2f9iDzBBOBoezhayUqeCduKHQwQd5R0ZRPQV?=
- =?us-ascii?Q?37lFhoe1H3fdyxV3KCG8dRED+bLEHLmz05K++tVq1CCjTwrwqv6RgBE68az1?=
- =?us-ascii?Q?Msm9EPgePnBXwxJ7scatTiPYxHnYTcJVkHpqGfkvIa7r1ws5yMJE2Hl4doWB?=
- =?us-ascii?Q?35rU6ANgEqFc238WB0RuOJn4qEmmahqG7D29nzFd33bR1a9lsRvIMd0aBj+N?=
- =?us-ascii?Q?NPWkTQasxEQXqhagkDbsFnDrUppYryZQKxDRX2jyKYk9/E1cZ2ufBn/9IBK7?=
- =?us-ascii?Q?IpWnk60l8GnxFbTDp6J63N7Uuq5ULE6kwtjirkK3SDwY6mD1e86oyjtMvkZo?=
- =?us-ascii?Q?HCzvwyiG8HLV0isoSAY3LrBNpeqTGoA34xHHmhzLt+PEfW8UNPSpj83cM0zD?=
- =?us-ascii?Q?+KsX4GOt23mSmEPYd2eAl+cjDQRFmhEFRPD+imSOwn65CEQ31SVaEH/uJUcg?=
- =?us-ascii?Q?XpNBbvqBCOjV4v4iRmKXueSi?=
+X-Microsoft-Antispam-Message-Info: ut2lv5mJ28ZRLgyXigcaYROjnGmblqYWU603UGNQ/xDmwRoVjztCHu7r2La093ixib9oW8ZwQmqynZ64nWsnb6LzwjKj64cb7sSx6HhYZ/7TI6mAf8PUhoD5dShEce5R/p/tZXASr5EBjvVxPq3Ex/Psm70WAxgOE3dH8c1Uuvtpfr04ekB8Okql9fVw8ItNcVPDYnv6FAWuSfEFSufexHNeE84ZVt1+YTTXos7WvOx6XpxzBHIN4QhN5XkebOEF2JojgXIMgh9m2wV522ZaTab3hxoD9Xdq1g0VBYBqL67cr+x4fx4Jo4pkghbhkJVTlL4Znkacvda0U//yrYxNB1Y6PUB7s1s2neBHWd4lsXxLd6dHJyiSb/K1Q3FrPzeGYqjBIByJx3hEWfB2XhqpHRXLAtvNuJJJVusKDjOBSz55ZaRoJdB/NA2PvupmVKf/0wNd99/uEmOgQZaez5lB0mTYhdlnzSVQKlhFOXNegrvbPiLdwz3P9tUQPB5C6b06Q5a/+qD+RMLUcHyajbdrdxfpVbYtZ8hRX6KjlKOoAsQ29vQfCCVskTVenvrida6lF8+qw+53/kgpXrigLMOkCQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(346002)(396003)(136003)(39860400002)(366004)(6512007)(86362001)(69590400012)(36756003)(83380400001)(6916009)(66556008)(8936002)(66476007)(66946007)(478600001)(52116002)(6666004)(6506007)(316002)(44832011)(16526019)(6486002)(1076003)(5660300002)(26005)(2906002)(186003)(2616005)(956004)(8676002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?OIK/7Fw0i65Q31s/QF1vQKm7J3Z+FcPU7/pMKTwhMt7ZL3MuW2tVj1NijhrF?=
+ =?us-ascii?Q?7NkhZksf9M8KY43dMjuewK3sCtTew01wmzfMTcd7ZovV6v4mx1eyTotLNVSN?=
+ =?us-ascii?Q?Ly7DTx6kc7k8gZal/oTTpUcGTygLZYqD+7dbyaOPlF7t9VCdI1aMUlEom64z?=
+ =?us-ascii?Q?5YHfihy13wGijg9VqrO0lKGNoht2zfrWo4/4Sk2ccyRd4u8eawNxZ3HHxB2v?=
+ =?us-ascii?Q?BbCf9ogc9Twz319TAzmB/C3yoxXiTF3Bbe53Ch0faynPVJq8UG5pg5ZAF3Pv?=
+ =?us-ascii?Q?7C5RnKtARBTal8eT1J9FysPy3NVuStON4gl15FPeSU3wxAmNpL9Czcf7cBYe?=
+ =?us-ascii?Q?ktlcjWHbX1fpDeI4M8cwoEKo3WDondu6r8EprQcQYoJ9c2UBjMlKzDdA1rj1?=
+ =?us-ascii?Q?LZawaIf0aG91Hg5f8XYZAueTwAJtYOfZwaRVMH3RFrCwtEvF8Pq5yn00caZ6?=
+ =?us-ascii?Q?y5TLKPCGIjki3EtD4+boOaI4HulgOCOHBxmBS7X3ntxGrNEtvu59P00PXItk?=
+ =?us-ascii?Q?VtW2CjznRGFmxU+5WE7ZUvxRrTMPqlFMiT8+51yEw2Y96zVglAqN70kDHRi2?=
+ =?us-ascii?Q?k1ptxoPF8pmDl5HB4VUqWiaipOvrf+r7LtkrODdvqqRZkrupmEU/l1jk5iq+?=
+ =?us-ascii?Q?4HVAWq1jfx8bg4iqAQViMaLyGT6FkumgsfpDRMt3+Nf8G27I1skCq8U88cYm?=
+ =?us-ascii?Q?yOKdgr14PCO6lN6tXHZu0FggQyKcHDu4UkdLTJgJFxhTWAunFw0RFo+/eJb7?=
+ =?us-ascii?Q?fvpQR5c6fe0hDjcl69CnuneOeGqPYg54t/X0rVsGUxtqOk+VRk1x5fjgC3C1?=
+ =?us-ascii?Q?lM6ENyN8XIaso1ayGrt6UkrS9sVd579tyml/tNo17+a2TrjasPW0YuZ6qOUV?=
+ =?us-ascii?Q?gANmGcr5JBfQbNd8a/T4GbUYJzsLPYZovpw1K0Poi+EPjyXMZoIZPvyEzdfU?=
+ =?us-ascii?Q?fY0nPcdWREzId4Sutgb9NaOH23+HXEbpDlQaSQ7y67cZsjEeoxW3VGq7gywS?=
+ =?us-ascii?Q?bkijBNmI90xt/5L+L27nTwbr1H2gNFE9hgpjI6oFNcXzViUmRLTPOck7o2s1?=
+ =?us-ascii?Q?P+prw6fnpCqkDjP16GDQ7ru7GLfhzV5bRtOgeS3HvwwEIFQ+f2BJp0rWffrc?=
+ =?us-ascii?Q?r9lshQ57UsvB5jeHsGXI7H5udz+lFUATmdgRqAkFYhgy8UKltmU9oogPvY6x?=
+ =?us-ascii?Q?kVvXway2Sh7iK7fiYWIt/0Jp2gp/1yeNUqtVS0FJqmwKX728JIbdM9DWyvaU?=
+ =?us-ascii?Q?FfJ0MDkidjp+VuMZfWmNFS5fqPKz6KPYRq1Y8lgxA+U5tUFQihinzpI5bVq2?=
+ =?us-ascii?Q?FVf/YUIz7DHnzqYRl6cThsyq?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 22901117-8743-4628-2c23-08d8d42ca478
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6c7b93d0-cc9b-4154-05e5-08d8d42ca2e1
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2021 16:45:47.6919
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2021 16:45:45.0535
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: doRouZPCtUU4nnKNiYAwD+A2o3n7hmLTZpN3HgjMg8U9KFNVocwG1xPsSaMMBPXziyr6FqGPFeR6Q6ldD4HXpraXMzocbva41JGU/uZbmIc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB4813
+X-MS-Exchange-CrossTenant-UserPrincipalName: DPjRH3itCBwtnMvRtyoSKmc2AU7oVcvvvp0uJZGE9S9OsOFv03kEQaW8/uFIDu+TwkdClVhSm1zkUJVRB73s98g9tIogZv94gUXuzvydAYg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2965
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9898 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=999
  bulkscore=0 suspectscore=0 spamscore=0 malwarescore=0 mlxscore=0
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2102180141
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9898 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=0
- impostorscore=0 priorityscore=1501 clxscore=1015 spamscore=0 mlxscore=0
- phishscore=0 malwarescore=0 bulkscore=0 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2102180141
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 impostorscore=0
+ mlxscore=0 phishscore=0 mlxlogscore=999 spamscore=0 bulkscore=0
+ priorityscore=1501 malwarescore=0 suspectscore=0 adultscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2102180141
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patch adds an error tag that we can use to test delayed attribute
-recovery and replay
+Source kernel commit: fbc8d6bb875915e0afd8ff6cd4364b368a6f894f
+
+This is a quick patch to add a new tracepoint: xfs_das_state_return.  We
+use this to track when ever a new state is set or -EAGAIN is returned
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- io/inject.c           | 1 +
- libxfs/xfs_errortag.h | 4 +++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ include/xfs_trace.h      |  7 +++++++
+ libxfs/xfs_attr.c        | 31 ++++++++++++++++++++++++++++++-
+ libxfs/xfs_attr_remote.c |  1 +
+ 3 files changed, 38 insertions(+), 1 deletion(-)
 
-diff --git a/io/inject.c b/io/inject.c
-index 4bd4138..7fef1c6 100644
---- a/io/inject.c
-+++ b/io/inject.c
-@@ -57,6 +57,7 @@ error_tag(char *name)
- 		{ XFS_ERRTAG_BUF_IOERROR,		"buf_ioerror" },
- 		{ XFS_ERRTAG_REDUCE_MAX_IEXTENTS,	"reduce_max_iextents"},
- 		{ XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT,	"bmap_min_extent"},
-+		{ XFS_ERRTAG_DELAYED_ATTR,		"delayed_attr" },
- 		{ XFS_ERRTAG_MAX,			NULL }
- 	};
- 	int	count;
-diff --git a/libxfs/xfs_errortag.h b/libxfs/xfs_errortag.h
-index 6ca9084..72ad14b 100644
---- a/libxfs/xfs_errortag.h
-+++ b/libxfs/xfs_errortag.h
-@@ -58,7 +58,8 @@
- #define XFS_ERRTAG_BUF_IOERROR				35
- #define XFS_ERRTAG_REDUCE_MAX_IEXTENTS			36
- #define XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT		37
--#define XFS_ERRTAG_MAX					38
-+#define XFS_ERRTAG_DELAYED_ATTR				38
-+#define XFS_ERRTAG_MAX					39
+diff --git a/include/xfs_trace.h b/include/xfs_trace.h
+index a100263..cc3e8b3 100644
+--- a/include/xfs_trace.h
++++ b/include/xfs_trace.h
+@@ -314,4 +314,11 @@
+ #define trace_xfs_perag_get_tag(a,b,c,d)	((c) = (c))
+ #define trace_xfs_perag_put(a,b,c,d)		((c) = (c))
  
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -101,5 +102,6 @@
- #define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
- #define XFS_RANDOM_REDUCE_MAX_IEXTENTS			1
- #define XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT		1
-+#define XFS_RANDOM_DELAYED_ATTR				1
++#define trace_xfs_attr_set_fmt_return(a,b)	((void) 0)
++#define trace_xfs_attr_set_iter_return(a,b)	((void) 0)
++#define trace_xfs_attr_node_addname_return(a,b)	((void) 0)
++#define trace_xfs_attr_node_remove_rmt_return(a,b)	((void) 0)
++#define trace_xfs_attr_node_removename_iter_return(a,b)	((void) 0)
++#define trace_xfs_attr_rmtval_remove_return(a,b)	((void) 0)
++
+ #endif /* __TRACE_H__ */
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index e4c6268..4aad38d 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -313,6 +313,7 @@ xfs_attr_set_fmt(
+ 	 * the attr fork to leaf format and will restart with the leaf
+ 	 * add.
+ 	 */
++	trace_xfs_attr_set_fmt_return(XFS_DAS_UNINIT, args->dp);
+ 	dac->flags |= XFS_DAC_DEFER_FINISH;
+ 	return -EAGAIN;
+ }
+@@ -378,6 +379,8 @@ xfs_attr_set_iter(
+ 				 * handling code below
+ 				 */
+ 				dac->flags |= XFS_DAC_DEFER_FINISH;
++				trace_xfs_attr_set_iter_return(
++					dac->dela_state, args->dp);
+ 				return -EAGAIN;
+ 			}
+ 			else if (error)
+@@ -400,10 +403,13 @@ xfs_attr_set_iter(
+ 				return error;
  
- #endif /* __XFS_ERRORTAG_H_ */
+ 			dac->dela_state = XFS_DAS_FOUND_NBLK;
++			trace_xfs_attr_set_iter_return(dac->dela_state,
++						       args->dp);
+ 			return -EAGAIN;
+ 		}
+ 
+ 		dac->dela_state = XFS_DAS_FOUND_LBLK;
++		trace_xfs_attr_set_iter_return(dac->dela_state, args->dp);
+ 		return -EAGAIN;
+ 
+         case XFS_DAS_FOUND_LBLK:
+@@ -433,6 +439,8 @@ xfs_attr_set_iter(
+ 			if (error)
+ 				return error;
+ 
++			trace_xfs_attr_set_iter_return(dac->dela_state,
++						       args->dp);
+ 			return -EAGAIN;
+ 		}
+ 
+@@ -469,6 +477,7 @@ xfs_attr_set_iter(
+ 		 * series.
+ 		 */
+ 		dac->dela_state = XFS_DAS_FLIP_LFLAG;
++		trace_xfs_attr_set_iter_return(dac->dela_state, args->dp);
+ 		return -EAGAIN;
+ 	case XFS_DAS_FLIP_LFLAG:
+ 		/*
+@@ -488,6 +497,9 @@ xfs_attr_set_iter(
+ 	case XFS_DAS_RM_LBLK:
+ 		if (args->rmtblkno) {
+ 			error = __xfs_attr_rmtval_remove(dac);
++			if (error == -EAGAIN)
++				trace_xfs_attr_set_iter_return(
++					dac->dela_state, args->dp);
+ 			if (error)
+ 				return error;
+ 		}
+@@ -545,6 +557,8 @@ xfs_attr_set_iter(
+ 				if (error)
+ 					return error;
+ 
++				trace_xfs_attr_set_iter_return(
++					dac->dela_state, args->dp);
+ 				return -EAGAIN;
+ 			}
+ 
+@@ -581,6 +595,7 @@ xfs_attr_set_iter(
+ 		 * series
+ 		 */
+ 		dac->dela_state = XFS_DAS_FLIP_NFLAG;
++		trace_xfs_attr_set_iter_return(dac->dela_state, args->dp);
+ 		return -EAGAIN;
+ 
+ 	case XFS_DAS_FLIP_NFLAG:
+@@ -601,6 +616,10 @@ xfs_attr_set_iter(
+ 	case XFS_DAS_RM_NBLK:
+ 		if (args->rmtblkno) {
+ 			error = __xfs_attr_rmtval_remove(dac);
++			if (error == -EAGAIN)
++				trace_xfs_attr_set_iter_return(
++					dac->dela_state, args->dp);
++
+ 			if (error)
+ 				return error;
+ 		}
+@@ -1227,6 +1246,8 @@ xfs_attr_node_addname(
+ 			 * this point.
+ 			 */
+ 			dac->flags |= XFS_DAC_DEFER_FINISH;
++			trace_xfs_attr_node_addname_return(
++					dac->dela_state, args->dp);
+ 			return -EAGAIN;
+ 		}
+ 
+@@ -1407,6 +1428,9 @@ xfs_attr_node_remove_rmt (
+ 	 * May return -EAGAIN to request that the caller recall this function
+ 	 */
+ 	error = __xfs_attr_rmtval_remove(dac);
++	if (error == -EAGAIN)
++		trace_xfs_attr_node_remove_rmt_return(dac->dela_state,
++						      dac->da_args->dp);
+ 	if (error)
+ 		return error;
+ 
+@@ -1526,6 +1550,8 @@ xfs_attr_node_removename_iter(
+ 
+ 			dac->flags |= XFS_DAC_DEFER_FINISH;
+ 			dac->dela_state = XFS_DAS_RM_SHRINK;
++			trace_xfs_attr_node_removename_iter_return(
++					dac->dela_state, args->dp);
+ 			return -EAGAIN;
+ 		}
+ 
+@@ -1544,8 +1570,11 @@ xfs_attr_node_removename_iter(
+ 		goto out;
+ 	}
+ 
+-	if (error == -EAGAIN)
++	if (error == -EAGAIN) {
++		trace_xfs_attr_node_removename_iter_return(
++					dac->dela_state, args->dp);
+ 		return error;
++	}
+ out:
+ 	if (state)
+ 		xfs_da_state_free(state);
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index 628ab42..a1c9864e 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -762,6 +762,7 @@ __xfs_attr_rmtval_remove(
+ 	 */
+ 	if (!done) {
+ 		dac->flags |= XFS_DAC_DEFER_FINISH;
++		trace_xfs_attr_rmtval_remove_return(dac->dela_state, args->dp);
+ 		return -EAGAIN;
+ 	}
+ 
 -- 
 2.7.4
 
