@@ -2,191 +2,183 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CDD9C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 16:45:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24DBDC43381
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 18:45:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51A3064EB2
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 16:45:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D890564EB3
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 18:45:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233710AbhBRQmY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Feb 2021 11:42:24 -0500
-Received: from sandeen.net ([63.231.237.45]:42940 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233785AbhBRQjH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Feb 2021 11:39:07 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 1D30B615D7B;
-        Thu, 18 Feb 2021 10:38:09 -0600 (CST)
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Dave Chinner <david@fromorbit.com>
-References: <20201013040627.13932-1-hsiangkao@redhat.com>
- <20201013040627.13932-4-hsiangkao@redhat.com>
- <320d0635-2fbf-dd44-9f39-eaea48272bc7@sandeen.net>
- <20210218024159.GA145146@xiangao.remote.csb>
- <20210218052454.GA161514@xiangao.remote.csb>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH v6 3/3] mkfs: make use of xfs_validate_stripe_geometry()
-Message-ID: <1f63b1b7-71ec-2a03-1053-58a1abd0088a@sandeen.net>
-Date:   Thu, 18 Feb 2021 10:38:17 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.7.1
+        id S232428AbhBRSo5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Feb 2021 13:44:57 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:35536 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231718AbhBRQqk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Feb 2021 11:46:40 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11IGUQZo041132
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:45:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : in-reply-to : references : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=zayGktjTziCYHsvpZ7Y70sIEhUGWYy6e4ZjjVOk6Ba0=;
+ b=i8Dd0toUXjLOuh+ykiuQljUKWGyVXhbfqQg9Pof2OHu88M4OKVktmL4F3exvmPA5tVDG
+ syxxkqwqJC/tYnKtUL/9AAJFnalaRTA7j+zqmG7hsP9HvXJQKtlFr2y4q+zCilcb1+/+
+ eQxMht394m9IxnvCGwn5Wa2S4u0ZPiG6jg/dKi3xI2+MJSbB8qEXnx3XcTNck+NMIz7x
+ /CnBVNB0OuehAWIfOmIXXhCJ+1F/sHUGTlR/k9hF9LTQoBGLRHVicOkqp6DdV15FEBWy
+ ENl/YQk0wWGwA9WnCoYT3NXEygfLqGMvTSYQkuAbcymaniHNtQBXEnGVc6i+VJGpYY4q dw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 36pd9ae3h2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:45:33 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11IGUHT7067740
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:45:33 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2168.outbound.protection.outlook.com [104.47.59.168])
+        by aserp3020.oracle.com with ESMTP id 36prp1rjuh-5
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:45:33 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=YU3mBWEX2vsHRxuqC2K5kobgD6GFzVPvCa9zf8oDRaa/MihSwfwPjHrWisbsq7+olP+9Fn2XXOUUXNNDlztGugQmGbMjqJL4/co4WRpmJjV8OlyXssGzYQyOz3DZlJapuXBWe0Lx7rRNS/kCx5TW34vs8pptMju8U2G6JmviRh6JIPb+zPRoaePWF35v7h5QLEKKEcDSUn4xa4mz2kpdsZvouFh7E+Vg9wuue9gX+akCEL7HjmWdjUEXjF6bV0ubTuIS+ZXsTCyzpa9TJcpG/Q7LG/gspAdWJl2IjQhwmWeXqnt+MSP9aCzSxduWAPd/C8kqVzXDeATDYAazwcp4+w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=zayGktjTziCYHsvpZ7Y70sIEhUGWYy6e4ZjjVOk6Ba0=;
+ b=Zi8qjMr+O2QgKuyCOaXWnOVlHRbIOs7x9oOhqIeGGMDYnWozxRwaGKb9MkcdRMan79iHOiqubDgR7RNC9es5tc5yGH80o4m0E2O06hEfpZRLNWs0sp2hBbO0LLsK/G5ik7dn2CHdS94QAZscFa68OY+3slzR2wA/R6OhJdrHEDQ7RV3x0/3WzUcsOECfcZuHJ64DgLViTn9/tptL6KeV5xJhuDzmG3SpKqyjLe5lyPMdhP/7bnJLNrjzJy2XawMRcEiCyd9Ajv7z+ZpAY+NJBotEC+bjWgTqLJWHP4K5THEsg4BApvzh9mLXzD502mOsAxxyardpA2smCSSTIKy6/Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=zayGktjTziCYHsvpZ7Y70sIEhUGWYy6e4ZjjVOk6Ba0=;
+ b=TRVuksIIAWoX9cHB5KTuBirrmjCMmig5WQsSLKqhEwKSuRtrxL1Nc/JEEui/hsefY6hDzbUA+epl1WsG6s6erISJaqmMc7lGDIdA7hMFYz4djfGGqCDYMdUiDZsK7jVj7dHRRF2lutbsgakPZIsx0M55YuEs2hX77dTb6c5/5yo=
+Authentication-Results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by BYAPR10MB3461.namprd10.prod.outlook.com (2603:10b6:a03:11e::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.25; Thu, 18 Feb
+ 2021 16:45:31 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::f4a1:6643:4c93:2a9f]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::f4a1:6643:4c93:2a9f%3]) with mapi id 15.20.3846.042; Thu, 18 Feb 2021
+ 16:45:31 +0000
+From:   Allison Henderson <allison.henderson@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v15 04/37] xfsprogs: Check for extent overflow when punching a hole
+Date:   Thu, 18 Feb 2021 09:44:39 -0700
+Message-Id: <20210218164512.4659-5-allison.henderson@oracle.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210218164512.4659-1-allison.henderson@oracle.com>
+References: <20210218164512.4659-1-allison.henderson@oracle.com>
+Content-Type: text/plain
+X-Originating-IP: [67.1.223.248]
+X-ClientProxiedBy: BYAPR11CA0088.namprd11.prod.outlook.com
+ (2603:10b6:a03:f4::29) To BY5PR10MB4306.namprd10.prod.outlook.com
+ (2603:10b6:a03:211::7)
 MIME-Version: 1.0
-In-Reply-To: <20210218052454.GA161514@xiangao.remote.csb>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from localhost.localdomain (67.1.223.248) by BYAPR11CA0088.namprd11.prod.outlook.com (2603:10b6:a03:f4::29) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.27 via Frontend Transport; Thu, 18 Feb 2021 16:45:31 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: fc8b06ea-74d7-44f0-1511-08d8d42c9ad2
+X-MS-TrafficTypeDiagnostic: BYAPR10MB3461:
+X-Microsoft-Antispam-PRVS: <BYAPR10MB34612537DF23CDD4CC0932B895859@BYAPR10MB3461.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:364;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 4Gi/IMPu7Zhm2v1399yskOAEh+X0fo8JEGxFQTGqjoAp4v8LLtH6ERS6iiLaqtggOqUuqhEoY8sV26FKccbDYdUfrl25k1w0z06HiWiUvqgOxzZFTx3R8GomDL9ZKQ7GQcMzrjVj2g2sg8x0PwMYC7lsxFbxTS9AcvuVYxpPeZPZim8RPKiuxQbTCiTyMhDGFJrUMOuBbuzzE3A9uDVDwwiyQ2zWyHAwbDzYvJBJNN/1xl7PvByuOK4QER5/CHkcpgOiauV9UO9X06GcYXAgC/Yxl5bV42tMcrg1YFk8xDqLQb5kM6OGKGgnbuzMlanKjplIk3FHyGSz1VwicXcjH5YKSuPbt/x7h0qg4Sk/f/YcAOaFfmzwQ7yNDKc28DavjPd2T+4hs1c84Mlk8fMSzVjyDiIPFtXTD2NSXH6hNx+pDAIW95sMWsAEdQ3o8u6ocQR9TjQ9jzFrrKqBDvNVVFMX0jlT8123O3BOpDnKyMkkpQHAzGHxLWGOy+kBdMERiadyH4Iwa9LgsHRH1eDbqWzQQuqajBWn7Wx71gS998DyJfR1+yW5s0D/bF2qa1gAADG0Gx3u+b3UsAbQL+Gurg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(346002)(396003)(376002)(136003)(39860400002)(8936002)(66476007)(1076003)(69590400012)(66556008)(2906002)(86362001)(316002)(26005)(6486002)(52116002)(16526019)(8676002)(6512007)(186003)(36756003)(5660300002)(956004)(2616005)(6916009)(66946007)(44832011)(6506007)(478600001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?srQVRVHWuF4Pkix251d++/3lsgGeUtkCPO5E5AwTsouc5B9NeMF+RtXQVzZ8?=
+ =?us-ascii?Q?+vlqCYQYoXwQ5c3HHYJ4YWChq7rGLIUGSeHIYenXSK7f0ezpnb0HZv0Cruxp?=
+ =?us-ascii?Q?gLxBP+OV9Var0ebgmXoE0J4XEwNpJJTU5aEf2Dy25frB1QeySkJA70IikDKM?=
+ =?us-ascii?Q?YAjTUlArXBenxQNNOUmK8q0MSakC+Kb8oeennrmNXq8IuBN6A+zDIpTwN5YZ?=
+ =?us-ascii?Q?MhJ1HYr52bRRWXVuHiU4vHPH82W1QSzFitOr1CLQqCXm4c5yo+v4TjLHF/Rf?=
+ =?us-ascii?Q?nrjvqSwLPdDfaMNIBFFqhfLelcpzbN81TiUDrtuTBczSUwateEP4564YHcYv?=
+ =?us-ascii?Q?WODto4glyzHdx+LeJrXtVlLogATuUybuKkDIxEOQxLqr2WqxxfCa1r4gPJQ3?=
+ =?us-ascii?Q?wQ93JxyYQ/yi2BvYxEEfdMrbnb628mRogOXHnNCzjZGEVZbELr+yt2qKdfbb?=
+ =?us-ascii?Q?2X5qTz3jtZSQpQfMpsT1P20eHCRRIa73GPJWlIrUmVbscjEls1zmuTQjQDPv?=
+ =?us-ascii?Q?PrBNKqNxwd7/mVzlUsqFfx0CQc7asnBalofftFZh7S3fhaJVdgljPXNYycwO?=
+ =?us-ascii?Q?R5st0b48j7b56rngLGBu+P6VzYS+NF+0gnMdlK6j11mjuO16fVBrcrRA/NDY?=
+ =?us-ascii?Q?7qnm/wlIVkeN6OpMNW8my827UzNURkpWptxuBkrqIglchrmfR3ArAFphncch?=
+ =?us-ascii?Q?V4ACm7004RFkjsqhhOL80NHHlxoktvlWjRCHa4D+3Fqg9kbc7iQgxp9qDik6?=
+ =?us-ascii?Q?HhZp+NETu5iprbKK824saINjA7ueeBsPbdl0ibOpmpMDgzcpBa1nR+JyN/sK?=
+ =?us-ascii?Q?c9MXbiDKHv/sDblcMoBbWsB/Jf6duk9sZRJk4LEnFWw8JsJWY9DoxHkPrsB2?=
+ =?us-ascii?Q?Kf4U1JT3FFjCV6r5hTLYWGwX4+6+mjc1Ngcp6G83QSGzCSFa0ab2Q20JrgpM?=
+ =?us-ascii?Q?1fRzlhuSvv2UcvTNmC6FMUUiZSZjLqQV3iN/w6oBPOn2ZWRZRqLiLtXCJ7kE?=
+ =?us-ascii?Q?NVeMFafv/RKjuSGgXKaeRQ8TiSxnOvt3IINr36XvuJZLokLRuGdpkaxXz9tJ?=
+ =?us-ascii?Q?EJxFlga0nkmaE+ikF+aBkzPzGcDVTdOHZNgac3JT2zNEs13hH+GCPrNJNE5d?=
+ =?us-ascii?Q?bc9EEatCw6HU2ytmD/AMZdaN09lc3pku+YFOwA+B6mAFATeWH0zYGAk7ZETk?=
+ =?us-ascii?Q?zdl8dcb44xYHub/VPpbzi0C0cym9AIeAq8tiYxkQM+8r+Bl9quecIWDJvSDS?=
+ =?us-ascii?Q?ZzOONUrHrrx+IZ+q8SXol2veKsUWWPy4s4bbELGOlD/DXq+UUAVWVaJ0BZup?=
+ =?us-ascii?Q?nIdLKQtIjeRW0aZNDitYjdG/?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fc8b06ea-74d7-44f0-1511-08d8d42c9ad2
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2021 16:45:31.5636
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: C6Fv/8V5I5LUdwVyEs5n+2oLvttdC1szHvcYZ4GrD852rFsf8U3TPl514WZ0FXD23WbDP2B7IAXf44MzytRFj+nzryP3kAeFrpOcs/GrBDc=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3461
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9898 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=999
+ bulkscore=0 suspectscore=0 spamscore=0 malwarescore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2102180141
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9898 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 impostorscore=0
+ mlxscore=0 phishscore=0 mlxlogscore=999 spamscore=0 bulkscore=0
+ priorityscore=1501 malwarescore=0 suspectscore=0 adultscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2102180141
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/17/21 11:24 PM, Gao Xiang wrote:
-> On Thu, Feb 18, 2021 at 10:41:59AM +0800, Gao Xiang wrote:
->> Hi Eric,
->>
->> On Mon, Feb 15, 2021 at 07:04:25PM -0600, Eric Sandeen wrote:
->>> On 10/12/20 11:06 PM, Gao Xiang wrote:
->>>> Check stripe numbers in calc_stripe_factors() by using
->>>> xfs_validate_stripe_geometry().
->>>>
->>>> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
->>>
->>> Hm, unless I have made a mistake, this seems to allow an invalid
->>> stripe specification.
->>>
->>> Without this patch, this fails:
->>>
->>> # mkfs/mkfs.xfs -f -d su=4097,sw=1 /dev/loop0
->>> data su must be a multiple of the sector size (512)
->>>
->>> With the patch:
->>>
->>> # mkfs/mkfs.xfs -f -d su=4097,sw=1 /dev/loop0
->>> meta-data=/dev/loop0             isize=512    agcount=8, agsize=32768 blks
->>>          =                       sectsz=512   attr=2, projid32bit=1
->>>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->>>          =                       reflink=1    bigtime=0
->>> data     =                       bsize=4096   blocks=262144, imaxpct=25
->>>          =                       sunit=1      swidth=1 blks
->>> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
->>> log      =internal log           bsize=4096   blocks=2560, version=2
->>>          =                       sectsz=512   sunit=1 blks, lazy-count=1
->>> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>> Discarding blocks...Done.
->>>
->>> When you are back from holiday, can you check? No big rush.
->>
->> I'm back from holiday today. I think the problem is in
->> "if (dsu || dsw) {" it turns into "dsunit  = (int)BTOBBT(dsu);" anyway,
->> and then if (!libxfs_validate_stripe_geometry(NULL, BBTOB(dsunit),
->> 					     BBTOB(dswidth), cfg->sectorsize, false))
->>
->> so dsu isn't checked with sectorsize in advance before it turns into BB.
->>
->> the fix seems simple though,
->> 1) turn dsunit and dswidth into bytes rather than BB, but I have no idea the range of
->>    these 2 varibles, since I saw "if (big_dswidth > INT_MAX) {" but the big_dswidth
->>    was also in BB as well, if we turn these into bytes, and such range cannot be
->>    guarunteed...
->> 2) recover the previous code snippet and check dsu in advance:
->> 		if (dsu % cfg->sectorsize) {
->> 			fprintf(stderr,
->> _("data su must be a multiple of the sector size (%d)\n"), cfg->sectorsize);
->> 			usage();
->> 		}
+From: Chandan Babu R <chandanrlinux@gmail.com>
 
-since we have this check already in xfs_validate_stripe_geometry, it seems best to
-keep using it there, and not copy it ... which I think you accomplish below.
+Source kernel commit: 85ef08b5a667615bc7be5058259753dc42a7adcd
 
->> btw, do we have some range test about these variables? I could rearrange the code
->> snippet, but I'm not sure if it could introduce some new potential regression as well...
->>
->> Thanks,
->> Gao Xiang
-> 
-> Or how about applying the following incremental patch, although the maximum dswidth
-> would be smaller I think, but considering libxfs_validate_stripe_geometry() accepts
-> dswidth in 64-bit bytes as well. I think that would be fine. Does that make sense?
-> 
-> I've confirmed "# mkfs/mkfs.xfs -f -d su=4097,sw=1 /dev/loop0" now report:
-> stripe unit (4097) must be a multiple of the sector size (512)
-> 
-> and xfs/191-input-validation passes now...
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index f152d5c7..80405790 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2361,20 +2361,24 @@ _("both data su and data sw options must be specified\n"));
->  			usage();
->  		}
+The extent mapping the file offset at which a hole has to be
+inserted will be split into two extents causing extent count to
+increase by 1.
 
-Just thinking through this... I think this is the right idea.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ libxfs/xfs_inode_fork.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-> -		dsunit  = (int)BTOBBT(dsu);
-> -		big_dswidth = (long long int)dsunit * dsw;
-> +		big_dswidth = (long long int)dsu * dsw;
+diff --git a/libxfs/xfs_inode_fork.h b/libxfs/xfs_inode_fork.h
+index 7fc2b12..bcac769 100644
+--- a/libxfs/xfs_inode_fork.h
++++ b/libxfs/xfs_inode_fork.h
+@@ -41,6 +41,13 @@ struct xfs_ifork {
+ #define XFS_IEXT_ADD_NOSPLIT_CNT	(1)
+ 
+ /*
++ * Punching out an extent from the middle of an existing extent can cause the
++ * extent count to increase by 1.
++ * i.e. | Old extent | Hole | Old extent |
++ */
++#define XFS_IEXT_PUNCH_HOLE_CNT		(1)
++
++/*
+  * Fork handling.
+  */
+ 
+-- 
+2.7.4
 
-dsu is in bytes; this would mean big_dswidth is now also in bytes...
-the original goal here, I think, is to not overflow the 32-bit superblock value
-for dswidth.
-
->  		if (big_dswidth > INT_MAX) {
->  			fprintf(stderr,
->  _("data stripe width (%lld) is too large of a multiple of the data stripe unit (%d)\n"),
->  				big_dswidth, dsunit);
-
-so this used to test big_dswidth in BB (sectors); but now it tests in bytes.
-
-Perhaps this should change to check and report sectors again:
-
-  		if (BTOBBT(big_dswidth) > INT_MAX) {
-  			fprintf(stderr,
-  _("data stripe width (%lld) is too large of a multiple of the data stripe unit (%d)\n"),
-  				BTOBBT(big_dswidth), dsunit);
-
-I think the goal is to not overflow the 32-bit on-disk values, which would be
-easy to do with "dsw" specified as a /multiplier/ of "dsu"
-
-So I think that if we keep range checking the value in BB units, it will be
-OK.
-
->  			usage();
->  		}
-> -		dswidth = big_dswidth;
-> -	}
->  
-> -	if (!libxfs_validate_stripe_geometry(NULL, BBTOB(dsunit), BBTOB(dswidth),
-> -					     cfg->sectorsize, false))
-> +		if (!libxfs_validate_stripe_geometry(NULL, dsu, big_dswidth,
-> +						     cfg->sectorsize, false))
-> +			usage();
-> +
-> +		dsunit = BTOBBT(dsu);
-> +		dswidth = BTOBBT(big_dswidth);
-> +	} else if (!libxfs_validate_stripe_geometry(NULL, BBTOB(dsunit),
-> +			BBTOB(dswidth), cfg->sectorsize, false)) {
->  		usage();
-> +	}
-Otherwise this looks reasonable to me; now it's basically:
-
-1) If we got geometry in bytes, validate them directly
-2) If we got geometry in BB, convert to bytes, and validate
-3) If we got no geometry, validate the device-reported defaults
-
-Thanks,
--Eric
-
->  	/* If sunit & swidth were manually specified as 0, same as noalign */
->  	if ((cli_opt_set(&dopts, D_SUNIT) || cli_opt_set(&dopts, D_SU)) &&
-> 
