@@ -2,254 +2,119 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17BFDC4360C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A11C4361B
 	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 18:48:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D240D64ECC
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 18:48:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3869F64ECC
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 18:48:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233192AbhBRSs3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Feb 2021 13:48:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37620 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232012AbhBRRIA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Feb 2021 12:08:00 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8110D64E15;
-        Thu, 18 Feb 2021 17:07:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613668038;
-        bh=i8XnE0Rr0X6SJSUe81NCfQZf7Nco2uoo8pbihsMXbBc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Pt/79RtU4ZDi6uKo4KXkHPLo7Mov99kmxC3bLkgCl/iJM/7OqmMKLYjhgXHbXaLdX
-         f3xx+0cv0PS450cdcjAJdsQ4Q8witYDsvZZuk9ECgnjSf0EGsDpPP/23OwvBPjbszp
-         StUpPzuR/sNsK2bJ0DhJ9u53IyI09Vtww770u5L0P9Ngk8ojd5fGGodcjbZZylvlLJ
-         Npg+uLirWgI4zyIaq88pXtGlfyfOPsZj/3SxN2LI099XDXckblddivRXJ2Jjdj3vSY
-         ePLzOV66o5weWSPZuD5MHZCwTgFEDVwZ8iHuv8OdGoWYzeeHpJNMDJSRytLY2+fUlZ
-         lj+/N3CNcUfwQ==
-Date:   Thu, 18 Feb 2021 09:07:17 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs_repair: set NEEDSREPAIR the first time we write
- to a filesystem
-Message-ID: <20210218170717.GU7193@magnolia>
-References: <161319520460.422860.10568013013578673175.stgit@magnolia>
- <161319521070.422860.2540813932323979688.stgit@magnolia>
- <20210216115534.GB534175@bfoster>
- <20210218044522.GR7193@magnolia>
- <20210218125927.GA685651@bfoster>
+        id S233224AbhBRSsb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Feb 2021 13:48:31 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:25911 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231338AbhBRSQf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Feb 2021 13:16:35 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1613672104;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=ELtCvI/pB+TlSJsLMQGTXYGscLxnUfeBnaPBk0xwDp8=;
+        b=GwCyyGPdQ1X2RW7xphbskLKFENWsRy9mDeh9nS/+LMtLjKNbw1bpIwcgh8f2joD7x9603K
+        OTHrB5YmM7z+DhyZ3GqeEqbq1dE6ImM04vHgtuKPQiYLy+fcayI01tZD16cD07g/NkwkAl
+        6NlAmtLl6AVNq7JKYqglbzp3BuPlX8o=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-47-AQeH2TctP3eoUXgNfIZlxw-1; Thu, 18 Feb 2021 13:15:02 -0500
+X-MC-Unique: AQeH2TctP3eoUXgNfIZlxw-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7173185B68F;
+        Thu, 18 Feb 2021 18:14:52 +0000 (UTC)
+Received: from bfoster (ovpn-119-92.rdu2.redhat.com [10.10.119.92])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 209205D9C2;
+        Thu, 18 Feb 2021 18:14:52 +0000 (UTC)
+Date:   Thu, 18 Feb 2021 13:14:50 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: lockdep recursive locking warning on for-next
+Message-ID: <20210218181450.GA705507@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210218125927.GA685651@bfoster>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 18, 2021 at 07:59:27AM -0500, Brian Foster wrote:
-> On Wed, Feb 17, 2021 at 08:45:22PM -0800, Darrick J. Wong wrote:
-> > On Tue, Feb 16, 2021 at 06:55:34AM -0500, Brian Foster wrote:
-> > > On Fri, Feb 12, 2021 at 09:46:50PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > Add a hook to the buffer cache so that xfs_repair can intercept the
-> > > > first write to a V5 filesystem to set the NEEDSREPAIR flag.  In the
-> > > > event that xfs_repair dirties the filesystem and goes down, this ensures
-> > > > that the sysadmin will have to re-start repair before mounting.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  include/xfs_mount.h |    4 ++
-> > > >  libxfs/rdwr.c       |    4 ++
-> > > >  repair/xfs_repair.c |   95 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  3 files changed, 103 insertions(+)
-> > > > 
-> > > > 
-> > > ...
-> > > > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> > > > index 90d1a95a..12e319ae 100644
-> > > > --- a/repair/xfs_repair.c
-> > > > +++ b/repair/xfs_repair.c
-> ...
-> > > > @@ -751,6 +753,95 @@ clear_needsrepair(
-> > > >  		libxfs_buf_relse(bp);
-> > > >  }
-> > > >  
-> > > > +static void
-> > > > +update_sb_crc_only(
-> > > > +	struct xfs_buf		*bp)
-> > > > +{
-> > > > +	xfs_buf_update_cksum(bp, XFS_SB_CRC_OFF);
-> > > > +}
-> > > > +
-> > > > +/* Forcibly write the primary superblock with the NEEDSREPAIR flag set. */
-> > > > +static void
-> > > > +force_needsrepair(
-> > > > +	struct xfs_mount	*mp)
-> > > > +{
-> > > > +	struct xfs_buf_ops	fake_ops;
-> > > > +	struct xfs_buf		*bp;
-> > > > +	int			error;
-> > > > +
-> > > > +	if (!xfs_sb_version_hascrc(&mp->m_sb) ||
-> > > > +	    xfs_sb_version_needsrepair(&mp->m_sb))
-> > > > +		return;
-> > > > +
-> > > > +	bp = libxfs_getsb(mp);
-> > > > +	if (!bp || bp->b_error) {
-> > > > +		do_log(
-> > > > +	_("couldn't get superblock to set needsrepair, err=%d\n"),
-> > > > +				bp ? bp->b_error : ENOMEM);
-> > > > +		return;
-> > > > +	} else {
-> > > > +		/*
-> > > > +		 * It's possible that we need to set NEEDSREPAIR before we've
-> > > > +		 * had a chance to fix the summary counters in the primary sb.
-> > > > +		 * With the exception of those counters, phase 1 already
-> > > > +		 * ensured that the geometry makes sense.
-> > > > +		 *
-> > > > +		 * Bad summary counters in the primary super can cause the
-> > > > +		 * write verifier to fail, so substitute a dummy that only sets
-> > > > +		 * the CRC.  In the event of a crash, NEEDSREPAIR will prevent
-> > > > +		 * the kernel from mounting our potentially damaged filesystem
-> > > > +		 * until repair is run again, so it's ok to bypass the usual
-> > > > +		 * verification in this one case.
-> > > > +		 */
-> > > > +		fake_ops = xfs_sb_buf_ops; /* struct copy */
-> > > > +		fake_ops.verify_write = update_sb_crc_only;
-> > > > +
-> > > > +		mp->m_sb.sb_features_incompat |=
-> > > > +				XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-> > > > +		libxfs_sb_to_disk(bp->b_addr, &mp->m_sb);
-> > > > +
-> > > > +		/* Force the primary super to disk immediately. */
-> > > > +		bp->b_ops = &fake_ops;
-> > > > +		error = -libxfs_bwrite(bp);
-> > > 
-> > > This looks like it calls back into the writeback hook before it's been
-> > > cleared.
-> > 
-> > Yes, it does...
-> > 
-> > > I'm guessing the xfs_sb_version_needsrepair() check above cuts
-> > > off any recursion issues,
-> > 
-> > ...but as soon as we end up in the writeback hook, the b_ops and
-> > XFS_SB_DADDR checks cause the hook to return without doing anything.
-> > 
-> > > but it might be cleaner to clear the callback pointer first.
-> > 
-> > We need to block all other writers until /after/ we've written the
-> > primary super, which means that we can't clear the callback until some
-> > time after the bwrite.
-> > 
-> 
-> Ok, care to document how this is intended to work with a comment?
+Hi Darrick,
 
-Will do, though I'll put the comments about the hook in the actual hook
-function:
+I'm seeing the warning below via xfs/167 on a test machine. It looks
+like it's just complaining about nested freeze protection between the
+scan invocation and an underlying transaction allocation for an inode
+eofblocks trim. I suppose we could either refactor xfs_trans_alloc() to
+drop and reacquire freeze protection around the scan, or alternatively
+call __sb_writers_release() and __sb_writers_acquire() around the scan
+to retain freeze protection and quiet lockdep. Hm?
 
-	/*
-	 * This write hook ignores any buffer that looks like a
-	 * superblock to avoid hook recursion when setting NEEDSREPAIR.
-	 * Higher level code modifying an sb must control the flag
-	 * manually.
-	 */
+BTW, the stack report also had me wondering whether we had or need any
+nesting protection in these new scan invocations. For example, if we
+have an fs with a bunch of tagged inodes and concurrent allocation
+activity, would anything prevent an in-scan transaction allocation from
+jumping back into the scan code to complete outstanding work? It looks
+like that might not be possible right now because neither scan reserves
+blocks, but they do both use transactions and that's quite a subtle
+balance..
 
-	if (bp->b_ops == &xfs_sb_buf_ops || bp->b_bn == XFS_SB_DADDR)
-		return;
+Brian
 
-	pthread_mutex_lock(&wb_mutex);
+[  316.631387] ============================================
+[  316.636697] WARNING: possible recursive locking detected
+[  316.642010] 5.11.0-rc4 #35 Tainted: G        W I      
+[  316.647148] --------------------------------------------
+[  316.652462] fsstress/17733 is trying to acquire lock:
+[  316.657515] ffff8e0fd1d90650 (sb_internal){++++}-{0:0}, at: xfs_free_eofblocks+0x104/0x1d0 [xfs]
+[  316.666405] 
+               but task is already holding lock:
+[  316.672239] ffff8e0fd1d90650 (sb_internal){++++}-{0:0}, at: xfs_trans_alloc_inode+0x5f/0x160 [xfs]
+[  316.681269] 
+...
+               stack backtrace:
+[  316.774735] CPU: 38 PID: 17733 Comm: fsstress Tainted: G        W I       5.11.0-rc4 #35
+[  316.782819] Hardware name: Dell Inc. PowerEdge R740/01KPX8, BIOS 1.6.11 11/20/2018
+[  316.790386] Call Trace:
+[  316.792844]  dump_stack+0x8b/0xb0
+[  316.796168]  __lock_acquire.cold+0x159/0x2ab
+[  316.800441]  lock_acquire+0x116/0x370
+[  316.804106]  ? xfs_free_eofblocks+0x104/0x1d0 [xfs]
+[  316.809045]  ? rcu_read_lock_sched_held+0x3f/0x80
+[  316.813750]  ? kmem_cache_alloc+0x287/0x2b0
+[  316.817937]  xfs_trans_alloc+0x1ad/0x310 [xfs]
+[  316.822445]  ? xfs_free_eofblocks+0x104/0x1d0 [xfs]
+[  316.827376]  xfs_free_eofblocks+0x104/0x1d0 [xfs]
+[  316.832134]  xfs_blockgc_scan_inode+0x24/0x60 [xfs]
+[  316.837074]  xfs_inode_walk_ag+0x202/0x4b0 [xfs]
+[  316.841754]  ? xfs_inode_free_cowblocks+0xf0/0xf0 [xfs]
+[  316.847040]  ? __lock_acquire+0x382/0x1e10
+[  316.851142]  ? xfs_inode_free_cowblocks+0xf0/0xf0 [xfs]
+[  316.856425]  xfs_inode_walk+0x66/0xc0 [xfs]
+[  316.860670]  xfs_trans_alloc+0x160/0x310 [xfs]
+[  316.865179]  xfs_trans_alloc_inode+0x5f/0x160 [xfs]
+[  316.870119]  xfs_alloc_file_space+0x105/0x300 [xfs]
+[  316.875048]  ? down_write_nested+0x30/0x70
+[  316.879148]  xfs_file_fallocate+0x270/0x460 [xfs]
+[  316.883913]  ? lock_acquire+0x116/0x370
+[  316.887752]  ? __x64_sys_fallocate+0x3e/0x70
+[  316.892026]  ? selinux_file_permission+0x105/0x140
+[  316.896820]  vfs_fallocate+0x14d/0x3d0
+[  316.900572]  __x64_sys_fallocate+0x3e/0x70
+[  316.904669]  do_syscall_64+0x33/0x40
+[  316.908250]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+...
 
-	/*
-	 * If someone else already dropped the hook, then needsrepair
-	 * has already been set on the filesystem and we can unlock.
-	 */
-	if (mp->m_buf_writeback_fn != repair_capture_writeback)
-		goto unlock;
-
-	/*
-	 * If we get here, the buffer being written is not a superblock,
-	 * and needsrepair needs to be set.  The hook is kept in place
-	 * to plug all other writes until the sb write finishes.
-	 */
-	force_needsrepair(mp);
-	mp->m_buf_writeback_fn = NULL;
-
---D
-
-> Brian
-> 
-> > > 
-> > > > +		bp->b_ops = &xfs_sb_buf_ops;
-> > > > +		if (error)
-> > > > +			do_log(_("couldn't force needsrepair, err=%d\n"), error);
-> > > > +	}
-> > > > +	if (bp)
-> > > > +		libxfs_buf_relse(bp);
-> > > 
-> > > Doesn't appear we can get here with bp == NULL. Otherwise the rest looks
-> > > reasonable to me.
-> > 
-> > Yep, will fix.
-> > 
-> > --D
-> > 
-> > > Brian
-> > > 
-> > > > +}
-> > > > +
-> > > > +/* Intercept the first write to the filesystem so we can set NEEDSREPAIR. */
-> > > > +static void
-> > > > +repair_capture_writeback(
-> > > > +	struct xfs_buf		*bp)
-> > > > +{
-> > > > +	struct xfs_mount	*mp = bp->b_mount;
-> > > > +	static pthread_mutex_t	wb_mutex = PTHREAD_MUTEX_INITIALIZER;
-> > > > +
-> > > > +	/* Higher level code modifying a superblock must set NEEDSREPAIR. */
-> > > > +	if (bp->b_ops == &xfs_sb_buf_ops || bp->b_bn == XFS_SB_DADDR)
-> > > > +		return;
-> > > > +
-> > > > +	pthread_mutex_lock(&wb_mutex);
-> > > > +
-> > > > +	/*
-> > > > +	 * If someone else already dropped the hook, then needsrepair has
-> > > > +	 * already been set on the filesystem and we can unlock.
-> > > > +	 */
-> > > > +	if (mp->m_buf_writeback_fn != repair_capture_writeback)
-> > > > +		goto unlock;
-> > > > +
-> > > > +	/*
-> > > > +	 * If we get here, the buffer being written is not a superblock, and
-> > > > +	 * needsrepair needs to be set.
-> > > > +	 */
-> > > > +	force_needsrepair(mp);
-> > > > +	mp->m_buf_writeback_fn = NULL;
-> > > > +unlock:
-> > > > +	pthread_mutex_unlock(&wb_mutex);
-> > > > +}
-> > > > +
-> > > >  int
-> > > >  main(int argc, char **argv)
-> > > >  {
-> > > > @@ -847,6 +938,10 @@ main(int argc, char **argv)
-> > > >  	if (verbose > 2)
-> > > >  		mp->m_flags |= LIBXFS_MOUNT_WANT_CORRUPTED;
-> > > >  
-> > > > +	/* Capture the first writeback so that we can set needsrepair. */
-> > > > +	if (xfs_sb_version_hascrc(&mp->m_sb))
-> > > > +		mp->m_buf_writeback_fn = repair_capture_writeback;
-> > > > +
-> > > >  	/*
-> > > >  	 * set XFS-independent status vars from the mount/sb structure
-> > > >  	 */
-> > > > 
-> > > 
-> > 
-> 
