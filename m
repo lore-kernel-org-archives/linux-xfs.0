@@ -2,233 +2,124 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 398AAC433E6
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 07:26:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 013F5C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 07:56:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA9B660238
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 07:25:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C0AB61494
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 07:56:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229767AbhBRHVn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Feb 2021 02:21:43 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:38299 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231334AbhBRHPE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Feb 2021 02:15:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1613632415;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=DsXxaFmSIY8dERppLdjqfrib0/PA3/hpY+Wbu/fMqtY=;
-        b=dxnKsMxQONd4a8mfN4g8+pwRp7S+aUkLcrs9zijR5FZ77ITdHj0eq+JjWLqWV223Bw8ro4
-        6+eUQQPNGZW6ldbK9Ve/CPbmP51U/onAzrwiuf8SP9inDbfHsJKGgaCjvORpEvjMy2Puqm
-        kfZdQRmKOGaTsw5tXPGRDs88X9qUhVs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-436-oAAoU6iJPQ-XkBszyaY7XA-1; Thu, 18 Feb 2021 02:13:30 -0500
-X-MC-Unique: oAAoU6iJPQ-XkBszyaY7XA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 754CD195D562;
-        Thu, 18 Feb 2021 07:13:29 +0000 (UTC)
-Received: from zlang-laptop.redhat.com (ovpn-13-99.pek2.redhat.com [10.72.13.99])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5AE125D9DC;
-        Thu, 18 Feb 2021 07:13:27 +0000 (UTC)
-From:   Zorro Lang <zlang@redhat.com>
-To:     fstests@vger.kernel.org
-Cc:     linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        sunke32@huawei.com
-Subject: [PATCH] xfstests: rename RENAME_WHITEOUT test on fs no enough sapce
-Date:   Thu, 18 Feb 2021 15:13:24 +0800
-Message-Id: <20210218071324.50413-1-zlang@redhat.com>
+        id S230163AbhBRHzh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Feb 2021 02:55:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45672 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231373AbhBRHwq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Feb 2021 02:52:46 -0500
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3039DC061574
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Feb 2021 23:51:09 -0800 (PST)
+Received: by mail-pj1-x102c.google.com with SMTP id fa16so874662pjb.1
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Feb 2021 23:51:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=+lqdI/WJohYsXT4fAKdlVv1XEuod0Vv/50s+N9toB0c=;
+        b=eSBvVM78pAk/+g9YNHieVSlAozumdyIyIYL8qn8TYLEjeo2aOwk3XYPg1b8ZmHl5AD
+         WkFogtz0VBvrE9rdOyPHuxMHzBmmHy7fxI5w4OODo86nzNRjKWnBx1Kf/J5ZA0LklZNS
+         ek5Hs1C2bETToqJpuUSzn3BK7xqN83HlO9hxbUUIAZfRap3gkkV3ixqJMBkXVBAFNRzq
+         1nbXMok9+5ZrtfngzrLBXIBKbhjYH4f7OGisdvpUqiJkx+1hZKgFWY070B7WoILzdrKR
+         1Wptu41mz51L1e3HCgk6L2JPhYbNNylJNkWt6w7vqookHBKL3Kp/QuPU/TBQsGtN61nO
+         M+pw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=+lqdI/WJohYsXT4fAKdlVv1XEuod0Vv/50s+N9toB0c=;
+        b=Lib7vVl8Qkyi0VtrzyuB6qWVsR4qV53CSdq9hkkz1D4gVPZhMOu2bQMhnhWxV+Kur9
+         ptH1HQEU/DPmpLU0gMOv48h0vuP9p9GmF4MztYc7OQYdNkRSfMpt3TZvfIKTh2s1/xFd
+         v9bFJKytzM0E37oDfDkte0hk/bc7s1FRA0v5hY9FKqvam7hxmNE5EDyixScGJJcpzTot
+         WiCrruDUMwTWmCZySVYi9ehxBIHw570bSJWYGDZ3q7jxyyXi39v/ip1Qn601tQVffymd
+         tmNClpf+FZuLoT3C7js/IFXMzffCvDPBEm5n1bIPjZCji+9C1h+lFVPU9f7msWTAYwig
+         jiHQ==
+X-Gm-Message-State: AOAM531YFqo1vVXqPn8Tm7BXdl0v/xfK4xVDvmjvjTGOvksI23WpqqXm
+        CfjZAPjizOrLJshshxGP5K326cFbz2k=
+X-Google-Smtp-Source: ABdhPJxoj+59eoqxAXbZHQZMLx3WFB/35qEWK8k2EPaqedVf2PijkScnf5dSCeswK9gFNRJVMnV/PA==
+X-Received: by 2002:a17:90b:17c7:: with SMTP id me7mr2853612pjb.205.1613634668443;
+        Wed, 17 Feb 2021 23:51:08 -0800 (PST)
+Received: from garuda ([122.171.191.50])
+        by smtp.gmail.com with ESMTPSA id n1sm4899916pgn.94.2021.02.17.23.51.06
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 17 Feb 2021 23:51:08 -0800 (PST)
+References: <20210217132339.651020-1-bfoster@redhat.com>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: set aside allocation btree blocks from block reservation
+In-reply-to: <20210217132339.651020-1-bfoster@redhat.com>
+Date:   Thu, 18 Feb 2021 13:21:05 +0530
+Message-ID: <87eehd95li.fsf@garuda>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This's a regression test for linux 6b4b8e6b4ad8 ("ext4: fix bug for
-rename with RENAME_WHITEOUT"). Rename a file with RENAME_WHITEOUT
-flag might cause corruption when there's not enough space to
-complete this renaming operation.
+On 17 Feb 2021 at 18:53, Brian Foster wrote:
+> The blocks used for allocation btrees (bnobt and countbt) are
+> technically considered free space. This is because as free space is
+> used, allocbt blocks are removed and naturally become available for
+> traditional allocation. However, this means that a significant
+> portion of free space may consist of in-use btree blocks if free
+> space is severely fragmented.
+>
+> On large filesystems with large perag reservations, this can lead to
+> a rare but nasty condition where a significant amount of physical
+> free space is available, but the majority of actual usable blocks
+> consist of in-use allocbt blocks. We have a record of a (~12TB, 32
+> AG) filesystem with multiple AGs in a state with ~2.5GB or so free
+> blocks tracked across ~300 total allocbt blocks, but effectively at
+> 100% full because the the free space is entirely consumed by
+> refcountbt perag reservation.
+>
+> Such a large perag reservation is by design on large filesystems.
+> The problem is that because the free space is so fragmented, this AG
+> contributes the 300 or so allocbt blocks to the global counters as
+> free space. If this pattern repeats across enough AGs, the
+> filesystem lands in a state where global block reservation can
+> outrun physical block availability. For example, a streaming
+> buffered write on the affected filesystem continues to allow delayed
+> allocation beyond the point where writeback starts to fail due to
+> physical block allocation failures. The expected behavior is for the
+> delalloc block reservation to fail gracefully with -ENOSPC before
+> physical block allocation failure is a possibility.
+>
+> To address this problem, introduce a percpu counter to track the sum
+> of the allocbt block counters already tracked in the AGF. Use the
+> new counter to set these blocks aside at reservation time and thus
+> ensure they cannot be allocated until truly available. Since this is
+> only necessary when large reflink perag reservations are in place
+> and the counter requires a read of each AGF to fully populate, only
+> enforce on reflink enabled filesystems. This allows initialization
+> of the counter at ->pagf_init time because the refcountbt perag
+> reservation init code reads each AGF at mount time.
+>
+> Note that the counter uses a small percpu batch size to allow the
+> allocation paths to keep the primary count accurate enough that the
+> reservation path doesn't ever need to lock and sum the counter.
+> Absolute accuracy is not required here, just that the counter
+> reflects the majority of unavailable blocks so the reservation path
+> fails first.
+>
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
-Signed-off-by: Sun Ke <sunke32@huawei.com>
----
+The changes look good to me from the perspective of logical correctness.
 
-Hi,
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-As the request of Sun Ke, I rewrite his test case as this patch.
-The history of reviewing as below:
-https://patchwork.kernel.org/project/fstests/patch/20210128061202.210074-1-sunke32@huawei.com/
-https://patchwork.kernel.org/project/fstests/patch/20210202123956.3146761-1-sunke32@huawei.com/
-
-At last, I decide to create several chunks of files to do this testing, help to
-get more chance to trigger ENOSPC when does rename(RENAME_WHITEOUT).
-
-From my testing, it can reproduce this bug on linux 5.10[1], and test passed on
-linux 5.11-rc5+ [2]. And it works on XFS too. Hope to get more review from fs-devel.
-
-[1]
-# ./check generic/623
-FSTYP         -- ext4
-PLATFORM      -- Linux/x86_64 ibm-xxxxxxx-xx 5.10.0-rc5+ #4 SMP Tue Jan 5 20:12:45 CST 2021
-MKFS_OPTIONS  -- /dev/mapper/testvg-scratchdev
-MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:root_t:s0 /dev/mapper/testvg-scratchdev /mnt/scratch
-
-generic/623     _check_generic_filesystem: filesystem on /dev/mapper/testvg-scratchdev is inconsistent                                                                                        
-(see /root/git/xfstests-zlang/results//generic/623.full for details)
-- output mismatch (see /root/git/xfstests-zlang/results//generic/623.out.bad)
-    --- tests/generic/623.out   2021-02-18 13:26:35.953071523 +0800
-    +++ /root/git/xfstests-zlang/results//generic/623.out.bad   2021-02-18 13:28:10.450733088 +0800                                                                                           
-    @@ -1,2 +1,232 @@
-     QA output created by 623
-    +ls: cannot access '/mnt/scratch/srcfile3866': Structure needs cleaning
-    +ls: cannot access '/mnt/scratch/srcfile3867': Structure needs cleaning
-    +ls: cannot access '/mnt/scratch/srcfile3868': Structure needs cleaning
-    +ls: cannot access '/mnt/scratch/srcfile3869': Structure needs cleaning
-    +ls: cannot access '/mnt/scratch/srcfile3870': Structure needs cleaning
-    +ls: cannot access '/mnt/scratch/srcfile3871': Structure needs cleaning
-    ...
-    (Run 'diff -u /root/git/xfstests-zlang/tests/generic/623.out /root/git/xfstests-zlang/results//generic/623.out.bad'  to see the entire diff)                                              
-Ran: generic/623
-Failures: generic/623
-Failed 1 of 1 tests
-
-[2]
-# ./check generic/623
-FSTYP         -- ext4
-PLATFORM      -- Linux/x86_64 localhost 5.11.0-0.rc5.20210128git76c057c84d28.137.fc34.x86_64 #1 SMP Thu Jan 28 21:10:47 UTC 2021
-MKFS_OPTIONS  -- /dev/mapper/testvg-scratchdev
-MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:root_t:s0 /dev/mapper/testvg-scratchdev /mnt/scratch
-
-generic/623 4s ...  86s
-Ran: generic/623
-Passed all 1 tests
-
-[3]
-# ./check generic/623
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 localhost 5.11.0-0.rc5.20210128git76c057c84d28.137.fc34.x86_64 #1 SMP Thu Jan 28 21:10:47 UTC 2021
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/mapper/testvg-scratchdev
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/testvg-scratchdev /mnt/scratch
-
-generic/623 86s ...  99s
-Ran: generic/623
-Passed all 1 tests
-
-Thanks,
-Zorro
-
- tests/generic/623     | 72 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/623.out |  2 ++
- tests/generic/group   |  1 +
- 3 files changed, 75 insertions(+)
- create mode 100755 tests/generic/623
- create mode 100644 tests/generic/623.out
-
-diff --git a/tests/generic/623 b/tests/generic/623
-new file mode 100755
-index 00000000..56358ca6
---- /dev/null
-+++ b/tests/generic/623
-@@ -0,0 +1,72 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2021 HUAWEI.  All Rights Reserved.
-+# Copyright (c) 2021 Red Hat Inc.  All Rights Reserved.
-+#
-+# FS QA Test 623
-+#
-+# Test RENAME_WHITEOUT on filesystem without space to create one more inodes.
-+# This is a regression test for kernel commit:
-+#   6b4b8e6b4ad8 ("ext4: ext4: fix bug for rename with RENAME_WHITEOUT")
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/populate
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_require_scratch
-+
-+_scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1
-+_scratch_mount
-+
-+# Create several chunks of file, to help to trigger the bug easily
-+CHUNKS=$((64 * 64))
-+for ((i=0; i<CHUNKS; i++));do
-+	touch $SCRATCH_MNT/srcfile$i
-+done
-+# Try to fill the whole fs
-+nr_free=$(stat -f -c '%f' $SCRATCH_MNT)
-+blksz="$(_get_block_size $SCRATCH_MNT)"
-+_fill_fs $((nr_free * blksz)) $SCRATCH_MNT/fill_space $blksz 0 >> $seqres.full 2>&1
-+# Use empty files to fill the rest
-+for ((i=0; i<10000; i++));do
-+	touch $SCRATCH_MNT/fill_file$i 2>/dev/null
-+	# Until no more files can be created
-+	if [ $? -ne 0 ];then
-+		break
-+	fi
-+done
-+# ENOSPC is expected here
-+for ((i=0; i<CHUNKS; i++));do
-+	$here/src/renameat2 -w $SCRATCH_MNT/srcfile$i $SCRATCH_MNT/dstfile$i >> $seqres.full 2>&1
-+done
-+_scratch_cycle_mount
-+# Expect no errors at here
-+for ((i=0; i<CHUNKS; i++));do
-+	ls -l $SCRATCH_MNT/srcfile$i >/dev/null
-+done
-+
-+echo "Silence is golden"
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/623.out b/tests/generic/623.out
-new file mode 100644
-index 00000000..6f774f19
---- /dev/null
-+++ b/tests/generic/623.out
-@@ -0,0 +1,2 @@
-+QA output created by 623
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index b10fdea4..72136075 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -625,3 +625,4 @@
- 620 auto mount quick
- 621 auto quick encrypt
- 622 auto shutdown metadata atime
-+623 auto rename enospc
 -- 
-2.29.2
-
+chandan
