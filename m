@@ -7,206 +7,248 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 041AFC43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17BFDC4360C
 	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 18:48:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8C1164EC2
+	by mail.kernel.org (Postfix) with ESMTP id D240D64ECC
 	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 18:48:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233196AbhBRSsa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Feb 2021 13:48:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48152 "EHLO mail.kernel.org"
+        id S233192AbhBRSs3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Feb 2021 13:48:29 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37620 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233665AbhBRRms (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Feb 2021 12:42:48 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 01ABE64EC2;
-        Thu, 18 Feb 2021 17:42:06 +0000 (UTC)
+        id S232012AbhBRRIA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Feb 2021 12:08:00 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8110D64E15;
+        Thu, 18 Feb 2021 17:07:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613670127;
-        bh=JkW0nbIyHZjOwHuToIgmxHT0qQ73qc/QZTBGTwFN/fE=;
+        s=k20201202; t=1613668038;
+        bh=i8XnE0Rr0X6SJSUe81NCfQZf7Nco2uoo8pbihsMXbBc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JJr4tDzjYjGFCexazUjsQ+S2v+DGs0/zLsmC/0dmvDQfrFbBKsMCudMVvQfNXa+H9
-         2We2Qxk39MgzGG503zrCHRiDNDCMaMqDPAGfO+EauAfgq2onsaWjWMg+AXPSL1s5p6
-         Wb6EQsAMdkplcSamEBgjaD/1ATx6BaD2B7194ppTy2gmdyrjIUm936zbv7DDCrySca
-         TXL3pgj/JL9NHHiNjDQEImYNQHpJYpwnZR4N4YEayBxlE7Yl5GetY9zTsD6P8kTiyq
-         EJTq2rhsuSuQ//jkEqVi1zSLScp0BrKSnCF6ZCbMLOF7cvMJVSwzAsVBd4+RfrXWvH
-         jMgPpncm36ZQA==
-Date:   Thu, 18 Feb 2021 09:42:06 -0800
+        b=Pt/79RtU4ZDi6uKo4KXkHPLo7Mov99kmxC3bLkgCl/iJM/7OqmMKLYjhgXHbXaLdX
+         f3xx+0cv0PS450cdcjAJdsQ4Q8witYDsvZZuk9ECgnjSf0EGsDpPP/23OwvBPjbszp
+         StUpPzuR/sNsK2bJ0DhJ9u53IyI09Vtww770u5L0P9Ngk8ojd5fGGodcjbZZylvlLJ
+         Npg+uLirWgI4zyIaq88pXtGlfyfOPsZj/3SxN2LI099XDXckblddivRXJ2Jjdj3vSY
+         ePLzOV66o5weWSPZuD5MHZCwTgFEDVwZ8iHuv8OdGoWYzeeHpJNMDJSRytLY2+fUlZ
+         lj+/N3CNcUfwQ==
+Date:   Thu, 18 Feb 2021 09:07:17 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] libxfs: simulate system failure after a certain
- number of writes
-Message-ID: <20210218174206.GV7193@magnolia>
+Subject: Re: [PATCH 1/3] xfs_repair: set NEEDSREPAIR the first time we write
+ to a filesystem
+Message-ID: <20210218170717.GU7193@magnolia>
 References: <161319520460.422860.10568013013578673175.stgit@magnolia>
- <161319521620.422860.17802896302850828411.stgit@magnolia>
- <20210216115645.GC534175@bfoster>
- <20210218043620.GQ7193@magnolia>
- <20210218130217.GB685651@bfoster>
+ <161319521070.422860.2540813932323979688.stgit@magnolia>
+ <20210216115534.GB534175@bfoster>
+ <20210218044522.GR7193@magnolia>
+ <20210218125927.GA685651@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210218130217.GB685651@bfoster>
+In-Reply-To: <20210218125927.GA685651@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 18, 2021 at 08:02:17AM -0500, Brian Foster wrote:
-> On Wed, Feb 17, 2021 at 08:36:20PM -0800, Darrick J. Wong wrote:
-> > On Tue, Feb 16, 2021 at 06:56:45AM -0500, Brian Foster wrote:
-> > > On Fri, Feb 12, 2021 at 09:46:56PM -0800, Darrick J. Wong wrote:
+On Thu, Feb 18, 2021 at 07:59:27AM -0500, Brian Foster wrote:
+> On Wed, Feb 17, 2021 at 08:45:22PM -0800, Darrick J. Wong wrote:
+> > On Tue, Feb 16, 2021 at 06:55:34AM -0500, Brian Foster wrote:
+> > > On Fri, Feb 12, 2021 at 09:46:50PM -0800, Darrick J. Wong wrote:
 > > > > From: Darrick J. Wong <djwong@kernel.org>
 > > > > 
-> > > > Add an error injection knob so that we can simulate system failure after
-> > > > a certain number of disk writes.  This knob is being added so that we
-> > > > can check repair's behavior after an arbitrary number of tests.
-> > > > 
-> > > > Set LIBXFS_DEBUG_WRITE_CRASH={ddev,logdev,rtdev}=nn in the environment
-> > > > to make libxfs SIGKILL itself after nn writes to the data, log, or rt
-> > > > devices.  Note that this only applies to xfs_buf writes and zero_range.
+> > > > Add a hook to the buffer cache so that xfs_repair can intercept the
+> > > > first write to a V5 filesystem to set the NEEDSREPAIR flag.  In the
+> > > > event that xfs_repair dirties the filesystem and goes down, this ensures
+> > > > that the sysadmin will have to re-start repair before mounting.
 > > > > 
 > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > > > ---
-> > > >  libxfs/init.c      |   68 +++++++++++++++++++++++++++++++++++++++++++++++++---
-> > > >  libxfs/libxfs_io.h |   19 +++++++++++++++
-> > > >  libxfs/rdwr.c      |    6 ++++-
-> > > >  3 files changed, 88 insertions(+), 5 deletions(-)
+> > > >  include/xfs_mount.h |    4 ++
+> > > >  libxfs/rdwr.c       |    4 ++
+> > > >  repair/xfs_repair.c |   95 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  3 files changed, 103 insertions(+)
 > > > > 
 > > > > 
-> > > > diff --git a/libxfs/init.c b/libxfs/init.c
-> > > > index 8a8ce3c4..1ec83791 100644
-> > > > --- a/libxfs/init.c
-> > > > +++ b/libxfs/init.c
 > > > ...
-> > > > @@ -614,6 +634,46 @@ libxfs_buftarg_init(
-> > > >  	dev_t			logdev,
-> > > >  	dev_t			rtdev)
-> > > >  {
-> > > > +	char			*p = getenv("LIBXFS_DEBUG_WRITE_CRASH");
-> > > > +	unsigned long		dfail = 0, lfail = 0, rfail = 0;
-> > > 
-> > > Was there a reason for using an environment variable now rather than the
-> > > original command line option?
-> > 
-> > Well, you said you wanted a generic write error injection hook for
-> > libxfs, and this is the simplest way to add that, given that libraries
-> > don't have a direct means to parse argc and argv.
-> > 
-> 
-> I think you're misinterpreting my previous feedback. ;) I thought the
-> injection mechanism was too closely tied to an implementation detail
-> (i.e. "fail after updating needsrepair bit") of the application.
-> Instead, I preferred a more generic mechanism (the "fail after so many
-> I/Os," "fail after phase N" approaches in these patches) that covers the
-> original use case. That broadens the potential test coverage and
-> usefulness of the mechanism.
-
-Agreed.  Admittedly, the test case I wrote for it that kills repair
-after NR writes (where NR steadily increases) has opened my eyes to how
-... stunningly awful xfs_repair (and e2fsck) can be.
-
-(As in, you can *very easily* snatch death from the jaws of victory if
-all you wanted was to fix a minor bitflip somewhere /and/ repair
-dies...)
-
-> > I mean... this /could/ take the form of an exposed library function that
-> > xfs utilities could opt into their own getopt loops, but that's even
-> > /more/ infrastructure code that I'd have to write.
-> > 
-> 
-> In this case I was just curious why the interface was changed from the
-> previous approach. ISTM it didn't necessarily have to, but I'm not
-> concerned about it either way.
-
-<nod>
-
+> > > > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> > > > index 90d1a95a..12e319ae 100644
+> > > > --- a/repair/xfs_repair.c
+> > > > +++ b/repair/xfs_repair.c
 > ...
-> > > > diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-> > > > index c80e2d59..85485257 100644
-> > > > --- a/libxfs/libxfs_io.h
-> > > > +++ b/libxfs/libxfs_io.h
-> > > ...
-> > > > @@ -30,6 +32,23 @@ struct xfs_buftarg {
-> > > >  #define XFS_BUFTARG_LOST_WRITE		(1 << 0)
-> > > >  /* A dirty buffer failed the write verifier. */
-> > > >  #define XFS_BUFTARG_CORRUPT_WRITE	(1 << 1)
-> > > > +/* Simulate failure after a certain number of writes. */
-> > > > +#define XFS_BUFTARG_INJECT_WRITE_FAIL	(1 << 2)
-> > > > +
-> > > > +/* Simulate the system crashing after a write. */
-> > > > +static inline void
-> > > > +xfs_buftarg_trip_write(
-> > > > +	struct xfs_buftarg	*btp)
+> > > > @@ -751,6 +753,95 @@ clear_needsrepair(
+> > > >  		libxfs_buf_relse(bp);
+> > > >  }
+> > > >  
+> > > > +static void
+> > > > +update_sb_crc_only(
+> > > > +	struct xfs_buf		*bp)
 > > > > +{
-> > > > +	if (!(btp->flags & XFS_BUFTARG_INJECT_WRITE_FAIL))
+> > > > +	xfs_buf_update_cksum(bp, XFS_SB_CRC_OFF);
+> > > > +}
+> > > > +
+> > > > +/* Forcibly write the primary superblock with the NEEDSREPAIR flag set. */
+> > > > +static void
+> > > > +force_needsrepair(
+> > > > +	struct xfs_mount	*mp)
+> > > > +{
+> > > > +	struct xfs_buf_ops	fake_ops;
+> > > > +	struct xfs_buf		*bp;
+> > > > +	int			error;
+> > > > +
+> > > > +	if (!xfs_sb_version_hascrc(&mp->m_sb) ||
+> > > > +	    xfs_sb_version_needsrepair(&mp->m_sb))
 > > > > +		return;
 > > > > +
-> > > > +	pthread_mutex_lock(&btp->lock);
-> > > > +	btp->writes_left--;
-> > > > +	if (!btp->writes_left)
-> > > > +		kill(getpid(), SIGKILL);
+> > > > +	bp = libxfs_getsb(mp);
+> > > > +	if (!bp || bp->b_error) {
+> > > > +		do_log(
+> > > > +	_("couldn't get superblock to set needsrepair, err=%d\n"),
+> > > > +				bp ? bp->b_error : ENOMEM);
+> > > > +		return;
+> > > > +	} else {
+> > > > +		/*
+> > > > +		 * It's possible that we need to set NEEDSREPAIR before we've
+> > > > +		 * had a chance to fix the summary counters in the primary sb.
+> > > > +		 * With the exception of those counters, phase 1 already
+> > > > +		 * ensured that the geometry makes sense.
+> > > > +		 *
+> > > > +		 * Bad summary counters in the primary super can cause the
+> > > > +		 * write verifier to fail, so substitute a dummy that only sets
+> > > > +		 * the CRC.  In the event of a crash, NEEDSREPAIR will prevent
+> > > > +		 * the kernel from mounting our potentially damaged filesystem
+> > > > +		 * until repair is run again, so it's ok to bypass the usual
+> > > > +		 * verification in this one case.
+> > > > +		 */
+> > > > +		fake_ops = xfs_sb_buf_ops; /* struct copy */
+> > > > +		fake_ops.verify_write = update_sb_crc_only;
+> > > > +
+> > > > +		mp->m_sb.sb_features_incompat |=
+> > > > +				XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
+> > > > +		libxfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+> > > > +
+> > > > +		/* Force the primary super to disk immediately. */
+> > > > +		bp->b_ops = &fake_ops;
+> > > > +		error = -libxfs_bwrite(bp);
 > > > 
-> > > Can we just exit()?
-> > > 
-> > > (Same questions for the next patch..)
+> > > This looks like it calls back into the writeback hook before it's been
+> > > cleared.
 > > 
-> > The goal of this generic write error injection framework is to simulate
-> > total system crashes immediately after a write.
+> > Yes, it does...
 > > 
-> > SIGKILL and exit are not the same, because atexit handlers don't run if
-> > the process forcibly kills itself.
+> > > I'm guessing the xfs_sb_version_needsrepair() check above cuts
+> > > off any recursion issues,
+> > 
+> > ...but as soon as we end up in the writeback hook, the b_ops and
+> > XFS_SB_DADDR checks cause the hook to return without doing anything.
+> > 
+> > > but it might be cleaner to clear the callback pointer first.
+> > 
+> > We need to block all other writers until /after/ we've written the
+> > primary super, which means that we can't clear the callback until some
+> > time after the bwrite.
 > > 
 > 
-> Can you document this somewhere please?
+> Ok, care to document how this is intended to work with a comment?
 
-Will do.
+Will do, though I'll put the comments about the hook in the actual hook
+function:
+
+	/*
+	 * This write hook ignores any buffer that looks like a
+	 * superblock to avoid hook recursion when setting NEEDSREPAIR.
+	 * Higher level code modifying an sb must control the flag
+	 * manually.
+	 */
+
+	if (bp->b_ops == &xfs_sb_buf_ops || bp->b_bn == XFS_SB_DADDR)
+		return;
+
+	pthread_mutex_lock(&wb_mutex);
+
+	/*
+	 * If someone else already dropped the hook, then needsrepair
+	 * has already been set on the filesystem and we can unlock.
+	 */
+	if (mp->m_buf_writeback_fn != repair_capture_writeback)
+		goto unlock;
+
+	/*
+	 * If we get here, the buffer being written is not a superblock,
+	 * and needsrepair needs to be set.  The hook is kept in place
+	 * to plug all other writes until the sb write finishes.
+	 */
+	force_needsrepair(mp);
+	mp->m_buf_writeback_fn = NULL;
 
 --D
 
 > Brian
 > 
+> > > 
+> > > > +		bp->b_ops = &xfs_sb_buf_ops;
+> > > > +		if (error)
+> > > > +			do_log(_("couldn't force needsrepair, err=%d\n"), error);
+> > > > +	}
+> > > > +	if (bp)
+> > > > +		libxfs_buf_relse(bp);
+> > > 
+> > > Doesn't appear we can get here with bp == NULL. Otherwise the rest looks
+> > > reasonable to me.
+> > 
+> > Yep, will fix.
+> > 
 > > --D
 > > 
-> > > 
 > > > Brian
 > > > 
-> > > > +	pthread_mutex_unlock(&btp->lock);
 > > > > +}
+> > > > +
+> > > > +/* Intercept the first write to the filesystem so we can set NEEDSREPAIR. */
+> > > > +static void
+> > > > +repair_capture_writeback(
+> > > > +	struct xfs_buf		*bp)
+> > > > +{
+> > > > +	struct xfs_mount	*mp = bp->b_mount;
+> > > > +	static pthread_mutex_t	wb_mutex = PTHREAD_MUTEX_INITIALIZER;
+> > > > +
+> > > > +	/* Higher level code modifying a superblock must set NEEDSREPAIR. */
+> > > > +	if (bp->b_ops == &xfs_sb_buf_ops || bp->b_bn == XFS_SB_DADDR)
+> > > > +		return;
+> > > > +
+> > > > +	pthread_mutex_lock(&wb_mutex);
+> > > > +
+> > > > +	/*
+> > > > +	 * If someone else already dropped the hook, then needsrepair has
+> > > > +	 * already been set on the filesystem and we can unlock.
+> > > > +	 */
+> > > > +	if (mp->m_buf_writeback_fn != repair_capture_writeback)
+> > > > +		goto unlock;
+> > > > +
+> > > > +	/*
+> > > > +	 * If we get here, the buffer being written is not a superblock, and
+> > > > +	 * needsrepair needs to be set.
+> > > > +	 */
+> > > > +	force_needsrepair(mp);
+> > > > +	mp->m_buf_writeback_fn = NULL;
+> > > > +unlock:
+> > > > +	pthread_mutex_unlock(&wb_mutex);
+> > > > +}
+> > > > +
+> > > >  int
+> > > >  main(int argc, char **argv)
+> > > >  {
+> > > > @@ -847,6 +938,10 @@ main(int argc, char **argv)
+> > > >  	if (verbose > 2)
+> > > >  		mp->m_flags |= LIBXFS_MOUNT_WANT_CORRUPTED;
 > > > >  
-> > > >  extern void	libxfs_buftarg_init(struct xfs_mount *mp, dev_t ddev,
-> > > >  				    dev_t logdev, dev_t rtdev);
-> > > > diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> > > > index ca272387..fd456d6b 100644
-> > > > --- a/libxfs/rdwr.c
-> > > > +++ b/libxfs/rdwr.c
-> > > > @@ -74,8 +74,10 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
-> > > >  	/* try to use special zeroing methods, fall back to writes if needed */
-> > > >  	len_bytes = LIBXFS_BBTOOFF64(len);
-> > > >  	error = platform_zero_range(fd, start_offset, len_bytes);
-> > > > -	if (!error)
-> > > > +	if (!error) {
-> > > > +		xfs_buftarg_trip_write(btp);
-> > > >  		return 0;
-> > > > +	}
-> > > >  
-> > > >  	zsize = min(BDSTRAT_SIZE, BBTOB(len));
-> > > >  	if ((z = memalign(libxfs_device_alignment(), zsize)) == NULL) {
-> > > > @@ -105,6 +107,7 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
-> > > >  				progname, __FUNCTION__);
-> > > >  			exit(1);
-> > > >  		}
-> > > > +		xfs_buftarg_trip_write(btp);
-> > > >  		offset += bytes;
-> > > >  	}
-> > > >  	free(z);
-> > > > @@ -860,6 +863,7 @@ libxfs_bwrite(
-> > > >  	} else {
-> > > >  		bp->b_flags |= LIBXFS_B_UPTODATE;
-> > > >  		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_UNCHECKED);
-> > > > +		xfs_buftarg_trip_write(bp->b_target);
-> > > >  	}
-> > > >  	return bp->b_error;
-> > > >  }
+> > > > +	/* Capture the first writeback so that we can set needsrepair. */
+> > > > +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> > > > +		mp->m_buf_writeback_fn = repair_capture_writeback;
+> > > > +
+> > > >  	/*
+> > > >  	 * set XFS-independent status vars from the mount/sb structure
+> > > >  	 */
 > > > > 
 > > > 
 > > 
