@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1C1FC433DB
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 03:18:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2681CC433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 03:19:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A12FD64ED5
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 03:18:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3FE864ED5
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 03:19:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229656AbhBSDSw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Feb 2021 22:18:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53318 "EHLO mail.kernel.org"
+        id S229678AbhBSDTB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Feb 2021 22:19:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53336 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229480AbhBSDSv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Feb 2021 22:18:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7A6BD64EDA;
-        Fri, 19 Feb 2021 03:18:10 +0000 (UTC)
+        id S229480AbhBSDS4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Feb 2021 22:18:56 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0A2D564EDB;
+        Fri, 19 Feb 2021 03:18:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613704690;
-        bh=MkeHDcRZlsYNQo92ECHItNR2rwYfuz4y5kRuQU12EEQ=;
+        s=k20201202; t=1613704696;
+        bh=Oe9LMLwa4A/l8KiB2WaNs2EVE1/j8fBuAqXEgjUaktw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=TWkZuAb/fS+sZAC3p6K3O4SoHks9F/UxqJjK22Y1kpnp3o1bKkp2Ebp5Ld8KNs8B6
-         4Oc5oFmzfaCAwRY6spirOSQoEgsD0v7XtkkI8tpz95vGZZFYvMZ6faUkrJE3CEDMtk
-         mJhlTVAcWiXuJcSZ5Mzd/5WgVgNmJCMFlB7ReXDHkzzn0rU7ODomDdFgcxhxiyPkYx
-         mPecl1P85ptq4w3XnjIjKpYhIMZ0xwlnuNihLsFPkr3n9doJLXNfVRNcQV0g7hgUi8
-         t9z9ygpRFd38J7G+YM7dzmO9sNiTj1ydK1uOKAZBjncCEB+I5o3r+58t5oWsKVvYr4
-         fgGVEaB5nIqww==
-Subject: [PATCH 3/4] xfs_repair: factor phase transitions into a helper
+        b=K2f7JBpHEVXjerx7469FsdW41BWyHZVCEBiBDlycmAvEz3TO2qri4gJCAUXDo6c6Z
+         2lzF6Xc/fhab6Zuxvn/dyGqSEjfLa4pOcUiI8FbhCMXvUjeCfzuQyHJTRXitc5v6wN
+         /XDTN2kcPMtERe+POodi02j57xLcuti/HbRsJrgK6b4NSZP1m7w8ZrMpuLUeINgFPr
+         1E9aWoxB+eeVOszwZYv7BalBwVFLpM/Lu+O+ZCkokks/uQgFyGNKlpRt+hLD6ZPFPN
+         iMldtmopQPWHJ6ayoh32W4ZOWJYYwlLkC86EXBR7HW1JLGqXv86+S16D68h9qwjqDY
+         R3gdfLjG533QQ==
+Subject: [PATCH 4/4] xfs_repair: add post-phase error injection points
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Date:   Thu, 18 Feb 2021 19:18:10 -0800
-Message-ID: <161370469026.2389661.9403286204851498334.stgit@magnolia>
+Date:   Thu, 18 Feb 2021 19:18:15 -0800
+Message-ID: <161370469573.2389661.2370498929966302970.stgit@magnolia>
 In-Reply-To: <161370467351.2389661.12577563230109429304.stgit@magnolia>
 References: <161370467351.2389661.12577563230109429304.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,90 +49,64 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a helper function to centralize all the stuff we do at the end of
-a repair phase (which for now is limited to reporting progress).  The
-next patch will add more interesting things to this helper.
+Create an error injection point so that we can simulate repair failing
+after a certain phase.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/xfs_repair.c |   22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+ repair/globals.c    |    3 +++
+ repair/globals.h    |    3 +++
+ repair/xfs_repair.c |    8 ++++++++
+ 3 files changed, 14 insertions(+)
 
 
+diff --git a/repair/globals.c b/repair/globals.c
+index 110d98b6..537d068b 100644
+--- a/repair/globals.c
++++ b/repair/globals.c
+@@ -117,3 +117,6 @@ uint64_t	*prog_rpt_done;
+ 
+ int		ag_stride;
+ int		thread_count;
++
++/* If nonzero, simulate failure after this phase. */
++int		fail_after_phase;
+diff --git a/repair/globals.h b/repair/globals.h
+index 1d397b35..a9287320 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -162,4 +162,7 @@ extern uint64_t		*prog_rpt_done;
+ extern int		ag_stride;
+ extern int		thread_count;
+ 
++/* If nonzero, simulate failure after this phase. */
++extern int		fail_after_phase;
++
+ #endif /* _XFS_REPAIR_GLOBAL_H */
 diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 8eb7da53..891b3b23 100644
+index 891b3b23..33062170 100644
 --- a/repair/xfs_repair.c
 +++ b/repair/xfs_repair.c
-@@ -847,6 +847,12 @@ repair_capture_writeback(
- 	pthread_mutex_unlock(&wb_mutex);
+@@ -362,6 +362,10 @@ process_args(int argc, char **argv)
+ 
+ 	if (report_corrected && no_modify)
+ 		usage();
++
++	p = getenv("XFS_REPAIR_FAIL_AFTER_PHASE");
++	if (p)
++		fail_after_phase = (int)strtol(p, NULL, 0);
  }
  
-+static inline void
-+phase_end(int phase)
-+{
-+	timestamp(PHASE_END, phase, NULL);
-+}
-+
- int
- main(int argc, char **argv)
+ void __attribute__((noreturn))
+@@ -851,6 +855,10 @@ static inline void
+ phase_end(int phase)
  {
-@@ -876,7 +882,7 @@ main(int argc, char **argv)
- 	msgbuf = malloc(DURATION_BUF_SIZE);
+ 	timestamp(PHASE_END, phase, NULL);
++
++	/* Fail if someone injected an post-phase error. */
++	if (fail_after_phase && phase == fail_after_phase)
++		platform_crash();
+ }
  
- 	timestamp(PHASE_START, 0, NULL);
--	timestamp(PHASE_END, 0, NULL);
-+	phase_end(0);
- 
- 	/* -f forces this, but let's be nice and autodetect it, as well. */
- 	if (!isa_file) {
-@@ -899,7 +905,7 @@ main(int argc, char **argv)
- 
- 	/* do phase1 to make sure we have a superblock */
- 	phase1(temp_mp);
--	timestamp(PHASE_END, 1, NULL);
-+	phase_end(1);
- 
- 	if (no_modify && primary_sb_modified)  {
- 		do_warn(_("Primary superblock would have been modified.\n"
-@@ -1125,23 +1131,23 @@ main(int argc, char **argv)
- 
- 	/* make sure the per-ag freespace maps are ok so we can mount the fs */
- 	phase2(mp, phase2_threads);
--	timestamp(PHASE_END, 2, NULL);
-+	phase_end(2);
- 
- 	if (do_prefetch)
- 		init_prefetch(mp);
- 
- 	phase3(mp, phase2_threads);
--	timestamp(PHASE_END, 3, NULL);
-+	phase_end(3);
- 
- 	phase4(mp);
--	timestamp(PHASE_END, 4, NULL);
-+	phase_end(4);
- 
- 	if (no_modify)
- 		printf(_("No modify flag set, skipping phase 5\n"));
- 	else {
- 		phase5(mp);
- 	}
--	timestamp(PHASE_END, 5, NULL);
-+	phase_end(5);
- 
- 	/*
- 	 * Done with the block usage maps, toss them...
-@@ -1151,10 +1157,10 @@ main(int argc, char **argv)
- 
- 	if (!bad_ino_btree)  {
- 		phase6(mp);
--		timestamp(PHASE_END, 6, NULL);
-+		phase_end(6);
- 
- 		phase7(mp, phase2_threads);
--		timestamp(PHASE_END, 7, NULL);
-+		phase_end(7);
- 	} else  {
- 		do_warn(
- _("Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"));
+ int
 
