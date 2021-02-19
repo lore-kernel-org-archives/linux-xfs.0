@@ -2,167 +2,268 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28322C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 01:40:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 709BDC433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 02:25:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB56764D9A
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 01:40:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EB8764ECE
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 02:25:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229468AbhBSBjq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Feb 2021 20:39:46 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50737 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229459AbhBSBjp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Feb 2021 20:39:45 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1613698698;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ofKQc4D7mS3cNuXAUON8kLtIoct0mNDX6qGCuosRrnk=;
-        b=HF+ooR3kQxNPtWPFUwFQ1B4SF+eqMmWF5hyToouULU8ZTekDSH/p8dYcB/dSqm+s3xyOoQ
-        S84ztEdHAgyJWzCX287I5MwOWjECLtMRqJuuBo3uu6DWLz4A38J1gMxYG48qTgAbofaVrw
-        5kU2ZsI0/AQt5xBfE0P6ThRuICFnytY=
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
- [209.85.210.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-25-vJeOHnATNYGiWgMjNRIw-w-1; Thu, 18 Feb 2021 20:38:14 -0500
-X-MC-Unique: vJeOHnATNYGiWgMjNRIw-w-1
-Received: by mail-pf1-f200.google.com with SMTP id 68so2849256pfe.2
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 17:38:14 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=ofKQc4D7mS3cNuXAUON8kLtIoct0mNDX6qGCuosRrnk=;
-        b=OzKTQmxAPPhFcNhyplAYY8Nzz9GzzTtNxIVEbbGV2YDyIu9lGQoN2ZbLEX9SlxOmxe
-         Cht2ZHODIz1OKIJKfIhzasrkmlOsXgAnAehjCKrJ1ix3rjUd1mJ8lorYtbAXLxK7/t5e
-         3mI756BJ1xum/3oUpTxDB2zkiExDfz79NwVIH4FEmn7EY2GJSMqpzJUIOHus0bq7S9gf
-         DDlIlw0g1cOqVI6dkffo+XG7nTvhN+ZSdkKdeOboowx57aAF8Gvj9Xig/OsIcgKrkuIT
-         VrrXJKjqhwFd4jcXUHmWHKcZELFpUjLTAAdpzjHfkq8SUJCzgl4pU/L2mr65kRxpyvaA
-         RrjQ==
-X-Gm-Message-State: AOAM533lT8PBYDNp4vxHFzK0rtkIjXRqLS+RFEKi2ubZfa0KhVW45IpC
-        HBuPnaOVO5V1N8gdOe1jNgMgezEYiB2zExLg1tjrcI6fU2Ph7JZUJ0bjYyUriASaBJMG96wbykp
-        ifJT927xAKOWL6qu6R/m+PNG68gCTiNDYV/6Eju7E2A0pGwztJq9+R9wAvoj49RwNs3mTL/Davw
-        ==
-X-Received: by 2002:aa7:99db:0:b029:1e1:fe8a:4948 with SMTP id v27-20020aa799db0000b02901e1fe8a4948mr7001913pfi.59.1613698693742;
-        Thu, 18 Feb 2021 17:38:13 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJy6lkfDwUTtW8AK/yX/UZqjpZnKVhkTQSXUrZtFfz8XEAvIZqW5yxeZg47Fp3zbWSV0AZzSpQ==
-X-Received: by 2002:aa7:99db:0:b029:1e1:fe8a:4948 with SMTP id v27-20020aa799db0000b02901e1fe8a4948mr7001888pfi.59.1613698693394;
-        Thu, 18 Feb 2021 17:38:13 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id 9sm7414144pfw.48.2021.02.18.17.38.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Feb 2021 17:38:13 -0800 (PST)
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH v7 3/3] mkfs: make use of xfs_validate_stripe_geometry()
-Date:   Fri, 19 Feb 2021 09:37:34 +0800
-Message-Id: <20210219013734.428396-1-hsiangkao@redhat.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201013040627.13932-4-hsiangkao@redhat.com>
-References: <20201013040627.13932-4-hsiangkao@redhat.com>
+        id S229471AbhBSCY5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Feb 2021 21:24:57 -0500
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:55793 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229468AbhBSCY4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Feb 2021 21:24:56 -0500
+Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 81E934EC75C;
+        Fri, 19 Feb 2021 13:24:12 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lCvSl-00BMUX-2y; Fri, 19 Feb 2021 13:24:11 +1100
+Date:   Fri, 19 Feb 2021 13:24:11 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: set aside allocation btree blocks from block
+ reservation
+Message-ID: <20210219022411.GD4662@dread.disaster.area>
+References: <20210217132339.651020-1-bfoster@redhat.com>
+ <20210218003451.GC4662@dread.disaster.area>
+ <20210218132520.GD685651@bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210218132520.GD685651@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
+        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=7-415B0cAAAA:8
+        a=NAWtXMCIp-F5qUBBsCMA:9 a=7jz1wD0oDIKR1GSH:21 a=2uMXh6LdSuaZHuh-:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Check stripe numbers in calc_stripe_factors() by using
-xfs_validate_stripe_geometry().
+On Thu, Feb 18, 2021 at 08:25:20AM -0500, Brian Foster wrote:
+> On Thu, Feb 18, 2021 at 11:34:51AM +1100, Dave Chinner wrote:
+> > On Wed, Feb 17, 2021 at 08:23:39AM -0500, Brian Foster wrote:
+> > > The blocks used for allocation btrees (bnobt and countbt) are
+> > > technically considered free space. This is because as free space is
+> > > used, allocbt blocks are removed and naturally become available for
+> > > traditional allocation. However, this means that a significant
+> > > portion of free space may consist of in-use btree blocks if free
+> > > space is severely fragmented.
+> > > 
+> > > On large filesystems with large perag reservations, this can lead to
+> > > a rare but nasty condition where a significant amount of physical
+> > > free space is available, but the majority of actual usable blocks
+> > > consist of in-use allocbt blocks. We have a record of a (~12TB, 32
+> > > AG) filesystem with multiple AGs in a state with ~2.5GB or so free
+> > > blocks tracked across ~300 total allocbt blocks, but effectively at
+> > > 100% full because the the free space is entirely consumed by
+> > > refcountbt perag reservation.
+> > > 
+> > > Such a large perag reservation is by design on large filesystems.
+> > > The problem is that because the free space is so fragmented, this AG
+> > > contributes the 300 or so allocbt blocks to the global counters as
+> > > free space. If this pattern repeats across enough AGs, the
+> > > filesystem lands in a state where global block reservation can
+> > > outrun physical block availability. For example, a streaming
+> > > buffered write on the affected filesystem continues to allow delayed
+> > > allocation beyond the point where writeback starts to fail due to
+> > > physical block allocation failures. The expected behavior is for the
+> > > delalloc block reservation to fail gracefully with -ENOSPC before
+> > > physical block allocation failure is a possibility.
+> > 
+> > *nod*
+> > 
+> > > To address this problem, introduce a percpu counter to track the sum
+> > > of the allocbt block counters already tracked in the AGF. Use the
+> > > new counter to set these blocks aside at reservation time and thus
+> > > ensure they cannot be allocated until truly available. Since this is
+> > > only necessary when large reflink perag reservations are in place
+> > > and the counter requires a read of each AGF to fully populate, only
+> > > enforce on reflink enabled filesystems. This allows initialization
+> > > of the counter at ->pagf_init time because the refcountbt perag
+> > > reservation init code reads each AGF at mount time.
+> > 
+> > Ok, so the mechanism sounds ok, but a per-cpu counter seems like
+> > premature optimisation. How often are we really updating btree block
+> > counts? An atomic counter is good for at least a million updates a
+> > second across a 2 socket 32p machine, and I highly doubt we're
+> > incrementing/decrementing btree block counts that often on such a
+> > machine. 
+> > 
+> > While per-cpu counters have a fast write side, they come with
+> > additional algorithmic complexity. Hence if the update rate of the
+> > counter is not fast enough to need per-cpu counters, we should avoid
+> > them. just because other free space counters use per-cpu counters,
+> > it doesn't mean everything in that path needs to use them...
+> > 
+> 
+> The use of the percpu counter was more for the read side than the write
+> side. I think of it more of an abstraction to avoid having to open code
+> and define a new spin lock just for this. I actually waffled a bit on
+> just setting a batch count of 0 to get roughly equivalent behavior, but
+> didn't think it would make much difference.
 
-Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
----
-changes since v6:
- - fix dsu round-down issue (the related print message has also
-   been turned into bytes to avoid round-down issue);
- - rebase on for-next.
+That doesn't make much sense to me. percpu counters are not for
+avoiding spinlocks for stand alone counters - that's what atomic
+counters are for. percpu counters are for replacing atomic counters
+when they run out of scalability, not spin locks.
 
- libxfs/libxfs_api_defs.h |  1 +
- mkfs/xfs_mkfs.c          | 35 +++++++++++++++--------------------
- 2 files changed, 16 insertions(+), 20 deletions(-)
+> > > Note that the counter uses a small percpu batch size to allow the
+> > > allocation paths to keep the primary count accurate enough that the
+> > > reservation path doesn't ever need to lock and sum the counter.
+> > > Absolute accuracy is not required here, just that the counter
+> > > reflects the majority of unavailable blocks so the reservation path
+> > > fails first.
+> > 
+> > And this makes the per-cpu counter scale almost no better than an
+> > simple atomic counter, because a spinlock requires two atomic
+> > operations (lock and unlock). Hence a batch count of 4 only reduces
+> > the atomic op count by half but introduces at lot of extra
+> > complexity. It won't make a difference to the scalability of
+> > workloads that hammer the btree block count because contention on
+> > the internal counter spinlock will occur at close to the same
+> > concurrency rate as would occur on an atomic counter.
+> > 
+> 
+> Right, but percpu_counter_read_positive() allows a fast read in the
+> xfs_mod_fdblocks() path. I didn't use an atomic because I was concerned
+> about introducing overhead in that path. If we're Ok with whatever
+> overhead an atomic read might introduce (a spin lock in the worst case
+> for some arches), then I don't mind switching over to that. I also don't
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 9a00ce66..e4192e1b 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -192,6 +192,7 @@
- #define xfs_trans_roll			libxfs_trans_roll
- #define xfs_trim_extent			libxfs_trim_extent
- 
-+#define xfs_validate_stripe_geometry	libxfs_validate_stripe_geometry
- #define xfs_verify_agbno		libxfs_verify_agbno
- #define xfs_verify_agino		libxfs_verify_agino
- #define xfs_verify_cksum		libxfs_verify_cksum
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index d72d21ef..dcdd5262 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2361,28 +2361,22 @@ _("both data su and data sw options must be specified\n"));
- 			usage();
- 		}
- 
--		if (dsu % cfg->sectorsize) {
-+		big_dswidth = (long long int)dsu * dsw;
-+		if (BTOBBT(big_dswidth) > INT_MAX) {
- 			fprintf(stderr,
--_("data su must be a multiple of the sector size (%d)\n"), cfg->sectorsize);
-+_("data stripe width (%lld) is too large of a multiple of the data stripe unit (%d)\n"),
-+				big_dswidth, dsu);
- 			usage();
- 		}
- 
--		dsunit  = (int)BTOBBT(dsu);
--		big_dswidth = (long long int)dsunit * dsw;
--		if (big_dswidth > INT_MAX) {
--			fprintf(stderr,
--_("data stripe width (%lld) is too large of a multiple of the data stripe unit (%d)\n"),
--				big_dswidth, dsunit);
-+		if (!libxfs_validate_stripe_geometry(NULL, dsu, big_dswidth,
-+						     cfg->sectorsize, false))
- 			usage();
--		}
--		dswidth = big_dswidth;
--	}
- 
--	if ((dsunit && !dswidth) || (!dsunit && dswidth) ||
--	    (dsunit && (dswidth % dsunit != 0))) {
--		fprintf(stderr,
--_("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
--			dswidth, dsunit);
-+		dsunit = BTOBBT(dsu);
-+		dswidth = BTOBBT(big_dswidth);
-+	} else if (!libxfs_validate_stripe_geometry(NULL, BBTOB(dsunit),
-+			BBTOB(dswidth), cfg->sectorsize, false)) {
- 		usage();
- 	}
- 
-@@ -2400,11 +2394,12 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
- 
- 	/* if no stripe config set, use the device default */
- 	if (!dsunit) {
--		/* Ignore nonsense from device.  XXX add more validation */
--		if (ft->dsunit && ft->dswidth == 0) {
-+		/* Ignore nonsense from device report. */
-+		if (!libxfs_validate_stripe_geometry(NULL, BBTOB(ft->dsunit),
-+				BBTOB(ft->dswidth), 0, true)) {
- 			fprintf(stderr,
--_("%s: Volume reports stripe unit of %d bytes and stripe width of 0, ignoring.\n"),
--				progname, BBTOB(ft->dsunit));
-+_("%s: Volume reports invalid stripe unit (%d) and stripe width (%d), ignoring.\n"),
-+				progname, BBTOB(ft->dsunit), BBTOB(ft->dswidth));
- 			ft->dsunit = 0;
- 			ft->dswidth = 0;
- 		} else {
+The generic definition of atomic_read() is this:
+
+/**
+ * atomic_read - read atomic variable
+ * @v: pointer of type atomic_t
+ *
+ * Atomically reads the value of @v.
+ */
+#ifndef atomic_read
+#define atomic_read(v)  READ_ONCE((v)->counter)
+#endif
+
+And the only arch specific implementations (x86 and arm64) both have
+the same implementation.
+
+And percpu_counter_read_positive() is:
+
+/*
+ * It is possible for the percpu_counter_read() to return a small negative
+ * number for some counter which should never be negative.
+ *
+ */
+static inline s64 percpu_counter_read_positive(struct percpu_counter *fbc)
+{
+        /* Prevent reloads of fbc->count */
+        s64 ret = READ_ONCE(fbc->count);
+
+        if (ret >= 0)
+                return ret;
+        return 0;
+}
+
+IOWs, atomic_read() has lower read side overhead than the percpu
+counter. atomic reads do not require spinlocks or even locked memory
+accesses - they are only needed on the write side. Hence the only
+reason for using a pcp counter over an atomic is that the atomic is
+update rate bound....
+
+FWIW, generic atomics don't use spin locks anymore - they use
+cmpxchg() which is generally much more efficient than a spin lock,
+even when emulated on platforms that don't have native support for
+cmpxchg(). And, really, we don't care one bit about performance or
+scalability on those niche platforms; all the high CPU count
+platforms where scalability matters have native atomic cmpxchg
+operations.
+
+> mind defining a new spin lock and explicitly implementing the lockless
+> read in xfs_mod_fdblocks(), I just thought it was extra code for little
+> benefit over the percpu counter. Preference?
+
+Spinlocks really hurt scalability in fast paths. atomics are much,
+much less hurty, and so the threshold for needing percpu counters is
+*much higher* than the threshold for needing lockless algorithms to
+avoid catastrophic lock contention.[*]
+
+Cheers,
+
+Dave.
+
+[*] For example, I just added an atomic counter into
+xlog_cil_insert_items() that is incremented on every transaction
+commit (provides global ordering of items in the CIL checkpoint
+placed on per-cpu lists). With the spinlocks from the CIL commit
+path, we increase performance from 700k commits/s to 1.4 million
+commits/s on a 32p machine and only increase CPU time in
+xlog_cil_insert_items() from 1.8% to 3.3%.
+
+IOWs, the atomic counter has almost zero overhead compared to a set
+of critical sections protected by multiple spinlocks that were
+consuming crazy amounts of CPU time.
+
+Before, at 700,000 commits/sec:
+
+ -   75.35%     1.83%  [kernel]            [k] xfs_log_commit_cil
+    - 46.35% xfs_log_commit_cil
+       - 41.54% _raw_spin_lock
+          - 67.30% do_raw_spin_lock
+               66.96% __pv_queued_spin_lock_slowpath
+
+
+After, at 1.4 million commits/sec:
+
+-   21.78%     3.32%  [kernel]            [k] xlog_cil_commit
+   - 17.32% xlog_cil_commit
+      - 9.04% xfs_log_ticket_ungrant
+           2.22% xfs_log_space_wake
+        2.13% memcpy_erms
+      - 1.42% xfs_buf_item_committing
+         - 1.44% xfs_buf_item_release
+            - 0.63% xfs_buf_unlock
+                 0.63% up
+              0.55% xfs_buf_rele
+        1.06% xfs_inode_item_format
+        1.00% down_read
+        0.77% up_read
+        0.60% xfs_buf_item_format
+
+You can see the atomic cmpxchg loops to update the grant heads in
+xfs_log_ticket_ungrant() is now looking like the highest contended
+cachelines in the fast path, and the CIL ctx rwsem is showing up on
+the profile, too. But there's no spin lock contention, and the
+atomics I added to the xlog_cil_commit() fast path aren't having any
+adverse impact on CPU usage at this point.
+
+FWIW, the grant head accounting is definitely getting hot here,
+as the xfs_trans_reserve side is showing:
+
+     7.35%     7.29%  [kernel]            [k] xlog_grant_add_space 
+
+Which indicates at least 15% of the CPU time on this workload is now
+being spend in the grant head accounting loops. Those atomic
+counters are where I'd be considering per-cpu counters now as they
+are showing signs of contention at ~2.8 million updates/s each.
+
+However, the reason I didn't use per-cpu counters way back when I
+made this stuff lockless was that we need an accurate sum of the
+grant head space frequently. Hence the summing cost of a per-cpu
+counter is just too great for a hot limit accounting path like this,
+so I used cmpxchg loops. PCP counters are still too expensive to sum
+accurately regularly, so if we want to support a higher transaction
+throughput rate we're going to have to get creative here.
+
+Cheers,
+
+Dave.
 -- 
-2.27.0
-
+Dave Chinner
+david@fromorbit.com
