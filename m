@@ -2,208 +2,185 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD789C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 20:28:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56113C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 00:41:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7CC8064EB9
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Feb 2021 20:28:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0ABAB64EC0
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 00:41:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229652AbhBRU2A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Feb 2021 15:28:00 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56962 "EHLO
+        id S229535AbhBSAl0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Feb 2021 19:41:26 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:49402 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230474AbhBRU1y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Feb 2021 15:27:54 -0500
+        by vger.kernel.org with ESMTP id S229468AbhBSAl0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Feb 2021 19:41:26 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1613679986;
+        s=mimecast20190719; t=1613695199;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=el8zfK220e9HCxyLBMMJQ+4N10Fob2r+gwloC4Bri5o=;
-        b=N/GwTW1PGDXm49TD7pNxwFRm4KAHuTwOb6a0Fog/kF/bWfaIxchQD5VwoRE5ig2TuSJaLu
-        8IKrsmcYREXyAEY48T8usrpuH7UK/cVMvtJX0WEmRvXY0qB4HlTB4GTtEmcmOexOr1+oWM
-        cwLK3KgkCn3mKswCv1ovt2REu6I+1Rs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-569-XllZmc1vOYu5aRssDkXXVQ-1; Thu, 18 Feb 2021 15:26:24 -0500
-X-MC-Unique: XllZmc1vOYu5aRssDkXXVQ-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DAF5D80196E;
-        Thu, 18 Feb 2021 20:26:23 +0000 (UTC)
-Received: from bfoster (ovpn-119-92.rdu2.redhat.com [10.10.119.92])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7EA165D9C2;
-        Thu, 18 Feb 2021 20:26:23 +0000 (UTC)
-Date:   Thu, 18 Feb 2021 15:26:21 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: lockdep recursive locking warning on for-next
-Message-ID: <20210218202621.GB709084@bfoster>
-References: <20210218181450.GA705507@bfoster>
- <20210218184926.GN7190@magnolia>
- <20210218191252.GA709084@bfoster>
- <20210218193154.GO7190@magnolia>
+        bh=XmEwdlyhExZOKAkloSeUNhYHfOnj7y/WXpQUFeMCEc0=;
+        b=dF1TiJuNJgQ7AopEmKx7BnS2+lU5tRFnry5Q3+kKVLYsm1Fctq59O72E39rU4bOd06zmNE
+        Z1kblU7khnVWG35PIi4WxROC7tr9Zks0/0/uih1a+cpNpzhqxTLiBQwceX/DLrsW1Enonu
+        Iy8S6NoQtf9JU80Pxs8QOpgjkTZg5Y4=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-552-ypRH-kumMS-pmwAchEUTQw-1; Thu, 18 Feb 2021 19:39:55 -0500
+X-MC-Unique: ypRH-kumMS-pmwAchEUTQw-1
+Received: by mail-pf1-f198.google.com with SMTP id c186so2719179pfa.23
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Feb 2021 16:39:55 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=XmEwdlyhExZOKAkloSeUNhYHfOnj7y/WXpQUFeMCEc0=;
+        b=c495x6KCielDPKk8ZvtBf7geAAFLxa1Tkqrkoa6tNotjLr0ziBg6x9S5dNWBZxIyWW
+         XDFeuec42cKZiagXg6X3tjTDlhxGGTPGecLpcI4smDXeFLzYAKGIOYW+8iTeCb+VywiC
+         artpCd27L6m78ko3V1gMWJz/12qjCbezeh4w5mZghQhJuT523Li1u5Qlo7NsIMrjTVYk
+         NvL5KNRd2ZJON7le1At/4GJiHHlGJVQIcnBOEMIUafEUU96hxqYSWeLO1kYUJCTMt9Ae
+         0qqoWt7egdo7FpcOZmp76DtTYEeVkfjQ02FXGCVZy7Ln6b6J5hDF5lv4xv0UsYr4bNEn
+         qs2A==
+X-Gm-Message-State: AOAM531ZRpjh9XJGVvuJTrMhE4SCE2FJf7I4m5uHVUfqNEFZpv26f9xf
+        gsAJRwq/jzT45d33gNf78a4HkKM7IN4lHgS7LrmxTNKzTf8OGVIR+p+2YoG9A0cmeY8lWLZ7FYp
+        G1EzttStiw3KdW6ue83w8
+X-Received: by 2002:aa7:8d8e:0:b029:1d1:f9c9:cff6 with SMTP id i14-20020aa78d8e0000b02901d1f9c9cff6mr7082229pfr.31.1613695194253;
+        Thu, 18 Feb 2021 16:39:54 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxqr5j3VGj5FrIOEmvi3pXOxh/J8PRrQjys+gcwv4hhhCNBQSLfu6PRQof/pQ3+3BjLBqwrXw==
+X-Received: by 2002:aa7:8d8e:0:b029:1d1:f9c9:cff6 with SMTP id i14-20020aa78d8e0000b02901d1f9c9cff6mr7082205pfr.31.1613695193957;
+        Thu, 18 Feb 2021 16:39:53 -0800 (PST)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id h10sm7611278pfq.97.2021.02.18.16.39.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 18 Feb 2021 16:39:52 -0800 (PST)
+Date:   Fri, 19 Feb 2021 08:39:42 +0800
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v6 3/3] mkfs: make use of xfs_validate_stripe_geometry()
+Message-ID: <20210219003942.GA392963@xiangao.remote.csb>
+References: <20201013040627.13932-1-hsiangkao@redhat.com>
+ <20201013040627.13932-4-hsiangkao@redhat.com>
+ <320d0635-2fbf-dd44-9f39-eaea48272bc7@sandeen.net>
+ <20210218024159.GA145146@xiangao.remote.csb>
+ <20210218052454.GA161514@xiangao.remote.csb>
+ <1f63b1b7-71ec-2a03-1053-58a1abd0088a@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210218193154.GO7190@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <1f63b1b7-71ec-2a03-1053-58a1abd0088a@sandeen.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 18, 2021 at 11:31:54AM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 18, 2021 at 02:12:52PM -0500, Brian Foster wrote:
-> > On Thu, Feb 18, 2021 at 10:49:26AM -0800, Darrick J. Wong wrote:
-> > > On Thu, Feb 18, 2021 at 01:14:50PM -0500, Brian Foster wrote:
-> > > > Hi Darrick,
-> > > > 
-> > > > I'm seeing the warning below via xfs/167 on a test machine. It looks
-> > > > like it's just complaining about nested freeze protection between the
-> > > > scan invocation and an underlying transaction allocation for an inode
-> > > > eofblocks trim. I suppose we could either refactor xfs_trans_alloc() to
-> > > > drop and reacquire freeze protection around the scan, or alternatively
-> > > > call __sb_writers_release() and __sb_writers_acquire() around the scan
-> > > > to retain freeze protection and quiet lockdep. Hm?
-> > > 
-> > > Erk, isn't that a potential log grant livelock too?
-> > > 
-> > > Fill up the filesystem with real data and cow blocks until it's full,
-> > > then spawn exactly enough file writer threads to eat up all the log
-> > > reservation, then each _reserve() fails, so every thread starts a scan
-> > > and tries to allocate /another/ transaction ... but there's no space
-> > > left in the log, so those scans just block indefinitely.
-> > > 
-> > > So... I think the solution here is to go back to a previous version of
-> > > what that patchset did, where we'd drop the whole transaction, run the
-> > > scan, and jump back to the top of the function to get a fresh
-> > > transaction.
-> > > 
+On Thu, Feb 18, 2021 at 10:38:17AM -0600, Eric Sandeen wrote:
+> On 2/17/21 11:24 PM, Gao Xiang wrote:
+> 
+
+...
+
+> since we have this check already in xfs_validate_stripe_geometry, it seems best to
+> keep using it there, and not copy it ... which I think you accomplish below.
+> 
+> >> btw, do we have some range test about these variables? I could rearrange the code
+> >> snippet, but I'm not sure if it could introduce some new potential regression as well...
+> >>
+> >> Thanks,
+> >> Gao Xiang
 > > 
-> > But we don't call into the scan while holding log reservation. We hold
-> > the transaction memory and freeze protection. It's probably debatable
-> > whether we'd want to scan with freeze protection held or not, but I
-> > don't see how dropping either of those changes anything wrt to log
-> > reservation..?
-> 
-> Right, sorry about the noise.  We could just trick lockdep with
-> __sb_writers_release like you said.  Though I am a tad bit concerned
-> about the rwsem behavior -- what happens if:
-> 
-> T1 calls sb_start_intwrite (which is down_read on sb_writers), gets the
-> lock, and then hits ENOSPC and goes into our scan loop; meanwhile,
-> 
-> T2 calls sb_wait_write (which is down_write on sb_writers), and is
-> scheduled off because it was a blocking lock attempt; and then,
-> 
-> T1 finds some eofblocks to delete, and now it wants to sb_start_intwrite
-> again as part of allocating that second nested transaction.  Does that
-> actually work, or will T1 stall because we don't allow more readers once
-> something is waiting in down_write()?
-> 
-
-Good question. I'm not sure off the top of my head. In light of that, it
-probably makes more sense to just cycle out of freeze protection during
-the scan (patch sent and will test overnight).
-
-> > > > BTW, the stack report also had me wondering whether we had or need any
-> > > > nesting protection in these new scan invocations. For example, if we
-> > > > have an fs with a bunch of tagged inodes and concurrent allocation
-> > > > activity, would anything prevent an in-scan transaction allocation from
-> > > > jumping back into the scan code to complete outstanding work? It looks
-> > > > like that might not be possible right now because neither scan reserves
-> > > > blocks, but they do both use transactions and that's quite a subtle
-> > > > balance..
-> > > 
-> > > Yes, that's a subtlety that screams for better documentation.
-> > > 
+> > Or how about applying the following incremental patch, although the maximum dswidth
+> > would be smaller I think, but considering libxfs_validate_stripe_geometry() accepts
+> > dswidth in 64-bit bytes as well. I think that would be fine. Does that make sense?
 > > 
-> > TBH, I'm not sure that's enough. I think we should at least have some
-> > kind of warning, even if only in DEBUG mode, that explicitly calls out
-> > if we've become susceptible to this kind of scan reentry. Otherwise I
-> > suspect that if this problem is ever truly introduced, the person who
-> > first discovers it will probably be user with a blown stack. :( Could we
-> > set a flag on the task or something that warns as such (i.e. "WARNING:
-> > attempted block reservation in block reclaim context") or perhaps just
-> > prevents scan reentry in the first place?
-> 
-> What if we implemented a XFS_TRANS_TRYRESERVE flag that would skip the
-> scanning loops?  Then it would be at least a little more obvious when
-> xfs_free_eofblocks and xfs_reflink_cancel_cow_range kick on.
-> 
-> OTOH that's problematic because both of those functions have other
-> callers, and "we're already doing a blockgc scan, don't start another"
-> is part of the thread context.
-> 
-
-Yeah, so we'd probably still need task state or to put something in the
-eofb (which might be too ugly to plumb all the way through to the
-transaction..?) to provide context information..
-
-Brian
-
-> --D
-> 
+> > I've confirmed "# mkfs/mkfs.xfs -f -d su=4097,sw=1 /dev/loop0" now report:
+> > stripe unit (4097) must be a multiple of the sector size (512)
 > > 
-> > Brian
+> > and xfs/191-input-validation passes now...
 > > 
-> > > --D
-> > > 
-> > > > 
-> > > > Brian
-> > > > 
-> > > > [  316.631387] ============================================
-> > > > [  316.636697] WARNING: possible recursive locking detected
-> > > > [  316.642010] 5.11.0-rc4 #35 Tainted: G        W I      
-> > > > [  316.647148] --------------------------------------------
-> > > > [  316.652462] fsstress/17733 is trying to acquire lock:
-> > > > [  316.657515] ffff8e0fd1d90650 (sb_internal){++++}-{0:0}, at: xfs_free_eofblocks+0x104/0x1d0 [xfs]
-> > > > [  316.666405] 
-> > > >                but task is already holding lock:
-> > > > [  316.672239] ffff8e0fd1d90650 (sb_internal){++++}-{0:0}, at: xfs_trans_alloc_inode+0x5f/0x160 [xfs]
-> > > > [  316.681269] 
-> > > > ...
-> > > >                stack backtrace:
-> > > > [  316.774735] CPU: 38 PID: 17733 Comm: fsstress Tainted: G        W I       5.11.0-rc4 #35
-> > > > [  316.782819] Hardware name: Dell Inc. PowerEdge R740/01KPX8, BIOS 1.6.11 11/20/2018
-> > > > [  316.790386] Call Trace:
-> > > > [  316.792844]  dump_stack+0x8b/0xb0
-> > > > [  316.796168]  __lock_acquire.cold+0x159/0x2ab
-> > > > [  316.800441]  lock_acquire+0x116/0x370
-> > > > [  316.804106]  ? xfs_free_eofblocks+0x104/0x1d0 [xfs]
-> > > > [  316.809045]  ? rcu_read_lock_sched_held+0x3f/0x80
-> > > > [  316.813750]  ? kmem_cache_alloc+0x287/0x2b0
-> > > > [  316.817937]  xfs_trans_alloc+0x1ad/0x310 [xfs]
-> > > > [  316.822445]  ? xfs_free_eofblocks+0x104/0x1d0 [xfs]
-> > > > [  316.827376]  xfs_free_eofblocks+0x104/0x1d0 [xfs]
-> > > > [  316.832134]  xfs_blockgc_scan_inode+0x24/0x60 [xfs]
-> > > > [  316.837074]  xfs_inode_walk_ag+0x202/0x4b0 [xfs]
-> > > > [  316.841754]  ? xfs_inode_free_cowblocks+0xf0/0xf0 [xfs]
-> > > > [  316.847040]  ? __lock_acquire+0x382/0x1e10
-> > > > [  316.851142]  ? xfs_inode_free_cowblocks+0xf0/0xf0 [xfs]
-> > > > [  316.856425]  xfs_inode_walk+0x66/0xc0 [xfs]
-> > > > [  316.860670]  xfs_trans_alloc+0x160/0x310 [xfs]
-> > > > [  316.865179]  xfs_trans_alloc_inode+0x5f/0x160 [xfs]
-> > > > [  316.870119]  xfs_alloc_file_space+0x105/0x300 [xfs]
-> > > > [  316.875048]  ? down_write_nested+0x30/0x70
-> > > > [  316.879148]  xfs_file_fallocate+0x270/0x460 [xfs]
-> > > > [  316.883913]  ? lock_acquire+0x116/0x370
-> > > > [  316.887752]  ? __x64_sys_fallocate+0x3e/0x70
-> > > > [  316.892026]  ? selinux_file_permission+0x105/0x140
-> > > > [  316.896820]  vfs_fallocate+0x14d/0x3d0
-> > > > [  316.900572]  __x64_sys_fallocate+0x3e/0x70
-> > > > [  316.904669]  do_syscall_64+0x33/0x40
-> > > > [  316.908250]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> > > > ...
-> > > > 
-> > > 
+> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > index f152d5c7..80405790 100644
+> > --- a/mkfs/xfs_mkfs.c
+> > +++ b/mkfs/xfs_mkfs.c
+> > @@ -2361,20 +2361,24 @@ _("both data su and data sw options must be specified\n"));
+> >  			usage();
+> >  		}
+> 
+> Just thinking through this... I think this is the right idea.
+> 
+> > -		dsunit  = (int)BTOBBT(dsu);
+> > -		big_dswidth = (long long int)dsunit * dsw;
+> > +		big_dswidth = (long long int)dsu * dsw;
+> 
+> dsu is in bytes; this would mean big_dswidth is now also in bytes...
+> the original goal here, I think, is to not overflow the 32-bit superblock value
+> for dswidth.
+
+Yeah, agreed. Thanks for catching this.
+
+> 
+> >  		if (big_dswidth > INT_MAX) {
+> >  			fprintf(stderr,
+> >  _("data stripe width (%lld) is too large of a multiple of the data stripe unit (%d)\n"),
+> >  				big_dswidth, dsunit);
+> 
+> so this used to test big_dswidth in BB (sectors); but now it tests in bytes.
+> 
+> Perhaps this should change to check and report sectors again:
+> 
+>   		if (BTOBBT(big_dswidth) > INT_MAX) {
+>   			fprintf(stderr,
+>   _("data stripe width (%lld) is too large of a multiple of the data stripe unit (%d)\n"),
+>   				BTOBBT(big_dswidth), dsunit);
+> 
+> I think the goal is to not overflow the 32-bit on-disk values, which would be
+> easy to do with "dsw" specified as a /multiplier/ of "dsu"
+> 
+> So I think that if we keep range checking the value in BB units, it will be
+> OK.
+> 
+> >  			usage();
+> >  		}
+> > -		dswidth = big_dswidth;
+> > -	}
+> >  
+> > -	if (!libxfs_validate_stripe_geometry(NULL, BBTOB(dsunit), BBTOB(dswidth),
+> > -					     cfg->sectorsize, false))
+> > +		if (!libxfs_validate_stripe_geometry(NULL, dsu, big_dswidth,
+> > +						     cfg->sectorsize, false))
+> > +			usage();
+> > +
+> > +		dsunit = BTOBBT(dsu);
+> > +		dswidth = BTOBBT(big_dswidth);
+> > +	} else if (!libxfs_validate_stripe_geometry(NULL, BBTOB(dsunit),
+> > +			BBTOB(dswidth), cfg->sectorsize, false)) {
+> >  		usage();
+> > +	}
+> Otherwise this looks reasonable to me; now it's basically:
+> 
+> 1) If we got geometry in bytes, validate them directly
+> 2) If we got geometry in BB, convert to bytes, and validate
+> 3) If we got no geometry, validate the device-reported defaults
+> 
+
+Ok, let me send the next version.
+
+Thanks,
+Gao Xiang
+
+> Thanks,
+> -Eric
+> 
+> >  	/* If sunit & swidth were manually specified as 0, same as noalign */
+> >  	if ((cli_opt_set(&dopts, D_SUNIT) || cli_opt_set(&dopts, D_SU)) &&
 > > 
 > 
 
