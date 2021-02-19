@@ -2,115 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-21.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCF6FC433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 03:24:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DA5BC433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 03:34:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88F0D64ED7
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 03:24:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9C2C64EB8
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Feb 2021 03:34:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229544AbhBSDXu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Feb 2021 22:23:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53800 "EHLO mail.kernel.org"
+        id S229553AbhBSDdo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Feb 2021 22:33:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54844 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229480AbhBSDXu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Feb 2021 22:23:50 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 06C7164D74;
-        Fri, 19 Feb 2021 03:23:10 +0000 (UTC)
+        id S229480AbhBSDdo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Feb 2021 22:33:44 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E8EB764ECA;
+        Fri, 19 Feb 2021 03:33:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613704990;
-        bh=4EITOIjAmBMK0GdN5IJMY3LI3QvjIMGw7EXHdMMWm0Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BoeGMh1LmsNKPLSSVooyXe0gPVxxRtilfZ0xAUtOz5MY+95/WIlk4CVmh6bFAidEc
-         eZgpQ3Ka8v+bqpTiidPZSsWnVEDu+rTQ7l/kC5U2ZdOlKWrtYegCh2EleWHRztggvm
-         rbr5ddUOzx32r16tHtoKenpXxtqw0MBLYyn+Fsq/r8F5NOw88y84Km/gxIa1rxESee
-         k8K/k5KiQbKL/MM0I05v9DBtVpmQy+q++iQSDaZjJ3ml77pTxJ27gHW8AjjJL+MjdW
-         OhSDO87tBXyhJcF2OS1VcJR+6fShpjGHeVpN8mNvnmMq9TxepSunzM5XfH+I24b6/B
-         KNm6Ino00gfew==
-Date:   Thu, 18 Feb 2021 19:23:09 -0800
+        s=k20201202; t=1613705583;
+        bh=j5rx9nRCiYG3qpKeTXd2kCmumKSrhK+DrOLzzfUjbp0=;
+        h=Date:From:To:Cc:Subject:From;
+        b=cFQJOnFprE2zPmMCVvUPAwBU7xZZuIddWTs6fgCGm/G5DvxbZMYCmpL6TWbfEEigI
+         BEmnQ69kEIRfR53FPtBAQvX5HvrFkxSZzl/Be4Lh+A3c0OrrxnFYOUe7iCUmhq3ngN
+         /RP6j5Nq0nZhyYYlBSpH+gyiIXaqwoLgXl7Mx9kzg/hbv9qZDyX1C62CnI/Kk5mjdC
+         12EaVYVveRhwQdBytsuDcD2/4q5duq1UzQCC1ChH+OuTTbttV1qJnq7vIb23PlM4fO
+         WS4VWnS7Tbcdwk+MDYv6rUoNl7IeMUsOZWaAB4I5dTxXyiM5iYsGfYkyU5vGnxcP/9
+         uYwGZH9XO6ZXQ==
+Date:   Thu, 18 Feb 2021 19:33:02 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: don't call into blockgc scan with freeze protection
-Message-ID: <20210219032309.GX7193@magnolia>
-References: <20210218201458.718889-1-bfoster@redhat.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de, linux-btrfs@vger.kernel.org,
+        naohiro.aota@wdc.com
+Subject: [GIT PULL] iomap: new code for 5.12-rc1
+Message-ID: <20210219033302.GY7193@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210218201458.718889-1-bfoster@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 18, 2021 at 03:14:58PM -0500, Brian Foster wrote:
-> fstest xfs/167 produced a lockdep splat that complained about a
-> nested transaction acquiring freeze protection during an eofblocks
-> scan. Drop freeze protection around the block reclaim scan in the
-> transaction allocation code to avoid this problem.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+Hi Linus,
 
-I think it seems reasonable, though I really wish that other patchset to
-clean up all the "modify thread state when we start/end transactions"
-had landed.
+Please pull these new changes to the iomap code for 5.12.  The big
+change in this cycle is some new code to make it possible for XFS to try
+unaligned directio overwrites without taking locks.  If the block is
+fully written and within EOF (i.e. doesn't require any further fs
+intervention) then we can let the unlocked write proceed.  If not, we
+fall back to synchronizing direct writes.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Note that the btrfs developers have been working on supporting zoned
+block devices, and their 5.12 pull request has a single iomap patch to
+adjust directio writes to support REQ_OP_APPEND.
 
---D
+The branch merges cleanly with 5.11 and has been soaking in for-next for
+quite a while now.  Please let me know if there are any strange
+problems.  It's been a pretty quiet cycle, so I don't anticipate any
+more iomap pulls other than whatever new bug fixes show up.
 
-> ---
->  fs/xfs/xfs_trans.c | 19 ++++++++++++++-----
->  1 file changed, 14 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 44f72c09c203..c32c62d3b77a 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -261,6 +261,7 @@ xfs_trans_alloc(
->  {
->  	struct xfs_trans	*tp;
->  	int			error;
-> +	bool			retried = false;
->  
->  	/*
->  	 * Allocate the handle before we do our freeze accounting and setting up
-> @@ -288,19 +289,27 @@ xfs_trans_alloc(
->  	INIT_LIST_HEAD(&tp->t_dfops);
->  	tp->t_firstblock = NULLFSBLOCK;
->  
-> +retry:
->  	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
-> -	if (error == -ENOSPC) {
-> +	if (error == -ENOSPC && !retried) {
->  		/*
->  		 * We weren't able to reserve enough space for the transaction.
->  		 * Flush the other speculative space allocations to free space.
->  		 * Do not perform a synchronous scan because callers can hold
->  		 * other locks.
->  		 */
-> +		retried = true;
-> +		if (!(flags & XFS_TRANS_NO_WRITECOUNT))
-> +			sb_end_intwrite(mp->m_super);
->  		error = xfs_blockgc_free_space(mp, NULL);
-> -		if (!error)
-> -			error = xfs_trans_reserve(tp, resp, blocks, rtextents);
-> -	}
-> -	if (error) {
-> +		if (error) {
-> +			kmem_cache_free(xfs_trans_zone, tp);
-> +			return error;
-> +		}
-> +		if (!(flags & XFS_TRANS_NO_WRITECOUNT))
-> +			sb_start_intwrite(mp->m_super);
-> +		goto retry;
-> +	} else if (error) {
->  		xfs_trans_cancel(tp);
->  		return error;
->  	}
-> -- 
-> 2.26.2
-> 
+--D (whose pull requests are delayed by last weekend's wild ride :( )
+
+The following changes since commit 19c329f6808995b142b3966301f217c831e7cf31:
+
+  Linux 5.11-rc4 (2021-01-17 16:37:05 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.12-merge-2
+
+for you to fetch changes up to ed1128c2d0c87e5ff49c40f5529f06bc35f4251b:
+
+  xfs: reduce exclusive locking on unaligned dio (2021-02-01 09:47:19 -0800)
+
+----------------------------------------------------------------
+New code for 5.12:
+- Adjust the final parameter of iomap_dio_rw.
+- Add a new flag to request that iomap directio writes return EAGAIN if
+  the write is not a pure overwrite within EOF; this will be used to
+  reduce lock contention with unaligned direct writes on XFS.
+- Amend XFS' directio code to eliminate exclusive locking for unaligned
+  direct writes if the circumstances permit
+
+----------------------------------------------------------------
+Christoph Hellwig (9):
+      iomap: rename the flags variable in __iomap_dio_rw
+      iomap: pass a flags argument to iomap_dio_rw
+      iomap: add a IOMAP_DIO_OVERWRITE_ONLY flag
+      xfs: factor out a xfs_ilock_iocb helper
+      xfs: make xfs_file_aio_write_checks IOCB_NOWAIT-aware
+      xfs: cleanup the read/write helper naming
+      xfs: remove the buffered I/O fallback assert
+      xfs: simplify the read/write tracepoints
+      xfs: improve the reflink_bounce_dio_write tracepoint
+
+Dave Chinner (2):
+      xfs: split the unaligned DIO write code out
+      xfs: reduce exclusive locking on unaligned dio
+
+ fs/btrfs/file.c       |   7 +-
+ fs/ext4/file.c        |   5 +-
+ fs/gfs2/file.c        |   7 +-
+ fs/iomap/direct-io.c  |  26 ++--
+ fs/xfs/xfs_file.c     | 351 ++++++++++++++++++++++++++++----------------------
+ fs/xfs/xfs_iomap.c    |  29 +++--
+ fs/xfs/xfs_trace.h    |  22 ++--
+ fs/zonefs/super.c     |   4 +-
+ include/linux/iomap.h |  18 ++-
+ 9 files changed, 269 insertions(+), 200 deletions(-)
