@@ -2,313 +2,267 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E239C433DB
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Feb 2021 01:16:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FFDFC433E0
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Feb 2021 03:45:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1102564E57
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Feb 2021 01:16:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09A2464E38
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Feb 2021 03:45:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229863AbhBTBPs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Feb 2021 20:15:48 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35936 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229806AbhBTBPr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 19 Feb 2021 20:15:47 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3783764EDE;
-        Sat, 20 Feb 2021 01:15:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613783706;
-        bh=ExITRXEiZwPopMv2V9BBWj6Dlm4StyYPuU9KOq74zpA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NAdzl/3pumGXUS5847M/l/ggKpPuLyG8/F/oXY8H27pmhrdxP8Az4FPBd4JbYdpss
-         lkz+B9AzqVznbcOzsSuamzlb7aSb/OveJOoNpEuzE1h+7IWHqOqzN9tsqODktvgZWX
-         L5dOAiuboA1BB5EN3N50jBiL1w6Ua7ckTRc20gskptlmWmVrng6t/O1hf6uXefwd1B
-         wc4d5KAA5WaN+Yz+ehJKVe0FUKO13aNiJn0r5a6NV7KxeFh8BOI+EPGMU229aFF6v4
-         7tElHj7La9/GYfWD+RJBWAHhTx7v/KhLb4oXreOMCGegRZQqR37FYcXeI17w1x8wLx
-         PQXE/DmSgwXaA==
-Date:   Fri, 19 Feb 2021 17:15:05 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Subject: Re: [PATCH 2/4] libxfs: simulate system failure after a certain
- number of writes
-Message-ID: <20210220011505.GF7193@magnolia>
-References: <161370467351.2389661.12577563230109429304.stgit@magnolia>
- <161370468470.2389661.11874247132336274370.stgit@magnolia>
- <0fd54cbb-140e-f2ea-30f7-b6ae4ba2346f@sandeen.net>
+        id S229771AbhBTDpg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Feb 2021 22:45:36 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:39944 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229765AbhBTDpd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Feb 2021 22:45:33 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11K3ihVo122960;
+        Sat, 20 Feb 2021 03:44:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=tyEj7aJMHZZn1ImGbO/8CGvLGGAss8koe0U6rt1j5vA=;
+ b=UrhGsjQvG8z8EpUfJyp8qlnhwCekvVbkapAfKWOo8ZXhRlAsoKvsMdUjfAkKAwTBdyjC
+ bT33+6lYkRU0WJfvPF8dmDpsTZjSSlObvC7X3QY/tePi2YXPmmsfoiiGd14jk80VKtOm
+ NaVaETNwVzakSWhoCxq9/fPS755xFlrzmiifAD8jfn3GHG4ILum8PNjtu3Wvejp+JcNl
+ L8DZniRkXbOeZ8u/WKEd2VGXROfPZFj/d+WbnkwcamPYIrmKZwEE3aZ/IetG7ilomb+t
+ 3R4t5VRc+MPDytu3adYecBJs34o23ueT+oYfPAAdk7DpTWC+vGZBMdIaXEXdvQaGq7XV NA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2130.oracle.com with ESMTP id 36tqxb84t8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 20 Feb 2021 03:44:42 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11K3dnla169672;
+        Sat, 20 Feb 2021 03:44:42 GMT
+Received: from nam02-cy1-obe.outbound.protection.outlook.com (mail-cys01nam02lp2057.outbound.protection.outlook.com [104.47.37.57])
+        by userp3020.oracle.com with ESMTP id 36tsrh16v7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 20 Feb 2021 03:44:41 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=GuAyjIaySL9jpsTWBxCIqMjaKnI0wqy4UGlu44BavoTYU8XealjuLf+5uELBN082VD43qw4Ndj78dgeJj06YNTfXBH396Wo1hYTUXh1sd9cPAk1HnUq82+TpPj8SdgPACFf+e1qXslzN1GwmeicEvJPkRyEY7xADpflqDCM2r+8D3/FOWvuWgyB/eMBwdSCbwuu9Vgo89CkWt2mtQ7H+94gL6KzyyiPM6a2o0N5y4Q3ykeXNP06wJ4uKXX5TlxCT6PcN/vyc+UQXHdpk6BwXgI4LiXE25dNFex2OHScZ5lZ5LJ+f+OFq4NUdTE4QdKP/wV1759kwSTNGA3ljWiCHKw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tyEj7aJMHZZn1ImGbO/8CGvLGGAss8koe0U6rt1j5vA=;
+ b=FlHzmRKsluZC/T7niCU1gACLIs2N0KJ/IAWCehR8ryBSB8JYijQYVrLT08roOWUMa9UacJiO1AkzG23hudCqW9wZmS75jpPUm2KOIffMZONl2sIJmNHXXZ95xP0FmSw8GhmllUsQZsGq/1dTgQVcUeRAjOMBX3Hpq1FpR/dPc9nv4VdjPqwwUfqm4pmiszo7Le1BUcNU8xJI9ofGs0/wiyxRzF95ogtL2FS8ePsaUB07NMjPnYfJeEmyC0dnddgdkqBXc8M6Dggwuo4C4Q3tPhg5nL2vDHNK+UDCN7rb3vyQPYT10lfxi6fNYojJ3AcYG4cq1wU9Hmbb5EuJRxsm6A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tyEj7aJMHZZn1ImGbO/8CGvLGGAss8koe0U6rt1j5vA=;
+ b=SNJeQA7L69hcW2kvQTWVIk33RjDVDxD9g0rExYfGVbRh2bKHzqgqr/lHbHIcdby9T3SCjLgDvgEwCILfyjC4x1W631MQpTZBndurFB6hax58Iip0aJwWaqWnptjpRPKBT5yfWPLqu8r0ZxxH3bBhy/FAiuJY807r+uuk4SZRw3Y=
+Authentication-Results: infradead.org; dkim=none (message not signed)
+ header.d=none;infradead.org; dmarc=none action=none header.from=oracle.com;
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by BY5PR10MB4177.namprd10.prod.outlook.com (2603:10b6:a03:205::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.27; Sat, 20 Feb
+ 2021 03:44:38 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::f4a1:6643:4c93:2a9f]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::f4a1:6643:4c93:2a9f%3]) with mapi id 15.20.3846.042; Sat, 20 Feb 2021
+ 03:44:38 +0000
+Subject: Re: [PATCH v2] xfs: don't nest transactions when scanning for
+ eofblocks
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>
+References: <20210219042940.GB7193@magnolia> <20210219172341.GD7193@magnolia>
+From:   Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <00949be3-a79b-46de-503f-c0a5b45f8a36@oracle.com>
+Date:   Fri, 19 Feb 2021 20:44:36 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
+In-Reply-To: <20210219172341.GD7193@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [67.1.223.248]
+X-ClientProxiedBy: SJ0PR03CA0041.namprd03.prod.outlook.com
+ (2603:10b6:a03:33e::16) To BY5PR10MB4306.namprd10.prod.outlook.com
+ (2603:10b6:a03:211::7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0fd54cbb-140e-f2ea-30f7-b6ae4ba2346f@sandeen.net>
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.1.223] (67.1.223.248) by SJ0PR03CA0041.namprd03.prod.outlook.com (2603:10b6:a03:33e::16) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.28 via Frontend Transport; Sat, 20 Feb 2021 03:44:38 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: a9aa2e69-aa0d-4cd2-46a1-08d8d551d92a
+X-MS-TrafficTypeDiagnostic: BY5PR10MB4177:
+X-Microsoft-Antispam-PRVS: <BY5PR10MB4177468296D2A1652D059C9E95839@BY5PR10MB4177.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:111;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: zAs6PXtPNBE9tNYGDLue0046tJEwK4vyWy0FNoVNsWv/U10naeqrjreZoquTBT9QcbwmqxbWx7XWzvYhpW4JK9NUoxlgqW7GMShLdfHSISF35oIJ5quwtaK0M9YfQR/JTfCeLowM6op/Xu+1t6L7Ht+RNHVmo3rBSolIU3BuALLKUe34eHRyRessA0a3QW4qtdsB/jckZNxLZrhK4DGyZ8p68y7Ki5rWz46lcksq9oEkM7UUun5k3cT/Bd2y6ughEC2mLgOzZARfukyDEpGbIWDEWqPFtxBulfhuuyWJnlL4xYY+wMp7PeH+IJXKgZuYaforUM5MHAzL7p4XaZe+ylEzOuoLTlJh9GvQbWWs/NhadfPWX0Lq/z0Q7thG6FdPMhOscWpUN3Zt0ntDYn8+nD+DE9yYppyo7tsIfjdhLAL8fDmSEaCyHeOrAbJtQ8qnb81vtoSqQK/99mx0b92lpbCLMuVEYBCUcXmcMEgxFQFveFk//631hRA/tpI7JvIXrKlOwnLEsaV7D5oQu8zkMP7hCYkRO4EkQC4CdyT/UgcQc3OBD89hjIV/PpMXrDoYKUrzrgIUAbzuhVPTgMiFiPBqGceBG9cdD6quwQR/T8WN5nh9wkZh8kUbpp+pOWKpDfTwe9CyNnyWw3LEF3Fq6peGsxI3gm0C0I4i0aVreY8QOoAQaHSQ+LLl9IwDaHD4
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(136003)(376002)(346002)(39860400002)(396003)(66556008)(16526019)(66476007)(956004)(478600001)(66946007)(86362001)(110136005)(44832011)(54906003)(2906002)(53546011)(4326008)(5660300002)(31696002)(16576012)(316002)(31686004)(2616005)(8936002)(966005)(52116002)(6486002)(36756003)(8676002)(186003)(83380400001)(26005)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?Z0lzdnhYL243TmJwd1lFTEE3dTRhTjdLS0RVdDRCVEUrYnlUUXZhRjlLTnMy?=
+ =?utf-8?B?MkRUd092SVNreGt5QW5IVTE3RlZHc0FUSmlJWjZQMlYyNHBqNndGNjFKRWx0?=
+ =?utf-8?B?R2M5QzdLeWQrTDdkSVpudVFqbjljWnFRcmJrU200WGxxN0hndWwyazVxWklq?=
+ =?utf-8?B?WENUeHZqLzFlUkxEMjRCSmIwWHU4a21kbkpkTFE0MTREa1RKUmxQYlNQYlZR?=
+ =?utf-8?B?TktLWVB6NFhac0YxVERMekRVa1NteVVUZzUzN2VSZnJ6Z2ZsUXpYUFhYVWRC?=
+ =?utf-8?B?NVgvNkZ4V20ya2N1cnl2dFpqMUUweGtya2RsWlBsUGI1N0ZESFg4c2RVMk9S?=
+ =?utf-8?B?SUJLU0JWTUg2UkpYd0k2WGYwQlFuYUJUNGJDUjBsaStCRytqL0pnUlNnU1lx?=
+ =?utf-8?B?R20rSmtHbmtTcDRQMVB6Q0xuNjJzVW5xQktyaWZad21qVm9wcVdmaExvZXNZ?=
+ =?utf-8?B?Y2hpNG1wbi9jcjdKRGxPSjZXdFcrcjlTMXJRamp5bzJCOGQ3ZjMvaG1Jd1JN?=
+ =?utf-8?B?Y2EweFBPMEV2cFN6cGJmendVdWVOMVRVQ2FpL0kvaE92bkVidUdOV3pqODBq?=
+ =?utf-8?B?SFJSeDRvNzV4Q3JyYmhxdWJaZnhseEJjS1I4Rnhva1hBdlhmdmcycGY5Ukdl?=
+ =?utf-8?B?a1BSK3dpMzhyWjZKa3B6aVU0NVhZTUZYM0IySEt1Ymh1b2JjSEp2TVVBaHRn?=
+ =?utf-8?B?SndUU1B5aHlMSzFSTTJ4ZzUydmlRTU5lR21aVmlJbmtyK1czb0ZGZXF3Znky?=
+ =?utf-8?B?QXpMSnU3eTM1cExub1pXVmpqWWVSeUpiSS9zWmE3dVBpMDJSQ3MyMGZTMHlV?=
+ =?utf-8?B?TzZGaW9DQUNtNnNQMUsvTjQyYnYwQ3ZDKy83eVkrOENOZTJYR3RGQit1eWsw?=
+ =?utf-8?B?NXgrSzY3SGdQN1FSZkdaWlJLaDB6OWlZV3dHdFI5TWw5SnZCY3JwdStuL0tq?=
+ =?utf-8?B?WWxCc0tDSVdadnFIRnoyYUNaZDRqaGtGRkJJNlAwaGpZODg4NkhzZFVDSUF4?=
+ =?utf-8?B?cVhxbUJKU0Nwc0I3OG92OFhseElMTnFmZ2J3cXB2OEwzS1VydFNtQUo4M09S?=
+ =?utf-8?B?dksxbXh5Lyt4aWcvbzRUNlh6WFd4cE1FWDE1bnpyNUpETVJQRyt4NU8yK0pz?=
+ =?utf-8?B?RExJTjdGR2tDSlZMTWllUkwxRDQ2V1lDbUZVTGFwVW02N3kyU3g5YWFSSkl3?=
+ =?utf-8?B?RXg5akRlWFlUVTJEQ3pBcnh2TWVIRzBYSk1Ud3dTbHR3L0FmbWRrWVdHSzFq?=
+ =?utf-8?B?MlhldUpKeGhuT21FNjhpd0hoWGYrNG42MTdaVlpBSmdEeDFLeHJmM1phWnRP?=
+ =?utf-8?B?NGcyTXU1bXBnQTFpbHpmQW12dXFDa0wzYzZuSVltWVdxZ1RtWExzZEtKQ04w?=
+ =?utf-8?B?d2ZMMDM1bENDck0xZGRwNXh2S1FXdW5WUUNYeFVIZzRaTElOMTR4MDlaS1k3?=
+ =?utf-8?B?bVRzSkpGWHN1bmMwSWpoTVRlYzFmMlYzRW96VXdGZEtaaENoRDZPV2E4Z3dp?=
+ =?utf-8?B?S0VoK3BFcUpidmVkSXhZbGo4b1c5NU91Y1pmWVQvSmltZWk5VHBoV1BlTlRM?=
+ =?utf-8?B?YXpIdHdCbHJzU2xJUHRVd0F2Q2U2U1RIMEx1RTMzM2NoaC9TakREYUwvS3BO?=
+ =?utf-8?B?Y0xpWklMcSs5bk0zc0ZzMWpWNDJSeUgxM09VMUFlZVVYdnBlQ3Y0UC9Yekl3?=
+ =?utf-8?B?OXZ3REJPYjdicHhzTEQ4dEY5R2hmMFhNOHNPa1ZhUE5NVzVNelRoK0pEWms1?=
+ =?utf-8?Q?dF6Zx5TXfRhpYMtPHKUqLUzY6Wg2S8cAlp1VOUp?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a9aa2e69-aa0d-4cd2-46a1-08d8d551d92a
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Feb 2021 03:44:38.7340
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ukrfbfEUqCMiu2gng5tK7J+eGqeSrafK7Y0zEmR4vtDHE47mp72LfNM1vgAobpBRL+hpLYC8vQZmJCHwCd9FST+yfqvalLv1FfeZAatub+Q=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4177
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9900 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0
+ suspectscore=0 malwarescore=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2102200029
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9900 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 phishscore=0
+ mlxlogscore=999 malwarescore=0 clxscore=1015 suspectscore=0
+ lowpriorityscore=0 bulkscore=0 adultscore=0 priorityscore=1501 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2102200029
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 19, 2021 at 06:51:17PM -0600, Eric Sandeen wrote:
-> On 2/18/21 9:18 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Add an error injection knob so that we can simulate system failure after
-> > a certain number of disk writes.  This knob is being added so that we
-> > can check repair's behavior after an arbitrary number of tests.
-> > 
-> > Set LIBXFS_DEBUG_WRITE_CRASH={ddev,logdev,rtdev}=nn in the environment
-> > to make libxfs SIGKILL itself after nn writes to the data, log, or rt
-> > devices.  Note that this only applies to xfs_buf writes and zero_range.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  include/linux.h    |   13 ++++++++++
-> >  libxfs/init.c      |   68 +++++++++++++++++++++++++++++++++++++++++++++++++---
-> >  libxfs/libxfs_io.h |   19 +++++++++++++++
-> >  libxfs/rdwr.c      |    6 ++++-
-> >  4 files changed, 101 insertions(+), 5 deletions(-)
-> > 
-> > 
-> > diff --git a/include/linux.h b/include/linux.h
-> > index 03b3278b..7bf59e07 100644
-> > --- a/include/linux.h
-> > +++ b/include/linux.h
-> > @@ -31,6 +31,8 @@
-> >  #ifdef OVERRIDE_SYSTEM_FSXATTR
-> >  # undef fsxattr
-> >  #endif
-> > +#include <unistd.h>
-> > +#include <assert.h>
-> >  
-> >  static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
-> >  {
-> > @@ -186,6 +188,17 @@ platform_zero_range(
-> >  #define platform_zero_range(fd, s, l)	(-EOPNOTSUPP)
-> >  #endif
-> >  
-> > +/*
-> > + * Use SIGKILL to simulate an immediate program crash, without a chance to run
-> > + * atexit handlers.
-> > + */
-> > +static inline void
-> > +platform_crash(void)
-> > +{
-> > +	kill(getpid(), SIGKILL);
-> > +	assert(0);
-> > +}
-> > +
-> >  /*
-> >   * Check whether we have to define FS_IOC_FS[GS]ETXATTR ourselves. These
-> >   * are a copy of the definitions moved to linux/uapi/fs.h in the 4.5 kernel,
-> > diff --git a/libxfs/init.c b/libxfs/init.c
-> > index 8a8ce3c4..1ec83791 100644
-> > --- a/libxfs/init.c
-> > +++ b/libxfs/init.c
-> > @@ -590,7 +590,8 @@ libxfs_initialize_perag(
-> >  static struct xfs_buftarg *
-> >  libxfs_buftarg_alloc(
-> >  	struct xfs_mount	*mp,
-> > -	dev_t			dev)
-> > +	dev_t			dev,
-> > +	unsigned long		write_fails)
-> >  {
-> >  	struct xfs_buftarg	*btp;
-> >  
-> > @@ -603,10 +604,29 @@ libxfs_buftarg_alloc(
-> >  	btp->bt_mount = mp;
-> >  	btp->bt_bdev = dev;
-> >  	btp->flags = 0;
-> > +	if (write_fails) {
-> > +		btp->writes_left = write_fails;
-> > +		btp->flags |= XFS_BUFTARG_INJECT_WRITE_FAIL;
-> > +	}
-> > +	pthread_mutex_init(&btp->lock, NULL);
-> >  
-> >  	return btp;
-> >  }
-> >  
-> > +enum libxfs_write_failure_nums {
-> > +	WF_DATA = 0,
-> > +	WF_LOG,
-> > +	WF_RT,
-> > +	WF_MAX_OPTS,
-> > +};
-> > +
-> > +static char *wf_opts[] = {
-> > +	[WF_DATA]		= "ddev",
-> > +	[WF_LOG]		= "logdev",
-> > +	[WF_RT]			= "rtdev",
-> > +	[WF_MAX_OPTS]		= NULL,
-> > +};
-> > +
-> >  void
-> >  libxfs_buftarg_init(
-> >  	struct xfs_mount	*mp,
-> > @@ -614,6 +634,46 @@ libxfs_buftarg_init(
-> >  	dev_t			logdev,
-> >  	dev_t			rtdev)
-> >  {
-> > +	char			*p = getenv("LIBXFS_DEBUG_WRITE_CRASH");
-> > +	unsigned long		dfail = 0, lfail = 0, rfail = 0;
-> > +
-> > +	/* Simulate utility crash after a certain number of writes. */
-> > +	while (p && *p) {
-> > +		char *val;
-> > +
-> > +		switch (getsubopt(&p, wf_opts, &val)) {
-> > +		case WF_DATA:
-> > +			if (!val) {
-> > +				fprintf(stderr,
-> > +		_("ddev write fail requires a parameter\n"));
-> > +				exit(1);
-> > +			}
-> > +			dfail = strtoul(val, NULL, 0);
-> 
-> so if we do "LIBXFS_DEBUG_WRITE_CRASH=ddev=WHEEEEEEEE!" we get back
-> "dfail = 0" and nothing happens	and ... that's fine, this is a debug
-> thingy.
 
-Yep.  If you use the knob, you're expected to use it correctly.
 
-> > +			break;
-> > +		case WF_LOG:
-> > +			if (!val) {
-> > +				fprintf(stderr,
-> > +		_("logdev write fail requires a parameter\n"));
-> > +				exit(1);
-> > +			}
-> > +			lfail = strtoul(val, NULL, 0);
-> > +			break;
-> > +		case WF_RT:
-> > +			if (!val) {
-> > +				fprintf(stderr,
-> > +		_("rtdev write fail requires a parameter\n"));
-> > +				exit(1);
-> > +			}
-> > +			rfail = strtoul(val, NULL, 0);
-> > +			break;
-> > +		default:
-> > +			fprintf(stderr, _("unknown write fail type %s\n"),
-> > +					val);
-> > +			exit(1);
+On 2/19/21 10:23 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> although I guess we do error handling here. *shrug* don't much care,
-> I guess.
+> Brian Foster reported a lockdep warning on xfs/167:
+> 
+> ============================================
+> WARNING: possible recursive locking detected
+> 5.11.0-rc4 #35 Tainted: G        W I
+> --------------------------------------------
+> fsstress/17733 is trying to acquire lock:
+> ffff8e0fd1d90650 (sb_internal){++++}-{0:0}, at: xfs_free_eofblocks+0x104/0x1d0 [xfs]
+> 
+> but task is already holding lock:
+> ffff8e0fd1d90650 (sb_internal){++++}-{0:0}, at: xfs_trans_alloc_inode+0x5f/0x160 [xfs]
+> 
+> stack backtrace:
+> CPU: 38 PID: 17733 Comm: fsstress Tainted: G        W I       5.11.0-rc4 #35
+> Hardware name: Dell Inc. PowerEdge R740/01KPX8, BIOS 1.6.11 11/20/2018
+> Call Trace:
+>   dump_stack+0x8b/0xb0
+>   __lock_acquire.cold+0x159/0x2ab
+>   lock_acquire+0x116/0x370
+>   xfs_trans_alloc+0x1ad/0x310 [xfs]
+>   xfs_free_eofblocks+0x104/0x1d0 [xfs]
+>   xfs_blockgc_scan_inode+0x24/0x60 [xfs]
+>   xfs_inode_walk_ag+0x202/0x4b0 [xfs]
+>   xfs_inode_walk+0x66/0xc0 [xfs]
+>   xfs_trans_alloc+0x160/0x310 [xfs]
+>   xfs_trans_alloc_inode+0x5f/0x160 [xfs]
+>   xfs_alloc_file_space+0x105/0x300 [xfs]
+>   xfs_file_fallocate+0x270/0x460 [xfs]
+>   vfs_fallocate+0x14d/0x3d0
+>   __x64_sys_fallocate+0x3e/0x70
+>   do_syscall_64+0x33/0x40
+>   entry_SYSCALL_64_after_hwframe+0x44/0xa9
+> 
+> The cause of this is the new code that spurs a scan to garbage collect
+> speculative preallocations if we fail to reserve enough blocks while
+> allocating a transaction.  While the warning itself is a fairly benign
+> lockdep complaint, it does expose a potential livelock if the rwsem
+> behavior ever changes with regards to nesting read locks when someone's
+> waiting for a write lock.
+> 
+> Fix this by freeing the transaction and jumping back to xfs_trans_alloc
+> like this patch in the V4 submission[1].
+> 
+> [1] https://urldefense.com/v3/__https://lore.kernel.org/linux-xfs/161142798066.2171939.9311024588681972086.stgit@magnolia/__;!!GqivPVa7Brio!ONLN-B-M-uqN8aJAN8zMDHDQZ6wwDyF4BSpjkT9j3mV2Zxe5zVD0vgjTWvPFRO2tzEpN$
+> 
+> Fixes: a1a7d05a0576 ("xfs: flush speculative space allocations when we run out of space")
+> Reported-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Ok, makes sense
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
-Just in case we add new debug knobs in the future and fstests need a way
-to detect them.
-
-> > +			break;
-> > +		}
-> > +	}
-> > +
-> >  	if (mp->m_ddev_targp) {
-> >  		/* should already have all buftargs initialised */
-> >  		if (mp->m_ddev_targp->bt_bdev != dev ||
-> > @@ -647,12 +707,12 @@ libxfs_buftarg_init(
-> >  		return;
-> >  	}
-> >  
-> > -	mp->m_ddev_targp = libxfs_buftarg_alloc(mp, dev);
-> > +	mp->m_ddev_targp = libxfs_buftarg_alloc(mp, dev, dfail);
-> >  	if (!logdev || logdev == dev)
-> >  		mp->m_logdev_targp = mp->m_ddev_targp;
-> >  	else
-> > -		mp->m_logdev_targp = libxfs_buftarg_alloc(mp, logdev);
-> > -	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, rtdev);
-> > +		mp->m_logdev_targp = libxfs_buftarg_alloc(mp, logdev, lfail);
-> > +	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, rtdev, rfail);
-> >  }
-> >  
-> >  /*
-> > diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-> > index c80e2d59..3cc4f4ee 100644
-> > --- a/libxfs/libxfs_io.h
-> > +++ b/libxfs/libxfs_io.h
-> > @@ -22,6 +22,8 @@ struct xfs_perag;
-> >   */
-> >  struct xfs_buftarg {
-> >  	struct xfs_mount	*bt_mount;
-> > +	pthread_mutex_t		lock;
-> > +	unsigned long		writes_left;
-> >  	dev_t			bt_bdev;
-> >  	unsigned int		flags;
-> >  };
-> > @@ -30,6 +32,23 @@ struct xfs_buftarg {
-> >  #define XFS_BUFTARG_LOST_WRITE		(1 << 0)
-> >  /* A dirty buffer failed the write verifier. */
-> >  #define XFS_BUFTARG_CORRUPT_WRITE	(1 << 1)
-> > +/* Simulate failure after a certain number of writes. */
-> > +#define XFS_BUFTARG_INJECT_WRITE_FAIL	(1 << 2)
-> > +
-> > +/* Simulate the system crashing after a certain number of writes. */
-> > +static inline void
-> > +xfs_buftarg_trip_write(
-> > +	struct xfs_buftarg	*btp)
-> > +{
-> > +	if (!(btp->flags & XFS_BUFTARG_INJECT_WRITE_FAIL))
-> > +		return;
-> > +
-> > +	pthread_mutex_lock(&btp->lock);
-> > +	btp->writes_left--;
-> > +	if (!btp->writes_left)
-> > +		platform_crash();
-> > +	pthread_mutex_unlock(&btp->lock);
-> > +}
-> >  
-> >  extern void	libxfs_buftarg_init(struct xfs_mount *mp, dev_t ddev,
-> >  				    dev_t logdev, dev_t rtdev);
-> > diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> > index ca272387..fd456d6b 100644
-> > --- a/libxfs/rdwr.c
-> > +++ b/libxfs/rdwr.c
-> > @@ -74,8 +74,10 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
-> >  	/* try to use special zeroing methods, fall back to writes if needed */
-> >  	len_bytes = LIBXFS_BBTOOFF64(len);
-> >  	error = platform_zero_range(fd, start_offset, len_bytes);
-> > -	if (!error)
-> > +	if (!error) {
-> > +		xfs_buftarg_trip_write(btp);
+> ---
+> v2: fix commit message
+> ---
+>   fs/xfs/xfs_trans.c |   13 ++++++++++---
+>   1 file changed, 10 insertions(+), 3 deletions(-)
 > 
-> Fine, but is there any real reason to catch this operation? *shrug*
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 44f72c09c203..377f3961d7ed 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -260,6 +260,7 @@ xfs_trans_alloc(
+>   	struct xfs_trans	**tpp)
+>   {
+>   	struct xfs_trans	*tp;
+> +	bool			want_retry = true;
+>   	int			error;
+>   
+>   	/*
+> @@ -267,6 +268,7 @@ xfs_trans_alloc(
+>   	 * GFP_NOFS allocation context so that we avoid lockdep false positives
+>   	 * by doing GFP_KERNEL allocations inside sb_start_intwrite().
+>   	 */
+> +retry:
+>   	tp = kmem_cache_zalloc(xfs_trans_zone, GFP_KERNEL | __GFP_NOFAIL);
+>   	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
+>   		sb_start_intwrite(mp->m_super);
+> @@ -289,7 +291,9 @@ xfs_trans_alloc(
+>   	tp->t_firstblock = NULLFSBLOCK;
+>   
+>   	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
+> -	if (error == -ENOSPC) {
+> +	if (error == -ENOSPC && want_retry) {
+> +		xfs_trans_cancel(tp);
+> +
+>   		/*
+>   		 * We weren't able to reserve enough space for the transaction.
+>   		 * Flush the other speculative space allocations to free space.
+> @@ -297,8 +301,11 @@ xfs_trans_alloc(
+>   		 * other locks.
+>   		 */
+>   		error = xfs_blockgc_free_space(mp, NULL);
+> -		if (!error)
+> -			error = xfs_trans_reserve(tp, resp, blocks, rtextents);
+> +		if (error)
+> +			return error;
+> +
+> +		want_retry = false;
+> +		goto retry;
+>   	}
+>   	if (error) {
+>   		xfs_trans_cancel(tp);
 > 
-> >  		return 0;
-> > +	}
-> >  
-> >  	zsize = min(BDSTRAT_SIZE, BBTOB(len));
-> >  	if ((z = memalign(libxfs_device_alignment(), zsize)) == NULL) {
-> > @@ -105,6 +107,7 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
-> >  				progname, __FUNCTION__);
-> >  			exit(1);
-> >  		}
-> > +		xfs_buftarg_trip_write(btp);
-> 
-> I guess it's consistent with this; I wonder if we really need to trip
-> in the zeroing code; it almost makes it more complex to figure out how
-> many ops we want to "trip" after...  OTOH I guess you want to be able
-> to test a half-completed zeroing. Hrm.
-
-Well yes, since I was asked to write a more generic write error
-injection mechanism, I decided I might as well use it for /all/ types of
-writes, even if the "write" is a fancy zeroing op. :)
-
---D
-
-> 
-> >  		offset += bytes;
-> >  	}
-> >  	free(z);
-> > @@ -860,6 +863,7 @@ libxfs_bwrite(
-> >  	} else {
-> >  		bp->b_flags |= LIBXFS_B_UPTODATE;
-> >  		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_UNCHECKED);
-> > +		xfs_buftarg_trip_write(bp->b_target);
-> 
-> this is where I expected the hook to go, having not considered the zeroing
-> code ;)
-> 
-> >  	}
-> >  	return bp->b_error;
-> >  }
-> > 
