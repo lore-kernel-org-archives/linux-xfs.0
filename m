@@ -2,100 +2,84 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE3DEC433DB
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 04:12:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04877C433E0
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 04:29:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 75CC164F01
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 04:12:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEA8364F06
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 04:29:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229998AbhBUEMY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 Feb 2021 23:12:24 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:54773 "EHLO
+        id S229996AbhBUE2y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 20 Feb 2021 23:28:54 -0500
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:48442 "EHLO
         mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229996AbhBUEMX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Feb 2021 23:12:23 -0500
+        by vger.kernel.org with ESMTP id S229903AbhBUE2y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Feb 2021 23:28:54 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 262711AD999;
-        Sun, 21 Feb 2021 15:11:41 +1100 (AEDT)
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 85CA21AD9DE;
+        Sun, 21 Feb 2021 15:28:10 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lDg5r-00EZIt-Op; Sun, 21 Feb 2021 15:11:39 +1100
-Date:   Sun, 21 Feb 2021 15:11:39 +1100
+        id 1lDgLp-00EaVE-Hs; Sun, 21 Feb 2021 15:28:09 +1100
+Date:   Sun, 21 Feb 2021 15:28:09 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Bastian Germann <bastiangermann@fishpost.de>
-Cc:     linux-xfs@vger.kernel.org,
-        Steve Langasek <steve.langasek@ubuntu.com>
-Subject: Re: [PATCH 3/4] debian: Regenerate config.guess using debhelper
-Message-ID: <20210221041139.GL4662@dread.disaster.area>
+To:     Dimitri John Ledkov <dimitri.ledkov@canonical.com>
+Cc:     Bastian Germann <bastiangermann@fishpost.de>,
+        linux-xfs@vger.kernel.org, Dimitri John Ledkov <xnox@ubuntu.com>
+Subject: Re: NACK Re: [PATCH 2/4] debian: Enable CET on amd64
+Message-ID: <20210221042809.GM4662@dread.disaster.area>
 References: <20210220121610.3982-1-bastiangermann@fishpost.de>
- <20210220121610.3982-4-bastiangermann@fishpost.de>
+ <20210220121610.3982-3-bastiangermann@fishpost.de>
+ <20210221035943.GJ4662@dread.disaster.area>
+ <CADWks+Y93MB=fO42K4oQ2kKt=82bz9m=KDVHWeZmqxLV40-PdA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210220121610.3982-4-bastiangermann@fishpost.de>
+In-Reply-To: <CADWks+Y93MB=fO42K4oQ2kKt=82bz9m=KDVHWeZmqxLV40-PdA@mail.gmail.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=fxJcL_dCAAAA:8 a=7-415B0cAAAA:8
-        a=CeK0mnQAh5vRBkEZaqMA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=7-415B0cAAAA:8
+        a=sx7RX4dEAmHzUYr8zh0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Feb 20, 2021 at 01:16:08PM +0100, Bastian Germann wrote:
-> This is a change introduced in 5.10.0-2ubuntu2 with the changelog:
+On Sun, Feb 21, 2021 at 04:02:55AM +0000, Dimitri John Ledkov wrote:
+> The patch in question is specific to Ubuntu and was not submitted by
+> me to neither Debian or Upstream.
 > 
-> > xfsprogs upstream has regressed config.guess, so use
-> > dh_update_autotools_config.
-
-What regression?
-
-The xfsprogs build generates config.guess with the libtool
-infrastructure installed on the build machine. So I'm not sure
-how/what we've regressed here, because AFAIK we haven't changed
-anything here recently...
-
-> Reported-by: Steve Langasek <steve.langasek@ubuntu.com>
-> Signed-off-by: Bastian Germann <bastiangermann@fishpost.de>
-> ---
->  debian/changelog | 3 +++
->  debian/rules     | 1 +
->  2 files changed, 4 insertions(+)
+> Indeed, this is very distro specific, because of all the other things
+> that we turn on by default in our toolchain, dpkg build flags, and all
+> other packages.
 > 
-> diff --git a/debian/changelog b/debian/changelog
-> index c77f04ab..6cc9926b 100644
-> --- a/debian/changelog
-> +++ b/debian/changelog
-> @@ -4,6 +4,9 @@ xfsprogs (5.11.0-rc0-1) experimental; urgency=medium
->    * Drop trying to create upstream distribution
->    * Enable CET on amd64
->  
-> +  [ Steve Langasek ]
-> +  * Regenerate config.guess using debhelper
-> +
->   -- Bastian Germann <bastiangermann@fishpost.de>  Sat, 20 Feb 2021 11:57:31 +0100
->  
->  xfsprogs (5.10.0-3) unstable; urgency=medium
-> diff --git a/debian/rules b/debian/rules
-> index dd093f2c..1913ccb6 100755
-> --- a/debian/rules
-> +++ b/debian/rules
-> @@ -49,6 +49,7 @@ config: .census
->  	@echo "== dpkg-buildpackage: configure" 1>&2
->  	$(checkdir)
->  	AUTOHEADER=/bin/true dh_autoreconf
-> +	dh_update_autotools_config
->  	$(options) $(MAKE) $(PMAKEFLAGS) include/platform_defs.h
+> This patch if taken at face value, will not enable CET. And will make
+> the package start failing to build from source, when using older
+> toolchains that don't support said flag.
 
-Why would running at tool that does a search-n-replace of built
-config.guess files do anything when run before the build runs
-libtoolize to copy in the config.guess file it uses? I'm a bit
-confused by this...
+Yes, that is exactly what I said when pointing out how to *support
+this properly* so it doesn't break builds in environments that do
+not support such functionality.
+
+Having it as a configure option allows the configure script to -test
+whether the toolchain supports it- and then either fail (enable=yes)
+or not use it (enable=probe) and continue the build without it.
+
+> It should not go upstream nor into debian.
+
+There is no reason it cannot be implemented as a build option in the
+upstream package. Then you can get rid of all your nasty hacks and
+simply add --enable-cf-protections to your distro's configure
+options.
+
+And other distros that also support all this functionality can use
+it to. Please play nice with others and do things the right way
+instead of making silly claims about how "nobody else can use this"
+when it's clear that they can if they also tick all the necessary
+boxes.
 
 Cheers,
 
