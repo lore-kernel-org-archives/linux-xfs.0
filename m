@@ -7,142 +7,99 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79ED1C433DB
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 04:04:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE3DEC433DB
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 04:12:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48C5164EF6
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 04:04:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75CC164F01
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 04:12:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229990AbhBUEEY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 Feb 2021 23:04:24 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:52705 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229903AbhBUEEX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Feb 2021 23:04:23 -0500
-Received: from mail-il1-f200.google.com ([209.85.166.200])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <dimitri.ledkov@canonical.com>)
-        id 1lDfy0-0007DI-Oz
-        for linux-xfs@vger.kernel.org; Sun, 21 Feb 2021 04:03:32 +0000
-Received: by mail-il1-f200.google.com with SMTP id s4so5653627ilv.23
-        for <linux-xfs@vger.kernel.org>; Sat, 20 Feb 2021 20:03:32 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=88pmCQ8vIrazSRpj4ykaDBoNzGdmdnLrH/GPkMs2qJg=;
-        b=CWF5qSd6YiZMpRq2jYShNSUJkUXVkuxP0nZDlmVa4eqvQPHOvJUKHwTwFKOZglYTxZ
-         6V9ZhaEFb9JVyAX/om6A26S0eOsSHbJcjEoEA05WFHaVEFNnbOVvnhxeWObqxJSaBfH/
-         +vgcatdS+QzcroVgD1/pT0s0KFiekl8n3Vc3tkHJBGWP7Vb7uQoRn5HK2c6bKh7XhKUP
-         aVSce9Q5cmCfTa80n77O7Q0XKs86w1aDvdroTjM2mHxY1sJ6ScFdQMEHf+CozI7gUENv
-         GZRMe0RQM5HrcnEKYuFyWWLRldz0CE3uxG7k9DZv3HGzMjkJvlNyuQK2sgPtGe3lN2Nr
-         jn0Q==
-X-Gm-Message-State: AOAM532q1DFpBqaq+BlZEZHJtr9C6qUasbDZSQYtpB6oDvwayS5UepQ6
-        kElbD7dEjx9NzbDv7Amh5LzAOqex1HmKzTdWcPbPRl3JUWKdEvoT5E4MzvPg7FgiBNUlUyrXNf9
-        MwLg5PyUkRnSnUxMEND3o07AiBgNYj3R3Ug/zQ68QjS6tbtjYJMdezA==
-X-Received: by 2002:a5d:8d94:: with SMTP id b20mr10272392ioj.200.1613880211658;
-        Sat, 20 Feb 2021 20:03:31 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxizyAspyB/Oa44LHVp8HNBEhWaXp6YG1Et5JSwYCCRNmOKD4uWgaWD6+nB1Dgu97zE5xJ7y4XrA7J3HlL7ZOg=
-X-Received: by 2002:a5d:8d94:: with SMTP id b20mr10272375ioj.200.1613880211387;
- Sat, 20 Feb 2021 20:03:31 -0800 (PST)
-MIME-Version: 1.0
+        id S229998AbhBUEMY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 20 Feb 2021 23:12:24 -0500
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:54773 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229996AbhBUEMX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Feb 2021 23:12:23 -0500
+Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 262711AD999;
+        Sun, 21 Feb 2021 15:11:41 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lDg5r-00EZIt-Op; Sun, 21 Feb 2021 15:11:39 +1100
+Date:   Sun, 21 Feb 2021 15:11:39 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Bastian Germann <bastiangermann@fishpost.de>
+Cc:     linux-xfs@vger.kernel.org,
+        Steve Langasek <steve.langasek@ubuntu.com>
+Subject: Re: [PATCH 3/4] debian: Regenerate config.guess using debhelper
+Message-ID: <20210221041139.GL4662@dread.disaster.area>
 References: <20210220121610.3982-1-bastiangermann@fishpost.de>
- <20210220121610.3982-3-bastiangermann@fishpost.de> <20210221035943.GJ4662@dread.disaster.area>
-In-Reply-To: <20210221035943.GJ4662@dread.disaster.area>
-From:   Dimitri John Ledkov <dimitri.ledkov@canonical.com>
-Date:   Sun, 21 Feb 2021 04:02:55 +0000
-Message-ID: <CADWks+Y93MB=fO42K4oQ2kKt=82bz9m=KDVHWeZmqxLV40-PdA@mail.gmail.com>
-Subject: NACK Re: [PATCH 2/4] debian: Enable CET on amd64
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Bastian Germann <bastiangermann@fishpost.de>,
-        linux-xfs@vger.kernel.org, Dimitri John Ledkov <xnox@ubuntu.com>
-Content-Type: text/plain; charset="UTF-8"
+ <20210220121610.3982-4-bastiangermann@fishpost.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210220121610.3982-4-bastiangermann@fishpost.de>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
+        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=fxJcL_dCAAAA:8 a=7-415B0cAAAA:8
+        a=CeK0mnQAh5vRBkEZaqMA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The patch in question is specific to Ubuntu and was not submitted by
-me to neither Debian or Upstream.
+On Sat, Feb 20, 2021 at 01:16:08PM +0100, Bastian Germann wrote:
+> This is a change introduced in 5.10.0-2ubuntu2 with the changelog:
+> 
+> > xfsprogs upstream has regressed config.guess, so use
+> > dh_update_autotools_config.
 
-Indeed, this is very distro specific, because of all the other things
-that we turn on by default in our toolchain, dpkg build flags, and all
-other packages.
+What regression?
 
-This patch if taken at face value, will not enable CET. And will make
-the package start failing to build from source, when using older
-toolchains that don't support said flag.
+The xfsprogs build generates config.guess with the libtool
+infrastructure installed on the build machine. So I'm not sure
+how/what we've regressed here, because AFAIK we haven't changed
+anything here recently...
 
-It should not go upstream nor into debian.
+> Reported-by: Steve Langasek <steve.langasek@ubuntu.com>
+> Signed-off-by: Bastian Germann <bastiangermann@fishpost.de>
+> ---
+>  debian/changelog | 3 +++
+>  debian/rules     | 1 +
+>  2 files changed, 4 insertions(+)
+> 
+> diff --git a/debian/changelog b/debian/changelog
+> index c77f04ab..6cc9926b 100644
+> --- a/debian/changelog
+> +++ b/debian/changelog
+> @@ -4,6 +4,9 @@ xfsprogs (5.11.0-rc0-1) experimental; urgency=medium
+>    * Drop trying to create upstream distribution
+>    * Enable CET on amd64
+>  
+> +  [ Steve Langasek ]
+> +  * Regenerate config.guess using debhelper
+> +
+>   -- Bastian Germann <bastiangermann@fishpost.de>  Sat, 20 Feb 2021 11:57:31 +0100
+>  
+>  xfsprogs (5.10.0-3) unstable; urgency=medium
+> diff --git a/debian/rules b/debian/rules
+> index dd093f2c..1913ccb6 100755
+> --- a/debian/rules
+> +++ b/debian/rules
+> @@ -49,6 +49,7 @@ config: .census
+>  	@echo "== dpkg-buildpackage: configure" 1>&2
+>  	$(checkdir)
+>  	AUTOHEADER=/bin/true dh_autoreconf
+> +	dh_update_autotools_config
+>  	$(options) $(MAKE) $(PMAKEFLAGS) include/platform_defs.h
 
-NACK
+Why would running at tool that does a search-n-replace of built
+config.guess files do anything when run before the build runs
+libtoolize to copy in the config.guess file it uses? I'm a bit
+confused by this...
 
-On Sun, Feb 21, 2021 at 3:59 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Sat, Feb 20, 2021 at 01:16:07PM +0100, Bastian Germann wrote:
-> > This is a change introduced in 5.6.0-1ubuntu3.
-> >
-> > Reported-by: Dimitri John Ledkov <xnox@ubuntu.com>
-> > Signed-off-by: Bastian Germann <bastiangermann@fishpost.de>
-> > ---
-> >  debian/changelog | 1 +
-> >  debian/rules     | 8 +++++++-
-> >  2 files changed, 8 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/debian/changelog b/debian/changelog
-> > index 8320a2e8..c77f04ab 100644
-> > --- a/debian/changelog
-> > +++ b/debian/changelog
-> > @@ -2,6 +2,7 @@ xfsprogs (5.11.0-rc0-1) experimental; urgency=medium
-> >
-> >    [ Dimitri John Ledkov ]
-> >    * Drop trying to create upstream distribution
-> > +  * Enable CET on amd64
-> >
-> >   -- Bastian Germann <bastiangermann@fishpost.de>  Sat, 20 Feb 2021 11:57:31 +0100
-> >
-> > diff --git a/debian/rules b/debian/rules
-> > index 8a3345b6..dd093f2c 100755
-> > --- a/debian/rules
-> > +++ b/debian/rules
-> > @@ -23,8 +23,14 @@ pkgdev = DIST_ROOT=`pwd`/$(dirdev); export DIST_ROOT;
-> >  pkgdi  = DIST_ROOT=`pwd`/$(dirdi); export DIST_ROOT;
-> >  stdenv = @GZIP=-q; export GZIP;
-> >
-> > +ifeq ($(target),amd64)
-> > +export DEB_CFLAGS_MAINT_APPEND=-fcf-protection
-> > +export DEB_LDFLAGS_MAINT_APPEND=-fcf-protection
-> > +endif
-> > +include /usr/share/dpkg/default.mk
-> > +
-> >  options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
-> > -       INSTALL_USER=root INSTALL_GROUP=root \
-> > +       INSTALL_USER=root INSTALL_GROUP=root LDFLAGS='$(LDFLAGS)' \
-> >         LOCAL_CONFIGURE_OPTIONS="--enable-editline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto" ;
-> >  diopts  = $(options) \
-> >         export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto" ;
->
-> No. This is not the way to turn on build wide compiler/linker
-> options/protections.
->
-> IOWs, if you want to turn on control flow protections to make ROP
-> exploits harder (why that actually matters for xfsprogs is beyond
-> me), then it you need to add a configure option similar to
-> --enable-lto. Then it can actually be enabled and used by other
-> distros, not just Ubuntu, and it will also ensure that builds will
-> fail at configure time if the compiler/linker does not support this
-> functionality.
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+Cheers,
 
-
-
+Dave.
 -- 
-Regards,
-
-Dimitri.
+Dave Chinner
+david@fromorbit.com
