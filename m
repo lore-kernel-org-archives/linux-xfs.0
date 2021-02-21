@@ -2,124 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D703C433E0
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 21:38:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03264C433DB
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 22:06:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 15F4164EBE
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 21:38:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C435D64E57
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 22:06:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230391AbhBUViN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 21 Feb 2021 16:38:13 -0500
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:49482 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230356AbhBUViM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Feb 2021 16:38:12 -0500
+        id S231339AbhBUWF7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 21 Feb 2021 17:05:59 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:48152 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231335AbhBUWF2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Feb 2021 17:05:28 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 77C9778AB24;
-        Mon, 22 Feb 2021 08:37:28 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6F2911040F99;
+        Mon, 22 Feb 2021 09:04:44 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lDwPv-00Fh8z-Ga; Mon, 22 Feb 2021 08:37:27 +1100
-Date:   Mon, 22 Feb 2021 08:37:27 +1100
+        id 1lDwqJ-00FiwL-0b; Mon, 22 Feb 2021 09:04:43 +1100
+Date:   Mon, 22 Feb 2021 09:04:43 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Dimitri John Ledkov <dimitri.ledkov@canonical.com>
+To:     Steve Langasek <steve.langasek@canonical.com>
 Cc:     Bastian Germann <bastiangermann@fishpost.de>,
-        linux-xfs@vger.kernel.org
-Subject: Re: NACK Re: [PATCH 2/4] debian: Enable CET on amd64
-Message-ID: <20210221213727.GN4662@dread.disaster.area>
+        linux-xfs@vger.kernel.org,
+        Steve Langasek <steve.langasek@ubuntu.com>
+Subject: Re: [PATCH 3/4] debian: Regenerate config.guess using debhelper
+Message-ID: <20210221220443.GO4662@dread.disaster.area>
 References: <20210220121610.3982-1-bastiangermann@fishpost.de>
- <20210220121610.3982-3-bastiangermann@fishpost.de>
- <20210221035943.GJ4662@dread.disaster.area>
- <CADWks+Y93MB=fO42K4oQ2kKt=82bz9m=KDVHWeZmqxLV40-PdA@mail.gmail.com>
- <20210221042809.GM4662@dread.disaster.area>
- <CADWks+Yf_Vg7fTPH_BoXEmxUoo_XnyCLj4oeBme5fRTqoy+o4g@mail.gmail.com>
+ <20210220121610.3982-4-bastiangermann@fishpost.de>
+ <20210221041139.GL4662@dread.disaster.area>
+ <840CCF3D-7A20-4E35-BA9C-DEC9C05EE70A@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CADWks+Yf_Vg7fTPH_BoXEmxUoo_XnyCLj4oeBme5fRTqoy+o4g@mail.gmail.com>
+In-Reply-To: <840CCF3D-7A20-4E35-BA9C-DEC9C05EE70A@canonical.com>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=7-415B0cAAAA:8
-        a=TJDqitv73KFGkjakVWAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=7-415B0cAAAA:8 a=VwQbUJbxAAAA:8
+        a=0q3JwVDr4qjw3R0EPjYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 21, 2021 at 04:32:46AM +0000, Dimitri John Ledkov wrote:
-> On Sun, Feb 21, 2021 at 4:28 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > On Sun, Feb 21, 2021 at 04:02:55AM +0000, Dimitri John Ledkov wrote:
-> > > The patch in question is specific to Ubuntu and was not submitted by
-> > > me to neither Debian or Upstream.
-> > >
-> > > Indeed, this is very distro specific, because of all the other things
-> > > that we turn on by default in our toolchain, dpkg build flags, and all
-> > > other packages.
-> > >
-> > > This patch if taken at face value, will not enable CET. And will make
-> > > the package start failing to build from source, when using older
-> > > toolchains that don't support said flag.
-> >
-> > Yes, that is exactly what I said when pointing out how to *support
-> > this properly* so it doesn't break builds in environments that do
-> > not support such functionality.
-> >
-> > Having it as a configure option allows the configure script to -test
-> > whether the toolchain supports it- and then either fail (enable=yes)
-> > or not use it (enable=probe) and continue the build without it.
-> >
-> > > It should not go upstream nor into debian.
-> >
-> > There is no reason it cannot be implemented as a build option in the
-> > upstream package. Then you can get rid of all your nasty hacks and
-> > simply add --enable-cf-protections to your distro's configure
-> > options.
-> >
-> > And other distros that also support all this functionality can use
-> > it to. Please play nice with others and do things the right way
-> > instead of making silly claims about how "nobody else can use this"
-> > when it's clear that they can if they also tick all the necessary
-> > boxes.
+On Sat, Feb 20, 2021 at 11:16:57PM -0800, Steve Langasek wrote:
 > 
-> debian will probably will not want --enable-cf-protections as a
-> configure option, and will enable CET via dpkg-buildflags as a
-> hardening option, which will then be turned on by default for relevant
-> architectures and series as of when debian kernel starts to support
-> it.
 > 
-> as that way, debian will be able to affect that change across the whole distro.
+> On February 20, 2021 8:11:39 PM PST, Dave Chinner <david@fromorbit.com> wrote:
+> >On Sat, Feb 20, 2021 at 01:16:08PM +0100, Bastian Germann wrote:
+> >> This is a change introduced in 5.10.0-2ubuntu2 with the changelog:
+> >> 
+> >> > xfsprogs upstream has regressed config.guess, so use
+> >> > dh_update_autotools_config.
+> >
+> >What regression?
+> >
+> >The xfsprogs build generates config.guess with the libtool
+> >infrastructure installed on the build machine. So I'm not sure
+> >how/what we've regressed here, because AFAIK we haven't changed
+> >anything here recently...
+> 
+> This upstream release ended up with an older version of config.guess in the tarball.  Specifically, it was too old to recognize RISC-V as an architecture.
 
-Except now you've got the problem that dpkg-buildflags is not used
-by various packages such as xfsprogs, so the flags it sets up,
-even with overrides like DEB_BUILD_MAINT_OPTIONS are completely
-ignored by the debian package build because debian/rules is not set
-up to source the buildflags at all.
+So was the RISC-V architecture added to the ubuntu build between the
+uploads of the previous version of xfsprogs and xfsprogs-5.10.0? Or
+is this an actual regression where the maintainer signed tarball had
+RISC-V support in it and now it doesn't?
 
-e.g. if you run 'make Q= deb' you won't see any of the compiler or
-linker options emitted by dpkg-buildflags being used during the
-debian package build. You will, OTOH, see it emit stuff like LTO
-options because those get turned on via configure.
+FWIW, where are you getting the tarballs from? Are you downloading
+the maintainer signed tarballs from here:
 
-> once CET is actually merged into kernel, I do not expect configure
-> options or debian/rules changes to enable CET. At most `export
-> DEB_BUILD_MAINT_OPTIONS=hardening` should be enough in debian/rules.
+https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/
 
-The default dpkg-buildflags output already includes "hardening"
-options, and as I said above, they aren't actually included in the
-build rules. Hence what you suggest just won't work like you think
-it should.
+Or pulling the git.kernel.org built tarball that is autogenerated
+from the release tag?
 
-Again, if you want build option stuff to work correctly, don't rely
-on distro specific magic to turn stuff on because it just doesn't
-work for everyone. Use configure options to enable, probe and detect
-support and enable the feature in the build, then upstream and other
-distros can actually build with it and test it outside the magical
-unicorn distro build environment you are running in...
+> >>  	@echo "== dpkg-buildpackage: configure" 1>&2
+> >>  	$(checkdir)
+> >>  	AUTOHEADER=/bin/true dh_autoreconf
+> >> +	dh_update_autotools_config
+> >>  	$(options) $(MAKE) $(PMAKEFLAGS) include/platform_defs.h
+> >
+> >Why would running at tool that does a search-n-replace of built
+> >config.guess files do anything when run before the build runs
+> >libtoolize to copy in the config.guess file it uses? I'm a bit
+> >confused by this...
+> 
+> Autoreconf was not copying in a newer version of config.guess from the system, because of the specific subset of autotools used by this project.
+
+That sounds wrong. AIUI, autoreconf doesn't copy in anything.
+
+$ man 7 dh-autoreconf
+....
+CAVEATS
+       dh_autoreconf is mostly a superset of the
+       dh_update_autotools_config debhelper command included in
+       debhelper since version 9.20160115. When using the dh
+       sequencer, dh_update_autotools_config is run before
+       dh_autoreconf and updates the config.guess and config.sub
+       files. This is required in cases where autoreconf does not
+       update config.guess and config.sub itself.
+
+So isn't the dh_update_autotools_config call in the wrong place
+here?
 
 Cheers,
 
