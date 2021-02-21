@@ -2,119 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03264C433DB
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 22:06:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A23BC433E0
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 22:54:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C435D64E57
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 22:06:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7EDF6511E
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 22:54:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231339AbhBUWF7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 21 Feb 2021 17:05:59 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:48152 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231335AbhBUWF2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Feb 2021 17:05:28 -0500
-Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6F2911040F99;
-        Mon, 22 Feb 2021 09:04:44 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lDwqJ-00FiwL-0b; Mon, 22 Feb 2021 09:04:43 +1100
-Date:   Mon, 22 Feb 2021 09:04:43 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Steve Langasek <steve.langasek@canonical.com>
-Cc:     Bastian Germann <bastiangermann@fishpost.de>,
-        linux-xfs@vger.kernel.org,
-        Steve Langasek <steve.langasek@ubuntu.com>
-Subject: Re: [PATCH 3/4] debian: Regenerate config.guess using debhelper
-Message-ID: <20210221220443.GO4662@dread.disaster.area>
-References: <20210220121610.3982-1-bastiangermann@fishpost.de>
- <20210220121610.3982-4-bastiangermann@fishpost.de>
- <20210221041139.GL4662@dread.disaster.area>
- <840CCF3D-7A20-4E35-BA9C-DEC9C05EE70A@canonical.com>
+        id S231907AbhBUWye (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 21 Feb 2021 17:54:34 -0500
+Received: from bilbo.ozlabs.org ([203.11.71.1]:50491 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231779AbhBUWyd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 21 Feb 2021 17:54:33 -0500
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4DkLG02hhJz9sRN;
+        Mon, 22 Feb 2021 09:53:44 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1613948030;
+        bh=4/O2JiwVPVpuG+xm9BdGowJkGLilkAkyPpTRjEKIL68=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=ZJSVEFTjFVlsJNiPZROU0txPaE4rMdsUAY0eIMFcba3cJahR3R+1udt+rCd2hVdgJ
+         FNb1BQuX0dnDTL6Yh7MxdneBjKA/zEmbaMRhXYgJp+g8hYh3O3bhiNDY1x/zPEVcp1
+         t0t3ZmhQctAzSe9BPeKBqd2FwmlYVASuV7X6ZYaKUxpwKUwODQ1O/Tjjv9FoKIbuL4
+         1h+GwugZ9+ff6iHibLvhjqWA3vLW/OEsZOvT21cBMT9/1f1Fmvy8C6tA9YSZd5vbVx
+         KIhfj0VlSfyyP2+KkBNF6sGX1oP7CTmmHyF7fGSpCJr3OzmyEEbEg0Hjcmr83GphD9
+         fn/C1ZZyYIYXg==
+Date:   Mon, 22 Feb 2021 09:53:43 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     Christian Brauner <christian@brauner.io>, linux-xfs@vger.kernel.org
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        David Chinner <david@fromorbit.com>,
+        Christian Brauner <christian.brauner@ubuntu.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: Re: linux-next: manual merge of the pidfd tree with the xfs tree
+Message-ID: <20210222095343.21b5a367@canb.auug.org.au>
+In-Reply-To: <20210215084243.6e22abeb@canb.auug.org.au>
+References: <20210125171414.41ed957a@canb.auug.org.au>
+        <20210127112441.1d07c1d4@canb.auug.org.au>
+        <20210215084243.6e22abeb@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <840CCF3D-7A20-4E35-BA9C-DEC9C05EE70A@canonical.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
-        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=7-415B0cAAAA:8 a=VwQbUJbxAAAA:8
-        a=0q3JwVDr4qjw3R0EPjYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
-        a=AjGcO6oz07-iQ99wixmX:22
+Content-Type: multipart/signed; boundary="Sig_/ENE1_RMIkp8vJ_Pq_Qhb=U8";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Feb 20, 2021 at 11:16:57PM -0800, Steve Langasek wrote:
-> 
-> 
-> On February 20, 2021 8:11:39 PM PST, Dave Chinner <david@fromorbit.com> wrote:
-> >On Sat, Feb 20, 2021 at 01:16:08PM +0100, Bastian Germann wrote:
-> >> This is a change introduced in 5.10.0-2ubuntu2 with the changelog:
-> >> 
-> >> > xfsprogs upstream has regressed config.guess, so use
-> >> > dh_update_autotools_config.
-> >
-> >What regression?
-> >
-> >The xfsprogs build generates config.guess with the libtool
-> >infrastructure installed on the build machine. So I'm not sure
-> >how/what we've regressed here, because AFAIK we haven't changed
-> >anything here recently...
-> 
-> This upstream release ended up with an older version of config.guess in the tarball.  Specifically, it was too old to recognize RISC-V as an architecture.
+--Sig_/ENE1_RMIkp8vJ_Pq_Qhb=U8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-So was the RISC-V architecture added to the ubuntu build between the
-uploads of the previous version of xfsprogs and xfsprogs-5.10.0? Or
-is this an actual regression where the maintainer signed tarball had
-RISC-V support in it and now it doesn't?
+Hi all,
 
-FWIW, where are you getting the tarballs from? Are you downloading
-the maintainer signed tarballs from here:
+On Mon, 15 Feb 2021 08:42:43 +1100 Stephen Rothwell <sfr@canb.auug.org.au> =
+wrote:
+>
+> On Wed, 27 Jan 2021 11:24:41 +1100 Stephen Rothwell <sfr@canb.auug.org.au=
+> wrote:
+> >=20
+> > On Mon, 25 Jan 2021 17:14:14 +1100 Stephen Rothwell <sfr@canb.auug.org.=
+au> wrote: =20
+> > >
+> > > Today's linux-next merge of the pidfd tree got a conflict in:
+> > >=20
+> > >   fs/xfs/xfs_inode.c
+> > >=20
+> > > between commit:
+> > >=20
+> > >   01ea173e103e ("xfs: fix up non-directory creation in SGID directori=
+es")
+> > >=20
+> > > from the xfs tree and commit:
+> > >=20
+> > >   f736d93d76d3 ("xfs: support idmapped mounts")
+> > >=20
+> > > from the pidfd tree.
+> > >=20
+> > > I fixed it up (see below) and can carry the fix as necessary. This
+> > > is now fixed as far as linux-next is concerned, but any non trivial
+> > > conflicts should be mentioned to your upstream maintainer when your t=
+ree
+> > > is submitted for merging.  You may also want to consider cooperating
+> > > with the maintainer of the conflicting tree to minimise any particula=
+rly
+> > > complex conflicts.
+> > >=20
+> > > diff --cc fs/xfs/xfs_inode.c
+> > > index e2a1db4cee43,95b7f2ba4e06..000000000000
+> > > --- a/fs/xfs/xfs_inode.c
+> > > +++ b/fs/xfs/xfs_inode.c
+> > > @@@ -809,13 -810,13 +810,13 @@@ xfs_init_new_inode
+> > >   	inode->i_rdev =3D rdev;
+> > >   	ip->i_d.di_projid =3D prid;
+> > >  =20
+> > >  -	if (pip && XFS_INHERIT_GID(pip)) {
+> > >  -		inode->i_gid =3D VFS_I(pip)->i_gid;
+> > >  -		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
+> > >  -			inode->i_mode |=3D S_ISGID;
+> > >  +	if (dir && !(dir->i_mode & S_ISGID) &&
+> > >  +	    (mp->m_flags & XFS_MOUNT_GRPID)) {
+> > >  +		inode->i_uid =3D current_fsuid();   =20
+> >=20
+> > Looking a bit harder, I replaced the above line with
+> > 		inode->i_uid =3D fsuid_into_mnt(mnt_userns);
+> >  =20
+> > >  +		inode->i_gid =3D dir->i_gid;
+> > >  +		inode->i_mode =3D mode;
+> > >   	} else {
+> > > - 		inode_init_owner(inode, dir, mode);
+> > >  -		inode->i_gid =3D fsgid_into_mnt(mnt_userns);
+> > > ++		inode_init_owner(mnt_userns, inode, dir, mode);
+> > >   	}
+> > >  =20
+> > >   	/*   =20
+>=20
+> With the merge window about to open, this is a reminder that this
+> conflict still exists.
 
-https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/
+This is now a conflict between the pidfd tree and Linus' tree.
 
-Or pulling the git.kernel.org built tarball that is autogenerated
-from the release tag?
-
-> >>  	@echo "== dpkg-buildpackage: configure" 1>&2
-> >>  	$(checkdir)
-> >>  	AUTOHEADER=/bin/true dh_autoreconf
-> >> +	dh_update_autotools_config
-> >>  	$(options) $(MAKE) $(PMAKEFLAGS) include/platform_defs.h
-> >
-> >Why would running at tool that does a search-n-replace of built
-> >config.guess files do anything when run before the build runs
-> >libtoolize to copy in the config.guess file it uses? I'm a bit
-> >confused by this...
-> 
-> Autoreconf was not copying in a newer version of config.guess from the system, because of the specific subset of autotools used by this project.
-
-That sounds wrong. AIUI, autoreconf doesn't copy in anything.
-
-$ man 7 dh-autoreconf
-....
-CAVEATS
-       dh_autoreconf is mostly a superset of the
-       dh_update_autotools_config debhelper command included in
-       debhelper since version 9.20160115. When using the dh
-       sequencer, dh_update_autotools_config is run before
-       dh_autoreconf and updates the config.guess and config.sub
-       files. This is required in cases where autoreconf does not
-       update config.guess and config.sub itself.
-
-So isn't the dh_update_autotools_config call in the wrong place
-here?
-
+--=20
 Cheers,
+Stephen Rothwell
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Sig_/ENE1_RMIkp8vJ_Pq_Qhb=U8
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmAy5HcACgkQAVBC80lX
+0Gyqpgf+Jj8z5dtQ7dKf2smHeXzpAERxaIjjdhlb6d/6a6gcigP2gYlrur6hpaus
+WeeimUG/TFpnqEuZ0cZ5YBvzattapDhnlh7tVDSmzYONudXXuqXKPphduv8GhsNj
+28rWcJSd2KnsnBNN28uL66hI8ic+mTBBQGDNEM3gnqvcAJwQxo2BUNrB8e5qSsd6
+ciWTuGvLAcrqHEgzDM1kb81cKMVapGSr0DIhzhUT1RaeDA5uKM5d1gCU2JuQMKAk
+OUYxG8X1zLZZAe7n8yMo+aGhrPnYFPQGzj+8j5YshGBWJ13C07Z2pDEzaoUy4l8A
+eq9Anenwc81RiRqWDXs5/Ycv3tQQYw==
+=ykSr
+-----END PGP SIGNATURE-----
+
+--Sig_/ENE1_RMIkp8vJ_Pq_Qhb=U8--
