@@ -2,98 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D813C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 19:20:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF5B8C433E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 19:26:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2929464E31
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 19:20:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FB5C64DB1
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 19:26:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231605AbhBVTTx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Feb 2021 14:19:53 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50554 "EHLO mail.kernel.org"
+        id S233068AbhBVT0c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Feb 2021 14:26:32 -0500
+Received: from sandeen.net ([63.231.237.45]:56920 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233014AbhBVTQ1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Feb 2021 14:16:27 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5FDD9650AE;
-        Mon, 22 Feb 2021 18:39:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614019171;
-        bh=qT8ZeYdrk8QUQW+gf0TjAN6smsy8jrNbT3wISCeC0As=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qsBLpFUQh3NKcBKy7QUYCwacZnaSb2RsDPF/KxfFdQuouxw37cuE4DqIbxqaUD8nF
-         zyafBSldfC6Vkp/VBHVxa9l3CRp8sKsyOlshEQdN4q5fIrpK1E9Nh4I3lz5Rc06u1B
-         N/HbM9liU8LrNfEOsRgLMbMht6sPWqMeP8K7/InOFAf85l9BYQUGYU7c4XvMjAJPrc
-         sWgbRy8iRtval0F+Xc9EzbKXrzkXUdLGT2DmB1AspEyCuVE596ihDl1lxcAZEiCiic
-         95z1h3xZ1MpHmRbAH0iz2PEind7FDzzYtJ2AxFnCamlADwyC7BDqoVw3SECfAqMcqa
-         AxPnwQh4xvHNg==
-Date:   Mon, 22 Feb 2021 10:39:31 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Bastian Germann <bastiangermann@fishpost.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] debian: Build-depend on libinih-dev with udeb
- package
-Message-ID: <20210222183931.GC7272@magnolia>
-References: <20210221093946.3473-1-bastiangermann@fishpost.de>
- <20210221093946.3473-3-bastiangermann@fishpost.de>
+        id S232954AbhBVTX6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Feb 2021 14:23:58 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id F02E4324E5E;
+        Mon, 22 Feb 2021 13:23:00 -0600 (CST)
+To:     Dave Chinner <david@fromorbit.com>,
+        Steve Langasek <steve.langasek@canonical.com>
+Cc:     Bastian Germann <bastiangermann@fishpost.de>,
+        linux-xfs@vger.kernel.org
+References: <20210220121610.3982-1-bastiangermann@fishpost.de>
+ <20210220121610.3982-4-bastiangermann@fishpost.de>
+ <20210221041139.GL4662@dread.disaster.area>
+ <840CCF3D-7A20-4E35-BA9C-DEC9C05EE70A@canonical.com>
+ <20210221220443.GO4662@dread.disaster.area>
+ <20210222001639.GA1737229@homer.dodds.net>
+ <20210222024425.GP4662@dread.disaster.area>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH 3/4] debian: Regenerate config.guess using debhelper
+Message-ID: <957b9913-bcdb-b64c-4c33-6493a91b3838@sandeen.net>
+Date:   Mon, 22 Feb 2021 13:23:12 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.16; rv:78.0)
+ Gecko/20100101 Thunderbird/78.7.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210221093946.3473-3-bastiangermann@fishpost.de>
+In-Reply-To: <20210222024425.GP4662@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 21, 2021 at 10:39:46AM +0100, Bastian Germann wrote:
-> The first libinih Debian package version with udeb binary package is 53-1.
-> Debian bug #981662 documents the need for it:
-> xfsprogs-udeb depends on libinih1, not libinih1-udeb
+On 2/21/21 8:44 PM, Dave Chinner wrote:
+> On Sun, Feb 21, 2021 at 04:16:39PM -0800, Steve Langasek wrote:
+>> On Mon, Feb 22, 2021 at 09:04:43AM +1100, Dave Chinner wrote:
+>>
+>>>> This upstream release ended up with an older version of config.guess in
+>>>> the tarball.  Specifically, it was too old to recognize RISC-V as an
+>>>> architecture.
+>>
+>>> So was the RISC-V architecture added to the ubuntu build between the
+>>> uploads of the previous version of xfsprogs and xfsprogs-5.10.0? Or
+>>> is this an actual regression where the maintainer signed tarball had
+>>> RISC-V support in it and now it doesn't?
+>>
+>> This is a regression.  The previous tarball (5.6.0) had a newer config.guess
+>> that recognized RISC-V, the newer one (5.10.0) had an older config.guess.
 > 
-> Link: https://bugs.debian.org/981662
-> Signed-off-by: Bastian Germann <bastiangermann@fishpost.de>
-
-Oops, yeah... :(
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  debian/changelog | 3 +++
->  debian/control   | 2 +-
->  2 files changed, 4 insertions(+), 1 deletion(-)
+> Ok.
 > 
-> diff --git a/debian/changelog b/debian/changelog
-> index 679fbf03..8738ab90 100644
-> --- a/debian/changelog
-> +++ b/debian/changelog
-> @@ -3,6 +3,9 @@ xfsprogs (5.11.0-rc0-1) experimental; urgency=medium
->    [ Steve Langasek ]
->    * Regenerate config.guess using debhelper
->  
-> +  [ Bastian Germann ]
-> +  * Build-depend on libinih-dev with udeb package
-> +
->   -- Bastian Germann <bastiangermann@fishpost.de>  Sat, 20 Feb 2021 11:57:31 +0100
->  
->  xfsprogs (5.10.0-3) unstable; urgency=medium
-> diff --git a/debian/control b/debian/control
-> index 1da8093d..e4ec897c 100644
-> --- a/debian/control
-> +++ b/debian/control
-> @@ -3,7 +3,7 @@ Section: admin
->  Priority: optional
->  Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
->  Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>, Bastian Germann <bastiangermann@fishpost.de>
-> -Build-Depends: libinih-dev, uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, pkg-config
-> +Build-Depends: libinih-dev (>= 53), uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, pkg-config
->  Standards-Version: 4.0.0
->  Homepage: https://xfs.wiki.kernel.org/
->  
-> -- 
-> 2.30.1
-> 
+> Eric, did you change the machine you did the release build from?
+
+I don't recall doing so, but I must have. I guess I remember this coming up
+a while ago and maybe I failed to change process in a sticky way.  :/
+
+But - if my local toolchain can cause a regression in a major distro, it seems
+like this patch to regenerate is the obvious path forward, to control
+the distro-specific build, and not be subject to my personal toolchain whims.
+
+Is that not best practice? (I honestly don't know.)
+
+-Eric
