@@ -7,182 +7,146 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87DE6C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 21:23:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFAA7C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 21:29:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 485F964E02
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 21:23:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BAED64E02
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 21:29:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231281AbhBVVXB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Feb 2021 16:23:01 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36602 "EHLO mail.kernel.org"
+        id S231601AbhBVV3S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Feb 2021 16:29:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37456 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230057AbhBVVW7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Feb 2021 16:22:59 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8EF4F64E02;
-        Mon, 22 Feb 2021 21:22:18 +0000 (UTC)
+        id S232008AbhBVV3L (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Feb 2021 16:29:11 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id CF1AA60295;
+        Mon, 22 Feb 2021 21:28:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614028938;
-        bh=WBh5qWgfM7G56vrwoGlbZeOtR2U0q3m8T55gWBCj5m4=;
+        s=k20201202; t=1614029310;
+        bh=OT4UOGUVUbuC+S4M2wLXDQgDkHIL+pPxropHv++OmgE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pSqRlusZz+bxWE8ZEm6/mrrQXJofwqr0Qw4ljds/bUOJTlDjAvBiqInvgCxocspW7
-         oknFAf4VmlZ9gmnBfYEFMcnAJh5ltlzP3/LA7JzWNp5+w1QW9Hx1TZJ7qhk4Sb/+F9
-         Kgw2UyDwrqQUTI1/jgIwHxUebksk/QZ9JfizoQ9lYbCCNS00IqaolcRDZieCTHkdYR
-         ouaunTIxmE6sVM4OobS0eEQf0ejovKwp6kw9wsQ2CUft/8oLLtkjSDUXUrO0YI75Ym
-         9ECm6PlLGowzpKKrwSZYkdUAi7dCdr2VeEeQ7CJ6TPlWKWVr/tW6+NBcKhz77m3j2D
-         N6ExCR8QBJZ/Q==
-Date:   Mon, 22 Feb 2021 13:22:17 -0800
+        b=qH/FF/Wy7Wdvv9Pp0UZ8tt27w3zspVPxoak0zIzHNz/V9mHJtIFX7GdmNOW2Ehfpw
+         E57K8jz2DnpSJtlzJXxkFfQDVyH4xqc19CwAbi05zYbiIgzN9f7V1Bcl7wlBfM+Gtm
+         muYP1kK+grATWH2s2dne/iIip4BLPR7rqgdXQsSV1anbfcsGkHGYfhWnIKQt3fk+EM
+         DIwAfbiP6lFEKar1UVnptLj/5d+h7Sg3N/uc+9yeAj36gEbPpy6dessPTeNnfXdPLO
+         wcWH6VDwkrPOsPh5hPunmiqsAO/8a8zCCrzLMQUmNG8o4JNM88wG5LNVjfwBjGilsT
+         KhmU3AgUp2fBQ==
+Date:   Mon, 22 Feb 2021 13:28:30 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Pavel Reichl <preichl@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: Add test for printing deprec. mount options
-Message-ID: <20210222212217.GD7272@magnolia>
+Subject: Re: [PATCH 1/1] xfs: Skip repetitive warnings about mount options
+Message-ID: <20210222212830.GE7272@magnolia>
 References: <20210220221549.290538-1-preichl@redhat.com>
- <20210220221549.290538-2-preichl@redhat.com>
+ <20210220221549.290538-3-preichl@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210220221549.290538-2-preichl@redhat.com>
+In-Reply-To: <20210220221549.290538-3-preichl@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Feb 20, 2021 at 11:15:48PM +0100, Pavel Reichl wrote:
-> Verify that warnings about deprecated mount options are properly
-> printed.
+On Sat, Feb 20, 2021 at 11:15:49PM +0100, Pavel Reichl wrote:
+> Skip the warnings about mount option being deprecated if we are
+> remounting and deprecated option state is not changing.
 > 
-> Verify that no excessive warnings are printed during remounts.
-> 
+> Bug: https://bugzilla.kernel.org/show_bug.cgi?id=211605
+> Fix-suggested-by: Eric Sandeen <sandeen@redhat.com>
 > Signed-off-by: Pavel Reichl <preichl@redhat.com>
 > ---
->  tests/xfs/528     | 88 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/528.out |  2 ++
->  tests/xfs/group   |  1 +
->  3 files changed, 91 insertions(+)
->  create mode 100755 tests/xfs/528
->  create mode 100644 tests/xfs/528.out
+>  fs/xfs/xfs_super.c | 23 +++++++++++++++++++----
+>  1 file changed, 19 insertions(+), 4 deletions(-)
 > 
-> diff --git a/tests/xfs/528 b/tests/xfs/528
-> new file mode 100755
-> index 00000000..0fc57cef
-> --- /dev/null
-> +++ b/tests/xfs/528
-> @@ -0,0 +1,88 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2020 Red Hat, Inc.. All Rights Reserved.
-> +#
-> +# FS QA Test 528
-> +#
-> +# Verify that warnings about deprecated mount options are properly printed.
-> +#  
-> +# Verify that no excessive warnings are printed during remounts.
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +_require_check_dmesg
-> +_supported_fs xfs
-> +_require_scratch
-> +
-> +log_tag()
-> +{
-> +	echo "fstests $seqnum [tag]" > /dev/kmsg
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 813be879a5e5..6724a7018d1f 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1169,6 +1169,13 @@ xfs_fs_parse_param(
+>  	struct fs_parse_result	result;
+>  	int			size = 0;
+>  	int			opt;
+> +	uint64_t                prev_m_flags = 0; /* Mount flags of prev. mount */
 
-_require_check_dmesg?
+Nit: spaces here^^^^^^^^^^^^^^^^ should be tabs.
 
-> +}
+> +	bool			remounting = fc->purpose & FS_CONTEXT_FOR_RECONFIGURE;
 > +
-> +dmesg_since_test_tag()
-> +{
-> +        dmesg | tac | sed -ne "0,\#fstests $seqnum \[tag\]#p" | \
-> +                tac
-> +}
-> +
-> +check_dmesg_for_since_tag()
-> +{
-> +        dmesg_since_test_tag | egrep -q "$1"
-> +}
-> +
-> +echo "Silence is golden."
-> +
-> +log_tag
-> +
-> +# Test mount
-> +for VAR in {attr2,ikeep,noikeep}; do
-> +	_scratch_mkfs > $seqres.full 2>&1
-> +	_scratch_mount -o $VAR
-> +	check_dmesg_for_since_tag "XFS: $VAR mount option is deprecated" || \
-> +		echo "Could not find deprecation warning for $VAR"
+> +	/* if reconfiguring then get mount flags of previous flags */
+> +	if (remounting) {
+> +		prev_m_flags  = XFS_M(fc->root->d_sb)->m_flags;
+> +	}
+>  
+>  	opt = fs_parse(fc, xfs_fs_parameters, param, &result);
+>  	if (opt < 0)
+> @@ -1294,19 +1301,27 @@ xfs_fs_parse_param(
+>  #endif
+>  	/* Following mount options will be removed in September 2025 */
+>  	case Opt_ikeep:
+> -		xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> +		if (!remounting ||  !(prev_m_flags & XFS_MOUNT_IKEEP)) {
+> +			xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> +		}
 
-I think this is going to regress on old stable kernels that don't know
-about the mount option deprecation, right?  Shouldn't there be some
-logic to skip the test in that case?
+/me wonders if these could be refactored into a common helper, though I
+can't really think of anything less clunky than:
+
+static inline void
+xfs_fs_warn_deprecated(
+	struct fs_context	*fc,
+	struct fs_parameter	*param)
+	uint64_t		flag,
+	bool			value);
+{
+	uint64_t		prev_m_flags;
+
+	if (!(fc->purpose & FS_CONTEXT_FOR_RECONFIGURE))
+		goto warn;
+	prev_m_flags  = XFS_M(fc->root->d_sb)->m_flags;
+	if (!!(prev_m_flags & flag) == value)
+		goto warn;
+	return;
+warn:
+	xfs_warn(mp, "%s mount option is deprecated.", param->key);
+}
+...
+	case Opt_ikeep:
+		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_IKEEP, true);
+		mp->m_flags |= XFS_MOUNT_IKEEP;
+		break;
+	case Opt_noikeep:
+		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_IKEEP, false);
+		mp->m_flags &= ~XFS_MOUNT_IKEEP;
+		break;
+
+Thoughts?
 
 --D
 
-> +	umount $SCRATCH_MNT
-> +done
-> +
-> +# Test mount with default options (attr2 and noikeep) and remount with
-> +# 2 groups of options
-> +# 1) the defaults (attr2, noikeep)
-> +# 2) non defaults (noattr2, ikeep)
-> +_scratch_mount
-> +for VAR in {attr2,noikeep}; do
-> +	log_tag
-> +	mount -o $VAR,remount $SCRATCH_MNT
-> +	check_dmesg_for_since_tag "XFS: $VAR mount option is deprecated." && \
-> +		echo "Should not be able to find deprecation warning for $VAR"
-> +done
-> +for VAR in {noattr2,ikeep}; do
-> +	log_tag
-> +	mount -o $VAR,remount $SCRATCH_MNT
-> +	check_dmesg_for_since_tag "XFS: $VAR mount option is deprecated" || \
-> +		echo "Could not find deprecation warning for $VAR"
-> +done
-> +umount $SCRATCH_MNT
-> +
-> +# success, all done
-> +status=0
-> +exit
-> +
-> diff --git a/tests/xfs/528.out b/tests/xfs/528.out
-> new file mode 100644
-> index 00000000..762dccc0
-> --- /dev/null
-> +++ b/tests/xfs/528.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 528
-> +Silence is golden.
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index e861cec9..ad3bd223 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -525,3 +525,4 @@
->  525 auto quick mkfs
->  526 auto quick mkfs
->  527 auto quick quota
-> +528 auto quick mount
+>  		mp->m_flags |= XFS_MOUNT_IKEEP;
+>  		return 0;
+>  	case Opt_noikeep:
+> -		xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> +		if (!remounting || prev_m_flags & XFS_MOUNT_IKEEP) {
+> +			xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> +		}
+>  		mp->m_flags &= ~XFS_MOUNT_IKEEP;
+>  		return 0;
+>  	case Opt_attr2:
+> -		xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> +		if (!remounting || !(prev_m_flags & XFS_MOUNT_ATTR2)) {
+> +			xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> +		}
+>  		mp->m_flags |= XFS_MOUNT_ATTR2;
+>  		return 0;
+>  	case Opt_noattr2:
+> -		xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> +		if (!remounting || !(prev_m_flags & XFS_MOUNT_NOATTR2)) {
+> +			xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> +		}
+>  		mp->m_flags &= ~XFS_MOUNT_ATTR2;
+>  		mp->m_flags |= XFS_MOUNT_NOATTR2;
+>  		return 0;
 > -- 
 > 2.29.2
 > 
