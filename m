@@ -4,177 +4,185 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65FC3C433DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 19:44:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87DE6C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 21:23:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 387CA64E15
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 19:44:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 485F964E02
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 21:23:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232808AbhBVToA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Feb 2021 14:44:00 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55144 "EHLO mail.kernel.org"
+        id S231281AbhBVVXB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Feb 2021 16:23:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36602 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232728AbhBVTny (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Feb 2021 14:43:54 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DB36764E02;
-        Mon, 22 Feb 2021 19:43:13 +0000 (UTC)
+        id S230057AbhBVVW7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Feb 2021 16:22:59 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8EF4F64E02;
+        Mon, 22 Feb 2021 21:22:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614022994;
-        bh=usSU2oBkZGnp1Mz/IUNaysLAP3xhl6Ersv3SVqy26Jo=;
+        s=k20201202; t=1614028938;
+        bh=WBh5qWgfM7G56vrwoGlbZeOtR2U0q3m8T55gWBCj5m4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GG6JU+48jsGavyrv80rmaFi0ZqsPflJofEAnLBKa7qo7+r8TDCEOPs40B7fWXE0sA
-         2xhT3ViIYvSyOeWcpRWjkudJgqCN9tZTj2hvdSwWJ593Xwc5lD+9lmAYwFVoaCzl1G
-         i3TdsOK4VBkvjQxKjJ7CS8TBqg8jfx+c3G19fW9YB2/Q9jEXkuLG9GPk+x3Noc3PEb
-         1Azb5LwG3B2jbqo47p2te8AnSl1asLIXNz/h23JbN+V7LYvWAsVMbcZtyKo+oYdkT9
-         FNhSaExM45y9BjQCXrTDHecDewJnoFhfTbT3PDp9B4R+jEdkK/blAJZoblFgfj0f8f
-         E3DwjYl9KFXqw==
-Date:   Mon, 22 Feb 2021 11:43:13 -0800
+        b=pSqRlusZz+bxWE8ZEm6/mrrQXJofwqr0Qw4ljds/bUOJTlDjAvBiqInvgCxocspW7
+         oknFAf4VmlZ9gmnBfYEFMcnAJh5ltlzP3/LA7JzWNp5+w1QW9Hx1TZJ7qhk4Sb/+F9
+         Kgw2UyDwrqQUTI1/jgIwHxUebksk/QZ9JfizoQ9lYbCCNS00IqaolcRDZieCTHkdYR
+         ouaunTIxmE6sVM4OobS0eEQf0ejovKwp6kw9wsQ2CUft/8oLLtkjSDUXUrO0YI75Ym
+         9ECm6PlLGowzpKKrwSZYkdUAi7dCdr2VeEeQ7CJ6TPlWKWVr/tW6+NBcKhz77m3j2D
+         N6ExCR8QBJZ/Q==
+Date:   Mon, 22 Feb 2021 13:22:17 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Bastian Germann <bastiangermann@fishpost.de>
-Cc:     linux-xfs@vger.kernel.org,
-        Steve Langasek <steve.langasek@ubuntu.com>
-Subject: Re: [PATCH v2 1/2] debian: Regenerate config.guess using debhelper
-Message-ID: <20210222194313.GA7267@magnolia>
-References: <20210221093946.3473-1-bastiangermann@fishpost.de>
- <20210221093946.3473-2-bastiangermann@fishpost.de>
+To:     Pavel Reichl <preichl@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: Add test for printing deprec. mount options
+Message-ID: <20210222212217.GD7272@magnolia>
+References: <20210220221549.290538-1-preichl@redhat.com>
+ <20210220221549.290538-2-preichl@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210221093946.3473-2-bastiangermann@fishpost.de>
+In-Reply-To: <20210220221549.290538-2-preichl@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 21, 2021 at 10:39:45AM +0100, Bastian Germann wrote:
-> This is a change introduced in 5.10.0-2ubuntu2 with the changelog:
+On Sat, Feb 20, 2021 at 11:15:48PM +0100, Pavel Reichl wrote:
+> Verify that warnings about deprecated mount options are properly
+> printed.
 > 
-> > xfsprogs upstream has regressed config.guess, so use
-> > dh_update_autotools_config.
+> Verify that no excessive warnings are printed during remounts.
 > 
-> The 5.10.0 tarball has a config.guess that breaks builds on RISC-V:
-> ...
-> UNAME_MACHINE = riscv64
-> UNAME_RELEASE = 5.0.0+
-> UNAME_SYSTEM  = Linux
-> UNAME_VERSION = #2 SMP Sat Mar 9 22:34:53 UTC 2019
-> configure: error: cannot guess build type; you must specify one
-> make[1]: *** [Makefile:131: include/builddefs] Error 1
-> ...
-> 
-> Reported-by: Steve Langasek <steve.langasek@ubuntu.com>
-> Signed-off-by: Bastian Germann <bastiangermann@fishpost.de>
+> Signed-off-by: Pavel Reichl <preichl@redhat.com>
 > ---
->  debian/changelog | 7 +++++++
->  debian/rules     | 1 +
->  2 files changed, 8 insertions(+)
+>  tests/xfs/528     | 88 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/528.out |  2 ++
+>  tests/xfs/group   |  1 +
+>  3 files changed, 91 insertions(+)
+>  create mode 100755 tests/xfs/528
+>  create mode 100644 tests/xfs/528.out
 > 
-> diff --git a/debian/changelog b/debian/changelog
-> index 5421aed6..679fbf03 100644
-> --- a/debian/changelog
-> +++ b/debian/changelog
-> @@ -1,3 +1,10 @@
-> +xfsprogs (5.11.0-rc0-1) experimental; urgency=medium
+> diff --git a/tests/xfs/528 b/tests/xfs/528
+> new file mode 100755
+> index 00000000..0fc57cef
+> --- /dev/null
+> +++ b/tests/xfs/528
+> @@ -0,0 +1,88 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2020 Red Hat, Inc.. All Rights Reserved.
+> +#
+> +# FS QA Test 528
+> +#
+> +# Verify that warnings about deprecated mount options are properly printed.
+> +#  
+> +# Verify that no excessive warnings are printed during remounts.
+> +#
 > +
-> +  [ Steve Langasek ]
-> +  * Regenerate config.guess using debhelper
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
 > +
-> + -- Bastian Germann <bastiangermann@fishpost.de>  Sat, 20 Feb 2021 11:57:31 +0100
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
 > +
->  xfsprogs (5.10.0-3) unstable; urgency=medium
->  
->    * Drop unused dh-python from Build-Depends (Closes: #981361)
-> diff --git a/debian/rules b/debian/rules
-> index c6ca5491..fe9a1c3a 100755
-> --- a/debian/rules
-> +++ b/debian/rules
-> @@ -43,6 +43,7 @@ config: .census
->  	@echo "== dpkg-buildpackage: configure" 1>&2
->  	$(checkdir)
->  	AUTOHEADER=/bin/true dh_autoreconf
-> +	dh_update_autotools_config
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +_require_check_dmesg
+> +_supported_fs xfs
+> +_require_scratch
+> +
+> +log_tag()
+> +{
+> +	echo "fstests $seqnum [tag]" > /dev/kmsg
 
-Hm.  The manual page says "dh_update_autotools_config replaces all
-occurrences of config.sub and config.guess in the source tree by the
-up-to-date versions found in the autotools-dev package."
+_require_check_dmesg?
 
-autoreconf does not itself examine config.{guess,sub}.  automake can
-override those files if someone passes it --force --add-missing, but
-nobody does.  The build then kicks off with an ancient config.guess.
+> +}
+> +
+> +dmesg_since_test_tag()
+> +{
+> +        dmesg | tac | sed -ne "0,\#fstests $seqnum \[tag\]#p" | \
+> +                tac
+> +}
+> +
+> +check_dmesg_for_since_tag()
+> +{
+> +        dmesg_since_test_tag | egrep -q "$1"
+> +}
+> +
+> +echo "Silence is golden."
+> +
+> +log_tag
+> +
+> +# Test mount
+> +for VAR in {attr2,ikeep,noikeep}; do
+> +	_scratch_mkfs > $seqres.full 2>&1
+> +	_scratch_mount -o $VAR
+> +	check_dmesg_for_since_tag "XFS: $VAR mount option is deprecated" || \
+> +		echo "Could not find deprecation warning for $VAR"
 
-Hence this patch forcibly overrides config.guess (and config.sub) after
-autoreconf, but before debuild gets to ./configure, thereby solving the
-build failure on riscv.
-
-Eric could also not to ship config.guess files at all, but that would
-break the age-old "download and unpack tarball, ./configure && make"
-workflow.  Overriding the files also works, though I have not focused
-on repercussions for reproducible builds while examining this patch.
-
-----------
-
-As for the question of why the config.guess file versions keep
-changing in the .orig and kernel.org tarballs--
-
-[1] is a tarball with a 2013 era config.guess and files owned by
-'sandeen', which I guess means that Eric generates the config.guess file
-on a machine with fairly old devel packages before uploading to
-kernel.org.
-
-[2] is a tarball with a 2016 era config.guess and files owned by
-'nathans'.  I suspect this means that Nathan Scott generated his own
-.orig tarball when creating the 5.6.0 package, and as part of that
-generated config.guess from a (somewhat more up to date) system?
-
-[3] is a tarball with a 2013 era config.guess and files owned by
-'sandeen', which I guess means that four releases later, Eric still
-generates the config.guess file on a machine with fairly old devel
-packages before uploading to kernel.org.  Though weirdly now he's doing
-this as root (or I really hope fakeroot?)
-
-[4] appears to be the same tarball as [3].
-
-So reading between the lines here, I speculate that Eric runs 'make
-xfsprogs-5.6.0.tar.xz' on (who are we kidding here, RHEL) and so that
-tarball gets the 2013 era config.guess.  Nathan ran 'make
-xfsprogs-5.6.0.tar.gz' on Debian and uploaded that to Debian, whereas
-Bastian is pulling tarballs straight from kernel.org?  Then Ubuntu
-pulled the Debian sources, found that riscv regressed, hence this patch
-to reset config.guess?
-
-(And the reason I never noticed is that I build from git on Ubuntu
-20.04.  There's no config.guess in the build directory so the build
-scripts install config.guess from autotools-dev; the one I get is from
-2018 or so...)
-
-Insofar as I avoid have strong opinions about packaging, I don't think
-it's unreasonable for a distro to override autotools files with the
-versions that they're shipping in that distro.  Who knows what kinds of
-adjustments Debian makes to autotools, and it's certainly their right to
-do that.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
-<flame>
-Personally I also think the upstream tarball should not ship with any of
-those autotools files at all because they are not revision-controlled in
-upstream git.  Anyone building from source ought to have autotools and
-can generate their own.
-</flame>
+I think this is going to regress on old stable kernels that don't know
+about the mount option deprecation, right?  Shouldn't there be some
+logic to skip the test in that case?
 
 --D
 
-[1] https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.6.0.tar.gz
-[2] http://archive.ubuntu.com/ubuntu/pool/main/x/xfsprogs/xfsprogs_5.6.0.orig.tar.gz
-
-[3] https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.10.0.tar.xz
-[4] http://deb.debian.org/debian/pool/main/x/xfsprogs/xfsprogs_5.10.0.orig.tar.xz
-
->  	$(options) $(MAKE) $(PMAKEFLAGS) include/platform_defs.h
->  	touch .census
->  
+> +	umount $SCRATCH_MNT
+> +done
+> +
+> +# Test mount with default options (attr2 and noikeep) and remount with
+> +# 2 groups of options
+> +# 1) the defaults (attr2, noikeep)
+> +# 2) non defaults (noattr2, ikeep)
+> +_scratch_mount
+> +for VAR in {attr2,noikeep}; do
+> +	log_tag
+> +	mount -o $VAR,remount $SCRATCH_MNT
+> +	check_dmesg_for_since_tag "XFS: $VAR mount option is deprecated." && \
+> +		echo "Should not be able to find deprecation warning for $VAR"
+> +done
+> +for VAR in {noattr2,ikeep}; do
+> +	log_tag
+> +	mount -o $VAR,remount $SCRATCH_MNT
+> +	check_dmesg_for_since_tag "XFS: $VAR mount option is deprecated" || \
+> +		echo "Could not find deprecation warning for $VAR"
+> +done
+> +umount $SCRATCH_MNT
+> +
+> +# success, all done
+> +status=0
+> +exit
+> +
+> diff --git a/tests/xfs/528.out b/tests/xfs/528.out
+> new file mode 100644
+> index 00000000..762dccc0
+> --- /dev/null
+> +++ b/tests/xfs/528.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 528
+> +Silence is golden.
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index e861cec9..ad3bd223 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -525,3 +525,4 @@
+>  525 auto quick mkfs
+>  526 auto quick mkfs
+>  527 auto quick quota
+> +528 auto quick mount
 > -- 
-> 2.30.1
+> 2.29.2
 > 
