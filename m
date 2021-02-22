@@ -2,157 +2,145 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C89B3C433DB
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 22:57:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8274CC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 00:17:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C94465391
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Feb 2021 22:57:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4919964EB3
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Feb 2021 00:17:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232060AbhBUW4t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 21 Feb 2021 17:56:49 -0500
-Received: from bilbo.ozlabs.org ([203.11.71.1]:38379 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232059AbhBUW4r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 21 Feb 2021 17:56:47 -0500
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4DkLJh4glwz9sRN;
-        Mon, 22 Feb 2021 09:56:04 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1613948164;
-        bh=mDb9WwHcqGhZ4bPpDkU7BjvQ4JztEbZDcd5OtQn9M60=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Hh6SoziSSNowpGMX3kRkdtK2fRkUhdvZZb+gVDkARtzE2EWm8DzV2J2WK2oDEsF5Q
-         n/MRR+hfzHbAXuSvlZrZ683u6Si/jO20uR1zBPDMekZWrmnEib96bUyRqNjkKrF/CX
-         D48ybrYBPq9bZ7ivsMym8My9ckkCGySlkrbwk7WkAIABhYrix7UBqy4eOx/TxAaLBy
-         dvkz3uskIrBdcXi3lGyaVv++pH+8ryeihLJ0jiPo7bYfCEehHRFUpEmsC48jD8+Ynf
-         UyRlc4a/H2+gU3uiCWUCREajKAJxA46mbdmL0LxaFeK3ZZWcoi/l+JiA6w1UvnrGCM
-         +sZ1wjx7MvDxg==
-Date:   Mon, 22 Feb 2021 09:56:04 +1100
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     Christian Brauner <christian.brauner@ubuntu.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: Re: linux-next: manual merge of the xfs tree with the pidfd tree
-Message-ID: <20210222095604.1e63eaaf@canb.auug.org.au>
-In-Reply-To: <20210215094131.7b47c1c5@canb.auug.org.au>
-References: <20210208103348.1a0beef9@canb.auug.org.au>
-        <20210215094131.7b47c1c5@canb.auug.org.au>
+        id S229996AbhBVARY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 21 Feb 2021 19:17:24 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:44104 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229962AbhBVARY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Feb 2021 19:17:24 -0500
+Received: from 1.general.vorlon.us.vpn ([10.172.64.74] helo=homer.dodds.net)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <steve.langasek@canonical.com>)
+        id 1lDyu1-0006Ml-OR; Mon, 22 Feb 2021 00:16:42 +0000
+Received: by homer.dodds.net (Postfix, from userid 1000)
+        id 87C33EE6; Sun, 21 Feb 2021 16:16:39 -0800 (PST)
+Date:   Sun, 21 Feb 2021 16:16:39 -0800
+From:   Steve Langasek <steve.langasek@canonical.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Bastian Germann <bastiangermann@fishpost.de>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] debian: Regenerate config.guess using debhelper
+Message-ID: <20210222001639.GA1737229@homer.dodds.net>
+References: <20210220121610.3982-1-bastiangermann@fishpost.de>
+ <20210220121610.3982-4-bastiangermann@fishpost.de>
+ <20210221041139.GL4662@dread.disaster.area>
+ <840CCF3D-7A20-4E35-BA9C-DEC9C05EE70A@canonical.com>
+ <20210221220443.GO4662@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/RZeV=9Mhs3FldC0XQDQoHZI";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="OXfL5xGRrasGEqWY"
+Content-Disposition: inline
+In-Reply-To: <20210221220443.GO4662@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/RZeV=9Mhs3FldC0XQDQoHZI
-Content-Type: text/plain; charset=US-ASCII
+
+--OXfL5xGRrasGEqWY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi all,
+On Mon, Feb 22, 2021 at 09:04:43AM +1100, Dave Chinner wrote:
 
-On Mon, 15 Feb 2021 09:41:31 +1100 Stephen Rothwell <sfr@canb.auug.org.au> =
-wrote:
->
-> On Mon, 8 Feb 2021 10:33:48 +1100 Stephen Rothwell <sfr@canb.auug.org.au>=
- wrote:
-> >
-> > Today's linux-next merge of the xfs tree got a conflict in:
-> >=20
-> >   fs/xfs/xfs_ioctl.c
-> >=20
-> > between commit:
-> >=20
-> >   f736d93d76d3 ("xfs: support idmapped mounts")
-> >=20
-> > from the pidfd tree and commit:
-> >=20
-> >   7317a03df703 ("xfs: refactor inode ownership change transaction/inode=
-/quota allocation idiom")
-> >=20
-> > from the xfs tree.
-> >=20
-> > I fixed it up (see below) and can carry the fix as necessary. This
-> > is now fixed as far as linux-next is concerned, but any non trivial
-> > conflicts should be mentioned to your upstream maintainer when your tree
-> > is submitted for merging.  You may also want to consider cooperating
-> > with the maintainer of the conflicting tree to minimise any particularly
-> > complex conflicts.
-> >=20
-> > diff --cc fs/xfs/xfs_ioctl.c
-> > index 3d4c7ca080fb,248083ea0276..000000000000
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@@ -1280,9 -1275,9 +1280,10 @@@ xfs_ioctl_setattr_prepare_dax
-> >    */
-> >   static struct xfs_trans *
-> >   xfs_ioctl_setattr_get_trans(
-> > - 	struct file		*file)
-> >  -	struct xfs_inode	*ip,
-> > ++	struct file		*file,
-> > + 	struct xfs_dquot	*pdqp)
-> >   {
-> >  +	struct xfs_inode	*ip =3D XFS_I(file_inode(file));
-> >   	struct xfs_mount	*mp =3D ip->i_mount;
-> >   	struct xfs_trans	*tp;
-> >   	int			error =3D -EROFS;
-> > @@@ -1470,9 -1461,9 +1469,9 @@@ xfs_ioctl_setattr
-> >  =20
-> >   	xfs_ioctl_setattr_prepare_dax(ip, fa);
-> >  =20
-> > - 	tp =3D xfs_ioctl_setattr_get_trans(file);
-> >  -	tp =3D xfs_ioctl_setattr_get_trans(ip, pdqp);
-> > ++	tp =3D xfs_ioctl_setattr_get_trans(file, pdqp);
-> >   	if (IS_ERR(tp)) {
-> > - 		code =3D PTR_ERR(tp);
-> > + 		error =3D PTR_ERR(tp);
-> >   		goto error_free_dquots;
-> >   	}
-> >  =20
-> > @@@ -1615,7 -1599,7 +1606,7 @@@ xfs_ioc_setxflags
-> >  =20
-> >   	xfs_ioctl_setattr_prepare_dax(ip, &fa);
-> >  =20
-> > - 	tp =3D xfs_ioctl_setattr_get_trans(filp);
-> >  -	tp =3D xfs_ioctl_setattr_get_trans(ip, NULL);
-> > ++	tp =3D xfs_ioctl_setattr_get_trans(filp, NULL);
-> >   	if (IS_ERR(tp)) {
-> >   		error =3D PTR_ERR(tp);
-> >   		goto out_drop_write; =20
->=20
-> With the merge window about to open, this is a reminder that this
-> conflict still exists.
+> > This upstream release ended up with an older version of config.guess in
+> > the tarball.  Specifically, it was too old to recognize RISC-V as an
+> > architecture.
 
-This is now a conflict between the pidfd tree and Linus' tree.
+> So was the RISC-V architecture added to the ubuntu build between the
+> uploads of the previous version of xfsprogs and xfsprogs-5.10.0? Or
+> is this an actual regression where the maintainer signed tarball had
+> RISC-V support in it and now it doesn't?
+
+This is a regression.  The previous tarball (5.6.0) had a newer config.guess
+that recognized RISC-V, the newer one (5.10.0) had an older config.guess.
+
+> FWIW, where are you getting the tarballs from? Are you downloading
+> the maintainer signed tarballs from here:
+
+> https://mirrors.edge.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/
+
+> Or pulling the git.kernel.org built tarball that is autogenerated
+> from the release tag?
+
+I don't know the answer to this; we in Ubuntu take the tarballs from Debian.
+
+> > >>  	@echo "=3D=3D dpkg-buildpackage: configure" 1>&2
+> > >>  	$(checkdir)
+> > >>  	AUTOHEADER=3D/bin/true dh_autoreconf
+> > >> +	dh_update_autotools_config
+> > >>  	$(options) $(MAKE) $(PMAKEFLAGS) include/platform_defs.h
+
+> > >Why would running at tool that does a search-n-replace of built
+> > >config.guess files do anything when run before the build runs
+> > >libtoolize to copy in the config.guess file it uses? I'm a bit
+> > >confused by this...
+
+> > Autoreconf was not copying in a newer version of config.guess from the
+> > system, because of the specific subset of autotools used by this
+> > project.
+
+> That sounds wrong. AIUI, autoreconf doesn't copy in anything.
+
+> $ man 7 dh-autoreconf
+> ....
+> CAVEATS
+>        dh_autoreconf is mostly a superset of the
+>        dh_update_autotools_config debhelper command included in
+>        debhelper since version 9.20160115. When using the dh
+>        sequencer, dh_update_autotools_config is run before
+>        dh_autoreconf and updates the config.guess and config.sub
+>        files. This is required in cases where autoreconf does not
+>        update config.guess and config.sub itself.
+
+> So isn't the dh_update_autotools_config call in the wrong place
+> here?
+
+Documentation notwithstanding, dh_autoreconf was definitively NOT copying in
+the newer config.guess, and we have the build logs to prove it.
+
+https://launchpad.net/ubuntu/+source/xfsprogs/5.10.0-2ubuntu1/+build/209520=
+06
+
+I don't know in what sense this would be the "wrong" place to call it,
+because it fixes the build failure, which is what I care about.
 
 --=20
-Cheers,
-Stephen Rothwell
+Steve Langasek                   Give me a lever long enough and a Free OS
+Debian Developer                   to set it on, and I can move the world.
+Ubuntu Developer                                   https://www.debian.org/
+slangasek@ubuntu.com                                     vorlon@debian.org
 
---Sig_/RZeV=9Mhs3FldC0XQDQoHZI
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+--OXfL5xGRrasGEqWY
+Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmAy5QQACgkQAVBC80lX
-0Gyt/QgAg6nywpR7+H3R+TIxr7Ww32PrnCqnq3RwYLG+y8N4hMR3B4WPqMR99UWs
-YljuazspcYx4n/T13b06yVMfmvkgt8xE54nT3vLG4ghv8zLlBu4sCBnii/8+QSak
-z78WGednA8sVQEdiu2Xd7bXdKczQlcWb7RTjJhSEXnZG+Ru69IjGqyCwam1pshfF
-wP7gpK3qs3MYpVGfbWow+fYlkcOksoxCmmhclQgwKatV3eYPw7zSxm4UduPcjxEr
-P+LjOPOk4FvCAo+unHpxi80XOSQUssixgk2+SMa0/mRr9oRVLo/ToyIzRikFcIyS
-bNT+3+fKJYdEo5bm+II950JLFgjtTw==
-=Lzdc
+iQIzBAABCgAdFiEErEg/aN5yj0PyIC/KVo0w8yGyEz0FAmAy9+EACgkQVo0w8yGy
+Ez0nHhAAzh6MlCL05CepDzy86YWlgUGX2QAQhs5Fwu5P/T1WKno2dwT7JNz8MeJC
+0128BrA8LrOT54yg4QPZ7EKEGc6Tu7b6OxZKQif+EyS5e8rqYFFJeF9QNkYirasT
+GoROhQIJkssfXLeOQo1xRSvYOuCOtw7yFiUeQ37/hdQrxtKMc49MIZ6WFORtXJ5Y
+eRqFJaIHLTDOWgmK9pEvLlryagKRsKm/mzIZolQEe+redkWl7hvWd9beuSyVQlp+
+Ou+eBxcHNI0qRjp4OWXgQggpN5mmtBiL0ETxQUdn0hqq/FTgyz/dxYMXfVca3w7V
+zw+uyffXgvKy4Mep523671O2x0JTf9Zf6qCNuww9R4IUCDmxY6VmHFkpHDQ8dxco
+08WYbEjyPOxDgrpam461vy73+63zTQq6DSuPQeLIGScDEyPjQhB1+yzYIkrNvDM4
+Yo+GerRuAwAy/Y77zM+LvE5EZAZC2RmrEjWh60a4eDmNGHvSQ5ur05PXVJoU0vBE
+0F0rAACHfrUT4IQqg+epIPe/kiaJODQCDQ5ZsD0KAYffN3WCWiySjsFWKUp0tszB
+oLUvSxjeOskLKnbXz+eWLLOZSi/EhGf4dwnDeCG2wQ5LiQ+kaCn8RNnHxbWAzrc1
+tLLhFLm3dMXuY+EfjFWX0F1m+0Jz8QEprwclqgp5BfysMReuuzM=
+=Xb3n
 -----END PGP SIGNATURE-----
 
---Sig_/RZeV=9Mhs3FldC0XQDQoHZI--
+--OXfL5xGRrasGEqWY--
