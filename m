@@ -4,42 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FEEBC433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6378EC433E6
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:02:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E898364E02
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:02:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1985D64E4B
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231286AbhBWDCS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Feb 2021 22:02:18 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47618 "EHLO mail.kernel.org"
+        id S230057AbhBWDCT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Feb 2021 22:02:19 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47768 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230400AbhBWDB6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Feb 2021 22:01:58 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BD20F64E02;
-        Tue, 23 Feb 2021 03:01:42 +0000 (UTC)
+        id S231284AbhBWDB7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Feb 2021 22:01:59 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 297B864E4D;
+        Tue, 23 Feb 2021 03:01:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614049302;
-        bh=ob7Pm07fS8v/Xgevnx8Fzacgh+AxqJ9PGNz6d6P9v9c=;
+        s=k20201202; t=1614049278;
+        bh=O/VBUE1KfX3TruSjzP0z+wCsAneM9yu2vQ7TnoF+XO0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=cA9twMdwuAyWUinX4sH1e86ARSucC8p/SkkjCQQS+i7MulmlMq/DBgltcCgUb9yKq
-         vZGYF0ybtgL/oWj/cFvf+wAGOhjVMTlRCoFV+jzwT6q3Zp0aldp6Q40gzNalg/chKq
-         Gijoevqov4ANjsjawMI6ct0j0I/tsyvj6HEXTbHDNPIStxIBHA9UGPIb3iwARATjDS
-         +n/eHiwQfckg2CE3ec2BPGGciQL4DNQi997CbM16lGY68WqutOeUczCa/PwZIy56VH
-         FZ+da/3udZzBLGu87j+WvHnuU7IaAY3WKrcXqp2Rf+kqPN4BTai4lRav9ayIAg3Ear
-         YS4JzMYGwPjQQ==
-Subject: [PATCH 3/5] xfs_admin: support adding features to V5 filesystems
+        b=PZBQqrbyiZF6gsZEqXe0lH4jupCFT3WKkWACEosYpd8aARyCI19IojFxKGNMQrnwj
+         DjsaSTGewix8snUQ/jAYcKLy7PglqzUFfh7ojxdqiHeW5QrCOxTjyGo+ITMdxh0ooz
+         /3xW983O7OZGFV1EcoH6vNPoVpP4it3Ku0JDikyD+KADCajUpYp5eQ0VK071Y8x3zv
+         YTx+lbQ3AvLMwXsPWdsJrVKPhF1FP9z1YiMErE4DNjgsC5lGMKMT827WPpgTQP6TAH
+         x0NiOM5puoWLqVql0CSsCmVZpoRVFOT86j4Xj2t4LAYZmttxIPhrcHJBI8xs2h/WOY
+         crsItC2dp9lLw==
+Subject: [PATCH 3/4] xfs_repair: factor phase transitions into a helper
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        hch@lst.de, bfoster@redhat.com
-Date:   Mon, 22 Feb 2021 19:01:42 -0800
-Message-ID: <161404930230.425731.17349113846789217272.stgit@magnolia>
-In-Reply-To: <161404928523.425731.7157248967184496592.stgit@magnolia>
-References: <161404928523.425731.7157248967184496592.stgit@magnolia>
+Cc:     Eric Sandeen <sandeen@redhat.com>,
+        Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        bfoster@redhat.com
+Date:   Mon, 22 Feb 2021 19:01:17 -0800
+Message-ID: <161404927772.425602.2186366769310581007.stgit@magnolia>
+In-Reply-To: <161404926046.425602.766097344183886137.stgit@magnolia>
+References: <161404926046.425602.766097344183886137.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,81 +51,92 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Teach the xfs_admin script how to add features to V5 filesystems.
-Technically speaking we could add lazycount to the list, but that option
-is only useful for the V4 format which is deprecated.
+Create a helper function to centralize all the stuff we do at the end of
+a repair phase (which for now is limited to reporting progress).  The
+next patch will add more interesting things to this helper.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- db/xfs_admin.sh      |    6 ++++--
- man/man8/xfs_admin.8 |   22 ++++++++++++++++++++++
- 2 files changed, 26 insertions(+), 2 deletions(-)
+ repair/xfs_repair.c |   22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
 
-diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
-index 430872ef..7a467dbe 100755
---- a/db/xfs_admin.sh
-+++ b/db/xfs_admin.sh
-@@ -8,9 +8,10 @@ status=0
- DB_OPTS=""
- REPAIR_OPTS=""
- REPAIR_DEV_OPTS=""
--USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-r rtdev] [-U uuid] device [logdev]"
-+DB_LOG_OPTS=""
-+USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 03b7c242..a9236bb7 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -849,6 +849,12 @@ repair_capture_writeback(
+ 	pthread_mutex_unlock(&wb_mutex);
+ }
  
--while getopts "c:efjlL:pr:uU:V" c
-+while getopts "c:efjlL:O:pr:uU:V" c
- do
- 	case $c in
- 	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG;;
-@@ -19,6 +20,7 @@ do
- 	j)	DB_OPTS=$DB_OPTS" -c 'version log2'";;
- 	l)	DB_OPTS=$DB_OPTS" -r -c label";;
- 	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";;
-+	O)	REPAIR_OPTS=$REPAIR_OPTS" -c $OPTARG=1";;
- 	p)	DB_OPTS=$DB_OPTS" -c 'version projid32bit'";;
- 	r)	REPAIR_DEV_OPTS=" -r '$OPTARG'";;
- 	u)	DB_OPTS=$DB_OPTS" -r -c uuid";;
-diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-index 5ef99316..ae661648 100644
---- a/man/man8/xfs_admin.8
-+++ b/man/man8/xfs_admin.8
-@@ -6,6 +6,8 @@ xfs_admin \- change parameters of an XFS filesystem
- [
- .B \-eflpu
- ] [
-+.BI \-O " featurelist"
-+] [
- .BR "\-c 0" | 1
- ] [
- .B \-L
-@@ -116,6 +118,26 @@ The filesystem label can be cleared using the special "\c
- " value for
- .IR label .
- .TP
-+.BI \-O " feature1" = "status" , "feature2" = "status..."
-+Add or remove features on an existing V5 filesystem.
-+The features should be specified as a comma-separated list.
-+.I status
-+should be either 0 to disable the feature or 1 to enable the feature.
-+Note, however, that most features cannot be disabled.
-+.IP
-+.B NOTE:
-+Administrators must ensure the filesystem is clean by running
-+.B xfs_repair -n
-+to inspect the filesystem before performing the upgrade.
-+If corruption is found, recovery procedures (e.g. reformat followed by
-+restoration from backup; or running
-+.B xfs_repair
-+without the
-+.BR -n )
-+must be followed to clean the filesystem.
-+.IP
-+There are no feature options currently.
-+.TP
- .BI \-U " uuid"
- Set the UUID of the filesystem to
- .IR uuid .
++static inline void
++phase_end(int phase)
++{
++	timestamp(PHASE_END, phase, NULL);
++}
++
+ int
+ main(int argc, char **argv)
+ {
+@@ -878,7 +884,7 @@ main(int argc, char **argv)
+ 	msgbuf = malloc(DURATION_BUF_SIZE);
+ 
+ 	timestamp(PHASE_START, 0, NULL);
+-	timestamp(PHASE_END, 0, NULL);
++	phase_end(0);
+ 
+ 	/* -f forces this, but let's be nice and autodetect it, as well. */
+ 	if (!isa_file) {
+@@ -901,7 +907,7 @@ main(int argc, char **argv)
+ 
+ 	/* do phase1 to make sure we have a superblock */
+ 	phase1(temp_mp);
+-	timestamp(PHASE_END, 1, NULL);
++	phase_end(1);
+ 
+ 	if (no_modify && primary_sb_modified)  {
+ 		do_warn(_("Primary superblock would have been modified.\n"
+@@ -1127,23 +1133,23 @@ main(int argc, char **argv)
+ 
+ 	/* make sure the per-ag freespace maps are ok so we can mount the fs */
+ 	phase2(mp, phase2_threads);
+-	timestamp(PHASE_END, 2, NULL);
++	phase_end(2);
+ 
+ 	if (do_prefetch)
+ 		init_prefetch(mp);
+ 
+ 	phase3(mp, phase2_threads);
+-	timestamp(PHASE_END, 3, NULL);
++	phase_end(3);
+ 
+ 	phase4(mp);
+-	timestamp(PHASE_END, 4, NULL);
++	phase_end(4);
+ 
+ 	if (no_modify)
+ 		printf(_("No modify flag set, skipping phase 5\n"));
+ 	else {
+ 		phase5(mp);
+ 	}
+-	timestamp(PHASE_END, 5, NULL);
++	phase_end(5);
+ 
+ 	/*
+ 	 * Done with the block usage maps, toss them...
+@@ -1153,10 +1159,10 @@ main(int argc, char **argv)
+ 
+ 	if (!bad_ino_btree)  {
+ 		phase6(mp);
+-		timestamp(PHASE_END, 6, NULL);
++		phase_end(6);
+ 
+ 		phase7(mp, phase2_threads);
+-		timestamp(PHASE_END, 7, NULL);
++		phase_end(7);
+ 	} else  {
+ 		do_warn(
+ _("Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"));
 
