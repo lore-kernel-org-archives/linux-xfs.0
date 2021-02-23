@@ -2,157 +2,236 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 779CFC433E9
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 16:26:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3551C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 16:43:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3413364DA8
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 16:26:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AEAE164E6B
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 16:43:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232176AbhBWQ0C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Feb 2021 11:26:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39160 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233542AbhBWQ0B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Feb 2021 11:26:01 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C5B9064E61;
-        Tue, 23 Feb 2021 16:25:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614097519;
-        bh=L6RyhuMz4LzKTPxhWWWIqy5rxmctdEM8L25oAtLFo3I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=I3OZySxYQRD/2xF/E13j6pmYHwM4HZoT07nqBQ/gauz1OkdK8YkeNJhcSjtj3NGwf
-         llJ8hVDcGeutj1MHMLfjSXwY2/oQrux+eI1a08LLNdHV+NFih8GTic5AkKVURnt/GZ
-         bmQlT066dn8k/BZiEDUvqUlYVYScovA0I4N4CaPriUB1hwSfdmfnWyyAXTvwtdT2Mf
-         nmZ9pCIe5fbnbdjzqpsNJvZACEAbKlSNOeaTixLaLS5NJOp83anKn4uoLNpnGwuc5S
-         AtV0mgAs+oGaYvFJY1rWaocKpqWTB0TVJbVE6wwm7Ch9uQ1yEsHCj12aRJmeVUV6z+
-         Buw3iZU/rWkSQ==
-Date:   Tue, 23 Feb 2021 08:25:19 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Gao Xiang <hsiangkao@redhat.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: don't dirty snapshot logs for unlinked inode
- recovery
-Message-ID: <20210223162519.GI7272@magnolia>
-References: <83696ce6-4054-0e77-b4b8-e82a1a9fbbc3@redhat.com>
- <896a0202-aac8-e43f-7ea6-3718591e32aa@sandeen.net>
- <20180324162049.GP4818@magnolia>
- <20180326124649.GD34912@bfoster.bfoster>
- <20180327211728.GP18129@dastard>
- <20210223134256.GA1327978@xiangao.remote.csb>
- <a3a02b9b-656a-7284-d1b1-befbafc3e9f9@sandeen.net>
- <20210223150341.GA1341686@xiangao.remote.csb>
- <97534412-b95d-48f8-0a5a-3eafe47d72a6@sandeen.net>
+        id S231915AbhBWQnl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Feb 2021 11:43:41 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50292 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231604AbhBWQnj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Feb 2021 11:43:39 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1614098532;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=MRyitFeu/UVz8RCUVTVp0xSWfzIJV3e8eZnTXrbD9m4=;
+        b=IIUWdXaCiosy6z7zy+jHuG8Palfk1XBXRNy99p+8AmvY2QBO/RpNZxcyp1JRYN3ucmoX2l
+        WWzcjbARJlkIX++vGcHDlKLHpKpc6dBnFvmyc9KsBkmyBn1pEpHBqiHmDvmuhhB8jaio1p
+        tLyPmGs/anGdVCltFhdJeVez/7/V2F0=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-579-W1bCECZWNiyM4IPjGQR3fw-1; Tue, 23 Feb 2021 11:41:07 -0500
+X-MC-Unique: W1bCECZWNiyM4IPjGQR3fw-1
+Received: by mail-wr1-f71.google.com with SMTP id e29so7372116wra.12
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Feb 2021 08:41:07 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=MRyitFeu/UVz8RCUVTVp0xSWfzIJV3e8eZnTXrbD9m4=;
+        b=Y/Tb+3bqkecoPwiOBIK0fvM6YX/7kaduZJ0AK0g3qqqljWdzztt9goRS/8+iUAzpkJ
+         TZ/60bBzUvb45ZTBHlW6Dk/A4XVka4l/tyzFIRiZP2Hf9ORMQAiMhv0bMELV/aPDIOEc
+         YQt48/FOZcWBF2QQH744Nh9M3VSDNGAaYGAmft2NCjik+ohC5MALMWk+8hpYgCVSpQVE
+         aVmlb81Dr8UC5eAv1OCxmgsKZ3Mf6GxJ20yFfJy4ikEmfjyk2Pk3XOnnPnc0ajH3JROZ
+         Ny8TbCPtJK38pIzHdCWLYlJieMKAUpXuHuSY04jZufyhXIBFTKP5PNKOAFAfr2CSyeXD
+         0yLg==
+X-Gm-Message-State: AOAM530WRtvfy9R+/0s9i2duO/e6fb+RiYtr/8B3pWVvSC7kYhdBlVfj
+        usx/7sH5kBfpiefVP21/WrgAA+Nkd8HVw39ad0arV8V5vUHRGuvOrGmk4BAVFSxPvTtPQeydD8L
+        ocP9liBCqb2kHr/hLdfAKz7qTR0BBdu2RQRbnhOk1LRliYFuXoJXqh95HT7w6/q53sXWfYLM=
+X-Received: by 2002:adf:9521:: with SMTP id 30mr9925976wrs.23.1614098466072;
+        Tue, 23 Feb 2021 08:41:06 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwg6NEiHhFFgXLi/xrtJXv/31xxNamGRda/eFUuQ/BrhqfJee+G5mF3g9cyhieomGcHfN/gYQ==
+X-Received: by 2002:adf:9521:: with SMTP id 30mr9925952wrs.23.1614098465831;
+        Tue, 23 Feb 2021 08:41:05 -0800 (PST)
+Received: from localhost.localdomain ([84.19.91.9])
+        by smtp.gmail.com with ESMTPSA id f7sm32849277wre.78.2021.02.23.08.41.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 23 Feb 2021 08:41:05 -0800 (PST)
+Subject: Re: [PATCH] xfs: Add test for printing deprec. mount options
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <20210220221549.290538-1-preichl@redhat.com>
+ <20210220221549.290538-2-preichl@redhat.com> <20210222212217.GD7272@magnolia>
+From:   Pavel Reichl <preichl@redhat.com>
+Message-ID: <86ed6a8b-47e5-544e-50b0-2632d29fbeb7@redhat.com>
+Date:   Tue, 23 Feb 2021 17:41:04 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <97534412-b95d-48f8-0a5a-3eafe47d72a6@sandeen.net>
+In-Reply-To: <20210222212217.GD7272@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 23, 2021 at 09:46:38AM -0600, Eric Sandeen wrote:
-> 
-> 
-> On 2/23/21 9:03 AM, Gao Xiang wrote:
-> > On Tue, Feb 23, 2021 at 08:40:56AM -0600, Eric Sandeen wrote:
-> >> On 2/23/21 7:42 AM, Gao Xiang wrote:
-> >>> Hi folks,
-> >>>
-> >>> On Wed, Mar 28, 2018 at 08:17:28AM +1100, Dave Chinner wrote:
-> >>>> On Mon, Mar 26, 2018 at 08:46:49AM -0400, Brian Foster wrote:
-> >>>>> On Sat, Mar 24, 2018 at 09:20:49AM -0700, Darrick J. Wong wrote:
-> >>>>>> On Wed, Mar 07, 2018 at 05:33:48PM -0600, Eric Sandeen wrote:
-> >>>>>>> Now that unlinked inode recovery is done outside of
-> >>>>>>> log recovery, there is no need to dirty the log on
-> >>>>>>> snapshots just to handle unlinked inodes.  This means
-> >>>>>>> that readonly snapshots can be mounted without requiring
-> >>>>>>> -o ro,norecovery to avoid the log replay that can't happen
-> >>>>>>> on a readonly block device.
-> >>>>>>>
-> >>>>>>> (unlinked inodes will just hang out in the agi buckets until
-> >>>>>>> the next writable mount)
-> >>>>>>
-> >>>>>> FWIW I put these two in a test kernel to see what would happen and
-> >>>>>> generic/311 failures popped up.  It looked like the _check_scratch_fs
-> >>>>>> found incorrect block counts on the snapshot(?)
-> >>>>>>
-> >>>>>
-> >>>>> Interesting. Just a wild guess, but perhaps it has something to do with
-> >>>>> lazy sb accounting..? I see we call xfs_initialize_perag_data() when
-> >>>>> mounting an unclean fs.
-> >>>>
-> >>>> The freeze is calls xfs_log_sbcount() which should update the
-> >>>> superblock counters from the in-memory counters and write them to
-> >>>> disk.
-> >>>>
-> >>>> If they are out, I'm guessing it's because the in-memory per-ag
-> >>>> reservations are not being returned to the global pool before the
-> >>>> in-memory counters are summed during a freeze....
-> >>>>
-> >>>> Cheers,
-> >>>>
-> >>>> Dave.
-> >>>> -- 
-> >>>> Dave Chinner
-> >>>> david@fromorbit.com
-> >>>
-> >>> I spend some time on tracking this problem. I've made a quick
-> >>> modification with per-AG reservation and tested with generic/311
-> >>> it seems fine. My current question is that how such fsfreezed
-> >>> images (with clean mount) work with old kernels without [PATCH 1/1]?
-> >>> I'm afraid orphan inodes won't be freed with such old kernels....
-> >>> Am I missing something?
-> >>
-> >> It's true, a snapshot created with these patches will not have their unlinked
-> >> inodes processed if mounted on an older kernel. I'm not sure how much of a
-> >> problem that is; the filesystem is not inconsistent, but some space is lost,
-> >> I guess. I'm not sure it's common to take a snapshot of a frozen filesystem on
-> >> one kernel and then move it back to an older kernel.  Maybe others have
-> >> thoughts on this.
 
-Yes, I know of cloudy image generation factories that use old versions
-of RHEL to generate images that are then frozen and copied to a
-deployment system without an unmount.  I don't understand why they
-insist that unmount is "too slow" but freeze isn't, nor why they then
-file bugs that their instance deploy process is unacceptably slow
-because of log recovery.
 
-> > My current thought might be only to write clean mount without
-> > unlinked inodes when freezing, but leave log dirty if any
-> > unlinked inodes exist as Brian mentioned before and don't
-> > handle such case (?). I'd like to hear more comments about
-> > this as well.
+On 2/22/21 10:22 PM, Darrick J. Wong wrote:
+> On Sat, Feb 20, 2021 at 11:15:48PM +0100, Pavel Reichl wrote:
+>> Verify that warnings about deprecated mount options are properly
+>> printed.
+>>
+>> Verify that no excessive warnings are printed during remounts.
+>>
+>> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+>> ---
+>>  tests/xfs/528     | 88 +++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/528.out |  2 ++
+>>  tests/xfs/group   |  1 +
+>>  3 files changed, 91 insertions(+)
+>>  create mode 100755 tests/xfs/528
+>>  create mode 100644 tests/xfs/528.out
+>>
+>> diff --git a/tests/xfs/528 b/tests/xfs/528
+>> new file mode 100755
+>> index 00000000..0fc57cef
+>> --- /dev/null
+>> +++ b/tests/xfs/528
+>> @@ -0,0 +1,88 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2020 Red Hat, Inc.. All Rights Reserved.
+>> +#
+>> +# FS QA Test 528
+>> +#
+>> +# Verify that warnings about deprecated mount options are properly printed.
+>> +#  
+>> +# Verify that no excessive warnings are printed during remounts.
+>> +#
+>> +
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +echo "QA output created by $seq"
+>> +
+>> +here=`pwd`
+>> +tmp=/tmp/$$
+>> +status=1	# failure is the default!
+>> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +
+>> +_cleanup()
+>> +{
+>> +	cd /
+>> +	rm -f $tmp.*
+>> +}
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +
+>> +# remove previous $seqres.full before test
+>> +rm -f $seqres.full
+>> +
+>> +_require_check_dmesg
+>> +_supported_fs xfs
+>> +_require_scratch
+>> +
+>> +log_tag()
+>> +{
+>> +	echo "fstests $seqnum [tag]" > /dev/kmsg
 > 
-> I don't know if I had made this comment before ;) but I feel like that's even
-> more "surprise" (as in: gets further from the principle of least surprise)
-> and TBH I would rather not have that somewhat unpredictable behavior.
-> 
-> I think I'd rather /always/ make a dirty log than sometimes do it, other
-> times not. It'd just be more confusion for the admin IMHO.
+> _require_check_dmesg?
 
-...but the next time anyone wants to introduce a new in/rocompat feature
-flag for something inode related, then you can disable the "leave a
-dirty log on freeze if there are unlinked inodes" behavior.
 
---D
+Yeah? I mean it's right above _supported_fs_xfs and _require_scratch...I guess I should move it right next to _require_scratch, OK?
+
 
 > 
-> Thanks,
-> -Eric
+>> +}
+>> +
+>> +dmesg_since_test_tag()
+>> +{
+>> +        dmesg | tac | sed -ne "0,\#fstests $seqnum \[tag\]#p" | \
+>> +                tac
+>> +}
+>> +
+>> +check_dmesg_for_since_tag()
+>> +{
+>> +        dmesg_since_test_tag | egrep -q "$1"
+>> +}
+>> +
+>> +echo "Silence is golden."
+>> +
+>> +log_tag
+>> +
+>> +# Test mount
+>> +for VAR in {attr2,ikeep,noikeep}; do
+>> +	_scratch_mkfs > $seqres.full 2>&1
+>> +	_scratch_mount -o $VAR
+>> +	check_dmesg_for_since_tag "XFS: $VAR mount option is deprecated" || \
+>> +		echo "Could not find deprecation warning for $VAR"
 > 
-> > Thanks,
-> > Gao Xiang
-> > 
-> >>
-> >> -Eric
-> >>
-> > 
+> I think this is going to regress on old stable kernels that don't know
+> about the mount option deprecation, right?  Shouldn't there be some
+> logic to skip the test in that case?
+
+I think you are right, thanks for the catch.
+	
+Do you know how to make sure that xfstest is executed only on the kernel that implements the tested feature? I tried to do some grepping but I didn't find anything yet.
+
+Adding check for the output of `uname -r' directly to test seems a bit too crude.
+
+> 
+> --D
+> 
+>> +	umount $SCRATCH_MNT
+>> +done
+>> +
+>> +# Test mount with default options (attr2 and noikeep) and remount with
+>> +# 2 groups of options
+>> +# 1) the defaults (attr2, noikeep)
+>> +# 2) non defaults (noattr2, ikeep)
+>> +_scratch_mount
+>> +for VAR in {attr2,noikeep}; do
+>> +	log_tag
+>> +	mount -o $VAR,remount $SCRATCH_MNT
+>> +	check_dmesg_for_since_tag "XFS: $VAR mount option is deprecated." && \
+>> +		echo "Should not be able to find deprecation warning for $VAR"
+>> +done
+>> +for VAR in {noattr2,ikeep}; do
+>> +	log_tag
+>> +	mount -o $VAR,remount $SCRATCH_MNT
+>> +	check_dmesg_for_since_tag "XFS: $VAR mount option is deprecated" || \
+>> +		echo "Could not find deprecation warning for $VAR"
+>> +done
+>> +umount $SCRATCH_MNT
+>> +
+>> +# success, all done
+>> +status=0
+>> +exit
+>> +
+>> diff --git a/tests/xfs/528.out b/tests/xfs/528.out
+>> new file mode 100644
+>> index 00000000..762dccc0
+>> --- /dev/null
+>> +++ b/tests/xfs/528.out
+>> @@ -0,0 +1,2 @@
+>> +QA output created by 528
+>> +Silence is golden.
+>> diff --git a/tests/xfs/group b/tests/xfs/group
+>> index e861cec9..ad3bd223 100644
+>> --- a/tests/xfs/group
+>> +++ b/tests/xfs/group
+>> @@ -525,3 +525,4 @@
+>>  525 auto quick mkfs
+>>  526 auto quick mkfs
+>>  527 auto quick quota
+>> +528 auto quick mount
+>> -- 
+>> 2.29.2
+>>
+> 
+
