@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 964B8C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:01:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F9E2C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:01:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BE7864E4A
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:01:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 359DA64E57
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:01:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230459AbhBWDBe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Feb 2021 22:01:34 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47520 "EHLO mail.kernel.org"
+        id S230493AbhBWDBk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Feb 2021 22:01:40 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47568 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230434AbhBWDB3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Feb 2021 22:01:29 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D22B364DF3;
-        Tue, 23 Feb 2021 03:00:41 +0000 (UTC)
+        id S231267AbhBWDBe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Feb 2021 22:01:34 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5526764E4A;
+        Tue, 23 Feb 2021 03:00:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614049242;
-        bh=eYTE8MxWR0l0+sBxedArH65I5fhuR0B+OsSJpCSB5iU=;
+        s=k20201202; t=1614049253;
+        bh=E+nr4GUSFhrROrwtzLXtQkq0fOas518cxwYs4EPNyX8=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=b4cgvIgX3995Lccvaye2VTYFXKYh6i6dV5qmwIT1WOYAayhPbbuOTHa6MOPaN8wLY
-         GMLVKNSPBvJd2E6tRQoWLA5JIaBtauKrXLRwEAEjgYqllcQ44h2fDJuqQSYVFXT2w9
-         fJZq0g/bRyrz5lqFsjNCGjQZmnGRB5acZoArinWPVPlzviTy2waJwY37IMD0xRpYRq
-         /iqjCu2q8Q0SNGJsvD/qfMLW+1+iHenyMcbaf8KJPNpOCLxYE3T64qvp9qJ+4bh0us
-         2+Wjja6K8eyJaJ50g3Dc9A3A4TQ4uKifOx/jokR0OezOqkzRG4IWwmtUN7//YZbN+4
-         hxkFIgdFMgWuQ==
-Subject: [PATCH 4/7] xfs_db: don't allow label/uuid setting if the needsrepair
- flag is set
+        b=gLV3QYdZpzQLasqexM9HfBqCd3f1ko/uj3HqjdRnMJhbo9cpi8/PiG+88pUsekzo4
+         839RWMzPcbx8VzUeBMXUwp4v3j9ORFSp/adhJ28pa0Jqg9qpEtmlePuhFBiHofFz7U
+         ZPa39tif1XYg6OlcjvxVL4OB6+E674z7bTcdimC6UvRCQcj0Xzp/f6XEMf2/lO4OP7
+         6zeOJhw5XHTojgR/CNAry4hlk9IIm1fP27e6pGybcpaZqskRN88wbRVOUFpwOn9s+T
+         011WCwFYOqPZQCzxW2JV5ArhNAW1uYcEsHyIlh6gkBe1qgHD14sPbWOWsyDcskFkbE
+         XCh+ziRaV4Fiw==
+Subject: [PATCH 6/7] xfs_repair: clear quota CHKD flags on the incore
+ superblock too
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        bfoster@redhat.com
-Date:   Mon, 22 Feb 2021 19:00:41 -0800
-Message-ID: <161404924136.425352.783422563005701204.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>,
+        linux-xfs@vger.kernel.org, bfoster@redhat.com
+Date:   Mon, 22 Feb 2021 19:00:52 -0800
+Message-ID: <161404925290.425352.17614643483707405953.stgit@magnolia>
 In-Reply-To: <161404921827.425352.18151735716678009691.stgit@magnolia>
 References: <161404921827.425352.18151735716678009691.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,49 +51,67 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The NEEDSREPAIR flag can be set on filesystems where we /know/ that
-there's something wrong with the metadata and want to force the sysadmin
-to run xfs_repair before the next mount.  The goal here is to prevent
-non-repair changes to a filesystem when we are confident of its
-instability.  Normally we wouldn't bother with such safety checks for
-the debugger, but the label and uuid functions can be called from
-xfs_admin, so we should prevent these administrative tasks until the
-filesystem can be repaired.
+At the end of a repair run, xfs_repair clears the superblock's quota
+checked flags if it found mistakes in the quota accounting to force a
+quotacheck at the next mount.  This is currently the last time repair
+modifies the primary superblock, so it is sufficient to update the
+ondisk buffer and not the incore mount structure.
+
+However, we're about to introduce code to clear the needsrepair feature
+at the very end of repair, after all metadata blocks have been written
+to disk and all disk caches flush.  Since the convention everywhere else
+in xfs is to update the incore superblock, call libxfs_sb_to_disk to
+translate that into the ondisk buffer, and then write the buffer to
+disk, switch the quota CHKD code to use this mechanism too.
+
+(Get rid of dsb too, since the incore super should be in sync with the
+ondisk super.)
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- db/sb.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+ repair/xfs_repair.c |   12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
 
-diff --git a/db/sb.c b/db/sb.c
-index d7111e92..cec7dce9 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -379,6 +379,11 @@ uuid_f(
- 				progname);
- 			return 0;
- 		}
-+		if (xfs_sb_version_needsrepair(&mp->m_sb)) {
-+			dbprintf(_("%s: filesystem needs xfs_repair\n"),
-+				progname);
-+			return 0;
-+		}
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 9409f0d8..40352458 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -717,7 +717,6 @@ main(int argc, char **argv)
+ {
+ 	xfs_mount_t	*temp_mp;
+ 	xfs_mount_t	*mp;
+-	xfs_dsb_t	*dsb;
+ 	struct xfs_buf	*sbp;
+ 	xfs_mount_t	xfs_m;
+ 	struct xlog	log = {0};
+@@ -1103,22 +1102,19 @@ _("Warning:  project quota information would be cleared.\n"
+ 	if (!sbp)
+ 		do_error(_("couldn't get superblock\n"));
  
- 		if (!strcasecmp(argv[1], "generate")) {
- 			platform_uuid_generate(&uu);
-@@ -543,6 +548,12 @@ label_f(
- 			return 0;
- 		}
+-	dsb = sbp->b_addr;
+-
+ 	if ((mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD) != quotacheck_results()) {
+ 		do_warn(_("Note - quota info will be regenerated on next "
+ 			"quota mount.\n"));
+-		dsb->sb_qflags &= cpu_to_be16(~(XFS_UQUOTA_CHKD |
+-						XFS_GQUOTA_CHKD |
+-						XFS_PQUOTA_CHKD |
+-						XFS_OQUOTA_CHKD));
++		mp->m_sb.sb_qflags &= ~(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD |
++					XFS_PQUOTA_CHKD | XFS_OQUOTA_CHKD);
++		libxfs_sb_to_disk(sbp->b_addr, &mp->m_sb);
+ 	}
  
-+		if (xfs_sb_version_needsrepair(&mp->m_sb)) {
-+			dbprintf(_("%s: filesystem needs xfs_repair\n"),
-+				progname);
-+			return 0;
-+		}
-+
- 		dbprintf(_("writing all SBs\n"));
- 		for (ag = 0; ag < mp->m_sb.sb_agcount; ag++)
- 			if ((p = do_label(ag, argv[1])) == NULL) {
+ 	if (copied_sunit) {
+ 		do_warn(
+ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\n"
+   "Please reset with mount -o sunit=<value>,swidth=<value> if necessary\n"),
+-			be32_to_cpu(dsb->sb_unit), be32_to_cpu(dsb->sb_width));
++			mp->m_sb.sb_unit, mp->m_sb.sb_width);
+ 	}
+ 
+ 	libxfs_buf_mark_dirty(sbp);
 
