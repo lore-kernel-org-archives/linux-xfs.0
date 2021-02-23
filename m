@@ -7,179 +7,175 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90315C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B48E4C433DB
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:35:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4762A64E25
+	by mail.kernel.org (Postfix) with ESMTP id 6C77164E4B
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:35:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230425AbhBWDf2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Feb 2021 22:35:28 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:34025 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230498AbhBWDf2 (ORCPT
+        id S230498AbhBWDf3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Feb 2021 22:35:29 -0500
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:37026 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231211AbhBWDf2 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Feb 2021 22:35:28 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 917601ADBE2
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 97FEFFA628C
         for <linux-xfs@vger.kernel.org>; Tue, 23 Feb 2021 14:34:46 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lEOTF-0001kW-Q1
+        id 1lEOTF-0001kZ-Qc
         for linux-xfs@vger.kernel.org; Tue, 23 Feb 2021 14:34:45 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lEOTF-00Di0C-IS
+        id 1lEOTF-00Di0F-JM
         for linux-xfs@vger.kernel.org; Tue, 23 Feb 2021 14:34:45 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/8] xfs: separate CIL commit record IO
-Date:   Tue, 23 Feb 2021 14:34:36 +1100
-Message-Id: <20210223033442.3267258-3-david@fromorbit.com>
+Subject: [PATCH 3/8] xfs: move and rename xfs_blkdev_issue_flush
+Date:   Tue, 23 Feb 2021 14:34:37 +1100
+Message-Id: <20210223033442.3267258-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20210223033442.3267258-1-david@fromorbit.com>
 References: <20210223033442.3267258-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8 a=-CzamR9Lu324sNjnbDUA:9
+        a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8 a=3J8Cqu4lOtRIifzBSocA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To allow for iclog IO device cache flush behaviour to be optimised,
-we first need to separate out the commit record iclog IO from the
-rest of the checkpoint so we can wait for the checkpoint IO to
-complete before we issue the commit record.
-
-This separation is only necessary if the commit record is being
-written into a different iclog to the start of the checkpoint as the
-upcoming cache flushing changes requires completion ordering against
-the other iclogs submitted by the checkpoint.
-
-If the entire checkpoint and commit is in the one iclog, then they
-are both covered by the one set of cache flush primitives on the
-iclog and hence there is no need to separate them for ordering.
-
-Otherwise, we need to wait for all the previous iclogs to complete
-so they are ordered correctly and made stable by the REQ_PREFLUSH
-that the commit record iclog IO issues. This guarantees that if a
-reader sees the commit record in the journal, they will also see the
-entire checkpoint that commit record closes off.
-
-This also provides the guarantee that when the commit record IO
-completes, we can safely unpin all the log items in the checkpoint
-so they can be written back because the entire checkpoint is stable
-in the journal.
+Move it to xfs_bio_io.c as we are about to add new async cache flush
+functionality that uses bios directly, so all this stuff should be
+in the same place. Rename the function to xfs_flush_bdev() to match
+the xfs_rw_bdev() function that already exists in this file.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c      | 55 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_log_cil.c  |  7 ++++++
- fs/xfs/xfs_log_priv.h |  2 ++
- 3 files changed, 64 insertions(+)
+ fs/xfs/xfs_bio_io.c | 8 ++++++++
+ fs/xfs/xfs_buf.c    | 2 +-
+ fs/xfs/xfs_file.c   | 6 +++---
+ fs/xfs/xfs_linux.h  | 1 +
+ fs/xfs/xfs_log.c    | 2 +-
+ fs/xfs/xfs_super.c  | 7 -------
+ fs/xfs/xfs_super.h  | 1 -
+ 7 files changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index fa284f26d10e..ff26fb46d70f 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -808,6 +808,61 @@ xlog_wait_on_iclog(
- 	return 0;
+diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
+index e2148f2d5d6b..5abf653a45d4 100644
+--- a/fs/xfs/xfs_bio_io.c
++++ b/fs/xfs/xfs_bio_io.c
+@@ -59,3 +59,11 @@ xfs_rw_bdev(
+ 		invalidate_kernel_vmap_range(data, count);
+ 	return error;
  }
- 
-+/*
-+ * Wait on any iclogs that are still flushing in the range of start_lsn to the
-+ * current iclog's lsn. The caller holds a reference to the iclog, but otherwise
-+ * holds no log locks.
-+ *
-+ * We walk backwards through the iclogs to find the iclog with the highest lsn
-+ * in the range that we need to wait for and then wait for it to complete.
-+ * Completion ordering of iclog IOs ensures that all prior iclogs to the
-+ * candidate iclog we need to sleep on have been complete by the time our
-+ * candidate has completed it's IO.
-+ *
-+ * Therefore we only need to find the first iclog that isn't clean within the
-+ * span of our flush range. If we come across a clean, newly activated iclog
-+ * with a lsn of 0, it means IO has completed on this iclog and all previous
-+ * iclogs will be have been completed prior to this one. Hence finding a newly
-+ * activated iclog indicates that there are no iclogs in the range we need to
-+ * wait on and we are done searching.
-+ */
-+int
-+xlog_wait_on_iclog_lsn(
-+	struct xlog_in_core	*iclog,
-+	xfs_lsn_t		start_lsn)
++
++void
++xfs_flush_bdev(
++	struct block_device	*bdev)
 +{
-+	struct xlog		*log = iclog->ic_log;
-+	struct xlog_in_core	*prev;
-+	int			error = -EIO;
-+
-+	spin_lock(&log->l_icloglock);
-+	if (XLOG_FORCED_SHUTDOWN(log))
-+		goto out_unlock;
-+
-+	error = 0;
-+	for (prev = iclog->ic_prev; prev != iclog; prev = prev->ic_prev) {
-+
-+		/* Done if the lsn is before our start lsn */
-+		if (XFS_LSN_CMP(be64_to_cpu(prev->ic_header.h_lsn),
-+				start_lsn) < 0)
-+			break;
-+
-+		/* Don't need to wait on completed, clean iclogs */
-+		if (prev->ic_state == XLOG_STATE_DIRTY ||
-+		    prev->ic_state == XLOG_STATE_ACTIVE) {
-+			continue;
-+		}
-+
-+		/* wait for completion on this iclog */
-+		xlog_wait(&prev->ic_force_wait, &log->l_icloglock);
-+		return 0;
-+	}
-+
-+out_unlock:
-+	spin_unlock(&log->l_icloglock);
-+	return error;
++	blkdev_issue_flush(bdev, GFP_NOFS);
 +}
 +
- /*
-  * Write out an unmount record using the ticket provided. We have to account for
-  * the data space used in the unmount ticket as this write is not done from a
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b0ef071b3cb5..c5cc1b7ad25e 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -870,6 +870,13 @@ xlog_cil_push_work(
- 	wake_up_all(&cil->xc_commit_wait);
- 	spin_unlock(&cil->xc_push_lock);
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index f6e5235df7c9..b1d6c530c693 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1958,7 +1958,7 @@ xfs_free_buftarg(
+ 	percpu_counter_destroy(&btp->bt_io_count);
+ 	list_lru_destroy(&btp->bt_lru);
  
-+	/*
-+	 * If the checkpoint spans multiple iclogs, wait for all previous
-+	 * iclogs to complete before we submit the commit_iclog.
-+	 */
-+	if (ctx->start_lsn != commit_lsn)
-+		xlog_wait_on_iclog_lsn(commit_iclog, ctx->start_lsn);
-+
- 	/* release the hounds! */
- 	xfs_log_release_iclog(commit_iclog);
- 	return;
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 037950cf1061..a7ac85aaff4e 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -584,6 +584,8 @@ xlog_wait(
- 	remove_wait_queue(wq, &wait);
+-	xfs_blkdev_issue_flush(btp);
++	xfs_flush_bdev(btp->bt_bdev);
+ 
+ 	kmem_free(btp);
+ }
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 38528e59030e..dd33ef2d0e20 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -196,9 +196,9 @@ xfs_file_fsync(
+ 	 * inode size in case of an extending write.
+ 	 */
+ 	if (XFS_IS_REALTIME_INODE(ip))
+-		xfs_blkdev_issue_flush(mp->m_rtdev_targp);
++		xfs_flush_bdev(mp->m_rtdev_targp->bt_bdev);
+ 	else if (mp->m_logdev_targp != mp->m_ddev_targp)
+-		xfs_blkdev_issue_flush(mp->m_ddev_targp);
++		xfs_flush_bdev(mp->m_ddev_targp->bt_bdev);
+ 
+ 	/*
+ 	 * Any inode that has dirty modifications in the log is pinned.  The
+@@ -218,7 +218,7 @@ xfs_file_fsync(
+ 	 */
+ 	if (!log_flushed && !XFS_IS_REALTIME_INODE(ip) &&
+ 	    mp->m_logdev_targp == mp->m_ddev_targp)
+-		xfs_blkdev_issue_flush(mp->m_ddev_targp);
++		xfs_flush_bdev(mp->m_ddev_targp->bt_bdev);
+ 
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index af6be9b9ccdf..e94a2aeefee8 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -196,6 +196,7 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
+ 
+ int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
+ 		char *data, unsigned int op);
++void xfs_flush_bdev(struct block_device *bdev);
+ 
+ #define ASSERT_ALWAYS(expr)	\
+ 	(likely(expr) ? (void)0 : assfail(NULL, #expr, __FILE__, __LINE__))
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index ff26fb46d70f..493454c98c6f 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2015,7 +2015,7 @@ xlog_sync(
+ 	 * layer state machine for preflushes.
+ 	 */
+ 	if (log->l_targ != log->l_mp->m_ddev_targp || split) {
+-		xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
++		xfs_flush_bdev(log->l_mp->m_ddev_targp->bt_bdev);
+ 		need_flush = false;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 21b1d034aca3..85dd9593b40b 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -339,13 +339,6 @@ xfs_blkdev_put(
+ 		blkdev_put(bdev, FMODE_READ|FMODE_WRITE|FMODE_EXCL);
  }
  
-+int xlog_wait_on_iclog_lsn(struct xlog_in_core *iclog, xfs_lsn_t start_lsn);
-+
- /*
-  * The LSN is valid so long as it is behind the current LSN. If it isn't, this
-  * means that the next log record that includes this metadata could have a
+-void
+-xfs_blkdev_issue_flush(
+-	xfs_buftarg_t		*buftarg)
+-{
+-	blkdev_issue_flush(buftarg->bt_bdev, GFP_NOFS);
+-}
+-
+ STATIC void
+ xfs_close_devices(
+ 	struct xfs_mount	*mp)
+diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
+index 1ca484b8357f..79cb2dece811 100644
+--- a/fs/xfs/xfs_super.h
++++ b/fs/xfs/xfs_super.h
+@@ -88,7 +88,6 @@ struct block_device;
+ 
+ extern void xfs_quiesce_attr(struct xfs_mount *mp);
+ extern void xfs_flush_inodes(struct xfs_mount *mp);
+-extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
+ extern xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *,
+ 					   xfs_agnumber_t agcount);
+ 
 -- 
 2.28.0
 
