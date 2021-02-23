@@ -2,301 +2,159 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03A05C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 06:09:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C1C2C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 06:27:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 913BE64E4B
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 06:09:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4980164DB1
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 06:27:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230452AbhBWGJa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Feb 2021 01:09:30 -0500
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:45694 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231154AbhBWGJa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Feb 2021 01:09:30 -0500
-Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 0E9C4FA6666;
-        Tue, 23 Feb 2021 17:08:41 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lEQsC-000BzL-CC; Tue, 23 Feb 2021 17:08:40 +1100
-Date:   Tue, 23 Feb 2021 17:08:40 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        id S230452AbhBWG1N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Feb 2021 01:27:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38282 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231648AbhBWGZS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Feb 2021 01:25:18 -0500
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53F98C061574
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Feb 2021 22:24:38 -0800 (PST)
+Received: by mail-pg1-x52d.google.com with SMTP id o63so11752634pgo.6
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Feb 2021 22:24:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=5/MDvXf4OSTvySPPtHkWwoZynp744dnk05C04HSuAVk=;
+        b=HYeweNiLiIUyOix7+XWa7OKrW8RpATKIaD5311fafXPJKX7sVOcXco8aEBPvYMC7TK
+         aUIpBo1aMVwisO+ITpH6YsTaSmq3w4ZX/w2jSIq8/JFKL2RKs2KVj1bY3G90ZoTPaipu
+         6pibj+FugHD4OLDrvXmfOg8FkYOgpAtX5tU09zaaNh7SziDddJ+/PvmMIaVVb+aVc8q2
+         /VdEAZBPtfA3hV7H+NE7lK81KDCjcHJmhYAyRDxQP/7Kf0NpxnNltFR3baxVTcqV0m5s
+         VLNmMnAtBGbmAbaXW0Lh68pFJ/P0hGELrXIfladbTUBcdbwz5n+533N+TsDiwaoT2xUM
+         FK/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=5/MDvXf4OSTvySPPtHkWwoZynp744dnk05C04HSuAVk=;
+        b=rCz0v1IlaiLp2AvvdqutH8AQLr2Nstvc+7/1qTS31TQNLcK2NKabxsmD93aKQ4U1uq
+         p1jPFSHlC0EQZV90a24lR8FiZRb/OtNTo/8G4qn7LHX1d4n9NcBvDM9UUPO1ox1GzJg6
+         nq6X6iJgUaqbYa0QowU6ldxwkTrpGpv4lsYmve9NzYJVRAQPQ6LXXXhkzPgdPedQsXJ2
+         gXMyJKtsr6M5PblaQtlyuKO4rWVKHHQfNWKthCYE7wxF1+Ob2EeFFgu868RgEoMM4Y4m
+         4YYY1UiqrtVGWCrPNrl33/l+oWrbRz83S0saM4XNHTEBTZ641ITIvCsso+Az4WPzTYPb
+         EcXA==
+X-Gm-Message-State: AOAM5334o6lXI4seDulIXVW5auoc2UIgX9D9LcMBWowWB86f/J9eoSLH
+        /cueprvLT+P5i3pJVNTqEq6QVg3CHNg=
+X-Google-Smtp-Source: ABdhPJz7l+juwYGIlnMB7o5Ld06mPbsMz4p1xhHU4FITeWct+VniC4CJnCrQKQHhYtndnTzbswjGBQ==
+X-Received: by 2002:aa7:9e04:0:b029:1ed:996a:abb4 with SMTP id y4-20020aa79e040000b02901ed996aabb4mr965605pfq.5.1614061477589;
+        Mon, 22 Feb 2021 22:24:37 -0800 (PST)
+Received: from garuda ([122.171.216.250])
+        by smtp.gmail.com with ESMTPSA id 9sm20409285pgw.61.2021.02.22.22.24.36
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 22 Feb 2021 22:24:37 -0800 (PST)
+References: <20210222153442.897089-1-bfoster@redhat.com>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2] xfs: use current->journal_info for detecting transaction
- recursion
-Message-ID: <20210223060840.GV4662@dread.disaster.area>
-References: <20210222233107.3233795-1-david@fromorbit.com>
- <20210223021557.GF7272@magnolia>
- <20210223032837.GS4662@dread.disaster.area>
- <20210223045105.GH7272@magnolia>
- <20210223055326.GU4662@dread.disaster.area>
+Subject: Re: [PATCH] xfs: don't reuse busy extents on extent trim
+In-reply-to: <20210222153442.897089-1-bfoster@redhat.com>
+Date:   Tue, 23 Feb 2021 11:54:32 +0530
+Message-ID: <87k0qzmhcv.fsf@garuda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210223055326.GU4662@dread.disaster.area>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8
-        a=OloAxu19YPiXiwF6eC8A:9 a=CjuIK1q_8ugA:10
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On 22 Feb 2021 at 21:04, Brian Foster wrote:
+> Freed extents are marked busy from the point the freeing transaction
+> commits until the associated CIL context is checkpointed to the log.
+> This prevents reuse and overwrite of recently freed blocks before
+> the changes are committed to disk, which can lead to corruption
+> after a crash. The exception to this rule is that metadata
+> allocation is allowed to reuse busy extents because metadata changes
+> are also logged.
+>
+> As of commit 97d3ac75e5e0 ("xfs: exact busy extent tracking"), XFS
+> has allowed modification or complete invalidation of outstanding
+> busy extents for metadata allocations. This implementation assumes
+> that use of the associated extent is imminent, which is not always
+> the case. For example, the trimmed extent might not satisfy the
+> minimum length of the allocation request, or the allocation
+> algorithm might be involved in a search for the optimal result based
+> on locality.
+>
+> generic/019 reproduces a corruption caused by this scenario. First,
+> a metadata block (usually a bmbt or symlink block) is freed from an
+> inode. A subsequent bmbt split on an unrelated inode attempts a near
+> mode allocation request that invalidates the busy block during the
+> search, but does not ultimately allocate it. Due to the busy state
+> invalidation, the block is no longer considered busy to subsequent
+> allocation. A direct I/O write request immediately allocates the
+> block and writes to it. Finally, the filesystem crashes while in a
+> state where the initial metadata block free had not committed to the
+> on-disk log. After recovery, the original metadata block is in its
+> original location as expected, but has been corrupted by the
+> aforementioned dio.
+>
+> This demonstrates that it is fundamentally unsafe to modify busy
+> extent state for extents that are not guaranteed to be allocated.
+> This applies to pretty much all of the code paths that currently
+> trim busy extents for one reason or another. Therefore to address
+> this problem, drop the reuse mechanism from the busy extent trim
+> path. This code already knows how to return partial non-busy ranges
+> of the targeted free extent and higher level code tracks the busy
+> state of the allocation attempt. If a block allocation fails where
+> one or more candidate extents is busy, we force the log and retry
+> the allocation.
+>
 
-Because the iomap code using PF_MEMALLOC_NOFS to detect transaction
-recursion in XFS is just wrong. Remove it from the iomap code and
-replace it with XFS specific internal checks using
-current->journal_info instead.
+The changes look good to me.
 
-Fixes: 9070733b4efa ("xfs: abstract PF_FSTRANS to PF_MEMALLOC_NOFS")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
-Version 2:
-- fix use-after-free in xfs_btree_split_worker() and leave comment
-  in function documenting the landmine I stepped on.
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
- fs/iomap/buffered-io.c    |  7 -------
- fs/xfs/libxfs/xfs_btree.c | 12 ++++++++++--
- fs/xfs/xfs_aops.c         | 17 +++++++++++++++--
- fs/xfs/xfs_trans.c        | 20 +++++---------------
- fs/xfs/xfs_trans.h        | 30 ++++++++++++++++++++++++++++++
- 5 files changed, 60 insertions(+), 26 deletions(-)
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_extent_busy.c | 14 --------------
+>  1 file changed, 14 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index 3991e59cfd18..ef17c1f6db32 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+> @@ -344,7 +344,6 @@ xfs_extent_busy_trim(
+>  	ASSERT(*len > 0);
+>  
+>  	spin_lock(&args->pag->pagb_lock);
+> -restart:
+>  	fbno = *bno;
+>  	flen = *len;
+>  	rbp = args->pag->pagb_tree.rb_node;
+> @@ -363,19 +362,6 @@ xfs_extent_busy_trim(
+>  			continue;
+>  		}
+>  
+> -		/*
+> -		 * If this is a metadata allocation, try to reuse the busy
+> -		 * extent instead of trimming the allocation.
+> -		 */
+> -		if (!(args->datatype & XFS_ALLOC_USERDATA) &&
+> -		    !(busyp->flags & XFS_EXTENT_BUSY_DISCARDED)) {
+> -			if (!xfs_extent_busy_update_extent(args->mp, args->pag,
+> -							  busyp, fbno, flen,
+> -							  false))
+> -				goto restart;
+> -			continue;
+> -		}
+> -
+>  		if (bbno <= fbno) {
+>  			/* start overlap */
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 16a1e82e3aeb..fcd4a0d71fc1 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1458,13 +1458,6 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
- 			PF_MEMALLOC))
- 		goto redirty;
- 
--	/*
--	 * Given that we do not allow direct reclaim to call us, we should
--	 * never be called in a recursive filesystem reclaim context.
--	 */
--	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
--		goto redirty;
--
- 	/*
- 	 * Is this page beyond the end of the file?
- 	 *
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index b56ff451adce..5b6fcb9b44e2 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -2805,7 +2805,7 @@ xfs_btree_split_worker(
- 	struct xfs_btree_split_args	*args = container_of(work,
- 						struct xfs_btree_split_args, work);
- 	unsigned long		pflags;
--	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
-+	unsigned long		new_pflags = 0;
- 
- 	/*
- 	 * we are in a transaction context here, but may also be doing work
-@@ -2817,12 +2817,20 @@ xfs_btree_split_worker(
- 		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
- 
- 	current_set_flags_nested(&pflags, new_pflags);
-+	xfs_trans_set_context(args->cur->bc_tp);
- 
- 	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
- 					 args->key, args->curp, args->stat);
--	complete(args->done);
- 
-+	xfs_trans_clear_context(args->cur->bc_tp);
- 	current_restore_flags_nested(&pflags, new_pflags);
-+
-+	/*
-+	 * Do not access args after complete() has run here. We don't own args
-+	 * and the owner may run and free args before we return here.
-+	 */
-+	complete(args->done);
-+
- }
- 
- /*
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 4304c6416fbb..b4186d666157 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -62,7 +62,7 @@ xfs_setfilesize_trans_alloc(
- 	 * We hand off the transaction to the completion thread now, so
- 	 * clear the flag here.
- 	 */
--	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
-+	xfs_trans_clear_context(tp);
- 	return 0;
- }
- 
-@@ -125,7 +125,7 @@ xfs_setfilesize_ioend(
- 	 * thus we need to mark ourselves as being in a transaction manually.
- 	 * Similarly for freeze protection.
- 	 */
--	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
-+	xfs_trans_set_context(tp);
- 	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
- 
- 	/* we abort the update if there was an IO error */
-@@ -568,6 +568,12 @@ xfs_vm_writepage(
- {
- 	struct xfs_writepage_ctx wpc = { };
- 
-+	if (WARN_ON_ONCE(current->journal_info)) {
-+		redirty_page_for_writepage(wbc, page);
-+		unlock_page(page);
-+		return 0;
-+	}
-+
- 	return iomap_writepage(page, wbc, &wpc.ctx, &xfs_writeback_ops);
- }
- 
-@@ -578,6 +584,13 @@ xfs_vm_writepages(
- {
- 	struct xfs_writepage_ctx wpc = { };
- 
-+	/*
-+	 * Writing back data in a transaction context can result in recursive
-+	 * transactions. This is bad, so issue a warning and get out of here.
-+	 */
-+	if (WARN_ON_ONCE(current->journal_info))
-+		return 0;
-+
- 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
- 	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
- }
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 44f72c09c203..e2a922f061c7 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -72,6 +72,7 @@ xfs_trans_free(
- 	xfs_extent_busy_clear(tp->t_mountp, &tp->t_busy, false);
- 
- 	trace_xfs_trans_free(tp, _RET_IP_);
-+	xfs_trans_clear_context(tp);
- 	if (!(tp->t_flags & XFS_TRANS_NO_WRITECOUNT))
- 		sb_end_intwrite(tp->t_mountp->m_super);
- 	xfs_trans_free_dqinfo(tp);
-@@ -123,7 +124,8 @@ xfs_trans_dup(
- 
- 	ntp->t_rtx_res = tp->t_rtx_res - tp->t_rtx_res_used;
- 	tp->t_rtx_res = tp->t_rtx_res_used;
--	ntp->t_pflags = tp->t_pflags;
-+
-+	xfs_trans_switch_context(tp, ntp);
- 
- 	/* move deferred ops over to the new tp */
- 	xfs_defer_move(ntp, tp);
-@@ -157,9 +159,6 @@ xfs_trans_reserve(
- 	int			error = 0;
- 	bool			rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
- 
--	/* Mark this thread as being in a transaction */
--	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
--
- 	/*
- 	 * Attempt to reserve the needed disk blocks by decrementing
- 	 * the number needed from the number available.  This will
-@@ -167,10 +166,8 @@ xfs_trans_reserve(
- 	 */
- 	if (blocks > 0) {
- 		error = xfs_mod_fdblocks(mp, -((int64_t)blocks), rsvd);
--		if (error != 0) {
--			current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
-+		if (error != 0)
- 			return -ENOSPC;
--		}
- 		tp->t_blk_res += blocks;
- 	}
- 
-@@ -244,9 +241,6 @@ xfs_trans_reserve(
- 		xfs_mod_fdblocks(mp, (int64_t)blocks, rsvd);
- 		tp->t_blk_res = 0;
- 	}
--
--	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
--
- 	return error;
- }
- 
-@@ -270,6 +264,7 @@ xfs_trans_alloc(
- 	tp = kmem_cache_zalloc(xfs_trans_zone, GFP_KERNEL | __GFP_NOFAIL);
- 	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
- 		sb_start_intwrite(mp->m_super);
-+	xfs_trans_set_context(tp);
- 
- 	/*
- 	 * Zero-reservation ("empty") transactions can't modify anything, so
-@@ -893,7 +888,6 @@ __xfs_trans_commit(
- 
- 	xfs_log_commit_cil(mp, tp, &commit_lsn, regrant);
- 
--	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 	xfs_trans_free(tp);
- 
- 	/*
-@@ -925,7 +919,6 @@ __xfs_trans_commit(
- 			xfs_log_ticket_ungrant(mp->m_log, tp->t_ticket);
- 		tp->t_ticket = NULL;
- 	}
--	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 	xfs_trans_free_items(tp, !!error);
- 	xfs_trans_free(tp);
- 
-@@ -985,9 +978,6 @@ xfs_trans_cancel(
- 		tp->t_ticket = NULL;
- 	}
- 
--	/* mark this thread as no longer being in a transaction */
--	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
--
- 	xfs_trans_free_items(tp, dirty);
- 	xfs_trans_free(tp);
- }
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 8b03fbfe9a1b..9dd745cf77c9 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -281,4 +281,34 @@ int xfs_trans_alloc_ichange(struct xfs_inode *ip, struct xfs_dquot *udqp,
- 		struct xfs_dquot *gdqp, struct xfs_dquot *pdqp, bool force,
- 		struct xfs_trans **tpp);
- 
-+static inline void
-+xfs_trans_set_context(
-+	struct xfs_trans	*tp)
-+{
-+	ASSERT(current->journal_info == NULL);
-+	tp->t_pflags = memalloc_nofs_save();
-+	current->journal_info = tp;
-+}
-+
-+static inline void
-+xfs_trans_clear_context(
-+	struct xfs_trans	*tp)
-+{
-+	if (current->journal_info == tp) {
-+		memalloc_nofs_restore(tp->t_pflags);
-+		current->journal_info = NULL;
-+	}
-+}
-+
-+static inline void
-+xfs_trans_switch_context(
-+	struct xfs_trans	*old_tp,
-+	struct xfs_trans	*new_tp)
-+{
-+	ASSERT(current->journal_info == old_tp);
-+	new_tp->t_pflags = old_tp->t_pflags;
-+	old_tp->t_pflags = 0;
-+	current->journal_info = new_tp;
-+}
-+
- #endif	/* __XFS_TRANS_H__ */
+
+-- 
+chandan
