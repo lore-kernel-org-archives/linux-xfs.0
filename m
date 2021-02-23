@@ -7,38 +7,40 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D1E5C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 750CAC43381
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:02:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D158B64E4B
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:02:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31B8564E6B
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:02:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231203AbhBWDBz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Feb 2021 22:01:55 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47520 "EHLO mail.kernel.org"
+        id S231269AbhBWDB5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Feb 2021 22:01:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47744 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231286AbhBWDBs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Feb 2021 22:01:48 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 57ADE64E6C;
-        Tue, 23 Feb 2021 03:01:31 +0000 (UTC)
+        id S231301AbhBWDBx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Feb 2021 22:01:53 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6CC6764E4B;
+        Tue, 23 Feb 2021 03:01:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614049291;
-        bh=xu4I7Zho5aatS468G2ieDU6Sn9deTfMztZnfSIbgVX0=;
+        s=k20201202; t=1614049272;
+        bh=b4tT8hyjNELe9OAFTyRZzjykskOBmVQid5Ojhc+hbpY=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=lrsWHtZGXAikTsL0/IoqqJkrVJqlGVQ8Ip9ReyVZzRzSG7tKqwmTodl2M8qAY5rlP
-         dVBEuTsCYPczq6QB++Hf2ak7fLjRNUitYU1d+s2Hx5O1iHhmBZVrQVYJfsFjbex9Tz
-         vGe4XkGgl6523TkNuO9oOClOGLibQY0CVVJg40CJYZpAdHhzXz/hQ5CjyjLRkMsAES
-         wI5s5bmYr7CsYMSQdx3bPdPpSfXhfHyYs4wHiqUm7BYyYHlbciOQU/ASO2p3vyrrRv
-         L+dptI/121mTc1pveVM6YSrjzz44u87V3zCoy+g7RTdkWpAARG786MuP31iAePptYn
-         xSte6PYjeJEGw==
-Subject: [PATCH 1/5] man: mark all deprecated V4 format options
+        b=aVYGA/9vzOQd4tm29tTqt4K23X8jIHQfD8jBZnr5uL+U9uQ7C4J6opcIzNfxb9Sxb
+         7466yz0jEHNtLG2HMbR4st+lsn3TxgAv5YI9+nLAk0+NgvxmFjnab1m+Y2e41IMOOW
+         +VbjvqOIOFPIYWoCUXzLSoEyCnXEHvBgCHnnGqzUaKiwkELOlUMG4ZbtpCGp7jxo7b
+         IibluNA4YjHVEIXtNaHRSJPXt2MdK8jZ/8LyHJm0a2e8hmPXTIo45oQsUT/kDZVpIF
+         8YyDOR/oe6yIoO8t3VbMUCmnGZrwUrs0Tx8nPQGXphbad0fAylzMfrzRwxsmi4K9zy
+         yHwmj243ScPEg==
+Subject: [PATCH 2/4] libxfs: simulate system failure after a certain number of
+ writes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, hch@lst.de, bfoster@redhat.com
-Date:   Mon, 22 Feb 2021 19:01:30 -0800
-Message-ID: <161404929091.425731.465351236842105610.stgit@magnolia>
-In-Reply-To: <161404928523.425731.7157248967184496592.stgit@magnolia>
-References: <161404928523.425731.7157248967184496592.stgit@magnolia>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        bfoster@redhat.com
+Date:   Mon, 22 Feb 2021 19:01:12 -0800
+Message-ID: <161404927196.425602.4393417228179099132.stgit@magnolia>
+In-Reply-To: <161404926046.425602.766097344183886137.stgit@magnolia>
+References: <161404926046.425602.766097344183886137.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,132 +51,229 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Update the manual pages for the most popular tools to note which options
-are only useful with the V4 XFS format, and that the V4 format is
-deprecated and will be removed no later than September 2030.
+Add an error injection knob so that we can simulate system failure after
+a certain number of disk writes.  This knob is being added so that we
+can check repair's behavior after an arbitrary number of tests.
+
+Set LIBXFS_DEBUG_WRITE_CRASH={ddev,logdev,rtdev}=nn in the environment
+to make libxfs SIGKILL itself after nn writes to the data, log, or rt
+devices.  Note that this only applies to xfs_buf writes and zero_range.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- man/man8/mkfs.xfs.8  |   16 ++++++++++++++++
- man/man8/xfs_admin.8 |   10 ++++++++++
- 2 files changed, 26 insertions(+)
+ include/linux.h    |   13 ++++++++++
+ libxfs/init.c      |   68 +++++++++++++++++++++++++++++++++++++++++++++++++---
+ libxfs/libxfs_io.h |   19 +++++++++++++++
+ libxfs/rdwr.c      |    6 ++++-
+ 4 files changed, 101 insertions(+), 5 deletions(-)
 
 
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index fac82d74..df25abaa 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -223,6 +223,11 @@ of calculating and checking the CRCs is not noticeable in normal operation.
- By default,
- .B mkfs.xfs
- will enable metadata CRCs.
-+.IP
-+Formatting a filesystem without CRCs selects the V4 format, which is deprecated
-+and will be removed from upstream in September 2030.
-+Distributors may choose to withdraw support for the V4 format earlier than
-+this date.
- .TP
- .BI finobt= value
- This option enables the use of a separate free inode btree index in each
-@@ -592,6 +597,8 @@ This option can be used to turn off inode alignment when the
- filesystem needs to be mountable by a version of IRIX
- that does not have the inode alignment feature
- (any release of IRIX before 6.2, and IRIX 6.2 without XFS patches).
-+.IP
-+This option only applies to the deprecated V4 format.
- .TP
- .BI attr= value
- This is used to specify the version of extended attribute inline
-@@ -602,6 +609,8 @@ between attribute and extent data.
- The previous version 1, which has fixed regions for attribute and
- extent data, is kept for backwards compatibility with kernels older
- than version 2.6.16.
-+.IP
-+This option only applies to the deprecated V4 format.
- .TP
- .BI projid32bit[= value ]
- This is used to enable 32bit quota project identifiers. The
-@@ -609,6 +618,8 @@ This is used to enable 32bit quota project identifiers. The
- is either 0 or 1, with 1 signifying that 32bit projid are to be enabled.
- If the value is omitted, 1 is assumed.  (This default changed
- in release version 3.2.0.)
-+.IP
-+This option only applies to the deprecated V4 format.
- .TP
- .BI sparse[= value ]
- Enable sparse inode chunk allocation. The
-@@ -690,6 +701,7 @@ stripe-aligned log writes (see the sunit and su options, below).
- The previous version 1, which is limited to 32k log buffers and does
- not support stripe-aligned writes, is kept for backwards compatibility
- with very old 2.4 kernels.
-+This option only applies to the deprecated V4 format.
- .TP
- .BI sunit= value
- This specifies the alignment to be used for log writes. The
-@@ -744,6 +756,8 @@ is 1 (on) so you must specify
- .B lazy-count=0
- if you want to disable this feature for older kernels which don't support
- it.
-+.IP
-+This option only applies to the deprecated V4 format.
- .RE
- .PP
- .PD 0
-@@ -803,6 +817,8 @@ will be stored in the directory structure.  The default value is 1.
- When CRCs are enabled (the default), the ftype functionality is always
- enabled, and cannot be turned off.
- .IP
-+This option only applies to the deprecated V4 format.
-+.IP
- .RE
- .TP
- .BI \-p " protofile"
-diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-index cccbb224..5ef99316 100644
---- a/man/man8/xfs_admin.8
-+++ b/man/man8/xfs_admin.8
-@@ -54,6 +54,8 @@ for a detailed description of the XFS log.
- Enables unwritten extent support on a filesystem that does not
- already have this enabled (for legacy filesystems, it can't be
- disabled anymore at mkfs time).
-+.IP
-+This option only applies to the deprecated V4 format.
- .TP
- .B \-f
- Specifies that the filesystem image to be processed is stored in a
-@@ -67,12 +69,16 @@ option).
- .B \-j
- Enables version 2 log format (journal format supporting larger
- log buffers).
-+.IP
-+This option only applies to the deprecated V4 format.
- .TP
- .B \-l
- Print the current filesystem label.
- .TP
- .B \-p
- Enable 32bit project identifier support (PROJID32BIT feature).
-+.IP
-+This option only applies to the deprecated V4 format.
- .TP
- .B \-u
- Print the current filesystem UUID (Universally Unique IDentifier).
-@@ -83,6 +89,8 @@ Enable (1) or disable (0) lazy-counters in the filesystem.
- Lazy-counters may not be disabled on Version 5 superblock filesystems
- (i.e. those with metadata CRCs enabled).
- .IP
-+In other words, this option only applies to the deprecated V4 format.
-+.IP
- This operation may take quite a bit of time on large filesystems as the
- entire filesystem needs to be scanned when this option is changed.
- .IP
-@@ -92,6 +100,8 @@ information is kept in other parts of the filesystem to be able to
- maintain the counter values without needing to keep them in the
- superblock. This gives significant improvements in performance on some
- configurations and metadata intensive workloads.
-+.IP
-+This option only applies to the deprecated V4 format.
- .TP
- .BI \-L " label"
- Set the filesystem label to
+diff --git a/include/linux.h b/include/linux.h
+index 03b3278b..7bf59e07 100644
+--- a/include/linux.h
++++ b/include/linux.h
+@@ -31,6 +31,8 @@
+ #ifdef OVERRIDE_SYSTEM_FSXATTR
+ # undef fsxattr
+ #endif
++#include <unistd.h>
++#include <assert.h>
+ 
+ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
+ {
+@@ -186,6 +188,17 @@ platform_zero_range(
+ #define platform_zero_range(fd, s, l)	(-EOPNOTSUPP)
+ #endif
+ 
++/*
++ * Use SIGKILL to simulate an immediate program crash, without a chance to run
++ * atexit handlers.
++ */
++static inline void
++platform_crash(void)
++{
++	kill(getpid(), SIGKILL);
++	assert(0);
++}
++
+ /*
+  * Check whether we have to define FS_IOC_FS[GS]ETXATTR ourselves. These
+  * are a copy of the definitions moved to linux/uapi/fs.h in the 4.5 kernel,
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 8a8ce3c4..1ec83791 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -590,7 +590,8 @@ libxfs_initialize_perag(
+ static struct xfs_buftarg *
+ libxfs_buftarg_alloc(
+ 	struct xfs_mount	*mp,
+-	dev_t			dev)
++	dev_t			dev,
++	unsigned long		write_fails)
+ {
+ 	struct xfs_buftarg	*btp;
+ 
+@@ -603,10 +604,29 @@ libxfs_buftarg_alloc(
+ 	btp->bt_mount = mp;
+ 	btp->bt_bdev = dev;
+ 	btp->flags = 0;
++	if (write_fails) {
++		btp->writes_left = write_fails;
++		btp->flags |= XFS_BUFTARG_INJECT_WRITE_FAIL;
++	}
++	pthread_mutex_init(&btp->lock, NULL);
+ 
+ 	return btp;
+ }
+ 
++enum libxfs_write_failure_nums {
++	WF_DATA = 0,
++	WF_LOG,
++	WF_RT,
++	WF_MAX_OPTS,
++};
++
++static char *wf_opts[] = {
++	[WF_DATA]		= "ddev",
++	[WF_LOG]		= "logdev",
++	[WF_RT]			= "rtdev",
++	[WF_MAX_OPTS]		= NULL,
++};
++
+ void
+ libxfs_buftarg_init(
+ 	struct xfs_mount	*mp,
+@@ -614,6 +634,46 @@ libxfs_buftarg_init(
+ 	dev_t			logdev,
+ 	dev_t			rtdev)
+ {
++	char			*p = getenv("LIBXFS_DEBUG_WRITE_CRASH");
++	unsigned long		dfail = 0, lfail = 0, rfail = 0;
++
++	/* Simulate utility crash after a certain number of writes. */
++	while (p && *p) {
++		char *val;
++
++		switch (getsubopt(&p, wf_opts, &val)) {
++		case WF_DATA:
++			if (!val) {
++				fprintf(stderr,
++		_("ddev write fail requires a parameter\n"));
++				exit(1);
++			}
++			dfail = strtoul(val, NULL, 0);
++			break;
++		case WF_LOG:
++			if (!val) {
++				fprintf(stderr,
++		_("logdev write fail requires a parameter\n"));
++				exit(1);
++			}
++			lfail = strtoul(val, NULL, 0);
++			break;
++		case WF_RT:
++			if (!val) {
++				fprintf(stderr,
++		_("rtdev write fail requires a parameter\n"));
++				exit(1);
++			}
++			rfail = strtoul(val, NULL, 0);
++			break;
++		default:
++			fprintf(stderr, _("unknown write fail type %s\n"),
++					val);
++			exit(1);
++			break;
++		}
++	}
++
+ 	if (mp->m_ddev_targp) {
+ 		/* should already have all buftargs initialised */
+ 		if (mp->m_ddev_targp->bt_bdev != dev ||
+@@ -647,12 +707,12 @@ libxfs_buftarg_init(
+ 		return;
+ 	}
+ 
+-	mp->m_ddev_targp = libxfs_buftarg_alloc(mp, dev);
++	mp->m_ddev_targp = libxfs_buftarg_alloc(mp, dev, dfail);
+ 	if (!logdev || logdev == dev)
+ 		mp->m_logdev_targp = mp->m_ddev_targp;
+ 	else
+-		mp->m_logdev_targp = libxfs_buftarg_alloc(mp, logdev);
+-	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, rtdev);
++		mp->m_logdev_targp = libxfs_buftarg_alloc(mp, logdev, lfail);
++	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, rtdev, rfail);
+ }
+ 
+ /*
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index c80e2d59..3cc4f4ee 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -22,6 +22,8 @@ struct xfs_perag;
+  */
+ struct xfs_buftarg {
+ 	struct xfs_mount	*bt_mount;
++	pthread_mutex_t		lock;
++	unsigned long		writes_left;
+ 	dev_t			bt_bdev;
+ 	unsigned int		flags;
+ };
+@@ -30,6 +32,23 @@ struct xfs_buftarg {
+ #define XFS_BUFTARG_LOST_WRITE		(1 << 0)
+ /* A dirty buffer failed the write verifier. */
+ #define XFS_BUFTARG_CORRUPT_WRITE	(1 << 1)
++/* Simulate failure after a certain number of writes. */
++#define XFS_BUFTARG_INJECT_WRITE_FAIL	(1 << 2)
++
++/* Simulate the system crashing after a certain number of writes. */
++static inline void
++xfs_buftarg_trip_write(
++	struct xfs_buftarg	*btp)
++{
++	if (!(btp->flags & XFS_BUFTARG_INJECT_WRITE_FAIL))
++		return;
++
++	pthread_mutex_lock(&btp->lock);
++	btp->writes_left--;
++	if (!btp->writes_left)
++		platform_crash();
++	pthread_mutex_unlock(&btp->lock);
++}
+ 
+ extern void	libxfs_buftarg_init(struct xfs_mount *mp, dev_t ddev,
+ 				    dev_t logdev, dev_t rtdev);
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index ca272387..fd456d6b 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -74,8 +74,10 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
+ 	/* try to use special zeroing methods, fall back to writes if needed */
+ 	len_bytes = LIBXFS_BBTOOFF64(len);
+ 	error = platform_zero_range(fd, start_offset, len_bytes);
+-	if (!error)
++	if (!error) {
++		xfs_buftarg_trip_write(btp);
+ 		return 0;
++	}
+ 
+ 	zsize = min(BDSTRAT_SIZE, BBTOB(len));
+ 	if ((z = memalign(libxfs_device_alignment(), zsize)) == NULL) {
+@@ -105,6 +107,7 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
+ 				progname, __FUNCTION__);
+ 			exit(1);
+ 		}
++		xfs_buftarg_trip_write(btp);
+ 		offset += bytes;
+ 	}
+ 	free(z);
+@@ -860,6 +863,7 @@ libxfs_bwrite(
+ 	} else {
+ 		bp->b_flags |= LIBXFS_B_UPTODATE;
+ 		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_UNCHECKED);
++		xfs_buftarg_trip_write(bp->b_target);
+ 	}
+ 	return bp->b_error;
+ }
 
