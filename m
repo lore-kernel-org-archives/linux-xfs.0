@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DF02C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68161C433E0
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:01:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E211064E57
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:01:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1994D64E5B
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:01:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230457AbhBWDBM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Feb 2021 22:01:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47414 "EHLO mail.kernel.org"
+        id S231262AbhBWDBc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Feb 2021 22:01:32 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47518 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230053AbhBWDBL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Feb 2021 22:01:11 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3F68464E4D;
-        Tue, 23 Feb 2021 03:00:30 +0000 (UTC)
+        id S230053AbhBWDB3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Feb 2021 22:01:29 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 14D6764E57;
+        Tue, 23 Feb 2021 03:00:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614049230;
-        bh=k9P4KOh8zz2ktBf96z1sxGWEzdv4kabmpDP+Ki/oidE=;
+        s=k20201202; t=1614049236;
+        bh=EQyv+2tV702VcR7DfyihyF5UejBebc12Ks4An41ZuP4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=pZ0vKmP4g8+CRmC0JcSYeoRsbitAjmD06caEiwF3DLDxis5LzqBl/ECMcyByLzG+u
-         a2DtCO6z/o11lKGznsUrM6qDalGACwdKd1wo3ClpgrCnDXkviqEE7GaTF4DmY+898F
-         qTcPm+EoDm6NWcFRn62O5qG5HLiwmd4TgtSpOiowHsv+xifW11KFNcRj8xKydBO0r7
-         E+t7vWFuWkexAFB+JnfsT57BHgNdmGTHRZ1SSzc4PmeJwVLJ5T9uU995GwrfKPOP3O
-         8uF2ccrweJF+3UhcgyVCQvaBfbuZc7RQjcTS/Yph9MdeGHF8LbySXadpPhOu/Fm2O2
-         HT5Qf8OMDTu8Q==
-Subject: [PATCH 2/7] xfs_admin: support filesystems with realtime devices
+        b=MIzJ9GhfqX/x8s7PRRD3FYeuwAz7LZRff+JA1yRlgazfIrC18tZuMxnlINysOaqKE
+         hUzlJcI9nMr4rDyN4JULKqmwu/vqZ9zRTN9BweNOeAyQaxDkAm7YkoUNKJKL4JjgYs
+         tQE05xWg+d7p3N/ebMtjYpK/VK7/+JNlkBKOY2f35r9qiEm555E7u+2Cof7iASHfMK
+         E2O7Wza0/D0qgI3RkPtAMQ9DihdABfNkK+UdzHXmQIg/CRyNcslJw1ji+ooUxuxsdz
+         COPfe/vhKONb7rEJoV6N58sXfyU0HrM1zNMbCHg5Lyf6hJFAgxb69arU+ZGOozUaKR
+         4wuc/0dUMkm6Q==
+Subject: [PATCH 3/7] xfs_db: report the needsrepair flag in check and version
+ commands
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        linux-xfs@vger.kernel.org, bfoster@redhat.com
-Date:   Mon, 22 Feb 2021 19:00:29 -0800
-Message-ID: <161404922974.425352.3747623410781587574.stgit@magnolia>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        bfoster@redhat.com
+Date:   Mon, 22 Feb 2021 19:00:35 -0800
+Message-ID: <161404923555.425352.13688646688421406378.stgit@magnolia>
 In-Reply-To: <161404921827.425352.18151735716678009691.stgit@magnolia>
 References: <161404921827.425352.18151735716678009691.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,87 +51,44 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a -r option to xfs_admin so that we can pass the name of the
-realtime device to xfs_repair.
+Teach the version and check commands to report the presence of the
+NEEDSREPAIR flag.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- db/xfs_admin.sh      |   11 ++++++-----
- man/man8/xfs_admin.8 |    8 ++++++++
- 2 files changed, 14 insertions(+), 5 deletions(-)
+ db/check.c |    5 +++++
+ db/sb.c    |    2 ++
+ 2 files changed, 7 insertions(+)
 
 
-diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
-index 71a9aa98..430872ef 100755
---- a/db/xfs_admin.sh
-+++ b/db/xfs_admin.sh
-@@ -7,9 +7,10 @@
- status=0
- DB_OPTS=""
- REPAIR_OPTS=""
--USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-U uuid] device [logdev]"
-+REPAIR_DEV_OPTS=""
-+USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-r rtdev] [-U uuid] device [logdev]"
+diff --git a/db/check.c b/db/check.c
+index 33736e33..485e855e 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -3970,6 +3970,11 @@ scan_ag(
+ 			dbprintf(_("mkfs not completed successfully\n"));
+ 		error++;
+ 	}
++	if (xfs_sb_version_needsrepair(sb)) {
++		if (!sflag)
++			dbprintf(_("filesystem needs xfs_repair\n"));
++		error++;
++	}
+ 	set_dbmap(agno, XFS_SB_BLOCK(mp), 1, DBM_SB, agno, XFS_SB_BLOCK(mp));
+ 	if (sb->sb_logstart && XFS_FSB_TO_AGNO(mp, sb->sb_logstart) == agno)
+ 		set_dbmap(agno, XFS_FSB_TO_AGBNO(mp, sb->sb_logstart),
+diff --git a/db/sb.c b/db/sb.c
+index d09f653d..d7111e92 100644
+--- a/db/sb.c
++++ b/db/sb.c
+@@ -691,6 +691,8 @@ version_string(
+ 		strcat(s, ",INOBTCNT");
+ 	if (xfs_sb_version_hasbigtime(sbp))
+ 		strcat(s, ",BIGTIME");
++	if (xfs_sb_version_needsrepair(sbp))
++		strcat(s, ",NEEDSREPAIR");
+ 	return s;
+ }
  
--while getopts "efjlpuc:L:U:V" c
-+while getopts "c:efjlL:pr:uU:V" c
- do
- 	case $c in
- 	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG;;
-@@ -19,6 +20,7 @@ do
- 	l)	DB_OPTS=$DB_OPTS" -r -c label";;
- 	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";;
- 	p)	DB_OPTS=$DB_OPTS" -c 'version projid32bit'";;
-+	r)	REPAIR_DEV_OPTS=" -r '$OPTARG'";;
- 	u)	DB_OPTS=$DB_OPTS" -r -c uuid";;
- 	U)	DB_OPTS=$DB_OPTS" -c 'uuid "$OPTARG"'";;
- 	V)	xfs_db -p xfs_admin -V
-@@ -37,8 +39,7 @@ case $# in
- 		# Pick up the log device, if present
- 		if [ -n "$2" ]; then
- 			DB_OPTS=$DB_OPTS" -l '$2'"
--			test -n "$REPAIR_OPTS" && \
--				REPAIR_OPTS=$REPAIR_OPTS" -l '$2'"
-+			REPAIR_DEV_OPTS=$REPAIR_DEV_OPTS" -l '$2'"
- 		fi
- 
- 		if [ -n "$DB_OPTS" ]
-@@ -53,7 +54,7 @@ case $# in
- 			# running xfs_admin.
- 			# Ideally, we need to improve the output behaviour
- 			# of repair for this purpose (say a "quiet" mode).
--			eval xfs_repair $REPAIR_OPTS "$1" 2> /dev/null
-+			eval xfs_repair $REPAIR_DEV_OPTS $REPAIR_OPTS "$1" 2> /dev/null
- 			status=`expr $? + $status`
- 			if [ $status -ne 0 ]
- 			then
-diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-index 8afc873f..cccbb224 100644
---- a/man/man8/xfs_admin.8
-+++ b/man/man8/xfs_admin.8
-@@ -13,6 +13,9 @@ xfs_admin \- change parameters of an XFS filesystem
- ] [
- .B \-U
- .I uuid
-+] [
-+.B \-r
-+.I rtdev
- ]
- .I device
- [
-@@ -123,6 +126,11 @@ not be able to mount the filesystem.  To remove this incompatible flag, use
- which will restore the original UUID and remove the incompatible
- feature flag as needed.
- .TP
-+.BI \-r " rtdev"
-+Specifies the device special file where the filesystem's realtime section
-+resides.
-+Only for those filesystems which use a realtime section.
-+.TP
- .B \-V
- Prints the version number and exits.
- .PP
 
