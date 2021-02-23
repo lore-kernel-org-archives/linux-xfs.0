@@ -7,40 +7,38 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06167C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D1E5C433E0
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:02:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1F3F64EDD
+	by mail.kernel.org (Postfix) with ESMTP id D158B64E4B
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:02:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231307AbhBWDBx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Feb 2021 22:01:53 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47658 "EHLO mail.kernel.org"
+        id S231203AbhBWDBz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Feb 2021 22:01:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47520 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231203AbhBWDBs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S231286AbhBWDBs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Mon, 22 Feb 2021 22:01:48 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A63B264E41;
-        Tue, 23 Feb 2021 03:01:06 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 57ADE64E6C;
+        Tue, 23 Feb 2021 03:01:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614049266;
-        bh=kPYus7ZKXRbjBk02dE7IDNkz7xvytSQCyt2nUk1zYuE=;
+        s=k20201202; t=1614049291;
+        bh=xu4I7Zho5aatS468G2ieDU6Sn9deTfMztZnfSIbgVX0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=lZusap0+kEhII447BNCj0X7d2oI7TVSSMieonUEYKEOwWK90C8W3pcPGLj6TVAd2u
-         vTasSWAji17FDItNcx9gEJcZ8eDukfPl6Emj42CdKpAjTpxocOHAyegWtrMOKYa3cx
-         IFKpgZchOz1rqwqKnDDeTbEL3RJNn8W0NjEBV62eujHcxh1zSscgzEfAi4AEJTAY6a
-         lQvsBOKMqNOAMZ7LpjK5isyT69dnYr55nUvcU0XSu9hybGniR2cEHve8rBU8QQKb5C
-         IfLBLVu5X6dqNWKzkZ9MHVFVUlfw5NAcJwvCLnJr0wEBmR8MXv6p9GOzG1kGzvbxVe
-         3CoEkbjX9Y2fg==
-Subject: [PATCH 1/4] xfs_repair: set NEEDSREPAIR the first time we write to a
- filesystem
+        b=lrsWHtZGXAikTsL0/IoqqJkrVJqlGVQ8Ip9ReyVZzRzSG7tKqwmTodl2M8qAY5rlP
+         dVBEuTsCYPczq6QB++Hf2ak7fLjRNUitYU1d+s2Hx5O1iHhmBZVrQVYJfsFjbex9Tz
+         vGe4XkGgl6523TkNuO9oOClOGLibQY0CVVJg40CJYZpAdHhzXz/hQ5CjyjLRkMsAES
+         wI5s5bmYr7CsYMSQdx3bPdPpSfXhfHyYs4wHiqUm7BYyYHlbciOQU/ASO2p3vyrrRv
+         L+dptI/121mTc1pveVM6YSrjzz44u87V3zCoy+g7RTdkWpAARG786MuP31iAePptYn
+         xSte6PYjeJEGw==
+Subject: [PATCH 1/5] man: mark all deprecated V4 format options
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        bfoster@redhat.com
-Date:   Mon, 22 Feb 2021 19:01:06 -0800
-Message-ID: <161404926616.425602.16421331298021628773.stgit@magnolia>
-In-Reply-To: <161404926046.425602.766097344183886137.stgit@magnolia>
-References: <161404926046.425602.766097344183886137.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, hch@lst.de, bfoster@redhat.com
+Date:   Mon, 22 Feb 2021 19:01:30 -0800
+Message-ID: <161404929091.425731.465351236842105610.stgit@magnolia>
+In-Reply-To: <161404928523.425731.7157248967184496592.stgit@magnolia>
+References: <161404928523.425731.7157248967184496592.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -51,175 +49,132 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a hook to the buffer cache so that xfs_repair can intercept the
-first write to a V5 filesystem to set the NEEDSREPAIR flag.  In the
-event that xfs_repair dirties the filesystem and goes down, this ensures
-that the sysadmin will have to re-start repair before mounting.
+Update the manual pages for the most popular tools to note which options
+are only useful with the V4 XFS format, and that the V4 format is
+deprecated and will be removed no later than September 2030.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- include/xfs_mount.h |    4 ++
- libxfs/rdwr.c       |    4 ++
- repair/xfs_repair.c |  102 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 110 insertions(+)
+ man/man8/mkfs.xfs.8  |   16 ++++++++++++++++
+ man/man8/xfs_admin.8 |   10 ++++++++++
+ 2 files changed, 26 insertions(+)
 
 
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index 75230ca5..f93a9f11 100644
---- a/include/xfs_mount.h
-+++ b/include/xfs_mount.h
-@@ -11,6 +11,8 @@ struct xfs_inode;
- struct xfs_buftarg;
- struct xfs_da_geometry;
- 
-+typedef void (*buf_writeback_fn)(struct xfs_buf *bp);
-+
- /*
-  * Define a user-level mount structure with all we need
-  * in order to make use of the numerous XFS_* macros.
-@@ -95,6 +97,8 @@ typedef struct xfs_mount {
- 		int	qi_dqperchunk;
- 	}			*m_quotainfo;
- 
-+	buf_writeback_fn	m_buf_writeback_fn;
-+
- 	/*
- 	 * xlog is defined in libxlog and thus is not intialized by libxfs. This
- 	 * allows an application to initialize and store a reference to the log
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index ac783ce3..ca272387 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -812,6 +812,10 @@ libxfs_bwrite(
- 		return bp->b_error;
- 	}
- 
-+	/* Trigger the writeback hook if there is one. */
-+	if (bp->b_mount->m_buf_writeback_fn)
-+		bp->b_mount->m_buf_writeback_fn(bp);
-+
- 	/*
- 	 * clear any pre-existing error status on the buffer. This can occur if
- 	 * the buffer is corrupt on disk and the repair process doesn't clear
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index e2e99b21..03b7c242 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -751,6 +751,104 @@ clear_needsrepair(
- 		libxfs_buf_relse(bp);
- }
- 
-+static void
-+update_sb_crc_only(
-+	struct xfs_buf		*bp)
-+{
-+	xfs_buf_update_cksum(bp, XFS_SB_CRC_OFF);
-+}
-+
-+/* Forcibly write the primary superblock with the NEEDSREPAIR flag set. */
-+static void
-+force_needsrepair(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_buf_ops	fake_ops;
-+	struct xfs_buf		*bp;
-+	int			error;
-+
-+	if (!xfs_sb_version_hascrc(&mp->m_sb) ||
-+	    xfs_sb_version_needsrepair(&mp->m_sb))
-+		return;
-+
-+	bp = libxfs_getsb(mp);
-+	if (!bp || bp->b_error) {
-+		do_log(
-+	_("couldn't get superblock to set needsrepair, err=%d\n"),
-+				bp ? bp->b_error : ENOMEM);
-+	} else {
-+		/*
-+		 * It's possible that we need to set NEEDSREPAIR before we've
-+		 * had a chance to fix the summary counters in the primary sb.
-+		 * With the exception of those counters, phase 1 already
-+		 * ensured that the geometry makes sense.
-+		 *
-+		 * Bad summary counters in the primary super can cause the
-+		 * write verifier to fail, so substitute a dummy that only sets
-+		 * the CRC.  In the event of a crash, NEEDSREPAIR will prevent
-+		 * the kernel from mounting our potentially damaged filesystem
-+		 * until repair is run again, so it's ok to bypass the usual
-+		 * verification in this one case.
-+		 */
-+		fake_ops = xfs_sb_buf_ops; /* struct copy */
-+		fake_ops.verify_write = update_sb_crc_only;
-+
-+		mp->m_sb.sb_features_incompat |=
-+				XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-+		libxfs_sb_to_disk(bp->b_addr, &mp->m_sb);
-+
-+		/* Force the primary super to disk immediately. */
-+		bp->b_ops = &fake_ops;
-+		error = -libxfs_bwrite(bp);
-+		bp->b_ops = &xfs_sb_buf_ops;
-+		if (error)
-+			do_log(_("couldn't force needsrepair, err=%d\n"), error);
-+	}
-+	if (bp)
-+		libxfs_buf_relse(bp);
-+}
-+
-+/*
-+ * Intercept the first non-super write to the filesystem so we can set
-+ * NEEDSREPAIR to protect the filesystem from mount in case of a crash.
-+ */
-+static void
-+repair_capture_writeback(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_mount;
-+	static pthread_mutex_t	wb_mutex = PTHREAD_MUTEX_INITIALIZER;
-+
-+	/*
-+	 * This write hook ignores any buffer that looks like a superblock to
-+	 * avoid hook recursion when setting NEEDSREPAIR.  Higher level code
-+	 * modifying an sb must control the flag manually.
-+	 */
-+	if (bp->b_ops == &xfs_sb_buf_ops || bp->b_bn == XFS_SB_DADDR)
-+		return;
-+
-+	pthread_mutex_lock(&wb_mutex);
-+
-+	/*
-+	 * If someone else already dropped the hook, then needsrepair has
-+	 * already been set on the filesystem and we can unlock.
-+	 */
-+	if (mp->m_buf_writeback_fn != repair_capture_writeback)
-+		goto unlock;
-+
-+	/*
-+	 * If we get here, the buffer being written is not a superblock, and
-+	 * needsrepair needs to be set.  The hook is kept in place to plug all
-+	 * other writes until the sb write finishes.
-+	 */
-+	force_needsrepair(mp);
-+
-+	/* We only set needsrepair once, so clear the hook now. */
-+	mp->m_buf_writeback_fn = NULL;
-+unlock:
-+	pthread_mutex_unlock(&wb_mutex);
-+}
-+
- int
- main(int argc, char **argv)
- {
-@@ -847,6 +945,10 @@ main(int argc, char **argv)
- 	if (verbose > 2)
- 		mp->m_flags |= LIBXFS_MOUNT_WANT_CORRUPTED;
- 
-+	/* Capture the first writeback so that we can set needsrepair. */
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		mp->m_buf_writeback_fn = repair_capture_writeback;
-+
- 	/*
- 	 * set XFS-independent status vars from the mount/sb structure
- 	 */
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index fac82d74..df25abaa 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -223,6 +223,11 @@ of calculating and checking the CRCs is not noticeable in normal operation.
+ By default,
+ .B mkfs.xfs
+ will enable metadata CRCs.
++.IP
++Formatting a filesystem without CRCs selects the V4 format, which is deprecated
++and will be removed from upstream in September 2030.
++Distributors may choose to withdraw support for the V4 format earlier than
++this date.
+ .TP
+ .BI finobt= value
+ This option enables the use of a separate free inode btree index in each
+@@ -592,6 +597,8 @@ This option can be used to turn off inode alignment when the
+ filesystem needs to be mountable by a version of IRIX
+ that does not have the inode alignment feature
+ (any release of IRIX before 6.2, and IRIX 6.2 without XFS patches).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI attr= value
+ This is used to specify the version of extended attribute inline
+@@ -602,6 +609,8 @@ between attribute and extent data.
+ The previous version 1, which has fixed regions for attribute and
+ extent data, is kept for backwards compatibility with kernels older
+ than version 2.6.16.
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI projid32bit[= value ]
+ This is used to enable 32bit quota project identifiers. The
+@@ -609,6 +618,8 @@ This is used to enable 32bit quota project identifiers. The
+ is either 0 or 1, with 1 signifying that 32bit projid are to be enabled.
+ If the value is omitted, 1 is assumed.  (This default changed
+ in release version 3.2.0.)
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI sparse[= value ]
+ Enable sparse inode chunk allocation. The
+@@ -690,6 +701,7 @@ stripe-aligned log writes (see the sunit and su options, below).
+ The previous version 1, which is limited to 32k log buffers and does
+ not support stripe-aligned writes, is kept for backwards compatibility
+ with very old 2.4 kernels.
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI sunit= value
+ This specifies the alignment to be used for log writes. The
+@@ -744,6 +756,8 @@ is 1 (on) so you must specify
+ .B lazy-count=0
+ if you want to disable this feature for older kernels which don't support
+ it.
++.IP
++This option only applies to the deprecated V4 format.
+ .RE
+ .PP
+ .PD 0
+@@ -803,6 +817,8 @@ will be stored in the directory structure.  The default value is 1.
+ When CRCs are enabled (the default), the ftype functionality is always
+ enabled, and cannot be turned off.
+ .IP
++This option only applies to the deprecated V4 format.
++.IP
+ .RE
+ .TP
+ .BI \-p " protofile"
+diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+index cccbb224..5ef99316 100644
+--- a/man/man8/xfs_admin.8
++++ b/man/man8/xfs_admin.8
+@@ -54,6 +54,8 @@ for a detailed description of the XFS log.
+ Enables unwritten extent support on a filesystem that does not
+ already have this enabled (for legacy filesystems, it can't be
+ disabled anymore at mkfs time).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .B \-f
+ Specifies that the filesystem image to be processed is stored in a
+@@ -67,12 +69,16 @@ option).
+ .B \-j
+ Enables version 2 log format (journal format supporting larger
+ log buffers).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .B \-l
+ Print the current filesystem label.
+ .TP
+ .B \-p
+ Enable 32bit project identifier support (PROJID32BIT feature).
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .B \-u
+ Print the current filesystem UUID (Universally Unique IDentifier).
+@@ -83,6 +89,8 @@ Enable (1) or disable (0) lazy-counters in the filesystem.
+ Lazy-counters may not be disabled on Version 5 superblock filesystems
+ (i.e. those with metadata CRCs enabled).
+ .IP
++In other words, this option only applies to the deprecated V4 format.
++.IP
+ This operation may take quite a bit of time on large filesystems as the
+ entire filesystem needs to be scanned when this option is changed.
+ .IP
+@@ -92,6 +100,8 @@ information is kept in other parts of the filesystem to be able to
+ maintain the counter values without needing to keep them in the
+ superblock. This gives significant improvements in performance on some
+ configurations and metadata intensive workloads.
++.IP
++This option only applies to the deprecated V4 format.
+ .TP
+ .BI \-L " label"
+ Set the filesystem label to
 
