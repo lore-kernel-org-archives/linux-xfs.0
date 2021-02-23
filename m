@@ -2,230 +2,213 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E1EEC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 12:12:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89560C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 12:13:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF0B564E21
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 12:12:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E9C1601FF
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 12:13:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232575AbhBWMMe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Feb 2021 07:12:34 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:31242 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232392AbhBWMLv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Feb 2021 07:11:51 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1614082224;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Y6Mg9bAXBZus9n+URBMo+ziYn1DLuazYLrYz5QseRgk=;
-        b=HFZhApZzy/OCSpuC12VqtoCBA3+e9BeXycykdVXh8OZS2jK+AevIxaUi6kaINHk6LeGdcD
-        colJXVN3ZTS6elgJw5KyMmn6qzb+vPViOmOTdolXy5MTga2MKN+l/8SsxYqLRS2yEakFAz
-        RnShv1CmKEMHI/TUNJYa39nHNDaPqKo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-286-V5Nr011uOyWkXof51b5HSw-1; Tue, 23 Feb 2021 07:10:22 -0500
-X-MC-Unique: V5Nr011uOyWkXof51b5HSw-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2188B195D561;
-        Tue, 23 Feb 2021 12:10:20 +0000 (UTC)
-Received: from bfoster (ovpn-119-92.rdu2.redhat.com [10.10.119.92])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A5A5A19CB6;
-        Tue, 23 Feb 2021 12:10:19 +0000 (UTC)
-Date:   Tue, 23 Feb 2021 07:10:17 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        id S232396AbhBWMNX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Feb 2021 07:13:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56236 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232378AbhBWMNW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Feb 2021 07:13:22 -0500
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2F84C061574
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Feb 2021 04:12:42 -0800 (PST)
+Received: by mail-pl1-x636.google.com with SMTP id g20so9719339plo.2
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Feb 2021 04:12:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=cNtRQuc9eDYedBW+UMU2NkXbmYAjSFjq8jonVKtpJSk=;
+        b=Q3AkiJ5gGn+79QASUtDkB+kw/hRTw43OVx3l5eRkH8GXVM89hW05TtsvzLCfZirjHA
+         M6XMyzYTh1JBDT32UIkNZVghz1ALvf/Qfvl46JiCg25f1qk0fmniyXbVaZzffJK0avwg
+         Sp00Xg3aaCRpq5/XPGyfiJkiNUJ1DOhcxrB59jdm0OphUNTQjRJi/vKj6hItOJnr3ml/
+         H/e74C1fZXuhQyfqawDsSgs70SC/VQL+n1KJOd4D2gBVwpL8O12ovn9W5rsLA+p1w5VG
+         NePYx9voTQzR5y3cO0B+O/R0aWIcSyfus1JNJFrx/iSiO4eaUOsDwu9WcFh0dO990KUu
+         QyRw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=cNtRQuc9eDYedBW+UMU2NkXbmYAjSFjq8jonVKtpJSk=;
+        b=hbDNOUeLKO+D1lQDoCVLIoBJ/iQcy0UfA2P6e3JpO8NUr6eiZuZH8jQoU0ZDi58IUY
+         FITClDjHJDwbmvZVgp3Bl8kD14Q1vW70xHALA1MUee7OkR/k4J/S0QXgtAHqS8tVzLl1
+         FAIvDRc/tu6NaDS59a3nvRfJiBVFZBitMxYpvBuaI/f6GNTVkUu4YXuaRV+aROBg04bP
+         /EY9k933Sh4JdT8QEjI2jSchn6Fgy30BjsPkJgCEsykNP/OOD5reX1wq3abryGdXbalS
+         TQ9GRw6jz5M35dDKgaqFFzZNBvS1VwRKClRkAqBO+C6mqMY9NW3AGLcNI0v6fIpG2T0t
+         C9Ow==
+X-Gm-Message-State: AOAM530PZPL7LWzUmU585/24jWrbjNF5fYBitJkDTeLOiqk/3uRxu17z
+        Hv8ExgGRCCY/nvyrzmpE6ZEp/KgcGGw=
+X-Google-Smtp-Source: ABdhPJzij/XWwbvezroGIT8v6ImsL1UiSlI3PCNFzZ5V4fGWQr7nBmzHaLgitJRD4lyjDtEcFl/jBQ==
+X-Received: by 2002:a17:90a:c698:: with SMTP id n24mr13024218pjt.81.1614082362157;
+        Tue, 23 Feb 2021 04:12:42 -0800 (PST)
+Received: from garuda ([122.171.216.250])
+        by smtp.gmail.com with ESMTPSA id 188sm14000091pfz.119.2021.02.23.04.12.40
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 23 Feb 2021 04:12:41 -0800 (PST)
+References: <20210223033442.3267258-1-david@fromorbit.com> <20210223033442.3267258-3-david@fromorbit.com>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: set aside allocation btree blocks from block
- reservation
-Message-ID: <20210223121017.GA946926@bfoster>
-References: <20210222152108.896178-1-bfoster@redhat.com>
- <20210222183408.GB7272@magnolia>
+Subject: Re: [PATCH 2/8] xfs: separate CIL commit record IO
+In-reply-to: <20210223033442.3267258-3-david@fromorbit.com>
+Date:   Tue, 23 Feb 2021 17:42:38 +0530
+Message-ID: <87h7m3m18p.fsf@garuda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210222183408.GB7272@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 22, 2021 at 10:34:08AM -0800, Darrick J. Wong wrote:
-> On Mon, Feb 22, 2021 at 10:21:08AM -0500, Brian Foster wrote:
-> > The blocks used for allocation btrees (bnobt and countbt) are
-> > technically considered free space. This is because as free space is
-> > used, allocbt blocks are removed and naturally become available for
-> > traditional allocation. However, this means that a significant
-> > portion of free space may consist of in-use btree blocks if free
-> > space is severely fragmented.
-> > 
-> > On large filesystems with large perag reservations, this can lead to
-> > a rare but nasty condition where a significant amount of physical
-> > free space is available, but the majority of actual usable blocks
-> > consist of in-use allocbt blocks. We have a record of a (~12TB, 32
-> > AG) filesystem with multiple AGs in a state with ~2.5GB or so free
-> > blocks tracked across ~300 total allocbt blocks, but effectively at
-> > 100% full because the the free space is entirely consumed by
-> > refcountbt perag reservation.
-> 
-> Do the finobt/rmapbt per-ag reservations present similar challenges?
-> 
+On 23 Feb 2021 at 09:04, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> To allow for iclog IO device cache flush behaviour to be optimised,
+> we first need to separate out the commit record iclog IO from the
+> rest of the checkpoint so we can wait for the checkpoint IO to
+> complete before we issue the commit record.
+>
+> This separation is only necessary if the commit record is being
+> written into a different iclog to the start of the checkpoint as the
+> upcoming cache flushing changes requires completion ordering against
+> the other iclogs submitted by the checkpoint.
+>
+> If the entire checkpoint and commit is in the one iclog, then they
+> are both covered by the one set of cache flush primitives on the
+> iclog and hence there is no need to separate them for ordering.
+>
+> Otherwise, we need to wait for all the previous iclogs to complete
+> so they are ordered correctly and made stable by the REQ_PREFLUSH
+> that the commit record iclog IO issues. This guarantees that if a
+> reader sees the commit record in the journal, they will also see the
+> entire checkpoint that commit record closes off.
+>
+> This also provides the guarantee that when the commit record IO
+> completes, we can safely unpin all the log items in the checkpoint
+> so they can be written back because the entire checkpoint is stable
+> in the journal.
+>
 
-I think any large perag reservation can contribute to an elevated
-btreeblks count if free space is fragmented enough. That said, it's not
-clear to me that an elevated btreeblks count is enough to cause this
-problem. So far I've not been able to reproduce, but have only been able
-to play around with a filesystem that was already put into this state by
-a workload that seemingly made heavy/fragmented use of COW and
-persistently beat against -ENOSPC over time. For that reason I suspect
-COW remaps dipping into the reserve block pool may also be a
-contributing factor, but it's hard to say for sure. Given the
-circumstances, I opted to keep this isolated to reflink at least for the
-time being.
+The changes seem to be logically correct.
 
-We could certainly enable the enforcement for any filesystem that
-requires perag reservation if we preferred to do that out of caution.
-The accounting logic is trivial and already unconditional. The one
-caveat to be aware of is that the enforcement is not effective until
-m_btree_blks is fully populated, which doesn't occur until each AGF has
-been read for the first time. This is not a problem for reflink and
-rmapbt because both of those features read the AGF at mount time to
-calculate the perag res.
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-The finobt perag res calculation only reads the AGIs atm, so we'd either
-want to also read the AGFs there as well (which is perhaps not such a
-big deal if we're already reading the AGIs), or perhaps just leave
-things as is, enforce by default, and hope (and document) that the
-counter is initialized in the cases where it's most important. I don't
-have a strong opinion on any of those particular options. Thoughts?
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_log.c      | 55 +++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_log_cil.c  |  7 ++++++
+>  fs/xfs/xfs_log_priv.h |  2 ++
+>  3 files changed, 64 insertions(+)
+>
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index fa284f26d10e..ff26fb46d70f 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -808,6 +808,61 @@ xlog_wait_on_iclog(
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Wait on any iclogs that are still flushing in the range of start_lsn to the
+> + * current iclog's lsn. The caller holds a reference to the iclog, but otherwise
+> + * holds no log locks.
+> + *
+> + * We walk backwards through the iclogs to find the iclog with the highest lsn
+> + * in the range that we need to wait for and then wait for it to complete.
+> + * Completion ordering of iclog IOs ensures that all prior iclogs to the
+> + * candidate iclog we need to sleep on have been complete by the time our
+> + * candidate has completed it's IO.
+> + *
+> + * Therefore we only need to find the first iclog that isn't clean within the
+> + * span of our flush range. If we come across a clean, newly activated iclog
+> + * with a lsn of 0, it means IO has completed on this iclog and all previous
+> + * iclogs will be have been completed prior to this one. Hence finding a newly
+> + * activated iclog indicates that there are no iclogs in the range we need to
+> + * wait on and we are done searching.
+> + */
+> +int
+> +xlog_wait_on_iclog_lsn(
+> +	struct xlog_in_core	*iclog,
+> +	xfs_lsn_t		start_lsn)
+> +{
+> +	struct xlog		*log = iclog->ic_log;
+> +	struct xlog_in_core	*prev;
+> +	int			error = -EIO;
+> +
+> +	spin_lock(&log->l_icloglock);
+> +	if (XLOG_FORCED_SHUTDOWN(log))
+> +		goto out_unlock;
+> +
+> +	error = 0;
+> +	for (prev = iclog->ic_prev; prev != iclog; prev = prev->ic_prev) {
+> +
+> +		/* Done if the lsn is before our start lsn */
+> +		if (XFS_LSN_CMP(be64_to_cpu(prev->ic_header.h_lsn),
+> +				start_lsn) < 0)
+> +			break;
+> +
+> +		/* Don't need to wait on completed, clean iclogs */
+> +		if (prev->ic_state == XLOG_STATE_DIRTY ||
+> +		    prev->ic_state == XLOG_STATE_ACTIVE) {
+> +			continue;
+> +		}
+> +
+> +		/* wait for completion on this iclog */
+> +		xlog_wait(&prev->ic_force_wait, &log->l_icloglock);
+> +		return 0;
+> +	}
+> +
+> +out_unlock:
+> +	spin_unlock(&log->l_icloglock);
+> +	return error;
+> +}
+> +
+>  /*
+>   * Write out an unmount record using the ticket provided. We have to account for
+>   * the data space used in the unmount ticket as this write is not done from a
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index b0ef071b3cb5..c5cc1b7ad25e 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -870,6 +870,13 @@ xlog_cil_push_work(
+>  	wake_up_all(&cil->xc_commit_wait);
+>  	spin_unlock(&cil->xc_push_lock);
+>  
+> +	/*
+> +	 * If the checkpoint spans multiple iclogs, wait for all previous
+> +	 * iclogs to complete before we submit the commit_iclog.
+> +	 */
+> +	if (ctx->start_lsn != commit_lsn)
+> +		xlog_wait_on_iclog_lsn(commit_iclog, ctx->start_lsn);
+> +
+>  	/* release the hounds! */
+>  	xfs_log_release_iclog(commit_iclog);
+>  	return;
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 037950cf1061..a7ac85aaff4e 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -584,6 +584,8 @@ xlog_wait(
+>  	remove_wait_queue(wq, &wait);
+>  }
+>  
+> +int xlog_wait_on_iclog_lsn(struct xlog_in_core *iclog, xfs_lsn_t start_lsn);
+> +
+>  /*
+>   * The LSN is valid so long as it is behind the current LSN. If it isn't, this
+>   * means that the next log record that includes this metadata could have a
 
-Brian
 
-> --D
-> 
-> > Such a large perag reservation is by design on large filesystems.
-> > The problem is that because the free space is so fragmented, this AG
-> > contributes the 300 or so allocbt blocks to the global counters as
-> > free space. If this pattern repeats across enough AGs, the
-> > filesystem lands in a state where global block reservation can
-> > outrun physical block availability. For example, a streaming
-> > buffered write on the affected filesystem continues to allow delayed
-> > allocation beyond the point where writeback starts to fail due to
-> > physical block allocation failures. The expected behavior is for the
-> > delalloc block reservation to fail gracefully with -ENOSPC before
-> > physical block allocation failure is a possibility.
-> > 
-> > To address this problem, introduce a counter to track the sum of the
-> > allocbt block counters already tracked in the AGF. Use the new
-> > counter to set these blocks aside at reservation time and thus
-> > ensure they cannot be allocated until truly available. Since this is
-> > only necessary when large reflink perag reservations are in place
-> > and the counter requires a read of each AGF to fully populate, only
-> > enforce on reflink enabled filesystems. This allows initialization
-> > of the counter at ->pagf_init time because the refcountbt perag
-> > reservation init code reads each AGF at mount time.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > v2:
-> > - Use an atomic counter instead of a percpu counter.
-> > v1: https://lore.kernel.org/linux-xfs/20210217132339.651020-1-bfoster@redhat.com/
-> > 
-> >  fs/xfs/libxfs/xfs_alloc.c |  3 +++
-> >  fs/xfs/xfs_mount.c        | 15 ++++++++++++++-
-> >  fs/xfs/xfs_mount.h        |  6 ++++++
-> >  3 files changed, 23 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index 0c623d3c1036..fb3d36cad173 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -2746,6 +2746,7 @@ xfs_alloc_get_freelist(
-> >  	if (btreeblk) {
-> >  		be32_add_cpu(&agf->agf_btreeblks, 1);
-> >  		pag->pagf_btreeblks++;
-> > +		atomic64_inc(&mp->m_btree_blks);
-> >  		logflags |= XFS_AGF_BTREEBLKS;
-> >  	}
-> >  
-> > @@ -2853,6 +2854,7 @@ xfs_alloc_put_freelist(
-> >  	if (btreeblk) {
-> >  		be32_add_cpu(&agf->agf_btreeblks, -1);
-> >  		pag->pagf_btreeblks--;
-> > +		atomic64_dec(&mp->m_btree_blks);
-> >  		logflags |= XFS_AGF_BTREEBLKS;
-> >  	}
-> >  
-> > @@ -3055,6 +3057,7 @@ xfs_alloc_read_agf(
-> >  	if (!pag->pagf_init) {
-> >  		pag->pagf_freeblks = be32_to_cpu(agf->agf_freeblks);
-> >  		pag->pagf_btreeblks = be32_to_cpu(agf->agf_btreeblks);
-> > +		atomic64_add(pag->pagf_btreeblks, &mp->m_btree_blks);
-> >  		pag->pagf_flcount = be32_to_cpu(agf->agf_flcount);
-> >  		pag->pagf_longest = be32_to_cpu(agf->agf_longest);
-> >  		pag->pagf_levels[XFS_BTNUM_BNOi] =
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index 52370d0a3f43..16482e02da01 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -1178,6 +1178,7 @@ xfs_mod_fdblocks(
-> >  	int64_t			lcounter;
-> >  	long long		res_used;
-> >  	s32			batch;
-> > +	uint64_t		set_aside = mp->m_alloc_set_aside;
-> >  
-> >  	if (delta > 0) {
-> >  		/*
-> > @@ -1217,8 +1218,20 @@ xfs_mod_fdblocks(
-> >  	else
-> >  		batch = XFS_FDBLOCKS_BATCH;
-> >  
-> > +	/*
-> > +	 * Set aside allocbt blocks on reflink filesystems because COW remaps
-> > +	 * can dip into the reserved block pool. This is problematic if free
-> > +	 * space is fragmented and m_fdblocks tracks a significant number of
-> > +	 * allocbt blocks. Note this also ensures the counter is accurate before
-> > +	 * the filesystem is active because perag reservation reads all AGFs at
-> > +	 * mount time. The only call prior to that is to populate the reserve
-> > +	 * pool itself.
-> > +	 */
-> > +	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> > +		set_aside += atomic64_read(&mp->m_btree_blks);
-> > +
-> >  	percpu_counter_add_batch(&mp->m_fdblocks, delta, batch);
-> > -	if (__percpu_counter_compare(&mp->m_fdblocks, mp->m_alloc_set_aside,
-> > +	if (__percpu_counter_compare(&mp->m_fdblocks, set_aside,
-> >  				     XFS_FDBLOCKS_BATCH) >= 0) {
-> >  		/* we had space! */
-> >  		return 0;
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index 659ad95fe3e0..70e1dd6b538a 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -170,6 +170,12 @@ typedef struct xfs_mount {
-> >  	 * extents or anything related to the rt device.
-> >  	 */
-> >  	struct percpu_counter	m_delalloc_blks;
-> > +	/*
-> > +	 * Optional count of btree blocks in use across all AGs. Only used when
-> > +	 * reflink is enabled. Helps prevent block reservation from attempting
-> > +	 * to reserve allocation btree blocks.
-> > +	 */
-> > +	atomic64_t		m_btree_blks;
-> >  
-> >  	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
-> >  	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
-> > -- 
-> > 2.26.2
-> > 
-> 
-
+-- 
+chandan
