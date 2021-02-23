@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAD8DC433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9137BC433E0
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:02:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9ADB864DF3
+	by mail.kernel.org (Postfix) with ESMTP id 3F8F764E5B
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 03:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231284AbhBWDCW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Feb 2021 22:02:22 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47854 "EHLO mail.kernel.org"
+        id S231219AbhBWDCV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Feb 2021 22:02:21 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47518 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229967AbhBWDCR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Feb 2021 22:02:17 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0DA1864DF3;
-        Tue, 23 Feb 2021 03:01:37 +0000 (UTC)
+        id S230411AbhBWDCE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Feb 2021 22:02:04 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 77B4F64E57;
+        Tue, 23 Feb 2021 03:01:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614049297;
-        bh=yeiuzjpAXFgdL80GF15iQpaXcjaySaU80aUI0GCOf3k=;
+        s=k20201202; t=1614049308;
+        bh=+lV2hryLDyVw4bc0VOaihukklk7oaOv65zkAQzK+TpA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=WTPgeaqEtIjq2P2lohSNjNka2Paxy0STys1XYVI6rZU7ZDUeimqyLRRbbGE6p1ZmT
-         eOwVxPYrdfmjdoKnsCY6wekjW86ofJvwFnSFKZtCESMOu+LDyMsf0jXqXRSnmPzLTG
-         yQymemVhIOCLg93Fmf4VTmKU9KxJ8dmvDM82uWIpKuowY+JaFYKdgVX7s23eLT0qP+
-         ihyhwhm1x7x6yeCcT8pbrk0oMSwROzhoahigc3y6TN5TWS/YtNQSSKFr2z8U5A2Ibb
-         lkU/n4KDuDIDj053K6lYaCCMyB5ByR11ZYuwYzKRmPcfWMPwbx8uLTrfrkxzav+95p
-         Xe7xGis2cJkuA==
-Subject: [PATCH 2/5] xfs_repair: allow upgrades to v5 filesystems
+        b=Sf8xJDc/b8pLp4tD24qpqyHnXgIL0not8QOrHbA8n/2lzzbPULiQSgzj0K9b1YZLU
+         CTCFY+cz2ZXg3qTK5fRI81y56f1B/t4NOdt5nntGbWnoSUoorOqLeVUP5LxzSjhusM
+         H5lLeBt61hNq42zLsKZsUFUb1R87OmMYHvjO29uhrwihnwqKnYppspy4Z75Z+GESIj
+         PmB2BsKQl5v2G2qSSEP8f6a1nRv0bAoAPEJ5hBC5fxxsHLraMJbKGLQF8Q8HODg+tF
+         2xPgfIlQEeBHT24n0B7ellEA7LCp5eXzwMkBfD9SbgLdeUi2y37rHCTwZvIFavagcV
+         jcMK9MB+Uugzg==
+Subject: [PATCH 4/5] xfs_repair: enable inobtcount upgrade via repair
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        hch@lst.de, bfoster@redhat.com
-Date:   Mon, 22 Feb 2021 19:01:36 -0800
-Message-ID: <161404929660.425731.17886982949516193444.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>,
+        linux-xfs@vger.kernel.org, hch@lst.de, bfoster@redhat.com
+Date:   Mon, 22 Feb 2021 19:01:48 -0800
+Message-ID: <161404930804.425731.4363462062346246125.stgit@magnolia>
 In-Reply-To: <161404928523.425731.7157248967184496592.stgit@magnolia>
 References: <161404928523.425731.7157248967184496592.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,71 +50,146 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some helper functions so that we can allow users to upgrade V5
-filesystems in a sane manner.  This just lands the boilerplate; the
-actual feature validation and whatnot will land in the next patches.
+Use xfs_repair to add the inode btree counter feature to a filesystem.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/phase2.c |   40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ man/man8/xfs_admin.8 |   11 ++++++++++-
+ repair/globals.c     |    1 +
+ repair/globals.h     |    1 +
+ repair/phase2.c      |   30 ++++++++++++++++++++++++++++++
+ repair/xfs_repair.c  |   11 +++++++++++
+ 5 files changed, 53 insertions(+), 1 deletion(-)
 
 
+diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+index ae661648..4ba718d8 100644
+--- a/man/man8/xfs_admin.8
++++ b/man/man8/xfs_admin.8
+@@ -136,7 +136,16 @@ without the
+ .BR -n )
+ must be followed to clean the filesystem.
+ .IP
+-There are no feature options currently.
++Supported features are as follows:
++.RS 0.7i
++.TP 0.4i
++.B inobtcount
++Keep a count the number of blocks in each inode btree in the AGI.
++This reduces mount time by speeding up metadata space reservation calculations.
++The filesystem cannot be downgraded after this feature is enabled.
++Once enabled, the filesystem will not be writable by older kernels.
++This feature was added to Linux 5.10.
++.RE
+ .TP
+ .BI \-U " uuid"
+ Set the UUID of the filesystem to
+diff --git a/repair/globals.c b/repair/globals.c
+index 537d068b..47d90bd3 100644
+--- a/repair/globals.c
++++ b/repair/globals.c
+@@ -48,6 +48,7 @@ char	*rt_name;		/* Name of realtime device */
+ int	rt_spec;		/* Realtime dev specified as option */
+ int	convert_lazy_count;	/* Convert lazy-count mode on/off */
+ int	lazy_count;		/* What to set if to if converting */
++bool	add_inobtcount;		/* add inode btree counts to AGI */
+ 
+ /* misc status variables */
+ 
+diff --git a/repair/globals.h b/repair/globals.h
+index a9287320..5b6fe4d4 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -89,6 +89,7 @@ extern char	*rt_name;		/* Name of realtime device */
+ extern int	rt_spec;		/* Realtime dev specified as option */
+ extern int	convert_lazy_count;	/* Convert lazy-count mode on/off */
+ extern int	lazy_count;		/* What to set if to if converting */
++extern bool	add_inobtcount;		/* add inode btree counts to AGI */
+ 
+ /* misc status variables */
+ 
 diff --git a/repair/phase2.c b/repair/phase2.c
-index 952ac4a5..f654edcc 100644
+index f654edcc..96074a1d 100644
 --- a/repair/phase2.c
 +++ b/repair/phase2.c
-@@ -131,6 +131,40 @@ zero_log(
+@@ -131,6 +131,33 @@ zero_log(
  		libxfs_max_lsn = log->l_last_sync_lsn;
  }
  
-+/* Perform the user's requested upgrades on filesystem. */
-+static void
-+upgrade_filesystem(
++static bool
++set_inobtcount(
 +	struct xfs_mount	*mp)
 +{
-+	struct xfs_buf		*bp;
-+	bool			dirty = false;
-+	int			error;
++	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++		printf(
++	_("Inode btree count feature only supported on V5 filesystems.\n"));
++		exit(0);
++	}
 +
-+        if (no_modify || !dirty)
-+                return;
++	if (!xfs_sb_version_hasfinobt(&mp->m_sb)) {
++		printf(
++	_("Inode btree count feature requires free inode btree.\n"));
++		exit(0);
++	}
 +
-+        bp = libxfs_getsb(mp);
-+        if (!bp || bp->b_error) {
-+                do_error(
-+	_("couldn't get superblock for feature upgrade, err=%d\n"),
-+                                bp ? bp->b_error : ENOMEM);
-+        } else {
-+                libxfs_sb_to_disk(bp->b_addr, &mp->m_sb);
++	if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
++		printf(_("Filesystem already has inode btree counts.\n"));
++		exit(0);
++	}
 +
-+                /*
-+		 * Write the primary super to disk immediately so that
-+		 * needsrepair will be set if repair doesn't complete.
-+		 */
-+                error = -libxfs_bwrite(bp);
-+                if (error)
-+                        do_error(
-+	_("filesystem feature upgrade failed, err=%d\n"),
-+                                        error);
-+        }
-+        if (bp)
-+                libxfs_buf_relse(bp);
++	printf(_("Adding inode btree counts to filesystem.\n"));
++	mp->m_sb.sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
++	mp->m_sb.sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
++	return true;
 +}
 +
- /*
-  * ok, at this point, the fs is mounted but the root inode may be
-  * trashed and the ag headers haven't been checked.  So we have
-@@ -235,4 +269,10 @@ phase2(
- 				do_warn(_("would correct\n"));
- 		}
- 	}
+ /* Perform the user's requested upgrades on filesystem. */
+ static void
+ upgrade_filesystem(
+@@ -140,6 +167,9 @@ upgrade_filesystem(
+ 	bool			dirty = false;
+ 	int			error;
+ 
++	if (add_inobtcount)
++		dirty |= set_inobtcount(mp);
 +
-+	/*
-+	 * Upgrade the filesystem now that we've done a preliminary check of
-+	 * the superblocks, the AGs, the log, and the metadata inodes.
-+	 */
-+	upgrade_filesystem(mp);
- }
+         if (no_modify || !dirty)
+                 return;
+ 
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 64d7607f..8a9caf15 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -65,11 +65,13 @@ static char *o_opts[] = {
+  */
+ enum c_opt_nums {
+ 	CONVERT_LAZY_COUNT = 0,
++	CONVERT_INOBTCOUNT,
+ 	C_MAX_OPTS,
+ };
+ 
+ static char *c_opts[] = {
+ 	[CONVERT_LAZY_COUNT]	= "lazycount",
++	[CONVERT_INOBTCOUNT]	= "inobtcount",
+ 	[C_MAX_OPTS]		= NULL,
+ };
+ 
+@@ -302,6 +304,15 @@ process_args(int argc, char **argv)
+ 					lazy_count = (int)strtol(val, NULL, 0);
+ 					convert_lazy_count = 1;
+ 					break;
++				case CONVERT_INOBTCOUNT:
++					if (!val)
++						do_abort(
++		_("-c inobtcount requires a parameter\n"));
++					if (strtol(val, NULL, 0) != 1)
++						do_abort(
++		_("-c inobtcount only supports upgrades\n"));
++					add_inobtcount = true;
++					break;
+ 				default:
+ 					unknown('c', val);
+ 					break;
 
