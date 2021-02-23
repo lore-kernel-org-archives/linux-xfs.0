@@ -2,114 +2,219 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C75C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 18:11:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE42DC43381
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 18:23:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16F8664DD3
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 18:11:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5E7664E2E
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 18:23:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233065AbhBWSLX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Feb 2021 13:11:23 -0500
-Received: from sandeen.net ([63.231.237.45]:41364 "EHLO sandeen.net"
+        id S233991AbhBWSXO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Feb 2021 13:23:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57106 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231591AbhBWSLX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Feb 2021 13:11:23 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id DA480611F0F;
-        Tue, 23 Feb 2021 12:10:27 -0600 (CST)
-To:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
-References: <20210220221549.290538-1-preichl@redhat.com>
- <20210220221549.290538-3-preichl@redhat.com>
- <61f66b91-4343-f28e-dd47-6b6c70ee8b96@sandeen.net>
- <e29b3877-385b-3e0a-5761-51bb1265b302@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH 1/1] xfs: Skip repetitive warnings about mount options
-Message-ID: <a5a94542-750c-0741-f95d-799e34656ca0@sandeen.net>
-Date:   Tue, 23 Feb 2021 12:10:41 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.16; rv:78.0)
- Gecko/20100101 Thunderbird/78.7.1
+        id S233981AbhBWSW7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Feb 2021 13:22:59 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4FC1C64E61;
+        Tue, 23 Feb 2021 18:22:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614104538;
+        bh=0k7ph56M6eE4UJfIfoCbA8rQNrb5IDiAYJFoaXPEttE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=NSJ+qf3009oCLWIgY9Tkzj52C13tDuNmTzUvAIXqNJZYW2UnytNTyXl+GXn5uHK5U
+         p2a+fJqSR8pf47IeCnweQ0ESrYh0OpgOMlduqntlgbpof8QoSOTd+vyF7jGddsDYMn
+         kSCTie+bcodPKdnacQiHrUux0gt2XPbKPRm48OqecMHyyZKJx70DJJfGHMMgV6VqYC
+         AlNEWjLOlRKFRg5RVi8qblgqY7ePHJfBP+cluaeIVyporvqzx+psaLtlR9+1U4w/Rr
+         Gosa7vmH9LOXpTveN+cjjW81YR/YAD/YvFSFpvUTrIxFbJ5CLAyIGHHbMyBwweinMf
+         xGIuj0FhzAOUw==
+Date:   Tue, 23 Feb 2021 10:22:17 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: don't reuse busy extents on extent trim
+Message-ID: <20210223182217.GL7272@magnolia>
+References: <20210222153442.897089-1-bfoster@redhat.com>
+ <20210222182745.GA7272@magnolia>
+ <20210223123106.GB946926@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <e29b3877-385b-3e0a-5761-51bb1265b302@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210223123106.GB946926@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2/23/21 11:53 AM, Pavel Reichl wrot
+On Tue, Feb 23, 2021 at 07:31:06AM -0500, Brian Foster wrote:
+> On Mon, Feb 22, 2021 at 10:27:45AM -0800, Darrick J. Wong wrote:
+> > On Mon, Feb 22, 2021 at 10:34:42AM -0500, Brian Foster wrote:
+> > > Freed extents are marked busy from the point the freeing transaction
+> > > commits until the associated CIL context is checkpointed to the log.
+> > > This prevents reuse and overwrite of recently freed blocks before
+> > > the changes are committed to disk, which can lead to corruption
+> > > after a crash. The exception to this rule is that metadata
+> > > allocation is allowed to reuse busy extents because metadata changes
+> > > are also logged.
+> > > 
+> > > As of commit 97d3ac75e5e0 ("xfs: exact busy extent tracking"), XFS
+> > > has allowed modification or complete invalidation of outstanding
+> > > busy extents for metadata allocations. This implementation assumes
+> > > that use of the associated extent is imminent, which is not always
+> > > the case. For example, the trimmed extent might not satisfy the
+> > > minimum length of the allocation request, or the allocation
+> > > algorithm might be involved in a search for the optimal result based
+> > > on locality.
+> > > 
+> > > generic/019 reproduces a corruption caused by this scenario. First,
+> > > a metadata block (usually a bmbt or symlink block) is freed from an
+> > > inode. A subsequent bmbt split on an unrelated inode attempts a near
+> > > mode allocation request that invalidates the busy block during the
+> > > search, but does not ultimately allocate it. Due to the busy state
+> > > invalidation, the block is no longer considered busy to subsequent
+> > > allocation. A direct I/O write request immediately allocates the
+> > > block and writes to it.
+> > 
+> > I really hope there's a fstest case coming for this... :)
+> > 
 > 
-> On 2/22/21 11:19 PM, Eric Sandeen wrote:
->>
->> On 2/20/21 4:15 PM, Pavel Reichl wrote:
->>> Skip the warnings about mount option being deprecated if we are
->>> remounting and deprecated option state is not changing.
->>>
->>> Bug: https://bugzilla.kernel.org/show_bug.cgi?id=211605
->>> Fix-suggested-by: Eric Sandeen <sandeen@redhat.com>
->>> Signed-off-by: Pavel Reichl <preichl@redhat.com>
->>> ---
->>>  fs/xfs/xfs_super.c | 23 +++++++++++++++++++----
->>>  1 file changed, 19 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->>> index 813be879a5e5..6724a7018d1f 100644
->>> --- a/fs/xfs/xfs_super.c
->>> +++ b/fs/xfs/xfs_super.c
->>> @@ -1169,6 +1169,13 @@ xfs_fs_parse_param(
->>>  	struct fs_parse_result	result;
->>>  	int			size = 0;
->>>  	int			opt;
->>> +	uint64_t                prev_m_flags = 0; /* Mount flags of prev. mount */
->>> +	bool			remounting = fc->purpose & FS_CONTEXT_FOR_RECONFIGURE;
->>> +
->>> +	/* if reconfiguring then get mount flags of previous flags */
->>> +	if (remounting) {
->>> +		prev_m_flags  = XFS_M(fc->root->d_sb)->m_flags;
->>
->> I wonder, does mp->m_flags work just as well for this purpose? I do get lost
->> in how the mount api stashes things. I /think/ that the above is just a
->> long way of getting to mp->m_flags.
+> generic/019? :) I'm not sure of a good way to reproduce on demand given
+> the conditions required to reproduce.
+
+<nod> I guess you'd have to have a fs where extents take a long time to
+exit the busy tree, and then set up the allocations and frees just
+right.  FWIW I've never hit this in generic/019.
+
+> > > Finally, the filesystem crashes while in a
+> > > state where the initial metadata block free had not committed to the
+> > > on-disk log. After recovery, the original metadata block is in its
+> > > original location as expected, but has been corrupted by the
+> > > aforementioned dio.
+> > 
+> > Wheee!
+> > 
+> > Looking at xfs_alloc_ag_vextent_exact, I guess the allocator will go
+> > find a freespace record, call xfs_extent_busy_trim (which could erase
+> > the busy extent entry), decide that it's not interested after all, and
+> > bail out without restoring the busy entry.
+> > 
+> > Similarly, xfs_alloc_cur_check calls _busy_trim (same side effects) as
+> > we wander around the free space btrees looking for a good chunk of
+> > space... and doesn't restore the busy record if it decides to consider a
+> > different extent.
+> > 
 > 
-> Hi Eric, I'm sorry to disagree, but I think that mp->m_flags is newly allocated for this mount and it's not populated with previous mount's mount options.
-
-No need to be sorry ;) And in any case, you're corrrect here.
-
+> Yep. I was originally curious whether the more recent allocator rework
+> introduced this problem somehow, but AFAICT that just refactored the
+> relevant allocator code and this bug has been latent in the existing
+> code for quite some time. That's not hugely surprising given the rare
+> combination of conditions required to reproduce.
 > 
-> static int xfs_init_fs_context(
->         struct fs_context       *fc)
-> {
->         struct xfs_mount        *mp;
+> > So I guess this "speculatively remove busy records and forget to restore
+> > them" behavior opens the door to the write allocating blocks that aren't
+> > yet free and nonbusy, right?  And the solution presented here is to
+> > avoid letting go of the busy record for the bmbt allocation, and if the
+> > btree split caller decides it really /must/ have that block for the bmbt
+> > it can force the log and try again, just like we do for a file data
+> > allocation?
+> > 
 > 
-> So here it's allocated and zeroed
+> Yes, pretty much. The metadata allocation that is allowed to safely
+> reuse busy extents ends up invalidating a set of blocks during a NEAR
+> mode search (i.e. bmbt allocation), but ends up only using one of those
+> blocks. A data allocation immediately comes along next, finds one of the
+> other invalidated blocks and writes to it. A crash/recovery leaves the
+> invalidated busy block in its original metadata location having already
+> been written to by the dio.
 > 
->         mp = kmem_alloc(sizeof(struct xfs_mount), KM_ZERO);
->         if (!mp)
->                 return -ENOMEM;
->                 
-> ...
+> > Another solution could have been to restore the record if we decide not
+> > to go ahead with the allocation, but as we haven't yet committed to
+> > using the space, there's no sense in thrashing the busy records?
+> > 
+> 
+> That was my original thought as well. Then after looking through the
+> code a bit I thought that something like allowing the allocator to
+> "track" a reusable, but still busy extent until allocation is imminent
+> might be a bit more straightforward of an implementation given the
+> layering between the allocator and busy extent tracking code. IOW, we'd
+> split the busy trim/available and busy invalidate logic into two steps
+> instead of doing it immediately in the busy trim path. That would allow
+> the allocator to consider the same set of reusable busy blocks but not
+> commit to any of them until the allocation search is complete.
+> 
+> However, either of those options require a bit of thought and rework
+> (and perhaps some value proposition justification for the complexity)
+> while the current trim reuse code is pretty much bolted on and broken.
+> Therefore, I think it's appropriate to fix the bug in one step and
+> follow up with a different implementation separately.
 
-and eventually:
+<nod> I'm not sure that's even worth the effort... :)
 
-	fc->s_fs_info = mp;
+--D
 
-Ok, yup, I see.  so I guess we kind of have:
-
-*parsing_mp = fc->s_fs_info;
-
-and 
-
-*current_mp = XFS_M(fc->root->d_sb);
-
-(variable names not actually in the code, just used for example)
-
-Sorry for the noise, my mistake!
-
--Eric
+> > Assuming I got all that right,
+> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> > 
+> 
+> Thanks.
+> 
+> Brian
+> 
+> > --D
+> > 
+> > 
+> > > This demonstrates that it is fundamentally unsafe to modify busy
+> > > extent state for extents that are not guaranteed to be allocated.
+> > > This applies to pretty much all of the code paths that currently
+> > > trim busy extents for one reason or another. Therefore to address
+> > > this problem, drop the reuse mechanism from the busy extent trim
+> > > path. This code already knows how to return partial non-busy ranges
+> > > of the targeted free extent and higher level code tracks the busy
+> > > state of the allocation attempt. If a block allocation fails where
+> > > one or more candidate extents is busy, we force the log and retry
+> > > the allocation.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_extent_busy.c | 14 --------------
+> > >  1 file changed, 14 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> > > index 3991e59cfd18..ef17c1f6db32 100644
+> > > --- a/fs/xfs/xfs_extent_busy.c
+> > > +++ b/fs/xfs/xfs_extent_busy.c
+> > > @@ -344,7 +344,6 @@ xfs_extent_busy_trim(
+> > >  	ASSERT(*len > 0);
+> > >  
+> > >  	spin_lock(&args->pag->pagb_lock);
+> > > -restart:
+> > >  	fbno = *bno;
+> > >  	flen = *len;
+> > >  	rbp = args->pag->pagb_tree.rb_node;
+> > > @@ -363,19 +362,6 @@ xfs_extent_busy_trim(
+> > >  			continue;
+> > >  		}
+> > >  
+> > > -		/*
+> > > -		 * If this is a metadata allocation, try to reuse the busy
+> > > -		 * extent instead of trimming the allocation.
+> > > -		 */
+> > > -		if (!(args->datatype & XFS_ALLOC_USERDATA) &&
+> > > -		    !(busyp->flags & XFS_EXTENT_BUSY_DISCARDED)) {
+> > > -			if (!xfs_extent_busy_update_extent(args->mp, args->pag,
+> > > -							  busyp, fbno, flen,
+> > > -							  false))
+> > > -				goto restart;
+> > > -			continue;
+> > > -		}
+> > > -
+> > >  		if (bbno <= fbno) {
+> > >  			/* start overlap */
+> > >  
+> > > -- 
+> > > 2.26.2
+> > > 
+> > 
+> 
