@@ -2,194 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DFB8C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 429B1C433E6
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 05:48:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6FB664E5C
+	by mail.kernel.org (Postfix) with ESMTP id EA19C64E4D
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Feb 2021 05:48:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231284AbhBWFss (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Feb 2021 00:48:48 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:42101 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230014AbhBWFss (ORCPT
+        id S230014AbhBWFst (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Feb 2021 00:48:49 -0500
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:60928 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230439AbhBWFss (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Feb 2021 00:48:48 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id CBC27104060C
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id B9C86FA97D2
         for <linux-xfs@vger.kernel.org>; Tue, 23 Feb 2021 16:47:54 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lEQY5-000AX7-W3
+        id 1lEQY5-000AX6-V2
         for linux-xfs@vger.kernel.org; Tue, 23 Feb 2021 16:47:54 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lEQY5-00Dofl-OU
+        id 1lEQY5-00Dofj-Lx
         for linux-xfs@vger.kernel.org; Tue, 23 Feb 2021 16:47:53 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/3] xfs: type verification is expensive
-Date:   Tue, 23 Feb 2021 16:47:46 +1100
-Message-Id: <20210223054748.3292734-2-david@fromorbit.com>
+Subject: [PATCH 0/3] xfs: 64kb directory block verification hurts
+Date:   Tue, 23 Feb 2021 16:47:45 +1100
+Message-Id: <20210223054748.3292734-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20210223054748.3292734-1-david@fromorbit.com>
-References: <20210223054748.3292734-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8 a=NuCpFDova00jneZWLDgA:9
-        a=VYulwihJHBYJMpFq:21 a=7EeG--xdTkWisC3H:21
+        a=qa6Q16uM49sA:10 a=fOOSwP09aBwv3-grD08A:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-From a concurrent rm -rf workload:
+Quite simple: the debug code we have for internal directory block
+verification does not scale to large directory blocks. What is a
+minor nuisance at 4kB block size turns into a major problem at 64kB
+block size.
 
-  41.04%  [kernel]  [k] xfs_dir3_leaf_check_int
-   9.85%  [kernel]  [k] __xfs_dir3_data_check
-   5.60%  [kernel]  [k] xfs_verify_ino
-   5.32%  [kernel]  [k] xfs_agino_range
-   4.21%  [kernel]  [k] memcpy
-   3.06%  [kernel]  [k] xfs_errortag_test
-   2.57%  [kernel]  [k] xfs_dir_ino_validate
-   1.66%  [kernel]  [k] xfs_dir2_data_get_ftype
-   1.17%  [kernel]  [k] do_raw_spin_lock
-   1.11%  [kernel]  [k] xfs_verify_dir_ino
-   0.84%  [kernel]  [k] __raw_callee_save___pv_queued_spin_unlock
-   0.83%  [kernel]  [k] xfs_buf_find
-   0.64%  [kernel]  [k] xfs_log_commit_cil
+These three patches work to reduce the worst of this overhead
+without completely gutting the debug checks that are being done.
+The type verification code that is generated is horrible - the
+compiler does not inline all the nested 3 line functions and so
+the function call overhead is significant. Adding a few inline
+keywords so that the internal nesting is inlined cuts the overhead
+by 30%.
 
-THere's an awful lot of overhead in just range checking inode
-numbers in that, but each inode number check is not a lot of code.
-The total is a bit over 14.5% of the CPU time is spent validating
-inode numbers.
+The overhead is still huge. Some of the verification testing is
+unnecessary - testing for error injection for a bad inode number
+millions of times a second is hugely expensive, and getting rid of
+that cuts overhead of directory inode number validation in half.
 
-The problem is that they deeply nested global scope functions so the
-overhead here is all in function call marshalling.
+But the overhead is still huge. The biggest offender is the
+directory leaf hash ordering checks. On every debug check call, of
+which there is several for every directory modification, we walk the
+entire hash entry table in the buffer (8k entries!) to check for
+order. This is largely unnecessary, so only do this full order check
+when the check function is called from the IO verifiers. If a kernel
+dev needs more expensive checks to be re-instated, they only need to
+change a single parameter from false to true to do so.
 
-   text	   data	    bss	    dec	    hex	filename
-   2077	      0	      0	   2077	    81d fs/xfs/libxfs/xfs_types.o.orig
-   2197	      0	      0	   2197	    895	fs/xfs/libxfs/xfs_types.o
+These changes make scalability testing with 64kB directory blocks on
+debug kernels possible.
 
-There's a small increase in binary size by inlining all the local
-nested calls in the verifier functions, but the same workload now
-profiles as:
+Cheers,
 
-  40.69%  [kernel]  [k] xfs_dir3_leaf_check_int
-  10.52%  [kernel]  [k] __xfs_dir3_data_check
-   6.68%  [kernel]  [k] xfs_verify_dir_ino
-   4.22%  [kernel]  [k] xfs_errortag_test
-   4.15%  [kernel]  [k] memcpy
-   3.53%  [kernel]  [k] xfs_dir_ino_validate
-   1.87%  [kernel]  [k] xfs_dir2_data_get_ftype
-   1.37%  [kernel]  [k] do_raw_spin_lock
-   0.98%  [kernel]  [k] xfs_buf_find
-   0.94%  [kernel]  [k] __raw_callee_save___pv_queued_spin_unlock
-   0.73%  [kernel]  [k] xfs_log_commit_cil
-
-Now we only spend just over 10% of the time validing inode numbers
-for the same workload. Hence a few "inline" keyworks is good enough
-to reduce the validation overhead by 30%...
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_types.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index b254fbeaaa50..04801362e1a7 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -13,7 +13,7 @@
- #include "xfs_mount.h"
- 
- /* Find the size of the AG, in blocks. */
--xfs_agblock_t
-+inline xfs_agblock_t
- xfs_ag_block_count(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno)
-@@ -29,7 +29,7 @@ xfs_ag_block_count(
-  * Verify that an AG block number pointer neither points outside the AG
-  * nor points at static metadata.
-  */
--bool
-+inline bool
- xfs_verify_agbno(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
-@@ -49,7 +49,7 @@ xfs_verify_agbno(
-  * Verify that an FS block number pointer neither points outside the
-  * filesystem nor points at static AG metadata.
-  */
--bool
-+inline bool
- xfs_verify_fsbno(
- 	struct xfs_mount	*mp,
- 	xfs_fsblock_t		fsbno)
-@@ -85,7 +85,7 @@ xfs_verify_fsbext(
- }
- 
- /* Calculate the first and last possible inode number in an AG. */
--void
-+inline void
- xfs_agino_range(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
-@@ -116,7 +116,7 @@ xfs_agino_range(
-  * Verify that an AG inode number pointer neither points outside the AG
-  * nor points at static metadata.
-  */
--bool
-+inline bool
- xfs_verify_agino(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
-@@ -146,7 +146,7 @@ xfs_verify_agino_or_null(
-  * Verify that an FS inode number pointer neither points outside the
-  * filesystem nor points at static AG metadata.
-  */
--bool
-+inline bool
- xfs_verify_ino(
- 	struct xfs_mount	*mp,
- 	xfs_ino_t		ino)
-@@ -162,7 +162,7 @@ xfs_verify_ino(
- }
- 
- /* Is this an internal inode number? */
--bool
-+inline bool
- xfs_internal_inum(
- 	struct xfs_mount	*mp,
- 	xfs_ino_t		ino)
-@@ -190,7 +190,7 @@ xfs_verify_dir_ino(
-  * Verify that an realtime block number pointer doesn't point off the
-  * end of the realtime device.
-  */
--bool
-+inline bool
- xfs_verify_rtbno(
- 	struct xfs_mount	*mp,
- 	xfs_rtblock_t		rtbno)
-@@ -215,7 +215,7 @@ xfs_verify_rtext(
- }
- 
- /* Calculate the range of valid icount values. */
--void
-+inline void
- xfs_icount_range(
- 	struct xfs_mount	*mp,
- 	unsigned long long	*min,
--- 
-2.28.0
+Dave.
 
