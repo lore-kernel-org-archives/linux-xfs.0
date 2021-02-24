@@ -7,269 +7,154 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38C83C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 18:44:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F7E7C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 18:45:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E032664F0A
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 18:44:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2869964F0C
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 18:45:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235010AbhBXSo3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 13:44:29 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:44393 "EHLO
+        id S232933AbhBXSpC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Feb 2021 13:45:02 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:45214 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235031AbhBXSo1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 13:44:27 -0500
+        by vger.kernel.org with ESMTP id S231561AbhBXSpB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 13:45:01 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1614192180;
+        s=mimecast20190719; t=1614192215;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=sWHrOakKe4QkkabxuB7amees8mB2WTQZA+cIiBlDfEA=;
-        b=DsS7NIbCdDB29qHQewFoocPNUhZ0jeVDMeU8cP9eRiF5VmiixIGLOTIK1ebe8cHUDWCYR/
-        Qf1r1ImBLfOX5ag56GzJYmtlYfUuAdd32XQyUyAG7/CQ5tz9LrFUMwL3KxRioeySB0q4se
-        5N8kVDfctMACNKH6EwAe6lnsulE0GGg=
+        bh=AXzTwejnm0Y+RJIoyQZvBLfmo91qdJPSXWYBxN5FImc=;
+        b=hmBtMsaeYys8nCbGYh3/ZJuC1yUG0zp9XJG0njncZ9VEJW5+mqptzoLCRpzV0Sp4Y0CLO3
+        b1sYPS9RcbEcZwplOT8odoHJxb/ZOedr02YuHTJievaEeWcqLuK/yGTmDz8eJdM0Ee1cXk
+        yAvATzO+67mJGz1s9WI15bWg0yxqsd0=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-573-mebM3spAMLiPUnWPO5RAVw-1; Wed, 24 Feb 2021 13:42:58 -0500
-X-MC-Unique: mebM3spAMLiPUnWPO5RAVw-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+ us-mta-576-SErzQ3l-PfyZqjztH5dXdw-1; Wed, 24 Feb 2021 13:43:31 -0500
+X-MC-Unique: SErzQ3l-PfyZqjztH5dXdw-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2809C874982;
-        Wed, 24 Feb 2021 18:42:57 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9F375874988;
+        Wed, 24 Feb 2021 18:43:30 +0000 (UTC)
 Received: from bfoster (ovpn-119-92.rdu2.redhat.com [10.10.119.92])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A194C5D9D3;
-        Wed, 24 Feb 2021 18:42:56 +0000 (UTC)
-Date:   Wed, 24 Feb 2021 13:42:54 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3C71D6E515;
+        Wed, 24 Feb 2021 18:43:30 +0000 (UTC)
+Date:   Wed, 24 Feb 2021 13:43:28 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v15 08/22] xfs: Hoist xfs_attr_node_addname
-Message-ID: <20210224184254.GJ981777@bfoster>
+Subject: Re: [PATCH v15 10/22] xfs: Hoist node transaction handling
+Message-ID: <20210224184328.GK981777@bfoster>
 References: <20210218165348.4754-1-allison.henderson@oracle.com>
- <20210218165348.4754-9-allison.henderson@oracle.com>
+ <20210218165348.4754-11-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210218165348.4754-9-allison.henderson@oracle.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <20210218165348.4754-11-allison.henderson@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 18, 2021 at 09:53:34AM -0700, Allison Henderson wrote:
-> This patch hoists the later half of xfs_attr_node_addname into
-> the calling function.  We do this because it is this area that
-> will need the most state management, and we want to keep such
-> code in the same scope as much as possible
+On Thu, Feb 18, 2021 at 09:53:36AM -0700, Allison Henderson wrote:
+> This patch basically hoists the node transaction handling around the
+> leaf code we just hoisted.  This will helps setup this area for the
+> state machine since the goto is easily replaced with a state since it
+> ends with a transaction roll.
 > 
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 165 ++++++++++++++++++++++++-----------------------
->  1 file changed, 83 insertions(+), 82 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c | 53 +++++++++++++++++++++++++-----------------------
+>  1 file changed, 28 insertions(+), 25 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 4333b61..19a532a 100644
+> index bfd4466..56d4b56 100644
 > --- a/fs/xfs/libxfs/xfs_attr.c
 > +++ b/fs/xfs/libxfs/xfs_attr.c
-...
-> @@ -320,8 +322,82 @@ xfs_attr_set_args(
->  			return error;
->  		error = xfs_attr_node_addname(args, state);
->  	} while (error == -EAGAIN);
-> +	if (error)
-> +		return error;
+> @@ -288,8 +288,34 @@ xfs_attr_set_args(
+>  
+>  	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+>  		error = xfs_attr_leaf_try_add(args, bp);
+> -		if (error == -ENOSPC)
+> +		if (error == -ENOSPC) {
+> +			/*
+> +			 * Promote the attribute list to the Btree format.
+> +			 */
+> +			error = xfs_attr3_leaf_to_node(args);
+> +			if (error)
+> +				return error;
 > +
-> +	/*
-> +	 * Commit the leaf addition or btree split and start the next
-> +	 * trans in the chain.
-> +	 */
-> +	error = xfs_trans_roll_inode(&args->trans, dp);
-> +	if (error)
-> +		goto out;
+> +			/*
+> +			 * Finish any deferred work items and roll the transaction once
+> +			 * more.  The goal here is to call node_addname with the inode
+> +			 * and transaction in the same state (inode locked and joined,
+> +			 * transaction clean) no matter how we got to this step.
+> +			 */
+> +			error = xfs_defer_finish(&args->trans);
+> +			if (error)
+> +				return error;
 > +
-> +	/*
-> +	 * If there was an out-of-line value, allocate the blocks we
-> +	 * identified for its storage and copy the value.  This is done
-> +	 * after we create the attribute so that we don't overflow the
-> +	 * maximum size of a transaction and/or hit a deadlock.
-> +	 */
-> +	if (args->rmtblkno > 0) {
-> +		error = xfs_attr_rmtval_set(args);
-> +		if (error)
-> +			return error;
-> +	}
+> +			/*
+> +			 * Commit the current trans (including the inode) and
+> +			 * start a new one.
+> +			 */
+> +			error = xfs_trans_roll_inode(&args->trans, dp);
+> +			if (error)
+> +				return error;
 > +
-> +	if (!(args->op_flags & XFS_DA_OP_RENAME)) {
-> +		/*
-> +		 * Added a "remote" value, just clear the incomplete flag.
-> +		 */
-> +		if (args->rmtblkno > 0)
-> +			error = xfs_attr3_leaf_clearflag(args);
-> +		retval = error;
+>  			goto node;
+> +		}
+>  		else if (error)
 
-It looks like this is the only use of retval. Otherwise this function is
-getting a bit big, but the factoring LGTM:
+		} else if (error) {
+			return error;
+		}
+
+(I think we usually try to add braces around all branches of an if/else
+if at least one branch requires them.)
+
+Otherwise, the factoring looks Ok to me and this does improve on the
+wart from the previous patch:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> +		goto out;
+>  			return error;
+>  
+> @@ -381,32 +407,9 @@ xfs_attr_set_args(
+>  			/* bp is gone due to xfs_da_shrink_inode */
+>  
+>  		return error;
 > +	}
-> +
-> +	/*
-> +	 * If this is an atomic rename operation, we must "flip" the incomplete
-> +	 * flags on the "new" and "old" attribute/value pairs so that one
-> +	 * disappears and one appears atomically.  Then we must remove the "old"
-> +	 * attribute/value pair.
-> +	 *
-> +	 * In a separate transaction, set the incomplete flag on the "old" attr
-> +	 * and clear the incomplete flag on the "new" attr.
-> +	 */
-> +	error = xfs_attr3_leaf_flipflags(args);
-> +	if (error)
-> +		goto out;
-> +	/*
-> +	 * Commit the flag value change and start the next trans in series
-> +	 */
-> +	error = xfs_trans_roll_inode(&args->trans, args->dp);
-> +	if (error)
-> +		goto out;
-> +
-> +	/*
-> +	 * Dismantle the "old" attribute/value pair by removing a "remote" value
-> +	 * (if it exists).
-> +	 */
-> +	xfs_attr_restore_rmt_blk(args);
-> +
-> +	if (args->rmtblkno) {
-> +		error = xfs_attr_rmtval_invalidate(args);
-> +		if (error)
-> +			return error;
-> +
-> +		error = xfs_attr_rmtval_remove(args);
-> +		if (error)
-> +			return error;
-> +	}
-> +
-> +	error = xfs_attr_node_addname_work(args);
-> +out:
-> +	if (state)
-> +		xfs_da_state_free(state);
-> +	if (error)
-> +		return error;
-> +	return retval;
->  
-> -	return error;
->  }
->  
->  /*
-> @@ -955,7 +1031,7 @@ xfs_attr_node_addname(
->  {
->  	struct xfs_da_state_blk	*blk;
->  	struct xfs_inode	*dp;
-> -	int			retval, error;
-> +	int			error;
->  
->  	trace_xfs_attr_node_addname(args);
->  
-> @@ -963,8 +1039,8 @@ xfs_attr_node_addname(
->  	blk = &state->path.blk[state->path.active-1];
->  	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
->  
-> -	retval = xfs_attr3_leaf_add(blk->bp, state->args);
-> -	if (retval == -ENOSPC) {
-> +	error = xfs_attr3_leaf_add(blk->bp, state->args);
-> +	if (error == -ENOSPC) {
->  		if (state->path.active == 1) {
->  			/*
->  			 * Its really a single leaf node, but it had
-> @@ -1010,85 +1086,10 @@ xfs_attr_node_addname(
->  		xfs_da3_fixhashpath(state, &state->path);
->  	}
->  
-> -	/*
-> -	 * Kill the state structure, we're done with it and need to
-> -	 * allow the buffers to come back later.
-> -	 */
-> -	xfs_da_state_free(state);
-> -	state = NULL;
-> -
-> -	/*
-> -	 * Commit the leaf addition or btree split and start the next
-> -	 * trans in the chain.
-> -	 */
-> -	error = xfs_trans_roll_inode(&args->trans, dp);
-> -	if (error)
-> -		goto out;
-> -
-> -	/*
-> -	 * If there was an out-of-line value, allocate the blocks we
-> -	 * identified for its storage and copy the value.  This is done
-> -	 * after we create the attribute so that we don't overflow the
-> -	 * maximum size of a transaction and/or hit a deadlock.
-> -	 */
-> -	if (args->rmtblkno > 0) {
-> -		error = xfs_attr_rmtval_set(args);
-> -		if (error)
-> -			return error;
-> -	}
-> -
-> -	if (!(args->op_flags & XFS_DA_OP_RENAME)) {
+>  node:
 > -		/*
-> -		 * Added a "remote" value, just clear the incomplete flag.
+> -		 * Promote the attribute list to the Btree format.
 > -		 */
-> -		if (args->rmtblkno > 0)
-> -			error = xfs_attr3_leaf_clearflag(args);
-> -		retval = error;
-> -		goto out;
-> -	}
-> -
-> -	/*
-> -	 * If this is an atomic rename operation, we must "flip" the incomplete
-> -	 * flags on the "new" and "old" attribute/value pairs so that one
-> -	 * disappears and one appears atomically.  Then we must remove the "old"
-> -	 * attribute/value pair.
-> -	 *
-> -	 * In a separate transaction, set the incomplete flag on the "old" attr
-> -	 * and clear the incomplete flag on the "new" attr.
-> -	 */
-> -	error = xfs_attr3_leaf_flipflags(args);
-> -	if (error)
-> -		goto out;
-> -	/*
-> -	 * Commit the flag value change and start the next trans in series
-> -	 */
-> -	error = xfs_trans_roll_inode(&args->trans, args->dp);
-> -	if (error)
-> -		goto out;
-> -
-> -	/*
-> -	 * Dismantle the "old" attribute/value pair by removing a "remote" value
-> -	 * (if it exists).
-> -	 */
-> -	xfs_attr_restore_rmt_blk(args);
-> -
-> -	if (args->rmtblkno) {
-> -		error = xfs_attr_rmtval_invalidate(args);
+> -		error = xfs_attr3_leaf_to_node(args);
 > -		if (error)
 > -			return error;
 > -
-> -		error = xfs_attr_rmtval_remove(args);
+> -		/*
+> -		 * Finish any deferred work items and roll the transaction once
+> -		 * more.  The goal here is to call node_addname with the inode
+> -		 * and transaction in the same state (inode locked and joined,
+> -		 * transaction clean) no matter how we got to this step.
+> -		 */
+> -		error = xfs_defer_finish(&args->trans);
+> -		if (error)
+> -			return error;
+>  
+> -		/*
+> -		 * Commit the current trans (including the inode) and
+> -		 * start a new one.
+> -		 */
+> -		error = xfs_trans_roll_inode(&args->trans, dp);
 > -		if (error)
 > -			return error;
 > -	}
-> -
-> -	error = xfs_attr_node_addname_work(args);
->  out:
->  	if (state)
->  		xfs_da_state_free(state);
-> -	if (error)
-> -		return error;
-> -	return retval;
-> +	return error;
->  }
 >  
->  
+>  	do {
+>  		error = xfs_attr_node_addname_find_attr(args, &state);
 > -- 
 > 2.7.4
 > 
