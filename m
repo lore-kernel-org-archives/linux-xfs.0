@@ -2,214 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FA0BC433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 02:08:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 660A1C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 03:11:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 139BA64E83
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 02:08:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F24FF64E2B
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 03:10:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230434AbhBXCIW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Feb 2021 21:08:22 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54006 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230429AbhBXCIW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Feb 2021 21:08:22 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0CA6F64E85;
-        Wed, 24 Feb 2021 02:07:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614132461;
-        bh=EP2Thve01BLr26z6Q8QsD7es7YpjPkTRzJRWWcz2u5w=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ram6m0Yt6pxHHe1UbeIUhBKPY2GrXGLoyjCQIrMUOmCbp2jZD5qI0RIWq3I6UOLUZ
-         n0U+cS7ktANpUromqYjoHbdOGfUpi0uGEYcmvhAd5B/f1HMMi9kCrtfeptsMrsE1Fu
-         /RcQuOrhwYbccY/6zyyRnIgNtHMaF2PWf33RAPS027NshuLhfp+w9Shi8C8Us8jwqM
-         ZEr/ePH/+tmC+doilOc18uxq2WTdAWhSfrQE/r558w+C/JUDvMQ97xHk5X6yFmRpRF
-         WDkYiAQIEACuTH/Kmojei6JKx2mUfHifVeBSoTz2DBiRTsbwvNZWr7Sof34j1Xss/K
-         IGRrQfDU2/m+g==
-Date:   Tue, 23 Feb 2021 18:07:40 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org, hch@lst.de, bfoster@redhat.com
-Subject: Re: [PATCH 1/5] man: mark all deprecated V4 format options
-Message-ID: <20210224020740.GO7272@magnolia>
-References: <161404928523.425731.7157248967184496592.stgit@magnolia>
- <161404929091.425731.465351236842105610.stgit@magnolia>
- <14656568-caf9-c931-2387-e06f171d1ead@sandeen.net>
+        id S229961AbhBXDKn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Feb 2021 22:10:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51374 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229952AbhBXDKm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Feb 2021 22:10:42 -0500
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77188C061574
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Feb 2021 19:10:02 -0800 (PST)
+Received: by mail-pg1-x535.google.com with SMTP id g4so571866pgj.0
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Feb 2021 19:10:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=F9pj/Yt9KqTFsOfQSkWuMZ91EvZ0O1vUGeWGb7abBgs=;
+        b=vaVqGB5DOwLDXGdra9P0bbpRQjS/NO0UFgTBS6Q6Y8zblalA60/4sl17vVVFftrjuh
+         M7QO68yhNxJildKs5IE6RabjSnljqDSqokNsvt+DcMYSeQrz06rozYaHNVTuboc6aiqY
+         8c+uPK3BHVyElPqpCpGewZClIzSpCxS//GUytEtmAFHWgn5f21J1VrssTu9/Y4hVjYI5
+         r5B4HSTOVGYH0Q1bBim8tH6d2dHO+Bd4se8/CUPYCq8PRITUChl64fy440IGJJ5OG1/n
+         zMF1mShR/3zgfDUBQc/dnCraxkmQ+2zGP5ozwNAJazGU6p91ro7Ez7621S2sahTfuAem
+         eqJw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=F9pj/Yt9KqTFsOfQSkWuMZ91EvZ0O1vUGeWGb7abBgs=;
+        b=Mc0hHXXzz3IoiMZxFtnkE1AqpfelqyyqvmthkIhRsund49sKT7a/nKFesjuP8Jkmy1
+         TSTYvXgFzRV3BrUn1ImWeOJoqDZLdZGy4Xwjh1SMuah1qGIWV/wAjVCk0zlXALzyWA6C
+         n2IL11qa51AIlssy8v9MFY5aNVEP5H4HHRa+ohNNQ/6AYMkhSBZ53+Xr0uZ8+6lQ1KKl
+         52cVC9u5WF8bI/UyjawPiYo903Tl4+uR9THZDsHtEZLchn+u8MykTuM7v2G1Y0XaMBes
+         0ftcLY1mN1z3SSboqdpjc+vGnwNi5QRSeeIMiB5xVXJjGWWylspX+HA+dCj/tECFyL2j
+         H+1A==
+X-Gm-Message-State: AOAM533nEWkpSlKQ/ShtfB+rryUA5CgHVQnhZLGvABumBg1QMJuSynmU
+        kwoliVqTR58efjBvVpzk+JOJcFk1lz0=
+X-Google-Smtp-Source: ABdhPJwf9uaVGOPG/U+RLF8JeH+nKC14lt9heXepDH32zL3DjAqvWmW/5YENRM/wZldi/dNNly1xEg==
+X-Received: by 2002:a63:e614:: with SMTP id g20mr15564075pgh.275.1614136201681;
+        Tue, 23 Feb 2021 19:10:01 -0800 (PST)
+Received: from garuda ([122.171.161.92])
+        by smtp.gmail.com with ESMTPSA id 14sm581083pfy.55.2021.02.23.19.10.00
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 23 Feb 2021 19:10:01 -0800 (PST)
+References: <20210223082629.16719-1-chandanrlinux@gmail.com> <20210223203013.GX4662@dread.disaster.area>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: Allow scrub to detect inodes with non-maximal sized extents
+In-reply-to: <20210223203013.GX4662@dread.disaster.area>
+Date:   Wed, 24 Feb 2021 08:39:58 +0530
+Message-ID: <87mtvu17qx.fsf@garuda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <14656568-caf9-c931-2387-e06f171d1ead@sandeen.net>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 23, 2021 at 06:26:05PM -0600, Eric Sandeen wrote:
-> On 2/22/21 9:01 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Update the manual pages for the most popular tools to note which options
-> > are only useful with the V4 XFS format, and that the V4 format is
-> > deprecated and will be removed no later than September 2030.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  man/man8/mkfs.xfs.8  |   16 ++++++++++++++++
-> >  man/man8/xfs_admin.8 |   10 ++++++++++
-> >  2 files changed, 26 insertions(+)
-> > 
-> > 
-> > diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-> > index fac82d74..df25abaa 100644
-> > --- a/man/man8/mkfs.xfs.8
-> > +++ b/man/man8/mkfs.xfs.8
-> > @@ -223,6 +223,11 @@ of calculating and checking the CRCs is not noticeable in normal operation.
-> >  By default,
-> >  .B mkfs.xfs
-> >  will enable metadata CRCs.
-> > +.IP
-> > +Formatting a filesystem without CRCs selects the V4 format, which is deprecated
-> > +and will be removed from upstream in September 2030.
-> 
-> Can I add:
-> 
-> + Several other options, noted below, are only tunable on V4 formats, and will
-> + be removed along with the V4 format itself.
+On 24 Feb 2021 at 02:00, Dave Chinner wrote:
+> On Tue, Feb 23, 2021 at 01:56:29PM +0530, Chandan Babu R wrote:
+>> This commit now makes it possible for scrub to check if an inode's extents are
+>> maximally sized i.e. it checks if an inode's extent is contiguous (in terms of
+>> both file offset and disk offset) with neighbouring extents and the total
+>> length of both the extents is less than the maximum allowed extent
+>> length (i.e. MAXEXTLEN).
+>
+> It took me a while to understand that what this is actually doing
+> (had to read the code because I couldn't work out what this meant).
+> Essentially, it is determining if two extents that are physically
+> and logically adjacent were not merged together into a single extent
+> when the combined size of the two extents would fit into a single
+> extent record.
+>
+> I'm not sure this is an issue - it most definitely isn't corruption
+> as nothing will have any problems looking up either extent, nor
+> modifying or removing either extent. It's not ideal, but it isn't
+> corruption.
+>
+> I can see how it would come about, too, because extent removal
+> doesn't merge remaining partial extents.
+>
+> That is, create a long written extent in a file, then use fallocate
+> to allocate an adjacent extent that puts the two extents over
+> MAXEXTLEN. Now we have two phsyically and logically adjacent extents
+> that only differ by state. Now do a single write that converts the
+> entire unwritten extent to written so no merging occurs during the
+> state conversion.  Now punch out the far end of the second extent.
+>
+> This ends up in xfs_bmap_del_extent_real(), which simply removes the
+> end of the second extent. It does not look up the previous extent
+> and attempt to merge the remaining part of the second extent into
+> the previous adjacent extent.
+>
+> Hence, at this point, we have two logically and physically adjacent
+> extents whose combined length is less than MAXLEN. This patch will
+> now signal that as corruption, which is wrong.
 
-Ok.
+Ah ok. Thanks for explaining the scenario which could lead to a false positive
+report because of the code changes in this patch.
 
-> > +Distributors may choose to withdraw support for the V4 format earlier than
-> > +this date.
-> >  .TP
-> >  .BI finobt= value
-> >  This option enables the use of a separate free inode btree index in each
-> > @@ -592,6 +597,8 @@ This option can be used to turn off inode alignment when the
-> >  filesystem needs to be mountable by a version of IRIX
-> >  that does not have the inode alignment feature
-> >  (any release of IRIX before 6.2, and IRIX 6.2 without XFS patches).
-> > +.IP
-> > +This option only applies to the deprecated V4 format.
-> 
-> and can I change this (and other mkfs option notes) to:
-> 
-> + This option is only tunable on the deprecated V4 format.
-> 
-> because we actually do accept i.e. "-i attr=2" on a V5 format today.
-> 
-> so, "you can't tune it on v5, and it goes away when v4 does" seems to
-> capture what you want the user to know.
-
-Assuming we don't add an attr=3 in the meantime.
-
-Though really, I think we should just introduce new feature flags from
-now on, and not have these "versioned" features where every time I see
-one I have to go look up what the number means.
-
-> >  .TP
-> >  .BI attr= value
-> >  This is used to specify the version of extended attribute inline
-> > @@ -602,6 +609,8 @@ between attribute and extent data.
-> >  The previous version 1, which has fixed regions for attribute and
-> >  extent data, is kept for backwards compatibility with kernels older
-> >  than version 2.6.16.
-> > +.IP
-> > +This option only applies to the deprecated V4 format.
-> >  .TP
-> >  .BI projid32bit[= value ]
-> >  This is used to enable 32bit quota project identifiers. The
-> > @@ -609,6 +618,8 @@ This is used to enable 32bit quota project identifiers. The
-> >  is either 0 or 1, with 1 signifying that 32bit projid are to be enabled.
-> >  If the value is omitted, 1 is assumed.  (This default changed
-> >  in release version 3.2.0.)
-> > +.IP
-> > +This option only applies to the deprecated V4 format.
-> >  .TP
-> >  .BI sparse[= value ]
-> >  Enable sparse inode chunk allocation. The
-> > @@ -690,6 +701,7 @@ stripe-aligned log writes (see the sunit and su options, below).
-> >  The previous version 1, which is limited to 32k log buffers and does
-> >  not support stripe-aligned writes, is kept for backwards compatibility
-> >  with very old 2.4 kernels.
-> > +This option only applies to the deprecated V4 format.
-> >  .TP
-> >  .BI sunit= value
-> >  This specifies the alignment to be used for log writes. The
-> > @@ -744,6 +756,8 @@ is 1 (on) so you must specify
-> >  .B lazy-count=0
-> >  if you want to disable this feature for older kernels which don't support
-> >  it.
-> > +.IP
-> > +This option only applies to the deprecated V4 format.
-> >  .RE
-> >  .PP
-> >  .PD 0
-> > @@ -803,6 +817,8 @@ will be stored in the directory structure.  The default value is 1.
-> >  When CRCs are enabled (the default), the ftype functionality is always
-> >  enabled, and cannot be turned off.
-> >  .IP
-> > +This option only applies to the deprecated V4 format.
-> > +.IP
-> >  .RE
-> >  .TP
-> >  .BI \-p " protofile"
-> > diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-> > index cccbb224..5ef99316 100644
-> > --- a/man/man8/xfs_admin.8
-> > +++ b/man/man8/xfs_admin.8
-> > @@ -54,6 +54,8 @@ for a detailed description of the XFS log.
-> >  Enables unwritten extent support on a filesystem that does not
-> >  already have this enabled (for legacy filesystems, it can't be
-> >  disabled anymore at mkfs time).
-> > +.IP
-> > +This option only applies to the deprecated V4 format.
-> >  .TP
-> >  .B \-f
-> >  Specifies that the filesystem image to be processed is stored in a
-> > @@ -67,12 +69,16 @@ option).
-> >  .B \-j
-> >  Enables version 2 log format (journal format supporting larger
-> >  log buffers).
-> > +.IP
-> > +This option only applies to the deprecated V4 format.
-> >  .TP
-> >  .B \-l
-> >  Print the current filesystem label.
-> >  .TP
-> >  .B \-p
-> >  Enable 32bit project identifier support (PROJID32BIT feature).
-> > +.IP
-> > +This option only applies to the deprecated V4 format.
-> >  .TP
-> >  .B \-u
-> >  Print the current filesystem UUID (Universally Unique IDentifier).
-> > @@ -83,6 +89,8 @@ Enable (1) or disable (0) lazy-counters in the filesystem.
-> >  Lazy-counters may not be disabled on Version 5 superblock filesystems
-> >  (i.e. those with metadata CRCs enabled).
-> >  .IP
-> > +In other words, this option only applies to the deprecated V4 format.
-> > +.IP
-> >  This operation may take quite a bit of time on large filesystems as the
-> >  entire filesystem needs to be scanned when this option is changed.
-> >  .IP
-> > @@ -92,6 +100,8 @@ information is kept in other parts of the filesystem to be able to
-> >  maintain the counter values without needing to keep them in the
-> >  superblock. This gives significant improvements in performance on some
-> >  configurations and metadata intensive workloads.
-> > +.IP
-> > +This option only applies to the deprecated V4 format.
-> 
-> I think you're restated it here in the same section; I can just drop this extra
-> one if you concur.
-
-Ok, yes, thanks. :)
-
---D
-
-> >  .TP
-> >  .BI \-L " label"
-> >  Set the filesystem label to
-> > 
+--
+chandan
