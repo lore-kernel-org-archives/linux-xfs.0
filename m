@@ -2,184 +2,325 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F195C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:11:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52C6FC433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:14:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC8EF64F03
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:11:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBF0B64F06
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:14:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230083AbhBXVLp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 16:11:45 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:54871 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229886AbhBXVLm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 16:11:42 -0500
-Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 803B61ADE1C
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Feb 2021 08:10:59 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lF1Qw-002iFi-J7
-        for linux-xfs@vger.kernel.org; Thu, 25 Feb 2021 08:10:58 +1100
-Date:   Thu, 25 Feb 2021 08:10:58 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: AIL needs asynchronous CIL forcing
-Message-ID: <20210224211058.GA4662@dread.disaster.area>
-References: <20210223053212.3287398-1-david@fromorbit.com>
- <20210223053212.3287398-3-david@fromorbit.com>
+        id S232496AbhBXVOV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Feb 2021 16:14:21 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47460 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229886AbhBXVOU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 Feb 2021 16:14:20 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7518464F03;
+        Wed, 24 Feb 2021 21:13:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614201218;
+        bh=GrtELNmYzdI5H5l1pEpQJScv/My/WFJCFAXewpEc/4A=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=p66KvDXdXvstK7fE4NtQOJF1P5omp46YLvHJESzBRDf56hlFfZiRfAjM26JZjhxXL
+         /IyaZxC/gBPkIKbPxi+2YPFsxeRbsW+OmpQs1rYng/SpgX7PBrG+N+VZrB1WxeGJf+
+         7UY5Y7v+h9jHlGkhp5Ho4k/Q/HnPVYnVXNuqW83mMFjWh+1mng+eoXCkpD9Fb4MbUC
+         3PwKcGSjFZEJFP9lgmck9KetdvdC/s2jFePp6s3T48eODhkKYf0I8lUluRG/NYqZDC
+         qOk4O7D/GOZQ3u8ybGI06mXF1xDzHZHQlY8yYpaPsZXshwdyp6rxO8JVKp029zW/yn
+         xtVASB0m+eWbg==
+Date:   Wed, 24 Feb 2021 13:13:37 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/8 v2] xfs: journal IO cache flush reductions
+Message-ID: <20210224211337.GW7272@magnolia>
+References: <20210223033442.3267258-1-david@fromorbit.com>
+ <20210223033442.3267258-8-david@fromorbit.com>
+ <20210223080503.GW4662@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210223053212.3287398-3-david@fromorbit.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=fANzahRz4QIE9oshsjYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210223080503.GW4662@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 23, 2021 at 04:32:11PM +1100, Dave Chinner wrote:
+On Tue, Feb 23, 2021 at 07:05:03PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The AIL pushing is stalling on log forces when it comes across
-> pinned items. This is happening on removal workloads where the AIL
-> is dominated by stale items that are removed from AIL when the
-> checkpoint that marks the items stale is committed to the journal.
-> This results is relatively few items in the AIL, but those that are
-> are often pinned as directories items are being removed from are
-> still being logged.
+> Currently every journal IO is issued as REQ_PREFLUSH | REQ_FUA to
+> guarantee the ordering requirements the journal has w.r.t. metadata
+> writeback. THe two ordering constraints are:
 > 
-> As a result, many push cycles through the CIL will first issue a
-> blocking log force to unpin the items. This can take some time to
-> complete, with tracing regularly showing push delays of half a
-> second and sometimes up into the range of several seconds. Sequences
-> like this aren't uncommon:
+> 1. we cannot overwrite metadata in the journal until we guarantee
+> that the dirty metadata has been written back in place and is
+> stable.
 > 
-> ....
->  399.829437:  xfsaild: last lsn 0x11002dd000 count 101 stuck 101 flushing 0 tout 20
-> <wanted 20ms, got 270ms delay>
->  400.099622:  xfsaild: target 0x11002f3600, prev 0x11002f3600, last lsn 0x0
->  400.099623:  xfsaild: first lsn 0x11002f3600
->  400.099679:  xfsaild: last lsn 0x1100305000 count 16 stuck 11 flushing 0 tout 50
-> <wanted 50ms, got 500ms delay>
->  400.589348:  xfsaild: target 0x110032e600, prev 0x11002f3600, last lsn 0x0
->  400.589349:  xfsaild: first lsn 0x1100305000
->  400.589595:  xfsaild: last lsn 0x110032e600 count 156 stuck 101 flushing 30 tout 50
-> <wanted 50ms, got 460ms delay>
->  400.950341:  xfsaild: target 0x1100353000, prev 0x110032e600, last lsn 0x0
->  400.950343:  xfsaild: first lsn 0x1100317c00
->  400.950436:  xfsaild: last lsn 0x110033d200 count 105 stuck 101 flushing 0 tout 20
-> <wanted 20ms, got 200ms delay>
->  401.142333:  xfsaild: target 0x1100361600, prev 0x1100353000, last lsn 0x0
->  401.142334:  xfsaild: first lsn 0x110032e600
->  401.142535:  xfsaild: last lsn 0x1100353000 count 122 stuck 101 flushing 8 tout 10
-> <wanted 10ms, got 10ms delay>
->  401.154323:  xfsaild: target 0x1100361600, prev 0x1100361600, last lsn 0x1100353000
->  401.154328:  xfsaild: first lsn 0x1100353000
->  401.154389:  xfsaild: last lsn 0x1100353000 count 101 stuck 101 flushing 0 tout 20
-> <wanted 20ms, got 300ms delay>
->  401.451525:  xfsaild: target 0x1100361600, prev 0x1100361600, last lsn 0x0
->  401.451526:  xfsaild: first lsn 0x1100353000
->  401.451804:  xfsaild: last lsn 0x1100377200 count 170 stuck 22 flushing 122 tout 50
-> <wanted 50ms, got 500ms delay>
->  401.933581:  xfsaild: target 0x1100361600, prev 0x1100361600, last lsn 0x0
-> ....
+> 2. we cannot write back dirty metadata until it has been written to
+> the journal and guaranteed to be stable (and hence recoverable) in
+> the journal.
 > 
-> In each of these cases, every AIL pass saw 101 log items stuck on
-> the AIL (pinned) with very few other items being found. Each pass, a
-> log force was issued, and delay between last/first is the sleep time
-> + the sync log force time.
+> The ordering guarantees of #1 are provided by REQ_PREFLUSH. This
+> causes the journal IO to issue a cache flush and wait for it to
+> complete before issuing the write IO to the journal. Hence all
+> completed metadata IO is guaranteed to be stable before the journal
+> overwrites the old metadata.
 > 
-> Some of these 101 items pinned the tail of the log. The tail of the
-> log does slowly creep forward (first lsn), but the problem is that
-> the log is actually out of reservation space because it's been
-> running so many transactions that stale items that never reach the
-> AIL but consume log space. Hence we have a largely empty AIL, with
-> long term pins on items that pin the tail of the log that don't get
-> pushed frequently enough to keep log space available.
+> The ordering guarantees of #2 are provided by the REQ_FUA, which
+> ensures the journal writes do not complete until they are on stable
+> storage. Hence by the time the last journal IO in a checkpoint
+> completes, we know that the entire checkpoint is on stable storage
+> and we can unpin the dirty metadata and allow it to be written back.
 > 
-> The problem is the hundreds of milliseconds that we block in the log
-> force pushing the CIL out to disk. The AIL should not be stalled
-> like this - it needs to run and flush items that are at the tail of
-> the log with minimal latency. What we really need to do is trigger a
-> log flush, but then not wait for it at all - we've already done our
-> waiting for stuff to complete when we backed off prior to the log
-> force being issued.
+> This is the mechanism by which ordering was first implemented in XFS
+> way back in 2002 by this commit:
 > 
-> Even if we remove the XFS_LOG_SYNC from the xfs_log_force() call, we
-> still do a blocking flush of the CIL and that is what is causing the
-> issue. Hence we need a new interface for the CIL to trigger an
-> immediate background push of the CIL to get it moving faster but not
-> to wait on that to occur. While the CIL is pushing, the AIL can also
-> be pushing.
+> commit 95d97c36e5155075ba2eb22b17562cfcc53fcf96
+> Author: Steve Lord <lord@sgi.com>
+> Date:   Fri May 24 14:30:21 2002 +0000
 > 
-> We already have an internal interface to do this -
-> xlog_cil_push_now() - but we need a wrapper for it to be used
-> externally. xlog_cil_force_seq() can easily be extended to do what
-> we need as it already implements the synchronous CIL push via
-> xlog_cil_push_now(). Add the necessary flags and "push current
-> sequence" semantics to xlog_cil_force_seq() and convert the AIL
-> pushing to use it.
+>     Add support for drive write cache flushing - should the kernel
+>     have the infrastructure
+> 
+> A lot has changed since then, most notably we now use delayed
+> logging to checkpoint the filesystem to the journal rather than
+> write each individual transaction to the journal. Cache flushes on
+> journal IO are necessary when individual transactions are wholly
+> contained within a single iclog. However, CIL checkpoints are single
+> transactions that typically span hundreds to thousands of individual
+> journal writes, and so the requirements for device cache flushing
+> have changed.
+> 
+> That is, the ordering rules I state above apply to ordering of
+> atomic transactions recorded in the journal, not to the journal IO
+> itself. Hence we need to ensure metadata is stable before we start
+> writing a new transaction to the journal (guarantee #1), and we need
+> to ensure the entire transaction is stable in the journal before we
+> start metadata writeback (guarantee #2).
+> 
+> Hence we only need a REQ_PREFLUSH on the journal IO that starts a
+> new journal transaction to provide #1, and it is not on any other
+> journal IO done within the context of that journal transaction.
+> 
+> The CIL checkpoint already issues a cache flush before it starts
+> writing to the log, so we no longer need the iclog IO to issue a
+> REQ_REFLUSH for us. Hence if XLOG_START_TRANS is passed
+> to xlog_write(), we no longer need to mark the first iclog in
+> the log write with REQ_PREFLUSH for this case.
+> 
+> Given the new ordering semantics of commit records for the CIL, we
+> need iclogs containing commit to issue a REQ_PREFLUSH. We also
+> require unmount records to do this. Hence for both XLOG_COMMIT_TRANS
+> and XLOG_UNMOUNT_TRANS xlog_write() calls we need to mark
+> the first iclog being written with REQ_PREFLUSH.
+> 
+> For both commit records and unmount records, we also want them
+> immediately on stable storage, so we want to also mark the iclogs
+> that contain these records to be marked REQ_FUA. That means if a
+> record is split across multiple iclogs, they are all marked REQ_FUA
+> and not just the last one so that when the transaction is completed
+> all the parts of the record are on stable storage.
+> 
+> As an optimisation, when the commit record lands in the same iclog
+> as the journal transaction starts, we don't need to wait for
+> anything and can simply use REQ_FUA to provide guarantee #2.  This
+> means that for fsync() heavy workloads, the cache flush behaviour is
+> completely unchanged and there is no degradation in performance as a
+> result of optimise the multi-IO transaction case.
+> 
+> The most notable sign that there is less IO latency on my test
+> machine (nvme SSDs) is that the "noiclogs" rate has dropped
+> substantially. This metric indicates that the CIL push is blocking
+> in xlog_get_iclog_space() waiting for iclog IO completion to occur.
+> With 8 iclogs of 256kB, the rate is appoximately 1 noiclog event to
+> every 4 iclog writes. IOWs, every 4th call to xlog_get_iclog_space()
+> is blocking waiting for log IO. With the changes in this patch, this
+> drops to 1 noiclog event for every 100 iclog writes. Hence it is
+> clear that log IO is completing much faster than it was previously,
+> but it is also clear that for large iclog sizes, this isn't the
+> performance limiting factor on this hardware.
+> 
+> With smaller iclogs (32kB), however, there is a sustantial
+> difference. With the cache flush modifications, the journal is now
+> running at over 4000 write IOPS, and the journal throughput is
+> largely identical to the 256kB iclogs and the noiclog event rate
+> stays low at about 1:50 iclog writes. The existing code tops out at
+> about 2500 IOPS as the number of cache flushes dominate performance
+> and latency. The noiclog event rate is about 1:4, and the
+> performance variance is quite large as the journal throughput can
+> fall to less than half the peak sustained rate when the cache flush
+> rate prevents metadata writeback from keeping up and the log runs
+> out of space and throttles reservations.
+> 
+> As a result:
+> 
+> 	logbsize	fsmark create rate	rm -rf
+> before	32kb		152851+/-5.3e+04	5m28s
+> patched	32kb		221533+/-1.1e+04	5m24s
+> 
+> before	256kb		220239+/-6.2e+03	4m58s
+> patched	256kb		228286+/-9.2e+03	5m06s
+> 
+> The rm -rf times are included because I ran them, but the
+> differences are largely noise. This workload is largely metadata
+> read IO latency bound and the changes to the journal cache flushing
+> doesn't really make any noticable difference to behaviour apart from
+> a reduction in noiclog events from background CIL pushing.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Overnight testing indicates generic/530 hangs on small logs with
-this patch. It essentially runs out of log space because there are
-inode cluster buffers permanently pinned by this workload.
+If I've gotten this right so far, patch 4 introduces the ability to
+flush the data device while we get ready to overwrite parts of the log.
+This patch makes it so that writing a commit (or unmount) record to an
+iclog causes that iclog write to be issued (to the log device) with at
+least FUA set, and possibly PREFLUSH if we've written out more than one
+iclog since the last commit?
 
-That is, as inodes are unlinked, they repeatedly relog the inode
-cluster buffer, and so while the CIL is flushing to unpin the
-buffer, a new unlink relogs it and adds a new pin to the buffer.
-Hence the log force that the AIL does to unpin pinned items doesn't
-actually unpin buffers that are being relogged.
+IOWs, the data device flush is now asynchronous with CIL processing and
+we've ripped out all the cache flushes and FUA writes for iclogs except
+for the last one in a chain, which should maintain data integrity
+requirements 1 and 2?
 
-These buffers only get unpinned when the log actually runs out of
-space because they pin the tail of the log. Then the modifications
-that are relogging the buffer stop because they fail to get a log
-reservation, and the tail of the log does not move forward until the
-AIL issues a log force that finally unpins the buffer and writes it
-back.
+If that's correct,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Essentially, relogged buffers cannot be flushed by the AIL until the
-log completely stalls.
+--D
 
-The problem being tripped over here is that we no longer force the
-final iclogs in a CIL push to disk - we leave the iclog with the
-commit record in it in ACTIVE state, and by not waiting and forcing
-all the iclogs to disk, the buffer never gets unpinned because there
-isn't any more log pressure to force it out because everything is
-blocked on reservation space.
-
-The solution to this is to have the CIL push change the state of the
-commit iclog to WANT_SYNC before it is released. This means the CIL
-push will always flush the iclog to disk and the checkpoint will
-complete and unpin the buffers.
-
-Right now, we really only want to do this state switch for these
-async pushes - for small sync transactions and fsync we really want
-the iclog aggregation that we have now to optimise iclogbuf usage,
-so I'll have to pass a new flag through the push code and back into
-xlog_write(). That will make this patch behave the same as we
-currently do.
-
-In the longer term, we need to change how the AIL deals with pinned
-buffers, as the current method is definitely sub-optimal. It also
-explains the "everything stops for a second" performance anomalies
-I've been seeing for a while in testing. But fixing that is outside
-the scope of this patchset, so in the mean time I'll fix this one up
-and repost it in a little while.
-
-FWIW, this is also the likely cause of the "CIL workqueue too deep"
-hangs I was seeing with the next patch in the series, too.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+> Version 2:
+> - repost manually without git/guilt mangling the patch author
+> - fix bug in XLOG_ICL_NEED_FUA definition that didn't manifest as an
+>   ordering bug in generic/45[57] until testing the CIL pipelining
+>   changes much later in the series.
+> 
+>  fs/xfs/xfs_log.c      | 33 +++++++++++++++++++++++----------
+>  fs/xfs/xfs_log_cil.c  |  7 ++++++-
+>  fs/xfs/xfs_log_priv.h |  4 ++++
+>  3 files changed, 33 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 6c3fb6dcb505..08d68a6161ae 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1806,8 +1806,7 @@ xlog_write_iclog(
+>  	struct xlog		*log,
+>  	struct xlog_in_core	*iclog,
+>  	uint64_t		bno,
+> -	unsigned int		count,
+> -	bool			need_flush)
+> +	unsigned int		count)
+>  {
+>  	ASSERT(bno < log->l_logBBsize);
+>  
+> @@ -1845,10 +1844,12 @@ xlog_write_iclog(
+>  	 * writeback throttle from throttling log writes behind background
+>  	 * metadata writeback and causing priority inversions.
+>  	 */
+> -	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC |
+> -				REQ_IDLE | REQ_FUA;
+> -	if (need_flush)
+> +	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC | REQ_IDLE;
+> +	if (iclog->ic_flags & XLOG_ICL_NEED_FLUSH)
+>  		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
+> +	if (iclog->ic_flags & XLOG_ICL_NEED_FUA)
+> +		iclog->ic_bio.bi_opf |= REQ_FUA;
+> +	iclog->ic_flags &= ~(XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FUA);
+>  
+>  	if (xlog_map_iclog_data(&iclog->ic_bio, iclog->ic_data, count)) {
+>  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+> @@ -1951,7 +1952,7 @@ xlog_sync(
+>  	unsigned int		roundoff;       /* roundoff to BB or stripe */
+>  	uint64_t		bno;
+>  	unsigned int		size;
+> -	bool			need_flush = true, split = false;
+> +	bool			split = false;
+>  
+>  	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
+>  
+> @@ -2009,13 +2010,14 @@ xlog_sync(
+>  	 * synchronously here; for an internal log we can simply use the block
+>  	 * layer state machine for preflushes.
+>  	 */
+> -	if (log->l_targ != log->l_mp->m_ddev_targp || split) {
+> +	if (log->l_targ != log->l_mp->m_ddev_targp ||
+> +	    (split && (iclog->ic_flags & XLOG_ICL_NEED_FLUSH))) {
+>  		xfs_flush_bdev(log->l_mp->m_ddev_targp->bt_bdev);
+> -		need_flush = false;
+> +		iclog->ic_flags &= ~XLOG_ICL_NEED_FLUSH;
+>  	}
+>  
+>  	xlog_verify_iclog(log, iclog, count);
+> -	xlog_write_iclog(log, iclog, bno, count, need_flush);
+> +	xlog_write_iclog(log, iclog, bno, count);
+>  }
+>  
+>  /*
+> @@ -2469,10 +2471,21 @@ xlog_write(
+>  		ASSERT(log_offset <= iclog->ic_size - 1);
+>  		ptr = iclog->ic_datap + log_offset;
+>  
+> -		/* start_lsn is the first lsn written to. That's all we need. */
+> +		/* Start_lsn is the first lsn written to. */
+>  		if (start_lsn && !*start_lsn)
+>  			*start_lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+>  
+> +		/*
+> +		 * iclogs containing commit records or unmount records need
+> +		 * to issue ordering cache flushes and commit immediately
+> +		 * to stable storage to guarantee journal vs metadata ordering
+> +		 * is correctly maintained in the storage media.
+> +		 */
+> +		if (optype & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS)) {
+> +			iclog->ic_flags |= (XLOG_ICL_NEED_FLUSH |
+> +						XLOG_ICL_NEED_FUA);
+> +		}
+> +
+>  		/*
+>  		 * This loop writes out as many regions as can fit in the amount
+>  		 * of space which was allocated by xlog_state_get_iclog_space().
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 4093d2d0db7c..370da7c2bfc8 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -894,10 +894,15 @@ xlog_cil_push_work(
+>  
+>  	/*
+>  	 * If the checkpoint spans multiple iclogs, wait for all previous
+> -	 * iclogs to complete before we submit the commit_iclog.
+> +	 * iclogs to complete before we submit the commit_iclog. If it is in the
+> +	 * same iclog as the start of the checkpoint, then we can skip the iclog
+> +	 * cache flush because there are no other iclogs we need to order
+> +	 * against.
+>  	 */
+>  	if (ctx->start_lsn != commit_lsn)
+>  		xlog_wait_on_iclog_lsn(commit_iclog, ctx->start_lsn);
+> +	else
+> +		commit_iclog->ic_flags &= ~XLOG_ICL_NEED_FLUSH;
+>  
+>  	/* release the hounds! */
+>  	xfs_log_release_iclog(commit_iclog);
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 10a41b1dd895..a77e00b7789a 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -133,6 +133,9 @@ enum xlog_iclog_state {
+>  
+>  #define XLOG_COVER_OPS		5
+>  
+> +#define XLOG_ICL_NEED_FLUSH	(1 << 0)	/* iclog needs REQ_PREFLUSH */
+> +#define XLOG_ICL_NEED_FUA	(1 << 1)	/* iclog needs REQ_FUA */
+> +
+>  /* Ticket reservation region accounting */ 
+>  #define XLOG_TIC_LEN_MAX	15
+>  
+> @@ -201,6 +204,7 @@ typedef struct xlog_in_core {
+>  	u32			ic_size;
+>  	u32			ic_offset;
+>  	enum xlog_iclog_state	ic_state;
+> +	unsigned int		ic_flags;
+>  	char			*ic_datap;	/* pointer to iclog data */
+>  
+>  	/* Callback structures need their own cacheline */
