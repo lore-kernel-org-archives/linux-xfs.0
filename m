@@ -2,144 +2,198 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D412C433E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:45:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6853C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:47:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0970564F03
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:45:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91C9C64F06
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:47:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232941AbhBXVpA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 16:45:00 -0500
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:41300 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230330AbhBXVo7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 16:44:59 -0500
-Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id C361D4ABFE4;
-        Thu, 25 Feb 2021 08:44:17 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lF1xB-002kUn-4n; Thu, 25 Feb 2021 08:44:17 +1100
-Date:   Thu, 25 Feb 2021 08:44:17 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        id S234026AbhBXVr2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Feb 2021 16:47:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52442 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236074AbhBXVr2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 Feb 2021 16:47:28 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3F1D364EFA;
+        Wed, 24 Feb 2021 21:46:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614203207;
+        bh=ykwgLyk0QxbdVRQxmlVZZD+vjXNMw4bf19CQ0k7kniA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=CqNM9IuD28IF1V98mdFDFnZKznA2k603Mo/H8z91dzAv5LOS0xQxY/AzM4IjUeK8m
+         FOMRc0OpI+6VgEkQ+U7rDBq0Lx/83msvamKHQj8KhuWx/zeSleLZqKUmSE8RJDc1bh
+         VOo1BacwazYeNKocrjTbJW62D+4c5XxlaHpawKN9vw0xYC857FaSfdfi+jIY8ANU0+
+         gJJHXh3h2bRZIwR7WF/kmn5wihHgI0Bck73KUcKSarCAedCUOpVm/wayex+5Ww4TZ/
+         myHef8nZ3j8smjqxBIRIjf/X3GZZ0u9OIq0kmyynl1xYTUoaMhAre+jHIMkGxe77Y4
+         o5EpmIfxMZFRA==
+Date:   Wed, 24 Feb 2021 13:46:46 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/8] xfs: separate CIL commit record IO
-Message-ID: <20210224214417.GB4662@dread.disaster.area>
-References: <20210223033442.3267258-1-david@fromorbit.com>
- <20210223033442.3267258-3-david@fromorbit.com>
- <20210224203429.GR7272@magnolia>
+Subject: Re: [PATCH 1/3] xfs: type verification is expensive
+Message-ID: <20210224214646.GC7272@magnolia>
+References: <20210223054748.3292734-1-david@fromorbit.com>
+ <20210223054748.3292734-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210224203429.GR7272@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=k4gU2gVVm8cocxQ7w5EA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210223054748.3292734-2-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 24, 2021 at 12:34:29PM -0800, Darrick J. Wong wrote:
-> On Tue, Feb 23, 2021 at 02:34:36PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > To allow for iclog IO device cache flush behaviour to be optimised,
-> > we first need to separate out the commit record iclog IO from the
-> > rest of the checkpoint so we can wait for the checkpoint IO to
-> > complete before we issue the commit record.
-> > 
-> > This separation is only necessary if the commit record is being
-> > written into a different iclog to the start of the checkpoint as the
-> > upcoming cache flushing changes requires completion ordering against
-> > the other iclogs submitted by the checkpoint.
-> > 
-> > If the entire checkpoint and commit is in the one iclog, then they
-> > are both covered by the one set of cache flush primitives on the
-> > iclog and hence there is no need to separate them for ordering.
-> > 
-> > Otherwise, we need to wait for all the previous iclogs to complete
-> > so they are ordered correctly and made stable by the REQ_PREFLUSH
-> > that the commit record iclog IO issues. This guarantees that if a
-> > reader sees the commit record in the journal, they will also see the
-> > entire checkpoint that commit record closes off.
-> > 
-> > This also provides the guarantee that when the commit record IO
-> > completes, we can safely unpin all the log items in the checkpoint
-> > so they can be written back because the entire checkpoint is stable
-> > in the journal.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_log.c      | 55 +++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_log_cil.c  |  7 ++++++
-> >  fs/xfs/xfs_log_priv.h |  2 ++
-> >  3 files changed, 64 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > index fa284f26d10e..ff26fb46d70f 100644
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -808,6 +808,61 @@ xlog_wait_on_iclog(
-> >  	return 0;
-> >  }
-> >  
-> > +/*
-> > + * Wait on any iclogs that are still flushing in the range of start_lsn to the
-> > + * current iclog's lsn. The caller holds a reference to the iclog, but otherwise
-> > + * holds no log locks.
-> > + *
-> > + * We walk backwards through the iclogs to find the iclog with the highest lsn
-> > + * in the range that we need to wait for and then wait for it to complete.
-> > + * Completion ordering of iclog IOs ensures that all prior iclogs to the
-> > + * candidate iclog we need to sleep on have been complete by the time our
-> > + * candidate has completed it's IO.
+On Tue, Feb 23, 2021 at 04:47:46PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Hmm, I guess this means that iclog header lsns are supposed to increase
-> as one walks forwards through the list?
-
-yes, the iclogs are written sequentially to the log - we don't
-switch the log->l_iclog pointer to the current active iclog until we
-switch it out, and then the next iclog in the loop is physically
-located at a higher lsn to the one we just switched out.
-
-> > + *
-> > + * Therefore we only need to find the first iclog that isn't clean within the
-> > + * span of our flush range. If we come across a clean, newly activated iclog
-> > + * with a lsn of 0, it means IO has completed on this iclog and all previous
-> > + * iclogs will be have been completed prior to this one. Hence finding a newly
-> > + * activated iclog indicates that there are no iclogs in the range we need to
-> > + * wait on and we are done searching.
+> From a concurrent rm -rf workload:
 > 
-> I don't see an explicit check for an iclog with a zero lsn?  Is that
-> implied by XLOG_STATE_ACTIVE?
+>   41.04%  [kernel]  [k] xfs_dir3_leaf_check_int
+>    9.85%  [kernel]  [k] __xfs_dir3_data_check
+>    5.60%  [kernel]  [k] xfs_verify_ino
+>    5.32%  [kernel]  [k] xfs_agino_range
+>    4.21%  [kernel]  [k] memcpy
+>    3.06%  [kernel]  [k] xfs_errortag_test
+>    2.57%  [kernel]  [k] xfs_dir_ino_validate
+>    1.66%  [kernel]  [k] xfs_dir2_data_get_ftype
+>    1.17%  [kernel]  [k] do_raw_spin_lock
+>    1.11%  [kernel]  [k] xfs_verify_dir_ino
+>    0.84%  [kernel]  [k] __raw_callee_save___pv_queued_spin_unlock
+>    0.83%  [kernel]  [k] xfs_buf_find
+>    0.64%  [kernel]  [k] xfs_log_commit_cil
+> 
+> THere's an awful lot of overhead in just range checking inode
+> numbers in that, but each inode number check is not a lot of code.
+> The total is a bit over 14.5% of the CPU time is spent validating
+> inode numbers.
+> 
+> The problem is that they deeply nested global scope functions so the
+> overhead here is all in function call marshalling.
+> 
+>    text	   data	    bss	    dec	    hex	filename
+>    2077	      0	      0	   2077	    81d fs/xfs/libxfs/xfs_types.o.orig
+>    2197	      0	      0	   2197	    895	fs/xfs/libxfs/xfs_types.o
+> 
+> There's a small increase in binary size by inlining all the local
+> nested calls in the verifier functions, but the same workload now
+> profiles as:
+> 
+>   40.69%  [kernel]  [k] xfs_dir3_leaf_check_int
+>   10.52%  [kernel]  [k] __xfs_dir3_data_check
+>    6.68%  [kernel]  [k] xfs_verify_dir_ino
+>    4.22%  [kernel]  [k] xfs_errortag_test
+>    4.15%  [kernel]  [k] memcpy
+>    3.53%  [kernel]  [k] xfs_dir_ino_validate
+>    1.87%  [kernel]  [k] xfs_dir2_data_get_ftype
+>    1.37%  [kernel]  [k] do_raw_spin_lock
+>    0.98%  [kernel]  [k] xfs_buf_find
+>    0.94%  [kernel]  [k] __raw_callee_save___pv_queued_spin_unlock
+>    0.73%  [kernel]  [k] xfs_log_commit_cil
+> 
+> Now we only spend just over 10% of the time validing inode numbers
+> for the same workload. Hence a few "inline" keyworks is good enough
+> to reduce the validation overhead by 30%...
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-It's handled by the XFS_LSN_CMP(prev_lsn, start_lsn) < 0 check.  if
-the prev_lsn is zero because the iclog is clean, then this check
-will always be true.
+Looks fine I guess,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-> Also, do you have any idea what was Christoph talking about wrt devices
-> with no-op flushes the last time this patch was posted?  This change
-> seems straightforward to me (assuming the answers to my two question are
-> 'yes') but I didn't grok what subtlety he was alluding to...?
+--D
 
-He was wondering what devices benefited from this. It has no impact
-on highspeed devices that do not require flushes/FUA (e.g. high end
-intel optane SSDs) but those are not the devices this change is
-aimed at. There are no regressions on these high end devices,
-either, so they are largely irrelevant to the patch and what it
-targets...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>  fs/xfs/libxfs/xfs_types.c | 18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+> index b254fbeaaa50..04801362e1a7 100644
+> --- a/fs/xfs/libxfs/xfs_types.c
+> +++ b/fs/xfs/libxfs/xfs_types.c
+> @@ -13,7 +13,7 @@
+>  #include "xfs_mount.h"
+>  
+>  /* Find the size of the AG, in blocks. */
+> -xfs_agblock_t
+> +inline xfs_agblock_t
+>  xfs_ag_block_count(
+>  	struct xfs_mount	*mp,
+>  	xfs_agnumber_t		agno)
+> @@ -29,7 +29,7 @@ xfs_ag_block_count(
+>   * Verify that an AG block number pointer neither points outside the AG
+>   * nor points at static metadata.
+>   */
+> -bool
+> +inline bool
+>  xfs_verify_agbno(
+>  	struct xfs_mount	*mp,
+>  	xfs_agnumber_t		agno,
+> @@ -49,7 +49,7 @@ xfs_verify_agbno(
+>   * Verify that an FS block number pointer neither points outside the
+>   * filesystem nor points at static AG metadata.
+>   */
+> -bool
+> +inline bool
+>  xfs_verify_fsbno(
+>  	struct xfs_mount	*mp,
+>  	xfs_fsblock_t		fsbno)
+> @@ -85,7 +85,7 @@ xfs_verify_fsbext(
+>  }
+>  
+>  /* Calculate the first and last possible inode number in an AG. */
+> -void
+> +inline void
+>  xfs_agino_range(
+>  	struct xfs_mount	*mp,
+>  	xfs_agnumber_t		agno,
+> @@ -116,7 +116,7 @@ xfs_agino_range(
+>   * Verify that an AG inode number pointer neither points outside the AG
+>   * nor points at static metadata.
+>   */
+> -bool
+> +inline bool
+>  xfs_verify_agino(
+>  	struct xfs_mount	*mp,
+>  	xfs_agnumber_t		agno,
+> @@ -146,7 +146,7 @@ xfs_verify_agino_or_null(
+>   * Verify that an FS inode number pointer neither points outside the
+>   * filesystem nor points at static AG metadata.
+>   */
+> -bool
+> +inline bool
+>  xfs_verify_ino(
+>  	struct xfs_mount	*mp,
+>  	xfs_ino_t		ino)
+> @@ -162,7 +162,7 @@ xfs_verify_ino(
+>  }
+>  
+>  /* Is this an internal inode number? */
+> -bool
+> +inline bool
+>  xfs_internal_inum(
+>  	struct xfs_mount	*mp,
+>  	xfs_ino_t		ino)
+> @@ -190,7 +190,7 @@ xfs_verify_dir_ino(
+>   * Verify that an realtime block number pointer doesn't point off the
+>   * end of the realtime device.
+>   */
+> -bool
+> +inline bool
+>  xfs_verify_rtbno(
+>  	struct xfs_mount	*mp,
+>  	xfs_rtblock_t		rtbno)
+> @@ -215,7 +215,7 @@ xfs_verify_rtext(
+>  }
+>  
+>  /* Calculate the range of valid icount values. */
+> -void
+> +inline void
+>  xfs_icount_range(
+>  	struct xfs_mount	*mp,
+>  	unsigned long long	*min,
+> -- 
+> 2.28.0
+> 
