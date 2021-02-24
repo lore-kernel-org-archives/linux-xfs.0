@@ -2,131 +2,198 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFCADC433E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 20:33:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5262DC433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 20:35:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA3D464E20
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 20:33:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2306464E7A
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 20:35:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235428AbhBXUdh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 15:33:37 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58550 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235783AbhBXUdg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 15:33:36 -0500
-Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 49B7A827FFE;
-        Thu, 25 Feb 2021 07:32:54 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lF0q5-002fmM-2T; Thu, 25 Feb 2021 07:32:53 +1100
-Date:   Thu, 25 Feb 2021 07:32:53 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
+        id S234496AbhBXUfM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Feb 2021 15:35:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41020 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229598AbhBXUfM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 Feb 2021 15:35:12 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8BEB164E09;
+        Wed, 24 Feb 2021 20:34:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614198870;
+        bh=KZSJrlYdeLt670eKrZWq/34MOFY51vCG5O3X3NNWPHE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ajti0mURRk+TIeyWx9DZtw086SvbQuCVwS4jU3hodm1ovsvc03D6iIqNYtbaVT0hz
+         oc3Ngv6NjdekWNwH58Omwtxvklw06uFXehTU2T70GEeM60JDTYOxKkAYHxUSJc64FZ
+         UaDh/JhxADVAMhwWt1QKcMu9u4Bk9GktfBxmgzlHfi64qZ8MhicF748o2Gtrqsx3xW
+         ELP4MswktzQnvkIV3Vk9GwEfDJonUko4XywkuJatee81TAQOcZDDAhdvRE5QD/RGMM
+         TTy6Duz+cnNpxe7XhA0coF/mIhj+rnbLluZjWq7QbYMpYG+D7Fpy4hk7Vi/Tm5RcxV
+         WdEICtvdbgAvw==
+Date:   Wed, 24 Feb 2021 12:34:29 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/8 v2] xfs: journal IO cache flush reductions
-Message-ID: <20210224203253.GZ4662@dread.disaster.area>
+Subject: Re: [PATCH 2/8] xfs: separate CIL commit record IO
+Message-ID: <20210224203429.GR7272@magnolia>
 References: <20210223033442.3267258-1-david@fromorbit.com>
- <20210223033442.3267258-8-david@fromorbit.com>
- <20210223080503.GW4662@dread.disaster.area>
- <87sg5lps5z.fsf@garuda>
+ <20210223033442.3267258-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87sg5lps5z.fsf@garuda>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
-        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8 a=eJfxgxciAAAA:8
-        a=7-415B0cAAAA:8 a=C7IU5Li1-fztAd9e-tUA:9 a=CjuIK1q_8ugA:10
-        a=xM9caqqi1sUkTy8OJ5Uh:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210223033442.3267258-3-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 24, 2021 at 05:57:20PM +0530, Chandan Babu R wrote:
-> On 23 Feb 2021 at 13:35, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > Currently every journal IO is issued as REQ_PREFLUSH | REQ_FUA to
-> > guarantee the ordering requirements the journal has w.r.t. metadata
-> > writeback. THe two ordering constraints are:
-> >
-> > 1. we cannot overwrite metadata in the journal until we guarantee
-> > that the dirty metadata has been written back in place and is
-> > stable.
-> >
-> > 2. we cannot write back dirty metadata until it has been written to
-> > the journal and guaranteed to be stable (and hence recoverable) in
-> > the journal.
-> >
-> > The ordering guarantees of #1 are provided by REQ_PREFLUSH. This
-> > causes the journal IO to issue a cache flush and wait for it to
-> > complete before issuing the write IO to the journal. Hence all
-> > completed metadata IO is guaranteed to be stable before the journal
-> > overwrites the old metadata.
-> >
-> > The ordering guarantees of #2 are provided by the REQ_FUA, which
-> > ensures the journal writes do not complete until they are on stable
-> > storage. Hence by the time the last journal IO in a checkpoint
-> > completes, we know that the entire checkpoint is on stable storage
-> > and we can unpin the dirty metadata and allow it to be written back.
-> >
-> > This is the mechanism by which ordering was first implemented in XFS
-> > way back in 2002 by this commit:
-> >
-> > commit 95d97c36e5155075ba2eb22b17562cfcc53fcf96
-> > Author: Steve Lord <lord@sgi.com>
-> > Date:   Fri May 24 14:30:21 2002 +0000
-> >
-> >     Add support for drive write cache flushing - should the kernel
-> >     have the infrastructure
-> >
-> > A lot has changed since then, most notably we now use delayed
-> > logging to checkpoint the filesystem to the journal rather than
-> > write each individual transaction to the journal. Cache flushes on
-> > journal IO are necessary when individual transactions are wholly
-> > contained within a single iclog. However, CIL checkpoints are single
-> > transactions that typically span hundreds to thousands of individual
-> > journal writes, and so the requirements for device cache flushing
-> > have changed.
-> >
-> > That is, the ordering rules I state above apply to ordering of
-> > atomic transactions recorded in the journal, not to the journal IO
-> > itself. Hence we need to ensure metadata is stable before we start
-> > writing a new transaction to the journal (guarantee #1), and we need
-> > to ensure the entire transaction is stable in the journal before we
-> > start metadata writeback (guarantee #2).
-> >
-> > Hence we only need a REQ_PREFLUSH on the journal IO that starts a
-> > new journal transaction to provide #1, and it is not on any other
-> > journal IO done within the context of that journal transaction.
-> >
-> > The CIL checkpoint already issues a cache flush before it starts
-> > writing to the log, so we no longer need the iclog IO to issue a
-> > REQ_REFLUSH for us. Hence if XLOG_START_TRANS is passed
-> > to xlog_write(), we no longer need to mark the first iclog in
-> > the log write with REQ_PREFLUSH for this case.
-> >
-> > Given the new ordering semantics of commit records for the CIL, we
-> > need iclogs containing commit to issue a REQ_PREFLUSH. We also
+On Tue, Feb 23, 2021 at 02:34:36PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> We flush the data device before writing the first iclog (containing
-> XLOG_START_TRANS) to the disk. This satisfies the first ordering constraint
-> listed above. Why is it required to have another REQ_PREFLUSH when writing the
-> iclog containing XLOG_COMMIT_TRANS? I am guessing that it is required to
-> make sure that the previous iclogs (belonging to the same checkpoint
-> transaction) have indeed been written to the disk.
+> To allow for iclog IO device cache flush behaviour to be optimised,
+> we first need to separate out the commit record iclog IO from the
+> rest of the checkpoint so we can wait for the checkpoint IO to
+> complete before we issue the commit record.
+> 
+> This separation is only necessary if the commit record is being
+> written into a different iclog to the start of the checkpoint as the
+> upcoming cache flushing changes requires completion ordering against
+> the other iclogs submitted by the checkpoint.
+> 
+> If the entire checkpoint and commit is in the one iclog, then they
+> are both covered by the one set of cache flush primitives on the
+> iclog and hence there is no need to separate them for ordering.
+> 
+> Otherwise, we need to wait for all the previous iclogs to complete
+> so they are ordered correctly and made stable by the REQ_PREFLUSH
+> that the commit record iclog IO issues. This guarantees that if a
+> reader sees the commit record in the journal, they will also see the
+> entire checkpoint that commit record closes off.
+> 
+> This also provides the guarantee that when the commit record IO
+> completes, we can safely unpin all the log items in the checkpoint
+> so they can be written back because the entire checkpoint is stable
+> in the journal.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_log.c      | 55 +++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_log_cil.c  |  7 ++++++
+>  fs/xfs/xfs_log_priv.h |  2 ++
+>  3 files changed, 64 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index fa284f26d10e..ff26fb46d70f 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -808,6 +808,61 @@ xlog_wait_on_iclog(
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Wait on any iclogs that are still flushing in the range of start_lsn to the
+> + * current iclog's lsn. The caller holds a reference to the iclog, but otherwise
+> + * holds no log locks.
+> + *
+> + * We walk backwards through the iclogs to find the iclog with the highest lsn
+> + * in the range that we need to wait for and then wait for it to complete.
+> + * Completion ordering of iclog IOs ensures that all prior iclogs to the
+> + * candidate iclog we need to sleep on have been complete by the time our
+> + * candidate has completed it's IO.
 
-Yes, that is correct.
+Hmm, I guess this means that iclog header lsns are supposed to increase
+as one walks forwards through the list?
 
-Cheers,
+> + *
+> + * Therefore we only need to find the first iclog that isn't clean within the
+> + * span of our flush range. If we come across a clean, newly activated iclog
+> + * with a lsn of 0, it means IO has completed on this iclog and all previous
+> + * iclogs will be have been completed prior to this one. Hence finding a newly
+> + * activated iclog indicates that there are no iclogs in the range we need to
+> + * wait on and we are done searching.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I don't see an explicit check for an iclog with a zero lsn?  Is that
+implied by XLOG_STATE_ACTIVE?
+
+Also, do you have any idea what was Christoph talking about wrt devices
+with no-op flushes the last time this patch was posted?  This change
+seems straightforward to me (assuming the answers to my two question are
+'yes') but I didn't grok what subtlety he was alluding to...?
+
+--D
+
+> + */
+> +int
+> +xlog_wait_on_iclog_lsn(
+> +	struct xlog_in_core	*iclog,
+> +	xfs_lsn_t		start_lsn)
+> +{
+> +	struct xlog		*log = iclog->ic_log;
+> +	struct xlog_in_core	*prev;
+> +	int			error = -EIO;
+> +
+> +	spin_lock(&log->l_icloglock);
+> +	if (XLOG_FORCED_SHUTDOWN(log))
+> +		goto out_unlock;
+> +
+> +	error = 0;
+> +	for (prev = iclog->ic_prev; prev != iclog; prev = prev->ic_prev) {
+> +
+> +		/* Done if the lsn is before our start lsn */
+> +		if (XFS_LSN_CMP(be64_to_cpu(prev->ic_header.h_lsn),
+> +				start_lsn) < 0)
+> +			break;
+> +
+> +		/* Don't need to wait on completed, clean iclogs */
+> +		if (prev->ic_state == XLOG_STATE_DIRTY ||
+> +		    prev->ic_state == XLOG_STATE_ACTIVE) {
+> +			continue;
+> +		}
+> +
+> +		/* wait for completion on this iclog */
+> +		xlog_wait(&prev->ic_force_wait, &log->l_icloglock);
+> +		return 0;
+> +	}
+> +
+> +out_unlock:
+> +	spin_unlock(&log->l_icloglock);
+> +	return error;
+> +}
+> +
+>  /*
+>   * Write out an unmount record using the ticket provided. We have to account for
+>   * the data space used in the unmount ticket as this write is not done from a
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index b0ef071b3cb5..c5cc1b7ad25e 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -870,6 +870,13 @@ xlog_cil_push_work(
+>  	wake_up_all(&cil->xc_commit_wait);
+>  	spin_unlock(&cil->xc_push_lock);
+>  
+> +	/*
+> +	 * If the checkpoint spans multiple iclogs, wait for all previous
+> +	 * iclogs to complete before we submit the commit_iclog.
+> +	 */
+> +	if (ctx->start_lsn != commit_lsn)
+> +		xlog_wait_on_iclog_lsn(commit_iclog, ctx->start_lsn);
+> +
+>  	/* release the hounds! */
+>  	xfs_log_release_iclog(commit_iclog);
+>  	return;
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 037950cf1061..a7ac85aaff4e 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -584,6 +584,8 @@ xlog_wait(
+>  	remove_wait_queue(wq, &wait);
+>  }
+>  
+> +int xlog_wait_on_iclog_lsn(struct xlog_in_core *iclog, xfs_lsn_t start_lsn);
+> +
+>  /*
+>   * The LSN is valid so long as it is behind the current LSN. If it isn't, this
+>   * means that the next log record that includes this metadata could have a
+> -- 
+> 2.28.0
+> 
