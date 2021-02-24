@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D79DFC43333
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D021C43331
 	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 06:36:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B22664ED4
+	by mail.kernel.org (Postfix) with ESMTP id 7AB5664DCF
 	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 06:36:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233842AbhBXGf5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 01:35:57 -0500
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:39539 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233674AbhBXGfr (ORCPT
+        id S232913AbhBXGf4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Feb 2021 01:35:56 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:39914 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233842AbhBXGfr (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 01:35:47 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 79B824ACC58
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8D1A4827F97
         for <linux-xfs@vger.kernel.org>; Wed, 24 Feb 2021 17:35:03 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lEnlG-001loe-Qt
+        id 1lEnlG-001loN-MM
         for linux-xfs@vger.kernel.org; Wed, 24 Feb 2021 17:35:02 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lEnlG-00EQr1-JF
+        id 1lEnlG-00EQqm-Dz
         for linux-xfs@vger.kernel.org; Wed, 24 Feb 2021 17:35:02 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 07/13] xfs: reserve space and initialise xlog_op_header in item formatting
-Date:   Wed, 24 Feb 2021 17:34:53 +1100
-Message-Id: <20210224063459.3436852-8-david@fromorbit.com>
+Subject: [PATCH 02/13] xfs: only CIL pushes require a start record
+Date:   Wed, 24 Feb 2021 17:34:48 +1100
+Message-Id: <20210224063459.3436852-3-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20210224063459.3436852-1-david@fromorbit.com>
 References: <20210224063459.3436852-1-david@fromorbit.com>
@@ -44,261 +44,285 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8 a=uPggeX9WVvHMgeOGhM8A:9
-        a=Bs5-CCoWqMGbAjIj:21 a=wdNbswrM7fPWghU8:21
+        a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8 a=KPKL3CcRt_6iA-bUn9MA:9
+        a=Echpx2VvfMwB_eDK:21 a=YPT_P03KJfBdCC68:21
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Current xlog_write() adds op headers to the log manually for every
-log item region that is in the vector passed to it. While
-xlog_write() needs to stamp the transaction ID into the ophdr, we
-already know it's length, flags, clientid, etc at CIL commit time.
+So move the one-off start record writing in xlog_write() out into
+the static header that the CIL push builds to write into the log
+initially. This simplifes the xlog_write() logic a lot.
 
-This means the only time that xlog write really needs to format and
-reserve space for a new ophdr is when a region is split across two
-iclogs. Adding the opheader and accounting for it as part of the
-normal formatted item region means we simplify the accounting
-of space used by a transaction and we don't have to special case
-reserving of space in for the ophdrs in xlog_write(). It also means
-we can largely initialise the ophdr in transaction commit instead
-of xlog_write, making the xlog_write formatting inner loop much
-tighter.
+pahole on x86-64 confirms that the xlog_cil_trans_hdr is correctly
+32 bit aligned and packed for copying the log op and transaction
+headers directly into the log as a single log region copy.
+
+struct xlog_cil_trans_hdr {
+	struct xlog_op_header      oph[2];               /*     0    24 */
+	struct xfs_trans_header    thdr;                 /*    24    16 */
+	struct xfs_log_iovec       lhdr;                 /*    40    16 */
+
+	/* size: 56, cachelines: 1, members: 3 */
+	/* last cacheline: 56 bytes */
+};
+
+A wart is needed to handle the fact that length of the region the
+opheader points to doesn't include the opheader length. hence if
+we embed the opheader, we have to substract the opheader length from
+the length written into the opheader by the generic copying code.
+This will eventually go away when everything is converted to
+embedded opheaders.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c     | 59 ++++++++++++++++----------------------------
- fs/xfs/xfs_log.h     | 35 ++++++++++++++++++++++----
- fs/xfs/xfs_log_cil.c | 25 ++++++++++---------
- 3 files changed, 65 insertions(+), 54 deletions(-)
+ fs/xfs/xfs_log.c     | 90 ++++++++++++++++++++++----------------------
+ fs/xfs/xfs_log_cil.c | 44 ++++++++++++++++++----
+ 2 files changed, 81 insertions(+), 53 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index dd86c141d9c9..f7e16cb3fe7f 100644
+index a0ecaf4f9b77..727c0fe64fb6 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -2205,9 +2205,9 @@ xlog_print_trans(
+@@ -2191,9 +2191,9 @@ xlog_print_trans(
  }
  
  /*
-- * Calculate the potential space needed by the log vector. If this is a start
-- * transaction, the caller has already accounted for both opheaders in the start
-- * transaction, so we don't need to account for them here.
-+ * Calculate the potential space needed by the log vector. All regions contain
-+ * their own opheaders and they are accounted for in region space so we don't
-+ * need to add them to the vector length here.
+- * Calculate the potential space needed by the log vector.  We may need a start
+- * record, and each region gets its own struct xlog_op_header and may need to be
+- * double word aligned.
++ * Calculate the potential space needed by the log vector. If this is a start
++ * transaction, the caller has already accounted for both opheaders in the start
++ * transaction, so we don't need to account for them here.
   */
  static int
  xlog_write_calc_vec_length(
-@@ -2234,18 +2234,7 @@ xlog_write_calc_vec_length(
- 			xlog_tic_add_region(ticket, vecp->i_len, vecp->i_type);
+@@ -2206,9 +2206,6 @@ xlog_write_calc_vec_length(
+ 	int			len = 0;
+ 	int			i;
+ 
+-	if (optype & XLOG_START_TRANS)
+-		headers++;
+-
+ 	for (lv = log_vector; lv; lv = lv->lv_next) {
+ 		/* we don't write ordered log vectors */
+ 		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
+@@ -2224,24 +2221,20 @@ xlog_write_calc_vec_length(
  		}
  	}
--
--	/* Don't account for regions with embedded ophdrs */
--	if (optype && headers > 0) {
--		headers--;
--		if (optype & XLOG_START_TRANS) {
--			ASSERT(headers >= 1);
--			headers--;
--		}
--	}
--
+ 
++	/* Don't account for regions with embedded ophdrs */
++	if (optype && headers > 0) {
++		if (optype & XLOG_START_TRANS) {
++			ASSERT(headers >= 2);
++			headers -= 2;
++		}
++	}
++
  	ticket->t_res_num_ophdrs += headers;
--	len += headers * sizeof(struct xlog_op_header);
+ 	len += headers * sizeof(struct xlog_op_header);
  
  	return len;
  }
-@@ -2255,7 +2244,6 @@ xlog_write_setup_ophdr(
- 	struct xlog_op_header	*ophdr,
- 	struct xlog_ticket	*ticket)
- {
--	ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
- 	ophdr->oh_clientid = XFS_TRANSACTION;
- 	ophdr->oh_res2 = 0;
- 	ophdr->oh_flags = 0;
-@@ -2489,21 +2477,25 @@ xlog_write(
+ 
+-static void
+-xlog_write_start_rec(
+-	struct xlog_op_header	*ophdr,
+-	struct xlog_ticket	*ticket)
+-{
+-	ophdr->oh_tid	= cpu_to_be32(ticket->t_tid);
+-	ophdr->oh_clientid = ticket->t_clientid;
+-	ophdr->oh_len = 0;
+-	ophdr->oh_flags = XLOG_START_TRANS;
+-	ophdr->oh_res2 = 0;
+-}
+-
+ static xlog_op_header_t *
+ xlog_write_setup_ophdr(
+ 	struct xlog		*log,
+@@ -2446,9 +2439,11 @@ xlog_write(
+ 	 * If this is a commit or unmount transaction, we don't need a start
+ 	 * record to be written.  We do, however, have to account for the
+ 	 * commit or unmount header that gets written. Hence we always have
+-	 * to account for an extra xlog_op_header here.
++	 * to account for an extra xlog_op_header here for commit and unmount
++	 * records.
+ 	 */
+-	ticket->t_curr_res -= sizeof(struct xlog_op_header);
++	if (optype & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS))
++		ticket->t_curr_res -= sizeof(struct xlog_op_header);
+ 	if (ticket->t_curr_res < 0) {
+ 		xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
+ 		     "ctx ticket reservation ran out. Need to up reservation");
+@@ -2496,7 +2491,7 @@ xlog_write(
+ 			int			copy_len;
+ 			int			copy_off;
+ 			bool			ordered = false;
+-			bool			wrote_start_rec = false;
++			bool			added_ophdr = false;
+ 
+ 			/* ordered log vectors have no regions to write */
+ 			if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
+@@ -2510,25 +2505,24 @@ xlog_write(
  			ASSERT((unsigned long)ptr % sizeof(int32_t) == 0);
  
  			/*
--			 * The XLOG_START_TRANS has embedded ophdrs for the
--			 * start record and transaction header. They will always
--			 * be the first two regions in the lv chain. Commit and
--			 * unmount records also have embedded ophdrs.
-+			 * Regions always have their ophdr at the start of the
-+			 * region, except for:
-+			 * - a transaction start which has a start record ophdr
-+			 *   before the first region ophdr; and
-+			 * - the previous region didn't fully fit into an iclog
-+			 *   so needs a continuation ophdr to prepend the region
-+			 *   in this new iclog.
+-			 * Before we start formatting log vectors, we need to
+-			 * write a start record. Only do this for the first
+-			 * iclog we write to.
++			 * The XLOG_START_TRANS has embedded ophdrs for the
++			 * start record and transaction header. They will always
++			 * be the first two regions in the lv chain.
  			 */
--			if (optype) {
--				ophdr = reg->i_addr;
--				if (index)
--					optype &= ~XLOG_START_TRANS;
--			} else {
-+			ophdr = reg->i_addr;
-+			if (optype && index) {
-+				optype &= ~XLOG_START_TRANS;
-+			} else if (partial_copy) {
-                                 ophdr = xlog_write_setup_ophdr(ptr, ticket);
- 				xlog_write_adv_cnt(&ptr, &len, &log_offset,
+ 			if (optype & XLOG_START_TRANS) {
+-				xlog_write_start_rec(ptr, ticket);
+-				xlog_write_adv_cnt(&ptr, &len, &log_offset,
+-						sizeof(struct xlog_op_header));
+-				optype &= ~XLOG_START_TRANS;
+-				wrote_start_rec = true;
+-			}
+-
+-			ophdr = xlog_write_setup_ophdr(log, ptr, ticket, optype);
+-			if (!ophdr)
+-				return -EIO;
++				ophdr = reg->i_addr;
++				if (index)
++					optype &= ~XLOG_START_TRANS;
++			} else {
++				ophdr = xlog_write_setup_ophdr(log, ptr,
++							ticket, optype);
++				if (!ophdr)
++					return -EIO;
+ 
+-			xlog_write_adv_cnt(&ptr, &len, &log_offset,
++				xlog_write_adv_cnt(&ptr, &len, &log_offset,
  					   sizeof(struct xlog_op_header));
- 				added_ophdr = true;
- 			}
-+			ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
-+
+-
++				added_ophdr = true;
++			}
  			len += xlog_write_setup_copy(ticket, ophdr,
  						     iclog->ic_size-log_offset,
  						     reg->i_len,
-@@ -2521,20 +2513,11 @@ xlog_write(
- 				ophdr->oh_len = cpu_to_be32(copy_len -
- 						sizeof(struct xlog_op_header));
+@@ -2537,13 +2531,22 @@ xlog_write(
+ 						     &partial_copy_len);
+ 			xlog_verify_dest_ptr(log, ptr);
+ 
++
++			/*
++			 * Wart: need to update length in embedded ophdr not
++			 * to include it's own length.
++			 */
++			if (!added_ophdr) {
++				ophdr->oh_len = cpu_to_be32(copy_len -
++						sizeof(struct xlog_op_header));
++			}
+ 			/*
+ 			 * Copy region.
+ 			 *
+-			 * Unmount records just log an opheader, so can have
+-			 * empty payloads with no data region to copy. Hence we
+-			 * only copy the payload if the vector says it has data
+-			 * to copy.
++			 * Commit and unmount records just log an opheader, so
++			 * we can have empty payloads with no data region to
++			 * copy.  Hence we only copy the payload if the vector
++			 * says it has data to copy.
+ 			 */
+ 			ASSERT(copy_len >= 0);
+ 			if (copy_len > 0) {
+@@ -2551,12 +2554,9 @@ xlog_write(
+ 				xlog_write_adv_cnt(&ptr, &len, &log_offset,
+ 						   copy_len);
  			}
--			/*
--			 * Copy region.
--			 *
--			 * Commit records just log an opheader, so
--			 * we can have empty payloads with no data region to
--			 * copy.  Hence we only copy the payload if the vector
--			 * says it has data to copy.
--			 */
--			ASSERT(copy_len >= 0);
--			if (copy_len > 0) {
--				memcpy(ptr, reg->i_addr + copy_off, copy_len);
--				xlog_write_adv_cnt(&ptr, &len, &log_offset,
--						   copy_len);
--			}
-+
-+			ASSERT(copy_len > 0);
-+			memcpy(ptr, reg->i_addr + copy_off, copy_len);
-+			xlog_write_adv_cnt(&ptr, &len, &log_offset, copy_len);
-+
- 			if (added_ophdr)
+-			copy_len += sizeof(struct xlog_op_header);
+-			record_cnt++;
+-			if (wrote_start_rec) {
++			if (added_ophdr)
  				copy_len += sizeof(struct xlog_op_header);
- 			record_cnt++;
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index 3bc93edb9929..335a139eb018 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -30,12 +30,22 @@ struct xfs_log_vec {
-  * track the space used by the log vectors separately to prevent log space hangs
-  * due to inaccurate accounting (i.e. a leak) of the used log space through the
-  * CIL context ticket.
-+ *
-+ * We also add space for the xlog_op_header that describes this region in the
-+ * log. This prepends the data region we return to the caller to copy their data
-+ * into, so do all the static initialisation of the ophdr now. Because the ophdr
-+ * is not 8 byte aligned, we have to be careful to ensure that we align the
-+ * start of the buffer such that the region we return to the call is 8 byte
-+ * aligned and packed against the tail of the ophdr.
-  */
- static inline void *
- xlog_prepare_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
- 		uint type)
- {
--	struct xfs_log_iovec *vec = *vecp;
-+	struct xfs_log_iovec	*vec = *vecp;
-+	struct xlog_op_header	*oph;
-+	uint32_t		len;
-+	void			*buf;
+-				record_cnt++;
+-			}
++			record_cnt++;
+ 			data_cnt += contwr ? copy_len : 0;
  
- 	if (vec) {
- 		ASSERT(vec - lv->lv_iovecp < lv->lv_niovecs);
-@@ -44,21 +54,36 @@ xlog_prepare_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
- 		vec = &lv->lv_iovecp[0];
- 	}
- 
--	if (!IS_ALIGNED(lv->lv_buf_len, sizeof(uint64_t)))
--		lv->lv_buf_len = round_up(lv->lv_buf_len, sizeof(uint64_t));
-+	len = lv->lv_buf_len + sizeof(struct xlog_op_header);
-+	if (!IS_ALIGNED(len, sizeof(uint64_t))) {
-+		lv->lv_buf_len = round_up(len, sizeof(uint64_t)) -
-+					sizeof(struct xlog_op_header);
-+	}
- 
- 	vec->i_type = type;
- 	vec->i_addr = lv->lv_buf + lv->lv_buf_len;
- 
--	ASSERT(IS_ALIGNED((unsigned long)vec->i_addr, sizeof(uint64_t)));
-+	oph = vec->i_addr;
-+	oph->oh_clientid = XFS_TRANSACTION;
-+	oph->oh_res2 = 0;
-+	oph->oh_flags = 0;
-+
-+	buf = vec->i_addr + sizeof(struct xlog_op_header);
-+	ASSERT(IS_ALIGNED((unsigned long)buf, sizeof(uint64_t)));
- 
- 	*vecp = vec;
--	return vec->i_addr;
-+	return buf;
- }
- 
- static inline void
- xlog_finish_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec *vec, int len)
- {
-+	struct xlog_op_header	*oph = vec->i_addr;
-+
-+	/* opheader tracks payload length, logvec tracks region length */
-+	oph->oh_len = len;
-+
-+	len += sizeof(struct xlog_op_header);
- 	lv->lv_buf_len += len;
- 	lv->lv_bytes += len;
- 	vec->i_len = len;
+ 			error = xlog_write_copy_finish(log, iclog, optype,
 diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b5ad62f12e24..98a8ac0b4a87 100644
+index e8c674b291f3..145f1e847f82 100644
 --- a/fs/xfs/xfs_log_cil.c
 +++ b/fs/xfs/xfs_log_cil.c
-@@ -181,13 +181,20 @@ xlog_cil_alloc_shadow_bufs(
- 		}
+@@ -652,14 +652,22 @@ xlog_cil_process_committed(
+ }
  
- 		/*
--		 * We 64-bit align the length of each iovec so that the start
--		 * of the next one is naturally aligned.  We'll need to
--		 * account for that slack space here. Then round nbytes up
--		 * to 64-bit alignment so that the initial buffer alignment is
--		 * easy to calculate and verify.
-+		 * We 64-bit align the length of each iovec so that the start of
-+		 * the next one is naturally aligned.  We'll need to account for
-+		 * that slack space here.
-+		 *
-+		 * We also add the xlog_op_header to each region when
-+		 * formatting, but that's not accounted to the size of the item
-+		 * at this point. Hence we'll need an addition number of bytes
-+		 * for each vector to hold an opheader.
-+		 *
-+		 * Then round nbytes up to 64-bit alignment so that the initial
-+		 * buffer alignment is easy to calculate and verify.
- 		 */
--		nbytes += niovecs * sizeof(uint64_t);
-+		nbytes += niovecs * (sizeof(uint64_t) +
-+					sizeof(struct xlog_op_header));;
- 		nbytes = round_up(nbytes, sizeof(uint64_t));
+ struct xlog_cil_trans_hdr {
++	struct xlog_op_header	oph[2];
+ 	struct xfs_trans_header	thdr;
+-	struct xfs_log_iovec	lhdr;
++	struct xfs_log_iovec	lhdr[2];
+ };
  
- 		/*
-@@ -433,11 +440,6 @@ xlog_cil_insert_items(
+ /*
+  * Build a checkpoint transaction header to begin the journal transaction.  We
+  * need to account for the space used by the transaction header here as it is
+  * not accounted for in xlog_write().
++ *
++ * This is the only place we write a transaction header, so we also build the
++ * log opheaders that indicate the start of a log transaction and wrap the
++ * transaction header. We keep the start record in it's own log vector rather
++ * than compacting them into a single region as this ends up making the logic
++ * in xlog_write() for handling empty opheaders for start, commit and unmount
++ * records much simpler.
+  */
+ static void
+ xlog_cil_build_trans_hdr(
+@@ -669,20 +677,40 @@ xlog_cil_build_trans_hdr(
+ 	int			num_iovecs)
+ {
+ 	struct xlog_ticket	*tic = ctx->ticket;
++	uint32_t		tid = cpu_to_be32(tic->t_tid);
  
- 	spin_lock(&cil->xc_cil_lock);
+ 	memset(hdr, 0, sizeof(*hdr));
  
--	/* account for space used by new iovec headers  */
--	iovhdr_res = diff_iovecs * sizeof(xlog_op_header_t);
--	len += iovhdr_res;
--	ctx->nvecs += diff_iovecs;
--
- 	/* attach the transaction to the CIL if it has any busy extents */
- 	if (!list_empty(&tp->t_busy))
- 		list_splice_init(&tp->t_busy, &ctx->busy_extents);
-@@ -469,6 +471,7 @@ xlog_cil_insert_items(
- 	}
- 	tp->t_ticket->t_curr_res -= len;
- 	ctx->space_used += len;
-+	ctx->nvecs += diff_iovecs;
++	/* Log start record */
++	hdr->oph[0].oh_tid = tid;
++	hdr->oph[0].oh_clientid = XFS_TRANSACTION;
++	hdr->oph[0].oh_flags = XLOG_START_TRANS;
++
++	/* log iovec region pointer */
++	hdr->lhdr[0].i_addr = &hdr->oph[0];
++	hdr->lhdr[0].i_len = sizeof(struct xlog_op_header);
++	hdr->lhdr[0].i_type = XLOG_REG_TYPE_LRHEADER;
++
++	/* log opheader */
++	hdr->oph[1].oh_tid = tid;
++	hdr->oph[1].oh_clientid = XFS_TRANSACTION;
++
++	/* transaction header */
+ 	hdr->thdr.th_magic = XFS_TRANS_HEADER_MAGIC;
+ 	hdr->thdr.th_type = XFS_TRANS_CHECKPOINT;
+-	hdr->thdr.th_tid = tic->t_tid;
++	hdr->thdr.th_tid = tid;
+ 	hdr->thdr.th_num_items = num_iovecs;
+-	hdr->lhdr.i_addr = &hdr->thdr;
+-	hdr->lhdr.i_len = sizeof(xfs_trans_header_t);
+-	hdr->lhdr.i_type = XLOG_REG_TYPE_TRANSHDR;
+-	tic->t_curr_res -= hdr->lhdr.i_len + sizeof(xlog_op_header_t);
  
- 	/*
- 	 * If we've overrun the reservation, dump the tx details before we move
+-	lvhdr->lv_niovecs = 1;
+-	lvhdr->lv_iovecp = &hdr->lhdr;
++	/* log iovec region pointer */
++	hdr->lhdr[1].i_addr = &hdr->oph[1];
++	hdr->lhdr[1].i_len = sizeof(struct xlog_op_header) +
++				sizeof(struct xfs_trans_header);
++	hdr->lhdr[1].i_type = XLOG_REG_TYPE_TRANSHDR;
++
++	tic->t_curr_res -= hdr->lhdr[0].i_len + hdr->lhdr[1].i_len;
++
++	lvhdr->lv_niovecs = 2;
++	lvhdr->lv_iovecp = &hdr->lhdr[0];
+ 	lvhdr->lv_next = ctx->lv_chain;
+ }
+ 
 -- 
 2.28.0
 
