@@ -5,66 +5,66 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE,
+	TVD_PH_BODY_META_ALL autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF8F2C433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 07:17:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42E25C433E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 07:19:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92B8F64EBB
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 07:17:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFF6D64EC9
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 07:19:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230174AbhBXHRD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 02:17:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47404 "EHLO
+        id S233099AbhBXHSx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Feb 2021 02:18:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232564AbhBXHRC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 02:17:02 -0500
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AA9EC06174A
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Feb 2021 23:16:22 -0800 (PST)
-Received: by mail-pl1-x629.google.com with SMTP id w18so639020plc.12
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Feb 2021 23:16:22 -0800 (PST)
+        with ESMTP id S234425AbhBXHSh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 02:18:37 -0500
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 864DEC061574
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Feb 2021 23:17:56 -0800 (PST)
+Received: by mail-pg1-x52a.google.com with SMTP id o10so895829pgg.4
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Feb 2021 23:17:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=references:user-agent:from:to:cc:subject:in-reply-to:date
          :message-id:mime-version;
-        bh=jAcimEZMrpJNN70yEeGzowxamEJVkgVW4Lv0cmjFx4Q=;
-        b=QSP/ZSZ4ODBnO9I4rhkLMmavj+cQyAWsxVCVWuj/VFM1NRg6ci+E08wdREZtQuJshG
-         og/9cBkdv5JW2fn4awaLccB43Wau0ZG8NnqEk7qJw492jkifQePVhXGvJEgNq42v5KGN
-         N9gsfkjxGbAzb+fi4NLvH/l7uXJ8F5P1DKyPj3MtXwGQlgGTZMhqk6IVvtS+uw1ytKb0
-         8JeDOWTlmzHcgchAS7519+CHLBJIb5gNjOoS9MsRQOoCdQSK2lbLnpyuBwgUCsMFVURg
-         /SFgP3eKIxq+KUbGv07zKReXKFAAlulVYLObaecj60sFKMFno/py0O2BvRpBW+D0Iwwd
-         TJww==
+        bh=rSpxeVQF34bpz9F1y3dtwv97RqsBaC4UBtHHqrTSGtw=;
+        b=HDmMA+lW+qg8ucLesz60n44hmVvZkBT0EcMgX7xK7cAGLpZlpij90F47I6jq0Cwltd
+         XPZuz+mvLpeqG6ekUSX76OG+WFVJ6TVwsIcbr6mTwm++AHtqCErAkA0yq+g3wDFI7t3z
+         ECnElyQIm5FZelwci7HUUkB18vtgfL+rTkg4efm+OeTZzpMv8Fm/WNL/KvFqcyLz2VlF
+         wx/kcisLJUpCXNt1S3LQSPZkV2zirnqYRLPeQNnLS1Nnt8Fnj2YEjiuaFG13tVZPVQeO
+         piHul4FUwQRHd5GorH0/rtIkwFPj+aTdy4KXnsumJ8ggzSTJ3k0CelOS0buCF+iWRWbe
+         kcog==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:references:user-agent:from:to:cc:subject
          :in-reply-to:date:message-id:mime-version;
-        bh=jAcimEZMrpJNN70yEeGzowxamEJVkgVW4Lv0cmjFx4Q=;
-        b=XOEwMbsKlEPZMi9AOUmSkQVwpOZVemxYqJchbcxjMqkFB0ny3YQPlsmyPc2xgzeNVs
-         pAGVb/wBDylUoP5zvS9Y/IfSWAbXbVjNgRjDIGYcHptwSVYcOpKmnCPuG7TWntjamdNs
-         Q591aVe6vHbTTqIW610hrCD7WciBasmeL+eR4n3trqY9lCoELFQr1o1nkAdITk1kQWDD
-         cvbcOVinIvIo95rnChFHZ4YsBrlx+w8wQVyYDItYTooI06TKLfyR1TYxEkdMFYbd/VKV
-         Y1udcCU8IiNqkZaI4oGJrweIFLUOTUiG9oacGGU2ht6CSuYfmLr8SdBVxr3ZF6d42thF
-         RCrg==
-X-Gm-Message-State: AOAM532pBk8wSBIWTW2HHj5X5KNrjyXPj8AcNiNRBOHaLJWkG8+ugjlr
-        YY6KuVkXuP2ZtutTprKDkGXFm27cFFM=
-X-Google-Smtp-Source: ABdhPJzfAC0boBwZ/sPt0ndLLrHLWbZTUdnLWh5B+dhW7kTK0dmgUYk0SmBrHdplCUHGWwv2zQBYRg==
-X-Received: by 2002:a17:90b:1bc6:: with SMTP id oa6mr3181948pjb.86.1614150981783;
-        Tue, 23 Feb 2021 23:16:21 -0800 (PST)
+        bh=rSpxeVQF34bpz9F1y3dtwv97RqsBaC4UBtHHqrTSGtw=;
+        b=mZbRHmOInufVRNGRhdUQRqhBIc8FSjiMsYsV6pFBTLyKG00U96VzUJ7p9VfLOq78G7
+         fbKYmUP6i8KbfX72a1r+ewCC2LCVYZC9V05n5pkaU5QyrcMgE0QesSwEFJ5+VnZsSp0y
+         RDlQ0ISxzaD8vz4TLps9F643IBr1ue3F1v6Z+Ojpgb00D+OXRchPWKvhKzhspFHNesNY
+         FM1KAsleMaTm3AjgjX6vYlV8rtkZgg19eBx49tkk0JLho73HYOq2S8Hwad3jDsCu6tAm
+         h5Kn4+EDydPyHzHCM9xczkGugr8BG6FyFg86ARQhu6MwbkG4Qqqiki469gRG2X4gdhfV
+         E2/g==
+X-Gm-Message-State: AOAM533RTrn0aQ4aNGSiTtyLe9L93Fp0uGKyCrq4ehodberF/ox+PlFR
+        syXDeyZt61mOKL1fzcy8tLNPsAmmt30=
+X-Google-Smtp-Source: ABdhPJxMB/dzhJz6nF4+8b7Pdd2eqfvPBKchieCYpY+Y3/b0NgfqQYu4pT7eg/74fO58qcLTvftbAA==
+X-Received: by 2002:aa7:854e:0:b029:1ec:eae7:1565 with SMTP id y14-20020aa7854e0000b02901eceae71565mr30350675pfn.35.1614151075891;
+        Tue, 23 Feb 2021 23:17:55 -0800 (PST)
 Received: from garuda ([122.171.161.92])
-        by smtp.gmail.com with ESMTPSA id q7sm1387280pjr.13.2021.02.23.23.16.20
+        by smtp.gmail.com with ESMTPSA id r202sm1613085pfc.10.2021.02.23.23.17.54
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 23 Feb 2021 23:16:21 -0800 (PST)
-References: <20210223033442.3267258-1-david@fromorbit.com> <20210223033442.3267258-6-david@fromorbit.com>
+        Tue, 23 Feb 2021 23:17:55 -0800 (PST)
+References: <20210223033442.3267258-1-david@fromorbit.com> <20210223033442.3267258-7-david@fromorbit.com>
 User-agent: mu4e 1.0; emacs 26.1
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/8] xfs: CIL checkpoint flushes caches unconditionally
-In-reply-to: <20210223033442.3267258-6-david@fromorbit.com>
-Date:   Wed, 24 Feb 2021 12:46:18 +0530
-Message-ID: <87v9aiorzx.fsf@garuda>
+Subject: Re: [PATCH 6/8] xfs: remove need_start_rec parameter from xlog_write()
+In-reply-to: <20210223033442.3267258-7-david@fromorbit.com>
+Date:   Wed, 24 Feb 2021 12:47:53 +0530
+Message-ID: <87tuq2orxa.fsf@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
@@ -74,119 +74,213 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 23 Feb 2021 at 09:04, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 >
-> Currently every journal IO is issued as REQ_PREFLUSH | REQ_FUA to
-> guarantee the ordering requirements the journal has w.r.t. metadata
-> writeback. THe two ordering constraints are:
+> The CIL push is the only call to xlog_write that sets this variable
+> to true. The other callers don't need a start rec, and they tell
+> xlog_write what to do by passing the type of ophdr they need written
+> in the flags field. The need_start_rec parameter essentially tells
+> xlog_write to to write an extra ophdr with a XLOG_START_TRANS type,
+> so get rid of the variable to do this and pass XLOG_START_TRANS as
+> the flag value into xlog_write() from the CIL push.
 >
-> 1. we cannot overwrite metadata in the journal until we guarantee
-> that the dirty metadata has been written back in place and is
-> stable.
->
-> 2. we cannot write back dirty metadata until it has been written to
-> the journal and guaranteed to be stable (and hence recoverable) in
-> the journal.
->
-> These rules apply to the atomic transactions recorded in the
-> journal, not to the journal IO itself. Hence we need to ensure
-> metadata is stable before we start writing a new transaction to the
-> journal (guarantee #1), and we need to ensure the entire transaction
-> is stable in the journal before we start metadata writeback
-> (guarantee #2).
->
-> The ordering guarantees of #1 are currently provided by REQ_PREFLUSH
-> being added to every iclog IO. This causes the journal IO to issue a
-> cache flush and wait for it to complete before issuing the write IO
-> to the journal. Hence all completed metadata IO is guaranteed to be
-> stable before the journal overwrites the old metadata.
->
-> However, for long running CIL checkpoints that might do a thousand
-> journal IOs, we don't need every single one of these iclog IOs to
-> issue a cache flush - the cache flush done before the first iclog is
-> submitted is sufficient to cover the entire range in the log that
-> the checkpoint will overwrite because the CIL space reservation
-> guarantees the tail of the log (completed metadata) is already
-> beyond the range of the checkpoint write.
->
-> Hence we only need a full cache flush between closing off the CIL
-> checkpoint context (i.e. when the push switches it out) and issuing
-> the first journal IO. Rather than plumbing this through to the
-> journal IO, we can start this cache flush the moment the CIL context
-> is owned exclusively by the push worker. The cache flush can be in
-> progress while we process the CIL ready for writing, hence
-> reducing the latency of the initial iclog write. This is especially
-> true for large checkpoints, where we might have to process hundreds
-> of thousands of log vectors before we issue the first iclog write.
-> In these cases, it is likely the cache flush has already been
-> completed by the time we have built the CIL log vector chain.
+> $ size fs/xfs/xfs_log.o*
+>   text	   data	    bss	    dec	    hex	filename
+>  27595	    560	      8	  28163	   6e03	fs/xfs/xfs_log.o.orig
+>  27454	    560	      8	  28022	   6d76	fs/xfs/xfs_log.o.patched
 >
 
-Indeed, a single cache flush of the "data device" that is issued before
-writing the first iclog of a CIL context is sufficient to make sure that the
-metadata has really reached non-volatile storage.
+Looks good to me.
 
 Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_log_cil.c | 29 +++++++++++++++++++++++++----
->  1 file changed, 25 insertions(+), 4 deletions(-)
+>  fs/xfs/xfs_log.c      | 44 +++++++++++++++++++++----------------------
+>  fs/xfs/xfs_log_cil.c  |  3 ++-
+>  fs/xfs/xfs_log_priv.h |  3 +--
+>  3 files changed, 25 insertions(+), 25 deletions(-)
 >
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 493454c98c6f..6c3fb6dcb505 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -871,9 +871,7 @@ xlog_wait_on_iclog_lsn(
+>  static int
+>  xlog_write_unmount_record(
+>  	struct xlog		*log,
+> -	struct xlog_ticket	*ticket,
+> -	xfs_lsn_t		*lsn,
+> -	uint			flags)
+> +	struct xlog_ticket	*ticket)
+>  {
+>  	struct xfs_unmount_log_format ulf = {
+>  		.magic = XLOG_UNMOUNT_TYPE,
+> @@ -890,7 +888,7 @@ xlog_write_unmount_record(
+>  
+>  	/* account for space used by record data */
+>  	ticket->t_curr_res -= sizeof(ulf);
+> -	return xlog_write(log, &vec, ticket, lsn, NULL, flags, false);
+> +	return xlog_write(log, &vec, ticket, NULL, NULL, XLOG_UNMOUNT_TRANS);
+>  }
+>  
+>  /*
+> @@ -904,15 +902,13 @@ xlog_unmount_write(
+>  	struct xfs_mount	*mp = log->l_mp;
+>  	struct xlog_in_core	*iclog;
+>  	struct xlog_ticket	*tic = NULL;
+> -	xfs_lsn_t		lsn;
+> -	uint			flags = XLOG_UNMOUNT_TRANS;
+>  	int			error;
+>  
+>  	error = xfs_log_reserve(mp, 600, 1, &tic, XFS_LOG, 0);
+>  	if (error)
+>  		goto out_err;
+>  
+> -	error = xlog_write_unmount_record(log, tic, &lsn, flags);
+> +	error = xlog_write_unmount_record(log, tic);
+>  	/*
+>  	 * At this point, we're umounting anyway, so there's no point in
+>  	 * transitioning log state to IOERROR. Just continue...
+> @@ -1604,8 +1600,7 @@ xlog_commit_record(
+>  	if (XLOG_FORCED_SHUTDOWN(log))
+>  		return -EIO;
+>  
+> -	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS,
+> -			   false);
+> +	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS);
+>  	if (error)
+>  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+>  	return error;
+> @@ -2202,13 +2197,16 @@ static int
+>  xlog_write_calc_vec_length(
+>  	struct xlog_ticket	*ticket,
+>  	struct xfs_log_vec	*log_vector,
+> -	bool			need_start_rec)
+> +	uint			optype)
+>  {
+>  	struct xfs_log_vec	*lv;
+> -	int			headers = need_start_rec ? 1 : 0;
+> +	int			headers = 0;
+>  	int			len = 0;
+>  	int			i;
+>  
+> +	if (optype & XLOG_START_TRANS)
+> +		headers++;
+> +
+>  	for (lv = log_vector; lv; lv = lv->lv_next) {
+>  		/* we don't write ordered log vectors */
+>  		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
+> @@ -2428,8 +2426,7 @@ xlog_write(
+>  	struct xlog_ticket	*ticket,
+>  	xfs_lsn_t		*start_lsn,
+>  	struct xlog_in_core	**commit_iclog,
+> -	uint			flags,
+> -	bool			need_start_rec)
+> +	uint			optype)
+>  {
+>  	struct xlog_in_core	*iclog = NULL;
+>  	struct xfs_log_vec	*lv = log_vector;
+> @@ -2457,8 +2454,9 @@ xlog_write(
+>  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+>  	}
+>  
+> -	len = xlog_write_calc_vec_length(ticket, log_vector, need_start_rec);
+> -	*start_lsn = 0;
+> +	len = xlog_write_calc_vec_length(ticket, log_vector, optype);
+> +	if (start_lsn)
+> +		*start_lsn = 0;
+>  	while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
+>  		void		*ptr;
+>  		int		log_offset;
+> @@ -2472,7 +2470,7 @@ xlog_write(
+>  		ptr = iclog->ic_datap + log_offset;
+>  
+>  		/* start_lsn is the first lsn written to. That's all we need. */
+> -		if (!*start_lsn)
+> +		if (start_lsn && !*start_lsn)
+>  			*start_lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+>  
+>  		/*
+> @@ -2485,6 +2483,7 @@ xlog_write(
+>  			int			copy_len;
+>  			int			copy_off;
+>  			bool			ordered = false;
+> +			bool			wrote_start_rec = false;
+>  
+>  			/* ordered log vectors have no regions to write */
+>  			if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
+> @@ -2502,13 +2501,15 @@ xlog_write(
+>  			 * write a start record. Only do this for the first
+>  			 * iclog we write to.
+>  			 */
+> -			if (need_start_rec) {
+> +			if (optype & XLOG_START_TRANS) {
+>  				xlog_write_start_rec(ptr, ticket);
+>  				xlog_write_adv_cnt(&ptr, &len, &log_offset,
+>  						sizeof(struct xlog_op_header));
+> +				optype &= ~XLOG_START_TRANS;
+> +				wrote_start_rec = true;
+>  			}
+>  
+> -			ophdr = xlog_write_setup_ophdr(log, ptr, ticket, flags);
+> +			ophdr = xlog_write_setup_ophdr(log, ptr, ticket, optype);
+>  			if (!ophdr)
+>  				return -EIO;
+>  
+> @@ -2539,14 +2540,13 @@ xlog_write(
+>  			}
+>  			copy_len += sizeof(struct xlog_op_header);
+>  			record_cnt++;
+> -			if (need_start_rec) {
+> +			if (wrote_start_rec) {
+>  				copy_len += sizeof(struct xlog_op_header);
+>  				record_cnt++;
+> -				need_start_rec = false;
+>  			}
+>  			data_cnt += contwr ? copy_len : 0;
+>  
+> -			error = xlog_write_copy_finish(log, iclog, flags,
+> +			error = xlog_write_copy_finish(log, iclog, optype,
+>  						       &record_cnt, &data_cnt,
+>  						       &partial_copy,
+>  						       &partial_copy_len,
+> @@ -2590,7 +2590,7 @@ xlog_write(
+>  	spin_lock(&log->l_icloglock);
+>  	xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
+>  	if (commit_iclog) {
+> -		ASSERT(flags & XLOG_COMMIT_TRANS);
+> +		ASSERT(optype & XLOG_COMMIT_TRANS);
+>  		*commit_iclog = iclog;
+>  	} else {
+>  		error = xlog_state_release_iclog(log, iclog);
 > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index c5cc1b7ad25e..8bcacd463f06 100644
+> index 8bcacd463f06..4093d2d0db7c 100644
 > --- a/fs/xfs/xfs_log_cil.c
 > +++ b/fs/xfs/xfs_log_cil.c
-> @@ -656,6 +656,7 @@ xlog_cil_push_work(
->  	struct xfs_log_vec	lvhdr = { NULL };
->  	xfs_lsn_t		commit_lsn;
->  	xfs_lsn_t		push_seq;
-> +	DECLARE_COMPLETION_ONSTACK(bdev_flush);
->
->  	new_ctx = kmem_zalloc(sizeof(*new_ctx), KM_NOFS);
->  	new_ctx->ticket = xlog_cil_ticket_alloc(log);
-> @@ -719,10 +720,24 @@ xlog_cil_push_work(
->  	spin_unlock(&cil->xc_push_lock);
->
->  	/*
-> -	 * pull all the log vectors off the items in the CIL, and
-> -	 * remove the items from the CIL. We don't need the CIL lock
-> -	 * here because it's only needed on the transaction commit
-> -	 * side which is currently locked out by the flush lock.
-> +	 * The CIL is stable at this point - nothing new will be added to it
-> +	 * because we hold the flush lock exclusively. Hence we can now issue
-> +	 * a cache flush to ensure all the completed metadata in the journal we
-> +	 * are about to overwrite is on stable storage.
-> +	 *
-> +	 * This avoids the need to have the iclogs issue REQ_PREFLUSH based
-> +	 * cache flushes to provide this ordering guarantee, and hence for CIL
-> +	 * checkpoints that require hundreds or thousands of log writes no
-> +	 * longer need to issue device cache flushes to provide metadata
-> +	 * writeback ordering.
-> +	 */
-> +	xfs_flush_bdev_async(log->l_mp->m_ddev_targp->bt_bdev, &bdev_flush);
-> +
-> +	/*
-> +	 * Pull all the log vectors off the items in the CIL, and remove the
-> +	 * items from the CIL. We don't need the CIL lock here because it's only
-> +	 * needed on the transaction commit side which is currently locked out
-> +	 * by the flush lock.
+> @@ -827,7 +827,8 @@ xlog_cil_push_work(
 >  	 */
->  	lv = NULL;
->  	num_iovecs = 0;
-> @@ -806,6 +821,12 @@ xlog_cil_push_work(
->  	lvhdr.lv_iovecp = &lhdr;
->  	lvhdr.lv_next = ctx->lv_chain;
->
-> +	/*
-> +	 * Before we format and submit the first iclog, we have to ensure that
-> +	 * the metadata writeback ordering cache flush is complete.
-> +	 */
-> +	wait_for_completion(&bdev_flush);
-> +
->  	error = xlog_write(log, &lvhdr, tic, &ctx->start_lsn, NULL, 0, true);
+>  	wait_for_completion(&bdev_flush);
+>  
+> -	error = xlog_write(log, &lvhdr, tic, &ctx->start_lsn, NULL, 0, true);
+> +	error = xlog_write(log, &lvhdr, tic, &ctx->start_lsn, NULL,
+> +				XLOG_START_TRANS);
 >  	if (error)
 >  		goto out_abort_free_ticket;
+>  
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index a7ac85aaff4e..10a41b1dd895 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -480,8 +480,7 @@ void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
+>  void	xlog_print_trans(struct xfs_trans *);
+>  int	xlog_write(struct xlog *log, struct xfs_log_vec *log_vector,
+>  		struct xlog_ticket *tic, xfs_lsn_t *start_lsn,
+> -		struct xlog_in_core **commit_iclog, uint flags,
+> -		bool need_start_rec);
+> +		struct xlog_in_core **commit_iclog, uint optype);
+>  int	xlog_commit_record(struct xlog *log, struct xlog_ticket *ticket,
+>  		struct xlog_in_core **iclog, xfs_lsn_t *lsn);
+>  void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
 
 
---
+-- 
 chandan
