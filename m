@@ -8,138 +8,138 @@ X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ECC3C433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E361CC433DB
 	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 05:40:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 21BB864EBB
+	by mail.kernel.org (Postfix) with ESMTP id 918C064EBB
 	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 05:40:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230001AbhBXFkl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 00:40:41 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:48882 "EHLO
+        id S233487AbhBXFko (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Feb 2021 00:40:44 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:49044 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233487AbhBXFk2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 00:40:28 -0500
+        with ESMTP id S233981AbhBXFkb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 00:40:31 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11O5dcsY070664;
-        Wed, 24 Feb 2021 05:39:38 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11O5dNTv070579;
+        Wed, 24 Feb 2021 05:39:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=B/08PUJQhBvOa2kRxImsWIQecxmDdqdqK/xvLFt9dVs=;
- b=baGpt05O1c7WvL2mT/rLBOIjzA1LumISl0hQ0yIlA0not12MlMTNhWAlPbB6tZ95OtQ/
- Vau2q/JI31Y7Ab9KWqWSnMlwbwv1vES13o/Mjot5AVqMt8Fs8e3P07BbTMGDwC3tDHvv
- mIHuaN2vrzaXMPxZMwVrRki52ytL/hBqrhqSg0x4cy7e5YwXcuQbPsFizR46obbkhoY4
- veBDs0MHfXqB4/87QaOcGYzNtxgRuPlCZl1BrTNv5/IXVefq5ldUgFP7DURLSaz4Wk4u
- eWOqNsBJ8NGNxDlKK0LUmRwk+jnXluTsX2K5lxxfVHxDAMAbHrsQERoWjLDCJbEwkx6k fw== 
+ bh=X6ID3fmNPyhuNikkNFcOBobfi2sN+uvo6TVHDdLQPtI=;
+ b=CVvSZkTf6cyXfKRH3VPKDKdlweeOA4M/ehC/Yd3TbOHn2Pz7ywYiGgeajdMt/8KnY+RS
+ sVfcD6NnEbwJZqi3zTzVK25JvSYX4LId9lNaaxgxTb4cBRzAaJkTSVRveRdkuc7Fe26E
+ Z7bIWayp5nFP1ieUReWE95WEHTO4LXGhAkIVTGMlOzgouxSVHGdXZdIjDfMHQZ+2hK/k
+ RnvsFr9QAGzTTIJAiFWNX6yQ1HFQjERLP4MdHdwunm0aw3Nppz7oIvjG0DOFUCjZmODP
+ Bx1GwJkXuRIqqhNxotdgWcQqppsGbPqZHNomeAZGE85azSWwUKFcExJrtCyY5jzgK0/K Fg== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 36tsur1prt-1
+        by userp2130.oracle.com with ESMTP id 36tsur1ps1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 24 Feb 2021 05:39:38 +0000
+        Wed, 24 Feb 2021 05:39:44 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11O5a9Lx031749;
-        Wed, 24 Feb 2021 05:39:37 GMT
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11O5a9qh031747;
+        Wed, 24 Feb 2021 05:39:44 GMT
 Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2101.outbound.protection.outlook.com [104.47.70.101])
-        by userp3020.oracle.com with ESMTP id 36uc6sp3ev-2
+        by userp3020.oracle.com with ESMTP id 36uc6sp3hr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 24 Feb 2021 05:39:37 +0000
+        Wed, 24 Feb 2021 05:39:43 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Y8V0S3q6xiuNDADkbwY9wSOZbk1q/WNozajIt4rniVcClqnDU49YksJHc/I0OjR4ZeDsB+3SyVaFD3jPCx7SXsKrfSf74uVS7PrzFRnbnXCW+HF4cUw1+vhfmEYm7CTmtWxNkguZ4bZOsb6RlrDYnT0tWinF04bbM2bJWpq/sYRgLBrZdK2sbP0IPjfJD9JT/UYm+sIRu75zaUytWAwXo6/mszuEOPlyh4IOm+0Zreo4b2vVaAwH7wbl/waDsqqyPML1p5oKTHLVMha/S4PFpp5GVuHV/83ALGFki8mci8WJfvG4Bu0oV1DgTRgbA/QK5wpvsp69IgHgCM1mbmAg5w==
+ b=dhpivcPx4uCq3OUPFOl49m7o6U0V630jbPO44LZpgNpN1lUhPzPoZTIa2/SQAhWctXPA8j99SrAOCpj83JlAObZD4E17izgELY2lN5P7OztB9QRhX+/mWSBlauDSAMQRNLwycM/goc6tjpo5iuRe/C5wt8W5cvAulkNrImuis8cBgBtMAE0TE0Hh2mhrM4gMoPaZ7D4AFycoZ8FjXL0nDY8w6tkm8odQ/xeEJ6KmhtIydDtTZeFFSG1W2R9AUlb3nkWz5h4EFx2AAymQw4f/gSQFahHltyN3RFfeRKVtLwyX95/RjSrFJE7hurHZMdHpXr6r5FuH7tNX7zUjSfwsCg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=B/08PUJQhBvOa2kRxImsWIQecxmDdqdqK/xvLFt9dVs=;
- b=B3+Lss8mKCqmJOXpMBJUmJaMKOWiIBZr1YETm11/qInz8SUThIw9BIGgFsCo8f5c80au14z0m26sMt7YMsCvKJCGkMcSsQ72k1Sguhzj0CT0z4eFgISiwaVbTNeiignXuPuA8DMNXrX+YeJSPAvilflSp1TmEq7tmpPKFe6wpNrtEWAiaLWwuC2YBXLc3HVUo6Y5r+m/tDLUFllMme8EGpu3DOqkDtCMwMC4Cce7W5xyDaP+F1gtwMQ1Kt6TVxSqlTHKRMQBIbEfYQblZzPhLILZ13O8dhOKOPF3IebhFWUKd/EQFZo3iiUliTjMF+4TkjEOXWEb0W7AbP9SDoEeXg==
+ bh=X6ID3fmNPyhuNikkNFcOBobfi2sN+uvo6TVHDdLQPtI=;
+ b=gBxZmDeOwBPHqzLd0RKp8hRYymwn/XriZu7truu8wGiAhiA5LtIfXAgxPuVjWg+WLglK3KR8hL9fBhLXTj3e2xV2Tp04hNkm58Zusn9UsN8+pJ6eJGwpgC/ac4TgUxIxchbu73CbHdj8BMj1iDrpbP3g3YpbNcpbbnnABT7wivIMUalJNTBVAo8OVGOHV6bfEJ/qh2ym4H4Rpagu7Kb2yosGfGddTOsdGtDWaPMZWMr78wUwlawPZVfg4P7Jcik/utlpqU97sPOrcLh1vZ/cEUs/M4ByZq2Py07Br6fw60OqbhgrJM9claqy1nxn4z43iuBcAEJLZ6UXoN4Yc4NDEg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=B/08PUJQhBvOa2kRxImsWIQecxmDdqdqK/xvLFt9dVs=;
- b=vzDDzFtzqnNwLbQxSIZk6c2q6Cv1kTd8MPmnmGJKTe2Fvq6h2w2n8Q7zAH3YoOn6LTvoLXE49E/eprVuBFj3z8fDSLTcgV5QxRtltY4XPpOKeSu5FWfwxXqUyvvHJf+1SiQavr59GBgIhjuu2mslhZR/3khhIE5FNc7CIoM27Wc=
+ bh=X6ID3fmNPyhuNikkNFcOBobfi2sN+uvo6TVHDdLQPtI=;
+ b=ZfgqcHnlBiCviEFcTOUZJG9tgIAMtGAg++ESfHeaCdIxVklFfA7eLDU1V9MJSGNzKlfnaHloGj970Q/OceywsxvF4ZGZ/piHclJkO8bdmscKXtxcDI2xi9JDHT8808PVR6IOsN7/2B3c7jmNjkHpvx/6tvqW5jIOf1yjxX1mK9I=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
  by BYAPR10MB2437.namprd10.prod.outlook.com (2603:10b6:a02:b0::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.32; Wed, 24 Feb
- 2021 05:39:36 +0000
+ 2021 05:39:41 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::f4a1:6643:4c93:2a9f]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::f4a1:6643:4c93:2a9f%3]) with mapi id 15.20.3890.019; Wed, 24 Feb 2021
- 05:39:36 +0000
-Subject: Re: [PATCH 2/4] libxfs: simulate system failure after a certain
- number of writes
+ 05:39:41 +0000
+Subject: Re: [PATCH 3/4] xfs_repair: factor phase transitions into a helper
 To:     "Darrick J. Wong" <djwong@kernel.org>, sandeen@sandeen.net
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Cc:     Eric Sandeen <sandeen@redhat.com>,
+        Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 References: <161404926046.425602.766097344183886137.stgit@magnolia>
- <161404927196.425602.4393417228179099132.stgit@magnolia>
+ <161404927772.425602.2186366769310581007.stgit@magnolia>
 From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <f03d8e66-efe9-f8f1-42ec-81ef67e1f9b0@oracle.com>
-Date:   Tue, 23 Feb 2021 22:39:34 -0700
+Message-ID: <9b9dade6-f4bf-e568-b2d4-cc392de30de3@oracle.com>
+Date:   Tue, 23 Feb 2021 22:39:40 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.7.1
-In-Reply-To: <161404927196.425602.4393417228179099132.stgit@magnolia>
+In-Reply-To: <161404927772.425602.2186366769310581007.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [67.1.223.248]
-X-ClientProxiedBy: SJ0PR03CA0088.namprd03.prod.outlook.com
- (2603:10b6:a03:331::33) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: SJ0PR03CA0064.namprd03.prod.outlook.com
+ (2603:10b6:a03:331::9) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.226] (67.1.223.248) by SJ0PR03CA0088.namprd03.prod.outlook.com (2603:10b6:a03:331::33) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.28 via Frontend Transport; Wed, 24 Feb 2021 05:39:36 +0000
+Received: from [192.168.1.226] (67.1.223.248) by SJ0PR03CA0064.namprd03.prod.outlook.com (2603:10b6:a03:331::9) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.27 via Frontend Transport; Wed, 24 Feb 2021 05:39:41 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 14e343ef-d853-48f9-3312-08d8d8869241
+X-MS-Office365-Filtering-Correlation-Id: 5495fea9-9428-4aaf-a96f-08d8d8869563
 X-MS-TrafficTypeDiagnostic: BYAPR10MB2437:
-X-Microsoft-Antispam-PRVS: <BYAPR10MB2437BD8CAE3A36E92D0AFDBF959F9@BYAPR10MB2437.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:69;
+X-Microsoft-Antispam-PRVS: <BYAPR10MB2437210CE52BC471EA58C1C9959F9@BYAPR10MB2437.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: CLa1UMgPAflhZMOl4JCrG513jee6lyB0fVRBAcOo9bKxebPTKtFVD8IrXqR2RNhYn2L711MzNz/1HoF+oifdb3QaOzfraiKWkdBGIYXznjDai3mmRlmgZkuqPmQXiqLbECpvsG8rQPKtuXgyyJg+/WJv91EVRd9yCkD2+NX9rqI/WbPgEpGQvIkOWvVkHH4BJOAF78ltuDJpG8J9kHfc8LuMFwk3sqgg0HlUD2pHx7l0p59CBze9KUxzOz3NbjsED3F56ctADWROJf3JmrVaH+zk9vXo4qwXgz11j5YL8I6KcuE7zfzyaArTBZzJWMT8N+xdSbwdFn8NAa1ARjeLxZQH6IqaFLZtJz/OcnyHP+uar2Fik+cyARR+m8ECoT6RGlGoXMeChRyRWwnN/QQbJMJ+WGS0UTSOto/4AyWHRy/1SZptiAyo9eTUP3jB469l+JUZ/GNX/BsHUChLNeFwnqcFT5XRZJs4kNkR38e+sKPsfQXWiqEBFhkWtdJH0kd3TEkm/vvFl1Aw6kvXlN7X/keK2V4jjSrpBmpIuNlQytaap2310iNR1f/nximTrNq+7FJpubxUJabuZen8e6q5K7ztdzghtbTURgSMPQNtYKA=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(39860400002)(346002)(366004)(396003)(376002)(8676002)(316002)(26005)(66476007)(2906002)(4326008)(478600001)(8936002)(16526019)(186003)(5660300002)(53546011)(52116002)(956004)(44832011)(66556008)(83380400001)(2616005)(36756003)(66946007)(16576012)(6486002)(31696002)(31686004)(86362001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?OStHbHBxMTE0QmhXN2FYSU1HbWlYdFhVOVRwdEtTcCtGZUo4M1ZTYTk4dGZh?=
- =?utf-8?B?WGdPZDlUcFZQSFNybk93WHFyWWVTVjd3NTYxdUM4ZTF2bzlyMFZOUUd3MGNk?=
- =?utf-8?B?eWdkWDFhQjZMRUxsbmhHdEpqZkNkYUt3VFZoOXB5Wkg1NENLVTF6WmdzbDBM?=
- =?utf-8?B?V0V5RkRFQk1uK1JUWkE5NWRlMFV3SnR4dVc5Z0hiemFEZHlKajBnYkp2eHli?=
- =?utf-8?B?V1IzLzVJcG5vMTVPOGZKLyt1c0tQSjFNVG9YNUtXcjNXZ0ZYR3VQaTB4NzRt?=
- =?utf-8?B?bThRVHA4bTBxN0xCQ092b1Y0U2srMEE1VGxNczFqWHg3WVhVWXZxdU91clpi?=
- =?utf-8?B?cWdRbGo1L2hxMnVWU2p0T1NieGVVRzJEajRMQjhiTWp0N0xoSkx5M0hLUFBY?=
- =?utf-8?B?ZGlPMnhBRVZmZnJyaDhnd0tUek1jTVdvRVpGVHhGMnZ2UG9TVkppYVYvSStU?=
- =?utf-8?B?UkN4Z3ZnTDVncFk0a3dCcFFBRDVOajBIYUZ0QTUvT3JOWmtzVkxtcjJRZUp3?=
- =?utf-8?B?bHVRdEcrOUwwS01YTGVQSnRmZjVPSkpMdDZETTNLdmVoV0xndXRXVUxvV1hM?=
- =?utf-8?B?WUdHZCtlSWJiWFBPVk42Sng3UlhHdGJDL1p5M0ZvQzRuV2N5NVpXWU04V0o1?=
- =?utf-8?B?VldMOFJyOHpPNWlEZHdwK0hocXdzZ2paZjlsY2lGdDNnZzlsQVZwcWNHZVJ4?=
- =?utf-8?B?T1VmUTROaWpvSTYxR1FaZUNML3laUm1NZk94VVhyODQyUStQM3c5T1MvSHE0?=
- =?utf-8?B?aSthYzhTcHFrTW9ITndISFdhemEzRG84Q0hCc3RXaHlOQkdBOXExZWEwNzFq?=
- =?utf-8?B?S0JzM0lIYXVZZ0Zpck9TdHdndUYwQytTYlJJRlVMOUU2OEU2S0dKRkxDUUYw?=
- =?utf-8?B?UVJyZXR3VmdMNWNLV0luZGRxakVsdG0xQWQxWjVkSUFLNTdBWldNbUFaTUxE?=
- =?utf-8?B?SkxFMVE0eUpEc3lYRXMrNEFTekVQT3AvYVE1dURlbE02ek04N2VWaDk4QmdX?=
- =?utf-8?B?eVFUTEg3NW1jUnhkTkxOOGhoRm4wQWRoU2crY0wvRWFxYkF2U2tsSSszanJC?=
- =?utf-8?B?TGdMTi9GQkFtV1o3QWJHd3J2blRRNWJFdnJZcHFMa2hodk1UMUE2Skw4V0tP?=
- =?utf-8?B?RFp4Uk5FZWMyWStUbzlpVHJYd0wrSzA4dmNyUjFGS1pWNGN2VEU5UlJlVm42?=
- =?utf-8?B?eEhid09FZHZaYUovNnBRY0NUdWszWEtXWkVGZng5YTRRYVI3bFRGWllneUNr?=
- =?utf-8?B?VEU4SGd5eFdPL291VjVyR0VLTEdEWXBBeHplZzMyNW9TWWZOZ0Q5MDlYazQ0?=
- =?utf-8?B?eTRyR0U2bzhQM2xETGoxSmFSaHN1bFhIZGZRZVJCeExnUmQ4SlNFWnF5VndX?=
- =?utf-8?B?VGo0WHRvL2IwUERpNG1Fb2FaMGpFbVhLQzZ2TWlHSVlvSHNkYVdhK3ZvUDNY?=
- =?utf-8?B?T3VxUUFlQ3doSnBBK2tvZXFaY1FqWmV3OXFLUG9hNGc3d1VUVGRYYU9PM2RB?=
- =?utf-8?B?My9pQUFGelNXRmZvS1UvTjVCZmZNeWlObmFjc2FqczZaSU9sVy9jLzF0MVB5?=
- =?utf-8?B?SlNzRGVpeUJrMGxvT0ZWVzBiM0s0N3hYcW1rTG1ETG1XUzQ4SVJPaUFOYnIz?=
- =?utf-8?B?QUZlT25jQ3RlSnBhN2J0SGhMUlBsTzQ0SmJuWlF1Q3lHWXRkTExNa2x4aWZM?=
- =?utf-8?B?ak5COW15WmdjMDF1RjcwZnNsMTFNMzlpc2NISC8vTTlyeTBQOFVOWmlDWllJ?=
- =?utf-8?Q?xu+46JKpzp8Fp//12IGz9USbVorYz9NqS9lT/Ci?=
+X-Microsoft-Antispam-Message-Info: uVnZXcShkboFNrCusBnqjRIrml/8P6+zAP0KMgWNaVJjdphR+cGjSkzHqTc6YEL17zHVUAbthfNP+3NL8wcgUs4dVUYb6QQ+nU3mTKa+wXTJVhCpNTyYOwQOoKc43ZzPGWy0n1PsgbBHPWiJlW3CyQl1+IggU++9aUiRItejmsvLnmuIoRLSKPO1hjs3jR22rjgaGqRG+kCGUrdEecwPF9j+OqqDLNoHe9oJ/mvFHzM6McWWxvFZ39jy0ro5BhczdoP5tH0PTZCT2t7/2VsLoNsMVQVxeKpwcnP658PpciJZQoRWOHMQGMSJ2Qv83m74QH34dRmxQ6sGF+72QgnhwiHsw+o38jeFHMaE5GBPNNoKhSupJq+TCMUGFasiR6Odk9LawqzwmOqc+CWLHNcwhGadtRUo470vEqrdAnmdEjXXHG35QPYUZIm8qUwL0FVW7EndTPOUNhSpXiV+4t9tKuM2zL4sF6p97UsuARpi/Hc1yLEuC+/Ajq2/eY4RSeEaTn1lRPx/89ixtvVIfs+fv35WN0SJkBNPhLbFurA6TqhixdA8DG1Mm7logzVCUi4GL5RPcsyAtWRjB2rCZOGHGAlrUCj0HlkWTr+jXW/7igs=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(39860400002)(346002)(366004)(396003)(376002)(8676002)(316002)(26005)(66476007)(2906002)(4326008)(478600001)(8936002)(16526019)(186003)(5660300002)(53546011)(52116002)(956004)(44832011)(54906003)(66556008)(83380400001)(2616005)(36756003)(66946007)(16576012)(6486002)(31696002)(31686004)(86362001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?cmRzUzRnQ3Q1bkNSSU1yMGNCb3g5NkdpdjdvTnR1WkVIZWM0T1V5bEhBZ24r?=
+ =?utf-8?B?VVp4cnVrSVEzVG9OVkE0NnpEZ3l3RklWb29CcVJDTXBYVjFHUlc2NkN1MVlH?=
+ =?utf-8?B?dmovaFQ2WEhHRWJQNVhLYXB3NElNeHgwTWtiRzhpeTVnakpZLzNWOVBmTFhR?=
+ =?utf-8?B?Vmc3dHpxcWRsd0dJVVI4bHhZMFhNZjMwczNYaU9FZDgvK0ZmQ0lhOFd0Ky9H?=
+ =?utf-8?B?SUxWMDlZclZCK1FKbkliemlZWUlzaCtUQm56dC9OYU1md203ZHAzZWNKUE1Q?=
+ =?utf-8?B?QmFUbTF2a3JBM09yQytoUUc4bGFEVUR4MjVCQWs1cGdqYXFjc3pRRjEyb1d0?=
+ =?utf-8?B?OVBHbHJjZXN4eTdENjhPUlNvYkNZUFBzdi9yT3FXRDR5eExRM0VZdnhNd0E1?=
+ =?utf-8?B?Y01sOHdqV0R0TEVMVFlqeTllRHZtb2dwNGdmL3R5aEpxNS9rcFdXNjVlMXFZ?=
+ =?utf-8?B?WXN2WWFSSlJ1eHA2bEpxalJoblNSSUhxbUNqelgwZENsVlpPYWIwTXlEMjRp?=
+ =?utf-8?B?M2dmYjd6ckNEOUgwbi8wdTc4UFBacEdQWXdCUGNjMlNrK09MNXRrbE5jMmti?=
+ =?utf-8?B?OXBkbWQ2cWN2YkY1dm1hZ0w0YVlleEJ3aXVOajdQU2N2c21nS0xENVNtZ3ZW?=
+ =?utf-8?B?eE9jUVdYRVZyU2h1bmlrMWRBRWIwRldpQ1dydUE5WnB5NjZuY3pBeHFRNXdX?=
+ =?utf-8?B?SFcvUy9XY0d6ajcrYTd6YlZKMWlOVXNKTUpHakJSZkg0VVY3TTJ6bXFBTjA5?=
+ =?utf-8?B?L0ZVWmxoVzE0UGdKMWZTOXpsSmhRaGoxNjVvWm9yODZ1R0RXWi9XWUE0akRT?=
+ =?utf-8?B?aXI2UHdsSHFGT1JQRmQ1cG1HeVEvcUVLeXNtQWxWbmlzam45Zm5pajBwSjk4?=
+ =?utf-8?B?aXFiY0FjdzBBLzlrQk9pOUdGUUo4S0NFdWJ0QTlzQ3hZS0s3TzNBUWF0dHR4?=
+ =?utf-8?B?bDQzUFhUOFhMeW9vekRWbmR0WXFJTTl4YmRaN0svSjF2U0JzVkowYlB6aHc4?=
+ =?utf-8?B?bFNNelk4NE1rZnpwRzdIR2lGd2lJRk5vSWVOT0VMOVI0RyttZ3ZoeEhTTGxu?=
+ =?utf-8?B?cUFoWDloYzFRdmcva0UrallPcTd3QjZVdXBMZkU1Y281YjJHdDBpZWc4TFFE?=
+ =?utf-8?B?Z2llb0FJWW9CUHFuVWtCbERNRDJ1ajNydkl0NzY1MTMrbGdQK0pDRm1SZ3V1?=
+ =?utf-8?B?amxXbjN2MGV3QzVydzgrTDN4OTZKQ2pFQmNEU3A4OHdLaG81TXNMalhLbitq?=
+ =?utf-8?B?eTljNVg1Ri9RaG9Sb3NueHBBb0pyaDZTWUtrV0QwbjBiMTRUQlZBU21hNWEr?=
+ =?utf-8?B?QmI0N0dCU00yRmp1bVpNZE4rWldkNmNvMTBkalltN281MklTaml3UGM5MjNo?=
+ =?utf-8?B?RzRuQ0NnUThYeG1ISGNDeG1GaFNXMWx0V08rdXV3TkVQeklVZ3J1RmxRYnpi?=
+ =?utf-8?B?dU5SOEFic3ZzNlREMDZuOWl3K3c3YnR1czNRdE9rYUNYUU5UejFUQlBjaHRT?=
+ =?utf-8?B?TytDRW9uWUc3RittWW1zaWRuSERCOVo3am1xM2JtSE1Va2FuQmZMa3FwV0xU?=
+ =?utf-8?B?RG4rUTFhOFpRMElIOXM5UDhydlhuYVN5eUxuTS9DRXMzTHQyMHNmWEpyNzRw?=
+ =?utf-8?B?Y2JvbEtrRC84enJ5WUIwRzdCbW1tSVRaVGhWdmhVWXJOY1NnM01PclpaVTNF?=
+ =?utf-8?B?b3BNNmQ1bmswL3puT0UyWFNKMWZDT3g5NUxielUzQldLaU9UbHAwYmVybkJD?=
+ =?utf-8?Q?a9H2UwV143RpD8tOdKIryILVHy+1wI17UuTFqy/?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 14e343ef-d853-48f9-3312-08d8d8869241
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5495fea9-9428-4aaf-a96f-08d8d8869563
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2021 05:39:36.5561
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2021 05:39:41.7713
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Azok+EPZww0OGyvCaO1oBf+mhcVyxj0uoeZWlmV/F+3kTvsXPCiaM/yLLka1O02zj4ykWHaH2jFYyqdyX1FSp1F0As4+/C/XQsmDuAw2HPg=
+X-MS-Exchange-CrossTenant-UserPrincipalName: EbLHGTCW2NfO2QQpGZ3RELWcC2/P8ERlP7SUcMZI5IMV6jUrLgxFgHW2Zs1u2EVxL6CQv/mfE8rsPLOfEP5y/OBb90t3FepUbpue6AaIZc0=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2437
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9904 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 spamscore=0
@@ -149,7 +149,7 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 ml
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9904 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
  priorityscore=1501 impostorscore=0 bulkscore=0 mlxscore=0 malwarescore=0
- clxscore=1015 phishscore=0 mlxlogscore=999 lowpriorityscore=0 adultscore=0
+ clxscore=1011 phishscore=0 mlxlogscore=999 lowpriorityscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2102240046
 Precedence: bulk
@@ -161,232 +161,95 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 2/22/21 8:01 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Add an error injection knob so that we can simulate system failure after
-> a certain number of disk writes.  This knob is being added so that we
-> can check repair's behavior after an arbitrary number of tests.
-> 
-> Set LIBXFS_DEBUG_WRITE_CRASH={ddev,logdev,rtdev}=nn in the environment
-> to make libxfs SIGKILL itself after nn writes to the data, log, or rt
-> devices.  Note that this only applies to xfs_buf writes and zero_range.
+> Create a helper function to centralize all the stuff we do at the end of
+> a repair phase (which for now is limited to reporting progress).  The
+> next patch will add more interesting things to this helper.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 > Reviewed-by: Brian Foster <bfoster@redhat.com>
-Ok, makes sense
+Looks ok:
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
 > ---
->   include/linux.h    |   13 ++++++++++
->   libxfs/init.c      |   68 +++++++++++++++++++++++++++++++++++++++++++++++++---
->   libxfs/libxfs_io.h |   19 +++++++++++++++
->   libxfs/rdwr.c      |    6 ++++-
->   4 files changed, 101 insertions(+), 5 deletions(-)
+>   repair/xfs_repair.c |   22 ++++++++++++++--------
+>   1 file changed, 14 insertions(+), 8 deletions(-)
 > 
 > 
-> diff --git a/include/linux.h b/include/linux.h
-> index 03b3278b..7bf59e07 100644
-> --- a/include/linux.h
-> +++ b/include/linux.h
-> @@ -31,6 +31,8 @@
->   #ifdef OVERRIDE_SYSTEM_FSXATTR
->   # undef fsxattr
->   #endif
-> +#include <unistd.h>
-> +#include <assert.h>
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index 03b7c242..a9236bb7 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -849,6 +849,12 @@ repair_capture_writeback(
+>   	pthread_mutex_unlock(&wb_mutex);
+>   }
 >   
->   static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
->   {
-> @@ -186,6 +188,17 @@ platform_zero_range(
->   #define platform_zero_range(fd, s, l)	(-EOPNOTSUPP)
->   #endif
->   
-> +/*
-> + * Use SIGKILL to simulate an immediate program crash, without a chance to run
-> + * atexit handlers.
-> + */
 > +static inline void
-> +platform_crash(void)
+> +phase_end(int phase)
 > +{
-> +	kill(getpid(), SIGKILL);
-> +	assert(0);
+> +	timestamp(PHASE_END, phase, NULL);
 > +}
 > +
->   /*
->    * Check whether we have to define FS_IOC_FS[GS]ETXATTR ourselves. These
->    * are a copy of the definitions moved to linux/uapi/fs.h in the 4.5 kernel,
-> diff --git a/libxfs/init.c b/libxfs/init.c
-> index 8a8ce3c4..1ec83791 100644
-> --- a/libxfs/init.c
-> +++ b/libxfs/init.c
-> @@ -590,7 +590,8 @@ libxfs_initialize_perag(
->   static struct xfs_buftarg *
->   libxfs_buftarg_alloc(
->   	struct xfs_mount	*mp,
-> -	dev_t			dev)
-> +	dev_t			dev,
-> +	unsigned long		write_fails)
+>   int
+>   main(int argc, char **argv)
 >   {
->   	struct xfs_buftarg	*btp;
+> @@ -878,7 +884,7 @@ main(int argc, char **argv)
+>   	msgbuf = malloc(DURATION_BUF_SIZE);
 >   
-> @@ -603,10 +604,29 @@ libxfs_buftarg_alloc(
->   	btp->bt_mount = mp;
->   	btp->bt_bdev = dev;
->   	btp->flags = 0;
-> +	if (write_fails) {
-> +		btp->writes_left = write_fails;
-> +		btp->flags |= XFS_BUFTARG_INJECT_WRITE_FAIL;
-> +	}
-> +	pthread_mutex_init(&btp->lock, NULL);
+>   	timestamp(PHASE_START, 0, NULL);
+> -	timestamp(PHASE_END, 0, NULL);
+> +	phase_end(0);
 >   
->   	return btp;
->   }
+>   	/* -f forces this, but let's be nice and autodetect it, as well. */
+>   	if (!isa_file) {
+> @@ -901,7 +907,7 @@ main(int argc, char **argv)
 >   
-> +enum libxfs_write_failure_nums {
-> +	WF_DATA = 0,
-> +	WF_LOG,
-> +	WF_RT,
-> +	WF_MAX_OPTS,
-> +};
-> +
-> +static char *wf_opts[] = {
-> +	[WF_DATA]		= "ddev",
-> +	[WF_LOG]		= "logdev",
-> +	[WF_RT]			= "rtdev",
-> +	[WF_MAX_OPTS]		= NULL,
-> +};
-> +
->   void
->   libxfs_buftarg_init(
->   	struct xfs_mount	*mp,
-> @@ -614,6 +634,46 @@ libxfs_buftarg_init(
->   	dev_t			logdev,
->   	dev_t			rtdev)
->   {
-> +	char			*p = getenv("LIBXFS_DEBUG_WRITE_CRASH");
-> +	unsigned long		dfail = 0, lfail = 0, rfail = 0;
-> +
-> +	/* Simulate utility crash after a certain number of writes. */
-> +	while (p && *p) {
-> +		char *val;
-> +
-> +		switch (getsubopt(&p, wf_opts, &val)) {
-> +		case WF_DATA:
-> +			if (!val) {
-> +				fprintf(stderr,
-> +		_("ddev write fail requires a parameter\n"));
-> +				exit(1);
-> +			}
-> +			dfail = strtoul(val, NULL, 0);
-> +			break;
-> +		case WF_LOG:
-> +			if (!val) {
-> +				fprintf(stderr,
-> +		_("logdev write fail requires a parameter\n"));
-> +				exit(1);
-> +			}
-> +			lfail = strtoul(val, NULL, 0);
-> +			break;
-> +		case WF_RT:
-> +			if (!val) {
-> +				fprintf(stderr,
-> +		_("rtdev write fail requires a parameter\n"));
-> +				exit(1);
-> +			}
-> +			rfail = strtoul(val, NULL, 0);
-> +			break;
-> +		default:
-> +			fprintf(stderr, _("unknown write fail type %s\n"),
-> +					val);
-> +			exit(1);
-> +			break;
-> +		}
-> +	}
-> +
->   	if (mp->m_ddev_targp) {
->   		/* should already have all buftargs initialised */
->   		if (mp->m_ddev_targp->bt_bdev != dev ||
-> @@ -647,12 +707,12 @@ libxfs_buftarg_init(
->   		return;
+>   	/* do phase1 to make sure we have a superblock */
+>   	phase1(temp_mp);
+> -	timestamp(PHASE_END, 1, NULL);
+> +	phase_end(1);
+>   
+>   	if (no_modify && primary_sb_modified)  {
+>   		do_warn(_("Primary superblock would have been modified.\n"
+> @@ -1127,23 +1133,23 @@ main(int argc, char **argv)
+>   
+>   	/* make sure the per-ag freespace maps are ok so we can mount the fs */
+>   	phase2(mp, phase2_threads);
+> -	timestamp(PHASE_END, 2, NULL);
+> +	phase_end(2);
+>   
+>   	if (do_prefetch)
+>   		init_prefetch(mp);
+>   
+>   	phase3(mp, phase2_threads);
+> -	timestamp(PHASE_END, 3, NULL);
+> +	phase_end(3);
+>   
+>   	phase4(mp);
+> -	timestamp(PHASE_END, 4, NULL);
+> +	phase_end(4);
+>   
+>   	if (no_modify)
+>   		printf(_("No modify flag set, skipping phase 5\n"));
+>   	else {
+>   		phase5(mp);
 >   	}
+> -	timestamp(PHASE_END, 5, NULL);
+> +	phase_end(5);
 >   
-> -	mp->m_ddev_targp = libxfs_buftarg_alloc(mp, dev);
-> +	mp->m_ddev_targp = libxfs_buftarg_alloc(mp, dev, dfail);
->   	if (!logdev || logdev == dev)
->   		mp->m_logdev_targp = mp->m_ddev_targp;
->   	else
-> -		mp->m_logdev_targp = libxfs_buftarg_alloc(mp, logdev);
-> -	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, rtdev);
-> +		mp->m_logdev_targp = libxfs_buftarg_alloc(mp, logdev, lfail);
-> +	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, rtdev, rfail);
->   }
+>   	/*
+>   	 * Done with the block usage maps, toss them...
+> @@ -1153,10 +1159,10 @@ main(int argc, char **argv)
 >   
->   /*
-> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-> index c80e2d59..3cc4f4ee 100644
-> --- a/libxfs/libxfs_io.h
-> +++ b/libxfs/libxfs_io.h
-> @@ -22,6 +22,8 @@ struct xfs_perag;
->    */
->   struct xfs_buftarg {
->   	struct xfs_mount	*bt_mount;
-> +	pthread_mutex_t		lock;
-> +	unsigned long		writes_left;
->   	dev_t			bt_bdev;
->   	unsigned int		flags;
->   };
-> @@ -30,6 +32,23 @@ struct xfs_buftarg {
->   #define XFS_BUFTARG_LOST_WRITE		(1 << 0)
->   /* A dirty buffer failed the write verifier. */
->   #define XFS_BUFTARG_CORRUPT_WRITE	(1 << 1)
-> +/* Simulate failure after a certain number of writes. */
-> +#define XFS_BUFTARG_INJECT_WRITE_FAIL	(1 << 2)
-> +
-> +/* Simulate the system crashing after a certain number of writes. */
-> +static inline void
-> +xfs_buftarg_trip_write(
-> +	struct xfs_buftarg	*btp)
-> +{
-> +	if (!(btp->flags & XFS_BUFTARG_INJECT_WRITE_FAIL))
-> +		return;
-> +
-> +	pthread_mutex_lock(&btp->lock);
-> +	btp->writes_left--;
-> +	if (!btp->writes_left)
-> +		platform_crash();
-> +	pthread_mutex_unlock(&btp->lock);
-> +}
+>   	if (!bad_ino_btree)  {
+>   		phase6(mp);
+> -		timestamp(PHASE_END, 6, NULL);
+> +		phase_end(6);
 >   
->   extern void	libxfs_buftarg_init(struct xfs_mount *mp, dev_t ddev,
->   				    dev_t logdev, dev_t rtdev);
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index ca272387..fd456d6b 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -74,8 +74,10 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
->   	/* try to use special zeroing methods, fall back to writes if needed */
->   	len_bytes = LIBXFS_BBTOOFF64(len);
->   	error = platform_zero_range(fd, start_offset, len_bytes);
-> -	if (!error)
-> +	if (!error) {
-> +		xfs_buftarg_trip_write(btp);
->   		return 0;
-> +	}
->   
->   	zsize = min(BDSTRAT_SIZE, BBTOB(len));
->   	if ((z = memalign(libxfs_device_alignment(), zsize)) == NULL) {
-> @@ -105,6 +107,7 @@ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
->   				progname, __FUNCTION__);
->   			exit(1);
->   		}
-> +		xfs_buftarg_trip_write(btp);
->   		offset += bytes;
->   	}
->   	free(z);
-> @@ -860,6 +863,7 @@ libxfs_bwrite(
->   	} else {
->   		bp->b_flags |= LIBXFS_B_UPTODATE;
->   		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_UNCHECKED);
-> +		xfs_buftarg_trip_write(bp->b_target);
->   	}
->   	return bp->b_error;
->   }
+>   		phase7(mp, phase2_threads);
+> -		timestamp(PHASE_END, 7, NULL);
+> +		phase_end(7);
+>   	} else  {
+>   		do_warn(
+>   _("Inode allocation btrees are too corrupted, skipping phases 6 and 7\n"));
 > 
