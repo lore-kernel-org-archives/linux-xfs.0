@@ -2,170 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E75AC433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 15:06:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 710FFC433E9
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 16:02:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0249B60234
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 15:06:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AF5D64F03
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 16:02:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235273AbhBXPCQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 10:02:16 -0500
-Received: from sender2-pp-o92.zoho.com.cn ([163.53.93.251]:25308 "EHLO
-        sender2-pp-o92.zoho.com.cn" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233755AbhBXNxQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 08:53:16 -0500
-ARC-Seal: i=1; a=rsa-sha256; t=1614174536; cv=none; 
-        d=zoho.com.cn; s=zohoarc; 
-        b=lQA+AVARawNZN5g5lvnFLqJf8kRleEwbjlh6mbvAyuTffxCh2lJWvgCCcZ4XZqlk3hwPjkPRS0i1lji5PXUwEWtq9IRf2AiKfgdNTF9Kl/HtUEEpQCPis0KUydfcv/gAzRJX4rFGrR5/0j0fVttU4N+d/IVBOvkQRaY7IupRKU4=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zoho.com.cn; s=zohoarc; 
-        t=1614174536; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:Reply-To:References:Subject:To; 
-        bh=5dfC4UIBlDAD3j+p2vozEcResPOP6jwjIjKI5EdeBoQ=; 
-        b=n8lHeJLReVWQ/6WET57vc0rV5/oYX8jD9G7Cz0jXrEiB63AL+7bTpvUJwH8deP98909WWiblfyc+jZfPMtAKFelutvdUs/exN4wwGU5JY5En4qp0uuG2WzMYBv1kwrTQ+qCgcCfmgMKQ9HhwqrcwfAFYv3kNSIdVqIEgknfO79c=
-ARC-Authentication-Results: i=1; mx.zoho.com.cn;
-        dkim=pass  header.i=mykernel.net;
-        spf=pass  smtp.mailfrom=cgxu519@mykernel.net;
-        dmarc=pass header.from=<cgxu519@mykernel.net> header.from=<cgxu519@mykernel.net>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1614174536;
-        s=zohomail; d=mykernel.net; i=cgxu519@mykernel.net;
-        h=Date:From:Reply-To:To:Cc:Message-ID:In-Reply-To:References:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding;
-        bh=5dfC4UIBlDAD3j+p2vozEcResPOP6jwjIjKI5EdeBoQ=;
-        b=OmCmcOnkki8ji5gDD/ZVer72iFZwGTC5GPo5R9PqQvPgq1ueCqcmnzFAvKXluprM
-        ilkfR6DGR4e7JtCrGnCzGw8TrIwzrpkeSEZ17TCwNEP1doBfQG8zwa/FVR+4nLbjrBP
-        qzXh/WijyLFGaqoL2vbUmZCGuZBiV4NVC66Y9Bsg=
-Received: from mail.baihui.com by mx.zoho.com.cn
-        with SMTP id 1614174533227810.9043468053503; Wed, 24 Feb 2021 21:48:53 +0800 (CST)
-Date:   Wed, 24 Feb 2021 21:48:53 +0800
-From:   Chengguang Xu <cgxu519@mykernel.net>
-Reply-To: cgxu519@mykernel.net
-To:     "Eryu Guan" <eguan@linux.alibaba.com>
-Cc:     "Su Yue" <l@damenly.su>, "guaneryu" <guaneryu@gmail.com>,
-        "fstests" <fstests@vger.kernel.org>,
-        "linux-btrfs" <linux-btrfs@vger.kernel.org>,
-        "linux-fsdevel" <linux-fsdevel@vger.kernel.org>,
-        "linux-ext4" <linux-ext4@vger.kernel.org>,
-        "linux-xfs" <linux-xfs@vger.kernel.org>
-Message-ID: <177d44cb667.12f7afcae16893.3177469356061349445@mykernel.net>
-In-Reply-To: <20210224133146.GE96449@e18g06458.et15sqa>
-References: <20210223134042.2212341-1-cgxu519@mykernel.net>
- <4ki1rjgu.fsf@damenly.su>
- <177d33c0982.10b8858b515683.1169986601273192029@mykernel.net>
- <wnuxq0px.fsf@damenly.su>
- <177d3666a3c.e47042d016248.8805085013477614929@mykernel.net> <20210224133146.GE96449@e18g06458.et15sqa>
-Subject: Re: [PATCH] generic/473: fix expectation properly in out file
+        id S233703AbhBXQBv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Feb 2021 11:01:51 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:32264 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233383AbhBXPh2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 10:37:28 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1614180951;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=BlGg7XK/aRe9+o15hKox1UcM01iSuHpvSJwse8CKrpg=;
+        b=Vq/M/uLYyuzieQxWYHFF2LHaPmOhWJ2cc6rrSI0nxL9hmuaGWTWOwJhG02pQb8h4f46n6/
+        X4E4JLH40GRzgUdV2CkrAl1zcGbQf5LXHqFxlckvTLEK1NTQjheOLzddVcvEBe2TkA/KFG
+        ykcEOIL2Cq0EjbzWjRXTgQRrlM4Dj8o=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-171-93h74f7eP-mnj1xH6zBYhQ-1; Wed, 24 Feb 2021 10:35:45 -0500
+X-MC-Unique: 93h74f7eP-mnj1xH6zBYhQ-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BE2C61876550;
+        Wed, 24 Feb 2021 15:04:54 +0000 (UTC)
+Received: from bfoster (ovpn-119-92.rdu2.redhat.com [10.10.119.92])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 62D5C2BFC7;
+        Wed, 24 Feb 2021 15:04:54 +0000 (UTC)
+Date:   Wed, 24 Feb 2021 10:04:52 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v15 07/22] xfs: Add helper xfs_attr_node_addname_find_attr
+Message-ID: <20210224150452.GH981777@bfoster>
+References: <20210218165348.4754-1-allison.henderson@oracle.com>
+ <20210218165348.4754-8-allison.henderson@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Importance: Medium
-User-Agent: ZohoCN Mail
-X-Mailer: ZohoCN Mail
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210218165348.4754-8-allison.henderson@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
- ---- =E5=9C=A8 =E6=98=9F=E6=9C=9F=E4=B8=89, 2021-02-24 21:31:46 Eryu Guan =
-<eguan@linux.alibaba.com> =E6=92=B0=E5=86=99 ----
- > On Wed, Feb 24, 2021 at 05:37:20PM +0800, Chengguang Xu wrote:
- > >  ---- =E5=9C=A8 =E6=98=9F=E6=9C=9F=E4=B8=89, 2021-02-24 17:22:35 Su Yu=
-e <l@damenly.su> =E6=92=B0=E5=86=99 ----
- > >  >=20
- > >  > On Wed 24 Feb 2021 at 16:51, Chengguang Xu <cgxu519@mykernel.net>=
-=20
- > >  > wrote:
- > >  >=20
- > >  > >  ---- =E5=9C=A8 =E6=98=9F=E6=9C=9F=E4=B8=89, 2021-02-24 15:52:17 =
-Su Yue <l@damenly.su> =E6=92=B0=E5=86=99=20
- > >  > >  ----
- > >  > >  >
- > >  > >  > Cc to the author and linux-xfs, since it's xfsprogs related.
- > >  > >  >
- > >  > >  > On Tue 23 Feb 2021 at 21:40, Chengguang Xu=20
- > >  > >  > <cgxu519@mykernel.net>
- > >  > >  > wrote:
- > >  > >  >
- > >  > >  > > It seems the expected result of testcase of "Hole + Data"
- > >  > >  > > in generic/473 is not correct, so just fix it properly.
- > >  > >  > >
- > >  > >  >
- > >  > >  > But it's not proper...
- > >  > >  >
- > >  > >  > > Signed-off-by: Chengguang Xu <cgxu519@mykernel.net>
- > >  > >  > > ---
- > >  > >  > >  tests/generic/473.out | 2 +-
- > >  > >  > >  1 file changed, 1 insertion(+), 1 deletion(-)
- > >  > >  > >
- > >  > >  > > diff --git a/tests/generic/473.out b/tests/generic/473.out
- > >  > >  > > index 75816388..f1ee5805 100644
- > >  > >  > > --- a/tests/generic/473.out
- > >  > >  > > +++ b/tests/generic/473.out
- > >  > >  > > @@ -6,7 +6,7 @@ Data + Hole
- > >  > >  > >  1: [256..287]: hole
- > >  > >  > >  Hole + Data
- > >  > >  > >  0: [0..127]: hole
- > >  > >  > > -1: [128..255]: data
- > >  > >  > > +1: [128..135]: data
- > >  > >  > >
- > >  > >  > The line is produced by `$XFS_IO_PROG -c "fiemap -v 0 65k"=20
- > >  > >  > $file |
- > >  > >  > _filter_fiemap`.
- > >  > >  > 0-64k is a hole and 64k-128k is a data extent.
- > >  > >  > fiemap ioctl always returns *complete* ranges of extents.
- > >  > >
- > >  > > Manual testing result in latest kernel like below.
- > >  > >
- > >  > > [root@centos test]# uname -a
- > >  > > Linux centos 5.11.0+ #5 SMP Tue Feb 23 21:02:27 CST 2021 x86_64=
-=20
- > >  > > x86_64 x86_64 GNU/Linux
- > >  > >
- > >  > > [root@centos test]# xfs_io -V
- > >  > > xfs_io version 5.0.0
- > >  > >
- > >  > > [root@centos test]# stat a
- > >  > >   File: a
- > >  > >   Size: 4194304         Blocks: 0          IO Block: 4096=20
- > >  > >   regular file
- > >  > > Device: fc01h/64513d    Inode: 140         Links: 1
- > >  > > Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/=
-=20
- > >  > > root)
- > >  > > Access: 2021-02-24 16:33:20.235654140 +0800
- > >  > > Modify: 2021-02-24 16:33:25.070641521 +0800
- > >  > > Change: 2021-02-24 16:33:25.070641521 +0800
- > >  > >  Birth: -
- > >  > >
- > >  > > [root@centos test]# xfs_io -c "pwrite 64k 64k" a
- > >  > > wrote 65536/65536 bytes at offset 65536
- > >  > > 64 KiB, 16 ops; 0.0000 sec (992.063 MiB/sec and 253968.2540=20
- > >  > > ops/sec)
- > >  > >
- > >  > > [root@VM-8-4-centos test]# xfs_io -c "fiemap -v 0 65k" a
- > >  > > a:
- > >  > >  EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
- > >  > >    0: [0..127]:        hole               128
- > >  > >    1: [128..135]:      360..367             8   0x1
- > >  > >
- > >  >=20
- > >  > Sorry, my carelessness. I only checked btrfs implementation but=20
- > >  > xfs
- > >  > and ext4 do return the change you made.
- > >  >=20
- > >=20
- > > Yeah, it seems there is no bad side effect to show  only specified ran=
-ge of extents
- > > and keep all the same behavior is also good for testing. I can post a =
-fix patch for
- > > this but before that let us to wait some feedback from maintainers and=
- experts.
- >=20
- > generic/473 is marked as broken by commit 715eac1a9e66 ("generic/47[23]:
- > remove from auto/quick groups").
- >=20
+On Thu, Feb 18, 2021 at 09:53:33AM -0700, Allison Henderson wrote:
+> This patch separates the first half of xfs_attr_node_addname into a
+> helper function xfs_attr_node_addname_find_attr.  It also replaces the
+> restart goto with with an EAGAIN return code driven by a loop in the
+> calling function.  This looks odd now, but will clean up nicly once we
+> introduce the state machine.  It will also enable hoisting the last
+> state out of xfs_attr_node_addname with out having to plumb in a "done"
+> parameter to know if we need to move to the next state or not.
+> 
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 80 ++++++++++++++++++++++++++++++------------------
+>  1 file changed, 51 insertions(+), 29 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index bee8d3fb..4333b61 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+...
+> @@ -941,6 +931,38 @@ xfs_attr_node_addname(
+>  		args->rmtvaluelen = 0;
+>  	}
+>  
+> +	return 0;
+> +out:
 
-I got it, thanks Eryu!
+Nit: can we call this label 'error' since it appears to be used when we
+want to return the current retval as an operational error?
 
+> +	if (*state)
+> +		xfs_da_state_free(*state);
+> +	return retval;
+> +}
+> +
+> +/*
+> + * Add a name to a Btree-format attribute list.
+> + *
+> + * This will involve walking down the Btree, and may involve splitting
+> + * leaf nodes and even splitting intermediate nodes up to and including
+> + * the root node (a special case of an intermediate node).
+> + *
+> + * "Remote" attribute values confuse the issue and atomic rename operations
+> + * add a whole extra layer of confusion on top of that.
+> + */
+> +STATIC int
+> +xfs_attr_node_addname(
+> +	struct xfs_da_args	*args,
+> +	struct xfs_da_state	*state)
+> +{
+> +	struct xfs_da_state_blk	*blk;
+> +	struct xfs_inode	*dp;
+> +	int			retval, error;
+> +
+> +	trace_xfs_attr_node_addname(args);
+
+This moves the tracepoint into the looping sequence whereas previously
+it would only execute once. I don't see a clean way to fix that with the
+breakdown as of this patch, and it's not a huge deal, but it would be
+nice to fix that before the end of the series if we haven't already.
+Otherwise LGTM:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +
+> +	dp = args->dp;
+> +	blk = &state->path.blk[state->path.active-1];
+> +	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+> +
+>  	retval = xfs_attr3_leaf_add(blk->bp, state->args);
+>  	if (retval == -ENOSPC) {
+>  		if (state->path.active == 1) {
+> @@ -966,7 +988,7 @@ xfs_attr_node_addname(
+>  			if (error)
+>  				goto out;
+>  
+> -			goto restart;
+> +			return -EAGAIN;
+>  		}
+>  
+>  		/*
+> -- 
+> 2.7.4
+> 
 
