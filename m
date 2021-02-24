@@ -2,505 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D133CC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:43:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87721C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:44:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9103B64F06
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:43:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42DB464F03
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 21:44:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232397AbhBXVnU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 16:43:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51396 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235576AbhBXVnR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 Feb 2021 16:43:17 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DA4C064F03;
-        Wed, 24 Feb 2021 21:42:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614202956;
-        bh=v0lAgHtTGdQS2vFLOsk4tsTqhkH4GF8Ao7XH5vNAti0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Evn90JPL2HEUVxwbOqfHImqI1cVTcCUxPg9OvHZ80dAnlE6OvX9PjQ79bR0QwXHGg
-         atkM5pKWQkZASlwwIKo4euT/NAGCSiNUyyXr/0WFdVEpxHOEETX9jfElDZ0XwU1gyZ
-         adyL/+5y4lJ9cUtifr55UE3/bdPs8REVwwjA2IFg35gE7hAQkq3HApX/ibBhuE9G8x
-         K3yWV/mJclUl0ylBOrb9S0pBb9fKTHf+KPQ2vQMxSxmWl6nO0AxNgQ/tyxnFylsh8k
-         VhFMn+afqKX9GsotzS91vOQc+mY9Syi9mxU/GUyvkTKFX9j9qxZwsufrILl6seZY/D
-         6EfwjY8DA01CQ==
-Date:   Wed, 24 Feb 2021 13:42:35 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: xfs_log_force_lsn isn't passed a LSN
-Message-ID: <20210224214235.GB7272@magnolia>
-References: <20210223053212.3287398-1-david@fromorbit.com>
- <20210223053212.3287398-2-david@fromorbit.com>
+        id S232740AbhBXVoy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Feb 2021 16:44:54 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:47553 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230330AbhBXVoy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 16:44:54 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1614203007;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=ij/p5GM50HPwNBaUy4fo+FQsgEAi87WUJ/9oNZJtEAg=;
+        b=e0Om0BqrEY2+NiIALElE+Eny7d8wgt/VHm7mZ1IYUY71bLnsIXCMOgvd9GOuLsZCiwrDHF
+        BYuqu3DWxhuUc1DaBYB+60R8to/mPDh/kMqv4i4pYrs9Mpi7IzUzZvIbJwQHD1ws4W0oxK
+        IXDdnIUrOmoLrU+HKkKmjUXXaC75YWs=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-178-0DZG2e7ENnWWKekClT-ZRQ-1; Wed, 24 Feb 2021 16:43:26 -0500
+X-MC-Unique: 0DZG2e7ENnWWKekClT-ZRQ-1
+Received: by mail-wr1-f70.google.com with SMTP id q5so1625745wrs.20
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Feb 2021 13:43:25 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=ij/p5GM50HPwNBaUy4fo+FQsgEAi87WUJ/9oNZJtEAg=;
+        b=nIgcCsrBKo4aNtK1yylHWdyjPs/CKRETSeDXmQ+zkuTlHkl6/xqusf/bUzrL9cJ3T/
+         ghRo9CSFH0s81fgMsHvX4YvFa1S90uO0rRc2QvtYxD2W+ovpd9ffMYyJYzCaCDx7foEt
+         5eGcju5dk+fAos25HRyXtaNnmLf+3yI9aH2b4sBayqVv9UbBv0kXgGq2W/dswHeYu9cM
+         KvTtHiECGZZqHbWIjbfGR0AU9OqYwaBoZahWp9J8gLvC3eT9HVsMNPRse78/8Obf8ko0
+         pT3sauGtQKaxKX6ZWAyw8j1k1M3AoaFfXlkJpYRAsPqNlHSLf0ECF28VE6AU/d4qHMpq
+         QDGA==
+X-Gm-Message-State: AOAM533eYAFKxxNWoZYCZMyC6SzOl3GwG4P2zQ//tPNg2qApWNANYgeo
+        xAQXOy5FAMOKPaN2Ki06TJ+O/3l8a0GuZ66uYe4Ny7QzFqHO6Ln7ue8h/6zXs/j7bsd9nNqtfRP
+        6eYbtPvM2FZmL9Eyyth/i7OvXnhDOaNHaBGi3gsn2nMQEPjZj+408skTOEy9SddIPiQWG0jo=
+X-Received: by 2002:a1c:4b16:: with SMTP id y22mr70129wma.99.1614203004514;
+        Wed, 24 Feb 2021 13:43:24 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxQrm94OE4gktDwJmD9lXCVRl7Y5DhuJ0o949hXlKfs4y8a4wnw8xXqJHqFtH1Pph9oJYFMgA==
+X-Received: by 2002:a1c:4b16:: with SMTP id y22mr70116wma.99.1614203004265;
+        Wed, 24 Feb 2021 13:43:24 -0800 (PST)
+Received: from localhost.localdomain.com ([84.19.91.9])
+        by smtp.gmail.com with ESMTPSA id x13sm4477251wrt.75.2021.02.24.13.43.23
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 24 Feb 2021 13:43:23 -0800 (PST)
+From:   Pavel Reichl <preichl@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v2 0/2] xfs: Skip repetitive warnings about mount options
+Date:   Wed, 24 Feb 2021 22:43:20 +0100
+Message-Id: <20210224214323.394286-1-preichl@redhat.com>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210223053212.3287398-2-david@fromorbit.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 23, 2021 at 04:32:10PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> In doing an investigation into AIL push stalls, I was looking at the
-> log force code to see if an async CIL push could be done instead.
-> This lead me to xfs_log_force_lsn() and looking at how it works.
-> 
-> xfs_log_force_lsn() is only called from inode synchronisation
-> contexts such as fsync(), and it takes the ip->i_itemp->ili_last_lsn
-> value as the LSN to sync the log to. This gets passed to
-> xlog_cil_force_lsn() via xfs_log_force_lsn() to flush the CIL to the
-> journal, and then used by xfs_log_force_lsn() to flush the iclogs to
-> the journal.
-> 
-> The problem with is that ip->i_itemp->ili_last_lsn does not store a
-> log sequence number. What it stores is passed to it from the
-> ->iop_committing method, which is called by xfs_log_commit_cil().
-> The value this passes to the iop_committing method is the CIL
-> context sequence number that the item was committed to.
-> 
-> As it turns out, xlog_cil_force_lsn() converts the sequence to an
-> actual commit LSN for the related context and returns that to
-> xfs_log_force_lsn(). xfs_log_force_lsn() overwrites it's "lsn"
-> variable that contained a sequence with an actual LSN and then uses
-> that to sync the iclogs.
-> 
-> This caused me some confusion for a while, even though I originally
-> wrote all this code a decade ago. ->iop_committing is only used by
-> a couple of log item types, and only inode items use the sequence
-> number it is passed.
-> 
-> Let's clean up the API, CIL structures and inode log item to call it
-> a sequence number, and make it clear that the high level code is
-> using CIL sequence numbers and not on-disk LSNs for integrity
-> synchronisation purposes.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_buf_item.c   |  2 +-
->  fs/xfs/xfs_dquot_item.c |  2 +-
->  fs/xfs/xfs_file.c       | 14 +++++++-------
->  fs/xfs/xfs_inode.c      | 10 +++++-----
->  fs/xfs/xfs_inode_item.c |  4 ++--
->  fs/xfs/xfs_inode_item.h |  2 +-
->  fs/xfs/xfs_log.c        | 27 ++++++++++++++-------------
->  fs/xfs/xfs_log.h        |  4 +---
->  fs/xfs/xfs_log_cil.c    | 22 +++++++++-------------
->  fs/xfs/xfs_log_priv.h   | 15 +++++++--------
->  fs/xfs/xfs_trans.c      |  6 +++---
->  fs/xfs/xfs_trans.h      |  4 ++--
->  12 files changed, 53 insertions(+), 59 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 14d1fefcbf4c..7affe1aa16da 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -713,7 +713,7 @@ xfs_buf_item_release(
->  STATIC void
->  xfs_buf_item_committing(
->  	struct xfs_log_item	*lip,
-> -	xfs_lsn_t		commit_lsn)
-> +	uint64_t		seq)
+At least some version of mount will look in /proc/mounts and send in all of the 
+options that it finds as part of a remount command. We also /do/ still emit
+"attr2" in /proc/mounts (as we probably should), so remount passes that back
+in, and we emit a warning, which is not great.
 
-FWIW I rather wish you'd defined a new type for cil sequence numbers,
-since uint64_t is rather generic.  Even if checkpatch whines about new
-typedefs.
+In other words mount passes in "attr2" and the kernel emits a deprecation
+warning for attr2, even though the user/admin never explicitly asked for the
+option.
 
-I was kind of hoping that we'd be able to mark xfs_lsn_t and xfs_csn_t
-with __bitwise and so static checkers could catch us if we accidentally
-feed a CIL sequence number into a function that wants an LSN.
+So, lets skip the warning if (we are remounting && deprecated option
+state is not changing).
 
---D
+I also attached test for xfstests that I used for testing (the test
+will be proposed on xfstests-list after/if this patch is merged).
 
->  {
->  	return xfs_buf_item_release(lip);
->  }
-> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> index 8c1fdf37ee8f..74ca8fbbf1f3 100644
-> --- a/fs/xfs/xfs_dquot_item.c
-> +++ b/fs/xfs/xfs_dquot_item.c
-> @@ -188,7 +188,7 @@ xfs_qm_dquot_logitem_release(
->  STATIC void
->  xfs_qm_dquot_logitem_committing(
->  	struct xfs_log_item	*lip,
-> -	xfs_lsn_t		commit_lsn)
-> +	uint64_t		seq)
->  {
->  	return xfs_qm_dquot_logitem_release(lip);
->  }
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index dd33ef2d0e20..8b07408928a9 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -118,8 +118,8 @@ xfs_dir_fsync(
->  	return xfs_log_force_inode(ip);
->  }
->  
-> -static xfs_lsn_t
-> -xfs_fsync_lsn(
-> +static uint64_t
-> +xfs_fsync_seq(
->  	struct xfs_inode	*ip,
->  	bool			datasync)
->  {
-> @@ -127,7 +127,7 @@ xfs_fsync_lsn(
->  		return 0;
->  	if (datasync && !(ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
->  		return 0;
-> -	return ip->i_itemp->ili_last_lsn;
-> +	return ip->i_itemp->ili_commit_seq;
->  }
->  
->  /*
-> @@ -150,12 +150,12 @@ xfs_fsync_flush_log(
->  	int			*log_flushed)
->  {
->  	int			error = 0;
-> -	xfs_lsn_t		lsn;
-> +	uint64_t		seq;
->  
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
-> -	lsn = xfs_fsync_lsn(ip, datasync);
-> -	if (lsn) {
-> -		error = xfs_log_force_lsn(ip->i_mount, lsn, XFS_LOG_SYNC,
-> +	seq = xfs_fsync_seq(ip, datasync);
-> +	if (seq) {
-> +		error = xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC,
->  					  log_flushed);
->  
->  		spin_lock(&ip->i_itemp->ili_lock);
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 95e3a5e6e5e2..bc3e27f9c7f2 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2636,7 +2636,7 @@ xfs_iunpin(
->  	trace_xfs_inode_unpin_nowait(ip, _RET_IP_);
->  
->  	/* Give the log a push to start the unpinning I/O */
-> -	xfs_log_force_lsn(ip->i_mount, ip->i_itemp->ili_last_lsn, 0, NULL);
-> +	xfs_log_force_seq(ip->i_mount, ip->i_itemp->ili_commit_seq, 0, NULL);
->  
->  }
->  
-> @@ -3641,16 +3641,16 @@ int
->  xfs_log_force_inode(
->  	struct xfs_inode	*ip)
->  {
-> -	xfs_lsn_t		lsn = 0;
-> +	uint64_t		seq = 0;
->  
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
->  	if (xfs_ipincount(ip))
-> -		lsn = ip->i_itemp->ili_last_lsn;
-> +		seq = ip->i_itemp->ili_commit_seq;
->  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
->  
-> -	if (!lsn)
-> +	if (!seq)
->  		return 0;
-> -	return xfs_log_force_lsn(ip->i_mount, lsn, XFS_LOG_SYNC, NULL);
-> +	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, NULL);
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 6ff91e5bf3cd..7270a80f21dc 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -617,9 +617,9 @@ xfs_inode_item_committed(
->  STATIC void
->  xfs_inode_item_committing(
->  	struct xfs_log_item	*lip,
-> -	xfs_lsn_t		commit_lsn)
-> +	uint64_t		seq)
->  {
-> -	INODE_ITEM(lip)->ili_last_lsn = commit_lsn;
-> +	INODE_ITEM(lip)->ili_commit_seq = seq;
->  	return xfs_inode_item_release(lip);
->  }
->  
-> diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-> index 4b926e32831c..e60125b88292 100644
-> --- a/fs/xfs/xfs_inode_item.h
-> +++ b/fs/xfs/xfs_inode_item.h
-> @@ -33,7 +33,7 @@ struct xfs_inode_log_item {
->  	unsigned int		ili_fields;	   /* fields to be logged */
->  	unsigned int		ili_fsync_fields;  /* logged since last fsync */
->  	xfs_lsn_t		ili_flush_lsn;	   /* lsn at last flush */
-> -	xfs_lsn_t		ili_last_lsn;	   /* lsn at last transaction */
-> +	uint64_t		ili_commit_seq;	   /* last transaction commit */
->  };
->  
->  static inline int xfs_inode_clean(struct xfs_inode *ip)
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 08d68a6161ae..84cd9b6c6d1f 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -3336,14 +3336,13 @@ xfs_log_force(
->  }
->  
->  static int
-> -__xfs_log_force_lsn(
-> -	struct xfs_mount	*mp,
-> +xlog_force_lsn(
-> +	struct xlog		*log,
->  	xfs_lsn_t		lsn,
->  	uint			flags,
->  	int			*log_flushed,
->  	bool			already_slept)
->  {
-> -	struct xlog		*log = mp->m_log;
->  	struct xlog_in_core	*iclog;
->  
->  	spin_lock(&log->l_icloglock);
-> @@ -3376,8 +3375,6 @@ __xfs_log_force_lsn(
->  		if (!already_slept &&
->  		    (iclog->ic_prev->ic_state == XLOG_STATE_WANT_SYNC ||
->  		     iclog->ic_prev->ic_state == XLOG_STATE_SYNCING)) {
-> -			XFS_STATS_INC(mp, xs_log_force_sleep);
-> -
->  			xlog_wait(&iclog->ic_prev->ic_write_wait,
->  					&log->l_icloglock);
->  			return -EAGAIN;
-> @@ -3415,25 +3412,29 @@ __xfs_log_force_lsn(
->   * to disk, that thread will wake up all threads waiting on the queue.
->   */
->  int
-> -xfs_log_force_lsn(
-> +xfs_log_force_seq(
->  	struct xfs_mount	*mp,
-> -	xfs_lsn_t		lsn,
-> +	uint64_t		seq,
->  	uint			flags,
->  	int			*log_flushed)
->  {
-> +	struct xlog		*log = mp->m_log;
-> +	xfs_lsn_t		lsn;
->  	int			ret;
-> -	ASSERT(lsn != 0);
-> +	ASSERT(seq != 0);
->  
->  	XFS_STATS_INC(mp, xs_log_force);
-> -	trace_xfs_log_force(mp, lsn, _RET_IP_);
-> +	trace_xfs_log_force(mp, seq, _RET_IP_);
->  
-> -	lsn = xlog_cil_force_lsn(mp->m_log, lsn);
-> +	lsn = xlog_cil_force_seq(log, seq);
->  	if (lsn == NULLCOMMITLSN)
->  		return 0;
->  
-> -	ret = __xfs_log_force_lsn(mp, lsn, flags, log_flushed, false);
-> -	if (ret == -EAGAIN)
-> -		ret = __xfs_log_force_lsn(mp, lsn, flags, log_flushed, true);
-> +	ret = xlog_force_lsn(log, lsn, flags, log_flushed, false);
-> +	if (ret == -EAGAIN) {
-> +		XFS_STATS_INC(mp, xs_log_force_sleep);
-> +		ret = xlog_force_lsn(log, lsn, flags, log_flushed, true);
-> +	}
->  	return ret;
->  }
->  
-> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-> index 044e02cb8921..33ae53401060 100644
-> --- a/fs/xfs/xfs_log.h
-> +++ b/fs/xfs/xfs_log.h
-> @@ -106,7 +106,7 @@ struct xfs_item_ops;
->  struct xfs_trans;
->  
->  int	  xfs_log_force(struct xfs_mount *mp, uint flags);
-> -int	  xfs_log_force_lsn(struct xfs_mount *mp, xfs_lsn_t lsn, uint flags,
-> +int	  xfs_log_force_seq(struct xfs_mount *mp, uint64_t seq, uint flags,
->  		int *log_forced);
->  int	  xfs_log_mount(struct xfs_mount	*mp,
->  			struct xfs_buftarg	*log_target,
-> @@ -132,8 +132,6 @@ bool	xfs_log_writable(struct xfs_mount *mp);
->  struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
->  void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
->  
-> -void	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
-> -				xfs_lsn_t *commit_lsn, bool regrant);
->  void	xlog_cil_process_committed(struct list_head *list);
->  bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
->  
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 0a00c3c9610c..2fda8c4513b2 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -792,7 +792,7 @@ xlog_cil_push_work(
->  	 * that higher sequences will wait for us to write out a commit record
->  	 * before they do.
->  	 *
-> -	 * xfs_log_force_lsn requires us to mirror the new sequence into the cil
-> +	 * xfs_log_force_seq requires us to mirror the new sequence into the cil
->  	 * structure atomically with the addition of this sequence to the
->  	 * committing list. This also ensures that we can do unlocked checks
->  	 * against the current sequence in log forces without risking
-> @@ -1054,16 +1054,14 @@ xlog_cil_empty(
->   * allowed again.
->   */
->  void
-> -xfs_log_commit_cil(
-> -	struct xfs_mount	*mp,
-> +xlog_cil_commit(
-> +	struct xlog		*log,
->  	struct xfs_trans	*tp,
-> -	xfs_lsn_t		*commit_lsn,
-> +	uint64_t		*commit_seq,
->  	bool			regrant)
->  {
-> -	struct xlog		*log = mp->m_log;
->  	struct xfs_cil		*cil = log->l_cilp;
->  	struct xfs_log_item	*lip, *next;
-> -	xfs_lsn_t		xc_commit_lsn;
->  
->  	/*
->  	 * Do all necessary memory allocation before we lock the CIL.
-> @@ -1077,10 +1075,6 @@ xfs_log_commit_cil(
->  
->  	xlog_cil_insert_items(log, tp);
->  
-> -	xc_commit_lsn = cil->xc_ctx->sequence;
-> -	if (commit_lsn)
-> -		*commit_lsn = xc_commit_lsn;
-> -
->  	if (regrant && !XLOG_FORCED_SHUTDOWN(log))
->  		xfs_log_ticket_regrant(log, tp->t_ticket);
->  	else
-> @@ -1103,8 +1097,10 @@ xfs_log_commit_cil(
->  	list_for_each_entry_safe(lip, next, &tp->t_items, li_trans) {
->  		xfs_trans_del_item(lip);
->  		if (lip->li_ops->iop_committing)
-> -			lip->li_ops->iop_committing(lip, xc_commit_lsn);
-> +			lip->li_ops->iop_committing(lip, cil->xc_ctx->sequence);
->  	}
-> +	if (commit_seq)
-> +		*commit_seq = cil->xc_ctx->sequence;
->  
->  	/* xlog_cil_push_background() releases cil->xc_ctx_lock */
->  	xlog_cil_push_background(log);
-> @@ -1121,9 +1117,9 @@ xfs_log_commit_cil(
->   * iclog flush is necessary following this call.
->   */
->  xfs_lsn_t
-> -xlog_cil_force_lsn(
-> +xlog_cil_force_seq(
->  	struct xlog	*log,
-> -	xfs_lsn_t	sequence)
-> +	uint64_t	sequence)
->  {
->  	struct xfs_cil		*cil = log->l_cilp;
->  	struct xfs_cil_ctx	*ctx;
-> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index 24acdc54e44e..59778cd5ecdd 100644
-> --- a/fs/xfs/xfs_log_priv.h
-> +++ b/fs/xfs/xfs_log_priv.h
-> @@ -234,7 +234,7 @@ struct xfs_cil;
->  
->  struct xfs_cil_ctx {
->  	struct xfs_cil		*cil;
-> -	xfs_lsn_t		sequence;	/* chkpt sequence # */
-> +	uint64_t		sequence;	/* chkpt sequence # */
->  	xfs_lsn_t		start_lsn;	/* first LSN of chkpt commit */
->  	xfs_lsn_t		commit_lsn;	/* chkpt commit record lsn */
->  	struct xlog_ticket	*ticket;	/* chkpt ticket */
-> @@ -272,10 +272,10 @@ struct xfs_cil {
->  	struct xfs_cil_ctx	*xc_ctx;
->  
->  	spinlock_t		xc_push_lock ____cacheline_aligned_in_smp;
-> -	xfs_lsn_t		xc_push_seq;
-> +	uint64_t		xc_push_seq;
->  	struct list_head	xc_committing;
->  	wait_queue_head_t	xc_commit_wait;
-> -	xfs_lsn_t		xc_current_sequence;
-> +	uint64_t		xc_current_sequence;
->  	struct work_struct	xc_push_work;
->  	wait_queue_head_t	xc_push_wait;	/* background push throttle */
->  } ____cacheline_aligned_in_smp;
-> @@ -552,19 +552,18 @@ int	xlog_cil_init(struct xlog *log);
->  void	xlog_cil_init_post_recovery(struct xlog *log);
->  void	xlog_cil_destroy(struct xlog *log);
->  bool	xlog_cil_empty(struct xlog *log);
-> +void	xlog_cil_commit(struct xlog *log, struct xfs_trans *tp,
-> +			uint64_t *commit_seq, bool regrant);
->  
->  /*
->   * CIL force routines
->   */
-> -xfs_lsn_t
-> -xlog_cil_force_lsn(
-> -	struct xlog *log,
-> -	xfs_lsn_t sequence);
-> +xfs_lsn_t xlog_cil_force_seq(struct xlog *log, uint64_t sequence);
->  
->  static inline void
->  xlog_cil_force(struct xlog *log)
->  {
-> -	xlog_cil_force_lsn(log, log->l_cilp->xc_current_sequence);
-> +	xlog_cil_force_seq(log, log->l_cilp->xc_current_sequence);
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 44f72c09c203..697703f3be48 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -849,7 +849,7 @@ __xfs_trans_commit(
->  	bool			regrant)
->  {
->  	struct xfs_mount	*mp = tp->t_mountp;
-> -	xfs_lsn_t		commit_lsn = -1;
-> +	uint64_t		commit_seq = 0;
->  	int			error = 0;
->  	int			sync = tp->t_flags & XFS_TRANS_SYNC;
->  
-> @@ -891,7 +891,7 @@ __xfs_trans_commit(
->  		xfs_trans_apply_sb_deltas(tp);
->  	xfs_trans_apply_dquot_deltas(tp);
->  
-> -	xfs_log_commit_cil(mp, tp, &commit_lsn, regrant);
-> +	xlog_cil_commit(mp->m_log, tp, &commit_seq, regrant);
->  
->  	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
->  	xfs_trans_free(tp);
-> @@ -901,7 +901,7 @@ __xfs_trans_commit(
->  	 * log out now and wait for it.
->  	 */
->  	if (sync) {
-> -		error = xfs_log_force_lsn(mp, commit_lsn, XFS_LOG_SYNC, NULL);
-> +		error = xfs_log_force_seq(mp, commit_seq, XFS_LOG_SYNC, NULL);
->  		XFS_STATS_INC(mp, xs_trans_sync);
->  	} else {
->  		XFS_STATS_INC(mp, xs_trans_async);
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 8b03fbfe9a1b..d223d4f4e429 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -43,7 +43,7 @@ struct xfs_log_item {
->  	struct list_head		li_cil;		/* CIL pointers */
->  	struct xfs_log_vec		*li_lv;		/* active log vector */
->  	struct xfs_log_vec		*li_lv_shadow;	/* standby vector */
-> -	xfs_lsn_t			li_seq;		/* CIL commit seq */
-> +	uint64_t			li_seq;		/* CIL commit seq */
->  };
->  
->  /*
-> @@ -69,7 +69,7 @@ struct xfs_item_ops {
->  	void (*iop_pin)(struct xfs_log_item *);
->  	void (*iop_unpin)(struct xfs_log_item *, int remove);
->  	uint (*iop_push)(struct xfs_log_item *, struct list_head *);
-> -	void (*iop_committing)(struct xfs_log_item *, xfs_lsn_t commit_lsn);
-> +	void (*iop_committing)(struct xfs_log_item *lip, uint64_t seq);
->  	void (*iop_release)(struct xfs_log_item *);
->  	xfs_lsn_t (*iop_committed)(struct xfs_log_item *, xfs_lsn_t);
->  	int (*iop_recover)(struct xfs_log_item *lip,
-> -- 
-> 2.28.0
-> 
+V2 vs. V1
+Kernel:
+* Added new patch that renames mp to parsing_mp in xfs_fs_parse_param()
+* Added new function xfs_fs_warn_deprecated() to encapsulate the logic for displaying the deprecation warning.
+* Fixed some white space issues.
+
+Test:
+* Skip test on old kernels that don't print any deprecation warning. 
+
+Pavel Reichl (2):
+  xfs: rename variable mp to parsing_mp
+  xfs: Skip repetitive warnings about mount options
+
+ fs/xfs/xfs_super.c | 118 +++++++++++++++++++++++++--------------------
+ 1 file changed, 67 insertions(+), 51 deletions(-)
+
+-- 
+2.29.2
+
