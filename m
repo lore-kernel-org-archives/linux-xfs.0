@@ -2,119 +2,130 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AFCBC433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 22:14:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C19AC433E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 22:20:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D546360233
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 22:14:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA48664F03
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Feb 2021 22:20:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233218AbhBXWOY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 17:14:24 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:55838 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231335AbhBXWOX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 17:14:23 -0500
+        id S234669AbhBXWT7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Feb 2021 17:19:59 -0500
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:57538 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233615AbhBXWT5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 17:19:57 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 89CEA1AD7F7;
-        Thu, 25 Feb 2021 09:13:40 +1100 (AEDT)
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id D81694AC0B6;
+        Thu, 25 Feb 2021 09:19:13 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lF2Pc-002mQb-2H; Thu, 25 Feb 2021 09:13:40 +1100
-Date:   Thu, 25 Feb 2021 09:13:40 +1100
+        id 1lF2Uz-002mn3-3x; Thu, 25 Feb 2021 09:19:13 +1100
+Date:   Thu, 25 Feb 2021 09:19:13 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: reduce buffer log item shadow allocations
-Message-ID: <20210224221340.GF4662@dread.disaster.area>
-References: <20210223044636.3280862-1-david@fromorbit.com>
- <20210223044636.3280862-2-david@fromorbit.com>
- <20210224212929.GY7272@magnolia>
+Subject: Re: [PATCH 1/3] xfs: xfs_log_force_lsn isn't passed a LSN
+Message-ID: <20210224221913.GG4662@dread.disaster.area>
+References: <20210223053212.3287398-1-david@fromorbit.com>
+ <20210223053212.3287398-2-david@fromorbit.com>
+ <20210224214235.GB7272@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210224212929.GY7272@magnolia>
+In-Reply-To: <20210224214235.GB7272@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8 a=pGLkceISAAAA:8
-        a=7-415B0cAAAA:8 a=ON5KFjewiYm9JY-m1v0A:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=-aq6U8YYFRYAOWX8eF8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 24, 2021 at 01:29:29PM -0800, Darrick J. Wong wrote:
-> On Tue, Feb 23, 2021 at 03:46:34PM +1100, Dave Chinner wrote:
+On Wed, Feb 24, 2021 at 01:42:35PM -0800, Darrick J. Wong wrote:
+> On Tue, Feb 23, 2021 at 04:32:10PM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > When we modify btrees repeatedly, we regularly increase the size of
-> > the logged region by a single chunk at a time (per transaction
-> > commit). This results in the CIL formatting code having to
-> > reallocate the log vector buffer every time the buffer dirty region
-> > grows. Hence over a typical 4kB btree buffer, we might grow the log
-> > vector 4096/128 = 32x over a short period where we repeatedly add
-> > or remove records to/from the buffer over a series of running
-> > transaction. This means we are doing 32 memory allocations and frees
-> > over this time during a performance critical path in the journal.
+> > In doing an investigation into AIL push stalls, I was looking at the
+> > log force code to see if an async CIL push could be done instead.
+> > This lead me to xfs_log_force_lsn() and looking at how it works.
 > > 
-> > The amount of space tracked in the CIL for the object is calculated
-> > during the ->iop_format() call for the buffer log item, but the
-> > buffer memory allocated for it is calculated by the ->iop_size()
-> > call. The size callout determines the size of the buffer, the format
-> > call determines the space used in the buffer.
+> > xfs_log_force_lsn() is only called from inode synchronisation
+> > contexts such as fsync(), and it takes the ip->i_itemp->ili_last_lsn
+> > value as the LSN to sync the log to. This gets passed to
+> > xlog_cil_force_lsn() via xfs_log_force_lsn() to flush the CIL to the
+> > journal, and then used by xfs_log_force_lsn() to flush the iclogs to
+> > the journal.
 > > 
-> > Hence we can oversize the buffer space required in the size
-> > calculation without impacting the amount of space used and accounted
-> > to the CIL for the changes being logged. This allows us to reduce
-> > the number of allocations by rounding up the buffer size to allow
-> > for future growth. This can safe a substantial amount of CPU time in
-> > this path:
+> > The problem with is that ip->i_itemp->ili_last_lsn does not store a
+> > log sequence number. What it stores is passed to it from the
+> > ->iop_committing method, which is called by xfs_log_commit_cil().
+> > The value this passes to the iop_committing method is the CIL
+> > context sequence number that the item was committed to.
 > > 
-> > -   46.52%     2.02%  [kernel]                  [k] xfs_log_commit_cil
-> >    - 44.49% xfs_log_commit_cil
-> >       - 30.78% _raw_spin_lock
-> >          - 30.75% do_raw_spin_lock
-> >               30.27% __pv_queued_spin_lock_slowpath
+> > As it turns out, xlog_cil_force_lsn() converts the sequence to an
+> > actual commit LSN for the related context and returns that to
+> > xfs_log_force_lsn(). xfs_log_force_lsn() overwrites it's "lsn"
+> > variable that contained a sequence with an actual LSN and then uses
+> > that to sync the iclogs.
 > > 
-> > (oh, ouch!)
-> > ....
-> >       - 1.05% kmem_alloc_large
-> >          - 1.02% kmem_alloc
-> >               0.94% __kmalloc
+> > This caused me some confusion for a while, even though I originally
+> > wrote all this code a decade ago. ->iop_committing is only used by
+> > a couple of log item types, and only inode items use the sequence
+> > number it is passed.
 > > 
-> > This overhead here us what this patch is aimed at. After:
-> > 
-> >       - 0.76% kmem_alloc_large
-> >          - 0.75% kmem_alloc
-> >               0.70% __kmalloc
+> > Let's clean up the API, CIL structures and inode log item to call it
+> > a sequence number, and make it clear that the high level code is
+> > using CIL sequence numbers and not on-disk LSNs for integrity
+> > synchronisation purposes.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+> > ---
+> >  fs/xfs/xfs_buf_item.c   |  2 +-
+> >  fs/xfs/xfs_dquot_item.c |  2 +-
+> >  fs/xfs/xfs_file.c       | 14 +++++++-------
+> >  fs/xfs/xfs_inode.c      | 10 +++++-----
+> >  fs/xfs/xfs_inode_item.c |  4 ++--
+> >  fs/xfs/xfs_inode_item.h |  2 +-
+> >  fs/xfs/xfs_log.c        | 27 ++++++++++++++-------------
+> >  fs/xfs/xfs_log.h        |  4 +---
+> >  fs/xfs/xfs_log_cil.c    | 22 +++++++++-------------
+> >  fs/xfs/xfs_log_priv.h   | 15 +++++++--------
+> >  fs/xfs/xfs_trans.c      |  6 +++---
+> >  fs/xfs/xfs_trans.h      |  4 ++--
+> >  12 files changed, 53 insertions(+), 59 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> > index 14d1fefcbf4c..7affe1aa16da 100644
+> > --- a/fs/xfs/xfs_buf_item.c
+> > +++ b/fs/xfs/xfs_buf_item.c
+> > @@ -713,7 +713,7 @@ xfs_buf_item_release(
+> >  STATIC void
+> >  xfs_buf_item_committing(
+> >  	struct xfs_log_item	*lip,
+> > -	xfs_lsn_t		commit_lsn)
+> > +	uint64_t		seq)
 > 
-> Any particular reason for 512?  It looks like you simply picked an
-> arbitrary power of 2, but was there a particular target in mind? i.e.
-> we never need to realloc for the usual 4k filesystem?
+> FWIW I rather wish you'd defined a new type for cil sequence numbers,
+> since uint64_t is rather generic.  Even if checkpatch whines about new
+> typedefs.
 
-It is based on the bitmap chunk size being 128 bytes and that random
-directory entry updates almost never require more than 3-4 128 byte
-regions to be logged in the directory block.
+I don't use checkpatch so I don't care about all the idiotic
+"crusade of the month" stuff it is always whining about.
 
-The other observation is for per-ag btrees. When we are inserting
-into a new btree block, we'll pack it from the front. Hence the
-first few records land in the first 128 bytes so we log only 128
-bytes, the next 8-16 records land in the second region so now we log
-256 bytes. And so on.  If we are doing random updates, it will only
-allocate every 4 random 128 byte regions that are dirtied instead of
-every single one.
+> I was kind of hoping that we'd be able to mark xfs_lsn_t and xfs_csn_t
+> with __bitwise and so static checkers could catch us if we accidentally
+> feed a CIL sequence number into a function that wants an LSN.
 
-Any larger than this and I noticed an increase in memory footprint
-in my scalability workloads. Any less than this and I didn't really
-see any significant benefit to CPU usage.
+Seems reasonable to hide that behind a typedef. No idea how to set
+it up and test it, though, and I don't really have time right now.
+I'll change it to a typedef to make this easier to do in future,
+though.
 
 Cheers,
 
