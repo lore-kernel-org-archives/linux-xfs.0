@@ -2,270 +2,240 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D99FCC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 04:09:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 073BEC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 06:18:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6A1464ECB
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 04:09:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CA3664EC4
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 06:18:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232851AbhBYEJx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 23:09:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33742 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231974AbhBYEJt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 23:09:49 -0500
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39229C061574
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Feb 2021 20:09:09 -0800 (PST)
-Received: by mail-pf1-x434.google.com with SMTP id m6so2764977pfk.1
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Feb 2021 20:09:09 -0800 (PST)
+        id S231638AbhBYGSz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Feb 2021 01:18:55 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:41366 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230001AbhBYGSx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Feb 2021 01:18:53 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11P6FMJn119762;
+        Thu, 25 Feb 2021 06:18:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=G+71G9RCD5NaY2WCT5GbnNaQjej+sw/ANCwzPcZ0VMA=;
+ b=e4AJt7fXZf+M1BdKD1Xg05JBvTMH9hALbuy/4AVd1tV3EaCRCUgpmHXYDHjzG7ajmbvC
+ t5E5FNsHUHp1VTO78ZH+HV0iBCxkuquaKiyS7vmXG8Hq4beueGWf2dqNe6sCkxcPdmmx
+ MNGjcoOYVf/ZivuQDy2EKhWJEAoT44nQgkPTGO1x7h+/6q9SbC/Pz9bfYki/c/a4HvrF
+ GF4+Trir4Z4eq1Glrqt3EUqTPDh4zISFvR3j7X1+6RT366f7hz9WDW1R8R15OaHbJ0l/
+ qcjG93aK8QQlu3omscP1CBsPV9j591K4CGEDXQ3KmaIfLnebWiCV1KUNbOIkmkDKE7ME IA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 36tsur5bu2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 25 Feb 2021 06:18:00 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 11P6ADUs173189;
+        Thu, 25 Feb 2021 06:18:00 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2170.outbound.protection.outlook.com [104.47.57.170])
+        by userp3020.oracle.com with ESMTP id 36uc6u2ebm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 25 Feb 2021 06:18:00 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ACSw1kNl3iIp5Wzfq96ZvCkjdnHBrgKS+fhxKVRWeU84lH77Q3LE8FOs0aJCVm8ioZ6dsdEqn5iivk10VF+u8FLUcHPk9/3QJiXQKpDTE96jaPYJJLeyZ0p/OnMYWdQerMBMEThzFAeWQ2qHSQ+y/hb0H5fUULGmmxK+VOxa5cdJ720rfsZySUjlAcM0lOMb/wZddHOj7DeHzq0C5tfXugCKCqf7cZMZKA0uQBXUWgLXqlKCVnETvux2lB01EfKYXXlmGSgbtQNpJw0CfWtefRiffErMmyF2FvaL4DtA79hHjHsijCXspTVVzYCYZvfLOufzc6cu4LSAmwMC921Bmg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=G+71G9RCD5NaY2WCT5GbnNaQjej+sw/ANCwzPcZ0VMA=;
+ b=fJ/f/w7ZgIwavbmT83aa8OrmpuB1JywYG+F86ceGIuFSZZjjelXBvVClKhlLqXDLWFth4Hw4ns6ykEzFAWmR8b51VHUGilNuXplPFEJR2uDu6iMelrnFmQ9zTh4LcP64tPi75fQsJD4WUkCl81ZxyJ4uI4Gf99puXUbSeVgDvAaIAfU5cXF+3PfpLDAIQeFNWf57ABIh0IaQZg1EmrUMctzZJQru9n8RR/ZeE1bK9y79jnWpf8cucc5Q6UgmYsTtZVh0iTGPx6eMdj/T3MpcjaMrb51XMXMSVF7LdBpQ1FmAW+3G3KKlI90Gj5yUQBIEQQvdgguFmLLnlINr3di0UA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=JB1585lJnfy+TUFk5+MmqPYaA60tJGOMVQA/5ksPmi8=;
-        b=JJeV8SOMWhCoMIONdR5K665ekXSKFp+5+WBWZxMZnlyiYlDVL5KSysaZs1PhYm/h3V
-         7W6KBIV/DrAHOgh7fK+NhS7da4j4idWLRDNqax/6fLsStpvYjzI9/y0VEd2nNi8j36zb
-         QX5oIlcfzUyL1AK7i3ZxHJfUxuQI39MDubfNihGABP2QoyvUx366Bt0vForCNijqDOKy
-         j0FJwwD0hyn7PcncCDAGgK2CmRx9ASC6pMrzHZSbM2fpI17/kLHiLCH+NAb6rCaHAyFA
-         +V/+2vuKJqMEqThmV7RXtgflXQ5JnjLXjtFR27KglcRlM8UfZm1BkZJhepIB6sgDvPw1
-         D2Dg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=JB1585lJnfy+TUFk5+MmqPYaA60tJGOMVQA/5ksPmi8=;
-        b=Y2LY80uZr6ubXg2raDoR64XrPNTDTh1Q0ARfDMJc0we7bI3SUGBoHPRQNjOORKlBed
-         ZyCr9YvXLjNY4MRmjPGTlEVIe/T9E/dZP2IP+CjRPGK0Oa5GZl8EuKoV6CKzL5/aLDYW
-         sNn+qZyP+SpxqbhoGuVcxVRnfUg2fBn9OF6xHT+pJdUKZpBlYe0f/KiZzpqKA69IzZKl
-         YVc40mfLoHjvM5wac3voL+lL/lUUNCrGsXa4Kgi7fVLpMtFzirE++CjJCMzB2F1e/2kc
-         RPjtP4F3Ufw0gwSsxqRvja8Bry2QRc4D4to9Hqy8pTb5F4Jf8m+acniMIESBosP+2Tf6
-         NnEQ==
-X-Gm-Message-State: AOAM533npUrWaIzT66zn0ZyOZK+MLoD6r8UefpUwCT9iT3oD98Fmo+z0
-        7eZZqSfgtiLiVX4otnmbF1yqZUJLujA=
-X-Google-Smtp-Source: ABdhPJyOJHAFSRIbWe2uybMGTE2Pnx/DKEZHX0DSq4umtJvJmVQ2ubbL3zAOUbYmJaAdqj5KLcKLLQ==
-X-Received: by 2002:a63:ab4f:: with SMTP id k15mr1215384pgp.280.1614226148473;
-        Wed, 24 Feb 2021 20:09:08 -0800 (PST)
-Received: from garuda ([122.172.177.10])
-        by smtp.gmail.com with ESMTPSA id 140sm4427492pfv.83.2021.02.24.20.09.07
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 24 Feb 2021 20:09:08 -0800 (PST)
-References: <20210223033442.3267258-1-david@fromorbit.com> <20210223033442.3267258-8-david@fromorbit.com> <20210223080503.GW4662@dread.disaster.area>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Dave Chinner <david@fromorbit.com>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=G+71G9RCD5NaY2WCT5GbnNaQjej+sw/ANCwzPcZ0VMA=;
+ b=vLgduMGA5C6qCJilHLmjFkJzC7aEhDiq5h2DGJduxbTdgY4KQAirZwE5seSDRW9yf3HhSnzPGIzja4rB1kYhvmA7J44C2rssivYymWGa/IGsOdZftE4KKV1agqqTXj0qu1LR7saoZGgxNrJwhaEKD/bgTwyyphtHT3Dsw+udkgQ=
+Authentication-Results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by BYAPR10MB2488.namprd10.prod.outlook.com (2603:10b6:a02:b9::27) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3868.33; Thu, 25 Feb
+ 2021 06:17:58 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::f4a1:6643:4c93:2a9f]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::f4a1:6643:4c93:2a9f%3]) with mapi id 15.20.3890.019; Thu, 25 Feb 2021
+ 06:17:58 +0000
+Subject: Re: [PATCH v15 02/22] xfs: Add xfs_attr_node_remove_cleanup
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/8 v2] xfs: journal IO cache flush reductions
-In-reply-to: <20210223080503.GW4662@dread.disaster.area>
-Date:   Thu, 25 Feb 2021 09:39:05 +0530
-Message-ID: <8735xk7pr2.fsf@garuda>
+References: <20210218165348.4754-1-allison.henderson@oracle.com>
+ <20210218165348.4754-3-allison.henderson@oracle.com>
+ <20210224150325.GC981777@bfoster>
+From:   Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <debc4984-f535-91f4-9d96-2e36ca8229f0@oracle.com>
+Date:   Wed, 24 Feb 2021 23:17:57 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
+In-Reply-To: <20210224150325.GC981777@bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [67.1.223.248]
+X-ClientProxiedBy: BY5PR16CA0025.namprd16.prod.outlook.com
+ (2603:10b6:a03:1a0::38) To BY5PR10MB4306.namprd10.prod.outlook.com
+ (2603:10b6:a03:211::7)
 MIME-Version: 1.0
-Content-Type: text/plain
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.1.226] (67.1.223.248) by BY5PR16CA0025.namprd16.prod.outlook.com (2603:10b6:a03:1a0::38) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.19 via Frontend Transport; Thu, 25 Feb 2021 06:17:58 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 783e3995-6ce2-4287-79de-08d8d95518a9
+X-MS-TrafficTypeDiagnostic: BYAPR10MB2488:
+X-Microsoft-Antispam-PRVS: <BYAPR10MB2488F7EB8DA0A523F6458911959E9@BYAPR10MB2488.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: f/5nYFYvwsNAqy6L4g4QFxAb9nOF2BnUhFpuCyciDlNIMLFmpGqcA8JRcXzdWINhidkPMrBYeonmKFD5ujJjzJYG2b1FM3kbm0pkCHwft/EySYCXqyq77WZOGVsOm57fSp7QYq8m4W+9Q0G1GB57Rrc4JLQbM8CmwTRPx0xD2LeUftK2fjvTxq1CCXurFcKrW2i2MUHmvpo5unidpfLjmHpM6+pHPhmWk4UYAQ8OzHo8D+OoX5BFi+DI57Pak0yefurmUqvffUIsitbrQUP8NUgoT14/VSqKCs1CNMKYgrk2kMx2LwQpDr4NftpQVYvBQfZLUPW8WPzilAOXq6z7Yc16lrOK3ZqvdMWLi2uWiAhGpDPKXxvFGM7SnjyuQ6S9hqA5oKONOMGLHSFpnsdSrK7RJILcYIgNCysPc0Umaiqa7OcXNIYGgOlWKU02RIbNXp0DBte/P/AiX09Qr6n0UA6ITxizxSudGqCxyUcqlViCkUqG191Hft6AqtTnlcXg5aZLjC1kiEo4/ajoLn/FZEdasqk0QJRRl0XgahT8yqQ4BSXhoEqX2+vGwYvpXDeKJGTGQ5JsCSCq26/Z3M6ec+UJGH+Lu+SXZEvG6Juc19I=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(376002)(136003)(39860400002)(396003)(366004)(8936002)(2616005)(956004)(52116002)(8676002)(66946007)(5660300002)(44832011)(53546011)(6486002)(2906002)(31686004)(478600001)(83380400001)(4326008)(86362001)(16576012)(31696002)(16526019)(66476007)(66556008)(26005)(316002)(6916009)(36756003)(186003)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?cGhnZjRtYkFOL291RE1rYU1laEdEaExVc0JYeEZMOUttbXlQOFdUMW9oMWl6?=
+ =?utf-8?B?V09Jbm5NcHVRcU9mRjR6MEJneFcvMHJqb3BUNzhJd0V0clVrY2VtOW93bXVD?=
+ =?utf-8?B?SGZjWlJYTnNIMThwclZmSCtXcE9FV3JaWTByTFJ6RHRzTC9jK3lpeURzeEFY?=
+ =?utf-8?B?a0NsREFpc2t0L2ZBb3JyR2ZZR2loc2hHbEtvT0tuZEZ0dEJjRnFUWTI3cHJQ?=
+ =?utf-8?B?SnFYRVhkTFlzNHdwYnJqTEQ4TkFjVkZMZml2aEtIcEhXb2pRbUU1VHYzemlV?=
+ =?utf-8?B?Ly9sZ0UvSm90SzRRbmpRZnZrL29sWEZqZ3pVMTh2TnRhNHc1U1NpcHVvRXdQ?=
+ =?utf-8?B?bWQwbkQ2YkNmd1F5ZmU4T0M3b1RteFFKTUFMZVlUU3Z4Q3FWZExGbXdheDdL?=
+ =?utf-8?B?ZzhHOWU4M3BsamlWTGpUTFlTd3NEbmF4b3R6WWhTaVpMb3c3SmVWQ1NrL2tP?=
+ =?utf-8?B?TU9XVUNrNDFiSnRiYUVmVlpwY0syUG1BaWh0ZnJETWQzMi9yVnB0ZE8xWlV3?=
+ =?utf-8?B?NXRMZUhLVXdtSXVZSHRMRmY3b0o0TCtUKzQ1aWNjeWJSNDBPcEd4YzVkRElv?=
+ =?utf-8?B?SVFrU2VTaWo2QU00d3ViVVpOaWVZTkhkQjRWSVhGWEp0YjJjaFRMMnJFKzNm?=
+ =?utf-8?B?b1FZVWFTWmhWVWNsazhlbHRLUCtrcjJyMExkYlgzQUF4Sk95NkZvZG1Qb2lU?=
+ =?utf-8?B?cEtMV09CeC9CTmtyTTJhZk8zVURvRCtJc1BDUlVENHM3elBEYTJuWFk1cjRl?=
+ =?utf-8?B?NHZOeExiRmZST0JsbDV0YVlrbTM1TjFqQVFqTmhGU2NCM3g2SlBOOW1YMjhG?=
+ =?utf-8?B?TjhEZ3RYdjBTVUtCWmVFTnlwZyt0UHAxQmJKZjFxeG9NR1U1Yjd0d3dsZUNF?=
+ =?utf-8?B?bHQ2NE5OQ0xid3VEam02blRQTGxoYXBWcElwUzRWcE1jeVMrOEwvUGg1WEV5?=
+ =?utf-8?B?c3dndVhtWVRZbVVtWGFDaUJ5NllOQzNPRGhmL2U4ZkwvaC9oRlM0VFF1bU1z?=
+ =?utf-8?B?bDh2d0dTRlpXaFVqT2s3eXBaclROV3kvTGRIVnZMUTBJNHVxYTRPb2piOS90?=
+ =?utf-8?B?bGdUeFZHekNld0MwRFVUTzRrNHNDajIvb2tmT3NzMGJ2eElSZlFqN295RVNI?=
+ =?utf-8?B?MHROajh5cjBEWjNzVnVnakFRWVJQcC9sT1YrVjgzWVAvK1dSUEVmWDV2Zmdy?=
+ =?utf-8?B?R0pOTkZqYlFGYVByZ1BvZjlTbkc2bjFodlkwY2ZYTXNmRFRkM1FCaXQ0dmtk?=
+ =?utf-8?B?eHFqSHF6Yjg0a2Y2UFJ6NDhBL0hUZStMTnRmN2ZPazN4cGMwN0ZDUWpMTjdD?=
+ =?utf-8?B?NnZhN1BNdVVTNStjNjE3cGlMOGprTjRIWUgrcTZKZ0MyR2tvT1V5NDV4QWh1?=
+ =?utf-8?B?VWVRVTZCKzNHK0U1Z1h6ZTZRSDY5SnJvbWs5RjBkZ1BPR3RRdXp2NGkvcE42?=
+ =?utf-8?B?eWtCNlE0bUFGWUNFTEwwVkU3RWM2b280ZlVQSVhaYW1sTHZSNG9iK3hHYzNV?=
+ =?utf-8?B?VS8zVFROdkMxdXdNdTVld0pETWdrN0NnUFAweGlnOEkrWU85SHBmdm9VenJ4?=
+ =?utf-8?B?RWtxMTdSWENYeFVJejUwbW82MDRyYlQ0b0xkb3M0NzBRNkd6Q0VYS3Jkbzdh?=
+ =?utf-8?B?ekIxbUdoL0V0Rm8rT0dIbTAyak01ZlpVMytGMmltQktTRENMV0tDaHUveTUy?=
+ =?utf-8?B?U0Zic0VXalBBaXczekkwMzEycHArQ1kwKytQY0x6YzRyejRocmNxZ0l5anA1?=
+ =?utf-8?Q?hrWYcJn9vyMG/m4EZSOIGYIBkcdvkXsIduUIZZ8?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 783e3995-6ce2-4287-79de-08d8d95518a9
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Feb 2021 06:17:58.3257
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: tzIEggp6rb/Eic8pnngwaCS1imjOHiVq6v9HxejaxUJQDfoWNuY2PLBE2YzyxDAWLAxzM8XIMinwl9lRNo8er+K1hzxUh5YhirYJuIT0/Dc=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2488
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9905 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 spamscore=0
+ mlxlogscore=999 adultscore=0 bulkscore=0 malwarescore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2102250054
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9905 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
+ priorityscore=1501 impostorscore=0 bulkscore=0 mlxscore=0 malwarescore=0
+ clxscore=1015 phishscore=0 mlxlogscore=999 lowpriorityscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2102250054
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 23 Feb 2021 at 13:35, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> Currently every journal IO is issued as REQ_PREFLUSH | REQ_FUA to
-> guarantee the ordering requirements the journal has w.r.t. metadata
-> writeback. THe two ordering constraints are:
->
-> 1. we cannot overwrite metadata in the journal until we guarantee
-> that the dirty metadata has been written back in place and is
-> stable.
->
-> 2. we cannot write back dirty metadata until it has been written to
-> the journal and guaranteed to be stable (and hence recoverable) in
-> the journal.
->
-> The ordering guarantees of #1 are provided by REQ_PREFLUSH. This
-> causes the journal IO to issue a cache flush and wait for it to
-> complete before issuing the write IO to the journal. Hence all
-> completed metadata IO is guaranteed to be stable before the journal
-> overwrites the old metadata.
->
-> The ordering guarantees of #2 are provided by the REQ_FUA, which
-> ensures the journal writes do not complete until they are on stable
-> storage. Hence by the time the last journal IO in a checkpoint
-> completes, we know that the entire checkpoint is on stable storage
-> and we can unpin the dirty metadata and allow it to be written back.
->
-> This is the mechanism by which ordering was first implemented in XFS
-> way back in 2002 by this commit:
->
-> commit 95d97c36e5155075ba2eb22b17562cfcc53fcf96
-> Author: Steve Lord <lord@sgi.com>
-> Date:   Fri May 24 14:30:21 2002 +0000
->
->     Add support for drive write cache flushing - should the kernel
->     have the infrastructure
->
-> A lot has changed since then, most notably we now use delayed
-> logging to checkpoint the filesystem to the journal rather than
-> write each individual transaction to the journal. Cache flushes on
-> journal IO are necessary when individual transactions are wholly
-> contained within a single iclog. However, CIL checkpoints are single
-> transactions that typically span hundreds to thousands of individual
-> journal writes, and so the requirements for device cache flushing
-> have changed.
->
-> That is, the ordering rules I state above apply to ordering of
-> atomic transactions recorded in the journal, not to the journal IO
-> itself. Hence we need to ensure metadata is stable before we start
-> writing a new transaction to the journal (guarantee #1), and we need
-> to ensure the entire transaction is stable in the journal before we
-> start metadata writeback (guarantee #2).
->
-> Hence we only need a REQ_PREFLUSH on the journal IO that starts a
-> new journal transaction to provide #1, and it is not on any other
-> journal IO done within the context of that journal transaction.
->
-> The CIL checkpoint already issues a cache flush before it starts
-> writing to the log, so we no longer need the iclog IO to issue a
-> REQ_REFLUSH for us. Hence if XLOG_START_TRANS is passed
-> to xlog_write(), we no longer need to mark the first iclog in
-> the log write with REQ_PREFLUSH for this case.
->
-> Given the new ordering semantics of commit records for the CIL, we
-> need iclogs containing commit to issue a REQ_PREFLUSH. We also
-> require unmount records to do this. Hence for both XLOG_COMMIT_TRANS
-> and XLOG_UNMOUNT_TRANS xlog_write() calls we need to mark
-> the first iclog being written with REQ_PREFLUSH.
->
-> For both commit records and unmount records, we also want them
-> immediately on stable storage, so we want to also mark the iclogs
-> that contain these records to be marked REQ_FUA. That means if a
-> record is split across multiple iclogs, they are all marked REQ_FUA
-> and not just the last one so that when the transaction is completed
-> all the parts of the record are on stable storage.
->
-> As an optimisation, when the commit record lands in the same iclog
-> as the journal transaction starts, we don't need to wait for
-> anything and can simply use REQ_FUA to provide guarantee #2.  This
-> means that for fsync() heavy workloads, the cache flush behaviour is
-> completely unchanged and there is no degradation in performance as a
-> result of optimise the multi-IO transaction case.
->
-> The most notable sign that there is less IO latency on my test
-> machine (nvme SSDs) is that the "noiclogs" rate has dropped
-> substantially. This metric indicates that the CIL push is blocking
-> in xlog_get_iclog_space() waiting for iclog IO completion to occur.
-> With 8 iclogs of 256kB, the rate is appoximately 1 noiclog event to
-> every 4 iclog writes. IOWs, every 4th call to xlog_get_iclog_space()
-> is blocking waiting for log IO. With the changes in this patch, this
-> drops to 1 noiclog event for every 100 iclog writes. Hence it is
-> clear that log IO is completing much faster than it was previously,
-> but it is also clear that for large iclog sizes, this isn't the
-> performance limiting factor on this hardware.
->
-> With smaller iclogs (32kB), however, there is a sustantial
-> difference. With the cache flush modifications, the journal is now
-> running at over 4000 write IOPS, and the journal throughput is
-> largely identical to the 256kB iclogs and the noiclog event rate
-> stays low at about 1:50 iclog writes. The existing code tops out at
-> about 2500 IOPS as the number of cache flushes dominate performance
-> and latency. The noiclog event rate is about 1:4, and the
-> performance variance is quite large as the journal throughput can
-> fall to less than half the peak sustained rate when the cache flush
-> rate prevents metadata writeback from keeping up and the log runs
-> out of space and throttles reservations.
->
-> As a result:
->
-> 	logbsize	fsmark create rate	rm -rf
-> before	32kb		152851+/-5.3e+04	5m28s
-> patched	32kb		221533+/-1.1e+04	5m24s
->
-> before	256kb		220239+/-6.2e+03	4m58s
-> patched	256kb		228286+/-9.2e+03	5m06s
->
-> The rm -rf times are included because I ran them, but the
-> differences are largely noise. This workload is largely metadata
-> read IO latency bound and the changes to the journal cache flushing
-> doesn't really make any noticable difference to behaviour apart from
-> a reduction in noiclog events from background CIL pushing.
->
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
-> Version 2:
-> - repost manually without git/guilt mangling the patch author
-> - fix bug in XLOG_ICL_NEED_FUA definition that didn't manifest as an
->   ordering bug in generic/45[57] until testing the CIL pipelining
->   changes much later in the series.
->
->  fs/xfs/xfs_log.c      | 33 +++++++++++++++++++++++----------
->  fs/xfs/xfs_log_cil.c  |  7 ++++++-
->  fs/xfs/xfs_log_priv.h |  4 ++++
->  3 files changed, 33 insertions(+), 11 deletions(-)
->
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 6c3fb6dcb505..08d68a6161ae 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1806,8 +1806,7 @@ xlog_write_iclog(
->  	struct xlog		*log,
->  	struct xlog_in_core	*iclog,
->  	uint64_t		bno,
-> -	unsigned int		count,
-> -	bool			need_flush)
-> +	unsigned int		count)
->  {
->  	ASSERT(bno < log->l_logBBsize);
->
-> @@ -1845,10 +1844,12 @@ xlog_write_iclog(
->  	 * writeback throttle from throttling log writes behind background
->  	 * metadata writeback and causing priority inversions.
->  	 */
-> -	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC |
-> -				REQ_IDLE | REQ_FUA;
-> -	if (need_flush)
-> +	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC | REQ_IDLE;
-> +	if (iclog->ic_flags & XLOG_ICL_NEED_FLUSH)
->  		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
-> +	if (iclog->ic_flags & XLOG_ICL_NEED_FUA)
-> +		iclog->ic_bio.bi_opf |= REQ_FUA;
-> +	iclog->ic_flags &= ~(XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FUA);
->
->  	if (xlog_map_iclog_data(&iclog->ic_bio, iclog->ic_data, count)) {
->  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
-> @@ -1951,7 +1952,7 @@ xlog_sync(
->  	unsigned int		roundoff;       /* roundoff to BB or stripe */
->  	uint64_t		bno;
->  	unsigned int		size;
-> -	bool			need_flush = true, split = false;
-> +	bool			split = false;
->
->  	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
->
-> @@ -2009,13 +2010,14 @@ xlog_sync(
->  	 * synchronously here; for an internal log we can simply use the block
->  	 * layer state machine for preflushes.
->  	 */
-> -	if (log->l_targ != log->l_mp->m_ddev_targp || split) {
-> +	if (log->l_targ != log->l_mp->m_ddev_targp ||
-> +	    (split && (iclog->ic_flags & XLOG_ICL_NEED_FLUSH))) {
->  		xfs_flush_bdev(log->l_mp->m_ddev_targp->bt_bdev);
-> -		need_flush = false;
-> +		iclog->ic_flags &= ~XLOG_ICL_NEED_FLUSH;
->  	}
 
-If a checkpoint transaction spans across 2 or more iclogs and the log is
-stored on an external device, then the above would remove XLOG_ICL_NEED_FLUSH
-flag from iclog->ic_flags causing xlog_write_iclog() to include only REQ_FUA
-flag in the corresponding bio.
 
-Documentation/block/writeback_cache_control.rst seems to suggest that REQ_FUA
-guarantees only that the data associated with the bio is stable on disk before
-I/O completion is signalled. So looks like REQ_PREFLUSH is required in this
-scenario.
+On 2/24/21 8:03 AM, Brian Foster wrote:
+> On Thu, Feb 18, 2021 at 09:53:28AM -0700, Allison Henderson wrote:
+>> This patch pulls a new helper function xfs_attr_node_remove_cleanup out
+>> of xfs_attr_node_remove_step.  This helps to modularize
+>> xfs_attr_node_remove_step which will help make the delayed attribute
+>> code easier to follow
+>>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+>> ---
+> 
+> Looks like I sent a review for this on v14...
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+Sorry about that, I got tied up in the extra refactoring.  Will add. 
+Thanks again!
 
---
-chandan
+Allison
+
+> 
+>>   fs/xfs/libxfs/xfs_attr.c | 29 ++++++++++++++++++++---------
+>>   1 file changed, 20 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index 28ff93d..4e6c89d 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -1220,6 +1220,25 @@ xfs_attr_node_remove_rmt(
+>>   	return xfs_attr_refillstate(state);
+>>   }
+>>   
+>> +STATIC int
+>> +xfs_attr_node_remove_cleanup(
+>> +	struct xfs_da_args	*args,
+>> +	struct xfs_da_state	*state)
+>> +{
+>> +	struct xfs_da_state_blk	*blk;
+>> +	int			retval;
+>> +
+>> +	/*
+>> +	 * Remove the name and update the hashvals in the tree.
+>> +	 */
+>> +	blk = &state->path.blk[state->path.active-1];
+>> +	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+>> +	retval = xfs_attr3_leaf_remove(blk->bp, args);
+>> +	xfs_da3_fixhashpath(state, &state->path);
+>> +
+>> +	return retval;
+>> +}
+>> +
+>>   /*
+>>    * Remove a name from a B-tree attribute list.
+>>    *
+>> @@ -1232,7 +1251,6 @@ xfs_attr_node_remove_step(
+>>   	struct xfs_da_args	*args,
+>>   	struct xfs_da_state	*state)
+>>   {
+>> -	struct xfs_da_state_blk	*blk;
+>>   	int			retval, error;
+>>   	struct xfs_inode	*dp = args->dp;
+>>   
+>> @@ -1247,14 +1265,7 @@ xfs_attr_node_remove_step(
+>>   		if (error)
+>>   			return error;
+>>   	}
+>> -
+>> -	/*
+>> -	 * Remove the name and update the hashvals in the tree.
+>> -	 */
+>> -	blk = &state->path.blk[ state->path.active-1 ];
+>> -	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+>> -	retval = xfs_attr3_leaf_remove(blk->bp, args);
+>> -	xfs_da3_fixhashpath(state, &state->path);
+>> +	retval = xfs_attr_node_remove_cleanup(args, state);
+>>   
+>>   	/*
+>>   	 * Check to see if the tree needs to be collapsed.
+>> -- 
+>> 2.7.4
+>>
+> 
