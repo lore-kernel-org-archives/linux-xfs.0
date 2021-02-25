@@ -7,79 +7,113 @@ X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36ECCC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 08:52:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA512C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 09:01:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB2F064F06
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 08:52:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 950C064EDC
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 09:01:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234157AbhBYIwS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Feb 2021 03:52:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37658 "EHLO
+        id S232673AbhBYJBl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Feb 2021 04:01:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236030AbhBYIwR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Feb 2021 03:52:17 -0500
+        with ESMTP id S234499AbhBYJBl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Feb 2021 04:01:41 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3264C061574
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Feb 2021 00:51:36 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC1F9C06174A
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Feb 2021 01:01:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=lqOF2PiMDLuVMvI8KDNetOQwHqQ+2Qhms0D5mXkgaso=; b=LTYOktlL/Y+ZLHO/L01dVhfScp
-        HSBGItb4Uq9OHnJckQgKavoazNhII6sKLH3KkyG5RYddDfSsb2Zg5Sa6e/DvWsSCyz4wbXv3C4Sei
-        F113ne1h93FQLImXM7SS+NzfDjtBTa+FCzatlHyr7zAxeXzW5gpxIUktOeJ1TNaGeES3sD/8n0lP6
-        aNnNKDE7jXKILcS6fjhJQR5yFHNShbH5gLUk/GjnzBOp41ZQLnUIRXa7hTvGake3rQkqkulHMbxP4
-        t7iwWzmsievNhAUgMe6FW8YxeRWRyNYHxf2kCjc6cfut1P2yC3wxVJV2+PRLLPBo+aluk44dsF6ZX
-        3RAxMDrQ==;
+        bh=eap3plADSnmwqdojGL7lTERk3c/93KPO4zkxUdwK/DM=; b=j2NLPViHByxYcA5uW2St6xO3Os
+        ne+oW3G/ilg4nPcaD3Hy+4NfyJxyHCJbh01bsri8s78xC7F9k+UZ4zk/g3hj34OQC80OOup3JMQ6G
+        0nxAS5sj8S6SVHTqYqWTZsuYrFHk/oJuW7Exzq8u+Em8u+r7tdYVkxBYNUKsmL85mnQz8RJ3esAKj
+        MjGUkLdm3MtTrpxrmGgq5PHgTPzh4H+cIa29DB1rOL8E3Ksgv3/CeJCxDDi5SRhTCjoFhLKyUb4NA
+        B3oeQOmaFIwvGAXqkB8FUDmnmSzkySV6YdRbEoqbIJj2okEzuDk5AXH+64lz84HFVp7ZpsFE+dvjW
+        56N6vkbQ==;
 Received: from 213-225-9-156.nat.highway.a1.net ([213.225.9.156] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lFCMu-00AUGy-Fu; Thu, 25 Feb 2021 08:51:34 +0000
-Date:   Thu, 25 Feb 2021 09:49:20 +0100
+        id 1lFCVw-00AUko-Kb; Thu, 25 Feb 2021 09:00:55 +0000
+Date:   Thu, 25 Feb 2021 09:58:42 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/8] xfs: remove need_start_rec parameter from
- xlog_write()
-Message-ID: <YDdkkPyKSnPfll3n@infradead.org>
+Subject: Re: [PATCH 7/8 v2] xfs: journal IO cache flush reductions
+Message-ID: <YDdmwiLsEwrazwBH@infradead.org>
 References: <20210223033442.3267258-1-david@fromorbit.com>
- <20210223033442.3267258-7-david@fromorbit.com>
+ <20210223033442.3267258-8-david@fromorbit.com>
+ <20210223080503.GW4662@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210223033442.3267258-7-david@fromorbit.com>
+In-Reply-To: <20210223080503.GW4662@dread.disaster.area>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> +	if (optype & XLOG_START_TRANS)
-> +		headers++;
+> As a result:
+> 
+> 	logbsize	fsmark create rate	rm -rf
+> before	32kb		152851+/-5.3e+04	5m28s
+> patched	32kb		221533+/-1.1e+04	5m24s
+> 
+> before	256kb		220239+/-6.2e+03	4m58s
+> patched	256kb		228286+/-9.2e+03	5m06s
+> 
+> The rm -rf times are included because I ran them, but the
+> differences are largely noise. This workload is largely metadata
+> read IO latency bound and the changes to the journal cache flushing
+> doesn't really make any noticable difference to behaviour apart from
+> a reduction in noiclog events from background CIL pushing.
 
-This deserves a comment.
+The 256b rm -rf case actually seems like a regression not in the noise
+here.  Does this reproduce over multiple runs?
 
-> +	len = xlog_write_calc_vec_length(ticket, log_vector, optype);
-> +	if (start_lsn)
-> +		*start_lsn = 0;
+> @@ -2009,13 +2010,14 @@ xlog_sync(
+>  	 * synchronously here; for an internal log we can simply use the block
+>  	 * layer state machine for preflushes.
+>  	 */
+> -	if (log->l_targ != log->l_mp->m_ddev_targp || split) {
+> +	if (log->l_targ != log->l_mp->m_ddev_targp ||
+> +	    (split && (iclog->ic_flags & XLOG_ICL_NEED_FLUSH))) {
+>  		xfs_flush_bdev(log->l_mp->m_ddev_targp->bt_bdev);
+> -		need_flush = false;
+> +		iclog->ic_flags &= ~XLOG_ICL_NEED_FLUSH;
 
-I'd slightly prefer that allowing a NULL start_lsn was a separate prep
-patch.  As-is it really clutters the patch and detracts from the real
-change.
+Once you touch all the buffer flags anyway we should optimize the
+log wraparound case here - insteaad of th synchronous flush we just
+need to set REQ_PREFLUSH on the first log bio, which should be nicely
+doable with your infrastruture.
 
->  			int			copy_len;
->  			int			copy_off;
->  			bool			ordered = false;
-> +			bool			wrote_start_rec = false;
+> +		/*
+> +		 * iclogs containing commit records or unmount records need
+> +		 * to issue ordering cache flushes and commit immediately
+> +		 * to stable storage to guarantee journal vs metadata ordering
+> +		 * is correctly maintained in the storage media.
+> +		 */
+> +		if (optype & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS)) {
+> +			iclog->ic_flags |= (XLOG_ICL_NEED_FLUSH |
+> +						XLOG_ICL_NEED_FUA);
+> +		}
+> +
+>  		/*
+>  		 * This loop writes out as many regions as can fit in the amount
+>  		 * of space which was allocated by xlog_state_get_iclog_space().
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 4093d2d0db7c..370da7c2bfc8 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -894,10 +894,15 @@ xlog_cil_push_work(
 >  
->  			/* ordered log vectors have no regions to write */
->  			if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
-> @@ -2502,13 +2501,15 @@ xlog_write(
->  			 * write a start record. Only do this for the first
->  			 * iclog we write to.
->  			 */
-> -			if (need_start_rec) {
-> +			if (optype & XLOG_START_TRANS) {
+>  	/*
+>  	 * If the checkpoint spans multiple iclogs, wait for all previous
+> -	 * iclogs to complete before we submit the commit_iclog.
+> +	 * iclogs to complete before we submit the commit_iclog. If it is in the
+> +	 * same iclog as the start of the checkpoint, then we can skip the iclog
+> +	 * cache flush because there are no other iclogs we need to order
+> +	 * against.
 
-So this relies on the fact that the only callers that passes an optype of
-XLOG_START_TRANS only writes a single lv.  I think we want an assert for
-that somewhere to avoid a bad surprise later.
+Nit: the iclogs in the first changed line would easily fit onto the previous
+line.
