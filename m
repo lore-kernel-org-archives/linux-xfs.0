@@ -2,90 +2,275 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A789C4332B
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 02:16:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2018AC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 02:41:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4891F64EF5
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 02:16:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC2F364ED3
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Feb 2021 02:41:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236783AbhBYCQd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Feb 2021 21:16:33 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:50200 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236785AbhBYCQX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Feb 2021 21:16:23 -0500
-Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 72FFD1AD805
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Feb 2021 13:15:33 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lF6Bg-0032fV-QO
-        for linux-xfs@vger.kernel.org; Thu, 25 Feb 2021 13:15:32 +1100
-Date:   Thu, 25 Feb 2021 13:15:32 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3 v2] xfs: AIL needs asynchronous CIL forcing
-Message-ID: <20210225021532.GI4662@dread.disaster.area>
-References: <20210223053212.3287398-1-david@fromorbit.com>
- <20210223053212.3287398-3-david@fromorbit.com>
- <20210224211058.GA4662@dread.disaster.area>
- <20210224232600.GH4662@dread.disaster.area>
+        id S233093AbhBYClU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Feb 2021 21:41:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54912 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232678AbhBYClU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 Feb 2021 21:41:20 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 34BB364ECF;
+        Thu, 25 Feb 2021 02:40:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614220839;
+        bh=1ctA/KkWRWCiPhP6WpUpWx7UjFRehT/YecppmPslUMA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jyKdXBv/WamB+fKWzTPkZQmMrTheId54TSi9SBalH5jCb5ksVSgAcyRfCmWOnmwZl
+         vEQlpDXUfg/8htqdVXtRGXtWniEtO+CIeanbhTqi7iQWVtj4IuoW3qDtX0LsW7G0kX
+         3Bgxo6AT0FqSOm6LTD/umpm0yYErL5tpl8pfEv5Y7Iqcvnntx0HxwHu1NRF3XuhLIA
+         ege3+xN1CmB2R7qoIUi/9ICo8/hAF3AdL2bNb6s25ZxO1/9oxtLYIjqSGNCyVgXw+o
+         biQeO5tXt8U0AlMDTUHpgwPsXxbDtbp6t9puoZdYuoJJEZsVWyYe9i3znMzsLui5G3
+         HMuYFU9UszVyg==
+Date:   Wed, 24 Feb 2021 18:40:38 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Pavel Reichl <preichl@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] xfs: rename variable mp to parsing_mp
+Message-ID: <20210225024038.GH7272@magnolia>
+References: <20210224214323.394286-1-preichl@redhat.com>
+ <20210224214323.394286-3-preichl@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210224232600.GH4662@dread.disaster.area>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=oLefN8dgAaCz4RDANdoA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210224214323.394286-3-preichl@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 25, 2021 at 10:26:00AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Feb 24, 2021 at 10:43:22PM +0100, Pavel Reichl wrote:
+> Rename mp variable to parsisng_mp so it is easy to distinguish
+> between current mount point handle and handle for mount point
+> which mount options are being parsed.
 > 
-> The AIL pushing is stalling on log forces when it comes across
-> pinned items. This is happening on removal workloads where the AIL
-> is dominated by stale items that are removed from AIL when the
-> checkpoint that marks the items stale is committed to the journal.
-> This results is relatively few items in the AIL, but those that are
-> are often pinned as directories items are being removed from are
-> still being logged.
-.....
-> One of the complexities here is that the CIL push does not guarantee
-> that the commit record for the CIL checkpoint is written to disk.
-> The current log force ensures this by submitting the current ACTIVE
-> iclog that the commit record was written to. We need the CIL to
-> actually write this commit record to disk for an async push to
-> ensure that the checkpoint actually makes it to disk and unpins the
-> pinned items in the checkpoint on completion. Hence we need to pass
-> down to the CIL push that we are doing an async flush so that it can
-> switch out the commit_iclog if necessary to get written to disk when
-> the commit iclog is finally released.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Suggested-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+
+Seems reasonable...
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
 > ---
-> Version 2:
-> - ensure the CIL checkpoint issues the commit record to disk for an
->   async push. Fixes generic/530 hang on small logs.
-> - increment log force stats when the CIL is forced and also when it
->   sleeps to give insight into the amount of blocking being done when
->   the CIL is forced.
-
-Oops, looks like I forgot to strip debug trace_printk()s out of the
-patch before sending it. They are gone now, so I'll wait for review
-comments before resending again...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  fs/xfs/xfs_super.c | 102 ++++++++++++++++++++++-----------------------
+>  1 file changed, 51 insertions(+), 51 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 813be879a5e5..7e281d1139dc 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1165,7 +1165,7 @@ xfs_fs_parse_param(
+>  	struct fs_context	*fc,
+>  	struct fs_parameter	*param)
+>  {
+> -	struct xfs_mount	*mp = fc->s_fs_info;
+> +	struct xfs_mount	*parsing_mp = fc->s_fs_info;
+>  	struct fs_parse_result	result;
+>  	int			size = 0;
+>  	int			opt;
+> @@ -1176,142 +1176,142 @@ xfs_fs_parse_param(
+>  
+>  	switch (opt) {
+>  	case Opt_logbufs:
+> -		mp->m_logbufs = result.uint_32;
+> +		parsing_mp->m_logbufs = result.uint_32;
+>  		return 0;
+>  	case Opt_logbsize:
+> -		if (suffix_kstrtoint(param->string, 10, &mp->m_logbsize))
+> +		if (suffix_kstrtoint(param->string, 10, &parsing_mp->m_logbsize))
+>  			return -EINVAL;
+>  		return 0;
+>  	case Opt_logdev:
+> -		kfree(mp->m_logname);
+> -		mp->m_logname = kstrdup(param->string, GFP_KERNEL);
+> -		if (!mp->m_logname)
+> +		kfree(parsing_mp->m_logname);
+> +		parsing_mp->m_logname = kstrdup(param->string, GFP_KERNEL);
+> +		if (!parsing_mp->m_logname)
+>  			return -ENOMEM;
+>  		return 0;
+>  	case Opt_rtdev:
+> -		kfree(mp->m_rtname);
+> -		mp->m_rtname = kstrdup(param->string, GFP_KERNEL);
+> -		if (!mp->m_rtname)
+> +		kfree(parsing_mp->m_rtname);
+> +		parsing_mp->m_rtname = kstrdup(param->string, GFP_KERNEL);
+> +		if (!parsing_mp->m_rtname)
+>  			return -ENOMEM;
+>  		return 0;
+>  	case Opt_allocsize:
+>  		if (suffix_kstrtoint(param->string, 10, &size))
+>  			return -EINVAL;
+> -		mp->m_allocsize_log = ffs(size) - 1;
+> -		mp->m_flags |= XFS_MOUNT_ALLOCSIZE;
+> +		parsing_mp->m_allocsize_log = ffs(size) - 1;
+> +		parsing_mp->m_flags |= XFS_MOUNT_ALLOCSIZE;
+>  		return 0;
+>  	case Opt_grpid:
+>  	case Opt_bsdgroups:
+> -		mp->m_flags |= XFS_MOUNT_GRPID;
+> +		parsing_mp->m_flags |= XFS_MOUNT_GRPID;
+>  		return 0;
+>  	case Opt_nogrpid:
+>  	case Opt_sysvgroups:
+> -		mp->m_flags &= ~XFS_MOUNT_GRPID;
+> +		parsing_mp->m_flags &= ~XFS_MOUNT_GRPID;
+>  		return 0;
+>  	case Opt_wsync:
+> -		mp->m_flags |= XFS_MOUNT_WSYNC;
+> +		parsing_mp->m_flags |= XFS_MOUNT_WSYNC;
+>  		return 0;
+>  	case Opt_norecovery:
+> -		mp->m_flags |= XFS_MOUNT_NORECOVERY;
+> +		parsing_mp->m_flags |= XFS_MOUNT_NORECOVERY;
+>  		return 0;
+>  	case Opt_noalign:
+> -		mp->m_flags |= XFS_MOUNT_NOALIGN;
+> +		parsing_mp->m_flags |= XFS_MOUNT_NOALIGN;
+>  		return 0;
+>  	case Opt_swalloc:
+> -		mp->m_flags |= XFS_MOUNT_SWALLOC;
+> +		parsing_mp->m_flags |= XFS_MOUNT_SWALLOC;
+>  		return 0;
+>  	case Opt_sunit:
+> -		mp->m_dalign = result.uint_32;
+> +		parsing_mp->m_dalign = result.uint_32;
+>  		return 0;
+>  	case Opt_swidth:
+> -		mp->m_swidth = result.uint_32;
+> +		parsing_mp->m_swidth = result.uint_32;
+>  		return 0;
+>  	case Opt_inode32:
+> -		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
+> +		parsing_mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
+>  		return 0;
+>  	case Opt_inode64:
+> -		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+> +		parsing_mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+>  		return 0;
+>  	case Opt_nouuid:
+> -		mp->m_flags |= XFS_MOUNT_NOUUID;
+> +		parsing_mp->m_flags |= XFS_MOUNT_NOUUID;
+>  		return 0;
+>  	case Opt_largeio:
+> -		mp->m_flags |= XFS_MOUNT_LARGEIO;
+> +		parsing_mp->m_flags |= XFS_MOUNT_LARGEIO;
+>  		return 0;
+>  	case Opt_nolargeio:
+> -		mp->m_flags &= ~XFS_MOUNT_LARGEIO;
+> +		parsing_mp->m_flags &= ~XFS_MOUNT_LARGEIO;
+>  		return 0;
+>  	case Opt_filestreams:
+> -		mp->m_flags |= XFS_MOUNT_FILESTREAMS;
+> +		parsing_mp->m_flags |= XFS_MOUNT_FILESTREAMS;
+>  		return 0;
+>  	case Opt_noquota:
+> -		mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
+> -		mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
+> -		mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
+> +		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
+> +		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
+> +		parsing_mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
+>  		return 0;
+>  	case Opt_quota:
+>  	case Opt_uquota:
+>  	case Opt_usrquota:
+> -		mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
+> +		parsing_mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
+>  				 XFS_UQUOTA_ENFD);
+>  		return 0;
+>  	case Opt_qnoenforce:
+>  	case Opt_uqnoenforce:
+> -		mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE);
+> -		mp->m_qflags &= ~XFS_UQUOTA_ENFD;
+> +		parsing_mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE);
+> +		parsing_mp->m_qflags &= ~XFS_UQUOTA_ENFD;
+>  		return 0;
+>  	case Opt_pquota:
+>  	case Opt_prjquota:
+> -		mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
+> +		parsing_mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
+>  				 XFS_PQUOTA_ENFD);
+>  		return 0;
+>  	case Opt_pqnoenforce:
+> -		mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
+> -		mp->m_qflags &= ~XFS_PQUOTA_ENFD;
+> +		parsing_mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
+> +		parsing_mp->m_qflags &= ~XFS_PQUOTA_ENFD;
+>  		return 0;
+>  	case Opt_gquota:
+>  	case Opt_grpquota:
+> -		mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
+> +		parsing_mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
+>  				 XFS_GQUOTA_ENFD);
+>  		return 0;
+>  	case Opt_gqnoenforce:
+> -		mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
+> -		mp->m_qflags &= ~XFS_GQUOTA_ENFD;
+> +		parsing_mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
+> +		parsing_mp->m_qflags &= ~XFS_GQUOTA_ENFD;
+>  		return 0;
+>  	case Opt_discard:
+> -		mp->m_flags |= XFS_MOUNT_DISCARD;
+> +		parsing_mp->m_flags |= XFS_MOUNT_DISCARD;
+>  		return 0;
+>  	case Opt_nodiscard:
+> -		mp->m_flags &= ~XFS_MOUNT_DISCARD;
+> +		parsing_mp->m_flags &= ~XFS_MOUNT_DISCARD;
+>  		return 0;
+>  #ifdef CONFIG_FS_DAX
+>  	case Opt_dax:
+> -		xfs_mount_set_dax_mode(mp, XFS_DAX_ALWAYS);
+> +		xfs_mount_set_dax_mode(parsing_mp, XFS_DAX_ALWAYS);
+>  		return 0;
+>  	case Opt_dax_enum:
+> -		xfs_mount_set_dax_mode(mp, result.uint_32);
+> +		xfs_mount_set_dax_mode(parsing_mp, result.uint_32);
+>  		return 0;
+>  #endif
+>  	/* Following mount options will be removed in September 2025 */
+>  	case Opt_ikeep:
+> -		xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> -		mp->m_flags |= XFS_MOUNT_IKEEP;
+> +		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
+> +		parsing_mp->m_flags |= XFS_MOUNT_IKEEP;
+>  		return 0;
+>  	case Opt_noikeep:
+> -		xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> -		mp->m_flags &= ~XFS_MOUNT_IKEEP;
+> +		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
+> +		parsing_mp->m_flags &= ~XFS_MOUNT_IKEEP;
+>  		return 0;
+>  	case Opt_attr2:
+> -		xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> -		mp->m_flags |= XFS_MOUNT_ATTR2;
+> +		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
+> +		parsing_mp->m_flags |= XFS_MOUNT_ATTR2;
+>  		return 0;
+>  	case Opt_noattr2:
+> -		xfs_warn(mp, "%s mount option is deprecated.", param->key);
+> -		mp->m_flags &= ~XFS_MOUNT_ATTR2;
+> -		mp->m_flags |= XFS_MOUNT_NOATTR2;
+> +		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
+> +		parsing_mp->m_flags &= ~XFS_MOUNT_ATTR2;
+> +		parsing_mp->m_flags |= XFS_MOUNT_NOATTR2;
+>  		return 0;
+>  	default:
+> -		xfs_warn(mp, "unknown mount option [%s].", param->key);
+> +		xfs_warn(parsing_mp, "unknown mount option [%s].", param->key);
+>  		return -EINVAL;
+>  	}
+>  
+> -- 
+> 2.29.2
+> 
