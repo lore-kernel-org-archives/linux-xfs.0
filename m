@@ -7,174 +7,107 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96E2EC433E6
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 03:08:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63FECC433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 04:02:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3386F64DE2
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 03:08:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 217AC64EE3
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 04:02:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229566AbhBZDIA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Feb 2021 22:08:00 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52668 "EHLO mail.kernel.org"
+        id S229586AbhBZECn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Feb 2021 23:02:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54240 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229460AbhBZDIA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Feb 2021 22:08:00 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 43DDE64EE2;
-        Fri, 26 Feb 2021 03:07:19 +0000 (UTC)
+        id S229491AbhBZECn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Feb 2021 23:02:43 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 62C3864EDC;
+        Fri, 26 Feb 2021 04:02:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614308839;
-        bh=mLLwOAzB2gSPm0EhS6uxtS8+Tiv+xqMwI7qU5xQ4LhU=;
+        s=k20201202; t=1614312122;
+        bh=EDP5XrnQlTAJlMm7/1eMfCXyy/o9Qz8AOdRG4Mg3TGU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RnkbWjX8qIRfmMXh8P1dCBiKMhnYmjw6FQOxfV1LbSh2Tm1+UB2McMVhaXLP6blbH
-         QXrq8ihqZLtzxhHE2gEZqqEGwW0qdri/9j5NigMfVYqxlQN5jFuODretphivooqXn2
-         y6HhyM/YRpq3hNXzHKRaYBNHMEOqvYadljzFrnTplF7mxvmntx1Y9z17veIVSnKAjW
-         695VqMNWJjpB/3sjpSOGYPFxaE+raMpdpdr/buxVaJ5pufpqrph/gdP80AVC/XRJ9C
-         SagddYicYVuW0pEJ60/Wd+pHSu5f8vURklpVJ/0nX43jfo1nhp4QyftEjFHy/OZYmf
-         P4/zMyM7YWUcg==
-Date:   Thu, 25 Feb 2021 19:07:19 -0800
+        b=UugjpY5i0UaOw6gAlkpNWfM64DlVjlkB6dpbjiR8K/GXgUKc1NGedo0/ZpB51VQvR
+         HLpo2YXN9InZEmOsBxvr635ZBVSn0S5k9Ez1QnaDKShoIpqRxlrfGM58yXeOXqX8jO
+         EVoOWSLM3uRLIyEHB6kBPssbawbmho5xlExxrXoldZh7kie7wgvxwLbgEAGzsUbaUU
+         gwIajyPDN/KkhNfEzfdxtqOYwi5Lhg0bhXgy3zldSjFYs7vJLlh1+wNMwJsU70noAx
+         oJ+zczopwdIddx9wjE2X7jjsjBENUUU+7z77vZNsdsrrv3AlIILF4texhGGO95irfk
+         90UW7utNYpmwg==
+Date:   Thu, 25 Feb 2021 20:02:01 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v15 05/22] xfs: Add helper xfs_attr_set_fmt
-Message-ID: <20210226030719.GS7272@magnolia>
+Subject: Re: [PATCH v15 06/22] xfs: Separate xfs_attr_node_addname and
+ xfs_attr_node_addname_work
+Message-ID: <20210226040201.GT7272@magnolia>
 References: <20210218165348.4754-1-allison.henderson@oracle.com>
- <20210218165348.4754-6-allison.henderson@oracle.com>
+ <20210218165348.4754-7-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210218165348.4754-6-allison.henderson@oracle.com>
+In-Reply-To: <20210218165348.4754-7-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 18, 2021 at 09:53:31AM -0700, Allison Henderson wrote:
-> This patch adds a helper function xfs_attr_set_fmt.  This will help
-> isolate the code that will require state management from the portions
-> that do not.  xfs_attr_set_fmt returns 0 when the attr has been set and
-> no further action is needed.  It returns -EAGAIN when shortform has been
-> transformed to leaf, and the calling function should proceed the set the
-> attr in leaf form.
+On Thu, Feb 18, 2021 at 09:53:32AM -0700, Allison Henderson wrote:
+> This patch separate xfs_attr_node_addname into two functions.  This will
+> help to make it easier to hoist parts of xfs_attr_node_addname that need
+> state management
 > 
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 77 +++++++++++++++++++++++++++---------------------
->  1 file changed, 44 insertions(+), 33 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index a064c5b..205ad26 100644
+> index 205ad26..bee8d3fb 100644
 > --- a/fs/xfs/libxfs/xfs_attr.c
 > +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -216,6 +216,46 @@ xfs_attr_is_shortform(
->  		ip->i_afp->if_nextents == 0);
->  }
+> @@ -54,6 +54,7 @@ STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
+>  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+>  STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
+>  STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
+> +STATIC int xfs_attr_node_addname_work(struct xfs_da_args *args);
+>  STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
+>  				 struct xfs_da_state **state);
+>  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+> @@ -1059,6 +1060,25 @@ xfs_attr_node_addname(
+>  			return error;
+>  	}
 >  
-> +STATIC int
-> +xfs_attr_set_fmt(
-> +	struct xfs_da_args	*args)
-> +{
-> +	struct xfs_buf          *leaf_bp = NULL;
-> +	struct xfs_inode	*dp = args->dp;
-> +	int			error2, error = 0;
-> +
-> +	/*
-> +	 * Try to add the attr to the attribute list in the inode.
-> +	 */
-> +	error = xfs_attr_try_sf_addname(dp, args);
-> +	if (error != -ENOSPC) {
-> +		error2 = xfs_trans_commit(args->trans);
-> +		args->trans = NULL;
-> +		return error ? error : error2;
-> +	}
-> +
-> +	/*
-> +	 * It won't fit in the shortform, transform to a leaf block.
-> +	 * GROT: another possible req'mt for a double-split btree op.
-> +	 */
-> +	error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
+> +	error = xfs_attr_node_addname_work(args);
+> +out:
+> +	if (state)
+> +		xfs_da_state_free(state);
 > +	if (error)
 > +		return error;
+> +	return retval;
+> +}
 > +
-> +	/*
-> +	 * Prevent the leaf buffer from being unlocked so that a
-> +	 * concurrent AIL push cannot grab the half-baked leaf buffer
-> +	 * and run into problems with the write verifier.
-> +	 */
-> +	xfs_trans_bhold(args->trans, leaf_bp);
-> +	error = xfs_defer_finish(&args->trans);
-> +	xfs_trans_bhold_release(args->trans, leaf_bp);
-> +	if (error)
-> +		xfs_trans_brelse(args->trans, leaf_bp);
+> +
+> +STATIC
+> +int xfs_attr_node_addname_work(
 
-Shouldn't this pass the error back to the caller?
+What, erm, work does this function do?  Since it survives to the end of
+the patchset, I think this needs a better name (or at least needs a
+comment about what it's actually supposed to do).
+
+AFAICT you're splitting node_addname() into two functions because we're
+at a transaction roll point, and this "_work" function exists to remove
+the copy of the xattr key that has the "INCOMPLETE" bit set (aka the old
+one), right?
 
 --D
 
+> +	struct xfs_da_args		*args)
+> +{
+> +	struct xfs_da_state		*state = NULL;
+> +	struct xfs_da_state_blk		*blk;
+> +	int				retval = 0;
+> +	int				error = 0;
 > +
-> +	return -EAGAIN;
-> +}
-> +
->  /*
->   * Set the attribute specified in @args.
->   */
-> @@ -224,8 +264,7 @@ xfs_attr_set_args(
->  	struct xfs_da_args	*args)
->  {
->  	struct xfs_inode	*dp = args->dp;
-> -	struct xfs_buf          *leaf_bp = NULL;
-> -	int			error2, error = 0;
-> +	int			error;
->  
 >  	/*
->  	 * If the attribute list is already in leaf format, jump straight to
-> @@ -234,36 +273,9 @@ xfs_attr_set_args(
->  	 * again.
->  	 */
->  	if (xfs_attr_is_shortform(dp)) {
-> -		/*
-> -		 * Try to add the attr to the attribute list in the inode.
-> -		 */
-> -		error = xfs_attr_try_sf_addname(dp, args);
-> -		if (error != -ENOSPC) {
-> -			error2 = xfs_trans_commit(args->trans);
-> -			args->trans = NULL;
-> -			return error ? error : error2;
-> -		}
-> -
-> -		/*
-> -		 * It won't fit in the shortform, transform to a leaf block.
-> -		 * GROT: another possible req'mt for a double-split btree op.
-> -		 */
-> -		error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
-> -		if (error)
-> +		error = xfs_attr_set_fmt(args);
-> +		if (error != -EAGAIN)
->  			return error;
-> -
-> -		/*
-> -		 * Prevent the leaf buffer from being unlocked so that a
-> -		 * concurrent AIL push cannot grab the half-baked leaf buffer
-> -		 * and run into problems with the write verifier.
-> -		 */
-> -		xfs_trans_bhold(args->trans, leaf_bp);
-> -		error = xfs_defer_finish(&args->trans);
-> -		xfs_trans_bhold_release(args->trans, leaf_bp);
-> -		if (error) {
-> -			xfs_trans_brelse(args->trans, leaf_bp);
-> -			return error;
-> -		}
->  	}
->  
->  	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> @@ -297,8 +309,7 @@ xfs_attr_set_args(
->  			return error;
->  	}
->  
-> -	error = xfs_attr_node_addname(args);
-> -	return error;
-> +	return xfs_attr_node_addname(args);
->  }
->  
->  /*
+>  	 * Re-find the "old" attribute entry after any split ops. The INCOMPLETE
+>  	 * flag means that we will find the "old" attr, not the "new" one.
 > -- 
 > 2.7.4
 > 
