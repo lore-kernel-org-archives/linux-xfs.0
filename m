@@ -7,141 +7,172 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40757C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 03:03:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48FBBC433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 03:04:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E252F64EE2
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 03:03:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E400364EE7
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 03:04:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229566AbhBZDDI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Feb 2021 22:03:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50830 "EHLO mail.kernel.org"
+        id S229598AbhBZDEY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Feb 2021 22:04:24 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51304 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229556AbhBZDDI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Feb 2021 22:03:08 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5D57164EE4;
-        Fri, 26 Feb 2021 03:02:27 +0000 (UTC)
+        id S229586AbhBZDEX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Feb 2021 22:04:23 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C423E64EE4;
+        Fri, 26 Feb 2021 03:03:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614308547;
-        bh=3t7XcB8D/4OR7STeykaKAyp/PdbDgdV6iYYuRKPgPNM=;
+        s=k20201202; t=1614308622;
+        bh=51OI27eQ3l6KEpHpcWfTMTuPvMbab5efwPZw4yRIc1o=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HDnjUtDHZ2ZlGZSc3KYe7Q8KB6JP8nKe1mvbS8tShF2493U6cM+3O5/X5PyGvrC7l
-         lvoWKs6KBf9Bm3WjTPUGEN9dpxTaw0J7V7cRdUkXZcHoqS5pCPV0y3TSFDGpmZ+oHb
-         srTCcz04TbPf9w9TS168npfwVu02+taV8EruGnUtTbXeiqOePq3N+UiSJmwpjQZ6qu
-         BqgkSAGnxoxB1p5jSTPrDI+UYmPOQSDEAsbxgGdjvkrK+Ee67qpsML6bESlIgY+HXD
-         Fx51p8lj5Ak8JYtBsQGq+noQ+YgEOPWyWLOJghUiwDia0+2jWqVH0JohmcOLvpGJ7D
-         4NVMSCDcPq6OA==
-Date:   Thu, 25 Feb 2021 19:02:27 -0800
+        b=vGR1OQ/a7DBAT183So0cf9ds2u1/HAkZ3yBcHlYiye0mSMQAqij+0bTS8CBVym+3p
+         KuEZU//LOeT9p9EV13TZc4L8nTFQ4ke0l27xAmWrp6lM+4gnKI1yS+rrfsq0nKrB7j
+         v/Xk8omN8YcofAvXywu+Dp0C0rDUtHA75CrRbtvM1e2NBByrXEaR7gJNk1PQNHgMxR
+         JvnlIP1CQAPK2zSTpQhUUZSE5A3tmNYK0Jik5IRkXHfol2dRj7xX/YdA4Hv9r0Iu+d
+         a93TnBJSHTglxLHSM4uZ3OfnkA41bNRys56ffPckvEeyqgmISFvYmY7z+RnMosdpcl
+         E0KjMwB6HzIZA==
+Date:   Thu, 25 Feb 2021 19:03:43 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v15 03/22] xfs: Hoist transaction handling in
- xfs_attr_node_remove_step
-Message-ID: <20210226030227.GQ7272@magnolia>
+Subject: Re: [PATCH v15 04/22] xfs: Hoist xfs_attr_set_shortform
+Message-ID: <20210226030343.GR7272@magnolia>
 References: <20210218165348.4754-1-allison.henderson@oracle.com>
- <20210218165348.4754-4-allison.henderson@oracle.com>
+ <20210218165348.4754-5-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210218165348.4754-4-allison.henderson@oracle.com>
+In-Reply-To: <20210218165348.4754-5-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 18, 2021 at 09:53:29AM -0700, Allison Henderson wrote:
-> This patch hoists transaction handling in xfs_attr_node_removename to
-> xfs_attr_node_remove_step.  This will help keep transaction handling in
-> higher level functions instead of buried in subfunctions when we
-> introduce delay attributes
+On Thu, Feb 18, 2021 at 09:53:30AM -0700, Allison Henderson wrote:
+> This patch hoists xfs_attr_set_shortform into the calling function. This
+> will help keep all state management code in the same scope.
 > 
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 
-Looks ok,
+Whoah, /removing/ a function! :)
+
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 45 ++++++++++++++++++++++-----------------------
->  1 file changed, 22 insertions(+), 23 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c | 81 ++++++++++++++++--------------------------------
+>  1 file changed, 27 insertions(+), 54 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 4e6c89d..3cf76e2 100644
+> index 3cf76e2..a064c5b 100644
 > --- a/fs/xfs/libxfs/xfs_attr.c
 > +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -1251,9 +1251,7 @@ xfs_attr_node_remove_step(
->  	struct xfs_da_args	*args,
->  	struct xfs_da_state	*state)
->  {
-> -	int			retval, error;
-> -	struct xfs_inode	*dp = args->dp;
-> -
-> +	int			error = 0;
+> @@ -217,53 +217,6 @@ xfs_attr_is_shortform(
+>  }
 >  
->  	/*
->  	 * If there is an out-of-line value, de-allocate the blocks.
-> @@ -1265,25 +1263,6 @@ xfs_attr_node_remove_step(
->  		if (error)
->  			return error;
->  	}
-> -	retval = xfs_attr_node_remove_cleanup(args, state);
+>  /*
+> - * Attempts to set an attr in shortform, or converts short form to leaf form if
+> - * there is not enough room.  If the attr is set, the transaction is committed
+> - * and set to NULL.
+> - */
+> -STATIC int
+> -xfs_attr_set_shortform(
+> -	struct xfs_da_args	*args,
+> -	struct xfs_buf		**leaf_bp)
+> -{
+> -	struct xfs_inode	*dp = args->dp;
+> -	int			error, error2 = 0;
 > -
 > -	/*
-> -	 * Check to see if the tree needs to be collapsed.
+> -	 * Try to add the attr to the attribute list in the inode.
 > -	 */
-> -	if (retval && (state->path.active > 1)) {
-> -		error = xfs_da3_join(state);
-> -		if (error)
-> -			return error;
-> -		error = xfs_defer_finish(&args->trans);
-> -		if (error)
-> -			return error;
-> -		/*
-> -		 * Commit the Btree join operation and start a new trans.
-> -		 */
-> -		error = xfs_trans_roll_inode(&args->trans, dp);
-> -		if (error)
-> -			return error;
+> -	error = xfs_attr_try_sf_addname(dp, args);
+> -	if (error != -ENOSPC) {
+> -		error2 = xfs_trans_commit(args->trans);
+> -		args->trans = NULL;
+> -		return error ? error : error2;
 > -	}
->  
->  	return error;
->  }
-> @@ -1299,7 +1278,7 @@ xfs_attr_node_removename(
->  	struct xfs_da_args	*args)
+> -	/*
+> -	 * It won't fit in the shortform, transform to a leaf block.  GROT:
+> -	 * another possible req'mt for a double-split btree op.
+> -	 */
+> -	error = xfs_attr_shortform_to_leaf(args, leaf_bp);
+> -	if (error)
+> -		return error;
+> -
+> -	/*
+> -	 * Prevent the leaf buffer from being unlocked so that a concurrent AIL
+> -	 * push cannot grab the half-baked leaf buffer and run into problems
+> -	 * with the write verifier. Once we're done rolling the transaction we
+> -	 * can release the hold and add the attr to the leaf.
+> -	 */
+> -	xfs_trans_bhold(args->trans, *leaf_bp);
+> -	error = xfs_defer_finish(&args->trans);
+> -	xfs_trans_bhold_release(args->trans, *leaf_bp);
+> -	if (error) {
+> -		xfs_trans_brelse(args->trans, *leaf_bp);
+> -		return error;
+> -	}
+> -
+> -	return 0;
+> -}
+> -
+> -/*
+>   * Set the attribute specified in @args.
+>   */
+>  int
+> @@ -272,7 +225,7 @@ xfs_attr_set_args(
 >  {
->  	struct xfs_da_state	*state = NULL;
-> -	int			error;
-> +	int			retval, error;
 >  	struct xfs_inode	*dp = args->dp;
+>  	struct xfs_buf          *leaf_bp = NULL;
+> -	int			error = 0;
+> +	int			error2, error = 0;
 >  
->  	trace_xfs_attr_node_removename(args);
-> @@ -1312,6 +1291,26 @@ xfs_attr_node_removename(
->  	if (error)
->  		goto out;
->  
-> +	retval = xfs_attr_node_remove_cleanup(args, state);
-> +
-> +	/*
-> +	 * Check to see if the tree needs to be collapsed.
-> +	 */
-> +	if (retval && (state->path.active > 1)) {
-> +		error = xfs_da3_join(state);
-> +		if (error)
-> +			goto out;
-> +		error = xfs_defer_finish(&args->trans);
-> +		if (error)
-> +			goto out;
-> +		/*
-> +		 * Commit the Btree join operation and start a new trans.
-> +		 */
-> +		error = xfs_trans_roll_inode(&args->trans, dp);
-> +		if (error)
-> +			goto out;
-> +	}
-> +
 >  	/*
->  	 * If the result is small enough, push it all into the inode.
+>  	 * If the attribute list is already in leaf format, jump straight to
+> @@ -281,16 +234,36 @@ xfs_attr_set_args(
+>  	 * again.
 >  	 */
+>  	if (xfs_attr_is_shortform(dp)) {
+> +		/*
+> +		 * Try to add the attr to the attribute list in the inode.
+> +		 */
+> +		error = xfs_attr_try_sf_addname(dp, args);
+> +		if (error != -ENOSPC) {
+> +			error2 = xfs_trans_commit(args->trans);
+> +			args->trans = NULL;
+> +			return error ? error : error2;
+> +		}
+> +
+> +		/*
+> +		 * It won't fit in the shortform, transform to a leaf block.
+> +		 * GROT: another possible req'mt for a double-split btree op.
+> +		 */
+> +		error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
+> +		if (error)
+> +			return error;
+>  
+>  		/*
+> -		 * If the attr was successfully set in shortform, the
+> -		 * transaction is committed and set to NULL.  Otherwise, is it
+> -		 * converted from shortform to leaf, and the transaction is
+> -		 * retained.
+> +		 * Prevent the leaf buffer from being unlocked so that a
+> +		 * concurrent AIL push cannot grab the half-baked leaf buffer
+> +		 * and run into problems with the write verifier.
+>  		 */
+> -		error = xfs_attr_set_shortform(args, &leaf_bp);
+> -		if (error || !args->trans)
+> +		xfs_trans_bhold(args->trans, leaf_bp);
+> +		error = xfs_defer_finish(&args->trans);
+> +		xfs_trans_bhold_release(args->trans, leaf_bp);
+> +		if (error) {
+> +			xfs_trans_brelse(args->trans, leaf_bp);
+>  			return error;
+> +		}
+>  	}
+>  
+>  	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
 > -- 
 > 2.7.4
 > 
