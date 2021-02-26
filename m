@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 948FCC433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 03:00:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40757C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 03:03:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 374F464EE7
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 03:00:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E252F64EE2
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 03:03:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229491AbhBZDAu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Feb 2021 22:00:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49942 "EHLO mail.kernel.org"
+        id S229566AbhBZDDI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Feb 2021 22:03:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50830 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229460AbhBZDAt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Feb 2021 22:00:49 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DF1E464EE4;
-        Fri, 26 Feb 2021 03:00:08 +0000 (UTC)
+        id S229556AbhBZDDI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Feb 2021 22:03:08 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5D57164EE4;
+        Fri, 26 Feb 2021 03:02:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614308409;
-        bh=scPiDGy66Q3PIGaFXlLVF6cokKONduX1jahn2SRUJF4=;
+        s=k20201202; t=1614308547;
+        bh=3t7XcB8D/4OR7STeykaKAyp/PdbDgdV6iYYuRKPgPNM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MPEvpgwfxt8M6/T9hWmnuq9XFfIbkrVbHOjDtXVzqMeZXNVjsASuHHKIRcIH8Jtx3
-         ZbIPNPovWV5X7iQHqBQN+5eEhkH4Epr3KUiC51WiKLq7BJS7PmD/2H7aYfWjaXWEat
-         SPw+0IaT7ch/kq4jXEObjaROGAIiE15GCArJZoaJHa4crSwcKwRF2Z01bEL6Rbtnuu
-         Jqco6gVGkvFmeWIx7dwNYGQik/BsW6jiaKxONEKdhzvCEJ2Hu2mWDKtF3rCeLCsC0E
-         tBKogf1PAX6fXnZx2SF0z18ax4kjDs+rzg/ExVGgOS7nFkEGxNicjXtXU2FWcfBCtm
-         yOHYUVLN/+zPQ==
-Date:   Thu, 25 Feb 2021 19:00:09 -0800
+        b=HDnjUtDHZ2ZlGZSc3KYe7Q8KB6JP8nKe1mvbS8tShF2493U6cM+3O5/X5PyGvrC7l
+         lvoWKs6KBf9Bm3WjTPUGEN9dpxTaw0J7V7cRdUkXZcHoqS5pCPV0y3TSFDGpmZ+oHb
+         srTCcz04TbPf9w9TS168npfwVu02+taV8EruGnUtTbXeiqOePq3N+UiSJmwpjQZ6qu
+         BqgkSAGnxoxB1p5jSTPrDI+UYmPOQSDEAsbxgGdjvkrK+Ee67qpsML6bESlIgY+HXD
+         Fx51p8lj5Ak8JYtBsQGq+noQ+YgEOPWyWLOJghUiwDia0+2jWqVH0JohmcOLvpGJ7D
+         4NVMSCDcPq6OA==
+Date:   Thu, 25 Feb 2021 19:02:27 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v15 02/22] xfs: Add xfs_attr_node_remove_cleanup
-Message-ID: <20210226030009.GP7272@magnolia>
+Subject: Re: [PATCH v15 03/22] xfs: Hoist transaction handling in
+ xfs_attr_node_remove_step
+Message-ID: <20210226030227.GQ7272@magnolia>
 References: <20210218165348.4754-1-allison.henderson@oracle.com>
- <20210218165348.4754-3-allison.henderson@oracle.com>
+ <20210218165348.4754-4-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210218165348.4754-3-allison.henderson@oracle.com>
+In-Reply-To: <20210218165348.4754-4-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 18, 2021 at 09:53:28AM -0700, Allison Henderson wrote:
-> This patch pulls a new helper function xfs_attr_node_remove_cleanup out
-> of xfs_attr_node_remove_step.  This helps to modularize
-> xfs_attr_node_remove_step which will help make the delayed attribute
-> code easier to follow
+On Thu, Feb 18, 2021 at 09:53:29AM -0700, Allison Henderson wrote:
+> This patch hoists transaction handling in xfs_attr_node_removename to
+> xfs_attr_node_remove_step.  This will help keep transaction handling in
+> higher level functions instead of buried in subfunctions when we
+> introduce delay attributes
 > 
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
 Looks ok,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
@@ -62,63 +62,86 @@ Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 29 ++++++++++++++++++++---------
->  1 file changed, 20 insertions(+), 9 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c | 45 ++++++++++++++++++++++-----------------------
+>  1 file changed, 22 insertions(+), 23 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 28ff93d..4e6c89d 100644
+> index 4e6c89d..3cf76e2 100644
 > --- a/fs/xfs/libxfs/xfs_attr.c
 > +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -1220,6 +1220,25 @@ xfs_attr_node_remove_rmt(
->  	return xfs_attr_refillstate(state);
->  }
->  
-> +STATIC int
-> +xfs_attr_node_remove_cleanup(
-> +	struct xfs_da_args	*args,
-> +	struct xfs_da_state	*state)
-> +{
-> +	struct xfs_da_state_blk	*blk;
-> +	int			retval;
-> +
-> +	/*
-> +	 * Remove the name and update the hashvals in the tree.
-> +	 */
-> +	blk = &state->path.blk[state->path.active-1];
-> +	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
-> +	retval = xfs_attr3_leaf_remove(blk->bp, args);
-> +	xfs_da3_fixhashpath(state, &state->path);
-> +
-> +	return retval;
-> +}
-> +
->  /*
->   * Remove a name from a B-tree attribute list.
->   *
-> @@ -1232,7 +1251,6 @@ xfs_attr_node_remove_step(
+> @@ -1251,9 +1251,7 @@ xfs_attr_node_remove_step(
 >  	struct xfs_da_args	*args,
 >  	struct xfs_da_state	*state)
 >  {
-> -	struct xfs_da_state_blk	*blk;
->  	int			retval, error;
->  	struct xfs_inode	*dp = args->dp;
+> -	int			retval, error;
+> -	struct xfs_inode	*dp = args->dp;
+> -
+> +	int			error = 0;
 >  
-> @@ -1247,14 +1265,7 @@ xfs_attr_node_remove_step(
+>  	/*
+>  	 * If there is an out-of-line value, de-allocate the blocks.
+> @@ -1265,25 +1263,6 @@ xfs_attr_node_remove_step(
 >  		if (error)
 >  			return error;
 >  	}
+> -	retval = xfs_attr_node_remove_cleanup(args, state);
 > -
 > -	/*
-> -	 * Remove the name and update the hashvals in the tree.
+> -	 * Check to see if the tree needs to be collapsed.
 > -	 */
-> -	blk = &state->path.blk[ state->path.active-1 ];
-> -	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
-> -	retval = xfs_attr3_leaf_remove(blk->bp, args);
-> -	xfs_da3_fixhashpath(state, &state->path);
-> +	retval = xfs_attr_node_remove_cleanup(args, state);
+> -	if (retval && (state->path.active > 1)) {
+> -		error = xfs_da3_join(state);
+> -		if (error)
+> -			return error;
+> -		error = xfs_defer_finish(&args->trans);
+> -		if (error)
+> -			return error;
+> -		/*
+> -		 * Commit the Btree join operation and start a new trans.
+> -		 */
+> -		error = xfs_trans_roll_inode(&args->trans, dp);
+> -		if (error)
+> -			return error;
+> -	}
 >  
+>  	return error;
+>  }
+> @@ -1299,7 +1278,7 @@ xfs_attr_node_removename(
+>  	struct xfs_da_args	*args)
+>  {
+>  	struct xfs_da_state	*state = NULL;
+> -	int			error;
+> +	int			retval, error;
+>  	struct xfs_inode	*dp = args->dp;
+>  
+>  	trace_xfs_attr_node_removename(args);
+> @@ -1312,6 +1291,26 @@ xfs_attr_node_removename(
+>  	if (error)
+>  		goto out;
+>  
+> +	retval = xfs_attr_node_remove_cleanup(args, state);
+> +
+> +	/*
+> +	 * Check to see if the tree needs to be collapsed.
+> +	 */
+> +	if (retval && (state->path.active > 1)) {
+> +		error = xfs_da3_join(state);
+> +		if (error)
+> +			goto out;
+> +		error = xfs_defer_finish(&args->trans);
+> +		if (error)
+> +			goto out;
+> +		/*
+> +		 * Commit the Btree join operation and start a new trans.
+> +		 */
+> +		error = xfs_trans_roll_inode(&args->trans, dp);
+> +		if (error)
+> +			goto out;
+> +	}
+> +
 >  	/*
->  	 * Check to see if the tree needs to be collapsed.
+>  	 * If the result is small enough, push it all into the inode.
+>  	 */
 > -- 
 > 2.7.4
 > 
