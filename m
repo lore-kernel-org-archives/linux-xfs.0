@@ -2,303 +2,160 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DCF6C433DB
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 08:30:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF2B7C433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 09:58:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDC6064EE3
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 08:30:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6592F64F13
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 09:58:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229482AbhBZIaQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 26 Feb 2021 03:30:16 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:45486 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229449AbhBZIaE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Feb 2021 03:30:04 -0500
-X-IronPort-AV: E=Sophos;i="5.81,208,1610380800"; 
-   d="scan'208";a="104901398"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 26 Feb 2021 16:28:10 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id D8B8A4CE76F9;
-        Fri, 26 Feb 2021 16:28:04 +0800 (CST)
-Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Fri, 26 Feb 2021 16:28:05 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Fri, 26 Feb 2021 16:28:05 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>
-CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <willy@infradead.org>, <jack@suse.cz>, <viro@zeniv.linux.org.uk>,
-        <linux-btrfs@vger.kernel.org>, <ocfs2-devel@oss.oracle.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <rgoldwyn@suse.de>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>
-Subject: [PATCH v2 08/10] fsdax: Dedup file range to use a compare function
-Date:   Fri, 26 Feb 2021 16:28:03 +0800
-Message-ID: <20210226082803.825612-1-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210226002030.653855-9-ruansy.fnst@fujitsu.com>
-References: <20210226002030.653855-9-ruansy.fnst@fujitsu.com>
+        id S230188AbhBZJ6X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 26 Feb 2021 04:58:23 -0500
+Received: from esa14.fujitsucc.c3s2.iphmx.com ([68.232.156.101]:57830 "EHLO
+        esa14.fujitsucc.c3s2.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230439AbhBZJ4Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Feb 2021 04:56:25 -0500
+X-Greylist: delayed 478 seconds by postgrey-1.27 at vger.kernel.org; Fri, 26 Feb 2021 04:56:09 EST
+IronPort-SDR: 30NIOz+v1U7CTutXgsRs+B3u20+2uEer2a+NbxzbQbCgp3zOsF28JaDmfwab+riwsUCo3Cmy2t
+ BmdEWl6zv+D28QlyiUHAASFe9UVQa8xOZ5DXlcn+zxdSue3o8Og2Lca4ur/AELapZRBx7HZa97
+ hNlDeei+QrQuiHCSnBdKXq2MwcZE34FX/0sfMKMa5oXr3xGeoWXyEXr7GrulQCvXeXe3W4dohn
+ 21BB81KHTJhiTKIkZRisyhpthSeW3fzCIKNb9TQJYnJ4j0mqtr3wQsmCkXpddXP2GyS9zFcI5r
+ Q9c=
+X-IronPort-AV: E=McAfee;i="6000,8403,9906"; a="26805831"
+X-IronPort-AV: E=Sophos;i="5.81,208,1610377200"; 
+   d="scan'208";a="26805831"
+Received: from mail-os2jpn01lp2058.outbound.protection.outlook.com (HELO JPN01-OS2-obe.outbound.protection.outlook.com) ([104.47.92.58])
+  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2021 18:45:48 +0900
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=f1B7fr7M3/ILV0fyZLflcpt77M15UxdzvUFwAjHta8+BlGE9qrdyjctmG2J8CdoPvvY1EQtS+OmIfgy+6KrsnT9ylo6oobaZsl7vbAB0Gz5x+8G5u3YigbmwJplRhkTO2WT74OBg/ejS1nESeGuSv0UJcHFSR5pIeDFshettEunYtG9Ded2X53Yh9WUFhWB1J9jgcDE+rV+lNDGb+J/GW5Yo7DLjf8hV0GAQA70fD1LAgEMZmRXEnmtnFgdwLy8liBSLkeWoRxbIVdSyc+RB2si1W5JUvYmrxZ4m/7AM/8QWXS+ILsNEOekCeeH59ljkdA9otJQ4ma2KLoV1KFl4nw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LJtXw0i4KVuKh0cTDpJQX59bhuFx0Wf4wSWTrGM2Asc=;
+ b=k4DYLD59EW4hLWo+37rtm4Ixhw4fDUq+UsisaYoL7GO7rtoSJVpwm8HM30lGlSA+9h4+/ke4AmnLjhAvV5GRyD5Fjpb+L8zyWHiRkY/LuRgi2GGH4LLx0volao+LW7zLLfhp7RXiOMD1v0KNXccle0ODEsWdG5dMh6MXXTSruwk8M+Sg1jEZGP7WXwFf76aVifyioxVLIgWZIvNN9CQ4nx2ynDEJ8XR3/08iCkuaWlnxRN198y0340fV697IYQDjm3LELtI4XHPUmfJq027YEKRtOCqLcBgHEB+IigsHvaBra6GCD3AHj0r2D33iOEF+H5DFPnHS7v1z1iN1zzFBUg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
+ dkim=pass header.d=fujitsu.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=fujitsu.onmicrosoft.com; s=selector2-fujitsu-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LJtXw0i4KVuKh0cTDpJQX59bhuFx0Wf4wSWTrGM2Asc=;
+ b=MFGrpZWey4OOwR89I8YAzKfjm06LGX0gbK4JGWkyhffYzZIa9Ronj62yAB7zlQGmZUOXIrROPbs+CKNAooUFLqQl2WHTQwBVDCOlN/lwoOcu84+TlBLN+OoWbgmgV2inCZ5TbOGtXMkRHnCT12Nf2RD2APWVbbBUjsI6kSTlyms=
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com (2603:1096:604:18::16)
+ by OS3PR01MB5816.jpnprd01.prod.outlook.com (2603:1096:604:c4::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.19; Fri, 26 Feb
+ 2021 09:45:46 +0000
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::7de7:2ce8:ffc0:d098]) by OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::7de7:2ce8:ffc0:d098%7]) with mapi id 15.20.3868.032; Fri, 26 Feb 2021
+ 09:45:46 +0000
+From:   "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
+To:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+CC:     "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "jack@suse.cz" <jack@suse.cz>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
+        "y-goto@fujitsu.com" <y-goto@fujitsu.com>,
+        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
+        "fnstml-iaas@cn.fujitsu.com" <fnstml-iaas@cn.fujitsu.com>
+Subject: Question about the "EXPERIMENTAL" tag for dax in XFS
+Thread-Topic: Question about the "EXPERIMENTAL" tag for dax in XFS
+Thread-Index: AQHXDCQnpTImuSbsuEuKD1BHo1YY+g==
+Date:   Fri, 26 Feb 2021 09:45:45 +0000
+Message-ID: <OSBPR01MB2920899F1D71E7B054A04E39F49D9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+References: <20210226002030.653855-1-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20210226002030.653855-1-ruansy.fnst@fujitsu.com>
+Accept-Language: en-US, zh-CN
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none
+ header.from=fujitsu.com;
+x-originating-ip: [49.74.161.241]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: f91ecbdd-db6b-4d96-5caf-08d8da3b4ab8
+x-ms-traffictypediagnostic: OS3PR01MB5816:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <OS3PR01MB5816BC74D5D1DDD232082EEDF49D9@OS3PR01MB5816.jpnprd01.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 9Q8rtszZWkgDFHOR4Q7xcuYxtpqq19TxUr/I2JQRudOKHQCslSZQYyEqexZtGEqdDdTrFmCgSmbgVpIxQcS3YieDDlGiWSUHQlycHW0SrBSBr89RRugwihofN7nCsuE4AbBf5npxqkrP+sUR6jUDlOuU4N/w8v/Mky7puaAxFoK04Wa/yONDJFgJsa+uToZPOQWCnAmzjP8oX5uj495rEB4uOX6FwzAmW4fk9G/6uPthe5cH8D6aH2d/bjszkmqRfZQnbCbibKqb8LbCBHUdyZ6TJGoAi9ihiQwkCw6aqR65sbMbdNW0jEuBdiPF2w4sPIM3u8zJyzbqR8GfqahMSJ9yP17o2CzQu8BUXHueVdWz9jaquaAAU4IVY8HL2NTHgp5kwkmFUh1DgQqT6mrxjBuizwmNesdETU3j7Ynvf80PbEzfnlWrhKYe88xqmNdxeJBIU/xV9dOwnI43+4FlfzAcT3A8ChMkvYyVMTk/UPx/qY8zW0bJR8kbR2NdoHFxIMcyfC+XbAa1ZZRbKJMCfQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSBPR01MB2920.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(136003)(376002)(39860400002)(396003)(366004)(66556008)(52536014)(9686003)(7416002)(66476007)(55016002)(86362001)(64756008)(66946007)(66446008)(110136005)(83380400001)(71200400001)(316002)(107886003)(85182001)(7696005)(4326008)(186003)(8936002)(8676002)(26005)(6506007)(33656002)(4744005)(5660300002)(54906003)(2906002)(76116006)(91956017)(478600001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: =?gb2312?B?SHUrakJTcU5DS0pvVUw3MjByNXlVc3QzZG9pdGhsQUdaRTZKRDlZbDN0MGNG?=
+ =?gb2312?B?TDFKaWZVNlk4ZTVMb1lNa01GN0NiR0xuaDVkWGkvVWZnYktuakR4V0hwQlhT?=
+ =?gb2312?B?dWlya3d5cEI3bXIzQ2RzYVFld01qTVRUaEJpRnd5UC83LysyQVF3SnBBbzdy?=
+ =?gb2312?B?RXI3dEdOYUE4MzB3SzQ2VXB1bWdMbFJuUm4wd0lQVURVbHViL2gwN1RycTEv?=
+ =?gb2312?B?VEc0UVc0NitoSXlRQVNwRm5sODgvcUhFVFRHSkFHL0VHUnA1TERzN3c3Tm0y?=
+ =?gb2312?B?SWF0d0xGZ0V1Zm1lYXdIZmgyVldnY2hHdUd0NVFYT2cxdUhzVmRvTjBVNU9u?=
+ =?gb2312?B?QTBKTXhLZmZNR3FkVUxwQ1BieEEvQWpXcU80dUtoWmpPRDdOZ0JjRVJ3R05j?=
+ =?gb2312?B?MnRTVFZqYUpIMXM5UlFtQUFtVEgvbEVOUnROUVRnc0J4WnVDdHFPVUpvTnU0?=
+ =?gb2312?B?bGwyUDZyWWlPVGlwdEI3czk4cTNvRHhwdFlROCtFWURyNWI5Q0x3UkdsR3M5?=
+ =?gb2312?B?OXhvZnJSeThCZmFuY3lOQyt2WjduZmRSVjBQay9VRjJaL1NtYVBidjF1QXlI?=
+ =?gb2312?B?R21taWM2d1VqcGthUExkemU0MjVOeFhwb2VaU01UZzFuTHJySDVzV2JheFVH?=
+ =?gb2312?B?eHJ2MFNkdktCUm8yU1p2UUx3Y3licE9UdW1WNEwvSDRZb2h0MElxNE8vdk9V?=
+ =?gb2312?B?c1g2Yzc2ZHhRcHpINm01c29xVk9SZk8zZ1psdTY5UEdLdUdrTFlBMmdvTHFq?=
+ =?gb2312?B?a2VBc24yQjlhZmg1ekZCL25RQWkrUksxMnVHMWJYaFpIRlV3dDYxeHlmbW9X?=
+ =?gb2312?B?ekpJT2FuY3NnaDNDNDhuTUkvQ0pQQjduVkExWGh2N1VQMXpxZHIyeFdlcytE?=
+ =?gb2312?B?OVVNOUo0WkpKR0RHQkNYRDU0Ulg5MDFMSkJlZm9EbTcxOWNSUll2MEgrM2tC?=
+ =?gb2312?B?ZzdNV3AwT2diUHVrMWlra0FoZU03MHFkVkJ2S2VnY3RoL1BWSTJabXRRVWRq?=
+ =?gb2312?B?ZWNJb3VzbFZmZ0pVRE9RQTYyNFN0VmNTWEszMWJBS3pGenFSay9EaTZtb3Nz?=
+ =?gb2312?B?T2NRbVRNcHNtejNJLytZeEF2eitSS3FEcVMyYWdBcVIvcEl2TysrdFJreTZW?=
+ =?gb2312?B?dzJpRGc2SVY2cHJEWmpid01XM2pQOWtDa09NdkdEMzlJQlVrQVV1Vlpxakxy?=
+ =?gb2312?B?VzBITytEM0VoZEhsSWd0MEt1OE9XSzdXeWxtc2FtVzhmWDlGVlpQcFZ5bVBW?=
+ =?gb2312?B?cTdUQ0VBKzltek9LcC81YlJFWnV3Q3VyRkFnaXZrYWFNcmU0ZlNlMkxvRWNi?=
+ =?gb2312?B?WFZJQjlPS0FORldkRTRVcFpUbHhkSWNXekFjeXlqclRqRFBub3MwWjM1Z2dn?=
+ =?gb2312?B?WXVxOEFjc0ZkL1dqYzd5MVhmb2xSajFNWEl0QTJadG50eHhPblo4NHFqRjh2?=
+ =?gb2312?B?THdvZXNDNytCQ3I2aVhzdXlheXdJUE1iZUNvaGxTYmRkZnVHSEFlS3JuQ2NT?=
+ =?gb2312?B?OTk4MGcrclc5VDF2Wm9TS09OYk9vUnhHc002a3Vlbk8wVXRIWUE4dWxRaEFF?=
+ =?gb2312?B?VzRTSWd4SjNUUndrTG5tY2tXckUvWWNxS1QrL1oySmRrMDE0NkQ0NzBFd0Jw?=
+ =?gb2312?B?bitudUdsZGs2WmxLbFY5YkwvTFRCTU1lc05Bc2tWdjBSV3lLbkErRFppTGlS?=
+ =?gb2312?B?cUNFRDlnWFJEK053eGFwRm1SLzlCbVdPWk1GZ0ZaZEQ3UVRmbmNGMzIzSXlW?=
+ =?gb2312?Q?8k/mqON7zWkH4Xlfcg=3D?=
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: D8B8A4CE76F9.A5BE0
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+X-OriginatorOrg: fujitsu.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: OSBPR01MB2920.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f91ecbdd-db6b-4d96-5caf-08d8da3b4ab8
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Feb 2021 09:45:45.4003
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: otIJH1RssPktwNRpAw+JDESOzIwYfxsevw0arpYCB3GzBsQoYWknNqOGh9az5QcVQTA5Aaz1oU9DD2tOSyBUlA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS3PR01MB5816
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-With dax we cannot deal with readpage() etc. So, we create a dax
-comparison funciton which is similar with
-vfs_dedupe_file_range_compare().
-And introduce dax_remap_file_range_prep() for filesystem use.
-
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- fs/dax.c             | 56 ++++++++++++++++++++++++++++++++++++++++++++
- fs/remap_range.c     | 45 ++++++++++++++++++++++++++++-------
- fs/xfs/xfs_reflink.c |  9 +++++--
- include/linux/dax.h  |  4 ++++
- include/linux/fs.h   | 15 ++++++++----
- 5 files changed, 115 insertions(+), 14 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index 4f6c6ba68e6f..dbb95f00b38b 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1856,3 +1856,59 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
- 	return dax_insert_pfn_mkwrite(vmf, pfn, order);
- }
- EXPORT_SYMBOL_GPL(dax_finish_sync_fault);
-+
-+static loff_t dax_range_compare_actor(struct inode *ino1, loff_t pos1,
-+		struct inode *ino2, loff_t pos2, loff_t len, void *data,
-+		struct iomap *smap, struct iomap *dmap)
-+{
-+	void *saddr, *daddr;
-+	bool *same = data;
-+	int ret;
-+
-+	if (smap->type == IOMAP_HOLE && dmap->type == IOMAP_HOLE) {
-+		*same = true;
-+		return len;
-+	}
-+
-+	if (smap->type == IOMAP_HOLE || dmap->type == IOMAP_HOLE) {
-+		*same = false;
-+		return 0;
-+	}
-+
-+	ret = dax_iomap_direct_access(smap, pos1, ALIGN(pos1 + len, PAGE_SIZE),
-+				      &saddr, NULL);
-+	if (ret < 0)
-+		return -EIO;
-+
-+	ret = dax_iomap_direct_access(dmap, pos2, ALIGN(pos2 + len, PAGE_SIZE),
-+				      &daddr, NULL);
-+	if (ret < 0)
-+		return -EIO;
-+
-+	*same = !memcmp(saddr, daddr, len);
-+	return len;
-+}
-+
-+int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-+		struct inode *dest, loff_t destoff, loff_t len, bool *is_same,
-+		const struct iomap_ops *ops)
-+{
-+	int id, ret = 0;
-+
-+	id = dax_read_lock();
-+	while (len) {
-+		ret = iomap_apply2(src, srcoff, dest, destoff, len, 0, ops,
-+				   is_same, dax_range_compare_actor);
-+		if (ret < 0 || !*is_same)
-+			goto out;
-+
-+		len -= ret;
-+		srcoff += ret;
-+		destoff += ret;
-+	}
-+	ret = 0;
-+out:
-+	dax_read_unlock(id);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(dax_dedupe_file_range_compare);
-diff --git a/fs/remap_range.c b/fs/remap_range.c
-index 77dba3a49e65..9079390edaf3 100644
---- a/fs/remap_range.c
-+++ b/fs/remap_range.c
-@@ -14,6 +14,7 @@
- #include <linux/compat.h>
- #include <linux/mount.h>
- #include <linux/fs.h>
-+#include <linux/dax.h>
- #include "internal.h"
- 
- #include <linux/uaccess.h>
-@@ -199,9 +200,9 @@ static void vfs_unlock_two_pages(struct page *page1, struct page *page2)
-  * Compare extents of two files to see if they are the same.
-  * Caller must have locked both inodes to prevent write races.
-  */
--static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
--					 struct inode *dest, loff_t destoff,
--					 loff_t len, bool *is_same)
-+int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-+				  struct inode *dest, loff_t destoff,
-+				  loff_t len, bool *is_same)
- {
- 	loff_t src_poff;
- 	loff_t dest_poff;
-@@ -280,6 +281,7 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
- out_error:
- 	return error;
- }
-+EXPORT_SYMBOL(vfs_dedupe_file_range_compare);
- 
- /*
-  * Check that the two inodes are eligible for cloning, the ranges make
-@@ -289,9 +291,11 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-  * If there's an error, then the usual negative error code is returned.
-  * Otherwise returns 0 with *len set to the request length.
-  */
--int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
--				  struct file *file_out, loff_t pos_out,
--				  loff_t *len, unsigned int remap_flags)
-+static int
-+__generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+				struct file *file_out, loff_t pos_out,
-+				loff_t *len, unsigned int remap_flags,
-+				const struct iomap_ops *ops)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
-@@ -351,8 +355,15 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 	if (remap_flags & REMAP_FILE_DEDUP) {
- 		bool		is_same = false;
- 
--		ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
--				inode_out, pos_out, *len, &is_same);
-+		if (!IS_DAX(inode_in) && !IS_DAX(inode_out))
-+			ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
-+					inode_out, pos_out, *len, &is_same);
-+		else if (IS_DAX(inode_in) && IS_DAX(inode_out) && ops)
-+			ret = dax_dedupe_file_range_compare(inode_in, pos_in,
-+					inode_out, pos_out, *len, &is_same,
-+					ops);
-+		else
-+			return -EINVAL;
- 		if (ret)
- 			return ret;
- 		if (!is_same)
-@@ -370,6 +381,24 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 
- 	return ret;
- }
-+
-+int dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+			      struct file *file_out, loff_t pos_out,
-+			      loff_t *len, unsigned int remap_flags,
-+			      const struct iomap_ops *ops)
-+{
-+	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
-+					       pos_out, len, remap_flags, ops);
-+}
-+EXPORT_SYMBOL(dax_remap_file_range_prep);
-+
-+int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+				  struct file *file_out, loff_t pos_out,
-+				  loff_t *len, unsigned int remap_flags)
-+{
-+	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
-+					       pos_out, len, remap_flags, NULL);
-+}
- EXPORT_SYMBOL(generic_remap_file_range_prep);
- 
- loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 6fa05fb78189..f5b3a3da36b7 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1308,8 +1308,13 @@ xfs_reflink_remap_prep(
- 	if (IS_DAX(inode_in) || IS_DAX(inode_out))
- 		goto out_unlock;
- 
--	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
--			len, remap_flags);
-+	if (IS_DAX(inode_in))
-+		ret = generic_remap_file_range_prep(file_in, pos_in, file_out,
-+						    pos_out, len, remap_flags);
-+	else
-+		ret = dax_remap_file_range_prep(file_in, pos_in, file_out,
-+						pos_out, len, remap_flags,
-+						&xfs_read_iomap_ops);
- 	if (ret || *len == 0)
- 		goto out_unlock;
- 
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 3275e01ed33d..32e1c34349f2 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -239,6 +239,10 @@ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
- s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap,
- 		struct iomap *srcmap);
-+int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-+				  struct inode *dest, loff_t destoff,
-+				  loff_t len, bool *is_same,
-+				  const struct iomap_ops *ops);
- static inline bool dax_mapping(struct address_space *mapping)
- {
- 	return mapping->host && IS_DAX(mapping->host);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index fd47deea7c17..2e6ec5bdf82a 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -68,6 +68,7 @@ struct fsverity_info;
- struct fsverity_operations;
- struct fs_context;
- struct fs_parameter_spec;
-+struct iomap_ops;
- 
- extern void __init inode_init(void);
- extern void __init inode_init_early(void);
-@@ -1910,13 +1911,19 @@ extern ssize_t vfs_read(struct file *, char __user *, size_t, loff_t *);
- extern ssize_t vfs_write(struct file *, const char __user *, size_t, loff_t *);
- extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
- 				   loff_t, size_t, unsigned int);
-+typedef int (*compare_range_t)(struct inode *src, loff_t srcpos,
-+			       struct inode *dest, loff_t destpos,
-+			       loff_t len, bool *is_same);
- extern ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
- 				       struct file *file_out, loff_t pos_out,
- 				       size_t len, unsigned int flags);
--extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
--					 struct file *file_out, loff_t pos_out,
--					 loff_t *count,
--					 unsigned int remap_flags);
-+int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+				  struct file *file_out, loff_t pos_out,
-+				  loff_t *count, unsigned int remap_flags);
-+int dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+			      struct file *file_out, loff_t pos_out,
-+			      loff_t *len, unsigned int remap_flags,
-+			      const struct iomap_ops *ops);
- extern loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
- 				  struct file *file_out, loff_t pos_out,
- 				  loff_t len, unsigned int remap_flags);
--- 
-2.30.1
-
-
-
+SGksIGd1eXMKCkJlc2lkZSB0aGlzIHBhdGNoc2V0LCBJJ2QgbGlrZSB0byBjb25maXJtIHNvbWV0
+aGluZyBhYm91dCB0aGUgIkVYUEVSSU1FTlRBTCIgdGFnIGZvciBkYXggaW4gWEZTLgoKSW4gWEZT
+LCB0aGUgIkVYUEVSSU1FTlRBTCIgdGFnLCB3aGljaCBpcyByZXBvcnRlZCBpbiB3YXJpbmcgbWVz
+c2FnZSB3aGVuIHdlIG1vdW50IGEgcG1lbSBkZXZpY2Ugd2l0aCBkYXggb3B0aW9uLCBoYXMgYmVl
+biBleGlzdGVkIGZvciBhIHdoaWxlLiAgSXQncyBhIGJpdCBhbm5veWluZyB3aGVuIHVzaW5nIGZz
+ZGF4IGZlYXR1cmUuICBTbywgbXkgaW5pdGlhbCBpbnRlbnRpb24gd2FzIHRvIHJlbW92ZSB0aGlz
+IHRhZy4gIEFuZCBJIHN0YXJ0ZWQgdG8gZmluZCBvdXQgYW5kIHNvbHZlIHRoZSBwcm9ibGVtcyB3
+aGljaCBwcmV2ZW50IGl0IGZyb20gYmVpbmcgcmVtb3ZlZC4KCkFzIGlzIHRhbGtlZCBiZWZvcmUs
+IHRoZXJlIGFyZSAzIG1haW4gcHJvYmxlbXMuICBUaGUgZmlyc3Qgb25lIGlzICJkYXggc2VtYW50
+aWNzIiwgd2hpY2ggaGFzIGJlZW4gcmVzb2x2ZWQuICBUaGUgcmVzdCB0d28gYXJlICJSTUFQIGZv
+ciBmc2RheCIgYW5kICJzdXBwb3J0IGRheCByZWZsaW5rIGZvciBmaWxlc3lzdGVtIiwgd2hpY2gg
+SSBoYXZlIGJlZW4gd29ya2luZyBvbi4gIAoKU28sIHdoYXQgSSB3YW50IHRvIGNvbmZpcm0gaXM6
+IGRvZXMgaXQgbWVhbnMgdGhhdCB3ZSBjYW4gcmVtb3ZlIHRoZSAiRVhQRVJJTUVOVEFMIiB0YWcg
+d2hlbiB0aGUgcmVzdCB0d28gcHJvYmxlbSBhcmUgc29sdmVkPyAgT3IgbWF5YmUgdGhlcmUgYXJl
+IG90aGVyIGltcG9ydGFudCBwcm9ibGVtcyBuZWVkIHRvIGJlIGZpeGVkIGJlZm9yZSByZW1vdmlu
+ZyBpdD8gIElmIHRoZXJlIGFyZSwgY291bGQgeW91IHBsZWFzZSBzaG93IG1lIHRoYXQ/CgpUaGFu
+ayB5b3UuCgoKLS0KUnVhbiBTaGl5YW5nLg==
