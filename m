@@ -2,156 +2,64 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 927B8C433DB
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 04:15:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56352C433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 04:24:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F8F764EEB
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 04:15:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10D7164EE4
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Feb 2021 04:24:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229707AbhBZEP2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Feb 2021 23:15:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60660 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229492AbhBZEP1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Feb 2021 23:15:27 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9227864EDC;
-        Fri, 26 Feb 2021 04:14:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614312885;
-        bh=sgWuxqBTz4uJmSaPMNWjznkck8E4uzq3eRWOtth4/Pk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GaKlhVvbTBQ10wmdG8lJGORHMFm7ED+I2ZQh6j3TMj5vcfdLDA91LE6NAJU6sYUAQ
-         PLQ/fdnQyVxpFDdaGoY8MBdg+9xQznfx/6tHoJIAPnTa5XymqVuRDgGDR9woUdGIt1
-         qR9bvxbSIdjDrVgZMmBG3RdSwbrzz2s14VpCvmDDxQir6273b544lhaey0J9JohhGF
-         /F9PfucDLwp+H/egWwJ0jCumTfHCKrfrAlR7rN1QEeK4gDR++yhSE51klT4tcnTvSp
-         QGkqBbHSLvEQYMwJNM9436fxTtc2kUqBJVmlSHPW//XR7cYfGQxa9nqGz78tOJbvah
-         n5IabVC/GXYtw==
-Date:   Thu, 25 Feb 2021 20:14:46 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        willy@infradead.org, jack@suse.cz, viro@zeniv.linux.org.uk,
-        linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        david@fromorbit.com, hch@lst.de, rgoldwyn@suse.de
-Subject: Re: [PATCH v2 07/10] iomap: Introduce iomap_apply2() for operations
- on two files
-Message-ID: <20210226041446.GV7272@magnolia>
-References: <20210226002030.653855-1-ruansy.fnst@fujitsu.com>
- <20210226002030.653855-8-ruansy.fnst@fujitsu.com>
+        id S229823AbhBZEYM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Feb 2021 23:24:12 -0500
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:60529 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229498AbhBZEYL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Feb 2021 23:24:11 -0500
+Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id C8FCD4EC789;
+        Fri, 26 Feb 2021 15:23:28 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lFUf0-004jBp-Re; Fri, 26 Feb 2021 15:23:26 +1100
+Date:   Fri, 26 Feb 2021 15:23:26 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/13] xfs: embed the xlog_op_header in the unmount record
+Message-ID: <20210226042326.GV4662@dread.disaster.area>
+References: <20210224063459.3436852-1-david@fromorbit.com>
+ <20210224063459.3436852-5-david@fromorbit.com>
+ <20210226025727.GO7272@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210226002030.653855-8-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20210226025727.GO7272@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
+        a=kj9zAlcOel0A:10 a=qa6Q16uM49sA:10 a=7-415B0cAAAA:8
+        a=jyTUhv0JJRFv05d8aE0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 26, 2021 at 08:20:27AM +0800, Shiyang Ruan wrote:
-> Some operations, such as comparing a range of data in two files under
-> fsdax mode, requires nested iomap_open()/iomap_end() on two file.  Thus,
-> we introduce iomap_apply2() to accept arguments from two files and
-> iomap_actor2_t for actions on two files.
+On Thu, Feb 25, 2021 at 06:57:27PM -0800, Darrick J. Wong wrote:
+> On Wed, Feb 24, 2021 at 05:34:50PM +1100, Dave Chinner wrote:
+> > Subject: xfs: embed the xlog_op_header in the unmount record
 > 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> ---
->  fs/iomap/apply.c      | 51 +++++++++++++++++++++++++++++++++++++++++++
->  include/linux/iomap.h |  7 +++++-
->  2 files changed, 57 insertions(+), 1 deletion(-)
+> Uh... isn't this embedding the xlog op header in the *commit* record?
 > 
-> diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
-> index 26ab6563181f..fd2f8bde5791 100644
-> --- a/fs/iomap/apply.c
-> +++ b/fs/iomap/apply.c
-> @@ -97,3 +97,54 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
->  
->  	return written ? written : ret;
->  }
-> +
-> +loff_t
-> +iomap_apply2(struct inode *ino1, loff_t pos1, struct inode *ino2, loff_t pos2,
-> +		loff_t length, unsigned int flags, const struct iomap_ops *ops,
-> +		void *data, iomap_actor2_t actor)
-> +{
-> +	struct iomap smap = { .type = IOMAP_HOLE };
-> +	struct iomap dmap = { .type = IOMAP_HOLE };
-> +	loff_t written = 0, ret;
-> +
-> +	ret = ops->iomap_begin(ino1, pos1, length, 0, &smap, NULL);
-> +	if (ret)
-> +		goto out_src;
-> +	if (WARN_ON(smap.offset > pos1)) {
-> +		written = -EIO;
-> +		goto out_src;
-> +	}
-> +	if (WARN_ON(smap.length == 0)) {
-> +		written = -EIO;
-> +		goto out_src;
-> +	}
-> +
-> +	ret = ops->iomap_begin(ino2, pos2, length, 0, &dmap, NULL);
-> +	if (ret)
-> +		goto out_dest;
-> +	if (WARN_ON(dmap.offset > pos2)) {
-> +		written = -EIO;
-> +		goto out_dest;
-> +	}
-> +	if (WARN_ON(dmap.length == 0)) {
-> +		written = -EIO;
-> +		goto out_dest;
-> +	}
-> +
-> +	/* make sure extent length of two file is equal */
-> +	if (WARN_ON(smap.length != dmap.length)) {
+> (Just saying for my own lazy purposes because my scripts choke badly
+> when a patchset has multiple patches with the same subject...)
 
-Why not set smap.length and dmap.length to min(smap.length, dmap.length) ?
+Uh, yes. That's what I get for copy-pasta of the commit headers ;)
 
---D
+Cheers,
 
-> +		written = -EIO;
-> +		goto out_dest;
-> +	}
-> +
-> +	written = actor(ino1, pos1, ino2, pos2, length, data, &smap, &dmap);
-> +
-> +out_dest:
-> +	if (ops->iomap_end)
-> +		ret = ops->iomap_end(ino2, pos2, length, 0, 0, &dmap);
-> +out_src:
-> +	if (ops->iomap_end)
-> +		ret = ops->iomap_end(ino1, pos1, length, 0, 0, &smap);
-> +
-> +	return ret;
-> +}
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 5bd3cac4df9c..913f98897a77 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -148,10 +148,15 @@ struct iomap_ops {
->   */
->  typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
->  		void *data, struct iomap *iomap, struct iomap *srcmap);
-> -
-> +typedef loff_t (*iomap_actor2_t)(struct inode *ino1, loff_t pos1,
-> +		struct inode *ino2, loff_t pos2, loff_t len, void *data,
-> +		struct iomap *smap, struct iomap *dmap);
->  loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
->  		unsigned flags, const struct iomap_ops *ops, void *data,
->  		iomap_actor_t actor);
-> +loff_t iomap_apply2(struct inode *ino1, loff_t pos1, struct inode *ino2,
-> +		loff_t pos2, loff_t length, unsigned int flags,
-> +		const struct iomap_ops *ops, void *data, iomap_actor2_t actor);
->  
->  ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
->  		const struct iomap_ops *ops);
-> -- 
-> 2.30.1
-> 
-> 
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
