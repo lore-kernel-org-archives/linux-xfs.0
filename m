@@ -2,127 +2,75 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5560DC433DB
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 07:09:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7061C433E0
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 07:50:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2379764E21
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 07:09:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 861E164E56
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 07:50:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230125AbhB1HJC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 28 Feb 2021 02:09:02 -0500
-Received: from conssluserg-03.nifty.com ([210.131.2.82]:50809 "EHLO
-        conssluserg-03.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229941AbhB1HJA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Feb 2021 02:09:00 -0500
-Received: from mail-oi1-f173.google.com (mail-oi1-f173.google.com [209.85.167.173]) (authenticated)
-        by conssluserg-03.nifty.com with ESMTP id 11S786F3000515;
-        Sun, 28 Feb 2021 16:08:07 +0900
-DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-03.nifty.com 11S786F3000515
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
-        s=dec2015msa; t=1614496087;
-        bh=ldg+O7sE55to+alrJE10yp3zvi7BbH+3v1wNoAJS4q4=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=I0VcDFnKJ9ZI1vl7gD1o63BMh27v5/xoqXdGImvPu9vZui8he0MXNPPjpWB3VH5h8
-         654FJ/8jnrBo5STG+/dhi9ANpCEbDnnwjbd5y3G4dTTUQynxO8grRRui6E3F/8oQyh
-         LVGCXb3weyzFn+tAxU2lGl/B6t88CGfK8MlFdkikbfr/LWyyTbZYpUX5HDGNbqKd/v
-         0J81h/U6rkVmP7Z6SOzLA0CYTB8S0P2KiESCBYDf1jW2gkaVrbX7qEHgIU71bsJZ57
-         XpgCdgTR4vuY6aBffaqXg5pBsk4wN4Anr1btjcelqzm78oqpfWaWnnl94figzXnxGZ
-         JUHqBEMIi8z6A==
-X-Nifty-SrcIP: [209.85.167.173]
-Received: by mail-oi1-f173.google.com with SMTP id m25so1692836oie.12;
-        Sat, 27 Feb 2021 23:08:07 -0800 (PST)
-X-Gm-Message-State: AOAM530zU8zcvbJN7+aYQyrCZR2wmOiL6npiMFl1I9OXKxMHZk5yZYKc
-        k6HjUbWu2YfJbhntAdKF6Hg8w4+b20VhdUVAwH4=
-X-Google-Smtp-Source: ABdhPJxnVdF9Cvtz3QuQ9Z55mLc0nR7ZPvYqUNLa1UMZMC9CH1qH9+VqVFfmtGZF/+QiECQmAdbbtJL43yO3rdbPYM4=
-X-Received: by 2002:a17:90a:dc08:: with SMTP id i8mr10797186pjv.153.1614496085241;
- Sat, 27 Feb 2021 23:08:05 -0800 (PST)
+        id S230075AbhB1Hum (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 28 Feb 2021 02:50:42 -0500
+Received: from out30-131.freemail.mail.aliyun.com ([115.124.30.131]:57601 "EHLO
+        out30-131.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229820AbhB1Hum (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Feb 2021 02:50:42 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R481e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=2;SR=0;TI=SMTPD_---0UPnZxJ2_1614498575;
+Received: from 30.39.186.82(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0UPnZxJ2_1614498575)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Sun, 28 Feb 2021 15:49:35 +0800
+To:     linux-xfs@vger.kernel.org
+Cc:     djwong@kernel.org
+From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+Subject: code questions about xfs log implementation
+Message-ID: <a732a6ff-4d66-91e5-cd9a-43d156d83362@linux.alibaba.com>
+Date:   Sun, 28 Feb 2021 15:46:56 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-References: <20210227183910.221873-1-masahiroy@kernel.org> <CAK7LNASL_X43_nMTz1CZQB+jiLCRAJbh-wQdc23QV0pWceL_Lw@mail.gmail.com>
- <20210228064936.zixrhxlthyy6fmid@24bbad8f3778> <20210228065254.GA30798@24bbad8f3778>
-In-Reply-To: <20210228065254.GA30798@24bbad8f3778>
-From:   Masahiro Yamada <masahiroy@kernel.org>
-Date:   Sun, 28 Feb 2021 16:07:27 +0900
-X-Gmail-Original-Message-ID: <CAK7LNATmHU48mg4uh2H0VZDuhg6-Fwz=uF0rKSHuCJK-soZbUQ@mail.gmail.com>
-Message-ID: <CAK7LNATmHU48mg4uh2H0VZDuhg6-Fwz=uF0rKSHuCJK-soZbUQ@mail.gmail.com>
-Subject: Re: [PATCH RFC] x86: remove toolchain check for X32 ABI capability
-To:     Nathan Chancellor <nathan@kernel.org>
-Cc:     X86 ML <x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-        Borislav Petkov <bp@alien8.de>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Fangrui Song <maskray@google.com>,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        "H . J . Lu" <hjl.tools@gmail.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Brian Gerst <brgerst@gmail.com>,
-        "Chang S. Bae" <chang.seok.bae@intel.com>,
-        Chao Yu <chao@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dmitry Safonov <0x7f454c46@gmail.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Gabriel Krisman Bertazi <krisman@collabora.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Jethro Beekman <jethro@fortanix.com>,
-        Kees Cook <keescook@chromium.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Sasha Levin <sashal@kernel.org>,
-        Sean Christopherson <seanjc@google.com>,
-        Takashi Iwai <tiwai@suse.com>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 28, 2021 at 3:53 PM Nathan Chancellor <nathan@kernel.org> wrote:
->
-> On Sat, Feb 27, 2021 at 11:49:36PM -0700, Nathan Chancellor wrote:
-> > On Sun, Feb 28, 2021 at 12:15:16PM +0900, Masahiro Yamada wrote:
-> > > On Sun, Feb 28, 2021 at 3:41 AM Masahiro Yamada <masahiroy@kernel.org> wrote:
-> > > >
-> > > > This commit reverts 0bf6276392e9 ("x32: Warn and disable rather than
-> > > > error if binutils too old").
-> > > >
-> > > > The help text in arch/x86/Kconfig says enabling the X32 ABI support
-> > > > needs binutils 2.22 or later. This is met because the minimal binutils
-> > > > version is 2.23 according to Documentation/process/changes.rst.
-> > > >
-> > > > I would not say I am not familiar with toolchain configuration, but
-> > >
-> > > I mean:
-> > > I would not say I am familiar ...
-> > > That is why I added RFC.
-> > >
-> > > I appreciate comments from people who are familiar
-> > > with toolchains (binutils, llvm).
-> > >
-> > > If this change is not safe,
-> > > we can move this check to Kconfig at least.
-> >
-> > Hi Masahiro,
-> >
-> > As Fangrui pointed out, there are two outstanding issues with x32 with
-> > LLVM=1, both seemingly related to LLVM=1.
->                                     ^ llvm-objcopy
->
-> Sigh, note to self, don't write emails while tired...
->
+hi,
 
-Fangrui, Nathan, thanks for your comments.
+I'm studying xfs delayed logging codes, and currently have some questions about log
+reservation, can anyone help to answer below questions, thanks in advance!
 
-OK, then we still need to carry this toolchain check.
+1, what's the difference between xlog's l_reserve_head and l_write_head?
+Seems that l_reserve_head already can been used to do log space reservation, from
+codes, I really don't get when to use l_reserve_head or l_write_head, so what different
+cases are they used for?
+
+2, what's the exact definition about permanent transaction reservation?
+In xfs_trans_resv_calc(), I see many kinds of transactions have XFS_TRANS_PERM_LOG_RES
+enabled, so non-permanent transaction does not need to do log reservation
+at the begin?
+
+3, struct xfs_trans_res's tr_logcount(/* number of log operations per log ticket */)
+For exmaple, tr_write.tr_logcount is XFS_WRITE_LOG_COUNT_REFLINK(8), does that mean
+to complete a write operation, we'll need 8 log operations, such as file block mapping
+update intent will be counted one?
+
+4, what's the exact definition about xfs rolling transactions?
+Is that because we use WAL log ing xfs, so for example, if we free a file extent,
+we at least create an extent free intent in one transaction, and when this transaction
+is committed to disk, then do the real xfs b+ tree modifications, finally once
+we completed the b+ tree modifications, we log an extent free done intent in one
+new transactino? so we'll need to reserve all the needed log space an the begin,
+and the whole process needs multiple transactions, so it's named rolling transactions?
+
+5, finally are there any documents that describe the initial xfs log design before
+current delayed logging design?
+Documentation/filesystems/xfs-delayed-logging-design.rst is a very good document, but
+seems that it assumes that readers has been familiar with initial xfs log design.
 
 
--- 
-Best Regards
-Masahiro Yamada
+Regards,
+Xiaoguang Wang
