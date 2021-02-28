@@ -6,207 +6,112 @@ X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 745E5C433E0
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 23:33:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7AFCC433E0
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 23:47:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A1D964E62
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 23:33:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74FFD64E27
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 23:47:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230491AbhB1XdD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 28 Feb 2021 18:33:03 -0500
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:45113 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230419AbhB1XdC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Feb 2021 18:33:02 -0500
+        id S230215AbhB1XrZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 28 Feb 2021 18:47:25 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:48150 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230214AbhB1XrZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Feb 2021 18:47:25 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 12B4E1057EC;
-        Mon,  1 Mar 2021 10:32:19 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4AECE1041047;
+        Mon,  1 Mar 2021 10:46:43 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lGVXu-0093Vv-2c; Mon, 01 Mar 2021 10:32:18 +1100
-Date:   Mon, 1 Mar 2021 10:32:18 +1100
+        id 1lGVlq-0094MI-H3; Mon, 01 Mar 2021 10:46:42 +1100
+Date:   Mon, 1 Mar 2021 10:46:42 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
-Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: code questions about xfs log implementation
-Message-ID: <20210228233218.GB4662@dread.disaster.area>
-References: <a732a6ff-4d66-91e5-cd9a-43d156d83362@linux.alibaba.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/8] xfs: separate CIL commit record IO
+Message-ID: <20210228234642.GC4662@dread.disaster.area>
+References: <20210223033442.3267258-1-david@fromorbit.com>
+ <20210223033442.3267258-3-david@fromorbit.com>
+ <20210224203429.GR7272@magnolia>
+ <20210224214417.GB4662@dread.disaster.area>
+ <YDdhJ0Oe6R+UXqDU@infradead.org>
+ <20210226024828.GN7272@magnolia>
+ <YDvGfUIcEhq9hB5t@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a732a6ff-4d66-91e5-cd9a-43d156d83362@linux.alibaba.com>
+In-Reply-To: <YDvGfUIcEhq9hB5t@bfoster>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
         a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
-        a=WKyg_PURvCFiBR6fA1IA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=1HwpQATvKKftJe36GlsA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 28, 2021 at 03:46:56PM +0800, Xiaoguang Wang wrote:
-> hi,
+On Sun, Feb 28, 2021 at 11:36:13AM -0500, Brian Foster wrote:
+> On Thu, Feb 25, 2021 at 06:48:28PM -0800, Darrick J. Wong wrote:
+> > On Thu, Feb 25, 2021 at 09:34:47AM +0100, Christoph Hellwig wrote:
+> > > On Thu, Feb 25, 2021 at 08:44:17AM +1100, Dave Chinner wrote:
+> > > > > Also, do you have any idea what was Christoph talking about wrt devices
+> > > > > with no-op flushes the last time this patch was posted?  This change
+> > > > > seems straightforward to me (assuming the answers to my two question are
+> > > > > 'yes') but I didn't grok what subtlety he was alluding to...?
+> > > > 
+> > > > He was wondering what devices benefited from this. It has no impact
+> > > > on highspeed devices that do not require flushes/FUA (e.g. high end
+> > > > intel optane SSDs) but those are not the devices this change is
+> > > > aimed at. There are no regressions on these high end devices,
+> > > > either, so they are largely irrelevant to the patch and what it
+> > > > targets...
+> > > 
+> > > I don't think it is that simple.  Pretty much every device aimed at
+> > > enterprise use does not enable a volatile write cache by default.  That
+> > > also includes hard drives, arrays and NAND based SSDs.
+> > > 
+> > > Especially for hard drives (or slower arrays) the actual I/O wait might
+> > > matter.  What is the argument against making this conditional?
+> > 
+> > I still don't understand what you're asking about here --
+> > 
+> > AFAICT the net effect of this patchset is that it reduces the number of
+> > preflushes and FUA log writes.  To my knowledge, on a high end device
+> > with no volatile write cache, flushes are a no-op (because all writes
+> > are persisted somewhere immediately) and a FUA write should be the exact
+> > same thing as a non-FUA write.  Because XFS will now issue fewer no-op
+> > persistence commands to the device, there should be no effect at all.
+> > 
 > 
-> I'm studying xfs delayed logging codes, and currently have some questions about log
-> reservation, can anyone help to answer below questions, thanks in advance!
-> 
-> 1, what's the difference between xlog's l_reserve_head and l_write_head?
-> Seems that l_reserve_head already can been used to do log space reservation, from
-> codes, I really don't get when to use l_reserve_head or l_write_head, so what different
-> cases are they used for?
+> Except the cost of the new iowaits used to implement iclog ordering...
+> which I think is what Christoph has been asking about..?
 
-The reserve head tracks active transaction reservation space, the
-write head tracks physical log space reservation. Mostly they track
-the same, but there's an important difference when it comes to
-rolling permanent transactions.
+And I've already answered - it is largely just noise.
 
-> 
-> 2, what's the exact definition about permanent transaction reservation?
-> In xfs_trans_resv_calc(), I see many kinds of transactions have XFS_TRANS_PERM_LOG_RES
-> enabled, so non-permanent transaction does not need to do log reservation
-> at the begin?
+> IOW, considering the storage configuration noted above where the impact
+> of the flush/fua optimizations is neutral, the net effect of this change
+> is whatever impact is introduced by intra-checkpoint iowaits and iclog
+> ordering. What is that impact?
 
-Non-permanent transactions are effectively one-shot transactions.
-They consist of:
+All I've really noticed is that long tail latencies on operations go
+down a bit. That seems to correlate with spending less time waiting
+for log space when the log is full, but it's a marginal improvement
+at best.
 
-	tp = xfs_trans_alloc(<space>)
-	<do modification>
-	xfs_trans_commit(tp);
+Otherwise I cannot measure any significant difference in performance
+or behaviour across any of the metrics I monitor during performance
+testing.
 
-Once the transaction is committed, all resources attached to it are
-released, along with all the unused reservation space (both reserve
-and write space).
+> Note that it's not clear enough to me to suggest whether that impact
+> might be significant or not. Hopefully it's neutral (?), but that seems
+> like best case scenario so I do think it's a reasonable question.
 
-A "permanent" transaction is on that can be "rolled" repeatedly to
-form a long running chain of individual transactions that appears
-atomic to outside runtime observers. You'll see this pattern:
-
-	tp = xfs_trans_alloc(<space>)
-	xfs_ilock(ip, XFS_ILOCK_EXCL)
-
-	loop {
-		xfs_trans_ijoin(tp, 0);
-		<do modification>
-		xfs_trans_log_inode(tp, ip);
-		xfs_trans_roll(&tp);
-	}
-
-	xfs_trans_commit(tp);
-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-
-This holds the inode locked over a series of rolling transactions,
-and hence while this series of modifications is running, nothing
-else can read from or write to the inode. i.e. the change is atomic
-from an external observer's point of view. The key here is
-xfs_trans_roll(), which does:
-
-	ntp = xfs_trans_dup(tp);
-	xfs_trans_commit(tp);
-	xfs_log_reserve(ntp);
-
-This duplicates the current transaction and it's internal state
-(including reservations), commits the original transaction, then
-reserves space for the new transaction if necessary. This can only
-be done with transactions marked as permanent transactions.
-
-The key here is that a permanent transaction reserves space for
-multiple transactions up front. this is the tr_logcount in the
-reservation. This number of unit reservations is made in the
-original xfs_trans_alloc() call, and each time the transaction
-"rolls" the unit count is decremented by one.
-
-This is because each commit releases the unused part of the current
-unit reservation back to the log and the new transaction (the dup'd
-transaction) will start with an entire unit reservation that it
-can consume.
-
-So what happens when the log count reaches zero? Well, that's where
-the differences between the reserve head and the write head come in.
-When the log count reaches zero and the remaining unit reservations
-have been freed, xfs_log_regrant() immediately takes
-a new unit reservation on the reservation head. This
--overcommits- the reservation grant space, preventing new
-reservations from occurring if the log is full until some ongoing
-transactions commit and release unused reservation space.
-
-xfs_log_regrant() does not, however, take any new space from the
-write head because this tracks physical space in the log and must
-not be overcommitted. If we overcommit write space, we can
-physically overwrite the tail of the log with the current head, and
-that corrupts the log. We can't wait for write head space in the
-xfs_trans_commit code, because the commit we are about to write to
-log might contain items that pin the tail of the log. Hence  new
-write space won't get released for the current transaction because
-that needs the commit to complete.
-
-Hence we wait until we call xfs_log_reserve() after
-xfs_trans_commit() completes to regrant write head space. At this
-point, it is safe for us to sleep if the transaction we just
-committed ensured that it relogged all the items in the transaction
-that might pin the tail of the log (e.g. the inode). Because we
-relogged those items, they'll get moved to the head of the log and
-the tail will move forwards, guaranteeing that there will be write
-space available for this permanent transaction. And we are
-guaranteed that there will eventually be write space available
-because we over-committed the reserve head and nobody can take new
-reserve space via xfs_trans_alloc() while we are overcommitted.
-
-So that's how permanent transactions and reservations work.
-
-It is important to note that a series of rolling transactions in a
-chain like this do not form an atomic change on disk.  While each
-individual modification is atomic, the chain is *not atomic*. If we
-crash half way through, then recovery will only replay up to the
-last modification the loop made.
-
-If you want an atomic modification that requires multiple individual
-transactions to perform, then you need to learn about xfs_defer_ops,
-intents, etc and how they are used within a permanent transaction
-chain and recovery to form an atomic all-or-nothing modification to
-the filesystem.
-
-> 3, struct xfs_trans_res's tr_logcount(/* number of log operations per log ticket */)
-> For exmaple, tr_write.tr_logcount is XFS_WRITE_LOG_COUNT_REFLINK(8), does that mean
-> to complete a write operation, we'll need 8 log operations, such as file block mapping
-> update intent will be counted one?
-
-It means that we expect the vast majority of reflink modifications
-to take less than 8 individual transactions chained together to
-complete. THis effectively forms a fast path for common operations
-where xfs_trans_roll() does not block having to wait for log space
-to become available. IOWs, for the fast path when there is log space
-available, we do an atomic, lockless transaction reservation for up
-to 8 transaction rolls to complete the operation without need to
-obtain more log space.
-
-> 4, what's the exact definition about xfs rolling transactions?
-
-"rolling transaction" == "permanent transaction"
-
-Same thing, just one refers to the way the log sees the log space
-accounting (a reservation that is permanent until the caller
-releases it) and the other refers to the way the code running
-transactions sees them (you roll from one transaction to the next in
-the chain).
-
-> 5, finally are there any documents that describe the initial xfs log design before
-> current delayed logging design?
-> Documentation/filesystems/xfs-delayed-logging-design.rst is a very good document, but
-> seems that it assumes that readers has been familiar with initial xfs log design.
-
-No. I wrote the delayed logging document with that in mind - the
-first section ("Introduction to Re-logging in XFS") describes how
-the original log design worked. That's essentially what I also wrote
-above - none of what I describe above has anything to do with
-delayed logging, nor does it even know (or care) that delayed
-logging exists.
-
-The above is all about locking, relogging and log space accounting,
-and it's largely unchanged from the original design. While we've
-added delayed logging and deferred transactions, they all still work
-within the rules I outline above. It all really only works because
-of the original design rules placed around the need to relog items
-in permanent transactions...
+Yes, It's a reasonable question, but I answered it entirely and in
+great detail the first time.  Repeating the same question multiple
+times just with slightly different phrasing does not change the
+answer, nor explain to me what the undocumented concern might be...
 
 Cheers,
 
