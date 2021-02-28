@@ -7,384 +7,451 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34652C433DB
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 15:20:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBF38C433E0
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 15:41:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC26964EAF
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 15:20:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87B7864E4A
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 15:41:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231168AbhB1PUc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 28 Feb 2021 10:20:32 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50272 "EHLO
+        id S230231AbhB1Pk6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 28 Feb 2021 10:40:58 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:41328 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230499AbhB1PUZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Feb 2021 10:20:25 -0500
+        by vger.kernel.org with ESMTP id S229982AbhB1Pk6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Feb 2021 10:40:58 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1614525537;
+        s=mimecast20190719; t=1614526770;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=U44m9JD0ZD9K8JzPrywU61p9UpMv/fAQpa9yuISWNp4=;
-        b=IAnIgzhRljQI23oDqr5KHmT2kk5Hl9xzH+992BflDTwyuoEjz0QBQysoaklBph9YhJFZ9X
-        f07oH7nKRKiqHxdDEkGIEEdEjIfCZrZyKr5124V7pE5uLlhhRYJ0B3pJS+HVru/suVRfnV
-        zyo4knhIlXjBJWBQmfQB6NcinMWTHK8=
+        bh=O9wds+d+R2TM0efN7TZqcYOciJl+LmlhMyLLwHjJJrw=;
+        b=TS/9QsnhlEcv8pjkHq7d25Qtv2wX6IfrB8ZZMiyF/aQFeBix44M14vNukHNYzRhcyVdnaS
+        ZRcDBL2aV3Awa9i/d164tyF1Zlbo6ZgTb27paDVLZqpgtQG7IZvZIXC1ToSC62OAnTKvNv
+        R3UUSGmMQSmd21aEDlokiAh1V2as95A=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-309-oYYAXxuaObeVkSYSrhFioQ-1; Sun, 28 Feb 2021 10:18:55 -0500
-X-MC-Unique: oYYAXxuaObeVkSYSrhFioQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-488-bjYWnSc5OVWk4I_UB_YNjQ-1; Sun, 28 Feb 2021 10:39:27 -0500
+X-MC-Unique: bjYWnSc5OVWk4I_UB_YNjQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id ABE9E6D4E6;
-        Sun, 28 Feb 2021 15:18:54 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 09174107ACED;
+        Sun, 28 Feb 2021 15:39:26 +0000 (UTC)
 Received: from bfoster (ovpn-113-120.rdu2.redhat.com [10.10.113.120])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 36C3E5C1D5;
-        Sun, 28 Feb 2021 15:18:54 +0000 (UTC)
-Date:   Sun, 28 Feb 2021 10:18:52 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6CA175D9CC;
+        Sun, 28 Feb 2021 15:39:25 +0000 (UTC)
+Date:   Sun, 28 Feb 2021 10:39:23 -0500
 From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: set aside allocation btree blocks from block
- reservation
-Message-ID: <YDu0XF4yGI5nKoKN@bfoster>
-References: <20210222152108.896178-1-bfoster@redhat.com>
- <20210222183408.GB7272@magnolia>
- <20210223121017.GA946926@bfoster>
- <20210224181453.GP7272@magnolia>
- <YDfgsLyjXRwZI8JS@bfoster>
- <20210226190149.GC7272@magnolia>
+Subject: Re: [PATCH v15 11/22] xfs: Add delay ready attr remove routines
+Message-ID: <YDu5K+M43oyM4LIG@bfoster>
+References: <20210218165348.4754-1-allison.henderson@oracle.com>
+ <20210218165348.4754-12-allison.henderson@oracle.com>
+ <20210224184546.GL981777@bfoster>
+ <b3639b95-9817-675b-909a-27f04eb46c11@oracle.com>
+ <YDeynHGXcL9XdQPR@bfoster>
+ <6606af4d-66ba-af9b-65c6-106f00d1d854@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210226190149.GC7272@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <6606af4d-66ba-af9b-65c6-106f00d1d854@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 26, 2021 at 11:01:49AM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 25, 2021 at 12:38:56PM -0500, Brian Foster wrote:
-> > On Wed, Feb 24, 2021 at 10:14:53AM -0800, Darrick J. Wong wrote:
-> > > On Tue, Feb 23, 2021 at 07:10:17AM -0500, Brian Foster wrote:
-> > > > On Mon, Feb 22, 2021 at 10:34:08AM -0800, Darrick J. Wong wrote:
-> > > > > On Mon, Feb 22, 2021 at 10:21:08AM -0500, Brian Foster wrote:
-> > > > > > The blocks used for allocation btrees (bnobt and countbt) are
-> > > > > > technically considered free space. This is because as free space is
-> > > > > > used, allocbt blocks are removed and naturally become available for
-> > > > > > traditional allocation. However, this means that a significant
-> > > > > > portion of free space may consist of in-use btree blocks if free
-> > > > > > space is severely fragmented.
-> > > > > > 
-> > > > > > On large filesystems with large perag reservations, this can lead to
-> > > > > > a rare but nasty condition where a significant amount of physical
-> > > > > > free space is available, but the majority of actual usable blocks
-> > > > > > consist of in-use allocbt blocks. We have a record of a (~12TB, 32
-> > > > > > AG) filesystem with multiple AGs in a state with ~2.5GB or so free
-> > > > > > blocks tracked across ~300 total allocbt blocks, but effectively at
-> > > > > > 100% full because the the free space is entirely consumed by
-> > > > > > refcountbt perag reservation.
+On Thu, Feb 25, 2021 at 03:28:00PM -0700, Allison Henderson wrote:
+> 
+> 
+> On 2/25/21 7:22 AM, Brian Foster wrote:
+> > On Thu, Feb 25, 2021 at 12:01:10AM -0700, Allison Henderson wrote:
 > > > 
-> > > Hmm.  I'm still a bit confused by what's going on here.  Free space is
-> > > heavily fragmented and the bnobt/cntbt are very large, but what actually
-> > > triggers the (bug? customer escalation?) report?  Did the fs go offline?
-> > > Did fsync() suddenly start emitting errors?
 > > > 
-> > 
-> > It's a very odd scenario.. The original bug report complains about a
-> > shutdown in the xfs_btree_insert() code because of a record insertion
-> > failure. This is a bmbt record insertion on COW I/O completion
-> > (xfs_reflink_end_cow()) where we are remapping from the COW fork to the
-> > data fork. I believe the user was beating this fs against -ENOSPC for
-> 
-> Heh, knowing some of my customers I bet I'll encounter this in 5..4...
-> 
-
-It's just a matter of time. :) FWIW, upping the global reserve block
-pool (after freeing up a bit of space) seemed an effective workaround
-for the particular case I investigated. That at least allowed the user
-to run to -ENOSPC gracefully (why they want to do that, I still have no
-idea.. :P).
-
-...
-> > > Ahh, ok.  I think I grok what this patch does now.  XFS (prior to per-ag
-> > > space reservations) counts all the space used by the free space btrees
-> > > as free space, which means that a delalloc reservation expects to be
-> > > able to consume both the free space in the tree as well as the tree
-> > > itself.
-> > > 
-> > > Now we use the free space btrees to hold space for future metadata
-> > > expansions, so the expectation above no longer holds.  Hence subtracting
-> > > agf_btreeblks from fdblocks at mount time.
-> > > 
-> > > With that in mind, the finobt and rmapbt reservations are no different
-> > > from the refcountbt reservation -- the unused-but-reserved space for all
-> > > three reservations are held in the free space btrees, so they all need
-> > > this now.  The answer to my question is "yes, they need it too".
-> > > 
-> > 
-> > Ok, that sounds reasonable.
-> > 
-> > > With that in mind, should xfs_ag_resv_init be responsible for
-> > > subtracting agf_btreeblocks from fdblocks if there are any reservations?
-> > > 
-> > 
-> > I'd have to think it through as the perag res code tends to confuse me,
-> > but at a glance that sounds like a potential option. That said, what's
-> > the advantage? Would that imply that subsequent runtime allocbt
-> > allocations need also pass through xfs_mod_fdblocks()? I admit I'm a
-> > little weary of fundamentally changing how blocks for core structures
-> > like the allocbt are tracked, particularly for such an unlikely corner
-> > case. For that reason, I do like the simplicity of the track and set
-> > aside model...
-> 
-> I was thinking of something simpler than creating a new XFS_AG_RESV
-> type, if that's what you were thinking.
-> 
-
-No, I was just thinking of adding this change in __xfs_ag_resv_init():
-
-@@ -197,7 +197,7 @@ __xfs_ag_resv_init(
-                 * subtract the entire reservation from fdblocks so that we
-                 * always have blocks available for rmapbt expansion.
-                 */
--               hidden_space = ask;
-+               hidden_space = ask - used;
-                break;
-        case XFS_AG_RESV_METADATA:
-                /*
-
-... and then update the feature check in xfs_mod_fdblocks() to include
-rmapbt.
-
-FWIW, I was able to reproduce the double accounting issue on a
-filesystem with many rmapbt entries. Thanks for catching that. The above
-seems to avoid it (in a quick test with a large, prexisting rmapbt at
-mount time at least).
-
-> Now that we know that we have to subtract the free space btree blocks
-> from fdblocks for any AG that has a reservation, I think it makes the
-> most sense to wrap the m_btree_blks accounting code in xfs_ag_resv.c.
-> 
-> bool xfs_ag_has_resv(struct xfs_perag *pag)
-> {
-> 	return  pag->pag_meta_resv.ar_asked > 0 ||
-> 		pag->pag_rmapbt_resv.ar_asked > 0;
-> }
-> 
-> void xfs_ag_resv_allocbt_delta(struct xfs_perag *pag, s64 delta)
-> {
-> 	if (xfs_ag_has_resv(pag))
-> 		atomic64_add(delta, &mp->m_btree_blks);
-> }
-> 
-> And call that from xfs_allocbt_{alloc,free}_block.
-> 
-
-That looks reasonable to me. I'd probably open code the feature check in
-the delta() helper just because having a has_resv() predicate that
-doesn't technically cover all of the "has reservation" cases (i.e.
-finobt) urks me a bit.
-
-> Then move the initialization of m_btree_blks from the pagf_init code
-> into xfs_ag_resv_init, because that function already knows whether or
-> not we made reservations, and therefore how much to add to m_btree_blks.
-> 
-> 	/* Create the metadata reservation. */
-> 	if (pag->pag_meta_resv.ar_asked == 0) {...}
-> 
-> 	/* Create the RMAPBT metadata reservation */
-> 	if (pag->pag_rmapbt_resv.ar_asked == 0) {...}
-> 
-> 	/*
-> 	 * Blocks reserved for metadata btree reservations are held in
-> 	 * the free space btree, which effectively means that the free
-> 	 * space btrees themselves become part of the reservation.  Add
-> 	 * the size of /only/ the free space btrees to what we withhold
-> 	 * from the fdblocks count that we present to userspace.  (We
-> 	 * already reserved the space that the rmapbt wants.)
-> 	 */
-> 	if (xfs_ag_has_resv(pag)) {
-> 		xfs_alloc_pagf_init(...);
-> 
-> 		allocbt_resv =  pag->pagf_btreeblks -
-> 				pag->pag_rmapbt_resv.ar_asked;
-> 
-> 		atomic64_add(allocbt_resv, &mp->m_btree_blks);
-> 	}
-> 
-
-I'm not following this part... So we've calculated and acquired the
-reflink/rmapbt reservations at this point. This code subtracts the AG
-rmapbt reservation calculation from the existing btree block count, then
-adds that value to the btree block counter..? Hmm.. did you mean for
-this to subtract .ar_used instead of .ar_asked..? If so, does this not
-similarly double charge the rmapbt blocks that might be used after this
-point (in fact I'm wondering the same thing about my tweak above)?
-
-> > > > > > counter to set these blocks aside at reservation time and thus
-> > > > > > ensure they cannot be allocated until truly available. Since this is
-> > > > > > only necessary when large reflink perag reservations are in place
-> > > > > > and the counter requires a read of each AGF to fully populate, only
-> > > > > > enforce on reflink enabled filesystems. This allows initialization
-> > > > > > of the counter at ->pagf_init time because the refcountbt perag
-> > > > > > reservation init code reads each AGF at mount time.
-> 
-> By the way, should we be subtracting m_btree_blks from b_avail in
-> statvfs?
-> 
-
-My understanding is that this space should continue to be presented as
-free space (so I don't think so..?).
-
-> > > > > > 
-> > > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > > > ---
-> > > > > > 
-> > > > > > v2:
-> > > > > > - Use an atomic counter instead of a percpu counter.
-> > > > > > v1: https://lore.kernel.org/linux-xfs/20210217132339.651020-1-bfoster@redhat.com/
-> > > > > > 
-> > > > > >  fs/xfs/libxfs/xfs_alloc.c |  3 +++
-> > > > > >  fs/xfs/xfs_mount.c        | 15 ++++++++++++++-
-> > > > > >  fs/xfs/xfs_mount.h        |  6 ++++++
-> > > > > >  3 files changed, 23 insertions(+), 1 deletion(-)
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > > > > > index 0c623d3c1036..fb3d36cad173 100644
-> > > > > > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > > > > > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > > > > > @@ -2746,6 +2746,7 @@ xfs_alloc_get_freelist(
-> > > > > >  	if (btreeblk) {
-> > > > > >  		be32_add_cpu(&agf->agf_btreeblks, 1);
-> > > > > >  		pag->pagf_btreeblks++;
-> > > > > > +		atomic64_inc(&mp->m_btree_blks);
-> > > > > >  		logflags |= XFS_AGF_BTREEBLKS;
-> > > > > >  	}
-> > > > > >  
-> > > > > > @@ -2853,6 +2854,7 @@ xfs_alloc_put_freelist(
-> > > > > >  	if (btreeblk) {
-> > > > > >  		be32_add_cpu(&agf->agf_btreeblks, -1);
-> > > > > >  		pag->pagf_btreeblks--;
-> > > > > > +		atomic64_dec(&mp->m_btree_blks);
-> > > > > >  		logflags |= XFS_AGF_BTREEBLKS;
-> > > > > >  	}
-> > > > > >  
-> > > > > > @@ -3055,6 +3057,7 @@ xfs_alloc_read_agf(
-> > > > > >  	if (!pag->pagf_init) {
-> > > > > >  		pag->pagf_freeblks = be32_to_cpu(agf->agf_freeblks);
-> > > > > >  		pag->pagf_btreeblks = be32_to_cpu(agf->agf_btreeblks);
-> > > > > > +		atomic64_add(pag->pagf_btreeblks, &mp->m_btree_blks);
-> > > 
-> > > Come to think of it, this isn't quite correct -- rmapbt blocks are
-> > > counted in agf_btreeblks and separately in agf_rmap_blocks.  At mount
-> > > time, the rmapbt per-ag reservation subtracts the entire rmapbt
-> > > reservation from fdblocks (not just agf_rmap_blocks), so this
-> > > effectively double-charges fdblocks for the rmap btree.
+> > > On 2/24/21 11:45 AM, Brian Foster wrote:
+> > > > On Thu, Feb 18, 2021 at 09:53:37AM -0700, Allison Henderson wrote:
+> > > > > This patch modifies the attr remove routines to be delay ready. This
+> > > > > means they no longer roll or commit transactions, but instead return
+> > > > > -EAGAIN to have the calling routine roll and refresh the transaction. In
+> > > > > this series, xfs_attr_remove_args has become xfs_attr_remove_iter, which
+> > > > > uses a sort of state machine like switch to keep track of where it was
+> > > > > when EAGAIN was returned. xfs_attr_node_removename has also been
+> > > > > modified to use the switch, and a new version of xfs_attr_remove_args
+> > > > > consists of a simple loop to refresh the transaction until the operation
+> > > > > is completed. A new XFS_DAC_DEFER_FINISH flag is used to finish the
+> > > > > transaction where ever the existing code used to.
+> > > > > 
+> > > > > Calls to xfs_attr_rmtval_remove are replaced with the delay ready
+> > > > > version __xfs_attr_rmtval_remove. We will rename
+> > > > > __xfs_attr_rmtval_remove back to xfs_attr_rmtval_remove when we are
+> > > > > done.
+> > > > > 
+> > > > > xfs_attr_rmtval_remove itself is still in use by the set routines (used
+> > > > > during a rename).  For reasons of preserving existing function, we
+> > > > > modify xfs_attr_rmtval_remove to call xfs_defer_finish when the flag is
+> > > > > set.  Similar to how xfs_attr_remove_args does here.  Once we transition
+> > > > > the set routines to be delay ready, xfs_attr_rmtval_remove is no longer
+> > > > > used and will be removed.
+> > > > > 
+> > > > > This patch also adds a new struct xfs_delattr_context, which we will use
+> > > > > to keep track of the current state of an attribute operation. The new
+> > > > > xfs_delattr_state enum is used to track various operations that are in
+> > > > > progress so that we know not to repeat them, and resume where we left
+> > > > > off before EAGAIN was returned to cycle out the transaction. Other
+> > > > > members take the place of local variables that need to retain their
+> > > > > values across multiple function recalls.  See xfs_attr.h for a more
+> > > > > detailed diagram of the states.
+> > > > > 
+> > > > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > > > > ---
+> > > > >    fs/xfs/libxfs/xfs_attr.c        | 223 +++++++++++++++++++++++++++++-----------
+> > > > >    fs/xfs/libxfs/xfs_attr.h        | 100 ++++++++++++++++++
+> > > > >    fs/xfs/libxfs/xfs_attr_leaf.c   |   2 +-
+> > > > >    fs/xfs/libxfs/xfs_attr_remote.c |  48 +++++----
+> > > > >    fs/xfs/libxfs/xfs_attr_remote.h |   2 +-
+> > > > >    fs/xfs/xfs_attr_inactive.c      |   2 +-
+> > > > >    6 files changed, 294 insertions(+), 83 deletions(-)
+> > > > > 
+> > > > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > > > > index 56d4b56..d46b92a 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_attr.c
+> > > > > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > ...
+> > > > > @@ -1285,51 +1365,74 @@ xfs_attr_node_remove_step(
+> > > > >     *
+> > > > >     * This routine will find the blocks of the name to remove, remove them and
+> > > > >     * shrink the tree if needed.
+> > > > > + *
+> > > > > + * This routine is meant to function as either an inline or delayed operation,
+> > > > > + * and may return -EAGAIN when the transaction needs to be rolled.  Calling
+> > > > > + * functions will need to handle this, and recall the function until a
+> > > > > + * successful error code is returned.
+> > > > >     */
+> > > > >    STATIC int
+> > > > > -xfs_attr_node_removename(
+> > > > > -	struct xfs_da_args	*args)
+> > > > > +xfs_attr_node_removename_iter(
+> > > > > +	struct xfs_delattr_context	*dac)
+> > > > >    {
+> > > > > -	struct xfs_da_state	*state = NULL;
+> > > > > -	int			retval, error;
+> > > > > -	struct xfs_inode	*dp = args->dp;
+> > > > > +	struct xfs_da_args		*args = dac->da_args;
+> > > > > +	struct xfs_da_state		*state = NULL;
+> > > > > +	int				retval, error;
+> > > > > +	struct xfs_inode		*dp = args->dp;
+> > > > >    	trace_xfs_attr_node_removename(args);
+> > > > > -	error = xfs_attr_node_removename_setup(args, &state);
+> > > > > -	if (error)
+> > > > > -		goto out;
+> > > > > -
+> > > > > -	error = xfs_attr_node_remove_step(args, state);
+> > > > > -	if (error)
+> > > > > -		goto out;
+> > > > > -
+> > > > > -	retval = xfs_attr_node_remove_cleanup(args, state);
+> > > > > -
+> > > > > -	/*
+> > > > > -	 * Check to see if the tree needs to be collapsed.
+> > > > > -	 */
+> > > > > -	if (retval && (state->path.active > 1)) {
+> > > > > -		error = xfs_da3_join(state);
+> > > > > -		if (error)
+> > > > > -			goto out;
+> > > > > -		error = xfs_defer_finish(&args->trans);
+> > > > > +	if (!dac->da_state) {
+> > > > > +		error = xfs_attr_node_removename_setup(dac);
+> > > > >    		if (error)
+> > > > >    			goto out;
+> > > > > +	}
+> > > > > +	state = dac->da_state;
+> > > > > +
+> > > > > +	switch (dac->dela_state) {
+> > > > > +	case XFS_DAS_UNINIT:
+> > > > >    		/*
+> > > > > -		 * Commit the Btree join operation and start a new trans.
+> > > > > +		 * repeatedly remove remote blocks, remove the entry and join.
+> > > > > +		 * returns -EAGAIN or 0 for completion of the step.
+> > > > >    		 */
+> > > > > -		error = xfs_trans_roll_inode(&args->trans, dp);
+> > > > > +		error = xfs_attr_node_remove_step(dac);
+> > > > >    		if (error)
+> > > > > -			goto out;
+> > > > > -	}
+> > > > > +			break;
+> > > > 
+> > > > Hmm.. so re: my comment further down on xfs_attr_rmtval_remove(),
+> > > > wouldn't that change semantics here? I.e., once remote blocks are
+> > > > removed this would previously carry on with a clean transaction. Now it
+> > > > looks like we'd carry on with the dirty transaction that removed the
+> > > > last remote extent. This suggests that perhaps we should return once
+> > > > more and fall into a new state to remove the name..?
+> > > I suspect the diff might be making this a bit difficult to see.  The roll
+> > > that you see being removed here belongs to the transaction we hoisted up  in
+> > > patch 3 which happens after the clean up below, and we have the
+> > > corresponding EAGAIN fot that one.  I think the diff gets things a little
+> > > interlaced here because the switch adds another level of indentation.
 > > > 
 > > 
-> > Not sure I follow.. this counter just tracks the sum of of
-> > ->agf_btreeblks. I see what you mean that __xfs_ag_resv_init() doesn't
-> > subtract the used value for XFS_AG_RESV_RMAPBT. So are you saying that
-> > some portion of this total btree block counter includes
-> > ->agf_rmap_blocks, those blocks have been already reserved, and
-> > therefore should not be part of set_aside in xfs_mod_fdblocks()?
-> 
-> Yes.
-> 
-> > If so, I _think_ I follow, and I suspect that would require a separate
-> > global counter to remove the rmap blocks from the set_aside bit. That
-> > said, I am a little confused by the rmapbt reservation in this regard.
-> > It sounds like it already double accounts at mount time by reserving
-> > already used blocks.
-> 
-> It doesn't double count, because the blocks used by the rmapbt are (for
-> better or worse) accounted on disk in exactly the same way as the free
-> space btree blocks.  IOWs, the blocks used by the rmap btree are not
-> subtracted from fdblocks.
+> > Hmm.. the roll in patch 3 appears to be related to the _cleanup()
+> > helper. What I'm referring to here is the state of the transaction after
+> > the final remote block is removed from the attr. I'm not sure we're
+> > talking about the same thing here..
+> > 
+> > > some times i do like to I use a graphical diffviewer like diffuse when
+> > > patches get weird like this.  Something like this:
+> > > 
+> > > git config --global diff.tool  diffuse
+> > > git difftool 3c53e49 e201c09
+> > > 
+> > > You'd need to download the branch and also the diffuse tool, but sometimes i
+> > > think it makes some of these diffs a bit easier to see
+> > > 
+> > 
+> > I think it's easier just to refer to the code directly. The current
+> > upstream code flows down into:
+> > 
+> > ...
+> > xfs_attr_node_removename()
+> >   xfs_attr_node_remove_rmt()
+> >    xfs_attr_rmtval_remove()
+> > 
+> > ... which then implements the following loop:
+> > 
+> >          do {
+> >                  retval = __xfs_attr_rmtval_remove(args);
+> >                  if (retval && retval != -EAGAIN)
+> >                          return retval;
+> > 
+> >                  /*
+> >                   * Close out trans and start the next one in the chain.
+> >                   */
+> >                  error = xfs_trans_roll_inode(&args->trans, args->dp);
+> >                  if (error)
+> >                          return error;
+> >          } while (retval == -EAGAIN);
+> > 
+> > This rolls the transaction when retval == -EAGAIN or retval == 0, thus
+> > always returns with a clean transaction after the remote block removal
+> > completes.
+> > 
+> > The code as of this patch does:
+> > 
+> > ...
+> > xfs_attr_node_removename_iter()
+> >   xfs_attr_node_remove_step()
+> >    xfs_attr_node_remove_rmt()
+> >     __xfs_attr_rmtval_remove()
+> > 
+> > ... which either returns -EAGAIN (since the roll is now implemented at
+> > the very top) or 0 when done == true. The transaction might be dirty in
+> > the latter case, but xfs_attr_node_removename_iter() moves right on to
+> > xfs_attr_node_remove_cleanup() which can now do more work in that same
+> > transaction. Am I following that correctly?
+> > 
+> > > Also, it would be
+> > > > nice to remove the several seemingly unnecessary layers of indirection
+> > > > here. For example, something like the following (also considering my
+> > > > comment above wrt to xfs_attr_remove_iter() and UNINIT):
+> > > > 
+> > > > 	case UNINIT:
+> > > > 		...
+> > > > 		/* fallthrough */
+> > > > 	case RMTBLK:
+> > > > 		if (args->rmtblkno > 0) {
+> > > > 			dac->dela_state = RMTBLK;
+> > > > 			error = __xfs_attr_rmtval_remove(dac);
+> > > > 			if (error)
+> > > > 				break;
+> > > > 
+> > > > 			ASSERT(args->rmtblkno == 0);
+> > > > 			xfs_attr_refillstate(state);
+> > > > 			dac->flags |= XFS_DAC_DEFER_FINISH;
+> > > > 			dac->dela_state = RMNAME;
+> > > > 			return -EAGAIN;
+> > > > 		}
+> > > Ok, this looks to me like we've hoisted both xfs_attr_node_remove_rmt and
+> > > xfs_attr_node_remove_step into this scope, but I still think this adds an
+> > > extra roll where non previously was.  With out that extra EAGAIN, I think we
+> > > are fine to have all that just under the UNINIT case.  I also think it's
+> > > also worth noteing here that this is kind of a reverse of patch 1, which I
+> > > think we put in for reasons of trying to modularize the higher level
+> > > functions as much as possible.
+> > > 
+> > > I suspect some of where you were going with this may have been influenced by
+> > > the earlier diff confusion too.  Maybe take a second look there before we go
+> > > too much down this change....
+> > > 
+> > 
+> > I can certainly be getting lost somewhere in all the refactoring. If so,
+> > can you point out where in the flow described above?
+> Ok, I think see it.  So basically I think this means we cant have the
+> helpers because it's ambiguos as to if the transaction is dirty or not.  I
+> dont see that there's anything in the review history where we rationalized
+> that away, so I think we just overlooked it.  So I think what this means is
+> that we need to reverse apply commit 72b97ea40d (which is where we added
+> xfs_attr_node_remove_rmt), then drop patch 1 which leaves no need for patch
+> 3, since the transaction will have not moved.  Then add state RMTBLK?  I
+> think that arrives at what you have here.
 > 
 
-Ok.
+It's not clear to me if anything needs to change before this patch or
+the changes can just fold into this patch itself. You probably have a
+better sense of that than I do atm. From my perspective, I think we want
+that transaction to roll after the final remote extent removal unless we
+had some reason to explicitly change existing behavior. This used to be
+handled by the old loop that rolled the transaction down in the remote
+block removal code. ISTM that the proper way to maintain the same
+behavior in the new state machine code is to unconditionally fall out of
+a RMTBLKREMOVE state with an -EAGAIN from _iter().
 
-> > If that is because those blocks are always shown as free (thus used
-> > blocks are not actually double accounted), does that mean we could
-> > drop the used portion of the mount time reservation by including the
-> > used blocks in the set_aside value instead?
-> 
-> Er... I thought the set_aside value is static?
-> 
-
-Well it is currently. This patch adds ->m_free_blks to the current set
-aside so it effectively becomes a dynamic value. IIUC, the purpose of
-the "set aside" is not much to be static or not, but as a mechanism to
-track/enforce reservation of blocks that are technically accounted as
-free but not reservable. The allocbt blocks happen to be in that state
-transiently, hence that portion of the calculation is dynamic.
+IOW, __xfs_attr_rmtval_remove() returns -EAGAIN when it has more work to
+do. _iter() returns -EAGAIN when __xfs_attr_rmtval_remove() was called,
+finished its work, but we need to roll the transaction before the next
+step of the operation..
 
 Brian
 
-> --D
+> Allison
 > 
+> > 
 > > Brian
 > > 
-> > > --D
 > > > 
-> > > > > >  		pag->pagf_flcount = be32_to_cpu(agf->agf_flcount);
-> > > > > >  		pag->pagf_longest = be32_to_cpu(agf->agf_longest);
-> > > > > >  		pag->pagf_levels[XFS_BTNUM_BNOi] =
-> > > > > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > > > > > index 52370d0a3f43..16482e02da01 100644
-> > > > > > --- a/fs/xfs/xfs_mount.c
-> > > > > > +++ b/fs/xfs/xfs_mount.c
-> > > > > > @@ -1178,6 +1178,7 @@ xfs_mod_fdblocks(
-> > > > > >  	int64_t			lcounter;
-> > > > > >  	long long		res_used;
-> > > > > >  	s32			batch;
-> > > > > > +	uint64_t		set_aside = mp->m_alloc_set_aside;
-> > > > > >  
-> > > > > >  	if (delta > 0) {
-> > > > > >  		/*
-> > > > > > @@ -1217,8 +1218,20 @@ xfs_mod_fdblocks(
-> > > > > >  	else
-> > > > > >  		batch = XFS_FDBLOCKS_BATCH;
-> > > > > >  
-> > > > > > +	/*
-> > > > > > +	 * Set aside allocbt blocks on reflink filesystems because COW remaps
-> > > > > > +	 * can dip into the reserved block pool. This is problematic if free
-> > > > > > +	 * space is fragmented and m_fdblocks tracks a significant number of
-> > > > > > +	 * allocbt blocks. Note this also ensures the counter is accurate before
-> > > > > > +	 * the filesystem is active because perag reservation reads all AGFs at
-> > > > > > +	 * mount time. The only call prior to that is to populate the reserve
-> > > > > > +	 * pool itself.
-> > > > > > +	 */
-> > > > > > +	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> > > > > > +		set_aside += atomic64_read(&mp->m_btree_blks);
-> > > > > > +
-> > > > > >  	percpu_counter_add_batch(&mp->m_fdblocks, delta, batch);
-> > > > > > -	if (__percpu_counter_compare(&mp->m_fdblocks, mp->m_alloc_set_aside,
-> > > > > > +	if (__percpu_counter_compare(&mp->m_fdblocks, set_aside,
-> > > > > >  				     XFS_FDBLOCKS_BATCH) >= 0) {
-> > > > > >  		/* we had space! */
-> > > > > >  		return 0;
-> > > > > > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > > > > > index 659ad95fe3e0..70e1dd6b538a 100644
-> > > > > > --- a/fs/xfs/xfs_mount.h
-> > > > > > +++ b/fs/xfs/xfs_mount.h
-> > > > > > @@ -170,6 +170,12 @@ typedef struct xfs_mount {
-> > > > > >  	 * extents or anything related to the rt device.
-> > > > > >  	 */
-> > > > > >  	struct percpu_counter	m_delalloc_blks;
-> > > > > > +	/*
-> > > > > > +	 * Optional count of btree blocks in use across all AGs. Only used when
-> > > > > > +	 * reflink is enabled. Helps prevent block reservation from attempting
-> > > > > > +	 * to reserve allocation btree blocks.
-> > > > > > +	 */
-> > > > > > +	atomic64_t		m_btree_blks;
-> > > > > >  
-> > > > > >  	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
-> > > > > >  	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
-> > > > > > -- 
-> > > > > > 2.26.2
-> > > > > > 
+> > > > 		/* fallthrough */
+> > > > 	case RMNAME:
+> > > > 		...
+> > > > 	...
+> > > > 
+> > > > > -	/*
+> > > > > -	 * If the result is small enough, push it all into the inode.
+> > > > > -	 */
+> > > > > -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+> > > > > -		error = xfs_attr_node_shrink(args, state);
+> > > > > +		retval = xfs_attr_node_remove_cleanup(args, state);
+> > > > ...
+> > > I think the overlooked EAGAIN was in this area that got clipped out.....
+> > > 
+> > > > > diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> > > > > index 48d8e9c..f09820c 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> > > > > +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> > > > ...
+> > > > > @@ -685,31 +687,29 @@ c(
+> > > > >    	 * Keep de-allocating extents until the remote-value region is gone.
+> > > > >    	 */
+> > > > >    	do {
+> > > > > -		retval = __xfs_attr_rmtval_remove(args);
+> > > > > -		if (retval && retval != -EAGAIN)
+> > > > > -			return retval;
+> > > > > +		error = __xfs_attr_rmtval_remove(&dac);
+> > > > > +		if (error != -EAGAIN)
+> > > > > +			break;
+> > > > 
+> > > > Previously this would roll once and exit the loop on retval == 0. Now it
+> > > > looks like we break out of the loop immediately. Why the change?
+> > > 
+> > > Gosh, I think sometime in reviewing v9, we had come up with a
+> > > "xfs_attr_roll_again" helper that took the error code as a paramater and
+> > > decided whether or not to roll.  And then in v10 i think people thought that
+> > > was weird and we turned it into xfs_attr_trans_roll.  I think I likley
+> > > forgot to restore the orginal retval handling here.  This whole function
+> > > disappears in the next patch, but the original error handling should be
+> > > restored to keep things consistent. Thx for the catch!
+> > > 
+> > > 
+> > > Thx for the reviews!!  I know it's complicated!  I've chased my tail many
+> > > times with it myself :-)
+> > > 
+> > > Allison
+> > > 
+> > > 
+> > > 
+> > > 
+> > > > 
+> > > > Brian
+> > > > 
+> > > > > -		/*
+> > > > > -		 * Close out trans and start the next one in the chain.
+> > > > > -		 */
+> > > > > -		error = xfs_trans_roll_inode(&args->trans, args->dp);
+> > > > > +		error = xfs_attr_trans_roll(&dac);
+> > > > >    		if (error)
+> > > > >    			return error;
+> > > > > -	} while (retval == -EAGAIN);
+> > > > > +	} while (true);
+> > > > > -	return 0;
+> > > > > +	return error;
+> > > > >    }
+> > > > >    /*
+> > > > >     * Remove the value associated with an attribute by deleting the out-of-line
+> > > > > - * buffer that it is stored on. Returns EAGAIN for the caller to refresh the
+> > > > > + * buffer that it is stored on. Returns -EAGAIN for the caller to refresh the
+> > > > >     * transaction and re-call the function
+> > > > >     */
+> > > > >    int
+> > > > >    __xfs_attr_rmtval_remove(
+> > > > > -	struct xfs_da_args	*args)
+> > > > > +	struct xfs_delattr_context	*dac)
+> > > > >    {
+> > > > > -	int			error, done;
+> > > > > +	struct xfs_da_args		*args = dac->da_args;
+> > > > > +	int				error, done;
+> > > > >    	/*
+> > > > >    	 * Unmap value blocks for this attr.
+> > > > > @@ -719,12 +719,20 @@ __xfs_attr_rmtval_remove(
+> > > > >    	if (error)
+> > > > >    		return error;
+> > > > > -	error = xfs_defer_finish(&args->trans);
+> > > > > -	if (error)
+> > > > > -		return error;
+> > > > > -
+> > > > > -	if (!done)
+> > > > > +	/*
+> > > > > +	 * We dont need an explicit state here to pick up where we left off.  We
+> > > > > +	 * can figure it out using the !done return code.  Calling function only
+> > > > > +	 * needs to keep recalling this routine until we indicate to stop by
+> > > > > +	 * returning anything other than -EAGAIN. The actual value of
+> > > > > +	 * attr->xattri_dela_state may be some value reminicent of the calling
+> > > > > +	 * function, but it's value is irrelevant with in the context of this
+> > > > > +	 * function.  Once we are done here, the next state is set as needed
+> > > > > +	 * by the parent
+> > > > > +	 */
+> > > > > +	if (!done) {
+> > > > > +		dac->flags |= XFS_DAC_DEFER_FINISH;
+> > > > >    		return -EAGAIN;
+> > > > > +	}
+> > > > >    	return error;
+> > > > >    }
+> > > > > diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+> > > > > index 9eee615..002fd30 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_attr_remote.h
+> > > > > +++ b/fs/xfs/libxfs/xfs_attr_remote.h
+> > > > > @@ -14,5 +14,5 @@ int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+> > > > >    int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
+> > > > >    		xfs_buf_flags_t incore_flags);
+> > > > >    int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
+> > > > > -int __xfs_attr_rmtval_remove(struct xfs_da_args *args);
+> > > > > +int __xfs_attr_rmtval_remove(struct xfs_delattr_context *dac);
+> > > > >    #endif /* __XFS_ATTR_REMOTE_H__ */
+> > > > > diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+> > > > > index bfad669..aaa7e66 100644
+> > > > > --- a/fs/xfs/xfs_attr_inactive.c
+> > > > > +++ b/fs/xfs/xfs_attr_inactive.c
+> > > > > @@ -15,10 +15,10 @@
+> > > > >    #include "xfs_da_format.h"
+> > > > >    #include "xfs_da_btree.h"
+> > > > >    #include "xfs_inode.h"
+> > > > > +#include "xfs_attr.h"
+> > > > >    #include "xfs_attr_remote.h"
+> > > > >    #include "xfs_trans.h"
+> > > > >    #include "xfs_bmap.h"
+> > > > > -#include "xfs_attr.h"
+> > > > >    #include "xfs_attr_leaf.h"
+> > > > >    #include "xfs_quota.h"
+> > > > >    #include "xfs_dir2.h"
+> > > > > -- 
+> > > > > 2.7.4
 > > > > > 
 > > > > 
 > > > 
