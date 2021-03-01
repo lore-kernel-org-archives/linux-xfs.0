@@ -2,164 +2,231 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C992CC432C3
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 17:13:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE20C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 15:16:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A84B764EDB
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 17:13:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0472764E56
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 15:16:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231342AbhB1RMs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 28 Feb 2021 12:12:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49154 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230461AbhB1RMj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Feb 2021 12:12:39 -0500
-Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10048C06174A;
-        Sun, 28 Feb 2021 09:11:58 -0800 (PST)
-Received: by mail-ej1-x635.google.com with SMTP id g5so23843438ejt.2;
-        Sun, 28 Feb 2021 09:11:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=dfQ46OGWItLgoKPUR/Czwfd0qqTUSj25+jf5yrElG/4=;
-        b=GzeA/aDB2UBhnNVhm++I/Jk3Up7Sjll8FWko6UUVrR8GbwUj6tdWvj7U7T3p1JnaWE
-         tuDT5n8KyfWwgonEFcDAlbP9Wnm/lzI5ynLZd5zXrmZLcqy0e5qJFV+Ury6tgPUdhcIC
-         ZnUpySrUVv3A0oExsLsVOkNej6wDTO/NVed1e1lRxfeovoJIixufVCuML3LKRgEXHaK6
-         AQIpA41ncR2vIctG/YIpRBR7PPh4Vs9caRlig7rCLuPUPKUXlteysI6kNYwN/3Yc//ci
-         tD2NQsug/MYd9mQ+dWSVvw0ZV+w1YK/V6hQL8df04yN35+nWGaht76tutf0kiQ1Fxgq5
-         E6Vw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=dfQ46OGWItLgoKPUR/Czwfd0qqTUSj25+jf5yrElG/4=;
-        b=DFk3PQk4Tg5+x/JyUn1GIB9WRKbs4ZjvCjYZr9JKO8621MT6/JMbxVEVcdDoUwHVL+
-         For3KnKO03QZ25kxJo4JrfZHSkIeuz8ttxAxFkjgF2q6WYdlaegFsyL7pwebxMCJOuh/
-         NrMre9pjnYhb6I4oOeQe6UNOpaC6IPz2m13QnfLeVZ2YZGlmr1DYxmPi+bvVPkKasB7e
-         u9RBjICZzwxg7kg714yWmesb+O+Rtbcpc99VRzJxNj+AhqwCvcU1kFYQqrqosKdGeMu3
-         qv1KRTCKEbd/EDeY1ITs68EsyfQGwPqrqB4AdfJhZ2zoof+PofoZAtTFpktFx3ZcE2nA
-         XTjg==
-X-Gm-Message-State: AOAM5304vRkhWj/qH8naxa3syBxpk1crx5yAp/FsV3b7mRkxQxwuuOcN
-        4SYwXjH8z05UBhk34i8rBvOfdoP18tGg
-X-Google-Smtp-Source: ABdhPJw5sLbCUCcgxkhNvC6IgO3vmNaTgOeasYPBEho60Poa4WNRXoZ/cPiXNkLCHgbgyBJUziViqw==
-X-Received: by 2002:a17:906:acb:: with SMTP id z11mr3855755ejf.193.1614532316774;
-        Sun, 28 Feb 2021 09:11:56 -0800 (PST)
-Received: from localhost.localdomain ([46.53.249.223])
-        by smtp.gmail.com with ESMTPSA id fw3sm6654338ejb.82.2021.02.28.09.11.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 28 Feb 2021 09:11:56 -0800 (PST)
-Date:   Sun, 28 Feb 2021 20:11:54 +0300
-From:   Alexey Dobriyan <adobriyan@gmail.com>
-To:     torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
-        akpm@linux-foundation.org, linux-arch@vger.kernel.org
-Subject: [PATCH 12/11] pragma once: scripted treewide conversion
-Message-ID: <YDvO2kmidKZaK26j@localhost.localdomain>
-References: <YDvLYzsGu+l1pQ2y@localhost.localdomain>
+        id S237086AbhCAPQI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Mar 2021 10:16:08 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:48605 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237024AbhCAPPG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Mar 2021 10:15:06 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1614611616;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=d7XMxNLabizf9SPbxpnTMNqWKy0o3FQ3EMRNX6U51Jg=;
+        b=gPgMIwnQ+XibNA2oX2sIgCoxWwRoIwuZU0q5+XoiRWLyNTGSx5BIayeZDRFRX08jyJF5eK
+        HvVfSd0PP1IwgjYqF3xP7glj8GW//OdKLLW52PjjSOZXaXLEdSyLSa4Y/waYNqHHm7Gbf7
+        kqrhtmwaoJzL+7LmjIfNCtY9m9GL0o4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-207-1FCgDFwyPxel4k2YkgjRcA-1; Mon, 01 Mar 2021 10:13:35 -0500
+X-MC-Unique: 1FCgDFwyPxel4k2YkgjRcA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 33AE5814301;
+        Mon,  1 Mar 2021 15:13:34 +0000 (UTC)
+Received: from bfoster (ovpn-113-120.rdu2.redhat.com [10.10.113.120])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CCA7D5C1D1;
+        Mon,  1 Mar 2021 15:13:33 +0000 (UTC)
+Date:   Mon, 1 Mar 2021 10:13:31 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/8] xfs: log stripe roundoff is a property of the log
+Message-ID: <YD0Emze0LNf3F9BB@bfoster>
+References: <20210223033442.3267258-1-david@fromorbit.com>
+ <20210223033442.3267258-2-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YDvLYzsGu+l1pQ2y@localhost.localdomain>
+In-Reply-To: <20210223033442.3267258-2-david@fromorbit.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[  Bcc a lot of lists so that people understand what's this is all         ]
-[  about without creating uber-cc-thread.                                  ]
-[  Apologies if I missed your subsystem                                    ]
-[  Please see [PATCH 11/11: pragma once: conversion script (in Python 2)]  ]
+On Tue, Feb 23, 2021 at 02:34:35PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> We don't need to look at the xfs_mount and superblock every time we
+> need to do an iclog roundoff calculation. The property is fixed for
+> the life of the log, so store the roundoff in the log at mount time
+> and use that everywhere.
+> 
+> On a debug build:
+> 
+> $ size fs/xfs/xfs_log.o.*
+>    text	   data	    bss	    dec	    hex	filename
+>   27360	    560	      8	  27928	   6d18	fs/xfs/xfs_log.o.orig
+>   27219	    560	      8	  27787	   6c8b	fs/xfs/xfs_log.o.patched
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-Hi, Linus.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Please run the script below from top-level directory, it will convert
-most kernel headers to #pragma once directive advancing them into
-21-st century.
+>  fs/xfs/libxfs/xfs_log_format.h |  3 --
+>  fs/xfs/xfs_log.c               | 59 ++++++++++++++--------------------
+>  fs/xfs/xfs_log_priv.h          |  2 ++
+>  3 files changed, 27 insertions(+), 37 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> index 8bd00da6d2a4..16587219549c 100644
+> --- a/fs/xfs/libxfs/xfs_log_format.h
+> +++ b/fs/xfs/libxfs/xfs_log_format.h
+> @@ -34,9 +34,6 @@ typedef uint32_t xlog_tid_t;
+>  #define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
+>  #define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
+>  #define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
+> -#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
+> -                                 (log)->l_mp->m_sb.sb_logsunit)
+> -#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
+>  
+>  #define XLOG_HEADER_SIZE	512
+>  
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 06041834daa3..fa284f26d10e 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1399,6 +1399,11 @@ xlog_alloc_log(
+>  	xlog_assign_atomic_lsn(&log->l_last_sync_lsn, 1, 0);
+>  	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
+>  
+> +	if (xfs_sb_version_haslogv2(&mp->m_sb) && mp->m_sb.sb_logsunit > 1)
+> +		log->l_iclog_roundoff = mp->m_sb.sb_logsunit;
+> +	else
+> +		log->l_iclog_roundoff = BBSIZE;
+> +
+>  	xlog_grant_head_init(&log->l_reserve_head);
+>  	xlog_grant_head_init(&log->l_write_head);
+>  
+> @@ -1852,29 +1857,15 @@ xlog_calc_iclog_size(
+>  	uint32_t		*roundoff)
+>  {
+>  	uint32_t		count_init, count;
+> -	bool			use_lsunit;
+> -
+> -	use_lsunit = xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
+> -			log->l_mp->m_sb.sb_logsunit > 1;
+>  
+>  	/* Add for LR header */
+>  	count_init = log->l_iclog_hsize + iclog->ic_offset;
+> +	count = roundup(count_init, log->l_iclog_roundoff);
+>  
+> -	/* Round out the log write size */
+> -	if (use_lsunit) {
+> -		/* we have a v2 stripe unit to use */
+> -		count = XLOG_LSUNITTOB(log, XLOG_BTOLSUNIT(log, count_init));
+> -	} else {
+> -		count = BBTOB(BTOBB(count_init));
+> -	}
+> -
+> -	ASSERT(count >= count_init);
+>  	*roundoff = count - count_init;
+>  
+> -	if (use_lsunit)
+> -		ASSERT(*roundoff < log->l_mp->m_sb.sb_logsunit);
+> -	else
+> -		ASSERT(*roundoff < BBTOB(1));
+> +	ASSERT(count >= count_init);
+> +	ASSERT(*roundoff < log->l_iclog_roundoff);
+>  	return count;
+>  }
+>  
+> @@ -3149,10 +3140,9 @@ xlog_state_switch_iclogs(
+>  	log->l_curr_block += BTOBB(eventual_size)+BTOBB(log->l_iclog_hsize);
+>  
+>  	/* Round up to next log-sunit */
+> -	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
+> -	    log->l_mp->m_sb.sb_logsunit > 1) {
+> -		uint32_t sunit_bb = BTOBB(log->l_mp->m_sb.sb_logsunit);
+> -		log->l_curr_block = roundup(log->l_curr_block, sunit_bb);
+> +	if (log->l_iclog_roundoff > BBSIZE) {
+> +		log->l_curr_block = roundup(log->l_curr_block,
+> +						BTOBB(log->l_iclog_roundoff));
+>  	}
+>  
+>  	if (log->l_curr_block >= log->l_logBBsize) {
+> @@ -3404,12 +3394,11 @@ xfs_log_ticket_get(
+>   * Figure out the total log space unit (in bytes) that would be
+>   * required for a log ticket.
+>   */
+> -int
+> -xfs_log_calc_unit_res(
+> -	struct xfs_mount	*mp,
+> +static int
+> +xlog_calc_unit_res(
+> +	struct xlog		*log,
+>  	int			unit_bytes)
+>  {
+> -	struct xlog		*log = mp->m_log;
+>  	int			iclog_space;
+>  	uint			num_headers;
+>  
+> @@ -3485,18 +3474,20 @@ xfs_log_calc_unit_res(
+>  	/* for commit-rec LR header - note: padding will subsume the ophdr */
+>  	unit_bytes += log->l_iclog_hsize;
+>  
+> -	/* for roundoff padding for transaction data and one for commit record */
+> -	if (xfs_sb_version_haslogv2(&mp->m_sb) && mp->m_sb.sb_logsunit > 1) {
+> -		/* log su roundoff */
+> -		unit_bytes += 2 * mp->m_sb.sb_logsunit;
+> -	} else {
+> -		/* BB roundoff */
+> -		unit_bytes += 2 * BBSIZE;
+> -        }
+> +	/* roundoff padding for transaction data and one for commit record */
+> +	unit_bytes += 2 * log->l_iclog_roundoff;
+>  
+>  	return unit_bytes;
+>  }
+>  
+> +int
+> +xfs_log_calc_unit_res(
+> +	struct xfs_mount	*mp,
+> +	int			unit_bytes)
+> +{
+> +	return xlog_calc_unit_res(mp->m_log, unit_bytes);
+> +}
+> +
+>  /*
+>   * Allocate and initialise a new log ticket.
+>   */
+> @@ -3513,7 +3504,7 @@ xlog_ticket_alloc(
+>  
+>  	tic = kmem_cache_zalloc(xfs_log_ticket_zone, GFP_NOFS | __GFP_NOFAIL);
+>  
+> -	unit_res = xfs_log_calc_unit_res(log->l_mp, unit_bytes);
+> +	unit_res = xlog_calc_unit_res(log, unit_bytes);
+>  
+>  	atomic_set(&tic->t_ref, 1);
+>  	tic->t_task		= current;
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 1c6fdbf3d506..037950cf1061 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -436,6 +436,8 @@ struct xlog {
+>  #endif
+>  	/* log recovery lsn tracking (for buffer submission */
+>  	xfs_lsn_t		l_recovery_lsn;
+> +
+> +	uint32_t		l_iclog_roundoff;/* padding roundoff */
+>  };
+>  
+>  #define XLOG_BUF_CANCEL_BUCKET(log, blkno) \
+> -- 
+> 2.28.0
+> 
 
-The advantages are:
-
-* less LOC
-
-	18087 files changed, 18878 insertions(+), 99804 deletions(-)
-	= -81 kLOC (give or take)
-
-* less mental tax on developers forced to name things which aren't even
-  real code
-
-* less junk in preprocessor hashtables and editors/IDEs autocompletion
-  lists
-
-There are two bit exceptions: UAPI headers and ACPICA.
-Given ubiquity of #pragma once, I personally think even these subsystems
-should be converted in the future.
-
-Compile tested on alpha, arc, arm, arm64, h8300, ia64, m68k, microblaze,
-mips, nios2, parisc, powerpc, riscv, s390, sh, sparc, um-i386, um-x86_64,
-i386, x86_64, xtensa (allnoconfig, all defconfigs, allmodconfig with or
-without SMP/DEBUG_KERNEL + misc stuff).
-
-Not compile tested on csky, hexagon, nds32, openrisc. 
-
-Love,
-	Alexey
-
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
-
-
-
-#!/bin/sh -x
-find . -type f -name '*.h' -print	|\
-LC_ALL=C sort				|\
-sed -e 's#^./##g'			|\
-xargs ./scripts/pragma-once.py
-
-find . -type d -name 'uapi' | xargs git checkout -f
-git checkout -f arch/alpha/include/asm/cmpxchg.h
-git checkout -f arch/arm/mach-imx/hardware.h
-git checkout -f arch/arm/mach-ixp4xx/include/mach/hardware.h
-git checkout -f arch/arm/mach-sa1100/include/mach/hardware.h
-git checkout -f arch/mips/include/asm/mips-cps.h
-git checkout -f arch/x86/boot/boot.h
-git checkout -f arch/x86/boot/ctype.h
-git checkout -f arch/x86/include/asm/cpufeatures.h
-git checkout -f arch/x86/include/asm/disabled-features.h
-git checkout -f arch/x86/include/asm/required-features.h
-git checkout -f arch/x86/include/asm/vmxfeatures.h
-git checkout -f arch/x86/include/asm/vvar.h
-git checkout -f drivers/acpi/acpica/
-git checkout -f drivers/gpu/drm/amd/pm/inc/vega10_ppsmc.h
-git checkout -f drivers/gpu/drm/amd/pm/powerplay/ppsmc.h
-git checkout -f drivers/input/misc/yealink.h
-git checkout -f drivers/media/usb/dvb-usb-v2/mxl111sf-demod.h
-git checkout -f drivers/media/usb/dvb-usb-v2/mxl111sf-tuner.h
-git checkout -f drivers/pcmcia/yenta_socket.h
-git checkout -f drivers/staging/rtl8723bs/include/hal_com_h2c.h
-git checkout -f include/linux/acpi.h
-git checkout -f include/linux/bitops.h
-git checkout -f include/linux/compiler_types.h
-git checkout -f include/linux/device.h
-git checkout -f include/linux/kbuild.h
-git checkout -f include/linux/libfdt_env.h
-git checkout -f include/linux/local_lock.h
-git checkout -f include/linux/spinlock.h
-git checkout -f include/linux/spinlock_api_smp.h
-git checkout -f include/linux/spinlock_types.h
-git checkout -f include/linux/tracepoint.h
-git checkout -f mm/gup_test.h
-git checkout -f net/batman-adv/main.h
-git checkout -f scripts/dtc/
-git checkout -f tools/include/linux/bitops.h
-git checkout -f tools/include/linux/compiler.h
-git checkout -f tools/testing/selftests/clone3/clone3_selftests.h
-git checkout -f tools/testing/selftests/futex/include/atomic.h
-git checkout -f tools/testing/selftests/futex/include/futextest.h
-git checkout -f tools/testing/selftests/futex/include/logging.h
-git checkout -f tools/testing/selftests/kselftest.h
-git checkout -f tools/testing/selftests/kselftest_harness.h
-git checkout -f tools/testing/selftests/pidfd/pidfd.h
-git checkout -f tools/testing/selftests/x86/helpers.h
