@@ -2,116 +2,184 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7AFCC433E0
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 23:47:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39300C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 04:55:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74FFD64E27
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Feb 2021 23:47:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDB3464DE5
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 04:55:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230215AbhB1XrZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 28 Feb 2021 18:47:25 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:48150 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230214AbhB1XrZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Feb 2021 18:47:25 -0500
+        id S231636AbhCAEzM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 28 Feb 2021 23:55:12 -0500
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:41630 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231464AbhCAEzL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Feb 2021 23:55:11 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4AECE1041047;
-        Mon,  1 Mar 2021 10:46:43 +1100 (AEDT)
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id BAD7F630B4;
+        Mon,  1 Mar 2021 15:54:23 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lGVlq-0094MI-H3; Mon, 01 Mar 2021 10:46:42 +1100
-Date:   Mon, 1 Mar 2021 10:46:42 +1100
+        id 1lGaZa-009OlL-Gg; Mon, 01 Mar 2021 15:54:22 +1100
+Date:   Mon, 1 Mar 2021 15:54:22 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/8] xfs: separate CIL commit record IO
-Message-ID: <20210228234642.GC4662@dread.disaster.area>
-References: <20210223033442.3267258-1-david@fromorbit.com>
- <20210223033442.3267258-3-david@fromorbit.com>
- <20210224203429.GR7272@magnolia>
- <20210224214417.GB4662@dread.disaster.area>
- <YDdhJ0Oe6R+UXqDU@infradead.org>
- <20210226024828.GN7272@magnolia>
- <YDvGfUIcEhq9hB5t@bfoster>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: AIL needs asynchronous CIL forcing
+Message-ID: <20210301045422.GD4662@dread.disaster.area>
+References: <20210223053212.3287398-1-david@fromorbit.com>
+ <20210223053212.3287398-3-david@fromorbit.com>
+ <20210224211058.GA4662@dread.disaster.area>
+ <YDeiLOdFhIMJegWZ@bfoster>
+ <20210225220305.GO4662@dread.disaster.area>
+ <YDpyYj7+WHx9FviY@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YDvGfUIcEhq9hB5t@bfoster>
+In-Reply-To: <YDpyYj7+WHx9FviY@bfoster>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
         a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
-        a=1HwpQATvKKftJe36GlsA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=H_msZ75u-ybmeBl--IYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 28, 2021 at 11:36:13AM -0500, Brian Foster wrote:
-> On Thu, Feb 25, 2021 at 06:48:28PM -0800, Darrick J. Wong wrote:
-> > On Thu, Feb 25, 2021 at 09:34:47AM +0100, Christoph Hellwig wrote:
-> > > On Thu, Feb 25, 2021 at 08:44:17AM +1100, Dave Chinner wrote:
-> > > > > Also, do you have any idea what was Christoph talking about wrt devices
-> > > > > with no-op flushes the last time this patch was posted?  This change
-> > > > > seems straightforward to me (assuming the answers to my two question are
-> > > > > 'yes') but I didn't grok what subtlety he was alluding to...?
-> > > > 
-> > > > He was wondering what devices benefited from this. It has no impact
-> > > > on highspeed devices that do not require flushes/FUA (e.g. high end
-> > > > intel optane SSDs) but those are not the devices this change is
-> > > > aimed at. There are no regressions on these high end devices,
-> > > > either, so they are largely irrelevant to the patch and what it
-> > > > targets...
-> > > 
-> > > I don't think it is that simple.  Pretty much every device aimed at
-> > > enterprise use does not enable a volatile write cache by default.  That
-> > > also includes hard drives, arrays and NAND based SSDs.
-> > > 
-> > > Especially for hard drives (or slower arrays) the actual I/O wait might
-> > > matter.  What is the argument against making this conditional?
+On Sat, Feb 27, 2021 at 11:25:06AM -0500, Brian Foster wrote:
+> On Fri, Feb 26, 2021 at 09:03:05AM +1100, Dave Chinner wrote:
+> > On Thu, Feb 25, 2021 at 08:12:12AM -0500, Brian Foster wrote:
+> > > On Thu, Feb 25, 2021 at 08:10:58AM +1100, Dave Chinner wrote:
+> > > > On Tue, Feb 23, 2021 at 04:32:11PM +1100, Dave Chinner wrote:
+> > The problem that I talk about is introduced by this patch and also
+> > fixed by this patch. The problem does not exist until we have code
+> > that depends on an async CIL push guaranteeing that items in the CIL
+> > are unpinned. A stock xfs_log_force_seq(0) call guarantees that the
+> > log reaches disk by waiting on the CIL push then pushing the iclogs.
+> > All it does is elide waiting for the final iclogs to hit the disk.
 > > 
-> > I still don't understand what you're asking about here --
-> > 
-> > AFAICT the net effect of this patchset is that it reduces the number of
-> > preflushes and FUA log writes.  To my knowledge, on a high end device
-> > with no volatile write cache, flushes are a no-op (because all writes
-> > are persisted somewhere immediately) and a FUA write should be the exact
-> > same thing as a non-FUA write.  Because XFS will now issue fewer no-op
-> > persistence commands to the device, there should be no effect at all.
+> > By eliding the "wait for CIL push" in an async xfs_log_force_seq()
+> > call, we also elide the "push iclogs" part of the log force and
+> > that's what causes the AIL problem. We don't push the iclogs, so the
+> > items committed to the last iclog don't get dispatched and the items
+> > never get unpinned because the checkpoint never completes.
 > > 
 > 
-> Except the cost of the new iowaits used to implement iclog ordering...
-> which I think is what Christoph has been asking about..?
+> So in general it sounds like this patch broke async log force by
+> skipping the current iclog switch somehow or another and then this
+> change is incorporated to fix it (hence there is no outstanding bug
+> upstream). That makes a bit more sense. I'll get the detailed context
+> from the patches.
 
-And I've already answered - it is largely just noise.
+Yes.
 
-> IOW, considering the storage configuration noted above where the impact
-> of the flush/fua optimizations is neutral, the net effect of this change
-> is whatever impact is introduced by intra-checkpoint iowaits and iclog
-> ordering. What is that impact?
+> > As to the "root cause of the hang" I now know what that is too, but
+> > addressing it is outside the scope of this patchset. It's taken me a
+> > long time to identify this, but I've been seeing symptoms of it for
+> > quite a long time (i.e. years) but until doing this async CIL push
+> > work I've never been able to identify the cause.
+> > 
+> > That is, the root cause is that the AIL cannot force a pinned buffer
+> > to disk, and a log force (of any kind) does not guarantee a pinned
+> > item is unpinned. That's because the CIL is pipelined, meaning that
+> > an item can be pinned in one CIL context, and while that is being
+> > pushed, the front end can relog that same item and pin it in the
+> > current CIL context. Hence it has two pins, not one. Now when the
+> > original log force completes, the pin from the first CIL context has
+> > been removed, but the pin from the current CIL context is still
+> > present.
+> > 
+> 
+> Somewhat related to the above point, ISTM our current behavior can lead
+> to scenarios where the potential window for elevated pin counts is
+> somewhat artificially widened. IOW, the log vector for a pincount == 1
+> item might have been written out to disk, but the log item itself not
+> unpinned for some time later because the commit record is still sitting
+> in an active iclog. The unpin processing of the item doesn't occur until
+> that commit record iclog is synced out and I/O completes, which leaves
+> plenty of time for another pin to come along in the meantime (and the
+> scenario potentially repeats, starving out pincount == 0 state). So ISTM
+> the "damage" is done to some degree long before the AIL has any
+> opportunity to fix it, particularly if the only recourse it has is a log
+> force.
+> 
+> (And of course there's a huge tradeoff between current behavior and
+> something that unconditionally synced out commit record iclogs,
+> particularly depending on CIL checkpoint sizes, so that's a broad
+> simplification and not a valid solution.)
 
-All I've really noticed is that long tail latencies on operations go
-down a bit. That seems to correlate with spending less time waiting
-for log space when the log is full, but it's a marginal improvement
-at best.
+Yes, this can be an issue because when the single CIL work is CPU
+bound, it is the first iclog write of the checkpoint that pushes the
+previous commit record to disk. So, like you say, there's a natural
+pin overlap in this situation.
 
-Otherwise I cannot measure any significant difference in performance
-or behaviour across any of the metrics I monitor during performance
-testing.
+> > Hence when we are relogging buffers over time (e.g. repeatedly
+> > modifying a directory), the AIL always sees the buffer pinned and
+> > cannot flush it. Even if the buffer has been moved to the delwri
+> > list (i.e. had a successful push) we still can't write it out
+> > because the delwri code skips pinned buffers.
+> > 
+> > This iterative pin continues preventing the AIL from flushing the
+> > buffer until it pins the tail of the log. When the log runs out of
+> > space and blocks the modifying/relogging task(s), the log force the
+> > AIL issues allows the CIL to be pushed without the front end
+> > relogging the item and re-pinning the item. At the completion of the
+> > log force, the AIL can now push the unpinned buffer and hence move
+> > the tail of the log forward which frees up log reservation space.
+> > This then wakes the front end, which goes back to it's relogging
+> > game and the cycle repeats over.
+> > 
+> 
+> The description of the nested pin behavior makes sense. I've observed
+> the same thing recently when looking at some unrelated shutdown
+> problems.
+> 
+> In any event, if I'm following correctly the deadlock issue was a
+> transient problem with this patch and not an upstream problem. However
+> there is still a pipeline stall/performance issue that manifests as
+> described above, and that preexists the proposed changes. Yes?
 
-> Note that it's not clear enough to me to suggest whether that impact
-> might be significant or not. Hopefully it's neutral (?), but that seems
-> like best case scenario so I do think it's a reasonable question.
+Yes, AFAICT, this pin problem dates back to day zero. Before delayed
+logging it required the inode or buffer to be relogged in almost
+every iclog that was written (think a long running truncate removing
+hundreds of thousands of extents). But before delayed logging, this
+was very slow and limited by iclog IO so having the AIL stall would
+have largely been unnoticed.
 
-Yes, It's a reasonable question, but I answered it entirely and in
-great detail the first time.  Repeating the same question multiple
-times just with slightly different phrasing does not change the
-answer, nor explain to me what the undocumented concern might be...
+> > This is really nasty behaviour, and it's only recently that I've got
+> > a handle on it. I found it because my original "async CIL push" code
+> > resulted in long stalls every time the log is filled and the tail is
+> > pinned by a buffer that is being relogged in this manner....
+> > 
+> > I'm not sure how to fix this yet - the AIL needs to block the front
+> > end relogging to allow the buffer to be unpinned. Essentially, we
+> > need to hold the pinned items locked across a CIL push to guarantee
+> > they are unpinned, but that's the complete opposite of what the AIL
+> > currently does to prevent the front end from seeing long tail lock
+> > latencies when modifying stuff....
+> 
+> When this stall problem manifests, I'm assuming it's exacerbated by
+> delayed logging and the commit record behavior I described above. If
+> that's the case, could the AIL communicate writeback pressure through
+> affected log items such that checkpoints in which they are resident are
+> flushed out completely/immediately when the checkpoints occur? I suppose
+> that would require a log item flag or some such, which does raise a
+> concern of unnecessarily tagging many items (it's not clear to me how
+> likely that really is), but I'm curious if that would be an effective
+> POC at least..
+
+I don't think we need to do anything like that. All we need to do to
+ensure that the AIL can flush a pinned buffer is to lock it, kick
+the log and wait for the pin count to go to zero. Then we can write
+it just fine, blocking only the front end transactions that need
+that buffer lock.  Same goes for inodes, though xfs_iunpin_wait()
+already does this....
+
+The only issue is determining if this causes unaaceptible long tail
+latencies on buffers like the AG headers....
 
 Cheers,
 
