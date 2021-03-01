@@ -2,183 +2,85 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EF02C433DB
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 21:46:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECFA5C43381
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Mar 2021 08:12:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4D4B600EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 21:46:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3D7164DE4
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Mar 2021 08:12:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239153AbhCAVpj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Mar 2021 16:45:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47608 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240541AbhCAVmr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Mar 2021 16:42:47 -0500
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C743C061A30
-        for <linux-xfs@vger.kernel.org>; Mon,  1 Mar 2021 13:35:02 -0800 (PST)
-Received: by mail-ed1-x52d.google.com with SMTP id s8so22729765edd.5
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Mar 2021 13:35:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=S5eQqZgOuAzrBI1ZGPeaiXwFuA8MI7ck2ex1o4+Zhi4=;
-        b=GsgUGnSh6XCM33kX1YqttSd0KUcHsr80+hSKtWCibszAfGFuVyoxIXC+cudRfZnEyL
-         jFH0+RPqUvsQwAvjT5XJwBt5pQuHcaGCA/Feko97ZuD1PMjrJ8hMLEHi1SchA998kROw
-         UxPATs7C/17JV7vMmPWCU0/Cq8DeK9RmormTicDEINXX6EXW8+Qep3kfC331ztEFSzZ8
-         bw9+S7FYGY4+AkXPXKG2NEE4JfhXF3kMVFhfWhSrSe352obZ3SIJ8AsGdgXReUr/NbEz
-         WxFs1esX13EoIG/CvJs1unIoGIX7b4I9BK7Xd42Qj0vnCaDuJwD4PX0OJKgCRqq4oI6R
-         hnoA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=S5eQqZgOuAzrBI1ZGPeaiXwFuA8MI7ck2ex1o4+Zhi4=;
-        b=XJkyzatA4uDr2Bb3A81Nz8HPx0HKPu9MaInBDe7IY8Z+f8MGh+nDg58xFsUKH43WKk
-         4ElYtY2Dst3eVG8z0JV5Fc58XBlb2+jEZcXMa0qJ0gC/0H+3sricUtUmc8N2a1mvaGFV
-         9gq3jHPIiLTKnN1rlBewyTvFlJJK6ORWf1W3cWuhpYIgDhNsFnqWKsy6rSQp5/FGsg19
-         86Ihi6Pk9uwL6rg3Vkg2Mwl6Mlxv+Qhuim8cb25sLEbSLeVr8kU3k0U6QPo42N78s1rm
-         Hr4dVPZSYLASodfbevcGQtMUNyWm8d4gCJ/cKsmcxU0aimaG4Lo0m5dzVWXjk8KxAL5Z
-         PzMA==
-X-Gm-Message-State: AOAM531i3ogDsWO7Uypx3F7CM/eQpLk1J+vXyXs+uuGm6DTpjJHQC35G
-        6vZPOY/uc3iemSxGQcpjRIGitbhNfDl6db5WAonHvQ==
-X-Google-Smtp-Source: ABdhPJwE9duJauuJj63Z2mtoHxQXFJwkwdtiBTnboqNDobSDSZ5Ru3/ng679otfZJBNziIAzFv6Zba+Xj6ySXe7YUC0=
-X-Received: by 2002:a05:6402:10ce:: with SMTP id p14mr18013748edu.348.1614634501187;
- Mon, 01 Mar 2021 13:35:01 -0800 (PST)
+        id S231936AbhCBGQD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Mar 2021 01:16:03 -0500
+Received: from vera.ghen.be ([178.21.118.64]:35130 "EHLO vera.ghen.be"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236134AbhCAWmr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Mar 2021 17:42:47 -0500
+X-Greylist: delayed 568 seconds by postgrey-1.27 at vger.kernel.org; Mon, 01 Mar 2021 17:42:46 EST
+Received: by vera.ghen.be (Postfix, from userid 1000)
+        id 4DqFP85fkhz2x9L; Mon,  1 Mar 2021 23:31:56 +0100 (CET)
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=hendrickx.be;
+        s=21e; t=1614637916;
+        bh=yHHo456mNi8vr6XHFtPESuNBZ8YVb/dZthD8FnAVfhY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To;
+        b=bg+w2jmLgHq+jG7bYnlXg78QWCZvHgm9MC2bOqzTuPkouH4eppkpygrhHQx+WSbiY
+         7QkWBZmbc4N7jVYU9O+AQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hendrickx.be; s=21r;
+        t=1614637916; bh=yHHo456mNi8vr6XHFtPESuNBZ8YVb/dZthD8FnAVfhY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To;
+        b=frvhNQR4LC+IS7NCTksvp/01toES8JUPBMeHuW08W1KfATLlJqPRZgvx4Xceixjke
+         fEqxmw6rPjlV1lCbqnc+tYFzFsuODTAwU7xiE60zUy73LDqu3P2k0EtB+7f5oDDEOl
+         +ET7FZX1ev/xE5C287cdF78ESGUZjXCsNjhH/m42UCbY8/E6FwaDRoJ4nD/Z9s2B4Z
+         1HgoJLJ7NL2wbBjAcrQv2Padu39LWijiLzKxzLA8LKHotkZZZeC+GKjhf5kpK0jRLU
+         +lDy9KJd517cWtTKPbCoJGw9Zj3NcWlGqKh7adXjtNYhSZqJ3ZcFw+IxF0az/vAwCt
+         29oNJkyqFmL6Q==
+Date:   Mon, 1 Mar 2021 23:31:56 +0100
+From:   Geert Hendrickx <geert@hendrickx.be>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Eric Sandeen <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: xfs_admin -O feature upgrade feedback
+Message-ID: <YD1rXB4m3jXWWT0E@vera.ghen.be>
+References: <YDy+OmsVCkTfiMPp@vera.ghen.be>
+ <20210301191803.GE7269@magnolia>
 MIME-Version: 1.0
-References: <20210226002030.653855-1-ruansy.fnst@fujitsu.com>
- <OSBPR01MB2920899F1D71E7B054A04E39F49D9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <20210226190454.GD7272@magnolia> <CAPcyv4iJiYsM5FQdpMvCi24aCi7RqUnnxC6sM0umFqiN+Q59cg@mail.gmail.com>
- <556921a1-456c-c24d-6d47-e8b15c1d9972@fujitsu.com>
-In-Reply-To: <556921a1-456c-c24d-6d47-e8b15c1d9972@fujitsu.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Mon, 1 Mar 2021 13:34:52 -0800
-Message-ID: <CAPcyv4g3ZwbdLFx8bqMcNvXyrob8y6sBXXu=xPTmTY0VSk5HCw@mail.gmail.com>
-Subject: Re: Question about the "EXPERIMENTAL" tag for dax in XFS
-To:     Yasunori Goto <y-goto@fujitsu.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "jack@suse.cz" <jack@suse.cz>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-        "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
-        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
-        "fnstml-iaas@cn.fujitsu.com" <fnstml-iaas@cn.fujitsu.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210301191803.GE7269@magnolia>
+X-PGP-Key: https://geert.hendrickx.be/pgpkey.asc
+X-PGP-Key-Id: C88C1D9ED3861005886BF44ACD718C1F95AD44EA
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 28, 2021 at 11:27 PM Yasunori Goto <y-goto@fujitsu.com> wrote:
->
-> Hello, Dan-san,
->
-> On 2021/02/27 4:24, Dan Williams wrote:
-> > On Fri, Feb 26, 2021 at 11:05 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >>
-> >> On Fri, Feb 26, 2021 at 09:45:45AM +0000, ruansy.fnst@fujitsu.com wrote:
-> >>> Hi, guys
-> >>>
-> >>> Beside this patchset, I'd like to confirm something about the
-> >>> "EXPERIMENTAL" tag for dax in XFS.
-> >>>
-> >>> In XFS, the "EXPERIMENTAL" tag, which is reported in waring message
-> >>> when we mount a pmem device with dax option, has been existed for a
-> >>> while.  It's a bit annoying when using fsdax feature.  So, my initial
-> >>> intention was to remove this tag.  And I started to find out and solve
-> >>> the problems which prevent it from being removed.
-> >>>
-> >>> As is talked before, there are 3 main problems.  The first one is "dax
-> >>> semantics", which has been resolved.  The rest two are "RMAP for
-> >>> fsdax" and "support dax reflink for filesystem", which I have been
-> >>> working on.
-> >>
-> >> <nod>
-> >>
-> >>> So, what I want to confirm is: does it means that we can remove the
-> >>> "EXPERIMENTAL" tag when the rest two problem are solved?
-> >>
-> >> Yes.  I'd keep the experimental tag for a cycle or two to make sure that
-> >> nothing new pops up, but otherwise the two patchsets you've sent close
-> >> those two big remaining gaps.  Thank you for working on this!
-> >>
-> >>> Or maybe there are other important problems need to be fixed before
-> >>> removing it?  If there are, could you please show me that?
-> >>
-> >> That remains to be seen through QA/validation, but I think that's it.
-> >>
-> >> Granted, I still have to read through the two patchsets...
-> >
-> > I've been meaning to circle back here as well.
-> >
-> > My immediate concern is the issue Jason recently highlighted [1] with
-> > respect to invalidating all dax mappings when / if the device is
-> > ripped out from underneath the fs. I don't think that will collide
-> > with Ruan's implementation, but it does need new communication from
-> > driver to fs about removal events.
-> >
-> > [1]: http://lore.kernel.org/r/CAPcyv4i+PZhYZiePf2PaH0dT5jDfkmkDX-3usQy1fAhf6LPyfw@mail.gmail.com
-> >
->
-> I'm not sure why there is a race condition between unbinding operation
-> and accessing mmaped file on filesystem dax yet.
->
-> May be silly question, but could you tell me why the "unbinding"
-> operation of the namespace which is mounted by filesystem dax must be
-> allowed?
+On Mon, Mar 01, 2021 at 11:18:03 -0800, Darrick J. Wong wrote:
+> On Mon, Mar 01, 2021 at 11:13:14AM +0100, Geert Hendrickx wrote:
+> > 1/ xfs_admin responds to every xfs_repair failure with the very generic
+> > "Conversion failed, is the filesystem unmounted?"  This isn't very helpful
+> > (and left me scratching my head in a number of scenarios), whereas calling
+> > xfs_repair directly shows a relevant error message in all cases.  This
+> > output should somehow be relayed through xfs_admin - without just dumping
+> > the whole xfs_repair output which I know you wanted to avoid.  Maybe by
+> > distinguishing more carefully between stderr and stdout?  (Currently, it
+> > seems xfs_repair sends its errors to stdout and "normal output" to stderr,
+> > and xfs_admin discards xfs_repair's stderr.)
+> 
+> That's a difficult project -- some of the things repair will complain
+> about are a result of whatever the upgrade is (e.g. complaining about
+> incorrect inode btree counters when you're in the process of enabling
+> the counters) but then there are other things that it probably should
+> not be dropping on the floor.
 
-The unbind operation is used to switch the mode of a namespace between
-fsdax and devdax. There is no way to fail unbind. At most it can be
-delayed for a short while to perform cleanup, but it can't be blocked
-indefinitely. There is the option to specify 'suppress_bind_attrs' to
-the driver to preclude software triggered device removal, but that
-would disable mode changes for the device.
 
-> If "unbinding" is rejected when the filesystem is mounted with dax
-> enabled, what is inconvenience?
 
-It would be interesting (read difficult) to introduce the concept of
-dynamic 'suppress_bind_attrs'. Today the decision is static at driver
-registration time, not in response to how the device is being used.
+On the other hand, upgrading a filesystem is a one-time operation where
+it doesn't hurt to be a bit more verbose by default, compared to regular
+maintenance operations where silence indicates success.
 
-I think global invalidation of all inodes that might be affected by a
-dax-capable device being ripped away from the filesystem is sufficient
-and avoids per-fs enabling, but I'm willing to be convinced that
-->corrupted_range() is the proper vehicle for this.
+(and for large filesystems some progress indication is useful, too.)
 
->
-> I can imagine if a device like usb memory stick is removed surprisingly,
-> kernel/filesystem need to reject writeback at the time, and discard page
-> cache. Then, I can understand that unbinding operation is essential for
-> such case.
 
-For usb the system is protected by the fact that all future block-i/o
-submissions to the old block-device will fail, and a new usb-device
-being plugged in will get a new block-device. I.e. the old security
-model is invalidated / all holes are closed by blk_cleanup_queue().
+	Geert
 
-> But I don't know why PMEM device/namespace allows unbinding operation
-> like surprising removal event.
 
-DAX hands direct mappings to physical pages, if the security model
-fronting those physical pages changes the mappings attained via the
-old security model need to be invalidated. blk_cleanup_queue() does
-not invalidate DAX mappings.
-
-The practical value of fixing that hole is small given that physical
-unplug is not implemented for NVDIMMs today, but the get_user_pages()
-path can be optimized if this invalidation is implemented, and future
-hotplug-capable NVDIMM buses like CXL will need this.
