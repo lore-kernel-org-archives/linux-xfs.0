@@ -2,90 +2,144 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56852C433DB
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 05:58:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 216ECC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 07:38:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A12464E31
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 05:58:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B608364E3F
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 07:38:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232095AbhCAF5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Mar 2021 00:57:45 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:59200 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231247AbhCAF5n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Mar 2021 00:57:43 -0500
-Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E31D31041272;
-        Mon,  1 Mar 2021 16:56:59 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lGbYB-009T05-E3; Mon, 01 Mar 2021 16:56:59 +1100
-Date:   Mon, 1 Mar 2021 16:56:59 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/8 v2] xfs: journal IO cache flush reductions
-Message-ID: <20210301055659.GF4662@dread.disaster.area>
-References: <20210223033442.3267258-1-david@fromorbit.com>
- <20210223033442.3267258-8-david@fromorbit.com>
- <20210223080503.GW4662@dread.disaster.area>
- <8735xk7pr2.fsf@garuda>
- <20210301054453.GE4662@dread.disaster.area>
+        id S232286AbhCAHg7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Mar 2021 02:36:59 -0500
+Received: from esa5.hc1455-7.c3s2.iphmx.com ([68.232.139.130]:42266 "EHLO
+        esa5.hc1455-7.c3s2.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232517AbhCAHg5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Mar 2021 02:36:57 -0500
+IronPort-SDR: tGvBDWbOft83eNsQjRioYLiVBVz1iyTh5nEUdQtY/rAjCbWstI0P576mQxG76VXSQw4xGhrL2O
+ 4pwBXFGLFfhyEbZhAR/Mgsk0Y5Jr5w8MEPfKH8NLh/OX8XS0Nr1OYGhwmOZpX+d7dbK3mK+0Zu
+ k6MIMtLyZivYsUNlCwnuq4wnqvQFqUY3d/d+V53NnFfS+l32tQyX/4P0l4NjWnCus3LwP1B33G
+ r72yxnXbCv2gEGqjmBh+qABH4oGmwPuvAC4E8deFIwy0n12gZGnaDb5KFX3wnOvJPF3pKE4Q81
+ sgE=
+X-IronPort-AV: E=McAfee;i="6000,8403,9909"; a="20943770"
+X-IronPort-AV: E=Sophos;i="5.81,214,1610377200"; 
+   d="scan'208";a="20943770"
+Received: from unknown (HELO oym-r2.gw.nic.fujitsu.com) ([210.162.30.90])
+  by esa5.hc1455-7.c3s2.iphmx.com with ESMTP; 01 Mar 2021 16:26:47 +0900
+Received: from oym-m3.gw.nic.fujitsu.com (oym-nat-oym-m3.gw.nic.fujitsu.com [192.168.87.60])
+        by oym-r2.gw.nic.fujitsu.com (Postfix) with ESMTP id CC3C2E60A7;
+        Mon,  1 Mar 2021 16:26:46 +0900 (JST)
+Received: from m3050.s.css.fujitsu.com (msm.b.css.fujitsu.com [10.134.21.208])
+        by oym-m3.gw.nic.fujitsu.com (Postfix) with ESMTP id D3CCE15331;
+        Mon,  1 Mar 2021 16:26:45 +0900 (JST)
+Received: from [10.133.113.145] (VPC-Y08P0560117.g01.fujitsu.local [10.133.113.145])
+        by m3050.s.css.fujitsu.com (Postfix) with ESMTP id A473F2A7;
+        Mon,  1 Mar 2021 16:26:45 +0900 (JST)
+Subject: Re: Question about the "EXPERIMENTAL" tag for dax in XFS
+To:     Dan Williams <dan.j.williams@intel.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "jack@suse.cz" <jack@suse.cz>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
+        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
+        "fnstml-iaas@cn.fujitsu.com" <fnstml-iaas@cn.fujitsu.com>
+References: <20210226002030.653855-1-ruansy.fnst@fujitsu.com>
+ <OSBPR01MB2920899F1D71E7B054A04E39F49D9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+ <20210226190454.GD7272@magnolia>
+ <CAPcyv4iJiYsM5FQdpMvCi24aCi7RqUnnxC6sM0umFqiN+Q59cg@mail.gmail.com>
+From:   Yasunori Goto <y-goto@fujitsu.com>
+Message-ID: <556921a1-456c-c24d-6d47-e8b15c1d9972@fujitsu.com>
+Date:   Mon, 1 Mar 2021 16:26:45 +0900
+User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210301054453.GE4662@dread.disaster.area>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
-        a=qq_oq4w3_H_SAqW8XJ4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <CAPcyv4iJiYsM5FQdpMvCi24aCi7RqUnnxC6sM0umFqiN+Q59cg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 01, 2021 at 04:44:53PM +1100, Dave Chinner wrote:
-> On Thu, Feb 25, 2021 at 09:39:05AM +0530, Chandan Babu R wrote:
-> > On 23 Feb 2021 at 13:35, Dave Chinner wrote:
-> > > @@ -2009,13 +2010,14 @@ xlog_sync(
-> > >  	 * synchronously here; for an internal log we can simply use the block
-> > >  	 * layer state machine for preflushes.
-> > >  	 */
-> > > -	if (log->l_targ != log->l_mp->m_ddev_targp || split) {
-> > > +	if (log->l_targ != log->l_mp->m_ddev_targp ||
-> > > +	    (split && (iclog->ic_flags & XLOG_ICL_NEED_FLUSH))) {
-> > >  		xfs_flush_bdev(log->l_mp->m_ddev_targp->bt_bdev);
-> > > -		need_flush = false;
-> > > +		iclog->ic_flags &= ~XLOG_ICL_NEED_FLUSH;
-> > >  	}
-> > 
-> > If a checkpoint transaction spans across 2 or more iclogs and the log is
-> > stored on an external device, then the above would remove XLOG_ICL_NEED_FLUSH
-> > flag from iclog->ic_flags causing xlog_write_iclog() to include only REQ_FUA
-> > flag in the corresponding bio.
+Hello, Dan-san,
+
+On 2021/02/27 4:24, Dan Williams wrote:
+> On Fri, Feb 26, 2021 at 11:05 AM Darrick J. Wong <djwong@kernel.org> wrote:
+>>
+>> On Fri, Feb 26, 2021 at 09:45:45AM +0000, ruansy.fnst@fujitsu.com wrote:
+>>> Hi, guys
+>>>
+>>> Beside this patchset, I'd like to confirm something about the
+>>> "EXPERIMENTAL" tag for dax in XFS.
+>>>
+>>> In XFS, the "EXPERIMENTAL" tag, which is reported in waring message
+>>> when we mount a pmem device with dax option, has been existed for a
+>>> while.  It's a bit annoying when using fsdax feature.  So, my initial
+>>> intention was to remove this tag.  And I started to find out and solve
+>>> the problems which prevent it from being removed.
+>>>
+>>> As is talked before, there are 3 main problems.  The first one is "dax
+>>> semantics", which has been resolved.  The rest two are "RMAP for
+>>> fsdax" and "support dax reflink for filesystem", which I have been
+>>> working on.
+>>
+>> <nod>
+>>
+>>> So, what I want to confirm is: does it means that we can remove the
+>>> "EXPERIMENTAL" tag when the rest two problem are solved?
+>>
+>> Yes.  I'd keep the experimental tag for a cycle or two to make sure that
+>> nothing new pops up, but otherwise the two patchsets you've sent close
+>> those two big remaining gaps.  Thank you for working on this!
+>>
+>>> Or maybe there are other important problems need to be fixed before
+>>> removing it?  If there are, could you please show me that?
+>>
+>> That remains to be seen through QA/validation, but I think that's it.
+>>
+>> Granted, I still have to read through the two patchsets...
 > 
-> Yup, good catch, this is a subtle change of behaviour only for
-> external logs and only for the commit iclog that needs to flush the
-> previous log writes to stable storage. I'll rework the logic here.
+> I've been meaning to circle back here as well.
+> 
+> My immediate concern is the issue Jason recently highlighted [1] with
+> respect to invalidating all dax mappings when / if the device is
+> ripped out from underneath the fs. I don't think that will collide
+> with Ruan's implementation, but it does need new communication from
+> driver to fs about removal events.
+> 
+> [1]: http://lore.kernel.org/r/CAPcyv4i+PZhYZiePf2PaH0dT5jDfkmkDX-3usQy1fAhf6LPyfw@mail.gmail.com
+> 
 
-And now that I think about it, we can simply remove this code if we
-put an explicit data device cache flush in the unmount recrod write
-code. The CIL has already guaranteed metadata vs journal ordering
-before we start writing the checkpoint, meaning the
-XLOG_ICL_NEED_FLUSH flag only has meaning for internal iclog write
-ordering, not external metadata ordering. ANd for the split, we can
-simply clear the REQ_PREFLUSH flag from the split bio before
-submitting it....
+I'm not sure why there is a race condition between unbinding operation 
+and accessing mmaped file on filesystem dax yet.
 
-Much simpler and faster for external logs, too.
+May be silly question, but could you tell me why the "unbinding" 
+operation of the namespace which is mounted by filesystem dax must be
+allowed?
+If "unbinding" is rejected when the filesystem is mounted with dax 
+enabled, what is inconvenience?
 
-CHeers,
+I can imagine if a device like usb memory stick is removed surprisingly, 
+kernel/filesystem need to reject writeback at the time, and discard page 
+cache. Then, I can understand that unbinding operation is essential for 
+such case.
+But I don't know why PMEM device/namespace allows unbinding operation 
+like surprising removal event.
 
-Dav.e
+Thanks,
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Yasunori Goto
