@@ -2,104 +2,209 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 542A8C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 20:39:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA5AAC433E6
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 20:50:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 199C6600CD
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 20:39:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5622600EF
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Mar 2021 20:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239583AbhCAUhV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Mar 2021 15:37:21 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51356 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243145AbhCAUfN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Mar 2021 15:35:13 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3B519601FF;
-        Mon,  1 Mar 2021 19:18:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614626285;
-        bh=Hukifh4hnUCmfpynvVbMNFVrBbahH+s0NQ5ov4AJMjo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MJV0t+RONsyLbelIcL31hnn1OK+WGUxeAZdQXkOMTym6DjODPVBAQXAklDrO6uJol
-         0mCzWEZoLcUy5suF3NZXmvNc8br9t7rJQkb5+UbVFnWYnrWczj5bkS0OlrS5+7LdJl
-         g0xC0yVVJqSiqbmj5nA4OSzn9xryApNaJB1u7w1saGUTVzAKSfnZ42cuW52p29ZNvd
-         PpDZghOA6MjgaoPtfKRMDghNw469q9Kgyoz/UrYshwse3aIj1XdfnfuX1GrAKDmv1f
-         gKcip3p8CndphyH3VgfqdLHRB0VXB3vJabHb5q/iywhXz1BndHyZzIkLlLiCqhKZnj
-         /pnYqlQFmbtBA==
-Date:   Mon, 1 Mar 2021 11:18:03 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Geert Hendrickx <geert@hendrickx.be>
-Cc:     Eric Sandeen <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: xfs_admin -O feature upgrade feedback
-Message-ID: <20210301191803.GE7269@magnolia>
-References: <YDy+OmsVCkTfiMPp@vera.ghen.be>
+        id S239891AbhCAUtm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Mar 2021 15:49:42 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:56669 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243656AbhCAUrZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Mar 2021 15:47:25 -0500
+Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <christian.brauner@ubuntu.com>)
+        id 1lGpQg-000669-3l; Mon, 01 Mar 2021 20:46:10 +0000
+Date:   Mon, 1 Mar 2021 21:46:08 +0100
+From:   Christian Brauner <christian.brauner@ubuntu.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
+        John Johansen <john.johansen@canonical.com>,
+        James Morris <jmorris@namei.org>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Casey Schaufler <casey@schaufler-ca.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Geoffrey Thomas <geofft@ldpreload.com>,
+        Mrunal Patel <mpatel@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
+        Tycho Andersen <tycho@tycho.ws>,
+        David Howells <dhowells@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        =?utf-8?B?U3TDqXBoYW5l?= Graber <stgraber@ubuntu.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aleksa Sarai <cyphar@cyphar.com>,
+        Lennart Poettering <lennart@poettering.net>,
+        "Eric W. Biederman" <ebiederm@xmission.com>, smbarber@chromium.org,
+        Phil Estes <estesp@gmail.com>, Serge Hallyn <serge@hallyn.com>,
+        Kees Cook <keescook@chromium.org>,
+        Todd Kjos <tkjos@google.com>, Paul Moore <paul@paul-moore.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        containers@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-integrity@vger.kernel.org, selinux@vger.kernel.org
+Subject: Re: [PATCH v6 39/40] xfs: support idmapped mounts
+Message-ID: <20210301204608.ip7nowqh6fpztkhr@wittgenstein>
+References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
+ <20210121131959.646623-40-christian.brauner@ubuntu.com>
+ <20210301200520.GK7272@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <YDy+OmsVCkTfiMPp@vera.ghen.be>
+In-Reply-To: <20210301200520.GK7272@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[adding linux-xfs to cc]
-
-On Mon, Mar 01, 2021 at 11:13:14AM +0100, Geert Hendrickx wrote:
-> Gentlemen
+On Mon, Mar 01, 2021 at 12:05:20PM -0800, Darrick J. Wong wrote:
+> On Thu, Jan 21, 2021 at 02:19:58PM +0100, Christian Brauner wrote:
+> > From: Christoph Hellwig <hch@lst.de>
+> > 
+> > Enable idmapped mounts for xfs. This basically just means passing down
+> > the user_namespace argument from the VFS methods down to where it is
+> > passed to the relevant helpers.
+> > 
+> > Note that full-filesystem bulkstat is not supported from inside idmapped
+> > mounts as it is an administrative operation that acts on the whole file
+> > system. The limitation is not applied to the bulkstat single operation
+> > that just operates on a single inode.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
+> > ---
+> > /* v2 */
+> > 
+> > /* v3 */
+> > 
+> > /* v4 */
+> > 
+> > /* v5 */
+> > base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
+> > 
+> > /* v6 */
+> > unchanged
+> > base-commit: 19c329f6808995b142b3966301f217c831e7cf31
+> > ---
+> >  fs/xfs/xfs_acl.c     |  3 +--
+> >  fs/xfs/xfs_file.c    |  4 +++-
+> >  fs/xfs/xfs_inode.c   | 26 +++++++++++++++--------
+> >  fs/xfs/xfs_inode.h   | 16 +++++++++------
+> >  fs/xfs/xfs_ioctl.c   | 35 ++++++++++++++++++-------------
+> >  fs/xfs/xfs_ioctl32.c |  6 ++++--
+> >  fs/xfs/xfs_iops.c    | 49 +++++++++++++++++++++++++-------------------
+> >  fs/xfs/xfs_iops.h    |  3 ++-
+> >  fs/xfs/xfs_itable.c  | 17 +++++++++++----
+> >  fs/xfs/xfs_itable.h  |  1 +
+> >  fs/xfs/xfs_qm.c      |  3 ++-
+> >  fs/xfs/xfs_super.c   |  2 +-
+> >  fs/xfs/xfs_symlink.c |  5 +++--
+> >  fs/xfs/xfs_symlink.h |  5 +++--
+> >  14 files changed, 110 insertions(+), 65 deletions(-)
 > 
-> 
-> I've been testing xfsprogs 5.11.0-rc1 for XFS feature upgrades (inobtcount
-> and bigtime), and have a couple of small nits with it - besides the actual
-> functionality working as expected:
-> 
-> 1/ xfs_admin responds to every xfs_repair failure with the very generic
-> "Conversion failed, is the filesystem unmounted?"  This isn't very helpful
-> (and left me scratching my head in a number of scenarios), whereas calling
-> xfs_repair directly shows a relevant error message in all cases.  This
-> output should somehow be relayed through xfs_admin - without just dumping
-> the whole xfs_repair output which I know you wanted to avoid.  Maybe by
-> distinguishing more carefully between stderr and stdout?  (Currently, it
-> seems xfs_repair sends its errors to stdout and "normal output" to stderr,
-> and xfs_admin discards xfs_repair's stderr.)
+> <snip> Sorry for not noticing until after this went upstream, but...
 
-That's a difficult project -- some of the things repair will complain
-about are a result of whatever the upgrade is (e.g. complaining about
-incorrect inode btree counters when you're in the process of enabling
-the counters) but then there are other things that it probably should
-not be dropping on the floor.
-
-> 2/ minor, but xfs_admin(8) manpage documents `xfs_admin -O feature=status`,
-> however xfs_admin itself appends another `=1`, resulting in `xfs_repair -c
-> feature=1=1`.  This works, but looks ugly, and is not consistent with the
-> option to enable multiple features at once.  I think either the xfs_admin
-> script or its manpage should be adjusted to be consistent?
-
-Yeah, xfs_admin should not add '=1'. Thanks for pointing that out.
-
-> Apart from this, the actual upgrade functionality is working as expected,
-> great job!
-
-Thx :)
-
-> Btw, do you have an idea from which release onwards mkfs.xfs will enable
-> the new features by default?  Are there fixed rules for this (like feature
-> must be X releases old, or supported by the latest LTS kernel), or is this
-> judged on a case-by-case basis?
-
-~6mo after we hear that people are using the feature /and/ we haven't
-heard of any serious complaints.
-
-Or some distro makes a business case and enables it by default. <cough>
-
---D
+No problem at all.
 
 > 
-> Thanks!
+> > diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> > index 16ca97a7ff00..ca310a125d1e 100644
+> > --- a/fs/xfs/xfs_itable.c
+> > +++ b/fs/xfs/xfs_itable.c
+> > @@ -54,10 +54,12 @@ struct xfs_bstat_chunk {
+> >  STATIC int
+> >  xfs_bulkstat_one_int(
+> >  	struct xfs_mount	*mp,
+> > +	struct user_namespace	*mnt_userns,
+> >  	struct xfs_trans	*tp,
+> >  	xfs_ino_t		ino,
+> >  	struct xfs_bstat_chunk	*bc)
+> >  {
+> > +	struct user_namespace	*sb_userns = mp->m_super->s_user_ns;
+> >  	struct xfs_icdinode	*dic;		/* dinode core info pointer */
+> >  	struct xfs_inode	*ip;		/* incore inode pointer */
+> >  	struct inode		*inode;
+> > @@ -86,8 +88,8 @@ xfs_bulkstat_one_int(
+> >  	 */
+> >  	buf->bs_projectid = ip->i_d.di_projid;
+> >  	buf->bs_ino = ino;
+> > -	buf->bs_uid = i_uid_read(inode);
+> > -	buf->bs_gid = i_gid_read(inode);
+> > +	buf->bs_uid = from_kuid(sb_userns, i_uid_into_mnt(mnt_userns, inode));
+> > +	buf->bs_gid = from_kgid(sb_userns, i_gid_into_mnt(mnt_userns, inode));
+> >  	buf->bs_size = dic->di_size;
+> >  
+> >  	buf->bs_nlink = inode->i_nlink;
+> > @@ -173,7 +175,8 @@ xfs_bulkstat_one(
+> >  	if (!bc.buf)
+> >  		return -ENOMEM;
+> >  
+> > -	error = xfs_bulkstat_one_int(breq->mp, NULL, breq->startino, &bc);
+> > +	error = xfs_bulkstat_one_int(breq->mp, breq->mnt_userns, NULL,
+> > +				     breq->startino, &bc);
+> >  
+> >  	kmem_free(bc.buf);
+> >  
+> > @@ -194,9 +197,10 @@ xfs_bulkstat_iwalk(
+> >  	xfs_ino_t		ino,
+> >  	void			*data)
+> >  {
+> > +	struct xfs_bstat_chunk	*bc = data;
+> >  	int			error;
+> >  
+> > -	error = xfs_bulkstat_one_int(mp, tp, ino, data);
+> > +	error = xfs_bulkstat_one_int(mp, bc->breq->mnt_userns, tp, ino, data);
+> >  	/* bulkstat just skips over missing inodes */
+> >  	if (error == -ENOENT || error == -EINVAL)
+> >  		return 0;
+> > @@ -239,6 +243,11 @@ xfs_bulkstat(
+> >  	};
+> >  	int			error;
+> >  
+> > +	if (breq->mnt_userns != &init_user_ns) {
+> > +		xfs_warn_ratelimited(breq->mp,
+> > +			"bulkstat not supported inside of idmapped mounts.");
+> > +		return -EINVAL;
 > 
+> Shouldn't this be -EPERM?
 > 
-> 	Geert
+> Or -EOPNOTSUPP?
+
+EOPNOTSUPP seems a good choice. Whether or not it's better than EINVAL I
+don't know. With my userspace maintainer hat on I would probably say
+that EOPNOTSUPP feels a bit more natural and might have the advantage
+that it is less overloaded then EINVAL.
+
 > 
-> 
+> Also, I'm not sure why bulkstat won't work in an idmapped mount but
+> bulkstat_single does?  You can use the singleton version to stat inodes
+> that aren't inside the submount.
+
+Christoph will very likely have a better informed opinion than I have
+but as long as bulkstat is able to discern inodes that need to be
+reported idmapped and inodes that don't then I see no reason why this
+shouldn't work (at least for privileged users on the host which I think
+is the case already).
+
+In any case these changes, if any, aren't vfs changes and so you can
+just take them as bugfixes through the xfs tree anyway. So no harm done
+in you not spotting it earlier. :)
+
+Thanks for taking another look!
+Christian
