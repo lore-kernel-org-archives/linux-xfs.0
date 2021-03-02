@@ -7,269 +7,150 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B527C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88996C433E0
 	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 114CE601FF
+	by mail.kernel.org (Postfix) with ESMTP id 3CCD261477
 	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244182AbhCCDNL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Mar 2021 22:13:11 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:30170 "EHLO
+        id S235137AbhCCDOE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Mar 2021 22:14:04 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:53818 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1384536AbhCBPFW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Mar 2021 10:05:22 -0500
+        by vger.kernel.org with ESMTP id S1384613AbhCBPWn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Mar 2021 10:22:43 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1614697417;
+        s=mimecast20190719; t=1614698401;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=FWUqLA5vZVd6Rrn9PgnoQWlBBnr4Q+DQXJnfgK2Opr8=;
-        b=IUW918xST8TYKquBNzuEgZ6dcsxNRjkzOWl6WRlheQ8PFNx76yuTbqiGUCwmtqoBnDzI2U
-        H0P1Eg59sEdyOF8MZMyh0J8vxaFdpG8RhovNonzg5a/6ZaPc5QsrUPEZFW6sVhlHXUXHI+
-        XEy8QTcdqMnJzNj11FrgC8q1IM7QjKA=
+        bh=WMJ46CGYlMlnHOb+imNgDyRe8GlIaT++MCwYLndXLb0=;
+        b=CgodP1z14AbNfuKGCBHwFz+PXAKJC9S7juNP2MxOl/2wPSXFR3C7gBIddWC7R+XZmPLlYS
+        FJpU8znhLIZC204pdeHh9snm7posf/zLSMTAGpLGdxBre1fxr+Covlfz1dWpEKcwwgaihg
+        LLg02HaRBE8egyA1xI5vwtsmJtmeMik=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-154-btmvMG-bPLahgjP2tZ-DEg-1; Tue, 02 Mar 2021 09:38:04 -0500
-X-MC-Unique: btmvMG-bPLahgjP2tZ-DEg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-442-jz3qAQPEMHKk5f3cR4fh9A-1; Tue, 02 Mar 2021 09:37:19 -0500
+X-MC-Unique: jz3qAQPEMHKk5f3cR4fh9A-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2701C1936B60;
-        Tue,  2 Mar 2021 14:38:03 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B7A531083EA9;
+        Tue,  2 Mar 2021 14:37:18 +0000 (UTC)
 Received: from bfoster (ovpn-114-60.rdu2.redhat.com [10.10.114.60])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id AB40D10013C1;
-        Tue,  2 Mar 2021 14:38:02 +0000 (UTC)
-Date:   Tue, 2 Mar 2021 09:38:00 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5BF5D60CC5;
+        Tue,  2 Mar 2021 14:37:18 +0000 (UTC)
+Date:   Tue, 2 Mar 2021 09:37:16 -0500
 From:   Brian Foster <bfoster@redhat.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: optimise xfs_buf_item_size/format for
- contiguous regions
-Message-ID: <YD5NyJdxpeDN11Fe@bfoster>
+Subject: Re: [PATCH 1/3] xfs: reduce buffer log item shadow allocations
+Message-ID: <YD5NnITklvkLXS+A@bfoster>
 References: <20210223044636.3280862-1-david@fromorbit.com>
- <20210223044636.3280862-4-david@fromorbit.com>
+ <20210223044636.3280862-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210223044636.3280862-4-david@fromorbit.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20210223044636.3280862-2-david@fromorbit.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 23, 2021 at 03:46:36PM +1100, Dave Chinner wrote:
+On Tue, Feb 23, 2021 at 03:46:34PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> We process the buf_log_item bitmap one set bit at a time with
-> xfs_next_bit() so we can detect if a region crosses a memcpy
-> discontinuity in the buffer data address. This has massive overhead
-> on large buffers (e.g. 64k directory blocks) because we do a lot of
-> unnecessary checks and xfs_buf_offset() calls.
+> When we modify btrees repeatedly, we regularly increase the size of
+> the logged region by a single chunk at a time (per transaction
+> commit). This results in the CIL formatting code having to
+> reallocate the log vector buffer every time the buffer dirty region
+> grows. Hence over a typical 4kB btree buffer, we might grow the log
+> vector 4096/128 = 32x over a short period where we repeatedly add
+> or remove records to/from the buffer over a series of running
+> transaction. This means we are doing 32 memory allocations and frees
+> over this time during a performance critical path in the journal.
 > 
-> For example, 16-way concurrent create workload on debug kernel
-> running CPU bound has this at the top of the profile at ~120k
-> create/s on 64kb directory block size:
+> The amount of space tracked in the CIL for the object is calculated
+> during the ->iop_format() call for the buffer log item, but the
+> buffer memory allocated for it is calculated by the ->iop_size()
+> call. The size callout determines the size of the buffer, the format
+> call determines the space used in the buffer.
 > 
->   20.66%  [kernel]  [k] xfs_dir3_leaf_check_int
->    7.10%  [kernel]  [k] memcpy
->    6.22%  [kernel]  [k] xfs_next_bit
->    3.55%  [kernel]  [k] xfs_buf_offset
->    3.53%  [kernel]  [k] xfs_buf_item_format
->    3.34%  [kernel]  [k] __pv_queued_spin_lock_slowpath
->    3.04%  [kernel]  [k] do_raw_spin_lock
->    2.84%  [kernel]  [k] xfs_buf_item_size_segment.isra.0
->    2.31%  [kernel]  [k] __raw_callee_save___pv_queued_spin_unlock
->    1.36%  [kernel]  [k] xfs_log_commit_cil
+> Hence we can oversize the buffer space required in the size
+> calculation without impacting the amount of space used and accounted
+> to the CIL for the changes being logged. This allows us to reduce
+> the number of allocations by rounding up the buffer size to allow
+> for future growth. This can safe a substantial amount of CPU time in
+> this path:
 > 
-> (debug checks hurt large blocks)
+> -   46.52%     2.02%  [kernel]                  [k] xfs_log_commit_cil
+>    - 44.49% xfs_log_commit_cil
+>       - 30.78% _raw_spin_lock
+>          - 30.75% do_raw_spin_lock
+>               30.27% __pv_queued_spin_lock_slowpath
 > 
-> The only buffers with discontinuities in the data address are
-> unmapped buffers, and they are only used for inode cluster buffers
-> and only for logging unlinked pointers. IOWs, it is -rare- that we
-> even need to detect a discontinuity in the buffer item formatting
-> code.
-> 
-> Optimise all this by using xfs_contig_bits() to find the size of
-> the contiguous regions, then test for a discontiunity inside it. If
-> we find one, do the slow "bit at a time" method we do now. If we
-> don't, then just copy the entire contiguous range in one go.
-> 
-> Profile now looks like:
-> 
->   25.26%  [kernel]  [k] xfs_dir3_leaf_check_int
->    9.25%  [kernel]  [k] memcpy
->    5.01%  [kernel]  [k] __pv_queued_spin_lock_slowpath
->    2.84%  [kernel]  [k] do_raw_spin_lock
->    2.22%  [kernel]  [k] __raw_callee_save___pv_queued_spin_unlock
->    1.88%  [kernel]  [k] xfs_buf_find
->    1.53%  [kernel]  [k] memmove
->    1.47%  [kernel]  [k] xfs_log_commit_cil
+> (oh, ouch!)
 > ....
->    0.34%  [kernel]  [k] xfs_buf_item_format
-> ....
->    0.21%  [kernel]  [k] xfs_buf_offset
-> ....
->    0.16%  [kernel]  [k] xfs_contig_bits
-> ....
->    0.13%  [kernel]  [k] xfs_buf_item_size_segment.isra.0
+>       - 1.05% kmem_alloc_large
+>          - 1.02% kmem_alloc
+>               0.94% __kmalloc
 > 
-> So the bit scanning over for the dirty region tracking for the
-> buffer log items is basically gone. Debug overhead hurts even more
-> now...
+> This overhead here us what this patch is aimed at. After:
 > 
-> Perf comparison
-> 
-> 		dir block	 creates		unlink
-> 		size (kb)	time	rate		time
-> 
-> Original	 4		4m08s	220k		 5m13s
-> Original	64		7m21s	115k		13m25s
-> Patched		 4		3m59s	230k		 5m03s
-> Patched		64		6m23s	143k		12m33s
-> 
+>       - 0.76% kmem_alloc_large
+>          - 0.75% kmem_alloc
+>               0.70% __kmalloc
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 > ---
->  fs/xfs/xfs_buf_item.c | 102 +++++++++++++++++++++++++++++++++++-------
->  1 file changed, 87 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 91dc7d8c9739..14d1fefcbf4c 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-...
-> @@ -84,20 +90,51 @@ xfs_buf_item_size_segment(
->  	int				*nbytes)
->  {
->  	struct xfs_buf			*bp = bip->bli_buf;
-> +	int				first_bit;
-> +	int				nbits;
->  	int				next_bit;
->  	int				last_bit;
->  
-> -	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
-> -	if (last_bit == -1)
-> +	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
-> +	if (first_bit == -1)
->  		return;
->  
-> -	/*
-> -	 * initial count for a dirty buffer is 2 vectors - the format structure
-> -	 * and the first dirty region.
-> -	 */
-> -	*nvecs += 2;
-> -	*nbytes += xfs_buf_log_format_size(blfp) + XFS_BLF_CHUNK;
-> +	(*nvecs)++;
-> +	*nbytes += xfs_buf_log_format_size(blfp);
-> +
-> +	do {
-> +		nbits = xfs_contig_bits(blfp->blf_data_map,
-> +					blfp->blf_map_size, first_bit);
-> +		ASSERT(nbits > 0);
-> +
-> +		/*
-> +		 * Straddling a page is rare because we don't log contiguous
-> +		 * chunks of unmapped buffers anywhere.
-> +		 */
-> +		if (nbits > 1 &&
-> +		    xfs_buf_item_straddle(bp, offset, first_bit, nbits))
-> +			goto slow_scan;
-> +
-> +		(*nvecs)++;
-> +		*nbytes += nbits * XFS_BLF_CHUNK;
-> +
-> +		/*
-> +		 * This takes the bit number to start looking from and
-> +		 * returns the next set bit from there.  It returns -1
-> +		 * if there are no more bits set or the start bit is
-> +		 * beyond the end of the bitmap.
-> +		 */
-> +		first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
-> +					(uint)first_bit + nbits + 1);
-
-I think the range tracking logic would be a bit more robust to not +1
-here and thus not make assumptions on how the rest of the loop is
-implemented, but regardless this looks Ok to me:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> +	} while (first_bit != -1);
+>  fs/xfs/xfs_buf_item.c | 13 +++++++++++--
+>  1 file changed, 11 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 17960b1ce5ef..0628a65d9c55 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -142,6 +142,7 @@ xfs_buf_item_size(
+>  {
+>  	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+>  	int			i;
+> +	int			bytes;
 >  
-> +	return;
-> +
-> +slow_scan:
-> +	/* Count the first bit we jumped out of the above loop from */
-> +	(*nvecs)++;
-> +	*nbytes += XFS_BLF_CHUNK;
-> +	last_bit = first_bit;
->  	while (last_bit != -1) {
->  		/*
->  		 * This takes the bit number to start looking from and
-> @@ -115,11 +152,14 @@ xfs_buf_item_size_segment(
->  		if (next_bit == -1) {
->  			break;
->  		} else if (next_bit != last_bit + 1 ||
-> -		           xfs_buf_item_straddle(bp, offset, next_bit, last_bit)) {
-> +		           xfs_buf_item_straddle(bp, offset, first_bit, nbits)) {
->  			last_bit = next_bit;
-> +			first_bit = next_bit;
->  			(*nvecs)++;
-> +			nbits = 1;
->  		} else {
->  			last_bit++;
-> +			nbits++;
->  		}
->  		*nbytes += XFS_BLF_CHUNK;
+>  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+>  	if (bip->bli_flags & XFS_BLI_STALE) {
+> @@ -173,7 +174,7 @@ xfs_buf_item_size(
 >  	}
-> @@ -276,6 +316,38 @@ xfs_buf_item_format_segment(
+>  
 >  	/*
->  	 * Fill in an iovec for each set of contiguous chunks.
+> -	 * the vector count is based on the number of buffer vectors we have
+> +	 * The vector count is based on the number of buffer vectors we have
+>  	 * dirty bits in. This will only be greater than one when we have a
+>  	 * compound buffer with more than one segment dirty. Hence for compound
+>  	 * buffers we need to track which segment the dirty bits correspond to,
+> @@ -181,10 +182,18 @@ xfs_buf_item_size(
+>  	 * count for the extra buf log format structure that will need to be
+>  	 * written.
 >  	 */
-> +	do {
-> +		ASSERT(first_bit >= 0);
-> +		nbits = xfs_contig_bits(blfp->blf_data_map,
-> +					blfp->blf_map_size, first_bit);
-> +		ASSERT(nbits > 0);
+> +	bytes = 0;
+>  	for (i = 0; i < bip->bli_format_count; i++) {
+>  		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
+> -					  nvecs, nbytes);
+> +					  nvecs, &bytes);
+>  	}
 > +
-> +		/*
-> +		 * Straddling a page is rare because we don't log contiguous
-> +		 * chunks of unmapped buffers anywhere.
-> +		 */
-> +		if (nbits > 1 &&
-> +		    xfs_buf_item_straddle(bp, offset, first_bit, nbits))
-> +			goto slow_scan;
-> +
-> +		xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
-> +					first_bit, nbits);
-> +		blfp->blf_size++;
-> +
-> +		/*
-> +		 * This takes the bit number to start looking from and
-> +		 * returns the next set bit from there.  It returns -1
-> +		 * if there are no more bits set or the start bit is
-> +		 * beyond the end of the bitmap.
-> +		 */
-> +		first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
-> +					(uint)first_bit + nbits + 1);
-> +	} while (first_bit != -1);
-> +
-> +	return;
-> +
-> +slow_scan:
-> +	ASSERT(bp->b_addr == NULL);
->  	last_bit = first_bit;
->  	nbits = 1;
->  	for (;;) {
-> @@ -300,7 +372,7 @@ xfs_buf_item_format_segment(
->  			blfp->blf_size++;
->  			break;
->  		} else if (next_bit != last_bit + 1 ||
-> -		           xfs_buf_item_straddle(bp, offset, next_bit, last_bit)) {
-> +		           xfs_buf_item_straddle(bp, offset, first_bit, nbits)) {
->  			xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
->  						first_bit, nbits);
->  			blfp->blf_size++;
+> +	/*
+> +	 * Round up the buffer size required to minimise the number of memory
+> +	 * allocations that need to be done as this item grows when relogged by
+> +	 * repeated modifications.
+> +	 */
+> +	*nbytes = round_up(bytes, 512);
+>  	trace_xfs_buf_item_size(bip);
+>  }
+>  
 > -- 
 > 2.28.0
 > 
