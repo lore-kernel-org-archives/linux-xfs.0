@@ -2,154 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84C24C43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79A36C433E6
 	for <linux-xfs@archiver.kernel.org>; Tue,  2 Mar 2021 08:21:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 61A4A64DEE
+	by mail.kernel.org (Postfix) with ESMTP id 3A7F264DE5
 	for <linux-xfs@archiver.kernel.org>; Tue,  2 Mar 2021 08:21:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344690AbhCBGlz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Mar 2021 01:41:55 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44512 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1574967AbhCBDwF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Mar 2021 22:52:05 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1DD0B61601;
-        Tue,  2 Mar 2021 03:32:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614655964;
-        bh=fBTTRycpEqDMY530KgFM0faLEhz7cqnXeERkwGA1YI4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tebFDnvWOkaomqYSq4U0wr9aHPv7z2SucpZUuMA78KKSVYSBtZ0B4VStiNmn69jzd
-         07DHVQQZSOoFTQFkxrHFwcD25QrEZMQr1HfGfhJorz5k0eUySUCPnr9CqeyC12wTP8
-         o9hIKlJXYW83SaPnezvjTHuok3nE3KPSwCb4ZhEWlSSOnFltTHOwuNeC5a+ShxoIZw
-         1c5r+FCGgxzWk2lnvFNWG8wyqwjS41Ntg0bHQKTVwy9Z+Qs1p1R6IleoWxzf8QMRFC
-         aP0ncfse1YRhloRRl1B3US1GVgH0gN6YGQdpy7BXAisMU+PiEcTqSTrX0vHkhinIqF
-         sl97Gh+mj+rjg==
-Date:   Mon, 1 Mar 2021 19:32:43 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] generic: test mapped write after shutdown and failed
- writeback
-Message-ID: <20210302033243.GN7272@magnolia>
-References: <20210210170628.173200-1-bfoster@redhat.com>
+        id S1344673AbhCBGlf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Mar 2021 01:41:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38420 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1574447AbhCBDfv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Mar 2021 22:35:51 -0500
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3D20C061756
+        for <linux-xfs@vger.kernel.org>; Mon,  1 Mar 2021 19:33:38 -0800 (PST)
+Received: by mail-ed1-x532.google.com with SMTP id v13so7051140edw.9
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Mar 2021 19:33:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=QHkKhS85lTO/1ZkryMnHdjoXWEHU3orWJwuliOPijEg=;
+        b=un1zylhUbUa9CBvR67wBcwPZvQL0x4JmNFowwQWRDdGYxu6J0OgWJEqn+3PtBd+4QC
+         cqbNNIeSXYA8G6vSnR2uWbYjsgGQb5v/h7oL7jXxuD/VBFphR/pct3mB6r/X2pupGg/4
+         SX0eqVTO0JkgI1bmn9LswXNbdaya2hfY4NIFZphT51UPaWZdFK1euP4fmMjsJ/0gWvHH
+         5MQKmxtzMf+qFdDzOGUkl/xaAxZrFsRaD+xCnHywqcc6II2p9p2dKXMlqjkktBRuwj7O
+         L/YYyNBuR6P8AD/3Fbh94FYwxPajGC5dQCIpOaLmcM/6zN0em2h1wm4dnam+wALgryIF
+         VUzg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=QHkKhS85lTO/1ZkryMnHdjoXWEHU3orWJwuliOPijEg=;
+        b=qQ30cCOaWrIlUt3AN+YuPSgQXBE/gP+5VtvONtVLPLq15BNAziCENOQvBkozdB9k+a
+         cgXIIr+Vc1P8y2yHPArgBfIXj5n0YS3pX2HyRqz5+9SVHhx+6S0Y2N9Dupo6WKGL3+RH
+         Zme4i7uuPUg8V110cxz+B66WQUY/BBkpxjLEM8rIswo9kC+AcBPsPs2CWBCrus15GXXm
+         z90Iu6i/NsE+73F/QHUn4Ap9TVGLEc/WonhvekQjTjv2tb8OCrhgkNeNdG//3tIBG2my
+         WmFRWtZhTbVSTaxm6Wnh75b2AKgkkjaikYe/v0FAbbt5FEOKshWrWBaJOhvBoyWw11WC
+         mylA==
+X-Gm-Message-State: AOAM531at8fFWQMVISne8aPDe6Imqu9r5yrCkPHE9R81I7LBkS8uqgPc
+        tCoZDTgVYb1XGIuob2ZZAHISJe4/6P5I656HALNc6Q==
+X-Google-Smtp-Source: ABdhPJy6/ka8tGagcwE2L5RBcYi+8/lqcA+6OxdF6mdgjEfsgOsYpbXmbns7gGEU/XAr64+OyUVXGqCAa0atgxuU9hs=
+X-Received: by 2002:a05:6402:1152:: with SMTP id g18mr19307291edw.18.1614656017366;
+ Mon, 01 Mar 2021 19:33:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210210170628.173200-1-bfoster@redhat.com>
+References: <20210226205126.GX4662@dread.disaster.area> <CAPcyv4iDefA3Y0wUW=p080SYAsM_2TPJba-V-sxdK_BeJMkmsw@mail.gmail.com>
+ <20210226212748.GY4662@dread.disaster.area> <CAPcyv4jryJ32R5vOwwEdoU3V8C0B7zu_pCt=7f6A3Gk-9h6Dfg@mail.gmail.com>
+ <20210227223611.GZ4662@dread.disaster.area> <CAPcyv4h7XA3Jorcy_J+t9scw0A4KdT2WEwAhE-Nbjc=C2qmkMw@mail.gmail.com>
+ <20210228223846.GA4662@dread.disaster.area> <CAPcyv4jzV2RUij2BEvDJLLiK_67Nf1v3M6-jRLKf32x4iOzqng@mail.gmail.com>
+ <20210301224640.GG4662@dread.disaster.area> <CAPcyv4iTqDJApZY0o_Q0GKn93==d2Gta2NM5x=upf=3JtTia7Q@mail.gmail.com>
+ <20210302024227.GH4662@dread.disaster.area>
+In-Reply-To: <20210302024227.GH4662@dread.disaster.area>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Mon, 1 Mar 2021 19:33:28 -0800
+Message-ID: <CAPcyv4ja8gnTR1E-Ge5etm+y69cHwdWN6Bg79wPPF4M=C-w79A@mail.gmail.com>
+Subject: Re: Question about the "EXPERIMENTAL" tag for dax in XFS
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "jack@suse.cz" <jack@suse.cz>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>,
+        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
+        "y-goto@fujitsu.com" <y-goto@fujitsu.com>,
+        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
+        "fnstml-iaas@cn.fujitsu.com" <fnstml-iaas@cn.fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 10, 2021 at 12:06:28PM -0500, Brian Foster wrote:
-> XFS has a regression where it failed to check shutdown status in the
-> write fault path. This produced an iomap warning if the page
-> happened to recently fail a writeback attempt because writeback
-> failure can clear Uptodate status on the page. Add a test for this
-> scenario to help ensure mapped write failures are handled as
-> expected in the event of filesystem shutdown.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> Note that this test currently fails on XFS. The fix is posted for review
-> on linux-xfs:
-> 
-> https://lore.kernel.org/linux-xfs/20210210170112.172734-1-bfoster@redhat.com/
-> 
-> Brian
-> 
->  tests/generic/999     | 45 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/999.out |  4 ++++
->  tests/generic/group   |  1 +
->  3 files changed, 50 insertions(+)
->  create mode 100755 tests/generic/999
->  create mode 100644 tests/generic/999.out
-> 
-> diff --git a/tests/generic/999 b/tests/generic/999
-> new file mode 100755
-> index 00000000..5e5408e7
-> --- /dev/null
-> +++ b/tests/generic/999
-> @@ -0,0 +1,45 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-only
-> +# Copyright 2021 Red Hat, Inc.
-> +#
-> +# FS QA Test No. 999
-> +#
-> +# Test a write fault scenario on a shutdown fs.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	rm -f $tmp.*
-> +}
-> +
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +rm -f $seqres.full
-> +
-> +_supported_fs generic
-> +_require_scratch_nocheck
-> +_require_scratch_shutdown
-> +
-> +_scratch_mkfs &>> $seqres.full
-> +_scratch_mount
-> +
-> +# XFS had a regression where it failed to check shutdown status in the fault
-> +# path. This produced an iomap warning because writeback failure clears Uptodate
-> +# status on the page.
-> +file=$SCRATCH_MNT/file
-> +$XFS_IO_PROG -fc "pwrite 0 4k" -c fsync $file | _filter_xfs_io
-> +$XFS_IO_PROG -x -c "mmap 0 4k" -c "mwrite 0 4k" -c shutdown -c fsync \
-> +	-c "mwrite 0 4k" $file | _filter_xfs_io
+On Mon, Mar 1, 2021 at 6:42 PM Dave Chinner <david@fromorbit.com> wrote:
+[..]
+> We do not need a DAX specific mechanism to tell us "DAX device
+> gone", we need a generic block device interface that tells us "range
+> of block device is gone".
 
-On my fstests (which sets unlimited core dumps) this test generates a
-false negative because ./check trips on the core dump that the dying
-xfs_io creates.  Assuming that we're /supposed/ to segfault here, I'll
-send a patch to ulimit -c0.
+This is the crux of the disagreement. The block_device is going away
+*and* the dax_device is going away. The dax_device removal implies one
+set of actions (direct accessed pfns invalid) the block device removal
+implies another (block layer sector access offline). corrupted_range
+is blurring the notification for 2 different failure domains. Look at
+the nascent idea to mount a filesystem on dax sans a block device.
+Look at the existing plumbing for DM to map dax_operations through a
+device stack. Look at the pushback Ruan got for adding a new
+block_device operation for corrupted_range().
 
---D
+> The reason that the block device is gone is irrelevant to the
+> filesystem. The type of block device is also irrelevant. If the
+> filesystem isn't using DAX (e.g. dax=never mount option) even when
+> it is on a DAX capable device, then it just doesn't care about
+> invalidating DAX mappings because it has none. But it still may care
+> about shutting down the filesystem because the block device is gone.
 
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/999.out b/tests/generic/999.out
-> new file mode 100644
-> index 00000000..f55569ff
-> --- /dev/null
-> +++ b/tests/generic/999.out
-> @@ -0,0 +1,4 @@
-> +QA output created by 999
-> +wrote 4096/4096 bytes at offset 0
-> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> +fsync: Input/output error
-> diff --git a/tests/generic/group b/tests/generic/group
-> index b10fdea4..edd54ce5 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -625,3 +625,4 @@
->  620 auto mount quick
->  621 auto quick encrypt
->  622 auto shutdown metadata atime
-> +999 auto quick shutdown
-> -- 
-> 2.26.2
-> 
+Sure, let's have a discussion about a block_device gone notification,
+and a dax_device gone notification.
+
+> This is why we need to communicate what error occurred, not what
+> action a device driver thinks needs to be taken.
+
+The driver is only an event producer in this model, whatever the
+consumer does at the other end is not its concern. There may be a
+generic consumer and a filesystem specific consumer.
+
+> The error is
+> important to the filesystem, the action might be completely
+> irrelevant. And, as we know now, shutdown on DAX enable filesystems
+> needs to imply DAX mapping invalidation in all cases, not just when
+> the device disappears from under the filesystem.
+
+Sure.
