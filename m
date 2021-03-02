@@ -2,1162 +2,396 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49587C28D17
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B1E5C28E82
 	for <linux-xfs@archiver.kernel.org>; Tue,  2 Mar 2021 08:12:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26CAF64D9E
+	by mail.kernel.org (Postfix) with ESMTP id 4758764D74
 	for <linux-xfs@archiver.kernel.org>; Tue,  2 Mar 2021 08:12:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245113AbhCBGiE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Mar 2021 01:38:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41622 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236900AbhCBBkE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Mar 2021 20:40:04 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 108ED601FF;
-        Tue,  2 Mar 2021 01:39:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614649149;
-        bh=Pia6b5mXDuy3o9EQqciAdTQq0tklfjh1JnTxl5kfUWw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ZiS3N9zpTnMjz30GgfCquSHnChFG2UljZtPVbrADjdIOGO/5B5ysDPH7huvZIJL3e
-         mDus0UTP7OX3xRq7T9oorxKPDNej00ADibS+U4dGCjrA0ygP4hP0bq0TcRtrfUoQTR
-         a2IdgnMC1kJgt50/5ABOkTXSZxepcy+602tbsfUKQpi4LeRfs5Os40CTw6FFFXfUBb
-         BEVGSFMncRqDNZHm/KAfip7mL79Jzw+JL58Rt2iQiUNze+L0BBxV2OoLRS+R+IXa0C
-         eJIWwUe7l+u8UNcVsvXmZjcFO3iXxwQVrDPm8DgZ5wmX6MEgJIljfCIuA3fI+K069V
-         WBdG0GgU+aP7g==
-Date:   Mon, 1 Mar 2021 17:39:05 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v15 12/22] xfs: Add delay ready attr set routines
-Message-ID: <20210302013905.GL7272@magnolia>
-References: <20210218165348.4754-1-allison.henderson@oracle.com>
- <20210218165348.4754-13-allison.henderson@oracle.com>
+        id S245259AbhCBGib (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Mar 2021 01:38:31 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:48031 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1444617AbhCBCn1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Mar 2021 21:43:27 -0500
+Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 6ABC110748E;
+        Tue,  2 Mar 2021 13:42:28 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lGuzT-00Ao38-CB; Tue, 02 Mar 2021 13:42:27 +1100
+Date:   Tue, 2 Mar 2021 13:42:27 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "jack@suse.cz" <jack@suse.cz>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>,
+        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
+        "y-goto@fujitsu.com" <y-goto@fujitsu.com>,
+        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
+        "fnstml-iaas@cn.fujitsu.com" <fnstml-iaas@cn.fujitsu.com>
+Subject: Re: Question about the "EXPERIMENTAL" tag for dax in XFS
+Message-ID: <20210302024227.GH4662@dread.disaster.area>
+References: <20210226205126.GX4662@dread.disaster.area>
+ <CAPcyv4iDefA3Y0wUW=p080SYAsM_2TPJba-V-sxdK_BeJMkmsw@mail.gmail.com>
+ <20210226212748.GY4662@dread.disaster.area>
+ <CAPcyv4jryJ32R5vOwwEdoU3V8C0B7zu_pCt=7f6A3Gk-9h6Dfg@mail.gmail.com>
+ <20210227223611.GZ4662@dread.disaster.area>
+ <CAPcyv4h7XA3Jorcy_J+t9scw0A4KdT2WEwAhE-Nbjc=C2qmkMw@mail.gmail.com>
+ <20210228223846.GA4662@dread.disaster.area>
+ <CAPcyv4jzV2RUij2BEvDJLLiK_67Nf1v3M6-jRLKf32x4iOzqng@mail.gmail.com>
+ <20210301224640.GG4662@dread.disaster.area>
+ <CAPcyv4iTqDJApZY0o_Q0GKn93==d2Gta2NM5x=upf=3JtTia7Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210218165348.4754-13-allison.henderson@oracle.com>
+In-Reply-To: <CAPcyv4iTqDJApZY0o_Q0GKn93==d2Gta2NM5x=upf=3JtTia7Q@mail.gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
+        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
+        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
+        a=86xVJcmK9V8V8UM-AToA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 18, 2021 at 09:53:38AM -0700, Allison Henderson wrote:
-> This patch modifies the attr set routines to be delay ready. This means
-> they no longer roll or commit transactions, but instead return -EAGAIN
-> to have the calling routine roll and refresh the transaction.  In this
-> series, xfs_attr_set_args has become xfs_attr_set_iter, which uses a
-> state machine like switch to keep track of where it was when EAGAIN was
-> returned. See xfs_attr.h for a more detailed diagram of the states.
+On Mon, Mar 01, 2021 at 04:32:36PM -0800, Dan Williams wrote:
+> On Mon, Mar 1, 2021 at 2:47 PM Dave Chinner <david@fromorbit.com> wrote:
+> > Now we have the filesytem people providing a mechanism for the pmem
+> > devices to tell the filesystems about physical device failures so
+> > they can handle such failures correctly themselves. Having the
+> > device go away unexpectedly from underneath a mounted and active
+> > filesystem is a *device failure*, not an "unplug event".
 > 
-> Two new helper functions have been added: xfs_attr_rmtval_find_space and
-> xfs_attr_rmtval_set_blk.  They provide a subset of logic similar to
-> xfs_attr_rmtval_set, but they store the current block in the delay attr
-> context to allow the caller to roll the transaction between allocations.
-> This helps to simplify and consolidate code used by
-> xfs_attr_leaf_addname and xfs_attr_node_addname. xfs_attr_set_args has
-> now become a simple loop to refresh the transaction until the operation
-> is completed.  Lastly, xfs_attr_rmtval_remove is no longer used, and is
-> removed.
+> It's the same difference to the physical page, all mappings to that
+> page need to be torn down. I'm happy to call an fs callback and let
+> each filesystem do what it wants with a "every pfn in this dax device
+> needs to be unmapped".
+
+You keep talking like this is something specific to a DAX device.
+It isn't - the filesystem needs to take specific actions if any type
+of block device reports that it has a corrupted range, not just DAX.
+A DAX device simply adds "and invalidate direct mappings" to the
+list of stuff that needs to be done.
+
+And as far as a filesystem is concerned, there is no difference
+between "this 4kB range is bad" and "the range of this entire device
+is bad". We have to do the same things in both situations.
+
+> I'm looking at the ->corrupted_range() patches trying to map it to
+> this use case and I don't see how, for example a realtime-xfs over DM
+> over multiple PMEM gets the notification to the right place.
+> bd_corrupted_range() uses get_super() which get the wrong answer for
+> both realtime-xfs and DM.
+
+I'm not sure I follow your logic. What is generating the wrong
+answer?
+
+We already have infrastructure for the block device to look up the
+superblock mounted on top of it, an DM already uses that for things
+like "dmsetup suspend" to freeze the filesystem before it does
+something.  This "superblock lookup" only occurs for the top level
+DM device, not for the component pmem devices that make up the DM
+device.
+
+
+IOWs, if there's a DM device that maps multiple pmem devices, then
+it should be stacking the bd_corrupted_range() callbacks to map the
+physical device range to the range in the higher level DM device
+that belongs to. This mapping of ranges is what DM exists to do -
+the filesystem has no clue about what devices make up a DM device,
+so the DM device *must* translate ranges for component devices into
+the ranges that it maps that device into the LBA range it exposes to
+the filesystem.
+
+> I'd flip that arrangement around and have the FS tell the block device
+> "if something happens to you, here is the super_block to notify".
+
+We already have a mechanism for this that the block device calls:
+get_active_super(bdev). There can be only one superblock per block
+device - the superblock has exclusive ownership of the block device
+while the filesystem is mounted.
+
+get_active_super() returns the superblock that sits on top of the
+bdev with an active reference, allowing the caller to safely access
+and operate on the sueprblock without having to worry about the
+superblock going away in the middle of whatever operation the block
+device needs to perform.
+
+If this isn't working, then existing storage stack functionality
+doesn't work as it should and this needs fixing independently of
+the PMEM/DAX stuff we are talking about here.
+
+> So
+> to me this looks like a fs_dax_register_super() helper that plumbs the
+> superblock through an arbitrary stack of block devices to the leaf
+> block-device that might want to send a notification up when a global
+> unmap operation needs to be performed.
+
+No, this is just wrong. The filesystem has no clue what block device
+is at the leaf level of a block device stack, nor what LBA block
+range represents that device within the address space the stacked
+block devices present to the filesystem.
+
+> > Please listen when we say "that is
+> > not sufficient" because we don't want to be backed into a corner
+> > that we have to fix ourselves again before we can enable some basic
+> > filesystem functionality that we should have been able to support on
+> > DAX from the start...
 > 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
-I /think/ this looks reasonable.
-
-By the way, would you mind going through the comments in these patches
-looking for typos?  I noticed a few ("sucesfull") lurking here and
-there.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  fs/xfs/libxfs/xfs_attr.c        | 448 ++++++++++++++++++++++++----------------
->  fs/xfs/libxfs/xfs_attr.h        | 241 ++++++++++++++++++++-
->  fs/xfs/libxfs/xfs_attr_remote.c |  98 ++++++---
->  fs/xfs/libxfs/xfs_attr_remote.h |   5 +-
->  fs/xfs/xfs_trace.h              |   1 -
->  5 files changed, 583 insertions(+), 210 deletions(-)
+> That's some revisionist interpretation of how the discovery of the
+> reflink+dax+memory-error-handling collision went down.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index d46b92a..c7b86d5 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -53,16 +53,16 @@ STATIC int xfs_attr_leaf_try_add(struct xfs_da_args *args, struct xfs_buf *bp);
->   */
->  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
->  STATIC void xfs_attr_restore_rmt_blk(struct xfs_da_args *args);
-> -STATIC int xfs_attr_node_addname(struct xfs_da_args *args,
-> -				 struct xfs_da_state *state);
-> -STATIC int xfs_attr_node_addname_find_attr(struct xfs_da_args *args,
-> -				 struct xfs_da_state **state);
-> -STATIC int xfs_attr_node_addname_work(struct xfs_da_args *args);
-> +STATIC int xfs_attr_node_addname(struct xfs_delattr_context *dac);
-> +STATIC int xfs_attr_node_addname_find_attr(struct xfs_delattr_context *dac);
-> +STATIC int xfs_attr_node_addname_work(struct xfs_delattr_context *dac);
->  STATIC int xfs_attr_node_removename_iter(struct xfs_delattr_context *dac);
->  STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
->  				 struct xfs_da_state **state);
->  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
->  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
-> +STATIC int xfs_attr_set_iter(struct xfs_delattr_context *dac,
-> +			     struct xfs_buf **leaf_bp);
->  
->  int
->  xfs_inode_hasattr(
-> @@ -226,7 +226,7 @@ xfs_attr_is_shortform(
->   * also checks for a defer finish.  Transaction is finished and rolled as
->   * needed, and returns true of false if the delayed operation should continue.
->   */
-> -int
-> +STATIC int
->  xfs_attr_trans_roll(
->  	struct xfs_delattr_context	*dac)
->  {
-> @@ -249,29 +249,55 @@ xfs_attr_trans_roll(
->  	return error;
->  }
->  
-> +/*
-> + * Set the attribute specified in @args.
-> + */
-> +int
-> +xfs_attr_set_args(
-> +	struct xfs_da_args		*args)
-> +{
-> +	struct xfs_buf			*leaf_bp = NULL;
-> +	int				error = 0;
-> +	struct xfs_delattr_context	dac = {
-> +		.da_args	= args,
-> +	};
-> +
-> +	do {
-> +		error = xfs_attr_set_iter(&dac, &leaf_bp);
-> +		if (error != -EAGAIN)
-> +			break;
-> +
-> +		error = xfs_attr_trans_roll(&dac);
-> +		if (error)
-> +			return error;
-> +	} while (true);
-> +
-> +	return error;
-> +}
-> +
->  STATIC int
->  xfs_attr_set_fmt(
-> -	struct xfs_da_args	*args)
-> +	struct xfs_delattr_context	*dac,
-> +	struct xfs_buf			**leaf_bp)
->  {
-> -	struct xfs_buf          *leaf_bp = NULL;
-> -	struct xfs_inode	*dp = args->dp;
-> -	int			error2, error = 0;
-> +	struct xfs_da_args		*args = dac->da_args;
-> +	struct xfs_inode		*dp = args->dp;
-> +	int				error = 0;
->  
->  	/*
->  	 * Try to add the attr to the attribute list in the inode.
->  	 */
->  	error = xfs_attr_try_sf_addname(dp, args);
-> -	if (error != -ENOSPC) {
-> -		error2 = xfs_trans_commit(args->trans);
-> -		args->trans = NULL;
-> -		return error ? error : error2;
-> -	}
-> +
-> +	/* Should only be 0, -EEXIST or -ENOSPC */
-> +	if (error != -ENOSPC)
-> +		return error;
->  
->  	/*
->  	 * It won't fit in the shortform, transform to a leaf block.
->  	 * GROT: another possible req'mt for a double-split btree op.
->  	 */
-> -	error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
-> +	error = xfs_attr_shortform_to_leaf(args, leaf_bp);
->  	if (error)
->  		return error;
->  
-> @@ -280,93 +306,140 @@ xfs_attr_set_fmt(
->  	 * concurrent AIL push cannot grab the half-baked leaf buffer
->  	 * and run into problems with the write verifier.
->  	 */
-> -	xfs_trans_bhold(args->trans, leaf_bp);
-> -	error = xfs_defer_finish(&args->trans);
-> -	xfs_trans_bhold_release(args->trans, leaf_bp);
-> -	if (error)
-> -		xfs_trans_brelse(args->trans, leaf_bp);
-> +	xfs_trans_bhold(args->trans, *leaf_bp);
->  
-> +	/*
-> +	 * We're still in XFS_DAS_UNINIT state here.  We've converted
-> +	 * the attr fork to leaf format and will restart with the leaf
-> +	 * add.
-> +	 */
-> +	dac->flags |= XFS_DAC_DEFER_FINISH;
->  	return -EAGAIN;
->  }
->  
->  /*
->   * Set the attribute specified in @args.
-> + * This routine is meant to function as a delayed operation, and may return
-> + * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
-> + * to handle this, and recall the function until a successful error code is
-> + * returned.
->   */
->  int
-> -xfs_attr_set_args(
-> -	struct xfs_da_args	*args)
-> +xfs_attr_set_iter(
-> +	struct xfs_delattr_context	*dac,
-> +	struct xfs_buf			**leaf_bp)
->  {
-> -	struct xfs_inode	*dp = args->dp;
-> -	struct xfs_buf		*bp = NULL;
-> -	struct xfs_da_state     *state = NULL;
-> -	int			forkoff, error = 0;
-> -	int			retval = 0;
-> +	struct xfs_da_args              *args = dac->da_args;
-> +	struct xfs_inode		*dp = args->dp;
-> +	struct xfs_buf			*bp = NULL;
-> +	struct xfs_da_state		*state = NULL;
-> +	int				forkoff, error = 0;
-> +	int				retval = 0;
->  
-> -	/*
-> -	 * If the attribute list is already in leaf format, jump straight to
-> -	 * leaf handling.  Otherwise, try to add the attribute to the shortform
-> -	 * list; if there's no room then convert the list to leaf format and try
-> -	 * again.
-> -	 */
-> -	if (xfs_attr_is_shortform(dp)) {
-> -		error = xfs_attr_set_fmt(args);
-> -		if (error != -EAGAIN)
-> -			return error;
-> -	}
-> +	/* State machine switch */
-> +	switch (dac->dela_state) {
-> +	case XFS_DAS_UNINIT:
-> +		if (xfs_attr_is_shortform(dp))
-> +			return xfs_attr_set_fmt(dac, leaf_bp);
->  
-> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> -		error = xfs_attr_leaf_try_add(args, bp);
-> -		if (error == -ENOSPC) {
-> -			/*
-> -			 * Promote the attribute list to the Btree format.
-> -			 */
-> -			error = xfs_attr3_leaf_to_node(args);
-> +		/*
-> +		 * After a shortform to leaf conversion, we need to hold the
-> +		 * leaf and cycle out the transaction.  When we get back,
-> +		 * we need to release the leaf to release the hold on the leaf
-> +		 * buffer.
-> +		 */
-> +		if (*leaf_bp != NULL) {
-> +			xfs_trans_bhold_release(args->trans, *leaf_bp);
-> +			*leaf_bp = NULL;
-> +		}
-> +
-> +		if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> +			error = xfs_attr_leaf_try_add(args, *leaf_bp);
-> +			if (error == -ENOSPC) {
-> +				/*
-> +				 * Promote the attribute list to the Btree
-> +				 * format.
-> +				 */
-> +				error = xfs_attr3_leaf_to_node(args);
-> +				if (error)
-> +					return error;
-> +
-> +				/*
-> +				 * Finish any deferred work items and roll the
-> +				 * transaction once more.  The goal here is to
-> +				 * call node_addname with the inode and
-> +				 * transaction in the same state (inode locked
-> +				 * and joined, transaction clean) no matter how
-> +				 * we got to this step.
-> +				 *
-> +				 * At this point, we are still in
-> +				 * XFS_DAS_UNINIT, but when we come back, we'll
-> +				 * be a node, so we'll fall down into the node
-> +				 * handling code below
-> +				 */
-> +				dac->flags |= XFS_DAC_DEFER_FINISH;
-> +				return -EAGAIN;
-> +			}
-> +			else if (error)
-> +				return error;
-> +		}
-> +		else {
-> +			error = xfs_attr_node_addname_find_attr(dac);
->  			if (error)
->  				return error;
->  
-> -			/*
-> -			 * Finish any deferred work items and roll the transaction once
-> -			 * more.  The goal here is to call node_addname with the inode
-> -			 * and transaction in the same state (inode locked and joined,
-> -			 * transaction clean) no matter how we got to this step.
-> -			 */
-> -			error = xfs_defer_finish(&args->trans);
-> +			error = xfs_attr_node_addname(dac);
->  			if (error)
->  				return error;
->  
->  			/*
-> -			 * Commit the current trans (including the inode) and
-> -			 * start a new one.
-> +			 * If addname was sucesfull, and we dont need to alloc
-> +			 * anymore blks, we're done.
->  			 */
-> -			error = xfs_trans_roll_inode(&args->trans, dp);
-> -			if (error)
-> +			if (!args->rmtblkno && !args->rmtblkno2)
->  				return error;
->  
-> -			goto node;
-> +			dac->dela_state = XFS_DAS_FOUND_NBLK;
-> +			return -EAGAIN;
->  		}
-> -		else if (error)
-> -			return error;
->  
-> -		/*
-> -		 * Commit the transaction that added the attr name so that
-> -		 * later routines can manage their own transactions.
-> -		 */
-> -		error = xfs_trans_roll_inode(&args->trans, dp);
-> -		if (error)
-> -			return error;
-> +		dac->dela_state = XFS_DAS_FOUND_LBLK;
-> +		return -EAGAIN;
->  
-> +        case XFS_DAS_FOUND_LBLK:
->  		/*
->  		 * If there was an out-of-line value, allocate the blocks we
->  		 * identified for its storage and copy the value.  This is done
->  		 * after we create the attribute so that we don't overflow the
->  		 * maximum size of a transaction and/or hit a deadlock.
->  		 */
-> -		if (args->rmtblkno > 0) {
-> -			error = xfs_attr_rmtval_set(args);
-> +
-> +		/* Open coded xfs_attr_rmtval_set without trans handling */
-> +		if ((dac->flags & XFS_DAC_LEAF_ADDNAME_INIT) == 0) {
-> +			dac->flags |= XFS_DAC_LEAF_ADDNAME_INIT;
-> +			if (args->rmtblkno > 0) {
-> +				error = xfs_attr_rmtval_find_space(dac);
-> +				if (error)
-> +					return error;
-> +			}
-> +		}
-> +
-> +		/*
-> +		 * Roll through the "value", allocating blocks on disk as
-> +		 * required.
-> +		 */
-> +		if (dac->blkcnt > 0) {
-> +			error = xfs_attr_rmtval_set_blk(dac);
->  			if (error)
->  				return error;
-> +
-> +			return -EAGAIN;
->  		}
->  
-> +		error = xfs_attr_rmtval_set_value(args);
-> +		if (error)
-> +			return error;
-> +
->  		if (!(args->op_flags & XFS_DA_OP_RENAME)) {
->  			/*
->  			 * Added a "remote" value, just clear the incomplete
-> @@ -395,22 +468,26 @@ xfs_attr_set_args(
->  		 * Commit the flag value change and start the next trans in
->  		 * series.
->  		 */
-> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
-> -		if (error)
-> -			return error;
-> -
-> +		dac->dela_state = XFS_DAS_FLIP_LFLAG;
-> +		return -EAGAIN;
-> +	case XFS_DAS_FLIP_LFLAG:
->  		/*
->  		 * Dismantle the "old" attribute/value pair by removing a
->  		 * "remote" value (if it exists).
->  		 */
->  		xfs_attr_restore_rmt_blk(args);
->  
-> -		if (args->rmtblkno) {
-> -			error = xfs_attr_rmtval_invalidate(args);
-> -			if (error)
-> -				return error;
-> +		error = xfs_attr_rmtval_invalidate(args);
-> +		if (error)
-> +			return error;
->  
-> -			error = xfs_attr_rmtval_remove(args);
-> +		/* Set state in case xfs_attr_rmtval_remove returns -EAGAIN */
-> +		dac->dela_state = XFS_DAS_RM_LBLK;
-> +
-> +		/* fallthrough */
-> +	case XFS_DAS_RM_LBLK:
-> +		if (args->rmtblkno) {
-> +			error = __xfs_attr_rmtval_remove(dac);
->  			if (error)
->  				return error;
->  		}
-> @@ -435,94 +512,117 @@ xfs_attr_set_args(
->  			/* bp is gone due to xfs_da_shrink_inode */
->  
->  		return error;
-> -	}
-> -node:
->  
-> +	case XFS_DAS_FOUND_NBLK:
-> +		/*
-> +		 * If there was an out-of-line value, allocate the blocks we
-> +		 * identified for its storage and copy the value.  This is done
-> +		 * after we create the attribute so that we don't overflow the
-> +		 * maximum size of a transaction and/or hit a deadlock.
-> +		 */
-> +		if (args->rmtblkno > 0) {
-> +			/*
-> +			 * Open coded xfs_attr_rmtval_set without trans
-> +			 * handling
-> +			 */
-> +			error = xfs_attr_rmtval_find_space(dac);
-> +			if (error)
-> +				return error;
->  
-> -	do {
-> -		error = xfs_attr_node_addname_find_attr(args, &state);
-> -		if (error)
-> -			return error;
-> -		error = xfs_attr_node_addname(args, state);
-> -	} while (error == -EAGAIN);
-> -	if (error)
-> -		return error;
-> +			/*
-> +			 * Roll through the "value", allocating blocks on disk
-> +			 * as required.  Set the state in case of -EAGAIN return
-> +			 * code
-> +			 */
-> +			dac->dela_state = XFS_DAS_ALLOC_NODE;
-> +		}
->  
-> -	/*
-> -	 * Commit the leaf addition or btree split and start the next
-> -	 * trans in the chain.
-> -	 */
-> -	error = xfs_trans_roll_inode(&args->trans, dp);
-> -	if (error)
-> -		goto out;
-> +		/* fallthrough */
-> +	case XFS_DAS_ALLOC_NODE:
-> +		if (args->rmtblkno > 0) {
-> +			if (dac->blkcnt > 0) {
-> +				error = xfs_attr_rmtval_set_blk(dac);
-> +				if (error)
-> +					return error;
->  
-> -	/*
-> -	 * If there was an out-of-line value, allocate the blocks we
-> -	 * identified for its storage and copy the value.  This is done
-> -	 * after we create the attribute so that we don't overflow the
-> -	 * maximum size of a transaction and/or hit a deadlock.
-> -	 */
-> -	if (args->rmtblkno > 0) {
-> -		error = xfs_attr_rmtval_set(args);
-> -		if (error)
-> -			return error;
-> -	}
-> +				return -EAGAIN;
-> +			}
-> +
-> +			error = xfs_attr_rmtval_set_value(args);
-> +			if (error)
-> +				return error;
-> +		}
-> +
-> +		if (!(args->op_flags & XFS_DA_OP_RENAME)) {
-> +			/*
-> +			 * Added a "remote" value, just clear the incomplete
-> +			 * flag.
-> +			 */
-> +			if (args->rmtblkno > 0)
-> +				error = xfs_attr3_leaf_clearflag(args);
-> +			retval = error;
-> +			goto out;
-> +		}
->  
-> -	if (!(args->op_flags & XFS_DA_OP_RENAME)) {
->  		/*
-> -		 * Added a "remote" value, just clear the incomplete flag.
-> +		 * If this is an atomic rename operation, we must "flip" the
-> +		 * incomplete flags on the "new" and "old" attribute/value pairs
-> +		 * so that one disappears and one appears atomically.  Then we
-> +		 * must remove the "old" attribute/value pair.
-> +		 *
-> +		 * In a separate transaction, set the incomplete flag on the
-> +		 * "old" attr and clear the incomplete flag on the "new" attr.
->  		 */
-> -		if (args->rmtblkno > 0)
-> -			error = xfs_attr3_leaf_clearflag(args);
-> -		retval = error;
-> -		goto out;
-> -	}
-> -
-> -	/*
-> -	 * If this is an atomic rename operation, we must "flip" the incomplete
-> -	 * flags on the "new" and "old" attribute/value pairs so that one
-> -	 * disappears and one appears atomically.  Then we must remove the "old"
-> -	 * attribute/value pair.
-> -	 *
-> -	 * In a separate transaction, set the incomplete flag on the "old" attr
-> -	 * and clear the incomplete flag on the "new" attr.
-> -	 */
-> -	error = xfs_attr3_leaf_flipflags(args);
-> -	if (error)
-> -		goto out;
-> -	/*
-> -	 * Commit the flag value change and start the next trans in series
-> -	 */
-> -	error = xfs_trans_roll_inode(&args->trans, args->dp);
-> -	if (error)
-> -		goto out;
-> +		error = xfs_attr3_leaf_flipflags(args);
-> +		if (error)
-> +			goto out;
-> +		/*
-> +		 * Commit the flag value change and start the next trans in
-> +		 * series
-> +		 */
-> +		dac->dela_state = XFS_DAS_FLIP_NFLAG;
-> +		return -EAGAIN;
->  
-> -	/*
-> -	 * Dismantle the "old" attribute/value pair by removing a "remote" value
-> -	 * (if it exists).
-> -	 */
-> -	xfs_attr_restore_rmt_blk(args);
-> +	case XFS_DAS_FLIP_NFLAG:
-> +		/*
-> +		 * Dismantle the "old" attribute/value pair by removing a
-> +		 * "remote" value (if it exists).
-> +		 */
-> +		xfs_attr_restore_rmt_blk(args);
->  
-> -	if (args->rmtblkno) {
->  		error = xfs_attr_rmtval_invalidate(args);
->  		if (error)
->  			return error;
->  
-> -		error = xfs_attr_rmtval_remove(args);
-> +		/* Set state in case xfs_attr_rmtval_remove returns -EAGAIN */
-> +		dac->dela_state = XFS_DAS_RM_NBLK;
-> +
-> +		/* fallthrough */
-> +	case XFS_DAS_RM_NBLK:
-> +		if (args->rmtblkno) {
-> +			error = __xfs_attr_rmtval_remove(dac);
-> +			if (error)
-> +				return error;
-> +		}
-> +
-> +		error = xfs_attr_node_addname_work(dac);
-> +
-> +out:
-> +		if (state)
-> +			xfs_da_state_free(state);
->  		if (error)
->  			return error;
-> -	}
-> +		return retval;
->  
-> -	error = xfs_attr_node_addname_work(args);
-> -out:
-> -	if (state)
-> -		xfs_da_state_free(state);
-> -	if (error)
-> -		return error;
-> -	return retval;
-> +	default:
-> +		ASSERT(dac->dela_state != XFS_DAS_RM_SHRINK);
-> +		break;
-> +	}
->  
-> +	return error;
->  }
->  
-> +
->  /*
->   * Return EEXIST if attr is found, or ENOATTR if not
->   */
-> @@ -1021,18 +1121,18 @@ xfs_attr_node_hasname(
->  
->  STATIC int
->  xfs_attr_node_addname_find_attr(
-> -	struct xfs_da_args	*args,
-> -	struct xfs_da_state     **state)
-> +	struct xfs_delattr_context	*dac)
->  {
-> -	int			retval;
-> +	struct xfs_da_args		*args = dac->da_args;
-> +	int				retval;
->  
->  	/*
->  	 * Search to see if name already exists, and get back a pointer
->  	 * to where it should go.
->  	 */
-> -	retval = xfs_attr_node_hasname(args, state);
-> +	retval = xfs_attr_node_hasname(args, &dac->da_state);
->  	if (retval != -ENOATTR && retval != -EEXIST)
-> -		goto out;
-> +		return retval;
->  
->  	if (retval == -ENOATTR && (args->attr_flags & XATTR_REPLACE))
->  		goto out;
-> @@ -1058,8 +1158,8 @@ xfs_attr_node_addname_find_attr(
->  
->  	return 0;
->  out:
-> -	if (*state)
-> -		xfs_da_state_free(*state);
-> +	if (dac->da_state)
-> +		xfs_da_state_free(dac->da_state);
->  	return retval;
->  }
->  
-> @@ -1072,20 +1172,24 @@ xfs_attr_node_addname_find_attr(
->   *
->   * "Remote" attribute values confuse the issue and atomic rename operations
->   * add a whole extra layer of confusion on top of that.
-> + *
-> + * This routine is meant to function as a delayed operation, and may return
-> + * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
-> + * to handle this, and recall the function until a successful error code is
-> + *returned.
->   */
->  STATIC int
->  xfs_attr_node_addname(
-> -	struct xfs_da_args	*args,
-> -	struct xfs_da_state	*state)
-> +	struct xfs_delattr_context	*dac)
->  {
-> -	struct xfs_da_state_blk	*blk;
-> -	struct xfs_inode	*dp;
-> -	int			error;
-> +	struct xfs_da_args		*args = dac->da_args;
-> +	struct xfs_da_state		*state = dac->da_state;
-> +	struct xfs_da_state_blk		*blk;
-> +	int				error;
->  
->  	trace_xfs_attr_node_addname(args);
->  
-> -	dp = args->dp;
-> -	blk = &state->path.blk[state->path.active-1];
-> +	blk = &state->path.blk[ state->path.active-1 ];
->  	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
->  
->  	error = xfs_attr3_leaf_add(blk->bp, state->args);
-> @@ -1101,18 +1205,15 @@ xfs_attr_node_addname(
->  			error = xfs_attr3_leaf_to_node(args);
->  			if (error)
->  				goto out;
-> -			error = xfs_defer_finish(&args->trans);
-> -			if (error)
-> -				goto out;
->  
->  			/*
-> -			 * Commit the node conversion and start the next
-> -			 * trans in the chain.
-> +			 * Now that we have converted the leaf to a node, we can
-> +			 * roll the transaction, and try xfs_attr3_leaf_add
-> +			 * again on re-entry.  No need to set dela_state to do
-> +			 * this. dela_state is still unset by this function at
-> +			 * this point.
->  			 */
-> -			error = xfs_trans_roll_inode(&args->trans, dp);
-> -			if (error)
-> -				goto out;
-> -
-> +			dac->flags |= XFS_DAC_DEFER_FINISH;
->  			return -EAGAIN;
->  		}
->  
-> @@ -1125,9 +1226,7 @@ xfs_attr_node_addname(
->  		error = xfs_da3_split(state);
->  		if (error)
->  			goto out;
-> -		error = xfs_defer_finish(&args->trans);
-> -		if (error)
-> -			goto out;
-> +		dac->flags |= XFS_DAC_DEFER_FINISH;
->  	} else {
->  		/*
->  		 * Addition succeeded, update Btree hashvals.
-> @@ -1144,8 +1243,9 @@ xfs_attr_node_addname(
->  
->  STATIC
->  int xfs_attr_node_addname_work(
-> -	struct xfs_da_args		*args)
-> +	struct xfs_delattr_context	*dac)
->  {
-> +	struct xfs_da_args		*args = dac->da_args;
->  	struct xfs_da_state		*state = NULL;
->  	struct xfs_da_state_blk		*blk;
->  	int				retval = 0;
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 3154ef4..603887e 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -135,6 +135,233 @@ struct xfs_attr_list_context {
->   *              v
->   *            done
->   *
-> + *
-> + * Below is a state machine diagram for attr set operations.
-> + *
-> + * It seems the challenge with undertanding this system comes from trying to
-> + * absorb the state machine all at once, when really one should only be looking
-> + * at it with in the context of a single function.  Once a state sensitive
-> + * function is called, the idea is that it "takes ownership" of the
-> + * statemachine. It isn't concerned with the states that may have belonged to
-> + * it's calling parent.  Only the states relevant to itself or any other
-> + * subroutines there in.  Once a calling function hands off the statemachine to
-> + * a subroutine, it needs to respect the simple rule that it doesn't "own" the
-> + * statemachine anymore, and it's the responsibility of that calling function to
-> + * propagate the -EAGAIN back up the call stack.  Upon reentry, it is committed
-> + * to re-calling that subroutine until it returns something other than -EAGAIN.
-> + * Once that subroutine signals completion (by returning anything other than
-> + * -EAGAIN), the calling function can resume using the statemachine.
-> + *
-> + *  xfs_attr_set_iter()
-> + *              │
-> + *              v
-> + *   ┌─y─ has an attr fork?
-> + *   │          |
-> + *   │          n
-> + *   │          |
-> + *   │          V
-> + *   │       add a fork
-> + *   │          │
-> + *   └──────────┤
-> + *              │
-> + *              V
-> + *   ┌─y─ is shortform?
-> + *   │          │
-> + *   │          V
-> + *   │   xfs_attr_set_fmt
-> + *   │          |
-> + *   │          V
-> + *   │ xfs_attr_try_sf_addname
-> + *   │          │
-> + *   │          V
-> + *   │      had enough ──y──> done
-> + *   │        space?
-> + *   n          │
-> + *   │          n
-> + *   │          │
-> + *   │          V
-> + *   │   transform to leaf
-> + *   │          │
-> + *   │          V
-> + *   │   hold the leaf buffer
-> + *   │          │
-> + *   │          V
-> + *   │     return -EAGAIN
-> + *   │      Re-enter in
-> + *   │       leaf form
-> + *   │
-> + *   └─> release leaf buffer
-> + *          if needed
-> + *              │
-> + *              V
-> + *   ┌───n── fork has
-> + *   │      only 1 blk?
-> + *   │          │
-> + *   │          y
-> + *   │          │
-> + *   │          v
-> + *   │ xfs_attr_leaf_try_add()
-> + *   │          │
-> + *   │          v
-> + *   │      had enough ──────────────y───────────────┐
-> + *   │        space?                                 │
-> + *   │          │                                    │
-> + *   │          n                                    │
-> + *   │          │                                    │
-> + *   │          v                                    │
-> + *   │    return -EAGAIN                             │
-> + *   │      re-enter in                              │
-> + *   │        node form                              │
-> + *   │          │                                    │
-> + *   └──────────┤                                    │
-> + *              │                                    │
-> + *              V                                    │
-> + * xfs_attr_node_addname_find_attr                   │
-> + *        determines if this                         │
-> + *       is create or rename                         │
-> + *     find space to store attr                      │
-> + *              │                                    │
-> + *              v                                    │
-> + *     xfs_attr_node_addname                         │
-> + *              │                                    │
-> + *              v                                    │
-> + *   fits in a node leaf? ────n─────┐                │
-> + *              │     ^             v                │
-> + *              │     │        single leaf node?     │
-> + *              │     │          │            │      │
-> + *              y     │          y            n      │
-> + *              │     │          │            │      │
-> + *              v     │          v            v      │
-> + *            update  │     grow the leaf  split if  │
-> + *           hashvals └─── return -EAGAIN   needed   │
-> + *              │          retry leaf add     │      │
-> + *              │            on reentry       │      │
-> + *              ├─────────────────────────────┘      │
-> + *              │                                    │
-> + *              v                                    │
-> + *         need to alloc                             │
-> + *   ┌─y── or flip flag?                             │
-> + *   │          │                                    │
-> + *   │          n                                    │
-> + *   │          │                                    │
-> + *   │          v                                    │
-> + *   │         done                                  │
-> + *   │                                               │
-> + *   │                                               │
-> + *   │         XFS_DAS_FOUND_LBLK <──────────────────┘
-> + *   │                  │
-> + *   │                  V
-> + *   │        xfs_attr_leaf_addname()
-> + *   │                  │
-> + *   │                  v
-> + *   │      ┌──first time through?
-> + *   │      │          │
-> + *   │      │          y
-> + *   │      │          │
-> + *   │      n          v
-> + *   │      │    if we have rmt blks
-> + *   │      │    find space for them
-> + *   │      │          │
-> + *   │      └──────────┤
-> + *   │                 │
-> + *   │                 v
-> + *   │            still have
-> + *   │      ┌─n─ blks to alloc? <──┐
-> + *   │      │          │           │
-> + *   │      │          y           │
-> + *   │      │          │           │
-> + *   │      │          v           │
-> + *   │      │     alloc one blk    │
-> + *   │      │     return -EAGAIN ──┘
-> + *   │      │    re-enter with one
-> + *   │      │    less blk to alloc
-> + *   │      │
-> + *   │      │
-> + *   │      └───> set the rmt
-> + *   │               value
-> + *   │                 │
-> + *   │                 v
-> + *   │               was this
-> + *   │              a rename? ──n─┐
-> + *   │                 │          │
-> + *   │                 y          │
-> + *   │                 │          │
-> + *   │                 v          │
-> + *   │           flip incomplete  │
-> + *   │               flag         │
-> + *   │                 │          │
-> + *   │                 v          │
-> + *   │         XFS_DAS_FLIP_LFLAG │
-> + *   │                 │          │
-> + *   │                 v          │
-> + *   │               remove       │
-> + *   │        ┌───> old name      │
-> + *   │        │        │          │
-> + *   │ XFS_DAS_RM_LBLK │          │
-> + *   │        ^        │          │
-> + *   │        │        v          │
-> + *   │        └──y── more to      │
-> + *   │               remove       │
-> + *   │                 │          │
-> + *   │                 n          │
-> + *   │                 │          │
-> + *   │                 v          │
-> + *   │                done <──────┘
-> + *   │
-> + *   └──────> XFS_DAS_FOUND_NBLK
-> + *                     │
-> + *                     v
-> + *       ┌─────n──  need to
-> + *       │        alloc blks?
-> + *       │             │
-> + *       │             y
-> + *       │             │
-> + *       │             v
-> + *       │        find space
-> + *       │             │
-> + *       │             v
-> + *       │  ┌─>XFS_DAS_ALLOC_NODE
-> + *       │  │          │
-> + *       │  │          v
-> + *       │  │      alloc blk
-> + *       │  │          │
-> + *       │  │          v
-> + *       │  └──y── need to alloc
-> + *       │         more blocks?
-> + *       │             │
-> + *       │             n
-> + *       │             │
-> + *       │             v
-> + *       │      set the rmt value
-> + *       │             │
-> + *       │             v
-> + *       │          was this
-> + *       └────────> a rename? ──n─┐
-> + *                     │          │
-> + *                     y          │
-> + *                     │          │
-> + *                     v          │
-> + *               flip incomplete  │
-> + *                   flag         │
-> + *                     │          │
-> + *                     v          │
-> + *             XFS_DAS_FLIP_NFLAG │
-> + *                     │          │
-> + *                     v          │
-> + *                   remove       │
-> + *        ┌────────> old name     │
-> + *        │            │          │
-> + *  XFS_DAS_RM_NBLK    │          │
-> + *        ^            │          │
-> + *        │            v          │
-> + *        └──────y── more to      │
-> + *                   remove       │
-> + *                     │          │
-> + *                     n          │
-> + *                     │          │
-> + *                     v          │
-> + *                    done <──────┘
-> + *
->   */
->  
->  /*
-> @@ -149,12 +376,20 @@ struct xfs_attr_list_context {
->  enum xfs_delattr_state {
->  	XFS_DAS_UNINIT		= 0,  /* No state has been set yet */
->  	XFS_DAS_RM_SHRINK,	      /* We are shrinking the tree */
-> +	XFS_DAS_FOUND_LBLK,	      /* We found leaf blk for attr */
-> +	XFS_DAS_FOUND_NBLK,	      /* We found node blk for attr */
-> +	XFS_DAS_FLIP_LFLAG,	      /* Flipped leaf INCOMPLETE attr flag */
-> +	XFS_DAS_RM_LBLK,	      /* A rename is removing leaf blocks */
-> +	XFS_DAS_ALLOC_NODE,	      /* We are allocating node blocks */
-> +	XFS_DAS_FLIP_NFLAG,	      /* Flipped node INCOMPLETE attr flag */
-> +	XFS_DAS_RM_NBLK,	      /* A rename is removing node blocks */
->  };
->  
->  /*
->   * Defines for xfs_delattr_context.flags
->   */
->  #define XFS_DAC_DEFER_FINISH		0x01 /* finish the transaction */
-> +#define XFS_DAC_LEAF_ADDNAME_INIT	0x02 /* xfs_attr_leaf_addname init*/
->  
->  /*
->   * Context used for keeping track of delayed attribute operations
-> @@ -162,6 +397,11 @@ enum xfs_delattr_state {
->  struct xfs_delattr_context {
->  	struct xfs_da_args      *da_args;
->  
-> +	/* Used in xfs_attr_rmtval_set_blk to roll through allocating blocks */
-> +	struct xfs_bmbt_irec	map;
-> +	xfs_dablk_t		lblkno;
-> +	int			blkcnt;
-> +
->  	/* Used in xfs_attr_node_removename to roll through removing blocks */
->  	struct xfs_da_state     *da_state;
->  
-> @@ -188,7 +428,6 @@ int xfs_attr_set_args(struct xfs_da_args *args);
->  int xfs_has_attr(struct xfs_da_args *args);
->  int xfs_attr_remove_args(struct xfs_da_args *args);
->  int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
-> -int xfs_attr_trans_roll(struct xfs_delattr_context *dac);
->  bool xfs_attr_namecheck(const void *name, size_t length);
->  void xfs_delattr_context_init(struct xfs_delattr_context *dac,
->  			      struct xfs_da_args *args);
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index f09820c..6af86bf 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -441,7 +441,7 @@ xfs_attr_rmtval_get(
->   * Find a "hole" in the attribute address space large enough for us to drop the
->   * new attribute's value into
->   */
-> -STATIC int
-> +int
->  xfs_attr_rmt_find_hole(
->  	struct xfs_da_args	*args)
->  {
-> @@ -468,7 +468,7 @@ xfs_attr_rmt_find_hole(
->  	return 0;
->  }
->  
-> -STATIC int
-> +int
->  xfs_attr_rmtval_set_value(
->  	struct xfs_da_args	*args)
->  {
-> @@ -628,6 +628,69 @@ xfs_attr_rmtval_set(
->  }
->  
->  /*
-> + * Find a hole for the attr and store it in the delayed attr context.  This
-> + * initializes the context to roll through allocating an attr extent for a
-> + * delayed attr operation
-> + */
-> +int
-> +xfs_attr_rmtval_find_space(
-> +	struct xfs_delattr_context	*dac)
-> +{
-> +	struct xfs_da_args		*args = dac->da_args;
-> +	struct xfs_bmbt_irec		*map = &dac->map;
-> +	int				error;
-> +
-> +	dac->lblkno = 0;
-> +	dac->blkcnt = 0;
-> +	args->rmtblkcnt = 0;
-> +	args->rmtblkno = 0;
-> +	memset(map, 0, sizeof(struct xfs_bmbt_irec));
-> +
-> +	error = xfs_attr_rmt_find_hole(args);
-> +	if (error)
-> +		return error;
-> +
-> +	dac->blkcnt = args->rmtblkcnt;
-> +	dac->lblkno = args->rmtblkno;
-> +
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Write one block of the value associated with an attribute into the
-> + * out-of-line buffer that we have defined for it. This is similar to a subset
-> + * of xfs_attr_rmtval_set, but records the current block to the delayed attr
-> + * context, and leaves transaction handling to the caller.
-> + */
-> +int
-> +xfs_attr_rmtval_set_blk(
-> +	struct xfs_delattr_context	*dac)
-> +{
-> +	struct xfs_da_args		*args = dac->da_args;
-> +	struct xfs_inode		*dp = args->dp;
-> +	struct xfs_bmbt_irec		*map = &dac->map;
-> +	int nmap;
-> +	int error;
-> +
-> +	nmap = 1;
-> +	error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)dac->lblkno,
-> +				dac->blkcnt, XFS_BMAPI_ATTRFORK, args->total,
-> +				map, &nmap);
-> +	if (error)
-> +		return error;
-> +
-> +	ASSERT(nmap == 1);
-> +	ASSERT((map->br_startblock != DELAYSTARTBLOCK) &&
-> +	       (map->br_startblock != HOLESTARTBLOCK));
-> +
-> +	/* roll attribute extent map forwards */
-> +	dac->lblkno += map->br_blockcount;
-> +	dac->blkcnt -= map->br_blockcount;
-> +
-> +	return 0;
-> +}
-> +
-> +/*
->   * Remove the value associated with an attribute by deleting the
->   * out-of-line buffer that it is stored on.
->   */
-> @@ -669,37 +732,6 @@ xfs_attr_rmtval_invalidate(
->  }
->  
->  /*
-> - * Remove the value associated with an attribute by deleting the
-> - * out-of-line buffer that it is stored on.
-> - */
-> -int
-> -xfs_attr_rmtval_remove(
-> -	struct xfs_da_args		*args)
-> -{
-> -	int				error;
-> -	struct xfs_delattr_context	dac  = {
-> -		.da_args	= args,
-> -	};
-> -
-> -	trace_xfs_attr_rmtval_remove(args);
-> -
-> -	/*
-> -	 * Keep de-allocating extents until the remote-value region is gone.
-> -	 */
-> -	do {
-> -		error = __xfs_attr_rmtval_remove(&dac);
-> -		if (error != -EAGAIN)
-> -			break;
-> -
-> -		error = xfs_attr_trans_roll(&dac);
-> -		if (error)
-> -			return error;
-> -	} while (true);
-> -
-> -	return error;
-> -}
-> -
-> -/*
->   * Remove the value associated with an attribute by deleting the out-of-line
->   * buffer that it is stored on. Returns -EAGAIN for the caller to refresh the
->   * transaction and re-call the function
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
-> index 002fd30..8ad68d5 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.h
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
-> @@ -10,9 +10,12 @@ int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
->  
->  int xfs_attr_rmtval_get(struct xfs_da_args *args);
->  int xfs_attr_rmtval_set(struct xfs_da_args *args);
-> -int xfs_attr_rmtval_remove(struct xfs_da_args *args);
->  int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
->  		xfs_buf_flags_t incore_flags);
->  int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
->  int __xfs_attr_rmtval_remove(struct xfs_delattr_context *dac);
-> +int xfs_attr_rmt_find_hole(struct xfs_da_args *args);
-> +int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
-> +int xfs_attr_rmtval_set_blk(struct xfs_delattr_context *dac);
-> +int xfs_attr_rmtval_find_space(struct xfs_delattr_context *dac);
->  #endif /* __XFS_ATTR_REMOTE_H__ */
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 63ecbc6..363e1bf 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -1942,7 +1942,6 @@ DEFINE_ATTR_EVENT(xfs_attr_refillstate);
->  
->  DEFINE_ATTR_EVENT(xfs_attr_rmtval_get);
->  DEFINE_ATTR_EVENT(xfs_attr_rmtval_set);
-> -DEFINE_ATTR_EVENT(xfs_attr_rmtval_remove);
->  
->  #define DEFINE_DA_EVENT(name) \
->  DEFINE_EVENT(xfs_da_class, name, \
-> -- 
-> 2.7.4
+> The whole point of this discussion is to determine if
+> ->corrupted_range() is suitable for this notification, and looking at
+> the code as is, it isn't. Perhaps you have a different implementation
+> of ->corrupted_range() in mind that allows this to be plumbed
+> correctly?
+
+So rather than try to make the generic ->corrupted_range
+infrastructure be able to report "DAX range is invalid" (which is
+the very definition of a corrupted block device range!), you want
+to introduce a DAX specific notification to tell us that a range in
+the block device contains invalid/corrupt data?
+
+We're talking about a patchset that is in development. The proposed
+notification path is supposed to be generic and *not PMEM specific*,
+and is intended to handle exactly the use case that you raised.
+The implementation may not be perfect yet, so rather than trying to
+say "we need something different but does the same thing", work to
+ensure that the proposed -generic infrastructure- can pass the
+information you want to pass to the filesystem.
+
+> > > Yes, but I was trying to map it to an existing mechanism and the
+> > > internals of drop_pagecache_sb() are, in coarse terms, close to what
+> > > needs to happen here.
+> >
+> > No.
+> >
+> > drop_pagecache_sb() is not a relevant model for telling a filesystem
+> > that the block device underneath has gone away,
 > 
+> Like I said I'm not trying to communicate "device has gone away", only
+> "unmap all dax pages".
+
+That is the wrong thing to be communicating.  If the device has gone
+away, the filesystem needs to know that the device has gone away,
+not that it should just unmap DAX pages.
+
+> If you want those to be one in the same
+> mechanism I'm listening, but like I said it was my mistake for tying
+> global unmap to device-gone, they need not be the same given
+> fileystems have not historically been notified proactively of device
+> removal.
+
+What other circumstance is there for the device driver punching
+through block device layers to tell the filesystem it should "unmap
+all dax pages"? ANd if we get such an event, what does that mean for
+any of the other filesystem data/metadata in that range?
+
+You are still trying to tell the filesystem what action it must take
+based on what went wrong at the device driver level, not
+communicating what error just occurred to the device. The filesystem
+needs to know about the error that occurred, not what some device
+thinks the filesystem should do when the device detects an error.
+
+> > Filesystems are way more complex than pure DAX devices, and hence
+> > handle errors and failure events differently. Unlike DAX devices, we
+> > have both internal and external references to the DAX device, and we
+> > can have both external and internal direct maps.  Invalidating user
+> > data mappings is all dax devices need to do on unplug, but for
+> > filesystems it is only a small part of what we have to do when a
+> > range of a device goes bad.
+> >
+> > IOWs, there is no "one size fits all" approach that works for all
+> > filesystems, nor is there one strategy that is is optimal for all
+> > filesystems. Failure handling in a filesystem is almost always
+> > filesystem specific...
+> 
+> Point taken, if a filesystem is not using the block-layer for metadata
+> I/O and using DAX techniques directly it needs this event too
+> otherwise it will crash vs report failed operations...
+> ->corrupted_range() does not offer the correct plumbing for that
+> today.
+> 
+> There's an additional problem this brings to mind. Device-mapper
+> targets like dm-writecache need this notification as well because it
+> is using direct physical page access via the linear map and may crash
+> like the filesystem if the mm-direct-map is torn down from underneath
+> it.
+
+Yes, dm gets the notification by the ->corrupted_range() callback
+from it's underlying device(s). It can then do what it needs to map
+the range and pass that error on to the filesystem. Fundamentally,
+though, if the range is mapped into userspace and it goes away, the
+user has lost data and there's nothing DM can do to recover it so
+all it can do is pass the corruption up the stack to the next layer
+(either another block device or the filesystem).
+
+> > For actual pmem, maybe. But hotplug RAM is a thing; big numa
+> > machines that can hotplug nodes into their fabric and so have CPUs
+> > and memory able to come and go from a live machine. It's not a small
+> > stretch to extend that to having PMEM in those nodes. So it's a
+> > practical design concern right now, even ignoring that NVMe is
+> > hotplug....
+> 
+> Memory hotplug today requires the memory-device to be offlined before
+> the memory is unplugged and the core-mm has a chance to say "no" if it
+> sees even one page with an elevated reference. Block-devices in
+> contrast have no option to say "no" to being unplugged / ->remove()
+> triggered.
+
+Yes, I know that. That's my whole point - NVMe persistent regions
+mean that DAX filesystems will have to handle the latter case, and
+that it looks no different to normal block device failure to the
+filesystem.  ->corrupted_range is exactly how these events are
+intended to be sent up the storage stack to the filesystem, so why
+should PMEM be handled any different?
+
+> > > While the pmem
+> > > driver has a ->remove() path that's purely a software unbind
+> > > operation. That said the vulnerability window today is if a process
+> > > acquires a dax mapping, the pmem device hosting that filesystem goes
+> > > through an unbind / bind cycle, and then a new filesystem is created /
+> > > mounted. That old pte may be able to access data that is outside its
+> > > intended protection domain.
+> >
+> > So what is being done to prevent stale DAX mappings from being
+> > leaked this way right now, seeing as the leak you mention here
+> > doesn't appear in any way to be filesystem related?
+> 
+> For device-dax where there is only one inode->i_mapping to deal with,
+> one unmap_mapping_range() call is performed in the device shutdown
+> path. For filesystem-dax only the direct-map is torn down.
+> 
+> The user mapping teardown gap is why I'm coming at this elephant from
+> the user mapping perspective and not necessarily the "what does the
+> filesystem want to do about device removal" perspective.
+
+But that doesn't help avoid the "user mapping teardown gap" at all -
+that gap only gets bigger when you add a filesystem into the picture
+because not we have tens to hundreds of millions of cache inodes to
+walk and invalidate mappings on.
+
+Closing this gap requires brute force purging the CPU ptes the
+moment an unexpected DAX device unplug occurs. There is no other way
+to do it quickly, and just waiting until the filesystem can unmap it
+only increases the gap between the ptes becoming invalid and them
+getting invalidated.
+
+> > And once you take into account that "pulling the wrong device" can
+> > happen, how does the filesystem tell tell the difference between a
+> > device being pulled and a drive cage just dying and so the drive
+> > just disappear from the system? How are these accidental vs real
+> > failures any different from the perspective of a filesystem mounted
+> > on that device?
+> 
+> Not even the device driver can tell you that.
+
+Exactly my point. As there is no difference between unplug and
+device failure from a filesystem perspective, the comunication
+should come through a single "device failure" interface, not some
+special DAX-specific notification path that you are advocating for.
+
+> This goes back to Yasunori's question, can't ->remove() just be
+> blocked when the filesystem is mounted? The answer is similar to
+> asking the filesystem to allow DAX RDMA pages to be pinned
+> indefinitely and lock-out the filesystem from making any extent-map
+> changes. If the admin wants the device disabled while the filesystem
+> is mounted the kernel should do everything it can to honor that
+> request safely.
+
+Sure, but the end effect of this is that the filesystem seems that
+the -device has failed- and there is no need for DAX devices to
+require some special "invalidate all mappings" notification when a
+"device jsut failed" notification tells the filesystem the same
+thing and a whole lot more....
+
+> > This just makes no sense at all from an operations perspective - if
+> > you know that you are about to do an unplug that will result in all
+> > your DAX apps and filesystems being killed (i.e. fatal production
+> > environment failure) then why haven't they all been stopped by the
+> > admin before the device unplug is done? Why does this "human in the
+> > loop" admin task require the applications and filesystems to handle
+> > this without warning and have to treat it as a "device failure"
+> > event when this can all be avoided for normal, scheduled, controlled
+> > unplug operations? The "unexpected unplug" is a catastrophic failure
+> > event which may have severe side effects on system operation and
+> > stability. Why would you design an unplug process that does not
+> > start with a clean, a controlled shutdown process from the top down?
+> > If we make the assumption that planned unplugs are well planned,
+> > organised and scheduled, then the only thing that an unplug event
+> > needs to mean to a filesystem is "catastrophic device failure has
+> > occurred".
+> 
+> There is a difference between the kernel saying "don't do that, bad
+> things will happen" and "you can't do that the entire system will
+> crash / security promises will be violated".
+> 
+> git grep -n suppress_bind_attr drivers/ata/ drivers/scsi/ drivers/nvme/
+> 
+> There are no block-device providers that I can find on a quick search
+> that forbid triggering ->remove() on the driver if a filesystem is
+> mounted. pmem is not the first block device driver to present this
+> problem.
+
+Yes, that's because, as you point out,  pmem has unique
+characteristics - DAX - that absolutely require us to handle storage
+failures in this way. No other type of device requires the fileystem
+to directly arbitrate userspace access to the device, and so we've
+been able to get away with having the block device return EIO or
+ENODEV when we try to do IO and handling the problem that way.
+
+But we still have been wanting ENODEV notification from block
+devices when they are unexpectedly unplugged, and have been wanting
+that functionality for at least the last decade, if not longer.
+Filesystem shutdown on device removal should be instantenous because
+device removal for most filesystems is an unrecoverable error and
+delaying the shutdown until a fatal IO error occurrs in the
+filesystem benefits no-one.
+
+And now, we can't even get reliable IO error reporting, because DAX.
+
+That's the problems that this set of ->corrupted_range callbacks is
+supposed to provide - it's generic enough that we can plumb
+ata/scsi/nvme layers into it as well as PMEM, and the filesystem
+will now get device failure notifications from all types of device
+drivers and block devices.
+
+We do not need a DAX specific mechanism to tell us "DAX device
+gone", we need a generic block device interface that tells us "range
+of block device is gone".
+
+The reason that the block device is gone is irrelevant to the
+filesystem. The type of block device is also irrelevant. If the
+filesystem isn't using DAX (e.g. dax=never mount option) even when
+it is on a DAX capable device, then it just doesn't care about
+invalidating DAX mappings because it has none. But it still may care
+about shutting down the filesystem because the block device is gone.
+
+This is why we need to communicate what error occurred, not what
+action a device driver thinks needs to be taken. The error is
+important to the filesystem, the action might be completely
+irrelevant. And, as we know now, shutdown on DAX enable filesystems
+needs to imply DAX mapping invalidation in all cases, not just when
+the device disappears from under the filesystem.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
