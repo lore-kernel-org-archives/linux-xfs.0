@@ -2,92 +2,77 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B62DC43142
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C4F6C4321A
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 190C8601FF
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 264DF61477
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343602AbhCCDQJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Mar 2021 22:16:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37456 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2361015AbhCBXLL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Mar 2021 18:11:11 -0500
-X-Greylist: delayed 88076 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 02 Mar 2021 15:00:25 PST
-Received: from vera.ghen.be (vera.ghen.be [IPv6:2a02:2308:20::3be:0:1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9627CC06178B
-        for <linux-xfs@vger.kernel.org>; Tue,  2 Mar 2021 15:00:25 -0800 (PST)
-Received: by vera.ghen.be (Postfix, from userid 1000)
-        id 4Dqsw23GXyz2xBF; Tue,  2 Mar 2021 23:57:22 +0100 (CET)
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=hendrickx.be;
-        s=21e; t=1614725842;
-        bh=l1vW9JHsSOPKj8U7zv7CvTh8KRM1+FD5TUVhL3BnVmw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=y+7CgVxOx8pS5Mj03WfCNlOZ8DsHTL3jaWjE1xDRidb9ST14l/JDAFdl6AI5uoNR/
-         wnP2e3qmBYbZ6ZSWWo0Ag==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hendrickx.be; s=21r;
-        t=1614725842; bh=l1vW9JHsSOPKj8U7zv7CvTh8KRM1+FD5TUVhL3BnVmw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=IhNL17XYUM6JT4QyOCC8L6FEQd1Cg9z7lpHOrlZHNxCWIiwy8Ky2HEbLhP/RfcBXf
-         uUG5hXB/KeNS+TOAgLH2VGsWaxR+J5qBML/VWzmZ3h985NXVNnQp1J8hpDzRciLkW/
-         xvrKiwLnJvznOrOU3854edAAnLV8B+RxNqDpMuVf/3zl0MxxtXFdxFAS5sq0gTTCoy
-         ysDlz+7rhPgEGhV0jMLQ6GLNvd47/l3wtM3idDVLk5JisKD1hsJQ5rMZczxsneOq2k
-         caiF1+L2KTs/yqVDmKnIuzrLuc+GAYgdT14mejax2nF7VCpmK99E8K5Y1jDZBU8fV5
-         QcHsDlFo1mjrQ==
-Date:   Tue, 2 Mar 2021 23:57:22 +0100
-From:   Geert Hendrickx <geert@hendrickx.be>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: xfs_admin -O feature upgrade feedback
-Message-ID: <YD7C0v5rKopCJvk2@vera.ghen.be>
-References: <YDy+OmsVCkTfiMPp@vera.ghen.be>
- <20210301191803.GE7269@magnolia>
- <YD4tWbfzmuXv1mKQ@bfoster>
+        id S245664AbhCCDP7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Mar 2021 22:15:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44964 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2360790AbhCBW3q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Mar 2021 17:29:46 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8F7ED64F2D;
+        Tue,  2 Mar 2021 22:28:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614724139;
+        bh=gxJFqmZJEJNZBQcGOetI+GdSq+2KUnqCpSVCCQVquWA=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=FJd8cJRxTIka1oOHGwE2CyQVRRk/NJJbRdLviqgBD0LWOKnEphGE+Alkz21J9+2C1
+         OWUF893sWuapsinSTGIxE1FdHhkmDELNUIBIZs2n8p5Hlo7eEjankWSm3cFsQ/QOmH
+         mJvEx599c+tR80lEN2uNMRMN5IMyYdilt3DYLwhWVDGvbBBhk25Cr71bOVSX5ummbZ
+         wZAJRm4qW8t2V1kZNAvkM/iR947DC8ePguIew/kQbVbgfO686L86hn0rc4nd/QZVQ3
+         DMSaGprL5c8VGqvBF2qjVGSrfQQSWSnzqs8Yd3uAjcJL++MutjMhdHgNZYxi5y1vxi
+         DqjVIvlok7CkQ==
+Subject: [PATCH 4/7] xfs: mark a data structure sick if there are
+ cross-referencing errors
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Date:   Tue, 02 Mar 2021 14:28:59 -0800
+Message-ID: <161472413910.3421582.5713995044590901701.stgit@magnolia>
+In-Reply-To: <161472411627.3421582.2040330025988154363.stgit@magnolia>
+References: <161472411627.3421582.2040330025988154363.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YD4tWbfzmuXv1mKQ@bfoster>
-X-PGP-Key: https://geert.hendrickx.be/pgpkey.asc
-X-PGP-Key-Id: C88C1D9ED3861005886BF44ACD718C1F95AD44EA
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 02, 2021 at 07:19:37 -0500, Brian Foster wrote:
-> It's not clear to me if you're reporting that feature upgrades spuriously
-> report this "Conversion failed ..." message (i.e., feature upgrade
-> succeeded, but repair found and fixed things expected to be problems due
-> to the feature upgrade), or that this error is reported if there is
-> something independently wrong with the fs. If the former, that seems like
-> a bug. If the latter, I think that's reasonable/expected behavior.
+From: Darrick J. Wong <djwong@kernel.org>
+
+If scrub observes cross-referencing errors while scanning a data
+structure, mark the data structure sick.  There's /something/
+inconsistent, even if we can't really tell what it is.
+
+Fixes: 4860a05d2475 ("xfs: scrub/repair should update filesystem metadata health")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/scrub/health.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-
-There are sillier scenarios, like simply incorrect arguments.  For example
-"xfs_admin -O bigtypo=1 /dev/foo" responds with: "Conversion failed, is the
-filesystem unmounted?"
-
-(where /dev/foo is the correct blockdevice, properly unmounted etc, but the
-options argument contains a typo)
-
-The proper xfs_repair error "unknown option -c bigtypo=1" gets thrown away.
-
-
-Other examples include "-O bigtime" => "bigtime requires a parameter" (with
-Darrick's patch for the other issue applied), or "bigtime=0" => "bigtime
-only supports upgrades", all dropped on the floor by xfs_admin and replaced
-with the one generic message that gives no indication of the actual problem.
-(the user keeps verifying whether the filesystem is unmounted and clean...)
-
-
-
-	Geert
-
+diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
+index 83d27cdf579b..3de59b5c2ce6 100644
+--- a/fs/xfs/scrub/health.c
++++ b/fs/xfs/scrub/health.c
+@@ -133,7 +133,8 @@ xchk_update_health(
+ 	if (!sc->sick_mask)
+ 		return;
+ 
+-	bad = (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT);
++	bad = (sc->sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
++				   XFS_SCRUB_OFLAG_XCORRUPT));
+ 	switch (type_to_health_flag[sc->sm->sm_type].group) {
+ 	case XHG_AG:
+ 		pag = xfs_perag_get(sc->mp, sc->sm->sm_agno);
 
