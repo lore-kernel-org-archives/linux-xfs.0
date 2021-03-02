@@ -2,67 +2,31 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27C0DC433DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Mar 2021 08:22:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20E7CC433E6
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:10:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF0EA6148E
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Mar 2021 08:22:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7AA964ED0
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:10:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237739AbhCBGy3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Mar 2021 01:54:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39480 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347638AbhCBFvw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Mar 2021 00:51:52 -0500
-Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F285FC061788
-        for <linux-xfs@vger.kernel.org>; Mon,  1 Mar 2021 21:50:30 -0800 (PST)
-Received: by mail-ej1-x62d.google.com with SMTP id mj10so12818595ejb.5
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Mar 2021 21:50:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=mNZE31gswus170slngXjiwYWAkhOfZUEI/tWqeY6+Ew=;
-        b=Q/OzweNBKTN/p31Gfi5+pQqOQLOS8ZN89cCgWPq5hATdbuSvGCLn+xZgiTqHaV8ovA
-         WPKN7gxWkd/+30M9nOOTji8DLoErcoaIiwcYKBsZU/JkB5jhdpz4wr0X2R9eV7Om8Q0N
-         RILeOr2BWoJJHRoqZ4VrOk84X5EAfMP2kLyBknuDlFE1TifyhnA4CM+YMvmSNBdnnmEE
-         gh0wmMjxGG9kl+Zi/KvsWuhE9ss4/c2eFFp6TBVG9D6DSlyPgmcR3v+BtzohWvyCOGjR
-         5pmqvqEAeig8HYJ40mUttD9ivnt7wJthGN3a7/JqWUToJ2QNAehPFT6Lplucu2vvBVXy
-         2Bsw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=mNZE31gswus170slngXjiwYWAkhOfZUEI/tWqeY6+Ew=;
-        b=DT2Zw72GqF92QIuybXLzwAdMJRJ+vkWm4N1Ebc9Nznlv8JXnyxzp692Xx9Ndlm8P0s
-         S9+FNyDPloEp1xUSwb9eg2nwo4Oi4GuPoD+DL3qqiRCCuSSY3RV2CcUvv5RMDG/8CRXX
-         HTrGRblhTKSZnVDlKg1a3ke9elxNmd66JQ/V8a2xJFBm7NZgbk3cYRD2ImFRRB1mmgt+
-         o0ACpo0ds/hoC3Qe/8Gyl5416DYnbmxSnfd3z/F7Gdi9a/RUMPMRLVCy8L+ZcI1xH3kz
-         Z4s3uNb5PIzPgUjJQAz8dk4ZMCGoe/g8XgNQSOc7v8JqWwbNza+zinsaw581TNWcE16K
-         F2LQ==
-X-Gm-Message-State: AOAM5334efeUyOepX+7AL0PQUR/ZZW7PnkdfLJ2vGuYCbfxykiIvuacJ
-        tg0+vNheJe5KrD8dekt0yV+3/adEgJtM7W70GFRL2w==
-X-Google-Smtp-Source: ABdhPJxLO+hVTmt5Q/tH6FezKM4fb+QRR9ZU9IG9BkPzIKgW3o8mPLtbsk6FDkn6ClsqBLu20m+e0BUjDu7jfCSGcRk=
-X-Received: by 2002:a17:906:6088:: with SMTP id t8mr19715072ejj.323.1614664229502;
- Mon, 01 Mar 2021 21:50:29 -0800 (PST)
-MIME-Version: 1.0
-References: <20210226212748.GY4662@dread.disaster.area> <CAPcyv4jryJ32R5vOwwEdoU3V8C0B7zu_pCt=7f6A3Gk-9h6Dfg@mail.gmail.com>
- <20210227223611.GZ4662@dread.disaster.area> <CAPcyv4h7XA3Jorcy_J+t9scw0A4KdT2WEwAhE-Nbjc=C2qmkMw@mail.gmail.com>
- <20210228223846.GA4662@dread.disaster.area> <CAPcyv4jzV2RUij2BEvDJLLiK_67Nf1v3M6-jRLKf32x4iOzqng@mail.gmail.com>
- <20210301224640.GG4662@dread.disaster.area> <CAPcyv4iTqDJApZY0o_Q0GKn93==d2Gta2NM5x=upf=3JtTia7Q@mail.gmail.com>
- <20210302024227.GH4662@dread.disaster.area> <CAPcyv4ja8gnTR1E-Ge5etm+y69cHwdWN6Bg79wPPF4M=C-w79A@mail.gmail.com>
- <20210302053828.GI4662@dread.disaster.area>
-In-Reply-To: <20210302053828.GI4662@dread.disaster.area>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Mon, 1 Mar 2021 21:50:21 -0800
-Message-ID: <CAPcyv4g03VU8Z8MarMOrW6oJpO-4QFe9-P=CFu3C0z6St3vLuQ@mail.gmail.com>
-Subject: Re: Question about the "EXPERIMENTAL" tag for dax in XFS
-To:     Dave Chinner <david@fromorbit.com>
+        id S233631AbhCCC6g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Mar 2021 21:58:36 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:33075 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1376815AbhCBIAl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Mar 2021 03:00:41 -0500
+Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 740D3105F88;
+        Tue,  2 Mar 2021 18:57:37 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lGzuS-00B8zi-8j; Tue, 02 Mar 2021 18:57:36 +1100
+Date:   Tue, 2 Mar 2021 18:57:36 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Dan Williams <dan.j.williams@intel.com>
 Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
@@ -79,121 +43,170 @@ Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         "y-goto@fujitsu.com" <y-goto@fujitsu.com>,
         "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
         "fnstml-iaas@cn.fujitsu.com" <fnstml-iaas@cn.fujitsu.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: Question about the "EXPERIMENTAL" tag for dax in XFS
+Message-ID: <20210302075736.GJ4662@dread.disaster.area>
+References: <20210226205126.GX4662@dread.disaster.area>
+ <CAPcyv4iDefA3Y0wUW=p080SYAsM_2TPJba-V-sxdK_BeJMkmsw@mail.gmail.com>
+ <20210226212748.GY4662@dread.disaster.area>
+ <CAPcyv4jryJ32R5vOwwEdoU3V8C0B7zu_pCt=7f6A3Gk-9h6Dfg@mail.gmail.com>
+ <20210227223611.GZ4662@dread.disaster.area>
+ <CAPcyv4h7XA3Jorcy_J+t9scw0A4KdT2WEwAhE-Nbjc=C2qmkMw@mail.gmail.com>
+ <20210228223846.GA4662@dread.disaster.area>
+ <CAPcyv4jzV2RUij2BEvDJLLiK_67Nf1v3M6-jRLKf32x4iOzqng@mail.gmail.com>
+ <20210302032805.GM7272@magnolia>
+ <CAPcyv4jXH0F+aii6ZtYQ3=Rx-mOWM7NFHC9wVxacW-b1o_s20g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4jXH0F+aii6ZtYQ3=Rx-mOWM7NFHC9wVxacW-b1o_s20g@mail.gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
+        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=sNTs5Pk-nQt0djJhEW0A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 1, 2021 at 9:38 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Mon, Mar 01, 2021 at 07:33:28PM -0800, Dan Williams wrote:
-> > On Mon, Mar 1, 2021 at 6:42 PM Dave Chinner <david@fromorbit.com> wrote:
-> > [..]
-> > > We do not need a DAX specific mechanism to tell us "DAX device
-> > > gone", we need a generic block device interface that tells us "range
-> > > of block device is gone".
+On Mon, Mar 01, 2021 at 09:41:02PM -0800, Dan Williams wrote:
+> On Mon, Mar 1, 2021 at 7:28 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> > > > I really don't see you seem to be telling us that invalidation is an
+> > > > either/or choice. There's more ways to convert physical block
+> > > > address -> inode file offset and mapping index than brute force
+> > > > inode cache walks....
+> > >
+> > > Yes, but I was trying to map it to an existing mechanism and the
+> > > internals of drop_pagecache_sb() are, in coarse terms, close to what
+> > > needs to happen here.
 > >
-> > This is the crux of the disagreement. The block_device is going away
-> > *and* the dax_device is going away.
->
-> No, that is not the disagreement I have with what you are saying.
-> You still haven't understand that it's even more basic and generic
-> than devices going away. At the simplest form, all the filesystem
-> wants is to be notified of is when *unrecoverable media errors*
-> occur in the persistent storage that underlies the filesystem.
->
-> The filesystem does not care what that media is build from - PMEM,
-> flash, corroded spinning disks, MRAM, or any other persistent media
-> you can think off. It just doesn't matter.
->
-> What we care about is that the contents of a *specific LBA range* no
-> longer contain *valid data*. IOWs, the data in that range of the
-> block device has been lost, cannot be retreived and/or cannot be
-> written to any more.
->
-> PMEM taking a MCE because ECC tripped is a media error because data
-> is lost and inaccessible until recovery actions are taken.
->
-> MD RAID failing a scrub is a media error and data is lost and
-> unrecoverable at that layer.
->
-> A device disappearing is a media error because the storage media is
-> now permanently inaccessible to the higher layers.
->
-> This "media error" categorisation is a fundamental property of
-> persistent storage and, as such, is a property of the block devices
-> used to access said persistent storage.
->
-> That's the disagreement here - that you and Christoph are saying
-> ->corrupted_range is not a block device property because only a
-> pmem/DAX device currently generates it.
->
-> You both seem to be NACKing a generic interface because it's only
-> implemented for the first subsystem that needs it. AFAICT, you
-> either don't understand or are completely ignoring the architectural
-> need for it to be provided across the rest of the storage stack that
-> *block device based filesystems depend on*.
+> > Yes.  XFS (with rmap enabled) can do all the iteration and walking in
+> > that function except for the invalidate_mapping_* call itself.  The goal
+> > of this series is first to wire up a callback within both the block and
+> > pmem subsystems so that they can take notifications and reverse-map them
+> > through the storage stack until they reach an fs superblock.
+> 
+> I'm chuckling because this "reverse map all the way up the block
+> layer" is the opposite of what Dave said at the first reaction to my
+> proposal, "can't the mm map pfns to fs inode  address_spaces?".
 
-No I'm NAKing it because it's the wrong interface. See my 'struct
-badblocks' argument in the reply to Darrick. That 'struct badblocks'
-infrastructure arose from MD and is shared with PMEM.
+Ah, no, I never said that the filesystem can't do reverse maps. I
+was asking if the mm could directly (brute-force) invalidate PTEs
+pointing at physical pmem ranges without needing walk the inode
+mappings. That would be far more efficient if it could be done....
 
->
-> Sure, there might be dax device based fielsystems around the corner.
-> They just require a different pmem device ->corrupted_range callout
-> to implement the notification - one that directs to the dax device
-> rather than the block device. That's simple and trivial to
-> implement, but such functionaity for DAX devices  does not replace
-> the need for the same generic functionality to be provided across a
-> *range of different block devices* as required by *block device
-> based filesystems*.
->
-> And that's fundamentally the problem. XFS is block device based, not
-> DAX device based. We require errors to be reported through block
-> device mechanisms. fs-dax does not change this - it is based on pmem
-> being presented as a primarily as a block device to the block device
-> based filesystems and only secondarily as a dax device. Hence if it
-> can be trivially implemented as a block device interface, that's
-> where it should go, because then all the other block devices that
-> the filesytem runs on can provide the same functionality for similar
-> media error events....
+> Today whenever the pmem driver receives new corrupted range
+> notification from the lower level nvdimm
+> infrastructure(nd_pmem_notify) it updates the 'badblocks' instance
+> associated with the pmem gendisk and then notifies userspace that
+> there are new badblocks. This seems a perfect place to signal an upper
+> level stacked block device that may also be watching disk->bb. Then
+> each gendisk in a stacked topology is responsible for watching the
+> badblock notifications of the next level and storing a remapped
+> instance of those blocks until ultimately the filesystem mounted on
+> the top-level block device is responsible for registering for those
+> top-level disk->bb events.
+> 
+> The device gone notification does not map cleanly onto 'struct badblocks'.
 
-Sure, use 'struct badblocks' not struct block_device and
-block_device_operations.
->
-> > The dax_device removal implies one
-> > set of actions (direct accessed pfns invalid) the block device removal
-> > implies another (block layer sector access offline).
->
-> There you go again, saying DAX requires an action, while the block
-> device notification is a -state change- (i.e. goes offline).
+Filesystems are not allowed to interact with the gendisk
+infrastructure - that's for supporting the device side of a block
+device. It's a layering violation, and many a filesytem developer
+has been shouted at for trying to do this. At most we can peek
+through it to query functionality support from the request queue,
+but otherwise filesystems do not interact with anything under
+bdev->bd_disk.
 
-There you go reacting to the least generous interpretation of what I said.
+As it is, badblocks are used by devices to manage internal state.
+e.g. md for recording stripes that need recovery if the system
+crashes while they are being written out.
 
-s/pfns invalid/pfns offline/
+> If an upper level agent really cared about knowing about ->remove()
+> events before they happened it could maybe do something like:
+> 
+> dev = disk_to_dev(bdev->bd_disk)->parent;
+> bus_register_notifier(dev->bus. &disk_host_device_notifier_block)
 
->
-> This is exactly what I said was wrong in my last email.
->
-> > corrupted_range
-> > is blurring the notification for 2 different failure domains. Look at
-> > the nascent idea to mount a filesystem on dax sans a block device.
-> > Look at the existing plumbing for DM to map dax_operations through a
-> > device stack.
->
-> Ummm, it just maps the direct_access call to the underlying device
-> and calls it's ->direct_access method. All it's doing is LBA
-> mapping. That's all it needs to do for ->corrupted_range, too.
-> I have no clue why you think this is a problem for error
-> notification...
->
-> > Look at the pushback Ruan got for adding a new
-> > block_device operation for corrupted_range().
->
-> one person said "no". That's hardly pushback. Especially as I think
-> Christoph's objection about this being dax specific functionality
-> is simply wrong, as per above.
+Yeah, that's exactly the sort of thing that filesystems have been
+aggressively discouraged from doing for years.
 
-It's not wrong when we have a perfectly suitable object for sector
-based error notification and when we're trying to disentangle 'struct
-block_device' from 'struct dax_device'.
+Part of the reason for this is that gendisk based mechanisms are not
+very good for stacked device error reporting. Part of the problem
+here is that every layer of the stacked device has to hook the
+notifier of the block devices underneath it, then translate the
+event to match the upper block device map, then regenerate the
+notification for the next layer up. This isn't an efficient way to
+pass a notification through a series of stacked devices and it is
+messy and cumbersome to maintain.
+
+It can be effective for getting notifications to userspace about
+something that happens to a specific block device. But The userspace
+still ends up having to solve the "what does this error resolve to"
+problem. i.e. Userspace still needs to map that notification to a
+filesystem, and for data loss events map it to objects within the
+filesystem, which can be extremely expensive to do from userspace.
+
+This is exactly the sort of userspace error reporting mess that
+various projects have asked us to try to fix. Plumbing errors
+internally through the kernel up to the filesystem where the
+filesytem can point directly to the user data that is affected is a
+simple, effective solution to the problem. Especially if we then
+have a generic error notification mechanism for filesystems to emit
+errors to registered userspace watchers...
+
+> I still don't think that solves the need for a separate mechanism for
+> global dax_device pte invalidation.
+
+It's just another type of media error because.....
+
+> I think that global dax_device invalidation needs new kernel
+> infrastructure to allow internal users, like dm-writecache and future
+> filesystems using dax for metadata, to take a fault when pmem is
+> offlined.
+
+.... if userspace has directly mapped into the cache, and the cache
+storage goes away, the userspace app has to be killed because we
+have no idea if the device going away has caused data loss or not.
+IOWs, if userspace writes direct to the cache device and it hasn't
+been written back to other storage when it gets yanked, we have just
+caused data corruption to occur.
+
+At minimum, we now have to tell the filesystem that the dirty data
+in the cache is now bad, and direct map applications that map those
+dirty ranges need to be killed because their backing store is no
+longer valid nor does the backup copy contain the data they last
+wrote. Nor is it acessible by direct access, which is going to be
+interesting because dynamically changing dax to non-dax access can't
+be done without forcibly kicking the inode out of the cache. That
+requires all references to the inode to go away. And that means the
+event really has to go up to the filesystem.
+
+But I think the biggest piece of the puzzle that you haven't grokked
+here is that the dm cache device isn't a linear map - it's made up of
+random ranges from the underlying devices. Hence the "remove" of a dm
+cache device turns into a huge number of small, sparse corrupt
+ranges, not a single linear device remove event.
+
+IOWs, device unplug/remove events are not just simple "pass it on"
+events in a stacked storage setup. There can be non-trivial mappings
+through the layers, and device disappearance may in fact manifest to
+the user as data corruption rather than causing data to be
+inaccessible.
+
+Hence "remove" notifications just don't work in the storage stack.
+They need to be translated to block ranges going bad (i.e.  media
+errors), and reported to higher layers as bad ranges, not as device
+removal.
+
+The same goes for DAX devices. The moment they can be placed in
+storage stacks in non-trivial configurations and/or used as cache
+devices that can be directly accessed over tranditional block
+devices, we end up with error conditions that can only be mapped as
+ranges of blocks that have gone bad.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
