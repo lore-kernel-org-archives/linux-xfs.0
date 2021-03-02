@@ -2,211 +2,257 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20E7CC433E6
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:10:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40F02C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:17:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7AA964ED0
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:10:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFB32601FF
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:17:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233631AbhCCC6g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Mar 2021 21:58:36 -0500
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:33075 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1376815AbhCBIAl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Mar 2021 03:00:41 -0500
-Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 740D3105F88;
-        Tue,  2 Mar 2021 18:57:37 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lGzuS-00B8zi-8j; Tue, 02 Mar 2021 18:57:36 +1100
-Date:   Tue, 2 Mar 2021 18:57:36 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "jack@suse.cz" <jack@suse.cz>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-        "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>,
-        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
-        "y-goto@fujitsu.com" <y-goto@fujitsu.com>,
-        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
-        "fnstml-iaas@cn.fujitsu.com" <fnstml-iaas@cn.fujitsu.com>
-Subject: Re: Question about the "EXPERIMENTAL" tag for dax in XFS
-Message-ID: <20210302075736.GJ4662@dread.disaster.area>
-References: <20210226205126.GX4662@dread.disaster.area>
- <CAPcyv4iDefA3Y0wUW=p080SYAsM_2TPJba-V-sxdK_BeJMkmsw@mail.gmail.com>
- <20210226212748.GY4662@dread.disaster.area>
- <CAPcyv4jryJ32R5vOwwEdoU3V8C0B7zu_pCt=7f6A3Gk-9h6Dfg@mail.gmail.com>
- <20210227223611.GZ4662@dread.disaster.area>
- <CAPcyv4h7XA3Jorcy_J+t9scw0A4KdT2WEwAhE-Nbjc=C2qmkMw@mail.gmail.com>
- <20210228223846.GA4662@dread.disaster.area>
- <CAPcyv4jzV2RUij2BEvDJLLiK_67Nf1v3M6-jRLKf32x4iOzqng@mail.gmail.com>
- <20210302032805.GM7272@magnolia>
- <CAPcyv4jXH0F+aii6ZtYQ3=Rx-mOWM7NFHC9wVxacW-b1o_s20g@mail.gmail.com>
+        id S234752AbhCCDJM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Mar 2021 22:09:12 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:46098 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1377810AbhCBI3S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Mar 2021 03:29:18 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1228KnEM080887;
+        Tue, 2 Mar 2021 08:26:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2020-01-29;
+ bh=grBCV0d20i+MVXX/dsSPvkfwXnbNLpD7vpB8U73ZmAw=;
+ b=XI1DexymHJrYuf/sMaitoF7J/0KIiHrWMKsG4gsD0iUuWuzeshl4GTfm7ziFLMuaq1jO
+ BdrT7VaMlfGyBSUWBU0YczedUs6HGdfBh7adHefVFz7rkXNpt48uYRCP70qoG6rRAYGC
+ xV62sD3mev+L/DbBG7Qe03gNZyvreHT1FOCJcG0Ag6LHDS9NYvy3CaJVLqCw8nm12V9J
+ QRust4ZZ3HHC+QXofjGEORA9JPnS+35pwC0a/ICw0HQtMYiGdr0t83qzIQIsxuJGj6v1
+ ozWB4xvePhv/XL6hLVLZUpooe8EKgJXpSEPD+v5CkxsPFYRVtF224l3ql3gNA1Fputg0 Cg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 36yeqmxk1s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 02 Mar 2021 08:26:35 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1228QV10140643;
+        Tue, 2 Mar 2021 08:26:35 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2100.outbound.protection.outlook.com [104.47.70.100])
+        by userp3020.oracle.com with ESMTP id 36yyurp0rh-3
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 02 Mar 2021 08:26:35 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=lcUf9H429oiU7v3tinLS4yYxyjiKNipCSp+Q8Y12gVkKlfTIiC0XhIkVla6t7YxbFcly5Xoo0rIRck4y35/fpYXBMm85FktMgMjepsgUKrq4bSOW7mn/h/wSu0SYlh+/7dFOVQ09TWTJKMFC0vD/ZdsMPVfXaMlhYEYwRUgimafdV6jff1XTBnbqyRsUs4NjJP8JvX52q3Bq9rS5LeGvMTOQJLQGHtqbxNpE3hU7TBuRaP+1BmQu3/u5K4xWermrG096XA8UoB4pvx5WCYjRfnMxnknlqSmhJQyqgPkg4uBNa/XXLCyLhbIQUl7/b8Y5AfhdoUXBqvTJlDkIWhdHuA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=grBCV0d20i+MVXX/dsSPvkfwXnbNLpD7vpB8U73ZmAw=;
+ b=Pfmuw908rCz0oLW2muq057022a7k5oTmXgT6jbFXJZcChm4vA+RGseaozE+0BKgtrZsBwZR6jG2hRfHQA3Yi61J3Dydcy8lxH+4lX6JId97/gGghbwanlCnTHgq+f5H4NCPeSaxQUNtwFaaN139efvUptYcldk01kB8P3TfGdzL0Ky5xYvuktFJ9Jm1bQECEDg38zW8JH2uwzf0OT+A2P9/K0iUSmmNgTVIg28tqaSL6iNXqHlJvbCmF3pBEoIn9jG/u/+hKC/iBOTq2GrqfELLjKUXPBQVBe5tme8k9aK2orXhYZI7F68Xa+FXcuHUlNq9o5bBQRhx0CuOagZ8P5g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=grBCV0d20i+MVXX/dsSPvkfwXnbNLpD7vpB8U73ZmAw=;
+ b=p1x+xX8hUYvcCRG00Hr2tlXl/ffw5U2Rv1Q8wb6buO97HHTArK/FjMm/5BWRwKa6NNGn8ondSF4VFJezDdU2eTZfZpkNUNHhUo6z6JpC1Zcgp+SCO2dhGW9P/fxE8wM6WtAvSW2YY5wfhLW/U0H6ws5q45wPnNoK9W26ubIRfIo=
+Authentication-Results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by BYAPR10MB3144.namprd10.prod.outlook.com (2603:10b6:a03:15c::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.26; Tue, 2 Mar
+ 2021 08:26:24 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::f4a1:6643:4c93:2a9f]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::f4a1:6643:4c93:2a9f%3]) with mapi id 15.20.3890.029; Tue, 2 Mar 2021
+ 08:26:24 +0000
+Subject: Re: [PATCH v15 10/22] xfs: Hoist node transaction handling
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <20210218165348.4754-1-allison.henderson@oracle.com>
+ <20210218165348.4754-11-allison.henderson@oracle.com>
+ <20210301182016.GJ7272@magnolia>
+From:   Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <7043300a-3622-b47b-8061-8368afb906e7@oracle.com>
+Date:   Tue, 2 Mar 2021 01:26:23 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
+In-Reply-To: <20210301182016.GJ7272@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [67.1.223.248]
+X-ClientProxiedBy: SJ0PR03CA0303.namprd03.prod.outlook.com
+ (2603:10b6:a03:39d::8) To BY5PR10MB4306.namprd10.prod.outlook.com
+ (2603:10b6:a03:211::7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4jXH0F+aii6ZtYQ3=Rx-mOWM7NFHC9wVxacW-b1o_s20g@mail.gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=sNTs5Pk-nQt0djJhEW0A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.1.226] (67.1.223.248) by SJ0PR03CA0303.namprd03.prod.outlook.com (2603:10b6:a03:39d::8) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.19 via Frontend Transport; Tue, 2 Mar 2021 08:26:24 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: fbd6c265-5b10-4dd3-be59-08d8dd54dde7
+X-MS-TrafficTypeDiagnostic: BYAPR10MB3144:
+X-Microsoft-Antispam-PRVS: <BYAPR10MB314402679C5479AF1BEFEAF195999@BYAPR10MB3144.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: E6W9qCaou22n1EU52HxYAPBy/iZrJaeryaVVxnmKdVGlPh9ttxiYoX7YSFHNcoh/BJ7HlT/msCO1maEiBHD7G4PBh/ONYad8ZhSPWU7GUu+U8M2fwtKMWSjsdR7JmlFeCZHzQU8A1E3QlQaBSOwxc8oo/wQg5v9rp9N3HYGgCAxru4mRKjYLgbrIirO+jv7/OwfCqgW/ijPQ8zTFATgRVCOfT8ktWHT9sCZWFuu1n6pPCbzhoeLU1fzH0ah7UeTSIpswpBGLf5Y6GFWqKdQaZjrroQeOT95yZZW8hzECBJT9O0ZVj/XxO+w0WM5gHXipRH7qSrDFgvuOBzvjkJG9XHgkWFilxtdQBMiUvgGUGL//nlQwfOlrzt42MT9wkcTf5/H3j4HYvjC8/4UfIgy3HFxHLu0p0QJxurMtzKCa63Kr3MDSIcymhyZ5dD6c46c9mfweW49P56Fi9Q/m2uzl7xRQ/Z192tz196NmI1inapwKPfaEB1BkJscBa4Nbtyl5WyMFNyUl7bnVCZXTTZIHpwFdl5XpG3D4sxJ1toPi1UWfMrulhNFHTrpe179PhLlj1LS0TopK6JVTavta55NjEKEk30qsCMT6/tMVfO4aiiY=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(39860400002)(376002)(366004)(136003)(346002)(66476007)(66556008)(52116002)(4326008)(66946007)(2616005)(6916009)(53546011)(44832011)(31696002)(16576012)(316002)(6486002)(956004)(86362001)(16526019)(8676002)(31686004)(83380400001)(8936002)(2906002)(478600001)(186003)(5660300002)(26005)(36756003)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?S3p0Z2ZlZ0JIU2dYS1BjekREMFhiOG5EbzVhS1djUjBqRDcxZ0d5WmJhcWhl?=
+ =?utf-8?B?K0JQS3k3VHhqcWc1alA0dzFOUDgyaDZxU0pWZWQrdDBRSDFhbXVleTQ2SlpV?=
+ =?utf-8?B?azVCcHV3LzBENGw3VzIzQnBKQjY5WEhMWjk1ZGxpSDM2dktpMlBDYU13YWxy?=
+ =?utf-8?B?SWw1ak9XejRRRndvNGxTdHpwaVpSNlRXMlJXbXc5eGdYY0NwUjhWTE95NFI1?=
+ =?utf-8?B?clpKYnkxOXpTbVd2ajB0Wm5qNzRlYXhQbW5sekJXREJ1WEJNT3h0dGtvZzJR?=
+ =?utf-8?B?SDExak5tUVlXNHVIV04xU3lpaUZXcHFwdm82WFpOaU5TTDZVa0NEUzk0OVlJ?=
+ =?utf-8?B?RzRGOVV6WnBCQzl5aXoxdVZMc2pkTU5iTnVCWHFRakdzWTVidVZrZldkTEtH?=
+ =?utf-8?B?RW1nSXhpa0xwOTBkU2NHV1FyVXBZd2xXL1BYN0xmUFQvUy9yd3Z4L0pVOS9U?=
+ =?utf-8?B?NVNIaVRLY3V2cisxT2NuRmlRcVJla0Evai8xNDNFMTFhL1E5Rm5lbFNkMzUw?=
+ =?utf-8?B?c1BKQnROZ1lNR3dkSm9ZVng2Z2xUalp0c2tPNnRUYnE0dklHKyswSzZNMDJk?=
+ =?utf-8?B?NHViVGdldG0vWXBIMHZpbXZJS3drT24rNUxkMlUrbjFlTzhEYVdPSy8yall6?=
+ =?utf-8?B?RUtEdGZQV3B0LzYvcVkwdS9XN1ZUVTkrcWU0elNhSndTMjZoOXRjaXpOWXg4?=
+ =?utf-8?B?eGllUjA2NzVLbGdaMDhBUmh4bU5DNk51cFlkVERQNCtON2J3Yzk1bHEzYXZ6?=
+ =?utf-8?B?L0RMVGRJdWUxbGxXMC9wcFRpYkc4ZHhJeTRhbGdBeHFJQ1M0NVc2QzJGdHRB?=
+ =?utf-8?B?R2o4bVdjaGgxd1FpcUdOeHZ4UVI1RGN3N3Z2NGNKWmNXQWhCNFVZUDVhY1dn?=
+ =?utf-8?B?eTFiNXY0NU16T2hkZ3ZzY3JRcFFkbW1BYXJjVWNHMkhiUWdTeUk1Y1FjSlJh?=
+ =?utf-8?B?VXI2ZS9RY2tZY1Z2MFcwamJsTnNiY0F6d1ZLMTNvWEYzbEJLb082UE0yVTJ5?=
+ =?utf-8?B?ZTJzTitrVXo4MjMwN2NacG5mNDRoSXB0emMzZDNmRURwN1pXWjhBeXhDSWt6?=
+ =?utf-8?B?YllJQklnVnFvRU51cGRpUW9kWWdMd0tFUUNIaWF0YTFUN0pKUmRoZDMxRCtG?=
+ =?utf-8?B?K1B2RGJLSjFndDNyVVpjSjExZ0Y1cDlvNXJ6azc0VGhSZ3J2OW5lMUs3d2ly?=
+ =?utf-8?B?dktQVTgxYzhSM3R0Rjd1STdIVGpVNWk0Z01rWUR5QU9iQmk1Qk5Fc09OTEYr?=
+ =?utf-8?B?ekMvMmVIYnNwT21aRVo2NWh2RFR3L2pQTU1WUVRyQkpPK1Z6bHhmbVZIQmZG?=
+ =?utf-8?B?MU1SMEZvM1VGeGFrRGZUZmdKRUYvUjVjQlpxV0lRNHRZQ1dhc3JkeTVRN09q?=
+ =?utf-8?B?V1JkOEJITjkvS3NaS3A3dHRNRzh0UGxJa3lJS0o0MU52Qk1leUhQUlpHellZ?=
+ =?utf-8?B?aUMvNmNSVTEyMHN4WWlSVVZ1Yk8zK0lJNTZUUGlyaGdaMVBGaEcrdzdhaEdj?=
+ =?utf-8?B?aVk0ancyREhKdXlKdVN2a2dYdzRXWGFXb0pQcUdJR0JabEx4ME80bjlKcWN0?=
+ =?utf-8?B?VisreXRROHpWbElXYTJSTXFBaFA1K3NpZDZNcjdlVnVpd0tKbzA2NWVVQ09I?=
+ =?utf-8?B?NXU4WVpEZHlNYkhYaEZIOGpEeFBUVnpyYnRLTEJLR01FSmJPK3dFQnlEajNU?=
+ =?utf-8?B?VTloTjdTU0NhMERBQ2N0NDc4a2dtOG91L1YvZUVYeXk1VDRZSmswY3JCZGNP?=
+ =?utf-8?Q?HftuTBoJZaEbtUQWLvVA+MgD6bezLb9W+F1Coux?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fbd6c265-5b10-4dd3-be59-08d8dd54dde7
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Mar 2021 08:26:24.6731
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: TMDcpCVBe1iGUB/tjCmvcdRjt958zoGUt5tH7opbCzEYWRzqRHjDkK8BmKO7SvLDqQWcRPO/BxY5SrmbzmTOOEOHKiTRqqlP/lgoy4UpP9s=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3144
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9910 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 suspectscore=0
+ mlxlogscore=999 bulkscore=0 adultscore=0 phishscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103020070
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9910 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 clxscore=1015
+ priorityscore=1501 mlxlogscore=999 suspectscore=0 malwarescore=0
+ impostorscore=0 bulkscore=0 adultscore=0 mlxscore=0 phishscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2103020069
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 01, 2021 at 09:41:02PM -0800, Dan Williams wrote:
-> On Mon, Mar 1, 2021 at 7:28 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> > > > I really don't see you seem to be telling us that invalidation is an
-> > > > either/or choice. There's more ways to convert physical block
-> > > > address -> inode file offset and mapping index than brute force
-> > > > inode cache walks....
-> > >
-> > > Yes, but I was trying to map it to an existing mechanism and the
-> > > internals of drop_pagecache_sb() are, in coarse terms, close to what
-> > > needs to happen here.
-> >
-> > Yes.  XFS (with rmap enabled) can do all the iteration and walking in
-> > that function except for the invalidate_mapping_* call itself.  The goal
-> > of this series is first to wire up a callback within both the block and
-> > pmem subsystems so that they can take notifications and reverse-map them
-> > through the storage stack until they reach an fs superblock.
+
+
+On 3/1/21 11:20 AM, Darrick J. Wong wrote:
+> On Thu, Feb 18, 2021 at 09:53:36AM -0700, Allison Henderson wrote:
+>> This patch basically hoists the node transaction handling around the
+>> leaf code we just hoisted.  This will helps setup this area for the
+>> state machine since the goto is easily replaced with a state since it
+>> ends with a transaction roll.
+>>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_attr.c | 53 +++++++++++++++++++++++++-----------------------
+>>   1 file changed, 28 insertions(+), 25 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index bfd4466..56d4b56 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -288,8 +288,34 @@ xfs_attr_set_args(
+>>   
+>>   	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+>>   		error = xfs_attr_leaf_try_add(args, bp);
+>> -		if (error == -ENOSPC)
+>> +		if (error == -ENOSPC) {
+>> +			/*
+>> +			 * Promote the attribute list to the Btree format.
+>> +			 */
+>> +			error = xfs_attr3_leaf_to_node(args);
+>> +			if (error)
+>> +				return error;
+>> +
+>> +			/*
+>> +			 * Finish any deferred work items and roll the transaction once
+>> +			 * more.  The goal here is to call node_addname with the inode
+>> +			 * and transaction in the same state (inode locked and joined,
+>> +			 * transaction clean) no matter how we got to this step.
+>> +			 */
+>> +			error = xfs_defer_finish(&args->trans);
+>> +			if (error)
+>> +				return error;
+>> +
+>> +			/*
+>> +			 * Commit the current trans (including the inode) and
+>> +			 * start a new one.
+>> +			 */
+>> +			error = xfs_trans_roll_inode(&args->trans, dp);
+>> +			if (error)
+>> +				return error;
+>> +
+>>   			goto node;
+>> +		}
+>>   		else if (error)
+>>   			return error;
 > 
-> I'm chuckling because this "reverse map all the way up the block
-> layer" is the opposite of what Dave said at the first reaction to my
-> proposal, "can't the mm map pfns to fs inode  address_spaces?".
+> With the braces and indenting fixed the way Brian said,
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Sure, will do.  Thank you!
+Allison
 
-Ah, no, I never said that the filesystem can't do reverse maps. I
-was asking if the mm could directly (brute-force) invalidate PTEs
-pointing at physical pmem ranges without needing walk the inode
-mappings. That would be far more efficient if it could be done....
-
-> Today whenever the pmem driver receives new corrupted range
-> notification from the lower level nvdimm
-> infrastructure(nd_pmem_notify) it updates the 'badblocks' instance
-> associated with the pmem gendisk and then notifies userspace that
-> there are new badblocks. This seems a perfect place to signal an upper
-> level stacked block device that may also be watching disk->bb. Then
-> each gendisk in a stacked topology is responsible for watching the
-> badblock notifications of the next level and storing a remapped
-> instance of those blocks until ultimately the filesystem mounted on
-> the top-level block device is responsible for registering for those
-> top-level disk->bb events.
 > 
-> The device gone notification does not map cleanly onto 'struct badblocks'.
-
-Filesystems are not allowed to interact with the gendisk
-infrastructure - that's for supporting the device side of a block
-device. It's a layering violation, and many a filesytem developer
-has been shouted at for trying to do this. At most we can peek
-through it to query functionality support from the request queue,
-but otherwise filesystems do not interact with anything under
-bdev->bd_disk.
-
-As it is, badblocks are used by devices to manage internal state.
-e.g. md for recording stripes that need recovery if the system
-crashes while they are being written out.
-
-> If an upper level agent really cared about knowing about ->remove()
-> events before they happened it could maybe do something like:
+> --D
 > 
-> dev = disk_to_dev(bdev->bd_disk)->parent;
-> bus_register_notifier(dev->bus. &disk_host_device_notifier_block)
-
-Yeah, that's exactly the sort of thing that filesystems have been
-aggressively discouraged from doing for years.
-
-Part of the reason for this is that gendisk based mechanisms are not
-very good for stacked device error reporting. Part of the problem
-here is that every layer of the stacked device has to hook the
-notifier of the block devices underneath it, then translate the
-event to match the upper block device map, then regenerate the
-notification for the next layer up. This isn't an efficient way to
-pass a notification through a series of stacked devices and it is
-messy and cumbersome to maintain.
-
-It can be effective for getting notifications to userspace about
-something that happens to a specific block device. But The userspace
-still ends up having to solve the "what does this error resolve to"
-problem. i.e. Userspace still needs to map that notification to a
-filesystem, and for data loss events map it to objects within the
-filesystem, which can be extremely expensive to do from userspace.
-
-This is exactly the sort of userspace error reporting mess that
-various projects have asked us to try to fix. Plumbing errors
-internally through the kernel up to the filesystem where the
-filesytem can point directly to the user data that is affected is a
-simple, effective solution to the problem. Especially if we then
-have a generic error notification mechanism for filesystems to emit
-errors to registered userspace watchers...
-
-> I still don't think that solves the need for a separate mechanism for
-> global dax_device pte invalidation.
-
-It's just another type of media error because.....
-
-> I think that global dax_device invalidation needs new kernel
-> infrastructure to allow internal users, like dm-writecache and future
-> filesystems using dax for metadata, to take a fault when pmem is
-> offlined.
-
-.... if userspace has directly mapped into the cache, and the cache
-storage goes away, the userspace app has to be killed because we
-have no idea if the device going away has caused data loss or not.
-IOWs, if userspace writes direct to the cache device and it hasn't
-been written back to other storage when it gets yanked, we have just
-caused data corruption to occur.
-
-At minimum, we now have to tell the filesystem that the dirty data
-in the cache is now bad, and direct map applications that map those
-dirty ranges need to be killed because their backing store is no
-longer valid nor does the backup copy contain the data they last
-wrote. Nor is it acessible by direct access, which is going to be
-interesting because dynamically changing dax to non-dax access can't
-be done without forcibly kicking the inode out of the cache. That
-requires all references to the inode to go away. And that means the
-event really has to go up to the filesystem.
-
-But I think the biggest piece of the puzzle that you haven't grokked
-here is that the dm cache device isn't a linear map - it's made up of
-random ranges from the underlying devices. Hence the "remove" of a dm
-cache device turns into a huge number of small, sparse corrupt
-ranges, not a single linear device remove event.
-
-IOWs, device unplug/remove events are not just simple "pass it on"
-events in a stacked storage setup. There can be non-trivial mappings
-through the layers, and device disappearance may in fact manifest to
-the user as data corruption rather than causing data to be
-inaccessible.
-
-Hence "remove" notifications just don't work in the storage stack.
-They need to be translated to block ranges going bad (i.e.  media
-errors), and reported to higher layers as bad ranges, not as device
-removal.
-
-The same goes for DAX devices. The moment they can be placed in
-storage stacks in non-trivial configurations and/or used as cache
-devices that can be directly accessed over tranditional block
-devices, we end up with error conditions that can only be mapped as
-ranges of blocks that have gone bad.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>>   
+>> @@ -381,32 +407,9 @@ xfs_attr_set_args(
+>>   			/* bp is gone due to xfs_da_shrink_inode */
+>>   
+>>   		return error;
+>> +	}
+>>   node:
+>> -		/*
+>> -		 * Promote the attribute list to the Btree format.
+>> -		 */
+>> -		error = xfs_attr3_leaf_to_node(args);
+>> -		if (error)
+>> -			return error;
+>> -
+>> -		/*
+>> -		 * Finish any deferred work items and roll the transaction once
+>> -		 * more.  The goal here is to call node_addname with the inode
+>> -		 * and transaction in the same state (inode locked and joined,
+>> -		 * transaction clean) no matter how we got to this step.
+>> -		 */
+>> -		error = xfs_defer_finish(&args->trans);
+>> -		if (error)
+>> -			return error;
+>>   
+>> -		/*
+>> -		 * Commit the current trans (including the inode) and
+>> -		 * start a new one.
+>> -		 */
+>> -		error = xfs_trans_roll_inode(&args->trans, dp);
+>> -		if (error)
+>> -			return error;
+>> -	}
+>>   
+>>   	do {
+>>   		error = xfs_attr_node_addname_find_attr(args, &state);
+>> -- 
+>> 2.7.4
+>>
