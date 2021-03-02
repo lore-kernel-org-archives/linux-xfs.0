@@ -4,42 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9125C4360C
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4BD7C28CBC
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C0480601FF
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C406601FF
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343550AbhCCDQH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Mar 2021 22:16:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45092 "EHLO mail.kernel.org"
+        id S1350385AbhCCDQU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Mar 2021 22:16:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38566 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2360825AbhCBW35 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Mar 2021 17:29:57 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 75EFB64F39;
-        Tue,  2 Mar 2021 22:29:16 +0000 (UTC)
+        id S2361110AbhCBXX0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Mar 2021 18:23:26 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 90CDB64F39;
+        Tue,  2 Mar 2021 23:22:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614724156;
-        bh=zIcU4r6u4b6L6Ldt0s8f+DVdv1Nw8eu9IRF/Ajcbe64=;
+        s=k20201202; t=1614727365;
+        bh=2oyFzPf7zo59T6UmCeDEbgc4XUptJkxuMlmAGUT1Vow=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=FkR4W9YsGyLvsT3fJwWirs+yPU9B3ELGUXVj4+/ENq0klZXNGcbn1LvWDFiHf7q5e
-         0OkFeVSXGdqKsM8CUCLHTqPPE6TUEoZicwC9pIeK7P9gJTifFbAQwZLt+jjc3zrCBE
-         +R6Hrir6+rEWg6nnLsV6sT13BE8OjW4uDV+abLDU5+blS2HsQwpPrnZEiK4Ug9HuWc
-         cq6KyQhg4AZVUV4+IU5HcFR14WBII3df8DAkA1lMhsRUCAtDQHrIbg6GyRpPUzOaLn
-         /pBx1b0GTIYsXEghqgh3rIM2eKlWkKV5oL/UtJkAnwaG84vAKafsAjs2vnLDHE8EY3
-         ni8N167iL0LFw==
-Subject: [PATCH 7/7] xfs: validate ag btree levels using the precomputed
- values
+        b=WVSimCf0ZriWxsnfww0hdphD94mgkJPmqAzRKe75xKQBz+idQArhZ3Ul7LstTyzMa
+         BedsTZmh84tgE9LQRfvM2j+0Wvc7d6RjxuT183MzE1uEMro7NhTwW/T9dUJjVE8xEi
+         e/ZfbzCRfnuNtu1UuErP9/9DuCUjf3jEJE7I449Ox4fCIH/OgkL1a4vnVibBwAsUdr
+         7vl6RSUcrljJYwtou5hyyngrKFUM+K+csNmLB7klb2gXlzQaj+jFZhnLWOU/MsvZMO
+         yj/u+dfVcO4SalEe2bve+ucbcKhGbQHS9tGA1Z8AIMn5DqvHJEvf1W+VWquayJ4SLR
+         awXRMLKjGRPGA==
+Subject: [PATCH 2/4] xfs/271: fix test failure on non-reflink filesystems
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 02 Mar 2021 14:29:16 -0800
-Message-ID: <161472415607.3421582.13410103932115410995.stgit@magnolia>
-In-Reply-To: <161472411627.3421582.2040330025988154363.stgit@magnolia>
-References: <161472411627.3421582.2040330025988154363.stgit@magnolia>
+To:     djwong@kernel.org, guaneryu@gmail.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Tue, 02 Mar 2021 15:22:45 -0800
+Message-ID: <161472736521.3478298.1405183245326186350.stgit@magnolia>
+In-Reply-To: <161472735404.3478298.8179031068431918520.stgit@magnolia>
+References: <161472735404.3478298.8179031068431918520.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,77 +49,51 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Use the AG btree height limits that we precomputed into the xfs_mount to
-validate the AG headers instead of using XFS_BTREE_MAXLEVELS.
+This test creates an empty filesystem with rmap btrees enabled, and then
+checks that GETFSMAP corresponds (roughly) with what we expect mkfs to
+have written to the filesystem.
+
+Unfortunately, the test's calculation for the number of "per-AG
+metadata" extents is not quite correct.  For a filesystem with a
+refcount btree, the rmapbt and agfl blocks will be reported separately,
+but for non-reflink filesystems, GETFSMAP merges the records.
+
+Since this test counts the number of records, fix the calculation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc.c      |    8 ++++----
- fs/xfs/libxfs/xfs_ialloc.c     |    4 ++--
- fs/xfs/libxfs/xfs_inode_fork.c |    2 +-
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ tests/xfs/271 |   12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 0c623d3c1036..aaa19101bb2a 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2906,13 +2906,13 @@ xfs_agf_verify(
+diff --git a/tests/xfs/271 b/tests/xfs/271
+index 48a3eb8f..35c23b84 100755
+--- a/tests/xfs/271
++++ b/tests/xfs/271
+@@ -38,6 +38,16 @@ _scratch_mount
  
- 	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) < 1 ||
- 	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) < 1 ||
--	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) > XFS_BTREE_MAXLEVELS ||
--	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) > XFS_BTREE_MAXLEVELS)
-+	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) > mp->m_ag_maxlevels ||
-+	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) > mp->m_ag_maxlevels)
- 		return __this_address;
+ agcount=$(_xfs_mount_agcount $SCRATCH_MNT)
  
- 	if (xfs_sb_version_hasrmapbt(&mp->m_sb) &&
- 	    (be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) < 1 ||
--	     be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) > XFS_BTREE_MAXLEVELS))
-+	     be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) > mp->m_rmap_maxlevels))
- 		return __this_address;
++# mkfs lays out btree root blocks in the order bnobt, cntbt, inobt, finobt,
++# rmapbt, refcountbt, and then allocates AGFL blocks.  Since GETFSMAP has the
++# same owner (per-AG metadata) for rmap btree blocks and blocks on the AGFL and
++# the reverse mapping index merges records, the number of per-AG extents
++# reported will vary depending on whether the refcount btree is enabled.
++$XFS_INFO_PROG $SCRATCH_MNT | grep -q reflink=1
++has_reflink=$(( 1 - $? ))
++perag_metadata_exts=2
++test $has_reflink -gt 0 && perag_metadata_exts=$((perag_metadata_exts + 1))
++
+ echo "Get fsmap" | tee -a $seqres.full
+ $XFS_IO_PROG -c 'fsmap -v' $SCRATCH_MNT > $TEST_DIR/fsmap
+ cat $TEST_DIR/fsmap >> $seqres.full
+@@ -48,7 +58,7 @@ _within_tolerance "AG header count" $(wc -l < $TEST_DIR/testout) $agcount 0 -v
  
- 	if (xfs_sb_version_hasrmapbt(&mp->m_sb) &&
-@@ -2939,7 +2939,7 @@ xfs_agf_verify(
+ echo "Check freesp/rmap btrees" | tee -a $seqres.full
+ grep 'per-AG metadata[[:space:]]*[0-9]*[[:space:]]*([0-9]*\.\.' $TEST_DIR/fsmap | tee -a $seqres.full > $TEST_DIR/testout
+-_within_tolerance "freesp extent count" $(wc -l < $TEST_DIR/testout) $((agcount * 3)) 0 999999 -v
++_within_tolerance "freesp extent count" $(wc -l < $TEST_DIR/testout) $((agcount * perag_metadata_exts)) 0 999999 -v
  
- 	if (xfs_sb_version_hasreflink(&mp->m_sb) &&
- 	    (be32_to_cpu(agf->agf_refcount_level) < 1 ||
--	     be32_to_cpu(agf->agf_refcount_level) > XFS_BTREE_MAXLEVELS))
-+	     be32_to_cpu(agf->agf_refcount_level) > mp->m_refc_maxlevels))
- 		return __this_address;
- 
- 	return NULL;
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 69b228fce81a..eefdb518fe64 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2535,12 +2535,12 @@ xfs_agi_verify(
- 		return __this_address;
- 
- 	if (be32_to_cpu(agi->agi_level) < 1 ||
--	    be32_to_cpu(agi->agi_level) > XFS_BTREE_MAXLEVELS)
-+	    be32_to_cpu(agi->agi_level) > M_IGEO(mp)->inobt_maxlevels)
- 		return __this_address;
- 
- 	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
- 	    (be32_to_cpu(agi->agi_free_level) < 1 ||
--	     be32_to_cpu(agi->agi_free_level) > XFS_BTREE_MAXLEVELS))
-+	     be32_to_cpu(agi->agi_free_level) > M_IGEO(mp)->inobt_maxlevels))
- 		return __this_address;
- 
- 	/*
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index e080d7e07643..192bcf3e549d 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -195,7 +195,7 @@ xfs_iformat_btree(
- 		     XFS_BMDR_SPACE_CALC(nrecs) >
- 					XFS_DFORK_SIZE(dip, mp, whichfork) ||
- 		     ifp->if_nextents > ip->i_d.di_nblocks) ||
--		     level == 0 || level > XFS_BTREE_MAXLEVELS) {
-+		     level == 0 || level > XFS_BM_MAXLEVELS(mp, whichfork)) {
- 		xfs_warn(mp, "corrupt inode %Lu (btree).",
- 					(unsigned long long) ip->i_ino);
- 		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+ echo "Check inode btrees" | tee -a $seqres.full
+ grep 'inode btree[[:space:]]*[0-9]*[[:space:]]*([0-9]*\.\.' $TEST_DIR/fsmap | tee -a $seqres.full > $TEST_DIR/testout
 
