@@ -2,184 +2,226 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E84BC433DB
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CCBBC433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A8AB61477
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1459601FF
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351123AbhCCDQa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1351125AbhCCDQa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 2 Mar 2021 22:16:30 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:36790 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233895AbhCCBac (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Mar 2021 20:30:32 -0500
-Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 2B5B18283F4;
-        Wed,  3 Mar 2021 11:57:52 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lHFpo-00CF17-AB; Wed, 03 Mar 2021 11:57:52 +1100
-Date:   Wed, 3 Mar 2021 11:57:52 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3 v2] xfs: AIL needs asynchronous CIL forcing
-Message-ID: <20210303005752.GM4662@dread.disaster.area>
-References: <20210223053212.3287398-1-david@fromorbit.com>
- <20210223053212.3287398-3-david@fromorbit.com>
- <20210224211058.GA4662@dread.disaster.area>
- <20210224232600.GH4662@dread.disaster.area>
- <YD6xrJHgkkHi+7a3@bfoster>
+Received: from out30-130.freemail.mail.aliyun.com ([115.124.30.130]:57887 "EHLO
+        out30-130.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S244907AbhCCCrX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Mar 2021 21:47:23 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R201e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04395;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=3;SR=0;TI=SMTPD_---0UQADsP5_1614739598;
+Received: from 30.225.32.216(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0UQADsP5_1614739598)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Wed, 03 Mar 2021 10:46:39 +0800
+Subject: Re: code questions about xfs log implementation
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
+References: <a732a6ff-4d66-91e5-cd9a-43d156d83362@linux.alibaba.com>
+ <20210228233218.GB4662@dread.disaster.area>
+From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+Message-ID: <fda0caca-4d71-77ec-2339-0e93a6ded3f1@linux.alibaba.com>
+Date:   Wed, 3 Mar 2021 10:43:56 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YD6xrJHgkkHi+7a3@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=wnysfiyLU5Gt2fQxVeIA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210228233218.GB4662@dread.disaster.area>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 02, 2021 at 04:44:12PM -0500, Brian Foster wrote:
-> On Thu, Feb 25, 2021 at 10:26:00AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The AIL pushing is stalling on log forces when it comes across
-> > pinned items. This is happening on removal workloads where the AIL
-> > is dominated by stale items that are removed from AIL when the
-> > checkpoint that marks the items stale is committed to the journal.
-> > This results is relatively few items in the AIL, but those that are
-> > are often pinned as directories items are being removed from are
-> > still being logged.
-> > 
-> > As a result, many push cycles through the CIL will first issue a
-> > blocking log force to unpin the items. This can take some time to
-> > complete, with tracing regularly showing push delays of half a
-> > second and sometimes up into the range of several seconds. Sequences
-> > like this aren't uncommon:
-> > 
-> ...
-> > 
-> > In each of these cases, every AIL pass saw 101 log items stuck on
-> > the AIL (pinned) with very few other items being found. Each pass, a
-> > log force was issued, and delay between last/first is the sleep time
-> > + the sync log force time.
-> > 
-> > Some of these 101 items pinned the tail of the log. The tail of the
-> > log does slowly creep forward (first lsn), but the problem is that
-> > the log is actually out of reservation space because it's been
-> > running so many transactions that stale items that never reach the
-> > AIL but consume log space. Hence we have a largely empty AIL, with
-> > long term pins on items that pin the tail of the log that don't get
-> > pushed frequently enough to keep log space available.
-> > 
-> > The problem is the hundreds of milliseconds that we block in the log
-> > force pushing the CIL out to disk. The AIL should not be stalled
-> > like this - it needs to run and flush items that are at the tail of
-> > the log with minimal latency. What we really need to do is trigger a
-> > log flush, but then not wait for it at all - we've already done our
-> > waiting for stuff to complete when we backed off prior to the log
-> > force being issued.
-> > 
-> > Even if we remove the XFS_LOG_SYNC from the xfs_log_force() call, we
-> > still do a blocking flush of the CIL and that is what is causing the
-> > issue. Hence we need a new interface for the CIL to trigger an
-> > immediate background push of the CIL to get it moving faster but not
-> > to wait on that to occur. While the CIL is pushing, the AIL can also
-> > be pushing.
-> > 
+hi,
+
+I had sent this mail before, but didn't receive it myself, so send it again :)
+
+Original message:
+   Sorry for late reply, because I took some time to understand your words and read
+   source codes, your explanation is great and really help me to understand xfs log
+   codes now. Appreciate your time, thanks.
+   Currently we use ext4 widely, but xfs has some advanced features, such as reflink,
+   there're some users who needs to use these features. Once we have a good knowledge
+   about xfs, we may have a try in product.
+
+Regards,
+Xiaoguang Wang
+
+
+> On Sun, Feb 28, 2021 at 03:46:56PM +0800, Xiaoguang Wang wrote:
+>> hi,
+>>
+>> I'm studying xfs delayed logging codes, and currently have some questions about log
+>> reservation, can anyone help to answer below questions, thanks in advance!
+>>
+>> 1, what's the difference between xlog's l_reserve_head and l_write_head?
+>> Seems that l_reserve_head already can been used to do log space reservation, from
+>> codes, I really don't get when to use l_reserve_head or l_write_head, so what different
+>> cases are they used for?
 > 
-> So I think I follow what you're describing wrt to the xfsaild delay, but
-> what I'm not clear on is what changing this behavior actually fixes.
-> IOW, if the xfsaild is cycling through and finding mostly stuck items,
-> then we see a delay because of the time spent in a log force (because of
-> those stuck items), what's the advantage to issue an async force over a
-> sync force? Won't xfsaild effectively continue to spin on these stuck
-> items until the log force completes, regardless?
-
-When buffers get flushed and then pinned and can't be written back,
-we issue sync log forces from the AIL because the delwri list is not
-empty and the force count is non-zero.
-
-So it's not just pinned items in the AIL that trigger this - it's
-stuff that gets pinned after it has been flushed but before it gets
-written that causes problems, too.
-
-And if it's pinned buffers in the delwri list that are the issue,
-then we stop flushing other items from the list while we wait for
-the log force. hence if the tail pinning items are not actually
-pinned, but other buffers are, then we block on the log force when
-we could have been flushing and writing the items that pin the tail
-of the log.
-
-> Is the issue not so much the throughput of xfsaild, but just the fact
-> that the task stalls are large enough to cause other problems? I.e., the
-> comment you add down in the xfsaild code refers to tail pinning causing
-> reservation stalls.  IOW, the purpose of this patch is then to keep
-> xfsaild sleeps to a predictable latency to ensure we come around again
-> quickly enough to keep the tail moving forward (even though the AIL
-> itself might remain in a state where the majority of items are stuck).
-> Yes?
-
-Yup, largely because there are multiple triggers for log forces. 
-There's a difference between buffers that can't be flushed because
-they are pinned and flushed buffers that can't be written because
-they are pinned. The prior prevents the AIL from making push progress,
-the latter doesn't.
-
-> > +trace_printk("seq %llu, curseq %llu, ctxseq %llu pushseq %llu flags 0x%x",
-> > +		sequence, cil->xc_current_sequence, cil->xc_ctx->sequence,
-> > +		cil->xc_push_seq, flags);
-> > +
-> > +	trace_xfs_log_force(log->l_mp, sequence, _RET_IP_);
-> >  	/*
-> >  	 * check to see if we need to force out the current context.
-> >  	 * xlog_cil_push() handles racing pushes for the same sequence,
-> >  	 * so no need to deal with it here.
-> >  	 */
-> >  restart:
-> > -	xlog_cil_push_now(log, sequence);
-> > +	xlog_cil_push_now(log, sequence, flags & XFS_LOG_SYNC);
-> > +	if (!(flags & XFS_LOG_SYNC))
-> > +		return commit_lsn;
+> The reserve head tracks active transaction reservation space, the
+> write head tracks physical log space reservation. Mostly they track
+> the same, but there's an important difference when it comes to
+> rolling permanent transactions.
 > 
-> Hm, so now we have sync and async log force and sync and async CIL push.
-> A log force always requires a sync CIL push and commit record submit;
-> the difference is simply whether or not we wait on commit record I/O
-> completion. The sync CIL push drains the CIL of log items but does not
-> switch out the commit record iclog, while the async CIL push executes in
-> the workqueue context so the drain is async, but it does switch out the
-> commit record iclog before it completes. IOW, the async CIL push is
-> basically a "more async" async log force.
-
-Yes.
-
-> I can see the need for the behavior of the async CIL push here, but that
-> leaves a mess of interfaces and behavior matrix. Is there any reason we
-> couldn't just make async log forces unconditionally behave equivalent to
-> the async CIL push as defined by this patch? There's only a handful of
-> existing users and I don't see any obvious reason why they might care
-> whether the underlying CIL push is synchronous or not...
-
-I'm not touching the rest of the log force code in this series - it
-is out of scope of this bug fix and the rest of the series that it
-is part of.
-
-Cleaning up the mess that is the xfs_log_* and xlog_* interfaces and
-changing things like log force behaviour and implementation is for
-a future series.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>>
+>> 2, what's the exact definition about permanent transaction reservation?
+>> In xfs_trans_resv_calc(), I see many kinds of transactions have XFS_TRANS_PERM_LOG_RES
+>> enabled, so non-permanent transaction does not need to do log reservation
+>> at the begin?
+> 
+> Non-permanent transactions are effectively one-shot transactions.
+> They consist of:
+> 
+> 	tp = xfs_trans_alloc(<space>)
+> 	<do modification>
+> 	xfs_trans_commit(tp);
+> 
+> Once the transaction is committed, all resources attached to it are
+> released, along with all the unused reservation space (both reserve
+> and write space).
+> 
+> A "permanent" transaction is on that can be "rolled" repeatedly to
+> form a long running chain of individual transactions that appears
+> atomic to outside runtime observers. You'll see this pattern:
+> 
+> 	tp = xfs_trans_alloc(<space>)
+> 	xfs_ilock(ip, XFS_ILOCK_EXCL)
+> 
+> 	loop {
+> 		xfs_trans_ijoin(tp, 0);
+> 		<do modification>
+> 		xfs_trans_log_inode(tp, ip);
+> 		xfs_trans_roll(&tp);
+> 	}
+> 
+> 	xfs_trans_commit(tp);
+> 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> 
+> This holds the inode locked over a series of rolling transactions,
+> and hence while this series of modifications is running, nothing
+> else can read from or write to the inode. i.e. the change is atomic
+> from an external observer's point of view. The key here is
+> xfs_trans_roll(), which does:
+> 
+> 	ntp = xfs_trans_dup(tp);
+> 	xfs_trans_commit(tp);
+> 	xfs_log_reserve(ntp);
+> 
+> This duplicates the current transaction and it's internal state
+> (including reservations), commits the original transaction, then
+> reserves space for the new transaction if necessary. This can only
+> be done with transactions marked as permanent transactions.
+> 
+> The key here is that a permanent transaction reserves space for
+> multiple transactions up front. this is the tr_logcount in the
+> reservation. This number of unit reservations is made in the
+> original xfs_trans_alloc() call, and each time the transaction
+> "rolls" the unit count is decremented by one.
+> 
+> This is because each commit releases the unused part of the current
+> unit reservation back to the log and the new transaction (the dup'd
+> transaction) will start with an entire unit reservation that it
+> can consume.
+> 
+> So what happens when the log count reaches zero? Well, that's where
+> the differences between the reserve head and the write head come in.
+> When the log count reaches zero and the remaining unit reservations
+> have been freed, xfs_log_regrant() immediately takes
+> a new unit reservation on the reservation head. This
+> -overcommits- the reservation grant space, preventing new
+> reservations from occurring if the log is full until some ongoing
+> transactions commit and release unused reservation space.
+> 
+> xfs_log_regrant() does not, however, take any new space from the
+> write head because this tracks physical space in the log and must
+> not be overcommitted. If we overcommit write space, we can
+> physically overwrite the tail of the log with the current head, and
+> that corrupts the log. We can't wait for write head space in the
+> xfs_trans_commit code, because the commit we are about to write to
+> log might contain items that pin the tail of the log. Hence  new
+> write space won't get released for the current transaction because
+> that needs the commit to complete.
+> 
+> Hence we wait until we call xfs_log_reserve() after
+> xfs_trans_commit() completes to regrant write head space. At this
+> point, it is safe for us to sleep if the transaction we just
+> committed ensured that it relogged all the items in the transaction
+> that might pin the tail of the log (e.g. the inode). Because we
+> relogged those items, they'll get moved to the head of the log and
+> the tail will move forwards, guaranteeing that there will be write
+> space available for this permanent transaction. And we are
+> guaranteed that there will eventually be write space available
+> because we over-committed the reserve head and nobody can take new
+> reserve space via xfs_trans_alloc() while we are overcommitted.
+> 
+> So that's how permanent transactions and reservations work.
+> 
+> It is important to note that a series of rolling transactions in a
+> chain like this do not form an atomic change on disk.  While each
+> individual modification is atomic, the chain is *not atomic*. If we
+> crash half way through, then recovery will only replay up to the
+> last modification the loop made.
+> 
+> If you want an atomic modification that requires multiple individual
+> transactions to perform, then you need to learn about xfs_defer_ops,
+> intents, etc and how they are used within a permanent transaction
+> chain and recovery to form an atomic all-or-nothing modification to
+> the filesystem.
+> 
+>> 3, struct xfs_trans_res's tr_logcount(/* number of log operations per log ticket */)
+>> For exmaple, tr_write.tr_logcount is XFS_WRITE_LOG_COUNT_REFLINK(8), does that mean
+>> to complete a write operation, we'll need 8 log operations, such as file block mapping
+>> update intent will be counted one?
+> 
+> It means that we expect the vast majority of reflink modifications
+> to take less than 8 individual transactions chained together to
+> complete. THis effectively forms a fast path for common operations
+> where xfs_trans_roll() does not block having to wait for log space
+> to become available. IOWs, for the fast path when there is log space
+> available, we do an atomic, lockless transaction reservation for up
+> to 8 transaction rolls to complete the operation without need to
+> obtain more log space.
+> 
+>> 4, what's the exact definition about xfs rolling transactions?
+> 
+> "rolling transaction" == "permanent transaction"
+> 
+> Same thing, just one refers to the way the log sees the log space
+> accounting (a reservation that is permanent until the caller
+> releases it) and the other refers to the way the code running
+> transactions sees them (you roll from one transaction to the next in
+> the chain).
+> 
+>> 5, finally are there any documents that describe the initial xfs log design before
+>> current delayed logging design?
+>> Documentation/filesystems/xfs-delayed-logging-design.rst is a very good document, but
+>> seems that it assumes that readers has been familiar with initial xfs log design.
+> 
+> No. I wrote the delayed logging document with that in mind - the
+> first section ("Introduction to Re-logging in XFS") describes how
+> the original log design worked. That's essentially what I also wrote
+> above - none of what I describe above has anything to do with
+> delayed logging, nor does it even know (or care) that delayed
+> logging exists.
+> 
+> The above is all about locking, relogging and log space accounting,
+> and it's largely unchanged from the original design. While we've
+> added delayed logging and deferred transactions, they all still work
+> within the rules I outline above. It all really only works because
+> of the original design rules placed around the need to relog items
+> in permanent transactions...
+> 
+> Cheers,
+> 
+> Dave.
+> 
