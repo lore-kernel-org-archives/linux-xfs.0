@@ -2,174 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95151C4161F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8864C28CFB
 	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6462C61477
+	by mail.kernel.org (Postfix) with ESMTP id 91FF5601FF
 	for <linux-xfs@archiver.kernel.org>; Wed,  3 Mar 2021 03:19:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351118AbhCCDQ0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Mar 2021 22:16:26 -0500
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:44151 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232972AbhCCAmM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Mar 2021 19:42:12 -0500
+        id S1351122AbhCCDQ2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Mar 2021 22:16:28 -0500
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:52128 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233654AbhCCBYJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Mar 2021 20:24:09 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 4EBAD107F1B;
-        Wed,  3 Mar 2021 11:41:20 +1100 (AEDT)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id C3CA9E6ADD3;
+        Wed,  3 Mar 2021 12:23:05 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lHFZn-00CDvV-If; Wed, 03 Mar 2021 11:41:19 +1100
-Date:   Wed, 3 Mar 2021 11:41:19 +1100
+        id 1lHGEC-00CGcs-MC; Wed, 03 Mar 2021 12:23:04 +1100
+Date:   Wed, 3 Mar 2021 12:23:04 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/8] xfs: separate CIL commit record IO
-Message-ID: <20210303004119.GL4662@dread.disaster.area>
-References: <20210223033442.3267258-1-david@fromorbit.com>
- <20210223033442.3267258-3-david@fromorbit.com>
- <YD0GCCPmCkoYBVK0@bfoster>
+Subject: Re: [PATCH 2/3] xfs: AIL needs asynchronous CIL forcing
+Message-ID: <20210303012304.GN4662@dread.disaster.area>
+References: <20210223053212.3287398-1-david@fromorbit.com>
+ <20210223053212.3287398-3-david@fromorbit.com>
+ <20210224211058.GA4662@dread.disaster.area>
+ <YDeiLOdFhIMJegWZ@bfoster>
+ <20210225220305.GO4662@dread.disaster.area>
+ <YDpyYj7+WHx9FviY@bfoster>
+ <20210301045422.GD4662@dread.disaster.area>
+ <YDzs4mQmiYN1UwFr@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YD0GCCPmCkoYBVK0@bfoster>
+In-Reply-To: <YDzs4mQmiYN1UwFr@bfoster>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=7r87xiz7UFZlPemfZwkA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
+        a=UQpl2JReXQ5wmOcdS3MA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 01, 2021 at 10:19:36AM -0500, Brian Foster wrote:
-> On Tue, Feb 23, 2021 at 02:34:36PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Mon, Mar 01, 2021 at 08:32:18AM -0500, Brian Foster wrote:
+> On Mon, Mar 01, 2021 at 03:54:22PM +1100, Dave Chinner wrote:
+> > On Sat, Feb 27, 2021 at 11:25:06AM -0500, Brian Foster wrote:
+> > > On Fri, Feb 26, 2021 at 09:03:05AM +1100, Dave Chinner wrote:
+> > > > This is really nasty behaviour, and it's only recently that I've got
+> > > > a handle on it. I found it because my original "async CIL push" code
+> > > > resulted in long stalls every time the log is filled and the tail is
+> > > > pinned by a buffer that is being relogged in this manner....
+> > > > 
+> > > > I'm not sure how to fix this yet - the AIL needs to block the front
+> > > > end relogging to allow the buffer to be unpinned. Essentially, we
+> > > > need to hold the pinned items locked across a CIL push to guarantee
+> > > > they are unpinned, but that's the complete opposite of what the AIL
+> > > > currently does to prevent the front end from seeing long tail lock
+> > > > latencies when modifying stuff....
+> > > 
+> > > When this stall problem manifests, I'm assuming it's exacerbated by
+> > > delayed logging and the commit record behavior I described above. If
+> > > that's the case, could the AIL communicate writeback pressure through
+> > > affected log items such that checkpoints in which they are resident are
+> > > flushed out completely/immediately when the checkpoints occur? I suppose
+> > > that would require a log item flag or some such, which does raise a
+> > > concern of unnecessarily tagging many items (it's not clear to me how
+> > > likely that really is), but I'm curious if that would be an effective
+> > > POC at least..
 > > 
-> > To allow for iclog IO device cache flush behaviour to be optimised,
-> > we first need to separate out the commit record iclog IO from the
-> > rest of the checkpoint so we can wait for the checkpoint IO to
-> > complete before we issue the commit record.
+> > I don't think we need to do anything like that. All we need to do to
+> > ensure that the AIL can flush a pinned buffer is to lock it, kick
+> > the log and wait for the pin count to go to zero. Then we can write
+> > it just fine, blocking only the front end transactions that need
+> > that buffer lock.  Same goes for inodes, though xfs_iunpin_wait()
+> > already does this....
 > > 
-> > This separation is only necessary if the commit record is being
-> > written into a different iclog to the start of the checkpoint as the
-> > upcoming cache flushing changes requires completion ordering against
-> > the other iclogs submitted by the checkpoint.
-> > 
-> > If the entire checkpoint and commit is in the one iclog, then they
-> > are both covered by the one set of cache flush primitives on the
-> > iclog and hence there is no need to separate them for ordering.
-> > 
-> > Otherwise, we need to wait for all the previous iclogs to complete
-> > so they are ordered correctly and made stable by the REQ_PREFLUSH
-> > that the commit record iclog IO issues. This guarantees that if a
-> > reader sees the commit record in the journal, they will also see the
-> > entire checkpoint that commit record closes off.
-> > 
-> > This also provides the guarantee that when the commit record IO
-> > completes, we can safely unpin all the log items in the checkpoint
-> > so they can be written back because the entire checkpoint is stable
-> > in the journal.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_log.c      | 55 +++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_log_cil.c  |  7 ++++++
-> >  fs/xfs/xfs_log_priv.h |  2 ++
-> >  3 files changed, 64 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > index fa284f26d10e..ff26fb46d70f 100644
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -808,6 +808,61 @@ xlog_wait_on_iclog(
-> >  	return 0;
-> >  }
-> >  
-> > +/*
-> > + * Wait on any iclogs that are still flushing in the range of start_lsn to the
-> > + * current iclog's lsn. The caller holds a reference to the iclog, but otherwise
-> > + * holds no log locks.
-> > + *
-> > + * We walk backwards through the iclogs to find the iclog with the highest lsn
-> > + * in the range that we need to wait for and then wait for it to complete.
-> > + * Completion ordering of iclog IOs ensures that all prior iclogs to the
-> > + * candidate iclog we need to sleep on have been complete by the time our
-> > + * candidate has completed it's IO.
-> > + *
-> > + * Therefore we only need to find the first iclog that isn't clean within the
-> > + * span of our flush range. If we come across a clean, newly activated iclog
-> > + * with a lsn of 0, it means IO has completed on this iclog and all previous
-> > + * iclogs will be have been completed prior to this one. Hence finding a newly
-> > + * activated iclog indicates that there are no iclogs in the range we need to
-> > + * wait on and we are done searching.
-> > + */
-> > +int
-> > +xlog_wait_on_iclog_lsn(
-> > +	struct xlog_in_core	*iclog,
-> > +	xfs_lsn_t		start_lsn)
-> > +{
-> > +	struct xlog		*log = iclog->ic_log;
-> > +	struct xlog_in_core	*prev;
-> > +	int			error = -EIO;
-> > +
-> > +	spin_lock(&log->l_icloglock);
-> > +	if (XLOG_FORCED_SHUTDOWN(log))
-> > +		goto out_unlock;
-> > +
-> > +	error = 0;
-> > +	for (prev = iclog->ic_prev; prev != iclog; prev = prev->ic_prev) {
-> > +
-> > +		/* Done if the lsn is before our start lsn */
-> > +		if (XFS_LSN_CMP(be64_to_cpu(prev->ic_header.h_lsn),
-> > +				start_lsn) < 0)
-> > +			break;
-> > +
-> > +		/* Don't need to wait on completed, clean iclogs */
-> > +		if (prev->ic_state == XLOG_STATE_DIRTY ||
-> > +		    prev->ic_state == XLOG_STATE_ACTIVE) {
-> > +			continue;
-> > +		}
-> > +
-> > +		/* wait for completion on this iclog */
-> > +		xlog_wait(&prev->ic_force_wait, &log->l_icloglock);
 > 
-> You haven't addressed my feedback from the previous version. In
-> particular the bit about whether it is safe to block on ->ic_force_wait
-> from here considering some of our more quirky buffer locking behavior.
+> Yeah, but why would we want to block xfsaild on a single item like that?
 
-Sorry, first I've heard about this. I don't have any such email in
-my inbox.
+Who said anything about blocking the AIL on a single item? :)
 
-I don't know what waiting on an iclog in the middle of a checkpoint
-has to do with buffer locking behaviour, because iclogs don't use
-buffers and we block waiting on iclog IO completion all the time in
-xlog_state_get_iclog_space(). If it's not safe to block on iclog IO
-completion here, then it's not safe to block on an iclog in
-xlog_state_get_iclog_space(). That's obviously not true, so I'm
-really not sure what the concern here is...
+> Wouldn't holding the item locked like that just create a new stall point
+> within xfsaild? Maybe I'm missing something, but what you describe here
+> basically just sounds like a "lock the item and run a sync log force"
+> pattern.
 
-> That aside, this iteration logic all seems a bit overengineered to me.
-> We have the commit record iclog of the current checkpoint and thus the
-> immediately previous iclog in the ring. We know that previous record
-> isn't earlier than start_lsn because the caller confirmed that start_lsn
-> != commit_lsn. We also know that iclog can't become dirty -> active
-> until it and all previous iclog writes have completed because the
-> callback ordering implemented by xlog_state_do_callback() won't clean
-> the iclog until that point. Given that, can't this whole thing be
-> replaced with a check of iclog->prev to either see if it's been cleaned
-> or to otherwise xlog_wait() for that condition and return?
+What I was thinking is that if the item is pinned and at the
+tail of the log, then we leave it locked when we flush it rather
+than unlocking it and relocking it when the delwri submit code gets
+to it. If it gets unpinned before the delwri code gets to it, all
+good. If not, the delwri code being unable to flush it will feed
+back up into the AIL to trigger a log force, which will unpin it
+in the near future and it will be written on the next AIL delwri
+submit cycle.
 
-Maybe. I was more concerned about ensuring that it did the right
-thing so I checked all the things that came to mind. There was more
-than enough compexity in other parts of this patchset to fill my
-brain that minimal implementation were not a concern. I'll go take
-another look at it.
+The thing we need to be careful of this is minimising the lock hold
+time by the AIL while we unpin the item. That's the "long tail
+latencies" problem I mention above. Essentially, we need to try to
+avoid holding the item locked for a long period of time before
+issuing the log force and/or resubmitting it for IO once it is
+unlocked. I have a few ideas on this, but no patches yet.
 
 Cheers,
 
