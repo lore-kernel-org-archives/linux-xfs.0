@@ -7,81 +7,75 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C1FC43333
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 00:18:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59539C43332
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 00:18:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F39C64EE6
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 00:18:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3436F64F14
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 00:18:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238542AbhCDASF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Mar 2021 19:18:05 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48524 "EHLO mail.kernel.org"
+        id S1354996AbhCDASD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Mar 2021 19:18:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45022 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1347605AbhCCSNS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Mar 2021 13:13:18 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6142064EE4;
-        Wed,  3 Mar 2021 18:12:03 +0000 (UTC)
+        id S237751AbhCCSIl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Mar 2021 13:08:41 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C1B8864EE9;
+        Wed,  3 Mar 2021 18:07:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614795123;
-        bh=jyaYGhe7SHBLFJN63XZPxmo0g2Gv8zD6NDmqEY8ZEI8=;
+        s=k20201202; t=1614794870;
+        bh=c/0Nw26Evz1ipPg2E91Z3z57/L/m1hJeG8RBYeOW+w0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jMTSMzrl6udR7QuL6g3aJSp1fMCQVS5iSQUq/WJHgmGAE/lPFcGrD0rB7PVlsT4Ke
-         LJhVZzzlio2RPV9wLz95RIWWsj+zjM4isVbyW2sHgpF9ZqOTUTn9MF6yM4UFCPPP0O
-         Tvq9Cl4hVibkecjPLFBN272VCd+NpQPFrVeMOTsQzY4NBE4x6Cb0f1baNHChmORXeL
-         EreXoqq3+gmEcnZcteLN21NYBsMOuQnKlWPpOg1jmfeamHxELcegauR24Vd5yX6ABE
-         hzyzG6zHo1ayG0UAipwr8nLEOyRmL1F2Ur3pxPHQ7+27GjSOWr6wE/637ScA7i95xQ
-         3ZKUmhXERyU3Q==
-Date:   Wed, 3 Mar 2021 10:12:02 -0800
+        b=Q32em7TxZVO9bjiiK9UE+mfyq+suEgWS89//PxiO91WfYVPQSuIdFm55mL3fJzOgl
+         3tefQRbtbRkLrb+MV5ulWi9p51CXiKBU89c+L20KTGb9kBrtM2R4P9AeurritSUl75
+         6P3kijw4cR4PZoxK/kWrNVbkscxfPeJNP6aZGGXI3D3JyLmpuIciNP94quZJ+OHz8o
+         tqs5W1dRwovQ5dCdJmD6sTlQzSOqs5MSVRlqxtd8ctCyQSoPN+3bfq3j5BjqtAPxux
+         tS7LJMOKw1sWpqsLWtU8Hu8hNftmKYYJQzjWNyxpIdXTbaYp0nRkMyizCbsN9fAcoY
+         hhVSML4W0BFZw==
+Date:   Wed, 3 Mar 2021 10:07:50 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
         darrick.wong@oracle.com
-Subject: Re: [PATCH V4 11/11] xfs: Stress test with bmap_alloc_minlen_extent
- error tag enabled
-Message-ID: <20210303181202.GS7269@magnolia>
+Subject: Re: [PATCH V4 08/11] xfs: Check for extent overflow when moving
+ extent from cow to data fork
+Message-ID: <20210303180750.GP7269@magnolia>
 References: <20210118062022.15069-1-chandanrlinux@gmail.com>
- <20210118062022.15069-12-chandanrlinux@gmail.com>
+ <20210118062022.15069-9-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210118062022.15069-12-chandanrlinux@gmail.com>
+In-Reply-To: <20210118062022.15069-9-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 18, 2021 at 11:50:22AM +0530, Chandan Babu R wrote:
-> This commit adds a stress test that executes fsstress with
-> bmap_alloc_minlen_extent error tag enabled.
-
-Haha, yikes.
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-
+On Mon, Jan 18, 2021 at 11:50:19AM +0530, Chandan Babu R wrote:
+> This test verifies that XFS does not cause inode fork's extent count to
+> overflow when writing to/funshare-ing a shared extent.
+> 
 > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 > ---
->  tests/xfs/531     | 84 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/531.out |  7 ++++
->  tests/xfs/group   |  1 +
->  3 files changed, 92 insertions(+)
->  create mode 100755 tests/xfs/531
->  create mode 100644 tests/xfs/531.out
+>  tests/xfs/528     | 110 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/528.out |  12 +++++
+>  tests/xfs/group   |   1 +
+>  3 files changed, 123 insertions(+)
+>  create mode 100755 tests/xfs/528
+>  create mode 100644 tests/xfs/528.out
 > 
-> diff --git a/tests/xfs/531 b/tests/xfs/531
+> diff --git a/tests/xfs/528 b/tests/xfs/528
 > new file mode 100755
-> index 00000000..fd92c3ea
+> index 00000000..269d368d
 > --- /dev/null
-> +++ b/tests/xfs/531
-> @@ -0,0 +1,84 @@
+> +++ b/tests/xfs/528
+> @@ -0,0 +1,110 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0
 > +# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
 > +#
-> +# FS QA Test 531
+> +# FS QA Test 528
 > +#
-> +# Execute fsstress with bmap_alloc_minlen_extent error tag enabled.
-> +#
+> +# Verify that XFS does not cause inode fork's extent count to overflow when
+> +# writing to a shared extent.
 > +seq=`basename $0`
 > +seqres=$RESULT_DIR/$seq
 > +echo "QA output created by $seq"
@@ -100,8 +94,8 @@ Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > +# get standard environment, filters and checks
 > +. ./common/rc
 > +. ./common/filter
+> +. ./common/reflink
 > +. ./common/inject
-> +. ./common/populate
 > +
 > +# remove previous $seqres.full before test
 > +rm -f $seqres.full
@@ -110,76 +104,115 @@ Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > +
 > +_supported_fs xfs
 > +_require_scratch
+> +_require_scratch_reflink
 > +_require_xfs_debug
-> +_require_test_program "punch-alternating"
-> +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
+> +_require_xfs_io_command "reflink"
+> +_require_xfs_io_command "funshare"
+> +_require_xfs_io_error_injection "reduce_max_iextents"
 > +
 > +echo "Format and mount fs"
-> +_scratch_mkfs_sized $((1024 * 1024 * 1024)) >> $seqres.full
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full
 > +_scratch_mount >> $seqres.full
 > +
-> +bsize=$(_get_file_block_size $SCRATCH_MNT)
+> +bsize=$(_get_block_size $SCRATCH_MNT)
 > +
-> +echo "Consume free space"
-> +fillerdir=$SCRATCH_MNT/fillerdir
-> +nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
-> +nr_free_blks=$((nr_free_blks * 90 / 100))
+> +nr_blks=15
 > +
-> +_fill_fs $((bsize * nr_free_blks)) $fillerdir $bsize 0 >> $seqres.full 2>&1
+> +srcfile=${SCRATCH_MNT}/srcfile
+> +dstfile=${SCRATCH_MNT}/dstfile
 > +
-> +echo "Create fragmented filesystem"
-> +for dentry in $(ls -1 $fillerdir/); do
-> +	$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
+> +echo "Inject reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 1
+> +
+> +echo "Create a \$srcfile having an extent of length $nr_blks blocks"
+> +$XFS_IO_PROG -f -c "pwrite -b $((nr_blks * bsize))  0 $((nr_blks * bsize))" \
+> +       -c fsync $srcfile  >> $seqres.full
+> +
+> +echo "* Write to shared extent"
+> +
+> +echo "Share the extent with \$dstfile"
+> +$XFS_IO_PROG -f -c "reflink $srcfile" $dstfile >> $seqres.full
+
+_reflink?
+
+> +
+> +echo "Buffered write to every other block of \$dstfile's shared extent"
+> +for i in $(seq 1 2 $((nr_blks - 1))); do
+> +	$XFS_IO_PROG -f -s -c "pwrite $((i * bsize)) $bsize" $dstfile \
+> +	       >> $seqres.full 2>&1
+> +	[[ $? != 0 ]] && break
 > +done
 > +
-> +echo "Inject bmap_alloc_minlen_extent error tag"
-> +_scratch_inject_error bmap_alloc_minlen_extent 1
+> +echo "Verify \$dstfile's extent count"
+> +nextents=$($XFS_IO_PROG -c 'stat' $dstfile | grep nextents)
+> +nextents=${nextents##fsxattr.nextents = }
+> +if (( $nextents > 10 )); then
+> +	echo "Extent count overflow check failed: nextents = $nextents"
+> +	exit 1
+> +fi
 > +
-> +echo "Scale fsstress args"
-> +args=$(_scale_fsstress_args -p $((LOAD_FACTOR * 75)) -n $((TIME_FACTOR * 1000)))
+> +rm $dstfile
 > +
-> +echo "Execute fsstress in background"
-> +$FSSTRESS_PROG -d $SCRATCH_MNT $args \
-> +		 -f bulkstat=0 \
-> +		 -f bulkstat1=0 \
-> +		 -f fiemap=0 \
-> +		 -f getattr=0 \
-> +		 -f getdents=0 \
-> +		 -f getfattr=0 \
-> +		 -f listfattr=0 \
-> +		 -f mread=0 \
-> +		 -f read=0 \
-> +		 -f readlink=0 \
-> +		 -f readv=0 \
-> +		 -f stat=0 \
-> +		 -f aread=0 \
-> +		 -f dread=0 > /dev/null 2>&1
+> +echo "* Funshare shared extent"
+> +
+> +echo "Share the extent with \$dstfile"
+> +$XFS_IO_PROG -f -c "reflink $srcfile" $dstfile >> $seqres.full
+> +
+> +echo "Funshare every other block of \$dstfile's shared extent"
+> +for i in $(seq 1 2 $((nr_blks - 1))); do
+> +	$XFS_IO_PROG -f -s -c "funshare $((i * bsize)) $bsize" $dstfile \
+> +	       >> $seqres.full 2>&1
+> +	[[ $? != 0 ]] && break
+> +done
+> +
+> +echo "Verify \$dstfile's extent count"
+> +nextents=$($XFS_IO_PROG -c 'stat' $dstfile | grep nextents)
+> +nextents=${nextents##fsxattr.nextents = }
+> +if (( $nextents > 10 )); then
+> +	echo "Extent count overflow check failed: nextents = $nextents"
+> +	exit 1
+> +fi
+> +
+> +# super_block->s_wb_err will have a newer seq value when compared to "/"'s
+> +# file->f_sb_err. Consume it here so that xfs_scrub can does not error out.
+> +$XFS_IO_PROG -c syncfs $SCRATCH_MNT >> $seqres.full 2>&1
+
+Same code, hence same comments as the previous patch.
+
+--D
+
 > +
 > +# success, all done
 > +status=0
 > +exit
-> diff --git a/tests/xfs/531.out b/tests/xfs/531.out
+> + 
+> diff --git a/tests/xfs/528.out b/tests/xfs/528.out
 > new file mode 100644
-> index 00000000..67f40654
+> index 00000000..d0f2c878
 > --- /dev/null
-> +++ b/tests/xfs/531.out
-> @@ -0,0 +1,7 @@
-> +QA output created by 531
+> +++ b/tests/xfs/528.out
+> @@ -0,0 +1,12 @@
+> +QA output created by 528
 > +Format and mount fs
-> +Consume free space
-> +Create fragmented filesystem
-> +Inject bmap_alloc_minlen_extent error tag
-> +Scale fsstress args
-> +Execute fsstress in background
+> +Inject reduce_max_iextents error tag
+> +Create a $srcfile having an extent of length 15 blocks
+> +* Write to shared extent
+> +Share the extent with $dstfile
+> +Buffered write to every other block of $dstfile's shared extent
+> +Verify $dstfile's extent count
+> +* Funshare shared extent
+> +Share the extent with $dstfile
+> +Funshare every other block of $dstfile's shared extent
+> +Verify $dstfile's extent count
 > diff --git a/tests/xfs/group b/tests/xfs/group
-> index 81a15582..f4cb5af6 100644
+> index 627813fe..c85aac6b 100644
 > --- a/tests/xfs/group
 > +++ b/tests/xfs/group
-> @@ -528,3 +528,4 @@
->  528 auto quick reflink
->  529 auto quick reflink
->  530 auto quick
-> +531 auto stress
+> @@ -525,3 +525,4 @@
+>  525 auto quick attr
+>  526 auto quick dir hardlink symlink
+>  527 auto quick
+> +528 auto quick reflink
 > -- 
 > 2.29.2
 > 
