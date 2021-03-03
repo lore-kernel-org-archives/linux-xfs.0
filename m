@@ -7,133 +7,212 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5C88C43619
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EF58C432C3
 	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 00:18:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0A2564F56
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 00:18:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBF9264F14
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 00:18:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353109AbhCDASI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Mar 2021 19:18:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34486 "EHLO mail.kernel.org"
+        id S243297AbhCDASE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Mar 2021 19:18:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47386 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1579511AbhCCSbZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Mar 2021 13:31:25 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9ED0B64EBD;
-        Wed,  3 Mar 2021 18:30:43 +0000 (UTC)
+        id S243468AbhCCSNJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Mar 2021 13:13:09 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9D6DF64EF6;
+        Wed,  3 Mar 2021 18:10:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614796243;
-        bh=F0e3L2Wm3uQfA6XE/nNAtnKnAk5UnNpxLpwHgvmK4gs=;
+        s=k20201202; t=1614795029;
+        bh=9l6fWymWzWU8UebVBsO//46r3x1kyep6FPNCGXarAXU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Qz1R6/NU/g6RF/rEGIgBv9g5bx10v6GQIRRUzvGcA9hJXYGRNYz1mN118r6ErDwf3
-         Ppeenpz6TByfv2otCTHUOAyVRlvu+/RtvpK6zbiQ1FXyOmqIV02HdEp5JEgsza3h06
-         XOSTsRfHhsV+X2C4mqTl5sRNco8nTS5bhOG9GjZKbyXphzt+DKxwbzk1CR/iYU76tU
-         QPACdYouqFiuFPt8QSX6JS/L/ejAqKnh2oXrL5IhxrSYFrdocBd5OXcv/PVMHVezMk
-         4i64JCDjV//dsozlOZ/yeVYgdwVdwXoO3QceVE+Cz1DQ+QRtYzSkOVhXj2baOjdlOR
-         Nq9+2X6WbadFQ==
-Date:   Wed, 3 Mar 2021 10:30:42 -0800
+        b=Z111x1/3IWOxl9jU9MC10pR5vaWNv0M3i/y7La5PhVJcq3FvAEtweT59X7mSJu8eN
+         0f55kcSBPHgrjwJM/gvj1ImfYvAGStaamwLWBr0FrSyn5vcMCH45Pnwk3K0+7a/mW/
+         77agXTBp1Otwns59n5kJ7YheKvPoMZ+/HdFwk5rMipXi8jOddl0i94n5JTSm1sIa5m
+         NgzocIVcubCZZjguOjnYf2gCmXK9sh/ZC4rsxlsCgwGQX5Uaz96wc++xQ0yVckJ2di
+         8EHVNduETVNLZKjzumizgTdK8qT7Lxq+8znTh604NY3fHC0QJ4MmJDnw0y3tmLfr44
+         5drGguuj0U6iQ==
+Date:   Wed, 3 Mar 2021 10:10:28 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH v7 5/5] xfs: add error injection for per-AG resv failure
-Message-ID: <20210303183042.GD3419940@magnolia>
-References: <20210302024816.2525095-1-hsiangkao@redhat.com>
- <20210302024816.2525095-6-hsiangkao@redhat.com>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+        darrick.wong@oracle.com
+Subject: Re: [PATCH V4 10/11] xfs: Check for extent overflow when swapping
+ extents
+Message-ID: <20210303181028.GR7269@magnolia>
+References: <20210118062022.15069-1-chandanrlinux@gmail.com>
+ <20210118062022.15069-11-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210302024816.2525095-6-hsiangkao@redhat.com>
+In-Reply-To: <20210118062022.15069-11-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 02, 2021 at 10:48:16AM +0800, Gao Xiang wrote:
-> per-AG resv failure after fixing up freespace is hard to test in an
-> effective way, so directly add an error injection path to observe
-> such error handling path works as expected.
+On Mon, Jan 18, 2021 at 11:50:21AM +0530, Chandan Babu R wrote:
+> This test verifies that XFS does not cause inode fork's extent count to
+> overflow when swapping forks across two files.
 > 
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 > ---
->  fs/xfs/libxfs/xfs_ag_resv.c  | 6 +++++-
->  fs/xfs/libxfs/xfs_errortag.h | 4 +++-
->  fs/xfs/xfs_error.c           | 2 ++
->  3 files changed, 10 insertions(+), 2 deletions(-)
+>  tests/xfs/530     | 109 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/530.out |  13 ++++++
+>  tests/xfs/group   |   1 +
+>  3 files changed, 123 insertions(+)
+>  create mode 100755 tests/xfs/530
+>  create mode 100644 tests/xfs/530.out
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-> index fdfe6dc0d307..6c5f8d10589c 100644
-> --- a/fs/xfs/libxfs/xfs_ag_resv.c
-> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
-> @@ -211,7 +211,11 @@ __xfs_ag_resv_init(
->  		ASSERT(0);
->  		return -EINVAL;
->  	}
-> -	error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
-> +
-> +	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_AG_RESV_FAIL))
-> +		error = -ENOSPC;
-> +	else
-> +		error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
->  	if (error) {
->  		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
->  				error, _RET_IP_);
-> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-> index 6ca9084b6934..b433ef735217 100644
-> --- a/fs/xfs/libxfs/xfs_errortag.h
-> +++ b/fs/xfs/libxfs/xfs_errortag.h
-> @@ -40,6 +40,7 @@
->  #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
->  #define XFS_ERRTAG_BMAP_FINISH_ONE			26
->  #define XFS_ERRTAG_AG_RESV_CRITICAL			27
-> +
+> diff --git a/tests/xfs/530 b/tests/xfs/530
+> new file mode 100755
+> index 00000000..0986d8bf
+> --- /dev/null
+> +++ b/tests/xfs/530
+> @@ -0,0 +1,109 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
 
-Extra space?
+2021? :D
 
->  /*
->   * DEBUG mode instrumentation to test and/or trigger delayed allocation
->   * block killing in the event of failed writes. When enabled, all
-> @@ -58,7 +59,8 @@
->  #define XFS_ERRTAG_BUF_IOERROR				35
->  #define XFS_ERRTAG_REDUCE_MAX_IEXTENTS			36
->  #define XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT		37
-> -#define XFS_ERRTAG_MAX					38
-> +#define XFS_ERRTAG_AG_RESV_FAIL				38
-> +#define XFS_ERRTAG_MAX					39
->  
->  /*
->   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-
-This needs to define XFS_RANDOM_AG_RESV_FAIL and put it in
-xfs_errortag_random_default in xfs_error.c to avoid running off the end
-of the array.
-
-Also... that _default array /really/ needs to have a BUILD_BUG_ON
-somewhere to scream loudly if it isn't XFS_ERRTAG_MAX elements long.
+Otherwise this looks ok,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index 185b4915b7bf..5192a7063d95 100644
-> --- a/fs/xfs/xfs_error.c
-> +++ b/fs/xfs/xfs_error.c
-> @@ -168,6 +168,7 @@ XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
->  XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
->  XFS_ERRORTAG_ATTR_RW(reduce_max_iextents,	XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
->  XFS_ERRORTAG_ATTR_RW(bmap_alloc_minlen_extent,	XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT);
-> +XFS_ERRORTAG_ATTR_RW(ag_resv_fail, XFS_ERRTAG_AG_RESV_FAIL);
->  
->  static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(noerror),
-> @@ -208,6 +209,7 @@ static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
->  	XFS_ERRORTAG_ATTR_LIST(reduce_max_iextents),
->  	XFS_ERRORTAG_ATTR_LIST(bmap_alloc_minlen_extent),
-> +	XFS_ERRORTAG_ATTR_LIST(ag_resv_fail),
->  	NULL,
->  };
->  
+> +#
+> +# FS QA Test 530
+> +#
+> +# Verify that XFS does not cause inode fork's extent count to overflow when
+> +# swapping forks between files
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/inject
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +_supported_fs xfs
+> +_require_scratch
+> +_require_xfs_debug
+> +_require_xfs_scratch_rmapbt
+> +_require_xfs_io_command "fcollapse"
+> +_require_xfs_io_command "swapext"
+> +_require_xfs_io_error_injection "reduce_max_iextents"
+> +
+> +echo "* Swap extent forks"
+> +
+> +echo "Format and mount fs"
+> +_scratch_mkfs >> $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
+> +bsize=$(_get_block_size $SCRATCH_MNT)
+> +
+> +srcfile=${SCRATCH_MNT}/srcfile
+> +donorfile=${SCRATCH_MNT}/donorfile
+> +
+> +echo "Create \$donorfile having an extent of length 67 blocks"
+> +$XFS_IO_PROG -f -s -c "pwrite -b $((17 * bsize)) 0 $((17 * bsize))" $donorfile \
+> +       >> $seqres.full
+> +
+> +# After the for loop the donor file will have the following extent layout
+> +# | 0-4 | 5 | 6 | 7 | 8 | 9 | 10 |
+> +echo "Fragment \$donorfile"
+> +for i in $(seq 5 10); do
+> +	start_offset=$((i * bsize))
+> +	$XFS_IO_PROG -f -c "fcollapse $start_offset $bsize" $donorfile >> $seqres.full
+> +done
+> +
+> +echo "Create \$srcfile having an extent of length 18 blocks"
+> +$XFS_IO_PROG -f -s -c "pwrite -b $((18 * bsize)) 0 $((18 * bsize))" $srcfile \
+> +       >> $seqres.full
+> +
+> +echo "Fragment \$srcfile"
+> +# After the for loop the src file will have the following extent layout
+> +# | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7-10 |
+> +for i in $(seq 1 7); do
+> +	start_offset=$((i * bsize))
+> +	$XFS_IO_PROG -f -c "fcollapse $start_offset $bsize" $srcfile >> $seqres.full
+> +done
+> +
+> +echo "Collect \$donorfile's extent count"
+> +donor_nr_exts=$($XFS_IO_PROG -c 'stat' $donorfile | grep nextents)
+> +donor_nr_exts=${donor_nr_exts##fsxattr.nextents = }
+> +
+> +echo "Collect \$srcfile's extent count"
+> +src_nr_exts=$($XFS_IO_PROG -c 'stat' $srcfile | grep nextents)
+> +src_nr_exts=${src_nr_exts##fsxattr.nextents = }
+> +
+> +echo "Inject reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 1
+> +
+> +echo "Swap \$srcfile's and \$donorfile's extent forks"
+> +$XFS_IO_PROG -f -c "swapext $donorfile" $srcfile >> $seqres.full 2>&1
+> +
+> +echo "Check for \$donorfile's extent count overflow"
+> +nextents=$($XFS_IO_PROG -c 'stat' $donorfile | grep nextents)
+> +nextents=${nextents##fsxattr.nextents = }
+> +
+> +if (( $nextents == $src_nr_exts )); then
+> +	echo "\$donorfile: Extent count overflow check failed"
+> +fi
+> +
+> +echo "Check for \$srcfile's extent count overflow"
+> +nextents=$($XFS_IO_PROG -c 'stat' $srcfile | grep nextents)
+> +nextents=${nextents##fsxattr.nextents = }
+> +
+> +if (( $nextents == $donor_nr_exts )); then
+> +	echo "\$srcfile: Extent count overflow check failed"
+> +fi
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/530.out b/tests/xfs/530.out
+> new file mode 100644
+> index 00000000..9f55608b
+> --- /dev/null
+> +++ b/tests/xfs/530.out
+> @@ -0,0 +1,13 @@
+> +QA output created by 530
+> +* Swap extent forks
+> +Format and mount fs
+> +Create $donorfile having an extent of length 67 blocks
+> +Fragment $donorfile
+> +Create $srcfile having an extent of length 18 blocks
+> +Fragment $srcfile
+> +Collect $donorfile's extent count
+> +Collect $srcfile's extent count
+> +Inject reduce_max_iextents error tag
+> +Swap $srcfile's and $donorfile's extent forks
+> +Check for $donorfile's extent count overflow
+> +Check for $srcfile's extent count overflow
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index bc3958b3..81a15582 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -527,3 +527,4 @@
+>  527 auto quick
+>  528 auto quick reflink
+>  529 auto quick reflink
+> +530 auto quick
 > -- 
-> 2.27.0
+> 2.29.2
 > 
