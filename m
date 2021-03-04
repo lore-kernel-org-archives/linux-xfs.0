@@ -2,193 +2,368 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CDC5C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 23:32:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2079CC433DB
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 23:40:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 338FB64FF9
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 23:32:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9E9964FF0
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 23:40:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231234AbhCDXci (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Mar 2021 18:32:38 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:6528 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229592AbhCDXch (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Mar 2021 18:32:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1614900965; x=1646436965;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=RusSpL0HJeNvqdaTfGwlPi7UHcI37pnMO1x1BqU8gdA=;
-  b=AKXaImyiAgGnKoFtPwqR3MjkQinj41GdnKUKc1JuPbZoqX8nrlg1ZymG
-   RyrpurPKAgYcOjRopjRHFFDa9Z8E+saBWwEDSZbiX0LN5F44CX2NA3mGi
-   PNOhCu6v0/aug2cuo+AjKnHJBWj42aGBCmcD1WLMTaQGteNPSwqGZuvIE
-   aauwbkVvlRM5dRgKyrcx4SvU6EEmVqKL/WKAWuy9nPzQ02E/5DStHbiPK
-   3VIckNYJ1nMhgi1cMLVOyVC2TKvJHfowBsdIPjl00QgzEubRYnhdJmx6i
-   2Y5X2qLXelp31qmLEU+6rj6mFmPdXR3mORr5I2TUq2v1K7VwG3+4jvzX4
-   g==;
-IronPort-SDR: RahzdLlOpqmx7HPJr5S9KSX9NVhBlUg5j2Wby7XVoU9RsTUrWqahQYT2XdlUzGglkQ0cASW7VE
- +7EbPNuAzcGXy67cHlt0e8E9SKEVuZ4DVZVE5cBjxQCij4LtA30qUv6EWiOgQ6h1C5g1+qk32Q
- 6JKJjTzqSKZyh5D7dmYpx7qqckScFm8yB8DqHJDfFRDqR7gojWkKL9/2odDhFZU3gF7iDNSQNY
- ldXV/j4t/IvxDhaCApQkkwvGDJ7Dq4n0RumyeNsBFnCqm1cyn+naKwijw/APPRlyhKLPfcLQM7
- Wdo=
-X-IronPort-AV: E=Sophos;i="5.81,223,1610380800"; 
-   d="scan'208";a="265705344"
-Received: from mail-sn1nam04lp2059.outbound.protection.outlook.com (HELO NAM04-SN1-obe.outbound.protection.outlook.com) ([104.47.44.59])
-  by ob1.hgst.iphmx.com with ESMTP; 05 Mar 2021 07:36:03 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=MifstauLvAXN/z0nChtaqfdd2PCJl0kd2Wpoumqt+ikRkerbK+xERTytT8gxP198T7TYqCl37RQtvUNrHYf8GcIOvZ7K7qh4VbQ9cT/HRyH7aKgjd1DEKlLNYXObZ6qkPZQsFW8nOORNHubTVwIuNYcohaw5/3qAhLspSTD8q4brNbfDhLFTuO1Vr+KRdFwe32Hw3fUGxJaLLg3AC50peH+NyJCebsgIt/z0PBxpZ7WylV2PJY6naqHgCpBDtAsOaBSybLf5NjrHZlGxnuAa8nF7xjnZSpUJQs4MDKNAM/0VgPMRlQQLnlzfo1vr8cQXnVjvVOUohuX81k8XjFexMg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ClJjtAXGvzQQndqwrzntsiEMgBL/5Jeg8yPzdL8aCow=;
- b=LZZa+koe2rwzuaYci2DkVLBjTdPlMqQa7UoypWhjFwTgNSbhbMSPGQBNBUF85uBbbzhygWjCCfTkzpVE1KM1XwFmMl1ORscSrJqH1Eko4VuCqkiiKofBDk/rQSkriE8OkLwjO2aWwYB/Q0KP9nfjVqmQlPUKPWtyqhkbjRKnyZxw4LL5AVPmbVjkk4GrIG68WYO95OcqKFy3Hj/GCiafbbX+9ljvIOj9upFvv+ru0L8nr+AEYBkbLDsrVrpzanVV6tvJMx8YdVoEK+q2eOddDPTQxGNE66NFkV4DT72U8GvNBo7bf8xa3swkYYEjskzl90maZe5Up3eKwktiCPrptQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ClJjtAXGvzQQndqwrzntsiEMgBL/5Jeg8yPzdL8aCow=;
- b=cK7nd/Lt+JIFs381g6lLQSFKRAQcQPVlONW42Zv9TmF4qrQk1LkdQhtXiiPrIdY7lXaLB8M2e36uzNHRUPR2k3VMmOtbX+xaYDZHfDdjqBxixU5B6b/4EFf6+mDAXAqOoocakqicLZHOt1NcJs6WIUX2XTlPJlinAaka6PWVBIk=
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
- by SJ0PR04MB7680.namprd04.prod.outlook.com (2603:10b6:a03:324::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.20; Thu, 4 Mar
- 2021 23:32:35 +0000
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::c897:a1f8:197a:706b]) by BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::c897:a1f8:197a:706b%5]) with mapi id 15.20.3890.031; Thu, 4 Mar 2021
- 23:32:35 +0000
-From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-To:     Dave Chinner <david@fromorbit.com>
-CC:     "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        id S233186AbhCDXkR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Mar 2021 18:40:17 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49776 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231959AbhCDXkQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Mar 2021 18:40:16 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A3DD664F62;
+        Thu,  4 Mar 2021 23:40:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614901215;
+        bh=/0DW0uDIqgzkDXBs7LC+CDyXpa8iOTe6w8cw9abn6UI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=AnWu6vola+FNdAFd0O0QSm5CrhcxhlC4xqH8nCAsjypIQxK7Nfk41NTf6Spr5n04q
+         k0c8hhgqr83fDz29/W3sfYKwGDITitYFhQFi4BE7nIQ6u6rpyzx/562jryvL8kGula
+         Y22Pir+9Uwh4bVQA1M2OVITjvU1n1h7MBf0EHluTmx7XN8H86bvZ4/qweshhjrbc7r
+         KJZY3ZHUYbqfUP+o6GOttYrxAxE9L+OA32k7AI9nwqEa3cYP0OqGucUUKr0DVCxdGi
+         vJO+RX7WZl/yiBGpCr/Z3SI5kRSIXruyntKWfATL5pDR2eJWQVBTGjmA5v8TFLd+yw
+         343jX08iumibA==
+Date:   Thu, 4 Mar 2021 15:40:14 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
-Subject: Re: Problem With XFS + KVM
-Thread-Topic: Problem With XFS + KVM
-Thread-Index: AQHXEUaJ81+kylbMeUuYIeYf5OnWpA==
-Date:   Thu, 4 Mar 2021 23:32:35 +0000
-Message-ID: <BYAPR04MB49657CB2E5F0C2F2FC4F24E686979@BYAPR04MB4965.namprd04.prod.outlook.com>
-References: <BYAPR04MB4965AAAB580D73E3B03E7E7886979@BYAPR04MB4965.namprd04.prod.outlook.com>
- <20210304231359.GT4662@dread.disaster.area>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: fromorbit.com; dkim=none (message not signed)
- header.d=none;fromorbit.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [199.255.45.62]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 3321c2a1-cb07-41b4-b65a-08d8df65ca6c
-x-ms-traffictypediagnostic: SJ0PR04MB7680:
-x-microsoft-antispam-prvs: <SJ0PR04MB76808B7DB737984C05B9D83D86979@SJ0PR04MB7680.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: Or5UIp5Z+nMSkNL4Xk+m0BXUQ/sh5B/YChQG+oTsdAz6oQRj+SX4BJm1PV1OgeY4ilhx6m1e4XYqUOcUoD59GMMHdWqT6A3yUxrBypcdLBvndEaIW0MEFdkH9OkN5W3F2LMq3huNPekXhlz5cho7ODe8BN/W4A/RKGLkIdu2U0NtCPSR8muucIcjBAad4i0yohpHIeSA9QYVLL5YodztJ4Sj8yI4MpIu4F6pIThgtfjL4qqxqqRZkkEC31EXqM13ieNp+Jgp4hEZIWYq4iooCJPJ3bInvQaJGPyNYnvG3zku9VGfTOeA4GckiMO1wKdbZBT5QVPaccp/doXDLQ2utEN/p8fLcBg9fsNnvzCQ8BzTG7pF+FGTR5zQBBwJv7Ex9DUDNBB8qcMgC/pOuPrSdElTbkhXi+uOtsyG9meeA8pzDWETyEg02KUWUUa/yoGyjbwS6IPGO0v+kpn3CS+ZuOb+BeTce386DpkltW2CXjQWhGdI3zMt7suuzWlRaf6TlHwMQf1/4gFgckM8C0jwDw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(396003)(39860400002)(136003)(376002)(346002)(316002)(186003)(6916009)(54906003)(26005)(55016002)(8676002)(4326008)(53546011)(8936002)(478600001)(6506007)(5660300002)(7696005)(33656002)(64756008)(66556008)(66446008)(52536014)(76116006)(66946007)(86362001)(66476007)(71200400001)(9686003)(2906002)(83380400001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?S+UCMmDwXK1sJrmzKHSaCr0fBh8e83Un6/iAKRHkPqY5fk2oXlfbNZzbugc+?=
- =?us-ascii?Q?527kaQnO0lNQPVrJ6CRSqhNpt3tlPabfw6DIFhNXl+Jl4zsI+mAxe23cEaLD?=
- =?us-ascii?Q?0fHdQWC7Al25L2vXe3z90t1mFdw4b4JBqnCl8GbERj4XJK4hTrUTA/SEIeQj?=
- =?us-ascii?Q?A2krfoXvyGTkhflcnBzkMFD+vq9Mz7OR7mVcmF69UtO+EOyD+7NpBNROF3mF?=
- =?us-ascii?Q?HvKUU2LmdlmNHXQL+Ccdnx1EmdJI+vx5f81ai7LVbGYdpJA2k3xBTFiTS4CG?=
- =?us-ascii?Q?86NzWXN5i3l8vJmOfUYBOcD3+R0FxdQT+EU9Hxf+nUffVFa50FeW4jO5c4yj?=
- =?us-ascii?Q?HWlH8XYap9nfcRUon6FCoGEj9jbT8zugZrxB47w2MedXOymyxhsvRYxaKiaO?=
- =?us-ascii?Q?dVRS9zdk1mfX7/6T7b2ZJtRIL7N8EyUkqkaEhzAhh6U7zGJRdq6aZ2tiGRCS?=
- =?us-ascii?Q?XfZV4BJcCB+Zsx1gH4CHO1vod2yBHQHrfoWwkDbmfMzyenzhstsnUTatNugF?=
- =?us-ascii?Q?0HcWfH2jIXtKY+qf5DVThhM+8VhZK6OMxB4r5SN938vG/TJaSngf5CkFHDMY?=
- =?us-ascii?Q?rOZy6OOMZGgkorRecVPH1jreP2MKsuux3/bctNVZcMupEYwwfTvQDqejeih6?=
- =?us-ascii?Q?s6BI6UdZMpghNyhoeeDYuiP/ALPXyM5AQ5PhoNqAUR/GyXlgr9UvYdh1lzXw?=
- =?us-ascii?Q?Pwv+P+E9/zKwhWB77C600yeujh3PvHR9osMNd5rbN8Zddf870aMasLRXqwes?=
- =?us-ascii?Q?KAQb7wlG48XO46xjBzrVxQrGXULchT7kgW5uyVaSE8nk4N3b09cse7c7uIXK?=
- =?us-ascii?Q?FOulXe/auUs78SKY30KMjprCGE13aN6BAuY4pc6A1t2LpsYD4X7eCi6MV2ru?=
- =?us-ascii?Q?Pn465ytfQUYhnX/OgpqdVMmLiviug+syHCCaI33d8Y/dv9TBAnRMkZgyWxBn?=
- =?us-ascii?Q?2H9XA56CJ3fu0x+0jVJKE3qRRsG/XeymK645Xr6XRAgzAZYFFOYJM4aGWPjJ?=
- =?us-ascii?Q?YmZ15inrYjjpQscHDwLAEKtP0IxAV7VJka8Cgu8egn+sFY11PtNtsLpiuYPa?=
- =?us-ascii?Q?54Ti7Oa9ehT8njmJ0z//4TRzU1WC4TxFihrbTB7vUcJfGi7u2TIJhQ5DRGQi?=
- =?us-ascii?Q?GnzndeqhMY/K/VrhYJoP9/iYVw/tdMSiSpngZAL1/VnOETnD8QkhuAB8S8Da?=
- =?us-ascii?Q?BfIbarQ5QFfXMfLl9Ub1smjA9GGC1AC6FUOzc+DjAGZLY4KTRAlpMjhlg9CG?=
- =?us-ascii?Q?p/IyB1+D5RUsBgTj46346xv2vegrm9iMUaBjDj6rs+G58YUjODVBvDopma92?=
- =?us-ascii?Q?iyAcPRo1ZgwIQRHA8ypWTG9W?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "jack@suse.cz" <jack@suse.cz>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "ocfs2-devel@oss.oracle.com" <ocfs2-devel@oss.oracle.com>,
+        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
+        "y-goto@fujitsu.com" <y-goto@fujitsu.com>,
+        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
+        "fnstml-iaas@cn.fujitsu.com" <fnstml-iaas@cn.fujitsu.com>
+Subject: Re: Question about the "EXPERIMENTAL" tag for dax in XFS
+Message-ID: <20210304234014.GG3419940@magnolia>
+References: <20210226212748.GY4662@dread.disaster.area>
+ <CAPcyv4jryJ32R5vOwwEdoU3V8C0B7zu_pCt=7f6A3Gk-9h6Dfg@mail.gmail.com>
+ <20210227223611.GZ4662@dread.disaster.area>
+ <CAPcyv4h7XA3Jorcy_J+t9scw0A4KdT2WEwAhE-Nbjc=C2qmkMw@mail.gmail.com>
+ <20210228223846.GA4662@dread.disaster.area>
+ <CAPcyv4jzV2RUij2BEvDJLLiK_67Nf1v3M6-jRLKf32x4iOzqng@mail.gmail.com>
+ <20210302032805.GM7272@magnolia>
+ <CAPcyv4jXH0F+aii6ZtYQ3=Rx-mOWM7NFHC9wVxacW-b1o_s20g@mail.gmail.com>
+ <20210302075736.GJ4662@dread.disaster.area>
+ <CAPcyv4iyTHVW51xocmLO7F6ATgq0rJtQ1nShB=rAmDfzx83EyA@mail.gmail.com>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3321c2a1-cb07-41b4-b65a-08d8df65ca6c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Mar 2021 23:32:35.2219
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 4x5HrBbtAifNV8U2m7NOiDmiMZeNrYV8+IyvUS0RD79pyj95ovJ8yyFl/WnsgeZqIyDnaGGu+HiGxt6uFVcEhRQjDfqHee9auWj8zx96svI=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR04MB7680
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4iyTHVW51xocmLO7F6ATgq0rJtQ1nShB=rAmDfzx83EyA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 3/4/21 15:14, Dave Chinner wrote:=0A=
->> 00000000003506e0=0A=
->> [  587.766864] Call Trace:=0A=
->> [  587.766867]  kvm_wait+0x8c/0x90=0A=
->> [  587.766876]  __pv_queued_spin_lock_slowpath+0x265/0x2a0=0A=
->> [  587.766893]  do_raw_spin_lock+0xb1/0xc0=0A=
->> [  587.766898]  _raw_spin_lock+0x61/0x70=0A=
->> [  587.766904]  xfs_extent_busy_trim+0x2f/0x200 [xfs]=0A=
-> That looks like a KVM or local_irq_save()/local_irq_restore problem.=0A=
-> kvm_wait() does:=0A=
->=0A=
-> static void kvm_wait(u8 *ptr, u8 val)=0A=
-> {=0A=
->         unsigned long flags;=0A=
->=0A=
->         if (in_nmi())=0A=
->                 return;=0A=
->=0A=
->         local_irq_save(flags);=0A=
->=0A=
->         if (READ_ONCE(*ptr) !=3D val)=0A=
->                 goto out;=0A=
->=0A=
->         /*=0A=
->          * halt until it's our turn and kicked. Note that we do safe halt=
-=0A=
->          * for irq enabled case to avoid hang when lock info is overwritt=
-en=0A=
->          * in irq spinlock slowpath and no spurious interrupt occur to sa=
-ve us.=0A=
->          */=0A=
->         if (arch_irqs_disabled_flags(flags))=0A=
->                 halt();=0A=
->         else=0A=
->                 safe_halt();=0A=
->=0A=
-> out:=0A=
->         local_irq_restore(flags);=0A=
-> }=0A=
->=0A=
-> And the warning is coming from the local_irq_restore() call=0A=
-> indicating that interrupts are not disabled when they should be.=0A=
-> The interrupt state is being modified entirely within the kvm_wait()=0A=
-> code here, so none of the high level XFS code has any influence on=0A=
-> behaviour here.=0A=
->=0A=
-> Cheers,=0A=
->=0A=
-> Dave.=0A=
-> -- Dave Chinner david@fromorbit.com=0A=
-=0A=
-Thanks a lot for the response Dave, that is what I thought, just wasn't=0A=
-sure.=0A=
-=0A=
-=0A=
+On Tue, Mar 02, 2021 at 09:49:30AM -0800, Dan Williams wrote:
+> On Mon, Mar 1, 2021 at 11:57 PM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Mon, Mar 01, 2021 at 09:41:02PM -0800, Dan Williams wrote:
+> > > On Mon, Mar 1, 2021 at 7:28 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> > > > > > I really don't see you seem to be telling us that invalidation is an
+> > > > > > either/or choice. There's more ways to convert physical block
+> > > > > > address -> inode file offset and mapping index than brute force
+> > > > > > inode cache walks....
+> > > > >
+> > > > > Yes, but I was trying to map it to an existing mechanism and the
+> > > > > internals of drop_pagecache_sb() are, in coarse terms, close to what
+> > > > > needs to happen here.
+> > > >
+> > > > Yes.  XFS (with rmap enabled) can do all the iteration and walking in
+> > > > that function except for the invalidate_mapping_* call itself.  The goal
+> > > > of this series is first to wire up a callback within both the block and
+> > > > pmem subsystems so that they can take notifications and reverse-map them
+> > > > through the storage stack until they reach an fs superblock.
+> > >
+> > > I'm chuckling because this "reverse map all the way up the block
+> > > layer" is the opposite of what Dave said at the first reaction to my
+> > > proposal, "can't the mm map pfns to fs inode  address_spaces?".
+> >
+> > Ah, no, I never said that the filesystem can't do reverse maps. I
+> > was asking if the mm could directly (brute-force) invalidate PTEs
+> > pointing at physical pmem ranges without needing walk the inode
+> > mappings. That would be far more efficient if it could be done....
+
+So, uh, /can/ the kernel brute-force invalidate PTEs when the pmem
+driver says that something died?  Part of what's keeping me from putting
+together a coherent vision for how this would work is my relative
+unfamiliarity with all things mm/.
+
+> > > Today whenever the pmem driver receives new corrupted range
+> > > notification from the lower level nvdimm
+> > > infrastructure(nd_pmem_notify) it updates the 'badblocks' instance
+> > > associated with the pmem gendisk and then notifies userspace that
+> > > there are new badblocks. This seems a perfect place to signal an upper
+> > > level stacked block device that may also be watching disk->bb. Then
+> > > each gendisk in a stacked topology is responsible for watching the
+> > > badblock notifications of the next level and storing a remapped
+> > > instance of those blocks until ultimately the filesystem mounted on
+> > > the top-level block device is responsible for registering for those
+> > > top-level disk->bb events.
+> > >
+> > > The device gone notification does not map cleanly onto 'struct badblocks'.
+> >
+> > Filesystems are not allowed to interact with the gendisk
+> > infrastructure - that's for supporting the device side of a block
+> > device. It's a layering violation, and many a filesytem developer
+> > has been shouted at for trying to do this. At most we can peek
+> > through it to query functionality support from the request queue,
+> > but otherwise filesystems do not interact with anything under
+> > bdev->bd_disk.
+> 
+> So lets add an api that allows the querying of badblocks by bdev and
+> let the block core handle the bd_disk interaction. I see other block
+> functionality like blk-integrity reaching through gendisk. The fs need
+> not interact with the gendisk directly.
+
+(I thought it was ok for block code to fiddle with other block
+internals, and it's filesystems messing with block internals that was
+prohibited?)
+
+> > As it is, badblocks are used by devices to manage internal state.
+> > e.g. md for recording stripes that need recovery if the system
+> > crashes while they are being written out.
+> 
+> I know, I was there when it was invented which is why it was
+> top-of-mind when pmem had a need to communicate badblocks. Other block
+> drivers have threatened to use it for badblocks tracking, but none of
+> those have carried through on that initial interest.
+
+I hadn't realized that badblocks was bolted onto gendisk nowadays, I
+mistakenly thought it was still something internal to md.
+
+Looking over badblocks, I see a major drawback in that it can only
+remember a single page's worth of badblocks records.
+
+> > > If an upper level agent really cared about knowing about ->remove()
+> > > events before they happened it could maybe do something like:
+> > >
+> > > dev = disk_to_dev(bdev->bd_disk)->parent;
+> > > bus_register_notifier(dev->bus. &disk_host_device_notifier_block)
+> >
+> > Yeah, that's exactly the sort of thing that filesystems have been
+> > aggressively discouraged from doing for years.
+> 
+> Yup, it's a layering violation.
+> 
+> > Part of the reason for this is that gendisk based mechanisms are not
+> > very good for stacked device error reporting. Part of the problem
+> > here is that every layer of the stacked device has to hook the
+> > notifier of the block devices underneath it, then translate the
+> > event to match the upper block device map, then regenerate the
+> > notification for the next layer up. This isn't an efficient way to
+> > pass a notification through a series of stacked devices and it is
+> > messy and cumbersome to maintain.
+> 
+> It's been messy and cumbersome to route new infrastructure through DM
+> every time a new dax_operation arrives. The corrupted_range() routing
+> has the same burden. The advantage of badblocks over corrupted_range()
+> is that it solves the "what If I miss a notification" problem. Each
+> layer of the stack maintains its sector translation of the next level
+> errors.
+
+Oh.  Hum.  This changes my interpretation of what you're advocating.
+
+If I'm understanding you correctly, I think you want to handle pmem
+persistence errors (aka "I lost this cache line") by ... what?  The pmem
+driver marks the appropriate range in the block_device/dax_device's
+badblocks list, invalidates the page tables to force fs page faults, and
+the next time the fs tries to access that pmem (either via bios or by
+creating a direct map) the lower level storage driver will see the
+badblocks entry and fail the IO / decline the mapping?
+
+<shrug> I dunno, does that even make sense?  I thought it was pretty
+easy for the kernel to invalidate a mapping to force a page fault, since
+we (xfs) do that to the regular page cache all the time.
+
+Assuming I understood that part correctly, why is it objectionable to
+ask for the one extra step where pmem steps through the dax_device to
+call the filesystem ->memory_failure handler?  There's no pmem-mapper
+layer (yet) so making this piece happen should be relatively simple
+since it doesn't require translating through multiple layers of dm,
+right?
+
+Also, does your mental model of storage device error reporting center
+around lower layers setting badblocks ranges and then poking filesystems
+to call down into badblocks to find out what's bad?  Versus lower layers
+calling filesystems with the bad ranges directly?  Or are you trying to
+omit as much fs involvement as possible?
+
+(I'll address invalidating dax devices a little further down)
+
+> > It can be effective for getting notifications to userspace about
+> > something that happens to a specific block device.
+> 
+> No, it's not block device specific, it's stuck at the disk level. The
+> user notification aspect was added for pmem at the disk layer because
+> IIRC it was NAKd to add it to the block_device itself.
+> 
+> >
+> > But The userspace
+> > still ends up having to solve the "what does this error resolve to"
+> > problem. i.e. Userspace still needs to map that notification to a
+> > filesystem, and for data loss events map it to objects within the
+> > filesystem, which can be extremely expensive to do from userspace.
+> 
+> Expensive and vulnerable to TOCTOU, this has been the motivation for
+> filesystem native awareness of these errors from the beginning.
+> 
+> > This is exactly the sort of userspace error reporting mess that
+> > various projects have asked us to try to fix. Plumbing errors
+> > internally through the kernel up to the filesystem where the
+> > filesytem can point directly to the user data that is affected is a
+> > simple, effective solution to the problem. Especially if we then
+> > have a generic error notification mechanism for filesystems to emit
+> > errors to registered userspace watchers...
+> 
+> Agree, that's the dream worth pursuing.
+
+(Agree, the error reporting story is still a mess.)
+
+> >
+> > > I still don't think that solves the need for a separate mechanism for
+> > > global dax_device pte invalidation.
+> >
+> > It's just another type of media error because.....
+> >
+> > > I think that global dax_device invalidation needs new kernel
+> > > infrastructure to allow internal users, like dm-writecache and future
+> > > filesystems using dax for metadata, to take a fault when pmem is
+> > > offlined.
+> >
+> > .... if userspace has directly mapped into the cache, and the cache
+> > storage goes away, the userspace app has to be killed because we
+> > have no idea if the device going away has caused data loss or not.
+> > IOWs, if userspace writes direct to the cache device and it hasn't
+> > been written back to other storage when it gets yanked, we have just
+> > caused data corruption to occur.
+> 
+> If userspace has it direct mapped dirty in the cache when the remove
+> fires, there is no opportunity to flush the cache. Just as there is no
+> opportunity today with non-DAX and the page cache. The block-queue
+> will be invalidated and any dirty in page cache is stranded.
+
+So this is the "dax device invalidation" case that you also mention
+below.  How differently would you handle this case from the persistence
+error case I outlined above?  It sounds like in this case all the mm can
+really do is invalidate the active page table mappings and set some
+"totally offline" state in the dax/block_device badblocks so that all
+future io requests are declined?
+
+Do I understand that correctly?
+
+If so, then I guess my next question is about the coordinated
+pre-removal step that I think you mentioned in connection with something
+named "CXL"?  If someone /requests/ the removal of a chunk of pmem,
+would you propagate that request far enough up the storage chain so that
+a mounted filesystem could reject the removal attempt?
+
+> > At minimum, we now have to tell the filesystem that the dirty data
+> > in the cache is now bad, and direct map applications that map those
+> > dirty ranges need to be killed because their backing store is no
+> > longer valid nor does the backup copy contain the data they last
+> > wrote. Nor is it acessible by direct access, which is going to be
+> > interesting because dynamically changing dax to non-dax access can't
+> > be done without forcibly kicking the inode out of the cache. That
+> > requires all references to the inode to go away. And that means the
+> > event really has to go up to the filesystem.
+> >
+> > But I think the biggest piece of the puzzle that you haven't grokked
+> > here is that the dm cache device isn't a linear map - it's made up of
+> > random ranges from the underlying devices. Hence the "remove" of a dm
+> > cache device turns into a huge number of small, sparse corrupt
+> > ranges, not a single linear device remove event.
+> 
+> I am aware that DM is non-linear. The other non-linearity is sector-to-pfn.
+> 
+> > IOWs, device unplug/remove events are not just simple "pass it on"
+> > events in a stacked storage setup. There can be non-trivial mappings
+> > through the layers, and device disappearance may in fact manifest to
+> > the user as data corruption rather than causing data to be
+> > inaccessible.
+> 
+> Even MD does not rely on component device notifications for failure
+> notifications, it waits for write-errors, and yes losing a component
+> of a raid0 is more than a data offline event.
+> 
+> > Hence "remove" notifications just don't work in the storage stack.
+> > They need to be translated to block ranges going bad (i.e.  media
+> > errors), and reported to higher layers as bad ranges, not as device
+> > removal.
+> 
+> Yes, the generic top-level remove event is pretty much useless for
+> both the dax pte invalidation and lba range offline notification. I'm
+> distinguishing that from knock on events that fire in response to
+> ->remove() triggering on the disk driver which seems to be where you
+> are at as well with the idea to trigger ->corrupted_range(0, EOD) from
+> ->remove().
+> 
+> There's 2 ways to view the "filesystems have wanted proactive
+> notification of remove events from storage for a long time". There's
+> either enough pent up demand to convince all parties to come to the
+> table and get something done, or there's too much momentum with the
+> status quo to overcome.
+
+Don't forget my cynical product manager view: "Here's a good opportunity
+to get the basics of this revolutionary change plumbed in while upper
+management is still hot enough about pmem to spend engineer time". :P
+
+> I do not think it is fair to ask Ruan to solve a problem with brand
+> new plumbing that the Linux storage community has not seen fit to
+> address for a decade.
+
+Nevertheless, he's more or less built it now.  Honestly I'm pleased to
+see him pushing this forward exactly /because/ nobody has seen fit to
+address this for so long.
+
+The part where we plumb notifications upwards through the storage stack
+is indeed revolutionary.  However, I /do/ think it's fair to ask Ruan to
+make a revolutionary change as part of adapting to recent revolutionary
+changes in storage hardware.
+
+(At the very least I think it soul-crushing to toss out Ruan's work
+now that he's at least gotten the proof of concept running... but Ruan
+is in the best place to say that)
+
+> Not when disk->bb is already plumbed without anyone complaining about
+> it.
+
+...or noticing it was there, as was the case here. :/
+
+> > The same goes for DAX devices. The moment they can be placed in
+> > storage stacks in non-trivial configurations and/or used as cache
+> > devices that can be directly accessed over tranditional block
+> > devices, we end up with error conditions that can only be mapped as
+> > ranges of blocks that have gone bad.
+> 
+> I see plumbing corrupted_range() and using it to communicate removal
+> in addition to badblocks in addition to bad pfns as a revolutionary
+> change. A reuse of disk->bb for communicating poison sector discovery
+> events up the stack and a separate facility to invalidate dax devices
+> as evolutionary. The evolutionary change does not preclude the
+> eventual revolutionary change, but it has a better chance of making
+> forward progress in the near term.
+
+And I want both. :)
+
+But I'll end this email here to make sure I've understood what you're
+going for, Dan, before working on a reply.
+
+Hopefully it doesn't take 2 days to roundtrip a reply email like the
+last week of utter vger frustration. :(
+
+--D
