@@ -2,77 +2,157 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EAEDC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 02:08:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B6B7C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 05:48:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C784664F78
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 02:08:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7875B64ED7
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 05:48:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229437AbhCDCIo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Mar 2021 21:08:44 -0500
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:35752 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229379AbhCDCIb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Mar 2021 21:08:31 -0500
-Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id A26D7632DF;
-        Thu,  4 Mar 2021 13:07:48 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lHdP2-00Drei-4y; Thu, 04 Mar 2021 13:07:48 +1100
-Date:   Thu, 4 Mar 2021 13:07:48 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Geert Hendrickx <geert@hendrickx.be>,
-        Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: xfs_admin -O feature upgrade feedback
-Message-ID: <20210304020748.GQ4662@dread.disaster.area>
-References: <YDy+OmsVCkTfiMPp@vera.ghen.be>
- <20210301191803.GE7269@magnolia>
- <YD4tWbfzmuXv1mKQ@bfoster>
- <YD7C0v5rKopCJvk2@vera.ghen.be>
- <YD937HTr5Lq/YErv@bfoster>
- <YD+NF63sGji+OBtc@vera.ghen.be>
- <20210303170019.GH7269@magnolia>
+        id S234247AbhCDFo5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Mar 2021 00:44:57 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:29093 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S234236AbhCDFo0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Mar 2021 00:44:26 -0500
+X-IronPort-AV: E=Sophos;i="5.81,221,1610380800"; 
+   d="scan'208";a="105143058"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 04 Mar 2021 13:42:03 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 8BD674CE92FD;
+        Thu,  4 Mar 2021 13:41:57 +0800 (CST)
+Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Thu, 4 Mar 2021 13:41:47 +0800
+Received: from irides.mr.mr.mr (10.167.225.141) by
+ G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Thu, 4 Mar 2021 13:41:47 +0800
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>
+CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <willy@infradead.org>, <jack@suse.cz>, <viro@zeniv.linux.org.uk>,
+        <linux-btrfs@vger.kernel.org>, <ocfs2-devel@oss.oracle.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <rgoldwyn@suse.de>
+Subject: [RESEND PATCH v2.1 07/10] iomap: Introduce iomap_apply2() for operations on two files
+Date:   Thu, 4 Mar 2021 13:41:42 +0800
+Message-ID: <20210304054142.1147895-1-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210226002030.653855-8-ruansy.fnst@fujitsu.com>
+References: <20210226002030.653855-8-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210303170019.GH7269@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
-        a=HMF4cdRJZewUdH1l25wA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 8BD674CE92FD.A45E2
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 03, 2021 at 09:00:19AM -0800, Darrick J. Wong wrote:
-> On Wed, Mar 03, 2021 at 02:20:23PM +0100, Geert Hendrickx wrote:
-> > On Wed, Mar 03, 2021 at 06:50:04 -0500, Brian Foster wrote:
-> > > Maybe a simple compromise is a verbose option for xfs_admin itself..?
-> > > I.e., the normal use case operates as it does now, but the failure case
-> > > would print something like:
-> > > 
-> > >   "Feature conversion failed. Retry with -v for detailed error output."
-> 
-> Ugh, no, by the time the sysadmin /reruns/ repair, the original output
-> is lost.  Frankly I'd rather xfs_admin stop interfering with
-> stdout/stderr and teach repair to suppress errors due to upgrades.
+Some operations, such as comparing a range of data in two files under
+fsdax mode, requires nested iomap_open()/iomap_end() on two file.  Thus,
+we introduce iomap_apply2() to accept arguments from two files and
+iomap_actor2_t for actions on two files.
 
-Yup, that's what the 'xfs_db -p <progname>' effectively does. It
-tells xfs_db to act as if it was some other program and behave
-differently....
+Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+---
+ fs/iomap/apply.c      | 56 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  7 +++++-
+ 2 files changed, 62 insertions(+), 1 deletion(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
+index 26ab6563181f..fbc38ce3d5b6 100644
+--- a/fs/iomap/apply.c
++++ b/fs/iomap/apply.c
+@@ -97,3 +97,59 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 
+ 	return written ? written : ret;
+ }
++
++loff_t
++iomap_apply2(struct inode *ino1, loff_t pos1, struct inode *ino2, loff_t pos2,
++		loff_t length, unsigned int flags, const struct iomap_ops *ops,
++		void *data, iomap_actor2_t actor)
++{
++	struct iomap smap = { .type = IOMAP_HOLE };
++	struct iomap dmap = { .type = IOMAP_HOLE };
++	loff_t written = 0, ret, ret2 = 0;
++	loff_t len1 = length, len2, min_len;
++
++	ret = ops->iomap_begin(ino1, pos1, len1, flags, &smap, NULL);
++	if (ret)
++		goto out_src;
++	if (WARN_ON(smap.offset > pos1)) {
++		written = -EIO;
++		goto out_src;
++	}
++	if (WARN_ON(smap.length == 0)) {
++		written = -EIO;
++		goto out_src;
++	}
++	len2 = min_t(loff_t, len1, smap.length);
++
++	ret = ops->iomap_begin(ino2, pos2, len2, flags, &dmap, NULL);
++	if (ret)
++		goto out_dest;
++	if (WARN_ON(dmap.offset > pos2)) {
++		written = -EIO;
++		goto out_dest;
++	}
++	if (WARN_ON(dmap.length == 0)) {
++		written = -EIO;
++		goto out_dest;
++	}
++	min_len = min_t(loff_t, len2, dmap.length);
++
++	written = actor(ino1, pos1, ino2, pos2, min_len, data, &smap, &dmap);
++
++out_dest:
++	if (ops->iomap_end)
++		ret2 = ops->iomap_end(ino2, pos2, len2,
++				      written > 0 ? written : 0, flags, &dmap);
++out_src:
++	if (ops->iomap_end)
++		ret = ops->iomap_end(ino1, pos1, len1,
++				     written > 0 ? written : 0, flags, &smap);
++
++	if (ret)
++		return written ? written : ret;
++
++	if (ret2)
++		return written ? written : ret2;
++
++	return written;
++}
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 5bd3cac4df9c..913f98897a77 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -148,10 +148,15 @@ struct iomap_ops {
+  */
+ typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
+ 		void *data, struct iomap *iomap, struct iomap *srcmap);
+-
++typedef loff_t (*iomap_actor2_t)(struct inode *ino1, loff_t pos1,
++		struct inode *ino2, loff_t pos2, loff_t len, void *data,
++		struct iomap *smap, struct iomap *dmap);
+ loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
+ 		unsigned flags, const struct iomap_ops *ops, void *data,
+ 		iomap_actor_t actor);
++loff_t iomap_apply2(struct inode *ino1, loff_t pos1, struct inode *ino2,
++		loff_t pos2, loff_t length, unsigned int flags,
++		const struct iomap_ops *ops, void *data, iomap_actor2_t actor);
+ 
+ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+ 		const struct iomap_ops *ops);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.30.1
+
+
+
