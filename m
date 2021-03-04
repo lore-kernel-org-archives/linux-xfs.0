@@ -2,303 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7065C43381
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 05:48:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7B8EC433DB
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 06:23:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B88A764EFC
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 05:48:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AACF64EDF
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Mar 2021 06:23:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234264AbhCDFo6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Mar 2021 00:44:58 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:31382 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234239AbhCDFov (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Mar 2021 00:44:51 -0500
-X-IronPort-AV: E=Sophos;i="5.81,221,1610380800"; 
-   d="scan'208";a="105143082"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 04 Mar 2021 13:42:28 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 3247B4CE92FC;
-        Thu,  4 Mar 2021 13:42:28 +0800 (CST)
-Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Thu, 4 Mar 2021 13:42:23 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Thu, 4 Mar 2021 13:42:22 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>
-CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <willy@infradead.org>, <jack@suse.cz>, <viro@zeniv.linux.org.uk>,
-        <linux-btrfs@vger.kernel.org>, <ocfs2-devel@oss.oracle.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <rgoldwyn@suse.de>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>
-Subject: [RESEND PATCH v2.1 08/10] fsdax: Dedup file range to use a compare function
-Date:   Thu, 4 Mar 2021 13:42:21 +0800
-Message-ID: <20210304054221.1148015-1-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210226002030.653855-9-ruansy.fnst@fujitsu.com>
-References: <20210226002030.653855-9-ruansy.fnst@fujitsu.com>
+        id S235079AbhCDGWt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Mar 2021 01:22:49 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:4062 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234859AbhCDGWa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Mar 2021 01:22:30 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 12464ApJ002003;
+        Thu, 4 Mar 2021 01:21:49 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-transfer-encoding; s=pp1;
+ bh=C/UEZBuZ9fJJJjUOHrXxdlo2KGgCtmOmAhhi4GZjqCc=;
+ b=ETbxTAUwAH7uDT5rvPYB+0e4r5hFEWCOan8oowg79DqeDGOM+D3upCsLOHzN0LkBkEHS
+ F8gjQBi4qL5Tr34pQ8T72LwqktYDvo0MB1qQ91RVkywPP59cKp964OT79UBFlafuB8dx
+ lbtHlF18OABqXZoqKEMT/UB8Oyrt7xsYWOONkwQWuXbaiBzusWnN2y3TdCu7gVz2JrNi
+ eT1uW4I+O3nNfp2+p3X4+vfMM/d+4Ro3eFDRG2OA7obakNhqs99bJMQtUa1+DgYkZEnf
+ zW4oZKrBQJ1YwEvfmNwXuCu8H42JsPCOsXelFwtxKyko12GCDX4RFOCOhFZ3bfulMg9U MA== 
+Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 372squs1r6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 04 Mar 2021 01:21:49 -0500
+Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
+        by ppma03fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 1246IrUs021627;
+        Thu, 4 Mar 2021 06:21:47 GMT
+Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
+        by ppma03fra.de.ibm.com with ESMTP id 371a8es4u6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 04 Mar 2021 06:21:47 +0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1246LjS036766176
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 4 Mar 2021 06:21:45 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 13ADBA4057;
+        Thu,  4 Mar 2021 06:21:45 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0D8D2A4051;
+        Thu,  4 Mar 2021 06:21:44 +0000 (GMT)
+Received: from riteshh-domain.ibmuc.com (unknown [9.199.35.80])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Thu,  4 Mar 2021 06:21:43 +0000 (GMT)
+From:   Ritesh Harjani <riteshh@linux.ibm.com>
+To:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, anju@linux.vnet.ibm.com,
+        Ritesh Harjani <riteshh@linux.ibm.com>
+Subject: [PATCH] iomap: Fix negative assignment to unsigned sis->pages in iomap_swapfile_activate
+Date:   Thu,  4 Mar 2021 11:51:26 +0530
+Message-Id: <b39319ab99d9c5541b2cdc172a4b25f39cbaad50.1614838615.git.riteshh@linux.ibm.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 3247B4CE92FC.A4A8F
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
+ definitions=2021-03-04_01:2021-03-03,2021-03-04 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 mlxscore=0
+ phishscore=0 adultscore=0 priorityscore=1501 clxscore=1011 suspectscore=0
+ spamscore=0 mlxlogscore=999 bulkscore=0 lowpriorityscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103040025
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-With dax we cannot deal with readpage() etc. So, we create a dax
-comparison funciton which is similar with
-vfs_dedupe_file_range_compare().
-And introduce dax_remap_file_range_prep() for filesystem use.
+In case if isi.nr_pages is 0, we are making sis->pages (which is
+unsigned int) a huge value in iomap_swapfile_activate() by assigning -1.
+This could cause a kernel crash in kernel v4.18 (with below signature).
+Or could lead to unknown issues on latest kernel if the fake big swap gets
+used.
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Fix this issue by returning -EINVAL in case of nr_pages is 0, since it
+is anyway a invalid swapfile. Looks like this issue will be hit when
+we have pagesize < blocksize type of configuration.
+
+I was able to hit the issue in case of a tiny swap file with below
+test script.
+https://raw.githubusercontent.com/riteshharjani/LinuxStudy/master/scripts/swap-issue.sh
+
+kernel crash analysis on v4.18
+==============================
+On v4.18 kernel, it causes a kernel panic, since sis->pages becomes
+a huge value and isi.nr_extents is 0. When 0 is returned it is
+considered as a swapfile over NFS and SWP_FILE is set (sis->flags |= SWP_FILE).
+Then when swapoff was getting called it was calling a_ops->swap_deactivate()
+if (sis->flags & SWP_FILE) is true. Since a_ops->swap_deactivate() is
+NULL in case of XFS, it causes below panic.
+
+Panic signature on v4.18 kernel:
+=======================================
+root@qemu:/home/qemu# [ 8291.723351] XFS (loop2): Unmounting Filesystem
+[ 8292.123104] XFS (loop2): Mounting V5 Filesystem
+[ 8292.132451] XFS (loop2): Ending clean mount
+[ 8292.263362] Adding 4294967232k swap on /mnt1/test/swapfile.  Priority:-2 extents:1 across:274877906880k
+[ 8292.277834] Unable to handle kernel paging request for instruction fetch
+[ 8292.278677] Faulting instruction address: 0x00000000
+cpu 0x19: Vector: 400 (Instruction Access) at [c0000009dd5b7ad0]
+    pc: 0000000000000000
+    lr: c0000000003eb9dc: destroy_swap_extents+0xfc/0x120
+    sp: c0000009dd5b7d50
+   msr: 8000000040009033
+  current = 0xc0000009b6710080
+  paca    = 0xc00000003ffcb280   irqmask: 0x03   irq_happened: 0x01
+    pid   = 5604, comm = swapoff
+Linux version 4.18.0 (riteshh@xxxxxxx) (gcc version 8.4.0 (Ubuntu 8.4.0-1ubuntu1~18.04)) #57 SMP Wed Mar 3 01:33:04 CST 2021
+enter ? for help
+[link register   ] c0000000003eb9dc destroy_swap_extents+0xfc/0x120
+[c0000009dd5b7d50] c0000000025a7058 proc_poll_event+0x0/0x4 (unreliable)
+[c0000009dd5b7da0] c0000000003f0498 sys_swapoff+0x3f8/0x910
+[c0000009dd5b7e30] c00000000000bbe4 system_call+0x5c/0x70
+--- Exception: c01 (System Call) at 00007ffff7d208d8
+
+Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
 ---
- fs/dax.c             | 56 ++++++++++++++++++++++++++++++++++++++++++++
- fs/remap_range.c     | 45 ++++++++++++++++++++++++++++-------
- fs/xfs/xfs_reflink.c |  9 +++++--
- include/linux/dax.h  |  4 ++++
- include/linux/fs.h   | 15 ++++++++----
- 5 files changed, 115 insertions(+), 14 deletions(-)
+ fs/iomap/swapfile.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 4f6c6ba68e6f..dbb95f00b38b 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1856,3 +1856,59 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
- 	return dax_insert_pfn_mkwrite(vmf, pfn, order);
- }
- EXPORT_SYMBOL_GPL(dax_finish_sync_fault);
-+
-+static loff_t dax_range_compare_actor(struct inode *ino1, loff_t pos1,
-+		struct inode *ino2, loff_t pos2, loff_t len, void *data,
-+		struct iomap *smap, struct iomap *dmap)
-+{
-+	void *saddr, *daddr;
-+	bool *same = data;
-+	int ret;
-+
-+	if (smap->type == IOMAP_HOLE && dmap->type == IOMAP_HOLE) {
-+		*same = true;
-+		return len;
-+	}
-+
-+	if (smap->type == IOMAP_HOLE || dmap->type == IOMAP_HOLE) {
-+		*same = false;
-+		return 0;
-+	}
-+
-+	ret = dax_iomap_direct_access(smap, pos1, ALIGN(pos1 + len, PAGE_SIZE),
-+				      &saddr, NULL);
-+	if (ret < 0)
-+		return -EIO;
-+
-+	ret = dax_iomap_direct_access(dmap, pos2, ALIGN(pos2 + len, PAGE_SIZE),
-+				      &daddr, NULL);
-+	if (ret < 0)
-+		return -EIO;
-+
-+	*same = !memcmp(saddr, daddr, len);
-+	return len;
-+}
-+
-+int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-+		struct inode *dest, loff_t destoff, loff_t len, bool *is_same,
-+		const struct iomap_ops *ops)
-+{
-+	int id, ret = 0;
-+
-+	id = dax_read_lock();
-+	while (len) {
-+		ret = iomap_apply2(src, srcoff, dest, destoff, len, 0, ops,
-+				   is_same, dax_range_compare_actor);
-+		if (ret < 0 || !*is_same)
-+			goto out;
-+
-+		len -= ret;
-+		srcoff += ret;
-+		destoff += ret;
-+	}
-+	ret = 0;
-+out:
-+	dax_read_unlock(id);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(dax_dedupe_file_range_compare);
-diff --git a/fs/remap_range.c b/fs/remap_range.c
-index 77dba3a49e65..9079390edaf3 100644
---- a/fs/remap_range.c
-+++ b/fs/remap_range.c
-@@ -14,6 +14,7 @@
- #include <linux/compat.h>
- #include <linux/mount.h>
- #include <linux/fs.h>
-+#include <linux/dax.h>
- #include "internal.h"
- 
- #include <linux/uaccess.h>
-@@ -199,9 +200,9 @@ static void vfs_unlock_two_pages(struct page *page1, struct page *page2)
-  * Compare extents of two files to see if they are the same.
-  * Caller must have locked both inodes to prevent write races.
-  */
--static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
--					 struct inode *dest, loff_t destoff,
--					 loff_t len, bool *is_same)
-+int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-+				  struct inode *dest, loff_t destoff,
-+				  loff_t len, bool *is_same)
- {
- 	loff_t src_poff;
- 	loff_t dest_poff;
-@@ -280,6 +281,7 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
- out_error:
- 	return error;
- }
-+EXPORT_SYMBOL(vfs_dedupe_file_range_compare);
- 
- /*
-  * Check that the two inodes are eligible for cloning, the ranges make
-@@ -289,9 +291,11 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-  * If there's an error, then the usual negative error code is returned.
-  * Otherwise returns 0 with *len set to the request length.
-  */
--int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
--				  struct file *file_out, loff_t pos_out,
--				  loff_t *len, unsigned int remap_flags)
-+static int
-+__generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+				struct file *file_out, loff_t pos_out,
-+				loff_t *len, unsigned int remap_flags,
-+				const struct iomap_ops *ops)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
-@@ -351,8 +355,15 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 	if (remap_flags & REMAP_FILE_DEDUP) {
- 		bool		is_same = false;
- 
--		ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
--				inode_out, pos_out, *len, &is_same);
-+		if (!IS_DAX(inode_in) && !IS_DAX(inode_out))
-+			ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
-+					inode_out, pos_out, *len, &is_same);
-+		else if (IS_DAX(inode_in) && IS_DAX(inode_out) && ops)
-+			ret = dax_dedupe_file_range_compare(inode_in, pos_in,
-+					inode_out, pos_out, *len, &is_same,
-+					ops);
-+		else
-+			return -EINVAL;
- 		if (ret)
+diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
+index a648dbf6991e..67953678c99f 100644
+--- a/fs/iomap/swapfile.c
++++ b/fs/iomap/swapfile.c
+@@ -170,6 +170,15 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
  			return ret;
- 		if (!is_same)
-@@ -370,6 +381,24 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 
- 	return ret;
- }
-+
-+int dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+			      struct file *file_out, loff_t pos_out,
-+			      loff_t *len, unsigned int remap_flags,
-+			      const struct iomap_ops *ops)
-+{
-+	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
-+					       pos_out, len, remap_flags, ops);
-+}
-+EXPORT_SYMBOL(dax_remap_file_range_prep);
-+
-+int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+				  struct file *file_out, loff_t pos_out,
-+				  loff_t *len, unsigned int remap_flags)
-+{
-+	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
-+					       pos_out, len, remap_flags, NULL);
-+}
- EXPORT_SYMBOL(generic_remap_file_range_prep);
- 
- loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 6fa05fb78189..f5b3a3da36b7 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1308,8 +1308,13 @@ xfs_reflink_remap_prep(
- 	if (IS_DAX(inode_in) || IS_DAX(inode_out))
- 		goto out_unlock;
- 
--	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
--			len, remap_flags);
-+	if (IS_DAX(inode_in))
-+		ret = generic_remap_file_range_prep(file_in, pos_in, file_out,
-+						    pos_out, len, remap_flags);
-+	else
-+		ret = dax_remap_file_range_prep(file_in, pos_in, file_out,
-+						pos_out, len, remap_flags,
-+						&xfs_read_iomap_ops);
- 	if (ret || *len == 0)
- 		goto out_unlock;
- 
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 3275e01ed33d..32e1c34349f2 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -239,6 +239,10 @@ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
- s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap,
- 		struct iomap *srcmap);
-+int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-+				  struct inode *dest, loff_t destoff,
-+				  loff_t len, bool *is_same,
-+				  const struct iomap_ops *ops);
- static inline bool dax_mapping(struct address_space *mapping)
- {
- 	return mapping->host && IS_DAX(mapping->host);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index fd47deea7c17..2e6ec5bdf82a 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -68,6 +68,7 @@ struct fsverity_info;
- struct fsverity_operations;
- struct fs_context;
- struct fs_parameter_spec;
-+struct iomap_ops;
- 
- extern void __init inode_init(void);
- extern void __init inode_init_early(void);
-@@ -1910,13 +1911,19 @@ extern ssize_t vfs_read(struct file *, char __user *, size_t, loff_t *);
- extern ssize_t vfs_write(struct file *, const char __user *, size_t, loff_t *);
- extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
- 				   loff_t, size_t, unsigned int);
-+typedef int (*compare_range_t)(struct inode *src, loff_t srcpos,
-+			       struct inode *dest, loff_t destpos,
-+			       loff_t len, bool *is_same);
- extern ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
- 				       struct file *file_out, loff_t pos_out,
- 				       size_t len, unsigned int flags);
--extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
--					 struct file *file_out, loff_t pos_out,
--					 loff_t *count,
--					 unsigned int remap_flags);
-+int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+				  struct file *file_out, loff_t pos_out,
-+				  loff_t *count, unsigned int remap_flags);
-+int dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+			      struct file *file_out, loff_t pos_out,
-+			      loff_t *len, unsigned int remap_flags,
-+			      const struct iomap_ops *ops);
- extern loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
- 				  struct file *file_out, loff_t pos_out,
- 				  loff_t len, unsigned int remap_flags);
--- 
-2.30.1
+ 	}
 
-
++	/*
++	 * In case if nr_pages is 0 then we better return -EINVAL
++	 * since it is anyway an empty swapfile.
++	 */
++	if (isi.nr_pages == 0) {
++		pr_warn("swapon: Empty swap-file\n");
++		return -EINVAL;
++	}
++
+ 	*pagespan = 1 + isi.highest_ppage - isi.lowest_ppage;
+ 	sis->max = isi.nr_pages;
+ 	sis->pages = isi.nr_pages - 1;
+--
+2.26.2
 
