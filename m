@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF378C433E6
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:11:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B36D8C43381
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:11:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 942E665013
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:11:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94C0765013
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:11:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229497AbhCEFL5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Mar 2021 00:11:57 -0500
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:36732 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229500AbhCEFLw (ORCPT
+        id S229616AbhCEFL6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Mar 2021 00:11:58 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58881 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229512AbhCEFLw (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Mar 2021 00:11:52 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id DA277ECB1DE
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Mar 2021 16:11:50 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 2027B1041377
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Mar 2021 16:11:51 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lI2kg-00Fbo3-8C
+        id 1lI2kg-00FboU-Kx
         for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:50 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lI2kf-000lZ4-WA
+        id 1lI2kg-000lZW-Cr
         for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:50 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 07/45] xfs: remove need_start_rec parameter from xlog_write()
-Date:   Fri,  5 Mar 2021 16:11:05 +1100
-Message-Id: <20210305051143.182133-8-david@fromorbit.com>
+Subject: [PATCH 16/45] xfs: type verification is expensive
+Date:   Fri,  5 Mar 2021 16:11:14 +1100
+Message-Id: <20210305051143.182133-17-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20210305051143.182133-1-david@fromorbit.com>
 References: <20210305051143.182133-1-david@fromorbit.com>
@@ -44,217 +44,154 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=pGLkceISAAAA:8 a=VwQbUJbxAAAA:8
-        a=U2sKdf1BhhSb6LhUA4oA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+        a=NuCpFDova00jneZWLDgA:9 a=1u2EsRlddwQMu84T:21 a=xfdbkvumHq1WlvTV:21
+        a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The CIL push is the only call to xlog_write that sets this variable
-to true. The other callers don't need a start rec, and they tell
-xlog_write what to do by passing the type of ophdr they need written
-in the flags field. The need_start_rec parameter essentially tells
-xlog_write to to write an extra ophdr with a XLOG_START_TRANS type,
-so get rid of the variable to do this and pass XLOG_START_TRANS as
-the flag value into xlog_write() from the CIL push.
+From a concurrent rm -rf workload:
 
-$ size fs/xfs/xfs_log.o*
-  text	   data	    bss	    dec	    hex	filename
- 27595	    560	      8	  28163	   6e03	fs/xfs/xfs_log.o.orig
- 27454	    560	      8	  28022	   6d76	fs/xfs/xfs_log.o.patched
+  41.04%  [kernel]  [k] xfs_dir3_leaf_check_int
+   9.85%  [kernel]  [k] __xfs_dir3_data_check
+   5.60%  [kernel]  [k] xfs_verify_ino
+   5.32%  [kernel]  [k] xfs_agino_range
+   4.21%  [kernel]  [k] memcpy
+   3.06%  [kernel]  [k] xfs_errortag_test
+   2.57%  [kernel]  [k] xfs_dir_ino_validate
+   1.66%  [kernel]  [k] xfs_dir2_data_get_ftype
+   1.17%  [kernel]  [k] do_raw_spin_lock
+   1.11%  [kernel]  [k] xfs_verify_dir_ino
+   0.84%  [kernel]  [k] __raw_callee_save___pv_queued_spin_unlock
+   0.83%  [kernel]  [k] xfs_buf_find
+   0.64%  [kernel]  [k] xfs_log_commit_cil
+
+THere's an awful lot of overhead in just range checking inode
+numbers in that, but each inode number check is not a lot of code.
+The total is a bit over 14.5% of the CPU time is spent validating
+inode numbers.
+
+The problem is that they deeply nested global scope functions so the
+overhead here is all in function call marshalling.
+
+   text	   data	    bss	    dec	    hex	filename
+   2077	      0	      0	   2077	    81d fs/xfs/libxfs/xfs_types.o.orig
+   2197	      0	      0	   2197	    895	fs/xfs/libxfs/xfs_types.o
+
+There's a small increase in binary size by inlining all the local
+nested calls in the verifier functions, but the same workload now
+profiles as:
+
+  40.69%  [kernel]  [k] xfs_dir3_leaf_check_int
+  10.52%  [kernel]  [k] __xfs_dir3_data_check
+   6.68%  [kernel]  [k] xfs_verify_dir_ino
+   4.22%  [kernel]  [k] xfs_errortag_test
+   4.15%  [kernel]  [k] memcpy
+   3.53%  [kernel]  [k] xfs_dir_ino_validate
+   1.87%  [kernel]  [k] xfs_dir2_data_get_ftype
+   1.37%  [kernel]  [k] do_raw_spin_lock
+   0.98%  [kernel]  [k] xfs_buf_find
+   0.94%  [kernel]  [k] __raw_callee_save___pv_queued_spin_unlock
+   0.73%  [kernel]  [k] xfs_log_commit_cil
+
+Now we only spend just over 10% of the time validing inode numbers
+for the same workload. Hence a few "inline" keyworks is good enough
+to reduce the validation overhead by 30%...
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log.c      | 44 +++++++++++++++++++++----------------------
- fs/xfs/xfs_log_cil.c  |  3 ++-
- fs/xfs/xfs_log_priv.h |  3 +--
- 3 files changed, 25 insertions(+), 25 deletions(-)
+ fs/xfs/libxfs/xfs_types.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index fee76c485727..364694a83de6 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -818,9 +818,7 @@ xlog_wait_on_iclog(
- static int
- xlog_write_unmount_record(
- 	struct xlog		*log,
--	struct xlog_ticket	*ticket,
--	xfs_lsn_t		*lsn,
--	uint			flags)
-+	struct xlog_ticket	*ticket)
- {
- 	struct xfs_unmount_log_format ulf = {
- 		.magic = XLOG_UNMOUNT_TYPE,
-@@ -837,7 +835,7 @@ xlog_write_unmount_record(
+diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+index b254fbeaaa50..04801362e1a7 100644
+--- a/fs/xfs/libxfs/xfs_types.c
++++ b/fs/xfs/libxfs/xfs_types.c
+@@ -13,7 +13,7 @@
+ #include "xfs_mount.h"
  
- 	/* account for space used by record data */
- 	ticket->t_curr_res -= sizeof(ulf);
--	return xlog_write(log, &vec, ticket, lsn, NULL, flags, false);
-+	return xlog_write(log, &vec, ticket, NULL, NULL, XLOG_UNMOUNT_TRANS);
+ /* Find the size of the AG, in blocks. */
+-xfs_agblock_t
++inline xfs_agblock_t
+ xfs_ag_block_count(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno)
+@@ -29,7 +29,7 @@ xfs_ag_block_count(
+  * Verify that an AG block number pointer neither points outside the AG
+  * nor points at static metadata.
+  */
+-bool
++inline bool
+ xfs_verify_agbno(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+@@ -49,7 +49,7 @@ xfs_verify_agbno(
+  * Verify that an FS block number pointer neither points outside the
+  * filesystem nor points at static AG metadata.
+  */
+-bool
++inline bool
+ xfs_verify_fsbno(
+ 	struct xfs_mount	*mp,
+ 	xfs_fsblock_t		fsbno)
+@@ -85,7 +85,7 @@ xfs_verify_fsbext(
  }
  
- /*
-@@ -851,15 +849,13 @@ xlog_unmount_write(
- 	struct xfs_mount	*mp = log->l_mp;
- 	struct xlog_in_core	*iclog;
- 	struct xlog_ticket	*tic = NULL;
--	xfs_lsn_t		lsn;
--	uint			flags = XLOG_UNMOUNT_TRANS;
- 	int			error;
+ /* Calculate the first and last possible inode number in an AG. */
+-void
++inline void
+ xfs_agino_range(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+@@ -116,7 +116,7 @@ xfs_agino_range(
+  * Verify that an AG inode number pointer neither points outside the AG
+  * nor points at static metadata.
+  */
+-bool
++inline bool
+ xfs_verify_agino(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+@@ -146,7 +146,7 @@ xfs_verify_agino_or_null(
+  * Verify that an FS inode number pointer neither points outside the
+  * filesystem nor points at static AG metadata.
+  */
+-bool
++inline bool
+ xfs_verify_ino(
+ 	struct xfs_mount	*mp,
+ 	xfs_ino_t		ino)
+@@ -162,7 +162,7 @@ xfs_verify_ino(
+ }
  
- 	error = xfs_log_reserve(mp, 600, 1, &tic, XFS_LOG, 0);
- 	if (error)
- 		goto out_err;
+ /* Is this an internal inode number? */
+-bool
++inline bool
+ xfs_internal_inum(
+ 	struct xfs_mount	*mp,
+ 	xfs_ino_t		ino)
+@@ -190,7 +190,7 @@ xfs_verify_dir_ino(
+  * Verify that an realtime block number pointer doesn't point off the
+  * end of the realtime device.
+  */
+-bool
++inline bool
+ xfs_verify_rtbno(
+ 	struct xfs_mount	*mp,
+ 	xfs_rtblock_t		rtbno)
+@@ -215,7 +215,7 @@ xfs_verify_rtext(
+ }
  
--	error = xlog_write_unmount_record(log, tic, &lsn, flags);
-+	error = xlog_write_unmount_record(log, tic);
- 	/*
- 	 * At this point, we're umounting anyway, so there's no point in
- 	 * transitioning log state to IOERROR. Just continue...
-@@ -1551,8 +1547,7 @@ xlog_commit_record(
- 	if (XLOG_FORCED_SHUTDOWN(log))
- 		return -EIO;
- 
--	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS,
--			   false);
-+	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS);
- 	if (error)
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
- 	return error;
-@@ -2149,13 +2144,16 @@ static int
- xlog_write_calc_vec_length(
- 	struct xlog_ticket	*ticket,
- 	struct xfs_log_vec	*log_vector,
--	bool			need_start_rec)
-+	uint			optype)
- {
- 	struct xfs_log_vec	*lv;
--	int			headers = need_start_rec ? 1 : 0;
-+	int			headers = 0;
- 	int			len = 0;
- 	int			i;
- 
-+	if (optype & XLOG_START_TRANS)
-+		headers++;
-+
- 	for (lv = log_vector; lv; lv = lv->lv_next) {
- 		/* we don't write ordered log vectors */
- 		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
-@@ -2375,8 +2373,7 @@ xlog_write(
- 	struct xlog_ticket	*ticket,
- 	xfs_lsn_t		*start_lsn,
- 	struct xlog_in_core	**commit_iclog,
--	uint			flags,
--	bool			need_start_rec)
-+	uint			optype)
- {
- 	struct xlog_in_core	*iclog = NULL;
- 	struct xfs_log_vec	*lv = log_vector;
-@@ -2404,8 +2401,9 @@ xlog_write(
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
- 	}
- 
--	len = xlog_write_calc_vec_length(ticket, log_vector, need_start_rec);
--	*start_lsn = 0;
-+	len = xlog_write_calc_vec_length(ticket, log_vector, optype);
-+	if (start_lsn)
-+		*start_lsn = 0;
- 	while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
- 		void		*ptr;
- 		int		log_offset;
-@@ -2419,7 +2417,7 @@ xlog_write(
- 		ptr = iclog->ic_datap + log_offset;
- 
- 		/* start_lsn is the first lsn written to. That's all we need. */
--		if (!*start_lsn)
-+		if (start_lsn && !*start_lsn)
- 			*start_lsn = be64_to_cpu(iclog->ic_header.h_lsn);
- 
- 		/*
-@@ -2432,6 +2430,7 @@ xlog_write(
- 			int			copy_len;
- 			int			copy_off;
- 			bool			ordered = false;
-+			bool			wrote_start_rec = false;
- 
- 			/* ordered log vectors have no regions to write */
- 			if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
-@@ -2449,13 +2448,15 @@ xlog_write(
- 			 * write a start record. Only do this for the first
- 			 * iclog we write to.
- 			 */
--			if (need_start_rec) {
-+			if (optype & XLOG_START_TRANS) {
- 				xlog_write_start_rec(ptr, ticket);
- 				xlog_write_adv_cnt(&ptr, &len, &log_offset,
- 						sizeof(struct xlog_op_header));
-+				optype &= ~XLOG_START_TRANS;
-+				wrote_start_rec = true;
- 			}
- 
--			ophdr = xlog_write_setup_ophdr(log, ptr, ticket, flags);
-+			ophdr = xlog_write_setup_ophdr(log, ptr, ticket, optype);
- 			if (!ophdr)
- 				return -EIO;
- 
-@@ -2486,14 +2487,13 @@ xlog_write(
- 			}
- 			copy_len += sizeof(struct xlog_op_header);
- 			record_cnt++;
--			if (need_start_rec) {
-+			if (wrote_start_rec) {
- 				copy_len += sizeof(struct xlog_op_header);
- 				record_cnt++;
--				need_start_rec = false;
- 			}
- 			data_cnt += contwr ? copy_len : 0;
- 
--			error = xlog_write_copy_finish(log, iclog, flags,
-+			error = xlog_write_copy_finish(log, iclog, optype,
- 						       &record_cnt, &data_cnt,
- 						       &partial_copy,
- 						       &partial_copy_len,
-@@ -2537,7 +2537,7 @@ xlog_write(
- 	spin_lock(&log->l_icloglock);
- 	xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
- 	if (commit_iclog) {
--		ASSERT(flags & XLOG_COMMIT_TRANS);
-+		ASSERT(optype & XLOG_COMMIT_TRANS);
- 		*commit_iclog = iclog;
- 	} else {
- 		error = xlog_state_release_iclog(log, iclog);
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b4cdb8b6c4c3..c04d5d37a3a2 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -829,7 +829,8 @@ xlog_cil_push_work(
- 	 */
- 	wait_for_completion(&bdev_flush);
- 
--	error = xlog_write(log, &lvhdr, tic, &ctx->start_lsn, NULL, 0, true);
-+	error = xlog_write(log, &lvhdr, tic, &ctx->start_lsn, NULL,
-+				XLOG_START_TRANS);
- 	if (error)
- 		goto out_abort_free_ticket;
- 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index ee7786b33da9..56e1942c47df 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -480,8 +480,7 @@ void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
- void	xlog_print_trans(struct xfs_trans *);
- int	xlog_write(struct xlog *log, struct xfs_log_vec *log_vector,
- 		struct xlog_ticket *tic, xfs_lsn_t *start_lsn,
--		struct xlog_in_core **commit_iclog, uint flags,
--		bool need_start_rec);
-+		struct xlog_in_core **commit_iclog, uint optype);
- int	xlog_commit_record(struct xlog *log, struct xlog_ticket *ticket,
- 		struct xlog_in_core **iclog, xfs_lsn_t *lsn);
- void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
+ /* Calculate the range of valid icount values. */
+-void
++inline void
+ xfs_icount_range(
+ 	struct xfs_mount	*mp,
+ 	unsigned long long	*min,
 -- 
 2.28.0
 
