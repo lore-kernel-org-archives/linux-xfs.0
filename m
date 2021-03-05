@@ -4,159 +4,257 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4799AC433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF378C433E6
 	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:11:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 145B065017
+	by mail.kernel.org (Postfix) with ESMTP id 942E665013
 	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:11:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229446AbhCEFLz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Mar 2021 00:11:55 -0500
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:40392 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229497AbhCEFLw (ORCPT
+        id S229497AbhCEFL5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Mar 2021 00:11:57 -0500
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:36732 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229500AbhCEFLw (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Mar 2021 00:11:52 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id DA4AF78AFD1
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id DA277ECB1DE
         for <linux-xfs@vger.kernel.org>; Fri,  5 Mar 2021 16:11:50 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lI2kg-00FboC-CB
+        id 1lI2kg-00Fbo3-8C
         for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:50 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lI2kg-000lZE-3y
+        id 1lI2kf-000lZ4-WA
         for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:50 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 10/45] xfs: reduce buffer log item shadow allocations
-Date:   Fri,  5 Mar 2021 16:11:08 +1100
-Message-Id: <20210305051143.182133-11-david@fromorbit.com>
+Subject: [PATCH 07/45] xfs: remove need_start_rec parameter from xlog_write()
+Date:   Fri,  5 Mar 2021 16:11:05 +1100
+Message-Id: <20210305051143.182133-8-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20210305051143.182133-1-david@fromorbit.com>
 References: <20210305051143.182133-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
         a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=pGLkceISAAAA:8 a=VwQbUJbxAAAA:8
-        a=FNdSPaME_fANvIEDIncA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=U2sKdf1BhhSb6LhUA4oA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we modify btrees repeatedly, we regularly increase the size of
-the logged region by a single chunk at a time (per transaction
-commit). This results in the CIL formatting code having to
-reallocate the log vector buffer every time the buffer dirty region
-grows. Hence over a typical 4kB btree buffer, we might grow the log
-vector 4096/128 = 32x over a short period where we repeatedly add
-or remove records to/from the buffer over a series of running
-transaction. This means we are doing 32 memory allocations and frees
-over this time during a performance critical path in the journal.
+The CIL push is the only call to xlog_write that sets this variable
+to true. The other callers don't need a start rec, and they tell
+xlog_write what to do by passing the type of ophdr they need written
+in the flags field. The need_start_rec parameter essentially tells
+xlog_write to to write an extra ophdr with a XLOG_START_TRANS type,
+so get rid of the variable to do this and pass XLOG_START_TRANS as
+the flag value into xlog_write() from the CIL push.
 
-The amount of space tracked in the CIL for the object is calculated
-during the ->iop_format() call for the buffer log item, but the
-buffer memory allocated for it is calculated by the ->iop_size()
-call. The size callout determines the size of the buffer, the format
-call determines the space used in the buffer.
-
-Hence we can oversize the buffer space required in the size
-calculation without impacting the amount of space used and accounted
-to the CIL for the changes being logged. This allows us to reduce
-the number of allocations by rounding up the buffer size to allow
-for future growth. This can safe a substantial amount of CPU time in
-this path:
-
--   46.52%     2.02%  [kernel]                  [k] xfs_log_commit_cil
-   - 44.49% xfs_log_commit_cil
-      - 30.78% _raw_spin_lock
-         - 30.75% do_raw_spin_lock
-              30.27% __pv_queued_spin_lock_slowpath
-
-(oh, ouch!)
-....
-      - 1.05% kmem_alloc_large
-         - 1.02% kmem_alloc
-              0.94% __kmalloc
-
-This overhead here us what this patch is aimed at. After:
-
-      - 0.76% kmem_alloc_large
-         - 0.75% kmem_alloc
-              0.70% __kmalloc
-
-The size of 512 bytes is based on the bitmap chunk size being 128
-bytes and that random directory entry updates almost never require
-more than 3-4 128 byte regions to be logged in the directory block.
-
-The other observation is for per-ag btrees. When we are inserting
-into a new btree block, we'll pack it from the front. Hence the
-first few records land in the first 128 bytes so we log only 128
-bytes, the next 8-16 records land in the second region so now we log
-256 bytes. And so on.  If we are doing random updates, it will only
-allocate every 4 random 128 byte regions that are dirtied instead of
-every single one.
-
-Any larger than 512 bytes and I noticed an increase in memory
-footprint in my scalability workloads. Any less than this and I
-didn't really see any significant benefit to CPU usage.
+$ size fs/xfs/xfs_log.o*
+  text	   data	    bss	    dec	    hex	filename
+ 27595	    560	      8	  28163	   6e03	fs/xfs/xfs_log.o.orig
+ 27454	    560	      8	  28022	   6d76	fs/xfs/xfs_log.o.patched
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_buf_item.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_log.c      | 44 +++++++++++++++++++++----------------------
+ fs/xfs/xfs_log_cil.c  |  3 ++-
+ fs/xfs/xfs_log_priv.h |  3 +--
+ 3 files changed, 25 insertions(+), 25 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 17960b1ce5ef..0628a65d9c55 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -142,6 +142,7 @@ xfs_buf_item_size(
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index fee76c485727..364694a83de6 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -818,9 +818,7 @@ xlog_wait_on_iclog(
+ static int
+ xlog_write_unmount_record(
+ 	struct xlog		*log,
+-	struct xlog_ticket	*ticket,
+-	xfs_lsn_t		*lsn,
+-	uint			flags)
++	struct xlog_ticket	*ticket)
  {
- 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
- 	int			i;
-+	int			bytes;
+ 	struct xfs_unmount_log_format ulf = {
+ 		.magic = XLOG_UNMOUNT_TYPE,
+@@ -837,7 +835,7 @@ xlog_write_unmount_record(
  
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 	if (bip->bli_flags & XFS_BLI_STALE) {
-@@ -173,7 +174,7 @@ xfs_buf_item_size(
- 	}
- 
- 	/*
--	 * the vector count is based on the number of buffer vectors we have
-+	 * The vector count is based on the number of buffer vectors we have
- 	 * dirty bits in. This will only be greater than one when we have a
- 	 * compound buffer with more than one segment dirty. Hence for compound
- 	 * buffers we need to track which segment the dirty bits correspond to,
-@@ -181,10 +182,18 @@ xfs_buf_item_size(
- 	 * count for the extra buf log format structure that will need to be
- 	 * written.
- 	 */
-+	bytes = 0;
- 	for (i = 0; i < bip->bli_format_count; i++) {
- 		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
--					  nvecs, nbytes);
-+					  nvecs, &bytes);
- 	}
-+
-+	/*
-+	 * Round up the buffer size required to minimise the number of memory
-+	 * allocations that need to be done as this item grows when relogged by
-+	 * repeated modifications.
-+	 */
-+	*nbytes = round_up(bytes, 512);
- 	trace_xfs_buf_item_size(bip);
+ 	/* account for space used by record data */
+ 	ticket->t_curr_res -= sizeof(ulf);
+-	return xlog_write(log, &vec, ticket, lsn, NULL, flags, false);
++	return xlog_write(log, &vec, ticket, NULL, NULL, XLOG_UNMOUNT_TRANS);
  }
  
+ /*
+@@ -851,15 +849,13 @@ xlog_unmount_write(
+ 	struct xfs_mount	*mp = log->l_mp;
+ 	struct xlog_in_core	*iclog;
+ 	struct xlog_ticket	*tic = NULL;
+-	xfs_lsn_t		lsn;
+-	uint			flags = XLOG_UNMOUNT_TRANS;
+ 	int			error;
+ 
+ 	error = xfs_log_reserve(mp, 600, 1, &tic, XFS_LOG, 0);
+ 	if (error)
+ 		goto out_err;
+ 
+-	error = xlog_write_unmount_record(log, tic, &lsn, flags);
++	error = xlog_write_unmount_record(log, tic);
+ 	/*
+ 	 * At this point, we're umounting anyway, so there's no point in
+ 	 * transitioning log state to IOERROR. Just continue...
+@@ -1551,8 +1547,7 @@ xlog_commit_record(
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		return -EIO;
+ 
+-	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS,
+-			   false);
++	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS);
+ 	if (error)
+ 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+ 	return error;
+@@ -2149,13 +2144,16 @@ static int
+ xlog_write_calc_vec_length(
+ 	struct xlog_ticket	*ticket,
+ 	struct xfs_log_vec	*log_vector,
+-	bool			need_start_rec)
++	uint			optype)
+ {
+ 	struct xfs_log_vec	*lv;
+-	int			headers = need_start_rec ? 1 : 0;
++	int			headers = 0;
+ 	int			len = 0;
+ 	int			i;
+ 
++	if (optype & XLOG_START_TRANS)
++		headers++;
++
+ 	for (lv = log_vector; lv; lv = lv->lv_next) {
+ 		/* we don't write ordered log vectors */
+ 		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
+@@ -2375,8 +2373,7 @@ xlog_write(
+ 	struct xlog_ticket	*ticket,
+ 	xfs_lsn_t		*start_lsn,
+ 	struct xlog_in_core	**commit_iclog,
+-	uint			flags,
+-	bool			need_start_rec)
++	uint			optype)
+ {
+ 	struct xlog_in_core	*iclog = NULL;
+ 	struct xfs_log_vec	*lv = log_vector;
+@@ -2404,8 +2401,9 @@ xlog_write(
+ 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+ 	}
+ 
+-	len = xlog_write_calc_vec_length(ticket, log_vector, need_start_rec);
+-	*start_lsn = 0;
++	len = xlog_write_calc_vec_length(ticket, log_vector, optype);
++	if (start_lsn)
++		*start_lsn = 0;
+ 	while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
+ 		void		*ptr;
+ 		int		log_offset;
+@@ -2419,7 +2417,7 @@ xlog_write(
+ 		ptr = iclog->ic_datap + log_offset;
+ 
+ 		/* start_lsn is the first lsn written to. That's all we need. */
+-		if (!*start_lsn)
++		if (start_lsn && !*start_lsn)
+ 			*start_lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+ 
+ 		/*
+@@ -2432,6 +2430,7 @@ xlog_write(
+ 			int			copy_len;
+ 			int			copy_off;
+ 			bool			ordered = false;
++			bool			wrote_start_rec = false;
+ 
+ 			/* ordered log vectors have no regions to write */
+ 			if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
+@@ -2449,13 +2448,15 @@ xlog_write(
+ 			 * write a start record. Only do this for the first
+ 			 * iclog we write to.
+ 			 */
+-			if (need_start_rec) {
++			if (optype & XLOG_START_TRANS) {
+ 				xlog_write_start_rec(ptr, ticket);
+ 				xlog_write_adv_cnt(&ptr, &len, &log_offset,
+ 						sizeof(struct xlog_op_header));
++				optype &= ~XLOG_START_TRANS;
++				wrote_start_rec = true;
+ 			}
+ 
+-			ophdr = xlog_write_setup_ophdr(log, ptr, ticket, flags);
++			ophdr = xlog_write_setup_ophdr(log, ptr, ticket, optype);
+ 			if (!ophdr)
+ 				return -EIO;
+ 
+@@ -2486,14 +2487,13 @@ xlog_write(
+ 			}
+ 			copy_len += sizeof(struct xlog_op_header);
+ 			record_cnt++;
+-			if (need_start_rec) {
++			if (wrote_start_rec) {
+ 				copy_len += sizeof(struct xlog_op_header);
+ 				record_cnt++;
+-				need_start_rec = false;
+ 			}
+ 			data_cnt += contwr ? copy_len : 0;
+ 
+-			error = xlog_write_copy_finish(log, iclog, flags,
++			error = xlog_write_copy_finish(log, iclog, optype,
+ 						       &record_cnt, &data_cnt,
+ 						       &partial_copy,
+ 						       &partial_copy_len,
+@@ -2537,7 +2537,7 @@ xlog_write(
+ 	spin_lock(&log->l_icloglock);
+ 	xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
+ 	if (commit_iclog) {
+-		ASSERT(flags & XLOG_COMMIT_TRANS);
++		ASSERT(optype & XLOG_COMMIT_TRANS);
+ 		*commit_iclog = iclog;
+ 	} else {
+ 		error = xlog_state_release_iclog(log, iclog);
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index b4cdb8b6c4c3..c04d5d37a3a2 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -829,7 +829,8 @@ xlog_cil_push_work(
+ 	 */
+ 	wait_for_completion(&bdev_flush);
+ 
+-	error = xlog_write(log, &lvhdr, tic, &ctx->start_lsn, NULL, 0, true);
++	error = xlog_write(log, &lvhdr, tic, &ctx->start_lsn, NULL,
++				XLOG_START_TRANS);
+ 	if (error)
+ 		goto out_abort_free_ticket;
+ 
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index ee7786b33da9..56e1942c47df 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -480,8 +480,7 @@ void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
+ void	xlog_print_trans(struct xfs_trans *);
+ int	xlog_write(struct xlog *log, struct xfs_log_vec *log_vector,
+ 		struct xlog_ticket *tic, xfs_lsn_t *start_lsn,
+-		struct xlog_in_core **commit_iclog, uint flags,
+-		bool need_start_rec);
++		struct xlog_in_core **commit_iclog, uint optype);
+ int	xlog_commit_record(struct xlog *log, struct xlog_ticket *ticket,
+ 		struct xlog_in_core **iclog, xfs_lsn_t *lsn);
+ void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
 -- 
 2.28.0
 
