@@ -7,130 +7,156 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03EEEC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4799AC433DB
 	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:11:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CFDA165013
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:11:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 145B065017
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:11:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229523AbhCEFLw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Mar 2021 00:11:52 -0500
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:36722 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229446AbhCEFLw (ORCPT
+        id S229446AbhCEFLz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Mar 2021 00:11:55 -0500
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:40392 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229497AbhCEFLw (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Mar 2021 00:11:52 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 18D97ECB205
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Mar 2021 16:11:51 +1100 (AEDT)
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id DA4AF78AFD1
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Mar 2021 16:11:50 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lI2kg-00Fbns-5T
+        id 1lI2kg-00FboC-CB
         for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:50 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lI2kf-000lYy-UD
-        for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:49 +1100
+        id 1lI2kg-000lZE-3y
+        for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:50 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 05/45] xfs: async blkdev cache flush
-Date:   Fri,  5 Mar 2021 16:11:03 +1100
-Message-Id: <20210305051143.182133-6-david@fromorbit.com>
+Subject: [PATCH 10/45] xfs: reduce buffer log item shadow allocations
+Date:   Fri,  5 Mar 2021 16:11:08 +1100
+Message-Id: <20210305051143.182133-11-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20210305051143.182133-1-david@fromorbit.com>
 References: <20210305051143.182133-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=SfSGQrjV1alRuBDLQEQA:9
+        a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=pGLkceISAAAA:8 a=VwQbUJbxAAAA:8
+        a=FNdSPaME_fANvIEDIncA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The new checkpoint caceh flush mechanism requires us to issue an
-unconditional cache flush before we start a new checkpoint. We don't
-want to block for this if we can help it, and we have a fair chunk
-of CPU work to do between starting the checkpoint and issuing the
-first journal IO.
+When we modify btrees repeatedly, we regularly increase the size of
+the logged region by a single chunk at a time (per transaction
+commit). This results in the CIL formatting code having to
+reallocate the log vector buffer every time the buffer dirty region
+grows. Hence over a typical 4kB btree buffer, we might grow the log
+vector 4096/128 = 32x over a short period where we repeatedly add
+or remove records to/from the buffer over a series of running
+transaction. This means we are doing 32 memory allocations and frees
+over this time during a performance critical path in the journal.
 
-Hence it makes sense to amortise the latency cost of the cache flush
-by issuing it asynchronously and then waiting for it only when we
-need to issue the first IO in the transaction.
+The amount of space tracked in the CIL for the object is calculated
+during the ->iop_format() call for the buffer log item, but the
+buffer memory allocated for it is calculated by the ->iop_size()
+call. The size callout determines the size of the buffer, the format
+call determines the space used in the buffer.
 
-TO do this, we need async cache flush primitives to submit the cache
-flush bio and to wait on it. THe block layer has no such primitives
-for filesystems, so roll our own for the moment.
+Hence we can oversize the buffer space required in the size
+calculation without impacting the amount of space used and accounted
+to the CIL for the changes being logged. This allows us to reduce
+the number of allocations by rounding up the buffer size to allow
+for future growth. This can safe a substantial amount of CPU time in
+this path:
+
+-   46.52%     2.02%  [kernel]                  [k] xfs_log_commit_cil
+   - 44.49% xfs_log_commit_cil
+      - 30.78% _raw_spin_lock
+         - 30.75% do_raw_spin_lock
+              30.27% __pv_queued_spin_lock_slowpath
+
+(oh, ouch!)
+....
+      - 1.05% kmem_alloc_large
+         - 1.02% kmem_alloc
+              0.94% __kmalloc
+
+This overhead here us what this patch is aimed at. After:
+
+      - 0.76% kmem_alloc_large
+         - 0.75% kmem_alloc
+              0.70% __kmalloc
+
+The size of 512 bytes is based on the bitmap chunk size being 128
+bytes and that random directory entry updates almost never require
+more than 3-4 128 byte regions to be logged in the directory block.
+
+The other observation is for per-ag btrees. When we are inserting
+into a new btree block, we'll pack it from the front. Hence the
+first few records land in the first 128 bytes so we log only 128
+bytes, the next 8-16 records land in the second region so now we log
+256 bytes. And so on.  If we are doing random updates, it will only
+allocate every 4 random 128 byte regions that are dirtied instead of
+every single one.
+
+Any larger than 512 bytes and I noticed an increase in memory
+footprint in my scalability workloads. Any less than this and I
+didn't really see any significant benefit to CPU usage.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bio_io.c | 36 ++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_linux.h  |  2 ++
- 2 files changed, 38 insertions(+)
+ fs/xfs/xfs_buf_item.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
-index 17f36db2f792..668f8bd27b4a 100644
---- a/fs/xfs/xfs_bio_io.c
-+++ b/fs/xfs/xfs_bio_io.c
-@@ -9,6 +9,42 @@ static inline unsigned int bio_max_vecs(unsigned int count)
- 	return bio_max_segs(howmany(count, PAGE_SIZE));
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 17960b1ce5ef..0628a65d9c55 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -142,6 +142,7 @@ xfs_buf_item_size(
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	int			i;
++	int			bytes;
+ 
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 	if (bip->bli_flags & XFS_BLI_STALE) {
+@@ -173,7 +174,7 @@ xfs_buf_item_size(
+ 	}
+ 
+ 	/*
+-	 * the vector count is based on the number of buffer vectors we have
++	 * The vector count is based on the number of buffer vectors we have
+ 	 * dirty bits in. This will only be greater than one when we have a
+ 	 * compound buffer with more than one segment dirty. Hence for compound
+ 	 * buffers we need to track which segment the dirty bits correspond to,
+@@ -181,10 +182,18 @@ xfs_buf_item_size(
+ 	 * count for the extra buf log format structure that will need to be
+ 	 * written.
+ 	 */
++	bytes = 0;
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+ 		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
+-					  nvecs, nbytes);
++					  nvecs, &bytes);
+ 	}
++
++	/*
++	 * Round up the buffer size required to minimise the number of memory
++	 * allocations that need to be done as this item grows when relogged by
++	 * repeated modifications.
++	 */
++	*nbytes = round_up(bytes, 512);
+ 	trace_xfs_buf_item_size(bip);
  }
  
-+void
-+xfs_flush_bdev_async_endio(
-+	struct bio	*bio)
-+{
-+	if (bio->bi_private)
-+		complete(bio->bi_private);
-+}
-+
-+/*
-+ * Submit a request for an async cache flush to run. If the request queue does
-+ * not require flush operations, just skip it altogether. If the caller needsi
-+ * to wait for the flush completion at a later point in time, they must supply a
-+ * valid completion. This will be signalled when the flush completes.  The
-+ * caller never sees the bio that is issued here.
-+ */
-+void
-+xfs_flush_bdev_async(
-+	struct bio		*bio,
-+	struct block_device	*bdev,
-+	struct completion	*done)
-+{
-+	struct request_queue	*q = bdev->bd_disk->queue;
-+
-+	if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
-+		complete(done);
-+		return;
-+	}
-+
-+	bio_init(bio, NULL, 0);
-+	bio_set_dev(bio, bdev);
-+	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
-+	bio->bi_private = done;
-+	bio->bi_end_io = xfs_flush_bdev_async_endio;
-+
-+	submit_bio(bio);
-+}
- int
- xfs_rw_bdev(
- 	struct block_device	*bdev,
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index af6be9b9ccdf..953d98bc4832 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -196,6 +196,8 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
- 
- int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
- 		char *data, unsigned int op);
-+void xfs_flush_bdev_async(struct bio *bio, struct block_device *bdev,
-+		struct completion *done);
- 
- #define ASSERT_ALWAYS(expr)	\
- 	(likely(expr) ? (void)0 : assfail(NULL, #expr, __FILE__, __LINE__))
 -- 
 2.28.0
 
