@@ -2,160 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AAF4C433DB
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 02:58:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03EEEC433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:11:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2AAA64FDB
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 02:58:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFDA165013
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:11:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230058AbhCEC6F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Mar 2021 21:58:05 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:21165 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229528AbhCEC6F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Mar 2021 21:58:05 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1614913084;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=RDCUbE9ayuguhvHZLdqXgCCucvyzxuogayKdE4uOcvU=;
-        b=iBhRLLMdvu1HSZMDSsEPAkqjPRtxXkjCEOsIFGoCMR1QGMBpPgRbt3o4j6WWnG/mAirprS
-        +u2ouhRE2Q8I6XdPshn+B0V8+C/LIV56puVwNw1+mCe2MV6JHEDXgoVxCbLux2YmoAYSq2
-        MxbFMHthe7zXOAV524gAFDuk6dMwK5s=
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
- [209.85.215.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-414-Fssbe66gOAawIdsgpMLr6w-1; Thu, 04 Mar 2021 21:58:03 -0500
-X-MC-Unique: Fssbe66gOAawIdsgpMLr6w-1
-Received: by mail-pg1-f199.google.com with SMTP id x36so312485pgl.8
-        for <linux-xfs@vger.kernel.org>; Thu, 04 Mar 2021 18:58:03 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=RDCUbE9ayuguhvHZLdqXgCCucvyzxuogayKdE4uOcvU=;
-        b=B5VrbES4hqLmjAAy0l/WkjR6zQPVQOcn8KXqqstIHYOjobvgNQqNaZzelU4dYEBJjH
-         KP6ZeHPLsqgvC7fSDHuzoH314LoYrqn4hFAHHh1ZP0nhJzLTZoL5e8+RgTrJYyWfCs1b
-         ykD2kka9pQG1k5bE3Q+ChZ36uQRZi6k4MTCeY4nccXHEJEIFdCVUV6M6XBfLccDBORnT
-         Ey5be1owDgi0/fIQKyNHng1sznO0p/i+lR4fnMh/Jbo5yOjHujhbFwhKsi3oM1LTi4TQ
-         Ly7AyxcuO9CKoSm2ntD3c6AJor8sY3Z5PeyyuyPtfydHOPUkRReB93pdFPaKmcfrW4l9
-         kySg==
-X-Gm-Message-State: AOAM530n4uteXBDuak9H1uNx2bx5bHyaY8cpfT+JXlrMMBFNmDgq/TZC
-        xKbvjx5fUJdRVfFv8Zwz3nFNZdgAhYt/qjJKbSnKwKJCM2sykgNy1czInopUq/u5AywKqfobAZa
-        lTJtqnlRuXlyBrrrfkAcLCebBlkLXhX2NJ8x7RRAK9TtmgFc/VTkMO+fsMYA5ZDGt+EqaTKIDnQ
-        ==
-X-Received: by 2002:a17:90a:4586:: with SMTP id v6mr6480714pjg.129.1614913082368;
-        Thu, 04 Mar 2021 18:58:02 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJwczvjOaRpMGMoasA1x7+UJ9mMCUyMQs5t3UCWwipz6s/fD9hB0BFXDDW5NTJVfXC1TXdwFgQ==
-X-Received: by 2002:a17:90a:4586:: with SMTP id v6mr6480678pjg.129.1614913081967;
-        Thu, 04 Mar 2021 18:58:01 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id m19sm533414pjn.21.2021.03.04.18.57.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Mar 2021 18:58:01 -0800 (PST)
-From:   Gao Xiang <hsiangkao@redhat.com>
+        id S229523AbhCEFLw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Mar 2021 00:11:52 -0500
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:36722 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229446AbhCEFLw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Mar 2021 00:11:52 -0500
+Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 18D97ECB205
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Mar 2021 16:11:51 +1100 (AEDT)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lI2kg-00Fbns-5T
+        for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:50 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.94)
+        (envelope-from <david@fromorbit.com>)
+        id 1lI2kf-000lYy-UD
+        for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:49 +1100
+From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH v8 5/5] xfs: add error injection for per-AG resv failure
-Date:   Fri,  5 Mar 2021 10:57:03 +0800
-Message-Id: <20210305025703.3069469-6-hsiangkao@redhat.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210305025703.3069469-1-hsiangkao@redhat.com>
-References: <20210305025703.3069469-1-hsiangkao@redhat.com>
+Subject: [PATCH 05/45] xfs: async blkdev cache flush
+Date:   Fri,  5 Mar 2021 16:11:03 +1100
+Message-Id: <20210305051143.182133-6-david@fromorbit.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20210305051143.182133-1-david@fromorbit.com>
+References: <20210305051143.182133-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+        a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
+        a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=SfSGQrjV1alRuBDLQEQA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-per-AG resv failure after fixing up freespace is hard to test in an
-effective way, so directly add an error injection path to observe
-such error handling path works as expected.
+From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+The new checkpoint caceh flush mechanism requires us to issue an
+unconditional cache flush before we start a new checkpoint. We don't
+want to block for this if we can help it, and we have a fair chunk
+of CPU work to do between starting the checkpoint and issuing the
+first journal IO.
+
+Hence it makes sense to amortise the latency cost of the cache flush
+by issuing it asynchronously and then waiting for it only when we
+need to issue the first IO in the transaction.
+
+TO do this, we need async cache flush primitives to submit the cache
+flush bio and to wait on it. THe block layer has no such primitives
+for filesystems, so roll our own for the moment.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ag_resv.c  | 6 +++++-
- fs/xfs/libxfs/xfs_errortag.h | 4 +++-
- fs/xfs/xfs_error.c           | 3 +++
- 3 files changed, 11 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_bio_io.c | 36 ++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_linux.h  |  2 ++
+ 2 files changed, 38 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index fdfe6dc0d307..6c5f8d10589c 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -211,7 +211,11 @@ __xfs_ag_resv_init(
- 		ASSERT(0);
- 		return -EINVAL;
- 	}
--	error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
+diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
+index 17f36db2f792..668f8bd27b4a 100644
+--- a/fs/xfs/xfs_bio_io.c
++++ b/fs/xfs/xfs_bio_io.c
+@@ -9,6 +9,42 @@ static inline unsigned int bio_max_vecs(unsigned int count)
+ 	return bio_max_segs(howmany(count, PAGE_SIZE));
+ }
+ 
++void
++xfs_flush_bdev_async_endio(
++	struct bio	*bio)
++{
++	if (bio->bi_private)
++		complete(bio->bi_private);
++}
 +
-+	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_AG_RESV_FAIL))
-+		error = -ENOSPC;
-+	else
-+		error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
- 	if (error) {
- 		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
- 				error, _RET_IP_);
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index 6ca9084b6934..a23a52e643ad 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -58,7 +58,8 @@
- #define XFS_ERRTAG_BUF_IOERROR				35
- #define XFS_ERRTAG_REDUCE_MAX_IEXTENTS			36
- #define XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT		37
--#define XFS_ERRTAG_MAX					38
-+#define XFS_ERRTAG_AG_RESV_FAIL				38
-+#define XFS_ERRTAG_MAX					39
++/*
++ * Submit a request for an async cache flush to run. If the request queue does
++ * not require flush operations, just skip it altogether. If the caller needsi
++ * to wait for the flush completion at a later point in time, they must supply a
++ * valid completion. This will be signalled when the flush completes.  The
++ * caller never sees the bio that is issued here.
++ */
++void
++xfs_flush_bdev_async(
++	struct bio		*bio,
++	struct block_device	*bdev,
++	struct completion	*done)
++{
++	struct request_queue	*q = bdev->bd_disk->queue;
++
++	if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
++		complete(done);
++		return;
++	}
++
++	bio_init(bio, NULL, 0);
++	bio_set_dev(bio, bdev);
++	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
++	bio->bi_private = done;
++	bio->bi_end_io = xfs_flush_bdev_async_endio;
++
++	submit_bio(bio);
++}
+ int
+ xfs_rw_bdev(
+ 	struct block_device	*bdev,
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index af6be9b9ccdf..953d98bc4832 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -196,6 +196,8 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
  
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -101,5 +102,6 @@
- #define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
- #define XFS_RANDOM_REDUCE_MAX_IEXTENTS			1
- #define XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT		1
-+#define XFS_RANDOM_AG_RESV_FAIL				1
+ int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
+ 		char *data, unsigned int op);
++void xfs_flush_bdev_async(struct bio *bio, struct block_device *bdev,
++		struct completion *done);
  
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 185b4915b7bf..f70984f3174d 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -56,6 +56,7 @@ static unsigned int xfs_errortag_random_default[] = {
- 	XFS_RANDOM_BUF_IOERROR,
- 	XFS_RANDOM_REDUCE_MAX_IEXTENTS,
- 	XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT,
-+	XFS_RANDOM_AG_RESV_FAIL,
- };
- 
- struct xfs_errortag_attr {
-@@ -168,6 +169,7 @@ XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
- XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
- XFS_ERRORTAG_ATTR_RW(reduce_max_iextents,	XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
- XFS_ERRORTAG_ATTR_RW(bmap_alloc_minlen_extent,	XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT);
-+XFS_ERRORTAG_ATTR_RW(ag_resv_fail, XFS_ERRTAG_AG_RESV_FAIL);
- 
- static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -208,6 +210,7 @@ static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
- 	XFS_ERRORTAG_ATTR_LIST(reduce_max_iextents),
- 	XFS_ERRORTAG_ATTR_LIST(bmap_alloc_minlen_extent),
-+	XFS_ERRORTAG_ATTR_LIST(ag_resv_fail),
- 	NULL,
- };
- 
+ #define ASSERT_ALWAYS(expr)	\
+ 	(likely(expr) ? (void)0 : assfail(NULL, #expr, __FILE__, __LINE__))
 -- 
-2.27.0
+2.28.0
 
