@@ -7,103 +7,92 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E8A5C433E9
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:12:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D460C433E6
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:12:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11C5C65013
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:12:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C32F65014
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 05:12:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229582AbhCEFMS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229465AbhCEFMS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 5 Mar 2021 00:12:18 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:59333 "EHLO
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:59331 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229465AbhCEFMA (ORCPT
+        by vger.kernel.org with ESMTP id S229595AbhCEFMA (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Mar 2021 00:12:00 -0500
 Received: from dread.disaster.area (pa49-179-130-210.pa.nsw.optusnet.com.au [49.179.130.210])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 651E3104107C
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Mar 2021 16:11:51 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 13DBE1041374
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Mar 2021 16:11:52 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lI2kg-00FboX-N0
-        for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:50 +1100
+        id 1lI2kh-00Fbpm-Jf
+        for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:51 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lI2kg-000lZZ-EL
-        for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:50 +1100
+        id 1lI2kh-000lap-C5
+        for linux-xfs@vger.kernel.org; Fri, 05 Mar 2021 16:11:51 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 17/45] xfs: No need for inode number error injection in __xfs_dir3_data_check
-Date:   Fri,  5 Mar 2021 16:11:15 +1100
-Message-Id: <20210305051143.182133-18-david@fromorbit.com>
+Subject: [PATCH 43/45] xfs: avoid cil push lock if possible
+Date:   Fri,  5 Mar 2021 16:11:41 +1100
+Message-Id: <20210305051143.182133-44-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20210305051143.182133-1-david@fromorbit.com>
 References: <20210305051143.182133-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
         a=JD06eNgDs9tuHP7JIKoLzw==:117 a=JD06eNgDs9tuHP7JIKoLzw==:17
-        a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=_ii9FaXb6EwW4meCbCgA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=F6O72S5bnyPC6Df_giEA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We call xfs_dir_ino_validate() for every dir entry in a directory
-when doing validity checking of the directory. It calls
-xfs_verify_dir_ino() then emits a corruption report if bad or does
-error injection if good. It is extremely costly:
+Because now it hurts when the CIL fills up.
 
-  43.27%  [kernel]  [k] xfs_dir3_leaf_check_int
-  10.28%  [kernel]  [k] __xfs_dir3_data_check
-   6.61%  [kernel]  [k] xfs_verify_dir_ino
-   4.16%  [kernel]  [k] xfs_errortag_test
-   4.00%  [kernel]  [k] memcpy
-   3.48%  [kernel]  [k] xfs_dir_ino_validate
+  - 37.20% __xfs_trans_commit
+      - 35.84% xfs_log_commit_cil
+         - 19.34% _raw_spin_lock
+            - do_raw_spin_lock
+                 19.01% __pv_queued_spin_lock_slowpath
+         - 4.20% xfs_log_ticket_ungrant
+              0.90% xfs_log_space_wake
 
-7% of the cpu usage in this directory traversal workload is
-xfs_dir_ino_validate() doing absolutely nothing.
-
-We don't need error injection to simulate a bad inode numbers in the
-directory structure because we can do that by fuzzing the structure
-on disk.
-
-And we don't need a corruption report, because the
-__xfs_dir3_data_check() will emit one if the inode number is bad.
-
-So just call xfs_verify_dir_ino() directly here, and get rid of all
-this unnecessary overhead:
-
-  40.30%  [kernel]  [k] xfs_dir3_leaf_check_int
-  10.98%  [kernel]  [k] __xfs_dir3_data_check
-   8.10%  [kernel]  [k] xfs_verify_dir_ino
-   4.42%  [kernel]  [k] memcpy
-   2.22%  [kernel]  [k] xfs_dir2_data_get_ftype
-   1.52%  [kernel]  [k] do_raw_spin_lock
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_dir2_data.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_log_cil.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index 375b3edb2ad2..e67fa086f2c1 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -218,7 +218,7 @@ __xfs_dir3_data_check(
- 		 */
- 		if (dep->namelen == 0)
- 			return __this_address;
--		if (xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)))
-+		if (!xfs_verify_dir_ino(mp, be64_to_cpu(dep->inumber)))
- 			return __this_address;
- 		if (offset + xfs_dir2_data_entsize(mp, dep->namelen) > end)
- 			return __this_address;
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 6dcc23829bef..d60c72ad391a 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -1115,10 +1115,18 @@ xlog_cil_push_background(
+ 	ASSERT(!test_bit(XLOG_CIL_EMPTY, &cil->xc_flags));
+ 
+ 	/*
+-	 * Don't do a background push if we haven't used up all the
+-	 * space available yet.
++	 * We are done if:
++	 * - we haven't used up all the space available yet; or
++	 * - we've already queued up a push; and
++	 * - we're not over the hard limit; and
++	 * - nothing has been over the hard limit.
++	 *
++	 * If so, we don't need to take the push lock as there's nothing to do.
+ 	 */
+-	if (space_used < XLOG_CIL_SPACE_LIMIT(log)) {
++	if (space_used < XLOG_CIL_SPACE_LIMIT(log) ||
++	    (cil->xc_push_seq == cil->xc_current_sequence &&
++	     space_used < XLOG_CIL_BLOCKING_SPACE_LIMIT(log) &&
++	     !waitqueue_active(&cil->xc_push_wait))) {
+ 		up_read(&cil->xc_ctx_lock);
+ 		return;
+ 	}
 -- 
 2.28.0
 
