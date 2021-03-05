@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2324C433DB
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 02:57:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0755C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 02:58:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A745364F52
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 02:57:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFB9164F52
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Mar 2021 02:58:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229861AbhCEC56 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Mar 2021 21:57:58 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:32987 "EHLO
+        id S229848AbhCEC6C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Mar 2021 21:58:02 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:60899 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229436AbhCEC55 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Mar 2021 21:57:57 -0500
+        by vger.kernel.org with ESMTP id S229528AbhCEC6B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Mar 2021 21:58:01 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1614913076;
+        s=mimecast20190719; t=1614913081;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=lf8HT1sgQOy5PL4FdvymMkk3T/a0i14JWEXeaTwHcy0=;
-        b=C9ipw8V3Bw+DRQ7hB3T5+1Up9/QEhT25fDn2dCcADAEXnPz9BfokwV1xqjLAkO+oYCRDWe
-        VkCvQmrvm+dZ/FAbKcspeeIbk/QOeLlVl3Jm+g776P7l2Nay1dEuJELVzCdoWiHT/sHFkR
-        JCzwSEbqK0b0LYj7vjH444hGqfr1sHc=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-12-EI0TYuC4PiC7z9t0n4NY3A-1; Thu, 04 Mar 2021 21:57:55 -0500
-X-MC-Unique: EI0TYuC4PiC7z9t0n4NY3A-1
-Received: by mail-pf1-f198.google.com with SMTP id b12so373410pfb.15
-        for <linux-xfs@vger.kernel.org>; Thu, 04 Mar 2021 18:57:55 -0800 (PST)
+        bh=wkY3FTAIacYrwuPMXIJvXomIx2MVTrRPaR5z08syAQE=;
+        b=RUJrWFRRYQl3EKLDy4Ydp7Yypclh/2PIuXJLsumHj4w1pjJso2meAp4vTAB6aae+MbT844
+        tplXqBtuJ3/l5mQ+TF080z/ak+JvFCuDvJ4pdM0EDTrfIU2pyUueT8MnzxFL3XESA/8TFD
+        SRjW4wD2U7LKhvppmCJu+YzXB9WiEs8=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-24-3DQogZdkMK2CclYbdosclg-1; Thu, 04 Mar 2021 21:57:59 -0500
+X-MC-Unique: 3DQogZdkMK2CclYbdosclg-1
+Received: by mail-pj1-f69.google.com with SMTP id r18so436478pjz.1
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Mar 2021 18:57:59 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=lf8HT1sgQOy5PL4FdvymMkk3T/a0i14JWEXeaTwHcy0=;
-        b=j1o7MUiqdjRl+rL0TzYDcODnTwP2AsYhtWs2tRWaGYlOhqcdy0w3lzAqqoG2ipyoEr
-         sAMrMEgb3X1deGFCUz+WhtmCUh3T8x1Xziu7XQl7JOZqoWdB2NftFIWgp7sK3IQTDIRx
-         tuIJHHuq2Y5LOMbIkkaVMJoyyrVF8b/+A/hs7CAxeVIiAx1XPdqfmUciYKg62pGROWj5
-         KK4PRhbeTIveqrfCnVPNTZOAxbv7hfTOMJAIkjTI6uVKuhB0yl7dJXsALfc0hvl5TxJx
-         MV/jtkvgE3mI6aQ0EnEIMbkkLxMhFt7trI5yws69sX/Or80y9V5nA7wdez3AqB6momEo
-         Uz2A==
-X-Gm-Message-State: AOAM530PxZ+LP9bUnRZO5rphz+I8hO6XoGkKkA4722D4kt0l8pKJgyVk
-        2WTdxtujW4tgrqPhghyyFLVD4aWUfeVmYI98WhIWHvpEaYs6axMV5+O0XBNZPQPhH4C2oYUjne6
-        vPbNsG0N58qRmD6THxVDbUipjU+tI0GS1oiJHua9lHvFdAvD5VPJBiV35seoBZlNVidldspeScg
+        bh=wkY3FTAIacYrwuPMXIJvXomIx2MVTrRPaR5z08syAQE=;
+        b=UCh67uk5C7JDj8gJDHZt63hWRokVhAKSviktpFjoJCXQzbQeDLTgrs0Mp/o0Y6Gwh2
+         Truh3C1AHf2uSDWGH9H6TXVB27u1YBlJHEKm/wqfJBsL6arCeT0NxBGJGiq+1TbW0cK4
+         zfzgeWlNCLZm02IrzlnLkecc9INsiTBYATW/qZrjH220Vb2nq7tyyvD9Iwdxm20lb59l
+         VsOEyT9Ns8UydeKlLWfoXZt6fvNuSy8XzrXGH0Xrys6GAeOpq4a33Adaa4kqanSh0xff
+         fomgFaRnYKRPLqgJrGdVV/w6HUntbUJaarsSYMPb9yhR1seY73B2u9N5fzEWNyOQ2D6u
+         l1xw==
+X-Gm-Message-State: AOAM533eiVyuPFBME60z8u3b9s0WIxlZwqH3dtfFoDy5HCOyjZqjfcVD
+        A5DuXrDPM7hNuKVi4Wg5F1qn/cllheobwWIQpLLMeISsBFebPuZadmMc3pdz1VZPJF9gbluXRZV
+        TUms4cq6NvCcdP1ZWp4ORoKbLi+cx/5ujHzWe9rEnYvwv4ESNufqeND4e7HEHLVfvDURgxsrJ4w
         ==
-X-Received: by 2002:a17:90a:314:: with SMTP id 20mr8041165pje.72.1614913074093;
-        Thu, 04 Mar 2021 18:57:54 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyv3URLjBUX6aoSa263sgVOTu5eSThSsf76COTkAm+7vOdaFQzbAUXUu+kbX7pZp0Fb9MYyig==
-X-Received: by 2002:a17:90a:314:: with SMTP id 20mr8041139pje.72.1614913073786;
-        Thu, 04 Mar 2021 18:57:53 -0800 (PST)
+X-Received: by 2002:a17:90b:1950:: with SMTP id nk16mr7774736pjb.140.1614913078279;
+        Thu, 04 Mar 2021 18:57:58 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJziHc/lr/M9mh0jIYW3SaN3UkEaOUulhUOpkb8Lqcb6nC/FlSfDEaNzbHiHiXQHEfcn/patYw==
+X-Received: by 2002:a17:90b:1950:: with SMTP id nk16mr7774696pjb.140.1614913077830;
+        Thu, 04 Mar 2021 18:57:57 -0800 (PST)
 Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id m19sm533414pjn.21.2021.03.04.18.57.50
+        by smtp.gmail.com with ESMTPSA id m19sm533414pjn.21.2021.03.04.18.57.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Mar 2021 18:57:53 -0800 (PST)
+        Thu, 04 Mar 2021 18:57:57 -0800 (PST)
 From:   Gao Xiang <hsiangkao@redhat.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     "Darrick J. Wong" <djwong@kernel.org>,
@@ -67,9 +67,9 @@ Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         Christoph Hellwig <hch@lst.de>,
         Eric Sandeen <sandeen@sandeen.net>,
         Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH v8 3/5] xfs: introduce xfs_ag_shrink_space()
-Date:   Fri,  5 Mar 2021 10:57:01 +0800
-Message-Id: <20210305025703.3069469-4-hsiangkao@redhat.com>
+Subject: [PATCH v8 4/5] xfs: support shrinking unused space in the last AG
+Date:   Fri,  5 Mar 2021 10:57:02 +0800
+Message-Id: <20210305025703.3069469-5-hsiangkao@redhat.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210305025703.3069469-1-hsiangkao@redhat.com>
 References: <20210305025703.3069469-1-hsiangkao@redhat.com>
@@ -79,165 +79,178 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patch introduces a helper to shrink unused space in the last AG
-by fixing up the freespace btree.
+As the first step of shrinking, this attempts to enable shrinking
+unused space in the last allocation group by fixing up freespace
+btree, agi, agf and adjusting super block and use a helper
+xfs_ag_shrink_space() to fixup the last AG.
 
-Also make sure that the per-AG reservation works under the new AG
-size. If such per-AG reservation or extent allocation fails, roll
-the transaction so the new transaction could cancel without any side
-effects.
+This can be all done in one transaction for now, so I think no
+additional protection is needed.
 
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ag.c | 111 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_ag.h |   4 +-
- 2 files changed, 114 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_fsops.c | 88 ++++++++++++++++++++++++++++------------------
+ fs/xfs/xfs_trans.c |  1 -
+ 2 files changed, 53 insertions(+), 36 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index 9331f3516afa..1f6f9e70e1cb 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -22,6 +22,11 @@
- #include "xfs_ag.h"
- #include "xfs_ag_resv.h"
- #include "xfs_health.h"
-+#include "xfs_error.h"
-+#include "xfs_bmap.h"
-+#include "xfs_defer.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index fc9e799b2ae3..71cba61a451c 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -91,23 +91,28 @@ xfs_growfs_data_private(
+ 	xfs_agnumber_t		nagcount;
+ 	xfs_agnumber_t		nagimax = 0;
+ 	xfs_rfsblock_t		nb, nb_div, nb_mod;
+-	xfs_rfsblock_t		delta;
++	int64_t			delta;
+ 	bool			lastag_resetagres;
+ 	xfs_agnumber_t		oagcount;
+ 	struct xfs_trans	*tp;
+ 	struct aghdr_init_data	id = {};
  
- static int
- xfs_get_aghdr_buf(
-@@ -485,6 +490,112 @@ xfs_ag_init_headers(
- 	return error;
- }
- 
-+int
-+xfs_ag_shrink_space(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	**tpp,
-+	xfs_agnumber_t		agno,
-+	xfs_extlen_t		delta)
-+{
-+	struct xfs_alloc_arg	args = {
-+		.tp	= *tpp,
-+		.mp	= mp,
-+		.type	= XFS_ALLOCTYPE_THIS_BNO,
-+		.minlen = delta,
-+		.maxlen = delta,
-+		.oinfo	= XFS_RMAP_OINFO_SKIP_UPDATE,
-+		.resv	= XFS_AG_RESV_NONE,
-+		.prod	= 1
-+	};
-+	struct xfs_buf		*agibp, *agfbp;
-+	struct xfs_agi		*agi;
-+	struct xfs_agf		*agf;
-+	int			error, err2;
+ 	nb = in->newblocks;
+-	if (nb < mp->m_sb.sb_dblocks)
+-		return -EINVAL;
+-	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
++	if (nb == mp->m_sb.sb_dblocks)
++		return 0;
 +
-+	ASSERT(agno == mp->m_sb.sb_agcount - 1);
-+	error = xfs_ialloc_read_agi(mp, *tpp, agno, &agibp);
++	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
 +	if (error)
-+		return error;
+ 		return error;
+-	error = xfs_buf_read_uncached(mp->m_ddev_targp,
 +
-+	agi = agibp->b_addr;
-+
-+	error = xfs_alloc_read_agf(mp, *tpp, agno, 0, &agfbp);
-+	if (error)
-+		return error;
-+
-+	agf = agfbp->b_addr;
-+	if (XFS_IS_CORRUPT(mp, agf->agf_length != agi->agi_length))
-+		return -EFSCORRUPTED;
-+
-+	if (delta >= agi->agi_length)
-+		return -EINVAL;
-+
-+	args.fsbno = XFS_AGB_TO_FSB(mp, agno,
-+				    be32_to_cpu(agi->agi_length) - delta);
-+
-+	/* remove the preallocations before allocation and re-establish then */
-+	error = xfs_ag_resv_free(agibp->b_pag);
-+	if (error)
-+		return error;
-+
-+	/* internal log shouldn't also show up in the free space btrees */
-+	error = xfs_alloc_vextent(&args);
-+	if (!error && args.agbno == NULLAGBLOCK)
-+		error = -ENOSPC;
-+
-+	if (error) {
-+		/*
-+		 * if extent allocation fails, need to roll the transaction to
-+		 * ensure that the AGFL fixup has been committed anyway.
-+		 */
-+		err2 = xfs_trans_roll(tpp);
-+		if (err2)
-+			return err2;
-+		goto resv_init_out;
-+	}
-+
-+	/*
-+	 * if successfully deleted from freespace btrees, need to confirm
-+	 * per-AG reservation works as expected.
-+	 */
-+	be32_add_cpu(&agi->agi_length, -delta);
-+	be32_add_cpu(&agf->agf_length, -delta);
-+
-+	err2 = xfs_ag_resv_init(agibp->b_pag, *tpp);
-+	if (err2) {
-+		be32_add_cpu(&agi->agi_length, delta);
-+		be32_add_cpu(&agf->agf_length, delta);
-+		if (err2 != -ENOSPC)
-+			goto resv_err;
-+
-+		__xfs_bmap_add_free(*tpp, args.fsbno, delta, NULL, true);
-+
-+		/*
-+		 * Roll the transaction before trying to re-init the per-ag
-+		 * reservation. The new transaction is clean so it will cancel
-+		 * without any side effects.
-+		 */
-+		error = xfs_defer_finish(tpp);
++	if (nb > mp->m_sb.sb_dblocks) {
++		error = xfs_buf_read_uncached(mp->m_ddev_targp,
+ 				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
+ 				XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+-	if (error)
+-		return error;
+-	xfs_buf_relse(bp);
 +		if (error)
 +			return error;
-+
-+		error = -ENOSPC;
-+		goto resv_init_out;
++		xfs_buf_relse(bp);
 +	}
-+	xfs_ialloc_log_agi(*tpp, agibp, XFS_AGI_LENGTH);
-+	xfs_alloc_log_agf(*tpp, agfbp, XFS_AGF_LENGTH);
-+	return 0;
-+
-+resv_init_out:
-+	err2 = xfs_ag_resv_init(agibp->b_pag, *tpp);
-+	if (!err2)
-+		return error;
-+resv_err:
-+	xfs_warn(mp, "Error %d reserving per-AG metadata reserve pool.", err2);
-+	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+	return err2;
-+}
-+
- /*
-  * Extent the AG indicated by the @id by the length passed in
-  */
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 5166322807e7..41293ebde8da 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -24,8 +24,10 @@ struct aghdr_init_data {
- };
  
- int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
-+int xfs_ag_shrink_space(struct xfs_mount *mp, struct xfs_trans **tpp,
-+			xfs_agnumber_t agno, xfs_extlen_t len);
- int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
--			struct aghdr_init_data *id, xfs_extlen_t len);
-+			struct aghdr_init_data *id, xfs_extlen_t delta);
- int xfs_ag_get_geometry(struct xfs_mount *mp, xfs_agnumber_t agno,
- 			struct xfs_ag_geometry *ageo);
+ 	nb_div = nb;
+ 	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
+@@ -115,10 +120,15 @@ xfs_growfs_data_private(
+ 	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
+ 		nagcount--;
+ 		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
+-		if (nb < mp->m_sb.sb_dblocks)
+-			return -EINVAL;
+ 	}
+ 	delta = nb - mp->m_sb.sb_dblocks;
++	/*
++	 * XFS doesn't really support single-AG filesystems, so do not
++	 * permit callers to remove the filesystem's second and last AG.
++	 */
++	if (delta < 0 && nagcount < 2)
++		return -EINVAL;
++
+ 	oagcount = mp->m_sb.sb_agcount;
  
+ 	/* allocate the new per-ag structures */
+@@ -126,15 +136,22 @@ xfs_growfs_data_private(
+ 		error = xfs_initialize_perag(mp, nagcount, &nagimax);
+ 		if (error)
+ 			return error;
++	} else if (nagcount < oagcount) {
++		/* TODO: shrinking the entire AGs hasn't yet completed */
++		return -EINVAL;
+ 	}
+ 
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
+-			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
++			(delta > 0 ? XFS_GROWFS_SPACE_RES(mp) : -delta), 0,
++			XFS_TRANS_RESERVE, &tp);
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
+-					  delta, &lastag_resetagres);
++	if (delta > 0)
++		error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
++						  delta, &lastag_resetagres);
++	else
++		error = xfs_ag_shrink_space(mp, &tp, nagcount - 1, -delta);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+@@ -145,7 +162,7 @@ xfs_growfs_data_private(
+ 	 */
+ 	if (nagcount > oagcount)
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_AGCOUNT, nagcount - oagcount);
+-	if (delta > 0)
++	if (delta)
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_DBLOCKS, delta);
+ 	if (id.nfree)
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, id.nfree);
+@@ -169,28 +186,29 @@ xfs_growfs_data_private(
+ 	xfs_set_low_space_thresholds(mp);
+ 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+ 
+-	/*
+-	 * If we expanded the last AG, free the per-AG reservation
+-	 * so we can reinitialize it with the new size.
+-	 */
+-	if (lastag_resetagres) {
+-		struct xfs_perag	*pag;
+-
+-		pag = xfs_perag_get(mp, id.agno);
+-		error = xfs_ag_resv_free(pag);
+-		xfs_perag_put(pag);
+-		if (error)
+-			return error;
++	if (delta > 0) {
++		/*
++		 * If we expanded the last AG, free the per-AG reservation
++		 * so we can reinitialize it with the new size.
++		 */
++		if (lastag_resetagres) {
++			struct xfs_perag	*pag;
++
++			pag = xfs_perag_get(mp, id.agno);
++			error = xfs_ag_resv_free(pag);
++			xfs_perag_put(pag);
++			if (error)
++				return error;
++		}
++		/*
++		 * Reserve AG metadata blocks. ENOSPC here does not mean there
++		 * was a growfs failure, just that there still isn't space for
++		 * new user data after the grow has been run.
++		 */
++		error = xfs_fs_reserve_ag_blocks(mp);
++		if (error == -ENOSPC)
++			error = 0;
+ 	}
+-
+-	/*
+-	 * Reserve AG metadata blocks. ENOSPC here does not mean there was a
+-	 * growfs failure, just that there still isn't space for new user data
+-	 * after the grow has been run.
+-	 */
+-	error = xfs_fs_reserve_ag_blocks(mp);
+-	if (error == -ENOSPC)
+-		error = 0;
+ 	return error;
+ 
+ out_trans_cancel:
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 44f72c09c203..d047f5f26cc0 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -434,7 +434,6 @@ xfs_trans_mod_sb(
+ 		tp->t_res_frextents_delta += delta;
+ 		break;
+ 	case XFS_TRANS_SB_DBLOCKS:
+-		ASSERT(delta > 0);
+ 		tp->t_dblocks_delta += delta;
+ 		break;
+ 	case XFS_TRANS_SB_AGCOUNT:
 -- 
 2.27.0
 
