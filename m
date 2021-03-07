@@ -7,43 +7,42 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D24DC433E9
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 20:26:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 896FBC433DB
+	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 20:37:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3DAE165165
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 20:26:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BCB865166
+	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 20:37:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232859AbhCGU0G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 7 Mar 2021 15:26:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52762 "EHLO mail.kernel.org"
+        id S232894AbhCGUgw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 7 Mar 2021 15:36:52 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54046 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232868AbhCGUZw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 7 Mar 2021 15:25:52 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0E8F565166;
-        Sun,  7 Mar 2021 20:25:52 +0000 (UTC)
+        id S231732AbhCGUgj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 7 Mar 2021 15:36:39 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 36E4C65165;
+        Sun,  7 Mar 2021 20:36:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615148752;
-        bh=S5M2a1iMvmsSIeURhBYVQOfyH9qne2rJoCnjL8Jfe/w=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=P2XSXpySJwuY4JXU7wKNWhhJLYV/abhcQQyUzpz/6KqkfQ9tqAMp1/Hgnaj0BIaI6
-         5JilSZnnkpNvB65dOx/lEbFaAeg/7/eqC00hLBrG5UBrRwlfDWvJWzTAMRyGOLrCjK
-         Q1lAS10f6nO99JnrOxp2uryAv9uUHpGq3jc0N86/aebtq/revsSpA55r1KD0yvvBrH
-         Zn00xN7vCtC2cTho2BP2RfboTpUZnipr8v6xSFOIVrcgmw2Gr8At9TbT+74j7R7IWz
-         cQcT/TfhDdc95MzK9RG+ojqslIAEzlDvWb+nkzZpeu1ikqQHjXOIYGjrbNfvQ6c7Si
-         H2JNjtDLlXBQQ==
-Subject: [PATCH 2/4] xfs: avoid buffer deadlocks when walking fs inodes
+        s=k20201202; t=1615149399;
+        bh=+FjKFSIHie783ImBTkqzC50V34MSJ6naN+ptDEI1L+Q=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=mURJAuAe3JHXc2vaz9MY22RwVkQS9FWXeSWlHhlcNhvO5IEX/6zb6EfXbEZLPx3OY
+         hTBRaJJrEzVpRhVrefj/0TWvbIzJkq0bRwLNTRx2CzTmeS2yAgyVTjzjWaapMYvbW8
+         vCovz+X+jeluIaBemmBGN0uEpDiEc6tT81N78lWciJHwG+2XpOBCLF1GrQ1bOGjDrh
+         VdsXZR3sr01hnHktGIwVB+HgiTzlAOXfD+Cj2fEFhQwb7QvHTgVIiSoT+tlBpX6aHm
+         2Gl2OehcF58lCxbGk6J2r+AqYphxs4N7txn5aY+/aF+iHx2An0kbFC3zHu+VaZnYx5
+         s47/AUFniwovg==
+Date:   Sun, 7 Mar 2021 12:36:38 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, hch@lst.de, dchinner@redhat.com,
+To:     linux-xfs@vger.kernel.org, hch@lst.de, dchinner@redhat.com,
         christian.brauner@ubuntu.com
-Date:   Sun, 07 Mar 2021 12:25:51 -0800
-Message-ID: <161514875165.698643.17020544838073213424.stgit@magnolia>
-In-Reply-To: <161514874040.698643.2749449122589431232.stgit@magnolia>
+Subject: [PATCH v2.1 2/4] xfs: avoid buffer deadlocks when walking fs inodes
+Message-ID: <20210307203638.GJ3419940@magnolia>
 References: <161514874040.698643.2749449122589431232.stgit@magnolia>
-User-Agent: StGit/0.19
+ <161514875165.698643.17020544838073213424.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <161514875165.698643.17020544838073213424.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -60,13 +59,14 @@ tree (xfs/365).
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_itable.c |   40 ++++++++++++++++++++++++++++++++++++----
+v2.1: actually pass tp in the bulkstat_single case
+---
+ fs/xfs/xfs_itable.c |   42 +++++++++++++++++++++++++++++++++++++-----
  fs/xfs/xfs_iwalk.c  |   32 +++++++++++++++++++++++++++-----
- 2 files changed, 63 insertions(+), 9 deletions(-)
-
+ 2 files changed, 64 insertions(+), 10 deletions(-)
 
 diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index ca310a125d1e..0cc19135e827 100644
+index ca310a125d1e..326495c8910e 100644
 --- a/fs/xfs/xfs_itable.c
 +++ b/fs/xfs/xfs_itable.c
 @@ -19,6 +19,7 @@
@@ -89,6 +89,8 @@ index ca310a125d1e..0cc19135e827 100644
  	if (!bc.buf)
  		return -ENOMEM;
  
+-	error = xfs_bulkstat_one_int(breq->mp, breq->mnt_userns, NULL,
+-				     breq->startino, &bc);
 +	/*
 +	 * Grab an empty transaction so that we can use its recursive buffer
 +	 * locking abilities to detect cycles in the inobt without deadlocking.
@@ -96,10 +98,9 @@ index ca310a125d1e..0cc19135e827 100644
 +	error = xfs_trans_alloc_empty(breq->mp, &tp);
 +	if (error)
 +		goto out;
-+
- 	error = xfs_bulkstat_one_int(breq->mp, breq->mnt_userns, NULL,
- 				     breq->startino, &bc);
--
+ 
++	error = xfs_bulkstat_one_int(breq->mp, breq->mnt_userns, tp,
++			breq->startino, &bc);
 +	xfs_trans_cancel(tp);
 +out:
  	kmem_free(bc.buf);
@@ -251,4 +252,3 @@ index c4a340f1f1e1..e1e889f3647f 100644
  	xfs_iwalk_free(iwag);
  out:
  	kmem_free(iwag);
-
