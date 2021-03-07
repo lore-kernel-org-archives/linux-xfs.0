@@ -2,94 +2,243 @@ Return-Path: <SRS0=xiMZ=IF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE375C433DB
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 12:08:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA92BC433DB
+	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 15:31:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77E026501D
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 12:08:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89360650FA
+	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 15:31:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229730AbhCGMIF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 7 Mar 2021 07:08:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56398 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229662AbhCGMHl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Mar 2021 07:07:41 -0500
-Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFA29C06174A
-        for <linux-xfs@vger.kernel.org>; Sun,  7 Mar 2021 04:07:40 -0800 (PST)
-Received: by mail-ej1-x633.google.com with SMTP id lr13so14349555ejb.8
-        for <linux-xfs@vger.kernel.org>; Sun, 07 Mar 2021 04:07:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fishpost-de.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=rATENos7+MdMi1AQ2hRE9KJFszbL1b4Fnef7mg7FIuE=;
-        b=In66PxE+5SUqvT1bF1mqC+/nAnO9KmWxiP2a8V6lh7hjQ0GK7NqO86Xhe56nymHNpJ
-         bNc9Xv96E1QxGX0dIssCadl0NuFN1z8fErRs3xqg5ddoHOqTJwzVizAmvw/bWb0RY2iP
-         hANYKEf9TKFPKuKl0oNLXTb+h7XNXxu9HVTHovhyDKdg4WTJw6kLV1X3R5EAh3PmOTcK
-         Dq094Z1qL/rr5/chwUYDHskyZSGCBI0SoSfuqcwUe5vMK4G3p/nUqIJnmekIN7bYp1IL
-         /a0ZY43jk6n/e7N2Gy9QLJQvDmhN7mPHDGJZNlXxfP6IXu7Ez+vBNr64u088oRY6yHdD
-         fYGw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=rATENos7+MdMi1AQ2hRE9KJFszbL1b4Fnef7mg7FIuE=;
-        b=L/MsFPfq5FPKnMhITmhCUQZZIRtZtqSowQ4pubUtqmHMddb1nW4MeLI75caXKwkeaS
-         L77muXArWl2YAI8SoAD/Flj0nLp+tFkh/ohW5euz24X+jIq9ekBIYuHZPrjdGMcAOzKF
-         RMFwUkVnTmmLGSIInsAW+SIPRRg98xIsXQTC9gTwZjS56DH8n/ke1/pidMXkIHAuAksJ
-         ySuG+YIj8zZUfbx1uREeMj4kL6FbuzO1SiSK/Sj4niUimrCT2/jfFnoXulMxL6yGzcsP
-         LuRhgrPu1e8QBxonAo3NZLShKMtyh5IENeV3nFna/auUyB3frCHmGdiV3eQOram6HfXt
-         kTbw==
-X-Gm-Message-State: AOAM530Kg0REdVVN2K/aBvUgP3NhMIwxLipslPpExxcMKQdqr4zRNidl
-        6Or5My1i3z0eWjz3saVwvuU1dmlVWxUftw==
-X-Google-Smtp-Source: ABdhPJw6hAu0kZXpGCA4zHLMVIOUO8yFWQbNtxws8N11rBWbELHM2mJSl/J4bf/+hnguic9HTrYYjw==
-X-Received: by 2002:a17:906:3e92:: with SMTP id a18mr10178965ejj.95.1615118859410;
-        Sun, 07 Mar 2021 04:07:39 -0800 (PST)
-Received: from ?IPv6:2003:d0:6f2c:df00:2a7b:9283:37dc:e408? (p200300d06f2cdf002a7b928337dce408.dip0.t-ipconnect.de. [2003:d0:6f2c:df00:2a7b:9283:37dc:e408])
-        by smtp.gmail.com with ESMTPSA id g25sm5068321edp.95.2021.03.07.04.07.38
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 07 Mar 2021 04:07:38 -0800 (PST)
-Subject: Re: [PATCH v2 0/2] debian: Fix problems introduced with 5.10.0
-To:     linux-xfs@vger.kernel.org
-References: <20210221093946.3473-1-bastiangermann@fishpost.de>
-From:   Bastian Germann <bastiangermann@fishpost.de>
-Message-ID: <8f1f91b8-b2a8-e0c3-eb8c-092e16802404@fishpost.de>
-Date:   Sun, 7 Mar 2021 13:07:37 +0100
-User-Agent: Mozilla/5.0 (X11; Linux i686; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+        id S231411AbhCGPbH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 7 Mar 2021 10:31:07 -0500
+Received: from out20-98.mail.aliyun.com ([115.124.20.98]:56189 "EHLO
+        out20-98.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231255AbhCGPa4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Mar 2021 10:30:56 -0500
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.0743673|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.260236-0.00399315-0.735771;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047187;MF=guan@eryu.me;NM=1;PH=DS;RN=5;RT=5;SR=0;TI=SMTPD_---.JhdEwGg_1615131049;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.JhdEwGg_1615131049)
+          by smtp.aliyun-inc.com(10.147.41.143);
+          Sun, 07 Mar 2021 23:30:50 +0800
+Date:   Sun, 7 Mar 2021 23:30:49 +0800
+From:   Eryu Guan <guan@eryu.me>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, sunke32@huawei.com
+Subject: Re: [PATCH] xfstests: rename RENAME_WHITEOUT test on fs no enough
+ sapce
+Message-ID: <YETxqYdhNQwT+aZE@desktop>
+References: <20210218071324.50413-1-zlang@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20210221093946.3473-1-bastiangermann@fishpost.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210218071324.50413-1-zlang@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Am 21.02.21 um 10:39 schrieb Bastian Germann:
-> There were two bugs introduced with the 5.6 -> 5.10 change in Debian:
-> RISC-V does not build. Fix that by regenerating it.
-> The new libinih package did not have a udeb package which is needed by
-> xfsprogs-udeb. Explicitly depend on newer libinih versions.
+On Thu, Feb 18, 2021 at 03:13:24PM +0800, Zorro Lang wrote:
+> This's a regression test for linux 6b4b8e6b4ad8 ("ext4: fix bug for
+> rename with RENAME_WHITEOUT"). Rename a file with RENAME_WHITEOUT
+> flag might cause corruption when there's not enough space to
+> complete this renaming operation.
 > 
-> Changelog:
->   v2: Drop Dimitri's Ubuntu changes (related to CET)
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> Signed-off-by: Sun Ke <sunke32@huawei.com>
+> ---
 > 
-> Bastian Germann (2):
->    debian: Regenerate config.guess using debhelper
->    debian: Build-depend on libinih-dev with udeb package
+> Hi,
 > 
->   debian/changelog | 10 ++++++++++
->   debian/control   |  2 +-
->   debian/rules     |  1 +
->   3 files changed, 12 insertions(+), 1 deletion(-)
+> As the request of Sun Ke, I rewrite his test case as this patch.
+> The history of reviewing as below:
+> https://patchwork.kernel.org/project/fstests/patch/20210128061202.210074-1-sunke32@huawei.com/
+> https://patchwork.kernel.org/project/fstests/patch/20210202123956.3146761-1-sunke32@huawei.com/
+> 
+> At last, I decide to create several chunks of files to do this testing, help to
+> get more chance to trigger ENOSPC when does rename(RENAME_WHITEOUT).
+> 
+> From my testing, it can reproduce this bug on linux 5.10[1], and test passed on
+> linux 5.11-rc5+ [2]. And it works on XFS too. Hope to get more review from fs-devel.
 
-Any chance of getting this reviewed series in the tree?
+Thanks a lot for the revision!
+
+> 
+> [1]
+> # ./check generic/623
+> FSTYP         -- ext4
+> PLATFORM      -- Linux/x86_64 ibm-xxxxxxx-xx 5.10.0-rc5+ #4 SMP Tue Jan 5 20:12:45 CST 2021
+> MKFS_OPTIONS  -- /dev/mapper/testvg-scratchdev
+> MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:root_t:s0 /dev/mapper/testvg-scratchdev /mnt/scratch
+> 
+> generic/623     _check_generic_filesystem: filesystem on /dev/mapper/testvg-scratchdev is inconsistent                                                                                        
+> (see /root/git/xfstests-zlang/results//generic/623.full for details)
+> - output mismatch (see /root/git/xfstests-zlang/results//generic/623.out.bad)
+>     --- tests/generic/623.out   2021-02-18 13:26:35.953071523 +0800
+>     +++ /root/git/xfstests-zlang/results//generic/623.out.bad   2021-02-18 13:28:10.450733088 +0800                                                                                           
+>     @@ -1,2 +1,232 @@
+>      QA output created by 623
+>     +ls: cannot access '/mnt/scratch/srcfile3866': Structure needs cleaning
+>     +ls: cannot access '/mnt/scratch/srcfile3867': Structure needs cleaning
+>     +ls: cannot access '/mnt/scratch/srcfile3868': Structure needs cleaning
+>     +ls: cannot access '/mnt/scratch/srcfile3869': Structure needs cleaning
+>     +ls: cannot access '/mnt/scratch/srcfile3870': Structure needs cleaning
+>     +ls: cannot access '/mnt/scratch/srcfile3871': Structure needs cleaning
+>     ...
+>     (Run 'diff -u /root/git/xfstests-zlang/tests/generic/623.out /root/git/xfstests-zlang/results//generic/623.out.bad'  to see the entire diff)                                              
+> Ran: generic/623
+> Failures: generic/623
+> Failed 1 of 1 tests
+> 
+> [2]
+> # ./check generic/623
+> FSTYP         -- ext4
+> PLATFORM      -- Linux/x86_64 localhost 5.11.0-0.rc5.20210128git76c057c84d28.137.fc34.x86_64 #1 SMP Thu Jan 28 21:10:47 UTC 2021
+> MKFS_OPTIONS  -- /dev/mapper/testvg-scratchdev
+> MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:root_t:s0 /dev/mapper/testvg-scratchdev /mnt/scratch
+> 
+> generic/623 4s ...  86s
+> Ran: generic/623
+> Passed all 1 tests
+> 
+> [3]
+> # ./check generic/623
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 localhost 5.11.0-0.rc5.20210128git76c057c84d28.137.fc34.x86_64 #1 SMP Thu Jan 28 21:10:47 UTC 2021
+> MKFS_OPTIONS  -- -f -bsize=4096 /dev/mapper/testvg-scratchdev
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/testvg-scratchdev /mnt/scratch
+> 
+> generic/623 86s ...  99s
+> Ran: generic/623
+> Passed all 1 tests
+> 
+> Thanks,
+> Zorro
+> 
+>  tests/generic/623     | 72 +++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/623.out |  2 ++
+>  tests/generic/group   |  1 +
+>  3 files changed, 75 insertions(+)
+>  create mode 100755 tests/generic/623
+>  create mode 100644 tests/generic/623.out
+> 
+> diff --git a/tests/generic/623 b/tests/generic/623
+> new file mode 100755
+> index 00000000..56358ca6
+> --- /dev/null
+> +++ b/tests/generic/623
+> @@ -0,0 +1,72 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2021 HUAWEI.  All Rights Reserved.
+> +# Copyright (c) 2021 Red Hat Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test 623
+> +#
+> +# Test RENAME_WHITEOUT on filesystem without space to create one more inodes.
+> +# This is a regression test for kernel commit:
+> +#   6b4b8e6b4ad8 ("ext4: ext4: fix bug for rename with RENAME_WHITEOUT")
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/populate
+
+. ./common/renameat2
+
+then ...
+
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_require_scratch
+
+Need "_require_renameat2 whiteout" here.
+
+> +
+> +_scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1
+> +_scratch_mount
+> +
+> +# Create several chunks of file, to help to trigger the bug easily
+> +CHUNKS=$((64 * 64))
+
+Rename CHUNKS to NR_FILE? I tried 128 and could trigger the failure
+quickly as well, and test passwd within 5 seconds on v5.11 kernel. So I
+think 128 files should be fine? It's not required to be 100%
+reproducible, as long as the possiblity is high enough.
+
+> +for ((i=0; i<CHUNKS; i++));do
+> +	touch $SCRATCH_MNT/srcfile$i
+> +done
+> +# Try to fill the whole fs
+> +nr_free=$(stat -f -c '%f' $SCRATCH_MNT)
+> +blksz="$(_get_block_size $SCRATCH_MNT)"
+> +_fill_fs $((nr_free * blksz)) $SCRATCH_MNT/fill_space $blksz 0 >> $seqres.full 2>&1
+> +# Use empty files to fill the rest
+> +for ((i=0; i<10000; i++));do
+> +	touch $SCRATCH_MNT/fill_file$i 2>/dev/null
+> +	# Until no more files can be created
+> +	if [ $? -ne 0 ];then
+> +		break
+> +	fi
+> +done
+> +# ENOSPC is expected here
+> +for ((i=0; i<CHUNKS; i++));do
+> +	$here/src/renameat2 -w $SCRATCH_MNT/srcfile$i $SCRATCH_MNT/dstfile$i >> $seqres.full 2>&1
+> +done
+> +_scratch_cycle_mount
+> +# Expect no errors at here
+> +for ((i=0; i<CHUNKS; i++));do
+> +	ls -l $SCRATCH_MNT/srcfile$i >/dev/null
+> +done
+> +
+> +echo "Silence is golden"
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/623.out b/tests/generic/623.out
+> new file mode 100644
+> index 00000000..6f774f19
+> --- /dev/null
+> +++ b/tests/generic/623.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 623
+> +Silence is golden
+> diff --git a/tests/generic/group b/tests/generic/group
+> index b10fdea4..72136075 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -625,3 +625,4 @@
+>  620 auto mount quick
+>  621 auto quick encrypt
+>  622 auto shutdown metadata atime
+> +623 auto rename enospc
+
+If we reduce the iterations, and test would pass quickly, we could add
+'quick' group too.
+
+Thanks,
+Eryu
+
+> -- 
+> 2.29.2
