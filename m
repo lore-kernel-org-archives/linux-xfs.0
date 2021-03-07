@@ -7,38 +7,37 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60ED0C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D24DC433E9
 	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 20:26:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 269506516B
+	by mail.kernel.org (Postfix) with ESMTP id 3DAE165165
 	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 20:26:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232860AbhCGU0G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S232859AbhCGU0G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sun, 7 Mar 2021 15:26:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52784 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:52762 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232849AbhCGUZ5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 7 Mar 2021 15:25:57 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8DAEA65165;
-        Sun,  7 Mar 2021 20:25:57 +0000 (UTC)
+        id S232868AbhCGUZw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 7 Mar 2021 15:25:52 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0E8F565166;
+        Sun,  7 Mar 2021 20:25:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615148757;
-        bh=ANXu+xvTfkku0KZG8HFR3XbGTE4V/jR/re5DtOQAjk0=;
+        s=k20201202; t=1615148752;
+        bh=S5M2a1iMvmsSIeURhBYVQOfyH9qne2rJoCnjL8Jfe/w=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=eVfatMtjtsD0s0eue6NpXBalZ16Ux1e6cIoH8YamWGVlRhZ3aGaTiZ1nZ6+fWeb4x
-         b2kSEJ4ondooMg1EhtLGCTXEsptirGgdtNjea2BQ2k4UGhhhiw2j3I3mivainuZlHd
-         v/IicRA7N4nlJNFtx1wwgfpqMDfzlO7WsFrmVmm+SBLpOS5sctanpo5F7SbyC/eKyr
-         NJpK1pDSVBAHt9AEa9HP5jbNnBHE2jXyD1kpK0qgLJScNbSwgP670kmyFh6szN3DSh
-         zzPwP1Bds5qHhL0Qh07UzoqxHKUE2wY5drLczrCvGvwNEudprIisHByYsyPvZ4FHyW
-         EnhCLL328M3IQ==
-Subject: [PATCH 3/4] xfs: force log and push AIL to clear pinned inodes when
- aborting mount
+        b=P2XSXpySJwuY4JXU7wKNWhhJLYV/abhcQQyUzpz/6KqkfQ9tqAMp1/Hgnaj0BIaI6
+         5JilSZnnkpNvB65dOx/lEbFaAeg/7/eqC00hLBrG5UBrRwlfDWvJWzTAMRyGOLrCjK
+         Q1lAS10f6nO99JnrOxp2uryAv9uUHpGq3jc0N86/aebtq/revsSpA55r1KD0yvvBrH
+         Zn00xN7vCtC2cTho2BP2RfboTpUZnipr8v6xSFOIVrcgmw2Gr8At9TbT+74j7R7IWz
+         cQcT/TfhDdc95MzK9RG+ojqslIAEzlDvWb+nkzZpeu1ikqQHjXOIYGjrbNfvQ6c7Si
+         H2JNjtDLlXBQQ==
+Subject: [PATCH 2/4] xfs: avoid buffer deadlocks when walking fs inodes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, hch@lst.de, dchinner@redhat.com,
         christian.brauner@ubuntu.com
-Date:   Sun, 07 Mar 2021 12:25:57 -0800
-Message-ID: <161514875722.698643.971171271199400538.stgit@magnolia>
+Date:   Sun, 07 Mar 2021 12:25:51 -0800
+Message-ID: <161514875165.698643.17020544838073213424.stgit@magnolia>
 In-Reply-To: <161514874040.698643.2749449122589431232.stgit@magnolia>
 References: <161514874040.698643.2749449122589431232.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,155 +50,205 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If we allocate quota inodes in the process of mounting a filesystem but
-then decide to abort the mount, it's possible that the quota inodes are
-sitting around pinned by the log.  Now that inode reclaim relies on the
-AIL to flush inodes, we have to force the log and push the AIL in
-between releasing the quota inodes and kicking off reclaim to tear down
-all the incore inodes.  Do this by extracting the bits we need from the
-unmount path and reusing them.
+When we're servicing an INUMBERS or BULKSTAT request or running
+quotacheck, grab an empty transaction so that we can use its inherent
+recursive buffer locking abilities to detect inode btree cycles without
+hitting ABBA buffer deadlocks.
 
-This was originally found during a fuzz test of metadata directories
-(xfs/1546), but the actual symptom was that reclaim hung up on the quota
-inodes.
+Found by fuzzing an inode btree pointer to introduce a cycle into the
+tree (xfs/365).
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_mount.c |  100 ++++++++++++++++++++++++++++------------------------
- 1 file changed, 54 insertions(+), 46 deletions(-)
+ fs/xfs/xfs_itable.c |   40 ++++++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_iwalk.c  |   32 +++++++++++++++++++++++++++-----
+ 2 files changed, 63 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 52370d0a3f43..556ce373145f 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -634,6 +634,57 @@ xfs_check_summary_counts(
- 	return xfs_initialize_perag_data(mp, mp->m_sb.sb_agcount);
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index ca310a125d1e..0cc19135e827 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -19,6 +19,7 @@
+ #include "xfs_error.h"
+ #include "xfs_icache.h"
+ #include "xfs_health.h"
++#include "xfs_trans.h"
+ 
+ /*
+  * Bulk Stat
+@@ -166,6 +167,7 @@ xfs_bulkstat_one(
+ 		.formatter	= formatter,
+ 		.breq		= breq,
+ 	};
++	struct xfs_trans	*tp;
+ 	int			error;
+ 
+ 	ASSERT(breq->icount == 1);
+@@ -175,9 +177,18 @@ xfs_bulkstat_one(
+ 	if (!bc.buf)
+ 		return -ENOMEM;
+ 
++	/*
++	 * Grab an empty transaction so that we can use its recursive buffer
++	 * locking abilities to detect cycles in the inobt without deadlocking.
++	 */
++	error = xfs_trans_alloc_empty(breq->mp, &tp);
++	if (error)
++		goto out;
++
+ 	error = xfs_bulkstat_one_int(breq->mp, breq->mnt_userns, NULL,
+ 				     breq->startino, &bc);
+-
++	xfs_trans_cancel(tp);
++out:
+ 	kmem_free(bc.buf);
+ 
+ 	/*
+@@ -241,6 +252,7 @@ xfs_bulkstat(
+ 		.formatter	= formatter,
+ 		.breq		= breq,
+ 	};
++	struct xfs_trans	*tp;
+ 	int			error;
+ 
+ 	if (breq->mnt_userns != &init_user_ns) {
+@@ -256,9 +268,18 @@ xfs_bulkstat(
+ 	if (!bc.buf)
+ 		return -ENOMEM;
+ 
+-	error = xfs_iwalk(breq->mp, NULL, breq->startino, breq->flags,
++	/*
++	 * Grab an empty transaction so that we can use its recursive buffer
++	 * locking abilities to detect cycles in the inobt without deadlocking.
++	 */
++	error = xfs_trans_alloc_empty(breq->mp, &tp);
++	if (error)
++		goto out;
++
++	error = xfs_iwalk(breq->mp, tp, breq->startino, breq->flags,
+ 			xfs_bulkstat_iwalk, breq->icount, &bc);
+-
++	xfs_trans_cancel(tp);
++out:
+ 	kmem_free(bc.buf);
+ 
+ 	/*
+@@ -371,13 +392,24 @@ xfs_inumbers(
+ 		.formatter	= formatter,
+ 		.breq		= breq,
+ 	};
++	struct xfs_trans	*tp;
+ 	int			error = 0;
+ 
+ 	if (xfs_bulkstat_already_done(breq->mp, breq->startino))
+ 		return 0;
+ 
+-	error = xfs_inobt_walk(breq->mp, NULL, breq->startino, breq->flags,
++	/*
++	 * Grab an empty transaction so that we can use its recursive buffer
++	 * locking abilities to detect cycles in the inobt without deadlocking.
++	 */
++	error = xfs_trans_alloc_empty(breq->mp, &tp);
++	if (error)
++		goto out;
++
++	error = xfs_inobt_walk(breq->mp, tp, breq->startino, breq->flags,
+ 			xfs_inumbers_walk, breq->icount, &ic);
++	xfs_trans_cancel(tp);
++out:
+ 
+ 	/*
+ 	 * We found some inode groups, so clear the error status and return
+diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+index c4a340f1f1e1..e1e889f3647f 100644
+--- a/fs/xfs/xfs_iwalk.c
++++ b/fs/xfs/xfs_iwalk.c
+@@ -81,6 +81,9 @@ struct xfs_iwalk_ag {
+ 
+ 	/* Skip empty inobt records? */
+ 	unsigned int			skip_empty:1;
++
++	/* Drop the (hopefully empty) transaction when calling iwalk_fn. */
++	unsigned int			drop_trans:1;
+ };
+ 
+ /*
+@@ -351,7 +354,6 @@ xfs_iwalk_run_callbacks(
+ 	int				*has_more)
+ {
+ 	struct xfs_mount		*mp = iwag->mp;
+-	struct xfs_trans		*tp = iwag->tp;
+ 	struct xfs_inobt_rec_incore	*irec;
+ 	xfs_agino_t			next_agino;
+ 	int				error;
+@@ -361,10 +363,15 @@ xfs_iwalk_run_callbacks(
+ 	ASSERT(iwag->nr_recs > 0);
+ 
+ 	/* Delete cursor but remember the last record we cached... */
+-	xfs_iwalk_del_inobt(tp, curpp, agi_bpp, 0);
++	xfs_iwalk_del_inobt(iwag->tp, curpp, agi_bpp, 0);
+ 	irec = &iwag->recs[iwag->nr_recs - 1];
+ 	ASSERT(next_agino >= irec->ir_startino + XFS_INODES_PER_CHUNK);
+ 
++	if (iwag->drop_trans) {
++		xfs_trans_cancel(iwag->tp);
++		iwag->tp = NULL;
++	}
++
+ 	error = xfs_iwalk_ag_recs(iwag);
+ 	if (error)
+ 		return error;
+@@ -375,8 +382,14 @@ xfs_iwalk_run_callbacks(
+ 	if (!has_more)
+ 		return 0;
+ 
++	if (iwag->drop_trans) {
++		error = xfs_trans_alloc_empty(mp, &iwag->tp);
++		if (error)
++			return error;
++	}
++
+ 	/* ...and recreate the cursor just past where we left off. */
+-	error = xfs_inobt_cur(mp, tp, agno, XFS_BTNUM_INO, curpp, agi_bpp);
++	error = xfs_inobt_cur(mp, iwag->tp, agno, XFS_BTNUM_INO, curpp, agi_bpp);
+ 	if (error)
+ 		return error;
+ 
+@@ -389,7 +402,6 @@ xfs_iwalk_ag(
+ 	struct xfs_iwalk_ag		*iwag)
+ {
+ 	struct xfs_mount		*mp = iwag->mp;
+-	struct xfs_trans		*tp = iwag->tp;
+ 	struct xfs_buf			*agi_bp = NULL;
+ 	struct xfs_btree_cur		*cur = NULL;
+ 	xfs_agnumber_t			agno;
+@@ -469,7 +481,7 @@ xfs_iwalk_ag(
+ 	error = xfs_iwalk_run_callbacks(iwag, agno, &cur, &agi_bp, &has_more);
+ 
+ out:
+-	xfs_iwalk_del_inobt(tp, &cur, &agi_bp, error);
++	xfs_iwalk_del_inobt(iwag->tp, &cur, &agi_bp, error);
+ 	return error;
  }
  
-+/*
-+ * Force the log contents and checkpoint them into the filesystem, the reclaim
-+ * inodes in preparation to unmount.
-+ */
-+static void
-+xfs_unmount_flush_inodes(
-+	struct xfs_mount	*mp)
-+{
+@@ -594,8 +606,18 @@ xfs_iwalk_ag_work(
+ 	error = xfs_iwalk_alloc(iwag);
+ 	if (error)
+ 		goto out;
 +	/*
-+	 * We can potentially deadlock here if we have an inode cluster
-+	 * that has been freed has its buffer still pinned in memory because
-+	 * the transaction is still sitting in a iclog. The stale inodes
-+	 * on that buffer will be pinned to the buffer until the
-+	 * transaction hits the disk and the callbacks run. Pushing the AIL will
-+	 * skip the stale inodes and may never see the pinned buffer, so
-+	 * nothing will push out the iclog and unpin the buffer. Hence we
-+	 * need to force the log here to ensure all items are flushed into the
-+	 * AIL before we go any further.
++	 * Grab an empty transaction so that we can use its recursive buffer
++	 * locking abilities to detect cycles in the inobt without deadlocking.
 +	 */
-+	xfs_log_force(mp, XFS_LOG_SYNC);
-+
-+	/*
-+	 * Wait for all busy extents to be freed, including completion of
-+	 * any discard operation.
-+	 */
-+	xfs_extent_busy_wait_all(mp);
-+	flush_workqueue(xfs_discard_wq);
-+
-+	/*
-+	 * We now need to tell the world we are unmounting. This will allow
-+	 * us to detect that the filesystem is going away and we should error
-+	 * out anything that we have been retrying in the background. This will
-+	 * prevent neverending retries in AIL pushing from hanging the unmount.
-+	 */
-+	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
-+
-+	/*
-+	 * Flush all pending changes from the AIL.
-+	 */
-+	xfs_ail_push_all_sync(mp->m_ail);
-+
-+	/*
-+	 * Reclaim all inodes. At this point there should be no dirty inodes and
-+	 * none should be pinned or locked. Stop background inode reclaim here
-+	 * if it is still running.
-+	 */
-+	cancel_delayed_work_sync(&mp->m_reclaim_work);
-+	xfs_reclaim_inodes(mp);
-+	xfs_health_unmount(mp);
-+}
-+
- /*
-  * This function does the following on an initial mount of a file system:
-  *	- reads the superblock from disk and init the mount struct
-@@ -1008,7 +1059,7 @@ xfs_mountfs(
- 	/* Clean out dquots that might be in memory after quotacheck. */
- 	xfs_qm_unmount(mp);
- 	/*
--	 * Cancel all delayed reclaim work and reclaim the inodes directly.
-+	 * Flush all inode reclamation work and flush the log.
- 	 * We have to do this /after/ rtunmount and qm_unmount because those
- 	 * two will have scheduled delayed reclaim for the rt/quota inodes.
- 	 *
-@@ -1018,11 +1069,8 @@ xfs_mountfs(
- 	 * qm_unmount_quotas and therefore rely on qm_unmount to release the
- 	 * quota inodes.
- 	 */
--	cancel_delayed_work_sync(&mp->m_reclaim_work);
--	xfs_reclaim_inodes(mp);
--	xfs_health_unmount(mp);
-+	xfs_unmount_flush_inodes(mp);
-  out_log_dealloc:
--	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
- 	xfs_log_mount_cancel(mp);
-  out_fail_wait:
- 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
-@@ -1063,47 +1111,7 @@ xfs_unmountfs(
- 	xfs_rtunmount_inodes(mp);
- 	xfs_irele(mp->m_rootip);
++	error = xfs_trans_alloc_empty(mp, &iwag->tp);
++	if (error)
++		goto out;
++	iwag->drop_trans = 1;
  
--	/*
--	 * We can potentially deadlock here if we have an inode cluster
--	 * that has been freed has its buffer still pinned in memory because
--	 * the transaction is still sitting in a iclog. The stale inodes
--	 * on that buffer will be pinned to the buffer until the
--	 * transaction hits the disk and the callbacks run. Pushing the AIL will
--	 * skip the stale inodes and may never see the pinned buffer, so
--	 * nothing will push out the iclog and unpin the buffer. Hence we
--	 * need to force the log here to ensure all items are flushed into the
--	 * AIL before we go any further.
--	 */
--	xfs_log_force(mp, XFS_LOG_SYNC);
--
--	/*
--	 * Wait for all busy extents to be freed, including completion of
--	 * any discard operation.
--	 */
--	xfs_extent_busy_wait_all(mp);
--	flush_workqueue(xfs_discard_wq);
--
--	/*
--	 * We now need to tell the world we are unmounting. This will allow
--	 * us to detect that the filesystem is going away and we should error
--	 * out anything that we have been retrying in the background. This will
--	 * prevent neverending retries in AIL pushing from hanging the unmount.
--	 */
--	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
--
--	/*
--	 * Flush all pending changes from the AIL.
--	 */
--	xfs_ail_push_all_sync(mp->m_ail);
--
--	/*
--	 * Reclaim all inodes. At this point there should be no dirty inodes and
--	 * none should be pinned or locked. Stop background inode reclaim here
--	 * if it is still running.
--	 */
--	cancel_delayed_work_sync(&mp->m_reclaim_work);
--	xfs_reclaim_inodes(mp);
--	xfs_health_unmount(mp);
-+	xfs_unmount_flush_inodes(mp);
- 
- 	xfs_qm_unmount(mp);
- 
+ 	error = xfs_iwalk_ag(iwag);
++	if (iwag->tp)
++		xfs_trans_cancel(iwag->tp);
+ 	xfs_iwalk_free(iwag);
+ out:
+ 	kmem_free(iwag);
 
