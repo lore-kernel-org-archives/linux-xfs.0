@@ -2,243 +2,103 @@ Return-Path: <SRS0=xiMZ=IF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA92BC433DB
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 15:31:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CEFBC433E6
+	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 20:26:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89360650FA
-	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 15:31:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09D6465166
+	for <linux-xfs@archiver.kernel.org>; Sun,  7 Mar 2021 20:26:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231411AbhCGPbH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 7 Mar 2021 10:31:07 -0500
-Received: from out20-98.mail.aliyun.com ([115.124.20.98]:56189 "EHLO
-        out20-98.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231255AbhCGPa4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Mar 2021 10:30:56 -0500
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.0743673|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.260236-0.00399315-0.735771;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047187;MF=guan@eryu.me;NM=1;PH=DS;RN=5;RT=5;SR=0;TI=SMTPD_---.JhdEwGg_1615131049;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.JhdEwGg_1615131049)
-          by smtp.aliyun-inc.com(10.147.41.143);
-          Sun, 07 Mar 2021 23:30:50 +0800
-Date:   Sun, 7 Mar 2021 23:30:49 +0800
-From:   Eryu Guan <guan@eryu.me>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, sunke32@huawei.com
-Subject: Re: [PATCH] xfstests: rename RENAME_WHITEOUT test on fs no enough
- sapce
-Message-ID: <YETxqYdhNQwT+aZE@desktop>
-References: <20210218071324.50413-1-zlang@redhat.com>
+        id S232849AbhCGU0H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 7 Mar 2021 15:26:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52804 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232869AbhCGU0D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 7 Mar 2021 15:26:03 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1587065167;
+        Sun,  7 Mar 2021 20:26:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1615148763;
+        bh=ZS9NOBvBR9f8TybCq716fQ3WJNwDXvoCEpC/6WHW6ag=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=uK4yC9vXLplC0KryYY+WQ7+Y0z/klnvvfavPfbJksIYSOUNFGrI1cvHAEAo18y3sL
+         URz6ySCZkVewX5Nwhh3q4kcjJQuh5048Q+ou85UHZg3grYGBYqpnBn0bD15yCBY7r3
+         vs0sXPTOK2v9wxLcqZbF7RgJXMXsXiCtPVJTwN4RNP07Puzm01DAGDoiT0l9Zp8vxe
+         fxh5R1oHtgiI6UJoIjlYFtP7xc2Ec7ISD0bCbthn69e7ridUooB9sQU+jD0axnmwPY
+         VAd+FOuvVOV50q29gi9+zGBpgCdlDaBQHA5FB2VxQvcgf/zGStU/TNFnKw0eh3x6sN
+         3bpBog4ROYcdQ==
+Subject: [PATCH 4/4] xfs: drop freeze protection when running GETFSMAP
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, hch@lst.de, dchinner@redhat.com,
+        christian.brauner@ubuntu.com
+Date:   Sun, 07 Mar 2021 12:26:02 -0800
+Message-ID: <161514876275.698643.12226309352552265069.stgit@magnolia>
+In-Reply-To: <161514874040.698643.2749449122589431232.stgit@magnolia>
+References: <161514874040.698643.2749449122589431232.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210218071324.50413-1-zlang@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 18, 2021 at 03:13:24PM +0800, Zorro Lang wrote:
-> This's a regression test for linux 6b4b8e6b4ad8 ("ext4: fix bug for
-> rename with RENAME_WHITEOUT"). Rename a file with RENAME_WHITEOUT
-> flag might cause corruption when there's not enough space to
-> complete this renaming operation.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> Signed-off-by: Sun Ke <sunke32@huawei.com>
-> ---
-> 
-> Hi,
-> 
-> As the request of Sun Ke, I rewrite his test case as this patch.
-> The history of reviewing as below:
-> https://patchwork.kernel.org/project/fstests/patch/20210128061202.210074-1-sunke32@huawei.com/
-> https://patchwork.kernel.org/project/fstests/patch/20210202123956.3146761-1-sunke32@huawei.com/
-> 
-> At last, I decide to create several chunks of files to do this testing, help to
-> get more chance to trigger ENOSPC when does rename(RENAME_WHITEOUT).
-> 
-> From my testing, it can reproduce this bug on linux 5.10[1], and test passed on
-> linux 5.11-rc5+ [2]. And it works on XFS too. Hope to get more review from fs-devel.
+From: Darrick J. Wong <djwong@kernel.org>
 
-Thanks a lot for the revision!
+A recent log refactoring patchset from Brian Foster relaxed fsfreeze
+behavior with regards to the buffer cache -- now freeze only waits for
+pending buffer IO to finish, and does not try to drain the buffer cache
+LRU.  As a result, fsfreeze should no longer stall indefinitely while
+fsmap runs.  Drop the sb_start_write calls around fsmap invocations.
 
-> 
-> [1]
-> # ./check generic/623
-> FSTYP         -- ext4
-> PLATFORM      -- Linux/x86_64 ibm-xxxxxxx-xx 5.10.0-rc5+ #4 SMP Tue Jan 5 20:12:45 CST 2021
-> MKFS_OPTIONS  -- /dev/mapper/testvg-scratchdev
-> MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:root_t:s0 /dev/mapper/testvg-scratchdev /mnt/scratch
-> 
-> generic/623     _check_generic_filesystem: filesystem on /dev/mapper/testvg-scratchdev is inconsistent                                                                                        
-> (see /root/git/xfstests-zlang/results//generic/623.full for details)
-> - output mismatch (see /root/git/xfstests-zlang/results//generic/623.out.bad)
->     --- tests/generic/623.out   2021-02-18 13:26:35.953071523 +0800
->     +++ /root/git/xfstests-zlang/results//generic/623.out.bad   2021-02-18 13:28:10.450733088 +0800                                                                                           
->     @@ -1,2 +1,232 @@
->      QA output created by 623
->     +ls: cannot access '/mnt/scratch/srcfile3866': Structure needs cleaning
->     +ls: cannot access '/mnt/scratch/srcfile3867': Structure needs cleaning
->     +ls: cannot access '/mnt/scratch/srcfile3868': Structure needs cleaning
->     +ls: cannot access '/mnt/scratch/srcfile3869': Structure needs cleaning
->     +ls: cannot access '/mnt/scratch/srcfile3870': Structure needs cleaning
->     +ls: cannot access '/mnt/scratch/srcfile3871': Structure needs cleaning
->     ...
->     (Run 'diff -u /root/git/xfstests-zlang/tests/generic/623.out /root/git/xfstests-zlang/results//generic/623.out.bad'  to see the entire diff)                                              
-> Ran: generic/623
-> Failures: generic/623
-> Failed 1 of 1 tests
-> 
-> [2]
-> # ./check generic/623
-> FSTYP         -- ext4
-> PLATFORM      -- Linux/x86_64 localhost 5.11.0-0.rc5.20210128git76c057c84d28.137.fc34.x86_64 #1 SMP Thu Jan 28 21:10:47 UTC 2021
-> MKFS_OPTIONS  -- /dev/mapper/testvg-scratchdev
-> MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:root_t:s0 /dev/mapper/testvg-scratchdev /mnt/scratch
-> 
-> generic/623 4s ...  86s
-> Ran: generic/623
-> Passed all 1 tests
-> 
-> [3]
-> # ./check generic/623
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/x86_64 localhost 5.11.0-0.rc5.20210128git76c057c84d28.137.fc34.x86_64 #1 SMP Thu Jan 28 21:10:47 UTC 2021
-> MKFS_OPTIONS  -- -f -bsize=4096 /dev/mapper/testvg-scratchdev
-> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/testvg-scratchdev /mnt/scratch
-> 
-> generic/623 86s ...  99s
-> Ran: generic/623
-> Passed all 1 tests
-> 
-> Thanks,
-> Zorro
-> 
->  tests/generic/623     | 72 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/623.out |  2 ++
->  tests/generic/group   |  1 +
->  3 files changed, 75 insertions(+)
->  create mode 100755 tests/generic/623
->  create mode 100644 tests/generic/623.out
-> 
-> diff --git a/tests/generic/623 b/tests/generic/623
-> new file mode 100755
-> index 00000000..56358ca6
-> --- /dev/null
-> +++ b/tests/generic/623
-> @@ -0,0 +1,72 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2021 HUAWEI.  All Rights Reserved.
-> +# Copyright (c) 2021 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 623
-> +#
-> +# Test RENAME_WHITEOUT on filesystem without space to create one more inodes.
-> +# This is a regression test for kernel commit:
-> +#   6b4b8e6b4ad8 ("ext4: ext4: fix bug for rename with RENAME_WHITEOUT")
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/populate
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_fsmap.c |   14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-. ./common/renameat2
 
-then ...
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 9ce5e7d5bf8f..34f2b971ce43 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -904,14 +904,6 @@ xfs_getfsmap(
+ 	info.fsmap_recs = fsmap_recs;
+ 	info.head = head;
+ 
+-	/*
+-	 * If fsmap runs concurrently with a scrub, the freeze can be delayed
+-	 * indefinitely as we walk the rmapbt and iterate over metadata
+-	 * buffers.  Freeze quiesces the log (which waits for the buffer LRU to
+-	 * be emptied) and that won't happen while we're reading buffers.
+-	 */
+-	sb_start_write(mp->m_super);
+-
+ 	/* For each device we support... */
+ 	for (i = 0; i < XFS_GETFSMAP_DEVS; i++) {
+ 		/* Is this device within the range the user asked for? */
+@@ -934,6 +926,11 @@ xfs_getfsmap(
+ 		if (handlers[i].dev > head->fmh_keys[0].fmr_device)
+ 			memset(&dkeys[0], 0, sizeof(struct xfs_fsmap));
+ 
++		/*
++		 * Grab an empty transaction so that we can use its recursive
++		 * buffer locking abilities to detect cycles in the rmapbt
++		 * without deadlocking.
++		 */
+ 		error = xfs_trans_alloc_empty(mp, &tp);
+ 		if (error)
+ 			break;
+@@ -951,7 +948,6 @@ xfs_getfsmap(
+ 
+ 	if (tp)
+ 		xfs_trans_cancel(tp);
+-	sb_end_write(mp->m_super);
+ 	head->fmh_oflags = FMH_OF_DEV_T;
+ 	return error;
+ }
 
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_require_scratch
-
-Need "_require_renameat2 whiteout" here.
-
-> +
-> +_scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1
-> +_scratch_mount
-> +
-> +# Create several chunks of file, to help to trigger the bug easily
-> +CHUNKS=$((64 * 64))
-
-Rename CHUNKS to NR_FILE? I tried 128 and could trigger the failure
-quickly as well, and test passwd within 5 seconds on v5.11 kernel. So I
-think 128 files should be fine? It's not required to be 100%
-reproducible, as long as the possiblity is high enough.
-
-> +for ((i=0; i<CHUNKS; i++));do
-> +	touch $SCRATCH_MNT/srcfile$i
-> +done
-> +# Try to fill the whole fs
-> +nr_free=$(stat -f -c '%f' $SCRATCH_MNT)
-> +blksz="$(_get_block_size $SCRATCH_MNT)"
-> +_fill_fs $((nr_free * blksz)) $SCRATCH_MNT/fill_space $blksz 0 >> $seqres.full 2>&1
-> +# Use empty files to fill the rest
-> +for ((i=0; i<10000; i++));do
-> +	touch $SCRATCH_MNT/fill_file$i 2>/dev/null
-> +	# Until no more files can be created
-> +	if [ $? -ne 0 ];then
-> +		break
-> +	fi
-> +done
-> +# ENOSPC is expected here
-> +for ((i=0; i<CHUNKS; i++));do
-> +	$here/src/renameat2 -w $SCRATCH_MNT/srcfile$i $SCRATCH_MNT/dstfile$i >> $seqres.full 2>&1
-> +done
-> +_scratch_cycle_mount
-> +# Expect no errors at here
-> +for ((i=0; i<CHUNKS; i++));do
-> +	ls -l $SCRATCH_MNT/srcfile$i >/dev/null
-> +done
-> +
-> +echo "Silence is golden"
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/623.out b/tests/generic/623.out
-> new file mode 100644
-> index 00000000..6f774f19
-> --- /dev/null
-> +++ b/tests/generic/623.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 623
-> +Silence is golden
-> diff --git a/tests/generic/group b/tests/generic/group
-> index b10fdea4..72136075 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -625,3 +625,4 @@
->  620 auto mount quick
->  621 auto quick encrypt
->  622 auto shutdown metadata atime
-> +623 auto rename enospc
-
-If we reduce the iterations, and test would pass quickly, we could add
-'quick' group too.
-
-Thanks,
-Eryu
-
-> -- 
-> 2.29.2
