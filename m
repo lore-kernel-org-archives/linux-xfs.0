@@ -2,203 +2,195 @@ Return-Path: <SRS0=7MVS=IG=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D503C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 10:50:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7489CC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 11:35:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B7A5651FC
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 10:50:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33AF4651D3
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 11:35:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230039AbhCHKuW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Mar 2021 05:50:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37228 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230125AbhCHKtt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 05:49:49 -0500
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B7F5C06174A
-        for <linux-xfs@vger.kernel.org>; Mon,  8 Mar 2021 02:49:48 -0800 (PST)
-Received: by mail-pl1-x62e.google.com with SMTP id n17so1121699plc.7
-        for <linux-xfs@vger.kernel.org>; Mon, 08 Mar 2021 02:49:48 -0800 (PST)
+        id S229711AbhCHLem (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 06:34:42 -0500
+Received: from esa7.fujitsucc.c3s2.iphmx.com ([68.232.159.87]:31326 "EHLO
+        esa7.fujitsucc.c3s2.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229578AbhCHLeZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 06:34:25 -0500
+IronPort-SDR: sBtAvlq4x0Bw3Jq0ZkvcKdGZbpT7DAVeRHgEWqKnhh0TR9UjZTvL2h0No0H74xqx3ucAAT/7yk
+ fo6TN3naQDmGdlGChxEJzp6IPWWRMFm7vNZ18GnW4NSIRRsevGHa6JT92QDCf8JH9XqYVBCnGM
+ y6KkABELqZV3TG7wZVdxzoOmbWLsPFDjltu6D4sL0bQWkftCILI9y3sjDsBrdl16LP2FfSA+Ks
+ CKOARliCBcxUcn19CSe+8Suj+IvkiPql+dgRgTAoiwTvYn/5Sm2fwsQbOTRHfEjPA/NPOJzs42
+ Urs=
+X-IronPort-AV: E=McAfee;i="6000,8403,9916"; a="27391094"
+X-IronPort-AV: E=Sophos;i="5.81,232,1610377200"; 
+   d="scan'208";a="27391094"
+Received: from mail-os2jpn01lp2058.outbound.protection.outlook.com (HELO JPN01-OS2-obe.outbound.protection.outlook.com) ([104.47.92.58])
+  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2021 20:34:20 +0900
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=mzpAy9oXxURtcobhOqbyWv8P1ZXPYQMU5RkIdq23lQ3za+zuMWWSYb7wu7aLL+uWGt5lV499n0y8EsY5CYNyAoXe7TivNMuzboaCi/9t36xUHpHP2mKf9uACC/tCtDdlCRJNas3BeBDp/y3kpeb9YRfw5/kbuXoxjPYmCQsoKD1zYJugHzZp8BHCVuSsTc40qCh+kS54QvZDt3bHovLH4FvvN/mw+RdGn1d++/KpTwC19aOVTUDrHBq53N7908VyC3nLgr0De+h8/lIRsXXkQrQYkGudzvwFkH3ZgbKK06QvVc6r+eAa9vP5XFvV2MDOC6fqjF1+nBuuT8xDJjiCxw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+7yH3Ef5p3eCXwKhdWr3MstcfOaVdOEKpIAQ0ALp5Ss=;
+ b=lb0chRdPEiFmR03TEiVOE1yN1F/k9LEqqAIDtCwTs8uKYcUI6YwlcIpjylJu8RyZVE8GOw9eHRfN+7z2zQek7fhhWWbnWFMFtjo/BUoAW16NuEVomF+co29lYXurrMp2oDvI7N3MInGAc3qoyKFYN0xppe3kHgGDJN9oB0np1FFdKAYtAvSZ8gy3Kn7yrLy1Gk6uvLUSf9HBZfpTwxvZ5TVN2ENQSVSr7oJtx35frXG/vKXWRotpWy2GGMhrVK6LsNlWN8CaU8zs6ybRXoooBMJObVFmPjl0WSbefTtqo/r1Lrrn7tPGZNWctAYEK5xhvaz14/BX2iXJx7WqG65qlg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
+ dkim=pass header.d=fujitsu.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=/5QP9rPfQqlXhD0IF6cUc8tn4UetbeGFHAGwYdKf9BY=;
-        b=aHYxC5raLJlknMbscRBbtZ4CPbXwxjFu2mNcRJXsi+Y77xz1KblKsc0dcQrIl78tNF
-         jkUl0Sro0+3rVvwrJvGb/Tjcgih9MdMMXZ+DYQfvKHpRVNYG0FuayzI55e4xSOtl3w9z
-         tNbbvxxg6sVIlzPPlkeVBDke+jbtYyk9fRWP5EkXpvWp14WAgf3IbzI43i/wqcv87nHD
-         ZQQ6unFgsA4lR9iz2qe02UPQog1iY/PznA+Op2IC4jSfFKKIoUJ7eCIifc2/ZrMlDbq7
-         LdC+OH3xGxqQKAmC/FZ438fNbEB2ClQ6BSoiT5+XrFkB4XscY5hi6LSpLjTMJenUryGD
-         g7Hw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=/5QP9rPfQqlXhD0IF6cUc8tn4UetbeGFHAGwYdKf9BY=;
-        b=hKOzAkC84modXgvElcwEWcs3ovQbwVmmNUFqtxwzuEKk51NuHwovX8/DJMVPBLYum+
-         NxIAWVufN589su0asdqg3Hy/MoEUwzAnSLc5LylP6YcPfo9ozGc2xC6xNHBWhkc+f9lD
-         JV2UXgs9vGPstkQvyhaFacdkMOdzNgRSfSNcZZkus7G3UpXlQi/Eez40YEfFYkt1eB5a
-         0jhSDJgJUE7P7RrnZIQX6OblRQORLBDMXXgIVWV52bMKxo+ZSiuN8u9WmhzEPahKRubR
-         FWkfD+sTn1STOwGPFQsPw8EZVzrsBCBWfZaw6I8pAG1nkDyJq1xgiK3ODJULI6910NSe
-         bD0A==
-X-Gm-Message-State: AOAM533/OG9E30q6dAtpPTFf9SjVob3ZFyDH3dsmNwZ0D4cbQh7fkd72
-        KIIXWoV1o8sP6Qx+KEAwCJcAn+y8/yiVdg==
-X-Google-Smtp-Source: ABdhPJyYStU/hj7bau4G8BaTGKstXuSP2Qifp0fbkNkPk05QyUCXMbucIiZsHfzoSOxLSAkawPTayA==
-X-Received: by 2002:a17:902:cb0b:b029:e5:b670:d905 with SMTP id c11-20020a170902cb0bb02900e5b670d905mr21030315ply.18.1615200587580;
-        Mon, 08 Mar 2021 02:49:47 -0800 (PST)
-Received: from garuda ([122.167.231.243])
-        by smtp.gmail.com with ESMTPSA id d6sm10045700pjs.38.2021.03.08.02.49.46
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 08 Mar 2021 02:49:47 -0800 (PST)
-References: <20210305051143.182133-1-david@fromorbit.com> <20210305051143.182133-9-david@fromorbit.com>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/45] xfs: journal IO cache flush reductions
-In-reply-to: <20210305051143.182133-9-david@fromorbit.com>
-Date:   Mon, 08 Mar 2021 16:19:44 +0530
-Message-ID: <87czw95393.fsf@garuda>
+ d=fujitsu.onmicrosoft.com; s=selector2-fujitsu-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+7yH3Ef5p3eCXwKhdWr3MstcfOaVdOEKpIAQ0ALp5Ss=;
+ b=Czbqi+PyG0lOv17fA2FBE7tDVy97Guhpv/dSuX0xbADf6FUHttPzkRZVNTWB7ZH2xT2Y5GUqqGwO2mt7WJv1SN4vDyoz7xqax8my73XPnnLNz0QoKz9tki4cJUN/V4kmjzzR6BRaOb4ynHIRGaRPMl4/J2ngmPVoR7AwK3LKLeE=
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com (2603:1096:604:18::16)
+ by OSYPR01MB5413.jpnprd01.prod.outlook.com (2603:1096:604:90::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.19; Mon, 8 Mar
+ 2021 11:34:16 +0000
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::c482:fa93:9877:5063]) by OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::c482:fa93:9877:5063%3]) with mapi id 15.20.3912.027; Mon, 8 Mar 2021
+ 11:34:16 +0000
+From:   "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+CC:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        device-mapper development <dm-devel@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        david <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
+        "y-goto@fujitsu.com" <y-goto@fujitsu.com>
+Subject: Re: [PATCH v3 01/11] pagemap: Introduce ->memory_failure()
+Thread-Topic: [PATCH v3 01/11] pagemap: Introduce ->memory_failure()
+Thread-Index: AQHW/gjzAa5hnh6PaUq187fVBTbxkqp3lL+AgAIDAHSAACKcgIAARgh1
+Date:   Mon, 8 Mar 2021 11:34:16 +0000
+Message-ID: <OSBPR01MB29203F891F9584CC53616FB8F4939@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+References: <20210208105530.3072869-1-ruansy.fnst@cn.fujitsu.com>
+ <20210208105530.3072869-2-ruansy.fnst@cn.fujitsu.com>
+ <CAPcyv4jqEdPoF5YM+jSYJd74KqRTwbbEum7=moa3=Wyn6UyU9g@mail.gmail.com>
+ <OSBPR01MB29207A1C06968705C2FEBACFF4939@OSBPR01MB2920.jpnprd01.prod.outlook.com>,<CAPcyv4iBnWbG0FYw6-K0MaH--rq62s7RY_yoT9rOYWMa94Yakw@mail.gmail.com>
+In-Reply-To: <CAPcyv4iBnWbG0FYw6-K0MaH--rq62s7RY_yoT9rOYWMa94Yakw@mail.gmail.com>
+Accept-Language: en-US, zh-CN
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: intel.com; dkim=none (message not signed)
+ header.d=none;intel.com; dmarc=none action=none header.from=fujitsu.com;
+x-originating-ip: [49.74.142.24]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 3393f5fb-3e41-4fab-a05a-08d8e2261af8
+x-ms-traffictypediagnostic: OSYPR01MB5413:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <OSYPR01MB5413B2F1021BEA9CB1105D49F4939@OSYPR01MB5413.jpnprd01.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: qsYrcBXi0KulC1SmKo90aNEZp8MLk7sk/ilhirmcf67RTHrrFkXYrkAUFiZwhGaeGhvGi08Tw3kGQ4m4yt3gmajQWUvWvYlJTQbYSbXSwdqMiVuJGcGN//Mfd1aYcHPjidRib6LXc8L/S2dNvJPSjrbniA2S3Z+AUu5npSJnHFh9OmBt5MF4PmT5hgc8vzyIO5VogxxCS5JAZlvq1cyZtoA2C+mcrV3U3bQlGVfRy3QmL0AYlb15Gg1Jwv4zuegBGh6UpDmmtvDt3Kq5rMhhE+y2JH6RTePQga5tFpBRpq/wd9hZkIGH5hkZGVnSXGo07KDOl69KLWKq1y46tt6FSXOxo8Dhq6Zt6d1h+9HNzOkVeHkTW9Qs5QqN8csAJZP6YOqRT3WHS5BzjNVAtd5cV3ib9HTw2wpye6D0z6RAXIxYsCj3SxhdEKjjq2fsNtFhToW+tn265Da7QBf7Tj1kQbGBZaS9VAvvDyo5yg9kP76d3L06JLgML6v6L47oOdXFlU63z9LvPL3vfPN7VMfVtA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSBPR01MB2920.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(346002)(39860400002)(376002)(366004)(396003)(91956017)(5660300002)(85182001)(76116006)(86362001)(4326008)(83380400001)(2906002)(186003)(33656002)(107886003)(7416002)(6506007)(8936002)(9686003)(71200400001)(55016002)(26005)(8676002)(7696005)(52536014)(54906003)(66556008)(478600001)(64756008)(66476007)(66446008)(66946007)(316002)(6916009);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: =?gb2312?B?dEVqakxySFdndFlOK3FlbzQ2KzY0eUFPZUZMYjArV1kwUk1EN0pHbnoxc1Yz?=
+ =?gb2312?B?Z25ZY0VJaHNlbkV0bE1TcE52OWlXV2ZkSzNqcjlJV1VzUG5RTXhxaUlGVGVY?=
+ =?gb2312?B?cjN0WllFTWVKWTd3QlcvOGpvRGVCenVORTBwN0l5d1hDaVNZekpxbHJZQTd6?=
+ =?gb2312?B?d1JOZnIzdHE5a0ZkZWwyTnhackxzaGpGSVJvSWFUMjhjSE85TWxSR2xOWTYr?=
+ =?gb2312?B?VFFsay9PTHFZcG9nOFp1ZVVkZzdZU2lPUit6allTUjEwVFBvTmdKaFo0SzU0?=
+ =?gb2312?B?SlYxa0ZVdnllRnJ2Wkh2NVRVcUs1TzdrSTh4R3M0SzFwTWIvc3R3Mk12dDM3?=
+ =?gb2312?B?TzdiNFhxbWNYcGh1MHBWS09UZXpTcHZIbjQwZUcvMHZFd1RhMGxRUmViSFpS?=
+ =?gb2312?B?M2VvNlZPSnI5UXNEaEd1ZFdUSEZQZEhIY0VYMnlhbGV6ZkpZdE5GejJRbXhZ?=
+ =?gb2312?B?dDhNaUR0eXRWTEIrRnBtVnhnYTNVY1NuZ0NGdFVJekp5WVd4dC9GL0kzRC9Y?=
+ =?gb2312?B?N2RPRy81K0cvdGF3Qy9lSDNUdUR0eCtFaXVhd1V1YStja2w2YXFuSDhlTnBu?=
+ =?gb2312?B?WnJDZnhkTUwrWk5MaVZxRUNUc29zbU43cDNRSk03NWQ5NmpHSTRCb3JTMmd5?=
+ =?gb2312?B?eUtSdm94Qm1MaTNSQXhBVVR3QnpNVnkxSGhRVG1pVGxMSnNmQlgvVHhQbGJQ?=
+ =?gb2312?B?M1I1N1ZVR244YkdPR0l1dHA2UHphMkNXaW93U1UrcTc3WEF3b2ZMTm5IVFF1?=
+ =?gb2312?B?S3JGU21CQ2xqVHhYZitVdDMyYXlxV1VRWXVwYmNPRUNCQ2VVU3pOdXl6V0da?=
+ =?gb2312?B?Z1oxQUpKT1lIejBGNUxyR1ZtaEwyd0xoaWZMLzZPZ1VKM0NSemFJYUZjelQy?=
+ =?gb2312?B?TDlBeTVWRzNkcWtNTXhYNG9ycWxWdFRwUzVQbStyamFZMVZHUURCYTVtbGhY?=
+ =?gb2312?B?MUlySUpWem16NERCbjdvclNWdVBybTAzVjh5dzYyMEVxTUozN0EwZXdBdzBj?=
+ =?gb2312?B?dTlLYWowL2t5TlVQYXExRkd0ZUFVZVFlMzgxczVPbUFtL2E0aGM4Ykl6cTZu?=
+ =?gb2312?B?TmJwOHZKRzduMGRNQjdYR0tTaW5Fdm90NU5RR1hYQVFTQ21yY2FOVzhXL0po?=
+ =?gb2312?B?QXVtT1QxZzZvQ1VTU0JRN1A1cUdwQ1hGQ3htbW9Za3pPYXpNTGVycFE2VThB?=
+ =?gb2312?B?NUgxdnhyMUZ4MVJ2TFVKdGFwSzlVZ2hMWTB4dHRWMFdSOTJZYjZ3OUN4SEF6?=
+ =?gb2312?B?ZmJnN3JmU21aVmRjTjRqd3BocGN5L0FTYzF1akdObi9SbnB6cEhMaGdETm9W?=
+ =?gb2312?B?MjBjR3prazA1WFRoZTNBSm1HS3lWMjI4azhNcFhYa0hrOUNYaHhCa095amw2?=
+ =?gb2312?B?dmtLMzh5bmNZSG9VdG1DTFZPVXkvUzBBN2lOV3A5d2NuL29Qa2t3NWNHSTBh?=
+ =?gb2312?B?NVFobnJCU3ZoajZ1T0VpVlE5Y2dRSy9hRkwrZmJaV2NYVWtLL2RUYkh1NjRY?=
+ =?gb2312?B?RWFudWUra1FMVEhuVzd5eEVTNzd6R1F1RHcrVWUxYVFwc0lFUXlCMU5heWJH?=
+ =?gb2312?B?UnQ1bi8wNFVkWXpWVWdXc29zMVVGbnFhVUpGQ1hXTmtGODJEYmEzS0x5d0oz?=
+ =?gb2312?B?NUVlSGNOSjJyTEszR1hhc0Z6dmEwSmpTZ1M3TjJKSXVYSFhJRVpKRUxKc3dP?=
+ =?gb2312?B?L3AwL3F3RTIrbkl0cTVSeS96ZU52am1rbk1vOC9rakpTbDRHUE90RzJpalps?=
+ =?gb2312?Q?QHDdUxnV9N2YlN3mIA=3D?=
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain
+X-OriginatorOrg: fujitsu.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: OSBPR01MB2920.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3393f5fb-3e41-4fab-a05a-08d8e2261af8
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Mar 2021 11:34:16.0742
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 3ZmgYXijU2OzGS67bH7T8nFINHi5rZeMUr/enpXJ43ReabbnKKq4IIuZ8SzgFhDJGp4K2klH1NeurZsoM7Dipg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSYPR01MB5413
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 05 Mar 2021 at 10:41, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> Currently every journal IO is issued as REQ_PREFLUSH | REQ_FUA to
-> guarantee the ordering requirements the journal has w.r.t. metadata
-> writeback. THe two ordering constraints are:
->
-> 1. we cannot overwrite metadata in the journal until we guarantee
-> that the dirty metadata has been written back in place and is
-> stable.
->
-> 2. we cannot write back dirty metadata until it has been written to
-> the journal and guaranteed to be stable (and hence recoverable) in
-> the journal.
->
-> The ordering guarantees of #1 are provided by REQ_PREFLUSH. This
-> causes the journal IO to issue a cache flush and wait for it to
-> complete before issuing the write IO to the journal. Hence all
-> completed metadata IO is guaranteed to be stable before the journal
-> overwrites the old metadata.
->
-> The ordering guarantees of #2 are provided by the REQ_FUA, which
-> ensures the journal writes do not complete until they are on stable
-> storage. Hence by the time the last journal IO in a checkpoint
-> completes, we know that the entire checkpoint is on stable storage
-> and we can unpin the dirty metadata and allow it to be written back.
->
-> This is the mechanism by which ordering was first implemented in XFS
-> way back in 2002 by commit 95d97c36e5155075ba2eb22b17562cfcc53fcf96
-> ("Add support for drive write cache flushing") in the xfs-archive
-> tree.
->
-> A lot has changed since then, most notably we now use delayed
-> logging to checkpoint the filesystem to the journal rather than
-> write each individual transaction to the journal. Cache flushes on
-> journal IO are necessary when individual transactions are wholly
-> contained within a single iclog. However, CIL checkpoints are single
-> transactions that typically span hundreds to thousands of individual
-> journal writes, and so the requirements for device cache flushing
-> have changed.
->
-> That is, the ordering rules I state above apply to ordering of
-> atomic transactions recorded in the journal, not to the journal IO
-> itself. Hence we need to ensure metadata is stable before we start
-> writing a new transaction to the journal (guarantee #1), and we need
-> to ensure the entire transaction is stable in the journal before we
-> start metadata writeback (guarantee #2).
->
-> Hence we only need a REQ_PREFLUSH on the journal IO that starts a
-> new journal transaction to provide #1, and it is not on any other
-> journal IO done within the context of that journal transaction.
->
-> The CIL checkpoint already issues a cache flush before it starts
-> writing to the log, so we no longer need the iclog IO to issue a
-> REQ_REFLUSH for us. Hence if XLOG_START_TRANS is passed
-> to xlog_write(), we no longer need to mark the first iclog in
-> the log write with REQ_PREFLUSH for this case. As an added bonus,
-> this ordering mechanism works for both internal and external logs,
-> meaning we can remove the explicit data device cache flushes from
-> the iclog write code when using external logs.
->
-> Given the new ordering semantics of commit records for the CIL, we
-> need iclogs containing commit records to issue a REQ_PREFLUSH. We
-> also require unmount records to do this. Hence for both
-> XLOG_COMMIT_TRANS and XLOG_UNMOUNT_TRANS xlog_write() calls we need
-> to mark the first iclog being written with REQ_PREFLUSH.
->
-> For both commit records and unmount records, we also want them
-> immediately on stable storage, so we want to also mark the iclogs
-> that contain these records to be marked REQ_FUA. That means if a
-> record is split across multiple iclogs, they are all marked REQ_FUA
-> and not just the last one so that when the transaction is completed
-> all the parts of the record are on stable storage.
->
-> And for external logs, unmount records need a pre-write data device
-> cache flush similar to the CIL checkpoint cache pre-flush as the
-> internal iclog write code does not do this implicitly anymore.
->
-> As an optimisation, when the commit record lands in the same iclog
-> as the journal transaction starts, we don't need to wait for
-> anything and can simply use REQ_FUA to provide guarantee #2.  This
-> means that for fsync() heavy workloads, the cache flush behaviour is
-> completely unchanged and there is no degradation in performance as a
-> result of optimise the multi-IO transaction case.
->
-> The most notable sign that there is less IO latency on my test
-> machine (nvme SSDs) is that the "noiclogs" rate has dropped
-> substantially. This metric indicates that the CIL push is blocking
-> in xlog_get_iclog_space() waiting for iclog IO completion to occur.
-> With 8 iclogs of 256kB, the rate is appoximately 1 noiclog event to
-> every 4 iclog writes. IOWs, every 4th call to xlog_get_iclog_space()
-> is blocking waiting for log IO. With the changes in this patch, this
-> drops to 1 noiclog event for every 100 iclog writes. Hence it is
-> clear that log IO is completing much faster than it was previously,
-> but it is also clear that for large iclog sizes, this isn't the
-> performance limiting factor on this hardware.
->
-> With smaller iclogs (32kB), however, there is a sustantial
-> difference. With the cache flush modifications, the journal is now
-> running at over 4000 write IOPS, and the journal throughput is
-> largely identical to the 256kB iclogs and the noiclog event rate
-> stays low at about 1:50 iclog writes. The existing code tops out at
-> about 2500 IOPS as the number of cache flushes dominate performance
-> and latency. The noiclog event rate is about 1:4, and the
-> performance variance is quite large as the journal throughput can
-> fall to less than half the peak sustained rate when the cache flush
-> rate prevents metadata writeback from keeping up and the log runs
-> out of space and throttles reservations.
->
-> As a result:
->
-> 	logbsize	fsmark create rate	rm -rf
-> before	32kb		152851+/-5.3e+04	5m28s
-> patched	32kb		221533+/-1.1e+04	5m24s
->
-> before	256kb		220239+/-6.2e+03	4m58s
-> patched	256kb		228286+/-9.2e+03	5m06s
->
-> The rm -rf times are included because I ran them, but the
-> differences are largely noise. This workload is largely metadata
-> read IO latency bound and the changes to the journal cache flushing
-> doesn't really make any noticable difference to behaviour apart from
-> a reduction in noiclog events from background CIL pushing.
->
-
-I see that the missing preflush w.r.t previous iclogs of a multi-iclog
-checkpoint transaction has been handled in this version. Hence,
-
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
--- 
-chandan
+PiA+ID4gPiAgMSBmaWxlIGNoYW5nZWQsIDggaW5zZXJ0aW9ucygrKQo+ID4gPiA+Cj4gPiA+ID4g
+ZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvbWVtcmVtYXAuaCBiL2luY2x1ZGUvbGludXgvbWVt
+cmVtYXAuaAo+ID4gPiA+IGluZGV4IDc5YzQ5ZTdmNWMzMC4uMGJjZjJiMWUyMGJkIDEwMDY0NAo+
+ID4gPiA+IC0tLSBhL2luY2x1ZGUvbGludXgvbWVtcmVtYXAuaAo+ID4gPiA+ICsrKyBiL2luY2x1
+ZGUvbGludXgvbWVtcmVtYXAuaAo+ID4gPiA+IEBAIC04Nyw2ICs4NywxNCBAQCBzdHJ1Y3QgZGV2
+X3BhZ2VtYXBfb3BzIHsKPiA+ID4gPiAgICAgICAgICAqIHRoZSBwYWdlIGJhY2sgdG8gYSBDUFUg
+YWNjZXNzaWJsZSBwYWdlLgo+ID4gPiA+ICAgICAgICAgICovCj4gPiA+ID4gICAgICAgICB2bV9m
+YXVsdF90ICgqbWlncmF0ZV90b19yYW0pKHN0cnVjdCB2bV9mYXVsdCAqdm1mKTsKPiA+ID4gPiAr
+Cj4gPiA+ID4gKyAgICAgICAvKgo+ID4gPiA+ICsgICAgICAgICogSGFuZGxlIHRoZSBtZW1vcnkg
+ZmFpbHVyZSBoYXBwZW5zIG9uIG9uZSBwYWdlLiAgTm90aWZ5IHRoZSBwcm9jZXNzZXMKPiA+ID4g
+PiArICAgICAgICAqIHdobyBhcmUgdXNpbmcgdGhpcyBwYWdlLCBhbmQgdHJ5IHRvIHJlY292ZXIg
+dGhlIGRhdGEgb24gdGhpcyBwYWdlCj4gPiA+ID4gKyAgICAgICAgKiBpZiBuZWNlc3NhcnkuCj4g
+PiA+ID4gKyAgICAgICAgKi8KPiA+ID4gPiArICAgICAgIGludCAoKm1lbW9yeV9mYWlsdXJlKShz
+dHJ1Y3QgZGV2X3BhZ2VtYXAgKnBnbWFwLCB1bnNpZ25lZCBsb25nIHBmbiwKPiA+ID4gPiArICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICBpbnQgZmxhZ3MpOwo+ID4gPiA+ICB9Owo+ID4gPgo+
+ID4gPiBBZnRlciB0aGUgY29udmVyc2F0aW9uIHdpdGggRGF2ZSBJIGRvbid0IHNlZSB0aGUgcG9p
+bnQgb2YgdGhpcy4gSWYKPiA+ID4gdGhlcmUgaXMgYSBtZW1vcnlfZmFpbHVyZSgpIG9uIGEgcGFn
+ZSwgd2h5IG5vdCBqdXN0IGNhbGwKPiA+ID4gbWVtb3J5X2ZhaWx1cmUoKT8gVGhhdCBhbHJlYWR5
+IGtub3dzIGhvdyB0byBmaW5kIHRoZSBpbm9kZSBhbmQgdGhlCj4gPiA+IGZpbGVzeXN0ZW0gY2Fu
+IGJlIG5vdGlmaWVkIGZyb20gdGhlcmUuCj4gPgo+ID4gV2Ugd2FudCBtZW1vcnlfZmFpbHVyZSgp
+IHN1cHBvcnRzIHJlZmxpbmtlZCBmaWxlcy4gIEluIHRoaXMgY2FzZSwgd2UgYXJlIG5vdAo+ID4g
+YWJsZSB0byB0cmFjayBtdWx0aXBsZSBmaWxlcyBmcm9tIGEgcGFnZSh0aGlzIGJyb2tlbiBwYWdl
+KSBiZWNhdXNlCj4gPiBwYWdlLT5tYXBwaW5nLHBhZ2UtPmluZGV4IGNhbiBvbmx5IHRyYWNrIG9u
+ZSBmaWxlLiAgVGh1cywgSSBpbnRyb2R1Y2UgdGhpcwo+ID4gLT5tZW1vcnlfZmFpbHVyZSgpIGlt
+cGxlbWVudGVkIGluIHBtZW0gZHJpdmVyLCB0byBjYWxsIC0+Y29ycnVwdGVkX3JhbmdlKCkKPiA+
+IHVwcGVyIGxldmVsIHRvIHVwcGVyIGxldmVsLCBhbmQgZmluYWxseSBmaW5kIG91dCBmaWxlcyB3
+aG8gYXJlCj4gPiB1c2luZyhtbWFwcGluZykgdGhpcyBwYWdlLgo+ID4KPiAKPiBJIGtub3cgdGhl
+IG1vdGl2YXRpb24sIGJ1dCB0aGlzIGltcGxlbWVudGF0aW9uIHNlZW1zIGJhY2t3YXJkcy4gSXQn
+cwo+IGFscmVhZHkgdGhlIGNhc2UgdGhhdCBtZW1vcnlfZmFpbHVyZSgpIGxvb2tzIHVwIHRoZSBh
+ZGRyZXNzX3NwYWNlCj4gYXNzb2NpYXRlZCB3aXRoIGEgbWFwcGluZy4gRnJvbSB0aGVyZSBJIHdv
+dWxkIGV4cGVjdCBhIG5ldyAnc3RydWN0Cj4gYWRkcmVzc19zcGFjZV9vcGVyYXRpb25zJyBvcCB0
+byBsZXQgdGhlIGZzIGhhbmRsZSB0aGUgY2FzZSB3aGVuIHRoZXJlCj4gYXJlIG11bHRpcGxlIGFk
+ZHJlc3Nfc3BhY2VzIGFzc29jaWF0ZWQgd2l0aCBhIGdpdmVuIGZpbGUuCj4gCgpMZXQgbWUgdGhp
+bmsgYWJvdXQgaXQuICBJbiB0aGlzIHdheSwgd2UKICAgIDEuIGFzc29jaWF0ZSBmaWxlIG1hcHBp
+bmcgd2l0aCBkYXggcGFnZSBpbiBkYXggcGFnZSBmYXVsdDsKICAgIDIuIGl0ZXJhdGUgZmlsZXMg
+cmVmbGlua2VkIHRvIG5vdGlmeSBga2lsbCBwcm9jZXNzZXMgc2lnbmFsYCBieSB0aGUKICAgICAg
+ICAgIG5ldyBhZGRyZXNzX3NwYWNlX29wZXJhdGlvbjsKICAgIDMuIHJlLWFzc29jaWF0ZSB0byBh
+bm90aGVyIHJlZmxpbmtlZCBmaWxlIG1hcHBpbmcgd2hlbiB1bm1tYXBpbmcKICAgICAgICAocm1h
+cCBxZXVyeSBpbiBmaWxlc3lzdGVtIHRvIGdldCB0aGUgYW5vdGhlciBmaWxlKS4KCkl0IGRpZCBu
+b3QgaGFuZGxlIHRob3NlIGRheCBwYWdlcyBhcmUgbm90IGluIHVzZSwgYmVjYXVzZSB0aGVpciAt
+Pm1hcHBpbmcgYXJlCm5vdCBhc3NvY2lhdGVkIHRvIGFueSBmaWxlLiAgSSBkaWRuJ3QgdGhpbmsg
+aXQgdGhyb3VnaCB1bnRpbCByZWFkaW5nIHlvdXIKY29udmVyc2F0aW9uLiAgSGVyZSBpcyBteSB1
+bmRlcnN0YW5kaW5nOiB0aGlzIGNhc2Ugc2hvdWxkIGJlIGhhbmRsZWQgYnkKYmFkYmxvY2sgbWVj
+aGFuaXNtIGluIHBtZW0gZHJpdmVyLiAgVGhpcyBiYWRibG9jayBtZWNoYW5pc20gd2lsbCBjYWxs
+Ci0+Y29ycnVwdGVkX3JhbmdlKCkgdG8gdGVsbCBmaWxlc3lzdGVtIHRvIHJlcGFpcmUgdGhlIGRh
+dGEgaWYgcG9zc2libGUuCgpTbywgd2Ugc3BsaXQgaXQgaW50byB0d28gcGFydHMuICBBbmQgZGF4
+IGRldmljZSBhbmQgYmxvY2sgZGV2aWNlIHdvbid0IGJlIG1peGVkCnVwIGFnYWluLiAgIElzIG15
+IHVuZGVyc3RhbmRpbmcgcmlnaHQ/CgpCdXQgdGhlIHNvbHV0aW9uIGFib3ZlIGlzIHRvIHNvbHZl
+IHRoZSBod3BvaXNvbiBvbiBvbmUgb3IgY291cGxlIHBhZ2VzLCB3aGljaApoYXBwZW5zIHJhcmVs
+eShJIHRoaW5rKS4gIERvIHRoZSAncG1lbSByZW1vdmUnIG9wZXJhdGlvbiBjYXVzZSBod3BvaXNv
+biB0b28/CkNhbGwgbWVtb3J5X2ZhaWx1cmUoKSBzbyBtYW55IHRpbWVzPyAgSSBoYXZuJ3QgdW5k
+ZXJzdG9vZCB0aGlzIHlldC4KCgotLQpUaGFua3MsClJ1YW4gU2hpeWFuZy4=
