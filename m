@@ -2,111 +2,134 @@ Return-Path: <SRS0=7MVS=IG=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC4C1C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 08:35:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 144D4C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 09:05:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F20C650F3
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 08:35:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0E2E6518F
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 09:05:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231388AbhCHIfF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Mar 2021 03:35:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36402 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231408AbhCHIev (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 03:34:51 -0500
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 105F1C06174A
-        for <linux-xfs@vger.kernel.org>; Mon,  8 Mar 2021 00:34:51 -0800 (PST)
-Received: by mail-pl1-x631.google.com with SMTP id p5so4524423plo.4
-        for <linux-xfs@vger.kernel.org>; Mon, 08 Mar 2021 00:34:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=M6CV3L5vNJTA1mlKLhnpRoxvlqydfHvbc3gM6PkV4G0=;
-        b=prJjpbDOZM8IzXzqpSEKil9XLD8Y5yq16wBukTtRwS5KtP7h8hvXnm2v5v8gJcGpiK
-         xmPScoBcsq3wE4LIWGGseEcCuNhEs8V3SmlnBPCUYMjxqT9/1je0AntNmqaTBqUrHpOf
-         h/u2cBgTklvBbWrqWE67e6D/H7OVdC0PZ5dv9tZ2sm4YHXkSAuHXTtOImxtD7VheDMvX
-         SCZQZZG1IP0XyDtSpHDOUZh873cZwlYHpIQgRSiytc4zjvQRuDppKnrKSM8GnxNjr3cu
-         zYQfkcG7/s96DUlwfwMnQOAXDIYbjVWcgprK9/Br89inBC+Zlwrg6hnBqq4HHAE3936+
-         JW8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=M6CV3L5vNJTA1mlKLhnpRoxvlqydfHvbc3gM6PkV4G0=;
-        b=p9DMG2fQsMqDYzaVDbJ++l9tEpD9gIqJxLpaC63ZjRsiPEz5xlwcTAoXn0i3fTRg6Y
-         8AK0+M1WrUuHYquHgRQwsLEftPPkCI7R17kYCA7D16OYWD5LG3ghQh7tyDx384wr7N4h
-         arRaMUFc0meH3eE9nxfLOkglvrWk6TJbZxg/6z6TePqpumCCWZyyNAUXF8MAczZJga3R
-         z+dT8q3MMkBOvogUsZuWD+iM2D+L1GF+jzO32V2OSKVidDj0DDFRcURb7U5CBPm2d4gX
-         7L14sPeXci8ZfBD3aHRHg1fPe5IE+9uCmtCPtXQ+ytJviNQTUoBfptdeq152/LKieRH0
-         47OA==
-X-Gm-Message-State: AOAM533u905R+BInFaxCikQKTtXmNUSiADtzZZ4BasoMPvZcGK+jFlUm
-        ThOcA/kj4u2PU99FWIqc2jclfdde53U=
-X-Google-Smtp-Source: ABdhPJxDKrPHWrJ5pl+ENZonrhiLPsXBRBBfOzOJ0xuTuQxF7JU2GTGu1aP1Ui3n3EKry82D43nA5Q==
-X-Received: by 2002:a17:90a:5510:: with SMTP id b16mr23806901pji.87.1615192490415;
-        Mon, 08 Mar 2021 00:34:50 -0800 (PST)
-Received: from garuda ([122.167.156.41])
-        by smtp.gmail.com with ESMTPSA id b3sm10493106pjg.41.2021.03.08.00.34.49
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 08 Mar 2021 00:34:49 -0800 (PST)
-References: <20210305051143.182133-1-david@fromorbit.com> <20210305051143.182133-4-david@fromorbit.com>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
+        id S229615AbhCHJEw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 04:04:52 -0500
+Received: from corp-mailer.zoner.com ([217.198.120.77]:37247 "EHLO
+        corp-mailer.zoner.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229813AbhCHJEZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 04:04:25 -0500
+Received: from [10.1.0.142] (gw-sady.zoner.com [217.198.112.101])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by corp-mailer.zoner.com (Postfix) with ESMTPSA id 6116E1F256;
+        Mon,  8 Mar 2021 10:04:18 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zoner.cz;
+        s=zcdkim1-3eaw24144jam11p; t=1615194258;
+        bh=iWwi0HW762uE7SYyjfa30lUCFiO25YEqsxYQB1GnQR8=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=BuOfy+SwhKX4jQVn0u/rvpjc1b1H/PlpBZG+eAHYN90OUlYOPSAJLoZVLIcXz+Itn
+         mdzeFmVd/gmxFzr7crzv1KjPKPGbyY6IcxPyKIO0mdfkdSAzARGn+MO1NtESc7L2yr
+         EUxmF84MsNcfMOda/mgQwVp/JZHB1y4IMOxV7RwDT5Cq7eoiGy7WEYwAtfef4vnLSp
+         xp4ubezP6hxfbd0a1ig7A7Vq3wFyLmUJs69mWkwHWOhYM+ApdXU2XsZI0h9Dm6QFcm
+         BhblXjN+pSTHxxoDpEH4lNY5TwEVln4vTESEl7huuj1aBI7+0I+rwN8lTiatrOejI4
+         cqcELYoi4IsvQ==
+Subject: Re: Incorrect user quota handling in fallocate
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 03/45] xfs: separate CIL commit record IO
-In-reply-to: <20210305051143.182133-4-david@fromorbit.com>
-Date:   Mon, 08 Mar 2021 14:04:47 +0530
-Message-ID: <87h7lm3uxk.fsf@garuda>
+References: <c0e98a3b-35e3-ecfe-2393-c0325d70e62f@zoner.cz>
+ <20210305214547.GV4662@dread.disaster.area>
+From:   Martin Svec <martin.svec@zoner.cz>
+Message-ID: <23073a06-f06f-8871-98f2-c6eab0910fc3@zoner.cz>
+Date:   Mon, 8 Mar 2021 10:04:18 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20210305214547.GV4662@dread.disaster.area>
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: 7bit
+Content-Language: cs
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 05 Mar 2021 at 10:41, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> To allow for iclog IO device cache flush behaviour to be optimised,
-> we first need to separate out the commit record iclog IO from the
-> rest of the checkpoint so we can wait for the checkpoint IO to
-> complete before we issue the commit record.
->
-> This separation is only necessary if the commit record is being
-> written into a different iclog to the start of the checkpoint as the
-> upcoming cache flushing changes requires completion ordering against
-> the other iclogs submitted by the checkpoint.
->
-> If the entire checkpoint and commit is in the one iclog, then they
-> are both covered by the one set of cache flush primitives on the
-> iclog and hence there is no need to separate them for ordering.
->
-> Otherwise, we need to wait for all the previous iclogs to complete
-> so they are ordered correctly and made stable by the REQ_PREFLUSH
-> that the commit record iclog IO issues. This guarantees that if a
-> reader sees the commit record in the journal, they will also see the
-> entire checkpoint that commit record closes off.
->
-> This also provides the guarantee that when the commit record IO
-> completes, we can safely unpin all the log items in the checkpoint
-> so they can be written back because the entire checkpoint is stable
-> in the journal.
->
+Dne 05.03.2021 v 22:45 Dave Chinner napsal(a):
+> On Fri, Mar 05, 2021 at 11:14:32AM +0100, Martin Svec wrote:
+>> Hi all,
+>>
+>> I've found a bug in XFS user quota handling in two subsequent fallocate() calls. This bug can be
+>> easily reproduced by the following script:
+>>
+>> # assume empty XFS mounted on /mnt/testxfs with -o usrquota, grpquota
+>>
+>> FILE="/mnt/testxfs/test.file"
+>> USER="testuser"
+>>
+>> setquota -u $USER $QUOTA $QUOTA 0 0 -a
+>> touch $FILE
+>> chown $USER:users $FILE
+>> fallocate --keep-size -o 0 -l $FILESIZE $FILE
+>> fallocate -o 0 -l $FILESIZE $FILE
+>>
+>> That is, we create an empty file, preallocate requested size while keeping zero file size and then
+>> call fallocate again to set the file size. Assume that there's enaugh free quota to fit the
+>> requested file size. In this case, both fallocate calls should succeed because the second one just
+>> increases the file size but does not change the allocated space. However, I observed that the second
+>> fallocate fails with EDQUOT if the free quota is less than _two times_ of the requested file size. I
+> I'd call that expected behaviour. We enforce space restrictions
+> (ENOSPC and EDQUOT) on the size being requested before the operation
+> takes place and return the unused space reservation after the
+> fallocate() completes and has allocated space.
 
-I see that xlog_state_clean_iclog() wakes up tasks waiting on
-iclog->ic_force_wait and that xlog_state_clean_iclog() itself is invoked after
-the corresponding iclog is written to disk and the log vectors are moved to
-AIL. Hence using iclog->ic_force_wait to wait for previous iclogs to complete
-I/O ensures that the commit record iclog is written to disk only after the
-previous iclogs have already been written.
+Well, I would expect that allocation of an already allocated space won't account that space again so
+it's a clear bug for me. But I'm not aware of XFS internals and understand that it can follow from
+overall space allocation logic.
 
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+> We cannot overcommit space or quota in XFS - that way leads to
+> deadlocks and data loss at ENOSPC because we can end up in
+> situations where we cannot write back data that users have written.
+> Hence we check up front, and if the worst case space requirement for
+> a given operation cannot fit under the ENOSPC or EDQUOT limits, it
+> is rejected with EDQUOT/ENOSPC.
+>
+> Yes, that means we get corner cases when near EDQUOT/ENOSPC where
+> stuff like this happens, but that tends to be exceedingly rare in
+> the rare world as few applications use the entire filesystem space
+> or quota allowance in just 1-2 allocations.
 
---
-chandan
+If our customer pays for a disk quota and cannot upload it's favorite 16 GiB movie to Samba share
+although he sees more than 30 GiB of space free, it's a bit hard to explain him that this is an
+expected and exceedingly rare behavior. :-)
+
+>
+>> guess that the second fallocate ignores the fact that the space was already preallocated and
+>> accounts the requested size for the second time. For example, if QUOTA=2GiB, file size FILESIZE=800
+>> MiB succeeds but FILESIZE=1600 MiB triggers EDQUOT in second fallocate. The same test performed on
+>> EXT4 always succeeds.
+> Yup, filesystems behave differently at edge cases.
+>
+>> I've found this issue while investigating why Samba (ver. 4.9.5) returns disk full error although
+>> there's still enaugh room for the copied file. Indeed, when Samba's "strict allocate" options is
+>> turned on Samba uses the above described sequence of two fallocate() syscalls to create a new file.
+> I'd say using fallocate to extend the file like this is .... not a
+> very good idea. All you actually need is a ftruncate() to change the
+> file size after the first fallocate (or use the first fallocate to
+> extend the file, too). The second fallocate() is largely useless on
+> most filesystems - internally they turn it into an extending
+> truncate because no allocation is required, so you may as well just
+> call ftruncate() and that way you will not trip over this space
+> reservation issue at all..
+
+I definitely agree that this is ... ehm, stupid way of file space reservation. I'll try to discuss
+it on Samba mailing list too. Fortunately, turning off Samba's "string allocate" feature solves the
+issue with minimal drawbacks.
+
+> Cheers,
+>
+> Dave.
+
+Thank you for your response,
+
+Martin
+
+
