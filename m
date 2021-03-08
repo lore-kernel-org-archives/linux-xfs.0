@@ -5,64 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F327EC43332
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 15:52:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5CADC4160E
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 15:52:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5EF965225
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 15:52:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC93265220
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 15:52:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230242AbhCHPwA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S230116AbhCHPwA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 8 Mar 2021 10:52:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46652 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230116AbhCHPvh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 10:51:37 -0500
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4EBAC06174A;
-        Mon,  8 Mar 2021 07:51:37 -0800 (PST)
-Received: by mail-pf1-x430.google.com with SMTP id y67so7487068pfb.2;
-        Mon, 08 Mar 2021 07:51:37 -0800 (PST)
+        with ESMTP id S230125AbhCHPvj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 10:51:39 -0500
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7804C06174A;
+        Mon,  8 Mar 2021 07:51:39 -0800 (PST)
+Received: by mail-pf1-x434.google.com with SMTP id j12so7304750pfj.12;
+        Mon, 08 Mar 2021 07:51:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=MoDGt/puC7EasHZqr7Mk0ROfRwgl6CKozyZM4S00kYM=;
-        b=PQZHt66DgfXOWMSaY3wD2ikpWXJm90zjRWAgNlQWTP7LDhp3xPH2f+l1LZ51v/z3Cn
-         h1lHKWdu6tnm2HorMbFNBSgBzfprDIrzf/oujUoPyjcs3/U06LX7pWW3Ua0KGU0Zpb+z
-         f2dfzA9nw9W7HpZdiH2t944ynQOtMzJtRRKvR7hjqWVBk8b2SCc5+nC9iXsOGZ0joAyE
-         0xz/lsCDGNbOV40VJdSJFN1A39kSvYeeIN5oGSXDoZOD3ACEFQ/8eHCOX52/9NNolLVO
-         HolJ9hcT7JUnAkBVuTvTHvXuRFnUXAv4AZJJfNGTkK8e0WnGe9B4xfHlQzaAZRX90CGk
-         Gnrw==
+        bh=SURDfOI58zJg6c8uN1nhSRiIbw4USkqI3jR97Wr0A2c=;
+        b=M15mPhWbDeeXZvwJ0oXGHm5+IwG/Mw9GINBMS60N6M8g9GU1lFAMpHGImSu2TLNy3W
+         Y9neeQO7OKmwNzxR4/w420Qs/GRIKg1RryJOPo/5DSD6a/lHlNZi80r0T1Yrbbc9c8Ma
+         ctOzZB6MIQP/DIazAF1rEPxk5f+2jfyu3P8+6YvN41tecvWlhzngqWijgqlX6Bzlk8gG
+         RminppRmw91hMdaPTX/IXTdd15MEw3EJHwfGp1c8s13abC5ZKQq8rOhsGWGe0kv4aQr1
+         KumS2nrlS2t9kOadi2Lxc4gVx/bI8mt/9GntDAUK9BFBK3e0bRTeuWjGR78PE0BzBSUe
+         fnIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=MoDGt/puC7EasHZqr7Mk0ROfRwgl6CKozyZM4S00kYM=;
-        b=Qz83y4y+LkzRiEaS1GAlK/KZwiu5MYpMQ1WmWLWaB4Vkax0Kj19pD54nfntpWT+Fjq
-         gKHPSLBiq+amvhcoQDPdr5Du0LBtT33CWEXzouaaHxvcBGa7DkLDQNbwMgvrV0vw7Aht
-         jIjCxe/tDYKmZY7J8vss3v6ePmqmTb/DHZSSRTT23JKevh4wTJ1RGMJ/E2cSYBj3M/5U
-         MhjYfbXW9+7s8Ya01aaSieCX6LgORQxYuYU0vULm3jEo3XmI6kQ0L05mvNnxImp/cCYm
-         PlUx8b4wBCBOAwnk7BVrWM5Cv5fNk/ujJgtvncSvvQLUw56RUlGHDvo62m9CpMrbTZsk
-         +9Pg==
-X-Gm-Message-State: AOAM5306cpBIcxS2FXYKqzPBk+jkoSh15AyEnVNNk33qkzLHMuHINtAr
-        GUbUxlgam1F03QiUyAyl26RZeLFVhKU=
-X-Google-Smtp-Source: ABdhPJxtyxIY7iq2G8rMRdPPC7MBApGNIVpH3E28cFDuwxoY6N/6yF/OJvSeeNpMfkUDyCxZ5LjMdg==
-X-Received: by 2002:aa7:9824:0:b029:1ef:2104:c72d with SMTP id q4-20020aa798240000b02901ef2104c72dmr20284365pfl.20.1615218697107;
-        Mon, 08 Mar 2021 07:51:37 -0800 (PST)
+        bh=SURDfOI58zJg6c8uN1nhSRiIbw4USkqI3jR97Wr0A2c=;
+        b=p8wKSQmf+4q8X0iKu4BCZ9ZFq0aOtXGYwYul+KENuqV707ETtUiqWahxePQ07hHsEE
+         gIehLK9dApPjMF//iSmG5Z2hfs26FCrgeQYiUb9vUVWi3VOxG+WgTBzVtAdbTAyWXPQQ
+         0s8shlvLnLuhFSZSV3VaJL+HueGfEi7f5HRQyM20EwyX2hIXuXNTazTarriTh0/ys2/e
+         ky4z4PDrq4KybhMekywgL+aNVs/g8mRws7cx0hBvklbN3j/crHfJVMbXhZ+9HLDoWFuD
+         /tlAH2T8H2j5TdgPCZiREetEPbMfHmlUmPh6lH6uT1AAeqPuKwKLE0ZycLtDDr9JS+HY
+         rSbQ==
+X-Gm-Message-State: AOAM532cT3lnKZDBLfHhYXSuamhmOp87SCCgo78JjgC2/CjueE8bCDBf
+        qI/yG6mIOcr8ayLQvftKrDJJfeIGE18=
+X-Google-Smtp-Source: ABdhPJw1GoPQei19pugthODEUo9GMis4q+c1BOrI1OQNO1e2y2q3L2S7tBAymhFVAtqV+XdT2ME+5Q==
+X-Received: by 2002:a62:7bc4:0:b029:1f1:58ea:4010 with SMTP id w187-20020a627bc40000b02901f158ea4010mr15932658pfc.70.1615218699136;
+        Mon, 08 Mar 2021 07:51:39 -0800 (PST)
 Received: from localhost.localdomain ([122.182.238.13])
-        by smtp.gmail.com with ESMTPSA id s4sm11086378pji.2.2021.03.08.07.51.35
+        by smtp.gmail.com with ESMTPSA id s4sm11086378pji.2.2021.03.08.07.51.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Mar 2021 07:51:36 -0800 (PST)
+        Mon, 08 Mar 2021 07:51:38 -0800 (PST)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     fstests@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
         linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: [PATCH V5 07/13] xfs: Check for extent overflow when adding/removing xattrs
-Date:   Mon,  8 Mar 2021 21:21:05 +0530
-Message-Id: <20210308155111.53874-8-chandanrlinux@gmail.com>
+Subject: [PATCH V5 08/13] xfs: Check for extent overflow when adding/removing dir entries
+Date:   Mon,  8 Mar 2021 21:21:06 +0530
+Message-Id: <20210308155111.53874-9-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210308155111.53874-1-chandanrlinux@gmail.com>
 References: <20210308155111.53874-1-chandanrlinux@gmail.com>
@@ -73,32 +73,31 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 This test verifies that XFS does not cause inode fork's extent count to
-overflow when adding/removing xattrs.
+overflow when adding/removing directory entries.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- tests/xfs/531     | 139 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/531.out |  18 ++++++
+ tests/xfs/532     | 182 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/532.out |  17 +++++
  tests/xfs/group   |   1 +
- 3 files changed, 158 insertions(+)
- create mode 100755 tests/xfs/531
- create mode 100644 tests/xfs/531.out
+ 3 files changed, 200 insertions(+)
+ create mode 100755 tests/xfs/532
+ create mode 100644 tests/xfs/532.out
 
-diff --git a/tests/xfs/531 b/tests/xfs/531
+diff --git a/tests/xfs/532 b/tests/xfs/532
 new file mode 100755
-index 00000000..a487318f
+index 00000000..235b60b5
 --- /dev/null
-+++ b/tests/xfs/531
-@@ -0,0 +1,139 @@
++++ b/tests/xfs/532
+@@ -0,0 +1,182 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2021 Chandan Babu R.  All Rights Reserved.
 +#
-+# FS QA Test 531
++# FS QA Test 532
 +#
 +# Verify that XFS does not cause inode fork's extent count to overflow when
-+# adding/removing xattrs.
++# adding/removing directory entries.
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
 +echo "QA output created by $seq"
@@ -117,7 +116,6 @@ index 00000000..a487318f
 +# get standard environment, filters and checks
 +. ./common/rc
 +. ./common/filter
-+. ./common/attr
 +. ./common/inject
 +. ./common/populate
 +
@@ -128,28 +126,34 @@ index 00000000..a487318f
 +
 +_supported_fs xfs
 +_require_scratch
-+_require_attrs
 +_require_xfs_debug
 +_require_test_program "punch-alternating"
 +_require_xfs_io_error_injection "reduce_max_iextents"
 +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
 +
++_scratch_mkfs_sized $((1024 * 1024 * 1024)) | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
++. $tmp.mkfs
++
++# Filesystems with directory block size greater than one FSB will not be tested,
++# since "7 (i.e. XFS_DA_NODE_MAXDEPTH + 1 data block + 1 free block) * 2 (fsb
++# count) = 14" is greater than the pseudo max extent count limit of 10.
++# Extending the pseudo max limit won't help either.  Consider the case where 1
++# FSB is 1k in size and 1 dir block is 64k in size (i.e. fsb count = 64). In
++# this case, the pseudo max limit has to be greater than 7 * 64 = 448 extents.
++if (( $dirbsize > $dbsize )); then
++	_notrun "Directory block size ($dirbsize) is larger than FSB size ($dbsize)"
++fi
++
 +echo "Format and mount fs"
 +_scratch_mkfs_sized $((1024 * 1024 * 1024)) >> $seqres.full
 +_scratch_mount >> $seqres.full
-+
-+bsize=$(_get_block_size $SCRATCH_MNT)
-+
-+attr_len=255
-+
-+testfile=$SCRATCH_MNT/testfile
 +
 +echo "Consume free space"
 +fillerdir=$SCRATCH_MNT/fillerdir
 +nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
 +nr_free_blks=$((nr_free_blks * 90 / 100))
 +
-+_fill_fs $((bsize * nr_free_blks)) $fillerdir $bsize 0 >> $seqres.full 2>&1
++_fill_fs $((dbsize * nr_free_blks)) $fillerdir $dbsize 0 >> $seqres.full 2>&1
 +
 +echo "Create fragmented filesystem"
 +for dentry in $(ls -1 $fillerdir/); do
@@ -162,107 +166,144 @@ index 00000000..a487318f
 +echo "Inject bmap_alloc_minlen_extent error tag"
 +_scratch_inject_error bmap_alloc_minlen_extent 1
 +
-+echo "* Set xattrs"
++dent_len=255
 +
-+echo "Create \$testfile"
-+touch $testfile
++echo "* Create directory entries"
 +
-+echo "Create xattrs"
-+nr_attrs=$((bsize * 20 / attr_len))
-+for i in $(seq 1 $nr_attrs); do
-+	attr="$(printf "trusted.%0247d" $i)"
-+	$SETFATTR_PROG -n "$attr" $testfile >> $seqres.full 2>&1
-+	[[ $? != 0 ]] && break
++testdir=$SCRATCH_MNT/testdir
++mkdir $testdir
++
++nr_dents=$((dbsize * 20 / dent_len))
++for i in $(seq 1 $nr_dents); do
++	dentry="$(printf "%0255d" $i)"
++	touch ${testdir}/$dentry >> $seqres.full 2>&1 || break
 +done
 +
-+echo "Verify \$testfile's naextent count"
-+
-+naextents=$(xfs_get_fsxattr naextents $testfile)
-+if (( $naextents > 10 )); then
-+	echo "Extent count overflow check failed: naextents = $naextents"
++echo "Verify directory's extent count"
++nextents=$(xfs_get_fsxattr nextents $testdir)
++if (( $nextents > 10 )); then
++	echo "Extent count overflow check failed: nextents = $nextents"
 +	exit 1
 +fi
 +
-+echo "Remove \$testfile"
++rm -rf $testdir
++
++echo "* Rename: Populate destination directory"
++
++dstdir=$SCRATCH_MNT/dstdir
++mkdir $dstdir
++
++nr_dents=$((dirbsize * 20 / dent_len))
++
++echo "Populate \$dstdir by moving new directory entries"
++for i in $(seq 1 $nr_dents); do
++	dentry="$(printf "%0255d" $i)"
++	dentry=${SCRATCH_MNT}/${dentry}
++	touch $dentry || break
++	mv $dentry $dstdir >> $seqres.full 2>&1 || break
++done
++
++rm $dentry
++
++echo "Verify \$dstdir's extent count"
++
++nextents=$(xfs_get_fsxattr nextents $dstdir)
++if (( $nextents > 10 )); then
++	echo "Extent count overflow check failed: nextents = $nextents"
++	exit 1
++fi
++
++rm -rf $dstdir
++
++echo "* Create multiple hard links to a single file"
++
++testdir=$SCRATCH_MNT/testdir
++mkdir $testdir
++
++testfile=$SCRATCH_MNT/testfile
++touch $testfile
++
++nr_dents=$((dirbsize * 20 / dent_len))
++
++echo "Create multiple hardlinks"
++for i in $(seq 1 $nr_dents); do
++	dentry="$(printf "%0255d" $i)"
++	ln $testfile ${testdir}/${dentry} >> $seqres.full 2>&1 || break
++done
++
 +rm $testfile
 +
-+echo "* Remove xattrs"
-+
-+echo "Create \$testfile"
-+touch $testfile
-+
-+echo "Disable reduce_max_iextents error tag"
-+_scratch_inject_error reduce_max_iextents 0
-+
-+echo "Create initial xattr extents"
-+
-+naextents=0
-+last=""
-+start=1
-+nr_attrs=$((bsize / attr_len))
-+
-+while (( $naextents < 4 )); do
-+	end=$((start + nr_attrs - 1))
-+
-+	for i in $(seq $start $end); do
-+		attr="$(printf "trusted.%0247d" $i)"
-+		$SETFATTR_PROG -n $attr $testfile
-+	done
-+
-+	start=$((end + 1))
-+
-+	naextents=$(xfs_get_fsxattr naextents $testfile)
-+done
-+
-+echo "Inject reduce_max_iextents error tag"
-+_scratch_inject_error reduce_max_iextents 1
-+
-+echo "Remove xattr to trigger -EFBIG"
-+attr="$(printf "trusted.%0247d" 1)"
-+$SETFATTR_PROG -x "$attr" $testfile >> $seqres.full 2>&1
-+if [[ $? == 0 ]]; then
-+	echo "Xattr removal succeeded; Should have failed "
++echo "Verify directory's extent count"
++nextents=$(xfs_get_fsxattr nextents $testdir)
++if (( $nextents > 10 )); then
++	echo "Extent count overflow check failed: nextents = $nextents"
 +	exit 1
 +fi
 +
-+rm $testfile && echo "Successfully removed \$testfile"
++rm -rf $testdir
++
++echo "* Create multiple symbolic links to a single file"
++
++testdir=$SCRATCH_MNT/testdir
++mkdir $testdir
++
++testfile=$SCRATCH_MNT/testfile
++touch $testfile
++
++nr_dents=$((dirbsize * 20 / dent_len))
++
++echo "Create multiple symbolic links"
++for i in $(seq 1 $nr_dents); do
++	dentry="$(printf "%0255d" $i)"
++	ln -s $testfile ${testdir}/${dentry} >> $seqres.full 2>&1 || break;
++done
++
++rm $testfile
++
++echo "Verify directory's extent count"
++nextents=$(xfs_get_fsxattr nextents $testdir)
++if (( $nextents > 10 )); then
++	echo "Extent count overflow check failed: nextents = $nextents"
++	exit 1
++fi
++
++rm -rf $testdir
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/531.out b/tests/xfs/531.out
+diff --git a/tests/xfs/532.out b/tests/xfs/532.out
 new file mode 100644
-index 00000000..7b699b7a
+index 00000000..2766c211
 --- /dev/null
-+++ b/tests/xfs/531.out
-@@ -0,0 +1,18 @@
-+QA output created by 531
++++ b/tests/xfs/532.out
+@@ -0,0 +1,17 @@
++QA output created by 532
 +Format and mount fs
 +Consume free space
 +Create fragmented filesystem
 +Inject reduce_max_iextents error tag
 +Inject bmap_alloc_minlen_extent error tag
-+* Set xattrs
-+Create $testfile
-+Create xattrs
-+Verify $testfile's naextent count
-+Remove $testfile
-+* Remove xattrs
-+Create $testfile
-+Disable reduce_max_iextents error tag
-+Create initial xattr extents
-+Inject reduce_max_iextents error tag
-+Remove xattr to trigger -EFBIG
-+Successfully removed $testfile
++* Create directory entries
++Verify directory's extent count
++* Rename: Populate destination directory
++Populate $dstdir by moving new directory entries
++Verify $dstdir's extent count
++* Create multiple hard links to a single file
++Create multiple hardlinks
++Verify directory's extent count
++* Create multiple symbolic links to a single file
++Create multiple symbolic links
++Verify directory's extent count
 diff --git a/tests/xfs/group b/tests/xfs/group
-index 463d810d..7e284841 100644
+index 7e284841..77abeefa 100644
 --- a/tests/xfs/group
 +++ b/tests/xfs/group
-@@ -528,3 +528,4 @@
- 528 auto quick quota
+@@ -529,3 +529,4 @@
  529 auto quick realtime growfs
  530 auto quick punch zero insert collapse
-+531 auto quick attr
+ 531 auto quick attr
++532 auto quick dir hardlink symlink
 -- 
 2.29.2
 
