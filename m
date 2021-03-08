@@ -2,171 +2,284 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A9C8C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 18:02:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C30D4C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 18:08:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2F64652B6
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 18:02:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99714652B3
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 18:08:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229972AbhCHSCW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Mar 2021 13:02:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46716 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230373AbhCHSB6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 13:01:58 -0500
-Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D834AC06174A
-        for <linux-xfs@vger.kernel.org>; Mon,  8 Mar 2021 10:01:57 -0800 (PST)
-Received: by mail-ed1-x52e.google.com with SMTP id l12so16090890edt.3
-        for <linux-xfs@vger.kernel.org>; Mon, 08 Mar 2021 10:01:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=+zcp9aSnYoFbyB3tMeqX2oxWSrOP4DQTmgBJZuYBvDA=;
-        b=yTqFiowg+ZrDQtEMf4WQCSpsgfGWzoDQpdhdJUNvav3WFR5Fl31Twy3LzXQ2HywcM+
-         RrbZGR8F02Tfetm3U1Lpxu5XyG1yT1ZlQCSohl2vOC3g4QMqojDgmBTgZc1b7kG68+yV
-         VvPcGQfwXkSyNByekhFWqNxqJNGNZ1+f3remo8UT9cc1o16+QjcJXep8wsZYGU18HbSI
-         J7TDY5zxBQvWjRoJl6piqGZe+IQgnXAn3scq0hzfsDM4IaSKP59goSfGKo+1LLciZRW9
-         xc+lFfDGbSOygStnXQhI8ZPnjq5+SAPHsYR702i3ZVA61b2FRGUPNiC8fjLf0KqLjF9a
-         30lw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=+zcp9aSnYoFbyB3tMeqX2oxWSrOP4DQTmgBJZuYBvDA=;
-        b=QwwcOC7flDtXs9toLTctWeUqksEEQVnKPcj7Xstf0X4rKKcF1Y0lnkdxTPTs9ODzn3
-         qExCeSQNgTVkZYbbk9RX26DnwSgouGK3tEnJDscWovH72Gy9TrFBn0SmQo5YV8VPpjvF
-         /mT9pYibBOdkqMewfjwtlpCyb9mSRkhhOu4nPXuWz8tt9Zye0+fH9WOuaNEhQ8MHgSBH
-         369yFzlG9V99Hz2DP9seG+VCSszIIgCB134kx+jMNG2695/crNHhGzpq96dufAvOvz0g
-         pc50SYJZStCMkT8oFN8mLeLl+WWSu2/MLf7vSWjfmnWKjGm3bYaFjxjg5xv3ErdWfk1L
-         btfQ==
-X-Gm-Message-State: AOAM533f8TGTsN8Y1jxB7YZ0D+1Zm03ysBmD4D+0fcNhIRS6wmDU86fg
-        17c6/y4kLxUGFVFN1AYmR7wIQHsKbm0v8E12Pa8yBw==
-X-Google-Smtp-Source: ABdhPJyiH5A/Lsq6qgR2AevlyxpZfOCI02f/Sq+KNGBFf5iXaQ47vO/OVkIBwMUvOxYfFtKqEcOogvchILyJzJrHkW4=
-X-Received: by 2002:a05:6402:11c9:: with SMTP id j9mr11617699edw.348.1615226515542;
- Mon, 08 Mar 2021 10:01:55 -0800 (PST)
+        id S230488AbhCHSI0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 13:08:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48786 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231148AbhCHSIG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Mar 2021 13:08:06 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BA7A2652AB;
+        Mon,  8 Mar 2021 18:08:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1615226885;
+        bh=7MLAUWhZLVnPHBdZRah3mEv2lqfWBEZv5Amncnk3H84=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=EMrP5rFxrdJ1TdC8kJQif7qEQYioloQuIMc9YUHcNsgsCEdklzXwIgPX1Ek0VtiYl
+         vOhqVKklwQ0FCjwb4dE897V2qR9mkY+aTxO7Lb+2Xq8Dxw2XilcuUNssCOHRdGtFOK
+         cZhhVH8utdzcAWr7laqKBpcg++1/dseAnYaqPeiLc0+c0ucEliDwcJxxsYbkKWkAFL
+         S0D8LL0/dKeRiddkE6+B6XZ3pp8hlMqA5IwILCPbS55IqGManLIpCUfeoTddeEJPgZ
+         SxVn4NZX/bQS613Cd2b9WBhAnWE2T7Mr1OIOYnjrH5tkizh3NZCWBp2scPvURWSV3u
+         tYqwCXzpj74vA==
+Date:   Mon, 8 Mar 2021 10:08:05 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V5 04/13] xfs: Check for extent overflow when trivally
+ adding a new extent
+Message-ID: <20210308180805.GR3419940@magnolia>
+References: <20210308155111.53874-1-chandanrlinux@gmail.com>
+ <20210308155111.53874-5-chandanrlinux@gmail.com>
 MIME-Version: 1.0
-References: <20210208105530.3072869-1-ruansy.fnst@cn.fujitsu.com>
- <20210208105530.3072869-2-ruansy.fnst@cn.fujitsu.com> <CAPcyv4jqEdPoF5YM+jSYJd74KqRTwbbEum7=moa3=Wyn6UyU9g@mail.gmail.com>
- <OSBPR01MB29207A1C06968705C2FEBACFF4939@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <CAPcyv4iBnWbG0FYw6-K0MaH--rq62s7RY_yoT9rOYWMa94Yakw@mail.gmail.com> <OSBPR01MB29203F891F9584CC53616FB8F4939@OSBPR01MB2920.jpnprd01.prod.outlook.com>
-In-Reply-To: <OSBPR01MB29203F891F9584CC53616FB8F4939@OSBPR01MB2920.jpnprd01.prod.outlook.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Mon, 8 Mar 2021 10:01:52 -0800
-Message-ID: <CAPcyv4gn_AvT6BA7g4jLKRFODSpt7_ORowVd3KgyWxyaFG0k9g@mail.gmail.com>
-Subject: Re: [PATCH v3 01/11] pagemap: Introduce ->memory_failure()
-To:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        device-mapper development <dm-devel@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        david <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
-        "y-goto@fujitsu.com" <y-goto@fujitsu.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210308155111.53874-5-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 8, 2021 at 3:34 AM ruansy.fnst@fujitsu.com
-<ruansy.fnst@fujitsu.com> wrote:
-> > > > >  1 file changed, 8 insertions(+)
-> > > > >
-> > > > > diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-> > > > > index 79c49e7f5c30..0bcf2b1e20bd 100644
-> > > > > --- a/include/linux/memremap.h
-> > > > > +++ b/include/linux/memremap.h
-> > > > > @@ -87,6 +87,14 @@ struct dev_pagemap_ops {
-> > > > >          * the page back to a CPU accessible page.
-> > > > >          */
-> > > > >         vm_fault_t (*migrate_to_ram)(struct vm_fault *vmf);
-> > > > > +
-> > > > > +       /*
-> > > > > +        * Handle the memory failure happens on one page.  Notify the processes
-> > > > > +        * who are using this page, and try to recover the data on this page
-> > > > > +        * if necessary.
-> > > > > +        */
-> > > > > +       int (*memory_failure)(struct dev_pagemap *pgmap, unsigned long pfn,
-> > > > > +                             int flags);
-> > > > >  };
-> > > >
-> > > > After the conversation with Dave I don't see the point of this. If
-> > > > there is a memory_failure() on a page, why not just call
-> > > > memory_failure()? That already knows how to find the inode and the
-> > > > filesystem can be notified from there.
-> > >
-> > > We want memory_failure() supports reflinked files.  In this case, we are not
-> > > able to track multiple files from a page(this broken page) because
-> > > page->mapping,page->index can only track one file.  Thus, I introduce this
-> > > ->memory_failure() implemented in pmem driver, to call ->corrupted_range()
-> > > upper level to upper level, and finally find out files who are
-> > > using(mmapping) this page.
-> > >
-> >
-> > I know the motivation, but this implementation seems backwards. It's
-> > already the case that memory_failure() looks up the address_space
-> > associated with a mapping. From there I would expect a new 'struct
-> > address_space_operations' op to let the fs handle the case when there
-> > are multiple address_spaces associated with a given file.
-> >
->
-> Let me think about it.  In this way, we
->     1. associate file mapping with dax page in dax page fault;
+On Mon, Mar 08, 2021 at 09:21:02PM +0530, Chandan Babu R wrote:
+> This test verifies that XFS does not cause inode fork's extent count to
+> overflow when adding a single extent while there's no possibility of splitting
+> an existing mapping.
+> 
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-I think this needs to be a new type of association that proxies the
-representation of the reflink across all involved address_spaces.
+Looks ok,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
->     2. iterate files reflinked to notify `kill processes signal` by the
->           new address_space_operation;
->     3. re-associate to another reflinked file mapping when unmmaping
->         (rmap qeury in filesystem to get the another file).
+--D
 
-Perhaps the proxy object is reference counted per-ref-link. It seems
-error prone to keep changing the association of the pfn while the
-reflink is in-tact.
-
-> It did not handle those dax pages are not in use, because their ->mapping are
-> not associated to any file.  I didn't think it through until reading your
-> conversation.  Here is my understanding: this case should be handled by
-> badblock mechanism in pmem driver.  This badblock mechanism will call
-> ->corrupted_range() to tell filesystem to repaire the data if possible.
-
-There are 2 types of notifications. There are badblocks discovered by
-the driver (see notify_pmem()) and there are memory_failures()
-signalled by the CPU machine-check handler, or the platform BIOS. In
-the case of badblocks that needs to be information considered by the
-fs block allocator to avoid / try-to-repair badblocks on allocate, and
-to allow listing damaged files that need repair. The memory_failure()
-notification needs immediate handling to tear down mappings to that
-pfn and signal processes that have consumed it with
-SIGBUS-action-required. Processes that have the poison mapped, but
-have not consumed it receive SIGBUS-action-optional.
-
-> So, we split it into two parts.  And dax device and block device won't be mixed
-> up again.   Is my understanding right?
-
-Right, it's only the filesystem that knows that the block_device and
-the dax_device alias data at the same logical offset. The requirements
-for sector error handling and page error handling are separate like
-block_device_operations and dax_operations.
-
-> But the solution above is to solve the hwpoison on one or couple pages, which
-> happens rarely(I think).  Do the 'pmem remove' operation cause hwpoison too?
-> Call memory_failure() so many times?  I havn't understood this yet.
-
-I'm working on a patch here to call memory_failure() on a wide range
-for the surprise remove of a dax_device while a filesystem might be
-mounted. It won't be efficient, but there is no other way to notify
-the kernel that it needs to immediately stop referencing a page.
+> ---
+>  tests/xfs/528     | 171 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/528.out |  20 ++++++
+>  tests/xfs/group   |   1 +
+>  3 files changed, 192 insertions(+)
+>  create mode 100755 tests/xfs/528
+>  create mode 100644 tests/xfs/528.out
+> 
+> diff --git a/tests/xfs/528 b/tests/xfs/528
+> new file mode 100755
+> index 00000000..5eb1021a
+> --- /dev/null
+> +++ b/tests/xfs/528
+> @@ -0,0 +1,171 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2021 Chandan Babu R.  All Rights Reserved.
+> +#
+> +# FS QA Test 528
+> +#
+> +# Verify that XFS does not cause inode fork's extent count to overflow when
+> +# adding a single extent while there's no possibility of splitting an existing
+> +# mapping.
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/quota
+> +. ./common/inject
+> +. ./common/populate
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +_supported_fs xfs
+> +_require_scratch
+> +_require_xfs_quota
+> +_require_xfs_debug
+> +_require_test_program "punch-alternating"
+> +_require_xfs_io_command "falloc"
+> +_require_xfs_io_error_injection "reduce_max_iextents"
+> +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
+> +
+> +echo "Format and mount fs"
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full
+> +_scratch_mount -o uquota >> $seqres.full
+> +
+> +bsize=$(_get_file_block_size $SCRATCH_MNT)
+> +
+> +echo "* Delalloc to written extent conversion"
+> +
+> +testfile=$SCRATCH_MNT/testfile
+> +
+> +echo "Inject reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 1
+> +
+> +nr_blks=$((15 * 2))
+> +
+> +echo "Create fragmented file"
+> +for i in $(seq 0 2 $((nr_blks - 1))); do
+> +	$XFS_IO_PROG -f -s -c "pwrite $((i * bsize)) $bsize" $testfile \
+> +	       >> $seqres.full 2>&1
+> +	[[ $? != 0 ]] && break
+> +done
+> +
+> +echo "Verify \$testfile's extent count"
+> +
+> +nextents=$(xfs_get_fsxattr nextents $testfile)
+> +if (( $nextents > 10 )); then
+> +	echo "Extent count overflow check failed: nextents = $nextents"
+> +	exit 1
+> +fi
+> +
+> +rm $testfile
+> +
+> +echo "* Fallocate unwritten extents"
+> +
+> +echo "Fallocate fragmented file"
+> +for i in $(seq 0 2 $((nr_blks - 1))); do
+> +	$XFS_IO_PROG -f -c "falloc $((i * bsize)) $bsize" $testfile \
+> +	       >> $seqres.full 2>&1
+> +	[[ $? != 0 ]] && break
+> +done
+> +
+> +echo "Verify \$testfile's extent count"
+> +
+> +nextents=$(xfs_get_fsxattr nextents $testfile)
+> +if (( $nextents > 10 )); then
+> +	echo "Extent count overflow check failed: nextents = $nextents"
+> +	exit 1
+> +fi
+> +
+> +rm $testfile
+> +
+> +echo "* Directio write"
+> +
+> +echo "Create fragmented file via directio writes"
+> +for i in $(seq 0 2 $((nr_blks - 1))); do
+> +	$XFS_IO_PROG -d -s -f -c "pwrite $((i * bsize)) $bsize" $testfile \
+> +	       >> $seqres.full 2>&1
+> +	[[ $? != 0 ]] && break
+> +done
+> +
+> +echo "Verify \$testfile's extent count"
+> +
+> +nextents=$(xfs_get_fsxattr nextents $testfile)
+> +if (( $nextents > 10 )); then
+> +	echo "Extent count overflow check failed: nextents = $nextents"
+> +	exit 1
+> +fi
+> +
+> +rm $testfile
+> +
+> +# Check if XFS gracefully returns with an error code when we try to increase
+> +# extent count of user quota inode beyond the pseudo max extent count limit.
+> +echo "* Extend quota inodes"
+> +
+> +echo "Disable reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 0
+> +
+> +echo "Consume free space"
+> +fillerdir=$SCRATCH_MNT/fillerdir
+> +nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
+> +nr_free_blks=$((nr_free_blks * 90 / 100))
+> +
+> +_fill_fs $((bsize * nr_free_blks)) $fillerdir $bsize 0 >> $seqres.full 2>&1
+> +
+> +echo "Create fragmented filesystem"
+> +for dentry in $(ls -1 $fillerdir/); do
+> +	$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
+> +done
+> +
+> +echo "Inject reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 1
+> +
+> +echo "Inject bmap_alloc_minlen_extent error tag"
+> +_scratch_inject_error bmap_alloc_minlen_extent 1
+> +
+> +nr_blks=20
+> +
+> +# This is a rough calculation; It doesn't take block headers into
+> +# consideration.
+> +# gdb -batch vmlinux -ex 'print sizeof(struct xfs_dqblk)'
+> +# $1 = 136
+> +nr_quotas_per_block=$((bsize / 136))
+> +nr_quotas=$((nr_quotas_per_block * nr_blks))
+> +
+> +echo "Extend uquota file"
+> +for i in $(seq 0 $nr_quotas_per_block $nr_quotas); do
+> +	chown $i $testfile >> $seqres.full 2>&1
+> +	[[ $? != 0 ]] && break
+> +done
+> +
+> +_scratch_unmount >> $seqres.full
+> +
+> +echo "Verify uquota inode's extent count"
+> +uquotino=$(_scratch_xfs_get_metadata_field 'uquotino' 'sb 0')
+> +
+> +nextents=$(_scratch_get_iext_count $uquotino data || \
+> +		   _fail "Unable to obtain inode fork's extent count")
+> +if (( $nextents > 10 )); then
+> +	echo "Extent count overflow check failed: nextents = $nextents"
+> +	exit 1
+> +fi
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/528.out b/tests/xfs/528.out
+> new file mode 100644
+> index 00000000..3973cc15
+> --- /dev/null
+> +++ b/tests/xfs/528.out
+> @@ -0,0 +1,20 @@
+> +QA output created by 528
+> +Format and mount fs
+> +* Delalloc to written extent conversion
+> +Inject reduce_max_iextents error tag
+> +Create fragmented file
+> +Verify $testfile's extent count
+> +* Fallocate unwritten extents
+> +Fallocate fragmented file
+> +Verify $testfile's extent count
+> +* Directio write
+> +Create fragmented file via directio writes
+> +Verify $testfile's extent count
+> +* Extend quota inodes
+> +Disable reduce_max_iextents error tag
+> +Consume free space
+> +Create fragmented filesystem
+> +Inject reduce_max_iextents error tag
+> +Inject bmap_alloc_minlen_extent error tag
+> +Extend uquota file
+> +Verify uquota inode's extent count
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index e861cec9..2356c4a9 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -525,3 +525,4 @@
+>  525 auto quick mkfs
+>  526 auto quick mkfs
+>  527 auto quick quota
+> +528 auto quick quota
+> -- 
+> 2.29.2
+> 
