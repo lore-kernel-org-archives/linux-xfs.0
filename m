@@ -2,225 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42D96C41620
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 15:52:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B20C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 17:51:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EF4D65220
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 15:52:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A748652AB
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 17:51:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230126AbhCHPwB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Mar 2021 10:52:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46680 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230135AbhCHPvn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 10:51:43 -0500
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF335C06174A;
-        Mon,  8 Mar 2021 07:51:43 -0800 (PST)
-Received: by mail-pf1-x42e.google.com with SMTP id j12so7304884pfj.12;
-        Mon, 08 Mar 2021 07:51:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=KMFFCYyGzP7zARjeZvJnfjwGPoSsOwwHruKWWLUt1h8=;
-        b=ZFnXW4fKLiN7K1qT9LSmWn9ZQQstu76n271P9MAfOVMIfzfCqi8NqVGZJ4CgcCaB0D
-         u88nZSjeI+zu/MQTQx/qEfLprIuLyRW1C+ZB+jdeyOKgIjmbdulxBjcOzVrGIEPOlNFY
-         G0G3RIgp6Uo87Bf0jmT7xoI+H8v/NVdM3MDXCI8X9dqyuKBB39rsSsbkM8i4zFoPDAaP
-         rs1nPgcIK+n/meiQb1Oqi0b0VC0SErpo87iJpZ/h82z+bhVBxCTw9xCYUBVMAxyZR85c
-         daGMGX1B4j2zF0pVtDi8cgKkBYTddo3OcYCLxCAqa2abThEE8CdHlc1EOthOvWsSDjjd
-         jeaA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=KMFFCYyGzP7zARjeZvJnfjwGPoSsOwwHruKWWLUt1h8=;
-        b=VoIcHL1UbASH/uD6y0+GA8deoa58C8Z03sxgl6rVoJkb3aIH6LNdtT/pIYSooAj7aW
-         s2wAvHnLjj+onr14XUzxw6VBcJ8TvTd9CMSJM8RU5euVP4pDPsBl4NBbMyFTbBGQjPRt
-         ZWMsLVlbdpAcr5RUDL7mYL5/DfuJot7WG0SoxYYmfRU5rraOdveM8kVcpRobdkE3uJLc
-         J63VQEfY2V6yTkGWyvufgl8JKEzqFFoCJhYDwgxKhKGOxK01qjnm+86QIPL2tB8JCtGM
-         3mo9KAQviIyQY+DCwIqv9Pc5deUrJngy9gCqxgewIVpWt/GyGuEU2dX+q/Up/SGIqbKm
-         nBcw==
-X-Gm-Message-State: AOAM533HVssXPFRwWbk+sVmYYRW3rE2xx66Q4ijcQEat4CJjO4q4OWrq
-        w8g5a52OsT6I6jZAvn1irFd1WJUyfEU=
-X-Google-Smtp-Source: ABdhPJyEsNaE0pwv8mYd9Wd3BKRiemhmwKWic8ZXClkAdn+63odz8yvF+hgjLc9vuIq/BICFk65cDg==
-X-Received: by 2002:a63:c601:: with SMTP id w1mr20289129pgg.11.1615218703103;
-        Mon, 08 Mar 2021 07:51:43 -0800 (PST)
-Received: from localhost.localdomain ([122.182.238.13])
-        by smtp.gmail.com with ESMTPSA id s4sm11086378pji.2.2021.03.08.07.51.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Mar 2021 07:51:42 -0800 (PST)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     fstests@vger.kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
-        linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: [PATCH V5 10/13] xfs: Check for extent overflow when moving extent from cow to data fork
-Date:   Mon,  8 Mar 2021 21:21:08 +0530
-Message-Id: <20210308155111.53874-11-chandanrlinux@gmail.com>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210308155111.53874-1-chandanrlinux@gmail.com>
+        id S230301AbhCHRu5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 12:50:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46458 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230124AbhCHRuv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Mar 2021 12:50:51 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9AD19652AC;
+        Mon,  8 Mar 2021 17:50:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1615225850;
+        bh=m8XG6MwIvTCKI3P8BBTnFO4P3KGTQn2ZqjhTJOGU+UY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=oM5ApqXw2Zo/iG34UvBtrASG4zOHgcGTuO+ld9UAKe7ql9J/v71FzI8d6B/QUg0Z2
+         m/25L4HYG/M6xGgA29G2qXmuhql/6HXkGBfuPF8igrpyJwQpdWo46nGLELEEFZ1rfT
+         5TaVd+9iDlHdJ5zhIwf4zfjLb2XlR45QLwwWQ2DFwzuVDT3e6wSMiXMnULQfi9GzW0
+         67CBg0EQHwjthXRNRrCVBBUc2g+xLu17ConNagz3SlZn2v09TfPKQEF8OtHX0k6Zvq
+         /2l8ueLVFVbBXda3CF8OpX4o+CkRJE4ZULTuI4054fhxbpNWpTPuEWlxaaMxvtooGi
+         7MSgLuVVY+jxA==
+Date:   Mon, 8 Mar 2021 09:50:48 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V5 01/13] _check_xfs_filesystem: sync fs before running
+ scrub
+Message-ID: <20210308175048.GO3419940@magnolia>
 References: <20210308155111.53874-1-chandanrlinux@gmail.com>
+ <20210308155111.53874-2-chandanrlinux@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210308155111.53874-2-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This test verifies that XFS does not cause inode fork's extent count to
-overflow when writing to/funshare-ing a shared extent.
+On Mon, Mar 08, 2021 at 09:20:59PM +0530, Chandan Babu R wrote:
+> Tests can create a scenario in which a call to syncfs() issued at the end of
+> the execution of the test script would return an error code. xfs_scrub
+> internally calls syncfs() before starting the actual online consistency check
+> operation. Since this call to syncfs() fails, xfs_scrub ends up returning
+> without performing consistency checks on the test filesystem. This can mask a
+> possible on-disk data structure corruption.
 
-Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
----
- tests/xfs/534     | 104 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/534.out |  12 ++++++
- tests/xfs/group   |   1 +
- 3 files changed, 117 insertions(+)
- create mode 100755 tests/xfs/534
- create mode 100644 tests/xfs/534.out
+This explanation for why we're calling syncfs before invoking scrub
+ought to be captured in a comment preceeding the syncfs call.
 
-diff --git a/tests/xfs/534 b/tests/xfs/534
-new file mode 100755
-index 00000000..c2fa6cb6
---- /dev/null
-+++ b/tests/xfs/534
-@@ -0,0 +1,104 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2021 Chandan Babu R.  All Rights Reserved.
-+#
-+# FS QA Test 534
-+#
-+# Verify that XFS does not cause inode fork's extent count to overflow when
-+# writing to a shared extent.
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+. ./common/inject
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+_supported_fs xfs
-+_require_scratch
-+_require_scratch_reflink
-+_require_xfs_debug
-+_require_xfs_io_command "reflink"
-+_require_xfs_io_command "funshare"
-+_require_xfs_io_error_injection "reduce_max_iextents"
-+
-+echo "Format and mount fs"
-+_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full
-+_scratch_mount >> $seqres.full
-+
-+bsize=$(_get_block_size $SCRATCH_MNT)
-+
-+nr_blks=15
-+
-+srcfile=${SCRATCH_MNT}/srcfile
-+dstfile=${SCRATCH_MNT}/dstfile
-+
-+echo "Inject reduce_max_iextents error tag"
-+_scratch_inject_error reduce_max_iextents 1
-+
-+echo "Create a \$srcfile having an extent of length $nr_blks blocks"
-+$XFS_IO_PROG -f -c "pwrite -b $((nr_blks * bsize))  0 $((nr_blks * bsize))" \
-+       -c fsync $srcfile  >> $seqres.full
-+
-+echo "* Write to shared extent"
-+
-+echo "Share the extent with \$dstfile"
-+_reflink $srcfile $dstfile >> $seqres.full
-+
-+echo "Buffered write to every other block of \$dstfile's shared extent"
-+for i in $(seq 1 2 $((nr_blks - 1))); do
-+	$XFS_IO_PROG -f -s -c "pwrite $((i * bsize)) $bsize" $dstfile \
-+	       >> $seqres.full 2>&1
-+	[[ $? != 0 ]] && break
-+done
-+
-+echo "Verify \$dstfile's extent count"
-+nextents=$(xfs_get_fsxattr nextents $dstfile)
-+if (( $nextents > 10 )); then
-+	echo "Extent count overflow check failed: nextents = $nextents"
-+	exit 1
-+fi
-+
-+rm $dstfile
-+
-+echo "* Funshare shared extent"
-+
-+echo "Share the extent with \$dstfile"
-+_reflink $srcfile $dstfile >> $seqres.full
-+
-+echo "Funshare every other block of \$dstfile's shared extent"
-+for i in $(seq 1 2 $((nr_blks - 1))); do
-+	$XFS_IO_PROG -f -s -c "funshare $((i * bsize)) $bsize" $dstfile \
-+	       >> $seqres.full 2>&1
-+	[[ $? != 0 ]] && break
-+done
-+
-+echo "Verify \$dstfile's extent count"
-+nextents=$(xfs_get_fsxattr nextents $dstfile)
-+if (( $nextents > 10 )); then
-+	echo "Extent count overflow check failed: nextents = $nextents"
-+	exit 1
-+fi
-+
-+# success, all done
-+status=0
-+exit
-+ 
-diff --git a/tests/xfs/534.out b/tests/xfs/534.out
-new file mode 100644
-index 00000000..53288d12
---- /dev/null
-+++ b/tests/xfs/534.out
-@@ -0,0 +1,12 @@
-+QA output created by 534
-+Format and mount fs
-+Inject reduce_max_iextents error tag
-+Create a $srcfile having an extent of length 15 blocks
-+* Write to shared extent
-+Share the extent with $dstfile
-+Buffered write to every other block of $dstfile's shared extent
-+Verify $dstfile's extent count
-+* Funshare shared extent
-+Share the extent with $dstfile
-+Funshare every other block of $dstfile's shared extent
-+Verify $dstfile's extent count
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 3ad47d07..b4f0c777 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -531,3 +531,4 @@
- 531 auto quick attr
- 532 auto quick dir hardlink symlink
- 533 auto quick
-+534 auto quick reflink
--- 
-2.29.2
+--D
 
+> To fix the above stated problem, this commit invokes syncfs() prior to
+> executing xfs_scrub.
+> 
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> ---
+>  common/xfs | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 2156749d..7ec89492 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -467,6 +467,7 @@ _check_xfs_filesystem()
+>  	# Run online scrub if we can.
+>  	mntpt="$(_is_dev_mounted $device)"
+>  	if [ -n "$mntpt" ] && _supports_xfs_scrub "$mntpt" "$device"; then
+> +		$XFS_IO_PROG -c syncfs $mntpt >> $seqres.full 2>&1
+>  		"$XFS_SCRUB_PROG" $scrubflag -v -d -n $mntpt > $tmp.scrub 2>&1
+>  		if [ $? -ne 0 ]; then
+>  			_log_err "_check_xfs_filesystem: filesystem on $device failed scrub"
+> -- 
+> 2.29.2
+> 
