@@ -4,83 +4,83 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C41C2C433E9
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 18:19:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77DC5C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 18:19:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9FEF66148E
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 18:19:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E02B65218
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 18:19:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230502AbhCHSSm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Mar 2021 13:18:42 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50578 "EHLO mail.kernel.org"
+        id S229463AbhCHSTP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 13:19:15 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50956 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230125AbhCHSSL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Mar 2021 13:18:11 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1F0B865230;
-        Mon,  8 Mar 2021 18:18:11 +0000 (UTC)
+        id S230517AbhCHSTD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Mar 2021 13:19:03 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 87CE164DA3;
+        Mon,  8 Mar 2021 18:19:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615227491;
-        bh=P9ZldR8ZJ3Y92ITd4uifkHkocNkDJAtwr1quUWIBlOw=;
+        s=k20201202; t=1615227543;
+        bh=EDOVQcjsxktf/57dRLoO9NBtPoY2YucaJIj2qVe1+R4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oPoO4CVWdo6fK0/7HBBOIssvpAT7OiDaQeQq8KYrKtIGuINTprcWY+OCbw4n/4nQ7
-         gpEckooj0d8bSrfm5MhXMVv0DhWom/mgGE2Hit0X+SnrOiXiuJvabKgk6w2ihgPcYK
-         JkLsb40HdElYv8FwU8oi///HI08iSOHD8HBU34ucIk47x+eFlu1gEbQmEOYLsHOHOR
-         biLI8zbhL7lolJiDd1tXOljVLQfUd+oUL5Khqz9AIbRcxgpag6+I6JaxuM+GbU5+NS
-         aGaTxlgWyQm5bg0pO1OH953vyLITTUd65f7oiymyS+UcGleAfVTTKAEx8WjQbBBVtT
-         OMqCZvourKYrQ==
-Date:   Mon, 8 Mar 2021 10:18:10 -0800
+        b=L7SyQuaYZIwLgmhuQggaQKRyxZueyn9y7AwoWWn8KFz8UQuko5KBNS8cDAaYS/qN+
+         EeLZ+OUJ2hsnNvXa2YQKhpVHmoOiCR5KY5HnY0zPpAcBjLiQLShb0IFfyOZ/flxb96
+         OXCbpu4tXDIXz0QnOIsrJ8SjqSVXBWt0AXU4DG+bXZrBtsA9pBQuem45vtC1Vsw+EY
+         yHoWsdjFLcctuYP3GpqWhIXtRo5EJlErHPGttS8/1yiwWkrB7Trk9herpq1dP6MPUZ
+         0G9O7a40Hq4CDOpEYhFQkr/ntay1HzZZc3+hgG+UJKJMkjIABFM2TrYd7EIfQMPCSA
+         s/boHN0cdHYOQ==
+Date:   Mon, 8 Mar 2021 10:19:02 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V5 10/13] xfs: Check for extent overflow when moving
- extent from cow to data fork
-Message-ID: <20210308181810.GV3419940@magnolia>
+Subject: Re: [PATCH V5 11/13] xfs: Check for extent overflow when remapping
+ an extent
+Message-ID: <20210308181902.GW3419940@magnolia>
 References: <20210308155111.53874-1-chandanrlinux@gmail.com>
- <20210308155111.53874-11-chandanrlinux@gmail.com>
+ <20210308155111.53874-12-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210308155111.53874-11-chandanrlinux@gmail.com>
+In-Reply-To: <20210308155111.53874-12-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 08, 2021 at 09:21:08PM +0530, Chandan Babu R wrote:
+On Mon, Mar 08, 2021 at 09:21:09PM +0530, Chandan Babu R wrote:
 > This test verifies that XFS does not cause inode fork's extent count to
-> overflow when writing to/funshare-ing a shared extent.
+> overflow when remapping extents from one file's inode fork to another.
 > 
 > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-Looks fine,
+Seems sensible,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  tests/xfs/534     | 104 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/534.out |  12 ++++++
->  tests/xfs/group   |   1 +
->  3 files changed, 117 insertions(+)
->  create mode 100755 tests/xfs/534
->  create mode 100644 tests/xfs/534.out
+>  tests/xfs/535     | 81 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/535.out |  8 +++++
+>  tests/xfs/group   |  1 +
+>  3 files changed, 90 insertions(+)
+>  create mode 100755 tests/xfs/535
+>  create mode 100644 tests/xfs/535.out
 > 
-> diff --git a/tests/xfs/534 b/tests/xfs/534
+> diff --git a/tests/xfs/535 b/tests/xfs/535
 > new file mode 100755
-> index 00000000..c2fa6cb6
+> index 00000000..6bb27c92
 > --- /dev/null
-> +++ b/tests/xfs/534
-> @@ -0,0 +1,104 @@
+> +++ b/tests/xfs/535
+> @@ -0,0 +1,81 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0
 > +# Copyright (c) 2021 Chandan Babu R.  All Rights Reserved.
 > +#
-> +# FS QA Test 534
+> +# FS QA Test 535
 > +#
 > +# Verify that XFS does not cause inode fork's extent count to overflow when
-> +# writing to a shared extent.
+> +# remapping extents from one file's inode fork to another.
 > +seq=`basename $0`
 > +seqres=$RESULT_DIR/$seq
 > +echo "QA output created by $seq"
@@ -112,58 +112,36 @@ Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > +_require_scratch_reflink
 > +_require_xfs_debug
 > +_require_xfs_io_command "reflink"
-> +_require_xfs_io_command "funshare"
 > +_require_xfs_io_error_injection "reduce_max_iextents"
 > +
+> +echo "* Reflink remap extents"
+> +
 > +echo "Format and mount fs"
-> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full
+> +_scratch_mkfs >> $seqres.full
 > +_scratch_mount >> $seqres.full
 > +
 > +bsize=$(_get_block_size $SCRATCH_MNT)
 > +
-> +nr_blks=15
-> +
 > +srcfile=${SCRATCH_MNT}/srcfile
 > +dstfile=${SCRATCH_MNT}/dstfile
+> +
+> +nr_blks=15
+> +
+> +echo "Create \$srcfile having an extent of length $nr_blks blocks"
+> +$XFS_IO_PROG -f -c "pwrite -b $((nr_blks * bsize))  0 $((nr_blks * bsize))" \
+> +       -c fsync $srcfile >> $seqres.full
+> +
+> +echo "Create \$dstfile having an extent of length $nr_blks blocks"
+> +$XFS_IO_PROG -f -c "pwrite -b $((nr_blks * bsize))  0 $((nr_blks * bsize))" \
+> +       -c fsync $dstfile >> $seqres.full
 > +
 > +echo "Inject reduce_max_iextents error tag"
 > +_scratch_inject_error reduce_max_iextents 1
 > +
-> +echo "Create a \$srcfile having an extent of length $nr_blks blocks"
-> +$XFS_IO_PROG -f -c "pwrite -b $((nr_blks * bsize))  0 $((nr_blks * bsize))" \
-> +       -c fsync $srcfile  >> $seqres.full
-> +
-> +echo "* Write to shared extent"
-> +
-> +echo "Share the extent with \$dstfile"
-> +_reflink $srcfile $dstfile >> $seqres.full
-> +
-> +echo "Buffered write to every other block of \$dstfile's shared extent"
+> +echo "Reflink every other block from \$srcfile into \$dstfile"
 > +for i in $(seq 1 2 $((nr_blks - 1))); do
-> +	$XFS_IO_PROG -f -s -c "pwrite $((i * bsize)) $bsize" $dstfile \
-> +	       >> $seqres.full 2>&1
-> +	[[ $? != 0 ]] && break
-> +done
-> +
-> +echo "Verify \$dstfile's extent count"
-> +nextents=$(xfs_get_fsxattr nextents $dstfile)
-> +if (( $nextents > 10 )); then
-> +	echo "Extent count overflow check failed: nextents = $nextents"
-> +	exit 1
-> +fi
-> +
-> +rm $dstfile
-> +
-> +echo "* Funshare shared extent"
-> +
-> +echo "Share the extent with \$dstfile"
-> +_reflink $srcfile $dstfile >> $seqres.full
-> +
-> +echo "Funshare every other block of \$dstfile's shared extent"
-> +for i in $(seq 1 2 $((nr_blks - 1))); do
-> +	$XFS_IO_PROG -f -s -c "funshare $((i * bsize)) $bsize" $dstfile \
-> +	       >> $seqres.full 2>&1
-> +	[[ $? != 0 ]] && break
+> +	_reflink_range $srcfile $((i * bsize)) $dstfile $((i * bsize)) $bsize \
+> +		       >> $seqres.full 2>&1
 > +done
 > +
 > +echo "Verify \$dstfile's extent count"
@@ -176,34 +154,29 @@ Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > +# success, all done
 > +status=0
 > +exit
-> + 
-> diff --git a/tests/xfs/534.out b/tests/xfs/534.out
+> diff --git a/tests/xfs/535.out b/tests/xfs/535.out
 > new file mode 100644
-> index 00000000..53288d12
+> index 00000000..cfe50f45
 > --- /dev/null
-> +++ b/tests/xfs/534.out
-> @@ -0,0 +1,12 @@
-> +QA output created by 534
+> +++ b/tests/xfs/535.out
+> @@ -0,0 +1,8 @@
+> +QA output created by 535
+> +* Reflink remap extents
 > +Format and mount fs
+> +Create $srcfile having an extent of length 15 blocks
+> +Create $dstfile having an extent of length 15 blocks
 > +Inject reduce_max_iextents error tag
-> +Create a $srcfile having an extent of length 15 blocks
-> +* Write to shared extent
-> +Share the extent with $dstfile
-> +Buffered write to every other block of $dstfile's shared extent
-> +Verify $dstfile's extent count
-> +* Funshare shared extent
-> +Share the extent with $dstfile
-> +Funshare every other block of $dstfile's shared extent
+> +Reflink every other block from $srcfile into $dstfile
 > +Verify $dstfile's extent count
 > diff --git a/tests/xfs/group b/tests/xfs/group
-> index 3ad47d07..b4f0c777 100644
+> index b4f0c777..aed06494 100644
 > --- a/tests/xfs/group
 > +++ b/tests/xfs/group
-> @@ -531,3 +531,4 @@
->  531 auto quick attr
+> @@ -532,3 +532,4 @@
 >  532 auto quick dir hardlink symlink
 >  533 auto quick
-> +534 auto quick reflink
+>  534 auto quick reflink
+> +535 auto quick reflink
 > -- 
 > 2.29.2
 > 
