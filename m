@@ -7,114 +7,146 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C65BC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 04:46:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06283C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 04:47:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFD6B65166
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 04:46:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD1436503E
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 04:47:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232566AbhCHEqA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 7 Mar 2021 23:46:00 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51048 "EHLO mail.kernel.org"
+        id S234182AbhCHErG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 7 Mar 2021 23:47:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51108 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232471AbhCHEpv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 7 Mar 2021 23:45:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 524C865165;
-        Mon,  8 Mar 2021 04:45:51 +0000 (UTC)
+        id S232439AbhCHErG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 7 Mar 2021 23:47:06 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D96F66503E;
+        Mon,  8 Mar 2021 04:47:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615178751;
-        bh=L4XYotDAeglDe4EpwcG2A3/ys09Rhr78cFZxRJ+ikXE=;
+        s=k20201202; t=1615178825;
+        bh=52/4KCfj/aTZJRArHBd5gAyAw05sIsXpDPs7IcnnyQc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CPgPGpb2eSugvacSq2XqqYmpGBfAZJuqznChwu0zGXMzaaJrew91MaGtYn2LPAtVb
-         I7IkY+Ah5edohjrvVomFAjTXqrHAJxAbdpY8/SDBJgKGf6VN/tzpXE2ZrXtitsNBp1
-         kwYtLd2y4umaiEm/7PtdveiDEkJIEL8nFSm+A7pEjnysmriHqCId8JsGcfscn1CFJN
-         VPKnhjJpcyon0ObQuyvQU3D+/ckj/70bwtLn21AYD8JHQv6BvoB0aoBk2idZwWcVoW
-         g+yM7gPNGa/dRxp9gF3STLeB8lwhKGOPHKJnVu8n1gAw2iSUeQcS4HYjFnAcw3DWPq
-         JlcpJfjr5YaQw==
-Date:   Sun, 7 Mar 2021 20:45:51 -0800
+        b=CggBcKnDPJYXDb/+pntp4KZS+qlVv+KHa+0r5+FY4OdUcbjN5+mdxPa3TXrVjdyyX
+         0qit04QCa3Fhm1jNDpbM0WiW3zEv7ULTVm5RdFG+k3qotcVtUT+Lsplu9ewn+lSmBo
+         ZZDbD/Gyljv9guSfRvFTi+UGhIKyAceh823pdUGm/9P/XT+mPiSqo+mhHjbNfs4sPd
+         HMjw6Hjwz8MnOr1e/XWUoQXPyYS/HwMr0qarxGqSsG9pFLsNMo1cwDxgSV3oTpt3lA
+         ENCDJA+3q1Jk2o5X6Phaov8hs2JO7j2f7g6FXbPp7N4nC8+Re5jTXBSqiB84gHWFIS
+         grQE2XXwHh8Sw==
+Date:   Sun, 7 Mar 2021 20:47:05 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org, hch@lst.de, dchinner@redhat.com,
         christian.brauner@ubuntu.com
-Subject: Re: [PATCH 4/4] xfs: drop freeze protection when running GETFSMAP
-Message-ID: <20210308044551.GL3419940@magnolia>
+Subject: Re: [PATCH 3/4] xfs: force log and push AIL to clear pinned inodes
+ when aborting mount
+Message-ID: <20210308044705.GM3419940@magnolia>
 References: <161514874040.698643.2749449122589431232.stgit@magnolia>
- <161514876275.698643.12226309352552265069.stgit@magnolia>
- <20210307230555.GZ4662@dread.disaster.area>
+ <161514875722.698643.971171271199400538.stgit@magnolia>
+ <20210307230123.GY4662@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210307230555.GZ4662@dread.disaster.area>
+In-Reply-To: <20210307230123.GY4662@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 08, 2021 at 10:05:55AM +1100, Dave Chinner wrote:
-> On Sun, Mar 07, 2021 at 12:26:02PM -0800, Darrick J. Wong wrote:
+On Mon, Mar 08, 2021 at 10:01:23AM +1100, Dave Chinner wrote:
+> On Sun, Mar 07, 2021 at 12:25:57PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > A recent log refactoring patchset from Brian Foster relaxed fsfreeze
-> > behavior with regards to the buffer cache -- now freeze only waits for
-> > pending buffer IO to finish, and does not try to drain the buffer cache
-> > LRU.  As a result, fsfreeze should no longer stall indefinitely while
-> > fsmap runs.  Drop the sb_start_write calls around fsmap invocations.
+> > If we allocate quota inodes in the process of mounting a filesystem but
+> > then decide to abort the mount, it's possible that the quota inodes are
+> > sitting around pinned by the log.  Now that inode reclaim relies on the
+> > AIL to flush inodes, we have to force the log and push the AIL in
+> > between releasing the quota inodes and kicking off reclaim to tear down
+> > all the incore inodes.  Do this by extracting the bits we need from the
+> > unmount path and reusing them.
+> > 
+> > This was originally found during a fuzz test of metadata directories
+> > (xfs/1546), but the actual symptom was that reclaim hung up on the quota
+> > inodes.
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  fs/xfs/xfs_fsmap.c |   14 +++++---------
-> >  1 file changed, 5 insertions(+), 9 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> > index 9ce5e7d5bf8f..34f2b971ce43 100644
-> > --- a/fs/xfs/xfs_fsmap.c
-> > +++ b/fs/xfs/xfs_fsmap.c
-> > @@ -904,14 +904,6 @@ xfs_getfsmap(
-> >  	info.fsmap_recs = fsmap_recs;
-> >  	info.head = head;
-> >  
-> > -	/*
-> > -	 * If fsmap runs concurrently with a scrub, the freeze can be delayed
-> > -	 * indefinitely as we walk the rmapbt and iterate over metadata
-> > -	 * buffers.  Freeze quiesces the log (which waits for the buffer LRU to
-> > -	 * be emptied) and that won't happen while we're reading buffers.
-> > -	 */
-> > -	sb_start_write(mp->m_super);
-> > -
-> >  	/* For each device we support... */
-> >  	for (i = 0; i < XFS_GETFSMAP_DEVS; i++) {
-> >  		/* Is this device within the range the user asked for? */
-> > @@ -934,6 +926,11 @@ xfs_getfsmap(
-> >  		if (handlers[i].dev > head->fmh_keys[0].fmr_device)
-> >  			memset(&dkeys[0], 0, sizeof(struct xfs_fsmap));
-> >  
-> > +		/*
-> > +		 * Grab an empty transaction so that we can use its recursive
-> > +		 * buffer locking abilities to detect cycles in the rmapbt
-> > +		 * without deadlocking.
-> > +		 */
-> >  		error = xfs_trans_alloc_empty(mp, &tp);
-> >  		if (error)
-> >  			break;
+> >  fs/xfs/xfs_mount.c |  100 ++++++++++++++++++++++++++++------------------------
+> >  1 file changed, 54 insertions(+), 46 deletions(-)
 > 
-> Took me a moment to work out that this is just adding a comment
-> because it wasn't mentioned in the commit log. Somewhat unrelated to
-> the bug fix but it's harmless so I don't see any need for you to
-> do any extra work to respin this patch to remove it.
+> Seems reasonable.
+> 
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > index 52370d0a3f43..556ce373145f 100644
+> > --- a/fs/xfs/xfs_mount.c
+> > +++ b/fs/xfs/xfs_mount.c
+> > @@ -634,6 +634,57 @@ xfs_check_summary_counts(
+> >  	return xfs_initialize_perag_data(mp, mp->m_sb.sb_agcount);
+> >  }
+> >  
+> > +/*
+> > + * Force the log contents and checkpoint them into the filesystem, the reclaim
+> > + * inodes in preparation to unmount.
+> 
+> "then reclaim"
+> 
+> Ignoring the typo, the comment doesn't add anything useful - you're
+> saying what the function does, not why. I'd prefer you lift all the
+> comments in the code up into the header, explaining why each step
+> is needed/taken. Something like:
+> 
+> /*
+>  * Flush and reclaim dirty inodes in preparation for unmount. Inodes and
+>  * internal inode structures can be sitting in the CIL and AIL at this point, so
+>  * we need to unpin them, write them back and/or reclaim them before unmount can
+>  * proceed.
+>  *
+>  * An inode cluster that has been freed can have its buffer still pinned in
+>  * memory because the transaction is still sitting in a iclog. The stale inodes
+>  * on that buffer will be pinned to the buffer until the transaction hits the
+>  * disk and the callbacks run. Pushing the AIL will skip the stale inodes and
+>  * may never see the pinned buffer, so nothing will push out the iclog and unpin
+>  * the buffer.
+>  *
+>  * Hence we need to force the log to unpin everything first. However, log forces
+>  * don't wait for the discards they issue to complete, so we have to explicitly
+>  * wait for them to complete here as well.
+>  *
+>  * Then we can tell the world we are unmounting so that error handling knows
+>  * that the filesystem is going away and we should error out anything that we
+>  * have been retrying in the background.  This will prevent never-ending retries
+>  * in AIL pushing from hanging the unmount.
+>  *
+>  * Finally, we can push the AIL to clean all the remaining dirty objects, then
+>  * reclaim the remaining inodes that are still in memory at this point in
+>  * time.
+>  */
 
-I'll add a sentence to the commit message explaining why we're adding a
-seemingly random (but related!) comment:
-
-"While we're cleaning things, add a comment to the xfs_trans_alloc_empty
-call explaining why we're running around with empty transactions."
+Ok.  Seems good to me.
 
 --D
 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> static void
+> xfs_unmount_flush_inodes(
+> 	struct xfs_mount	*mp)
+> {
+> 	xfs_log_force(mp, XFS_LOG_SYNC);
+> 	xfs_extent_busy_wait_all(mp);
+> 	flush_workqueue(xfs_discard_wq);
+> 
+> 	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
+> 
+> 	xfs_ail_push_all_sync(mp->m_ail);
+> 	cancel_delayed_work_sync(&mp->m_reclaim_work);
+> 	xfs_reclaim_inodes(mp);
+> 	xfs_health_unmount(mp);
+> }
+> 
+> Everything else looks fine.
 > 
 > Cheers,
 > 
 > Dave.
+> 
 > -- 
 > Dave Chinner
 > david@fromorbit.com
