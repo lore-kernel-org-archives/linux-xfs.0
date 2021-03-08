@@ -7,81 +7,97 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B20C433DB
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 17:51:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E27ACC433DB
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 17:53:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A748652AB
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 17:51:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B28A7652B7
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 17:53:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230301AbhCHRu5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Mar 2021 12:50:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46458 "EHLO mail.kernel.org"
+        id S230439AbhCHRwd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 12:52:33 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46720 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230124AbhCHRuv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Mar 2021 12:50:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9AD19652AC;
-        Mon,  8 Mar 2021 17:50:50 +0000 (UTC)
+        id S230507AbhCHRwP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Mar 2021 12:52:15 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0D128652AB;
+        Mon,  8 Mar 2021 17:52:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615225850;
-        bh=m8XG6MwIvTCKI3P8BBTnFO4P3KGTQn2ZqjhTJOGU+UY=;
+        s=k20201202; t=1615225935;
+        bh=KOoaIFouh6pUamKpbNK7O1GDD9SS5S6gzgOIm5e2TQE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oM5ApqXw2Zo/iG34UvBtrASG4zOHgcGTuO+ld9UAKe7ql9J/v71FzI8d6B/QUg0Z2
-         m/25L4HYG/M6xGgA29G2qXmuhql/6HXkGBfuPF8igrpyJwQpdWo46nGLELEEFZ1rfT
-         5TaVd+9iDlHdJ5zhIwf4zfjLb2XlR45QLwwWQ2DFwzuVDT3e6wSMiXMnULQfi9GzW0
-         67CBg0EQHwjthXRNRrCVBBUc2g+xLu17ConNagz3SlZn2v09TfPKQEF8OtHX0k6Zvq
-         /2l8ueLVFVbBXda3CF8OpX4o+CkRJE4ZULTuI4054fhxbpNWpTPuEWlxaaMxvtooGi
-         7MSgLuVVY+jxA==
-Date:   Mon, 8 Mar 2021 09:50:48 -0800
+        b=C3KTndvFGX4mqbfcZMUIEayTqZZJos8memGC6pH8Y7MnYN5+DTmIOrsY6hOMJGCua
+         bHkK+Y7FqOtYvMIfluE4nhh1lfSdxAYgiaSpvLquAiRvrCOaYVu9cvSBvMs/uwGWsI
+         +VXROWdQokBXsZqCJniuMzq4fzQbn47BNSFDDhtqASIhez2m8vDTfNgo97UdPEI8OS
+         4oiUOmxZDCAFWz/o0qoaDsh/4F7sEv23TSsBlFxIAEAA+YbDSJh+hgPbJK+1dmDRrS
+         S/TOrFJRC9VGwFedtiyBFnRf68sksky3HElV4ucsy26IDAZWEeHUh05OfW5hT2JRKd
+         y88dBdGV0nDqQ==
+Date:   Mon, 8 Mar 2021 09:52:13 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V5 01/13] _check_xfs_filesystem: sync fs before running
- scrub
-Message-ID: <20210308175048.GO3419940@magnolia>
+Subject: Re: [PATCH V5 02/13] common/xfs: Add a helper to get an inode fork's
+ extent count
+Message-ID: <20210308175213.GP3419940@magnolia>
 References: <20210308155111.53874-1-chandanrlinux@gmail.com>
- <20210308155111.53874-2-chandanrlinux@gmail.com>
+ <20210308155111.53874-3-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210308155111.53874-2-chandanrlinux@gmail.com>
+In-Reply-To: <20210308155111.53874-3-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 08, 2021 at 09:20:59PM +0530, Chandan Babu R wrote:
-> Tests can create a scenario in which a call to syncfs() issued at the end of
-> the execution of the test script would return an error code. xfs_scrub
-> internally calls syncfs() before starting the actual online consistency check
-> operation. Since this call to syncfs() fails, xfs_scrub ends up returning
-> without performing consistency checks on the test filesystem. This can mask a
-> possible on-disk data structure corruption.
+On Mon, Mar 08, 2021 at 09:21:00PM +0530, Chandan Babu R wrote:
+> This commit adds the helper _scratch_get_iext_count() which returns an
+> inode fork's extent count.
+> 
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> ---
+>  common/xfs | 23 +++++++++++++++++++++++
+>  1 file changed, 23 insertions(+)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 7ec89492..f0ae321e 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -914,6 +914,29 @@ _scratch_get_bmx_prefix() {
+>  	return 1
+>  }
+>  
+> +_scratch_get_iext_count()
+> +{
+> +	local ino=$1
+> +	local whichfork=$2
+> +	local nextents=0
+> +	local field=""
+> +
+> +	case $whichfork in
+> +		"attr")
+> +			field=core.naextents
+> +			;;
+> +		"data")
+> +			field=core.nextents
+> +			;;
+> +		*)
+> +			return 1
+> +	esac
+> +
+> +	nextents=$(_scratch_xfs_get_metadata_field $field "inode $ino")
+> +
+> +	echo $nextents
 
-This explanation for why we're calling syncfs before invoking scrub
-ought to be captured in a comment preceeding the syncfs call.
+Any reason why you capture the contents into a variable and then echo
+the variable a line later?  You could omit all that and just end with
+the get_metadata_field call.
 
 --D
 
-> To fix the above stated problem, this commit invokes syncfs() prior to
-> executing xfs_scrub.
-> 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> ---
->  common/xfs | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/common/xfs b/common/xfs
-> index 2156749d..7ec89492 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -467,6 +467,7 @@ _check_xfs_filesystem()
->  	# Run online scrub if we can.
->  	mntpt="$(_is_dev_mounted $device)"
->  	if [ -n "$mntpt" ] && _supports_xfs_scrub "$mntpt" "$device"; then
-> +		$XFS_IO_PROG -c syncfs $mntpt >> $seqres.full 2>&1
->  		"$XFS_SCRUB_PROG" $scrubflag -v -d -n $mntpt > $tmp.scrub 2>&1
->  		if [ $? -ne 0 ]; then
->  			_log_err "_check_xfs_filesystem: filesystem on $device failed scrub"
+> +}
+> +
+>  #
+>  # Ensures that we don't pass any mount options incompatible with XFS v4
+>  #
 > -- 
 > 2.29.2
 > 
