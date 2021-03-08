@@ -2,194 +2,133 @@ Return-Path: <SRS0=7MVS=IG=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CBC4C433DB
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 04:49:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A1A6C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 05:24:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 181496514A
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 04:49:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA3AD651EE
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Mar 2021 05:24:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232524AbhCHEsn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 7 Mar 2021 23:48:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51668 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232439AbhCHEsi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 7 Mar 2021 23:48:38 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A0BCF6514A;
-        Mon,  8 Mar 2021 04:48:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615178917;
-        bh=brw/3JiqgETJJH+jcqEp31L+TIFSBInBILOSPNf3IQg=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=ClOTRMtRbp7dy0faEkYIVtmPwU7H5X9xT8uFocq+O3oxNPnrXdoOKvXkdSiQ15PDL
-         UFgjGxJqaISuGk9HnNE9WaJBuKgBDfh9GfEDy4nyXRdvKAJ9buGSuAb0/0P2UtCAVv
-         FBmxHppUy8wBi42bPZf1/gDS9MJ7SgyMib8kvV1C6AY/8RHCb6WRC30jVMj1pIbokf
-         U/F+qsIMKfaLHaSlukh67BX7ZChWBRgZcVSLOD21zIsF+gDjZ9IWsyxUj8Of3o5WlW
-         quh/4SkjzDBdgynLCt1eC6auMEP1IbJbYISm7OJtkRvb212fkF0RdW5rpjqEadb6Lx
-         DAkg347Xyofbg==
-Date:   Sun, 7 Mar 2021 20:48:37 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-xfs@vger.kernel.org, hch@lst.de, dchinner@redhat.com,
-        christian.brauner@ubuntu.com
-Subject: [PATCH v2.1 3/4] xfs: force log and push AIL to clear pinned inodes
- when aborting mount
-Message-ID: <20210308044837.GN3419940@magnolia>
-References: <161514874040.698643.2749449122589431232.stgit@magnolia>
- <161514875722.698643.971171271199400538.stgit@magnolia>
+        id S234404AbhCHFYL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 00:24:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52178 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234308AbhCHFXv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 00:23:51 -0500
+Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B1CDC06174A
+        for <linux-xfs@vger.kernel.org>; Sun,  7 Mar 2021 21:23:51 -0800 (PST)
+Received: by mail-ej1-x62f.google.com with SMTP id dx17so17696191ejb.2
+        for <linux-xfs@vger.kernel.org>; Sun, 07 Mar 2021 21:23:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=4vk8NjZWUWMSC21zZsC5XhaD9emmq9PjiDCa5A5wz7c=;
+        b=dmfnCfqpjw4sbFySyQCvKT/bnV1gdfJE//RwUw+/gEad1qlgdXYzLJo6gW07X7BaWi
+         fOhjzy+D1McnNY1FlfUUZ2eVsZX4PMmPnHHnfvK/QcHbludMlyF7P2E7NSHAbcqrf5gm
+         aJ9t9GCUBUf7zQgOZPuMx/DcsYpEXNWI2O0bdl6RCMydWb7xFXo4rl9dJRw0Qhj5rYcP
+         2LxgpXUh4l+i7nWNKqBaapAousEIDyzh4EFeoGR7B+xkGxD2oRsrUJHseSmx3kgzJrJn
+         DP5PrPXZJVUI/wFIKhOVGuOZLzXVvn/Osj8paaq9+KZ4pIoYwDefy+eJcO2VWrZ8JUde
+         amxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=4vk8NjZWUWMSC21zZsC5XhaD9emmq9PjiDCa5A5wz7c=;
+        b=eJmOcQOE3x398pzqc5dbP9h9ByHdszfWIM0AIznOQG3yldftBInX4iQjmPk/GqNmXI
+         FKXhwsEcEghTHb+QH4fDmcL38ZvRdhgAsyFAtBw51bXxQhh3f983GmcX942q7BnrboA/
+         zI3CSbe2HIPoQD0wk/6umSyGTU9s7w09fiDz5pPQSe1YSn6vBQov0yE/HV8xx+NTDQzI
+         l9T0zsjXgzLqjjJfnh7OH0tjgMMiww48+dZz2RmHVWW3+dC6/K5eDgF9FcwT9wB8kM4C
+         a3TCf51ZPidZ73t36I1DK6LPc9w3vwgwT9tdjw1hCrN5087i2r7dISkPwmbw4JrWBf8B
+         tt4w==
+X-Gm-Message-State: AOAM531XKYlK5EBFn5E/OKaBvIS7aD7yxEFu3GwXkXegsG+6oHS3HbOz
+        bKkkIwcJWgqoHo2EmRkI04Zw/+7OUbVs+qaiX38wsg==
+X-Google-Smtp-Source: ABdhPJxP4YeKftw4Lj6ZQkw1k0hTAM+QWLRj2zfFwlL8QUnJAuQwAg2fpXUMBBNPLZZXJqNMxEP+ZhTef3D9nTDkcKU=
+X-Received: by 2002:a17:906:1bf2:: with SMTP id t18mr13449685ejg.418.1615181030278;
+ Sun, 07 Mar 2021 21:23:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <161514875722.698643.971171271199400538.stgit@magnolia>
+References: <20210208105530.3072869-1-ruansy.fnst@cn.fujitsu.com>
+ <20210208105530.3072869-2-ruansy.fnst@cn.fujitsu.com> <CAPcyv4jqEdPoF5YM+jSYJd74KqRTwbbEum7=moa3=Wyn6UyU9g@mail.gmail.com>
+ <OSBPR01MB29207A1C06968705C2FEBACFF4939@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+In-Reply-To: <OSBPR01MB29207A1C06968705C2FEBACFF4939@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Sun, 7 Mar 2021 21:23:47 -0800
+Message-ID: <CAPcyv4iBnWbG0FYw6-K0MaH--rq62s7RY_yoT9rOYWMa94Yakw@mail.gmail.com>
+Subject: Re: [PATCH v3 01/11] pagemap: Introduce ->memory_failure()
+To:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        device-mapper development <dm-devel@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        david <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
+        "y-goto@fujitsu.com" <y-goto@fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Sun, Mar 7, 2021 at 7:38 PM ruansy.fnst@fujitsu.com
+<ruansy.fnst@fujitsu.com> wrote:
+>
+> > On Mon, Feb 8, 2021 at 2:55 AM Shiyang Ruan <ruansy.fnst@cn.fujitsu.com> wrote:
+> > >
+> > > When memory-failure occurs, we call this function which is implemented
+> > > by each kind of devices.  For the fsdax case, pmem device driver
+> > > implements it.  Pmem device driver will find out the block device where
+> > > the error page locates in, and try to get the filesystem on this block
+> > > device.  And finally call filesystem handler to deal with the error.
+> > > The filesystem will try to recover the corrupted data if possiable.
+> > >
+> > > Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+> > > ---
+> > >  include/linux/memremap.h | 8 ++++++++
+> > >  1 file changed, 8 insertions(+)
+> > >
+> > > diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+> > > index 79c49e7f5c30..0bcf2b1e20bd 100644
+> > > --- a/include/linux/memremap.h
+> > > +++ b/include/linux/memremap.h
+> > > @@ -87,6 +87,14 @@ struct dev_pagemap_ops {
+> > >          * the page back to a CPU accessible page.
+> > >          */
+> > >         vm_fault_t (*migrate_to_ram)(struct vm_fault *vmf);
+> > > +
+> > > +       /*
+> > > +        * Handle the memory failure happens on one page.  Notify the processes
+> > > +        * who are using this page, and try to recover the data on this page
+> > > +        * if necessary.
+> > > +        */
+> > > +       int (*memory_failure)(struct dev_pagemap *pgmap, unsigned long pfn,
+> > > +                             int flags);
+> > >  };
+> >
+> > After the conversation with Dave I don't see the point of this. If
+> > there is a memory_failure() on a page, why not just call
+> > memory_failure()? That already knows how to find the inode and the
+> > filesystem can be notified from there.
+>
+> We want memory_failure() supports reflinked files.  In this case, we are not
+> able to track multiple files from a page(this broken page) because
+> page->mapping,page->index can only track one file.  Thus, I introduce this
+> ->memory_failure() implemented in pmem driver, to call ->corrupted_range()
+> upper level to upper level, and finally find out files who are
+> using(mmapping) this page.
+>
 
-If we allocate quota inodes in the process of mounting a filesystem but
-then decide to abort the mount, it's possible that the quota inodes are
-sitting around pinned by the log.  Now that inode reclaim relies on the
-AIL to flush inodes, we have to force the log and push the AIL in
-between releasing the quota inodes and kicking off reclaim to tear down
-all the incore inodes.  Do this by extracting the bits we need from the
-unmount path and reusing them; as an added bonus, failed writes during
-a failed mount will not retry forever.
-
-This was originally found during a fuzz test of metadata directories
-(xfs/1546), but the actual symptom was that reclaim hung up on the quota
-inodes.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
-v2.1: consolidate the comments.
----
- fs/xfs/xfs_mount.c |   90 +++++++++++++++++++++++++---------------------------
- 1 file changed, 44 insertions(+), 46 deletions(-)
-
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 52370d0a3f43..1c97b155a8ee 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -634,6 +634,47 @@ xfs_check_summary_counts(
- 	return xfs_initialize_perag_data(mp, mp->m_sb.sb_agcount);
- }
- 
-+/*
-+ * Flush and reclaim dirty inodes in preparation for unmount. Inodes and
-+ * internal inode structures can be sitting in the CIL and AIL at this point,
-+ * so we need to unpin them, write them back and/or reclaim them before unmount
-+ * can proceed.
-+ *
-+ * An inode cluster that has been freed can have its buffer still pinned in
-+ * memory because the transaction is still sitting in a iclog. The stale inodes
-+ * on that buffer will be pinned to the buffer until the transaction hits the
-+ * disk and the callbacks run. Pushing the AIL will skip the stale inodes and
-+ * may never see the pinned buffer, so nothing will push out the iclog and
-+ * unpin the buffer.
-+ *
-+ * Hence we need to force the log to unpin everything first. However, log
-+ * forces don't wait for the discards they issue to complete, so we have to
-+ * explicitly wait for them to complete here as well.
-+ *
-+ * Then we can tell the world we are unmounting so that error handling knows
-+ * that the filesystem is going away and we should error out anything that we
-+ * have been retrying in the background.  This will prevent never-ending
-+ * retries in AIL pushing from hanging the unmount.
-+ *
-+ * Finally, we can push the AIL to clean all the remaining dirty objects, then
-+ * reclaim the remaining inodes that are still in memory at this point in time.
-+ */
-+static void
-+xfs_unmount_flush_inodes(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_log_force(mp, XFS_LOG_SYNC);
-+	xfs_extent_busy_wait_all(mp);
-+	flush_workqueue(xfs_discard_wq);
-+
-+	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
-+
-+	xfs_ail_push_all_sync(mp->m_ail);
-+	cancel_delayed_work_sync(&mp->m_reclaim_work);
-+	xfs_reclaim_inodes(mp);
-+	xfs_health_unmount(mp);
-+}
-+
- /*
-  * This function does the following on an initial mount of a file system:
-  *	- reads the superblock from disk and init the mount struct
-@@ -1008,7 +1049,7 @@ xfs_mountfs(
- 	/* Clean out dquots that might be in memory after quotacheck. */
- 	xfs_qm_unmount(mp);
- 	/*
--	 * Cancel all delayed reclaim work and reclaim the inodes directly.
-+	 * Flush all inode reclamation work and flush the log.
- 	 * We have to do this /after/ rtunmount and qm_unmount because those
- 	 * two will have scheduled delayed reclaim for the rt/quota inodes.
- 	 *
-@@ -1018,11 +1059,8 @@ xfs_mountfs(
- 	 * qm_unmount_quotas and therefore rely on qm_unmount to release the
- 	 * quota inodes.
- 	 */
--	cancel_delayed_work_sync(&mp->m_reclaim_work);
--	xfs_reclaim_inodes(mp);
--	xfs_health_unmount(mp);
-+	xfs_unmount_flush_inodes(mp);
-  out_log_dealloc:
--	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
- 	xfs_log_mount_cancel(mp);
-  out_fail_wait:
- 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
-@@ -1063,47 +1101,7 @@ xfs_unmountfs(
- 	xfs_rtunmount_inodes(mp);
- 	xfs_irele(mp->m_rootip);
- 
--	/*
--	 * We can potentially deadlock here if we have an inode cluster
--	 * that has been freed has its buffer still pinned in memory because
--	 * the transaction is still sitting in a iclog. The stale inodes
--	 * on that buffer will be pinned to the buffer until the
--	 * transaction hits the disk and the callbacks run. Pushing the AIL will
--	 * skip the stale inodes and may never see the pinned buffer, so
--	 * nothing will push out the iclog and unpin the buffer. Hence we
--	 * need to force the log here to ensure all items are flushed into the
--	 * AIL before we go any further.
--	 */
--	xfs_log_force(mp, XFS_LOG_SYNC);
--
--	/*
--	 * Wait for all busy extents to be freed, including completion of
--	 * any discard operation.
--	 */
--	xfs_extent_busy_wait_all(mp);
--	flush_workqueue(xfs_discard_wq);
--
--	/*
--	 * We now need to tell the world we are unmounting. This will allow
--	 * us to detect that the filesystem is going away and we should error
--	 * out anything that we have been retrying in the background. This will
--	 * prevent neverending retries in AIL pushing from hanging the unmount.
--	 */
--	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
--
--	/*
--	 * Flush all pending changes from the AIL.
--	 */
--	xfs_ail_push_all_sync(mp->m_ail);
--
--	/*
--	 * Reclaim all inodes. At this point there should be no dirty inodes and
--	 * none should be pinned or locked. Stop background inode reclaim here
--	 * if it is still running.
--	 */
--	cancel_delayed_work_sync(&mp->m_reclaim_work);
--	xfs_reclaim_inodes(mp);
--	xfs_health_unmount(mp);
-+	xfs_unmount_flush_inodes(mp);
- 
- 	xfs_qm_unmount(mp);
- 
+I know the motivation, but this implementation seems backwards. It's
+already the case that memory_failure() looks up the address_space
+associated with a mapping. From there I would expect a new 'struct
+address_space_operations' op to let the fs handle the case when there
+are multiple address_spaces associated with a given file.
