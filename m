@@ -2,212 +2,382 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAC8EC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 02:20:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F720C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 02:22:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7000C652B2
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 02:20:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2360F652B1
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 02:22:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229870AbhCICTp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Mar 2021 21:19:45 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:39525 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230112AbhCICTO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 21:19:14 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1615256353;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=89pWBWd7SPwk0M+KVrSNtVjvqUSXx0cUII1nPj+SP8E=;
-        b=PQytOoCYJ0m2K0+IdL9usYeyVT1fpTzqdeoc3E+3SsPP15r1/8Fva+TaQ8paHfphiLA96F
-        7ry131HZ7wqUjE5d7Y3bp07FRFVA3XUt3EVhH/g5ygxRAt/ThMiJO47kIKymgl2yodPpkS
-        dztbMWhHddnUIQ3Xhg2mxSIQ/ZUVVIw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-180-k-xWnxV5MaiRj_psvvcwow-1; Mon, 08 Mar 2021 21:19:09 -0500
-X-MC-Unique: k-xWnxV5MaiRj_psvvcwow-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 73B861842142;
-        Tue,  9 Mar 2021 02:19:08 +0000 (UTC)
-Received: from localhost (unknown [10.66.61.36])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D9D9D5944F;
-        Tue,  9 Mar 2021 02:19:07 +0000 (UTC)
-Date:   Tue, 9 Mar 2021 10:37:24 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     fstests@vger.kernel.org, guan@eryu.me, sunke32@huawei.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfstests: rename RENAME_WHITEOUT test on fs no enough
- sapce
-Message-ID: <20210309023724.GC3499219@localhost.localdomain>
-Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
-        fstests@vger.kernel.org, guan@eryu.me, sunke32@huawei.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <20210308134327.345579-1-zlang@redhat.com>
- <20210308183610.GX3419940@magnolia>
+        id S229793AbhCICVz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 21:21:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42646 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230285AbhCICVg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Mar 2021 21:21:36 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D5A2B652B1;
+        Tue,  9 Mar 2021 02:21:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1615256496;
+        bh=yWAlD+ZsuNgIGghfqfjffoEqtgf18JxQeDHKfu46OB4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=WJdv3LYFhS9P3sl1ZzgNIsJ3kAm+diqA1IbjwCkFZqFGypFqUlfvwrCVZfuYJenbi
+         P5UBUk4uB+XJRd8PEyg+B9cXMVBivic+tutt6occzQhQX9kZ6H/z/u9VTn6Ij11ASI
+         ve4ZEvlV01PN+FiaqAd121NkCTC8rXyoZOC1+s853IPUnuqrWzADmsFuCvoYFCb0+F
+         +M++fGvo8UaSn8qAqj3gHTiB/O60OkNQoCVS/bOd5O7Y6F6WeszHLPLrgAD9msI2oK
+         aOPjnXsm8oxDlgfqkHJKgvR3SQuXEEPI5c7rN/undCO2K2gO2gaNQXEVIPFm9cdFkK
+         oJbLVGB4PWA0Q==
+Date:   Mon, 8 Mar 2021 18:21:34 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 25/45] xfs: reserve space and initialise xlog_op_header
+ in item formatting
+Message-ID: <20210309022134.GM3419940@magnolia>
+References: <20210305051143.182133-1-david@fromorbit.com>
+ <20210305051143.182133-26-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210308183610.GX3419940@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <20210305051143.182133-26-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 08, 2021 at 10:36:10AM -0800, Darrick J. Wong wrote:
-> On Mon, Mar 08, 2021 at 09:43:27PM +0800, Zorro Lang wrote:
-> > This's a regression test for linux 6b4b8e6b4ad8 ("ext4: fix bug for
-> > rename with RENAME_WHITEOUT"). Rename a file with RENAME_WHITEOUT
-> > flag might cause corruption when there's not enough space to
-> > complete this renaming operation.
-> > 
-> > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > Signed-off-by: Sun Ke <sunke32@huawei.com>
+On Fri, Mar 05, 2021 at 04:11:23PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Seems reasonable to me; does it pass on xfs?
+> Current xlog_write() adds op headers to the log manually for every
+> log item region that is in the vector passed to it. While
+> xlog_write() needs to stamp the transaction ID into the ophdr, we
+> already know it's length, flags, clientid, etc at CIL commit time.
+> 
+> This means the only time that xlog write really needs to format and
+> reserve space for a new ophdr is when a region is split across two
+> iclogs. Adding the opheader and accounting for it as part of the
+> normal formatted item region means we simplify the accounting
+> of space used by a transaction and we don't have to special case
+> reserving of space in for the ophdrs in xlog_write(). It also means
+> we can largely initialise the ophdr in transaction commit instead
+> of xlog_write, making the xlog_write formatting inner loop much
+> tighter.
+> 
+> xlog_prepare_iovec() is now too large to stay as an inline function,
+> so we move it out of line and into xfs_log.c.
+> 
+> Object sizes:
+> text	   data	    bss	    dec	    hex	filename
+> 1125934	 305951	    484	1432369	 15db31 fs/xfs/built-in.a.before
+> 1123360	 305951	    484	1429795	 15d123 fs/xfs/built-in.a.after
+> 
+> So the code is a roughly 2.5kB smaller with xlog_prepare_iovec() now
+> out of line, even though it grew in size itself.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Yes, it's passed on xfs and latest ext4(fixed this bug).
+Sooo... if I understand this part of the patchset correctly, the goal
+here is to simplify and shorten the inner loop of xlog_write. Callers
+are now required to create their own log op headers at the start of the
+xfs_log_iovec chain in the xfs_log_vec, which means that the only time
+xlog_write has to create an ophdr is when we fill up the current iclog
+and must continue in a new one, because that's not something the callers
+should ever have to know about.  Correct?
 
-Thanks,
-Zorro
+If so,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-> 
-> If so,
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> --D
-> 
-> > ---
-> > 
-> > Hi,
-> > 
-> > Thanks for the reviewing from Eryu. V2 did below changes:
-> > 1) Import ./common/renameat2 and _require_renameat2 whiteout
-> > 2) Replace CHUNKS with NR_FILE
-> > 3) Reduce the number of test files from 64*64 to 4*64
-> > 4) Add to quick group 
-> > 
-> > More details about the reviewing history, refer to:
-> > https://patchwork.kernel.org/project/fstests/patch/20210218071324.50413-1-zlang@redhat.com/
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> >  tests/generic/626     | 74 +++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/626.out |  2 ++
-> >  tests/generic/group   |  1 +
-> >  3 files changed, 77 insertions(+)
-> >  create mode 100755 tests/generic/626
-> >  create mode 100644 tests/generic/626.out
-> > 
-> > diff --git a/tests/generic/626 b/tests/generic/626
-> > new file mode 100755
-> > index 00000000..1baa73f8
-> > --- /dev/null
-> > +++ b/tests/generic/626
-> > @@ -0,0 +1,74 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2021 HUAWEI.  All Rights Reserved.
-> > +# Copyright (c) 2021 Red Hat Inc.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 626
-> > +#
-> > +# Test RENAME_WHITEOUT on filesystem without space to create one more inodes.
-> > +# This is a regression test for kernel commit:
-> > +#   6b4b8e6b4ad8 ("ext4: ext4: fix bug for rename with RENAME_WHITEOUT")
-> > +#
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +. ./common/populate
-> > +. ./common/renameat2
-> > +
-> > +# remove previous $seqres.full before test
-> > +rm -f $seqres.full
-> > +
-> > +# real QA test starts here
-> > +_supported_fs generic
-> > +_require_scratch
-> > +_require_renameat2 whiteout
-> > +
-> > +_scratch_mkfs_sized $((256 * 1024 * 1024)) >> $seqres.full 2>&1
-> > +_scratch_mount
-> > +
-> > +# Create lots of files, to help to trigger the bug easily
-> > +NR_FILE=$((4 * 64))
-> > +for ((i=0; i<NR_FILE; i++));do
-> > +	touch $SCRATCH_MNT/srcfile$i
-> > +done
-> > +# Try to fill the whole fs
-> > +nr_free=$(stat -f -c '%f' $SCRATCH_MNT)
-> > +blksz="$(_get_block_size $SCRATCH_MNT)"
-> > +_fill_fs $((nr_free * blksz)) $SCRATCH_MNT/fill_space $blksz 0 >> $seqres.full 2>&1
-> > +# Use empty files to fill the rest
-> > +for ((i=0; i<10000; i++));do
-> > +	touch $SCRATCH_MNT/fill_file$i 2>/dev/null
-> > +	# Until no more files can be created
-> > +	if [ $? -ne 0 ];then
-> > +		break
-> > +	fi
-> > +done
-> > +# ENOSPC is expected here
-> > +for ((i=0; i<NR_FILE; i++));do
-> > +	$here/src/renameat2 -w $SCRATCH_MNT/srcfile$i $SCRATCH_MNT/dstfile$i >> $seqres.full 2>&1
-> > +done
-> > +_scratch_cycle_mount
-> > +# Expect no errors at here
-> > +for ((i=0; i<NR_FILE; i++));do
-> > +	ls -l $SCRATCH_MNT/srcfile$i >/dev/null
-> > +done
-> > +
-> > +echo "Silence is golden"
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/626.out b/tests/generic/626.out
-> > new file mode 100644
-> > index 00000000..130b2fef
-> > --- /dev/null
-> > +++ b/tests/generic/626.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 626
-> > +Silence is golden
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index 84db3789..c3448fe3 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -628,3 +628,4 @@
-> >  623 auto quick shutdown
-> >  624 auto quick verity
-> >  625 auto quick verity
-> > +626 auto quick rename enospc
-> > -- 
-> > 2.29.2
-> > 
-> 
+It /really/ would have been nice to have kept these patches separated by
+major functional change area (i.e. separate series) instead of one
+gigantic 45-patch behemoth to intimidate the reviewers...
 
+--D
+
+> ---
+>  fs/xfs/xfs_log.c     | 115 +++++++++++++++++++++++++++++--------------
+>  fs/xfs/xfs_log.h     |  42 +++-------------
+>  fs/xfs/xfs_log_cil.c |  25 +++++-----
+>  3 files changed, 99 insertions(+), 83 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 429cb1e7cc67..98de45be80c0 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -89,6 +89,62 @@ xlog_iclogs_empty(
+>  static int
+>  xfs_log_cover(struct xfs_mount *);
+>  
+> +/*
+> + * We need to make sure the buffer pointer returned is naturally aligned for the
+> + * biggest basic data type we put into it. We have already accounted for this
+> + * padding when sizing the buffer.
+> + *
+> + * However, this padding does not get written into the log, and hence we have to
+> + * track the space used by the log vectors separately to prevent log space hangs
+> + * due to inaccurate accounting (i.e. a leak) of the used log space through the
+> + * CIL context ticket.
+> + *
+> + * We also add space for the xlog_op_header that describes this region in the
+> + * log. This prepends the data region we return to the caller to copy their data
+> + * into, so do all the static initialisation of the ophdr now. Because the ophdr
+> + * is not 8 byte aligned, we have to be careful to ensure that we align the
+> + * start of the buffer such that the region we return to the call is 8 byte
+> + * aligned and packed against the tail of the ophdr.
+> + */
+> +void *
+> +xlog_prepare_iovec(
+> +	struct xfs_log_vec	*lv,
+> +	struct xfs_log_iovec	**vecp,
+> +	uint			type)
+> +{
+> +	struct xfs_log_iovec	*vec = *vecp;
+> +	struct xlog_op_header	*oph;
+> +	uint32_t		len;
+> +	void			*buf;
+> +
+> +	if (vec) {
+> +		ASSERT(vec - lv->lv_iovecp < lv->lv_niovecs);
+> +		vec++;
+> +	} else {
+> +		vec = &lv->lv_iovecp[0];
+> +	}
+> +
+> +	len = lv->lv_buf_len + sizeof(struct xlog_op_header);
+> +	if (!IS_ALIGNED(len, sizeof(uint64_t))) {
+> +		lv->lv_buf_len = round_up(len, sizeof(uint64_t)) -
+> +					sizeof(struct xlog_op_header);
+> +	}
+> +
+> +	vec->i_type = type;
+> +	vec->i_addr = lv->lv_buf + lv->lv_buf_len;
+> +
+> +	oph = vec->i_addr;
+> +	oph->oh_clientid = XFS_TRANSACTION;
+> +	oph->oh_res2 = 0;
+> +	oph->oh_flags = 0;
+> +
+> +	buf = vec->i_addr + sizeof(struct xlog_op_header);
+> +	ASSERT(IS_ALIGNED((unsigned long)buf, sizeof(uint64_t)));
+> +
+> +	*vecp = vec;
+> +	return buf;
+> +}
+> +
+>  static void
+>  xlog_grant_sub_space(
+>  	struct xlog		*log,
+> @@ -2120,9 +2176,9 @@ xlog_print_trans(
+>  }
+>  
+>  /*
+> - * Calculate the potential space needed by the log vector. If this is a start
+> - * transaction, the caller has already accounted for both opheaders in the start
+> - * transaction, so we don't need to account for them here.
+> + * Calculate the potential space needed by the log vector. All regions contain
+> + * their own opheaders and they are accounted for in region space so we don't
+> + * need to add them to the vector length here.
+>   */
+>  static int
+>  xlog_write_calc_vec_length(
+> @@ -2149,18 +2205,7 @@ xlog_write_calc_vec_length(
+>  			xlog_tic_add_region(ticket, vecp->i_len, vecp->i_type);
+>  		}
+>  	}
+> -
+> -	/* Don't account for regions with embedded ophdrs */
+> -	if (optype && headers > 0) {
+> -		headers--;
+> -		if (optype & XLOG_START_TRANS) {
+> -			ASSERT(headers >= 1);
+> -			headers--;
+> -		}
+> -	}
+> -
+>  	ticket->t_res_num_ophdrs += headers;
+> -	len += headers * sizeof(struct xlog_op_header);
+>  
+>  	return len;
+>  }
+> @@ -2170,7 +2215,6 @@ xlog_write_setup_ophdr(
+>  	struct xlog_op_header	*ophdr,
+>  	struct xlog_ticket	*ticket)
+>  {
+> -	ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
+>  	ophdr->oh_clientid = XFS_TRANSACTION;
+>  	ophdr->oh_res2 = 0;
+>  	ophdr->oh_flags = 0;
+> @@ -2404,21 +2448,25 @@ xlog_write(
+>  			ASSERT((unsigned long)ptr % sizeof(int32_t) == 0);
+>  
+>  			/*
+> -			 * The XLOG_START_TRANS has embedded ophdrs for the
+> -			 * start record and transaction header. They will always
+> -			 * be the first two regions in the lv chain. Commit and
+> -			 * unmount records also have embedded ophdrs.
+> +			 * Regions always have their ophdr at the start of the
+> +			 * region, except for:
+> +			 * - a transaction start which has a start record ophdr
+> +			 *   before the first region ophdr; and
+> +			 * - the previous region didn't fully fit into an iclog
+> +			 *   so needs a continuation ophdr to prepend the region
+> +			 *   in this new iclog.
+>  			 */
+> -			if (optype) {
+> -				ophdr = reg->i_addr;
+> -				if (index)
+> -					optype &= ~XLOG_START_TRANS;
+> -			} else {
+> +			ophdr = reg->i_addr;
+> +			if (optype && index) {
+> +				optype &= ~XLOG_START_TRANS;
+> +			} else if (partial_copy) {
+>                                  ophdr = xlog_write_setup_ophdr(ptr, ticket);
+>  				xlog_write_adv_cnt(&ptr, &len, &log_offset,
+>  					   sizeof(struct xlog_op_header));
+>  				added_ophdr = true;
+>  			}
+> +			ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
+> +
+>  			len += xlog_write_setup_copy(ticket, ophdr,
+>  						     iclog->ic_size-log_offset,
+>  						     reg->i_len,
+> @@ -2436,20 +2484,11 @@ xlog_write(
+>  				ophdr->oh_len = cpu_to_be32(copy_len -
+>  						sizeof(struct xlog_op_header));
+>  			}
+> -			/*
+> -			 * Copy region.
+> -			 *
+> -			 * Commit records just log an opheader, so
+> -			 * we can have empty payloads with no data region to
+> -			 * copy.  Hence we only copy the payload if the vector
+> -			 * says it has data to copy.
+> -			 */
+> -			ASSERT(copy_len >= 0);
+> -			if (copy_len > 0) {
+> -				memcpy(ptr, reg->i_addr + copy_off, copy_len);
+> -				xlog_write_adv_cnt(&ptr, &len, &log_offset,
+> -						   copy_len);
+> -			}
+> +
+> +			ASSERT(copy_len > 0);
+> +			memcpy(ptr, reg->i_addr + copy_off, copy_len);
+> +			xlog_write_adv_cnt(&ptr, &len, &log_offset, copy_len);
+> +
+>  			if (added_ophdr)
+>  				copy_len += sizeof(struct xlog_op_header);
+>  			record_cnt++;
+> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+> index 1ca4f2edbdaf..af54ea3f8c90 100644
+> --- a/fs/xfs/xfs_log.h
+> +++ b/fs/xfs/xfs_log.h
+> @@ -21,44 +21,18 @@ struct xfs_log_vec {
+>  
+>  #define XFS_LOG_VEC_ORDERED	(-1)
+>  
+> -/*
+> - * We need to make sure the buffer pointer returned is naturally aligned for the
+> - * biggest basic data type we put into it. We have already accounted for this
+> - * padding when sizing the buffer.
+> - *
+> - * However, this padding does not get written into the log, and hence we have to
+> - * track the space used by the log vectors separately to prevent log space hangs
+> - * due to inaccurate accounting (i.e. a leak) of the used log space through the
+> - * CIL context ticket.
+> - */
+> -static inline void *
+> -xlog_prepare_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
+> -		uint type)
+> -{
+> -	struct xfs_log_iovec *vec = *vecp;
+> -
+> -	if (vec) {
+> -		ASSERT(vec - lv->lv_iovecp < lv->lv_niovecs);
+> -		vec++;
+> -	} else {
+> -		vec = &lv->lv_iovecp[0];
+> -	}
+> -
+> -	if (!IS_ALIGNED(lv->lv_buf_len, sizeof(uint64_t)))
+> -		lv->lv_buf_len = round_up(lv->lv_buf_len, sizeof(uint64_t));
+> -
+> -	vec->i_type = type;
+> -	vec->i_addr = lv->lv_buf + lv->lv_buf_len;
+> -
+> -	ASSERT(IS_ALIGNED((unsigned long)vec->i_addr, sizeof(uint64_t)));
+> -
+> -	*vecp = vec;
+> -	return vec->i_addr;
+> -}
+> +void *xlog_prepare_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
+> +		uint type);
+>  
+>  static inline void
+>  xlog_finish_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec *vec, int len)
+>  {
+> +	struct xlog_op_header	*oph = vec->i_addr;
+> +
+> +	/* opheader tracks payload length, logvec tracks region length */
+> +	oph->oh_len = len;
+> +
+> +	len += sizeof(struct xlog_op_header);
+>  	lv->lv_buf_len += len;
+>  	lv->lv_bytes += len;
+>  	vec->i_len = len;
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 0c81c13e2cf6..7a5e6bdb7876 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -181,13 +181,20 @@ xlog_cil_alloc_shadow_bufs(
+>  		}
+>  
+>  		/*
+> -		 * We 64-bit align the length of each iovec so that the start
+> -		 * of the next one is naturally aligned.  We'll need to
+> -		 * account for that slack space here. Then round nbytes up
+> -		 * to 64-bit alignment so that the initial buffer alignment is
+> -		 * easy to calculate and verify.
+> +		 * We 64-bit align the length of each iovec so that the start of
+> +		 * the next one is naturally aligned.  We'll need to account for
+> +		 * that slack space here.
+> +		 *
+> +		 * We also add the xlog_op_header to each region when
+> +		 * formatting, but that's not accounted to the size of the item
+> +		 * at this point. Hence we'll need an addition number of bytes
+> +		 * for each vector to hold an opheader.
+> +		 *
+> +		 * Then round nbytes up to 64-bit alignment so that the initial
+> +		 * buffer alignment is easy to calculate and verify.
+>  		 */
+> -		nbytes += niovecs * sizeof(uint64_t);
+> +		nbytes += niovecs *
+> +			(sizeof(uint64_t) + sizeof(struct xlog_op_header));
+>  		nbytes = round_up(nbytes, sizeof(uint64_t));
+>  
+>  		/*
+> @@ -433,11 +440,6 @@ xlog_cil_insert_items(
+>  
+>  	spin_lock(&cil->xc_cil_lock);
+>  
+> -	/* account for space used by new iovec headers  */
+> -	iovhdr_res = diff_iovecs * sizeof(xlog_op_header_t);
+> -	len += iovhdr_res;
+> -	ctx->nvecs += diff_iovecs;
+> -
+>  	/* attach the transaction to the CIL if it has any busy extents */
+>  	if (!list_empty(&tp->t_busy))
+>  		list_splice_init(&tp->t_busy, &ctx->busy_extents);
+> @@ -469,6 +471,7 @@ xlog_cil_insert_items(
+>  	}
+>  	tp->t_ticket->t_curr_res -= len;
+>  	ctx->space_used += len;
+> +	ctx->nvecs += diff_iovecs;
+>  
+>  	/*
+>  	 * If we've overrun the reservation, dump the tx details before we move
+> -- 
+> 2.28.0
+> 
