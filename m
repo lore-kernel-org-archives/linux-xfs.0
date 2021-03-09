@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFDD1C43381
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 04:41:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A24EC4332B
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 04:41:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBABC6529E
+	by mail.kernel.org (Postfix) with ESMTP id F20A1652AD
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 04:41:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230140AbhCIEkn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S230122AbhCIEkn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 8 Mar 2021 23:40:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:32936 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:32914 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229813AbhCIEkh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Mar 2021 23:40:37 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DE12865275;
-        Tue,  9 Mar 2021 04:40:36 +0000 (UTC)
+        id S229701AbhCIEkb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Mar 2021 23:40:31 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5AB2665275;
+        Tue,  9 Mar 2021 04:40:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615264837;
-        bh=kxWH7F4brECXLYtjcDpMuJt2/GCOUol5Wd8naC3DfBc=;
+        s=k20201202; t=1615264831;
+        bh=uhr8wJ7bb74FE76utpAtAKmZe5Cuj55gHF4cpzpgcPQ=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=dCst7V+c+g4VD52VSzim5IFGf32Sa9HFnGbzzJjbiUe4DvMzdfRSk0x/344f2LlNt
-         xreqIBroq8hhl4fZ0x/pYm1tAhbNDPUZ/BztYjdlcxTVz0QUV5Spk8d37hjis0Hzs4
-         E6W4YAQ0RTZs5wbJe5zVI74SCG+6vGZIe+Kbe3Lv9v+Q+R+vbaSP5z5GckNhUnqEDM
-         ZMwnsNY2o43x4PfrQKzM3zCYqsC3Ep/r7lDQ7jVq3ACPLZkAKe97v300kUVnJJPb4G
-         rqjuIokEA63MGD/Ta/DxcYl5F9qrlBTEta8yw/D9cIFY1V0GBJmuYkc78AFJ9e11dg
-         yh8iOOgX0Rd5A==
-Subject: [PATCH 06/10] xfs: test quota softlimit warning functionality
+        b=rU5Nm0M5I+QGmKD9a0FqUV2AOWd3G9lQ5PhhghxRidEL3Uxy/kT0BmufH/DL+5rSD
+         bBRMHk+rti8dPxLFlAHXAfVFMlh9DdofU3DZkLxAd5YE7mNxRx1VhMrnmTSrC7DCm/
+         4WnYS2rvURuWPhzSwVg1weR0LSGUpwDHSQNaXRen86Bl4Ep2InRfB0uYcf1XQnvwpF
+         cOgoaMMRn76/3CBdNyoBTx4FxSfxeyhZN+x4cuheozH7dT92mAdlgF6LS2SrDK5I3k
+         vKJELY/uSjeU8PgpWkywmi2SOwsmfvK4nIOj1OomhDOhHOG2mTQVWvEEHRFc4PzymU
+         jqDIouusz1DPw==
+Subject: [PATCH 05/10] common/filter: refactor quota report filtering
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 08 Mar 2021 20:40:36 -0800
-Message-ID: <161526483668.1214319.17667836667890283825.stgit@magnolia>
+Date:   Mon, 08 Mar 2021 20:40:31 -0800
+Message-ID: <161526483109.1214319.14555094406560973318.stgit@magnolia>
 In-Reply-To: <161526480371.1214319.3263690953532787783.stgit@magnolia>
 References: <161526480371.1214319.3263690953532787783.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,352 +49,216 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that quota softlimits work, which is to say that one can
-exceed the softlimit up to warnlimit times before it starts enforcing
-that.
+xfs/299 and xfs/050 share the same function to filter quota reporting
+into a format suitable for the golden output.  Refactor this so that we
+can use it in a new test.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/915     |  162 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/915.out |  151 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/group   |    1 
- 3 files changed, 314 insertions(+)
- create mode 100755 tests/xfs/915
- create mode 100644 tests/xfs/915.out
+ common/filter |   24 ++++++++++++++++++++++++
+ tests/xfs/050 |   30 ++++++------------------------
+ tests/xfs/299 |   30 ++++++------------------------
+ 3 files changed, 36 insertions(+), 48 deletions(-)
 
 
-diff --git a/tests/xfs/915 b/tests/xfs/915
-new file mode 100755
-index 00000000..a2cdbbb7
---- /dev/null
-+++ b/tests/xfs/915
-@@ -0,0 +1,162 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2021 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 915
-+#
-+# Check that quota softlimit warnings work the way they should.  This means
-+# that we can disobey the softlimit up to warnlimit times before it turns into
-+# hard(er) enforcement.  This is a functional test for quota warnings, but
-+# since the functionality has been broken for decades, this is also a
-+# regression test for commit 4b8628d57b72 ("xfs: actually bump warning counts
-+# when we send warnings").
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
+diff --git a/common/filter b/common/filter
+index 2f3277f7..2efbbd99 100644
+--- a/common/filter
++++ b/common/filter
+@@ -637,5 +637,29 @@ _filter_getcap()
+         sed -e "s/= //" -e "s/\+/=/g"
+ }
+ 
++# Filter user/group/project id numbers out of quota reports, and standardize
++# the block counts to use filesystem block size.  Callers must set the id and
++# bsize variables before calling this function.
++_filter_quota_report()
 +{
-+	cd /
-+	rm -f $tmp.*
++	test -n "$id" || echo "id must be set"
++	test -n "$bsize" || echo "block size must be set"
++
++	tr -s '[:space:]' | \
++	perl -npe '
++		s/^\#'$id' /[NAME] /g;
++		s/^\#0 \d+ /[ROOT] 0 /g;
++		s/6 days/7 days/g' |
++	perl -npe '
++		$val = 0;
++		if ($ENV{'LARGE_SCRATCH_DEV'}) {
++			$val = $ENV{'NUM_SPACE_FILES'};
++		}
++		s/(^\[ROOT\] \S+ \S+ \S+ \S+ \[--------\] )(\S+)/$1@{[$2 - $val]}/g' |
++	sed -e 's/ 65535 \[--------\]/ 00 \[--------\]/g' |
++	perl -npe '
++		s|^(.*?) (\d+) (\d+) (\d+)|$1 @{[$2 * 1024 /'$bsize']} @{[$3 * 1024 /'$bsize']} @{[$4 * 1024 /'$bsize']}|'
 +}
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/quota
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_quota
-+_require_scratch
-+
-+rm -f $seqres.full
-+
-+qsetup()
-+{
-+	opt=$1
-+	enforce=0
-+	if [ $opt = "u" -o $opt = "uno" ]; then
-+		type=u
-+		eval `_choose_uid`
-+	elif [ $opt = "g" -o $opt = "gno" ]; then
-+		type=g
-+		eval `_choose_gid`
-+	elif [ $opt = "p" -o $opt = "pno" ]; then
-+		type=p
-+		eval `_choose_prid`
-+	fi
-+	[ $opt = "u" -o $opt = "g" -o $opt = "p" ] && enforce=1
-+
-+	echo "Using type=$type id=$id" >> $seqres.full
-+}
-+
-+exercise() {
-+	_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+	cat $tmp.mkfs >>$seqres.full
-+
-+	# keep the blocksize and data size for dd later
-+	. $tmp.mkfs
-+
-+	_qmount
-+
-+	qsetup $1
-+
-+	echo "Using type=$type id=$id" >>$seqres.full
-+
-+	echo
-+	echo "*** report initial settings" | tee -a $seqres.full
-+	$XFS_QUOTA_PROG -x \
-+		-c "limit -$type isoft=3 ihard=500000 $id" \
-+		-c "warn -$type -i -d 13" \
-+		$SCRATCH_DEV
-+	$XFS_QUOTA_PROG -x \
-+		-c "state -$type" >> $seqres.full
-+	$XFS_QUOTA_PROG -x \
-+		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ # make sure this script returns success
+ /bin/true
+diff --git a/tests/xfs/050 b/tests/xfs/050
+index 53412a13..1df97537 100755
+--- a/tests/xfs/050
++++ b/tests/xfs/050
+@@ -47,24 +47,6 @@ bhard=$(( 1000 * $bsize ))
+ isoft=4
+ ihard=10
+ 
+-_filter_report()
+-{
+-	tr -s '[:space:]' | \
+-	perl -npe '
+-		s/^\#'$id' /[NAME] /g;
+-		s/^\#0 \d+ /[ROOT] 0 /g;
+-		s/6 days/7 days/g' |
+-	perl -npe '
+-		$val = 0;
+-		if ($ENV{'LARGE_SCRATCH_DEV'}) {
+-			$val = $ENV{'NUM_SPACE_FILES'};
+-		}
+-		s/(^\[ROOT\] \S+ \S+ \S+ \S+ \[--------\] )(\S+)/$1@{[$2 - $val]}/g' |
+-	sed -e 's/ 65535 \[--------\]/ 00 \[--------\]/g' |
+-	perl -npe '
+-		s|^(.*?) (\d+) (\d+) (\d+)|$1 @{[$2 * 1024 /'$bsize']} @{[$3 * 1024 /'$bsize']} @{[$4 * 1024 /'$bsize']}|'
+-}
+-
+ # The actual point at which limit enforcement takes place for the
+ # hard block limit is variable depending on filesystem blocksize,
+ # and iosize.  What we want to test is that the limit is enforced
+@@ -84,7 +66,7 @@ _filter_and_check_blks()
+ 			}
+ 			s/^(\#'$id'\s+)(\d+)/\1 =OK=/g;
+ 		}
+-	' | _filter_report
++	' | _filter_quota_report
+ }
+ 
+ _qsetup()
+@@ -134,7 +116,7 @@ _exercise()
+ 	echo "*** report no quota settings" | tee -a $seqres.full
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+-		_filter_report | LC_COLLATE=POSIX sort -ru
 +		_filter_quota_report | LC_COLLATE=POSIX sort -ru
-+
-+	echo
-+	echo "*** push past the soft inode limit" | tee -a $seqres.full
-+	_file_as_id $SCRATCH_MNT/softok1 $id $type $bsize 0
-+	_file_as_id $SCRATCH_MNT/softok2 $id $type $bsize 0
-+	_file_as_id $SCRATCH_MNT/softok3 $id $type $bsize 0
-+	_file_as_id $SCRATCH_MNT/softwarn1 $id $type $bsize 0
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 
+ 	echo
+ 	echo "*** report initial settings" | tee -a $seqres.full
+@@ -147,7 +129,7 @@ _exercise()
+ 		$SCRATCH_DEV
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+-		_filter_report | LC_COLLATE=POSIX sort -ru
 +		_filter_quota_report | LC_COLLATE=POSIX sort -ru
-+
-+	echo
-+	echo "*** push further past the soft inode limit" | tee -a $seqres.full
-+	for warn_nr in $(seq 2 5); do
-+		_file_as_id $SCRATCH_MNT/softwarn$warn_nr $id $type $bsize 0
-+	done
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 
+ 	echo
+ 	echo "*** push past the soft inode limit" | tee -a $seqres.full
+@@ -159,7 +141,7 @@ _exercise()
+ 	$XFS_QUOTA_PROG -x -c "warn -i -$type 0 $id" $SCRATCH_DEV
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+-		_filter_report | LC_COLLATE=POSIX sort -ru
 +		_filter_quota_report | LC_COLLATE=POSIX sort -ru
-+
-+	echo
-+	echo "*** push past the soft inode warning limit" | tee -a $seqres.full
-+	for warn_nr in $(seq 6 15); do
-+		_file_as_id $SCRATCH_MNT/softwarn$warn_nr $id $type $bsize 0
-+	done
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 
+ 	echo
+ 	echo "*** push past the soft block limit" | tee -a $seqres.full
+@@ -169,7 +151,7 @@ _exercise()
+ 		-c "warn -b -$type 0 $id" $SCRATCH_DEV
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+-		_filter_report | LC_COLLATE=POSIX sort -ru
 +		_filter_quota_report | LC_COLLATE=POSIX sort -ru
-+
-+	echo
-+	echo "*** unmount"
-+	_scratch_unmount
-+}
-+
-+_scratch_mkfs > $seqres.full
-+_scratch_mount >> $seqres.full
-+
-+chmod a+rwx $SCRATCH_MNT $seqres.full	# arbitrary users will write here
-+bsize=$(_get_file_block_size $SCRATCH_MNT)
-+_scratch_unmount
-+
-+cat >$tmp.projects <<EOF
-+1:$SCRATCH_MNT
-+EOF
-+
-+cat >$tmp.projid <<EOF
-+root:0
-+scratch:1
-+EOF
-+
-+projid_file="$tmp.projid"
-+
-+echo "*** user"
-+_qmount_option "uquota"
-+exercise u
-+
-+echo "*** group"
-+_qmount_option "gquota"
-+exercise g
-+
-+echo "*** uqnoenforce"
-+_qmount_option "uqnoenforce"
-+exercise uno
-+
-+echo "*** gqnoenforce"
-+_qmount_option "gqnoenforce"
-+exercise gno
-+
-+echo "*** pquota"
-+_qmount_option "pquota"
-+exercise p
-+
-+echo "*** pqnoenforce"
-+_qmount_option "pqnoenforce"
-+exercise pno
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/915.out b/tests/xfs/915.out
-new file mode 100644
-index 00000000..c3bb855e
---- /dev/null
-+++ b/tests/xfs/915.out
-@@ -0,0 +1,151 @@
-+QA output created by 915
-+*** user
-+meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-+data     = bsize=XXX blocks=XXX, imaxpct=PCT
-+         = sunit=XXX swidth=XXX, unwritten=X
-+naming   =VERN bsize=XXX
-+log      =LDEV bsize=XXX blocks=XXX
-+realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-+
-+*** report initial settings
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 0 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 4 3 500000 01 [7 days] 0 0 0 00 [--------]
-+
-+*** push further past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 8 3 500000 05 [7 days] 0 0 0 00 [--------]
-+
-+*** push past the soft inode warning limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 16 3 500000 13 [7 days] 0 0 0 00 [--------]
-+
-+*** unmount
-+*** group
-+meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-+data     = bsize=XXX blocks=XXX, imaxpct=PCT
-+         = sunit=XXX swidth=XXX, unwritten=X
-+naming   =VERN bsize=XXX
-+log      =LDEV bsize=XXX blocks=XXX
-+realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-+
-+*** report initial settings
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 0 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 4 3 500000 01 [7 days] 0 0 0 00 [--------]
-+
-+*** push further past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 8 3 500000 05 [7 days] 0 0 0 00 [--------]
-+
-+*** push past the soft inode warning limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 16 3 500000 13 [7 days] 0 0 0 00 [--------]
-+
-+*** unmount
-+*** uqnoenforce
-+meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-+data     = bsize=XXX blocks=XXX, imaxpct=PCT
-+         = sunit=XXX swidth=XXX, unwritten=X
-+naming   =VERN bsize=XXX
-+log      =LDEV bsize=XXX blocks=XXX
-+realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-+
-+*** report initial settings
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 0 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 4 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push further past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 8 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push past the soft inode warning limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 18 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** unmount
-+*** gqnoenforce
-+meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-+data     = bsize=XXX blocks=XXX, imaxpct=PCT
-+         = sunit=XXX swidth=XXX, unwritten=X
-+naming   =VERN bsize=XXX
-+log      =LDEV bsize=XXX blocks=XXX
-+realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-+
-+*** report initial settings
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 0 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 4 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push further past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 8 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push past the soft inode warning limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 18 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** unmount
-+*** pquota
-+meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-+data     = bsize=XXX blocks=XXX, imaxpct=PCT
-+         = sunit=XXX swidth=XXX, unwritten=X
-+naming   =VERN bsize=XXX
-+log      =LDEV bsize=XXX blocks=XXX
-+realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-+
-+*** report initial settings
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 0 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 4 3 500000 02 [7 days] 0 0 0 00 [--------]
-+
-+*** push further past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 8 3 500000 06 [7 days] 0 0 0 00 [--------]
-+
-+*** push past the soft inode warning limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 15 3 500000 13 [7 days] 0 0 0 00 [--------]
-+
-+*** unmount
-+*** pqnoenforce
-+meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-+data     = bsize=XXX blocks=XXX, imaxpct=PCT
-+         = sunit=XXX swidth=XXX, unwritten=X
-+naming   =VERN bsize=XXX
-+log      =LDEV bsize=XXX blocks=XXX
-+realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-+
-+*** report initial settings
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 0 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 4 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push further past the soft inode limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 8 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** push past the soft inode warning limit
-+[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
-+[NAME] 0 0 0 00 [--------] 18 3 500000 00 [--------] 0 0 0 00 [--------]
-+
-+*** unmount
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 87badd56..d7aafc94 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -505,3 +505,4 @@
- 760 auto quick rw collapse punch insert zero prealloc
- 761 auto quick realtime
- 763 auto quick rw realtime
-+915 auto quick quota
+ 
+ 	echo
+ 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
+@@ -183,7 +165,7 @@ _exercise()
+ 		-c "warn -i -$type 0 $id" $SCRATCH_DEV
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+-		_filter_report | LC_COLLATE=POSIX sort -ru
++		_filter_quota_report | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
+diff --git a/tests/xfs/299 b/tests/xfs/299
+index 15e0edf6..b862e67e 100755
+--- a/tests/xfs/299
++++ b/tests/xfs/299
+@@ -40,24 +40,6 @@ _require_xfs_quota
+ _require_xfs_mkfs_crc
+ _require_xfs_crc
+ 
+-_filter_report()
+-{
+-	tr -s '[:space:]' | \
+-	perl -npe '
+-		s/^\#'$id' /[NAME] /g;
+-		s/^\#0 \d+ /[ROOT] 0 /g;
+-		s/6 days/7 days/g' |
+-	perl -npe '
+-		$val = 0;
+-		if ($ENV{'LARGE_SCRATCH_DEV'}) {
+-			$val = $ENV{'NUM_SPACE_FILES'};
+-		}
+-		s/(^\[ROOT\] \S+ \S+ \S+ \S+ \[--------\] )(\S+)/$1@{[$2 - $val]}/g' |
+-	sed -e 's/ 65535 \[--------\]/ 00 \[--------\]/g' |
+-	perl -npe '
+-		s|^(.*?) (\d+) (\d+) (\d+)|$1 @{[$2 * 1024 /'$bsize']} @{[$3 * 1024 /'$bsize']} @{[$4 * 1024 /'$bsize']}|'
+-}
+-
+ # The actual point at which limit enforcement takes place for the
+ # hard block limit is variable depending on filesystem blocksize,
+ # and iosize.  What we want to test is that the limit is enforced
+@@ -77,7 +59,7 @@ _filter_and_check_blks()
+ 			}
+ 			s/^(\#'$id'\s+)(\d+)/\1 =OK=/g;
+ 		}
+-	' | _filter_report
++	' | _filter_quota_report
+ }
+ 
+ _qsetup()
+@@ -120,7 +102,7 @@ _exercise()
+ 	echo "*** report no quota settings" | tee -a $seqres.full
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+-		_filter_report | LC_COLLATE=POSIX sort -ru
++		_filter_quota_report | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	echo "*** report initial settings" | tee -a $seqres.full
+@@ -133,7 +115,7 @@ _exercise()
+ 		$SCRATCH_DEV
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+-		_filter_report | LC_COLLATE=POSIX sort -ru
++		_filter_quota_report | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	echo "*** push past the soft inode limit" | tee -a $seqres.full
+@@ -145,7 +127,7 @@ _exercise()
+ 	$XFS_QUOTA_PROG -x -c "warn -i -$type 0 $id" $SCRATCH_DEV
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+-		_filter_report | LC_COLLATE=POSIX sort -ru
++		_filter_quota_report | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	echo "*** push past the soft block limit" | tee -a $seqres.full
+@@ -155,7 +137,7 @@ _exercise()
+ 		-c "warn -b -$type 0 $id" $SCRATCH_DEV
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+-		_filter_report | LC_COLLATE=POSIX sort -ru
++		_filter_quota_report | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
+@@ -169,7 +151,7 @@ _exercise()
+ 		-c "warn -i -$type 0 $id" $SCRATCH_DEV
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+-		_filter_report | LC_COLLATE=POSIX sort -ru
++		_filter_quota_report | LC_COLLATE=POSIX sort -ru
+ 
+ 	echo
+ 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
 
