@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A24EC4332B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F70C4332D
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 04:41:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F20A1652AD
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 04:41:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B291652A4
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 04:41:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230122AbhCIEkn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Mar 2021 23:40:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:32914 "EHLO mail.kernel.org"
+        id S230050AbhCIEkm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 23:40:42 -0500
+Received: from mail.kernel.org ([198.145.29.99]:32896 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229701AbhCIEkb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Mar 2021 23:40:31 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5AB2665275;
-        Tue,  9 Mar 2021 04:40:31 +0000 (UTC)
+        id S229772AbhCIEk0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Mar 2021 23:40:26 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C24AD65275;
+        Tue,  9 Mar 2021 04:40:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615264831;
-        bh=uhr8wJ7bb74FE76utpAtAKmZe5Cuj55gHF4cpzpgcPQ=;
+        s=k20201202; t=1615264825;
+        bh=z8gtE7eBiVPyS4gAqaZDmLXXstaBQIF2xzfaaY1mtp4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=rU5Nm0M5I+QGmKD9a0FqUV2AOWd3G9lQ5PhhghxRidEL3Uxy/kT0BmufH/DL+5rSD
-         bBRMHk+rti8dPxLFlAHXAfVFMlh9DdofU3DZkLxAd5YE7mNxRx1VhMrnmTSrC7DCm/
-         4WnYS2rvURuWPhzSwVg1weR0LSGUpwDHSQNaXRen86Bl4Ep2InRfB0uYcf1XQnvwpF
-         cOgoaMMRn76/3CBdNyoBTx4FxSfxeyhZN+x4cuheozH7dT92mAdlgF6LS2SrDK5I3k
-         vKJELY/uSjeU8PgpWkywmi2SOwsmfvK4nIOj1OomhDOhHOG2mTQVWvEEHRFc4PzymU
-         jqDIouusz1DPw==
-Subject: [PATCH 05/10] common/filter: refactor quota report filtering
+        b=glibU5M9vKw/TrWhPutRohiLu5GZUaiSkUtL3j9QxLEPWWcI8gxRO2InI+31aHwdk
+         T74gm4yvbg6ipw3iF+UyGT0XmgiNr3jj+ra21BytluNxFIkLKJ9C+QYBRDdZgL7N41
+         +pvXnJ3G8why0ZJaqAsCkvrpUObPmhQM5OpZTkWh6siTBWDd1XYvZw1IxFCwHixSUG
+         WaZBKdqBE5TgEXOXrnWURPIPNM0kICcVc0ZXrnRSYO2WyQSSaTCHjGE6OFM7ONNVCG
+         1NPYhktiphH9HhNHSX0PudGFhXlPEG+NqSw/g2dsZtGGcTA+F3S8+LO07WXyJCYFRC
+         9EvbK9yoQ20EQ==
+Subject: [PATCH 04/10] xfs: test mkfs min log size calculation w/ rt volumes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 08 Mar 2021 20:40:31 -0800
-Message-ID: <161526483109.1214319.14555094406560973318.stgit@magnolia>
+Date:   Mon, 08 Mar 2021 20:40:25 -0800
+Message-ID: <161526482563.1214319.7317631500409765514.stgit@magnolia>
 In-Reply-To: <161526480371.1214319.3263690953532787783.stgit@magnolia>
 References: <161526480371.1214319.3263690953532787783.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,216 +49,87 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-xfs/299 and xfs/050 share the same function to filter quota reporting
-into a format suitable for the golden output.  Refactor this so that we
-can use it in a new test.
+In "mkfs: set required parts of the realtime geometry before computing
+log geometry" we made sure that mkfs set up enough of the fs geometry to
+compute the minimum xfs log size correctly when formatting the
+filesystem.  This is the regression test for that issue.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/filter |   24 ++++++++++++++++++++++++
- tests/xfs/050 |   30 ++++++------------------------
- tests/xfs/299 |   30 ++++++------------------------
- 3 files changed, 36 insertions(+), 48 deletions(-)
+ tests/xfs/761     |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/761.out |    1 +
+ tests/xfs/group   |    1 +
+ 3 files changed, 47 insertions(+)
+ create mode 100755 tests/xfs/761
+ create mode 100644 tests/xfs/761.out
 
 
-diff --git a/common/filter b/common/filter
-index 2f3277f7..2efbbd99 100644
---- a/common/filter
-+++ b/common/filter
-@@ -637,5 +637,29 @@ _filter_getcap()
-         sed -e "s/= //" -e "s/\+/=/g"
- }
- 
-+# Filter user/group/project id numbers out of quota reports, and standardize
-+# the block counts to use filesystem block size.  Callers must set the id and
-+# bsize variables before calling this function.
-+_filter_quota_report()
-+{
-+	test -n "$id" || echo "id must be set"
-+	test -n "$bsize" || echo "block size must be set"
+diff --git a/tests/xfs/761 b/tests/xfs/761
+new file mode 100755
+index 00000000..b9770d90
+--- /dev/null
++++ b/tests/xfs/761
+@@ -0,0 +1,45 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2021 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 761
++#
++# Make sure mkfs sets up enough of the rt geometry that we can compute the
++# correct min log size for formatting the fs.
++#
++# This is a regression test for the xfsprogs commit 31409f48 ("mkfs: set
++# required parts of the realtime geometry before computing log geometry").
 +
-+	tr -s '[:space:]' | \
-+	perl -npe '
-+		s/^\#'$id' /[NAME] /g;
-+		s/^\#0 \d+ /[ROOT] 0 /g;
-+		s/6 days/7 days/g' |
-+	perl -npe '
-+		$val = 0;
-+		if ($ENV{'LARGE_SCRATCH_DEV'}) {
-+			$val = $ENV{'NUM_SPACE_FILES'};
-+		}
-+		s/(^\[ROOT\] \S+ \S+ \S+ \S+ \[--------\] )(\S+)/$1@{[$2 - $val]}/g' |
-+	sed -e 's/ 65535 \[--------\]/ 00 \[--------\]/g' |
-+	perl -npe '
-+		s|^(.*?) (\d+) (\d+) (\d+)|$1 @{[$2 * 1024 /'$bsize']} @{[$3 * 1024 /'$bsize']} @{[$4 * 1024 /'$bsize']}|'
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
 +}
 +
- # make sure this script returns success
- /bin/true
-diff --git a/tests/xfs/050 b/tests/xfs/050
-index 53412a13..1df97537 100755
---- a/tests/xfs/050
-+++ b/tests/xfs/050
-@@ -47,24 +47,6 @@ bhard=$(( 1000 * $bsize ))
- isoft=4
- ihard=10
- 
--_filter_report()
--{
--	tr -s '[:space:]' | \
--	perl -npe '
--		s/^\#'$id' /[NAME] /g;
--		s/^\#0 \d+ /[ROOT] 0 /g;
--		s/6 days/7 days/g' |
--	perl -npe '
--		$val = 0;
--		if ($ENV{'LARGE_SCRATCH_DEV'}) {
--			$val = $ENV{'NUM_SPACE_FILES'};
--		}
--		s/(^\[ROOT\] \S+ \S+ \S+ \S+ \[--------\] )(\S+)/$1@{[$2 - $val]}/g' |
--	sed -e 's/ 65535 \[--------\]/ 00 \[--------\]/g' |
--	perl -npe '
--		s|^(.*?) (\d+) (\d+) (\d+)|$1 @{[$2 * 1024 /'$bsize']} @{[$3 * 1024 /'$bsize']} @{[$4 * 1024 /'$bsize']}|'
--}
--
- # The actual point at which limit enforcement takes place for the
- # hard block limit is variable depending on filesystem blocksize,
- # and iosize.  What we want to test is that the limit is enforced
-@@ -84,7 +66,7 @@ _filter_and_check_blks()
- 			}
- 			s/^(\#'$id'\s+)(\d+)/\1 =OK=/g;
- 		}
--	' | _filter_report
-+	' | _filter_quota_report
- }
- 
- _qsetup()
-@@ -134,7 +116,7 @@ _exercise()
- 	echo "*** report no quota settings" | tee -a $seqres.full
- 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
--		_filter_report | LC_COLLATE=POSIX sort -ru
-+		_filter_quota_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	echo "*** report initial settings" | tee -a $seqres.full
-@@ -147,7 +129,7 @@ _exercise()
- 		$SCRATCH_DEV
- 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
--		_filter_report | LC_COLLATE=POSIX sort -ru
-+		_filter_quota_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	echo "*** push past the soft inode limit" | tee -a $seqres.full
-@@ -159,7 +141,7 @@ _exercise()
- 	$XFS_QUOTA_PROG -x -c "warn -i -$type 0 $id" $SCRATCH_DEV
- 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
--		_filter_report | LC_COLLATE=POSIX sort -ru
-+		_filter_quota_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	echo "*** push past the soft block limit" | tee -a $seqres.full
-@@ -169,7 +151,7 @@ _exercise()
- 		-c "warn -b -$type 0 $id" $SCRATCH_DEV
- 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
--		_filter_report | LC_COLLATE=POSIX sort -ru
-+		_filter_quota_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
-@@ -183,7 +165,7 @@ _exercise()
- 		-c "warn -i -$type 0 $id" $SCRATCH_DEV
- 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
--		_filter_report | LC_COLLATE=POSIX sort -ru
-+		_filter_quota_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
-diff --git a/tests/xfs/299 b/tests/xfs/299
-index 15e0edf6..b862e67e 100755
---- a/tests/xfs/299
-+++ b/tests/xfs/299
-@@ -40,24 +40,6 @@ _require_xfs_quota
- _require_xfs_mkfs_crc
- _require_xfs_crc
- 
--_filter_report()
--{
--	tr -s '[:space:]' | \
--	perl -npe '
--		s/^\#'$id' /[NAME] /g;
--		s/^\#0 \d+ /[ROOT] 0 /g;
--		s/6 days/7 days/g' |
--	perl -npe '
--		$val = 0;
--		if ($ENV{'LARGE_SCRATCH_DEV'}) {
--			$val = $ENV{'NUM_SPACE_FILES'};
--		}
--		s/(^\[ROOT\] \S+ \S+ \S+ \S+ \[--------\] )(\S+)/$1@{[$2 - $val]}/g' |
--	sed -e 's/ 65535 \[--------\]/ 00 \[--------\]/g' |
--	perl -npe '
--		s|^(.*?) (\d+) (\d+) (\d+)|$1 @{[$2 * 1024 /'$bsize']} @{[$3 * 1024 /'$bsize']} @{[$4 * 1024 /'$bsize']}|'
--}
--
- # The actual point at which limit enforcement takes place for the
- # hard block limit is variable depending on filesystem blocksize,
- # and iosize.  What we want to test is that the limit is enforced
-@@ -77,7 +59,7 @@ _filter_and_check_blks()
- 			}
- 			s/^(\#'$id'\s+)(\d+)/\1 =OK=/g;
- 		}
--	' | _filter_report
-+	' | _filter_quota_report
- }
- 
- _qsetup()
-@@ -120,7 +102,7 @@ _exercise()
- 	echo "*** report no quota settings" | tee -a $seqres.full
- 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
--		_filter_report | LC_COLLATE=POSIX sort -ru
-+		_filter_quota_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	echo "*** report initial settings" | tee -a $seqres.full
-@@ -133,7 +115,7 @@ _exercise()
- 		$SCRATCH_DEV
- 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
--		_filter_report | LC_COLLATE=POSIX sort -ru
-+		_filter_quota_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	echo "*** push past the soft inode limit" | tee -a $seqres.full
-@@ -145,7 +127,7 @@ _exercise()
- 	$XFS_QUOTA_PROG -x -c "warn -i -$type 0 $id" $SCRATCH_DEV
- 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
--		_filter_report | LC_COLLATE=POSIX sort -ru
-+		_filter_quota_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	echo "*** push past the soft block limit" | tee -a $seqres.full
-@@ -155,7 +137,7 @@ _exercise()
- 		-c "warn -b -$type 0 $id" $SCRATCH_DEV
- 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
--		_filter_report | LC_COLLATE=POSIX sort -ru
-+		_filter_quota_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
-@@ -169,7 +151,7 @@ _exercise()
- 		-c "warn -i -$type 0 $id" $SCRATCH_DEV
- 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
--		_filter_report | LC_COLLATE=POSIX sort -ru
-+		_filter_quota_report | LC_COLLATE=POSIX sort -ru
- 
- 	echo
- 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_realtime
++
++rm -f $seqres.full
++
++# Format a tiny filesystem to force minimum log size, then see if it mounts
++_scratch_mkfs -r size=1m -d size=100m > $seqres.full
++_scratch_mount >> $seqres.full
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/761.out b/tests/xfs/761.out
+new file mode 100644
+index 00000000..8c9d9e90
+--- /dev/null
++++ b/tests/xfs/761.out
+@@ -0,0 +1 @@
++QA output created by 761
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 318468b5..87badd56 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -503,4 +503,5 @@
+ 758 auto quick rw attr realtime
+ 759 auto quick rw realtime
+ 760 auto quick rw collapse punch insert zero prealloc
++761 auto quick realtime
+ 763 auto quick rw realtime
 
