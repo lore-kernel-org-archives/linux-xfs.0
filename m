@@ -4,42 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E46EFC43333
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71C72C433E9
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 04:40:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA14C65275
+	by mail.kernel.org (Postfix) with ESMTP id 4541165295
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 04:40:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230139AbhCIEkM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Mar 2021 23:40:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60988 "EHLO mail.kernel.org"
+        id S230081AbhCIEkL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 23:40:11 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60914 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229872AbhCIEkJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Mar 2021 23:40:09 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 684B86523B;
-        Tue,  9 Mar 2021 04:40:09 +0000 (UTC)
+        id S229854AbhCIEjz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Mar 2021 23:39:55 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 703DE6523B;
+        Tue,  9 Mar 2021 04:39:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615264809;
-        bh=won8P26HD3UWLjx3SPmMJ0Gn5xM9EYpQhFiLLUgkBGQ=;
+        s=k20201202; t=1615264795;
+        bh=UTmsGf6pzsOIXWEj+lo05taEArKorY+/PGT1/xEVF1U=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=p9e0tImGdK0aoTQgmKIq43PpNocxVXDYHp0bCWusyjLbM5fsXUWT8DR7h4B9JLUKR
-         AwiP2wgXUCnnNTYtPdiLlsLw0gLndbCdKClFUF04UbFUTKhY6owIG3TxO3QCUPuSwW
-         DlAfrOZA5gZKuUmCF4kEsIe4xuBGvYg56VeuqbFRnh5V9o7vuu0V6cNgAd8cKu2GZZ
-         T0CpExWxdmrJ+UIH8ltbGc9urRN5IJmYMrPbpMTQxZ98ZjBgi/T1HpT7QRECDfAkHn
-         5WazVlRQfxKgk0rd8yKJ8icgHWwyW0YLVMXIfIBmkeMGmMsQ7MEODZs041oi0maFqK
-         Kuv9MAZfqYUsg==
-Subject: [PATCH 01/10] xfs: test regression in xfs_bmap_validate_extent
+        b=Cu9zpNOFi5HnT8SzpzEV1iapFS8XlM2Z6MGJHSs9pqorEAtraAQjo53qWVfg/O7EB
+         XJL9CEDxQztA+FsbScUQkJpd0jyD65O1i/pAw2njsi4eU6kw88E4Am1QQ78DSylA3j
+         8Md8lfwQOGuR/y7/kGH0Iunrt90g2hvKtFsa5vg+ngfDqdzOXTnJ+AtOA6eFz4/6iG
+         iufSlvrij1xq5zkL/mIOlq7YWFDLdDw58rWrqHJxcXuE/nd3lUXIZrCHQG4py7jIcw
+         nfXKOxjFpCoXXSkOJTLV5hOKWUueKw3Dk+br0G6Xk7EaYTxclxE9aRKu7giS4Im447
+         S6BZgRuSa0JTQ==
+Subject: [PATCH 2/2] fstests: remove DMAPI support from build system
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 08 Mar 2021 20:40:09 -0800
-Message-ID: <161526480925.1214319.17395174541667296356.stgit@magnolia>
-In-Reply-To: <161526480371.1214319.3263690953532787783.stgit@magnolia>
-References: <161526480371.1214319.3263690953532787783.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Mon, 08 Mar 2021 20:39:55 -0800
+Message-ID: <161526479532.1213071.1569165278701497636.stgit@magnolia>
+In-Reply-To: <161526478158.1213071.11274238322406050241.stgit@magnolia>
+References: <161526478158.1213071.11274238322406050241.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,101 +49,150 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This is a regression test to make sure that we can have realtime files
-with xattr blocks and not trip the verifiers.
+Since we've axed all the DMAPI tests, get rid of the build system
+support too.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- tests/xfs/758     |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/758.out |    2 ++
- tests/xfs/group   |    1 +
- 3 files changed, 62 insertions(+)
- create mode 100755 tests/xfs/758
- create mode 100644 tests/xfs/758.out
+ Makefile                   |    2 +-
+ build/rpm/xfstests.spec.in |    2 +-
+ common/rc                  |    1 -
+ configure.ac               |    1 -
+ include/builddefs.in       |    1 -
+ m4/Makefile                |    1 -
+ m4/package_dmapidev.m4     |   27 ---------------------------
+ tools/auto-qa              |    4 ++--
+ 8 files changed, 4 insertions(+), 35 deletions(-)
+ delete mode 100644 m4/package_dmapidev.m4
 
 
-diff --git a/tests/xfs/758 b/tests/xfs/758
-new file mode 100755
-index 00000000..a247701e
---- /dev/null
-+++ b/tests/xfs/758
-@@ -0,0 +1,59 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2021 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 758
-+#
-+# This is a regression test for commit d0c20d38af13 "xfs: fix
-+# xfs_bmap_validate_extent_raw when checking attr fork of rt files", which
-+# fixes the bmap record validator so that it will not check the attr fork
-+# extent mappings of a realtime file against the size of the realtime volume.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_scratch
-+_require_realtime
-+
-+rm -f $seqres.full
-+
-+# Format filesystem with very tiny realtime volume
-+_scratch_mkfs -r size=256k > $seqres.full
-+_scratch_mount >> $seqres.full
-+
-+# Create a realtime file
-+$XFS_IO_PROG -f -R -c 'pwrite 0 64k' -c stat $SCRATCH_MNT/v >> $seqres.full
-+
-+# Add enough xattr data to force creation of xattr blocks at a higher address
-+# on the data device than the size of the realtime volume
-+for i in `seq 0 16`; do
-+	$ATTR_PROG -s user.test$i $SCRATCH_MNT/v < $SCRATCH_MNT/v >> $seqres.full
-+done
-+
-+# Force flushing extent maps to disk to trip the verifier
-+_scratch_cycle_mount
-+
-+# Now let that unmount
-+echo Silence is golden.
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/758.out b/tests/xfs/758.out
-new file mode 100644
-index 00000000..6d219f8e
---- /dev/null
-+++ b/tests/xfs/758.out
-@@ -0,0 +1,2 @@
-+QA output created by 758
-+Silence is golden.
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 754fc7be..4dd9901f 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -500,4 +500,5 @@
- 525 auto quick mkfs
- 526 auto quick mkfs
- 527 auto quick quota
-+758 auto quick rw attr realtime
- 763 auto quick rw realtime
+diff --git a/Makefile b/Makefile
+index 48927bcd..86a2d399 100644
+--- a/Makefile
++++ b/Makefile
+@@ -43,7 +43,7 @@ TOOL_SUBDIRS = ltp src m4 common
+ export TESTS_DIR = tests
+ SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS) $(TESTS_DIR)
+ 
+-default: include/builddefs $(DMAPI_MAKEFILE)
++default: include/builddefs
+ ifeq ($(HAVE_BUILDDEFS), no)
+ 	$(Q)$(MAKE) $(MAKEOPTS) $@
+ else
+diff --git a/build/rpm/xfstests.spec.in b/build/rpm/xfstests.spec.in
+index 0a8c896b..e0f7c5f9 100644
+--- a/build/rpm/xfstests.spec.in
++++ b/build/rpm/xfstests.spec.in
+@@ -17,7 +17,7 @@ Group: System Environment/Base
+ 
+ %description
+ The XFS regression test suite.  Also includes some support for
+-acl, attr, dmapi, udf, and nfs testing.  Contains around 200 specific tests
++acl, attr, udf, and nfs testing.  Contains around 200 specific tests
+ for userspace & kernelspace.
+ 
+ %prep
+diff --git a/common/rc b/common/rc
+index 6983bf6a..c0a791cb 100644
+--- a/common/rc
++++ b/common/rc
+@@ -277,7 +277,6 @@ _mount_ops_filter()
+     local params="$*"
+     local last_index=$(( $# - 1 ))
+ 
+-    #get mount point to handle dmapi mtpt option correctly
+     [ $last_index -gt 0 ] && shift $last_index
+     local fs_escaped=$1
+ 
+diff --git a/configure.ac b/configure.ac
+index e5771285..27d57d63 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -58,7 +58,6 @@ AC_PACKAGE_NEED_ACLINIT_LIBACL
+ AC_PACKAGE_WANT_GDBM
+ AC_PACKAGE_WANT_AIO
+ AC_PACKAGE_WANT_URING
+-AC_PACKAGE_WANT_DMAPI
+ AC_PACKAGE_WANT_LINUX_FIEMAP_H
+ AC_PACKAGE_WANT_FALLOCATE
+ AC_PACKAGE_WANT_OPEN_BY_HANDLE_AT
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 6893d598..471e651c 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -63,7 +63,6 @@ HAVE_AIO = @have_aio@
+ HAVE_URING = @have_uring@
+ HAVE_FALLOCATE = @have_fallocate@
+ HAVE_OPEN_BY_HANDLE_AT = @have_open_by_handle_at@
+-HAVE_DMAPI = @have_dmapi@
+ HAVE_FIEMAP = @have_fiemap@
+ HAVE_FALLOCATE = @have_fallocate@
+ HAVE_COPY_FILE_RANGE = @have_copy_file_range@
+diff --git a/m4/Makefile b/m4/Makefile
+index 5d9c5896..f3f195c5 100644
+--- a/m4/Makefile
++++ b/m4/Makefile
+@@ -10,7 +10,6 @@ LSRCFILES = \
+ 	package_acldev.m4 \
+ 	package_aiodev.m4 \
+ 	package_gdbmdev.m4 \
+-	package_dmapidev.m4 \
+ 	package_globals.m4 \
+ 	package_libcdev.m4 \
+ 	package_liburing.m4 \
+diff --git a/m4/package_dmapidev.m4 b/m4/package_dmapidev.m4
+deleted file mode 100644
+index 6a7257ee..00000000
+--- a/m4/package_dmapidev.m4
++++ /dev/null
+@@ -1,27 +0,0 @@
+-AC_DEFUN([AC_PACKAGE_NEED_XFS_DMAPI_H],
+-  [ AC_CHECK_HEADERS([xfs/dmapi.h])
+-    if test "$ac_cv_header_xfs_dmapi_h" != yes; then
+-        echo
+-        echo 'FATAL ERROR: could not find a valid DMAPI library header.'
+-        echo 'Install the data migration API (dmapi) development package.'
+-        echo 'Alternatively, run "make install-dev" from the dmapi source.'
+-        exit 1
+-    fi
+-  ])
+-
+-AC_DEFUN([AC_PACKAGE_WANT_DMAPI],
+-  [ AC_CHECK_LIB(dm, dm_make_handle, [ have_dmapi=true ], [
+-	have_dmapi=false
+-        echo
+-        echo 'WARNING: could not find a valid DMAPI base library.'
+-	echo 'If you want DMAPI support please install the data migration'
+-	echo 'API (dmapi) library package. Alternatively, run "make install"'
+-	echo 'from the dmapi source.'
+-	echo
+-    ])
+-    libdm="-ldm"
+-    test -f ${libexecdir}${libdirsuffix}/libdm.la && \
+-	libdm="${libexecdir}${libdirsuffix}/libdm.la"
+-    AC_SUBST(libdm)
+-    AC_SUBST(have_dmapi)
+-  ])
+diff --git a/tools/auto-qa b/tools/auto-qa
+index 1d0cc07c..1beb2835 100755
+--- a/tools/auto-qa
++++ b/tools/auto-qa
+@@ -308,7 +308,7 @@ do
+ 
+ 	*cleantools)
+ 	    # we need to configure or else we might fail to clean
+-	    for pkg in attr acl xfsprogs dmapi xfsdump xfstests
++	    for pkg in attr acl xfsprogs xfsdump xfstests
+ 	    do
+ 		[ -d $WORKAREA/$pkg ] || continue
+ 		cd $WORKAREA/$pkg
+@@ -321,7 +321,7 @@ do
+ 
+ 	*buildtools)
+ 	    _log "	*** build and install tools"
+-	    for pkg in attr acl xfsprogs dmapi xfsdump xfstests 
++	    for pkg in attr acl xfsprogs xfsdump xfstests 
+ 	    do
+ 		[ -d $WORKAREA/$pkg ] || continue
+ 		cd $WORKAREA/$pkg
 
