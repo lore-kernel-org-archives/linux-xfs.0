@@ -7,82 +7,93 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF85BC433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7354C433E6
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 05:05:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADA17652B4
+	by mail.kernel.org (Postfix) with ESMTP id 99846652B1
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 05:05:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229544AbhCIFEo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Mar 2021 00:04:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36304 "EHLO mail.kernel.org"
+        id S229520AbhCIFEn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Mar 2021 00:04:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36288 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229515AbhCIFEb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Mar 2021 00:04:31 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D204B6529C;
-        Tue,  9 Mar 2021 05:04:30 +0000 (UTC)
+        id S229495AbhCIFET (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Mar 2021 00:04:19 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4146C65199;
+        Tue,  9 Mar 2021 05:04:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615266271;
-        bh=DSVTX0sULXQJLB5Ilz/PObwUY6hhE8+pUmQUEntWUns=;
+        s=k20201202; t=1615266259;
+        bh=BJqI1aGpYnIO+O1/iOnaZD7P9grW63eEqAJ0kc8tR9g=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qN6vMHXja/o7CqZyO+HQWVIrVbgBdetIsHeRrWfeDa19eoWsVOtPFIbiN7t3p9p0b
-         OdRP1hhXVBDAPpOpGF3lT7vFh0qXI/kBCeX25Zx7hu/yYTQAnSTuCZoT8ydaDLrrFw
-         j/OM1NRQQuTjpPYs2a7cwZZH8tFYz7jEc7mZWCYfYUmGVUZscMklbvigjDVxJi6tXm
-         mPkGemMLNzZ/xmfsDDnJpXeHw7ID4D/ZhgBKsAaEX/Xo7oFbxmAMG6aqxPa+ZdDXak
-         Xs01Lb46TWlwUFf/27kI/HCtRnVq3O1iH5WQ9xuv1YEjTjsYpClxinznzYk3BaLG+8
-         AMu83j9oYc+UQ==
-Date:   Mon, 8 Mar 2021 21:04:30 -0800
+        b=npzz0AJi3rOYYrB+6wbQPG5nCbV2aZ6b5KgT4bitQYWO4QJ5jIwWkKXtLF1sKnD2/
+         IPMj29CukovukN10rlQMiKl9MtdyQAeCKZQSmr/KPXemHjPi474PREMQw0uz9qbQ9V
+         BzDfuSDDL+r/ChUqAYQu5cEpUjTNJo+27vHyoLoQoAnyw5LwGdU2EKaq0eSb5XxNep
+         mTwuR1g1c3R166A60v/Vv6M/fE3TQ43yI0vIei+KNp3AkTn8F8/0l3ZSzqav96EOT3
+         YydKElYuSOBseS7M4h5nprzygiShM8r3CEA6+9UZ2nCeuRJFL9In0PhExdlkONWFeq
+         8SZkdKvhd0c8w==
+Date:   Mon, 8 Mar 2021 21:04:18 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V6 03/13] common/xfs: Add helper to obtain fsxattr field
- value
-Message-ID: <20210309050430.GB7269@magnolia>
+Subject: Re: [PATCH V6 02/13] common/xfs: Add a helper to get an inode fork's
+ extent count
+Message-ID: <20210309050418.GA7269@magnolia>
 References: <20210309050124.23797-1-chandanrlinux@gmail.com>
- <20210309050124.23797-4-chandanrlinux@gmail.com>
+ <20210309050124.23797-3-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210309050124.23797-4-chandanrlinux@gmail.com>
+In-Reply-To: <20210309050124.23797-3-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 09, 2021 at 10:31:14AM +0530, Chandan Babu R wrote:
-> This commit adds a helper function to obtain the value of a particular field
-> of an inode's fsxattr fields.
+On Tue, Mar 09, 2021 at 10:31:13AM +0530, Chandan Babu R wrote:
+> This commit adds the helper _scratch_get_iext_count() which returns an
+> inode fork's extent count.
 > 
 > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-Seems reasonable,
+Looks good now,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  common/xfs | 9 +++++++++
->  1 file changed, 9 insertions(+)
+>  common/xfs | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
 > 
 > diff --git a/common/xfs b/common/xfs
-> index 26ae21b9..130b3232 100644
+> index 41dd8676..26ae21b9 100644
 > --- a/common/xfs
 > +++ b/common/xfs
-> @@ -194,6 +194,15 @@ _xfs_get_file_block_size()
->  	$XFS_INFO_PROG "$path" | grep realtime | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g'
+> @@ -924,6 +924,26 @@ _scratch_get_bmx_prefix() {
+>  	return 1
 >  }
 >  
-> +_xfs_get_fsxattr()
+> +_scratch_get_iext_count()
 > +{
-> +	local field="$1"
-> +	local path="$2"
+> +	local ino=$1
+> +	local whichfork=$2
+> +	local field=""
 > +
-> +	local value=$($XFS_IO_PROG -c "stat" "$path" | grep "$field")
-> +	echo ${value##fsxattr.${field} = }
+> +	case $whichfork in
+> +		"attr")
+> +			field=core.naextents
+> +			;;
+> +		"data")
+> +			field=core.nextents
+> +			;;
+> +		*)
+> +			return 1
+> +	esac
+> +
+> +	_scratch_xfs_get_metadata_field $field "inode $ino"
 > +}
 > +
->  # xfs_check script is planned to be deprecated. But, we want to
->  # be able to invoke "xfs_check" behavior in xfstests in order to
->  # maintain the current verification levels.
+>  #
+>  # Ensures that we don't pass any mount options incompatible with XFS v4
+>  #
 > -- 
 > 2.29.2
 > 
