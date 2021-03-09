@@ -2,290 +2,178 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00483C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 00:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD12C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 00:44:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A144264EEB
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 00:22:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C328B652A4
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 00:44:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230327AbhCIAVs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Mar 2021 19:21:48 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48274 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231911AbhCIAVg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Mar 2021 19:21:36 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9787E64FFD;
-        Tue,  9 Mar 2021 00:21:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615249295;
-        bh=K3vNZGy59mxmGK+TyFlB+E1ecfC9SIcWUIsMdzmsrGA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sS8WSNdKbJtdc3plWQD0J+xmP3fC5CAz/8c3Q7OBLtwqSlm6/7B00biWGfyL2cUY9
-         AqtXHCreJu0MMwAQwDKvenM3bQV01y2VN+Agta3q0/IkNdaD8ny3TOEtMUE5rrxjr1
-         gXkoj8A8R+FBbySAxK8CphGt2Ra/SfzWTIhBngVeuM63Ndz16+Bu0egkaqsUNILpdY
-         mwq4jbnW+vv2165Xvtf0ic+A+GdRqyuiAhqPIfiWlDx9Smhf3zcz5X1fes+Ys191BM
-         rneAuG7tpwVUsOiqMuTMyDBs1Y5Vlynl+Qen4YRLV8pbS4+Ue8aKGO3Dsm//9DF+ue
-         +IXlzIqxN/wRQ==
-Date:   Mon, 8 Mar 2021 16:21:34 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
+        id S229611AbhCIAoY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 19:44:24 -0500
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:52422 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229749AbhCIAoT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 19:44:19 -0500
+Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 07F2778A85F;
+        Tue,  9 Mar 2021 11:44:10 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lJQTq-000Kfn-4Q; Tue, 09 Mar 2021 11:44:10 +1100
+Date:   Tue, 9 Mar 2021 11:44:10 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 23/45] xfs: log tickets don't need log client id
-Message-ID: <20210309002134.GJ3419940@magnolia>
-References: <20210305051143.182133-1-david@fromorbit.com>
- <20210305051143.182133-24-david@fromorbit.com>
+Subject: Re: [PATCH 2/3 v2] xfs: AIL needs asynchronous CIL forcing
+Message-ID: <20210309004410.GC74031@dread.disaster.area>
+References: <20210223053212.3287398-3-david@fromorbit.com>
+ <20210224211058.GA4662@dread.disaster.area>
+ <20210224232600.GH4662@dread.disaster.area>
+ <YD6xrJHgkkHi+7a3@bfoster>
+ <20210303005752.GM4662@dread.disaster.area>
+ <YD/IN66S3aM1lEQh@bfoster>
+ <20210304015933.GO4662@dread.disaster.area>
+ <YEDc42Z1GjHBXi6S@bfoster>
+ <20210304224848.GR4662@dread.disaster.area>
+ <YEJHEt/vt6yuHbak@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210305051143.182133-24-david@fromorbit.com>
+In-Reply-To: <YEJHEt/vt6yuHbak@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
+        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
+        a=wv6fbLyrdsbbpLF9zbIA:9 a=UxIdY4KfFaj0D5R4:21 a=eTjuvqhptYncLwUU:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 05, 2021 at 04:11:21PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, Mar 05, 2021 at 09:58:26AM -0500, Brian Foster wrote:
+> On Fri, Mar 05, 2021 at 09:48:48AM +1100, Dave Chinner wrote:
+> > > > > So not only does this patch expose subsystem internals to
+> > > > > external layers and create more log forcing interfaces/behaviors to
+> > > > 
+> > > > Sorry, I don't follow. What "subsystem internals" are being exposed
+> > > > and what external layer are they being exposed to?
+> > > > 
+> > > > > > Cleaning up the mess that is the xfs_log_* and xlog_* interfaces and
+> > > > > > changing things like log force behaviour and implementation is for
+> > > > > > a future series.
+> > > > > > 
+> > > > > 
+> > > > > TBH I think this patch is kind of a mess on its own. I think the
+> > > > > mechanism it wants to provide is sane, but I've not even got to the
+> > > > > point of reviewing _that_ yet because of the seeming dismissal of higher
+> > > > > level feedback. I'd rather not go around in circles on this so I'll just
+> > > > > offer my summarized feedback to this patch...
+> > > > 
+> > > > I'm not dismissing review nor am I saying the API cannot or should
+> > > > not be improved. I'm simply telling you that I think the additional
+> > > > changes you are proposing are outside the scope of the problem I am
+> > > > addressing here. I already plan to rework the log force API (and
+> > > > others) but doing so it not something that this patchset needs to
+> > > > address, or indeed should address.
+> > > > 
+> > > 
+> > > I'm not proposing additional changes nor to rework the log force API.
+> > > I'm pointing out that I find this implementation to be extremely and
+> > > unnecessarily confusing.
+> > 
+> > And that's just fine - not everyone has to understand all of the
+> > code all of the time. That's why we have a team....
+> > 
+> > > To improve it, I'm suggesting to either coopt
+> > > the existing async log force API...
+> > 
+> > And I'm telling you that this is *future work*. As the person
+> > actually doing the work, that's my decision and you need to accept
+> > that. I understand your concerns and have a plan to address them -
+> > you just have to accept that the plan to address them isn't going to
+> > be exactly to your liking.
+> > 
 > 
-> We currently set the log ticket client ID when we reserve a
-> transaction. This client ID is only ever written to the log by
-> a CIL checkpoint or unmount records, and so anything using a high
-> level transaction allocated through xfs_trans_alloc() does not need
-> a log ticket client ID to be set.
-> 
-> For the CIL checkpoint, the client ID written to the journal is
-> always XFS_TRANSACTION, and for the unmount record it is always
-> XFS_LOG, and nothing else writes to the log. All of these operations
-> tell xlog_write() exactly what they need to write to the log (the
-> optype) and build their own opheaders for start, commit and unmount
-> records. Hence we no longer need to set the client id in either the
-> log ticket or the xfs_trans.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_log.c      | 47 ++++++++-----------------------------------
->  fs/xfs/xfs_log.h      | 16 ++++++---------
->  fs/xfs/xfs_log_cil.c  |  2 +-
->  fs/xfs/xfs_log_priv.h | 10 ++-------
->  fs/xfs/xfs_trans.c    |  6 ++----
->  5 files changed, 19 insertions(+), 62 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index c2e69a1f5cad..429cb1e7cc67 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -431,10 +431,9 @@ xfs_log_regrant(
->  int
->  xfs_log_reserve(
->  	struct xfs_mount	*mp,
-> -	int		 	unit_bytes,
-> -	int		 	cnt,
-> +	int			unit_bytes,
-> +	int			cnt,
->  	struct xlog_ticket	**ticp,
-> -	uint8_t		 	client,
->  	bool			permanent)
->  {
->  	struct xlog		*log = mp->m_log;
-> @@ -442,15 +441,13 @@ xfs_log_reserve(
->  	int			need_bytes;
->  	int			error = 0;
->  
-> -	ASSERT(client == XFS_TRANSACTION || client == XFS_LOG);
-> -
->  	if (XLOG_FORCED_SHUTDOWN(log))
->  		return -EIO;
->  
->  	XFS_STATS_INC(mp, xs_try_logspace);
->  
->  	ASSERT(*ticp == NULL);
-> -	tic = xlog_ticket_alloc(log, unit_bytes, cnt, client, permanent);
-> +	tic = xlog_ticket_alloc(log, unit_bytes, cnt, permanent);
->  	*ticp = tic;
->  
->  	xlog_grant_push_ail(log, tic->t_cnt ? tic->t_unit_res * tic->t_cnt
-> @@ -847,7 +844,7 @@ xlog_unmount_write(
->  	struct xlog_ticket	*tic = NULL;
->  	int			error;
->  
-> -	error = xfs_log_reserve(mp, 600, 1, &tic, XFS_LOG, 0);
-> +	error = xfs_log_reserve(mp, 600, 1, &tic, 0);
->  	if (error)
->  		goto out_err;
->  
-> @@ -2170,35 +2167,13 @@ xlog_write_calc_vec_length(
->  
->  static xlog_op_header_t *
->  xlog_write_setup_ophdr(
-> -	struct xlog		*log,
->  	struct xlog_op_header	*ophdr,
-> -	struct xlog_ticket	*ticket,
-> -	uint			flags)
-> +	struct xlog_ticket	*ticket)
->  {
->  	ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
-> -	ophdr->oh_clientid = ticket->t_clientid;
-> +	ophdr->oh_clientid = XFS_TRANSACTION;
->  	ophdr->oh_res2 = 0;
-> -
-> -	/* are we copying a commit or unmount record? */
-> -	ophdr->oh_flags = flags;
-> -
-> -	/*
-> -	 * We've seen logs corrupted with bad transaction client ids.  This
-> -	 * makes sure that XFS doesn't generate them on.  Turn this into an EIO
-> -	 * and shut down the filesystem.
-> -	 */
-> -	switch (ophdr->oh_clientid)  {
-> -	case XFS_TRANSACTION:
-> -	case XFS_VOLUME:
+> As a reviewer, I am pointing out that I object to how this patch is
+> implemented and offered several fairly simple suggestions on how to
+> address my concerns. Those suggestions have been rejected pretty much
+> out of hand on the basis of the existence of some future plans.
 
-Reading between the lines, I'm guessing this clientid is some
-now-vestigial organ from the Irix days, where there was some kind of
-volume manager (in addition to the filesystem + log)?  And between the
-three, there was a need to dispatch recovered log ops to the correct
-subsystem?
+We're allowed to disagree on the best approach. But to find a way
+forward means that both the summitter and the reviewer need to
+compromise. I've fixed up the obvious warts and bugs you've pointed
+out, and agreed that it needs cleaning up and have committed to
+cleaning it up in the near future.
 
-> -	case XFS_LOG:
-> -		break;
-> -	default:
-> -		xfs_warn(log->l_mp,
-> -			"Bad XFS transaction clientid 0x%x in ticket "PTR_FMT,
-> -			ophdr->oh_clientid, ticket);
-> -		return NULL;
-> -	}
-> -
-> +	ophdr->oh_flags = 0;
->  	return ophdr;
->  }
->  
-> @@ -2439,11 +2414,7 @@ xlog_write(
->  				if (index)
->  					optype &= ~XLOG_START_TRANS;
->  			} else {
-> -				ophdr = xlog_write_setup_ophdr(log, ptr,
-> -							ticket, optype);
-> -				if (!ophdr)
-> -					return -EIO;
-> -
-> +                                ophdr = xlog_write_setup_ophdr(ptr, ticket);
+> Future rework plans do not justify or change my view of this patch
+> and the mess it adds (for other developers, for historical context
+> and downstreams, etc.).  Therefore, if the only option you're
+> willing to consider is "make this mess now and clean it up later
+> in some broader rework," then I'd rather we just defer this patch
+> until after that rework is available and avoid the mess that way.
 
-Nit: use tabs, not spaces.
+So you won't review it until I have 100 outstanding patches in this
+series and it's completely and utterly unreviewable? Then you'll ask
+me to split it up and re-order it into digestable chunks, and so
+we'll go back to having to merge this because any of the API rework
+that depends on the mechanism that this patch introduces.
 
-With that fixed,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+I'm not going to play that "now jump through this hoop" game.  We
+add flags for on-off behaviours in internal functions -all the
+time-. If this makes the interface so complex and confusing that you
+don't understand it, then the interface was already too complex and
+confusing. And fixing that is *not in the scope of this patchset*.
 
---D
+Demanding that code be made perfect before it can be merged is
+really not very helpful. Especially when there are already plans to
+rework the API but that rework is dependent on a bunch of other
+changes than need to be done first.
 
->  				xlog_write_adv_cnt(&ptr, &len, &log_offset,
->  					   sizeof(struct xlog_op_header));
->  				added_ophdr = true;
-> @@ -3499,7 +3470,6 @@ xlog_ticket_alloc(
->  	struct xlog		*log,
->  	int			unit_bytes,
->  	int			cnt,
-> -	char			client,
->  	bool			permanent)
->  {
->  	struct xlog_ticket	*tic;
-> @@ -3517,7 +3487,6 @@ xlog_ticket_alloc(
->  	tic->t_cnt		= cnt;
->  	tic->t_ocnt		= cnt;
->  	tic->t_tid		= prandom_u32();
-> -	tic->t_clientid		= client;
->  	if (permanent)
->  		tic->t_flags |= XLOG_TIC_PERM_RESERV;
->  
-> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-> index 1bd080ce3a95..c0c3141944ea 100644
-> --- a/fs/xfs/xfs_log.h
-> +++ b/fs/xfs/xfs_log.h
-> @@ -117,16 +117,12 @@ int	  xfs_log_mount_finish(struct xfs_mount *mp);
->  void	xfs_log_mount_cancel(struct xfs_mount *);
->  xfs_lsn_t xlog_assign_tail_lsn(struct xfs_mount *mp);
->  xfs_lsn_t xlog_assign_tail_lsn_locked(struct xfs_mount *mp);
-> -void	  xfs_log_space_wake(struct xfs_mount *mp);
-> -int	  xfs_log_reserve(struct xfs_mount *mp,
-> -			  int		   length,
-> -			  int		   count,
-> -			  struct xlog_ticket **ticket,
-> -			  uint8_t		   clientid,
-> -			  bool		   permanent);
-> -int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
-> -void      xfs_log_unmount(struct xfs_mount *mp);
-> -int	  xfs_log_force_umount(struct xfs_mount *mp, int logerror);
-> +void	xfs_log_space_wake(struct xfs_mount *mp);
-> +int	xfs_log_reserve(struct xfs_mount *mp, int length, int count,
-> +			struct xlog_ticket **ticket, bool permanent);
-> +int	xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
-> +void	xfs_log_unmount(struct xfs_mount *mp);
-> +int	xfs_log_force_umount(struct xfs_mount *mp, int logerror);
->  bool	xfs_log_writable(struct xfs_mount *mp);
->  
->  struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index e9da074ecd69..0c81c13e2cf6 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -37,7 +37,7 @@ xlog_cil_ticket_alloc(
->  {
->  	struct xlog_ticket *tic;
->  
-> -	tic = xlog_ticket_alloc(log, 0, 1, XFS_TRANSACTION, 0);
-> +	tic = xlog_ticket_alloc(log, 0, 1, 0);
->  
->  	/*
->  	 * set the current reservation to zero so we know to steal the basic
-> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index bb5fa6b71114..7f601c1c9f45 100644
-> --- a/fs/xfs/xfs_log_priv.h
-> +++ b/fs/xfs/xfs_log_priv.h
-> @@ -158,7 +158,6 @@ typedef struct xlog_ticket {
->  	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
->  	char		   t_ocnt;	 /* original count		 : 1  */
->  	char		   t_cnt;	 /* current count		 : 1  */
-> -	char		   t_clientid;	 /* who does this belong to;	 : 1  */
->  	char		   t_flags;	 /* properties of reservation	 : 1  */
->  
->          /* reservation array fields */
-> @@ -465,13 +464,8 @@ extern __le32	 xlog_cksum(struct xlog *log, struct xlog_rec_header *rhead,
->  			    char *dp, int size);
->  
->  extern kmem_zone_t *xfs_log_ticket_zone;
-> -struct xlog_ticket *
-> -xlog_ticket_alloc(
-> -	struct xlog	*log,
-> -	int		unit_bytes,
-> -	int		count,
-> -	char		client,
-> -	bool		permanent);
-> +struct xlog_ticket *xlog_ticket_alloc(struct xlog *log, int unit_bytes,
-> +		int count, bool permanent);
->  
->  static inline void
->  xlog_write_adv_cnt(void **ptr, int *len, int *off, size_t bytes)
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 52f3fdf1e0de..83c2b7f22eb7 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -194,11 +194,9 @@ xfs_trans_reserve(
->  			ASSERT(resp->tr_logflags & XFS_TRANS_PERM_LOG_RES);
->  			error = xfs_log_regrant(mp, tp->t_ticket);
->  		} else {
-> -			error = xfs_log_reserve(mp,
-> -						resp->tr_logres,
-> +			error = xfs_log_reserve(mp, resp->tr_logres,
->  						resp->tr_logcount,
-> -						&tp->t_ticket, XFS_TRANSACTION,
-> -						permanent);
-> +						&tp->t_ticket, permanent);
->  		}
->  
->  		if (error)
-> -- 
-> 2.28.0
-> 
+iclogs are something that need to be moved behind the CIL, not sit
+in front of CIL. The CIL abstracts the journal and writing to the
+journal completely away from the transaction subsystem, yet the log
+force code punches straight through that abstraction and walks
+iclogs directly. The whole log force implementation needs to change,
+and I plan for the API that wraps the log forces to get reworked at
+that time.
+
+For example, if we want to direct map storage for log writes, then
+iclog-based log force synchronisation needs to go away because we
+don't need iclogs for buffering journal writes. Hence the log foce
+code should interface only with the CIL, and only the CIL should
+manage whatever mechanism it is using to write to stable storage.
+The code is currently the way it is because the CIL, when first
+implemented, had to co-exist with the old way of writing to the log.
+We haven't used that old way for a decade now and we have very
+different storage performance characteristics these days, so it's
+about time we got rid of the mechanism designed to be optimal for
+spinning disks and actually integrated the CIL and the log
+efficiently.
+
+There are a *lot* of steps to do this, and reworking the log force
+implementation and API is part of that. But reworking that API is
+premature because we haven't done all the necessary pre-work in
+place to make such a change yet. This patch is actually part of that
+pre-work to get the mechanisms that the log force rework will rely
+on.
+
+I have very good reasons for pushing back against your suggestions,
+Brian. Your suggestions have merit but this patch is not the time to
+be making the changes you suggest. Code does not need to be perfect
+to be merged, nor does the entire larger change they will be part of
+need to be complete and 100% tested and reviewed before preparation
+and infrastructure patches can be merged. This is how we've done big
+changes in the past - they've been staged across multiple kernel
+cycles - and not everything needs to be done in the first
+patchset of a larger body of work....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
