@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F70C4332D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87BDAC43333
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 04:41:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B291652A4
+	by mail.kernel.org (Postfix) with ESMTP id 5F47C6528A
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 04:41:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230050AbhCIEkm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229872AbhCIEkm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 8 Mar 2021 23:40:42 -0500
-Received: from mail.kernel.org ([198.145.29.99]:32896 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:32878 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229772AbhCIEk0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Mar 2021 23:40:26 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C24AD65275;
-        Tue,  9 Mar 2021 04:40:25 +0000 (UTC)
+        id S230140AbhCIEkU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Mar 2021 23:40:20 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5102065275;
+        Tue,  9 Mar 2021 04:40:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615264825;
-        bh=z8gtE7eBiVPyS4gAqaZDmLXXstaBQIF2xzfaaY1mtp4=;
+        s=k20201202; t=1615264820;
+        bh=/34Q4K6Ae87lq3+BnoM2xICN4SUmvFlYJ9HGAm/kpHg=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=glibU5M9vKw/TrWhPutRohiLu5GZUaiSkUtL3j9QxLEPWWcI8gxRO2InI+31aHwdk
-         T74gm4yvbg6ipw3iF+UyGT0XmgiNr3jj+ra21BytluNxFIkLKJ9C+QYBRDdZgL7N41
-         +pvXnJ3G8why0ZJaqAsCkvrpUObPmhQM5OpZTkWh6siTBWDd1XYvZw1IxFCwHixSUG
-         WaZBKdqBE5TgEXOXrnWURPIPNM0kICcVc0ZXrnRSYO2WyQSSaTCHjGE6OFM7ONNVCG
-         1NPYhktiphH9HhNHSX0PudGFhXlPEG+NqSw/g2dsZtGGcTA+F3S8+LO07WXyJCYFRC
-         9EvbK9yoQ20EQ==
-Subject: [PATCH 04/10] xfs: test mkfs min log size calculation w/ rt volumes
+        b=FYvfkGSg0abVCGbbgl6DG5Uvi3UYCR8hzrJtfonQvdeGa+Ydd5T55+G8gIfbFicWn
+         gj+OXuXkJFqvFRACeNg1gRVqeOZzlt+xCllh7zV7QCMEYtV0Y5aosA/o1n6z2QAKAn
+         hYEd7dqXnz4oyIKtvgI9lVjRmFNG8wkA65YyZve+afG2t4wJp26eEiIEZ0hHfcRpIt
+         w1r0EsOY6ZBAAFMUVT5aq+aGzPQkU2RcKEVSlheX7ON5gCKf/3qIgTsgL1BWWfk17F
+         eh4lwZqcf1M37SPBlrlaolMtxEE6SLYkToUkT/fkYFtybYkXf5gShJOf49fiDXenpC
+         knWzlO8TlkaqQ==
+Subject: [PATCH 03/10] xfs: test rtalloc alignment and math errors
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 08 Mar 2021 20:40:25 -0800
-Message-ID: <161526482563.1214319.7317631500409765514.stgit@magnolia>
+Date:   Mon, 08 Mar 2021 20:40:20 -0800
+Message-ID: <161526482015.1214319.6227125326960502859.stgit@magnolia>
 In-Reply-To: <161526480371.1214319.3263690953532787783.stgit@magnolia>
 References: <161526480371.1214319.3263690953532787783.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,38 +49,45 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In "mkfs: set required parts of the realtime geometry before computing
-log geometry" we made sure that mkfs set up enough of the fs geometry to
-compute the minimum xfs log size correctly when formatting the
-filesystem.  This is the regression test for that issue.
+Add a couple of regression tests for "xfs: make sure the rt allocator
+doesn't run off the end" and "xfs: ensure that fpunch, fcollapse, and
+finsert operations are aligned to rt extent size".
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/761     |   45 +++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/761.out |    1 +
- tests/xfs/group   |    1 +
- 3 files changed, 47 insertions(+)
- create mode 100755 tests/xfs/761
- create mode 100644 tests/xfs/761.out
+ tests/xfs/759     |  100 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/759.out |    2 +
+ tests/xfs/760     |   68 ++++++++++++++++++++++++++++++++++++
+ tests/xfs/760.out |    9 +++++
+ tests/xfs/group   |    2 +
+ 5 files changed, 181 insertions(+)
+ create mode 100755 tests/xfs/759
+ create mode 100644 tests/xfs/759.out
+ create mode 100755 tests/xfs/760
+ create mode 100644 tests/xfs/760.out
 
 
-diff --git a/tests/xfs/761 b/tests/xfs/761
+diff --git a/tests/xfs/759 b/tests/xfs/759
 new file mode 100755
-index 00000000..b9770d90
+index 00000000..8558fe30
 --- /dev/null
-+++ b/tests/xfs/761
-@@ -0,0 +1,45 @@
++++ b/tests/xfs/759
+@@ -0,0 +1,100 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0-or-later
 +# Copyright (c) 2021 Oracle.  All Rights Reserved.
 +#
-+# FS QA Test No. 761
++# FS QA Test No. 759
 +#
-+# Make sure mkfs sets up enough of the rt geometry that we can compute the
-+# correct min log size for formatting the fs.
-+#
-+# This is a regression test for the xfsprogs commit 31409f48 ("mkfs: set
-+# required parts of the realtime geometry before computing log geometry").
++# This is a regression test for commit 2a6ca4baed62 ("xfs: make sure the rt
++# allocator doesn't run off the end") which fixes an overflow error in the
++# _near realtime allocator.  If the rt bitmap ends exactly at the end of a
++# block and the number of rt extents is large enough to allow an allocation
++# request larger than the maximum extent size, it's possible that during a
++# large allocation request, the allocator will fail to constrain maxlen on the
++# second run through the loop, and the rt bitmap range check will run right off
++# the end of the rtbitmap file.  When this happens, xfs triggers a verifier
++# error and returns EFSCORRUPTED.
 +
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
@@ -105,31 +112,173 @@ index 00000000..b9770d90
 +_supported_fs xfs
 +_require_scratch
 +_require_realtime
++_require_test_program "punch-alternating"
 +
 +rm -f $seqres.full
 +
-+# Format a tiny filesystem to force minimum log size, then see if it mounts
-+_scratch_mkfs -r size=1m -d size=100m > $seqres.full
++# Format filesystem to get the block size
++_scratch_mkfs > $seqres.full
 +_scratch_mount >> $seqres.full
++
++blksz=$(_get_block_size $SCRATCH_MNT)
++rextsize=$($XFS_INFO_PROG $SCRATCH_MNT | grep realtime.*extsz | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g')
++rextblks=$((rextsize / blksz))
++
++echo "blksz $blksz rextsize $rextsize rextblks $rextblks" >> $seqres.full
++
++_scratch_unmount
++
++# Format filesystem with a realtime volume whose size fits the following:
++# 1. Longer than (XFS MAXEXTLEN * blocksize) bytes.
++# 2. Exactly a multiple of (NBBY * blksz * rextsize) bytes.
++
++rtsize1=$((2097151 * blksz))
++rtsize2=$((8 * blksz * rextsize))
++rtsize=$(( $(blockdev --getsz $SCRATCH_RTDEV) * 512 ))
++
++echo "rtsize1 $rtsize1 rtsize2 $rtsize2 rtsize $rtsize" >> $seqres.full
++
++test $rtsize -gt $rtsize1 || \
++	_notrun "scratch rt device too small, need $rtsize1 bytes"
++test $rtsize -gt $rtsize2 || \
++	_notrun "scratch rt device too small, need $rtsize2 bytes"
++
++rtsize=$((rtsize - (rtsize % rtsize2)))
++
++echo "rt size will be $rtsize" >> $seqres.full
++
++_scratch_mkfs -r size=$rtsize >> $seqres.full
++_scratch_mount >> $seqres.full
++
++# Make sure the root directory has rtinherit set so our test file will too
++$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT
++
++# Allocate some stuff at the start, to force the first falloc of the ouch file
++# to happen somewhere in the middle of the rt volume
++$XFS_IO_PROG -f -c 'falloc 0 64m' "$SCRATCH_MNT/b"
++$here/src/punch-alternating -i $((rextblks * 2)) -s $((rextblks)) "$SCRATCH_MNT/b"
++
++avail="$(df -P "$SCRATCH_MNT" | awk 'END {print $4}')"1
++toobig="$((avail * 2))"
++
++# falloc the ouch file in the middle of the rt extent to exercise the near
++# allocator in the last step.
++$XFS_IO_PROG -f -c 'falloc 0 1g' "$SCRATCH_MNT/ouch"
++
++# Try to get the near allocator to overflow on an allocation that matches
++# exactly one of the rtsummary size levels.  This should return ENOSPC and
++# not EFSCORRUPTED.
++$XFS_IO_PROG -f -c "falloc 0 ${toobig}k" "$SCRATCH_MNT/ouch"
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/761.out b/tests/xfs/761.out
+diff --git a/tests/xfs/759.out b/tests/xfs/759.out
 new file mode 100644
-index 00000000..8c9d9e90
+index 00000000..df693d50
 --- /dev/null
-+++ b/tests/xfs/761.out
-@@ -0,0 +1 @@
-+QA output created by 761
++++ b/tests/xfs/759.out
+@@ -0,0 +1,2 @@
++QA output created by 759
++fallocate: No space left on device
+diff --git a/tests/xfs/760 b/tests/xfs/760
+new file mode 100755
+index 00000000..7f2b52d4
+--- /dev/null
++++ b/tests/xfs/760
+@@ -0,0 +1,68 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2021 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 760
++#
++# Make sure we validate realtime extent size alignment for fallocate modes.
++# This is a regression test for fe341eb151ec ("xfs: ensure that fpunch,
++# fcollapse, and finsert operations are aligned to rt extent size")
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_realtime
++_require_xfs_io_command "fcollapse"
++_require_xfs_io_command "finsert"
++_require_xfs_io_command "funshare"
++_require_xfs_io_command "fzero"
++_require_xfs_io_command "falloc"
++
++rm -f $seqres.full
++
++# Format filesystem with a 256k realtime extent size
++_scratch_mkfs -r extsize=256k > $seqres.full
++_scratch_mount >> $seqres.full
++
++blksz=$(_get_block_size $SCRATCH_MNT)
++rextsize=$($XFS_INFO_PROG $SCRATCH_MNT | grep realtime.*extsz | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g')
++rextblks=$((rextsize / blksz))
++
++echo "blksz $blksz rextsize $rextsize rextblks $rextblks" >> $seqres.full
++
++# Make sure the root directory has rtinherit set so our test file will too
++$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT
++
++sz=$((rextsize * 100))
++range="$((blksz * 3)) $blksz"
++
++for verb in fpunch finsert fcollapse fzero funshare falloc; do
++	echo "test $verb"
++	$XFS_IO_PROG -f -c "falloc 0 $sz" "$SCRATCH_MNT/b"
++	$XFS_IO_PROG -f -c "$verb $range" "$SCRATCH_MNT/b"
++	rm -f "$SCRATCH_MNT/b"
++	_scratch_cycle_mount
++done
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/760.out b/tests/xfs/760.out
+new file mode 100644
+index 00000000..3d73c6fa
+--- /dev/null
++++ b/tests/xfs/760.out
+@@ -0,0 +1,9 @@
++QA output created by 760
++test fpunch
++test finsert
++fallocate: Invalid argument
++test fcollapse
++fallocate: Invalid argument
++test fzero
++test funshare
++test falloc
 diff --git a/tests/xfs/group b/tests/xfs/group
-index 318468b5..87badd56 100644
+index 4dd9901f..318468b5 100644
 --- a/tests/xfs/group
 +++ b/tests/xfs/group
-@@ -503,4 +503,5 @@
+@@ -501,4 +501,6 @@
+ 526 auto quick mkfs
+ 527 auto quick quota
  758 auto quick rw attr realtime
- 759 auto quick rw realtime
- 760 auto quick rw collapse punch insert zero prealloc
-+761 auto quick realtime
++759 auto quick rw realtime
++760 auto quick rw collapse punch insert zero prealloc
  763 auto quick rw realtime
 
