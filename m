@@ -5,64 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ED9FC4332E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40E6AC43331
 	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 05:03:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA85B6529E
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 05:03:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B91E65092
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 05:03:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229599AbhCIFC3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Mar 2021 00:02:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48728 "EHLO
+        id S229691AbhCIFCa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Mar 2021 00:02:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229612AbhCIFB7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Mar 2021 00:01:59 -0500
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EC9DC06174A;
-        Mon,  8 Mar 2021 21:01:59 -0800 (PST)
-Received: by mail-pg1-x533.google.com with SMTP id o38so7946315pgm.9;
-        Mon, 08 Mar 2021 21:01:59 -0800 (PST)
+        with ESMTP id S229652AbhCIFCH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Mar 2021 00:02:07 -0500
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88714C06174A;
+        Mon,  8 Mar 2021 21:02:07 -0800 (PST)
+Received: by mail-pj1-x102c.google.com with SMTP id nh23-20020a17090b3657b02900c0d5e235a8so4492258pjb.0;
+        Mon, 08 Mar 2021 21:02:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=UoIgnUhVWthCqsPnEF2k+5Wvvq+hQl8O9VoT2BqJBss=;
-        b=RCDwapbH285aJvvPUS6c3Fv2Jehs9yjtOpcQVnk2lEartpQoOml6JwDgIWsWt6nMam
-         Hl0MX4SESsMyL4ukkEhdHCFj1fixoVdB2CdsVwEb44fU2o3EtgVJ2fLdI17Cz9l/6cIE
-         NDgy3ComOBEFdSjLJ52dgmqFfa8J/ppzbgpjlTSxZnURUrp2Sb6twlaupzuMB8m3+INa
-         a7IAI2l9ylyuR3IRr+TNkdqFwYVp7xe3HwnHaraXyS52QXlzE/GL3v0UAhDD7w63dXf9
-         iarbJ8ueIRafKKM40/Rw542IKniWAwaRbPFkRwl/oj9pnGm9KGdeYrpNAxuOnI7JrPvf
-         v1zw==
+        bh=y0Z+s7Fjcy2Im2UyVPHCdibGR473jRuqO1r2vb39Jps=;
+        b=bWJY/3PYuNpZxTHJwRcjgHbB29cQHzo/ReDTDwlqXafn4N5ktmI6vfF7xG9ZU3TGg1
+         kpn5g247GyuqZFQBApUQp66mhFOO4btA/UgF7p8K+nZ5lba8hnUJk+LxAEk0LVKnk6yo
+         bI1vNoFqgDVJBJ0Pj9L76f1DaCGZpFDjWA3hdwZh7tTDyddv7xEycAwZ/8vl3U90IL8z
+         xkaQpx1EcPu5kL1tLbHPkdo0mQhDSe2yw62CDVg75VS0Q4jO5W28/ApbA6jq5LTQf7wI
+         mcLBWkg0p6UmYsdD+NuLJrLynBulJ8Nggk62Riyox4sLIoobkAGibzB8LJkfGZIfRG0t
+         w9YA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=UoIgnUhVWthCqsPnEF2k+5Wvvq+hQl8O9VoT2BqJBss=;
-        b=np4dzECx/NGpTcaKAEjbstx4yE5JyBFYlczLiGYb+TMCoBTt+fYwfJlnWkLFB+HCD/
-         dC29hIOpBfRoqrhIqVfrrCMHIB2hxVto529/yoDmxce2e+ZtbbuslBwGOVxa5jvbp3FU
-         c4bducbYJ7Q6G/+vCv3KNhuJ0dThE2zDZLId/A2LoTLa1/LZFsWoBzkptBDNAqK2WsBg
-         e8jG/rfdDp2M1gSvc9zY1upH5utqU0oan24S9VYeubqxuDNhgEX9pgGF/+VMJO0sWMyh
-         SxeR1Cjh5wAggz/MyXbrwcq5jv6Yyj3igx5Sj9bqWzbWXBHWSI12k+JZO0k44OFoyRU5
-         bmXA==
-X-Gm-Message-State: AOAM533xeCdY13wq1dmjV5D7s+J42pVThgDhqUtNpDWElEf5NK2y1rQm
-        00l3zm90jE1KK71yNsbyzOs15qd75OQ=
-X-Google-Smtp-Source: ABdhPJwwMnWk9sbLUr+y86827Cg/9yTss8pdZj8pUlwcTNRP1gv8Ky+aG3rdhGSrdT/kotu4HvGo4g==
-X-Received: by 2002:a63:6f8a:: with SMTP id k132mr24406710pgc.59.1615266118622;
-        Mon, 08 Mar 2021 21:01:58 -0800 (PST)
+        bh=y0Z+s7Fjcy2Im2UyVPHCdibGR473jRuqO1r2vb39Jps=;
+        b=qyN3lH44NKzSxkuja1Kb5i342bP3MK0a5qIQWmPxlJHaKy6WoK46gACXbyO+W+8WeF
+         BypUX2GrSizdzJwYdnAO/+7lgPWhoaLFhFTAYrLbubHmat0WmVyrTwF66ruBp9En9AE2
+         FpilpBEvCLgRi/YOFEzP7JvEHFTZ+EMrM2LSQfDVdrQy9zMyxixZneeecnb4aktddUkU
+         8P2ZHDBcecgs3cp0484hWplVZ1vGdnaF91Yys0t9fZhabjwuuaofN1fDc7pA4TZQJev1
+         ha1OuqhLX/wi7g2x+p/MEp5oA/+TKqacG7FUVNxKbOtWBkxNa04cTfK7vzpJs0DvApI5
+         Ay6g==
+X-Gm-Message-State: AOAM530ucg1beH7o0rQ3o9PQkElhwgc9sV1x01msBHUljsgkKGiUt81f
+        xspWWcMK1R+eHxjh3qBQ1poG4yTTOUA=
+X-Google-Smtp-Source: ABdhPJy2nJHeU3cC6q+lvLLnXq8DCuZUFVndQQerxS3XkGsWFXipmt+i5Aqmm/QNuKvc10oWIrv/iA==
+X-Received: by 2002:a17:90a:64c7:: with SMTP id i7mr2682270pjm.95.1615266126400;
+        Mon, 08 Mar 2021 21:02:06 -0800 (PST)
 Received: from localhost.localdomain ([122.179.125.254])
-        by smtp.gmail.com with ESMTPSA id a21sm5849577pfh.31.2021.03.08.21.01.56
+        by smtp.gmail.com with ESMTPSA id a21sm5849577pfh.31.2021.03.08.21.02.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Mar 2021 21:01:58 -0800 (PST)
+        Mon, 08 Mar 2021 21:02:06 -0800 (PST)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     fstests@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
         linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: [PATCH V6 09/13] xfs: Check for extent overflow when writing to unwritten extent
-Date:   Tue,  9 Mar 2021 10:31:20 +0530
-Message-Id: <20210309050124.23797-10-chandanrlinux@gmail.com>
+Subject: [PATCH V6 13/13] xfs: Stress test with bmap_alloc_minlen_extent error tag enabled
+Date:   Tue,  9 Mar 2021 10:31:24 +0530
+Message-Id: <20210309050124.23797-14-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210309050124.23797-1-chandanrlinux@gmail.com>
 References: <20210309050124.23797-1-chandanrlinux@gmail.com>
@@ -72,33 +72,33 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This test verifies that XFS does not cause inode fork's extent count to
-overflow when writing to an unwritten extent.
+This commit adds a stress test that executes fsstress with
+bmap_alloc_minlen_extent error tag enabled.
 
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- tests/xfs/533     | 84 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/533.out | 11 +++++++
+ tests/xfs/537     | 84 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/537.out |  7 ++++
  tests/xfs/group   |  1 +
- 3 files changed, 96 insertions(+)
- create mode 100755 tests/xfs/533
- create mode 100644 tests/xfs/533.out
+ 3 files changed, 92 insertions(+)
+ create mode 100755 tests/xfs/537
+ create mode 100644 tests/xfs/537.out
 
-diff --git a/tests/xfs/533 b/tests/xfs/533
+diff --git a/tests/xfs/537 b/tests/xfs/537
 new file mode 100755
-index 00000000..bb6f075e
+index 00000000..77fa60d9
 --- /dev/null
-+++ b/tests/xfs/533
++++ b/tests/xfs/537
 @@ -0,0 +1,84 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2021 Chandan Babu R.  All Rights Reserved.
 +#
-+# FS QA Test 533
++# FS QA Test 537
 +#
-+# Verify that XFS does not cause inode fork's extent count to overflow when
-+# writing to an unwritten extent.
++# Execute fsstress with bmap_alloc_minlen_extent error tag enabled.
++#
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
 +echo "QA output created by $seq"
@@ -118,6 +118,7 @@ index 00000000..bb6f075e
 +. ./common/rc
 +. ./common/filter
 +. ./common/inject
++. ./common/populate
 +
 +# remove previous $seqres.full before test
 +rm -f $seqres.full
@@ -127,8 +128,8 @@ index 00000000..bb6f075e
 +_supported_fs xfs
 +_require_scratch
 +_require_xfs_debug
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_error_injection "reduce_max_iextents"
++_require_test_program "punch-alternating"
++_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
 +
 +echo "Format and mount fs"
 +_scratch_mkfs_sized $((1024 * 1024 * 1024)) >> $seqres.full
@@ -136,71 +137,66 @@ index 00000000..bb6f075e
 +
 +bsize=$(_get_file_block_size $SCRATCH_MNT)
 +
-+testfile=${SCRATCH_MNT}/testfile
++echo "Consume free space"
++fillerdir=$SCRATCH_MNT/fillerdir
++nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
++nr_free_blks=$((nr_free_blks * 90 / 100))
 +
-+echo "Inject reduce_max_iextents error tag"
-+_scratch_inject_error reduce_max_iextents 1
++_fill_fs $((bsize * nr_free_blks)) $fillerdir $bsize 0 >> $seqres.full 2>&1
 +
-+nr_blks=15
-+
-+for io in Buffered Direct; do
-+	echo "* $io write to unwritten extent"
-+
-+	echo "Fallocate $nr_blks blocks"
-+	$XFS_IO_PROG -f -c "falloc 0 $((nr_blks * bsize))" $testfile >> $seqres.full
-+
-+	if [[ $io == "Buffered" ]]; then
-+		xfs_io_flag=""
-+	else
-+		xfs_io_flag="-d"
-+	fi
-+
-+	echo "$io write to every other block of fallocated space"
-+	for i in $(seq 1 2 $((nr_blks - 1))); do
-+		$XFS_IO_PROG -f -s $xfs_io_flag -c "pwrite $((i * bsize)) $bsize" \
-+		       $testfile >> $seqres.full 2>&1
-+		[[ $? != 0 ]] && break
-+	done
-+
-+	echo "Verify \$testfile's extent count"
-+	nextents=$(_xfs_get_fsxattr nextents $testfile)
-+	if (( $nextents > 10 )); then
-+		echo "Extent count overflow check failed: nextents = $nextents"
-+		exit 1
-+	fi
-+
-+	rm $testfile
++echo "Create fragmented filesystem"
++for dentry in $(ls -1 $fillerdir/); do
++	$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
 +done
++
++echo "Inject bmap_alloc_minlen_extent error tag"
++_scratch_inject_error bmap_alloc_minlen_extent 1
++
++echo "Scale fsstress args"
++args=$(_scale_fsstress_args -p $((LOAD_FACTOR * 75)) -n $((TIME_FACTOR * 1000)))
++
++echo "Execute fsstress in background"
++$FSSTRESS_PROG -d $SCRATCH_MNT $args \
++		 -f bulkstat=0 \
++		 -f bulkstat1=0 \
++		 -f fiemap=0 \
++		 -f getattr=0 \
++		 -f getdents=0 \
++		 -f getfattr=0 \
++		 -f listfattr=0 \
++		 -f mread=0 \
++		 -f read=0 \
++		 -f readlink=0 \
++		 -f readv=0 \
++		 -f stat=0 \
++		 -f aread=0 \
++		 -f dread=0 > /dev/null 2>&1
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/533.out b/tests/xfs/533.out
+diff --git a/tests/xfs/537.out b/tests/xfs/537.out
 new file mode 100644
-index 00000000..5b93964a
+index 00000000..19633a07
 --- /dev/null
-+++ b/tests/xfs/533.out
-@@ -0,0 +1,11 @@
-+QA output created by 533
++++ b/tests/xfs/537.out
+@@ -0,0 +1,7 @@
++QA output created by 537
 +Format and mount fs
-+Inject reduce_max_iextents error tag
-+* Buffered write to unwritten extent
-+Fallocate 15 blocks
-+Buffered write to every other block of fallocated space
-+Verify $testfile's extent count
-+* Direct write to unwritten extent
-+Fallocate 15 blocks
-+Direct write to every other block of fallocated space
-+Verify $testfile's extent count
++Consume free space
++Create fragmented filesystem
++Inject bmap_alloc_minlen_extent error tag
++Scale fsstress args
++Execute fsstress in background
 diff --git a/tests/xfs/group b/tests/xfs/group
-index 77abeefa..3ad47d07 100644
+index ba674a58..5c827727 100644
 --- a/tests/xfs/group
 +++ b/tests/xfs/group
-@@ -530,3 +530,4 @@
- 530 auto quick punch zero insert collapse
- 531 auto quick attr
- 532 auto quick dir hardlink symlink
-+533 auto quick
+@@ -534,3 +534,4 @@
+ 534 auto quick reflink
+ 535 auto quick reflink
+ 536 auto quick
++537 auto stress
 -- 
 2.29.2
 
