@@ -7,316 +7,135 @@ X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1983DC433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 18:04:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9A0FC433DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 18:05:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8A0B652BE
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 18:04:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7E62652B3
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 18:05:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231438AbhCISEI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Mar 2021 13:04:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54904 "EHLO mail.kernel.org"
+        id S231831AbhCISFO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Mar 2021 13:05:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56544 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230173AbhCISDu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Mar 2021 13:03:50 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A44DA65244;
-        Tue,  9 Mar 2021 18:03:49 +0000 (UTC)
+        id S231572AbhCISFE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Mar 2021 13:05:04 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 25580652B3;
+        Tue,  9 Mar 2021 18:05:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615313029;
-        bh=eC6dJhgH6QLi/lxSS3FWa0YU3z2pfr4tll33zFGoYRE=;
+        s=k20201202; t=1615313104;
+        bh=tb+vOOlGpUbqVPVpwHw7QMSLy8D/i0GUX2OHL8TSxW0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rh4VftUQjBQx0IXNVDGdJe+ABILvEGb3zNxI4xWlAD7RDKx3IqV1LKxdcJJkwHkDW
-         QZsvrUGlJ38ZxdlY2plAqm5scmeY4kdUnMjgnvUVA16UKg3IrXPSlX228q0FTWSDNw
-         xT+6ZklXjYLFPhYeXGqIspjZEsfOQlPYZsDhXT0MKo1Gg0oa+pVQDsBKK6ewwSEL4E
-         YWa8URarKFY0O7SDCOMVsBhP2+4ZSzT78ip3nkWmsQJg6QZ1IigRXHcCgiOQjSGw3a
-         wvVodeNbqblHPKyrcmfCUU5JVcf8cJ5AAKR8iNYtISHm5k7sc5oZQnEMMv/DOLpWCW
-         RxiZOEo+l/nTw==
-Date:   Tue, 9 Mar 2021 10:03:49 -0800
+        b=hEzxfy0opdP1ZXTPSlHA8x0wyRzm6UtBvWH21OjoVmJpuPB6EakXdzEqnXjwSUVO3
+         Jhy88Q9jeq5zDZp40PcYGNwiE9DvInNWDM/UPj29H9Scdn2VAwu71ADYVpeX1w64uU
+         NxvIrwteOj4NHlsk3Wb60ukF2Ys8NODSRhFFUhe1zUdDKz6uLZ6+Q94YFaDi4VnBHK
+         Frhu1IrmAhvYTq/6CIAoeYkvhycxPnVZy+GPcdPWsHNQ7IETDybGeEmuJqF0Z0MZVy
+         yTixtEOOhUASpi2/09GvvSyEokHWERHEPXAtRYIsbrTHEeIdExPYMchnWjaGhWaKMs
+         VF7utkYEKyA+Q==
+Date:   Tue, 9 Mar 2021 10:05:03 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [WIP] [RFC PATCH] xfs: add test on shrinking unused space in the
- last AG
-Message-ID: <20210309180349.GC7269@magnolia>
-References: <20201028230909.639698-1-hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH v8 5/5] xfs: add error injection for per-AG resv failure
+Message-ID: <20210309180503.GX3419940@magnolia>
+References: <20210305025703.3069469-1-hsiangkao@redhat.com>
+ <20210305025703.3069469-6-hsiangkao@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201028230909.639698-1-hsiangkao@redhat.com>
+In-Reply-To: <20210305025703.3069469-6-hsiangkao@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 29, 2020 at 07:09:09AM +0800, Gao Xiang wrote:
-> This adds a testcase to test shrinking unused space as much
-> as possible in the last AG with background fsstress workload.
-> 
-> The expectation is that no crash happens with expected output.
+On Fri, Mar 05, 2021 at 10:57:03AM +0800, Gao Xiang wrote:
+> per-AG resv failure after fixing up freespace is hard to test in an
+> effective way, so directly add an error injection path to observe
+> such error handling path works as expected.
 > 
 > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 > ---
->  tests/xfs/522     | 125 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/522.out |  73 +++++++++++++++++++++++++++
->  tests/xfs/group   |   1 +
->  3 files changed, 199 insertions(+)
->  create mode 100755 tests/xfs/522
->  create mode 100644 tests/xfs/522.out
+>  fs/xfs/libxfs/xfs_ag_resv.c  | 6 +++++-
+>  fs/xfs/libxfs/xfs_errortag.h | 4 +++-
+>  fs/xfs/xfs_error.c           | 3 +++
+>  3 files changed, 11 insertions(+), 2 deletions(-)
 > 
-> diff --git a/tests/xfs/522 b/tests/xfs/522
-> new file mode 100755
-> index 00000000..e427a33a
-> --- /dev/null
-> +++ b/tests/xfs/522
-> @@ -0,0 +1,125 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 522
-> +#
-> +# XFS online shrinkfs-while-allocating tests
-> +#
-> +# This test attempts to shrink unused space as much as possible with
-> +# background fsstress workload. It will decrease the shrink size if
-> +# larger size fails. And totally repeat 6 times.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
+> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+> index fdfe6dc0d307..6c5f8d10589c 100644
+> --- a/fs/xfs/libxfs/xfs_ag_resv.c
+> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
+> @@ -211,7 +211,11 @@ __xfs_ag_resv_init(
+>  		ASSERT(0);
+>  		return -EINVAL;
+>  	}
+> -	error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
 > +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +_create_scratch()
+> +	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_AG_RESV_FAIL))
+> +		error = -ENOSPC;
+> +	else
+> +		error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
+>  	if (error) {
+>  		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
+>  				error, _RET_IP_);
+> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+> index 6ca9084b6934..a23a52e643ad 100644
+> --- a/fs/xfs/libxfs/xfs_errortag.h
+> +++ b/fs/xfs/libxfs/xfs_errortag.h
+> @@ -58,7 +58,8 @@
+>  #define XFS_ERRTAG_BUF_IOERROR				35
+>  #define XFS_ERRTAG_REDUCE_MAX_IEXTENTS			36
+>  #define XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT		37
+> -#define XFS_ERRTAG_MAX					38
+> +#define XFS_ERRTAG_AG_RESV_FAIL				38
+> +#define XFS_ERRTAG_MAX					39
+>  
+>  /*
+>   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+> @@ -101,5 +102,6 @@
+>  #define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
+>  #define XFS_RANDOM_REDUCE_MAX_IEXTENTS			1
+>  #define XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT		1
+> +#define XFS_RANDOM_AG_RESV_FAIL				1
+>  
+>  #endif /* __XFS_ERRORTAG_H_ */
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index 185b4915b7bf..f70984f3174d 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -56,6 +56,7 @@ static unsigned int xfs_errortag_random_default[] = {
+>  	XFS_RANDOM_BUF_IOERROR,
+>  	XFS_RANDOM_REDUCE_MAX_IEXTENTS,
+>  	XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT,
+> +	XFS_RANDOM_AG_RESV_FAIL,
+>  };
 
-Functions in tests do not need to be prefixed with "_" since they're not
-global symbols.
-
-> +{
-> +	echo "*** mkfs"
-> +	_scratch_mkfs_xfs $@ | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-> +	. $tmp.mkfs
-> +
-> +	echo "*** mount"
-> +	if ! _try_scratch_mount 2>/dev/null
-> +	then
-> +		echo "failed to mount $SCRATCH_DEV"
-> +		exit 1
-> +	fi
-> +
-> +	# fix the reserve block pool to a known size so that the enospc
-> +	# calculations work out correctly.
-> +	_scratch_resvblks 1024 >  /dev/null 2>&1
-> +}
-> +
-> +_fill_scratch()
-> +{
-> +	$XFS_IO_PROG -f -c "resvsp 0 ${1}" $SCRATCH_MNT/resvfile
-> +}
-> +
-> +_stress_scratch()
-> +{
-> +	procs=3
-> +	nops=1000
-> +	# -w ensures that the only ops are ones which cause write I/O
-> +	FSSTRESS_ARGS=`_scale_fsstress_args -d $SCRATCH_MNT -w -p $procs \
-> +	    -n $nops $FSSTRESS_AVOID`
-> +	$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1 &
-> +}
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_scratch
-> +_require_xfs_io_command "falloc"
-> +
-> +rm -f $seqres.full
-> +_scratch_mkfs_xfs | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-> +. $tmp.mkfs	# extract blocksize and data size for scratch device
-> +
-> +endsize=`expr 125 \* 1048576`	# stop after shrinking this big
-> +[ `expr $endsize / $dbsize` -lt $dblocks ] || _notrun "Scratch device too small"
-> +
-> +nags=2
-> +totalcount=6
-> +
-> +while [ $totalcount -gt 0 ]; do
-
-So we run this six times?  Why six, specifically?  Should it be scaled
-by TIME_FACTOR?
-
-> +	size=`expr 1010 \* 1048576`	# 1010 megabytes initially
-> +	echo "*** creating scratch filesystem"
-> +	logblks=$(_scratch_find_xfs_min_logblocks -dsize=${size} -dagcount=${nags})
-> +
-> +	_create_scratch -lsize=${logblks}b -dsize=${size} -dagcount=${nags}
-> +
-> +	echo "*** using some initial space on scratch filesystem"
-> +	for i in `seq 125 -1 90`; do
-> +		fillsize=`expr $i \* 1048576`
-> +		out="$(_fill_scratch $fillsize 2>&1)"
-> +		echo "$out" | grep -q 'No space left on device' && continue
-> +		test -n "${out}" && echo "$out"
-> +		break
-> +	done
-
-_fill_fs ?
-
-> +
-> +	decsize=`expr  42 \* 1048576`	# shrink in chunks of this size at most
-
-This could go outside the loop.
-
-> +	echo "*** stressing filesystem"
-> +	while [ $size -gt $endsize ]; do
-> +		_stress_scratch
-> +		sleep 1
-> +
-> +		decb=`expr $decsize / $dbsize`    # in data blocks
-> +		while [ $decb -gt 0 ]; do
-> +			sizeb=`expr $size / $dbsize - $decb`
-> +
-> +			xfs_growfs -D ${sizeb} $SCRATCH_MNT 2>&1 \
-
-Use $XFS_GROWFS_PROG, do not call xfs_growfs directly.
-
-> +				| tee -a $seqres.full | _filter_mkfs 2>$tmp.growfs > /dev/null
-> +
-> +			ret="${PIPESTATUS[0]}"
-> +			. $tmp.growfs
-> +
-> +			[ $ret -eq 0 ] && break
-> +
-> +			[ $decb -gt 100 ] && decb=`expr $decb + $RANDOM % 10`
-> +			decb=`expr $decb / 2`
-
-So... uh... what does this decb logic do?  AFAICT we start by removing
-42MB from the end of the filesystem, and then we ... add some random
-quantity to decb, halve it, then shrink by that amount?  And we keep
-doing smaller and smaller pieces until the shrink fails or decb becomes
-zero...
-
-> +		done
-> +
-> +		wait
-> +		[ $decb -eq 0 ] && break
-
-...after which we wait for fsstress to end and then loop back to
-fsstress and shrinking?
-
-I was expecting to see two tests: a basic functionality test, and then a
-second one to race fsstress and shrink to see what happens.
-
-> +
-> +		size=`expr $size - $decb \* $dbsize`
-
-Why don't we query the size of the filesystem instead of calculating it
-and hoping that reflects reality?
+Could you please add the BUILD_BUG_ON somewhere in xfs_error.c to make
+sure that the length of xfs_errortag_random_default matches
+XFS_ERRTAG_MAX?  I inquired about that in the v7 series review, but that
+seems not to have been addressed?
 
 --D
 
-> +	done
-> +
-> +	_scratch_unmount
-> +	_repair_scratch_fs >> $seqres.full
-> +	totalcount=`expr $totalcount - 1`
-> +done
-> +
-> +status=0
-> +exit
-> diff --git a/tests/xfs/522.out b/tests/xfs/522.out
-> new file mode 100644
-> index 00000000..03d512f5
-> --- /dev/null
-> +++ b/tests/xfs/522.out
-> @@ -0,0 +1,73 @@
-> +QA output created by 522
-> +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> +         = sunit=XXX swidth=XXX, unwritten=X
-> +naming   =VERN bsize=XXX
-> +log      =LDEV bsize=XXX blocks=XXX
-> +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> +*** creating scratch filesystem
-> +*** mkfs
-> +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> +         = sunit=XXX swidth=XXX, unwritten=X
-> +naming   =VERN bsize=XXX
-> +log      =LDEV bsize=XXX blocks=XXX
-> +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> +*** mount
-> +*** using some initial space on scratch filesystem
-> +*** stressing filesystem
-> +*** creating scratch filesystem
-> +*** mkfs
-> +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> +         = sunit=XXX swidth=XXX, unwritten=X
-> +naming   =VERN bsize=XXX
-> +log      =LDEV bsize=XXX blocks=XXX
-> +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> +*** mount
-> +*** using some initial space on scratch filesystem
-> +*** stressing filesystem
-> +*** creating scratch filesystem
-> +*** mkfs
-> +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> +         = sunit=XXX swidth=XXX, unwritten=X
-> +naming   =VERN bsize=XXX
-> +log      =LDEV bsize=XXX blocks=XXX
-> +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> +*** mount
-> +*** using some initial space on scratch filesystem
-> +*** stressing filesystem
-> +*** creating scratch filesystem
-> +*** mkfs
-> +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> +         = sunit=XXX swidth=XXX, unwritten=X
-> +naming   =VERN bsize=XXX
-> +log      =LDEV bsize=XXX blocks=XXX
-> +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> +*** mount
-> +*** using some initial space on scratch filesystem
-> +*** stressing filesystem
-> +*** creating scratch filesystem
-> +*** mkfs
-> +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> +         = sunit=XXX swidth=XXX, unwritten=X
-> +naming   =VERN bsize=XXX
-> +log      =LDEV bsize=XXX blocks=XXX
-> +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> +*** mount
-> +*** using some initial space on scratch filesystem
-> +*** stressing filesystem
-> +*** creating scratch filesystem
-> +*** mkfs
-> +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> +         = sunit=XXX swidth=XXX, unwritten=X
-> +naming   =VERN bsize=XXX
-> +log      =LDEV bsize=XXX blocks=XXX
-> +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> +*** mount
-> +*** using some initial space on scratch filesystem
-> +*** stressing filesystem
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index b89c0a4e..ab762ed6 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -519,3 +519,4 @@
->  519 auto quick reflink
->  520 auto quick reflink
->  521 auto quick realtime growfs
-> +522 auto quick growfs
+>  
+>  struct xfs_errortag_attr {
+> @@ -168,6 +169,7 @@ XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
+>  XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
+>  XFS_ERRORTAG_ATTR_RW(reduce_max_iextents,	XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
+>  XFS_ERRORTAG_ATTR_RW(bmap_alloc_minlen_extent,	XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT);
+> +XFS_ERRORTAG_ATTR_RW(ag_resv_fail, XFS_ERRTAG_AG_RESV_FAIL);
+>  
+>  static struct attribute *xfs_errortag_attrs[] = {
+>  	XFS_ERRORTAG_ATTR_LIST(noerror),
+> @@ -208,6 +210,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+>  	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
+>  	XFS_ERRORTAG_ATTR_LIST(reduce_max_iextents),
+>  	XFS_ERRORTAG_ATTR_LIST(bmap_alloc_minlen_extent),
+> +	XFS_ERRORTAG_ATTR_LIST(ag_resv_fail),
+>  	NULL,
+>  };
+>  
 > -- 
-> 2.18.1
+> 2.27.0
 > 
