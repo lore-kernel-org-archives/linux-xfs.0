@@ -2,98 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7354C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 05:05:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80000C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 06:40:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99846652B1
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 05:05:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 466A364EF1
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 06:40:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229520AbhCIFEn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Mar 2021 00:04:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36288 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229495AbhCIFET (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Mar 2021 00:04:19 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4146C65199;
-        Tue,  9 Mar 2021 05:04:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615266259;
-        bh=BJqI1aGpYnIO+O1/iOnaZD7P9grW63eEqAJ0kc8tR9g=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=npzz0AJi3rOYYrB+6wbQPG5nCbV2aZ6b5KgT4bitQYWO4QJ5jIwWkKXtLF1sKnD2/
-         IPMj29CukovukN10rlQMiKl9MtdyQAeCKZQSmr/KPXemHjPi474PREMQw0uz9qbQ9V
-         BzDfuSDDL+r/ChUqAYQu5cEpUjTNJo+27vHyoLoQoAnyw5LwGdU2EKaq0eSb5XxNep
-         mTwuR1g1c3R166A60v/Vv6M/fE3TQ43yI0vIei+KNp3AkTn8F8/0l3ZSzqav96EOT3
-         YydKElYuSOBseS7M4h5nprzygiShM8r3CEA6+9UZ2nCeuRJFL9In0PhExdlkONWFeq
-         8SZkdKvhd0c8w==
-Date:   Mon, 8 Mar 2021 21:04:18 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V6 02/13] common/xfs: Add a helper to get an inode fork's
- extent count
-Message-ID: <20210309050418.GA7269@magnolia>
-References: <20210309050124.23797-1-chandanrlinux@gmail.com>
- <20210309050124.23797-3-chandanrlinux@gmail.com>
+        id S229637AbhCIGjf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Mar 2021 01:39:35 -0500
+Received: from out30-56.freemail.mail.aliyun.com ([115.124.30.56]:45134 "EHLO
+        out30-56.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229929AbhCIGjH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Mar 2021 01:39:07 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=alimailimapcm10staff010182156082;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=15;SR=0;TI=SMTPD_---0UR3PFCN_1615271941;
+Received: from 30.225.32.219(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0UR3PFCN_1615271941)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Tue, 09 Mar 2021 14:39:01 +0800
+Subject: Re: [PATCH v2 00/10] fsdax,xfs: Add reflink&dedupe support for fsdax
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org
+Cc:     darrick.wong@oracle.com, dan.j.williams@intel.com,
+        willy@infradead.org, jack@suse.cz, viro@zeniv.linux.org.uk,
+        linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        david@fromorbit.com, hch@lst.de, rgoldwyn@suse.de
+References: <20210226002030.653855-1-ruansy.fnst@fujitsu.com>
+From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+Message-ID: <5e7766f9-0224-10be-6810-2e516e610191@linux.alibaba.com>
+Date:   Tue, 9 Mar 2021 14:36:13 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210309050124.23797-3-chandanrlinux@gmail.com>
+In-Reply-To: <20210226002030.653855-1-ruansy.fnst@fujitsu.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 09, 2021 at 10:31:13AM +0530, Chandan Babu R wrote:
-> This commit adds the helper _scratch_get_iext_count() which returns an
-> inode fork's extent count.
+hi,
+
+First thanks for your patchset.
+I'd like to know whether your patchset pass fstests? Thanks.
+
+Regards,
+Xiaoguang Wang
+
+> This patchset is attempt to add CoW support for fsdax, and take XFS,
+> which has both reflink and fsdax feature, as an example.
 > 
-> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-
-Looks good now,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  common/xfs | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
+> Changes from V1:
+>   - Factor some helper functions to simplify dax fault code
+>   - Introduce iomap_apply2() for dax_dedupe_file_range_compare()
+>   - Fix mistakes and other problems
+>   - Rebased on v5.11
 > 
-> diff --git a/common/xfs b/common/xfs
-> index 41dd8676..26ae21b9 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -924,6 +924,26 @@ _scratch_get_bmx_prefix() {
->  	return 1
->  }
->  
-> +_scratch_get_iext_count()
-> +{
-> +	local ino=$1
-> +	local whichfork=$2
-> +	local field=""
-> +
-> +	case $whichfork in
-> +		"attr")
-> +			field=core.naextents
-> +			;;
-> +		"data")
-> +			field=core.nextents
-> +			;;
-> +		*)
-> +			return 1
-> +	esac
-> +
-> +	_scratch_xfs_get_metadata_field $field "inode $ino"
-> +}
-> +
->  #
->  # Ensures that we don't pass any mount options incompatible with XFS v4
->  #
-> -- 
-> 2.29.2
+> One of the key mechanism need to be implemented in fsdax is CoW.  Copy
+> the data from srcmap before we actually write data to the destance
+> iomap.  And we just copy range in which data won't be changed.
+> 
+> Another mechanism is range comparison.  In page cache case, readpage()
+> is used to load data on disk to page cache in order to be able to
+> compare data.  In fsdax case, readpage() does not work.  So, we need
+> another compare data with direct access support.
+> 
+> With the two mechanism implemented in fsdax, we are able to make reflink
+> and fsdax work together in XFS.
+> 
+> 
+> Some of the patches are picked up from Goldwyn's patchset.  I made some
+> changes to adapt to this patchset.
+> 
+> (Rebased on v5.11)
+> ==
+> 
+> Shiyang Ruan (10):
+>    fsdax: Factor helpers to simplify dax fault code
+>    fsdax: Factor helper: dax_fault_actor()
+>    fsdax: Output address in dax_iomap_pfn() and rename it
+>    fsdax: Introduce dax_iomap_cow_copy()
+>    fsdax: Replace mmap entry in case of CoW
+>    fsdax: Add dax_iomap_cow_copy() for dax_iomap_zero
+>    iomap: Introduce iomap_apply2() for operations on two files
+>    fsdax: Dedup file range to use a compare function
+>    fs/xfs: Handle CoW for fsdax write() path
+>    fs/xfs: Add dedupe support for fsdax
+> 
+>   fs/dax.c               | 532 +++++++++++++++++++++++++++--------------
+>   fs/iomap/apply.c       |  51 ++++
+>   fs/iomap/buffered-io.c |   2 +-
+>   fs/remap_range.c       |  45 +++-
+>   fs/xfs/xfs_bmap_util.c |   3 +-
+>   fs/xfs/xfs_file.c      |  29 ++-
+>   fs/xfs/xfs_inode.c     |   8 +-
+>   fs/xfs/xfs_inode.h     |   1 +
+>   fs/xfs/xfs_iomap.c     |  30 ++-
+>   fs/xfs/xfs_iomap.h     |   1 +
+>   fs/xfs/xfs_iops.c      |  11 +-
+>   fs/xfs/xfs_reflink.c   |  16 +-
+>   include/linux/dax.h    |   7 +-
+>   include/linux/fs.h     |  15 +-
+>   include/linux/iomap.h  |   7 +-
+>   15 files changed, 550 insertions(+), 208 deletions(-)
 > 
