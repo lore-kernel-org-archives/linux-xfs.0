@@ -2,174 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD12C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 00:44:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9439CC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 01:14:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C328B652A4
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 00:44:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 677076527E
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Mar 2021 01:14:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229611AbhCIAoY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Mar 2021 19:44:24 -0500
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:52422 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229749AbhCIAoT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 19:44:19 -0500
+        id S229682AbhCIBOR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Mar 2021 20:14:17 -0500
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:32950 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229599AbhCIBN6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Mar 2021 20:13:58 -0500
 Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 07F2778A85F;
-        Tue,  9 Mar 2021 11:44:10 +1100 (AEDT)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 9367DFAA124;
+        Tue,  9 Mar 2021 12:13:53 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lJQTq-000Kfn-4Q; Tue, 09 Mar 2021 11:44:10 +1100
-Date:   Tue, 9 Mar 2021 11:44:10 +1100
+        id 1lJQwa-000L8X-6z; Tue, 09 Mar 2021 12:13:52 +1100
+Date:   Tue, 9 Mar 2021 12:13:52 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3 v2] xfs: AIL needs asynchronous CIL forcing
-Message-ID: <20210309004410.GC74031@dread.disaster.area>
-References: <20210223053212.3287398-3-david@fromorbit.com>
- <20210224211058.GA4662@dread.disaster.area>
- <20210224232600.GH4662@dread.disaster.area>
- <YD6xrJHgkkHi+7a3@bfoster>
- <20210303005752.GM4662@dread.disaster.area>
- <YD/IN66S3aM1lEQh@bfoster>
- <20210304015933.GO4662@dread.disaster.area>
- <YEDc42Z1GjHBXi6S@bfoster>
- <20210304224848.GR4662@dread.disaster.area>
- <YEJHEt/vt6yuHbak@bfoster>
+Subject: Re: [PATCH 08/45] xfs: journal IO cache flush reductions
+Message-ID: <20210309011352.GD74031@dread.disaster.area>
+References: <20210305051143.182133-1-david@fromorbit.com>
+ <20210305051143.182133-9-david@fromorbit.com>
+ <YEYXtqb7L1zyAHyC@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YEJHEt/vt6yuHbak@bfoster>
+In-Reply-To: <YEYXtqb7L1zyAHyC@bfoster>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
         a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
-        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
-        a=wv6fbLyrdsbbpLF9zbIA:9 a=UxIdY4KfFaj0D5R4:21 a=eTjuvqhptYncLwUU:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=t_Mika3xE8SKjnU52iAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 05, 2021 at 09:58:26AM -0500, Brian Foster wrote:
-> On Fri, Mar 05, 2021 at 09:48:48AM +1100, Dave Chinner wrote:
-> > > > > So not only does this patch expose subsystem internals to
-> > > > > external layers and create more log forcing interfaces/behaviors to
-> > > > 
-> > > > Sorry, I don't follow. What "subsystem internals" are being exposed
-> > > > and what external layer are they being exposed to?
-> > > > 
-> > > > > > Cleaning up the mess that is the xfs_log_* and xlog_* interfaces and
-> > > > > > changing things like log force behaviour and implementation is for
-> > > > > > a future series.
-> > > > > > 
-> > > > > 
-> > > > > TBH I think this patch is kind of a mess on its own. I think the
-> > > > > mechanism it wants to provide is sane, but I've not even got to the
-> > > > > point of reviewing _that_ yet because of the seeming dismissal of higher
-> > > > > level feedback. I'd rather not go around in circles on this so I'll just
-> > > > > offer my summarized feedback to this patch...
-> > > > 
-> > > > I'm not dismissing review nor am I saying the API cannot or should
-> > > > not be improved. I'm simply telling you that I think the additional
-> > > > changes you are proposing are outside the scope of the problem I am
-> > > > addressing here. I already plan to rework the log force API (and
-> > > > others) but doing so it not something that this patchset needs to
-> > > > address, or indeed should address.
-> > > > 
-> > > 
-> > > I'm not proposing additional changes nor to rework the log force API.
-> > > I'm pointing out that I find this implementation to be extremely and
-> > > unnecessarily confusing.
+On Mon, Mar 08, 2021 at 07:25:26AM -0500, Brian Foster wrote:
+> On Fri, Mar 05, 2021 at 04:11:06PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > And that's just fine - not everyone has to understand all of the
-> > code all of the time. That's why we have a team....
+> > Currently every journal IO is issued as REQ_PREFLUSH | REQ_FUA to
+> > guarantee the ordering requirements the journal has w.r.t. metadata
+> > writeback. THe two ordering constraints are:
+....
+> > The rm -rf times are included because I ran them, but the
+> > differences are largely noise. This workload is largely metadata
+> > read IO latency bound and the changes to the journal cache flushing
+> > doesn't really make any noticable difference to behaviour apart from
+> > a reduction in noiclog events from background CIL pushing.
 > > 
-> > > To improve it, I'm suggesting to either coopt
-> > > the existing async log force API...
-> > 
-> > And I'm telling you that this is *future work*. As the person
-> > actually doing the work, that's my decision and you need to accept
-> > that. I understand your concerns and have a plan to address them -
-> > you just have to accept that the plan to address them isn't going to
-> > be exactly to your liking.
-> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
 > 
-> As a reviewer, I am pointing out that I object to how this patch is
-> implemented and offered several fairly simple suggestions on how to
-> address my concerns. Those suggestions have been rejected pretty much
-> out of hand on the basis of the existence of some future plans.
+> Thoughts on my previous feedback to this patch, particularly the locking
+> bits..? I thought I saw a subsequent patch somewhere that increased the
+> parallelism of this code..
 
-We're allowed to disagree on the best approach. But to find a way
-forward means that both the summitter and the reviewer need to
-compromise. I've fixed up the obvious warts and bugs you've pointed
-out, and agreed that it needs cleaning up and have committed to
-cleaning it up in the near future.
+I seem to have missed that email, too.
 
-> Future rework plans do not justify or change my view of this patch
-> and the mess it adds (for other developers, for historical context
-> and downstreams, etc.).  Therefore, if the only option you're
-> willing to consider is "make this mess now and clean it up later
-> in some broader rework," then I'd rather we just defer this patch
-> until after that rework is available and avoid the mess that way.
+I guess you are refering to these two hunks:
 
-So you won't review it until I have 100 outstanding patches in this
-series and it's completely and utterly unreviewable? Then you'll ask
-me to split it up and re-order it into digestable chunks, and so
-we'll go back to having to merge this because any of the API rework
-that depends on the mechanism that this patch introduces.
+> > @@ -2416,10 +2408,21 @@ xlog_write(
+> >  		ASSERT(log_offset <= iclog->ic_size - 1);
+> >  		ptr = iclog->ic_datap + log_offset;
+> >  
+> > -		/* start_lsn is the first lsn written to. That's all we need. */
+> > +		/* Start_lsn is the first lsn written to. */
+> >  		if (start_lsn && !*start_lsn)
+> >  			*start_lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+> >  
+> > +		/*
+> > +		 * iclogs containing commit records or unmount records need
+> > +		 * to issue ordering cache flushes and commit immediately
+> > +		 * to stable storage to guarantee journal vs metadata ordering
+> > +		 * is correctly maintained in the storage media.
+> > +		 */
+> > +		if (optype & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS)) {
+> > +			iclog->ic_flags |= (XLOG_ICL_NEED_FLUSH |
+> > +						XLOG_ICL_NEED_FUA);
+> > +		}
+> > +
+> >  		/*
+> >  		 * This loop writes out as many regions as can fit in the amount
+> >  		 * of space which was allocated by xlog_state_get_iclog_space().
+> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> > index c04d5d37a3a2..263c8d907221 100644
+> > --- a/fs/xfs/xfs_log_cil.c
+> > +++ b/fs/xfs/xfs_log_cil.c
+> > @@ -896,11 +896,16 @@ xlog_cil_push_work(
+> >  
+> >  	/*
+> >  	 * If the checkpoint spans multiple iclogs, wait for all previous
+> > -	 * iclogs to complete before we submit the commit_iclog.
+> > +	 * iclogs to complete before we submit the commit_iclog. If it is in the
+> > +	 * same iclog as the start of the checkpoint, then we can skip the iclog
+> > +	 * cache flush because there are no other iclogs we need to order
+> > +	 * against.
+> >  	 */
+> >  	if (ctx->start_lsn != commit_lsn) {
+> >  		spin_lock(&log->l_icloglock);
+> >  		xlog_wait_on_iclog(commit_iclog->ic_prev);
+> > +	} else {
+> > +		commit_iclog->ic_flags &= ~XLOG_ICL_NEED_FLUSH;
+> >  	}
 
-I'm not going to play that "now jump through this hoop" game.  We
-add flags for on-off behaviours in internal functions -all the
-time-. If this makes the interface so complex and confusing that you
-don't understand it, then the interface was already too complex and
-confusing. And fixing that is *not in the scope of this patchset*.
+.... that set/clear the flags on the iclog?  Yes, they probably
+should be atomic.
 
-Demanding that code be made perfect before it can be merged is
-really not very helpful. Especially when there are already plans to
-rework the API but that rework is dependent on a bunch of other
-changes than need to be done first.
+On second thoughts, we can't just clear XLOG_ICL_NEED_FLUSH here
+because there may be multiple commit records on this iclog and a
+previous one might require the flush. I'll just remove this
+optimisation from the patch right now, because it's more complex
+than it initially seemed.
 
-iclogs are something that need to be moved behind the CIL, not sit
-in front of CIL. The CIL abstracts the journal and writing to the
-journal completely away from the transaction subsystem, yet the log
-force code punches straight through that abstraction and walks
-iclogs directly. The whole log force implementation needs to change,
-and I plan for the API that wraps the log forces to get reworked at
-that time.
-
-For example, if we want to direct map storage for log writes, then
-iclog-based log force synchronisation needs to go away because we
-don't need iclogs for buffering journal writes. Hence the log foce
-code should interface only with the CIL, and only the CIL should
-manage whatever mechanism it is using to write to stable storage.
-The code is currently the way it is because the CIL, when first
-implemented, had to co-exist with the old way of writing to the log.
-We haven't used that old way for a decade now and we have very
-different storage performance characteristics these days, so it's
-about time we got rid of the mechanism designed to be optimal for
-spinning disks and actually integrated the CIL and the log
-efficiently.
-
-There are a *lot* of steps to do this, and reworking the log force
-implementation and API is part of that. But reworking that API is
-premature because we haven't done all the necessary pre-work in
-place to make such a change yet. This patch is actually part of that
-pre-work to get the mechanisms that the log force rework will rely
-on.
-
-I have very good reasons for pushing back against your suggestions,
-Brian. Your suggestions have merit but this patch is not the time to
-be making the changes you suggest. Code does not need to be perfect
-to be merged, nor does the entire larger change they will be part of
-need to be complete and 100% tested and reviewed before preparation
-and infrastructure patches can be merged. This is how we've done big
-changes in the past - they've been staged across multiple kernel
-cycles - and not everything needs to be done in the first
-patchset of a larger body of work....
+And looking at the aggregated code that I have now (including the
+stuff I haven't sent out), the need for xlog_write() to set the
+flush flags on the iclog is gone. THis is because the unmount record
+flushes the iclog directly itself so it can add flags there, and
+the iclog that the commit record is written to is returned to the
+caller.
 
 Cheers,
 
