@@ -2,105 +2,141 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE759C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 02:34:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68541C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 06:12:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8D4864F83
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 02:34:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B72F64FE7
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 06:12:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231645AbhCJCeM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Mar 2021 21:34:12 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:25595 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232184AbhCJCeI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Mar 2021 21:34:08 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1615343647;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8GwwUcOm0gDboHFJnkVDP021OHeO7lY2XNY3kkjyYDQ=;
-        b=RIGJwp2jPzFNO2NfLbQnXqy85wBNti34VbBydHWJt1ZPcDLS2Zf1WWErCvkG4adlDkhyHq
-        RhzsyWK5AxH5wZBmi2cqfcvRpqpsZ+dO/XjXIa9JcdKzFFRdN6NOSd+901Omi7tU63JaYV
-        TMmo1+buDytktbXkPE3JyRSJtFiPAxg=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-30-uchxIUaQPxCwZa4JX5qxYg-1; Tue, 09 Mar 2021 21:34:05 -0500
-X-MC-Unique: uchxIUaQPxCwZa4JX5qxYg-1
-Received: by mail-pj1-f72.google.com with SMTP id w34so3501912pjj.7
-        for <linux-xfs@vger.kernel.org>; Tue, 09 Mar 2021 18:34:04 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=8GwwUcOm0gDboHFJnkVDP021OHeO7lY2XNY3kkjyYDQ=;
-        b=CmpKQOKtZRDNUqIf1xdWp+g/oY8rAEu5NsUZa9BPnmIGoTVJRPmwRnJUrHiNc54QuB
-         D3GxJJas2FMpPfITBLGkXlHhpBaT3nW5SPNJl+Sao2EzaR1UXC42MQKfTtdlw/RG4wmQ
-         khreYLGZCP4Uk9wb9Yb50rUqaRYOIqi9iFCxbUELqp6uUsQe1T90KjHJgsPdwbnzak6E
-         /J4/agA42zAcFfnYCXDm94vD9cWYGgJMNICxsRB3E6FZ6bUMMgrOIrWPMxMmZKTjNKpd
-         Vp3XbU2+Hyx8ZAGeyuEL0mavN84gJiEPKh5F9EgKq1ce5QXjLRppDjDstJEoCIebfW5x
-         Mzaw==
-X-Gm-Message-State: AOAM5330kNa0KH04rhTWbQvGKe8QFawhip6rrMycTQXf9aYrWZvYtIbC
-        NyEiNMwcOTl0m3+ObFyy7/PcVkUk6ZCjWoUPogTB/NWriw0C16sWT2ggKNOogUESvAauLmgLlTL
-        CLIgmSOXVH/KhP9Fn6ypr
-X-Received: by 2002:a65:430b:: with SMTP id j11mr785262pgq.143.1615343643997;
-        Tue, 09 Mar 2021 18:34:03 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyYehmKoPCKeR7JcRYI46t1GlQkbwkAxXBSH0BFvQ0+b+8W0byext3PvqvQUVObbQX200m5Iw==
-X-Received: by 2002:a65:430b:: with SMTP id j11mr785228pgq.143.1615343643563;
-        Tue, 09 Mar 2021 18:34:03 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id 14sm14383070pfy.55.2021.03.09.18.34.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Mar 2021 18:34:03 -0800 (PST)
-Date:   Wed, 10 Mar 2021 10:33:53 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [WIP] [RFC PATCH] xfs: add test on shrinking unused space in the
- last AG
-Message-ID: <20210310023353.GC4003044@xiangao.remote.csb>
-References: <20201028230909.639698-1-hsiangkao@redhat.com>
- <20210310004324.GE3499219@localhost.localdomain>
- <20210310020947.GC3419940@magnolia>
+        id S229766AbhCJGMV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Mar 2021 01:12:21 -0500
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:35712 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229633AbhCJGL4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Mar 2021 01:11:56 -0500
+Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 80DCE107900;
+        Wed, 10 Mar 2021 17:11:52 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lJs4V-000nT8-4Z; Wed, 10 Mar 2021 17:11:51 +1100
+Date:   Wed, 10 Mar 2021 17:11:51 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Andi Kleen <ak@linux.intel.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 15/45] xfs: CIL work is serialised, not pipelined
+Message-ID: <20210310061151.GF74031@dread.disaster.area>
+References: <20210305051143.182133-1-david@fromorbit.com>
+ <20210305051143.182133-16-david@fromorbit.com>
+ <20210308231432.GD3419940@magnolia>
+ <20210308233819.GA74031@dread.disaster.area>
+ <20210309015540.GY7269@magnolia>
+ <87ft14t0ox.fsf@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210310020947.GC3419940@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <87ft14t0ox.fsf@linux.intel.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
+        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=VwQbUJbxAAAA:8 a=eJfxgxciAAAA:8
+        a=7-415B0cAAAA:8 a=NvfcQ1G7Lb4BHcPeJL8A:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=xM9caqqi1sUkTy8OJ5Uh:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
-
-On Tue, Mar 09, 2021 at 06:09:47PM -0800, Darrick J. Wong wrote:
-
-...
-
-> > 
-> > As Darrick has reviewed, I have one more question. Looks like we can shrink a
-> > mounted xfs via giving a smaller size to xfs_growfs.
-> > 
-> > If xfs_growfs or kernel doesn't support 'shrink', I think the whole test will
-> > be failed. So maybe we need a _require_* function to check if current xfs
-> > support shrinking feature at first?
+On Tue, Mar 09, 2021 at 02:35:42PM -0800, Andi Kleen wrote:
+> "Darrick J. Wong" <djwong@kernel.org> writes:
+> > It might be nice to leave that as a breadcrumb, then, in case the
+> > spinlock scalability problems ever get solved.
 > 
-> Also, it's time to send the xfs_growfs patches to the list so I can
-> replicate the tests on my own test vms.
+> It might be already solved, depending on if Dave's rule of thumb
+> was determined before the Linux spinlocks switched to MCS locks or not.
 
-There was a preliminary version of xfsprogs sent out before to
-match this version:
-https://lore.kernel.org/r/20201028114010.545331-1-hsiangkao@redhat.com
-https://lore.kernel.org/linux-xfs/20201028114010.545331-1-hsiangkao@redhat.com/raw
+It's what I see on my current 2-socket, 32p/64t machine with a
+handful of optane DC4800 SSDs attached to it running 5.12-rc1+.  MCS
+doesn't make spin contention go away, just stops spinlocks from
+bouncing the same cacheline all over the machine.
 
-This added a EXPERIMENTAL warning but without a new argument
-for shrinking.
+i.e. if you've got more than a single CPU's worth of critical
+section to execute, then spinlocks are going to spin, not matter how
+they are implemented. So AFAICT the contention I'm measuring is not
+cacheline bouncing, but just the cost of multiple CPUs
+spinning while queued waiting for the spinlock...
 
-Thanks,
-Gao Xiang
+> In my experience spinlock scalability depends a lot on how long the
+> critical section is (that is very important, short sections are a lot
+> worse than long sections), as well as if the contention is inside a
+> socket or over sockets, and the actual hardware behaves differently too.
 
+Yup, and most of the critical sections that the icloglock is used
+to protect are quite short.
+
+> So I would be quite surprised if the "rule of 4" generally holds.
+
+It's served me well for the past couple of decades, especially when
+working with machines that have thousands of CPUs that can turn even
+lightly trafficed spin locks into highly contended locks. That was
+the lesson I learnt from this commit:
+
+commit 249a8c1124653fa90f3a3afff869095a31bc229f
+Author: David Chinner <dgc@sgi.com>
+Date:   Tue Feb 5 12:13:32 2008 +1100
+
+    [XFS] Move AIL pushing into it's own thread
+    
+    When many hundreds to thousands of threads all try to do simultaneous
+    transactions and the log is in a tail-pushing situation (i.e. full), we
+    can get multiple threads walking the AIL list and contending on the AIL
+    lock.
+ 
+Getting half a dozen simultaneous AIL pushes, and the AIL spinlock
+would break down and burn an entire 2048p machine for half a day
+doing what should only take half a second. Unbound concurrency
+-always- finds spinlocks to contend on. And if the machine is large
+enough, it will then block up the entire machine as more and more
+CPUs hit the serialisation point.
+
+As long as I've worked with 500+ cpu machines (since 2002),
+scalability has always been about either removing spinlocks from
+hot paths or controlling concurrency to a level below where a
+spinlock breaks down. You see it again and again in XFS commit logs
+where I've either changed something to be lockless or to strictly
+constrain concurrency to be less than 4-8p across known hot and/or
+contended spinlocks and mutexes.
+
+And I've used it outside XFS, too. It was the basic concept behind
+the NUMA aware shrinker infrastructure and the per-node LRU lists
+that it uses. Even the internal spinlocks on those lists start to
+break down when bashing on the inode and dentry caches on systems
+with per-node CPU counts of 8-16...
+
+Oh, another "rule of 4" I came across a couple of days ago. My test
+machine has 4 node, so 4 kswapd threads. One buffered IO reader,
+running 100% cpu bound at 2GB/s from a 6GB/s capable block device.
+The reader was burning 12% of that CPU on the mapping spinlock
+insert pages into the page cache..  The kswapds were each burning
+12% of a CPU on the same mapping spinlock reclaiming page cache
+pages. So, overall, the system was burning over 50% of a CPU
+spinning on the mapping spinlock and really only doing about half a
+CPU worth of real work.
+
+Same workload with one kswapd (i.e. single node)? Contention on the
+mapping lock is barely measurable.  IOws, at just 5 concurrent
+threads doing repeated fast accesses to the inode mapping spinlock
+we have reached lock breakdown conditions.
+
+Perhaps we should consider spinlocks harmful these days...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
