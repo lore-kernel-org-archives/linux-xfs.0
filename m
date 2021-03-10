@@ -5,141 +5,141 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAFDBC433E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 22:41:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDAFAC433E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 22:42:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D59D64FCD
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 22:41:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6AD664FCD
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 22:42:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232177AbhCJWlX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Mar 2021 17:41:23 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:60786 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231207AbhCJWlO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Mar 2021 17:41:14 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12AMY3rx171377;
-        Wed, 10 Mar 2021 22:41:12 GMT
+        id S232659AbhCJWl7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Mar 2021 17:41:59 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:38682 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231584AbhCJWlW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Mar 2021 17:41:22 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12AMXZoB159090;
+        Wed, 10 Mar 2021 22:41:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=9PWfdcbx9rfjb2/YsjuYUg3SKg8qIt+pCiyDOTY5Hnw=;
- b=u1KkL6TuZUfiy2CQOJwKHnzWoNlAaDBYikmruC/1BOOgled4DdRJUNsWowP958WH7Mt7
- eTdTzv9SPp6ZUa2bJlFtNiKbJ8fXmGbEs+oPDw5bpV26qYJgN/jrhAqbICu4crs6x1kY
- f878uPlVz7MWLM4s4pCYG/1Xuj+sPLboxnEtmL3X7LhnPt6r1mVQXioxNKXpcnADfOhF
- LaofkPxjsuqpBMBoKUKzKtoHBtadpkdhA4YXQKw7lZmKCSmjVuWTDyjRNyu1P+Htf2JZ
- cGl9FJhnLyDmMnTlwPWGZaIbfigmmWP1y7tibEWcDqBp6wdVumOe4VDMHEYtY1QxE6wi gA== 
+ bh=OY0px/Dhs7symPclUQdGjTgW189fCYFb/c0w1UvdzTw=;
+ b=D0IPY26yiDxX06NmRraOo6GAP62qye3t9Nj6nHAccBjOA+XWFd+p8u/P9fQLgxF5KBPc
+ H4B4JLF46qKlr9R4b3/GFh1+DQWOVTRadHsrjBUzpMq9sKN2MbmQJ4P3SbSctAj7mpcf
+ N/IkyjQyZe/YHVz9KhMWaWGITy7XjhAa+oCPjM57AG57Dk1Ks/XMKyjLopQ6HfKXINGd
+ DM43i86TTWvmfMi6P9mb9Y0jpnhpPfGTfi7zbI9PE7Dq4HRVJnbPas2M94uhrA0fAnOw
+ jLX+ad+BfrkKtyjvIj36WRFlpg3AFYqNWasEcBYDCZhhmJBueb/2kH3uJzu64m4788Zj uQ== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 37415rcqpu-1
+        by aserp2130.oracle.com with ESMTP id 373y8bvvp2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 10 Mar 2021 22:41:12 +0000
+        Wed, 10 Mar 2021 22:41:18 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12AMZTml189700;
-        Wed, 10 Mar 2021 22:41:12 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2100.outbound.protection.outlook.com [104.47.55.100])
-        by userp3030.oracle.com with ESMTP id 374kp01sgq-1
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12AMZUun189763;
+        Wed, 10 Mar 2021 22:41:17 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
+        by userp3030.oracle.com with ESMTP id 374kp01sjj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 10 Mar 2021 22:41:12 +0000
+        Wed, 10 Mar 2021 22:41:17 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HIZXY5tlyTyWDXXcYIHPPzLFwltjHFhW3GwKygYlbOyRfJmPeV65Xud/DS9C+yVIV5Vlz0PXVV2+DP0xnA38WdYe5uPCMIgrn5ga2vuoJYIzOP+BWGf+BotpJRuNnJbCarZ+eCBGst52klA3kPGmLuE5cILWXa+bQ+GWuGUL7xy0KgBx0ofWPLXiOWj3bWLcPD0krAR356ocTmg+VjqAbpi6yIFj8TXQsF5IqDy6a45FdOzNkqt0QW7Rl03sot2LiSW/Noq6Mt6iBoYvbGiH8VJH/28iUj19tlTidqb/FByhDP1t/BHyYPpW1ip27Ro617nENa5ReuZnicCa/S/3Tw==
+ b=hIuVn6pgt2aWrfKVOXZNo14Fszdu73Mfm0FhEWQmQKjYdFZ5ZFUH20Oi43zOTdxYC2wNO1K1NQYhIljiOkJqPD1U91wxl+kvl1KGmKhPxvjv1AuRhXt8UV8qbBArsWQsyviuceI1VIjBse5UA7Bujgh5kJiuyrjZLV8XTvtNW9QBTj1F3+3+6lvTjndjiwjZczlxQXGggOM7Pb+S7aMOTT+tkpYJ2fm2LZWbMKnTWUxETXuCky/kiKRFXm1w6NnJ46OdE71vEOzuCGUjwIau3S6qvmaE5Uen17qKq0AKbhvX0qqHwE8L92AGPI7MXTCBTdnu+QXauvb+g9d+Gsvanw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9PWfdcbx9rfjb2/YsjuYUg3SKg8qIt+pCiyDOTY5Hnw=;
- b=XiHjDQIxUAPW9ypYx6vpi4fUf4epa/1pjOm0y+mT0F0EsR93HUaO6dZXnkJuAvh9XSdNi1wEKYXUqp5WZeJYSynBQPWLp8YSesve1M3HBVjBjMQPNNMFzSQCT5AP/zq6LgUXARAOk936Kjpxrk1+T+czXQ7VJTyhzijaaborhoRQM3u9d+z2JlMmwBpr+AbOV54Lwb6hSiEe+tuIDANQ4aRsZpVEXLnZ+SmIKVjSf0ttwzgsmu/MKh6vRVgy6I1hef51tonMEV1sygb9IlgNLPvF0FT3huPN9jNDRxOXywuzvTAx1KHpJr2PBlCyPzxJeRQvM3mTkJBkNZnjkw1C7Q==
+ bh=OY0px/Dhs7symPclUQdGjTgW189fCYFb/c0w1UvdzTw=;
+ b=DYGqT8msjOEcrdwJ/p9hY8K+IIiCLuRiiYAgjGSaO2hkFF0rTk7Riy5kQlS0kRQWPeNKl1Qw8NaEuMHsI3U4M1qy0kNpxOlKitkEvE7YHhxCvzc7GN+go+z19DKhB8QIyt0U/4IvME1tfHoMzCBCaSonjl/4rlJnvuox2DDA9nIsyUGxxTNd8k/oYqS1JUWwXVyKvFFHsbQ60ULJTEfI1Rq3/YKLiUI97/qEpFhGJI1rsj2cKrob4DTs7Ih2s92hsYFYexRjvqS9BenIHO4VYRzLsaYIMGWt/+BQusb0eeYQYc+VsLR2FKVJRr6yWZL5m2dh4I9J/xs5Sl3VxghlAQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9PWfdcbx9rfjb2/YsjuYUg3SKg8qIt+pCiyDOTY5Hnw=;
- b=YVxjSN/HsqcFWaBK8vm2rptdJWyz/rzwNnK+rFh9bleDlK6bOvGMhcRW8p2MnEU9TblhGTZtNiKQT2nUTuJCVA20g7tlbVk+XquPR/Wq1ZsCMIOyLhKJIrBDe0v9m47GO1hKj8zz+8kYyULSpUhA1Ebj7CGOaQDYnLqriGO1v6I=
+ bh=OY0px/Dhs7symPclUQdGjTgW189fCYFb/c0w1UvdzTw=;
+ b=q0SC5wKUEWDGXzjVYkS3jEOggAFJ+7OoY5ZJxwUMPif/3hFf2cQDRaG+5jMxluz3J8E3Y8M4PJHMoU4IM/71AC1oOhl610T8olzJigfL8UUnI+OEePrrwPdRYDeMGGNArVdn7NEVG9I4yQIzT7caGlxP7w9TzM5iq/fuLyiTUKA=
 Authentication-Results: kernel.org; dkim=none (message not signed)
  header.d=none;kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
  by BY5PR10MB3780.namprd10.prod.outlook.com (2603:10b6:a03:1ff::14) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.20; Wed, 10 Mar
- 2021 22:41:10 +0000
+ 2021 22:41:15 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::f4a1:6643:4c93:2a9f]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::f4a1:6643:4c93:2a9f%3]) with mapi id 15.20.3912.029; Wed, 10 Mar 2021
- 22:41:10 +0000
-Subject: Re: [PATCH V6 09/13] xfs: Check for extent overflow when writing to
- unwritten extent
+ 22:41:15 +0000
+Subject: Re: [PATCH V6 10/13] xfs: Check for extent overflow when moving
+ extent from cow to data fork
 To:     Chandan Babu R <chandanrlinux@gmail.com>, fstests@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
 References: <20210309050124.23797-1-chandanrlinux@gmail.com>
- <20210309050124.23797-10-chandanrlinux@gmail.com>
+ <20210309050124.23797-11-chandanrlinux@gmail.com>
 From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <3b3f5f27-7a5e-2a69-0fc3-28fc2b339e36@oracle.com>
-Date:   Wed, 10 Mar 2021 15:41:09 -0700
+Message-ID: <b6ff1508-9977-27f0-8bdc-d4347a3e6523@oracle.com>
+Date:   Wed, 10 Mar 2021 15:41:13 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.0
-In-Reply-To: <20210309050124.23797-10-chandanrlinux@gmail.com>
+In-Reply-To: <20210309050124.23797-11-chandanrlinux@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [67.1.223.248]
-X-ClientProxiedBy: BYAPR08CA0055.namprd08.prod.outlook.com
- (2603:10b6:a03:117::32) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: BYAPR08CA0037.namprd08.prod.outlook.com
+ (2603:10b6:a03:117::14) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.226] (67.1.223.248) by BYAPR08CA0055.namprd08.prod.outlook.com (2603:10b6:a03:117::32) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.17 via Frontend Transport; Wed, 10 Mar 2021 22:41:10 +0000
+Received: from [192.168.1.226] (67.1.223.248) by BYAPR08CA0037.namprd08.prod.outlook.com (2603:10b6:a03:117::14) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.17 via Frontend Transport; Wed, 10 Mar 2021 22:41:14 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 76c37e31-e95a-4403-0c33-08d8e4159a0a
+X-MS-Office365-Filtering-Correlation-Id: 3345a848-72fb-4386-67ca-08d8e4159cc6
 X-MS-TrafficTypeDiagnostic: BY5PR10MB3780:
-X-Microsoft-Antispam-PRVS: <BY5PR10MB37804D77367545EF7FDD5DB495919@BY5PR10MB3780.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4714;
+X-Microsoft-Antispam-PRVS: <BY5PR10MB3780037C8CDD71B003F0A5B095919@BY5PR10MB3780.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:628;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 8gxp2wRT9FL13fo403qkb627rQ851jr/74B8GmFd9JLojK4eAHFKwW6iWbz5C7CDlNKtPcW0YtmbKtUzMd0uWWeoJ3Sso+C+reS0btmeLQmrRfyVw4QVfyCgAQc4b8V5F6nRShkbk0VyvS0cHS/w+OpbDLT4U5CarxnBlW6LlWp4TZ6DoIm9UBDGuzAVjBvfFYAVvHUETQd60RCAM9XGwiQb6TzC8WJg3Ii75GWNhQWcLm8/Fi32on5Dh5D6dECNPXOE1Um0SToZOM9QFUvD/6EceVU1VxoNU4x+KM5PerP8az4LJYOSQ0PNkgTkFceBmc+a3EZa4nyzzg6/kmeWB8Aex5tFW/cmIRC0qZoTl3boS8JsC3LwBXA2S9lT/vnQKM5TbF8+iX1O6sS/qKsubY5HEz0ceZe+dIrl8MG6rT3+fwhKmD3vOHwo3J8Nd9FbPFlAhWtuv6s93RvQ4ycxF/EHx7QlSdEXWaKRi+E5bs4uHGnHESIxYEFNY+fw8K4hTbexAxMHavOqxn+rpZeLeHxanQhOyOQtJ9ZposGql748pVXjL3HhyXfBbCvHQk1dtkKhrr8aJwilImn6BuMXpZU5C9RsqKLjSmEzOlfDVYg=
+X-Microsoft-Antispam-Message-Info: S6jpSv+BJIYUsvNeCMMS4R68x3U8Qvm3hYYZ3iMG5Fbuo47YK4v1tiLiCpwX9E735tuY7oF0cwo2aOkOPXhN3d1yb76qvgkEjVU2EZtsqGm9nc4TjFx/Q1/fJKypZBjAYo5GmbiRO2QYK161s2Js3qk4x3LuhHPmfVqGYWxPwyXduRv9n8MMAEgoR4UwRowaFrVgEjFo5TKm8Ny/XL0JvZC3+6DVWIvRUY2P3PG0YT8RcjvuestP9MKPgaIVc/tyXlF9rTSyzEqWngbV19AxOmmqvgsKnjZwiOL17s+dwWnX/OF1nINwAXpw3kUcEbtfOnm0oC1LZpRwJd4AiotHsjHSpoO0dsL8ZZPNEfnwRwUyXADg6M7mdq+ShpBLifsSGY8fP6mut4ZN8UXurd2BjIvcz4Y3mPpSY9ZWzrhow9YiPMMwr1RGWToWu++XT02LsN3XZqCmnLjmyrqaRs/A73H8oZSBnjgkScVtaMvKe25WRdKmRiD896zyIsYm7ayJ/SS7vKfjpNpxOtXz3png6QaCa9abnapgvdfFwTo5bzcy37bhXUa5fw/ucyuqrOyt94Ua7bBnoVXDiv6xJQc91EfwcmVn7CY11BZ4/X3QLf4=
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(346002)(366004)(376002)(396003)(39860400002)(83380400001)(8936002)(316002)(53546011)(956004)(5660300002)(44832011)(478600001)(36756003)(2906002)(31696002)(86362001)(52116002)(8676002)(31686004)(2616005)(186003)(26005)(6486002)(16526019)(16576012)(66556008)(66946007)(66476007)(4326008)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?b2lCaWVRUThMZmpUV1dNUjByNWI3VHI1VElFSkVkK3NqUkhJc1BVc1c3WWlt?=
- =?utf-8?B?RzY2SXp0NGtpOFpqK3MyWG9rS3luaDFUSTVYV2RoUk02SkU5S0JEOGFtNTNX?=
- =?utf-8?B?RkVIQzFpaDAvMjVoZWZHdjF4RHNOeThPUUd4T2hqYjduWmw5d2dFbmNDd3V1?=
- =?utf-8?B?TnZIbVNkVHlVREY4RnQ1ZE92djZKL2grbDErNlREZ0Izc2dpb1RnY0NvaXpN?=
- =?utf-8?B?OXp5cngxY1pUMm00cFlUdm9ibFBsb2hTcGlBNGxwcWkxbDFndzVNT1NGMytZ?=
- =?utf-8?B?Zk9JL29rRktvSmNvU0k5SGt2Zkxrd2FnNXN2Zzdrd0hsbzBsUEZZRko3aVNi?=
- =?utf-8?B?emwyS3J4amxKK3poR09VdFo4WlRkZ214VmJvYk93Y1ZsSDFNL2ZoV3NtRGlm?=
- =?utf-8?B?Z2JJd25LRFJDeUYyZjVIM0VJNTIySU1teHE0SlZ6cXZ0UVVXQTgzZ1BrUVg3?=
- =?utf-8?B?L3ZPZW1XVmdVejEvT1JuNkhYV1R4V2d6eGRMTEJMT2ROSm9NUFM2M2wzOUI3?=
- =?utf-8?B?RVRUQzhZOHYzK00wYkxsMEpIcUFlNUU4VWpQK1JEUUZlSUkvZ3k4MGtGcUNC?=
- =?utf-8?B?dWdUOGltenFHVUhyL1FqZmRPYzZJbEVYL1BVTDcvTHI1ejRUNW5CeThYNkVl?=
- =?utf-8?B?aXB1d1hvcitRT3NoVDFJdnR4UTBMMW50ZFROSmpDTE1OS0JCY3oyc3c4NndQ?=
- =?utf-8?B?VHVmd09DVUhWTTg4cGZkcDU0MkkwaTQvZVF6dGltdFNBKzBiSS93MnBVTGZJ?=
- =?utf-8?B?a0xOeVI4cU1OV2o5Rk4vUTB5UUZ2RnpNUEd5NjM4dUxGK0tNaDNpdm5WVFdD?=
- =?utf-8?B?M1BvZExPNzdhb1d6OS94M1J3UjI2RW5QeEdvMWNBcS9USjJZOVJEWEswb2dO?=
- =?utf-8?B?UWlEbDFlczc5S3pUSzRCZjRBSFp0SnZtODJidEpieEpoMXprVTFTSFdxK2ZU?=
- =?utf-8?B?Zlljb2ljS0VIQjJiWlpuM2NLUVlhbVNFL1dGSVRhK3l2U1VESWVtaUk4UVFC?=
- =?utf-8?B?WVBKd0pnaHIweFdQNkZWVmFkdXRBb1czNktYVVBqSnA0TDBQL1ZvaWd5elg4?=
- =?utf-8?B?ZUlKYUF4dmluQXFiTEJFN3IxUU5pMHhjdVZYWFVLb0J1VXJrN1R2VFhYZmNE?=
- =?utf-8?B?ZkdhaTRZblF0ZDQ2Yy9uSHJzV2kwM0drSlc4Y3NiK2cxNEFxQVJaRHNKcUdC?=
- =?utf-8?B?MkplYTNnaWtmNWcweTdKdEY2anVoR0Q4Y2ZQSGRWUDhlWEpSSWtnSHlxZjdY?=
- =?utf-8?B?bVZ3bHA0T0VaaHFNbmRmREpKRWtzVGpLazZpazhHYm9kc0hmS0FoNHJYYTVw?=
- =?utf-8?B?R3FzbHhsQWRPeWxtMkFZMVFZSTdmVjNVZXFJMkxNUDRFaFRjZ01XRHFFMisy?=
- =?utf-8?B?MURCRWdvWFYrNlV3eU9BMVk0K0lKS2xWVzdxTEY2bi8yMWp6SVlDTHc2RDNp?=
- =?utf-8?B?L3JOQmoxTktoQmpWR04zbllOZXpXRzNma2ozY0VSWW9HcG1mUXhBOGc5UDhY?=
- =?utf-8?B?NzlkcG5CeVd6anY1SndxZG1tUllNMkltcjM1SDk1ekh4aGJUSUNqSHlnMFhu?=
- =?utf-8?B?TGw5VXFiS3pMQ2NmUGQ1dDdKUlpwLytKb3I2aWNKQkRGWHRRRUVJSnJvZ1cr?=
- =?utf-8?B?ZHlTY0FTSUk1TlJPa2hzZXFlR1BCNHJoZWkvLzJXT09CZ3JMaE9VQVhxa05P?=
- =?utf-8?B?Z0dHV0ZWekZxZmZyb0pkRFdldVd1RHdVeWhQOE1JaGJTbmoySWcwNjV3WEZQ?=
- =?utf-8?Q?dTiOBwcRKOFUXvkV3wt+jMVfPpjPxpO6NqX2PxS?=
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?LytMUTJOcXJnNlYwcmJZcGF0bHZLSnBoMnhKSFB0Yk1ueEI5STNZNkF0SGtJ?=
+ =?utf-8?B?azlqdjIxQ3kzS2tMNmJnVmQ0d1hKZk1iUFdzaE1uQzJuVUpNUWJDMDhJU0Yx?=
+ =?utf-8?B?ZHdSRWF6Nlg2dEJaUzg2dEFMdlQrT2E5TnZyY3RaMm1XZysrQnNsWGlCMzJw?=
+ =?utf-8?B?MTlOQWdVR1lFN2ZDcnJEU3pWV2xaWDNLd0o4QnhVZmhaMXNNWTNSOFpXMGJt?=
+ =?utf-8?B?QUlKeno5OTMwVm01YnZNbE5PYlhTOFJ4c3FPVnpsME5oU3ZZNHhndnNIZDdZ?=
+ =?utf-8?B?Nm1yakRGNkJiWENXd0NQVmlYQWIzbVpFNXU4d2NQbEVML2NQUVMvNkhUb2RQ?=
+ =?utf-8?B?bkNwcXdId0dieXliYjNVVWh2MUVjOFY3eVJ2K2xtMGN0TUNVR3BMcG5IUW9v?=
+ =?utf-8?B?d3R2NDFiN3pzWFArcDJNYnRjQjNQSy9BbGp4TTd1NExWSlpNVk0ydENKazVw?=
+ =?utf-8?B?UDM2NTArZ3FxQTExRFhkRTNiK1NtUHdHVmpFZ1Z1R2xvUlo5WmRPcm9oclBY?=
+ =?utf-8?B?UEFSYk5vRVZheFdXOVZCSFRxY0dWajNWczl3Qlo0M2c5K1hIajlEMVVsTGNu?=
+ =?utf-8?B?c0ppN2FpdE92Q1huVWRnYjFkalZyQzkxTGcxS2FlVVhmUXVoU2VkTm40YVBv?=
+ =?utf-8?B?MGRCM0hQajBrMGlvTkowLzlHSkRLNTFlOWF2MXVUeXJJcThSRlJadUlBMjNu?=
+ =?utf-8?B?L0JubjJPaXBUVFU0SWpzL0FyU1FoWUhLaUZZMUVhalEyMHpyMWpBNG91a3Fq?=
+ =?utf-8?B?UElMdGNFWVNQbDFndkd0N1RnNUZqdEkwb1NaeXE0QUFUd2FBaS9HVnV3ZSt6?=
+ =?utf-8?B?UWNtcjQrSXFCZWpmY3JhVDh5ZkV1T3lCWmVRTS9DSzdnM0wzYmxnTEtlVlND?=
+ =?utf-8?B?dDV2T0lUUzVlRjMrWkFwSFJjYml6RktETTIzNTZEWG5WRm5Lb2FxNkdNdDls?=
+ =?utf-8?B?NVk1MVE0dEpLZFBaL3lCM1dkdzRxcm04aW1PVVVwa0dBdFF5Vm9QUXFGemIz?=
+ =?utf-8?B?UUFyWkhjYXhlUWNGZUFvdHEyVGs5cGovRWg3NmdkNFFVQ1pWNzRDbnArdmI3?=
+ =?utf-8?B?TjZHT3kvSHgwWkIveUliL1F4b3pONno0c2JhRU9QVW5QekxzbmRIalA5UFRV?=
+ =?utf-8?B?ME1aTVRGbWs2dWdPcWx0KzlBOEp5MTdwaDkvU2s2cUhUeVBxcUVRc2JGMVlF?=
+ =?utf-8?B?bHl2bXNNNnFVcnhpWHJBTGkyMGNZVlArelBLMUp4Y2pySHIyNUN4aGZSSm9i?=
+ =?utf-8?B?dFF2eWRGWFNGVTl0UEZocEtnandOaTJFMEh5RVRBUVhQNWpwSTI5NFNaVVBv?=
+ =?utf-8?B?WlRQMy9YR2duVENjSnhGTnFZSnJVb056Z1grTUwzTHRZc2RVMVVyc25LZmE0?=
+ =?utf-8?B?TzVXZDUvSFI5QmJlOXhuQk1tQ09vZms5UTRSZmlYNldjVjFMZ1BqSXNIZXFy?=
+ =?utf-8?B?ZUZuT1dqYkgrSnVDWHRISHVVUjM5cFJFdlE5L0g5YjUrVHgrM0JWcWtxbzBX?=
+ =?utf-8?B?ZEo0b0JKSWlVY2FBWTZSTU9EVDNoYzJaNE4wc1VuMmQwVzYwQWhnWVJnbHJ6?=
+ =?utf-8?B?RTYyRDBta0taVXRmbHJrRzZUSGFDMGZxMWNRdHdzM0JpVFNUYlhhdmczN2Ny?=
+ =?utf-8?B?RFdjS2JpVVR2TkU5NUdtbzRKVlcwcTl6cmVEMlprUFgxa0pPODYzei9iMUFH?=
+ =?utf-8?B?aC84endvUUUxbVgvSllUMVJPT3Bub3hrOXRNMmlsRjVMVUczYmhoQWtLZlpB?=
+ =?utf-8?Q?SPtHvGjUSnVm8Ffs+qAkB5UTdXSf1QBw4O8hHVp?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 76c37e31-e95a-4403-0c33-08d8e4159a0a
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3345a848-72fb-4386-67ca-08d8e4159cc6
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Mar 2021 22:41:10.4124
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Mar 2021 22:41:15.0601
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +Bhie1cikmdXHGwa2jHBUvanNdmX8GYiUGuGPXJoIy8XLOF/Ac48ng0BNGhK4q0h0pJuua0RdLFG9yKu7mVNZV+WQNJfc2w32C0ClGroBvI=
+X-MS-Exchange-CrossTenant-UserPrincipalName: JYJ48CEOXy3pBX8TZDvgs1tlwtNmmwUiuVRrPqXlgnssOlQKuYS/99oXVKi+yy+mOGB0fdBAUEfxZemS0d3rK8aqJfv05jQ9JbUBUodNzdE=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB3780
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9919 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 adultscore=0
@@ -147,9 +147,9 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspe
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2103100109
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9919 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 lowpriorityscore=0
- impostorscore=0 mlxlogscore=999 malwarescore=0 suspectscore=0 adultscore=0
- phishscore=0 spamscore=0 priorityscore=1501 bulkscore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 mlxscore=0 phishscore=0
+ lowpriorityscore=0 malwarescore=0 suspectscore=0 adultscore=0
+ mlxlogscore=999 spamscore=0 bulkscore=0 priorityscore=1501 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2103100109
 Precedence: bulk
@@ -160,35 +160,34 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 On 3/8/21 10:01 PM, Chandan Babu R wrote:
 > This test verifies that XFS does not cause inode fork's extent count to
-> overflow when writing to an unwritten extent.
+> overflow when writing to/funshare-ing a shared extent.
 > 
 > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-Ok, makes sense
+looks ok
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-
 > ---
->   tests/xfs/533     | 84 +++++++++++++++++++++++++++++++++++++++++++++++
->   tests/xfs/533.out | 11 +++++++
->   tests/xfs/group   |  1 +
->   3 files changed, 96 insertions(+)
->   create mode 100755 tests/xfs/533
->   create mode 100644 tests/xfs/533.out
+>   tests/xfs/534     | 104 ++++++++++++++++++++++++++++++++++++++++++++++
+>   tests/xfs/534.out |  12 ++++++
+>   tests/xfs/group   |   1 +
+>   3 files changed, 117 insertions(+)
+>   create mode 100755 tests/xfs/534
+>   create mode 100644 tests/xfs/534.out
 > 
-> diff --git a/tests/xfs/533 b/tests/xfs/533
+> diff --git a/tests/xfs/534 b/tests/xfs/534
 > new file mode 100755
-> index 00000000..bb6f075e
+> index 00000000..06b21f40
 > --- /dev/null
-> +++ b/tests/xfs/533
-> @@ -0,0 +1,84 @@
+> +++ b/tests/xfs/534
+> @@ -0,0 +1,104 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0
 > +# Copyright (c) 2021 Chandan Babu R.  All Rights Reserved.
 > +#
-> +# FS QA Test 533
+> +# FS QA Test 534
 > +#
 > +# Verify that XFS does not cause inode fork's extent count to overflow when
-> +# writing to an unwritten extent.
+> +# writing to a shared extent.
 > +seq=`basename $0`
 > +seqres=$RESULT_DIR/$seq
 > +echo "QA output created by $seq"
@@ -207,6 +206,7 @@ Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 > +# get standard environment, filters and checks
 > +. ./common/rc
 > +. ./common/filter
+> +. ./common/reflink
 > +. ./common/inject
 > +
 > +# remove previous $seqres.full before test
@@ -216,79 +216,99 @@ Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 > +
 > +_supported_fs xfs
 > +_require_scratch
+> +_require_scratch_reflink
 > +_require_xfs_debug
-> +_require_xfs_io_command "falloc"
+> +_require_xfs_io_command "reflink"
+> +_require_xfs_io_command "funshare"
 > +_require_xfs_io_error_injection "reduce_max_iextents"
 > +
 > +echo "Format and mount fs"
-> +_scratch_mkfs_sized $((1024 * 1024 * 1024)) >> $seqres.full
+> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seqres.full
 > +_scratch_mount >> $seqres.full
 > +
-> +bsize=$(_get_file_block_size $SCRATCH_MNT)
+> +bsize=$(_get_block_size $SCRATCH_MNT)
 > +
-> +testfile=${SCRATCH_MNT}/testfile
+> +nr_blks=15
+> +
+> +srcfile=${SCRATCH_MNT}/srcfile
+> +dstfile=${SCRATCH_MNT}/dstfile
 > +
 > +echo "Inject reduce_max_iextents error tag"
 > +_scratch_inject_error reduce_max_iextents 1
 > +
-> +nr_blks=15
+> +echo "Create a \$srcfile having an extent of length $nr_blks blocks"
+> +$XFS_IO_PROG -f -c "pwrite -b $((nr_blks * bsize))  0 $((nr_blks * bsize))" \
+> +       -c fsync $srcfile  >> $seqres.full
 > +
-> +for io in Buffered Direct; do
-> +	echo "* $io write to unwritten extent"
+> +echo "* Write to shared extent"
 > +
-> +	echo "Fallocate $nr_blks blocks"
-> +	$XFS_IO_PROG -f -c "falloc 0 $((nr_blks * bsize))" $testfile >> $seqres.full
+> +echo "Share the extent with \$dstfile"
+> +_reflink $srcfile $dstfile >> $seqres.full
 > +
-> +	if [[ $io == "Buffered" ]]; then
-> +		xfs_io_flag=""
-> +	else
-> +		xfs_io_flag="-d"
-> +	fi
-> +
-> +	echo "$io write to every other block of fallocated space"
-> +	for i in $(seq 1 2 $((nr_blks - 1))); do
-> +		$XFS_IO_PROG -f -s $xfs_io_flag -c "pwrite $((i * bsize)) $bsize" \
-> +		       $testfile >> $seqres.full 2>&1
-> +		[[ $? != 0 ]] && break
-> +	done
-> +
-> +	echo "Verify \$testfile's extent count"
-> +	nextents=$(_xfs_get_fsxattr nextents $testfile)
-> +	if (( $nextents > 10 )); then
-> +		echo "Extent count overflow check failed: nextents = $nextents"
-> +		exit 1
-> +	fi
-> +
-> +	rm $testfile
+> +echo "Buffered write to every other block of \$dstfile's shared extent"
+> +for i in $(seq 1 2 $((nr_blks - 1))); do
+> +	$XFS_IO_PROG -f -s -c "pwrite $((i * bsize)) $bsize" $dstfile \
+> +	       >> $seqres.full 2>&1
+> +	[[ $? != 0 ]] && break
 > +done
+> +
+> +echo "Verify \$dstfile's extent count"
+> +nextents=$(_xfs_get_fsxattr nextents $dstfile)
+> +if (( $nextents > 10 )); then
+> +	echo "Extent count overflow check failed: nextents = $nextents"
+> +	exit 1
+> +fi
+> +
+> +rm $dstfile
+> +
+> +echo "* Funshare shared extent"
+> +
+> +echo "Share the extent with \$dstfile"
+> +_reflink $srcfile $dstfile >> $seqres.full
+> +
+> +echo "Funshare every other block of \$dstfile's shared extent"
+> +for i in $(seq 1 2 $((nr_blks - 1))); do
+> +	$XFS_IO_PROG -f -s -c "funshare $((i * bsize)) $bsize" $dstfile \
+> +	       >> $seqres.full 2>&1
+> +	[[ $? != 0 ]] && break
+> +done
+> +
+> +echo "Verify \$dstfile's extent count"
+> +nextents=$(_xfs_get_fsxattr nextents $dstfile)
+> +if (( $nextents > 10 )); then
+> +	echo "Extent count overflow check failed: nextents = $nextents"
+> +	exit 1
+> +fi
 > +
 > +# success, all done
 > +status=0
 > +exit
-> diff --git a/tests/xfs/533.out b/tests/xfs/533.out
+> +
+> diff --git a/tests/xfs/534.out b/tests/xfs/534.out
 > new file mode 100644
-> index 00000000..5b93964a
+> index 00000000..53288d12
 > --- /dev/null
-> +++ b/tests/xfs/533.out
-> @@ -0,0 +1,11 @@
-> +QA output created by 533
+> +++ b/tests/xfs/534.out
+> @@ -0,0 +1,12 @@
+> +QA output created by 534
 > +Format and mount fs
 > +Inject reduce_max_iextents error tag
-> +* Buffered write to unwritten extent
-> +Fallocate 15 blocks
-> +Buffered write to every other block of fallocated space
-> +Verify $testfile's extent count
-> +* Direct write to unwritten extent
-> +Fallocate 15 blocks
-> +Direct write to every other block of fallocated space
-> +Verify $testfile's extent count
+> +Create a $srcfile having an extent of length 15 blocks
+> +* Write to shared extent
+> +Share the extent with $dstfile
+> +Buffered write to every other block of $dstfile's shared extent
+> +Verify $dstfile's extent count
+> +* Funshare shared extent
+> +Share the extent with $dstfile
+> +Funshare every other block of $dstfile's shared extent
+> +Verify $dstfile's extent count
 > diff --git a/tests/xfs/group b/tests/xfs/group
-> index 77abeefa..3ad47d07 100644
+> index 3ad47d07..b4f0c777 100644
 > --- a/tests/xfs/group
 > +++ b/tests/xfs/group
-> @@ -530,3 +530,4 @@
->   530 auto quick punch zero insert collapse
+> @@ -531,3 +531,4 @@
 >   531 auto quick attr
 >   532 auto quick dir hardlink symlink
-> +533 auto quick
+>   533 auto quick
+> +534 auto quick reflink
 > 
