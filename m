@@ -8,148 +8,148 @@ X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77B6BC433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F95CC43381
 	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 23:50:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BFA564FD4
+	by mail.kernel.org (Postfix) with ESMTP id 7196664FD0
 	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 23:50:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233849AbhCJXtz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S233570AbhCJXtz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 10 Mar 2021 18:49:55 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:57256 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233937AbhCJXtc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Mar 2021 18:49:32 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12ANi6YG067459;
-        Wed, 10 Mar 2021 23:49:30 GMT
+Received: from userp2120.oracle.com ([156.151.31.85]:54932 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233910AbhCJXtp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Mar 2021 18:49:45 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12ANjprQ057643;
+        Wed, 10 Mar 2021 23:49:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=qMTUOOXhiAkvotsme5o7ema0Wp0qq0ekHqKZajsYUv4=;
- b=bC/ROqP8g1rm4sBIAXFst7wI77IL7hN5btaH12rnxZHPGiuceXZwoFxEmW3HLDDnF3sB
- 0CImxczlkqcdFJFycQp8Y4mfGvIaA6Fs0//U66Oy2XlI0zQfJYaUiFJBgBnG+0WpwMYb
- CpPhGitayAHSoDyCMQ/C3dJ0X+HvPBnZoljAYlygl7SdBev8Dud8UqOf8sw6XdxSdgSl
- +rzsI/Fsa5nswzt9HD561lShSDQnVqjtL3cQPV0OeclZwjgAD3Q6p0iviNq5Ku+EM3Fz
- JTdHUe5M60nwbHttCmt9Wvpb7xxwABT3WAi4Xu5PxROMK3If0VgaMEuTs1texRDjmrl6 +A== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 37415rcuhr-1
+ bh=JFj1+TK1QM+uMakMKoE07lX8JwzKeXcOIBwNExjusgs=;
+ b=iVZ6er2dtiN/g1iLdwx2sSVQJR9W2WXw+JqwqoCBTHuylAv5S+JwbzUvcinLI8kd/NW2
+ IaHS5UQOypNvILTHnLdiYoZNmbWCAYxKFUGPBvHsZ0vnG2gi6DUtEkugs9Mx3rdYeVef
+ dXFPRwSROVAoyOsQQhz1xzjmzx1xhZ7GOO8VgyfJziy1mhIRlKANwRSKWWHe89wgA2rW
+ R4ZuMSyimVSv2GuZ7P42cebDUCSXa23lqi4h7tpQqAcU8Hj/+GdKArJiTqIbZ7hpBdOL
+ T0teIBnVHDeQ6iWF1jqI7o+dX2ZTANzXETV2a6nW5YYbhAn1uXp0nFxKauN/E/GSIXrm DQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 3742cnctm1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 10 Mar 2021 23:49:30 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12ANjTCQ029812;
-        Wed, 10 Mar 2021 23:49:29 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2174.outbound.protection.outlook.com [104.47.56.174])
-        by aserp3030.oracle.com with ESMTP id 374kaqwvmy-1
+        Wed, 10 Mar 2021 23:49:43 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 12ANjcwM043569;
+        Wed, 10 Mar 2021 23:49:42 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2042.outbound.protection.outlook.com [104.47.66.42])
+        by aserp3020.oracle.com with ESMTP id 374kn1p6ja-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 10 Mar 2021 23:49:29 +0000
+        Wed, 10 Mar 2021 23:49:42 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fTW3TKX95BueR904PMp4qYnteb67zFNQlOkwCNpRZVJkYfUcoByoNDkU+Jzl3S3bAh4W1CQgQ7beA7aPpLN25CLzVPppnBEKzZxFBSHJP/YmW7q7LXMMBxsR1+SB0ErKMy5iHxn1cFtb1Fky6V1SxeXy2MK+irr6IKuBDEktUSy8PCS6If4/zfM2IqKfLih8Y8nlt4AIPSG7AlnWR7azCKeFYQPYpZY+RBTFYkeG4kwJxdmE18c6wrGalN7DNZ7s6GawAyoPoylmP4nLQADY9SDquvKkNy4XWGr7HbZ4RQg/oIvCYRCfHGlt0xzo1LJU4MQ6UoOKSPTnX9v+HXT/Hg==
+ b=MZ+6YIAefUwrN3OfWlehs0kW9aIF82qkKDDW3NdLXma/w5r8tcjiM5ENvR3iToBu2fRKymCq3Wb9dnDopXCl1gpPn+Nn8iWYCKeoxv7a3Vl7Xp8zkXHbZ61VtN55DpCI7aG+ww1WYVQv58hnTW/NMn9nc+gru+ILUouGUtFK0bApY0suqEnW43Yoz+sWPjr7LfaEprtJfVXxh5DhnYUbqFh0ZPxbFdx0FHnGo777RPlt0KG0BHx26mYcu5wd7HevMnJDmZaXbgPQ6nBeOTQCb/gEkLLpLAuTbcAMvlnTxgfeO4H2LkTY5ytb7Qa3orAD2J9r97MKxlwrcIgchwz6ew==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qMTUOOXhiAkvotsme5o7ema0Wp0qq0ekHqKZajsYUv4=;
- b=kwOxd7DZoOQ0Z+R8A0YTOUIGLhcb48K6SnyAl8bUqlRKa+jrJo9x41JZb/5Opf0zDxsX0QE+ga17bmTaLekpmycb6MDFxFZinZsDW27vBO/6W5v+eVAQtQqA+nOdswL+w5Ud4pVV3oGYLHiqq8j3B/vnEb35IKDE4iRwLw4w6DF4FVshHpJQzhcMO6+7DhzjFQet0gN8oxRBU9E13b4e6kp6Lr9G78xeyXuWyjatd00f78g2vzuT2qydjd/IOFUDnkC/dQf33VYWskYC0b/z4jyTLR6fO2VJtYMzpKh17xZBQuguXUmk8WjfBvyaZZzY9oqxkhWnW5V/q2t+zBo71Q==
+ bh=JFj1+TK1QM+uMakMKoE07lX8JwzKeXcOIBwNExjusgs=;
+ b=N6LaBU3pCrKkQFR29KhtdxtiI85o+hC4caPM/V2c560qVJQehdI7WSlVqLhv4I/m5nMkJCxQNfQDfRW6qsXKu5Cb+YHkLxGSQC2MvJBDvkdoBv7bwfBzWcMWq3FcwhnN7fVJyK4dKZzePpfqpdb/Er+J+myNRuyALCmYMkgPSvlHQO5Sb7LEYbKwv1EK9ZOKl/nXGtbKFqovviL73/H7JYp+7WSk/SQB4fbXKOUbvkRC776TU7KjS3Pxqp8XWpnT9exL6IuYYAoSeW0WI/WrfqP2YV6ccBwUWZHhdeDIivaraYKJKKMsZzmQic6ti4Y/TlsIdrjFsO0Frw4glk+XdA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qMTUOOXhiAkvotsme5o7ema0Wp0qq0ekHqKZajsYUv4=;
- b=v1guEnJuouOJNKtTvhx0CDsv6wRuY1SkhqnM9N/HU6uD3+CS2KxqORIxzZfC3hDLPAJ9po083dD2N1d3qkZvowlrhP9+7EslmxQE28IUtcSvjlBE8KCEMETVfvO0feLVH77fAvK1LFPfWjhwboKVcKVNnCF6/0fWL3EpqlLN0AU=
+ bh=JFj1+TK1QM+uMakMKoE07lX8JwzKeXcOIBwNExjusgs=;
+ b=QC1hv6AcYlYKmOMiXgvejU3v+99iChySDp1Qqg5cRLDhI8lijXQRiVps+e7qOO4G4a4jacDCDGchzelcOamCyMBQ+3DtZERZw0yPUm2LVoFrpzRzP4IcpuRA1niZJ4BwVcUi6utoY5jHRDxRHhLCQFnBWxVqjtJjyqdWekiaa4k=
 Authentication-Results: kernel.org; dkim=none (message not signed)
  header.d=none;kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by BYAPR10MB2566.namprd10.prod.outlook.com (2603:10b6:a02:b4::21) with
+ by BY5PR10MB4177.namprd10.prod.outlook.com (2603:10b6:a03:205::13) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.21; Wed, 10 Mar
- 2021 23:49:27 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.28; Wed, 10 Mar
+ 2021 23:49:40 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::f4a1:6643:4c93:2a9f]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::f4a1:6643:4c93:2a9f%3]) with mapi id 15.20.3912.029; Wed, 10 Mar 2021
- 23:49:27 +0000
-Subject: Re: [PATCH V6 11/13] xfs: Check for extent overflow when remapping an
- extent
+ 23:49:40 +0000
+Subject: Re: [PATCH V6 13/13] xfs: Stress test with bmap_alloc_minlen_extent
+ error tag enabled
 To:     Chandan Babu R <chandanrlinux@gmail.com>, fstests@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
 References: <20210309050124.23797-1-chandanrlinux@gmail.com>
- <20210309050124.23797-12-chandanrlinux@gmail.com>
+ <20210309050124.23797-14-chandanrlinux@gmail.com>
 From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <c587ec5d-11cf-9927-693f-ad39d1dd4b2f@oracle.com>
-Date:   Wed, 10 Mar 2021 16:49:25 -0700
+Message-ID: <537dba42-b671-faa0-2bb0-999b2b7e346f@oracle.com>
+Date:   Wed, 10 Mar 2021 16:49:38 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.0
-In-Reply-To: <20210309050124.23797-12-chandanrlinux@gmail.com>
+In-Reply-To: <20210309050124.23797-14-chandanrlinux@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [67.1.223.248]
-X-ClientProxiedBy: SJ0PR05CA0083.namprd05.prod.outlook.com
- (2603:10b6:a03:332::28) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: SJ0PR05CA0063.namprd05.prod.outlook.com
+ (2603:10b6:a03:332::8) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.226] (67.1.223.248) by SJ0PR05CA0083.namprd05.prod.outlook.com (2603:10b6:a03:332::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3955.9 via Frontend Transport; Wed, 10 Mar 2021 23:49:27 +0000
+Received: from [192.168.1.226] (67.1.223.248) by SJ0PR05CA0063.namprd05.prod.outlook.com (2603:10b6:a03:332::8) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3933.13 via Frontend Transport; Wed, 10 Mar 2021 23:49:39 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 71a1a9c7-6fdc-4f8f-355f-08d8e41f23fc
-X-MS-TrafficTypeDiagnostic: BYAPR10MB2566:
-X-Microsoft-Antispam-PRVS: <BYAPR10MB25664BD9B75554A4B0F4B25095919@BYAPR10MB2566.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4714;
+X-MS-Office365-Filtering-Correlation-Id: 996283da-1ea6-44df-3c23-08d8e41f2ba3
+X-MS-TrafficTypeDiagnostic: BY5PR10MB4177:
+X-Microsoft-Antispam-PRVS: <BY5PR10MB417772CE4461871CB8BE5F4495919@BY5PR10MB4177.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:219;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: DOL+6+QfMNkAXiOJEculortclFzhObwJ52cZY8sQtEFDLJdMuadBp9wxshsVL4DYPMpyN8HFg0feP8/X9LfUftAIvhckkwkDQ+uJUv8KKnrbeBCCjHDCHDfsRQBuIBXWiHY4I/jlrTAqmi37il941q3FQeUHp0Xp1XzC3ShPAcM1sM8KLOJzvNXNX80TQxyIXp7cqPD3kYBBSLzu41kG+ncCd2Zqx11V9B1JZ2jXVzAhzj6+eGmtSDLSzG+8BY5g2gzA4aPbTbVWmi6xcvgEMnKCP5v2h/LpCtj4ac3dvTVl5e0G+C2QpRPFQzZY0zAEHnPTCmmyn7InJcOFk78PRp5SOizUaGGe8UCACjsTt5XY+nMQEoZPtdaOLtet5+3YLT4eXHq2xHwkzIt70QeaElzjQtV/nsj912TeARjQNrO1bMJHyI6G1xh6/OUxxT04IKJqUHoGWDdQTolRP3hfmGbM8wcSIM5kXQbCHCvHeFPqpJ9dIAqYvGRv+2kuN43nVJ5/vWt2hbxfVweQpLRjlQzRwet7nDIvyjEDOAue0nziAt1ryh4+4OpL5v6odkMCYBDgP8BrAT8sSUwmzO3ARcyulri9scWMccBHJFQwK/0=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(346002)(366004)(376002)(396003)(39860400002)(5660300002)(8676002)(31696002)(2616005)(66556008)(31686004)(16576012)(86362001)(8936002)(4326008)(316002)(66476007)(66946007)(2906002)(478600001)(83380400001)(52116002)(956004)(44832011)(186003)(53546011)(16526019)(36756003)(26005)(6486002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?MnM2b1lkSTRzR0YvWjVuWm1nMFlVZWVSS0oyY2NWdHNJSW1LelU2ZVBVY2pB?=
- =?utf-8?B?aGxBS2RCOTc2RFlzUENaMjgzUkphdnN4c0xHWG0zTTBpbWR0QWJvM1BvdDBr?=
- =?utf-8?B?NVJ4eHBkYXE5L2dZSnpsbjRrYnBnYXU5d3VDYnZqUHBKdTNxQ1ZTTDIyUXFB?=
- =?utf-8?B?TkVyOERBN1huRTdacGRPQTdxTUo4MnFFR0ljYzhWL2tYbUNJQW9Eb01rcnMr?=
- =?utf-8?B?bnRZeUFSRzBUek5vWGdLZmlpZHpVY0p6UmpZd0tWRGd2WUVrTG9BVi91eHB6?=
- =?utf-8?B?aU11ZmU4MFVYTnU5MjBHNzU5b21rTE9lQmFzcW13dEZSYVpIVUFEQS9DanlB?=
- =?utf-8?B?T3ZNa2Z2Z2NDUHFBbHNWUTdibjhBS29kL282d2lRZnJYNmp4OHNCc0dBRThH?=
- =?utf-8?B?NDJacnpWd1QzN0VEUmNIK3IzSHlIWUFYUy9QTFBCUG0ydWZMcTB3bnljanh1?=
- =?utf-8?B?QnVmNm0vd1RQM3dWQkgyYlhidDI1ODlMSDVzQTB2YUk4TG5yUE9IUFdpQlVE?=
- =?utf-8?B?dkJiYUxUbkVMZ1lCOU94NXVGL1VEeElqQ241L0UzWjBlODlxbnNWQUxHR08w?=
- =?utf-8?B?TFI0RFN4akgycmVPOTBXZ2oyd1dETEJsWU1ISDlZNHAvQm92dFZqK0d4WVJR?=
- =?utf-8?B?REVDN3QyUE5SR3MrUEJrTWZBRm9xTk01KzR6c0FROTlYYURTcEM2NGhGVE9K?=
- =?utf-8?B?MS9zSVVJYkpHQ2d3YWtqWnhhRUFrbjYxS1AwbkdDTDNPRkhTamNiTDJiVUYw?=
- =?utf-8?B?Z0RDZFlMNFZXS0lDOEo1UG1yb0xuWHNJdFF0UTJJczB4dldSZ0NLWWNXaXFN?=
- =?utf-8?B?Nk1vVTZzOU04dTBCYUpzUHVORUZEbVowMXN5V1BPNnBFb3Q4R1NWQjNDWndO?=
- =?utf-8?B?VjJ2dlA1Tm45Wm9LaVNJcGJPZ01hc2lDS2trcDh4SVNRV0tmNXFqemJlMUVr?=
- =?utf-8?B?QUtnTHhpSHdRWjdOUnpLWUhhNEljR29PNmNjK0pQbWtmVU1CZ3cydkRoUFJi?=
- =?utf-8?B?L0JqNjFkSGZmNVBpOGdURXpnUnVUZ3lSRSs4aFo4bm00Vy9DeEs1bEhTeVVS?=
- =?utf-8?B?SzVkR2RydTIvVmRCc2pabTFyNnhzZ1FpN2s1R1RTbVZsWFdTRksvRWp5M3RL?=
- =?utf-8?B?anZaUFVGMVg1TWNSK2RzM0VEYlRaRnB0NXFkVE1oVk1hYkx0N2s2V0JtTCtK?=
- =?utf-8?B?S0JuQm9hSWlnZWNCS0JQMjM4MGV6SjlrdE8yNjNFcm9ZRk5YNXR0T1BHcElZ?=
- =?utf-8?B?czlmcEQxaUVpNnJoTnJKZ25jajk0TjJxUHozaWk0MFlaZFBRazM5TU45eVpx?=
- =?utf-8?B?WUJ2c3R2VjJqWUVWMmN0bklLRHlIRlBMSGdPTVZFK201MzRWWEJsMENIUFFI?=
- =?utf-8?B?NkU2b2NWbHRqc3hmMEdRRE1GRFF5VVJiSUEzZi9TQTJGd1RpVmlSOExiSlBQ?=
- =?utf-8?B?K3NWWHM4a2Zuc3Q0bHlrSlJNMzNLbVdCUEg3N2JNbktmSW4xUVdZV21YdmYv?=
- =?utf-8?B?a3lrcVFWK1dDeGh3TURvVDVFanpnK3BQL1dPUktMZWNSNGQ5dXNtem9JMkl1?=
- =?utf-8?B?cXVKOE13M3pQY3BGYlpWcllNVjFiMUZRMjFxY0R1RmJDbTRaK2MrZXJNdGR0?=
- =?utf-8?B?RC9rSEtERjJkdGhlbnY2QjlWRXJHeG1HSUhjNTJmTm5qRVFES2RpNFhuUHhZ?=
- =?utf-8?B?ZmRQSCs3TFdxVzVnRlN0a3orbU1XZlh5b1FNWEVrdTR3K3p6Wlg3OEtVaTh2?=
- =?utf-8?Q?/x/W3blusk+ZYmxNabNT8TO44s9hZounHfzHqT/?=
+X-Microsoft-Antispam-Message-Info: 5zHCf8S3ANb5pjvLpIWB9IxvTglWd/2pvTLtt8/d7K8RpkxuCJdbw37tNcYVla9tpFPv9y4Lr7hVvRsXXIt9lWu3cHtRRN6YIP3wc2QuGQxgMZ6aQ4lWr1PxTnimZw0rtHsJmwcXnARA/plmxOZ3acZ/mBJUpcBzu3kwB7rKm93wsSvdOHBOBdYA3sLpfBnvq4ShnHAEO+9FSXQmG5npv9QB2XHWZ0WrpRVCCorvTgltfaStC6/EP/tu191yjP4yUmTZyRTfqtGWdJWgej1knRA3gnL/6HghO1yzg2VOsydBsCtwAaXlFwSZblcqSQ1vF1c3SuWmkGeb7N3NfFnUK2BPRV3nC/2RynTZtgp+ID03OwE6pCDt83AOI/kauan7JHbH6qd1f6mQCcfvhSPwnzlHKAEZ1QDPFScHa0UmYZoQkB5vogb7vReePYJniF3UDrzZjJDTzXxXikfpQwruwT3vMnQo/+tp4Jv1otOXyeQKysdy2BpP1cCNNR7R//9P6v5IAnYponfG279bLEtFld7MlvzT9Y5Q9aC64n5L59YNGFBvtth2y7um1E7Wojq0Qc7NhtfooUQRKqCc7s3J1D7P8ZlDUxjGytkhnMii2GA=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(366004)(39860400002)(376002)(346002)(136003)(478600001)(316002)(6486002)(2906002)(52116002)(53546011)(4326008)(86362001)(8936002)(8676002)(31686004)(16576012)(66946007)(83380400001)(66476007)(44832011)(186003)(31696002)(36756003)(16526019)(26005)(5660300002)(2616005)(66556008)(956004)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?V2hqY2JCcTdsdU1PWmZmL3hqQ2xJMTZTTENRUmtYM0lTcnNId0RUYXlVNUFY?=
+ =?utf-8?B?cm93V00zYmYvMWU3YnJEL1c1L3V1S3k1WDZxMldsTXd5WUZZbFRKQ0ZvTDUy?=
+ =?utf-8?B?YTZxYVFjaEZlVzUxSUhCcG1pR3BJRVpkOEd6Yzdvd2Y5WThEbmxhRFBDNG8v?=
+ =?utf-8?B?eXZ0UkNoUEZjcGVKNVVNc1ZKcm5teDlCdXBWRStNMHRzOXNvVTI5VXBzeGZ4?=
+ =?utf-8?B?ZXgvaUluSGFEVUxBU2dQeDRra28wSGdoa1kxOENrM2RnZjRkV2dXT2VmdnIw?=
+ =?utf-8?B?UVN6MHE5V2JFU2xlZDN6OHRYL1B2eEJJOEgyUlBMWXhFdUtJMnVzL2RTSkNt?=
+ =?utf-8?B?YUlsV1ltRXM4RjI4UmZ3UEIxQkJpbUtYNGRoSVV1bjc2OFg0RUpLbFloYTk1?=
+ =?utf-8?B?aVowNWxnMmtWZFIxaVovVEh2SjBTek5uK3hZSTRTclVkME1HejZJL0FJbzA1?=
+ =?utf-8?B?V2xhVDE5SlBxNHBPeTlDcFJoMnMxakNVK2pmeHJWL3Y2d1o5bGd2K3F4ZStE?=
+ =?utf-8?B?K3hZSy9Ec2J2blZnODBUZ01WSkxmWkFPblFZRnUzZHdXbFBCdFUxbTRSV3Fk?=
+ =?utf-8?B?eUJTTFNUVkd6VkVxTEdRQnFGb1Uwb1hNSjlzc3RmdkoyTXR3aVRMQnlGQmpO?=
+ =?utf-8?B?VzhIaEw5SDNLM3pwcFhGUlc3dGpXUFo4d1o0NjMzOUJNS095c1FzZS9Ga2Zk?=
+ =?utf-8?B?NHl1ODFPUEZQeTRJSERWeVZzcjBNeXJjTFZaZUl3b1lSU3YybEM1QnFEQUtx?=
+ =?utf-8?B?Z25JOURaMkZrVG5IS1Fxcm5nYWdGVHpJRTRiT0d5NVhndWRCOEU2bHpSeUlV?=
+ =?utf-8?B?bWY4VzZwZ21ySjZ4Q3NEY2taR1ZtWFlnL2tNY0NYakR1ZUN4emNuOTgzbFRv?=
+ =?utf-8?B?OXRMYmcwNGZaQlhJU01wYU5tUmZqRHI2R041WHBxRDVXazYxOVVWYTF5em5l?=
+ =?utf-8?B?WUdvRjB2YXJzRkptb2VNVEVOK1l6bEhyT2dlcVpnaGNzMjJzK1RKZ3FSbTZY?=
+ =?utf-8?B?Tll6Nk12VVZ4cWVzZjBpcmZzMGt1WTg3eE81cVBROWprNG9BanBUd0h4K1RN?=
+ =?utf-8?B?cWdTSzJ4SDhldzhlc2sySmNmSVNUbTNqSXRPbGRhRHZXTnNZTG9MWS95SUFq?=
+ =?utf-8?B?YnZBd0pmb3ZYdk9WQXlGOTIzMkFYNHRRZ2UwaEYrSmkwakpJNnhHYzk5dDEw?=
+ =?utf-8?B?UGdCY1pzQzEwQ2lvUnZBSytjRjlGR3BZUHk4TEtBRTlodytldEFUV2ZYMll5?=
+ =?utf-8?B?cnhSc3RFaS9MWW1CemZqeFhGWW1NSCt5YjJOb2ZsRHVBb1lpWEh0RENOTEUx?=
+ =?utf-8?B?T1FOcjduNUpnUE1xRFhCY1ZqSTl4T0NHeVFtQ1NGMlRqRFU5VFJ3VThVUnZ3?=
+ =?utf-8?B?UmRpbzBLQXQ4elN5Rm9MOExhL0lpZmIzL0tnVmdmalZKYkRIOGFjdk5pbE1z?=
+ =?utf-8?B?SGFHYTNHN01IRVQ2Um9NNWFrd0xvV0doTEpKOEhpMFhTQTIwVDBIT1NmSjRE?=
+ =?utf-8?B?NHNwWG1BU01NUkQyZjVMRzlGOTFnTngvOEdPVUFVbEtHWXk2K3hqRzF4K2Fy?=
+ =?utf-8?B?VVJ5OGJIa0tZM2JHWCtCSVAxYndQRUhXZ01qazQ3akl3ckRsODVSUGtiTWJl?=
+ =?utf-8?B?N3NtczU3VW1yeUNlWkRrQkV6bFBBYmxlZDc3Vm1YMUZZcE9GM2lBdkt2QzdM?=
+ =?utf-8?B?QW9YSGZEWE82aForVUhVc3o5UzVpclVtZEVXRDRFTlM0NW83eEhCU1o2RnVt?=
+ =?utf-8?Q?eFHSckNoJLtEfw2/uRuaTyRaQaKB1LDHCpbf9Ob?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 71a1a9c7-6fdc-4f8f-355f-08d8e41f23fc
+X-MS-Exchange-CrossTenant-Network-Message-Id: 996283da-1ea6-44df-3c23-08d8e41f2ba3
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Mar 2021 23:49:27.3219
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Mar 2021 23:49:40.1954
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: An2A96ZnTPbzNmXwc/mPvUeD0e9gaNGTWoJE60xyNirYhu/gcKaCVcTTJUzSI58U5cM8T4F9MTZ444yowo2aIm9vV23b5a1T9tkxCscNBY0=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2566
+X-MS-Exchange-CrossTenant-UserPrincipalName: pisa1brBbd7nvkUsDXj7r8JWCksP/Y4SI7ae2wgMS6ba2C7xneh4uw/BanvlnGcP4Nx/cfuiBPOQP6JPI0Qj95ze8if6z5dbbnKUDWndVoU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4177
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9919 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
- spamscore=0 phishscore=0 bulkscore=0 malwarescore=0 adultscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2103100115
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 malwarescore=0
+ spamscore=0 mlxlogscore=999 phishscore=0 adultscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2103100115
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9919 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 lowpriorityscore=0
- impostorscore=0 mlxlogscore=999 malwarescore=0 suspectscore=0 adultscore=0
- phishscore=0 spamscore=0 priorityscore=1501 bulkscore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
+ clxscore=1015 phishscore=0 adultscore=0 mlxlogscore=999 priorityscore=1501
+ lowpriorityscore=0 bulkscore=0 mlxscore=0 impostorscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2103100115
 Precedence: bulk
@@ -159,36 +159,36 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 On 3/8/21 10:01 PM, Chandan Babu R wrote:
-> This test verifies that XFS does not cause inode fork's extent count to
-> overflow when remapping extents from one file's inode fork to another.
+> This commit adds a stress test that executes fsstress with
+> bmap_alloc_minlen_extent error tag enabled.
 > 
 > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-Looks ok
+Ok makes sense
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
 > ---
->   tests/xfs/535     | 81 +++++++++++++++++++++++++++++++++++++++++++++++
->   tests/xfs/535.out |  8 +++++
+>   tests/xfs/537     | 84 +++++++++++++++++++++++++++++++++++++++++++++++
+>   tests/xfs/537.out |  7 ++++
 >   tests/xfs/group   |  1 +
->   3 files changed, 90 insertions(+)
->   create mode 100755 tests/xfs/535
->   create mode 100644 tests/xfs/535.out
+>   3 files changed, 92 insertions(+)
+>   create mode 100755 tests/xfs/537
+>   create mode 100644 tests/xfs/537.out
 > 
-> diff --git a/tests/xfs/535 b/tests/xfs/535
+> diff --git a/tests/xfs/537 b/tests/xfs/537
 > new file mode 100755
-> index 00000000..98209e06
+> index 00000000..77fa60d9
 > --- /dev/null
-> +++ b/tests/xfs/535
-> @@ -0,0 +1,81 @@
+> +++ b/tests/xfs/537
+> @@ -0,0 +1,84 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0
 > +# Copyright (c) 2021 Chandan Babu R.  All Rights Reserved.
 > +#
-> +# FS QA Test 535
+> +# FS QA Test 537
 > +#
-> +# Verify that XFS does not cause inode fork's extent count to overflow when
-> +# remapping extents from one file's inode fork to another.
+> +# Execute fsstress with bmap_alloc_minlen_extent error tag enabled.
+> +#
 > +seq=`basename $0`
 > +seqres=$RESULT_DIR/$seq
 > +echo "QA output created by $seq"
@@ -207,8 +207,8 @@ Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 > +# get standard environment, filters and checks
 > +. ./common/rc
 > +. ./common/filter
-> +. ./common/reflink
 > +. ./common/inject
+> +. ./common/populate
 > +
 > +# remove previous $seqres.full before test
 > +rm -f $seqres.full
@@ -217,72 +217,74 @@ Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 > +
 > +_supported_fs xfs
 > +_require_scratch
-> +_require_scratch_reflink
 > +_require_xfs_debug
-> +_require_xfs_io_command "reflink"
-> +_require_xfs_io_error_injection "reduce_max_iextents"
-> +
-> +echo "* Reflink remap extents"
+> +_require_test_program "punch-alternating"
+> +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
 > +
 > +echo "Format and mount fs"
-> +_scratch_mkfs >> $seqres.full
+> +_scratch_mkfs_sized $((1024 * 1024 * 1024)) >> $seqres.full
 > +_scratch_mount >> $seqres.full
 > +
-> +bsize=$(_get_block_size $SCRATCH_MNT)
+> +bsize=$(_get_file_block_size $SCRATCH_MNT)
 > +
-> +srcfile=${SCRATCH_MNT}/srcfile
-> +dstfile=${SCRATCH_MNT}/dstfile
+> +echo "Consume free space"
+> +fillerdir=$SCRATCH_MNT/fillerdir
+> +nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
+> +nr_free_blks=$((nr_free_blks * 90 / 100))
 > +
-> +nr_blks=15
+> +_fill_fs $((bsize * nr_free_blks)) $fillerdir $bsize 0 >> $seqres.full 2>&1
 > +
-> +echo "Create \$srcfile having an extent of length $nr_blks blocks"
-> +$XFS_IO_PROG -f -c "pwrite -b $((nr_blks * bsize))  0 $((nr_blks * bsize))" \
-> +       -c fsync $srcfile >> $seqres.full
-> +
-> +echo "Create \$dstfile having an extent of length $nr_blks blocks"
-> +$XFS_IO_PROG -f -c "pwrite -b $((nr_blks * bsize))  0 $((nr_blks * bsize))" \
-> +       -c fsync $dstfile >> $seqres.full
-> +
-> +echo "Inject reduce_max_iextents error tag"
-> +_scratch_inject_error reduce_max_iextents 1
-> +
-> +echo "Reflink every other block from \$srcfile into \$dstfile"
-> +for i in $(seq 1 2 $((nr_blks - 1))); do
-> +	_reflink_range $srcfile $((i * bsize)) $dstfile $((i * bsize)) $bsize \
-> +		       >> $seqres.full 2>&1
+> +echo "Create fragmented filesystem"
+> +for dentry in $(ls -1 $fillerdir/); do
+> +	$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
 > +done
 > +
-> +echo "Verify \$dstfile's extent count"
-> +nextents=$(_xfs_get_fsxattr nextents $dstfile)
-> +if (( $nextents > 10 )); then
-> +	echo "Extent count overflow check failed: nextents = $nextents"
-> +	exit 1
-> +fi
+> +echo "Inject bmap_alloc_minlen_extent error tag"
+> +_scratch_inject_error bmap_alloc_minlen_extent 1
+> +
+> +echo "Scale fsstress args"
+> +args=$(_scale_fsstress_args -p $((LOAD_FACTOR * 75)) -n $((TIME_FACTOR * 1000)))
+> +
+> +echo "Execute fsstress in background"
+> +$FSSTRESS_PROG -d $SCRATCH_MNT $args \
+> +		 -f bulkstat=0 \
+> +		 -f bulkstat1=0 \
+> +		 -f fiemap=0 \
+> +		 -f getattr=0 \
+> +		 -f getdents=0 \
+> +		 -f getfattr=0 \
+> +		 -f listfattr=0 \
+> +		 -f mread=0 \
+> +		 -f read=0 \
+> +		 -f readlink=0 \
+> +		 -f readv=0 \
+> +		 -f stat=0 \
+> +		 -f aread=0 \
+> +		 -f dread=0 > /dev/null 2>&1
 > +
 > +# success, all done
 > +status=0
 > +exit
-> diff --git a/tests/xfs/535.out b/tests/xfs/535.out
+> diff --git a/tests/xfs/537.out b/tests/xfs/537.out
 > new file mode 100644
-> index 00000000..cfe50f45
+> index 00000000..19633a07
 > --- /dev/null
-> +++ b/tests/xfs/535.out
-> @@ -0,0 +1,8 @@
-> +QA output created by 535
-> +* Reflink remap extents
+> +++ b/tests/xfs/537.out
+> @@ -0,0 +1,7 @@
+> +QA output created by 537
 > +Format and mount fs
-> +Create $srcfile having an extent of length 15 blocks
-> +Create $dstfile having an extent of length 15 blocks
-> +Inject reduce_max_iextents error tag
-> +Reflink every other block from $srcfile into $dstfile
-> +Verify $dstfile's extent count
+> +Consume free space
+> +Create fragmented filesystem
+> +Inject bmap_alloc_minlen_extent error tag
+> +Scale fsstress args
+> +Execute fsstress in background
 > diff --git a/tests/xfs/group b/tests/xfs/group
-> index b4f0c777..aed06494 100644
+> index ba674a58..5c827727 100644
 > --- a/tests/xfs/group
 > +++ b/tests/xfs/group
-> @@ -532,3 +532,4 @@
->   532 auto quick dir hardlink symlink
->   533 auto quick
+> @@ -534,3 +534,4 @@
 >   534 auto quick reflink
-> +535 auto quick reflink
+>   535 auto quick reflink
+>   536 auto quick
+> +537 auto stress
 > 
