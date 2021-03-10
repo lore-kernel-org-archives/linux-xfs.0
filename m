@@ -2,304 +2,307 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81F3DC433E9
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 02:10:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0CA0C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 02:11:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B40164E99
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 02:10:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7161664E99
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Mar 2021 02:11:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231490AbhCJCKO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Mar 2021 21:10:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34848 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231228AbhCJCJs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Mar 2021 21:09:48 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3091364E68;
-        Wed, 10 Mar 2021 02:09:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615342188;
-        bh=qU9RoGZjaBXY27t9JrsftmnlnAhoZKpJNOMzpz7L624=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=meFT0+5RgAiNZ3A71k62Mrbb6njoNxQHHBvCXMAbsfQgnfBJw8dxHRbXhnBqvyXWH
-         3+59kFN9RmU5NNT8UxcpA/hPgTPUJmaH0p0B+0Bj34lqcVA1cgV3+dQ6VQ+j1obLFY
-         n4SzA/Njx4amqzEEcDpuKXKR/KgzZoZH443fPlK6KUpbgFK7cbqU0FzSadfw+oabA7
-         4HD06bx98YsHQZkTNQjIhdm95R4WFPUi8RhFi7V/KllrXOoUSxVwxH2PljSzzlW8ja
-         juW0wSqxhucF+SuPgOqqDNP8pR3A/T5OwO66N/GKRYOfAxO4p7TM34m5W5g6uOow9/
-         fwGAvN/eFH6KA==
-Date:   Tue, 9 Mar 2021 18:09:47 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Gao Xiang <hsiangkao@redhat.com>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [WIP] [RFC PATCH] xfs: add test on shrinking unused space in the
- last AG
-Message-ID: <20210310020947.GC3419940@magnolia>
-References: <20201028230909.639698-1-hsiangkao@redhat.com>
- <20210310004324.GE3499219@localhost.localdomain>
+        id S231689AbhCJCLS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Mar 2021 21:11:18 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:59269 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231228AbhCJCKz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Mar 2021 21:10:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1615342254;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PmSQRdKuTp5cPzpU2X7/Ag9DGVk/eGYjOzfVTtfQg8I=;
+        b=MlSzF3SnBeBJNOLnBZywvgp9y+Ivxy2IwRTfKJi9yqM6uwsnARrP3qBNrSpdauUod4Cbre
+        eQXwz5DZlRj8eT5DWPU1wtpMIbBQiP1fy3ZknppmUYQ/WpmXKp8jOr1mv3WLXOgh6QfbUH
+        UFzpMVNS1gwD6jqJkuidKjfB7TtPt2o=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-348-nUsYzvUBPq2QWDo17sRPJA-1; Tue, 09 Mar 2021 21:10:50 -0500
+X-MC-Unique: nUsYzvUBPq2QWDo17sRPJA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C448B184214B;
+        Wed, 10 Mar 2021 02:10:49 +0000 (UTC)
+Received: from bfoster (ovpn-112-124.rdu2.redhat.com [10.10.112.124])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 43A376A8E5;
+        Wed, 10 Mar 2021 02:10:49 +0000 (UTC)
+Date:   Tue, 9 Mar 2021 21:10:47 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3 v2] xfs: AIL needs asynchronous CIL forcing\
+Message-ID: <YEgqp87obzpezjwT@bfoster>
+References: <20210224232600.GH4662@dread.disaster.area>
+ <YD6xrJHgkkHi+7a3@bfoster>
+ <20210303005752.GM4662@dread.disaster.area>
+ <YD/IN66S3aM1lEQh@bfoster>
+ <20210304015933.GO4662@dread.disaster.area>
+ <YEDc42Z1GjHBXi6S@bfoster>
+ <20210304224848.GR4662@dread.disaster.area>
+ <YEJHEt/vt6yuHbak@bfoster>
+ <20210309004410.GC74031@dread.disaster.area>
+ <20210309043559.GT3419940@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210310004324.GE3499219@localhost.localdomain>
+In-Reply-To: <20210309043559.GT3419940@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 10, 2021 at 08:43:25AM +0800, Zorro Lang wrote:
-> On Thu, Oct 29, 2020 at 07:09:09AM +0800, Gao Xiang wrote:
-> > This adds a testcase to test shrinking unused space as much
-> > as possible in the last AG with background fsstress workload.
+On Mon, Mar 08, 2021 at 08:35:59PM -0800, Darrick J. Wong wrote:
+> On Tue, Mar 09, 2021 at 11:44:10AM +1100, Dave Chinner wrote:
+> > On Fri, Mar 05, 2021 at 09:58:26AM -0500, Brian Foster wrote:
+> > > On Fri, Mar 05, 2021 at 09:48:48AM +1100, Dave Chinner wrote:
+> > > > > > > So not only does this patch expose subsystem internals to
+> > > > > > > external layers and create more log forcing interfaces/behaviors to
+> > > > > > 
+> > > > > > Sorry, I don't follow. What "subsystem internals" are being exposed
+> > > > > > and what external layer are they being exposed to?
+> > > > > > 
+> > > > > > > > Cleaning up the mess that is the xfs_log_* and xlog_* interfaces and
+> > > > > > > > changing things like log force behaviour and implementation is for
+> > > > > > > > a future series.
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > TBH I think this patch is kind of a mess on its own. I think the
+> > > > > > > mechanism it wants to provide is sane, but I've not even got to the
+> > > > > > > point of reviewing _that_ yet because of the seeming dismissal of higher
+> > > > > > > level feedback. I'd rather not go around in circles on this so I'll just
+> > > > > > > offer my summarized feedback to this patch...
+> > > > > > 
+> > > > > > I'm not dismissing review nor am I saying the API cannot or should
+> > > > > > not be improved. I'm simply telling you that I think the additional
+> > > > > > changes you are proposing are outside the scope of the problem I am
+> > > > > > addressing here. I already plan to rework the log force API (and
+> > > > > > others) but doing so it not something that this patchset needs to
+> > > > > > address, or indeed should address.
+> > > > > > 
+> > > > > 
+> > > > > I'm not proposing additional changes nor to rework the log force API.
+> > > > > I'm pointing out that I find this implementation to be extremely and
+> > > > > unnecessarily confusing.
+> > > > 
+> > > > And that's just fine - not everyone has to understand all of the
+> > > > code all of the time. That's why we have a team....
+> > > > 
+> > > > > To improve it, I'm suggesting to either coopt
+> > > > > the existing async log force API...
+> > > > 
+> > > > And I'm telling you that this is *future work*. As the person
+> > > > actually doing the work, that's my decision and you need to accept
+> > > > that. I understand your concerns and have a plan to address them -
+> > > > you just have to accept that the plan to address them isn't going to
+> > > > be exactly to your liking.
+> > > > 
+> > > 
+> > > As a reviewer, I am pointing out that I object to how this patch is
+> > > implemented and offered several fairly simple suggestions on how to
+> > > address my concerns. Those suggestions have been rejected pretty much
+> > > out of hand on the basis of the existence of some future plans.
 > > 
-> > The expectation is that no crash happens with expected output.
+> > We're allowed to disagree on the best approach. But to find a way
+> > forward means that both the summitter and the reviewer need to
+> > compromise. I've fixed up the obvious warts and bugs you've pointed
+> > out, and agreed that it needs cleaning up and have committed to
+> > cleaning it up in the near future.
 > > 
-> > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> > ---
-> >  tests/xfs/522     | 125 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/522.out |  73 +++++++++++++++++++++++++++
-> >  tests/xfs/group   |   1 +
-> >  3 files changed, 199 insertions(+)
-> >  create mode 100755 tests/xfs/522
-> >  create mode 100644 tests/xfs/522.out
+> > > Future rework plans do not justify or change my view of this patch
+> > > and the mess it adds (for other developers, for historical context
+> > > and downstreams, etc.).  Therefore, if the only option you're
+> > > willing to consider is "make this mess now and clean it up later
+> > > in some broader rework," then I'd rather we just defer this patch
+> > > until after that rework is available and avoid the mess that way.
 > > 
-> > diff --git a/tests/xfs/522 b/tests/xfs/522
-> > new file mode 100755
-> > index 00000000..e427a33a
-> > --- /dev/null
-> > +++ b/tests/xfs/522
-> > @@ -0,0 +1,125 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 522
-> > +#
-> > +# XFS online shrinkfs-while-allocating tests
-> > +#
-> > +# This test attempts to shrink unused space as much as possible with
-> > +# background fsstress workload. It will decrease the shrink size if
-> > +# larger size fails. And totally repeat 6 times.
-> > +#
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +_create_scratch()
-> > +{
-> > +	echo "*** mkfs"
-> > +	_scratch_mkfs_xfs $@ | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-> > +	. $tmp.mkfs
-> > +
-> > +	echo "*** mount"
-> > +	if ! _try_scratch_mount 2>/dev/null
-> > +	then
-> > +		echo "failed to mount $SCRATCH_DEV"
-> > +		exit 1
-> > +	fi
-> > +
-> > +	# fix the reserve block pool to a known size so that the enospc
-> > +	# calculations work out correctly.
-> > +	_scratch_resvblks 1024 >  /dev/null 2>&1
-> > +}
-> > +
-> > +_fill_scratch()
-> > +{
-> > +	$XFS_IO_PROG -f -c "resvsp 0 ${1}" $SCRATCH_MNT/resvfile
-> > +}
-> > +
-> > +_stress_scratch()
-> > +{
-> > +	procs=3
-> > +	nops=1000
-> > +	# -w ensures that the only ops are ones which cause write I/O
-> > +	FSSTRESS_ARGS=`_scale_fsstress_args -d $SCRATCH_MNT -w -p $procs \
-> > +	    -n $nops $FSSTRESS_AVOID`
-> > +	$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1 &
-> > +}
-> > +
-> > +# real QA test starts here
-> > +_supported_fs xfs
-> > +_require_scratch
-> > +_require_xfs_io_command "falloc"
-> > +
-> > +rm -f $seqres.full
-> > +_scratch_mkfs_xfs | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-> > +. $tmp.mkfs	# extract blocksize and data size for scratch device
-> > +
-> > +endsize=`expr 125 \* 1048576`	# stop after shrinking this big
-> > +[ `expr $endsize / $dbsize` -lt $dblocks ] || _notrun "Scratch device too small"
-> > +
-> > +nags=2
-> > +totalcount=6
-> > +
-> > +while [ $totalcount -gt 0 ]; do
-> > +	size=`expr 1010 \* 1048576`	# 1010 megabytes initially
-> > +	echo "*** creating scratch filesystem"
-> > +	logblks=$(_scratch_find_xfs_min_logblocks -dsize=${size} -dagcount=${nags})
-> > +
-> > +	_create_scratch -lsize=${logblks}b -dsize=${size} -dagcount=${nags}
-> > +
-> > +	echo "*** using some initial space on scratch filesystem"
-> > +	for i in `seq 125 -1 90`; do
-> > +		fillsize=`expr $i \* 1048576`
-> > +		out="$(_fill_scratch $fillsize 2>&1)"
-> > +		echo "$out" | grep -q 'No space left on device' && continue
-> > +		test -n "${out}" && echo "$out"
-> > +		break
-> > +	done
-> > +
-> > +	decsize=`expr  42 \* 1048576`	# shrink in chunks of this size at most
-> > +
-> > +	echo "*** stressing filesystem"
-> > +	while [ $size -gt $endsize ]; do
-> > +		_stress_scratch
-> > +		sleep 1
-> > +
-> > +		decb=`expr $decsize / $dbsize`    # in data blocks
-> > +		while [ $decb -gt 0 ]; do
-> > +			sizeb=`expr $size / $dbsize - $decb`
-> > +
-> > +			xfs_growfs -D ${sizeb} $SCRATCH_MNT 2>&1 \
-> > +				| tee -a $seqres.full | _filter_mkfs 2>$tmp.growfs > /dev/null
+> > So you won't review it until I have 100 outstanding patches in this
+> > series and it's completely and utterly unreviewable?
 > 
-> As Darrick has reviewed, I have one more question. Looks like we can shrink a
-> mounted xfs via giving a smaller size to xfs_growfs.
+> Already unreviewable at 45, and I've only gotten through 2/3 of it.
 > 
-> If xfs_growfs or kernel doesn't support 'shrink', I think the whole test will
-> be failed. So maybe we need a _require_* function to check if current xfs
-> support shrinking feature at first?
-
-Also, it's time to send the xfs_growfs patches to the list so I can
-replicate the tests on my own test vms.
-
---D
-
-> Thanks,
-> Zorro
+> > Then you'll ask me to split it up and re-order it into digestable
+> > chunks, and so we'll go back to having to merge this because any of
+> > the API rework that depends on the mechanism that this patch
+> > introduces.
 > 
-> > +
-> > +			ret="${PIPESTATUS[0]}"
-> > +			. $tmp.growfs
-> > +
-> > +			[ $ret -eq 0 ] && break
-> > +
-> > +			[ $decb -gt 100 ] && decb=`expr $decb + $RANDOM % 10`
-> > +			decb=`expr $decb / 2`
-> > +		done
-> > +
-> > +		wait
-> > +		[ $decb -eq 0 ] && break
-> > +
-> > +		size=`expr $size - $decb \* $dbsize`
-> > +	done
-> > +
-> > +	_scratch_unmount
-> > +	_repair_scratch_fs >> $seqres.full
-> > +	totalcount=`expr $totalcount - 1`
-> > +done
-> > +
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/522.out b/tests/xfs/522.out
-> > new file mode 100644
-> > index 00000000..03d512f5
-> > --- /dev/null
-> > +++ b/tests/xfs/522.out
-> > @@ -0,0 +1,73 @@
-> > +QA output created by 522
-> > +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> > +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> > +         = sunit=XXX swidth=XXX, unwritten=X
-> > +naming   =VERN bsize=XXX
-> > +log      =LDEV bsize=XXX blocks=XXX
-> > +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> > +*** creating scratch filesystem
-> > +*** mkfs
-> > +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> > +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> > +         = sunit=XXX swidth=XXX, unwritten=X
-> > +naming   =VERN bsize=XXX
-> > +log      =LDEV bsize=XXX blocks=XXX
-> > +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> > +*** mount
-> > +*** using some initial space on scratch filesystem
-> > +*** stressing filesystem
-> > +*** creating scratch filesystem
-> > +*** mkfs
-> > +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> > +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> > +         = sunit=XXX swidth=XXX, unwritten=X
-> > +naming   =VERN bsize=XXX
-> > +log      =LDEV bsize=XXX blocks=XXX
-> > +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> > +*** mount
-> > +*** using some initial space on scratch filesystem
-> > +*** stressing filesystem
-> > +*** creating scratch filesystem
-> > +*** mkfs
-> > +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> > +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> > +         = sunit=XXX swidth=XXX, unwritten=X
-> > +naming   =VERN bsize=XXX
-> > +log      =LDEV bsize=XXX blocks=XXX
-> > +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> > +*** mount
-> > +*** using some initial space on scratch filesystem
-> > +*** stressing filesystem
-> > +*** creating scratch filesystem
-> > +*** mkfs
-> > +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> > +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> > +         = sunit=XXX swidth=XXX, unwritten=X
-> > +naming   =VERN bsize=XXX
-> > +log      =LDEV bsize=XXX blocks=XXX
-> > +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> > +*** mount
-> > +*** using some initial space on scratch filesystem
-> > +*** stressing filesystem
-> > +*** creating scratch filesystem
-> > +*** mkfs
-> > +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> > +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> > +         = sunit=XXX swidth=XXX, unwritten=X
-> > +naming   =VERN bsize=XXX
-> > +log      =LDEV bsize=XXX blocks=XXX
-> > +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> > +*** mount
-> > +*** using some initial space on scratch filesystem
-> > +*** stressing filesystem
-> > +*** creating scratch filesystem
-> > +*** mkfs
-> > +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> > +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> > +         = sunit=XXX swidth=XXX, unwritten=X
-> > +naming   =VERN bsize=XXX
-> > +log      =LDEV bsize=XXX blocks=XXX
-> > +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> > +*** mount
-> > +*** using some initial space on scratch filesystem
-> > +*** stressing filesystem
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index b89c0a4e..ab762ed6 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -519,3 +519,4 @@
-> >  519 auto quick reflink
-> >  520 auto quick reflink
-> >  521 auto quick realtime growfs
-> > +522 auto quick growfs
+> Here's something I haven't previously shared with all of you: Last cycle
+> when we were going around and around on the ENOSPC/EDQUOT retry loop
+> patches (which exploded from 13 to 41 patches) it was /very/ stressful
+> to have to rework this and that part every day and a half for almost
+> three weeks.
+> 
+> When I get a patchset ready for submission, I export the patches from my
+> development branch into a topic branch based off the latest -rc.  Every
+> time anyone makes a suggestion, I update the topic branch and send that
+> to the fstests "cloud" to see if it broke anything.  If it succeeds, I
+> push it to k.org and resubmit.
+> 
+> The part that's less obvious is the fact that rebasing is /not/ that
+> simple.  Next I integrate the changes into my development tree and
+> rebase everything that comes after /that/ to make sure it doesn't
+> interfere with my longer term development goals.  Sometimes this is
+> easy, sometimes this takes an entire day to work out the warts.
+> Then I send that to the fstests "cloud".  This rebase is particularly
+> painful because every change that everyone makes to inode
+> initialization collides with a rework of inode initialization that I've
+> been working on in preparation for metadata directory trees.
+> 
+> The part that's even /less/ obvious than that is that once the
+> development tree tests ok, then I do the same to my xfsprogs dev tree to
+> make sure that nothing broke.  Frequently there are ABI or cognitive
+> mismatches between kernel and userspace such that the build breaks, and
+> then I have to patch the two kernel trees and re-run everything.
+> 
+> So, that's really stressful for me because a minor tweak to an interface
+> can result in an enormous amount of work.  And I reject the argument
+> that I could just rebase less frequently -- Dave does that, which means
+> that any time he hears that one of his topic branches is being asked
+> about, he has to spend weeks rebasing the whole mess to the latest
+> upstream.  Maybe that works for him, but for me, I would hate that even
+> more than doing a daily rebase.
+> 
+> Add to that the fact that vger has been a total delivery sh*tshow all
+> year.  Now in addition to feeling disconnected from my family and
+> friends, I also feel disconnected from work people too.  This really did
+> nearly push me over the edge three weeks ago.
+> 
+> Please remember, one of the big advantages of our open development
+> processes is that we /do/ accept code with warty (but functional)
+> interfaces now, and we can clean them up later.  This is (IMHO) a good
+> stress-reduction tactic, because each of us (ideally) should concentrate
+> on getting the core algorithms right, and not focusing on rebasing code
+> and smoothing over the same d*** merge conflicts over and over.
+> 
+> Yes, it's true that people think that a maintainer's only real power is
+> to say 'no' in the hopes of forcing developers to fix everything now
+> because they can't trust that a dev will ever come back with the
+> promised updates, but I reject that 110%.  I'm not going anywhere, and I
+> /do/ trust that when the rest of you say that you'll be back with wart
+> remover, you will.
+> 
+> > I'm not going to play that "now jump through this hoop" game.  We
+> > add flags for on-off behaviours in internal functions -all the
+> > time-. If this makes the interface so complex and confusing that you
+> > don't understand it, then the interface was already too complex and
+> > confusing. And fixing that is *not in the scope of this patchset*.
+> > 
+> > Demanding that code be made perfect before it can be merged is
+> > really not very helpful. Especially when there are already plans to
+> > rework the API but that rework is dependent on a bunch of other
+> > changes than need to be done first.
+> > 
+> > iclogs are something that need to be moved behind the CIL, not sit
+> > in front of CIL. The CIL abstracts the journal and writing to the
+> > journal completely away from the transaction subsystem, yet the log
+> > force code punches straight through that abstraction and walks
+> > iclogs directly. The whole log force implementation needs to change,
+> > and I plan for the API that wraps the log forces to get reworked at
+> > that time.
+> 
+> So here's what I want to know: Do Dave's changes to the log force APIs
+> introduce broken behavior?  If the interfaces are so confusing that
+> /none/ of us understand it, can we introduce the appropriate wrappers
+> and documentation so that the rest of us plugging away at the rest of
+> the system can only call it the supported ways to achieve any of the
+> supported outcomes?
+> 
+
+It looks to me that the changes to xlog_cil_force_seq() could
+essentially be replaced with something like:
+
+/*
+ * Behold the magical async CIL force
+ * ... <explain what this does> ...
+ */
+static inline void
+xfs_cil_force_async(
+	struct xlog	*log)
+{
+	struct xfs_cil	*cil = log->l_cilp;
+
+	/* true for magic async CIL force */
+	xlog_cil_push_now(log, cil->xc_current_sequence, true);
+}
+
+If so, we wouldn't have to hack up xlog_cil_force_seq() with a flags
+parameter that provides inconsistent async semantics (and thus show
+mercy on the log force call stack above it) and otherwise only serves to
+bypass 95% of that function anyways. I also think that inverting the cil
+push bool param (and calling it async_push or some such) is a bit more
+clear because it separates it from XFS_LOG_SYNC (or !XFS_LOG_SYNC)
+semantics and simultaneously maps directly to the underlying
+->xc_push_async control.
+
+Brian
+
+> I'm willing to accept a bunch of documentation and "trivial" wrappers
+> for the rest of us as a shoofly to enable the rest of the xfs developers
+> to keep moving around a messy slow-moving log restructuring without
+> falling into a work pit.
+> 
+> However, it's been difficult for me to check that without being able to
+> reference a branch to see that at least the end result looks sane.  That
+> was immensely helpful for reviewing Allison's deferred xattrs series.
+> 
+> (TLDR: git branch plz)
+> 
+> The other way to ease my fears, of course, would be to submit a ton of
+> fstests to examine the log behavior for correctness, but that's
+> difficult to pull off when the control surface is the userspace ABI.
+> 
+> > For example, if we want to direct map storage for log writes, then
+> > iclog-based log force synchronisation needs to go away because we
+> > don't need iclogs for buffering journal writes. Hence the log foce
+> > code should interface only with the CIL, and only the CIL should
+> > manage whatever mechanism it is using to write to stable storage.
+> > The code is currently the way it is because the CIL, when first
+> > implemented, had to co-exist with the old way of writing to the log.
+> > We haven't used that old way for a decade now and we have very
+> > different storage performance characteristics these days, so it's
+> > about time we got rid of the mechanism designed to be optimal for
+> > spinning disks and actually integrated the CIL and the log
+> > efficiently.
+> > 
+> > There are a *lot* of steps to do this, and reworking the log force
+> > implementation and API is part of that. But reworking that API is
+> > premature because we haven't done all the necessary pre-work in
+> > place to make such a change yet. This patch is actually part of that
+> > pre-work to get the mechanisms that the log force rework will rely
+> > on.
+> > 
+> > I have very good reasons for pushing back against your suggestions,
+> > Brian. Your suggestions have merit but this patch is not the time to
+> > be making the changes you suggest. Code does not need to be perfect
+> > to be merged, nor does the entire larger change they will be part of
+> > need to be complete and 100% tested and reviewed before preparation
+> > and infrastructure patches can be merged. This is how we've done big
+> > changes in the past - they've been staged across multiple kernel
+> > cycles - and not everything needs to be done in the first
+> > patchset of a larger body of work....
+> 
+> You mean there's even more beyond the 45 already on the list? /groan/
+> 
+> --D
+> 
+> > Cheers,
+> > 
+> > Dave.
 > > -- 
-> > 2.18.1
-> > 
+> > Dave Chinner
+> > david@fromorbit.com
 > 
+
