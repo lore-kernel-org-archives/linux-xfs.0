@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BB96C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 03:06:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC168C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 03:06:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDFDF64FC6
+	by mail.kernel.org (Postfix) with ESMTP id 9E26964FC8
 	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 03:06:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229767AbhCKDGE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229778AbhCKDGE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 10 Mar 2021 22:06:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45714 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:45738 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229778AbhCKDF5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Mar 2021 22:05:57 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6F1D964EDB;
-        Thu, 11 Mar 2021 03:05:57 +0000 (UTC)
+        id S229803AbhCKDGD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Mar 2021 22:06:03 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ECB4A64FC4;
+        Thu, 11 Mar 2021 03:06:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615431957;
-        bh=WG+ja7N7H8Y/QGkwfK6rVDuuSZO88XfisSFbrls4Mgg=;
+        s=k20201202; t=1615431963;
+        bh=rkFPfgneG8SPucad0U2iTgZHLihxGMnr4JNJfcvnXvw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=BgXruYdrnm1cqSI6u/FS3hc/1VsqANNk5Oh14+YSWpIBQXOrmirACLWYDIiq91Yp2
-         6cXVZcvOZ+1igG7VlpwHEwd02kXRfl09+B+oe1k6fjrXXL9s8rFKQhubsDcKITYKsP
-         1SwZbFedIoYaumR71WTBXEJuARwxGnJPtjz75gQYme21nhAd8Bz9hf0VxqxnenZiL7
-         S/++Gb7dQmp+i+P11xhXaVmNv3l2DSP5W1ox5k2dQrmFJlqkzqgyFIUS+gNSQPGIEG
-         IMNHBhxdvKziBPdE6KtP7WZ/atK8V0r3EUO96T+OY42cRZq85MHnQVsDdnJ418uCwY
-         EaHYFMPcOwIyQ==
-Subject: [PATCH 03/11] xfs: don't reclaim dquots with incore reservations
+        b=Cg6KcOJPncqAt3eMCta5JZLnY8u6C99mIL4/n2bKdeBG47Mis1TqPJo3ScJkdM65f
+         OLrtQw4af09slFH9oPtQYskBxAIfr7Vu8rlIU+BnsyUgRhNuPNZGY5r5rptel4IJnB
+         q9G7TGgaMP0G30FR3UgBF282hDXpo/aUuOnIVUOOrUX/ZGVOmZvxE1n0tP2UxgSUzY
+         LtA7CwilWnY7rO+5xt3/8hMj409DKyqJZDPSPeUkccSnMQybv+4Ktd9kY7Ey8Xnpi6
+         qFp3Xnkcq49Ucr+1EuDLxLn5ZzLgRTuxHX8Rnri59H2R7eEQJAqPzktp9+1l/1OIF7
+         /GJ5ArggBLIcA==
+Subject: [PATCH 04/11] xfs: decide if inode needs inactivation
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 10 Mar 2021 19:05:57 -0800
-Message-ID: <161543195719.1947934.8218545606940173264.stgit@magnolia>
+Date:   Wed, 10 Mar 2021 19:06:02 -0800
+Message-ID: <161543196269.1947934.4125444770307830204.stgit@magnolia>
 In-Reply-To: <161543194009.1947934.9910987247994410125.stgit@magnolia>
 References: <161543194009.1947934.9910987247994410125.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,115 +49,104 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a dquot has an incore reservation that exceeds the ondisk count, it
-by definition has active incore state and must not be reclaimed.  Up to
-this point every inode with an incore dquot reservation has always
-retained a reference to the dquot so it was never possible for
-xfs_qm_dquot_isolate to be called on a dquot with active state and zero
-refcount, but this will soon change.
-
-Deferred inode inactivation is about to reorganize how inodes are
-inactivated by shunting all that work to a background workqueue.  In
-order to avoid deadlocks with the quotaoff inode scan and reduce overall
-memory requirements (since inodes can spend a lot of time waiting for
-inactivation), inactive inodes will drop their dquot references while
-they're waiting to be inactivated.
-
-However, inactive inodes can have delalloc extents in the data fork or
-any extents in the CoW fork.  Either of these contribute to the dquot's
-incore reservation being larger than the resource count (i.e. they're
-the reason the dquot still has active incore state), so we cannot allow
-the dquot to be reclaimed.
+Add a predicate function to decide if an inode needs (deferred)
+inactivation.  Any file that has been unlinked or has speculative
+preallocations either for post-EOF writes or for CoW qualifies.
+This function will also be used by the upcoming deferred inactivation
+patch.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_qm.c |   29 ++++++++++++++++++++++++-----
- fs/xfs/xfs_qm.h |   17 +++++++++++++++++
- 2 files changed, 41 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_inode.c |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_inode.h |    2 ++
+ 2 files changed, 65 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index bfa4164990b1..b3ce04dec181 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -166,9 +166,14 @@ xfs_qm_dqpurge(
- 
- 	/*
- 	 * We move dquots to the freelist as soon as their reference count
--	 * hits zero, so it really should be on the freelist here.
-+	 * hits zero, so it really should be on the freelist here.  If we're
-+	 * running quotaoff, it's possible that we're purging a zero-refcount
-+	 * dquot with active incore reservation because there are inodes
-+	 * awaiting inactivation.  Dquots in this state will not be on the LRU
-+	 * but it's quotaoff, so we don't care.
- 	 */
--	ASSERT(!list_empty(&dqp->q_lru));
-+	ASSERT(!(mp->m_qflags & xfs_quota_active_flag(xfs_dquot_type(dqp))) ||
-+	       !list_empty(&dqp->q_lru));
- 	list_lru_del(&qi->qi_lru, &dqp->q_lru);
- 	XFS_STATS_DEC(mp, xs_qm_dquot_unused);
- 
-@@ -411,6 +416,15 @@ struct xfs_qm_isolate {
- 	struct list_head	dispose;
- };
- 
-+static inline bool
-+xfs_dquot_has_incore_resv(
-+	struct xfs_dquot	*dqp)
-+{
-+	return  dqp->q_blk.reserved > dqp->q_blk.count ||
-+		dqp->q_ino.reserved > dqp->q_ino.count ||
-+		dqp->q_rtb.reserved > dqp->q_rtb.count;
-+}
-+
- static enum lru_status
- xfs_qm_dquot_isolate(
- 	struct list_head	*item,
-@@ -427,10 +441,15 @@ xfs_qm_dquot_isolate(
- 		goto out_miss_busy;
- 
- 	/*
--	 * This dquot has acquired a reference in the meantime remove it from
--	 * the freelist and try again.
-+	 * Either this dquot has incore reservations or it has acquired a
-+	 * reference.  Remove it from the freelist and try again.
-+	 *
-+	 * Inodes tagged for inactivation drop their dquot references to avoid
-+	 * deadlocks with quotaoff.  If these inodes have delalloc reservations
-+	 * in the data fork or any extents in the CoW fork, these contribute
-+	 * to the dquot's incore block reservation exceeding the count.
- 	 */
--	if (dqp->q_nrefs) {
-+	if (xfs_dquot_has_incore_resv(dqp) || dqp->q_nrefs) {
- 		xfs_dqunlock(dqp);
- 		XFS_STATS_INC(dqp->q_mount, xs_qm_dqwants);
- 
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index e3dabab44097..78f90935e91e 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -105,6 +105,23 @@ xfs_quota_inode(struct xfs_mount *mp, xfs_dqtype_t type)
- 	return NULL;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 12c79962f8c3..65897cb0cf2a 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1665,6 +1665,69 @@ xfs_inactive_ifree(
+ 	return 0;
  }
  
-+static inline unsigned int
-+xfs_quota_active_flag(
-+	xfs_dqtype_t		type)
++/*
++ * Returns true if we need to update the on-disk metadata before we can free
++ * the memory used by this inode.  Updates include freeing post-eof
++ * preallocations; freeing COW staging extents; and marking the inode free in
++ * the inobt if it is on the unlinked list.
++ */
++bool
++xfs_inode_needs_inactivation(
++	struct xfs_inode	*ip)
 +{
-+	switch (type) {
-+	case XFS_DQTYPE_USER:
-+		return XFS_UQUOTA_ACTIVE;
-+	case XFS_DQTYPE_GROUP:
-+		return XFS_GQUOTA_ACTIVE;
-+	case XFS_DQTYPE_PROJ:
-+		return XFS_PQUOTA_ACTIVE;
-+	default:
-+		ASSERT(0);
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_ifork	*cow_ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
++
++	/*
++	 * If the inode is already free, then there can be nothing
++	 * to clean up here.
++	 */
++	if (VFS_I(ip)->i_mode == 0)
++		return false;
++
++	/* If this is a read-only mount, don't do this (would generate I/O) */
++	if (mp->m_flags & XFS_MOUNT_RDONLY)
++		return false;
++
++	/* Metadata inodes require explicit resource cleanup. */
++	if (xfs_is_metadata_inode(ip))
++		return false;
++
++	/* Try to clean out the cow blocks if there are any. */
++	if (cow_ifp && cow_ifp->if_bytes > 0)
++		return true;
++
++	if (VFS_I(ip)->i_nlink != 0) {
++		int	error;
++		bool	has;
++
++		/*
++		 * force is true because we are evicting an inode from the
++		 * cache. Post-eof blocks must be freed, lest we end up with
++		 * broken free space accounting.
++		 *
++		 * Note: don't bother with iolock here since lockdep complains
++		 * about acquiring it in reclaim context. We have the only
++		 * reference to the inode at this point anyways.
++		 *
++		 * If the predicate errors out, send the inode through
++		 * inactivation anyway, because that's what we did before.
++		 * The inactivation worker will ignore an inode that doesn't
++		 * actually need it.
++		 */
++		if (!xfs_can_free_eofblocks(ip, true))
++			return false;
++		error = xfs_has_eofblocks(ip, &has);
++		return error != 0 || has;
 +	}
-+	return 0;
++
++	/*
++	 * Link count dropped to zero, which means we have to mark the inode
++	 * free on disk and remove it from the AGI unlinked list.
++	 */
++	return true;
 +}
 +
- extern void	xfs_trans_mod_dquot(struct xfs_trans *tp, struct xfs_dquot *dqp,
- 				    uint field, int64_t delta);
- extern void	xfs_trans_dqjoin(struct xfs_trans *, struct xfs_dquot *);
+ /*
+  * xfs_inactive
+  *
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index c2c26f8f4a81..3fe8c8afbc72 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -480,6 +480,8 @@ extern struct kmem_zone	*xfs_inode_zone;
+ /* The default CoW extent size hint. */
+ #define XFS_DEFAULT_COWEXTSZ_HINT 32
+ 
++bool xfs_inode_needs_inactivation(struct xfs_inode *ip);
++
+ int xfs_iunlink_init(struct xfs_perag *pag);
+ void xfs_iunlink_destroy(struct xfs_perag *pag);
+ 
 
