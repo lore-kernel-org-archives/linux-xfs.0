@@ -7,37 +7,35 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C08E7C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 17:48:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 038DBC433E9
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 18:01:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8073264F9A
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 17:48:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B734B64FFF
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 18:01:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229688AbhCKRrv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Mar 2021 12:47:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47562 "EHLO mail.kernel.org"
+        id S230142AbhCKSAx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Mar 2021 13:00:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49742 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229663AbhCKRra (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Mar 2021 12:47:30 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 29D1864E77;
-        Thu, 11 Mar 2021 17:47:30 +0000 (UTC)
+        id S229483AbhCKSAj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Mar 2021 13:00:39 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5163964FD4
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Mar 2021 18:00:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615484850;
-        bh=CUpOtfHKdUUcy/1c7hi0EkO0Isi78+jkwbojfh+uXIs=;
+        s=k20201202; t=1615485639;
+        bh=cOOIE/YKodwq10sewmtTtA0+cTMp7g7A6WPSJqqZIrc=;
         h=Date:From:To:Subject:From;
-        b=QUXlWx5vvxEk74wiuUQkDaNYPD6hLHBP4uSAUmERR7ThANciUVjqEBw10PoiWKXfm
-         CWnMIAbsDMXYW4dcALi6D7PBSH77vKwG5pJKZsri/iP4ThFAkMTgE3YtRPfvwX3JFl
-         8qIsidcLKFSdw8tlSs8/Q2oIPnK6cvmX41UlMyUrukfD5ryvmodoUmi+j+FQrPNOQ9
-         zbAV1oLJy8p25VUyGXDxuCqiuVFIWJeV+ZQ2tkRL9ySoywwLpevUR4MWoW7eUbKDEC
-         VTiR7zlqqPtYfqjzHVoaX6SCj2avg2DEdPCntifRSK7XLYCImCxOhe5AGeOp/02sWx
-         ZsnzQf91FE8bQ==
-Date:   Thu, 11 Mar 2021 09:47:29 -0800
+        b=XlEbM53hRTUJ/ZjgOOf1KgzKkYnzxvWjaS6YbMXMFXIQkKJl+/OQQLGCDCEtNcV1o
+         5R8FJiPo9f1qc2x1uGjX73A+IRFrTdR8qG5D5Djk71dWT+aEAK9t/aqcctikA8K80K
+         eT/um3QYh/4mUSsYljqS/oVeF8MB8s4I3/c+UcBsWZg8T4PSVa9h19aLs0FDHoAEWX
+         xqdwwuEjGx+HrExGxDI/jNBOC7/LEtswXEY2/O4Noy/Rix+qde3lMyijBZ3TSgsUxf
+         V0ZRp6cMLdMshRDtHx+hMoTa9djlumI0nv5LT72QengcH7bu1bOK8zNNtJQjAsAiET
+         7kvputXwdKy6g==
+Date:   Thu, 11 Mar 2021 10:00:38 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to 5808fecc5723
-Message-ID: <20210311174729.GA8425@magnolia>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 96fd0303027c
+Message-ID: <20210311180038.GB8425@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -47,7 +45,7 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi folks,
 
-The iomap-for-next branch of the xfs-linux repository at:
+The for-next branch of the xfs-linux repository at:
 
 	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
@@ -58,17 +56,27 @@ were in this update. If they have not been in this update, please
 resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
 the next update.
 
-The new head of the iomap-for-next branch is commit:
+The new head of the for-next branch is commit:
 
-5808fecc5723 iomap: Fix negative assignment to unsigned sis->pages in iomap_swapfile_activate
+96fd0303027c docs: ABI: Fix the spelling oustanding to outstanding in the file sysfs-fs-xfs
 
 New Commits:
 
-Ritesh Harjani (1):
-      [5808fecc5723] iomap: Fix negative assignment to unsigned sis->pages in iomap_swapfile_activate
+Bhaskar Chowdhury (1):
+      [96fd0303027c] docs: ABI: Fix the spelling oustanding to outstanding in the file sysfs-fs-xfs
+
+Darrick J. Wong (3):
+      [b5a08423da9d] xfs: fix quota accounting when a mount is idmapped
+      [45b5d1dba70e] xfs: avoid buffer deadlocks when walking fs inodes
+      [e8efa3a8244e] xfs: force log and push AIL to clear pinned inodes when aborting mount
 
 
 Code Diffstat:
 
- fs/iomap/swapfile.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ Documentation/ABI/testing/sysfs-fs-xfs |  2 +-
+ fs/xfs/xfs_inode.c                     | 14 +++---
+ fs/xfs/xfs_itable.c                    | 42 ++++++++++++++--
+ fs/xfs/xfs_iwalk.c                     | 32 ++++++++++--
+ fs/xfs/xfs_mount.c                     | 90 +++++++++++++++++-----------------
+ fs/xfs/xfs_symlink.c                   |  3 +-
+ 6 files changed, 119 insertions(+), 64 deletions(-)
