@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CC31C433E6
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 03:06:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9D77C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 03:07:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E40FE64FCE
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 03:06:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DD9764FC4
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 03:07:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229562AbhCKDGE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Mar 2021 22:06:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45694 "EHLO mail.kernel.org"
+        id S229931AbhCKDGf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Mar 2021 22:06:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45772 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229767AbhCKDFw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Mar 2021 22:05:52 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E6BCE64EDB;
-        Thu, 11 Mar 2021 03:05:51 +0000 (UTC)
+        id S229813AbhCKDGI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Mar 2021 22:06:08 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7637664EDB;
+        Thu, 11 Mar 2021 03:06:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615431952;
-        bh=6iiuLUwyjNk50xf94MQ7HUSs3rnb7OzMLuHg8ZF9tVY=;
+        s=k20201202; t=1615431968;
+        bh=lanNz/6hwDHxua+Mn5t1kXpbwgyWxlVz18cNr+sqrE4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=jJdm3wNHrxXU7iFYLaMjU7FwwDGo2h2ohqfL3XdspmTPxWZAGVCxOkdq7xfL0tPTG
-         fNsRzHUM8GXFxuFfkdEQC6UFXWnNre+y7Yon3f0+ezOb7oxf2aoLSsUOBHmBRre0ag
-         c6Lfn7GNyuwP3SsdtyQje6FETaBDHbhX2BnK/+oCMWLdwlmGIaNmSLIUcFS9V24JY3
-         HIJJRmK/4xbhiG3LXyLkvD//kkttpkMZSHh7aa2rc/zRpDDBjTWOuNHt8CnNezUPMP
-         k1W6ZKSMoqh386qX77Id5FWmKFwh3gDhigBT7dP68e/yPs2s2SWOLS3fTdxF5VKnyo
-         caexEymUnt0JA==
-Subject: [PATCH 02/11] xfs: refactor the predicate part of xfs_free_eofblocks
+        b=K5d+LmM6kAYXIhzGf5GkRMpz+K7rfqvTd/+3JjmvNYCgvi9KjSdlRtIHvqx09EjXQ
+         wIbMX6BocI/ipK0VS7z2xn5BQzLlMa1WK/1ZajVc52PBoYnVMLPUcLeg5Cp4E1vDNM
+         L0cquN9kNU99g0pK6iYtliT1EUpunTk6NHnAbPZ3dPVZiAluXjE6FnTpE0iTkkVFHx
+         fVmt0AitvRcW9o6ewgHumX3lwl0vX05SSIQAJGaXwU1Z2UaCY51UoRsUG2QO1gArJT
+         rCRAs0bev+PIw6/MtDJDnar/RsBK9fo3gWjlCqEjYoXloICl8OMdfwC5oERSNBEHet
+         +Ltbltv2A9Lgg==
+Subject: [PATCH 05/11] xfs: rename the blockgc workqueue
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 10 Mar 2021 19:05:51 -0800
-Message-ID: <161543195167.1947934.16237799936089844524.stgit@magnolia>
+Date:   Wed, 10 Mar 2021 19:06:08 -0800
+Message-ID: <161543196819.1947934.4325937657338405659.stgit@magnolia>
 In-Reply-To: <161543194009.1947934.9910987247994410125.stgit@magnolia>
 References: <161543194009.1947934.9910987247994410125.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,191 +49,91 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Refactor the part of _free_eofblocks that decides if it's really going
-to truncate post-EOF blocks into a separate helper function.  The
-upcoming deferred inode inactivation patch requires us to be able to
-decide this prior to actual inactivation.  No functionality changes.
+Since we're about to start using the blockgc workqueue to dispose of
+inactivated inodes, strip the "block" prefix from the name; now it's
+merely the general garbage collection (gc) workqueue.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_util.c |  129 ++++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_bmap_util.h |    1 
- 2 files changed, 76 insertions(+), 54 deletions(-)
+ Documentation/admin-guide/xfs.rst |    2 +-
+ fs/xfs/xfs_icache.c               |    2 +-
+ fs/xfs/xfs_mount.h                |    2 +-
+ fs/xfs/xfs_super.c                |    8 ++++----
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index e7d68318e6a5..21aa38183ae9 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -628,27 +628,23 @@ xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
- }
- 
- /*
-- * This is called to free any blocks beyond eof. The caller must hold
-- * IOLOCK_EXCL unless we are in the inode reclaim path and have the only
-- * reference to the inode.
-+ * Decide if this inode have post-EOF blocks.  The caller is responsible
-+ * for knowing / caring about the PREALLOC/APPEND flags.
-  */
- int
--xfs_free_eofblocks(
--	struct xfs_inode	*ip)
-+xfs_has_eofblocks(
-+	struct xfs_inode	*ip,
-+	bool			*has)
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+index 5422407a96d7..8de008c0c5ad 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -522,7 +522,7 @@ and the short name of the data device.  They all can be found in:
+ ================  ===========
+   xfs_iwalk-$pid  Inode scans of the entire filesystem. Currently limited to
+                   mount time quotacheck.
+-  xfs-blockgc     Background garbage collection of disk space that have been
++  xfs-gc          Background garbage collection of disk space that have been
+                   speculatively allocated beyond EOF or for staging copy on
+                   write operations.
+ ================  ===========
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 1d7720a0c068..e6a62f765422 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1335,7 +1335,7 @@ xfs_blockgc_queue(
  {
--	struct xfs_trans	*tp;
--	int			error;
-+	struct xfs_bmbt_irec	imap;
-+	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		end_fsb;
- 	xfs_fileoff_t		last_fsb;
- 	xfs_filblks_t		map_len;
- 	int			nimaps;
--	struct xfs_bmbt_irec	imap;
--	struct xfs_mount	*mp = ip->i_mount;
-+	int			error;
+ 	rcu_read_lock();
+ 	if (radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG))
+-		queue_delayed_work(pag->pag_mount->m_blockgc_workqueue,
++		queue_delayed_work(pag->pag_mount->m_gc_workqueue,
+ 				   &pag->pag_blockgc_work,
+ 				   msecs_to_jiffies(xfs_blockgc_secs * 1000));
+ 	rcu_read_unlock();
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 659ad95fe3e0..81829d19596e 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -93,7 +93,7 @@ typedef struct xfs_mount {
+ 	struct workqueue_struct	*m_unwritten_workqueue;
+ 	struct workqueue_struct	*m_cil_workqueue;
+ 	struct workqueue_struct	*m_reclaim_workqueue;
+-	struct workqueue_struct *m_blockgc_workqueue;
++	struct workqueue_struct *m_gc_workqueue;
+ 	struct workqueue_struct	*m_sync_workqueue;
  
--	/*
--	 * Figure out if there are any blocks beyond the end
--	 * of the file.  If not, then there is nothing to do.
--	 */
-+	*has = false;
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
- 	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
- 	if (last_fsb <= end_fsb)
-@@ -660,55 +656,80 @@ xfs_free_eofblocks(
- 	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 	int			m_bsize;	/* fs logical block size */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index e5e0713bebcd..e774358383d6 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -519,10 +519,10 @@ xfs_init_mount_workqueues(
+ 	if (!mp->m_reclaim_workqueue)
+ 		goto out_destroy_cil;
  
-+	if (error || nimaps == 0)
-+		return error;
-+
-+	*has = imap.br_startblock != HOLESTARTBLOCK || ip->i_delayed_blks;
-+	return 0;
-+}
-+
-+/*
-+ * This is called to free any blocks beyond eof. The caller must hold
-+ * IOLOCK_EXCL unless we are in the inode reclaim path and have the only
-+ * reference to the inode.
-+ */
-+int
-+xfs_free_eofblocks(
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_trans	*tp;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	bool			has;
-+	int			error;
-+
- 	/*
- 	 * If there are blocks after the end of file, truncate the file to its
- 	 * current size to free them up.
- 	 */
--	if (!error && (nimaps != 0) &&
--	    (imap.br_startblock != HOLESTARTBLOCK ||
--	     ip->i_delayed_blks)) {
--		/*
--		 * Attach the dquots to the inode up front.
--		 */
--		error = xfs_qm_dqattach(ip);
--		if (error)
--			return error;
-+	error = xfs_has_eofblocks(ip, &has);
-+	if (error || !has)
-+		return error;
+-	mp->m_blockgc_workqueue = alloc_workqueue("xfs-blockgc/%s",
++	mp->m_gc_workqueue = alloc_workqueue("xfs-gc/%s",
+ 			WQ_SYSFS | WQ_UNBOUND | WQ_FREEZABLE | WQ_MEM_RECLAIM,
+ 			0, mp->m_super->s_id);
+-	if (!mp->m_blockgc_workqueue)
++	if (!mp->m_gc_workqueue)
+ 		goto out_destroy_reclaim;
  
--		/* wait on dio to ensure i_size has settled */
--		inode_dio_wait(VFS_I(ip));
-+	/*
-+	 * Attach the dquots to the inode up front.
-+	 */
-+	error = xfs_qm_dqattach(ip);
-+	if (error)
-+		return error;
+ 	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s",
+@@ -533,7 +533,7 @@ xfs_init_mount_workqueues(
+ 	return 0;
  
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0,
--				&tp);
--		if (error) {
--			ASSERT(XFS_FORCED_SHUTDOWN(mp));
--			return error;
--		}
-+	/* wait on dio to ensure i_size has settled */
-+	inode_dio_wait(VFS_I(ip));
- 
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_ijoin(tp, ip, 0);
--
--		/*
--		 * Do not update the on-disk file size.  If we update the
--		 * on-disk file size and then the system crashes before the
--		 * contents of the file are flushed to disk then the files
--		 * may be full of holes (ie NULL files bug).
--		 */
--		error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
--					XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
--		if (error) {
--			/*
--			 * If we get an error at this point we simply don't
--			 * bother truncating the file.
--			 */
--			xfs_trans_cancel(tp);
--		} else {
--			error = xfs_trans_commit(tp);
--			if (!error)
--				xfs_inode_clear_eofblocks_tag(ip);
--		}
--
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
-+	if (error) {
-+		ASSERT(XFS_FORCED_SHUTDOWN(mp));
-+		return error;
- 	}
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, 0);
-+
-+	/*
-+	 * Do not update the on-disk file size.  If we update the
-+	 * on-disk file size and then the system crashes before the
-+	 * contents of the file are flushed to disk then the files
-+	 * may be full of holes (ie NULL files bug).
-+	 */
-+	error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
-+				XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
-+	if (error)
-+		goto err_cancel;
-+
-+	error = xfs_trans_commit(tp);
-+	if (error)
-+		goto out_unlock;
-+
-+	xfs_inode_clear_eofblocks_tag(ip);
-+	goto out_unlock;
-+
-+err_cancel:
-+	/*
-+	 * If we get an error at this point we simply don't
-+	 * bother truncating the file.
-+	 */
-+	xfs_trans_cancel(tp);
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 9f993168b55b..af07a4a20d7c 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -63,6 +63,7 @@ int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
- 
- /* EOF block manipulation functions */
-+int	xfs_has_eofblocks(struct xfs_inode *ip, bool *has);
- bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
- int	xfs_free_eofblocks(struct xfs_inode *ip);
- 
+ out_destroy_eofb:
+-	destroy_workqueue(mp->m_blockgc_workqueue);
++	destroy_workqueue(mp->m_gc_workqueue);
+ out_destroy_reclaim:
+ 	destroy_workqueue(mp->m_reclaim_workqueue);
+ out_destroy_cil:
+@@ -551,7 +551,7 @@ xfs_destroy_mount_workqueues(
+ 	struct xfs_mount	*mp)
+ {
+ 	destroy_workqueue(mp->m_sync_workqueue);
+-	destroy_workqueue(mp->m_blockgc_workqueue);
++	destroy_workqueue(mp->m_gc_workqueue);
+ 	destroy_workqueue(mp->m_reclaim_workqueue);
+ 	destroy_workqueue(mp->m_cil_workqueue);
+ 	destroy_workqueue(mp->m_unwritten_workqueue);
 
