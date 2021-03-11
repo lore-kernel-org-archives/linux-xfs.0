@@ -2,159 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3791EC433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 00:36:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 718E2C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 00:54:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0EDF64FC0
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 00:36:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39EFB64FA1
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 00:54:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229668AbhCKAgJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Mar 2021 19:36:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51760 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229655AbhCKAgH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Mar 2021 19:36:07 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C0C5B64FBA;
-        Thu, 11 Mar 2021 00:36:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615422966;
-        bh=XDl9FusC+rDFhETdRnzDyk8nOYJgOjuxQREJ7pqTcOk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cR7CQR7lwY8XzeZ/9edwEX8swTiTaooQZ+L6lN30F0Iy8EXAwV0unnZV9NeP8Vwc4
-         xBPyFyyG++8NO4j+F5WLPwlW3+5Tsnlo5m6BPVE6EZxI/tm78amdEJQ+17lYFzok7u
-         O58bqjWKEIY1kwKOrZR8if+Y59HVQC7+yr2L3aZ4Ap+kSlUfPSd4+0MSi/OMnvsuvm
-         c7TfpF1kY+UXO4za1XfUGb/qbyIV8KoIyWhp5f/dRDb2QeQi7G0YcLkksaRlB9dj3j
-         m9B7HS1NSBVeLw0lheu45ytEnclL4C5TPE12ybX9k77JXMM1bZuHY+4F+P765wmueR
-         g4CwRF74yBMGQ==
-Date:   Wed, 10 Mar 2021 16:36:01 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 38/45] xfs: convert CIL busy extents to per-cpu
-Message-ID: <20210311003601.GL3419940@magnolia>
-References: <20210305051143.182133-1-david@fromorbit.com>
- <20210305051143.182133-39-david@fromorbit.com>
+        id S229623AbhCKAxz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Mar 2021 19:53:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53722 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229577AbhCKAx2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Mar 2021 19:53:28 -0500
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FF63C061762
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Mar 2021 16:53:28 -0800 (PST)
+Received: by mail-ed1-x535.google.com with SMTP id x21so250269eds.4
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Mar 2021 16:53:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=q4/XB1NjVzkcassvGF9k8OOkOtHMefsYgpLIOhbHN44=;
+        b=VytBblI4nb9JtqHcpg5PYs38jajnTR0u0JS6jpl3x32VbN+1FmkpQKztC6QGh/owq5
+         OKZtrVWvRSAAgZSa52MpRCKaSLrn8M/wS7+lpN3thB2qy4x5ASseSLbpttO55PtkZRcg
+         Usu+VKGsxFUTs0UMAmVvtsOBETR54kARgVDHg+jieLrIMe5HoGU7jO+WFaXqB1/Shadj
+         acLiBoL+9rXMHYN4h5kBD34GepJ6XoGwLlBU74peSFTH4olLLWwe877BUouMrPF9vqxz
+         iTkHZTfI/P5BPtXD8Ih2GVWaZnwQK2AMiro/XIrqqU/ujd/Qp2vrSZYPEp61VpSaQc8f
+         2Qpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=q4/XB1NjVzkcassvGF9k8OOkOtHMefsYgpLIOhbHN44=;
+        b=Izav+d5LDRgMZKeBstI9R723XYq0j+UEUTc8kuAph1e/EOjL4+veBw6uqNloYsFODz
+         YmT6TyqTeZIY/hhSrTAPPXvpHLUIQgdH2t+/IhgTMpNdPeH8OiQBZYzPoPZ9Qx4ytdAU
+         u8vF2oN2oftTGE0jgI66TmNzumRdR814nDgq5x2HHaR3YwoJl/xD49cPPvbJ/RTiTto9
+         eF3O3F0YvzhdtmLRunqWXGHDUixQu/376ryqSDCJQPMOznL2HKe+9zIYmplDsbVip15N
+         x+MyI46BWuJ4qVJg71MRQ0vd9E59WFl832WO/0y8XxzA0DPxRPCWRgJHu2xLjH6mGrkp
+         hUPg==
+X-Gm-Message-State: AOAM530uAjMqBmP7Vx24sOwexk1yVwzJNehIXHsY1ipsTt8/tDL98AYb
+        T1cnnMB4q80yLnU6q99b0VGKcF44TO+8EIYt6mtjcw==
+X-Google-Smtp-Source: ABdhPJypQ8GemOXeRAlB5nBwa/LaXTEzwLO62LM4I6+2OuCpeLVCa5nLj+566PgoZJjKJzgw0+xwotjje7pT9PlLG2A=
+X-Received: by 2002:aa7:dd05:: with SMTP id i5mr6011841edv.300.1615424006716;
+ Wed, 10 Mar 2021 16:53:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210305051143.182133-39-david@fromorbit.com>
+References: <20210226002030.653855-1-ruansy.fnst@fujitsu.com>
+ <CAEg-Je-OLidbfzHCJvY55x+-cOfiUxX8CJ1AeN8VxXAVuVyxKQ@mail.gmail.com>
+ <20210310130227.GN3479805@casper.infradead.org> <20210310142159.kudk7q2ogp4yqn36@fiona>
+ <20210310142643.GQ3479805@casper.infradead.org>
+In-Reply-To: <20210310142643.GQ3479805@casper.infradead.org>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Wed, 10 Mar 2021 16:53:15 -0800
+Message-ID: <CAPcyv4i80GXjjoAD9G0AaRDWPbcTSLogJE9NokO4Eqpzt6UMkA@mail.gmail.com>
+Subject: Re: [PATCH v2 00/10] fsdax,xfs: Add reflink&dedupe support for fsdax
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        Neal Gompa <ngompa13@gmail.com>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jan Kara <jack@suse.cz>, Al Viro <viro@zeniv.linux.org.uk>,
+        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
+        ocfs2-devel@oss.oracle.com, david <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 05, 2021 at 04:11:36PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> To get them out from under the CIL lock.
-> 
-> This is an unordered list, so we can simply punt it to per-cpu lists
-> during transaction commits and reaggregate it back into a single
-> list during the CIL push work.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_log_cil.c | 26 ++++++++++++++++++--------
->  1 file changed, 18 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index a2f93bd7644b..7428b98c8279 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -501,6 +501,9 @@ xlog_cil_insert_items(
->  		atomic_add(cilpcp->space_used, &ctx->space_used);
->  		cilpcp->space_used = 0;
->  	}
-> +	/* attach the transaction to the CIL if it has any busy extents */
-> +	if (!list_empty(&tp->t_busy))
-> +		list_splice_init(&tp->t_busy, &cilpcp->busy_extents);
->  	put_cpu_ptr(cilpcp);
->  
->  	/*
-> @@ -540,9 +543,6 @@ xlog_cil_insert_items(
->  			list_move_tail(&lip->li_cil, &cil->xc_cil);
->  	}
->  
-> -	/* attach the transaction to the CIL if it has any busy extents */
-> -	if (!list_empty(&tp->t_busy))
-> -		list_splice_init(&tp->t_busy, &ctx->busy_extents);
->  	spin_unlock(&cil->xc_cil_lock);
->  
->  	if (tp->t_ticket->t_curr_res < 0)
-> @@ -802,7 +802,10 @@ xlog_cil_push_work(
->  		ctx->ticket->t_curr_res += cilpcp->space_reserved;
->  		cilpcp->space_used = 0;
->  		cilpcp->space_reserved = 0;
-> -
-> +		if (!list_empty(&cilpcp->busy_extents)) {
-> +			list_splice_init(&cilpcp->busy_extents,
-> +					&ctx->busy_extents);
-> +		}
->  	}
->  
->  	spin_lock(&cil->xc_push_lock);
-> @@ -1459,17 +1462,24 @@ static void __percpu *
->  xlog_cil_pcp_alloc(
->  	struct xfs_cil		*cil)
->  {
-> +	void __percpu		*pcptr;
->  	struct xlog_cil_pcp	*cilpcp;
-> +	int			cpu;
->  
-> -	cilpcp = alloc_percpu(struct xlog_cil_pcp);
-> -	if (!cilpcp)
-> +	pcptr = alloc_percpu(struct xlog_cil_pcp);
-> +	if (!pcptr)
->  		return NULL;
->  
-> +	for_each_possible_cpu(cpu) {
-> +		cilpcp = per_cpu_ptr(pcptr, cpu);
+On Wed, Mar 10, 2021 at 6:27 AM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Wed, Mar 10, 2021 at 08:21:59AM -0600, Goldwyn Rodrigues wrote:
+> > On 13:02 10/03, Matthew Wilcox wrote:
+> > > On Wed, Mar 10, 2021 at 07:30:41AM -0500, Neal Gompa wrote:
+> > > > Forgive my ignorance, but is there a reason why this isn't wired up to
+> > > > Btrfs at the same time? It seems weird to me that adding a feature
+> > >
+> > > btrfs doesn't support DAX.  only ext2, ext4, XFS and FUSE have DAX support.
+> > >
+> > > If you think about it, btrfs and DAX are diametrically opposite things.
+> > > DAX is about giving raw access to the hardware.  btrfs is about offering
+> > > extra value (RAID, checksums, ...), none of which can be done if the
+> > > filesystem isn't in the read/write path.
+> > >
+> > > That's why there's no DAX support in btrfs.  If you want DAX, you have
+> > > to give up all the features you like in btrfs.  So you may as well use
+> > > a different filesystem.
+> >
+> > DAX on btrfs has been attempted[1]. Of course, we could not
+>
+> But why?  A completeness fetish?  I don't understand why you decided
+> to do this work.
 
-So... in my mind, "cilpcp" and "pcptr" aren't really all that distinct
-from each other.  I /think/ you're trying to use "cilpcp" everywhere
-else to mean "pointer to a particular CPU's CIL data", and this change
-makes that usage consistent in the alloc function.
+Isn't DAX useful for pagecache minimization on read even if it is
+awkward for a copy-on-write fs?
 
-However, this leaves xlog_cil_pcp_free using "cilpcp" to refer to the
-entire chunk of per-CPU data structures.  Given that the first refers to
-a specific structure and the second refers to them all in aggregate,
-maybe _pcp_alloc and _pcp_free should use a name that at least sounds
-plural?
-
-e.g.
-
-	void __percpu	*all_cilpcps = alloc_percpu(...);
-
-	for_each_possible_cpu(cpu) {
-		cilpcp = per_cpu_ptr(all_cilpcps, cpu);
-		cilpcp->magicval = 7777;
-	}
-
-and
-
-	cil->xc_all_pcps = xlog_cil_pcp_alloc(...);
-
-Hm?
-
---D
-
-> +		INIT_LIST_HEAD(&cilpcp->busy_extents);
-> +	}
-> +
->  	if (xlog_cil_pcp_hpadd(cil) < 0) {
-> -		free_percpu(cilpcp);
-> +		free_percpu(pcptr);
->  		return NULL;
->  	}
-> -	return cilpcp;
-> +	return pcptr;
->  }
->  
->  static void
-> -- 
-> 2.28.0
-> 
+Seems it would be a useful case to have COW'd VM images on BTRFS that
+don't need superfluous page cache allocations.
