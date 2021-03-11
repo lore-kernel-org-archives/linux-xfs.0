@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC168C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 03:06:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 505D0C433E9
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 03:06:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E26964FC8
+	by mail.kernel.org (Postfix) with ESMTP id 0A35D64FC8
 	for <linux-xfs@archiver.kernel.org>; Thu, 11 Mar 2021 03:06:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229778AbhCKDGE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229469AbhCKDGE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 10 Mar 2021 22:06:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45738 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:45672 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229803AbhCKDGD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Mar 2021 22:06:03 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ECB4A64FC4;
-        Thu, 11 Mar 2021 03:06:02 +0000 (UTC)
+        id S229562AbhCKDFq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Mar 2021 22:05:46 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5FC9E64FC4;
+        Thu, 11 Mar 2021 03:05:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615431963;
-        bh=rkFPfgneG8SPucad0U2iTgZHLihxGMnr4JNJfcvnXvw=;
+        s=k20201202; t=1615431946;
+        bh=HX6mTiI95u1DkubNHBK2b4P+74/gkNrjPnImsNVnKX8=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Cg6KcOJPncqAt3eMCta5JZLnY8u6C99mIL4/n2bKdeBG47Mis1TqPJo3ScJkdM65f
-         OLrtQw4af09slFH9oPtQYskBxAIfr7Vu8rlIU+BnsyUgRhNuPNZGY5r5rptel4IJnB
-         q9G7TGgaMP0G30FR3UgBF282hDXpo/aUuOnIVUOOrUX/ZGVOmZvxE1n0tP2UxgSUzY
-         LtA7CwilWnY7rO+5xt3/8hMj409DKyqJZDPSPeUkccSnMQybv+4Ktd9kY7Ey8Xnpi6
-         qFp3Xnkcq49Ucr+1EuDLxLn5ZzLgRTuxHX8Rnri59H2R7eEQJAqPzktp9+1l/1OIF7
-         /GJ5ArggBLIcA==
-Subject: [PATCH 04/11] xfs: decide if inode needs inactivation
+        b=WZNPqJmpirb9joXI7CxJVl1CA9g6/pCp99V7zHoQuz7iieDHCgnmOzthEmCjMsPvQ
+         G9Yza3wS3CZKKCg8tcYrbAsiVnDNLNtIeBh8TclOLXyGr+KfEp8cn6CCkyguGnJWWg
+         Jj++2RldWh+YE7hYyFDq5qxzBzQ3OnC49+2vptJ7fe4Ab9O9QHcP/pqEvhxJquMSgx
+         wdaapUHbBbOlFVHMMMZAsJXLX13Nr5DvPccYW+rWnAA5Uukm5UFNTV3n8vorh6RbdI
+         tB1IV0FUBYg0koQxRdn95jzd3w79lLXQcVbQRGhgRo5oZ1MmsarYJRa0cQAd02O1QO
+         4c2ddH4zhL/xg==
+Subject: [PATCH 01/11] xfs: prevent metadata files from being inactivated
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 10 Mar 2021 19:06:02 -0800
-Message-ID: <161543196269.1947934.4125444770307830204.stgit@magnolia>
+Date:   Wed, 10 Mar 2021 19:05:46 -0800
+Message-ID: <161543194600.1947934.584103655060069020.stgit@magnolia>
 In-Reply-To: <161543194009.1947934.9910987247994410125.stgit@magnolia>
 References: <161543194009.1947934.9910987247994410125.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,104 +49,91 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a predicate function to decide if an inode needs (deferred)
-inactivation.  Any file that has been unlinked or has speculative
-preallocations either for post-EOF writes or for CoW qualifies.
-This function will also be used by the upcoming deferred inactivation
-patch.
+Files containing metadata (quota records, rt bitmap and summary info)
+are fully managed by the filesystem, which means that all resource
+cleanup must be explicit, not automatic.  This means that they should
+never be subjected automatic to post-eof truncation, nor should they be
+freed automatically even if the link count drops to zero.
 
+In other words, xfs_inactive() should leave these files alone.  Add the
+necessary predicate functions to make this happen.  This adds a second
+layer of prevention for the kinds of fs corruption that was fixed by
+commit f4c32e87de7d.  If we ever decide to support removing metadata
+files, we should make all those metadata updates explicit.
+
+Rearrange the order of #includes to fix compiler errors, since
+xfs_mount.h is supposed to be included before xfs_inode.h
+
+Followup-to: f4c32e87de7d ("xfs: fix realtime bitmap/summary file truncation when growing rt volume")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_inode.c |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode.h |    2 ++
- 2 files changed, 65 insertions(+)
+ fs/xfs/libxfs/xfs_iext_tree.c |    2 +-
+ fs/xfs/xfs_inode.c            |    4 ++++
+ fs/xfs/xfs_inode.h            |    8 ++++++++
+ fs/xfs/xfs_xattr.c            |    2 ++
+ 4 files changed, 15 insertions(+), 1 deletion(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+index b4164256993d..773cf4349428 100644
+--- a/fs/xfs/libxfs/xfs_iext_tree.c
++++ b/fs/xfs/libxfs/xfs_iext_tree.c
+@@ -8,9 +8,9 @@
+ #include "xfs_format.h"
+ #include "xfs_bit.h"
+ #include "xfs_log_format.h"
+-#include "xfs_inode.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
++#include "xfs_inode.h"
+ #include "xfs_trace.h"
+ 
+ /*
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 12c79962f8c3..65897cb0cf2a 100644
+index f93370bd7b1e..12c79962f8c3 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1665,6 +1665,69 @@ xfs_inactive_ifree(
- 	return 0;
- }
+@@ -1697,6 +1697,10 @@ xfs_inactive(
+ 	if (mp->m_flags & XFS_MOUNT_RDONLY)
+ 		return;
  
-+/*
-+ * Returns true if we need to update the on-disk metadata before we can free
-+ * the memory used by this inode.  Updates include freeing post-eof
-+ * preallocations; freeing COW staging extents; and marking the inode free in
-+ * the inobt if it is on the unlinked list.
-+ */
-+bool
-+xfs_inode_needs_inactivation(
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_ifork	*cow_ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-+
-+	/*
-+	 * If the inode is already free, then there can be nothing
-+	 * to clean up here.
-+	 */
-+	if (VFS_I(ip)->i_mode == 0)
-+		return false;
-+
-+	/* If this is a read-only mount, don't do this (would generate I/O) */
-+	if (mp->m_flags & XFS_MOUNT_RDONLY)
-+		return false;
-+
 +	/* Metadata inodes require explicit resource cleanup. */
 +	if (xfs_is_metadata_inode(ip))
-+		return false;
++		return;
 +
-+	/* Try to clean out the cow blocks if there are any. */
-+	if (cow_ifp && cow_ifp->if_bytes > 0)
-+		return true;
+ 	/* Try to clean out the cow blocks if there are any. */
+ 	if (xfs_inode_has_cow_data(ip))
+ 		xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 88ee4c3930ae..c2c26f8f4a81 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -185,6 +185,14 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+ 	return ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
+ }
+ 
++static inline bool xfs_is_metadata_inode(struct xfs_inode *ip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
 +
-+	if (VFS_I(ip)->i_nlink != 0) {
-+		int	error;
-+		bool	has;
-+
-+		/*
-+		 * force is true because we are evicting an inode from the
-+		 * cache. Post-eof blocks must be freed, lest we end up with
-+		 * broken free space accounting.
-+		 *
-+		 * Note: don't bother with iolock here since lockdep complains
-+		 * about acquiring it in reclaim context. We have the only
-+		 * reference to the inode at this point anyways.
-+		 *
-+		 * If the predicate errors out, send the inode through
-+		 * inactivation anyway, because that's what we did before.
-+		 * The inactivation worker will ignore an inode that doesn't
-+		 * actually need it.
-+		 */
-+		if (!xfs_can_free_eofblocks(ip, true))
-+			return false;
-+		error = xfs_has_eofblocks(ip, &has);
-+		return error != 0 || has;
-+	}
-+
-+	/*
-+	 * Link count dropped to zero, which means we have to mark the inode
-+	 * free on disk and remove it from the AGI unlinked list.
-+	 */
-+	return true;
++	return ip == mp->m_rbmip || ip == mp->m_rsumip ||
++		xfs_is_quota_inode(&mp->m_sb, ip->i_ino);
 +}
 +
  /*
-  * xfs_inactive
-  *
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index c2c26f8f4a81..3fe8c8afbc72 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -480,6 +480,8 @@ extern struct kmem_zone	*xfs_inode_zone;
- /* The default CoW extent size hint. */
- #define XFS_DEFAULT_COWEXTSZ_HINT 32
- 
-+bool xfs_inode_needs_inactivation(struct xfs_inode *ip);
-+
- int xfs_iunlink_init(struct xfs_perag *pag);
- void xfs_iunlink_destroy(struct xfs_perag *pag);
- 
+  * Check if an inode has any data in the COW fork.  This might be often false
+  * even for inodes with the reflink flag when there is no pending COW operation.
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index 12be32f66dc1..0d050f8829ef 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -9,6 +9,8 @@
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_da_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
+ #include "xfs_inode.h"
+ #include "xfs_attr.h"
+ #include "xfs_acl.h"
 
