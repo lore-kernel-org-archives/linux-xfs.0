@@ -2,109 +2,127 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E326C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 02:37:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44581C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 04:26:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6689164ED6
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 02:37:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0632C64F93
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 04:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231351AbhCLCh0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Mar 2021 21:37:26 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:50494 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229530AbhCLChC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Mar 2021 21:37:02 -0500
-Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 68535825F65;
-        Fri, 12 Mar 2021 13:37:01 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lKXff-001VFU-RF; Fri, 12 Mar 2021 13:36:59 +1100
-Date:   Fri, 12 Mar 2021 13:36:59 +1100
-From:   Dave Chinner <david@fromorbit.com>
+        id S232145AbhCLEZq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Mar 2021 23:25:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41856 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232065AbhCLEZS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Mar 2021 23:25:18 -0500
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB044C061574;
+        Thu, 11 Mar 2021 20:25:17 -0800 (PST)
+Received: by mail-pg1-x535.google.com with SMTP id p21so15040340pgl.12;
+        Thu, 11 Mar 2021 20:25:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=j34L6WvUfG4y1tiZKOgfewghT0BSLNLv/xKvpS+TRWI=;
+        b=RpIMnSxsD/bpx+qHyd/jm/T1omBxkQu5n672HQf81rfmJzU0BcxqqBjxIFrvZo7Yjn
+         nSXYyNDPA4Q4ZwpQFsBSVQt1+vhsJE0C0H8V+rWlWgmVYTE+jKENioFjO1RrWbPplIHE
+         HbruVXed0fpBbwbWf66iCXfRW4qndQ+P3fsZRMglhnjvE1V7lGMRDPl7H36SSG7eCRif
+         YKxTG7JHQyovtLRUXnH5Ll6mmoXhFbI00xqpwXggibHedJ02je/SQsVwZ53bK/5zl5u8
+         1tfHCtiqw+uzlyfMekkEf53/2/Oo52O8nyEPbJpU9OvDIMj1xu26E3MVhyDgrXvi13bs
+         lumA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=j34L6WvUfG4y1tiZKOgfewghT0BSLNLv/xKvpS+TRWI=;
+        b=BqXn3BtvySa5nDHWy0qK3182Cm09bMA4j8IBWd226gnWHkMMx+L1s9n+XT6oA5PWMh
+         Jb7qi/t4mv1XtnzZQ/VK+xh7D7aFHnvugvaOMPS9gvJLjOZMuO7Q8NSII60N+VFkyCC3
+         rxHeO1KHlO83aiKHVT90bcAhfONye2oRqYLXinCGti/g3XZtaAwcTc03nGMgQXO2wT51
+         loUhvy/dXLpai0TlR/+NSvSaoZqBZwTkJXLpmZImFvV08IexximswcLyPmstCFZoTXBO
+         KsedAjgj9z/KlD5D0UzNz156euDcL7cjs1IxnlJeJgUx8+1MGT+vb6SK6feST1Okzo+R
+         e4jQ==
+X-Gm-Message-State: AOAM531p5STCnpx0H1tBrZlPwpOnwEyUz7FkkJ5M4IFDVV+uTYDCNbEN
+        VSRjAYWV5Cij3EhWmnRiATY=
+X-Google-Smtp-Source: ABdhPJwg6RLuW6jsT5N/UYz4PemGYeQaJFAy3Xe+jsswewSIujYAJ7lNb7BaHVlcURFXdzAK78IDEg==
+X-Received: by 2002:aa7:8681:0:b029:1fd:4dd2:5659 with SMTP id d1-20020aa786810000b02901fd4dd25659mr9645731pfo.8.1615523117415;
+        Thu, 11 Mar 2021 20:25:17 -0800 (PST)
+Received: from garuda ([122.179.18.33])
+        by smtp.gmail.com with ESMTPSA id s19sm3840566pfh.168.2021.03.11.20.25.15
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 11 Mar 2021 20:25:16 -0800 (PST)
+References: <161526480371.1214319.3263690953532787783.stgit@magnolia> <161526483668.1214319.17667836667890283825.stgit@magnolia> <87im5yc5dp.fsf@garuda>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 43/45] xfs: avoid cil push lock if possible
-Message-ID: <20210312023659.GK63242@dread.disaster.area>
-References: <20210305051143.182133-1-david@fromorbit.com>
- <20210305051143.182133-44-david@fromorbit.com>
- <20210311014709.GQ3419940@magnolia>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCH 06/10] xfs: test quota softlimit warning functionality
+In-reply-to: <87im5yc5dp.fsf@garuda>
+Date:   Fri, 12 Mar 2021 09:55:13 +0530
+Message-ID: <87im5xngly.fsf@garuda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210311014709.GQ3419940@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
-        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=C4FxL-jx8oPV39ssRIAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 10, 2021 at 05:47:09PM -0800, Darrick J. Wong wrote:
-> On Fri, Mar 05, 2021 at 04:11:41PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Because now it hurts when the CIL fills up.
-> > 
-> >   - 37.20% __xfs_trans_commit
-> >       - 35.84% xfs_log_commit_cil
-> >          - 19.34% _raw_spin_lock
-> >             - do_raw_spin_lock
-> >                  19.01% __pv_queued_spin_lock_slowpath
-> >          - 4.20% xfs_log_ticket_ungrant
-> >               0.90% xfs_log_space_wake
-> > 
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_log_cil.c | 14 +++++++++++---
-> >  1 file changed, 11 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> > index 6dcc23829bef..d60c72ad391a 100644
-> > --- a/fs/xfs/xfs_log_cil.c
-> > +++ b/fs/xfs/xfs_log_cil.c
-> > @@ -1115,10 +1115,18 @@ xlog_cil_push_background(
-> >  	ASSERT(!test_bit(XLOG_CIL_EMPTY, &cil->xc_flags));
-> >  
-> >  	/*
-> > -	 * Don't do a background push if we haven't used up all the
-> > -	 * space available yet.
-> > +	 * We are done if:
-> > +	 * - we haven't used up all the space available yet; or
-> > +	 * - we've already queued up a push; and
-> > +	 * - we're not over the hard limit; and
-> > +	 * - nothing has been over the hard limit.
-> 
-> Er... do these last three bullet points correspond to the last three
-> lines of the if test?  I'm not sure how !waitqueue_active() determines
-> that nothing has been over the hard limit?
+On 11 Mar 2021 at 16:40, Chandan Babu R wrote:
+> On 09 Mar 2021 at 10:10, Darrick J. Wong wrote:
+>> From: Darrick J. Wong <djwong@kernel.org>
+>>
+>> Make sure that quota softlimits work, which is to say that one can
+>> exceed the softlimit up to warnlimit times before it starts enforcing
+>> that.
+>>
+>> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+>> ---
+>>  tests/xfs/915     |  162 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/915.out |  151 +++++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/group   |    1
+>>  3 files changed, 314 insertions(+)
+>>  create mode 100755 tests/xfs/915
+>>  create mode 100644 tests/xfs/915.out
+>>
+>>
+>> diff --git a/tests/xfs/915 b/tests/xfs/915
 
-If a commit has made space used go over the hard limit, it will be
-throttled and put to sleep on the push wait queue. Another commit
-can then return space (inode fork gets smaller) and bring us back
-under the hard limit. Hence just checking against the space used does
-not tell us if we've hit the hard limit or not, but checking if
-there is a throttled process on the wait queue does...
+[...]
 
-> Or for that matter how
-> comparing push_seq against current_seq tells us if we've queued a
-> push?
+>> +*** report initial settings
+>> +[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
+>> +[NAME] 0 0 0 00 [--------] 0 3 500000 00 [--------] 0 0 0 00 [--------]
+>> +
+>> +*** push past the soft inode limit
+>> +[ROOT] 0 0 0 00 [--------] 3 0 0 13 [--------] 0 0 0 00 [--------]
+>> +[NAME] 0 0 0 00 [--------] 4 3 500000 02 [7 days] 0 0 0 00 [--------]
+>
+> At this point in the test we have created 4 files.
+> 1. softok{1,2,3}
+> 2. softwarn1
+>
+> So we have exceeded the soft inode limit (i.e. 3) once. But the warning has
+> been issued twice.
+>
+> _file_as_id() changes the project id of parent of each of the above files.  In
+> this case all the above listed files have $SCRATCH_MNT as the parent. So by
+> the time softok2 is created we have already reached the soft inode limit of 3
+> (parent and the two softok{1,2} files) and creation of softok3 and softwarn1
+> generates the two warnings listed above. If this explaination is correct,
+> shouldn't 'Used' inode count have a value of 5 (including the inode associated
+> with $SCRATCH_MNT)?
 
-We only set push_seq == current_seq when we queue up a push in
-xlog_cil_push_now() or xlog_cil_push_background().  Hence if no push
-has been queued, then push_seq will be less than current_seq.
+Sorry, I missed the fact that _file_as_id() reverts back the project id of
+$SCRATCH_MNT just before returning.
 
-Cheers,
+The patch looks good.
 
-Dave.
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+
 -- 
-Dave Chinner
-david@fromorbit.com
+chandan
