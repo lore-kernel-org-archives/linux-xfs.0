@@ -6,156 +6,155 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86A77C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 02:18:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01615C433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 02:30:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F3FC64EE9
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 02:18:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9D2B64F8E
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 02:30:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229743AbhCLCS0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Mar 2021 21:18:26 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:38105 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229530AbhCLCSF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Mar 2021 21:18:05 -0500
+        id S229636AbhCLCaY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Mar 2021 21:30:24 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:51180 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229558AbhCLC36 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Mar 2021 21:29:58 -0500
 Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7BCDD1041202;
-        Fri, 12 Mar 2021 13:18:03 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9F7FC828144;
+        Fri, 12 Mar 2021 13:29:56 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lKXNK-001Ush-FZ; Fri, 12 Mar 2021 13:18:02 +1100
-Date:   Fri, 12 Mar 2021 13:18:02 +1100
+        id 1lKXYq-001V9L-4P; Fri, 12 Mar 2021 13:29:56 +1100
+Date:   Fri, 12 Mar 2021 13:29:56 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 40/45] xfs: convert CIL to unordered per cpu lists
-Message-ID: <20210312021802.GI63242@dread.disaster.area>
+Subject: Re: [PATCH 41/45] xfs: move CIL ordering to the logvec chain
+Message-ID: <20210312022956.GJ63242@dread.disaster.area>
 References: <20210305051143.182133-1-david@fromorbit.com>
- <20210305051143.182133-41-david@fromorbit.com>
- <20210311011505.GN3419940@magnolia>
+ <20210305051143.182133-42-david@fromorbit.com>
+ <20210311013452.GO3419940@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210311011505.GN3419940@magnolia>
+In-Reply-To: <20210311013452.GO3419940@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
         a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
         a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=LeHXpyoGwPcjRiw2vpIA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=uTbK0inUIfzE9kccKWwA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 10, 2021 at 05:15:05PM -0800, Darrick J. Wong wrote:
-> On Fri, Mar 05, 2021 at 04:11:38PM +1100, Dave Chinner wrote:
+On Wed, Mar 10, 2021 at 05:34:52PM -0800, Darrick J. Wong wrote:
+> On Fri, Mar 05, 2021 at 04:11:39PM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > So that we can remove the cil_lock which is a global serialisation
-> > point. We've already got ordering sorted, so all we need to do is
-> > treat the CIL list like the busy extent list and reconstruct it
-> > before the push starts.
-....
-> > @@ -530,7 +511,6 @@ xlog_cil_insert_items(
-> >  	 * the transaction commit.
-> >  	 */
-> >  	order = atomic_inc_return(&ctx->order_id);
-> > -	spin_lock(&cil->xc_cil_lock);
-> >  	list_for_each_entry(lip, &tp->t_items, li_trans) {
-> >  
-> >  		/* Skip items which aren't dirty in this transaction. */
-> > @@ -540,10 +520,26 @@ xlog_cil_insert_items(
-> >  		lip->li_order_id = order;
-> >  		if (!list_empty(&lip->li_cil))
-> >  			continue;
-> > -		list_add(&lip->li_cil, &cil->xc_cil);
-> > +		list_add(&lip->li_cil, &cilpcp->log_items);
+> > Adding a list_sort() call to the CIL push work while the xc_ctx_lock
+> > is held exclusively has resulted in fairly long lock hold times and
+> > that stops all front end transaction commits from making progress.
 > 
-> Ok, so if I understand this correctly -- every time a transaction
-> commits, it marks every dirty log item with a monotonically increasing
-> counter.  If the log item isn't already on another CPU's CIL list, it
-> gets added to the current CPU's CIL list...
+> Heh, nice solution. :)
+> 
+> > We can move the sorting out of the xc_ctx_lock if we can transfer
+> > the ordering information to the log vectors as they are detached
+> > from the log items and then we can sort the log vectors. This
+> > requires log vectors to use a list_head rather than a single linked
+> > list
+> 
+> Ergh, could pull out the list conversion into a separate piece?
+> Some of the lv_chain usage is ... not entirely textbook.
 
-Correct.
+Yes, I can probably do that.
 
-> > +	}
-> > +	put_cpu_ptr(cilpcp);
-> > +
-> > +	/*
-> > +	 * If we've overrun the reservation, dump the tx details before we move
-> > +	 * the log items. Shutdown is imminent...
-> > +	 */
-> > +	tp->t_ticket->t_curr_res -= ctx_res + len;
-> > +	if (WARN_ON(tp->t_ticket->t_curr_res < 0)) {
-> > +		xfs_warn(log->l_mp, "Transaction log reservation overrun:");
-> > +		xfs_warn(log->l_mp,
-> > +			 "  log items: %d bytes (iov hdrs: %d bytes)",
-> > +			 len, iovhdr_res);
-> > +		xfs_warn(log->l_mp, "  split region headers: %d bytes",
-> > +			 split_res);
-> > +		xfs_warn(log->l_mp, "  ctx ticket: %d bytes", ctx_res);
-> > +		xlog_print_trans(tp);
-> >  	}
+> > diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+> > index af54ea3f8c90..0445dd6acbce 100644
+> > --- a/fs/xfs/xfs_log.h
+> > +++ b/fs/xfs/xfs_log.h
+> > @@ -9,7 +9,8 @@
+> >  struct xfs_cil_ctx;
 > >  
-> > -	spin_unlock(&cil->xc_cil_lock);
+> >  struct xfs_log_vec {
+> > -	struct xfs_log_vec	*lv_next;	/* next lv in build list */
+> > +	struct list_head	lv_chain;	/* lv chain ptrs */
+> > +	int			lv_order_id;	/* chain ordering info */
+> 
+> uint32_t to match li_order_id?
+
+*nod*
+
+> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> > index 3d43a5088154..6dcc23829bef 100644
+> > --- a/fs/xfs/xfs_log_cil.c
+> > +++ b/fs/xfs/xfs_log_cil.c
+> > @@ -72,6 +72,7 @@ xlog_cil_ctx_alloc(void)
+> >  	ctx = kmem_zalloc(sizeof(*ctx), KM_NOFS);
+> >  	INIT_LIST_HEAD(&ctx->committing);
+> >  	INIT_LIST_HEAD(&ctx->busy_extents);
+> > +	INIT_LIST_HEAD(&ctx->lv_chain);
+> >  	INIT_WORK(&ctx->push_work, xlog_cil_push_work);
+> >  	return ctx;
+> >  }
+> > @@ -237,6 +238,7 @@ xlog_cil_alloc_shadow_bufs(
+> >  			lv = kmem_alloc_large(buf_size, KM_NOFS);
+> >  			memset(lv, 0, xlog_cil_iovec_space(niovecs));
 > >  
-> >  	if (tp->t_ticket->t_curr_res < 0)
-> >  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
-> > @@ -806,6 +802,7 @@ xlog_cil_push_work(
-> >  	bool			commit_iclog_sync = false;
-> >  	int			cpu;
-> >  	struct xlog_cil_pcp	*cilpcp;
-> > +	LIST_HEAD		(log_items);
-> >  
-> >  	new_ctx = xlog_cil_ctx_alloc();
-> >  	new_ctx->ticket = xlog_cil_ticket_alloc(log);
-> > @@ -822,6 +819,9 @@ xlog_cil_push_work(
-> >  			list_splice_init(&cilpcp->busy_extents,
-> >  					&ctx->busy_extents);
+> > +			INIT_LIST_HEAD(&lv->lv_chain);
+> >  			lv->lv_item = lip;
+> >  			lv->lv_size = buf_size;
+> >  			if (ordered)
+> > @@ -252,7 +254,6 @@ xlog_cil_alloc_shadow_bufs(
+> >  			else
+> >  				lv->lv_buf_len = 0;
+> >  			lv->lv_bytes = 0;
+> > -			lv->lv_next = NULL;
 > >  		}
-> > +		if (!list_empty(&cilpcp->log_items)) {
-> > +			list_splice_init(&cilpcp->log_items, &log_items);
+> >  
+> >  		/* Ensure the lv is set up according to ->iop_size */
+> > @@ -379,8 +380,6 @@ xlog_cil_insert_format_items(
+> >  		if (lip->li_lv && shadow->lv_size <= lip->li_lv->lv_size) {
+> >  			/* same or smaller, optimise common overwrite case */
+> >  			lv = lip->li_lv;
+> > -			lv->lv_next = NULL;
 > 
-> ...and then at CIL push time, we splice each per-CPU list into a big
-> list, sort the dirty log items by counter number, and process them.
+> What /did/ these null assignments do?
 
-Yup, that's pretty much it. I'm replacing insert time ordering with
-push-time ordering to get rid of the serialisation overhead of
-insert time ordering.
+IIRC, at one point they ensured that the lv chain was correctly
+terminated when a lv was reused and added to the tail of an existing
+chain. I think that became redundant when we added the shadow
+buffers to allow allocation outside the CIL lock contexts...
 
-> The first thought I had was that it's a darn shame that _insert_items
-> can't steal a log item from another CPU's CIL list, because you could
-> then mergesort the per-CPU CIL lists into @log_items.  Unfortunately, I
-> don't think there's a safe way to steal items from a per-CPU list
-> without involving locks.
+> > -		list_del_init(&item->li_cil);
+> > -		item->li_order_id = 0;
+> > -		if (!ctx->lv_chain)
+> > -			ctx->lv_chain = item->li_lv;
+> > -		else
+> > -			lv->lv_next = item->li_lv;
+> > +
+> >  		lv = item->li_lv;
+> > -		item->li_lv = NULL;
+> > +		lv->lv_order_id = item->li_order_id;
+> >  		num_iovecs += lv->lv_niovecs;
+> > -
+> >  		/* we don't write ordered log vectors */
+> >  		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED)
+> >  			num_bytes += lv->lv_bytes;
+> > +		list_add_tail(&lv->lv_chain, &ctx->lv_chain);
+> > +
+> > +		list_del_init(&item->li_cil);
+> 
+> Do the list manipulations need moving, or could they have stayed further
+> up in the loop body for a cleaner patch?
 
-Yeah, it needs locks because we then have to serialise local inserts
-with remote removals. It can be done fairly easily - I just need to
-replace the "order ID" field with the CPU ID of the list it is on.
+I moved them so the code was structured as:
 
-The problem is that relogging happens a lot, so in some workloads we
-might be bouncing a set of commonly accessed log items around CPUs
-frequently. That said, I'm not sure this would end up a huge
-problem, but it still needs a mergesort to be performed in the push
-code...
+		<transfer item state to log vec>
+		<manipulate lists>
+		<clear item state>
 
-> The second thought I had was that we have the xfs_pwork mechanism for
-> launching a bunch of worker threads.  A pwork workqueue is (probably)
-> too costly when the item list is short or there aren't that many CPUs,
-> but once list_sort starts getting painful, would it be faster to launch
-> a bunch of threads in push_work to sort each per-CPU list and then merge
-> sort them into the final list?
-
-Not sure, because now you have N work threads competing with the
-userspace workload for CPU to do maybe 10ms of work. The scheduling
-latency when the system is CPU bound is likely to introduce more
-latency than you save by spreading the work out....
-
-I've largely put these sorts of questions aside because optimising
-this code further can be done later. The code as it stands doubles
-the throughput of the commit path and I don't think that further
-optimisation is immediately necessary. Ensuring that the splitting
-and recombining of the lists still results in correctly ordered log
-items is more important right now, and I think it does that.
+Because there was no clear separation between state and list
+manipulations. This will clean up if I separate the list
+manipulations into their own patch...
 
 Cheers,
 
