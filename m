@@ -7,118 +7,172 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BD95C433E6
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 00:48:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD721C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 01:16:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2AB8C64F8E
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 00:48:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA70464F90
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 Mar 2021 01:16:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229775AbhCLArd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Mar 2021 19:47:33 -0500
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:41912 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229636AbhCLArJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Mar 2021 19:47:09 -0500
+        id S229578AbhCLBPn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Mar 2021 20:15:43 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:37397 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229606AbhCLBPm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Mar 2021 20:15:42 -0500
 Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 1C33263077;
-        Fri, 12 Mar 2021 11:47:07 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BC13C1041358;
+        Fri, 12 Mar 2021 12:15:40 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lKVxI-001TQn-Me; Fri, 12 Mar 2021 11:47:04 +1100
-Date:   Fri, 12 Mar 2021 11:47:04 +1100
+        id 1lKWOx-001Tss-M1; Fri, 12 Mar 2021 12:15:39 +1100
+Date:   Fri, 12 Mar 2021 12:15:39 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 37/45] xfs: track CIL ticket reservation in percpu
- structure
-Message-ID: <20210312004704.GG63242@dread.disaster.area>
+Subject: Re: [PATCH 38/45] xfs: convert CIL busy extents to per-cpu
+Message-ID: <20210312011539.GH63242@dread.disaster.area>
 References: <20210305051143.182133-1-david@fromorbit.com>
- <20210305051143.182133-38-david@fromorbit.com>
- <20210311002610.GK3419940@magnolia>
+ <20210305051143.182133-39-david@fromorbit.com>
+ <20210311003601.GL3419940@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210311002610.GK3419940@magnolia>
+In-Reply-To: <20210311003601.GL3419940@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
         a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=Dhs8RxifOZkinYDzEEwA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=k-ReQ_0xFo0pnyzktQAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 10, 2021 at 04:26:10PM -0800, Darrick J. Wong wrote:
-> On Fri, Mar 05, 2021 at 04:11:35PM +1100, Dave Chinner wrote:
+On Wed, Mar 10, 2021 at 04:36:01PM -0800, Darrick J. Wong wrote:
+> On Fri, Mar 05, 2021 at 04:11:36PM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > To get it out from under the cil spinlock.
+> > To get them out from under the CIL lock.
+> > 
+> > This is an unordered list, so we can simply punt it to per-cpu lists
+> > during transaction commits and reaggregate it back into a single
+> > list during the CIL push work.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > > ---
-> >  fs/xfs/xfs_log_cil.c  | 11 ++++++-----
-> >  fs/xfs/xfs_log_priv.h |  2 +-
-> >  2 files changed, 7 insertions(+), 6 deletions(-)
+> >  fs/xfs/xfs_log_cil.c | 26 ++++++++++++++++++--------
+> >  1 file changed, 18 insertions(+), 8 deletions(-)
 > > 
 > > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> > index 5519d112c1fd..a2f93bd7644b 100644
+> > index a2f93bd7644b..7428b98c8279 100644
 > > --- a/fs/xfs/xfs_log_cil.c
 > > +++ b/fs/xfs/xfs_log_cil.c
-> > @@ -492,6 +492,7 @@ xlog_cil_insert_items(
-> >  	 * based on how close we are to the hard limit.
-> >  	 */
-> >  	cilpcp = get_cpu_ptr(cil->xc_pcp);
-> > +	cilpcp->space_reserved += ctx_res;
-> >  	cilpcp->space_used += len;
-> >  	if (space_used >= XLOG_CIL_SPACE_LIMIT(log) ||
-> >  	    cilpcp->space_used >
-> > @@ -502,10 +503,6 @@ xlog_cil_insert_items(
+> > @@ -501,6 +501,9 @@ xlog_cil_insert_items(
+> >  		atomic_add(cilpcp->space_used, &ctx->space_used);
+> >  		cilpcp->space_used = 0;
 > >  	}
+> > +	/* attach the transaction to the CIL if it has any busy extents */
+> > +	if (!list_empty(&tp->t_busy))
+> > +		list_splice_init(&tp->t_busy, &cilpcp->busy_extents);
 > >  	put_cpu_ptr(cilpcp);
 > >  
-> > -	spin_lock(&cil->xc_cil_lock);
-> > -	ctx->ticket->t_unit_res += ctx_res;
-> > -	ctx->ticket->t_curr_res += ctx_res;
-> > -
 > >  	/*
-> >  	 * If we've overrun the reservation, dump the tx details before we move
-> >  	 * the log items. Shutdown is imminent...
-> > @@ -527,6 +524,7 @@ xlog_cil_insert_items(
-> >  	 * We do this here so we only need to take the CIL lock once during
-> >  	 * the transaction commit.
-> >  	 */
-> > +	spin_lock(&cil->xc_cil_lock);
-> >  	list_for_each_entry(lip, &tp->t_items, li_trans) {
+> > @@ -540,9 +543,6 @@ xlog_cil_insert_items(
+> >  			list_move_tail(&lip->li_cil, &cil->xc_cil);
+> >  	}
 > >  
-> >  		/* Skip items which aren't dirty in this transaction. */
-> > @@ -798,10 +796,13 @@ xlog_cil_push_work(
+> > -	/* attach the transaction to the CIL if it has any busy extents */
+> > -	if (!list_empty(&tp->t_busy))
+> > -		list_splice_init(&tp->t_busy, &ctx->busy_extents);
+> >  	spin_unlock(&cil->xc_cil_lock);
 > >  
-> >  	down_write(&cil->xc_ctx_lock);
+> >  	if (tp->t_ticket->t_curr_res < 0)
+> > @@ -802,7 +802,10 @@ xlog_cil_push_work(
+> >  		ctx->ticket->t_curr_res += cilpcp->space_reserved;
+> >  		cilpcp->space_used = 0;
+> >  		cilpcp->space_reserved = 0;
+> > -
+> > +		if (!list_empty(&cilpcp->busy_extents)) {
+> > +			list_splice_init(&cilpcp->busy_extents,
+> > +					&ctx->busy_extents);
+> > +		}
+> >  	}
 > >  
-> > -	/* Reset the CIL pcp counters */
-> > +	/* Aggregate and reset the CIL pcp counters */
-> >  	for_each_online_cpu(cpu) {
-> >  		cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
-> > +		ctx->ticket->t_curr_res += cilpcp->space_reserved;
+> >  	spin_lock(&cil->xc_push_lock);
+> > @@ -1459,17 +1462,24 @@ static void __percpu *
+> >  xlog_cil_pcp_alloc(
+> >  	struct xfs_cil		*cil)
+> >  {
+> > +	void __percpu		*pcptr;
+> >  	struct xlog_cil_pcp	*cilpcp;
+> > +	int			cpu;
+> >  
+> > -	cilpcp = alloc_percpu(struct xlog_cil_pcp);
+> > -	if (!cilpcp)
+> > +	pcptr = alloc_percpu(struct xlog_cil_pcp);
+> > +	if (!pcptr)
+> >  		return NULL;
+> >  
+> > +	for_each_possible_cpu(cpu) {
+> > +		cilpcp = per_cpu_ptr(pcptr, cpu);
 > 
-> Why isn't it necessary to update ctx->ticket->t_unit_res any more?
+> So... in my mind, "cilpcp" and "pcptr" aren't really all that distinct
+> from each other.  I /think/ you're trying to use "cilpcp" everywhere
+> else to mean "pointer to a particular CPU's CIL data", and this change
+> makes that usage consistent in the alloc function.
 
-Because t_unit_res is never used by the CIL ticket becuse they
-aren't permanent transaction reservations. The unit res is only
-for granting new space to a ticket, yet the CIL only ever "steals"
-granted space from an existing ticket. When
-the ticket is dropped, we return unused reservations from the
-CIL ticket, but never touch or look at the unit reservation.
+Yeah, it's had to have short, concise, distinct names here because
+the generic pointer returned is a pointer to per cpu memory that
+contains CIL specific per-cpu structures...
 
-I can add it back in here if you want, but it's largely dead code...
+> However, this leaves xlog_cil_pcp_free using "cilpcp" to refer to the
+> entire chunk of per-CPU data structures.
 
-> (Admittedly I'm struggling to figure out why it matters to keep it
-> updated even in the current code base...)
+I'll fix that, I obviously missed that when trying to clean this up
+to be consistent...
 
-I think I originally did it a decade ago because I probably wasn't
-100% sure on what impact not setting it would have. Getting the rest
-of the delayed logging code right was far more important than
-sweating on a tiny, largely insignificant detail like this.
+> Given that the first refers to
+> a specific structure and the second refers to them all in aggregate,
+> maybe _pcp_alloc and _pcp_free should use a name that at least sounds
+> plural?
+> 
+> e.g.
+> 
+> 	void __percpu	*all_cilpcps = alloc_percpu(...);
+> 
+> 	for_each_possible_cpu(cpu) {
+> 		cilpcp = per_cpu_ptr(all_cilpcps, cpu);
+> 		cilpcp->magicval = 7777;
+> 	}
+
+The problem with "all" is that it implies a "global" all, not
+something that is owned by this specific CIL instance. i.e. there
+will be a per-cpu CIL area for every filesystem that is mounted, and
+they are actually all linked together into a global list for CPU
+hotplug to walk. So "all" CIL pcps to me means walking this list:
+
+static LIST_HEAD(xlog_cil_pcp_list);
+static DEFINE_SPINLOCK(xlog_cil_pcp_lock);
+
+which is linked by the cil->xc_pcp_list list heads in each CIL
+instance so that CPU hotplug can do the right thing.
+
+"pcp" is typical shorthand for a "per cpu pointer" but it's
+horrible when we have pointers to per-cpu lists, lists of per-cpu
+aware structures, pointers to per-cpu regions, pointers to per-cpu
+data (structures) within per-cpu regions, etc.
+
+There is no way to win here, it's going to be confusing whatever we
+do. I've tried to keep it simple:
+
+pcptr			- generic pointer to allocated per CPU region
+cil->xc_pcp		- CIL instance pointer to allocated percpu region
+cil->xc_pcp_list	- global list for CPU hotplug pcp management
+
+cilpcp			- pointer to specfic CPU instance of the CIL
+			  percpu data inside cil->xc_pcp region.
+
+I might just change the generic (void percpu *) regions to "pcp" so
+that they align with all the other uses of "pcp" in the naming.
 
 Cheers,
 
