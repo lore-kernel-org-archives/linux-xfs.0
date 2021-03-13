@@ -2,333 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 676DCC433E0
-	for <linux-xfs@archiver.kernel.org>; Sat, 13 Mar 2021 14:33:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9797C433E6
+	for <linux-xfs@archiver.kernel.org>; Sat, 13 Mar 2021 16:25:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F3FC64F25
-	for <linux-xfs@archiver.kernel.org>; Sat, 13 Mar 2021 14:33:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA06A64F26
+	for <linux-xfs@archiver.kernel.org>; Sat, 13 Mar 2021 16:25:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230441AbhCMOcT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 13 Mar 2021 09:32:19 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:41178 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229615AbhCMOby (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Mar 2021 09:31:54 -0500
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1lL5Iz-0006T4-55; Sat, 13 Mar 2021 14:31:49 +0000
-Date:   Sat, 13 Mar 2021 15:31:48 +0100
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     Vivek Goyal <vgoyal@redhat.com>, Christoph Hellwig <hch@lst.de>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-fsdevel@vger.kernel.org, Andy Lutomirski <luto@kernel.org>,
-        Theodore Tso <tytso@mit.edu>, Alban Crequy <alban@kinvolk.io>,
-        Tycho Andersen <tycho@tycho.ws>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        =?utf-8?B?U3TDqXBoYW5l?= Graber <stgraber@ubuntu.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aleksa Sarai <cyphar@cyphar.com>,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Serge Hallyn <serge@hallyn.com>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v6 02/40] fs: add id translation helpers
-Message-ID: <20210313143148.d6rhgmhxwq6abb6y@wittgenstein>
-References: <20210121131959.646623-1-christian.brauner@ubuntu.com>
- <20210121131959.646623-3-christian.brauner@ubuntu.com>
- <20210313000529.GA181317@redhat.com>
+        id S233570AbhCMQYx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 13 Mar 2021 11:24:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53904 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233478AbhCMQYi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Mar 2021 11:24:38 -0500
+Received: from mail-yb1-xb34.google.com (mail-yb1-xb34.google.com [IPv6:2607:f8b0:4864:20::b34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61BCBC061574;
+        Sat, 13 Mar 2021 08:24:38 -0800 (PST)
+Received: by mail-yb1-xb34.google.com with SMTP id u3so28716383ybk.6;
+        Sat, 13 Mar 2021 08:24:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=aXi6zxmykvKGGuEUIknBGQuu/CrpF+OFk8aqg1g8+Js=;
+        b=Hv71HUzmf0Lv3L07Y9vPI88fr2tkUa/1JbFZGy51jjbh9n4cRQ+P6rLbvPAhZMLbg5
+         ixsUkRYdDUhei4YCiRy0287CIkP8b3Jg9TpHICyCGV2xDgcQFoYiRrPDp0LcPbNyPobt
+         e2mB8WjIyZJjUgnIK3eEg9rREEgBthIupmC5k7TJkMd1BdMNglR5MTBljFc4WnZL0Tv/
+         2A5yFWAf2SP7q2tspr8wPFHgGP1dhWKjLEJrKe1jxyEujMO/6QhrAuiX6efY9Q0tZhFG
+         jbv3PaYMyafnqAK7BZW4C9hHl2HDt27Z0jCW48yq0cRe9cKlFDPeNt9KBY4Z6kTHjtIk
+         4+5Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=aXi6zxmykvKGGuEUIknBGQuu/CrpF+OFk8aqg1g8+Js=;
+        b=RWpJp9ontZOvRMncYQydzhgd/kmxrCW8sA2Ss7LRhtcfOdDRN05N0BMdgwxBp9lcqV
+         9RisfygBqY7VUHuBXgutd6LSgESo5NHywEPfFqyIquxFfPd60o++gNEwYxYFPqUgzt2J
+         /UBPjHmaNb1A5kaNZIqtdN9YU5HjXDwaWNIpUkzVH9RUW8JzOB2p9ByW3gi6kjp9LKzQ
+         gkPddsfWFIbCzF42F35daAAkB1Oxww0Jkh7Oi7QtNzGDLvMXoBptAcY0TuqUD9XMv06s
+         Pj9of01etDCrGKMA4YkZgIMK308rmtskcCeS8WK0OO8A1KJvBQYuWzCGyi00TOUl80Jq
+         2nWw==
+X-Gm-Message-State: AOAM533KP5HXB3hBoclYsfK8ZYpxe/wiTlfCU/uEShCW3vneppsIz5/b
+        oyTaM5gkLl9XCr50q3SQAOIr+c+Bg32n0WP3kms=
+X-Google-Smtp-Source: ABdhPJwtKc3ckDh1wM2gREfAQUcazj9bOTqT8gJ/CC1jACL5d+N8mbIM5sD/vFtR/QEb1ipgGC33qgcC6cjdF7XgPjg=
+X-Received: by 2002:a25:424f:: with SMTP id p76mr27228411yba.109.1615652676401;
+ Sat, 13 Mar 2021 08:24:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20210313000529.GA181317@redhat.com>
+References: <20210226002030.653855-1-ruansy.fnst@fujitsu.com>
+ <CAEg-Je-OLidbfzHCJvY55x+-cOfiUxX8CJ1AeN8VxXAVuVyxKQ@mail.gmail.com>
+ <20210310130227.GN3479805@casper.infradead.org> <20210310142159.kudk7q2ogp4yqn36@fiona>
+ <20210310142643.GQ3479805@casper.infradead.org> <YEy4+SPUvQkL44PQ@angband.pl>
+In-Reply-To: <YEy4+SPUvQkL44PQ@angband.pl>
+From:   Neal Gompa <ngompa13@gmail.com>
+Date:   Sat, 13 Mar 2021 11:24:00 -0500
+Message-ID: <CAEg-Je-JCW5xa6w5Z9n7+UNnLju251SmqnXiReA2v41fFaXAtw@mail.gmail.com>
+Subject: Re: [PATCH v2 00/10] fsdax,xfs: Add reflink&dedupe support for fsdax
+To:     Adam Borowski <kilobyte@angband.pl>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jan Kara <jack@suse.cz>, Al Viro <viro@zeniv.linux.org.uk>,
+        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
+        ocfs2-devel@oss.oracle.com, david <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 12, 2021 at 07:05:29PM -0500, Vivek Goyal wrote:
-> On Thu, Jan 21, 2021 at 02:19:21PM +0100, Christian Brauner wrote:
-> > Add simple helpers to make it easy to map kuids into and from idmapped
-> > mounts. We provide simple wrappers that filesystems can use to e.g.
-> > initialize inodes similar to i_{uid,gid}_read() and i_{uid,gid}_write().
-> > Accessing an inode through an idmapped mount maps the i_uid and i_gid of
-> > the inode to the mount's user namespace. If the fsids are used to
-> > initialize inodes they are unmapped according to the mount's user
-> > namespace. Passing the initial user namespace to these helpers makes
-> > them a nop and so any non-idmapped paths will not be impacted.
-> > 
-> > Link: https://lore.kernel.org/r/20210112220124.837960-9-christian.brauner@ubuntu.com
-> > Cc: David Howells <dhowells@redhat.com>
-> > Cc: Al Viro <viro@zeniv.linux.org.uk>
-> > Cc: linux-fsdevel@vger.kernel.org
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
-> > ---
-> > /* v2 */
-> > - Christoph Hellwig <hch@lst.de>:
-> >   - Get rid of the ifdefs and the config option that hid idmapped mounts.
-> > 
-> > /* v3 */
-> > unchanged
-> > 
-> > /* v4 */
-> > - Serge Hallyn <serge@hallyn.com>:
-> >   - Use "mnt_userns" to refer to a vfsmount's userns everywhere to make
-> >     terminology consistent.
-> > 
-> > /* v5 */
-> > unchanged
-> > base-commit: 7c53f6b671f4aba70ff15e1b05148b10d58c2837
-> > 
-> > /* v6 */
-> > unchanged
-> > base-commit: 19c329f6808995b142b3966301f217c831e7cf31
-> > ---
-> >  include/linux/fs.h | 47 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 47 insertions(+)
-> > 
-> > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > index fd0b80e6361d..3165998e2294 100644
-> > --- a/include/linux/fs.h
-> > +++ b/include/linux/fs.h
-> > @@ -40,6 +40,7 @@
-> >  #include <linux/build_bug.h>
-> >  #include <linux/stddef.h>
-> >  #include <linux/mount.h>
-> > +#include <linux/cred.h>
-> >  
-> >  #include <asm/byteorder.h>
-> >  #include <uapi/linux/fs.h>
-> > @@ -1573,6 +1574,52 @@ static inline void i_gid_write(struct inode *inode, gid_t gid)
-> >  	inode->i_gid = make_kgid(inode->i_sb->s_user_ns, gid);
-> >  }
-> >  
-> > +static inline kuid_t kuid_into_mnt(struct user_namespace *mnt_userns,
-> > +				   kuid_t kuid)
-> > +{
-> > +	return make_kuid(mnt_userns, __kuid_val(kuid));
-> > +}
-> > +
-> 
-> Hi Christian,
-> 
-> I am having little trouble w.r.t function names and trying to figure
-> out whether they are mapping id down or up.
-> 
-> For example, kuid_into_mnt() ultimately calls map_id_down(). That is,
-> id visible inside user namespace is mapped to host
-> (if observer is in init_user_ns, IIUC).
-> 
-> But fsuid_into_mnt() ultimately calls map_id_up(). That's take a kuid
-> and map it into the user_namespace.
-> 
-> So both the helpers end with into_mnt() but one maps id down and
-> other maps id up. I found this confusing and was wondering how
-> should I visualize it. So thought of asking you.
-> 
-> Is this intentional or can naming be improved so that *_into_mnt()
-> means one thing (Either map_id_up() or map_id_down()). And vice-a-versa
-> for *_from_mnt().
+On Sat, Mar 13, 2021 at 8:09 AM Adam Borowski <kilobyte@angband.pl> wrote:
+>
+> On Wed, Mar 10, 2021 at 02:26:43PM +0000, Matthew Wilcox wrote:
+> > On Wed, Mar 10, 2021 at 08:21:59AM -0600, Goldwyn Rodrigues wrote:
+> > > DAX on btrfs has been attempted[1]. Of course, we could not
+> >
+> > But why?  A completeness fetish?  I don't understand why you decided
+> > to do this work.
+>
+> * xfs can shapshot only single files, btrfs entire subvolumes
+> * btrfs-send|receive
+> * enumeration of changed parts of a file
+>
 
-[Trimming my crazy Cc list to not spam everyone.].
-
-Hey Vivek,
-
-Thank you for your feedback, really appreciated!
-
-The naming was intended to always signify that the helpers always return
-a k{u,g}id but I can certainly see how the naming isn't as clear as it
-should be for those helpers in other ways. I would suggest we remove
-such direct exposures of these helpers completely and make it simpler
-for callers by introducing very straightforward helpers. See the tiny
-patches below (only compile tested for now):
-
-From 1bab0249295d0cad359f39a38e6171bcd2d68a60 Mon Sep 17 00:00:00 2001
-From: Christian Brauner <christian.brauner@ubuntu.com>
-Date: Sat, 13 Mar 2021 15:08:04 +0100
-Subject: [PATCH 1/2] fs: introduce fsuidgid_has_mapping() helper
-
-Don't open-code the checks and instead move them into a clean little
-helper we can call. This also reduces the risk that if we ever changing
-something here we forget to change all locations.
-
-Inspired-by: Vivek Goyal <vgoyal@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
----
- fs/namei.c         | 11 +++--------
- include/linux/fs.h | 13 +++++++++++++
- 2 files changed, 16 insertions(+), 8 deletions(-)
-
-diff --git a/fs/namei.c b/fs/namei.c
-index 216f16e74351..bc03cbc37ba7 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -2823,16 +2823,14 @@ static int may_delete(struct user_namespace *mnt_userns, struct inode *dir,
- static inline int may_create(struct user_namespace *mnt_userns,
- 			     struct inode *dir, struct dentry *child)
- {
--	struct user_namespace *s_user_ns;
- 	audit_inode_child(dir, child, AUDIT_TYPE_CHILD_CREATE);
- 	if (child->d_inode)
- 		return -EEXIST;
- 	if (IS_DEADDIR(dir))
- 		return -ENOENT;
--	s_user_ns = dir->i_sb->s_user_ns;
--	if (!kuid_has_mapping(s_user_ns, fsuid_into_mnt(mnt_userns)) ||
--	    !kgid_has_mapping(s_user_ns, fsgid_into_mnt(mnt_userns)))
-+	if (!fsuidgid_has_mapping(dir->i_sb, mnt_userns))
- 		return -EOVERFLOW;
-+
- 	return inode_permission(mnt_userns, dir, MAY_WRITE | MAY_EXEC);
- }
- 
-@@ -3034,14 +3032,11 @@ static int may_o_create(struct user_namespace *mnt_userns,
- 			const struct path *dir, struct dentry *dentry,
- 			umode_t mode)
- {
--	struct user_namespace *s_user_ns;
- 	int error = security_path_mknod(dir, dentry, mode, 0);
- 	if (error)
- 		return error;
- 
--	s_user_ns = dir->dentry->d_sb->s_user_ns;
--	if (!kuid_has_mapping(s_user_ns, fsuid_into_mnt(mnt_userns)) ||
--	    !kgid_has_mapping(s_user_ns, fsgid_into_mnt(mnt_userns)))
-+	if (!fsuidgid_has_mapping(dir->dentry->d_sb, mnt_userns))
- 		return -EOVERFLOW;
- 
- 	error = inode_permission(mnt_userns, dir->dentry->d_inode,
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ec8f3ddf4a6a..a970a43afb0a 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1620,6 +1620,19 @@ static inline kgid_t fsgid_into_mnt(struct user_namespace *mnt_userns)
- 	return kgid_from_mnt(mnt_userns, current_fsgid());
- }
- 
-+static inline bool fsuidgid_has_mapping(struct super_block *sb,
-+					struct user_namespace *mnt_userns)
-+{
-+	struct user_namespace *s_user_ns = sb->s_user_ns;
-+	if (!kuid_has_mapping(s_user_ns,
-+		kuid_from_mnt(mnt_userns, current_fsuid())))
-+		return false;
-+	if (!kgid_has_mapping(s_user_ns,
-+		kgid_from_mnt(mnt_userns, current_fsgid())))
-+		return false;
-+	return true;
-+}
-+
- extern struct timespec64 current_time(struct inode *inode);
- 
- /*
--- 
-2.27.0
+XFS cannot do snapshots since it lacks metadata COW. XFS reflinking is
+primarily for space efficiency.
 
 
-From 2f316f7de3ac96ecc8cc889724c0132e96b47b51 Mon Sep 17 00:00:00 2001
-From: Christian Brauner <christian.brauner@ubuntu.com>
-Date: Sat, 13 Mar 2021 15:11:55 +0100
-Subject: [PATCH 2/2] fs: introduce two little fs{u,g}id inode initialization
- helpers
 
-As Vivek pointed out we could tweak the names of the fs{u,g}id helpers.
-That's already good but the better approach is to not expose them in
-this way to filesystems at all and simply give the filesystems two
-helpers inode_fsuid_set() and inode_fsgid_set() that will do the right
-thing.
-
-Inspired-by: Vivek Goyal <vgoyal@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
----
- fs/ext4/ialloc.c   |  2 +-
- fs/inode.c         |  4 ++--
- fs/xfs/xfs_inode.c |  2 +-
- include/linux/fs.h | 10 ++++++----
- 4 files changed, 10 insertions(+), 8 deletions(-)
-
-diff --git a/fs/ext4/ialloc.c b/fs/ext4/ialloc.c
-index 633ae7becd61..755a68bb7e22 100644
---- a/fs/ext4/ialloc.c
-+++ b/fs/ext4/ialloc.c
-@@ -970,7 +970,7 @@ struct inode *__ext4_new_inode(struct user_namespace *mnt_userns,
- 		i_gid_write(inode, owner[1]);
- 	} else if (test_opt(sb, GRPID)) {
- 		inode->i_mode = mode;
--		inode->i_uid = fsuid_into_mnt(mnt_userns);
-+		inode_fsuid_set(inode, mnt_userns);
- 		inode->i_gid = dir->i_gid;
- 	} else
- 		inode_init_owner(mnt_userns, inode, dir, mode);
-diff --git a/fs/inode.c b/fs/inode.c
-index a047ab306f9a..21c5a620ca89 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2148,7 +2148,7 @@ EXPORT_SYMBOL(init_special_inode);
- void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
- 		      const struct inode *dir, umode_t mode)
- {
--	inode->i_uid = fsuid_into_mnt(mnt_userns);
-+	inode_fsuid_set(inode, mnt_userns);
- 	if (dir && dir->i_mode & S_ISGID) {
- 		inode->i_gid = dir->i_gid;
- 
-@@ -2160,7 +2160,7 @@ void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
- 			 !capable_wrt_inode_uidgid(mnt_userns, dir, CAP_FSETID))
- 			mode &= ~S_ISGID;
- 	} else
--		inode->i_gid = fsgid_into_mnt(mnt_userns);
-+		inode_fsgid_set(inode, mnt_userns);
- 	inode->i_mode = mode;
- }
- EXPORT_SYMBOL(inode_init_owner);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 46a861d55e48..aa924db90cd9 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -812,7 +812,7 @@ xfs_init_new_inode(
- 
- 	if (dir && !(dir->i_mode & S_ISGID) &&
- 	    (mp->m_flags & XFS_MOUNT_GRPID)) {
--		inode->i_uid = fsuid_into_mnt(mnt_userns);
-+		inode_fsuid_set(inode, mnt_userns);
- 		inode->i_gid = dir->i_gid;
- 		inode->i_mode = mode;
- 	} else {
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index a970a43afb0a..b337daa6b191 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1610,14 +1610,16 @@ static inline kgid_t kgid_from_mnt(struct user_namespace *mnt_userns,
- 	return KGIDT_INIT(from_kgid(mnt_userns, kgid));
- }
- 
--static inline kuid_t fsuid_into_mnt(struct user_namespace *mnt_userns)
-+static inline void inode_fsuid_set(struct inode *inode,
-+				   struct user_namespace *mnt_userns)
- {
--	return kuid_from_mnt(mnt_userns, current_fsuid());
-+	inode->i_uid = kuid_from_mnt(mnt_userns, current_fsuid());
- }
- 
--static inline kgid_t fsgid_into_mnt(struct user_namespace *mnt_userns)
-+static inline void inode_fsgid_set(struct inode *inode,
-+				   struct user_namespace *mnt_userns)
- {
--	return kgid_from_mnt(mnt_userns, current_fsgid());
-+	inode->i_gid = kgid_from_mnt(mnt_userns, current_fsgid());
- }
- 
- static inline bool fsuidgid_has_mapping(struct super_block *sb,
--- 
-2.27.0
-
+--=20
+=E7=9C=9F=E5=AE=9F=E3=81=AF=E3=81=84=E3=81=A4=E3=82=82=E4=B8=80=E3=81=A4=EF=
+=BC=81/ Always, there's only one truth!
