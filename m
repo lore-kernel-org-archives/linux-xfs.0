@@ -2,121 +2,93 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 333BCC433E6
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Mar 2021 15:00:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3BF6C433E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Mar 2021 15:03:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13E3564E13
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Mar 2021 15:00:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 795CC64E1F
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Mar 2021 15:03:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232795AbhCOO71 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 Mar 2021 10:59:27 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:37940 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239381AbhCOOyk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Mar 2021 10:54:40 -0400
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1lLoc4-0006o5-SB; Mon, 15 Mar 2021 14:54:33 +0000
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>
-Cc:     Vivek Goyal <vgoyal@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Christian Brauner <christian.brauner@ubuntu.com>
-Subject: [PATCH 1/3] fs: introduce fsuidgid_has_mapping() helper
-Date:   Mon, 15 Mar 2021 15:54:17 +0100
-Message-Id: <20210315145419.2612537-2-christian.brauner@ubuntu.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210315145419.2612537-1-christian.brauner@ubuntu.com>
-References: <20210315145419.2612537-1-christian.brauner@ubuntu.com>
+        id S237280AbhCOPDW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 Mar 2021 11:03:22 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:41450 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232697AbhCOPDA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Mar 2021 11:03:00 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1615820579;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=SuUrfSUVYcvqwv+V2phKH037J7pY14xAe8WG1eVhE/c=;
+        b=DQnYIPIDCk41hfB8RYKhWawr9utjDuInxz5wjKyvK5tebVPG9swPWtCCfMMLtJigEQOnl8
+        pPJab1NelT8v4iZxnOTT/Y1yxQIBagSNYauEinpof8uQMUx1kNzgPdN80BqHkNFG+aOG5j
+        fH7Z12rNIrhEFnzLb62nWVBpchBln+s=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-96-b6xBBW-6MeOQ2XkeiepQaw-1; Mon, 15 Mar 2021 11:02:57 -0400
+X-MC-Unique: b6xBBW-6MeOQ2XkeiepQaw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 97C8081426D
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Mar 2021 15:02:56 +0000 (UTC)
+Received: from andromeda.lan (unknown [10.40.194.157])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id EF4216B8E5
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Mar 2021 15:02:55 +0000 (UTC)
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] Add dax mount option to man xfs(5)
+Date:   Mon, 15 Mar 2021 16:02:50 +0100
+Message-Id: <20210315150250.11870-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Don't open-code the checks and instead move them into a clean little
-helper we can call. This also reduces the risk that if we ever change
-something we forget to change all locations.
+Details are already in kernel's documentation, but make dax mount option
+information accessible through xfs(5) manpage.
 
-Inspired-by: Vivek Goyal <vgoyal@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
-Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/namei.c         | 11 +++--------
- include/linux/fs.h | 11 +++++++++++
- 2 files changed, 14 insertions(+), 8 deletions(-)
+ man/man5/xfs.5 | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/fs/namei.c b/fs/namei.c
-index 216f16e74351..bc03cbc37ba7 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -2823,16 +2823,14 @@ static int may_delete(struct user_namespace *mnt_userns, struct inode *dir,
- static inline int may_create(struct user_namespace *mnt_userns,
- 			     struct inode *dir, struct dentry *child)
- {
--	struct user_namespace *s_user_ns;
- 	audit_inode_child(dir, child, AUDIT_TYPE_CHILD_CREATE);
- 	if (child->d_inode)
- 		return -EEXIST;
- 	if (IS_DEADDIR(dir))
- 		return -ENOENT;
--	s_user_ns = dir->i_sb->s_user_ns;
--	if (!kuid_has_mapping(s_user_ns, fsuid_into_mnt(mnt_userns)) ||
--	    !kgid_has_mapping(s_user_ns, fsgid_into_mnt(mnt_userns)))
-+	if (!fsuidgid_has_mapping(dir->i_sb, mnt_userns))
- 		return -EOVERFLOW;
+diff --git a/man/man5/xfs.5 b/man/man5/xfs.5
+index 7642662f..46b0558a 100644
+--- a/man/man5/xfs.5
++++ b/man/man5/xfs.5
+@@ -133,6 +133,24 @@ by the filesystem.
+ CRC enabled filesystems always use the attr2 format, and so
+ will reject the noattr2 mount option if it is set.
+ .TP
++.BR dax=value
++Set DAX behavior for the current filesystem. This mount option accepts the
++following values:
 +
- 	return inode_permission(mnt_userns, dir, MAY_WRITE | MAY_EXEC);
- }
- 
-@@ -3034,14 +3032,11 @@ static int may_o_create(struct user_namespace *mnt_userns,
- 			const struct path *dir, struct dentry *dentry,
- 			umode_t mode)
- {
--	struct user_namespace *s_user_ns;
- 	int error = security_path_mknod(dir, dentry, mode, 0);
- 	if (error)
- 		return error;
- 
--	s_user_ns = dir->dentry->d_sb->s_user_ns;
--	if (!kuid_has_mapping(s_user_ns, fsuid_into_mnt(mnt_userns)) ||
--	    !kgid_has_mapping(s_user_ns, fsgid_into_mnt(mnt_userns)))
-+	if (!fsuidgid_has_mapping(dir->dentry->d_sb, mnt_userns))
- 		return -EOVERFLOW;
- 
- 	error = inode_permission(mnt_userns, dir->dentry->d_inode,
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ec8f3ddf4a6a..edcb1aa99fd6 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1620,6 +1620,17 @@ static inline kgid_t fsgid_into_mnt(struct user_namespace *mnt_userns)
- 	return kgid_from_mnt(mnt_userns, current_fsgid());
- }
- 
-+static inline bool fsuidgid_has_mapping(struct super_block *sb,
-+					struct user_namespace *mnt_userns)
-+{
-+	struct user_namespace *s_user_ns = sb->s_user_ns;
++"dax=inode" DAX will be enabled only on files with FS_XFLAG_DAX applied.
 +
-+	return kuid_has_mapping(s_user_ns,
-+				kuid_from_mnt(mnt_userns, current_fsuid())) &&
-+	       kgid_has_mapping(s_user_ns,
-+				kgid_from_mnt(mnt_userns, current_fsgid()));
-+}
++"dax=never" DAX will be disabled by the whole filesystem including files with
++FS_XFLAG_DAX applied"
 +
- extern struct timespec64 current_time(struct inode *inode);
- 
- /*
++"dax=always" DAX will be enabled to every file in the filesystem inclduing files
++without FS_XFLAG_DAX applied"
++
++If no option is used when mounting a pmem device, dax=inode will be used as
++default.
++
++For details regarding DAX behavior in kernel, please refer to kernel's
++documentation at filesystems/dax.txt
++.TP
+ .BR discard | nodiscard
+ Enable/disable the issuing of commands to let the block
+ device reclaim space freed by the filesystem.  This is
 -- 
-2.27.0
+2.29.2
 
