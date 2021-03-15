@@ -2,127 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED652C433E9
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Mar 2021 14:55:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8985FC433E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Mar 2021 14:55:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBC9764E81
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Mar 2021 14:55:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5474E64E76
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Mar 2021 14:55:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239686AbhCOOyy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 Mar 2021 10:54:54 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:37935 "EHLO
+        id S238541AbhCOOzZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 Mar 2021 10:55:25 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:37955 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239527AbhCOOyh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Mar 2021 10:54:37 -0400
+        with ESMTP id S241797AbhCOOys (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Mar 2021 10:54:48 -0400
 Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
         by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.86_2)
         (envelope-from <christian.brauner@ubuntu.com>)
-        id 1lLoc2-0006o5-JN; Mon, 15 Mar 2021 14:54:30 +0000
+        id 1lLoc9-0006o5-CG; Mon, 15 Mar 2021 14:54:37 +0000
 From:   Christian Brauner <christian.brauner@ubuntu.com>
 To:     Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>
 Cc:     Vivek Goyal <vgoyal@redhat.com>,
         "Darrick J . Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         Christian Brauner <christian.brauner@ubuntu.com>
-Subject: [PATCH 0/3] tweak idmap helpers
-Date:   Mon, 15 Mar 2021 15:54:16 +0100
-Message-Id: <20210315145419.2612537-1-christian.brauner@ubuntu.com>
+Subject: [PATCH 3/3] fs: introduce two little fs{u,g}id inode initialization helpers
+Date:   Mon, 15 Mar 2021 15:54:19 +0100
+Message-Id: <20210315145419.2612537-4-christian.brauner@ubuntu.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20210315145419.2612537-1-christian.brauner@ubuntu.com>
+References: <20210315145419.2612537-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hey,
+Give filesystem two little helpers so that do the right thing when
+initializing the i_uid and i_gid fields on idmapped and non-idmapped
+mounts. Filesystemd don't need to bother with too many details for this.
 
-This little series tries to improve naming and developer friendliness of fs
-idmapping helpers triggered by a request/comment from Vivek.
-Let's remove the two open-coded checks for whether there's a mapping for
-fsuid/fsgid in the s_user_ns of the underlying filesystem. Instead move them
-into a tiny helper, getting rid of redundancy and making sure that if we ever
-change something it's changed in all places. Also add two helpers to initialize
-and inode's i_uid and i_gid fields taking into account idmapped mounts making
-it easier for fs developers.
+Inspired-by: Vivek Goyal <vgoyal@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Al Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org
+Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
+---
+ fs/ext4/ialloc.c   |  2 +-
+ fs/inode.c         |  4 ++--
+ fs/xfs/xfs_inode.c |  2 +-
+ include/linux/fs.h | 12 ++++++++++++
+ 4 files changed, 16 insertions(+), 4 deletions(-)
 
-This patch series is on top of Darrick's changes in the xfs-5.12-fixes-2
-tag or xfs-5.12-fixes branch since renaming the two helpers in the second patch
-affects xfs which calls them when initializing quotas.
-
-The xfstests I sent out all pass:
-
-1. Idmapped mounts test-suite
-ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check generic/627
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-inode-helpers #343 SMP Mon Mar 15 12:57:02 UTC 2021
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
-MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
-
-generic/627      16s
-Ran: generic/627
-Passed all 1 tests
-
-2. Detached mount propagation
-ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check generic/626
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-inode-helpers #343 SMP Mon Mar 15 12:57:02 UTC 2021
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
-MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
-
-generic/626 10s ...  9s
-Ran: generic/626
-Passed all 1 tests
-
-3. Testing xfs quotas can't be exceeded/work correctly from idmapped mounts
-ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check xfs/528
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-inode-helpers #343 SMP Mon Mar 15 12:57:02 UTC 2021
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
-MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
-
-xfs/528 41s ...  44s
-Ran: xfs/528
-Passed all 1 tests
-
-4. Testing xfs qutoas on idmapped mounts
-ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check xfs/529
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-inode-helpers #343 SMP Mon Mar 15 12:57:02 UTC 2021
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
-MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
-
-xfs/529 23s ...  25s
-Ran: xfs/529
-Passed all 1 tests
-
-Thanks!
-Christian
-
-Christian Brauner (3):
-  fs: introduce fsuidgid_has_mapping() helper
-  fs: improve naming for fsid helpers
-  fs: introduce two little fs{u,g}id inode initialization helpers
-
- fs/ext4/ialloc.c     |  2 +-
- fs/inode.c           |  4 ++--
- fs/namei.c           | 11 +++--------
- fs/xfs/xfs_inode.c   | 10 +++++-----
- fs/xfs/xfs_symlink.c |  4 ++--
- include/linux/fs.h   | 27 +++++++++++++++++++++++++--
- 6 files changed, 38 insertions(+), 20 deletions(-)
-
-
-base-commit: 1e28eed17697bcf343c6743f0028cc3b5dd88bf0
-prerequisite-patch-id: 0bdc07ef3137ce6d6ef284ad308de9a9bc2ea1f3
-prerequisite-patch-id: a1c05069d67f08ea75e88f54f5fdf86db4d82865
-prerequisite-patch-id: 707b24a3c6f71599e038a66aa3474b270d2699fe
-prerequisite-patch-id: c42d85f64933a4e48aa10192c374bebad07ca5c0
-prerequisite-patch-id: 5fcf22eea4b225691a034308a23c309f1583f970
+diff --git a/fs/ext4/ialloc.c b/fs/ext4/ialloc.c
+index 633ae7becd61..755a68bb7e22 100644
+--- a/fs/ext4/ialloc.c
++++ b/fs/ext4/ialloc.c
+@@ -970,7 +970,7 @@ struct inode *__ext4_new_inode(struct user_namespace *mnt_userns,
+ 		i_gid_write(inode, owner[1]);
+ 	} else if (test_opt(sb, GRPID)) {
+ 		inode->i_mode = mode;
+-		inode->i_uid = fsuid_into_mnt(mnt_userns);
++		inode_fsuid_set(inode, mnt_userns);
+ 		inode->i_gid = dir->i_gid;
+ 	} else
+ 		inode_init_owner(mnt_userns, inode, dir, mode);
+diff --git a/fs/inode.c b/fs/inode.c
+index a047ab306f9a..21c5a620ca89 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2148,7 +2148,7 @@ EXPORT_SYMBOL(init_special_inode);
+ void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
+ 		      const struct inode *dir, umode_t mode)
+ {
+-	inode->i_uid = fsuid_into_mnt(mnt_userns);
++	inode_fsuid_set(inode, mnt_userns);
+ 	if (dir && dir->i_mode & S_ISGID) {
+ 		inode->i_gid = dir->i_gid;
+ 
+@@ -2160,7 +2160,7 @@ void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
+ 			 !capable_wrt_inode_uidgid(mnt_userns, dir, CAP_FSETID))
+ 			mode &= ~S_ISGID;
+ 	} else
+-		inode->i_gid = fsgid_into_mnt(mnt_userns);
++		inode_fsgid_set(inode, mnt_userns);
+ 	inode->i_mode = mode;
+ }
+ EXPORT_SYMBOL(inode_init_owner);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 8703408bd1aa..20846810f13f 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -812,7 +812,7 @@ xfs_init_new_inode(
+ 
+ 	if (dir && !(dir->i_mode & S_ISGID) &&
+ 	    (mp->m_flags & XFS_MOUNT_GRPID)) {
+-		inode->i_uid = fsuid_into_mnt(mnt_userns);
++		inode_fsuid_set(inode, mnt_userns);
+ 		inode->i_gid = dir->i_gid;
+ 		inode->i_mode = mode;
+ 	} else {
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 189673721726..0cde0cbc20fc 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1620,6 +1620,18 @@ static inline kgid_t idmapped_fsgid(struct user_namespace *mnt_userns)
+ 	return kgid_from_mnt(mnt_userns, current_fsgid());
+ }
+ 
++static inline void inode_fsuid_set(struct inode *inode,
++				   struct user_namespace *mnt_userns)
++{
++	inode->i_uid = idmapped_fsuid(mnt_userns);
++}
++
++static inline void inode_fsgid_set(struct inode *inode,
++				   struct user_namespace *mnt_userns)
++{
++	inode->i_gid = idmapped_fsgid(mnt_userns);
++}
++
+ static inline bool fsuidgid_has_mapping(struct super_block *sb,
+ 					struct user_namespace *mnt_userns)
+ {
 -- 
 2.27.0
 
