@@ -2,173 +2,155 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0782C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Mar 2021 14:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70852C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Mar 2021 14:56:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82E5665090
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Mar 2021 14:55:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D5F66508A
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Mar 2021 14:56:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237620AbhCPOy5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Mar 2021 10:54:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:31746 "EHLO
+        id S237623AbhCPO4B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Mar 2021 10:56:01 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:26906 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231277AbhCPOyf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Mar 2021 10:54:35 -0400
+        by vger.kernel.org with ESMTP id S237626AbhCPOzm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Mar 2021 10:55:42 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1615906475;
+        s=mimecast20190719; t=1615906541;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=TjcdPLulPVPLqgT21rrns+++8FxSebIR0EUFB5jrlDQ=;
-        b=hny9AGUYgJAornrXobtr7npomYHpg7GXmmtlrD6LeUqCw/zHP0RXpvWR8vfx00SriQdrfC
-        XNExjMS+zi713MpBXVv2/cQVOdzcMzbe7kdfLIX4gV5x9Lj8JZmuUNHdH5r0LcO7UZsPZ1
-        6PMCNPUI7Sh2CqQlEW4XIGQTdDisY50=
+        bh=oXpNpE/q63iMLxuPsRemeyADYyB9Vu/nXwuk776EPX8=;
+        b=K7+siSBWfFu6OtALb4FXI9Tr7CVbIzAsyJIr26rSxvWPaHBr4L7bhP4Di4B9z4T0v0nDZt
+        Zd7l/A7viJiMWfs1YZswFhUK8MaeZaK352bstOiBoehY0ArxYdVuol68Zyecibdjhz4O6R
+        ZhF6LAZrkGo/5kJBT2zmK8bca4adhho=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-200-DPcg-0GhOF-BroRCbfVf1w-1; Tue, 16 Mar 2021 10:54:33 -0400
-X-MC-Unique: DPcg-0GhOF-BroRCbfVf1w-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-409-EpIInxPAPiK_OJFsX7fYtw-1; Tue, 16 Mar 2021 10:55:37 -0400
+X-MC-Unique: EpIInxPAPiK_OJFsX7fYtw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4DF40800C78;
-        Tue, 16 Mar 2021 14:54:32 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4166AEC1A4;
+        Tue, 16 Mar 2021 14:55:36 +0000 (UTC)
 Received: from bfoster (ovpn-112-124.rdu2.redhat.com [10.10.112.124])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C43506091A;
-        Tue, 16 Mar 2021 14:54:31 +0000 (UTC)
-Date:   Tue, 16 Mar 2021 10:54:29 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D479710023B0;
+        Tue, 16 Mar 2021 14:55:35 +0000 (UTC)
+Date:   Tue, 16 Mar 2021 10:55:34 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 25/45] xfs: reserve space and initialise xlog_op_header
- in item formatting
-Message-ID: <YFDGpVRPksA8HDeY@bfoster>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 26/45] xfs: log ticket region debug is largely useless
+Message-ID: <YFDG5mYRTvSL1Wjo@bfoster>
 References: <20210305051143.182133-1-david@fromorbit.com>
- <20210305051143.182133-26-david@fromorbit.com>
- <20210309022134.GM3419940@magnolia>
- <20210311032932.GL74031@dread.disaster.area>
- <20210311034114.GD7269@magnolia>
+ <20210305051143.182133-27-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210311034114.GD7269@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <20210305051143.182133-27-david@fromorbit.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 10, 2021 at 07:41:14PM -0800, Darrick J. Wong wrote:
-> On Thu, Mar 12, 2021 at 02:29:32PM +1100, Dave Chinner wrote:
-> > On Mon, Mar 08, 2021 at 06:21:34PM -0800, Darrick J. Wong wrote:
-> > > On Fri, Mar 05, 2021 at 04:11:23PM +1100, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Current xlog_write() adds op headers to the log manually for every
-> > > > log item region that is in the vector passed to it. While
-> > > > xlog_write() needs to stamp the transaction ID into the ophdr, we
-> > > > already know it's length, flags, clientid, etc at CIL commit time.
-> > > > 
-> > > > This means the only time that xlog write really needs to format and
-> > > > reserve space for a new ophdr is when a region is split across two
-> > > > iclogs. Adding the opheader and accounting for it as part of the
-> > > > normal formatted item region means we simplify the accounting
-> > > > of space used by a transaction and we don't have to special case
-> > > > reserving of space in for the ophdrs in xlog_write(). It also means
-> > > > we can largely initialise the ophdr in transaction commit instead
-> > > > of xlog_write, making the xlog_write formatting inner loop much
-> > > > tighter.
-> > > > 
-> > > > xlog_prepare_iovec() is now too large to stay as an inline function,
-> > > > so we move it out of line and into xfs_log.c.
-> > > > 
-> > > > Object sizes:
-> > > > text	   data	    bss	    dec	    hex	filename
-> > > > 1125934	 305951	    484	1432369	 15db31 fs/xfs/built-in.a.before
-> > > > 1123360	 305951	    484	1429795	 15d123 fs/xfs/built-in.a.after
-> > > > 
-> > > > So the code is a roughly 2.5kB smaller with xlog_prepare_iovec() now
-> > > > out of line, even though it grew in size itself.
-> > > > 
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Sooo... if I understand this part of the patchset correctly, the goal
-> > > here is to simplify and shorten the inner loop of xlog_write.
-> > 
-> > That's one of the goals. The other goal is to avoid needing to
-> > account for log op headers separately in the high level CIL commit
-> > code.
-> > 
-> > > Callers
-> > > are now required to create their own log op headers at the start of the
-> > > xfs_log_iovec chain in the xfs_log_vec, which means that the only time
-> > > xlog_write has to create an ophdr is when we fill up the current iclog
-> > > and must continue in a new one, because that's not something the callers
-> > > should ever have to know about.  Correct?
-> > 
-> > Yes.
-> > 
-> > > If so,
-> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Thanks!
-> > 
-> > > It /really/ would have been nice to have kept these patches separated by
-> > > major functional change area (i.e. separate series) instead of one
-> > > gigantic 45-patch behemoth to intimidate the reviewers...
-> > 
-> > How is that any different from sending out 6-7 separate dependent
-> > patchsets one immediately after another?  A change to one patch in
-> > one series results in needing to rebase at least one patch in each
-> > of the smaller patchsets, so I've still got to treat them all as one
-> > big patchset in my development trees. Then I have to start
-> > reposting patchsets just because another patchset was changed, and
-> > that gets even more confusing trying to work out what patchset goes
-> > with which version and so on. It's much easier for me to manage them
-> > as a single patchset....
+On Fri, Mar 05, 2021 at 04:11:24PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Well, ok, but it would have been nice for the cover letter to give
-> /some/ hint as to what's changing in various subranges, e.g.
+> xlog_tic_add_region() is used to trace the regions being added to a
+> log ticket to provide information in the situation where a ticket
+> reservation overrun occurs. The information gathered is stored int
+> the ticket, and dumped if xlog_print_tic_res() is called.
 > 
-> "Patches 32-36 reduce the xc_cil_lock critical sections,
->  Patches 37-41 create per-cpu cil structures and move log items and
->        vectors to use them,
->  Patches 42-44 are more cleanups,
->  Patch 45 documents the whole mess."
+> For a front end struct xfs_trans overrun, the ticket only contains
+> reservation tracking information - the ticket is never handed to the
+> log so has no regions attached to it. The overrun debug information in this
+> case comes from xlog_print_trans(), which walks the items attached
+> to the transaction and dumps their attached formatted log vectors
+> directly. It also dumps the ticket state, but that only contains
+> reservation accounting and nothing else. Hence xlog_print_tic_res()
+> never dumps region or overrun information from this path.
 > 
-> So I could see the outlines of where the 45 patches were going.
+> xlog_tic_add_region() is actually called from xlog_write(), which
+> means it is being used to track the regions seen in a
+> CIL checkpoint log vector chain. In looking at CIL behaviour
+> recently, I've seen 32MB checkpoints regularly exceed 250,000
+> regions in the LV chain. The log ticket debug code can track *15*
+> regions. IOWs, if there is a ticket overrun in the CIL code, the
+> ticket region tracking code is going to be completely useless for
+> determining what went wrong. The only thing it can tell us is how
+> much of an overrun occurred, and we really don't need extra debug
+> information in the log ticket to tell us that.
 > 
+> Indeed, the main place we call xlog_tic_add_region() is also adding
+> up the number of regions and the space used so that xlog_write()
+> knows how much will be written to the log. This is exactly the same
+> information that log ticket is storing once we take away the useless
+> region tracking array. Hence xlog_tic_add_region() is not useful,
+> but can be called 250,000 times a CIL push...
+> 
+> Just strip all that debug "information" out of the of the log ticket
+> and only have it report reservation space information when an
+> overrun occurs. This also reduces the size of a log ticket down by
+> about 150 bytes...
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_log.c      | 107 +++---------------------------------------
+>  fs/xfs/xfs_log_priv.h |  17 -------
+>  2 files changed, 6 insertions(+), 118 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 7f601c1c9f45..8ee6a5f74396 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -139,16 +139,6 @@ enum xlog_iclog_state {
+>  /* Ticket reservation region accounting */ 
+>  #define XLOG_TIC_LEN_MAX	15
+>  
 
-Agreed. The purpose of separate patch series' is to facilitate upstream
-review and patch processing. This series strikes me as not only separate
-logical changes, but changes probably with different trajectories toward
-merge as well. E.g., do we expect to land this whole series together at
-the same time? That would seem... unwise.
+This is unused now.
 
-If not (or if we don't otherwise want to unnecessarily delay the earlier
-parts of the series until the whole percpu cil thing at the end is
-worked out), then I think it probably makes sense to split off into
-three or so subseries. The first can cover the log flush optimizations
-and whatever one off fixes that are all probably close to merge-worthy,
-the second can cover this op header formatting rework and associated
-cleanups, and the last covers all of the percpu stuff at the end. If
-there's a real concern over rebase churn, there's probably no huge need
-to respin the entire collection on every review cycle of one of the
-earlier subseries.
+> -/*
+> - * Reservation region
+> - * As would be stored in xfs_log_iovec but without the i_addr which
+> - * we don't care about.
+> - */
+> -typedef struct xlog_res {
+> -	uint	r_len;	/* region length		:4 */
+> -	uint	r_type;	/* region's transaction type	:4 */
+> -} xlog_res_t;
+> -
+>  typedef struct xlog_ticket {
+>  	struct list_head   t_queue;	 /* reserve/write queue */
+>  	struct task_struct *t_task;	 /* task that owns this ticket */
+> @@ -159,13 +149,6 @@ typedef struct xlog_ticket {
+>  	char		   t_ocnt;	 /* original count		 : 1  */
+>  	char		   t_cnt;	 /* current count		 : 1  */
+>  	char		   t_flags;	 /* properties of reservation	 : 1  */
+> -
+> -        /* reservation array fields */
+> -	uint		   t_res_num;                    /* num in array : 4 */
+> -	uint		   t_res_num_ophdrs;		 /* num op hdrs  : 4 */
+
+I'm curious why we wouldn't want to retain the ophdr count..? That's
+managed separately from the _add_region() bits and provides some info on
+the total number of vectors, etc. Otherwise looks reasonable.
 
 Brian
 
-> --D
-> 
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
+> -	uint		   t_res_arr_sum;		 /* array sum    : 4 */
+> -	uint		   t_res_o_flow;		 /* sum overflow : 4 */
+> -	xlog_res_t	   t_res_arr[XLOG_TIC_LEN_MAX];  /* array of res : 8 * 15 */ 
+>  } xlog_ticket_t;
+>  
+>  /*
+> -- 
+> 2.28.0
 > 
 
