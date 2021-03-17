@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A90C43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F37EC433E0
 	for <linux-xfs@archiver.kernel.org>; Wed, 17 Mar 2021 04:58:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 615F264F2B
+	by mail.kernel.org (Postfix) with ESMTP id 2CFD364FB4
 	for <linux-xfs@archiver.kernel.org>; Wed, 17 Mar 2021 04:58:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229863AbhCQE5r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Mar 2021 00:57:47 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:52808 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229864AbhCQE5f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Mar 2021 00:57:35 -0400
+        id S229847AbhCQE5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Mar 2021 00:57:45 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53666 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229831AbhCQE5X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Mar 2021 00:57:23 -0400
 Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id ABECB78BB77
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id AB03582831D
         for <linux-xfs@vger.kernel.org>; Wed, 17 Mar 2021 15:57:10 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lMOF3-003R8V-9w
+        id 1lMOF3-003R8P-64
         for linux-xfs@vger.kernel.org; Wed, 17 Mar 2021 15:57:09 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lMOF3-002jaC-1J
-        for linux-xfs@vger.kernel.org; Wed, 17 Mar 2021 15:57:09 +1100
+        id 1lMOF2-002ja6-U0
+        for linux-xfs@vger.kernel.org; Wed, 17 Mar 2021 15:57:08 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 7/8] xfs: reduce debug overhead of dir leaf/node checks
-Date:   Wed, 17 Mar 2021 15:57:05 +1100
-Message-Id: <20210317045706.651306-8-david@fromorbit.com>
+Subject: [PATCH 5/8] xfs: type verification is expensive
+Date:   Wed, 17 Mar 2021 15:57:03 +1100
+Message-Id: <20210317045706.651306-6-david@fromorbit.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210317045706.651306-1-david@fromorbit.com>
 References: <20210317045706.651306-1-david@fromorbit.com>
@@ -45,132 +45,153 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
         a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
         a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=es5hYbETAauG9ijk2hQA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=NuCpFDova00jneZWLDgA:9 a=1bhhmmbT452i7CQz:21 a=xfdbkvumHq1WlvTV:21
+        a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-On debug kernels, we call xfs_dir3_leaf_check_int() multiple times
-on every directory modification. The robust hash ordering checks it
-does on every entry in the leaf on every call results in a massive
-CPU overhead which slows down debug kernels by a large amount.
+From a concurrent rm -rf workload:
 
-We use xfs_dir3_leaf_check_int() for the verifiers as well, so we
-can't just gut the function to reduce overhead. What we can do,
-however, is reduce the work it does when it is called from the
-debug interfaces, just leaving the high level checks in place and
-leaving the robust validation to the verifiers. This means the debug
-checks will catch gross errors, but subtle bugs might not be caught
-until a verifier is run.
+  41.04%  [kernel]  [k] xfs_dir3_leaf_check_int
+   9.85%  [kernel]  [k] __xfs_dir3_data_check
+   5.60%  [kernel]  [k] xfs_verify_ino
+   5.32%  [kernel]  [k] xfs_agino_range
+   4.21%  [kernel]  [k] memcpy
+   3.06%  [kernel]  [k] xfs_errortag_test
+   2.57%  [kernel]  [k] xfs_dir_ino_validate
+   1.66%  [kernel]  [k] xfs_dir2_data_get_ftype
+   1.17%  [kernel]  [k] do_raw_spin_lock
+   1.11%  [kernel]  [k] xfs_verify_dir_ino
+   0.84%  [kernel]  [k] __raw_callee_save___pv_queued_spin_unlock
+   0.83%  [kernel]  [k] xfs_buf_find
+   0.64%  [kernel]  [k] xfs_log_commit_cil
 
-It is easy enough to restore the existing debug behaviour if the
-developer needs it (just change a call parameter in the debug code),
-but overwise the overhead makes testing large directory block sizes
-on debug kernels very slow.
+THere's an awful lot of overhead in just range checking inode
+numbers in that, but each inode number check is not a lot of code.
+The total is a bit over 14.5% of the CPU time is spent validating
+inode numbers.
 
-Profile at an unlink rate of ~80k file/s on a 64k block size
-filesystem before the patch:
+The problem is that they deeply nested global scope functions so the
+overhead here is all in function call marshalling.
 
-  40.30%  [kernel]  [k] xfs_dir3_leaf_check_int
-  10.98%  [kernel]  [k] __xfs_dir3_data_check
-   8.10%  [kernel]  [k] xfs_verify_dir_ino
-   4.42%  [kernel]  [k] memcpy
-   2.22%  [kernel]  [k] xfs_dir2_data_get_ftype
-   1.52%  [kernel]  [k] do_raw_spin_lock
+   text	   data	    bss	    dec	    hex	filename
+   2077	      0	      0	   2077	    81d fs/xfs/libxfs/xfs_types.o.orig
+   2197	      0	      0	   2197	    895	fs/xfs/libxfs/xfs_types.o
 
-Profile after, at an unlink rate of ~125k files/s (+50% improvement)
-has largely dropped the leaf verification debug overhead out of the
-profile.
+There's a small increase in binary size by inlining all the local
+nested calls in the verifier functions, but the same workload now
+profiles as:
 
-  16.53%  [kernel]  [k] __xfs_dir3_data_check
-  12.53%  [kernel]  [k] xfs_verify_dir_ino
-   7.97%  [kernel]  [k] memcpy
-   3.36%  [kernel]  [k] xfs_dir2_data_get_ftype
-   2.86%  [kernel]  [k] __pv_queued_spin_lock_slowpath
+  40.69%  [kernel]  [k] xfs_dir3_leaf_check_int
+  10.52%  [kernel]  [k] __xfs_dir3_data_check
+   6.68%  [kernel]  [k] xfs_verify_dir_ino
+   4.22%  [kernel]  [k] xfs_errortag_test
+   4.15%  [kernel]  [k] memcpy
+   3.53%  [kernel]  [k] xfs_dir_ino_validate
+   1.87%  [kernel]  [k] xfs_dir2_data_get_ftype
+   1.37%  [kernel]  [k] do_raw_spin_lock
+   0.98%  [kernel]  [k] xfs_buf_find
+   0.94%  [kernel]  [k] __raw_callee_save___pv_queued_spin_unlock
+   0.73%  [kernel]  [k] xfs_log_commit_cil
 
-Create shows a similar change in profile and a +25% improvement in
-performance.
+Now we only spend just over 10% of the time validing inode numbers
+for the same workload. Hence a few "inline" keyworks is good enough
+to reduce the validation overhead by 30%...
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_dir2_leaf.c | 10 +++++++---
- fs/xfs/libxfs/xfs_dir2_node.c |  2 +-
- fs/xfs/libxfs/xfs_dir2_priv.h |  3 ++-
- 3 files changed, 10 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_types.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 95d2a3f92d75..ccd8d0aa62b8 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -113,7 +113,7 @@ xfs_dir3_leaf1_check(
- 	} else if (leafhdr.magic != XFS_DIR2_LEAF1_MAGIC)
- 		return __this_address;
+diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+index b254fbeaaa50..04801362e1a7 100644
+--- a/fs/xfs/libxfs/xfs_types.c
++++ b/fs/xfs/libxfs/xfs_types.c
+@@ -13,7 +13,7 @@
+ #include "xfs_mount.h"
  
--	return xfs_dir3_leaf_check_int(dp->i_mount, &leafhdr, leaf);
-+	return xfs_dir3_leaf_check_int(dp->i_mount, &leafhdr, leaf, false);
+ /* Find the size of the AG, in blocks. */
+-xfs_agblock_t
++inline xfs_agblock_t
+ xfs_ag_block_count(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno)
+@@ -29,7 +29,7 @@ xfs_ag_block_count(
+  * Verify that an AG block number pointer neither points outside the AG
+  * nor points at static metadata.
+  */
+-bool
++inline bool
+ xfs_verify_agbno(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+@@ -49,7 +49,7 @@ xfs_verify_agbno(
+  * Verify that an FS block number pointer neither points outside the
+  * filesystem nor points at static AG metadata.
+  */
+-bool
++inline bool
+ xfs_verify_fsbno(
+ 	struct xfs_mount	*mp,
+ 	xfs_fsblock_t		fsbno)
+@@ -85,7 +85,7 @@ xfs_verify_fsbext(
  }
  
- static inline void
-@@ -139,7 +139,8 @@ xfs_failaddr_t
- xfs_dir3_leaf_check_int(
- 	struct xfs_mount		*mp,
- 	struct xfs_dir3_icleaf_hdr	*hdr,
--	struct xfs_dir2_leaf		*leaf)
-+	struct xfs_dir2_leaf		*leaf,
-+	bool				expensive_checking)
- {
- 	struct xfs_da_geometry		*geo = mp->m_dir_geo;
- 	xfs_dir2_leaf_tail_t		*ltp;
-@@ -162,6 +163,9 @@ xfs_dir3_leaf_check_int(
- 	    (char *)&hdr->ents[hdr->count] > (char *)xfs_dir2_leaf_bests_p(ltp))
- 		return __this_address;
- 
-+	if (!expensive_checking)
-+		return NULL;
-+
- 	/* Check hash value order, count stale entries.  */
- 	for (i = stale = 0; i < hdr->count; i++) {
- 		if (i + 1 < hdr->count) {
-@@ -195,7 +199,7 @@ xfs_dir3_leaf_verify(
- 		return fa;
- 
- 	xfs_dir2_leaf_hdr_from_disk(mp, &leafhdr, bp->b_addr);
--	return xfs_dir3_leaf_check_int(mp, &leafhdr, bp->b_addr);
-+	return xfs_dir3_leaf_check_int(mp, &leafhdr, bp->b_addr, true);
+ /* Calculate the first and last possible inode number in an AG. */
+-void
++inline void
+ xfs_agino_range(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+@@ -116,7 +116,7 @@ xfs_agino_range(
+  * Verify that an AG inode number pointer neither points outside the AG
+  * nor points at static metadata.
+  */
+-bool
++inline bool
+ xfs_verify_agino(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+@@ -146,7 +146,7 @@ xfs_verify_agino_or_null(
+  * Verify that an FS inode number pointer neither points outside the
+  * filesystem nor points at static AG metadata.
+  */
+-bool
++inline bool
+ xfs_verify_ino(
+ 	struct xfs_mount	*mp,
+ 	xfs_ino_t		ino)
+@@ -162,7 +162,7 @@ xfs_verify_ino(
  }
  
- static void
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 5d51265d29d6..80a64117b460 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -73,7 +73,7 @@ xfs_dir3_leafn_check(
- 	} else if (leafhdr.magic != XFS_DIR2_LEAFN_MAGIC)
- 		return __this_address;
- 
--	return xfs_dir3_leaf_check_int(dp->i_mount, &leafhdr, leaf);
-+	return xfs_dir3_leaf_check_int(dp->i_mount, &leafhdr, leaf, false);
+ /* Is this an internal inode number? */
+-bool
++inline bool
+ xfs_internal_inum(
+ 	struct xfs_mount	*mp,
+ 	xfs_ino_t		ino)
+@@ -190,7 +190,7 @@ xfs_verify_dir_ino(
+  * Verify that an realtime block number pointer doesn't point off the
+  * end of the realtime device.
+  */
+-bool
++inline bool
+ xfs_verify_rtbno(
+ 	struct xfs_mount	*mp,
+ 	xfs_rtblock_t		rtbno)
+@@ -215,7 +215,7 @@ xfs_verify_rtext(
  }
  
- static inline void
-diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index 44c6a77cba05..94943ce49cab 100644
---- a/fs/xfs/libxfs/xfs_dir2_priv.h
-+++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -127,7 +127,8 @@ xfs_dir3_leaf_find_entry(struct xfs_dir3_icleaf_hdr *leafhdr,
- extern int xfs_dir2_node_to_leaf(struct xfs_da_state *state);
- 
- extern xfs_failaddr_t xfs_dir3_leaf_check_int(struct xfs_mount *mp,
--		struct xfs_dir3_icleaf_hdr *hdr, struct xfs_dir2_leaf *leaf);
-+		struct xfs_dir3_icleaf_hdr *hdr, struct xfs_dir2_leaf *leaf,
-+		bool expensive_checks);
- 
- /* xfs_dir2_node.c */
- void xfs_dir2_free_hdr_from_disk(struct xfs_mount *mp,
+ /* Calculate the range of valid icount values. */
+-void
++inline void
+ xfs_icount_range(
+ 	struct xfs_mount	*mp,
+ 	unsigned long long	*min,
 -- 
 2.30.1
 
