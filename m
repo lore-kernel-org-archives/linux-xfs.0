@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 384FEC433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD78C433E6
 	for <linux-xfs@archiver.kernel.org>; Wed, 17 Mar 2021 04:58:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E843564F9E
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Mar 2021 04:58:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19CE764FB3
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Mar 2021 04:58:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229761AbhCQE5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229867AbhCQE5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 17 Mar 2021 00:57:45 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:49443 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229472AbhCQE5R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Mar 2021 00:57:17 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53704 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229761AbhCQE5M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Mar 2021 00:57:12 -0400
 Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 22A6663D11
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id AAFEB8282E9
         for <linux-xfs@vger.kernel.org>; Wed, 17 Mar 2021 15:57:10 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lMOF3-003R8S-7t
+        id 1lMOF3-003R8G-3D
         for linux-xfs@vger.kernel.org; Wed, 17 Mar 2021 15:57:09 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lMOF2-002ja9-Vk
+        id 1lMOF2-002ja0-Rr
         for linux-xfs@vger.kernel.org; Wed, 17 Mar 2021 15:57:08 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 6/8] xfs: No need for inode number error injection in __xfs_dir3_data_check
-Date:   Wed, 17 Mar 2021 15:57:04 +1100
-Message-Id: <20210317045706.651306-7-david@fromorbit.com>
+Subject: [PATCH 3/8] xfs: xfs_buf_item_size_segment() needs to pass segment offset
+Date:   Wed, 17 Mar 2021 15:57:01 +1100
+Message-Id: <20210317045706.651306-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210317045706.651306-1-david@fromorbit.com>
 References: <20210317045706.651306-1-david@fromorbit.com>
@@ -45,65 +45,115 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
         a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
         a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=_ii9FaXb6EwW4meCbCgA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=kme4I8nbBunu55xL2I8A:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We call xfs_dir_ino_validate() for every dir entry in a directory
-when doing validity checking of the directory. It calls
-xfs_verify_dir_ino() then emits a corruption report if bad or does
-error injection if good. It is extremely costly:
+Otherwise it doesn't correctly calculate the number of vectors
+in a logged buffer that has a contiguous map that gets split into
+multiple regions because the range spans discontigous memory.
 
-  43.27%  [kernel]  [k] xfs_dir3_leaf_check_int
-  10.28%  [kernel]  [k] __xfs_dir3_data_check
-   6.61%  [kernel]  [k] xfs_verify_dir_ino
-   4.16%  [kernel]  [k] xfs_errortag_test
-   4.00%  [kernel]  [k] memcpy
-   3.48%  [kernel]  [k] xfs_dir_ino_validate
-
-7% of the cpu usage in this directory traversal workload is
-xfs_dir_ino_validate() doing absolutely nothing.
-
-We don't need error injection to simulate a bad inode numbers in the
-directory structure because we can do that by fuzzing the structure
-on disk.
-
-And we don't need a corruption report, because the
-__xfs_dir3_data_check() will emit one if the inode number is bad.
-
-So just call xfs_verify_dir_ino() directly here, and get rid of all
-this unnecessary overhead:
-
-  40.30%  [kernel]  [k] xfs_dir3_leaf_check_int
-  10.98%  [kernel]  [k] __xfs_dir3_data_check
-   8.10%  [kernel]  [k] xfs_verify_dir_ino
-   4.42%  [kernel]  [k] memcpy
-   2.22%  [kernel]  [k] xfs_dir2_data_get_ftype
-   1.52%  [kernel]  [k] do_raw_spin_lock
+Probably never been hit in practice - we don't log contiguous ranges
+on unmapped buffers (inode clusters).
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_dir2_data.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_buf_item.c | 38 +++++++++++++++++++-------------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index 375b3edb2ad2..e67fa086f2c1 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -218,7 +218,7 @@ __xfs_dir3_data_check(
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index cb8fd8afd140..189a4534e0b2 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -55,6 +55,18 @@ xfs_buf_log_format_size(
+ 			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
+ }
+ 
++static inline bool
++xfs_buf_item_straddle(
++	struct xfs_buf		*bp,
++	uint			offset,
++	int			next_bit,
++	int			last_bit)
++{
++	return xfs_buf_offset(bp, offset + (next_bit << XFS_BLF_SHIFT)) !=
++		(xfs_buf_offset(bp, offset + (last_bit << XFS_BLF_SHIFT)) +
++		 XFS_BLF_CHUNK);
++}
++
+ /*
+  * This returns the number of log iovecs needed to log the
+  * given buf log item.
+@@ -69,6 +81,7 @@ STATIC void
+ xfs_buf_item_size_segment(
+ 	struct xfs_buf_log_item		*bip,
+ 	struct xfs_buf_log_format	*blfp,
++	uint				offset,
+ 	int				*nvecs,
+ 	int				*nbytes)
+ {
+@@ -103,12 +116,8 @@ xfs_buf_item_size_segment(
  		 */
- 		if (dep->namelen == 0)
- 			return __this_address;
--		if (xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)))
-+		if (!xfs_verify_dir_ino(mp, be64_to_cpu(dep->inumber)))
- 			return __this_address;
- 		if (offset + xfs_dir2_data_entsize(mp, dep->namelen) > end)
- 			return __this_address;
+ 		if (next_bit == -1) {
+ 			break;
+-		} else if (next_bit != last_bit + 1) {
+-			last_bit = next_bit;
+-			(*nvecs)++;
+-		} else if (xfs_buf_offset(bp, next_bit * XFS_BLF_CHUNK) !=
+-			   (xfs_buf_offset(bp, last_bit * XFS_BLF_CHUNK) +
+-			    XFS_BLF_CHUNK)) {
++		} else if (next_bit != last_bit + 1 ||
++		           xfs_buf_item_straddle(bp, offset, next_bit, last_bit)) {
+ 			last_bit = next_bit;
+ 			(*nvecs)++;
+ 		} else {
+@@ -142,8 +151,10 @@ xfs_buf_item_size(
+ 	int			*nbytes)
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
++	struct xfs_buf		*bp = bip->bli_buf;
+ 	int			i;
+ 	int			bytes;
++	uint			offset = 0;
+ 
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 	if (bip->bli_flags & XFS_BLI_STALE) {
+@@ -185,8 +196,9 @@ xfs_buf_item_size(
+ 	 */
+ 	bytes = 0;
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+-		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
++		xfs_buf_item_size_segment(bip, &bip->bli_formats[i], offset,
+ 					  nvecs, &bytes);
++		offset += BBTOB(bp->b_maps[i].bm_len);
+ 	}
+ 
+ 	/*
+@@ -213,18 +225,6 @@ xfs_buf_item_copy_iovec(
+ 			nbits * XFS_BLF_CHUNK);
+ }
+ 
+-static inline bool
+-xfs_buf_item_straddle(
+-	struct xfs_buf		*bp,
+-	uint			offset,
+-	int			next_bit,
+-	int			last_bit)
+-{
+-	return xfs_buf_offset(bp, offset + (next_bit << XFS_BLF_SHIFT)) !=
+-		(xfs_buf_offset(bp, offset + (last_bit << XFS_BLF_SHIFT)) +
+-		 XFS_BLF_CHUNK);
+-}
+-
+ static void
+ xfs_buf_item_format_segment(
+ 	struct xfs_buf_log_item	*bip,
 -- 
 2.30.1
 
