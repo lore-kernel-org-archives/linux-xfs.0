@@ -7,97 +7,170 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72ADFC433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A90C43381
 	for <linux-xfs@archiver.kernel.org>; Wed, 17 Mar 2021 04:58:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3EC4364FB9
+	by mail.kernel.org (Postfix) with ESMTP id 615F264F2B
 	for <linux-xfs@archiver.kernel.org>; Wed, 17 Mar 2021 04:58:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229472AbhCQE5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Mar 2021 00:57:45 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:33673 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229847AbhCQE5X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Mar 2021 00:57:23 -0400
+        id S229863AbhCQE5r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Mar 2021 00:57:47 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:52808 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229864AbhCQE5f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Mar 2021 00:57:35 -0400
 Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id A294F105E
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Mar 2021 15:57:11 +1100 (AEDT)
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id ABECB78BB77
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Mar 2021 15:57:10 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lMOF3-003R8Y-C0
+        id 1lMOF3-003R8V-9w
         for linux-xfs@vger.kernel.org; Wed, 17 Mar 2021 15:57:09 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lMOF3-002jaF-3W
+        id 1lMOF3-002jaC-1J
         for linux-xfs@vger.kernel.org; Wed, 17 Mar 2021 15:57:09 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 8/8] xfs: __percpu_counter_compare() inode count debug too expensive
-Date:   Wed, 17 Mar 2021 15:57:06 +1100
-Message-Id: <20210317045706.651306-9-david@fromorbit.com>
+Subject: [PATCH 7/8] xfs: reduce debug overhead of dir leaf/node checks
+Date:   Wed, 17 Mar 2021 15:57:05 +1100
+Message-Id: <20210317045706.651306-8-david@fromorbit.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210317045706.651306-1-david@fromorbit.com>
 References: <20210317045706.651306-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
         a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
         a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=sMu_4l5kZS4VzaOAmzIA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=es5hYbETAauG9ijk2hQA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
- - 21.92% __xfs_trans_commit
-     - 21.62% xfs_log_commit_cil
-	- 11.69% xfs_trans_unreserve_and_mod_sb
-	   - 11.58% __percpu_counter_compare
-	      - 11.45% __percpu_counter_sum
-		 - 10.29% _raw_spin_lock_irqsave
-		    - 10.28% do_raw_spin_lock
-			 __pv_queued_spin_lock_slowpath
+On debug kernels, we call xfs_dir3_leaf_check_int() multiple times
+on every directory modification. The robust hash ordering checks it
+does on every entry in the leaf on every call results in a massive
+CPU overhead which slows down debug kernels by a large amount.
 
-We debated just getting rid of it last time this came up and
-there was no real objection to removing it. Now it's the biggest
-scalability limitation for debug kernels even on smallish machines,
-so let's just get rid of it.
+We use xfs_dir3_leaf_check_int() for the verifiers as well, so we
+can't just gut the function to reduce overhead. What we can do,
+however, is reduce the work it does when it is called from the
+debug interfaces, just leaving the high level checks in place and
+leaving the robust validation to the verifiers. This means the debug
+checks will catch gross errors, but subtle bugs might not be caught
+until a verifier is run.
+
+It is easy enough to restore the existing debug behaviour if the
+developer needs it (just change a call parameter in the debug code),
+but overwise the overhead makes testing large directory block sizes
+on debug kernels very slow.
+
+Profile at an unlink rate of ~80k file/s on a 64k block size
+filesystem before the patch:
+
+  40.30%  [kernel]  [k] xfs_dir3_leaf_check_int
+  10.98%  [kernel]  [k] __xfs_dir3_data_check
+   8.10%  [kernel]  [k] xfs_verify_dir_ino
+   4.42%  [kernel]  [k] memcpy
+   2.22%  [kernel]  [k] xfs_dir2_data_get_ftype
+   1.52%  [kernel]  [k] do_raw_spin_lock
+
+Profile after, at an unlink rate of ~125k files/s (+50% improvement)
+has largely dropped the leaf verification debug overhead out of the
+profile.
+
+  16.53%  [kernel]  [k] __xfs_dir3_data_check
+  12.53%  [kernel]  [k] xfs_verify_dir_ino
+   7.97%  [kernel]  [k] memcpy
+   3.36%  [kernel]  [k] xfs_dir2_data_get_ftype
+   2.86%  [kernel]  [k] __pv_queued_spin_lock_slowpath
+
+Create shows a similar change in profile and a +25% improvement in
+performance.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_trans.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_dir2_leaf.c | 10 +++++++---
+ fs/xfs/libxfs/xfs_dir2_node.c |  2 +-
+ fs/xfs/libxfs/xfs_dir2_priv.h |  3 ++-
+ 3 files changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index b22a09e9daee..631cca73198f 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -618,19 +618,12 @@ xfs_trans_unreserve_and_mod_sb(
- 		ASSERT(!error);
- 	}
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 95d2a3f92d75..ccd8d0aa62b8 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -113,7 +113,7 @@ xfs_dir3_leaf1_check(
+ 	} else if (leafhdr.magic != XFS_DIR2_LEAF1_MAGIC)
+ 		return __this_address;
  
--	if (idelta) {
-+	if (idelta)
- 		percpu_counter_add_batch(&mp->m_icount, idelta,
- 					 XFS_ICOUNT_BATCH);
--		if (idelta < 0)
--			ASSERT(__percpu_counter_compare(&mp->m_icount, 0,
--							XFS_ICOUNT_BATCH) >= 0);
--	}
+-	return xfs_dir3_leaf_check_int(dp->i_mount, &leafhdr, leaf);
++	return xfs_dir3_leaf_check_int(dp->i_mount, &leafhdr, leaf, false);
+ }
  
--	if (ifreedelta) {
-+	if (ifreedelta)
- 		percpu_counter_add(&mp->m_ifree, ifreedelta);
--		if (ifreedelta < 0)
--			ASSERT(percpu_counter_compare(&mp->m_ifree, 0) >= 0);
--	}
+ static inline void
+@@ -139,7 +139,8 @@ xfs_failaddr_t
+ xfs_dir3_leaf_check_int(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_dir3_icleaf_hdr	*hdr,
+-	struct xfs_dir2_leaf		*leaf)
++	struct xfs_dir2_leaf		*leaf,
++	bool				expensive_checking)
+ {
+ 	struct xfs_da_geometry		*geo = mp->m_dir_geo;
+ 	xfs_dir2_leaf_tail_t		*ltp;
+@@ -162,6 +163,9 @@ xfs_dir3_leaf_check_int(
+ 	    (char *)&hdr->ents[hdr->count] > (char *)xfs_dir2_leaf_bests_p(ltp))
+ 		return __this_address;
  
- 	if (rtxdelta == 0 && !(tp->t_flags & XFS_TRANS_SB_DIRTY))
- 		return;
++	if (!expensive_checking)
++		return NULL;
++
+ 	/* Check hash value order, count stale entries.  */
+ 	for (i = stale = 0; i < hdr->count; i++) {
+ 		if (i + 1 < hdr->count) {
+@@ -195,7 +199,7 @@ xfs_dir3_leaf_verify(
+ 		return fa;
+ 
+ 	xfs_dir2_leaf_hdr_from_disk(mp, &leafhdr, bp->b_addr);
+-	return xfs_dir3_leaf_check_int(mp, &leafhdr, bp->b_addr);
++	return xfs_dir3_leaf_check_int(mp, &leafhdr, bp->b_addr, true);
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 5d51265d29d6..80a64117b460 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -73,7 +73,7 @@ xfs_dir3_leafn_check(
+ 	} else if (leafhdr.magic != XFS_DIR2_LEAFN_MAGIC)
+ 		return __this_address;
+ 
+-	return xfs_dir3_leaf_check_int(dp->i_mount, &leafhdr, leaf);
++	return xfs_dir3_leaf_check_int(dp->i_mount, &leafhdr, leaf, false);
+ }
+ 
+ static inline void
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index 44c6a77cba05..94943ce49cab 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -127,7 +127,8 @@ xfs_dir3_leaf_find_entry(struct xfs_dir3_icleaf_hdr *leafhdr,
+ extern int xfs_dir2_node_to_leaf(struct xfs_da_state *state);
+ 
+ extern xfs_failaddr_t xfs_dir3_leaf_check_int(struct xfs_mount *mp,
+-		struct xfs_dir3_icleaf_hdr *hdr, struct xfs_dir2_leaf *leaf);
++		struct xfs_dir3_icleaf_hdr *hdr, struct xfs_dir2_leaf *leaf,
++		bool expensive_checks);
+ 
+ /* xfs_dir2_node.c */
+ void xfs_dir2_free_hdr_from_disk(struct xfs_mount *mp,
 -- 
 2.30.1
 
