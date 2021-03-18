@@ -7,38 +7,39 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42370C4332B
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Mar 2021 22:34:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AC80C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Mar 2021 22:35:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E11464F57
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Mar 2021 22:34:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BBD164E98
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Mar 2021 22:35:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231846AbhCRWd5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Mar 2021 18:33:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55430 "EHLO mail.kernel.org"
+        id S232036AbhCRWe3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Mar 2021 18:34:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55526 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231916AbhCRWdp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Mar 2021 18:33:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8A3CB64E02;
-        Thu, 18 Mar 2021 22:33:45 +0000 (UTC)
+        id S232503AbhCRWeK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Mar 2021 18:34:10 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 60B3864E0C;
+        Thu, 18 Mar 2021 22:34:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616106825;
-        bh=0jMn6I3jOnka5z+SbgEocuNH+1lVNYTfRRCqbrqcy+U=;
+        s=k20201202; t=1616106850;
+        bh=wdjwjQt1Wf4/d42X+DQ2xGRcOPkBF13OGAyiHbD62MM=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=URLvmxuiDi23Auhjo0IeEac5lFBwzQ5v/wBrtpdHi95nAE9zuw6f4UEnId9G2Vm43
-         7VImqaiX6g/LfpuUja4adiGq98ZwhGqRSdMhblOI99dBs8atiu71iG2AkPmQPCEjFk
-         qJy98+EcsxekXA+7Gys8Bhjl/Ji4AVnonuHBIXMInzbwPJ91M4nEjR/oIqiH2fZ2Cl
-         hwUsByf40XwXaHvQ/Mfn03ub2Wi9WW8azjg0XqfOVf8TK4HiOYghv7RCanfGGdg3zu
-         OHR6jtF1HC+jDGVu4WHpLkgm3AMJGXAXiAYmfaXowUaLtUihifnqXyau2bIf8CoJF+
-         pkS0LcmgLuBvQ==
-Subject: [PATCH 1/3] xfs: remove tag parameter from xfs_inode_walk{,_ag}
+        b=KGAz2y7/lFN1dIKe5zPHtODlaxKwXBnAy4I0BUmbQFlfUOyWr30/ZOTcZQdVriMmp
+         oPd36uX+Lnqu2eXvAD1+Tb2GfBaq2qcMQ75xFc8hyskauLwJ35QJ8sfDXdQiktUwL4
+         O5785yFNNwQFxjbOUX4ftBkvbMWb8HUm24zswNPoGOMBDjnok3SgANzcHvWrIERhKi
+         3cbp96hggxEUImVLlHkzrPXtIPoqOE+/i2hBjfkpV8urhB3d45UjrzeMP8vcDDs19J
+         rmCRkZULoH805LAO8bjLgJXcNT71o49PnamsW+QaG0bjcXPgsCs0919YHcP/+Pm4bm
+         P2pw7nqT6+fyw==
+Subject: [PATCH 2/7] xfs: expose sysfs knob to control inode inactivation
+ delay
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Date:   Thu, 18 Mar 2021 15:33:45 -0700
-Message-ID: <161610682523.1887634.9689710010549931486.stgit@magnolia>
-In-Reply-To: <161610681966.1887634.12780057277967410395.stgit@magnolia>
-References: <161610681966.1887634.12780057277967410395.stgit@magnolia>
+Date:   Thu, 18 Mar 2021 15:34:10 -0700
+Message-ID: <161610685004.1887744.15480838880881907099.stgit@magnolia>
+In-Reply-To: <161610683869.1887744.8863884017621115954.stgit@magnolia>
+References: <161610683869.1887744.8863884017621115954.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,138 +50,112 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-It turns out that there is a 1:1 mapping between the execute and tag
-parameters that are passed to xfs_inode_walk_ag:
-
-	xfs_dqrele_inode => XFS_ICI_NO_TAG
-	xfs_blockgc_scan_inode => XFS_ICI_BLOCKGC_TAG
-
-The radix tree tags are an implementation detail of the inode cache,
-which means that callers outside of xfs_icache.c have no business
-passing in radix tree tags.  Since we're about to get rid of the
-indirect calls in the BLOCKGC case, eliminate the extra argument in
-favor of computing the ICI tag from the execute argument passed into the
-function.
+Allow administrators to control the length that we defer inode
+inactivation.  By default we'll set the delay to 5 seconds, as an
+arbitrary choice between allowing for some batching of a deltree
+operation, and not letting too many inodes pile up in memory.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c      |   27 ++++++++++++++++++---------
- fs/xfs/xfs_icache.h      |    2 +-
- fs/xfs/xfs_qm_syscalls.c |    3 +--
- 3 files changed, 20 insertions(+), 12 deletions(-)
+ Documentation/admin-guide/xfs.rst |    9 +++++++++
+ fs/xfs/xfs_globals.c              |    3 +++
+ fs/xfs/xfs_icache.c               |    3 ++-
+ fs/xfs/xfs_linux.h                |    1 +
+ fs/xfs/xfs_sysctl.c               |    9 +++++++++
+ fs/xfs/xfs_sysctl.h               |    1 +
+ 6 files changed, 25 insertions(+), 1 deletion(-)
 
 
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+index f9b109bfc6a6..608d0ba7a86e 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -277,6 +277,15 @@ The following sysctls are available for the XFS filesystem:
+ 	references and returns timed-out AGs back to the free stream
+ 	pool.
+ 
++  fs.xfs.inode_gc_delay
++	(Units: centiseconds   Min: 1  Default: 200  Max: 360000)
++	The amount of time to delay garbage collection of inodes that
++	have been closed or have been unlinked from the directory tree.
++	Garbage collection here means clearing speculative preallocations
++	from linked files and freeing unlinked inodes.  A higher value
++	here enables more batching at a cost of delayed reclamation of
++	incore inodes.
++
+   fs.xfs.speculative_prealloc_lifetime
+ 	(Units: seconds   Min: 1  Default: 300  Max: 86400)
+ 	The interval at which the background scanning for inodes
+diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+index f62fa652c2fd..2945c2c54cf0 100644
+--- a/fs/xfs/xfs_globals.c
++++ b/fs/xfs/xfs_globals.c
+@@ -28,6 +28,9 @@ xfs_param_t xfs_params = {
+ 	.rotorstep	= {	1,		1,		255	},
+ 	.inherit_nodfrg	= {	0,		1,		1	},
+ 	.fstrm_timer	= {	1,		30*100,		3600*100},
++	.inodegc_timer	= {	1,		2*100,		3600*100},
++
++	/* Values below here are measured in seconds */
+ 	.blockgc_timer	= {	1,		300,		3600*24},
+ };
+ 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 7353c9fe05db..6924125a3c53 100644
+index 75116000b494..c0a0f6055cc1 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -26,6 +26,9 @@
- 
- #include <linux/iversion.h>
- 
-+/* Forward declarations to reduce indirect calls in xfs_inode_walk_ag */
-+static int xfs_blockgc_scan_inode(struct xfs_inode *ip, void *args);
-+
- /*
-  * Allocate and initialise an xfs_inode.
-  */
-@@ -763,6 +766,14 @@ xfs_inode_walk_ag_grab(
- 	return false;
+@@ -253,7 +253,8 @@ xfs_inodegc_queue(
+ {
+ 	rcu_read_lock();
+ 	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_INODEGC_TAG))
+-		queue_delayed_work(mp->m_gc_workqueue, &mp->m_inodegc_work, 0);
++		queue_delayed_work(mp->m_gc_workqueue, &mp->m_inodegc_work,
++				msecs_to_jiffies(xfs_inodegc_centisecs * 10));
+ 	rcu_read_unlock();
  }
  
-+static inline int
-+inode_walk_fn_to_tag(int (*execute)(struct xfs_inode *ip, void *args))
-+{
-+	if (execute == xfs_blockgc_scan_inode)
-+		return XFS_ICI_BLOCKGC_TAG;
-+	return XFS_ICI_NO_TAG;
-+}
-+
- /*
-  * For a given per-AG structure @pag, grab, @execute, and rele all incore
-  * inodes with the given radix tree @tag.
-@@ -772,14 +783,14 @@ xfs_inode_walk_ag(
- 	struct xfs_perag	*pag,
- 	int			iter_flags,
- 	int			(*execute)(struct xfs_inode *ip, void *args),
--	void			*args,
--	int			tag)
-+	void			*args)
- {
- 	struct xfs_mount	*mp = pag->pag_mount;
- 	uint32_t		first_index;
- 	int			last_error = 0;
- 	int			skipped;
- 	bool			done;
-+	int			tag = inode_walk_fn_to_tag(execute);
- 	int			nr_found;
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index af6be9b9ccdf..b4c5a2c71f43 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -99,6 +99,7 @@ typedef __u32			xfs_nlink_t;
+ #define xfs_inherit_nodefrag	xfs_params.inherit_nodfrg.val
+ #define xfs_fstrm_centisecs	xfs_params.fstrm_timer.val
+ #define xfs_blockgc_secs	xfs_params.blockgc_timer.val
++#define xfs_inodegc_centisecs	xfs_params.inodegc_timer.val
  
- restart:
-@@ -893,18 +904,18 @@ xfs_inode_walk(
- 	struct xfs_mount	*mp,
- 	int			iter_flags,
- 	int			(*execute)(struct xfs_inode *ip, void *args),
--	void			*args,
--	int			tag)
-+	void			*args)
- {
- 	struct xfs_perag	*pag;
- 	int			error = 0;
- 	int			last_error = 0;
-+	int			tag = inode_walk_fn_to_tag(execute);
- 	xfs_agnumber_t		ag;
- 
- 	ag = 0;
- 	while ((pag = xfs_inode_walk_get_perag(mp, ag, tag))) {
- 		ag = pag->pag_agno + 1;
--		error = xfs_inode_walk_ag(pag, iter_flags, execute, args, tag);
-+		error = xfs_inode_walk_ag(pag, iter_flags, execute, args);
- 		xfs_perag_put(pag);
- 		if (error) {
- 			last_error = error;
-@@ -1613,8 +1624,7 @@ xfs_blockgc_worker(
- 
- 	if (!sb_start_write_trylock(mp->m_super))
- 		return;
--	error = xfs_inode_walk_ag(pag, 0, xfs_blockgc_scan_inode, NULL,
--			XFS_ICI_BLOCKGC_TAG);
-+	error = xfs_inode_walk_ag(pag, 0, xfs_blockgc_scan_inode, NULL);
- 	if (error)
- 		xfs_info(mp, "AG %u preallocation gc worker failed, err=%d",
- 				pag->pag_agno, error);
-@@ -1632,8 +1642,7 @@ xfs_blockgc_free_space(
- {
- 	trace_xfs_blockgc_free_space(mp, eofb, _RET_IP_);
- 
--	return xfs_inode_walk(mp, 0, xfs_blockgc_scan_inode, eofb,
--			XFS_ICI_BLOCKGC_TAG);
-+	return xfs_inode_walk(mp, 0, xfs_blockgc_scan_inode, eofb);
- }
+ #define current_cpu()		(raw_smp_processor_id())
+ #define current_set_flags_nested(sp, f)		\
+diff --git a/fs/xfs/xfs_sysctl.c b/fs/xfs/xfs_sysctl.c
+index 546a6cd96729..878f31d3a587 100644
+--- a/fs/xfs/xfs_sysctl.c
++++ b/fs/xfs/xfs_sysctl.c
+@@ -176,6 +176,15 @@ static struct ctl_table xfs_table[] = {
+ 		.extra1		= &xfs_params.fstrm_timer.min,
+ 		.extra2		= &xfs_params.fstrm_timer.max,
+ 	},
++	{
++		.procname	= "inode_gc_delay",
++		.data		= &xfs_params.inodegc_timer.val,
++		.maxlen		= sizeof(int),
++		.mode		= 0644,
++		.proc_handler	= proc_dointvec_minmax,
++		.extra1		= &xfs_params.inodegc_timer.min,
++		.extra2		= &xfs_params.inodegc_timer.max
++	},
+ 	{
+ 		.procname	= "speculative_prealloc_lifetime",
+ 		.data		= &xfs_params.blockgc_timer.val,
+diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
+index 7692e76ead33..a045c33c3d30 100644
+--- a/fs/xfs/xfs_sysctl.h
++++ b/fs/xfs/xfs_sysctl.h
+@@ -36,6 +36,7 @@ typedef struct xfs_param {
+ 	xfs_sysctl_val_t inherit_nodfrg;/* Inherit the "nodefrag" inode flag. */
+ 	xfs_sysctl_val_t fstrm_timer;	/* Filestream dir-AG assoc'n timeout. */
+ 	xfs_sysctl_val_t blockgc_timer;	/* Interval between blockgc scans */
++	xfs_sysctl_val_t inodegc_timer;	/* Inode inactivation scan interval */
+ } xfs_param_t;
  
  /*
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index d1fddb152420..a20bb89e3a38 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -70,7 +70,7 @@ void xfs_blockgc_worker(struct work_struct *work);
- 
- int xfs_inode_walk(struct xfs_mount *mp, int iter_flags,
- 	int (*execute)(struct xfs_inode *ip, void *args),
--	void *args, int tag);
-+	void *args);
- 
- int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
- 				  xfs_ino_t ino, bool *inuse);
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index ca1b57d291dc..2f42ea8a09ab 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -795,6 +795,5 @@ xfs_qm_dqrele_all_inodes(
- 	uint			flags)
- {
- 	ASSERT(mp->m_quotainfo);
--	xfs_inode_walk(mp, XFS_INODE_WALK_INEW_WAIT, xfs_dqrele_inode,
--			&flags, XFS_ICI_NO_TAG);
-+	xfs_inode_walk(mp, XFS_INODE_WALK_INEW_WAIT, xfs_dqrele_inode, &flags);
- }
 
