@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07FC4C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 266E1C433E9
 	for <linux-xfs@archiver.kernel.org>; Thu, 18 Mar 2021 22:34:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C42FB64F57
+	by mail.kernel.org (Postfix) with ESMTP id F2BFB64F59
 	for <linux-xfs@archiver.kernel.org>; Thu, 18 Mar 2021 22:34:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232096AbhCRWd5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S231364AbhCRWd5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 18 Mar 2021 18:33:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55256 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:55356 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230368AbhCRWd1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Mar 2021 18:33:27 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E52A264E02;
-        Thu, 18 Mar 2021 22:33:26 +0000 (UTC)
+        id S231886AbhCRWdk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Mar 2021 18:33:40 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0896464F40;
+        Thu, 18 Mar 2021 22:33:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616106807;
-        bh=LlRueU5VCiquaro3f0CgRpsD/Js/dRpHxVC2JaFCWXE=;
+        s=k20201202; t=1616106820;
+        bh=xZqW1YeGrQ8FNBUgikUy5PgzdR/Gwn3C/h8C+m+EWkA=;
         h=Subject:From:To:Cc:Date:From;
-        b=srFY+kfSlR9QUoJIZmS9YjB7EN+QDKuC6KwW99ufhbvFBFClG+svqO/k5rn+1GfCW
-         UKncASszLvTS4rW5p0/B3gKBXBdOnUrsRBEvUhGRKTC9r42bQhFdY4zzyf2Rg8OL0H
-         noUUVyC0bC3NiaTqVWX9g1X1wIh8UlOWgh7rS47n1M9kS7atng2Vxp8D+oeuwI15wI
-         bj7D1d/v4ogLJTky2AMxfrYdLoKZpPUJxy/iv+YIDSYxmoAkpiN9vaplKEMhHmBBgF
-         pOHm6IS0Jcj88TP+QPw9Yj5Ad1H6koqZmJI5M29nW/en+PAmxMcP06XrViCOywByNT
-         aBoF5SPKNeuIg==
-Subject: [PATCHSET 0/2] xfs: make xfs_can_free_eofblocks a predicate
+        b=McJ5b7KgkrOzHiDI6tyPwgHQbfrXfLK2+zLHBp5vARKEB59dIpH/I/LFk2CdWcVWA
+         cElkt1/rKbOqCY01X9khj74PszAM9EBiHwV8CyYGwejKw9zVAiNqpLr9OJ5xyt19Cy
+         kMTl/MqPOiiF2IYT0QcX0WcbQa13JlyJ5LYwsEfD3v13o5t0zwRPNoFFvePwTdQVoL
+         gK6Kgr+klraWC1OBPhckmMmzVfl3F/FCFLLlJXsgfNv/lRhmSHgvx0VCEWFX2MJIx/
+         F1rrZgTZW6C5DgHV10FQtKaRCMBdd/U1MNzru+BSiMxf3AAcdP/cr+xAP7yKyaQYcK
+         OcBlv2nLICqkw==
+Subject: [PATCHSET 0/3] xfs: reduce indirect function calls in inode walk
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Date:   Thu, 18 Mar 2021 15:33:26 -0700
-Message-ID: <161610680641.1887542.10509468263256161712.stgit@magnolia>
+Date:   Thu, 18 Mar 2021 15:33:39 -0700
+Message-ID: <161610681966.1887634.12780057277967410395.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,15 +47,25 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-The two patches in this set reorganize the responsibilities between
-xfs_can_free_eofblocks and xfs_free_eofblocks so that the first becomes
-a true predicate, and the second becomes a simple update function.  The
-goal is to be able to use the predicate to decide if a linked but
-unopened inode has speculative post-EOF preallocations and hence must go
-through the extra inactivation step.
+This short series reduces the number of indirect function calls when we
+want to iterate the incore inode radix tree, and reduces the number of
+arguments that must be passed to the walk function.
 
-This requires a slight change in behavior of the background block gc
-workers, which will try to take the IOLOCK before calling the predicate.
+I made a few observations about incore inode radix tree walks -- the one
+caller (blockgc) that cares about radix tree tags is internal to
+xfs_icache.c, and there's a 1:1 mapping between that tag and the
+iterator function.  Furthermore, the only other caller (quotaoff) is the
+only caller to supply a nonzero flags argument, and it never specifies a
+radix tree tag.
+
+On those grounds, we can remove both the flags and tag arguments to
+xfs_inode_walk; and for the internal caller, we can replace the indirect
+call with direct calls to the blockgc functions.  This makes for less
+ugly code and gives us a (negligible) performance bump.
+
+This series is a prerequisite for the next patchset, since deferred
+inode inactivation will add another inode radix tree tag and iterator
+function to go with it.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -66,9 +76,10 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=refactor-has-eofblocks-5.13
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=iwalk-remove-indirect-calls-5.13
 ---
- fs/xfs/xfs_bmap_util.c |  148 +++++++++++++++++++++++++-----------------------
- fs/xfs/xfs_icache.c    |   12 +---
- 2 files changed, 82 insertions(+), 78 deletions(-)
+ fs/xfs/xfs_icache.c      |   57 ++++++++++++++++++++++++++++++----------------
+ fs/xfs/xfs_icache.h      |    9 ++-----
+ fs/xfs/xfs_qm_syscalls.c |    3 +-
+ 3 files changed, 40 insertions(+), 29 deletions(-)
 
