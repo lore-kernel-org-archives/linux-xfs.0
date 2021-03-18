@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DDEEC433E6
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Mar 2021 22:35:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69E75C433E6
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Mar 2021 22:35:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5573E64E89
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Mar 2021 22:35:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DC0664EBD
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Mar 2021 22:35:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232710AbhCRWe2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Mar 2021 18:34:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55474 "EHLO mail.kernel.org"
+        id S232764AbhCRWfB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Mar 2021 18:35:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55640 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230368AbhCRWd5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Mar 2021 18:33:57 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CDA7664E02;
-        Thu, 18 Mar 2021 22:33:56 +0000 (UTC)
+        id S232613AbhCRWec (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Mar 2021 18:34:32 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8733264E0C;
+        Thu, 18 Mar 2021 22:34:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616106836;
-        bh=isMKDOucUAPZiYoxG6tViWiJFOxV9+N4TPVzqAsvgg8=;
+        s=k20201202; t=1616106872;
+        bh=JggwjUwzt7xCuyKCsAymn3y9v+Q8R+uJPDxwOVZPVzI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Lk6nNN7BZumiXlvhxPL8eDVGWnFErL0tH82aMjfWM03i6UNLigE/rbRfM1Mn8zLlV
-         h7KnPdHLahOK9bu8nZgnvvVTu7WQKiVbKGQ1LrbBL4xPYo4TN9FI6LbzxlJrJ26QHR
-         tkpu6pktqPxfy8ZwyyTWzB5tWDMNQ+N7zc38JEk3SYjlcqqDVBGX/UQMNiOW/LawJ9
-         5fa4NHs9rY0W+vwUKymR3DhR90F+/tsvmNemcXymPMskkPaV+d/r4AEsYNJr76mSj0
-         xbADTH1MbEw1W2/XvYCoIzTzHzHCIV/qsXybD29S6fEOEIMryE69PUM0j9Tgj8JxsT
-         LjYC1NT/4eP+w==
-Subject: [PATCH 3/3] xfs: remove iter_flags parameter from xfs_inode_walk_*
+        b=eiB81Hyc2K2HoD7/4PhwgSCgVedgBTp4vyCl3fN2sNB+wzoWwP3YCcP+Zgzu/1U8i
+         FBZapeiP7UrHCnqrw7wxADsbAuaTZ0DCjcAGFo+frAnS0xFHFAZqHhUfw6gO4NjMJC
+         XQT+zv6aJyA+rsbn8Gn/4VpaK8FHh9vySNOyDUqpv3maK74zGZelypvcBrIJPMyA39
+         uNo3GcxdiDOc/LOhGv46KOiHLisiJ+o27pRdU4up4sQOsEpDdn1plTIb8JCnsW9b7V
+         P689MukLLle0/4nxDJtTbZ30Fv84XblAVIvMEvHbJwqrdV5Qry+vIQqd/A/9q3x0JI
+         M3xoNBerRDr8Q==
+Subject: [PATCH 6/7] xfs: create a polled function to force inode inactivation
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Date:   Thu, 18 Mar 2021 15:33:56 -0700
-Message-ID: <161610683632.1887634.9330923612964175378.stgit@magnolia>
-In-Reply-To: <161610681966.1887634.12780057277967410395.stgit@magnolia>
-References: <161610681966.1887634.12780057277967410395.stgit@magnolia>
+Date:   Thu, 18 Mar 2021 15:34:32 -0700
+Message-ID: <161610687219.1887744.12622367871348304784.stgit@magnolia>
+In-Reply-To: <161610683869.1887744.8863884017621115954.stgit@magnolia>
+References: <161610683869.1887744.8863884017621115954.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,148 +49,149 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The sole user of the INEW_WAIT flag to xfs_inode_walk is a caller that
-is external to the inode cache.  Since external callers have no business
-messing with INEW inodes or inode radix tree tags, we can get rid of the
-iter_flag entirely.
+Create a polled version of xfs_inactive_force so that we can force
+inactivation while holding a lock (usually the umount lock) without
+tripping over the softlockup timer.  This is for callers that hold vfs
+locks while calling inactivation, which is currently unmount, iunlink
+processing during mount, and rw->ro remount.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c      |   20 ++++++++------------
- fs/xfs/xfs_icache.h      |    7 +------
- fs/xfs/xfs_qm_syscalls.c |    2 +-
- 3 files changed, 10 insertions(+), 19 deletions(-)
+ fs/xfs/xfs_icache.c |   40 +++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_icache.h |    1 +
+ fs/xfs/xfs_mount.c  |    2 +-
+ fs/xfs/xfs_mount.h  |    5 +++++
+ fs/xfs/xfs_super.c  |    3 ++-
+ 5 files changed, 48 insertions(+), 3 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 9198c7a7c3ca..563865140a99 100644
+index 29d99e5edbdf..53104c463d0b 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -732,10 +732,9 @@ xfs_icache_inode_is_allocated(
- STATIC bool
- xfs_inode_walk_ag_grab(
- 	struct xfs_inode	*ip,
--	int			flags)
-+	int			tag)
- {
- 	struct inode		*inode = VFS_I(ip);
--	bool			newinos = !!(flags & XFS_INODE_WALK_INEW_WAIT);
+@@ -25,6 +25,7 @@
+ #include "xfs_ialloc.h"
  
- 	ASSERT(rcu_read_lock_held());
+ #include <linux/iversion.h>
++#include <linux/nmi.h>
  
-@@ -745,7 +744,7 @@ xfs_inode_walk_ag_grab(
- 		goto out_unlock_noent;
- 
- 	/* avoid new or reclaimable inodes. Leave for reclaim code to flush */
--	if ((!newinos && __xfs_iflags_test(ip, XFS_INEW)) ||
-+	if ((tag != XFS_ICI_NO_TAG && __xfs_iflags_test(ip, XFS_INEW)) ||
- 	    __xfs_iflags_test(ip, XFS_IRECLAIMABLE | XFS_IRECLAIM))
- 		goto out_unlock_noent;
- 	spin_unlock(&ip->i_flags_lock);
-@@ -781,7 +780,6 @@ inode_walk_fn_to_tag(int (*execute)(struct xfs_inode *ip, void *args))
- STATIC int
- xfs_inode_walk_ag(
- 	struct xfs_perag	*pag,
--	int			iter_flags,
- 	int			(*execute)(struct xfs_inode *ip, void *args),
- 	void			*args)
- {
-@@ -827,7 +825,7 @@ xfs_inode_walk_ag(
- 		for (i = 0; i < nr_found; i++) {
- 			struct xfs_inode *ip = batch[i];
- 
--			if (done || !xfs_inode_walk_ag_grab(ip, iter_flags))
-+			if (done || !xfs_inode_walk_ag_grab(ip, tag))
- 				batch[i] = NULL;
- 
- 			/*
-@@ -855,15 +853,14 @@ xfs_inode_walk_ag(
- 		for (i = 0; i < nr_found; i++) {
- 			if (!batch[i])
- 				continue;
--			if ((iter_flags & XFS_INODE_WALK_INEW_WAIT) &&
--			    xfs_iflags_test(batch[i], XFS_INEW))
--				xfs_inew_wait(batch[i]);
- 			switch (tag) {
- 			case XFS_ICI_BLOCKGC_TAG:
- 				error = xfs_blockgc_scan_inode(batch[i], args);
- 				xfs_irele(batch[i]);
- 				break;
- 			case XFS_ICI_NO_TAG:
-+				if (xfs_iflags_test(batch[i], XFS_INEW))
-+					xfs_inew_wait(batch[i]);
- 				error = execute(batch[i], args);
- 				xfs_irele(batch[i]);
- 				break;
-@@ -914,7 +911,6 @@ xfs_inode_walk_get_perag(
- int
- xfs_inode_walk(
+ /* Forward declarations to reduce indirect calls in xfs_inode_walk_ag */
+ static int xfs_blockgc_scan_inode(struct xfs_inode *ip, void *args);
+@@ -2064,9 +2065,13 @@ xfs_inodegc_free_space(
  	struct xfs_mount	*mp,
--	int			iter_flags,
- 	int			(*execute)(struct xfs_inode *ip, void *args),
- 	void			*args)
+ 	struct xfs_eofblocks	*eofb)
  {
-@@ -927,7 +923,7 @@ xfs_inode_walk(
- 	ag = 0;
- 	while ((pag = xfs_inode_walk_get_perag(mp, ag, tag))) {
- 		ag = pag->pag_agno + 1;
--		error = xfs_inode_walk_ag(pag, iter_flags, execute, args);
-+		error = xfs_inode_walk_ag(pag, execute, args);
- 		xfs_perag_put(pag);
- 		if (error) {
- 			last_error = error;
-@@ -1636,7 +1632,7 @@ xfs_blockgc_worker(
++	int			error;
++
+ 	trace_xfs_inodegc_free_space(mp, eofb, _RET_IP_);
  
- 	if (!sb_start_write_trylock(mp->m_super))
- 		return;
--	error = xfs_inode_walk_ag(pag, 0, xfs_blockgc_scan_inode, NULL);
-+	error = xfs_inode_walk_ag(pag, xfs_blockgc_scan_inode, NULL);
- 	if (error)
- 		xfs_info(mp, "AG %u preallocation gc worker failed, err=%d",
- 				pag->pag_agno, error);
-@@ -1654,7 +1650,7 @@ xfs_blockgc_free_space(
- {
- 	trace_xfs_blockgc_free_space(mp, eofb, _RET_IP_);
- 
--	return xfs_inode_walk(mp, 0, xfs_blockgc_scan_inode, eofb);
-+	return xfs_inode_walk(mp, xfs_blockgc_scan_inode, eofb);
+-	return xfs_inode_walk(mp, xfs_inodegc_inactivate, eofb);
++	error = xfs_inode_walk(mp, xfs_inodegc_inactivate, eofb);
++	wake_up(&mp->m_inactive_wait);
++	return error;
  }
  
- /*
+ /* Background inode inactivation worker. */
+@@ -2136,6 +2141,39 @@ xfs_inodegc_force(
+ 	flush_workqueue(mp->m_gc_workqueue);
+ }
+ 
++/*
++ * Force all inode inactivation work to run immediately, and poll until the
++ * work is complete.  Callers should only use this function if they must
++ * inactivate inodes while holding VFS locks, and must ensure that no new
++ * inodes will be queued for inactivation.
++ */
++void
++xfs_inodegc_force_poll(
++	struct xfs_mount	*mp)
++{
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno;
++	bool			queued = false;
++
++	for_each_perag_tag(mp, agno, pag, XFS_ICI_INODEGC_TAG) {
++		xfs_inodegc_force_pag(pag);
++		queued = true;
++	}
++	if (!queued)
++		return;
++
++	/*
++	 * Touch the softlockup watchdog every 1/10th of a second while there
++	 * are still inactivation-tagged inodes in the filesystem.
++	 */
++	while (!wait_event_timeout(mp->m_inactive_wait,
++				   !radix_tree_tagged(&mp->m_perag_tree,
++						      XFS_ICI_INODEGC_TAG),
++				   HZ / 10)) {
++		touch_softlockup_watchdog();
++	}
++}
++
+ /* Stop all queued inactivation work. */
+ void
+ xfs_inodegc_stop(
 diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index a20bb89e3a38..04e59b775432 100644
+index d4171998deef..371453028dc8 100644
 --- a/fs/xfs/xfs_icache.h
 +++ b/fs/xfs/xfs_icache.h
-@@ -34,11 +34,6 @@ struct xfs_eofblocks {
- #define XFS_IGET_DONTCACHE	0x4
- #define XFS_IGET_INCORE		0x8	/* don't read from disk or reinit */
+@@ -78,6 +78,7 @@ void xfs_blockgc_start(struct xfs_mount *mp);
  
--/*
-- * flags for AG inode iterator
-- */
--#define XFS_INODE_WALK_INEW_WAIT	0x1	/* wait on new inodes */
--
- int xfs_iget(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t ino,
- 	     uint flags, uint lock_flags, xfs_inode_t **ipp);
+ void xfs_inodegc_worker(struct work_struct *work);
+ void xfs_inodegc_force(struct xfs_mount *mp);
++void xfs_inodegc_force_poll(struct xfs_mount *mp);
+ void xfs_inodegc_stop(struct xfs_mount *mp);
+ void xfs_inodegc_start(struct xfs_mount *mp);
+ int xfs_inodegc_free_space(struct xfs_mount *mp, struct xfs_eofblocks *eofb);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index a5963061485c..1012b1b361ba 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1109,7 +1109,7 @@ xfs_unmountfs(
+ 	 * Since this can involve finobt updates, do it now before we lose the
+ 	 * per-AG space reservations.
+ 	 */
+-	xfs_inodegc_force(mp);
++	xfs_inodegc_force_poll(mp);
  
-@@ -68,7 +63,7 @@ void xfs_inode_clear_cowblocks_tag(struct xfs_inode *ip);
+ 	xfs_blockgc_stop(mp);
+ 	xfs_fs_unreserve_ag_blocks(mp);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index ff765c73a542..61dad1ba4dcf 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -213,6 +213,11 @@ typedef struct xfs_mount {
+ 	unsigned int		*m_errortag;
+ 	struct xfs_kobj		m_errortag_kobj;
+ #endif
++	/*
++	 * Use this to wait for the inode inactivation workqueue to finish
++	 * inactivating all the inodes.
++	 */
++	struct wait_queue_head	m_inactive_wait;
+ } xfs_mount_t;
  
- void xfs_blockgc_worker(struct work_struct *work);
+ #define M_IGEO(mp)		(&(mp)->m_ino_geo)
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 566e5657c1b0..8329a3efced7 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1754,7 +1754,7 @@ xfs_remount_ro(
+ 	 * Since this can involve finobt updates, do it now before we lose the
+ 	 * per-AG space reservations.
+ 	 */
+-	xfs_inodegc_force(mp);
++	xfs_inodegc_force_poll(mp);
  
--int xfs_inode_walk(struct xfs_mount *mp, int iter_flags,
-+int xfs_inode_walk(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, void *args),
- 	void *args);
- 
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 2f42ea8a09ab..dad4d3fc3df3 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -795,5 +795,5 @@ xfs_qm_dqrele_all_inodes(
- 	uint			flags)
- {
- 	ASSERT(mp->m_quotainfo);
--	xfs_inode_walk(mp, XFS_INODE_WALK_INEW_WAIT, xfs_dqrele_inode, &flags);
-+	xfs_inode_walk(mp, xfs_dqrele_inode, &flags);
- }
+ 	/* Free the per-AG metadata reservation pool. */
+ 	error = xfs_fs_unreserve_ag_blocks(mp);
+@@ -1880,6 +1880,7 @@ static int xfs_init_fs_context(
+ 	INIT_WORK(&mp->m_flush_inodes_work, xfs_flush_inodes_worker);
+ 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+ 	mp->m_kobj.kobject.kset = xfs_kset;
++	init_waitqueue_head(&mp->m_inactive_wait);
+ 	/*
+ 	 * We don't create the finobt per-ag space reservation until after log
+ 	 * recovery, so we must set this to true so that an ifree transaction
 
