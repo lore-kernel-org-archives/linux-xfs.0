@@ -2,95 +2,131 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 234C0C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:49:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35FB9C433E9
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:53:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED86C64E09
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:49:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02B8B64E98
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:53:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229931AbhCSBtL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Mar 2021 21:49:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50840 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229927AbhCSBs4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Mar 2021 21:48:56 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E0E5B64E09;
-        Fri, 19 Mar 2021 01:48:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616118536;
-        bh=p9OP4RdJkDNtcSpaWiTpri4LVl8l/CfK+H1oPq5IKKA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TFyVB3o1Moj66AVNoodeUwUVmz3Q4R4AhYhZSn2ymIU5b3NPhA2Ut32Ed7Yf+5mj+
-         I742DpWQ4USEGWioGrrrYhUZZQmPmVZJ+XrP3ZuEx+SVn30JtZ8C1z9MLw1ojTldzP
-         JMFAbTa2WJ8WeReFWznPAWvPWeemPk6pGIL0e0VX52TtPh+YoZHIRHhlZGb7ObwQlR
-         nWSb1jMLEqEbMBdELV7bPOfEBvvbiP2cLl0vj+cQSmXA+doa2hLbFkivq3kllZ0lEd
-         3Ca5QKkW+J7WMHlzckEqUYtmx54UHEyO64mPmvjYMmHbnldy5xuCo70VocZGmYk/dE
-         +9zEox2Cuu0xA==
-Date:   Thu, 18 Mar 2021 18:48:55 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/11] xfs: refactor the predicate part of
- xfs_free_eofblocks
-Message-ID: <20210319014855.GD1670408@magnolia>
-References: <161543194009.1947934.9910987247994410125.stgit@magnolia>
- <161543195167.1947934.16237799936089844524.stgit@magnolia>
- <20210315184615.GB140421@infradead.org>
- <20210318043329.GJ22100@magnolia>
+        id S230497AbhCSBw4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Mar 2021 21:52:56 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:41437 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230389AbhCSBws (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Mar 2021 21:52:48 -0400
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AARB8MK8Ih9lumEGjpUVuk+A4I+orLtY04lQ7?=
+ =?us-ascii?q?vn1ZYxpTb8CeioSSjO0WvCWE7Ao5dVMBvZS7OKeGSW7B7pId2+QsFJqrQQWOgg?=
+ =?us-ascii?q?WVBa5v4YboyzfjXw3Sn9Q26Y5OaK57YeeQMXFfreLXpDa1CMwhxt7vytHMuc77?=
+ =?us-ascii?q?w212RQ9nL4FMhj0JaTqzKUF9SAlYCZdRLvP1ifZvnSaqengcc62Adxs4dtXEzu?=
+ =?us-ascii?q?eqqLvWJTYCBzMCrDKFlC6U7tfBeCSw71MzVCxuzN4ZnVT4rw=3D=3D?=
+X-IronPort-AV: E=Sophos;i="5.81,259,1610380800"; 
+   d="scan'208";a="105876646"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 19 Mar 2021 09:52:46 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id 122074CEB2A3;
+        Fri, 19 Mar 2021 09:52:46 +0800 (CST)
+Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Fri, 19 Mar 2021 09:52:46 +0800
+Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
+ G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Fri, 19 Mar 2021 09:52:42 +0800
+Received: from irides.mr.mr.mr (10.167.225.141) by
+ G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Fri, 19 Mar 2021 09:52:41 +0800
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>
+CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <willy@infradead.org>, <jack@suse.cz>, <viro@zeniv.linux.org.uk>,
+        <linux-btrfs@vger.kernel.org>, <ocfs2-devel@oss.oracle.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <rgoldwyn@suse.de>,
+        Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+Subject: [PATCH v3 00/10] fsdax,xfs: Add reflink&dedupe support for fsdax
+Date:   Fri, 19 Mar 2021 09:52:27 +0800
+Message-ID: <20210319015237.993880-1-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.30.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210318043329.GJ22100@magnolia>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 122074CEB2A3.A4D15
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 17, 2021 at 09:33:29PM -0700, Darrick J. Wong wrote:
-> On Mon, Mar 15, 2021 at 06:46:15PM +0000, Christoph Hellwig wrote:
-> > Going further through the series actually made me go back to this one,
-> > so a few more comments:
-> > 
-> > >  /*
-> > > + * Decide if this inode have post-EOF blocks.  The caller is responsible
-> > > + * for knowing / caring about the PREALLOC/APPEND flags.
-> > 
-> > Please spell out the XFS_DIFLAG_ here, as this really confused me.  In
-> > fact even with that it still confuses me, as "caller is responsible"
-> > here really means: only call this if you previously called
-> > xfs_can_free_eofblocks and it return true.
-> 
-> Sorry about that; I'll spell them out in the future.
-> 
-> > Which brings me to the structure of this:  I think without much pain
-> > we can ensure xfs_can_free_eofblocks is always called with the iolock,
-> > in which case we really should merge xfs_can_free_eofblocks and this
-> > new helper to avoid the rather confusing fact that we have two similarly
-> > named helper doing similiar but not the same thing.
-> 
-> I'll have a look into that tomorrow morning. :)
+From: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 
-The only change that was necessary was moving the can_free_eofblocks
-call in the blockgc code until after we've taken the IOLOCK.
+This patchset is attempt to add CoW support for fsdax, and take XFS,
+which has both reflink and fsdax feature, as an example.
 
-> > >  int
-> > > +xfs_has_eofblocks(
-> > > +	struct xfs_inode	*ip,
-> > > +	bool			*has)
-> > 
-> > I also think the calling convention can be simplified here.  If an
-> > error occurs we obviously do not want to free the eofblocks.  So
-> > instead of returning two calues we can just return a single bool.
-> 
-> Yeah, this area needs some simplification.  Will do.
+Changes from V2:
+ - Fix the mistake in iomap_apply2() and dax_dedupe_file_range_compare()
+ - Add CoW judgement in dax_iomap_zero()
+ - Fix other code style problems and mistakes
 
-I moved all the stuff in this function upwards into
-xfs_can_free_eofblocks and it seems to work ok.
+Changes from V1:
+ - Factor some helper functions to simplify dax fault code
+ - Introduce iomap_apply2() for dax_dedupe_file_range_compare()
+ - Fix mistakes and other problems
+ - Rebased on v5.11
 
---D
+One of the key mechanism need to be implemented in fsdax is CoW.  Copy
+the data from srcmap before we actually write data to the destance
+iomap.  And we just copy range in which data won't be changed.
 
-> 
-> --D
+Another mechanism is range comparison.  In page cache case, readpage()
+is used to load data on disk to page cache in order to be able to
+compare data.  In fsdax case, readpage() does not work.  So, we need
+another compare data with direct access support.
+
+With the two mechanism implemented in fsdax, we are able to make reflink
+and fsdax work together in XFS.
+
+
+Some of the patches are picked up from Goldwyn's patchset.  I made some
+changes to adapt to this patchset.
+
+(Rebased on v5.11)
+==
+
+Shiyang Ruan (10):
+  fsdax: Factor helpers to simplify dax fault code
+  fsdax: Factor helper: dax_fault_actor()
+  fsdax: Output address in dax_iomap_pfn() and rename it
+  fsdax: Introduce dax_iomap_cow_copy()
+  fsdax: Replace mmap entry in case of CoW
+  fsdax: Add dax_iomap_cow_copy() for dax_iomap_zero
+  iomap: Introduce iomap_apply2() for operations on two files
+  fsdax: Dedup file range to use a compare function
+  fs/xfs: Handle CoW for fsdax write() path
+  fs/xfs: Add dedupe support for fsdax
+
+ fs/dax.c               | 596 ++++++++++++++++++++++++++---------------
+ fs/iomap/apply.c       |  56 ++++
+ fs/iomap/buffered-io.c |   2 +-
+ fs/remap_range.c       |  45 +++-
+ fs/xfs/xfs_bmap_util.c |   3 +-
+ fs/xfs/xfs_file.c      |  29 +-
+ fs/xfs/xfs_inode.c     |   8 +-
+ fs/xfs/xfs_inode.h     |   1 +
+ fs/xfs/xfs_iomap.c     |  58 +++-
+ fs/xfs/xfs_iomap.h     |   4 +
+ fs/xfs/xfs_iops.c      |   7 +-
+ fs/xfs/xfs_reflink.c   |  17 +-
+ include/linux/dax.h    |   7 +-
+ include/linux/fs.h     |  15 +-
+ include/linux/iomap.h  |   7 +-
+ 15 files changed, 602 insertions(+), 253 deletions(-)
+
+--
+2.30.1
+
+
+
