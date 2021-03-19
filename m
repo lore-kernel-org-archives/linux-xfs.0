@@ -2,143 +2,309 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02307C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:06:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FF9DC433E6
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:34:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C1E7264DE1
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:05:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 563FD64E81
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:34:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231512AbhCSBF1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Mar 2021 21:05:27 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:35830 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232139AbhCSBFK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Mar 2021 21:05:10 -0400
+        id S230031AbhCSBeV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Mar 2021 21:34:21 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:34580 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230049AbhCSBeD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Mar 2021 21:34:03 -0400
 Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BFDAE10425AE;
-        Fri, 19 Mar 2021 12:05:07 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 23F9A1AE2DE;
+        Fri, 19 Mar 2021 12:34:02 +1100 (AEDT)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lN3Za-0048Kp-5a; Fri, 19 Mar 2021 12:05:06 +1100
-Date:   Fri, 19 Mar 2021 12:05:06 +1100
+        id 1lN41U-0048oC-2i; Fri, 19 Mar 2021 12:33:56 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.94)
+        (envelope-from <david@fromorbit.com>)
+        id 1lN41T-003Ft9-RO; Fri, 19 Mar 2021 12:33:55 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] xfs: set a mount flag when perag reservation is
- active
-Message-ID: <20210319010506.GP63242@dread.disaster.area>
-References: <20210318161707.723742-1-bfoster@redhat.com>
- <20210318161707.723742-2-bfoster@redhat.com>
- <20210318205536.GO63242@dread.disaster.area>
- <20210318221901.GN22100@magnolia>
+To:     linux-xfs@vger.kernel.org
+Cc:     hsiangkao@redhat.com
+Subject: [PATCH 3/7] repair: protect inode chunk tree records with a mutex
+Date:   Fri, 19 Mar 2021 12:33:51 +1100
+Message-Id: <20210319013355.776008-4-david@fromorbit.com>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210319013355.776008-1-david@fromorbit.com>
+References: <20210319013355.776008-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210318221901.GN22100@magnolia>
+Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_d
         a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
-        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
-        a=Ufu4mrYEM0lq-filU0EA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=UqzBNiQEfBF_k0VGQjQA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 18, 2021 at 03:19:01PM -0700, Darrick J. Wong wrote:
-> On Fri, Mar 19, 2021 at 07:55:36AM +1100, Dave Chinner wrote:
-> > On Thu, Mar 18, 2021 at 12:17:06PM -0400, Brian Foster wrote:
-> > > perag reservation is enabled at mount time on a per AG basis. The
-> > > upcoming in-core allocation btree accounting mechanism needs to know
-> > > when reservation is enabled and that all perag AGF contexts are
-> > > initialized. As a preparation step, set a flag in the mount
-> > > structure and unconditionally initialize the pagf on all mounts
-> > > where at least one reservation is active.
-> > 
-> > I'm not sure this is a good idea. AFAICT, this means just about any
-> > filesystem with finobt, reflink and/or rmap will now typically read
-> > every AGF header in the filesystem at mount time. That means pretty
-> > much every v5 filesystem in production...
-> 
-> They already do that, because the AG headers are where we store the
-> btree block counts.
+From: Dave Chinner <dchinner@redhat.com>
 
-Oh, we're brute forcing AG reservation space? I thought we were
-doing something smarter than that, because I'm sure this isn't the
-first time I've mentioned this problem....
+Phase 6 accesses inode chunk records mostly in an isolated manner.
+However, when it finds a corruption in a directory or there are
+multiple hardlinks to an inode, there can be concurrent access
+to the inode chunk record to update state.
 
-> > We've always tried to avoid needing to reading all AG headers at
-> > mount time because that does not scale when we have really large
-> > filesystems (I'm talking petabytes here). We should only read AG
-> > headers if there is something not fully recovered during the mount
-> > (i.e. slow path) and not on every mount.
-> > 
-> > Needing to do a few thousand synchonous read IOs during mount makes
-> > mount very slow, and as such we always try to do dynamic
-> > instantiation of AG headers...  Testing I've done with exabyte scale
-> > filesystems (>10^6 AGs) show that it can take minutes for mount to
-> > run when each AG header needs to be read, and that's on SSDs where
-> > the individual read latency is only a couple of hundred
-> > microseconds. On spinning disks that can do 200 IOPS, we're
-> > potentially talking hours just to mount really large filesystems...
-> 
-> Is that with reflink enabled?  Reflink always scans the right edge of
-> the refcount btree at mount to clean out stale COW staging extents,
+Hence the inode record itself needs a mutex. This protects all state
+changes within the inode chunk record, as well as inode link counts
+and chunk references. That allows us to process multiple chunks at
+once, providing concurrency within an AG as well as across AGs.
 
-Aren't they cleaned up at unmount when the inode is inactivated?
-i.e. isn't this something that should only be done on a unclean
-mount?
+The inode chunk tree itself is not modified in the directory
+scanning and rebuilding part of phase 6 which we are making
+concurrent, hence we do not need to worry about locking for AVL tree
+lookups to find the inode chunk records themselves. Therefore
+internal locking is all we need here.
 
-> and
-> (prior to the introduction of the inode btree counts feature last year)
-> we also ahad to walk the entire finobt to find out how big it is.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ repair/incore.h     | 23 +++++++++++++++++++++++
+ repair/incore_ino.c | 15 +++++++++++++++
+ 2 files changed, 38 insertions(+)
 
-ugh, I forgot about the fact we had to add that wart because we
-screwed up the space reservations for finobt operations...
-
-As for large scale testing, I suspect I turned everything optional
-off when I last did this testing, because mkfs currently requires a
-lot of per-AG IO to initialise structures. On an SSD, mkfs.xfs
--K -f -d agcount=10000 ... takes
-
-		mkfs time	mount time
--m crc=0	15s		1s
--m rmapbt=1	25s		6s
-
-Multiply those times by at another 1000 to get to an 8EB
-filesystem and the difference is several hours of mkfs time and
-a couple of hours of mount time....
-
-So from the numbers, it is pretty likely I didn't test anything that
-actually required iterating 8 million AGs at mount time....
-
-> TBH I think the COW recovery and the AG block reservation pieces are
-> prime candidates for throwing at an xfs_pwork workqueue so we can
-> perform those scans in parallel.
-
-As I mentioned on #xfs, I think we only need to do the AG read if we
-are near enospc. i.e. we can take the entire reservation at mount
-time (which is fixed per-ag) and only take away the used from the
-reservation (i.e. return to the free space pool) when we actually
-access the AGF/AGI the first time. Or when we get a ENOSPC
-event, which might occur when we try to take the fixed reservation
-at mount time...
-
-> > Hence I don't think that any algorithm that requires reading every
-> > AGF header in the filesystem at mount time on every v5 filesystem
-> > already out there in production (because finobt triggers this) is a
-> > particularly good idea...
-> 
-> Perhaps not, but the horse bolted 5 years ago. :/
-
-Let's go catch it :P
-
-Cheers,
-
-Dave.
+diff --git a/repair/incore.h b/repair/incore.h
+index 977e5dd04336..d64315fd2585 100644
+--- a/repair/incore.h
++++ b/repair/incore.h
+@@ -281,6 +281,7 @@ typedef struct ino_tree_node  {
+ 		parent_list_t	*plist;		/* phases 2-5 */
+ 	} ino_un;
+ 	uint8_t			*ftypes;	/* phases 3,6 */
++	pthread_mutex_t		lock;
+ } ino_tree_node_t;
+ 
+ #define INOS_PER_IREC	(sizeof(uint64_t) * NBBY)
+@@ -411,7 +412,9 @@ next_free_ino_rec(ino_tree_node_t *ino_rec)
+  */
+ static inline void add_inode_refchecked(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_un.ex_data->ino_processed |= IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline int is_inode_refchecked(struct ino_tree_node *irec, int offset)
+@@ -437,12 +440,16 @@ static inline int is_inode_confirmed(struct ino_tree_node *irec, int offset)
+  */
+ static inline void set_inode_isadir(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_isa_dir |= IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline void clear_inode_isadir(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_isa_dir &= ~IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline int inode_isadir(struct ino_tree_node *irec, int offset)
+@@ -455,15 +462,19 @@ static inline int inode_isadir(struct ino_tree_node *irec, int offset)
+  */
+ static inline void set_inode_free(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	set_inode_confirmed(irec, offset);
+ 	irec->ir_free |= XFS_INOBT_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ 
+ }
+ 
+ static inline void set_inode_used(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	set_inode_confirmed(irec, offset);
+ 	irec->ir_free &= ~XFS_INOBT_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline int is_inode_free(struct ino_tree_node *irec, int offset)
+@@ -476,7 +487,9 @@ static inline int is_inode_free(struct ino_tree_node *irec, int offset)
+  */
+ static inline void set_inode_sparse(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ir_sparse |= XFS_INOBT_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline bool is_inode_sparse(struct ino_tree_node *irec, int offset)
+@@ -489,12 +502,16 @@ static inline bool is_inode_sparse(struct ino_tree_node *irec, int offset)
+  */
+ static inline void set_inode_was_rl(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_was_rl |= IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline void clear_inode_was_rl(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_was_rl &= ~IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline int inode_was_rl(struct ino_tree_node *irec, int offset)
+@@ -507,12 +524,16 @@ static inline int inode_was_rl(struct ino_tree_node *irec, int offset)
+  */
+ static inline void set_inode_is_rl(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_is_rl |= IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline void clear_inode_is_rl(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_is_rl &= ~IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline int inode_is_rl(struct ino_tree_node *irec, int offset)
+@@ -545,7 +566,9 @@ static inline int is_inode_reached(struct ino_tree_node *irec, int offset)
+ static inline void add_inode_reached(struct ino_tree_node *irec, int offset)
+ {
+ 	add_inode_ref(irec, offset);
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_un.ex_data->ino_reached |= IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ /*
+diff --git a/repair/incore_ino.c b/repair/incore_ino.c
+index 82956ae93005..299e4f949e5e 100644
+--- a/repair/incore_ino.c
++++ b/repair/incore_ino.c
+@@ -91,6 +91,7 @@ void add_inode_ref(struct ino_tree_node *irec, int ino_offset)
+ {
+ 	ASSERT(irec->ino_un.ex_data != NULL);
+ 
++	pthread_mutex_lock(&irec->lock);
+ 	switch (irec->nlink_size) {
+ 	case sizeof(uint8_t):
+ 		if (irec->ino_un.ex_data->counted_nlinks.un8[ino_offset] < 0xff) {
+@@ -112,6 +113,7 @@ void add_inode_ref(struct ino_tree_node *irec, int ino_offset)
+ 	default:
+ 		ASSERT(0);
+ 	}
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ void drop_inode_ref(struct ino_tree_node *irec, int ino_offset)
+@@ -120,6 +122,7 @@ void drop_inode_ref(struct ino_tree_node *irec, int ino_offset)
+ 
+ 	ASSERT(irec->ino_un.ex_data != NULL);
+ 
++	pthread_mutex_lock(&irec->lock);
+ 	switch (irec->nlink_size) {
+ 	case sizeof(uint8_t):
+ 		ASSERT(irec->ino_un.ex_data->counted_nlinks.un8[ino_offset] > 0);
+@@ -139,6 +142,7 @@ void drop_inode_ref(struct ino_tree_node *irec, int ino_offset)
+ 
+ 	if (refs == 0)
+ 		irec->ino_un.ex_data->ino_reached &= ~IREC_MASK(ino_offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ uint32_t num_inode_references(struct ino_tree_node *irec, int ino_offset)
+@@ -161,6 +165,7 @@ uint32_t num_inode_references(struct ino_tree_node *irec, int ino_offset)
+ void set_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset,
+ 		uint32_t nlinks)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	switch (irec->nlink_size) {
+ 	case sizeof(uint8_t):
+ 		if (nlinks < 0xff) {
+@@ -182,6 +187,7 @@ void set_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset,
+ 	default:
+ 		ASSERT(0);
+ 	}
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset)
+@@ -253,6 +259,7 @@ alloc_ino_node(
+ 	irec->nlink_size = sizeof(uint8_t);
+ 	irec->disk_nlinks.un8 = alloc_nlink_array(irec->nlink_size);
+ 	irec->ftypes = alloc_ftypes_array(mp);
++	pthread_mutex_init(&irec->lock, NULL);
+ 	return irec;
+ }
+ 
+@@ -294,6 +301,7 @@ free_ino_tree_node(
+ 	}
+ 
+ 	free(irec->ftypes);
++	pthread_mutex_destroy(&irec->lock);
+ 	free(irec);
+ }
+ 
+@@ -600,6 +608,7 @@ set_inode_parent(
+ 	uint64_t		bitmask;
+ 	parent_entry_t		*tmp;
+ 
++	pthread_mutex_lock(&irec->lock);
+ 	if (full_ino_ex_data)
+ 		ptbl = irec->ino_un.ex_data->parents;
+ 	else
+@@ -625,6 +634,7 @@ set_inode_parent(
+ #endif
+ 		ptbl->pentries[0] = parent;
+ 
++		pthread_mutex_unlock(&irec->lock);
+ 		return;
+ 	}
+ 
+@@ -642,6 +652,7 @@ set_inode_parent(
+ #endif
+ 		ptbl->pentries[target] = parent;
+ 
++		pthread_mutex_unlock(&irec->lock);
+ 		return;
+ 	}
+ 
+@@ -682,6 +693,7 @@ set_inode_parent(
+ #endif
+ 	ptbl->pentries[target] = parent;
+ 	ptbl->pmask |= (1ULL << offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ xfs_ino_t
+@@ -692,6 +704,7 @@ get_inode_parent(ino_tree_node_t *irec, int offset)
+ 	int		i;
+ 	int		target;
+ 
++	pthread_mutex_lock(&irec->lock);
+ 	if (full_ino_ex_data)
+ 		ptbl = irec->ino_un.ex_data->parents;
+ 	else
+@@ -709,9 +722,11 @@ get_inode_parent(ino_tree_node_t *irec, int offset)
+ #ifdef DEBUG
+ 		ASSERT(target < ptbl->cnt);
+ #endif
++		pthread_mutex_unlock(&irec->lock);
+ 		return(ptbl->pentries[target]);
+ 	}
+ 
++	pthread_mutex_unlock(&irec->lock);
+ 	return(0LL);
+ }
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.30.1
+
