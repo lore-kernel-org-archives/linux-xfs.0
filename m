@@ -2,142 +2,195 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NO_RDNS_DOTCOM_HELO,
-	RCVD_FAKE_HELO_DOTCOM,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A98C433E2
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 15:34:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA3B0C433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 16:44:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71B7261951
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 15:34:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8975A61963
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 16:44:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230317AbhCSPeF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Mar 2021 11:34:05 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38946 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230324AbhCSPeA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Mar 2021 11:34:00 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1616168039;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=//iAscT7QZKGpEOB6SsAN5ms5ixLV6eqvoKlQIKzpwE=;
-        b=bCNNd/VHYAsJK5J1JMSbbF2rZhWiSqMyMNg931YI9q9WG7M//S1zgcRRdyVg9oBluDDUol
-        z8pX2Y85Y/B3KM4r/qBLo7Sc2MWx9MEguD6jq6qjxkee8Mh54HNaHE1/sK1rBJKy9OZBNp
-        13PAu+c1GiLOrYvgoI+qbjeO98z/PO4=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-8-ylS_TNMQNfW0O01geIbCog-1; Fri, 19 Mar 2021 11:33:57 -0400
-X-MC-Unique: ylS_TNMQNfW0O01geIbCog-1
-Received: by mail-wr1-f71.google.com with SMTP id x9so21806327wro.9
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Mar 2021 08:33:57 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=//iAscT7QZKGpEOB6SsAN5ms5ixLV6eqvoKlQIKzpwE=;
-        b=OrkBSsHpXNTcLN+ybKuSGKsBRYYcZgwdtmfyHI4qiQclrdCBoKEXD3rK3IqHpWT3ZM
-         yixjfiQLKzGeLCd0ibSuywJtlSCvRl3PLGKBnWE9pJJmCN+LY3m62OW5s4hGM4kVONrQ
-         oGx2vVErow8TL9wJsrgiomQs5+5burZu+Fbg0ejJaks8A1oR6J3DlxzZANFC3vb8q9gO
-         eJ2GjDxWPZGv1UUsIRy7F2BsUKrara8H0fEgkW7GKNxS4nUV8fzvTDLl89RPNmWJjgxZ
-         5i+UpMXkQLSIrhjH0s1bguBDVdVh+1sPpyjEHvp71E3AaRt24mjK1hdqTEJfREBqdO8o
-         Dy8g==
-X-Gm-Message-State: AOAM530NdLzi0/8/Xyerxol2S02wYSzf/y+e5p0jOKmYVXwoan+H2Q7u
-        Ax0a5jG7q8YK8+k3op+xkt/zXk0dYZR0oOtsHM25kUYzzi4K4TKyx2IrMq81zvvrdFQuLOpF+2s
-        6ZOdeD34/RzURK35S3SNoT0D0Q0MF/OE4pfkd0bDdVnHKFZ58qGZbtteVUJ1dhzSXyq3P4lM=
-X-Received: by 2002:a1c:7407:: with SMTP id p7mr4289488wmc.51.1616168036416;
-        Fri, 19 Mar 2021 08:33:56 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyo+8Gy601HWQeHX+helQCMbwnqu8NpGaGyEANop8wLGhbhBk8qfCFB8UxxrLnTPu9/Rk0Qtg==
-X-Received: by 2002:a1c:7407:: with SMTP id p7mr4289472wmc.51.1616168036210;
-        Fri, 19 Mar 2021 08:33:56 -0700 (PDT)
-Received: from localhost.com ([84.19.91.9])
-        by smtp.gmail.com with ESMTPSA id g9sm8842791wrp.14.2021.03.19.08.33.55
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Mar 2021 08:33:55 -0700 (PDT)
-From:   Pavel Reichl <preichl@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 2/2] xfs: Skip repetitive warnings about mount options
-Date:   Fri, 19 Mar 2021 16:32:51 +0100
-Message-Id: <20210319153251.476606-3-preichl@redhat.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210319153251.476606-1-preichl@redhat.com>
-References: <20210319153251.476606-1-preichl@redhat.com>
+        id S229806AbhCSQoY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Mar 2021 12:44:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58362 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230041AbhCSQnz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 19 Mar 2021 12:43:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id CC2B161940;
+        Fri, 19 Mar 2021 16:43:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616172234;
+        bh=eo6HaL6jcO0lwF8a0K7vypkm/EAieEVH2jjWz2rs6tI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=u8rUMCiHIklP7eBNZJWrR3P449F28aYHUUlRzQQF2W0CsMUgP6zN8AYAuuq06w0Aw
+         xFJMutTwqZ8Vraxo/2qHx+DUroPuEqD7zzw4LmRRc9WM9QVi6fY9HxAifJCIqZtEGB
+         upND7ZtCNgTALzcxyqX/fX3ujJ28KOQ0rsiUzCN1kGThT3GvFarusEOIEowVcv2mXZ
+         jEytF3uOGH6dhnxziAcYhhpPZyoe/UMiuUDn1seWUoJ73is43jZ6JwhWt1s665q0fp
+         dla38usED2M9XAyueTGIgRJRLz43b4TjJ1tDbwJpjvLzk2DF1zJrL7PQjmqp/9d9UO
+         TvaJ9dSUVIbig==
+Date:   Fri, 19 Mar 2021 09:43:54 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: remove tag parameter from xfs_inode_walk{,_ag}
+Message-ID: <20210319164354.GQ22100@magnolia>
+References: <161610681966.1887634.12780057277967410395.stgit@magnolia>
+ <161610682523.1887634.9689710010549931486.stgit@magnolia>
+ <20210319062501.GC955126@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210319062501.GC955126@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Skip the warnings about mount option being deprecated if we are
-remounting and deprecated option state is not changing.
+On Fri, Mar 19, 2021 at 06:25:01AM +0000, Christoph Hellwig wrote:
+> On Thu, Mar 18, 2021 at 03:33:45PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > It turns out that there is a 1:1 mapping between the execute and tag
+> > parameters that are passed to xfs_inode_walk_ag:
+> > 
+> > 	xfs_dqrele_inode => XFS_ICI_NO_TAG
+> > 	xfs_blockgc_scan_inode => XFS_ICI_BLOCKGC_TAG
+> > 
+> > The radix tree tags are an implementation detail of the inode cache,
+> > which means that callers outside of xfs_icache.c have no business
+> > passing in radix tree tags.  Since we're about to get rid of the
+> > indirect calls in the BLOCKGC case, eliminate the extra argument in
+> > favor of computing the ICI tag from the execute argument passed into the
+> > function.
+> 
+> This seems backwards to me.  I'd rather deduce the function from the
+> talk, which seems like a more sensible pattern.
 
-Bug: https://bugzilla.kernel.org/show_bug.cgi?id=211605
-Fix-suggested-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Pavel Reichl <preichl@redhat.com>
+Fair enough.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_super.c | 24 ++++++++++++++++++++----
- 1 file changed, 20 insertions(+), 4 deletions(-)
+> That being said, the quota inode walk is a little different in that it
+> doesn't use any tags, so switching it to a plain list_for_each_entry_safe
+> on sb->s_inodes would seems more sensible, something like this untested
+> patch:
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 7e281d1139dc..ba113a28b631 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1155,6 +1155,22 @@ suffix_kstrtoint(
- 	return ret;
- }
- 
-+static inline void
-+xfs_fs_warn_deprecated(
-+	struct fs_context	*fc,
-+	struct fs_parameter	*param,
-+	uint64_t		flag,
-+	bool			value)
-+{
-+	/* Don't print the warning if reconfiguring and current mount point
-+	 * already had the flag set
-+	 */
-+	if ((fc->purpose & FS_CONTEXT_FOR_RECONFIGURE) &&
-+			!!(XFS_M(fc->root->d_sb)->m_flags & flag) == value)
-+		return;
-+	xfs_warn(fc->s_fs_info, "%s mount option is deprecated.", param->key);
-+}
-+
- /*
-  * Set mount state from a mount option.
-  *
-@@ -1294,19 +1310,19 @@ xfs_fs_parse_param(
- #endif
- 	/* Following mount options will be removed in September 2025 */
- 	case Opt_ikeep:
--		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
-+		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_IKEEP, true);
- 		parsing_mp->m_flags |= XFS_MOUNT_IKEEP;
- 		return 0;
- 	case Opt_noikeep:
--		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
-+		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_IKEEP, false);
- 		parsing_mp->m_flags &= ~XFS_MOUNT_IKEEP;
- 		return 0;
- 	case Opt_attr2:
--		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
-+		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_ATTR2, true);
- 		parsing_mp->m_flags |= XFS_MOUNT_ATTR2;
- 		return 0;
- 	case Opt_noattr2:
--		xfs_warn(parsing_mp, "%s mount option is deprecated.", param->key);
-+		xfs_fs_warn_deprecated(fc, param, XFS_MOUNT_NOATTR2, true);
- 		parsing_mp->m_flags &= ~XFS_MOUNT_ATTR2;
- 		parsing_mp->m_flags |= XFS_MOUNT_NOATTR2;
- 		return 0;
--- 
-2.30.2
+Hmm, well, I look forward to hearing the results of your testing. :)
 
+I /think/ this will work, since quotaoff doesn't touch inodes that can't
+be igrabbed (i.e. their VFS state is gone), so walking sb->s_inodes
+/should/ be the same.  The only thing I'm not sure about is that the vfs
+removes the inode from the sb list before clear_inode sets I_FREEING
+(to prevent further igrab), which /could/ introduce a behavioral change?
+Though I think even if quotaoff ends up racing with evict_inodes, the
+xfs_fs_destroy_inode call will inactivate the inode and drop the dquots
+(before the next patchset) or queue the inode for inactivation and
+detach the dquots.
+
+One thing that occurs to me -- do the quota and rt metadata inodes end
+up on the sb inode list?  The rt metadata inodes definitely contribute
+to the root dquot's inode counts.
+
+--D
+
+> ---
+> From 9ae07b6bf8c6b1337a627c8f0ad619c56511b343 Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Fri, 19 Mar 2021 07:16:31 +0100
+> Subject: xfs: use s_inodes in xfs_qm_dqrele_all_inodes
+> 
+> Using xfs_inode_walk in xfs_qm_dqrele_all_inodes is complete overkill,
+> given that function simplify wants to iterate all live inodes known
+> to the VFS.  Just iterate over the s_inodes list.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_qm_syscalls.c | 50 +++++++++++++++++++++++-----------------
+>  1 file changed, 29 insertions(+), 21 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> index 11f1e2fbf22f44..4e33919ed04b56 100644
+> --- a/fs/xfs/xfs_qm_syscalls.c
+> +++ b/fs/xfs/xfs_qm_syscalls.c
+> @@ -748,41 +748,27 @@ xfs_qm_scall_getquota_next(
+>  	return error;
+>  }
+>  
+> -STATIC int
+> +static void
+>  xfs_dqrele_inode(
+>  	struct xfs_inode	*ip,
+> -	void			*args)
+> +	uint			flags)
+>  {
+> -	uint			*flags = args;
+> -
+> -	/* skip quota inodes */
+> -	if (ip == ip->i_mount->m_quotainfo->qi_uquotaip ||
+> -	    ip == ip->i_mount->m_quotainfo->qi_gquotaip ||
+> -	    ip == ip->i_mount->m_quotainfo->qi_pquotaip) {
+> -		ASSERT(ip->i_udquot == NULL);
+> -		ASSERT(ip->i_gdquot == NULL);
+> -		ASSERT(ip->i_pdquot == NULL);
+> -		return 0;
+> -	}
+> -
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -	if ((*flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
+> +	if ((flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
+>  		xfs_qm_dqrele(ip->i_udquot);
+>  		ip->i_udquot = NULL;
+>  	}
+> -	if ((*flags & XFS_GQUOTA_ACCT) && ip->i_gdquot) {
+> +	if ((flags & XFS_GQUOTA_ACCT) && ip->i_gdquot) {
+>  		xfs_qm_dqrele(ip->i_gdquot);
+>  		ip->i_gdquot = NULL;
+>  	}
+> -	if ((*flags & XFS_PQUOTA_ACCT) && ip->i_pdquot) {
+> +	if ((flags & XFS_PQUOTA_ACCT) && ip->i_pdquot) {
+>  		xfs_qm_dqrele(ip->i_pdquot);
+>  		ip->i_pdquot = NULL;
+>  	}
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -	return 0;
+>  }
+>  
+> -
+>  /*
+>   * Go thru all the inodes in the file system, releasing their dquots.
+>   *
+> @@ -794,7 +780,29 @@ xfs_qm_dqrele_all_inodes(
+>  	struct xfs_mount	*mp,
+>  	uint			flags)
+>  {
+> +	struct super_block	*sb = mp->m_super;
+> +	struct inode		*inode, *old_inode = NULL;
+> +
+>  	ASSERT(mp->m_quotainfo);
+> -	xfs_inode_walk(mp, XFS_INODE_WALK_INEW_WAIT, xfs_dqrele_inode,
+> -			&flags, XFS_ICI_NO_TAG);
+> +
+> +	spin_lock(&sb->s_inode_list_lock);
+> +	list_for_each_entry(inode, &sb->s_inodes, i_sb_list) {
+> +		struct xfs_inode	*ip = XFS_I(inode);
+> +
+> +		if (xfs_is_quota_inode(&mp->m_sb, ip->i_ino))
+> +			continue;
+> +		if (!igrab(inode))
+> +			continue;
+> +		spin_unlock(&sb->s_inode_list_lock);
+> +
+> +		iput(old_inode);
+> +		old_inode = inode;
+> +
+> +		xfs_dqrele_inode(ip, flags);
+> +
+> +		spin_lock(&sb->s_inode_list_lock);
+> +	}
+> +	spin_unlock(&sb->s_inode_list_lock);
+> +
+> +	iput(old_inode);
+>  }
+> -- 
+> 2.30.1
+> 
