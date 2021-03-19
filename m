@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6B55C4332E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2015C4332D
 	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:34:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEFDB64E45
+	by mail.kernel.org (Postfix) with ESMTP id D641164E99
 	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:34:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230006AbhCSBeU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229927AbhCSBeU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 18 Mar 2021 21:34:20 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:34879 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230019AbhCSBd6 (ORCPT
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:55249 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230006AbhCSBd6 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Mar 2021 21:33:58 -0400
 Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id BADFE63EDB;
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id EC17F82811B;
         Fri, 19 Mar 2021 12:33:56 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lN41U-0048oG-4v; Fri, 19 Mar 2021 12:33:56 +1100
+        id 1lN41U-0048oE-3Y; Fri, 19 Mar 2021 12:33:56 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lN41T-003FtF-TE; Fri, 19 Mar 2021 12:33:55 +1100
+        id 1lN41T-003FtC-SM; Fri, 19 Mar 2021 12:33:55 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     hsiangkao@redhat.com
-Subject: [PATCH 5/7] repair: don't duplicate names in phase 6
-Date:   Fri, 19 Mar 2021 12:33:53 +1100
-Message-Id: <20210319013355.776008-6-david@fromorbit.com>
+Subject: [PATCH 4/7] repair: parallelise phase 6
+Date:   Fri, 19 Mar 2021 12:33:52 +1100
+Message-Id: <20210319013355.776008-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210319013355.776008-1-david@fromorbit.com>
 References: <20210319013355.776008-1-david@fromorbit.com>
@@ -43,303 +43,143 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
-        a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=ktqsFqGhlViaf363e9wA:9 a=3ouC7Ay7WxX6Qxzw:21 a=Rd4n5-NmGWv8Fztx:21
+        a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=6KEnGoqAMqwac_kpMeoA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The name hash in phase 6 is constructed by using names that point
-directly into the directory buffers. Hence before the buffers can be
-released, the constructed name hash has to duplicate all those names
-into meory it owns via dir_hash_dup_names().
+A recent metadump provided to us caused repair to take hours in
+phase6. It wasn't IO bound - it was fully CPU bound the entire time.
+The only way to speed it up is to make phase 6 run multiple
+concurrent processing threads.
 
-Given that the structure that holds the name is dynamically
-allocated, it makes no sense to store a pointer to the name
-dir_hash_add() and then later have dynamically allocate the name.
+The obvious way to do this is to spread the concurrency across AGs,
+like the other phases, and while this works it is not optimal. When
+a processing thread hits a really large directory, it essentially
+sits CPU bound until that directory is processed. IF an AG has lots
+of large directories, we end up with a really long single threaded
+tail that limits concurrency.
 
-Extend the name hash allocation to contain space for the name
-itself, and copy the name into the name hash structure in
-dir_hash_add(). This allows us to get rid of dir_hash_dup_names(),
-and the directory checking code no longer needs to hold all the
-directory buffers in memory until the entire directory walk is
-complete and the names duplicated.
+Hence we also need to have concurrency /within/ the AG. This is
+realtively easy, as the inode chunk records allow for a simple
+concurrency mechanism within an AG. We can simply feed each chunk
+record to a workqueue, and we get concurrency within the AG for
+free. However, this allows prefetch to run way ahead of processing
+and this blows out the buffer cache size and can cause OOM.
+
+However, we can use the new workqueue depth limiting to limit the
+number of inode chunks queued, and this then backs up the inode
+prefetching to it's maximum queue depth. Hence we prevent having the
+prefetch code queue the entire AG's inode chunks on the workqueue
+blowing out memory by throttling the prefetch consumer.
+
+This takes phase 6 from taking many, many hours down to:
+
+Phase 6:        10/30 21:12:58  10/30 21:40:48  27 minutes, 50 seconds
+
+And burning 20-30 cpus that entire time on my test rig.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/phase6.c | 101 ++++++++++++++----------------------------------
- 1 file changed, 29 insertions(+), 72 deletions(-)
+ repair/phase6.c | 43 +++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 35 insertions(+), 8 deletions(-)
 
 diff --git a/repair/phase6.c b/repair/phase6.c
-index 85abea29250a..440b6a2982df 100644
+index 14464befa8b6..85abea29250a 100644
 --- a/repair/phase6.c
 +++ b/repair/phase6.c
-@@ -72,7 +72,7 @@ typedef struct dir_hash_ent {
- 	struct dir_hash_ent	*nextbyorder;	/* next in order added */
- 	xfs_dahash_t		hashval;	/* hash value of name */
- 	uint32_t		address;	/* offset of data entry */
--	xfs_ino_t 		inum;		/* inode num of entry */
-+	xfs_ino_t		inum;		/* inode num of entry */
- 	short			junkit;		/* name starts with / */
- 	short			seen;		/* have seen leaf entry */
- 	struct xfs_name		name;
-@@ -80,7 +80,6 @@ typedef struct dir_hash_ent {
+@@ -6,6 +6,7 @@
  
- typedef struct dir_hash_tab {
- 	int			size;		/* size of hash tables */
--	int			names_duped;	/* 1 = ent names malloced */
- 	dir_hash_ent_t		*first;		/* ptr to first added entry */
- 	dir_hash_ent_t		*last;		/* ptr to last added entry */
- 	dir_hash_ent_t		**byhash;	/* ptr to name hash buckets */
-@@ -171,8 +170,6 @@ dir_hash_add(
- 	short			junk;
- 	struct xfs_name		xname;
- 
--	ASSERT(!hashtab->names_duped);
--
- 	xname.name = name;
- 	xname.len = namelen;
- 	xname.type = ftype;
-@@ -199,7 +196,12 @@ dir_hash_add(
- 		}
- 	}
- 
--	if ((p = malloc(sizeof(*p))) == NULL)
-+	/*
-+	 * Allocate enough space for the hash entry and the name in a single
-+	 * allocation so we can store our own copy of the name for later use.
-+	 */
-+	p = calloc(1, sizeof(*p) + namelen + 1);
-+	if (!p)
- 		do_error(_("malloc failed in dir_hash_add (%zu bytes)\n"),
- 			sizeof(*p));
- 
-@@ -220,7 +222,12 @@ dir_hash_add(
- 	p->address = addr;
- 	p->inum = inum;
- 	p->seen = 0;
--	p->name = xname;
-+
-+	/* Set up the name in the region trailing the hash entry. */
-+	memcpy(p + 1, name, namelen);
-+	p->name.name = (const unsigned char *)(p + 1);
-+	p->name.len = namelen;
-+	p->name.type = ftype;
- 
- 	return !dup;
- }
-@@ -287,8 +294,6 @@ dir_hash_done(
- 	for (i = 0; i < hashtab->size; i++) {
- 		for (p = hashtab->byaddr[i]; p; p = n) {
- 			n = p->nextbyaddr;
--			if (hashtab->names_duped)
--				free((void *)p->name.name);
- 			free(p);
- 		}
- 	}
-@@ -385,27 +390,6 @@ dir_hash_see_all(
- 	return j == stale ? DIR_HASH_CK_OK : DIR_HASH_CK_BADSTALE;
+ #include "libxfs.h"
+ #include "threads.h"
++#include "threads.h"
+ #include "prefetch.h"
+ #include "avl.h"
+ #include "globals.h"
+@@ -3105,20 +3106,45 @@ check_for_orphaned_inodes(
  }
  
--/*
-- * Convert name pointers into locally allocated memory.
-- * This must only be done after all the entries have been added.
-- */
--static void
--dir_hash_dup_names(dir_hash_tab_t *hashtab)
--{
--	unsigned char		*name;
--	dir_hash_ent_t		*p;
--
--	if (hashtab->names_duped)
--		return;
--
--	for (p = hashtab->first; p; p = p->nextbyorder) {
--		name = malloc(p->name.len);
--		memcpy(name, p->name.name, p->name.len);
--		p->name.name = name;
--	}
--	hashtab->names_duped = 1;
--}
--
- /*
-  * Given a block number in a fork, return the next valid block number (not a
-  * hole).  If this is the last block number then NULLFILEOFF is returned.
-@@ -1383,6 +1367,7 @@ dir2_kill_block(
- 		res_failed(error);
- 	libxfs_trans_ijoin(tp, ip, 0);
- 	libxfs_trans_bjoin(tp, bp);
-+	libxfs_trans_bhold(tp, bp);
- 	memset(&args, 0, sizeof(args));
- 	args.dp = ip;
- 	args.trans = tp;
-@@ -1414,7 +1399,7 @@ longform_dir2_entry_check_data(
- 	int			*need_dot,
- 	ino_tree_node_t		*current_irec,
- 	int			current_ino_offset,
--	struct xfs_buf		**bpp,
-+	struct xfs_buf		*bp,
- 	dir_hash_tab_t		*hashtab,
- 	freetab_t		**freetabp,
- 	xfs_dablk_t		da_bno,
-@@ -1422,7 +1407,6 @@ longform_dir2_entry_check_data(
+ static void
+-traverse_function(
++do_dir_inode(
+ 	struct workqueue	*wq,
+-	xfs_agnumber_t 		agno,
++	xfs_agnumber_t		agno,
+ 	void			*arg)
  {
- 	xfs_dir2_dataptr_t	addr;
- 	xfs_dir2_leaf_entry_t	*blp;
--	struct xfs_buf		*bp;
- 	xfs_dir2_block_tail_t	*btp;
- 	struct xfs_dir2_data_hdr *d;
- 	xfs_dir2_db_t		db;
-@@ -1453,7 +1437,6 @@ longform_dir2_entry_check_data(
- 	};
- 
- 
--	bp = *bpp;
- 	d = bp->b_addr;
- 	ptr = (char *)d + mp->m_dir_geo->data_entry_offset;
- 	nbad = 0;
-@@ -1554,10 +1537,8 @@ longform_dir2_entry_check_data(
- 			dir2_kill_block(mp, ip, da_bno, bp);
- 		} else {
- 			do_warn(_("would junk block\n"));
--			libxfs_buf_relse(bp);
- 		}
- 		freetab->ents[db].v = NULLDATAOFF;
--		*bpp = NULL;
- 		return;
- 	}
- 
-@@ -2215,17 +2196,15 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 			int		ino_offset,
- 			dir_hash_tab_t	*hashtab)
- {
--	struct xfs_buf		**bplist;
-+	struct xfs_buf		*bp;
- 	xfs_dablk_t		da_bno;
- 	freetab_t		*freetab;
--	int			num_bps;
+-	ino_tree_node_t 	*irec;
++	struct ino_tree_node	*irec = arg;
  	int			i;
- 	int			isblock;
- 	int			isleaf;
- 	xfs_fileoff_t		next_da_bno;
- 	int			seeval;
- 	int			fixit = 0;
--	xfs_dir2_db_t		db;
- 	struct xfs_da_args	args;
++
++	for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
++		if (inode_isadir(irec, i))
++			process_dir_inode(wq->wq_ctx, agno, irec, i);
++	}
++}
++
++static void
++traverse_function(
++	struct workqueue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
++{
++	struct ino_tree_node	*irec;
+ 	prefetch_args_t		*pf_args = arg;
++	struct workqueue	lwq;
++	struct xfs_mount	*mp = wq->wq_ctx;
++
  
- 	*need_dot = 1;
-@@ -2242,11 +2221,6 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 		freetab->ents[i].v = NULLDATAOFF;
- 		freetab->ents[i].s = 0;
- 	}
--	num_bps = freetab->naents;
--	bplist = calloc(num_bps, sizeof(struct xfs_buf*));
--	if (!bplist)
--		do_error(_("calloc failed in %s (%zu bytes)\n"),
--			__func__, num_bps * sizeof(struct xfs_buf*));
+ 	wait_for_inode_prefetch(pf_args);
  
- 	/* is this a block, leaf, or node directory? */
- 	args.dp = ip;
-@@ -2275,28 +2249,12 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 			break;
+ 	if (verbose)
+ 		do_log(_("        - agno = %d\n"), agno);
+ 
++	/*
++	 * The more AGs we have in flight at once, the fewer processing threads
++	 * per AG. This means we don't overwhelm the machine with hundreds of
++	 * threads when we start acting on lots of AGs at once. We just want
++	 * enough that we can keep multiple CPUs busy across multiple AGs.
++	 */
++	workqueue_create_bound(&lwq, mp, ag_stride, 1000);
++
+ 	for (irec = findfirst_inode_rec(agno); irec; irec = next_ino_rec(irec)) {
+ 		if (irec->ino_isa_dir == 0)
+ 			continue;
+@@ -3126,18 +3152,19 @@ traverse_function(
+ 		if (pf_args) {
+ 			sem_post(&pf_args->ra_count);
+ #ifdef XR_PF_TRACE
++			{
++			int	i;
+ 			sem_getvalue(&pf_args->ra_count, &i);
+ 			pftrace(
+ 		"processing inode chunk %p in AG %d (sem count = %d)",
+ 				irec, agno, i);
++			}
+ #endif
  		}
  
--		db = xfs_dir2_da_to_db(mp->m_dir_geo, da_bno);
--		if (db >= num_bps) {
--			int last_size = num_bps;
--
--			/* more data blocks than expected */
--			num_bps = db + 1;
--			bplist = realloc(bplist, num_bps * sizeof(struct xfs_buf*));
--			if (!bplist)
--				do_error(_("realloc failed in %s (%zu bytes)\n"),
--					__func__,
--					num_bps * sizeof(struct xfs_buf*));
--			/* Initialize the new elements */
--			for (i = last_size; i < num_bps; i++)
--				bplist[i] = NULL;
+-		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
+-			if (inode_isadir(irec, i))
+-				process_dir_inode(wq->wq_ctx, agno, irec, i);
 -		}
--
- 		if (isblock)
- 			ops = &xfs_dir3_block_buf_ops;
- 		else
- 			ops = &xfs_dir3_data_buf_ops;
- 
--		error = dir_read_buf(ip, da_bno, &bplist[db], ops, &fixit);
-+		error = dir_read_buf(ip, da_bno, &bp, ops, &fixit);
- 		if (error) {
- 			do_warn(
- 	_("can't read data block %u for directory inode %" PRIu64 " error %d\n"),
-@@ -2316,21 +2274,25 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 		}
- 
- 		/* check v5 metadata */
--		d = bplist[db]->b_addr;
-+		d = bp->b_addr;
- 		if (be32_to_cpu(d->magic) == XFS_DIR3_BLOCK_MAGIC ||
- 		    be32_to_cpu(d->magic) == XFS_DIR3_DATA_MAGIC) {
--			struct xfs_buf		 *bp = bplist[db];
--
- 			error = check_dir3_header(mp, bp, ino);
- 			if (error) {
- 				fixit++;
-+				if (isblock)
-+					goto out_fix;
- 				continue;
- 			}
- 		}
- 
- 		longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
--				irec, ino_offset, &bplist[db], hashtab,
-+				irec, ino_offset, bp, hashtab,
- 				&freetab, da_bno, isblock);
-+		if (isblock)
-+			break;
-+
-+		libxfs_buf_relse(bp);
++		queue_work(&lwq, do_dir_inode, agno, irec);
  	}
- 	fixit |= (*num_illegal != 0) || dir2_is_badino(ino) || *need_dot;
- 
-@@ -2341,7 +2303,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 			xfs_dir2_block_tail_t	*btp;
- 			xfs_dir2_leaf_entry_t	*blp;
- 
--			block = bplist[0]->b_addr;
-+			block = bp->b_addr;
- 			btp = xfs_dir2_block_tail_p(mp->m_dir_geo, block);
- 			blp = xfs_dir2_block_leaf_p(btp);
- 			seeval = dir_hash_see_all(hashtab, blp,
-@@ -2358,11 +2320,10 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 		}
- 	}
- out_fix:
-+	if (isblock && bp)
-+		libxfs_buf_relse(bp);
-+
- 	if (!no_modify && (fixit || dotdot_update)) {
--		dir_hash_dup_names(hashtab);
--		for (i = 0; i < num_bps; i++)
--			if (bplist[i])
--				libxfs_buf_relse(bplist[i]);
- 		longform_dir2_rebuild(mp, ino, ip, irec, ino_offset, hashtab);
- 		*num_illegal = 0;
- 		*need_dot = 0;
-@@ -2370,12 +2331,8 @@ out_fix:
- 		if (fixit || dotdot_update)
- 			do_warn(
- 	_("would rebuild directory inode %" PRIu64 "\n"), ino);
--		for (i = 0; i < num_bps; i++)
--			if (bplist[i])
--				libxfs_buf_relse(bplist[i]);
- 	}
- 
--	free(bplist);
- 	free(freetab);
++	destroy_work_queue(&lwq);
+ 	cleanup_inode_prefetch(pf_args);
  }
  
+@@ -3165,7 +3192,7 @@ static void
+ traverse_ags(
+ 	struct xfs_mount	*mp)
+ {
+-	do_inode_prefetch(mp, 0, traverse_function, false, true);
++	do_inode_prefetch(mp, ag_stride, traverse_function, false, true);
+ }
+ 
+ void
 -- 
 2.30.1
 
