@@ -6,60 +6,61 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BC75C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 06:33:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B0FC433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 06:37:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6952C64E10
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 06:33:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7211464F6E
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 06:37:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233942AbhCSGd0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Mar 2021 02:33:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37244 "EHLO
+        id S233909AbhCSGgj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Mar 2021 02:36:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233819AbhCSGdF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Mar 2021 02:33:05 -0400
+        with ESMTP id S234073AbhCSGgP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Mar 2021 02:36:15 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBB61C06174A
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Mar 2021 23:33:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 457CBC06174A
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Mar 2021 23:36:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=BVzkkqyYKuEXHRTRi9bzx/buQtt04QjkDJyo0D47KiI=; b=KFTxhHGVt1BE6hyh0F5+W+LgGS
-        oDMBrRB/72c8fSR8WNi68yEPw/kR+HclIs7BvWJK1vGNmxdQcVdinSaU6kYkIDc7a7i8S/iNBRaKt
-        rLjENPfvDkF4P7lpiDRP+ewAsYz86UZ/TzStNZXJoPKn/KHVzJzaNtKfx2y6dtH3WB+h4gA9Ikdf/
-        yf1xAz1Wzpvqw6bOG5wSeO5FMo1l43g9ALrrDB8C08kPpUCodmBs9vRdrkasIQ3e1BgprfEOpLxX6
-        +HAyLWSN+QP7LRHR5o6VYXf9n2tf/t4P4vZItXLVFN9S2NUkv4uSc74uUQvXYfausCucI+lFyYBoQ
-        XyB0Ts/g==;
+        bh=tZw4q+LpNY7xPZq4827yhXJC3hLCfEzh/x87P/vz6Qk=; b=XA2pwEZTqz/zaXz3QqIUJqOAz8
+        RmIcdnDteHw1q/vFxvGIg+ZMUgFlLj97uySCneZTgQmwaZDpqTOGEXKXc+/jMW3FWA1lmF3klLxrX
+        sF7eGAYTQPTY4P+MaDiBV8J4g/I1lZ55cIHFafRIr724M7EhhVmiJ5flJNYPdnu7AZeXVKwW+l3/l
+        G7MqKuCPV4wtFqIMrJf27vre4t8SywygyNGUuSCa4k/bsxUV93WoYf9C9JoeMXaQqpz7XlTrnwQ9N
+        IjV8ru+kYTWxXFwyFgmuTP/byndQpqRnHrPaKrp3HEp/oKEIQzJxF8fYba5Q9WG5Q/8RkZqwgWQpK
+        pwbe9nkw==;
 Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lN8fk-0043IL-Rn; Fri, 19 Mar 2021 06:31:54 +0000
-Date:   Fri, 19 Mar 2021 06:31:48 +0000
+        id 1lN8jR-0043Xo-1f; Fri, 19 Mar 2021 06:35:48 +0000
+Date:   Fri, 19 Mar 2021 06:35:37 +0000
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: move the xfs_can_free_eofblocks call under the
- IOLOCK
-Message-ID: <20210319063148.GA965589@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: move the check for post-EOF mappings into
+ xfs_can_free_eofblocks
+Message-ID: <20210319063537.GB965589@infradead.org>
 References: <161610680641.1887542.10509468263256161712.stgit@magnolia>
- <161610681213.1887542.5172499515393116902.stgit@magnolia>
- <20210319055340.GA955126@infradead.org>
- <20210319060110.GE1670408@magnolia>
+ <161610681767.1887542.5197301352012661570.stgit@magnolia>
+ <20210319055907.GB955126@infradead.org>
+ <20210319060534.GF1670408@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210319060110.GE1670408@magnolia>
+In-Reply-To: <20210319060534.GF1670408@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 18, 2021 at 11:01:10PM -0700, Darrick J. Wong wrote:
-> I don't think so, because xfs_free_eofblocks will call
-> xfs_inode_clear_eofblocks_tag if it succeeds in freeing anything.
-> 
-> Though perhaps you're correct that we need to clear the tag if
-> !xfs_can_free_eofblocks, since we could have been called if
-> XFS_ICI_BLOCKGC_TAG was set in the radix tree because we once had a
-> posteof block but now we really only have cow blocks.
+On Thu, Mar 18, 2021 at 11:05:34PM -0700, Darrick J. Wong wrote:
+> xfs_inactive doesn't take the iolock because (evidently) at some point
+> there were lockdep complaints about taking it in reclaim context.  By
+> the time the inode reaches inactivation context, there can't be any
+> other users of it anyway -- the last caller dropped its reference, we
+> tore down the VFS inode, and anyone who wants to resuscitate the inode
+> will wait in xfs_iget for us to finish.
 
-Yes, that's what I meant.
+Yes.  What I meant is that if we can deduce that we are in inactive
+somehow (probably using the VFS inode state) we can ASSERT that we
+are either in inactive or hold the iolock.
