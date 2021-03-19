@@ -2,65 +2,182 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B0FC433DB
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 06:37:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4072C433E6
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 07:36:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7211464F6E
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 06:37:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D3CC64F69
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 07:36:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233909AbhCSGgj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Mar 2021 02:36:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37912 "EHLO
+        id S234175AbhCSHgW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Mar 2021 03:36:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234073AbhCSGgP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Mar 2021 02:36:15 -0400
+        with ESMTP id S234163AbhCSHgA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Mar 2021 03:36:00 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 457CBC06174A
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Mar 2021 23:36:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6043C06174A
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Mar 2021 00:35:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=tZw4q+LpNY7xPZq4827yhXJC3hLCfEzh/x87P/vz6Qk=; b=XA2pwEZTqz/zaXz3QqIUJqOAz8
-        RmIcdnDteHw1q/vFxvGIg+ZMUgFlLj97uySCneZTgQmwaZDpqTOGEXKXc+/jMW3FWA1lmF3klLxrX
-        sF7eGAYTQPTY4P+MaDiBV8J4g/I1lZ55cIHFafRIr724M7EhhVmiJ5flJNYPdnu7AZeXVKwW+l3/l
-        G7MqKuCPV4wtFqIMrJf27vre4t8SywygyNGUuSCa4k/bsxUV93WoYf9C9JoeMXaQqpz7XlTrnwQ9N
-        IjV8ru+kYTWxXFwyFgmuTP/byndQpqRnHrPaKrp3HEp/oKEIQzJxF8fYba5Q9WG5Q/8RkZqwgWQpK
-        pwbe9nkw==;
+        bh=MR2hpVgcizJqmBoGRTqkz5bbJztaT0eyFQ+oWeD9AWo=; b=MoWeh1+2Fxp8NIV15MCLDymyCr
+        i/FBKNvNRIWwwnnZ/ntxnAIPjyPeYnOWO21/Srqh+P0NROmAe5fnvXw3i9jhkJ1CNbZL+EMNPyvCD
+        EM8ntXp+t/DNaQpSSSS11h5Qq6dYTHsk35pIZcjaw23rnjakZ+5+5rA2zzkPijXIGCCwaLlIynl7s
+        ctmUFjyERJ+e5HrIn2oOBFThVTkbSfViSpmHqMeQyNWL+Mly75bJVyYkQ6ruVq2vtW8qrmDLufS6O
+        bZOKwtS2Ev6s981BhgMM2Smh4O+pJh13GpYQS4mtoHu+xN4fmAI6c6uGk+KWhmebdhBPtL0Nr2zHD
+        ieubZYUw==;
 Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lN8jR-0043Xo-1f; Fri, 19 Mar 2021 06:35:48 +0000
-Date:   Fri, 19 Mar 2021 06:35:37 +0000
+        id 1lN9fH-0047Ga-AS; Fri, 19 Mar 2021 07:35:38 +0000
+Date:   Fri, 19 Mar 2021 07:35:23 +0000
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: move the check for post-EOF mappings into
- xfs_can_free_eofblocks
-Message-ID: <20210319063537.GB965589@infradead.org>
-References: <161610680641.1887542.10509468263256161712.stgit@magnolia>
- <161610681767.1887542.5197301352012661570.stgit@magnolia>
- <20210319055907.GB955126@infradead.org>
- <20210319060534.GF1670408@magnolia>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
+Subject: Re: [PATCH 1/3] xfs: remove tag parameter from xfs_inode_walk{,_ag}
+Message-ID: <20210319073523.GA980561@infradead.org>
+References: <161610681966.1887634.12780057277967410395.stgit@magnolia>
+ <161610682523.1887634.9689710010549931486.stgit@magnolia>
+ <20210319062501.GC955126@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210319060534.GF1670408@magnolia>
+In-Reply-To: <20210319062501.GC955126@infradead.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 18, 2021 at 11:05:34PM -0700, Darrick J. Wong wrote:
-> xfs_inactive doesn't take the iolock because (evidently) at some point
-> there were lockdep complaints about taking it in reclaim context.  By
-> the time the inode reaches inactivation context, there can't be any
-> other users of it anyway -- the last caller dropped its reference, we
-> tore down the VFS inode, and anyone who wants to resuscitate the inode
-> will wait in xfs_iget for us to finish.
+On Fri, Mar 19, 2021 at 06:25:01AM +0000, Christoph Hellwig wrote:
+> On Thu, Mar 18, 2021 at 03:33:45PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > It turns out that there is a 1:1 mapping between the execute and tag
+> > parameters that are passed to xfs_inode_walk_ag:
+> > 
+> > 	xfs_dqrele_inode => XFS_ICI_NO_TAG
+> > 	xfs_blockgc_scan_inode => XFS_ICI_BLOCKGC_TAG
+> > 
+> > The radix tree tags are an implementation detail of the inode cache,
+> > which means that callers outside of xfs_icache.c have no business
+> > passing in radix tree tags.  Since we're about to get rid of the
+> > indirect calls in the BLOCKGC case, eliminate the extra argument in
+> > favor of computing the ICI tag from the execute argument passed into the
+> > function.
+> 
+> This seems backwards to me.  I'd rather deduce the function from the
+> talk, which seems like a more sensible pattern.
+> 
+> That being said, the quota inode walk is a little different in that it
+> doesn't use any tags, so switching it to a plain list_for_each_entry_safe
+> on sb->s_inodes would seems more sensible, something like this untested
+> patch:
 
-Yes.  What I meant is that if we can deduce that we are in inactive
-somehow (probably using the VFS inode state) we can ASSERT that we
-are either in inactive or hold the iolock.
+Something like this is probably going to work better (maybe split into
+two patches).  I'm going to kick off some testing on it:
+
+---
+From 9ae07b6bf8c6b1337a627c8f0ad619c56511b343 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Fri, 19 Mar 2021 07:16:31 +0100
+Subject: xfs: use s_inodes in xfs_qm_dqrele_all_inodes
+
+Using xfs_inode_walk in xfs_qm_dqrele_all_inodes is complete overkill,
+given that function simplify wants to iterate all live inodes known
+to the VFS.  Just iterate over the s_inodes list.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_qm_syscalls.c | 50 +++++++++++++++++++++++-----------------
+ 1 file changed, 29 insertions(+), 21 deletions(-)
+
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 11f1e2fbf22f44..4e33919ed04b56 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -748,41 +748,27 @@ xfs_qm_scall_getquota_next(
+ 	return error;
+ }
+ 
+-STATIC int
++static void
+ xfs_dqrele_inode(
+ 	struct xfs_inode	*ip,
+-	void			*args)
++	uint			flags)
+ {
+-	uint			*flags = args;
+-
+-	/* skip quota inodes */
+-	if (ip == ip->i_mount->m_quotainfo->qi_uquotaip ||
+-	    ip == ip->i_mount->m_quotainfo->qi_gquotaip ||
+-	    ip == ip->i_mount->m_quotainfo->qi_pquotaip) {
+-		ASSERT(ip->i_udquot == NULL);
+-		ASSERT(ip->i_gdquot == NULL);
+-		ASSERT(ip->i_pdquot == NULL);
+-		return 0;
+-	}
+-
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	if ((*flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
++	if ((flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
+ 		xfs_qm_dqrele(ip->i_udquot);
+ 		ip->i_udquot = NULL;
+ 	}
+-	if ((*flags & XFS_GQUOTA_ACCT) && ip->i_gdquot) {
++	if ((flags & XFS_GQUOTA_ACCT) && ip->i_gdquot) {
+ 		xfs_qm_dqrele(ip->i_gdquot);
+ 		ip->i_gdquot = NULL;
+ 	}
+-	if ((*flags & XFS_PQUOTA_ACCT) && ip->i_pdquot) {
++	if ((flags & XFS_PQUOTA_ACCT) && ip->i_pdquot) {
+ 		xfs_qm_dqrele(ip->i_pdquot);
+ 		ip->i_pdquot = NULL;
+ 	}
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	return 0;
+ }
+ 
+-
+ /*
+  * Go thru all the inodes in the file system, releasing their dquots.
+  *
+@@ -794,7 +780,29 @@ xfs_qm_dqrele_all_inodes(
+ 	struct xfs_mount	*mp,
+ 	uint			flags)
+ {
++	struct super_block	*sb = mp->m_super;
++	struct inode		*inode, *old_inode = NULL;
++
+ 	ASSERT(mp->m_quotainfo);
+-	xfs_inode_walk(mp, XFS_INODE_WALK_INEW_WAIT, xfs_dqrele_inode,
+-			&flags, XFS_ICI_NO_TAG);
++
++	spin_lock(&sb->s_inode_list_lock);
++	list_for_each_entry(inode, &sb->s_inodes, i_sb_list) {
++		struct xfs_inode	*ip = XFS_I(inode);
++
++		if (xfs_is_quota_inode(&mp->m_sb, ip->i_ino))
++			continue;
++		if (!igrab(inode))
++			continue;
++		spin_unlock(&sb->s_inode_list_lock);
++
++		iput(old_inode);
++		old_inode = inode;
++
++		xfs_dqrele_inode(ip, flags);
++
++		spin_lock(&sb->s_inode_list_lock);
++	}
++	spin_unlock(&sb->s_inode_list_lock);
++
++	iput(old_inode);
+ }
+-- 
+2.30.1
+
