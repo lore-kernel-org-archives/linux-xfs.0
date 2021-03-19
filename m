@@ -2,184 +2,180 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2015C4332D
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:34:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4531C433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:35:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D641164E99
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:34:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE92264E6B
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Mar 2021 01:35:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229927AbhCSBeU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Mar 2021 21:34:20 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:55249 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230006AbhCSBd6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Mar 2021 21:33:58 -0400
-Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id EC17F82811B;
-        Fri, 19 Mar 2021 12:33:56 +1100 (AEDT)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lN41U-0048oE-3Y; Fri, 19 Mar 2021 12:33:56 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.94)
-        (envelope-from <david@fromorbit.com>)
-        id 1lN41T-003FtC-SM; Fri, 19 Mar 2021 12:33:55 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     hsiangkao@redhat.com
-Subject: [PATCH 4/7] repair: parallelise phase 6
-Date:   Fri, 19 Mar 2021 12:33:52 +1100
-Message-Id: <20210319013355.776008-5-david@fromorbit.com>
-X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210319013355.776008-1-david@fromorbit.com>
-References: <20210319013355.776008-1-david@fromorbit.com>
+        id S230056AbhCSBey (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Mar 2021 21:34:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49714 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230049AbhCSBee (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Mar 2021 21:34:34 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8161A64E45;
+        Fri, 19 Mar 2021 01:34:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616117674;
+        bh=fxd5cPLKXMijFoty7ns+2iZQRnp4ElyuPcRkia0eK8w=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=u38dTFU5CS6p7E7+uA6XC0BxYrKqBktxaE6aiGI7OM2uKprEwDNe5fvXlnYsloi0/
+         To7TpfClaDKCQ00BUUjdj73aizsZjsTPZsKlFpjoSwz3b9wj3bFCKu5NOrrl2L0Czq
+         vF7e7PKgkrJOyTLQqPFqWBWqwlu9WUFxknArAvLQPkwrZJNbZ4mVsK1KAGztE+p/a7
+         ySLk1gZfMSDPgZeZkfZ6yUInl3RE4DLpkQRet3sjtbpVBFQDJ1RQY6tG0WK06uwlAC
+         bd0JfC5m9LehmXdw+yGqVkZOEVhEoQSawgHXLxFhuYGjbK44nU0OYvHdx8tbGwlzVB
+         HYNQxSdxi/jVA==
+Date:   Thu, 18 Mar 2021 18:34:30 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] xfs: set a mount flag when perag reservation is
+ active
+Message-ID: <20210319013430.GO22100@magnolia>
+References: <20210318161707.723742-1-bfoster@redhat.com>
+ <20210318161707.723742-2-bfoster@redhat.com>
+ <20210318205536.GO63242@dread.disaster.area>
+ <20210318221901.GN22100@magnolia>
+ <20210319010506.GP63242@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
-        a=dESyimp9J3IA:10 a=20KFwNOVAAAA:8 a=6KEnGoqAMqwac_kpMeoA:9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210319010506.GP63242@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Mar 19, 2021 at 12:05:06PM +1100, Dave Chinner wrote:
+> On Thu, Mar 18, 2021 at 03:19:01PM -0700, Darrick J. Wong wrote:
+> > On Fri, Mar 19, 2021 at 07:55:36AM +1100, Dave Chinner wrote:
+> > > On Thu, Mar 18, 2021 at 12:17:06PM -0400, Brian Foster wrote:
+> > > > perag reservation is enabled at mount time on a per AG basis. The
+> > > > upcoming in-core allocation btree accounting mechanism needs to know
+> > > > when reservation is enabled and that all perag AGF contexts are
+> > > > initialized. As a preparation step, set a flag in the mount
+> > > > structure and unconditionally initialize the pagf on all mounts
+> > > > where at least one reservation is active.
+> > > 
+> > > I'm not sure this is a good idea. AFAICT, this means just about any
+> > > filesystem with finobt, reflink and/or rmap will now typically read
+> > > every AGF header in the filesystem at mount time. That means pretty
+> > > much every v5 filesystem in production...
+> > 
+> > They already do that, because the AG headers are where we store the
+> > btree block counts.
+> 
+> Oh, we're brute forcing AG reservation space? I thought we were
+> doing something smarter than that, because I'm sure this isn't the
+> first time I've mentioned this problem....
 
-A recent metadump provided to us caused repair to take hours in
-phase6. It wasn't IO bound - it was fully CPU bound the entire time.
-The only way to speed it up is to make phase 6 run multiple
-concurrent processing threads.
+Probably not... :)
 
-The obvious way to do this is to spread the concurrency across AGs,
-like the other phases, and while this works it is not optimal. When
-a processing thread hits a really large directory, it essentially
-sits CPU bound until that directory is processed. IF an AG has lots
-of large directories, we end up with a really long single threaded
-tail that limits concurrency.
+> > > We've always tried to avoid needing to reading all AG headers at
+> > > mount time because that does not scale when we have really large
+> > > filesystems (I'm talking petabytes here). We should only read AG
+> > > headers if there is something not fully recovered during the mount
+> > > (i.e. slow path) and not on every mount.
+> > > 
+> > > Needing to do a few thousand synchonous read IOs during mount makes
+> > > mount very slow, and as such we always try to do dynamic
+> > > instantiation of AG headers...  Testing I've done with exabyte scale
+> > > filesystems (>10^6 AGs) show that it can take minutes for mount to
+> > > run when each AG header needs to be read, and that's on SSDs where
+> > > the individual read latency is only a couple of hundred
+> > > microseconds. On spinning disks that can do 200 IOPS, we're
+> > > potentially talking hours just to mount really large filesystems...
+> > 
+> > Is that with reflink enabled?  Reflink always scans the right edge of
+> > the refcount btree at mount to clean out stale COW staging extents,
+> 
+> Aren't they cleaned up at unmount when the inode is inactivated?
 
-Hence we also need to have concurrency /within/ the AG. This is
-realtively easy, as the inode chunk records allow for a simple
-concurrency mechanism within an AG. We can simply feed each chunk
-record to a workqueue, and we get concurrency within the AG for
-free. However, this allows prefetch to run way ahead of processing
-and this blows out the buffer cache size and can cause OOM.
+Yes.  Or when the blockgc timeout expires, or when ENOSPC pushes
+blockgc...
 
-However, we can use the new workqueue depth limiting to limit the
-number of inode chunks queued, and this then backs up the inode
-prefetching to it's maximum queue depth. Hence we prevent having the
-prefetch code queue the entire AG's inode chunks on the workqueue
-blowing out memory by throttling the prefetch consumer.
+> i.e. isn't this something that should only be done on a unclean
+> mount?
 
-This takes phase 6 from taking many, many hours down to:
+Years ago (back when reflink was experimental) we left it that way so
+that if there were any serious implementation bugs we wouldn't leak
+blocks everywhere.  I think we forgot to take it out.
 
-Phase 6:        10/30 21:12:58  10/30 21:40:48  27 minutes, 50 seconds
+> > and
+> > (prior to the introduction of the inode btree counts feature last year)
+> > we also ahad to walk the entire finobt to find out how big it is.
+> 
+> ugh, I forgot about the fact we had to add that wart because we
+> screwed up the space reservations for finobt operations...
 
-And burning 20-30 cpus that entire time on my test rig.
+Yeah.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- repair/phase6.c | 43 +++++++++++++++++++++++++++++++++++--------
- 1 file changed, 35 insertions(+), 8 deletions(-)
+> As for large scale testing, I suspect I turned everything optional
+> off when I last did this testing, because mkfs currently requires a
+> lot of per-AG IO to initialise structures. On an SSD, mkfs.xfs
+> -K -f -d agcount=10000 ... takes
+> 
+> 		mkfs time	mount time
+> -m crc=0	15s		1s
+> -m rmapbt=1	25s		6s
+> 
+> Multiply those times by at another 1000 to get to an 8EB
+> filesystem and the difference is several hours of mkfs time and
+> a couple of hours of mount time....
+> 
+> So from the numbers, it is pretty likely I didn't test anything that
+> actually required iterating 8 million AGs at mount time....
+> 
+> > TBH I think the COW recovery and the AG block reservation pieces are
+> > prime candidates for throwing at an xfs_pwork workqueue so we can
+> > perform those scans in parallel.
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 14464befa8b6..85abea29250a 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -6,6 +6,7 @@
- 
- #include "libxfs.h"
- #include "threads.h"
-+#include "threads.h"
- #include "prefetch.h"
- #include "avl.h"
- #include "globals.h"
-@@ -3105,20 +3106,45 @@ check_for_orphaned_inodes(
- }
- 
- static void
--traverse_function(
-+do_dir_inode(
- 	struct workqueue	*wq,
--	xfs_agnumber_t 		agno,
-+	xfs_agnumber_t		agno,
- 	void			*arg)
- {
--	ino_tree_node_t 	*irec;
-+	struct ino_tree_node	*irec = arg;
- 	int			i;
-+
-+	for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
-+		if (inode_isadir(irec, i))
-+			process_dir_inode(wq->wq_ctx, agno, irec, i);
-+	}
-+}
-+
-+static void
-+traverse_function(
-+	struct workqueue	*wq,
-+	xfs_agnumber_t		agno,
-+	void			*arg)
-+{
-+	struct ino_tree_node	*irec;
- 	prefetch_args_t		*pf_args = arg;
-+	struct workqueue	lwq;
-+	struct xfs_mount	*mp = wq->wq_ctx;
-+
- 
- 	wait_for_inode_prefetch(pf_args);
- 
- 	if (verbose)
- 		do_log(_("        - agno = %d\n"), agno);
- 
-+	/*
-+	 * The more AGs we have in flight at once, the fewer processing threads
-+	 * per AG. This means we don't overwhelm the machine with hundreds of
-+	 * threads when we start acting on lots of AGs at once. We just want
-+	 * enough that we can keep multiple CPUs busy across multiple AGs.
-+	 */
-+	workqueue_create_bound(&lwq, mp, ag_stride, 1000);
-+
- 	for (irec = findfirst_inode_rec(agno); irec; irec = next_ino_rec(irec)) {
- 		if (irec->ino_isa_dir == 0)
- 			continue;
-@@ -3126,18 +3152,19 @@ traverse_function(
- 		if (pf_args) {
- 			sem_post(&pf_args->ra_count);
- #ifdef XR_PF_TRACE
-+			{
-+			int	i;
- 			sem_getvalue(&pf_args->ra_count, &i);
- 			pftrace(
- 		"processing inode chunk %p in AG %d (sem count = %d)",
- 				irec, agno, i);
-+			}
- #endif
- 		}
- 
--		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
--			if (inode_isadir(irec, i))
--				process_dir_inode(wq->wq_ctx, agno, irec, i);
--		}
-+		queue_work(&lwq, do_dir_inode, agno, irec);
- 	}
-+	destroy_work_queue(&lwq);
- 	cleanup_inode_prefetch(pf_args);
- }
- 
-@@ -3165,7 +3192,7 @@ static void
- traverse_ags(
- 	struct xfs_mount	*mp)
- {
--	do_inode_prefetch(mp, 0, traverse_function, false, true);
-+	do_inode_prefetch(mp, ag_stride, traverse_function, false, true);
- }
- 
- void
--- 
-2.30.1
+[This didn't turn out to be difficult at all.]
 
+> As I mentioned on #xfs, I think we only need to do the AG read if we
+> are near enospc. i.e. we can take the entire reservation at mount
+> time (which is fixed per-ag) and only take away the used from the
+> reservation (i.e. return to the free space pool) when we actually
+> access the AGF/AGI the first time. Or when we get a ENOSPC
+> event, which might occur when we try to take the fixed reservation
+> at mount time...
+
+<nod> That's probably not hard.  Compute the theoretical maximum size of
+the finobt/rmapbt/refcountbt, multiply that by the number of AGs, try to
+reserve that much, and if we get it, we can trivially initialise the
+per-AG reservation structure.  If that fails, we fall back to the
+scanning thing we do now:
+
+When we set pag[if]_init in the per-AG structure, we can back off the
+space reservation by the number of blocks in the trees tracked by that
+AG header, which will add that quantity to fdblocks.  We can handle the
+ENOSPC case by modifying the per-AG blockgc worker to load the AGF/AGI
+if they aren't already.
+
+> > > Hence I don't think that any algorithm that requires reading every
+> > > AGF header in the filesystem at mount time on every v5 filesystem
+> > > already out there in production (because finobt triggers this) is a
+> > > particularly good idea...
+> > 
+> > Perhaps not, but the horse bolted 5 years ago. :/
+> 
+> Let's go catch it :P
+
+FWIW I previously fixed the rmapbt/reflink transaction reservations
+being unnecessarily large, so (provided deferred inode inactivation gets
+reviewed this cycle) I can try to put all these reflink cleanups
+together for the next cycle.
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
