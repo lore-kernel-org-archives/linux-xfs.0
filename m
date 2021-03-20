@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3B40C433C1
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Mar 2021 12:27:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58F56C433E2
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Mar 2021 12:27:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 898B161930
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Mar 2021 12:27:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 275746196A
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Mar 2021 12:27:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229585AbhCTM07 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 Mar 2021 08:26:59 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:48193 "EHLO
+        id S229638AbhCTM1A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 20 Mar 2021 08:27:00 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:48198 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229510AbhCTM0q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Mar 2021 08:26:46 -0400
+        with ESMTP id S229529AbhCTM0s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Mar 2021 08:26:48 -0400
 Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
         by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.86_2)
         (envelope-from <christian.brauner@ubuntu.com>)
-        id 1lNagi-0004Pf-VA; Sat, 20 Mar 2021 12:26:41 +0000
+        id 1lNagl-0004Pf-ON; Sat, 20 Mar 2021 12:26:43 +0000
 From:   Christian Brauner <christian.brauner@ubuntu.com>
 To:     Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>
 Cc:     Vivek Goyal <vgoyal@redhat.com>,
         "Darrick J . Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         Christian Brauner <christian.brauner@ubuntu.com>
-Subject: [PATCH v2 1/4] fs: document mapping helpers
-Date:   Sat, 20 Mar 2021 13:26:21 +0100
-Message-Id: <20210320122623.599086-2-christian.brauner@ubuntu.com>
+Subject: [PATCH v2 3/4] fs: introduce fsuidgid_has_mapping() helper
+Date:   Sat, 20 Mar 2021 13:26:23 +0100
+Message-Id: <20210320122623.599086-4-christian.brauner@ubuntu.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210320122623.599086-1-christian.brauner@ubuntu.com>
 References: <20210320122623.599086-1-christian.brauner@ubuntu.com>
@@ -42,110 +42,95 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Document new helpers we introduced this cycle.
+Don't open-code the checks and instead move them into a clean little
+helper we can call. This also reduces the risk that if we ever change
+something we forget to change all locations.
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: Al Viro <viro@zeniv.linux.org.uk>
 Cc: linux-fsdevel@vger.kernel.org
+Inspired-by: Vivek Goyal <vgoyal@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
 ---
 /* v2 */
-patch introduced
 - Christoph Hellwig <hch@lst.de>:
   - Add kernel docs to helpers.
 ---
- include/linux/fs.h | 48 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 48 insertions(+)
+ fs/namei.c         | 11 +++--------
+ include/linux/fs.h | 20 ++++++++++++++++++++
+ 2 files changed, 23 insertions(+), 8 deletions(-)
 
+diff --git a/fs/namei.c b/fs/namei.c
+index 6b5424d34962..bc03cbc37ba7 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -2823,16 +2823,14 @@ static int may_delete(struct user_namespace *mnt_userns, struct inode *dir,
+ static inline int may_create(struct user_namespace *mnt_userns,
+ 			     struct inode *dir, struct dentry *child)
+ {
+-	struct user_namespace *s_user_ns;
+ 	audit_inode_child(dir, child, AUDIT_TYPE_CHILD_CREATE);
+ 	if (child->d_inode)
+ 		return -EEXIST;
+ 	if (IS_DEADDIR(dir))
+ 		return -ENOENT;
+-	s_user_ns = dir->i_sb->s_user_ns;
+-	if (!kuid_has_mapping(s_user_ns, mapped_fsuid(mnt_userns)) ||
+-	    !kgid_has_mapping(s_user_ns, mapped_fsgid(mnt_userns)))
++	if (!fsuidgid_has_mapping(dir->i_sb, mnt_userns))
+ 		return -EOVERFLOW;
++
+ 	return inode_permission(mnt_userns, dir, MAY_WRITE | MAY_EXEC);
+ }
+ 
+@@ -3034,14 +3032,11 @@ static int may_o_create(struct user_namespace *mnt_userns,
+ 			const struct path *dir, struct dentry *dentry,
+ 			umode_t mode)
+ {
+-	struct user_namespace *s_user_ns;
+ 	int error = security_path_mknod(dir, dentry, mode, 0);
+ 	if (error)
+ 		return error;
+ 
+-	s_user_ns = dir->dentry->d_sb->s_user_ns;
+-	if (!kuid_has_mapping(s_user_ns, mapped_fsuid(mnt_userns)) ||
+-	    !kgid_has_mapping(s_user_ns, mapped_fsgid(mnt_userns)))
++	if (!fsuidgid_has_mapping(dir->dentry->d_sb, mnt_userns))
+ 		return -EOVERFLOW;
+ 
+ 	error = inode_permission(mnt_userns, dir->dentry->d_inode,
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ec8f3ddf4a6a..4795a632ef0d 100644
+index c8603969d21f..0e2ce21b2552 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -1574,36 +1574,84 @@ static inline void i_gid_write(struct inode *inode, gid_t gid)
- 	inode->i_gid = make_kgid(inode->i_sb->s_user_ns, gid);
+@@ -1692,6 +1692,26 @@ static inline kgid_t mapped_fsgid(struct user_namespace *mnt_userns)
+ 	return kgid_from_mnt(mnt_userns, current_fsgid());
  }
  
 +/**
-+ * kuid_into_mnt - map a kuid down into a mnt_userns
++ * fsuidgid_has_mapping() - check whether caller's fsuid/fsgid is mapped
++ * @sb: the superblock we want a mapping in
 + * @mnt_userns: user namespace of the relevant mount
-+ * @kuid: kuid to be mapped
 + *
-+ * Return @kuid mapped according to @mnt_userns.
-+ * If @kuid has no mapping INVALID_UID is returned.
++ * Check whether the caller's fsuid and fsgid have a valid mapping in the
++ * s_user_ns of the superblock @sb. If the caller is on an idmapped mount map
++ * the caller's fsuid and fsgid according to the @mnt_userns first.
++ *
++ * Returns true if fsuid and fsgid is mapped, false if not.
 + */
- static inline kuid_t kuid_into_mnt(struct user_namespace *mnt_userns,
- 				   kuid_t kuid)
- {
- 	return make_kuid(mnt_userns, __kuid_val(kuid));
- }
++static inline bool fsuidgid_has_mapping(struct super_block *sb,
++					struct user_namespace *mnt_userns)
++{
++	struct user_namespace *s_user_ns = sb->s_user_ns;
++
++	return kuid_has_mapping(s_user_ns, mapped_fsuid(mnt_userns)) &&
++	       kgid_has_mapping(s_user_ns, mapped_fsgid(mnt_userns));
++}
++
+ extern struct timespec64 current_time(struct inode *inode);
  
-+/**
-+ * kgid_into_mnt - map a kgid down into a mnt_userns
-+ * @mnt_userns: user namespace of the relevant mount
-+ * @kgid: kgid to be mapped
-+ *
-+ * Return @kgid mapped according to @mnt_userns.
-+ * If @kgid has no mapping INVALID_GID is returned.
-+ */
- static inline kgid_t kgid_into_mnt(struct user_namespace *mnt_userns,
- 				   kgid_t kgid)
- {
- 	return make_kgid(mnt_userns, __kgid_val(kgid));
- }
- 
-+/**
-+ * i_uid_into_mnt - map an inode's i_uid down into a mnt_userns
-+ * @mnt_userns: user namespace of the mount the inode was found from
-+ * @inode: inode to map
-+ *
-+ * Return the inode's i_uid mapped down according to @mnt_userns.
-+ * If the inode's i_uid has no mapping INVALID_UID is returned.
-+ */
- static inline kuid_t i_uid_into_mnt(struct user_namespace *mnt_userns,
- 				    const struct inode *inode)
- {
- 	return kuid_into_mnt(mnt_userns, inode->i_uid);
- }
- 
-+/**
-+ * i_gid_into_mnt - map an inode's i_gid down into a mnt_userns
-+ * @mnt_userns: user namespace of the mount the inode was found from
-+ * @inode: inode to map
-+ *
-+ * Return the inode's i_gid mapped down according to @mnt_userns.
-+ * If the inode's i_gid has no mapping INVALID_GID is returned.
-+ */
- static inline kgid_t i_gid_into_mnt(struct user_namespace *mnt_userns,
- 				    const struct inode *inode)
- {
- 	return kgid_into_mnt(mnt_userns, inode->i_gid);
- }
- 
-+/**
-+ * kuid_from_mnt - map a kuid up into a mnt_userns
-+ * @mnt_userns: user namespace of the relevant mount
-+ * @kuid: kuid to be mapped
-+ *
-+ * Return @kuid mapped up according to @mnt_userns.
-+ * If @kuid has no mapping INVALID_UID is returned.
-+ */
- static inline kuid_t kuid_from_mnt(struct user_namespace *mnt_userns,
- 				   kuid_t kuid)
- {
- 	return KUIDT_INIT(from_kuid(mnt_userns, kuid));
- }
- 
-+/**
-+ * kgid_from_mnt - map a kgid up into a mnt_userns
-+ * @mnt_userns: user namespace of the relevant mount
-+ * @kgid: kgid to be mapped
-+ *
-+ * Return @kgid mapped up according to @mnt_userns.
-+ * If @kgid has no mapping INVALID_GID is returned.
-+ */
- static inline kgid_t kgid_from_mnt(struct user_namespace *mnt_userns,
- 				   kgid_t kgid)
- {
+ /*
 -- 
 2.27.0
 
