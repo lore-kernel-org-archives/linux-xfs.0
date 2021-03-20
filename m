@@ -2,174 +2,235 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28C49C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D5D5C433E5
 	for <linux-xfs@archiver.kernel.org>; Sat, 20 Mar 2021 12:27:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E139361972
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Mar 2021 12:27:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FD1F6197B
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Mar 2021 12:27:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229544AbhCTM07 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229588AbhCTM07 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sat, 20 Mar 2021 08:26:59 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:48186 "EHLO
+Received: from youngberry.canonical.com ([91.189.89.112]:48197 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbhCTM0p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Mar 2021 08:26:45 -0400
+        with ESMTP id S229524AbhCTM0r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Mar 2021 08:26:47 -0400
 Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
         by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.86_2)
         (envelope-from <christian.brauner@ubuntu.com>)
-        id 1lNagg-0004Pf-6E; Sat, 20 Mar 2021 12:26:38 +0000
+        id 1lNagk-0004Pf-9S; Sat, 20 Mar 2021 12:26:42 +0000
 From:   Christian Brauner <christian.brauner@ubuntu.com>
 To:     Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>
 Cc:     Vivek Goyal <vgoyal@redhat.com>,
         "Darrick J . Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         Christian Brauner <christian.brauner@ubuntu.com>
-Subject: [PATCH v2 0/4] tweak fs mapping helpers
-Date:   Sat, 20 Mar 2021 13:26:20 +0100
-Message-Id: <20210320122623.599086-1-christian.brauner@ubuntu.com>
+Subject: [PATCH v2 2/4] fs: document and rename fsid helpers
+Date:   Sat, 20 Mar 2021 13:26:22 +0100
+Message-Id: <20210320122623.599086-3-christian.brauner@ubuntu.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20210320122623.599086-1-christian.brauner@ubuntu.com>
+References: <20210320122623.599086-1-christian.brauner@ubuntu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hey,
+Vivek pointed out that the fs{g,u}id_into_mnt() naming scheme can be
+misleading as it could be understood as implying they do the exact same
+thing as i_{g,u}id_into_mnt(). The original motivation for this naming
+scheme was to signal to callers that the helpers will always take care
+to map the k{g,u}id such that the ownership is expressed in terms of the
+mnt_users.
+Get rid of the confusion by renaming those helpers to something more
+sensible. Al suggested mapped_fs{g,u}id() which seems a really good fit.
+Usually filesystems don't need to bother with these helpers directly
+only in some cases where they allocate objects that carry {g,u}ids which
+are either filesystem specific (e.g. xfs quota objects) or don't have a
+clean set of helpers as inodes have.
 
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Darrick J. Wong <djwong@kernel.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org
+Inspired-by: Vivek Goyal <vgoyal@redhat.com>
+Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
+---
 /* v2 */
-Add some kernel docs to helpers as suggested by Christoph.
-Switch to Al's naming proposal for these helpers.
-(Added Acks.)
+- Christoph Hellwig <hch@lst.de>:
+  - Add kernel docs to helpers.
 
-This little series tries to improve naming and developer friendliness of
-fs idmapping helpers triggered by a request/comment from Vivek.
-Let's remove the two open-coded checks for whether there's a mapping for
-fsuid/fsgid in the s_user_ns of the underlying filesystem. Instead move them
-into a tiny helper, getting rid of redundancy and making sure that if we ever
-change something it's changed in all places. Also add two helpers to initialize
-and inode's i_uid and i_gid fields taking into account idmapped mounts making
-it easier for fs developers.
+- Al Viro <viro@zeniv.linux.org.uk>:
+  - s/idmapped_{fsuid,fsgid}/mapped_{fsuid,fsgid}/g
+---
+ fs/ext4/ialloc.c     |  2 +-
+ fs/inode.c           |  4 ++--
+ fs/namei.c           |  8 ++++----
+ fs/xfs/xfs_inode.c   | 10 +++++-----
+ fs/xfs/xfs_symlink.c |  4 ++--
+ include/linux/fs.h   | 28 ++++++++++++++++++++++++++--
+ 6 files changed, 40 insertions(+), 16 deletions(-)
 
-The xfstests I sent out all pass for both xfs and ext4:
-
-#### xfs
-  1. Detached mount propagation
-     ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check generic/631
-     FSTYP         -- xfs (non-debug)
-     PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-idmapped-mounts-inode-helpers #351 SMP Sat Mar 20 10:32:48 UTC 2021
-     MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
-     MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
-     
-     generic/631 9s ...  11s
-     Ran: generic/631
-     Passed all 1 tests
-    
-  2. Idmapped mounts test-suite
-     ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check generic/632
-     FSTYP         -- xfs (non-debug)
-     PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-idmapped-mounts-inode-helpers #351 SMP Sat Mar 20 10:32:48 UTC 2021
-     MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
-     MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
-     
-     generic/632 13s ...  14s
-     Ran: generic/632
-     Passed all 1 tests
-    
-  3. Testing xfs quotas can't be exceeded/work correctly from idmapped mounts
-     ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check xfs/529
-     FSTYP         -- xfs (non-debug)
-     PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-idmapped-mounts-inode-helpers #351 SMP Sat Mar 20 10:32:48 UTC 2021
-     MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
-     MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
-     
-     xfs/529 42s ...  44s
-     Ran: xfs/529
-     Passed all 1 tests
-    
-  4. Testing xfs qutoas on idmapped mounts
-     ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check xfs/530
-     hFSTYP         -- xfs (non-debug)
-     PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-idmapped-mounts-inode-helpers #351 SMP Sat Mar 20 10:32:48 UTC 2021
-     MKFS_OPTIONS  -- -f -bsize=4096 /dev/loop1
-     MOUNT_OPTIONS -- /dev/loop1 /mnt/scratch
-
-     xfs/530 20s ...  20s
-     Ran: xfs/530
-     Passed all 1 tests
-
-#### ext4
-  1. Detached mount propagation
-
-     ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check generic/631
-     FSTYP         -- ext4
-     PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-idmapped-mounts-inode-helpers #351 SMP Sat Mar 20 10:32:48 UTC 2021
-     MKFS_OPTIONS  -- /dev/loop1
-     MOUNT_OPTIONS -- -o acl,user_xattr /dev/loop1 /mnt/scratch
-     
-     generic/631 11s ...  8s
-     Ran: generic/631
-     Passed all 1 tests
-
-  2. Idmapped mounts test-suite
-
-     ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check generic/632
-     FSTYP         -- ext4
-     PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-idmapped-mounts-inode-helpers #351 SMP Sat Mar 20 10:32:48 UTC 2021
-     MKFS_OPTIONS  -- /dev/loop1
-     MOUNT_OPTIONS -- -o acl,user_xattr /dev/loop1 /mnt/scratch
-     
-     generic/632 14s ...  10s
-     Ran: generic/632
-     Passed all 1 tests
-
-  3. Testing xfs quotas can't be exceeded/work correctly from idmapped mounts
-     ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check xfs/529
-     FSTYP         -- ext4
-     PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-idmapped-mounts-inode-helpers #351 SMP Sat Mar 20 10:32:48 UTC 2021
-     MKFS_OPTIONS  -- /dev/loop1
-     MOUNT_OPTIONS -- -o acl,user_xattr /dev/loop1 /mnt/scratch
-     
-     xfs/529 44s ... [not run] not suitable for this filesystem type: ext4
-     Ran: xfs/529
-     Not run: xfs/529
-     Passed all 1 tests
-
-  4. Testing xfs qutoas on idmapped mounts
-     ubuntu@f1-vm:~/src/git/xfstests$ sudo ./check xfs/530
-     FSTYP         -- ext4
-     PLATFORM      -- Linux/x86_64 f1-vm 5.12.0-rc3-idmapped-mounts-inode-helpers #351 SMP Sat Mar 20 10:32:48 UTC 2021
-     MKFS_OPTIONS  -- /dev/loop1
-     MOUNT_OPTIONS -- -o acl,user_xattr /dev/loop1 /mnt/scratch
-     
-     xfs/530 20s ... [not run] not suitable for this filesystem type: ext4
-     Ran: xfs/530
-     Not run: xfs/530
-     Passed all 1 tests
-
-Thanks!
-Christian
-
-Christian Brauner (4):
-  fs: document mapping helpers
-  fs: document and rename fsid helpers
-  fs: introduce fsuidgid_has_mapping() helper
-  fs: introduce two inode i_{u,g}id initialization helpers
-
- fs/ext4/ialloc.c     |   2 +-
- fs/inode.c           |   4 +-
- fs/namei.c           |  11 ++--
- fs/xfs/xfs_inode.c   |  10 ++--
- fs/xfs/xfs_symlink.c |   4 +-
- include/linux/fs.h   | 124 ++++++++++++++++++++++++++++++++++++++++++-
- 6 files changed, 135 insertions(+), 20 deletions(-)
-
-
-base-commit: 8b12a62a4e3ed4ae99c715034f557eb391d6b196
+diff --git a/fs/ext4/ialloc.c b/fs/ext4/ialloc.c
+index 633ae7becd61..d0dc12197346 100644
+--- a/fs/ext4/ialloc.c
++++ b/fs/ext4/ialloc.c
+@@ -970,7 +970,7 @@ struct inode *__ext4_new_inode(struct user_namespace *mnt_userns,
+ 		i_gid_write(inode, owner[1]);
+ 	} else if (test_opt(sb, GRPID)) {
+ 		inode->i_mode = mode;
+-		inode->i_uid = fsuid_into_mnt(mnt_userns);
++		inode->i_uid = mapped_fsuid(mnt_userns);
+ 		inode->i_gid = dir->i_gid;
+ 	} else
+ 		inode_init_owner(mnt_userns, inode, dir, mode);
+diff --git a/fs/inode.c b/fs/inode.c
+index a047ab306f9a..81a6a59b7dd3 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2148,7 +2148,7 @@ EXPORT_SYMBOL(init_special_inode);
+ void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
+ 		      const struct inode *dir, umode_t mode)
+ {
+-	inode->i_uid = fsuid_into_mnt(mnt_userns);
++	inode->i_uid = mapped_fsuid(mnt_userns);
+ 	if (dir && dir->i_mode & S_ISGID) {
+ 		inode->i_gid = dir->i_gid;
+ 
+@@ -2160,7 +2160,7 @@ void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
+ 			 !capable_wrt_inode_uidgid(mnt_userns, dir, CAP_FSETID))
+ 			mode &= ~S_ISGID;
+ 	} else
+-		inode->i_gid = fsgid_into_mnt(mnt_userns);
++		inode->i_gid = mapped_fsgid(mnt_userns);
+ 	inode->i_mode = mode;
+ }
+ EXPORT_SYMBOL(inode_init_owner);
+diff --git a/fs/namei.c b/fs/namei.c
+index 216f16e74351..6b5424d34962 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -2830,8 +2830,8 @@ static inline int may_create(struct user_namespace *mnt_userns,
+ 	if (IS_DEADDIR(dir))
+ 		return -ENOENT;
+ 	s_user_ns = dir->i_sb->s_user_ns;
+-	if (!kuid_has_mapping(s_user_ns, fsuid_into_mnt(mnt_userns)) ||
+-	    !kgid_has_mapping(s_user_ns, fsgid_into_mnt(mnt_userns)))
++	if (!kuid_has_mapping(s_user_ns, mapped_fsuid(mnt_userns)) ||
++	    !kgid_has_mapping(s_user_ns, mapped_fsgid(mnt_userns)))
+ 		return -EOVERFLOW;
+ 	return inode_permission(mnt_userns, dir, MAY_WRITE | MAY_EXEC);
+ }
+@@ -3040,8 +3040,8 @@ static int may_o_create(struct user_namespace *mnt_userns,
+ 		return error;
+ 
+ 	s_user_ns = dir->dentry->d_sb->s_user_ns;
+-	if (!kuid_has_mapping(s_user_ns, fsuid_into_mnt(mnt_userns)) ||
+-	    !kgid_has_mapping(s_user_ns, fsgid_into_mnt(mnt_userns)))
++	if (!kuid_has_mapping(s_user_ns, mapped_fsuid(mnt_userns)) ||
++	    !kgid_has_mapping(s_user_ns, mapped_fsgid(mnt_userns)))
+ 		return -EOVERFLOW;
+ 
+ 	error = inode_permission(mnt_userns, dir->dentry->d_inode,
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index f93370bd7b1e..dc91f8c34d35 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -812,7 +812,7 @@ xfs_init_new_inode(
+ 
+ 	if (dir && !(dir->i_mode & S_ISGID) &&
+ 	    (mp->m_flags & XFS_MOUNT_GRPID)) {
+-		inode->i_uid = fsuid_into_mnt(mnt_userns);
++		inode->i_uid = mapped_fsuid(mnt_userns);
+ 		inode->i_gid = dir->i_gid;
+ 		inode->i_mode = mode;
+ 	} else {
+@@ -1007,8 +1007,8 @@ xfs_create(
+ 	/*
+ 	 * Make sure that we have allocated dquot(s) on disk.
+ 	 */
+-	error = xfs_qm_vop_dqalloc(dp, fsuid_into_mnt(mnt_userns),
+-			fsgid_into_mnt(mnt_userns), prid,
++	error = xfs_qm_vop_dqalloc(dp, mapped_fsuid(mnt_userns),
++			mapped_fsgid(mnt_userns), prid,
+ 			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+ 			&udqp, &gdqp, &pdqp);
+ 	if (error)
+@@ -1158,8 +1158,8 @@ xfs_create_tmpfile(
+ 	/*
+ 	 * Make sure that we have allocated dquot(s) on disk.
+ 	 */
+-	error = xfs_qm_vop_dqalloc(dp, fsuid_into_mnt(mnt_userns),
+-			fsgid_into_mnt(mnt_userns), prid,
++	error = xfs_qm_vop_dqalloc(dp, mapped_fsuid(mnt_userns),
++			mapped_fsgid(mnt_userns), prid,
+ 			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+ 			&udqp, &gdqp, &pdqp);
+ 	if (error)
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 7f368b10ded1..63edb4dbed4a 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -182,8 +182,8 @@ xfs_symlink(
+ 	/*
+ 	 * Make sure that we have allocated dquot(s) on disk.
+ 	 */
+-	error = xfs_qm_vop_dqalloc(dp, fsuid_into_mnt(mnt_userns),
+-			fsgid_into_mnt(mnt_userns), prid,
++	error = xfs_qm_vop_dqalloc(dp, mapped_fsuid(mnt_userns),
++			mapped_fsgid(mnt_userns), prid,
+ 			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+ 			&udqp, &gdqp, &pdqp);
+ 	if (error)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 4795a632ef0d..c8603969d21f 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1658,12 +1658,36 @@ static inline kgid_t kgid_from_mnt(struct user_namespace *mnt_userns,
+ 	return KGIDT_INIT(from_kgid(mnt_userns, kgid));
+ }
+ 
+-static inline kuid_t fsuid_into_mnt(struct user_namespace *mnt_userns)
++/**
++ * mapped_fsuid - return caller's fsuid mapped up into a mnt_userns
++ * @mnt_userns: user namespace of the relevant mount
++ *
++ * Return the caller's current fsuid mapped up according to @mnt_userns.
++ *
++ * Use this helper to initialize a new vfs or filesystem object based on
++ * the caller's fsuid. A common example is initializing the i_uid field of
++ * a newly allocated inode triggered by a creation event such as mkdir or
++ * O_CREAT. Other examples include the allocation of quotas for a specific
++ * user.
++ */
++static inline kuid_t mapped_fsuid(struct user_namespace *mnt_userns)
+ {
+ 	return kuid_from_mnt(mnt_userns, current_fsuid());
+ }
+ 
+-static inline kgid_t fsgid_into_mnt(struct user_namespace *mnt_userns)
++/**
++ * mapped_fsgid - return caller's fsgid mapped up into a mnt_userns
++ * @mnt_userns: user namespace of the relevant mount
++ *
++ * Return the caller's current fsgid mapped up according to @mnt_userns.
++ *
++ * Use this helper to initialize a new vfs or filesystem object based on
++ * the caller's fsgid. A common example is initializing the i_gid field of
++ * a newly allocated inode triggered by a creation event such as mkdir or
++ * O_CREAT. Other examples include the allocation of quotas for a specific
++ * user.
++ */
++static inline kgid_t mapped_fsgid(struct user_namespace *mnt_userns)
+ {
+ 	return kgid_from_mnt(mnt_userns, current_fsgid());
+ }
 -- 
 2.27.0
 
