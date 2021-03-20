@@ -2,155 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAFAFC433C1
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Mar 2021 12:28:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CD5EC433C1
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Mar 2021 16:41:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7DD1A61930
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Mar 2021 12:28:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 464C861942
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Mar 2021 16:41:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229713AbhCTM1d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 Mar 2021 08:27:33 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:48209 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229529AbhCTM1B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Mar 2021 08:27:01 -0400
-Received: from ip5f5af0a0.dynamic.kabel-deutschland.de ([95.90.240.160] helo=wittgenstein.fritz.box)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1lNagm-0004Pf-Om; Sat, 20 Mar 2021 12:26:44 +0000
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>
-Cc:     Vivek Goyal <vgoyal@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Christian Brauner <christian.brauner@ubuntu.com>
-Subject: [PATCH v2 4/4] fs: introduce two inode i_{u,g}id initialization helpers
-Date:   Sat, 20 Mar 2021 13:26:24 +0100
-Message-Id: <20210320122623.599086-5-christian.brauner@ubuntu.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210320122623.599086-1-christian.brauner@ubuntu.com>
-References: <20210320122623.599086-1-christian.brauner@ubuntu.com>
+        id S229780AbhCTQki (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 20 Mar 2021 12:40:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49978 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229756AbhCTQkH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 20 Mar 2021 12:40:07 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 193CD6148E
+        for <linux-xfs@vger.kernel.org>; Sat, 20 Mar 2021 16:40:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616258407;
+        bh=BWv1e1vTKc4Bu3/Ieuy4G8Q+8j7MytzYeeLf9DqMHyU=;
+        h=Date:From:To:Subject:From;
+        b=rbPsnojrxjL9ODP2Lj94ZyC+Qz31A+prVz/SjluNRInGL3gXe+A5M0WrIgvg5CEYw
+         Dfz7eafnerGK0ukBmnAW06iNaHwqx2e0WMUZi52sVFAaN06peD2JwnyNyNs9gw8Ga1
+         JaObuKARqHdUsfpMAQOptjxDZwWQO57soC+kkAElKPriMoj0OCc4IZqe2d8h7SdxjJ
+         biDMG5KShnxsiMVApWrbJiLNWO1ZcXS7jfR9AU3fsuf70pj4b2YpraNcSyVeIIl8yg
+         MVHClsOKR3PxK07ULDuwadlWPaZnsyjxCsJfuid+99M37sLn6FpDlW7Ow+nnUcOmtJ
+         ao12IfLO2ZC+Q==
+Date:   Sat, 20 Mar 2021 09:40:07 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: only reset incore inode health state flags when
+ reclaiming an inode
+Message-ID: <20210320164007.GX22100@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Give filesystem two little helpers that do the right thing when
-initializing the i_uid and i_gid fields on idmapped and non-idmapped
-mounts. Filesystems shouldn't have to be concerned with too many
-details.
+From: Darrick J. Wong <djwong@kernel.org>
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
-Inspired-by: Vivek Goyal <vgoyal@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
+While running some fuzz tests on inode metadata, I noticed that the
+filesystem health report (as provided by xfs_spaceman) failed to report
+the file corruption even when spaceman was run immediately after running
+xfs_scrub to detect the corruption.  That isn't the intended behavior;
+one ought to be able to run scrub to detect errors in the ondisk
+metadata and be able to access to those reports for some time after the
+scrub.
+
+After running the same sequence through an instrumented kernel, I
+discovered the reason why -- scrub igets the file, scans it, marks it
+sick, and ireleases the inode.  When the VFS lets go of the incore
+inode, it moves to RECLAIMABLE state.  If spaceman igets the incore
+inode before it moves to RECLAIM state, iget reinitializes the VFS
+state, clears the sick and checked masks, and hands back the inode.  At
+this point, the caller has the exact same incore inode, but with all the
+health state erased.
+
+In other words, we're erasing the incore inode's health state flags when
+we've decided NOT to sever the link between the incore inode and the
+ondisk inode.  This is wrong, so we need to remove the lines that zero
+the fields from xfs_iget_cache_hit.
+
+As a precaution, we add the same lines into xfs_reclaim_inode just after
+we sever the link between incore and ondisk inode.  Strictly speaking
+this isn't necessary because once an inode has gone through reclaim it
+must go through xfs_inode_alloc (which also zeroes the state) and
+xfs_iget is careful to check for mismatches between the inode it pulls
+out of the radix tree and the one it wants.
+
+Fixes: 6772c1f11206 ("xfs: track metadata health status")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
-/* v2 */
-- Christian Brauner <christian.brauner@ubuntu.com>:
-  - Add kernel docs to helpers.
----
- fs/ext4/ialloc.c   |  2 +-
- fs/inode.c         |  4 ++--
- fs/xfs/xfs_inode.c |  2 +-
- include/linux/fs.h | 28 ++++++++++++++++++++++++++++
- 4 files changed, 32 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_icache.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/ext4/ialloc.c b/fs/ext4/ialloc.c
-index d0dc12197346..755a68bb7e22 100644
---- a/fs/ext4/ialloc.c
-+++ b/fs/ext4/ialloc.c
-@@ -970,7 +970,7 @@ struct inode *__ext4_new_inode(struct user_namespace *mnt_userns,
- 		i_gid_write(inode, owner[1]);
- 	} else if (test_opt(sb, GRPID)) {
- 		inode->i_mode = mode;
--		inode->i_uid = mapped_fsuid(mnt_userns);
-+		inode_fsuid_set(inode, mnt_userns);
- 		inode->i_gid = dir->i_gid;
- 	} else
- 		inode_init_owner(mnt_userns, inode, dir, mode);
-diff --git a/fs/inode.c b/fs/inode.c
-index 81a6a59b7dd3..21c5a620ca89 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2148,7 +2148,7 @@ EXPORT_SYMBOL(init_special_inode);
- void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
- 		      const struct inode *dir, umode_t mode)
- {
--	inode->i_uid = mapped_fsuid(mnt_userns);
-+	inode_fsuid_set(inode, mnt_userns);
- 	if (dir && dir->i_mode & S_ISGID) {
- 		inode->i_gid = dir->i_gid;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 595bda69b18d..5325fa28d099 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -587,8 +587,6 @@ xfs_iget_cache_hit(
+ 		ip->i_flags |= XFS_INEW;
+ 		xfs_inode_clear_reclaim_tag(pag, ip->i_ino);
+ 		inode->i_state = I_NEW;
+-		ip->i_sick = 0;
+-		ip->i_checked = 0;
  
-@@ -2160,7 +2160,7 @@ void inode_init_owner(struct user_namespace *mnt_userns, struct inode *inode,
- 			 !capable_wrt_inode_uidgid(mnt_userns, dir, CAP_FSETID))
- 			mode &= ~S_ISGID;
- 	} else
--		inode->i_gid = mapped_fsgid(mnt_userns);
-+		inode_fsgid_set(inode, mnt_userns);
- 	inode->i_mode = mode;
- }
- EXPORT_SYMBOL(inode_init_owner);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index dc91f8c34d35..2a8bdf33e6c4 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -812,7 +812,7 @@ xfs_init_new_inode(
+ 		spin_unlock(&ip->i_flags_lock);
+ 		spin_unlock(&pag->pag_ici_lock);
+@@ -1205,6 +1203,8 @@ xfs_reclaim_inode(
+ 	spin_lock(&ip->i_flags_lock);
+ 	ip->i_flags = XFS_IRECLAIM;
+ 	ip->i_ino = 0;
++	ip->i_sick = 0;
++	ip->i_checked = 0;
+ 	spin_unlock(&ip->i_flags_lock);
  
- 	if (dir && !(dir->i_mode & S_ISGID) &&
- 	    (mp->m_flags & XFS_MOUNT_GRPID)) {
--		inode->i_uid = mapped_fsuid(mnt_userns);
-+		inode_fsuid_set(inode, mnt_userns);
- 		inode->i_gid = dir->i_gid;
- 		inode->i_mode = mode;
- 	} else {
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 0e2ce21b2552..4a4af6c26a01 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1692,6 +1692,34 @@ static inline kgid_t mapped_fsgid(struct user_namespace *mnt_userns)
- 	return kgid_from_mnt(mnt_userns, current_fsgid());
- }
- 
-+/**
-+ * inode_fsuid_set - initialize inode's i_uid field with callers fsuid
-+ * @inode: inode to initialize
-+ * @mnt_userns: user namespace of the mount the inode was found from
-+ *
-+ * Initialize the i_uid field of @inode. If the inode was found/created via
-+ * an idmapped mount map the caller's fsuid according to @mnt_users.
-+ */
-+static inline void inode_fsuid_set(struct inode *inode,
-+				   struct user_namespace *mnt_userns)
-+{
-+	inode->i_uid = mapped_fsuid(mnt_userns);
-+}
-+
-+/**
-+ * inode_fsgid_set - initialize inode's i_gid field with callers fsgid
-+ * @inode: inode to initialize
-+ * @mnt_userns: user namespace of the mount the inode was found from
-+ *
-+ * Initialize the i_gid field of @inode. If the inode was found/created via
-+ * an idmapped mount map the caller's fsgid according to @mnt_users.
-+ */
-+static inline void inode_fsgid_set(struct inode *inode,
-+				   struct user_namespace *mnt_userns)
-+{
-+	inode->i_gid = mapped_fsgid(mnt_userns);
-+}
-+
- /**
-  * fsuidgid_has_mapping() - check whether caller's fsuid/fsgid is mapped
-  * @sb: the superblock we want a mapping in
--- 
-2.27.0
-
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
