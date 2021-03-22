@@ -2,124 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C20C7C433C1
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 21:31:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 912E4C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 21:51:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84DCA6198E
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 21:31:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B3FE619A9
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 21:51:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229730AbhCVVaZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Mar 2021 17:30:25 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:34918 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229508AbhCVVaT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Mar 2021 17:30:19 -0400
+        id S229943AbhCVVvH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Mar 2021 17:51:07 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:38161 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229904AbhCVVuw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Mar 2021 17:50:52 -0400
 Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id D79CF102B0AB;
-        Tue, 23 Mar 2021 08:30:16 +1100 (AEDT)
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 3127863C1F;
+        Tue, 23 Mar 2021 08:50:40 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lOS7s-005amK-Cn; Tue, 23 Mar 2021 08:30:16 +1100
-Date:   Tue, 23 Mar 2021 08:30:16 +1100
+        id 1lOSRb-005b09-Gm; Tue, 23 Mar 2021 08:50:39 +1100
+Date:   Tue, 23 Mar 2021 08:50:39 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: only reset incore inode health state flags when
- reclaiming an inode
-Message-ID: <20210322213016.GU63242@dread.disaster.area>
-References: <20210320164007.GX22100@magnolia>
+To:     Ralf =?iso-8859-1?Q?Gro=DF?= <ralf.gross+xfs@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: memory requirements for a 400TB fs with reflinks
+Message-ID: <20210322215039.GV63242@dread.disaster.area>
+References: <CANSSxym1ob76jW9i-1ZLfEe4KSHA5auOnZhtXykRQg0efAL+WA@mail.gmail.com>
+ <CANSSxy=d2Tihu8dXUFQmRwYWHNdcGQoSQAkZpePD-8NOV+d5dw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20210320164007.GX22100@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANSSxy=d2Tihu8dXUFQmRwYWHNdcGQoSQAkZpePD-8NOV+d5dw@mail.gmail.com>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
-        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=lA46TapvIksECz0co-wA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=8nJEP1OIZ-IA:10 a=dESyimp9J3IA:10 a=pGLkceISAAAA:8 a=7-415B0cAAAA:8
+        a=m5aNOxJfd4GQ2X_wVs8A:9 a=wPNLvfGTeEIA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Mar 20, 2021 at 09:40:07AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> While running some fuzz tests on inode metadata, I noticed that the
-> filesystem health report (as provided by xfs_spaceman) failed to report
-> the file corruption even when spaceman was run immediately after running
-> xfs_scrub to detect the corruption.  That isn't the intended behavior;
-> one ought to be able to run scrub to detect errors in the ondisk
-> metadata and be able to access to those reports for some time after the
-> scrub.
-> 
-> After running the same sequence through an instrumented kernel, I
-> discovered the reason why -- scrub igets the file, scans it, marks it
-> sick, and ireleases the inode.  When the VFS lets go of the incore
-> inode, it moves to RECLAIMABLE state.  If spaceman igets the incore
-> inode before it moves to RECLAIM state, iget reinitializes the VFS
-> state, clears the sick and checked masks, and hands back the inode.  At
-> this point, the caller has the exact same incore inode, but with all the
-> health state erased.
-> 
-> In other words, we're erasing the incore inode's health state flags when
-> we've decided NOT to sever the link between the incore inode and the
-> ondisk inode.  This is wrong, so we need to remove the lines that zero
-> the fields from xfs_iget_cache_hit.
-> 
-> As a precaution, we add the same lines into xfs_reclaim_inode just after
-> we sever the link between incore and ondisk inode.  Strictly speaking
-> this isn't necessary because once an inode has gone through reclaim it
-> must go through xfs_inode_alloc (which also zeroes the state) and
-> xfs_iget is careful to check for mismatches between the inode it pulls
-> out of the radix tree and the one it wants.
-> 
-> Fixes: 6772c1f11206 ("xfs: track metadata health status")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_icache.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 595bda69b18d..5325fa28d099 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -587,8 +587,6 @@ xfs_iget_cache_hit(
->  		ip->i_flags |= XFS_INEW;
->  		xfs_inode_clear_reclaim_tag(pag, ip->i_ino);
->  		inode->i_state = I_NEW;
-> -		ip->i_sick = 0;
-> -		ip->i_checked = 0;
->  
->  		spin_unlock(&ip->i_flags_lock);
->  		spin_unlock(&pag->pag_ici_lock);
-> @@ -1205,6 +1203,8 @@ xfs_reclaim_inode(
->  	spin_lock(&ip->i_flags_lock);
->  	ip->i_flags = XFS_IRECLAIM;
->  	ip->i_ino = 0;
-> +	ip->i_sick = 0;
-> +	ip->i_checked = 0;
->  	spin_unlock(&ip->i_flags_lock);
->  
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+On Mon, Mar 22, 2021 at 05:50:55PM +0100, Ralf Groﬂ wrote:
+> No advice or rule of thumb regarding needed memory for xfs_repair?
 
-This is only going to keep the health information around on a
-DONTCACHE inode for a few extra seconds. If the scrub takes longer
-to run than it takes for the background inode reclaimer thread to
-run again (every 5s by default), then the health information for
-that inode is still trashed by this patch and the problem still
-exists.
+People are busy, and you posted on a weekend. Have some patience,
+please.
 
-I suspect that unhealthy inodes need to have IDONTCACHE cleared so
-that they don't get reclaimed until there is memory pressure, hence
-giving scrub/spaceman some time to set/report health issues. Perhaps
-we should not reclaim the unhealthy inodes until they've been marked
-as "seen"....
+> Am Sa., 20. M‰rz 2021 um 19:01 Uhr schrieb Ralf Groﬂ <ralf.gross+xfs@gmail.com>:
+> >
+> > Hi,
+> >
+> > I plan to deploy a couple of Linux (RHEL 8.x) server as Veeam backup
+> > repositories. Base for this might be high density server with 58 x
+> > 16TB disks, 2x  RAID 60, each with its own raid controller and 28
+> > disks. So each RAID 6 has 14 disks, + 2 globale spare.
+> >
+> > I wonder what memory requirement such a server would have, is there
+> > any special requirement regarding reflinks? I remember that xfs_repair
+> > has been a problem in the past, but my experience with this is from 10
+> > years ago. Currently I plan to use 192GB RAM, this would be perfect as
+> > it utilizes 6 memory channels and 16GB DIMMs are not so expensive.
+
+Filesystem capacity doesn't massively affect repair memory usage
+these days.
+
+The amount of metadata and the type of it certainly does, though. I
+recently saw a 14TB filesystem require 240GB of RAM to repair
+because, as a hardlink based backup farm, it had hundreds of
+millions of directories, inodes and hardlinks in it.  Resolving all
+those directories and hardlinks took 3 weeks and 240GB of RAM....
+
+I've seen other broken backup server filesystems of similar size
+that have had close on 500GB of metadata in them, and repair needs
+to index and cross-reference all that metadata. Hence memory demands
+can be massive, even in today's terms....
+
+Unfortunately, I haven't seen a broken filesystem containing
+extensive production use of reflink at that scale, so I can't really
+say what difference that will make to memory usage at this point in
+time.
+
+So there's no one answer - the amount of RAM xfs_repair might need
+largely depends on what you are storing in the filesystem.
 
 Cheers,
 
