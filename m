@@ -2,87 +2,95 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4AEFC433DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 04:04:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21ABBC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 06:40:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7174461967
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 04:04:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D89DA61973
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 06:40:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229621AbhCVEDe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Mar 2021 00:03:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55434 "EHLO
+        id S229746AbhCVGkC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Mar 2021 02:40:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229866AbhCVEDF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Mar 2021 00:03:05 -0400
-Received: from desiato.infradead.org (desiato.infradead.org [IPv6:2001:8b0:10b:1:d65d:64ff:fe57:4e05])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4473BC061574;
-        Sun, 21 Mar 2021 21:03:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=Content-Transfer-Encoding:Content-Type
-        :In-Reply-To:MIME-Version:Date:Message-ID:From:References:To:Subject:Sender:
-        Reply-To:Cc:Content-ID:Content-Description;
-        bh=qkxewrQlJK5/shxaPgCG1PvVmFC3aSiTWgp0bhbRIoI=; b=FwBJQP8/Abo91fpN2ZDsfgh3l6
-        +vNEe4Pe8fosCMV4hhlvTI0L281mKpLbIwznBh48xyO9ZmJFgdAM3+3Iv5qwkVwbfCGxJIYTZa3uB
-        6+Kniiz90VSvvt4h9HdedxK0BP6c/NdHo2kXwpoTfojKKCshazEUZJtCorCURxIZvzhHt3Q0/ty1v
-        KNoE3WjLtKD/pMYRGw5aYicaK83RSnfslZ3fyQ7ojOmpJ6AuBxxbdTZ7DD/308sCeV8sod5Oq7SK3
-        0Zp6STclBZ0t2w8VvHs8Q6BWg91H71gDtaF9224vhobgS+fMfAisQNYTtqHeLjJ0jwpej8VTcVamN
-        JtwdVoGg==;
-Received: from [2601:1c0:6280:3f0::3ba4]
-        by desiato.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lOBmR-00Aq4e-5j; Mon, 22 Mar 2021 04:03:03 +0000
-Subject: Re: [PATCH V2] xfs: Rudimentary spelling fix
-To:     Bhaskar Chowdhury <unixbhaskar@gmail.com>, djwong@kernel.org,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20210322034538.3022189-1-unixbhaskar@gmail.com>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <77c33126-ad02-0054-d563-c067d887b267@infradead.org>
-Date:   Sun, 21 Mar 2021 21:03:00 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+        with ESMTP id S229455AbhCVGji (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Mar 2021 02:39:38 -0400
+Received: from mail-qv1-xf33.google.com (mail-qv1-xf33.google.com [IPv6:2607:f8b0:4864:20::f33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7228EC061574;
+        Sun, 21 Mar 2021 23:39:38 -0700 (PDT)
+Received: by mail-qv1-xf33.google.com with SMTP id g8so8161777qvx.1;
+        Sun, 21 Mar 2021 23:39:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=U3vqf31zx/P6mYrrygrvQtxsipFMbvBFOfUBzSBRGg4=;
+        b=CZF/fa2GKiY7bAaXe+J6WwjouI8z3qWssNzjqFbMzPw/d9LhS3PsoCkF0ohxn2adDz
+         m+riPTkocwXnMbBLxA+4uuVZBeyIuUPOi4mAeNNC6xyqMRfnrJOn2vNFBMlwFYFaN25q
+         SZ9RZmV4BvmxgybqEEUJgyWoPPODnhBLNOTn7O3R1PU5ncXfWE5raG2MwAGof2ctv3uY
+         nnTWP9LkKmBjhO+CNdjrNGI1zGJfhBaSClwd61HvEZApASFjo80wP/0zQ6dHtar04Z8n
+         SA7w8F8EqYcSMwfaGs3aupttdBa/mZVqJbTGhAGOTQk/oWevFoZ8Q074GqQLdgcd0nnj
+         xWaA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=U3vqf31zx/P6mYrrygrvQtxsipFMbvBFOfUBzSBRGg4=;
+        b=UGuQjZHcynAjmJwShuXb7eXJjlOdLByX5lvTL69EzaTfyLK5eRInIYzJsSUNFesYjy
+         qlCpaeLuOuU4lqJ36NMjKkUCSt2vPf74tadciiuiGKRpRo9X2qrXE5djb+xTRFPCrGhw
+         /oEMpnrDTvxwNVss3iqHIceHmZGV5lTSEv9zP9LlnK5vJsjzija4l5FmDBCpcVtaMMLO
+         HFAN8olO1LUpzjljSlxMTXiY/qn0GXxGujmhSo/T0g44cXSPBZ7G+2xadVsPx5/0n2WF
+         zQx2GCi3Ql+8bZBGlTK9M5IVU9Bvk8MG7Gk0Y+IE3B9vhAi4REc4VLEohbqgyMTXGUli
+         +qQA==
+X-Gm-Message-State: AOAM53153Yhx2K/rzf8A8NMQq9UZx0U3vKP1WcRZqIg01rUmrJg/5HRv
+        h6tQVMbjuV6vQtxN+SZJKrmb+StT/IX+dS87
+X-Google-Smtp-Source: ABdhPJw6OtW3SHgLEK9zOSMWCCWDXvtAkyc1UAExuJyh5PkdiJEqqN00w8ZTT/LA7MSLWKpRgzoFpg==
+X-Received: by 2002:a0c:f946:: with SMTP id i6mr19900412qvo.40.1616395177633;
+        Sun, 21 Mar 2021 23:39:37 -0700 (PDT)
+Received: from localhost.localdomain ([37.19.198.40])
+        by smtp.gmail.com with ESMTPSA id 66sm10471199qkk.18.2021.03.21.23.39.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 21 Mar 2021 23:39:37 -0700 (PDT)
+From:   Bhaskar Chowdhury <unixbhaskar@gmail.com>
+To:     djwong@kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     rdunlap@infradead.org, Bhaskar Chowdhury <unixbhaskar@gmail.com>
+Subject: [PATCH] xfs: Fix a typo
+Date:   Mon, 22 Mar 2021 12:09:26 +0530
+Message-Id: <20210322063926.3755645-1-unixbhaskar@gmail.com>
+X-Mailer: git-send-email 2.31.0
 MIME-Version: 1.0
-In-Reply-To: <20210322034538.3022189-1-unixbhaskar@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 3/21/21 8:45 PM, Bhaskar Chowdhury wrote:
-> s/sytemcall/syscall/
-> 
-> Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
 
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
+s/strutures/structures/
 
-> ---
->   Changes from V1:
->    Randy's suggestion incorporated.
-> 
->  fs/xfs/xfs_inode.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index f93370bd7b1e..3087d03a6863 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2870,7 +2870,7 @@ xfs_finish_rename(
->  /*
->   * xfs_cross_rename()
->   *
-> - * responsible for handling RENAME_EXCHANGE flag in renameat2() sytemcall
-> + * responsible for handling RENAME_EXCHANGE flag in renameat2() syscall
->   */
->  STATIC int
->  xfs_cross_rename(
-> --
+Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
+---
+ fs/xfs/xfs_aops.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index b4186d666157..1cc7c36d98e9 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -158,7 +158,7 @@ xfs_end_ioend(
+ 	nofs_flag = memalloc_nofs_save();
 
--- 
-~Randy
+ 	/*
+-	 * Just clean up the in-memory strutures if the fs has been shut down.
++	 * Just clean up the in-memory structures if the fs has been shut down.
+ 	 */
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+ 		error = -EIO;
+--
+2.31.0
 
