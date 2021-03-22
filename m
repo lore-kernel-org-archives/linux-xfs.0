@@ -2,88 +2,139 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60108C433DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 16:52:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A116C433DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 17:12:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A8336198E
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 16:52:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B4E461998
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 17:12:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230084AbhCVQve (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Mar 2021 12:51:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52014 "EHLO
+        id S231375AbhCVRLa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Mar 2021 13:11:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230021AbhCVQvG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Mar 2021 12:51:06 -0400
-Received: from mail-il1-x136.google.com (mail-il1-x136.google.com [IPv6:2607:f8b0:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD698C061574
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Mar 2021 09:51:05 -0700 (PDT)
-Received: by mail-il1-x136.google.com with SMTP id z9so15457824ilb.4
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Mar 2021 09:51:05 -0700 (PDT)
+        with ESMTP id S231542AbhCVRLY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Mar 2021 13:11:24 -0400
+Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A558DC061574;
+        Mon, 22 Mar 2021 10:11:23 -0700 (PDT)
+Received: by mail-wr1-x42d.google.com with SMTP id b9so17953081wrt.8;
+        Mon, 22 Mar 2021 10:11:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+        h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=IOsQb5jlH8Eo6j++D8ki5e+RXoyG2ym37A0foUIu+Pg=;
-        b=bNwo04fmqUSy2wfsN6Uz1t1pcuR4ZjA0X6W+a2DGAxHykb+5KCbp2M485tWBMB+Erb
-         +C3Ej3j/8LyZgFpXIrwBTDQCx+KHiNuBI3iEhZXYUVBj2Lhtqk22UylUOnQNsoZn9Nzv
-         nCDh/X1cDZOeMAE72jw+yIKM15BbgbJwG0rnMQRxxjFgJhsbhq9RkfLbyBq/HSh3rTfD
-         dvLijZKRoo0OyhVvsqLIdbVbTe2X31EZbVvAYHJfkhxq9oKAi4s+osWFeYbwiqvVB0Np
-         hGkWbsxBRv+4FH6ousxFJkG0epGI/T7PN7BtZNCl+RHL7AAsc/fIoWunDp1RzU5d94T0
-         RLNA==
+        bh=fPEpEZgdFBNuAySe33wXUxS0c6QSZ5Fcq/SWTX6m1/c=;
+        b=crMqOcSSN0otgZYG8RYbdA5tgD/jzTplIRXBtlG4vOv+5IDPOF6nc8dyz8dK3UWYj4
+         WVkBuZgvjIzxVwdjISbsYKHXdgoFH6vFWnWiHoDnGDoDT3E76HxaD5lwlBk2f62JGW+L
+         Ndvi120N1oa7+CC29/6Mvj8+4voIe09KY+T02GykLug9gEo+rlj7txI+LS2JKWuaAP0Z
+         MdroSVeCncJdyoHKAJR3+b5HEiaTKG1hGRgzETNZXc/wbULCFoiwNN5gGj4uyAuC63sq
+         4qf+WVYW8hPt2AM+rW4M4tcuudtef+2rzcG0MpRpZyXOnFHW2v3Gqrx/85uWdLd0PXqw
+         gGMQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:content-transfer-encoding;
-        bh=IOsQb5jlH8Eo6j++D8ki5e+RXoyG2ym37A0foUIu+Pg=;
-        b=mKlFAM+m2oiIrSFJOOP/rJSWIl0es//aiMoJ73Yz0k/Mbg9bF9oZJl+5jFMvtOP4+c
-         7OQaFGr8EL2pibkA/P30GJEuJr7+e0drunduIn/0dYQMN8YgDwSl/fDJ/saBFNBSKkUP
-         7rKOIQIbsyQ1uJflk6W4fKdr8FjPF233jbSNbag1N8Ht5Mx3GOrjRDnAJsgK2T3sgi5a
-         hGXaFyJf1SjTdt4niVu/vyujndY/yBpkL4dwM/VY1eEPR4Vv/eSfQWD1zjtdAUI3TZ/8
-         0t+qL/VKXXAFcWJ5Ap137P0L+UOX75JUVmgo1T6gpoA2GkG8cK63bTvFAFbYz2brRZLr
-         +uLw==
-X-Gm-Message-State: AOAM533U6STuoWbkt8bHyNw+OYHsGEML7Cq+NaoXMvoSglA0wt3Kfzt2
-        zPPy58UrEtq7HfAwltGGMQQRt2AjcJvStYjFiwIVKoQ1lRs=
-X-Google-Smtp-Source: ABdhPJxkLWPenbbnyIxq6dTwdosP4sYYLi6+CQtAnzPKinfk3n6p2xmS39Z0RPFnCJTMc5zkTv1DbTYzZjLiPgeH2RU=
-X-Received: by 2002:a92:cd0c:: with SMTP id z12mr774245iln.109.1616431865320;
- Mon, 22 Mar 2021 09:51:05 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=fPEpEZgdFBNuAySe33wXUxS0c6QSZ5Fcq/SWTX6m1/c=;
+        b=eKff2+Cl4TWKXmRF8gifUtXvUY4FHeaIfHru53lvdOveKvdEPfU+2VSNEJnyM8Tr16
+         SDNUt2o++VkMsbg4aIVQTBUE0YEMcz60NLZGQf3bfJ3ZtG1NI78a3QBc/aLd+9DZs8Q5
+         hZZSCA4fAaRkIfgO0O8UVrB1I70wYDSDK7u+p1Uew/LEIcG+c580dcXLRQ5ov6iOKEiI
+         Mh0I2I7Aii6DIwXUx9E9Qxk5Y7I7OY2i/HwUFwCGZVEl3Ixgj/kMLgn1+C236SGB3A4U
+         QM78HxjJgQ/HfnP5nVbDp4kHNz5F1oKdJOEq8jI96PTzEvfEXqOsgS8VCTyxnj/nBoCB
+         REdQ==
+X-Gm-Message-State: AOAM533rvDOff4IGV6LMTR4epSh+7Z7/migw6qq+z/6r4otvomHnwk0H
+        crD6dnIVzUKowBGgGJEz3+Q=
+X-Google-Smtp-Source: ABdhPJx7b06btMqKpp1MNA9IjMnV7fQ1dYB3ciPRnHJNX6umMi9KLCwXh/fyKmch7fFCwo5RbO4tlg==
+X-Received: by 2002:adf:dfc9:: with SMTP id q9mr605282wrn.200.1616433082388;
+        Mon, 22 Mar 2021 10:11:22 -0700 (PDT)
+Received: from localhost.localdomain ([141.226.241.101])
+        by smtp.gmail.com with ESMTPSA id j9sm55119wmi.24.2021.03.22.10.11.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 Mar 2021 10:11:21 -0700 (PDT)
+From:   Amir Goldstein <amir73il@gmail.com>
+To:     "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc:     Jan Kara <jack@suse.cz>,
+        Christian Brauner <christian.brauner@ubuntu.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-api@vger.kernel.org
+Subject: [PATCH] xfs: use a unique and persistent value for f_fsid
+Date:   Mon, 22 Mar 2021 19:11:18 +0200
+Message-Id: <20210322171118.446536-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <CANSSxym1ob76jW9i-1ZLfEe4KSHA5auOnZhtXykRQg0efAL+WA@mail.gmail.com>
-In-Reply-To: <CANSSxym1ob76jW9i-1ZLfEe4KSHA5auOnZhtXykRQg0efAL+WA@mail.gmail.com>
-From:   =?UTF-8?Q?Ralf_Gro=C3=9F?= <ralf.gross+xfs@gmail.com>
-Date:   Mon, 22 Mar 2021 17:50:55 +0100
-Message-ID: <CANSSxy=d2Tihu8dXUFQmRwYWHNdcGQoSQAkZpePD-8NOV+d5dw@mail.gmail.com>
-Subject: Re: memory requirements for a 400TB fs with reflinks
-To:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-No advice or rule of thumb regarding needed memory for xfs_repair?
+Some filesystems on persistent storage backend use a digest of the
+filesystem's persistent uuid as the value for f_fsid returned by
+statfs(2).
 
-Ralf
+xfs, as many other filesystem provide the non-persistent block device
+number as the value of f_fsid.
 
+Since kernel v5.1, fanotify_init(2) supports the flag FAN_REPORT_FID
+for identifying objects using file_handle and f_fsid in events.
 
-Am Sa., 20. M=C3=A4rz 2021 um 19:01 Uhr schrieb Ralf Gro=C3=9F <ralf.gross+=
-xfs@gmail.com>:
->
-> Hi,
->
-> I plan to deploy a couple of Linux (RHEL 8.x) server as Veeam backup
-> repositories. Base for this might be high density server with 58 x
-> 16TB disks, 2x  RAID 60, each with its own raid controller and 28
-> disks. So each RAID 6 has 14 disks, + 2 globale spare.
->
-> I wonder what memory requirement such a server would have, is there
-> any special requirement regarding reflinks? I remember that xfs_repair
-> has been a problem in the past, but my experience with this is from 10
-> years ago. Currently I plan to use 192GB RAM, this would be perfect as
-> it utilizes 6 memory channels and 16GB DIMMs are not so expensive.
->
-> Thanks - Ralf
+The xfs specific ioctl XFS_IOC_PATH_TO_FSHANDLE similarly attaches an
+fsid to exported file handles, but it is not the same fsid exported
+via statfs(2) - it is a persistent fsid based on the filesystem's uuid.
+
+Use the same persistent value for f_fsid, so object identifiers in
+fanotify events will describe the objects more uniquely.
+
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+
+Guys,
+
+This change would be useful for fanotify users.
+Do you see any problems with that minor change of uapi?
+
+The way I see it, now f_fsid of an xfs filesystem can change on reboots.
+With this change, it will change once more and never more.
+
+I did not find any kernel internal user other than fanotify and as for
+userland expectations, there should not be much expectations from the
+value of f_fsid as it is persistent for some filesystems and bdev number
+for others - there is no standard.
+
+Thanks,
+Amir.
+
+ fs/xfs/xfs_super.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index e5e0713bebcd..37f8417b78c4 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -790,7 +790,7 @@ xfs_fs_statfs(
+ 	struct xfs_mount	*mp = XFS_M(dentry->d_sb);
+ 	xfs_sb_t		*sbp = &mp->m_sb;
+ 	struct xfs_inode	*ip = XFS_I(d_inode(dentry));
+-	uint64_t		fakeinos, id;
++	uint64_t		fakeinos;
+ 	uint64_t		icount;
+ 	uint64_t		ifree;
+ 	uint64_t		fdblocks;
+@@ -800,8 +800,8 @@ xfs_fs_statfs(
+ 	statp->f_type = XFS_SUPER_MAGIC;
+ 	statp->f_namelen = MAXNAMELEN - 1;
+ 
+-	id = huge_encode_dev(mp->m_ddev_targp->bt_dev);
+-	statp->f_fsid = u64_to_fsid(id);
++	statp->f_fsid.val[0] = mp->m_fixedfsid[0];
++	statp->f_fsid.val[1] = mp->m_fixedfsid[1];
+ 
+ 	icount = percpu_counter_sum(&mp->m_icount);
+ 	ifree = percpu_counter_sum(&mp->m_ifree);
+-- 
+2.25.1
+
