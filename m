@@ -2,200 +2,366 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA1A6C433DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 17:48:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B41CDC433C1
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 17:57:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76AE261994
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 17:48:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D2E96197F
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Mar 2021 17:57:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230105AbhCVRrd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Mar 2021 13:47:33 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:37458 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232226AbhCVRrU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Mar 2021 13:47:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1616435238;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=X0HyEonyXc6K6+tnonj7rIMpvRxoEHg5penZzibEfAg=;
-        b=YLktaYyKx/uMJxMdcLz0Je+V4J0Ly/svAJCfv58t6v175y360XC+WpjscCOx8wDKGh1nzH
-        eaUBpyR1T06swx8SIy6e0jr/zS/ux7asI7YPJRGA+jo65/vMV7zZObxG2W+CKphHIdiYpg
-        2/sBQYPYVBoft/npNWIxAkmmCeXK8HM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-412-aQ51hw8_MmeV7jYsezA3lg-1; Mon, 22 Mar 2021 13:47:16 -0400
-X-MC-Unique: aQ51hw8_MmeV7jYsezA3lg-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6585C18C89C4;
-        Mon, 22 Mar 2021 17:47:15 +0000 (UTC)
-Received: from bfoster (ovpn-112-29.rdu2.redhat.com [10.10.112.29])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 022B863622;
-        Mon, 22 Mar 2021 17:47:14 +0000 (UTC)
-Date:   Mon, 22 Mar 2021 13:47:13 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: only reset incore inode health state flags when
- reclaiming an inode
-Message-ID: <YFjYIXjJcNHx4fdJ@bfoster>
-References: <20210320164007.GX22100@magnolia>
- <YFiyneMtdTccoe+N@bfoster>
- <20210322162944.GC22100@magnolia>
+        id S230140AbhCVR5M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Mar 2021 13:57:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51422 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229590AbhCVR4x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Mar 2021 13:56:53 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 094BD6196E;
+        Mon, 22 Mar 2021 17:56:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616435813;
+        bh=tjvSPrg08ec2wbCrKBieeI1VLAYfvCBICZo2EnttIf0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=j9740ByHv2QOQioL4OZEnsO/iBG2WWeLi9rvi9zIHuVjQQEwoAvci8hy0zMVE0vZX
+         zh8iQ9qtIK0zFXEeWnAySk0ZOeDMlNCKftUYaN9Lk4MZizoHZjjRwJxVvX6mIcIlsd
+         pdH+WDOSI+HT5YwcqSds8T9Xb11nlMroIrCZkdnmQVRw2wvlxR+mqrH7gi5l4l22fC
+         EOOycTRzvRMXi7MbcKlwAbDJlZaKBc5l/a294Rgi/bCdTpsJhahgURXhMHFzOl7WpT
+         h7tZ+4hKYtTlbaRt9w0LLcztypjk9VvOM8tp0kjE2XrJx8PONSpqttNvOmtztyJf59
+         zfKmXU9QARKYQ==
+Date:   Mon, 22 Mar 2021 10:56:52 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V6 05/13] xfs: Check for extent overflow when growing
+ realtime bitmap/summary inodes
+Message-ID: <20210322175652.GG1670408@magnolia>
+References: <20210309050124.23797-1-chandanrlinux@gmail.com>
+ <20210309050124.23797-6-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210322162944.GC22100@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20210309050124.23797-6-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 22, 2021 at 09:29:44AM -0700, Darrick J. Wong wrote:
-> On Mon, Mar 22, 2021 at 11:07:09AM -0400, Brian Foster wrote:
-> > On Sat, Mar 20, 2021 at 09:40:07AM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > While running some fuzz tests on inode metadata, I noticed that the
-> > > filesystem health report (as provided by xfs_spaceman) failed to report
-> > > the file corruption even when spaceman was run immediately after running
-> > > xfs_scrub to detect the corruption.  That isn't the intended behavior;
-> > > one ought to be able to run scrub to detect errors in the ondisk
-> > > metadata and be able to access to those reports for some time after the
-> > > scrub.
-> > > 
-> > > After running the same sequence through an instrumented kernel, I
-> > > discovered the reason why -- scrub igets the file, scans it, marks it
-> > > sick, and ireleases the inode.  When the VFS lets go of the incore
-> > > inode, it moves to RECLAIMABLE state.  If spaceman igets the incore
-> > > inode before it moves to RECLAIM state, iget reinitializes the VFS
-> > > state, clears the sick and checked masks, and hands back the inode.  At
-> > > this point, the caller has the exact same incore inode, but with all the
-> > > health state erased.
-> > > 
-> > 
-> > So this requires some degree of cache pressure to reproduce, right?
+On Tue, Mar 09, 2021 at 10:31:16AM +0530, Chandan Babu R wrote:
+> Verify that XFS does not cause realtime bitmap/summary inode fork's
+> extent count to overflow when growing the realtime volume associated
+> with a filesystem.
 > 
-> None at all, actually -- xfs_scrub uses bulkstat to find inodes to
-> scrub.  Bulkstat sets I_DONTCACHE on the files it reads, so the VFS
-> drops the inode (if there are no dentries or the dentries are also
-> marked DONTCACHE) as soon as irele drops the refcount to zero.
-> 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-Ah, I see. So in the DONTCACHE case, the inode release translates to
-immediate eviction and thus immediate reclaimable status.
+Soo... I discovered that this test doesn't pass with multiblock
+directories:
 
-> IOWs, the fuzz test can do this on an idle system:
-> 
-> # xfs_db -x -c 'inode XXX' -c 'fuzz -d core.blah random' /dev/sda
-> # mount /dev/sda /mnt
-> # xfs_scrub -d -T -v -n /mnt/
-> Corruption: inode XXX record
-> # xfs_spaceman -c 'health -c' /mnt/
-> 
-> and spaceman doesn't report the corruption that we /just/ found.
-> 
-> > I.e., the inode likely does not immediately go to reclaimable state on
-> > release, but rather the vfs eventually decides to evict and we
-> > inactivate from there. If we grab the inode after that point, it
-> > effectively behaves as if the inode structure was freed and we re-read
-> > from disk because we cleared health state earlier than necessary.
-> 
-> Right.
-> 
-> > If I'm following that correctly, do you observe a noticeable impact in
-> > terms of health state lifetime? The change seems reasonable, I'm just
-> > wondering how much longer we'd expect to have this information available
-> > after vfs eviction occurs and if/how that impacts userspace scrub
-> > behavior.
-> 
-> I notice /some/ increase in health state lifetime.  With the patch
-> applied the shell code above works as intended (spaceman reports inode
-> XXX is broken) so long as inode reclaim doesn't run before spaceman.
-> Because these days reclaim is triggered by the AIL releasing the inodes,
-> this means that spaceman only has to be run before the next fsync or the
-> log force expiration.
-> 
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 alder-mtr00 5.12.0-rc4-xfsx #rc4 SMP PREEMPT Mon Mar 22 10:03:45 PDT 2021
+MKFS_OPTIONS  -- -f -b size=1024, /dev/sdf
+MOUNT_OPTIONS -- -o usrquota,grpquota,prjquota, /dev/sdf /opt
 
-Not sure what you mean by AIL releasing inodes associated with a scrub
-scan.. does scrub dirty unhealthy inodes?
+xfs/529 - output mismatch (see /var/tmp/fstests/xfs/529.out.bad)
+    --- tests/xfs/529.out       2021-03-21 11:44:09.383407733 -0700
+    +++ /var/tmp/fstests/xfs/529.out.bad        2021-03-22 10:36:34.000348426 -0700
+    @@ -4,12 +4,21 @@
+     Inject reduce_max_iextents error tag
+     Create fragmented file
+     Verify $testfile's extent count
+    +/opt/testfile: No such file or directory
+    +/tmp/fstests/tests/xfs/529: line 72: ((: > 10 : syntax error: operand expected (error token is "> 10 ")
+    +rm: cannot remove '/opt/testfile': No such file or directory
+     * Fallocate unwritten extents
+    ...
+    (Run 'diff -u /tmp/fstests/tests/xfs/529.out /var/tmp/fstests/xfs/529.out.bad'  to see the entire diff)
+Ran: xfs/529
+Failures: xfs/529
+Failed 1 of 1 tests
 
-Regardless, it seems like we're still potentially racing with an actual
-reclaim and thus loss of health state is still technically possible,
-just made noticeably less likely in certain cases by this patch (due to
-I_DONTCACHE)...
+Test xfs/529 FAILED with code 1 and bad golden output:
+--- /tmp/fstests/tests/xfs/529.out      2021-03-21 11:44:09.383407733 -0700
++++ /var/tmp/fstests/xfs/529.out.bad    2021-03-22 10:36:34.000348426 -0700
+@@ -4,12 +4,21 @@
+ Inject reduce_max_iextents error tag
+ Create fragmented file
+ Verify $testfile's extent count
++/opt/testfile: No such file or directory
++/tmp/fstests/tests/xfs/529: line 72: ((: > 10 : syntax error: operand expected (error token is "> 10 ")
++rm: cannot remove '/opt/testfile': No such file or directory
+ * Fallocate unwritten extents
+ Fallocate fragmented file
+ Verify $testfile's extent count
++/opt/testfile: No such file or directory
++/tmp/fstests/tests/xfs/529: line 91: ((: > 10 : syntax error: operand expected (error token is "> 10 ")
++rm: cannot remove '/opt/testfile': No such file or directory
+ * Directio write
+ Create fragmented file via directio writes
+ Verify $testfile's extent count
++/opt/testfile: No such file or directory
++/tmp/fstests/tests/xfs/529: line 110: ((: > 10 : syntax error: operand expected (error token is "> 10 ")
++rm: cannot remove '/opt/testfile': No such file or directory
+ * Extend quota inodes
+ Disable reduce_max_iextents error tag
+ Consume free space
 
-> Similarly, if a different user program open()s the inode after a scan,
-> then the health state will stick around as long as there hasn't been
-> enough memory pressure to push the inode out of memory for real.
+The test appears to fail because we cannot create even a single file in
+the root directory.  Looking at xfs_create, I see:
+
+	error = xfs_iext_count_may_overflow(dp, XFS_DATA_FORK,
+			XFS_IEXT_DIR_MANIP_CNT(mp));
+	if (error)
+		goto out_trans_cancel;
+
+XFS_IEXT_DIR_MANIP_CNT is defined as:
+
+	#define XFS_IEXT_DIR_MANIP_CNT(mp) \
+		((XFS_DA_NODE_MAXDEPTH + 1 + 1) * (mp)->m_dir_geo->fsbcount)
+
+If one formats a filesystem with 1k blocks, the result will be a
+filesystem with 4k directory blocks:
+
+# mkfs.xfs -b size=1024 /dev/sdf -Nf
+meta-data=/dev/sdf               isize=512    agcount=4, agsize=5192704 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=1
+         =                       reflink=1    bigtime=1 inobtcount=1
+         =                       metadir=0   
+data     =                       bsize=1024   blocks=20770816, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=1024   blocks=10240, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+Note "data bsize" is 1024, and "naming bsize" is 4096.
+
+In the kernel, we set m_dir_geo->fsbcount = "naming bsize" /
+"data bsize", or 4 in this case.  Since XFS_DA_NODE_MAXDEPTH is always
+5, this macro expands to:
+
+	(5 + 1 + 1) * (4) = 28
+
+The reason for the test failure I think is because of this code in
+xfs_iext_count_may_overflow, which is called from xfs_create on the
+parent directory:
+
+	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
+		max_exts = 10;
+
+	nr_exts = ifp->if_nextents + nr_to_add;
+	if (nr_exts < ifp->if_nextents || nr_exts > max_ext)
+		return -EFBIG
+
+The second part of the if statement becomes (28 > 10) which is trivially
+true, so we return -EFBIG for all attempts to create a file in a
+directory.  xfs/529, in turn, cannot create $testfile because nothing
+can create a file in $SCRATCH_MNT, and the test goes off the rails.
+
+I think this can be trivially solved by changing this (and the other
+tests) to ensure that the error injection is only set when we're running
+a command to check if we get EFBIG.  In other words, this code in
+xfs/529:
+
+	rm $testfile
+
+	echo "* Fallocate unwritten extents"
+
+	echo "Fallocate fragmented file"
+	for i in $(seq 0 2 $((nr_blks - 1))); do
+		$XFS_IO_PROG -f -c "falloc $((i * bsize)) $bsize" $testfile \
+		       >> $seqres.full 2>&1
+		[[ $? != 0 ]] && break
+	done
+
+Should become:
+
+	rm -f $testfile
+	touch $testfile
+
+	echo "* Fallocate unwritten extents"
+
+	echo "Fallocate fragmented file"
+	_scratch_inject_error reduce_max_iextents 1
+	for i in $(seq 0 2 $((nr_blks - 1))); do
+		$XFS_IO_PROG -c "falloc $((i * bsize)) $bsize" $testfile \
+		       >> $seqres.full 2>&1
+		[[ $? != 0 ]] && break
+	done
+	_scratch_inject_error reduce_max_iextents 0
+
+With that patched up, xfs/529 passes on 1k block filesystems.  I suspect
+the other tests in this series (xfs/531, 532, 534, and 535) are going to
+need similar patching.
+
+--D
+
+> ---
+>  tests/xfs/529     | 124 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/529.out |  11 ++++
+>  tests/xfs/group   |   1 +
+>  3 files changed, 136 insertions(+)
+>  create mode 100755 tests/xfs/529
+>  create mode 100644 tests/xfs/529.out
 > 
-> My development tree also contains a patchset that adds the ability for
-> inode reclaim to notice that it's freeing an inode that had health
-> problems, and record in the per-AG health state that some inode
-> somewhere in that AG had a problem, but that's for a future submission.
-> This will close the hole that inode health state perishes rather quickly
-> under memory pressure.
+> diff --git a/tests/xfs/529 b/tests/xfs/529
+> new file mode 100755
+> index 00000000..dd7019f5
+> --- /dev/null
+> +++ b/tests/xfs/529
+> @@ -0,0 +1,124 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2021 Chandan Babu R.  All Rights Reserved.
+> +#
+> +# FS QA Test 529
+> +#
+> +# Verify that XFS does not cause bitmap/summary inode fork's extent count to
+> +# overflow when growing an the realtime volume of the filesystem.
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	_scratch_unmount >> $seqres.full 2>&1
+> +	test -e "$rtdev" && losetup -d $rtdev >> $seqres.full 2>&1
+> +	rm -f $tmp.* $TEST_DIR/$seq.rtvol
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/inject
+> +. ./common/populate
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +_supported_fs xfs
+> +# Note that we don't _require_realtime because we synthesize a rt volume
+> +# below.
+> +_require_test
+> +_require_xfs_debug
+> +_require_test_program "punch-alternating"
+> +_require_xfs_io_error_injection "reduce_max_iextents"
+> +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
+> +_require_scratch_nocheck
+> +
+> +echo "* Test extending rt inodes"
+> +
+> +_scratch_mkfs | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
+> +. $tmp.mkfs
+> +
+> +echo "Create fake rt volume"
+> +nr_bitmap_blks=25
+> +nr_bits=$((nr_bitmap_blks * dbsize * 8))
+> +
+> +# Realtime extent size has to be atleast 4k in size.
+> +if (( $dbsize < 4096 )); then
+> +	rtextsz=4096
+> +else
+> +	rtextsz=$dbsize
+> +fi
+> +
+> +rtdevsz=$((nr_bits * rtextsz))
+> +truncate -s $rtdevsz $TEST_DIR/$seq.rtvol
+> +rtdev=$(_create_loop_device $TEST_DIR/$seq.rtvol)
+> +
+> +echo "Format and mount rt volume"
+> +
+> +export USE_EXTERNAL=yes
+> +export SCRATCH_RTDEV=$rtdev
+> +_scratch_mkfs -d size=$((1024 * 1024 * 1024)) -b size=${dbsize} \
+> +	      -r size=${rtextsz},extsize=${rtextsz} >> $seqres.full
+> +_try_scratch_mount || _notrun "Couldn't mount fs with synthetic rt volume"
+> +
+> +echo "Consume free space"
+> +fillerdir=$SCRATCH_MNT/fillerdir
+> +nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
+> +nr_free_blks=$((nr_free_blks * 90 / 100))
+> +
+> +_fill_fs $((dbsize * nr_free_blks)) $fillerdir $dbsize 0 >> $seqres.full 2>&1
+> +
+> +echo "Create fragmented filesystem"
+> +for dentry in $(ls -1 $fillerdir/); do
+> +	$here/src/punch-alternating $fillerdir/$dentry >> $seqres.full
+> +done
+> +
+> +echo "Inject reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 1
+> +
+> +echo "Inject bmap_alloc_minlen_extent error tag"
+> +_scratch_inject_error bmap_alloc_minlen_extent 1
+> +
+> +echo "Grow realtime volume"
+> +$XFS_GROWFS_PROG -r $SCRATCH_MNT >> $seqres.full 2>&1
+> +if [[ $? == 0 ]]; then
+> +	echo "Growfs succeeded; should have failed."
+> +	exit 1
+> +fi
+> +
+> +_scratch_unmount >> $seqres.full
+> +
+> +echo "Verify rbmino's and rsumino's extent count"
+> +for rtino in rbmino rsumino; do
+> +	ino=$(_scratch_xfs_get_metadata_field $rtino "sb 0")
+> +	echo "$rtino = $ino" >> $seqres.full
+> +
+> +	nextents=$(_scratch_get_iext_count $ino data || \
+> +			_fail "Unable to obtain inode fork's extent count")
+> +	if (( $nextents > 10 )); then
+> +		echo "Extent count overflow check failed: nextents = $nextents"
+> +		exit 1
+> +	fi
+> +done
+> +
+> +echo "Check filesystem"
+> +_check_xfs_filesystem $SCRATCH_DEV none $rtdev
+> +
+> +losetup -d $rtdev
+> +rm -f $TEST_DIR/$seq.rtvol
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/529.out b/tests/xfs/529.out
+> new file mode 100644
+> index 00000000..4ee113a4
+> --- /dev/null
+> +++ b/tests/xfs/529.out
+> @@ -0,0 +1,11 @@
+> +QA output created by 529
+> +* Test extending rt inodes
+> +Create fake rt volume
+> +Format and mount rt volume
+> +Consume free space
+> +Create fragmented filesystem
+> +Inject reduce_max_iextents error tag
+> +Inject bmap_alloc_minlen_extent error tag
+> +Grow realtime volume
+> +Verify rbmino's and rsumino's extent count
+> +Check filesystem
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 2356c4a9..5dff7acb 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -526,3 +526,4 @@
+>  526 auto quick mkfs
+>  527 auto quick quota
+>  528 auto quick quota
+> +529 auto quick realtime growfs
+> -- 
+> 2.29.2
 > 
-
-... and presumably eventually addressed by perag tracking.
-
-That all seems reasonable to me. Thanks for the details:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> --D
-> 
-> > Brian
-> > 
-> > > In other words, we're erasing the incore inode's health state flags when
-> > > we've decided NOT to sever the link between the incore inode and the
-> > > ondisk inode.  This is wrong, so we need to remove the lines that zero
-> > > the fields from xfs_iget_cache_hit.
-> > > 
-> > > As a precaution, we add the same lines into xfs_reclaim_inode just after
-> > > we sever the link between incore and ondisk inode.  Strictly speaking
-> > > this isn't necessary because once an inode has gone through reclaim it
-> > > must go through xfs_inode_alloc (which also zeroes the state) and
-> > > xfs_iget is careful to check for mismatches between the inode it pulls
-> > > out of the radix tree and the one it wants.
-> > > 
-> > > Fixes: 6772c1f11206 ("xfs: track metadata health status")
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  fs/xfs/xfs_icache.c |    4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > index 595bda69b18d..5325fa28d099 100644
-> > > --- a/fs/xfs/xfs_icache.c
-> > > +++ b/fs/xfs/xfs_icache.c
-> > > @@ -587,8 +587,6 @@ xfs_iget_cache_hit(
-> > >  		ip->i_flags |= XFS_INEW;
-> > >  		xfs_inode_clear_reclaim_tag(pag, ip->i_ino);
-> > >  		inode->i_state = I_NEW;
-> > > -		ip->i_sick = 0;
-> > > -		ip->i_checked = 0;
-> > >  
-> > >  		spin_unlock(&ip->i_flags_lock);
-> > >  		spin_unlock(&pag->pag_ici_lock);
-> > > @@ -1205,6 +1203,8 @@ xfs_reclaim_inode(
-> > >  	spin_lock(&ip->i_flags_lock);
-> > >  	ip->i_flags = XFS_IRECLAIM;
-> > >  	ip->i_ino = 0;
-> > > +	ip->i_sick = 0;
-> > > +	ip->i_checked = 0;
-> > >  	spin_unlock(&ip->i_flags_lock);
-> > >  
-> > >  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > 
-> > 
-> 
-
