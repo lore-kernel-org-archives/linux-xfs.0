@@ -2,216 +2,262 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D426C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 05:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36641C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 06:36:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2053619B6
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 05:29:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0575B619AB
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 06:36:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229669AbhCWF2u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Mar 2021 01:28:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45090 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbhCWF2Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Mar 2021 01:28:16 -0400
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1360CC061574;
-        Mon, 22 Mar 2021 22:28:16 -0700 (PDT)
-Received: by mail-pg1-x531.google.com with SMTP id f10so3479802pgl.9;
-        Mon, 22 Mar 2021 22:28:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=wF1f+YiW75e9avV/lrqNP3wPOzxLewWYHM6dXygj0Nw=;
-        b=L1jfUgCG09NOYsOVToSW8fiZhFrIDEfv46qmiZl+5sljI2+vWcgMQysWhHhTLymiVA
-         /KPk+4IG+E1SJWqbfgz0lPRg01TUoe+TUj+o7u9/VcOiMpLDeU3FsAI+X4T1w72J7IQV
-         7wEyBKvFQNAd0fyPqXl1L8jAlBHpTz1yqiGyRNqJuMkWAEZrPS//323RoYr9iEtaadYK
-         bVK/BWArWDeU9TFprH8E/S+pWFyGCGGlByX5lzEfS8FWvZg/K6vJHlXsWCzTJ9KNUwTz
-         V2nS7D60pDjeURxJszKmpjAOtm7ryUTTvUZSpg55PQAPcVBf1Ki5uSN2f7hCjhKqR6Rn
-         kIwg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=wF1f+YiW75e9avV/lrqNP3wPOzxLewWYHM6dXygj0Nw=;
-        b=j/64xcjnRVoDQHpvNVkCYFZ92Ki20qpPp8GP6+rVTU3qhRS55bhvkF6azMm3aWG0Xq
-         QtfIZEnoavrN77U/A3vjej3JCmpQYVTlDjXwJnV0rve3ExHAMmy93mUbedET5Ns79poV
-         lCDSMeeCda7cAhirP746XwEdJ1WbHWxLfplJXY7VYSt/mki2cK+soD7lovHVGTF3utC/
-         3cVd+coNZ+rssSGojkCQ6l7bgjBOZWqxj3rJrVwdaoHt2/RNs9jjeHzu3h5oW1gW/Ohf
-         8U1euF+txGRH583v1Pp6YYliJKstjckjKCpXk4Jw51AUnVmQs+lg3V/hUkxic9u1CVwc
-         BRBA==
-X-Gm-Message-State: AOAM5313r+HV0T2o6V6Sk/lwIK9pTl/6ZfCBzgyzOJdl+bgZKNEfJkyh
-        uvuGGa1QxB2e/LIY6eymBOMZCZh/klA=
-X-Google-Smtp-Source: ABdhPJxUa0xzoZzAWo0Jahc2uIPGSrjDWBlUVFMktoDvF8v98Ar9SY/Y7f8aA2aLSX9DeTTlgTTC+g==
-X-Received: by 2002:a17:902:da8d:b029:e5:c7d9:81f2 with SMTP id j13-20020a170902da8db02900e5c7d981f2mr3440593plx.21.1616477295176;
-        Mon, 22 Mar 2021 22:28:15 -0700 (PDT)
-Received: from garuda ([122.179.41.147])
-        by smtp.gmail.com with ESMTPSA id w17sm14134240pfu.29.2021.03.22.22.28.13
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 22 Mar 2021 22:28:14 -0700 (PDT)
-References: <20210309050124.23797-1-chandanrlinux@gmail.com> <20210309050124.23797-14-chandanrlinux@gmail.com> <20210322185413.GH1670408@magnolia>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V6 13/13] xfs: Stress test with bmap_alloc_minlen_extent error tag enabled
-In-reply-to: <20210322185413.GH1670408@magnolia>
-Date:   Tue, 23 Mar 2021 10:58:11 +0530
-Message-ID: <877dlyqw0k.fsf@garuda>
+        id S229798AbhCWGfk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Mar 2021 02:35:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36306 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229494AbhCWGfL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Mar 2021 02:35:11 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2711A619A0;
+        Tue, 23 Mar 2021 06:35:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616481310;
+        bh=Nx/d2Z+FtUC+cJ6MYfy6o+v8DsgfTiM76EojyQpGng8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=kqz7coTnugpch7HaGw/k+EC0R/oZ6hqn2g+54Dt+97EpSjXEWJEsdS8kw0qHu0cVC
+         mUI/hNQLipbBvf3OdUist8mX/GG6PhajM/TTcWZtmUdbNOEHqowA+YtDdBswfQQQfG
+         src78u2rQJQ3qkGrHre//q8ev3OFyo+UEiYcFOVxzI6IDb/HEy+q8zCw+fpY+gDnt1
+         +/wEFKmJTt7C3p3uE4bimOshK11Nyg+uD8Jo58RV/MRf9Ys6DdSBNj3FSg3tKhCCCj
+         EwySlbMelQcbrcyzW1zwH1j4t3OacU6aPHu//Od78yaF8AZSMO1qR5wbiey8StcPBB
+         dJ9INnSOAG0xQ==
+Date:   Mon, 22 Mar 2021 23:35:09 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Jan Kara <jack@suse.cz>,
+        Christian Brauner <christian.brauner@ubuntu.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux API <linux-api@vger.kernel.org>,
+        "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [PATCH] xfs: use a unique and persistent value for f_fsid
+Message-ID: <20210323063509.GJ22100@magnolia>
+References: <20210322171118.446536-1-amir73il@gmail.com>
+ <20210322230352.GW63242@dread.disaster.area>
+ <CAOQ4uxjFMPNgR-aCqZt3FD90XtBVFZncdgNc4RdOCbsxukkyYQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxjFMPNgR-aCqZt3FD90XtBVFZncdgNc4RdOCbsxukkyYQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 23 Mar 2021 at 00:24, Darrick J. Wong wrote:
-> On Tue, Mar 09, 2021 at 10:31:24AM +0530, Chandan Babu R wrote:
->> This commit adds a stress test that executes fsstress with
->> bmap_alloc_minlen_extent error tag enabled.
->
-> Continuing along the theme of watching the magic smoke come out when dir
-> block size > fs block size, I also observed the following assertion when
-> running this test:
->
->  XFS: Assertion failed: done, file: fs/xfs/libxfs/xfs_dir2.c, line: 687
->  ------------[ cut here ]------------
->  WARNING: CPU: 0 PID: 3892 at fs/xfs/xfs_message.c:112 assfail+0x3c/0x40 [xfs]
->  Modules linked in: xfs(O) libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 ip_set_hash_ip ip_set_hash_net xt_tcpudp xt_set ip_set_hash_mac ip_set nfnetlink ip6table_filter ip6_tables iptable_filter bfq sch_fq_codel ip_tables x_tables overlay nfsv4 af_packet
->  CPU: 0 PID: 3892 Comm: fsstress Tainted: G           O      5.12.0-rc4-xfsx #rc4
->  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
->  RIP: 0010:assfail+0x3c/0x40 [xfs]
->  Code: d0 d5 41 a0 e8 81 f9 ff ff 8a 1d 5b 44 0e 00 80 fb 01 76 0f 0f b6 f3 48 c7 c7 b0 d5 4d a0 e8 93 dc fc e0 80 e3 01 74 02 0f 0b <0f> 0b 5b c3 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c 24 48 89 44 24
->  RSP: 0018:ffffc900035bba38 EFLAGS: 00010246
->  RAX: 0000000000000000 RBX: ffff88804f204100 RCX: 0000000000000000
->  RDX: 00000000ffffffc0 RSI: 0000000000000000 RDI: ffffffffa040c157
->  RBP: 0000000000000000 R08: 0000000000000000 R09: 000000000000000a
->  R10: 000000000000000a R11: f000000000000000 R12: ffff88805920b880
->  R13: ffff888003778bb0 R14: 0000000000000000 R15: ffff88800f0f63c0
->  FS:  00007fe7b5e2f740(0000) GS:ffff88803ec00000(0000) knlGS:0000000000000000
->  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->  CR2: 00007fe7b6055000 CR3: 0000000053094005 CR4: 00000000001706b0
->  Call Trace:
->   xfs_dir2_shrink_inode+0x22f/0x270 [xfs]
->   xfs_dir2_block_to_sf+0x29a/0x420 [xfs]
->   xfs_dir2_block_removename+0x221/0x290 [xfs]
->   xfs_dir_removename+0x1a0/0x220 [xfs]
->   xfs_dir_rename+0x343/0x3b0 [xfs]
->   xfs_rename+0x79e/0xae0 [xfs]
->   xfs_vn_rename+0xdb/0x150 [xfs]
->   vfs_rename+0x4e2/0x8e0
->   do_renameat2+0x393/0x550
->   __x64_sys_rename+0x40/0x50
->   do_syscall_64+0x2d/0x40
->   entry_SYSCALL_64_after_hwframe+0x44/0xae
->  RIP: 0033:0x7fe7b5e9800b
->  Code: e8 aa ce 0a 00 85 c0 0f 95 c0 0f b6 c0 f7 d8 5d c3 66 0f 1f 44 00 00 b8 ff ff ff ff 5d c3 90 f3 0f 1e fa b8 52 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 05 c3 0f 1f 40 00 48 8b 15 51 4e 18 00 f7 d8
->  RSP: 002b:00007ffeb526c698 EFLAGS: 00000246 ORIG_RAX: 0000000000000052
->  RAX: ffffffffffffffda RBX: 00007ffeb526c970 RCX: 00007fe7b5e9800b
->  RDX: 0000000000000000 RSI: 000055d6ccdb9250 RDI: 000055d6ccdb9270
->  RBP: 00007ffeb526c980 R08: 0000000000000001 R09: 0000000000000003
->  R10: 000055d6cc3b20dc R11: 0000000000000246 R12: 0000000000000000
->  R13: 0000000000000040 R14: 00007ffeb526c970 R15: 00007ffeb526c980
->  ---[ end trace 98f99784621d65fe ]---
->
-> It looks to me as though we return from xfs_bunmapi having not completed
-> all the unmapping work, though I can't tell if that's because bunmapi
-> returned early because it thought it would overflow the extent count; or
-> some other reason.
+On Tue, Mar 23, 2021 at 06:50:44AM +0200, Amir Goldstein wrote:
+> On Tue, Mar 23, 2021 at 1:03 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Mon, Mar 22, 2021 at 07:11:18PM +0200, Amir Goldstein wrote:
+> > > Some filesystems on persistent storage backend use a digest of the
+> > > filesystem's persistent uuid as the value for f_fsid returned by
+> > > statfs(2).
+> > >
+> > > xfs, as many other filesystem provide the non-persistent block device
+> > > number as the value of f_fsid.
+> > >
+> > > Since kernel v5.1, fanotify_init(2) supports the flag FAN_REPORT_FID
+> > > for identifying objects using file_handle and f_fsid in events.
+> >
+> > The filesystem id is encoded into the VFS filehandle - it does not
+> > need some special external identifier to identify the filesystem it
+> > belongs to....
+> >
+> 
+> Let's take it from the start.
+> There is no requirement for fanotify to get a persistent fs id, we just need
+> a unique fs id that is known to userspace, so the statfs API is good enough
+> for our needs.
+> 
+> See quote from fanotify.7:
+> 
+> " The fields of the fanotify_event_info_fid structure are as follows:
+> ...
+>        fsid   This  is  a  unique identifier of the filesystem
+> containing the object associated with the event.  It is a structure of
+> type __kernel_fsid_t and contains the same value as f_fsid when
+>               calling statfs(2).
+> 
+>        file_handle
+>               This is a variable length structure of type struct
+> file_handle.  It is an opaque handle that corresponds to a specified
+> object on a filesystem as returned by name_to_handle_at(2).  It
+>               can  be  used  to uniquely identify a file on a
+> filesystem and can be passed as an argument to open_by_handle_at(2).
 
-It could also be because the following conditions may have evaluated to true,
+Hmmmm.... so I guess you'd /like/ a file handle that will survive across
+unmount/mount cycles, and possibly even a reboot?
 
-if (!wasdel && !isrt) {
-    agno = XFS_FSB_TO_AGNO(mp, del.br_startblock);
-    if (prev_agno != NULLAGNUMBER && prev_agno > agno)
-          break;
-    prev_agno = agno;
-}
+I looked at the first commit, and I guess you use name_to_handle_at,
+which returns a mount_id that is .... that weird number in the leftmost
+column of /proc/mountinfo, which increments monotonically for each mount
+and definitely doesn't survive a remount cycle, let alone a reboot?
 
-i.e. the fs block being unmapped belongs to an AG whose agno is less than that
-of the previous fs block that was successfully unmapped.
+Hence wanting to use something less volatile than mnt_id_ida...?
 
-I can't seem to recreate this bug. I tried it with 64k directory block size
-with both 4k and 1k fs block sizes. I will keep trying.
+My natural inclination is "just use whatever NFS does", but ... then I
+saw fh_compose and realized that the fsid part of an NFS handle depends
+on the export options and probably isn't all that easy for someone who
+isn't an nfs client to extract.
 
-However I hit another call trace with directory block size > fs block size,
+Was that how you arrived at using the statfs fsid field?
 
-------------[ cut here ]------------
-WARNING: CPU: 2 PID: 6136 at fs/xfs/libxfs/xfs_bmap.c:717 xfs_bmap_extents_to_btree+0x520/0x5d0
-Modules linked in:
-CPU: 2 PID: 6136 Comm: fsstress Tainted: G        W         5.12.0-rc2-chandan #7
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.12.0-1 04/01/2014
-RIP: 0010:xfs_bmap_extents_to_btree+0x520/0x5d0
-Code: 5f fb ff ff 89 0c 24 48 c7 c2 1d 14 ac b2 b9 9d 02 00 00 31 ff 48 c7 c6 bf 14 ac b2 e8 1e 70 ac 00 44 8b 14 24 e9 55 ff ff ff <0f> 0b c7 44 24 0c e4 ff ff ff e9 0f ff ff ff b9 0e 03 00 00 48 c7
-RSP: 0018:ffffb43d4939f5c0 EFLAGS: 00010246
-RAX: ffffffffffffffff RBX: ffffa011c8887048 RCX: 0000000000000de5
-RDX: 00000000ffffffff RSI: 0000000000000000 RDI: ffffa010e29c9000
-RBP: ffffa010e2e00000 R08: ffffffffb180e81a R09: 0000000000000116
-R10: 0000000000000000 R11: 0000000000000000 R12: ffffa011c8887000
-R13: 0000000000000000 R14: ffffa010e11ed7e0 R15: ffffa011c8468100
-FS:  00007efd9458fb80(0000) GS:ffffa011f7c80000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007efd9458d000 CR3: 00000001fff6c000 CR4: 00000000000006e0
-Call Trace:
- ? __cond_resched+0x16/0x40
- ? __kmalloc_track_caller+0x6d/0x260
- xfs_bmap_add_extent_hole_real+0x747/0x960
- xfs_bmapi_allocate+0x380/0x410
- xfs_bmapi_write+0x507/0x9e0
- xfs_da_grow_inode_int+0x1cd/0x330
- ? _xfs_trans_bjoin+0x72/0x110
- xfs_dir2_grow_inode+0x62/0x110
- ? xfs_trans_log_inode+0xce/0x2d0
- xfs_dir2_sf_to_block+0x103/0x940
- ? xfs_dir2_sf_check+0x8c/0x210
- ? xfs_da_compname+0x19/0x30
- ? xfs_dir2_sf_lookup+0xd0/0x3d0
- xfs_dir2_sf_addname+0x10d/0x910
- xfs_dir_createname+0x1ad/0x210
- ? xfs_trans_log_inode+0xce/0x2d0
- xfs_rename+0x803/0xbb0
- ? avc_has_perm_noaudit+0x83/0x100
- xfs_vn_rename+0xdb/0x150
- vfs_rename+0x691/0xa90
- do_renameat2+0x393/0x540
- __x64_sys_renameat2+0x4b/0x60
- do_syscall_64+0x33/0x40
- entry_SYSCALL_64_after_hwframe+0x44/0xae
-RIP: 0033:0x7efd945e8e9f
-Code: 44 00 00 48 8b 15 f1 5f 16 00 f7 d8 64 89 02 b8 ff ff ff ff c3 66 0f 1f 44 00 00 49 89 ca 45 85 c0 74 40 b8 3c 01 00 00 0f 05 <48> 3d 00 f0 ff ff 77 39 41 89 c0 83 f8 ff 74 09 44 89 c0 c3 0f 1f
-RSP: 002b:00007fff55bbfee8 EFLAGS: 00000202 ORIG_RAX: 000000000000013c
-RAX: ffffffffffffffda RBX: 0000563e5f50654f RCX: 00007efd945e8e9f
-RDX: 00000000ffffff9c RSI: 0000563e5ff284e0 RDI: 00000000ffffff9c
-RBP: 00007fff55bc0140 R08: 0000000000000004 R09: feff7efdff2f3562
-R10: 0000563e5ff286c0 R11: 0000000000000202 R12: 0000563e5f4fb630
-R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
----[ end trace 6d859f8beaa17680 ]---
+...except XFS doesn't guarantee that fsid is particularly unique or
+stable, since a reboot can enumerate blockdevs in a different order and
+hence the dev_t will change.  UUIDs also aren't a great idea because you
+can snapshot an fs and mount it with nouuid, and now a "unique" file
+handle can map ambiguously to two different files.
 
->
-> OH CRAP, I just realized that xfs_dir2_shrink_inode only calls
-> xfs_bunmapi once, which means that if the directory block it's removing
-> is a multi-fsb block, it will remove the last extent map.  It then trips
-> the assertion, having left the rest of the directory block still mapped.
->
-> This is also what's going on when xfs_inactive_symlink_rmt trips the
-> same ASSERT(done), because the symlink remote block can span multiple
-> (two?) fs blocks but we only ever call xfs_bunmapi once.
->
-> So, no, there's nothing wrong with this test, but it _did_ shake loose
-> a couple of XFS bugs.  Congratulations!
->
-> So... who wants to tackle this one?  This isn't trivial to clean up
-> because you'll have to clean up all callers of xfs_dir2_shrink_inode to
-> handle rolling of the transaction, and I bet the only way to fix this is
-> to use deferred bunmap items to make sure the unmap always completes.
+Urgh, I'm gonna have to think about this one, all the options suck.
+fanotify might be smart enough to handle ambiguous file handles but now
+I wonder how dumb programs react to that.  Also it's 23:30 here. :)
 
-I will work on both the above listed call traces. Thanks for reporting the bug
-and also the follow up analysis.
+--D
 
---
-chandan
+> ..."
+> 
+> So the main objective is to "uniquely identify an object" which was observed
+> before (i.e. at the time of setting a watch) and a secondary objective is to
+> resolve a path from the identifier, which requires extra privileges.
+> 
+> This definition does not specify the lifetime of the identifier and
+> indeed, in most
+> cases, uniqueness in the system while filesystem is mounted should suffice
+> as that is also the lifetime of the fanotify mark.
+> 
+> But the fanotify group can outlive the mounted filesystem and it can be used
+> to watch multiple filesystems. It's not really a problem per-se that
+> xfs filesystems
+> can change and reuse f_fsid, it is just less friendly that's all.
+> 
+> I am trying to understand your objection to making this "friendly" change.
+> 
+> > > The xfs specific ioctl XFS_IOC_PATH_TO_FSHANDLE similarly attaches an
+> > > fsid to exported file handles, but it is not the same fsid exported
+> > > via statfs(2) - it is a persistent fsid based on the filesystem's uuid.
+> >
+> > To actually use that {fshandle,fhandle} tuple for anything
+> > requires CAP_SYS_ADMIN. A user can read the fshandle, but it can't
+> > use it for anything useful.
+> 
+> It is a unique identifier and that is a useful thing - see demo code:
+> * Index watches by fanotify fid:
+>   https://github.com/amir73il/inotify-tools/commit/ed82098b54b847e3c2d46b32d35b2aa537a9ba94
+> * Handle global watches on several filesystems:
+>   https://github.com/amir73il/inotify-tools/commit/1188ef00dc84964de58afb32c91e19930ad1e2e8
+> 
+> > i.e. it's use is entirely isolated to
+> > the file handle interface for identifying the filesystem the handle
+> > belongs to. This is messy, but XFS inherited this "fixed fsid"
+> > interface from Irix filehandles and was needed to port
+> > xfsdump/xfsrestore to Linux.  Realistically, it is not functionality
+> > that should be duplicated/exposed more widely on Linux...
+> >
+> 
+> Other filesystems expose a uuid digest as f_fsid: ext4, btrfs, ocfs2
+> and many more. XFS is really the exception among the big local fs.
+> This is not exposing anything new at all.
+> I would say it is more similar to the way that the generation part of
+> the file handle has improved over the years in different filesystems
+> to provide better uniqueness guarantees.
+> 
+> > IMO, if fanotify needs a persistent filesystem ID on Linux, it
+> 
+> It does not *need* that. It's just nicer for f_fsid to use a persistent
+> fs identifier if one is anyway available.
+> 
+> > should be using something common across all filesystems from the
+> > linux superblock, not deep dark internal filesystem magic. The
+> > export interfaces that generate VFS (and NFS) filehandles already
+> > have a persistent fsid associated with them, which may in fact be
+> > the filesystem UUID in it's entirety.
+> >
+> 
+> Yes, nfsd is using dark internal and AFAIK undocumnetd magic to
+> pick that identifier (Bruce, am I wrong?).
+> 
+> > The export-derived "filesystem ID" is what should be exported to
+> > userspace in combination with the file handle to identify the fs the
+> > handle belongs to because then you have consistent behaviour and a
+> > change that invalidates the filehandle will also invalidate the
+> > fshandle....
+> >
+> 
+> nfsd has a much stronger persistent file handles requirement than
+> fanotify. There is no need to make things more complicated than
+> they need to be.
+> 
+> > > Use the same persistent value for f_fsid, so object identifiers in
+> > > fanotify events will describe the objects more uniquely.
+> >
+> > It's not persistent as in "will never change". The moment a user
+> > changes the XFS filesystem uuid, the f_fsid changes.
+> >
+> 
+> Yes. I know. But it's still much better than the bdev number IMO.
+> 
+> > However, changing the uuid on XFS is an offline (unmounted)
+> > operation, so there will be no fanotify marks present when it is
+> > changed. Hence when it is remounted, there will be a new f_fsid
+> > returned in statvfs(), just like what happens now, and all
+> > applications dependent on "persistent" fsids (and persistent
+> > filehandles for that matter) will now get ESTALE errors...
+> >
+> > And, worse, mp->m_fixed_fsid (and XFS superblock UUIDs in general)
+> > are not unique if you've got snapshots and they've been mounted via
+> > "-o nouuid" to avoid XFS's duplicate uuid checking. This is one of
+> > the reasons that the duplicate checking exists - so that fshandles
+> > are unique and resolve to a single filesystem....
+> >
+> 
+> Both of the caveats of uuid you mentioned are not a big concern for
+> fanotify because the nature of f_fsid can be understood by the event
+> listener before setting the multi-fs watch (i.e. in case of fsid collision).
+> 
+> > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> > > ---
+> > >
+> > > Guys,
+> > >
+> > > This change would be useful for fanotify users.
+> > > Do you see any problems with that minor change of uapi?
+> >
+> > Yes.
+> >
+> > IMO, we shouldn't be making a syscall interface rely on the
+> > undefined, filesystem specific behaviour a value some other syscall
+> > exposes to userspace. This means the fsid has no defined or
+> > standardised behaviour applications can rely on and can't be
+> > guaranteed unique and unchanging by fanotify. This seems like a
+> > lose-lose situation for everyone...
+> >
+> 
+> The fanotify uapi guarantee is to provide the same value of f_fsid
+> observed by statfs() uapi. The statfs() uapi guarantee about f_fsid is
+> a bit vague, but it's good enough for our needs:
+> 
+> "...The  general idea is that f_fsid contains some random stuff such that the
+>  pair (f_fsid,ino) uniquely determines a file.  Some operating systems use
+>  (a variation on) the device number, or the device number combined with the
+>  filesystem type..."
+> 
+> Regardless of the fanotify uapi and whether it's good or bad, do you insist
+> that the value of f_fsid exposed by xfs needs to be the bdev number and
+> not derived from uuid?
+> 
+> One thing we could do is in the "-o nouuid" case that you mentioned
+> we continue to use the bdev number for f_fsid.
+> Would you like me to make that change?
+> 
+> Thanks,
+> Amir.
