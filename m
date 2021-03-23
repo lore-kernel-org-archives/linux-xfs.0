@@ -2,129 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60C82C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 20:58:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3C73C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 22:03:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F41F601FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 20:58:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A61AB619E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 22:03:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233413AbhCWU56 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Mar 2021 16:57:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53224 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233340AbhCWU5b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Mar 2021 16:57:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1DA25619C2;
-        Tue, 23 Mar 2021 20:57:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616533051;
-        bh=DwFqB5ZeRcy79Fu2DlrLkcLO++PTFau1DQjBnKJ0wVU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=axK5mE6SACEBzYlJP1kIJFZVRIhKN5jPQ+GYIOe0yLrUi8r+i2kQ0M5Qq2l1CnDLD
-         QrGa3BUmFlBC0vwKhVUu4bgVuOaOmx8ijvv1mECGLWcHovskKR/TLkD0Ip+DOYb8WN
-         AReKMqBATtREEhHISOSDAvxmDZYwt2Cc0d/PSPG3u/ebxivAN3jEVB973DMl6ykdQx
-         2bNcV859yR5npnVdKDIHO0s0Gf1c59A+F5VNryauFu6M7yDBUA6qCNtKII52o+gRfO
-         9VuJi7AWF258/E3+XVkYdh8B3TiZHjRr9Pb6bdbYYi53F7GSPeXI7HFOf/5pFK2qGl
-         nkc3/Mnb+YDGA==
-Date:   Tue, 23 Mar 2021 13:57:30 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V6 05/13] xfs: Check for extent overflow when growing
- realtime bitmap/summary inodes
-Message-ID: <20210323205730.GN22100@magnolia>
-References: <20210309050124.23797-1-chandanrlinux@gmail.com>
- <20210309050124.23797-6-chandanrlinux@gmail.com>
- <20210322175652.GG1670408@magnolia>
- <87r1k56f7k.fsf@garuda>
+        id S233788AbhCWWDQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Mar 2021 18:03:16 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:53984 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233769AbhCWWCo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Mar 2021 18:02:44 -0400
+Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 5CA9A10465B1;
+        Wed, 24 Mar 2021 09:02:42 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lOp6l-005yrn-FE; Wed, 24 Mar 2021 09:02:39 +1100
+Date:   Wed, 24 Mar 2021 09:02:39 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Ralf =?iso-8859-1?Q?Gro=DF?= <ralf.gross+xfs@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: memory requirements for a 400TB fs with reflinks
+Message-ID: <20210323220239.GG63242@dread.disaster.area>
+References: <CANSSxym1ob76jW9i-1ZLfEe4KSHA5auOnZhtXykRQg0efAL+WA@mail.gmail.com>
+ <CANSSxy=d2Tihu8dXUFQmRwYWHNdcGQoSQAkZpePD-8NOV+d5dw@mail.gmail.com>
+ <20210322215039.GV63242@dread.disaster.area>
+ <CANSSxyk0sKzTmUKitwsxvip-N+TdLmPDrHYFAL9TUDB7gs1Bsg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <87r1k56f7k.fsf@garuda>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANSSxyk0sKzTmUKitwsxvip-N+TdLmPDrHYFAL9TUDB7gs1Bsg@mail.gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_x
+        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
+        a=8nJEP1OIZ-IA:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
+        a=ByG9n77nS2TrNZs5M-8A:9 a=wPNLvfGTeEIA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=fCgQI5UlmZDRPDxm0A3o:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 23, 2021 at 09:21:27PM +0530, Chandan Babu R wrote:
-> On 22 Mar 2021 at 23:26, Darrick J. Wong wrote:
-> > On Tue, Mar 09, 2021 at 10:31:16AM +0530, Chandan Babu R wrote:
-> >> Verify that XFS does not cause realtime bitmap/summary inode fork's
-> >> extent count to overflow when growing the realtime volume associated
-> >> with a filesystem.
-> >>
-> >> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> >> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> >
-> > Soo... I discovered that this test doesn't pass with multiblock
-> > directories:
+On Tue, Mar 23, 2021 at 10:39:27AM +0100, Ralf Groß wrote:
+> Hi Dave,
 > 
-> Thanks for the bug report and the description of the corresponding solution. I
-> am fixing the tests and will soon post corresponding patches to the mailing
-> list.
+> > People are busy, and you posted on a weekend. Have some patience,
+> > please.
+> 
+> I know, sorry for that.
+> 
+> > ....
+> >
+> > So there's no one answer - the amount of RAM xfs_repair might need
+> > largely depends on what you are storing in the filesystem.
+> 
+> I just checked our existing backups repositories. The backup files are
+> VMware image backup files, daily ones are smaller, weekly/GFS larger.
+> But the are not millions of smaller files. For primary backup there
+> are ~25.000 files in 68 TB of a 100 TB share, for a new repository
+> with a 400 TB fs this would result in ~150.000 files. For the the
+> secondary copy repository I see 3000 files in a 100 TB share. This
+> would there result in ~200.000 files in a 700 TB repository. Is there
+> any formula to calculate the memory requirement for a number of files?
 
-Also, I found a problem with xfs/534 when it does the direct write tests
-to a pmem volume with DAX enabled:
+Worse case static data indexing memory usage can be reported by
+xfs_repair itself by abusing verbose reporting and memory limiting.
+A 500TB filesystem with 50 million zero length files in it:
 
---- /tmp/fstests/tests/xfs/534.out      2021-03-21 11:44:09.384407426 -0700
-+++ /var/tmp/fstests/xfs/534.out.bad    2021-03-23 13:32:15.898301839 -0700
-@@ -5,7 +5,4 @@
- Fallocate 15 blocks
- Buffered write to every other block of fallocated space
- Verify $testfile's extent count
--* Direct write to unwritten extent
--Fallocate 15 blocks
--Direct write to every other block of fallocated space
--Verify $testfile's extent count
-+Extent count overflow check failed: nextents = 11
+# xfs_repair -n -vvv -m 1 /dev/vdc
+Phase 1 - find and verify superblock...
+        - reporting progress in intervals of 15 minutes
+        - max_mem = 1024, icount = 51221120, imem = 200082, dblock = 134217727500, dmem = 65535999
+Required memory for repair is greater that the maximum specified
+with the -m option. Please increase it to at least 64244.
+#
 
-looking at the xfs_bmap output for $testfile shows:
+Says that worst case it is going to need "dmem = 65535999" to index
+the space usage. That's 64GB of RAM. Inode based requirements are
+"imem = 200082" another 200MB for indexing 50 million inodes. Of
+course, there is the inodes themselves and all the other metadata
+that need to be brought into RAM, but that is typically paged in and
+out of the buffer cache that is not actually included in these
+memory usage counts.
 
-/opt/testfile:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-   0: [0..7]:          208..215          0 (208..215)           8 010000
-   1: [8..15]:         216..223          0 (216..223)           8 000000
-   2: [16..23]:        224..231          0 (224..231)           8 010000
-   3: [24..31]:        232..239          0 (232..239)           8 000000
-   4: [32..39]:        240..247          0 (240..247)           8 010000
-   5: [40..47]:        248..255          0 (248..255)           8 000000
-   6: [48..55]:        256..263          0 (256..263)           8 010000
-   7: [56..63]:        264..271          0 (264..271)           8 000000
-   8: [64..71]:        272..279          0 (272..279)           8 010000
-   9: [72..79]:        280..287          0 (280..287)           8 000000
-  10: [80..119]:       288..327          0 (288..327)          40 010000
+So for a 500GB filesystem with minimal metadata and large contiguous
+files as you describe you're probably only going to need a few GB of
+RAM to repair it. OF course, if things get broken, then you should
+plan for worst case minimums as described by xfs_repair above...
 
-Which is ... odd since the same direct write gets cut off after writing
-to block 7 (like you'd expect since it's the same function) when DAX
-isn't enabled...
+Cheers,
 
-...OH, I see the problem.  For a non-DAX direct write,
-xfs_iomap_write_direct will allocate an unwritten block into a hole, but
-if the block was already mapped (written or unwritten) it won't do
-anything at all.  For that case, XFS_IEXT_ADD_NOSPLIT_CNT is sufficient,
-because in the worst case we add one extent to the data fork.
-
-For DAX writes, however, the behavior is different:
-
-	if (IS_DAX(VFS_I(ip))) {
-		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
-		if (imap->br_state == XFS_EXT_UNWRITTEN) {
-			force = true;
-			dblocks = XFS_DIOSTRAT_SPACE_RES(mp, 0) << 1;
-		}
-	}
-
-This tells xfs_bmapi_write that we want to /convert/ an unwritten extent
-to written, and we want to zero the blocks.  If we're dax-writing into
-the middle of an unwritten range, this will cause a split.  The correct
-parameter there would be XFS_IEXT_WRITE_UNWRITTEN_CNT.  Would you mind
-sending a kernel patch to fix that?
-
---D
-
-> --
-> chandan
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
