@@ -3,43 +3,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54720C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A20FDC433E1
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 04:20:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0488661990
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 04:20:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D8DB61990
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 04:20:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229452AbhCWET5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Mar 2021 00:19:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46048 "EHLO mail.kernel.org"
+        id S229472AbhCWET4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Mar 2021 00:19:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45840 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229464AbhCWETy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Mar 2021 00:19:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D466461990;
-        Tue, 23 Mar 2021 04:19:53 +0000 (UTC)
+        id S229451AbhCWETn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Mar 2021 00:19:43 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D221061990;
+        Tue, 23 Mar 2021 04:19:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616473193;
-        bh=5o3PRU4OvnC1W0sNVlX3XyQIhh7K8DWWmcpgWYJ/pvs=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=J+5jrkv7RavLHBPGkRNVK6Dh0JsH5L72hJ4+JpHZgydYlPSymjOeq4Nb+bnhUGkcE
-         BsaVtm050KqeDXsk3xdu5z9nh91WJQdIUlZWJJHZyN7vTNiObf14Ai6Rk1Mq3o8/XG
-         1bnJ7IyNNRA6S1sxuRGktcRQAzNJdHwfPKH5qesLseVZ9/jtEE/tgUb6Vpwt8bjY0n
-         Mofd9ihDGGoZyBw+0ouyU1AlOMytKZmDpQLShk7rIjFNKu3FRnmAoQ/ZVgnGCc81xB
-         eqgdfHHA2ULRgCpub20yt61kbp17Blc7qaoaPsUxTIZ8oFoGTSjX5Ns0lgT9BeksQd
-         gpSJSZK0Ae48g==
-Subject: [PATCH 2/3] common/populate: create fifos when pre-populating
- filesystems
+        s=k20201202; t=1616473182;
+        bh=yJNZ557IvZqa5pftWAR0VtUTYFViE7l3Ff9pSkGIwjM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=DADSg80tR2twH5r5ACpDlEMMTMTPqltPvOiWujp8MfVxWziysRI1OZFXzO07cP67+
+         gz80h2FXc7nfw20Ht65zK+CvQ3np8rhS/0Hn2VZ5pCiXGIR/fxzjluqh0CnQNV5dFN
+         e/fHv484tVSzI2cQ1wwBa9fH8yQ845+iCxcO5HY07pO+ICKpt2eTc7CUlntXcKylji
+         zhd8FQ83xs0I6/+8Afy/HRtBKmdHXHS6iVuD5utBz0/gp/XyXT5xFm0LfIgJgNT3u1
+         WShk2kxAhYsTYUzLI0HA7WKzjYifOOfpTZHciQSTdDiutCrdpM1SYRl68XdHzdTL5j
+         XYg3rFhGfepnA==
+Subject: [PATCHSET 0/3] populate: fix a few bugs with fs pre-population
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 22 Mar 2021 21:19:53 -0700
-Message-ID: <161647319358.3429609.6818899550213439595.stgit@magnolia>
-In-Reply-To: <161647318241.3429609.1862044070327396092.stgit@magnolia>
-References: <161647318241.3429609.1862044070327396092.stgit@magnolia>
+Date:   Mon, 22 Mar 2021 21:19:42 -0700
+Message-ID: <161647318241.3429609.1862044070327396092.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -48,50 +45,31 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-Create fifos when populating the scratch filesystem for completeness.
+While I was auditing the efficacy of the xfs repair tools I noticed a
+few deficiencies in the code that populates filesystems, so I fixed
+them.  Most notable are the fact that we didn't create fifos, messed up
+blockdev creation, and while the cache tags should record the size of
+external devices, the actual device names aren't exciting.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
 ---
- common/populate |    4 ++++
- 1 file changed, 4 insertions(+)
-
-
-diff --git a/common/populate b/common/populate
-index 8f42a528..c01b7e0e 100644
---- a/common/populate
-+++ b/common/populate
-@@ -231,6 +231,7 @@ _scratch_xfs_populate() {
- 	echo "+ special"
- 	mknod "${SCRATCH_MNT}/S_IFCHR" c 1 1
- 	mknod "${SCRATCH_MNT}/S_IFBLK" b 1 1
-+	mknod "${SCRATCH_MNT}/S_IFIFO" p
- 
- 	# special file with an xattr
- 	setfacl -P -m u:nobody:r ${SCRATCH_MNT}/S_IFCHR
-@@ -403,6 +404,7 @@ _scratch_ext4_populate() {
- 	echo "+ special"
- 	mknod "${SCRATCH_MNT}/S_IFCHR" c 1 1
- 	mknod "${SCRATCH_MNT}/S_IFBLK" b 1 1
-+	mknod "${SCRATCH_MNT}/S_IFIFO" p
- 
- 	# special file with an xattr
- 	setfacl -P -m u:nobody:r ${SCRATCH_MNT}/S_IFCHR
-@@ -580,6 +582,7 @@ _scratch_xfs_populate_check() {
- 	extents_slink="$(__populate_find_inode "${SCRATCH_MNT}/S_IFLNK.FMT_EXTENTS")"
- 	bdev="$(__populate_find_inode "${SCRATCH_MNT}/S_IFBLK")"
- 	cdev="$(__populate_find_inode "${SCRATCH_MNT}/S_IFCHR")"
-+	fifo="$(__populate_find_inode "${SCRATCH_MNT}/S_IFIFO")"
- 	local_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_LOCAL")"
- 	leaf_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_LEAF")"
- 	node_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_NODE")"
-@@ -605,6 +608,7 @@ _scratch_xfs_populate_check() {
- 	__populate_check_xfs_dformat "${btree_dir}" "btree"
- 	__populate_check_xfs_dformat "${bdev}" "dev"
- 	__populate_check_xfs_dformat "${cdev}" "dev"
-+	__populate_check_xfs_dformat "${fifo}" "dev"
- 	__populate_check_xfs_attr "${local_attr}" "local"
- 	__populate_check_xfs_attr "${leaf_attr}" "leaf"
- 	__populate_check_xfs_attr "${node_attr}" "node"
+ common/populate |   22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
