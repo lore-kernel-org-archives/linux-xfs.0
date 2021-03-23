@@ -2,248 +2,491 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD3E5C433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 04:51:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CD92C433C1
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 05:19:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C33E619AF
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 04:51:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0419619A9
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 05:19:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229590AbhCWEvD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Mar 2021 00:51:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37122 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbhCWEu4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Mar 2021 00:50:56 -0400
-Received: from mail-il1-x129.google.com (mail-il1-x129.google.com [IPv6:2607:f8b0:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E99CBC061574;
-        Mon, 22 Mar 2021 21:50:55 -0700 (PDT)
-Received: by mail-il1-x129.google.com with SMTP id d10so10217240ils.5;
-        Mon, 22 Mar 2021 21:50:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=8bZy/09bVtTe50yphuLd9VM5OVNCJtBTaXJNW821aO8=;
-        b=jhe4eWgYYa6pPg1tWfJqkkw8+JAcI3zlpU/8Uc4zvu1pi+Pp4xulBAEq+lmTsaFIw0
-         +tMNHHFQjyvktv/5A1SS7j5crAckhZthbdjxsBpSknfG9pOPjP6vDSX3VQx2nrU5suDr
-         Cu8eLPbParOQxhdb00c7wuefkRPaz1MXgVG4f8oJbnSFGsLMOf9jqck20X5NCzZ7Bxcn
-         VJreJYQDSc7BWafLE1uWNkXGRr3/oanbtsVh0ZrYAM1I5qVyQVu41LO00Ns+Zzo0wPu1
-         bZ+w0n+MU7qWnGT6Yu0GpRoNUxSMEueh6YPV23BF+4yvJWh+sMVXlaJq3cglqc3jRS6d
-         MUIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8bZy/09bVtTe50yphuLd9VM5OVNCJtBTaXJNW821aO8=;
-        b=TqrsHKpN5bnezj5l2E3nLwtY7jqoseX7mFaMZ8bky0u/f9Y6SAdtB6uf7w9BgzJ0hx
-         kcFQZG4houSeLND3PPtLDzfAs16049bS8RrJNUMsfgCXoVeT4SUjDy81iiuS0IcuQ0cW
-         YUjlZdsk1MW4JpThBbyYqBCX8xiqL7xEko5PY62RR+ktY5w5cbenn5zTMa0TGQvT6JkY
-         6svmaQPDumXMuQ2cQIGFvS/Kf9hgg9bIKH3niDjnbxMEcQdH6D4PLew/w3cCHCBpO2iR
-         l4WfBZwNa7rXC5n3r7lMqNEFdcHzJaaKZBbGB0vVvD5iC/0HlE57ynZbEKQlVtHbtO7w
-         N4qg==
-X-Gm-Message-State: AOAM531l+aYVlgXTZfodW3F4elBylD+Iid8fw9Yg+CjLdUxJjsEKO+X0
-        nmXkCD2qhdKT9pccxeCiHaw7lVmXFeQZC7k6ZLh/EcMl57Y=
-X-Google-Smtp-Source: ABdhPJxNYq8xk+VFFJuzprgcg8V1aewJHiJGEuBZddllEAumilMNCQTHq4qSjUTEqfi4aZrMMdhtz7fkyXH/y9LPH2Y=
-X-Received: by 2002:a05:6e02:b2a:: with SMTP id e10mr3263029ilu.9.1616475055194;
- Mon, 22 Mar 2021 21:50:55 -0700 (PDT)
+        id S229452AbhCWFTL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Mar 2021 01:19:11 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:56270 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229451AbhCWFTK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Mar 2021 01:19:10 -0400
+Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id D92C5635FD;
+        Tue, 23 Mar 2021 16:19:08 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lOZRb-005iIt-T4; Tue, 23 Mar 2021 16:19:07 +1100
+Date:   Tue, 23 Mar 2021 16:19:07 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 06/11] xfs: deferred inode inactivation
+Message-ID: <20210323051907.GE63242@dread.disaster.area>
+References: <161543194009.1947934.9910987247994410125.stgit@magnolia>
+ <161543197372.1947934.1230576164438094965.stgit@magnolia>
+ <20210323014417.GC63242@dread.disaster.area>
+ <20210323040037.GI22100@magnolia>
 MIME-Version: 1.0
-References: <20210322171118.446536-1-amir73il@gmail.com> <20210322230352.GW63242@dread.disaster.area>
-In-Reply-To: <20210322230352.GW63242@dread.disaster.area>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 23 Mar 2021 06:50:44 +0200
-Message-ID: <CAOQ4uxjFMPNgR-aCqZt3FD90XtBVFZncdgNc4RdOCbsxukkyYQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: use a unique and persistent value for f_fsid
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Jan Kara <jack@suse.cz>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux API <linux-api@vger.kernel.org>,
-        "J. Bruce Fields" <bfields@fieldses.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210323040037.GI22100@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
+        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=Ufvyk1750Vp5jyoTMkwA:9 a=dYSxTJxp-guaVUvf:21 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 23, 2021 at 1:03 AM Dave Chinner <david@fromorbit.com> wrote:
+On Mon, Mar 22, 2021 at 09:00:37PM -0700, Darrick J. Wong wrote:
+> On Tue, Mar 23, 2021 at 12:44:17PM +1100, Dave Chinner wrote:
+> > On Wed, Mar 10, 2021 at 07:06:13PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Instead of calling xfs_inactive directly from xfs_fs_destroy_inode,
+> > > defer the inactivation phase to a separate workqueue.  With this we
+> > > avoid blocking memory reclaim on filesystem metadata updates that are
+> > > necessary to free an in-core inode, such as post-eof block freeing, COW
+> > > staging extent freeing, and truncating and freeing unlinked inodes.  Now
+> > > that work is deferred to a workqueue where we can do the freeing in
+> > > batches.
+> > > 
+> > > We introduce two new inode flags -- NEEDS_INACTIVE and INACTIVATING.
+> > > The first flag helps our worker find inodes needing inactivation, and
+> > > the second flag marks inodes that are in the process of being
+> > > inactivated.  A concurrent xfs_iget on the inode can still resurrect the
+> > > inode by clearing NEEDS_INACTIVE (or bailing if INACTIVATING is set).
+> > > 
+> > > Unfortunately, deferring the inactivation has one huge downside --
+> > > eventual consistency.  Since all the freeing is deferred to a worker
+> > > thread, one can rm a file but the space doesn't come back immediately.
+> > > This can cause some odd side effects with quota accounting and statfs,
+> > > so we also force inactivation scans in order to maintain the existing
+> > > behaviors, at least outwardly.
+> > > 
+> > > For this patch we'll set the delay to zero to mimic the old timing as
+> > > much as possible; in the next patch we'll play with different delay
+> > > settings.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ....
+> > > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > > index a2a407039227..3a3baf56198b 100644
+> > > --- a/fs/xfs/xfs_fsops.c
+> > > +++ b/fs/xfs/xfs_fsops.c
+> > > @@ -19,6 +19,8 @@
+> > >  #include "xfs_log.h"
+> > >  #include "xfs_ag.h"
+> > >  #include "xfs_ag_resv.h"
+> > > +#include "xfs_inode.h"
+> > > +#include "xfs_icache.h"
+> > >  
+> > >  /*
+> > >   * growfs operations
+> > > @@ -290,6 +292,13 @@ xfs_fs_counts(
+> > >  	xfs_mount_t		*mp,
+> > >  	xfs_fsop_counts_t	*cnt)
+> > >  {
+> > > +	/*
+> > > +	 * Process all the queued file and speculative preallocation cleanup so
+> > > +	 * that the counter values we report here do not incorporate any
+> > > +	 * resources that were previously deleted.
+> > > +	 */
+> > > +	xfs_inodegc_force(mp);
+> > 
+> > xfs_fs_counts() is supposed to be a quick, non-blocking summary of
+> > the state - it can never supply userspace with accurate values
+> > because they are wrong even before the ioctl returns to userspace.
+> > Hence we do not attempt to make them correct, just use a fast, point
+> > in time sample of the current counter values.
+> > 
+> > So this seems like an unnecessarily heavyweight operation
+> > to add to this function....
+> 
+> I agree, xfs_inodegc_force is a heavyweight operation to add to statvfs
+> and (further down) the quota reporting ioctl.  I added these calls to
+> maintain the user-visible behavior that one can df a mount, rm -rf a
+> 30T directory tree, df again, and observe a 30T difference in available
+> space between the two df calls.
 >
-> On Mon, Mar 22, 2021 at 07:11:18PM +0200, Amir Goldstein wrote:
-> > Some filesystems on persistent storage backend use a digest of the
-> > filesystem's persistent uuid as the value for f_fsid returned by
-> > statfs(2).
-> >
-> > xfs, as many other filesystem provide the non-persistent block device
-> > number as the value of f_fsid.
-> >
-> > Since kernel v5.1, fanotify_init(2) supports the flag FAN_REPORT_FID
-> > for identifying objects using file_handle and f_fsid in events.
->
-> The filesystem id is encoded into the VFS filehandle - it does not
-> need some special external identifier to identify the filesystem it
-> belongs to....
->
+> There are a lot of fstests that require this kind of behavior to pass.
+> In my internal testing without this bit applied, I also got complaints
+> about breaking the user-behavior of XFS that people have gotten used to.
 
-Let's take it from the start.
-There is no requirement for fanotify to get a persistent fs id, we just need
-a unique fs id that is known to userspace, so the statfs API is good enough
-for our needs.
+Yeah, that's messy, but I see a potential problem here with space
+monitoring apps that poll the filesystem frequently to check space
+usage. That's going to override whatever your background "do work"
+setting is going to be...
 
-See quote from fanotify.7:
+> Earlier revisions of this patchset tried to maintain counts of the
+> resources used by the inactivated inode so that we could adjust the
+> values reported by statvfs and the quota reporting ioctl.  This meant we
+> didn't have to delay either call at all, but it turns out that it's
+> not feasible to maintain an accurate count of inactive resources because
+> any resources that are shared at destroy_inode time cannot become part
+> of this liar counter and consulting the refcountbt to decide which
+> extents should be added just makes unlinking even slower.  Worse yet,
+> unsharing of shared blocks attached to queued inactive inodes implies
+> either that we have to update the liar counter or that we have to be ok
+> with the free block count fluctuating for a while after a deletion if
+> that deletion ends up freeing more space than the liar counter thinks
+> we can free by flushing inactivation.
 
-" The fields of the fanotify_event_info_fid structure are as follows:
-...
-       fsid   This  is  a  unique identifier of the filesystem
-containing the object associated with the event.  It is a structure of
-type __kernel_fsid_t and contains the same value as f_fsid when
-              calling statfs(2).
+So the main problem is block accounting. Non-reflink stuff is easy
+(the equivalent of delalloc accounting) but reflink is hard.
 
-       file_handle
-              This is a variable length structure of type struct
-file_handle.  It is an opaque handle that corresponds to a specified
-object on a filesystem as returned by name_to_handle_at(2).  It
-              can  be  used  to uniquely identify a file on a
-filesystem and can be passed as an argument to open_by_handle_at(2).
-..."
+> Hmm, maybe this could maintain an approxiate liar counter and only flush
+> inactivation when the liar counter would cause us to be off by more than
+> some configurable amount?  The fstests that care about free space
+> accounting are not going to be happy since they are measured with very
+> tight tolerances.
 
-So the main objective is to "uniquely identify an object" which was observed
-before (i.e. at the time of setting a watch) and a secondary objective is to
-resolve a path from the identifier, which requires extra privileges.
+I'd prefer something that doesn't require a magic heuristic. I don't
+have any better ideas right now, so let's just go with what you have
+and see what falls out...
 
-This definition does not specify the lifetime of the identifier and
-indeed, in most
-cases, uniqueness in the system while filesystem is mounted should suffice
-as that is also the lifetime of the fanotify mark.
+> > > @@ -233,6 +242,94 @@ xfs_inode_clear_reclaim_tag(
+> > >  	xfs_perag_clear_reclaim_tag(pag);
+> > >  }
+> > >  
+> > > +/* Queue a new inode gc pass if there are inodes needing inactivation. */
+> > > +static void
+> > > +xfs_inodegc_queue(
+> > > +	struct xfs_mount        *mp)
+> > > +{
+> > > +	rcu_read_lock();
+> > > +	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_INACTIVE_TAG))
+> > > +		queue_delayed_work(mp->m_gc_workqueue, &mp->m_inodegc_work,
+> > > +				2 * HZ);
+> > > +	rcu_read_unlock();
+> > > +}
+> > 
+> > Why half a second and not something referenced against the inode
+> > reclaim/sync period?
+> 
+> It's actually 2 seconds, and the next patch adds a knob to tweak the
+> default value.
 
-But the fanotify group can outlive the mounted filesystem and it can be used
-to watch multiple filesystems. It's not really a problem per-se that
-xfs filesystems
-can change and reuse f_fsid, it is just less friendly that's all.
+Ugh, 2 * HZ != 2Hz. Stupid bad generic timer code, always trips me
+over.
 
-I am trying to understand your objection to making this "friendly" change.
+> The first version of this patchset from 2017 actually did just use
+> (6 * xfs_syncd_centisecs / 10) like reclaim does.  This turned out to be
+> pretty foolish because that meant that reclaim and inactivation would
+> start at the same time, and because inactivation is slow, most of them
+> would miss the reclaim window and sit around pointlessly until the
+> next one.
+> 
+> The next iteration from mid 2019 changed this to (xfs_syncd_centisecs/5)
+> which fixed that, but large deltree storms could lead to so many inodes
+> being inactivated that we'd still miss the reclaim window sometimes.
+> Around this time I got my djwong-dev tree hooked up to the ktest robot
+> and it started complaining about performance regressions and noticeably
+> higher slab usage for xfs inodes and log items.
 
-> > The xfs specific ioctl XFS_IOC_PATH_TO_FSHANDLE similarly attaches an
-> > fsid to exported file handles, but it is not the same fsid exported
-> > via statfs(2) - it is a persistent fsid based on the filesystem's uuid.
->
-> To actually use that {fshandle,fhandle} tuple for anything
-> requires CAP_SYS_ADMIN. A user can read the fshandle, but it can't
-> use it for anything useful.
+Right, I was thinking more along the lines of "run inactivation
+twice for every background inode reclaim pass". It's clear that what
+you were struggling with was that the interaction between the two
+running at similar periods is not good, and hence no matter what the
+background reclaim period is, we should process inactivated inodes a
+at least a couple of times per reclaim period...
 
-It is a unique identifier and that is a useful thing - see demo code:
-* Index watches by fanotify fid:
-  https://github.com/amir73il/inotify-tools/commit/ed82098b54b847e3c2d46b32d35b2aa537a9ba94
-* Handle global watches on several filesystems:
-  https://github.com/amir73il/inotify-tools/commit/1188ef00dc84964de58afb32c91e19930ad1e2e8
+> The next time I got back to this was shortly after Dave cleaned up the
+> reclaim behavior (2020) to be driven by the AIL, which mostly fixed the
+> performance complaints, except for the one about AIM7.  I was intrigued
+> enough by this to instrument the patchset and fstests and the fstests
+> cloud hosts <cough> to see if I could derive a reasonable default value.
+> 
+> I've observed through experimentation that 2 seconds seems like a good
+> default value -- it's long enough to enable a lot of batching of
+> inactive inodes, but short enough that the background thread can
+> throttle the foreground threads by competing for the log grant heads.
 
-> i.e. it's use is entirely isolated to
-> the file handle interface for identifying the filesystem the handle
-> belongs to. This is messy, but XFS inherited this "fixed fsid"
-> interface from Irix filehandles and was needed to port
-> xfsdump/xfsrestore to Linux.  Realistically, it is not functionality
-> that should be duplicated/exposed more widely on Linux...
->
+Right, it ends up about 2x per reclaim period by default. :)
 
-Other filesystems expose a uuid digest as f_fsid: ext4, btrfs, ocfs2
-and many more. XFS is really the exception among the big local fs.
-This is not exposing anything new at all.
-I would say it is more similar to the way that the generation part of
-the file handle has improved over the years in different filesystems
-to provide better uniqueness guarantees.
+> I also noticed that the amount of overhead introduced by background
+> inactivation (as measured by fstests run times and other <cough>
+> performance tests) ranged from minimal at 0 seconds to about 20% at
+> (6*xfs_syncd_centisecs/10).
 
-> IMO, if fanotify needs a persistent filesystem ID on Linux, it
+Which is about 20s period. yeah, that's way too long...
 
-It does not *need* that. It's just nicer for f_fsid to use a persistent
-fs identifier if one is anyway available.
+> Honestly, this could just be zero.  Assuming your distro has power
+> efficient workqueues enabled, the ~4-10ms delay introduced by that is
+> enough to realize some batching advantage with zero noticeable effect on
+> performance.
 
-> should be using something common across all filesystems from the
-> linux superblock, not deep dark internal filesystem magic. The
-> export interfaces that generate VFS (and NFS) filehandles already
-> have a persistent fsid associated with them, which may in fact be
-> the filesystem UUID in it's entirety.
->
+Yeah, the main benefit is moving it into the background so that the
+syscall completion isn't running the entire inode inactivation pass.
+That moves almost 50% of the unlink processing off to another thread
+which is what we want for rm -rf workloads. Keeping the batch size
+small is probably the best place to start with this - just enough
+inodes to keep a CPU busy for a scheduler tick?
 
-Yes, nfsd is using dark internal and AFAIK undocumnetd magic to
-pick that identifier (Bruce, am I wrong?).
 
-> The export-derived "filesystem ID" is what should be exported to
-> userspace in combination with the file handle to identify the fs the
-> handle belongs to because then you have consistent behaviour and a
-> change that invalidates the filehandle will also invalidate the
-> fshandle....
->
+> > >  static void
+> > >  xfs_inew_wait(
+> > >  	struct xfs_inode	*ip)
+> > > @@ -298,6 +395,13 @@ xfs_iget_check_free_state(
+> > >  	struct xfs_inode	*ip,
+> > >  	int			flags)
+> > >  {
+> > > +	/*
+> > > +	 * Unlinked inodes awaiting inactivation must not be reused until we
+> > > +	 * have a chance to clear the on-disk metadata.
+> > > +	 */
+> > > +	if (VFS_I(ip)->i_nlink == 0 && (ip->i_flags & XFS_NEED_INACTIVE))
+> > > +		return -ENOENT;
+> > > +
+> > >  	if (flags & XFS_IGET_CREATE) {
+> > >  		/* should be a free inode */
+> > >  		if (VFS_I(ip)->i_mode != 0) {
+> > 
+> > How do we get here with an XFS_NEED_INACTIVE inode?
+> > xfs_iget_check_free_state() is only called from the cache miss path,
+> 
+> You added it to xfs_iget_cache_hit in 2018, commit afca6c5b2595f...
 
-nfsd has a much stronger persistent file handles requirement than
-fanotify. There is no need to make things more complicated than
-they need to be.
+Oh, cscope fail:
 
-> > Use the same persistent value for f_fsid, so object identifiers in
-> > fanotify events will describe the objects more uniquely.
->
-> It's not persistent as in "will never change". The moment a user
-> changes the XFS filesystem uuid, the f_fsid changes.
->
+  File             Function                  Line
+0 xfs/xfs_icache.c xfs_iget_check_free_state 297 xfs_iget_check_free_state(
+1 xfs/xfs_icache.c __releases                378 error = xfs_iget_check_free_state(ip, flags);
+2 xfs/xfs_icache.c xfs_iget_cache_miss       530 error = xfs_iget_check_free_state(ip, flags);
 
-Yes. I know. But it's still much better than the bdev number IMO.
+"__releases" is a sparse annotation, so it didn't trigger that this
+was actually in xfs_iget_cache_hit()...
 
-> However, changing the uuid on XFS is an offline (unmounted)
-> operation, so there will be no fanotify marks present when it is
-> changed. Hence when it is remounted, there will be a new f_fsid
-> returned in statvfs(), just like what happens now, and all
-> applications dependent on "persistent" fsids (and persistent
-> filehandles for that matter) will now get ESTALE errors...
->
-> And, worse, mp->m_fixed_fsid (and XFS superblock UUIDs in general)
-> are not unique if you've got snapshots and they've been mounted via
-> "-o nouuid" to avoid XFS's duplicate uuid checking. This is one of
-> the reasons that the duplicate checking exists - so that fshandles
-> are unique and resolve to a single filesystem....
->
+Never mind...
 
-Both of the caveats of uuid you mentioned are not a big concern for
-fanotify because the nature of f_fsid can be understood by the event
-listener before setting the multi-fs watch (i.e. in case of fsid collision).
+> > > @@ -713,6 +904,43 @@ xfs_icache_inode_is_allocated(
+> > >  	return 0;
+> > >  }
+> > >  
+> > > +/*
+> > > + * Grab the inode for inactivation exclusively.
+> > > + * Return true if we grabbed it.
+> > > + */
+> > > +static bool
+> > > +xfs_inactive_grab(
+> > > +	struct xfs_inode	*ip)
+> > > +{
+> > > +	ASSERT(rcu_read_lock_held());
+> > > +
+> > > +	/* quick check for stale RCU freed inode */
+> > > +	if (!ip->i_ino)
+> > > +		return false;
+> > > +
+> > > +	/*
+> > > +	 * The radix tree lock here protects a thread in xfs_iget from racing
+> > > +	 * with us starting reclaim on the inode.
+> > > +	 *
+> > > +	 * Due to RCU lookup, we may find inodes that have been freed and only
+> > > +	 * have XFS_IRECLAIM set.  Indeed, we may see reallocated inodes that
+> > > +	 * aren't candidates for reclaim at all, so we must check the
+> > > +	 * XFS_IRECLAIMABLE is set first before proceeding to reclaim.
+> > > +	 * Obviously if XFS_NEED_INACTIVE isn't set then we ignore this inode.
+> > > +	 */
+> > > +	spin_lock(&ip->i_flags_lock);
+> > > +	if (!(ip->i_flags & XFS_NEED_INACTIVE) ||
+> > > +	    (ip->i_flags & XFS_INACTIVATING)) {
+> > > +		/* not a inactivation candidate. */
+> > > +		spin_unlock(&ip->i_flags_lock);
+> > > +		return false;
+> > > +	}
+> > > +
+> > > +	ip->i_flags |= XFS_INACTIVATING;
+> > > +	spin_unlock(&ip->i_flags_lock);
+> > > +	return true;
+> > > +}
+> > > +
+> > >  /*
+> > >   * The inode lookup is done in batches to keep the amount of lock traffic and
+> > >   * radix tree lookups to a minimum. The batch size is a trade off between
+> > > @@ -736,6 +964,9 @@ xfs_inode_walk_ag_grab(
+> > >  
+> > >  	ASSERT(rcu_read_lock_held());
+> > >  
+> > > +	if (flags & XFS_INODE_WALK_INACTIVE)
+> > > +		return xfs_inactive_grab(ip);
+> > > +
+> > 
+> > Hmmm. This doesn't actually grab the inode. It's an unreferenced
+> > inode walk, in a function that assumes that the grab() call returns
+> > a referenced inode. Why isn't this using the inode reclaim walk
+> > which is intended to walk unreferenced inodes?
+> 
+> Because I thought that some day you might want to rebase the inode
+> reclaim cleanups from 2019 and didn't want to slow either of us down by
+> forcing a gigantic rebase.  So I left the duplicative inode walk
+> functions.
+> 
+> FWIW these are current separate functions with separate call sites in
+> xfs_inode_walk_ag since the "remove indirect calls from inode walk"
+> series made it more convenient to have a separate function for each tag.
+> 
+> As for the name ... reclaim also has a "grab" function even though it
+> walks unreferenced inodes.
 
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > ---
-> >
-> > Guys,
-> >
-> > This change would be useful for fanotify users.
-> > Do you see any problems with that minor change of uapi?
->
-> Yes.
->
-> IMO, we shouldn't be making a syscall interface rely on the
-> undefined, filesystem specific behaviour a value some other syscall
-> exposes to userspace. This means the fsid has no defined or
-> standardised behaviour applications can rely on and can't be
-> guaranteed unique and unchanging by fanotify. This seems like a
-> lose-lose situation for everyone...
->
+Sure, but the reclaim code was always a special "unreferenced"
+lookup that just used the same code structure. It never mixed
+"igrab()" with unreferenced inode pinning...
 
-The fanotify uapi guarantee is to provide the same value of f_fsid
-observed by statfs() uapi. The statfs() uapi guarantee about f_fsid is
-a bit vague, but it's good enough for our needs:
+> > > +xfs_inactive_inode(
+> > > +	struct xfs_inode	*ip,
+> > > +	void			*args)
+> > > +{
+> > > +	struct xfs_eofblocks	*eofb = args;
+> > > +	struct xfs_perag	*pag;
+> > > +
+> > > +	ASSERT(ip->i_mount->m_super->s_writers.frozen < SB_FREEZE_FS);
+> > 
+> > What condition is this trying to catch? It's something to do with
+> > freeze, but you haven't documented what happens to inodes with
+> > pending inactivation when a freeze is started....
+> 
+> Inactivation creates transactions, which means that we should never be
+> running this at FREEZE_FS time.  IOWs, it's a check that we can never
+> stall a kernel thread indefinitely because the fs is frozen.
 
-"...The  general idea is that f_fsid contains some random stuff such that the
- pair (f_fsid,ino) uniquely determines a file.  Some operating systems use
- (a variation on) the device number, or the device number combined with the
- filesystem type..."
+What's the problem with doing that to a dedicated worker thread?  We
+currently stall inactivation on a frozen filesystem if a transaction
+is required
 
-Regardless of the fanotify uapi and whether it's good or bad, do you insist
-that the value of f_fsid exposed by xfs needs to be the bdev number and
-not derived from uuid?
+> We can continue to queue inodes for inactivation on a frozen filesystem,
+> and I was trying to avoid touching the umount lock in
+> xfs_perag_set_inactive_tag to find out if the fs is actually frozen and
+> therefore we shouldn't call xfs_inodegc_queue.
 
-One thing we could do is in the "-o nouuid" case that you mentioned
-we continue to use the bdev number for f_fsid.
-Would you like me to make that change?
+I think stopping background inactivation for frozen filesystems make
+more sense than this...
 
-Thanks,
-Amir.
+> > > +
+> > > +	/*
+> > > +	 * Not a match for our passed in scan filter?  Put it back on the shelf
+> > > +	 * and move on.
+> > > +	 */
+> > > +	spin_lock(&ip->i_flags_lock);
+> > > +	if (!xfs_inode_matches_eofb(ip, eofb)) {
+> > > +		ip->i_flags &= ~XFS_INACTIVATING;
+> > > +		spin_unlock(&ip->i_flags_lock);
+> > > +		return 0;
+> > > +	}
+> > > +	spin_unlock(&ip->i_flags_lock);
+> > 
+> > IDGI. What do EOF blocks have to do with running inode inactivation
+> > on this inode?
+> 
+> This enables foreground threads that hit EDQUOT to look for inodes to
+> inactivate in order to free up quota'd resources.
+
+Not very obvious - better comment, please?
+
+> > I can't tell why this is necessary given what
+> > xfs_unmount_flush_inodes() does. Or, alternatively, why
+> > xfs_unmount_flush_inodes() can do what it does without caring about
+> > per-ag space reservations....
+> > 
+> > > diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> > > index ca1b57d291dc..0f9a1450fe0e 100644
+> > > --- a/fs/xfs/xfs_qm_syscalls.c
+> > > +++ b/fs/xfs/xfs_qm_syscalls.c
+> > > @@ -104,6 +104,12 @@ xfs_qm_scall_quotaoff(
+> > >  	uint			inactivate_flags;
+> > >  	struct xfs_qoff_logitem	*qoffstart = NULL;
+> > >  
+> > > +	/*
+> > > +	 * Clean up the inactive list before we turn quota off, to reduce the
+> > > +	 * amount of quotaoff work we have to do with the mutex held.
+> > > +	 */
+> > > +	xfs_inodegc_force(mp);
+> > > +
+> > 
+> > Hmmm. why not just stop background inactivation altogether while
+> > quotaoff runs? i.e. just do normal, inline inactivation when
+> > quotaoff is running, and then we can get rid of the whole "drop
+> > dquot references" issue that background inactivation has...
+> 
+> I suppose that would have an advantage that quotaoff could switch to
+> foreground inactivation, flush the pending inactivation work to release
+> the dquot references, and then dqflush_all to dump the dquots
+> altogether.
+> 
+> How do we add the ability to switch behaviors, though?  The usual percpu
+> rwsem that protects a flag?
+
+That's overkill.  Global synchronisation doesn't need complex
+structures, just a low cost reader path.
+
+All we need is an atomic bit that we can test via test_bit().
+test_bit() is not a locked operation, but it is atomic. Hence most
+of the time it is a shared cacheline and hence has near zero cost to
+check as it can be shared across all CPUs.
+
+Set the flag to turn off background inactivation, then all future
+inactivations will be foreground. Then flush and stop the inodegc
+work queue.  When we finish processing the last inactivated inode,
+the background work stops (i.e. it is not requeued).  No more
+pending background work.
+
+Clear the flag to turn background inactivation back on. The first
+inode queued will restart that background work...
+
+> > > @@ -1720,6 +1749,13 @@ xfs_remount_ro(
+> > >  		return error;
+> > >  	}
+> > >  
+> > > +	/*
+> > > +	 * Perform all on-disk metadata updates required to inactivate inodes.
+> > > +	 * Since this can involve finobt updates, do it now before we lose the
+> > > +	 * per-AG space reservations.
+> > > +	 */
+> > > +	xfs_inodegc_force(mp);
+> > 
+> > Should we stop background inactivation, because we can't make
+> > modifications anymore and hence background inactication makes little
+> > sense...
+> 
+> We don't actually stop background gc transactions or other internal
+> updates on readonly filesystems
+
+Yes we do - that's what xfs_blockgc_stop() higher up in this
+function does. xfs_log_clean() further down in the function also
+stops the background log work (that covers the log when idle)
+because xfs_remount_ro() leaves the log clean.
+
+THese all get restarted in xfs_remount_rw()....
+
+> -- the ro part means only that we don't
+> let /userspace/ change anything directly.  If you open a file readonly,
+> unlink it, freeze the fs, and close the file, we'll still free it.
+
+How do you unlink the file on a RO mount?
+
+And if it's a rw mount that is frozen, it will block on the first
+transaction in the inactivation process from close(), and block
+there until the filesystem is unfrozen.
+
+It's pretty clear to me that we want frozen filesystems to
+turn off background inactivation so that we can block things like
+this in the syscall context and not have to deal with the complexity
+of freeze or read-only mounts in the background inactivation code at
+all..
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
