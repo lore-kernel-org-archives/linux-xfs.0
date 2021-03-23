@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEE96C433EB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA3B5C433EC
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 04:21:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A66A619B9
+	by mail.kernel.org (Postfix) with ESMTP id BEED2619B8
 	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 04:21:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229658AbhCWEVG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229665AbhCWEVG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 23 Mar 2021 00:21:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47000 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:47078 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229665AbhCWEUu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Mar 2021 00:20:50 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6FF8B6198E;
-        Tue, 23 Mar 2021 04:20:50 +0000 (UTC)
+        id S229666AbhCWEU4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Mar 2021 00:20:56 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 013BE6198E;
+        Tue, 23 Mar 2021 04:20:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616473250;
-        bh=GDWjU4DCIze5DwS4eYYYPuxPlGnlspEYDBe52dhwOH8=;
+        s=k20201202; t=1616473256;
+        bh=yUB8d38HfpbDCRPHNKnnorSrkrAJTVvygBH4h4lHOZY=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=UqBkY2vVm08AEoCJW29uqVwHyXC43heW3b0CtBn7PMZ6fZD1CyRPaUoa4PQ9L1ws1
-         2UHEdbHl+azbMGjhPTu8d7C1bmW9PPR6c+5mra4igZcZkrW+JoLfrvX45qx50sKJIO
-         l0wox21CfvxikDAAJ56FcgBdN+DKfr+pUlL1epcxYHUHz/GQg1GJOdH3Rcp68k4tyt
-         DnTIPzk5n0fCp/JylkLyB5M96SEiZPu2Y5SGJDPuPgGHx/FTR49Y3CHBEm8/1in58t
-         NZmI/wC3yGcJH6PuO9TsiDc00etm51RE9NbTfkqJ5zonnmLq/fWORwEFACXIamCMWl
-         j5AKaqXhYuq1g==
-Subject: [PATCH 1/3] xfs/{010,030}: update repair output to deal with
- inobtcount feature
+        b=cngs+7G5TBY6AZ/UnqUDjzKGCj376lsUVBYJuiqZzMVhsUBMIJtxHoE5UjAQeNSeX
+         eAxoA4X/LQbPCoN3+D1AUKA03ujoCFDcSBltLMgsYAswYnq0g12VrXEWeZ+zeBgnDC
+         wfpRslDW4hR3xGmkxAjiyThkK5b7niCIgYqxOD4NzKOdVUlxdUB4UOPeTg5OHvhK0u
+         WnJlYNjk4BtG8lFBR5UtWcxxzrb0BdKaKSQdys3DNUiDLtELFYNErg8Gd73ItiRZfI
+         PVxdqrAdTE2/yw+lSs5h/ocoVE+LRIbhpg2LvQaOtCl2NU6TDCx9Su72XxDf+ZbCFX
+         Hdafjkv/TA6YA==
+Subject: [PATCH 2/3] xfs/122: embiggen struct xfs_agi size for inobtcount
+ feature
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 22 Mar 2021 21:20:50 -0700
-Message-ID: <161647325010.3431131.10019758464943956019.stgit@magnolia>
+Date:   Mon, 22 Mar 2021 21:20:55 -0700
+Message-ID: <161647325568.3431131.12651460689158775079.stgit@magnolia>
 In-Reply-To: <161647324459.3431131.16341235245632737552.stgit@magnolia>
 References: <161647324459.3431131.16341235245632737552.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,42 +51,26 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Update both of these tests to filter out the new error messages from
-repair when the inode btree counter feature is enabled.
+Make the expected AGI size larger for the inobtcount feature.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- tests/xfs/010 |    3 ++-
- tests/xfs/030 |    2 ++
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ tests/xfs/122.out |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/tests/xfs/010 b/tests/xfs/010
-index 1f9bcdff..95cc2555 100755
---- a/tests/xfs/010
-+++ b/tests/xfs/010
-@@ -113,7 +113,8 @@ _check_scratch_fs
- _corrupt_finobt_root $SCRATCH_DEV
- 
- filter_finobt_repair() {
--	sed -e '/^agi has bad CRC/d' | \
-+	sed -e '/^agi has bad CRC/d' \
-+	    -e '/^bad finobt block/d' | \
- 		_filter_repair_lostblocks
- }
- 
-diff --git a/tests/xfs/030 b/tests/xfs/030
-index 04440f9c..906d9019 100755
---- a/tests/xfs/030
-+++ b/tests/xfs/030
-@@ -44,6 +44,8 @@ _check_ag()
- 			    -e '/^bad agbno AGBNO for refcntbt/d' \
- 			    -e '/^agf has bad CRC/d' \
- 			    -e '/^agi has bad CRC/d' \
-+			    -e '/^bad inobt block count/d' \
-+			    -e '/^bad finobt block count/d' \
- 			    -e '/^Missing reverse-mapping record.*/d' \
- 			    -e '/^bad levels LEVELS for [a-z]* root.*/d' \
- 			    -e '/^unknown block state, ag AGNO, block.*/d'
+diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+index cfe09c6d..b0773756 100644
+--- a/tests/xfs/122.out
++++ b/tests/xfs/122.out
+@@ -113,7 +113,7 @@ sizeof(struct xfs_scrub_metadata) = 64
+ sizeof(struct xfs_unmount_log_format) = 8
+ sizeof(xfs_agf_t) = 224
+ sizeof(xfs_agfl_t) = 36
+-sizeof(xfs_agi_t) = 336
++sizeof(xfs_agi_t) = 344
+ sizeof(xfs_alloc_key_t) = 8
+ sizeof(xfs_alloc_rec_incore_t) = 8
+ sizeof(xfs_alloc_rec_t) = 8
 
