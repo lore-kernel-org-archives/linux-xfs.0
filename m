@@ -2,84 +2,67 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2E03C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 16:14:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9C04C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 18:34:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7EEE619B7
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 16:14:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80BCE619CE
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 18:34:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233086AbhCWQN4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Mar 2021 12:13:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37220 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233049AbhCWQNq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Mar 2021 12:13:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E10396157F;
-        Tue, 23 Mar 2021 16:13:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616516026;
-        bh=iiHwzHokTAsiR1T7OK3N9IRi4hpWdAxWWKILrdGWoXY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=b+vx5KOAdRhPTbu1zQkNFdDnZT31ix3LA6H2d5sQTK1ZPnmB8dR4O1nPJEkkKOXOZ
-         8oZf+WO/9RD++Nq96OWNPoS2Pz8pYG6gIp4W0CknWoNwcoME9lExjYf60/y89d0bhC
-         Y4fa2UMsgx/2hm7EUGc0n7c3n69nup22ON+E1IiK/jm2YnEkcwi1QtUPlcSPUNbjpm
-         d54bgaUy5CY+xItDtSSP9za7qR4s51D0d47LGf5NdcpHo8wa6fcE02X8ob4voip62P
-         Snyy/x0h7LTf0tSuTrlzy2mbrDVMdSZyBL/mxQXyiOscsC8A9PC9hSbZHdvdhKIAom
-         gUFlC1ZiqAF/g==
-Date:   Tue, 23 Mar 2021 09:13:45 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zhen Zhao <zp_8483@163.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1] xfs: return err code if xfs_buf_associate_memory fail
-Message-ID: <20210323161345.GL22100@magnolia>
-References: <20210323062456.67938-1-zp_8483@163.com>
+        id S232283AbhCWSde (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Mar 2021 14:33:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45720 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231936AbhCWSd3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Mar 2021 14:33:29 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BD59C061574
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Mar 2021 11:33:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=yLWfR6PgbSiFVxQMMsfpSa+z0YjYdHLt4utxU4NEb68=; b=eW5xsH2w3CHZJUPSa2A/VHa4Z3
+        18g4NNuBIg6DN62GnrgkHOgfwbZQeXG7xVVgGoHdCv4VVbxSSt1IHRIPcet0sMaecE1ZGvkgxtMyc
+        hT43tfxAbm0+mCqJVYYFGhmJZCKVTFYY4BESfwFMYxzbhhriqJ31/kFXlqIMeAqcpR4LcMm4M7+mb
+        UX1T6EwZcd53E+oSRiEO1Wa3Hc+6er76tUHXZpJbkhtT9gjPqI6bmMRlXD0Vdh1Xsk0GibG7CCsBv
+        IZye0KyJjp6HaV9zYcpLTuz1WLvgEBcYz3tuOPI7ZATZEyy9QB8K08YxBUJSV4Oz2OYFUD2ksKUTu
+        VmPoWkQg==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lOloy-00AP9C-Q0; Tue, 23 Mar 2021 18:32:33 +0000
+Date:   Tue, 23 Mar 2021 18:32:04 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: move the check for post-EOF mappings into
+ xfs_can_free_eofblocks
+Message-ID: <20210323183204.GA2479637@infradead.org>
+References: <161610680641.1887542.10509468263256161712.stgit@magnolia>
+ <161610681767.1887542.5197301352012661570.stgit@magnolia>
+ <20210319055907.GB955126@infradead.org>
+ <20210319060534.GF1670408@magnolia>
+ <20210319063537.GB965589@infradead.org>
+ <20210319165924.GR22100@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210323062456.67938-1-zp_8483@163.com>
+In-Reply-To: <20210319165924.GR22100@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 23, 2021 at 02:24:56AM -0400, Zhen Zhao wrote:
-> In kernel 3.10, when there is no memory left in the
-> system, fs_buf_associate_memory can fail, catch the
-> error and return.
-
-You're probably going to need to take this up with your kernel
-distributor or the linux stable fixes list, since (AFAICT) none of this
-exists in the upstream kernel.
-
---D
-
-> Signed-off-by: Zhen Zhao <zp_8483@163.com>
-> ---
->  fs/xfs/xfs_log.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
+On Fri, Mar 19, 2021 at 09:59:24AM -0700, Darrick J. Wong wrote:
+> > Yes.  What I meant is that if we can deduce that we are in inactive
+> > somehow (probably using the VFS inode state) we can ASSERT that we
+> > are either in inactive or hold the iolock.
 > 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 2e5581bc..32a41bf5 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1916,8 +1916,11 @@ xlog_sync(
->  	if (split) {
->  		bp = iclog->ic_log->l_xbuf;
->  		XFS_BUF_SET_ADDR(bp, 0);	     /* logical 0 */
-> -		xfs_buf_associate_memory(bp,
-> +		error = xfs_buf_associate_memory(bp,
->  				(char *)&iclog->ic_header + count, split);
-> +		if (error)
-> +			return error;
-> +
->  		bp->b_fspriv = iclog;
->  		bp->b_flags &= ~XBF_FLUSH;
->  		bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
-> -- 
-> 2.27.0
+> Yeah, I think we can do:
 > 
-> 
+> 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL) ||
+> 	       (VFS_I(ip)->i_state & I_FREEING));
+
+Yes, that looks sensible.
