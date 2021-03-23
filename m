@@ -2,89 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9E68C433C1
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 15:52:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A51C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 15:55:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9F80619B7
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 15:52:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 575A2619D0
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 15:55:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232860AbhCWPv5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Mar 2021 11:51:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38454 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232856AbhCWPvc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Mar 2021 11:51:32 -0400
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8928C061574;
-        Tue, 23 Mar 2021 08:51:31 -0700 (PDT)
-Received: by mail-pf1-x42c.google.com with SMTP id c17so7829401pfn.6;
-        Tue, 23 Mar 2021 08:51:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=t0mivpXIuWwx9gP16IjJs3W87rHyzlNwbyfeEx8As/Y=;
-        b=jT7xvHnYN9jm0FJQE0C8NwDDnsO+P/CPOuzPTH/pURNUV2oLz7NmiSfnKv2+vditiK
-         b3Fdx7445KH8CH3mXjPTXn6sPExVJ3uNQcxxkactqufL+rkic5LiC5stfqjAcTWUdyua
-         9xep6vakVSVlMdneZQFoLHXVqrN+6SGs2y/3Ead4/I5jTIm3cdMxLU3FE8T053jMHz61
-         i6nn9llgGdayg+NLDfFOw56uCCxAA9W6Z6gnslP4GwwGXvpd3fuEbnp85lOCOJG9VVwa
-         B6JRNnQ35X3L1dnyLu2GnCS6rCemeD+rpPRJgJU+0jXAvyAYDm6wDHgC4xsZef921tuS
-         epsg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=t0mivpXIuWwx9gP16IjJs3W87rHyzlNwbyfeEx8As/Y=;
-        b=biG4lGtdiMgVcJeXpHXuTHZs+0GmTef2IHMKysDZZZ2SnO0vX39kmndCC7AUg++BD8
-         iONwUf52HYM9fTZGy5/S5tzN0pyUqsHj/ReDVv9zh43Up+Mm/6utZjPRbcAlE3Hww2GJ
-         AS5UR2r7X8rn2ojZjSc5BIpMKE2q9bXWQ/0EKCuZifBOB04GgkVt5CnBngs0kf4t26cB
-         tmsgKL0IkaPXS53opXCLMmg51MlyPVW0ZU+TS47keSFUUfmlVUQ+GTQUFdhL8QL8wXcM
-         SLNehVHNLHmDsL8aVyusWG73Qw9CMtHyi4Swj8xrVyYqmq+NNYu/Sep15UeY7/DzB1/8
-         9uDg==
-X-Gm-Message-State: AOAM532nIF8BMkKTAnvAaYSbgSOB6FM+fZP77eLhGpboKHi/Ox2NqUZy
-        tpNamZ0N37550JxnCJbqPm68Uri9dfk=
-X-Google-Smtp-Source: ABdhPJyUgp1p94yLGBUJbQxPyaAVfxaCVm5Y4Adga5HNMGqaNgtSq5t+k9UTdR7AgYzTOvkXOrQrOg==
-X-Received: by 2002:a17:902:b088:b029:e6:e1d8:20cc with SMTP id p8-20020a170902b088b02900e6e1d820ccmr6271228plr.27.1616514691104;
-        Tue, 23 Mar 2021 08:51:31 -0700 (PDT)
-Received: from garuda ([122.179.41.147])
-        by smtp.gmail.com with ESMTPSA id s12sm15114920pgj.70.2021.03.23.08.51.29
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 23 Mar 2021 08:51:30 -0700 (PDT)
-References: <20210309050124.23797-1-chandanrlinux@gmail.com> <20210309050124.23797-6-chandanrlinux@gmail.com> <20210322175652.GG1670408@magnolia>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V6 05/13] xfs: Check for extent overflow when growing realtime bitmap/summary inodes
-In-reply-to: <20210322175652.GG1670408@magnolia>
-Date:   Tue, 23 Mar 2021 21:21:27 +0530
-Message-ID: <87r1k56f7k.fsf@garuda>
+        id S232915AbhCWPzL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Mar 2021 11:55:11 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:12140 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232888AbhCWPyo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Mar 2021 11:54:44 -0400
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 12NFoTus175024;
+        Tue, 23 Mar 2021 11:54:28 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=h6hBPFYCR+FBgbg4wITQFac+o5L7qJzqrEtyX1BNYFg=;
+ b=Mr/2AlA0lcFNJcPQ02PtEP2uPlVx7EwM91gg57lqcnxEAGvBLkVBDXjvyTDq2SENbrbn
+ w7kY9ZFXZReS/JN/Z6XN0t+KC48eGhsj+G7RqqOhDNPF3uD6x7f9FJlLWTIbO9HOC52r
+ r2K9JYT1MbDv6JURbJYhRXWl62w0ZGgEcNAxLfX+yzD+jihHG8BzkX4fGFmgQX6Rfvy+
+ DVwaMvAcdQsbFabbiuQaOTJxxRXGTEscL1GqotqVTsvB/VnBdKQLk7+4K1zmUK/RNSSm
+ 3KUtn2JuwsS43TOAAdlY8P/eY8T1+l3oEQBAyXI9PmESD7UrT+9hxxaPQoJBKMlg6Dvi 3g== 
+Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 37fkaxg6t6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 23 Mar 2021 11:54:27 -0400
+Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
+        by ppma04fra.de.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 12NFlK4o029025;
+        Tue, 23 Mar 2021 15:54:25 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma04fra.de.ibm.com with ESMTP id 37d9by9ty1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 23 Mar 2021 15:54:24 +0000
+Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 12NFs43l34275824
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 23 Mar 2021 15:54:04 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B11E142042;
+        Tue, 23 Mar 2021 15:54:22 +0000 (GMT)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 4492642045;
+        Tue, 23 Mar 2021 15:54:20 +0000 (GMT)
+Received: from [9.199.34.65] (unknown [9.199.34.65])
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Tue, 23 Mar 2021 15:54:20 +0000 (GMT)
+Subject: Re: [PATCH v3 03/10] fsdax: Output address in dax_iomap_pfn() and
+ rename it
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org
+Cc:     darrick.wong@oracle.com, dan.j.williams@intel.com,
+        willy@infradead.org, jack@suse.cz, viro@zeniv.linux.org.uk,
+        linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        david@fromorbit.com, hch@lst.de, rgoldwyn@suse.de
+References: <20210319015237.993880-1-ruansy.fnst@fujitsu.com>
+ <20210319015237.993880-4-ruansy.fnst@fujitsu.com>
+From:   Ritesh Harjani <riteshh@linux.ibm.com>
+Message-ID: <9cf456a0-e2ce-18b2-100a-80604862831b@linux.ibm.com>
+Date:   Tue, 23 Mar 2021 21:24:19 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20210319015237.993880-4-ruansy.fnst@fujitsu.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
+ definitions=2021-03-23_07:2021-03-22,2021-03-23 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ priorityscore=1501 mlxscore=0 impostorscore=0 phishscore=0 adultscore=0
+ suspectscore=0 mlxlogscore=999 spamscore=0 lowpriorityscore=0
+ malwarescore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2103230114
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 22 Mar 2021 at 23:26, Darrick J. Wong wrote:
-> On Tue, Mar 09, 2021 at 10:31:16AM +0530, Chandan Babu R wrote:
->> Verify that XFS does not cause realtime bitmap/summary inode fork's
->> extent count to overflow when growing the realtime volume associated
->> with a filesystem.
->>
->> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
->> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
->
-> Soo... I discovered that this test doesn't pass with multiblock
-> directories:
 
-Thanks for the bug report and the description of the corresponding solution. I
-am fixing the tests and will soon post corresponding patches to the mailing
-list.
 
---
-chandan
+On 3/19/21 7:22 AM, Shiyang Ruan wrote:
+> Add address output in dax_iomap_pfn() in order to perform a memcpy() in
+> CoW case.  Since this function both output address and pfn, rename it to
+> dax_iomap_direct_access().
+> 
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   fs/dax.c | 16 ++++++++++++----
+>   1 file changed, 12 insertions(+), 4 deletions(-)
+> 
+
+Like the naming convention. It is consistent with
+dax_direct_access() function.
+
+Changes looks good to me. Feel free to add.
+
+Reviewed-by: Ritesh Harjani <riteshh@linux.ibm.com>
