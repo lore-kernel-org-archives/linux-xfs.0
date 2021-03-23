@@ -2,531 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF99DC433C1
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 14:14:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 768F7C433DB
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 15:29:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB03D619A9
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 14:14:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41FBE619B2
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 15:29:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232107AbhCWONg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Mar 2021 10:13:36 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:27733 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232266AbhCWONd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Mar 2021 10:13:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1616508812;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=hTxZYORWLljeU8gkqlzXfd7jSD/b/63szrd4iojaJmk=;
-        b=UMWjf6V6xwAuY9zmzfnSe4zUWiMqfyG+QPvLuCP5Mk1iu6Z5TLb38cKCme+b6cf0mf+bxx
-        ly/L8xVSPPT4DQJ2EgDGtO2L8RhyIdbzjTEZ5JgKcBEAY/uDON42pL7KZd5gDYeUhh7Y7+
-        OYlRrrUFajyDs4OGFbNj/LfM9aRpCoM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-589-gJuI9SXzMneNDJOulH4nqw-1; Tue, 23 Mar 2021 10:13:30 -0400
-X-MC-Unique: gJuI9SXzMneNDJOulH4nqw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C60D7108BD0D;
-        Tue, 23 Mar 2021 14:13:28 +0000 (UTC)
-Received: from bfoster (ovpn-113-24.rdu2.redhat.com [10.10.113.24])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C8CAE5C1C5;
-        Tue, 23 Mar 2021 14:13:27 +0000 (UTC)
-Date:   Tue, 23 Mar 2021 10:13:25 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 3/3] xfs: test inobtcount upgrade
-Message-ID: <YFn3hck7nYCwhfK3@bfoster>
-References: <161647324459.3431131.16341235245632737552.stgit@magnolia>
- <161647326120.3431131.9588272913557202987.stgit@magnolia>
+        id S232492AbhCWP26 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Mar 2021 11:28:58 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:11272 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S232816AbhCWP2c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Mar 2021 11:28:32 -0400
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 12NFGQtq158809;
+        Tue, 23 Mar 2021 11:27:59 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=HEgPNmOQ2fGg+4o6ggG+TNuvsojvFlxy9dBHlBe6Svc=;
+ b=j6Axg86BIT6TdVpK3dBy599D+sEsSqA4nMaJjCiiop2oShxkrUfHnnN/Xd3h/Swxo7aa
+ 5NKOVTNS1xlKE0pRfPk80TITeQTTiyDX19Dnq2BY0H3i2iy8EC2JnSL5ccfLWBgv394m
+ ab5x/brQxo90AIXLxqy2cFVgak4tCpENma9XCPf+ub+FBQ1D7d2OKK2ItTEFC/J6xGI2
+ 1xzVmwJQR9UAg+rnRwKM2mZ5SzMiZk7aJ6Yj+jPpon/fTZk3u/DB6Vfmq8jCRG2CeNxl
+ jpZEhKAeKLRcD3BG+t2CpzLz6jFlUKn0Cj93iuW7UNljsWf/qS7i2lfaigmROHE9DZ5Q MA== 
+Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 37fjth8dmw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 23 Mar 2021 11:27:59 -0400
+Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
+        by ppma01fra.de.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 12NFLY4H007748;
+        Tue, 23 Mar 2021 15:27:57 GMT
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
+        by ppma01fra.de.ibm.com with ESMTP id 37d99xhtu1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 23 Mar 2021 15:27:57 +0000
+Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 12NFRs1e30146828
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 23 Mar 2021 15:27:54 GMT
+Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B779A52052;
+        Tue, 23 Mar 2021 15:27:54 +0000 (GMT)
+Received: from [9.199.34.65] (unknown [9.199.34.65])
+        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 280B65205A;
+        Tue, 23 Mar 2021 15:27:52 +0000 (GMT)
+Subject: Re: [PATCH v3 00/10] fsdax,xfs: Add reflink&dedupe support for fsdax
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org
+Cc:     darrick.wong@oracle.com, dan.j.williams@intel.com,
+        willy@infradead.org, jack@suse.cz, viro@zeniv.linux.org.uk,
+        linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        david@fromorbit.com, hch@lst.de, rgoldwyn@suse.de,
+        Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+References: <20210319015237.993880-1-ruansy.fnst@fujitsu.com>
+From:   Ritesh Harjani <riteshh@linux.ibm.com>
+Message-ID: <7f9d5477-b156-e084-9412-307dd67149b1@linux.ibm.com>
+Date:   Tue, 23 Mar 2021 20:57:50 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <161647326120.3431131.9588272913557202987.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <20210319015237.993880-1-ruansy.fnst@fujitsu.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
+ definitions=2021-03-23_06:2021-03-22,2021-03-23 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 malwarescore=0
+ impostorscore=0 bulkscore=0 suspectscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 spamscore=0 clxscore=1011 lowpriorityscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2103230112
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 22, 2021 at 09:21:01PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+
+
+On 3/19/21 7:22 AM, Shiyang Ruan wrote:
+> From: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 > 
-> Make sure we can actually upgrade filesystems to support inode btree
-> counters.
+> This patchset is attempt to add CoW support for fsdax, and take XFS,
+> which has both reflink and fsdax feature, as an example.
+
+
+Thanks for the patchset. I have tried reviewing the series from logical
+correctness and to some extent functional correctness.
+Since I am not well versed with the core functionality of COW operation,
+so I may have requested for some clarifications where I could not get
+the code 100% on what it is doing.
+
+
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  common/xfs        |   20 ++++++
->  tests/xfs/764     |  190 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/764.out |   27 ++++++++
->  tests/xfs/910     |   84 +++++++++++++++++++++++
->  tests/xfs/910.out |   12 +++
->  tests/xfs/group   |    2 +
->  6 files changed, 335 insertions(+)
->  create mode 100755 tests/xfs/764
->  create mode 100644 tests/xfs/764.out
->  create mode 100755 tests/xfs/910
->  create mode 100644 tests/xfs/910.out
+> (Rebased on v5.11)
+> ==
 > 
-> 
-> diff --git a/common/xfs b/common/xfs
-> index 9cb373ba..a316f384 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -1085,3 +1085,23 @@ _require_xfs_copy()
->  	[ "$USE_EXTERNAL" = yes ] && \
->  		_notrun "Cannot xfs_copy with external devices"
->  }
-> +
-> +_require_xfs_repair_upgrade()
-> +{
-> +	local type="$1"
-> +
-> +	$XFS_REPAIR_PROG -c "$type=narf" 2>&1 | \
+Thanks. Yes, I see some conflicts when tried to apply on latest kernel.
 
-narf?
-
-> +		grep -q 'unknown option' && \
-> +		_notrun "xfs_repair does not support upgrading fs with $type"
-> +}
-> +
-> +_require_xfs_scratch_inobtcount()
-> +{
-> +	_require_scratch
-> +
-> +	_scratch_mkfs -m inobtcount=1 &> /dev/null || \
-> +		_notrun "mkfs.xfs doesn't have inobtcount feature"
-> +	_try_scratch_mount || \
-> +		_notrun "inobtcount not supported by scratch filesystem type: $FSTYP"
-> +	_scratch_unmount
-> +}
-> diff --git a/tests/xfs/764 b/tests/xfs/764
-> new file mode 100755
-> index 00000000..cf6784d2
-> --- /dev/null
-> +++ b/tests/xfs/764
-> @@ -0,0 +1,190 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 764
-> +#
-> +# Functional testing for xfs_admin -O, which is a new switch that enables us to
-> +# add features to an existing filesystem.  In these test scenarios, we try to
-> +# add the inode btree counter 'feature' to the filesystem, and make sure that
-> +# NEEDSREPAIR (aka the thing that prevents us from mounting after an upgrade
-> +# fails) is clear if the upgraded succeeds and set if it fails.
-> +#
-> +# The first scenario tests that we can't add inobtcount to the V4 format,
-> +# which is now deprecated.
-> +#
-> +# The middle five scenarios ensure that xfs_admin -O works even when external
-> +# log devices and realtime volumes are specified.  This part is purely an
-> +# exerciser for the userspace tools; kernel support for those features is not
-> +# required.
-> +#
-> +# The last scenario uses a xfs_repair debug knob to simulate failure during an
-> +# inobtcount upgrade, then checks that mounts fail when the flag is enabled,
-> +# that repair clears the flag, and mount works after repair.
-> +
-
-By and large the test seems reasonable, though it hangs somewhere in
-xfs_db for me on a quick run, not sure why. The runtime state is as
-follows:
-
-# ps | grep xfs_db:
-... xfs_db -x -p xfs_admin -l /mnt/test/scratch.log /dev/mapper/test-scratch
-
-# cat /proc/12489/stack 
-[<0>] wait_woken+0x67/0x80
-[<0>] n_tty_read+0x4f9/0x5c0
-[<0>] tty_read+0x135/0x240
-[<0>] new_sync_read+0x105/0x180
-[<0>] vfs_read+0x14b/0x1a0
-[<0>] ksys_read+0x4f/0xc0
-[<0>] do_syscall_64+0x33/0x40
-[<0>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
-
-# cat /tmp/11671.out 
-QA output created by 764
-S1: Cannot add inobtcount to a V4 fs
-Running xfs_repair to upgrade filesystem.
-Inode btree count feature only supported on V5 filesystems.
-S2: Check that setting with xfs_admin + logdev works
-
-Looks like xfs_db might be waiting for input on the terminal..?
-
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.* $fake_logfile $fake_rtfile
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_test
-> +_require_xfs_scratch_inobtcount
-> +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
-> +_require_xfs_repair_upgrade inobtcount
-> +
-> +rm -f $seqres.full
-> +
-> +note() {
-> +	echo "$@" | tee -a $seqres.full
-> +}
-> +
-> +note "S1: Cannot add inobtcount to a V4 fs"
-> +_scratch_mkfs -m crc=0 >> $seqres.full
-> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-> +
-> +# Middle five scenarios: Make sure upgrades work with various external device
-> +# configurations.
-> +note "S2: Check that setting with xfs_admin + logdev works"
-> +fake_logfile=$TEST_DIR/scratch.log
-> +rm -f $fake_logfile
-> +truncate -s 500m $fake_logfile
-> +
-> +old_external=$USE_EXTERNAL
-> +old_logdev=$SCRATCH_LOGDEV
-> +USE_EXTERNAL=yes
-> +SCRATCH_LOGDEV=$fake_logfile
-> +
-> +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
-> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-> +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
-> +	echo "xfs_admin should have cleared needsrepair?"
-> +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
-> +	echo "xfs_admin should have set inobtcount?"
-> +
-> +note "Check clean"
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +
-> +USE_EXTERNAL=$old_external
-> +SCRATCH_LOGDEV=$old_logdev
-> +
-> +note "S3: Check that setting with xfs_admin + realtime works"
-> +fake_rtfile=$TEST_DIR/scratch.rt
-> +rm -f $fake_rtfile
-> +truncate -s 500m $fake_rtfile
-> +
-> +old_external=$USE_EXTERNAL
-> +old_rtdev=$SCRATCH_RTDEV
-> +USE_EXTERNAL=yes
-> +SCRATCH_RTDEV=$fake_rtfile
-> +
-> +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
-> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-> +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
-> +	echo "xfs_admin should have cleared needsrepair?"
-> +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
-> +	echo "xfs_admin should have set inobtcount?"
-> +
-> +note "Check clean"
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +
-> +USE_EXTERNAL=$old_external
-> +SCRATCH_RTDEV=$old_rtdev
-> +
-> +note "S4: Check that setting with xfs_admin + realtime + logdev works"
-> +old_external=$USE_EXTERNAL
-> +old_logdev=$SCRATCH_LOGDEV
-> +old_rtdev=$SCRATCH_RTDEV
-> +USE_EXTERNAL=yes
-> +SCRATCH_LOGDEV=$fake_logfile
-> +SCRATCH_RTDEV=$fake_rtfile
-> +
-> +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
-> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-> +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
-> +	echo "xfs_admin should have cleared needsrepair?"
-> +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
-> +	echo "xfs_admin should have set inobtcount?"
-> +
-> +note "Check clean"
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +
-> +USE_EXTERNAL=$old_external
-> +SCRATCH_LOGDEV=$old_logdev
-> +SCRATCH_RTDEV=$old_rtdev
-> +
-> +note "S5: Check that setting with xfs_admin + nortdev + nologdev works"
-> +old_external=$USE_EXTERNAL
-> +old_logdev=$SCRATCH_LOGDEV
-> +old_rtdev=$SCRATCH_RTDEV
-> +USE_EXTERNAL=
-> +SCRATCH_LOGDEV=
-> +SCRATCH_RTDEV=
-> +
-> +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
-> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-> +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
-> +	echo "xfs_admin should have cleared needsrepair?"
-> +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
-> +	echo "xfs_admin should have set inobtcount?"
-> +
-> +note "Check clean"
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +
-> +USE_EXTERNAL=$old_external
-> +SCRATCH_LOGDEV=$old_logdev
-> +SCRATCH_RTDEV=$old_rtdev
-> +
-
-There's a lot of eye crossing copy-paste going on here. Do we really
-need to always test these varying configurations? My general expectation
-for fstests has always been to primarily test the configuration
-specified in the config file. ISTM this test could be legitimately
-reduced to S1, S6 and S7. That might also mitigate the need for 'note'
-markers in the golden output, fwiw.
-
-> +# Run our test with the test runner's config last so that the post-test check
-> +# won't trip over our artificial log/rt devices
-> +note "S6: Check that setting with xfs_admin testrunner config works"
-> +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
-> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-> +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
-> +	echo "xfs_admin should have cleared needsrepair?"
-> +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
-> +	echo "xfs_admin should have set inobtcount?"
-> +
-
-Perhaps the above xfs_db commands could be wrapped in a helper that
-filters on the expected version values..? I.e., even something really
-simple that executed the grep and manually constructed a string would
-improve readability:
-
-_filter_version()
-{
-	str="version "
-	_scratch_xfs_db -c "version" | grep -q $1 &&
-		str="$str $1"
-	echo $str
-}
-
-_scratch_mkfs ...
-_scratch_xfs_admin ...
-_filter_version NEEDSREPAIR
-_filter_version INOBTCNT
-
-Then the test dumps the filter output directly to the golden output such
-that there's no need for '&& echo "didn't expect this"' logic on every
-test.
-
-> +note "Check clean"
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +
-> +note "S7: Simulate failure during upgrade process"
-> +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
-> +XFS_REPAIR_FAIL_AFTER_PHASE=2 _scratch_xfs_repair -c inobtcount=1 2>> $seqres.full
-> +test $? -eq 137 || echo "repair should have been killed??"
-> +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR || \
-> +	echo "needsrepair should have been set on fs"
-> +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
-> +	echo "inobtcount should have been set on fs"
-> +_try_scratch_mount &> $tmp.mount
-> +res=$?
-> +_filter_scratch < $tmp.mount
-> +if [ $res -eq 0 ]; then
-> +	echo "needsrepair should have prevented mount"
-> +	_scratch_unmount
-> +fi
-> +_scratch_xfs_repair 2>> $seqres.full
-> +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
-> +	echo "xfs_repair should have cleared needsrepair?"
-> +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
-> +	echo "xfs_admin should have set inobtcount?"
-> +_scratch_mount
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/764.out b/tests/xfs/764.out
-> new file mode 100644
-> index 00000000..067639c9
-> --- /dev/null
-> +++ b/tests/xfs/764.out
-> @@ -0,0 +1,27 @@
-> +QA output created by 764
-> +S1: Cannot add inobtcount to a V4 fs
-> +Running xfs_repair to upgrade filesystem.
-> +Inode btree count feature only supported on V5 filesystems.
-> +S2: Check that setting with xfs_admin + logdev works
-> +Running xfs_repair to upgrade filesystem.
-> +Adding inode btree counts to filesystem.
-> +Check clean
-> +S3: Check that setting with xfs_admin + realtime works
-> +Running xfs_repair to upgrade filesystem.
-> +Adding inode btree counts to filesystem.
-> +Check clean
-> +S4: Check that setting with xfs_admin + realtime + logdev works
-> +Running xfs_repair to upgrade filesystem.
-> +Adding inode btree counts to filesystem.
-> +Check clean
-> +S5: Check that setting with xfs_admin + nortdev + nologdev works
-> +Running xfs_repair to upgrade filesystem.
-> +Adding inode btree counts to filesystem.
-> +Check clean
-> +S6: Check that setting with xfs_admin testrunner config works
-> +Running xfs_repair to upgrade filesystem.
-> +Adding inode btree counts to filesystem.
-> +Check clean
-> +S7: Simulate failure during upgrade process
-> +Adding inode btree counts to filesystem.
-> +mount: SCRATCH_MNT: mount(2) system call failed: Structure needs cleaning.
-> diff --git a/tests/xfs/910 b/tests/xfs/910
-> new file mode 100755
-> index 00000000..4bf79db2
-> --- /dev/null
-> +++ b/tests/xfs/910
-> @@ -0,0 +1,84 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 910
-> +#
-> +# Check that we can upgrade a filesystem to support inobtcount and that
-> +# everything works properly after the upgrade.
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_xfs_scratch_inobtcount
-> +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
-> +_require_xfs_repair_upgrade inobtcount
-> +
-> +rm -f $seqres.full
-> +
-> +# Make sure we can't format a filesystem with inobtcount and not finobt.
-> +_scratch_mkfs -m crc=1,inobtcount=1,finobt=0 &> $seqres.full && \
-> +	echo "Should not be able to format with inobtcount but not finobt."
-> +
-> +# Make sure we can't upgrade a V4 filesystem
-> +_scratch_mkfs -m crc=0,inobtcount=0,finobt=0 >> $seqres.full
-> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-> +_scratch_xfs_db -c 'version' | grep -q INOBTCNT && \
-> +	echo "Should not be able to upgrade to inobtcount without V5."
-> +
-> +# Make sure we can't upgrade a filesystem to inobtcount without finobt.
-> +_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
-> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-> +_scratch_xfs_db -c 'version' | grep -q INOBTCNT && \
-> +	echo "Should not be able to upgrade to inobtcount without finobt."
-> +
-> +# Format V5 filesystem without inode btree counter support and populate it
-> +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
-> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
-> +_scratch_mount >> $seqres.full
-> +
-> +echo moo > $SCRATCH_MNT/urk
-> +
-> +_scratch_unmount
-> +_check_scratch_fs
-> +
-> +# Now upgrade to inobtcount support
-> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-> +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
-> +	echo "Cannot detect new feature?"
-> +_check_scratch_fs
-> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' -c 'agi 0' -c 'p' >> $seqres.full
-> +
-
-Isn't this essentially the same core feature upgrade test as 764 with
-some minor additional logic (i.e., create a file, check counters)? From
-the group update below it seems like maybe 764 is intended to be a
-generic repair test while this is intended to target inobtcount, but
-there seems to be quite a lot of overlap here...
-
-Brian
-
-> +# Make sure we have nonzero counters
-> +_scratch_xfs_db -c 'agi 0' -c 'print ino_blocks fino_blocks' | \
-> +	sed -e 's/= [1-9]*/= NONZERO/g'
-> +
-> +# Mount again, look at our files
-> +_scratch_mount >> $seqres.full
-> +cat $SCRATCH_MNT/urk
-> +
-> +# Make sure we can't re-add inobtcount
-> +_scratch_unmount
-> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-> +_scratch_mount >> $seqres.full
-> +
-> +status=0
-> +exit
-> diff --git a/tests/xfs/910.out b/tests/xfs/910.out
-> new file mode 100644
-> index 00000000..c3cfbb80
-> --- /dev/null
-> +++ b/tests/xfs/910.out
-> @@ -0,0 +1,12 @@
-> +QA output created by 910
-> +Running xfs_repair to upgrade filesystem.
-> +Inode btree count feature only supported on V5 filesystems.
-> +Running xfs_repair to upgrade filesystem.
-> +Inode btree count feature requires free inode btree.
-> +Running xfs_repair to upgrade filesystem.
-> +Adding inode btree counts to filesystem.
-> +ino_blocks = NONZERO
-> +fino_blocks = NONZERO
-> +moo
-> +Running xfs_repair to upgrade filesystem.
-> +Filesystem already has inode btree counts.
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 6aa7883e..28176409 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -517,7 +517,9 @@
->  538 auto stress
->  759 auto quick rw realtime
->  760 auto quick rw realtime collapse insert unshare zero prealloc
-> +764 auto quick repair
->  768 auto quick repair
->  770 auto repair
-> +910 auto quick inobtcount
->  917 auto quick db
->  918 auto quick db
-> 
-
+-ritesh
