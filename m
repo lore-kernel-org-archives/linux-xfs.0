@@ -7,91 +7,248 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8842C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 17:32:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 816C3C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 17:35:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBDA661A1C
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 17:32:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5835161A0A
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 17:35:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236616AbhCXRc1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Mar 2021 13:32:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52384 "EHLO mail.kernel.org"
+        id S237436AbhCXRfK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Mar 2021 13:35:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53340 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236580AbhCXRcQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 Mar 2021 13:32:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B04CC619DC;
-        Wed, 24 Mar 2021 17:32:15 +0000 (UTC)
+        id S237215AbhCXRej (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 Mar 2021 13:34:39 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4BEF1619EC;
+        Wed, 24 Mar 2021 17:34:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616607135;
-        bh=spiRFMrNpYMGjabHtyRjDieA0cgJjJyQmGc06zWsgS0=;
+        s=k20201202; t=1616607279;
+        bh=5KIOrkNKhQ9RzXpxzPRBbWInNGG2LxVDrNk9EgQZhrg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mrGc8wR1tPs+j1CLqr8IOL6sHeYi6PD6NPSdYj+KcDi/7AJ/WPwKRvW9sz5bRATJd
-         NJTh/KfNeiAp01VESFMeZMK4n7yY8hYUHJqYeURjpGea8lW1mKMYKnvRuBzP+9PSMx
-         u5AlognC0nBNo8+g4MpjFbbU6Ap+NxezQdcVvV1zmZrJMbuyuV87UROm1Rbab+ze5z
-         U+f1mYgkjNnwmYVj2/I75HPghgOQR0josxvetDrRuvxaF5dj+kRKdEJL/UeTf6oZ1Q
-         Ixo2m97rQc2Hvee1qxoskK4hTsmedkmFeyp1/wqfkTF3+lEb2p08WycglO6/IjEPRs
-         tkSgqKr1MSqyA==
-Date:   Wed, 24 Mar 2021 10:32:15 -0700
+        b=p9powOt99kV1hHWk4uYDM+i6umTDFaJ8rCCCJHAbJ/QLXCAx4/+jvqqpkXnOXoIGK
+         x3zhBj+BZvYsxQGnwLffGcoG1QhNn7DGEhstpJNfgWVrBA1lm5YN/felZCnD6WXJYB
+         y+enUQ+f64v9baEpBUKmypVLxRAjHtIBRpUVeSsYIdzf5vTVILycQD7+wFRQ7EsrA/
+         PLHb8+9Xdvo8jLA4YiJPFmMpkDWq1JlmLUPKs3HUqN0xOMexE/b9aXiuxtnserH6Ch
+         tevL4Z5UtSMG7wSv6B8awaafFUs3CFnEW1X+HubYu/MVBcmELtN77DqiO8s1cEqdmF
+         bhCxcnEJXWX0A==
+Date:   Wed, 24 Mar 2021 10:34:38 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [WIP] [RFC PATCH] xfs_growfs: allow shrinking unused space in
- the last AG
-Message-ID: <20210324173215.GU22100@magnolia>
-References: <20201028114010.545331-1-hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH v9 4/5] xfs: support shrinking unused space in the last AG
+Message-ID: <20210324173438.GV22100@magnolia>
+References: <20210324010621.2244671-1-hsiangkao@redhat.com>
+ <20210324010621.2244671-5-hsiangkao@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201028114010.545331-1-hsiangkao@redhat.com>
+In-Reply-To: <20210324010621.2244671-5-hsiangkao@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 07:40:10PM +0800, Gao Xiang wrote:
-> This allows shrinking operation can pass into kernel.
+On Wed, Mar 24, 2021 at 09:06:20AM +0800, Gao Xiang wrote:
+> As the first step of shrinking, this attempts to enable shrinking
+> unused space in the last allocation group by fixing up freespace
+> btree, agi, agf and adjusting super block and use a helper
+> xfs_ag_shrink_space() to fixup the last AG.
 > 
+> This can be all done in one transaction for now, so I think no
+> additional protection is needed.
+> 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 > ---
-> preliminary version.
+>  fs/xfs/xfs_fsops.c | 84 +++++++++++++++++++++++++++-------------------
+>  fs/xfs/xfs_trans.c |  1 -
+>  2 files changed, 50 insertions(+), 35 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index d1ba04124c28..9457b0691ece 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -91,23 +91,25 @@ xfs_growfs_data_private(
+>  	xfs_agnumber_t		nagcount;
+>  	xfs_agnumber_t		nagimax = 0;
+>  	xfs_rfsblock_t		nb, nb_div, nb_mod;
+> -	xfs_rfsblock_t		delta;
+> +	int64_t			delta;
+>  	bool			lastag_extended;
+>  	xfs_agnumber_t		oagcount;
+>  	struct xfs_trans	*tp;
+>  	struct aghdr_init_data	id = {};
+>  
+>  	nb = in->newblocks;
+> -	if (nb < mp->m_sb.sb_dblocks)
+> -		return -EINVAL;
+> -	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
+> +	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
+> +	if (error)
+>  		return error;
+> -	error = xfs_buf_read_uncached(mp->m_ddev_targp,
+> +
+> +	if (nb > mp->m_sb.sb_dblocks) {
+> +		error = xfs_buf_read_uncached(mp->m_ddev_targp,
+>  				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
+>  				XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+> -	if (error)
+> -		return error;
+> -	xfs_buf_relse(bp);
+> +		if (error)
+> +			return error;
+> +		xfs_buf_relse(bp);
+> +	}
+>  
+>  	nb_div = nb;
+>  	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
+> @@ -115,10 +117,16 @@ xfs_growfs_data_private(
+>  	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
+>  		nagcount--;
+>  		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
+> -		if (nb < mp->m_sb.sb_dblocks)
+> -			return -EINVAL;
+>  	}
+>  	delta = nb - mp->m_sb.sb_dblocks;
+> +	/*
+> +	 * Reject filesystems with a single AG because they are not
+> +	 * supported, and reject a shrink operation that would cause a
+> +	 * filesystem to become unsupported.
+> +	 */
+> +	if (delta < 0 && nagcount < 2)
+> +		return -EINVAL;
+> +
+>  	oagcount = mp->m_sb.sb_agcount;
+>  
+>  	/* allocate the new per-ag structures */
+> @@ -126,15 +134,22 @@ xfs_growfs_data_private(
+>  		error = xfs_initialize_perag(mp, nagcount, &nagimax);
+>  		if (error)
+>  			return error;
+> +	} else if (nagcount < oagcount) {
+> +		/* TODO: shrinking the entire AGs hasn't yet completed */
+> +		return -EINVAL;
+>  	}
+>  
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
+> -			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
+> +			(delta > 0 ? XFS_GROWFS_SPACE_RES(mp) : -delta), 0,
+> +			XFS_TRANS_RESERVE, &tp);
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
+> -					  delta, &lastag_extended);
+> +	if (delta > 0)
+> +		error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
+> +						  delta, &lastag_extended);
+> +	else
+> +		error = xfs_ag_shrink_space(mp, &tp, nagcount - 1, -delta);
 
-...which is going to need a manpage update:
+Assuming I don't hear anyone yelling NAK in the next day or so, I think
+I'll stage this for 5.13 with the following change to warn that the
+shrink feature is still EXPERIMENTAL:
 
-"-d | -D size
+By the way, are you going to send a patch to shrink the realtime device
+too?
 
-"Specifies that the data section of the filesystem should be resized. If
-the -D size option is given, the data section is changed to that size,
-otherwise the data section is grown to the largest size possible with
-the -d option. The size is expressed in filesystem blocks.  A filesystem
-with only 1 AG cannot be shrunk further, and a filesystem cannot be
-shrunk to the point where it would only have 1 AG."
-
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 9457b0691ece..b33c894b6cf3 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -145,11 +145,20 @@ xfs_growfs_data_private(
+ 	if (error)
+ 		return error;
+ 
+-	if (delta > 0)
++	if (delta > 0) {
+ 		error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
+ 						  delta, &lastag_extended);
+-	else
++	} else {
++		static struct ratelimit_state shrink_warning = \
++			RATELIMIT_STATE_INIT("shrink_warning", 86400 * HZ, 1);
++		ratelimit_set_flags(&shrink_warning, RATELIMIT_MSG_ON_RELEASE);
++
++		if (__ratelimit(&shrink_warning))
++			xfs_alert(mp,
++	"EXPERIMENTAL online shrink feature in use. Use at your own risk!");
++
+ 		error = xfs_ag_shrink_space(mp, &tp, nagcount - 1, -delta);
++	}
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
 --D
 
-> 
->  growfs/xfs_growfs.c | 9 ++++-----
->  1 file changed, 4 insertions(+), 5 deletions(-)
-> 
-> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-> index a68b515d..d45ba703 100644
-> --- a/growfs/xfs_growfs.c
-> +++ b/growfs/xfs_growfs.c
-> @@ -246,12 +246,11 @@ main(int argc, char **argv)
->  			error = 1;
->  		}
+>  	if (error)
+>  		goto out_trans_cancel;
 >  
-> -		if (!error && dsize < geo.datablocks) {
-> -			fprintf(stderr, _("data size %lld too small,"
-> -				" old size is %lld\n"),
-> +		if (!error && dsize < geo.datablocks)
-> +			fprintf(stderr,
-> +_("[EXPERIMENTAL] try to shrink unused space %lld, old size is %lld\n"),
->  				(long long)dsize, (long long)geo.datablocks);
-> -			error = 1;
-> -		} else if (!error &&
-> +		if (!error &&
->  			   dsize == geo.datablocks && maxpct == geo.imaxpct) {
->  			if (dflag)
->  				fprintf(stderr, _(
+> @@ -169,28 +184,29 @@ xfs_growfs_data_private(
+>  	xfs_set_low_space_thresholds(mp);
+>  	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+>  
+> -	/*
+> -	 * If we expanded the last AG, free the per-AG reservation
+> -	 * so we can reinitialize it with the new size.
+> -	 */
+> -	if (lastag_extended) {
+> -		struct xfs_perag	*pag;
+> -
+> -		pag = xfs_perag_get(mp, id.agno);
+> -		error = xfs_ag_resv_free(pag);
+> -		xfs_perag_put(pag);
+> -		if (error)
+> -			return error;
+> +	if (delta > 0) {
+> +		/*
+> +		 * If we expanded the last AG, free the per-AG reservation
+> +		 * so we can reinitialize it with the new size.
+> +		 */
+> +		if (lastag_extended) {
+> +			struct xfs_perag	*pag;
+> +
+> +			pag = xfs_perag_get(mp, id.agno);
+> +			error = xfs_ag_resv_free(pag);
+> +			xfs_perag_put(pag);
+> +			if (error)
+> +				return error;
+> +		}
+> +		/*
+> +		 * Reserve AG metadata blocks. ENOSPC here does not mean there
+> +		 * was a growfs failure, just that there still isn't space for
+> +		 * new user data after the grow has been run.
+> +		 */
+> +		error = xfs_fs_reserve_ag_blocks(mp);
+> +		if (error == -ENOSPC)
+> +			error = 0;
+>  	}
+> -
+> -	/*
+> -	 * Reserve AG metadata blocks. ENOSPC here does not mean there was a
+> -	 * growfs failure, just that there still isn't space for new user data
+> -	 * after the grow has been run.
+> -	 */
+> -	error = xfs_fs_reserve_ag_blocks(mp);
+> -	if (error == -ENOSPC)
+> -		error = 0;
+>  	return error;
+>  
+>  out_trans_cancel:
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index b22a09e9daee..052274321993 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -436,7 +436,6 @@ xfs_trans_mod_sb(
+>  		tp->t_res_frextents_delta += delta;
+>  		break;
+>  	case XFS_TRANS_SB_DBLOCKS:
+> -		ASSERT(delta > 0);
+>  		tp->t_dblocks_delta += delta;
+>  		break;
+>  	case XFS_TRANS_SB_AGCOUNT:
 > -- 
-> 2.18.1
+> 2.27.0
 > 
