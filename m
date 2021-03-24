@@ -3,127 +3,253 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60F5CC433C1
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 22:41:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D50BAC433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 00:55:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2AEB3619D8
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Mar 2021 22:41:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6835619E5
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 00:55:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233877AbhCWWlC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Mar 2021 18:41:02 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:52841 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234158AbhCWWkj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Mar 2021 18:40:39 -0400
+        id S230475AbhCXAyu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Mar 2021 20:54:50 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:43259 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233600AbhCXAyZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Mar 2021 20:54:25 -0400
 Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A1F76827E55;
-        Wed, 24 Mar 2021 09:40:37 +1100 (AEDT)
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 5377164032;
+        Wed, 24 Mar 2021 11:54:22 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lOphU-005zUV-Vg; Wed, 24 Mar 2021 09:40:36 +1100
-Date:   Wed, 24 Mar 2021 09:40:36 +1100
+        id 1lOrmv-0061Zh-CW; Wed, 24 Mar 2021 11:54:21 +1100
+Date:   Wed, 24 Mar 2021 11:54:21 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] xfs: set a mount flag when perag reservation is
- active
-Message-ID: <20210323224036.GJ63242@dread.disaster.area>
-References: <20210318161707.723742-1-bfoster@redhat.com>
- <20210318161707.723742-2-bfoster@redhat.com>
- <20210318205536.GO63242@dread.disaster.area>
- <20210318221901.GN22100@magnolia>
- <20210319010506.GP63242@dread.disaster.area>
- <20210319014303.GQ63242@dread.disaster.area>
- <YFS7IbGIyf4VqF59@bfoster>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Jan Kara <jack@suse.cz>,
+        Christian Brauner <christian.brauner@ubuntu.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux API <linux-api@vger.kernel.org>,
+        "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [PATCH] xfs: use a unique and persistent value for f_fsid
+Message-ID: <20210324005421.GK63242@dread.disaster.area>
+References: <20210322171118.446536-1-amir73il@gmail.com>
+ <20210322230352.GW63242@dread.disaster.area>
+ <CAOQ4uxjFMPNgR-aCqZt3FD90XtBVFZncdgNc4RdOCbsxukkyYQ@mail.gmail.com>
+ <20210323072607.GF63242@dread.disaster.area>
+ <CAOQ4uxgAddAfGkA7LMTPoBmrwVXbvHfnN8SWsW_WXm=LPVmc7Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YFS7IbGIyf4VqF59@bfoster>
+In-Reply-To: <CAOQ4uxgAddAfGkA7LMTPoBmrwVXbvHfnN8SWsW_WXm=LPVmc7Q@mail.gmail.com>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_x
         a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
         a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
-        a=6RKVXk6y1sDKWcmH7FUA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=N0d8Qoj7gSbW1E7g6xMA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
         a=fCgQI5UlmZDRPDxm0A3o:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 19, 2021 at 10:54:25AM -0400, Brian Foster wrote:
-> On Fri, Mar 19, 2021 at 12:43:03PM +1100, Dave Chinner wrote:
-> > On Fri, Mar 19, 2021 at 12:05:06PM +1100, Dave Chinner wrote:
-> > > On Thu, Mar 18, 2021 at 03:19:01PM -0700, Darrick J. Wong wrote:
-> > > > TBH I think the COW recovery and the AG block reservation pieces are
-> > > > prime candidates for throwing at an xfs_pwork workqueue so we can
-> > > > perform those scans in parallel.
-> > > 
-> > > As I mentioned on #xfs, I think we only need to do the AG read if we
-> > > are near enospc. i.e. we can take the entire reservation at mount
-> > > time (which is fixed per-ag) and only take away the used from the
-> > > reservation (i.e. return to the free space pool) when we actually
-> > > access the AGF/AGI the first time. Or when we get a ENOSPC
-> > > event, which might occur when we try to take the fixed reservation
-> > > at mount time...
-> > 
-> > Which leaves the question about when we need to actually do the
-> > accounting needed to fix the bug Brian is trying to fix. Can that be
-> > delayed until we read the AGFs or have an ENOSPC event occur? Or
-> > maybe some other "we are near ENOSPC and haven't read all AGFs yet"
-> > threshold/trigger?
-> > 
+On Tue, Mar 23, 2021 at 11:35:46AM +0200, Amir Goldstein wrote:
+> On Tue, Mar 23, 2021 at 9:26 AM Dave Chinner <david@fromorbit.com> wrote:
+> > On Tue, Mar 23, 2021 at 06:50:44AM +0200, Amir Goldstein wrote:
+> > > On Tue, Mar 23, 2021 at 1:03 AM Dave Chinner <david@fromorbit.com> wrote:
+> For most use cases, getting a unique fsid that is not "persistent"
+> would be fine. Many use case will probably be watching a single
+> filesystem and then the value of fsid in the event doesn't matter at all.
 > 
-> Technically there isn't a hard requirement to read in any AGFs at mount
-> time. The tradeoff is that leaves a gap in effectiveness until at least
-> the majority of allocbt blocks have been accounted for (via perag agf
-> initialization). The in-core counter simply folds into the reservation
-> set aside value, so it would just remain at 0 at reservation time and
-> behave as if the mechanism didn't exist in the first place. The obvious
-> risk is a user can mount the fs and immediately acquire reservation
-> without having populated the counter from enough AGs to prevent the
-> reservation overrun problem. For that reason, I didn't really consider
-> the "lazy" init approach a suitable fix and hooked onto the (mostly)
-> preexisting perag res behavior to initialize the appropriate structures
-> at mount time.
+> If, however, at some point in the future, someone were to write
+> a listener that stores events in a persistent queue for later processing
+> it would be more "convenient" if fsid values were "persistent".
+
+Ok, that is what I suspected - that you want to write filehandles to
+a userspace database of some sort for later processing and so you
+need to also store the filesystem that the filehandle belongs to.
+
+FWIW, that's something XFS started doing a couple of decades ago for
+DMAPI based prioprietary HSM implementations. They were build around
+a massive userspace database that indexed the contents of the
+fileystem via file handles and were kept up to date via
+notifications through the DMAPI interface.
+
+> > > > However, changing the uuid on XFS is an offline (unmounted)
+> > > > operation, so there will be no fanotify marks present when it is
+> > > > changed. Hence when it is remounted, there will be a new f_fsid
+> > > > returned in statvfs(), just like what happens now, and all
+> > > > applications dependent on "persistent" fsids (and persistent
+> > > > filehandles for that matter) will now get ESTALE errors...
+> > > >
+> > > > And, worse, mp->m_fixed_fsid (and XFS superblock UUIDs in general)
+> > > > are not unique if you've got snapshots and they've been mounted via
+> > > > "-o nouuid" to avoid XFS's duplicate uuid checking. This is one of
+> > > > the reasons that the duplicate checking exists - so that fshandles
+> > > > are unique and resolve to a single filesystem....
+> > >
+> > > Both of the caveats of uuid you mentioned are not a big concern for
+> > > fanotify because the nature of f_fsid can be understood by the event
+> > > listener before setting the multi-fs watch (i.e. in case of fsid collision).
+> >
+> > Sorry, I don't understand what "the nature of f_fsid can be
+> > understood" means. What meaning are you trying to infer from 8 bytes
+> > of opaque data in f_fsid?
+> >
 > 
-> If that underlying mount time behavior changes, it's not totally clear
-> to me how that impacts this patch. If the perag res change relies on an
-> overestimated mount time reservation and a fallback to a hard scan on
-> -ENOSPC, then I wonder whether the overestimated reservation might
-> effectively subsume whatever the allocbt set aside might be for that AG.
-> If so, and the perag init effectively transfers excess reservation back
-> to free space at the same time allocbt blocks are accounted for (and set
-> aside from subsequent reservations), perhaps that has a similar net
-> effect as the current behavior (of initializing the allocbt count at
-> mount time)..?
+> When the program is requested to watch multiple filesystems, it starts by
+> querying their fsid. In case of an fsid collision, the program knows that it
+> will not be able to tell which filesystem the event originated in, so the
+> program can print a descriptive error to the user.
+
+Ok, so it can handle collisions, but it cannot detect things like
+two filesystems swapping fsids because device ordering changed at
+boot time. i.e. there no way to determine the difference between
+f_fsid change vs the same filesystems with stable f_fsid being
+mounted in different locations....
+
+> > > Regardless of the fanotify uapi and whether it's good or bad, do you insist
+> > > that the value of f_fsid exposed by xfs needs to be the bdev number and
+> > > not derived from uuid?
+> >
+> > I'm not insisting that it needs to be the bdev number. I'm trying to
+> > understand why it needs to be changed, what the impact of that
+> > change is and whether there are other alternatives before I form an
+> > opinion on whether we should make this user visible filesystem
+> > identifier change or not...
+> >
+> > > One thing we could do is in the "-o nouuid" case that you mentioned
+> > > we continue to use the bdev number for f_fsid.
+> > > Would you like me to make that change?
+> >
+> > No, I need to you stop rushing around in a hurry to change code and
+> > assuming that everyone knows every little detail of fanotify and the
+> > problems that need to be solved. Slow down and explain clearly and
+> > concisely why f_fsid needs to be persistent, how it gets used to
+> > optimise <something> when it is persistent, and what the impact of
+> > it not being persistent is.
+> >
 > 
-> One problem is that might be hard to reason about even with code in
-> place, let alone right now when the targeted behavior is still
-> vaporware. OTOH, I suppose that if we do know right now that the perag
-> res scan will still fall back to mount time scans beyond some low free
-> space threshold, perhaps it's just a matter of factoring allocbt set
-> aside into the threshold somehow so that we know the counter will always
-> be initialized before a user can over reserve blocks.
+> Fair enough.
+> I'm in a position of disadvantage having no real users to request this change.
+> XFS is certainly "not broken", so the argument for "not fixing" it is valid.
+> 
+> Nevertheless bdev can change on modern systems even without reboot
+> for example for loop mounted images, so please consider investing the time
+> in forming an opinion about making this change for the sake of making f_fsid
+> more meaningful for any caller of statfs(2) not only for fanotify listeners.
+> 
+> Leaving fanotify out of the picture, the question that the prospect user is
+> trying answer is:
+> "Is the object at $PATH or at $FD the same object that was observed at
+>  'an earlier time'?"
+> 
+> With XFS, that question can be answered (< 100% certainty)
+> using the XFS_IOC_PATH_TO_FSHANDLE interface.
 
-Yeah, that seems reasonable to me. I don't think it's difficult to
-handle - just set the setaside to maximum at mount time, then as we
-read in AGFs we replace the maximum setaside for that AG with the
-actual btree block usage. If we hit ENOSPC, then we can read in the
-uninitialised pags to reduce the setaside from the maximum to the
-actual values and return that free space back to the global pool...
+Actually, there's a bit more to it than that. See below.
 
-> As it is, I don't
-> really have a strong opinion on whether we should try to make this fix
-> now and preserve it, or otherwise table it and revisit once we know what
-> the resulting perag res code will look like. Thoughts?
+> name_to_handle_at(2) + statfs(2) is a generic interface that provides
+> this answer with less certainty, but it could provide the answer
+> with the same certainty for XFS.
 
-It sounds like we have a solid plan to address the AG header access
-at mount time, adding this code now doesn't make anything worse,
-nor does it appear to prevent us from fixing the AG header access
-problem in the future. So I'm happy for this fix to go ahead as it
-stands.
+Let me see if I get this straight....
+
+Because the VFS filehandle interface does not cater for this by
+giving you a fshandle that is persistent, you have to know what path
+the filehandle was derived from to be able to open a mountfd for
+open_by_handle_at() on the file handle you have stored in userspace.
+And that open_by_handle_at() returns an ephemeral mount ID, so the
+kernel does not provide what you need to use open_by_handle_at()
+immediately.
+
+To turn this ephemeral mount ID into a stable identifier you have to
+look up /proc/self/mounts to find the mount point, then statvfs()
+the mount point to get the f_fsid.
+
+To use the handle, you then need to open the path to the stored
+mount point, check that f_fsid still matches what you originally
+looked up, then you can run open_by_handle_at() on the file handle.
+If you have an open fd on the filesystem and f_fsid matches, you
+have the filesystem pinned until you close the mount fd, and so you
+can just sort your queued filehandles by f_fsid and process them all
+while you have the mount fd open....
+
+Is that right?
+
+But that still leaves a problem in that the VFS filehandle does not
+contain a filesystem identifier itself, so you can never actually
+verify that the filehandle belongs to the mount that you opened for
+that f_fsid. i.e. The file handle is built by exportfs_encode_fh(),
+which filesystems use to encode inode/gen/parent information.
+Nothing else is placed in the VFS handle, so the file handle cannot
+be used to identify what filesystem it came from.
+
+These seem like a fundamental problems for storing VFS handles
+across reboots: identifying the filesystem is not atomic with the
+file handle generation and it that identification is not encoded
+into the file handle for later verification.
+
+IOWs, if you get the fsid translation wrong, the filehandle will end
+up being used on the wrong filesystem and userspace has no way of
+knowing that this occurred - it will get ESTALE or data that isn't
+what it expected. Either way, it'll look like data corruption to the
+application(s). Using f_fsid for this seems fragile to me and has
+potential to break in unexpected ways in highly dynamic
+environments.
+
+The XFS filehandle exposed by the ioctls, and the NFS filehandle for
+that matter, both include an identifier for the filesystem they
+belong to in the file handle. This identifier matches the stable
+filesystem identifier held by the filesystem (or the NFS export
+table), and hence the kernel could resolve whether the filehandle
+itself has been directed at the correct filesystem.
+
+The XFS ioctls do not do this fshandle checking - this is something
+performed by the libhandle library (part of xfsprogs).  libhandle
+knows the format of the XFS filehandles, so it peaks inside them to
+extract the fsid to determine where to direct them. 
+
+Applications must first initialise filesystems that file handles can
+be used on by calling path_to_fshandle() to populate an open file
+cache.  Behind the scenes, this calls XFS_IOC_PATH_TO_FSHANDLE to
+associate a {fd, path, fshandle} tuple for that filesystem. The
+libhandle operations then match the fsid embedded in the file handle
+to the known open fshandles, and if they match it uses the
+associated fd to issue the ioctl to the correct filesystem.
+
+This fshandle fd is held open for as long as the application is
+running, so it pins the filesystem and so the fshandle obtained at
+init time is guaranteed to be valid until the application exits.
+Hence on startup an app simply needs to walk the paths it is
+interested in and call path_to_fshandle() on all of them, but
+otherwise it does not need to know what filesystem a filehandle
+belongs to - the libhandle implementation takes care of that
+entirely....
+
+IOWs, this whole "find the right filesystem for the file handle"
+implementation is largely abstracted away from userspace by
+libhandle. Hence just looking at what the the XFS ioctls do does not
+give the whole picture of how stable filehandles were actually used
+by applications...
+
+I suspect that the right thing to do here is extend the VFS
+filehandles to contain an 8 byte fsid prefix (supplied by a new an
+export op) and an AT_FSID flag for name_to_handle_at() to return
+just the 8 byte fsid that is used by handles on that filesystem.
+This provides the filesystems with a well defined API for providing
+a stable identifier instead of redefining what filesystems need to
+return in some other UAPI.
+
+This also means that userspace can be entirely filesystem agnostic
+and it doesn't need to rely on parsing proc files to translate
+ephemeral mount IDs to paths, statvfs() and hoping that f_fsid is
+stable enough that it doesn't get the destination wrong.  It also
+means that fanotify UAPI probably no longer needs to supply a
+f_fsid with the filehandle because it is built into the
+filehandle....
 
 Cheers,
 
