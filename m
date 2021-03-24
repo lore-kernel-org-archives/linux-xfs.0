@@ -2,126 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A96DC433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 02:08:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38226C433C1
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 02:11:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1FF67619F3
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 02:08:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3277619C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 02:10:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231687AbhCXCIP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Mar 2021 22:08:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38156 "EHLO mail.kernel.org"
+        id S231237AbhCXCK1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Mar 2021 22:10:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39332 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231237AbhCXCIM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Mar 2021 22:08:12 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BB96B619FB;
-        Wed, 24 Mar 2021 02:08:11 +0000 (UTC)
+        id S231267AbhCXCKU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Mar 2021 22:10:20 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 16ABC619F3;
+        Wed, 24 Mar 2021 02:10:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616551691;
-        bh=5RrpgDTSFEcTmdL7hnSP0wuQudQnSBWs15uXi1XO53A=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jyYf1RYWO3E0rn59fXR8eGUBULRNN1Is/HUjqIyNkXF03gf2iKLRmZfJI9FaTeZ7D
-         GXLrJKl9jVa0uqaKad/OIRM9qsiyCAyqyHzBQHC2WXJ3TmXahyS/0WbcNLZ/HIPPb4
-         AhZ7R181f388AUmevGB0ur7LaKChq7bjrVswWiE14ncX6QcLTjXgN0isJBxxq138l6
-         6ztsAsPbcDgDqw8SyYkjSfv7CwM6Jns+BPu9g5KLHoOCZdZ+sBAoIQPr8wtgEO5fCx
-         cgzwnZ3VBj5Z2XqwaYeh5pNKi6PAA7GqlVIHSmyZC4ytCTdxdmiiSUMmV5h7VRL7gV
-         5+uhAUPw8OZIA==
-Date:   Tue, 23 Mar 2021 19:08:10 -0700
+        s=k20201202; t=1616551820;
+        bh=NvG2VrPqtaLvm7XDSALaBDEiHwsoMUkCGCayCTwxLQQ=;
+        h=Date:From:To:Cc:Subject:From;
+        b=VegzxjwS/2Wha0Rp6M/hn+YV1vWb1PCo0bYS4T6s40Esx/oRNHjoMtDMDLdrrUZhL
+         wtL3lH8RovpzH80uPKyNjnPRAhJk7NDj6vdtma/w4UR7i/VpB4EidqNqqw30tx7ajI
+         RpOgTei7R0HtYGdMsbbbhGGt3HI08AOwhvyfYaGhA4K9fAwNycJx+mxP3cm6XP5YWl
+         S93v+1qopLGS92SStRw7/WMzBbgBq1c8eATh0BEPjxgfNxqYjV8vaz5dCabJU1m0vr
+         ihf+yv30A7cXs1rqbTh/evoWyhsjWchyDNDXY2I1iywtHfk/PiAogF2HiUWQNgjKEs
+         5R5Gy3IOJFGxw==
+Date:   Tue, 23 Mar 2021 19:10:18 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/7] repair: Phase 6 performance improvements
-Message-ID: <20210324020810.GP22100@magnolia>
-References: <20210319013355.776008-1-david@fromorbit.com>
- <20210319013845.GA1431129@xiangao.remote.csb>
- <20210319182221.GU22100@magnolia>
- <20210320020931.GA1608555@xiangao.remote.csb>
- <20210324012655.GA2245176@xiangao.remote.csb>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs_admin: pick up log arguments correctly
+Message-ID: <20210324021018.GQ22100@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210324012655.GA2245176@xiangao.remote.csb>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 24, 2021 at 09:26:55AM +0800, Gao Xiang wrote:
-> Hi Dave and Darrick,
-> 
-> On Sat, Mar 20, 2021 at 10:09:31AM +0800, Gao Xiang wrote:
-> > On Fri, Mar 19, 2021 at 11:22:21AM -0700, Darrick J. Wong wrote:
-> > > On Fri, Mar 19, 2021 at 09:38:45AM +0800, Gao Xiang wrote:
-> > > > On Fri, Mar 19, 2021 at 12:33:48PM +1100, Dave Chinner wrote:
-> > > > > Hi folks,
-> > > > > 
-> > > > > This is largely a repost of my current code so that Xiang can take
-> > > > > over and finish it off. It applies against 5.11.0 and the
-> > > > > performance numbers are still valid. I can't remember how much of
-> > > > > the review comments I addressed from the first time I posted it, so
-> > > > > the changelog is poor....
-> > > > 
-> > > > Yeah, I will catch what's missing (now looking the previous review),
-> > > > and follow up then...
-> > > 
-> > > :)
-> > > 
-> > > While you're revising the patches, you might as well convert:
-> > > 
-> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > into:
-> > > 
-> > > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > because Exchange is so awful for inline replies that I don't use that
-> > > email address anymore.
-> > 
-> > Yeah, I'm just starting sorting out all previous opinions
-> > and patches diff. Will update in the next version.
-> > 
-> 
-> Sorry for bothering... After reading the previous discussion for a while,
-> I'm fine with the trivial cleanups. Yet, it seems that there are mainly 2
-> remaining open discussions unsolved yet...
-> 
-> 1 is magic number 1000,
-> https://lore.kernel.org/r/20201029172045.GP1061252@magnolia
-> 
-> while I also don't have better ideas of this (and have no idea why queue
-> depth 1000 is optimal compared with other configurations), so it'd be better
-> to get your thoughts about this in advance (e.g. just leave it as-is, or...
-> plus, I don't have such test setting with such many cpus)
-> 
-> 2 is the hash size modificiation,
-> https://lore.kernel.org/r/20201029162922.GM1061252@magnolia/
-> 
-> it seems previously hash entires are limited to 64k, and this patch relaxes
-> such limitation, but for huge directories I'm not sure the hash table
-> utilization but from the previous commit message it seems the extra memory
-> usage can be ignored.
-> 
-> Anyway, I'm fine with just leave them as-is if agreed on these.
+From: Darrick J. Wong <djwong@kernel.org>
 
-FWIW I didn't have any specific objections to either magic number, I
-simply wanted to know where they came from and why. :)
+In commit ab9d8d69, we added support to xfs_admin to pass an external
+log to xfs_db and xfs_repair.  Unfortunately, we didn't do this
+correctly -- by appending the log arguments to DB_OPTS, we now guarantee
+an invocation of xfs_db when we don't have any work for it to do.
 
---D
+Brian Foster noticed that this results in xfs/764 hanging fstests
+because xfs_db (when not compiled with libeditline) will wait for input
+on stdin.  I didn't notice because my build includes libeditline and my
+test runner script does silly things with pipes such that xfs_db would
+exit immediately.
 
-> Thanks,
-> Gao Xiang
-> 
-> > Thanks,
-> > Gao Xiang
-> > 
-> > > 
-> > > --D
-> > > 
-> > > > Thanks,
-> > > > Gao Xiang
-> > > > 
-> > > 
-> 
+Reported-by: Brian Foster <bfoster@redhat.com>
+Fixes: ab9d8d69 ("xfs_admin: support adding features to V5 filesystems")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ db/xfs_admin.sh |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+index 916050cb..409975b2 100755
+--- a/db/xfs_admin.sh
++++ b/db/xfs_admin.sh
+@@ -8,7 +8,7 @@ status=0
+ DB_OPTS=""
+ REPAIR_OPTS=""
+ REPAIR_DEV_OPTS=""
+-DB_LOG_OPTS=""
++LOG_OPTS=""
+ USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
+ 
+ while getopts "c:efjlL:O:pr:uU:V" c
+@@ -40,19 +40,18 @@ case $# in
+ 	1|2)
+ 		# Pick up the log device, if present
+ 		if [ -n "$2" ]; then
+-			DB_OPTS=$DB_OPTS" -l '$2'"
+-			REPAIR_DEV_OPTS=$REPAIR_DEV_OPTS" -l '$2'"
++			LOG_OPTS=" -l '$2'"
+ 		fi
+ 
+ 		if [ -n "$DB_OPTS" ]
+ 		then
+-			eval xfs_db -x -p xfs_admin $DB_OPTS "$1"
++			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_OPTS "$1"
+ 			status=$?
+ 		fi
+ 		if [ -n "$REPAIR_OPTS" ]
+ 		then
+ 			echo "Running xfs_repair to upgrade filesystem."
+-			eval xfs_repair $REPAIR_DEV_OPTS $REPAIR_OPTS "$1"
++			eval xfs_repair $LOG_OPTS $REPAIR_DEV_OPTS $REPAIR_OPTS "$1"
+ 			status=`expr $? + $status`
+ 		fi
+ 		;;
