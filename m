@@ -2,160 +2,586 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C03CC433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 10:47:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8D92C433C1
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 12:58:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9FDC61993
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 10:47:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4D9561A0B
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 12:58:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231728AbhCXKrD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Mar 2021 06:47:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57894 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230316AbhCXKqy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Mar 2021 06:46:54 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46770C061763;
-        Wed, 24 Mar 2021 03:46:53 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id q11so7706153pld.11;
-        Wed, 24 Mar 2021 03:46:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=cRPbWLqsrCVnDSAZCiqDcrV/O58L/L3nAvuvsKRM09k=;
-        b=MNZxKObuZplvjdA4uShIhvxfLASZR3VyMgGYAeeC6D93eC0IEAjr6ibYTDbuaHhPz2
-         Onoo4GpvXgq1G6nUOAazqlBTD8M8MQQUwcTgZplbaDmaJ85ULF7YjTMdhS0VCnPLS3qf
-         C9vlr+JDL1lTzhIDOvgxMiGukFh51w4j++aYuYU6YcYFVMsAFI6SbwvNBl40iCZVfptH
-         5aiaH091jPrOyWT9F83ZWkoh5rcLQ/AGpS1cs0lQ1Wx+3kO9w/d+6DPIGHvqmj1r0ZMZ
-         GUL/eZ2WLrh3raeY1pNE+3Ac7EI6VfdiucC77UxMICYl1Tj+CU0Jc8M6tWEBX7eACzsL
-         XpwA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=cRPbWLqsrCVnDSAZCiqDcrV/O58L/L3nAvuvsKRM09k=;
-        b=q1KtGx75cNdIZZ7BYuKwf3CDfWWY3R1eBiUzUub6sCOPjqzzfBvzQcu1ub5eA7/gD6
-         F2jbLezU0xwLoQpE53N8PpRtYdvdVR5lEzXVCE/COToojSj9BLA1QwHDw4I/0D+hX22X
-         Kjjb5Vs1AINVGaGoUgi1KlXQzPMdNYB/YrK6MRzCfv2uDHtf8wfRJIh37Ntuo1VmGMVb
-         KWO2J0lg4c5txttG+1NiR1bPrr7QLxbP2IXHhZ/VYuM07vY1uzMWPRvWjmV3315EpmwV
-         nw/GE8bf5UMC3kFb6VTN+jqnMP3IFQCH9BsuXoOQByi1kQS9PnP8R1d7KUkG0GhBEHQg
-         LpNQ==
-X-Gm-Message-State: AOAM533AQxONv47mtwEEftB/ovEOEjmhWihflmN4MkCdJEIiJ13jUJ2/
-        4y5/OI7CplggKUvkifXSjGgIw6gJvRk=
-X-Google-Smtp-Source: ABdhPJxBHn680TUyI69FPCUZ4lFr0WESaNG9dSt8EaNZw1xQq7ArueVfYBE1i6MCzA0z33JO0XWpxw==
-X-Received: by 2002:a17:90a:df91:: with SMTP id p17mr2837067pjv.23.1616582812388;
-        Wed, 24 Mar 2021 03:46:52 -0700 (PDT)
-Received: from garuda ([171.61.69.55])
-        by smtp.gmail.com with ESMTPSA id f2sm2118752pju.46.2021.03.24.03.46.50
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 24 Mar 2021 03:46:51 -0700 (PDT)
-References: <20210309050124.23797-1-chandanrlinux@gmail.com> <20210309050124.23797-6-chandanrlinux@gmail.com> <20210322175652.GG1670408@magnolia> <87r1k56f7k.fsf@garuda> <20210323205730.GN22100@magnolia>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
+        id S234669AbhCXM6E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Mar 2021 08:58:04 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:48188 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234343AbhCXM5y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Mar 2021 08:57:54 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1616590672;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=C9KpXD5ex3kEvrLgVXeuh+s0ObmxKcdQXr8oYSx5pqY=;
+        b=ao7K/BCIvUPxRwTG5W7phojxtPUJIjJ8SqdXNGHKW+KxTBZmYvYW6CUhEA7XUh+1ykfk7J
+        y6cTHYAVKdK9xTusWv2bkhjoqfQNVc5NA82eauj0441viL9ZM8GXQ6O+83pJ7nxCcPY+Fl
+        MH8G8ujeaQ4WlKyEyYtUSBjwhQZM25A=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-96-S4y-NMbuNO-WJtSMnctRbg-1; Wed, 24 Mar 2021 08:57:50 -0400
+X-MC-Unique: S4y-NMbuNO-WJtSMnctRbg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0875F108BD06;
+        Wed, 24 Mar 2021 12:57:49 +0000 (UTC)
+Received: from bfoster (ovpn-113-24.rdu2.redhat.com [10.10.113.24])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id F0B8D1972B;
+        Wed, 24 Mar 2021 12:57:47 +0000 (UTC)
+Date:   Wed, 24 Mar 2021 08:57:46 -0400
+From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V6 05/13] xfs: Check for extent overflow when growing realtime bitmap/summary inodes
-In-reply-to: <20210323205730.GN22100@magnolia>
-Date:   Wed, 24 Mar 2021 16:16:48 +0530
-Message-ID: <871rc43k2v.fsf@garuda>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCH 3/3] xfs: test inobtcount upgrade
+Message-ID: <YFs3StgzVH6Y7XfJ@bfoster>
+References: <161647324459.3431131.16341235245632737552.stgit@magnolia>
+ <161647326120.3431131.9588272913557202987.stgit@magnolia>
+ <YFn3hck7nYCwhfK3@bfoster>
+ <20210323185403.GM22100@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210323185403.GM22100@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 24 Mar 2021 at 02:27, Darrick J. Wong wrote:
-> On Tue, Mar 23, 2021 at 09:21:27PM +0530, Chandan Babu R wrote:
->> On 22 Mar 2021 at 23:26, Darrick J. Wong wrote:
->> > On Tue, Mar 09, 2021 at 10:31:16AM +0530, Chandan Babu R wrote:
->> >> Verify that XFS does not cause realtime bitmap/summary inode fork's
->> >> extent count to overflow when growing the realtime volume associated
->> >> with a filesystem.
->> >>
->> >> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
->> >> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
->> >
->> > Soo... I discovered that this test doesn't pass with multiblock
->> > directories:
->>
->> Thanks for the bug report and the description of the corresponding solution. I
->> am fixing the tests and will soon post corresponding patches to the mailing
->> list.
->
-> Also, I found a problem with xfs/534 when it does the direct write tests
-> to a pmem volume with DAX enabled:
->
-> --- /tmp/fstests/tests/xfs/534.out      2021-03-21 11:44:09.384407426 -0700
-> +++ /var/tmp/fstests/xfs/534.out.bad    2021-03-23 13:32:15.898301839 -0700
-> @@ -5,7 +5,4 @@
->  Fallocate 15 blocks
->  Buffered write to every other block of fallocated space
->  Verify $testfile's extent count
-> -* Direct write to unwritten extent
-> -Fallocate 15 blocks
-> -Direct write to every other block of fallocated space
-> -Verify $testfile's extent count
-> +Extent count overflow check failed: nextents = 11
+On Tue, Mar 23, 2021 at 11:54:03AM -0700, Darrick J. Wong wrote:
+> On Tue, Mar 23, 2021 at 10:13:25AM -0400, Brian Foster wrote:
+> > On Mon, Mar 22, 2021 at 09:21:01PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Make sure we can actually upgrade filesystems to support inode btree
+> > > counters.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  common/xfs        |   20 ++++++
+> > >  tests/xfs/764     |  190 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/xfs/764.out |   27 ++++++++
+> > >  tests/xfs/910     |   84 +++++++++++++++++++++++
+> > >  tests/xfs/910.out |   12 +++
+> > >  tests/xfs/group   |    2 +
+> > >  6 files changed, 335 insertions(+)
+> > >  create mode 100755 tests/xfs/764
+> > >  create mode 100644 tests/xfs/764.out
+> > >  create mode 100755 tests/xfs/910
+> > >  create mode 100644 tests/xfs/910.out
+> > > 
+> > > 
+> > > diff --git a/common/xfs b/common/xfs
+> > > index 9cb373ba..a316f384 100644
+> > > --- a/common/xfs
+> > > +++ b/common/xfs
+> > > @@ -1085,3 +1085,23 @@ _require_xfs_copy()
+> > >  	[ "$USE_EXTERNAL" = yes ] && \
+> > >  		_notrun "Cannot xfs_copy with external devices"
+> > >  }
+> > > +
+> > > +_require_xfs_repair_upgrade()
+> > > +{
+> > > +	local type="$1"
+> > > +
+> > > +	$XFS_REPAIR_PROG -c "$type=narf" 2>&1 | \
+> > 
+> > narf?
+> 
+> Not A Real Flag?
+> 
+> I'm checking to see if repair knows about a feature upgrade by seeding
+> it with a garbage value to see if the error that repair spits back is
+> about the feature being unrecognised or about the value not making any
+> sense.
+> 
 
-The inode extent overflow reported above was actually due to the buffered
-write operation. But it does occur with direct write operation as well.
+Ok.
 
-I was able to recreate the bug with an emulated pmem device on my qemu guest.
+> > > +		grep -q 'unknown option' && \
+> > > +		_notrun "xfs_repair does not support upgrading fs with $type"
+> > > +}
+> > > +
+> > > +_require_xfs_scratch_inobtcount()
+> > > +{
+> > > +	_require_scratch
+> > > +
+> > > +	_scratch_mkfs -m inobtcount=1 &> /dev/null || \
+> > > +		_notrun "mkfs.xfs doesn't have inobtcount feature"
+> > > +	_try_scratch_mount || \
+> > > +		_notrun "inobtcount not supported by scratch filesystem type: $FSTYP"
+> > > +	_scratch_unmount
+> > > +}
+> > > diff --git a/tests/xfs/764 b/tests/xfs/764
+> > > new file mode 100755
+> > > index 00000000..cf6784d2
+> > > --- /dev/null
+> > > +++ b/tests/xfs/764
+> > > @@ -0,0 +1,190 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0-or-later
+> > > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test No. 764
+> > > +#
+> > > +# Functional testing for xfs_admin -O, which is a new switch that enables us to
+> > > +# add features to an existing filesystem.  In these test scenarios, we try to
+> > > +# add the inode btree counter 'feature' to the filesystem, and make sure that
+> > > +# NEEDSREPAIR (aka the thing that prevents us from mounting after an upgrade
+> > > +# fails) is clear if the upgraded succeeds and set if it fails.
+> > > +#
+> > > +# The first scenario tests that we can't add inobtcount to the V4 format,
+> > > +# which is now deprecated.
+> > > +#
+> > > +# The middle five scenarios ensure that xfs_admin -O works even when external
+> > > +# log devices and realtime volumes are specified.  This part is purely an
+> > > +# exerciser for the userspace tools; kernel support for those features is not
+> > > +# required.
+> > > +#
+> > > +# The last scenario uses a xfs_repair debug knob to simulate failure during an
+> > > +# inobtcount upgrade, then checks that mounts fail when the flag is enabled,
+> > > +# that repair clears the flag, and mount works after repair.
+...
+> > > +seq=`basename $0`
+> > > +seqres=$RESULT_DIR/$seq
+> > > +echo "QA output created by $seq"
+> > > +
+> > > +here=`pwd`
+> > > +tmp=/tmp/$$
+> > > +status=1    # failure is the default!
+> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > > +
+> > > +_cleanup()
+> > > +{
+> > > +	cd /
+> > > +	rm -f $tmp.* $fake_logfile $fake_rtfile
+> > > +}
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/rc
+> > > +. ./common/filter
+> > > +
+> > > +# real QA test starts here
+> > > +_supported_fs xfs
+> > > +_require_test
+> > > +_require_xfs_scratch_inobtcount
+> > > +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> > > +_require_xfs_repair_upgrade inobtcount
+> > > +
+> > > +rm -f $seqres.full
+> > > +
+> > > +note() {
+> > > +	echo "$@" | tee -a $seqres.full
+> > > +}
+> > > +
+> > > +note "S1: Cannot add inobtcount to a V4 fs"
+> > > +_scratch_mkfs -m crc=0 >> $seqres.full
+> > > +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> > > +
+> > > +# Middle five scenarios: Make sure upgrades work with various external device
+> > > +# configurations.
+> > > +note "S2: Check that setting with xfs_admin + logdev works"
+> > > +fake_logfile=$TEST_DIR/scratch.log
+> > > +rm -f $fake_logfile
+> > > +truncate -s 500m $fake_logfile
+> > > +
+> > > +old_external=$USE_EXTERNAL
+> > > +old_logdev=$SCRATCH_LOGDEV
+> > > +USE_EXTERNAL=yes
+> > > +SCRATCH_LOGDEV=$fake_logfile
+> > > +
+> > > +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
+> > > +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> > > +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
+> > > +	echo "xfs_admin should have cleared needsrepair?"
+> > > +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
+> > > +	echo "xfs_admin should have set inobtcount?"
+> > > +
+> > > +note "Check clean"
+> > > +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> > > +
+> > > +USE_EXTERNAL=$old_external
+> > > +SCRATCH_LOGDEV=$old_logdev
+> > > +
+> > > +note "S3: Check that setting with xfs_admin + realtime works"
+> > > +fake_rtfile=$TEST_DIR/scratch.rt
+> > > +rm -f $fake_rtfile
+> > > +truncate -s 500m $fake_rtfile
+> > > +
+> > > +old_external=$USE_EXTERNAL
+> > > +old_rtdev=$SCRATCH_RTDEV
+> > > +USE_EXTERNAL=yes
+> > > +SCRATCH_RTDEV=$fake_rtfile
+> > > +
+> > > +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
+> > > +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> > > +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
+> > > +	echo "xfs_admin should have cleared needsrepair?"
+> > > +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
+> > > +	echo "xfs_admin should have set inobtcount?"
+> > > +
+> > > +note "Check clean"
+> > > +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> > > +
+> > > +USE_EXTERNAL=$old_external
+> > > +SCRATCH_RTDEV=$old_rtdev
+> > > +
+> > > +note "S4: Check that setting with xfs_admin + realtime + logdev works"
+> > > +old_external=$USE_EXTERNAL
+> > > +old_logdev=$SCRATCH_LOGDEV
+> > > +old_rtdev=$SCRATCH_RTDEV
+> > > +USE_EXTERNAL=yes
+> > > +SCRATCH_LOGDEV=$fake_logfile
+> > > +SCRATCH_RTDEV=$fake_rtfile
+> > > +
+> > > +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
+> > > +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> > > +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
+> > > +	echo "xfs_admin should have cleared needsrepair?"
+> > > +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
+> > > +	echo "xfs_admin should have set inobtcount?"
+> > > +
+> > > +note "Check clean"
+> > > +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> > > +
+> > > +USE_EXTERNAL=$old_external
+> > > +SCRATCH_LOGDEV=$old_logdev
+> > > +SCRATCH_RTDEV=$old_rtdev
+> > > +
+> > > +note "S5: Check that setting with xfs_admin + nortdev + nologdev works"
+> > > +old_external=$USE_EXTERNAL
+> > > +old_logdev=$SCRATCH_LOGDEV
+> > > +old_rtdev=$SCRATCH_RTDEV
+> > > +USE_EXTERNAL=
+> > > +SCRATCH_LOGDEV=
+> > > +SCRATCH_RTDEV=
+> > > +
+> > > +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
+> > > +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> > > +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
+> > > +	echo "xfs_admin should have cleared needsrepair?"
+> > > +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
+> > > +	echo "xfs_admin should have set inobtcount?"
+> > > +
+> > > +note "Check clean"
+> > > +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> > > +
+> > > +USE_EXTERNAL=$old_external
+> > > +SCRATCH_LOGDEV=$old_logdev
+> > > +SCRATCH_RTDEV=$old_rtdev
+> > > +
+> > 
+> > There's a lot of eye crossing copy-paste going on here. Do we really
+> > need to always test these varying configurations?
+> 
+> Yes, because it just uncovered a bug in a rare xfs_admin use case.
+> 
 
->
-> looking at the xfs_bmap output for $testfile shows:
->
-> /opt/testfile:
->  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
->    0: [0..7]:          208..215          0 (208..215)           8 010000
->    1: [8..15]:         216..223          0 (216..223)           8 000000
->    2: [16..23]:        224..231          0 (224..231)           8 010000
->    3: [24..31]:        232..239          0 (232..239)           8 000000
->    4: [32..39]:        240..247          0 (240..247)           8 010000
->    5: [40..47]:        248..255          0 (248..255)           8 000000
->    6: [48..55]:        256..263          0 (256..263)           8 010000
->    7: [56..63]:        264..271          0 (264..271)           8 000000
->    8: [64..71]:        272..279          0 (272..279)           8 010000
->    9: [72..79]:        280..287          0 (280..287)           8 000000
->   10: [80..119]:       288..327          0 (288..327)          40 010000
->
-> Which is ... odd since the same direct write gets cut off after writing
-> to block 7 (like you'd expect since it's the same function) when DAX
-> isn't enabled...
->
-> ...OH, I see the problem.  For a non-DAX direct write,
-> xfs_iomap_write_direct will allocate an unwritten block into a hole, but
-> if the block was already mapped (written or unwritten) it won't do
-> anything at all.  For that case, XFS_IEXT_ADD_NOSPLIT_CNT is sufficient,
-> because in the worst case we add one extent to the data fork.
->
-> For DAX writes, however, the behavior is different:
->
-> 	if (IS_DAX(VFS_I(ip))) {
-> 		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
-> 		if (imap->br_state == XFS_EXT_UNWRITTEN) {
-> 			force = true;
-> 			dblocks = XFS_DIOSTRAT_SPACE_RES(mp, 0) << 1;
-> 		}
-> 	}
->
-> This tells xfs_bmapi_write that we want to /convert/ an unwritten extent
-> to written, and we want to zero the blocks.  If we're dax-writing into
-> the middle of an unwritten range, this will cause a split.  The correct
-> parameter there would be XFS_IEXT_WRITE_UNWRITTEN_CNT.  Would you mind
-> sending a kernel patch to fix that?
+I don't see how that's relevant. I suspect if all tests did this kind of
+dynamic configuration modification, we'd probably uncover odd bugs just
+the same. Perhaps the same goes for anybody who might run with this
+configuration in the first place.
 
-Sure, I will work on fixing both the buffered and direct IO extent overflow
-issues.
+ISTM individual tests are historically meant to be fairly focused. I.e.,
+run some test or workload against the provided configuration. I know
+some tests technically violate that when they target a specific feature
+or something like a mount option, for example, but even some of those
+instances can probably be removed over time as certain features become
+more predominant than when the test was originally written (i.e., if we
+have any tests that explicitly format to v5 or with any features that
+have become enabled by default for a significant period of time).
 
-Thanks for reporting the bug.
+> > My general expectation
+> > for fstests has always been to primarily test the configuration
+> > specified in the config file. ISTM this test could be legitimately
+> > reduced to S1, S6 and S7. That might also mitigate the need for 'note'
+> > markers in the golden output, fwiw.
+> 
+> I wouldn't be opposed to pushing S2-S5 to a separate test case to
+> isolate the synthesized external volume tests, if Eryu wants them to be
+> separate...?
+> 
 
---
-chandan
+Why not leave this to runtime configuration vs more unnecessary test
+code?
+
+I'll defer to Eryu regardless, but this just stands out as inconsistent
+with the usage model IMO. I suppose to split it out into a separate test
+might be better than not, but I'm not sure that new test should be part
+of the auto regression group at least (maybe an external log group or
+some such for targeted log testing?).
+
+> > > +# Run our test with the test runner's config last so that the post-test check
+> > > +# won't trip over our artificial log/rt devices
+> > > +note "S6: Check that setting with xfs_admin testrunner config works"
+> > > +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
+> > > +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> > > +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
+> > > +	echo "xfs_admin should have cleared needsrepair?"
+> > > +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
+> > > +	echo "xfs_admin should have set inobtcount?"
+> > > +
+> > 
+> > Perhaps the above xfs_db commands could be wrapped in a helper that
+> > filters on the expected version values..? I.e., even something really
+> > simple that executed the grep and manually constructed a string would
+> > improve readability:
+> > 
+> > _filter_version()
+> > {
+> > 	str="version "
+> > 	_scratch_xfs_db -c "version" | grep -q $1 &&
+> > 		str="$str $1"
+> > 	echo $str
+> > }
+> > 
+> > _scratch_mkfs ...
+> > _scratch_xfs_admin ...
+> > _filter_version NEEDSREPAIR
+> > _filter_version INOBTCNT
+> > 
+> > Then the test dumps the filter output directly to the golden output such
+> > that there's no need for '&& echo "didn't expect this"' logic on every
+> > test.
+> 
+> Hm, yes, that makes sense.
+> 
+> > > +note "Check clean"
+> > > +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> > > +
+> > > +note "S7: Simulate failure during upgrade process"
+> > > +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
+> > > +XFS_REPAIR_FAIL_AFTER_PHASE=2 _scratch_xfs_repair -c inobtcount=1 2>> $seqres.full
+> > > +test $? -eq 137 || echo "repair should have been killed??"
+> > > +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR || \
+> > > +	echo "needsrepair should have been set on fs"
+> > > +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
+> > > +	echo "inobtcount should have been set on fs"
+> > > +_try_scratch_mount &> $tmp.mount
+> > > +res=$?
+> > > +_filter_scratch < $tmp.mount
+> > > +if [ $res -eq 0 ]; then
+> > > +	echo "needsrepair should have prevented mount"
+> > > +	_scratch_unmount
+> > > +fi
+> > > +_scratch_xfs_repair 2>> $seqres.full
+> > > +_scratch_xfs_db -c 'version' | grep -q NEEDSREPAIR && \
+> > > +	echo "xfs_repair should have cleared needsrepair?"
+> > > +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
+> > > +	echo "xfs_admin should have set inobtcount?"
+> > > +_scratch_mount
+> > > +
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/764.out b/tests/xfs/764.out
+> > > new file mode 100644
+> > > index 00000000..067639c9
+> > > --- /dev/null
+> > > +++ b/tests/xfs/764.out
+> > > @@ -0,0 +1,27 @@
+> > > +QA output created by 764
+> > > +S1: Cannot add inobtcount to a V4 fs
+> > > +Running xfs_repair to upgrade filesystem.
+> > > +Inode btree count feature only supported on V5 filesystems.
+> > > +S2: Check that setting with xfs_admin + logdev works
+> > > +Running xfs_repair to upgrade filesystem.
+> > > +Adding inode btree counts to filesystem.
+> > > +Check clean
+> > > +S3: Check that setting with xfs_admin + realtime works
+> > > +Running xfs_repair to upgrade filesystem.
+> > > +Adding inode btree counts to filesystem.
+> > > +Check clean
+> > > +S4: Check that setting with xfs_admin + realtime + logdev works
+> > > +Running xfs_repair to upgrade filesystem.
+> > > +Adding inode btree counts to filesystem.
+> > > +Check clean
+> > > +S5: Check that setting with xfs_admin + nortdev + nologdev works
+> > > +Running xfs_repair to upgrade filesystem.
+> > > +Adding inode btree counts to filesystem.
+> > > +Check clean
+> > > +S6: Check that setting with xfs_admin testrunner config works
+> > > +Running xfs_repair to upgrade filesystem.
+> > > +Adding inode btree counts to filesystem.
+> > > +Check clean
+> > > +S7: Simulate failure during upgrade process
+> > > +Adding inode btree counts to filesystem.
+> > > +mount: SCRATCH_MNT: mount(2) system call failed: Structure needs cleaning.
+> > > diff --git a/tests/xfs/910 b/tests/xfs/910
+> > > new file mode 100755
+> > > index 00000000..4bf79db2
+> > > --- /dev/null
+> > > +++ b/tests/xfs/910
+> > > @@ -0,0 +1,84 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0-or-later
+> > > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test No. 910
+> > > +#
+> > > +# Check that we can upgrade a filesystem to support inobtcount and that
+> > > +# everything works properly after the upgrade.
+> > > +
+> > > +seq=`basename $0`
+> > > +seqres=$RESULT_DIR/$seq
+> > > +echo "QA output created by $seq"
+> > > +
+> > > +here=`pwd`
+> > > +tmp=/tmp/$$
+> > > +status=1    # failure is the default!
+> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > > +
+> > > +_cleanup()
+> > > +{
+> > > +	cd /
+> > > +	rm -f $tmp.*
+> > > +}
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/rc
+> > > +. ./common/filter
+> > > +
+> > > +# real QA test starts here
+> > > +_supported_fs xfs
+> > > +_require_xfs_scratch_inobtcount
+> > > +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> > > +_require_xfs_repair_upgrade inobtcount
+> > > +
+> > > +rm -f $seqres.full
+> > > +
+> > > +# Make sure we can't format a filesystem with inobtcount and not finobt.
+> > > +_scratch_mkfs -m crc=1,inobtcount=1,finobt=0 &> $seqres.full && \
+> > > +	echo "Should not be able to format with inobtcount but not finobt."
+> > > +
+> > > +# Make sure we can't upgrade a V4 filesystem
+> > > +_scratch_mkfs -m crc=0,inobtcount=0,finobt=0 >> $seqres.full
+> > > +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> > > +_scratch_xfs_db -c 'version' | grep -q INOBTCNT && \
+> > > +	echo "Should not be able to upgrade to inobtcount without V5."
+> > > +
+> > > +# Make sure we can't upgrade a filesystem to inobtcount without finobt.
+> > > +_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
+> > > +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> > > +_scratch_xfs_db -c 'version' | grep -q INOBTCNT && \
+> > > +	echo "Should not be able to upgrade to inobtcount without finobt."
+> > > +
+> > > +# Format V5 filesystem without inode btree counter support and populate it
+> > > +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
+> > > +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> > > +_scratch_mount >> $seqres.full
+> > > +
+> > > +echo moo > $SCRATCH_MNT/urk
+> > > +
+> > > +_scratch_unmount
+> > > +_check_scratch_fs
+> > > +
+> > > +# Now upgrade to inobtcount support
+> > > +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> > > +_scratch_xfs_db -c 'version' | grep -q INOBTCNT || \
+> > > +	echo "Cannot detect new feature?"
+> > > +_check_scratch_fs
+> > > +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' -c 'agi 0' -c 'p' >> $seqres.full
+> > > +
+> > 
+> > Isn't this essentially the same core feature upgrade test as 764 with
+> > some minor additional logic (i.e., create a file, check counters)? From
+> > the group update below it seems like maybe 764 is intended to be a
+> > generic repair test while this is intended to target inobtcount, but
+> > there seems to be quite a lot of overlap here...
+> 
+> No, they're not the same test.  As the description for xfs/764 points
+> out, that test is functional testing for the -O switch to xfs_admin.
+> It ensures that we covered basic functionality and that the argument
+> passing logic in that shell script works well enough that there's an
+> observable change in state.
+> 
+
+Hm, Ok. Perhaps I'm a little confused by the fact that they rely on the
+same feature, but I'm still wondering whether a generic "test the -O
+switch" test is necessary if it basically takes the same actions as
+the feature oriented test. Logically it sort of makes sense, it just
+seems like a bit of overkill to have multiple tests running the same
+functional commands to check some slightly different things given the
+time it takes for a full regression test run lately.
+
+(BTW, separate patches for separate tests please. I completely missed
+this was even part of the patch in my first pass through it.)
+
+Brian
+
+> xfs/910 by contrast tests upgrading a filesystem to inobtcount and
+> checking that the kernel will recognise an upgraded filesystem and that
+> it actually writes inode btree counts to the AGI.
+> 
+> In other words, the first test is purely a test of userspace tooling
+> that ensures that xfs_admin can handle different kinds of filesystems,
+> and the second test make sure that an inobtcount upgrade actually works.
+> 
+> --D
+> 
+> > 
+> > Brian
+> > 
+> > > +# Make sure we have nonzero counters
+> > > +_scratch_xfs_db -c 'agi 0' -c 'print ino_blocks fino_blocks' | \
+> > > +	sed -e 's/= [1-9]*/= NONZERO/g'
+> > > +
+> > > +# Mount again, look at our files
+> > > +_scratch_mount >> $seqres.full
+> > > +cat $SCRATCH_MNT/urk
+> > > +
+> > > +# Make sure we can't re-add inobtcount
+> > > +_scratch_unmount
+> > > +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> > > +_scratch_mount >> $seqres.full
+> > > +
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/910.out b/tests/xfs/910.out
+> > > new file mode 100644
+> > > index 00000000..c3cfbb80
+> > > --- /dev/null
+> > > +++ b/tests/xfs/910.out
+> > > @@ -0,0 +1,12 @@
+> > > +QA output created by 910
+> > > +Running xfs_repair to upgrade filesystem.
+> > > +Inode btree count feature only supported on V5 filesystems.
+> > > +Running xfs_repair to upgrade filesystem.
+> > > +Inode btree count feature requires free inode btree.
+> > > +Running xfs_repair to upgrade filesystem.
+> > > +Adding inode btree counts to filesystem.
+> > > +ino_blocks = NONZERO
+> > > +fino_blocks = NONZERO
+> > > +moo
+> > > +Running xfs_repair to upgrade filesystem.
+> > > +Filesystem already has inode btree counts.
+> > > diff --git a/tests/xfs/group b/tests/xfs/group
+> > > index 6aa7883e..28176409 100644
+> > > --- a/tests/xfs/group
+> > > +++ b/tests/xfs/group
+> > > @@ -517,7 +517,9 @@
+> > >  538 auto stress
+> > >  759 auto quick rw realtime
+> > >  760 auto quick rw realtime collapse insert unshare zero prealloc
+> > > +764 auto quick repair
+> > >  768 auto quick repair
+> > >  770 auto repair
+> > > +910 auto quick inobtcount
+> > >  917 auto quick db
+> > >  918 auto quick db
+> > > 
+> > 
+> 
+
