@@ -2,81 +2,85 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F20B2C433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 18:11:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F26FBC433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 18:13:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C425261A21
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 18:11:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0C4961A25
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 18:13:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237354AbhCXSKl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Mar 2021 14:10:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39960 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237271AbhCXSKX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 Mar 2021 14:10:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C84C361A06;
-        Wed, 24 Mar 2021 18:10:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616609423;
-        bh=FWfXTxg/ArBF3nuqH8ksf1XvEQ3ktq9eyw2HJ5IzSIs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rSKW5Rc6kk/5+bkoN70uTBurytnNahZYmAhwfdjwZD6qKpD2ubJU/YCJ2wL+j2Jxn
-         V3t/eGRYWfkNjHYGbz8uQXEMQ1+im6ohd0EzFAPqwPe/HS9F2/BAip9LgA8HpygiL/
-         d5DEYlNagV+uqFuZoN28gEZAxR2A1j1IcxGEkJXoYTNHxQKVmtsB8jnSLDPK+XZM23
-         mbBCXkoOqcWWeUrEno5AP0r5uz+4wGvbq/kkqIiKnKEuB2fo4NjTmk+rRfPvlYF3Pa
-         Y+IHtBbPFvquQ3I7rydmH5OYmbpy2hgJvFhYAvcVwj6P+t9z5I7qNABOSjFg0NLmgO
-         1lbjYY1F/ybHA==
-Date:   Wed, 24 Mar 2021 11:10:22 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/18] xfs: remove the unused xfs_icdinode_has_bigtime
- helper
-Message-ID: <20210324181022.GC22100@magnolia>
-References: <20210324142129.1011766-1-hch@lst.de>
- <20210324142129.1011766-5-hch@lst.de>
+        id S237409AbhCXSMz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Mar 2021 14:12:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42204 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237181AbhCXSMd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Mar 2021 14:12:33 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7308C061763;
+        Wed, 24 Mar 2021 11:12:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Qz136NLar8MaLNakgb8B8hXZ8Dw3KPCZdV6e5jyV8nY=; b=GK4ee1CF6ZLqq28ESWA/QZIU6n
+        mXOdS5ji/jgLvtSudySbmNdO2HNO7Q94yVYtkospFzSf7QCz8e3qdKD2mV1tlBKoy+WCrEnOcH3HP
+        zNPuVsOrqT0MwXd4ADPrgbmqQclCc66gq3/2ISkhMnpN56Jt2dTRXlWLJEsN4XiFumm6W5VkDsu+l
+        PS3+FHuj+oHXVvrUWv8t3cfnDaGYDVZ25ZWyTvkZLERhhs47YxA6CJHxoV04okj9VfufU4sbt4iPD
+        WkeJvEUoDxqWib5KxbjuwX3xNt0tey/YzogrJfIt96bEZ2YoGjCty8odOn+GUBg+19/mvw45RC1OR
+        3G7i5BLQ==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lP7z3-00Bg5H-H7; Wed, 24 Mar 2021 18:12:02 +0000
+Date:   Wed, 24 Mar 2021 18:11:57 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCH 3/3] common/populate: change how we describe cached
+ populated images
+Message-ID: <20210324181157.GC2779737@infradead.org>
+References: <161647318241.3429609.1862044070327396092.stgit@magnolia>
+ <161647319905.3429609.14862078528489327236.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210324142129.1011766-5-hch@lst.de>
+In-Reply-To: <161647319905.3429609.14862078528489327236.stgit@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 24, 2021 at 03:21:15PM +0100, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Heh.  Sloppy Darrick! <slaps wrist>
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
+On Mon, Mar 22, 2021 at 09:19:59PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> The device name of a secondary storage device isn't all that important,
+> but the size is.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/libxfs/xfs_inode_buf.h | 5 -----
->  1 file changed, 5 deletions(-)
+>  common/populate |   14 ++++++++++++--
+>  1 file changed, 12 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-> index 9e1ae38380b3c0..b3097ea8b53366 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.h
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-> @@ -32,11 +32,6 @@ struct xfs_icdinode {
->  	struct timespec64 di_crtime;	/* time created */
->  };
->  
-> -static inline bool xfs_icdinode_has_bigtime(const struct xfs_icdinode *icd)
-> -{
-> -	return icd->di_flags2 & XFS_DIFLAG2_BIGTIME;
-> -}
-> -
->  /*
->   * Inode location information.  Stored in the inode and passed to
->   * xfs_imap_to_bp() to get a buffer and dinode for a given inode.
-> -- 
-> 2.30.1
 > 
+> diff --git a/common/populate b/common/populate
+> index c01b7e0e..94bf5ce9 100644
+> --- a/common/populate
+> +++ b/common/populate
+> @@ -808,13 +808,23 @@ _fill_fs()
+>  _scratch_populate_cache_tag() {
+>  	local extra_descr=""
+>  	local size="$(blockdev --getsz "${SCRATCH_DEV}")"
+> +	local logdev="none"
+> +	local rtdev="none"
+> +
+> +	if [ "${USE_EXTERNAL}" = "yes" ] && [ -n "${SCRATCH_LOGDEV}" ]; then
+> +		logdev="$(blockdev --getsz "${SCRATCH_LOGDEV}")"
+> +	fi
+> +
+> +	if [ "${USE_EXTERNAL}" = "yes" ] && [ -n "${SCRATCH_RTDEV}" ]; then
+> +		rtdev="$(blockdev --getsz "${SCRATCH_RTDEV}")"
+
+Shouldn't these variables be called LOGDEV_SIZE and RTDEV_SIZE?
