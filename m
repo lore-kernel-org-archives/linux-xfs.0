@@ -2,138 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 158B6C433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 16:37:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8D3DC433E1
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 17:18:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E0B28619F8
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 16:37:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4BB261A17
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 17:18:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236060AbhCXQhS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Mar 2021 12:37:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49562 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235832AbhCXQhO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Mar 2021 12:37:14 -0400
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F41F1C061763
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Mar 2021 09:37:13 -0700 (PDT)
-Received: by mail-ed1-x533.google.com with SMTP id j3so28334992edp.11
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Mar 2021 09:37:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=F78F4/Kq+ndIvAG3q41JlNnbimm1afFKY1uPrkgKEKE=;
-        b=CsDx6xAl1VtYRX8X8nlGVP72pS+Njf2eRG9UeLEcNYw/0GG+u51E8oRfnZj6k3/sNg
-         aRLLF/mmJCW58czyShqa6WkR7qJxQwuiCLVxyrBpZ+TAPagZGTpDfa7+zl7Dur1DKlk4
-         B1AAACFL6xsj3ekCmh1gjol0o/QSp3xiwcbei6jwyZhVy3/cDah43fcg8J30O9ZE/PgR
-         mQCXAHzOBzR2wsLGgkCG9GE3xk75u+tWfyPHSZJGznQsHqijxofg2L4Q1jPv+MKqUCHE
-         RQjr95+R6I9EMKEYtmdWrRAb9fTP8P6XndMLkaPTVlg8oBOUifEZ/RsV84+JGEN92W79
-         y2cA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=F78F4/Kq+ndIvAG3q41JlNnbimm1afFKY1uPrkgKEKE=;
-        b=WdUJuZXdD6lgKssP8dRaUUQPeDKV0dVDcKE22zKeD+9EUMYUXSch7Hcqis6jBuAmV0
-         Sn2ElVkOzaM2hQfxGmLodp9zSzveQ5l0mqnQM6vn45MIRqlcGv0ixD8J69/wQDh/qef9
-         pGqiqa1yjwT9SAZvvGOvVP4J1OSjCNJSod2ALNo8YYX6fn71Bhn1knyCXD3gP02s/DGY
-         yM4JwwK5qRD2V2LFv1vxmvdRxt+X4SACR/sdfpXGhUWJmRIxNXI8Z6gZgrypAcnQ5dAa
-         +DpcSruAbhQa8YR6OOk7Dg+Vhjmaj/QmCylqLHcou3869L4YpW8y5UX2380hc1sVov0u
-         L0ig==
-X-Gm-Message-State: AOAM5305tCdIhCmZd53yV99tlIjeQ66QmMcOfoJ+Lb+/aVERMZf8gUAP
-        ZT0ZYxw2gnnTVXWLBSXWzcEs7MGku7ZHZGxtW4QdPA==
-X-Google-Smtp-Source: ABdhPJy0i6T+2AM1FhaOe2x1NOEA+VihVGm8Q0AyYdTDg9DUntxFo3NhisOlYTqdDwwzXOKs7/wWOwG2TBuN7zwJqD8=
-X-Received: by 2002:a05:6402:4301:: with SMTP id m1mr4548882edc.210.1616603832460;
- Wed, 24 Mar 2021 09:37:12 -0700 (PDT)
+        id S237091AbhCXRSQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Mar 2021 13:18:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50076 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S237143AbhCXRRp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 Mar 2021 13:17:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 21AED61A15;
+        Wed, 24 Mar 2021 17:17:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616606265;
+        bh=I2rB0wZcooOuQPNoLBEGDtV+iS04jtAYWGCHIJMzu98=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Jod0nzwmNxYaakWPFnsyNvrekbUOP8QPxBkX9YqbURClZIAZkfLYDIlZYq8fPw8z4
+         3t68Ol655mKLyclFtTN0NBFfFpLuNA+8UI06GaN5JllxGVYQBSbnJLUAiq2hnKA7WN
+         V+RLFqROaHBxTGZG0A2MyMWfKkrb3oLtCLiEhpu01gtQDVUAqFc1zWNJu4BLC80JNQ
+         XgoDPJNcdabNj/t4qxaG8PWgc2twAcjInieoUrfHin6RF/CMaNEACf6afdylPCm9mV
+         cL+Rot1Pn7E8UWSj9Q0XjPo0A8EavOvGFZhTi/UtufH4UcaltQvdopW1H//qLge32m
+         le0Zj2+nGGkMg==
+Date:   Wed, 24 Mar 2021 10:17:44 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH v9 5/5] xfs: add error injection for per-AG resv failure
+Message-ID: <20210324171744.GT22100@magnolia>
+References: <20210324010621.2244671-1-hsiangkao@redhat.com>
+ <20210324010621.2244671-6-hsiangkao@redhat.com>
 MIME-Version: 1.0
-References: <20210208105530.3072869-1-ruansy.fnst@cn.fujitsu.com>
- <20210208105530.3072869-2-ruansy.fnst@cn.fujitsu.com> <CAPcyv4jqEdPoF5YM+jSYJd74KqRTwbbEum7=moa3=Wyn6UyU9g@mail.gmail.com>
- <OSBPR01MB29207A1C06968705C2FEBACFF4939@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <CAPcyv4iBnWbG0FYw6-K0MaH--rq62s7RY_yoT9rOYWMa94Yakw@mail.gmail.com>
- <OSBPR01MB29203F891F9584CC53616FB8F4939@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <CAPcyv4gn_AvT6BA7g4jLKRFODSpt7_ORowVd3KgyWxyaFG0k9g@mail.gmail.com>
- <OSBPR01MB2920E46CBE4816CDF711E004F46F9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <OSBPR01MB29208779955B49F84D857F80F4689@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <CAPcyv4jhUU3NVD8HLZnJzir+SugB6LnnrgJZ-jP45BZrbJ1dJQ@mail.gmail.com> <20210324074751.GA1630@lst.de>
-In-Reply-To: <20210324074751.GA1630@lst.de>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 24 Mar 2021 09:37:01 -0700
-Message-ID: <CAPcyv4hOrYCW=wjkxkCP+JbyD+A_Po0rW-61qQWAOm3zp_eyUQ@mail.gmail.com>
-Subject: Re: [PATCH v3 01/11] pagemap: Introduce ->memory_failure()
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        device-mapper development <dm-devel@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        david <david@fromorbit.com>, Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
-        "y-goto@fujitsu.com" <y-goto@fujitsu.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210324010621.2244671-6-hsiangkao@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 24, 2021 at 12:48 AM Christoph Hellwig <hch@lst.de> wrote:
->
-> On Tue, Mar 23, 2021 at 07:19:28PM -0700, Dan Williams wrote:
-> > So I think the path forward is:
-> >
-> > - teach memory_failure() to allow for ranged failures
-> >
-> > - let interested drivers register for memory failure events via a
-> > blocking_notifier_head
->
-> Eww.  As I said I think the right way is that the file system (or
-> other consumer) can register a set of callbacks for opening the device.
+On Wed, Mar 24, 2021 at 09:06:21AM +0800, Gao Xiang wrote:
+> per-AG resv failure after fixing up freespace is hard to test in an
+> effective way, so directly add an error injection path to observe
+> such error handling path works as expected.
+> 
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 
-How does that solve the problem of the driver being notified of all
-pfn failure events? Today pmem only finds out about the ones that are
-notified via native x86 machine check error handling via a notifier
-(yes "firmware-first" error handling fails to do the right thing for
-the pmem driver), or the ones that are eventually reported via address
-range scrub, but only for the nvdimms that implement range scrubbing.
-memory_failure() seems a reasonable catch all point to route pfn
-failure events, in an arch independent way, to interested drivers.
+Looks good to me; can you send the latest version of the xfs_growfs
+patches to the list to get the review started for 5.13?
 
-I'm fine swapping out dax_device blocking_notiier chains for your
-proposal, but that does not address all the proposed reworks in my
-list which are:
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-- delete "drivers/acpi/nfit/mce.c"
+--D
 
-- teach memory_failure() to be able to communicate range failure
-
-- enable memory_failure() to defer to a filesystem that can say
-"critical metadata is impacted, no point in trying to do file-by-file
-isolation, bring the whole fs down".
-
-> I have a series I need to finish and send out to do that for block
-> devices.  We probably also need the concept of a holder for the dax
-> device to make it work nicely, as otherwise we're going to have a bit
-> of a mess.
-
-Ok, I'll take a look at adding a holder.
-
->
-> > This obviously does not solve Dave's desire to get this type of error
-> > reporting on block_devices, but I think there's nothing stopping a
-> > parallel notifier chain from being created for block-devices, but
-> > that's orthogonal to requirements and capabilities provided by
-> > dax-devices.
->
-> FYI, my series could easily accomodate that if we ever get a block
-> driver that actually could report such errors.
-
-Sure, whatever we land for a dax_device could easily be adopted for a
-block device.
+> ---
+>  fs/xfs/libxfs/xfs_ag_resv.c  | 6 +++++-
+>  fs/xfs/libxfs/xfs_errortag.h | 4 +++-
+>  fs/xfs/xfs_error.c           | 3 +++
+>  3 files changed, 11 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+> index fdfe6dc0d307..6c5f8d10589c 100644
+> --- a/fs/xfs/libxfs/xfs_ag_resv.c
+> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
+> @@ -211,7 +211,11 @@ __xfs_ag_resv_init(
+>  		ASSERT(0);
+>  		return -EINVAL;
+>  	}
+> -	error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
+> +
+> +	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_AG_RESV_FAIL))
+> +		error = -ENOSPC;
+> +	else
+> +		error = xfs_mod_fdblocks(mp, -(int64_t)hidden_space, true);
+>  	if (error) {
+>  		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
+>  				error, _RET_IP_);
+> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+> index 6ca9084b6934..a23a52e643ad 100644
+> --- a/fs/xfs/libxfs/xfs_errortag.h
+> +++ b/fs/xfs/libxfs/xfs_errortag.h
+> @@ -58,7 +58,8 @@
+>  #define XFS_ERRTAG_BUF_IOERROR				35
+>  #define XFS_ERRTAG_REDUCE_MAX_IEXTENTS			36
+>  #define XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT		37
+> -#define XFS_ERRTAG_MAX					38
+> +#define XFS_ERRTAG_AG_RESV_FAIL				38
+> +#define XFS_ERRTAG_MAX					39
+>  
+>  /*
+>   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+> @@ -101,5 +102,6 @@
+>  #define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
+>  #define XFS_RANDOM_REDUCE_MAX_IEXTENTS			1
+>  #define XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT		1
+> +#define XFS_RANDOM_AG_RESV_FAIL				1
+>  
+>  #endif /* __XFS_ERRORTAG_H_ */
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index 185b4915b7bf..f70984f3174d 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -56,6 +56,7 @@ static unsigned int xfs_errortag_random_default[] = {
+>  	XFS_RANDOM_BUF_IOERROR,
+>  	XFS_RANDOM_REDUCE_MAX_IEXTENTS,
+>  	XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT,
+> +	XFS_RANDOM_AG_RESV_FAIL,
+>  };
+>  
+>  struct xfs_errortag_attr {
+> @@ -168,6 +169,7 @@ XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
+>  XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
+>  XFS_ERRORTAG_ATTR_RW(reduce_max_iextents,	XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
+>  XFS_ERRORTAG_ATTR_RW(bmap_alloc_minlen_extent,	XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT);
+> +XFS_ERRORTAG_ATTR_RW(ag_resv_fail, XFS_ERRTAG_AG_RESV_FAIL);
+>  
+>  static struct attribute *xfs_errortag_attrs[] = {
+>  	XFS_ERRORTAG_ATTR_LIST(noerror),
+> @@ -208,6 +210,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+>  	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
+>  	XFS_ERRORTAG_ATTR_LIST(reduce_max_iextents),
+>  	XFS_ERRORTAG_ATTR_LIST(bmap_alloc_minlen_extent),
+> +	XFS_ERRORTAG_ATTR_LIST(ag_resv_fail),
+>  	NULL,
+>  };
+>  
+> -- 
+> 2.27.0
+> 
