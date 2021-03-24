@@ -7,229 +7,242 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C6EDC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 18:18:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7265C433C1
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 18:20:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FFDB61A25
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 18:18:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8093461A16
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 18:20:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237409AbhCXSSW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Mar 2021 14:18:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42250 "EHLO mail.kernel.org"
+        id S229948AbhCXSU1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Mar 2021 14:20:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43120 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237176AbhCXSSA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 Mar 2021 14:18:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ACEA361A1E;
-        Wed, 24 Mar 2021 18:17:59 +0000 (UTC)
+        id S229873AbhCXSUS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 Mar 2021 14:20:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C4CDB61A0E;
+        Wed, 24 Mar 2021 18:20:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616609879;
-        bh=QWO4q8PuEkCVm5/AKLZOsXNRQ8fMlsYgkvn3vTu/h/8=;
+        s=k20201202; t=1616610017;
+        bh=D9wUU1pKWmq5wUOuWkwuqDI1yI2XXK9YTnGM05QVQD8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cmZKWZqckerGGkYSc0SBUw2XE0kjrbJ8gmWmvw5/qQXML/bCFuvr88FPc8mmqGnel
-         13nAVL9hqVOhJavxDfYdHe9SVt5fl0qzgiPzkqqeAx2GDAJmQl/y1Dv95gAhLyhCgJ
-         bKalwjNAbb00YsEA4CDeu2wMfPCQ1l0ixg15X1GtzubWW0ItXEYiR80hqs0t5BEBw+
-         1wOAo7cdTj8IIN+VAJf52tX9fNLzfrvV2ZM6ai53sSKlqjuQQO6xxNaSyl14uBq9C5
-         u+x8ZxwPGcg6motVX8eSne88cO3ITtnVmtO46+jg/daO4SYvrMzlgi+WvedmlFFtSR
-         BTcOeL+ze9QBA==
-Date:   Wed, 24 Mar 2021 11:17:59 -0700
+        b=A7Ap6Shmwoo7oJ7MUnTVROL87+/S2H5nW732qKYhHjL3Tag1QbYqYOKLtI2KkgK3Z
+         bMdB/g8B1Quui8DFrlEVkqxrsPHLyGaofih+kIzkdOv62u+s3nDvSq+SjIGCd4aiix
+         j0t4E1BcfSKappVqdmgwRrUwqy6yZEMbqWXdrMRxIpbVVwdG31FkGFiM/JYn+F2+Ur
+         fhahNtMcEtj2lM+1/eQkT33mXpgePA2zVdDV96R8x8eUOPWSGCH9FAS0xZtf03mKqf
+         KLLEB9i+8D7J6IGhKv/zfyRGwx/icOdEEu0iLWRJo2drCbqbY3YyxukQrPL+Vp2Dle
+         5s2zDRKTXfzkA==
+Date:   Wed, 24 Mar 2021 11:20:17 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/18] xfs: remove the di_dmevmask and di_dmstate fields
- from struct xfs_icdinode
-Message-ID: <20210324181429.GD22100@magnolia>
+Subject: Re: [PATCH 07/18] xfs: move the di_projid field to struct xfs_inode
+Message-ID: <20210324182017.GE22100@magnolia>
 References: <20210324142129.1011766-1-hch@lst.de>
- <20210324142129.1011766-6-hch@lst.de>
+ <20210324142129.1011766-8-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210324142129.1011766-6-hch@lst.de>
+In-Reply-To: <20210324142129.1011766-8-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 24, 2021 at 03:21:16PM +0100, Christoph Hellwig wrote:
-> The legacy DMAPI fields were never set by upstream Linux XFS, and have no
-> way to be read using the kernel APIs.  So instead of bloating the in-core
-> inode for them just copy them from the on-disk inode into the log when
-> logging the inode.  The only caveat is that we need to make sure to zero
-> the fields for newly read or deleted inodes, which is solved using a new
-> flag in the inode.
-
-How long ago /did/ non-upstream XFS have DMAPI support?  Does it still
-have it now?  What's the cost of zeroing the fields?
-
-(Really what I'm saying is that I have so little clue of what dmevmask
-and dmstate do that I don't really know what Magic Smoke comes out if
-these fields get zeroed by an upstream kernel.)
-
+On Wed, Mar 24, 2021 at 03:21:18PM +0100, Christoph Hellwig wrote:
+> In preparation of removing the historic icinode struct, move the projid
+> field into the containing xfs_inode structure.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/libxfs/xfs_inode_buf.c |  7 +++----
->  fs/xfs/libxfs/xfs_inode_buf.h |  2 --
->  fs/xfs/xfs_inode.c            |  5 ++---
->  fs/xfs/xfs_inode.h            |  1 +
->  fs/xfs/xfs_inode_item.c       | 31 +++++++++++++++++++++++++++++--
->  fs/xfs/xfs_log_recover.c      |  6 ------
->  6 files changed, 35 insertions(+), 17 deletions(-)
+>  fs/xfs/libxfs/xfs_inode_buf.c | 8 ++++----
+>  fs/xfs/libxfs/xfs_inode_buf.h | 1 -
+>  fs/xfs/xfs_bmap_util.c        | 2 +-
+>  fs/xfs/xfs_dquot.c            | 2 +-
+>  fs/xfs/xfs_icache.c           | 4 ++--
+>  fs/xfs/xfs_inode.c            | 6 +++---
+>  fs/xfs/xfs_inode.h            | 3 ++-
+>  fs/xfs/xfs_inode_item.c       | 4 ++--
+>  fs/xfs/xfs_ioctl.c            | 6 +++---
+>  fs/xfs/xfs_iops.c             | 2 +-
+>  fs/xfs/xfs_itable.c           | 2 +-
+>  fs/xfs/xfs_qm.c               | 4 ++--
+>  fs/xfs/xfs_qm_bhv.c           | 2 +-
+>  13 files changed, 23 insertions(+), 23 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index af5ee8bd7e6ac9..062157dcfdfcd3 100644
+> index 062157dcfdfcd3..6b7d651d7c4cf4 100644
 > --- a/fs/xfs/libxfs/xfs_inode_buf.c
 > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -230,10 +230,11 @@ xfs_inode_from_disk(
->  	to->di_nblocks = be64_to_cpu(from->di_nblocks);
->  	to->di_extsize = be32_to_cpu(from->di_extsize);
->  	to->di_forkoff = from->di_forkoff;
-> -	to->di_dmevmask	= be32_to_cpu(from->di_dmevmask);
-> -	to->di_dmstate	= be16_to_cpu(from->di_dmstate);
->  	to->di_flags	= be16_to_cpu(from->di_flags);
+> @@ -206,10 +206,10 @@ xfs_inode_from_disk(
+>  	 */
+>  	if (unlikely(from->di_version == 1)) {
+>  		set_nlink(inode, be16_to_cpu(from->di_onlink));
+> -		to->di_projid = 0;
+> +		ip->i_projid = 0;
+>  	} else {
+>  		set_nlink(inode, be32_to_cpu(from->di_nlink));
+> -		to->di_projid = (prid_t)be16_to_cpu(from->di_projid_hi) << 16 |
+> +		ip->i_projid = (prid_t)be16_to_cpu(from->di_projid_hi) << 16 |
+>  					be16_to_cpu(from->di_projid_lo);
+>  	}
 >  
-> +	if (from->di_dmevmask || from->di_dmstate)
-> +		xfs_iflags_set(ip, XFS_IDMAPI);
-
-My prefix-happy brain sees this as IDMAP-I, not I-DMAPI.
-
-ISAVEDMAPI?  No... I-SAVED-MAPI makes no sense...
-
-I_PRESERVE_DMAPI?
-
-> +
->  	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
->  		inode_set_iversion_queried(inode,
->  					   be64_to_cpu(from->di_changecount));
-> @@ -311,8 +312,6 @@ xfs_inode_to_disk(
->  	to->di_anextents = cpu_to_be16(xfs_ifork_nextents(ip->i_afp));
->  	to->di_forkoff = from->di_forkoff;
->  	to->di_aformat = xfs_ifork_format(ip->i_afp);
-> -	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
-> -	to->di_dmstate = cpu_to_be16(from->di_dmstate);
->  	to->di_flags = cpu_to_be16(from->di_flags);
+> @@ -294,8 +294,8 @@ xfs_inode_to_disk(
+>  	to->di_format = xfs_ifork_format(&ip->i_df);
+>  	to->di_uid = cpu_to_be32(i_uid_read(inode));
+>  	to->di_gid = cpu_to_be32(i_gid_read(inode));
+> -	to->di_projid_lo = cpu_to_be16(from->di_projid & 0xffff);
+> -	to->di_projid_hi = cpu_to_be16(from->di_projid >> 16);
+> +	to->di_projid_lo = cpu_to_be16(ip->i_projid & 0xffff);
+> +	to->di_projid_hi = cpu_to_be16(ip->i_projid >> 16);
 >  
->  	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
+>  	memset(to->di_pad, 0, sizeof(to->di_pad));
+>  	to->di_atime = xfs_inode_to_disk_ts(ip, inode->i_atime);
 > diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-> index b3097ea8b53366..d7a019df05d647 100644
+> index d7a019df05d647..406f667992883f 100644
 > --- a/fs/xfs/libxfs/xfs_inode_buf.h
 > +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-> @@ -22,8 +22,6 @@ struct xfs_icdinode {
+> @@ -17,7 +17,6 @@ struct xfs_dinode;
+>   */
+>  struct xfs_icdinode {
+>  	uint16_t	di_flushiter;	/* incremented on flush */
+> -	prid_t		di_projid;	/* owner's project id */
+>  	xfs_fsize_t	di_size;	/* number of bytes in file */
 >  	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
 >  	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
->  	uint8_t		di_forkoff;	/* attr fork offs, <<3 for 64b align */
-> -	uint32_t	di_dmevmask;	/* DMIG event mask */
-> -	uint16_t	di_dmstate;	/* DMIG state info */
->  	uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
->  
->  	uint64_t	di_flags2;	/* more random flags */
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 093689996f06f3..0954ad0d12ec48 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -839,8 +839,6 @@ xfs_init_new_inode(
->  	inode->i_ctime = tv;
->  
->  	ip->i_d.di_extsize = 0;
-> -	ip->i_d.di_dmevmask = 0;
-> -	ip->i_d.di_dmstate = 0;
->  	ip->i_d.di_flags = 0;
->  
->  	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
-> @@ -2591,9 +2589,10 @@ xfs_ifree(
->  	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
->  	ip->i_d.di_flags = 0;
->  	ip->i_d.di_flags2 = ip->i_mount->m_ino_geo.new_diflags2;
-> -	ip->i_d.di_dmevmask = 0;
->  	ip->i_d.di_forkoff = 0;		/* mark the attr fork not in use */
->  	ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
-> +	if (xfs_iflags_test(ip, XFS_IDMAPI))
-> +		xfs_iflags_clear(ip, XFS_IDMAPI);
->  
->  	/* Don't attempt to replay owner changes for a deleted inode */
->  	spin_lock(&iip->ili_lock);
+
+<snip>
+
 > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 88ee4c3930ae70..e97957f5309281 100644
+> index e97957f5309281..674d1a0b781cd3 100644
 > --- a/fs/xfs/xfs_inode.h
 > +++ b/fs/xfs/xfs_inode.h
-> @@ -212,6 +212,7 @@ static inline bool xfs_inode_has_bigtime(struct xfs_inode *ip)
->  #define XFS_IRECLAIM		(1 << 0) /* started reclaiming this inode */
->  #define XFS_ISTALE		(1 << 1) /* inode has been staled */
->  #define XFS_IRECLAIMABLE	(1 << 2) /* inode can be reclaimed */
-> +#define XFS_IDMAPI		(1 << 4) /* has legacy DMAPI fields set */
->  #define __XFS_INEW_BIT		3	 /* inode has just been allocated */
->  #define XFS_INEW		(1 << __XFS_INEW_BIT)
->  #define XFS_ITRUNCATED		(1 << 5) /* truncated down so flush-on-close */
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 17e20a6d8b4e27..4c3d1d829753b2 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -317,6 +317,33 @@ xfs_inode_to_log_dinode_ts(
->  	return its;
->  }
->  
-> +/*
-> + * The legacy DMAPI fields are only present in the on-disk and in-log inodes,
-> + * but in the in-memory one.  But we are guaranteed to have an inode buffer in
+> @@ -54,6 +54,7 @@ typedef struct xfs_inode {
+>  	/* Miscellaneous state. */
+>  	unsigned long		i_flags;	/* see defined flags below */
+>  	uint64_t		i_delayed_blks;	/* count of delay alloc blks */
+> +	uint32_t		i_projid;	/* owner's project id */
 
-"but not in" ?
+Shouldn't this be prid_t to match the field removed from icdinode?
+
+The rest of the name conversions look ok though.
 
 --D
 
-> + * memory when logging an inode, so we can just copy it from the on-disk inode
-> + * to the in-log inode here so that recovery of file system with these fields
-> + * set to non-zero values doesn't lose them.  For all other cases we zero the
-> + * fields.
-> + */
-> +static void
-> +xfs_copy_dm_fields_to_log_dinode(
-> +	struct xfs_inode	*ip,
-> +	struct xfs_log_dinode	*to)
-> +{
-> +	struct xfs_dinode	*dip;
-> +
-> +	dip = xfs_buf_offset(ip->i_itemp->ili_item.li_buf,
-> +			     ip->i_imap.im_boffset);
-> +
-> +	if (xfs_iflags_test(ip, XFS_IDMAPI)) {
-> +		to->di_dmevmask = be32_to_cpu(dip->di_dmevmask);
-> +		to->di_dmstate = be16_to_cpu(dip->di_dmstate);
-> +	} else {
-> +		to->di_dmevmask = 0;
-> +		to->di_dmstate = 0;
-> +	}
-> +}
-> +
->  static void
->  xfs_inode_to_log_dinode(
->  	struct xfs_inode	*ip,
-> @@ -349,10 +376,10 @@ xfs_inode_to_log_dinode(
->  	to->di_anextents = xfs_ifork_nextents(ip->i_afp);
->  	to->di_forkoff = from->di_forkoff;
->  	to->di_aformat = xfs_ifork_format(ip->i_afp);
-> -	to->di_dmevmask = from->di_dmevmask;
-> -	to->di_dmstate = from->di_dmstate;
->  	to->di_flags = from->di_flags;
 >  
-> +	xfs_copy_dm_fields_to_log_dinode(ip, to);
-> +
->  	/* log a dummy value to ensure log structure is fully initialised */
->  	to->di_next_unlinked = NULLAGINO;
+>  	struct xfs_icdinode	i_d;		/* most of ondisk inode */
 >  
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 31348e660cd65b..507c31f6b1a8be 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2696,12 +2696,6 @@ xlog_recover_process_one_iunlink(
->  	agino = be32_to_cpu(dip->di_next_unlinked);
->  	xfs_buf_relse(ibp);
+> @@ -175,7 +176,7 @@ static inline prid_t
+>  xfs_get_initial_prid(struct xfs_inode *dp)
+>  {
+>  	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+> -		return dp->i_d.di_projid;
+> +		return dp->i_projid;
 >  
-> -	/*
-> -	 * Prevent any DMAPI event from being sent when the reference on
-> -	 * the inode is dropped.
-> -	 */
-> -	ip->i_d.di_dmevmask = 0;
-> -
->  	xfs_irele(ip);
->  	return agino;
+>  	return XFS_PROJID_DEFAULT;
+>  }
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 4c3d1d829753b2..3af00685adc4b8 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -357,8 +357,8 @@ xfs_inode_to_log_dinode(
+>  	to->di_format = xfs_ifork_format(&ip->i_df);
+>  	to->di_uid = i_uid_read(inode);
+>  	to->di_gid = i_gid_read(inode);
+> -	to->di_projid_lo = from->di_projid & 0xffff;
+> -	to->di_projid_hi = from->di_projid >> 16;
+> +	to->di_projid_lo = ip->i_projid & 0xffff;
+> +	to->di_projid_hi = ip->i_projid >> 16;
 >  
+>  	memset(to->di_pad, 0, sizeof(to->di_pad));
+>  	memset(to->di_pad3, 0, sizeof(to->di_pad3));
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 99dfe89a8d08b8..8d22127284d360 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1123,7 +1123,7 @@ xfs_fill_fsxattr(
+>  	fa->fsx_extsize = ip->i_d.di_extsize << ip->i_mount->m_sb.sb_blocklog;
+>  	fa->fsx_cowextsize = ip->i_d.di_cowextsize <<
+>  			ip->i_mount->m_sb.sb_blocklog;
+> -	fa->fsx_projid = ip->i_d.di_projid;
+> +	fa->fsx_projid = ip->i_projid;
+>  	if (ifp && (ifp->if_flags & XFS_IFEXTENTS))
+>  		fa->fsx_nextents = xfs_iext_count(ifp);
+>  	else
+> @@ -1505,12 +1505,12 @@ xfs_ioctl_setattr(
+>  		VFS_I(ip)->i_mode &= ~(S_ISUID|S_ISGID);
+>  
+>  	/* Change the ownerships and register project quota modifications */
+> -	if (ip->i_d.di_projid != fa->fsx_projid) {
+> +	if (ip->i_projid != fa->fsx_projid) {
+>  		if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp)) {
+>  			olddquot = xfs_qm_vop_chown(tp, ip,
+>  						&ip->i_pdquot, pdqp);
+>  		}
+> -		ip->i_d.di_projid = fa->fsx_projid;
+> +		ip->i_projid = fa->fsx_projid;
+>  	}
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 66ebccb5a6fffb..9f2ea7f7d35ea3 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -705,7 +705,7 @@ xfs_setattr_nonsize(
+>  		 */
+>  		ASSERT(udqp == NULL);
+>  		ASSERT(gdqp == NULL);
+> -		error = xfs_qm_vop_dqalloc(ip, uid, gid, ip->i_d.di_projid,
+> +		error = xfs_qm_vop_dqalloc(ip, uid, gid, ip->i_projid,
+>  					   qflags, &udqp, &gdqp, NULL);
+>  		if (error)
+>  			return error;
+> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> index 444b551d540f44..a40fe601ef61d4 100644
+> --- a/fs/xfs/xfs_itable.c
+> +++ b/fs/xfs/xfs_itable.c
+> @@ -86,7 +86,7 @@ xfs_bulkstat_one_int(
+>  	/* xfs_iget returns the following without needing
+>  	 * further change.
+>  	 */
+> -	buf->bs_projectid = ip->i_d.di_projid;
+> +	buf->bs_projectid = ip->i_projid;
+>  	buf->bs_ino = ino;
+>  	buf->bs_uid = from_kuid(sb_userns, i_uid_into_mnt(mnt_userns, inode));
+>  	buf->bs_gid = from_kgid(sb_userns, i_gid_into_mnt(mnt_userns, inode));
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index bfa4164990b171..9599d40ff2ec49 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -1716,7 +1716,7 @@ xfs_qm_vop_dqalloc(
+>  	}
+>  	if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
+>  		ASSERT(O_pdqpp);
+> -		if (ip->i_d.di_projid != prid) {
+> +		if (ip->i_projid != prid) {
+>  			xfs_iunlock(ip, lockflags);
+>  			error = xfs_qm_dqget(mp, prid,
+>  					XFS_DQTYPE_PROJ, true, &pq);
+> @@ -1877,7 +1877,7 @@ xfs_qm_vop_create_dqattach(
+>  	}
+>  	if (pdqp && XFS_IS_PQUOTA_ON(mp)) {
+>  		ASSERT(ip->i_pdquot == NULL);
+> -		ASSERT(ip->i_d.di_projid == pdqp->q_id);
+> +		ASSERT(ip->i_projid == pdqp->q_id);
+>  
+>  		ip->i_pdquot = xfs_qm_dqhold(pdqp);
+>  		xfs_trans_mod_dquot(tp, pdqp, XFS_TRANS_DQ_ICOUNT, 1);
+> diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+> index 639398091ad6ba..df00dfbf5c9d19 100644
+> --- a/fs/xfs/xfs_qm_bhv.c
+> +++ b/fs/xfs/xfs_qm_bhv.c
+> @@ -60,7 +60,7 @@ xfs_qm_statvfs(
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_dquot	*dqp;
+>  
+> -	if (!xfs_qm_dqget(mp, ip->i_d.di_projid, XFS_DQTYPE_PROJ, false, &dqp)) {
+> +	if (!xfs_qm_dqget(mp, ip->i_projid, XFS_DQTYPE_PROJ, false, &dqp)) {
+>  		xfs_fill_statvfs_from_dquot(statp, dqp);
+>  		xfs_qm_dqput(dqp);
+>  	}
 > -- 
 > 2.30.1
 > 
