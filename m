@@ -2,253 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 816C3C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 17:35:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3E88C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 17:40:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5835161A0A
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 17:35:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A02261A19
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 17:40:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237436AbhCXRfK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Mar 2021 13:35:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53340 "EHLO mail.kernel.org"
+        id S237071AbhCXRj6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Mar 2021 13:39:58 -0400
+Received: from verein.lst.de ([213.95.11.211]:38051 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237215AbhCXRej (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 Mar 2021 13:34:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4BEF1619EC;
-        Wed, 24 Mar 2021 17:34:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616607279;
-        bh=5KIOrkNKhQ9RzXpxzPRBbWInNGG2LxVDrNk9EgQZhrg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=p9powOt99kV1hHWk4uYDM+i6umTDFaJ8rCCCJHAbJ/QLXCAx4/+jvqqpkXnOXoIGK
-         x3zhBj+BZvYsxQGnwLffGcoG1QhNn7DGEhstpJNfgWVrBA1lm5YN/felZCnD6WXJYB
-         y+enUQ+f64v9baEpBUKmypVLxRAjHtIBRpUVeSsYIdzf5vTVILycQD7+wFRQ7EsrA/
-         PLHb8+9Xdvo8jLA4YiJPFmMpkDWq1JlmLUPKs3HUqN0xOMexE/b9aXiuxtnserH6Ch
-         tevL4Z5UtSMG7wSv6B8awaafFUs3CFnEW1X+HubYu/MVBcmELtN77DqiO8s1cEqdmF
-         bhCxcnEJXWX0A==
-Date:   Wed, 24 Mar 2021 10:34:38 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH v9 4/5] xfs: support shrinking unused space in the last AG
-Message-ID: <20210324173438.GV22100@magnolia>
-References: <20210324010621.2244671-1-hsiangkao@redhat.com>
- <20210324010621.2244671-5-hsiangkao@redhat.com>
+        id S237143AbhCXRjl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 Mar 2021 13:39:41 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 1520C68BEB; Wed, 24 Mar 2021 18:39:36 +0100 (CET)
+Date:   Wed, 24 Mar 2021 18:39:35 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        device-mapper development <dm-devel@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        david <david@fromorbit.com>, Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
+        "y-goto@fujitsu.com" <y-goto@fujitsu.com>
+Subject: Re: [PATCH v3 01/11] pagemap: Introduce ->memory_failure()
+Message-ID: <20210324173935.GB12770@lst.de>
+References: <CAPcyv4jqEdPoF5YM+jSYJd74KqRTwbbEum7=moa3=Wyn6UyU9g@mail.gmail.com> <OSBPR01MB29207A1C06968705C2FEBACFF4939@OSBPR01MB2920.jpnprd01.prod.outlook.com> <CAPcyv4iBnWbG0FYw6-K0MaH--rq62s7RY_yoT9rOYWMa94Yakw@mail.gmail.com> <OSBPR01MB29203F891F9584CC53616FB8F4939@OSBPR01MB2920.jpnprd01.prod.outlook.com> <CAPcyv4gn_AvT6BA7g4jLKRFODSpt7_ORowVd3KgyWxyaFG0k9g@mail.gmail.com> <OSBPR01MB2920E46CBE4816CDF711E004F46F9@OSBPR01MB2920.jpnprd01.prod.outlook.com> <OSBPR01MB29208779955B49F84D857F80F4689@OSBPR01MB2920.jpnprd01.prod.outlook.com> <CAPcyv4jhUU3NVD8HLZnJzir+SugB6LnnrgJZ-jP45BZrbJ1dJQ@mail.gmail.com> <20210324074751.GA1630@lst.de> <CAPcyv4hOrYCW=wjkxkCP+JbyD+A_Po0rW-61qQWAOm3zp_eyUQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210324010621.2244671-5-hsiangkao@redhat.com>
+In-Reply-To: <CAPcyv4hOrYCW=wjkxkCP+JbyD+A_Po0rW-61qQWAOm3zp_eyUQ@mail.gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 24, 2021 at 09:06:20AM +0800, Gao Xiang wrote:
-> As the first step of shrinking, this attempts to enable shrinking
-> unused space in the last allocation group by fixing up freespace
-> btree, agi, agf and adjusting super block and use a helper
-> xfs_ag_shrink_space() to fixup the last AG.
+On Wed, Mar 24, 2021 at 09:37:01AM -0700, Dan Williams wrote:
+> > Eww.  As I said I think the right way is that the file system (or
+> > other consumer) can register a set of callbacks for opening the device.
 > 
-> This can be all done in one transaction for now, so I think no
-> additional protection is needed.
+> How does that solve the problem of the driver being notified of all
+> pfn failure events?
+
+Ok, I probably just showed I need to spend more time looking at
+your proposal vs the actual code..
+
+Don't we have a proper way how one of the nvdimm layers own a
+spefific memory range and call directly into that instead of through
+a notifier?
+
+> Today pmem only finds out about the ones that are
+> notified via native x86 machine check error handling via a notifier
+> (yes "firmware-first" error handling fails to do the right thing for
+> the pmem driver),
+
+Did any kind of firmware-first error handling ever get anything
+right?  I wish people would have learned that by now.
+
+> or the ones that are eventually reported via address
+> range scrub, but only for the nvdimms that implement range scrubbing.
+> memory_failure() seems a reasonable catch all point to route pfn
+> failure events, in an arch independent way, to interested drivers.
+
+Yeah.
+
+> I'm fine swapping out dax_device blocking_notiier chains for your
+> proposal, but that does not address all the proposed reworks in my
+> list which are:
 > 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> ---
->  fs/xfs/xfs_fsops.c | 84 +++++++++++++++++++++++++++-------------------
->  fs/xfs/xfs_trans.c |  1 -
->  2 files changed, 50 insertions(+), 35 deletions(-)
+> - delete "drivers/acpi/nfit/mce.c"
 > 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index d1ba04124c28..9457b0691ece 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -91,23 +91,25 @@ xfs_growfs_data_private(
->  	xfs_agnumber_t		nagcount;
->  	xfs_agnumber_t		nagimax = 0;
->  	xfs_rfsblock_t		nb, nb_div, nb_mod;
-> -	xfs_rfsblock_t		delta;
-> +	int64_t			delta;
->  	bool			lastag_extended;
->  	xfs_agnumber_t		oagcount;
->  	struct xfs_trans	*tp;
->  	struct aghdr_init_data	id = {};
->  
->  	nb = in->newblocks;
-> -	if (nb < mp->m_sb.sb_dblocks)
-> -		return -EINVAL;
-> -	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
-> +	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
-> +	if (error)
->  		return error;
-> -	error = xfs_buf_read_uncached(mp->m_ddev_targp,
-> +
-> +	if (nb > mp->m_sb.sb_dblocks) {
-> +		error = xfs_buf_read_uncached(mp->m_ddev_targp,
->  				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
->  				XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
-> -	if (error)
-> -		return error;
-> -	xfs_buf_relse(bp);
-> +		if (error)
-> +			return error;
-> +		xfs_buf_relse(bp);
-> +	}
->  
->  	nb_div = nb;
->  	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
-> @@ -115,10 +117,16 @@ xfs_growfs_data_private(
->  	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
->  		nagcount--;
->  		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
-> -		if (nb < mp->m_sb.sb_dblocks)
-> -			return -EINVAL;
->  	}
->  	delta = nb - mp->m_sb.sb_dblocks;
-> +	/*
-> +	 * Reject filesystems with a single AG because they are not
-> +	 * supported, and reject a shrink operation that would cause a
-> +	 * filesystem to become unsupported.
-> +	 */
-> +	if (delta < 0 && nagcount < 2)
-> +		return -EINVAL;
-> +
->  	oagcount = mp->m_sb.sb_agcount;
->  
->  	/* allocate the new per-ag structures */
-> @@ -126,15 +134,22 @@ xfs_growfs_data_private(
->  		error = xfs_initialize_perag(mp, nagcount, &nagimax);
->  		if (error)
->  			return error;
-> +	} else if (nagcount < oagcount) {
-> +		/* TODO: shrinking the entire AGs hasn't yet completed */
-> +		return -EINVAL;
->  	}
->  
->  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
-> -			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
-> +			(delta > 0 ? XFS_GROWFS_SPACE_RES(mp) : -delta), 0,
-> +			XFS_TRANS_RESERVE, &tp);
->  	if (error)
->  		return error;
->  
-> -	error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
-> -					  delta, &lastag_extended);
-> +	if (delta > 0)
-> +		error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
-> +						  delta, &lastag_extended);
-> +	else
-> +		error = xfs_ag_shrink_space(mp, &tp, nagcount - 1, -delta);
-
-Assuming I don't hear anyone yelling NAK in the next day or so, I think
-I'll stage this for 5.13 with the following change to warn that the
-shrink feature is still EXPERIMENTAL:
-
-By the way, are you going to send a patch to shrink the realtime device
-too?
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 9457b0691ece..b33c894b6cf3 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -145,11 +145,20 @@ xfs_growfs_data_private(
- 	if (error)
- 		return error;
- 
--	if (delta > 0)
-+	if (delta > 0) {
- 		error = xfs_resizefs_init_new_ags(tp, &id, oagcount, nagcount,
- 						  delta, &lastag_extended);
--	else
-+	} else {
-+		static struct ratelimit_state shrink_warning = \
-+			RATELIMIT_STATE_INIT("shrink_warning", 86400 * HZ, 1);
-+		ratelimit_set_flags(&shrink_warning, RATELIMIT_MSG_ON_RELEASE);
-+
-+		if (__ratelimit(&shrink_warning))
-+			xfs_alert(mp,
-+	"EXPERIMENTAL online shrink feature in use. Use at your own risk!");
-+
- 		error = xfs_ag_shrink_space(mp, &tp, nagcount - 1, -delta);
-+	}
- 	if (error)
- 		goto out_trans_cancel;
- 
---D
-
->  	if (error)
->  		goto out_trans_cancel;
->  
-> @@ -169,28 +184,29 @@ xfs_growfs_data_private(
->  	xfs_set_low_space_thresholds(mp);
->  	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
->  
-> -	/*
-> -	 * If we expanded the last AG, free the per-AG reservation
-> -	 * so we can reinitialize it with the new size.
-> -	 */
-> -	if (lastag_extended) {
-> -		struct xfs_perag	*pag;
-> -
-> -		pag = xfs_perag_get(mp, id.agno);
-> -		error = xfs_ag_resv_free(pag);
-> -		xfs_perag_put(pag);
-> -		if (error)
-> -			return error;
-> +	if (delta > 0) {
-> +		/*
-> +		 * If we expanded the last AG, free the per-AG reservation
-> +		 * so we can reinitialize it with the new size.
-> +		 */
-> +		if (lastag_extended) {
-> +			struct xfs_perag	*pag;
-> +
-> +			pag = xfs_perag_get(mp, id.agno);
-> +			error = xfs_ag_resv_free(pag);
-> +			xfs_perag_put(pag);
-> +			if (error)
-> +				return error;
-> +		}
-> +		/*
-> +		 * Reserve AG metadata blocks. ENOSPC here does not mean there
-> +		 * was a growfs failure, just that there still isn't space for
-> +		 * new user data after the grow has been run.
-> +		 */
-> +		error = xfs_fs_reserve_ag_blocks(mp);
-> +		if (error == -ENOSPC)
-> +			error = 0;
->  	}
-> -
-> -	/*
-> -	 * Reserve AG metadata blocks. ENOSPC here does not mean there was a
-> -	 * growfs failure, just that there still isn't space for new user data
-> -	 * after the grow has been run.
-> -	 */
-> -	error = xfs_fs_reserve_ag_blocks(mp);
-> -	if (error == -ENOSPC)
-> -		error = 0;
->  	return error;
->  
->  out_trans_cancel:
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index b22a09e9daee..052274321993 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -436,7 +436,6 @@ xfs_trans_mod_sb(
->  		tp->t_res_frextents_delta += delta;
->  		break;
->  	case XFS_TRANS_SB_DBLOCKS:
-> -		ASSERT(delta > 0);
->  		tp->t_dblocks_delta += delta;
->  		break;
->  	case XFS_TRANS_SB_AGCOUNT:
-> -- 
-> 2.27.0
+> - teach memory_failure() to be able to communicate range failure
 > 
+> - enable memory_failure() to defer to a filesystem that can say
+> "critical metadata is impacted, no point in trying to do file-by-file
+> isolation, bring the whole fs down".
+
+This all sounds sensible.
