@@ -2,159 +2,138 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F6FCC433DB
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 14:24:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 158B6C433DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 16:37:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37CAB61580
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 14:24:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0B28619F8
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 Mar 2021 16:37:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236125AbhCXOYQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Mar 2021 10:24:16 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:42358 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236201AbhCXOYL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Mar 2021 10:24:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1616595850;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=4NY1h6Oe7r3ji0gCW3vDq/3UwvOH5YL7i2nd2M4iAcw=;
-        b=b9NjHFwMRMwu4u41Hu5ePr1xRJ1DUFj7nj1GOQYKBT6oE/o10eHb0evAxNPV5sFylIfVaG
-        hL9xvjUdqdArYllqJ8R8WrCOjGF4lULgO52Fw0aeUms/RLhfhC2mQRFA0bc4ekShSzb+Q2
-        Aw1TgoizM16KSHKgPOJB2dpWJFU9P1Q=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-527-QiVuUAcJOgup2z8PkWDidg-1; Wed, 24 Mar 2021 10:24:06 -0400
-X-MC-Unique: QiVuUAcJOgup2z8PkWDidg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6E68E801817;
-        Wed, 24 Mar 2021 14:24:05 +0000 (UTC)
-Received: from bfoster (ovpn-113-24.rdu2.redhat.com [10.10.113.24])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id E46667128C;
-        Wed, 24 Mar 2021 14:24:04 +0000 (UTC)
-Date:   Wed, 24 Mar 2021 10:24:03 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] xfs: set a mount flag when perag reservation is
- active
-Message-ID: <YFtLg9iIzHbKPjrG@bfoster>
-References: <20210318161707.723742-1-bfoster@redhat.com>
- <20210318161707.723742-2-bfoster@redhat.com>
- <20210318205536.GO63242@dread.disaster.area>
- <20210318221901.GN22100@magnolia>
- <20210319010506.GP63242@dread.disaster.area>
- <20210319014303.GQ63242@dread.disaster.area>
- <YFS7IbGIyf4VqF59@bfoster>
- <20210323224036.GJ63242@dread.disaster.area>
+        id S236060AbhCXQhS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 Mar 2021 12:37:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49562 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235832AbhCXQhO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Mar 2021 12:37:14 -0400
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F41F1C061763
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Mar 2021 09:37:13 -0700 (PDT)
+Received: by mail-ed1-x533.google.com with SMTP id j3so28334992edp.11
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Mar 2021 09:37:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=F78F4/Kq+ndIvAG3q41JlNnbimm1afFKY1uPrkgKEKE=;
+        b=CsDx6xAl1VtYRX8X8nlGVP72pS+Njf2eRG9UeLEcNYw/0GG+u51E8oRfnZj6k3/sNg
+         aRLLF/mmJCW58czyShqa6WkR7qJxQwuiCLVxyrBpZ+TAPagZGTpDfa7+zl7Dur1DKlk4
+         B1AAACFL6xsj3ekCmh1gjol0o/QSp3xiwcbei6jwyZhVy3/cDah43fcg8J30O9ZE/PgR
+         mQCXAHzOBzR2wsLGgkCG9GE3xk75u+tWfyPHSZJGznQsHqijxofg2L4Q1jPv+MKqUCHE
+         RQjr95+R6I9EMKEYtmdWrRAb9fTP8P6XndMLkaPTVlg8oBOUifEZ/RsV84+JGEN92W79
+         y2cA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=F78F4/Kq+ndIvAG3q41JlNnbimm1afFKY1uPrkgKEKE=;
+        b=WdUJuZXdD6lgKssP8dRaUUQPeDKV0dVDcKE22zKeD+9EUMYUXSch7Hcqis6jBuAmV0
+         Sn2ElVkOzaM2hQfxGmLodp9zSzveQ5l0mqnQM6vn45MIRqlcGv0ixD8J69/wQDh/qef9
+         pGqiqa1yjwT9SAZvvGOvVP4J1OSjCNJSod2ALNo8YYX6fn71Bhn1knyCXD3gP02s/DGY
+         yM4JwwK5qRD2V2LFv1vxmvdRxt+X4SACR/sdfpXGhUWJmRIxNXI8Z6gZgrypAcnQ5dAa
+         +DpcSruAbhQa8YR6OOk7Dg+Vhjmaj/QmCylqLHcou3869L4YpW8y5UX2380hc1sVov0u
+         L0ig==
+X-Gm-Message-State: AOAM5305tCdIhCmZd53yV99tlIjeQ66QmMcOfoJ+Lb+/aVERMZf8gUAP
+        ZT0ZYxw2gnnTVXWLBSXWzcEs7MGku7ZHZGxtW4QdPA==
+X-Google-Smtp-Source: ABdhPJy0i6T+2AM1FhaOe2x1NOEA+VihVGm8Q0AyYdTDg9DUntxFo3NhisOlYTqdDwwzXOKs7/wWOwG2TBuN7zwJqD8=
+X-Received: by 2002:a05:6402:4301:: with SMTP id m1mr4548882edc.210.1616603832460;
+ Wed, 24 Mar 2021 09:37:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210323224036.GJ63242@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+References: <20210208105530.3072869-1-ruansy.fnst@cn.fujitsu.com>
+ <20210208105530.3072869-2-ruansy.fnst@cn.fujitsu.com> <CAPcyv4jqEdPoF5YM+jSYJd74KqRTwbbEum7=moa3=Wyn6UyU9g@mail.gmail.com>
+ <OSBPR01MB29207A1C06968705C2FEBACFF4939@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+ <CAPcyv4iBnWbG0FYw6-K0MaH--rq62s7RY_yoT9rOYWMa94Yakw@mail.gmail.com>
+ <OSBPR01MB29203F891F9584CC53616FB8F4939@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+ <CAPcyv4gn_AvT6BA7g4jLKRFODSpt7_ORowVd3KgyWxyaFG0k9g@mail.gmail.com>
+ <OSBPR01MB2920E46CBE4816CDF711E004F46F9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+ <OSBPR01MB29208779955B49F84D857F80F4689@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+ <CAPcyv4jhUU3NVD8HLZnJzir+SugB6LnnrgJZ-jP45BZrbJ1dJQ@mail.gmail.com> <20210324074751.GA1630@lst.de>
+In-Reply-To: <20210324074751.GA1630@lst.de>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Wed, 24 Mar 2021 09:37:01 -0700
+Message-ID: <CAPcyv4hOrYCW=wjkxkCP+JbyD+A_Po0rW-61qQWAOm3zp_eyUQ@mail.gmail.com>
+Subject: Re: [PATCH v3 01/11] pagemap: Introduce ->memory_failure()
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        device-mapper development <dm-devel@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        david <david@fromorbit.com>, Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        "qi.fuli@fujitsu.com" <qi.fuli@fujitsu.com>,
+        "y-goto@fujitsu.com" <y-goto@fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 24, 2021 at 09:40:36AM +1100, Dave Chinner wrote:
-> On Fri, Mar 19, 2021 at 10:54:25AM -0400, Brian Foster wrote:
-> > On Fri, Mar 19, 2021 at 12:43:03PM +1100, Dave Chinner wrote:
-> > > On Fri, Mar 19, 2021 at 12:05:06PM +1100, Dave Chinner wrote:
-> > > > On Thu, Mar 18, 2021 at 03:19:01PM -0700, Darrick J. Wong wrote:
-> > > > > TBH I think the COW recovery and the AG block reservation pieces are
-> > > > > prime candidates for throwing at an xfs_pwork workqueue so we can
-> > > > > perform those scans in parallel.
-> > > > 
-> > > > As I mentioned on #xfs, I think we only need to do the AG read if we
-> > > > are near enospc. i.e. we can take the entire reservation at mount
-> > > > time (which is fixed per-ag) and only take away the used from the
-> > > > reservation (i.e. return to the free space pool) when we actually
-> > > > access the AGF/AGI the first time. Or when we get a ENOSPC
-> > > > event, which might occur when we try to take the fixed reservation
-> > > > at mount time...
-> > > 
-> > > Which leaves the question about when we need to actually do the
-> > > accounting needed to fix the bug Brian is trying to fix. Can that be
-> > > delayed until we read the AGFs or have an ENOSPC event occur? Or
-> > > maybe some other "we are near ENOSPC and haven't read all AGFs yet"
-> > > threshold/trigger?
-> > > 
-> > 
-> > Technically there isn't a hard requirement to read in any AGFs at mount
-> > time. The tradeoff is that leaves a gap in effectiveness until at least
-> > the majority of allocbt blocks have been accounted for (via perag agf
-> > initialization). The in-core counter simply folds into the reservation
-> > set aside value, so it would just remain at 0 at reservation time and
-> > behave as if the mechanism didn't exist in the first place. The obvious
-> > risk is a user can mount the fs and immediately acquire reservation
-> > without having populated the counter from enough AGs to prevent the
-> > reservation overrun problem. For that reason, I didn't really consider
-> > the "lazy" init approach a suitable fix and hooked onto the (mostly)
-> > preexisting perag res behavior to initialize the appropriate structures
-> > at mount time.
-> > 
-> > If that underlying mount time behavior changes, it's not totally clear
-> > to me how that impacts this patch. If the perag res change relies on an
-> > overestimated mount time reservation and a fallback to a hard scan on
-> > -ENOSPC, then I wonder whether the overestimated reservation might
-> > effectively subsume whatever the allocbt set aside might be for that AG.
-> > If so, and the perag init effectively transfers excess reservation back
-> > to free space at the same time allocbt blocks are accounted for (and set
-> > aside from subsequent reservations), perhaps that has a similar net
-> > effect as the current behavior (of initializing the allocbt count at
-> > mount time)..?
-> > 
-> > One problem is that might be hard to reason about even with code in
-> > place, let alone right now when the targeted behavior is still
-> > vaporware. OTOH, I suppose that if we do know right now that the perag
-> > res scan will still fall back to mount time scans beyond some low free
-> > space threshold, perhaps it's just a matter of factoring allocbt set
-> > aside into the threshold somehow so that we know the counter will always
-> > be initialized before a user can over reserve blocks.
-> 
-> Yeah, that seems reasonable to me. I don't think it's difficult to
-> handle - just set the setaside to maximum at mount time, then as we
-> read in AGFs we replace the maximum setaside for that AG with the
-> actual btree block usage. If we hit ENOSPC, then we can read in the
-> uninitialised pags to reduce the setaside from the maximum to the
-> actual values and return that free space back to the global pool...
-> 
+On Wed, Mar 24, 2021 at 12:48 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Tue, Mar 23, 2021 at 07:19:28PM -0700, Dan Williams wrote:
+> > So I think the path forward is:
+> >
+> > - teach memory_failure() to allow for ranged failures
+> >
+> > - let interested drivers register for memory failure events via a
+> > blocking_notifier_head
+>
+> Eww.  As I said I think the right way is that the file system (or
+> other consumer) can register a set of callbacks for opening the device.
 
-Ack. That seems like a generic enough fallback plan if the
-overestimation of perag reservation doesn't otherwise cover the gap.
+How does that solve the problem of the driver being notified of all
+pfn failure events? Today pmem only finds out about the ones that are
+notified via native x86 machine check error handling via a notifier
+(yes "firmware-first" error handling fails to do the right thing for
+the pmem driver), or the ones that are eventually reported via address
+range scrub, but only for the nvdimms that implement range scrubbing.
+memory_failure() seems a reasonable catch all point to route pfn
+failure events, in an arch independent way, to interested drivers.
 
-> > As it is, I don't
-> > really have a strong opinion on whether we should try to make this fix
-> > now and preserve it, or otherwise table it and revisit once we know what
-> > the resulting perag res code will look like. Thoughts?
-> 
-> It sounds like we have a solid plan to address the AG header access
-> at mount time, adding this code now doesn't make anything worse,
-> nor does it appear to prevent us from fixing the AG header access
-> problem in the future. So I'm happy for this fix to go ahead as it
-> stands.
-> 
+I'm fine swapping out dax_device blocking_notiier chains for your
+proposal, but that does not address all the proposed reworks in my
+list which are:
 
-Ok, so is that a Rv-b..? ;)
+- delete "drivers/acpi/nfit/mce.c"
 
-So far after a quick skim back through the discussion, I don't have a
-reason for a v4 of this series...
+- teach memory_failure() to be able to communicate range failure
 
-Brian
+- enable memory_failure() to defer to a filesystem that can say
+"critical metadata is impacted, no point in trying to do file-by-file
+isolation, bring the whole fs down".
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+> I have a series I need to finish and send out to do that for block
+> devices.  We probably also need the concept of a holder for the dax
+> device to make it work nicely, as otherwise we're going to have a bit
+> of a mess.
 
+Ok, I'll take a look at adding a holder.
+
+>
+> > This obviously does not solve Dave's desire to get this type of error
+> > reporting on block_devices, but I think there's nothing stopping a
+> > parallel notifier chain from being created for block-devices, but
+> > that's orthogonal to requirements and capabilities provided by
+> > dax-devices.
+>
+> FYI, my series could easily accomodate that if we ever get a block
+> driver that actually could report such errors.
+
+Sure, whatever we land for a dax_device could easily be adopted for a
+block device.
