@@ -2,69 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D920C433C1
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 16:45:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 722D2C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 17:51:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C40761A16
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 16:45:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D70561A2D
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 17:51:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229869AbhCYQpK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Mar 2021 12:45:10 -0400
-Received: from mx2.suse.de ([195.135.220.15]:45408 "EHLO mx2.suse.de"
+        id S229664AbhCYRvB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 13:51:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50108 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229533AbhCYQol (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Mar 2021 12:44:41 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1616690680; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=EwaRIE09GX8AfoBaJ3oYa6KimMdVtHo8D7Q+Ms/Hd6U=;
-        b=s9rAuH+GWzW69Bn+DQSgrHNrG3hdRhy2/JMYaSQqPcfPjiBicgrd/obf3TMlC1DkORIKAO
-        S8lE6ov9J8MtHL79IeAT4S8AYXhO5JygT/5R+Vzgq3Vwv7kzXzlflwoyH5G4V0Yg1NaEGb
-        ZM+9l+fFyDyYyOG/O6mKAZ2b21IorUk=
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 9B67BACFC
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Mar 2021 16:44:40 +0000 (UTC)
-From:   Anthony Iliopoulos <ailiop@suse.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: fix xfs_trans slab cache name
-Date:   Thu, 25 Mar 2021 17:47:50 +0100
-Message-Id: <20210325164750.19599-1-ailiop@suse.com>
-X-Mailer: git-send-email 2.31.0
+        id S229592AbhCYRuz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Mar 2021 13:50:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C96A861A2C;
+        Thu, 25 Mar 2021 17:50:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616694654;
+        bh=tMUbvMGW4GFm3c9SJSicGeAiTQfATDqUMe5Oxp3eGtg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=NZUpc6nVPWD96OrB6bSrgiIVm0dRzct/fywwo5bN50DqnFajzTcqboq1TzKRCHXGN
+         NXTLAipNta2jNdn78SnNx12eHHA+nkkVHKvHxPO+nIvP8wJd/wKZx/oAQZEUzhq6pE
+         UpEuiLp6mH6t5Xl2pvkgPqP1KCveTkEwXXhBlE/kwcSqxubQYtSJy5wrxyDDE57iun
+         S+grxZblLbp6k42+5eGzzvIj5Mh/VWkW2/C8QKkfwWdipx4Li3ATpanNKkg6cDjfJd
+         hjodECNNUzTXQym5L+hwNXwc7ZMHmaoyD8hFHT5VU4byqkpcU6Qyx0wIsLgfHLTxx8
+         rUSDoIrJXnqcw==
+Date:   Thu, 25 Mar 2021 10:50:54 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     guaneryu@gmail.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCH 1/2] common/xfs: support realtime devices with
+ _scratch_xfs_admin
+Message-ID: <20210325175054.GJ4090233@magnolia>
+References: <161647323173.3431002.17140233881930299974.stgit@magnolia>
+ <161647323723.3431002.10715201555327186329.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <161647323723.3431002.10715201555327186329.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Removal of kmem_zone_init wrappers accidentally changed a slab cache
-name from "xfs_trans" to "xf_trans". Fix this so that userspace
-consumers of /proc/slabinfo and /sys/kernel/slab can find it again.
+On Mon, Mar 22, 2021 at 09:20:37PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Teach _scratch_xfs_admin to support passing the realtime device to
+> xfs_admin so that we can actually test xfs_admin functionality with
+> those setups.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  common/xfs |    8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 69f76d6e..9cb373ba 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -269,9 +269,15 @@ _test_xfs_db()
+>  _scratch_xfs_admin()
+>  {
+>  	local options=("$SCRATCH_DEV")
+> +	local rtopts=()
 
-Fixes: b1231760e443 ("xfs: Remove slab init wrappers")
-Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
----
- fs/xfs/xfs_super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+NAK, this name is inconsistent with the rest of the function and stupid
+bash will just create the rt_opts array in the global namespace with no
+complaints whatsoever.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 699c61637961..f816137ae976 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1905,7 +1905,7 @@ xfs_init_zones(void)
- 	if (!xfs_ifork_zone)
- 		goto out_destroy_da_state_zone;
- 
--	xfs_trans_zone = kmem_cache_create("xf_trans",
-+	xfs_trans_zone = kmem_cache_create("xfs_trans",
- 					   sizeof(struct xfs_trans),
- 					   0, 0, NULL);
- 	if (!xfs_trans_zone)
--- 
-2.31.0
+--D
 
+>  	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+>  		options+=("$SCRATCH_LOGDEV")
+> -	$XFS_ADMIN_PROG "$@" "${options[@]}"
+> +	if [ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ]; then
+> +		$XFS_ADMIN_PROG --help 2>&1 | grep -q 'rtdev' || \
+> +			_notrun 'xfs_admin does not support rt devices'
+> +		rt_opts+=(-r "$SCRATCH_RTDEV")
+> +	fi
+> +	$XFS_ADMIN_PROG "${rt_opts[@]}" "$@" "${options[@]}"
+>  }
+>  
+>  _scratch_xfs_logprint()
+> 
