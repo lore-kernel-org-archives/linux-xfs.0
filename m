@@ -2,79 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B028C433C1
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 04:31:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D43EC433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 04:33:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 50BEB61A1A
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 04:31:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A89161A1A
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 04:33:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229493AbhCYEbJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Mar 2021 00:31:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43196 "EHLO mail.kernel.org"
+        id S229619AbhCYEdT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 00:33:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43294 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229448AbhCYEaq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Mar 2021 00:30:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2510460238;
-        Thu, 25 Mar 2021 04:30:46 +0000 (UTC)
+        id S229448AbhCYEdA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Mar 2021 00:33:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 49CAA60238;
+        Thu, 25 Mar 2021 04:33:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616646646;
-        bh=A2mbUqfh15zlM5Chdm5jLjjmHolsrxnk47JiYjk6x8c=;
+        s=k20201202; t=1616646780;
+        bh=di7oIpGQwzNDOAmPbBDHTwedcQXWqSfPyXPKAKVzbJU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XMZC1N0p9Dsas1223mLQ56N79kpJXKTBIaGDM5jP3MPn+SVGhShmN0GXn5/KQCAKE
-         FW6rDm0YAWMTgqkChcELfpxylh9pRxkGALgxlQJ/RBL6oxcIfFEUaQeHN41dMcuXoK
-         G4AZ5aEqvl95g2lxQU83sM8eGSiqF7FPu4p1jMTy6O1KUXax1E6zR36U8gZySGuY5K
-         hNZ1BQgW6Gq7/VUhTl1HiIGjJpzVTgrmnaERpEo7WLXSXbQhFvdcsSEbr4c8eJzPX+
-         LEwwBWwNuCc78uq4xc9BIYdRz7oalYzid+GxI3gntR5bzoE+BkYSzR9HfKKNZuq+xc
-         p3IYl1O5G5THg==
-Date:   Wed, 24 Mar 2021 21:30:45 -0700
+        b=EJZAyI4vLsnGcnPPynam9I0ljjohXC6PNEMkmq/GFEtzJocDp6s5JvHDmi+uuYyRE
+         SlSNJeZPLuo59x+k4XD1e5gXc56frmFax9Xd12Pdnsw85Ig4Jby/ocURZnMspxWmIm
+         /aGyzfWOQH/D6zCavlPYxG5CsQzOyXoG6UJ3KmYbhf21asSZEoGZU/SHDpioc+Makx
+         5c1FAXFofuqBXuj/01bvvGHMu2N00eZQFhgZA3CBXRtcp+na1kcZC5HKrl7oUmQGeV
+         lAtomm5NLm1zI+ugUywIqUOaRK++5czJEyRZwfS/m6r4dEaNOBBbD3lxt+GN09V85A
+         JSMWYb4lt4Cew==
+Date:   Wed, 24 Mar 2021 21:32:59 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: simplify the perage inode walk infrastructure
-Message-ID: <20210325043045.GD4090233@magnolia>
-References: <20210324070307.908462-1-hch@lst.de>
- <20210324070307.908462-3-hch@lst.de>
- <20210324175735.GX22100@magnolia>
- <20210324175937.GA14862@lst.de>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>,
+        Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs_admin: pick up log arguments correctly
+Message-ID: <20210325043259.GE4090233@magnolia>
+References: <20210324021018.GQ22100@magnolia>
+ <773c904b-4468-e16e-dc17-5942988c997c@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210324175937.GA14862@lst.de>
+In-Reply-To: <773c904b-4468-e16e-dc17-5942988c997c@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 24, 2021 at 06:59:37PM +0100, Christoph Hellwig wrote:
-> On Wed, Mar 24, 2021 at 10:57:35AM -0700, Darrick J. Wong wrote:
-> > On Wed, Mar 24, 2021 at 08:03:06AM +0100, Christoph Hellwig wrote:
-> > > Remove the generic xfs_inode_walk and just open code the only caller.
+On Wed, Mar 24, 2021 at 03:47:54PM -0500, Eric Sandeen wrote:
+> On 3/23/21 9:10 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > This is going in the wrong direction for me.  Maybe.
+> > In commit ab9d8d69, we added support to xfs_admin to pass an external
+> > log to xfs_db and xfs_repair.  Unfortunately, we didn't do this
+> > correctly -- by appending the log arguments to DB_OPTS, we now guarantee
+> > an invocation of xfs_db when we don't have any work for it to do.
 > > 
-> > I was planning to combine the reclaim inode walk into this function, and
-> > later on share it with inactivation.  This made for one switch-happy
-> > iteration function, but it meant there was only one loop.
+> > Brian Foster noticed that this results in xfs/764 hanging fstests
+> > because xfs_db (when not compiled with libeditline) will wait for input
+> > on stdin.  I didn't notice because my build includes libeditline and my
+> > test runner script does silly things with pipes such that xfs_db would
+> > exit immediately.
+> > 
+> > Reported-by: Brian Foster <bfoster@redhat.com>
+> > Fixes: ab9d8d69 ("xfs_admin: support adding features to V5 filesystems")
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > 
-> Ok, we can skip this for now if this gets in your way.  Or I can resend
-> a different patch 2 that just removes the no tag case for now.
-> 
-> > OFC maybe the point that you and/or Dave were trying to make is that I
-> > should be doing the opposite, and combining the inactivation loop into
-> > what is now the (badly misnamed) xfs_reclaim_inodes_ag?  And leave this
-> > blockgc loop alone?
-> 
-> That is my gut feeling.  No guarantee it actually works out, and given
-> that I've lead you down the wrong road a few times I already feel guily
-> ahead of time..
+> This seems fine.  While astute bashophiles will have no problem with this,
+> at some point it might be nice to add some comments above DB_OPTS and
+> REPAIR_OPTS that point out hey, if you set these, you WILL be invoking the
+> tool.
 
-Actually, collapsing all of the tag walkers into xfs_inode_walk was
-pretty straightforward, and in the end I just borrowed bits and pieces
-from patches 2 and 3 to make it happen and clean up the arguments.  The
-net change is 55 lines deleted and ~1k less code (granted with all the
-debugging and ubsan crud turned on).
+That "should" be obvious from reading the source code, but this
+maintainer obviously didn't notice that, and bash is horrible so I don't
+blame anyone else for missing things.
+
+> I also chafe a little at accumulating some device options in REPAIR_DEV_OPTS
+> and others in LOG_OPTS; why not REPAIR_DEV_OPTS and DB_DEV_OPTS for some
+> consistency?
+
+Why not dump each arg into a bash array so that we don't have to deal
+with all this shell space-escaping crap? :P
+
+> But, this does seem to solve the problem, and in the
+> Spirit of Lets Not Navel-Gaze And Just Keep Fixing Things(tm),
+
+Ok, thanks.  Enjoy your vacation! :)
 
 --D
+
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> > ---
+> >  db/xfs_admin.sh |    9 ++++-----
+> >  1 file changed, 4 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+> > index 916050cb..409975b2 100755
+> > --- a/db/xfs_admin.sh
+> > +++ b/db/xfs_admin.sh
+> > @@ -8,7 +8,7 @@ status=0
+> >  DB_OPTS=""
+> >  REPAIR_OPTS=""
+> >  REPAIR_DEV_OPTS=""
+> > -DB_LOG_OPTS=""
+> > +LOG_OPTS=""
+> >  USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
+> >  
+> >  while getopts "c:efjlL:O:pr:uU:V" c
+> > @@ -40,19 +40,18 @@ case $# in
+> >  	1|2)
+> >  		# Pick up the log device, if present
+> >  		if [ -n "$2" ]; then
+> > -			DB_OPTS=$DB_OPTS" -l '$2'"
+> > -			REPAIR_DEV_OPTS=$REPAIR_DEV_OPTS" -l '$2'"
+> > +			LOG_OPTS=" -l '$2'"
+> >  		fi
+> >  
+> >  		if [ -n "$DB_OPTS" ]
+> >  		then
+> > -			eval xfs_db -x -p xfs_admin $DB_OPTS "$1"
+> > +			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_OPTS "$1"
+> >  			status=$?
+> >  		fi
+> >  		if [ -n "$REPAIR_OPTS" ]
+> >  		then
+> >  			echo "Running xfs_repair to upgrade filesystem."
+> > -			eval xfs_repair $REPAIR_DEV_OPTS $REPAIR_OPTS "$1"
+> > +			eval xfs_repair $LOG_OPTS $REPAIR_DEV_OPTS $REPAIR_OPTS "$1"
+> >  			status=`expr $? + $status`
+> >  		fi
+> >  		;;
+> > 
