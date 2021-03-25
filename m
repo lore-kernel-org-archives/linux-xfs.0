@@ -2,89 +2,176 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4881C433C1
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 03:07:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E3FFC433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 04:21:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8103061A1E
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 03:07:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06F9161A1D
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 04:21:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230274AbhCYDGo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 Mar 2021 23:06:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36122 "EHLO mail.kernel.org"
+        id S229626AbhCYEVE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 00:21:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42524 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230169AbhCYDGb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 Mar 2021 23:06:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3A0DD61580;
-        Thu, 25 Mar 2021 03:06:29 +0000 (UTC)
+        id S229592AbhCYEUu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Mar 2021 00:20:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D96D861A14;
+        Thu, 25 Mar 2021 04:20:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616641589;
-        bh=oZv+v7mRbypqbhwmrjapMG3Of5RNyAPzgaFIuevL8ls=;
+        s=k20201202; t=1616646048;
+        bh=cyQjfLDC5CPrAwKYnmDoVAIgkZDsEBsfY7lu3xo97dw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CYgsnA7/WlyJeabioPfXm36RnjDl6MRHNDgMPWYkWCH1T5vXzG/IBcY4oPlvcRSbM
-         Fqm9dS4fIRpZjCqsc4YY9ZlXY0YI0S7xA5XI7kO5h8NYm3OevNylus99Nza7FZlM8H
-         y7sjNNH3KakC6QB29xazH8F6Etp5/MmrveLu7YvhcepXhESO6wsnTxbPPmw1w4sR8N
-         e28UcMkhwXnqfkOMZfTCoNYleBIM0HOoO/q9A5GbRiBQgLFHBB/Bx82p3tU21cnNit
-         fntzBoEHTE/2cyB9kSOTIkWJxOg5w8ffr6BPeuPyUCXtrAGv6Z0WY20EIixv7vQsyY
-         DOjCRm/iU5Wgg==
-Date:   Wed, 24 Mar 2021 20:06:28 -0700
+        b=UXsroXieVU0lNyXPYTTASu0778DRfWURlRZt0eMTlceo0KREWSrCppc9+ajdymrKM
+         QMYKGNG7aj1hSs5sk41FBl1dv2tJDwp7ueCv9uCcdbWQm+3AGcgtTJzPgXiyXdIcAs
+         bY79v68e7VsQMr4un0PRtkICV3GM5Tiq+biTBpactU5PASZIQTRsgssP3jvdsFg9et
+         QAIYdLb0SZ37p9n4lPaJaDf6nrsmsDJ9R0/qqq2T/FSUmZ8Azd+W1/tiVlRo4h4Pto
+         vrqS1j7D0sSYecdYQ3jCNVOUHEuNoK1sl8futQc32zJfeu+dIhRJZUKb35DClX02yr
+         ngr1QZAQdYYkA==
+Date:   Wed, 24 Mar 2021 21:20:44 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 13/18] xfs: use a union for i_cowextsize and i_flushiter
-Message-ID: <20210325030628.GA4090233@magnolia>
-References: <20210324142129.1011766-1-hch@lst.de>
- <20210324142129.1011766-14-hch@lst.de>
+Subject: Re: [PATCH 06/11] xfs: deferred inode inactivation
+Message-ID: <20210325042044.GB4090233@magnolia>
+References: <161543194009.1947934.9910987247994410125.stgit@magnolia>
+ <161543197372.1947934.1230576164438094965.stgit@magnolia>
+ <20210323014417.GC63242@dread.disaster.area>
+ <20210323040037.GI22100@magnolia>
+ <20210323051907.GE63242@dread.disaster.area>
+ <20210324020407.GO22100@magnolia>
+ <20210324045706.GL63242@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210324142129.1011766-14-hch@lst.de>
+In-Reply-To: <20210324045706.GL63242@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 24, 2021 at 03:21:24PM +0100, Christoph Hellwig wrote:
-> The i_cowextsize field is only used for v3 inodes, and the i_flushiter
-> field is only used for v1/v2 inodes.  Use a union to pack the inode a
-> littler better after adding a few missing guards around their usage.
+On Wed, Mar 24, 2021 at 03:57:06PM +1100, Dave Chinner wrote:
+> On Tue, Mar 23, 2021 at 07:04:07PM -0700, Darrick J. Wong wrote:
+> > On Tue, Mar 23, 2021 at 04:19:07PM +1100, Dave Chinner wrote:
+> > > On Mon, Mar 22, 2021 at 09:00:37PM -0700, Darrick J. Wong wrote:
+> > > > On Tue, Mar 23, 2021 at 12:44:17PM +1100, Dave Chinner wrote:
+> > > > > On Wed, Mar 10, 2021 at 07:06:13PM -0800, Darrick J. Wong wrote:
+> > > > > > +	/*
+> > > > > > +	 * Not a match for our passed in scan filter?  Put it back on the shelf
+> > > > > > +	 * and move on.
+> > > > > > +	 */
+> > > > > > +	spin_lock(&ip->i_flags_lock);
+> > > > > > +	if (!xfs_inode_matches_eofb(ip, eofb)) {
+> > > > > > +		ip->i_flags &= ~XFS_INACTIVATING;
+> > > > > > +		spin_unlock(&ip->i_flags_lock);
+> > > > > > +		return 0;
+> > > > > > +	}
+> > > > > > +	spin_unlock(&ip->i_flags_lock);
+> > > > > 
+> > > > > IDGI. What do EOF blocks have to do with running inode inactivation
+> > > > > on this inode?
+> > > > 
+> > > > This enables foreground threads that hit EDQUOT to look for inodes to
+> > > > inactivate in order to free up quota'd resources.
+> > > 
+> > > Not very obvious - better comment, please?
+> > 
+> > 	/*
+> > 	 * Foreground threads that have hit ENOSPC or EDQUOT are allowed
+> > 	 * to pass in a eofb structure to look for inodes to inactivate
+> > 	 * immediately to free some resources.  If this inode isn't a
+> > 	 * match, put it back on the shelf and move on.
+> > 	 */
+> > 
+> > Better?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Yes.
+> 
+> > > > > > +	/*
+> > > > > > +	 * Perform all on-disk metadata updates required to inactivate inodes.
+> > > > > > +	 * Since this can involve finobt updates, do it now before we lose the
+> > > > > > +	 * per-AG space reservations.
+> > > > > > +	 */
+> > > > > > +	xfs_inodegc_force(mp);
+> > > > > 
+> > > > > Should we stop background inactivation, because we can't make
+> > > > > modifications anymore and hence background inactication makes little
+> > > > > sense...
 
-Hmm, so this patch caused a regression on V4 filesystems xfs/051.  It
-looks like the flush iter gets set to zero and then log recovery forgets
-to replay the inode(?)
+Ahhh, now I remember why the blockgc and inodegc workers call
+sb_start_write before running any transactions.  We don't want the
+threads to stall on transaction allocation when the fs is at FREEZE_FS,
+which means that we have to cancel the work before we get there.  That
+means it's too late to cancel the work items in xfs_fs_freeze.
 
-The following patch fixes it for me, FWIW...
+We can't cancel the work items from a ->freeze_super handler before
+calling freeze_super(), because we haven't taken any locks yet, and
+we're still unfrozen.
+
+For blockgc I solved this problem by making the worker get FREEZE_WRITE
+protection so that we can't freeze the fs until the work is done.  Then
+we don't have to care that much about ensuring that the worker threads
+cannot run while the fs is frozen.  But that's a bit sloppy, since
+they're still consuming CPU time.
+
+I could solve this problem by observing that freeze_super calls
+sync_filesystem when the fs is in FREEZE_PAGEFAULTS and is about to move
+to FREEZE_FS, but that seems ugly and hacky.
+
+> > > > 
+> > > > We don't actually stop background gc transactions or other internal
+> > > > updates on readonly filesystems
+> > > 
+> > > Yes we do - that's what xfs_blockgc_stop() higher up in this
+> > > function does. xfs_log_clean() further down in the function also
+> > > stops the background log work (that covers the log when idle)
+> > > because xfs_remount_ro() leaves the log clean.
+> > > 
+> > > THese all get restarted in xfs_remount_rw()....
+> > > 
+> > > > -- the ro part means only that we don't
+> > > > let /userspace/ change anything directly.  If you open a file readonly,
+> > > > unlink it, freeze the fs, and close the file, we'll still free it.
+> > > 
+> > > How do you unlink the file on a RO mount?
+> > 
+> > I got confused here.  If you open a file readonly on a rw mount, unlink
+> > it, remount the fs readonly, and close the file, we'll still free it.
+> 
+> Not even that way. :)
+> 
+> You can't remount-ro while there are open-but-unlinked files. See
+> sb->s_remove_count. It's incremented when drop_link() drops the link
+> count to zero in the unlink() syscall, then decremented when
+> __destroy_inode() is called during inode eviction when the final
+> reference goes away. Hence while we have open but unlinked inodes in
+> active use, that superblock counter is non-zero.
+> 
+> In sb_prepare_remount_readonly() we have:
+> 
+> 	if (atomic_long_read(&sb->s_remove_count))
+> 		return -EBUSY;
+> 
+> So a remount-ro will fail with -EBUSY while there are open but
+> unlinked files.
+
+Ah, ok.
+
+> Except, of course, if you are doing an emergency remount-ro from
+> sysrq, in which case these open-but-unlinked checks are not done,
+> but when we are forcing the fs to be read-only this way, it's not
+> being done for correctness (i.e the system is about to be shot down)
+> so we don't really care...
+
+Well yes, most bets are off during emergency ro-remounts. :)
 
 --D
 
-xfs: fix regression in xfs/051 with this patch
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 205ee7da8fa5..795c23e5c655 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1525,11 +1525,12 @@ xfs_ioctl_setattr(
- 		ip->i_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
- 	else
- 		ip->i_extsize = 0;
--	if (xfs_sb_version_has_v3inode(&mp->m_sb) &&
--	    (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
--		ip->i_cowextsize = fa->fsx_cowextsize >> mp->m_sb.sb_blocklog;
--	else
--		ip->i_cowextsize = 0;
-+	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
-+		if (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
-+			ip->i_cowextsize = XFS_B_TO_FSBT(mp, fa->fsx_cowextsize);
-+		else
-+			ip->i_cowextsize = 0;
-+	}
- 
- 	error = xfs_trans_commit(tp);
- 
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
