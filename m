@@ -2,120 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CC18C433E5
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 18:55:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E78DC433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 20:18:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D36A561A3A
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 18:55:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47235619FF
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 20:18:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230182AbhCYSzH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Mar 2021 14:55:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37786 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230185AbhCYSyt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Mar 2021 14:54:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BF89261A1E;
-        Thu, 25 Mar 2021 18:54:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616698488;
-        bh=tM8eINKnHRITG9wCAfjpIsUWMm+grOjYY8RVmsE3iZw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Gy4K7VpSx3Q5yIe3gceuOWLGRh46PyAaqHbk2Zb6AuGda8FG9asw5JSI00+r423vS
-         iu1n/giq3Qiq9U/Jz1Sq64I4zjBGBOmHxzE5f0O2f4nfQnfBGkg/ksSle0TSMuZDuH
-         kdy7He55ANIXvhoORSiGy7KzB0Mz6ZmBvhcrGfpULC4HQ7oIpqU0x4Vt4Y83oKphCx
-         GlSzeT79RbpY4xfHtNcO4lt9aWq/fe+CUQCgIsWfmtnder6jnus0fj3tkM7dxAYD9a
-         fDs7vaykEly+G5KKbfARaxkAzf1K6Dw2lZkC5d3CokW/mdY5V3LfEluuLZcKrcxmU4
-         ll9LWguuakzOQ==
-Date:   Thu, 25 Mar 2021 11:54:47 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
+        id S230208AbhCYUSM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 16:18:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42368 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230378AbhCYUR4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Mar 2021 16:17:56 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA5BAC06174A
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Mar 2021 13:17:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=5sYu+3j89dTdYt5i9a2Ve1TcoMJHlbbvhwDf3xY9Nr8=; b=WykyVGWont44eSbjPk3urZXgPF
+        WqpGLogyTApxrsJQloCczxldpJ9QZ/nHavNSNdpT6FFJdtevkGeZEZglU89mv853Uuic5I3Ofx6Mr
+        Ka514JqIYn1J7qNjYV04C5/UfJyOZBoC/kF02++n8MbIHWDCHiDGYRJSsPwPt1Fawuu1wxiyz7A4W
+        K+hnEzwDsBGRilJ6qkMbGpzbpyACnv4uqz94BHv8XxH6v1SOyyktNbv6h8Fg4ExjaemGN3o2Qb0GU
+        VK+JmUy8CWU5L3K1uCSQgB0D61Rsyi6bZ9Qxi3rNvEwCxYWsKokKN3EZGduJg6qP+pssGjl354Giw
+        yBCnzXNA==;
+Received: from [2001:4bb8:191:f692:97ff:1e47:aee2:c7e5] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1lPWQV-004xlU-Hh; Thu, 25 Mar 2021 20:17:55 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: Initialize xfs_alloc_arg->total correctly when
- allocating minlen extents
-Message-ID: <20210325185447.GM4090233@magnolia>
-References: <20210325140339.6603-1-chandanrlinux@gmail.com>
+Subject: [PATCH] iomap: improve the warnings from iomap_swapfile_activate
+Date:   Thu, 25 Mar 2021 21:17:53 +0100
+Message-Id: <20210325201753.1292361-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210325140339.6603-1-chandanrlinux@gmail.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 25, 2021 at 07:33:38PM +0530, Chandan Babu R wrote:
-> xfs/538 can cause the following call trace to be printed when executing on a
-> multi-block directory configuration,
-> 
->  WARNING: CPU: 1 PID: 2578 at fs/xfs/libxfs/xfs_bmap.c:717 xfs_bmap_extents_to_btree+0x520/0x5d0
->  Call Trace:
->   ? xfs_buf_rele+0x4f/0x450
->   xfs_bmap_add_extent_hole_real+0x747/0x960
->   xfs_bmapi_allocate+0x39a/0x440
->   xfs_bmapi_write+0x507/0x9e0
->   xfs_da_grow_inode_int+0x1cd/0x330
->   ? up+0x12/0x60
->   xfs_dir2_grow_inode+0x62/0x110
->   ? xfs_trans_log_inode+0x234/0x2d0
->   xfs_dir2_sf_to_block+0x103/0x940
->   ? xfs_dir2_sf_check+0x8c/0x210
->   ? xfs_da_compname+0x19/0x30
->   ? xfs_dir2_sf_lookup+0xd0/0x3d0
->   xfs_dir2_sf_addname+0x10d/0x910
->   xfs_dir_createname+0x1ad/0x210
->   xfs_create+0x404/0x620
->   xfs_generic_create+0x24c/0x320
->   path_openat+0xda6/0x1030
->   do_filp_open+0x88/0x130
->   ? kmem_cache_alloc+0x50/0x210
->   ? __cond_resched+0x16/0x40
->   ? kmem_cache_alloc+0x50/0x210
->   do_sys_openat2+0x97/0x150
->   __x64_sys_creat+0x49/0x70
->   do_syscall_64+0x33/0x40
->   entry_SYSCALL_64_after_hwframe+0x44/0xae
-> 
-> This occurs because xfs_bmap_exact_minlen_extent_alloc() initializes
-> xfs_alloc_arg->total to xfs_bmalloca->minlen. In the context of
-> xfs_bmap_exact_minlen_extent_alloc(), xfs_bmalloca->minlen has a value of 1
-> and hence the space allocator could choose an AG which has less than
-> xfs_bmalloca->total number of free blocks available. As the transaction
-> proceeds, one of the future space allocation requests could fail due to
-> non-availability of free blocks in the AG that was originally chosen.
-> 
-> This commit fixes the bug by assigning xfs_alloc_arg->total to the value of
-> xfs_bmalloca->total.
-> 
-> Fixes: 301519674699 ("xfs: Introduce error injection to allocate only minlen size extents for files")
-> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+Print the path name of the swapfile that failed to active to ease
+debugging the problem and to avoid a scare if xfstests hits these
+cases.  Also reword one warning a bit, as the error is not about
+a file being on multiple devices, but one that has at least an
+extent outside the main device known to the VFS and swap code.
 
-Sounds resonable to me, I guess I'll give it a try...
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap/swapfile.c | 38 ++++++++++++++++++++++----------------
+ 1 file changed, 22 insertions(+), 16 deletions(-)
 
---D
+diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
+index a648dbf6991e4e..1dc63beae0c5b8 100644
+--- a/fs/iomap/swapfile.c
++++ b/fs/iomap/swapfile.c
+@@ -18,6 +18,7 @@ struct iomap_swapfile_info {
+ 	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
+ 	unsigned long nr_pages;		/* number of pages collected */
+ 	int nr_extents;			/* extent count */
++	struct file *file;
+ };
+ 
+ /*
+@@ -70,6 +71,18 @@ static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
+ 	return 0;
+ }
+ 
++static int iomap_swapfile_fail(struct iomap_swapfile_info *isi, const char *str)
++{
++	char *buf, *p = ERR_PTR(-ENOMEM);
++
++	buf = kmalloc(PATH_MAX, GFP_KERNEL);
++	if (buf)
++		p = file_path(isi->file, buf, PATH_MAX);
++	pr_err("swapon: file %s %s\n", IS_ERR(p) ? "<unknown>" : p, str);
++	kfree(buf);
++	return -EINVAL;
++}
++
+ /*
+  * Accumulate iomaps for this swap file.  We have to accumulate iomaps because
+  * swap only cares about contiguous page-aligned physical extents and makes no
+@@ -89,28 +102,20 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
+ 		break;
+ 	case IOMAP_INLINE:
+ 		/* No inline data. */
+-		pr_err("swapon: file is inline\n");
+-		return -EINVAL;
++		return iomap_swapfile_fail(isi, "is inline");
+ 	default:
+-		pr_err("swapon: file has unallocated extents\n");
+-		return -EINVAL;
++		return iomap_swapfile_fail(isi, "has unallocated extents");
+ 	}
+ 
+ 	/* No uncommitted metadata or shared blocks. */
+-	if (iomap->flags & IOMAP_F_DIRTY) {
+-		pr_err("swapon: file is not committed\n");
+-		return -EINVAL;
+-	}
+-	if (iomap->flags & IOMAP_F_SHARED) {
+-		pr_err("swapon: file has shared extents\n");
+-		return -EINVAL;
+-	}
++	if (iomap->flags & IOMAP_F_DIRTY)
++		return iomap_swapfile_fail(isi, "is not committed");
++	if (iomap->flags & IOMAP_F_SHARED)
++		return iomap_swapfile_fail(isi, "has shared extents");
+ 
+ 	/* Only one bdev per swap file. */
+-	if (iomap->bdev != isi->sis->bdev) {
+-		pr_err("swapon: file is on multiple devices\n");
+-		return -EINVAL;
+-	}
++	if (iomap->bdev != isi->sis->bdev)
++		return iomap_swapfile_fail(isi, "outside the main device");
+ 
+ 	if (isi->iomap.length == 0) {
+ 		/* No accumulated extent, so just store it. */
+@@ -139,6 +144,7 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
+ 	struct iomap_swapfile_info isi = {
+ 		.sis = sis,
+ 		.lowest_ppage = (sector_t)-1ULL,
++		.file = swap_file,
+ 	};
+ 	struct address_space *mapping = swap_file->f_mapping;
+ 	struct inode *inode = mapping->host;
+-- 
+2.30.1
 
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index e0905ad171f0..585f7e795023 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3586,7 +3586,8 @@ xfs_bmap_exact_minlen_extent_alloc(
->  	args.fsbno = ap->blkno;
->  	args.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
->  	args.type = XFS_ALLOCTYPE_FIRST_AG;
-> -	args.total = args.minlen = args.maxlen = ap->minlen;
-> +	args.minlen = args.maxlen = ap->minlen;
-> +	args.total = ap->total;
->  
->  	args.alignment = 1;
->  	args.minalignslop = 0;
-> -- 
-> 2.29.2
-> 
