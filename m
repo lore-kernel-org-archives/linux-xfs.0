@@ -4,89 +4,78 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 722D2C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 17:51:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00F70C433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 18:48:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D70561A2D
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 17:51:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAFD361A3E
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 18:48:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229664AbhCYRvB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Mar 2021 13:51:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50108 "EHLO mail.kernel.org"
+        id S230057AbhCYSrz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 14:47:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36960 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229592AbhCYRuz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Mar 2021 13:50:55 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C96A861A2C;
-        Thu, 25 Mar 2021 17:50:54 +0000 (UTC)
+        id S229953AbhCYSre (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Mar 2021 14:47:34 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B1E6D61A3D;
+        Thu, 25 Mar 2021 18:47:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616694654;
-        bh=tMUbvMGW4GFm3c9SJSicGeAiTQfATDqUMe5Oxp3eGtg=;
+        s=k20201202; t=1616698053;
+        bh=mS4KEiEFdNblnovM4tgPs/nOYfMHV8nqjCMjWk/lN+0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NZUpc6nVPWD96OrB6bSrgiIVm0dRzct/fywwo5bN50DqnFajzTcqboq1TzKRCHXGN
-         NXTLAipNta2jNdn78SnNx12eHHA+nkkVHKvHxPO+nIvP8wJd/wKZx/oAQZEUzhq6pE
-         UpEuiLp6mH6t5Xl2pvkgPqP1KCveTkEwXXhBlE/kwcSqxubQYtSJy5wrxyDDE57iun
-         S+grxZblLbp6k42+5eGzzvIj5Mh/VWkW2/C8QKkfwWdipx4Li3ATpanNKkg6cDjfJd
-         hjodECNNUzTXQym5L+hwNXwc7ZMHmaoyD8hFHT5VU4byqkpcU6Qyx0wIsLgfHLTxx8
-         rUSDoIrJXnqcw==
-Date:   Thu, 25 Mar 2021 10:50:54 -0700
+        b=EEy+71rRMtjSVScnLdNEpiKPoi8wH0FLYiRbJ788bjqSVfOwAQQTp+ShIG4l6/MFD
+         gcCo7jFIpn102wKhgLUTL0327wntomUIqXRihAQ9lzQgkEb5Wdl+GSSrtaOHXNUgWt
+         CW+sTRu5GWp9HGJEr+xNMi3sGUd7EqwkbYm0Xwl+FcxC+QQNAGvUw0LbOpazFZ6ueF
+         TVFNP4b8bhlODqkqdlBoQvzW6BS/9lzu/RyPbKucMySHLaGGN8w0LrFvrLmt0EaBJ+
+         /UaXuC5SGZ3Us+9dsCCpheOGpG6fN8aQBS/2gtm4q8YXKA9CHUvFaV780WyFc+8KIa
+         IeO/WKa897Png==
+Date:   Thu, 25 Mar 2021 11:47:30 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 1/2] common/xfs: support realtime devices with
- _scratch_xfs_admin
-Message-ID: <20210325175054.GJ4090233@magnolia>
-References: <161647323173.3431002.17140233881930299974.stgit@magnolia>
- <161647323723.3431002.10715201555327186329.stgit@magnolia>
+To:     Anthony Iliopoulos <ailiop@suse.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix xfs_trans slab cache name
+Message-ID: <20210325184730.GK4090233@magnolia>
+References: <20210325164750.19599-1-ailiop@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161647323723.3431002.10715201555327186329.stgit@magnolia>
+In-Reply-To: <20210325164750.19599-1-ailiop@suse.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 22, 2021 at 09:20:37PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Mar 25, 2021 at 05:47:50PM +0100, Anthony Iliopoulos wrote:
+> Removal of kmem_zone_init wrappers accidentally changed a slab cache
+> name from "xfs_trans" to "xf_trans". Fix this so that userspace
+> consumers of /proc/slabinfo and /sys/kernel/slab can find it again.
 > 
-> Teach _scratch_xfs_admin to support passing the realtime device to
-> xfs_admin so that we can actually test xfs_admin functionality with
-> those setups.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  common/xfs |    8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/common/xfs b/common/xfs
-> index 69f76d6e..9cb373ba 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -269,9 +269,15 @@ _test_xfs_db()
->  _scratch_xfs_admin()
->  {
->  	local options=("$SCRATCH_DEV")
-> +	local rtopts=()
+> Fixes: b1231760e443 ("xfs: Remove slab init wrappers")
+> Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
 
-NAK, this name is inconsistent with the rest of the function and stupid
-bash will just create the rt_opts array in the global namespace with no
-complaints whatsoever.
+Heh, whoops.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
->  	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
->  		options+=("$SCRATCH_LOGDEV")
-> -	$XFS_ADMIN_PROG "$@" "${options[@]}"
-> +	if [ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ]; then
-> +		$XFS_ADMIN_PROG --help 2>&1 | grep -q 'rtdev' || \
-> +			_notrun 'xfs_admin does not support rt devices'
-> +		rt_opts+=(-r "$SCRATCH_RTDEV")
-> +	fi
-> +	$XFS_ADMIN_PROG "${rt_opts[@]}" "$@" "${options[@]}"
->  }
+> ---
+>  fs/xfs/xfs_super.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 699c61637961..f816137ae976 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1905,7 +1905,7 @@ xfs_init_zones(void)
+>  	if (!xfs_ifork_zone)
+>  		goto out_destroy_da_state_zone;
 >  
->  _scratch_xfs_logprint()
+> -	xfs_trans_zone = kmem_cache_create("xf_trans",
+> +	xfs_trans_zone = kmem_cache_create("xfs_trans",
+>  					   sizeof(struct xfs_trans),
+>  					   0, 0, NULL);
+>  	if (!xfs_trans_zone)
+> -- 
+> 2.31.0
 > 
