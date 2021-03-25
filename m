@@ -2,104 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD277C433C1
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 23:04:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8E8DC433DB
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 23:20:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 806E4619B6
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 23:04:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9338961A0D
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 23:20:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231273AbhCYXD2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Mar 2021 19:03:28 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:37604 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231252AbhCYXDS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Mar 2021 19:03:18 -0400
-Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 37A0F2AE6;
-        Fri, 26 Mar 2021 10:03:13 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lPZ0S-006l4K-1N; Fri, 26 Mar 2021 10:03:12 +1100
-Date:   Fri, 26 Mar 2021 10:03:12 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Jan Kara <jack@suse.cz>,
-        Christian Brauner <christian.brauner@ubuntu.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux API <linux-api@vger.kernel.org>,
-        "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH] xfs: use a unique and persistent value for f_fsid
-Message-ID: <20210325230312.GN63242@dread.disaster.area>
-References: <20210322171118.446536-1-amir73il@gmail.com>
- <20210322230352.GW63242@dread.disaster.area>
- <CAOQ4uxjFMPNgR-aCqZt3FD90XtBVFZncdgNc4RdOCbsxukkyYQ@mail.gmail.com>
- <20210323072607.GF63242@dread.disaster.area>
- <CAOQ4uxgAddAfGkA7LMTPoBmrwVXbvHfnN8SWsW_WXm=LPVmc7Q@mail.gmail.com>
- <20210324005421.GK63242@dread.disaster.area>
- <CAOQ4uxhhMVQ4XE8DMU1EjaXBo-go3_pFX3CCWn=7GuUXcMW=PA@mail.gmail.com>
- <20210324074318.GA2646094@infradead.org>
- <CAOQ4uxgOi9hxDaL7Rk8OU3O-S+YuvDZPtpN7PggXfL=COyrc0Q@mail.gmail.com>
+        id S231352AbhCYXT4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 19:19:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53362 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231307AbhCYXTd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Mar 2021 19:19:33 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id CF65D61A0F;
+        Thu, 25 Mar 2021 23:19:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616714372;
+        bh=tKzCvvv88QDjtjKN5JzT/7F4ttkl5n4A/cwERoqky9w=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=RXmSuObW4wtOqZgjUrw0VGu7iZKh1kXag2NGaF8aU1bnAIqa6n4KmKAGFloWgfB0m
+         ZDn8xKE2gySFzmI7rW+7rnoGwDHcQivX45DYQL80WV72xGOY8KjwfWA9bDuXLm9E5X
+         5afrkJddnG8wcAUiSuDuOuiTU3oRm+A3HHXHRdeV+WAqLV1v5pjUQNrARinD1Vhw9M
+         GSl99lNX9hwnvQnabl7631ouAhaX4OgLUIikbBjayObMztTJty5p2m10kOp+GqHRRF
+         m7d+uctezMBUVV+GxskvxCNPc1N3IG9dx7ZY90DedH/0aCH4O7/PpOkjF+rMEmZDwy
+         G9BlX1sCHMIbw==
+Date:   Thu, 25 Mar 2021 16:19:32 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     guaneryu@gmail.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Subject: [PATCH v1.1 1/2] common/xfs: support realtime devices with
+ _scratch_xfs_admin
+Message-ID: <20210325231932.GL1670408@magnolia>
+References: <161647323173.3431002.17140233881930299974.stgit@magnolia>
+ <161647323723.3431002.10715201555327186329.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgOi9hxDaL7Rk8OU3O-S+YuvDZPtpN7PggXfL=COyrc0Q@mail.gmail.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_x
-        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
-        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=JfrnYn6hAAAA:8 a=7-415B0cAAAA:8
-        a=axe3pCkCbSIAKNk3-JAA:9 a=CjuIK1q_8ugA:10 a=1CNFftbPRP8L7MoqJWF3:22
-        a=biEYGPWJfzWAr4FL6Ov7:22 a=fCgQI5UlmZDRPDxm0A3o:22
+In-Reply-To: <161647323723.3431002.10715201555327186329.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 24, 2021 at 11:18:36AM +0200, Amir Goldstein wrote:
-> On Wed, Mar 24, 2021 at 9:43 AM Christoph Hellwig <hch@infradead.org> wrote:
-> >
-> > On Wed, Mar 24, 2021 at 08:53:25AM +0200, Amir Goldstein wrote:
-> > > > This also means that userspace can be entirely filesystem agnostic
-> > > > and it doesn't need to rely on parsing proc files to translate
-> > > > ephemeral mount IDs to paths, statvfs() and hoping that f_fsid is
-> > > > stable enough that it doesn't get the destination wrong.  It also
-> > > > means that fanotify UAPI probably no longer needs to supply a
-> > > > f_fsid with the filehandle because it is built into the
-> > > > filehandle....
-> > > >
-> > >
-> > > That is one option. Let's call it the "bullet proof" option.
-> > >
-> > > Another option, let's call it the "pragmatic" options, is that you accept
-> > > that my patch shouldn't break anything and agree to apply it.
-> >
-> > Your patch may very well break something.  Most Linux file systems do
-> > store the dev_t in the fsid and userspace may for whatever silly
-> > reasons depend on it.
-> >
-> 
-> I acknowledge that.
-> I do not claim that my change carries zero risk of breakage.
-> However, if such userspace dependency exists, it would break on ext4,
-> btrfs, ocsf2, ceph and many more fs, so it would have to be a
-> dependency that is tightly coupled with a specific fs.
-> The probability of that is rather low IMO.
-> 
-> I propose an opt-in mount option "-o fixed_fsid" for this behavior to make
-> everyone sleep better.
+From: Darrick J. Wong <djwong@kernel.org>
 
-Layering hacks on top of hacks to avoid fixing the fanotify UAPI
-limitations isn't a very palatable option. Especially those that
-require adding mount options we'll have to support forever more...
+Teach _scratch_xfs_admin to support passing the realtime device to
+xfs_admin so that we can actually test xfs_admin functionality with
+those setups.
 
-Cheers,
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+v1.1: fix rt_ops variable naming problems
+---
+ common/xfs |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/common/xfs b/common/xfs
+index f5e98c1e..06989d1c 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -269,9 +269,15 @@ _test_xfs_db()
+ _scratch_xfs_admin()
+ {
+ 	local options=("$SCRATCH_DEV")
++	local rt_opts=()
+ 	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+ 		options+=("$SCRATCH_LOGDEV")
+-	$XFS_ADMIN_PROG "$@" "${options[@]}"
++	if [ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ]; then
++		$XFS_ADMIN_PROG --help 2>&1 | grep -q 'rtdev' || \
++			_notrun 'xfs_admin does not support rt devices'
++		rt_opts+=(-r "$SCRATCH_RTDEV")
++	fi
++	$XFS_ADMIN_PROG "${rt_opts[@]}" "$@" "${options[@]}"
+ }
+ 
+ _scratch_xfs_logprint()
