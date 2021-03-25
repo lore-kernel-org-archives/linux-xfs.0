@@ -5,67 +5,67 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71721C433DB
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 09:34:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8B6AC433C1
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 10:09:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29E8F619E3
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 09:34:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8987461A2C
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 10:09:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229617AbhCYJdu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Mar 2021 05:33:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43118 "EHLO
+        id S230063AbhCYKJH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 06:09:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229581AbhCYJdS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Mar 2021 05:33:18 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83D14C06174A;
-        Thu, 25 Mar 2021 02:33:18 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id t18so787136pjs.3;
-        Thu, 25 Mar 2021 02:33:18 -0700 (PDT)
+        with ESMTP id S229854AbhCYKJB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Mar 2021 06:09:01 -0400
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E255C06174A;
+        Thu, 25 Mar 2021 03:09:00 -0700 (PDT)
+Received: by mail-pg1-x52d.google.com with SMTP id v186so1280646pgv.7;
+        Thu, 25 Mar 2021 03:09:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=references:user-agent:from:to:cc:subject:in-reply-to:date
          :message-id:mime-version;
-        bh=DghIGvoJvAWU+AmtvRQJyQPHJINq7DxtjJe1w12HlJA=;
-        b=q0OHqbgjkOHp+ak66k737yRGNgP6Q17NMhcfSmvhCA30Y+ajxt+gOjMynbTZP2L/xC
-         FQC9/1mE98JITVremNQm+5263BueZ2yZ9sFNYLLb0eJJT34pa2HMiHNN0OlqRl/+P2P5
-         gatVfetppJdxHxCzuylfPo2cNhFcPUXvQplscRqLVHyF5/fZBdZhzJkz/VqSy1Yk4Bl1
-         7/YzgHeHPzMVbHnErGaOGz/SUuzeWp3a92mEPG67zxaTgpBwVo5k9hTaZ1jsIsHEyZst
-         8QdXn9ghtl+jnqz4qOCbfdxCfBw8O/bens0ZNaiYKScMz7+1rkQzpFAdKCCVfrPA11tj
-         niFg==
+        bh=lLSFxEmIbL155ZDAgKp3ao3Ztt5yppEE6Roz8XB3Np8=;
+        b=erthkXZNKsF4262/gcoBu1E1COw7lsYE4XG279MjU4gfdAToLhaOblOWSBazHagxas
+         5LLr76LHj+jmRk2/vtNPfiKK9uRSVrNLPVPagkfO2iPe5T/+ZjQ6t+mkO719mb2Oyg7C
+         7a9qCYciPvjpkKjp04CQPBw1Zipk/EdTTuy9m+yBWF6HG1W/qU7eEKRFQCbNmvm5RRUy
+         HaipoCdYu6qYVn01PnlpHvbGw5fDmtB/rq2uafPgs3f4cqwswX2YzElpS0wGcA/nGvZ1
+         2GELnZ7/ZwGWOrr3+mSZW6Y5RTBPTIXIsgUjO55DeSlwToqFEcFUUTodOicqxi0YrTea
+         rBVQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:references:user-agent:from:to:cc:subject
          :in-reply-to:date:message-id:mime-version;
-        bh=DghIGvoJvAWU+AmtvRQJyQPHJINq7DxtjJe1w12HlJA=;
-        b=N/SWL/3cZqYq6yqvhj51Zbfma9JZR0i6RxAeZbGuIKc2s0JewN8o+EKOgd6IxJeHWk
-         WxpKac5FOg5oVTgK5GR3e6dU0CFj4qLITGmtr4FFyikR7aJST9rOlQl6FvTBiwTwGPLi
-         4Twu3Lvm5upBDOqq1lPZPOjkzFeEhhr7ruH52jo6RLawmz4iTRtFKTV3sg3dAOzRJxt4
-         3+Xp0Qk2TNW0iIS41GzmHc2hl+qR4VSipFo2SmpISAR9+QwuiXBStx6DF3M8h0kw0PMz
-         IRai3YZETSksfUWM1DasIpGJHECDrYxqPwSvGx2R1uoQ1seljXEnGwMnhFVogkIQUhRo
-         okVg==
-X-Gm-Message-State: AOAM53258b2HExfW592LQd8cfd+0VBCWOpb37TSm8iWBI4fYgQU8okjV
-        mIKHt3qCGHUTPbGuhKWp7i8=
-X-Google-Smtp-Source: ABdhPJykjvAUXQ3ktQVSq5vkMdGXfdzu9e2jqK+XHbT8bbVfonJxnCHEozgCfdis6pGLtu6Eih3ztA==
-X-Received: by 2002:a17:90b:681:: with SMTP id m1mr7736667pjz.168.1616664798040;
-        Thu, 25 Mar 2021 02:33:18 -0700 (PDT)
+        bh=lLSFxEmIbL155ZDAgKp3ao3Ztt5yppEE6Roz8XB3Np8=;
+        b=qebFpWUUSUdVYMWG1Ddcux1/GJl4ih0jnXTe2A7fkjGMb8flle+Uj7Ut4c0QmZggFw
+         hMyALkYpIm0C/r3ji8oCq/Fy/K2HAPyl41WhuXRf2r5/4Fao7/Zk3oSWU/JvEzYpqC6e
+         DpJ6YlND+Pi5I0YOodQUa44JqBKPEBDkYgDlHiVPdNznRmJNJaFJjC21X/QMBglEVsQU
+         FIQOiPdG+RCSgMecu7drONgFiO7+0GqOCiL0AhqLQij3DDKD7NIJE1WS0neB6SnsrFg/
+         LtHqZKfkbKTWsqqNF+5QA2xfAymnDffofYKjLjPTjFECuj+Io+YMh/qSSbh2AHtCHpmS
+         uQQQ==
+X-Gm-Message-State: AOAM532m+84fShn4sd113GY4cZqkh+jlZsYClL2nG2/FUMZymcOugonV
+        EiGTLI8Af+vo+8KIHO11UBw=
+X-Google-Smtp-Source: ABdhPJxN+uqEZCON/yHAJeJrx/jtx135Bi0XujKf1bFlSvrqmHbCwn/ba5Q+zNmqNGAtAggLy3ceYA==
+X-Received: by 2002:aa7:9493:0:b029:1f8:a493:b747 with SMTP id z19-20020aa794930000b02901f8a493b747mr7552297pfk.41.1616666939669;
+        Thu, 25 Mar 2021 03:08:59 -0700 (PDT)
 Received: from garuda ([122.171.175.121])
-        by smtp.gmail.com with ESMTPSA id f13sm4838141pfj.8.2021.03.25.02.33.15
+        by smtp.gmail.com with ESMTPSA id j3sm5494526pfi.74.2021.03.25.03.08.57
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 25 Mar 2021 02:33:17 -0700 (PDT)
-References: <161647321880.3430916.13415014495565709258.stgit@magnolia> <161647322430.3430916.12437291741320143904.stgit@magnolia>
+        Thu, 25 Mar 2021 03:08:59 -0700 (PDT)
+References: <161647321880.3430916.13415014495565709258.stgit@magnolia> <161647322983.3430916.9402200604814364098.stgit@magnolia>
 User-agent: mu4e 1.0; emacs 26.1
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 1/2] xfs: test the xfs_db path command
-In-reply-to: <161647322430.3430916.12437291741320143904.stgit@magnolia>
-Date:   Thu, 25 Mar 2021 15:03:14 +0530
-Message-ID: <87mturo9wl.fsf@garuda>
+Subject: Re: [PATCH 2/2] xfs: test the xfs_db ls command
+In-reply-to: <161647322983.3430916.9402200604814364098.stgit@magnolia>
+Date:   Thu, 25 Mar 2021 15:38:56 +0530
+Message-ID: <87lfabo893.fsf@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
@@ -75,34 +75,34 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 23 Mar 2021 at 09:50, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 >
-> Add a new test to make sure the xfs_db path command works the way the
-> author thinks it should.
+> Make sure that the xfs_db ls command works the way the author thinks it
+> does.
 >
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  tests/xfs/917     |   98 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/917.out |   19 ++++++++++
->  tests/xfs/group   |    1 +
->  3 files changed, 118 insertions(+)
->  create mode 100755 tests/xfs/917
->  create mode 100644 tests/xfs/917.out
+>  tests/xfs/918     |  109 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/918.out |   27 +++++++++++++
+>  tests/xfs/group   |    1
+>  3 files changed, 137 insertions(+)
+>  create mode 100755 tests/xfs/918
+>  create mode 100644 tests/xfs/918.out
 >
 >
-> diff --git a/tests/xfs/917 b/tests/xfs/917
+> diff --git a/tests/xfs/918 b/tests/xfs/918
 > new file mode 100755
-> index 00000000..bf21b290
+> index 00000000..7211df92
 > --- /dev/null
-> +++ b/tests/xfs/917
-> @@ -0,0 +1,98 @@
+> +++ b/tests/xfs/918
+> @@ -0,0 +1,109 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0-or-later
 > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
 > +#
-> +# FS QA Test No. 917
+> +# FS QA Test No. 918
 > +#
-> +# Make sure the xfs_db path command works the way the author thinks it does.
-> +# This means that it can navigate to random inodes, fails on paths that don't
-> +# resolve.
+> +# Make sure the xfs_db ls command works the way the author thinks it does.
+> +# This means that we can list the current directory, list an arbitrary path,
+> +# and we can't list things that aren't directories.
 > +#
 > +seq=`basename $0`
 > +seqres=$RESULT_DIR/$seq
@@ -126,53 +126,75 @@ On 23 Mar 2021 at 09:50, Darrick J. Wong wrote:
 > +# real QA test starts here
 > +_supported_fs xfs
 > +_require_xfs_db_command "path"
+> +_require_xfs_db_command "ls"
 > +_require_scratch
 > +
 > +echo "Format filesystem and populate"
 > +_scratch_mkfs > $seqres.full
 > +_scratch_mount >> $seqres.full
 > +
+> +$XFS_INFO_PROG $SCRATCH_MNT | grep -q ftype=1 || \
+> +	_notrun "filesystem does not support ftype"
+> +
+> +filter_ls() {
+> +	awk '
+> +BEGIN { cookie = 0; }
+> +{
+> +	if (cookie == 0)
+> +		cookie = $1;
+> +	printf("+%d %s %s %s %s %s\n", $1 - cookie, $2, $3, $4, $5, $6);
+> +	cookie = $1;
+> +}' | \
+> +	sed	-e "s/ $root_ino directory / root directory /g" \
+> +		-e "s/ $a_ino directory / a_ino directory /g" \
+> +		-e "s/ $b_ino directory / b_ino directory /g" \
+> +		-e "s/ $c_ino regular / c_ino regular /g" \
+> +		-e "s/ $d_ino symlink / d_ino symlink /g" \
+> +		-e "s/ $e_ino blkdev / e_ino blkdev /g" \
+> +		-e "s/ $f_ino chardev / f_ino chardev /g" \
+> +		-e "s/ $g_ino fifo / g_ino fifo /g" \
+> +		-e "s/ $big0_ino regular / big0_ino regular /g" \
+> +		-e "s/ $big1_ino regular / big1_ino regular /g" \
+> +		-e "s/ $h_ino regular / g_ino regular /g"
+> +}
+> +
 > +mkdir $SCRATCH_MNT/a
 > +mkdir $SCRATCH_MNT/a/b
 > +$XFS_IO_PROG -f -c 'pwrite 0 61' $SCRATCH_MNT/a/c >> $seqres.full
-> +ln -s -f c $SCRATCH_MNT/a/d
-> +mknod $SCRATCH_MNT/a/e b 8 0
-> +ln -s -f b $SCRATCH_MNT/a/f
+> +ln -s -f b $SCRATCH_MNT/a/d
 
-Later in the test script, there are two checks corresponding to accessibility
-of file symlink and dir symlink. However, $SCRATCH_MNT/a/d and
-$SCRATCH_MNT/a/f are actually referring to non-existant files since current
-working directory at the time of invocation of ln command is the xfstests
-directory.
+Similar to the previous patch, the symbolic link 'd' will refer to a
+non-existing file. However, it shouldn't matter w.r.t to correctness of this
+test.
 
-i.e. 'c' and 'b' arguments to 'ln' command above must be qualified with
-$SCRATCH_MNT/a/.
-
+> +mknod $SCRATCH_MNT/a/e b 0 0
+> +mknod $SCRATCH_MNT/a/f c 0 0
+> +mknod $SCRATCH_MNT/a/g p
+> +touch $SCRATCH_MNT/a/averylongnameforadirectorysothatwecanpushthecookieforward
+> +touch $SCRATCH_MNT/a/andmakethefirstcolumnlookmoreinterestingtopeoplelolwtfbbq
+> +touch $SCRATCH_MNT/a/h
+> +
+> +root_ino=$(stat -c '%i' $SCRATCH_MNT)
+> +a_ino=$(stat -c '%i' $SCRATCH_MNT/a)
+> +b_ino=$(stat -c '%i' $SCRATCH_MNT/a/b)
+> +c_ino=$(stat -c '%i' $SCRATCH_MNT/a/c)
+> +d_ino=$(stat -c '%i' $SCRATCH_MNT/a/d)
+> +e_ino=$(stat -c '%i' $SCRATCH_MNT/a/e)
+> +f_ino=$(stat -c '%i' $SCRATCH_MNT/a/f)
+> +g_ino=$(stat -c '%i' $SCRATCH_MNT/a/g)
+> +big0_ino=$(stat -c '%i' $SCRATCH_MNT/a/avery*)
+> +big1_ino=$(stat -c '%i' $SCRATCH_MNT/a/andma*)
+> +h_ino=$(stat -c '%i' $SCRATCH_MNT/a/h)
 > +
 > +_scratch_unmount
 > +
-> +echo "Check xfs_db path on directories"
-> +_scratch_xfs_db -c 'path /a' -c print | grep -q 'sfdir.*count.* 5$' || \
-> +	echo "Did not find directory /a"
-> +
-> +_scratch_xfs_db -c 'path /a/b' -c print | grep -q sfdir || \
-> +	echo "Did not find empty sf directory /a/b"
-> +
-> +echo "Check xfs_db path on files"
-> +_scratch_xfs_db -c 'path /a/c' -c print | grep -q 'core.size.*61' || \
-> +	echo "Did not find 61-byte file /a/c"
-> +
-> +echo "Check xfs_db path on file symlinks"
-> +_scratch_xfs_db -c 'path /a/d' -c print | grep -q symlink || \
-> +	echo "Did not find symlink /a/d"
-> +
-> +echo "Check xfs_db path on bdevs"
-> +_scratch_xfs_db -c 'path /a/e' -c print | grep -q 'format.*dev' || \
-> +	echo "Did not find bdev /a/e"
-> +
-> +echo "Check xfs_db path on dir symlinks"
-> +_scratch_xfs_db -c 'path /a/f' -c print | grep -q symlink || \
-> +	echo "Did not find symlink /a/f"
+> +echo "Manually navigate to root dir then list"
+> +_scratch_xfs_db -c 'sb 0' -c 'addr rootino' -c ls > /tmp/fuck0
+> +cat /tmp/fuck0 | filter_ls > /tmp/fuck1
+
+The two lines above are redundant.
+
+> +_scratch_xfs_db -c 'sb 0' -c 'addr rootino' -c ls | filter_ls
 
 --
 chandan
