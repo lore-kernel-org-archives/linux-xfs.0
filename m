@@ -2,86 +2,107 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B09DFC433C1
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 14:30:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F9D2C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 15:42:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7ADAE61A2A
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 14:30:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9C6561A30
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 15:42:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230413AbhCYO3m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Mar 2021 10:29:42 -0400
-Received: from mx2.suse.de ([195.135.220.15]:42020 "EHLO mx2.suse.de"
+        id S230500AbhCYPlu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 11:41:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43606 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229574AbhCYO3m (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Mar 2021 10:29:42 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1616682581; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=hq+364Gyz3cSxoIAyE0vkUkHwS69imXT89V2QvwJtPI=;
-        b=EZ/ntjKZnzr9IhGnLvfvy+hSZRR7rkas2DhXqBQajik24ruBq7NKKzCkxvM3JnTQjF5ufY
-        A90caqSQsy4QxF5ulvb2poEXF65RS3Wa3nnMFwo4YV5WFpO6fbZX5yOKt3nWGMc5q1WsWa
-        nxmvGsEm0rEEx3Gua0D++OmjAxzn3tI=
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 06123AC16;
-        Thu, 25 Mar 2021 14:29:41 +0000 (UTC)
-Date:   Thu, 25 Mar 2021 15:29:40 +0100
-From:   Anthony Iliopoulos <ailiop@suse.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/18] xfs: remove the di_dmevmask and di_dmstate fields
- from struct xfs_icdinode
-Message-ID: <YFyeVLbI/7JCKPnX@technoir>
-References: <20210324142129.1011766-1-hch@lst.de>
- <20210324142129.1011766-6-hch@lst.de>
- <20210324181429.GD22100@magnolia>
- <20210324182042.GA16478@lst.de>
+        id S230516AbhCYPld (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Mar 2021 11:41:33 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 63DB461A1A;
+        Thu, 25 Mar 2021 15:41:32 +0000 (UTC)
+Date:   Thu, 25 Mar 2021 16:41:29 +0100
+From:   Christian Brauner <christian.brauner@ubuntu.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: swapfile warnings
+Message-ID: <20210325154129.wf2qiwuybv7sad5j@wittgenstein>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210324182042.GA16478@lst.de>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 24, 2021 at 07:20:42PM +0100, Christoph Hellwig wrote:
-> On Wed, Mar 24, 2021 at 11:17:59AM -0700, Darrick J. Wong wrote:
-> > On Wed, Mar 24, 2021 at 03:21:16PM +0100, Christoph Hellwig wrote:
-> > > The legacy DMAPI fields were never set by upstream Linux XFS, and have no
-> > > way to be read using the kernel APIs.  So instead of bloating the in-core
-> > > inode for them just copy them from the on-disk inode into the log when
-> > > logging the inode.  The only caveat is that we need to make sure to zero
-> > > the fields for newly read or deleted inodes, which is solved using a new
-> > > flag in the inode.
-> > 
-> > How long ago /did/ non-upstream XFS have DMAPI support?  Does it still
-> > have it now?  What's the cost of zeroing the fields?
-> > 
-> > (Really what I'm saying is that I have so little clue of what dmevmask
-> > and dmstate do that I don't really know what Magic Smoke comes out if
-> > these fields get zeroed by an upstream kernel.)
-> 
-> SuSE is shipping SGI patches for it in SLES12, their second newest
-> release. Which is still supported AFAIK.
+Hey,
 
-Indeed SLE12-SP3 was the last release to ship with DMAPI. The general
-support has ended (although LTSS is still supported till mid-2022).
+I've been running xfstests on a v5.12-rc3 kernel using a swapfile:
 
-Either way booting/rescue from a non-SLE12 medium isn't supported, and
-this cleanup is not going to be backported (LTSS only receives critical
-fixes anyway), so it's probably safe to keep those fields always zeroed
-in upstream kernels.
+ubuntu@edfu|~
+> cat /etc/fstab
+# /etc/fstab: static file system information.
+#
+# Use 'blkid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+# / was on /dev/sdb1 during curtin installation
+/dev/disk/by-uuid/f2c4df25-b55c-4d1b-95fa-059f72ef86eb / ext4 defaults 0 0
+/swap.img       none    swap    sw      0       0
 
-Perhaps even renaming those fields on xfs_dinode and xfs_log_dinode to
-unused/pads would make sense, since they could be repurposed. Needs
-though a couple of cleanups on the xfsprogs side too, so probably
-outside the scope of this series (I have a bunch of patches to that
-effect that I need to send sometime).
+where my rootfs is ext4:
 
-Regards,
-Anthony
+ubuntu@edfu|~
+> findmnt | grep -i ext4
+/                                     /dev/sdb1              ext4       rw,relatime
+
+In addition to the /dev/sdb disk I have three other disks attached:
+
+ubuntu@edfu|~
+> lsblk
+NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+loop0    7:0    0  55.5M  1 loop /snap/core18/1988
+loop1    7:1    0  69.9M  1 loop /snap/lxd/19188
+loop2    7:2    0  70.4M  1 loop /snap/lxd/19647
+loop3    7:3    0  32.3M  1 loop /snap/snapd/11107
+loop4    7:4    0  32.3M  1 loop /snap/snapd/11402
+sda      8:0    0 931.5G  0 disk
+sdb      8:16   0 223.6G  0 disk
+└─sdb1   8:17   0 223.6G  0 part /
+sdc      8:32   0 279.5G  0 disk
+sdd      8:48   0 931.5G  0 disk
+
+I'm using two of them /dev/sdc and /dev/sdb for xfstests:
+
+ubuntu@edfu|~/src/git/xfstests
+> cat local.config
+# Ideally define at least these 4 to match your environment
+# The first 2 are required.
+# See README for other variables which can be set.
+#
+# Note: SCRATCH_DEV >will< get overwritten!
+
+export FSTYP=xfs
+export TEST_DEV=/dev/sdc
+export TEST_DIR=/mnt/test
+export SCRATCH_DEV=/dev/sdd
+export SCRATCH_MNT=/mnt/scratch
+
+when the system gets under load during test runs I assume it sometimes
+swaps and so sometimes I see the following messages pop up:
+
+> sudo journalctl | grep -i swapon
+Mar 21 00:00:58 edfu kernel: swapon: file has shared extents
+Mar 21 02:25:52 edfu kernel: swapon: file has unallocated extents
+Mar 21 21:38:12 edfu kernel: swapon: file has shared extents
+Mar 22 00:16:03 edfu kernel: swapon: file has unallocated extents
+Mar 23 11:49:46 edfu kernel: swapon: file has shared extents
+Mar 23 12:34:38 edfu kernel: swapon: file has unallocated extents
+
+I don't know enough about swapfiles to make any deep observations but I
+wonder what this can be caused by and whether this is something to worry
+about.
+
+Christian
