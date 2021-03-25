@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1814AC433E5
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 11:26:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89EB1C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 11:27:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E3EB161A3C
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 11:26:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E68B61A34
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 11:27:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230185AbhCYLZb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Mar 2021 07:25:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33618 "EHLO mail.kernel.org"
+        id S231380AbhCYL1G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 07:27:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35170 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229963AbhCYLZL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Mar 2021 07:25:11 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EDA4D61A2F;
-        Thu, 25 Mar 2021 11:25:09 +0000 (UTC)
+        id S230478AbhCYL0Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Mar 2021 07:26:16 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id CE5C361A4C;
+        Thu, 25 Mar 2021 11:26:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616671510;
+        s=k20201202; t=1616671570;
         bh=RAcmr8XK87Ey3UEhsWQklDNIkjlPCFA2XTgbM233wvY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZgZzu5ihGSeAQNZNjbPDUy1+cTbqYiecl84INxcCcZuBWIq1hKA9DUE1SyImC4Q11
-         Ga6BuWtTvfh8But/ubSahjn4v/AlEfjyELF5Yq24PztAKvRHHZfSZouhZHRS2oloWo
-         H09IQj+MlHOXfqDM9gKfSry41zBB13nvXmT8dhOPjuU+uqXemBYeU8L4iTI8eTfEIi
-         axJXg2N9kmq/DEsshSB45lBv9+gJWVJmW/fQeCMUsrZHlallsSwomL8GPfd5ZKfc26
-         cc3zHroK+zTcYwA/i9Xx+SadUCWz11kvI9iH2dcNFpIwQ0X+7Tr3ukC0M96WpOGE1t
-         F8jyW2JVFDzKg==
+        b=SZQWtYrbpm6jfSJQOQgcbP6OCvWT11Ubd8ymjejPCRYxsteLYYVTOu8yjnvzcne8t
+         NdoScHPMoHXZ5SMjYwSnUFQZWtHWTlUQzsiUkXOAj+byastUEwP2XZfmFv3r9+nrwZ
+         egWFYuAFBcMGSu3YX3213x6gor0iXgEUlx2Oif5Pl8T96tciGzXuGQl7x7sUMG15SM
+         Sf0CvHA9eovNxSOKff1aDY/qJRdytAooI34PQuPZbsH6ix/MBIne42d213rlqAARU3
+         eVC3Cj7SSl2YO+Z6WZJ+V+IOHQTvkyV0P7iYwqYqgchQAG0QNF2JXllubCcOcHRS9K
+         HEnQGkff0wBJA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ritesh Harjani <riteshh@linux.ibm.com>,
@@ -38,12 +38,12 @@ Cc:     Ritesh Harjani <riteshh@linux.ibm.com>,
         Christoph Hellwig <hch@lst.de>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 08/44] iomap: Fix negative assignment to unsigned sis->pages in iomap_swapfile_activate
-Date:   Thu, 25 Mar 2021 07:24:23 -0400
-Message-Id: <20210325112459.1926846-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 08/39] iomap: Fix negative assignment to unsigned sis->pages in iomap_swapfile_activate
+Date:   Thu, 25 Mar 2021 07:25:27 -0400
+Message-Id: <20210325112558.1927423-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210325112459.1926846-1-sashal@kernel.org>
-References: <20210325112459.1926846-1-sashal@kernel.org>
+In-Reply-To: <20210325112558.1927423-1-sashal@kernel.org>
+References: <20210325112558.1927423-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
