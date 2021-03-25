@@ -4,83 +4,83 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0291C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 16:34:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9FBAC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 16:36:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A173461A2C
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 16:34:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CCC061A25
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Mar 2021 16:36:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229744AbhCYQdt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Mar 2021 12:33:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58110 "EHLO mail.kernel.org"
+        id S229533AbhCYQf5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 12:35:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59522 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229839AbhCYQdW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Mar 2021 12:33:22 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5560561993;
-        Thu, 25 Mar 2021 16:33:22 +0000 (UTC)
+        id S229576AbhCYQfc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Mar 2021 12:35:32 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F279061A1E;
+        Thu, 25 Mar 2021 16:35:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616690002;
-        bh=Yh8kP5w1znpIE83oLnJ0fkzeYCuENIM1UN1hlBjl5r4=;
+        s=k20201202; t=1616690132;
+        bh=ccVZkzPIlwL9g7NyYVNcqr30agjNkb0lEWxCHiMInJE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NIZ+pW9zNiJA69qewT7N3kQNN497Q10jgm3r+lcvwXOtC5dqttjvDNmf+oMKGQwPf
-         rSa664pEHHDlLY5hsYLSGf4XYiKNxZivK5j2zg427SNGyWk8/yl/630P7V/dder3v+
-         Ag3wS6ToxIRrpiaZ4pm3o5gA3xPvBPQmYutEHQnN5A5BCOlZof3kAPi/Z/mUiWV3Oq
-         TY4owITtHF7mbeyKBgOoAR+o6HuwPxgHX+kN31U/MCOmVdfGe8+5RTXkywbwPIrYGA
-         KW20I70W2plnCCxIwHXCLlQgpdqmuIemVHpXGkimNcFTMJuXwjywHesCpabpmPVois
-         Bz9sV+4HI3KaA==
-Date:   Thu, 25 Mar 2021 09:33:21 -0700
+        b=hjnwxEHFWs4ASw1UT3ap/cGHdOdDwr8hI8IufjQuhSmW0QEUsdb2kqmPMKUvEjw4I
+         +IweR5aEjNIPNqU8wsrQPCLjhBezYXo0j6EdSQ0H2CoLh8K98NA7hqVzxtva/iu+Nn
+         C1vEaIfJbh/xZnWJusl5RO6zDjaP333grhAat7wuwPYctCaM2DRcn1Qm7Otr75QS3k
+         SswMnczSjdi9Z36lDT5F0ArsKnvXtpSEsUAsJ0mFM1xhpf3P6eXiK/bH2kfHd4mjJZ
+         wM1K/t8JKDKnFQGby+devRUTrljfNelAM1bsgVmSL0KEfHD8ZmgspSiY3nY6VXTMhq
+         KzDYzMPatulfA==
+Date:   Thu, 25 Mar 2021 09:35:31 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 1/2] xfs: test the xfs_db path command
-Message-ID: <20210325163321.GG4090233@magnolia>
+Subject: Re: [PATCH 2/2] xfs: test the xfs_db ls command
+Message-ID: <20210325163531.GH4090233@magnolia>
 References: <161647321880.3430916.13415014495565709258.stgit@magnolia>
- <161647322430.3430916.12437291741320143904.stgit@magnolia>
- <87mturo9wl.fsf@garuda>
+ <161647322983.3430916.9402200604814364098.stgit@magnolia>
+ <87lfabo893.fsf@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87mturo9wl.fsf@garuda>
+In-Reply-To: <87lfabo893.fsf@garuda>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 25, 2021 at 03:03:14PM +0530, Chandan Babu R wrote:
+On Thu, Mar 25, 2021 at 03:38:56PM +0530, Chandan Babu R wrote:
 > On 23 Mar 2021 at 09:50, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > >
-> > Add a new test to make sure the xfs_db path command works the way the
-> > author thinks it should.
+> > Make sure that the xfs_db ls command works the way the author thinks it
+> > does.
 > >
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  tests/xfs/917     |   98 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/917.out |   19 ++++++++++
-> >  tests/xfs/group   |    1 +
-> >  3 files changed, 118 insertions(+)
-> >  create mode 100755 tests/xfs/917
-> >  create mode 100644 tests/xfs/917.out
+> >  tests/xfs/918     |  109 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/918.out |   27 +++++++++++++
+> >  tests/xfs/group   |    1
+> >  3 files changed, 137 insertions(+)
+> >  create mode 100755 tests/xfs/918
+> >  create mode 100644 tests/xfs/918.out
 > >
 > >
-> > diff --git a/tests/xfs/917 b/tests/xfs/917
+> > diff --git a/tests/xfs/918 b/tests/xfs/918
 > > new file mode 100755
-> > index 00000000..bf21b290
+> > index 00000000..7211df92
 > > --- /dev/null
-> > +++ b/tests/xfs/917
-> > @@ -0,0 +1,98 @@
+> > +++ b/tests/xfs/918
+> > @@ -0,0 +1,109 @@
 > > +#! /bin/bash
 > > +# SPDX-License-Identifier: GPL-2.0-or-later
 > > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
 > > +#
-> > +# FS QA Test No. 917
+> > +# FS QA Test No. 918
 > > +#
-> > +# Make sure the xfs_db path command works the way the author thinks it does.
-> > +# This means that it can navigate to random inodes, fails on paths that don't
-> > +# resolve.
+> > +# Make sure the xfs_db ls command works the way the author thinks it does.
+> > +# This means that we can list the current directory, list an arbitrary path,
+> > +# and we can't list things that aren't directories.
 > > +#
 > > +seq=`basename $0`
 > > +seqres=$RESULT_DIR/$seq
@@ -104,75 +104,81 @@ On Thu, Mar 25, 2021 at 03:03:14PM +0530, Chandan Babu R wrote:
 > > +# real QA test starts here
 > > +_supported_fs xfs
 > > +_require_xfs_db_command "path"
+> > +_require_xfs_db_command "ls"
 > > +_require_scratch
 > > +
 > > +echo "Format filesystem and populate"
 > > +_scratch_mkfs > $seqres.full
 > > +_scratch_mount >> $seqres.full
 > > +
+> > +$XFS_INFO_PROG $SCRATCH_MNT | grep -q ftype=1 || \
+> > +	_notrun "filesystem does not support ftype"
+> > +
+> > +filter_ls() {
+> > +	awk '
+> > +BEGIN { cookie = 0; }
+> > +{
+> > +	if (cookie == 0)
+> > +		cookie = $1;
+> > +	printf("+%d %s %s %s %s %s\n", $1 - cookie, $2, $3, $4, $5, $6);
+> > +	cookie = $1;
+> > +}' | \
+> > +	sed	-e "s/ $root_ino directory / root directory /g" \
+> > +		-e "s/ $a_ino directory / a_ino directory /g" \
+> > +		-e "s/ $b_ino directory / b_ino directory /g" \
+> > +		-e "s/ $c_ino regular / c_ino regular /g" \
+> > +		-e "s/ $d_ino symlink / d_ino symlink /g" \
+> > +		-e "s/ $e_ino blkdev / e_ino blkdev /g" \
+> > +		-e "s/ $f_ino chardev / f_ino chardev /g" \
+> > +		-e "s/ $g_ino fifo / g_ino fifo /g" \
+> > +		-e "s/ $big0_ino regular / big0_ino regular /g" \
+> > +		-e "s/ $big1_ino regular / big1_ino regular /g" \
+> > +		-e "s/ $h_ino regular / g_ino regular /g"
+> > +}
+> > +
 > > +mkdir $SCRATCH_MNT/a
 > > +mkdir $SCRATCH_MNT/a/b
 > > +$XFS_IO_PROG -f -c 'pwrite 0 61' $SCRATCH_MNT/a/c >> $seqres.full
-> > +ln -s -f c $SCRATCH_MNT/a/d
-> > +mknod $SCRATCH_MNT/a/e b 8 0
-> > +ln -s -f b $SCRATCH_MNT/a/f
+> > +ln -s -f b $SCRATCH_MNT/a/d
 > 
-> Later in the test script, there are two checks corresponding to accessibility
-> of file symlink and dir symlink. However, $SCRATCH_MNT/a/d and
-> $SCRATCH_MNT/a/f are actually referring to non-existant files since current
-> working directory at the time of invocation of ln command is the xfstests
-> directory.
-> 
-> i.e. 'c' and 'b' arguments to 'ln' command above must be qualified with
-> $SCRATCH_MNT/a/.
+> Similar to the previous patch, the symbolic link 'd' will refer to a
+> non-existing file. However, it shouldn't matter w.r.t to correctness of this
+> test.
 
-Hm?  d and f look fine to me:
+Right.
 
-$ ./check xfs/917
-$ mount /dev/sdf /opt
-$ cd /opt/a
-$ ls
-total 4
-drwxr-xr-x 2 root root    6 Mar 25 09:25 b/
--rw------- 1 root root   61 Mar 25 09:25 c
-lrwxrwxrwx 1 root root    1 Mar 25 09:25 d -> c
-brw-r--r-- 1 root root 8, 0 Mar 25 09:25 e
-lrwxrwxrwx 1 root root    1 Mar 25 09:25 f -> b/
-
-The link target is copied verbatim into the symlink, so I don't see why
-they need to be qualified?
-
-(FWIW the path command doesn't resolve symlinks, so it really only
-checks that /a/d and /a/f exist and are of type symlink.)
-
---D
-
-> 
+> > +mknod $SCRATCH_MNT/a/e b 0 0
+> > +mknod $SCRATCH_MNT/a/f c 0 0
+> > +mknod $SCRATCH_MNT/a/g p
+> > +touch $SCRATCH_MNT/a/averylongnameforadirectorysothatwecanpushthecookieforward
+> > +touch $SCRATCH_MNT/a/andmakethefirstcolumnlookmoreinterestingtopeoplelolwtfbbq
+> > +touch $SCRATCH_MNT/a/h
+> > +
+> > +root_ino=$(stat -c '%i' $SCRATCH_MNT)
+> > +a_ino=$(stat -c '%i' $SCRATCH_MNT/a)
+> > +b_ino=$(stat -c '%i' $SCRATCH_MNT/a/b)
+> > +c_ino=$(stat -c '%i' $SCRATCH_MNT/a/c)
+> > +d_ino=$(stat -c '%i' $SCRATCH_MNT/a/d)
+> > +e_ino=$(stat -c '%i' $SCRATCH_MNT/a/e)
+> > +f_ino=$(stat -c '%i' $SCRATCH_MNT/a/f)
+> > +g_ino=$(stat -c '%i' $SCRATCH_MNT/a/g)
+> > +big0_ino=$(stat -c '%i' $SCRATCH_MNT/a/avery*)
+> > +big1_ino=$(stat -c '%i' $SCRATCH_MNT/a/andma*)
+> > +h_ino=$(stat -c '%i' $SCRATCH_MNT/a/h)
 > > +
 > > +_scratch_unmount
 > > +
-> > +echo "Check xfs_db path on directories"
-> > +_scratch_xfs_db -c 'path /a' -c print | grep -q 'sfdir.*count.* 5$' || \
-> > +	echo "Did not find directory /a"
-> > +
-> > +_scratch_xfs_db -c 'path /a/b' -c print | grep -q sfdir || \
-> > +	echo "Did not find empty sf directory /a/b"
-> > +
-> > +echo "Check xfs_db path on files"
-> > +_scratch_xfs_db -c 'path /a/c' -c print | grep -q 'core.size.*61' || \
-> > +	echo "Did not find 61-byte file /a/c"
-> > +
-> > +echo "Check xfs_db path on file symlinks"
-> > +_scratch_xfs_db -c 'path /a/d' -c print | grep -q symlink || \
-> > +	echo "Did not find symlink /a/d"
-> > +
-> > +echo "Check xfs_db path on bdevs"
-> > +_scratch_xfs_db -c 'path /a/e' -c print | grep -q 'format.*dev' || \
-> > +	echo "Did not find bdev /a/e"
-> > +
-> > +echo "Check xfs_db path on dir symlinks"
-> > +_scratch_xfs_db -c 'path /a/f' -c print | grep -q symlink || \
-> > +	echo "Did not find symlink /a/f"
+> > +echo "Manually navigate to root dir then list"
+> > +_scratch_xfs_db -c 'sb 0' -c 'addr rootino' -c ls > /tmp/fuck0
+> > +cat /tmp/fuck0 | filter_ls > /tmp/fuck1
+> 
+> The two lines above are redundant.
+
+Yikes, sorry about that, everyone.
+
+--D
+
+> > +_scratch_xfs_db -c 'sb 0' -c 'addr rootino' -c ls | filter_ls
 > 
 > --
 > chandan
