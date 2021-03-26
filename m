@@ -2,105 +2,121 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ABE3C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 15:42:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78F37C433C1
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 16:07:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38AFD619FC
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 15:42:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4144B61A33
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 16:07:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230197AbhCZPm0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 26 Mar 2021 11:42:26 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38603 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230297AbhCZPmE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Mar 2021 11:42:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1616773323;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=AAG5JV/XvJZ+KOyjuzUdtKv9eJKNmT3Zl3jgHy8v/9M=;
-        b=QZli+GeW9DESbllAen1hWZkJEEiMFp2SMikyOceq3gVqkis+nee8cct+wtgVCwlrq6e1aw
-        e4bZBtGy12lINLaGfDkKrqZng8kqeNL8cPfPw81uZFnVYyoRHuEdim9Qs1pFB+PNoVWHOe
-        sA/7hctt2ojbwk+sSsLnx73WyezJOHs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-170-qn6abOPbOIK6L00KN3SSUg-1; Fri, 26 Mar 2021 11:42:00 -0400
-X-MC-Unique: qn6abOPbOIK6L00KN3SSUg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 506B593C;
-        Fri, 26 Mar 2021 15:39:41 +0000 (UTC)
-Received: from bfoster (ovpn-113-24.rdu2.redhat.com [10.10.113.24])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A43DE10023AB;
-        Fri, 26 Mar 2021 15:39:40 +0000 (UTC)
-Date:   Fri, 26 Mar 2021 11:39:38 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: xfs ioend batching log reservation deadlock
-Message-ID: <YF4AOto30pC/0FYW@bfoster>
+        id S230299AbhCZQHL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 26 Mar 2021 12:07:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35262 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231184AbhCZQHC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 Mar 2021 12:07:02 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 63A5E61A2A;
+        Fri, 26 Mar 2021 16:07:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616774822;
+        bh=ld5jXWszz9mnlMEUjgdRJcsQjxduNFIImTydz9RYBfM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OrBBJCRwJj6nM1jXUrns9AnupZJSvW0PV6B9oTwz+bHTHBiY3g8q6Jjs63aRZuju+
+         GvoT80MeFcqlSiAeJ2TKBgOEtbl7cZtqTiPLcC7vQPiaEDtoiSvjmdDgdQiJvO8I5V
+         IhBIGa3bJW+ZI+Io5Eo5796QqSdsxAhUTbMW5NdBADqD4fyDLFTF+9TXE9Oshq/N2m
+         5B+5G34xn6cLnrxOM6ElIjihL97UdzBoA2I7Cr2hNacc7PCWVMQv12BpuCL7GWkdCx
+         dw1Vi6a9ECh5uqrJImIl0mOLeMhoGtfXxehNh6irEcmqMt60LmfEz9fY1fDC7cLKkZ
+         dQny9MYWkcBSA==
+Date:   Fri, 26 Mar 2021 09:07:01 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/6] xfs: merge xfs_reclaim_inodes_ag into
+ xfs_inode_walk_ag
+Message-ID: <20210326160701.GW4090233@magnolia>
+References: <161671807287.621936.13471099564526590235.stgit@magnolia>
+ <161671810078.621936.339407186528826628.stgit@magnolia>
+ <20210326063056.GF3421955@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20210326063056.GF3421955@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+On Fri, Mar 26, 2021 at 06:30:56AM +0000, Christoph Hellwig wrote:
+> On Thu, Mar 25, 2021 at 05:21:40PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Merge these two inode walk loops together, since they're pretty similar
+> > now.  Get rid of XFS_ICI_NO_TAG since nobody uses it.
+> 
+> The laster user of XFS_ICI_NO_TAG was quotoff, and the last reference
+> was removed in "xfs: remove indirect calls from xfs_inode_walk{,_ag}".
+> So I think it should be dropped there, or even better in a prep patch
+> removing all the XFS_ICI_NO_TAG code before that one.
 
-We have a report of a workload that deadlocks on log reservation via
-iomap_ioend completion batching. To start, the fs format is somewhat
-unique in that the log is on the smaller side (35MB) and the log stripe
-unit is 256k, but this is actually a default mkfs for the underlying
-storage. I don't have much more information wrt to the workload or
-anything that contributes to the completion processing characteristics.
+Ok, moved to patch 3.
 
-The overall scenario is that a workqueue task is executing in
-xfs_end_io() and blocked on transaction reservation for an unwritten
-extent conversion. Since this task began executing and pulled pending
-items from ->i_ioend_list, the latter was repopulated with 90 ioends, 67
-of which have append transactions. These append transactions account for
-~520k of log reservation each due to the log stripe unit. All together
-this consumes nearly all of available log space, prevents allocation of
-the aforementioned unwritten extent conversion transaction and thus
-leaves the fs in a deadlocked state.
+> > +static inline bool
+> > +selected_for_walk(
+> > +	unsigned int		tag,
+> > +	struct xfs_inode	*ip)
+> > +{
+> > +	switch (tag) {
+> > +	case XFS_ICI_BLOCKGC_TAG:
+> > +		return xfs_blockgc_grab(ip);
+> > +	case XFS_ICI_RECLAIM_TAG:
+> > +		return xfs_reclaim_inode_grab(ip);
+> > +	default:
+> > +		return false;
+> > +	}
+> > +}
+> 
+> Maybe name ths something that starts with xfs_ and ends with _grab?
 
-I can think of different ways we could probably optimize this problem
-away. One example is to transfer the append transaction to the inode at
-bio completion time such that we retain only one per pending batch of
-ioends. The workqueue task would then pull this append transaction from
-the inode along with the ioend list and transfer it back to the last
-non-unwritten/shared ioend in the sorted list.
+xfs_grabbed_for_walk?
 
-That said, I'm not totally convinced this addresses the fundamental
-problem of acquiring transaction reservation from a context that
-essentially already owns outstanding reservation vs. just making it hard
-to reproduce. I'm wondering if/why we need the append transaction at
-all. AFAICT it goes back to commit 281627df3eb5 ("xfs: log file size
-updates at I/O completion time") in v3.4 which changed the completion
-on-disk size update from being an unlogged update. If we continue to
-send these potential append ioends to the workqueue for completion
-processing, is there any reason we can't let the workqueue allocate the
-transaction as it already does for unwritten conversion?
+> >   * and release all incore inodes with the given radix tree @tag.
+> > @@ -786,12 +803,14 @@ xfs_inode_walk_ag(
+> >  	bool			done;
+> >  	int			nr_found;
+> >  
+> > -	ASSERT(tag == XFS_ICI_BLOCKGC_TAG);
+> > +	ASSERT(tag < RADIX_TREE_MAX_TAGS);
+> >  
+> >  restart:
+> >  	done = false;
+> >  	skipped = 0;
+> >  	first_index = 0;
+> > +	if (tag == XFS_ICI_RECLAIM_TAG)
+> > +		first_index = READ_ONCE(pag->pag_ici_reclaim_cursor);
+> 
+> if / else to make this clear?
 
-If that is reasonable, I'm thinking of a couple patches:
+Done.
 
-1. Optimize current append transaction processing with an inode field as
-noted above.
+> >  		for (i = 0; i < nr_found; i++) {
+> >  			if (!batch[i])
+> >  				continue;
+> > -			error = xfs_blockgc_scan_inode(batch[i], eofb);
+> > -			xfs_irele(batch[i]);
+> > +			switch (tag) {
+> > +			case XFS_ICI_BLOCKGC_TAG:
+> > +				error = xfs_blockgc_scan_inode(batch[i], eofb);
+> > +				xfs_irele(batch[i]);
+> > +				break;
+> > +			case XFS_ICI_RECLAIM_TAG:
+> > +				xfs_reclaim_inode(batch[i], pag);
+> > +				error = 0;
+> 
+> Maybe move the irele into xfs_blockgc_scan_inode to make the calling
+> conventions more similar?
 
-2. Replace the submission side append transaction entirely with a flag
-or some such on the ioend that allocates the transaction at completion
-time, but otherwise preserves batching behavior instituted in patch 1.
+Ok.  I'll also fix the off-by-one error in the nr_to_scan check.
 
-Thoughts?
-
-Brian
-
+--D
