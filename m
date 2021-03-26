@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 712C3C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 00:21:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2AE2C433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 00:22:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3784561A42
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 00:21:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0AFD619F3
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 00:22:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229695AbhCZAVL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Mar 2021 20:21:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34800 "EHLO mail.kernel.org"
+        id S230225AbhCZAVk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 20:21:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34914 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229730AbhCZAVF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Mar 2021 20:21:05 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 84DDF619F8;
-        Fri, 26 Mar 2021 00:21:05 +0000 (UTC)
+        id S230093AbhCZAVL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Mar 2021 20:21:11 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2370F61A43;
+        Fri, 26 Mar 2021 00:21:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616718065;
-        bh=KnJlOksD1+2L0pzxZsr63lstx3kgGP+xpaXd48aCnls=;
+        s=k20201202; t=1616718071;
+        bh=lG1zA5DFWzjKvekkBucxBF9HweaAeaV3ilWqQfeVzcc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=WCeW03oiF0HwcvUr9k/6sBF1Jf/PvLvpOHP31af7xoJSEJKUSRHoUhihRhDTGaY3p
-         rQ9eswVt8zsAH0aVz6kDz0o9CaDJtx4UdHN4CgIez2qqVdIJqG8pWnmd1/feHMnOoC
-         vruh+ajWvKT49yx5w41oQZT6GxZDnONk5BLwxOdpbtIkxq48HbFx1GNAhU3dkvgr6Q
-         3u6B6R974BiKB9CiYmNPby18yNS/9cCo9g2fhC9HXYvst/plSoOc9yyjZt+12MnDb9
-         ITUIGo/DUW0vBILhWj+yGf38YzSVUg+vqTQL9rBEOyHHatL8VCOP3Q8Pv07Sb/U4ds
-         WFBaXce4m/Y5Q==
-Subject: [PATCH 1/2] xfs: move the xfs_can_free_eofblocks call under the
- IOLOCK
+        b=F8kwQfrKANUQk3uAg6pQu5Ylld8ynUq+j99aHNGoMFi1EeoPywYtjc7vmX7gCR33z
+         L8rVwsJR0nhfWOTAI08V+FX9DwQBZwEbBFClPJ2c8Jaj0qeorTZcgtK/vlqMe+xOPP
+         FSP6wSJnL0dRMVzpJzvpHZpKk07XvsPoXsHTbq9Hq4gDsE90u6BhFUuAoXutRrCXVp
+         9mPmvI/FrEyfdZ1Bs384BNOTIObHXmLO4+7zG80u9l67NVv9ylmrmdJJzAg+7Y1h9y
+         pYMAdyw3JlfTTxAG5PHejAOHsHvKij5fORxSb+DudUPD5mfvbjMsaeRYlJaA0mnXbx
+         6juYviO2Fm4TA==
+Subject: [PATCH 2/2] xfs: move the check for post-EOF mappings into
+ xfs_can_free_eofblocks
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Date:   Thu, 25 Mar 2021 17:21:05 -0700
-Message-ID: <161671806513.621829.6973192250605604420.stgit@magnolia>
+Date:   Thu, 25 Mar 2021 17:21:10 -0700
+Message-ID: <161671807074.621829.1806705819432894284.stgit@magnolia>
 In-Reply-To: <161671805938.621829.266575450099624132.stgit@magnolia>
 References: <161671805938.621829.266575450099624132.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,49 +50,208 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In xfs_inode_free_eofblocks, move the xfs_can_free_eofblocks call
-further down in the function to the point where we have taken the
-IOLOCK.  This is preparation for the next patch, where we will need that
-lock (or equivalent) so that we can check if there are any post-eof
-blocks to clean out.
+Fix the weird split of responsibilities between xfs_can_free_eofblocks
+and xfs_free_eofblocks by moving the chunk of code that looks for any
+actual post-EOF space mappings from the second function into the first.
+
+This clears the way for deferred inode inactivation to be able to decide
+if an inode needs inactivation work before committing the released inode
+to the inactivation code paths (vs. marking it for reclaim).
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |   15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_bmap_util.c |  155 ++++++++++++++++++++++++++----------------------
+ 1 file changed, 85 insertions(+), 70 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 2fd4a39acb46..3c81daca0e9a 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1296,13 +1296,6 @@ xfs_inode_free_eofblocks(
- 	if (!xfs_iflags_test(ip, XFS_IEOFBLOCKS))
- 		return 0;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 2b9991e5ea47..e79e3d1ff38d 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -597,8 +597,24 @@ xfs_bmap_punch_delalloc_range(
+  * regular files that are marked preallocated or append-only.
+  */
+ bool
+-xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
++xfs_can_free_eofblocks(
++	struct xfs_inode	*ip,
++	bool			force)
+ {
++	struct xfs_bmbt_irec	imap;
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_fileoff_t		end_fsb;
++	xfs_fileoff_t		last_fsb;
++	int			nimaps = 1;
++	int			error;
++
++	/*
++	 * Caller must either hold the exclusive io lock; or be inactivating
++	 * the inode, which guarantees there are no other users of the inode.
++	 */
++	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL) ||
++	       (VFS_I(ip)->i_state & I_FREEING));
++
+ 	/* prealloc/delalloc exists only on regular files */
+ 	if (!S_ISREG(VFS_I(ip)->i_mode))
+ 		return false;
+@@ -624,91 +640,90 @@ xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
+ 		if (!force || ip->i_delayed_blks == 0)
+ 			return false;
  
--	if (!xfs_can_free_eofblocks(ip, false)) {
--		/* inode could be preallocated or append-only */
--		trace_xfs_inode_free_eofblocks_invalid(ip);
--		xfs_inode_clear_eofblocks_tag(ip);
--		return 0;
--	}
+-	return true;
+-}
+-
+-/*
+- * This is called to free any blocks beyond eof. The caller must hold
+- * IOLOCK_EXCL unless we are in the inode reclaim path and have the only
+- * reference to the inode.
+- */
+-int
+-xfs_free_eofblocks(
+-	struct xfs_inode	*ip)
+-{
+-	struct xfs_trans	*tp;
+-	int			error;
+-	xfs_fileoff_t		end_fsb;
+-	xfs_fileoff_t		last_fsb;
+-	xfs_filblks_t		map_len;
+-	int			nimaps;
+-	struct xfs_bmbt_irec	imap;
+-	struct xfs_mount	*mp = ip->i_mount;
 -
  	/*
- 	 * If the mapping is dirty the operation can block and wait for some
- 	 * time. Unless we are waiting, skip it.
-@@ -1324,7 +1317,13 @@ xfs_inode_free_eofblocks(
- 	}
- 	*lockflags |= XFS_IOLOCK_EXCL;
+-	 * Figure out if there are any blocks beyond the end
+-	 * of the file.  If not, then there is nothing to do.
++	 * Do not try to free post-EOF blocks if EOF is beyond the end of the
++	 * range supported by the page cache, because the truncation will loop
++	 * forever.
+ 	 */
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
+ 	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+ 	if (last_fsb <= end_fsb)
+-		return 0;
+-	map_len = last_fsb - end_fsb;
++		return false;
  
--	return xfs_free_eofblocks(ip);
-+	if (xfs_can_free_eofblocks(ip, false))
-+		return xfs_free_eofblocks(ip);
+-	nimaps = 1;
++	/*
++	 * Look up the mapping for the first block past EOF.  If we can't find
++	 * it, there's nothing to free.
++	 */
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
++	error = xfs_bmapi_read(ip, end_fsb, last_fsb - end_fsb, &imap, &nimaps,
++			0);
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	if (error || nimaps == 0)
++		return false;
+ 
+ 	/*
+-	 * If there are blocks after the end of file, truncate the file to its
+-	 * current size to free them up.
++	 * If there's a real mapping there or there are delayed allocation
++	 * reservations, then we have post-EOF blocks to try to free.
+ 	 */
+-	if (!error && (nimaps != 0) &&
+-	    (imap.br_startblock != HOLESTARTBLOCK ||
+-	     ip->i_delayed_blks)) {
+-		/*
+-		 * Attach the dquots to the inode up front.
+-		 */
+-		error = xfs_qm_dqattach(ip);
+-		if (error)
+-			return error;
++	return imap.br_startblock != HOLESTARTBLOCK || ip->i_delayed_blks;
++}
+ 
+-		/* wait on dio to ensure i_size has settled */
+-		inode_dio_wait(VFS_I(ip));
++/*
++ * This is called to free any blocks beyond eof. The caller must hold
++ * IOLOCK_EXCL unless we are in the inode reclaim path and have the only
++ * reference to the inode.
++ */
++int
++xfs_free_eofblocks(
++	struct xfs_inode	*ip)
++{
++	struct xfs_trans	*tp;
++	struct xfs_mount	*mp = ip->i_mount;
++	int			error;
+ 
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0,
+-				&tp);
+-		if (error) {
+-			ASSERT(XFS_FORCED_SHUTDOWN(mp));
+-			return error;
+-		}
++	/* Attach the dquots to the inode up front. */
++	error = xfs_qm_dqattach(ip);
++	if (error)
++		return error;
+ 
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_trans_ijoin(tp, ip, 0);
++	/* Wait on dio to ensure i_size has settled. */
++	inode_dio_wait(VFS_I(ip));
+ 
+-		/*
+-		 * Do not update the on-disk file size.  If we update the
+-		 * on-disk file size and then the system crashes before the
+-		 * contents of the file are flushed to disk then the files
+-		 * may be full of holes (ie NULL files bug).
+-		 */
+-		error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
+-					XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
+-		if (error) {
+-			/*
+-			 * If we get an error at this point we simply don't
+-			 * bother truncating the file.
+-			 */
+-			xfs_trans_cancel(tp);
+-		} else {
+-			error = xfs_trans_commit(tp);
+-			if (!error)
+-				xfs_inode_clear_eofblocks_tag(ip);
+-		}
+-
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
++	if (error) {
++		ASSERT(XFS_FORCED_SHUTDOWN(mp));
++		return error;
+ 	}
 +
-+	/* inode could be preallocated or append-only */
-+	trace_xfs_inode_free_eofblocks_invalid(ip);
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, 0);
++
++	/*
++	 * Do not update the on-disk file size.  If we update the on-disk file
++	 * size and then the system crashes before the contents of the file are
++	 * flushed to disk then the files may be full of holes (ie NULL files
++	 * bug).
++	 */
++	error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
++				XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
++	if (error)
++		goto err_cancel;
++
++	error = xfs_trans_commit(tp);
++	if (error)
++		goto out_unlock;
++
 +	xfs_inode_clear_eofblocks_tag(ip);
-+	return 0;
++	goto out_unlock;
++
++err_cancel:
++	/*
++	 * If we get an error at this point we simply don't
++	 * bother truncating the file.
++	 */
++	xfs_trans_cancel(tp);
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
  }
  
- /*
 
