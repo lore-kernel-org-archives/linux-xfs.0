@@ -3,196 +3,148 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A00BC433E4
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 00:23:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5879AC433DB
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 00:25:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19A5D61A41
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 00:23:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAE8B619F8
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 00:25:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230195AbhCZAWq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Mar 2021 20:22:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35522 "EHLO mail.kernel.org"
+        id S229760AbhCZAYx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Mar 2021 20:24:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35834 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230209AbhCZAWj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Mar 2021 20:22:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7F12C619F3;
-        Fri, 26 Mar 2021 00:22:39 +0000 (UTC)
+        id S229631AbhCZAY2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Mar 2021 20:24:28 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4E26760C41;
+        Fri, 26 Mar 2021 00:24:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616718159;
-        bh=zgl34HvqTAtCGjsQ3Jux5nEoazBUgs+3KVhXjw2Yqrk=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=nSxl449nN/T8kGwpvKvMLwkwX2hCPLkHNWzTHkf1VbnoWkRj9LEo4w3r2SQc2MPF3
-         rd4NnsFbWuPsLxDJSYYUa3+sqQgrNtA+XcNW/YQVekVJgiyY1BkD2GDqaCN2l06sSr
-         J2LA5nAZgIhjo3rAaGcZmT0bds7HDeiEFI2cGQbtpNUZstxnQ6dZMrDozvCVBwM/zg
-         KuqfRGfJw0Pni39+bF+cNjR4bVSxyfFpV4aCJE5Z6Jc5+JYc7DtlL6sxy8LnNonK/M
-         RDbhvLoR+oaV+H81DxxrZtgJXoK6AxJfeM5qH10WsZsZbr+pt3heVnEyLJS5qtXdd7
-         Ug1WFsvJcSlEg==
-Subject: [PATCH 9/9] xfs: don't run speculative preallocation gc when fs is
- frozen
+        s=k20201202; t=1616718268;
+        bh=mTPCLZn1nZI6ah0pYSRDEqqh0+YkyyWJ4ZXDT8hVRiU=;
+        h=Date:From:To:Cc:Subject:From;
+        b=pB2rflHkAFYe2a5kzPc934swwFR/N1/gzft0mDQTK8fkxbI/9wxgyfwSiK+GWtxjr
+         +KPdfZay3dWXw1IQn1saKsKMKnQxSrabHlx0p1JIuPQSXmNyjvvbERHLp2vouhpGKi
+         u25785deAui0tO+LP4gYSkMsveuw5E9X3178f27NxCDVtBhTmAzIYEsYOFdPuuDsfB
+         G0x3z3TieKQ0XCMlqwcixTQk3XB61JDG/Cv7s8xQkFZ4KlTBGS+17eHOUuwwvcHUn8
+         5tGnXaY6/7QSFg1lNxund3GP/vCVSf656vUDz0yvyvArZbXYY+8fqX+L0dKWkU9xqR
+         0a81ETb20CQMQ==
+Date:   Thu, 25 Mar 2021 17:24:27 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Thu, 25 Mar 2021 17:22:39 -0700
-Message-ID: <161671815908.622901.11201307813479002034.stgit@magnolia>
-In-Reply-To: <161671810866.622901.16520335819131743716.stgit@magnolia>
-References: <161671810866.622901.16520335819131743716.stgit@magnolia>
-User-Agent: StGit/0.19
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 25dfa65f8149
+Message-ID: <20210326002427.GO4090233@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi folks,
 
-Now that we have the infrastructure to switch background workers on and
-off at will, fix the block gc worker code so that we don't actually run
-the worker when the filesystem is frozen, same as we do for deferred
-inactivation.
+The for-next branch of the xfs-linux repository at:
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_icache.c |   28 +++++++++++++++++++++++-----
- fs/xfs/xfs_mount.c  |    1 +
- fs/xfs/xfs_mount.h  |    3 +++
- fs/xfs/xfs_super.c  |    5 +++--
- 4 files changed, 30 insertions(+), 7 deletions(-)
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+25dfa65f8149 xfs: fix xfs_trans slab cache name
+
+New Commits:
+
+Anthony Iliopoulos (1):
+      [25dfa65f8149] xfs: fix xfs_trans slab cache name
+
+Bhaskar Chowdhury (3):
+      [bd24a4f5f7fd] xfs: Rudimentary typo fixes
+      [0145225e353e] xfs: Rudimentary spelling fix
+      [f9dd7ba4308c] xfs: Fix a typo
+
+Darrick J. Wong (10):
+      [e424aa5f547d] xfs: drop freeze protection when running GETFSMAP
+      [1aa26707ebd6] xfs: fix uninitialized variables in xrep_calc_ag_resblks
+      [05237032fdec] xfs: fix dquot scrub loop cancellation
+      [7716ee54cb88] xfs: bail out of scrub immediately if scan incomplete
+      [9de4b514494a] xfs: mark a data structure sick if there are cross-referencing errors
+      [de9d2a78add1] xfs: set the scrub AG number in xchk_ag_read_headers
+      [f53acface7a9] xfs: remove return value from xchk_ag_btcur_init
+      [973975b72a36] xfs: validate ag btree levels using the precomputed values
+      [383e32b0d0db] xfs: prevent metadata files from being inactivated
+      [3fef46fc43ca] xfs: rename the blockgc workqueue
+
+Dave Chinner (8):
+      [e6a688c33238] xfs: initialise attr fork on inode create
+      [accc661bf99a] xfs: reduce buffer log item shadow allocations
+      [c81ea11e0332] xfs: xfs_buf_item_size_segment() needs to pass segment offset
+      [929f8b0deb83] xfs: optimise xfs_buf_item_size/format for contiguous regions
+      [ec08c14ba28c] xfs: type verification is expensive
+      [39d3c0b5968b] xfs: No need for inode number error injection in __xfs_dir3_data_check
+      [1fea323ff005] xfs: reduce debug overhead of dir leaf/node checks
+      [5825bea05265] xfs: __percpu_counter_compare() inode count debug too expensive
+
+Gao Xiang (6):
+      [b2c2974b8cdf] xfs: ensure xfs_errortag_random_default matches XFS_ERRTAG_MAX
+      [014695c0a78e] xfs: update lazy sb counters immediately for resizefs
+      [c789c83c7ef8] xfs: hoist out xfs_resizefs_init_new_ags()
+      [46141dc891f7] xfs: introduce xfs_ag_shrink_space()
+      [fb2fc1720185] xfs: support shrinking unused space in the last AG
+      [2b92faed5511] xfs: add error injection for per-AG resv failure
+
+Pavel Reichl (2):
+      [0f98b4ece18d] xfs: rename variable mp to parsing_mp
+      [92cf7d36384b] xfs: Skip repetitive warnings about mount options
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index e8a2e1cf7577..75a4df687d5d 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1416,6 +1416,12 @@ xfs_inode_free_eofblocks(
- 	return 0;
- }
- 
-+static inline bool
-+xfs_blockgc_running(struct xfs_mount *mp)
-+{
-+	return test_bit(XFS_OPFLAG_BLOCKGC_RUNNING_BIT, &mp->m_opflags);
-+}
-+
- /*
-  * Background scanning to trim preallocated space. This is queued based on the
-  * 'speculative_prealloc_lifetime' tunable (5m by default).
-@@ -1424,6 +1430,9 @@ static inline void
- xfs_blockgc_queue(
- 	struct xfs_perag	*pag)
- {
-+	if (!xfs_blockgc_running(pag->pag_mount))
-+		return;
-+
- 	rcu_read_lock();
- 	if (radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG))
- 		queue_delayed_work(pag->pag_mount->m_gc_workqueue,
-@@ -1628,11 +1637,15 @@ void
- xfs_blockgc_stop(
- 	struct xfs_mount	*mp)
- {
--	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno;
- 
--	for_each_perag_tag(mp, agno, pag, XFS_ICI_BLOCKGC_TAG)
-+	clear_bit(XFS_OPFLAG_BLOCKGC_RUNNING_BIT, &mp->m_opflags);
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		struct xfs_perag	*pag = xfs_perag_get(mp, agno);
-+
- 		cancel_delayed_work_sync(&pag->pag_blockgc_work);
-+		xfs_perag_put(pag);
-+	}
- }
- 
- /* Enable post-EOF and CoW block auto-reclamation. */
-@@ -1643,6 +1656,7 @@ xfs_blockgc_start(
- 	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno;
- 
-+	set_bit(XFS_OPFLAG_BLOCKGC_RUNNING_BIT, &mp->m_opflags);
- 	for_each_perag_tag(mp, agno, pag, XFS_ICI_BLOCKGC_TAG)
- 		xfs_blockgc_queue(pag);
- }
-@@ -1656,6 +1670,13 @@ xfs_blockgc_scan_inode(
- 	unsigned int		lockflags = 0;
- 	int			error;
- 
-+	/*
-+	 * Speculative preallocation gc isn't supposed to run when the fs is
-+	 * frozen because we don't want kernel threads to block on transaction
-+	 * allocation.
-+	 */
-+	ASSERT(ip->i_mount->m_super->s_writers.frozen < SB_FREEZE_FS);
-+
- 	error = xfs_inode_free_eofblocks(ip, eofb, &lockflags);
- 	if (error)
- 		goto unlock;
-@@ -1677,13 +1698,10 @@ xfs_blockgc_worker(
- 	struct xfs_mount	*mp = pag->pag_mount;
- 	int			error;
- 
--	if (!sb_start_write_trylock(mp->m_super))
--		return;
- 	error = xfs_inode_walk_ag(pag, XFS_ICI_BLOCKGC_TAG, NULL);
- 	if (error)
- 		xfs_info(mp, "AG %u preallocation gc worker failed, err=%d",
- 				pag->pag_agno, error);
--	sb_end_write(mp->m_super);
- 	xfs_blockgc_queue(pag);
- }
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 5db2a65b3729..d454d2492f3b 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -908,6 +908,7 @@ xfs_mountfs(
- 
- 	/* Enable background workers. */
- 	xfs_inodegc_start(mp);
-+	xfs_blockgc_start(mp);
- 
- 	/*
- 	 * Get and sanity-check the root inode.
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index e910e5734026..629d971c8787 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -263,6 +263,9 @@ typedef struct xfs_mount {
- 						   inode inactivation worker? */
- #define XFS_OPFLAG_INACTIVATE_NOW_BIT	(1)	/* force foreground inactivation
- 						   of unlinked inodes */
-+#define XFS_OPFLAG_BLOCKGC_RUNNING_BIT	(0)	/* are we allowed to start the
-+						   speculative preallocation gc
-+						   worker? */
- 
- /*
-  * Max and min values for mount-option defined I/O
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index de44e9843558..75f08d00815b 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -813,8 +813,10 @@ xfs_fs_sync_fs(
- 	 * s_umount, which means we can't lock out a concurrent thaw request
- 	 * without adding another layer of locks to the freeze process.
- 	 */
--	if (sb->s_writers.frozen == SB_FREEZE_PAGEFAULT)
-+	if (sb->s_writers.frozen == SB_FREEZE_PAGEFAULT) {
- 		xfs_inodegc_stop(mp);
-+		xfs_blockgc_stop(mp);
-+	}
- 
- 	return 0;
- }
-@@ -931,7 +933,6 @@ xfs_fs_freeze(
- 	 * set a GFP_NOFS context here to avoid recursion deadlocks.
- 	 */
- 	flags = memalloc_nofs_save();
--	xfs_blockgc_stop(mp);
- 	xfs_save_resvblks(mp);
- 	ret = xfs_log_quiesce(mp);
- 	memalloc_nofs_restore(flags);
+Code Diffstat:
 
+ Documentation/admin-guide/xfs.rst |   2 +-
+ fs/xfs/libxfs/xfs_ag.c            | 115 ++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h            |   2 +
+ fs/xfs/libxfs/xfs_ag_resv.c       |   6 +-
+ fs/xfs/libxfs/xfs_alloc.c         |   8 +-
+ fs/xfs/libxfs/xfs_bmap.c          |   9 +-
+ fs/xfs/libxfs/xfs_dir2_data.c     |   2 +-
+ fs/xfs/libxfs/xfs_dir2_leaf.c     |  10 +-
+ fs/xfs/libxfs/xfs_dir2_node.c     |   2 +-
+ fs/xfs/libxfs/xfs_dir2_priv.h     |   3 +-
+ fs/xfs/libxfs/xfs_errortag.h      |   4 +-
+ fs/xfs/libxfs/xfs_ialloc.c        |   4 +-
+ fs/xfs/libxfs/xfs_iext_tree.c     |   2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c    |  22 +++--
+ fs/xfs/libxfs/xfs_inode_fork.h    |   2 +
+ fs/xfs/libxfs/xfs_types.c         |  18 ++--
+ fs/xfs/scrub/agheader.c           |  33 ++-----
+ fs/xfs/scrub/common.c             |  23 ++---
+ fs/xfs/scrub/common.h             |   5 +-
+ fs/xfs/scrub/health.c             |   3 +-
+ fs/xfs/scrub/quota.c              |   6 +-
+ fs/xfs/scrub/repair.c             |   6 +-
+ fs/xfs/scrub/scrub.c              |   2 +-
+ fs/xfs/xfs_aops.c                 |   2 +-
+ fs/xfs/xfs_buf_item.c             | 141 +++++++++++++++++++++------
+ fs/xfs/xfs_error.c                |   5 +
+ fs/xfs/xfs_fsmap.c                |  14 +--
+ fs/xfs/xfs_fsops.c                | 195 ++++++++++++++++++++++++--------------
+ fs/xfs/xfs_icache.c               |   2 +-
+ fs/xfs/xfs_inode.c                |  30 +++++-
+ fs/xfs/xfs_inode.h                |  14 ++-
+ fs/xfs/xfs_iops.c                 |  34 ++++++-
+ fs/xfs/xfs_log_recover.c          |   4 +-
+ fs/xfs/xfs_mount.h                |   2 +-
+ fs/xfs/xfs_qm.c                   |   2 +-
+ fs/xfs/xfs_super.c                | 128 ++++++++++++++-----------
+ fs/xfs/xfs_symlink.c              |   2 +-
+ fs/xfs/xfs_trans.c                |  12 +--
+ fs/xfs/xfs_xattr.c                |   2 +
+ 39 files changed, 608 insertions(+), 270 deletions(-)
