@@ -2,105 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA537C433C1
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 11:34:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0B47C433C1
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 12:50:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B12661A2D
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 11:34:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E340619E5
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 Mar 2021 12:50:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229671AbhCZLdu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 26 Mar 2021 07:33:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41788 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229573AbhCZLd0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Mar 2021 07:33:26 -0400
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E60BC0613AA
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Mar 2021 04:33:26 -0700 (PDT)
-Received: by mail-pj1-x1029.google.com with SMTP id ot17-20020a17090b3b51b0290109c9ac3c34so4097004pjb.4
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Mar 2021 04:33:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=1cgrMeN5iKsPRXbu6/ydLfG/xTeC+RRkt1Jy99PvYe0=;
-        b=diEjVzhUTXsFIEOFx/XGR1cxa2ZODtBgniYtNroMuChMfz+sR2hT1hI49+Ehk0+Mb/
-         CzewzFgGxQeInQWj+47beKByqaH1YsyIfKThUNkq7J1J267d9gYbrrjcRa/yy0fEULgk
-         0sO2ekoZ8fffNgRPJ/iyjd2XsObr4kQF9PEu9QiZOBGSmNsMShPEfyxH9KBMRMBIPJDr
-         14XUE0lias59Q1HDV7DRbfzQpOR4VGuPoxjI3I/YCUkGsILXTcktbBPsCAoAU9JPZKDl
-         meB7llV3dMIzeiHppvIY9OxXNkYQ8aeIiJpCc5C2w9pJeTSTgJ9dmTF5iEMzu9o3HAi8
-         /Yhw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=1cgrMeN5iKsPRXbu6/ydLfG/xTeC+RRkt1Jy99PvYe0=;
-        b=bjCgQYr8la/phCLMb6c38Ezpgg8hQK0Bth5nCkFSEQqc7Wsmpouvq16XYG0PblAWdA
-         BwWHF2zLlKb6PFEjfhppaUZtwl6TyqrAdjIxi8LzbDYXXQszwTl2GG0O8M0hRFW8i4nu
-         CHsj5F44Xuy5VuKLyyFlPROsqz0p8ofD/RAWXVIC22N7HbSWpMFNSO0GK9/K7AYxzsT6
-         aGMy6eHISFu4hEElmg9s54SigzZbvdBC/fsxLnJTW9ABVK9nmpsv3p6zIZ5Y+X7oFPOY
-         q/fRy9A7YW/AinJmx9ebEl29AHHuubZygyfpf99pkgYd9CeotLThW6V8zd35+UxcYjDP
-         ckLg==
-X-Gm-Message-State: AOAM530Ti5BMm0vVRQWh7RSDaivMPib4nVrrVk/1DcSRWIWAaN3w4fuo
-        TBfrNFv43nFsDg/meNie327o55+4ftk=
-X-Google-Smtp-Source: ABdhPJx8jJxKWs8VbvBF/XdbTQ8xrFJyB1ZdXaG42zNz0eiSTnYj1Mc2qTmspanGxkOX3m4HVzhaow==
-X-Received: by 2002:a17:902:c317:b029:e4:aecd:8539 with SMTP id k23-20020a170902c317b02900e4aecd8539mr14843306plx.61.1616758406048;
-        Fri, 26 Mar 2021 04:33:26 -0700 (PDT)
-Received: from localhost.localdomain ([122.179.126.69])
-        by smtp.gmail.com with ESMTPSA id v23sm8457625pfn.71.2021.03.26.04.33.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Mar 2021 04:33:25 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
+        id S229976AbhCZMuP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 26 Mar 2021 08:50:15 -0400
+Received: from mx2.suse.de ([195.135.220.15]:57458 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229957AbhCZMuI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 Mar 2021 08:50:08 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1616763007; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=GgRdD7fbH7ZjfEMaUCy+Ljet4pB7OZwmX9lp9NIOQ7g=;
+        b=bd87yRMn2pFWQ8tWGjaWR7AVDQsbQ6pHd6L2wit0zO4i+7nQk5BfAz9bl5a4QxefflELb2
+        S5z04x0IrWKnH45ppkQpR/nSnfbvATpkXpabXXQ7Lz2nnurLokyEfuWTkuu/+DyTvg0kJx
+        7pec6Qb7/ZXfk9dsEic1q5Lhf9Cij04=
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 640F5ADD7
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Mar 2021 12:50:07 +0000 (UTC)
+From:   Anthony Iliopoulos <ailiop@suse.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>
-Subject: [PATCH] xfs: scrub: Remove incorrect check executed on block format directories
-Date:   Fri, 26 Mar 2021 17:03:12 +0530
-Message-Id: <20210326113312.983-1-chandanrlinux@gmail.com>
-X-Mailer: git-send-email 2.29.2
+Subject: [PATCH] xfs: remove BMV_IF_NO_DMAPI_READ flag
+Date:   Fri, 26 Mar 2021 13:53:19 +0100
+Message-Id: <20210326125321.28047-1-ailiop@suse.com>
+X-Mailer: git-send-email 2.31.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-A directory with one directory block which in turns consists of two or more fs
-blocks is incorrectly flagged as corrupt by scrub since it assumes that
-"Block" format directories have a data fork single extent spanning the file
-offset range of [0, Dir block size - 1].
+Use of the flag has had no effect since kernel commit 288699fecaff
+("xfs: drop dmapi hooks"), which removed all dmapi related code, so
+drop it completely.
 
-This commit fixes the bug by removing the incorrect check.
-
-Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
 ---
- fs/xfs/scrub/dir.c | 9 ---------
- 1 file changed, 9 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h | 3 +--
+ fs/xfs/xfs_ioctl.c     | 2 --
+ 2 files changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 178b3455a170..3ec6290c78bb 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -694,15 +694,6 @@ xchk_directory_blocks(
- 	/* Iterate all the data extents in the directory... */
- 	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &icur, &got);
- 	while (found && !(sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
--		/* Block directories only have a single block at offset 0. */
--		if (is_block &&
--		    (got.br_startoff > 0 ||
--		     got.br_blockcount != args.geo->fsbcount)) {
--			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK,
--					got.br_startoff);
--			break;
--		}
--
- 		/* No more data blocks... */
- 		if (got.br_startoff >= leaf_lblk)
- 			break;
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 6fad140d4c8e..23da047c3098 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -65,13 +65,12 @@ struct getbmapx {
+ 
+ /*	bmv_iflags values - set by XFS_IOC_GETBMAPX caller.	*/
+ #define BMV_IF_ATTRFORK		0x1	/* return attr fork rather than data */
+-#define BMV_IF_NO_DMAPI_READ	0x2	/* Do not generate DMAPI read event  */
+ #define BMV_IF_PREALLOC		0x4	/* rtn status BMV_OF_PREALLOC if req */
+ #define BMV_IF_DELALLOC		0x8	/* rtn status BMV_OF_DELALLOC if req */
+ #define BMV_IF_NO_HOLES		0x10	/* Do not return holes */
+ #define BMV_IF_COWFORK		0x20	/* return CoW fork rather than data */
+ #define BMV_IF_VALID	\
+-	(BMV_IF_ATTRFORK|BMV_IF_NO_DMAPI_READ|BMV_IF_PREALLOC|	\
++	(BMV_IF_ATTRFORK|BMV_IF_PREALLOC|	\
+ 	 BMV_IF_DELALLOC|BMV_IF_NO_HOLES|BMV_IF_COWFORK)
+ 
+ /*	bmv_oflags values - returned for each non-header segment */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 99dfe89a8d08..9d3f72ef1efe 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1669,8 +1669,6 @@ xfs_ioc_getbmap(
+ 		bmx.bmv_iflags = BMV_IF_ATTRFORK;
+ 		/*FALLTHRU*/
+ 	case XFS_IOC_GETBMAP:
+-		if (file->f_mode & FMODE_NOCMTIME)
+-			bmx.bmv_iflags |= BMV_IF_NO_DMAPI_READ;
+ 		/* struct getbmap is a strict subset of struct getbmapx. */
+ 		recsize = sizeof(struct getbmap);
+ 		break;
 -- 
-2.29.2
+2.31.0
 
