@@ -2,73 +2,126 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B88B4C433E0
-	for <linux-xfs@archiver.kernel.org>; Sat, 27 Mar 2021 03:48:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFF56C433C1
+	for <linux-xfs@archiver.kernel.org>; Sat, 27 Mar 2021 09:10:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82751619FF
-	for <linux-xfs@archiver.kernel.org>; Sat, 27 Mar 2021 03:48:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77476619FC
+	for <linux-xfs@archiver.kernel.org>; Sat, 27 Mar 2021 09:10:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229901AbhC0Dr7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 26 Mar 2021 23:47:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58660 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230152AbhC0DrO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 Mar 2021 23:47:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2F77A619FF;
-        Sat, 27 Mar 2021 03:47:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616816823;
-        bh=yA8kD8ypT3ufo7csW1XItLYaTujjqa7SDCX8CvpPF7k=;
-        h=Date:From:To:Subject:From;
-        b=gPcMou40HgHH3cA6xOgTkmsHVH/ZbPNFiyomnDl70lzHB205rGzXWSBxj8RI6tG3M
-         S6erRCJjwnHu76PVov3oPaPiCXzr3PZQzRIrGdENOyQNg0b0qiH6jLtl7BuExt9AWf
-         18mlb4pmjrQS6UXmzhMbLQVNv1gsTp3dC1UOv6YlfWpUC+MYKOwDcxLNUgCyw4fHbS
-         apxi24ogXXyyJiSHRKOc66LFP74Vv8FHpZU/aTTOtmpLCaeVpkk7UQMWi6lW1sbc9P
-         07wF+OhMvy5y4Ekwt/hL213yYrSZelaHPItKQzJjQn4OcudBi7IGZ5LpDIaZMATSRv
-         WX2t17y5OfFFQ==
-Date:   Fri, 26 Mar 2021 20:46:59 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to ad89b66cbad1
-Message-ID: <20210327034659.GB4090233@magnolia>
+        id S230350AbhC0JH2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 27 Mar 2021 05:07:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36892 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230288AbhC0JGx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Mar 2021 05:06:53 -0400
+Received: from mail-il1-x12d.google.com (mail-il1-x12d.google.com [IPv6:2607:f8b0:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14B2DC0613B1;
+        Sat, 27 Mar 2021 02:06:53 -0700 (PDT)
+Received: by mail-il1-x12d.google.com with SMTP id t6so7043171ilp.11;
+        Sat, 27 Mar 2021 02:06:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=8UM4qDTvG5FI1YwUQ+9DzYT4jA+A+wOqNSmHA+PMwTE=;
+        b=COmbHnhuXMA7YKPpBlncY+nXDIk6HTUMSNRf2QxFvG195l2gGhobNEeMoGkAZHb7wj
+         gkVHhbpzuWbAz1zLPYHdahE4U/LlxYS9Sd+8/dJ2b8/dWYqxIPnFNZ0x5LhN21SUssqs
+         3XFB6pMlukw077/gSYVQfcPwH6UcIccm38s7+y9GaYJiJ2OAuOHrcn0ofmNh3Rx6cQUO
+         fFuu5QO7VIweKAN4E30HD2WCvQMHywRCrPBxMgZR6PVzv/hYIYEkZS1ydpnw7jVlMGwv
+         c4Qif9Am+Qq/+5KKdGVdo/SeUBYA1867MnboswAjBvNks7ZLzAlA5dlmIQRqfou+E55F
+         OSkg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=8UM4qDTvG5FI1YwUQ+9DzYT4jA+A+wOqNSmHA+PMwTE=;
+        b=o4w8cxvvAyLtJkiU+xkO5RBhYFe/FWshzI1GzjXawNZI+pqWA/BTvxFPl/2ne8T8an
+         1mZR4LmmS8cRiOodE6Datz0pucqyVoYzXYOOupZPx7K7p9gSKIpWigS5I1GKw1iYbqqs
+         83VLppz02xuWnxaHN4w0KOJJ0Ke2n00Hn3Eq/mUK4HXsbgjsHuP9fIQwnorTP0Y4PnnZ
+         p2tgZMRQfx/LF+QSnB2B00GcrQeO1MU/Z7GzA+OpuIFJlMKKgcZ79NKZO8bkQ+MTLcRB
+         k4kQpLIZxe1diRnS5TGQbNM3MJp5eYruW2nxr6kPK4+0PTfmlv87rOKDAriDjt1X398Q
+         yxmA==
+X-Gm-Message-State: AOAM532HDgM8LFAp0gMcxs8E2rnD5CHKrzgSbbwKWIemBMkM3lQmWgSb
+        DOxVuauxC5dviWig0d5hHX08/9XMaojNWoaCTY0=
+X-Google-Smtp-Source: ABdhPJxiTKRrMzN82uEne8nhFbmVOHw3BonW5Tq9jLuPr6eyGyfb4tzZRn23c0tY+eWAKcxwbwLETA67ULvF2iAhG4M=
+X-Received: by 2002:a92:50b:: with SMTP id q11mr14436909ile.250.1616836012381;
+ Sat, 27 Mar 2021 02:06:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20210322171118.446536-1-amir73il@gmail.com> <20210322230352.GW63242@dread.disaster.area>
+ <CAOQ4uxjFMPNgR-aCqZt3FD90XtBVFZncdgNc4RdOCbsxukkyYQ@mail.gmail.com> <20210326191554.GB13139@fieldses.org>
+In-Reply-To: <20210326191554.GB13139@fieldses.org>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Sat, 27 Mar 2021 12:06:41 +0300
+Message-ID: <CAOQ4uxgQNfESKGM3E_aFYtkj6SpP93h8Z3T5Q9yyDGNpGzTayg@mail.gmail.com>
+Subject: Re: [PATCH] xfs: use a unique and persistent value for f_fsid
+To:     "J. Bruce Fields" <bfields@fieldses.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Jan Kara <jack@suse.cz>,
+        Christian Brauner <christian.brauner@ubuntu.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux API <linux-api@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Fri, Mar 26, 2021 at 10:15 PM J. Bruce Fields <bfields@fieldses.org> wrote:
+>
+> On Tue, Mar 23, 2021 at 06:50:44AM +0200, Amir Goldstein wrote:
+> > On Tue, Mar 23, 2021 at 1:03 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > should be using something common across all filesystems from the
+> > > linux superblock, not deep dark internal filesystem magic. The
+> > > export interfaces that generate VFS (and NFS) filehandles already
+> > > have a persistent fsid associated with them, which may in fact be
+> > > the filesystem UUID in it's entirety.
+> > >
+> >
+> > Yes, nfsd is using dark internal and AFAIK undocumnetd magic to
+> > pick that identifier (Bruce, am I wrong?).
+>
+> Sorry, I kept putting off catching up with this thread and only now
+> noticed the question.
+>
+> It's actually done mostly in userspace (rpc.mountd), so "dark internal"
+> might not be fair, but it is rather complicated.  There are several
+> options (UUID, device number, number provided by the user with fsid=
+> option), and I don't recall the logic behind which we use when.
+>
 
-The iomap-for-next branch of the xfs-linux repository at:
+I'll take back "dark internal" then and replace it with "light external" ;-)
+which is also a problem. If userspace is involved in declaring the id
+of the *export* then from NFS client POV, that is not a problem, but
+from fsnotify POV, that identifier cannot be determined when an event
+happens on an inode NOT via the NFS client.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+As a matter of fact, the fanotify requirements about fsid are even more
+strict than being able to get fsid from the inode. From fanotify_mark.2:
+"
+       EXDEV  The filesystem object indicated by pathname resides within
+              a filesystem subvolume (e.g., btrfs(5)) which uses a
+different fsid
+              than its root superblock...
+"
 
-has just been updated.
+> I don't *think* we have good comprehensive documentation of it anywhere.
+> I wish we did.  It'd take a little time to put together.  Starting
+> points would be linux/fs/nfsd/nfsfh.c and
+> nfs-utils/support/export/cache.c.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+At least as far as fanotify is concerned, the documentation is not going
+to matter. The only thing needed is an fsid value that is queryable via
+a userspace API.
 
-The new head of the iomap-for-next branch is commit:
+f_fsid meets this criteria, which is why it was chosen for fanotify.
+Having the fsid reported by fanotify also be stable is a nice to have
+feature for very selective use cases, which is why I posted this xfs patch.
 
-ad89b66cbad1 iomap: improve the warnings from iomap_swapfile_activate
-
-New Commits:
-
-Christoph Hellwig (1):
-      [ad89b66cbad1] iomap: improve the warnings from iomap_swapfile_activate
-
-
-Code Diffstat:
-
- fs/iomap/swapfile.c | 38 ++++++++++++++++++++++----------------
- 1 file changed, 22 insertions(+), 16 deletions(-)
+Thanks,
+Amir.
