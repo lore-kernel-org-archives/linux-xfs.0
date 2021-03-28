@@ -7,230 +7,164 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4DBEC433C1
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Mar 2021 16:47:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D76C2C433E0
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Mar 2021 16:49:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71BD661958
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Mar 2021 16:47:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A51F461969
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Mar 2021 16:49:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231187AbhC1Qqm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 28 Mar 2021 12:46:42 -0400
-Received: from out20-1.mail.aliyun.com ([115.124.20.1]:51361 "EHLO
-        out20-1.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229595AbhC1Qqg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Mar 2021 12:46:36 -0400
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07437051|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.100728-0.000827389-0.898445;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047207;MF=guan@eryu.me;NM=1;PH=DS;RN=5;RT=5;SR=0;TI=SMTPD_---.Jrb4lbm_1616949989;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.Jrb4lbm_1616949989)
-          by smtp.aliyun-inc.com(10.147.42.22);
-          Mon, 29 Mar 2021 00:46:29 +0800
-Date:   Mon, 29 Mar 2021 00:46:29 +0800
+        id S230395AbhC1QtX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 28 Mar 2021 12:49:23 -0400
+Received: from out20-27.mail.aliyun.com ([115.124.20.27]:57654 "EHLO
+        out20-27.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229762AbhC1QtL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Mar 2021 12:49:11 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.0745825|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.205369-0.00320171-0.791429;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047201;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.JraZUby_1616950147;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.JraZUby_1616950147)
+          by smtp.aliyun-inc.com(10.147.41.178);
+          Mon, 29 Mar 2021 00:49:07 +0800
+Date:   Mon, 29 Mar 2021 00:49:07 +0800
 From:   Eryu Guan <guan@eryu.me>
-To:     Gao Xiang <hsiangkao@redhat.com>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Zorro Lang <zlang@redhat.com>
-Subject: Re: [RFC PATCH v3 3/3] xfs: stress test for shrinking free space in
- the last AG
-Message-ID: <YGCy5W+4coMuM7y1@desktop>
-References: <20210315111926.837170-1-hsiangkao@redhat.com>
- <20210315111926.837170-4-hsiangkao@redhat.com>
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: Re: [PATCH 2/6] xfs/529: Fix test to execute in multi-block
+ directory config
+Message-ID: <YGCzg2zwOW03qVaX@desktop>
+References: <20210325140857.7145-1-chandanrlinux@gmail.com>
+ <20210325140857.7145-2-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210315111926.837170-4-hsiangkao@redhat.com>
+In-Reply-To: <20210325140857.7145-2-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 15, 2021 at 07:19:26PM +0800, Gao Xiang wrote:
-> This adds a stress testcase to shrink free space as much as
-> possible in the last AG with background fsstress workload.
+On Thu, Mar 25, 2021 at 07:38:53PM +0530, Chandan Babu R wrote:
+> xfs/529 attempts to create $testfile after reduce_max_iextents error tag is
+> injected. Creation of $testfile fails when using a multi-block directory test
+> configuration because,
+> 1. A directory can have a pseudo maximum extent count of 10.
+> 2. In the worst case a directory entry creation operation can consume
+>    (XFS_DA_NODE_MAXDEPTH + 1 + 1) * (Nr fs blocks in a single directory block)
+>    extents.
+>    With 1k fs block size and 4k directory block size, this evaluates to,
+>    (5 + 1 + 1) * 4
+>    = 7 * 4
+>    = 28
+>    > 10 (Pseudo maximum inode extent count).
 > 
-> The expectation is that no crash happens with expected output.
+> This commit fixes the issue by creating $testfile before injecting
+> reduce_max_iextents error tag.
 > 
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> ---
->  tests/xfs/991     | 122 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/991.out |   8 +++
->  tests/xfs/group   |   1 +
->  3 files changed, 131 insertions(+)
->  create mode 100755 tests/xfs/991
->  create mode 100644 tests/xfs/991.out
-> 
-> diff --git a/tests/xfs/991 b/tests/xfs/991
-> new file mode 100755
-> index 00000000..7e7d318e
-> --- /dev/null
-> +++ b/tests/xfs/991
-> @@ -0,0 +1,122 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2020-2021 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 991
-> +#
-> +# XFS online shrinkfs stress test
-> +#
-> +# This test attempts to shrink unused space as much as possible with
-> +# background fsstress workload. It will decrease the shrink size if
-> +# larger size fails. And totally repeat 2 * TIME_FACTOR times.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +create_scratch()
-> +{
-> +	_scratch_mkfs_xfs $@ | tee -a $seqres.full | \
-> +		_filter_mkfs 2>$tmp.mkfs >/dev/null
-> +	. $tmp.mkfs
-> +
-> +	if ! _try_scratch_mount 2>/dev/null; then
-> +		echo "failed to mount $SCRATCH_DEV"
-> +		exit 1
-> +	fi
+> Reported-by: Darrick J. Wong <djwong@kernel.org>
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-_scratch_mount will do the check and _fail the test on mount failure.
-
-> +
-> +	# fix the reserve block pool to a known size so that the enospc
-> +	# calculations work out correctly.
-> +	_scratch_resvblks 1024 > /dev/null 2>&1
-> +}
-> +
-> +fill_scratch()
-> +{
-> +	$XFS_IO_PROG -f -c "falloc -k 0 $1" $SCRATCH_MNT/resvfile
-> +}
-> +
-> +stress_scratch()
-> +{
-> +	procs=3
-> +	nops=$((1000 * LOAD_FACTOR))
-
-Declare procs and nops as local.
-
-> +	# -w ensures that the only ops are ones which cause write I/O
-> +	FSSTRESS_ARGS=`_scale_fsstress_args -d $SCRATCH_MNT -w -p $procs \
-> +	    -n $nops $FSSTRESS_AVOID`
-> +	$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1 &
-
-I think it's more explicit to run run stress_scratch in background,
-instead run fsstress in background implicit.
-
-> +}
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-
-_require_scratch
-
-> +_require_xfs_shrink
-> +_require_xfs_io_command "falloc"
-> +
-> +rm -f $seqres.full
-> +_scratch_mkfs_xfs | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-> +. $tmp.mkfs	# extract blocksize and data size for scratch device
-> +
-> +decsize=`expr  42 \* 1048576`	# shrink in chunks of this size at most
-> +endsize=`expr 125 \* 1048576`	# stop after shrinking this big
-> +[ `expr $endsize / $dbsize` -lt $dblocks ] || _notrun "Scratch device too small"
-> +
-> +nags=2
-> +totalcount=$((2 * TIME_FACTOR))
-> +
-> +while [ $totalcount -gt 0 ]; do
-> +	size=`expr 1010 \* 1048576`	# 1010 megabytes initially
-> +	logblks=$(_scratch_find_xfs_min_logblocks -dsize=${size} -dagcount=${nags})
-> +
-> +	create_scratch -lsize=${logblks}b -dsize=${size} -dagcount=${nags}
-> +
-> +	for i in `seq 125 -1 90`; do
-> +		fillsize=`expr $i \* 1048576`
-> +		out="$(fill_scratch $fillsize 2>&1)"
-> +		echo "$out" | grep -q 'No space left on device' && continue
-> +		test -n "${out}" && echo "$out"
-> +		break
-> +	done
-> +
-> +	while [ $size -gt $endsize ]; do
-> +		stress_scratch
-
-So just call
-
-stress_scratch &
-
-here? So it's clear that we put stress_scratch in background, and the
-'wait' below is waiting for it.
+Seems patch 2 to 6 fix the same bug in different tests, I think we could
+put the fixes in one patch.
 
 Thanks,
 Eryu
-
-> +		sleep 1
+> ---
+>  tests/xfs/529     | 24 +++++++++++++++++++++---
+>  tests/xfs/529.out |  6 +++++-
+>  2 files changed, 26 insertions(+), 4 deletions(-)
+> 
+> diff --git a/tests/xfs/529 b/tests/xfs/529
+> index abe5b1e0..b4533eba 100755
+> --- a/tests/xfs/529
+> +++ b/tests/xfs/529
+> @@ -54,6 +54,8 @@ echo "* Delalloc to written extent conversion"
+>  
+>  testfile=$SCRATCH_MNT/testfile
+>  
+> +touch $testfile
 > +
-> +		decb=`expr $decsize / $dbsize`    # in data blocks
-> +		while [ $decb -gt 0 ]; do
-> +			sizeb=`expr $size / $dbsize - $decb`
+>  echo "Inject reduce_max_iextents error tag"
+>  _scratch_inject_error reduce_max_iextents 1
+>  
+> @@ -74,10 +76,18 @@ if (( $nextents > 10 )); then
+>  	exit 1
+>  fi
+>  
+> +echo "Disable reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 0
 > +
-> +			$XFS_GROWFS_PROG -D ${sizeb} $SCRATCH_MNT \
-> +				>> $seqres.full 2>&1 && break
+>  rm $testfile
+>  
+>  echo "* Fallocate unwritten extents"
+>  
+> +touch $testfile
 > +
-> +			[ $decb -gt 100 ] && decb=`expr $decb + $RANDOM % 10`
-> +			decb=`expr $decb / 2`
-> +		done
+> +echo "Inject reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 1
 > +
-> +		wait
-> +		[ $decb -eq 0 ] && break
+>  echo "Fallocate fragmented file"
+>  for i in $(seq 0 2 $((nr_blks - 1))); do
+>  	$XFS_IO_PROG -f -c "falloc $((i * bsize)) $bsize" $testfile \
+> @@ -93,10 +103,18 @@ if (( $nextents > 10 )); then
+>  	exit 1
+>  fi
+>  
+> +echo "Disable reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 0
 > +
-> +		# get latest dblocks
-> +		$XFS_INFO_PROG $SCRATCH_MNT 2>&1 | _filter_mkfs 2>$tmp.growfs >/dev/null
-> +		. $tmp.growfs
+>  rm $testfile
+>  
+>  echo "* Directio write"
+>  
+> +touch $testfile
 > +
-> +		size=`expr $dblocks \* $dbsize`
-> +		_scratch_unmount
-> +		_repair_scratch_fs >> $seqres.full
-> +		_scratch_mount
-> +	done
+> +echo "Inject reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 1
 > +
-> +	_scratch_unmount
-> +	_repair_scratch_fs >> $seqres.full
-> +	totalcount=`expr $totalcount - 1`
-> +done
+>  echo "Create fragmented file via directio writes"
+>  for i in $(seq 0 2 $((nr_blks - 1))); do
+>  	$XFS_IO_PROG -d -s -f -c "pwrite $((i * bsize)) $bsize" $testfile \
+> @@ -112,15 +130,15 @@ if (( $nextents > 10 )); then
+>  	exit 1
+>  fi
+>  
+> +echo "Disable reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 0
 > +
-> +echo "*** done"
-> +status=0
-> +exit
-> diff --git a/tests/xfs/991.out b/tests/xfs/991.out
-> new file mode 100644
-> index 00000000..e8209672
-> --- /dev/null
-> +++ b/tests/xfs/991.out
-> @@ -0,0 +1,8 @@
-> +QA output created by 991
-> +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> +         = sunit=XXX swidth=XXX, unwritten=X
-> +naming   =VERN bsize=XXX
-> +log      =LDEV bsize=XXX blocks=XXX
-> +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> +*** done
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index a7981b67..cf190b59 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -526,3 +526,4 @@
->  526 auto quick mkfs
->  527 auto quick quota
->  990 auto quick growfs
-> +991 auto growfs ioctl prealloc stress
+>  rm $testfile
+>  
+>  # Check if XFS gracefully returns with an error code when we try to increase
+>  # extent count of user quota inode beyond the pseudo max extent count limit.
+>  echo "* Extend quota inodes"
+>  
+> -echo "Disable reduce_max_iextents error tag"
+> -_scratch_inject_error reduce_max_iextents 0
+> -
+>  echo "Consume free space"
+>  fillerdir=$SCRATCH_MNT/fillerdir
+>  nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
+> diff --git a/tests/xfs/529.out b/tests/xfs/529.out
+> index b2ae3f42..13489d34 100644
+> --- a/tests/xfs/529.out
+> +++ b/tests/xfs/529.out
+> @@ -4,14 +4,18 @@ Format and mount fs
+>  Inject reduce_max_iextents error tag
+>  Create fragmented file
+>  Verify $testfile's extent count
+> +Disable reduce_max_iextents error tag
+>  * Fallocate unwritten extents
+> +Inject reduce_max_iextents error tag
+>  Fallocate fragmented file
+>  Verify $testfile's extent count
+> +Disable reduce_max_iextents error tag
+>  * Directio write
+> +Inject reduce_max_iextents error tag
+>  Create fragmented file via directio writes
+>  Verify $testfile's extent count
+> -* Extend quota inodes
+>  Disable reduce_max_iextents error tag
+> +* Extend quota inodes
+>  Consume free space
+>  Create fragmented filesystem
+>  Inject reduce_max_iextents error tag
 > -- 
-> 2.27.0
+> 2.29.2
