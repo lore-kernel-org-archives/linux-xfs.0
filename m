@@ -2,169 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D76C2C433E0
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Mar 2021 16:49:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70D7CC433C1
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Mar 2021 19:52:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A51F461969
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Mar 2021 16:49:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E77961920
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Mar 2021 19:52:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230395AbhC1QtX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 28 Mar 2021 12:49:23 -0400
-Received: from out20-27.mail.aliyun.com ([115.124.20.27]:57654 "EHLO
-        out20-27.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229762AbhC1QtL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Mar 2021 12:49:11 -0400
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.0745825|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.205369-0.00320171-0.791429;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047201;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.JraZUby_1616950147;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.JraZUby_1616950147)
-          by smtp.aliyun-inc.com(10.147.41.178);
-          Mon, 29 Mar 2021 00:49:07 +0800
-Date:   Mon, 29 Mar 2021 00:49:07 +0800
-From:   Eryu Guan <guan@eryu.me>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
+        id S230184AbhC1TwD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 28 Mar 2021 15:52:03 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:33030 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229595AbhC1Tvk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Mar 2021 15:51:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1616961099;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HRkAEwUZiWNcfM4p41i7DUasLa0+aHNq1oDfUZcdnMg=;
+        b=TaHPQnDz/GDxvLWVBY77Ww2CCx0WDcCZdLx+9M/7TCAhVTTp6nQHCUMoC4+pTkn6BB/JTC
+        5UqbNkD9j/7/kaT8npVW35LT4JdfcY+VGvcUmm/vMbvL0nQo9ziNs3KvHKY/9MZD42vmwR
+        o5wKZnRghcfTqJk4av5z9Z24iqVUqbc=
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
+ [209.85.216.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-586-qQKcpFW5PLCyI-rdkmB7bw-1; Sun, 28 Mar 2021 15:51:37 -0400
+X-MC-Unique: qQKcpFW5PLCyI-rdkmB7bw-1
+Received: by mail-pj1-f70.google.com with SMTP id e15so9705823pjg.6
+        for <linux-xfs@vger.kernel.org>; Sun, 28 Mar 2021 12:51:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=HRkAEwUZiWNcfM4p41i7DUasLa0+aHNq1oDfUZcdnMg=;
+        b=B5POVbACkRlx0p4fjpnZqTGDFir9gNii+UKUwsDAO9a8QeFws14nIUC+FX2MJ/WRVo
+         FcoOcTwFInEaT/EpUnB5HjQnVnKNAFl7dbJMgalIBeUQtn8tCM3Ed+O8CrZ8ivoUHAAY
+         Ph5F8O5ujwIOCuxFIwAJzwWnNeP+QDtjMOYxoi7a2m0Fu64P7wuPIF2HbN25gRIQ5G1e
+         e0uRMaAhrtxsKfM+Vr5HnP5qq3ZIqpcr/QoApaGI47m20gNbDUmbu5zH/xJQUcGj8EAy
+         fLPpEkIJvsP9ZckFqb4/HHtsrOTBNPD1FcmraGEAMb+Nc9UbVvZXArMoT5SNFH7MRidS
+         9viQ==
+X-Gm-Message-State: AOAM531Hs0LoikNU4lUWoDOzydtqi1oNK7QaZJfYa408d3n8+ee6ronk
+        luOSVk4/8Y9Tm6itg/AmmoBAmIU/Pq2eNA6cFfnaiF4uvTzqFHtvF2qaeLPScd3C2UNVuCAzCuF
+        k83IOW22V3Y3iFL2HOu1u
+X-Received: by 2002:a17:902:c389:b029:e7:1029:8ba5 with SMTP id g9-20020a170902c389b02900e710298ba5mr24812752plg.55.1616961096118;
+        Sun, 28 Mar 2021 12:51:36 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxIB3Sd/MgDSmXIdYj9RWphjzMzNSWtXvuYtyrVkKHipBMhuMTo+7QhCDVjUCwhECR4HrLKaQ==
+X-Received: by 2002:a17:902:c389:b029:e7:1029:8ba5 with SMTP id g9-20020a170902c389b02900e710298ba5mr24812735plg.55.1616961095917;
+        Sun, 28 Mar 2021 12:51:35 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id 6sm15110383pfv.179.2021.03.28.12.51.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 28 Mar 2021 12:51:35 -0700 (PDT)
+Date:   Mon, 29 Mar 2021 03:51:24 +0800
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     Eryu Guan <guan@eryu.me>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH 2/6] xfs/529: Fix test to execute in multi-block
- directory config
-Message-ID: <YGCzg2zwOW03qVaX@desktop>
-References: <20210325140857.7145-1-chandanrlinux@gmail.com>
- <20210325140857.7145-2-chandanrlinux@gmail.com>
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Zorro Lang <zlang@redhat.com>
+Subject: Re: [RFC PATCH v3 1/3] common/xfs: add a _require_xfs_shrink helper
+Message-ID: <20210328195124.GA3213575@xiangao.remote.csb>
+References: <20210315111926.837170-1-hsiangkao@redhat.com>
+ <20210315111926.837170-2-hsiangkao@redhat.com>
+ <YGCsUXMF+uupaHNV@desktop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210325140857.7145-2-chandanrlinux@gmail.com>
+In-Reply-To: <YGCsUXMF+uupaHNV@desktop>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 25, 2021 at 07:38:53PM +0530, Chandan Babu R wrote:
-> xfs/529 attempts to create $testfile after reduce_max_iextents error tag is
-> injected. Creation of $testfile fails when using a multi-block directory test
-> configuration because,
-> 1. A directory can have a pseudo maximum extent count of 10.
-> 2. In the worst case a directory entry creation operation can consume
->    (XFS_DA_NODE_MAXDEPTH + 1 + 1) * (Nr fs blocks in a single directory block)
->    extents.
->    With 1k fs block size and 4k directory block size, this evaluates to,
->    (5 + 1 + 1) * 4
->    = 7 * 4
->    = 28
->    > 10 (Pseudo maximum inode extent count).
+On Mon, Mar 29, 2021 at 12:18:25AM +0800, Eryu Guan wrote:
+> On Mon, Mar 15, 2021 at 07:19:24PM +0800, Gao Xiang wrote:
+> > In order to detect whether the current kernel supports XFS shrinking.
+> > 
+> > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> > ---
+> >  common/xfs | 11 +++++++++++
+> >  1 file changed, 11 insertions(+)
+> > 
+> > diff --git a/common/xfs b/common/xfs
+> > index 2156749d..ea3b6cab 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -432,6 +432,17 @@ _supports_xfs_scrub()
+> >  	return 0
+> >  }
+> >  
+> > +_require_xfs_shrink()
+> > +{
+> > +	_require_scratch
 > 
-> This commit fixes the issue by creating $testfile before injecting
-> reduce_max_iextents error tag.
-> 
-> Reported-by: Darrick J. Wong <djwong@kernel.org>
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> _require_command "$XFS_GROWFS_PROG" xfs_growfs
 
-Seems patch 2 to 6 fix the same bug in different tests, I think we could
-put the fixes in one patch.
+will update.
+
+> 
+> > +
+> > +	_scratch_mkfs_xfs > /dev/null
+> > +	_scratch_mount
+> > +	$XFS_GROWFS_PROG -D1 "$SCRATCH_MNT" 2>&1 | grep -q 'Invalid argument' || \
+> > +		_notrun "kernel does not support shrinking"
+> 
+> Better to describe the behavior here to explain why EINVAL means kernel
+> supports shrink.
+
+hmmm.. I also don't think this check is correct now. Maybe try to shrink
+one fs-block would be better. Will update later.
 
 Thanks,
-Eryu
-> ---
->  tests/xfs/529     | 24 +++++++++++++++++++++---
->  tests/xfs/529.out |  6 +++++-
->  2 files changed, 26 insertions(+), 4 deletions(-)
+Gao Xiang
+
 > 
-> diff --git a/tests/xfs/529 b/tests/xfs/529
-> index abe5b1e0..b4533eba 100755
-> --- a/tests/xfs/529
-> +++ b/tests/xfs/529
-> @@ -54,6 +54,8 @@ echo "* Delalloc to written extent conversion"
->  
->  testfile=$SCRATCH_MNT/testfile
->  
-> +touch $testfile
-> +
->  echo "Inject reduce_max_iextents error tag"
->  _scratch_inject_error reduce_max_iextents 1
->  
-> @@ -74,10 +76,18 @@ if (( $nextents > 10 )); then
->  	exit 1
->  fi
->  
-> +echo "Disable reduce_max_iextents error tag"
-> +_scratch_inject_error reduce_max_iextents 0
-> +
->  rm $testfile
->  
->  echo "* Fallocate unwritten extents"
->  
-> +touch $testfile
-> +
-> +echo "Inject reduce_max_iextents error tag"
-> +_scratch_inject_error reduce_max_iextents 1
-> +
->  echo "Fallocate fragmented file"
->  for i in $(seq 0 2 $((nr_blks - 1))); do
->  	$XFS_IO_PROG -f -c "falloc $((i * bsize)) $bsize" $testfile \
-> @@ -93,10 +103,18 @@ if (( $nextents > 10 )); then
->  	exit 1
->  fi
->  
-> +echo "Disable reduce_max_iextents error tag"
-> +_scratch_inject_error reduce_max_iextents 0
-> +
->  rm $testfile
->  
->  echo "* Directio write"
->  
-> +touch $testfile
-> +
-> +echo "Inject reduce_max_iextents error tag"
-> +_scratch_inject_error reduce_max_iextents 1
-> +
->  echo "Create fragmented file via directio writes"
->  for i in $(seq 0 2 $((nr_blks - 1))); do
->  	$XFS_IO_PROG -d -s -f -c "pwrite $((i * bsize)) $bsize" $testfile \
-> @@ -112,15 +130,15 @@ if (( $nextents > 10 )); then
->  	exit 1
->  fi
->  
-> +echo "Disable reduce_max_iextents error tag"
-> +_scratch_inject_error reduce_max_iextents 0
-> +
->  rm $testfile
->  
->  # Check if XFS gracefully returns with an error code when we try to increase
->  # extent count of user quota inode beyond the pseudo max extent count limit.
->  echo "* Extend quota inodes"
->  
-> -echo "Disable reduce_max_iextents error tag"
-> -_scratch_inject_error reduce_max_iextents 0
-> -
->  echo "Consume free space"
->  fillerdir=$SCRATCH_MNT/fillerdir
->  nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
-> diff --git a/tests/xfs/529.out b/tests/xfs/529.out
-> index b2ae3f42..13489d34 100644
-> --- a/tests/xfs/529.out
-> +++ b/tests/xfs/529.out
-> @@ -4,14 +4,18 @@ Format and mount fs
->  Inject reduce_max_iextents error tag
->  Create fragmented file
->  Verify $testfile's extent count
-> +Disable reduce_max_iextents error tag
->  * Fallocate unwritten extents
-> +Inject reduce_max_iextents error tag
->  Fallocate fragmented file
->  Verify $testfile's extent count
-> +Disable reduce_max_iextents error tag
->  * Directio write
-> +Inject reduce_max_iextents error tag
->  Create fragmented file via directio writes
->  Verify $testfile's extent count
-> -* Extend quota inodes
->  Disable reduce_max_iextents error tag
-> +* Extend quota inodes
->  Consume free space
->  Create fragmented filesystem
->  Inject reduce_max_iextents error tag
-> -- 
-> 2.29.2
+> Thanks,
+> Eryu
+> 
+> > +	_scratch_unmount
+> > +}
+> > +
+> >  # run xfs_check and friends on a FS.
+> >  _check_xfs_filesystem()
+> >  {
+> > -- 
+> > 2.27.0
+> 
+
