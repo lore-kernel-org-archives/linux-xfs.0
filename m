@@ -2,230 +2,155 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03B47C433C1
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 02:15:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 208ABC433DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 02:29:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C96056023C
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 02:15:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA23D6192B
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 02:29:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230204AbhC2CPI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 28 Mar 2021 22:15:08 -0400
-Received: from out30-45.freemail.mail.aliyun.com ([115.124.30.45]:45764 "EHLO
-        out30-45.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229645AbhC2CO2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Mar 2021 22:14:28 -0400
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04394;MF=eguan@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0UTbnKBO_1616984066;
-Received: from localhost(mailfrom:eguan@linux.alibaba.com fp:SMTPD_---0UTbnKBO_1616984066)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Mon, 29 Mar 2021 10:14:26 +0800
-Date:   Mon, 29 Mar 2021 10:14:26 +0800
-From:   Eryu Guan <eguan@linux.alibaba.com>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     Eryu Guan <guan@eryu.me>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-        Zorro Lang <zlang@redhat.com>
-Subject: Re: [RFC PATCH v3 2/3] xfs: basic functionality test for shrinking
- free space in the last AG
-Message-ID: <20210329021426.GK95214@e18g06458.et15sqa>
-References: <20210315111926.837170-1-hsiangkao@redhat.com>
- <20210315111926.837170-3-hsiangkao@redhat.com>
- <YGCvp6QJherSSOGk@desktop>
- <20210328200603.GB3213575@xiangao.remote.csb>
+        id S230247AbhC2C2z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 28 Mar 2021 22:28:55 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:52605 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230242AbhC2C2g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Mar 2021 22:28:36 -0400
+Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 8A9271042870;
+        Mon, 29 Mar 2021 13:28:33 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lQhdi-007wbV-Du; Mon, 29 Mar 2021 13:28:26 +1100
+Date:   Mon, 29 Mar 2021 13:28:26 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: xfs ioend batching log reservation deadlock
+Message-ID: <20210329022826.GO63242@dread.disaster.area>
+References: <YF4AOto30pC/0FYW@bfoster>
+ <20210326173244.GY4090233@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210328200603.GB3213575@xiangao.remote.csb>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+In-Reply-To: <20210326173244.GY4090233@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_x
+        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
+        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
+        a=8hYNQG3eBgVaOVE4AQUA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=fCgQI5UlmZDRPDxm0A3o:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 29, 2021 at 04:06:03AM +0800, Gao Xiang wrote:
-> On Mon, Mar 29, 2021 at 12:32:39AM +0800, Eryu Guan wrote:
-> > On Mon, Mar 15, 2021 at 07:19:25PM +0800, Gao Xiang wrote:
-> > > Add basic test to make sure the functionality works as expected.
-> > > 
-> > > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> > > ---
-> > >  tests/xfs/990     | 70 +++++++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/xfs/990.out | 12 ++++++++
-> > >  tests/xfs/group   |  1 +
-> > >  3 files changed, 83 insertions(+)
-> > >  create mode 100755 tests/xfs/990
-> > >  create mode 100644 tests/xfs/990.out
-> > > 
-> > > diff --git a/tests/xfs/990 b/tests/xfs/990
-> > > new file mode 100755
-> > > index 00000000..3c79186e
-> > > --- /dev/null
-> > > +++ b/tests/xfs/990
-> > > @@ -0,0 +1,70 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2021 Red Hat, Inc.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test 990
-> > > +#
-> > > +# XFS shrinkfs basic functionality test
-> > > +#
-> > > +# This test attempts to shrink with a small size (512K), half AG size and
-> > > +# an out-of-bound size (agsize + 1) to observe if it works as expected.
-> > > +#
-> > > +seq=`basename $0`
-> > > +seqres=$RESULT_DIR/$seq
-> > > +echo "QA output created by $seq"
-> > > +
-> > > +here=`pwd`
-> > > +tmp=/tmp/$$
-> > > +status=1    # failure is the default!
-> > > +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> > > +
-> > > +# get standard environment, filters and checks
-> > > +. ./common/rc
-> > > +. ./common/filter
-> > > +
-> > > +test_shrink()
-> > > +{
-> > > +	$XFS_GROWFS_PROG -D"$1" $SCRATCH_MNT >> $seqres.full 2>&1
-> > > +	ret=$?
+On Fri, Mar 26, 2021 at 10:32:44AM -0700, Darrick J. Wong wrote:
+> On Fri, Mar 26, 2021 at 11:39:38AM -0400, Brian Foster wrote:
+> > Hi all,
 > > 
-> > I'm not sure what's the output of xfs_growfs when shrinking filesystem,
-> > if it's easy to do filter, but it'd be good if we could just dump the
-> > output and let .out file match & check the test result.
-> 
-> Not quite sure if it's of some use (e.g. also need to update expected output
-> when output changed), since I think just make sure the shrinked size is as
-> expected and xfs_repair won't argue anything on the new size, that would be
-> enough.
-> 
+> > We have a report of a workload that deadlocks on log reservation via
+> > iomap_ioend completion batching. To start, the fs format is somewhat
+> > unique in that the log is on the smaller side (35MB) and the log stripe
+> > unit is 256k, but this is actually a default mkfs for the underlying
+> > storage. I don't have much more information wrt to the workload or
+> > anything that contributes to the completion processing characteristics.
 > > 
-> > > +
-> > > +	_scratch_unmount
-> > > +	_repair_scratch_fs >> $seqres.full
+> > The overall scenario is that a workqueue task is executing in
+> > xfs_end_io() and blocked on transaction reservation for an unwritten
+> > extent conversion. Since this task began executing and pulled pending
+> > items from ->i_ioend_list, the latter was repopulated with 90 ioends, 67
+> > of which have append transactions. These append transactions account for
+> > ~520k of log reservation each due to the log stripe unit. All together
+> > this consumes nearly all of available log space, prevents allocation of
+> > the aforementioned unwritten extent conversion transaction and thus
+> > leaves the fs in a deadlocked state.
 > > 
-> > _repair_scratch_fs will fix corruption if there's any, and always return 0 if
-> > completes without problems. Is _check_scratch_fs() what you want?
-> 
-> I didn't notice this, will update.
-> 
+> > I can think of different ways we could probably optimize this problem
+> > away. One example is to transfer the append transaction to the inode at
+> > bio completion time such that we retain only one per pending batch of
+> > ioends. The workqueue task would then pull this append transaction from
+> > the inode along with the ioend list and transfer it back to the last
+> > non-unwritten/shared ioend in the sorted list.
 > > 
-> > > +	_scratch_mount >> $seqres.full
-> > > +
-> > > +	$XFS_INFO_PROG $SCRATCH_MNT 2>&1 | _filter_mkfs 2>$tmp.growfs >/dev/null
-> > > +	. $tmp.growfs
-> > > +	[ $ret -eq 0 -a $1 -eq $dblocks ]
-> > 
-> > Just dump the expected size after shrink if possible.
+> > That said, I'm not totally convinced this addresses the fundamental
+> > problem of acquiring transaction reservation from a context that
+> > essentially already owns outstanding reservation vs. just making it hard
+> > to reproduce. I'm wondering if/why we need the append transaction at
+> > all. AFAICT it goes back to commit 281627df3eb5 ("xfs: log file size
+> > updates at I/O completion time") in v3.4 which changed the completion
+> > on-disk size update from being an unlogged update. If we continue to
+> > send these potential append ioends to the workqueue for completion
+> > processing, is there any reason we can't let the workqueue allocate the
+> > transaction as it already does for unwritten conversion?
 > 
-> er... my idea is that I don't want to continue the test case
-> if any fails... if dump the expected size to output, I need to
-> fix blocksize as well, not sure if it's necessary.
-> 
-> > 
-> > > +}
-> > > +
-> > > +# real QA test starts here
-> > > +_supported_fs xfs
-> > 
-> > Still missing _require_scratch
-> 
-> No, _require_xfs_shrink will include that, just as _require_xfs_scratch_rmapbt.
+> Frankly I've never understood what benefit we get from preallocating a
+> transaction and letting it twist in the wind consuming log space while
+> writeback pushes data to the disk.  It's perfectly fine to delay ioend
+> processing while we wait for unwritten conversions and cow remapping to
+> take effect, so what's the harm in a slight delay for this?
 
-Then include the "scratch" part in the helper name, so it's clear that
-it requires the SCRATCH_DEV, i.e. _require_xfs_scratch_shrink
+The difference was that file size updates used to be far, far more
+common than unwritten extent updates for buffered IO. When this code
+was written, we almost never did buffered writes into unwritten
+regions, but we always do sequential writes that required a file
+size update.
 
-> 
-> > 
-> > > +_require_xfs_shrink
-> > > +
-> > > +rm -f $seqres.full
-> > > +echo "Format and mount"
-> > > +_scratch_mkfs -dsize="$((512 * 1024 * 1024))" -dagcount=3 2>&1 | \
-> > > +	tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-> > 
-> > Better to explain why mkfs with agcount=3
-> 
-> just because agcount = 1 is forbidden on purpose, and I need to make sure
-> shrinking to 2 AG is not possible yet. So agcount = 3 is the minimum number.
-> 
-> It's just a functionality test, so agcount = 3 also makes the result
-> determinatively.
+Given that this code was replacing an un-synchronised size update,
+the performance impact of reserving transaction space in IO
+completion was significant. There was also the problem of XFS using
+global workqueues - the series that introduced the append
+transaction also introduced per-mount IO completion workqueues and
+so there were concerns about blowing out the number of completion
+workers when we have thousands of pending completions all waiting on
+log space.
 
-Yeah, I'd guess the reason, but it'd be great to make it clear in
-comments.
+There was a bunch of considerations that probably don't exist
+anymore, plus a bunch of new ones, such as the fact that we now
+queue and merge ioends to process in a single context rather than
+just spraying ioends to worker threads to deal with. The old code
+would have worked just fine - the unwritten extent conversion would
+not have been blocking all those other IO completions...
 
-> 
-> > 
-> > > +. $tmp.mkfs
-> > > +t_dblocks=$dblocks
-> > > +_scratch_mount >> $seqres.full
-> > > +
-> > > +echo "Shrink fs (small size)"
-> > > +test_shrink $((t_dblocks-512*1024/dbsize)) || \
-> > > +	_fail "Shrink fs (small size) failure"
-> > 
-> > If it's possible to turn test_shrink to .out file matching way, _fail is
-> > not needed and below.
-> 
-> The same as above. I could try to fix blocksize if the opinion is strong.
-> 
-> > 
-> > > +
-> > > +echo "Shrink fs (half AG)"
-> > > +test_shrink $((t_dblocks-agsize/2)) || \
-> > > +	_fail "Shrink fs (half AG) failure"
-> > > +
-> > > +echo "Shrink fs (out-of-bound)"
-> > > +test_shrink $((t_dblocks-agsize-1)) && \
-> > > +	_fail "Shrink fs (out-of-bound) failure"
-> > > +[ $dblocks -ne $((t_dblocks-agsize/2)) ] && \
-> > > +	_fail "dblocks changed after shrinking failure"
-> > > +
-> > > +$XFS_INFO_PROG $SCRATCH_MNT >> $seqres.full
-> > > +echo "*** done"
-> > > +
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/xfs/990.out b/tests/xfs/990.out
-> > > new file mode 100644
-> > > index 00000000..812f89ef
-> > > --- /dev/null
-> > > +++ b/tests/xfs/990.out
-> > > @@ -0,0 +1,12 @@
-> > > +QA output created by 990
-> > > +Format and mount
-> > > +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> > > +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> > > +         = sunit=XXX swidth=XXX, unwritten=X
-> > > +naming   =VERN bsize=XXX
-> > > +log      =LDEV bsize=XXX blocks=XXX
-> > > +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> > > +Shrink fs (small size)
-> > > +Shrink fs (half AG)
-> > > +Shrink fs (out-of-bound)
-> > > +*** done
-> > > diff --git a/tests/xfs/group b/tests/xfs/group
-> > > index e861cec9..a7981b67 100644
-> > > --- a/tests/xfs/group
-> > > +++ b/tests/xfs/group
-> > > @@ -525,3 +525,4 @@
-> > >  525 auto quick mkfs
-> > >  526 auto quick mkfs
-> > >  527 auto quick quota
-> > > +990 auto quick growfs
-> > 
-> > Maybe it's time to add a new 'shrinkfs' group?
-> 
-> not sure if it needs, since shrinkfs reuses growfs ioctl.
+Wait, hold on - we're putting both unwritten conversion and size
+updates onto the same queue?
 
-Ok, I have no strong preference on this, just think it's a bit easier to
-run only shrink tests by ./check -g shrinkfs.
+Ah, yes, that's exactly what we are doing. We've punted all the size
+extension to the unwritten workqueue, regardless of whether it's
+just a size update or not. And then the work processes them one at a
+time after sorting them. We don't complete/free the append
+transactions until we try to merge them one at a time as we walk the
+ioend list on the inode. Hence we try to reserve more log space
+while we still hold an unknown amount of log space on the queue we
+are processin...
 
-Thanks,
-Eryu
+IOws, the completion queuing mixing unwritten extent conversion and
+size updates is *nesting transactions*.  THat's the deadlock - we
+can't take a new transaction reservation while holding another
+transaction reservation in a state where it cannot make progress....
+
+> What happens if you replace the call to xfs_setfilesize_ioend in
+> xfs_end_ioend with xfs_setfilesize, and skip the transaction
+> preallocation altogether?
+
+I expect that the deadlock will go away at the expense of increased
+log reservation contention in IO completion because this unbounds
+the amount of transaction reservation concurrency that can occur in
+buffered writeback. IOWs, this might just hammer the log really,
+really hard and that's exactly what we don't want data IO completion
+to do....
+
+I'd say the first thing to fix is the ordering problem on the
+completion queue. XFS needs more than just offset based ordering, it
+needs ioend type based ordering, too. All the size updates should be
+processed before the unwritten extent conversions, hence removing
+the nesting of transactions....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
