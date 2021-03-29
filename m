@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A00A0C433C1
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 09:38:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DB58C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 14:42:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D60861960
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 09:38:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AD806195B
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 14:42:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231623AbhC2Jhk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Mar 2021 05:37:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37660 "EHLO
+        id S230509AbhC2OmV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Mar 2021 10:42:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231618AbhC2Jh2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Mar 2021 05:37:28 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EBF5C061574
-        for <linux-xfs@vger.kernel.org>; Mon, 29 Mar 2021 02:37:27 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id a12so629470pfc.7
-        for <linux-xfs@vger.kernel.org>; Mon, 29 Mar 2021 02:37:27 -0700 (PDT)
+        with ESMTP id S230415AbhC2OmG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Mar 2021 10:42:06 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 451D2C061574
+        for <linux-xfs@vger.kernel.org>; Mon, 29 Mar 2021 07:42:06 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id bt4so6085713pjb.5
+        for <linux-xfs@vger.kernel.org>; Mon, 29 Mar 2021 07:42:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=references:user-agent:from:to:cc:subject:in-reply-to:date
          :message-id:mime-version;
-        bh=u2XeuMJiDh69PkGfWuWU13kqkUDRGtMYrPxDE3fLFnw=;
-        b=fZaaiEnZHXZdWoJW5gtqiiy9kA1jZpcP28CRNz7qKTplAL0d1oX65SyXsdSURED/lK
-         rYhLnkpkzQEG7SZmgv3ScQScXKuqF9SM+JPZLF+GGYipKQZXacoXBFmBaPZcjRIWVByw
-         7ysRQ+wDNxKXTFNOUJqir7pHxNTB56I94aRlIrJnjf2pQg63yPzd9z9kMwybjTZx5fE1
-         tooGOC3UXMu/GyHZdWk5n5p4vR/d2PgPlL2IXDVpkBI8vOYeBhcwSPRwahxBh6HKbOC8
-         atWTfdn2983QSf1tHrBhllmxTH+ueRibLIspzFjYjOX+owdsk0SvQmmi5u27V0jcaoDe
-         OZ6g==
+        bh=TDNAOc4UObP9WAFzSILUyj/OPWlsDZd0udnWYvyEZos=;
+        b=sIc2vrmNUKsBg6/KTAsDwHiQQFFIm6EL/QfmpXyfp2EcixLHb1y7BDUPaW6JkYOHMi
+         +/ayZ4pRprA2LauC9cUzY7VPuLKG+t5ZYuxPLBFmGCGq4m88o1/9kRMDTMNh5aU59xBi
+         70FcHqKiOVJq6ho8COy0gZdYN0wjs76U0J0DdvNcBl2emT7bOTq96gvYE4MaKb7Nyjge
+         F/VTLFRnCvjQwmlRyxSbgH9YKrMtM2CdWg5e1kGEw0DxkJdKQn2KCYub7LljammWeaGM
+         w/QDi1PAnQLgBqxh/OfibDO+J47o5vZCn/SuSPcoENXtVFiuvgAImKbdmXuHNGweBPGd
+         Fg6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:references:user-agent:from:to:cc:subject
          :in-reply-to:date:message-id:mime-version;
-        bh=u2XeuMJiDh69PkGfWuWU13kqkUDRGtMYrPxDE3fLFnw=;
-        b=o5cSyov+5xqpnnPUNFt1yTJiLmKPmsZvhJUcO+qtuCueGAUSY78JjqCifT6QwuNyMa
-         WDJC/mVVM8nV1AnLstxpIgotNZJhnRjWv2iIbgEMN5gnhBTl13+Yx74evkVp9d1XJ862
-         AYR3KESPEbandBco7F7GNLRNbKS/dal3lgsyFP48GxBMdaqQkwnXdzhSPa65iUWb/s+k
-         sZetsdG7TLPYLXJHTaQ5Glm3G+1LIQlpyeIjQDF053HVQF+UEASFqAKDvp9YZYFct9x7
-         Dy1dYhkdjX/FoceyQIeThKY/5wX2avHu0IKeRIvHq6A/Ef7PxSn0m+xL/vxnkYUAM6r6
-         sSvA==
-X-Gm-Message-State: AOAM532qeGoj1YPryM0oRZlNCPFOaluNrcZ8oZ4ucvXxW4jPosj22e8F
-        Je0p5pBhALJYE5ROY6gx/10R0E+vazk=
-X-Google-Smtp-Source: ABdhPJxPgZcf3b8yQ+5C8BcJd6Hul7Q5QlBizPFllHapB7CQZp2Jzm6ozKtnuA9izGiZBYPURgbQgg==
-X-Received: by 2002:a63:505d:: with SMTP id q29mr22865755pgl.218.1617010646635;
-        Mon, 29 Mar 2021 02:37:26 -0700 (PDT)
+        bh=TDNAOc4UObP9WAFzSILUyj/OPWlsDZd0udnWYvyEZos=;
+        b=WfckfnEg3M7p8dqLiuu4hqoSOZF88ux3DssAq0QH7Tj6zckmKmUrbuwVKjUgzxr648
+         MPZlOUHlvEcLai5C5youX48Lh1HLC8bH+q9Wr+WcIgyzZ32chT8bE7QYOaQ2zecbg7fu
+         EZYfireE2F30BV3rPJO/rEOBpF9vYrhXTljBGBQGvqJGOHu7Wg0lTYOxie6jEx9qaU4N
+         dzzGy0jAEr0xqMZfL7AF+7rFpvG7yXfvjjz5DUJpiAiKvst/KVpgqufmGE1t+aJ857jh
+         wFAvY5Y5ctDt9bLiO5a+sE4X6BsXN4EgIIp7n+GF5XWXd3r/CNrGnX5qCrEFg/5QtOBW
+         FMFg==
+X-Gm-Message-State: AOAM532wk0Mmz3Pptn2hV/m7QJvCEOQ/cmWt7Y08/aT7USdtZ/3bIUco
+        GiFs5G5VgKdX+eUNP8d52k6Poy3f7Iw=
+X-Google-Smtp-Source: ABdhPJyUztehf6wzlYPbIqNxRCU8s28mVEU1ZI2nWmWzCthXkvKOWHrJS6qbjDTeNl/d8sC/yV5/SA==
+X-Received: by 2002:a17:90a:f184:: with SMTP id bv4mr26030877pjb.43.1617028925716;
+        Mon, 29 Mar 2021 07:42:05 -0700 (PDT)
 Received: from garuda ([122.171.151.73])
-        by smtp.gmail.com with ESMTPSA id w84sm16699592pfc.142.2021.03.29.02.37.25
+        by smtp.gmail.com with ESMTPSA id b140sm17681423pfb.98.2021.03.29.07.42.04
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 29 Mar 2021 02:37:26 -0700 (PDT)
-References: <20210326003308.32753-1-allison.henderson@oracle.com> <20210326003308.32753-5-allison.henderson@oracle.com>
+        Mon, 29 Mar 2021 07:42:05 -0700 (PDT)
+References: <20210326003308.32753-1-allison.henderson@oracle.com> <20210326003308.32753-6-allison.henderson@oracle.com>
 User-agent: mu4e 1.0; emacs 26.1
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v16 04/11] xfs: Add helper xfs_attr_set_fmt
-In-reply-to: <20210326003308.32753-5-allison.henderson@oracle.com>
-Date:   Mon, 29 Mar 2021 15:07:24 +0530
-Message-ID: <87h7kub8rv.fsf@garuda>
+Subject: Re: [PATCH v16 05/11] xfs: Separate xfs_attr_node_addname and xfs_attr_node_addname_clear_incomplete
+In-reply-to: <20210326003308.32753-6-allison.henderson@oracle.com>
+Date:   Mon, 29 Mar 2021 20:12:02 +0530
+Message-ID: <87ft0eauo5.fsf@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
@@ -72,138 +72,45 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On 26 Mar 2021 at 06:03, Allison Henderson wrote:
-> This patch adds a helper function xfs_attr_set_fmt.  This will help
-> isolate the code that will require state management from the portions
-> that do not.  xfs_attr_set_fmt returns 0 when the attr has been set and
-> no further action is needed.  It returns -EAGAIN when shortform has been
-> transformed to leaf, and the calling function should proceed the set the
-> attr in leaf form.
-
-The previous behaviour is maintained across the changes made by this patch.
-
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
+> This patch separate xfs_attr_node_addname into two functions.  This will
+> help to make it easier to hoist parts of xfs_attr_node_addname that need
+> state management
 >
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > Reviewed-by: Brian Foster <bfoster@redhat.com>
->
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 79 ++++++++++++++++++++++++++++--------------------
->  1 file changed, 46 insertions(+), 33 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
 >
 > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 5216f67..d46324a 100644
+> index d46324a..531ff56 100644
 > --- a/fs/xfs/libxfs/xfs_attr.c
 > +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -216,6 +216,48 @@ xfs_attr_is_shortform(
->  		ip->i_afp->if_nextents == 0);
->  }
->  
-> +STATIC int
-> +xfs_attr_set_fmt(
-> +	struct xfs_da_args	*args)
-> +{
-> +	struct xfs_buf          *leaf_bp = NULL;
-> +	struct xfs_inode	*dp = args->dp;
-> +	int			error2, error = 0;
-> +
-> +	/*
-> +	 * Try to add the attr to the attribute list in the inode.
-> +	 */
-> +	error = xfs_attr_try_sf_addname(dp, args);
-> +	if (error != -ENOSPC) {
-> +		error2 = xfs_trans_commit(args->trans);
-> +		args->trans = NULL;
-> +		return error ? error : error2;
-> +	}
-> +
-> +	/*
-> +	 * It won't fit in the shortform, transform to a leaf block.
-> +	 * GROT: another possible req'mt for a double-split btree op.
-> +	 */
-> +	error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
+> @@ -54,6 +54,7 @@ STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
+>  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+>  STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
+>  STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
+> +STATIC int xfs_attr_node_addname_clear_incomplete(struct xfs_da_args *args);
+>  STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
+>  				 struct xfs_da_state **state);
+>  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+> @@ -1061,6 +1062,25 @@ xfs_attr_node_addname(
+>  			return error;
+>  	}
+>
+> +	error = xfs_attr_node_addname_clear_incomplete(args);
+> +out:
+> +	if (state)
+> +		xfs_da_state_free(state);
 > +	if (error)
 > +		return error;
-> +
-> +	/*
-> +	 * Prevent the leaf buffer from being unlocked so that a
-> +	 * concurrent AIL push cannot grab the half-baked leaf buffer
-> +	 * and run into problems with the write verifier.
-> +	 */
-> +	xfs_trans_bhold(args->trans, leaf_bp);
-> +	error = xfs_defer_finish(&args->trans);
-> +	xfs_trans_bhold_release(args->trans, leaf_bp);
-> +	if (error) {
-> +		xfs_trans_brelse(args->trans, leaf_bp);
-> +		return error;
-> +	}
-> +
-> +	return -EAGAIN;
-> +}
-> +
->  /*
->   * Set the attribute specified in @args.
->   */
-> @@ -224,8 +266,7 @@ xfs_attr_set_args(
->  	struct xfs_da_args	*args)
->  {
->  	struct xfs_inode	*dp = args->dp;
-> -	struct xfs_buf          *leaf_bp = NULL;
-> -	int			error2, error = 0;
-> +	int			error;
->  
->  	/*
->  	 * If the attribute list is already in leaf format, jump straight to
-> @@ -234,36 +275,9 @@ xfs_attr_set_args(
->  	 * again.
->  	 */
->  	if (xfs_attr_is_shortform(dp)) {
-> -		/*
-> -		 * Try to add the attr to the attribute list in the inode.
-> -		 */
-> -		error = xfs_attr_try_sf_addname(dp, args);
-> -		if (error != -ENOSPC) {
-> -			error2 = xfs_trans_commit(args->trans);
-> -			args->trans = NULL;
-> -			return error ? error : error2;
-> -		}
-> -
-> -		/*
-> -		 * It won't fit in the shortform, transform to a leaf block.
-> -		 * GROT: another possible req'mt for a double-split btree op.
-> -		 */
-> -		error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
-> -		if (error)
-> -			return error;
-> -
-> -		/*
-> -		 * Prevent the leaf buffer from being unlocked so that a
-> -		 * concurrent AIL push cannot grab the half-baked leaf buffer
-> -		 * and run into problems with the write verifier.
-> -		 */
-> -		xfs_trans_bhold(args->trans, leaf_bp);
-> -		error = xfs_defer_finish(&args->trans);
-> -		xfs_trans_bhold_release(args->trans, leaf_bp);
-> -		if (error) {
-> -			xfs_trans_brelse(args->trans, leaf_bp);
-> +		error = xfs_attr_set_fmt(args);
-> +		if (error != -EAGAIN)
->  			return error;
-> -		}
->  	}
->  
->  	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> @@ -297,8 +311,7 @@ xfs_attr_set_args(
->  			return error;
->  	}
->  
-> -	error = xfs_attr_node_addname(args);
-> -	return error;
-> +	return xfs_attr_node_addname(args);
->  }
->  
->  /*
+> +	return retval;
 
+Lets say the user is performing a xattr rename operation and the call to
+xfs_attr3_leaf_add() resulted in returning -ENOSPC. xfs_attr_node_addname()
+would later allocate a new leaf and insert the new instance of xattr
+name/value into this leaf. However, 'retval' will continue to have -ENOSPC as
+its value which is incorrectly returned by the above return statement.
 
--- 
+--
 chandan
