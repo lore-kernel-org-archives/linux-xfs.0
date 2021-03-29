@@ -2,115 +2,177 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DB58C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 14:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A869C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 16:21:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1AD806195B
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 14:42:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F5776198E
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 16:21:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230509AbhC2OmV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Mar 2021 10:42:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48140 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230415AbhC2OmG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Mar 2021 10:42:06 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 451D2C061574
-        for <linux-xfs@vger.kernel.org>; Mon, 29 Mar 2021 07:42:06 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id bt4so6085713pjb.5
-        for <linux-xfs@vger.kernel.org>; Mon, 29 Mar 2021 07:42:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=TDNAOc4UObP9WAFzSILUyj/OPWlsDZd0udnWYvyEZos=;
-        b=sIc2vrmNUKsBg6/KTAsDwHiQQFFIm6EL/QfmpXyfp2EcixLHb1y7BDUPaW6JkYOHMi
-         +/ayZ4pRprA2LauC9cUzY7VPuLKG+t5ZYuxPLBFmGCGq4m88o1/9kRMDTMNh5aU59xBi
-         70FcHqKiOVJq6ho8COy0gZdYN0wjs76U0J0DdvNcBl2emT7bOTq96gvYE4MaKb7Nyjge
-         F/VTLFRnCvjQwmlRyxSbgH9YKrMtM2CdWg5e1kGEw0DxkJdKQn2KCYub7LljammWeaGM
-         w/QDi1PAnQLgBqxh/OfibDO+J47o5vZCn/SuSPcoENXtVFiuvgAImKbdmXuHNGweBPGd
-         Fg6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=TDNAOc4UObP9WAFzSILUyj/OPWlsDZd0udnWYvyEZos=;
-        b=WfckfnEg3M7p8dqLiuu4hqoSOZF88ux3DssAq0QH7Tj6zckmKmUrbuwVKjUgzxr648
-         MPZlOUHlvEcLai5C5youX48Lh1HLC8bH+q9Wr+WcIgyzZ32chT8bE7QYOaQ2zecbg7fu
-         EZYfireE2F30BV3rPJO/rEOBpF9vYrhXTljBGBQGvqJGOHu7Wg0lTYOxie6jEx9qaU4N
-         dzzGy0jAEr0xqMZfL7AF+7rFpvG7yXfvjjz5DUJpiAiKvst/KVpgqufmGE1t+aJ857jh
-         wFAvY5Y5ctDt9bLiO5a+sE4X6BsXN4EgIIp7n+GF5XWXd3r/CNrGnX5qCrEFg/5QtOBW
-         FMFg==
-X-Gm-Message-State: AOAM532wk0Mmz3Pptn2hV/m7QJvCEOQ/cmWt7Y08/aT7USdtZ/3bIUco
-        GiFs5G5VgKdX+eUNP8d52k6Poy3f7Iw=
-X-Google-Smtp-Source: ABdhPJyUztehf6wzlYPbIqNxRCU8s28mVEU1ZI2nWmWzCthXkvKOWHrJS6qbjDTeNl/d8sC/yV5/SA==
-X-Received: by 2002:a17:90a:f184:: with SMTP id bv4mr26030877pjb.43.1617028925716;
-        Mon, 29 Mar 2021 07:42:05 -0700 (PDT)
-Received: from garuda ([122.171.151.73])
-        by smtp.gmail.com with ESMTPSA id b140sm17681423pfb.98.2021.03.29.07.42.04
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 29 Mar 2021 07:42:05 -0700 (PDT)
-References: <20210326003308.32753-1-allison.henderson@oracle.com> <20210326003308.32753-6-allison.henderson@oracle.com>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v16 05/11] xfs: Separate xfs_attr_node_addname and xfs_attr_node_addname_clear_incomplete
-In-reply-to: <20210326003308.32753-6-allison.henderson@oracle.com>
-Date:   Mon, 29 Mar 2021 20:12:02 +0530
-Message-ID: <87ft0eauo5.fsf@garuda>
+        id S231152AbhC2QVV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Mar 2021 12:21:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37408 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231332AbhC2QUz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 29 Mar 2021 12:20:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E1E9A61581;
+        Mon, 29 Mar 2021 16:20:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617034854;
+        bh=DXYgLhtCHN5p4bDkG9arx+gO7r6X8C1GBwlCqT4zx74=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=awpsZQ6YLiwXZTSbDQUAoOrNcSkjhRQncCl/wY/I8hqTdfEilWmx+lbEn1J+tEmN4
+         usVURphKBS4GXOJmqP3SvvDUfnzOajiTrU0iINEGSzYZwkW+KncYYbwnY7SYcWYZmq
+         uZ2s3E3l6n0NtYx4h/murF0gPbpdUyk2B4mMrmFXgm1IiqB60P22cyA9f49pXp2sZh
+         am5Oc5AJqB5vt6K41VMwUopcD9uQiaY+S0AfW2VOTCnf3oXDNQXHQN5GT+IMy+XiGE
+         3D56pcVXzhgTssNR43A/fEbF+P1tNGY3MslatI62Yz4evuEig55mtTgTu6Lkij3qDV
+         vUomMqvQo6XlA==
+Date:   Mon, 29 Mar 2021 09:20:53 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 2/6] xfs/529: Fix test to execute in multi-block
+ directory config
+Message-ID: <20210329162053.GR1670408@magnolia>
+References: <20210325140857.7145-1-chandanrlinux@gmail.com>
+ <20210325140857.7145-2-chandanrlinux@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210325140857.7145-2-chandanrlinux@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 26 Mar 2021 at 06:03, Allison Henderson wrote:
-> This patch separate xfs_attr_node_addname into two functions.  This will
-> help to make it easier to hoist parts of xfs_attr_node_addname that need
-> state management
->
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+On Thu, Mar 25, 2021 at 07:38:53PM +0530, Chandan Babu R wrote:
+> xfs/529 attempts to create $testfile after reduce_max_iextents error tag is
+> injected. Creation of $testfile fails when using a multi-block directory test
+> configuration because,
+> 1. A directory can have a pseudo maximum extent count of 10.
+> 2. In the worst case a directory entry creation operation can consume
+>    (XFS_DA_NODE_MAXDEPTH + 1 + 1) * (Nr fs blocks in a single directory block)
+>    extents.
+>    With 1k fs block size and 4k directory block size, this evaluates to,
+>    (5 + 1 + 1) * 4
+>    = 7 * 4
+>    = 28
+>    > 10 (Pseudo maximum inode extent count).
+> 
+> This commit fixes the issue by creating $testfile before injecting
+> reduce_max_iextents error tag.
+> 
+> Reported-by: Darrick J. Wong <djwong@kernel.org>
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+
+Looks good to me,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
->
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index d46324a..531ff56 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -54,6 +54,7 @@ STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
->  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
->  STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
->  STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
-> +STATIC int xfs_attr_node_addname_clear_incomplete(struct xfs_da_args *args);
->  STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
->  				 struct xfs_da_state **state);
->  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
-> @@ -1061,6 +1062,25 @@ xfs_attr_node_addname(
->  			return error;
->  	}
->
-> +	error = xfs_attr_node_addname_clear_incomplete(args);
-> +out:
-> +	if (state)
-> +		xfs_da_state_free(state);
-> +	if (error)
-> +		return error;
-> +	return retval;
-
-Lets say the user is performing a xattr rename operation and the call to
-xfs_attr3_leaf_add() resulted in returning -ENOSPC. xfs_attr_node_addname()
-would later allocate a new leaf and insert the new instance of xattr
-name/value into this leaf. However, 'retval' will continue to have -ENOSPC as
-its value which is incorrectly returned by the above return statement.
-
---
-chandan
+>  tests/xfs/529     | 24 +++++++++++++++++++++---
+>  tests/xfs/529.out |  6 +++++-
+>  2 files changed, 26 insertions(+), 4 deletions(-)
+> 
+> diff --git a/tests/xfs/529 b/tests/xfs/529
+> index abe5b1e0..b4533eba 100755
+> --- a/tests/xfs/529
+> +++ b/tests/xfs/529
+> @@ -54,6 +54,8 @@ echo "* Delalloc to written extent conversion"
+>  
+>  testfile=$SCRATCH_MNT/testfile
+>  
+> +touch $testfile
+> +
+>  echo "Inject reduce_max_iextents error tag"
+>  _scratch_inject_error reduce_max_iextents 1
+>  
+> @@ -74,10 +76,18 @@ if (( $nextents > 10 )); then
+>  	exit 1
+>  fi
+>  
+> +echo "Disable reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 0
+> +
+>  rm $testfile
+>  
+>  echo "* Fallocate unwritten extents"
+>  
+> +touch $testfile
+> +
+> +echo "Inject reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 1
+> +
+>  echo "Fallocate fragmented file"
+>  for i in $(seq 0 2 $((nr_blks - 1))); do
+>  	$XFS_IO_PROG -f -c "falloc $((i * bsize)) $bsize" $testfile \
+> @@ -93,10 +103,18 @@ if (( $nextents > 10 )); then
+>  	exit 1
+>  fi
+>  
+> +echo "Disable reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 0
+> +
+>  rm $testfile
+>  
+>  echo "* Directio write"
+>  
+> +touch $testfile
+> +
+> +echo "Inject reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 1
+> +
+>  echo "Create fragmented file via directio writes"
+>  for i in $(seq 0 2 $((nr_blks - 1))); do
+>  	$XFS_IO_PROG -d -s -f -c "pwrite $((i * bsize)) $bsize" $testfile \
+> @@ -112,15 +130,15 @@ if (( $nextents > 10 )); then
+>  	exit 1
+>  fi
+>  
+> +echo "Disable reduce_max_iextents error tag"
+> +_scratch_inject_error reduce_max_iextents 0
+> +
+>  rm $testfile
+>  
+>  # Check if XFS gracefully returns with an error code when we try to increase
+>  # extent count of user quota inode beyond the pseudo max extent count limit.
+>  echo "* Extend quota inodes"
+>  
+> -echo "Disable reduce_max_iextents error tag"
+> -_scratch_inject_error reduce_max_iextents 0
+> -
+>  echo "Consume free space"
+>  fillerdir=$SCRATCH_MNT/fillerdir
+>  nr_free_blks=$(stat -f -c '%f' $SCRATCH_MNT)
+> diff --git a/tests/xfs/529.out b/tests/xfs/529.out
+> index b2ae3f42..13489d34 100644
+> --- a/tests/xfs/529.out
+> +++ b/tests/xfs/529.out
+> @@ -4,14 +4,18 @@ Format and mount fs
+>  Inject reduce_max_iextents error tag
+>  Create fragmented file
+>  Verify $testfile's extent count
+> +Disable reduce_max_iextents error tag
+>  * Fallocate unwritten extents
+> +Inject reduce_max_iextents error tag
+>  Fallocate fragmented file
+>  Verify $testfile's extent count
+> +Disable reduce_max_iextents error tag
+>  * Directio write
+> +Inject reduce_max_iextents error tag
+>  Create fragmented file via directio writes
+>  Verify $testfile's extent count
+> -* Extend quota inodes
+>  Disable reduce_max_iextents error tag
+> +* Extend quota inodes
+>  Consume free space
+>  Create fragmented filesystem
+>  Inject reduce_max_iextents error tag
+> -- 
+> 2.29.2
+> 
