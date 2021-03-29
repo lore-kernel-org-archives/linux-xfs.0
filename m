@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21AC7C433E6
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 05:41:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB259C433E2
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 05:41:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C31F86196E
+	by mail.kernel.org (Postfix) with ESMTP id B15D661968
 	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 05:41:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230305AbhC2Fk3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Mar 2021 01:40:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41720 "EHLO
+        id S229674AbhC2Fk2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Mar 2021 01:40:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229842AbhC2FkC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Mar 2021 01:40:02 -0400
+        with ESMTP id S229483AbhC2Fj5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Mar 2021 01:39:57 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07B40C061574
-        for <linux-xfs@vger.kernel.org>; Sun, 28 Mar 2021 22:40:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC0FBC061574
+        for <linux-xfs@vger.kernel.org>; Sun, 28 Mar 2021 22:39:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Ylu88CwJENOipD7eEhfysfT44+dcmWlxYXNvZln7RJY=; b=UXknQDyfsShaNfBh3QZbH7jyFg
-        ujuYfhN5f/uNQ5iu9BN47Gt09KjtnxByQwUAItVYzN5oS9M7hvctkVOwklGi0GwjPG0JWq5nxEiEx
-        buBDrnEGfyenLNGTTDfJ7uA/Ii5xt/kzZRRgE44XwSp0FbWYLPXfq/xLGJ3B+Hhy/iuCMUy28sSTS
-        KFPlY/Hq14Kym0gcPRlhGwPGbQOQiXOiVzt2GTuNg+p1dTj8XVvvxHBzpmzohLN79aAG0Z+KXDvty
-        m0fLKIrq+SUgrBOCp+AlhogjBJZ0nNuz5e1QhGxqRdIyj2o0bHF7e+/YPFpT0wzMwZ2ufrj/82JtO
-        JkJ4gmwg==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
+        Reply-To:Cc:Content-Type:Content-ID:Content-Description;
+        bh=XVIOQdSCx2cDZxwy3qWQGAmvUvdgAkNWQ8pqwOlnaLs=; b=yPC0RhwCUQDIjOenbpCgu2lurp
+        lg9ook3c35VMyiz4TW2OwIs4f/rc9askKGRpevUvf7off7+P8u8KyVEp2abXXOeA2DR6/eDhbQiOR
+        9e7bdV+hHmfqC39GM6kA4zXHMA0EmSleqJAsszYxIffopykH3+PX5/u/0/GaI7QmSwfaKIrpPh4Yd
+        vVEctR5sTODSLZ1mGrCiIfncG+3uuyxhtDgf+d9LqzAbsTth0VKzDp3goqghett6DoLT6JGvFMFNq
+        5q1CHFD+ds233hrkh95ZefRU4iD8jypAVg6R70hBhL3ozDhgEA1z6/2hrakqsAkYyWqg12okHfVIs
+        WVlhwNHA==;
 Received: from 173.40.253.84.static.wline.lns.sme.cust.swisscom.ch ([84.253.40.173] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lQkc5-006oPm-35; Mon, 29 Mar 2021 05:38:57 +0000
+        id 1lQkby-006oPI-1j
+        for linux-xfs@vger.kernel.org; Mon, 29 Mar 2021 05:38:50 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH 10/20] xfs: move the di_extsize field to struct xfs_inode
-Date:   Mon, 29 Mar 2021 07:38:19 +0200
-Message-Id: <20210329053829.1851318-11-hch@lst.de>
+Subject: [PATCH 07/20] xfs: move the di_projid field to struct xfs_inode
+Date:   Mon, 29 Mar 2021 07:38:16 +0200
+Message-Id: <20210329053829.1851318-8-hch@lst.de>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210329053829.1851318-1-hch@lst.de>
 References: <20210329053829.1851318-1-hch@lst.de>
@@ -51,192 +51,270 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In preparation of removing the historic icinode struct, move the extsize
+In preparation of removing the historic icinode struct, move the projid
 field into the containing xfs_inode structure.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c      |  2 +-
- fs/xfs/libxfs/xfs_inode_buf.c |  4 ++--
- fs/xfs/libxfs/xfs_inode_buf.h |  1 -
- fs/xfs/xfs_inode.c            | 10 +++++-----
- fs/xfs/xfs_inode.h            |  1 +
- fs/xfs/xfs_inode_item.c       |  2 +-
- fs/xfs/xfs_ioctl.c            | 10 +++++-----
- fs/xfs/xfs_itable.c           |  2 +-
- 8 files changed, 16 insertions(+), 16 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c | 8 ++++----
+ fs/xfs/libxfs/xfs_inode_buf.h | 1 -
+ fs/xfs/xfs_bmap_util.c        | 2 +-
+ fs/xfs/xfs_dquot.c            | 2 +-
+ fs/xfs/xfs_icache.c           | 4 ++--
+ fs/xfs/xfs_inode.c            | 6 +++---
+ fs/xfs/xfs_inode.h            | 3 ++-
+ fs/xfs/xfs_inode_item.c       | 4 ++--
+ fs/xfs/xfs_ioctl.c            | 6 +++---
+ fs/xfs/xfs_iops.c             | 2 +-
+ fs/xfs/xfs_itable.c           | 2 +-
+ fs/xfs/xfs_qm.c               | 4 ++--
+ fs/xfs/xfs_qm_bhv.c           | 2 +-
+ 13 files changed, 23 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 7fc3e06feeb008..4aae40dda771e8 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2937,7 +2937,7 @@ xfs_bmap_add_extent_hole_real(
-  */
- 
- /*
-- * Adjust the size of the new extent based on di_extsize and rt extsize.
-+ * Adjust the size of the new extent based on i_extsize and rt extsize.
-  */
- int
- xfs_bmap_extsize_align(
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index e699669039c3a7..bb709584921d8b 100644
+index 917a41828ffbe3..671aeb012e3f59 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.c
 +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -228,7 +228,7 @@ xfs_inode_from_disk(
+@@ -206,10 +206,10 @@ xfs_inode_from_disk(
+ 	 */
+ 	if (unlikely(from->di_version == 1)) {
+ 		set_nlink(inode, be16_to_cpu(from->di_onlink));
+-		to->di_projid = 0;
++		ip->i_projid = 0;
+ 	} else {
+ 		set_nlink(inode, be32_to_cpu(from->di_nlink));
+-		to->di_projid = (prid_t)be16_to_cpu(from->di_projid_hi) << 16 |
++		ip->i_projid = (prid_t)be16_to_cpu(from->di_projid_hi) << 16 |
+ 					be16_to_cpu(from->di_projid_lo);
+ 	}
  
- 	ip->i_disk_size = be64_to_cpu(from->di_size);
- 	ip->i_nblocks = be64_to_cpu(from->di_nblocks);
--	to->di_extsize = be32_to_cpu(from->di_extsize);
-+	ip->i_extsize = be32_to_cpu(from->di_extsize);
- 	to->di_forkoff = from->di_forkoff;
- 	to->di_flags	= be16_to_cpu(from->di_flags);
+@@ -294,8 +294,8 @@ xfs_inode_to_disk(
+ 	to->di_format = xfs_ifork_format(&ip->i_df);
+ 	to->di_uid = cpu_to_be32(i_uid_read(inode));
+ 	to->di_gid = cpu_to_be32(i_gid_read(inode));
+-	to->di_projid_lo = cpu_to_be16(from->di_projid & 0xffff);
+-	to->di_projid_hi = cpu_to_be16(from->di_projid >> 16);
++	to->di_projid_lo = cpu_to_be16(ip->i_projid & 0xffff);
++	to->di_projid_hi = cpu_to_be16(ip->i_projid >> 16);
  
-@@ -307,7 +307,7 @@ xfs_inode_to_disk(
- 
- 	to->di_size = cpu_to_be64(ip->i_disk_size);
- 	to->di_nblocks = cpu_to_be64(ip->i_nblocks);
--	to->di_extsize = cpu_to_be32(from->di_extsize);
-+	to->di_extsize = cpu_to_be32(ip->i_extsize);
- 	to->di_nextents = cpu_to_be32(xfs_ifork_nextents(&ip->i_df));
- 	to->di_anextents = cpu_to_be16(xfs_ifork_nextents(ip->i_afp));
- 	to->di_forkoff = from->di_forkoff;
+ 	memset(to->di_pad, 0, sizeof(to->di_pad));
+ 	to->di_atime = xfs_inode_to_disk_ts(ip, inode->i_atime);
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index f4e1a9010b0a47..6bc78856373e31 100644
+index d7a019df05d647..406f667992883f 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.h
 +++ b/fs/xfs/libxfs/xfs_inode_buf.h
 @@ -17,7 +17,6 @@ struct xfs_dinode;
   */
  struct xfs_icdinode {
  	uint16_t	di_flushiter;	/* incremented on flush */
--	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
- 	uint8_t		di_forkoff;	/* attr fork offs, <<3 for 64b align */
- 	uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
+-	prid_t		di_projid;	/* owner's project id */
+ 	xfs_fsize_t	di_size;	/* number of bytes in file */
+ 	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
+ 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index e7d68318e6a55c..0a63728cc8f25c 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1208,7 +1208,7 @@ xfs_swap_extents_check_format(
+ 	if (XFS_IS_QUOTA_ON(ip->i_mount) &&
+ 	    (!uid_eq(VFS_I(ip)->i_uid, VFS_I(tip)->i_uid) ||
+ 	     !gid_eq(VFS_I(ip)->i_gid, VFS_I(tip)->i_gid) ||
+-	     ip->i_d.di_projid != tip->i_d.di_projid))
++	     ip->i_projid != tip->i_projid))
+ 		return -EINVAL;
  
+ 	/* Should never get a local format */
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index bd8379b98374f8..7fb63a04400fab 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -953,7 +953,7 @@ xfs_qm_id_for_quotatype(
+ 	case XFS_DQTYPE_GROUP:
+ 		return i_gid_read(VFS_I(ip));
+ 	case XFS_DQTYPE_PROJ:
+-		return ip->i_d.di_projid;
++		return ip->i_projid;
+ 	}
+ 	ASSERT(0);
+ 	return 0;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index fae6392f7c5650..47dfc70d4ed1a6 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1204,7 +1204,7 @@ xfs_inode_match_id(
+ 		return false;
+ 
+ 	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+-	    ip->i_d.di_projid != eofb->eof_prid)
++	    ip->i_projid != eofb->eof_prid)
+ 		return false;
+ 
+ 	return true;
+@@ -1228,7 +1228,7 @@ xfs_inode_match_id_union(
+ 		return true;
+ 
+ 	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+-	    ip->i_d.di_projid == eofb->eof_prid)
++	    ip->i_projid == eofb->eof_prid)
+ 		return true;
+ 
+ 	return false;
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 30abf797592443..46b1af91e78ddf 100644
+index 9c8fd11a53622a..7f2762a6c4c68e 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -60,8 +60,8 @@ xfs_get_extsz_hint(
+@@ -809,7 +809,7 @@ xfs_init_new_inode(
+ 	inode = VFS_I(ip);
+ 	set_nlink(inode, nlink);
+ 	inode->i_rdev = rdev;
+-	ip->i_d.di_projid = prid;
++	ip->i_projid = prid;
+ 
+ 	if (dir && !(dir->i_mode & S_ISGID) &&
+ 	    (mp->m_flags & XFS_MOUNT_GRPID)) {
+@@ -1288,7 +1288,7 @@ xfs_link(
+ 	 * the tree quota mechanism could be circumvented.
  	 */
- 	if (xfs_is_always_cow_inode(ip))
- 		return 0;
--	if ((ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE) && ip->i_d.di_extsize)
--		return ip->i_d.di_extsize;
-+	if ((ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE) && ip->i_extsize)
-+		return ip->i_extsize;
- 	if (XFS_IS_REALTIME_INODE(ip))
- 		return ip->i_mount->m_sb.sb_rextsize;
- 	return 0;
-@@ -712,7 +712,7 @@ xfs_inode_inherit_flags(
- 			di_flags |= XFS_DIFLAG_RTINHERIT;
- 		if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
- 			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
--			ip->i_d.di_extsize = pip->i_d.di_extsize;
-+			ip->i_extsize = pip->i_extsize;
- 		}
- 		if (pip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
- 			di_flags |= XFS_DIFLAG_PROJINHERIT;
-@@ -722,7 +722,7 @@ xfs_inode_inherit_flags(
- 			di_flags |= XFS_DIFLAG_REALTIME;
- 		if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
- 			di_flags |= XFS_DIFLAG_EXTSIZE;
--			ip->i_d.di_extsize = pip->i_d.di_extsize;
-+			ip->i_extsize = pip->i_extsize;
- 		}
+ 	if (unlikely((tdp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
+-		     tdp->i_d.di_projid != sip->i_d.di_projid)) {
++		     tdp->i_projid != sip->i_projid)) {
+ 		error = -EXDEV;
+ 		goto error_return;
  	}
- 	if ((pip->i_d.di_flags & XFS_DIFLAG_NOATIME) &&
-@@ -839,7 +839,7 @@ xfs_init_new_inode(
- 	inode->i_atime = tv;
- 	inode->i_ctime = tv;
- 
--	ip->i_d.di_extsize = 0;
-+	ip->i_extsize = 0;
- 	ip->i_d.di_flags = 0;
- 
- 	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
+@@ -3126,7 +3126,7 @@ xfs_rename(
+ 	 * tree quota mechanism would be circumvented.
+ 	 */
+ 	if (unlikely((target_dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
+-		     target_dp->i_d.di_projid != src_ip->i_d.di_projid)) {
++		     target_dp->i_projid != src_ip->i_projid)) {
+ 		error = -EXDEV;
+ 		goto out_trans_cancel;
+ 	}
 diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 5cf7f561465a7c..dff9bac658ace1 100644
+index d3369c0bcd9de7..3e55cb878162f2 100644
 --- a/fs/xfs/xfs_inode.h
 +++ b/fs/xfs/xfs_inode.h
-@@ -57,6 +57,7 @@ typedef struct xfs_inode {
- 	xfs_fsize_t		i_disk_size;	/* number of bytes in file */
- 	xfs_rfsblock_t		i_nblocks;	/* # of direct & btree blocks */
- 	prid_t			i_projid;	/* owner's project id */
-+	xfs_extlen_t		i_extsize;	/* basic/minimum extent size */
+@@ -54,6 +54,7 @@ typedef struct xfs_inode {
+ 	/* Miscellaneous state. */
+ 	unsigned long		i_flags;	/* see defined flags below */
+ 	uint64_t		i_delayed_blks;	/* count of delay alloc blks */
++	prid_t			i_projid;	/* owner's project id */
  
  	struct xfs_icdinode	i_d;		/* most of ondisk inode */
  
+@@ -175,7 +176,7 @@ static inline prid_t
+ xfs_get_initial_prid(struct xfs_inode *dp)
+ {
+ 	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+-		return dp->i_d.di_projid;
++		return dp->i_projid;
+ 
+ 	return XFS_PROJID_DEFAULT;
+ }
 diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 1d01cabc2db167..a0136fe771f076 100644
+index 16e758a689217e..ddc4b456864a39 100644
 --- a/fs/xfs/xfs_inode_item.c
 +++ b/fs/xfs/xfs_inode_item.c
-@@ -371,7 +371,7 @@ xfs_inode_to_log_dinode(
+@@ -357,8 +357,8 @@ xfs_inode_to_log_dinode(
+ 	to->di_format = xfs_ifork_format(&ip->i_df);
+ 	to->di_uid = i_uid_read(inode);
+ 	to->di_gid = i_gid_read(inode);
+-	to->di_projid_lo = from->di_projid & 0xffff;
+-	to->di_projid_hi = from->di_projid >> 16;
++	to->di_projid_lo = ip->i_projid & 0xffff;
++	to->di_projid_hi = ip->i_projid >> 16;
  
- 	to->di_size = ip->i_disk_size;
- 	to->di_nblocks = ip->i_nblocks;
--	to->di_extsize = from->di_extsize;
-+	to->di_extsize = ip->i_extsize;
- 	to->di_nextents = xfs_ifork_nextents(&ip->i_df);
- 	to->di_anextents = xfs_ifork_nextents(ip->i_afp);
- 	to->di_forkoff = from->di_forkoff;
+ 	memset(to->di_pad, 0, sizeof(to->di_pad));
+ 	memset(to->di_pad3, 0, sizeof(to->di_pad3));
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 8d22127284d360..ec769219e435e9 100644
+index 99dfe89a8d08b8..8d22127284d360 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -1120,7 +1120,7 @@ xfs_fill_fsxattr(
- 	struct xfs_ifork	*ifp = attr ? ip->i_afp : &ip->i_df;
- 
- 	simple_fill_fsxattr(fa, xfs_ip2xflags(ip));
--	fa->fsx_extsize = ip->i_d.di_extsize << ip->i_mount->m_sb.sb_blocklog;
-+	fa->fsx_extsize = ip->i_extsize << ip->i_mount->m_sb.sb_blocklog;
+@@ -1123,7 +1123,7 @@ xfs_fill_fsxattr(
+ 	fa->fsx_extsize = ip->i_d.di_extsize << ip->i_mount->m_sb.sb_blocklog;
  	fa->fsx_cowextsize = ip->i_d.di_cowextsize <<
  			ip->i_mount->m_sb.sb_blocklog;
- 	fa->fsx_projid = ip->i_projid;
-@@ -1223,7 +1223,7 @@ xfs_ioctl_setattr_xflags(
- 	/* If realtime flag is set then must have realtime device */
- 	if (fa->fsx_xflags & FS_XFLAG_REALTIME) {
- 		if (mp->m_sb.sb_rblocks == 0 || mp->m_sb.sb_rextsize == 0 ||
--		    (ip->i_d.di_extsize % mp->m_sb.sb_rextsize))
-+		    (ip->i_extsize % mp->m_sb.sb_rextsize))
- 			return -EINVAL;
+-	fa->fsx_projid = ip->i_d.di_projid;
++	fa->fsx_projid = ip->i_projid;
+ 	if (ifp && (ifp->if_flags & XFS_IFEXTENTS))
+ 		fa->fsx_nextents = xfs_iext_count(ifp);
+ 	else
+@@ -1505,12 +1505,12 @@ xfs_ioctl_setattr(
+ 		VFS_I(ip)->i_mode &= ~(S_ISUID|S_ISGID);
+ 
+ 	/* Change the ownerships and register project quota modifications */
+-	if (ip->i_d.di_projid != fa->fsx_projid) {
++	if (ip->i_projid != fa->fsx_projid) {
+ 		if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp)) {
+ 			olddquot = xfs_qm_vop_chown(tp, ip,
+ 						&ip->i_pdquot, pdqp);
+ 		}
+-		ip->i_d.di_projid = fa->fsx_projid;
++		ip->i_projid = fa->fsx_projid;
  	}
  
-@@ -1347,7 +1347,7 @@ xfs_ioctl_setattr_check_extsize(
- 	xfs_fsblock_t		extsize_fsb;
- 
- 	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_df.if_nextents &&
--	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
-+	    ((ip->i_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
- 		return -EINVAL;
- 
- 	if (fa->fsx_extsize == 0)
-@@ -1519,9 +1519,9 @@ xfs_ioctl_setattr(
- 	 * are set on the inode then unconditionally clear the extent size hint.
- 	 */
- 	if (ip->i_d.di_flags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
--		ip->i_d.di_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
-+		ip->i_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
- 	else
--		ip->i_d.di_extsize = 0;
-+		ip->i_extsize = 0;
- 	if (xfs_sb_version_has_v3inode(&mp->m_sb) &&
- 	    (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
- 		ip->i_d.di_cowextsize = fa->fsx_cowextsize >>
+ 	/*
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 5b8ac9b6cef8e7..710d9ee42e35f9 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -737,7 +737,7 @@ xfs_setattr_nonsize(
+ 		 */
+ 		ASSERT(udqp == NULL);
+ 		ASSERT(gdqp == NULL);
+-		error = xfs_qm_vop_dqalloc(ip, uid, gid, ip->i_d.di_projid,
++		error = xfs_qm_vop_dqalloc(ip, uid, gid, ip->i_projid,
+ 					   qflags, &udqp, &gdqp, NULL);
+ 		if (error)
+ 			return error;
 diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index b9dc8523633878..7e2340ee2f37b6 100644
+index 5593d50835c72e..81d34a525593ed 100644
 --- a/fs/xfs/xfs_itable.c
 +++ b/fs/xfs/xfs_itable.c
-@@ -103,7 +103,7 @@ xfs_bulkstat_one_int(
- 	buf->bs_mode = inode->i_mode;
+@@ -86,7 +86,7 @@ xfs_bulkstat_one_int(
+ 	/* xfs_iget returns the following without needing
+ 	 * further change.
+ 	 */
+-	buf->bs_projectid = ip->i_d.di_projid;
++	buf->bs_projectid = ip->i_projid;
+ 	buf->bs_ino = ino;
+ 	buf->bs_uid = from_kuid(sb_userns, i_uid_into_mnt(mnt_userns, inode));
+ 	buf->bs_gid = from_kgid(sb_userns, i_gid_into_mnt(mnt_userns, inode));
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 6fde318b9fed27..0a22b947897bc7 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1716,7 +1716,7 @@ xfs_qm_vop_dqalloc(
+ 	}
+ 	if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
+ 		ASSERT(O_pdqpp);
+-		if (ip->i_d.di_projid != prid) {
++		if (ip->i_projid != prid) {
+ 			xfs_iunlock(ip, lockflags);
+ 			error = xfs_qm_dqget(mp, prid,
+ 					XFS_DQTYPE_PROJ, true, &pq);
+@@ -1877,7 +1877,7 @@ xfs_qm_vop_create_dqattach(
+ 	}
+ 	if (pdqp && XFS_IS_PQUOTA_ON(mp)) {
+ 		ASSERT(ip->i_pdquot == NULL);
+-		ASSERT(ip->i_d.di_projid == pdqp->q_id);
++		ASSERT(ip->i_projid == pdqp->q_id);
  
- 	buf->bs_xflags = xfs_ip2xflags(ip);
--	buf->bs_extsize_blks = dic->di_extsize;
-+	buf->bs_extsize_blks = ip->i_extsize;
- 	buf->bs_extents = xfs_ifork_nextents(&ip->i_df);
- 	xfs_bulkstat_health(ip, buf);
- 	buf->bs_aextents = xfs_ifork_nextents(ip->i_afp);
+ 		ip->i_pdquot = xfs_qm_dqhold(pdqp);
+ 		xfs_trans_mod_dquot(tp, pdqp, XFS_TRANS_DQ_ICOUNT, 1);
+diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+index 639398091ad6ba..df00dfbf5c9d19 100644
+--- a/fs/xfs/xfs_qm_bhv.c
++++ b/fs/xfs/xfs_qm_bhv.c
+@@ -60,7 +60,7 @@ xfs_qm_statvfs(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_dquot	*dqp;
+ 
+-	if (!xfs_qm_dqget(mp, ip->i_d.di_projid, XFS_DQTYPE_PROJ, false, &dqp)) {
++	if (!xfs_qm_dqget(mp, ip->i_projid, XFS_DQTYPE_PROJ, false, &dqp)) {
+ 		xfs_fill_statvfs_from_dquot(statp, dqp);
+ 		xfs_qm_dqput(dqp);
+ 	}
 -- 
 2.30.1
 
