@@ -2,295 +2,185 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CE4BC433C1
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 22:00:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F28BC433DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 23:52:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 180726188B
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 22:00:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C75FB61879
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Mar 2021 23:52:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230323AbhC2WAM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Mar 2021 18:00:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41362 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230089AbhC2V7x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 29 Mar 2021 17:59:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2586F6188B;
-        Mon, 29 Mar 2021 21:59:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617055193;
-        bh=vCNeAD7Qq6CZlh/FvyMUS51yuk6+Oc6+Hji3jYO/E28=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ZX2ntMh9ZuLi0u1TYCsWf4kRoBqJ+4Gl9QUJkeK6/CgMt8kXEjXPcsZSgmnMJKs0j
-         m1j+vy1nTLkCfKdUzibvJxmQG/m9zr7KVOMsdZaeWpsSrcsS4ppYQELy8eTsBXum9H
-         4peVsIjaOGCwvFXN+dq4mR3IJHGP0Vy4Zyvg3K/+RJxuuRsNbv1DmsmMPmsJpXAJ6z
-         j6C2kYq4pYLXSWoJCcFw+FOT3ni/bhc1swH8BVPj+U2EhajO5He6zYsyg7Gwiu6gEB
-         7EETUEXnKN8aEDP5eEP3OruUZ+yv/RQl4dhTv/TeoKI3YBrxbnWwbpg7pDpPe5uhiC
-         j8SfcSS5Eo+JQ==
-Date:   Mon, 29 Mar 2021 14:59:52 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v16 00/11] xfs: Delay Ready Attributes
-Message-ID: <20210329215952.GJ4090233@magnolia>
-References: <20210326003308.32753-1-allison.henderson@oracle.com>
+        id S229628AbhC2XwE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Mar 2021 19:52:04 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:41489 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229441AbhC2Xvp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Mar 2021 19:51:45 -0400
+Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id D61E8106A09;
+        Tue, 30 Mar 2021 10:51:43 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lR1fa-008HSa-Lc; Tue, 30 Mar 2021 10:51:42 +1100
+Date:   Tue, 30 Mar 2021 10:51:42 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: xfs ioend batching log reservation deadlock
+Message-ID: <20210329235142.GR63242@dread.disaster.area>
+References: <YF4AOto30pC/0FYW@bfoster>
+ <20210326173244.GY4090233@magnolia>
+ <20210329022826.GO63242@dread.disaster.area>
+ <YGIWqX4pmfsv9LPk@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210326003308.32753-1-allison.henderson@oracle.com>
+In-Reply-To: <YGIWqX4pmfsv9LPk@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_x
+        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
+        a=kj9zAlcOel0A:10 a=dESyimp9J3IA:10 a=7-415B0cAAAA:8
+        a=ZmAiFlH-nWBhn4JOufMA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 25, 2021 at 05:32:57PM -0700, Allison Henderson wrote:
-> Hi all,
+On Mon, Mar 29, 2021 at 02:04:25PM -0400, Brian Foster wrote:
+> On Mon, Mar 29, 2021 at 01:28:26PM +1100, Dave Chinner wrote:
+> > I'd say the first thing to fix is the ordering problem on the
+> > completion queue. XFS needs more than just offset based ordering, it
+> > needs ioend type based ordering, too. All the size updates should be
+> > processed before the unwritten extent conversions, hence removing
+> > the nesting of transactions....
+> > 
 > 
-> This set is a subset of a larger series for Dealyed Attributes. Which is a
-> subset of a yet larger series for parent pointers. Delayed attributes allow
-> attribute operations (set and remove) to be logged and committed in the same
-> way that other delayed operations do. This allows more complex operations (like
-> parent pointers) to be broken up into multiple smaller transactions. To do
-> this, the existing attr operations must be modified to operate as a delayed
-> operation.  This means that they cannot roll, commit, or finish transactions.
-> Instead, they return -EAGAIN to allow the calling function to handle the
-> transaction.  In this series, we focus on only the delayed attribute portion.
-> We will introduce parent pointers in a later set.
-> 
-> In this version I have reduced the set back to the "Delay Ready Attrs" sub series to
-> avoid reviewer burn out, but the extended series is available to view in the inlcuded
-> git hub links, which extend all the way through parent pointers.  Feel free to review
-> as much as feels reasonable.  The set as a whole is a bit much to digest at once, so
-> working through it in progressive subsets seems like a reasonable way to manage its
-> dev efforts.
-> 
-> Lastly, in the last revision folks asked for some stress testing on the set.  On my
-> system, I found that in an fsstress test with all patches applied, we spend at most
-> %0.17 of the time in the attr routines, compared to at most %0.12 with out the set applied.
-> Both can fluctuate quite a bit depending on the other operations going on that seem to
-> occupy most of the activity.  For the most part though, I do not find these results to be
-> particularly concerning.  Though folks are certainly welcome to try it out on their own 
-> system to see how the results might differ.
-> 
-> Updates since v15: Mostly just review feed back from the previous revision.  I've
-> tracked changes below to help reviews recall the changes discussed
+> Generally speaking this makes sense if we need to retain the
+> preallocated size update transactions for some reason. One thing to note
+> is that we'd be putting on-disk size updates ahead of other ioend
+> completions on background writeback. I suspect that might not matter
+> much for unwritten ioends since we'd just expose unwritten extents after
+> a crash, but the effect on cow writeback completion is not as clear to
+> me.
 
-Hmm... so I ran fstests against this on an otherwise default V5
-filesystem, and saw three new regressions:
+The old code (pre-queue+merge) completed completions in random order
+(i.e. whatever the workqueue and scheduler resulted in) so I don't
+think this is a concern.
 
-xfs/125 spat out this from the final repair run:
+My concern is that it is a fairly major change of behaviour for IO
+completion, we know this is a performance sensitive path, and that
+we shouldn't make sweeping architectural changes without having a
+bunch of performance regression tests demonstrating that the change
+does not have unexpected, adverse side effects.
 
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-	- zero log...
-	- scan filesystem freespace and inode maps...
-	- found root inode chunk
-Phase 3 - for each AG...
-	- scan (but don't clear) agi unlinked lists...
-	- process known inodes and perform inode discovery...
-	- agno = 0
-attribute entry #32 in attr block 2, inode 134 is INCOMPLETE
-problem with attribute contents in inode 134
-would clear attr fork
-bad nblocks 8 for inode 134, would reset to 0
-bad anextents 4 for inode 134, would reset to 0
-	- agno = 1
-	- agno = 2
-	- agno = 3
-	- process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-	- setting up duplicate extent list...
-	- check for inodes claiming duplicate blocks...
-	- agno = 0
-	- agno = 1
-	- agno = 2
-	- agno = 3
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-	- traversing filesystem ...
-	- traversal finished ...
-	- moving disconnected inodes to lost+found ...
-Phase 7 - verify link counts...
-No modify flag set, skipping filesystem flush and exiting.
-xfs_repair should not fail
+Hence my suggestion that we first the deadlock first, then do the
+investigation work to determine if removing the pre-IO transaction
+reservation is a benefit or not. We often do the simple, low risk
+bug fix first, then do the more extensive rework that may have
+unexpected side effects so that we have a less risky backport
+candidate for stable distros. I don't see this as any different
+here.
 
-And xfs/434 and xfs/436 both complained about memory leaks stemming from
-an xfs_da_state that xfs/125 didn't free correctly:
+> For one, it looks like a cow ioend can both require a transaction
+> allocation for fork remap as well as have an append transaction already
+> attached, so we'd probably have to tweak how individual ioends are
+> processed as opposed to just ordering them differently. I also thought
+> cow blocks don't necessarily have to cover shared (or even existing)
+> blocks in the data fork due to preallocation, so we'd probably need to
+> investigate things like whether this makes it possible to put an on-disk
+> update ahead of a cow remap that lands somewhere in the range between
+> the in-core inode size and the (smaller) on-disk inode size, and if so,
+> whether that could result in problematic behavior.
 
-[ 1247.150683] =============================================================================
-[ 1247.151799] BUG xfs_da_state (Tainted: G    B   W        ): Objects remaining in xfs_da_state on __kmem_cache_shutdown()
-[ 1247.153246] -----------------------------------------------------------------------------
-[ 1247.153246] 
-[ 1247.154528] INFO: Slab 0xffffea00002e9280 objects=17 used=11 fp=0xffff88800ba4b4a0 flags=0xfff80000010200
-[ 1247.155764] CPU: 2 PID: 50257 Comm: modprobe Tainted: G    B   W         5.12.0-rc4-djwx #rc4
-[ 1247.156849] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
-[ 1247.157996] Call Trace:
-[ 1247.158330]  dump_stack+0x64/0x7c
-[ 1247.158767]  slab_err+0xb7/0xdc
-[ 1247.159196]  ? printk+0x58/0x6f
-[ 1247.159615]  __kmem_cache_shutdown.cold+0x39/0x15e
-[ 1247.160248]  kmem_cache_destroy+0x3f/0x110
-[ 1247.160779]  xfs_destroy_zones+0xbe/0xe2 [xfs]
-[ 1247.161462]  exit_xfs_fs+0x5f/0x9b4 [xfs]
-[ 1247.162065]  __do_sys_delete_module.constprop.0+0x145/0x220
-[ 1247.162740]  do_syscall_64+0x2d/0x40
-[ 1247.163197]  entry_SYSCALL_64_after_hwframe+0x44/0xae
-[ 1247.163810] RIP: 0033:0x7fd91cfe4bcb
-[ 1247.164262] Code: 73 01 c3 48 8b 0d c5 82 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 b0 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 95 82 0c 00 f7 d8 64 89 01 48
-[ 1247.166352] RSP: 002b:00007fff89097038 EFLAGS: 00000206 ORIG_RAX: 00000000000000b0
-[ 1247.167217] RAX: ffffffffffffffda RBX: 0000558b8e105cc0 RCX: 00007fd91cfe4bcb
-[ 1247.167998] RDX: 0000000000000000 RSI: 0000000000000800 RDI: 0000558b8e105d28
-[ 1247.168781] RBP: 0000558b8e105cc0 R08: 0000000000000000 R09: 0000000000000000
-[ 1247.169562] R10: 00007fd91d060ac0 R11: 0000000000000206 R12: 0000558b8e105d28
-[ 1247.170351] R13: 0000000000000000 R14: 0000558b8e105d28 R15: 0000558b8e105cc0
+These things all used to happen before we (recently) added all the
+per-inode queuing and merging code to IO completion. So there's no
+real evidence that there is a problem completing them in different
+orders. If someone runs fsync, then they'll all get completed before
+fsync returns, so AFAICT this is just unnecessary complication of a
+relatively simple mechanism.
 
-From a quick bisect, all of thse problem originates in the last patch.
+> I'm not sure this is
+> worth the associated complexity if there's opportunity to remove the
+> need for most of these transactions in the first place. Hm?
 
---D
+Please keep in mind I'm not saying "we can't remove this code" as
+Christoph has implied. Last time this came up, like the "use
+unwritten extents for delalloc", I asked for performance/benchmark
+results that indicate that the change doesn't introduce excessive
+overhead or unexpected regressions. Again, I'm asking for that work
+to be done *before* we make a signficant change in behaviour because
+that change in behaviour is not necessary to fix the bug.
 
-> xfs: Reverse apply 72b97ea40d
->   NEW
-> 
-> xfs: Add helper xfs_attr_node_remove_step
->   DROPPED
-> 
-> xfs: Add xfs_attr_node_remove_cleanup
->   No change
-> 
-> xfs: Hoist transaction handling in xfs_attr_node_remove_step
->   DROPPED
-> 
-> xfs: Hoist xfs_attr_set_shortform
->   No change
-> 
-> xfs: Add helper xfs_attr_set_fmt
->   Fixed helper to return error when defer_finish fails
-> 
-> xfs: Separate xfs_attr_node_addname and xfs_attr_node_addname_work
->   Renamed xfs_attr_node_addname_work to xfs_attr_node_addname_clear_incomplete
-> 
-> xfs: Add helper xfs_attr_node_addname_find_attr
->   Renamed goto out, to goto error
-> 
-> xfs: Hoist xfs_attr_node_addname
->   Removed unused retval variable
->   Removed extra state free in xfs_attr_node_addname
-> 
-> xfs: Hoist xfs_attr_leaf_addname
->   Fixed spelling typos
-> 
-> xfs: Hoist node transaction handling
->   Added consistent braces to if/else statement
-> 
-> xfs: Add delay ready attr remove routines
->   Typo fixes
->   Merged xfs_attr_remove_iter with xfs_attr_node_removename_iter
->   Added state XFS_DAS_RMTBLK
->   Flow chart updated
-> 
-> xfs: Add delay ready attr set routines
->   Rebase adjustments
->   Typo fixes
-> 
-> 
-> Extended Series Changes
-> ------------------------
-> xfs: Add state machine tracepoints
->   Rebase adjustments
->   xfs_attr_node_remove_rmt_return removed to match earlier refactoring changes
->   trace_xfs_attr_node_removename_iter_return becomes
->   trace_xfs_attr_remove_iter_return to match earlier refactoring changes
-> 
-> xfs: Rename __xfs_attr_rmtval_remove
->   No change
-> 
-> xfs: Handle krealloc errors in xlog_recover_add_to_cont_trans
->   Added kmem_alloc_large fall back
+> @@ -182,12 +185,10 @@ xfs_end_ioend(
+>  		error = xfs_reflink_end_cow(ip, offset, size);
+>  	else if (ioend->io_type == IOMAP_UNWRITTEN)
+>  		error = xfs_iomap_write_unwritten(ip, offset, size, false);
+> -	else
+> -		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_private);
 >  
-> xfs: Set up infrastructure for deferred attribute operations
->   Typo fixes
->   Rename xfs_trans_attr to xfs_trans_attr_finish_update
->   Added helper function xfs_attri_validate
->   Split patch into infrastructure and implementation patches
->   Added XFS_ERROR_REPORT in xlog_recover_attri_commit_pass2:
-> 
-> xfs: Implement for deferred attribute operations
->   NEW
-> 
-> xfs: Skip flip flags for delayed attrs
->   Did a performance analysis
-> 
-> xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
->   Typo fixes
-> 
-> xfs: Remove unused xfs_attr_*_args
->   Rebase adjustments
-> 
-> xfs: Add delayed attributes error tag
->   Added errortag include
-> 
-> xfs: Merge xfs_delattr_context into xfs_attr_item
->   Typo fixes
-> 
-> 
-> This series can be viewed on github here:
-> https://github.com/allisonhenderson/xfs_work/tree/delay_ready_attrs_v16
-> 
-> As well as the extended delayed attribute and parent pointer series:
-> https://github.com/allisonhenderson/xfs_work/tree/delay_ready_attrs_v16_extended
-> 
-> And the test cases:
-> https://github.com/allisonhenderson/xfs_work/tree/pptr_xfstestsv2
-> 
-> In order to run the test cases, you will need have the corresponding xfsprogs
-> changes as well.  Which can be found here:
-> https://github.com/allisonhenderson/xfs_work/tree/delay_ready_attrs_xfsprogs_v16
-> https://github.com/allisonhenderson/xfs_work/tree/delay_ready_attrs_xfsprogs_v16_extended
-> 
-> To run the xfs attributes tests run:
-> check -g attr
-> 
-> To run as delayed attributes run:
-> export MOUNT_OPTIONS="-o delattr"
-> check -g attr
-> 
-> To run parent pointer tests:
-> check -g parent
-> 
-> I've also made the corresponding updates to the user space side as well, and ported anything
-> they need to seat correctly.
-> 
-> Questions, comment and feedback appreciated! 
-> 
-> Thanks all!
-> Allison 
-> 
-> Allison Henderson (11):
->   xfs: Reverse apply 72b97ea40d
->   xfs: Add xfs_attr_node_remove_cleanup
->   xfs: Hoist xfs_attr_set_shortform
->   xfs: Add helper xfs_attr_set_fmt
->   xfs: Separate xfs_attr_node_addname and
->     xfs_attr_node_addname_clear_incomplete
->   xfs: Add helper xfs_attr_node_addname_find_attr
->   xfs: Hoist xfs_attr_node_addname
->   xfs: Hoist xfs_attr_leaf_addname
->   xfs: Hoist node transaction handling
->   xfs: Add delay ready attr remove routines
->   xfs: Add delay ready attr set routines
-> 
->  fs/xfs/libxfs/xfs_attr.c        | 903 ++++++++++++++++++++++++----------------
->  fs/xfs/libxfs/xfs_attr.h        | 364 ++++++++++++++++
->  fs/xfs/libxfs/xfs_attr_leaf.c   |   2 +-
->  fs/xfs/libxfs/xfs_attr_remote.c | 126 ++++--
->  fs/xfs/libxfs/xfs_attr_remote.h |   7 +-
->  fs/xfs/xfs_attr_inactive.c      |   2 +-
->  fs/xfs/xfs_trace.h              |   1 -
->  7 files changed, 998 insertions(+), 407 deletions(-)
-> 
-> -- 
-> 2.7.4
-> 
+>  done:
+> -	if (ioend->io_private)
+> -		error = xfs_setfilesize_ioend(ioend, error);
+> +	if (ioend->io_flags & IOMAP_F_APPEND)
+> +		error = xfs_setfilesize(ip, offset, size);
+>  	iomap_finish_ioends(ioend, error);
+>  	memalloc_nofs_restore(nofs_flag);
+>  }
+> @@ -221,16 +222,28 @@ xfs_end_io(
+>  	struct iomap_ioend	*ioend;
+>  	struct list_head	tmp;
+>  	unsigned long		flags;
+> +	xfs_off_t		maxendoff;
+>  
+>  	spin_lock_irqsave(&ip->i_ioend_lock, flags);
+>  	list_replace_init(&ip->i_ioend_list, &tmp);
+>  	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
+>  
+>  	iomap_sort_ioends(&tmp);
+> +
+> +	/* XXX: track max endoff manually? */
+> +	ioend = list_last_entry(&tmp, struct iomap_ioend, io_list);
+> +	if (((ioend->io_flags & IOMAP_F_SHARED) ||
+> +	     (ioend->io_type != IOMAP_UNWRITTEN)) &&
+> +	    xfs_ioend_is_append(ioend)) {
+> +		ioend->io_flags |= IOMAP_F_APPEND;
+> +		maxendoff = ioend->io_offset + ioend->io_size;
+> +	}
+> +
+>  	while ((ioend = list_first_entry_or_null(&tmp, struct iomap_ioend,
+>  			io_list))) {
+>  		list_del_init(&ioend->io_list);
+>  		iomap_ioend_try_merge(ioend, &tmp, xfs_ioend_merge_private);
+> +		ASSERT(ioend->io_offset + ioend->io_size <= maxendoff);
+>  		xfs_end_ioend(ioend);
+>  	}
+>  }
+
+So now when I run a workload that is untarring a large tarball full
+of small files, we have as many transaction reserve operations
+runnning concurrently as there are IO completions queued.
+
+Right now, we the single threaded writeback (bdi-flusher) runs
+reservations serially, so we are introducing a large amount of
+concurrency to reservations here. IOWs, instead of throttling active
+reservations before we submit the IO we end up with attempted
+reservations only being bounded by the number of kworkers the
+completion workqueue can throw at the system.  Then we might have
+tens of active filesystems doing the same thing, each with their own
+set of workqueues and kworkers...
+
+Yes, we can make "lots of IO to a single inode" have less overhead,
+but we do not want to do that at the expense of bad behaviour when
+we have "single IOs to lots of inodes". That's the concern I have
+here, and that's going to take a fair amount of work to characterise
+and measure the impact, especially on large machines with slow
+disks...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
