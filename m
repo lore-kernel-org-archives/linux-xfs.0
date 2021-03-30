@@ -2,72 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D98F1C433E5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D849DC433E4
 	for <linux-xfs@archiver.kernel.org>; Tue, 30 Mar 2021 14:26:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDFAE619D8
+	by mail.kernel.org (Postfix) with ESMTP id A70C9619D6
 	for <linux-xfs@archiver.kernel.org>; Tue, 30 Mar 2021 14:26:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232004AbhC3O0V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Mar 2021 10:26:21 -0400
-Received: from sonic304-24.consmr.mail.gq1.yahoo.com ([98.137.68.205]:36953
-        "EHLO sonic304-24.consmr.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232067AbhC3O0I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Mar 2021 10:26:08 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=aol.com; s=a2048; t=1617114368; bh=C+ztXxiHumfPzPm5X3Le/YXGTxHnu+eEnHfWnfIpcXQ=; h=From:To:Cc:Subject:Date:In-Reply-To:References:From:Subject:Reply-To; b=YAboQyijyqa7ZbZYMgzNnK3AhdSdnv69lncVMdBMlpksRn/uAzcjxnQWUQF58kTfl08bnXZGWmVQAf44ARWg1Uz02/Et1nj0mwRBwtdBAAGzg/t2wgDmJzRNrbXUP5zib5ELpcbciL2U63frSMT9COnj3jm1XwJKlHr5a5Df0Wrp8mLGo8RPLRv9WRifrlnJfwCweRAgxkn2WSqGxck2vSM16NSEeaUdds8xrD55VWy/oLMNSexV5ZY9wP/+J8kao2YjeAF4CxsMYmz0dxjIauWfO0uioC7ZlnEeOcyAFiww00ll9xuOAuSqCJxWeu6ha8THoz2u73eUbWWwVqccDg==
-X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1617114368; bh=dwlmUaBefD5lBZIaQU1sPm+AV73CWKLAaEoQ3WWcPaO=; h=X-Sonic-MF:From:To:Subject:Date:From:Subject; b=S766LXjYqR/I3Uj46QHasLYEnqDR7NGbQjkcPvCvXqkJTkbmXHZblyezYE2B7ViQLlwQyRobH791JtlHvHUpIcVmFEgcR0PKZitIipBJZhNId5K9lu2WgP7cHE3c/6uf4imepvNSPUhROkUMwK1EePU7ssybnVeyhWWq9YO1X4aT4VLn8BrEeOqeahzE9Sjeu1/3YS1r7Grjc4Gq6VKWN+L9oyF4CaBZf0ruP4y03DGBZUg6lE9WfsXzH0HJAGi+hlxtv9nHei+JK1+GU8T82J+mRaHME9l/QyiG2TaQQxN20UOz/wAGgSrFjo+vgJ0K/ev/1RJPUxTZ7hurON4PPA==
-X-YMail-OSG: hh6qyJ0VM1k1OQjguSk88vK0GLiZUK.pyNy45WfrVjFOXv6JXQ7kux7wst.7vNh
- hMw68HEfgaV2Ygzbpjz9cl6SIqRA_j30V9c03u_m6SA2T5B8B4F8t0wk3rJ8tK.aK6XDiPlxu.bi
- wJEa1oV4m1zhMTU8H1Z5am7ZaiVmnKw166_84woExgYFCznBd9DvO9buf3s0sAG_66Jo4DBItEWh
- APTT_KpUhsHvPXVd.DnDTgeIvaAq8pexJ71w5IkHg9XR8_cy9v3KUsf8lp9C.XFpgcZOAfxo9Bd5
- UQzcKTtRpzk85xC_DBsvV81026_oJI.llU6cEbRQ_ZZFz_LF.5q4lZgX87jC1WeFF.gDnPrco36a
- 7bLioL1BghVbLFDUrHNdrmTtWK5TauNLghgEKB85ocPybLvHTYOWhQQsA13fTNJu89spSZFuilOl
- MYspjBydqpbiepMdmJLrnSvqcp.j7B9BSFJwTeQlFRCztNC1uINv9btq16odvYFf.pAES9m6_ImS
- 458At6rGbw7e35K8oAyGiAkjTmiwqV38zhu2hZbbOxq84PVc1a.f1C7NlHahlJAJBDe1OIP78QSd
- 3KDPqF6iZdyXJW2EyRBk.Y7MtAt1KpO0alS7ymqJZAi.niz1lJj90MvZfw6p_5omIU8wE8Gf8uTh
- nZ6HEpx.OXtGdnP9b24nX5K4lOp.MO.VqM3HjW4pphAmfbzeYU1tSi3Rdb4j_fLB23OPIQhQO7na
- zRSrIvHQoS1ELDUZbIrDqwU_ruLl52dYvvBMLEFEqIq5Ls3htQsix_WqYu7S9DF96_iZ7Dy4kCkk
- VI3TAb_Ou3gbTcGPUSfe8aiE0mF7YoGbSFBA2B_WoznHzBHK5hyKFaM_znpe1WZJgWCheP4wnScQ
- X9ZFETq3ggVCFSNINdm9CDo6bxtkGQFnh9p1HTq0m_trsSWW1uhlTvfX.ef6ujrLn4Xj5Yh.rVY7
- oDznc5lIvmW6Yeiwn0VbwEwDnMTdy9WySZWbAgBAZDqRfWV1dxtMNHFcp8kjLjSHv_TndHWmfjc9
- fpynPp4ywUcL9lUUvXc.NgE8TMc8_h9i7hzeYdg8JEY4PlZd.ABodUX.IhDOX85kRKRcfAEhA7Me
- wsBR7Nax1xgdjV7dtZn5NVS7MTT4YRZp9HmoG2IrVaZkZec2N3Vso4ePWci4W4rQ8Me5xCSvECbK
- H_86Ej4DbUNfC.wS.9vZkP3StsOAluJbcQ_gjay5.X0WOv2nj05TpU79nsYE6i_gjKtUTE480pIr
- avmcqb3vvm047HFdu1r3JwM6AagBvXLv5udAStjEhpYHc7lH0.PdyZOkcYMwmE_rpgJNi3v8gsZf
- 4aXH3SVfmhDsj.A3nMZcGqkxPpAaPRMA3OPo.oPduz1YCqycIJDiafvUn0MztfIAXtn7RqwiTJAd
- rqvWfXmPI0b_WqQnJ0QrSaeTCElpJPd6VBD_xqL3InUcgP8ZZWAeYbT0.Mmk1pebLDswQGxtDtT7
- NwSO_lbcRitD0UXxlt4eKjvv.mgTLSv1pVG2oFFp6UUgxtLHaTREIqo70qJfARg_0.lCNCuKJQBl
- uZqDjFzfifMWRHLKaSgEv2iybpnN5K71qnzlMEA0pRz40raGxE.xm73sEmIujqlfJo3PzbHUYyGj
- XBtp4WQyvTqVLQGmfVxw9M1swHYVhKCtySx5uMRAn24G09THc8ROmOnXdg7BecJjVtc.LMR4pvsD
- gc.M6kgufMo8jcW0FKs5LrMaSkUsosuJRzGZQ7mUBwmAvwKxG7QWVKWbqm0URO.SwCFy6jf1Rqv2
- E8XCjUmckrOmq4J818KA5vv3PPSRBN2BDtFm4wG3_R20C_mIs2ORShmPz4SRR5qCbmOzfd8HZEW.
- jEsbcjp3uOCLYIC8l833lsy0oJPbCgZW0bzTOM1r0jYZMnw9vXFomNnFsEpQ0kc6gXdAHHlJQGR5
- eZvAe1g.RoG0x0.sheEqI9ZFtKPc.BApXwxCRJggy7Zf4rj5f0yZuQugJnLd6QYQ2wLu7rhnQKGX
- BHFRcNMh5tdkpWN3LD6xyhHO3_ogRLmM7_AxarCaXp26_xsa.PhSqCiyOds0jzr7VStSde6JJAcg
- k7ZG1oKmZg8damO3Bm_OJRZqcCnZ_81aLqKC3o0SjEAGMsSKUdvqPCzY5AdwKgr22Ui..sA6OJ_k
- 3BUDq__w3hFvkNqYkBSrz1bKdT3e_1pzOSM1cpksG.iLL372YErQPW8KLomcD.R9JPpZ_Gv3Me4T
- R6eNmH8fbll1VXBcngl3tKAs6V1ULwF9ATEFU1p3XxGQdPi_6.fduWsbwkXzM0zDVQqXavOLb9rl
- 72CaBaW8ccdK40XvVZvUgfaTtVs8gkUSoSACqiv9azLULTLIgtrWVK2XEN1V3wCe2sRRUr5Ta1pJ
- nwC621qhkRlEZKmRqdltnMCQgPr.PiNvXlkJtxmR5jCYqw04QiiC4hECsKF.J79UkzaiJOfJ.7p3
- kahPDaTiW5bAfEvGNElbnpyHZCsVskSiqtSbFMYP2oP4lzOYHpHDp98shcelsinvcnL68jqrDHhw
- evMc0HRv4H8kF43XxUt1P_Sc2xmErMCsdMvVsDVq.62JKTT7EsO_ELTo8y0E-
+        id S231918AbhC3O0U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Mar 2021 10:26:20 -0400
+Received: from sonic312-23.consmr.mail.gq1.yahoo.com ([98.137.69.204]:40382
+        "EHLO sonic312-23.consmr.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232038AbhC3OZ6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Mar 2021 10:25:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=aol.com; s=a2048; t=1617114358; bh=6T7MFQGZWvo120ENbTkrCIAA6M7ISWh8ieg+g5XrEvg=; h=From:To:Cc:Subject:Date:In-Reply-To:References:From:Subject:Reply-To; b=t36XSjB0AZmXylXTZe2ucJYOibt6SIGvvPZmb8xRvAOzIyId2nihU9B1LdTWkylwVqtQc7/okRtuPhUN7+JqlD88cXnaWE9aua0waokerbUU/lWBAP8bUTYzZUmlZ7oqBo8NhrqH+xSmVI6Wm7hztsb0GPC6jMzqLC9DqGDSdw+4uGge4OqckJJrW8ZPC0wKY28+x5aE6ujrkfAkI4k2N1+EdnnDDp6/Js4yCCvObWJo3YXIG+JUcZml9+CY+pVaU1rtc3PIDbJzbCMhHgJmL2wQfP4nN091CVk7lYB85xvecr/ZjxTzhegh1RIcI5+BPvTEYA3OJtxFaZ1dM5jGGg==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1617114358; bh=8dZi0vV2P36nZdiMeZo8DZv0KEvEAKcTGgi9ggDXbbU=; h=X-Sonic-MF:From:To:Subject:Date:From:Subject; b=stCjc/bzmMGnJlqmoXyzWEzWczAjWVRprvG9DathvXlPSmlUXqDmXl7yVft4odzFOjwWrvnodSH1zynXNkDypfThPjK+st8yxFPGsyu6B0lfRm49HsEDJXCfJi0EyB4qJJYUnKMQs4NIiorJsZxi8/DsPl/4L3d1cxppkd4QfyRDAVT1y9MbKH65UPGlLOt/T7g8Y7jYEuWaMyNyljj6cYSI0kWYwMZq2NGK52Pxf+qLvZsAcXxrc3XLvt2B9A7jSRh+HqB8LVpcvr8qMP3dPVbcrouogWoAk9pGuyYWpmHqJKP00526i1iedE6CNRuRSsywYZ5UvNorD/okql9ZNQ==
+X-YMail-OSG: 9yaXsgsVM1m59mZ_l5qSAFJWtRkPDJTaLTqCjyQGxHQNSGXy4XM0.RxtC.WQ1tM
+ mcpoQGeHQlHxcwytm8nYKciocif4y4m0nLe_Gg68HOXWTlaSPH4O86mxXu_8rlW2ICCQ9DqN69eC
+ UmDuyy6lpOlfuxXlstSAr.5Bf60JDwcf9HOuo7G1YHAtu8Qjzy38AIeROJ.mOyWvmqrsPhQ2YGoj
+ IoVZVCNoJsSBiZ8jfOvLak00.jqsedMOPbPvhg_P9zazZbQxyj.M9o2sq2YQwtZZxVOuLKRpvNzg
+ 7okQTkxsusMhGXDS0dr7G7NlWGY.EaNa6_9p9A1rvTKI0yJ4zk0hbjMX53J6yIA3dvk8tK422Luq
+ v6tpmEKxxpPuFYxS.ihFx0t.Alhs_3elsV35KQSFiM2Khw18zsg_RspJr0512YBoQEZlCOmVGDOY
+ xxjkNVcm3FpCHPur4HpE26W0JUYq4zHOGQdp3eI.Jduul0B4K0xhxlPGKbC2NVclq9.Mmv7KaiqD
+ xoWR.ItQZye22zHx.lwFV.rnzybdLP.p9OpfCU296jDaMYQ9uIjcpujfblGBL5P6Fi_MgLWEAOSo
+ VtKldnHZPiOYjVct4RBbE1JbWaGpidosW5Z0KPurwv4vVm4klszM4Kvur__84apwcXibYs3_36iI
+ GrWcOOHQS6kbri.AvG2R6ap4nduTC1xyG.bbHFtQXslatTqXrE.itFQDp479aWUSKhTYavgiDmrq
+ TFGgtNdJNLcW1DQwluMMf863hq9vyqQG8urXkQGO1XosBv2WIsR9JQIr2e6zBcWxYc4Tse4ZIrYh
+ H66g_4783QK2Koa2ivWwg.6MAqrJuwJPuM.XHPxyy9tUk8teIvSt18dRWDhoutzjj19seZkxh_d7
+ L_uSAwUcUfG06ee35lpQXP5s9UuZL2jeA.tXjwlojYUyu0ltCGhf5q4UeR4ODIcEiyplPnpLCteO
+ bXPAx6Wu2x5kvrx4brhxcTZjXuYlrYAwNI_azniqK6jHxMIvcrGociVb98VFG5EhFCgxDRqnB8vQ
+ esQqVnrFW0vo2OqxYyB4bSgV6GIZbWX_zknvBy4B99xgqhh49B_NttwhfH8u8AW1ss3B2EySx14T
+ Lv9EweoiY5FPcbtOPE1E86KxFmspLKCGp.ucw0uvDdIFJA7csmqw72_KzPB8rnnVcUyx3VHta8GU
+ V1FDYLnH.i6KNRto1d4SZIEkwj5tPXs5V0s7OCFCou9L2nWJUKPo8w.Hjz06QXHwAhsTPXcXM9eM
+ adXA0vk1.BZFIzVhROUV7sqQ_68goT9zvgNmud8lvkBIBbcsev0JbE2nxXHfNLotznohmN3afE0w
+ 4kd1Oa1w2.AqGlDzPZKixy7rqbSbcUjfefkFvTb.FNIiq3sMnLp1XyuOv7hK4gG86FEA4MFckHxi
+ Kzrfyittw56TGm2domo2jee01OXn5YC9qA6lDWSmfHGtZrbd_LNazjKcieI_4kR7tgnbthWW.7aD
+ AyWIy4Ho192AeW808eR.j1IIKQevJ33jn6V60uh6HabM3zhosR0ALICNSLzO_2YkO638bzHyVYa5
+ jvBUHZo3pchu32XQ6.vd80NheEc0iq93ivRPUdhrVBIItzkbXS7wkY2RedENiO81Mx_bphK0Ny1i
+ aeh0UOXReXy_QAHi0xpI_x9D8zwDPrXS7h92qOxDSfHfopo2laMfaG1f9nKgIyDtEeCbXT7iUHlu
+ 3owM8sN0W9ptBtpPCl_P5ivfj6438g9tOiA6WTaJcgzgFjvvcue2RxxNptiNQeEzJ.6CfQyNH4yI
+ m5ACYxqaKFqJQTFjrXPB6dae9s7OkZteJiU0zCmDf8ypwMp2qFmidu6QpO5asqaYaij7LnjsMWUQ
+ z4Ra3vfJLmnp2N7J1PpJ2j1vx0g0JwizQen6JpBcDy4TsRNbFrepqIIzLhopjsEaNDAXZyMKFJJm
+ 4xRR5Q_TpkJHUgn9bN52MRa5Ts5z.evOiX_zjRj.oQKdZsaB6j08vCGtjakSii.iiLomLyfXWz6c
+ BwRJqT9LZL_w5h5_LS.2a3In53UMNeInYUlTkCRr3hz1NayB_agugvht8aKo9KexshRTufSh6LNn
+ hVMZYF4FQ4HCjDf4ScNhCn0Ai.01bt2unkoWXEhA8ANGA7VHn7nlC_QUb7HGGhZaznRxhhO0.1iY
+ dH3bkFTrCvYAT.FU7x7vyI4Akj7SUUSBIQ2HmhJ9.43lSIlQk__X9x_w9A7u.Ho_B.1Vb6lby9GV
+ 8SKSdAqyboHuhhNZDKZzKTOyKy3rDAggAXPpwTumfh67iR1IaHbqFCHIvHAjsLv9wlgBvEmsY6O0
+ j9EcsEeqFIJe6HAxX3UvSdm9EAR_mtrbQDAuUAMUhUP5cW0Jhs0CHGEaYm2d2t8yOI1r.l9xsuEw
+ 53oo5Z1Em1Z6QO2sdMbAmk8RN5NtOJ4DKO3BMYQxaCNE2Vm7tawsRKKGnroDGg26.V0s4sHHLOzZ
+ lG.2U7xYCzTzXA1pGImyD7NhP4YD0AvpGUAOVHGBR69iCFtgNX_tEcsIO4qwaDLpmyeLIknQf3i0
+ J1oZBytAhOyXn.07GR6atkR99giwogw--
 X-Sonic-MF: <hsiangkao@aol.com>
-Received: from sonic.gate.mail.ne1.yahoo.com by sonic304.consmr.mail.gq1.yahoo.com with HTTP; Tue, 30 Mar 2021 14:26:08 +0000
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic312.consmr.mail.gq1.yahoo.com with HTTP; Tue, 30 Mar 2021 14:25:58 +0000
 Received: by kubenode575.mail-prod1.omega.gq1.yahoo.com (VZM Hermes SMTP Server) with ESMTPA ID d17ac850f756223f45b54c36ad526fbe;
-          Tue, 30 Mar 2021 14:26:04 +0000 (UTC)
+          Tue, 30 Mar 2021 14:25:56 +0000 (UTC)
 From:   Gao Xiang <hsiangkao@aol.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>,
         Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH v3 8/8] repair: scale duplicate name checking in phase 6.
-Date:   Tue, 30 Mar 2021 22:25:31 +0800
-Message-Id: <20210330142531.19809-9-hsiangkao@aol.com>
+Subject: [PATCH v3 5/8] repair: parallelise phase 6
+Date:   Tue, 30 Mar 2021 22:25:28 +0800
+Message-Id: <20210330142531.19809-6-hsiangkao@aol.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210330142531.19809-1-hsiangkao@aol.com>
 References: <20210330142531.19809-1-hsiangkao@aol.com>
@@ -79,102 +79,136 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-phase 6 on large directories is cpu bound on duplicate name checking
-due to the algorithm having effectively O(n^2) scalability. Hence
-when the duplicate name hash table  size is far smaller than the
-number of directory entries, we end up with long hash chains that
-are searched linearly on every new entry that is found in the
-directory to do duplicate detection.
+A recent metadump provided to us caused repair to take hours in
+phase6. It wasn't IO bound - it was fully CPU bound the entire time.
+The only way to speed it up is to make phase 6 run multiple
+concurrent processing threads.
 
-The in-memory hash table size is limited to 64k entries. Hence when
-we have millions of entries in a directory, duplicate entry lookups
-on the hash table have substantial overhead. Scale this table out to
-larger sizes so that we keep the chain lengths short and hence the
-O(n^2) scalability impact is limited because N is always small.
+The obvious way to do this is to spread the concurrency across AGs,
+like the other phases, and while this works it is not optimal. When
+a processing thread hits a really large directory, it essentially
+sits CPU bound until that directory is processed. IF an AG has lots
+of large directories, we end up with a really long single threaded
+tail that limits concurrency.
 
-For a 10M entry directory consuming 400MB of directory data, the
-hash table now sizes at 6.4 million entries instead of ~64k - it is
-~100x larger. While the hash table now consumes ~50MB of RAM, the
-xfs_repair footprint barely changes as it's using already consuming
-~9GB of RAM at this point in time. IOWs, the incremental memory
-usage change is noise, but the directory checking time:
+Hence we also need to have concurrency /within/ the AG. This is
+realtively easy, as the inode chunk records allow for a simple
+concurrency mechanism within an AG. We can simply feed each chunk
+record to a workqueue, and we get concurrency within the AG for
+free. However, this allows prefetch to run way ahead of processing
+and this blows out the buffer cache size and can cause OOM.
 
-Unpatched:
+However, we can use the new workqueue depth limiting to limit the
+number of inode chunks queued, and this then backs up the inode
+prefetching to it's maximum queue depth. Hence we prevent having the
+prefetch code queue the entire AG's inode chunks on the workqueue
+blowing out memory by throttling the prefetch consumer.
 
-  97.11%  xfs_repair          [.] dir_hash_add
-   0.38%  xfs_repair          [.] longform_dir2_entry_check_data
-   0.34%  libc-2.31.so        [.] __libc_calloc
-   0.32%  xfs_repair          [.] avl_ino_start
+This takes phase 6 from taking many, many hours down to:
 
-Phase 6:        10/22 12:11:40  10/22 12:14:28  2 minutes, 48 seconds
+Phase 6:        10/30 21:12:58  10/30 21:40:48  27 minutes, 50 seconds
 
-Patched:
-
-  46.74%  xfs_repair          [.] radix_tree_lookup
-  32.13%  xfs_repair          [.] dir_hash_see_all
-   7.70%  xfs_repair          [.] radix_tree_tag_get
-   3.92%  xfs_repair          [.] dir_hash_add
-   3.52%  xfs_repair          [.] radix_tree_tag_clear
-   2.43%  xfs_repair          [.] crc32c_le
-
-Phase 6:        10/22 13:11:01  10/22 13:11:18  17 seconds
-
-has been reduced by an order of magnitude.
+And burning 20-30 cpus that entire time on my test rig.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 ---
- repair/phase6.c | 30 ++++++++++++++++++++++++------
- 1 file changed, 24 insertions(+), 6 deletions(-)
+ repair/phase6.c | 42 ++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 34 insertions(+), 8 deletions(-)
 
 diff --git a/repair/phase6.c b/repair/phase6.c
-index 063329636500..aa991bf76da6 100644
+index 14464befa8b6..e51784521d28 100644
 --- a/repair/phase6.c
 +++ b/repair/phase6.c
-@@ -288,19 +288,37 @@ dir_hash_done(
- 	free(hashtab);
+@@ -6,6 +6,7 @@
+ 
+ #include "libxfs.h"
+ #include "threads.h"
++#include "threads.h"
+ #include "prefetch.h"
+ #include "avl.h"
+ #include "globals.h"
+@@ -3105,20 +3106,44 @@ check_for_orphaned_inodes(
  }
  
-+/*
-+ * Create a directory hash index structure based on the size of the directory we
-+ * are about to try to repair. The size passed in is the size of the data
-+ * segment of the directory in bytes, so we don't really know exactly how many
-+ * entries are in it. Hence assume an entry size of around 64 bytes - that's a
-+ * name length of 40+ bytes so should cover a most situations with large
-+ * really directories.
-+ */
- static struct dir_hash_tab *
- dir_hash_init(
- 	xfs_fsize_t		size)
+ static void
+-traverse_function(
++do_dir_inode(
+ 	struct workqueue	*wq,
+-	xfs_agnumber_t 		agno,
++	xfs_agnumber_t		agno,
+ 	void			*arg)
  {
--	struct dir_hash_tab	*hashtab;
-+	struct dir_hash_tab	*hashtab = NULL;
- 	int			hsize;
- 
--	hsize = size / (16 * 4);
--	if (hsize > 65536)
--		hsize = 63336;
--	else if (hsize < 16)
-+	hsize = size / 64;
-+	if (hsize < 16)
- 		hsize = 16;
--	if ((hashtab = calloc(DIR_HASH_TAB_SIZE(hsize), 1)) == NULL)
+-	ino_tree_node_t 	*irec;
++	struct ino_tree_node	*irec = arg;
+ 	int			i;
 +
-+	/*
-+	 * Try to allocate as large a hash table as possible. Failure to
-+	 * allocate isn't fatal, it will just result in slower performance as we
-+	 * reduce the size of the table.
-+	 */
-+	while (hsize >= 16) {
-+		hashtab = calloc(DIR_HASH_TAB_SIZE(hsize), 1);
-+		if (hashtab)
-+			break;
-+		hsize /= 2;
++	for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
++		if (inode_isadir(irec, i))
++			process_dir_inode(wq->wq_ctx, agno, irec, i);
 +	}
-+	if (!hashtab)
- 		do_error(_("calloc failed in dir_hash_init\n"));
- 	hashtab->size = hsize;
- 	hashtab->byhash = (struct dir_hash_ent **)((char *)hashtab +
++}
++
++static void
++traverse_function(
++	struct workqueue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
++{
++	struct ino_tree_node	*irec;
+ 	prefetch_args_t		*pf_args = arg;
++	struct workqueue	lwq;
++	struct xfs_mount	*mp = wq->wq_ctx;
+ 
+ 	wait_for_inode_prefetch(pf_args);
+ 
+ 	if (verbose)
+ 		do_log(_("        - agno = %d\n"), agno);
+ 
++	/*
++	 * The more AGs we have in flight at once, the fewer processing threads
++	 * per AG. This means we don't overwhelm the machine with hundreds of
++	 * threads when we start acting on lots of AGs at once. We just want
++	 * enough that we can keep multiple CPUs busy across multiple AGs.
++	 */
++	workqueue_create_bound(&lwq, mp, ag_stride, 1000);
++
+ 	for (irec = findfirst_inode_rec(agno); irec; irec = next_ino_rec(irec)) {
+ 		if (irec->ino_isa_dir == 0)
+ 			continue;
+@@ -3126,18 +3151,19 @@ traverse_function(
+ 		if (pf_args) {
+ 			sem_post(&pf_args->ra_count);
+ #ifdef XR_PF_TRACE
++			{
++			int	i;
+ 			sem_getvalue(&pf_args->ra_count, &i);
+ 			pftrace(
+ 		"processing inode chunk %p in AG %d (sem count = %d)",
+ 				irec, agno, i);
++			}
+ #endif
+ 		}
+ 
+-		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
+-			if (inode_isadir(irec, i))
+-				process_dir_inode(wq->wq_ctx, agno, irec, i);
+-		}
++		queue_work(&lwq, do_dir_inode, agno, irec);
+ 	}
++	destroy_work_queue(&lwq);
+ 	cleanup_inode_prefetch(pf_args);
+ }
+ 
+@@ -3165,7 +3191,7 @@ static void
+ traverse_ags(
+ 	struct xfs_mount	*mp)
+ {
+-	do_inode_prefetch(mp, 0, traverse_function, false, true);
++	do_inode_prefetch(mp, ag_stride, traverse_function, false, true);
+ }
+ 
+ void
 -- 
 2.20.1
 
