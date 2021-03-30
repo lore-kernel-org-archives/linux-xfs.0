@@ -4,194 +4,177 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC16BC433DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Mar 2021 18:19:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 017C0C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Mar 2021 18:32:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64FAA619CB
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Mar 2021 18:19:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B53E4619CB
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Mar 2021 18:32:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231579AbhC3STF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Mar 2021 14:19:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42808 "EHLO mail.kernel.org"
+        id S232796AbhC3ScA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Mar 2021 14:32:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44642 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232746AbhC3SSe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 30 Mar 2021 14:18:34 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B3A2D61983;
-        Tue, 30 Mar 2021 18:18:33 +0000 (UTC)
+        id S232839AbhC3Sbz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 Mar 2021 14:31:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 31BDC61924;
+        Tue, 30 Mar 2021 18:31:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617128313;
-        bh=iQsucNfwSUrbWrmSR0D6eVOtmU8qa6kxkGqxGF5F6wQ=;
+        s=k20201202; t=1617129115;
+        bh=ZQ8TB5Rw0Rcg+WRGBtk6BKlGYGNHqbrgWffIXk9Iqp4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=uIUWjMzJnDcHj4SfhckEHvzGyFRtac97UJX4daoJwtWRaj80zts5fUpEqVYky7gHg
-         tjPkeT5n8ijXkVfTSzlzbIpLk3mzDb/1oHwUt7j5k6VfjKnFx3jlo8690pWxqX8WUx
-         cvpIhjU0+c8U5u/PHDr8jqOGLDVatQrlcaYO3NjbhMS3bCzcFlLReB7zelUIlk+ahs
-         RNZadRwBueGkM+LimOkDeTLuJtTbXkaFIMzxMI9j0XDms/4RlZ1TBPGX867CfWxfau
-         SxB/TRi4gmu7ZRrUWvaOIUmdATZfbkMH1ldHV4zOJKvTnLT3GvgR4DSS0zll3eq3gF
-         PfGyWvt/2+o5g==
-Date:   Tue, 30 Mar 2021 11:18:32 -0700
+        b=W0yixvUKo17JFOI2m5B7DjJbEcCQOAJaxZesOl/ivigJ22j3fYnx2FjQzioTnEhee
+         /KildT7CTH7RL4oKAgxibcDDUxCUhPtnDuRyZLU7yEpFqP9tZIrL3hnsYeOLRkKNma
+         vfG/UQHcUyaE9fYx9vBWqeJ27gRXVFb5G9uHa6GUXMpVmbrOuUJcXoYWCeXpSue+/E
+         MOvgS+ba1WYrUsqE7xV3dt+YQYFY3FjIHeICyeb41sqnK5Ksc/eJIbdbvqtEb9UDwz
+         3+0dpsSqj7QXwTbPJ3Q8EluXn2z5BljBQafRlLEgc8xln/gG8DnBinJQlV0Nt9A/up
+         VH2JNL1P39z3w==
+Date:   Tue, 30 Mar 2021 11:31:53 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Gao Xiang <hsiangkao@aol.com>
 Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
         Gao Xiang <hsiangkao@redhat.com>
-Subject: Re: [PATCH v3 5/8] repair: parallelise phase 6
-Message-ID: <20210330181832.GW4090233@magnolia>
+Subject: Re: [PATCH v3 8/8] repair: scale duplicate name checking in phase 6.
+Message-ID: <20210330183153.GX4090233@magnolia>
 References: <20210330142531.19809-1-hsiangkao@aol.com>
- <20210330142531.19809-6-hsiangkao@aol.com>
+ <20210330142531.19809-9-hsiangkao@aol.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210330142531.19809-6-hsiangkao@aol.com>
+In-Reply-To: <20210330142531.19809-9-hsiangkao@aol.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 30, 2021 at 10:25:28PM +0800, Gao Xiang wrote:
+On Tue, Mar 30, 2021 at 10:25:31PM +0800, Gao Xiang wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> A recent metadump provided to us caused repair to take hours in
-> phase6. It wasn't IO bound - it was fully CPU bound the entire time.
-> The only way to speed it up is to make phase 6 run multiple
-> concurrent processing threads.
+> phase 6 on large directories is cpu bound on duplicate name checking
+> due to the algorithm having effectively O(n^2) scalability. Hence
+> when the duplicate name hash table  size is far smaller than the
+> number of directory entries, we end up with long hash chains that
+> are searched linearly on every new entry that is found in the
+> directory to do duplicate detection.
 > 
-> The obvious way to do this is to spread the concurrency across AGs,
-> like the other phases, and while this works it is not optimal. When
-> a processing thread hits a really large directory, it essentially
-> sits CPU bound until that directory is processed. IF an AG has lots
-> of large directories, we end up with a really long single threaded
-> tail that limits concurrency.
+> The in-memory hash table size is limited to 64k entries. Hence when
+> we have millions of entries in a directory, duplicate entry lookups
+> on the hash table have substantial overhead. Scale this table out to
+> larger sizes so that we keep the chain lengths short and hence the
+> O(n^2) scalability impact is limited because N is always small.
 > 
-> Hence we also need to have concurrency /within/ the AG. This is
-> realtively easy, as the inode chunk records allow for a simple
-> concurrency mechanism within an AG. We can simply feed each chunk
-> record to a workqueue, and we get concurrency within the AG for
-> free. However, this allows prefetch to run way ahead of processing
-> and this blows out the buffer cache size and can cause OOM.
+> For a 10M entry directory consuming 400MB of directory data, the
+> hash table now sizes at 6.4 million entries instead of ~64k - it is
+> ~100x larger. While the hash table now consumes ~50MB of RAM, the
+> xfs_repair footprint barely changes as it's using already consuming
+> ~9GB of RAM at this point in time. IOWs, the incremental memory
+> usage change is noise, but the directory checking time:
 > 
-> However, we can use the new workqueue depth limiting to limit the
-> number of inode chunks queued, and this then backs up the inode
-> prefetching to it's maximum queue depth. Hence we prevent having the
-> prefetch code queue the entire AG's inode chunks on the workqueue
-> blowing out memory by throttling the prefetch consumer.
+> Unpatched:
 > 
-> This takes phase 6 from taking many, many hours down to:
+>   97.11%  xfs_repair          [.] dir_hash_add
+>    0.38%  xfs_repair          [.] longform_dir2_entry_check_data
+>    0.34%  libc-2.31.so        [.] __libc_calloc
+>    0.32%  xfs_repair          [.] avl_ino_start
 > 
-> Phase 6:        10/30 21:12:58  10/30 21:40:48  27 minutes, 50 seconds
+> Phase 6:        10/22 12:11:40  10/22 12:14:28  2 minutes, 48 seconds
 > 
-> And burning 20-30 cpus that entire time on my test rig.
+> Patched:
+> 
+>   46.74%  xfs_repair          [.] radix_tree_lookup
+>   32.13%  xfs_repair          [.] dir_hash_see_all
+>    7.70%  xfs_repair          [.] radix_tree_tag_get
+>    3.92%  xfs_repair          [.] dir_hash_add
+>    3.52%  xfs_repair          [.] radix_tree_tag_clear
+>    2.43%  xfs_repair          [.] crc32c_le
+> 
+> Phase 6:        10/22 13:11:01  10/22 13:11:18  17 seconds
+> 
+> has been reduced by an order of magnitude.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 > ---
->  repair/phase6.c | 42 ++++++++++++++++++++++++++++++++++--------
->  1 file changed, 34 insertions(+), 8 deletions(-)
+>  repair/phase6.c | 30 ++++++++++++++++++++++++------
+>  1 file changed, 24 insertions(+), 6 deletions(-)
 > 
 > diff --git a/repair/phase6.c b/repair/phase6.c
-> index 14464befa8b6..e51784521d28 100644
+> index 063329636500..aa991bf76da6 100644
 > --- a/repair/phase6.c
 > +++ b/repair/phase6.c
-> @@ -6,6 +6,7 @@
->  
->  #include "libxfs.h"
->  #include "threads.h"
-> +#include "threads.h"
->  #include "prefetch.h"
->  #include "avl.h"
->  #include "globals.h"
-> @@ -3105,20 +3106,44 @@ check_for_orphaned_inodes(
+> @@ -288,19 +288,37 @@ dir_hash_done(
+>  	free(hashtab);
 >  }
 >  
->  static void
-> -traverse_function(
-> +do_dir_inode(
->  	struct workqueue	*wq,
-> -	xfs_agnumber_t 		agno,
-> +	xfs_agnumber_t		agno,
->  	void			*arg)
->  {
-> -	ino_tree_node_t 	*irec;
-> +	struct ino_tree_node	*irec = arg;
->  	int			i;
-> +
-> +	for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
-> +		if (inode_isadir(irec, i))
-> +			process_dir_inode(wq->wq_ctx, agno, irec, i);
-> +	}
-> +}
-> +
-> +static void
-> +traverse_function(
-> +	struct workqueue	*wq,
-> +	xfs_agnumber_t		agno,
-> +	void			*arg)
-> +{
-> +	struct ino_tree_node	*irec;
->  	prefetch_args_t		*pf_args = arg;
-> +	struct workqueue	lwq;
-> +	struct xfs_mount	*mp = wq->wq_ctx;
->  
->  	wait_for_inode_prefetch(pf_args);
->  
->  	if (verbose)
->  		do_log(_("        - agno = %d\n"), agno);
->  
-> +	/*
-> +	 * The more AGs we have in flight at once, the fewer processing threads
-> +	 * per AG. This means we don't overwhelm the machine with hundreds of
-> +	 * threads when we start acting on lots of AGs at once. We just want
-> +	 * enough that we can keep multiple CPUs busy across multiple AGs.
-> +	 */
-> +	workqueue_create_bound(&lwq, mp, ag_stride, 1000);
+> +/*
+> + * Create a directory hash index structure based on the size of the directory we
+> + * are about to try to repair. The size passed in is the size of the data
+> + * segment of the directory in bytes, so we don't really know exactly how many
+> + * entries are in it. Hence assume an entry size of around 64 bytes - that's a
+> + * name length of 40+ bytes so should cover a most situations with large
+> + * really directories.
 
-At some point I realized that two reviews ago I mixed up the last two
-arguments and thought that we were creating 1000 threads.  We're not,
-we're creating ag_stride threads and saying that we want to throttle
-queue_work if the queue reaches 1000 directory inodes.
+"...with really large directories."
+
+> + */
+>  static struct dir_hash_tab *
+>  dir_hash_init(
+>  	xfs_fsize_t		size)
+>  {
+> -	struct dir_hash_tab	*hashtab;
+> +	struct dir_hash_tab	*hashtab = NULL;
+>  	int			hsize;
+>  
+> -	hsize = size / (16 * 4);
+> -	if (hsize > 65536)
+> -		hsize = 63336;
+> -	else if (hsize < 16)
+> +	hsize = size / 64;
+> +	if (hsize < 16)
+>  		hsize = 16;
+> -	if ((hashtab = calloc(DIR_HASH_TAB_SIZE(hsize), 1)) == NULL)
+> +
+> +	/*
+> +	 * Try to allocate as large a hash table as possible. Failure to
+> +	 * allocate isn't fatal, it will just result in slower performance as we
+> +	 * reduce the size of the table.
+> +	 */
+> +	while (hsize >= 16) {
+> +		hashtab = calloc(DIR_HASH_TAB_SIZE(hsize), 1);
+> +		if (hashtab)
+> +			break;
+> +		hsize /= 2;
+> +	}
+
+I still kinda wonder if the hash size ought to be some prime number,
+though I suppose /finding/ a prime number isn't necessarily easy.
+
+Hm, let's assume you had the maximal 32GB directory.
+
+size = 34359738368
+hsize = size/64 = 536870912
+DIR_HASH_TAB_SIZE(hsize) =
+	(sizeof(dir_hash_tab_t) + (sizeof(dir_hash_ent_t *) * (hsize) * 2))
+
+== 40 + (8 * 536870912 * 2) == 8589934632
+
+That's ... kind of big?  I guess the saving grace is that we halve hsize
+if calloc fails and the address space isn't populated with memory pages
+until we actually use them.  It might turn out that users want a lower
+cap than 8GB per 32GB directory, but I suppose we won't find /that/ out
+until we try...
+
+With the comment fixed,
 
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-
-> +
->  	for (irec = findfirst_inode_rec(agno); irec; irec = next_ino_rec(irec)) {
->  		if (irec->ino_isa_dir == 0)
->  			continue;
-> @@ -3126,18 +3151,19 @@ traverse_function(
->  		if (pf_args) {
->  			sem_post(&pf_args->ra_count);
->  #ifdef XR_PF_TRACE
-> +			{
-> +			int	i;
->  			sem_getvalue(&pf_args->ra_count, &i);
->  			pftrace(
->  		"processing inode chunk %p in AG %d (sem count = %d)",
->  				irec, agno, i);
-> +			}
->  #endif
->  		}
->  
-> -		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
-> -			if (inode_isadir(irec, i))
-> -				process_dir_inode(wq->wq_ctx, agno, irec, i);
-> -		}
-> +		queue_work(&lwq, do_dir_inode, agno, irec);
->  	}
-> +	destroy_work_queue(&lwq);
->  	cleanup_inode_prefetch(pf_args);
->  }
->  
-> @@ -3165,7 +3191,7 @@ static void
->  traverse_ags(
->  	struct xfs_mount	*mp)
->  {
-> -	do_inode_prefetch(mp, 0, traverse_function, false, true);
-> +	do_inode_prefetch(mp, ag_stride, traverse_function, false, true);
->  }
->  
->  void
+> +	if (!hashtab)
+>  		do_error(_("calloc failed in dir_hash_init\n"));
+>  	hashtab->size = hsize;
+>  	hashtab->byhash = (struct dir_hash_ent **)((char *)hashtab +
 > -- 
 > 2.20.1
 > 
