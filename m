@@ -2,104 +2,179 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 643A8C433C1
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Mar 2021 03:50:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 208C1C433C1
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Mar 2021 04:07:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29AA76195D
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Mar 2021 03:50:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB1A561929
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Mar 2021 04:07:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229656AbhC3Dtq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Mar 2021 23:49:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48282 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229483AbhC3DtV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Mar 2021 23:49:21 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E54AC061762;
-        Mon, 29 Mar 2021 20:49:20 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id q6-20020a17090a4306b02900c42a012202so6965026pjg.5;
-        Mon, 29 Mar 2021 20:49:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=V8m/um/4qjFcW1pUXm5A1pzJvlUXU4Btq+wdKVMzb+0=;
-        b=nMH6z/whDTyjxV/NdgnguKy9/6a5l9iYAfUQ1LfMr4y1hILGkHH237pAaaVFQznRJx
-         HSbGN8E7agSkya5CSsFePtpK7BhAPs6LxUUHQe2hwVVcWz/cDKmtwXIGCreCKB12eCxj
-         tDoG4GUD/oGbnvzBtCs+qtwvvWpYNNGSD+3edPJvtDg2zQzz0LY4FaHGXUyVt9+m0i5k
-         953PPGzZJm/IAjU9+7d3ugx1eWPTebeLV2QdlAJvFMFRgkgc6GjUynfK3AnFrui2ZPr5
-         /mbEhQPmlVxXFDN+wvkbAV9TPIETsaDVFvTTl+0kpcPEz5f9FZ/n8VIIK1/Nc/WTGyFd
-         5TeA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=V8m/um/4qjFcW1pUXm5A1pzJvlUXU4Btq+wdKVMzb+0=;
-        b=d6PV4FQqZyYV7lsRhDiYf4TXTZsxENdbCEqRnWvxrIPyCSLiLzJWdz11/3xFe/fuyL
-         vI6tOoyF5UY0/myQEu8m1/LcC1NQFX4lNrIwTKHFQ0Z9GrVGfoEJ2oJMAQqxDGNqknB/
-         VmvU2AJlY1xPo2naPkOzW9KCv1R9ekFZEraMxC2eSNs68J5qQ69DQL7c3GIduZypp8+A
-         4zLWHFXcAkjw0SsMMBPfLlM85i79tBXSDkoDFsnnRCZntccMP2d2rr/ZF8BqKNaW5x/d
-         BtwVkgfs/rFSWrhPJBHxxIzr6rpDR6sfDME5SsW4+u8RIuIzMku9Kt8zifIBIGEwIVlC
-         hosg==
-X-Gm-Message-State: AOAM533EWdc5Uqg0vWCMFpzD7ndhF+tQLmtF0nfi3rDPzHnMed6JpdOG
-        5NBm+wASDJ41qLt/XMOk7gfhT3MK51c=
-X-Google-Smtp-Source: ABdhPJyaS5XQpSHvt5xbb2BK5TWjkvK9k1wtecCnlbIrMYqJ7n2Zih9ZhTy72yng5uc4y0k47L02Ng==
-X-Received: by 2002:a17:90a:9309:: with SMTP id p9mr2377634pjo.174.1617076160064;
-        Mon, 29 Mar 2021 20:49:20 -0700 (PDT)
-Received: from garuda ([122.172.178.88])
-        by smtp.gmail.com with ESMTPSA id u79sm19539371pfc.207.2021.03.29.20.49.18
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 29 Mar 2021 20:49:19 -0700 (PDT)
-References: <20210325140857.7145-1-chandanrlinux@gmail.com> <20210325140857.7145-6-chandanrlinux@gmail.com> <20210329180627.GF4090233@magnolia>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs/535: Fix test to execute in multi-block directory config
-In-reply-to: <20210329180627.GF4090233@magnolia>
-Date:   Tue, 30 Mar 2021 09:19:16 +0530
-Message-ID: <878s65b8sj.fsf@garuda>
+        id S229501AbhC3EGc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Mar 2021 00:06:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47092 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229483AbhC3EG3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 Mar 2021 00:06:29 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BB1FA61929;
+        Tue, 30 Mar 2021 04:06:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617077188;
+        bh=LtAidxOp8/ruVLDtsFHpwtQbFdW+ZCPn6C+XSibVUIw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Uq7K71f3KkbU4rSfxFFYyt87H+EifFzRRUOwWI0X0cHyY2LeFi51HolNovnG2uUMt
+         M3wqsjykON5LiCL63LQCGnRojWVJ6Fe3eGT/MmN9l54kTEyb2AIDh4d7JmJz7Hpi5p
+         w31xN6EqQg4+sW2y2js3xQ/jEAUdiVuKCQAkrT9jOfDQ5SOumUGRYjkiky5Gg3A1z3
+         AgyZRAMkdz8+9Er8X3d9Jt0nUQMQZo2JbRqtj9fUo9DdnvXyZNxsXUWBvvYnzAR9FE
+         HoysADhfWS6DZccKTKgi2qyJfGM12vlKBGqRwXgmZNnCVb4WA1n8aSzoZ3/SW4dy5z
+         TuDiqSEDjIm7g==
+Date:   Mon, 29 Mar 2021 21:06:25 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        hch@infradead.org
+Subject: Re: [PATCH 1/6] xfs: use s_inodes in xfs_qm_dqrele_all_inodes
+Message-ID: <20210330040625.GL4090233@magnolia>
+References: <161671807287.621936.13471099564526590235.stgit@magnolia>
+ <161671807853.621936.16639622639548774275.stgit@magnolia>
+ <20210330004407.GS63242@dread.disaster.area>
+ <20210330023656.GK4090233@magnolia>
+ <20210330030747.GT63242@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210330030747.GT63242@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 29 Mar 2021 at 23:36, Darrick J. Wong wrote:
-> On Thu, Mar 25, 2021 at 07:38:57PM +0530, Chandan Babu R wrote:
->> xfs/535 attempts to create $srcfile and $dstfile after reduce_max_iextents
->> error tag is injected. Creation of these files fails when using a multi-block
->> directory test configuration because,
->> 1. A directory can have a pseudo maximum extent count of 10.
->> 2. In the worst case a directory entry creation operation can consume
->>    (XFS_DA_NODE_MAXDEPTH + 1 + 1) * (Nr fs blocks in a single directory block)
->>    extents.
->>    With 1k fs block size and 4k directory block size, this evaluates to,
->>    (5 + 1 + 1) * 4
->>    = 7 * 4
->>    = 28
->>    > 10 (Pseudo maximum inode extent count).
->> 
->> This commit fixes the issue by creating $srcfile and $dstfile before injecting
->> reduce_max_iextents error tag.
->> 
->> Reported-by: Darrick J. Wong <djwong@kernel.org>
->> Suggested-by: Darrick J. Wong <djwong@kernel.org>
->> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
->
-> Now on to the xfs/538 regressions! ;)
+On Tue, Mar 30, 2021 at 02:07:47PM +1100, Dave Chinner wrote:
+> On Mon, Mar 29, 2021 at 07:36:56PM -0700, Darrick J. Wong wrote:
+> > On Tue, Mar 30, 2021 at 11:44:07AM +1100, Dave Chinner wrote:
+> > > On Thu, Mar 25, 2021 at 05:21:18PM -0700, Darrick J. Wong wrote:
+> > > > From: Christoph Hellwig <hch@lst.de>
+> > > > 
+> > > > Using xfs_inode_walk in xfs_qm_dqrele_all_inodes is complete overkill,
+> > > > given that function simplify wants to iterate all live inodes known
+> > > > to the VFS.  Just iterate over the s_inodes list.
+> > > 
+> > > I'm not sure that assertion is true. We attach dquots during inode
+> > > inactivation after the VFS has removed the inode from the s_inodes
+> > > list and evicted the inode. Hence there is a window between the
+> > > inode being removed from the sb->s_inodes lists and it being marked
+> > > XFS_IRECLAIMABLE where we can attach dquots to the inode.
+> > > 
+> > > Indeed, an inode marked XFS_IRECLAIMABLE that has gone through
+> > > evict -> destroy -> inactive -> nlink != 0 -> xfs_free_ eofblocks()
+> > > can have referenced dquots attached to it and require dqrele() to be
+> > > called to release them.
+> > 
+> > Why do the dquots need to remain attached after destroy_inode?
+> 
+> They don't. But that's not the problem here.
 
-Yup, I am working on them.
+Actually, they do need to remain attached nowadays, because COW blocks
+are accounted as incore dquot reservations so we can't let the dquots
+drop until the COW fork gets cleaned out.
 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Granted I guess I did have a patch that changed the dquot lifecycle so
+that they would stay in memory after the refcount dropped to zero, even
+if they had incore reservations.
 
-Thanks for the review! I will fold patches 2 to 6 into a single patch and
-repost.
+...and now I finally see the plot twist that turns this into the
+*Fourth* part of Yet Another Quota Restructuring.  This time I get to
+reimplement quotaoff! :P
 
--- 
-chandan
+> > We can
+> > easily reattach them during inactivation (v3 did this), and I don't know
+> > why an inode needs dquots once we're through making metadata updates.
+> 
+> Yes, they get re-attached for truncation, attr removal, EOF block
+> freeing, etc. Only on the unlinked inode path in inactivation do
+> they get removed once all the work tha tmodifies the dquots is done.
+> 
+> But many of the paths don't detach them again because they are
+> multi-use.  e.g xfs_free_eofblocks() will attach dquots, but doesn't
+> detatch them because it's called from more placed than than the
+> inactivation path.
+> 
+> I'm sure this can all be cleaned up, but I *really* don't like the
+> idea of a "walk all XFS inodes" scan that actually only walks the
+> inodes with VFS references and not -all XFS inodes-.
+> 
+> And there's other problems with doing sb->s_inodes list walks -
+> namely the global lock. While we are doing this walk (might be tens
+> of millions of inodes!) we can hold the s_inode_list_lock for a long
+> time and we cannot instantiate new inodes or evict inodes to/from
+> the cache while that lock is held. The XFS inode walk is lockless
+> and we don't hold off anything to do wiht cache instantiation and
+> freeing, so it has less impact on the running system.
+> 
+> If everything is clean and don't block on locks anywhere, the
+> s_inodes list walk needs a cond_resched() in it. Again, tens
+> (hundreds) of millions of inodes can be on that list mean it can
+> hold the CPU for a long time.
+
+Yeah, I had wondered how good an idea it was to replace batch lookups
+with a list walk...
+
+> Next, igrab() takes a reference to the inode which will mark them
+> referenced. THis walk grabs every inode in the filesysetm cache,
+> so marks them all referenced and makes it harder to reclaim them
+> under memory pressure. This perturbs working set behaviour.
+> 
+> inode list walks and igrab/iput don't come for free - they perturb
+> the working set, LRU orders, cause lock contention, long tail
+> latencies, etc. The XFS inode cache walk might not be the prettiest
+> thing, but it doesn't have any of these nasty side effects.
+> 
+> So, in general, I don't think we should be adding new inode list
+> walks anywhere, not even deep in XFS where nobody else might care...
+
+...but the current quotaoff behavior has /all/ of these problems too.
+
+I think you and I hashed out on IRC that quotaoff could simply take the
+ILOCK and the i_flags lock of every inode that isn't INEW, RECLAIMING,
+or INACTIVATING; drop the dquots, and drop the locks, and then dqpurge
+would only have to wait for the inodes that are actively being reclaimed
+or inactivated.
+
+I'll give that a try ... eventually, but I wouldn't be too confident
+that I'll get all this turned around before I have to shut the door next
+next Thursday.
+
+> > > Hence I think that xfs_qm_dqrele_all_inodes() is broken if all it is
+> > > doing is walking vfs referenced inodes, because it doesn't actually
+> > > release the dquots attached to reclaimable inodes. If this did
+> > > actually release all dquots, then there wouldn't be a need for the
+> > > xfs_qm_dqdetach() call in xfs_reclaim_inode() just before it's
+> > > handed to RCU to be freed....
+> > 
+> > Why does it work now, then?  The current code /also/ leaves the dquots
+> > attached to reclaimable inodes, and the quotaoff scan ignores
+> > IRECLAIMABLE inodes.
+> 
+> Luck, I think.
+> 
+> > Has it simply been the case that the dqpurge spins
+> > until reclaim runs, and reclaim gets run quickly enough (or quotaoff runs
+> > infrequently enough) that nobody's complained?
+> 
+> Yup, that's my assumption - quotaoff is rare, inode reclaim runs
+> every 5s - and so we haven't noticed it because nobody has looked
+> closely at how dquots vs inode reclaim works recently...
+
+Yes, that does explain some of the weird test duration quirks I see in
+xfs/305....
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
