@@ -2,199 +2,195 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8473DC43461
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Mar 2021 12:34:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82DA5C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Mar 2021 15:57:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8B20619AE
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Mar 2021 12:27:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D08D61029
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Mar 2021 15:57:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235399AbhCaM1J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Mar 2021 08:27:09 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:37675 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235314AbhCaM0w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Mar 2021 08:26:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1617193611;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PtXSU1/cPq+5Bk6pXm1kTgyhepDDn+jHjQ5GDsJHlWo=;
-        b=G1VZTa5dqTycvaA1svBt1ei4ZJNM92ZWQnM4sO28qt2N77aibkBtsuwNfZcaLdVqczuMVS
-        oJ+wulRIxtcMimpDEoiBk7jGLPdcKeQ030uoFetJXIdU+wWUs23XqRkZyDxNwoyDRf/0ol
-        Oz4L7ivWIXpM6SpA/4HR9gSM7uoyM5Q=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-139-EIuAxYg_OgWAw01GGr6ttg-1; Wed, 31 Mar 2021 08:26:49 -0400
-X-MC-Unique: EIuAxYg_OgWAw01GGr6ttg-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1569183DD21;
-        Wed, 31 Mar 2021 12:26:48 +0000 (UTC)
-Received: from bfoster (ovpn-112-117.rdu2.redhat.com [10.10.112.117])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7F59D6A902;
-        Wed, 31 Mar 2021 12:26:47 +0000 (UTC)
-Date:   Wed, 31 Mar 2021 08:26:45 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: xfs ioend batching log reservation deadlock
-Message-ID: <YGRqhXB9cGoxwdLE@bfoster>
-References: <YF4AOto30pC/0FYW@bfoster>
- <20210326173244.GY4090233@magnolia>
- <20210329022826.GO63242@dread.disaster.area>
- <YGIWqX4pmfsv9LPk@bfoster>
- <20210329235142.GR63242@dread.disaster.area>
- <YGM46ABWNVO5FKld@bfoster>
- <20210330235722.GX63242@dread.disaster.area>
+        id S232301AbhCaP47 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 Mar 2021 11:56:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39582 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233714AbhCaP4j (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 31 Mar 2021 11:56:39 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E411F61006;
+        Wed, 31 Mar 2021 15:56:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617206199;
+        bh=JQjTdpnaF7cwVBOo372oShy2warusYGn4AnPW0LdzOY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PAmTTMPkd/sbO/eZ4WRot0al0TVyIHArbhjRevtgqyCbqU56IfHvcZhBXbC821IbG
+         7miETBtUUS2UzZp3huck0bjhjutwK33HlJdAP9lH0nAAS+rk0KU8gtQ2ugohPqgabs
+         UxK4G5dMMTTTdT4stlF+2xtMOaiHgEkmrL8Rnwk1wpFySGhTaWwM47Mkh/oVu+3vot
+         c+xgosojF/TY7+MSRx4sRV2eDiEJ2MfYRxA/C3tEbTCNrlJEbO+JC6s9jNdotiuMH5
+         ibQfNJrhK40Tb6uUatQpCb5TLQe8R2Q+Gl0qE60EjeQAEsRLrxsbZQT9KKGDwO+biE
+         lrncH7X43ngfw==
+Date:   Wed, 31 Mar 2021 08:56:38 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
+Subject: Re: [PATCH 4/4] xfs: test upgrading filesystem to bigtime
+Message-ID: <20210331155638.GB4090233@magnolia>
+References: <161715291588.2703979.11541640936666929011.stgit@magnolia>
+ <161715293790.2703979.8248551223530213245.stgit@magnolia>
+ <CAOQ4uxgCzwxv1xYYM-k-gsHnkyWxU_KzjTHRS3RyJf775R06SQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210330235722.GX63242@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <CAOQ4uxgCzwxv1xYYM-k-gsHnkyWxU_KzjTHRS3RyJf775R06SQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 31, 2021 at 10:57:22AM +1100, Dave Chinner wrote:
-> On Tue, Mar 30, 2021 at 10:42:48AM -0400, Brian Foster wrote:
-> > On Tue, Mar 30, 2021 at 10:51:42AM +1100, Dave Chinner wrote:
-> > > On Mon, Mar 29, 2021 at 02:04:25PM -0400, Brian Foster wrote:
-> > > > On Mon, Mar 29, 2021 at 01:28:26PM +1100, Dave Chinner wrote:
-> > ...
-> > > 
-> > > > @@ -182,12 +185,10 @@ xfs_end_ioend(
-> > > >  		error = xfs_reflink_end_cow(ip, offset, size);
-> > > >  	else if (ioend->io_type == IOMAP_UNWRITTEN)
-> > > >  		error = xfs_iomap_write_unwritten(ip, offset, size, false);
-> > > > -	else
-> > > > -		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_private);
-> > > >  
-> > > >  done:
-> > > > -	if (ioend->io_private)
-> > > > -		error = xfs_setfilesize_ioend(ioend, error);
-> > > > +	if (ioend->io_flags & IOMAP_F_APPEND)
-> > > > +		error = xfs_setfilesize(ip, offset, size);
-> > > >  	iomap_finish_ioends(ioend, error);
-> > > >  	memalloc_nofs_restore(nofs_flag);
-> > > >  }
-> > > > @@ -221,16 +222,28 @@ xfs_end_io(
-> > > >  	struct iomap_ioend	*ioend;
-> > > >  	struct list_head	tmp;
-> > > >  	unsigned long		flags;
-> > > > +	xfs_off_t		maxendoff;
-> > > >  
-> > > >  	spin_lock_irqsave(&ip->i_ioend_lock, flags);
-> > > >  	list_replace_init(&ip->i_ioend_list, &tmp);
-> > > >  	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
-> > > >  
-> > > >  	iomap_sort_ioends(&tmp);
-> > > > +
-> > > > +	/* XXX: track max endoff manually? */
-> > > > +	ioend = list_last_entry(&tmp, struct iomap_ioend, io_list);
-> > > > +	if (((ioend->io_flags & IOMAP_F_SHARED) ||
-> > > > +	     (ioend->io_type != IOMAP_UNWRITTEN)) &&
-> > > > +	    xfs_ioend_is_append(ioend)) {
-> > > > +		ioend->io_flags |= IOMAP_F_APPEND;
-> > > > +		maxendoff = ioend->io_offset + ioend->io_size;
-> > > > +	}
-> > > > +
-> > > >  	while ((ioend = list_first_entry_or_null(&tmp, struct iomap_ioend,
-> > > >  			io_list))) {
-> > > >  		list_del_init(&ioend->io_list);
-> > > >  		iomap_ioend_try_merge(ioend, &tmp, xfs_ioend_merge_private);
-> > > > +		ASSERT(ioend->io_offset + ioend->io_size <= maxendoff);
-> > > >  		xfs_end_ioend(ioend);
-> > > >  	}
-> > > >  }
-> > > 
-> > > So now when I run a workload that is untarring a large tarball full
-> > > of small files, we have as many transaction reserve operations
-> > > runnning concurrently as there are IO completions queued.
-> > > 
-> > 
-> > This patch has pretty much no effect on a typical untar workload because
-> > it is dominated by delalloc -> unwritten extent conversions that already
-> > require completion time transaction reservations. Indeed, a quick test
-> > to untar a kernel source tree produces no setfilesize events at all.
+On Wed, Mar 31, 2021 at 12:49:32PM +0300, Amir Goldstein wrote:
+> On Wed, Mar 31, 2021 at 4:11 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > Test that we can upgrade an existing filesystem to use bigtime.
+> >
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  common/xfs        |   13 +++++
+> >  tests/xfs/908     |   97 +++++++++++++++++++++++++++++++++++
+> >  tests/xfs/908.out |   20 +++++++
+> >  tests/xfs/909     |  149 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/909.out |    6 ++
+> >  tests/xfs/group   |    2 +
+> >  6 files changed, 287 insertions(+)
+> >  create mode 100755 tests/xfs/908
+> >  create mode 100644 tests/xfs/908.out
+> >  create mode 100755 tests/xfs/909
+> >  create mode 100644 tests/xfs/909.out
+> >
+> >
+> > diff --git a/common/xfs b/common/xfs
+> > index 37658788..c430b3ac 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -1152,3 +1152,16 @@ _xfs_timestamp_range()
+> >                         awk '{printf("%s %s", $1, $2);}'
+> >         fi
+> >  }
+> > +
+> > +_require_xfs_scratch_bigtime()
+> > +{
+> > +       _require_scratch
+> > +
+> > +       _scratch_mkfs -m bigtime=1 &>/dev/null || \
+> > +               _notrun "mkfs.xfs doesn't have bigtime feature"
+> > +       _try_scratch_mount || \
+> > +               _notrun "bigtime not supported by scratch filesystem type: $FSTYP"
+> > +       $XFS_INFO_PROG "$SCRATCH_MNT" | grep -q "bigtime=1" || \
+> > +               _notrun "bigtime feature not advertised on mount?"
+> > +       _scratch_unmount
+> > +}
+> > diff --git a/tests/xfs/908 b/tests/xfs/908
+> > new file mode 100755
+> > index 00000000..1ad3131a
+> > --- /dev/null
+> > +++ b/tests/xfs/908
+> > @@ -0,0 +1,97 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0-or-later
+> > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 908
+> > +#
+> > +# Check that we can upgrade a filesystem to support bigtime and that inode
+> > +# timestamps work properly after the upgrade.
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1    # failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +       cd /
+> > +       rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +# real QA test starts here
+> > +_supported_fs xfs
+> > +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> > +_require_xfs_scratch_bigtime
+> > +_require_xfs_repair_upgrade bigtime
+> > +
+> > +date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
+> > +       _notrun "Userspace does not support dates past 2038."
+> > +
+> > +rm -f $seqres.full
+> > +
+> > +# Make sure we can't upgrade a V4 filesystem
+> > +_scratch_mkfs -m crc=0 >> $seqres.full
+> > +_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
+> > +_check_scratch_xfs_features BIGTIME
+> > +
+> > +# Make sure we're required to specify a feature status
+> > +_scratch_mkfs -m crc=1,bigtime=0,inobtcount=0 >> $seqres.full
+> > +_scratch_xfs_admin -O bigtime 2>> $seqres.full
+> > +
+> > +# Can we add bigtime and inobtcount at the same time?
+> > +_scratch_mkfs -m crc=1,bigtime=0,inobtcount=0 >> $seqres.full
+> > +_scratch_xfs_admin -O bigtime=1,inobtcount=1 2>> $seqres.full
+> > +
+> > +# Format V5 filesystem without bigtime support and populate it
+> > +_scratch_mkfs -m crc=1,bigtime=0 >> $seqres.full
+> > +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> > +_scratch_mount >> $seqres.full
+> > +
+> > +touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/a
+> > +touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/b
+> > +ls -la $SCRATCH_MNT/* >> $seqres.full
+> > +
+> > +echo before upgrade:
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> > +
+> > +_scratch_unmount
+> > +_check_scratch_fs
+> > +
+> > +# Now upgrade to bigtime support
+> > +_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
+> > +_check_scratch_xfs_features BIGTIME
+> > +_check_scratch_fs
+> > +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> > +
+> > +# Mount again, look at our files
+> > +_scratch_mount >> $seqres.full
+> > +ls -la $SCRATCH_MNT/* >> $seqres.full
+> > +
+> > +# Modify one of the timestamps to stretch beyond 2038
+> > +touch -d 'Feb 22 22:22:22 UTC 2222' $SCRATCH_MNT/b
+> > +
+> > +echo after upgrade:
 > 
-> Great, so it's not the obvious case because of the previous
-> delalloc->unwritten change. What you need to do now is find
-> out what workload it is that is generating so many setfilesize
-> completions despite delalloc->unwritten so we can understand what
-> workloads this will actually impact.
-> 
+> There is an oddity in the output.
+> The text says "after upgrade" but the timestampt of b has changed because
+> it is really "after upgrade and stretch". Did you mean to print to output
+> "after upgrade" and then again "after upgrade and stretch"?
 
-I think the discrepancy here is just that the original problem occurred
-on a downstream kernel where per-inode ioend batching exists but the
-delalloc -> unwritten change does not. The latter was a relatively more
-recent upstream change. The log reservation deadlock vector still exists
-regardless (i.e., if there's another source of reservation pressure),
-but that probably explains why the append ioends might be more
-predominant in the user kernel (and in general why this might be more
-likely between upstream v5.2 and v5.9) but less of a concern on current
-upstream.
+Yes, this test should check that the timestamps are intact after the
+upgrade.  Will repost.
 
-In any event, I think this clarifies that there's no longer much need
-for submission side append reservation in current kernels. I'll look
-into that change and deal with the downstream kernel separately.
+--D
 
-Brian
-
-> > I'm not sure we have many situations upstream where append transactions
-> > are used outside of perhaps cow completions (which already have a
-> > completion time transaction allocation for fork remaps) or intra-block
-> > file extending writes (that thus produce an inode size change within a
-> > mapped, already converted block). Otherwise a truncate down should
-> > always remove post-eof blocks and speculative prealloc originates from
-> > delalloc, so afaict those should follow the same general sequence. Eh?
-> > 
-> > As it is, I think the performance concern is overstated but I'm happy to
-> > run any tests to confirm or deny that if you want to make more concrete
-> > suggestions.
-> 
-> As I said: I'm happy to change the code as long as we understand
-> what workloads it will impact and by how much. We don't know what
-> workload is generating so many setfilesize transactions yet, so we
-> can't actually make educated guesses on the wider impact that this
-> change will have. We also don't have numbers from typical workloads,
-> just one data point, so nobody actually knows what the impact is.
-> 
-> > This patch is easy to test and pretty much survived an
-> > overnight regression run (outside of one or two things I have to look
-> > into..). I'm happy to adjust the approach from there, but I also think
-> > if it proves necessary there are fallback options (based around the
-> > original suggestion in my first mail) to preserve current submission
-> > time (serial) append transaction reservation that don't require to
-> > categorize/split or partially process the pending ioend list.
-> 
-> IO path behaviour changes require more than functional regression
-> tests. There is an amount of documented performance regression
-> testing that is required, too. The argument being made here is that
-> "this won't affect performance", so all I'm asking for is to be
-> provided with the evidence that shows this assertion to be true.
-> 
-> This is part of the reason I suggested breaking this up into
-> separate bug fix and removal patches - a pure bug fix doesn't need
-> performance regression testing to be done. Further, having the bug
-> fix separate to changing the behaviour of the code mitigates the
-> risk of finding an unexpected performance regression from changing
-> behaviour. Combining the bug fix with a significant change of
-> behaviour doesn't provide us with a simple method of addressing such
-> a regression...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-
+> Thanks,
+> Amir.
