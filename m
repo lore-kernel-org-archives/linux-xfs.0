@@ -7,104 +7,87 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79996C43461
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Mar 2021 17:37:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EDC6C43460
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Mar 2021 17:37:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3684C61041
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Mar 2021 17:37:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E96C460BD3
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 Mar 2021 17:37:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234613AbhCaRgw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Mar 2021 13:36:52 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:37792 "EHLO
+        id S233735AbhCaRhZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 Mar 2021 13:37:25 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:45455 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234583AbhCaRgk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Mar 2021 13:36:40 -0400
+        by vger.kernel.org with ESMTP id S234472AbhCaRg6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Mar 2021 13:36:58 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1617212199;
+        s=mimecast20190719; t=1617212217;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=M8X2z8wT/cJTgJML3e89BcPFnkcCKOdzolbiTQTLLm8=;
-        b=MhGiiD1HvAHIdLkdU9zEhn3ZcYyhOgMJHiaYws2F4ozpw2DVrZ+c+xHQu0db/yn7qlgdOK
-        RJuSRKpvEE7zwL4twU7YRsDptkGWkEtbTHu9lktL7CepEhr7gr7xkB3JHSpskz5A/13qBD
-        P3fdfAz1o7al9j31c89uZFc6qoT5wYc=
+        bh=CI5kGYi9DpIHlDXlgTlQ9DczlzDRgj/V5t2chH0UbRg=;
+        b=gSJovTEL4gFEYWLI2ikvuE3akB6325Xlx/woPdJwmxlwSpDl+cQeKtpDO8X3tsvTFeT9bT
+        F72Ouk44dmVv7OQajF3OJHbxIxXaBnyCFjBO2nQCcZBC7Y43IDRa2BEqsz7JCPpr4P1ihk
+        nC0YiswI/sRbPOL5+CqUlQkyKFLpx3k=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-386-5PvtE8aJO_6IOWZtf9gc7w-1; Wed, 31 Mar 2021 13:36:34 -0400
-X-MC-Unique: 5PvtE8aJO_6IOWZtf9gc7w-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-478-nK9oD-plMke6JmxT_5O0Qg-1; Wed, 31 Mar 2021 13:36:54 -0400
+X-MC-Unique: nK9oD-plMke6JmxT_5O0Qg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 59E7F501F8;
-        Wed, 31 Mar 2021 17:36:33 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DC2AA1083E81;
+        Wed, 31 Mar 2021 17:36:52 +0000 (UTC)
 Received: from bfoster (ovpn-112-117.rdu2.redhat.com [10.10.112.117])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B114C5C649;
-        Wed, 31 Mar 2021 17:36:29 +0000 (UTC)
-Date:   Wed, 31 Mar 2021 13:36:21 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A69C419C44;
+        Wed, 31 Mar 2021 17:36:50 +0000 (UTC)
+Date:   Wed, 31 Mar 2021 13:36:47 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 1/2] xfs: functional testing of V5-relevant options
-Message-ID: <YGSzFRxcGuu3GR4I@bfoster>
+Subject: Re: [PATCH 2/2] xfs: test inobtcount upgrade
+Message-ID: <YGSzLxelZoG7IGA9@bfoster>
 References: <161715290311.2703879.6182444659830603450.stgit@magnolia>
- <161715290858.2703879.2364659698245587140.stgit@magnolia>
+ <161715291407.2703879.12588572306371939752.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161715290858.2703879.2364659698245587140.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <161715291407.2703879.12588572306371939752.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 30, 2021 at 06:08:28PM -0700, Darrick J. Wong wrote:
+On Tue, Mar 30, 2021 at 06:08:34PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Currently, the only functional testing for xfs_admin is xfs/287, which
-> checks that one can add 32-bit project ids to a V4 filesystem.  This
-> obviously isn't an exhaustive test of all the CLI arguments, and
-> historically there have been xfs configurations that don't even work.
-> 
-> Therefore, introduce a couple of new tests -- one that will test the
-> simple options with the default configuration, and a second test that
-> steps a bit outside of the test run configuration to make sure that we
-> do the right thing for external devices.  The second test already caught
-> a nasty bug in xfsprogs 5.11.
+> Make sure we can actually upgrade filesystems to support inode btree
+> counters.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  common/xfs        |   21 ++++++++++
->  tests/xfs/764     |   91 ++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/764.out |   17 ++++++++
->  tests/xfs/773     |  114 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/773.out |   19 +++++++++
->  tests/xfs/group   |    2 +
->  6 files changed, 264 insertions(+)
->  create mode 100755 tests/xfs/764
->  create mode 100644 tests/xfs/764.out
->  create mode 100755 tests/xfs/773
->  create mode 100644 tests/xfs/773.out
+>  tests/xfs/910     |  112 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/910.out |   23 +++++++++++
+>  tests/xfs/group   |    1 
+>  3 files changed, 136 insertions(+)
+>  create mode 100755 tests/xfs/910
+>  create mode 100644 tests/xfs/910.out
 > 
 > 
-...
-> diff --git a/tests/xfs/764 b/tests/xfs/764
+> diff --git a/tests/xfs/910 b/tests/xfs/910
 > new file mode 100755
-> index 00000000..c710ad4e
+> index 00000000..5f095324
 > --- /dev/null
-> +++ b/tests/xfs/764
-> @@ -0,0 +1,91 @@
+> +++ b/tests/xfs/910
+> @@ -0,0 +1,112 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0-or-later
 > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
 > +#
-> +# FS QA Test No. 764
+> +# FS QA Test No. 910
 > +#
-> +# Functional testing for xfs_admin to make sure that it handles option parsing
-> +# correctly, at least for functionality that's relevant to V5 filesystems.
-
-This test doesn't seem to depend on v5..?
-
+> +# Check that we can upgrade a filesystem to support inobtcount and that
+> +# everything works properly after the upgrade.
 > +
 > +seq=`basename $0`
 > +seqres=$RESULT_DIR/$seq
@@ -127,252 +110,152 @@ This test doesn't seem to depend on v5..?
 > +
 > +# real QA test starts here
 > +_supported_fs xfs
-> +_require_scratch
+> +_require_xfs_scratch_inobtcount
 > +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> +_require_xfs_repair_upgrade inobtcount
 > +
 > +rm -f $seqres.full
 > +
-> +note() {
-> +	echo "$@" | tee -a $seqres.full
-> +}
+> +# Make sure we can't format a filesystem with inobtcount and not finobt.
+> +_scratch_mkfs -m crc=1,inobtcount=1,finobt=0 &> $seqres.full && \
+> +	echo "Should not be able to format with inobtcount but not finobt."
 > +
-> +note "S0: Initialize filesystem"
-> +_scratch_mkfs -L origlabel -m uuid=babababa-baba-baba-baba-babababababa >> $seqres.full
-> +_scratch_xfs_db -c label -c uuid
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> +# Make sure we can't upgrade a V4 filesystem
+> +_scratch_mkfs -m crc=0,inobtcount=0,finobt=0 >> $seqres.full
+> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> +_check_scratch_xfs_features INOBTCNT
 > +
-> +note "S1: Set a filesystem label"
-> +_scratch_xfs_admin -L newlabel >> $seqres.full
-> +_scratch_xfs_db -c label
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> +# Make sure we can't upgrade a filesystem to inobtcount without finobt.
+> +_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
+> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> +_check_scratch_xfs_features INOBTCNT
 > +
-> +note "S2: Clear filesystem label"
-> +_scratch_xfs_admin -L -- >> $seqres.full
-> +_scratch_xfs_db -c label
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +
-> +note "S3: Try to set oversized label"
-> +_scratch_xfs_admin -L thisismuchtoolongforxfstohandle >> $seqres.full
-> +_scratch_xfs_db -c label
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +
-> +note "S4: Set filesystem UUID"
-> +_scratch_xfs_admin -U deaddead-dead-dead-dead-deaddeaddead >> $seqres.full
-> +_scratch_xfs_db -c uuid
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +
-> +note "S5: Zero out filesystem UUID"
-> +_scratch_xfs_admin -U nil >> $seqres.full
-> +_scratch_xfs_db -c uuid
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +
-> +note "S6: Randomize filesystem UUID"
-> +old_uuid="$(_scratch_xfs_db -c uuid)"
-> +_scratch_xfs_admin -U generate >> $seqres.full
-> +new_uuid="$(_scratch_xfs_db -c uuid)"
-> +if [ "$new_uuid" = "$old_uuid" ]; then
-> +	echo "UUID randomization failed? $old_uuid == $new_uuid"
+> +# Format V5 filesystem without inode btree counter support and upgrade it.
+> +# Inject failure into repair and make sure that the only path forward is
+> +# to re-run repair on the filesystem.
+> +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
+> +echo "Fail partway through upgrading"
+> +XFS_REPAIR_FAIL_AFTER_PHASE=2 _scratch_xfs_repair -c inobtcount=1 2>> $seqres.full
+> +test $? -eq 137 || echo "repair should have been killed??"
+> +_check_scratch_xfs_features NEEDSREPAIR INOBTCNT
+> +_try_scratch_mount &> $tmp.mount
+> +res=$?
+> +_filter_scratch < $tmp.mount
+> +if [ $res -eq 0 ]; then
+> +	echo "needsrepair should have prevented mount"
+> +	_scratch_unmount
 > +fi
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> +
+> +echo "Re-run repair to finish upgrade"
+> +_scratch_xfs_repair 2>> $seqres.full
+> +_check_scratch_xfs_features NEEDSREPAIR INOBTCNT
+> +
+> +echo "Filesystem should be usable again"
+> +_try_scratch_mount &> $tmp.mount
+> +res=$?
+> +_filter_scratch < $tmp.mount
+> +if [ $res -eq 0 ]; then
+> +	_scratch_unmount
+> +else
+> +	echo "mount should succeed after second repair"
+> +fi
+> +_check_scratch_xfs_features NEEDSREPAIR INOBTCNT
 > +
 
-Can we drop all these intermediate repair invocations and just rely on
-the post-test device check? Otherwise the rest LGTM.
+As you're probably aware I'm not a huge fan of sprinkling these kind of
+repair/mount checks throughout the feature level tests. I don't think
+it's reasonable to expect this to become a consistent pattern, so over
+time this will likely just obfuscate the purpose of some of these tests.
+That said, it seems to be harmless here so I'll just note that as my
+.02.
+
+> +# Format V5 filesystem without inode btree counter support and upgrade it.
+> +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
+> +echo moo > $SCRATCH_MNT/urk
+> +
+> +_scratch_unmount
+> +_check_scratch_fs
+> +
+> +# Now upgrade to inobtcount support
+> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> +_check_scratch_xfs_features INOBTCNT
+> +_check_scratch_fs
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' -c 'agi 0' -c 'p' >> $seqres.full
+> +
+
+This looks nearly the same as the previous test with the exception of
+not doing repair failure injection and instead creating a file and
+checking the resulting counters. Could we combine these two sequences
+and simultaneously run a slightly more randomized test? E.g., a logical
+sequence along the lines of:
+
+mkfs inobtcount=0
+mount
+run fsstress -n 500 or otherwise (quickly) populate w/ some randomized content
+umount
+repair w/ fail injection
+repair w/o fail injection
+check resulting counters
+
+Hm?
 
 Brian
 
-> +note "S7: Restore original filesystem UUID"
-> +if _check_scratch_xfs_features V5 >/dev/null; then
-> +	# Only V5 supports the metauuid feature that enables us to restore the
-> +	# original UUID after a change.
-> +	_scratch_xfs_admin -U restore >> $seqres.full
-> +	_scratch_xfs_db -c uuid
-> +else
-> +	echo "UUID = babababa-baba-baba-baba-babababababa"
-> +fi
+> +# Make sure we have nonzero counters
+> +_scratch_xfs_db -c 'agi 0' -c 'print ino_blocks fino_blocks' | \
+> +	sed -e 's/= [1-9]*/= NONZERO/g'
 > +
-> +# success, all done
+> +# Mount again, look at our files
+> +_scratch_mount >> $seqres.full
+> +cat $SCRATCH_MNT/urk
+> +
+> +# Make sure we can't re-add inobtcount
+> +_scratch_unmount
+> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
 > +status=0
 > +exit
-> diff --git a/tests/xfs/764.out b/tests/xfs/764.out
+> diff --git a/tests/xfs/910.out b/tests/xfs/910.out
 > new file mode 100644
-> index 00000000..8da929ec
+> index 00000000..ed78d88f
 > --- /dev/null
-> +++ b/tests/xfs/764.out
-> @@ -0,0 +1,17 @@
-> +QA output created by 764
-> +S0: Initialize filesystem
-> +label = "origlabel"
-> +UUID = babababa-baba-baba-baba-babababababa
-> +S1: Set a filesystem label
-> +label = "newlabel"
-> +S2: Clear filesystem label
-> +label = ""
-> +S3: Try to set oversized label
-> +label = "thisismuchto"
-> +S4: Set filesystem UUID
-> +UUID = deaddead-dead-dead-dead-deaddeaddead
-> +S5: Zero out filesystem UUID
-> +UUID = 00000000-0000-0000-0000-000000000000
-> +S6: Randomize filesystem UUID
-> +S7: Restore original filesystem UUID
-> +UUID = babababa-baba-baba-baba-babababababa
-> diff --git a/tests/xfs/773 b/tests/xfs/773
-> new file mode 100755
-> index 00000000..f184962a
-> --- /dev/null
-> +++ b/tests/xfs/773
-> @@ -0,0 +1,114 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 773
-> +#
-> +# Functional testing for xfs_admin to ensure that it parses arguments correctly
-> +# with regards to data devices that are files, external logs, and realtime
-> +# devices.
-> +#
-> +# Because this test synthesizes log and rt devices (by modifying the test run
-> +# configuration), it does /not/ require the ability to mount the scratch
-> +# filesystem.  This increases test coverage while isolating the weird bits to a
-> +# single test.
-> +#
-> +# This is partially a regression test for "xfs_admin: pick up log arguments
-> +# correctly", insofar as the issue fixed by that patch was discovered with an
-> +# earlier revision of this test.
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.* $fake_logfile $fake_rtfile $fake_datafile
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_test
-> +_require_scratch_nocheck
-> +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
-> +
-> +rm -f $seqres.full
-> +
-> +# Create some fake sparse files for testing external devices and whatnot
-> +fake_datafile=$TEST_DIR/scratch.data
-> +rm -f $fake_datafile
-> +truncate -s 500m $fake_datafile
-> +
-> +fake_logfile=$TEST_DIR/scratch.log
-> +rm -f $fake_logfile
-> +truncate -s 500m $fake_logfile
-> +
-> +fake_rtfile=$TEST_DIR/scratch.rt
-> +rm -f $fake_rtfile
-> +truncate -s 500m $fake_rtfile
-> +
-> +# Save the original variables
-> +orig_ddev=$SCRATCH_DEV
-> +orig_external=$USE_EXTERNAL
-> +orig_logdev=$SCRATCH_LOGDEV
-> +orig_rtdev=$SCRATCH_RTDEV
-> +
-> +scenario() {
-> +	echo "$@" | tee -a $seqres.full
-> +
-> +	SCRATCH_DEV=$orig_ddev
-> +	USE_EXTERNAL=$orig_external
-> +	SCRATCH_LOGDEV=$orig_logdev
-> +	SCRATCH_RTDEV=$orig_rtdev
-> +}
-> +
-> +check_label() {
-> +	_scratch_mkfs -L oldlabel >> $seqres.full
-> +	_scratch_xfs_db -c label
-> +	_scratch_xfs_admin -L newlabel "$@" >> $seqres.full
-> +	_scratch_xfs_db -c label
-> +	_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +}
-> +
-> +scenario "S1: Check that label setting with file image"
-> +SCRATCH_DEV=$fake_datafile
-> +check_label -f
-> +
-> +scenario "S2: Check that setting with logdev works"
-> +USE_EXTERNAL=yes
-> +SCRATCH_LOGDEV=$fake_logfile
-> +check_label
-> +
-> +scenario "S3: Check that setting with rtdev works"
-> +USE_EXTERNAL=yes
-> +SCRATCH_RTDEV=$fake_rtfile
-> +check_label
-> +
-> +scenario "S4: Check that setting with rtdev + logdev works"
-> +USE_EXTERNAL=yes
-> +SCRATCH_LOGDEV=$fake_logfile
-> +SCRATCH_RTDEV=$fake_rtfile
-> +check_label
-> +
-> +scenario "S5: Check that setting with nortdev + nologdev works"
-> +USE_EXTERNAL=
-> +SCRATCH_LOGDEV=
-> +SCRATCH_RTDEV=
-> +check_label
-> +
-> +scenario "S6: Check that setting with bdev incorrectly flagged as file works"
-> +check_label -f
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/773.out b/tests/xfs/773.out
-> new file mode 100644
-> index 00000000..954bfb85
-> --- /dev/null
-> +++ b/tests/xfs/773.out
-> @@ -0,0 +1,19 @@
-> +QA output created by 773
-> +S1: Check that label setting with file image
-> +label = "oldlabel"
-> +label = "newlabel"
-> +S2: Check that setting with logdev works
-> +label = "oldlabel"
-> +label = "newlabel"
-> +S3: Check that setting with rtdev works
-> +label = "oldlabel"
-> +label = "newlabel"
-> +S4: Check that setting with rtdev + logdev works
-> +label = "oldlabel"
-> +label = "newlabel"
-> +S5: Check that setting with nortdev + nologdev works
-> +label = "oldlabel"
-> +label = "newlabel"
-> +S6: Check that setting with bdev incorrectly flagged as file works
-> +label = "oldlabel"
-> +label = "newlabel"
+> +++ b/tests/xfs/910.out
+> @@ -0,0 +1,23 @@
+> +QA output created by 910
+> +Running xfs_repair to upgrade filesystem.
+> +Inode btree count feature only supported on V5 filesystems.
+> +FEATURES: INOBTCNT:NO
+> +Running xfs_repair to upgrade filesystem.
+> +Inode btree count feature requires free inode btree.
+> +FEATURES: INOBTCNT:NO
+> +Fail partway through upgrading
+> +Adding inode btree counts to filesystem.
+> +FEATURES: NEEDSREPAIR:YES INOBTCNT:YES
+> +mount: SCRATCH_MNT: mount(2) system call failed: Structure needs cleaning.
+> +Re-run repair to finish upgrade
+> +FEATURES: NEEDSREPAIR:NO INOBTCNT:YES
+> +Filesystem should be usable again
+> +FEATURES: NEEDSREPAIR:NO INOBTCNT:YES
+> +Running xfs_repair to upgrade filesystem.
+> +Adding inode btree counts to filesystem.
+> +FEATURES: INOBTCNT:YES
+> +ino_blocks = NONZERO
+> +fino_blocks = NONZERO
+> +moo
+> +Running xfs_repair to upgrade filesystem.
+> +Filesystem already has inode btree counts.
 > diff --git a/tests/xfs/group b/tests/xfs/group
-> index 09fddb5a..5801471b 100644
+> index 5801471b..0dc8038a 100644
 > --- a/tests/xfs/group
 > +++ b/tests/xfs/group
-> @@ -520,5 +520,7 @@
->  537 auto quick
->  538 auto stress
->  539 auto quick mount
-> +764 auto quick repair
+> @@ -524,3 +524,4 @@
 >  768 auto quick repair
 >  770 auto repair
-> +773 auto quick repair
+>  773 auto quick repair
+> +910 auto quick inobtcount
 > 
 
