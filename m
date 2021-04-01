@@ -2,124 +2,346 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B6D9C433B4
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 10:41:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1CDCC43461
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 11:12:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33827610D0
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 10:41:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9574E610D1
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 11:12:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233637AbhDAKk7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Apr 2021 06:40:59 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30546 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233553AbhDAKki (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Apr 2021 06:40:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1617273638;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=MtiouDf2YbF6Ko8LHYP21qq4Koys+qZRSH/r6v4C2fs=;
-        b=Oi+o2PtwbfSVDLlSIQ4XrGfdlcSFkk84BY/SsuAjxamQ8qV8mt89zCCfpKHrnOKckVnxl2
-        b1F6VpAGQ7i2HtUVpgTiQTmRSji1LEjKWvrWp/EYCiteUA0WX41XSb/eD/Y9IYj7p6V453
-        kJ7lEWu1sy/u3GvuttCZEFY8WYBtD3g=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-387-EEzK2cOUMpG9AEfhyQcmLg-1; Thu, 01 Apr 2021 06:40:36 -0400
-X-MC-Unique: EEzK2cOUMpG9AEfhyQcmLg-1
-Received: by mail-ed1-f71.google.com with SMTP id a2so2633187edx.0
-        for <linux-xfs@vger.kernel.org>; Thu, 01 Apr 2021 03:40:36 -0700 (PDT)
+        id S234354AbhDALLx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Apr 2021 07:11:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60444 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234273AbhDALLX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Apr 2021 07:11:23 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 279D5C0613E6;
+        Thu,  1 Apr 2021 04:11:23 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id h8so842644plt.7;
+        Thu, 01 Apr 2021 04:11:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=f3T62p65u2S83DXPwAJqrEpWMg9bqfngCOlwnISjfa0=;
+        b=eqtNX+K/AXfThYAWzIPSF04zWuglu7DegIYqhI4iy34Pgv9XdqKgK3Ip6LFcfzQPuI
+         94U33DHmHTnhkRSXD+k8BHy1RmpBIXCGvZPvnYI3Wv9wgIIv/Abo6TOmEbKpcdr2rCtM
+         ipMaDHz7nt/xPuHi30tEAgbmOVpKA+F8IV8j9EL/TOBXKT4pwgEThKLzoIEIm2NFAbmA
+         FBfRfgZLE3X6O9hKvkARuSg3inrBlAYTrp/U/qIOTh2crZMRKyDW2/adyv4JEuhx4nAe
+         y7xHqJ+vbdyGP8n1vYnbswnY0bfP/FJdEdJHUvRlr8p8/ylVZsGdTG+Cc+Eoeg2DP6Uu
+         NMrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:subject:message-id:mail-followup-to
-         :references:mime-version:content-disposition:in-reply-to;
-        bh=MtiouDf2YbF6Ko8LHYP21qq4Koys+qZRSH/r6v4C2fs=;
-        b=flLe6mzhs9uEuVz6qFuCRHqXstVAIDtrTDFWh3QQaWB21mYuXf/b5GBz3fOGeqRUON
-         k0HLX7ppiMZFwiuxrkQprfytRnz9dztJa+bYXMF1JHXjzr2rWYSAtZiUXewJX/54KFyY
-         FvOP9Pbx+c5F24554rgzYaD5waWIqn/H0uPtkPJY/Py4xytUMeTX/XNdsCJHYb+c4sLs
-         Cdd3ErdreFiq3EhjafIGXXRJ5tERkUmXI8Gz/ozkf35lunjXBYmX6VxOPnqBgtsBA4+3
-         f40nwXinz3sRrD0Yg3R6uZZzq/5V9JDJTURTGbzFby3ABipfxoSscKlECmrVHiZm7Cyh
-         Ijcg==
-X-Gm-Message-State: AOAM531hLTFcAbwRPPOb0lzha28768WBknhj1KwE+O6Rgd9tuU03z9fY
-        JsLBVpgGXVqKsGjlYZVFWeXxhyEam0rU65Q8ean51GITMp4zhvLnuLcwzbno8h0rYAViiQw3rnt
-        q19WZqocn48UFagMNsrbvfOtCd9I+2ogBK82eHlXD7sZdoiqKGMB/0MlkubaUtTNidK610662YQ
-        ==
-X-Received: by 2002:a05:6402:1c86:: with SMTP id cy6mr8947001edb.276.1617273635311;
-        Thu, 01 Apr 2021 03:40:35 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzCFSHHqq6b+NPUb1tiQANGPvFYOQnavAWm8sCAmm/0BH38rgBk/zoVb8mZWRxq+++IJVlHAg==
-X-Received: by 2002:a05:6402:1c86:: with SMTP id cy6mr8946979edb.276.1617273635026;
-        Thu, 01 Apr 2021 03:40:35 -0700 (PDT)
-Received: from andromeda.lan (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
-        by smtp.gmail.com with ESMTPSA id h17sm3203284eds.26.2021.04.01.03.40.33
-        for <linux-xfs@vger.kernel.org>
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=f3T62p65u2S83DXPwAJqrEpWMg9bqfngCOlwnISjfa0=;
+        b=DkB/wDjRlXuD93iZymQDfQ7uNa/qkRwlX9W38qHIVXk80Zmb08WgHTzIzvBFFuJiUg
+         jzipePlZpYDqNndexAC4e97SaD4YAY56Hl4ET5/NXI954fOxBDJThaHCtBKf8SJmzLTw
+         ++Mzj7iqRQ17pqt1yVS6mCjel0DRVm7bZaq3rA2NMRnDVFsIBKE4Pst+1I90m2Ay9tga
+         WBQHzNgFwFVEDLiq58wppyXRVOwuf9A07hFkcSwiO2t4pg1jkIqKNxJJ3qGQw/gwY2lI
+         /sXIRzr89nLCWyWYlvGK9vo18hlj18+B9HjES2L29i+C65+7D+m9Hpn8tI14OitRMntR
+         edjw==
+X-Gm-Message-State: AOAM533isdPHGFNyWWwhRFiRoGTVV9Zvxxb0r8qsA3jlPnR1/+xTroE1
+        NvkSa1+nZpxqBb9QDVpN3Yw=
+X-Google-Smtp-Source: ABdhPJwd87RNzh+BfrCBf8eX/5dIR9xk4EAMKPeLjoBbOazcoZ79gljc2I3DoR3sYnn2r/fomTvxIg==
+X-Received: by 2002:a17:90b:38f:: with SMTP id ga15mr8213179pjb.149.1617275482546;
+        Thu, 01 Apr 2021 04:11:22 -0700 (PDT)
+Received: from localhost ([122.182.250.63])
+        by smtp.gmail.com with ESMTPSA id y15sm6499629pgi.31.2021.04.01.04.11.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Apr 2021 03:40:33 -0700 (PDT)
-Date:   Thu, 1 Apr 2021 12:40:31 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] Add dax mount option to man xfs(5)
-Message-ID: <20210401104031.zovqwnucsvhkdncf@andromeda.lan>
-Mail-Followup-To: linux-xfs@vger.kernel.org
-References: <20210315150250.11870-1-cmaiolino@redhat.com>
+        Thu, 01 Apr 2021 04:11:22 -0700 (PDT)
+Date:   Thu, 1 Apr 2021 16:41:20 +0530
+From:   Ritesh Harjani <ritesh.list@gmail.com>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org,
+        darrick.wong@oracle.com, dan.j.williams@intel.com,
+        willy@infradead.org, jack@suse.cz, viro@zeniv.linux.org.uk,
+        linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        david@fromorbit.com, hch@lst.de, rgoldwyn@suse.de,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>,
+        Ritesh Harjani <ritesh.list@gmail.com>
+Subject: Re: [PATCH v3 08/10] fsdax: Dedup file range to use a compare
+ function
+Message-ID: <20210401111120.2ukog26aoyvyysyz@riteshh-domain>
+References: <20210319015237.993880-1-ruansy.fnst@fujitsu.com>
+ <20210319015237.993880-9-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210315150250.11870-1-cmaiolino@redhat.com>
+In-Reply-To: <20210319015237.993880-9-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 15, 2021 at 04:02:50PM +0100, Carlos Maiolino wrote:
-> Details are already in kernel's documentation, but make dax mount option
-> information accessible through xfs(5) manpage.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+On 21/03/19 09:52AM, Shiyang Ruan wrote:
+> With dax we cannot deal with readpage() etc. So, we create a dax
+> comparison funciton which is similar with
+> vfs_dedupe_file_range_compare().
+> And introduce dax_remap_file_range_prep() for filesystem use.
+>
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
 > ---
-
-Polite ping :)
-
-
->  man/man5/xfs.5 | 18 ++++++++++++++++++
->  1 file changed, 18 insertions(+)
-> 
-> diff --git a/man/man5/xfs.5 b/man/man5/xfs.5
-> index 7642662f..46b0558a 100644
-> --- a/man/man5/xfs.5
-> +++ b/man/man5/xfs.5
-> @@ -133,6 +133,24 @@ by the filesystem.
->  CRC enabled filesystems always use the attr2 format, and so
->  will reject the noattr2 mount option if it is set.
->  .TP
-> +.BR dax=value
-> +Set DAX behavior for the current filesystem. This mount option accepts the
-> +following values:
+>  fs/dax.c             | 56 ++++++++++++++++++++++++++++++++++++++++++++
+>  fs/remap_range.c     | 45 ++++++++++++++++++++++++++++-------
+>  fs/xfs/xfs_reflink.c |  9 +++++--
+>  include/linux/dax.h  |  4 ++++
+>  include/linux/fs.h   | 15 ++++++++----
+>  5 files changed, 115 insertions(+), 14 deletions(-)
+>
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 348297b38f76..76f81f1d76ec 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -1833,3 +1833,59 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
+>  	return dax_insert_pfn_mkwrite(vmf, pfn, order);
+>  }
+>  EXPORT_SYMBOL_GPL(dax_finish_sync_fault);
 > +
-> +"dax=inode" DAX will be enabled only on files with FS_XFLAG_DAX applied.
+> +static loff_t dax_range_compare_actor(struct inode *ino1, loff_t pos1,
+> +		struct inode *ino2, loff_t pos2, loff_t len, void *data,
+> +		struct iomap *smap, struct iomap *dmap)
+> +{
+> +	void *saddr, *daddr;
+> +	bool *same = data;
+> +	int ret;
 > +
-> +"dax=never" DAX will be disabled by the whole filesystem including files with
-> +FS_XFLAG_DAX applied"
+> +	if (smap->type == IOMAP_HOLE && dmap->type == IOMAP_HOLE) {
+> +		*same = true;
+> +		return len;
+> +	}
 > +
-> +"dax=always" DAX will be enabled to every file in the filesystem inclduing files
-> +without FS_XFLAG_DAX applied"
+> +	if (smap->type == IOMAP_HOLE || dmap->type == IOMAP_HOLE) {
+> +		*same = false;
+> +		return 0;
+> +	}
 > +
-> +If no option is used when mounting a pmem device, dax=inode will be used as
-> +default.
-> +
-> +For details regarding DAX behavior in kernel, please refer to kernel's
-> +documentation at filesystems/dax.txt
-> +.TP
->  .BR discard | nodiscard
->  Enable/disable the issuing of commands to let the block
->  device reclaim space freed by the filesystem.  This is
-> -- 
-> 2.29.2
-> 
+> +	ret = dax_iomap_direct_access(smap, pos1, ALIGN(pos1 + len, PAGE_SIZE),
+> +				      &saddr, NULL);
 
--- 
-Carlos
+shouldn't it take len as the second argument?
 
+> +	if (ret < 0)
+> +		return -EIO;
+> +
+> +	ret = dax_iomap_direct_access(dmap, pos2, ALIGN(pos2 + len, PAGE_SIZE),
+> +				      &daddr, NULL);
+
+ditto.
+> +	if (ret < 0)
+> +		return -EIO;
+> +
+> +	*same = !memcmp(saddr, daddr, len);
+> +	return len;
+> +}
+> +
+> +int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+> +		struct inode *dest, loff_t destoff, loff_t len, bool *is_same,
+> +		const struct iomap_ops *ops)
+> +{
+> +	int id, ret = 0;
+> +
+> +	id = dax_read_lock();
+> +	while (len) {
+> +		ret = iomap_apply2(src, srcoff, dest, destoff, len, 0, ops,
+> +				   is_same, dax_range_compare_actor);
+> +		if (ret < 0 || !*is_same)
+> +			goto out;
+> +
+> +		len -= ret;
+> +		srcoff += ret;
+> +		destoff += ret;
+> +	}
+> +	ret = 0;
+> +out:
+> +	dax_read_unlock(id);
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_dedupe_file_range_compare);
+> diff --git a/fs/remap_range.c b/fs/remap_range.c
+> index 77dba3a49e65..9079390edaf3 100644
+> --- a/fs/remap_range.c
+> +++ b/fs/remap_range.c
+> @@ -14,6 +14,7 @@
+>  #include <linux/compat.h>
+>  #include <linux/mount.h>
+>  #include <linux/fs.h>
+> +#include <linux/dax.h>
+>  #include "internal.h"
+>
+>  #include <linux/uaccess.h>
+> @@ -199,9 +200,9 @@ static void vfs_unlock_two_pages(struct page *page1, struct page *page2)
+>   * Compare extents of two files to see if they are the same.
+>   * Caller must have locked both inodes to prevent write races.
+>   */
+> -static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+> -					 struct inode *dest, loff_t destoff,
+> -					 loff_t len, bool *is_same)
+> +int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+> +				  struct inode *dest, loff_t destoff,
+> +				  loff_t len, bool *is_same)
+>  {
+>  	loff_t src_poff;
+>  	loff_t dest_poff;
+> @@ -280,6 +281,7 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+>  out_error:
+>  	return error;
+>  }
+> +EXPORT_SYMBOL(vfs_dedupe_file_range_compare);
+>
+>  /*
+>   * Check that the two inodes are eligible for cloning, the ranges make
+> @@ -289,9 +291,11 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+>   * If there's an error, then the usual negative error code is returned.
+>   * Otherwise returns 0 with *len set to the request length.
+>   */
+> -int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+> -				  struct file *file_out, loff_t pos_out,
+> -				  loff_t *len, unsigned int remap_flags)
+> +static int
+> +__generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+> +				struct file *file_out, loff_t pos_out,
+> +				loff_t *len, unsigned int remap_flags,
+> +				const struct iomap_ops *ops)
+>  {
+>  	struct inode *inode_in = file_inode(file_in);
+>  	struct inode *inode_out = file_inode(file_out);
+> @@ -351,8 +355,15 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+>  	if (remap_flags & REMAP_FILE_DEDUP) {
+>  		bool		is_same = false;
+>
+> -		ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
+> -				inode_out, pos_out, *len, &is_same);
+> +		if (!IS_DAX(inode_in) && !IS_DAX(inode_out))
+> +			ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
+> +					inode_out, pos_out, *len, &is_same);
+> +		else if (IS_DAX(inode_in) && IS_DAX(inode_out) && ops)
+> +			ret = dax_dedupe_file_range_compare(inode_in, pos_in,
+> +					inode_out, pos_out, *len, &is_same,
+> +					ops);
+> +		else
+> +			return -EINVAL;
+>  		if (ret)
+>  			return ret;
+>  		if (!is_same)
+
+should we consider to check !is_same check b4?
+you should maybe relook at this error handling side of code.
+we still return len from actor function but is_same is set to false.
+So we are essentially returning ret (positive value), instead should be
+returning -EBADE because of !memcmp
+
+> @@ -370,6 +381,24 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+>
+>  	return ret;
+>  }
+> +
+> +int dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+> +			      struct file *file_out, loff_t pos_out,
+> +			      loff_t *len, unsigned int remap_flags,
+> +			      const struct iomap_ops *ops)
+> +{
+> +	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
+> +					       pos_out, len, remap_flags, ops);
+> +}
+> +EXPORT_SYMBOL(dax_remap_file_range_prep);
+> +
+> +int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+> +				  struct file *file_out, loff_t pos_out,
+> +				  loff_t *len, unsigned int remap_flags)
+> +{
+> +	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
+> +					       pos_out, len, remap_flags, NULL);
+> +}
+>  EXPORT_SYMBOL(generic_remap_file_range_prep);
+>
+>  loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 6fa05fb78189..f5b3a3da36b7 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1308,8 +1308,13 @@ xfs_reflink_remap_prep(
+>  	if (IS_DAX(inode_in) || IS_DAX(inode_out))
+>  		goto out_unlock;
+>
+> -	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
+> -			len, remap_flags);
+> +	if (IS_DAX(inode_in))
+
+if (!IS_DAX(inode_in)) no?
+
+> +		ret = generic_remap_file_range_prep(file_in, pos_in, file_out,
+> +						    pos_out, len, remap_flags);
+> +	else
+> +		ret = dax_remap_file_range_prep(file_in, pos_in, file_out,
+> +						pos_out, len, remap_flags,
+> +						&xfs_read_iomap_ops);
+>  	if (ret || *len == 0)
+>  		goto out_unlock;
+>
+> diff --git a/include/linux/dax.h b/include/linux/dax.h
+> index 3275e01ed33d..32e1c34349f2 100644
+> --- a/include/linux/dax.h
+> +++ b/include/linux/dax.h
+> @@ -239,6 +239,10 @@ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
+>  				      pgoff_t index);
+>  s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap,
+>  		struct iomap *srcmap);
+> +int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+> +				  struct inode *dest, loff_t destoff,
+> +				  loff_t len, bool *is_same,
+> +				  const struct iomap_ops *ops);
+>  static inline bool dax_mapping(struct address_space *mapping)
+>  {
+>  	return mapping->host && IS_DAX(mapping->host);
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index fd47deea7c17..2e6ec5bdf82a 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -68,6 +68,7 @@ struct fsverity_info;
+>  struct fsverity_operations;
+>  struct fs_context;
+>  struct fs_parameter_spec;
+> +struct iomap_ops;
+>
+>  extern void __init inode_init(void);
+>  extern void __init inode_init_early(void);
+> @@ -1910,13 +1911,19 @@ extern ssize_t vfs_read(struct file *, char __user *, size_t, loff_t *);
+>  extern ssize_t vfs_write(struct file *, const char __user *, size_t, loff_t *);
+>  extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
+>  				   loff_t, size_t, unsigned int);
+> +typedef int (*compare_range_t)(struct inode *src, loff_t srcpos,
+> +			       struct inode *dest, loff_t destpos,
+> +			       loff_t len, bool *is_same);
+
+Is this used anywhere?
+
+>  extern ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
+>  				       struct file *file_out, loff_t pos_out,
+>  				       size_t len, unsigned int flags);
+> -extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+> -					 struct file *file_out, loff_t pos_out,
+> -					 loff_t *count,
+> -					 unsigned int remap_flags);
+> +int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+> +				  struct file *file_out, loff_t pos_out,
+> +				  loff_t *count, unsigned int remap_flags);
+> +int dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+> +			      struct file *file_out, loff_t pos_out,
+> +			      loff_t *len, unsigned int remap_flags,
+> +			      const struct iomap_ops *ops);
+>  extern loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
+>  				  struct file *file_out, loff_t pos_out,
+>  				  loff_t len, unsigned int remap_flags);
+> --
+> 2.30.1
+>
+>
+>
