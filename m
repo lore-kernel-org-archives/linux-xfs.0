@@ -2,88 +2,387 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F185EC433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Mar 2021 20:23:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63F70C43470
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 01:09:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD1B860FEA
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 Mar 2021 20:23:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E9806105A
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 01:09:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236438AbhCaUXZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Mar 2021 16:23:25 -0400
-Received: from mx2.suse.de ([195.135.220.15]:32856 "EHLO mx2.suse.de"
+        id S232310AbhDABIy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 Mar 2021 21:08:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41330 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236441AbhCaUXQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Mar 2021 16:23:16 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1617222195; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=aQCCFPFFDKmuQfqBjbvwASzlhLWQzEsG+/db46wEao8=;
-        b=YxzRW9oxXOFHBsXf307g96PCyP4doyTX81uEN/dbfKx+COSiLXeqwILejNnt5Kk/WKNG4p
-        y0LMaK4KbW9I+76YT0j3sbffMs1gBoJ3jAVGSppMayxPqhlyAHOYQNA9U+IEKSdZL3YwEE
-        DO2nKc54/9l3SbRIqCSem26od+tXTfM=
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 3A9B6B3D7
-        for <linux-xfs@vger.kernel.org>; Wed, 31 Mar 2021 20:23:15 +0000 (UTC)
-From:   Anthony Iliopoulos <ailiop@suse.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v3] xfs: deprecate BMV_IF_NO_DMAPI_READ flag
-Date:   Wed, 31 Mar 2021 22:26:37 +0200
-Message-Id: <20210331202637.26012-1-ailiop@suse.com>
-X-Mailer: git-send-email 2.31.1.dirty
+        id S229486AbhDABIr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 31 Mar 2021 21:08:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7EC5E61057;
+        Thu,  1 Apr 2021 01:08:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617239327;
+        bh=HwWCq6SxvUfuy5a9dDVIH4MpXqTQrl97cM0rg3ExtiM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Yl5HamVNGOnj3haG2U2nvOySfjLHPBzAhMEHhQmph/+dSqFd3VvjzNOUTYeYvKHVM
+         b9bsUc2ZXAv1nim06P6QLD1yCKuZBXy2MpxAWxu0Cx2qsTKCn3YcD9K7p3doqLMBIY
+         gsrCCRCPe7Jroi3dnbouV7CVBW36DyD7sSLIvhgv7kcRkM5jILZZET5Xw03EGMbu87
+         IZLx415HF19SY2xfG4dYo7FuFSOwmpE35lGd7lWr8PATBr6L/zjCQclxy/A9/vDCqH
+         WAsmHGAU5oaz7CsI07qtv2R7UTUI3s18rBoG54N38PPOTu+IURMV8qZFDQ+ncQz0zn
+         6xO5exBs+N4ag==
+Subject: [PATCHSET RFC v3 00/18] xfs: atomic file updates
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-api@vger.kernel.org
+Date:   Wed, 31 Mar 2021 18:08:46 -0700
+Message-ID: <161723932606.3149451.12366114306150243052.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use of the flag has had no effect since kernel commit 288699fecaff
-("xfs: drop dmapi hooks"), which removed all dmapi related code, so
-deprecate it.
+Hi all,
 
-Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
+This series creates a new FIEXCHANGE_RANGE system call to exchange
+ranges of bytes between two files atomically.  This new functionality
+enables data storage programs to stage and commit file updates such that
+reader programs will see either the old contents or the new contents in
+their entirety, with no chance of torn writes.  A successful call
+completion guarantees that the new contents will be seen even if the
+system fails.
+
+User programs will be able to update files atomically by opening an
+O_TMPFILE, reflinking the source file to it, making whatever updates
+they want to make, and exchange the relevant ranges of the temp file
+with the original file.  If the updates are aligned with the file block
+size, a new (since v2) flag provides for exchanging only the written
+areas.  Callers can arrange for the update to be rejected if the
+original file has been changed.
+
+The intent behind this new userspace functionality is to enable atomic
+rewrites of arbitrary parts of individual files.  For years, application
+programmers wanting to ensure the atomicity of a file update had to
+write the changes to a new file in the same directory, fsync the new
+file, rename the new file on top of the old filename, and then fsync the
+directory.  People get it wrong all the time, and $fs hacks abound.
+Here is the proposed manual page:
+
+IOCTL-FIEXCHANGE_RANGE(Linux Programmer's ManIOCTL-FIEXCHANGE_RANGE(2)
+
+NAME
+       ioctl_fiexchange_range  - exchange the contents of parts of two
+       files
+
+SYNOPSIS
+       #include <sys/ioctl.h>
+       #include <linux/fiexchange.h>
+
+       int    ioctl(int     file2_fd,     FIEXCHANGE_RANGE,     struct
+       file_xchg_range *arg);
+
+DESCRIPTION
+       Given  a  range  of bytes in a first file file1_fd and a second
+       range of bytes in a second file  file2_fd,  this  ioctl(2)  ex‐
+       changes the contents of the two ranges.
+
+       Exchanges  are  atomic  with  regards to concurrent file opera‐
+       tions, so no userspace-level locks need to be taken  to  obtain
+       consistent  results.  Implementations must guarantee that read‐
+       ers see either the old contents or the new  contents  in  their
+       entirety, even if the system fails.
+
+       The exchange parameters are conveyed in a structure of the fol‐
+       lowing form:
+
+           struct file_xchg_range {
+               __s64    file1_fd;
+               __s64    file1_offset;
+               __s64    file2_offset;
+               __s64    length;
+
+               __u64    flags;
+
+               __s64    file2_ino;
+               __s64    file2_mtime;
+               __s64    file2_ctime;
+               __s32    file2_mtime_nsec;
+               __s32    file2_ctime_nsec;
+
+               __u64    pad[6];
+           };
+
+       The field pad must be zero.
+
+       The fields file1_fd, file1_offset, and length define the  first
+       range of bytes to be exchanged.
+
+       The fields file2_fd, file2_offset, and length define the second
+       range of bytes to be exchanged.
+
+       Both files must be from the same filesystem mount.  If the  two
+       file  descriptors represent the same file, the byte ranges must
+       not overlap.  Most  disk-based  filesystems  require  that  the
+       starts  of  both ranges must be aligned to the file block size.
+       If this is the case, the ends of the ranges  must  also  be  so
+       aligned unless the FILE_XCHG_RANGE_TO_EOF flag is set.
+
+       The field flags control the behavior of the exchange operation.
+
+           FILE_XCHG_RANGE_FILE2_FRESH
+                  Check  the  freshness  of file2_fd after locking the
+                  file but before exchanging the contents.   The  sup‐
+                  plied  file2_ino field must match file2's inode num‐
+                  ber, and the supplied file2_mtime, file2_mtime_nsec,
+                  file2_ctime,  and file2_ctime_nsec fields must match
+                  the modification time and change time of file2.   If
+                  they do not match, EBUSY will be returned.
+
+           FILE_XCHG_RANGE_TO_EOF
+                  Ignore  the length parameter.  All bytes in file1_fd
+                  from file1_offset to EOF are moved to file2_fd,  and
+                  file2's  size is set to (file2_offset+(file1_length-
+                  file1_offset)).  Meanwhile, all bytes in file2  from
+                  file2_offset  to  EOF are moved to file1 and file1's
+                  size   is   set   to    (file1_offset+(file2_length-
+                  file2_offset)).   This option is not compatible with
+                  FILE_XCHG_RANGE_FULL_FILES.
+
+           FILE_XCHG_RANGE_FSYNC
+                  Ensure that all modified in-core data in  both  file
+                  ranges  and  all  metadata updates pertaining to the
+                  exchange operation are flushed to persistent storage
+                  before  the  call  returns.  Opening either file de‐
+                  scriptor with O_SYNC or O_DSYNC will have  the  same
+                  effect.
+
+           FILE_XCHG_RANGE_SKIP_FILE1_HOLES
+                  Skip  sub-ranges  of  file1_fd that are known not to
+                  contain data.  This facility can be used  to  imple‐
+                  ment  atomic scatter-gather writes of any complexity
+                  for software-defined storage targets.
+
+           FILE_XCHG_RANGE_DRY_RUN
+                  Check the parameters and the feasibility of the  op‐
+                  eration, but do not change anything.
+
+           FILE_XCHG_RANGE_COMMIT
+                  This      flag      is      a     combination     of
+                  FILE_XCHG_RANGE_FILE2_FRESH |  FILE_XCHG_RANGE_FSYNC
+                  and  can  be  used  to commit changes to file2_fd to
+                  persistent storage if and  only  if  file2  has  not
+                  changed.
+
+           FILE_XCHG_RANGE_FULL_FILES
+                  Require that file1_offset and file2_offset are zero,
+                  and that the length field  matches  the  lengths  of
+                  both  files.   If  not, EDOM will be returned.  This
+                  option      is       not       compatible       with
+                  FILE_XCHG_RANGE_TO_EOF.
+
+           FILE_XCHG_RANGE_NONATOMIC
+                  This  flag  relaxes the requirement that readers see
+                  only the old contents or the new contents  in  their
+                  entirety.   If  the system fails before all modified
+                  in-core data and metadata updates are  persisted  to
+                  disk,  the contents of both file ranges after recov‐
+                  ery are not defined and may be a mix of both.
+
+                  Do not use this flag unless  the  contents  of  both
+                  ranges  are  known  to be identical and there are no
+                  other writers.
+
+RETURN VALUE
+       On error, -1 is returned, and errno is set to indicate the  er‐
+       ror.
+
+ERRORS
+       Error  codes can be one of, but are not limited to, the follow‐
+       ing:
+
+       EBADF  file1_fd is not open for reading and writing or is  open
+              for  append-only  writes;  or  file2_fd  is not open for
+              reading and writing or is open for append-only writes.
+
+       EBUSY  The inode number and timestamps supplied  do  not  match
+              file2_fd  and  FILE_XCHG_RANGE_FILE2_FRESH  was  set  in
+              flags.
+
+       EDOM   The ranges do not cover the entirety of both files,  and
+              FILE_XCHG_RANGE_FULL_FILES was set in flags.
+
+       EINVAL The  parameters  are  not correct for these files.  This
+              error can also appear if either file  descriptor  repre‐
+              sents  a device, FIFO, or socket.  Disk filesystems gen‐
+              erally require the offset and  length  arguments  to  be
+              aligned to the fundamental block sizes of both files.
+
+       EIO    An I/O error occurred.
+
+       EISDIR One of the files is a directory.
+
+       ENOMEM The  kernel  was unable to allocate sufficient memory to
+              perform the operation.
+
+       ENOSPC There is not enough free space  in  the  filesystem  ex‐
+              change the contents safely.
+
+       EOPNOTSUPP
+              The filesystem does not support exchanging bytes between
+              the two files.
+
+       EPERM  file1_fd or file2_fd are immutable.
+
+       ETXTBSY
+              One of the files is a swap file.
+
+       EUCLEAN
+              The filesystem is corrupt.
+
+       EXDEV  file1_fd and  file2_fd  are  not  on  the  same  mounted
+              filesystem.
+
+CONFORMING TO
+       This API is Linux-specific.
+
+USE CASES
+       Three use cases are imagined for this system call.
+
+       The  first  is a filesystem defragmenter, which copies the con‐
+       tents of a file into another file and wishes  to  exchange  the
+       space  mappings  of  the  two files, provided that the original
+       file has not changed.  The flags NONATOMIC and FILE2_FRESH  are
+       recommended for this application.
+
+       The  second is a data storage program that wants to commit non-
+       contiguous updates to a file atomically.  This can be  done  by
+       creating a temporary file, calling FICLONE(2) to share the con‐
+       tents, and staging the updates into the temporary file.  Either
+       of  the  FULL_FILES or TO_EOF flags are recommended, along with
+       FSYNC.  Depending on  the  application's  locking  design,  the
+       flags FILE2_FRESH or COMMIT may be applicable here.  The tempo‐
+       rary file can be deleted or punched out afterwards.
+
+       The third is a software-defined storage host (e.g. a disk juke‐
+       box)  which  implements an atomic scatter-gather write command.
+       Provided the exported disk's logical  block  size  matches  the
+       file's  allocation  unit  size,  this can be done by creating a
+       temporary file and writing the data at the appropriate offsets.
+       Use  this  call  with  the SKIP_HOLES flag to exchange only the
+       blocks involved in the write command.  The  use  of  the  FSYNC
+       flag is recommended here.  The temporary file should be deleted
+       or punched out completely before being reused to stage  another
+       write.
+
+NOTES
+       Some  filesystems may limit the amount of data or the number of
+       extents that can be exchanged in a single call.
+
+SEE ALSO
+       ioctl(2)
+
+Linux                         2021-04-01     IOCTL-FIEXCHANGE_RANGE(2)
+
+The reference implementation in XFS creates a new log incompat feature
+and log intent items to track high level progress of swapping ranges of
+two files and finish interrupted work if the system goes down.  Sample
+code can be found in the corresponding changes to xfs_io to exercise the
+use case mentioned above.
+
+Note that this function is /not/ the O_DIRECT atomic file writes concept
+that has also been floating around for years.  This RFC is constructed
+entirely in software, which means that there are no limitations other
+than the general filesystem limits.
+
+As a side note, the original motivation behind the kernel functionality
+is online repair of file-based metadata.  The atomic file swap is
+implemented as an atomic inode fork swap, which means that we can
+implement online reconstruction of extended attributes and directories
+by building a new one in another inode and atomically swap the contents.
+
+Subsequent patchsets adapt the online filesystem repair code to use
+atomic extent swapping.  This enables repair functions to construct a
+clean copy of a directory, xattr information, realtime bitmaps, and
+realtime summary information in a temporary inode.  If this completes
+successfully, the new contents can be swapped atomically into the inode
+being repaired.  This is essential to avoid making corruption problems
+worse if the system goes down in the middle of running repair.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=atomic-file-updates
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=atomic-file-updates
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=atomic-file-updates
+
+xfsdocs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=atomic-file-updates
 ---
-changes since v1:
- - retain flag definition to prevent reuse and not break kabi, per
-   Darrick's suggestion.
+ Documentation/filesystems/vfs.rst |   16 +
+ fs/ioctl.c                        |   42 ++
+ fs/remap_range.c                  |  283 ++++++++++
+ fs/xfs/Makefile                   |    3 
+ fs/xfs/libxfs/xfs_bmap.h          |    4 
+ fs/xfs/libxfs/xfs_defer.c         |   49 +-
+ fs/xfs/libxfs/xfs_defer.h         |   11 
+ fs/xfs/libxfs/xfs_errortag.h      |    4 
+ fs/xfs/libxfs/xfs_format.h        |   37 +
+ fs/xfs/libxfs/xfs_fs.h            |    2 
+ fs/xfs/libxfs/xfs_log_format.h    |   63 ++
+ fs/xfs/libxfs/xfs_log_recover.h   |    4 
+ fs/xfs/libxfs/xfs_sb.c            |    2 
+ fs/xfs/libxfs/xfs_shared.h        |    6 
+ fs/xfs/libxfs/xfs_swapext.c       | 1030 +++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_swapext.h       |   89 +++
+ fs/xfs/xfs_bmap_item.c            |   13 
+ fs/xfs/xfs_bmap_util.c            |  611 ----------------------
+ fs/xfs/xfs_bmap_util.h            |    3 
+ fs/xfs/xfs_error.c                |    3 
+ fs/xfs/xfs_extfree_item.c         |    2 
+ fs/xfs/xfs_file.c                 |   49 ++
+ fs/xfs/xfs_inode.c                |   13 
+ fs/xfs/xfs_inode.h                |    1 
+ fs/xfs/xfs_ioctl.c                |  102 +---
+ fs/xfs/xfs_ioctl.h                |    4 
+ fs/xfs/xfs_ioctl32.c              |    8 
+ fs/xfs/xfs_log.c                  |   65 ++
+ fs/xfs/xfs_log.h                  |    3 
+ fs/xfs/xfs_log_priv.h             |    3 
+ fs/xfs/xfs_log_recover.c          |   57 ++
+ fs/xfs/xfs_mount.c                |  110 ++++
+ fs/xfs/xfs_mount.h                |    2 
+ fs/xfs/xfs_refcount_item.c        |    2 
+ fs/xfs/xfs_rmap_item.c            |    2 
+ fs/xfs/xfs_super.c                |   17 +
+ fs/xfs/xfs_swapext_item.c         |  649 +++++++++++++++++++++++
+ fs/xfs/xfs_swapext_item.h         |   61 ++
+ fs/xfs/xfs_trace.c                |    1 
+ fs/xfs/xfs_trace.h                |  196 +++++++
+ fs/xfs/xfs_trans.c                |   14 -
+ fs/xfs/xfs_xchgrange.c            |  772 ++++++++++++++++++++++++++++
+ fs/xfs/xfs_xchgrange.h            |   30 +
+ include/linux/fs.h                |   14 -
+ include/uapi/linux/fiexchange.h   |  101 ++++
+ 45 files changed, 3807 insertions(+), 746 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_swapext.c
+ create mode 100644 fs/xfs/libxfs/xfs_swapext.h
+ create mode 100644 fs/xfs/xfs_swapext_item.c
+ create mode 100644 fs/xfs/xfs_swapext_item.h
+ create mode 100644 fs/xfs/xfs_xchgrange.c
+ create mode 100644 fs/xfs/xfs_xchgrange.h
+ create mode 100644 include/uapi/linux/fiexchange.h
 
-changes since v2:
- - leave flag in BMV_IF_VALID so that we won't break userspace.
-
- fs/xfs/libxfs/xfs_fs.h | 2 +-
- fs/xfs/xfs_ioctl.c     | 2 --
- 2 files changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index fa06a52c67fd..7439a8c317be 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -65,7 +65,7 @@ struct getbmapx {
- 
- /*	bmv_iflags values - set by XFS_IOC_GETBMAPX caller.	*/
- #define BMV_IF_ATTRFORK		0x1	/* return attr fork rather than data */
--#define BMV_IF_NO_DMAPI_READ	0x2	/* Do not generate DMAPI read event  */
-+#define BMV_IF_NO_DMAPI_READ	0x2	/* Deprecated */
- #define BMV_IF_PREALLOC		0x4	/* rtn status BMV_OF_PREALLOC if req */
- #define BMV_IF_DELALLOC		0x8	/* rtn status BMV_OF_DELALLOC if req */
- #define BMV_IF_NO_HOLES		0x10	/* Do not return holes */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 99dfe89a8d08..9d3f72ef1efe 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1669,8 +1669,6 @@ xfs_ioc_getbmap(
- 		bmx.bmv_iflags = BMV_IF_ATTRFORK;
- 		/*FALLTHRU*/
- 	case XFS_IOC_GETBMAP:
--		if (file->f_mode & FMODE_NOCMTIME)
--			bmx.bmv_iflags |= BMV_IF_NO_DMAPI_READ;
- 		/* struct getbmap is a strict subset of struct getbmapx. */
- 		recsize = sizeof(struct getbmap);
- 		break;
--- 
-2.31.1.dirty
