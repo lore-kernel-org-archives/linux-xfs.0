@@ -4,41 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27A9DC43470
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47E4AC43603
 	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 01:11:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB6DB6108C
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 01:11:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BE5361057
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 01:11:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233092AbhDABKb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Mar 2021 21:10:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41926 "EHLO mail.kernel.org"
+        id S233119AbhDABKc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 Mar 2021 21:10:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42090 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233036AbhDABKA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Mar 2021 21:10:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3AE2861073;
-        Thu,  1 Apr 2021 01:10:00 +0000 (UTC)
+        id S233048AbhDABKM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 31 Mar 2021 21:10:12 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A263361059;
+        Thu,  1 Apr 2021 01:10:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617239400;
-        bh=g41iFUu/ELIShU2ZENeAptrhYIpTYEX+OOLzxVKS/Kk=;
+        s=k20201202; t=1617239411;
+        bh=T5PUl359kzo+vFmrOpMOYvPBRBzKhRrOfmi+b8Rnx7Y=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Zy2H6PiMDTnLG8DB0E7Q8V4XiaWvRZ289N0UEbH0JXzKXTPSLAP+XBSAfq6OovIW1
-         1RCNoaLs79bYBOXA8ZJf5KIh+Uyv7B4WZA4fEUbPJBh9WPsA3Kpm023eI1MZ4cL5Gt
-         kkCDKHCsJOKEBRNmEvOyorxL6te2JKzWqd48Ko7BhEdg8zthen3vFJmsmSG014Aaln
-         f6pvHp2sE7QdpYTHElGdc7l5ZPRot/eRzB5CWnr5dJwcXTNZ1fFLVIQpf72BQWZ6WS
-         NcgpkhUxokw5suvvhf36Y6d6Et+TyTEzwcaT9zoCw1W6IJ6xsQaBZyigVznuO0D6k4
-         dpiTCcdvvcuOQ==
-Subject: [PATCH 13/18] xfs: allow xfs_swap_range to use older extent swap
- algorithms
+        b=jtpp2PRN8XRQtEnnTrpKOkU0LwgSShEl84ybdUXe0k5uDNm1k4hhAPfDsCVU4swvb
+         egtCEm5+TklUEPMxgV3BAsXdwHCxCS/flfG0HCZhq9Q+yyQeVs+gLK4lRPS0AqTCND
+         QyDCCNXf9lCPFBiIrlsvkCnElDk2cZhZwbkwV3JZg/92vZXEBnYR3RdttKZ6bAkZWB
+         zwoM0EFSAOzgcy4V75E0nRifEgO3ZX14a8IhS4JQwCvqUgGMKyyMAOhlPE8QPoJVB7
+         xCfGwoFCCgl/qn8+lP5ioj4USLww8CZ9m9Gik6gh/Idyi7DLXUfC9MD76vzXCWUJZM
+         4P72DIToRDfWw==
+Subject: [PATCH 15/18] xfs: condense extended attributes after an atomic swap
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-api@vger.kernel.org
-Date:   Wed, 31 Mar 2021 18:09:59 -0700
-Message-ID: <161723939929.3149451.10970679280631570212.stgit@magnolia>
+Date:   Wed, 31 Mar 2021 18:10:10 -0700
+Message-ID: <161723941063.3149451.11685074660218933956.stgit@magnolia>
 In-Reply-To: <161723932606.3149451.12366114306150243052.stgit@magnolia>
 References: <161723932606.3149451.12366114306150243052.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,152 +50,197 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If userspace permits non-atomic swap operations, use the older code
-paths to implement the same functionality.
+Add a new swapext flag that enables us to perform post-swap processing
+on file2 once we're done swapping the extent maps.  If we were swapping
+the extended attributes, we want to be able to convert file2's attr fork
+from block to inline format.
+
+This isn't used anywhere right now, but we need to have the basic ondisk
+flags in place so that a future online xattr repair feature can create
+salvaged attrs in a temporary file and swap the attr forks when ready.
+If one file is in extents format and the other is inline, we will have to
+promote both to extents format to perform the swap.  After the swap, we
+can try to condense the fixed file's attr fork back down to inline
+format if possible.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_util.c |    4 +--
- fs/xfs/xfs_bmap_util.h |    4 +++
- fs/xfs/xfs_xchgrange.c |   66 ++++++++++++++++++++++++++++++++++++++++++++----
- 3 files changed, 66 insertions(+), 8 deletions(-)
+ fs/xfs/libxfs/xfs_log_format.h |    6 ++++
+ fs/xfs/libxfs/xfs_swapext.c    |   56 ++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/libxfs/xfs_swapext.h    |    5 ++++
+ fs/xfs/xfs_trace.h             |    6 +++-
+ 4 files changed, 67 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 7cd6a6d5fb00..94f1d0d685fe 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1259,7 +1259,7 @@ xfs_insert_file_space(
-  * reject and log the attempt. basically we are putting the responsibility on
-  * userspace to get this right.
-  */
--static int
-+int
- xfs_swap_extents_check_format(
- 	struct xfs_inode	*ip,	/* target inode */
- 	struct xfs_inode	*tip)	/* tmp inode */
-@@ -1401,7 +1401,7 @@ xfs_swap_change_owner(
- }
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 52ca6d72de6a..9cca7db4c663 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -814,9 +814,13 @@ struct xfs_swap_extent {
+ /* Do not swap any part of the range where file1's mapping is a hole. */
+ #define XFS_SWAP_EXTENT_SKIP_FILE1_HOLES (1ULL << 2)
  
- /* Swap the extents of two files by swapping data forks. */
--STATIC int
-+int
- xfs_swap_extent_forks(
- 	struct xfs_trans	**tpp,
- 	struct xfs_swapext_req	*req)
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 9f993168b55b..de3173e64f47 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -69,6 +69,10 @@ int	xfs_free_eofblocks(struct xfs_inode *ip);
- int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
- 			 struct xfs_swapext *sx);
- 
-+struct xfs_swapext_req;
-+int xfs_swap_extent_forks(struct xfs_trans **tpp, struct xfs_swapext_req *req);
-+int xfs_swap_extents_check_format(struct xfs_inode *ip, struct xfs_inode *tip);
++/* Try to convert inode2 from block to short format at the end, if possible. */
++#define XFS_SWAP_EXTENT_INO2_SHORTFORM	(1ULL << 3)
 +
- xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
+ #define XFS_SWAP_EXTENT_FLAGS		(XFS_SWAP_EXTENT_ATTR_FORK | \
+ 					 XFS_SWAP_EXTENT_SET_SIZES | \
+-					 XFS_SWAP_EXTENT_SKIP_FILE1_HOLES)
++					 XFS_SWAP_EXTENT_SKIP_FILE1_HOLES | \
++					 XFS_SWAP_EXTENT_INO2_SHORTFORM)
  
- xfs_extnum_t xfs_bmap_count_leaves(struct xfs_ifork *ifp, xfs_filblks_t *count);
-diff --git a/fs/xfs/xfs_xchgrange.c b/fs/xfs/xfs_xchgrange.c
-index 877ef9f3eb64..ef74965198c6 100644
---- a/fs/xfs/xfs_xchgrange.c
-+++ b/fs/xfs/xfs_xchgrange.c
-@@ -259,6 +259,26 @@ xfs_swapext_enable_log_assist(
- 	return error;
+ /* This is the structure used to lay out an sxi log item in the log. */
+ struct xfs_sxi_log_format {
+diff --git a/fs/xfs/libxfs/xfs_swapext.c b/fs/xfs/libxfs/xfs_swapext.c
+index 082680635146..964af61c9e5d 100644
+--- a/fs/xfs/libxfs/xfs_swapext.c
++++ b/fs/xfs/libxfs/xfs_swapext.c
+@@ -22,6 +22,9 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_errortag.h"
+ #include "xfs_error.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_attr_leaf.h"
+ 
+ /* Information to help us reset reflink flag / CoW fork state after a swap. */
+ 
+@@ -196,12 +199,46 @@ xfs_swapext_update_size(
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
  }
  
-+/* Decide if we can use the old data fork exchange code. */
-+static inline bool
-+xfs_xchg_use_forkswap(
-+	const struct file_xchg_range	*fxr,
-+	struct xfs_inode		*ip1,
-+	struct xfs_inode		*ip2)
++/* Convert inode2's leaf attr fork back to shortform, if possible.. */
++STATIC int
++xfs_swapext_attr_to_shortform2(
++	struct xfs_trans		*tp,
++	struct xfs_swapext_intent	*sxi)
 +{
-+	return	(fxr->flags & FILE_XCHG_RANGE_NONATOMIC) &&
-+		(fxr->flags & FILE_XCHG_RANGE_FULL_FILES) &&
-+		!(fxr->flags & FILE_XCHG_RANGE_TO_EOF) &&
-+		fxr->file1_offset == 0 && fxr->file2_offset == 0 &&
-+		fxr->length == ip1->i_d.di_size &&
-+		fxr->length == ip2->i_d.di_size;
++	struct xfs_da_args	args = {
++		.dp		= sxi->sxi_ip2,
++		.geo		= tp->t_mountp->m_attr_geo,
++		.whichfork	= XFS_ATTR_FORK,
++		.trans		= tp,
++	};
++	struct xfs_buf		*bp;
++	int			forkoff;
++	int			error;
++
++	if (!xfs_bmap_one_block(sxi->sxi_ip2, XFS_ATTR_FORK))
++		return 0;
++
++	error = xfs_attr3_leaf_read(tp, sxi->sxi_ip2, 0, &bp);
++	if (error)
++		return error;
++
++	forkoff = xfs_attr_shortform_allfit(bp, sxi->sxi_ip2);
++	if (forkoff == 0)
++		return 0;
++
++	return xfs_attr3_leaf_to_shortform(bp, &args, forkoff);
 +}
 +
-+enum xchg_strategy {
-+	SWAPEXT		= 1,	/* xfs_swapext() */
-+	FORKSWAP	= 2,	/* exchange forks */
-+};
++/* Mask of all flags that require post-processing of file2. */
++#define XFS_SWAP_EXTENT_POST_PROCESSING (XFS_SWAP_EXTENT_INO2_SHORTFORM)
 +
- /* Exchange the contents of two files. */
- int
- xfs_xchg_range(
-@@ -279,12 +299,9 @@ xfs_xchg_range(
- 	unsigned int			qretry;
- 	bool				retried = false;
- 	bool				use_atomic = false;
-+	enum xchg_strategy		strategy;
- 	int				error;
+ /* Do we have more work to do to finish this operation? */
+ bool
+ xfs_swapext_has_more_work(
+ 	struct xfs_swapext_intent	*sxi)
+ {
+-	return sxi->sxi_blockcount > 0;
++	return sxi->sxi_blockcount > 0 ||
++		(sxi->sxi_flags & XFS_SWAP_EXTENT_POST_PROCESSING);
+ }
  
--	/* We don't support whole-fork swapping yet. */
--	if (!xfs_sb_version_canatomicswap(&mp->m_sb))
--		return -EOPNOTSUPP;
--
- 	if (fxr->flags & FILE_XCHG_RANGE_TO_EOF)
- 		req.flags |= XFS_SWAPEXT_SET_SIZES;
- 	if (fxr->flags & FILE_XCHG_RANGE_SKIP_FILE1_HOLES)
-@@ -374,6 +391,41 @@ xfs_xchg_range(
- 	if (error)
- 		goto out_trans_cancel;
+ /* Check all extents to make sure we can actually swap them. */
+@@ -273,12 +310,23 @@ xfs_swapext_finish_one(
+ 	int				whichfork;
+ 	int				nimaps;
+ 	int				bmap_flags;
+-	int				error;
++	int				error = 0;
  
-+	if (use_atomic || xfs_sb_version_hasreflink(&mp->m_sb) ||
-+	    xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		/*
-+		 * xfs_swapext() uses deferred bmap log intent items to swap
-+		 * extents between file forks.  If the atomic log swap feature
-+		 * is enabled, it will also use swapext log intent items to
-+		 * restart the operation in case of failure.
-+		 *
-+		 * This means that we can use it if we previously obtained
-+		 * permission from the log to use log-assisted atomic extent
-+		 * swapping; or if the fs supports rmap or reflink and the
-+		 * user said NONATOMIC.
-+		 */
-+		strategy = SWAPEXT;
-+	} else if (xfs_xchg_use_forkswap(fxr, ip1, ip2)) {
-+		/*
-+		 * Exchange the file contents by using the old bmap fork
-+		 * exchange code, if we're a defrag tool doing a full file
-+		 * swap.
-+		 */
-+		strategy = FORKSWAP;
-+
-+		error = xfs_swap_extents_check_format(ip2, ip1);
-+		if (error) {
-+			xfs_notice(mp,
-+		"%s: inode 0x%llx format is incompatible for exchanging.",
-+					__func__, ip2->i_ino);
-+			goto out_trans_cancel;
+ 	whichfork = (sxi->sxi_flags & XFS_SWAP_EXTENT_ATTR_FORK) ?
+ 			XFS_ATTR_FORK : XFS_DATA_FORK;
+ 	bmap_flags = xfs_bmapi_aflag(whichfork);
+ 
++	/* Do any post-processing work that we requires a transaction roll. */
++	if (sxi->sxi_blockcount == 0) {
++		if (sxi->sxi_flags & XFS_SWAP_EXTENT_INO2_SHORTFORM) {
++			if (sxi->sxi_flags & XFS_SWAP_EXTENT_ATTR_FORK)
++				error = xfs_swapext_attr_to_shortform2(tp, sxi);
++			sxi->sxi_flags &= ~XFS_SWAP_EXTENT_INO2_SHORTFORM;
++			return error;
 +		}
-+	} else {
-+		/* We cannot exchange the file contents. */
-+		error = -EOPNOTSUPP;
-+		goto out_trans_cancel;
++		return 0;
 +	}
 +
- 	/* If we got this far on a dry run, all parameters are ok. */
- 	if (fxr->flags & FILE_XCHG_RANGE_DRY_RUN)
- 		goto out_trans_cancel;
-@@ -395,8 +447,10 @@ xfs_xchg_range(
- 		xfs_trans_ichgtime(tp, ip2,
- 				XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	while (sxi->sxi_blockcount > 0) {
+ 		/* Read extent from the first file */
+ 		nimaps = 1;
+@@ -419,7 +467,7 @@ xfs_swapext_finish_one(
+ }
  
--	/* Exchange the file contents by swapping the block mappings. */
--	error = xfs_swapext(&tp, &req);
-+	if (strategy == SWAPEXT)
-+		error = xfs_swapext(&tp, &req);
-+	else
-+		error = xfs_swap_extent_forks(&tp, &req);
- 	if (error)
- 		goto out_trans_cancel;
+ /* Estimate the bmbt and rmapbt overhead required to exchange extents. */
+-static int
++int
+ xfs_swapext_estimate_overhead(
+ 	const struct xfs_swapext_req	*req,
+ 	struct xfs_swapext_res		*res)
+@@ -838,6 +886,8 @@ xfs_swapext_init_intent(
+ 	}
+ 	if (req->flags & XFS_SWAPEXT_SKIP_FILE1_HOLES)
+ 		sxi->sxi_flags |= XFS_SWAP_EXTENT_SKIP_FILE1_HOLES;
++	if (req->flags & XFS_SWAPEXT_INO2_SHORTFORM)
++		sxi->sxi_flags |= XFS_SWAP_EXTENT_INO2_SHORTFORM;
+ 	sxi->sxi_ip1 = req->ip1;
+ 	sxi->sxi_ip2 = req->ip2;
+ 	sxi->sxi_startoff1 = req->startoff1;
+diff --git a/fs/xfs/libxfs/xfs_swapext.h b/fs/xfs/libxfs/xfs_swapext.h
+index e63f4a5556c1..68842d62ec82 100644
+--- a/fs/xfs/libxfs/xfs_swapext.h
++++ b/fs/xfs/libxfs/xfs_swapext.h
+@@ -41,6 +41,9 @@ struct xfs_swapext_intent {
+ /* Do not swap any part of the range where file1's mapping is a hole. */
+ #define XFS_SWAPEXT_SKIP_FILE1_HOLES	(1U << 1)
  
++/* Try to convert inode2's fork to local format, if possible. */
++#define XFS_SWAPEXT_INO2_SHORTFORM	(1U << 2)
++
+ /* Parameters for a swapext request. */
+ struct xfs_swapext_req {
+ 	struct xfs_inode	*ip1;
+@@ -68,6 +71,8 @@ unsigned int xfs_swapext_reflink_prep(const struct xfs_swapext_req *req);
+ void xfs_swapext_reflink_finish(struct xfs_trans *tp,
+ 		const struct xfs_swapext_req *req, unsigned int reflink_state);
+ 
++int xfs_swapext_estimate_overhead(const struct xfs_swapext_req *req,
++		struct xfs_swapext_res *res);
+ int xfs_swapext_estimate(const struct xfs_swapext_req *req,
+ 		struct xfs_swapext_res *res);
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index f2db023986a4..915f3856a04a 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3954,7 +3954,8 @@ DEFINE_EOFBLOCKS_EVENT(xfs_inodegc_free_space);
+ 
+ #define XFS_SWAPEXT_STRINGS \
+ 	{ XFS_SWAPEXT_SET_SIZES,		"SETSIZES" }, \
+-	{ XFS_SWAPEXT_SKIP_FILE1_HOLES,		"SKIP_FILE1_HOLES" }
++	{ XFS_SWAPEXT_SKIP_FILE1_HOLES,		"SKIP_FILE1_HOLES" }, \
++	{ XFS_SWAPEXT_INO2_SHORTFORM,		"INO2_SHORTFORM" }
+ 
+ TRACE_EVENT(xfs_swapext_estimate,
+ 	TP_PROTO(const struct xfs_swapext_req *req,
+@@ -4010,7 +4011,8 @@ TRACE_EVENT(xfs_swapext_estimate,
+ #define XFS_SWAP_EXTENT_STRINGS \
+ 	{ XFS_SWAP_EXTENT_ATTR_FORK,		"ATTRFORK" }, \
+ 	{ XFS_SWAP_EXTENT_SET_SIZES,		"SETSIZES" }, \
+-	{ XFS_SWAP_EXTENT_SKIP_FILE1_HOLES,	"SKIP_FILE1_HOLES" }
++	{ XFS_SWAP_EXTENT_SKIP_FILE1_HOLES,	"SKIP_FILE1_HOLES" }, \
++	{ XFS_SWAP_EXTENT_INO2_SHORTFORM,	"INO2_SHORTFORM" }
+ 
+ TRACE_EVENT(xfs_swapext_defer,
+ 	TP_PROTO(struct xfs_mount *mp, const struct xfs_swapext_intent *sxi),
 
