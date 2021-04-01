@@ -2,119 +2,225 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0F18C433ED
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 03:57:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 134F9C43611
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 06:40:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E895610C7
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 03:57:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDDCD6105A
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 06:40:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232532AbhDAD4d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Mar 2021 23:56:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50718 "EHLO
+        id S233383AbhDAGjv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Apr 2021 02:39:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbhDAD4d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Mar 2021 23:56:33 -0400
-Received: from mail-io1-xd2c.google.com (mail-io1-xd2c.google.com [IPv6:2607:f8b0:4864:20::d2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C284C0613E6;
-        Wed, 31 Mar 2021 20:56:32 -0700 (PDT)
-Received: by mail-io1-xd2c.google.com with SMTP id z3so804215ioc.8;
-        Wed, 31 Mar 2021 20:56:32 -0700 (PDT)
+        with ESMTP id S233305AbhDAGjf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Apr 2021 02:39:35 -0400
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9BFEC0613E6;
+        Wed, 31 Mar 2021 23:39:35 -0700 (PDT)
+Received: by mail-pj1-x1032.google.com with SMTP id a22-20020a17090aa516b02900c1215e9b33so2539876pjq.5;
+        Wed, 31 Mar 2021 23:39:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=F7EDSHuA0GwUlPINZP06/yN+akmMXN7gu9sOlY1lvF0=;
-        b=NKcYDCerRdzw/l9o7/rNJp/4d2WriAR/6BnH5GEgw6YbTepXeh0lOIdkPIEdfg7Itv
-         nU1+FGa5OYdX5tlSpfybhELXxZJSidEtxSHRF6Ax20o6COw96chkiJ+Tb97fqxY6P486
-         YmGG+q+nWY0Jkb9zPGkoq7M6iBBFjifCBDBUhCTIVJxxgFCpjC8tm7XBjE3BbMQVoMuO
-         HmoYL+qkJp5/8yWRLs3VtXkCl540aT1daVpUX3gclmNbuBBGf6cXSnbf9rcixtw/5bWs
-         I7VnwtnrJdi/4YI4kzhbEge5EB0A+iXaIA1+jRcaDfsUzEOCBjJZmHj+5/jNU0UT4YZy
-         K1Tg==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Cdhn3hlT1LofiWiq9NSsZXRFtnuTmpkFOIZBKIG5BiA=;
+        b=UTL5B1kymvtzLNP/91qrZli7L9K/RRc+t3YUJywMQyXnYDuvkYCGKiqHl2oJcMHHoy
+         UGaOiavWcQuvbtsY1AjPK18htFJRFjqk3J5JdwTUPpjlDB0xyn5dXDyWUmP05ep0zZd3
+         /PasjavPWANRdOiP9OF2XgmhE9kIQIp8A01zzEzf9Th+GbR4RZ3V8I8HEFY87DA13dkG
+         txGDPNpeNWXZC+RFFqxjEarVoUhbMJnYh/2oHqJq6Qh6NIAaDiKc9Or3dcxwhb/yJSfj
+         VqvUFcWPRWPOFWq4prpgIgVuKKW4b/yRynE+dhn2QPX62tiJcvfvYUdyKCX/c2u8m8US
+         VzLA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=F7EDSHuA0GwUlPINZP06/yN+akmMXN7gu9sOlY1lvF0=;
-        b=GyjNCJFEJ1GqiZ1UWzXOVyg2wBNzcIor2+blLUEq9x9o4MBu/1bSdtXwU+Fs2Dd9/N
-         mcFNu14EHJVhAkuPlJJMsfemijXQzTY2yi4rV7+Fm8gNC4W/9pnTdJcgvBdKZ+nRXRDv
-         VnkQ5ttUALjcokaCDsFfgYA6OtZXBu5W0ldvbQfWgnhoHPYuGO0KQDCG+ib1P8hhixk+
-         P2Zlfb5jFpIH0C5ZXt6FhMxuYZ72cA6dhyGd9a9hnk2aVXnvNCZqVC4aPn41cgBpRh2V
-         Fx+AZj4lgN7eRlz4UuFco7p/WYBfUvenR6RbUi5wPTqO/jqeTAftRnPsKKt+2EyKPEMV
-         TiZA==
-X-Gm-Message-State: AOAM530M68ET4eB5cg8AbDaIG9yDQx6M8qydWK1AbzCW4BmlCleoKn73
-        X1fyzpqLKff7PtPW0m0smk/lb+K9z0pIB4Bp7ndD5ctTKPU=
-X-Google-Smtp-Source: ABdhPJyqw/7+HmJsaDNB4hU6krH7Mf8COLTt04ZC2Vzk2RMcezRikgLA6WsYa3G5LwbJDBx5alcoPPUPCjUx/c0PouQ=
-X-Received: by 2002:a02:a796:: with SMTP id e22mr5938245jaj.93.1617249391764;
- Wed, 31 Mar 2021 20:56:31 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Cdhn3hlT1LofiWiq9NSsZXRFtnuTmpkFOIZBKIG5BiA=;
+        b=NCUJqBFOLVLXGD0CS/MEPMCNlHc+jL7GWR2/74fQYIaiTMVx/vz1xJzpHBbVHFR6f1
+         /FCsxTqB41Y/1fIrLVPno+W73BLI8NZjyFqtPdWRCIDOAULaQ9cfbQM8iLddz0bVLTud
+         vSz5a035FeULYXbGFCk8XsmhjsTD8DD1cOTJ4KFmidJse0A40RwutMhL53uVdi6p2Oq1
+         6kKhednRO9BFV+35zuTAzgPsAW4cIMpK7x0amtQXD95FttQSzHlx3iicjfe8/zMEddjO
+         +P+5clRlXNAK1tJpp9kl+MQqtBThuMYmwd/Vm+oRsZ/weI8U/ETJLp0clcT9//1DEZsn
+         4Lcw==
+X-Gm-Message-State: AOAM533F1GzGaQBAdm2ue4cCwYi+dhdBkxh5nhJIER87VEZC/wIY+KY/
+        +FlJXt+I7IuFo8gcJzfXDnQ=
+X-Google-Smtp-Source: ABdhPJxV7qnJmiKTK7vMsVhFFpLWa9nVg5l0P/yHHXGvs45jJWGW4/3YJNYe6mcpuHqq0YLrqeBnjw==
+X-Received: by 2002:a17:90a:990a:: with SMTP id b10mr7368818pjp.178.1617259175255;
+        Wed, 31 Mar 2021 23:39:35 -0700 (PDT)
+Received: from localhost ([122.182.250.63])
+        by smtp.gmail.com with ESMTPSA id w26sm4326195pfj.58.2021.03.31.23.39.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 31 Mar 2021 23:39:34 -0700 (PDT)
+Date:   Thu, 1 Apr 2021 12:09:32 +0530
+From:   Ritesh Harjani <ritesh.list@gmail.com>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org,
+        darrick.wong@oracle.com, dan.j.williams@intel.com,
+        willy@infradead.org, jack@suse.cz, viro@zeniv.linux.org.uk,
+        linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        david@fromorbit.com, hch@lst.de, rgoldwyn@suse.de,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>
+Subject: Re: [PATCH v3 05/10] fsdax: Replace mmap entry in case of CoW
+Message-ID: <20210401063932.tro7a4hhy25zdmho@riteshh-domain>
+References: <20210319015237.993880-1-ruansy.fnst@fujitsu.com>
+ <20210319015237.993880-6-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-References: <161723932606.3149451.12366114306150243052.stgit@magnolia>
-In-Reply-To: <161723932606.3149451.12366114306150243052.stgit@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 1 Apr 2021 06:56:20 +0300
-Message-ID: <CAOQ4uxhPzTK=DvUxTGV0KXnqWNsumjm1UbSiFgXbdogbzyd29w@mail.gmail.com>
-Subject: Re: [PATCHSET RFC v3 00/18] xfs: atomic file updates
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux API <linux-api@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210319015237.993880-6-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 1, 2021 at 4:14 AM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> Hi all,
->
-> This series creates a new FIEXCHANGE_RANGE system call to exchange
-> ranges of bytes between two files atomically.  This new functionality
-> enables data storage programs to stage and commit file updates such that
-> reader programs will see either the old contents or the new contents in
-> their entirety, with no chance of torn writes.  A successful call
-> completion guarantees that the new contents will be seen even if the
-> system fails.
->
-> User programs will be able to update files atomically by opening an
-> O_TMPFILE, reflinking the source file to it, making whatever updates
-> they want to make, and exchange the relevant ranges of the temp file
-> with the original file.  If the updates are aligned with the file block
-> size, a new (since v2) flag provides for exchanging only the written
-> areas.  Callers can arrange for the update to be rejected if the
-> original file has been changed.
->
-> The intent behind this new userspace functionality is to enable atomic
-> rewrites of arbitrary parts of individual files.  For years, application
-> programmers wanting to ensure the atomicity of a file update had to
-> write the changes to a new file in the same directory, fsync the new
-> file, rename the new file on top of the old filename, and then fsync the
-> directory.  People get it wrong all the time, and $fs hacks abound.
-> Here is the proposed manual page:
+On 21/03/19 09:52AM, Shiyang Ruan wrote:
+> We replace the existing entry to the newly allocated one in case of CoW.
+> Also, we mark the entry as PAGECACHE_TAG_TOWRITE so writeback marks this
+> entry as writeprotected.  This helps us snapshots so new write
+> pagefaults after snapshots trigger a CoW.
 >
 
-I like the idea of modernizing FIEXCHANGE_RANGE very much and
-I think that the improved implementation and new(?) flags will be very
-useful just the way you designed them, but maybe something to consider...
+Please correct me here. So the flow is like this.
+1. In case of CoW or a reflinked file, on an mmaped file if write is attempted,
+   Then in DAX fault handler code, ->iomap_begin() on a given filesystem will
+   populate iomap and srcmap. srcmap being from where the read needs to be
+   attempted from and iomap on where the new write should go to.
+2. So the dax_insert_entry() code as part of the fault handling will take care
+   of removing the old entry and inserting the new pfn entry to xas and mark
+   it with PAGECACHE_TAG_TOWRITE so that dax writeback can mark the entry as
+   write protected.
+Is my above understanding correct?
 
-Taking a step back and ignoring the existing xfs ioctl, all the use cases
-that you listed actually want MOVE_RANGE not exchange range.
-No listed use case does anything with the old data except dump it in the
-trash bin. Right?
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/dax.c | 37 ++++++++++++++++++++++++++-----------
+>  1 file changed, 26 insertions(+), 11 deletions(-)
+>
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 181aad97136a..cfe513eb111e 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -722,6 +722,9 @@ static int copy_cow_page_dax(struct block_device *bdev, struct dax_device *dax_d
+>  	return 0;
+>  }
+>
+> +#define DAX_IF_DIRTY		(1 << 0)
+> +#define DAX_IF_COW		(1 << 1)
+> +
+>
+small comment expalining this means DAX insert flags used in dax_insert_entry()
 
-I do realize that implementing atomic extent exchange was easier back
-when that ioctl was implemented for xfs and ext4 and I realize that
-deferring inode unlink was much simpler to implement than deferred
-extent freeing, but seeing how punch hole and dedupe range already
-need to deal with freeing target inode extents, it is not obvious to me that
-atomic freeing the target inode extents instead of exchange is a bad idea
-(given the appropriate opt-in flags).
+>
+>  /*
+>   * By this point grab_mapping_entry() has ensured that we have a locked entry
+>   * of the appropriate size so we don't have to worry about downgrading PMDs to
+> @@ -729,16 +732,19 @@ static int copy_cow_page_dax(struct block_device *bdev, struct dax_device *dax_d
+>   * already in the tree, we will skip the insertion and just dirty the PMD as
+>   * appropriate.
+>   */
+> -static void *dax_insert_entry(struct xa_state *xas,
+> -		struct address_space *mapping, struct vm_fault *vmf,
+> -		void *entry, pfn_t pfn, unsigned long flags, bool dirty)
+> +static void *dax_insert_entry(struct xa_state *xas, struct vm_fault *vmf,
+> +		void *entry, pfn_t pfn, unsigned long flags,
+> +		unsigned int insert_flags)
+>  {
+> +	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
+>  	void *new_entry = dax_make_entry(pfn, flags);
+> +	bool dirty = insert_flags & DAX_IF_DIRTY;
+> +	bool cow = insert_flags & DAX_IF_COW;
+>
+>  	if (dirty)
+>  		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+>
+> -	if (dax_is_zero_entry(entry) && !(flags & DAX_ZERO_PAGE)) {
+> +	if (cow || (dax_is_zero_entry(entry) && !(flags & DAX_ZERO_PAGE))) {
+>  		unsigned long index = xas->xa_index;
+>  		/* we are replacing a zero page with block mapping */
+>  		if (dax_is_pmd_entry(entry))
+> @@ -750,7 +756,7 @@ static void *dax_insert_entry(struct xa_state *xas,
+>
+>  	xas_reset(xas);
+>  	xas_lock_irq(xas);
+> -	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+> +	if (cow || dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+>  		void *old;
+>
+>  		dax_disassociate_entry(entry, mapping, false);
+> @@ -774,6 +780,9 @@ static void *dax_insert_entry(struct xa_state *xas,
+>  	if (dirty)
+>  		xas_set_mark(xas, PAGECACHE_TAG_DIRTY);
+>
+> +	if (cow)
+> +		xas_set_mark(xas, PAGECACHE_TAG_TOWRITE);
+> +
+>  	xas_unlock_irq(xas);
+>  	return entry;
+>  }
+> @@ -1098,8 +1107,7 @@ static vm_fault_t dax_load_hole(struct xa_state *xas,
+>  	pfn_t pfn = pfn_to_pfn_t(my_zero_pfn(vaddr));
+>  	vm_fault_t ret;
+>
+> -	*entry = dax_insert_entry(xas, mapping, vmf, *entry, pfn,
+> -			DAX_ZERO_PAGE, false);
+> +	*entry = dax_insert_entry(xas, vmf, *entry, pfn, DAX_ZERO_PAGE, 0);
+>
+>  	ret = vmf_insert_mixed(vmf->vma, vaddr, pfn);
+>  	trace_dax_load_hole(inode, vmf, ret);
+> @@ -1126,8 +1134,8 @@ static vm_fault_t dax_pmd_load_hole(struct xa_state *xas, struct vm_fault *vmf,
+>  		goto fallback;
+>
+>  	pfn = page_to_pfn_t(zero_page);
+> -	*entry = dax_insert_entry(xas, mapping, vmf, *entry, pfn,
+> -			DAX_PMD | DAX_ZERO_PAGE, false);
+> +	*entry = dax_insert_entry(xas, vmf, *entry, pfn,
+> +				  DAX_PMD | DAX_ZERO_PAGE, 0);
+>
+>  	if (arch_needs_pgtable_deposit()) {
+>  		pgtable = pte_alloc_one(vma->vm_mm);
+> @@ -1431,6 +1439,7 @@ static vm_fault_t dax_fault_actor(struct vm_fault *vmf, pfn_t *pfnp,
+>  	loff_t pos = (loff_t)xas->xa_offset << PAGE_SHIFT;
+>  	bool write = vmf->flags & FAULT_FLAG_WRITE;
+>  	bool sync = dax_fault_is_synchronous(flags, vmf->vma, iomap);
+> +	unsigned int insert_flags = 0;
+>  	int err = 0;
+>  	pfn_t pfn;
+>  	void *kaddr;
+> @@ -1453,8 +1462,14 @@ static vm_fault_t dax_fault_actor(struct vm_fault *vmf, pfn_t *pfnp,
+>  	if (err)
+>  		return dax_fault_return(err);
+>
+> -	entry = dax_insert_entry(xas, mapping, vmf, entry, pfn, 0,
+> -				 write && !sync);
+> +	if (write) {
+> +		if (!sync)
+> +			insert_flags |= DAX_IF_DIRTY;
+> +		if (iomap->flags & IOMAP_F_SHARED)
+> +			insert_flags |= DAX_IF_COW;
+> +	}
+> +
+> +	entry = dax_insert_entry(xas, vmf, entry, pfn, 0, insert_flags);
+>
+>  	if (write && srcmap->addr != iomap->addr) {
+>  		err = dax_iomap_cow_copy(pos, size, size, srcmap, kaddr, false);
+>
 
-Is there a good reason for keeping the "freeing old blocks with unlink"
-strategy the only option?
+Rest looks good to me. Please feel free to add
+Reviewed-by: Ritesh Harjani <riteshh@gmail.com>
 
-Thanks,
-Amir.
+sorry about changing my email in between of this code review.
+I am planning to use above gmail id as primary account for all upstream work
+from now.
+
+> --
+> 2.30.1
+>
+>
+>
