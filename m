@@ -2,112 +2,88 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70946C433B4
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 18:11:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78856C433B4
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 21:18:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 451F061165
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 18:11:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55E30610F7
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Apr 2021 21:18:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236561AbhDASLM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Apr 2021 14:11:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37010 "EHLO mail.kernel.org"
+        id S234201AbhDAVSq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Apr 2021 17:18:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47766 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236817AbhDASDB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Apr 2021 14:03:01 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D452A61359;
-        Thu,  1 Apr 2021 15:33:33 +0000 (UTC)
+        id S234065AbhDAVSp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Apr 2021 17:18:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E16F0610A0;
+        Thu,  1 Apr 2021 21:18:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617291213;
-        bh=kGHDJioiCc9Fs272P6aEXWiCFsRtQE+nv4E9MqSyWyE=;
+        s=k20201202; t=1617311926;
+        bh=Zgmmd5hzP1ieDt7VbAxwl8OOV3LmW5efkdClsJU5rUg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MP7ZM31pqtzwOn7DFGQmZAcHMxpJFOGWny3aTveKgcJUNytanosGWHSnC0pJOmcJb
-         xrfg2N3ThrIkhXxkgSPk3K0HBGKwBTMFNn7Qe4rp25Htpl3p4OKaOIa4fdxlV2als2
-         Nf8OmsXTS7XuYTi3Ff5WuV7EuEau16f2sqb/8/HbwwFh3u47yiLuBB3sEPdlmWOJB8
-         t+lKGwfib/d/Sa+BErC/OrQp8xo5QrFmw1uznFw0G3mQiYF3vHWTRHJqdK7LDUBYG1
-         ExdSoA2+SUc2OmFXkBcckKaKEfZTWnRevmPlZoOvsMRjyAca1mt0RtoXLvvJ3AmXd1
-         V6JfIvTgz6DNg==
-Date:   Thu, 1 Apr 2021 08:33:33 -0700
+        b=sbO6mk/bB0mFPmOeL9NjtIM+LQW9B1ejrfan62mSTB9TRf6NAB0WZQmiUJeljydLe
+         DAuF8xu/JQCpQ2nDj1IeDrSTTAvAEou7uRMPQLx5JFADOvrZjlgPqzLTaEmiHs/Xy9
+         XjX2OvXou5bRPKFkFAknTOUREe5uKkkawncfONSwQr5X6tb57TEfFZoXZyFA1I6Unn
+         A5tCz1qw017KsQ5hhjgKTg/8CboIFmwFYON530mQi7pAtYHAhEg/NE6EiWqABLInt6
+         SEmzm0rawcAuy8LSrQYfZK3mck+E3kkRjbkt+vzwLKZSuB4GSiAHYdZjpDJaKZ8hx0
+         rpBX6PCazs6eA==
+Date:   Thu, 1 Apr 2021 14:18:45 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Carlos Maiolino <cmaiolino@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] Add dax mount option to man xfs(5)
-Message-ID: <20210401153333.GD4090233@magnolia>
-References: <20210315150250.11870-1-cmaiolino@redhat.com>
+To:     Al Viro <viro@zeniv.linux.org.uk>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-api@vger.kernel.org
+Subject: Re: [PATCH 01/18] vfs: introduce new file range exchange ioctl
+Message-ID: <20210401211845.GE4090233@magnolia>
+References: <161723932606.3149451.12366114306150243052.stgit@magnolia>
+ <161723933214.3149451.12102627412985512284.stgit@magnolia>
+ <YGUlavtPLH5tZFT/@zeniv-ca.linux.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210315150250.11870-1-cmaiolino@redhat.com>
+In-Reply-To: <YGUlavtPLH5tZFT/@zeniv-ca.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 15, 2021 at 04:02:50PM +0100, Carlos Maiolino wrote:
-> Details are already in kernel's documentation, but make dax mount option
-> information accessible through xfs(5) manpage.
+On Thu, Apr 01, 2021 at 01:44:10AM +0000, Al Viro wrote:
+> On Wed, Mar 31, 2021 at 06:08:52PM -0700, Darrick J. Wong wrote:
 > 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  man/man5/xfs.5 | 18 ++++++++++++++++++
->  1 file changed, 18 insertions(+)
+> > +	ret = vfs_xchg_file_range(file1.file, file2, &args);
+> > +	if (ret)
+> > +		goto fdput;
+> > +
+> > +	/*
+> > +	 * The VFS will set RANGE_FSYNC on its own if the file or inode require
+> > +	 * synchronous writes.  Don't leak this back to userspace.
+> > +	 */
+> > +	args.flags &= ~FILE_XCHG_RANGE_FSYNC;
+> > +	args.flags |= (old_flags & FILE_XCHG_RANGE_FSYNC);
+> > +
+> > +	if (copy_to_user(argp, &args, sizeof(args)))
+> > +		ret = -EFAULT;
 > 
-> diff --git a/man/man5/xfs.5 b/man/man5/xfs.5
-> index 7642662f..46b0558a 100644
-> --- a/man/man5/xfs.5
-> +++ b/man/man5/xfs.5
-> @@ -133,6 +133,24 @@ by the filesystem.
->  CRC enabled filesystems always use the attr2 format, and so
->  will reject the noattr2 mount option if it is set.
->  .TP
-> +.BR dax=value
-> +Set DAX behavior for the current filesystem. This mount option accepts the
+> Erm...  How is userland supposed to figure out whether that EFAULT
+> came before or after the operation?  Which of the fields are outputs,
+> anyway?
 
-It might be worth defining what DAX (the acronym) is...
+Come to think of it, none of the fields are outputs, so this whole block
+can go away.  Thanks for noticing that. :)
 
-"Set CPU direct access (DAX) behavior for regular files in the
-filesystem."
+> > +	/* Don't touch certain kinds of inodes */
+> > +	if (IS_IMMUTABLE(inode1) || IS_IMMUTABLE(inode2))
+> > +		return -EPERM;
+> 
+> Append-only should get the same treatment (and IMO if you have
 
-> +following values:
-> +
-> +"dax=inode" DAX will be enabled only on files with FS_XFLAG_DAX applied.
+Assuming you meant IS_APPEND, I thought we only checked that at open
+time, as part of requiring O_APPEND?
 
-"...enabled on regular files..."
+> O_APPEND on either file, you should get a failure as well).
 
-> +
-> +"dax=never" DAX will be disabled by the whole filesystem including files with
-> +FS_XFLAG_DAX applied"
-
-"DAX will not be enabled for any files.  FS_XFLAG_DAX will be ignored."
-
-> +
-> +"dax=always" DAX will be enabled to every file in the filesystem inclduing files
-
-"DAX will be enabled for all regular files, regardless of the
-FS_XFLAG_DAX state."
-
-> +without FS_XFLAG_DAX applied"
-> +
-> +If no option is used when mounting a pmem device, dax=inode will be used as
-
-"If no option is used when mounting a filesystem stored on a device
-capable of DAX access modes, dax=inode...."
-
-(DAX is a possibility with more than just persistent memory now...)
+generic_rw_checks (which is called by do_xchg_file_range) will send back
+-EBADF if the file descriptors are O_APPEND.
 
 --D
-
-> +default.
-> +
-> +For details regarding DAX behavior in kernel, please refer to kernel's
-> +documentation at filesystems/dax.txt
-> +.TP
->  .BR discard | nodiscard
->  Enable/disable the issuing of commands to let the block
->  device reclaim space freed by the filesystem.  This is
-> -- 
-> 2.29.2
-> 
