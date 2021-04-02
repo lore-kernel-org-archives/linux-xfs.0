@@ -2,88 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4F2DC433ED
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 05:05:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E9E5C433ED
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 06:43:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C3C261001
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 05:05:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D11F6610E7
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 06:43:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229518AbhDBFFC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Apr 2021 01:05:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37110 "EHLO
+        id S229924AbhDBGnS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Apr 2021 02:43:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229553AbhDBFFB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Apr 2021 01:05:01 -0400
-Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DACCFC0613E6
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Apr 2021 22:04:59 -0700 (PDT)
-Received: by mail-pg1-x52a.google.com with SMTP id f10so2909789pgl.9
-        for <linux-xfs@vger.kernel.org>; Thu, 01 Apr 2021 22:04:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=rtQT+OwXKd6Z2mRWC2YAgLTgteaXjNic+0HYEgWQIzA=;
-        b=AF/caNhnf/esYaibE/MJ4nE/HYUUhe4z4U0mxu9TfBa6VdIowML0PFTiTnFVU1hvd1
-         87Yqmz4hxZgfW2SlyN3sgHN37b3e4QSXkn05QYg9uZZ8GXfmwLHJO4KguMqW6PRNzImo
-         VHhmDXn0e4bPn1u2eoUxGRjK5/zlTmrAyjBK2j5SbYS+DbTb7xu4JDeQL9114NwPeyIt
-         bAMYebctFx2GGBk9O5ZLmxxlqneXKCz0fcjrJp1AlEwo48+jkFEBhHlGPqeO072CsPih
-         RRG4IvzOV0PWd9rCgQk1JIGV3tLCnh4pSICDI9jPnSfY0pcyFLTK2Ut9Dg2gKX+VB/Yg
-         wc0Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=rtQT+OwXKd6Z2mRWC2YAgLTgteaXjNic+0HYEgWQIzA=;
-        b=tHyC5KvxmbhWLWgN/Ui3UhF6M4MdAaWPyONRrDmLOvBMAWPke1CEW/uMTyKxhEZinF
-         ClGg++ihoXYbz8T50M85bvi6riWk3MvGGGJY0YCMTrk74IB/b15wroJUxG5F5+NWwZa6
-         GVv66lA9VcgCREpyEXebV7vSA3KTnBM+AwcktyJnpedkT6fYfXQM9od7ZrtHvlkb3TJl
-         kl8vaZCclmrfxl6gz/f6ls5zuLakbD4xqUwWNYjGVnY22MkTY0ZkNeXEuTnPqPpLf/5S
-         EpCrCzBCkOEq+Eb/57b9KIAdZJXI7FHq8/6RLa1AXjSleR78Syh2xLUY4CDZwOHkr4Il
-         qEUQ==
-X-Gm-Message-State: AOAM532kSL7G73yeAIsJLAqUGVn2BAHaA2csQRR/NLDrzqg4rR500SOy
-        Ftoq+o3TBaWxvkRd/fb6Xp99bAeqSzo=
-X-Google-Smtp-Source: ABdhPJwUY/I2iMbFHQGEWVU/K5p0FVqETuB9/4x4uY4BkPDVfkbE2AFygYjO9f9/usM0lAU1h3laww==
-X-Received: by 2002:a62:2585:0:b029:1fb:bd86:2008 with SMTP id l127-20020a6225850000b02901fbbd862008mr10297272pfl.77.1617339899248;
-        Thu, 01 Apr 2021 22:04:59 -0700 (PDT)
-Received: from garuda ([122.171.33.103])
-        by smtp.gmail.com with ESMTPSA id v1sm6920308pjt.1.2021.04.01.22.04.57
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 01 Apr 2021 22:04:58 -0700 (PDT)
-References: <20210326003308.32753-1-allison.henderson@oracle.com> <20210326003308.32753-10-allison.henderson@oracle.com>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Allison Henderson <allison.henderson@oracle.com>
+        with ESMTP id S229522AbhDBGnS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Apr 2021 02:43:18 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9394C0613E6
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Apr 2021 23:43:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Gu0K69iHQ5ZqM+u0U8HXBEaSG9uCJh50Qzi77tJxCIk=; b=g4In+zy8UA+GcoOi2URCCl9AQE
+        yWjA57Shtl49qFXjBuEQNfqUWlbeDtD6aOCPaV+a7erNPb5sd7qtCtGJ0DdGEIGecwvi9SpOBUMRJ
+        Cy6j5gh7vURmglkp64XLR6dot7UGLIz8+Md3TvXFXkIBUN2OcWIo3r9W8W7egBYiGPFQP51XtiQv2
+        uv30jXlAHoBaYt8dyF2L3W9IbL68V91m6z2xrRAq97CjdcCZh+E1a6ex0FwjWdxZ67DUIMXbsTCyr
+        W2kUKFZQkpKia7wVL1hRA9QhxmoG6Y/FeeNHD6CjQ9HqMcxzsIkXTSqvz/QuW+WipATQH9WYscaAq
+        QhIVGtHQ==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lSDWS-007IVT-4q; Fri, 02 Apr 2021 06:43:14 +0000
+Date:   Fri, 2 Apr 2021 07:43:12 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v16 09/11] xfs: Hoist node transaction handling
-In-reply-to: <20210326003308.32753-10-allison.henderson@oracle.com>
-Date:   Fri, 02 Apr 2021 10:34:56 +0530
-Message-ID: <87pmzd6zuv.fsf@garuda>
+Subject: Re: [PATCH] xfs: Use struct xfs_bmdr_block instead of struct
+ xfs_btree_block to calculate root node size
+Message-ID: <20210402064312.GA1739272@infradead.org>
+References: <20210401164525.8638-1-chandanrlinux@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210401164525.8638-1-chandanrlinux@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 26 Mar 2021 at 06:03, Allison Henderson wrote:
-> This patch basically hoists the node transaction handling around the
-> leaf code we just hoisted.  This will helps setup this area for the
-> state machine since the goto is easily replaced with a state since it
-> ends with a transaction roll.
->
+On Thu, Apr 01, 2021 at 10:15:25PM +0530, Chandan Babu R wrote:
+> @@ -927,13 +927,16 @@ xfs_bmap_add_attrfork_btree(
+>  	xfs_inode_t		*ip,		/* incore inode pointer */
+>  	int			*flags)		/* inode logging flags */
+>  {
+> +	struct xfs_btree_block	*block;
+>  	xfs_btree_cur_t		*cur;		/* btree cursor */
+>  	int			error;		/* error return value */
+>  	xfs_mount_t		*mp;		/* file system mount struct */
+>  	int			stat;		/* newroot status */
+>  
+>  	mp = ip->i_mount;
+> -	if (ip->i_df.if_broot_bytes <= XFS_IFORK_DSIZE(ip))
+> +	block = ip->i_df.if_broot;
 
-Looks good to me.
+Just initializing block o nthe line it is declared would read a little
+easier.  Other than that this looks good:
 
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
--- 
-chandan
