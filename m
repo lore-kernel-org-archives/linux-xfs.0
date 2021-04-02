@@ -2,72 +2,55 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E9E5C433ED
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 06:43:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AD65C433B4
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 06:44:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D11F6610E7
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 06:43:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13A91610FC
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 06:44:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229924AbhDBGnS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Apr 2021 02:43:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58026 "EHLO
+        id S229594AbhDBGoh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Apr 2021 02:44:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229522AbhDBGnS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Apr 2021 02:43:18 -0400
+        with ESMTP id S229522AbhDBGog (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Apr 2021 02:44:36 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9394C0613E6
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Apr 2021 23:43:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20C4AC0613E6
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Apr 2021 23:44:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Gu0K69iHQ5ZqM+u0U8HXBEaSG9uCJh50Qzi77tJxCIk=; b=g4In+zy8UA+GcoOi2URCCl9AQE
-        yWjA57Shtl49qFXjBuEQNfqUWlbeDtD6aOCPaV+a7erNPb5sd7qtCtGJ0DdGEIGecwvi9SpOBUMRJ
-        Cy6j5gh7vURmglkp64XLR6dot7UGLIz8+Md3TvXFXkIBUN2OcWIo3r9W8W7egBYiGPFQP51XtiQv2
-        uv30jXlAHoBaYt8dyF2L3W9IbL68V91m6z2xrRAq97CjdcCZh+E1a6ex0FwjWdxZ67DUIMXbsTCyr
-        W2kUKFZQkpKia7wVL1hRA9QhxmoG6Y/FeeNHD6CjQ9HqMcxzsIkXTSqvz/QuW+WipATQH9WYscaAq
-        QhIVGtHQ==;
+        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=lQEFRd6bBi3M5ZoATcvu6mhc5O
+        NiX/g74dBhIKlJTfsjw7RM97M0e3gKkdMqr6Eyri1h1BhHHFpDo9m/QCM12+stu1E5Tjx1/Zn/p77
+        wxYJLZ/aL5Lk46D5rPNw8oyVn2B3SJ1VGU5ZVVXakqFb9gE55GlogzjqC5doOfRqoAu69a9I0ynJz
+        kfab6xNwbClnq4uhYlk4UWehB9PoMHAnBQmV5i4cDfhuWaamEgGsppCfXGox4hKLLt5BLHy5lqL5H
+        BG2rGwy5IPf1W6ti8VpKJKqfCBXxM/GA76Vn06IS/3Jii6YNf9GfrmUV6hCsxj40ZKINR3DqKXeKu
+        aWR4ubSg==;
 Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lSDWS-007IVT-4q; Fri, 02 Apr 2021 06:43:14 +0000
-Date:   Fri, 2 Apr 2021 07:43:12 +0100
+        id 1lSDXh-007Ics-LR; Fri, 02 Apr 2021 06:44:30 +0000
+Date:   Fri, 2 Apr 2021 07:44:29 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: Use struct xfs_bmdr_block instead of struct
- xfs_btree_block to calculate root node size
-Message-ID: <20210402064312.GA1739272@infradead.org>
-References: <20210401164525.8638-1-chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
+Subject: Re: [PATCH 1/2] xfs: Initialize xfs_alloc_arg->total correctly when
+ allocating minlen extents
+Message-ID: <20210402064429.GA1739516@infradead.org>
+References: <20210325140339.6603-1-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210401164525.8638-1-chandanrlinux@gmail.com>
+In-Reply-To: <20210325140339.6603-1-chandanrlinux@gmail.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 01, 2021 at 10:15:25PM +0530, Chandan Babu R wrote:
-> @@ -927,13 +927,16 @@ xfs_bmap_add_attrfork_btree(
->  	xfs_inode_t		*ip,		/* incore inode pointer */
->  	int			*flags)		/* inode logging flags */
->  {
-> +	struct xfs_btree_block	*block;
->  	xfs_btree_cur_t		*cur;		/* btree cursor */
->  	int			error;		/* error return value */
->  	xfs_mount_t		*mp;		/* file system mount struct */
->  	int			stat;		/* newroot status */
->  
->  	mp = ip->i_mount;
-> -	if (ip->i_df.if_broot_bytes <= XFS_IFORK_DSIZE(ip))
-> +	block = ip->i_df.if_broot;
-
-Just initializing block o nthe line it is declared would read a little
-easier.  Other than that this looks good:
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
