@@ -2,177 +2,197 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AA64C433B4
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 09:50:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7610BC433ED
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 09:50:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31ECD6112E
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 09:50:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 448C86112E
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 09:50:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234479AbhDBJuq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Apr 2021 05:50:46 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:39332 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234316AbhDBJup (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Apr 2021 05:50:45 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1329nQ0A150042;
-        Fri, 2 Apr 2021 09:50:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=NnwiD3o1+iRhyL6MFLZLWZ+loQiFArxnxW2QmdR6taY=;
- b=akuaFzVqMIIN7abKp+upMaV+8Rp4jyJvQm1mwPrOy0rEd2maqG2E3RmRwVmMmAFHcEBU
- D4sEca/UQ0oykAI4ehnCiHQV2yeO4BNI8YGHb/Clgr2e7+QJngwUlpGMatYWqUVPFsIn
- LjOd8SHMOG6CsqusMyQO82b6QxJDk5ceTRIqAkjxo76mjDkbxlGHOrt656abJS/qm9J8
- hYmvV4kaZvhLGhbQth8k7Fp7FI/l4iAG2exk5mcLubX8LNW/xlsfQqHFIc4dU95IarLa
- s/9tP315EMfqkLnJFV1vr2NigjaxeZGu4GvKBJ3kB/Bb8waU0sa1zmVqqvk5i97abeuR oQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 37n30sc888-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 02 Apr 2021 09:50:42 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1329jkSc021030;
-        Fri, 2 Apr 2021 09:50:42 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2174.outbound.protection.outlook.com [104.47.59.174])
-        by aserp3030.oracle.com with ESMTP id 37n2ata14g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 02 Apr 2021 09:50:42 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=b+AF1yTvW/hepKQbGRoD+ORigjWD07CJaDhmt9P/f+f0ZvMdZvhdwDvkDwWlspb/Ab6i4Pczr7RGjmMHDzslLmsRGu3eo8TvEBQuxx59yVYUsVuGH4VfQDxywN07uBmFRUwNsux6nL+Qt5qkqVBBNKAO5VKaxrVP1lC2SqLz1LxFOKjRFmbWhPFle9YmwbbdexGVOterRKoCHLF7j8wMw26YG8NDLTzbLoGVEiEQBfZborzZtr22sWN81MaB5coZMS9BQIbCDpkQBqISVZe8gIGqBiVU845nMXW3UfSzhEHeHRKDywa+VXG7jKEQTl2EiROl74M27+DHaV17ZdwRXg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NnwiD3o1+iRhyL6MFLZLWZ+loQiFArxnxW2QmdR6taY=;
- b=hGwDZ3S3jYcxuyzaaQcTJY/sjBSW8huFFVezZ36xpoKGkbqkjNM2nvLolFoa3mmpxi6Jwu1WT3fjQxaZJohc1bNkUZTPZG94i0q6z37blWjYV7U8Rk4R6MD9LmxsT+HDckh1awlTVsev9ShGWjYFxS7JH1R9xfx9WHyxpr8h7ClLF8Be88KDd74vudcOL8Ebl2GyM9zLAf7Eol16K9Fb1QJlWP4NMQbY+dDfiKzq3L5YJ1+oXcMe24rPri7nKy3W3cdZPTw2mstahaKraiqDUH0lisQXZdacbbSfaJO/lL9eZpapIf6P2QfKQEtf56qOK16+2i+sevPT6pOLKxQtww==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NnwiD3o1+iRhyL6MFLZLWZ+loQiFArxnxW2QmdR6taY=;
- b=A+6EccnNOxH3s13nNBDnJqqVe3MMBLvwIs/yijLfLlU/lLu2a4WDnXdPDWx9tREFACVn3DcNX9+pGBggQCLwJ4DCsgDqNywxNtipmL2nH/QaN6DYlj0JfPAevoLjKbqJfPmHB9IuQtTp4U3BBwiqUDCb+KZEuRYovi2EC1M24jA=
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by BYAPR10MB3046.namprd10.prod.outlook.com (2603:10b6:a03:8e::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3977.33; Fri, 2 Apr
- 2021 09:50:40 +0000
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::55a0:c9fb:d00:cd88]) by BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::55a0:c9fb:d00:cd88%3]) with mapi id 15.20.3999.032; Fri, 2 Apr 2021
- 09:50:40 +0000
-Subject: Re: [PATCH v16 08/11] xfs: Hoist xfs_attr_leaf_addname
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20210326003308.32753-1-allison.henderson@oracle.com>
- <20210326003308.32753-9-allison.henderson@oracle.com> <87r1jt70yy.fsf@garuda>
-From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <d68f0179-e2c7-ba4d-c25a-a0b9e4d23e73@oracle.com>
-Date:   Fri, 2 Apr 2021 02:50:38 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
-In-Reply-To: <87r1jt70yy.fsf@garuda>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [67.1.223.248]
-X-ClientProxiedBy: BYAPR05CA0052.namprd05.prod.outlook.com
- (2603:10b6:a03:74::29) To BY5PR10MB4306.namprd10.prod.outlook.com
- (2603:10b6:a03:211::7)
+        id S234559AbhDBJus (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Apr 2021 05:50:48 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:59592 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234316AbhDBJur (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Apr 2021 05:50:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1617357046;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=eZmCo68pLsRQMxydSQmBF2SVLlLDb6V2Qpmq+6Mw1Gk=;
+        b=YWmDCecTyWHfilP+EiGMI2qdgp3fCBc7mjrNN1h1z/c7ggg1eknkO/MpESvkZRyMjkMtYe
+        HACp6qui8wJQswf6HQgu7rv+MOCdELtElYip3mdvSPZ/DfyQ9sSprgw5uzRSsltkgozFK/
+        xkPp5rXwt5bfF0six+VPLRouuoTfbfY=
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
+ [209.85.210.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-465-85KpJa-hPBeLhuoesMyVSQ-1; Fri, 02 Apr 2021 05:50:44 -0400
+X-MC-Unique: 85KpJa-hPBeLhuoesMyVSQ-1
+Received: by mail-pf1-f200.google.com with SMTP id a6so5061518pfv.9
+        for <linux-xfs@vger.kernel.org>; Fri, 02 Apr 2021 02:50:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=eZmCo68pLsRQMxydSQmBF2SVLlLDb6V2Qpmq+6Mw1Gk=;
+        b=aYHoACwe7k46d2noJmWrbzzh3EcJi2gUTID0zWmckTLc1SoInrhazAoV3GR8DSND5K
+         eZ7fSBxop98wA7y5cGWPUGdxjuhbgcdWOD+x0hXkQEJlw23Kg/Zjm78gOsmq0uXP+st2
+         VKDRJR0LJaOVnTyCMOKhd0/MqxMrioy0/FQ1CmNFq/0ZrYPZzBZNBHPBN2ZMJCs6uMSl
+         mV/l/w8TAhQa4laGdvVv3PnUetOML97vfFS8q8JGuaPd4kDnAl94giXqnqaledtyxc1B
+         9dme5k6Y6npCNSu5PGaJazHU9rHwR2grc0WNMJIJwJKyseZw3OZf2wIHwjM/dP0Qch7i
+         vMSw==
+X-Gm-Message-State: AOAM531URMr0/B9Y3y++xU298Ai4M6pn0IjAFlfGHzAj+MF4bYv2Mdaa
+        Idyd7Rhd/M8TRsrqxUoGgsapo2BSpHFqjFEJiZbpEgAgZPtB1j7iOEAQRCbSIeEZhXklEMH9D++
+        AqLe4/9+zWWc3pAGZtzVPLAEiDjgW6KTmRN2w36fxHwZdlz+7MP00xcvHJ1UnxG+70vMpdDQr7A
+        ==
+X-Received: by 2002:a05:6a00:1350:b029:227:7a8b:99c9 with SMTP id k16-20020a056a001350b02902277a8b99c9mr11496142pfu.73.1617357043568;
+        Fri, 02 Apr 2021 02:50:43 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJx6gLwpYivSKA/oUqSJXpW10nEvuW6C9UeJ14UDcYopNJBAc/UckrVppG/ZjjAnvGaFwxn3yg==
+X-Received: by 2002:a05:6a00:1350:b029:227:7a8b:99c9 with SMTP id k16-20020a056a001350b02902277a8b99c9mr11496113pfu.73.1617357043225;
+        Fri, 02 Apr 2021 02:50:43 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id l124sm7730354pfl.195.2021.04.02.02.50.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 02 Apr 2021 02:50:42 -0700 (PDT)
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Zorro Lang <zlang@redhat.com>, Eryu Guan <guan@eryu.me>,
+        Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH v4 2/3] xfs: basic functionality test for shrinking free space in the last AG
+Date:   Fri,  2 Apr 2021 17:49:36 +0800
+Message-Id: <20210402094937.4072606-3-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20210402094937.4072606-1-hsiangkao@redhat.com>
+References: <20210402094937.4072606-1-hsiangkao@redhat.com>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.226] (67.1.223.248) by BYAPR05CA0052.namprd05.prod.outlook.com (2603:10b6:a03:74::29) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.8 via Frontend Transport; Fri, 2 Apr 2021 09:50:40 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ab3947c7-8ca7-4dd7-cf75-08d8f5bcc65d
-X-MS-TrafficTypeDiagnostic: BYAPR10MB3046:
-X-Microsoft-Antispam-PRVS: <BYAPR10MB3046895F2791B1DB7450819D957A9@BYAPR10MB3046.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: icXld6Cugu3aipgda1H83pvG1XsPUZXbVefM8Eb4kFYzLXfgNOz799PK90xzG2FiERmRHokt0SjQAGPlROT6RSGeaV1QcDkVfu3RI3Gef5YIG6GwDvGnTSik1ktm8HGlcRdjFXAHISgUY8lfHfEqubd6uAob66DVNpIHuWXyjGlz1lGlKisIQycKYHBq4cgEX1MOBOPdFmAgA54qMJ/Mvm30ldEc75vZWF6h4oG/FB6WzdLVxmJ2Ow3AL41p8ylWglQXSpQhBv37tXc/+Wff+KqNbIIIBV4nn96Un+fMUKlIvBTqVBj+ZfGksLuW/wcTKiQhuc4S2sofgRFhsN3Wfzuhc8+U+WT+VgM6EPsbjpLgJn1KFM3aqLD40odiqRXGalWlOkbEm5NzxIFr/rwt73dV3UBKRXYnZw2VeTg7gRX4wm4udyVlAUYENqcnboHskxLyG0Xkfrwo5RuEwG2loMD34b6Mal7/CNbx9uZVcQ07sEuSQKe3iyA007uL0+WP877y7/4Npq0MYBgQBa4rzXs4TI6KN3VUm5iV0owc48R1T/JN6ZNYsOLct16Llk7SllnUmUIkQ9MTuM3F+Cajppht0Kv1VXSZU3SAJvnt2RKiAbogUcPRUC4xfAm7ZGAgcKqSXktq/e6gVUtuS28az1ORAB4DoXig3/suS0lHWKWkRuflPglzz5KitGZT5ZZtHclqO7+KP0E+m/JnmF6wGg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(366004)(136003)(396003)(376002)(39860400002)(956004)(36756003)(6916009)(2616005)(38100700001)(316002)(8936002)(4326008)(86362001)(186003)(66946007)(44832011)(66556008)(31696002)(5660300002)(4744005)(53546011)(16576012)(31686004)(16526019)(6486002)(2906002)(52116002)(478600001)(66476007)(8676002)(26005)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?L2JMZVgxZnZZWk00SkZTdi9xQzBuUVFMSHArcjArWlpvM3JXcWhFMWFYRk42?=
- =?utf-8?B?WjJ2REhxbWxJRVhWUklub1lMRTBudzM4V1kxMStycklBZjZEeHlobFA2TWRS?=
- =?utf-8?B?RytuVVFXV052ZzhkK3ZpOXg1STFNRnJqUmYwTDNPdjR4bDR0NXREdEVqMENY?=
- =?utf-8?B?dk9WWGZSWTJvQS80V0E3c1ZEd2RCOHB6YTkvdDc4WFdKTjJ5dHRIZnh2U0pH?=
- =?utf-8?B?anZkcHQ2VmJ5NUY1K0xsQ0FtZTBXTUxrbnlqellaczJFOEhwZTZmOXd0Tnh5?=
- =?utf-8?B?M3pIWjlPVHBDTUhKVFJlbk1Jb1QwTWFlT0RIUXJOclF2aDVMc0FLWjJ2L2JU?=
- =?utf-8?B?L1c3ODUxU09oN1g3aVdSS0xoTHZ3V2RkNG9qaXR4Y2lRQkdDUTVsa0dyenU2?=
- =?utf-8?B?aytoaDlTazhSM0FhRWlTQkx5SCsyeEpta285SmxOcjhSY0cyMHJrckkvSENi?=
- =?utf-8?B?cFFkOEZOek9Wc3J1WUNXNkhWSzlLU2YzVk1kS3dVZ2Q4cGQ1cFllc1owazl6?=
- =?utf-8?B?bG9pSXpiRDZWdCtwelNZNTU1aWtUanNiUkc4c1hSZXl4THVRNXJ3b05KdVJp?=
- =?utf-8?B?eWx3TXNhdTg2MlVQbUtaUWFKV0hoOWhvUUNHMWhDSzcrL3VpRFVtRVE4bTc3?=
- =?utf-8?B?R2pwZUZmYXZlZmpIYWNsZ3lvYXdFOEh0bFpXTk9hcWhldkVpdUx3c3BHWEVU?=
- =?utf-8?B?S213ZnkzU2VZV29yUGx1TUh0Tm5oUlE1QXFrekZQcUtkK0swQVNlbDBLNE5J?=
- =?utf-8?B?WUpQbWVLaFF2VWY3TE96U2o4ejA3eFJMckl1Ui9UZWQxUkhmUFNlWjcycm4z?=
- =?utf-8?B?RW8xQTVvM2IzWElvZUxla1JwcDNuWitHZGxoWDhGWGRFR3llUFFUbjlJSmtO?=
- =?utf-8?B?ZnpqcEtsQTROMUg1SnhyeXVBVzBEc1QvSW9mOG5KTVhIMW1yTTJGbXhOYmdD?=
- =?utf-8?B?YzBDbis3bXpXbEJOUkRwN3FkMVNtdWRHVm5OeVhJUlV2U3Q5TGhjcE5TNEIz?=
- =?utf-8?B?aURvdnhHRWpLV0N1T1ZBd1YxcnRVZ2t3dXFJWEFtellsYlVlQW90YTMyWWR2?=
- =?utf-8?B?SGtRbUJkeEc4U1YwYW5aV2xKWG94K2RnUWpTdW1XbExLNkNCZ2Roa0psNDNJ?=
- =?utf-8?B?WVJaQ0szU2o3bEtGWXdDczM1ZmdJZGtvVDJGdS84Z01zclp2b2o0NXhZYVNk?=
- =?utf-8?B?QVRJQXVGUzJLYkFkYXJDY05IMHQ4YjV6UDVUcmMyY0R0MGpjZWlSaGFCeG50?=
- =?utf-8?B?TWV4S0dlT0wzd1BqN0hJRFdReVRoZ0ZYVVRjQk9tazRGKzFIMHNZVndtek9W?=
- =?utf-8?B?SkI4THJNR3FlU3A0RW10Zkt2RktUNjNnZU5TS3NyZkk4b3paZlV1VWsxVlc0?=
- =?utf-8?B?bm12U0tqZlF4UXFxYlFMYkRMUkRBbzJSS3g3SHVGNzkya2pPYlRwVlB5eWV0?=
- =?utf-8?B?bnBXR0pRSCsyVFdHM3M1cTZnZk1XYlBzN3FXalRPVlV0K2hSU3ZNZHZKbVNx?=
- =?utf-8?B?MjJ4UlhvNkp1b2xsamprWDJzMWJETGg5WFlrUVlKY3pXdnNFN3R3eGVSbGVF?=
- =?utf-8?B?R1pOT1c3MnNzTjlZREdteVlvV1FNaTVXVlZKZmRMS0ZRUWhIenlyMlEvNXhK?=
- =?utf-8?B?bnhaRTh3UXNKSFBJWDZXYTZ2RHF6YUZpV2YrYWc3eGtiSEJtVm1BRzZ1TGtU?=
- =?utf-8?B?MHhGT3h5Q2ZJQnB2TWdSOFB0eGFoY0U0WGlZNUYvenF0U2Jpdko2YklndG51?=
- =?utf-8?Q?4Eo8RuQcblq5N/gDA3Wd2Wi37e7B8RERU492HVw?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ab3947c7-8ca7-4dd7-cf75-08d8f5bcc65d
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Apr 2021 09:50:40.4773
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: XjPCR5W6+EH70DScF3nhnjKtUiQDSc2H7Rl3RA9X8/yS+i4uHMZzMZex3np7t9bbRDlgSs7KSkRfgzcnF2bWSfLSUwEcJ2OQrfhfSePEv/o=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3046
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9941 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
- suspectscore=0 bulkscore=0 mlxscore=0 adultscore=0 malwarescore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2103310000 definitions=main-2104020068
-X-Proofpoint-GUID: zwV6XOaFYpzQQSmHrXlV9-78gW9krTyj
-X-Proofpoint-ORIG-GUID: zwV6XOaFYpzQQSmHrXlV9-78gW9krTyj
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9941 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
- bulkscore=0 priorityscore=1501 suspectscore=0 mlxscore=0 spamscore=0
- clxscore=1015 mlxlogscore=999 malwarescore=0 adultscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2103310000
- definitions=main-2104020068
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Add basic test to make sure the functionality works as expected.
 
+Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+---
+ tests/xfs/990     | 73 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/990.out | 12 ++++++++
+ tests/xfs/group   |  1 +
+ 3 files changed, 86 insertions(+)
+ create mode 100755 tests/xfs/990
+ create mode 100644 tests/xfs/990.out
 
-On 4/1/21 9:40 PM, Chandan Babu R wrote:
-> On 26 Mar 2021 at 06:03, Allison Henderson wrote:
->> This patch hoists xfs_attr_leaf_addname into the calling function.  The
->> goal being to get all the code that will require state management into
->> the same scope. This isn't particuarly aesthetic right away, but it is a
->> preliminary step to merging in the state machine code.
-> 
-> The changes look good to me.
-> 
-> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-Thank you!
-Allison
+diff --git a/tests/xfs/990 b/tests/xfs/990
+new file mode 100755
+index 00000000..322b09e1
+--- /dev/null
++++ b/tests/xfs/990
+@@ -0,0 +1,73 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2021 Red Hat, Inc.  All Rights Reserved.
++#
++# FS QA Test 990
++#
++# XFS shrinkfs basic functionality test
++#
++# This test attempts to shrink with a small size (512K), half AG size and
++# an out-of-bound size (agsize + 1) to observe if it works as expected.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++test_shrink()
++{
++	$XFS_GROWFS_PROG -D"$1" $SCRATCH_MNT >> $seqres.full 2>&1
++	ret=$?
++
++	_scratch_unmount
++	_check_scratch_fs
++	_scratch_mount
++
++	$XFS_INFO_PROG $SCRATCH_MNT 2>&1 | _filter_mkfs 2>$tmp.growfs >/dev/null
++	. $tmp.growfs
++	[ $ret -eq 0 -a $1 -eq $dblocks ]
++}
++
++# real QA test starts here
++_supported_fs xfs
++_require_xfs_scratch_shrink
++
++rm -f $seqres.full
++echo "Format and mount"
++
++# agcount = 1 is forbidden on purpose, and need to ensure shrinking to
++# 2 AGs isn't fensible yet. So agcount = 3 is the minimum number now.
++_scratch_mkfs -dsize="$((512 * 1024 * 1024))" -dagcount=3 2>&1 | \
++	tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
++. $tmp.mkfs
++t_dblocks=$dblocks
++_scratch_mount >> $seqres.full
++
++echo "Shrink fs (small size)"
++test_shrink $((t_dblocks-512*1024/dbsize)) || \
++	_fail "Shrink fs (small size) failure"
++
++echo "Shrink fs (half AG)"
++test_shrink $((t_dblocks-agsize/2)) || \
++	_fail "Shrink fs (half AG) failure"
++
++echo "Shrink fs (out-of-bound)"
++test_shrink $((t_dblocks-agsize-1)) && \
++	_fail "Shrink fs (out-of-bound) failure"
++[ $dblocks -ne $((t_dblocks-agsize/2)) ] && \
++	_fail "dblocks changed after shrinking failure"
++
++$XFS_INFO_PROG $SCRATCH_MNT >> $seqres.full
++echo "*** done"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/990.out b/tests/xfs/990.out
+new file mode 100644
+index 00000000..812f89ef
+--- /dev/null
++++ b/tests/xfs/990.out
+@@ -0,0 +1,12 @@
++QA output created by 990
++Format and mount
++meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
++data     = bsize=XXX blocks=XXX, imaxpct=PCT
++         = sunit=XXX swidth=XXX, unwritten=X
++naming   =VERN bsize=XXX
++log      =LDEV bsize=XXX blocks=XXX
++realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
++Shrink fs (small size)
++Shrink fs (half AG)
++Shrink fs (out-of-bound)
++*** done
+diff --git a/tests/xfs/group b/tests/xfs/group
+index fe83f82d..472c8f9a 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -520,3 +520,4 @@
+ 537 auto quick
+ 538 auto stress
+ 539 auto quick mount
++990 auto quick growfs shrinkfs
+-- 
+2.27.0
 
-> 
->>
->> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
