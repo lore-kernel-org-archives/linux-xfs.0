@@ -8,150 +8,150 @@ X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A1F4C433ED
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 09:42:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA731C433ED
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 09:45:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDF88610A0
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 09:42:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75AB061103
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Apr 2021 09:45:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233718AbhDBJmg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Apr 2021 05:42:36 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:55746 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229924AbhDBJmf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Apr 2021 05:42:35 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1329Sreu009209;
-        Fri, 2 Apr 2021 09:42:33 GMT
+        id S231160AbhDBJpq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Apr 2021 05:45:46 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:52110 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229924AbhDBJpq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Apr 2021 05:45:46 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1329UFsK030104;
+        Fri, 2 Apr 2021 09:45:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=F+U06yWgagBsW763bFM+wUmVrUPC8vpIEFblYUU6jMA=;
- b=mcBRUYSJoqSnXZQZYFFwhc4MUsmK/JVN2qSgiydsTROLCYvoDpqxbRGtLe2P+/Bbeqky
- rwyfVrcpGiO2FeCcwGQMweD/i3uU21A77r/tlP1w4ZHWWwIZX+96tyAbCn+f3Agfep8z
- t+irRY0kFJrWlyyRdjIs+nieLyXzwje3cb/AqK+Z3y8IeaGjpjGZEzR2ujMXJocj+e4/
- 2M3tJkQ3aLKvtYDmCPtaBfb5Z9We13E7scSUu4nx8cTizT3w6YXV0hWIOyijfLsADcuj
- exLW7rZHEjbnWAijCNO4aFhAv+9IGQMAffHkFRe2sd9jyLMYNHj7I6wvpLTY7DW5vyTM Eg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 37n33dv87k-1
+ bh=lqlGpIXqPnKVR1d6/MwtiHSy0AcFNkPqS/1VsqBjink=;
+ b=tgLlt36Mh+lijPlRWDZDJ0DJKBSBV/arB4ReQJmTm3zsEt+Z5R441Wz8QjB+e/zD6j0e
+ r4Xmr93OCfgbNbcgcZNJo+j0+KTjwpD2SLyD6iB42xII+gJHh2/VD1F135Gr1HPzTGAJ
+ j4TT4dO+dVdPBmFgbh1zGmqzr6I+2EOGqxjsceDr+vqdqOQ4uGgF1yxFyMddw1SPLb8N
+ dBUqwmhQfYgpW8bVoCM91eRq06Zcfdtu22ewOKVdbsngwl6ni+CQhlq3t+P/9Se3Bkw8
+ jvM1j/2cAI19jayGCE4gm53mBN974cbWWj/frLfcQEpKSPR5RykdUxaaxKNEK0kut8X3 Sg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 37n2akmb0b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 02 Apr 2021 09:42:32 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1329V1vT033840;
-        Fri, 2 Apr 2021 09:42:32 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2043.outbound.protection.outlook.com [104.47.66.43])
-        by aserp3020.oracle.com with ESMTP id 37n2acaaaw-1
+        Fri, 02 Apr 2021 09:45:44 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1329ilvc091486;
+        Fri, 2 Apr 2021 09:45:43 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2100.outbound.protection.outlook.com [104.47.70.100])
+        by userp3020.oracle.com with ESMTP id 37n2pbkxts-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 02 Apr 2021 09:42:32 +0000
+        Fri, 02 Apr 2021 09:45:43 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HyWToMZ+7mx9wg9Te62Yn3gkS4OkBLeGowxtNlGOKZYuFEQCduwowMxhibkg1GR9wV8igatBo7pd41ebUoP+VbANddMdcQpC6Q8aPBSniM84LzjP1dfVNCSrfLpeWG64g64N5ZzZYFjIhKZ8LxGu7adNsb9Z7Hu6LZuKF3vTzqGTkNZg1fDY7Iko4RfmsJrlhv7fDFywvqQMaJlXmmqJd1W69Sw0a4ZIVQsBj38vjJPJyb8bjtC0nV5dCB8PgQwbwmtiC239StlVzRyGeDc3GCDkuzXO7ZhAiqN09ZFqNRC33UyDr/+rzpjCM+Lgz013hIkjY+RTcWzLhnzcjnJV9Q==
+ b=Jg7C1aWStaFLuVaCNGE4Dy/oc0lXF2lJfNq+vtH5ggYi4S0p/vb9Q9el6kH1w2S1hDkSGW9Y5eHXpgiL4Vbs84F/KnTVwyP60TaplCRR/ZhoFaj0gEm15AN7Djx0WfOn8Yxs5iO7MNUwqQnL5L07+F07ffqqTzwFTMKfTWNAL5wyFKzcfchEzVs33O0E+CEVbKgl4KR27AkbU7BzPj0Oc8hPu/DR68mnpLAAZ8LL1S5+8zYK5Nps1R77jfcjftpS8Xaw85Od8lSjxjIUHBTYDlvWN9Z6xARvnfcgor8JLHRRMVpJy0NhhcPXIcQR6S93SGg/fb5tfFzo50k/EMdZpQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=F+U06yWgagBsW763bFM+wUmVrUPC8vpIEFblYUU6jMA=;
- b=Hqa6UawtGVSqdByLFdW7TjgwYSazoLnKLIaj1avMdWCs7dHL0tkSijM8vEZseqTrzhYcgB0LeeNxxIQhCKJxfwj3xz/t5vr/P9PJNVXvyq5o7cfEkvlULYQlQrHXxK7pBIJ2ZfAXK/K2gZgYTifbbsrfZ9Mrnfz8wjC6EdNx3jMj0u8uBNuP4keeswiNydU68xhdzoKmr3hoXdh0ZKbbsuEf+/GncGlHxI0K8pQWMoC3KGKnQAqKrKTLnQFkCWzhkEXFs3MHyRLTFCUkh9HD5n2c7LapP+p2w/WWnwMTne6OWV0jSjAzyxMe2OhtpCpqq7FlEGqAXfG9YpnAPhSCQg==
+ bh=lqlGpIXqPnKVR1d6/MwtiHSy0AcFNkPqS/1VsqBjink=;
+ b=ViiLQC5UcPBJimJRA8rK1R9vjdRYmTqSRlSVEwHoIEgsCOUoXInuoCBr3cs2BQ9DzCGdI/OiEzahQtXUjISKhJJ2OrLN3XjBISR5VrrTvLm7JVyCmiwMS0PTRUzrfvY4Imft+d21H6cC1Jxi4Y8iIWwF1jwEqSNbYlNi45lCaVEwSvJ95qW/KPTtV/0M6j/vV8I72E+0Ofu8XDzAZn/dJVKbZd7HfexQHFGPhPXD6H6Q6EMTPMqgKupRd7qBBUcl8HqLnejAZDWddotd6TCyqjqJjMvDAZivX6WqFeFSg6EY5r7oq0nnAPRMdNgiJA988V+MbLup4hjyZ606dBp9Lw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=F+U06yWgagBsW763bFM+wUmVrUPC8vpIEFblYUU6jMA=;
- b=sXcyaSXHLwL9QeUj3XCzsecPA+jZqsmdwHbx+K4I/nhH7NV08OpKl/b5pHbsIlH6VG94OCqod3b6W+tuYVmCjlPVmwTVCrzT2Sw0rzUqi9tz3yMvnDuJFE+MTrMnYbgym5Fn1z4Z2NGDT3NehiTslZFCpVJiQGGeJn8OrQqWJvY=
+ bh=lqlGpIXqPnKVR1d6/MwtiHSy0AcFNkPqS/1VsqBjink=;
+ b=yKOOELe6yGQX/UQCCHOTK8Lt/jtqoE6XBEhmlUyh3OlvGZlvm2pEAZVLMuqVNrSgY7LgTZFQi1svXpmlDBgrfcF+IOgaGM5gfxYUJOVNL+SoPb9d6yovN5tMs+ZM8nsAiUC/WFZ7AkzXL4we9RfC+k+Jy8wbuVBxupm5zbAH3oY=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
  by SJ0PR10MB4813.namprd10.prod.outlook.com (2603:10b6:a03:2d2::7) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3999.28; Fri, 2 Apr
- 2021 09:42:30 +0000
+ 2021 09:45:39 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::55a0:c9fb:d00:cd88]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::55a0:c9fb:d00:cd88%3]) with mapi id 15.20.3999.032; Fri, 2 Apr 2021
- 09:42:30 +0000
+ 09:45:39 +0000
 Subject: Re: [PATCH v16 10/11] xfs: Add delay ready attr remove routines
-To:     Brian Foster <bfoster@redhat.com>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <20210326003308.32753-1-allison.henderson@oracle.com>
  <20210326003308.32753-11-allison.henderson@oracle.com>
- <YGX7FxrMvV01xEzZ@bfoster>
+ <87o8ex6rr9.fsf@garuda>
 From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <b01f7ab5-3752-f19d-7280-e11ede30e613@oracle.com>
-Date:   Fri, 2 Apr 2021 02:42:28 -0700
+Message-ID: <da826494-b075-d6af-44f1-b3947e718e5b@oracle.com>
+Date:   Fri, 2 Apr 2021 02:45:38 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.1
-In-Reply-To: <YGX7FxrMvV01xEzZ@bfoster>
+In-Reply-To: <87o8ex6rr9.fsf@garuda>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-Originating-IP: [67.1.223.248]
-X-ClientProxiedBy: BYAPR08CA0060.namprd08.prod.outlook.com
- (2603:10b6:a03:117::37) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: PH0PR07CA0052.namprd07.prod.outlook.com
+ (2603:10b6:510:e::27) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.226] (67.1.223.248) by BYAPR08CA0060.namprd08.prod.outlook.com (2603:10b6:a03:117::37) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3999.29 via Frontend Transport; Fri, 2 Apr 2021 09:42:29 +0000
+Received: from [192.168.1.226] (67.1.223.248) by PH0PR07CA0052.namprd07.prod.outlook.com (2603:10b6:510:e::27) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3999.26 via Frontend Transport; Fri, 2 Apr 2021 09:45:39 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 9954bb5c-7911-4a11-116b-08d8f5bba1df
+X-MS-Office365-Filtering-Correlation-Id: 078f4dca-2c89-4903-33b3-08d8f5bc131d
 X-MS-TrafficTypeDiagnostic: SJ0PR10MB4813:
-X-Microsoft-Antispam-PRVS: <SJ0PR10MB48139A5002C468488CE669EC957A9@SJ0PR10MB4813.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-Microsoft-Antispam-PRVS: <SJ0PR10MB481302195A031EF9EF0272EA957A9@SJ0PR10MB4813.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: hg8s1VoCKY0qH8xRZFGNeVtlBWxRsYimCKvcQh3QjQtl0ymKtm5iIuaCnXVr/FwgUkJ1an+BfR+OaKyISqKjFgOXn2LgOzIW23n365h8mhZb/wJw3uvfeDrcqR9uNcZjKYHhcwMutCg4rAziZa5991EP/Ziq7CbnHJI2XQ8hlq0IkrN9WZwtX2IikGidZdVZ/BU4a/CVhkWKuePI/nh5Elhr3Nx9P8n4w8Jd0loZ8RDIcW7HOOLK4uSQx8RCjvhM1rDYm9xa/+PwkRbtU9lrH6C/LtiXZiPThME4LYwB9dG8ThOiOPCm3V+7alCcAJ0qDm0SA88gEr4fEarl2h7gyZn+b6U8sGQZeMCeilEpTzQ2xRshJ8uxzQRPW51a8Ul9DqwTgS7anNncG8BNHX4+LdulzJ5pHCIjbY1LQeXmJAbfrDQvgUl5FRBz0TVbI0lCnc69zMRIWZt0JwnjGdXc3z/rmdC6eKCIav9DbztjMMqBsIdqXp8dA/PNEZ1hVkHZI0FljZNqjlST/BzLeA7/dvOGiwr+10IIxqPgbxYpHYkhMfGR5v2WsZn8NnYMc/9i43nB4jf2kst67ikIBUsBEIaNYkkICf+8SMhXScLBp/4wesFWG7SHlT4UNhmmH6fRBjsZMsEhfyOzR9ij+iR2sh3jjjdo9EMdYikQiWFqAx5cL+JOFVg28G3T3Pyo16LC3YBRHhMv+nB9hY/vpuV0WA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(396003)(39860400002)(376002)(366004)(346002)(38100700001)(86362001)(956004)(2616005)(16526019)(8936002)(26005)(2906002)(31686004)(186003)(8676002)(31696002)(36756003)(83380400001)(44832011)(53546011)(316002)(6916009)(478600001)(16576012)(5660300002)(4326008)(66476007)(66556008)(66946007)(52116002)(30864003)(6486002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?L016TkVWT2NFWmpVK1JwM1pHK2ovL1lDLy9NM0xITVUvL1ZpanlEZzFXd1o4?=
- =?utf-8?B?SHhjY3NqQklHTVRzYS9wMkdPNzBLMWVFREhHdkQ1SXJNNXFUaEc5U3M3L3dR?=
- =?utf-8?B?a05URGw1WFR1VlRTMFFxUTBCc0RqcWcvb2lrOEp3V2ZCcW5ZdnQ4ZERkajRr?=
- =?utf-8?B?YmdFemI1SnNISzBrb3JzUVN0MitIQTlIS2hxbkt4Z2NrZXJPMjRRWGpSUU5r?=
- =?utf-8?B?ZkZXRjM3c2NlOVlpWGdFTXU1Ujdqai8zMC92NG5UOGp4bHJXSjIxWmxZTGNw?=
- =?utf-8?B?a2w2YktQL3g3WWVDQ0Jpc3BqYVJzQ1BzeG5hVUNMVmJuMWlPSXI2bXdNaFlj?=
- =?utf-8?B?ZXArcWlTeW0rQlF1M2ViY2JpQVcySEhCSzVtbk9JUFpPY2N1V3hJOU9mT3d3?=
- =?utf-8?B?YjA1SEtITVdIMEtLWk9Md1RsbWVFSktmMGV5RzFyTHVGblFydWhvWExKdGR4?=
- =?utf-8?B?c3Y1YWVCV0Z5S2pDYXFlYXkvTThWaE5XbzJkM016NGh5Qi9oSXBQanRXSDFw?=
- =?utf-8?B?M1ArVEVqNVV2bHR4MkZVRGtpZkx2Q3g4cm5DMHRUTmZlWm11SkljK2NlQ0l1?=
- =?utf-8?B?Z2NCcys0WEE1djhlS0J4Z2h2Y3E1Q2FTS00ycG5Xb1BybHFxdTB3MU10QWVo?=
- =?utf-8?B?bk5yS25BTWd4SUVURjk0V2hDZGEwZFFnUmxmQ25kU1A5TCtBc1E5R2JtbmQ3?=
- =?utf-8?B?V1k1TWdXRVYydGM1OVNoN2hRNkxwV2JRc2JEQXV6K2ZYNDhVdUdMbGFaWklY?=
- =?utf-8?B?NFlVNldvYXRhblNMbFpBZWRHV3pTOS91b1pNQ1BkUzBwMnNySml4ZWVDdVJP?=
- =?utf-8?B?TXBha3FPS1EwbjY3NVV4ZFlkNzNkNHI2NEg4d2xhZVJqUkEwYzZOa0xyQTNU?=
- =?utf-8?B?Q1d3Wi96eUVXck00KzBQZzl6WUhqeDhJM1N4NVpLS1VGYkQxdFlIbS81RmZL?=
- =?utf-8?B?d2FmOFhqak9BTVZUb0ZXV3RQNVJOWTFmSDNXOEkycW5FZ0RqZ3FmRTFSZDNX?=
- =?utf-8?B?OGVjdGlBVnFmWk95K2ZnMjRHaldBdjF4VjlUaEQ0UjYxbzVjeWlQd2RaRXZO?=
- =?utf-8?B?WUZjYXBHd09teWlHOW9DSXNKb0ZuenBJMzJaUVAyc0J5cnB0VjdXeXQ1QUQr?=
- =?utf-8?B?TDhTR3VFbWpoM3JyNlNjbE5hUmhvdmM4WjN5L0dwVUl3RjNscHVlWFhMRjBv?=
- =?utf-8?B?d3JkRUpLZXNRN0hRTmhXeE9mbi8rMDNLditZa2RwMzlheTdYbENsR1BDeUlw?=
- =?utf-8?B?d25nV3lGMmIrMFlVYy8wTG5WQ3dIeXNBU2F5Tm0yNjdtdm9kRkhoamZ5emUr?=
- =?utf-8?B?NE0xZmkxMGdFYlM3QmNnakJsa0FFYU9hNElzd1VhMEt5WFVIU1RHSEpKS0dG?=
- =?utf-8?B?cHlhNEg3Q1ZsMG5aUzZrZWdnaHZtS29EMEdwaldON2NTZVY2VVVZdDNYc3Nn?=
- =?utf-8?B?TjhqRkFEREY4bXp2bmdFWWs1VThUR0tPNTBBdDk3dkg0V3pMQ2JOaStOTGI2?=
- =?utf-8?B?Y2JsdjFYa1dIMS9MNzFSYm41UHo5eVN3ODVjKzZob1c2elZlclFBZEF2TVpW?=
- =?utf-8?B?VmJySGl1SWNYZ2FKN3ZqWXhYNnd5eE5abHI3bnBkS0tLSTUwY3lsMjByTFE1?=
- =?utf-8?B?Y2ozTVZFeldyeldScE9sSTlUclZLb1JhTEhLNGkrVEtSSUV6V1Z1R0pYTXNy?=
- =?utf-8?B?S0NsUjZqenZadWRDVGF0K2kxKzJuMUEwcjNHbzBLdkpnb1J1K24zK2ZveWNU?=
- =?utf-8?Q?ZGY2RER06uJdP3sHGpAFJTh5WaMKcXrbFL09D2A?=
+X-Microsoft-Antispam-Message-Info: S16Ovb/4wIAqyExhP4J/HEgIJMpFBLVXfXC91TvSNR69esMx4Q4EWxWxF4m6nWcSncEX56YCfDr6DMHkFCtlgur9cvbUgEG+87rGoYmV/kJtWDLTuxMkAd5djHnbktWlgs2Q8kVeVmFt1HuHcQ0nTec+v9kwrKgW2tf/PmKq0Ga0ECLhecJsuNkNZpa2sn/asa0QU88nCkjkbUyvuxK517MrdBTLxg6J0WcTucx/ntZbZVTaP7NpVzrmzIa239xQ3q1nX3SpMlzufRIzf8IN6O9AHT06vFp18axmGa4c38a5bariOTdBGxgL2lQVVSiTj4JkMQLtYraetblNnfCI6ozrvAWU/sQcYFtjDxrnEYxs/CIr/jbQxSmq9lkAsNxhrVUlS825l6agvOQawrIKnTR6kgkNXxQANfxQO0oYaQ3Q6Tn18QqYIFSrJMlH+Bcy2D1ND3Msy+iYnKp0vsa3tIU0IOHuIYOngix6RjBgKroJysmkKjccwq+/BO4n68lWxmwSmBbglnjtvWKlzjLW1Yp2gZlpHUxKz195H5McRkyKQLDokvY2hf7pBF4ENbk2McHHoHI/pQHTsm3WAeAVyzb9NCpDitusLQ16I4T3Tm5kHSd++UWy+WYqOexL90U7nP+1NmyYqW0rWNH5dByky6PZ42SX4Im52rzVgXPrW69136HyYj8beoQSJC+iys6BjmvKPHjznI2CmqhuyWZ8hg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(396003)(39860400002)(376002)(366004)(346002)(38100700001)(86362001)(956004)(2616005)(16526019)(8936002)(26005)(2906002)(31686004)(186003)(8676002)(31696002)(36756003)(83380400001)(44832011)(53546011)(316002)(6916009)(478600001)(16576012)(5660300002)(4326008)(66476007)(66556008)(66946007)(52116002)(6486002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?cVpMajBwS29hNEJhUEJnVHZBU28wNSt0MVhCaWp0dGNtcWpvTEdyb3ZVTm1z?=
+ =?utf-8?B?ZzFrUXZpN0QwbzJ5UlVNSHpIa3U2Tm9EQk5BQmhvY3NEL1MxNGtCTitqcGd0?=
+ =?utf-8?B?cVRENFF6OWtyeFJXR1RDZ0RDUm1rU1lsTjRKQXgxOE9PMXVsUjU2RHkwekw5?=
+ =?utf-8?B?ZzVZS1pJWmVuclNHN0F1UXlvM09KSloreE1pYlNvR0dRN1NtcXZiQjR4Tm8r?=
+ =?utf-8?B?TTVkWHMvL3hHNTE0bzZPdE1rT3plbUtQRUR6cnIrSmdGRENTRVl6VEgwZXJz?=
+ =?utf-8?B?SWMyZVF2aTY3UXlxL3JyY0J2UWRMNzdFeDFBSTlZSlJCSXE1NDlraTJlK3VT?=
+ =?utf-8?B?MVpRRU5hbGhMdlJ4bHFVcUhINCsraWZyTlRwVUJ5ckpnd1AzV2ZhMnhXcDBu?=
+ =?utf-8?B?allTaW8zeW1GcUFGOS9HL0JxK2NGcFN0bElIcFY5RldrdERvWGc0VG8yTlFp?=
+ =?utf-8?B?R2JwdXk3UVVVUnZZS0plNGtkNEFWQzhzUnZSMUhLblBYL0xFVDR6Mk1aUnJr?=
+ =?utf-8?B?Nkx3WXNrZVB6RWZoNjFIVGxoQldncm5JcGVxNWtMOGRNK0VJaXF6KzluWURy?=
+ =?utf-8?B?eVFqQnJSclFiZFdXTWtaSmh6REZPSVdzdXBQRnc0QXg2Nm85bldpZEc5QnE1?=
+ =?utf-8?B?UjNNM0pnc0NhNnFKYlFDeVJ0eCs2RGFOaHF0N08vQ0hWRGN5WnRHRGViQTly?=
+ =?utf-8?B?MERrd25oM1J2UUIrRTIzLzB4b1IvUndUd3c5d1RjQTQ3VVlmaXVTZytpWjBF?=
+ =?utf-8?B?Tk9nNU9Mc3JWQi81UTI3QklPRVF1TlYxelpqT3ZVRWx3M3U0RE94c2RmL2NX?=
+ =?utf-8?B?YnlobStMRkFrejJlTUhPWldHRmRBc0ovMWdzR25oREhWZ2p3SlNtSGROTFRi?=
+ =?utf-8?B?L04vNFlrdXBGblFRZjVmUUlzUFdHWGk4WGUxeTA1T2pEWWNjUE1qeXYzSlRH?=
+ =?utf-8?B?WU5wRS9TU1FEZVo0dzYrT3lEWGlQK0tMU3MvckFDZndjV2hqVUNBaEFNR0Q0?=
+ =?utf-8?B?OEhNSTVEb0oxelZkUUo4b0JranpWSklmaUNmc3o4SE9WQU9hK1FQNVVodjJH?=
+ =?utf-8?B?NlpNaSthd2VLOG1nVGZXaEEzNXpCNi9rVUZna3dwNjAxYmxqa3pEUFg3Q2dV?=
+ =?utf-8?B?aUROYlhHemVBVENMYWlkUExBbWE4ZVVGMXAzYVNJc05qRXU1TmRpK0xKeTIw?=
+ =?utf-8?B?WGU2S3dxcS9Nem45SU5tbXl0RmxyZUl2b1JIVkxiSVdXQVZYNnFZd3licmFm?=
+ =?utf-8?B?RTlUS3JPaFczMUd4RW1NZ21pdmpxUlptbkZPQSszZUJwUzBscDVMVnk4cHhI?=
+ =?utf-8?B?OG5KbjByeHdDcHJpa3RNSXpyK2NoQndtN3huZE1LbHlEZmcydytmZFFLalNq?=
+ =?utf-8?B?NC93NjM5ZXovTTRlWEtNU2xoaHRITWMxaUdrSHVwVURoWW4zNStCc1dIZFJQ?=
+ =?utf-8?B?NGk4b1RBK2dMUCt4S09GRi9xeUloa2x0ekJhRmhvWlcyRlh3ZEZTRmNlSVJ5?=
+ =?utf-8?B?bXp5OHJCTXNGNHhpYlVvM1gxTkpsQ1V1N2lwa04xZC9PY1I1UHNWY2wvZlpY?=
+ =?utf-8?B?Z0lMTHl4ekdZeTZoRHNJNE9JSm1zZWlNbkF5NmlFV1l2akZkU0phb29KZU4v?=
+ =?utf-8?B?YS9TdTErYXNNdGZwNVVQYkhmOGFxcnJ5MW5CWW1tT1BFN2Q2Q2RzSGt5aE1B?=
+ =?utf-8?B?Wjc5bHV5MmdNV1lvdTVhaHhwb2JhZHBvY2h3a3k5WGcrOTk5S21GTExFNFpD?=
+ =?utf-8?Q?Kh4S2DRArxHwXuB2k/+dWNcJ2fbZoZTgbAogiwL?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9954bb5c-7911-4a11-116b-08d8f5bba1df
+X-MS-Exchange-CrossTenant-Network-Message-Id: 078f4dca-2c89-4903-33b3-08d8f5bc131d
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Apr 2021 09:42:29.7769
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Apr 2021 09:45:39.7348
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 1WzyYGIh+VmREkJohkNSsuWQSLJpicJcpbhMx9fjW5fw5cVBOrGsxA0HGgS8OrXjsDkvDM5veSNeywb0VmhWpbGw8xRYUDPu7Bsbo6TgORk=
+X-MS-Exchange-CrossTenant-UserPrincipalName: cFRDCsHSJjX/b1tvCTPX+JhV26zw7lA+Awv9i1SIaS/mCoUwtEIql3lU0oihfjPlihWZS83jv/BOm4xPZZgsPzZW9c5gWccEBVqR6nnlNk8=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB4813
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9941 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 bulkscore=0
- suspectscore=0 phishscore=0 malwarescore=0 mlxlogscore=999 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2103310000
- definitions=main-2104020067
-X-Proofpoint-GUID: U_aqK333cOYnIzbP_Gens-i-U2A-hhSZ
-X-Proofpoint-ORIG-GUID: U_aqK333cOYnIzbP_Gens-i-U2A-hhSZ
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
+ adultscore=0 bulkscore=0 mlxscore=0 spamscore=0 malwarescore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2103310000 definitions=main-2104020068
+X-Proofpoint-ORIG-GUID: GNd-0B-vYdPABSy6P3aXjP8tcjNFDei2
+X-Proofpoint-GUID: GNd-0B-vYdPABSy6P3aXjP8tcjNFDei2
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9941 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999 mlxscore=0
- lowpriorityscore=0 suspectscore=0 priorityscore=1501 phishscore=0
- clxscore=1015 impostorscore=0 malwarescore=0 bulkscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0 phishscore=0
+ bulkscore=0 adultscore=0 clxscore=1015 malwarescore=0 priorityscore=1501
+ suspectscore=0 spamscore=0 mlxlogscore=999 lowpriorityscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2103310000
  definitions=main-2104020067
 Precedence: bulk
@@ -160,8 +160,8 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 
-On 4/1/21 9:55 AM, Brian Foster wrote:
-> On Thu, Mar 25, 2021 at 05:33:07PM -0700, Allison Henderson wrote:
+On 4/2/21 12:59 AM, Chandan Babu R wrote:
+> On 26 Mar 2021 at 06:03, Allison Henderson wrote:
 >> This patch modifies the attr remove routines to be delay ready. This
 >> means they no longer roll or commit transactions, but instead return
 >> -EAGAIN to have the calling routine roll and refresh the transaction. In
@@ -202,527 +202,56 @@ On 4/1/21 9:55 AM, Brian Foster wrote:
 >>   fs/xfs/libxfs/xfs_attr_leaf.c   |   2 +-
 >>   fs/xfs/libxfs/xfs_attr_remote.c |  48 ++++++----
 >>   fs/xfs/libxfs/xfs_attr_remote.h |   2 +-
->>   fs/xfs/xfs_attr_inactive.c      |   2 +-
->>   6 files changed, 297 insertions(+), 88 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index 41accd5..4a73691 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
-> ...
->> @@ -221,6 +220,32 @@ xfs_attr_is_shortform(
->>   		ip->i_afp->if_nextents == 0);
->>   }
->>   
->> +/*
->> + * Checks to see if a delayed attribute transaction should be rolled.  If so,
->> + * also checks for a defer finish.  Transaction is finished and rolled as
->> + * needed, and returns true of false if the delayed operation should continue.
->> + */
 > 
-> Outdated comment wrt to the return value.
-Ok, will drop last line here
-
+> [...]
 > 
->> +int
->> +xfs_attr_trans_roll(
->> +	struct xfs_delattr_context	*dac)
->> +{
->> +	struct xfs_da_args		*args = dac->da_args;
->> +	int				error;
->> +
->> +	if (dac->flags & XFS_DAC_DEFER_FINISH) {
->> +		/*
->> +		 * The caller wants us to finish all the deferred ops so that we
->> +		 * avoid pinning the log tail with a large number of deferred
->> +		 * ops.
->> +		 */
->> +		dac->flags &= ~XFS_DAC_DEFER_FINISH;
->> +		error = xfs_defer_finish(&args->trans);
->> +	} else
->> +		error = xfs_trans_roll_inode(&args->trans, args->dp);
->> +
->> +	return error;
->> +}
->> +
->>   STATIC int
->>   xfs_attr_set_fmt(
->>   	struct xfs_da_args	*args)
-> ...
->> @@ -1232,70 +1264,114 @@ xfs_attr_node_remove_cleanup(
->>   }
->>   
->>   /*
->> - * Remove a name from a B-tree attribute list.
->> + * Remove the attribute specified in @args.
->>    *
->>    * This will involve walking down the Btree, and may involve joining
->>    * leaf nodes and even joining intermediate nodes up to and including
->>    * the root node (a special case of an intermediate node).
->> + *
->> + * This routine is meant to function as either an in-line or delayed operation,
->> + * and may return -EAGAIN when the transaction needs to be rolled.  Calling
->> + * functions will need to handle this, and recall the function until a
->> + * successful error code is returned.
->>    */
->> -STATIC int
->> -xfs_attr_node_removename(
->> -	struct xfs_da_args	*args)
->> +int
->> +xfs_attr_remove_iter(
+>>   STATIC
+>>   int xfs_attr_node_removename_setup(
+>> -	struct xfs_da_args	*args,
+>> -	struct xfs_da_state	**state)
 >> +	struct xfs_delattr_context	*dac)
 >>   {
->> -	struct xfs_da_state	*state;
->> -	int			retval, error;
->> -	struct xfs_inode	*dp = args->dp;
+>> -	int			error;
 >> +	struct xfs_da_args		*args = dac->da_args;
->> +	struct xfs_da_state		*state = dac->da_state;
->> +	int				retval, error;
->> +	struct xfs_inode		*dp = args->dp;
->>   
->>   	trace_xfs_attr_node_removename(args);
->>   
->> -	error = xfs_attr_node_removename_setup(args, &state);
->> -	if (error)
->> -		goto out;
->> +	switch (dac->dela_state) {
->> +	case XFS_DAS_UNINIT:
->> +		if (!xfs_inode_hasattr(dp))
->> +			return -ENOATTR;
->>   
->> -	/*
->> -	 * If there is an out-of-line value, de-allocate the blocks.
->> -	 * This is done before we remove the attribute so that we don't
->> -	 * overflow the maximum size of a transaction and/or hit a deadlock.
->> -	 */
->> -	if (args->rmtblkno > 0) {
->> -		error = xfs_attr_rmtval_remove(args);
->> -		if (error)
->> -			goto out;
->> +		if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL) {
->> +			ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
->> +			return xfs_attr_shortform_remove(args);
->> +		}
->> +
->> +		if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
->> +			return xfs_attr_leaf_removename(args);
->> +
->> +	/* fallthrough */
->> +	case XFS_DAS_RMTBLK:
->> +		dac->dela_state = XFS_DAS_RMTBLK;
->> +
->> +		if (!dac->da_state) {
->> +			error = xfs_attr_node_removename_setup(dac);
->> +			if (error)
->> +				goto out;
+>> +	struct xfs_da_state		**state = &dac->da_state;
+>> +	int				error;
+>>
+>>   	error = xfs_attr_node_hasname(args, state);
+>>   	if (error != -EEXIST)
+>>   		return error;
+>> +	error = 0;
+>>
+>>   	ASSERT((*state)->path.blk[(*state)->path.active - 1].bp != NULL);
+>>   	ASSERT((*state)->path.blk[(*state)->path.active - 1].magic ==
+>> @@ -1204,10 +1233,13 @@ int xfs_attr_node_removename_setup(
+>>   	if (args->rmtblkno > 0) {
+>>   		error = xfs_attr_leaf_mark_incomplete(args, *state);
+>>   		if (error)
+>> -			return error;
+>> +			goto out;
+>>
+>> -		return xfs_attr_rmtval_invalidate(args);
+>> +		error = xfs_attr_rmtval_invalidate(args);
+>>   	}
+>> +out:
+>> +	if (error)
+>> +		xfs_da_state_free(*state);
+>>
+>>   	return 0;
 > 
-> Do we need the goto here if _removename_setup() frees state on error (or
-> is the latter change necessary)?
-I think we can safely return here.  Will update
-
-> 
->> +		}
->> +		state = dac->da_state;
-> 
-> Also, can this fold into the above if (!da_state) branch? Or maybe the
-> whole setup branch pulled up into the UNINIT state? Not a big deal, but
-> it does look a little out of place in the RMTBLK state.
-Sure, it should be ok, there isnt any EAGAINs here, so it shouldnt make 
-a difference
-
-> 
->>   
->>   		/*
->> -		 * Refill the state structure with buffers, the prior calls
->> -		 * released our buffers.
->> +		 * If there is an out-of-line value, de-allocate the blocks.
->> +		 * This is done before we remove the attribute so that we don't
->> +		 * overflow the maximum size of a transaction and/or hit a
->> +		 * deadlock.
->>   		 */
->> -		error = xfs_attr_refillstate(state);
->> -		if (error)
->> -			goto out;
->> -	}
->> -	retval = xfs_attr_node_remove_cleanup(args, state);
->> +		if (args->rmtblkno > 0) {
->> +			/*
->> +			 * May return -EAGAIN. Remove blocks until
->> +			 * args->rmtblkno == 0
->> +			 */
->> +			error = __xfs_attr_rmtval_remove(dac);
->> +			if (error)
->> +				break;
-> 
-> I feel that the difference between a break and goto out might confuse
-> some of the error handling. Right now, it looks like the exit path
-> handles either scenario, so we could presumably do something like the
-> following at the end of the function:
-> 
-> 	if (error != -EAGAIN && state)
-> 		xfs_da_state_free(state);
-> 	return error;
-> 
-> ... and just ditch the label. Alternatively we could retain the label above
-> the state check, but just use it consistently throughout the function.
-> 
-Either will work?  I think I'd prefer the gotos over the breaks though, 
-I just think it reads easier.  The switch is sort of big, so I think the 
-gotos make it a little more clear in that we're exiting the function 
-without having to skim all the way to the bottom.
-
-> Other than those few nits, this one looks pretty good to me.
-Great, will update.  Thanks!
+> If the call to xfs_attr_rmtval_invalidate() returned a non-zero value, the
+> above change would cause xfs_attr_node_removename_setup() to incorrectly
+> return success.
+Ok, will update the return.  Thx for the catch!
 
 Allison
 
 > 
-> Brian
-> 
->> +
->> +			/*
->> +			 * Refill the state structure with buffers, the prior
->> +			 * calls released our buffers.
->> +			 */
->> +			ASSERT(args->rmtblkno == 0);
->> +			error = xfs_attr_refillstate(state);
->> +			if (error)
->> +				goto out;
->> +
->> +			dac->flags |= XFS_DAC_DEFER_FINISH;
->> +			return -EAGAIN;
->> +		}
->> +
->> +		retval = xfs_attr_node_remove_cleanup(args, state);
->>   
->> -	/*
->> -	 * Check to see if the tree needs to be collapsed.
->> -	 */
->> -	if (retval && (state->path.active > 1)) {
->> -		error = xfs_da3_join(state);
->> -		if (error)
->> -			goto out;
->> -		error = xfs_defer_finish(&args->trans);
->> -		if (error)
->> -			goto out;
->>   		/*
->> -		 * Commit the Btree join operation and start a new trans.
->> +		 * Check to see if the tree needs to be collapsed. Set the flag
->> +		 * to indicate that the calling function needs to move the
->> +		 * shrink operation
->>   		 */
->> -		error = xfs_trans_roll_inode(&args->trans, dp);
->> -		if (error)
->> -			goto out;
->> -	}
->> +		if (retval && (state->path.active > 1)) {
->> +			error = xfs_da3_join(state);
->> +			if (error)
->> +				goto out;
->>   
->> -	/*
->> -	 * If the result is small enough, push it all into the inode.
->> -	 */
->> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
->> -		error = xfs_attr_node_shrink(args, state);
->> +			dac->flags |= XFS_DAC_DEFER_FINISH;
->> +			dac->dela_state = XFS_DAS_RM_SHRINK;
->> +			return -EAGAIN;
->> +		}
->> +
->> +		/* fallthrough */
->> +	case XFS_DAS_RM_SHRINK:
->> +		/*
->> +		 * If the result is small enough, push it all into the inode.
->> +		 */
->> +		if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
->> +			error = xfs_attr_node_shrink(args, state);
->> +
->> +		break;
->> +	default:
->> +		ASSERT(0);
->> +		error = -EINVAL;
->> +		goto out;
->> +	}
->>   
->> +	if (error == -EAGAIN)
->> +		return error;
->>   out:
->>   	if (state)
->>   		xfs_da_state_free(state);
->> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
->> index 3e97a93..92a6a50 100644
->> --- a/fs/xfs/libxfs/xfs_attr.h
->> +++ b/fs/xfs/libxfs/xfs_attr.h
->> @@ -74,6 +74,127 @@ struct xfs_attr_list_context {
->>   };
->>   
->>   
->> +/*
->> + * ========================================================================
->> + * Structure used to pass context around among the delayed routines.
->> + * ========================================================================
->> + */
->> +
->> +/*
->> + * Below is a state machine diagram for attr remove operations. The  XFS_DAS_*
->> + * states indicate places where the function would return -EAGAIN, and then
->> + * immediately resume from after being recalled by the calling function. States
->> + * marked as a "subroutine state" indicate that they belong to a subroutine, and
->> + * so the calling function needs to pass them back to that subroutine to allow
->> + * it to finish where it left off. But they otherwise do not have a role in the
->> + * calling function other than just passing through.
->> + *
->> + * xfs_attr_remove_iter()
->> + *              │
->> + *              v
->> + *        have attr to remove? ──n──> done
->> + *              │
->> + *              y
->> + *              │
->> + *              v
->> + *        are we short form? ──y──> xfs_attr_shortform_remove ──> done
->> + *              │
->> + *              n
->> + *              │
->> + *              V
->> + *        are we leaf form? ──y──> xfs_attr_leaf_removename ──> done
->> + *              │
->> + *              n
->> + *              │
->> + *              V
->> + *   ┌── need to setup state?
->> + *   │          │
->> + *   n          y
->> + *   │          │
->> + *   │          v
->> + *   │ find attr and get state
->> + *   │    attr has blks? ───n────???
->> + *   │          │                v
->> + *   │          │         find and invalidate
->> + *   │          y         the blocks. mark
->> + *   │          │         attr incomplete
->> + *   │          ├────────────────┘
->> + *   └──────────┤
->> + *              │
->> + *              v
->> + *      Have blks to remove? ─────y────???
->> + *              │       ^      remove the blks
->> + *              │       │              │
->> + *              │       │              v
->> + *              │       │        refill the state
->> + *              n       │              │
->> + *              │       │              v
->> + *              │       │         XFS_DAS_RMTBLK
->> + *              │       └─────  re-enter with one
->> + *              │               less blk to remove
->> + *              │
->> + *              v
->> + *       remove leaf and
->> + *       update hash with
->> + *   xfs_attr_node_remove_cleanup
->> + *              │
->> + *              v
->> + *           need to
->> + *        shrink tree? ─n─???
->> + *              │         │
->> + *              y         │
->> + *              │         │
->> + *              v         │
->> + *          join leaf     │
->> + *              │         │
->> + *              v         │
->> + *      XFS_DAS_RM_SHRINK │
->> + *              │         │
->> + *              v         │
->> + *       do the shrink    │
->> + *              │         │
->> + *              v         │
->> + *          free state <──┘
->> + *              │
->> + *              v
->> + *            done
->> + *
->> + */
->> +
->> +/*
->> + * Enum values for xfs_delattr_context.da_state
->> + *
->> + * These values are used by delayed attribute operations to keep track  of where
->> + * they were before they returned -EAGAIN.  A return code of -EAGAIN signals the
->> + * calling function to roll the transaction, and then recall the subroutine to
->> + * finish the operation.  The enum is then used by the subroutine to jump back
->> + * to where it was and resume executing where it left off.
->> + */
->> +enum xfs_delattr_state {
->> +	XFS_DAS_UNINIT		= 0,  /* No state has been set yet */
->> +	XFS_DAS_RMTBLK,		      /* Removing remote blks */
->> +	XFS_DAS_RM_SHRINK,	      /* We are shrinking the tree */
->> +};
->> +
->> +/*
->> + * Defines for xfs_delattr_context.flags
->> + */
->> +#define XFS_DAC_DEFER_FINISH		0x01 /* finish the transaction */
->> +
->> +/*
->> + * Context used for keeping track of delayed attribute operations
->> + */
->> +struct xfs_delattr_context {
->> +	struct xfs_da_args      *da_args;
->> +
->> +	/* Used in xfs_attr_node_removename to roll through removing blocks */
->> +	struct xfs_da_state     *da_state;
->> +
->> +	/* Used to keep track of current state of delayed operation */
->> +	unsigned int            flags;
->> +	enum xfs_delattr_state  dela_state;
->> +};
->> +
->>   /*========================================================================
->>    * Function prototypes for the kernel.
->>    *========================================================================*/
->> @@ -91,6 +212,10 @@ int xfs_attr_set(struct xfs_da_args *args);
->>   int xfs_attr_set_args(struct xfs_da_args *args);
->>   int xfs_has_attr(struct xfs_da_args *args);
->>   int xfs_attr_remove_args(struct xfs_da_args *args);
->> +int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
->> +int xfs_attr_trans_roll(struct xfs_delattr_context *dac);
->>   bool xfs_attr_namecheck(const void *name, size_t length);
->> +void xfs_delattr_context_init(struct xfs_delattr_context *dac,
->> +			      struct xfs_da_args *args);
->>   
->>   #endif	/* __XFS_ATTR_H__ */
->> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
->> index d6ef69a..3780141 100644
->> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
->> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
->> @@ -19,8 +19,8 @@
->>   #include "xfs_bmap_btree.h"
->>   #include "xfs_bmap.h"
->>   #include "xfs_attr_sf.h"
->> -#include "xfs_attr_remote.h"
->>   #include "xfs_attr.h"
->> +#include "xfs_attr_remote.h"
->>   #include "xfs_attr_leaf.h"
->>   #include "xfs_error.h"
->>   #include "xfs_trace.h"
->> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
->> index 48d8e9c..908521e7 100644
->> --- a/fs/xfs/libxfs/xfs_attr_remote.c
->> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
->> @@ -674,10 +674,12 @@ xfs_attr_rmtval_invalidate(
->>    */
->>   int
->>   xfs_attr_rmtval_remove(
->> -	struct xfs_da_args      *args)
->> +	struct xfs_da_args		*args)
->>   {
->> -	int			error;
->> -	int			retval;
->> +	int				error;
->> +	struct xfs_delattr_context	dac  = {
->> +		.da_args	= args,
->> +	};
->>   
->>   	trace_xfs_attr_rmtval_remove(args);
->>   
->> @@ -685,31 +687,29 @@ xfs_attr_rmtval_remove(
->>   	 * Keep de-allocating extents until the remote-value region is gone.
->>   	 */
->>   	do {
->> -		retval = __xfs_attr_rmtval_remove(args);
->> -		if (retval && retval != -EAGAIN)
->> -			return retval;
->> +		error = __xfs_attr_rmtval_remove(&dac);
->> +		if (error != -EAGAIN)
->> +			break;
->>   
->> -		/*
->> -		 * Close out trans and start the next one in the chain.
->> -		 */
->> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
->> +		error = xfs_attr_trans_roll(&dac);
->>   		if (error)
->>   			return error;
->> -	} while (retval == -EAGAIN);
->> +	} while (true);
->>   
->> -	return 0;
->> +	return error;
 >>   }
->>   
->>   /*
->>    * Remove the value associated with an attribute by deleting the out-of-line
->> - * buffer that it is stored on. Returns EAGAIN for the caller to refresh the
->> + * buffer that it is stored on. Returns -EAGAIN for the caller to refresh the
->>    * transaction and re-call the function
->>    */
->>   int
->>   __xfs_attr_rmtval_remove(
->> -	struct xfs_da_args	*args)
->> +	struct xfs_delattr_context	*dac)
->>   {
->> -	int			error, done;
->> +	struct xfs_da_args		*args = dac->da_args;
->> +	int				error, done;
->>   
->>   	/*
->>   	 * Unmap value blocks for this attr.
->> @@ -719,12 +719,20 @@ __xfs_attr_rmtval_remove(
->>   	if (error)
->>   		return error;
->>   
->> -	error = xfs_defer_finish(&args->trans);
->> -	if (error)
->> -		return error;
->> -
->> -	if (!done)
->> +	/*
->> +	 * We don't need an explicit state here to pick up where we left off. We
->> +	 * can figure it out using the !done return code. Calling function only
->> +	 * needs to keep recalling this routine until we indicate to stop by
->> +	 * returning anything other than -EAGAIN. The actual value of
->> +	 * attr->xattri_dela_state may be some value reminiscent of the calling
->> +	 * function, but it's value is irrelevant with in the context of this
->> +	 * function. Once we are done here, the next state is set as needed
->> +	 * by the parent
->> +	 */
->> +	if (!done) {
->> +		dac->flags |= XFS_DAC_DEFER_FINISH;
->>   		return -EAGAIN;
->> +	}
->>   
->>   	return error;
+>> @@ -1232,70 +1264,114 @@ xfs_attr_node_remove_cleanup(
 >>   }
->> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
->> index 9eee615..002fd30 100644
->> --- a/fs/xfs/libxfs/xfs_attr_remote.h
->> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
->> @@ -14,5 +14,5 @@ int xfs_attr_rmtval_remove(struct xfs_da_args *args);
->>   int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
->>   		xfs_buf_flags_t incore_flags);
->>   int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
->> -int __xfs_attr_rmtval_remove(struct xfs_da_args *args);
->> +int __xfs_attr_rmtval_remove(struct xfs_delattr_context *dac);
->>   #endif /* __XFS_ATTR_REMOTE_H__ */
->> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
->> index bfad669..aaa7e66 100644
->> --- a/fs/xfs/xfs_attr_inactive.c
->> +++ b/fs/xfs/xfs_attr_inactive.c
->> @@ -15,10 +15,10 @@
->>   #include "xfs_da_format.h"
->>   #include "xfs_da_btree.h"
->>   #include "xfs_inode.h"
->> +#include "xfs_attr.h"
->>   #include "xfs_attr_remote.h"
->>   #include "xfs_trans.h"
->>   #include "xfs_bmap.h"
->> -#include "xfs_attr.h"
->>   #include "xfs_attr_leaf.h"
->>   #include "xfs_quota.h"
->>   #include "xfs_dir2.h"
->> -- 
->> 2.7.4
 >>
+> 
+> --
+> chandan
 > 
