@@ -2,216 +2,132 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C02B7C433ED
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Apr 2021 03:25:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAFD6C433B4
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Apr 2021 07:44:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77CE16136D
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Apr 2021 03:25:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F3A961398
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Apr 2021 07:44:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236660AbhDDDZf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 3 Apr 2021 23:25:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57320 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236655AbhDDDZe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 3 Apr 2021 23:25:34 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ED4306136B;
-        Sun,  4 Apr 2021 03:25:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617506731;
-        bh=0C++g0iXdES4ATjMiDvyDxtMRsAWll4D1ZgwCFDltfs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OIXuqkGbOXuikMkDowkaYuSnYmUGf8KQlqH3yLcGsQn5HdVkSGJVxnoTZ/nn0zszl
-         hv6J5tfBZunkPQbYmYgkMh24ncnoUVzruNMFsLYKPleH9c0msT+AJ4inwiKW0qGv+0
-         g7/b/vF8gXEa/sljNTimRf/90iYdwFjtRlOLZNJvSwBq/2AcRGpEvykZ6raiOA9pfZ
-         DTfPWw0xmJ/o1kSFwsrgcUuUjYWRfKVFt+t8veOdeteZb9n0m6G/STA5i/DpVaXYUT
-         hiQ7iPAMYJXC5eBXKNgwP1TgUVqtQyscY6DxUpF4VCQi++XKh+DnHqNPMBbz/V3/6f
-         oauOZ4roxDp0w==
-Date:   Sat, 3 Apr 2021 20:25:28 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs: inode fork allocation depends on XFS_IFEXTENT
- flag
-Message-ID: <20210404032528.GB3957620@magnolia>
-References: <20210330053059.1339949-1-david@fromorbit.com>
- <20210330053059.1339949-3-david@fromorbit.com>
- <20210330180617.GR4090233@magnolia>
- <20210330214007.GU63242@dread.disaster.area>
+        id S232400AbhDEHpE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Apr 2021 03:45:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37000 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231523AbhDEHpD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Apr 2021 03:45:03 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 794E3C061756;
+        Mon,  5 Apr 2021 00:44:58 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id x126so2666302pfc.13;
+        Mon, 05 Apr 2021 00:44:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=XTBBScorhbEftP8fVZLn78ePqEjCyMTCnCUOdrrkRy4=;
+        b=fB00XGgc0nyWJGSN9ZdaKIRrFpbMkjL+RZsVmN6jNRLtxQt+KOmn/AauqMWKl+Lfhp
+         yZ8VPer8MIsZBBrW1KKtLfSKcyJEAFGoAQlgK0EnHjSE2ffFqOCucvOuR7tT7aw0hchv
+         NUjaz4LVaGRDtE411aHZOXnkLoZ9U+AHohJDmSmGyLYjVxaMBkt8cp75hS2USOagEYKf
+         IIifK9uh4ENp6eTgQR09jhCgicUixNYQ+Ty8inEkr1udScwY2pPUSlB6LQXF2tn1xZTM
+         ZMsV4KBYUfrmy5ihlOlwZojFdqMZ/a01fzpMJDME0dO36yq254MwCmfWqCNgyHi1n4Lq
+         nwWw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=XTBBScorhbEftP8fVZLn78ePqEjCyMTCnCUOdrrkRy4=;
+        b=eQ3sTy4/A3AYkmdH9ZlT6EnTiDK9M49iqvydMICbmPBCV9hY49jEzCFy7tX3e70XD3
+         PoAkG19Cl2W49ZlLVQcvbj5Y5OOXXdnz5z3d/S58rYNo4UPc5cUGmzl6tbku7UhaXSAq
+         X5OMCin6PRnd7JZ01lr5Wr5r05FjyKK6zCeJxtlnRBRV6IQcQLXg0OzbfU55TtXX3NSF
+         uEwIjefYSUsIQ45Bj0nkifAknXxWSPSWSvcXUacgOF0sjD9BE8ElpJ9gYnyetH4CCHEf
+         GbsbmtY2V4AvYwJPNhhXi3mdo1iP+nEsJZW0x8i7xDKck/jZ9SBWe5Pu6WoLVpojQsMm
+         ySdQ==
+X-Gm-Message-State: AOAM532GnjlBPABMaMUB7vSZtyQUh/CQ02Kbj+gY49wg9eHNwTbd47x3
+        L+st5Mn/+tzBIN52mLg3esiRMYifIxA=
+X-Google-Smtp-Source: ABdhPJwZtkN2lOHJxStxxWYltwOOan0thJCFlTHx5bEJcyys+WcdkhP0ORNtC4VdZlnfaF+aM99mCg==
+X-Received: by 2002:a05:6a00:b86:b029:207:8ac9:85de with SMTP id g6-20020a056a000b86b02902078ac985demr21745145pfj.66.1617608697905;
+        Mon, 05 Apr 2021 00:44:57 -0700 (PDT)
+Received: from localhost.localdomain ([122.171.183.71])
+        by smtp.gmail.com with ESMTPSA id y2sm8023067pji.22.2021.04.05.00.44.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Apr 2021 00:44:57 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     fstests@vger.kernel.org
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, djwong@kernel.org
+Subject: [PATCH] fstests: Do not execute xfs/{532,533,538} when realtime feature is enabled
+Date:   Mon,  5 Apr 2021 13:14:47 +0530
+Message-Id: <20210405074447.22222-1-chandanrlinux@gmail.com>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210330214007.GU63242@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 31, 2021 at 08:40:07AM +1100, Dave Chinner wrote:
-> On Tue, Mar 30, 2021 at 11:06:17AM -0700, Darrick J. Wong wrote:
-> > On Tue, Mar 30, 2021 at 04:30:57PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > XFS_IFEXTENT has two incompatible meanings to the code. The first
-> > > meaning is that the fork is in extent format, the second meaning is
-> > > that the extent list has been read into memory.
-> > 
-> > I don't agree that IFEXTENTS has two meanings.  This is what I
-> > understand of how xfs_ifork fields and surrounding code are supposed to
-> > work; can you point out what's wrong?
-> > 
-> >  1. xfs_ifork.if_format == XFS_DINODE_FMT_EXTENTS tells us if the fork
-> >     is in extent format.
-> > 
-> >  2. (xfs_ifork.if_flags & XFS_IFEXTENTS) tells us if the incore extent
-> >     map is initialized.
-> > 
-> >  3. If we are creating a fork with if_format == EXTENTS, the incore map
-> >     is trivially initialized, and therefore IFEXTENTS should be set
-> >     because no further work is required.
-> > 
-> >  4. If we are reading an if_format == EXTENTS fork in from disk (during
-> >     xfs_iread), we always populate the incore map and set IFEXTENTS.
-> > 
-> >  5. If if_format == BTREE and IFEXTENTS is not set, the incore map is
-> >     *not* initialized, and we must call xfs_iread_extents to walk the
-> >     ondisk btree to initialize the incore btree, and to set IFEXTENTS.
-> > 
-> >  6. xfs_iread_extents requires that if_format == BTREE and will return
-> >     an error and log a corruption report if it sees another fork format.
-> > 
-> > From points 3 and 4, I conclude that (prior to xfs-5.13-merge) IFEXTENTS
-> > is always set if if_format is FMT_EXTENTS.
-> 
-> ifp->if_flags is set to XFS_IFINLINE for local format forks,
-> XFS_IFEXTENTS for extent format forks, and XFS_IFBROOT for btree
-> roots in the inode fork.
-> 
-> THe contents of the fork are mode definitely defined by the flags
-> in the fork structure.
-> 
-> The problem is that we've overloaded XFS_IFEXTENTS to -also- mean
-> "extents loaded in memory". The in-core extent tree used to be a
-> IFBROOT only feature - XFS_IFEXTENTS format forks
-> held the extent data in the inode fork itself, not in the incore
-> extent tree, and so always had direct access to the extent records.
-> It never needed another flag to mean "extents have been read into
-> memory", because they always were present in the inode fork when
-> XFS_IFEXTENTS was set. 
-> 
-> What we used to have is another flag - XFS_IFEXTIREC - to indicate
-> that the XFS_IFBROOT format root was read into the incore memory
-> tree. This was removed in commit 6bdcf26ade88 ("xfs: use a b+tree
-> for the in-core extent list") when the btree was added for both
-> extent format and btree format forks, and it's use to indicate that
-> the btree had been read was replaced with the XFS_IFEXTENTS flag.
-> 
-> That's when XFS_IFEXTENTS gained it's dual meaning.
-> 
-> IOWS:
-> 
-> - XFS_IFINLINE means inode fork data is inode type specific data
-> - XFS_IFEXTENTS means the inode fork data is in extent format and
->   that the in-core extent btree has been populated
-> - XFS_IFBROOT means the inode fork data is a btree root
-> - XFS_IFBROOT|XFS_IFEXTENTS mean the inode data fork is a btree root
->   and that the in-core extent btree has been populated
-> 
-> Historically, that last case was XFS_IFBROOT|XFS_IFEXTIREC. What
-> should have been done in 6bdcf26ade88 is the XFS_IFEXTENTS format
-> fork should have become XFS_IFEXTENTS|XFS_IFEXTIREC to indicate
-> "extent format, extent tree populated", rather than eliding
-> XFS_IFEXTIREC and redefining XFS_IFEXTENTS to mean "extent tree
-> populated".  i.e. the separate flag to indicate the difference
-> between fork format and in-memory state should have been
-> retained....
-> 
-> > From point 6, I conclude that it's not possible for IFEXTENTS not to be
-> > set if if_format is FMT_EXTENTS, because if an inode fork ever ended up
-> > in that state, there would not be any way to escape.
-> 
-> That's an implementation detail arising from always reading the
-> extent list from the on-disk inode fork into in-memory extent list.
-> 
-> > > When the inode fork is in extent format, we automatically read the
-> > > extent list into memory and indexed by the inode extent btree when
-> > > the inode is brought into memory off disk.
-> > 
-> > Agreed, that's #4 above.
-> 
-> Yes, that's an implementation detail - we currently do not allow an
-> inode in extent form to be read in without populating the in-core
-> extent btree, whether we need to read extents or not. Hence the
-> confusion over "I know btree format uses this to indicate the extent
-> tree has been read" vs "this always needs to be set when in extent
-> format". That's the logic landmine I tripped over here.
-> 
-> Realistically, we should be separating the in-memory extent tree
-> initialisation from inode fork initialisation because directory traversal
-> workloads that just to look at inode state does not need to populate
-> the extent btree. Doing so for every inode is wasted memory and
-> CPU. We should init the extent btree on the first operation that
-> needs the extent list, like we do for btrees, and for that we need
-> XFS_IFEXTIREC to be re-introduced to clearly separate the in-memory
-> fork format from the extent tree state.
-> 
-> > > This fixes a scrub regression because it assumes XFS_IFEXTENT means
-> > > "on disk format" and not "read into memory" and e6a688c33238 assumed
-> > > it mean "read into memory". In reality, the XFS_IFEXTENT flag needs
-> > > to be split up into two flags - one for the on disk fork format and
-> > > one for the in-memory "extent btree has been populated" state.
-> > 
-> > Let's look at the relevant code in xchk_bmap(), since I wrote that
-> > function:
-> > 
-> > 	/* Check the fork values */
-> > 	switch (ifp->if_format) {
-> > 	...
-> > 	case XFS_DINODE_FMT_EXTENTS:
-> > 		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> > 			xchk_fblock_set_corrupt(sc, whichfork, 0);
-> > 			goto out;
-> > 		}
-> > 		break;
-> > 
-> > The switch statement checks the format (#1), and the flag test checks
-> > that the incore state (#3 and #4) hold true.  Perhaps it was unwise of
-> > scrub to check *incore* state flags here, but as of the time the code
-> > was written, it was always the case that FMT_EXTENTS and IFEXTENTS went
-> > together.  Setting SCRUB_OFLAG_CORRUPT is how scrub signals that
-> > something is wrong and administrator intervention is needed.
-> > 
-> > I agree with the code fix, but not with the justification.
-> 
-> If you take into account the history of this code, you can see that
-> XFS_IFEXTIREC -> XFS_IFEXTENTS did, indeed, give XFS_IFEXTENTS two
-> meanings...
+The minimum length space allocator (i.e. xfs_bmap_exact_minlen_extent_alloc())
+depends on the underlying filesystem to be fragmented so that there are enough
+one block sized extents available to satify space allocation requests.
 
-Aha, so we ended up more or less agreeing on the code fix but via two
-verrrry different paths (organizational knowledge vs. interpreting the
-code).
+xfs/{532,533,538} tests issue space allocation requests for metadata (e.g. for
+blocks holding directory and xattr information). With realtime filesystem
+instances, these tests would end up fragmenting the space on realtime
+device. Hence minimum length space allocator fails since the regular
+filesystem space is not fragmented and hence there are no one block sized
+extents available.
 
-> What I've written is mostly correct, yet what you've written is
-> also mostly correct. So what do you want me to put in the commit
-> message?
+Thus, this commit disables execution of xfs/{532,533,538} when realtime
+feature is enabled on the filesystem instance.
 
-I'd be fine with pasting in both, along with a note that while we agree
-on the code fix we arrived at it for different reasons ... if you think
-that Christoph's RFC cleanup is a reasonable thing to bundle in right
-after it.
+Reported-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+---
+ tests/xfs/532 | 1 +
+ tests/xfs/533 | 1 +
+ tests/xfs/538 | 1 +
+ 3 files changed, 3 insertions(+)
 
-It looks ok to me (once I cleaned up the build robot complaints) coming
-from the narrower perspective of looking at iforks as they are now and
-as they would become, FWIW, but since you know more about the historical
-design points I'm curious what you think. :)
+diff --git a/tests/xfs/532 b/tests/xfs/532
+index 2bed574a..5359add5 100755
+--- a/tests/xfs/532
++++ b/tests/xfs/532
+@@ -37,6 +37,7 @@ _supported_fs xfs
+ _require_scratch
+ _require_attrs
+ _require_xfs_debug
++_require_no_realtime
+ _require_test_program "punch-alternating"
+ _require_xfs_io_error_injection "reduce_max_iextents"
+ _require_xfs_io_error_injection "bmap_alloc_minlen_extent"
+diff --git a/tests/xfs/533 b/tests/xfs/533
+index be909fcc..4826cccc 100755
+--- a/tests/xfs/533
++++ b/tests/xfs/533
+@@ -35,6 +35,7 @@ rm -f $seqres.full
+ _supported_fs xfs
+ _require_scratch
+ _require_xfs_debug
++_require_no_realtime
+ _require_test_program "punch-alternating"
+ _require_xfs_io_error_injection "reduce_max_iextents"
+ _require_xfs_io_error_injection "bmap_alloc_minlen_extent"
+diff --git a/tests/xfs/538 b/tests/xfs/538
+index 90eb1637..53a2c060 100755
+--- a/tests/xfs/538
++++ b/tests/xfs/538
+@@ -35,6 +35,7 @@ rm -f $seqres.full
+ _supported_fs xfs
+ _require_scratch
+ _require_xfs_debug
++_require_no_realtime
+ _require_test_program "punch-alternating"
+ _require_xfs_io_error_injection "bmap_alloc_minlen_extent"
+ 
+-- 
+2.29.2
 
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
