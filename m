@@ -2,96 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F23FC433B4
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 11:14:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3260C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 11:23:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E14F061369
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 11:14:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CFA16136A
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 11:23:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238567AbhDGLOj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Apr 2021 07:14:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33176 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232429AbhDGLOh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Apr 2021 07:14:37 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 529E9C061756;
-        Wed,  7 Apr 2021 04:14:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=gXTPe6Z3xf8fN6/+SVbn3oskaMk/+fmn0nXa9QgNoq4=; b=adTni07HAeWwLS2YFlGyWwnHef
-        /sZm3ojRZKo+Ygx1EnVM5PliOVz1wtKizmuCGBSAmi0UJIsH7P6kMBF+ti7Mrf2S1tKMDzlyDFpO0
-        BozxGSdjTVRNpdjd7IRtXJhaaLurr6AHi9d4x+v6JKg99TLPnvcs+ApVba0ZvMRXqgVrLC7CBfWPX
-        hC5TVO5JLQaL446fVish6SQMaP0pZkmtI39bSBclvNEoVk1UvjJlJz/3FPOdGKF/0nxtnnV0a1i7a
-        BeCe93JNy2rJKClRUwuIe5/6KPKkgRyghnTNtdRBO89EYmGqKOehHaE4aBEeR0hLoWj3OqAyOqtyr
-        xRUHT6cQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lU68B-00EN6A-FD; Wed, 07 Apr 2021 11:14:06 +0000
-Date:   Wed, 7 Apr 2021 12:13:55 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com, jack@suse.cz,
-        viro@zeniv.linux.org.uk, linux-btrfs@vger.kernel.org,
-        david@fromorbit.com, hch@lst.de, rgoldwyn@suse.de,
-        Ritesh Harjani <riteshh@gmail.com>
-Subject: Re: [PATCH 1/3] fsdax: Factor helpers to simplify dax fault code
-Message-ID: <20210407111355.GD2531743@casper.infradead.org>
-References: <20210407063207.676753-1-ruansy.fnst@fujitsu.com>
- <20210407063207.676753-2-ruansy.fnst@fujitsu.com>
+        id S234767AbhDGLYB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Apr 2021 07:24:01 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:53314 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234598AbhDGLYA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Apr 2021 07:24:00 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1617794631;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=78gYsMf1wTUbwD1fRz6i3IOgBu8ZHNk+ftqf8wYMriI=;
+        b=SNPoMEbw5MW6j5q6vgvw2KkhftDEnV4ITKMGM+Ne9jacWPXCjpZSfXX+yJVGPP2WyJVdAu
+        GfFwGKbYAzcT1LNXrAz5VyGiznT0Lnup93HdfZYkagVgAVTtyLRbrx6ftJaByEvUWPBrcE
+        qKXugXHQ/zyAdmHCmIowtOCTQWLg5zo=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-556-2x-JkzOZOqWIgNJbS4Lryg-1; Wed, 07 Apr 2021 07:23:49 -0400
+X-MC-Unique: 2x-JkzOZOqWIgNJbS4Lryg-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E3940189C454;
+        Wed,  7 Apr 2021 11:23:48 +0000 (UTC)
+Received: from bfoster (ovpn-112-117.rdu2.redhat.com [10.10.112.117])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7FE0D1045D01;
+        Wed,  7 Apr 2021 11:23:48 +0000 (UTC)
+Date:   Wed, 7 Apr 2021 07:23:46 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: drop submit side trans alloc for append ioends
+Message-ID: <YG2WQhu3GcXwIgmO@bfoster>
+References: <20210405145903.629152-1-bfoster@redhat.com>
+ <20210405145903.629152-2-bfoster@redhat.com>
+ <20210407063321.GB3339217@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210407063207.676753-2-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20210407063321.GB3339217@infradead.org>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 07, 2021 at 02:32:05PM +0800, Shiyang Ruan wrote:
-> +static int dax_fault_cow_page(struct vm_fault *vmf, struct iomap *iomap,
-> +		loff_t pos, vm_fault_t *ret)
-> +{
-> +	int error = 0;
-> +	unsigned long vaddr = vmf->address;
-> +	sector_t sector = dax_iomap_sector(iomap, pos);
-> +
-> +	switch (iomap->type) {
-> +	case IOMAP_HOLE:
-> +	case IOMAP_UNWRITTEN:
-> +		clear_user_highpage(vmf->cow_page, vaddr);
-> +		break;
-> +	case IOMAP_MAPPED:
-> +		error = copy_cow_page_dax(iomap->bdev, iomap->dax_dev,
-> +						sector, vmf->cow_page, vaddr);
-> +		break;
-> +	default:
-> +		WARN_ON_ONCE(1);
-> +		error = -EIO;
-> +		break;
-> +	}
-> +
-> +	if (error)
-> +		return error;
-> +
-> +	__SetPageUptodate(vmf->cow_page);
-> +	*ret = finish_fault(vmf);
-> +	if (!*ret)
-> +		*ret = VM_FAULT_DONE_COW;
-> +	return 0;
-> +}
-...
+On Wed, Apr 07, 2021 at 07:33:21AM +0100, Christoph Hellwig wrote:
+> > @@ -182,12 +155,10 @@ xfs_end_ioend(
+> >  		error = xfs_reflink_end_cow(ip, offset, size);
+> >  	else if (ioend->io_type == IOMAP_UNWRITTEN)
+> >  		error = xfs_iomap_write_unwritten(ip, offset, size, false);
+> > -	else
+> > -		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_private);
+> 
+> I first though we'd now call xfs_setfilesize for unwritten extents
+> as well, but as those have already updated di_size we are fine here.
+> 
+> As a future enhancement it would be useful to let xfs_reflink_end_cow
+> update the file size similar to what we do for the unwritten case.
+> 
 
-> +		error = dax_fault_cow_page(vmf, &iomap, pos, &ret);
->  		if (error)
-> +			ret = dax_fault_return(error);
->  		goto finish_iomap;
+Agreed. I noticed that when first passing through the code but didn't
+want to get into further functional changes.
 
-This seems unnecessarily complex.  Why not return the vm_fault_t instead of
-returning the errno and then converting it?
+> >  done:
+> > -	if (ioend->io_private)
+> > -		error = xfs_setfilesize_ioend(ioend, error);
+> > +	if (!error && xfs_ioend_is_append(ioend))
+> > +		error = xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
+> >  	iomap_finish_ioends(ioend, error);
+> 
+> The done label can move after the call to xfs_setfilesize now.
+> 
+
+Fixed.
+
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+
+Thanks.
+
+Brian
+
