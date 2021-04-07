@@ -2,55 +2,78 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E642C43460
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 06:27:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4B62C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 06:32:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41891613C6
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 06:27:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B11C1610A6
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 06:32:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345603AbhDGG1s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Apr 2021 02:27:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54182 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345587AbhDGG1o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Apr 2021 02:27:44 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6821C06174A
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Apr 2021 23:27:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=qqjhZsQGile4RMU36C07ju8HRn
-        3lKdsoGvpU2eRIeGkuK0Nk1fIH1qKDdrCqPAMuLVJjxOY/+lHY9GHm38f2p7oi7HLVSLpMwQX8nIk
-        LOdYJ+7b0sKFK3VTk26HjWY96Go2rmMyvt99+vaNMpVfvhsv4AoovkCHaFvW3pSEyg5BREIeci0Dv
-        mh/8gkXLXavCeBs7nYEXP8wno7/hvGlWS4ksVMm/lzdztnfS6YI6Z/5QHwX5q5YzE0y9lHwy9yUMa
-        bSSNYN5hhOp4uVhjjBbBi4Bf+ZOaRqX9TLWzVGdrJnNphvtWxTg1/qK30yY5iPPUsWilYzntKJLXT
-        j6bx+/Jw==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lU1ey-00E0jz-Ga; Wed, 07 Apr 2021 06:27:30 +0000
-Date:   Wed, 7 Apr 2021 07:27:28 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH V2] xfs: scrub: Disable check for unoptimized data fork
- bmbt node
-Message-ID: <20210407062728.GA3339217@infradead.org>
-References: <20210406065519.696-1-chandanrlinux@gmail.com>
+        id S1345634AbhDGGcf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Apr 2021 02:32:35 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:7478 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S244556AbhDGGcd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Apr 2021 02:32:33 -0400
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A/Djejqsh0w9I/QyV1ybf6HI87skDltV00zAX?=
+ =?us-ascii?q?/kB9WHVpW+afkN2jm+le6A/shF8qKRUdsP2jGI3Fe3PT8pZp/ZIcVI3OYCDKsH?=
+ =?us-ascii?q?alRbsN0aLMzzHsECX19Kp8+M5bGZRWJ8b3CTFB7PrSxCmdP5IezMKc8Kau7N2u?=
+ =?us-ascii?q?qktFaQ1xcalv40NYJ2+gYy5LbTJLD5Y4C5aQj/Avz1WdUE4KZce2DGRtZZmgm/?=
+ =?us-ascii?q?T3kvvdASIuNloO7QmiqXeS4qfmLh7w5HwjegIK7bA80WWtqWDE2pk=3D?=
+X-IronPort-AV: E=Sophos;i="5.82,201,1613404800"; 
+   d="scan'208";a="106725722"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 07 Apr 2021 14:32:22 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 3DFE44D0B8AA;
+        Wed,  7 Apr 2021 14:32:21 +0800 (CST)
+Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Wed, 7 Apr 2021 14:32:10 +0800
+Received: from irides.mr.mr.mr (10.167.225.141) by
+ G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Wed, 7 Apr 2021 14:32:10 +0800
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>
+CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <willy@infradead.org>, <jack@suse.cz>, <viro@zeniv.linux.org.uk>,
+        <linux-btrfs@vger.kernel.org>, <david@fromorbit.com>, <hch@lst.de>,
+        <rgoldwyn@suse.de>
+Subject: [PATCH 0/3] fsdax: Factor helper functions to simplify the code
+Date:   Wed, 7 Apr 2021 14:32:04 +0800
+Message-ID: <20210407063207.676753-1-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.31.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210406065519.696-1-chandanrlinux@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 3DFE44D0B8AA.A2CF3
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good,
+The page fault part of fsdax code is little complex. In order to add CoW
+feature and make it easy to understand, I was suggested to factor some
+helper functions to simplify the current dax code.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+(Rebased on v5.12-rc5)
+==
+
+Shiyang Ruan (3):
+  fsdax: Factor helpers to simplify dax fault code
+  fsdax: Factor helper: dax_fault_actor()
+  fsdax: Output address in dax_iomap_pfn() and rename it
+
+ fs/dax.c | 438 +++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 232 insertions(+), 206 deletions(-)
+
+-- 
+2.31.0
+
+
+
