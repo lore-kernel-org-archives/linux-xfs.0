@@ -2,132 +2,77 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21AEFC433B4
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 06:32:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A989C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 06:33:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7C38613A9
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 06:32:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA5056124C
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Apr 2021 06:33:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345748AbhDGGc7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Apr 2021 02:32:59 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:15974 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1345707AbhDGGc5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Apr 2021 02:32:57 -0400
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AuPhIqq/2r5rmj5npc+luk+A4I+orLtY04lQ7?=
- =?us-ascii?q?vn1ZYxpTb8CeioSSjO0WvCWE7Ao5dVMBvZS7OKeGSW7B7pId2+QsFJqrQQWOgg?=
- =?us-ascii?q?WVBa5v4YboyzfjXw3Sn9Q26Y5OaK57YeeQMXFfreLXpDa1CMwhxt7vytHMuc77?=
- =?us-ascii?q?w212RQ9nL4FMhj0JaTqzKUF9SAlYCZdRLvP1ifZvnSaqengcc62Adxs4dtXEzu?=
- =?us-ascii?q?eqqLvWJTYCBzMCrDKFlC6U7tfBeCSw71MzVCxuzN4ZnVT4rw=3D=3D?=
-X-IronPort-AV: E=Sophos;i="5.82,201,1613404800"; 
-   d="scan'208";a="106725748"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 07 Apr 2021 14:32:46 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 1FA064D0B8A5;
-        Wed,  7 Apr 2021 14:32:41 +0800 (CST)
-Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Wed, 7 Apr 2021 14:32:30 +0800
-Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
- G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Wed, 7 Apr 2021 14:32:29 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Wed, 7 Apr 2021 14:32:29 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>
-CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <willy@infradead.org>, <jack@suse.cz>, <viro@zeniv.linux.org.uk>,
-        <linux-btrfs@vger.kernel.org>, <david@fromorbit.com>, <hch@lst.de>,
-        <rgoldwyn@suse.de>, Ritesh Harjani <riteshh@gmail.com>
-Subject: [PATCH 3/3] fsdax: Output address in dax_iomap_pfn() and rename it
-Date:   Wed, 7 Apr 2021 14:32:07 +0800
-Message-ID: <20210407063207.676753-4-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20210407063207.676753-1-ruansy.fnst@fujitsu.com>
-References: <20210407063207.676753-1-ruansy.fnst@fujitsu.com>
+        id S232982AbhDGGdt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Apr 2021 02:33:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55508 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232976AbhDGGds (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Apr 2021 02:33:48 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF809C06174A
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Apr 2021 23:33:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=OvzATXhYZwzqBKeaaLvewwJlr8Dv4A/0F22BOelqFLs=; b=sf3otFhvV11+RcVZalvmxZtxWc
+        Cy8u/QZ+aXTvu7mWdVSijTa+D45r3Aws+vPjFNxCYnvewtRjl0S25F7fNIFzVh98QLiEodbHu2gzj
+        Y5qEC1ALhVnL5zTWwBHMdU9lq60gIeoR8kZBUq57zKDur7StSMxDCZAD2hnCyv5NZR23JJOeAXCj7
+        Ge0bQR16D03ghYBx2KEnkUDyIdpneYALNmm6LbNDICYgiCBDz0wv/o9KIciY2MajHsGRUt/G0Cte1
+        ud/Dp0YfhK8qbVYUnTk6u4WMI/EvrWhAPs0spzr3modQ478Oal0ug+7tqDBNQDjE0Taf1BsY1Yze8
+        N9K5nH7Q==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lU1kf-00E18S-0a; Wed, 07 Apr 2021 06:33:29 +0000
+Date:   Wed, 7 Apr 2021 07:33:21 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: drop submit side trans alloc for append ioends
+Message-ID: <20210407063321.GB3339217@infradead.org>
+References: <20210405145903.629152-1-bfoster@redhat.com>
+ <20210405145903.629152-2-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 1FA064D0B8A5.A1FAE
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210405145903.629152-2-bfoster@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add address output in dax_iomap_pfn() in order to perform a memcpy() in
-CoW case.  Since this function both output address and pfn, rename it to
-dax_iomap_direct_access().
+> @@ -182,12 +155,10 @@ xfs_end_ioend(
+>  		error = xfs_reflink_end_cow(ip, offset, size);
+>  	else if (ioend->io_type == IOMAP_UNWRITTEN)
+>  		error = xfs_iomap_write_unwritten(ip, offset, size, false);
+> -	else
+> -		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_private);
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+I first though we'd now call xfs_setfilesize for unwritten extents
+as well, but as those have already updated di_size we are fine here.
+
+As a future enhancement it would be useful to let xfs_reflink_end_cow
+update the file size similar to what we do for the unwritten case.
+
+>  done:
+> -	if (ioend->io_private)
+> -		error = xfs_setfilesize_ioend(ioend, error);
+> +	if (!error && xfs_ioend_is_append(ioend))
+> +		error = xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
+>  	iomap_finish_ioends(ioend, error);
+
+The done label can move after the call to xfs_setfilesize now.
+
+Otherwise looks good:
+
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ritesh Harjani <riteshh@gmail.com>
----
- fs/dax.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index 19fa22ab50fa..ec66207a3199 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -998,8 +998,8 @@ static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
- 	return (iomap->addr + (pos & PAGE_MASK) - iomap->offset) >> 9;
- }
- 
--static int dax_iomap_pfn(struct iomap *iomap, loff_t pos, size_t size,
--			 pfn_t *pfnp)
-+static int dax_iomap_direct_access(struct iomap *iomap, loff_t pos, size_t size,
-+		void **kaddr, pfn_t *pfnp)
- {
- 	const sector_t sector = dax_iomap_sector(iomap, pos);
- 	pgoff_t pgoff;
-@@ -1011,11 +1011,13 @@ static int dax_iomap_pfn(struct iomap *iomap, loff_t pos, size_t size,
- 		return rc;
- 	id = dax_read_lock();
- 	length = dax_direct_access(iomap->dax_dev, pgoff, PHYS_PFN(size),
--				   NULL, pfnp);
-+				   kaddr, pfnp);
- 	if (length < 0) {
- 		rc = length;
- 		goto out;
- 	}
-+	if (!pfnp)
-+		goto out_check_addr;
- 	rc = -EINVAL;
- 	if (PFN_PHYS(length) < size)
- 		goto out;
-@@ -1025,6 +1027,12 @@ static int dax_iomap_pfn(struct iomap *iomap, loff_t pos, size_t size,
- 	if (length > 1 && !pfn_t_devmap(*pfnp))
- 		goto out;
- 	rc = 0;
-+
-+out_check_addr:
-+	if (!kaddr)
-+		goto out;
-+	if (!*kaddr)
-+		rc = -EFAULT;
- out:
- 	dax_read_unlock(id);
- 	return rc;
-@@ -1388,7 +1396,7 @@ static vm_fault_t dax_fault_actor(struct vm_fault *vmf, pfn_t *pfnp,
- 		return pmd ? VM_FAULT_FALLBACK : VM_FAULT_SIGBUS;
- 	}
- 
--	err = dax_iomap_pfn(iomap, pos, size, &pfn);
-+	err = dax_iomap_direct_access(iomap, pos, size, NULL, &pfn);
- 	if (err)
- 		return pmd ? VM_FAULT_FALLBACK : dax_fault_return(err);
- 
--- 
-2.31.0
-
-
-
