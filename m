@@ -4,140 +4,88 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95806C433ED
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Apr 2021 16:40:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4DEFC433ED
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Apr 2021 17:32:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B982610A8
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Apr 2021 16:40:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACD1861106
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Apr 2021 17:32:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233657AbhDIQkt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Apr 2021 12:40:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41516 "EHLO mail.kernel.org"
+        id S234298AbhDIRcm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Apr 2021 13:32:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38558 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229665AbhDIQks (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Apr 2021 12:40:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C7DE56108B;
-        Fri,  9 Apr 2021 16:40:34 +0000 (UTC)
+        id S234303AbhDIRcl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Apr 2021 13:32:41 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C498361041;
+        Fri,  9 Apr 2021 17:32:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617986434;
-        bh=y65vKsllT+CRdGvjaM6gGanMbXZ5lBOPW7WiN0Nru98=;
+        s=k20201202; t=1617989547;
+        bh=DgQsAYz7C3D7+7i4uqL4JLN3BiyxKkj6rW+7gpCpDEQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pr9cFr6Q6uyl+ZnlJjKYiHsUSll87Zg6VmVLVWRj/CSkXxmrHgJounA7W+8D0xhKF
-         1DG9F2E+noYowQhLwwK7VlUkowgZ5oFFn2FWksa1KK4rw9KV62s36vj5jbUJX2g1HH
-         fGRZwpuS02Sm852NbRox1Mu2f1Nk0F+QCGMA8PXAFzQhvkYaNTthzt6p9f/kuQqv4R
-         9H1yc8mXuX+T7efGzrfu5zRl/1m0SrrI5qJrHnqXlmnzoUDjuCjK2BnXSeZja/goWj
-         LrLk14sV55Ggx90OtpwLJ+dXN+pvpQkWdyqaIhOqbh9LrgclpgP3PJQzuA/E0NH4vG
-         rlqGTQgMR94/A==
-Date:   Fri, 9 Apr 2021 09:40:34 -0700
+        b=fXe9VAV4uRHbLZLI5WLHd7Sn+uPzQV5zB/fClT1/RDm9lTmbav5+33prfPWqYRw9d
+         uKo5F69X1l/o+MYMgBQjzldhJz0F5adse0aYJaQO09zVoiipObuMsBfL/nCxfnzNb9
+         m81XjCaL7TtwPCwcQRwGd4QKZAqk0e+f3xYMQn7XygHchZkHVkFPZesY5btZ+xvfM+
+         DLuDwCjbKLv9fJQV/apkFIca5YfI0qkg5i4I0pz/5j2EuOGJlL8U3JdEcuAR0d3X54
+         5PEvWM3aOCyDb8Rg90BdCx69cjY3lwR7Hc3oETJmZQ6gg6yDYNod8vlTKBHW8AbanT
+         2M3I6T61BTfgQ==
+Date:   Fri, 9 Apr 2021 10:32:27 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2 5/5] iomap: remove unused private field from ioend
-Message-ID: <20210409164034.GG3957620@magnolia>
-References: <20210409141210.1000155-1-bfoster@redhat.com>
- <20210409141210.1000155-6-bfoster@redhat.com>
+To:     Colin King <colin.king@canonical.com>
+Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix return of uninitialized value in variable error
+Message-ID: <20210409173227.GH3957620@magnolia>
+References: <20210409141834.667163-1-colin.king@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210409141210.1000155-6-bfoster@redhat.com>
+In-Reply-To: <20210409141834.667163-1-colin.king@canonical.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 09, 2021 at 10:12:10AM -0400, Brian Foster wrote:
-> The only remaining user of ->io_private is the generic ioend merging
-> infrastructure. The only user of that is XFS, which no longer sets
-> ->io_private or passes an associated merge callback. Remove the
-> unused parameter and the ->io_private field.
+On Fri, Apr 09, 2021 at 03:18:34PM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> CC: linux-fsdevel@vger.kernel.org
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> A previous commit removed a call to xfs_attr3_leaf_read that
+> assigned an error return code to variable error. We now have
+> a few early error return paths to label 'out' that return
+> error if error is set; however error now is uninitialized
+> so potentially garbage is being returned.  Fix this by setting
+> error to zero to restore the original behaviour where error
+> was zero at the label 'restart'.
+> 
+> Addresses-Coverity: ("Uninitialized scalar variable")
+> Fixes: 07120f1abdff ("xfs: Add xfs_has_attr and subroutines")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Looks good to me.  If anyone actually wants to start using io_private,
-the time to holler is _right now_.
-
+Looks correct to me...
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/iomap/buffered-io.c | 7 +------
->  fs/xfs/xfs_aops.c      | 2 +-
->  include/linux/iomap.h  | 5 +----
->  3 files changed, 3 insertions(+), 11 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 414769a6ad11..b7753a7907e2 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1134,9 +1134,7 @@ iomap_ioend_can_merge(struct iomap_ioend *ioend, struct iomap_ioend *next)
->  }
->  
->  void
-> -iomap_ioend_try_merge(struct iomap_ioend *ioend, struct list_head *more_ioends,
-> -		void (*merge_private)(struct iomap_ioend *ioend,
-> -				struct iomap_ioend *next))
-> +iomap_ioend_try_merge(struct iomap_ioend *ioend, struct list_head *more_ioends)
->  {
->  	struct iomap_ioend *next;
->  
-> @@ -1148,8 +1146,6 @@ iomap_ioend_try_merge(struct iomap_ioend *ioend, struct list_head *more_ioends,
->  			break;
->  		list_move_tail(&next->io_list, &ioend->io_list);
->  		ioend->io_size += next->io_size;
-> -		if (next->io_private && merge_private)
-> -			merge_private(ioend, next);
->  	}
->  }
->  EXPORT_SYMBOL_GPL(iomap_ioend_try_merge);
-> @@ -1235,7 +1231,6 @@ iomap_alloc_ioend(struct inode *inode, struct iomap_writepage_ctx *wpc,
->  	ioend->io_inode = inode;
->  	ioend->io_size = 0;
->  	ioend->io_offset = offset;
-> -	ioend->io_private = NULL;
->  	ioend->io_bio = bio;
->  	return ioend;
->  }
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 8540180bd106..8275ee09733d 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -146,7 +146,7 @@ xfs_end_io(
->  	while ((ioend = list_first_entry_or_null(&tmp, struct iomap_ioend,
->  			io_list))) {
->  		list_del_init(&ioend->io_list);
-> -		iomap_ioend_try_merge(ioend, &tmp, NULL);
-> +		iomap_ioend_try_merge(ioend, &tmp);
->  		xfs_end_ioend(ioend);
->  	}
->  }
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index d202fd2d0f91..c87d0cb0de6d 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -198,7 +198,6 @@ struct iomap_ioend {
->  	struct inode		*io_inode;	/* file being written to */
->  	size_t			io_size;	/* size of the extent */
->  	loff_t			io_offset;	/* offset in the file */
-> -	void			*io_private;	/* file system private data */
->  	struct bio		*io_bio;	/* bio being built */
->  	struct bio		io_inline_bio;	/* MUST BE LAST! */
->  };
-> @@ -234,9 +233,7 @@ struct iomap_writepage_ctx {
->  
->  void iomap_finish_ioends(struct iomap_ioend *ioend, int error);
->  void iomap_ioend_try_merge(struct iomap_ioend *ioend,
-> -		struct list_head *more_ioends,
-> -		void (*merge_private)(struct iomap_ioend *ioend,
-> -				struct iomap_ioend *next));
-> +		struct list_head *more_ioends);
->  void iomap_sort_ioends(struct list_head *ioend_list);
->  int iomap_writepage(struct page *page, struct writeback_control *wbc,
->  		struct iomap_writepage_ctx *wpc,
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 472b3039eabb..902e5f7e6642 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -928,6 +928,7 @@ xfs_attr_node_addname(
+>  	 * Search to see if name already exists, and get back a pointer
+>  	 * to where it should go.
+>  	 */
+> +	error = 0;
+>  	retval = xfs_attr_node_hasname(args, &state);
+>  	if (retval != -ENOATTR && retval != -EEXIST)
+>  		goto out;
 > -- 
-> 2.26.3
+> 2.30.2
 > 
