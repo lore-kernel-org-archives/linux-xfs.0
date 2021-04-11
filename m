@@ -7,401 +7,399 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06E81C43460
-	for <linux-xfs@archiver.kernel.org>; Sun, 11 Apr 2021 13:22:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16047C433ED
+	for <linux-xfs@archiver.kernel.org>; Sun, 11 Apr 2021 13:40:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C80FF611F0
-	for <linux-xfs@archiver.kernel.org>; Sun, 11 Apr 2021 13:22:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8EB861042
+	for <linux-xfs@archiver.kernel.org>; Sun, 11 Apr 2021 13:40:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232223AbhDKNWi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 11 Apr 2021 09:22:38 -0400
-Received: from out20-50.mail.aliyun.com ([115.124.20.50]:40551 "EHLO
-        out20-50.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229804AbhDKNWh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Apr 2021 09:22:37 -0400
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07436282|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0535335-0.00142055-0.945046;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047212;MF=guan@eryu.me;NM=1;PH=DS;RN=5;RT=5;SR=0;TI=SMTPD_---.JyK5W6v_1618147338;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.JyK5W6v_1618147338)
-          by smtp.aliyun-inc.com(10.147.42.197);
-          Sun, 11 Apr 2021 21:22:19 +0800
-Date:   Sun, 11 Apr 2021 21:22:18 +0800
+        id S235284AbhDKNk0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 11 Apr 2021 09:40:26 -0400
+Received: from out20-27.mail.aliyun.com ([115.124.20.27]:44625 "EHLO
+        out20-27.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229804AbhDKNkZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Apr 2021 09:40:25 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07436283|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.142761-0.00400471-0.853234;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047206;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.JyKEp6i_1618148406;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.JyKEp6i_1618148406)
+          by smtp.aliyun-inc.com(10.147.42.16);
+          Sun, 11 Apr 2021 21:40:07 +0800
+Date:   Sun, 11 Apr 2021 21:40:06 +0800
 From:   Eryu Guan <guan@eryu.me>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Brian Foster <bfoster@redhat.com>, guaneryu@gmail.com,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: test that the needsrepair feature works as
- advertised
-Message-ID: <YHL4CnofzF9JHcJw@desktop>
-References: <161715288469.2703773.13448230101596914371.stgit@magnolia>
- <161715290127.2703773.4292037416016401516.stgit@magnolia>
- <YGSmKk88waono99E@bfoster>
- <20210402012402.GV1670408@magnolia>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: test upgrading filesystem to bigtime
+Message-ID: <YHL8NocfNuRdsM9a@desktop>
+References: <161715291588.2703979.11541640936666929011.stgit@magnolia>
+ <161715293790.2703979.8248551223530213245.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210402012402.GV1670408@magnolia>
+In-Reply-To: <161715293790.2703979.8248551223530213245.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 01, 2021 at 06:24:02PM -0700, Darrick J. Wong wrote:
-> On Wed, Mar 31, 2021 at 12:41:14PM -0400, Brian Foster wrote:
-> > On Tue, Mar 30, 2021 at 06:08:21PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Make sure that the needsrepair feature flag can be cleared only by
-> > > repair and that mounts are prohibited when the feature is set.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  common/xfs        |   21 +++++++++++
-> > >  tests/xfs/768     |   82 +++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/xfs/768.out |    4 ++
-> > >  tests/xfs/770     |  101 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/xfs/770.out |    2 +
-> > >  tests/xfs/group   |    2 +
-> > >  6 files changed, 212 insertions(+)
-> > >  create mode 100755 tests/xfs/768
-> > >  create mode 100644 tests/xfs/768.out
-> > >  create mode 100755 tests/xfs/770
-> > >  create mode 100644 tests/xfs/770.out
-> > > 
-> > > 
-> > ...
-> > > diff --git a/tests/xfs/768 b/tests/xfs/768
-> > > new file mode 100755
-> > > index 00000000..7b909b76
-> > > --- /dev/null
-> > > +++ b/tests/xfs/768
-> > > @@ -0,0 +1,82 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0-or-later
-> > > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test No. 768
-> > > +#
-> > > +# Make sure that the kernel won't mount a filesystem if repair forcibly sets
-> > > +# NEEDSREPAIR while fixing metadata.  Corrupt a directory in such a way as
-> > > +# to force repair to write an invalid dirent value as a sentinel to trigger a
-> > > +# repair activity in a later phase.  Use a debug knob in xfs_repair to abort
-> > > +# the repair immediately after forcing the flag on.
-> > > +
-> > > +seq=`basename $0`
-> > > +seqres=$RESULT_DIR/$seq
-> > > +echo "QA output created by $seq"
-> > > +
-> > > +here=`pwd`
-> > > +tmp=/tmp/$$
-> > > +status=1    # failure is the default!
-> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > > +
-> > > +_cleanup()
-> > > +{
-> > > +	cd /
-> > > +	rm -f $tmp.*
-> > > +}
-> > > +
-> > > +# get standard environment, filters and checks
-> > > +. ./common/rc
-> > > +. ./common/filter
-> > > +
-> > > +# real QA test starts here
-> > > +_supported_fs xfs
-> > > +_require_scratch
-> > > +grep -q LIBXFS_DEBUG_WRITE_CRASH $XFS_REPAIR_PROG || \
-> > > +		_notrun "libxfs write failure injection hook not detected?"
-> > > +
-> > > +rm -f $seqres.full
-> > > +
-> > > +# Set up a real filesystem for our actual test
-> > > +_scratch_mkfs -m crc=1 >> $seqres.full
-> > > +
-> > > +# Create a directory large enough to have a dir data block.  2k worth of
-> > > +# dirent names ought to do it.
-> > > +_scratch_mount
-> > > +mkdir -p $SCRATCH_MNT/fubar
-> > > +for i in $(seq 0 256 2048); do
-> > > +	fname=$(printf "%0255d" $i)
-> > > +	ln -s -f urk $SCRATCH_MNT/fubar/$fname
-> > > +done
-> > > +inum=$(stat -c '%i' $SCRATCH_MNT/fubar)
-> > > +_scratch_unmount
-> > > +
-> > > +# Fuzz the directory
-> > > +_scratch_xfs_db -x -c "inode $inum" -c "dblock 0" \
-> > > +	-c "fuzz -d bu[2].inumber add" >> $seqres.full
-> > > +
-> > > +# Try to repair the directory, force it to crash after setting needsrepair
-> > > +LIBXFS_DEBUG_WRITE_CRASH=ddev=2 _scratch_xfs_repair 2>> $seqres.full
-> > > +test $? -eq 137 || echo "repair should have been killed??"
-> > > +_scratch_xfs_db -c 'version' >> $seqres.full
-> > > +
-> > > +# We can't mount, right?
-> > > +_check_scratch_xfs_features NEEDSREPAIR
-> > > +_try_scratch_mount &> $tmp.mount
-> > > +res=$?
-> > > +_filter_scratch < $tmp.mount
-> > > +if [ $res -eq 0 ]; then
-> > > +	echo "Should not be able to mount after needsrepair crash"
-> > > +	_scratch_unmount
-> > > +fi
-> > > +
-> > > +# Repair properly this time and retry the mount
-> > > +_scratch_xfs_repair 2>> $seqres.full
-> > > +_scratch_xfs_db -c 'version' >> $seqres.full
-> > 
-> > This _scratch_xfs_db() call and the same one a bit earlier both seem
-> > spurious. Otherwise this test LGTM.
+On Tue, Mar 30, 2021 at 06:08:57PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Ok, I'll get rid of those.
+> Test that we can upgrade an existing filesystem to use bigtime.
 > 
-> > 
-> > > +_check_scratch_xfs_features NEEDSREPAIR
-> > > +
-> > > +_scratch_mount
-> > > +
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/xfs/768.out b/tests/xfs/768.out
-> > > new file mode 100644
-> > > index 00000000..1168ba25
-> > > --- /dev/null
-> > > +++ b/tests/xfs/768.out
-> > > @@ -0,0 +1,4 @@
-> > > +QA output created by 768
-> > > +FEATURES: NEEDSREPAIR:YES
-> > > +mount: SCRATCH_MNT: mount(2) system call failed: Structure needs cleaning.
-> > > +FEATURES: NEEDSREPAIR:NO
-> > > diff --git a/tests/xfs/770 b/tests/xfs/770
-> > > new file mode 100755
-> > > index 00000000..1d0effd9
-> > > --- /dev/null
-> > > +++ b/tests/xfs/770
-> > > @@ -0,0 +1,101 @@
-> > 
-> > Can we have one test per patch in the future please?
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  common/xfs        |   13 +++++
+>  tests/xfs/908     |   97 +++++++++++++++++++++++++++++++++++
+>  tests/xfs/908.out |   20 +++++++
+>  tests/xfs/909     |  149 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/909.out |    6 ++
+>  tests/xfs/group   |    2 +
+>  6 files changed, 287 insertions(+)
+>  create mode 100755 tests/xfs/908
+>  create mode 100644 tests/xfs/908.out
+>  create mode 100755 tests/xfs/909
+>  create mode 100644 tests/xfs/909.out
 > 
-> No.  That will cost me a fortune in wasted time rebasing my fstests tree
-> every time someone adds something to tests/*/group.
 > 
-> $ stg ser | wc -l
-> 106
-> 
-> 106 patches total...
-> 
-> $ grep -l 'create mode' patches-djwong-dev/ | wc -l
-> 29
-> 
-> 29 of which add a test case of some kind...
-> 
-> $ grep 'create mode.*out' patches-djwong-dev/* | wc -l
-> 119
-> 
-> ...for a total of 119 new tests.  My fstests dev tree would double in
-> size to 196 patches if I implemented that suggestion.  Every Sunday I
-> rebase my fstests tree, and if it takes ~1min to resolve each merge
-> error in tests/*/group, it'll now take me two hours instead of thirty
+> diff --git a/common/xfs b/common/xfs
+> index 37658788..c430b3ac 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -1152,3 +1152,16 @@ _xfs_timestamp_range()
+>  			awk '{printf("%s %s", $1, $2);}'
+>  	fi
+>  }
+> +
+> +_require_xfs_scratch_bigtime()
 
-If the group files are the only confliction source, I think you could
-leave that to me, as for these 7xx or 9xx tests, I'll always need to
-re-number them and edit group files anyway. Or maybe you could just omit
-the group file changes? Just leave a note in patch (after the three
-dashes "---") on which groups it belongs to?
+I'm not sure what's the better way to name it,
+_require_xfs_scratch_bigtime() or _require_scratch_xfs_bigtime()?
 
-BTW, I've applied the first two patches in this patchset.
+We have one _require_scratch_xfs_crc() which "scratch" comes before
+"xfs", and one _require_xfs_scratch_rmapbt() which "scratch" comes after
+"xfs".
+
+> +{
+> +	_require_scratch
+> +
+> +	_scratch_mkfs -m bigtime=1 &>/dev/null || \
+> +		_notrun "mkfs.xfs doesn't have bigtime feature"
+> +	_try_scratch_mount || \
+> +		_notrun "bigtime not supported by scratch filesystem type: $FSTYP"
+
+Message should be "Kernel doesn't support bigtime" ?
 
 Thanks,
 Eryu
 
-> minutes to do this.
-> 
-> Please stop making requests of developers that increase their overhead
-> while doing absolutely nothing to improve code quality.  The fstests
-> maintainers have never required one test per patch, and it doesn't make
-> sense to scatter related tests into multiple patches.
-> 
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0-or-later
-> > > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test No. 770
-> > > +#
-> > > +# Populate a filesystem with all types of metadata, then run repair with the
-> > > +# libxfs write failure trigger set to go after a single write.  Check that the
-> > > +# injected error trips, causing repair to abort, that needsrepair is set on the
-> > > +# fs, the kernel won't mount; and that a non-injecting repair run clears
-> > > +# needsrepair and makes the filesystem mountable again.
-> > > +#
-> > > +# Repeat with the trip point set to successively higher numbers of writes until
-> > > +# we hit ~200 writes or repair manages to run to completion without tripping.
-> > > +
-> > 
-> > Nice test..
-> > 
-> > > +seq=`basename $0`
-> > > +seqres=$RESULT_DIR/$seq
-> > > +echo "QA output created by $seq"
-> > > +
-> > > +here=`pwd`
-> > > +tmp=/tmp/$$
-> > > +status=1    # failure is the default!
-> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > > +
-> > > +_cleanup()
-> > > +{
-> > > +	cd /
-> > > +	rm -f $tmp.*
-> > > +}
-> > > +
-> > > +# get standard environment, filters and checks
-> > > +. ./common/rc
-> > > +. ./common/populate
-> > > +. ./common/filter
-> > > +
-> > > +# real QA test starts here
-> > > +_supported_fs xfs
-> > > +
-> > > +_require_scratch_xfs_crc		# needsrepair only exists for v5
-> > > +_require_populate_commands
-> > > +
-> > > +rm -f ${RESULT_DIR}/require_scratch	# we take care of checking the fs
-> > > +rm -f $seqres.full
-> > > +
-> > > +max_writes=200			# 200 loops should be enough for anyone
-> > > +nr_incr=$((13 / TIME_FACTOR))
-> > 
-> > I'm not sure how time factor is typically used, but perhaps we should
-> > sanity check that nr_incr > 0.
-> 
-> Good catch.
-> 
-> > Also, could we randomize the increment value a bit to add some variance
-> > to the test? That could be done here or we could turn this into a min
-> > increment value or something based on time factor and randomize the
-> > increment in the loop, which might be a little more effective of a test.
-> > 
-> > > +test $nr_incr -lt 1 && nr_incr=1
-> > > +for ((nr_writes = 1; nr_writes < max_writes; nr_writes += nr_incr)); do
-> > > +	test -w /dev/ttyprintk && \
-> > > +		echo "fail after $nr_writes writes" >> /dev/ttyprintk
-> > > +	echo "fail after $nr_writes writes" >> $seqres.full
-> > 
-> > What is this for?
-> 
-> This synchronizes the kernel output with whatever step we're on of the
-> loop.
-> 
-> > 
-> > > +
-> > > +	# Populate the filesystem
-> > > +	_scratch_populate_cached nofill >> $seqres.full 2>&1
-> > > +
-> > 
-> > If I understand this correctly, this will fill up the fs and populate
-> > some kind of background cache with a metadump to facilitate restoring
-> > the state on repeated calls. I see this speeds things up a bit from the
-> > initial run, but I'm also wondering if we really need to reset this
-> > state on every iteration. Would we expect much difference in behavior if
-> > we populated once at the start of the test and then just bumped up the
-> > write count until we get to the max or the repair completes?
-> 
-> Probably not?  You're probably right that there's no need to repopulate
-> each time... provided that repair going down doesn't corrupt the fs and
-> thereby screw up each further iteration.
-> 
-> (I noticed that repair can really mess things up if it dies in just the
-> wrong places...)
-> 
-> > FWIW, a quick hack to test that out reduces my (cache cold, cache hot)
-> > run times of this test from something like (~4m, ~1m) to (~3m, ~12s).
-> > That's probably not quite quick group territory, but still a decent
-> > time savings.
-> 
-> I mean ... I could just run fsstress for ~1000 ops to populate the
-> filesystem.
-> 
-> > 
-> > > +	# Start a repair and force it to abort after some number of writes
-> > > +	LIBXFS_DEBUG_WRITE_CRASH=ddev=$nr_writes _scratch_xfs_repair 2>> $seqres.full
-> > > +	res=$?
-> > > +	if [ $res -ne 0 ] && [ $res -ne 137 ]; then
-> > > +		echo "repair failed with $res??"
-> > > +		break
-> > > +	elif [ $res -eq 0 ]; then
-> > > +		[ $nr_writes -eq 1 ] && \
-> > > +			echo "ran to completion on the first try?"
-> > > +		break
-> > > +	fi
-> > > +
-> > > +	_scratch_xfs_db -c 'version' >> $seqres.full
-> > 
-> > Why?
-> > 
-> > > +	if _check_scratch_xfs_features NEEDSREPAIR > /dev/null; then
-> > > +		# NEEDSREPAIR is set, so check that we can't mount.
-> > > +		_try_scratch_mount &>> $seqres.full
-> > > +		if [ $? -eq 0 ]; then
-> > > +			echo "Should not be able to mount after repair crash"
-> > > +			_scratch_unmount
-> > > +		fi
-> > 
-> > Didn't the previous test verify that the filesystem doesn't mount if
-> > NEEDSREPAIR?
-> 
-> Yes.  I'll remove them both.
-> 
-> --D
-> 
-> > > +	elif _scratch_xfs_repair -n &>> $seqres.full; then
-> > > +		# NEEDSREPAIR was not set, but repair -n didn't find problems.
-> > > +		# It's possible that the write failure injector triggered on
-> > > +		# the write that clears NEEDSREPAIR.
-> > > +		true
-> > > +	else
-> > > +		# NEEDSREPAIR was not set, but there are errors!
-> > > +		echo "NEEDSREPAIR should be set on corrupt fs"
-> > > +	fi
-> > > +
-> > > +	# Repair properly this time and retry the mount
-> > > +	_scratch_xfs_repair 2>> $seqres.full
-> > > +	_scratch_xfs_db -c 'version' >> $seqres.full
-> > > +	_check_scratch_xfs_features NEEDSREPAIR > /dev/null && \
-> > > +		echo "Repair failed to clear NEEDSREPAIR on the $nr_writes writes test"
-> > > +
-> > 
-> > Same here. It probably makes sense to test that NEEDSREPAIR remains set
-> > throughout the test sequence until repair completes cleanly, but I'm not
-> > sure we need to repeat the mount cycle every go around.
-> > 
-> > Brian
-> > 
-> > > +	# Make sure all the checking tools think this fs is ok
-> > > +	_scratch_mount
-> > > +	_check_scratch_fs
-> > > +	_scratch_unmount
-> > > +done
-> > > +
-> > > +# success, all done
-> > > +echo Silence is golden.
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/xfs/770.out b/tests/xfs/770.out
-> > > new file mode 100644
-> > > index 00000000..725d740b
-> > > --- /dev/null
-> > > +++ b/tests/xfs/770.out
-> > > @@ -0,0 +1,2 @@
-> > > +QA output created by 770
-> > > +Silence is golden.
-> > > diff --git a/tests/xfs/group b/tests/xfs/group
-> > > index fe83f82d..09fddb5a 100644
-> > > --- a/tests/xfs/group
-> > > +++ b/tests/xfs/group
-> > > @@ -520,3 +520,5 @@
-> > >  537 auto quick
-> > >  538 auto stress
-> > >  539 auto quick mount
-> > > +768 auto quick repair
-> > > +770 auto repair
-> > > 
-> > 
+> +	$XFS_INFO_PROG "$SCRATCH_MNT" | grep -q "bigtime=1" || \
+> +		_notrun "bigtime feature not advertised on mount?"
+> +	_scratch_unmount
+> +}
+> diff --git a/tests/xfs/908 b/tests/xfs/908
+> new file mode 100755
+> index 00000000..1ad3131a
+> --- /dev/null
+> +++ b/tests/xfs/908
+> @@ -0,0 +1,97 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 908
+> +#
+> +# Check that we can upgrade a filesystem to support bigtime and that inode
+> +# timestamps work properly after the upgrade.
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> +_require_xfs_scratch_bigtime
+> +_require_xfs_repair_upgrade bigtime
+> +
+> +date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
+> +	_notrun "Userspace does not support dates past 2038."
+> +
+> +rm -f $seqres.full
+> +
+> +# Make sure we can't upgrade a V4 filesystem
+> +_scratch_mkfs -m crc=0 >> $seqres.full
+> +_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
+> +_check_scratch_xfs_features BIGTIME
+> +
+> +# Make sure we're required to specify a feature status
+> +_scratch_mkfs -m crc=1,bigtime=0,inobtcount=0 >> $seqres.full
+> +_scratch_xfs_admin -O bigtime 2>> $seqres.full
+> +
+> +# Can we add bigtime and inobtcount at the same time?
+> +_scratch_mkfs -m crc=1,bigtime=0,inobtcount=0 >> $seqres.full
+> +_scratch_xfs_admin -O bigtime=1,inobtcount=1 2>> $seqres.full
+> +
+> +# Format V5 filesystem without bigtime support and populate it
+> +_scratch_mkfs -m crc=1,bigtime=0 >> $seqres.full
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
+> +touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/a
+> +touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/b
+> +ls -la $SCRATCH_MNT/* >> $seqres.full
+> +
+> +echo before upgrade:
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> +
+> +_scratch_unmount
+> +_check_scratch_fs
+> +
+> +# Now upgrade to bigtime support
+> +_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
+> +_check_scratch_xfs_features BIGTIME
+> +_check_scratch_fs
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> +
+> +# Mount again, look at our files
+> +_scratch_mount >> $seqres.full
+> +ls -la $SCRATCH_MNT/* >> $seqres.full
+> +
+> +# Modify one of the timestamps to stretch beyond 2038
+> +touch -d 'Feb 22 22:22:22 UTC 2222' $SCRATCH_MNT/b
+> +
+> +echo after upgrade:
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> +
+> +_scratch_cycle_mount
+> +
+> +# Did the timestamp survive the remount?
+> +ls -la $SCRATCH_MNT/* >> $seqres.full
+> +
+> +echo after upgrade and remount:
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/908.out b/tests/xfs/908.out
+> new file mode 100644
+> index 00000000..ab04a3fc
+> --- /dev/null
+> +++ b/tests/xfs/908.out
+> @@ -0,0 +1,20 @@
+> +QA output created by 908
+> +Running xfs_repair to upgrade filesystem.
+> +Large timestamp feature only supported on V5 filesystems.
+> +FEATURES: BIGTIME:NO
+> +Running xfs_repair to upgrade filesystem.
+> +Running xfs_repair to upgrade filesystem.
+> +Adding inode btree counts to filesystem.
+> +Adding large timestamp support to filesystem.
+> +before upgrade:
+> +915909559
+> +915909559
+> +Running xfs_repair to upgrade filesystem.
+> +Adding large timestamp support to filesystem.
+> +FEATURES: BIGTIME:YES
+> +after upgrade:
+> +915909559
+> +7956915742
+> +after upgrade and remount:
+> +915909559
+> +7956915742
+> diff --git a/tests/xfs/909 b/tests/xfs/909
+> new file mode 100755
+> index 00000000..b33e6dd5
+> --- /dev/null
+> +++ b/tests/xfs/909
+> @@ -0,0 +1,149 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 909
+> +#
+> +# Check that we can upgrade a filesystem to support bigtime and that quota
+> +# timers work properly after the upgrade.
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/quota
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> +_require_quota
+> +_require_xfs_scratch_bigtime
+> +_require_xfs_repair_upgrade bigtime
+> +
+> +date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
+> +	_notrun "Userspace does not support dates past 2038."
+> +
+> +rm -f $seqres.full
+> +
+> +# Format V5 filesystem without bigtime support and populate it
+> +_scratch_mkfs -m crc=1,bigtime=0 >> $seqres.full
+> +_qmount_option "usrquota"
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
+> +# Force the block counters for uid 1 and 2 above zero
+> +_pwrite_byte 0x61 0 64k $SCRATCH_MNT/a >> $seqres.full
+> +_pwrite_byte 0x61 0 64k $SCRATCH_MNT/b >> $seqres.full
+> +sync
+> +chown 1 $SCRATCH_MNT/a
+> +chown 2 $SCRATCH_MNT/b
+> +
+> +# Set quota limits on uid 1 before upgrading
+> +$XFS_QUOTA_PROG -x -c 'limit -u bsoft=12k bhard=1m 1' $SCRATCH_MNT
+> +
+> +# Make sure the grace period is at /some/ point in the future.  We have to
+> +# use bc because not all bashes can handle integer comparisons with 64-bit
+> +# numbers.
+> +repquota -upn $SCRATCH_MNT > $tmp.repquota
+> +cat $tmp.repquota >> $seqres.full
+> +grace="$(cat $tmp.repquota | grep '^#1' | awk '{print $6}')"
+> +now="$(date +%s)"
+> +res="$(echo "${grace} > ${now}" | $BC_PROG)"
+> +test $res -eq 1 || echo "Expected timer expiry (${grace}) to be after now (${now})."
+> +
+> +_scratch_unmount
+> +
+> +# Now upgrade to bigtime support
+> +_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
+> +_check_scratch_xfs_features BIGTIME
+> +_check_scratch_fs
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> +
+> +# Mount again, see if our quota timer survived
+> +_scratch_mount
+> +
+> +# Set a very generous grace period and quota limits on uid 2 after upgrading
+> +$XFS_QUOTA_PROG -x -c 'timer -u -b -d 2147483647' $SCRATCH_MNT
+> +$XFS_QUOTA_PROG -x -c 'limit -u bsoft=10000 bhard=150000 2' $SCRATCH_MNT
+> +
+> +# Query the grace periods to see if they got set properly after the upgrade.
+> +repquota -upn $SCRATCH_MNT > $tmp.repquota
+> +cat $tmp.repquota >> $seqres.full
+> +grace1="$(repquota -upn $SCRATCH_MNT | grep '^#1' | awk '{print $6}')"
+> +grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
+> +now="$(date +%s)"
+> +
+> +# Make sure that uid 1's expiration is in the future...
+> +res1="$(echo "${grace} > ${now}" | $BC_PROG)"
+> +test "${res1}" -eq 1 || echo "Expected uid 1 expiry (${grace1}) to be after now (${now})."
+> +
+> +# ...and that uid 2's expiration is after uid 1's...
+> +res2="$(echo "${grace2} > ${grace1}" | $BC_PROG)"
+> +test "${res2}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after uid 1 (${grace1})."
+> +
+> +# ...and that uid 2's expiration is after 2038 if right now is far enough
+> +# past 1970 that our generous grace period would provide for that.
+> +res3="$(echo "(${now} < 100) || (${grace2} > 2147483648)" | $BC_PROG)"
+> +test "${res3}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after 2038."
+> +
+> +_scratch_cycle_mount
+> +
+> +# Query the grace periods to see if they survived a remount.
+> +repquota -upn $SCRATCH_MNT > $tmp.repquota
+> +cat $tmp.repquota >> $seqres.full
+> +grace1="$(repquota -upn $SCRATCH_MNT | grep '^#1' | awk '{print $6}')"
+> +grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
+> +now="$(date +%s)"
+> +
+> +# Make sure that uid 1's expiration is in the future...
+> +res1="$(echo "${grace} > ${now}" | $BC_PROG)"
+> +test "${res1}" -eq 1 || echo "Expected uid 1 expiry (${grace1}) to be after now (${now})."
+> +
+> +# ...and that uid 2's expiration is after uid 1's...
+> +res2="$(echo "${grace2} > ${grace1}" | $BC_PROG)"
+> +test "${res2}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after uid 1 (${grace1})."
+> +
+> +# ...and that uid 2's expiration is after 2038 if right now is far enough
+> +# past 1970 that our generous grace period would provide for that.
+> +res3="$(echo "(${now} < 100) || (${grace2} > 2147483648)" | $BC_PROG)"
+> +test "${res3}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after 2038."
+> +
+> +# Now try setting uid 2's expiration to Feb 22 22:22:22 UTC 2222
+> +new_expiry=$(date -d 'Feb 22 22:22:22 UTC 2222' +%s)
+> +now=$(date +%s)
+> +test $now -ge $new_expiry && \
+> +	echo "Now is after February 2222?  Expect problems."
+> +expiry_delta=$((new_expiry - now))
+> +
+> +echo "setting expiration to $new_expiry - $now = $expiry_delta" >> $seqres.full
+> +$XFS_QUOTA_PROG -x -c "timer -u $expiry_delta 2" -c 'report' $SCRATCH_MNT >> $seqres.full
+> +
+> +# Did we get an expiration within 5s of the target range?
+> +grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
+> +echo "grace2 is $grace2" >> $seqres.full
+> +_within_tolerance "grace2 expiry" $grace2 $new_expiry 5 -v
+> +
+> +_scratch_cycle_mount
+> +
+> +# ...and is it still within 5s after a remount?
+> +grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
+> +echo "grace2 is $grace2" >> $seqres.full
+> +_within_tolerance "grace2 expiry after remount" $grace2 $new_expiry 5 -v
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/909.out b/tests/xfs/909.out
+> new file mode 100644
+> index 00000000..72bf2416
+> --- /dev/null
+> +++ b/tests/xfs/909.out
+> @@ -0,0 +1,6 @@
+> +QA output created by 909
+> +Running xfs_repair to upgrade filesystem.
+> +Adding large timestamp support to filesystem.
+> +FEATURES: BIGTIME:YES
+> +grace2 expiry is in range
+> +grace2 expiry after remount is in range
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index e212fd46..7e56b383 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -524,5 +524,7 @@
+>  768 auto quick repair
+>  770 auto repair
+>  773 auto quick repair
+> +908 auto quick bigtime
+> +909 auto quick bigtime quota
+>  910 auto quick inobtcount
+>  911 auto quick bigtime
