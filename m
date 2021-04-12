@@ -2,156 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1359AC43603
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Apr 2021 12:16:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 919D3C433B4
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Apr 2021 13:31:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC9816128A
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Apr 2021 12:16:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63ABE6128C
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Apr 2021 13:31:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239753AbhDLMQT convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Apr 2021 08:16:19 -0400
-Received: from mgw-02.mpynet.fi ([82.197.21.91]:59198 "EHLO mgw-02.mpynet.fi"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237283AbhDLMQS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Apr 2021 08:16:18 -0400
-X-Greylist: delayed 598 seconds by postgrey-1.27 at vger.kernel.org; Mon, 12 Apr 2021 08:16:16 EDT
-Received: from pps.filterd (mgw-02.mpynet.fi [127.0.0.1])
-        by mgw-02.mpynet.fi (8.16.0.43/8.16.0.43) with SMTP id 13CBuj4R036297;
-        Mon, 12 Apr 2021 15:05:00 +0300
-Received: from ex13.tuxera.com (ex13.tuxera.com [178.16.184.72])
-        by mgw-02.mpynet.fi with ESMTP id 37vmqsr2ph-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 12 Apr 2021 15:05:00 +0300
-Received: from tuxera-exch.ad.tuxera.com (10.20.48.11) by
- tuxera-exch.ad.tuxera.com (10.20.48.11) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 12 Apr 2021 15:04:59 +0300
-Received: from tuxera-exch.ad.tuxera.com ([fe80::552a:f9f0:68c3:d789]) by
- tuxera-exch.ad.tuxera.com ([fe80::552a:f9f0:68c3:d789%12]) with mapi id
- 15.00.1497.012; Mon, 12 Apr 2021 15:04:59 +0300
-From:   Anton Altaparmakov <anton@tuxera.com>
-To:     "christian.brauner@ubuntu.com" <christian.brauner@ubuntu.com>
-CC:     "James.Bottomley@hansenpartnership.com" 
-        <James.Bottomley@hansenpartnership.com>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "alban@kinvolk.io" <alban@kinvolk.io>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "casey@schaufler-ca.com" <casey@schaufler-ca.com>,
-        "containers@lists.linux-foundation.org" 
-        <containers@lists.linux-foundation.org>,
-        "corbet@lwn.net" <corbet@lwn.net>,
-        "cyphar@cyphar.com" <cyphar@cyphar.com>,
-        "dhowells@redhat.com" <dhowells@redhat.com>,
-        "dmitry.kasatkin@gmail.com" <dmitry.kasatkin@gmail.com>,
-        "ebiederm@xmission.com" <ebiederm@xmission.com>,
-        "geofft@ldpreload.com" <geofft@ldpreload.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "hirofumi@mail.parknet.co.jp" <hirofumi@mail.parknet.co.jp>,
-        "john.johansen@canonical.com" <john.johansen@canonical.com>,
-        "josh@joshtriplett.org" <josh@joshtriplett.org>,
-        "keescook@chromium.org" <keescook@chromium.org>,
-        "lennart@poettering.net" <lennart@poettering.net>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-integrity@vger.kernel.org" <linux-integrity@vger.kernel.org>,
-        "linux-security-module@vger.kernel.org" 
-        <linux-security-module@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "mpatel@redhat.com" <mpatel@redhat.com>,
-        "paul@paul-moore.com" <paul@paul-moore.com>,
-        "selinux@vger.kernel.org" <selinux@vger.kernel.org>,
-        "seth.forshee@canonical.com" <seth.forshee@canonical.com>,
-        "smbarber@chromium.org" <smbarber@chromium.org>,
-        "stephen.smalley.work@gmail.com" <stephen.smalley.work@gmail.com>,
-        "tkjos@google.com" <tkjos@google.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "tycho@tycho.ws" <tycho@tycho.ws>, "tytso@mit.edu" <tytso@mit.edu>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "zohar@linux.ibm.com" <zohar@linux.ibm.com>
-Subject: Re: [PATCH v6 24/40] fs: make helpers idmap mount aware
-Thread-Topic: [PATCH v6 24/40] fs: make helpers idmap mount aware
-Thread-Index: AQHXL5QPJZ+OaKJz8USD3Dodtq0P1w==
-Date:   Mon, 12 Apr 2021 12:04:59 +0000
-Message-ID: <E901E25F-41FA-444D-B3C7-A7A786DDD5D5@tuxera.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [109.145.212.130]
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <BA514E4FAABFD8498C8B1419EB26396B@ex13.tuxera.com>
-Content-Transfer-Encoding: 8BIT
+        id S241945AbhDLNb2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Apr 2021 09:31:28 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:55291 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241770AbhDLNbW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Apr 2021 09:31:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1618234263;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=UzpOTa+4PcclHHxuB4x9DyhTkS5zZ7R8oOBEy1kOIOw=;
+        b=IjMToOavT0VHEiRniOfBkHZdPHeFc55Q7sndOFjdqeyFGRjaBCcn22M8JJt466vdnidDjc
+        KGPhTavrP/A/lAGO8rNpgixuf9q1FAxEQxtkCkuIgqOSgzNEIqwYIWd2oZhxa3tEXeYp8L
+        SQ3Sro0KvGlAlnVt3owi7xf7G0PlCiI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-263-fn6RkPpzNdybrW1iTUPNtg-1; Mon, 12 Apr 2021 09:31:01 -0400
+X-MC-Unique: fn6RkPpzNdybrW1iTUPNtg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 040A65137
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Apr 2021 13:31:01 +0000 (UTC)
+Received: from bfoster.redhat.com (ovpn-112-117.rdu2.redhat.com [10.10.112.117])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B15095C1BB
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Apr 2021 13:31:00 +0000 (UTC)
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v3 1/2] xfs: set a mount flag when perag reservation is active
+Date:   Mon, 12 Apr 2021 09:30:58 -0400
+Message-Id: <20210412133059.1186634-2-bfoster@redhat.com>
+In-Reply-To: <20210412133059.1186634-1-bfoster@redhat.com>
+References: <20210412133059.1186634-1-bfoster@redhat.com>
 MIME-Version: 1.0
-X-Proofpoint-GUID: Vd5127wVnEcv9vrUnKYvowNFSa7J_xlE
-X-Proofpoint-ORIG-GUID: Vd5127wVnEcv9vrUnKYvowNFSa7J_xlE
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-04-12_09:2021-04-12,2021-04-12 signatures=0
-X-Proofpoint-Spam-Details: rule=mpy_notspam policy=mpy score=0 adultscore=0 suspectscore=0
- mlxlogscore=999 mlxscore=0 malwarescore=0 spamscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2104060000 definitions=main-2104120082
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+perag reservation is enabled at mount time on a per AG basis. The
+upcoming in-core allocation btree accounting mechanism needs to know
+when reservation is enabled and that all perag AGF contexts are
+initialized. As a preparation step, set a flag in the mount
+structure and unconditionally initialize the pagf on all mounts
+where at least one reservation is active.
 
-I noticed this patch got merged into mainline and looking through the HFS+ changes, I noticed something that struck me as odd.  I am not familiar with this patch set so perhaps it is the intention but I wanted to ask you because it just seems strange thing to do.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ag_resv.c | 24 ++++++++++++++----------
+ fs/xfs/xfs_mount.h          |  1 +
+ 2 files changed, 15 insertions(+), 10 deletions(-)
 
-So you are adding a new argument of "struct user_namespace *mnt_userns" to lots of functions but then inside the functions when they call another function you often make that use "&init_user_ns" instead of the passed in "mnt_userns" which kind of defeats the point of having the new "mnt_userns" argument altogether, doesn't it?
-
-Example after this chunk:
-
-diff --git a/fs/hfsplus/inode.c b/fs/hfsplus/inode.c
-index 642e067d8fe8..7a937de9b2ad 100644
---- a/fs/hfsplus/inode.c
-+++ b/fs/hfsplus/inode.c
-@@ -241,7 +241,8 @@ static int hfsplus_file_release(struct inode *inode, struct file *file)
-        return 0;
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index 6c5f8d10589c..9b2fc4abad2c 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -254,6 +254,7 @@ xfs_ag_resv_init(
+ 	xfs_extlen_t			ask;
+ 	xfs_extlen_t			used;
+ 	int				error = 0;
++	bool				has_resv = false;
+ 
+ 	/* Create the metadata reservation. */
+ 	if (pag->pag_meta_resv.ar_asked == 0) {
+@@ -291,6 +292,8 @@ xfs_ag_resv_init(
+ 			if (error)
+ 				goto out;
+ 		}
++		if (ask)
++			has_resv = true;
+ 	}
+ 
+ 	/* Create the RMAPBT metadata reservation */
+@@ -304,18 +307,19 @@ xfs_ag_resv_init(
+ 		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_RMAPBT, ask, used);
+ 		if (error)
+ 			goto out;
++		if (ask)
++			has_resv = true;
+ 	}
+ 
+-#ifdef DEBUG
+-	/* need to read in the AGF for the ASSERT below to work */
+-	error = xfs_alloc_pagf_init(pag->pag_mount, tp, pag->pag_agno, 0);
+-	if (error)
+-		return error;
+-
+-	ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
+-	       xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <=
+-	       pag->pagf_freeblks + pag->pagf_flcount);
+-#endif
++	if (has_resv) {
++		mp->m_has_agresv = true;
++		error = xfs_alloc_pagf_init(mp, tp, pag->pag_agno, 0);
++		if (error)
++			return error;
++		ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
++		       xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <=
++		       pag->pagf_freeblks + pag->pagf_flcount);
++	}
+ out:
+ 	return error;
  }
-
--static int hfsplus_setattr(struct dentry *dentry, struct iattr *attr)
-+static int hfsplus_setattr(struct user_namespace *mnt_userns,
-+                    struct dentry *dentry, struct iattr *attr)
- {
-        struct inode *inode = d_inode(dentry);
-        int error;
-
-The code now looks like this:
-
-static int hfsplus_setattr(struct user_namespace *mnt_userns,
-                           struct dentry *dentry, struct iattr *attr)
-{
-        struct inode *inode = d_inode(dentry);
-        int error;
-
-        error = setattr_prepare(&init_user_ns, dentry, attr);
-        if (error)
-                return error;
-[...]
-        setattr_copy(&init_user_ns, inode, attr);
-        mark_inode_dirty(inode);
-
-        return 0;
-}
-
-Shouldn't that be using mnt_userns instead of &init_user_ns both for the setattr_prepare() and setattr_copy() calls?
-
-Please note this is just one example - it seems the kernel is now littered with such examples in current mainline and I don't mean just HFS+ - this is now all over the place...
-
-Best regards,
-
-	Anton
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 81829d19596e..8847ffd29777 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -139,6 +139,7 @@ typedef struct xfs_mount {
+ 	bool			m_fail_unmount;
+ 	bool			m_finobt_nores; /* no per-AG finobt resv. */
+ 	bool			m_update_sb;	/* sb needs update in mount */
++	bool			m_has_agresv;	/* perag reservations active */
+ 
+ 	/*
+ 	 * Bitsets of per-fs metadata that have been checked and/or are sick.
 -- 
-Anton Altaparmakov <anton at tuxera.com> (replace at with @)
-Lead in File System Development, Tuxera Inc., http://www.tuxera.com/
-Linux NTFS maintainer
+2.26.3
 
