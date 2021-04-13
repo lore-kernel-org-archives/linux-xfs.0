@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6352C433B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB38C43461
 	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 11:29:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9002F613AB
+	by mail.kernel.org (Postfix) with ESMTP id A7519613AE
 	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 11:29:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231254AbhDML3V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Apr 2021 07:29:21 -0400
-Received: from mx2.suse.de ([195.135.220.15]:54916 "EHLO mx2.suse.de"
+        id S231401AbhDML3W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Apr 2021 07:29:22 -0400
+Received: from mx2.suse.de ([195.135.220.15]:54892 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231199AbhDML3V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S231172AbhDML3V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Tue, 13 Apr 2021 07:29:21 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 1688EB158;
+        by mx2.suse.de (Postfix) with ESMTP id 14296B12D;
         Tue, 13 Apr 2021 11:29:00 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id D24E61F2B67; Tue, 13 Apr 2021 13:28:59 +0200 (CEST)
+        id CA7F61E052B; Tue, 13 Apr 2021 13:28:59 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-fsdevel@vger.kernel.org>
 Cc:     <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         Ted Tso <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>,
         Amir Goldstein <amir73il@gmail.com>,
         Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>
-Subject: [PATCH 3/7] ext4: Convert to use inode->i_mapping_sem
-Date:   Tue, 13 Apr 2021 13:28:47 +0200
-Message-Id: <20210413112859.32249-3-jack@suse.cz>
+Subject: [PATCH 1/7] mm: Fix comments mentioning i_mutex
+Date:   Tue, 13 Apr 2021 13:28:45 +0200
+Message-Id: <20210413112859.32249-1-jack@suse.cz>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210413105205.3093-1-jack@suse.cz>
 References: <20210413105205.3093-1-jack@suse.cz>
@@ -43,399 +43,250 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Convert ext4 to use inode->i_mapping_sem instead of its private
-EXT4_I(inode)->i_mmap_sem. This is mostly search-and-replace. By this
-conversion we fix a long standing race between hole punching and read(2)
-/ readahead(2) paths that can lead to stale page cache contents.
+inode->i_mutex has been replaced with inode->i_rwsem long ago. Fix
+comments still mentioning i_mutex.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/ext4.h     | 10 ----------
- fs/ext4/extents.c  | 18 +++++++++---------
- fs/ext4/file.c     | 12 ++++++------
- fs/ext4/inode.c    | 47 +++++++++++++++++-----------------------------
- fs/ext4/ioctl.c    |  4 ++--
- fs/ext4/super.c    | 11 ++++-------
- fs/ext4/truncate.h |  4 ++--
- 7 files changed, 40 insertions(+), 66 deletions(-)
+ mm/filemap.c        | 10 +++++-----
+ mm/madvise.c        |  2 +-
+ mm/memory-failure.c |  2 +-
+ mm/rmap.c           |  6 +++---
+ mm/shmem.c          | 20 ++++++++++----------
+ mm/truncate.c       |  8 ++++----
+ 6 files changed, 24 insertions(+), 24 deletions(-)
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 826a56e3bbd2..2ae365458dca 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -1081,15 +1081,6 @@ struct ext4_inode_info {
- 	 * by other means, so we have i_data_sem.
- 	 */
- 	struct rw_semaphore i_data_sem;
--	/*
--	 * i_mmap_sem is for serializing page faults with truncate / punch hole
--	 * operations. We have to make sure that new page cannot be faulted in
--	 * a section of the inode that is being punched. We cannot easily use
--	 * i_data_sem for this since we need protection for the whole punch
--	 * operation and i_data_sem ranks below transaction start so we have
--	 * to occasionally drop it.
--	 */
--	struct rw_semaphore i_mmap_sem;
- 	struct inode vfs_inode;
- 	struct jbd2_inode *jinode;
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 43700480d897..bd7c50e060a9 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -76,7 +76,7 @@
+  *      ->swap_lock		(exclusive_swap_page, others)
+  *        ->i_pages lock
+  *
+- *  ->i_mutex
++ *  ->i_rwsem
+  *    ->i_mmap_rwsem		(truncate->unmap_mapping_range)
+  *
+  *  ->mmap_lock
+@@ -87,7 +87,7 @@
+  *  ->mmap_lock
+  *    ->lock_page		(access_process_vm)
+  *
+- *  ->i_mutex			(generic_perform_write)
++ *  ->i_rwsem			(generic_perform_write)
+  *    ->mmap_lock		(fault_in_pages_readable->do_page_fault)
+  *
+  *  bdi->wb.list_lock
+@@ -3625,12 +3625,12 @@ EXPORT_SYMBOL(generic_perform_write);
+  * modification times and calls proper subroutines depending on whether we
+  * do direct IO or a standard buffered write.
+  *
+- * It expects i_mutex to be grabbed unless we work on a block device or similar
++ * It expects i_rwsem to be grabbed unless we work on a block device or similar
+  * object which does not need locking at all.
+  *
+  * This function does *not* take care of syncing data in case of O_SYNC write.
+  * A caller has to handle it. This is mainly due to the fact that we want to
+- * avoid syncing under i_mutex.
++ * avoid syncing under i_rwsem.
+  *
+  * Return:
+  * * number of bytes written, even for truncated writes
+@@ -3718,7 +3718,7 @@ EXPORT_SYMBOL(__generic_file_write_iter);
+  *
+  * This is a wrapper around __generic_file_write_iter() to be used by most
+  * filesystems. It takes care of syncing the file in case of O_SYNC file
+- * and acquires i_mutex as needed.
++ * and acquires i_rwsem as needed.
+  * Return:
+  * * negative error code if no data has been written at all of
+  *   vfs_fsync_range() failed for a synchronous write
+diff --git a/mm/madvise.c b/mm/madvise.c
+index 01fef79ac761..bd28d693e0ad 100644
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -853,7 +853,7 @@ static long madvise_remove(struct vm_area_struct *vma,
+ 			+ ((loff_t)vma->vm_pgoff << PAGE_SHIFT);
  
-@@ -2908,7 +2899,6 @@ extern int ext4_chunk_trans_blocks(struct inode *, int nrblocks);
- extern int ext4_zero_partial_blocks(handle_t *handle, struct inode *inode,
- 			     loff_t lstart, loff_t lend);
- extern vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf);
--extern vm_fault_t ext4_filemap_fault(struct vm_fault *vmf);
- extern qsize_t *ext4_get_reserved_space(struct inode *inode);
- extern int ext4_get_projid(struct inode *inode, kprojid_t *projid);
- extern void ext4_da_release_space(struct inode *inode, int to_free);
-diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-index 77c84d6f1af6..a315fe6a0929 100644
---- a/fs/ext4/extents.c
-+++ b/fs/ext4/extents.c
-@@ -4553,17 +4553,17 @@ static long ext4_zero_range(struct file *file, loff_t offset,
- 		 * Prevent page faults from reinstantiating pages we have
- 		 * released from page cache.
- 		 */
--		down_write(&EXT4_I(inode)->i_mmap_sem);
-+		down_write(&inode->i_mapping_sem);
- 
- 		ret = ext4_break_layouts(inode);
- 		if (ret) {
--			up_write(&EXT4_I(inode)->i_mmap_sem);
-+			up_write(&inode->i_mapping_sem);
- 			goto out_mutex;
- 		}
- 
- 		ret = ext4_update_disksize_before_punch(inode, offset, len);
- 		if (ret) {
--			up_write(&EXT4_I(inode)->i_mmap_sem);
-+			up_write(&inode->i_mapping_sem);
- 			goto out_mutex;
- 		}
- 		/* Now release the pages and zero block aligned part of pages */
-@@ -4572,7 +4572,7 @@ static long ext4_zero_range(struct file *file, loff_t offset,
- 
- 		ret = ext4_alloc_file_blocks(file, lblk, max_blocks, new_size,
- 					     flags);
--		up_write(&EXT4_I(inode)->i_mmap_sem);
-+		up_write(&inode->i_mapping_sem);
- 		if (ret)
- 			goto out_mutex;
- 	}
-@@ -5267,7 +5267,7 @@ static int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len)
- 	 * Prevent page faults from reinstantiating pages we have released from
- 	 * page cache.
- 	 */
--	down_write(&EXT4_I(inode)->i_mmap_sem);
-+	down_write(&inode->i_mapping_sem);
- 
- 	ret = ext4_break_layouts(inode);
- 	if (ret)
-@@ -5288,7 +5288,7 @@ static int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len)
  	/*
- 	 * Write data that will be shifted to preserve them when discarding
- 	 * page cache below. We are also protected from pages becoming dirty
--	 * by i_mmap_sem.
-+	 * by i_mapping_sem.
+-	 * Filesystem's fallocate may need to take i_mutex.  We need to
++	 * Filesystem's fallocate may need to take i_rwsem.  We need to
+ 	 * explicitly grab a reference because the vma (and hence the
+ 	 * vma's reference to the file) can go away as soon as we drop
+ 	 * mmap_lock.
+diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+index 24210c9bd843..fca50b554122 100644
+--- a/mm/memory-failure.c
++++ b/mm/memory-failure.c
+@@ -704,7 +704,7 @@ static int me_pagecache_clean(struct page *p, unsigned long pfn)
+ 	/*
+ 	 * Truncation is a bit tricky. Enable it per file system for now.
+ 	 *
+-	 * Open: to take i_mutex or not for this? Right now we don't.
++	 * Open: to take i_rwsem or not for this? Right now we don't.
  	 */
- 	ret = filemap_write_and_wait_range(inode->i_mapping, offset + len,
- 					   LLONG_MAX);
-@@ -5343,7 +5343,7 @@ static int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len)
- 	ext4_journal_stop(handle);
- 	ext4_fc_stop_ineligible(sb);
- out_mmap:
--	up_write(&EXT4_I(inode)->i_mmap_sem);
-+	up_write(&inode->i_mapping_sem);
- out_mutex:
- 	inode_unlock(inode);
- 	return ret;
-@@ -5418,7 +5418,7 @@ static int ext4_insert_range(struct inode *inode, loff_t offset, loff_t len)
- 	 * Prevent page faults from reinstantiating pages we have released from
- 	 * page cache.
- 	 */
--	down_write(&EXT4_I(inode)->i_mmap_sem);
-+	down_write(&inode->i_mapping_sem);
- 
- 	ret = ext4_break_layouts(inode);
- 	if (ret)
-@@ -5519,7 +5519,7 @@ static int ext4_insert_range(struct inode *inode, loff_t offset, loff_t len)
- 	ext4_journal_stop(handle);
- 	ext4_fc_stop_ineligible(sb);
- out_mmap:
--	up_write(&EXT4_I(inode)->i_mmap_sem);
-+	up_write(&inode->i_mapping_sem);
- out_mutex:
- 	inode_unlock(inode);
- 	return ret;
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 194f5d00fa32..93fab87f0fff 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -692,17 +692,17 @@ static vm_fault_t ext4_dax_huge_fault(struct vm_fault *vmf,
- 	if (write) {
- 		sb_start_pagefault(sb);
- 		file_update_time(vmf->vma->vm_file);
--		down_read(&EXT4_I(inode)->i_mmap_sem);
-+		down_read(&inode->i_mapping_sem);
- retry:
- 		handle = ext4_journal_start_sb(sb, EXT4_HT_WRITE_PAGE,
- 					       EXT4_DATA_TRANS_BLOCKS(sb));
- 		if (IS_ERR(handle)) {
--			up_read(&EXT4_I(inode)->i_mmap_sem);
-+			up_read(&inode->i_mapping_sem);
- 			sb_end_pagefault(sb);
- 			return VM_FAULT_SIGBUS;
- 		}
- 	} else {
--		down_read(&EXT4_I(inode)->i_mmap_sem);
-+		down_read(&inode->i_mapping_sem);
- 	}
- 	result = dax_iomap_fault(vmf, pe_size, &pfn, &error, &ext4_iomap_ops);
- 	if (write) {
-@@ -714,10 +714,10 @@ static vm_fault_t ext4_dax_huge_fault(struct vm_fault *vmf,
- 		/* Handling synchronous page fault? */
- 		if (result & VM_FAULT_NEEDDSYNC)
- 			result = dax_finish_sync_fault(vmf, pe_size, pfn);
--		up_read(&EXT4_I(inode)->i_mmap_sem);
-+		up_read(&inode->i_mapping_sem);
- 		sb_end_pagefault(sb);
- 	} else {
--		up_read(&EXT4_I(inode)->i_mmap_sem);
-+		up_read(&inode->i_mapping_sem);
- 	}
- 
- 	return result;
-@@ -739,7 +739,7 @@ static const struct vm_operations_struct ext4_dax_vm_ops = {
- #endif
- 
- static const struct vm_operations_struct ext4_file_vm_ops = {
--	.fault		= ext4_filemap_fault,
-+	.fault		= filemap_fault,
- 	.map_pages	= filemap_map_pages,
- 	.page_mkwrite   = ext4_page_mkwrite,
- };
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 0948a43f1b3d..d76803eba884 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3952,20 +3952,19 @@ int ext4_update_disksize_before_punch(struct inode *inode, loff_t offset,
- 	return ret;
+ 	return truncate_error_page(p, pfn, mapping);
  }
- 
--static void ext4_wait_dax_page(struct ext4_inode_info *ei)
-+static void ext4_wait_dax_page(struct inode *inode)
- {
--	up_write(&ei->i_mmap_sem);
-+	up_write(&inode->i_mapping_sem);
- 	schedule();
--	down_write(&ei->i_mmap_sem);
-+	down_write(&inode->i_mapping_sem);
- }
- 
- int ext4_break_layouts(struct inode *inode)
- {
--	struct ext4_inode_info *ei = EXT4_I(inode);
- 	struct page *page;
- 	int error;
- 
--	if (WARN_ON_ONCE(!rwsem_is_locked(&ei->i_mmap_sem)))
-+	if (WARN_ON_ONCE(!rwsem_is_locked(&inode->i_mapping_sem)))
- 		return -EINVAL;
- 
- 	do {
-@@ -3976,7 +3975,7 @@ int ext4_break_layouts(struct inode *inode)
- 		error = ___wait_var_event(&page->_refcount,
- 				atomic_read(&page->_refcount) == 1,
- 				TASK_INTERRUPTIBLE, 0, 0,
--				ext4_wait_dax_page(ei));
-+				ext4_wait_dax_page(inode));
- 	} while (error == 0);
- 
- 	return error;
-@@ -4007,9 +4006,9 @@ int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length)
- 
- 	ext4_clear_inode_state(inode, EXT4_STATE_MAY_INLINE_DATA);
- 	if (ext4_has_inline_data(inode)) {
--		down_write(&EXT4_I(inode)->i_mmap_sem);
-+		down_write(&inode->i_mapping_sem);
- 		ret = ext4_convert_inline_data(inode);
--		up_write(&EXT4_I(inode)->i_mmap_sem);
-+		up_write(&inode->i_mapping_sem);
- 		if (ret)
- 			return ret;
- 	}
-@@ -4060,7 +4059,7 @@ int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length)
- 	 * Prevent page faults from reinstantiating pages we have released from
- 	 * page cache.
- 	 */
--	down_write(&EXT4_I(inode)->i_mmap_sem);
-+	down_write(&inode->i_mapping_sem);
- 
- 	ret = ext4_break_layouts(inode);
- 	if (ret)
-@@ -4133,7 +4132,7 @@ int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length)
- out_stop:
- 	ext4_journal_stop(handle);
- out_dio:
--	up_write(&EXT4_I(inode)->i_mmap_sem);
-+	up_write(&inode->i_mapping_sem);
- out_mutex:
- 	inode_unlock(inode);
- 	return ret;
-@@ -5428,11 +5427,11 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 			inode_dio_wait(inode);
- 		}
- 
--		down_write(&EXT4_I(inode)->i_mmap_sem);
-+		down_write(&inode->i_mapping_sem);
- 
- 		rc = ext4_break_layouts(inode);
- 		if (rc) {
--			up_write(&EXT4_I(inode)->i_mmap_sem);
-+			up_write(&inode->i_mapping_sem);
- 			goto err_out;
- 		}
- 
-@@ -5508,7 +5507,7 @@ int ext4_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
- 				error = rc;
- 		}
- out_mmap_sem:
--		up_write(&EXT4_I(inode)->i_mmap_sem);
-+		up_write(&inode->i_mapping_sem);
- 	}
- 
- 	if (!error) {
-@@ -5985,10 +5984,10 @@ int ext4_change_inode_journal_flag(struct inode *inode, int val)
- 	 * data (and journalled aops don't know how to handle these cases).
- 	 */
- 	if (val) {
--		down_write(&EXT4_I(inode)->i_mmap_sem);
-+		down_write(&inode->i_mapping_sem);
- 		err = filemap_write_and_wait(inode->i_mapping);
- 		if (err < 0) {
--			up_write(&EXT4_I(inode)->i_mmap_sem);
-+			up_write(&inode->i_mapping_sem);
- 			return err;
- 		}
- 	}
-@@ -6021,7 +6020,7 @@ int ext4_change_inode_journal_flag(struct inode *inode, int val)
- 	percpu_up_write(&sbi->s_writepages_rwsem);
- 
- 	if (val)
--		up_write(&EXT4_I(inode)->i_mmap_sem);
-+		up_write(&inode->i_mapping_sem);
- 
- 	/* Finally we can mark the inode as dirty. */
- 
-@@ -6065,7 +6064,7 @@ vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf)
- 	sb_start_pagefault(inode->i_sb);
- 	file_update_time(vma->vm_file);
- 
--	down_read(&EXT4_I(inode)->i_mmap_sem);
-+	down_read(&inode->i_mapping_sem);
- 
- 	err = ext4_convert_inline_data(inode);
- 	if (err)
-@@ -6178,7 +6177,7 @@ vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf)
- out_ret:
- 	ret = block_page_mkwrite_return(err);
- out:
--	up_read(&EXT4_I(inode)->i_mmap_sem);
-+	up_read(&inode->i_mapping_sem);
- 	sb_end_pagefault(inode->i_sb);
- 	return ret;
- out_error:
-@@ -6186,15 +6185,3 @@ vm_fault_t ext4_page_mkwrite(struct vm_fault *vmf)
- 	ext4_journal_stop(handle);
- 	goto out;
- }
--
--vm_fault_t ext4_filemap_fault(struct vm_fault *vmf)
--{
--	struct inode *inode = file_inode(vmf->vma->vm_file);
--	vm_fault_t ret;
--
--	down_read(&EXT4_I(inode)->i_mmap_sem);
--	ret = filemap_fault(vmf);
--	up_read(&EXT4_I(inode)->i_mmap_sem);
--
--	return ret;
--}
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index a2cf35066f46..7a9f24596401 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -147,7 +147,7 @@ static long swap_inode_boot_loader(struct super_block *sb,
- 		goto journal_err_out;
- 	}
- 
--	down_write(&EXT4_I(inode)->i_mmap_sem);
-+	down_write(&inode->i_mapping_sem);
- 	err = filemap_write_and_wait(inode->i_mapping);
- 	if (err)
- 		goto err_out;
-@@ -255,7 +255,7 @@ static long swap_inode_boot_loader(struct super_block *sb,
- 	ext4_double_up_write_data_sem(inode, inode_bl);
- 
- err_out:
--	up_write(&EXT4_I(inode)->i_mmap_sem);
-+	up_write(&inode->i_mapping_sem);
- journal_err_out:
- 	unlock_two_nondirectories(inode, inode_bl);
- 	iput(inode_bl);
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index b9693680463a..ec38f3673ad2 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -90,11 +90,8 @@ static struct inode *ext4_get_journal_inode(struct super_block *sb,
+diff --git a/mm/rmap.c b/mm/rmap.c
+index b0fc27e77d6d..dba8cb8a5578 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -20,9 +20,9 @@
  /*
-  * Lock ordering
+  * Lock ordering in mm:
   *
-- * Note the difference between i_mmap_sem (EXT4_I(inode)->i_mmap_sem) and
-- * i_mmap_rwsem (inode->i_mmap_rwsem)!
-- *
-  * page fault path:
-- * mmap_lock -> sb_start_pagefault -> i_mmap_sem (r) -> transaction start ->
-+ * mmap_lock -> sb_start_pagefault -> i_mapping_sem (r) -> transaction start ->
-  *   page lock -> i_data_sem (rw)
+- * inode->i_mutex	(while writing or truncating, not reading or faulting)
++ * inode->i_rwsem	(while writing or truncating, not reading or faulting)
+  *   mm->mmap_lock
+- *     page->flags PG_locked (lock_page)   * (see huegtlbfs below)
++ *     page->flags PG_locked (lock_page)   * (see hugetlbfs below)
+  *       hugetlbfs_i_mmap_rwsem_key (in huge_pmd_share)
+  *         mapping->i_mmap_rwsem
+  *           hugetlb_fault_mutex (hugetlbfs specific page fault mutex)
+@@ -41,7 +41,7 @@
+  *                             in arch-dependent flush_dcache_mmap_lock,
+  *                             within bdi.wb->list_lock in __sync_single_inode)
   *
-  * buffered write path:
-@@ -103,8 +100,9 @@ static struct inode *ext4_get_journal_inode(struct super_block *sb,
-  *   i_data_sem (rw)
+- * anon_vma->rwsem,mapping->i_mutex      (memory_failure, collect_procs_anon)
++ * anon_vma->rwsem,mapping->i_mmap_rwsem   (memory_failure, collect_procs_anon)
+  *   ->tasklist_lock
+  *     pte map lock
   *
-  * truncate:
-- * sb_start_write -> i_mutex -> i_mmap_sem (w) -> i_mmap_rwsem (w) -> page lock
-- * sb_start_write -> i_mutex -> i_mmap_sem (w) -> transaction start ->
-+ * sb_start_write -> i_mutex -> i_mapping_sem (w) -> i_mmap_rwsem (w) ->
-+ *   page lock
-+ * sb_start_write -> i_mutex -> i_mapping_sem (w) -> transaction start ->
-  *   i_data_sem (rw)
-  *
-  * direct IO:
-@@ -1349,7 +1347,6 @@ static void init_once(void *foo)
- 	INIT_LIST_HEAD(&ei->i_orphan);
- 	init_rwsem(&ei->xattr_sem);
- 	init_rwsem(&ei->i_data_sem);
--	init_rwsem(&ei->i_mmap_sem);
- 	inode_init_once(&ei->vfs_inode);
- 	ext4_fc_init_inode(&ei->vfs_inode);
- }
-diff --git a/fs/ext4/truncate.h b/fs/ext4/truncate.h
-index bcbe3668c1d4..4fe34ccc74e0 100644
---- a/fs/ext4/truncate.h
-+++ b/fs/ext4/truncate.h
-@@ -15,10 +15,10 @@ static inline void ext4_truncate_failed_write(struct inode *inode)
- 	 * We don't need to call ext4_break_layouts() because the blocks we
- 	 * are truncating were never visible to userspace.
- 	 */
--	down_write(&EXT4_I(inode)->i_mmap_sem);
-+	down_write(&inode->i_mapping_sem);
- 	truncate_inode_pages(inode->i_mapping, inode->i_size);
- 	ext4_truncate(inode);
--	up_write(&EXT4_I(inode)->i_mmap_sem);
-+	up_write(&inode->i_mapping_sem);
- }
+diff --git a/mm/shmem.c b/mm/shmem.c
+index b2db4ed0fbc7..55b2888db542 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -96,7 +96,7 @@ static struct vfsmount *shm_mnt;
  
  /*
+  * shmem_fallocate communicates with shmem_fault or shmem_writepage via
+- * inode->i_private (with i_mutex making sure that it has only one user at
++ * inode->i_private (with i_rwsem making sure that it has only one user at
+  * a time): we would prefer not to enlarge the shmem inode just for that.
+  */
+ struct shmem_falloc {
+@@ -774,7 +774,7 @@ static int shmem_free_swap(struct address_space *mapping,
+  * Determine (in bytes) how many of the shmem object's pages mapped by the
+  * given offsets are swapped out.
+  *
+- * This is safe to call without i_mutex or the i_pages lock thanks to RCU,
++ * This is safe to call without i_rwsem or the i_pages lock thanks to RCU,
+  * as long as the inode doesn't go away and racy results are not a problem.
+  */
+ unsigned long shmem_partial_swap_usage(struct address_space *mapping,
+@@ -806,7 +806,7 @@ unsigned long shmem_partial_swap_usage(struct address_space *mapping,
+  * Determine (in bytes) how many of the shmem object's pages mapped by the
+  * given vma is swapped out.
+  *
+- * This is safe to call without i_mutex or the i_pages lock thanks to RCU,
++ * This is safe to call without i_rwsem or the i_pages lock thanks to RCU,
+  * as long as the inode doesn't go away and racy results are not a problem.
+  */
+ unsigned long shmem_swap_usage(struct vm_area_struct *vma)
+@@ -1069,7 +1069,7 @@ static int shmem_setattr(struct user_namespace *mnt_userns,
+ 		loff_t oldsize = inode->i_size;
+ 		loff_t newsize = attr->ia_size;
+ 
+-		/* protected by i_mutex */
++		/* protected by i_rwsem */
+ 		if ((newsize < oldsize && (info->seals & F_SEAL_SHRINK)) ||
+ 		    (newsize > oldsize && (info->seals & F_SEAL_GROW)))
+ 			return -EPERM;
+@@ -2049,7 +2049,7 @@ static vm_fault_t shmem_fault(struct vm_fault *vmf)
+ 	/*
+ 	 * Trinity finds that probing a hole which tmpfs is punching can
+ 	 * prevent the hole-punch from ever completing: which in turn
+-	 * locks writers out with its hold on i_mutex.  So refrain from
++	 * locks writers out with its hold on i_rwsem.  So refrain from
+ 	 * faulting pages into the hole while it's being punched.  Although
+ 	 * shmem_undo_range() does remove the additions, it may be unable to
+ 	 * keep up, as each new page needs its own unmap_mapping_range() call,
+@@ -2060,7 +2060,7 @@ static vm_fault_t shmem_fault(struct vm_fault *vmf)
+ 	 * we just need to make racing faults a rare case.
+ 	 *
+ 	 * The implementation below would be much simpler if we just used a
+-	 * standard mutex or completion: but we cannot take i_mutex in fault,
++	 * standard mutex or completion: but we cannot take i_rwsem in fault,
+ 	 * and bloating every shmem inode for this unlikely case would be sad.
+ 	 */
+ 	if (unlikely(inode->i_private)) {
+@@ -2518,7 +2518,7 @@ shmem_write_begin(struct file *file, struct address_space *mapping,
+ 	struct shmem_inode_info *info = SHMEM_I(inode);
+ 	pgoff_t index = pos >> PAGE_SHIFT;
+ 
+-	/* i_mutex is held by caller */
++	/* i_rwsem is held by caller */
+ 	if (unlikely(info->seals & (F_SEAL_GROW |
+ 				   F_SEAL_WRITE | F_SEAL_FUTURE_WRITE))) {
+ 		if (info->seals & (F_SEAL_WRITE | F_SEAL_FUTURE_WRITE))
+@@ -2618,7 +2618,7 @@ static ssize_t shmem_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ 
+ 		/*
+ 		 * We must evaluate after, since reads (unlike writes)
+-		 * are called without i_mutex protection against truncate
++		 * are called without i_rwsem protection against truncate
+ 		 */
+ 		nr = PAGE_SIZE;
+ 		i_size = i_size_read(inode);
+@@ -2688,7 +2688,7 @@ static loff_t shmem_file_llseek(struct file *file, loff_t offset, int whence)
+ 		return -ENXIO;
+ 
+ 	inode_lock(inode);
+-	/* We're holding i_mutex so we can access i_size directly */
++	/* We're holding i_rwsem so we can access i_size directly */
+ 	offset = mapping_seek_hole_data(mapping, offset, inode->i_size, whence);
+ 	if (offset >= 0)
+ 		offset = vfs_setpos(file, offset, MAX_LFS_FILESIZE);
+@@ -2717,7 +2717,7 @@ static long shmem_fallocate(struct file *file, int mode, loff_t offset,
+ 		loff_t unmap_end = round_down(offset + len, PAGE_SIZE) - 1;
+ 		DECLARE_WAIT_QUEUE_HEAD_ONSTACK(shmem_falloc_waitq);
+ 
+-		/* protected by i_mutex */
++		/* protected by i_rwsem */
+ 		if (info->seals & (F_SEAL_WRITE | F_SEAL_FUTURE_WRITE)) {
+ 			error = -EPERM;
+ 			goto out;
+diff --git a/mm/truncate.c b/mm/truncate.c
+index 455944264663..2cf71d8c3c62 100644
+--- a/mm/truncate.c
++++ b/mm/truncate.c
+@@ -416,7 +416,7 @@ EXPORT_SYMBOL(truncate_inode_pages_range);
+  * @mapping: mapping to truncate
+  * @lstart: offset from which to truncate
+  *
+- * Called under (and serialised by) inode->i_mutex.
++ * Called under (and serialised by) inode->i_rwsem.
+  *
+  * Note: When this function returns, there can be a page in the process of
+  * deletion (inside __delete_from_page_cache()) in the specified range.  Thus
+@@ -433,7 +433,7 @@ EXPORT_SYMBOL(truncate_inode_pages);
+  * truncate_inode_pages_final - truncate *all* pages before inode dies
+  * @mapping: mapping to truncate
+  *
+- * Called under (and serialized by) inode->i_mutex.
++ * Called under (and serialized by) inode->i_rwsem.
+  *
+  * Filesystems have to use this in the .evict_inode path to inform the
+  * VM that this is the final truncate and the inode is going away.
+@@ -766,7 +766,7 @@ EXPORT_SYMBOL(truncate_pagecache);
+  * setattr function when ATTR_SIZE is passed in.
+  *
+  * Must be called with a lock serializing truncates and writes (generally
+- * i_mutex but e.g. xfs uses a different lock) and before all filesystem
++ * i_rwsem but e.g. xfs uses a different lock) and before all filesystem
+  * specific block truncation has been performed.
+  */
+ void truncate_setsize(struct inode *inode, loff_t newsize)
+@@ -795,7 +795,7 @@ EXPORT_SYMBOL(truncate_setsize);
+  *
+  * The function must be called after i_size is updated so that page fault
+  * coming after we unlock the page will already see the new i_size.
+- * The function must be called while we still hold i_mutex - this not only
++ * The function must be called while we still hold i_rwsem - this not only
+  * makes sure i_size is stable but also that userspace cannot observe new
+  * i_size value before we are prepared to store mmap writes at new inode size.
+  */
 -- 
 2.31.0.99.g0d91da736d9f.dirty
 
