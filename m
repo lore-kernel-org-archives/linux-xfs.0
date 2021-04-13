@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9480EC433B4
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 21:00:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7123C433B4
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 21:01:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6EC0461158
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 21:00:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98DB061176
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 21:01:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231626AbhDMVBO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Apr 2021 17:01:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60474 "EHLO mail.kernel.org"
+        id S229666AbhDMVBV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Apr 2021 17:01:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60500 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229666AbhDMVBO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Apr 2021 17:01:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D257361176;
-        Tue, 13 Apr 2021 21:00:53 +0000 (UTC)
+        id S231640AbhDMVBU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Apr 2021 17:01:20 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A8DB661158;
+        Tue, 13 Apr 2021 21:01:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618347654;
-        bh=2twklLVsiiTAhx4ULnreo8j5NZdiPzTm3s+W42E/mVk=;
+        s=k20201202; t=1618347660;
+        bh=Lx8IKenAWeblb/zHN2qf3ylBdwUNVWu4Z1gIavUzJP4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=DmKaJmYd2ehm+AXv5evPN5/YaAPLdJHvslWE90cOXLEamv68p+gczSblGOxJdW1f9
-         aJosbkVh7RAa5ic7jKwYHgowtrzdp/Oaf3KzLPHL7f8viu3ZU1Z0+F/+rnLYirWvz1
-         CA8cAjLzbE3gVp1WKlX/ZrSMFD5atK05Gsu29lqqsjVvVrVfSfhBFdS09/LqYEM24y
-         9Ca8aXPTtqdb+1t5JVWOAiyFD1urMabArmp14LNYjUgPaEw+srO+5LuHX4bdG+JQ/f
-         hrh38kCXO5N6oIS7xz3RE+QU+qIgoANHYc37ILmLbnrd7SSJTzS7B62Z9C3AH9zyJ4
-         BECZJrcNU3d6w==
-Subject: [PATCH 1/2] libfrog: report inobtcount in geometry
+        b=JUF/BOZ8GP8sBQyJ4pin5GWwrtfjWI2jD30mtg+oBcb1QdHIAYUK2Ww/szRv9ul60
+         j7VwB0W84v3LWNeengN9PXLL5R6UQ1ajDqoGAz0n93xFEh/4l/vHrn94ZFjE0QgjBt
+         891b2kl6wcEMLqpJ7/1gOGeK/pxNJehgKMdcLNMUjlYN22BqaCYs1rTbCC4q1FTTqB
+         6KU7gM9Nb5tFP1orJWaYREBiKtJvm8joHiI56b7DMTLj7tH685Hq5vN3RLcCCsUU5h
+         yWj42Dv4PGMXUN+FfcN62e4ZqJ8o6XkgUV5C50Z+g1ocxHzMxnlgpcJJ9XLFgRZ9ln
+         xwnK7Z4kC+yqw==
+Subject: [PATCH 2/2] xfs_admin: pick up log arguments correctly
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     sandeen@sandeen.net, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 13 Apr 2021 14:00:53 -0700
-Message-ID: <161834765317.2607077.766491854638241008.stgit@magnolia>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Date:   Tue, 13 Apr 2021 14:00:59 -0700
+Message-ID: <161834765914.2607077.678191068662384784.stgit@magnolia>
 In-Reply-To: <161834764606.2607077.6884775882008256887.stgit@magnolia>
 References: <161834764606.2607077.6884775882008256887.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,48 +49,59 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Report the inode btree counter feature in fs feature reports.
+In commit ab9d8d69, we added support to xfs_admin to pass an external
+log to xfs_db and xfs_repair.  Unfortunately, we didn't do this
+correctly -- by appending the log arguments to DB_OPTS, we now guarantee
+an invocation of xfs_db when we don't have any work for it to do.
 
+Brian Foster noticed that this results in xfs/764 hanging fstests
+because xfs_db (when not compiled with libeditline) will wait for input
+on stdin.  I didn't notice because my build includes libeditline and my
+test runner script does silly things with pipes such that xfs_db would
+exit immediately.
+
+Reported-by: Brian Foster <bfoster@redhat.com>
+Fixes: ab9d8d69 ("xfs_admin: support adding features to V5 filesystems")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libfrog/fsgeom.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ db/xfs_admin.sh |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
 
-diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
-index 14507668..4f1a1842 100644
---- a/libfrog/fsgeom.c
-+++ b/libfrog/fsgeom.c
-@@ -29,6 +29,7 @@ xfs_report_geom(
- 	int			rmapbt_enabled;
- 	int			reflink_enabled;
- 	int			bigtime_enabled;
-+	int			inobtcount;
+diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+index 916050cb..409975b2 100755
+--- a/db/xfs_admin.sh
++++ b/db/xfs_admin.sh
+@@ -8,7 +8,7 @@ status=0
+ DB_OPTS=""
+ REPAIR_OPTS=""
+ REPAIR_DEV_OPTS=""
+-DB_LOG_OPTS=""
++LOG_OPTS=""
+ USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
  
- 	isint = geo->logstart > 0;
- 	lazycount = geo->flags & XFS_FSOP_GEOM_FLAGS_LAZYSB ? 1 : 0;
-@@ -45,12 +46,13 @@ xfs_report_geom(
- 	rmapbt_enabled = geo->flags & XFS_FSOP_GEOM_FLAGS_RMAPBT ? 1 : 0;
- 	reflink_enabled = geo->flags & XFS_FSOP_GEOM_FLAGS_REFLINK ? 1 : 0;
- 	bigtime_enabled = geo->flags & XFS_FSOP_GEOM_FLAGS_BIGTIME ? 1 : 0;
-+	inobtcount = geo->flags & XFS_FSOP_GEOM_FLAGS_INOBTCNT ? 1 : 0;
+ while getopts "c:efjlL:O:pr:uU:V" c
+@@ -40,19 +40,18 @@ case $# in
+ 	1|2)
+ 		# Pick up the log device, if present
+ 		if [ -n "$2" ]; then
+-			DB_OPTS=$DB_OPTS" -l '$2'"
+-			REPAIR_DEV_OPTS=$REPAIR_DEV_OPTS" -l '$2'"
++			LOG_OPTS=" -l '$2'"
+ 		fi
  
- 	printf(_(
- "meta-data=%-22s isize=%-6d agcount=%u, agsize=%u blks\n"
- "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
- "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u\n"
--"         =%-22s reflink=%-4u bigtime=%u\n"
-+"         =%-22s reflink=%-4u bigtime=%u inobtcount=%u\n"
- "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
- "         =%-22s sunit=%-6u swidth=%u blks\n"
- "naming   =version %-14u bsize=%-6u ascii-ci=%d, ftype=%d\n"
-@@ -60,7 +62,7 @@ xfs_report_geom(
- 		mntpoint, geo->inodesize, geo->agcount, geo->agblocks,
- 		"", geo->sectsize, attrversion, projid32bit,
- 		"", crcs_enabled, finobt_enabled, spinodes, rmapbt_enabled,
--		"", reflink_enabled, bigtime_enabled,
-+		"", reflink_enabled, bigtime_enabled, inobtcount,
- 		"", geo->blocksize, (unsigned long long)geo->datablocks,
- 			geo->imaxpct,
- 		"", geo->sunit, geo->swidth,
+ 		if [ -n "$DB_OPTS" ]
+ 		then
+-			eval xfs_db -x -p xfs_admin $DB_OPTS "$1"
++			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_OPTS "$1"
+ 			status=$?
+ 		fi
+ 		if [ -n "$REPAIR_OPTS" ]
+ 		then
+ 			echo "Running xfs_repair to upgrade filesystem."
+-			eval xfs_repair $REPAIR_DEV_OPTS $REPAIR_OPTS "$1"
++			eval xfs_repair $LOG_OPTS $REPAIR_DEV_OPTS $REPAIR_OPTS "$1"
+ 			status=`expr $? + $status`
+ 		fi
+ 		;;
 
