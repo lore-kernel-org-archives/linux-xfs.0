@@ -2,74 +2,177 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D2FC433ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 14:17:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7370C433B4
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 15:20:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 107F0613B1
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 14:17:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2FED613B3
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 15:20:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229713AbhDMORc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Apr 2021 10:17:32 -0400
-Received: from mx2.suse.de ([195.135.220.15]:35586 "EHLO mx2.suse.de"
+        id S239917AbhDMPVI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Apr 2021 11:21:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58622 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229590AbhDMORc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Apr 2021 10:17:32 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 73746B178;
-        Tue, 13 Apr 2021 14:17:11 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 06D941E37A2; Tue, 13 Apr 2021 16:17:11 +0200 (CEST)
-Date:   Tue, 13 Apr 2021 16:17:11 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Ted Tso <tytso@mit.edu>, Amir Goldstein <amir73il@gmail.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/7 RFC v3] fs: Hole punch vs page cache filling races
-Message-ID: <20210413141710.GE15752@quack2.suse.cz>
-References: <20210413105205.3093-1-jack@suse.cz>
- <20210413130950.GD1366579@infradead.org>
+        id S229580AbhDMPVI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Apr 2021 11:21:08 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4EF0A611CE;
+        Tue, 13 Apr 2021 15:20:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1618327248;
+        bh=p7RmkSd/YcaE9xShOUQVPFRf7C98RAW1RMeav80HG/w=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Jzrec9I5m/SmWCWVUPqBvFSFxcC+AulSvd9xXmg3Qz2ndDXDGSGUTEND16LngCdWa
+         pmqV5AoDS+tWkj1zyvNljxGjExbIvJ7Ia7tA3Ndfe3UvpI849Iuq/KwWKtdG9L8l/4
+         d0DJLCsc1o3Zt32tvwY1n92YqttIXxjLlxNI/hxnkFoKTG0xbJc0zcZMgi8Ldp4KTI
+         nXe6WTPWPh+ALXPwLzM1D337g/6pM3Kr9HugI5tjErwaldS2+ywotWamJ3R1ANSHkE
+         pyac2niEGTiIPr1s2u6AlIoY89ApC+5W2OEIz8GSXMdZASGzP7p6vUniRdLaPGC4D1
+         xCy9IaNz0EKDg==
+Date:   Tue, 13 Apr 2021 08:20:48 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Stephen Rothwell <sfr@canb.auug.org.au>
+Cc:     Al Viro <viro@ZenIV.linux.org.uk>,
+        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Miklos Szeredi <mszeredi@redhat.com>
+Subject: Re: linux-next: manual merge of the vfs tree with the xfs tree
+Message-ID: <20210413152048.GM3957620@magnolia>
+References: <20210412122211.713ca71d@canb.auug.org.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210413130950.GD1366579@infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20210412122211.713ca71d@canb.auug.org.au>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 13-04-21 14:09:50, Christoph Hellwig wrote:
-> > Also when writing the documentation I came across one question: Do we mandate
-> > i_mapping_sem for truncate + hole punch for all filesystems or just for
-> > filesystems that support hole punching (or other complex fallocate operations)?
-> > I wrote the documentation so that we require every filesystem to use
-> > i_mapping_sem. This makes locking rules simpler, we can also add asserts when
-> > all filesystems are converted. The downside is that simple filesystems now pay
-> > the overhead of the locking unnecessary for them. The overhead is small
-> > (uncontended rwsem acquisition for truncate) so I don't think we care and the
-> > simplicity is worth it but I wanted to spell this out.
+On Mon, Apr 12, 2021 at 12:22:11PM +1000, Stephen Rothwell wrote:
+> Hi all,
 > 
-> I think all makes for much better to understand and document rules,
-> so I'd shoot for that eventually.
+> Today's linux-next merge of the vfs tree got a conflict in:
+> 
+>   fs/xfs/xfs_ioctl.c
+> 
+> between commits:
+> 
+>   ceaf603c7024 ("xfs: move the di_projid field to struct xfs_inode")
+>   031474c28a3a ("xfs: move the di_extsize field to struct xfs_inode")
+>   b33ce57d3e61 ("xfs: move the di_cowextsize field to struct xfs_inode")
+>   4800887b4574 ("xfs: cleanup xfs_fill_fsxattr")
+>   ee7b83fd365e ("xfs: use a union for i_cowextsize and i_flushiter")
+>   db07349da2f5 ("xfs: move the di_flags field to struct xfs_inode")
+>   3e09ab8fdc4d ("xfs: move the di_flags2 field to struct xfs_inode")
+> 
+> from the xfs tree and commit:
+> 
+>   280cad4ac884 ("xfs: convert to fileattr")
+> 
+> from the vfs tree.
+> 
+> I fixed it up (I think - see below) and can carry the fix as
+> necessary. This is now fixed as far as linux-next is concerned, but any
+> non trivial conflicts should be mentioned to your upstream maintainer
+> when your tree is submitted for merging.  You may also want to consider
+> cooperating with the maintainer of the conflicting tree to minimise any
+> particularly complex conflicts.
 
-OK.
+This looks correct to me; thanks for pointing out the merge conflict! :)
 
-> Btw, what about locking for DAX faults?  XFS seems to take
-> the mmap sem for those as well currently.
+--D
 
-Yes, I've mechanically converted all those uses to i_mapping_sem for XFS,
-ext4, and ext2 as well. Longer term we may be able to move some locking
-into generic DAX code now that the lock is in struct inode. But I want to
-leave that for later since DAX locking is different enough that it needs
-some careful thinking and justification...
+> -- 
+> Cheers,
+> Stephen Rothwell
+> 
+> diff --cc fs/xfs/xfs_ioctl.c
+> index 708b77341a70,bbda105a2ce5..000000000000
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@@ -1056,76 -1057,16 +1057,18 @@@ xfs_ioc_ag_geometry
+>   static void
+>   xfs_fill_fsxattr(
+>   	struct xfs_inode	*ip,
+> - 	bool			attr,
+> - 	struct fsxattr		*fa)
+> + 	int			whichfork,
+> + 	struct fileattr		*fa)
+>   {
+>  +	struct xfs_mount	*mp = ip->i_mount;
+> - 	struct xfs_ifork	*ifp = attr ? ip->i_afp : &ip->i_df;
+> + 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+>   
+> - 	simple_fill_fsxattr(fa, xfs_ip2xflags(ip));
+> + 	fileattr_fill_xflags(fa, xfs_ip2xflags(ip));
+>  -	fa->fsx_extsize = ip->i_d.di_extsize << ip->i_mount->m_sb.sb_blocklog;
+>  -	fa->fsx_cowextsize = ip->i_d.di_cowextsize <<
+>  -			ip->i_mount->m_sb.sb_blocklog;
+>  -	fa->fsx_projid = ip->i_d.di_projid;
+>  +
+>  +	fa->fsx_extsize = XFS_FSB_TO_B(mp, ip->i_extsize);
+>  +	if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE)
+>  +		fa->fsx_cowextsize = XFS_FSB_TO_B(mp, ip->i_cowextsize);
+>  +	fa->fsx_projid = ip->i_projid;
+>   	if (ifp && (ifp->if_flags & XFS_IFEXTENTS))
+>   		fa->fsx_nextents = xfs_iext_count(ifp);
+>   	else
+> @@@ -1212,10 -1167,10 +1169,10 @@@ static in
+>   xfs_ioctl_setattr_xflags(
+>   	struct xfs_trans	*tp,
+>   	struct xfs_inode	*ip,
+> - 	struct fsxattr		*fa)
+> + 	struct fileattr		*fa)
+>   {
+>   	struct xfs_mount	*mp = ip->i_mount;
+>  -	uint64_t		di_flags2;
+>  +	uint64_t		i_flags2;
+>   
+>   	/* Can't change realtime flag if any extents are allocated. */
+>   	if ((ip->i_df.if_nextents || ip->i_delayed_blks) &&
+> @@@ -1348,8 -1289,11 +1291,11 @@@ xfs_ioctl_setattr_check_extsize
+>   	xfs_extlen_t		size;
+>   	xfs_fsblock_t		extsize_fsb;
+>   
+> + 	if (!fa->fsx_valid)
+> + 		return 0;
+> + 
+>   	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_df.if_nextents &&
+>  -	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
+>  +	    ((ip->i_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
+>   		return -EINVAL;
+>   
+>   	if (fa->fsx_extsize == 0)
+> @@@ -1520,18 -1476,18 +1478,19 @@@ xfs_fileattr_set
+>   	 * extent size hint should be set on the inode. If no extent size flags
+>   	 * are set on the inode then unconditionally clear the extent size hint.
+>   	 */
+>  -	if (ip->i_d.di_flags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
+>  -		ip->i_d.di_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
+>  -	else
+>  -		ip->i_d.di_extsize = 0;
+>  -	if (xfs_sb_version_has_v3inode(&mp->m_sb) &&
+>  -	    (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
+>  -		ip->i_d.di_cowextsize = fa->fsx_cowextsize >>
+>  -				mp->m_sb.sb_blocklog;
+>  +	if (ip->i_diflags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
+>  +		ip->i_extsize = XFS_B_TO_FSB(mp, fa->fsx_extsize);
+>   	else
+>  -		ip->i_d.di_cowextsize = 0;
+>  +		ip->i_extsize = 0;
+>  +
+>  +	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
+>  +		if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE)
+>  +			ip->i_cowextsize = XFS_B_TO_FSB(mp, fa->fsx_cowextsize);
+>  +		else
+>  +			ip->i_cowextsize = 0;
+>  +	}
+>   
+> + skip_xattr:
+>   	error = xfs_trans_commit(tp);
+>   
+>   	/*
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+
