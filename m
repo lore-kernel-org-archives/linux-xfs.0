@@ -2,69 +2,78 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D27D6C433ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 13:10:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A687C43461
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 13:42:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6ADE60FED
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 13:10:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5659461353
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 13:42:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231618AbhDMNK3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Apr 2021 09:10:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41686 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231594AbhDMNK2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Apr 2021 09:10:28 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AE25C061756;
-        Tue, 13 Apr 2021 06:10:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=vBa5I9cnF6gq99nwmVfNLF184LBtNaf0t/nHm2F1SjU=; b=PJNh4509S/UB/1YM3kxTa7Z8Vu
-        slvZd7GxxNVfAt2IsAcpbueGzJxG8oWB0L6NOslHl1pyA0/NOMbcQj8ACitj9VV8WZz9b+hNaS7Wy
-        ftKsPyRCeqC8nKu0rLxr0dYFUQSgD6OSOoF4GkYhAy9LEmZ3/YJ9SNL56ZpG9ndU3Y2ok2wcOu60C
-        m0kk8q0pSfdc1QiRP6cm23bHtLYX9e8MIeoqu0GnoXgzvUzaK6Y9v+wc8d+OlTk0X/wlko71dwOkK
-        fS/DO+Aiq7gMCk0HVJpF3P1Qm0lDFNJh2YNesSkzt/Wv2vEIjaMVuiWxyK1s61/w6NBAqU6g9+dQK
-        utIXcUHw==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lWIne-005leB-9K; Tue, 13 Apr 2021 13:09:53 +0000
-Date:   Tue, 13 Apr 2021 14:09:50 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Christoph Hellwig <hch@infradead.org>,
-        Amir Goldstein <amir73il@gmail.com>,
+        id S230218AbhDMNmt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Apr 2021 09:42:49 -0400
+Received: from mx2.suse.de ([195.135.220.15]:57844 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229705AbhDMNms (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Apr 2021 09:42:48 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id A9F2EAF75;
+        Tue, 13 Apr 2021 13:42:27 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 7320E1E37A2; Tue, 13 Apr 2021 15:42:27 +0200 (CEST)
+Date:   Tue, 13 Apr 2021 15:42:27 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Ted Tso <tytso@mit.edu>, Amir Goldstein <amir73il@gmail.com>,
         Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/7 RFC v3] fs: Hole punch vs page cache filling races
-Message-ID: <20210413130950.GD1366579@infradead.org>
+Subject: Re: [PATCH 5/7] xfs: Convert to use i_mapping_sem
+Message-ID: <20210413134227.GC15752@quack2.suse.cz>
 References: <20210413105205.3093-1-jack@suse.cz>
+ <20210413112859.32249-5-jack@suse.cz>
+ <20210413130512.GC1366579@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210413105205.3093-1-jack@suse.cz>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20210413130512.GC1366579@infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> Also when writing the documentation I came across one question: Do we mandate
-> i_mapping_sem for truncate + hole punch for all filesystems or just for
-> filesystems that support hole punching (or other complex fallocate operations)?
-> I wrote the documentation so that we require every filesystem to use
-> i_mapping_sem. This makes locking rules simpler, we can also add asserts when
-> all filesystems are converted. The downside is that simple filesystems now pay
-> the overhead of the locking unnecessary for them. The overhead is small
-> (uncontended rwsem acquisition for truncate) so I don't think we care and the
-> simplicity is worth it but I wanted to spell this out.
+On Tue 13-04-21 14:05:12, Christoph Hellwig wrote:
+> On Tue, Apr 13, 2021 at 01:28:49PM +0200, Jan Kara wrote:
+> > Use i_mapping_sem instead of XFS internal i_mmap_lock. The intended
+> > purpose of i_mapping_sem is exactly the same.
+> 
+> Might be worth mentioning here that the locking in __xfs_filemap_fault
+> changes because filemap_fault already takes i_mapping_sem?
 
-I think all makes for much better to understand and document rules,
-so I'd shoot for that eventually.
+Sure, will add.
 
-Btw, what about locking for DAX faults?  XFS seems to take
-the mmap sem for those as well currently.
+> 
+> >   * mmap_lock (MM)
+> >   *   sb_start_pagefault(vfs, freeze)
+> > - *     i_mmaplock (XFS - truncate serialisation)
+> > + *     i_mapping_sem (XFS - truncate serialisation)
+> 
+> This is sort of VFS now, isn't it?
+
+Right, I'll update the comment.
+
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Thanks!
+
+								Honza
+
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
