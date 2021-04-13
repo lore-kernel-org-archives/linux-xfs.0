@@ -2,145 +2,65 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 637B7C43462
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 11:29:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49CFEC433B4
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 12:39:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F64261370
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 11:29:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CE89613B6
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 12:39:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238084AbhDML31 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Apr 2021 07:29:27 -0400
-Received: from mx2.suse.de ([195.135.220.15]:55010 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231330AbhDML3X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Apr 2021 07:29:23 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 4EF27B15D;
-        Tue, 13 Apr 2021 11:29:00 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id DEC271F2B6C; Tue, 13 Apr 2021 13:28:59 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     <linux-fsdevel@vger.kernel.org>
-Cc:     <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        Ted Tso <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>,
+        id S231441AbhDMMjm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Apr 2021 08:39:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34762 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231235AbhDMMjm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Apr 2021 08:39:42 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBCAAC061574;
+        Tue, 13 Apr 2021 05:39:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Y/ADFzMIM8pdreFqwSb6dgmwWS9W+B7TvZ6ngAxunpE=; b=kx3QSs6qxrP7KyLmkodjc3rVtG
+        Vi1Rdzv3dRJ+rZgoyJNPGpDh+qcXevOQx/6K4BhqObM/bHbevztoyJuUfFf5qXE5MrpS5++ZAGWHb
+        tpZ+xhxdnnBOLut5R0Nc4a8dFvJr4qVGTHEkWwENjHms9iC3duqyAszIMyMSWITqtMnGKh17zW/Y1
+        sA6JcChi7AaRfLCg13ohAyhTSqdSXZF8cCqIwhKcO+N05F3GyNPag9Y713dIkt+yplPjE08jWrEnB
+        OjwM+VzORhmOVz6D6K1dD2dyW9E734NyomUZdmJOnHFw57dJRCpArsfsNJNHIudcGVi9htFgy5ff9
+        wUpQ5NMA==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lWIIz-005jYU-9o; Tue, 13 Apr 2021 12:38:23 +0000
+Date:   Tue, 13 Apr 2021 13:38:09 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Christoph Hellwig <hch@infradead.org>,
         Amir Goldstein <amir73il@gmail.com>,
-        Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>
-Subject: [PATCH 6/7] zonefs: Convert to using i_mapping_sem
-Date:   Tue, 13 Apr 2021 13:28:50 +0200
-Message-Id: <20210413112859.32249-6-jack@suse.cz>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20210413105205.3093-1-jack@suse.cz>
+        Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/7] mm: Fix comments mentioning i_mutex
+Message-ID: <20210413123809.GA1366579@infradead.org>
 References: <20210413105205.3093-1-jack@suse.cz>
+ <20210413112859.32249-1-jack@suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210413112859.32249-1-jack@suse.cz>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use i_mapping_sem instead of zonefs' private i_mmap_sem. The intended
-purpose is exactly the same.
+On Tue, Apr 13, 2021 at 01:28:45PM +0200, Jan Kara wrote:
+> inode->i_mutex has been replaced with inode->i_rwsem long ago. Fix
+> comments still mentioning i_mutex.
+> 
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/zonefs/super.c  | 23 +++++------------------
- fs/zonefs/zonefs.h |  7 +++----
- 2 files changed, 8 insertions(+), 22 deletions(-)
+Looks good,
 
-diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
-index 049e36c69ed7..ace6f3a223da 100644
---- a/fs/zonefs/super.c
-+++ b/fs/zonefs/super.c
-@@ -462,7 +462,7 @@ static int zonefs_file_truncate(struct inode *inode, loff_t isize)
- 	inode_dio_wait(inode);
- 
- 	/* Serialize against page faults */
--	down_write(&zi->i_mmap_sem);
-+	down_write(&inode->i_mapping_sem);
- 
- 	/* Serialize against zonefs_iomap_begin() */
- 	mutex_lock(&zi->i_truncate_mutex);
-@@ -500,7 +500,7 @@ static int zonefs_file_truncate(struct inode *inode, loff_t isize)
- 
- unlock:
- 	mutex_unlock(&zi->i_truncate_mutex);
--	up_write(&zi->i_mmap_sem);
-+	up_write(&inode->i_mapping_sem);
- 
- 	return ret;
- }
-@@ -575,18 +575,6 @@ static int zonefs_file_fsync(struct file *file, loff_t start, loff_t end,
- 	return ret;
- }
- 
--static vm_fault_t zonefs_filemap_fault(struct vm_fault *vmf)
--{
--	struct zonefs_inode_info *zi = ZONEFS_I(file_inode(vmf->vma->vm_file));
--	vm_fault_t ret;
--
--	down_read(&zi->i_mmap_sem);
--	ret = filemap_fault(vmf);
--	up_read(&zi->i_mmap_sem);
--
--	return ret;
--}
--
- static vm_fault_t zonefs_filemap_page_mkwrite(struct vm_fault *vmf)
- {
- 	struct inode *inode = file_inode(vmf->vma->vm_file);
-@@ -607,16 +595,16 @@ static vm_fault_t zonefs_filemap_page_mkwrite(struct vm_fault *vmf)
- 	file_update_time(vmf->vma->vm_file);
- 
- 	/* Serialize against truncates */
--	down_read(&zi->i_mmap_sem);
-+	down_read(&inode->i_mapping_sem);
- 	ret = iomap_page_mkwrite(vmf, &zonefs_iomap_ops);
--	up_read(&zi->i_mmap_sem);
-+	up_read(&inode->i_mapping_sem);
- 
- 	sb_end_pagefault(inode->i_sb);
- 	return ret;
- }
- 
- static const struct vm_operations_struct zonefs_file_vm_ops = {
--	.fault		= zonefs_filemap_fault,
-+	.fault		= filemap_fault,
- 	.map_pages	= filemap_map_pages,
- 	.page_mkwrite	= zonefs_filemap_page_mkwrite,
- };
-@@ -1158,7 +1146,6 @@ static struct inode *zonefs_alloc_inode(struct super_block *sb)
- 
- 	inode_init_once(&zi->i_vnode);
- 	mutex_init(&zi->i_truncate_mutex);
--	init_rwsem(&zi->i_mmap_sem);
- 	zi->i_wr_refcnt = 0;
- 
- 	return &zi->i_vnode;
-diff --git a/fs/zonefs/zonefs.h b/fs/zonefs/zonefs.h
-index 51141907097c..d00626442ab5 100644
---- a/fs/zonefs/zonefs.h
-+++ b/fs/zonefs/zonefs.h
-@@ -70,12 +70,11 @@ struct zonefs_inode_info {
- 	 * and changes to the inode private data, and in particular changes to
- 	 * a sequential file size on completion of direct IO writes.
- 	 * Serialization of mmap read IOs with truncate and syscall IO
--	 * operations is done with i_mmap_sem in addition to i_truncate_mutex.
--	 * Only zonefs_seq_file_truncate() takes both lock (i_mmap_sem first,
--	 * i_truncate_mutex second).
-+	 * operations is done with i_mapping_sem in addition to
-+	 * i_truncate_mutex.  Only zonefs_seq_file_truncate() takes both lock
-+	 * (i_mapping_sem first, i_truncate_mutex second).
- 	 */
- 	struct mutex		i_truncate_mutex;
--	struct rw_semaphore	i_mmap_sem;
- 
- 	/* guarded by i_truncate_mutex */
- 	unsigned int		i_wr_refcnt;
--- 
-2.31.0.99.g0d91da736d9f.dirty
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
