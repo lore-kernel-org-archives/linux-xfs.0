@@ -2,403 +2,211 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27E06C433ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 23:21:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0B39C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 00:01:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0476C61242
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Apr 2021 23:21:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8401A61246
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 00:01:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231140AbhDMXV6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Apr 2021 19:21:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44204 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230123AbhDMXV6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Apr 2021 19:21:58 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BDD0D60C3D;
-        Tue, 13 Apr 2021 23:21:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618356097;
-        bh=jla5IS4+n+Nz5Rnjt9xy9jpq6gCIHFHjlGrQQJ82X/Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=G4urlAHEGa0sg6K6sYeHUvDAK+46Ytjy++4hXNl9BMLMYomm8rIgnBQwRKSRrPgNO
-         9mLfmo9I2mz/Fg56Y8z2B6B684MixZwOgD6AACpF9aOcab5pq3PiZQl4Wz1u9jsIlp
-         RJUox3gjYig7yVlckK2W3JOJ1dQgcnQPP6FVIc7C6YiTH2kxOgvVTr7QH0l2PV79y4
-         BnyDN2zy9iQ1gZ8Z5WQ9WnTrbcpxSMxUyNjy//F8WfmDc2dn9fsjrb/5FV/xJsjJld
-         5CxBbQ+ZYIDvaSpFnmx2fRTqzurwIoMGvXOKkqlLTcj64F0CC208kSmSTYSaBpnBru
-         9UYVKo9qBvRVA==
-Date:   Tue, 13 Apr 2021 16:21:35 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/7] xfs: move the XFS_IFEXTENTS check into
- xfs_iread_extents
-Message-ID: <20210413232135.GO3957620@magnolia>
-References: <20210412133819.2618857-1-hch@lst.de>
- <20210412133819.2618857-2-hch@lst.de>
+        id S230244AbhDNABi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Apr 2021 20:01:38 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:42794 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229747AbhDNABh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Apr 2021 20:01:37 -0400
+Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id ECEA01042B72;
+        Wed, 14 Apr 2021 10:01:14 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lWSy1-006oBD-BU; Wed, 14 Apr 2021 10:01:13 +1000
+Date:   Wed, 14 Apr 2021 10:01:13 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Christoph Hellwig <hch@infradead.org>,
+        Amir Goldstein <amir73il@gmail.com>
+Subject: Re: [PATCH 2/7] mm: Protect operations adding pages to page cache
+ with i_mapping_lock
+Message-ID: <20210414000113.GG63242@dread.disaster.area>
+References: <20210413105205.3093-1-jack@suse.cz>
+ <20210413112859.32249-2-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210412133819.2618857-2-hch@lst.de>
+In-Reply-To: <20210413112859.32249-2-jack@suse.cz>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_f
+        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
+        a=kj9zAlcOel0A:10 a=3YhXtTcJ-WEA:10 a=7-415B0cAAAA:8
+        a=DX6uKfG-f7m7lB0TV10A:9 a=zNJWZbXuTLNWGvKL:21 a=zPXtcYt7zDS9-pWJ:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 12, 2021 at 03:38:13PM +0200, Christoph Hellwig wrote:
-> Move the XFS_IFEXTENTS check from the callers into xfs_iread_extents to
-> simplify the code.
+On Tue, Apr 13, 2021 at 01:28:46PM +0200, Jan Kara wrote:
+> Currently, serializing operations such as page fault, read, or readahead
+> against hole punching is rather difficult. The basic race scheme is
+> like:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-Looks better this time,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  fs/xfs/libxfs/xfs_bmap.c  | 82 ++++++++++++++++-----------------------
->  fs/xfs/scrub/bmap.c       |  9 ++---
->  fs/xfs/xfs_bmap_util.c    | 16 +++-----
->  fs/xfs/xfs_dir2_readdir.c |  8 ++--
->  fs/xfs/xfs_dquot.c        |  8 ++--
->  fs/xfs/xfs_iomap.c        | 16 +++-----
->  fs/xfs/xfs_qm.c           |  8 ++--
->  fs/xfs/xfs_reflink.c      |  8 ++--
->  8 files changed, 62 insertions(+), 93 deletions(-)
+> fallocate(FALLOC_FL_PUNCH_HOLE)			read / fault / ..
+>   truncate_inode_pages_range()
+> 						  <create pages in page
+> 						   cache here>
+>   <update fs block mapping and free blocks>
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 402ecd6103605e..1b1b58af41fa7f 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1227,6 +1227,9 @@ xfs_iread_extents(
->  	struct xfs_btree_cur	*cur;
->  	int			error;
->  
-> +	if (ifp->if_flags & XFS_IFEXTENTS)
-> +		return 0;
-> +
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  
->  	if (XFS_IS_CORRUPT(mp, ifp->if_format != XFS_DINODE_FMT_BTREE)) {
-> @@ -1284,11 +1287,9 @@ xfs_bmap_first_unused(
->  
->  	ASSERT(xfs_ifork_has_extents(ifp));
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(tp, ip, whichfork);
-> -		if (error)
-> -			return error;
-> -	}
-> +	error = xfs_iread_extents(tp, ip, whichfork);
-> +	if (error)
-> +		return error;
->  
->  	lowest = max = *first_unused;
->  	for_each_xfs_iext(ifp, &icur, &got) {
-> @@ -1336,11 +1337,9 @@ xfs_bmap_last_before(
->  		return -EFSCORRUPTED;
->  	}
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(tp, ip, whichfork);
-> -		if (error)
-> -			return error;
-> -	}
-> +	error = xfs_iread_extents(tp, ip, whichfork);
-> +	if (error)
-> +		return error;
->  
->  	if (!xfs_iext_lookup_extent_before(ip, ifp, last_block, &icur, &got))
->  		*last_block = 0;
-> @@ -1359,11 +1358,9 @@ xfs_bmap_last_extent(
->  	struct xfs_iext_cursor	icur;
->  	int			error;
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(tp, ip, whichfork);
-> -		if (error)
-> -			return error;
-> -	}
-> +	error = xfs_iread_extents(tp, ip, whichfork);
-> +	if (error)
-> +		return error;
->  
->  	xfs_iext_last(ifp, &icur);
->  	if (!xfs_iext_get_extent(ifp, &icur, rec))
-> @@ -3991,11 +3988,9 @@ xfs_bmapi_read(
->  
->  	XFS_STATS_INC(mp, xs_blk_mapr);
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(NULL, ip, whichfork);
-> -		if (error)
-> -			return error;
-> -	}
-> +	error = xfs_iread_extents(NULL, ip, whichfork);
-> +	if (error)
-> +		return error;
->  
->  	if (!xfs_iext_lookup_extent(ip, ifp, bno, &icur, &got))
->  		eof = true;
-> @@ -4475,11 +4470,9 @@ xfs_bmapi_write(
->  
->  	XFS_STATS_INC(mp, xs_blk_mapw);
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(tp, ip, whichfork);
-> -		if (error)
-> -			goto error0;
-> -	}
-> +	error = xfs_iread_extents(tp, ip, whichfork);
-> +	if (error)
-> +		goto error0;
->  
->  	if (!xfs_iext_lookup_extent(ip, ifp, bno, &bma.icur, &bma.got))
->  		eof = true;
-> @@ -4758,11 +4751,9 @@ xfs_bmapi_remap(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(tp, ip, whichfork);
-> -		if (error)
-> -			return error;
-> -	}
-> +	error = xfs_iread_extents(tp, ip, whichfork);
-> +	if (error)
-> +		return error;
->  
->  	if (xfs_iext_lookup_extent(ip, ifp, bno, &icur, &got)) {
->  		/* make sure we only reflink into a hole. */
-> @@ -5433,9 +5424,10 @@ __xfs_bunmapi(
->  	else
->  		max_len = len;
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS) &&
-> -	    (error = xfs_iread_extents(tp, ip, whichfork)))
-> +	error = xfs_iread_extents(tp, ip, whichfork);
-> +	if (error)
->  		return error;
-> +
->  	if (xfs_iext_count(ifp) == 0) {
->  		*rlen = 0;
->  		return 0;
-> @@ -5921,11 +5913,9 @@ xfs_bmap_collapse_extents(
->  
->  	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(tp, ip, whichfork);
-> -		if (error)
-> -			return error;
-> -	}
-> +	error = xfs_iread_extents(tp, ip, whichfork);
-> +	if (error)
-> +		return error;
->  
->  	if (ifp->if_flags & XFS_IFBROOT) {
->  		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
-> @@ -6038,11 +6028,9 @@ xfs_bmap_insert_extents(
->  
->  	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(tp, ip, whichfork);
-> -		if (error)
-> -			return error;
-> -	}
-> +	error = xfs_iread_extents(tp, ip, whichfork);
-> +	if (error)
-> +		return error;
->  
->  	if (ifp->if_flags & XFS_IFBROOT) {
->  		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
-> @@ -6141,12 +6129,10 @@ xfs_bmap_split_extent(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		/* Read in all the extents */
-> -		error = xfs_iread_extents(tp, ip, whichfork);
-> -		if (error)
-> -			return error;
-> -	}
-> +	/* Read in all the extents */
-> +	error = xfs_iread_extents(tp, ip, whichfork);
-> +	if (error)
-> +		return error;
->  
->  	/*
->  	 * If there are not extents, or split_fsb lies in a hole we are done.
-> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-> index 613e2aa7e4e7f1..924d7e343731de 100644
-> --- a/fs/xfs/scrub/bmap.c
-> +++ b/fs/xfs/scrub/bmap.c
-> @@ -448,11 +448,10 @@ xchk_bmap_btree(
->  
->  	/* Load the incore bmap cache if it's not loaded. */
->  	info->was_loaded = ifp->if_flags & XFS_IFEXTENTS;
-> -	if (!info->was_loaded) {
-> -		error = xfs_iread_extents(sc->tp, ip, whichfork);
-> -		if (!xchk_fblock_process_error(sc, whichfork, 0, &error))
-> -			goto out;
-> -	}
-> +
-> +	error = xfs_iread_extents(sc->tp, ip, whichfork);
-> +	if (!xchk_fblock_process_error(sc, whichfork, 0, &error))
-> +		goto out;
->  
->  	/* Check the btree structure. */
->  	cur = xfs_bmbt_init_cursor(mp, sc->tp, ip, whichfork);
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index e79e3d1ff38dfe..1c7116abff0d69 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -225,11 +225,9 @@ xfs_bmap_count_blocks(
->  
->  	switch (ifp->if_format) {
->  	case XFS_DINODE_FMT_BTREE:
-> -		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -			error = xfs_iread_extents(tp, ip, whichfork);
-> -			if (error)
-> -				return error;
-> -		}
-> +		error = xfs_iread_extents(tp, ip, whichfork);
-> +		if (error)
-> +			return error;
->  
->  		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
->  		error = xfs_btree_count_blocks(cur, &btblocks);
-> @@ -471,11 +469,9 @@ xfs_getbmap(
->  	first_bno = bno = XFS_BB_TO_FSBT(mp, bmv->bmv_offset);
->  	len = XFS_BB_TO_FSB(mp, bmv->bmv_length);
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(NULL, ip, whichfork);
-> -		if (error)
-> -			goto out_unlock_ilock;
-> -	}
-> +	error = xfs_iread_extents(NULL, ip, whichfork);
-> +	if (error)
-> +		goto out_unlock_ilock;
->  
->  	if (!xfs_iext_lookup_extent(ip, ifp, bno, &icur, &got)) {
->  		/*
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index 03e7c39a07807a..1d2fe48ad19fb7 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -258,11 +258,9 @@ xfs_dir2_leaf_readbuf(
->  	int			ra_want;
->  	int			error = 0;
->  
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(args->trans, dp, XFS_DATA_FORK);
-> -		if (error)
-> -			goto out;
-> -	}
-> +	error = xfs_iread_extents(args->trans, dp, XFS_DATA_FORK);
-> +	if (error)
-> +		goto out;
->  
->  	/*
->  	 * Look for mapped directory blocks at or above the current offset.
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 7fb63a04400fab..ecd5059d6928f7 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -748,11 +748,9 @@ xfs_dq_get_next_id(
->  	start = (xfs_fsblock_t)next_id / mp->m_quotainfo->qi_dqperchunk;
->  
->  	lock_flags = xfs_ilock_data_map_shared(quotip);
-> -	if (!(quotip->i_df.if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(NULL, quotip, XFS_DATA_FORK);
-> -		if (error)
-> -			return error;
-> -	}
-> +	error = xfs_iread_extents(NULL, quotip, XFS_DATA_FORK);
-> +	if (error)
-> +		return error;
->  
->  	if (xfs_iext_lookup_extent(quotip, &quotip->i_df, start, &cur, &got)) {
->  		/* contiguous chunk, bump startoff for the id calculation */
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 9c7bd2d94d8d89..d37d42e554a12b 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -894,11 +894,9 @@ xfs_buffered_write_iomap_begin(
->  
->  	XFS_STATS_INC(mp, xs_blk_mapw);
->  
-> -	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> -		if (error)
-> -			goto out_unlock;
-> -	}
-> +	error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> +	if (error)
-> +		goto out_unlock;
->  
->  	/*
->  	 * Search the data fork first to look up our source mapping.  We
-> @@ -1209,11 +1207,9 @@ xfs_seek_iomap_begin(
->  		return -EIO;
->  
->  	lockmode = xfs_ilock_data_map_shared(ip);
-> -	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> -		if (error)
-> -			goto out_unlock;
-> -	}
-> +	error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> +	if (error)
-> +		goto out_unlock;
->  
->  	if (xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap)) {
->  		/*
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 134d5a11eb2205..4bf949a89d0d6d 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -1165,11 +1165,9 @@ xfs_qm_dqusage_adjust(
->  	if (XFS_IS_REALTIME_INODE(ip)) {
->  		struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
->  
-> -		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -			error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
-> -			if (error)
-> -				goto error0;
-> -		}
-> +		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
-> +		if (error)
-> +			goto error0;
->  
->  		xfs_bmap_count_leaves(ifp, &rtblks);
->  	}
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 323506a6b33947..4dd4af6ac2ef53 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1392,11 +1392,9 @@ xfs_reflink_inode_has_shared_extents(
->  	int				error;
->  
->  	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> -		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
-> -		if (error)
-> -			return error;
-> -	}
-> +	error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
-> +	if (error)
-> +		return error;
->  
->  	*has_shared = false;
->  	found = xfs_iext_lookup_extent(ip, ifp, 0, &icur, &got);
-> -- 
-> 2.30.1
+> Now the problem is in this way read / page fault / readahead can
+> instantiate pages in page cache with potentially stale data (if blocks
+> get quickly reused). Avoiding this race is not simple - page locks do
+> not work because we want to make sure there are *no* pages in given
+> range. inode->i_rwsem does not work because page fault happens under
+> mmap_sem which ranks below inode->i_rwsem. Also using it for reads makes
+> the performance for mixed read-write workloads suffer.
 > 
+> So create a new rw_semaphore in the inode - i_mapping_sem - that
+> protects adding of pages to page cache for page faults / reads /
+> readahead.
+> 
+> Signed-off-by: Jan Kara <jack@suse.cz>
+....
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index bd7c50e060a9..bc82a7856d3e 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -77,7 +77,8 @@
+>   *        ->i_pages lock
+>   *
+>   *  ->i_rwsem
+> - *    ->i_mmap_rwsem		(truncate->unmap_mapping_range)
+> + *    ->i_mapping_sem		(acquired by fs in truncate path)
+> + *      ->i_mmap_rwsem		(truncate->unmap_mapping_range)
+
+This is now officially a confusing mess.
+
+We have inode->i_mapping that points to an address space, which has
+an internal i_mmap variable and an i_mmap_rwsem that serialises
+access to the i_mmap tree.
+
+Now we have a inode->i_mapping_sem (which is actually a rwsem, not a
+sem) that sorta serialises additions to the mapping tree
+(inode->i_mapping->i_pages) against truncate, but it does not
+serialise accesses to the rest of the inode->i_mapping structure
+itself despite the similarlities in naming.
+
+Then we have the inode_lock() API and the i_mmap_lock() API that
+wrap around the i_rwsem and i_mmap_rwsem, but there's no API for
+inode_mapping_lock()...
+
+THen we have the mmap_lock in the page fault path as well, which is
+also an rwsem despite the name, and that protects something
+completely different to the i_mmap and the i_mapping.
+
+IOWs, we have 4 layers of entwined structures and locking here
+that pretty much all have the same name but protect different things
+and not always the obvious thing the name suggests. This makes it
+really difficult to actually read the code and understand that the
+correct lock is being used in the correct place...
+
+
+>   *
+>   *  ->mmap_lock
+>   *    ->i_mmap_rwsem
+> @@ -85,7 +86,8 @@
+>   *        ->i_pages lock	(arch-dependent flush_dcache_mmap_lock)
+>   *
+>   *  ->mmap_lock
+> - *    ->lock_page		(access_process_vm)
+> + *    ->i_mapping_sem		(filemap_fault)
+> + *      ->lock_page		(filemap_fault, access_process_vm)
+>   *
+>   *  ->i_rwsem			(generic_perform_write)
+>   *    ->mmap_lock		(fault_in_pages_readable->do_page_fault)
+> @@ -2276,16 +2278,28 @@ static int filemap_update_page(struct kiocb *iocb,
+>  {
+>  	int error;
+>  
+> +	if (iocb->ki_flags & IOCB_NOWAIT) {
+> +		if (!down_read_trylock(&mapping->host->i_mapping_sem))
+> +			return -EAGAIN;
+> +	} else {
+> +		down_read(&mapping->host->i_mapping_sem);
+> +	}
+
+We really need a lock primitive for this. The number of times this
+exact lock pattern is being replicated all through the IO path is
+getting out of hand.
+
+static inline bool
+down_read_try_or_lock(struct rwsem *sem, bool try)
+{
+	if (try) {
+		if (!down_read_trylock(sem))
+			return false;
+	} else {
+		down_read(&mapping->host->i_mapping_sem);
+	}
+	return true;
+}
+
+and the callers become:
+
+	if (!down_read_try_or_lock(sem, (iocb->ki_flags & IOCB_NOWAIT)))
+		return -EAGAIN;
+
+We can do the same with mutex_try_or_lock(), down_try_or_lock(), etc
+and we don't need to rely on cargo cult knowledge to propagate this
+pattern anymore. Because I'm betting relatively few people actually
+know why the code is written this way because the only place it is
+documented is in an XFS commit message....
+
+Doing this is a separate cleanup, though, and not something that
+needs to be done in this patchset.
+
+> index c5b0457415be..ac5bb50b3a4c 100644
+> --- a/mm/readahead.c
+> +++ b/mm/readahead.c
+> @@ -192,6 +192,7 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
+>  	 */
+>  	unsigned int nofs = memalloc_nofs_save();
+>  
+> +	down_read(&mapping->host->i_mapping_sem);
+>  	/*
+>  	 * Preallocate as many pages as we will need.
+>  	 */
+
+I can't say I'm a great fan of having the mapping reach back up to
+the host to lock the host. THis seems the wrong way around to me
+given that most of the locking in the IO path is in "host locks
+mapping" and "mapping locks internal mapping structures" order...
+
+I also come back to the naming confusion here, in that when we look
+at this in long hand from the inode perspective, this chain actually
+looks like:
+
+	lock(inode->i_mapping->inode->i_mapping_sem)
+
+i.e. the mapping is reaching back up outside it's scope to lock
+itself against other inode->i_mapping operations. Smells of layering
+violations to me.
+
+So, next question: should this truncate semanphore actually be part
+of the address space, not the inode? This patch is actually moving
+the page fault serialisation from the inode into the address space
+operations when page faults and page cache operations are done, so
+maybe the lock should also make that move? That would help clear up
+the naming problem, because now we can name it based around what it
+serialises in the address space, not the address space as a whole...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
