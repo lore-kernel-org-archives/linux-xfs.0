@@ -2,211 +2,231 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0B39C433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 00:01:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCD48C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 00:05:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8401A61246
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 00:01:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94F8C6128E
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 00:05:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230244AbhDNABi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Apr 2021 20:01:38 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:42794 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229747AbhDNABh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Apr 2021 20:01:37 -0400
-Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id ECEA01042B72;
-        Wed, 14 Apr 2021 10:01:14 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lWSy1-006oBD-BU; Wed, 14 Apr 2021 10:01:13 +1000
-Date:   Wed, 14 Apr 2021 10:01:13 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Christoph Hellwig <hch@infradead.org>,
-        Amir Goldstein <amir73il@gmail.com>
-Subject: Re: [PATCH 2/7] mm: Protect operations adding pages to page cache
- with i_mapping_lock
-Message-ID: <20210414000113.GG63242@dread.disaster.area>
-References: <20210413105205.3093-1-jack@suse.cz>
- <20210413112859.32249-2-jack@suse.cz>
+        id S229747AbhDNAGF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Apr 2021 20:06:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54024 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232167AbhDNAGD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Apr 2021 20:06:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5FB2F61246;
+        Wed, 14 Apr 2021 00:05:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1618358743;
+        bh=bG1wGr1+8KePAL///ru1gYThdWq1MEgxAr2K9zxvxa4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=tmWiqsfVXpeQC7XBlAmiSe8YG5Jxw4BghexCj2XSiA++1f1bEfs3uZHFl7iM/aOPZ
+         Vp0MTUthGg7yRzu7f5qsGY1mnsji8xPZaYMqeBH04i5dN0hFWcqcHl4/C2sKQpFPfq
+         uRWzRFzCGVgPdZGNL1FS+/gBpfnD/x8n+TbWNwMvRkEcJ/uvDxp4zmZKllsanAwemB
+         LxyNJuKjER7O2pCNQ28YCCzFd1laAUI0Hmtym1K/fhkgMJvYYP35VufK6cJfw10vvK
+         ruvgPrNGqPBKXI9PQOmg6xIN3aBIRTOeGz2/9byrhSGgODXkmDzXXRRSJBbO2RfbCT
+         QN3Donwm46zUg==
+Date:   Tue, 13 Apr 2021 17:05:42 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/7] xfs: rename and simplify xfs_bmap_one_block
+Message-ID: <20210414000542.GP3957620@magnolia>
+References: <20210412133819.2618857-1-hch@lst.de>
+ <20210412133819.2618857-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210413112859.32249-2-jack@suse.cz>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_f
-        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
-        a=kj9zAlcOel0A:10 a=3YhXtTcJ-WEA:10 a=7-415B0cAAAA:8
-        a=DX6uKfG-f7m7lB0TV10A:9 a=zNJWZbXuTLNWGvKL:21 a=zPXtcYt7zDS9-pWJ:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210412133819.2618857-3-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 13, 2021 at 01:28:46PM +0200, Jan Kara wrote:
-> Currently, serializing operations such as page fault, read, or readahead
-> against hole punching is rather difficult. The basic race scheme is
-> like:
+On Mon, Apr 12, 2021 at 03:38:14PM +0200, Christoph Hellwig wrote:
+> xfs_bmap_one_block is only called for the attribute fork.  Move it to
+> xfs_attr.c, drop the unused whichfork argument and code only executed for
+> the data fork and rename the result to xfs_attr_is_leaf.
 > 
-> fallocate(FALLOC_FL_PUNCH_HOLE)			read / fault / ..
->   truncate_inode_pages_range()
-> 						  <create pages in page
-> 						   cache here>
->   <update fs block mapping and free blocks>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 30 +++++++++++++++++++++++++-----
+>  fs/xfs/libxfs/xfs_attr.h |  1 +
+>  fs/xfs/libxfs/xfs_bmap.c | 32 --------------------------------
+>  fs/xfs/libxfs/xfs_bmap.h |  1 -
+>  fs/xfs/xfs_attr_list.c   |  2 +-
+>  5 files changed, 27 insertions(+), 39 deletions(-)
 > 
-> Now the problem is in this way read / page fault / readahead can
-> instantiate pages in page cache with potentially stale data (if blocks
-> get quickly reused). Avoiding this race is not simple - page locks do
-> not work because we want to make sure there are *no* pages in given
-> range. inode->i_rwsem does not work because page fault happens under
-> mmap_sem which ranks below inode->i_rwsem. Also using it for reads makes
-> the performance for mixed read-write workloads suffer.
-> 
-> So create a new rw_semaphore in the inode - i_mapping_sem - that
-> protects adding of pages to page cache for page faults / reads /
-> readahead.
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-....
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index bd7c50e060a9..bc82a7856d3e 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -77,7 +77,8 @@
->   *        ->i_pages lock
->   *
->   *  ->i_rwsem
-> - *    ->i_mmap_rwsem		(truncate->unmap_mapping_range)
-> + *    ->i_mapping_sem		(acquired by fs in truncate path)
-> + *      ->i_mmap_rwsem		(truncate->unmap_mapping_range)
-
-This is now officially a confusing mess.
-
-We have inode->i_mapping that points to an address space, which has
-an internal i_mmap variable and an i_mmap_rwsem that serialises
-access to the i_mmap tree.
-
-Now we have a inode->i_mapping_sem (which is actually a rwsem, not a
-sem) that sorta serialises additions to the mapping tree
-(inode->i_mapping->i_pages) against truncate, but it does not
-serialise accesses to the rest of the inode->i_mapping structure
-itself despite the similarlities in naming.
-
-Then we have the inode_lock() API and the i_mmap_lock() API that
-wrap around the i_rwsem and i_mmap_rwsem, but there's no API for
-inode_mapping_lock()...
-
-THen we have the mmap_lock in the page fault path as well, which is
-also an rwsem despite the name, and that protects something
-completely different to the i_mmap and the i_mapping.
-
-IOWs, we have 4 layers of entwined structures and locking here
-that pretty much all have the same name but protect different things
-and not always the obvious thing the name suggests. This makes it
-really difficult to actually read the code and understand that the
-correct lock is being used in the correct place...
-
-
->   *
->   *  ->mmap_lock
->   *    ->i_mmap_rwsem
-> @@ -85,7 +86,8 @@
->   *        ->i_pages lock	(arch-dependent flush_dcache_mmap_lock)
->   *
->   *  ->mmap_lock
-> - *    ->lock_page		(access_process_vm)
-> + *    ->i_mapping_sem		(filemap_fault)
-> + *      ->lock_page		(filemap_fault, access_process_vm)
->   *
->   *  ->i_rwsem			(generic_perform_write)
->   *    ->mmap_lock		(fault_in_pages_readable->do_page_fault)
-> @@ -2276,16 +2278,28 @@ static int filemap_update_page(struct kiocb *iocb,
->  {
->  	int error;
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 902e5f7e664231..fd61c67f573925 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -70,6 +70,26 @@ xfs_inode_hasattr(
+>  	return 1;
+>  }
 >  
-> +	if (iocb->ki_flags & IOCB_NOWAIT) {
-> +		if (!down_read_trylock(&mapping->host->i_mapping_sem))
-> +			return -EAGAIN;
-> +	} else {
-> +		down_read(&mapping->host->i_mapping_sem);
-> +	}
+> +/*
+> + * Returns true if the there is exactly only block in the attr fork, in which
+> + * case the attribute fork consists of a single leaf block entry.
+> + */
+> +bool
+> +xfs_attr_is_leaf(
+> +	struct xfs_inode	*ip)
+> +{
+> +	struct xfs_ifork	*ifp = ip->i_afp;
+> +	struct xfs_iext_cursor	icur;
+> +	struct xfs_bmbt_irec	imap;
+> +
+> +	if (ifp->if_nextents != 1 || ifp->if_format != XFS_DINODE_FMT_EXTENTS)
+> +		return false;
+> +
+> +	xfs_iext_first(ifp, &icur);
+> +	xfs_iext_get_extent(ifp, &icur, &imap);
+> +	return imap.br_startoff == 0 && imap.br_blockcount == 1;
 
-We really need a lock primitive for this. The number of times this
-exact lock pattern is being replicated all through the IO path is
-getting out of hand.
+/me kinda wonders if this ought to be mp->m_attr_geo->fsbcount, but
+seeing as adding support for large xattr blocks would require a full
+audit anyway, it's probably not worth fussing over.
 
-static inline bool
-down_read_try_or_lock(struct rwsem *sem, bool try)
-{
-	if (try) {
-		if (!down_read_trylock(sem))
-			return false;
-	} else {
-		down_read(&mapping->host->i_mapping_sem);
-	}
-	return true;
-}
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-and the callers become:
+--D
 
-	if (!down_read_try_or_lock(sem, (iocb->ki_flags & IOCB_NOWAIT)))
-		return -EAGAIN;
-
-We can do the same with mutex_try_or_lock(), down_try_or_lock(), etc
-and we don't need to rely on cargo cult knowledge to propagate this
-pattern anymore. Because I'm betting relatively few people actually
-know why the code is written this way because the only place it is
-documented is in an XFS commit message....
-
-Doing this is a separate cleanup, though, and not something that
-needs to be done in this patchset.
-
-> index c5b0457415be..ac5bb50b3a4c 100644
-> --- a/mm/readahead.c
-> +++ b/mm/readahead.c
-> @@ -192,6 +192,7 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
->  	 */
->  	unsigned int nofs = memalloc_nofs_save();
+> +}
+> +
+>  /*========================================================================
+>   * Overall external interface routines.
+>   *========================================================================*/
+> @@ -89,7 +109,7 @@ xfs_attr_get_ilocked(
 >  
-> +	down_read(&mapping->host->i_mapping_sem);
+>  	if (args->dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL)
+>  		return xfs_attr_shortform_getvalue(args);
+> -	if (xfs_bmap_one_block(args->dp, XFS_ATTR_FORK))
+> +	if (xfs_attr_is_leaf(args->dp))
+>  		return xfs_attr_leaf_get(args);
+>  	return xfs_attr_node_get(args);
+>  }
+> @@ -293,7 +313,7 @@ xfs_attr_set_args(
+>  			return error;
+>  	}
+>  
+> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+> +	if (xfs_attr_is_leaf(dp)) {
+>  		error = xfs_attr_leaf_addname(args);
+>  		if (error != -ENOSPC)
+>  			return error;
+> @@ -347,7 +367,7 @@ xfs_has_attr(
+>  		return xfs_attr_sf_findname(args, NULL, NULL);
+>  	}
+>  
+> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+> +	if (xfs_attr_is_leaf(dp)) {
+>  		error = xfs_attr_leaf_hasname(args, &bp);
+>  
+>  		if (bp)
+> @@ -374,7 +394,7 @@ xfs_attr_remove_args(
+>  	} else if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL) {
+>  		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+>  		error = xfs_attr_shortform_remove(args);
+> -	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+> +	} else if (xfs_attr_is_leaf(dp)) {
+>  		error = xfs_attr_leaf_removename(args);
+>  	} else {
+>  		error = xfs_attr_node_removename(args);
+> @@ -1283,7 +1303,7 @@ xfs_attr_node_removename(
 >  	/*
->  	 * Preallocate as many pages as we will need.
+>  	 * If the result is small enough, push it all into the inode.
 >  	 */
-
-I can't say I'm a great fan of having the mapping reach back up to
-the host to lock the host. THis seems the wrong way around to me
-given that most of the locking in the IO path is in "host locks
-mapping" and "mapping locks internal mapping structures" order...
-
-I also come back to the naming confusion here, in that when we look
-at this in long hand from the inode perspective, this chain actually
-looks like:
-
-	lock(inode->i_mapping->inode->i_mapping_sem)
-
-i.e. the mapping is reaching back up outside it's scope to lock
-itself against other inode->i_mapping operations. Smells of layering
-violations to me.
-
-So, next question: should this truncate semanphore actually be part
-of the address space, not the inode? This patch is actually moving
-the page fault serialisation from the inode into the address space
-operations when page faults and page cache operations are done, so
-maybe the lock should also make that move? That would help clear up
-the naming problem, because now we can name it based around what it
-serialises in the address space, not the address space as a whole...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+> +	if (xfs_attr_is_leaf(dp))
+>  		error = xfs_attr_node_shrink(args, state);
+>  
+>  out:
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 3e97a935e7121f..2b1f61987a9dec 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -85,6 +85,7 @@ int xfs_attr_inactive(struct xfs_inode *dp);
+>  int xfs_attr_list_ilocked(struct xfs_attr_list_context *);
+>  int xfs_attr_list(struct xfs_attr_list_context *);
+>  int xfs_inode_hasattr(struct xfs_inode *ip);
+> +bool xfs_attr_is_leaf(struct xfs_inode *ip);
+>  int xfs_attr_get_ilocked(struct xfs_da_args *args);
+>  int xfs_attr_get(struct xfs_da_args *args);
+>  int xfs_attr_set(struct xfs_da_args *args);
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 1b1b58af41fa7f..e32b8228d9cc2e 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1441,38 +1441,6 @@ xfs_bmap_last_offset(
+>  	return 0;
+>  }
+>  
+> -/*
+> - * Returns whether the selected fork of the inode has exactly one
+> - * block or not.  For the data fork we check this matches i_disk_size,
+> - * implying the file's range is 0..bsize-1.
+> - */
+> -int					/* 1=>1 block, 0=>otherwise */
+> -xfs_bmap_one_block(
+> -	struct xfs_inode	*ip,		/* incore inode */
+> -	int			whichfork)	/* data or attr fork */
+> -{
+> -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> -	int			rval;		/* return value */
+> -	struct xfs_bmbt_irec	s;		/* internal version of extent */
+> -	struct xfs_iext_cursor icur;
+> -
+> -#ifndef DEBUG
+> -	if (whichfork == XFS_DATA_FORK)
+> -		return XFS_ISIZE(ip) == ip->i_mount->m_sb.sb_blocksize;
+> -#endif	/* !DEBUG */
+> -	if (ifp->if_nextents != 1)
+> -		return 0;
+> -	if (ifp->if_format != XFS_DINODE_FMT_EXTENTS)
+> -		return 0;
+> -	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
+> -	xfs_iext_first(ifp, &icur);
+> -	xfs_iext_get_extent(ifp, &icur, &s);
+> -	rval = s.br_startoff == 0 && s.br_blockcount == 1;
+> -	if (rval && whichfork == XFS_DATA_FORK)
+> -		ASSERT(XFS_ISIZE(ip) == ip->i_mount->m_sb.sb_blocksize);
+> -	return rval;
+> -}
+> -
+>  /*
+>   * Extent tree manipulation functions used during allocation.
+>   */
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index a49df4092c304b..f9a390ecfb1d9a 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -200,7 +200,6 @@ int	xfs_bmap_last_before(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		xfs_fileoff_t *last_block, int whichfork);
+>  int	xfs_bmap_last_offset(struct xfs_inode *ip, xfs_fileoff_t *unused,
+>  		int whichfork);
+> -int	xfs_bmap_one_block(struct xfs_inode *ip, int whichfork);
+>  int	xfs_bmapi_read(struct xfs_inode *ip, xfs_fileoff_t bno,
+>  		xfs_filblks_t len, struct xfs_bmbt_irec *mval,
+>  		int *nmap, int flags);
+> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+> index 8f8837fe21cf02..25dcc98d50e6da 100644
+> --- a/fs/xfs/xfs_attr_list.c
+> +++ b/fs/xfs/xfs_attr_list.c
+> @@ -514,7 +514,7 @@ xfs_attr_list_ilocked(
+>  		return 0;
+>  	if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL)
+>  		return xfs_attr_shortform_list(context);
+> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+> +	if (xfs_attr_is_leaf(dp))
+>  		return xfs_attr_leaf_list(context);
+>  	return xfs_attr_node_list(context);
+>  }
+> -- 
+> 2.30.1
+> 
