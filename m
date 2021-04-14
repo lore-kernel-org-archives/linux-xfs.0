@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0203C43460
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 01:04:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9AABC433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 01:04:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD6A3613CE
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 01:04:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EE94613C3
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 01:04:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348954AbhDNBFE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Apr 2021 21:05:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37872 "EHLO mail.kernel.org"
+        id S1348957AbhDNBFK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Apr 2021 21:05:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37914 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1345256AbhDNBFD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Apr 2021 21:05:03 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D6AB1613B6;
-        Wed, 14 Apr 2021 01:04:42 +0000 (UTC)
+        id S1348955AbhDNBFJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Apr 2021 21:05:09 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2D16B613C0;
+        Wed, 14 Apr 2021 01:04:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618362283;
-        bh=Q9aUOqxIhO69rVteC88rMmwi+RM/8L0Kplu/0cIU6t0=;
+        s=k20201202; t=1618362289;
+        bh=NlCVr1nnQvGnwftU1uPqeOEIoypN0RecoAkuzE9lFbw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=LMb8A6Enf9nqXID8nn0PfWeV6ccwpcY0a0TXwDhHCsDpviHKpnSKjkv1HWhGTJSS6
-         KivCIv3chsHROOADAky4DcyNmdKUhUTvlh7q8GWfPTt8w+gaAs6PzvSctkRcKP3jLB
-         qH9tPzEFs+IQkJQT9Nwf1WVbsH57qbHh9+Et0+hGHE76GazWuqKJP8vApS0D5VDCYk
-         hDOoQjBSzuIOSKqz87TorCjpyuvR8KjwJQAzcov9JBOAAxNHSlhoHKl7Fco2OgDVwJ
-         hs+e7tuEleWrzPA0ebY+1rHVBokxsAoQ+D1FW+6hs4S6wqwvBZClYr6jfixihaHyiE
-         kmAUE2TudHd3Q==
-Subject: [PATCH 2/9] generic/563: selectively remove the io cgroup controller
+        b=m8WZS7EuctfwnIXPtDtV7FrLhSSXDsBuEbse3dDJ0KvsPm26mGUMBk3K4rbxDNVdv
+         Rd36i618RCO2ojf6k7q0w+Gp21mQ1AdBs9v+qa+4G13GhccRroDcHCez6ZYYNaZwwt
+         CbGJ+6SJ0HkCXlyxApBEV+4lkYGDjGBKgBjNhH1k+wUa3j1cCzyqyjjvjejMFuipGW
+         G1/cy8dyJ4k3oG2yULQC5DBRKP+RaEF9kcVYgjqjo6qmNnqzL7Yr+AT95DFxiqJEGn
+         IF3MpRvwSVew9SXETcgGn3czj+NWCilxzRJYE4mSG23TZ6PUQbrMrNNPl53+kqooFk
+         oNA31Ea/Y+0oQ==
+Subject: [PATCH 3/9] xfs/521,530: refactor scratch fs check
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 13 Apr 2021 18:04:42 -0700
-Message-ID: <161836228218.2754991.5899063640535008629.stgit@magnolia>
+Date:   Tue, 13 Apr 2021 18:04:48 -0700
+Message-ID: <161836228828.2754991.13327862649701948223.stgit@magnolia>
 In-Reply-To: <161836227000.2754991.9697150788054520169.stgit@magnolia>
 References: <161836227000.2754991.9697150788054520169.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,44 +49,40 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If a system configuration tool such as systemd sets up the io cgroup
-controller for its own purposes, it's possible that the last line of
-this test will not be able to remove the io controller from the system
-configuration.  This causes the test to fail even though the inability
-to tear down systemd should not be considered (in this case) a failure.
-
-Change this test to set the "io" component of subtree control back to
-whatever it was when the test started.
+Use the existing _check_scratch_fs helper to check the (modified)
+scratch filesystem in these tests.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/generic/563 |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ tests/xfs/521 |    2 +-
+ tests/xfs/530 |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/tests/generic/563 b/tests/generic/563
-index b113eacf..fe7394c0 100755
---- a/tests/generic/563
-+++ b/tests/generic/563
-@@ -103,6 +103,9 @@ sminor=$((0x`stat -L -c %T $LOOP_DEV`))
- _mkfs_dev $LOOP_DEV >> $seqres.full 2>&1
- _mount $LOOP_DEV $SCRATCH_MNT || _fail "mount failed"
+diff --git a/tests/xfs/521 b/tests/xfs/521
+index e6c417b8..b8026d45 100755
+--- a/tests/xfs/521
++++ b/tests/xfs/521
+@@ -75,7 +75,7 @@ echo "Create more copies to make sure the bitmap really works"
+ cp -p $testdir/original $testdir/copy3
  
-+drop_io_cgroup=
-+grep -q -w io $cgdir/cgroup.subtree_control || drop_io_cgroup=1
-+
- echo "+io" > $cgdir/cgroup.subtree_control || _fail "subtree control"
- 
- # Read and write from a single group.
-@@ -143,7 +146,9 @@ $XFS_IO_PROG -c fsync $SCRATCH_MNT/file
- check_cg $cgdir/$seq-cg $iosize $iosize
- check_cg $cgdir/$seq-cg-2 0 0
- 
--echo "-io" > $cgdir/cgroup.subtree_control || _fail "subtree control"
-+if [ "$drop_io_cgroup" = 1 ]; then
-+	echo "-io" > $cgdir/cgroup.subtree_control || _fail "subtree control"
-+fi
+ echo "Check filesystem"
+-_check_xfs_filesystem $SCRATCH_DEV none $rtdev
++_check_scratch_fs
  
  # success, all done
  status=0
+diff --git a/tests/xfs/530 b/tests/xfs/530
+index 65c17af2..0e4dd6b5 100755
+--- a/tests/xfs/530
++++ b/tests/xfs/530
+@@ -114,7 +114,7 @@ for rtino in rbmino rsumino; do
+ done
+ 
+ echo "Check filesystem"
+-_check_xfs_filesystem $SCRATCH_DEV none $rtdev
++_check_scratch_fs
+ 
+ losetup -d $rtdev
+ rm -f $TEST_DIR/$seq.rtvol
 
