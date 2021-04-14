@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0663FC43460
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 01:05:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7D92C43460
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 01:05:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E22F5613CE
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 01:05:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB3CA613C0
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 01:05:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348965AbhDNBFl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Apr 2021 21:05:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38082 "EHLO mail.kernel.org"
+        id S1348967AbhDNBFr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Apr 2021 21:05:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38114 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1348955AbhDNBFl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Apr 2021 21:05:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BFF00613BD;
-        Wed, 14 Apr 2021 01:05:20 +0000 (UTC)
+        id S231892AbhDNBFr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Apr 2021 21:05:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B5CDE613B6;
+        Wed, 14 Apr 2021 01:05:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618362320;
-        bh=g5hpyrx0j8qmL9uXoi8Kt2ksDIykdu4GIn/sovXBWJ8=;
+        s=k20201202; t=1618362326;
+        bh=ciw9XawiOHA/nO5Uu28ulUUKiFo2Lyl5PEG2yeWAXww=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=VB5RL7ug828ZNo/2DrzRzuFUOOuo7YGLPyH90QTCegVIrGp3VoUrEXApeDqsKqj4D
-         RVTz4QU/f6yHMHsfKWe5iuNBNYSSDJsfwvJyrfgMHd6fm5M5k7LnYFcLL7XXtYgj5l
-         ZBd6roGFJ6wdTkVZeU4T1ZLJ6YLH18tb5rRo1d9pDiq8t0GLdsPll7ncXcdDV8sjwH
-         DCzUluOJYObIHhqazr7gSYi5FYw9xpQBwDhJ6ODdtN1yBBbPqp0D2OSiohdPZ+apo1
-         sESzkT+NiUgpKWT2a5NzmLS8Po3R/97nDHao0h+u/DTdv/7GnYbXrJV7pRAc4fqJSM
-         VbAj0dc/wpDpA==
-Subject: [PATCH 8/9] generic/{094,225}: skip test when the xfs rt extent size
- is larger than 1 fsb
+        b=SLwP6qk6J6gPX6hvDwihGeXYWKnkItH0q7nbZMEN6qCimHtK2gJcfiEYOau72wj9u
+         lQIkXull1mn3BPbgQQoCYYKQ0peYHZngMLTjjdMN5kkOGcWvOm3HlmOhI7IhaKyv1o
+         9dceVIF0nI0PO7NMMWO8GFbTW/N+9AxlPHfqJBBRsMQff+8opH1NAdzmpeY/uFw1WN
+         21oBBibpi4d+CdodazHLsUQMF1CQUO0kTd6/BWxcfvzCODZN76/YtilnxFwD0+FWqK
+         uhItEgksrCzLxNjR+NK8rZmVUlRR18p8IUn8u6fyV7+Qht1Sqp5XhUVc6EnajKKZN0
+         ASUxm5sHM71WQ==
+Subject: [PATCH 9/9] xfs/305: make sure that fsstress is still running when we
+ quotaoff
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 13 Apr 2021 18:05:20 -0700
-Message-ID: <161836232004.2754991.941115577343319256.stgit@magnolia>
+Date:   Tue, 13 Apr 2021 18:05:26 -0700
+Message-ID: <161836232608.2754991.16417283237743979525.stgit@magnolia>
 In-Reply-To: <161836227000.2754991.9697150788054520169.stgit@magnolia>
 References: <161836227000.2754991.9697150788054520169.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,75 +50,28 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-These two tests call various fallocate modes on a file and compare the
-FIEMAP output to some golden output.  Unfortunately, the golden output
-doesn't take into account the possibility that (on XFS) the files could be
-created on a realtime volume with a large rt extent size set.
-
-Under such a configuration, fpunch operations that are aligned to the fs
-block size but not the rt extent size simply result in those blocks
-being set to unwritten status.  Unfortunately, the test expects holes
-and fails.  Therefore, detect the situation and skip the tests.
+Greatly increase the number of fs ops that fsstress is supposed to run
+in in this test so that we can ensure that it's still running when the
+quotaoff gets run.  1000 might have been sufficient in 2013, but it
+isn't now.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/rc         |   10 ++++++++++
- tests/generic/094 |    5 +++++
- tests/generic/225 |    5 +++++
- 3 files changed, 20 insertions(+)
+ tests/xfs/305 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/common/rc b/common/rc
-index bb54df56..b5e930de 100644
---- a/common/rc
-+++ b/common/rc
-@@ -4062,6 +4062,16 @@ _get_block_size()
- 	stat -f -c %S $1
- }
+diff --git a/tests/xfs/305 b/tests/xfs/305
+index fdb48a1d..9a3f0e03 100755
+--- a/tests/xfs/305
++++ b/tests/xfs/305
+@@ -50,7 +50,7 @@ _exercise()
+ 	_qmount
+ 	mkdir -p $QUOTA_DIR
  
-+# Require that the fundamental allocation unit of a file is the same as the
-+# filesystem block size.
-+_require_file_block_size_equals_fs_block_size()
-+{
-+	local file_alloc_unit="$(_get_file_block_size $1)"
-+	local fs_block_size="$(_get_block_size $1)"
-+	test "$file_alloc_unit" != "$fs_block_size" && \
-+		_notrun "File allocation unit is larger than a filesystem block"
-+}
-+
- get_page_size()
- {
- 	echo $(getconf PAGE_SIZE)
-diff --git a/tests/generic/094 b/tests/generic/094
-index d371e951..8c292473 100755
---- a/tests/generic/094
-+++ b/tests/generic/094
-@@ -40,6 +40,11 @@ fiemapfile=$SCRATCH_MNT/$seq.fiemap
- 
- _require_test_program "fiemap-tester"
- 
-+# FIEMAP test doesn't like finding unwritten blocks after it punches out
-+# a partial rt extent.
-+test "$FSTYP" = "xfs" && \
-+	_require_file_block_size_equals_fs_block_size $fiemapfile
-+
- seed=`date +%s`
- 
- echo "using seed $seed" >> $seqres.full
-diff --git a/tests/generic/225 b/tests/generic/225
-index 1228a256..fac688df 100755
---- a/tests/generic/225
-+++ b/tests/generic/225
-@@ -40,6 +40,11 @@ fiemaplog=$SCRATCH_MNT/$seq.log
- 
- _require_test_program "fiemap-tester"
- 
-+# FIEMAP test doesn't like finding unwritten blocks after it punches out
-+# a partial rt extent.
-+test "$FSTYP" = "xfs" && \
-+	_require_file_block_size_equals_fs_block_size $fiemapfile
-+
- seed=`date +%s`
- 
- echo "using seed $seed" >> $fiemaplog
+-	$FSSTRESS_PROG -d $QUOTA_DIR -n 1000 -p 100 $FSSTRESS_AVOID >/dev/null 2>&1 &
++	$FSSTRESS_PROG -d $QUOTA_DIR -n 1000000 -p 100 $FSSTRESS_AVOID >/dev/null 2>&1 &
+ 	sleep 10
+ 	xfs_quota -x -c "off -$type" $SCRATCH_DEV
+ 	sleep 5
 
