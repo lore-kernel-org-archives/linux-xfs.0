@@ -7,319 +7,409 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DA2DC43460
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 00:33:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9EE8C433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 00:37:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D1CA7613C0
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 00:33:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BD36613BA
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Apr 2021 00:37:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348857AbhDNAdf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Apr 2021 20:33:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59164 "EHLO mail.kernel.org"
+        id S1348845AbhDNAiG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Apr 2021 20:38:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60254 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1348308AbhDNAde (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Apr 2021 20:33:34 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5EAA461249;
-        Wed, 14 Apr 2021 00:33:14 +0000 (UTC)
+        id S1348287AbhDNAiF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Apr 2021 20:38:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 742726113E;
+        Wed, 14 Apr 2021 00:37:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618360394;
-        bh=rexnlldfJXr3s59ug1ut0QeN3TqlYceRrqD38x3GCkY=;
+        s=k20201202; t=1618360665;
+        bh=O/wsRTjtJIRwIhGiIRA/JCrIQ19nfhM4U1UklUTId94=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hMinPJlGnMdHPBbAvFDC7zgo2atylo3ONW6tJ2vRwi3fCr18t5InikMaC0KgoN6yk
-         B82vTRAXtn8pjfDmYGxivi7oXwpkifgo7AfTUNzi4pMqkCJGRCBZPPbukIv8brIM+D
-         xqO0UXaX/R/IPe4MHOavH6hXcI2qomyQKvmcq76UTmvwvl6GjbRekkIoZc4AtYYXio
-         a639NgN5LtH5tlpIa1HA9AQ1XbrJ3LccRanBpvJuAec8pBy9V+rU6CZZFBsOI4wdWk
-         sqyMvxm+C1SbtfYFsV+Cy5AsMUkb1WXvKMPMZ4mtAeDPstx7hm0MEcBGixoNXSmV8P
-         mUrICZ3ulGggQ==
-Date:   Tue, 13 Apr 2021 17:33:12 -0700
+        b=jtfF6ptIAHyeyYGBwwm2Lhd0xoK/ie0Iof6X3R9ynrB2+6Va0+j5TH11uG3NEwkYc
+         f59O93evB1VZ9cqHI6EK4aIwp7gmk/ciZ+p8Ah66YZPq7NQGQl2xb77bMCDWj40hQJ
+         As3pzYtPfc4HcZB2nJlslOFy3y9iNKH18gPKovgFjhRZy9llMO0+v541yup8OXpVD3
+         0YX++lurtZs3XgyVx4u8h7ZJjT4pGftyZTX9+6an65bYrehK99EUog2waNm/oE3jSt
+         VNNstbzg8fbV7+9M5tFfzZcGMsqq1XG/uJ0UvJESo9e36eGQ8wA4cfm0aKG23qterL
+         t+Qvy1eLQ4s7w==
+Date:   Tue, 13 Apr 2021 17:37:44 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/7] xfs: remove XFS_IFINLINE
-Message-ID: <20210414003312.GT3957620@magnolia>
+Subject: Re: [PATCH 7/7] xfs: remove XFS_IFEXTENTS
+Message-ID: <20210414003744.GU3957620@magnolia>
 References: <20210412133819.2618857-1-hch@lst.de>
- <20210412133819.2618857-7-hch@lst.de>
+ <20210412133819.2618857-8-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210412133819.2618857-7-hch@lst.de>
+In-Reply-To: <20210412133819.2618857-8-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 12, 2021 at 03:38:18PM +0200, Christoph Hellwig wrote:
-> Just check for an inline format fork instead of the using the equivalent
-> in-memory XFS_IFINLINE flag.
+On Mon, Apr 12, 2021 at 03:38:19PM +0200, Christoph Hellwig wrote:
+> The in-memory XFS_IFEXTENTS is now only used to check if an inode with
+> extents still needs the extents to be read into memory before doing
+> operations that need the extent map.  Add a new xfs_need_iread_extents
+> helper that returns true for btree format forks that do not have any
+> entries in the in-memory extent btree, and use that instead of checking
+> the XFS_IFEXTENTS flag.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks ok,
+The series seems reasonable to me, though I wonder if Dave will have
+strong(er) opinions?
+
+<shrug> Seeing how we already had a go-round where Dave and stumbled
+over each other about the somewhat duplicative flags and format fields
+I'm inclined to take this sooner or later just to eliminate the
+ambiguity...
+
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_attr.c       |  8 ++------
->  fs/xfs/libxfs/xfs_attr_leaf.c  |  9 +++------
->  fs/xfs/libxfs/xfs_bmap.c       |  3 +--
->  fs/xfs/libxfs/xfs_dir2_block.c |  2 +-
->  fs/xfs/libxfs/xfs_dir2_sf.c    | 11 +++++------
->  fs/xfs/libxfs/xfs_inode_fork.c |  1 -
->  fs/xfs/libxfs/xfs_inode_fork.h |  1 -
->  fs/xfs/scrub/symlink.c         |  2 +-
->  fs/xfs/xfs_dir2_readdir.c      |  2 +-
->  fs/xfs/xfs_iops.c              |  4 ++--
->  fs/xfs/xfs_symlink.c           |  4 ++--
->  11 files changed, 18 insertions(+), 29 deletions(-)
+>  fs/xfs/libxfs/xfs_attr_leaf.c  |  4 +---
+>  fs/xfs/libxfs/xfs_bmap.c       | 14 ++------------
+>  fs/xfs/libxfs/xfs_dir2_sf.c    |  1 -
+>  fs/xfs/libxfs/xfs_inode_fork.c |  6 ------
+>  fs/xfs/libxfs/xfs_inode_fork.h | 12 ++++++------
+>  fs/xfs/scrub/bmap.c            |  6 +-----
+>  fs/xfs/xfs_aops.c              |  3 +--
+>  fs/xfs/xfs_bmap_util.c         |  4 ++--
+>  fs/xfs/xfs_inode.c             | 10 ++--------
+>  fs/xfs/xfs_ioctl.c             |  2 +-
+>  fs/xfs/xfs_iomap.c             |  4 ++--
+>  fs/xfs/xfs_symlink.c           |  2 +-
+>  12 files changed, 19 insertions(+), 49 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 43ef85678cba6b..96146f425e503d 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -362,10 +362,8 @@ xfs_has_attr(
->  	if (!xfs_inode_hasattr(dp))
->  		return -ENOATTR;
->  
-> -	if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL) {
-> -		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-> +	if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL)
->  		return xfs_attr_sf_findname(args, NULL, NULL);
-> -	}
->  
->  	if (xfs_attr_is_leaf(dp)) {
->  		error = xfs_attr_leaf_hasname(args, &bp);
-> @@ -389,10 +387,8 @@ xfs_attr_remove_args(
->  	if (!xfs_inode_hasattr(args->dp))
->  		return -ENOATTR;
->  
-> -	if (args->dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL) {
-> -		ASSERT(args->dp->i_afp->if_flags & XFS_IFINLINE);
-> +	if (args->dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL)
->  		return xfs_attr_shortform_remove(args);
-> -	}
->  	if (xfs_attr_is_leaf(args->dp))
->  		return xfs_attr_leaf_removename(args);
->  	return xfs_attr_node_removename(args);
 > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 23e2bf3341a015..1ab7a73b5a9a46 100644
+> index 1ab7a73b5a9a46..556184b6306105 100644
 > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
 > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -654,9 +654,6 @@ xfs_attr_shortform_create(
->  	if (ifp->if_format == XFS_DINODE_FMT_EXTENTS) {
->  		ifp->if_flags &= ~XFS_IFEXTENTS;	/* just in case */
+> @@ -651,10 +651,8 @@ xfs_attr_shortform_create(
+>  	trace_xfs_attr_sf_create(args);
+>  
+>  	ASSERT(ifp->if_bytes == 0);
+> -	if (ifp->if_format == XFS_DINODE_FMT_EXTENTS) {
+> -		ifp->if_flags &= ~XFS_IFEXTENTS;	/* just in case */
+> +	if (ifp->if_format == XFS_DINODE_FMT_EXTENTS)
 >  		ifp->if_format = XFS_DINODE_FMT_LOCAL;
-> -		ifp->if_flags |= XFS_IFINLINE;
-> -	} else {
-> -		ASSERT(ifp->if_flags & XFS_IFINLINE);
->  	}
+> -	}
 >  	xfs_idata_realloc(dp, sizeof(*hdr), XFS_ATTR_FORK);
 >  	hdr = (struct xfs_attr_sf_hdr *)ifp->if_u1.if_data;
-> @@ -733,7 +730,7 @@ xfs_attr_shortform_add(
->  	dp->i_forkoff = forkoff;
->  
->  	ifp = dp->i_afp;
-> -	ASSERT(ifp->if_flags & XFS_IFINLINE);
-> +	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
->  	sf = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
->  	if (xfs_attr_sf_findname(args, &sfe, NULL) == -EEXIST)
->  		ASSERT(0);
-> @@ -851,7 +848,7 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
->  	trace_xfs_attr_sf_lookup(args);
->  
->  	ifp = args->dp->i_afp;
-> -	ASSERT(ifp->if_flags & XFS_IFINLINE);
-> +	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
->  	sf = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
->  	sfe = &sf->list[0];
->  	for (i = 0; i < sf->hdr.count;
-> @@ -878,7 +875,7 @@ xfs_attr_shortform_getvalue(
->  	struct xfs_attr_sf_entry *sfe;
->  	int			i;
->  
-> -	ASSERT(args->dp->i_afp->if_flags == XFS_IFINLINE);
-> +	ASSERT(args->dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL);
->  	sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
->  	sfe = &sf->list[0];
->  	for (i = 0; i < sf->hdr.count;
+>  	memset(hdr, 0, sizeof(*hdr));
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 580b36f19a26f7..0af3edf8443c73 100644
+> index 0af3edf8443c73..7e3b9b01431e57 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -605,7 +605,7 @@ xfs_bmap_btree_to_extents(
+>  
+>  	ASSERT(cur);
+>  	ASSERT(whichfork != XFS_COW_FORK);
+> -	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
+> +	ASSERT(!xfs_need_iread_extents(ifp));
+>  	ASSERT(ifp->if_format == XFS_DINODE_FMT_BTREE);
+>  	ASSERT(be16_to_cpu(rblock->bb_level) == 1);
+>  	ASSERT(be16_to_cpu(rblock->bb_numrecs) == 1);
 > @@ -805,7 +805,6 @@ xfs_bmap_local_to_extents_empty(
 >  	ASSERT(ifp->if_nextents == 0);
 >  
 >  	xfs_bmap_forkoff_reset(ip, whichfork);
-> -	ifp->if_flags &= ~XFS_IFINLINE;
->  	ifp->if_flags |= XFS_IFEXTENTS;
+> -	ifp->if_flags |= XFS_IFEXTENTS;
 >  	ifp->if_u1.if_root = NULL;
 >  	ifp->if_height = 0;
-> @@ -850,7 +849,7 @@ xfs_bmap_local_to_extents(
+>  	ifp->if_format = XFS_DINODE_FMT_EXTENTS;
+> @@ -849,7 +848,6 @@ xfs_bmap_local_to_extents(
 >  
 >  	flags = 0;
 >  	error = 0;
-> -	ASSERT((ifp->if_flags & (XFS_IFINLINE|XFS_IFEXTENTS)) == XFS_IFINLINE);
-> +	ASSERT(!(ifp->if_flags & XFS_IFEXTENTS));
+> -	ASSERT(!(ifp->if_flags & XFS_IFEXTENTS));
 >  	memset(&args, 0, sizeof(args));
 >  	args.tp = tp;
 >  	args.mp = ip->i_mount;
-> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-> index 7824af54637513..75e1421f69c458 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_block.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
-> @@ -1096,7 +1096,7 @@ xfs_dir2_sf_to_block(
+> @@ -1098,7 +1096,6 @@ xfs_bmap_add_attrfork(
+>  	ASSERT(ip->i_afp == NULL);
 >  
->  	trace_xfs_dir2_sf_to_block(args);
+>  	ip->i_afp = xfs_ifork_alloc(XFS_DINODE_FMT_EXTENTS, 0);
+> -	ip->i_afp->if_flags = XFS_IFEXTENTS;
+>  	logflags = 0;
+>  	switch (ip->i_df.if_format) {
+>  	case XFS_DINODE_FMT_LOCAL:
+> @@ -1224,16 +1221,11 @@ xfs_iread_extents(
+>  	struct xfs_btree_cur	*cur;
+>  	int			error;
 >  
-> -	ASSERT(ifp->if_flags & XFS_IFINLINE);
-> +	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
->  	ASSERT(dp->i_disk_size >= offsetof(struct xfs_dir2_sf_hdr, parent));
+> -	if (ifp->if_flags & XFS_IFEXTENTS)
+> +	if (!xfs_need_iread_extents(ifp))
+>  		return 0;
 >  
->  	oldsfp = (xfs_dir2_sf_hdr_t *)ifp->if_u1.if_data;
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  
+> -	if (XFS_IS_CORRUPT(mp, ifp->if_format != XFS_DINODE_FMT_BTREE)) {
+> -		error = -EFSCORRUPTED;
+> -		goto out;
+> -	}
+> -
+>  	ir.loaded = 0;
+>  	xfs_iext_first(ifp, &ir.icur);
+>  	cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
+> @@ -1248,8 +1240,6 @@ xfs_iread_extents(
+>  		goto out;
+>  	}
+>  	ASSERT(ir.loaded == xfs_iext_count(ifp));
+> -
+> -	ifp->if_flags |= XFS_IFEXTENTS;
+>  	return 0;
+>  out:
+>  	xfs_iext_destroy(ifp);
 > diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-> index bd89de61301c85..b031be033838f6 100644
+> index b031be033838f6..46d18bf9d5e158 100644
 > --- a/fs/xfs/libxfs/xfs_dir2_sf.c
 > +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-> @@ -378,7 +378,7 @@ xfs_dir2_sf_addname(
->  
->  	ASSERT(xfs_dir2_sf_lookup(args) == -ENOENT);
->  	dp = args->dp;
-> -	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
-> +	ASSERT(dp->i_df.if_format == XFS_DINODE_FMT_LOCAL);
->  	ASSERT(dp->i_disk_size >= offsetof(struct xfs_dir2_sf_hdr, parent));
->  	ASSERT(dp->i_df.if_bytes == dp->i_disk_size);
->  	ASSERT(dp->i_df.if_u1.if_data != NULL);
-> @@ -830,9 +830,8 @@ xfs_dir2_sf_create(
->  		dp->i_df.if_flags &= ~XFS_IFEXTENTS;	/* just in case */
+> @@ -827,7 +827,6 @@ xfs_dir2_sf_create(
+>  	 * convert it to local format.
+>  	 */
+>  	if (dp->i_df.if_format == XFS_DINODE_FMT_EXTENTS) {
+> -		dp->i_df.if_flags &= ~XFS_IFEXTENTS;	/* just in case */
 >  		dp->i_df.if_format = XFS_DINODE_FMT_LOCAL;
 >  		xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE);
-> -		dp->i_df.if_flags |= XFS_IFINLINE;
 >  	}
-> -	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
-> +	ASSERT(dp->i_df.if_format == XFS_DINODE_FMT_LOCAL);
->  	ASSERT(dp->i_df.if_bytes == 0);
->  	i8count = pino > XFS_DIR2_MAX_SHORT_INUM;
->  	size = xfs_dir2_sf_hdr_size(i8count);
-> @@ -877,7 +876,7 @@ xfs_dir2_sf_lookup(
->  
->  	xfs_dir2_sf_check(args);
->  
-> -	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
-> +	ASSERT(dp->i_df.if_format == XFS_DINODE_FMT_LOCAL);
->  	ASSERT(dp->i_disk_size >= offsetof(struct xfs_dir2_sf_hdr, parent));
->  	ASSERT(dp->i_df.if_bytes == dp->i_disk_size);
->  	ASSERT(dp->i_df.if_u1.if_data != NULL);
-> @@ -954,7 +953,7 @@ xfs_dir2_sf_removename(
->  
->  	trace_xfs_dir2_sf_removename(args);
->  
-> -	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
-> +	ASSERT(dp->i_df.if_format == XFS_DINODE_FMT_LOCAL);
->  	oldsize = (int)dp->i_disk_size;
->  	ASSERT(oldsize >= offsetof(struct xfs_dir2_sf_hdr, parent));
->  	ASSERT(dp->i_df.if_bytes == oldsize);
-> @@ -1053,7 +1052,7 @@ xfs_dir2_sf_replace(
->  
->  	trace_xfs_dir2_sf_replace(args);
->  
-> -	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
-> +	ASSERT(dp->i_df.if_format == XFS_DINODE_FMT_LOCAL);
->  	ASSERT(dp->i_disk_size >= offsetof(struct xfs_dir2_sf_hdr, parent));
->  	ASSERT(dp->i_df.if_bytes == dp->i_disk_size);
->  	ASSERT(dp->i_df.if_u1.if_data != NULL);
 > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 02ad722004d3f4..3f2c16bf82e8c6 100644
+> index 3f2c16bf82e8c6..1d174909f9bdf5 100644
 > --- a/fs/xfs/libxfs/xfs_inode_fork.c
 > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -61,7 +61,6 @@ xfs_init_local_fork(
+> @@ -60,7 +60,6 @@ xfs_init_local_fork(
+>  	}
 >  
 >  	ifp->if_bytes = size;
->  	ifp->if_flags &= ~XFS_IFEXTENTS;
-> -	ifp->if_flags |= XFS_IFINLINE;
+> -	ifp->if_flags &= ~XFS_IFEXTENTS;
 >  }
 >  
 >  /*
+> @@ -150,7 +149,6 @@ xfs_iformat_extents(
+>  			xfs_iext_next(ifp, &icur);
+>  		}
+>  	}
+> -	ifp->if_flags |= XFS_IFEXTENTS;
+>  	return 0;
+>  }
+>  
+> @@ -212,7 +210,6 @@ xfs_iformat_btree(
+>  	 */
+>  	xfs_bmdr_to_bmbt(ip, dfp, XFS_DFORK_SIZE(dip, ip->i_mount, whichfork),
+>  			 ifp->if_broot, size);
+> -	ifp->if_flags &= ~XFS_IFEXTENTS;
+>  
+>  	ifp->if_bytes = 0;
+>  	ifp->if_u1.if_root = NULL;
+> @@ -622,8 +619,6 @@ xfs_iflush_fork(
+>  		break;
+>  
+>  	case XFS_DINODE_FMT_EXTENTS:
+> -		ASSERT((ifp->if_flags & XFS_IFEXTENTS) ||
+> -		       !(iip->ili_fields & extflag[whichfork]));
+>  		if ((iip->ili_fields & extflag[whichfork]) &&
+>  		    (ifp->if_bytes > 0)) {
+>  			ASSERT(ifp->if_nextents > 0);
+> @@ -683,7 +678,6 @@ xfs_ifork_init_cow(
+>  
+>  	ip->i_cowfp = kmem_cache_zalloc(xfs_ifork_zone,
+>  				       GFP_NOFS | __GFP_NOFAIL);
+> -	ip->i_cowfp->if_flags = XFS_IFEXTENTS;
+>  	ip->i_cowfp->if_format = XFS_DINODE_FMT_EXTENTS;
+>  }
+>  
 > diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> index 8ffaa7cc1f7c3f..ac8b2182ce8c57 100644
+> index ac8b2182ce8c57..a6f7897b6887b1 100644
 > --- a/fs/xfs/libxfs/xfs_inode_fork.h
 > +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> @@ -30,7 +30,6 @@ struct xfs_ifork {
+> @@ -22,16 +22,10 @@ struct xfs_ifork {
+>  		char		*if_data;	/* inline file data */
+>  	} if_u1;
+>  	short			if_broot_bytes;	/* bytes allocated for root */
+> -	unsigned char		if_flags;	/* per-fork flags */
+>  	int8_t			if_format;	/* format of this fork */
+>  	xfs_extnum_t		if_nextents;	/* # of extents in this fork */
+>  };
+>  
+> -/*
+> - * Per-fork incore inode flags.
+> - */
+> -#define	XFS_IFEXTENTS	0x02	/* All extent pointers are read in */
+> -
 >  /*
->   * Per-fork incore inode flags.
->   */
-> -#define	XFS_IFINLINE	0x01	/* Inline data is read in */
->  #define	XFS_IFEXTENTS	0x02	/* All extent pointers are read in */
+>   * Worst-case increase in the fork extent count when we're adding a single
+>   * extent to a fork and there's no possibility of splitting an existing mapping.
+> @@ -236,4 +230,10 @@ int xfs_ifork_verify_local_attr(struct xfs_inode *ip);
+>  int xfs_iext_count_may_overflow(struct xfs_inode *ip, int whichfork,
+>  		int nr_to_add);
 >  
->  /*
-> diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
-> index ad7b85e248c78e..599ee277bba2f4 100644
-> --- a/fs/xfs/scrub/symlink.c
-> +++ b/fs/xfs/scrub/symlink.c
-> @@ -51,7 +51,7 @@ xchk_symlink(
->  	}
+> +/* returns true if the fork has extents but they are not read in yet. */
+> +static inline bool xfs_need_iread_extents(struct xfs_ifork *ifp)
+> +{
+> +	return ifp->if_format == XFS_DINODE_FMT_BTREE && ifp->if_height == 0;
+> +}
+> +
+>  #endif	/* __XFS_INODE_FORK_H__ */
+> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> index 924d7e343731de..b5ebf1d1b4db45 100644
+> --- a/fs/xfs/scrub/bmap.c
+> +++ b/fs/xfs/scrub/bmap.c
+> @@ -447,7 +447,7 @@ xchk_bmap_btree(
+>  	int			error;
 >  
->  	/* Inline symlink? */
-> -	if (ifp->if_flags & XFS_IFINLINE) {
-> +	if (ifp->if_format == XFS_DINODE_FMT_LOCAL) {
->  		if (len > XFS_IFORK_DSIZE(ip) ||
->  		    len > strnlen(ifp->if_u1.if_data, XFS_IFORK_DSIZE(ip)))
->  			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index 1d2fe48ad19fb7..da1cc683560c75 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -57,7 +57,7 @@ xfs_dir2_sf_getdents(
->  	xfs_ino_t		ino;
->  	struct xfs_da_geometry	*geo = args->geo;
+>  	/* Load the incore bmap cache if it's not loaded. */
+> -	info->was_loaded = ifp->if_flags & XFS_IFEXTENTS;
+> +	info->was_loaded = !xfs_need_iread_extents(ifp);
 >  
-> -	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
-> +	ASSERT(dp->i_df.if_format == XFS_DINODE_FMT_LOCAL);
->  	ASSERT(dp->i_df.if_bytes == dp->i_disk_size);
->  	ASSERT(dp->i_df.if_u1.if_data != NULL);
->  
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 607b3f263b0644..8f2f74a496bd24 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -519,7 +519,7 @@ xfs_vn_get_link_inline(
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	char			*link;
->  
-> -	ASSERT(ip->i_df.if_flags & XFS_IFINLINE);
-> +	ASSERT(ip->i_df.if_format == XFS_DINODE_FMT_LOCAL);
+>  	error = xfs_iread_extents(sc->tp, ip, whichfork);
+>  	if (!xchk_fblock_process_error(sc, whichfork, 0, &error))
+> @@ -673,10 +673,6 @@ xchk_bmap(
+>  		/* No mappings to check. */
+>  		goto out;
+>  	case XFS_DINODE_FMT_EXTENTS:
+> -		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> -			xchk_fblock_set_corrupt(sc, whichfork, 0);
+> -			goto out;
+> -		}
+>  		break;
+>  	case XFS_DINODE_FMT_BTREE:
+>  		if (whichfork == XFS_COW_FORK) {
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index fb66c5d20d261b..9b08db45ce8549 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -291,8 +291,7 @@ xfs_map_blocks(
+>  	cow_fsb = NULLFILEOFF;
+>  	whichfork = XFS_DATA_FORK;
+>  	xfs_ilock(ip, XFS_ILOCK_SHARED);
+> -	ASSERT(ip->i_df.if_format != XFS_DINODE_FMT_BTREE ||
+> -	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+> +	ASSERT(!xfs_need_iread_extents(&ip->i_df));
 >  
 >  	/*
->  	 * The VFS crashes on a NULL pointer, so return -EFSCORRUPTED if
-> @@ -1401,7 +1401,7 @@ xfs_setup_iops(
->  		inode->i_fop = &xfs_dir_file_operations;
+>  	 * Check if this is offset is covered by a COW extents, and if yes use
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 1c7116abff0d69..a5e9d7d34023f2 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -554,7 +554,7 @@ xfs_bmap_punch_delalloc_range(
+>  	struct xfs_iext_cursor	icur;
+>  	int			error = 0;
+>  
+> -	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
+> +	ASSERT(!xfs_need_iread_extents(ifp));
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
+> @@ -625,7 +625,7 @@ xfs_can_free_eofblocks(
+>  		return false;
+>  
+>  	/* If we haven't read in the extent list, then don't do it now. */
+> -	if (!(ip->i_df.if_flags & XFS_IFEXTENTS))
+> +	if (xfs_need_iread_extents(&ip->i_df))
+>  		return false;
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index fa2d377e251415..17c2d8b18283c9 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -111,8 +111,7 @@ xfs_ilock_data_map_shared(
+>  {
+>  	uint			lock_mode = XFS_ILOCK_SHARED;
+>  
+> -	if (ip->i_df.if_format == XFS_DINODE_FMT_BTREE &&
+> -	    (ip->i_df.if_flags & XFS_IFEXTENTS) == 0)
+> +	if (xfs_need_iread_extents(&ip->i_df))
+>  		lock_mode = XFS_ILOCK_EXCL;
+>  	xfs_ilock(ip, lock_mode);
+>  	return lock_mode;
+> @@ -124,9 +123,7 @@ xfs_ilock_attr_map_shared(
+>  {
+>  	uint			lock_mode = XFS_ILOCK_SHARED;
+>  
+> -	if (ip->i_afp &&
+> -	    ip->i_afp->if_format == XFS_DINODE_FMT_BTREE &&
+> -	    (ip->i_afp->if_flags & XFS_IFEXTENTS) == 0)
+> +	if (ip->i_afp && xfs_need_iread_extents(ip->i_afp))
+>  		lock_mode = XFS_ILOCK_EXCL;
+>  	xfs_ilock(ip, lock_mode);
+>  	return lock_mode;
+> @@ -843,7 +840,6 @@ xfs_init_new_inode(
+>  	case S_IFBLK:
+>  	case S_IFSOCK:
+>  		ip->i_df.if_format = XFS_DINODE_FMT_DEV;
+> -		ip->i_df.if_flags = 0;
+>  		flags |= XFS_ILOG_DEV;
 >  		break;
+>  	case S_IFREG:
+> @@ -855,7 +851,6 @@ xfs_init_new_inode(
+>  		/* FALLTHROUGH */
 >  	case S_IFLNK:
-> -		if (ip->i_df.if_flags & XFS_IFINLINE)
-> +		if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL)
->  			inode->i_op = &xfs_inline_symlink_inode_operations;
->  		else
->  			inode->i_op = &xfs_symlink_inode_operations;
+>  		ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
+> -		ip->i_df.if_flags = XFS_IFEXTENTS;
+>  		ip->i_df.if_bytes = 0;
+>  		ip->i_df.if_u1.if_root = NULL;
+>  		break;
+> @@ -875,7 +870,6 @@ xfs_init_new_inode(
+>  	if (init_xattrs && xfs_sb_version_hasattr(&mp->m_sb)) {
+>  		ip->i_forkoff = xfs_default_attroffset(ip) >> 3;
+>  		ip->i_afp = xfs_ifork_alloc(XFS_DINODE_FMT_EXTENTS, 0);
+> -		ip->i_afp->if_flags = XFS_IFEXTENTS;
+>  	}
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 708b77341a703f..bf490bfae6cbb1 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1126,7 +1126,7 @@ xfs_fill_fsxattr(
+>  	if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE)
+>  		fa->fsx_cowextsize = XFS_FSB_TO_B(mp, ip->i_cowextsize);
+>  	fa->fsx_projid = ip->i_projid;
+> -	if (ifp && (ifp->if_flags & XFS_IFEXTENTS))
+> +	if (ifp && !xfs_need_iread_extents(ifp))
+>  		fa->fsx_nextents = xfs_iext_count(ifp);
+>  	else
+>  		fa->fsx_nextents = xfs_ifork_nextents(ifp);
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index d37d42e554a12b..d154f42e2dc684 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -159,7 +159,7 @@ xfs_iomap_eof_align_last_fsb(
+>  	struct xfs_bmbt_irec	irec;
+>  	struct xfs_iext_cursor	icur;
+>  
+> -	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
+> +	ASSERT(!xfs_need_iread_extents(ifp));
+>  
+>  	/*
+>  	 * Always round up the allocation request to the extent hint boundary.
+> @@ -667,7 +667,7 @@ xfs_ilock_for_iomap(
+>  	 * is an opencoded xfs_ilock_data_map_shared() call but with
+>  	 * non-blocking behaviour.
+>  	 */
+> -	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
+> +	if (xfs_need_iread_extents(&ip->i_df)) {
+>  		if (flags & IOMAP_NOWAIT)
+>  			return -EAGAIN;
+>  		mode = XFS_ILOCK_EXCL;
 > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index 1a625920ddff94..d4b3567d87943f 100644
+> index d4b3567d87943f..b4fa702823834b 100644
 > --- a/fs/xfs/xfs_symlink.c
 > +++ b/fs/xfs/xfs_symlink.c
-> @@ -104,7 +104,7 @@ xfs_readlink(
+> @@ -377,7 +377,7 @@ xfs_inactive_symlink_rmt(
+>  	xfs_trans_t	*tp;
 >  
->  	trace_xfs_readlink(ip);
->  
-> -	ASSERT(!(ip->i_df.if_flags & XFS_IFINLINE));
-> +	ASSERT(ip->i_df.if_format != XFS_DINODE_FMT_LOCAL);
->  
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
-> @@ -492,7 +492,7 @@ xfs_inactive_symlink(
->  	 * Inline fork state gets removed by xfs_difree() so we have nothing to
->  	 * do here in that case.
->  	 */
-> -	if (ip->i_df.if_flags & XFS_IFINLINE) {
-> +	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  		return 0;
->  	}
+>  	mp = ip->i_mount;
+> -	ASSERT(ip->i_df.if_flags & XFS_IFEXTENTS);
+> +	ASSERT(!xfs_need_iread_extents(&ip->i_df));
+>  	/*
+>  	 * We're freeing a symlink that has some
+>  	 * blocks allocated to it.  Free the
 > -- 
 > 2.30.1
 > 
