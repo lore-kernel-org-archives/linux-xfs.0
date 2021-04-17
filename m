@@ -2,258 +2,224 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DA76C433ED
-	for <linux-xfs@archiver.kernel.org>; Sat, 17 Apr 2021 00:53:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19DB2C43460
+	for <linux-xfs@archiver.kernel.org>; Sat, 17 Apr 2021 01:57:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4714E60FF1
-	for <linux-xfs@archiver.kernel.org>; Sat, 17 Apr 2021 00:53:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2B90611AB
+	for <linux-xfs@archiver.kernel.org>; Sat, 17 Apr 2021 01:57:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231997AbhDQAxZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Apr 2021 20:53:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42648 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229719AbhDQAxZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Apr 2021 20:53:25 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id F14D660FF1
-        for <linux-xfs@vger.kernel.org>; Sat, 17 Apr 2021 00:52:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618620780;
-        bh=eK1KuP+hkj8tbxVirYyzLfGbt356hcWWb+w2JyXEZy4=;
-        h=Date:From:To:Subject:From;
-        b=kozb9oVH/5LWgaqO0EuwTS2SAZTT6kZpLFp+C5o3k+U1h4CtYHrFMDC2rImVoQDcO
-         zFwBrNzds1YmYHnaTX56slB2HtBgF+JRuN2YUR8K7+7ugxQsF/ZPLcabF5dxacXSWD
-         yYg7/MpsS+T8ftUZUdnDNrnPoW2p7vjbSHv7hOX/s82xgP8blNF5ydl6YP/vBzL7Ax
-         0rZYooK0Mu2eH9tB3kVKYomDbIaZtTc5u78e0ucMAn8UULq7xbgcQLsvLjIDBEtLXv
-         3SPYloMF0gJSOVdnXLaShw88WRzN2O6kFuKx1ywzdRJ7syalL+J54rQASwlvMNTfRx
-         kOauL1z840oow==
-Date:   Fri, 16 Apr 2021 17:52:59 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 76adf92a30f3
-Message-ID: <20210417005259.GE3122276@magnolia>
+        id S233892AbhDQB5d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Apr 2021 21:57:33 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55764 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229719AbhDQB5c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Apr 2021 21:57:32 -0400
+Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 3B4A210428D5;
+        Sat, 17 Apr 2021 11:57:04 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lXaCk-00BZfR-Ov; Sat, 17 Apr 2021 11:57:02 +1000
+Date:   Sat, 17 Apr 2021 11:57:02 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Gao Xiang <hsiangkao@redhat.com>, linux-xfs@vger.kernel.org,
+        Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH] xfs: don't use in-core per-cpu fdblocks for !lazysbcount
+Message-ID: <20210417015702.GT63242@dread.disaster.area>
+References: <20210416091023.2143162-1-hsiangkao@redhat.com>
+ <20210416160013.GB3122264@magnolia>
+ <20210416211320.GB2224153@xiangao.remote.csb>
+ <20210417001941.GC3122276@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20210417001941.GC3122276@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_f
+        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
+        a=kj9zAlcOel0A:10 a=3YhXtTcJ-WEA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=ye_JUFJUjT06L0fGW2QA:9 a=TQuDGcd8xqRuBanA:21 a=PGy9DwexgjBsZ3iH:21
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Fri, Apr 16, 2021 at 05:19:41PM -0700, Darrick J. Wong wrote:
+> On Sat, Apr 17, 2021 at 05:13:20AM +0800, Gao Xiang wrote:
+> > Hi Darrick,
+> > 
+> > On Fri, Apr 16, 2021 at 09:00:13AM -0700, Darrick J. Wong wrote:
+> > > On Fri, Apr 16, 2021 at 05:10:23PM +0800, Gao Xiang wrote:
+.....
+> > > Are you saying that because the f46e commit removed the xfs_sync_sb
+> > > calls from unmountfs for !lazysb filesystems, we no longer log the
+> > > summary counters at unmount?  Which means that we no longer write the
+> > > incore percpu fdblocks count to disk at unmount after we've torn down
+> > > all the incore space reservations (when sb_fdblocks == m_fdblocks)?
+> > 
+> > Er.. I think that is by reverse, before commit f46e, we no longer logged
+> > the summary counters at unmount, due to 
+> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/xfs/xfs_mount.c?h=v5.11#n1177
+> >   xfs_unmountfs
+> >     -> xfs_log_sbcount
+> >       -> !xfs_sb_version_haslazysbcount
+> >         -> return 0 (xfs_sync_sb bypassed).
+> > 
+> > So the only time we update the ondisk fdblocks was during transactions,
+> > but xfs_log_sb() corrupted this (due to no summary counters logging at
+> > unmount).
+> 
+> *OH* ok, so this isn't a fix for a regression in Brian's log covering
+> refactoring series that went into 5.12; this is a fix for a years old
+> bug that may very well have been there since the introduction of ...
+> delayed allocation?  I guess?
 
-The for-next branch of the xfs-linux repository at:
+No, xfs_trans_apply_sb_deltas() modifies the counters in the on disk
+superblock buffer directly. These counters don't contain the
+in-memory reservations for things like delalloc that are held in the
+counters in the xfs_mount (either percpu or mp->m_sb.sb_*).
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+The whole point of lazy superblock counters was avoiding this disk
+buffer update, because it required taking the superblock buffer lock
+and that serialised every transaction commit that did
+allocation/freeing. This serialised the entire transaction system,
+and effectively globally limited XFS to around 20,000 commits/sec....
 
-has just been updated.
+The original code was this:
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  I decided there wasn't any reason to delay Christoph's
-if_flags removal series, and I /think/ I'm going to hold off on merging
-the (first nine patches of) the delayed xattrs series until 5.14.
+/*
+ * xfs_log_sbcount
+ *
+ * Called either periodically to keep the on disk superblock values
+ * roughly up to date or from unmount to make sure the values are
+ * correct on a clean unmount.
+ *
+ * Note this code can be called during the process of freezing, so
+ * we may need to use the transaction allocator which does not not
+ * block when the transaction subsystem is in its frozen state.
+ */
+int
+xfs_log_sbcount(
+       xfs_mount_t     *mp,
+       uint            sync)
+{
+       xfs_trans_t     *tp;
+       int             error;
 
-The new head of the for-next branch is commit:
+       if (!xfs_fs_writable(mp))
+               return 0;
 
-76adf92a30f3 xfs: remove xfs_quiesce_attr declaration
+       xfs_icsb_sync_counters(mp);
 
-New Commits:
+       /*
+        * we don't need to do this if we are updating the superblock
+        * counters on every modification.
+        */
+       if (!xfs_sb_version_haslazysbcount(&mp->m_sb))
+               return 0;
 
-Anthony Iliopoulos (2):
-      [25dfa65f8149] xfs: fix xfs_trans slab cache name
-      [fcb62c28031e] xfs: deprecate BMV_IF_NO_DMAPI_READ flag
+       tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT);
+       error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
+                                       XFS_DEFAULT_LOG_COUNT);
+       if (error) {
+               xfs_trans_cancel(tp, 0);
+               return error;
+       }
 
-Bhaskar Chowdhury (3):
-      [bd24a4f5f7fd] xfs: Rudimentary typo fixes
-      [0145225e353e] xfs: Rudimentary spelling fix
-      [f9dd7ba4308c] xfs: Fix a typo
+       xfs_mod_sb(tp, XFS_SB_IFREE | XFS_SB_ICOUNT | XFS_SB_FDBLOCKS);
+       if (sync)
+               xfs_trans_set_sync(tp);
+       xfs_trans_commit(tp, 0);
 
-Brian Foster (4):
-      [7cd3099f4925] xfs: drop submit side trans alloc for append ioends
-      [7adb8f14e134] xfs: open code ioend needs workqueue helper
-      [044c6449f18f] xfs: drop unused ioend private merge and setfilesize code
-      [e7a3d7e792a5] xfs: drop unnecessary setfilesize helper
+       return 0;
+}
 
-Chandan Babu R (5):
-      [5147ef30f2cd] xfs: Fix dax inode extent calculation when direct write is performed on an unwritten extent
-      [6e8bd39d7227] xfs: Initialize xfs_alloc_arg->total correctly when allocating minlen extents
-      [e773f88029b1] xfs: scrub: Remove incorrect check executed on block format directories
-      [b6785e279d53] xfs: Use struct xfs_bmdr_block instead of struct xfs_btree_block to calculate root node size
-      [ae7bae68ea49] xfs: scrub: Disable check for unoptimized data fork bmbt node
+And that slowly ended up being modified and merged into
+xfs_log_sb()/xfs_sync_sb() and xfs_log_sb() gained more callers that
+didn't have the lazysbcount check. i.e. we lost the original reason
+for doing this counter update, and so we end up using it
+incorrectly.  Brian's log covering rework got rid of the explicit
+xfs_log_sbcount() call in the unmount path and replaced it with this
+"log covering is not needed sometimes when lazysbcounters are not in
+use". So now there isn't any of the original "counter updates are
+only necessary for lazysbcount filesystems" code left...
 
-Christoph Hellwig (27):
-      [af9dcddef662] xfs: split xfs_imap_to_bp
-      [4cb6f2e8c2c7] xfs: consistently initialize di_flags2
-      [582a73440bf5] xfs: handle crtime more carefully in xfs_bulkstat_one_int
-      [55f773380e92] xfs: remove the unused xfs_icdinode_has_bigtime helper
-      [9b3beb028ff5] xfs: remove the di_dmevmask and di_dmstate fields from struct xfs_icdinode
-      [7e2a8af52839] xfs: don't clear the "dinode core" in xfs_inode_alloc
-      [ceaf603c7024] xfs: move the di_projid field to struct xfs_inode
-      [13d2c10b05d8] xfs: move the di_size field to struct xfs_inode
-      [6e73a545f91e] xfs: move the di_nblocks field to struct xfs_inode
-      [031474c28a3a] xfs: move the di_extsize field to struct xfs_inode
-      [b33ce57d3e61] xfs: move the di_cowextsize field to struct xfs_inode
-      [965e0a1ad273] xfs: move the di_flushiter field to struct xfs_inode
-      [4800887b4574] xfs: cleanup xfs_fill_fsxattr
-      [b231b1221b39] xfs: use XFS_B_TO_FSB in xfs_ioctl_setattr
-      [ee7b83fd365e] xfs: use a union for i_cowextsize and i_flushiter
-      [7821ea302dca] xfs: move the di_forkoff field to struct xfs_inode
-      [db07349da2f5] xfs: move the di_flags field to struct xfs_inode
-      [3e09ab8fdc4d] xfs: move the di_flags2 field to struct xfs_inode
-      [e98d5e882b3c] xfs: move the di_crtime field to struct xfs_inode
-      [4422501da6b3] xfs: merge _xfs_dic2xflags into xfs_ip2xflags
-      [862a804aae30] xfs: move the XFS_IFEXTENTS check into xfs_iread_extents
-      [2ac131df03d4] xfs: rename and simplify xfs_bmap_one_block
-      [605e74e29218] xfs: simplify xfs_attr_remove_args
-      [0eba048dd3b7] xfs: only look at the fork format in xfs_idestroy_fork
-      [ac1e067211d1] xfs: remove XFS_IFBROOT
-      [0779f4a68d4d] xfs: remove XFS_IFINLINE
-      [b2197a36c0ef] xfs: remove XFS_IFEXTENTS
+Going back further, we always used to write the superblock at
+unmount, and this always used to happen after all the reservations
+had been released. Hence it didn't matter whether lazy-sb was
+enabled or not, the unmount always wrote out the correct value to
+the superblock.
 
-Colin Ian King (1):
-      [3b6dd9a9aeea] xfs: fix return of uninitialized value in variable error
+This explicit superblock write was removed from xfs_unmountfs() back
+in 2012 by commit 211e4d434bd7 ("xfs: implement freezing by emptying
+the AIL") where is was replaced in the unmount path by a call to
+xfs_ail_push_all_sync(mp->m_ail). With an explicit call to
+xfs_log_sbcount() in the unmountfs path, it was clear that this
+would result in the superblock getting written if counters needed
+syncing.
 
-Darrick J. Wong (15):
-      [e424aa5f547d] xfs: drop freeze protection when running GETFSMAP
-      [1aa26707ebd6] xfs: fix uninitialized variables in xrep_calc_ag_resblks
-      [05237032fdec] xfs: fix dquot scrub loop cancellation
-      [7716ee54cb88] xfs: bail out of scrub immediately if scan incomplete
-      [9de4b514494a] xfs: mark a data structure sick if there are cross-referencing errors
-      [de9d2a78add1] xfs: set the scrub AG number in xchk_ag_read_headers
-      [f53acface7a9] xfs: remove return value from xchk_ag_btcur_init
-      [973975b72a36] xfs: validate ag btree levels using the precomputed values
-      [383e32b0d0db] xfs: prevent metadata files from being inactivated
-      [3fef46fc43ca] xfs: rename the blockgc workqueue
-      [2b156ff8c82e] xfs: move the xfs_can_free_eofblocks call under the IOLOCK
-      [7d88329e5b0f] xfs: move the check for post-EOF mappings into xfs_can_free_eofblocks
-      [71bddbccab43] xfs: fix scrub and remount-ro protection when running scrub
-      [026f57ebe1be] xfs: get rid of the ip parameter to xchk_setup_*
-      [76adf92a30f3] xfs: remove xfs_quiesce_attr declaration
+IOWs, these changes in 2012 meant that if the superblock is not
+dirty, we don't actually write it at unmount. Which means that, for
+a non-lazy sb counter filesyste, if the last thing to modify the
+superblock was a call to xfs_log_sbcount(), there's every chance
+that the superblock that is written back contains the in-memory
+values in it from the percpu counters, not the value from
+mp->m_sb.sb_fdblocks....
 
-Dave Chinner (12):
-      [e6a688c33238] xfs: initialise attr fork on inode create
-      [accc661bf99a] xfs: reduce buffer log item shadow allocations
-      [c81ea11e0332] xfs: xfs_buf_item_size_segment() needs to pass segment offset
-      [929f8b0deb83] xfs: optimise xfs_buf_item_size/format for contiguous regions
-      [ec08c14ba28c] xfs: type verification is expensive
-      [39d3c0b5968b] xfs: No need for inode number error injection in __xfs_dir3_data_check
-      [1fea323ff005] xfs: reduce debug overhead of dir leaf/node checks
-      [5825bea05265] xfs: __percpu_counter_compare() inode count debug too expensive
-      [2442ee15bb1e] xfs: eager inode attr fork init needs attr feature awareness
-      [8de1cb003802] xfs: inode fork allocation depends on XFS_IFEXTENT flag
-      [683ec9ba887d] xfs: default attr fork size does not handle device inodes
-      [b2941046ea85] xfs: precalculate default inode attribute offset
+It's only taken ~10 years of testing to find an escape on a clean
+unmount.... :/
 
-Gao Xiang (6):
-      [b2c2974b8cdf] xfs: ensure xfs_errortag_random_default matches XFS_ERRTAG_MAX
-      [014695c0a78e] xfs: update lazy sb counters immediately for resizefs
-      [c789c83c7ef8] xfs: hoist out xfs_resizefs_init_new_ags()
-      [46141dc891f7] xfs: introduce xfs_ag_shrink_space()
-      [fb2fc1720185] xfs: support shrinking unused space in the last AG
-      [2b92faed5511] xfs: add error injection for per-AG resv failure
+So, yeah, this seems like a combination of changes over a period of
+years adding up to incorrectly logging the superblock counts and not
+noticing because unmount on lazycount filesystems rewrites them to
+be correct on a clean unmount. BUt with lazysbcount == 0, we've
+ended up with an escape because we don't actually update and write
+the superblock at unmount anymore.
 
-Pavel Reichl (2):
-      [0f98b4ece18d] xfs: rename variable mp to parsing_mp
-      [92cf7d36384b] xfs: Skip repetitive warnings about mount options
+> > But I have no idea xfs_log_need_covered(mp) is always true at that time,
+> > and the patchset seems a bit large and (possibly) hard to backport...
+> 
+> I wouldn't backport that to a stable series. :)
 
+Nor is it necessary to fix the problem.
 
-Code Diffstat:
+> > > > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> > > > index 60e6d255e5e2..423dada3f64c 100644
+> > > > --- a/fs/xfs/libxfs/xfs_sb.c
+> > > > +++ b/fs/xfs/libxfs/xfs_sb.c
+> > > > @@ -928,7 +928,13 @@ xfs_log_sb(
+> > > >  
+> > > >  	mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
+> > > >  	mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
+> > > > -	mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
+> > > > +	if (!xfs_sb_version_haslazysbcount(&mp->m_sb)) {
+> > > > +		struct xfs_dsb	*dsb = bp->b_addr;
+> > > > +
+> > > > +		mp->m_sb.sb_fdblocks = be64_to_cpu(dsb->sb_fdblocks);
+> 
+> Hmm... is this really needed?  I thought in !lazysbcount mode,
+> xfs_trans_apply_sb_deltas updates the ondisk super buffer directly.
+> So aren't all three of these updates unnecessary?
 
- Documentation/admin-guide/xfs.rst |   2 +-
- fs/xfs/libxfs/xfs_ag.c            | 115 +++++++++++++++++
- fs/xfs/libxfs/xfs_ag.h            |   2 +
- fs/xfs/libxfs/xfs_ag_resv.c       |   6 +-
- fs/xfs/libxfs/xfs_alloc.c         |   8 +-
- fs/xfs/libxfs/xfs_attr.c          |  54 +++++---
- fs/xfs/libxfs/xfs_attr.h          |   1 +
- fs/xfs/libxfs/xfs_attr_leaf.c     |  35 +++--
- fs/xfs/libxfs/xfs_bmap.c          | 229 +++++++++++++--------------------
- fs/xfs/libxfs/xfs_bmap.h          |   2 +-
- fs/xfs/libxfs/xfs_bmap_btree.c    |   6 +-
- fs/xfs/libxfs/xfs_btree_staging.c |   1 -
- fs/xfs/libxfs/xfs_da_btree.c      |   4 +-
- fs/xfs/libxfs/xfs_dir2.c          |  14 +-
- fs/xfs/libxfs/xfs_dir2_block.c    |  12 +-
- fs/xfs/libxfs/xfs_dir2_data.c     |   2 +-
- fs/xfs/libxfs/xfs_dir2_leaf.c     |  12 +-
- fs/xfs/libxfs/xfs_dir2_node.c     |   4 +-
- fs/xfs/libxfs/xfs_dir2_priv.h     |   3 +-
- fs/xfs/libxfs/xfs_dir2_sf.c       |  58 ++++-----
- fs/xfs/libxfs/xfs_errortag.h      |   4 +-
- fs/xfs/libxfs/xfs_format.h        |   5 +-
- fs/xfs/libxfs/xfs_fs.h            |   2 +-
- fs/xfs/libxfs/xfs_ialloc.c        |   4 +-
- fs/xfs/libxfs/xfs_iext_tree.c     |   2 +-
- fs/xfs/libxfs/xfs_inode_buf.c     |  81 +++++-------
- fs/xfs/libxfs/xfs_inode_buf.h     |  33 +----
- fs/xfs/libxfs/xfs_inode_fork.c    |  48 +++----
- fs/xfs/libxfs/xfs_inode_fork.h    |  20 +--
- fs/xfs/libxfs/xfs_rtbitmap.c      |   4 +-
- fs/xfs/libxfs/xfs_shared.h        |   4 +
- fs/xfs/libxfs/xfs_trans_inode.c   |   7 +-
- fs/xfs/libxfs/xfs_types.c         |  18 +--
- fs/xfs/scrub/agheader.c           |  33 ++---
- fs/xfs/scrub/alloc.c              |   5 +-
- fs/xfs/scrub/attr.c               |   5 +-
- fs/xfs/scrub/bmap.c               |  20 +--
- fs/xfs/scrub/btree.c              |  30 ++++-
- fs/xfs/scrub/common.c             |  38 +++---
- fs/xfs/scrub/common.h             |  58 ++++-----
- fs/xfs/scrub/dir.c                |  20 +--
- fs/xfs/scrub/fscounters.c         |   3 +-
- fs/xfs/scrub/health.c             |   3 +-
- fs/xfs/scrub/ialloc.c             |   8 +-
- fs/xfs/scrub/inode.c              |   5 +-
- fs/xfs/scrub/parent.c             |   7 +-
- fs/xfs/scrub/quota.c              |  11 +-
- fs/xfs/scrub/refcount.c           |   5 +-
- fs/xfs/scrub/repair.c             |  11 +-
- fs/xfs/scrub/repair.h             |   6 +-
- fs/xfs/scrub/rmap.c               |   5 +-
- fs/xfs/scrub/rtbitmap.c           |   7 +-
- fs/xfs/scrub/scrub.c              |  42 +++---
- fs/xfs/scrub/scrub.h              |  14 +-
- fs/xfs/scrub/symlink.c            |   9 +-
- fs/xfs/scrub/xfs_scrub.h          |   4 +-
- fs/xfs/xfs_aops.c                 | 138 +++-----------------
- fs/xfs/xfs_attr_list.c            |   2 +-
- fs/xfs/xfs_bmap_util.c            | 219 ++++++++++++++++---------------
- fs/xfs/xfs_buf_item.c             | 141 +++++++++++++++-----
- fs/xfs/xfs_dir2_readdir.c         |  12 +-
- fs/xfs/xfs_dquot.c                |  10 +-
- fs/xfs/xfs_error.c                |   5 +
- fs/xfs/xfs_file.c                 |  12 +-
- fs/xfs/xfs_filestream.h           |   2 +-
- fs/xfs/xfs_fsmap.c                |  14 +-
- fs/xfs/xfs_fsops.c                | 195 ++++++++++++++++++----------
- fs/xfs/xfs_icache.c               |  35 ++---
- fs/xfs/xfs_inode.c                | 262 ++++++++++++++++++++------------------
- fs/xfs/xfs_inode.h                |  42 ++++--
- fs/xfs/xfs_inode_item.c           |  56 +++++---
- fs/xfs/xfs_ioctl.c                |  71 ++++++-----
- fs/xfs/xfs_iomap.c                |  27 ++--
- fs/xfs/xfs_iops.c                 |  65 +++++++---
- fs/xfs/xfs_itable.c               |  19 ++-
- fs/xfs/xfs_linux.h                |   2 +-
- fs/xfs/xfs_log_recover.c          |  13 +-
- fs/xfs/xfs_mount.c                |  14 +-
- fs/xfs/xfs_mount.h                |   2 +-
- fs/xfs/xfs_pnfs.c                 |   2 +-
- fs/xfs/xfs_qm.c                   |  22 ++--
- fs/xfs/xfs_qm_bhv.c               |   2 +-
- fs/xfs/xfs_qm_syscalls.c          |   2 +-
- fs/xfs/xfs_quotaops.c             |   2 +-
- fs/xfs/xfs_reflink.c              |  22 ++--
- fs/xfs/xfs_rtalloc.c              |  16 +--
- fs/xfs/xfs_super.c                | 132 ++++++++++---------
- fs/xfs/xfs_super.h                |   1 -
- fs/xfs/xfs_symlink.c              |  28 ++--
- fs/xfs/xfs_trace.h                |  16 +--
- fs/xfs/xfs_trans.c                |  14 +-
- fs/xfs/xfs_xattr.c                |   2 +
- 92 files changed, 1463 insertions(+), 1307 deletions(-)
+Yup, now I understand the issue, the fix is simply to avoid these
+updates for !lazysb. i.e. it should just be:
+
+	if (xfs_sb_version_haslazysbcount(&mp->m_sb)) {
+		mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
+		mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
+		mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
+	}
+	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
