@@ -2,225 +2,315 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EA78C433B4
-	for <linux-xfs@archiver.kernel.org>; Sun, 18 Apr 2021 00:00:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2055C433B4
+	for <linux-xfs@archiver.kernel.org>; Sun, 18 Apr 2021 12:15:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB84C6134F
-	for <linux-xfs@archiver.kernel.org>; Sun, 18 Apr 2021 00:00:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF7F461359
+	for <linux-xfs@archiver.kernel.org>; Sun, 18 Apr 2021 12:15:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230216AbhDRAAa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 17 Apr 2021 20:00:30 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:40062 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230031AbhDRAAa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Apr 2021 20:00:30 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618704002;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=HLi8aIkmsV8v47NSHjA5YNJoWLdqHpxYHW9wooZF6DU=;
-        b=bPfyVuPlAysBHib6MBkGjo62ZgGM7hFW+6dl32Fp2+ohbD2FhqDOgBlgS8+Nb1pDnsX4O+
-        Xgbwgw8RejAqr3R1zPQJErwrawtyP3+n9YmqbZgfXMiwbTBhpdxaFHkLJfeAoJpqdmNkT/
-        6hUeESYDWRlza30PSdAkQfkSx3/mDcY=
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
- [209.85.216.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-514-qaIFcI-mNTu6-ATz9YBBng-1; Sat, 17 Apr 2021 20:00:01 -0400
-X-MC-Unique: qaIFcI-mNTu6-ATz9YBBng-1
-Received: by mail-pj1-f70.google.com with SMTP id oa1-20020a17090b1bc1b02901507fafb74fso1582934pjb.7
-        for <linux-xfs@vger.kernel.org>; Sat, 17 Apr 2021 17:00:00 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=HLi8aIkmsV8v47NSHjA5YNJoWLdqHpxYHW9wooZF6DU=;
-        b=MIzkEdtv+4g7Q2/SpvPh3+vRQy2qi9esm5qt4w+dkwxkBJiHPe19OZPm1dsfdzX0eS
-         puAt5SLsgI46km57mcbvQvAK9nLjNNlU9kEkT6IvaiPsfbO0FfTLKhs6u01ViusF7TPS
-         JLlleERqQ4oahT7erFfhvewQ3fd7eRa+52QcR5rjTyJEy+lh3pp+Xgb3wZxXSGhSGfo1
-         AWUeJfa2Uq7IT7cGnnDyjRK5/f9i5njpWnoe/bqJ1kAjXVuxtCJKNzGrUKpnhQ3LVEEA
-         ImXn2lwimHgPxPqkpzZtYGz8Je1pZCpChIw/thCxouaTo/cXjb4w6CwVGPOb4u0d/Anu
-         Tcmw==
-X-Gm-Message-State: AOAM533A1pdVqtaF2IkW05wiBSC6HwPl55beLCb6yAm/HNn5EIdZfI4d
-        1H1I0yc1QsdiCdMNsUfO7yYz8/uGJ4sDRVjkqxMvrHWS0i8EY3ec61JaoVLpbVZvKb1abI1G7ix
-        efmpTw6y7vr736QkIPEY4
-X-Received: by 2002:aa7:908d:0:b029:250:81a5:2a3c with SMTP id i13-20020aa7908d0000b029025081a52a3cmr13236057pfa.33.1618703999800;
-        Sat, 17 Apr 2021 16:59:59 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzgK9V4x6t2b2vL8rmLG9cmR90rDs/8388kCe+OkOjE53LkWeF6ZmAPPDc5vtM9bpIQOJGcLQ==
-X-Received: by 2002:aa7:908d:0:b029:250:81a5:2a3c with SMTP id i13-20020aa7908d0000b029025081a52a3cmr13236048pfa.33.1618703999480;
-        Sat, 17 Apr 2021 16:59:59 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id d12sm8436878pfl.179.2021.04.17.16.59.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 17 Apr 2021 16:59:58 -0700 (PDT)
-Date:   Sun, 18 Apr 2021 07:59:48 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH] xfs: don't use in-core per-cpu fdblocks for !lazysbcount
-Message-ID: <20210417235948.GB2266103@xiangao.remote.csb>
-References: <20210416091023.2143162-1-hsiangkao@redhat.com>
- <20210416160013.GB3122264@magnolia>
- <20210416211320.GB2224153@xiangao.remote.csb>
- <20210417001941.GC3122276@magnolia>
- <20210417015702.GT63242@dread.disaster.area>
- <20210417022013.GA2266103@xiangao.remote.csb>
- <20210417223201.GU63242@dread.disaster.area>
+        id S231281AbhDRMP3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 18 Apr 2021 08:15:29 -0400
+Received: from out20-111.mail.aliyun.com ([115.124.20.111]:37749 "EHLO
+        out20-111.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231166AbhDRMP2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Apr 2021 08:15:28 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07436294|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0351643-0.000727791-0.964108;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047206;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.K.pjIWp_1618748098;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.K.pjIWp_1618748098)
+          by smtp.aliyun-inc.com(10.147.42.241);
+          Sun, 18 Apr 2021 20:14:58 +0800
+Date:   Sun, 18 Apr 2021 20:14:58 +0800
+From:   Eryu Guan <guan@eryu.me>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs: test that the needsrepair feature works as
+ advertised
+Message-ID: <YHwiwogWS26/NR/K@desktop>
+References: <161836233058.2755262.72157999681408577.stgit@magnolia>
+ <161836233652.2755262.563331015931843615.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210417223201.GU63242@dread.disaster.area>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <161836233652.2755262.563331015931843615.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
-
-On Sun, Apr 18, 2021 at 08:32:01AM +1000, Dave Chinner wrote:
-> On Sat, Apr 17, 2021 at 10:20:13AM +0800, Gao Xiang wrote:
-
-...
-
-> > > > Hmm... is this really needed?  I thought in !lazysbcount mode,
-> > > > xfs_trans_apply_sb_deltas updates the ondisk super buffer directly.
-> > > > So aren't all three of these updates unnecessary?
-> > > 
-> > > Yup, now I understand the issue, the fix is simply to avoid these
-> > > updates for !lazysb. i.e. it should just be:
-> > > 
-> > > 	if (xfs_sb_version_haslazysbcount(&mp->m_sb)) {
-> > > 		mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
-> > > 		mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
-> > > 		mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
-> > > 	}
-> > > 	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
-> > 
-> > I did as this because xfs_sb_to_disk() will override them, see:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/xfs/libxfs/xfs_sb.c#n629
-> > 
-> > ...
-> > 	to->sb_icount = cpu_to_be64(from->sb_icount);
-> > 	to->sb_ifree = cpu_to_be64(from->sb_ifree);
-> > 	to->sb_fdblocks = cpu_to_be64(from->sb_fdblocks);
+On Tue, Apr 13, 2021 at 06:05:36PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> > As an alternative, I was once to wrap it as:
-> > 
-> > xfs_sb_to_disk() {
-> > ...
-> > 	if (xfs_sb_version_haslazysbcount(&mp->m_sb)) {
-> > 		to->sb_icount = cpu_to_be64(from->sb_icount);
-> > 		to->sb_ifree = cpu_to_be64(from->sb_ifree);
-> > 		to->sb_fdblocks = cpu_to_be64(from->sb_fdblocks);
-> > 	}
-> > ...
-> > }
+> Make sure that the needsrepair feature flag can be cleared only by
+> repair and that mounts are prohibited when the feature is set.
 > 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  common/xfs        |   21 ++++++++++++++
+>  tests/xfs/768     |   80 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/768.out |    4 +++
+>  tests/xfs/770     |   82 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/770.out |    2 +
+>  tests/xfs/group   |    2 +
+>  6 files changed, 191 insertions(+)
+>  create mode 100755 tests/xfs/768
+>  create mode 100644 tests/xfs/768.out
+>  create mode 100755 tests/xfs/770
+>  create mode 100644 tests/xfs/770.out
+> 
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 887bd001..fa204663 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -1114,3 +1114,24 @@ _xfs_get_cowgc_interval() {
+>  		_fail "Can't find cowgc interval procfs knob?"
+>  	fi
+>  }
+> +
+> +# Print the status of the given features on the scratch filesystem.
+> +# Returns 0 if all features are found, 1 otherwise.
+> +_check_scratch_xfs_features()
+> +{
+> +	local features="$(_scratch_xfs_db -c 'version')"
+> +	local output=("FEATURES:")
+> +	local found=0
+> +
+> +	for feature in "$@"; do
+> +		local status="NO"
+> +		if echo "${features}" | grep -q -w "${feature}"; then
+> +			status="YES"
+> +			found=$((found + 1))
+> +		fi
+> +		output+=("${feature}:${status}")
+> +	done
+> +
+> +	echo "${output[@]}"
+> +	test "${found}" -eq "$#"
+> +}
+> diff --git a/tests/xfs/768 b/tests/xfs/768
+> new file mode 100755
+> index 00000000..dd9c53be
+> --- /dev/null
+> +++ b/tests/xfs/768
+> @@ -0,0 +1,80 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 768
+> +#
+> +# Make sure that the kernel won't mount a filesystem if repair forcibly sets
+> +# NEEDSREPAIR while fixing metadata.  Corrupt a directory in such a way as
+> +# to force repair to write an invalid dirent value as a sentinel to trigger a
+> +# repair activity in a later phase.  Use a debug knob in xfs_repair to abort
+> +# the repair immediately after forcing the flag on.
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_scratch
+> +grep -q LIBXFS_DEBUG_WRITE_CRASH $XFS_REPAIR_PROG || \
+> +		_notrun "libxfs write failure injection hook not detected?"
 
-...
+Sorry that I didn't notice it earlier, but this pattern repeats in both
+tests, might be possible to turn it into a common helper?
 
-> 
-> That is, xfs_trans_apply_sb_deltas() only applies deltas to the
-> directly to the in-memory superblock in the case of !lazy-count, so
-> these counters are actually a correct representation of the on-disk
-> value of the accounting when lazy-count=0.
-> 
-> Hence we should always be able to write the counters in mp->m_sb
-> directly to the on-disk superblock buffer in the case of
-> lazy-count=0 and the values should be correct. lazy-count=1 only
-> updates the mp->m_sb counters from the per-cpu counters so that the
-> on-disk counters aren't wildly inaccruate, and so that when we
-> unmount/freeze/etc the counters are actually correct.
-> 
-> Long story short, I think xfs_sb_to_disk() always updating the
-> on-disk superblock from mp->m_sb is safe to do as the counters in
-> mp->m_sb are updated in the same manner during transaction commit as
-> the superblock buffer counters for lazy-count=0....
+And $XFS_REPAIR_PROG may contain some pre-defined options along with
+xfs_repair in the future, like $DF_PROG is actually defined as
+"df -T -P". Perhaps $(type -P xfs_repair) is better here.
 
-Thanks for your long words, I have to say I don't quite get what's
-your thought here, if my understanding is correct,
-xfs_trans_apply_sb_deltas() for !lazy-count case just directly
-update on-disk superblock (rather than in-memory superblock), see:
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/xfs/xfs_trans.c?h=v5.12-rc2#n501
+> +
+> +rm -f $seqres.full
+> +
+> +# Set up a real filesystem for our actual test
+> +_scratch_mkfs -m crc=1 >> $seqres.full
 
-	if (!xfs_sb_version_haslazysbcount(&(tp->t_mountp->m_sb))) {
-		if (tp->t_icount_delta)
-			be64_add_cpu(&sbp->sb_icount, tp->t_icount_delta);
-		if (tp->t_ifree_delta)
-			be64_add_cpu(&sbp->sb_ifree, tp->t_ifree_delta);
-		if (tp->t_fdblocks_delta)
-			be64_add_cpu(&sbp->sb_fdblocks, tp->t_fdblocks_delta);
-		if (tp->t_res_fdblocks_delta)
-			be64_add_cpu(&sbp->sb_fdblocks, tp->t_res_fdblocks_delta);
-	}
+Test relies on -m crc=1, so probably we need _require_xfs_crc as well to
+make sure userspace and kernel supports crc.
 
-That is why I think in-memory mp->m_sb.sb_icount, mp->m_sb.sb_ifree,
-mp->m_sb.sb_fdblocks are all outdated at all (kindly correct me if I'm wrong
-here)... so xfs_sb_to_disk() will replace on-disk fields with outdated
-in-memory counters.
+Or just like xfs/770, use _require_scratch_xfs_crc instead of
+_require_scratch?
 
-> 
-> > Yet after I observed the other callers of xfs_sb_to_disk() (e.g. growfs
-> > and online repair), I think a better modification is the way I proposed
-> > here, so no need to update xfs_sb_to_disk() and the other callers (since
-> > !lazysbcount is not recommended at all.)
-> 
-> Yup that's the original reason for having a fields flag to do
-> condition update of the on-disk buffer from the in-memory state.
-> Different code has diferrent requirements, but it looked like this
-> didn't matter for lazy-count filesystems because other checks
-> avoided the update of m_sb fields. What was missed in that
-> optimisation was the fact lazy-count=0 never updated the counters
-> directly.
-> 
-> /me is now wondering why we even bother with !lazy-count anymore.
-> 
-> WE've updated the agr btree block accounting unconditionally since
-> lazy-count was added, and scrub will always report a mismatch in
-> counts if they exist regardless of lazy-count. So why don't we just
-> start ignoring the on-disk value and always use lazy-count based
-> updates?
-> 
-> We only added it as mkfs option/feature bit because of the recovery
-> issue with not being able to account for btree blocks properly at
-> mount time, but now we have mechanisms for counting blocks in btrees
-> so even that has gone away. So we could actually just turn
-> on lazy-count at mount time, and we could get rid of this whole
-> set of subtle conditional behaviours we clearly aren't able to
-> exercise effectively...
+> +
+> +# Create a directory large enough to have a dir data block.  2k worth of
+> +# dirent names ought to do it.
+> +_scratch_mount
+> +mkdir -p $SCRATCH_MNT/fubar
+> +for i in $(seq 0 256 2048); do
+> +	fname=$(printf "%0255d" $i)
+> +	ln -s -f urk $SCRATCH_MNT/fubar/$fname
+> +done
+> +inum=$(stat -c '%i' $SCRATCH_MNT/fubar)
+> +_scratch_unmount
+> +
+> +# Fuzz the directory
+> +_scratch_xfs_db -x -c "inode $inum" -c "dblock 0" \
+> +	-c "fuzz -d bu[2].inumber add" >> $seqres.full
+> +
+> +# Try to repair the directory, force it to crash after setting needsrepair
+> +LIBXFS_DEBUG_WRITE_CRASH=ddev=2 _scratch_xfs_repair 2>> $seqres.full
+> +test $? -eq 137 || echo "repair should have been killed??"
+> +
+> +# We can't mount, right?
+> +_check_scratch_xfs_features NEEDSREPAIR
+> +_try_scratch_mount &> $tmp.mount
+> +res=$?
+> +_filter_scratch < $tmp.mount
+> +if [ $res -eq 0 ]; then
+> +	echo "Should not be able to mount after needsrepair crash"
+> +	_scratch_unmount
+> +fi
+> +
+> +# Repair properly this time and retry the mount
+> +_scratch_xfs_repair 2>> $seqres.full
+> +_check_scratch_xfs_features NEEDSREPAIR
+> +
+> +_scratch_mount
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/768.out b/tests/xfs/768.out
+> new file mode 100644
+> index 00000000..1168ba25
+> --- /dev/null
+> +++ b/tests/xfs/768.out
+> @@ -0,0 +1,4 @@
+> +QA output created by 768
+> +FEATURES: NEEDSREPAIR:YES
+> +mount: SCRATCH_MNT: mount(2) system call failed: Structure needs cleaning.
+> +FEATURES: NEEDSREPAIR:NO
+> diff --git a/tests/xfs/770 b/tests/xfs/770
+> new file mode 100755
+> index 00000000..574047d5
+> --- /dev/null
+> +++ b/tests/xfs/770
+> @@ -0,0 +1,82 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 770
+> +#
+> +# Populate a filesystem with all types of metadata, then run repair with the
+> +# libxfs write failure trigger set to go after a single write.  Check that the
+> +# injected error trips, causing repair to abort, that needsrepair is set on the
+> +# fs, the kernel won't mount; and that a non-injecting repair run clears
+> +# needsrepair and makes the filesystem mountable again.
+> +#
+> +# Repeat with the trip point set to successively higher numbers of writes until
+> +# we hit ~200 writes or repair manages to run to completion without tripping.
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/populate
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +
+> +_require_scratch_xfs_crc		# needsrepair only exists for v5
+> +_require_populate_commands
+> +
+> +rm -f ${RESULT_DIR}/require_scratch	# we take care of checking the fs
 
-If my understanding of the words above is correct, maybe that could
-be unfriendly when users turned back to some old kernels. But
-considering lazysbcount has been landed for quite quite long time,
-I think that is practical as 2 patches:
- 1) fix sb counters for !lazysbcount;
- 2) turn on lazysbcount at the mount time from now (and warn users).
-
-> 
-> > It's easier to backport and less conflict, and btw !lazysbcount also need
-> > to be warned out and deprecated from now.
-> 
-> You have to use -m crc=0 to turn off lazycount, and the deprecation
-> warning should come from -m crc=0...
-
-Yes, but I think 2030 is too far for this !lazysbcount feature, since
-it seems easy to cause potential bugs. I think maybe we could get rid
-of it as soon as possible.
+Use _require_scratch_nocheck instead?
 
 Thanks,
-Gao Xiang
+Eryu
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-
+> +rm -f $seqres.full
+> +
+> +# Populate the filesystem
+> +_scratch_populate_cached nofill >> $seqres.full 2>&1
+> +
+> +max_writes=200			# 200 loops should be enough for anyone
+> +nr_incr=$((13 / TIME_FACTOR))
+> +test $nr_incr -lt 1 && nr_incr=1
+> +for ((nr_writes = 1; nr_writes < max_writes; nr_writes += nr_incr)); do
+> +	# Start a repair and force it to abort after some number of writes
+> +	LIBXFS_DEBUG_WRITE_CRASH=ddev=$nr_writes _scratch_xfs_repair 2>> $seqres.full
+> +	res=$?
+> +	if [ $res -ne 0 ] && [ $res -ne 137 ]; then
+> +		echo "repair failed with $res??"
+> +		break
+> +	elif [ $res -eq 0 ]; then
+> +		[ $nr_writes -eq 1 ] && \
+> +			echo "ran to completion on the first try?"
+> +		break
+> +	fi
+> +
+> +	# Check the state of NEEDSREPAIR after repair fails.  If it isn't set
+> +	# but if repair -n says the fs is clean, then it's possible that the
+> +	# injected error caused it to abort immediately after the write that
+> +	# cleared NEEDSREPAIR.
+> +	if ! _check_scratch_xfs_features NEEDSREPAIR > /dev/null &&
+> +	   ! _scratch_xfs_repair -n &>> $seqres.full; then
+> +		echo "NEEDSREPAIR should be set on corrupt fs"
+> +	fi
+> +
+> +	# Repair properly this time and retry the mount
+> +	_scratch_xfs_repair 2>> $seqres.full
+> +	_check_scratch_xfs_features NEEDSREPAIR > /dev/null && \
+> +		echo "Repair failed to clear NEEDSREPAIR on the $nr_writes writes test"
+> +done
+> +
+> +# success, all done
+> +echo Silence is golden.
+> +status=0
+> +exit
+> diff --git a/tests/xfs/770.out b/tests/xfs/770.out
+> new file mode 100644
+> index 00000000..725d740b
+> --- /dev/null
+> +++ b/tests/xfs/770.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 770
+> +Silence is golden.
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index fe83f82d..09fddb5a 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -520,3 +520,5 @@
+>  537 auto quick
+>  538 auto stress
+>  539 auto quick mount
+> +768 auto quick repair
+> +770 auto repair
