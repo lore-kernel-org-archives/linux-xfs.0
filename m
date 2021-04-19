@@ -2,194 +2,333 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BD02C43460
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Apr 2021 00:50:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDD4BC433B4
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Apr 2021 00:59:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43B86610CC
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Apr 2021 00:50:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEB06610CB
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Apr 2021 00:59:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235636AbhDSAu3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 18 Apr 2021 20:50:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36136 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233117AbhDSAu3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Apr 2021 20:50:29 -0400
-Received: from ozlabs.org (ozlabs.org [IPv6:2401:3900:2:1::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E109C06174A;
-        Sun, 18 Apr 2021 17:50:00 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4FNpBB5c7xz9tlC;
-        Mon, 19 Apr 2021 10:49:50 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1618793396;
-        bh=RvcQsImDVi/p3uATnp9KP+phSL29G3tjajJIKF67gxM=;
-        h=Date:From:To:Cc:Subject:From;
-        b=DVl/CvV8fFjpm4hBDqeS4IwJs5wZkjX3zZhM97fJwyogTGQ2ZbWeFWP+CucT5rssI
-         JcqAcTQAfbbON6mDUCRDxDZANOK5DfEWjMOB+zZONKf7e8ji+O37h5Pod1MZvYkmwx
-         nkm3CzSFVTR19BJecPCS5rAkmU9vytCp5mpcJ0w9Jkj8k+eRhrEoxp/RX0MsSEL373
-         qZf3jEaVpKA6+xYUB/QFvVuQA3RB728FMdoUv78HVabhUYsSxe0ZpuvLlAJCdjpRSV
-         ieL+3mgYIdOrrYnpbhrcZ3eGX4NO9ZDnaIbhyHlVlvLP79KtU1tNAfcml4NrDDBx8S
-         WXKaTNazsGHYg==
-Date:   Mon, 19 Apr 2021 10:49:48 +1000
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     Al Viro <viro@ZenIV.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Miklos Szeredi <mszeredi@redhat.com>
-Subject: linux-next: manual merge of the vfs tree with the xfs tree
-Message-ID: <20210419104948.7be23015@canb.auug.org.au>
+        id S235680AbhDSA7q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 18 Apr 2021 20:59:46 -0400
+Received: from mga05.intel.com ([192.55.52.43]:20791 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233117AbhDSA7q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 18 Apr 2021 20:59:46 -0400
+IronPort-SDR: JC1RRekFrq9LRBL9+wtJFK4gSWsUmAV9ItO6Gz36fPTPA1tw2WPmM54jSyj29YV0Zpbb9TWvcM
+ URe137xOoBCw==
+X-IronPort-AV: E=McAfee;i="6200,9189,9958"; a="280575307"
+X-IronPort-AV: E=Sophos;i="5.82,232,1613462400"; 
+   d="scan'208";a="280575307"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2021 17:59:16 -0700
+IronPort-SDR: GCyZKgnhjaSeuFecse1GeCjEOwDPJhSMDtXWgGEt5VnuxSCOCR5dLGzsOeSd4Xhy9BfbDLaEJX
+ ZxyR0p2C/HPA==
+X-IronPort-AV: E=Sophos;i="5.82,232,1613462400"; 
+   d="scan'208";a="426314605"
+Received: from rongch2-mobl.ccr.corp.intel.com (HELO [10.238.4.225]) ([10.238.4.225])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2021 17:59:14 -0700
+Subject: Re: [kbuild-all] Re: [PATCH v3 2/2] xfs: set aside allocation btree
+ blocks from block reservation
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        kernel test robot <lkp@intel.com>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        kbuild-all@lists.01.org
+References: <20210412133059.1186634-3-bfoster@redhat.com>
+ <202104130641.CXaGdXDk-lkp@intel.com> <20210414004151.GV3957620@magnolia>
+From:   "Chen, Rong A" <rong.a.chen@intel.com>
+Message-ID: <f72234e6-09e1-2030-de0d-f0c295194935@intel.com>
+Date:   Mon, 19 Apr 2021 08:59:11 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/MSqUuCQP3/wpjIM9GXw96aU";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+In-Reply-To: <20210414004151.GV3957620@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/MSqUuCQP3/wpjIM9GXw96aU
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-Hi all,
 
-Today's linux-next merge of the vfs tree got a conflict in:
+On 4/14/2021 8:41 AM, Darrick J. Wong wrote:
+> On Tue, Apr 13, 2021 at 06:21:56AM +0800, kernel test robot wrote:
+>> Hi Brian,
+>>
+>> Thank you for the patch! Yet something to improve:
+>>
+>> [auto build test ERROR on xfs-linux/for-next]
+>> [also build test ERROR on v5.12-rc7 next-20210412]
+>> [If your patch is applied to the wrong git tree, kindly drop us a note.
+>> And when submitting patch, we suggest to use '--base' as documented in
+>> https://git-scm.com/docs/git-format-patch]
+>>
+>> url:    https://github.com/0day-ci/linux/commits/Brian-Foster/xfs-set-aside-allocation-btree-blocks-from-block-reservation/20210412-213222
+>> base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+>> config: um-randconfig-r022-20210412 (attached as .config)
+>> compiler: gcc-9 (Debian 9.3.0-22) 9.3.0
+>> reproduce (this is a W=1 build):
+>>          # https://github.com/0day-ci/linux/commit/5ffa1f5fa63a4a9c557f90beb5826866fa4aefd0
+>>          git remote add linux-review https://github.com/0day-ci/linux
+>>          git fetch --no-tags linux-review Brian-Foster/xfs-set-aside-allocation-btree-blocks-from-block-reservation/20210412-213222
+>>          git checkout 5ffa1f5fa63a4a9c557f90beb5826866fa4aefd0
+>>          # save the attached .config to linux build tree
+>>          make W=1 ARCH=um
+>>
+>> If you fix the issue, kindly add following tag as appropriate
+>> Reported-by: kernel test robot <lkp@intel.com>
+>>
+>> All errors (new ones prefixed by >>):
+>>
+>>     syscall.c:(.text+0xa023): undefined reference to `atomic64_inc_386'
+> 
+> What is all this build robot noise I'm suddenly getting about UML and
+> weird versions of atomic functions?  Seems to build fine on vanilla x64
+> and arm64, so....is there a real problem here???
 
-  fs/xfs/xfs_ioctl.c
+Hi Darrick,
 
-between commit:
+It seem no one has an interest in it, we have disabled randconfig test
+for arch um to avoid sending report to irrelevant people.
 
-  b2197a36c0ef ("xfs: remove XFS_IFEXTENTS")
+Best Regards,
+Rong Chen
 
-from the xfs tree and commit:
-
-  9fefd5db08ce ("xfs: convert to fileattr")
-
-from the vfs tree.
-
-I fixed it up (see below) and can carry the fix as necessary. This
-is now fixed as far as linux-next is concerned, but any non trivial
-conflicts should be mentioned to your upstream maintainer when your tree
-is submitted for merging.  You may also want to consider cooperating
-with the maintainer of the conflicting tree to minimise any particularly
-complex conflicts.
-
---=20
-Cheers,
-Stephen Rothwell
-
-diff --cc fs/xfs/xfs_ioctl.c
-index bf490bfae6cb,bbda105a2ce5..000000000000
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@@ -1056,77 -1057,17 +1057,19 @@@ xfs_ioc_ag_geometry
-  static void
-  xfs_fill_fsxattr(
-  	struct xfs_inode	*ip,
-- 	bool			attr,
-- 	struct fsxattr		*fa)
-+ 	int			whichfork,
-+ 	struct fileattr		*fa)
-  {
- +	struct xfs_mount	*mp =3D ip->i_mount;
-- 	struct xfs_ifork	*ifp =3D attr ? ip->i_afp : &ip->i_df;
-+ 	struct xfs_ifork	*ifp =3D XFS_IFORK_PTR(ip, whichfork);
- =20
-- 	simple_fill_fsxattr(fa, xfs_ip2xflags(ip));
-+ 	fileattr_fill_xflags(fa, xfs_ip2xflags(ip));
- -	fa->fsx_extsize =3D ip->i_d.di_extsize << ip->i_mount->m_sb.sb_blocklog;
- -	fa->fsx_cowextsize =3D ip->i_d.di_cowextsize <<
- -			ip->i_mount->m_sb.sb_blocklog;
- -	fa->fsx_projid =3D ip->i_d.di_projid;
- -	if (ifp && (ifp->if_flags & XFS_IFEXTENTS))
- +
- +	fa->fsx_extsize =3D XFS_FSB_TO_B(mp, ip->i_extsize);
- +	if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE)
- +		fa->fsx_cowextsize =3D XFS_FSB_TO_B(mp, ip->i_cowextsize);
- +	fa->fsx_projid =3D ip->i_projid;
- +	if (ifp && !xfs_need_iread_extents(ifp))
-  		fa->fsx_nextents =3D xfs_iext_count(ifp);
-  	else
-  		fa->fsx_nextents =3D xfs_ifork_nextents(ifp);
-@@@ -1212,10 -1167,10 +1169,10 @@@ static in
-  xfs_ioctl_setattr_xflags(
-  	struct xfs_trans	*tp,
-  	struct xfs_inode	*ip,
-- 	struct fsxattr		*fa)
-+ 	struct fileattr		*fa)
-  {
-  	struct xfs_mount	*mp =3D ip->i_mount;
- -	uint64_t		di_flags2;
- +	uint64_t		i_flags2;
- =20
-  	/* Can't change realtime flag if any extents are allocated. */
-  	if ((ip->i_df.if_nextents || ip->i_delayed_blks) &&
-@@@ -1348,8 -1289,11 +1291,11 @@@ xfs_ioctl_setattr_check_extsize
-  	xfs_extlen_t		size;
-  	xfs_fsblock_t		extsize_fsb;
- =20
-+ 	if (!fa->fsx_valid)
-+ 		return 0;
-+=20
-  	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_df.if_nextents &&
- -	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) !=3D fa->fsx_extsize))
- +	    ((ip->i_extsize << mp->m_sb.sb_blocklog) !=3D fa->fsx_extsize))
-  		return -EINVAL;
- =20
-  	if (fa->fsx_extsize =3D=3D 0)
-@@@ -1520,18 -1476,18 +1478,19 @@@ xfs_fileattr_set
-  	 * extent size hint should be set on the inode. If no extent size flags
-  	 * are set on the inode then unconditionally clear the extent size hint.
-  	 */
- -	if (ip->i_d.di_flags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
- -		ip->i_d.di_extsize =3D fa->fsx_extsize >> mp->m_sb.sb_blocklog;
- -	else
- -		ip->i_d.di_extsize =3D 0;
- -	if (xfs_sb_version_has_v3inode(&mp->m_sb) &&
- -	    (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
- -		ip->i_d.di_cowextsize =3D fa->fsx_cowextsize >>
- -				mp->m_sb.sb_blocklog;
- +	if (ip->i_diflags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
- +		ip->i_extsize =3D XFS_B_TO_FSB(mp, fa->fsx_extsize);
-  	else
- -		ip->i_d.di_cowextsize =3D 0;
- +		ip->i_extsize =3D 0;
- +
- +	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
- +		if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE)
- +			ip->i_cowextsize =3D XFS_B_TO_FSB(mp, fa->fsx_cowextsize);
- +		else
- +			ip->i_cowextsize =3D 0;
- +	}
- =20
-+ skip_xattr:
-  	error =3D xfs_trans_commit(tp);
- =20
-  	/*
-
---Sig_/MSqUuCQP3/wpjIM9GXw96aU
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmB806wACgkQAVBC80lX
-0GzcCwgAnoxu6Dc4L/mYs/vFg2p/AfhJ2qsSQak/UT7fV+6TNxOtucH6dBSd2sDp
-wat2nrVSsxNBrbi78Khj/sDNa0mc1BxOJvFkEHAiLofH/mbFWPAoT+Xx6pfWq6z5
-zBBe3SFWkJtd31OnflzI7xQlRh8jqMMf1HHLvsmRe8fP9INnnKtLAkeY/PXzdWOf
-Yy73th598WSyyi5wMZ3Dbf2xREeI6UPFCREtD9Z/YtWBAAnjfxRnBvi42OQaRROO
-bun4P+Ga0iz2t71ZCYUDDV5KPsdO9NopkCHdqGDEFdwLZngB5owXOeTjqTTBgoO6
-BhnnA6sjFqgpQ0rXpq+pTKlgx+GkFQ==
-=6VOz
------END PGP SIGNATURE-----
-
---Sig_/MSqUuCQP3/wpjIM9GXw96aU--
+> 
+> --D
+> 
+>>     /usr/bin/ld: kernel/bpf/syscall.o: in function `bpf_link_put':
+>>     syscall.c:(.text+0xa036): undefined reference to `atomic64_dec_return_386'
+>>     /usr/bin/ld: kernel/bpf/syscall.o: in function `bpf_tracing_prog_attach':
+>>     syscall.c:(.text+0xa423): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: kernel/bpf/syscall.o: in function `bpf_link_get_from_fd':
+>>     syscall.c:(.text+0xa8a7): undefined reference to `atomic64_inc_386'
+>>     /usr/bin/ld: kernel/bpf/bpf_iter.o: in function `prepare_seq_file':
+>>     bpf_iter.c:(.text+0x1b2): undefined reference to `atomic64_inc_return_386'
+>>     /usr/bin/ld: fs/proc/task_mmu.o: in function `task_mem':
+>>     task_mmu.c:(.text+0x2bfd): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/ext4/balloc.o: in function `ext4_has_free_clusters':
+>>     balloc.c:(.text+0x94): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/ext4/dir.o: in function `ext4_dir_llseek':
+>>     dir.c:(.text+0x2d3): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/ext4/dir.o: in function `ext4_readdir':
+>>     dir.c:(.text+0x84b): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: dir.c:(.text+0xc71): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: dir.c:(.text+0xc9f): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: dir.c:(.text+0xe1b): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: dir.c:(.text+0xe44): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: dir.c:(.text+0xe72): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ext4/ialloc.o: in function `get_orlov_stats':
+>>     ialloc.c:(.text+0x205): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/ext4/inline.o: in function `ext4_add_dirent_to_inline.isra.0':
+>>     inline.c:(.text+0x14a9): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: inline.c:(.text+0x14df): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ext4/inline.o: in function `ext4_read_inline_dir':
+>>     inline.c:(.text+0x3dd8): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: inline.c:(.text+0x3ea7): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: inline.c:(.text+0x3ed5): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ext4/inode.o: in function `ext4_do_update_inode':
+>>     inode.c:(.text+0x3f13): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: inode.c:(.text+0x44bb): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/ext4/inode.o: in function `__ext4_iget':
+>>     inode.c:(.text+0x7c4d): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: inode.c:(.text+0x8385): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/ext4/inode.o: in function `ext4_mark_iloc_dirty':
+>>     inode.c:(.text+0x8a69): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: inode.c:(.text+0x8aa0): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ext4/inode.o: in function `ext4_setattr':
+>>     inode.c:(.text+0xf4ed): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: inode.c:(.text+0xf523): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ext4/ioctl.o: in function `swap_inode_boot_loader':
+>>     ioctl.c:(.text+0x1794): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/ext4/namei.o: in function `ext4_setent':
+>>     namei.c:(.text+0x2a0a): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: namei.c:(.text+0x2a41): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ext4/namei.o: in function `add_dirent_to_buf':
+>>     namei.c:(.text+0x498c): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: namei.c:(.text+0x49c3): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ext4/namei.o: in function `ext4_generic_delete_entry':
+>>     namei.c:(.text+0x7452): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: namei.c:(.text+0x7488): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ext4/namei.o: in function `ext4_rmdir':
+>>     namei.c:(.text+0x9f2d): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: namei.c:(.text+0x9f63): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ext4/resize.o: in function `ext4_update_super.isra.0':
+>>     resize.c:(.text+0x2566): undefined reference to `atomic64_add_386'
+>>     /usr/bin/ld: fs/ext4/xattr.o: in function `ext4_xattr_inode_iget':
+>>     xattr.c:(.text+0x6b6): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/ext4/xattr.o: in function `ext4_xattr_inode_update_ref':
+>>     xattr.c:(.text+0x776): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xattr.c:(.text+0x79f): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/ext4/xattr.o: in function `ext4_xattr_inode_lookup_create':
+>>     xattr.c:(.text+0x2baf): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/fat/dir.o: in function `fat_remove_entries':
+>>     dir.c:(.text+0x2cf0): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: dir.c:(.text+0x2d27): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/fat/misc.o: in function `fat_update_time':
+>>     misc.c:(.text+0x721): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: misc.c:(.text+0x75e): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ufs/dir.o: in function `ufs_commit_chunk':
+>>     dir.c:(.text+0x24): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: dir.c:(.text+0x5b): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ufs/dir.o: in function `ufs_readdir':
+>>     dir.c:(.text+0x62e): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: dir.c:(.text+0xa43): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: dir.c:(.text+0xa71): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/ufs/inode.o: in function `ufs_iget':
+>>     inode.c:(.text+0x4331): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: inode.c:(.text+0x4365): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/affs/dir.o: in function `affs_readdir':
+>>     dir.c:(.text+0xf5): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: dir.c:(.text+0x480): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: dir.c:(.text+0x4ae): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/affs/amigaffs.o: in function `affs_remove_hash':
+>>     amigaffs.c:(.text+0x180): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: amigaffs.c:(.text+0x1b6): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/affs/amigaffs.o: in function `affs_insert_hash':
+>>     amigaffs.c:(.text+0x4ec): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: amigaffs.c:(.text+0x522): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/xfs/xfs_trace.o: in function `trace_event_raw_event_xfs_log_assign_tail_lsn':
+>>     xfs_trace.c:(.text+0xe948): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_trace.c:(.text+0xe959): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/xfs/xfs_trace.o: in function `trace_event_raw_event_xfs_loggrant_class':
+>>     xfs_trace.c:(.text+0x1126c): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_trace.c:(.text+0x11286): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_trace.c:(.text+0x112b2): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/xfs/libxfs/xfs_alloc.o: in function `xfs_alloc_read_agf':
+>>>> xfs_alloc.c:(.text+0x63db): undefined reference to `atomic64_add_386'
+>>     /usr/bin/ld: fs/xfs/libxfs/xfs_alloc_btree.o: in function `xfs_allocbt_free_block':
+>>>> xfs_alloc_btree.c:(.text+0x844): undefined reference to `atomic64_dec_386'
+>>     /usr/bin/ld: fs/xfs/libxfs/xfs_alloc_btree.o: in function `xfs_allocbt_alloc_block':
+>>>> xfs_alloc_btree.c:(.text+0x8d5): undefined reference to `atomic64_inc_386'
+>>     /usr/bin/ld: fs/xfs/libxfs/xfs_inode_buf.o: in function `xfs_inode_to_disk':
+>>     xfs_inode_buf.c:(.text+0x5e7): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/xfs/libxfs/xfs_inode_buf.o: in function `xfs_inode_from_disk':
+>>     xfs_inode_buf.c:(.text+0x1409): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/xfs/libxfs/xfs_trans_inode.o: in function `xfs_trans_log_inode':
+>>     xfs_trans_inode.c:(.text+0x490): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_trans_inode.c:(.text+0x4d8): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/xfs/xfs_icache.o: in function `xfs_iget_cache_hit':
+>>     xfs_icache.c:(.text+0x1d0c): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_icache.c:(.text+0x1d78): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/xfs/xfs_iops.o: in function `xfs_vn_update_time':
+>>     xfs_iops.c:(.text+0xab2): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_iops.c:(.text+0xaf8): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/xfs/xfs_inode.o: in function `xfs_init_new_inode':
+>>     xfs_inode.c:(.text+0x27d): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/xfs/xfs_mount.o: in function `xfs_mod_fdblocks':
+>>>> xfs_mount.c:(.text+0x24a2): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/xfs/xfs_sysfs.o: in function `write_grant_head_show':
+>>     xfs_sysfs.c:(.text+0x160): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/xfs/xfs_sysfs.o: in function `reserve_grant_head_show':
+>>     xfs_sysfs.c:(.text+0x1a6): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/xfs/xfs_sysfs.o: in function `log_tail_lsn_show':
+>>     xfs_sysfs.c:(.text+0x1ec): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/xfs/xfs_log.o: in function `xlog_space_left':
+>>     xfs_log.c:(.text+0x2cf): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/xfs/xfs_log.o:xfs_log.c:(.text+0x2e1): more undefined references to `atomic64_read_386' follow
+>>     /usr/bin/ld: fs/xfs/xfs_log.o: in function `xlog_grant_head_init':
+>>     xfs_log.c:(.text+0x4e5): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/xfs/xfs_log.o: in function `xlog_alloc_log':
+>>     xfs_log.c:(.text+0xceb): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0xcf6): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/xfs/xfs_log.o: in function `xlog_assign_tail_lsn_locked':
+>>     xfs_log.c:(.text+0x1951): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x196d): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/xfs/xfs_log.o: in function `xlog_grant_push_threshold':
+>>     xfs_log.c:(.text+0x1cc5): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x1ceb): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/xfs/xfs_log.o: in function `xfs_log_regrant':
+>>     xfs_log.c:(.text+0x258d): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x25b2): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/xfs/xfs_log.o: in function `xlog_state_do_callback':
+>>     xfs_log.c:(.text+0x27ab): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x2820): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/xfs/xfs_log.o: in function `xlog_sync':
+>>     xfs_log.c:(.text+0x310e): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x3134): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x3243): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x3269): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/xfs/xfs_log.o: in function `xfs_log_ticket_regrant':
+>>     xfs_log.c:(.text+0x5483): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x54be): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x54e7): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x5522): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x557f): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x559c): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/xfs/xfs_log.o: in function `xfs_log_ticket_ungrant':
+>>     xfs_log.c:(.text+0x5798): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x57d6): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x57f9): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x5834): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/xfs/xfs_log.o: in function `xfs_log_reserve':
+>>     xfs_log.c:(.text+0x5d14): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x5d39): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x5da8): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log.c:(.text+0x5dcd): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/xfs/xfs_inode_item.o: in function `xfs_inode_item_format':
+>>     xfs_inode_item.c:(.text+0x1da9): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/xfs/xfs_log_recover.o: in function `xlog_set_state':
+>>     xfs_log_recover.c:(.text+0x1e3): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: xfs_log_recover.c:(.text+0x1fd): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: xfs_log_recover.c:(.text+0x21c): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: xfs_log_recover.c:(.text+0x23b): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/xfs/xfs_log_recover.o: in function `xlog_check_unmount_rec':
+>>     xfs_log_recover.c:(.text+0x460e): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/xfs/xfs_log_recover.o:xfs_log_recover.c:(.text+0x461f): more undefined references to `atomic64_set_386' follow
+>>     /usr/bin/ld: fs/xfs/xfs_log_recover.o: in function `xlog_find_tail':
+>>     xfs_log_recover.c:(.text+0x57be): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xfs_log_recover.c:(.text+0x597a): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/nilfs2/inode.o: in function `nilfs_inode_add_blocks':
+>>     inode.c:(.text+0x5c4): undefined reference to `atomic64_add_386'
+>>     /usr/bin/ld: fs/nilfs2/inode.o: in function `nilfs_inode_sub_blocks':
+>>     inode.c:(.text+0x60f): undefined reference to `atomic64_sub_386'
+>>     /usr/bin/ld: fs/nilfs2/inode.o: in function `nilfs_new_inode':
+>>     inode.c:(.text+0x738): undefined reference to `atomic64_inc_386'
+>>     /usr/bin/ld: fs/nilfs2/inode.o: in function `nilfs_evict_inode':
+>>     inode.c:(.text+0x1d8e): undefined reference to `atomic64_dec_386'
+>>     /usr/bin/ld: fs/nilfs2/the_nilfs.o: in function `nilfs_find_or_create_root':
+>>     the_nilfs.c:(.text+0x17f0): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: the_nilfs.c:(.text+0x17fb): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/nilfs2/segment.o: in function `nilfs_segctor_do_construct':
+>>     segment.c:(.text+0x4e4d): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: segment.c:(.text+0x4e61): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/nilfs2/ifile.o: in function `nilfs_ifile_count_free_inodes':
+>>     ifile.c:(.text+0x380): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: fs/btrfs/ctree.o: in function `__tree_mod_log_insert':
+>>     ctree.c:(.text+0x2f8): undefined reference to `atomic64_inc_return_386'
+>>     /usr/bin/ld: fs/btrfs/ctree.o: in function `btrfs_get_tree_mod_seq':
+>>     ctree.c:(.text+0x3f69): undefined reference to `atomic64_inc_return_386'
+>>     /usr/bin/ld: fs/btrfs/transaction.o: in function `join_transaction':
+>>     transaction.c:(.text+0x1109): undefined reference to `atomic64_set_386'
+>>     /usr/bin/ld: fs/btrfs/xattr.o: in function `btrfs_xattr_handler_set_prop':
+>>     xattr.c:(.text+0xec): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xattr.c:(.text+0x122): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/btrfs/xattr.o: in function `btrfs_setxattr_trans':
+>>     xattr.c:(.text+0xc24): undefined reference to `atomic64_read_386'
+>>     /usr/bin/ld: xattr.c:(.text+0xc5a): undefined reference to `cmpxchg8b_emu'
+>>     /usr/bin/ld: fs/btrfs/volumes.o: in function `create_chunk':
+>>     volumes.c:(.text+0x242c): undefined reference to `atomic64_sub_386'
+>>     /usr/bin/ld: fs/btrfs/volumes.o: in function `btrfs_remove_chunk':
+>>     volumes.c:(.text+0x51e7): undefined reference to `atomic64_add_386'
+>>     /usr/bin/ld: fs/btrfs/volumes.o: in function `btrfs_shrink_device':
+>>     volumes.c:(.text+0x7977): undefined reference to `atomic64_sub_386'
+>>     /usr/bin/ld: volumes.c:(.text+0x7bcc): undefined reference to `atomic64_add_386'
+>>     /usr/bin/ld: fs/btrfs/volumes.o: in function `btrfs_init_new_device':
+>>     volumes.c:(.text+0xdc15): undefined reference to `atomic64_add_386'
+>>     /usr/bin/ld: volumes.c:(.text+0xeb10): undefined reference to `atomic64_sub_386'
+>>     /usr/bin/ld: fs/btrfs/volumes.o: in function `read_one_dev':
+>>
+>> ---
+>> 0-DAY CI Kernel Test Service, Intel Corporation
+>> https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+> 
+> _______________________________________________
+> kbuild-all mailing list -- kbuild-all@lists.01.org
+> To unsubscribe send an email to kbuild-all-leave@lists.01.org
+> 
