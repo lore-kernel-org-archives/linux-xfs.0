@@ -2,174 +2,148 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53F55C433ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:40:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F128C433B4
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:42:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09ADD613D5
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:40:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F8B6613CD
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:42:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233092AbhDTQlW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Apr 2021 12:41:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39382 "EHLO mail.kernel.org"
+        id S232767AbhDTQml (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Apr 2021 12:42:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39862 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232473AbhDTQlW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Apr 2021 12:41:22 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7827C6135F;
-        Tue, 20 Apr 2021 16:40:50 +0000 (UTC)
+        id S232504AbhDTQml (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Apr 2021 12:42:41 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AD58F613AB;
+        Tue, 20 Apr 2021 16:42:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618936850;
-        bh=nDOcbJtO+XiFZcwwX43zzmRayIqM63Gp5ogCddVXTS4=;
+        s=k20201202; t=1618936929;
+        bh=brH95ZvpRx7I0kHATlChsExIh1PGuSF+UN4APo+3BPc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=I/5w5hOqfrPA5ZlwXkcOhgUFvGITpYbGRgQoEOyhivn+TUNWisoO99evstmtJokX+
-         zB718a0T3xkwSL77zLD8pSNH9K3tgZrlAnp4Gq5GrnlHrlGj46wd/TD5+CvALqbrWS
-         xY1ddZ7gHXVe4QUX2Le9BLtLBGTgikcOKLtoHhnEHx2GIfHfGlaOdM74Bx5tRjUuhG
-         bE5agTB89UL1cbktImrEjwKi7ttK/b7P889R2N5a2PpwowvEAdJurx5Z0yxrwrGhMB
-         qPiDDGUOYkeEoeJ/gdB7Bm7qtA/6tlks3NMwrAwjLdHofJbpt7dpRTNUjmCDfqfis/
-         s6ngU5OfGdrFg==
-Date:   Tue, 20 Apr 2021 09:40:49 -0700
+        b=ouDUYO+3grLXGlF3qIGhregtpulPh7RdrWO4yB/i/s1Bbnv8hz9XOpS484h259TZx
+         +4k8mDqLIQ0LbAshZA/pAQbOhof3RA5Ys+Vlkj11BQEIsVaSgWfkKGmQs6pmyA9WRt
+         D8NyQNPIH/7KI1PPuacH8RCmUjPVmNynR7FSuZfCSwuxJUYwcUJ2nuJITLxqRojRjd
+         cohYUr4aN9t7ZPGYXNE07/H3ZkxaYwRriX/yW1sq7R07uuRGnQ8mnq1Xb6I+wUVzQY
+         ZheOijXmVZlYCLZ25Bo13qL0R2uw0lQEwy6H1gFCFbvejf62ChKGRFIh/DRQ2my1pG
+         whHzrY1JwkG0Q==
+Date:   Tue, 20 Apr 2021 09:42:09 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Stephen Rothwell <sfr@canb.auug.org.au>
-Cc:     Al Viro <viro@ZenIV.linux.org.uk>,
-        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Miklos Szeredi <mszeredi@redhat.com>
-Subject: Re: linux-next: manual merge of the vfs tree with the xfs tree
-Message-ID: <20210420164049.GF3122276@magnolia>
-References: <20210419104948.7be23015@canb.auug.org.au>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: rename xfs_ictimestamp_t
+Message-ID: <20210420164209.GG3122264@magnolia>
+References: <20210420162603.4057289-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210419104948.7be23015@canb.auug.org.au>
+In-Reply-To: <20210420162603.4057289-1-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 19, 2021 at 10:49:48AM +1000, Stephen Rothwell wrote:
-> Hi all,
+On Tue, Apr 20, 2021 at 06:26:03PM +0200, Christoph Hellwig wrote:
+> Rename xfs_ictimestamp_t to xfs_log_timestamp_t as it is a type used
+> for logging timestamps with no relationship to the in-core inode.
 > 
-> Today's linux-next merge of the vfs tree got a conflict in:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_log_format.h  | 10 +++++-----
+>  fs/xfs/xfs_inode_item.c         |  4 ++--
+>  fs/xfs/xfs_inode_item_recover.c |  2 +-
+>  fs/xfs/xfs_ondisk.h             |  2 +-
+>  4 files changed, 9 insertions(+), 9 deletions(-)
 > 
->   fs/xfs/xfs_ioctl.c
-> 
-> between commit:
-> 
->   b2197a36c0ef ("xfs: remove XFS_IFEXTENTS")
-> 
-> from the xfs tree and commit:
-> 
->   9fefd5db08ce ("xfs: convert to fileattr")
-> 
-> from the vfs tree.
-> 
-> I fixed it up (see below) and can carry the fix as necessary. This
-> is now fixed as far as linux-next is concerned, but any non trivial
-> conflicts should be mentioned to your upstream maintainer when your tree
-> is submitted for merging.  You may also want to consider cooperating
-> with the maintainer of the conflicting tree to minimise any particularly
-> complex conflicts.
+> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> index 8bd00da6d2a40f..5900772d678a90 100644
+> --- a/fs/xfs/libxfs/xfs_log_format.h
+> +++ b/fs/xfs/libxfs/xfs_log_format.h
+> @@ -368,7 +368,7 @@ static inline int xfs_ilog_fdata(int w)
+>   * directly mirrors the xfs_dinode structure as it must contain all the same
+>   * information.
+>   */
+> -typedef uint64_t xfs_ictimestamp_t;
+> +typedef uint64_t xfs_log_timestamp_t;
+>  
+>  /* Legacy timestamp encoding format. */
+>  struct xfs_legacy_ictimestamp {
 
-This looks like a good resolution to the merge conflict, thank you!
+Shouldn't you ^^^^^^^^^^^^^^^^^^ convert this one too?
 
 --D
 
-> 
+> @@ -393,9 +393,9 @@ struct xfs_log_dinode {
+>  	uint16_t	di_projid_hi;	/* higher part of owner's project id */
+>  	uint8_t		di_pad[6];	/* unused, zeroed space */
+>  	uint16_t	di_flushiter;	/* incremented on flush */
+> -	xfs_ictimestamp_t di_atime;	/* time last accessed */
+> -	xfs_ictimestamp_t di_mtime;	/* time last modified */
+> -	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
+> +	xfs_log_timestamp_t di_atime;	/* time last accessed */
+> +	xfs_log_timestamp_t di_mtime;	/* time last modified */
+> +	xfs_log_timestamp_t di_ctime;	/* time created/inode modified */
+>  	xfs_fsize_t	di_size;	/* number of bytes in file */
+>  	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
+>  	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+> @@ -420,7 +420,7 @@ struct xfs_log_dinode {
+>  	uint8_t		di_pad2[12];	/* more padding for future expansion */
+>  
+>  	/* fields only written to during inode creation */
+> -	xfs_ictimestamp_t di_crtime;	/* time created */
+> +	xfs_log_timestamp_t di_crtime;	/* time created */
+>  	xfs_ino_t	di_ino;		/* inode number */
+>  	uuid_t		di_uuid;	/* UUID of the filesystem */
+>  
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index c1b32680f71c73..6cc4ca15209ce5 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -299,13 +299,13 @@ xfs_inode_item_format_attr_fork(
+>   * Convert an incore timestamp to a log timestamp.  Note that the log format
+>   * specifies host endian format!
+>   */
+> -static inline xfs_ictimestamp_t
+> +static inline xfs_log_timestamp_t
+>  xfs_inode_to_log_dinode_ts(
+>  	struct xfs_inode		*ip,
+>  	const struct timespec64		tv)
+>  {
+>  	struct xfs_legacy_ictimestamp	*lits;
+> -	xfs_ictimestamp_t		its;
+> +	xfs_log_timestamp_t		its;
+>  
+>  	if (xfs_inode_has_bigtime(ip))
+>  		return xfs_inode_encode_bigtime(tv);
+> diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
+> index cb44f7653f03bb..9b877de2ce5e3d 100644
+> --- a/fs/xfs/xfs_inode_item_recover.c
+> +++ b/fs/xfs/xfs_inode_item_recover.c
+> @@ -125,7 +125,7 @@ static inline bool xfs_log_dinode_has_bigtime(const struct xfs_log_dinode *ld)
+>  static inline xfs_timestamp_t
+>  xfs_log_dinode_to_disk_ts(
+>  	struct xfs_log_dinode		*from,
+> -	const xfs_ictimestamp_t		its)
+> +	const xfs_log_timestamp_t	its)
+>  {
+>  	struct xfs_legacy_timestamp	*lts;
+>  	struct xfs_legacy_ictimestamp	*lits;
+> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> index 0aa87c2101049c..66b541b7bb643d 100644
+> --- a/fs/xfs/xfs_ondisk.h
+> +++ b/fs/xfs/xfs_ondisk.h
+> @@ -126,7 +126,7 @@ xfs_check_ondisk_structs(void)
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,		16);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_log_dinode,		176);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
+> -	XFS_CHECK_STRUCT_SIZE(xfs_ictimestamp_t,		8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_log_timestamp_t,		8);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_legacy_ictimestamp,	8);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format,	56);
 > -- 
-> Cheers,
-> Stephen Rothwell
+> 2.30.1
 > 
-> diff --cc fs/xfs/xfs_ioctl.c
-> index bf490bfae6cb,bbda105a2ce5..000000000000
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@@ -1056,77 -1057,17 +1057,19 @@@ xfs_ioc_ag_geometry
->   static void
->   xfs_fill_fsxattr(
->   	struct xfs_inode	*ip,
-> - 	bool			attr,
-> - 	struct fsxattr		*fa)
-> + 	int			whichfork,
-> + 	struct fileattr		*fa)
->   {
->  +	struct xfs_mount	*mp = ip->i_mount;
-> - 	struct xfs_ifork	*ifp = attr ? ip->i_afp : &ip->i_df;
-> + 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
->   
-> - 	simple_fill_fsxattr(fa, xfs_ip2xflags(ip));
-> + 	fileattr_fill_xflags(fa, xfs_ip2xflags(ip));
->  -	fa->fsx_extsize = ip->i_d.di_extsize << ip->i_mount->m_sb.sb_blocklog;
->  -	fa->fsx_cowextsize = ip->i_d.di_cowextsize <<
->  -			ip->i_mount->m_sb.sb_blocklog;
->  -	fa->fsx_projid = ip->i_d.di_projid;
->  -	if (ifp && (ifp->if_flags & XFS_IFEXTENTS))
->  +
->  +	fa->fsx_extsize = XFS_FSB_TO_B(mp, ip->i_extsize);
->  +	if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE)
->  +		fa->fsx_cowextsize = XFS_FSB_TO_B(mp, ip->i_cowextsize);
->  +	fa->fsx_projid = ip->i_projid;
->  +	if (ifp && !xfs_need_iread_extents(ifp))
->   		fa->fsx_nextents = xfs_iext_count(ifp);
->   	else
->   		fa->fsx_nextents = xfs_ifork_nextents(ifp);
-> @@@ -1212,10 -1167,10 +1169,10 @@@ static in
->   xfs_ioctl_setattr_xflags(
->   	struct xfs_trans	*tp,
->   	struct xfs_inode	*ip,
-> - 	struct fsxattr		*fa)
-> + 	struct fileattr		*fa)
->   {
->   	struct xfs_mount	*mp = ip->i_mount;
->  -	uint64_t		di_flags2;
->  +	uint64_t		i_flags2;
->   
->   	/* Can't change realtime flag if any extents are allocated. */
->   	if ((ip->i_df.if_nextents || ip->i_delayed_blks) &&
-> @@@ -1348,8 -1289,11 +1291,11 @@@ xfs_ioctl_setattr_check_extsize
->   	xfs_extlen_t		size;
->   	xfs_fsblock_t		extsize_fsb;
->   
-> + 	if (!fa->fsx_valid)
-> + 		return 0;
-> + 
->   	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_df.if_nextents &&
->  -	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
->  +	    ((ip->i_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
->   		return -EINVAL;
->   
->   	if (fa->fsx_extsize == 0)
-> @@@ -1520,18 -1476,18 +1478,19 @@@ xfs_fileattr_set
->   	 * extent size hint should be set on the inode. If no extent size flags
->   	 * are set on the inode then unconditionally clear the extent size hint.
->   	 */
->  -	if (ip->i_d.di_flags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
->  -		ip->i_d.di_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
->  -	else
->  -		ip->i_d.di_extsize = 0;
->  -	if (xfs_sb_version_has_v3inode(&mp->m_sb) &&
->  -	    (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
->  -		ip->i_d.di_cowextsize = fa->fsx_cowextsize >>
->  -				mp->m_sb.sb_blocklog;
->  +	if (ip->i_diflags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
->  +		ip->i_extsize = XFS_B_TO_FSB(mp, fa->fsx_extsize);
->   	else
->  -		ip->i_d.di_cowextsize = 0;
->  +		ip->i_extsize = 0;
->  +
->  +	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
->  +		if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE)
->  +			ip->i_cowextsize = XFS_B_TO_FSB(mp, fa->fsx_cowextsize);
->  +		else
->  +			ip->i_cowextsize = 0;
->  +	}
->   
-> + skip_xattr:
->   	error = xfs_trans_commit(tp);
->   
->   	/*
-
-
