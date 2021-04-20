@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08BBEC433ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:22:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82DA7C433ED
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:23:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C064E613CD
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:22:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43EC4613CD
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:23:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232901AbhDTQX0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Apr 2021 12:23:26 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:46284 "EHLO
+        id S233086AbhDTQYT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Apr 2021 12:24:19 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:36175 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232174AbhDTQX0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Apr 2021 12:23:26 -0400
+        by vger.kernel.org with ESMTP id S232767AbhDTQYT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Apr 2021 12:24:19 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618935774;
+        s=mimecast20190719; t=1618935826;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
         bh=+Ixv/8Zy/OmKtNfgkhWCSVuxjHsRhrWJnyARd9Tafqw=;
-        b=Uul8JKQLLLk8Ky2BhMNlgjprQ6LeT6u43ewTq9Gg59DzJnusY7o29YNaBqS2qTUKTJ4KZK
-        XHgjWQ4d7dScM11N5Tpyw5oQXo7KSN1m+d5hhcma0uv/2hOV5bENv6ob8UZoki0m+cCVEs
-        O6K9Ii7f+7+zEnybNsbM4ixa5NpuWhs=
+        b=OTZhkntSpmI5As3/TmF5QvVMFT6qopX0TKo8+y9m2QmWlCi1Rn8hMVAnk9CSg6jkIJxrMQ
+        rSZ+rOvSqZWpq31wBl91ImFlMiySzCPUNvHYoNei0l0z3CpyNOrPmUDUj4n0kH3GJA7BPo
+        EpmEgdF0OKcyKUZAReqMvKIPNsBF4do=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-403-nSl1xQsbNUGYH0LDc2ohlA-1; Tue, 20 Apr 2021 12:22:52 -0400
-X-MC-Unique: nSl1xQsbNUGYH0LDc2ohlA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+ us-mta-80-aEkcx2abN8yXsF9GrHkaKA-1; Tue, 20 Apr 2021 12:23:39 -0400
+X-MC-Unique: aEkcx2abN8yXsF9GrHkaKA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 10B488189C6;
-        Tue, 20 Apr 2021 16:22:51 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5A0491006C83;
+        Tue, 20 Apr 2021 16:23:38 +0000 (UTC)
 Received: from bfoster (ovpn-112-38.rdu2.redhat.com [10.10.112.38])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A813E5D9CA;
-        Tue, 20 Apr 2021 16:22:50 +0000 (UTC)
-Date:   Tue, 20 Apr 2021 12:22:48 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id EB1282C01F;
+        Tue, 20 Apr 2021 16:23:37 +0000 (UTC)
+Date:   Tue, 20 Apr 2021 12:23:36 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
 Subject: Re: [PATCH v3 1/2] xfs: set a mount flag when perag reservation is
  active
-Message-ID: <YH7/2P4SHHAJjaar@bfoster>
+Message-ID: <YH8ACPCvrMsMjnvG@bfoster>
 References: <20210412133059.1186634-1-bfoster@redhat.com>
  <20210412133059.1186634-2-bfoster@redhat.com>
  <20210414004950.GW3957620@magnolia>
@@ -54,7 +54,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20210414004950.GW3957620@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
