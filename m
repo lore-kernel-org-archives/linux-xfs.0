@@ -2,291 +2,159 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41391C433B4
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:22:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08BBEC433ED
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:22:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F4195613C8
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:22:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C064E613CD
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 16:22:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233004AbhDTQXX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Apr 2021 12:23:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58772 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232901AbhDTQXX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Apr 2021 12:23:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8F36A61003;
+        id S232901AbhDTQX0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Apr 2021 12:23:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:46284 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232174AbhDTQX0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Apr 2021 12:23:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1618935774;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=+Ixv/8Zy/OmKtNfgkhWCSVuxjHsRhrWJnyARd9Tafqw=;
+        b=Uul8JKQLLLk8Ky2BhMNlgjprQ6LeT6u43ewTq9Gg59DzJnusY7o29YNaBqS2qTUKTJ4KZK
+        XHgjWQ4d7dScM11N5Tpyw5oQXo7KSN1m+d5hhcma0uv/2hOV5bENv6ob8UZoki0m+cCVEs
+        O6K9Ii7f+7+zEnybNsbM4ixa5NpuWhs=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-403-nSl1xQsbNUGYH0LDc2ohlA-1; Tue, 20 Apr 2021 12:22:52 -0400
+X-MC-Unique: nSl1xQsbNUGYH0LDc2ohlA-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 10B488189C6;
         Tue, 20 Apr 2021 16:22:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618935771;
-        bh=D/CC8/ATN2RNusYvL0Osh4vgreV9oNZbkiOblJ5Yz0M=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=kwhg3NOCpcSSeR7L/M8wMVcT/CLQ4gDwelD2pisNlHxZM8wuYbYLAkHl9ywzLOJk2
-         dfsznmop6AZ9RygZYeMsQbBr4tOEaEU+NRYnB8g8UkJYpt3+PBzmnCnIbJPWZTaQ6K
-         YzGTALBAZ8dC9WbJ/zarV+2Xq4iiOAwiRyw84QuF6jwZsSlBFue4UqfvpOYJJzrhYE
-         zaxPblJlezhYV+2BUM1Eudw3ukJzA+CNphpyJ1cuid/bjfFitOEUsIgd0HX+QejZ4o
-         1mYSRH/ytZL2WwUsfSUB42cE1FVcYlUp1skeGmUB70s0cBRN9Sp8HLFSwLAEC5MUWu
-         Jjk73nlSSqqKg==
-Date:   Tue, 20 Apr 2021 09:22:50 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 2/2] xfs: turn on lazysbcount unconditionally
-Message-ID: <20210420162250.GE3122264@magnolia>
-References: <20210420110855.2961626-1-hsiangkao@redhat.com>
- <20210420110855.2961626-2-hsiangkao@redhat.com>
+Received: from bfoster (ovpn-112-38.rdu2.redhat.com [10.10.112.38])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A813E5D9CA;
+        Tue, 20 Apr 2021 16:22:50 +0000 (UTC)
+Date:   Tue, 20 Apr 2021 12:22:48 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] xfs: set a mount flag when perag reservation is
+ active
+Message-ID: <YH7/2P4SHHAJjaar@bfoster>
+References: <20210412133059.1186634-1-bfoster@redhat.com>
+ <20210412133059.1186634-2-bfoster@redhat.com>
+ <20210414004950.GW3957620@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210420110855.2961626-2-hsiangkao@redhat.com>
+In-Reply-To: <20210414004950.GW3957620@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 20, 2021 at 07:08:55PM +0800, Gao Xiang wrote:
-> As Dave mentioned [1], "/me is now wondering why we even bother
-> with !lazy-count anymore.
+On Tue, Apr 13, 2021 at 05:49:50PM -0700, Darrick J. Wong wrote:
+> On Mon, Apr 12, 2021 at 09:30:58AM -0400, Brian Foster wrote:
+> > perag reservation is enabled at mount time on a per AG basis. The
+> > upcoming in-core allocation btree accounting mechanism needs to know
+> > when reservation is enabled and that all perag AGF contexts are
+> > initialized. As a preparation step, set a flag in the mount
+> > structure and unconditionally initialize the pagf on all mounts
+> > where at least one reservation is active.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_ag_resv.c | 24 ++++++++++++++----------
+> >  fs/xfs/xfs_mount.h          |  1 +
+> >  2 files changed, 15 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+> > index 6c5f8d10589c..9b2fc4abad2c 100644
+> > --- a/fs/xfs/libxfs/xfs_ag_resv.c
+> > +++ b/fs/xfs/libxfs/xfs_ag_resv.c
+> > @@ -254,6 +254,7 @@ xfs_ag_resv_init(
+> >  	xfs_extlen_t			ask;
+> >  	xfs_extlen_t			used;
+> >  	int				error = 0;
+> > +	bool				has_resv = false;
+> >  
+> >  	/* Create the metadata reservation. */
+> >  	if (pag->pag_meta_resv.ar_asked == 0) {
+> > @@ -291,6 +292,8 @@ xfs_ag_resv_init(
+> >  			if (error)
+> >  				goto out;
+> >  		}
+> > +		if (ask)
+> > +			has_resv = true;
+> >  	}
+> >  
+> >  	/* Create the RMAPBT metadata reservation */
+> > @@ -304,18 +307,19 @@ xfs_ag_resv_init(
+> >  		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_RMAPBT, ask, used);
+> >  		if (error)
+> >  			goto out;
+> > +		if (ask)
+> > +			has_resv = true;
+> >  	}
+> >  
+> > -#ifdef DEBUG
+> > -	/* need to read in the AGF for the ASSERT below to work */
+> > -	error = xfs_alloc_pagf_init(pag->pag_mount, tp, pag->pag_agno, 0);
+> > -	if (error)
+> > -		return error;
+> > -
+> > -	ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
+> > -	       xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <=
+> > -	       pag->pagf_freeblks + pag->pagf_flcount);
+> > -#endif
+> > +	if (has_resv) {
+> > +		mp->m_has_agresv = true;
 > 
-> We've updated the agr btree block accounting unconditionally since
-> lazy-count was added, and scrub will always report a mismatch in
-> counts if they exist regardless of lazy-count. So why don't we just
-> start ignoring the on-disk value and always use lazy-count based
-> updates? "
+> If the metadata reservation succeeds but the rmapbt reservation fails
+> with ENOSPC, won't we fail to set m_has_agresv true here?  We don't fail
+> the entire mount if ENOSPC happens, which means that there's a slight
+> chance of doing the wrong thing here if all the AGs are (somehow) like
+> that.
 > 
-> Therefore, turn on lazy sb counters if it's still disabled at the
-> mount time, or at remount_rw if fs was mounted as read-only.
-> xfs_initialize_perag_data() is reused here since no need to scan
-> agf/agi once more again.
+
+Yes it looks like we would skip setting the mount flag (and initializing
+the pagf). I suppose we should probably just lift the out label up
+before this whole branch.
+
+Brian
+
+> --D
 > 
-> After this patch, we could get rid of this whole set of subtle
-> conditional behaviours in the codebase.
+> > +		error = xfs_alloc_pagf_init(mp, tp, pag->pag_agno, 0);
+> > +		if (error)
+> > +			return error;
+> > +		ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
+> > +		       xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <=
+> > +		       pag->pagf_freeblks + pag->pagf_flcount);
+> > +	}
+> >  out:
+> >  	return error;
+> >  }
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index 81829d19596e..8847ffd29777 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -139,6 +139,7 @@ typedef struct xfs_mount {
+> >  	bool			m_fail_unmount;
+> >  	bool			m_finobt_nores; /* no per-AG finobt resv. */
+> >  	bool			m_update_sb;	/* sb needs update in mount */
+> > +	bool			m_has_agresv;	/* perag reservations active */
+> >  
+> >  	/*
+> >  	 * Bitsets of per-fs metadata that have been checked and/or are sick.
+> > -- 
+> > 2.26.3
+> > 
 > 
-> [1] https://lore.kernel.org/r/20210417223201.GU63242@dread.disaster.area
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> ---
-> Enabling lazysbcount is only addressed in this patch, I'll send
-> out a seperated following patch to cleanup all unused conditions
-> later.
-> 
-> Also tr_sb is reused here since only agf is modified for each ag,
-> and before lazysbcount sb feature is enabled (m_update_sb = true),
-> agf_btreeblks field shouldn't matter for such AGs.
-> 
->  fs/xfs/libxfs/xfs_format.h |  6 +++
->  fs/xfs/libxfs/xfs_sb.c     | 93 +++++++++++++++++++++++++++++++++++---
->  fs/xfs/xfs_mount.c         |  2 +-
->  fs/xfs/xfs_super.c         |  5 ++
->  4 files changed, 98 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 76e2461b9e66..9081d7876d66 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -385,6 +385,12 @@ static inline bool xfs_sb_version_haslazysbcount(struct xfs_sb *sbp)
->  		(sbp->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT));
->  }
->  
-> +static inline void xfs_sb_version_addlazysbcount(struct xfs_sb *sbp)
-> +{
-> +	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
-> +	sbp->sb_features2 |= XFS_SB_VERSION2_LAZYSBCOUNTBIT;
-> +}
-> +
->  static inline bool xfs_sb_version_hasattr2(struct xfs_sb *sbp)
->  {
->  	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 423dada3f64c..6353e0d4cab1 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -18,6 +18,7 @@
->  #include "xfs_trace.h"
->  #include "xfs_trans.h"
->  #include "xfs_buf_item.h"
-> +#include "xfs_btree.h"
->  #include "xfs_bmap_btree.h"
->  #include "xfs_alloc_btree.h"
->  #include "xfs_log.h"
-> @@ -841,6 +842,55 @@ xfs_sb_mount_common(
->  	mp->m_ag_max_usable = xfs_alloc_ag_max_usable(mp);
->  }
->  
-> +static int
-> +xfs_fixup_agf_btreeblks(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,
-> +	struct xfs_buf		*agfbp,
-> +	xfs_agnumber_t		agno)
-> +{
-> +	struct xfs_btree_cur	*cur;
-> +	struct xfs_perag	*pag = agfbp->b_pag;
-> +	struct xfs_agf		*agf = agfbp->b_addr;
-> +	xfs_agblock_t		btreeblks, blocks;
-> +	int			error;
-> +
-> +	cur = xfs_allocbt_init_cursor(mp, tp, agfbp, agno, XFS_BTNUM_BNO);
-> +	error = xfs_btree_count_blocks(cur, &blocks);
-> +	if (error)
-> +		goto err;
-> +	xfs_btree_del_cursor(cur, error);
-> +	btreeblks = blocks - 1;
-> +
-> +	cur = xfs_allocbt_init_cursor(mp, tp, agfbp, agno, XFS_BTNUM_CNT);
-> +	error = xfs_btree_count_blocks(cur, &blocks);
-> +	if (error)
-> +		goto err;
-> +	xfs_btree_del_cursor(cur, error);
-> +	btreeblks += blocks - 1;
-> +
-> +	/*
-> +	 * although rmapbt doesn't exist in v4 fses, but it'd be better
-> +	 * to turn it as a generic helper.
-> +	 */
-> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> +		cur = xfs_rmapbt_init_cursor(mp, tp, agfbp, agno);
-> +		error = xfs_btree_count_blocks(cur, &blocks);
-> +		if (error)
-> +			goto err;
-> +		xfs_btree_del_cursor(cur, error);
-> +		btreeblks += blocks - 1;
-> +	}
-> +
-> +	agf->agf_btreeblks = cpu_to_be32(btreeblks);
-> +	pag->pagf_btreeblks = btreeblks;
-> +	xfs_alloc_log_agf(tp, agfbp, XFS_AGF_BTREEBLKS);
-> +	return 0;
-> +err:
-> +	xfs_btree_del_cursor(cur, error);
-> +	return error;
-> +}
-> +
->  /*
->   * xfs_initialize_perag_data
->   *
-> @@ -864,27 +914,51 @@ xfs_initialize_perag_data(
->  	uint64_t	btree = 0;
->  	uint64_t	fdblocks;
->  	int		error = 0;
-> +	bool		conv = !(mp->m_flags & XFS_MOUNT_RDONLY) &&
-> +				!xfs_sb_version_haslazysbcount(sbp);
-> +
-> +	if (conv)
-> +		xfs_warn(mp, "enabling lazy-counters...");
->  
->  	for (index = 0; index < agcount; index++) {
-> +		struct xfs_trans	*tp = NULL;
-> +		struct xfs_buf		*agfbp;
-> +
-> +		if (conv) {
-> +			error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb,
-> +					0, 0, 0, &tp);
-> +			if (error)
-> +				return error;
-> +		}
-> +
->  		/*
-> -		 * read the agf, then the agi. This gets us
-> +		 * read the agi, then the agf. This gets us
->  		 * all the information we need and populates the
->  		 * per-ag structures for us.
->  		 */
-> -		error = xfs_alloc_pagf_init(mp, NULL, index, 0);
-> -		if (error)
-> +		error = xfs_ialloc_pagi_init(mp, tp, index);
-> +		if (error) {
-> +err_out:
-> +			if (tp)
-> +				xfs_trans_cancel(tp);
->  			return error;
-> +		}
->  
-> -		error = xfs_ialloc_pagi_init(mp, NULL, index);
-> +		error = xfs_alloc_read_agf(mp, tp, index, 0, &agfbp);
->  		if (error)
-> -			return error;
-> -		pag = xfs_perag_get(mp, index);
-> +			goto err_out;
-> +		pag = agfbp->b_pag;
->  		ifree += pag->pagi_freecount;
->  		ialloc += pag->pagi_count;
->  		bfree += pag->pagf_freeblks;
->  		bfreelst += pag->pagf_flcount;
-> +		if (tp) {
-> +			error = xfs_fixup_agf_btreeblks(mp, tp, agfbp, index);
 
-Lazysbcount upgrades should be done from a separate function, not mixed
-in with perag initialization.  Also, why is it necessary to walk all the
-space btrees to set agf_btreeblks?
-
-> +			xfs_trans_commit(tp);
-> +		} else {
-> +			xfs_buf_relse(agfbp);
-> +		}
->  		btree += pag->pagf_btreeblks;
-> -		xfs_perag_put(pag);
->  	}
->  	fdblocks = bfree + bfreelst + btree;
->  
-> @@ -900,6 +974,11 @@ xfs_initialize_perag_data(
->  		goto out;
->  	}
->  
-> +	if (conv) {
-> +		xfs_sb_version_addlazysbcount(sbp);
-> +		mp->m_update_sb = true;
-> +		xfs_warn(mp, "lazy-counters has been enabled.");
-
-But we don't log the sb update?
-
-As far as the feature upgrade goes, is it necessary to bwrite the
-primary super to disk (and then log the change)[1] to prevent a truly
-ancient kernel that doesn't support lazysbcount from trying to recover
-the log and ending up with an unsupported feature set?
-
-[1] https://lore.kernel.org/linux-xfs/161723934343.3149451.16679733325094950568.stgit@magnolia/
-
-> +	}
->  	/* Overwrite incore superblock counters with just-read data */
->  	spin_lock(&mp->m_sb_lock);
->  	sbp->sb_ifree = ifree;
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index cb1e2c4702c3..b3b13acd45d6 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -626,7 +626,7 @@ xfs_check_summary_counts(
->  	 * superblock to be correct and we don't need to do anything here.
->  	 * Otherwise, recalculate the summary counters.
->  	 */
-> -	if ((!xfs_sb_version_haslazysbcount(&mp->m_sb) ||
-> +	if ((xfs_sb_version_haslazysbcount(&mp->m_sb) &&
-
-Not clear why the logic here inverts?
-
---D
-
->  	     XFS_LAST_UNMOUNT_WAS_CLEAN(mp)) &&
->  	    !xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS))
->  		return 0;
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index a2dab05332ac..16197a890c15 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1678,6 +1678,11 @@ xfs_remount_rw(
->  	}
->  
->  	mp->m_flags &= ~XFS_MOUNT_RDONLY;
-> +	if (!xfs_sb_version_haslazysbcount(sbp)) {
-> +		error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
-> +		if (error)
-> +			return error;
-> +	}
->  
->  	/*
->  	 * If this is the first remount to writeable state we might have some
-> -- 
-> 2.27.0
-> 
