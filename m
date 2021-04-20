@@ -7,99 +7,124 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7B10C433B4
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 17:10:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45D20C433B4
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 17:11:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B02D6613CD
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 17:10:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B522613CD
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 17:11:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233362AbhDTRLK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Apr 2021 13:11:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52914 "EHLO mail.kernel.org"
+        id S232879AbhDTRMI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Apr 2021 13:12:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53440 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232769AbhDTRLI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Apr 2021 13:11:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 121E961076;
-        Tue, 20 Apr 2021 17:10:37 +0000 (UTC)
+        id S231549AbhDTRMI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Apr 2021 13:12:08 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A981C613AF;
+        Tue, 20 Apr 2021 17:11:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618938637;
-        bh=NWqsz2NcKc7FCI4eofDE6H/oLs6Uuv0dLkcnijmIJiI=;
+        s=k20201202; t=1618938696;
+        bh=OCEOZAJbjv3xNGcLmLB4grBMoFIYzyVitNvLhh2weDE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=iSKQGaCdyRSuyahjfFKmu7At99Xsn8nFIjG7gkT9luOjpxsXFgARjkzIp2sMsryBr
-         1KjO0r0JQK4C90NUYBZJlt4TxEK3p+4k+ps0ZXYjttzP4A0NmmLtAR/+LNxT2T4tNQ
-         SskH68BT76mhtORQaykViQnmSbgc3lQnlNtiBcVLz0FEJ7JbIY7pp7PbMr1OA8/8Af
-         4k6Lm9Qims7ELFn5eed4nzKHPmnDFoptoxCu4C3mk8wdEWlt9TuZk6gRZR0z7E+6cN
-         upalCX2xhg86AGwJKB0tpiVnkgLoTlybDPalRQ45OPufv3HCHwVAhlrobiZ9/TJ/Dv
-         APTM5HGnPbzrg==
-Date:   Tue, 20 Apr 2021 10:10:36 -0700
+        b=a9sIfu4dwc09/XWlwAu7DEDgbnMNKcv3bKe14jn3WkaVhaxsjDiHddnM9c07LHX3b
+         nxUs9+cXZQSCjyJLugC9DpHs3FgI+c/sBgXWc8dLm62jCLJTa3pMn+8JS7FZVPLM5U
+         ZTtM2x040xz06fdi3wvjDMQnZ8LBjkfZHgjPCJWJ1CTLMSJbh3Ujivatkp1/UTiki6
+         zAPq060tZ+g/wKbTp21WhZZIqx/0VA0zxFDnTeG60VCipg6l8Gm2qxfalG7Xv4MBYq
+         cunGOl8du+SoLIh56qeMoaEpPQq/9KfyGbLeuNiMufpMxMhPY729sK9bWNnkd/nHbc
+         tHQtvOMOOaw3Q==
+Date:   Tue, 20 Apr 2021 10:11:36 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org,
         "Gustavo A . R . Silva" <gustavoars@kernel.org>
-Subject: Re: [PATCH 4/7]  xfs: pass a xfs_efd_log_item to xfs_efd_item_sizeof
-Message-ID: <20210420171036.GJ3122264@magnolia>
+Subject: Re: [PATCH 5/7] xfs: add a xfs_efi_item_sizeof helper
+Message-ID: <20210420171136.GK3122264@magnolia>
 References: <20210419082804.2076124-1-hch@lst.de>
- <20210419082804.2076124-5-hch@lst.de>
+ <20210419082804.2076124-6-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210419082804.2076124-5-hch@lst.de>
+In-Reply-To: <20210419082804.2076124-6-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 19, 2021 at 10:28:01AM +0200, Christoph Hellwig wrote:
-> xfs_efd_log_item only looks at the embedded xfs_efd_log_item structure,
-> so pass that directly and rename the function to xfs_efd_log_item_sizeof.
+On Mon, Apr 19, 2021 at 10:28:02AM +0200, Christoph Hellwig wrote:
+> Add a helper to calculate the size of an xfs_efi_log_item structure
+> the specified number of extents.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_extfree_item.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 7ae570d1944590..f15d6cfca6e2f1 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -195,11 +195,11 @@ xfs_efd_item_free(struct xfs_efd_log_item *efdp)
->   * structure.
->   */
->  static inline int
-> -xfs_efd_item_sizeof(
-> -	struct xfs_efd_log_item *efdp)
-> +xfs_efd_log_item_sizeof(
 
-Same naming complaint as the last patch, though the code changes
-themselves look fine to me.
+Function name questions notwithstanding, this is a nice cleanup.
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +	struct xfs_efd_log_format *elf)
+> ---
+>  fs/xfs/xfs_extfree_item.c | 10 +++-------
+>  fs/xfs/xfs_extfree_item.h |  6 ++++++
+>  fs/xfs/xfs_super.c        |  6 ++----
+>  3 files changed, 11 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+> index f15d6cfca6e2f1..afd568d426c1f1 100644
+> --- a/fs/xfs/xfs_extfree_item.c
+> +++ b/fs/xfs/xfs_extfree_item.c
+> @@ -153,17 +153,13 @@ xfs_efi_init(
+>  
 >  {
->  	return sizeof(struct xfs_efd_log_format) +
-> -	       (efdp->efd_format.efd_nextents - 1) * sizeof(struct xfs_extent);
-> +	       (elf->efd_nextents - 1) * sizeof(struct xfs_extent);
->  }
+>  	struct xfs_efi_log_item	*efip;
+> -	uint			size;
 >  
->  STATIC void
-> @@ -209,7 +209,7 @@ xfs_efd_item_size(
->  	int			*nbytes)
->  {
->  	*nvecs += 1;
-> -	*nbytes += xfs_efd_item_sizeof(EFD_ITEM(lip));
-> +	*nbytes += xfs_efd_log_item_sizeof(&EFD_ITEM(lip)->efd_format);
->  }
+>  	ASSERT(nextents > 0);
+> -	if (nextents > XFS_EFI_MAX_FAST_EXTENTS) {
+> -		size = (uint)(sizeof(struct xfs_efi_log_item) +
+> -			((nextents - 1) * sizeof(struct xfs_extent)));
+> -		efip = kmem_zalloc(size, 0);
+> -	} else {
+> +	if (nextents > XFS_EFI_MAX_FAST_EXTENTS)
+> +		efip = kmem_zalloc(xfs_efi_item_sizeof(nextents), 0);
+> +	else
+>  		efip = kmem_cache_zalloc(xfs_efi_zone,
+>  					 GFP_KERNEL | __GFP_NOFAIL);
+> -	}
 >  
+>  	xfs_log_item_init(mp, &efip->efi_item, XFS_LI_EFI, &xfs_efi_item_ops);
+>  	efip->efi_format.efi_nextents = nextents;
+> diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+> index e09afd0f63ff59..d2577d872de771 100644
+> --- a/fs/xfs/xfs_extfree_item.h
+> +++ b/fs/xfs/xfs_extfree_item.h
+> @@ -52,6 +52,12 @@ struct xfs_efi_log_item {
+>  	struct xfs_efi_log_format efi_format;
+>  };
+>  
+> +static inline int xfs_efi_item_sizeof(unsigned int nextents)
+> +{
+> +	return sizeof(struct xfs_efi_log_item) +
+> +		(nextents - 1) * sizeof(struct xfs_extent);
+> +}
+> +
 >  /*
-> @@ -234,7 +234,7 @@ xfs_efd_item_format(
+>   * This is the "extent free done" log item.  It is used to log
+>   * the fact that some extents earlier mentioned in an efi item
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index a2dab05332ac27..c93710cb5ce3f0 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1961,10 +1961,8 @@ xfs_init_zones(void)
+>  		goto out_destroy_buf_item_zone;
 >  
->  	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_EFD_FORMAT,
->  			&efdp->efd_format,
-> -			xfs_efd_item_sizeof(efdp));
-> +			xfs_efd_log_item_sizeof(&efdp->efd_format));
->  }
+>  	xfs_efi_zone = kmem_cache_create("xfs_efi_item",
+> -					 (sizeof(struct xfs_efi_log_item) +
+> -					 (XFS_EFI_MAX_FAST_EXTENTS - 1) *
+> -					 sizeof(struct xfs_extent)),
+> -					 0, 0, NULL);
+> +			xfs_efi_item_sizeof(XFS_EFI_MAX_FAST_EXTENTS),
+> +			0, 0, NULL);
+>  	if (!xfs_efi_zone)
+>  		goto out_destroy_efd_zone;
 >  
->  /*
 > -- 
 > 2.30.1
 > 
