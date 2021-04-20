@@ -2,147 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90BF7C433B4
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 17:35:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D3AAC433B4
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 17:36:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1DBA9613E4
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 17:35:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EE85613C9
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 17:36:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233467AbhDTRfo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Apr 2021 13:35:44 -0400
-Received: from sandeen.net ([63.231.237.45]:39876 "EHLO sandeen.net"
+        id S233281AbhDTRhH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Apr 2021 13:37:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35714 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233385AbhDTRfo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Apr 2021 13:35:44 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id A18D9EF8
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Apr 2021 12:33:58 -0500 (CDT)
-To:     xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 92abc149
-Message-ID: <07c5b8a1-174e-c034-7872-6980beeeb8ea@sandeen.net>
-Date:   Tue, 20 Apr 2021 12:35:11 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.9.1
+        id S233141AbhDTRhH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Apr 2021 13:37:07 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9E907613C4;
+        Tue, 20 Apr 2021 17:36:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1618940195;
+        bh=EINfUtLwjDfU3YHKQSvSOcvl/KZRbzI2/A7dluslhMs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=RsonUfwQcCdLf2wJweSeB5aeEM2WDZG9m4ftdvjp9KLa6+QmSeDA+Kvy4SqJPH455
+         tTzeDRNuABhHR0bmY8ZZ9ec+uGyxOYKc4Xc/sgraETKbTZdMwLCxpCwua2/kq5LT5g
+         rfZx/9cA7IHg6c1qNTq1nIcm63bupqzVhVWqOLFpN3VGkn3OqESBkV7qe+vfUqVjrn
+         QCax12P+gbzgI3GvssayIWFnBFqIPq0jSCGva9dHDzM6J3/qx7tNAXv/eLtSXmi2NU
+         Oi3lacQ3y7dc9KGX/iqpCfShLk8PQS6LzlxoFJ4CiHTNJD/Kv0xFM/KZU7dMdaH1Nh
+         izUgWP+3bXeXg==
+Date:   Tue, 20 Apr 2021 10:36:34 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: RFC: don't allow disabling quota accounting on a mounted file
+ system
+Message-ID: <20210420173634.GO3122264@magnolia>
+References: <20210420072256.2326268-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="Is7tTTXU9ILPMQ5NvrVWyISLWLNAVMhRv"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210420072256.2326268-1-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---Is7tTTXU9ILPMQ5NvrVWyISLWLNAVMhRv
-Content-Type: multipart/mixed; boundary="peHjwNVPUbOXYF1l1X8a5WIsGxzddPNDA";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <07c5b8a1-174e-c034-7872-6980beeeb8ea@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 92abc149
+On Tue, Apr 20, 2021 at 09:22:54AM +0200, Christoph Hellwig wrote:
+> Hi all,
+> 
+> disabling quota accounting (vs just enforcement) on a running file system
+> is a fundamentally race and hard to get right operation.  It also has
+> very little practical use.
+> 
+> This causes xfs/007 xfs/106 xfs/220 xfs/304 xfs/305 to fail, as they
+> specifically test this functionality.
 
---peHjwNVPUbOXYF1l1X8a5WIsGxzddPNDA
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+What kind of failures do you get now?  Are they all a result of the
+_ACCT flags never going away?  Which I guess means that tests expecting
+to get ENOSYS after you turn off _ACCT will now no longer error out?
 
-Hi folks,
+I've been wondering recently why we can't just apply "xfs: skip dquot
+reservations if quota is inactive" and change dqpurge_all to relog the
+quotaoff item if !xfs_log_item_in_current_chkpt to prevent tail pinning.
+AFAICT we can log a qoffend and a new qoff (just like we do with regular
+intents) and it won't have any bad effect on recovery.
 
-The for-next branch of the xfsprogs repository at:
+--D
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-(Note: If it's not in here, I really did miss it, so feel free to
-re-send or ping me if you were expecting your patches to be merged
-this time.)
-
-The new head of the for-next branch is commit:
-
-92abc149 (HEAD -> for-next, origin/for-next, korg/for-next) mkfs: don't d=
-efault to the physical sector size if > XFS_MAX_SECTORSIZE
-
-New Commits:
-
-Carlos Maiolino (2):
-      [bc8ff335] Add dax mount option to man xfs(5)
-      [366a2ad5] xfs_logprint: Fix buffer overflow printing quotaoff
-
-Darrick J. Wong (2):
-      [dcad5c60] libfrog: report inobtcount in geometry
-      [1ff584b2] xfs_admin: pick up log arguments correctly
-
-Dave Chinner (7):
-      [b6af4fa8] workqueue: bound maximum queue depth
-      [fdfd70e7] repair: Protect bad inode list with mutex
-      [96496f5d] repair: protect inode chunk tree records with a mutex
-      [39054ffe] repair: parallelise phase 6
-      [1f7c7553] repair: don't duplicate names in phase 6
-      [266b73fa] repair: convert the dir byaddr hash to a radix tree
-      [6375c5b8] repair: scale duplicate name checking in phase 6.
-
-Jeff Moyer (1):
-      [92abc149] mkfs: don't default to the physical sector size if > XFS=
-_MAX_SECTORSIZE
-
-Leah Neukirchen (1):
-      [3a882f0a] xfsprogs: include <signal.h> for platform_crash
-
-
-Code Diffstat:
-
- db/xfs_admin.sh          |   9 +-
- include/linux.h          |   1 +
- libfrog/fsgeom.c         |   6 +-
- libfrog/radix-tree.c     |  46 ++++++
- libfrog/workqueue.c      |  42 ++++-
- libfrog/workqueue.h      |   4 +
- logprint/log_print_all.c |  12 +-
- man/man5/xfs.5           |  17 ++
- mkfs/xfs_mkfs.c          |  10 +-
- repair/dir2.c            |  34 ++--
- repair/dir2.h            |   2 +-
- repair/incore.h          |  23 +++
- repair/incore_ino.c      |  15 ++
- repair/phase6.c          | 395 +++++++++++++++++++++++------------------=
-------
- 14 files changed, 379 insertions(+), 237 deletions(-)
-
-
---peHjwNVPUbOXYF1l1X8a5WIsGxzddPNDA--
-
---Is7tTTXU9ILPMQ5NvrVWyISLWLNAVMhRv
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmB/EM8FAwAAAAAACgkQIK4WkuE93uDb
-1g/+NuDg58sQw24TFkm2sVRNQxb46iL3DVa83nNsm0oLnnJWOivArj89uHaZZmxoQJHqH9QGc5Bu
-Wrhr2jSWoOuGY0QcWms0azageBAtnVIOb6mExMBrDTJbHQRhhpIml/Rx3Ea1o8E0AgDACBzaJJC6
-uclQicawJxDtFXvfZRM4GYW9cJfU/yjD8LLevCZ3ceGE5vuCDUCuOjr35jdA8Ukhb5/Vu1d5oZTp
-3OHlN6RAf+AATKNJit5Bie7rCEoA7fm/G4qhmUQANrwXwWiKn62gx6ZbdWvl1yi+KRNAf2h5l34N
-JTPjH17d4Vv8pNaB9jgUl34BVl8H7PxKINiDkM5nbF+74ih4xNj9O+3aIhTZIDmzgsygfF47GJj0
-CQsKb2deO86QdlXknCHM2tRrD2R5L6HAFYQRmQ34eEQHKVF9aAJVm/RgU1O/dKU7zR8V7j6p9MaF
-ecQ296wZl46EiUfhqU0SuPUJFSwnfLh4CB2nSyzNfQVh6skc4txmir1Nip4Kxnl8YgRu16KrlobB
-TGgtmy6JDLhuzaL7snFPiAupJBmFLDoGch4UfbphfMLHg8emBzLtlJ1Dl23C/kLlKzsJQpjLn0Wn
-xmIozGcZJeX2iXRiOhvUtEnCahG2F8dbi/JdRxTPZ++6luL61eaJZzQWH2r2pG+X3/P20IkYIZux
-ZhY=
-=VQnk
------END PGP SIGNATURE-----
-
---Is7tTTXU9ILPMQ5NvrVWyISLWLNAVMhRv--
+> 
+> Note that the quotaitem log recovery code is left for to make sure we
+> don't increase inconsistent recovery states.
+> 
+> Diffstat:
+>  libxfs/xfs_quota_defs.h |   30 ----
+>  libxfs/xfs_trans_resv.c |   30 ----
+>  libxfs/xfs_trans_resv.h |    2 
+>  scrub/quota.c           |    2 
+>  xfs_dquot.c             |    3 
+>  xfs_dquot_item.c        |  134 ---------------------
+>  xfs_dquot_item.h        |   17 --
+>  xfs_ioctl.c             |    2 
+>  xfs_iops.c              |    4 
+>  xfs_mount.c             |    4 
+>  xfs_qm.c                |   28 ++--
+>  xfs_qm.h                |    4 
+>  xfs_qm_syscalls.c       |  300 ------------------------------------------------
+>  xfs_quotaops.c          |   57 +++++----
+>  xfs_super.c             |   51 +++-----
+>  xfs_trans_dquot.c       |   49 -------
+>  16 files changed, 84 insertions(+), 633 deletions(-)
