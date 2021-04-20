@@ -2,221 +2,341 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4222C433ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 22:15:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EFD7C433ED
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 23:06:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7154B61400
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 22:15:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CBF8A61416
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Apr 2021 23:06:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233964AbhDTWQZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Apr 2021 18:16:25 -0400
-Received: from gateway32.websitewelcome.com ([192.185.145.178]:11647 "EHLO
-        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234188AbhDTWQY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Apr 2021 18:16:24 -0400
-Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
-        by gateway32.websitewelcome.com (Postfix) with ESMTP id E60F4D5B5
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Apr 2021 17:15:51 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id YyetljszWb8LyYyetlldlm; Tue, 20 Apr 2021 17:15:51 -0500
-X-Authority-Reason: nr=8
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=5XXS4Lng4Hi2wx0XQvrpPcvwnFbInQsBCfVyWXKUeQE=; b=ietFcTROfyJ95Q/XZa1RUtzHh6
-        HOnuhjIFUmkgbFDPtA61nCuo4xd4gYsdlqTOZNSXfJhjSYsg/uBT981wLAz59vAucwsFcDHYDTx4F
-        1boTWzrFzNOmfmlLVrG6TDnk9C1LeEPyQtDQrnyB6aTfL/ZQvnLxhQeIuC36s/6pBOu5Vpt5X7YNw
-        n3h5i4ZsUSEVh7ONFd0WgIOMiA8AwB7zyHJDxt8U+vbPILDVM1VRYtzxB/J58OqDNJ2G419M+pDtE
-        WgWp/gj6A3jNmldwJ9Gh0DZXwqAv/qhUiQJDOkuYwzwk51cmsgXG76N+zQy5VuNpzAnI4d3k14wPt
-        KPjM5zxg==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:50524 helo=[192.168.15.8])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1lYyes-001idx-Ko; Tue, 20 Apr 2021 17:15:50 -0500
-Subject: Re: [PATCH 7/7] xfs: Replace one-element arrays with flexible-array
- members
-To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Cc:     "Gustavo A . R . Silva" <gustavoars@kernel.org>
-References: <20210419082804.2076124-1-hch@lst.de>
- <20210419082804.2076124-8-hch@lst.de>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <6a806a6d-e64f-c0f9-17f3-10402197d6c8@embeddedor.com>
-Date:   Tue, 20 Apr 2021 17:16:08 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        id S234189AbhDTXHG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Apr 2021 19:07:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36392 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233964AbhDTXHF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Apr 2021 19:07:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3FFE461410;
+        Tue, 20 Apr 2021 23:06:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1618959993;
+        bh=8Kox6kjHjGbpPGfy41ExliX6H3o2ftxzdZjhqy+R0aM=;
+        h=Date:From:To:Cc:Subject:From;
+        b=bQLgQcUR0DHz+khz5sZ10851KIA0hshTp0xgIutzOICHJartMf8mn+haa6y61D8gY
+         aC4/7LImq++TIhSSdqk06sk1ejk10RzXsz1/UEyN2KRBnxL0Mcr6Xf1wwRV+wdQFbd
+         SM5EPt3OD30f54c0JggEryru+vHZczL1t7sgAJMIb3BLAr34JTjvBDoY+nuImBcsgD
+         wPCa77CXMmit5I+3yLTkodsmNaTS3kut/GXCf8Egunoj5OGPDFUjpgtzjGmnSZ5zpw
+         3pTXefdrXSLatAHWXFeCCin8w+IMnPGKE51k0aVX33Tufdk3Tf/1WE3+ELwZy0+iPP
+         q/cjHhrgiEXbw==
+Date:   Tue, 20 Apr 2021 18:06:52 -0500
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH][next] xfs: Fix fall-through warnings for Clang
+Message-ID: <20210420230652.GA70650@embeddedor>
 MIME-Version: 1.0
-In-Reply-To: <20210419082804.2076124-8-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1lYyes-001idx-Ko
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.8]) [187.162.31.110]:50524
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 2
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+In preparation to enable -Wimplicit-fallthrough for Clang, fix
+the following warnings by replacing /* fall through */ comments,
+and its variants, with the new pseudo-keyword macro fallthrough:
 
+fs/xfs/libxfs/xfs_alloc.c:3167:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/libxfs/xfs_da_btree.c:286:3: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/libxfs/xfs_ag_resv.c:346:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/libxfs/xfs_ag_resv.c:388:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/xfs_bmap_util.c:246:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/xfs_export.c:88:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/xfs_export.c:96:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/xfs_file.c:867:3: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/xfs_ioctl.c:562:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/xfs_ioctl.c:1548:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/xfs_iomap.c:1040:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/xfs_inode.c:852:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/xfs_log.c:2627:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/xfs_trans_buf.c:298:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/scrub/bmap.c:275:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/scrub/btree.c:48:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/scrub/common.c:85:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/scrub/common.c:138:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/scrub/common.c:698:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/scrub/dabtree.c:51:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+fs/xfs/scrub/repair.c:951:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
 
-On 4/19/21 03:28, Christoph Hellwig wrote:
-> From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-> 
-> There is a regular need in the kernel to provide a way to declare having
-> a dynamically sized set of trailing elements in a structure. Kernel code
-> should always use “flexible array members”[1] for these cases. The older
-> style of one-element or zero-length arrays should no longer be used[2].
-> 
-> Refactor the code according to the use of flexible-array members in
-> multiple structures, instead of one-element arrays. Also, make use of
-> the new struct_size() helper to properly calculate the size of some
-> structures that contain flexible-array members.
-> 
-> [1] https://en.wikipedia.org/wiki/Flexible_array_member
-> [2] https://www.kernel.org/doc/html/v5.9/process/deprecated.html#zero-length-and-one-element-arrays
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> [hch: rebased on top of the previous cleanups]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Notice that Clang doesn't recognize /* fall through */ comments as
+implicit fall-through markings, so in order to globally enable
+-Wimplicit-fallthrough for Clang, these comments need to be
+replaced with fallthrough; in the whole codebase.
 
-Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Link: https://github.com/KSPP/linux/issues/115
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+ fs/xfs/libxfs/xfs_ag_resv.c  | 4 ++--
+ fs/xfs/libxfs/xfs_alloc.c    | 2 +-
+ fs/xfs/libxfs/xfs_da_btree.c | 2 +-
+ fs/xfs/scrub/bmap.c          | 2 +-
+ fs/xfs/scrub/btree.c         | 2 +-
+ fs/xfs/scrub/common.c        | 6 +++---
+ fs/xfs/scrub/dabtree.c       | 2 +-
+ fs/xfs/scrub/repair.c        | 2 +-
+ fs/xfs/xfs_bmap_util.c       | 2 +-
+ fs/xfs/xfs_export.c          | 4 ++--
+ fs/xfs/xfs_file.c            | 2 +-
+ fs/xfs/xfs_inode.c           | 2 +-
+ fs/xfs/xfs_ioctl.c           | 4 ++--
+ fs/xfs/xfs_iomap.c           | 2 +-
+ fs/xfs/xfs_trans_buf.c       | 2 +-
+ 15 files changed, 20 insertions(+), 20 deletions(-)
 
-Thanks, Christoph.
---
-Gustavo
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index 6c5f8d10589c..8c3c99a9bf83 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -342,7 +342,7 @@ xfs_ag_resv_alloc_extent(
+ 		break;
+ 	default:
+ 		ASSERT(0);
+-		/* fall through */
++		fallthrough;
+ 	case XFS_AG_RESV_NONE:
+ 		field = args->wasdel ? XFS_TRANS_SB_RES_FDBLOCKS :
+ 				       XFS_TRANS_SB_FDBLOCKS;
+@@ -384,7 +384,7 @@ xfs_ag_resv_free_extent(
+ 		break;
+ 	default:
+ 		ASSERT(0);
+-		/* fall through */
++		fallthrough;
+ 	case XFS_AG_RESV_NONE:
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, (int64_t)len);
+ 		return;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index aaa19101bb2a..9eabdeeec492 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3163,7 +3163,7 @@ xfs_alloc_vextent(
+ 		}
+ 		args->agbno = XFS_FSB_TO_AGBNO(mp, args->fsbno);
+ 		args->type = XFS_ALLOCTYPE_NEAR_BNO;
+-		/* FALLTHROUGH */
++		fallthrough;
+ 	case XFS_ALLOCTYPE_FIRST_AG:
+ 		/*
+ 		 * Rotate through the allocation groups looking for a winner.
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 83ac9771bfb5..747ec77912c3 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -282,7 +282,7 @@ xfs_da3_node_read_verify(
+ 						__this_address);
+ 				break;
+ 			}
+-			/* fall through */
++			fallthrough;
+ 		case XFS_DA_NODE_MAGIC:
+ 			fa = xfs_da3_node_verify(bp);
+ 			if (fa)
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index b5ebf1d1b4db..77d5c4a0f09f 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -271,7 +271,7 @@ xchk_bmap_iextent_xref(
+ 	case XFS_DATA_FORK:
+ 		if (xfs_is_reflink_inode(info->sc->ip))
+ 			break;
+-		/* fall through */
++		fallthrough;
+ 	case XFS_ATTR_FORK:
+ 		xchk_xref_is_not_shared(info->sc, agbno,
+ 				irec->br_blockcount);
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index a94bd8122c60..bd1172358964 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -44,7 +44,7 @@ __xchk_btree_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
+ 			trace_xchk_ifork_btree_op_error(sc, cur, level,
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index aa874607618a..ce9a44ea6948 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -81,7 +81,7 @@ __xchk_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_op_error(sc, agno, bno, *error,
+ 				ret_ip);
+@@ -134,7 +134,7 @@ __xchk_fblock_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_file_op_error(sc, whichfork, offset, *error,
+ 				ret_ip);
+@@ -694,7 +694,7 @@ xchk_get_inode(
+ 		if (error)
+ 			return -ENOENT;
+ 		error = -EFSCORRUPTED;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_op_error(sc,
+ 				XFS_INO_TO_AGNO(mp, sc->sm->sm_ino),
+diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+index 653f3280e1c1..9f0dbb47c82c 100644
+--- a/fs/xfs/scrub/dabtree.c
++++ b/fs/xfs/scrub/dabtree.c
+@@ -47,7 +47,7 @@ xchk_da_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_file_op_error(sc, ds->dargs.whichfork,
+ 				xfs_dir2_da_to_db(ds->dargs.geo,
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index c2857d854c83..b8202dd08939 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -947,7 +947,7 @@ xrep_ino_dqattach(
+ 			xrep_force_quotacheck(sc, XFS_DQTYPE_GROUP);
+ 		if (XFS_IS_PQUOTA_ON(sc->mp) && !sc->ip->i_pdquot)
+ 			xrep_force_quotacheck(sc, XFS_DQTYPE_PROJ);
+-		/* fall through */
++		fallthrough;
+ 	case -ESRCH:
+ 		error = 0;
+ 		break;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index a5e9d7d34023..cc628475f9b6 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -242,7 +242,7 @@ xfs_bmap_count_blocks(
+ 		 */
+ 		*count += btblocks - 1;
+ 
+-		/* fall through */
++		fallthrough;
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		*nextents = xfs_bmap_count_leaves(ifp, count);
+ 		break;
+diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+index 465fd9e048d4..1da59bdff245 100644
+--- a/fs/xfs/xfs_export.c
++++ b/fs/xfs/xfs_export.c
+@@ -84,7 +84,7 @@ xfs_fs_encode_fh(
+ 	case FILEID_INO32_GEN_PARENT:
+ 		fid->i32.parent_ino = XFS_I(parent)->i_ino;
+ 		fid->i32.parent_gen = parent->i_generation;
+-		/*FALLTHRU*/
++		fallthrough;
+ 	case FILEID_INO32_GEN:
+ 		fid->i32.ino = XFS_I(inode)->i_ino;
+ 		fid->i32.gen = inode->i_generation;
+@@ -92,7 +92,7 @@ xfs_fs_encode_fh(
+ 	case FILEID_INO32_GEN_PARENT | XFS_FILEID_TYPE_64FLAG:
+ 		fid64->parent_ino = XFS_I(parent)->i_ino;
+ 		fid64->parent_gen = parent->i_generation;
+-		/*FALLTHRU*/
++		fallthrough;
+ 	case FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG:
+ 		fid64->ino = XFS_I(inode)->i_ino;
+ 		fid64->gen = inode->i_generation;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 396ef36dcd0a..3c0749ab9e40 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -863,7 +863,7 @@ xfs_break_layouts(
+ 			error = xfs_break_dax_layouts(inode, &retry);
+ 			if (error || retry)
+ 				break;
+-			/* fall through */
++			fallthrough;
+ 		case BREAK_WRITE:
+ 			error = xfs_break_leased_layouts(inode, iolock, &retry);
+ 			break;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 0369eb22c1bb..f2846997c3a8 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -848,7 +848,7 @@ xfs_init_new_inode(
+ 			xfs_inode_inherit_flags(ip, pip);
+ 		if (pip && (pip->i_diflags2 & XFS_DIFLAG2_ANY))
+ 			xfs_inode_inherit_flags2(ip, pip);
+-		/* FALLTHROUGH */
++		fallthrough;
+ 	case S_IFLNK:
+ 		ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
+ 		ip->i_df.if_bytes = 0;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 3925bfcb2365..c4dc6c72ac37 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -558,7 +558,7 @@ xfs_ioc_attrmulti_one(
+ 	case ATTR_OP_REMOVE:
+ 		value = NULL;
+ 		*len = 0;
+-		/* fall through */
++		fallthrough;
+ 	case ATTR_OP_SET:
+ 		error = mnt_want_write_file(parfilp);
+ 		if (error)
+@@ -1544,7 +1544,7 @@ xfs_ioc_getbmap(
+ 	switch (cmd) {
+ 	case XFS_IOC_GETBMAPA:
+ 		bmx.bmv_iflags = BMV_IF_ATTRFORK;
+-		/*FALLTHRU*/
++		fallthrough;
+ 	case XFS_IOC_GETBMAP:
+ 		/* struct getbmap is a strict subset of struct getbmapx. */
+ 		recsize = sizeof(struct getbmap);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index d154f42e2dc6..d8cd2583dedb 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1036,7 +1036,7 @@ xfs_buffered_write_iomap_begin(
+ 			prealloc_blocks = 0;
+ 			goto retry;
+ 		}
+-		/*FALLTHRU*/
++		fallthrough;
+ 	default:
+ 		goto out_unlock;
+ 	}
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 9aced0a00003..d11d032da0b4 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -294,7 +294,7 @@ xfs_trans_read_buf_map(
+ 	default:
+ 		if (tp && (tp->t_flags & XFS_TRANS_DIRTY))
+ 			xfs_force_shutdown(tp->t_mountp, SHUTDOWN_META_IO_ERROR);
+-		/* fall through */
++		fallthrough;
+ 	case -ENOMEM:
+ 	case -EAGAIN:
+ 		return error;
+-- 
+2.27.0
 
-> ---
->  fs/xfs/libxfs/xfs_log_format.h | 6 +++---
->  fs/xfs/xfs_extfree_item.c      | 9 +++------
->  fs/xfs/xfs_extfree_item.h      | 4 ++--
->  fs/xfs/xfs_ondisk.h            | 6 +++---
->  4 files changed, 11 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-> index 639035052b4f65..9b218c30659ad7 100644
-> --- a/fs/xfs/libxfs/xfs_log_format.h
-> +++ b/fs/xfs/libxfs/xfs_log_format.h
-> @@ -559,7 +559,7 @@ struct xfs_efi_log_format {
->  	uint16_t		efi_size;	/* size of this item */
->  	uint32_t		efi_nextents;	/* # extents to free */
->  	uint64_t		efi_id;		/* efi identifier */
-> -	struct xfs_extent	efi_extents[1];	/* array of extents to free */
-> +	struct xfs_extent	efi_extents[];	/* array of extents to free */
->  };
->  
->  /*
-> @@ -577,7 +577,7 @@ struct xfs_efi_log_format_32 {
->  	uint16_t		efi_size;	/* size of this item */
->  	uint32_t		efi_nextents;	/* # extents to free */
->  	uint64_t		efi_id;		/* efi identifier */
-> -	struct xfs_extent_32	efi_extents[1];	/* array of extents to free */
-> +	struct xfs_extent_32	efi_extents[];	/* array of extents to free */
->  } __attribute__((packed));
->  
->  /*
-> @@ -590,7 +590,7 @@ struct xfs_efd_log_format {
->  	uint16_t		efd_size;	/* size of this item */
->  	uint32_t		efd_nextents;	/* # of extents freed */
->  	uint64_t		efd_efi_id;	/* id of corresponding efi */
-> -	struct xfs_extent	efd_extents[1];	/* array of extents freed */
-> +	struct xfs_extent	efd_extents[];	/* array of extents freed */
->  };
->  
->  /*
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index a2abdfd3d076bf..8bea9c9ecf2042 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -73,8 +73,7 @@ static inline int
->  xfs_efi_log_item_sizeof(
->  	struct xfs_efi_log_format *elf)
->  {
-> -	return sizeof(*elf) +
-> -	       (elf->efi_nextents - 1) * sizeof(struct xfs_extent);
-> +	return struct_size(elf, efi_extents, elf->efi_nextents);
->  }
->  
->  STATIC void
-> @@ -194,8 +193,7 @@ static inline int
->  xfs_efd_log_item_sizeof(
->  	struct xfs_efd_log_format *elf)
->  {
-> -	return sizeof(struct xfs_efd_log_format) +
-> -	       (elf->efd_nextents - 1) * sizeof(struct xfs_extent);
-> +	return struct_size(elf, efd_extents, elf->efd_nextents);
->  }
->  
->  STATIC void
-> @@ -636,8 +634,7 @@ xfs_efi_copy_format_32(
->  	struct xfs_efi_log_format_32	*src = buf->i_addr;
->  	unsigned int			i;
->  
-> -	if (buf->i_len != sizeof(*src) +
-> -	    (src->efi_nextents - 1) * sizeof(struct xfs_extent_32)) {
-> +	if (buf->i_len != struct_size(src, efi_extents, src->efi_nextents)) {
->  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
->  		return -EFSCORRUPTED;
->  	}
-> diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
-> index 3bb62ef525f2e0..a01ce86145bb64 100644
-> --- a/fs/xfs/xfs_extfree_item.h
-> +++ b/fs/xfs/xfs_extfree_item.h
-> @@ -55,7 +55,7 @@ struct xfs_efi_log_item {
->  static inline int xfs_efi_item_sizeof(unsigned int nextents)
->  {
->  	return sizeof(struct xfs_efi_log_item) +
-> -		(nextents - 1) * sizeof(struct xfs_extent);
-> +		nextents * sizeof(struct xfs_extent);
->  }
->  
->  /*
-> @@ -73,7 +73,7 @@ struct xfs_efd_log_item {
->  static inline int xfs_efd_item_sizeof(unsigned int nextents)
->  {
->  	return sizeof(struct xfs_efd_log_item) +
-> -		(nextents - 1) * sizeof(struct xfs_extent);
-> +		nextents * sizeof(struct xfs_extent);
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> index 739476f7dffa21..fa4b590671bf58 100644
-> --- a/fs/xfs/xfs_ondisk.h
-> +++ b/fs/xfs/xfs_ondisk.h
-> @@ -118,9 +118,9 @@ xfs_check_ondisk_structs(void)
->  	/* log structures */
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_buf_log_format,	88);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
-> -	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format,	32);
-> -	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format,	32);
-> -	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	28);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format,	16);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format,	16);
-> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	16);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_extent,		16);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,		12);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_log_dinode,		176);
-> 
