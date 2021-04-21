@@ -2,91 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43F9AC433ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 06:26:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03577C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 08:57:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 149CD61423
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 06:26:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC3D661437
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 08:57:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234510AbhDUG0t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Apr 2021 02:26:49 -0400
-Received: from verein.lst.de ([213.95.11.211]:53140 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234077AbhDUG0t (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Apr 2021 02:26:49 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id C07B368BFE; Wed, 21 Apr 2021 08:26:14 +0200 (CEST)
-Date:   Wed, 21 Apr 2021 08:26:14 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: RFC: don't allow disabling quota accounting on a mounted file
- system
-Message-ID: <20210421062614.GA29662@lst.de>
-References: <20210420072256.2326268-1-hch@lst.de> <20210420173634.GO3122264@magnolia>
+        id S235497AbhDUI6Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Apr 2021 04:58:16 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:35767 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235313AbhDUI6P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Apr 2021 04:58:15 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1618995459;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=it6oVVTCNmY640TTxP6MCvnTbV9SwYW8TNajxR4D+7o=;
+        b=dA0xUpsmC151ni8MVnulfH9VdeK3iWSfVsg9Pf53HVGc0A1OUEgJOjjNdihO1BsZs7h9Ed
+        Nv0mL0tDCy+kbPD4eNhnKq7FoIJahzvwzOtVVyERACVcrIO1QkSiQk3CuvMB0qQDW4xD3z
+        o2J9Cl/sAJ2JzUhQn9dH/6RDN2zteXU=
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
+ [209.85.210.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-553-4lLpso72NjemPfXp8VGLEw-1; Wed, 21 Apr 2021 04:57:38 -0400
+X-MC-Unique: 4lLpso72NjemPfXp8VGLEw-1
+Received: by mail-pf1-f200.google.com with SMTP id k11-20020a62840b0000b029024135614a60so10358372pfd.18
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Apr 2021 01:57:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=it6oVVTCNmY640TTxP6MCvnTbV9SwYW8TNajxR4D+7o=;
+        b=jkU8MbjwnYUO4Nhvshq7T6l3ThRXd7zsxTfVWSFsYSxROgjVjSX1/jGQx18PXlumFg
+         TUa3anb40AKqRdC7If3oeo0DUwqQLi1AmY4D2kHf9bEvwsyYPRXbAtjj8o0/RkO7OKPM
+         0LI3v0r4+TM3PZUwFeYhrGDf4B2dFBN+XSIxYSejQLRO/7NTKbrYPKpnt1pklF7FDD80
+         kAVgnV/g0sGPZ8tpLPZ3NIQl6YDVb3WD4P90W7u/5bFho4V+kwDeXbgYK5F5MczJXpgJ
+         8DJ6aCwD8QcuN/ZAFgB48IvWhZbe2w072pEaiLM22Tr1ufFc/XrY5coGrDeLb1Ih1rhG
+         8HRg==
+X-Gm-Message-State: AOAM533q0Rtb17AKjV7vBim8x48sy8Xq2COX8tZrfqcVmHKEcZpx1hWw
+        etaUrNDApydAa7tgT+S1PBSAI9KupWnLvup0CTmrsSrzDzXpxp+HbU8NDXI1bfoyjiD6/JPet04
+        oYcGYuy0Z6gWxsWzDTYSOSAh7ywG552ZB4fgm5hB39f/JVYfjmWtn5kueE54GTk6U3RX2aR1L2A
+        ==
+X-Received: by 2002:a17:90b:344f:: with SMTP id lj15mr9989931pjb.211.1618995456957;
+        Wed, 21 Apr 2021 01:57:36 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxsBQzCAT3JvVuvaKTXpkAryZso75yIJieiFWrZmyIANrheOCRs0lQIKsbr9TdxW4ZITPtJSg==
+X-Received: by 2002:a17:90b:344f:: with SMTP id lj15mr9989913pjb.211.1618995456708;
+        Wed, 21 Apr 2021 01:57:36 -0700 (PDT)
+Received: from xiangao.com ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id x3sm1242123pfj.95.2021.04.21.01.57.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Apr 2021 01:57:36 -0700 (PDT)
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
+Cc:     Gao Xiang <hsiangkao@redhat.com>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH] mkfs: warn out the V4 format
+Date:   Wed, 21 Apr 2021 16:57:16 +0800
+Message-Id: <20210421085716.3144357-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210420173634.GO3122264@magnolia>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 20, 2021 at 10:36:34AM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 20, 2021 at 09:22:54AM +0200, Christoph Hellwig wrote:
-> > Hi all,
-> > 
-> > disabling quota accounting (vs just enforcement) on a running file system
-> > is a fundamentally race and hard to get right operation.  It also has
-> > very little practical use.
-> > 
-> > This causes xfs/007 xfs/106 xfs/220 xfs/304 xfs/305 to fail, as they
-> > specifically test this functionality.
-> 
-> What kind of failures do you get now?  Are they all a result of the
-> _ACCT flags never going away?  Which I guess means that tests expecting
-> to get ENOSYS after you turn off _ACCT will now no longer error out?
+Kernel commit b96cb835e37c ("xfs: deprecate the V4 format") started
+the process of retiring the old format to close off attack surfaces
+and to encourage users to migrate onto V5.
 
-Sort of.  Snipplets of the errors:
+This also prints warning to users when mkfs as well.
 
-xfs/007:
+Suggested-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
- core.nblocks = 1
- *** turn off ug quotas
-+XFS_QUOTARM: Invalid argument
- *** umount
- *** Usage after quotarm ***
--core.nblocks = 0
--core.nblocks = 0
-+core.nblocks = 1
-+core.nblocks = 1
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 0eac5336..ef09f8b3 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -4022,6 +4022,10 @@ main(
+ 	validate_extsize_hint(mp, &cli);
+ 	validate_cowextsize_hint(mp, &cli);
+ 
++	if (!cli.sb_feat.crcs_enabled)
++		fprintf(stderr,
++_("Deprecated V4 format (-mcrc=0) will not be supported after September 2030.\n"));
++
+ 	/* Print the intended geometry of the fs. */
+ 	if (!quiet || dry_run) {
+ 		struct xfs_fsop_geom	geo;
+-- 
+2.27.0
 
-xfs/106:
-
--User quota are not enabled on SCRATCH_DEV
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+  Accounting: ON
-+  Enforcement: OFF
-+  Inode: #131 (2 blocks, 2 extents)
-+Blocks grace time: [3 days 01:00:00]
-
-xfs/220:
-
-+XFS_QUOTARM: Invalid argument
-
-xfs/304:
-
- *** turn off project quotas
-+Quota already off.
- *** umount
-
-xfs/305:
-
- *** turn off project quotas
-+Quota already off.
- *** done
