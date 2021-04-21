@@ -4,40 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25ADAC433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 00:22:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE914C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 00:22:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E353561422
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 00:22:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8AC061409
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 00:22:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234453AbhDUAXA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Apr 2021 20:23:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36216 "EHLO mail.kernel.org"
+        id S234508AbhDUAXF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Apr 2021 20:23:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36274 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233807AbhDUAW6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Apr 2021 20:22:58 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5A86A61409;
-        Wed, 21 Apr 2021 00:22:26 +0000 (UTC)
+        id S234290AbhDUAXE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Apr 2021 20:23:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 67F8D6024A;
+        Wed, 21 Apr 2021 00:22:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618964546;
-        bh=r2JXMhLH80qAv/p2rjfAvWUg1KmO6GNEtxviSZ7yBmM=;
+        s=k20201202; t=1618964552;
+        bh=KajFsytasK456heMGUSkMWpLjo2xi2tcLdic2FyZPuk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Xr6hyHFF1YEMBbR61N1oJqC4QXvxwC16OmA/0bm+t6ZE97njb0zyyST8xPRZ0qvLv
-         /iZ0hg8bNv4y/GI7/gOwjQUXGwmGx8jgLv481MPDL0zdoQFf+uT3MoeFINhoNU61eW
-         LrXNCaNTsEutFr8UvvIpZvnKExnG8R8oez3VF4q+SCPfq6wFXblWeyEk3i6F76G7Ul
-         8U74VvE9WK/FJHKFJIJrVioMEX8BNa4HhPJut0Z8hqm6SvB/QrSA/Ao3z4d7ToMF75
-         VTZWzWEohNlUcF8aOPDS/RUuaH1PDW6wTiahHvvvigbK8zwwV9HSt7hBPVZSLf2jeX
-         MKCueYGtVyjMw==
-Subject: [PATCH 1/2] generic/223: make sure all files get created on the data
- device
+        b=Dc/aMKY99O1Hl8mynk66mKTNidY8lQLkp/3FdTkbtyfihohDebWBqizaB8my1o20S
+         HPVbMCazh58FQzmf/6hbuE6lthvCSFoPbEiVSB5CO3vXIfgt3KyylRCVntdfiUzBYp
+         EEQa2KemjYsMVAdK+mxCojSc40s2MCTMirIIBK5pQdslP6lzuAt4WxbMJY04pq1Gb1
+         c3YW4XwFQLzzeViY/ur1NrGYRjLfZuF/RpVWC/0J1NXQeWXJinGumUd0MzlXwKb2qS
+         mXjgJ93YLex6foX6pEy9IIAHxntb/K674nUu/uX4rU3ppaEF/06Axm4Mk+zowN2KI2
+         4wY3xIRInEpJw==
+Subject: [PATCH 2/2] common/dmthin: make this work with external log devices
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 20 Apr 2021 17:22:25 -0700
-Message-ID: <161896454559.776190.1857804198421552259.stgit@magnolia>
+Date:   Tue, 20 Apr 2021 17:22:31 -0700
+Message-ID: <161896455168.776190.4208955976933964610.stgit@magnolia>
 In-Reply-To: <161896453944.776190.2831340458112794975.stgit@magnolia>
 References: <161896453944.776190.2831340458112794975.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,34 +49,66 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This test formats filesystems with various stripe alignments, then
-checks that data file allocations are actually aligned to those stripe
-geometries.  If this test is run on an XFS filesystem with a realtime
-volume and RTINHERIT is set on the root dir, the test will fail because
-all new files will be created as realtime files, and realtime
-allocations are not subject to data device stripe alignments.  Fix this
-by clearing rtinherit on the root dir.
+Provide a mkfs helper to format the dm thin device when external devices
+are in use, and fix the dmthin mount helper to support them.  This fixes
+regressions in generic/347 and generic/500 when external logs are in
+use.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/generic/223 |    5 +++++
- 1 file changed, 5 insertions(+)
+ common/dmthin     |    9 ++++++++-
+ tests/generic/347 |    2 +-
+ tests/generic/500 |    2 +-
+ 3 files changed, 10 insertions(+), 3 deletions(-)
 
 
-diff --git a/tests/generic/223 b/tests/generic/223
-index 1f85efe5..f6393293 100755
---- a/tests/generic/223
-+++ b/tests/generic/223
-@@ -43,6 +43,11 @@ for SUNIT_K in 8 16 32 64 128; do
- 	_scratch_mkfs_geom $SUNIT_BYTES 4 $BLOCKSIZE >> $seqres.full 2>&1
- 	_scratch_mount
+diff --git a/common/dmthin b/common/dmthin
+index c58c3948..3b1c7d45 100644
+--- a/common/dmthin
++++ b/common/dmthin
+@@ -218,10 +218,17 @@ _dmthin_set_fail()
  
-+	# This test checks for stripe alignments of space allocations on the
-+	# filesystem.  Make sure all files get created on the main device,
-+	# which for XFS means no rt files.
-+	test "$FSTYP" = "xfs" && $XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
+ _dmthin_mount_options()
+ {
+-	echo `_common_dev_mount_options $*` $DMTHIN_VOL_DEV $SCRATCH_MNT
++	_scratch_options mount
++	echo `_common_dev_mount_options $*` $SCRATCH_OPTIONS $DMTHIN_VOL_DEV $SCRATCH_MNT
+ }
+ 
+ _dmthin_mount()
+ {
+ 	_mount -t $FSTYP `_dmthin_mount_options $*`
+ }
 +
- 	for SIZE_MULT in 1 2 8 64 256; do
- 		let SIZE=$SIZE_MULT*$SUNIT_BYTES
++_dmthin_mkfs()
++{
++	_scratch_options mkfs
++	_mkfs_dev $SCRATCH_OPTIONS $@ $DMTHIN_VOL_DEV
++}
+diff --git a/tests/generic/347 b/tests/generic/347
+index cbc5150a..e970ac10 100755
+--- a/tests/generic/347
++++ b/tests/generic/347
+@@ -31,7 +31,7 @@ _setup_thin()
+ {
+ 	_dmthin_init $BACKING_SIZE $VIRTUAL_SIZE
+ 	_dmthin_set_queue
+-	_mkfs_dev $DMTHIN_VOL_DEV
++	_dmthin_mkfs
+ 	_dmthin_mount
+ }
  
+diff --git a/tests/generic/500 b/tests/generic/500
+index 085ddbf3..5ab2f78c 100755
+--- a/tests/generic/500
++++ b/tests/generic/500
+@@ -68,7 +68,7 @@ CLUSTER_SIZE=$((64 * 1024 / 512))		# 64K
+ 
+ _dmthin_init $BACKING_SIZE $VIRTUAL_SIZE $CLUSTER_SIZE 0
+ _dmthin_set_fail
+-_mkfs_dev $DMTHIN_VOL_DEV
++_dmthin_mkfs
+ _dmthin_mount
+ 
+ # There're two bugs at here, one is dm-thin bug, the other is filesystem
 
