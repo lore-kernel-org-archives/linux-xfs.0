@@ -7,142 +7,116 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3743C433ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 17:29:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84AE6C433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 18:00:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68FF261459
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 17:29:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53CBD61455
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 18:00:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242187AbhDURaS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Apr 2021 13:30:18 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:43778 "EHLO
+        id S241567AbhDUSB0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Apr 2021 14:01:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:22020 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S242135AbhDURaR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Apr 2021 13:30:17 -0400
+        by vger.kernel.org with ESMTP id S240515AbhDUSB0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Apr 2021 14:01:26 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619026183;
+        s=mimecast20190719; t=1619028052;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=QiKjnWKTcUYlmN09bHkx8gHdWjcASpx98rUh0dz/d0Y=;
-        b=dIJy5PddCp1HhCOZZlPaLjcWfHLDRRSuxwQz2oylMNDzSZJrbJ9yk8NfvLXlhYnBpr03aw
-        IY53i8h6iYnmYoS0SGrYly8pxl+wzSfk1kI6yDgKlZacW56Q+r/Zfja5jjdAiV59hi+OKQ
-        zqEHKs9xLR9BAiPbK3ADUfSMljg1MEw=
+        bh=LiXhqtpbBUUXXKqGW3web+r0lHhXQaK2Q8TUVE38e2Y=;
+        b=beDBt633hYPyUy3SbDp7uqiQ5xly3kwaM//4saYFEBVlTny/93bHtAEtzav0lJxxQmQYjz
+        h9P50KPfT3qBE0yqvNVT4W4ChYPJvVt2LCJUKmfzRjNT7YCBZ+dqUPy44ByApSLFoXMWoi
+        pCKPWdqNSNLx7k2QlpRgh4KOm+vIUYM=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-386-7D-UHGQ8MsaNdvm2BEKZxQ-1; Wed, 21 Apr 2021 13:29:39 -0400
-X-MC-Unique: 7D-UHGQ8MsaNdvm2BEKZxQ-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-540--AYJ1SmQO0WbkWe3lZIGEQ-1; Wed, 21 Apr 2021 14:00:49 -0400
+X-MC-Unique: -AYJ1SmQO0WbkWe3lZIGEQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 97A7A343A0;
-        Wed, 21 Apr 2021 17:29:38 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 331D81008063;
+        Wed, 21 Apr 2021 18:00:48 +0000 (UTC)
 Received: from bfoster (ovpn-112-25.rdu2.redhat.com [10.10.112.25])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DDD296085A;
-        Wed, 21 Apr 2021 17:29:37 +0000 (UTC)
-Date:   Wed, 21 Apr 2021 13:29:36 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7CE175B69B;
+        Wed, 21 Apr 2021 18:00:47 +0000 (UTC)
+Date:   Wed, 21 Apr 2021 14:00:45 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 1/1] xfs: test that the needsrepair feature works as
- advertised
-Message-ID: <YIBhAPo25d9GTAC8@bfoster>
-References: <161896455503.776294.3492113564046201298.stgit@magnolia>
- <161896456107.776294.13840945585349427098.stgit@magnolia>
+Subject: Re: [PATCH 2/2] xfs: test inobtcount upgrade
+Message-ID: <YIBoTVQJKomAOVPL@bfoster>
+References: <161896456467.776366.1514131340097986327.stgit@magnolia>
+ <161896457693.776366.7071083307521835427.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161896456107.776294.13840945585349427098.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <161896457693.776366.7071083307521835427.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 20, 2021 at 05:22:41PM -0700, Darrick J. Wong wrote:
+On Tue, Apr 20, 2021 at 05:22:57PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Make sure that the needsrepair feature flag can be cleared only by
-> repair and that mounts are prohibited when the feature is set.
+> Make sure we can actually upgrade filesystems to support inode btree
+> counters.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  common/xfs        |   28 ++++++++++++++++++
->  tests/xfs/768     |   80 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/768.out |    4 +++
->  tests/xfs/770     |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/770.out |    2 +
->  tests/xfs/group   |    2 +
->  6 files changed, 199 insertions(+)
->  create mode 100755 tests/xfs/768
->  create mode 100644 tests/xfs/768.out
->  create mode 100755 tests/xfs/770
->  create mode 100644 tests/xfs/770.out
+
+LGTM:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  common/xfs        |    8 +++-
+>  tests/xfs/910     |   98 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/910.out |   23 ++++++++++++
+>  tests/xfs/group   |    1 +
+>  4 files changed, 127 insertions(+), 3 deletions(-)
+>  create mode 100755 tests/xfs/910
+>  create mode 100644 tests/xfs/910.out
 > 
 > 
 > diff --git a/common/xfs b/common/xfs
-> index 887bd001..c2384146 100644
+> index 5abc7034..3d660858 100644
 > --- a/common/xfs
 > +++ b/common/xfs
-> @@ -312,6 +312,13 @@ _scratch_xfs_check()
->  	_xfs_check $SCRATCH_OPTIONS $* $SCRATCH_DEV
+> @@ -1153,13 +1153,15 @@ _require_xfs_repair_upgrade()
+>  		_notrun "xfs_repair does not support upgrading fs with $type"
 >  }
 >  
-> +_require_libxfs_debug_flag() {
-> +	local hook="$1"
-> +
-> +	grep -q LIBXFS_DEBUG_WRITE_CRASH "$(type -P xfs_repair)" || \
-
-Did you mean to use $hook here?
-
-> +		_notrun "libxfs debug hook $hook not detected?"
-> +}
-> +
->  _scratch_xfs_repair()
+> -_require_xfs_scratch_inobtcount()
+> +# Require that the scratch device exists, that mkfs can format with inobtcount
+> +# enabled, and that the kernel can mount such a filesystem.
+> +_require_scratch_xfs_inobtcount()
 >  {
->  	SCRATCH_OPTIONS=""
-> @@ -1114,3 +1121,24 @@ _xfs_get_cowgc_interval() {
->  		_fail "Can't find cowgc interval procfs knob?"
->  	fi
+>  	_require_scratch
+>  
+>  	_scratch_mkfs -m inobtcount=1 &> /dev/null || \
+> -		_notrun "mkfs.xfs doesn't have inobtcount feature"
+> +		_notrun "mkfs.xfs doesn't support inobtcount feature"
+>  	_try_scratch_mount || \
+> -		_notrun "inobtcount not supported by scratch filesystem type: $FSTYP"
+> +		_notrun "kernel doesn't support xfs inobtcount feature"
+>  	_scratch_unmount
 >  }
-> +
-> +# Print the status of the given features on the scratch filesystem.
-> +# Returns 0 if all features are found, 1 otherwise.
-> +_check_scratch_xfs_features()
-> +{
-> +	local features="$(_scratch_xfs_db -c 'version')"
-> +	local output=("FEATURES:")
-> +	local found=0
-> +
-> +	for feature in "$@"; do
-> +		local status="NO"
-> +		if echo "${features}" | grep -q -w "${feature}"; then
-> +			status="YES"
-> +			found=$((found + 1))
-> +		fi
-> +		output+=("${feature}:${status}")
-> +	done
-> +
-> +	echo "${output[@]}"
-> +	test "${found}" -eq "$#"
-> +}
-> diff --git a/tests/xfs/768 b/tests/xfs/768
+> diff --git a/tests/xfs/910 b/tests/xfs/910
 > new file mode 100755
-> index 00000000..e6301829
+> index 00000000..237d0a35
 > --- /dev/null
-> +++ b/tests/xfs/768
-> @@ -0,0 +1,80 @@
+> +++ b/tests/xfs/910
+> @@ -0,0 +1,98 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0-or-later
 > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
 > +#
-> +# FS QA Test No. 768
+> +# FS QA Test No. 910
 > +#
-> +# Make sure that the kernel won't mount a filesystem if repair forcibly sets
-> +# NEEDSREPAIR while fixing metadata.  Corrupt a directory in such a way as
-> +# to force repair to write an invalid dirent value as a sentinel to trigger a
-> +# repair activity in a later phase.  Use a debug knob in xfs_repair to abort
-> +# the repair immediately after forcing the flag on.
+> +# Check that we can upgrade a filesystem to support inobtcount and that
+> +# everything works properly after the upgrade.
 > +
 > +seq=`basename $0`
 > +seqres=$RESULT_DIR/$seq
@@ -165,181 +139,111 @@ Did you mean to use $hook here?
 > +
 > +# real QA test starts here
 > +_supported_fs xfs
-> +_require_scratch_nocheck
-> +_require_scratch_xfs_crc		# needsrepair only exists for v5
-> +_require_libxfs_debug_flag LIBXFS_DEBUG_WRITE_CRASH
+> +_require_scratch_xfs_inobtcount
+> +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> +_require_xfs_repair_upgrade inobtcount
 > +
 > +rm -f $seqres.full
 > +
-> +# Set up a real filesystem for our actual test
-> +_scratch_mkfs -m crc=1 >> $seqres.full
-
-I don't think there's a need to explicitly format with -mcrc=1 when the
-require above would filter out the test anyways (which I think is fine
-since v5 has been default for some time now). Otherwise this test LGTM.
-
+> +# Make sure we can't format a filesystem with inobtcount and not finobt.
+> +_scratch_mkfs -m crc=1,inobtcount=1,finobt=0 &> $seqres.full && \
+> +	echo "Should not be able to format with inobtcount but not finobt."
 > +
-> +# Create a directory large enough to have a dir data block.  2k worth of
-> +# dirent names ought to do it.
+> +# Make sure we can't upgrade a V4 filesystem
+> +_scratch_mkfs -m crc=0,inobtcount=0,finobt=0 >> $seqres.full
+> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> +_check_scratch_xfs_features INOBTCNT
+> +
+> +# Make sure we can't upgrade a filesystem to inobtcount without finobt.
+> +_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
+> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> +_check_scratch_xfs_features INOBTCNT
+> +
+> +# Format V5 filesystem without inode btree counter support and populate it.
+> +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
 > +_scratch_mount
-> +mkdir -p $SCRATCH_MNT/fubar
-> +for i in $(seq 0 256 2048); do
-> +	fname=$(printf "%0255d" $i)
-> +	ln -s -f urk $SCRATCH_MNT/fubar/$fname
-> +done
-> +inum=$(stat -c '%i' $SCRATCH_MNT/fubar)
+> +
+> +mkdir $SCRATCH_MNT/stress
+> +$FSSTRESS_PROG -d $SCRATCH_MNT/stress -n 1000 >> $seqres.full
+> +echo moo > $SCRATCH_MNT/urk
+> +
 > +_scratch_unmount
 > +
-> +# Fuzz the directory
-> +_scratch_xfs_db -x -c "inode $inum" -c "dblock 0" \
-> +	-c "fuzz -d bu[2].inumber add" >> $seqres.full
-> +
-> +# Try to repair the directory, force it to crash after setting needsrepair
-> +LIBXFS_DEBUG_WRITE_CRASH=ddev=2 _scratch_xfs_repair 2>> $seqres.full
+> +# Upgrade filesystem to have the counters and inject failure into repair and
+> +# make sure that the only path forward is to re-run repair on the filesystem.
+> +echo "Fail partway through upgrading"
+> +XFS_REPAIR_FAIL_AFTER_PHASE=2 _scratch_xfs_repair -c inobtcount=1 2>> $seqres.full
 > +test $? -eq 137 || echo "repair should have been killed??"
-> +
-> +# We can't mount, right?
-> +_check_scratch_xfs_features NEEDSREPAIR
+> +_check_scratch_xfs_features NEEDSREPAIR INOBTCNT
 > +_try_scratch_mount &> $tmp.mount
 > +res=$?
 > +_filter_scratch < $tmp.mount
 > +if [ $res -eq 0 ]; then
-> +	echo "Should not be able to mount after needsrepair crash"
+> +	echo "needsrepair should have prevented mount"
 > +	_scratch_unmount
 > +fi
 > +
-> +# Repair properly this time and retry the mount
+> +echo "Re-run repair to finish upgrade"
 > +_scratch_xfs_repair 2>> $seqres.full
-> +_check_scratch_xfs_features NEEDSREPAIR
+> +_check_scratch_xfs_features NEEDSREPAIR INOBTCNT
 > +
+> +echo "Filesystem should be usable again"
 > +_scratch_mount
+> +$FSSTRESS_PROG -d $SCRATCH_MNT/stress -n 1000 >> $seqres.full
+> +_scratch_unmount
+> +_check_scratch_fs
+> +_check_scratch_xfs_features INOBTCNT
 > +
-> +# success, all done
+> +echo "Make sure we have nonzero counters"
+> +_scratch_xfs_db -c 'agi 0' -c 'print ino_blocks fino_blocks' | \
+> +	sed -e 's/= [1-9]*/= NONZERO/g'
+> +
+> +echo "Make sure we can't re-add inobtcount"
+> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> +
+> +echo "Mount again, look at our files"
+> +_scratch_mount >> $seqres.full
+> +cat $SCRATCH_MNT/urk
+> +
 > +status=0
 > +exit
-...
-> diff --git a/tests/xfs/770 b/tests/xfs/770
-> new file mode 100755
-> index 00000000..40e67ab5
-> --- /dev/null
-> +++ b/tests/xfs/770
-> @@ -0,0 +1,83 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 770
-> +#
-> +# Populate a filesystem with all types of metadata, then run repair with the
-> +# libxfs write failure trigger set to go after a single write.  Check that the
-> +# injected error trips, causing repair to abort, that needsrepair is set on the
-> +# fs, the kernel won't mount; and that a non-injecting repair run clears
-> +# needsrepair and makes the filesystem mountable again.
-> +#
-> +# Repeat with the trip point set to successively higher numbers of writes until
-> +# we hit ~200 writes or repair manages to run to completion without tripping.
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/populate
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_scratch_nocheck
-> +_require_scratch_xfs_crc		# needsrepair only exists for v5
-> +_require_populate_commands
-> +_require_libxfs_debug_flag LIBXFS_DEBUG_WRITE_CRASH
-> +
-> +rm -f $seqres.full
-> +
-> +# Populate the filesystem
-> +_scratch_populate_cached nofill >> $seqres.full 2>&1
-> +
-> +max_writes=200			# 200 loops should be enough for anyone
-> +nr_incr=$((13 / TIME_FACTOR))
-
-Could we randomize this increment so we get varying behavior run to run?
-It might be nice to actually do that on a per-iteration basis as well
-rather than once at the start of the test.
-
-> +test $nr_incr -lt 1 && nr_incr=1
-> +for ((nr_writes = 1; nr_writes < max_writes; nr_writes += nr_incr)); do
-> +	# Start a repair and force it to abort after some number of writes
-> +	LIBXFS_DEBUG_WRITE_CRASH=ddev=$nr_writes \
-> +			_scratch_xfs_repair 2>> $seqres.full
-> +	res=$?
-> +	if [ $res -ne 0 ] && [ $res -ne 137 ]; then
-> +		echo "repair failed with $res??"
-> +		break
-> +	elif [ $res -eq 0 ]; then
-> +		[ $nr_writes -eq 1 ] && \
-> +			echo "ran to completion on the first try?"
-> +		break
-> +	fi
-> +
-> +	# Check the state of NEEDSREPAIR after repair fails.  If it isn't set
-> +	# but if repair -n says the fs is clean, then it's possible that the
-> +	# injected error caused it to abort immediately after the write that
-> +	# cleared NEEDSREPAIR.
-> +	if ! _check_scratch_xfs_features NEEDSREPAIR > /dev/null &&
-> +	   ! _scratch_xfs_repair -n &>> $seqres.full; then
-> +		echo "NEEDSREPAIR should be set on corrupt fs"
-> +	fi
-> +
-> +	# Repair properly this time and retry the mount
-
-We can probably drop the "retry the mount" bit since we no longer do
-that.
-
-> +	_scratch_xfs_repair 2>> $seqres.full
-> +	_check_scratch_xfs_features NEEDSREPAIR > /dev/null && \
-> +		echo "Repair failed to clear NEEDSREPAIR on the $nr_writes writes test"
-
-Maybe I'm mistaken, but I thought we were going to let repair run and
-fail repeatedly/incrementally and then leave the full repair for the
-end..?
-
-Brian
-
-> +done
-> +
-> +# success, all done
-> +echo Silence is golden.
-> +status=0
-> +exit
-> diff --git a/tests/xfs/770.out b/tests/xfs/770.out
+> diff --git a/tests/xfs/910.out b/tests/xfs/910.out
 > new file mode 100644
-> index 00000000..725d740b
+> index 00000000..1bf040d5
 > --- /dev/null
-> +++ b/tests/xfs/770.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 770
-> +Silence is golden.
+> +++ b/tests/xfs/910.out
+> @@ -0,0 +1,23 @@
+> +QA output created by 910
+> +Running xfs_repair to upgrade filesystem.
+> +Inode btree count feature only supported on V5 filesystems.
+> +FEATURES: INOBTCNT:NO
+> +Running xfs_repair to upgrade filesystem.
+> +Inode btree count feature requires free inode btree.
+> +FEATURES: INOBTCNT:NO
+> +Fail partway through upgrading
+> +Adding inode btree counts to filesystem.
+> +FEATURES: NEEDSREPAIR:YES INOBTCNT:YES
+> +mount: SCRATCH_MNT: mount(2) system call failed: Structure needs cleaning.
+> +Re-run repair to finish upgrade
+> +FEATURES: NEEDSREPAIR:NO INOBTCNT:YES
+> +Filesystem should be usable again
+> +FEATURES: INOBTCNT:YES
+> +Make sure we have nonzero counters
+> +ino_blocks = NONZERO
+> +fino_blocks = NONZERO
+> +Make sure we can't re-add inobtcount
+> +Running xfs_repair to upgrade filesystem.
+> +Filesystem already has inode btree counts.
+> +Mount again, look at our files
+> +moo
 > diff --git a/tests/xfs/group b/tests/xfs/group
-> index d1b1456b..461ae2b2 100644
+> index a2309465..bd47333c 100644
 > --- a/tests/xfs/group
 > +++ b/tests/xfs/group
-> @@ -522,3 +522,5 @@
->  537 auto quick
->  538 auto stress
->  539 auto quick mount
-> +768 auto quick repair
-> +770 auto repair
+> @@ -526,3 +526,4 @@
+>  768 auto quick repair
+>  770 auto repair
+>  773 auto quick repair
+> +910 auto quick inobtcount
 > 
 
