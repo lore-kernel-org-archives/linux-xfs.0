@@ -7,64 +7,63 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03577C433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 08:57:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B64C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 14:42:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC3D661437
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 08:57:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3B336144B
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 14:42:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235497AbhDUI6Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Apr 2021 04:58:16 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:35767 "EHLO
+        id S239976AbhDUOme (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Apr 2021 10:42:34 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:50659 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235313AbhDUI6P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Apr 2021 04:58:15 -0400
+        by vger.kernel.org with ESMTP id S235292AbhDUOme (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Apr 2021 10:42:34 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618995459;
+        s=mimecast20190719; t=1619016120;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding;
-        bh=it6oVVTCNmY640TTxP6MCvnTbV9SwYW8TNajxR4D+7o=;
-        b=dA0xUpsmC151ni8MVnulfH9VdeK3iWSfVsg9Pf53HVGc0A1OUEgJOjjNdihO1BsZs7h9Ed
-        Nv0mL0tDCy+kbPD4eNhnKq7FoIJahzvwzOtVVyERACVcrIO1QkSiQk3CuvMB0qQDW4xD3z
-        o2J9Cl/sAJ2JzUhQn9dH/6RDN2zteXU=
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
- [209.85.210.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-553-4lLpso72NjemPfXp8VGLEw-1; Wed, 21 Apr 2021 04:57:38 -0400
-X-MC-Unique: 4lLpso72NjemPfXp8VGLEw-1
-Received: by mail-pf1-f200.google.com with SMTP id k11-20020a62840b0000b029024135614a60so10358372pfd.18
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Apr 2021 01:57:38 -0700 (PDT)
+        bh=Q0/s23ZBsgPrAG+ztRgXYmJvWInX/cki5A/AJduggn0=;
+        b=OTByqDzxn39foJxh4TyKqSZfskJl2N6KYRuhuqCiCKFQsm/VT1ahI/OsDh4cGWnxypMvWh
+        KaC+JdSeGkQOGZg/EXhQ7ntCRcFUP/MpzjusL7rOnNj2y+rv47HA+B1Y+x+kmMulipuIHA
+        ZMbBNYzhyQN3rScKBllvLzkJI6tdXBQ=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-160-VBFuBdopP3qsi6UlClO6Mg-1; Wed, 21 Apr 2021 10:41:59 -0400
+X-MC-Unique: VBFuBdopP3qsi6UlClO6Mg-1
+Received: by mail-pl1-f197.google.com with SMTP id j13-20020a170902da8db02900eb50257542so12335584plx.7
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Apr 2021 07:41:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=it6oVVTCNmY640TTxP6MCvnTbV9SwYW8TNajxR4D+7o=;
-        b=jkU8MbjwnYUO4Nhvshq7T6l3ThRXd7zsxTfVWSFsYSxROgjVjSX1/jGQx18PXlumFg
-         TUa3anb40AKqRdC7If3oeo0DUwqQLi1AmY4D2kHf9bEvwsyYPRXbAtjj8o0/RkO7OKPM
-         0LI3v0r4+TM3PZUwFeYhrGDf4B2dFBN+XSIxYSejQLRO/7NTKbrYPKpnt1pklF7FDD80
-         kAVgnV/g0sGPZ8tpLPZ3NIQl6YDVb3WD4P90W7u/5bFho4V+kwDeXbgYK5F5MczJXpgJ
-         8DJ6aCwD8QcuN/ZAFgB48IvWhZbe2w072pEaiLM22Tr1ufFc/XrY5coGrDeLb1Ih1rhG
-         8HRg==
-X-Gm-Message-State: AOAM533q0Rtb17AKjV7vBim8x48sy8Xq2COX8tZrfqcVmHKEcZpx1hWw
-        etaUrNDApydAa7tgT+S1PBSAI9KupWnLvup0CTmrsSrzDzXpxp+HbU8NDXI1bfoyjiD6/JPet04
-        oYcGYuy0Z6gWxsWzDTYSOSAh7ywG552ZB4fgm5hB39f/JVYfjmWtn5kueE54GTk6U3RX2aR1L2A
+        bh=Q0/s23ZBsgPrAG+ztRgXYmJvWInX/cki5A/AJduggn0=;
+        b=HD64lwjCfiGJjoocNiF60VMASGvPdURECX6mN4gQyxVAweHe6OdrxuY2zrHFUwkEMe
+         a3YrDr6dHYppYdl5v9zkzmCpFMLc4Tu9rQ73YV6XLCFHijcaCVXJp3ikNkcYcUGFAHJH
+         afmZ1KYAgPTD5S6nBqbQxPdrQo408vpK0Tp65NedLnEVH5OcCkmIUelhKhyZtx2Tb4Me
+         Okr9BOgEQOvAVDuszVd4kxqrG7z6zHZxawm1wy9qYB9YjvBMOnLLriOJYgOJZHa9UDGg
+         D857kWUkgxPS4LjW4HnJt+mw0dp2ySU7qtaK9zbPFA6fO3WJCvqCMbKDOzK9hgyGFBx1
+         pn+A==
+X-Gm-Message-State: AOAM5324GtRjLl3uZlg5mhtHgA+KPEXN9ImLBCowQtnMnnb8XrjQHaiT
+        s0Svn/l0wjmjbRFyUKAlT5IDFsNQd71VWdXdvag+pF0ZjRt/gcWVut0YDQMG5eByz+2tCQVRUZE
+        JUptP2j9wQ00Q5uvto0o6cliTcOxqMozF8Trury6RZo96z0WCX+KG1NW2kIQW7vw/MZiDXibOqw
         ==
-X-Received: by 2002:a17:90b:344f:: with SMTP id lj15mr9989931pjb.211.1618995456957;
-        Wed, 21 Apr 2021 01:57:36 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxsBQzCAT3JvVuvaKTXpkAryZso75yIJieiFWrZmyIANrheOCRs0lQIKsbr9TdxW4ZITPtJSg==
-X-Received: by 2002:a17:90b:344f:: with SMTP id lj15mr9989913pjb.211.1618995456708;
-        Wed, 21 Apr 2021 01:57:36 -0700 (PDT)
+X-Received: by 2002:a17:90a:f2c7:: with SMTP id gt7mr12122561pjb.157.1619016117789;
+        Wed, 21 Apr 2021 07:41:57 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzq6DYKRHUOyYjS46VO5h+w+kfFO2x1BSAyg6/PuIZVgVIXBCyR48QYK8Fb5w2SEviU5OaDxg==
+X-Received: by 2002:a17:90a:f2c7:: with SMTP id gt7mr12122535pjb.157.1619016117517;
+        Wed, 21 Apr 2021 07:41:57 -0700 (PDT)
 Received: from xiangao.com ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id x3sm1242123pfj.95.2021.04.21.01.57.34
+        by smtp.gmail.com with ESMTPSA id w21sm2441739pjy.21.2021.04.21.07.41.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Apr 2021 01:57:36 -0700 (PDT)
+        Wed, 21 Apr 2021 07:41:57 -0700 (PDT)
 From:   Gao Xiang <hsiangkao@redhat.com>
-To:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
-Cc:     Gao Xiang <hsiangkao@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH] mkfs: warn out the V4 format
-Date:   Wed, 21 Apr 2021 16:57:16 +0800
-Message-Id: <20210421085716.3144357-1-hsiangkao@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH] repair: fix an uninitialized variable issue
+Date:   Wed, 21 Apr 2021 22:41:35 +0800
+Message-Id: <20210421144135.3188137-1-hsiangkao@redhat.com>
 X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -72,33 +71,31 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Kernel commit b96cb835e37c ("xfs: deprecate the V4 format") started
-the process of retiring the old format to close off attack surfaces
-and to encourage users to migrate onto V5.
+An uninitialized variable issue reported by Coverity, it seems
+the following for-loop can be exited in advance with isblock == 1,
+and bp is still uninitialized.
 
-This also prints warning to users when mkfs as well.
+In case of that, initialize bp as NULL in advance to avoid this.
 
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
+Fixes: 1f7c7553489c ("repair: don't duplicate names in phase 6")
 Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ repair/phase6.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 0eac5336..ef09f8b3 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -4022,6 +4022,10 @@ main(
- 	validate_extsize_hint(mp, &cli);
- 	validate_cowextsize_hint(mp, &cli);
- 
-+	if (!cli.sb_feat.crcs_enabled)
-+		fprintf(stderr,
-+_("Deprecated V4 format (-mcrc=0) will not be supported after September 2030.\n"));
-+
- 	/* Print the intended geometry of the fs. */
- 	if (!quiet || dry_run) {
- 		struct xfs_fsop_geom	geo;
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 72287b5c..6bddfefa 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -2195,7 +2195,7 @@ longform_dir2_entry_check(
+ 	int			ino_offset,
+ 	struct dir_hash_tab	*hashtab)
+ {
+-	struct xfs_buf		*bp;
++	struct xfs_buf		*bp = NULL;
+ 	xfs_dablk_t		da_bno;
+ 	freetab_t		*freetab;
+ 	int			i;
 -- 
 2.27.0
 
