@@ -2,132 +2,272 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 920E3C433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 16:36:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4A2AC433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 16:41:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 627166144A
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 16:36:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FE8661406
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Apr 2021 16:41:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235521AbhDUQg5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Apr 2021 12:36:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:54928 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234887AbhDUQg5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Apr 2021 12:36:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619022983;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=j4Q8MZ1IGNzIXI0KZpe4qbdLLnAqBptPOFdwNXaZ4Mg=;
-        b=RJSg4DHiON2uoOk7w7AsD5BZV/CblbAlnV2clsi8qw0TVEC1S1FdjO8PYU9fvzi1WiYSor
-        0YHXIomXNuOEiJua0n5nxIWThqDW2x2G3SOaIN1xB4QqaaPry/av3EsJOkFEluKaPPkLBg
-        hYAC0KTjUznRTYv8YsWr86GM8oVuGpM=
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
- [209.85.210.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-371-4FTvIOoPNrqwUg1v2ZudZA-1; Wed, 21 Apr 2021 12:36:21 -0400
-X-MC-Unique: 4FTvIOoPNrqwUg1v2ZudZA-1
-Received: by mail-pf1-f197.google.com with SMTP id f19-20020a056a0022d3b02902608c8a75e0so5736618pfj.13
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Apr 2021 09:36:21 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=j4Q8MZ1IGNzIXI0KZpe4qbdLLnAqBptPOFdwNXaZ4Mg=;
-        b=VrvDVmgMGLuuIJApg3/bnFPqVzPiZv7VGhpuubdYgLfZjFp5Tm37cIf6rYqldjREPq
-         gr4icZpUqRAmSDAL8vIoBcc4NdSxxj4A2t/w2uqnyIoiLJNKWZfUXdezCeLbdU0v5xOf
-         CxBHFjn68t102U+VdaT8TS5Cl4QEReW9jLrigJVzrJ6v2lqS8MDtG+mpT7hcaTf+GJLA
-         GArm4Yb0LaHfJi7aPKt6RpjYyw52Vn2qWSXDHIk+iLwkpVYBchAt1p8QhFcFluPzH+gi
-         qsS02UMrWZ8iYGU59DuBI53/6Hlpp1BcBo0wX4cnEadCO2/BO0GqsB7mG7P3H61NQJ8Q
-         GpvA==
-X-Gm-Message-State: AOAM53297RWqpyiv4VNkOK4m5f8fFev+8R8IiEVtlSNWSR/wIlY3+LsD
-        3vTmvzM9+fJQ+T2WoCQi7y3Nmr9mIM0LwntJ4BN2t3abY2dEas6VhXioBVaHgUxFurAwm46L0u+
-        nyZjBC78+Uu9TQQI4Djyw
-X-Received: by 2002:a17:90a:f402:: with SMTP id ch2mr12176054pjb.171.1619022980960;
-        Wed, 21 Apr 2021 09:36:20 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzx976QRNYZFH9McSw7jCWzT+WXgdLBbff+yJnOMHy/pf5q31uGAn9Qr36aQq3qbPnhwZrXtg==
-X-Received: by 2002:a17:90a:f402:: with SMTP id ch2mr12176024pjb.171.1619022980670;
-        Wed, 21 Apr 2021 09:36:20 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id o62sm2135935pfg.79.2021.04.21.09.36.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Apr 2021 09:36:20 -0700 (PDT)
-Date:   Thu, 22 Apr 2021 00:36:10 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH] mkfs: warn out the V4 format
-Message-ID: <20210421163610.GA3189421@xiangao.remote.csb>
-References: <20210421085716.3144357-1-hsiangkao@redhat.com>
- <20210421155514.GS3122264@magnolia>
+        id S242474AbhDUQm2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Apr 2021 12:42:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50740 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236214AbhDUQm1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Apr 2021 12:42:27 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1279E6023B;
+        Wed, 21 Apr 2021 16:41:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1619023314;
+        bh=UDdAzkekCLOAL1gA7NK4MwugnfvMypzEr7qJMGMkgvE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=d5IdhrsmlqGJAgmb/5++MI+zyIafM9LOHgS+W5xNz+3fAYgrLHvCJdduLpiw3p4LP
+         cqr3jEsdzDR9lv65aYA7UnmtVf566u0YNnzLRi3uhg8tfki7NaErG1F/PEkluz8Zou
+         l8wCuTk56S4ZMPXBMR8VqTHu2QWeVmoXNnuqy7uqUoRFsIPA5oP0W4EbRXEECLxieB
+         IJkZa5V94bOJvxWCYp0mBBExtyOr8Flt/0PsdsdHhJmKR9NSG7fGJfgHOpACsAH7FL
+         PPOBL1xVuv1Mf2jS+xRhyWyUpGNz1E+wNuiyOHwnXnN/C6lW5fB/1Vjj4MRWNo0R+n
+         yFOW0wXC9iJDA==
+Date:   Wed, 21 Apr 2021 09:41:53 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>, Eryu Guan <guan@eryu.me>
+Subject: Re: [PATCH 4/4] xfs: test upgrading filesystem to bigtime
+Message-ID: <20210421164153.GD3122235@magnolia>
+References: <161896458140.776452.9583732658582318883.stgit@magnolia>
+ <161896460627.776452.15178871770338402214.stgit@magnolia>
+ <CAOQ4uxi8Bh8OYS-D6u=+U=uEdaO3EkoHce_rg6-0dyHQhG-sfw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210421155514.GS3122264@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <CAOQ4uxi8Bh8OYS-D6u=+U=uEdaO3EkoHce_rg6-0dyHQhG-sfw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
-
-On Wed, Apr 21, 2021 at 08:55:14AM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 21, 2021 at 04:57:16PM +0800, Gao Xiang wrote:
-> > Kernel commit b96cb835e37c ("xfs: deprecate the V4 format") started
-> > the process of retiring the old format to close off attack surfaces
-> > and to encourage users to migrate onto V5.
-> > 
-> > This also prints warning to users when mkfs as well.
-> > 
-> > Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> 
-> Looks fine to me; but does this cause any golden output failures in
-> fstests?
-
-ok, I will check mkfs_filter later.
-
-(btw, just in case... would you mind reply the message below:
- https://lore.kernel.org/r/20210420200029.GA3028214@xiangao.remote.csb
- so I could refine the series and send out the next version later?
-
- Also I still have no idea how to handle [PATCH v2 1/2], since
- I'd like just add some comments here to explain why sb_ifree,
- sb_icount doesn't matter and such logic can be (and will be)
- totally removed after [PATCH v2 2/2] in short time. )
-
-Thanks,
-Gao Xiang
-
-> 
-> --D
-> 
+On Wed, Apr 21, 2021 at 09:18:33AM +0300, Amir Goldstein wrote:
+> On Wed, Apr 21, 2021 at 3:23 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > Test that we can upgrade an existing filesystem to use bigtime.
+> >
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  mkfs/xfs_mkfs.c | 4 ++++
-> >  1 file changed, 4 insertions(+)
-> > 
-> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > index 0eac5336..ef09f8b3 100644
-> > --- a/mkfs/xfs_mkfs.c
-> > +++ b/mkfs/xfs_mkfs.c
-> > @@ -4022,6 +4022,10 @@ main(
-> >  	validate_extsize_hint(mp, &cli);
-> >  	validate_cowextsize_hint(mp, &cli);
-> >  
-> > +	if (!cli.sb_feat.crcs_enabled)
-> > +		fprintf(stderr,
-> > +_("Deprecated V4 format (-mcrc=0) will not be supported after September 2030.\n"));
+> >  common/xfs        |   16 ++++++
+> >  tests/xfs/908     |  117 ++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/908.out |   29 ++++++++++
+> >  tests/xfs/909     |  149 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/909.out |    6 ++
+> >  tests/xfs/group   |    2 +
+> >  6 files changed, 319 insertions(+)
+> >  create mode 100755 tests/xfs/908
+> >  create mode 100644 tests/xfs/908.out
+> >  create mode 100755 tests/xfs/909
+> >  create mode 100644 tests/xfs/909.out
+> >
+> >
+> > diff --git a/common/xfs b/common/xfs
+> > index cb6a1978..253a31e5 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -1184,3 +1184,19 @@ _xfs_timestamp_range()
+> >                         awk '{printf("%s %s", $1, $2);}'
+> >         fi
+> >  }
 > > +
-> >  	/* Print the intended geometry of the fs. */
-> >  	if (!quiet || dry_run) {
-> >  		struct xfs_fsop_geom	geo;
-> > -- 
-> > 2.27.0
-> > 
+> > +# Require that the scratch device exists, that mkfs can format with bigtime
+> > +# enabled, that the kernel can mount such a filesystem, and that xfs_info
+> > +# advertises the presence of that feature.
+> > +_require_scratch_xfs_bigtime()
+> > +{
+> > +       _require_scratch
+> > +
+> > +       _scratch_mkfs -m bigtime=1 &>/dev/null || \
+> > +               _notrun "mkfs.xfs doesn't support bigtime feature"
+> > +       _try_scratch_mount || \
+> > +               _notrun "kernel doesn't support xfs bigtime feature"
+> > +       $XFS_INFO_PROG "$SCRATCH_MNT" | grep -q -w "bigtime=1" || \
+> > +               _notrun "bigtime feature not advertised on mount?"
+> > +       _scratch_unmount
+> > +}
+> > diff --git a/tests/xfs/908 b/tests/xfs/908
+> > new file mode 100755
+> > index 00000000..004a8563
+> > --- /dev/null
+> > +++ b/tests/xfs/908
+> > @@ -0,0 +1,117 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0-or-later
+> > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 908
+> > +#
+> > +# Check that we can upgrade a filesystem to support bigtime and that inode
+> > +# timestamps work properly after the upgrade.
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1    # failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +       cd /
+> > +       rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +# real QA test starts here
+> > +_supported_fs xfs
+> > +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> > +_require_scratch_xfs_bigtime
+> > +_require_xfs_repair_upgrade bigtime
+> > +
+> > +date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
+> > +       _notrun "Userspace does not support dates past 2038."
+> > +
+> > +rm -f $seqres.full
+> > +
+> > +# Make sure we can't upgrade a V4 filesystem
+> > +_scratch_mkfs -m crc=0 >> $seqres.full
+> > +_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
+> > +_check_scratch_xfs_features BIGTIME
+> > +
+> > +# Make sure we're required to specify a feature status
+> > +_scratch_mkfs -m crc=1,bigtime=0,inobtcount=0 >> $seqres.full
+> > +_scratch_xfs_admin -O bigtime 2>> $seqres.full
+> > +
+> > +# Can we add bigtime and inobtcount at the same time?
+> > +_scratch_mkfs -m crc=1,bigtime=0,inobtcount=0 >> $seqres.full
+> > +_scratch_xfs_admin -O bigtime=1,inobtcount=1 2>> $seqres.full
+> > +
+> > +# Format V5 filesystem without bigtime support and populate it
+> > +_scratch_mkfs -m crc=1,bigtime=0 >> $seqres.full
+> > +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> > +_scratch_mount >> $seqres.full
+> > +
+> > +touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/a
+> > +touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/b
+> > +ls -la $SCRATCH_MNT/* >> $seqres.full
+> > +
+> > +echo before upgrade:
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> > +
+> > +_scratch_unmount
+> > +_check_scratch_fs
+> > +
+> > +# Now upgrade to bigtime support
+> > +_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
+> > +_check_scratch_xfs_features BIGTIME
+> > +_check_scratch_fs
+> > +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> > +
+> > +# Mount again, look at our files
+> > +_scratch_mount >> $seqres.full
+> > +ls -la $SCRATCH_MNT/* >> $seqres.full
+> > +
+> > +echo after upgrade:
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> > +
+> > +# Bump one of the timestamps but stay under 2038
+> > +touch -d 'Jan 10 19:19:19 UTC 1999' $SCRATCH_MNT/a
+> > +
+> > +echo after upgrade and bump:
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> > +
+> > +_scratch_cycle_mount
+> > +
+> > +# Did the bumped timestamp survive the remount?
+> > +ls -la $SCRATCH_MNT/* >> $seqres.full
+> > +
+> > +echo after upgrade, bump, and remount:
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> > +
+> > +# Modify the other timestamp to stretch beyond 2038
+> > +touch -d 'Feb 22 22:22:22 UTC 2222' $SCRATCH_MNT/b
+> > +
+> > +echo after upgrade and extension:
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> > +
+> > +_scratch_cycle_mount
+> > +
+> > +# Did the timestamp survive the remount?
+> > +ls -la $SCRATCH_MNT/* >> $seqres.full
+> > +
+> > +echo after upgrade, extension, and remount:
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> > +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/908.out b/tests/xfs/908.out
+> > new file mode 100644
+> > index 00000000..5e05854d
+> > --- /dev/null
+> > +++ b/tests/xfs/908.out
+> > @@ -0,0 +1,29 @@
+> > +QA output created by 908
+> > +Running xfs_repair to upgrade filesystem.
+> > +Large timestamp feature only supported on V5 filesystems.
+> > +FEATURES: BIGTIME:NO
+> > +Running xfs_repair to upgrade filesystem.
+> > +Running xfs_repair to upgrade filesystem.
+> > +Adding inode btree counts to filesystem.
+> > +Adding large timestamp support to filesystem.
+> > +before upgrade:
+> > +915909559
+> > +915909559
+> > +Running xfs_repair to upgrade filesystem.
+> > +Adding large timestamp support to filesystem.
+> > +FEATURES: BIGTIME:YES
+> > +after upgrade:
+> > +915909559
+> > +915909559
+> > +after upgrade and bump:
+> > +915995959
+> > +915909559
+> > +after upgrade, bump, and remount:
+> > +915995959
+> > +915909559
 > 
+> Did you design those following days timestamps to look so cool? ;-)
 
+No, the repeated 5s and 9s weren't intended.
+
+> > +after upgrade and extension:
+> > +915995959
+> > +7956915742
+> > +after upgrade, extension, and remount:
+> > +915995959
+> > +7956915742
+> 
+> Consider this test reviewed-by-me
+> I'd like more eyes on the quota grace period test, so not providing
+> a reviewed-by tag for the entire patch.
+
+Ok.
+
+--D
+
+> 
+> Thanks,
+> Amir.
