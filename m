@@ -5,148 +5,148 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F32F0C433B4
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 00:29:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 647D1C43460
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 00:29:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B28666101E
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 00:29:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28FE36101E
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 00:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235144AbhDVA36 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Apr 2021 20:29:58 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:17772 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234764AbhDVA34 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Apr 2021 20:29:56 -0400
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13M0S1jk007614;
-        Thu, 22 Apr 2021 00:29:15 GMT
+        id S235010AbhDVA37 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Apr 2021 20:29:59 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:65476 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234856AbhDVA36 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Apr 2021 20:29:58 -0400
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13M0SuDc030361;
+        Thu, 22 Apr 2021 00:29:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=SBsNFEJYF8JmHNU7vQH8fMz6u8Y7t8rSQK/zUl+60k8=;
- b=LtmfLtxzSliEyE7s3KOcL/mB2OiZ+UrJD37RDbyhsLQ5QjAec9kv4ZC/AbiK8J5PCXL9
- Jmx44qxqvXzoh4UBPfCpdsMdHpgn776sH7gi2ZoPF6JqfIKQ+bzVNkJjB88cNf2uve4Z
- ouDFBbWC4NRQTn2/8928Q14crQUCdqtX54rBztQfC+ArRS4CbTtImoHJsa3XPwA/+A8v
- lOpO7LvpielVyf1hFLJxavBomTMMCzYjsP89PAMNkdl5MuWHtgEcQ3hIgh/omvFRMMkp
- zg6t5K2f9RP0dARvKEz4IIe4vXnWp01mvsJT3VEOzWP86905hZ+/rxagxIRIk5rVQ1mi xA== 
-Received: from oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 381bjn8x86-1
+ bh=kt2DWkqwdkpwQz0j0nfdZsGTwuHW2R9bgrPW4Yo/MiQ=;
+ b=ZI9VK9NYbZlbZEyOyKLGS40p21sYKqbIAjCceFjvnz2DV4zHxYzKVK4x8LGR+ls0HHIb
+ /Nz9RJKu43R4HdQxz0hIOd3n5jRfOOFpXzav8U5El7dp7DjyXfE69tUi+wG04RfhUC9n
+ 1mjC9k37Hhi52uNk2YpYBP0Gv+ceGqAtf0Ig+HUNr4fRthCwVDiMIp6etHcBz7IHt3/q
+ oNRD4M3rHoNQunDukPBW7CPkEZvcU2m/FPJgYg/kxUOoHLwzRZYoOdgIxKiaVMUMo0HN
+ zQw90qhKw872GtOmjHGqB0kHvjnyWhbNcx8Mz7uwuNC6L9WVMv6NgfXe14HSYplzw0xg Kw== 
+Received: from oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 381tw0grnu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Apr 2021 00:29:15 +0000
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [127.0.0.1])
-        by pps.podrdrct (8.16.0.36/8.16.0.36) with SMTP id 13M0TDaE171591;
-        Thu, 22 Apr 2021 00:29:14 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2102.outbound.protection.outlook.com [104.47.58.102])
-        by aserp3030.oracle.com with ESMTP id 38098see62-2
+        Thu, 22 Apr 2021 00:29:21 +0000
+Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
+        by pps.podrdrct (8.16.0.36/8.16.0.36) with SMTP id 13M0QWFK165567;
+        Thu, 22 Apr 2021 00:29:19 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2172.outbound.protection.outlook.com [104.47.59.172])
+        by userp3030.oracle.com with ESMTP id 3809m1cyjf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Apr 2021 00:29:14 +0000
+        Thu, 22 Apr 2021 00:29:19 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=MSvIl2KnYCk2edFivxfvCaiuunvY6nP3FpD4horfFUH4J5JEJpuheJl32OHRHLRV7b7vbi7sFko845ZEUBM2mMyVLdVZwi+skMyvkpPD4wrSe/E0VT4uyU/ADOrZEvrUvMXf/5qEJrpx/j5DfCSG5cZjfRdhC9TarFGEJIXfPJ638uKIg/bgUpjx2c+j2GOJfSLzGmMNDeJC9IDF3QaM1FENzoGOvQYXkhLJmXCqa9r1H3UWCxAHB+GedusQfMxnckyqkY2EfSJem/YQGWeFqjca+IraMa7z3F1oAQTYZjt4WwySqTv1HjXX8Dd+EeQiNcBI7gV7r73aBAN/f0LFQQ==
+ b=hgM92pK48XDvxySMsvC4XD+R0Rl09sWwAxDyTXbHNwu6wnCmD9S3qOmILm6Nhq/TQGx3PeiqbmqHtNrKneD9cqNktG0JYZ2veQjO/Wf2mi4hVo7v5c8FjwCE+103IgYTcNgBu5KNU2btq9gbYc2rnKjjaEQ1sJ3QbSqrNWaeQAh1VqWGtX0tpn7C/FnIphFg6QFVnfnDKk8K3aMnP0ezvPxDOsSTLBnz95fh0QKK+wb7qU2kq4QTEiczwaAxzdFcu1zo2NFZGEiNFuCBp4B8mXehnbisn9R1Af5lJugifAYs7Af6d37kqFPg7hpM16v4XW58WaFjlQ9ldeVVDFXgfw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SBsNFEJYF8JmHNU7vQH8fMz6u8Y7t8rSQK/zUl+60k8=;
- b=BSzYhM35sal7ZoH0j1luOlrCQefOxlGvvzVjnD/nX1OfCGvR8ZsmvkeFpmXlcxNlpxVPwh38cfd8sLaYGjbgN5vVHHmzgbByudpUIKZ1IzbUww+IDhhGzkzKKwPpZf37WBlDVbrfxq4zxc7nz4Vtk/K5lbonID69GjaYgQnl258MH5ZP4ndNgO/mhOuh8uBxV9VEYegzhpmUIp3WAXE6PN85Vq59ThhtyrBDZwkUeVRJZ+dmHk+69DBKZtvmzwuoEaY7CJBl+QW+jUI1jsB3B2uBv4UdUiUely1ZeYSt9izLSPrj81ai77ohG40slBaoyeKmxJ0QpwfLHihojh5gaA==
+ bh=kt2DWkqwdkpwQz0j0nfdZsGTwuHW2R9bgrPW4Yo/MiQ=;
+ b=UMuR8t2OP2ojyheQDpJYNzLYgUOOAJky4ocvKNtdUTr0fGN/gVMme/+nL2pJthHmITl3JR6CXNcBnvjPZDKQEZllCvlLbo6ib/Gws11QLLoWH6ChB3kc1cvSEuiQUOwlouh30zI+yMDB2fE5wdf7YX0+APjNERsCYBklnsH0VZwVLxpxVLG4OSWcoD3ktSPjdtZjjgS5Qu70zu6TY6lx9WVEHz8s+VLeISkOOct04XEyU0N/x6OGCnkFS/ZjhIp8hGQU1Oje2/JlIvCCdA+MXSkMqrHOmfK/9WIcsU1RVTZrYESQ7NlvVI9jzxoB8HO1bbblyUR6cPC/eDUoHdIVJg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SBsNFEJYF8JmHNU7vQH8fMz6u8Y7t8rSQK/zUl+60k8=;
- b=dIdJ8IhOASaEDzWh3cREawGxaGKnnJhLOsAM/qAT3/AB9r1op+uKexE3b+GXPxx/pJH9ZRWpRgGTrtA/mlqCKCeg8YvygGxrmhu1W8yy7VfPQrALWNATU7u9y/zrzS/MmmKpviI1aePUp5y1QzVJMmgIxMzhpErd/ZT7IZnuDf4=
+ bh=kt2DWkqwdkpwQz0j0nfdZsGTwuHW2R9bgrPW4Yo/MiQ=;
+ b=FnaVoBtJelIyhaZeRZpuVAhiUo9wdOkRP50iP1VtPI+qokZHZ4Wuij4CNu5GNQ5GSk9LphHYXbeh+2BG6V09Di3FMzvyU8KjNF/XLKVCVmz0ucrIu8J3HokxTb7eFpSnQ12zhcIe1xcv5GcNUhgSMEN0/1y72kVPp8BptUFwnSM=
 Authentication-Results: eryu.me; dkim=none (message not signed)
  header.d=none;eryu.me; dmarc=none action=none header.from=oracle.com;
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
  by BYAPR10MB2517.namprd10.prod.outlook.com (2603:10b6:a02:b4::26) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4042.19; Thu, 22 Apr
- 2021 00:29:13 +0000
+ 2021 00:29:17 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::55a0:c9fb:d00:cd88]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::55a0:c9fb:d00:cd88%3]) with mapi id 15.20.4042.024; Thu, 22 Apr 2021
- 00:29:13 +0000
-Subject: Re: [PATCH 1/2] xfs: functional testing of V5-relevant options
+ 00:29:17 +0000
+Subject: Re: [PATCH 2/2] xfs: test inobtcount upgrade
 To:     "Darrick J. Wong" <djwong@kernel.org>, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
 References: <161896456467.776366.1514131340097986327.stgit@magnolia>
- <161896457076.776366.1740320523459442249.stgit@magnolia>
+ <161896457693.776366.7071083307521835427.stgit@magnolia>
 From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <b63d7a0c-b036-3a18-fed6-7e62d032481b@oracle.com>
-Date:   Wed, 21 Apr 2021 17:29:11 -0700
+Message-ID: <358fe855-c59c-3599-4a20-e299a1cf08f6@oracle.com>
+Date:   Wed, 21 Apr 2021 17:29:15 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.9.1
-In-Reply-To: <161896457076.776366.1740320523459442249.stgit@magnolia>
+In-Reply-To: <161896457693.776366.7071083307521835427.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [67.1.222.141]
-X-ClientProxiedBy: BYAPR07CA0007.namprd07.prod.outlook.com
- (2603:10b6:a02:bc::20) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: BYAPR07CA0006.namprd07.prod.outlook.com
+ (2603:10b6:a02:bc::19) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.226] (67.1.222.141) by BYAPR07CA0007.namprd07.prod.outlook.com (2603:10b6:a02:bc::20) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.20 via Frontend Transport; Thu, 22 Apr 2021 00:29:12 +0000
+Received: from [192.168.1.226] (67.1.222.141) by BYAPR07CA0006.namprd07.prod.outlook.com (2603:10b6:a02:bc::19) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.20 via Frontend Transport; Thu, 22 Apr 2021 00:29:17 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b011dfc5-6ad4-462d-a111-08d90525a744
+X-MS-Office365-Filtering-Correlation-Id: 33cf15a9-3693-4326-b816-08d90525a9eb
 X-MS-TrafficTypeDiagnostic: BYAPR10MB2517:
-X-Microsoft-Antispam-PRVS: <BYAPR10MB25174BEC4E88555BD8BBE7C695469@BYAPR10MB2517.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:972;
+X-Microsoft-Antispam-PRVS: <BYAPR10MB2517E5FDAF142F144E9F812795469@BYAPR10MB2517.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:112;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: wqR4hmfHfh4W3Fs0NWWSjQ5DLFhiwYIpFFsnj22tYdTiF11sABBO/cbKNiNILTHhs+Y/vgko4QSEm7gBnqDTnWGeRjWNIfwaSYXdfSubWDWMHRX3nSdf+vlqV6NMiSicotw+NNjSqDzW0M1Ll+edtVIMIP6+Ja/Hqt/IZPzwELSuhGOt8XkGf0V2bmDpR3kmG8MCZgjsoODbJEk28tZ/9IS6pO6M5KCvirv9eM4ShAsy7fg+zMUhqhxPv0CfWv2KV7T2nHEBPXCPlwgzTgT83FT2ofGFzafs2opcaPMofnCtUqTDOq103lP+dlcR/iP02lxRbImWWQ+eKYE8cAVjaAzcSf4aqJZpuONLPrtsccGQlWbTZwVQV8xUSgzmDmz2RMfDGPL/RAbjbE7yxFiwCUwhcZuJ7s8hkh/+s1LOwvR+bRa1snWFQ/K5LNRtFKy7HAJYK703pT8GJ+y6RJiZlkjA1Vf7JvsAGeuYRdJNCLH3JfpOozA0cfLuBu+z6Xtnyv3Um5fCB5y1Hdz1vjN5w8761xzf+uWsEvaPRs3a6rzDJS0EKi9r1BhXgZNz8nPZKz22EFfCNdSYWmDopgKP0VdRq3xYJAcWJ92GPyTYrw3UeHUIPE9EMfD3Skm8cbc5KNqP/Ns2H7kvEM0K8FmSMpgNzP2z5sMhFegB604d3rtZuN+Pg9PJBAcPRMd+BBZEjE6Z5IBf7xin8FaO48eDPw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(346002)(39860400002)(396003)(366004)(136003)(6486002)(5660300002)(478600001)(2616005)(4326008)(38100700002)(30864003)(16526019)(38350700002)(83380400001)(86362001)(31696002)(52116002)(66556008)(53546011)(66476007)(956004)(36756003)(316002)(8676002)(44832011)(31686004)(2906002)(186003)(16576012)(8936002)(66946007)(26005)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?dmxPaExKaE85UTBVVDJRZDlyYWFFOHRyWExjYnlGRUhNekZoL29GY3pWV0dw?=
- =?utf-8?B?YTRpYjF5WXJ0RW0weCtvVUFyRmJySm9yM29TSWRBMVltb1hXMit1dzVlcEh6?=
- =?utf-8?B?SlNwbmllQXVBQ1N1SkhVdWJEMmVlaVBLTzVPTlp0dlFIL01VbVhYaitYN1p3?=
- =?utf-8?B?dG00NW5ZeVNKYW9Nc01QbUdqWFZWL2ZEU3FjYjgzR1M4U1pSeFZhSmFLVVNh?=
- =?utf-8?B?c1BKSklrOVBMbisxY09wSm9BT1pkK1k1WVV3Mzc2aEFId0JqNURFeG0wd3RX?=
- =?utf-8?B?MVFVY2NUT1A2dktBazRXNWFYdmY3OE5vb1BEcExxM2NobEdMM1F6MFVyb0hK?=
- =?utf-8?B?aFcvMlhRREkwczdjYXZWMnJFdGpwb3ZURHpBYjlwRjlETy9wY1poK0VWQ3BC?=
- =?utf-8?B?SXFaYWNuejJkR0k0N1VjOEo1cFhiUEx3dUs0Um9IdlZvYXA5TTdDREhjbm9L?=
- =?utf-8?B?bUlnemZZVXFsZFRrNHVwWlI3S3ZsazFUclk1QjNBR21zbml4S3ZOMzJwbC9E?=
- =?utf-8?B?U3hsZE1sMDI5UjZaalllaFUzbndTTC9IWmpLR2FYdXJyTGNIZDNSSXY2Y3pv?=
- =?utf-8?B?RDd3TWI5STZobEZTWnhXY3gyTHJXMXpTV0xZeDcrdkRlcUMwZlcrK2Fkbzky?=
- =?utf-8?B?OXpGRm5iczVZZlNsSGtXMEhKTTlLV21OWGwvN3QwYkEvc3ZWVUV3TUROSmo4?=
- =?utf-8?B?NEFlenJuUnZRamI4dFNTSzgzWkgxZ0ZuenQ5aVg5Y3p2SnJZTit6eCtaSnd1?=
- =?utf-8?B?a1J6WXdtV1B0YXNrU0xFdkwvanc0WGkxSkUwMmJLRGFXMGVZTHlmUW84OXhS?=
- =?utf-8?B?b21rVkswWUdXdTRNSmlqUkNCOHpuSzVpSjJpQ2VEdVVOUDJPYVBUUkdKRit5?=
- =?utf-8?B?eXNQSkpFM2h4NUphbnR3VklOM3hNNDNvMTdIVkxPbmFlSUlXcGwzeHg5Ykgz?=
- =?utf-8?B?dElhMkNlWWhtekJwYjJEemlwUE54clNCNjZtSmhoSCtvVjlNK2FobW0vc2Ft?=
- =?utf-8?B?bXM3QVBxUWY2ckQvQ0Y4RVZKUnozYlg3Ykw2NmNsRXlKZitZVHJSNm5zUlJB?=
- =?utf-8?B?MzI4WlhOOWg1d2puL2VaN0R3MVE4L2tIMHZmbGxCUE5Ld0d2NmRHUDhKR3pL?=
- =?utf-8?B?ZldOU0ZYQTNLWDZ1MitSS1UzNnBXUGllTXRNT09DVDI0L0cvbFpobzlkVE85?=
- =?utf-8?B?S3NYSTBhd3NYWEwxMmZpOUluZWFWVEpjRFlpTGdsM2RyL0htakdmL1B1SnZO?=
- =?utf-8?B?SzZaekVaMlNUQVpQbURlSVlreGE4ZWxVK2cwNmJteUl4SjZ0R3BJU3F0OTlD?=
- =?utf-8?B?SktSQzdydjl3NE9jZnA3V1Z1UUlaTVk0N2NGaXp2TFBmWUlNS0pVUFY4M09L?=
- =?utf-8?B?citaV0dyVUkxUTBxaXQwL3Q3OEF5bEhKeUdTV1ZnN3VCUEoySnB3ZWJ1N29z?=
- =?utf-8?B?WkdHZXB4UGREcm50Z0hrMnZFU3hYMTl2MWhEZGF1cE1aQ0FrbHFCWFRpcEJn?=
- =?utf-8?B?czQ2ZHVKaDYrMTN1RTdSbWtvblY4b2pKc2F0R0NOd1BVSkIzR3h2Szd4cUV0?=
- =?utf-8?B?cG1VRWlnZ25TR1dNVE9QbGtlb3FFK3c0dlJUNkxtOU80LzRCQUVCVEJnU1Ba?=
- =?utf-8?B?TkNOcWpBTGNpL1c0MllQQnFaWjVzbm1IK0N0aUkwOGpwU0FGY2RiT09lMWpI?=
- =?utf-8?B?d3FMYmJXOG4vbFpSN3pBVWF3bE5WbitqVDUvWFE5UHlpWlVMNUg1NjZPNU5U?=
- =?utf-8?Q?QHPZyvNUYIDLDoLIj/MrdTkbIzxFqTFoD5hO0QD?=
+X-Microsoft-Antispam-Message-Info: N3vkV2CSzSDUI1bRtTPLmanPsZ/gNc5wv81VXLJV8PBbteVU9BAI//wvF4yEQ6blI4MfohNOUdgtcw1kB9QmLkQr4W7gRbf6+7MV2rb8uFRSRFLpUCFv+DRvoF5D1meNOFd+u1yasqMtdPl7AbdhbIbxWd98e5yHelMqSeISZ2z+rKFJvrE+McpScFJBGCRLqD6NVjKXg/KOpnNgh2Ja2Af4ZIhUTvbi2+au0gKW9dvpPDMH8B83+cH5yMAb95X1TokN+VEphenjTXhd85lkFcC9B/KE0aB9djOpgGau31M/xN2hxf8jO6Rxkr7i38YY16aLH9Ezt2IlIewv3/evqlyRGsWuBcp6nu+6+VQ2WvF1hYeUFwJnJgzdBKLALdHi0BOftR23sm9kwA7qP5SZ9TymoPbehZzuDhK+z28Wo80iHqbxrTqZmYYv7TCikt+hzfrwDozOn/tHp+fG9440Xe0ONL4KFi+8KsMXbaf4NH8i/BNdItwEDrBmhH6ZYUTuJLzsOjwVjYbBFJ5gUrhvmONKriiIyYfoFDsAIGQk2JTxXcmcY6JmInH6TtRZoRfPjUR0J7fQRSdwe2B6C7exko9siay/t9vUofm1RRyvhAlE8l1GWYEJdNo9WOYtRA1kJL1yUF8Gt3DIeTp+ItfIgFwaUcEvlOFAy5b7uYAb0sWIz2+Xz1XPzg/Lzskca6yHCptoZouzny6SzTGWPpHRTg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(346002)(39860400002)(396003)(366004)(136003)(6486002)(5660300002)(478600001)(2616005)(4326008)(38100700002)(16526019)(38350700002)(83380400001)(86362001)(31696002)(52116002)(66556008)(53546011)(66476007)(956004)(36756003)(316002)(8676002)(44832011)(31686004)(2906002)(186003)(16576012)(8936002)(66946007)(26005)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?TkdLcS9PM2JvUmRZR2lib0gvam9UcU00eFhPSjJCWWhoTFdLSXU1U09xRm92?=
+ =?utf-8?B?dkZJQ1N1aEYzZmZ3OVBVczJJOFdwNzNEb2dtTEJDQ2pDb3pydmNpd3l4YkNk?=
+ =?utf-8?B?bHFsZlNJSzlRR2ZHd1FvcEszaitRYVhLcGNMME1CWnRLd2NnQlNmWmgzaTRR?=
+ =?utf-8?B?QXdNa2l1cVRwdVdESGRQRlZOcEo0QTRUSkZvdm9NQ0owS05FZGtwRTdKWFNp?=
+ =?utf-8?B?K3NRMWptd3QvOC8wTjhJMFppM2NXdTVUaVMrV0VpbjFWMVh2N1hiYUw4Y0F4?=
+ =?utf-8?B?NWEyVHBBQzBVRVZPekNSamxhMWttbkc1alpzNExUSnZtam9rblh4Vkk5TDlM?=
+ =?utf-8?B?L0o2VWlpM0JTNE5lSXliN28xdHdDQTBPYXVUNFgxa1VjejA0T3FFREkycEl1?=
+ =?utf-8?B?enlrbHVLUlQ4K1ZGa2VBWmVqMEtxNXFXNll4NWlJdWJZdTB3YkNyOTB5R3d2?=
+ =?utf-8?B?ZzhTRTBPWTBvR1hBYXI1RzRNcWdMb0k1VnpCMHJTTTd2QXJzdk85ZWM3eFUz?=
+ =?utf-8?B?Vm9IN1VxWCs3ZG1zaVlOeDhDN291a1RrNDREWmJrM21pUkNhdGNDRkhVWmFm?=
+ =?utf-8?B?TmVRcnJQeHNyUHJLQjl5emVaT0RqZHkxdkx5WWdTVjRjWmJ0cVBjdWFub1hB?=
+ =?utf-8?B?ZDJKajdEQjVXNnNVbFJpT0Y1M1hBcnFCMTE3amFJMHZTYmpqSVZ3ZTM1MHBn?=
+ =?utf-8?B?U2FRUW9pQjJGVmI2WVV5ZFFCY01NVTF4TlRiZ2N5MkNIVVZPNHNvME1CTG1K?=
+ =?utf-8?B?ZkhmejQ3dTdNVmZFbmcvWDYvUGtIcDFCRnBBeklSenJ6YWFjTWNjZGNOTlVs?=
+ =?utf-8?B?SWd2eGF1cHZrS0hZbHJHKzFWYlVFMEJUSmNhYjgwRlZjMXlNNE41QXZDcEVm?=
+ =?utf-8?B?SXFnKzRNTDZwajllSVVMdEk0a1IyOS9nZmIzT2NKcnhsVTZvV2U0Z0RXWDJZ?=
+ =?utf-8?B?NnJKdFM0anN6NDRiUXBLc3dXdFZIdVErR25BSDBaWUx4Y0c0a3Vza0Z3am9K?=
+ =?utf-8?B?YzgxSVNvZFlyV3hnY1VEb1hwRjFUK2hkWW1ldGg2VmcyRHpZSllwMnhyTGJX?=
+ =?utf-8?B?QUgrK056QzZGN1FiNGJna1hzMFdWV0MvRHgxbDF6dzJuUXUzN0tsYXBlMi9T?=
+ =?utf-8?B?WFc3OGJGREtNakYxa3gzdWlOdDFPanAvNkx5YVg4TDQwVCtETVVYNU04cVhz?=
+ =?utf-8?B?bDdINE1MSzVVbTlqbnRYUkx2enZESTlFYzVseDB0UVI3MjA4SHNtZytPK3Na?=
+ =?utf-8?B?N0RkQ3U4b3pHNmVaWHJ6T2hLK2E3MjdaS3FuYUFMRGt2TExLWnZ0TzcvaVov?=
+ =?utf-8?B?c05ydDljSmczb1A4VWU0cUg1YzQrWXcyMTl4TmNuM3pGcFpIWEhZUVBlSHV2?=
+ =?utf-8?B?VnhZU2svelFqL1p5ZDhuQ1hzMnc5NzBML1o0OXVKR2x2NkFjWmxYTEdKUUZ1?=
+ =?utf-8?B?ZHpNODduTFViQUR6NUpCV25abVlncWZESkk3STRDOC8wOXBsMUFtTm5GdlFS?=
+ =?utf-8?B?L3QxWENmNVJYbXVBc3huQ2g0Vi9YZGcvcDQzWTNqQ25RSlZUS2oxMHV2anBE?=
+ =?utf-8?B?MnFKNXpYWnFxQ2JLKzFjVTRsMTJBSHJybnNJdXZ5MzhadlI2RlNISnlKMFZn?=
+ =?utf-8?B?ZG50QWZTSy8vb2Mra2VHYmtoYWRZaXZkVytqcHVtUkx4SmdlbmgwUG1GeHFz?=
+ =?utf-8?B?KzQ2NE1neVhDUGdmeTlRMVdmVXN1VzBEZ3psOFU4ZjdtTVRyRFZ5a3JyTnEy?=
+ =?utf-8?Q?Rc+St5YQMp+pmcweKCxAiGPXrU65L6lGHBXt7hj?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b011dfc5-6ad4-462d-a111-08d90525a744
+X-MS-Exchange-CrossTenant-Network-Message-Id: 33cf15a9-3693-4326-b816-08d90525a9eb
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Apr 2021 00:29:12.9430
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Apr 2021 00:29:17.4024
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: MjaeKqnMG1mw6LbgMSOjx9dDz+a8NWfYuyy9i9NhgoTFhmPLA0DQRfzpMTT9hbebvTQXBSCvZUFVxZFQtbmB79srU0/HnZWwsNQFKELY3gU=
+X-MS-Exchange-CrossTenant-UserPrincipalName: SgwkBT+bGco7kaLb7es7UVTgvI5QeJIqXVPOYgNDXSXt7NUd3cOnnbkbhSHwgIrgfGgmViSfnoVetyGikSfPl+jPAaEImHDpOGOS4Icmp2s=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2517
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9961 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 phishscore=0
- mlxlogscore=999 malwarescore=0 bulkscore=0 mlxscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 spamscore=0
+ mlxscore=0 suspectscore=0 malwarescore=0 adultscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
  definitions=main-2104220002
-X-Proofpoint-GUID: IIEkS9gUrhA0bGvL4GfU1b7crEbEiawU
-X-Proofpoint-ORIG-GUID: IIEkS9gUrhA0bGvL4GfU1b7crEbEiawU
+X-Proofpoint-GUID: 6ITgZe4JD6sUvmqwM5patAfhMAcpTaTO
+X-Proofpoint-ORIG-GUID: 6ITgZe4JD6sUvmqwM5patAfhMAcpTaTO
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -156,81 +156,60 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 4/20/21 5:22 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Currently, the only functional testing for xfs_admin is xfs/287, which
-> checks that one can add 32-bit project ids to a V4 filesystem.  This
-> obviously isn't an exhaustive test of all the CLI arguments, and
-> historically there have been xfs configurations that don't even work.
-> 
-> Therefore, introduce a couple of new tests -- one that will test the
-> simple options with the default configuration, and a second test that
-> steps a bit outside of the test run configuration to make sure that we
-> do the right thing for external devices.  The second test already caught
-> a nasty bug in xfsprogs 5.11.
+> Make sure we can actually upgrade filesystems to support inode btree
+> counters.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Ok, I followed it through and I think it makes sense.  With Brians 
-comments fixed:
+Seems ok to me
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
 > ---
->   common/xfs        |   21 ++++++++++
->   tests/xfs/764     |   93 +++++++++++++++++++++++++++++++++++++++++++
->   tests/xfs/764.out |   17 ++++++++
->   tests/xfs/773     |  114 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->   tests/xfs/773.out |   19 +++++++++
->   tests/xfs/group   |    2 +
->   6 files changed, 266 insertions(+)
->   create mode 100755 tests/xfs/764
->   create mode 100644 tests/xfs/764.out
->   create mode 100755 tests/xfs/773
->   create mode 100644 tests/xfs/773.out
+>   common/xfs        |    8 +++-
+>   tests/xfs/910     |   98 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>   tests/xfs/910.out |   23 ++++++++++++
+>   tests/xfs/group   |    1 +
+>   4 files changed, 127 insertions(+), 3 deletions(-)
+>   create mode 100755 tests/xfs/910
+>   create mode 100644 tests/xfs/910.out
 > 
 > 
 > diff --git a/common/xfs b/common/xfs
-> index c2384146..5abc7034 100644
+> index 5abc7034..3d660858 100644
 > --- a/common/xfs
 > +++ b/common/xfs
-> @@ -1142,3 +1142,24 @@ _check_scratch_xfs_features()
->   	echo "${output[@]}"
->   	test "${found}" -eq "$#"
+> @@ -1153,13 +1153,15 @@ _require_xfs_repair_upgrade()
+>   		_notrun "xfs_repair does not support upgrading fs with $type"
 >   }
-> +
-> +# Decide if xfs_repair knows how to set (or clear) a filesystem feature.
-> +_require_xfs_repair_upgrade()
-> +{
-> +	local type="$1"
-> +
-> +	$XFS_REPAIR_PROG -c "$type=garbagevalue" 2>&1 | \
-> +		grep -q 'unknown option' && \
-> +		_notrun "xfs_repair does not support upgrading fs with $type"
-> +}
-> +
-> +_require_xfs_scratch_inobtcount()
-> +{
-> +	_require_scratch
-> +
-> +	_scratch_mkfs -m inobtcount=1 &> /dev/null || \
-> +		_notrun "mkfs.xfs doesn't have inobtcount feature"
-> +	_try_scratch_mount || \
-> +		_notrun "inobtcount not supported by scratch filesystem type: $FSTYP"
-> +	_scratch_unmount
-> +}
-> diff --git a/tests/xfs/764 b/tests/xfs/764
+>   
+> -_require_xfs_scratch_inobtcount()
+> +# Require that the scratch device exists, that mkfs can format with inobtcount
+> +# enabled, and that the kernel can mount such a filesystem.
+> +_require_scratch_xfs_inobtcount()
+>   {
+>   	_require_scratch
+>   
+>   	_scratch_mkfs -m inobtcount=1 &> /dev/null || \
+> -		_notrun "mkfs.xfs doesn't have inobtcount feature"
+> +		_notrun "mkfs.xfs doesn't support inobtcount feature"
+>   	_try_scratch_mount || \
+> -		_notrun "inobtcount not supported by scratch filesystem type: $FSTYP"
+> +		_notrun "kernel doesn't support xfs inobtcount feature"
+>   	_scratch_unmount
+>   }
+> diff --git a/tests/xfs/910 b/tests/xfs/910
 > new file mode 100755
-> index 00000000..ebdf8883
+> index 00000000..237d0a35
 > --- /dev/null
-> +++ b/tests/xfs/764
-> @@ -0,0 +1,93 @@
+> +++ b/tests/xfs/910
+> @@ -0,0 +1,98 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0-or-later
 > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
 > +#
-> +# FS QA Test No. 764
+> +# FS QA Test No. 910
 > +#
-> +# Functional testing for xfs_admin to make sure that it handles option parsing
-> +# correctly for functionality that's relevant to V5 filesystems.  It doesn't
-> +# test the options that apply only to V4 filesystems because that disk format
-> +# is deprecated.
+> +# Check that we can upgrade a filesystem to support inobtcount and that
+> +# everything works properly after the upgrade.
 > +
 > +seq=`basename $0`
 > +seqres=$RESULT_DIR/$seq
@@ -253,245 +232,110 @@ Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 > +
 > +# real QA test starts here
 > +_supported_fs xfs
-> +_require_scratch
+> +_require_scratch_xfs_inobtcount
 > +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> +_require_xfs_repair_upgrade inobtcount
 > +
 > +rm -f $seqres.full
 > +
-> +note() {
-> +	echo "$@" | tee -a $seqres.full
-> +}
+> +# Make sure we can't format a filesystem with inobtcount and not finobt.
+> +_scratch_mkfs -m crc=1,inobtcount=1,finobt=0 &> $seqres.full && \
+> +	echo "Should not be able to format with inobtcount but not finobt."
 > +
-> +note "S0: Initialize filesystem"
-> +_scratch_mkfs -L origlabel -m uuid=babababa-baba-baba-baba-babababababa >> $seqres.full
-> +_scratch_xfs_db -c label -c uuid
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> +# Make sure we can't upgrade a V4 filesystem
+> +_scratch_mkfs -m crc=0,inobtcount=0,finobt=0 >> $seqres.full
+> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> +_check_scratch_xfs_features INOBTCNT
 > +
-> +note "S1: Set a filesystem label"
-> +_scratch_xfs_admin -L newlabel >> $seqres.full
-> +_scratch_xfs_db -c label
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> +# Make sure we can't upgrade a filesystem to inobtcount without finobt.
+> +_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
+> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> +_check_scratch_xfs_features INOBTCNT
 > +
-> +note "S2: Clear filesystem label"
-> +_scratch_xfs_admin -L -- >> $seqres.full
-> +_scratch_xfs_db -c label
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> +# Format V5 filesystem without inode btree counter support and populate it.
+> +_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
+> +_scratch_mount
 > +
-> +note "S3: Try to set oversized label"
-> +_scratch_xfs_admin -L thisismuchtoolongforxfstohandle >> $seqres.full
-> +_scratch_xfs_db -c label
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> +mkdir $SCRATCH_MNT/stress
+> +$FSSTRESS_PROG -d $SCRATCH_MNT/stress -n 1000 >> $seqres.full
+> +echo moo > $SCRATCH_MNT/urk
 > +
-> +note "S4: Set filesystem UUID"
-> +_scratch_xfs_admin -U deaddead-dead-dead-dead-deaddeaddead >> $seqres.full
-> +_scratch_xfs_db -c uuid
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
+> +_scratch_unmount
 > +
-> +note "S5: Zero out filesystem UUID"
-> +_scratch_xfs_admin -U nil >> $seqres.full
-> +_scratch_xfs_db -c uuid
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +
-> +note "S6: Randomize filesystem UUID"
-> +old_uuid="$(_scratch_xfs_db -c uuid)"
-> +_scratch_xfs_admin -U generate >> $seqres.full
-> +new_uuid="$(_scratch_xfs_db -c uuid)"
-> +if [ "$new_uuid" = "$old_uuid" ]; then
-> +	echo "UUID randomization failed? $old_uuid == $new_uuid"
-> +fi
-> +_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +
-> +note "S7: Restore original filesystem UUID"
-> +if _check_scratch_xfs_features V5 >/dev/null; then
-> +	# Only V5 supports the metauuid feature that enables us to restore the
-> +	# original UUID after a change.
-> +	_scratch_xfs_admin -U restore >> $seqres.full
-> +	_scratch_xfs_db -c uuid
-> +else
-> +	echo "UUID = babababa-baba-baba-baba-babababababa"
+> +# Upgrade filesystem to have the counters and inject failure into repair and
+> +# make sure that the only path forward is to re-run repair on the filesystem.
+> +echo "Fail partway through upgrading"
+> +XFS_REPAIR_FAIL_AFTER_PHASE=2 _scratch_xfs_repair -c inobtcount=1 2>> $seqres.full
+> +test $? -eq 137 || echo "repair should have been killed??"
+> +_check_scratch_xfs_features NEEDSREPAIR INOBTCNT
+> +_try_scratch_mount &> $tmp.mount
+> +res=$?
+> +_filter_scratch < $tmp.mount
+> +if [ $res -eq 0 ]; then
+> +	echo "needsrepair should have prevented mount"
+> +	_scratch_unmount
 > +fi
 > +
-> +# success, all done
+> +echo "Re-run repair to finish upgrade"
+> +_scratch_xfs_repair 2>> $seqres.full
+> +_check_scratch_xfs_features NEEDSREPAIR INOBTCNT
+> +
+> +echo "Filesystem should be usable again"
+> +_scratch_mount
+> +$FSSTRESS_PROG -d $SCRATCH_MNT/stress -n 1000 >> $seqres.full
+> +_scratch_unmount
+> +_check_scratch_fs
+> +_check_scratch_xfs_features INOBTCNT
+> +
+> +echo "Make sure we have nonzero counters"
+> +_scratch_xfs_db -c 'agi 0' -c 'print ino_blocks fino_blocks' | \
+> +	sed -e 's/= [1-9]*/= NONZERO/g'
+> +
+> +echo "Make sure we can't re-add inobtcount"
+> +_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
+> +
+> +echo "Mount again, look at our files"
+> +_scratch_mount >> $seqres.full
+> +cat $SCRATCH_MNT/urk
+> +
 > +status=0
 > +exit
-> diff --git a/tests/xfs/764.out b/tests/xfs/764.out
+> diff --git a/tests/xfs/910.out b/tests/xfs/910.out
 > new file mode 100644
-> index 00000000..8da929ec
+> index 00000000..1bf040d5
 > --- /dev/null
-> +++ b/tests/xfs/764.out
-> @@ -0,0 +1,17 @@
-> +QA output created by 764
-> +S0: Initialize filesystem
-> +label = "origlabel"
-> +UUID = babababa-baba-baba-baba-babababababa
-> +S1: Set a filesystem label
-> +label = "newlabel"
-> +S2: Clear filesystem label
-> +label = ""
-> +S3: Try to set oversized label
-> +label = "thisismuchto"
-> +S4: Set filesystem UUID
-> +UUID = deaddead-dead-dead-dead-deaddeaddead
-> +S5: Zero out filesystem UUID
-> +UUID = 00000000-0000-0000-0000-000000000000
-> +S6: Randomize filesystem UUID
-> +S7: Restore original filesystem UUID
-> +UUID = babababa-baba-baba-baba-babababababa
-> diff --git a/tests/xfs/773 b/tests/xfs/773
-> new file mode 100755
-> index 00000000..f184962a
-> --- /dev/null
-> +++ b/tests/xfs/773
-> @@ -0,0 +1,114 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 773
-> +#
-> +# Functional testing for xfs_admin to ensure that it parses arguments correctly
-> +# with regards to data devices that are files, external logs, and realtime
-> +# devices.
-> +#
-> +# Because this test synthesizes log and rt devices (by modifying the test run
-> +# configuration), it does /not/ require the ability to mount the scratch
-> +# filesystem.  This increases test coverage while isolating the weird bits to a
-> +# single test.
-> +#
-> +# This is partially a regression test for "xfs_admin: pick up log arguments
-> +# correctly", insofar as the issue fixed by that patch was discovered with an
-> +# earlier revision of this test.
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.* $fake_logfile $fake_rtfile $fake_datafile
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_test
-> +_require_scratch_nocheck
-> +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
-> +
-> +rm -f $seqres.full
-> +
-> +# Create some fake sparse files for testing external devices and whatnot
-> +fake_datafile=$TEST_DIR/scratch.data
-> +rm -f $fake_datafile
-> +truncate -s 500m $fake_datafile
-> +
-> +fake_logfile=$TEST_DIR/scratch.log
-> +rm -f $fake_logfile
-> +truncate -s 500m $fake_logfile
-> +
-> +fake_rtfile=$TEST_DIR/scratch.rt
-> +rm -f $fake_rtfile
-> +truncate -s 500m $fake_rtfile
-> +
-> +# Save the original variables
-> +orig_ddev=$SCRATCH_DEV
-> +orig_external=$USE_EXTERNAL
-> +orig_logdev=$SCRATCH_LOGDEV
-> +orig_rtdev=$SCRATCH_RTDEV
-> +
-> +scenario() {
-> +	echo "$@" | tee -a $seqres.full
-> +
-> +	SCRATCH_DEV=$orig_ddev
-> +	USE_EXTERNAL=$orig_external
-> +	SCRATCH_LOGDEV=$orig_logdev
-> +	SCRATCH_RTDEV=$orig_rtdev
-> +}
-> +
-> +check_label() {
-> +	_scratch_mkfs -L oldlabel >> $seqres.full
-> +	_scratch_xfs_db -c label
-> +	_scratch_xfs_admin -L newlabel "$@" >> $seqres.full
-> +	_scratch_xfs_db -c label
-> +	_scratch_xfs_repair -n &>> $seqres.full || echo "Check failed?"
-> +}
-> +
-> +scenario "S1: Check that label setting with file image"
-> +SCRATCH_DEV=$fake_datafile
-> +check_label -f
-> +
-> +scenario "S2: Check that setting with logdev works"
-> +USE_EXTERNAL=yes
-> +SCRATCH_LOGDEV=$fake_logfile
-> +check_label
-> +
-> +scenario "S3: Check that setting with rtdev works"
-> +USE_EXTERNAL=yes
-> +SCRATCH_RTDEV=$fake_rtfile
-> +check_label
-> +
-> +scenario "S4: Check that setting with rtdev + logdev works"
-> +USE_EXTERNAL=yes
-> +SCRATCH_LOGDEV=$fake_logfile
-> +SCRATCH_RTDEV=$fake_rtfile
-> +check_label
-> +
-> +scenario "S5: Check that setting with nortdev + nologdev works"
-> +USE_EXTERNAL=
-> +SCRATCH_LOGDEV=
-> +SCRATCH_RTDEV=
-> +check_label
-> +
-> +scenario "S6: Check that setting with bdev incorrectly flagged as file works"
-> +check_label -f
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/773.out b/tests/xfs/773.out
-> new file mode 100644
-> index 00000000..954bfb85
-> --- /dev/null
-> +++ b/tests/xfs/773.out
-> @@ -0,0 +1,19 @@
-> +QA output created by 773
-> +S1: Check that label setting with file image
-> +label = "oldlabel"
-> +label = "newlabel"
-> +S2: Check that setting with logdev works
-> +label = "oldlabel"
-> +label = "newlabel"
-> +S3: Check that setting with rtdev works
-> +label = "oldlabel"
-> +label = "newlabel"
-> +S4: Check that setting with rtdev + logdev works
-> +label = "oldlabel"
-> +label = "newlabel"
-> +S5: Check that setting with nortdev + nologdev works
-> +label = "oldlabel"
-> +label = "newlabel"
-> +S6: Check that setting with bdev incorrectly flagged as file works
-> +label = "oldlabel"
-> +label = "newlabel"
+> +++ b/tests/xfs/910.out
+> @@ -0,0 +1,23 @@
+> +QA output created by 910
+> +Running xfs_repair to upgrade filesystem.
+> +Inode btree count feature only supported on V5 filesystems.
+> +FEATURES: INOBTCNT:NO
+> +Running xfs_repair to upgrade filesystem.
+> +Inode btree count feature requires free inode btree.
+> +FEATURES: INOBTCNT:NO
+> +Fail partway through upgrading
+> +Adding inode btree counts to filesystem.
+> +FEATURES: NEEDSREPAIR:YES INOBTCNT:YES
+> +mount: SCRATCH_MNT: mount(2) system call failed: Structure needs cleaning.
+> +Re-run repair to finish upgrade
+> +FEATURES: NEEDSREPAIR:NO INOBTCNT:YES
+> +Filesystem should be usable again
+> +FEATURES: INOBTCNT:YES
+> +Make sure we have nonzero counters
+> +ino_blocks = NONZERO
+> +fino_blocks = NONZERO
+> +Make sure we can't re-add inobtcount
+> +Running xfs_repair to upgrade filesystem.
+> +Filesystem already has inode btree counts.
+> +Mount again, look at our files
+> +moo
 > diff --git a/tests/xfs/group b/tests/xfs/group
-> index 461ae2b2..a2309465 100644
+> index a2309465..bd47333c 100644
 > --- a/tests/xfs/group
 > +++ b/tests/xfs/group
-> @@ -522,5 +522,7 @@
->   537 auto quick
->   538 auto stress
->   539 auto quick mount
-> +764 auto quick repair
+> @@ -526,3 +526,4 @@
 >   768 auto quick repair
 >   770 auto repair
-> +773 auto quick repair
+>   773 auto quick repair
+> +910 auto quick inobtcount
 > 
