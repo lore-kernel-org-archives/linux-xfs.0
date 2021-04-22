@@ -2,321 +2,234 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3377CC433B4
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 01:51:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D6E6C433ED
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 02:06:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0567761139
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 01:51:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DE3E613B8
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 02:06:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229536AbhDVBwO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Apr 2021 21:52:14 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:52763 "EHLO
+        id S231598AbhDVCHF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Apr 2021 22:07:05 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:31003 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229502AbhDVBwO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Apr 2021 21:52:14 -0400
+        by vger.kernel.org with ESMTP id S229706AbhDVCHE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Apr 2021 22:07:04 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619056300;
+        s=mimecast20190719; t=1619057190;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=SexSbDGL45fkYgK7Mpr2lvl8urRWwRc0xdUnLFxIRtk=;
-        b=QOtod0pfB98tW3qN/xCUVdjekK/zieNTsYYH0qh92F6uulQK1hFV70c97L9nMaSBpS6ad8
-        twXZ3GtskOYR9anyvV21ke8pgzF78E/LBJWfWCzkEF6JOpO+CEM/l5Vsp48cFVgiNg2aCv
-        2RbPo2LvhDAlbfNGZ6pn3BL5hT1Xa2s=
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
- [209.85.215.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-189-Pb8lnzJ9PCuzYp8XRSuIWg-1; Wed, 21 Apr 2021 21:51:38 -0400
-X-MC-Unique: Pb8lnzJ9PCuzYp8XRSuIWg-1
-Received: by mail-pg1-f198.google.com with SMTP id g5-20020a63f4050000b02901f6c7b9a6d0so11583291pgi.5
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Apr 2021 18:51:38 -0700 (PDT)
+        bh=othbS4CIvWgJ8McaeVkm6FxgwuVQlQmsEj+LQDfjcqE=;
+        b=A0fXU4gYhe3YqCrTfuYjL4JjgHKKI0LBtWZc3oPiKk2TrRbN8dWn9lUCkI8131FFRaSecB
+        rRBNZimeiOPLHQQHhJl79uP3naSMeV1BUaFyr1CQQ4UmUrMLlNeWa1gBSe1ONYxGfFGvjZ
+        A0mZZy948aTPxhAY+P9NvQxSTTZtu0Q=
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
+ [209.85.215.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-602-QpzlX9DxM-23CEeF8S6WCw-1; Wed, 21 Apr 2021 22:06:26 -0400
+X-MC-Unique: QpzlX9DxM-23CEeF8S6WCw-1
+Received: by mail-pg1-f200.google.com with SMTP id 17-20020a6317510000b0290207249fa354so11681380pgx.8
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Apr 2021 19:06:25 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=SexSbDGL45fkYgK7Mpr2lvl8urRWwRc0xdUnLFxIRtk=;
-        b=PJs4zQor4ASd0uE+PmD1wC5MeOknmc0XT+N2heRODlVIZX8FMayogV9HtQX1NGIt2R
-         zqu92eS7hQbQcJEkgyKWdaJwDRY4TjFtvBgqgdVjtO5w0Cmzpx9hCEDL8aJck5Bzdcho
-         q9xdLgxC8ToOKCZBELc0MtUpJ6vB4Oy1bRJcXQyKMcB/yk4PBUkLw/x2MPzjLle5i71b
-         A7iWz+CJNO2LC/Ge/8Ml6TLMQ28MHXxINJrn51jfJkBG0IeDdCBaLTP+hG8+L5L6XJ9h
-         5k7p/Ey0yCf0fxvsdG42J0+dD1twSPbF8UZjxZIIpmpLQFR1lHehfGuOXi5p1hu2z9+F
-         4ZmQ==
-X-Gm-Message-State: AOAM532VKsyQ69Jq4K+GOMEVFSScglNRVKDaZf/HsVdsUIytN5bhtgWN
-        z599zXfqoOg+2zAPJD3NW/8i7pqxJajwyyFtZUB6iESFSTkJxyYIXB8Tc9HqI0QJ9ZqJbD45hXI
-        Iefija860hCKru1B0IBau
-X-Received: by 2002:a17:90b:813:: with SMTP id bk19mr14339912pjb.108.1619056297274;
-        Wed, 21 Apr 2021 18:51:37 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzlEzAOeyHSsLkmQstCchUeM8GnCCvS7cNn3aOKkTOKYuXU3S2O7GpYq0AZN5Q814UibenNhg==
-X-Received: by 2002:a17:90b:813:: with SMTP id bk19mr14339897pjb.108.1619056296932;
-        Wed, 21 Apr 2021 18:51:36 -0700 (PDT)
+        bh=othbS4CIvWgJ8McaeVkm6FxgwuVQlQmsEj+LQDfjcqE=;
+        b=pyNeFzK9KpoShzM+HqgURUrssakNyXm5VbJdCpJys5XyN9YeX1o+Ui434I6OrPFEaL
+         Zv/cPEjtAcicsPTdfUjeLObQMCmNyA4B2G/3fISA4k9Yw6//2RApvQ/zGhfAYzDOfDfZ
+         A0wARn0g6M8suxU9dkmaWoMKslhyFdieVW/90R2fDfdd5Oq/pV6QVsZ6s6+sPkcW61/I
+         twKzxoDhOrkLyZLOy2SxOU7yO3seDI8QLZj96zMmgt8TmaJn+APtlYyhsanzia0vmWcT
+         ufxj6/KOY1KtAXMkiUgY27hTSg91Jy5WwqPQBLwLqNOkyQO9v2e7Y4UFnt1eaBW+Xb85
+         wt9Q==
+X-Gm-Message-State: AOAM531rtDBnBaQp0nh9pkCiuNG391vvM+z/f2R4Hbg3cFS5/AWNiiqs
+        e4J2099TdskdeCdCoOiaSQwxCTKGf1VaQWriGUnrY7MN7VW+kTwnVlmhdNThPT9C+O4zWnHIrDE
+        cXDllNkoXDdoczOL3nddZ
+X-Received: by 2002:a62:e315:0:b029:263:8436:e784 with SMTP id g21-20020a62e3150000b02902638436e784mr844354pfh.69.1619057184951;
+        Wed, 21 Apr 2021 19:06:24 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzIeYDZ6/1goafv0m5MIdbZoCEb8D3UfDtcsW6M0hEWKH8gKwSO2HffNipQnA1vT2p4jDArZQ==
+X-Received: by 2002:a62:e315:0:b029:263:8436:e784 with SMTP id g21-20020a62e3150000b02902638436e784mr844337pfh.69.1619057184636;
+        Wed, 21 Apr 2021 19:06:24 -0700 (PDT)
 Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id m17sm529135pgh.41.2021.04.21.18.51.34
+        by smtp.gmail.com with ESMTPSA id a16sm538345pgl.12.2021.04.21.19.06.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Apr 2021 18:51:36 -0700 (PDT)
-Date:   Thu, 22 Apr 2021 09:51:26 +0800
+        Wed, 21 Apr 2021 19:06:24 -0700 (PDT)
+Date:   Thu, 22 Apr 2021 10:06:13 +0800
 From:   Gao Xiang <hsiangkao@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-        Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH v2 2/2] xfs: turn on lazysbcount unconditionally
-Message-ID: <20210422015126.GA3264012@xiangao.remote.csb>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
+        Zorro Lang <zlang@redhat.com>,
+        Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v2 1/2] xfs: don't use in-core per-cpu fdblocks for
+ !lazysbcount
+Message-ID: <20210422020613.GB3264012@xiangao.remote.csb>
 References: <20210420110855.2961626-1-hsiangkao@redhat.com>
- <20210420110855.2961626-2-hsiangkao@redhat.com>
- <20210420162250.GE3122264@magnolia>
- <20210420200029.GA3028214@xiangao.remote.csb>
- <20210422000140.GU3122264@magnolia>
+ <20210420212506.GW63242@dread.disaster.area>
+ <20210420215443.GA3047037@xiangao.remote.csb>
+ <20210421014526.GY63242@dread.disaster.area>
+ <20210421030129.GA3095436@xiangao.remote.csb>
+ <20210422014446.GZ63242@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210422000140.GU3122264@magnolia>
+In-Reply-To: <20210422014446.GZ63242@dread.disaster.area>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 21, 2021 at 05:01:40PM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 21, 2021 at 04:00:29AM +0800, Gao Xiang wrote:
+Hi Dave,
 
-...
-
-> > > >  /*
-> > > >   * xfs_initialize_perag_data
-> > > >   *
-> > > > @@ -864,27 +914,51 @@ xfs_initialize_perag_data(
-> > > >  	uint64_t	btree = 0;
-> > > >  	uint64_t	fdblocks;
-> > > >  	int		error = 0;
-> > > > +	bool		conv = !(mp->m_flags & XFS_MOUNT_RDONLY) &&
-> > > > +				!xfs_sb_version_haslazysbcount(sbp);
-> > > > +
-> > > > +	if (conv)
-> > > > +		xfs_warn(mp, "enabling lazy-counters...");
-> > > >  
-> > > >  	for (index = 0; index < agcount; index++) {
-> > > > +		struct xfs_trans	*tp = NULL;
-> > > > +		struct xfs_buf		*agfbp;
-> > > > +
-> > > > +		if (conv) {
-> > > > +			error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb,
-> > > > +					0, 0, 0, &tp);
-> > > > +			if (error)
-> > > > +				return error;
-> > > > +		}
-> > > > +
-> > > >  		/*
-> > > > -		 * read the agf, then the agi. This gets us
-> > > > +		 * read the agi, then the agf. This gets us
-> > > >  		 * all the information we need and populates the
-> > > >  		 * per-ag structures for us.
-> > > >  		 */
-> > > > -		error = xfs_alloc_pagf_init(mp, NULL, index, 0);
-> > > > -		if (error)
-> > > > +		error = xfs_ialloc_pagi_init(mp, tp, index);
-> > > > +		if (error) {
-> > > > +err_out:
-> > > > +			if (tp)
-> > > > +				xfs_trans_cancel(tp);
-> > > >  			return error;
-> > > > +		}
-> > > >  
-> > > > -		error = xfs_ialloc_pagi_init(mp, NULL, index);
-> > > > +		error = xfs_alloc_read_agf(mp, tp, index, 0, &agfbp);
-> > > >  		if (error)
-> > > > -			return error;
-> > > > -		pag = xfs_perag_get(mp, index);
-> > > > +			goto err_out;
-> > > > +		pag = agfbp->b_pag;
-> > > >  		ifree += pag->pagi_freecount;
-> > > >  		ialloc += pag->pagi_count;
-> > > >  		bfree += pag->pagf_freeblks;
-> > > >  		bfreelst += pag->pagf_flcount;
-> > > > +		if (tp) {
-> > > > +			error = xfs_fixup_agf_btreeblks(mp, tp, agfbp, index);
+On Thu, Apr 22, 2021 at 11:44:46AM +1000, Dave Chinner wrote:
+> On Wed, Apr 21, 2021 at 11:01:29AM +0800, Gao Xiang wrote:
+> > On Wed, Apr 21, 2021 at 11:45:26AM +1000, Dave Chinner wrote:
+> > > On Wed, Apr 21, 2021 at 05:54:43AM +0800, Gao Xiang wrote:
+> > > #1 is bad because there are cases where we want to write the
+> > > counters even for !lazysbcount filesystems (e.g. mkfs, repair, etc).
 > > > 
-> > > Lazysbcount upgrades should be done from a separate function, not mixed
-> > > in with perag initialization. 
-> > 
-> > I've seen some previous discussion about multiple AG total scan time cost.
-> > Yeah, if another extra scan really accepts here, I could update instead.
-> > 
-> > > Also, why is it necessary to walk all the space btrees to set agf_btreeblks?
-> > 
-> > If my understanding is correct, I think because without lazysbcount,
-> > even pagf_btreeblks is updated unconditionally now, but that counter
-> > is unreliable for quite ancient kernels which don't have such update
-> > logic.
-> > 
-> > Kindly correct me if I'm wrong here.
-> 
-> Ah, you're right.  The agf_btreeblks field in the AGF only exists if
-> lazysbcount is enabled, which means that adding the feature means that
-> we have to scan every AG to compute the correct value.
-> 
-> Still, we only need to do this walk once per filesystem, so I'd prefer
-> not to clutter up the xfs_initialize_perag_data code for the sake of a
-> onetime upgrade for a deprecated ondisk format.
-> 
-> In my mind it's a feature to be able to do:
-> 
-> #if IS_ENABLED(CONFIG_XFS_V4)
-> int
-> xfs_fs_set_lazycount(...)
-> {
-> 	/* walk AGs, fix AGF... */
-> 	/* lock super */
-> 	/* set lazysbcount */
-> 	/* bwrite super */
-> 	/* log super changes */
-> 	/* commit the whole mess */
-> }
-> #else
-> # define xfs_fs_set_lazycount(..)	(-ENOSYS)
-> #endif
-> 
-> Because then we know that this is all XFSv4 code and can easily make it
-> go away.
-
-Yeah, sounds better. I could refine this in the next version. :)
-
-> 
-> The other question I have is: Do we /really/ want to QA and support
-> this in the kernel?  Considering that we already have xfs_admin -c1?
-
-I think we might ask Zorro for this whole thing, since no end users
-actually report this. :) (Cc Zorro here.) Although the reality is
-we still support !lazysbcount fses even it isn't looked after at all.
-
-My another suggestion completely forbids !lazysbcount from mounting
-in months (or right now.)
-
-Just warn users to use xfs_admin -c1 to convert this. And after months,
-warn users to convert this and also forbid it from mounting.
-
-> 
+> > > #2 is essentially a hack around the fact that mp->m_sb is not kept
+> > > up to date in the in-memory superblock for !lazysbcount filesystems.
 > > > 
-> > > > +			xfs_trans_commit(tp);
-> > > > +		} else {
-> > > > +			xfs_buf_relse(agfbp);
-> > > > +		}
-> > > >  		btree += pag->pagf_btreeblks;
-> > > > -		xfs_perag_put(pag);
-> > > >  	}
-> > > >  	fdblocks = bfree + bfreelst + btree;
-> > > >  
-> > > > @@ -900,6 +974,11 @@ xfs_initialize_perag_data(
-> > > >  		goto out;
-> > > >  	}
-> > > >  
-> > > > +	if (conv) {
-> > > > +		xfs_sb_version_addlazysbcount(sbp);
-> > > > +		mp->m_update_sb = true;
-> > > > +		xfs_warn(mp, "lazy-counters has been enabled.");
+> > > #3 keeps the in-memory superblock up to date for !lazysbcount case
+> > > so they are coherent with the on-disk values and hence we only need
+> > > to update the in-memory superblock counts for lazysbcount
+> > > filesystems before calling xfs_sb_to_disk().
 > > > 
-> > > But we don't log the sb update?
+> > > #3 is my preferred solution.
 > > > 
-> > > As far as the feature upgrade goes, is it necessary to bwrite the
-> > > primary super to disk (and then log the change)[1] to prevent a truly
-> > > ancient kernel that doesn't support lazysbcount from trying to recover
-> > > the log and ending up with an unsupported feature set?
+> > > > That will indeed cause more modification, I'm not quite sure if it's
+> > > > quite ok honestly. But if you assume that's more clear, I could submit
+> > > > an alternative instead later.
+> > > 
+> > > I think the version you posted doesn't fix the entire problem. It
+> > > merely slaps a band-aid over the symptom that is being seen, and
+> > > doesn't address all the non-coherent data that can be written to the
+> > > superblock here.
 > > 
-> > Not quite sure if it does harm to ancient kernels with such
-> > unsupported feature. may I ask for more details? :)
+> > As I explained on IRC as well, I think for !lazysbcount cases, fdblocks,
+> > icount and ifree are protected by sb buffer lock. and the only users of
+> > these three are:
+> >  1) xfs_trans_apply_sb_deltas()
+> >  2) xfs_log_sb()
 > 
-> 1. Walk AG to update btreeblks.
-> 2. Commit feature flag update in superblock.
-> 3. Log flushes to disk before the superblock update gets written to
->    sector 0.
-> <crash>
-> 4. Boot ancient kernel that doesn't understand lazysbcount
->    (from USB recovery stick).
-> 5. Mount begins, because sector 0 doesn't have the lazysbcount bit set.
-> 6. Log recovery replays the primary super update over sector 0, and the
->    new contents of sector 0 say lazysbcount is enabled.
-> 7. Superblock now says it has lazysbcount, what does the kernel do?
+> That's just a happy accident and not intentional in any way. Just
+> fixing the case that occurs while holding the sb buffer lock doesn't
+> actually fix the underlying problem, it just uses this as a bandaid.
 
-Yeah, but I'm not sure if it has some bad effect if ancient kernels
-do it in this way. I mean (I think) it's somewhat different from
-log_incompat thing.
-
-If ancient kernels just replay the log, and then sb read verified
-and refuse to proceed (but fs is not corrupted...) I think that
-would be fine?
-
-I'm not sure about the whole thing on ancient kernels. So very
-curious about this. I will look into the whole thing as well.
-
+I think for !lazysbcases, sb buffer lock is only a reliable lock that
+can be relied on for serialzing (since we need to make sure each sb
+write matches the corresponding fdblocks, ifree, icount. So sb buffer
+needs be locked every time. So so need to recalc on dirty log.)
 > 
 > > 
-> > but yeah, if any issues here, I should follow
-> >  1) bwrite sb block first;
-> >  2) log sb
+> > So I've seen no need to update sb_icount, sb_ifree in that way (I mean
+> > my v2, although I agree it's a bit hacky.) only sb_fdblocks matters.
 > > 
-> > > 
-> > > [1] https://lore.kernel.org/linux-xfs/161723934343.3149451.16679733325094950568.stgit@magnolia/
-> > > 
-> > > > +	}
-> > > >  	/* Overwrite incore superblock counters with just-read data */
-> > > >  	spin_lock(&mp->m_sb_lock);
-> > > >  	sbp->sb_ifree = ifree;
-> > > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > > > index cb1e2c4702c3..b3b13acd45d6 100644
-> > > > --- a/fs/xfs/xfs_mount.c
-> > > > +++ b/fs/xfs/xfs_mount.c
-> > > > @@ -626,7 +626,7 @@ xfs_check_summary_counts(
-> > > >  	 * superblock to be correct and we don't need to do anything here.
-> > > >  	 * Otherwise, recalculate the summary counters.
-> > > >  	 */
-> > > > -	if ((!xfs_sb_version_haslazysbcount(&mp->m_sb) ||
-> > > > +	if ((xfs_sb_version_haslazysbcount(&mp->m_sb) &&
-> > > 
-> > > Not clear why the logic here inverts?
+> > But the reason why this patch exist is only to backport to old stable
+> > kernels, since after [PATCH v2 2/2], we can get rid of all of
+> > !lazysbcount cases upstream.
 > > 
-> > .. thus xfs_initialize_perag_data() below can be called then.
+> > But if we'd like to do more e.g. by taking m_sb_lock, I've seen the
+> > xfs codebase quite varies these years. and I modified some version
+> > like http://paste.debian.net/1194481/
 > 
-> That seems like all the more reason to make it a separate function, TBH.
+> I said on IRC that this is what xfs_trans_unreserve_and_mod_sb() is
+> for. For !lazysbcount filesystems the transaction will be marked
+> dirty (i.e XFS_TRANS_SB_DIRTY is set) and so we'll always run the
+> slow path that takes the m_sb_lock and updates mp->m_sb. 
+> 
+> It's faster for me to explain this by patch than any other way. See
+> below.
 
-Yeah, will refine this later.
+I know what you mean, but there exists 3 things:
+ 1) we be64_add_cpu() on-disk fdblocks, ifree, icount at
+    xfs_trans_apply_sb_deltas(), and then do the same bahavior in
+    xfs_trans_unreserve_and_mod_sb() for in-memory counters again.
+    that is (somewhat) fragile.
+
+ 2) m_sb_lock behaves no effect at this. This lock between
+    xfs_log_sb() and xfs_trans_unreserve_and_mod_sb() is still
+    sb buffer lock for !lazysbcount cases.
+
+ 3) in-memory sb counters are serialized by some spinlock now,
+    so I'm not sure sb per-CPU counters behave for lazysbcount
+    cases, are these used for better performance?
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> xfs: update superblock counters correctly for !lazysbcount
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Keep the mount superblock counters up to date for !lazysbcount
+> filesystems so that when we log the superblock they do not need
+> updating in any way because they are already correct.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_sb.c | 16 +++++++++++++---
+>  fs/xfs/xfs_trans.c     |  3 +++
+>  2 files changed, 16 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 9630f9e2f540..7d4c238540d4 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -794,9 +794,19 @@ xfs_log_sb(
+>  	struct xfs_mount	*mp = tp->t_mountp;
+>  	struct xfs_buf		*bp = xfs_trans_getsb(tp);
+>  
+> -	mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
+> -	mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
+> -	mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
+> +	/*
+> +	 * Lazy sb counters don't update the in-core superblock so do that now.
+> +	 * If this is at unmount, the counters will be exactly correct, but at
+> +	 * any other time they will only be ballpark correct because of
+> +	 * reservations that have been taken out percpu counters. If we have an
+> +	 * unclean shutdown, this will be corrected by log recovery rebuilding
+> +	 * the counters from the AGF block counts.
+> +	 */
+> +	if (xfs_sb_version_haslazysbcount(&mp->m_sb)) {
+> +		mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
+> +		mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
+> +		mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
+> +	}
+>  
+>  	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+>  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index bcc978011869..438e41931b55 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -629,6 +629,9 @@ xfs_trans_unreserve_and_mod_sb(
+>  
+>  	/* apply remaining deltas */
+>  	spin_lock(&mp->m_sb_lock);
+> +	mp->m_sb.sb_fdblocks += blkdelta;
+
+not sure that is quite equal to blkdelta, since (I think) we might need
+to apply t_res_fdblocks_delta for !lazysbcount cases but not lazysbcount
+cases, but I'm not quite sure, just saw the comment above
+xfs_trans_unreserve_and_mod_sb() and the implementation of
+xfs_trans_apply_sb_deltas().
 
 Thanks,
 Gao Xiang
 
-> 
-> --D
-> 
-> > 
-> > Thanks,
-> > Gao Xiang
-> > 
-> > > 
-> > > --D
-> > > 
-> > > >  	     XFS_LAST_UNMOUNT_WAS_CLEAN(mp)) &&
-> > > >  	    !xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS))
-> > > >  		return 0;
-> > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > > index a2dab05332ac..16197a890c15 100644
-> > > > --- a/fs/xfs/xfs_super.c
-> > > > +++ b/fs/xfs/xfs_super.c
-> > > > @@ -1678,6 +1678,11 @@ xfs_remount_rw(
-> > > >  	}
-> > > >  
-> > > >  	mp->m_flags &= ~XFS_MOUNT_RDONLY;
-> > > > +	if (!xfs_sb_version_haslazysbcount(sbp)) {
-> > > > +		error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
-> > > > +		if (error)
-> > > > +			return error;
-> > > > +	}
-> > > >  
-> > > >  	/*
-> > > >  	 * If this is the first remount to writeable state we might have some
-> > > > -- 
-> > > > 2.27.0
-> > > > 
-> > > 
-> > 
+> +	mp->m_sb.sb_icount += idelta;
+> +	mp->m_sb.sb_ifree += ifreedelta;
+>  	mp->m_sb.sb_frextents += rtxdelta;
+>  	mp->m_sb.sb_dblocks += tp->t_dblocks_delta;
+>  	mp->m_sb.sb_agcount += tp->t_agcount_delta;
 > 
 
