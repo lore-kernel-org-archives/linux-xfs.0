@@ -2,232 +2,172 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEB7FC43461
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 00:53:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2E8FC433B4
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 01:44:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C15760FE5
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 00:53:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA2D061430
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Apr 2021 01:44:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235174AbhDVAyA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Apr 2021 20:54:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41868 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235168AbhDVAx7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Apr 2021 20:53:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CB47C6113B;
-        Thu, 22 Apr 2021 00:53:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1619052806;
-        bh=azn8vKj3ph/35hisCqKbsLqOgObkJRbXSF94oL6GB40=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TLhF6JupJUh1ensP1AlkfEz9Z+rocjWGz3+APPDDPZB6oHjGALmLsjskShEx5x40r
-         3X76swpVnMuzjm7bevQoWfidp8sj5QnYVxZp65qEGS56YemXM/jZsZoXTU39yBXChF
-         UhEBoFCDsIejd5evlzanrqGvMVTxO0sZ3iqXtFnHYM02ykifm5k8nz26MhHugARGjZ
-         OiuDi6N2Ef6UhEmKlhFv+8kmRC+PLv8EBpj7+QynP5W/vPolih6lH8ZAgqNYlk6Rnv
-         MqydgXja99PjpOiig7ChWjRPwcgSNJPRhSpF4qJXAGg3JOm2kAwqZTYB2tBNBchi7E
-         5e+93J0Y2Nb3g==
-Date:   Wed, 21 Apr 2021 17:53:24 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        bfoster@redhat.com, allison.henderson@oracle.com,
-        amir73il@gmail.com
-Subject: [PATCH v2.1 2/2] xfs: test inobtcount upgrade
-Message-ID: <20210422005324.GC882213@magnolia>
-References: <161896456467.776366.1514131340097986327.stgit@magnolia>
- <161896457693.776366.7071083307521835427.stgit@magnolia>
+        id S233979AbhDVBpX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Apr 2021 21:45:23 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59487 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229740AbhDVBpW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Apr 2021 21:45:22 -0400
+Received: from dread.disaster.area (pa49-181-239-12.pa.nsw.optusnet.com.au [49.181.239.12])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id F01A484B495;
+        Thu, 22 Apr 2021 11:44:46 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lZOOc-001gzX-16; Thu, 22 Apr 2021 11:44:46 +1000
+Date:   Thu, 22 Apr 2021 11:44:46 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
+        Zorro Lang <zlang@redhat.com>,
+        Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v2 1/2] xfs: don't use in-core per-cpu fdblocks for
+ !lazysbcount
+Message-ID: <20210422014446.GZ63242@dread.disaster.area>
+References: <20210420110855.2961626-1-hsiangkao@redhat.com>
+ <20210420212506.GW63242@dread.disaster.area>
+ <20210420215443.GA3047037@xiangao.remote.csb>
+ <20210421014526.GY63242@dread.disaster.area>
+ <20210421030129.GA3095436@xiangao.remote.csb>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161896457693.776366.7071083307521835427.stgit@magnolia>
+In-Reply-To: <20210421030129.GA3095436@xiangao.remote.csb>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0 cx=a_idp_f
+        a=gO82wUwQTSpaJfP49aMSow==:117 a=gO82wUwQTSpaJfP49aMSow==:17
+        a=kj9zAlcOel0A:10 a=3YhXtTcJ-WEA:10 a=3_uRt0xjAAAA:8 a=7-415B0cAAAA:8
+        a=20KFwNOVAAAA:8 a=jKzYNAsfRhvObH0YQE0A:9 a=6auCuuOFA1vnnNCG:21
+        a=-fWEIMhM_uqq8Sar:21 a=CjuIK1q_8ugA:10 a=z1SuboXgGPGzQ8_2mWib:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Apr 21, 2021 at 11:01:29AM +0800, Gao Xiang wrote:
+> On Wed, Apr 21, 2021 at 11:45:26AM +1000, Dave Chinner wrote:
+> > On Wed, Apr 21, 2021 at 05:54:43AM +0800, Gao Xiang wrote:
+> > #1 is bad because there are cases where we want to write the
+> > counters even for !lazysbcount filesystems (e.g. mkfs, repair, etc).
+> > 
+> > #2 is essentially a hack around the fact that mp->m_sb is not kept
+> > up to date in the in-memory superblock for !lazysbcount filesystems.
+> > 
+> > #3 keeps the in-memory superblock up to date for !lazysbcount case
+> > so they are coherent with the on-disk values and hence we only need
+> > to update the in-memory superblock counts for lazysbcount
+> > filesystems before calling xfs_sb_to_disk().
+> > 
+> > #3 is my preferred solution.
+> > 
+> > > That will indeed cause more modification, I'm not quite sure if it's
+> > > quite ok honestly. But if you assume that's more clear, I could submit
+> > > an alternative instead later.
+> > 
+> > I think the version you posted doesn't fix the entire problem. It
+> > merely slaps a band-aid over the symptom that is being seen, and
+> > doesn't address all the non-coherent data that can be written to the
+> > superblock here.
+> 
+> As I explained on IRC as well, I think for !lazysbcount cases, fdblocks,
+> icount and ifree are protected by sb buffer lock. and the only users of
+> these three are:
+>  1) xfs_trans_apply_sb_deltas()
+>  2) xfs_log_sb()
 
-Make sure we can actually upgrade filesystems to support inode btree
-counters.
+That's just a happy accident and not intentional in any way. Just
+fixing the case that occurs while holding the sb buffer lock doesn't
+actually fix the underlying problem, it just uses this as a bandaid.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> 
+> So I've seen no need to update sb_icount, sb_ifree in that way (I mean
+> my v2, although I agree it's a bit hacky.) only sb_fdblocks matters.
+> 
+> But the reason why this patch exist is only to backport to old stable
+> kernels, since after [PATCH v2 2/2], we can get rid of all of
+> !lazysbcount cases upstream.
+> 
+> But if we'd like to do more e.g. by taking m_sb_lock, I've seen the
+> xfs codebase quite varies these years. and I modified some version
+> like http://paste.debian.net/1194481/
+
+I said on IRC that this is what xfs_trans_unreserve_and_mod_sb() is
+for. For !lazysbcount filesystems the transaction will be marked
+dirty (i.e XFS_TRANS_SB_DIRTY is set) and so we'll always run the
+slow path that takes the m_sb_lock and updates mp->m_sb. 
+
+It's faster for me to explain this by patch than any other way. See
+below.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+xfs: update superblock counters correctly for !lazysbcount
+
+From: Dave Chinner <dchinner@redhat.com>
+
+Keep the mount superblock counters up to date for !lazysbcount
+filesystems so that when we log the superblock they do not need
+updating in any way because they are already correct.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
-v2.1: fix helper bogosity, broken regexps.
----
- common/xfs        |   13 +++++++
- tests/xfs/910     |   98 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/910.out |   23 ++++++++++++
- tests/xfs/group   |    1 +
- 4 files changed, 135 insertions(+)
- create mode 100755 tests/xfs/910
- create mode 100644 tests/xfs/910.out
+ fs/xfs/libxfs/xfs_sb.c | 16 +++++++++++++---
+ fs/xfs/xfs_trans.c     |  3 +++
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/common/xfs b/common/xfs
-index 4f1a4dba..848311b4 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1138,3 +1138,16 @@ _require_xfs_repair_upgrade()
- 		grep -q 'unknown option' && \
- 		_notrun "xfs_repair does not support upgrading fs with $type"
- }
-+
-+# Require that the scratch device exists, that mkfs can format with inobtcount
-+# enabled, and that the kernel can mount such a filesystem.
-+_require_scratch_xfs_inobtcount()
-+{
-+	_require_scratch
-+
-+	_scratch_mkfs -m inobtcount=1 &> /dev/null || \
-+		_notrun "mkfs.xfs doesn't support inobtcount feature"
-+	_try_scratch_mount || \
-+		_notrun "kernel doesn't support xfs inobtcount feature"
-+	_scratch_unmount
-+}
-diff --git a/tests/xfs/910 b/tests/xfs/910
-new file mode 100755
-index 00000000..0ed2dc4f
---- /dev/null
-+++ b/tests/xfs/910
-@@ -0,0 +1,98 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2021 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 910
-+#
-+# Check that we can upgrade a filesystem to support inobtcount and that
-+# everything works properly after the upgrade.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_scratch_xfs_inobtcount
-+_require_command "$XFS_ADMIN_PROG" "xfs_admin"
-+_require_xfs_repair_upgrade inobtcount
-+
-+rm -f $seqres.full
-+
-+# Make sure we can't format a filesystem with inobtcount and not finobt.
-+_scratch_mkfs -m crc=1,inobtcount=1,finobt=0 &> $seqres.full && \
-+	echo "Should not be able to format with inobtcount but not finobt."
-+
-+# Make sure we can't upgrade a V4 filesystem
-+_scratch_mkfs -m crc=0,inobtcount=0,finobt=0 >> $seqres.full
-+_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-+_check_scratch_xfs_features INOBTCNT
-+
-+# Make sure we can't upgrade a filesystem to inobtcount without finobt.
-+_scratch_mkfs -m crc=1,inobtcount=0,finobt=0 >> $seqres.full
-+_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-+_check_scratch_xfs_features INOBTCNT
-+
-+# Format V5 filesystem without inode btree counter support and populate it.
-+_scratch_mkfs -m crc=1,inobtcount=0 >> $seqres.full
-+_scratch_mount
-+
-+mkdir $SCRATCH_MNT/stress
-+$FSSTRESS_PROG -d $SCRATCH_MNT/stress -n 1000 >> $seqres.full
-+echo moo > $SCRATCH_MNT/urk
-+
-+_scratch_unmount
-+
-+# Upgrade filesystem to have the counters and inject failure into repair and
-+# make sure that the only path forward is to re-run repair on the filesystem.
-+echo "Fail partway through upgrading"
-+XFS_REPAIR_FAIL_AFTER_PHASE=2 _scratch_xfs_repair -c inobtcount=1 2>> $seqres.full
-+test $? -eq 137 || echo "repair should have been killed??"
-+_check_scratch_xfs_features NEEDSREPAIR INOBTCNT
-+_try_scratch_mount &> $tmp.mount
-+res=$?
-+_filter_scratch < $tmp.mount
-+if [ $res -eq 0 ]; then
-+	echo "needsrepair should have prevented mount"
-+	_scratch_unmount
-+fi
-+
-+echo "Re-run repair to finish upgrade"
-+_scratch_xfs_repair 2>> $seqres.full
-+_check_scratch_xfs_features NEEDSREPAIR INOBTCNT
-+
-+echo "Filesystem should be usable again"
-+_scratch_mount
-+$FSSTRESS_PROG -d $SCRATCH_MNT/stress -n 1000 >> $seqres.full
-+_scratch_unmount
-+_check_scratch_fs
-+_check_scratch_xfs_features INOBTCNT
-+
-+echo "Make sure we have nonzero counters"
-+_scratch_xfs_db -c 'agi 0' -c 'print ino_blocks fino_blocks' | \
-+	sed -e 's/= 0$/= ZERO/g' -e 's/= [0-9]*/= NONZERO/g'
-+
-+echo "Make sure we can't re-add inobtcount"
-+_scratch_xfs_admin -O inobtcount=1 2>> $seqres.full
-+
-+echo "Mount again, look at our files"
-+_scratch_mount >> $seqres.full
-+cat $SCRATCH_MNT/urk
-+
-+status=0
-+exit
-diff --git a/tests/xfs/910.out b/tests/xfs/910.out
-new file mode 100644
-index 00000000..1bf040d5
---- /dev/null
-+++ b/tests/xfs/910.out
-@@ -0,0 +1,23 @@
-+QA output created by 910
-+Running xfs_repair to upgrade filesystem.
-+Inode btree count feature only supported on V5 filesystems.
-+FEATURES: INOBTCNT:NO
-+Running xfs_repair to upgrade filesystem.
-+Inode btree count feature requires free inode btree.
-+FEATURES: INOBTCNT:NO
-+Fail partway through upgrading
-+Adding inode btree counts to filesystem.
-+FEATURES: NEEDSREPAIR:YES INOBTCNT:YES
-+mount: SCRATCH_MNT: mount(2) system call failed: Structure needs cleaning.
-+Re-run repair to finish upgrade
-+FEATURES: NEEDSREPAIR:NO INOBTCNT:YES
-+Filesystem should be usable again
-+FEATURES: INOBTCNT:YES
-+Make sure we have nonzero counters
-+ino_blocks = NONZERO
-+fino_blocks = NONZERO
-+Make sure we can't re-add inobtcount
-+Running xfs_repair to upgrade filesystem.
-+Filesystem already has inode btree counts.
-+Mount again, look at our files
-+moo
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 4231d1d5..4c70cff1 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -526,3 +526,4 @@
- 768 auto quick repair
- 770 auto repair
- 773 auto quick admin
-+910 auto quick inobtcount
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 9630f9e2f540..7d4c238540d4 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -794,9 +794,19 @@ xfs_log_sb(
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 	struct xfs_buf		*bp = xfs_trans_getsb(tp);
+ 
+-	mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
+-	mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
+-	mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
++	/*
++	 * Lazy sb counters don't update the in-core superblock so do that now.
++	 * If this is at unmount, the counters will be exactly correct, but at
++	 * any other time they will only be ballpark correct because of
++	 * reservations that have been taken out percpu counters. If we have an
++	 * unclean shutdown, this will be corrected by log recovery rebuilding
++	 * the counters from the AGF block counts.
++	 */
++	if (xfs_sb_version_haslazysbcount(&mp->m_sb)) {
++		mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
++		mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
++		mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
++	}
+ 
+ 	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index bcc978011869..438e41931b55 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -629,6 +629,9 @@ xfs_trans_unreserve_and_mod_sb(
+ 
+ 	/* apply remaining deltas */
+ 	spin_lock(&mp->m_sb_lock);
++	mp->m_sb.sb_fdblocks += blkdelta;
++	mp->m_sb.sb_icount += idelta;
++	mp->m_sb.sb_ifree += ifreedelta;
+ 	mp->m_sb.sb_frextents += rtxdelta;
+ 	mp->m_sb.sb_dblocks += tp->t_dblocks_delta;
+ 	mp->m_sb.sb_agcount += tp->t_agcount_delta;
