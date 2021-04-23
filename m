@@ -2,332 +2,258 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BD26C433B4
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Apr 2021 17:06:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8176C433B4
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Apr 2021 17:30:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E26E613BE
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Apr 2021 17:06:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE5A2613F5
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Apr 2021 17:30:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243287AbhDWRHK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Apr 2021 13:07:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:55914 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229691AbhDWRHG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Apr 2021 13:07:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619197589;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=/IDDDMJ8ROPoQqW55bCiAu5/S9K98OQIlznTAmsc2Zo=;
-        b=PoxQYpiWYxFSJWc4aQDj56qUO04++zl2XD36RGHVXtoGBFIaqHPMsGkZiom75eMU5j7jXd
-        MwyA3ruqJbXkpwdBgUgvIlj/XLIsRotkeKqETQ++IQeR1aSnSM+Rgs3eG1XDYgKCP2RUJJ
-        6FzJLYs+llbhZanW1vSGGIDWDZgpM9g=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-507-u69itlGRNx6EQ0Xutf8q4Q-1; Fri, 23 Apr 2021 13:06:26 -0400
-X-MC-Unique: u69itlGRNx6EQ0Xutf8q4Q-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6600618397A5;
-        Fri, 23 Apr 2021 17:06:25 +0000 (UTC)
-Received: from bfoster (ovpn-112-25.rdu2.redhat.com [10.10.112.25])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DD4DA19C71;
-        Fri, 23 Apr 2021 17:06:24 +0000 (UTC)
-Date:   Fri, 23 Apr 2021 13:06:23 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v17 10/11] xfs: Add delay ready attr remove routines
-Message-ID: <YIL+j3BmnDOEqHrp@bfoster>
-References: <20210416092045.2215-1-allison.henderson@oracle.com>
- <20210416092045.2215-11-allison.henderson@oracle.com>
+        id S243448AbhDWRbB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Apr 2021 13:31:01 -0400
+Received: from mx2.suse.de ([195.135.220.15]:43602 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S243345AbhDWRa5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Apr 2021 13:30:57 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 41C62B1CA;
+        Fri, 23 Apr 2021 17:30:19 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id A48951F2B6F; Fri, 23 Apr 2021 19:30:18 +0200 (CEST)
+From:   Jan Kara <jack@suse.cz>
+To:     <linux-fsdevel@vger.kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Dave Chinner <david@fromorbit.com>, Ted Tso <tytso@mit.edu>,
+        Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>,
+        linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 05/12] xfs: Convert to use invalidate_lock
+Date:   Fri, 23 Apr 2021 19:29:34 +0200
+Message-Id: <20210423173018.23133-5-jack@suse.cz>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20210423171010.12-1-jack@suse.cz>
+References: <20210423171010.12-1-jack@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210416092045.2215-11-allison.henderson@oracle.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 16, 2021 at 02:20:44AM -0700, Allison Henderson wrote:
-> This patch modifies the attr remove routines to be delay ready. This
-> means they no longer roll or commit transactions, but instead return
-> -EAGAIN to have the calling routine roll and refresh the transaction. In
-> this series, xfs_attr_remove_args is merged with
-> xfs_attr_node_removename become a new function, xfs_attr_remove_iter.
-> This new version uses a sort of state machine like switch to keep track
-> of where it was when EAGAIN was returned. A new version of
-> xfs_attr_remove_args consists of a simple loop to refresh the
-> transaction until the operation is completed. A new XFS_DAC_DEFER_FINISH
-> flag is used to finish the transaction where ever the existing code used
-> to.
-> 
-> Calls to xfs_attr_rmtval_remove are replaced with the delay ready
-> version __xfs_attr_rmtval_remove. We will rename
-> __xfs_attr_rmtval_remove back to xfs_attr_rmtval_remove when we are
-> done.
-> 
-> xfs_attr_rmtval_remove itself is still in use by the set routines (used
-> during a rename).  For reasons of preserving existing function, we
-> modify xfs_attr_rmtval_remove to call xfs_defer_finish when the flag is
-> set.  Similar to how xfs_attr_remove_args does here.  Once we transition
-> the set routines to be delay ready, xfs_attr_rmtval_remove is no longer
-> used and will be removed.
-> 
-> This patch also adds a new struct xfs_delattr_context, which we will use
-> to keep track of the current state of an attribute operation. The new
-> xfs_delattr_state enum is used to track various operations that are in
-> progress so that we know not to repeat them, and resume where we left
-> off before EAGAIN was returned to cycle out the transaction. Other
-> members take the place of local variables that need to retain their
-> values across multiple function recalls.  See xfs_attr.h for a more
-> detailed diagram of the states.
-> 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c        | 208 +++++++++++++++++++++++++++-------------
->  fs/xfs/libxfs/xfs_attr.h        | 131 +++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_attr_leaf.c   |   2 +-
->  fs/xfs/libxfs/xfs_attr_remote.c |  48 ++++++----
->  fs/xfs/libxfs/xfs_attr_remote.h |   2 +-
->  fs/xfs/xfs_attr_inactive.c      |   2 +-
->  6 files changed, 305 insertions(+), 88 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index ed06b60..0bea8dd 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-...
-> @@ -1231,70 +1262,117 @@ xfs_attr_node_remove_cleanup(
->  }
->  
->  /*
-> - * Remove a name from a B-tree attribute list.
-> + * Remove the attribute specified in @args.
->   *
->   * This will involve walking down the Btree, and may involve joining
->   * leaf nodes and even joining intermediate nodes up to and including
->   * the root node (a special case of an intermediate node).
-> + *
-> + * This routine is meant to function as either an in-line or delayed operation,
-> + * and may return -EAGAIN when the transaction needs to be rolled.  Calling
-> + * functions will need to handle this, and recall the function until a
-> + * successful error code is returned.
->   */
-> -STATIC int
-> -xfs_attr_node_removename(
-> -	struct xfs_da_args	*args)
-> +int
-> +xfs_attr_remove_iter(
-> +	struct xfs_delattr_context	*dac)
->  {
-> -	struct xfs_da_state	*state;
-> -	int			retval, error;
-> -	struct xfs_inode	*dp = args->dp;
-> +	struct xfs_da_args		*args = dac->da_args;
-> +	struct xfs_da_state		*state = dac->da_state;
-> +	int				retval, error;
-> +	struct xfs_inode		*dp = args->dp;
->  
->  	trace_xfs_attr_node_removename(args);
->  
-...
-> +	case XFS_DAS_CLNUP:
-> +		retval = xfs_attr_node_remove_cleanup(args, state);
+Use invalidate_lock instead of XFS internal i_mmap_lock. The intended
+purpose of invalidate_lock is exactly the same. Note that the locking in
+__xfs_filemap_fault() slightly changes as filemap_fault() already takes
+invalidate_lock.
 
-This is a nit, but when reading the code the "cleanup" name gives the
-impression that this is a resource cleanup or something along those
-lines, when this is actually a primary component of the operation where
-we remove the attr name. That took me a second to find. Could we tweak
-the state and rename the helper to something like DAS_RMNAME  /
-_node_remove_name() so the naming is a bit more explicit?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+CC: <linux-xfs@vger.kernel.org>
+CC: "Darrick J. Wong" <darrick.wong@oracle.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_file.c  | 12 ++++++-----
+ fs/xfs/xfs_inode.c | 52 ++++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_inode.h |  1 -
+ fs/xfs/xfs_super.c |  2 --
+ 4 files changed, 36 insertions(+), 31 deletions(-)
 
->  
-> -	/*
-> -	 * Check to see if the tree needs to be collapsed.
-> -	 */
-> -	if (retval && (state->path.active > 1)) {
-> -		error = xfs_da3_join(state);
-> -		if (error)
-> -			goto out;
-> -		error = xfs_defer_finish(&args->trans);
-> -		if (error)
-> -			goto out;
->  		/*
-> -		 * Commit the Btree join operation and start a new trans.
-> +		 * Check to see if the tree needs to be collapsed. Set the flag
-> +		 * to indicate that the calling function needs to move the
-> +		 * shrink operation
->  		 */
-> -		error = xfs_trans_roll_inode(&args->trans, dp);
-> -		if (error)
-> -			goto out;
-> -	}
-> +		if (retval && (state->path.active > 1)) {
-> +			error = xfs_da3_join(state);
-> +			if (error)
-> +				goto out;
->  
-> -	/*
-> -	 * If the result is small enough, push it all into the inode.
-> -	 */
-> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> -		error = xfs_attr_node_shrink(args, state);
-> +			dac->flags |= XFS_DAC_DEFER_FINISH;
-> +			dac->dela_state = XFS_DAS_RM_SHRINK;
-> +			return -EAGAIN;
-> +		}
-> +
-> +		/* fallthrough */
-> +	case XFS_DAS_RM_SHRINK:
-> +		/*
-> +		 * If the result is small enough, push it all into the inode.
-> +		 */
-> +		if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> +			error = xfs_attr_node_shrink(args, state);
-> +
-> +		break;
-> +	default:
-> +		ASSERT(0);
-> +		error = -EINVAL;
-> +		goto out;
-> +	}
->  
-> +	if (error == -EAGAIN)
-> +		return error;
->  out:
->  	if (state)
->  		xfs_da_state_free(state);
-...
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index 48d8e9c..908521e7 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-...
-> @@ -685,31 +687,29 @@ xfs_attr_rmtval_remove(
->  	 * Keep de-allocating extents until the remote-value region is gone.
->  	 */
->  	do {
-> -		retval = __xfs_attr_rmtval_remove(args);
-> -		if (retval && retval != -EAGAIN)
-> -			return retval;
-> +		error = __xfs_attr_rmtval_remove(&dac);
-> +		if (error != -EAGAIN)
-> +			break;
-
-Shouldn't this retain the (error && error != -EAGAIN) logic to roll the
-transaction after the final unmap? Even if this is transient, it's
-probably best to preserve behavior if this is unintentional.
-
-Otherwise my only remaining feedback was to add/tweak some comments that
-I think make the iteration function easier to follow. I've appended a
-diff for that. If you agree with the changes feel free to just fold them
-in and/or tweak as necessary. With those various nits and Chandan's
-feedback addressed, I think this patch looks pretty good.
-
-Brian
-
---- 8< ---
-
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 0bea8dd34902..ee885c649c26 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -1289,14 +1289,21 @@ xfs_attr_remove_iter(
- 		if (!xfs_inode_hasattr(dp))
- 			return -ENOATTR;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index a007ca0711d9..2fc04ce0e9f9 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1282,7 +1282,7 @@ xfs_file_llseek(
+  *
+  * mmap_lock (MM)
+  *   sb_start_pagefault(vfs, freeze)
+- *     i_mmaplock (XFS - truncate serialisation)
++ *     invalidate_lock (vfs - truncate serialisation)
+  *       page_lock (MM)
+  *         i_lock (XFS - extent map serialisation)
+  */
+@@ -1303,24 +1303,26 @@ __xfs_filemap_fault(
+ 		file_update_time(vmf->vma->vm_file);
+ 	}
  
-+		/*
-+		 * Shortform or leaf formats don't require transaction rolls and
-+		 * thus state transitions. Call the right helper and return.
-+		 */
- 		if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL) {
- 			ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
- 			return xfs_attr_shortform_remove(args);
- 		}
--
- 		if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
- 			return xfs_attr_leaf_removename(args);
+-	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 	if (IS_DAX(inode)) {
+ 		pfn_t pfn;
  
-+		/*
-+		 * Node format may require transaction rolls. Set up the
-+		 * state context and fall into the state machine.
-+		 */
- 		if (!dac->da_state) {
- 			error = xfs_attr_node_removename_setup(dac);
- 			if (error)
-@@ -1304,7 +1311,7 @@ xfs_attr_remove_iter(
- 			state = dac->da_state;
- 		}
++		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
+ 				(write_fault && !vmf->cow_page) ?
+ 				 &xfs_direct_write_iomap_ops :
+ 				 &xfs_read_iomap_ops);
+ 		if (ret & VM_FAULT_NEEDDSYNC)
+ 			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
++		xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 	} else {
+-		if (write_fault)
++		if (write_fault) {
++			xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 			ret = iomap_page_mkwrite(vmf,
+ 					&xfs_buffered_write_iomap_ops);
+-		else
++			xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
++		} else
+ 			ret = filemap_fault(vmf);
+ 	}
+-	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
  
--	/* fallthrough */
-+		/* fallthrough */
- 	case XFS_DAS_RMTBLK:
- 		dac->dela_state = XFS_DAS_RMTBLK;
+ 	if (write_fault)
+ 		sb_end_pagefault(inode->i_sb);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index f93370bd7b1e..ac83409d0bf3 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -134,7 +134,7 @@ xfs_ilock_attr_map_shared(
  
-@@ -1316,7 +1323,8 @@ xfs_attr_remove_iter(
- 		 */
- 		if (args->rmtblkno > 0) {
- 			/*
--			 * May return -EAGAIN. Remove blocks until 0 is returned
-+			 * May return -EAGAIN. Roll and repeat until all remote
-+			 * blocks are removed.
- 			 */
- 			error = __xfs_attr_rmtval_remove(dac);
- 			if (error == -EAGAIN)
-@@ -1325,26 +1333,26 @@ xfs_attr_remove_iter(
- 				goto out;
+ /*
+  * In addition to i_rwsem in the VFS inode, the xfs inode contains 2
+- * multi-reader locks: i_mmap_lock and the i_lock.  This routine allows
++ * multi-reader locks: invalidate_lock and the i_lock.  This routine allows
+  * various combinations of the locks to be obtained.
+  *
+  * The 3 locks should always be ordered so that the IO lock is obtained first,
+@@ -142,23 +142,23 @@ xfs_ilock_attr_map_shared(
+  *
+  * Basic locking order:
+  *
+- * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
++ * i_rwsem -> invalidate_lock -> page_lock -> i_ilock
+  *
+  * mmap_lock locking order:
+  *
+  * i_rwsem -> page lock -> mmap_lock
+- * mmap_lock -> i_mmap_lock -> page_lock
++ * mmap_lock -> invalidate_lock -> page_lock
+  *
+  * The difference in mmap_lock locking order mean that we cannot hold the
+- * i_mmap_lock over syscall based read(2)/write(2) based IO. These IO paths can
+- * fault in pages during copy in/out (for buffered IO) or require the mmap_lock
+- * in get_user_pages() to map the user pages into the kernel address space for
+- * direct IO. Similarly the i_rwsem cannot be taken inside a page fault because
+- * page faults already hold the mmap_lock.
++ * invalidate_lock over syscall based read(2)/write(2) based IO. These IO paths
++ * can fault in pages during copy in/out (for buffered IO) or require the
++ * mmap_lock in get_user_pages() to map the user pages into the kernel address
++ * space for direct IO. Similarly the i_rwsem cannot be taken inside a page
++ * fault because page faults already hold the mmap_lock.
+  *
+  * Hence to serialise fully against both syscall and mmap based IO, we need to
+- * take both the i_rwsem and the i_mmap_lock. These locks should *only* be both
+- * taken in places where we need to invalidate the page cache in a race
++ * take both the i_rwsem and the invalidate_lock. These locks should *only* be
++ * both taken in places where we need to invalidate the page cache in a race
+  * free manner (e.g. truncate, hole punch and other extent manipulation
+  * functions).
+  */
+@@ -190,10 +190,13 @@ xfs_ilock(
+ 				 XFS_IOLOCK_DEP(lock_flags));
+ 	}
  
- 			/*
--			 * Refill the state structure with buffers, the prior
--			 * calls released our buffers.
-+			 * Refill the state structure with buffers (the prior
-+			 * calls released our buffers) and close out this
-+			 * transaction before proceeding.
- 			 */
- 			ASSERT(args->rmtblkno == 0);
- 			error = xfs_attr_refillstate(state);
- 			if (error)
- 				goto out;
--
- 			dac->dela_state = XFS_DAS_CLNUP;
- 			dac->flags |= XFS_DAC_DEFER_FINISH;
- 			return -EAGAIN;
- 		}
+-	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrupdate_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
+-	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+-		mraccess_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
++	if (lock_flags & XFS_MMAPLOCK_EXCL) {
++		down_write_nested(&VFS_I(ip)->i_mapping->invalidate_lock,
++				  XFS_MMAPLOCK_DEP(lock_flags));
++	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
++		down_read_nested(&VFS_I(ip)->i_mapping->invalidate_lock,
++				 XFS_MMAPLOCK_DEP(lock_flags));
++	}
  
-+		/* fallthrough */
- 	case XFS_DAS_CLNUP:
- 		retval = xfs_attr_node_remove_cleanup(args, state);
+ 	if (lock_flags & XFS_ILOCK_EXCL)
+ 		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
+@@ -242,10 +245,10 @@ xfs_ilock_nowait(
+ 	}
  
- 		/*
--		 * Check to see if the tree needs to be collapsed. Set the flag
--		 * to indicate that the calling function needs to move the
--		 * shrink operation
-+		 * Check to see if the tree needs to be collapsed. If so, roll
-+		 * the transacton and fall into the shrink state.
- 		 */
- 		if (retval && (state->path.active > 1)) {
- 			error = xfs_da3_join(state);
-@@ -1360,10 +1368,12 @@ xfs_attr_remove_iter(
- 	case XFS_DAS_RM_SHRINK:
- 		/*
- 		 * If the result is small enough, push it all into the inode.
-+		 * This is our final state so it's safe to return a dirty
-+		 * transaction.
- 		 */
- 		if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
- 			error = xfs_attr_node_shrink(args, state);
--
-+		ASSERT(error != -EAGAIN);
- 		break;
- 	default:
- 		ASSERT(0);
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL) {
+-		if (!mrtryupdate(&ip->i_mmaplock))
++		if (!down_write_trylock(&VFS_I(ip)->i_mapping->invalidate_lock))
+ 			goto out_undo_iolock;
+ 	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
+-		if (!mrtryaccess(&ip->i_mmaplock))
++		if (!down_read_trylock(&VFS_I(ip)->i_mapping->invalidate_lock))
+ 			goto out_undo_iolock;
+ 	}
+ 
+@@ -260,9 +263,9 @@ xfs_ilock_nowait(
+ 
+ out_undo_mmaplock:
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrunlock_excl(&ip->i_mmaplock);
++		up_write(&VFS_I(ip)->i_mapping->invalidate_lock);
+ 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+-		mrunlock_shared(&ip->i_mmaplock);
++		up_read(&VFS_I(ip)->i_mapping->invalidate_lock);
+ out_undo_iolock:
+ 	if (lock_flags & XFS_IOLOCK_EXCL)
+ 		up_write(&VFS_I(ip)->i_rwsem);
+@@ -309,9 +312,9 @@ xfs_iunlock(
+ 		up_read(&VFS_I(ip)->i_rwsem);
+ 
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrunlock_excl(&ip->i_mmaplock);
++		up_write(&VFS_I(ip)->i_mapping->invalidate_lock);
+ 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+-		mrunlock_shared(&ip->i_mmaplock);
++		up_read(&VFS_I(ip)->i_mapping->invalidate_lock);
+ 
+ 	if (lock_flags & XFS_ILOCK_EXCL)
+ 		mrunlock_excl(&ip->i_lock);
+@@ -337,7 +340,7 @@ xfs_ilock_demote(
+ 	if (lock_flags & XFS_ILOCK_EXCL)
+ 		mrdemote(&ip->i_lock);
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrdemote(&ip->i_mmaplock);
++		downgrade_write(&VFS_I(ip)->i_mapping->invalidate_lock);
+ 	if (lock_flags & XFS_IOLOCK_EXCL)
+ 		downgrade_write(&VFS_I(ip)->i_rwsem);
+ 
+@@ -358,8 +361,11 @@ xfs_isilocked(
+ 
+ 	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
+ 		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
+-			return !!ip->i_mmaplock.mr_writer;
+-		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
++			return !debug_locks ||
++				lockdep_is_held_type(
++					&VFS_I(ip)->i_mapping->invalidate_lock,
++					0);
++		return rwsem_is_locked(&VFS_I(ip)->i_mapping->invalidate_lock);
+ 	}
+ 
+ 	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 88ee4c3930ae..147537be751c 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -40,7 +40,6 @@ typedef struct xfs_inode {
+ 	/* Transaction and locking information. */
+ 	struct xfs_inode_log_item *i_itemp;	/* logging information */
+ 	mrlock_t		i_lock;		/* inode lock */
+-	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
+ 	atomic_t		i_pincount;	/* inode pin count */
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index e5e0713bebcd..a1536a02aaa5 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -715,8 +715,6 @@ xfs_fs_inode_init_once(
+ 	atomic_set(&ip->i_pincount, 0);
+ 	spin_lock_init(&ip->i_flags_lock);
+ 
+-	mrlock_init(&ip->i_mmaplock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+-		     "xfsino", ip->i_ino);
+ 	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+ 		     "xfsino", ip->i_ino);
+ }
+-- 
+2.26.2
 
