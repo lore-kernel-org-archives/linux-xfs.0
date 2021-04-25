@@ -2,334 +2,441 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE4BDC433ED
-	for <linux-xfs@archiver.kernel.org>; Sat, 24 Apr 2021 15:56:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A15D5C433B4
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Apr 2021 07:21:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 93B096147F
-	for <linux-xfs@archiver.kernel.org>; Sat, 24 Apr 2021 15:56:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73D67611C9
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Apr 2021 07:21:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232434AbhDXP5Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 24 Apr 2021 11:57:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45250 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230010AbhDXP5Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 24 Apr 2021 11:57:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CEC8061422;
-        Sat, 24 Apr 2021 15:56:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1619279805;
-        bh=6xzuKNnbVW9P1p6zTCc6GnMNO6ii8wrg5CIBySA4Rms=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fRj6v4YGnUVpnnvBqaMFzAbH865jNOuu9ckCvWh76bFlAvsSrLLKH02xAVrM49caL
-         WpqUhNTrKLb/tgrJLk0dlec8CG0jREJ5QXn2AxbpPefGQwYRu0nHsr0iu5z20e46eu
-         dCCZd9gjrFkol9UUt0RHWYeED7FsAK5RqH/ZlZ9gNSHN2ZMTa0ywf/b42LuES0aMTY
-         nik6QB5F8dAKF8A9Aj3ISPY9qRuxHHbdb6Kb7jC5MdShacdFmXjdzuUx4Z4bmsXdCB
-         +5osF04zuvbCk3Ke4wW4wYxjFcgzmp/XOFeNj1cOl+yt753bSeKcjvL/hfs3dfO5F0
-         SlvKtxU2A0Xaw==
-Date:   Sat, 24 Apr 2021 08:56:45 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v17 10/11] xfs: Add delay ready attr remove routines
-Message-ID: <20210424155645.GX3122264@magnolia>
-References: <20210416092045.2215-1-allison.henderson@oracle.com>
- <20210416092045.2215-11-allison.henderson@oracle.com>
- <YIL+j3BmnDOEqHrp@bfoster>
- <85c61f76-81e1-9c03-3171-0f01759c46de@oracle.com>
+        id S229529AbhDYHWH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 25 Apr 2021 03:22:07 -0400
+Received: from out20-49.mail.aliyun.com ([115.124.20.49]:50312 "EHLO
+        out20-49.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229480AbhDYHWG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Apr 2021 03:22:06 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07436283|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.141363-0.0039824-0.854655;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047211;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.K3jwfV-_1619335283;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.K3jwfV-_1619335283)
+          by smtp.aliyun-inc.com(10.147.42.241);
+          Sun, 25 Apr 2021 15:21:24 +0800
+Date:   Sun, 25 Apr 2021 15:21:23 +0800
+From:   Eryu Guan <guan@eryu.me>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: test upgrading filesystem to bigtime
+Message-ID: <YIUYc2JvFQqlva5U@desktop>
+References: <161896458140.776452.9583732658582318883.stgit@magnolia>
+ <161896460627.776452.15178871770338402214.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <85c61f76-81e1-9c03-3171-0f01759c46de@oracle.com>
+In-Reply-To: <161896460627.776452.15178871770338402214.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 23, 2021 at 08:27:28PM -0700, Allison Henderson wrote:
+On Tue, Apr 20, 2021 at 05:23:26PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
+> Test that we can upgrade an existing filesystem to use bigtime.
 > 
-> On 4/23/21 10:06 AM, Brian Foster wrote:
-> > On Fri, Apr 16, 2021 at 02:20:44AM -0700, Allison Henderson wrote:
-> > > This patch modifies the attr remove routines to be delay ready. This
-> > > means they no longer roll or commit transactions, but instead return
-> > > -EAGAIN to have the calling routine roll and refresh the transaction. In
-> > > this series, xfs_attr_remove_args is merged with
-> > > xfs_attr_node_removename become a new function, xfs_attr_remove_iter.
-> > > This new version uses a sort of state machine like switch to keep track
-> > > of where it was when EAGAIN was returned. A new version of
-> > > xfs_attr_remove_args consists of a simple loop to refresh the
-> > > transaction until the operation is completed. A new XFS_DAC_DEFER_FINISH
-> > > flag is used to finish the transaction where ever the existing code used
-> > > to.
-> > > 
-> > > Calls to xfs_attr_rmtval_remove are replaced with the delay ready
-> > > version __xfs_attr_rmtval_remove. We will rename
-> > > __xfs_attr_rmtval_remove back to xfs_attr_rmtval_remove when we are
-> > > done.
-> > > 
-> > > xfs_attr_rmtval_remove itself is still in use by the set routines (used
-> > > during a rename).  For reasons of preserving existing function, we
-> > > modify xfs_attr_rmtval_remove to call xfs_defer_finish when the flag is
-> > > set.  Similar to how xfs_attr_remove_args does here.  Once we transition
-> > > the set routines to be delay ready, xfs_attr_rmtval_remove is no longer
-> > > used and will be removed.
-> > > 
-> > > This patch also adds a new struct xfs_delattr_context, which we will use
-> > > to keep track of the current state of an attribute operation. The new
-> > > xfs_delattr_state enum is used to track various operations that are in
-> > > progress so that we know not to repeat them, and resume where we left
-> > > off before EAGAIN was returned to cycle out the transaction. Other
-> > > members take the place of local variables that need to retain their
-> > > values across multiple function recalls.  See xfs_attr.h for a more
-> > > detailed diagram of the states.
-> > > 
-> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > ---
-> > >   fs/xfs/libxfs/xfs_attr.c        | 208 +++++++++++++++++++++++++++-------------
-> > >   fs/xfs/libxfs/xfs_attr.h        | 131 +++++++++++++++++++++++++
-> > >   fs/xfs/libxfs/xfs_attr_leaf.c   |   2 +-
-> > >   fs/xfs/libxfs/xfs_attr_remote.c |  48 ++++++----
-> > >   fs/xfs/libxfs/xfs_attr_remote.h |   2 +-
-> > >   fs/xfs/xfs_attr_inactive.c      |   2 +-
-> > >   6 files changed, 305 insertions(+), 88 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > > index ed06b60..0bea8dd 100644
-> > > --- a/fs/xfs/libxfs/xfs_attr.c
-> > > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > ...
-> > > @@ -1231,70 +1262,117 @@ xfs_attr_node_remove_cleanup(
-> > >   }
-> > >   /*
-> > > - * Remove a name from a B-tree attribute list.
-> > > + * Remove the attribute specified in @args.
-> > >    *
-> > >    * This will involve walking down the Btree, and may involve joining
-> > >    * leaf nodes and even joining intermediate nodes up to and including
-> > >    * the root node (a special case of an intermediate node).
-> > > + *
-> > > + * This routine is meant to function as either an in-line or delayed operation,
-> > > + * and may return -EAGAIN when the transaction needs to be rolled.  Calling
-> > > + * functions will need to handle this, and recall the function until a
-> > > + * successful error code is returned.
-> > >    */
-> > > -STATIC int
-> > > -xfs_attr_node_removename(
-> > > -	struct xfs_da_args	*args)
-> > > +int
-> > > +xfs_attr_remove_iter(
-> > > +	struct xfs_delattr_context	*dac)
-> > >   {
-> > > -	struct xfs_da_state	*state;
-> > > -	int			retval, error;
-> > > -	struct xfs_inode	*dp = args->dp;
-> > > +	struct xfs_da_args		*args = dac->da_args;
-> > > +	struct xfs_da_state		*state = dac->da_state;
-> > > +	int				retval, error;
-> > > +	struct xfs_inode		*dp = args->dp;
-> > >   	trace_xfs_attr_node_removename(args);
-> > ...
-> > > +	case XFS_DAS_CLNUP:
-> > > +		retval = xfs_attr_node_remove_cleanup(args, state);
-> > 
-> > This is a nit, but when reading the code the "cleanup" name gives the
-> > impression that this is a resource cleanup or something along those
-> > lines, when this is actually a primary component of the operation where
-> > we remove the attr name. That took me a second to find. Could we tweak
-> > the state and rename the helper to something like DAS_RMNAME  /
-> > _node_remove_name() so the naming is a bit more explicit?
-> Sure, this helper is actually added in patch 2 of this set.  I can rename it
-> there?  People have already added their rvb's, but I'm assuming people are
-> not bothered by small tweeks like that?  That way this patch just sort of
-> moves it and XFS_DAS_CLNUP can turn into XFS_DAS_RMNAME here.
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  common/xfs        |   16 ++++++
+>  tests/xfs/908     |  117 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/908.out |   29 ++++++++++
+>  tests/xfs/909     |  149 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/909.out |    6 ++
 
-<bikeshed> "RMNAME" looks too similar to "RENAME" for my old eyes, can
-we please pick something else?  Like "RM_NAME", or "REMOVE_NAME" ?
+I saw the quota test failed as below, is that expected? I was testing
+with v5.12-rc7 kernel and latest xfsprogs from for-next branch.
 
---D
 
+ Running xfs_repair to upgrade filesystem.
+ Adding large timestamp support to filesystem.
+ FEATURES: BIGTIME:YES
+-grace2 expiry is in range
+-grace2 expiry after remount is in range
++grace2 expiry has value of 18446744073076532766
++grace2 expiry is NOT in range 7956915737 .. 7956915747
++grace2 expiry after remount has value of 18446744073076532768
++grace2 expiry after remount is NOT in range 7956915737 .. 7956915747
+
+Thanks,
+Eryu
+
+P.S. I've applied the first 3 patches.
+
+>  6 files changed, 319 insertions(+)
+>  create mode 100755 tests/xfs/908
+>  create mode 100644 tests/xfs/908.out
+>  create mode 100755 tests/xfs/909
+>  create mode 100644 tests/xfs/909.out
 > 
-> > 
-> > > -	/*
-> > > -	 * Check to see if the tree needs to be collapsed.
-> > > -	 */
-> > > -	if (retval && (state->path.active > 1)) {
-> > > -		error = xfs_da3_join(state);
-> > > -		if (error)
-> > > -			goto out;
-> > > -		error = xfs_defer_finish(&args->trans);
-> > > -		if (error)
-> > > -			goto out;
-> > >   		/*
-> > > -		 * Commit the Btree join operation and start a new trans.
-> > > +		 * Check to see if the tree needs to be collapsed. Set the flag
-> > > +		 * to indicate that the calling function needs to move the
-> > > +		 * shrink operation
-> > >   		 */
-> > > -		error = xfs_trans_roll_inode(&args->trans, dp);
-> > > -		if (error)
-> > > -			goto out;
-> > > -	}
-> > > +		if (retval && (state->path.active > 1)) {
-> > > +			error = xfs_da3_join(state);
-> > > +			if (error)
-> > > +				goto out;
-> > > -	/*
-> > > -	 * If the result is small enough, push it all into the inode.
-> > > -	 */
-> > > -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> > > -		error = xfs_attr_node_shrink(args, state);
-> > > +			dac->flags |= XFS_DAC_DEFER_FINISH;
-> > > +			dac->dela_state = XFS_DAS_RM_SHRINK;
-> > > +			return -EAGAIN;
-> > > +		}
-> > > +
-> > > +		/* fallthrough */
-> > > +	case XFS_DAS_RM_SHRINK:
-> > > +		/*
-> > > +		 * If the result is small enough, push it all into the inode.
-> > > +		 */
-> > > +		if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> > > +			error = xfs_attr_node_shrink(args, state);
-> > > +
-> > > +		break;
-> > > +	default:
-> > > +		ASSERT(0);
-> > > +		error = -EINVAL;
-> > > +		goto out;
-> > > +	}
-> > > +	if (error == -EAGAIN)
-> > > +		return error;
-> > >   out:
-> > >   	if (state)
-> > >   		xfs_da_state_free(state);
-> > ...
-> > > diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> > > index 48d8e9c..908521e7 100644
-> > > --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> > > +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> > ...
-> > > @@ -685,31 +687,29 @@ xfs_attr_rmtval_remove(
-> > >   	 * Keep de-allocating extents until the remote-value region is gone.
-> > >   	 */
-> > >   	do {
-> > > -		retval = __xfs_attr_rmtval_remove(args);
-> > > -		if (retval && retval != -EAGAIN)
-> > > -			return retval;
-> > > +		error = __xfs_attr_rmtval_remove(&dac);
-> > > +		if (error != -EAGAIN)
-> > > +			break;
-> > 
-> > Shouldn't this retain the (error && error != -EAGAIN) logic to roll the
-> > transaction after the final unmap? Even if this is transient, it's
-> > probably best to preserve behavior if this is unintentional.
-> Sure, I dont think it's intentional, I think back in v10 we had a different
-> arangement here with a helper inside the while() expression that had
-> equivelent error handling logic.  But that got nak'd in the next review and
-> I think I likley forgot to put back this handling.  Will fix.
 > 
-> > 
-> > Otherwise my only remaining feedback was to add/tweak some comments that
-> > I think make the iteration function easier to follow. I've appended a
-> > diff for that. If you agree with the changes feel free to just fold them
-> > in and/or tweak as necessary. With those various nits and Chandan's
-> > feedback addressed, I think this patch looks pretty good.
-> Sure, those all look reasonable.  Will add.  Thanks for the reviews!
-> Allison
-> 
-> > 
-> > Brian
-> > 
-> > --- 8< ---
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index 0bea8dd34902..ee885c649c26 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -1289,14 +1289,21 @@ xfs_attr_remove_iter(
-> >   		if (!xfs_inode_hasattr(dp))
-> >   			return -ENOATTR;
-> > +		/*
-> > +		 * Shortform or leaf formats don't require transaction rolls and
-> > +		 * thus state transitions. Call the right helper and return.
-> > +		 */
-> >   		if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL) {
-> >   			ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-> >   			return xfs_attr_shortform_remove(args);
-> >   		}
-> > -
-> >   		if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> >   			return xfs_attr_leaf_removename(args);
-> > +		/*
-> > +		 * Node format may require transaction rolls. Set up the
-> > +		 * state context and fall into the state machine.
-> > +		 */
-> >   		if (!dac->da_state) {
-> >   			error = xfs_attr_node_removename_setup(dac);
-> >   			if (error)
-> > @@ -1304,7 +1311,7 @@ xfs_attr_remove_iter(
-> >   			state = dac->da_state;
-> >   		}
-> > -	/* fallthrough */
-> > +		/* fallthrough */
-> >   	case XFS_DAS_RMTBLK:
-> >   		dac->dela_state = XFS_DAS_RMTBLK;
-> > @@ -1316,7 +1323,8 @@ xfs_attr_remove_iter(
-> >   		 */
-> >   		if (args->rmtblkno > 0) {
-> >   			/*
-> > -			 * May return -EAGAIN. Remove blocks until 0 is returned
-> > +			 * May return -EAGAIN. Roll and repeat until all remote
-> > +			 * blocks are removed.
-> >   			 */
-> >   			error = __xfs_attr_rmtval_remove(dac);
-> >   			if (error == -EAGAIN)
-> > @@ -1325,26 +1333,26 @@ xfs_attr_remove_iter(
-> >   				goto out;
-> >   			/*
-> > -			 * Refill the state structure with buffers, the prior
-> > -			 * calls released our buffers.
-> > +			 * Refill the state structure with buffers (the prior
-> > +			 * calls released our buffers) and close out this
-> > +			 * transaction before proceeding.
-> >   			 */
-> >   			ASSERT(args->rmtblkno == 0);
-> >   			error = xfs_attr_refillstate(state);
-> >   			if (error)
-> >   				goto out;
-> > -
-> >   			dac->dela_state = XFS_DAS_CLNUP;
-> >   			dac->flags |= XFS_DAC_DEFER_FINISH;
-> >   			return -EAGAIN;
-> >   		}
-> > +		/* fallthrough */
-> >   	case XFS_DAS_CLNUP:
-> >   		retval = xfs_attr_node_remove_cleanup(args, state);
-> >   		/*
-> > -		 * Check to see if the tree needs to be collapsed. Set the flag
-> > -		 * to indicate that the calling function needs to move the
-> > -		 * shrink operation
-> > +		 * Check to see if the tree needs to be collapsed. If so, roll
-> > +		 * the transacton and fall into the shrink state.
-> >   		 */
-> >   		if (retval && (state->path.active > 1)) {
-> >   			error = xfs_da3_join(state);
-> > @@ -1360,10 +1368,12 @@ xfs_attr_remove_iter(
-> >   	case XFS_DAS_RM_SHRINK:
-> >   		/*
-> >   		 * If the result is small enough, push it all into the inode.
-> > +		 * This is our final state so it's safe to return a dirty
-> > +		 * transaction.
-> >   		 */
-> >   		if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> >   			error = xfs_attr_node_shrink(args, state);
-> > -
-> > +		ASSERT(error != -EAGAIN);
-> >   		break;
-> >   	default:
-> >   		ASSERT(0);
-> > 
+> diff --git a/common/xfs b/common/xfs
+> index cb6a1978..253a31e5 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -1184,3 +1184,19 @@ _xfs_timestamp_range()
+>  			awk '{printf("%s %s", $1, $2);}'
+>  	fi
+>  }
+> +
+> +# Require that the scratch device exists, that mkfs can format with bigtime
+> +# enabled, that the kernel can mount such a filesystem, and that xfs_info
+> +# advertises the presence of that feature.
+> +_require_scratch_xfs_bigtime()
+> +{
+> +	_require_scratch
+> +
+> +	_scratch_mkfs -m bigtime=1 &>/dev/null || \
+> +		_notrun "mkfs.xfs doesn't support bigtime feature"
+> +	_try_scratch_mount || \
+> +		_notrun "kernel doesn't support xfs bigtime feature"
+> +	$XFS_INFO_PROG "$SCRATCH_MNT" | grep -q -w "bigtime=1" || \
+> +		_notrun "bigtime feature not advertised on mount?"
+> +	_scratch_unmount
+> +}
+> diff --git a/tests/xfs/908 b/tests/xfs/908
+> new file mode 100755
+> index 00000000..004a8563
+> --- /dev/null
+> +++ b/tests/xfs/908
+> @@ -0,0 +1,117 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 908
+> +#
+> +# Check that we can upgrade a filesystem to support bigtime and that inode
+> +# timestamps work properly after the upgrade.
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> +_require_scratch_xfs_bigtime
+> +_require_xfs_repair_upgrade bigtime
+> +
+> +date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
+> +	_notrun "Userspace does not support dates past 2038."
+> +
+> +rm -f $seqres.full
+> +
+> +# Make sure we can't upgrade a V4 filesystem
+> +_scratch_mkfs -m crc=0 >> $seqres.full
+> +_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
+> +_check_scratch_xfs_features BIGTIME
+> +
+> +# Make sure we're required to specify a feature status
+> +_scratch_mkfs -m crc=1,bigtime=0,inobtcount=0 >> $seqres.full
+> +_scratch_xfs_admin -O bigtime 2>> $seqres.full
+> +
+> +# Can we add bigtime and inobtcount at the same time?
+> +_scratch_mkfs -m crc=1,bigtime=0,inobtcount=0 >> $seqres.full
+> +_scratch_xfs_admin -O bigtime=1,inobtcount=1 2>> $seqres.full
+> +
+> +# Format V5 filesystem without bigtime support and populate it
+> +_scratch_mkfs -m crc=1,bigtime=0 >> $seqres.full
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
+> +touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/a
+> +touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/b
+> +ls -la $SCRATCH_MNT/* >> $seqres.full
+> +
+> +echo before upgrade:
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> +
+> +_scratch_unmount
+> +_check_scratch_fs
+> +
+> +# Now upgrade to bigtime support
+> +_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
+> +_check_scratch_xfs_features BIGTIME
+> +_check_scratch_fs
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> +
+> +# Mount again, look at our files
+> +_scratch_mount >> $seqres.full
+> +ls -la $SCRATCH_MNT/* >> $seqres.full
+> +
+> +echo after upgrade:
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> +
+> +# Bump one of the timestamps but stay under 2038
+> +touch -d 'Jan 10 19:19:19 UTC 1999' $SCRATCH_MNT/a
+> +
+> +echo after upgrade and bump:
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> +
+> +_scratch_cycle_mount
+> +
+> +# Did the bumped timestamp survive the remount?
+> +ls -la $SCRATCH_MNT/* >> $seqres.full
+> +
+> +echo after upgrade, bump, and remount:
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> +
+> +# Modify the other timestamp to stretch beyond 2038
+> +touch -d 'Feb 22 22:22:22 UTC 2222' $SCRATCH_MNT/b
+> +
+> +echo after upgrade and extension:
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> +
+> +_scratch_cycle_mount
+> +
+> +# Did the timestamp survive the remount?
+> +ls -la $SCRATCH_MNT/* >> $seqres.full
+> +
+> +echo after upgrade, extension, and remount:
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/908.out b/tests/xfs/908.out
+> new file mode 100644
+> index 00000000..5e05854d
+> --- /dev/null
+> +++ b/tests/xfs/908.out
+> @@ -0,0 +1,29 @@
+> +QA output created by 908
+> +Running xfs_repair to upgrade filesystem.
+> +Large timestamp feature only supported on V5 filesystems.
+> +FEATURES: BIGTIME:NO
+> +Running xfs_repair to upgrade filesystem.
+> +Running xfs_repair to upgrade filesystem.
+> +Adding inode btree counts to filesystem.
+> +Adding large timestamp support to filesystem.
+> +before upgrade:
+> +915909559
+> +915909559
+> +Running xfs_repair to upgrade filesystem.
+> +Adding large timestamp support to filesystem.
+> +FEATURES: BIGTIME:YES
+> +after upgrade:
+> +915909559
+> +915909559
+> +after upgrade and bump:
+> +915995959
+> +915909559
+> +after upgrade, bump, and remount:
+> +915995959
+> +915909559
+> +after upgrade and extension:
+> +915995959
+> +7956915742
+> +after upgrade, extension, and remount:
+> +915995959
+> +7956915742
+> diff --git a/tests/xfs/909 b/tests/xfs/909
+> new file mode 100755
+> index 00000000..66587aa7
+> --- /dev/null
+> +++ b/tests/xfs/909
+> @@ -0,0 +1,149 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 909
+> +#
+> +# Check that we can upgrade a filesystem to support bigtime and that quota
+> +# timers work properly after the upgrade.
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/quota
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_command "$XFS_ADMIN_PROG" "xfs_admin"
+> +_require_quota
+> +_require_scratch_xfs_bigtime
+> +_require_xfs_repair_upgrade bigtime
+> +
+> +date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
+> +	_notrun "Userspace does not support dates past 2038."
+> +
+> +rm -f $seqres.full
+> +
+> +# Format V5 filesystem without bigtime support and populate it
+> +_scratch_mkfs -m crc=1,bigtime=0 >> $seqres.full
+> +_qmount_option "usrquota"
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
+> +# Force the block counters for uid 1 and 2 above zero
+> +_pwrite_byte 0x61 0 64k $SCRATCH_MNT/a >> $seqres.full
+> +_pwrite_byte 0x61 0 64k $SCRATCH_MNT/b >> $seqres.full
+> +sync
+> +chown 1 $SCRATCH_MNT/a
+> +chown 2 $SCRATCH_MNT/b
+> +
+> +# Set quota limits on uid 1 before upgrading
+> +$XFS_QUOTA_PROG -x -c 'limit -u bsoft=12k bhard=1m 1' $SCRATCH_MNT
+> +
+> +# Make sure the grace period is at /some/ point in the future.  We have to
+> +# use bc because not all bashes can handle integer comparisons with 64-bit
+> +# numbers.
+> +repquota -upn $SCRATCH_MNT > $tmp.repquota
+> +cat $tmp.repquota >> $seqres.full
+> +grace="$(cat $tmp.repquota | grep '^#1' | awk '{print $6}')"
+> +now="$(date +%s)"
+> +res="$(echo "${grace} > ${now}" | $BC_PROG)"
+> +test $res -eq 1 || echo "Expected timer expiry (${grace}) to be after now (${now})."
+> +
+> +_scratch_unmount
+> +
+> +# Now upgrade to bigtime support
+> +_scratch_xfs_admin -O bigtime=1 2>> $seqres.full
+> +_check_scratch_xfs_features BIGTIME
+> +_check_scratch_fs
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> +
+> +# Mount again, see if our quota timer survived
+> +_scratch_mount
+> +
+> +# Set a very generous grace period and quota limits on uid 2 after upgrading
+> +$XFS_QUOTA_PROG -x -c 'timer -u -b -d 2147483647' $SCRATCH_MNT
+> +$XFS_QUOTA_PROG -x -c 'limit -u bsoft=10000 bhard=150000 2' $SCRATCH_MNT
+> +
+> +# Query the grace periods to see if they got set properly after the upgrade.
+> +repquota -upn $SCRATCH_MNT > $tmp.repquota
+> +cat $tmp.repquota >> $seqres.full
+> +grace1="$(repquota -upn $SCRATCH_MNT | grep '^#1' | awk '{print $6}')"
+> +grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
+> +now="$(date +%s)"
+> +
+> +# Make sure that uid 1's expiration is in the future...
+> +res1="$(echo "${grace} > ${now}" | $BC_PROG)"
+> +test "${res1}" -eq 1 || echo "Expected uid 1 expiry (${grace1}) to be after now (${now})."
+> +
+> +# ...and that uid 2's expiration is after uid 1's...
+> +res2="$(echo "${grace2} > ${grace1}" | $BC_PROG)"
+> +test "${res2}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after uid 1 (${grace1})."
+> +
+> +# ...and that uid 2's expiration is after 2038 if right now is far enough
+> +# past 1970 that our generous grace period would provide for that.
+> +res3="$(echo "(${now} < 100) || (${grace2} > 2147483648)" | $BC_PROG)"
+> +test "${res3}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after 2038."
+> +
+> +_scratch_cycle_mount
+> +
+> +# Query the grace periods to see if they survived a remount.
+> +repquota -upn $SCRATCH_MNT > $tmp.repquota
+> +cat $tmp.repquota >> $seqres.full
+> +grace1="$(repquota -upn $SCRATCH_MNT | grep '^#1' | awk '{print $6}')"
+> +grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
+> +now="$(date +%s)"
+> +
+> +# Make sure that uid 1's expiration is in the future...
+> +res1="$(echo "${grace} > ${now}" | $BC_PROG)"
+> +test "${res1}" -eq 1 || echo "Expected uid 1 expiry (${grace1}) to be after now (${now})."
+> +
+> +# ...and that uid 2's expiration is after uid 1's...
+> +res2="$(echo "${grace2} > ${grace1}" | $BC_PROG)"
+> +test "${res2}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after uid 1 (${grace1})."
+> +
+> +# ...and that uid 2's expiration is after 2038 if right now is far enough
+> +# past 1970 that our generous grace period would provide for that.
+> +res3="$(echo "(${now} < 100) || (${grace2} > 2147483648)" | $BC_PROG)"
+> +test "${res3}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after 2038."
+> +
+> +# Now try setting uid 2's expiration to Feb 22 22:22:22 UTC 2222
+> +new_expiry=$(date -d 'Feb 22 22:22:22 UTC 2222' +%s)
+> +now=$(date +%s)
+> +test $now -ge $new_expiry && \
+> +	echo "Now is after February 2222?  Expect problems."
+> +expiry_delta=$((new_expiry - now))
+> +
+> +echo "setting expiration to $new_expiry - $now = $expiry_delta" >> $seqres.full
+> +$XFS_QUOTA_PROG -x -c "timer -u $expiry_delta 2" -c 'report' $SCRATCH_MNT >> $seqres.full
+> +
+> +# Did we get an expiration within 5s of the target range?
+> +grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
+> +echo "grace2 is $grace2" >> $seqres.full
+> +_within_tolerance "grace2 expiry" $grace2 $new_expiry 5 -v
+> +
+> +_scratch_cycle_mount
+> +
+> +# ...and is it still within 5s after a remount?
+> +grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
+> +echo "grace2 is $grace2" >> $seqres.full
+> +_within_tolerance "grace2 expiry after remount" $grace2 $new_expiry 5 -v
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/909.out b/tests/xfs/909.out
+> new file mode 100644
+> index 00000000..72bf2416
+> --- /dev/null
+> +++ b/tests/xfs/909.out
+> @@ -0,0 +1,6 @@
+> +QA output created by 909
+> +Running xfs_repair to upgrade filesystem.
+> +Adding large timestamp support to filesystem.
+> +FEATURES: BIGTIME:YES
+> +grace2 expiry is in range
+> +grace2 expiry after remount is in range
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index b4e29bab..49bc4016 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -526,5 +526,7 @@
+>  768 auto quick repair
+>  770 auto repair
+>  773 auto quick repair
+> +908 auto quick bigtime
+> +909 auto quick bigtime quota
+>  910 auto quick inobtcount
+>  911 auto quick bigtime
