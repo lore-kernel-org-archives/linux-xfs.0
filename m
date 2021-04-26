@@ -2,201 +2,169 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E644BC433ED
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Apr 2021 15:06:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF3B6C43460
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Apr 2021 15:46:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A780D6135A
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Apr 2021 15:06:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8ABC86105A
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Apr 2021 15:46:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233573AbhDZPG4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Apr 2021 11:06:56 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:60759 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233825AbhDZPGx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Apr 2021 11:06:53 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619449570;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=DdImOAQNZvs2zCYnk8a4U+TRNBz+bpAQygGJxQayc1E=;
-        b=DgAKfIk7+EX9Movb8zsy1ucjyxNzvy05psW7ygGEJskuVoj8ZrF25VHNfpAzD0rJse2vgT
-        fiPbe9slmyUaYZslkEF+oQzOftrw7ne/nzGO3u4rcspk0UiSDS1w8QPh2I1kotg2eXAfjo
-        1ERnOPbRYMoDMvoV67iJ5USveUDNENE=
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
- [209.85.160.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-576-F1F81c0FOSaeJxMkur2SHQ-1; Mon, 26 Apr 2021 11:06:08 -0400
-X-MC-Unique: F1F81c0FOSaeJxMkur2SHQ-1
-Received: by mail-qt1-f198.google.com with SMTP id w10-20020ac86b0a0000b02901ba74ac38c9so9648616qts.22
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Apr 2021 08:06:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=DdImOAQNZvs2zCYnk8a4U+TRNBz+bpAQygGJxQayc1E=;
-        b=dk5EzBiN4Ls7HuIS+NH5ENrOEaxI3ftXu4kDBC2YrloLaWrjbapkDr2mVx8qlK453U
-         vpAlrQiwhfddyL5EPUytH16aT0YBOGE4KQWs70aks3a0fxH41+Kv0nMhDB+z22O1k7Rp
-         YnNslFDkpqIUmKjNTUD5x3b8rdwDekxDPseRv9/GX0z4CKoXeMxTjMilBV4rl6nX8l62
-         DA08eXFMZPsNOZeZOoFDaFfNCEO8ARJTYlGbuwG+jQyhNnVol/tnuuZpx+BezotsRanW
-         3K3xHpmZbCbewGIHc1FzcwF4I8zBIrGhPID1o4XB7r0S+8A7T1SuifmC6MWVGRMi4AYV
-         of+g==
-X-Gm-Message-State: AOAM532iucbOKi5cZhxwm7L5nPRQH/fK3nKQAxcSRfX21A6xTViKMgyD
-        HQdOxvGyKEBwf04yyy1ngdoqVdMgrpLk3jTMxHcubAxVVhrFoUj7Am0jp44LCmeBkY/y0tUUhOj
-        b+BmXzu6sFsGjB6F7iIpP
-X-Received: by 2002:a05:622a:1301:: with SMTP id v1mr7687047qtk.384.1619449567779;
-        Mon, 26 Apr 2021 08:06:07 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxum5Un2eeYlrIceOBgR3KyVq+eODvcU/cMdQtEkQzAOxbnnjStEW/hfivDRg2lm0t8ZUZwTQ==
-X-Received: by 2002:a05:622a:1301:: with SMTP id v1mr7687027qtk.384.1619449567505;
-        Mon, 26 Apr 2021 08:06:07 -0700 (PDT)
-Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id o23sm11796806qtp.55.2021.04.26.08.06.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Apr 2021 08:06:07 -0700 (PDT)
-Date:   Mon, 26 Apr 2021 11:06:05 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: remove support for disabling quota accounting
- on a mounted file system
-Message-ID: <YIbW3QAB1VaLeHMP@bfoster>
-References: <20210420072256.2326268-1-hch@lst.de>
- <20210420072256.2326268-2-hch@lst.de>
+        id S234150AbhDZPrY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Apr 2021 11:47:24 -0400
+Received: from mx2.suse.de ([195.135.220.15]:38026 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234090AbhDZPrX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Apr 2021 11:47:23 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 55725ABB1;
+        Mon, 26 Apr 2021 15:46:40 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id C7AF41E0CB7; Mon, 26 Apr 2021 17:46:39 +0200 (CEST)
+Date:   Mon, 26 Apr 2021 17:46:39 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Amir Goldstein <amir73il@gmail.com>, Ted Tso <tytso@mit.edu>,
+        ceph-devel@vger.kernel.org, Chao Yu <yuchao0@huawei.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Hugh Dickins <hughd@google.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        Steve French <sfrench@samba.org>
+Subject: Re: [PATCH 02/12] mm: Protect operations adding pages to page cache
+ with invalidate_lock
+Message-ID: <20210426154639.GB23895@quack2.suse.cz>
+References: <20210423171010.12-1-jack@suse.cz>
+ <20210423173018.23133-2-jack@suse.cz>
+ <20210423230449.GC1990290@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210420072256.2326268-2-hch@lst.de>
+In-Reply-To: <20210423230449.GC1990290@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 20, 2021 at 09:22:55AM +0200, Christoph Hellwig wrote:
-> Disabling quota accounting is hairy, racy code with all kinds of pitfalls.
-> And it has a very strange mind set, as quota accounting (unlike
-> enforcement) really is a propery of the on-disk format.  There is no good
-> use case for supporting this.
+On Sat 24-04-21 09:04:49, Dave Chinner wrote:
+> On Fri, Apr 23, 2021 at 07:29:31PM +0200, Jan Kara wrote:
+> > Currently, serializing operations such as page fault, read, or readahead
+> > against hole punching is rather difficult. The basic race scheme is
+> > like:
+> > 
+> > fallocate(FALLOC_FL_PUNCH_HOLE)			read / fault / ..
+> >   truncate_inode_pages_range()
+> > 						  <create pages in page
+> > 						   cache here>
+> >   <update fs block mapping and free blocks>
+> > 
+> > Now the problem is in this way read / page fault / readahead can
+> > instantiate pages in page cache with potentially stale data (if blocks
+> > get quickly reused). Avoiding this race is not simple - page locks do
+> > not work because we want to make sure there are *no* pages in given
+> > range. inode->i_rwsem does not work because page fault happens under
+> > mmap_sem which ranks below inode->i_rwsem. Also using it for reads makes
+> > the performance for mixed read-write workloads suffer.
+> > 
+> > So create a new rw_semaphore in the address_space - invalidate_lock -
+> > that protects adding of pages to page cache for page faults / reads /
+> > readahead.
+> .....
+> > diff --git a/fs/inode.c b/fs/inode.c
+> > index a047ab306f9a..43596dd8b61e 100644
+> > --- a/fs/inode.c
+> > +++ b/fs/inode.c
+> > @@ -191,6 +191,9 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
+> >  	mapping_set_gfp_mask(mapping, GFP_HIGHUSER_MOVABLE);
+> >  	mapping->private_data = NULL;
+> >  	mapping->writeback_index = 0;
+> > +	init_rwsem(&mapping->invalidate_lock);
+> > +	lockdep_set_class(&mapping->invalidate_lock,
+> > +			  &sb->s_type->invalidate_lock_key);
+> >  	inode->i_private = NULL;
+> >  	inode->i_mapping = mapping;
+> >  	INIT_HLIST_HEAD(&inode->i_dentry);	/* buggered by rcu freeing */
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_trans_resv.c |  30 ----
->  fs/xfs/libxfs/xfs_trans_resv.h |   2 -
->  fs/xfs/xfs_dquot_item.c        | 134 ---------------
->  fs/xfs/xfs_dquot_item.h        |  17 --
->  fs/xfs/xfs_qm.c                |   2 +-
->  fs/xfs/xfs_qm.h                |   4 -
->  fs/xfs/xfs_qm_syscalls.c       | 298 ---------------------------------
->  fs/xfs/xfs_quotaops.c          |  27 ++-
->  fs/xfs/xfs_trans_dquot.c       |  38 -----
->  9 files changed, 26 insertions(+), 526 deletions(-)
+> Oh, lockdep. That might be a problem here.
 > 
-...
-> diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-> index 88d70c236a5445..775bbee907a4b3 100644
-> --- a/fs/xfs/xfs_quotaops.c
-> +++ b/fs/xfs/xfs_quotaops.c
-...
-> @@ -184,7 +185,29 @@ xfs_quota_disable(
->  	if (!XFS_IS_QUOTA_ON(mp))
->  		return -EINVAL;
->  
-> -	return xfs_qm_scall_quotaoff(mp, xfs_quota_flags(uflags));
-
-What happened to the xfs_quota_flags() call here? Is it unnecessary?
-
-> +	/*
-> +	 * No file system can have quotas enabled on disk but not in core.
-> +	 * Note that quota utilities (like quotaoff) expect -EEXIST here.
-> +	 */
-> +	if ((mp->m_qflags & flags) == 0)
-> +		return -EEXIST;
-> +
-> +	/*
-> +	 * We do not support actually turning off quota accounting any more.
-> +	 * Just log a warning and ignored the accounting related flags.
-> +	 */
-> +	if (flags & XFS_ALL_QUOTA_ACCT)
-> +		xfs_info(mp, "disabling of quota accounting not supported.");
-> +
-> +	mutex_lock(&mp->m_quotainfo->qi_quotaofflock);
-> +	mp->m_qflags &= ~(flags & XFS_ALL_QUOTA_ENFD);
-> +	spin_lock(&mp->m_sb_lock);
-> +	mp->m_sb.sb_qflags = mp->m_qflags;
-> +	spin_unlock(&mp->m_sb_lock);
-> +	mutex_unlock(&mp->m_quotainfo->qi_quotaofflock);
-> +
-
-One thing I notice from the old implementation is that it looks like we
-effectively apply XFS_[UGP]QUOTA_ENFD to flags whenever the
-corresponding XFS_[UGP]QUOTA_ACCT flag is passed. I don't know if that
-is actually how flags are passed by userspace, but it looks like we'd
-automatically disable enforcement if only a particular accounting flag
-was passed. If that is the case, I wonder if we should preserve that
-behavior one way or another..?
-
-Otherwise the rest all looks pretty reasonable to me. Thanks for putting
-this together.
-
-Brian
-
-> +	/* XXX what to do if error ? Revert back to old vals incore ? */
-> +	return xfs_sync_sb(mp, false);
->  }
->  
->  STATIC int
-> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> index 48e09ea30ee539..b7e4b05a559bdb 100644
-> --- a/fs/xfs/xfs_trans_dquot.c
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -843,44 +843,6 @@ xfs_trans_reserve_quota_icreate(
->  			dblocks, 1, XFS_QMOPT_RES_REGBLKS);
->  }
->  
-> -/*
-> - * This routine is called to allocate a quotaoff log item.
-> - */
-> -struct xfs_qoff_logitem *
-> -xfs_trans_get_qoff_item(
-> -	struct xfs_trans	*tp,
-> -	struct xfs_qoff_logitem	*startqoff,
-> -	uint			flags)
-> -{
-> -	struct xfs_qoff_logitem	*q;
-> -
-> -	ASSERT(tp != NULL);
-> -
-> -	q = xfs_qm_qoff_logitem_init(tp->t_mountp, startqoff, flags);
-> -	ASSERT(q != NULL);
-> -
-> -	/*
-> -	 * Get a log_item_desc to point at the new item.
-> -	 */
-> -	xfs_trans_add_item(tp, &q->qql_item);
-> -	return q;
-> -}
-> -
-> -
-> -/*
-> - * This is called to mark the quotaoff logitem as needing
-> - * to be logged when the transaction is committed.  The logitem must
-> - * already be associated with the given transaction.
-> - */
-> -void
-> -xfs_trans_log_quotaoff_item(
-> -	struct xfs_trans	*tp,
-> -	struct xfs_qoff_logitem	*qlp)
-> -{
-> -	tp->t_flags |= XFS_TRANS_DIRTY;
-> -	set_bit(XFS_LI_DIRTY, &qlp->qql_item.li_flags);
-> -}
-> -
->  STATIC void
->  xfs_trans_alloc_dqinfo(
->  	xfs_trans_t	*tp)
-> -- 
-> 2.30.1
+> The XFS_MMAPLOCK has non-trivial lockdep annotations so that it is
+> tracked as nesting properly against the IOLOCK and the ILOCK. When
+> you end up using xfs_ilock(XFS_MMAPLOCK..) to lock this, XFS will
+> add subclass annotations to the lock and they are going to be
+> different to the locking that the VFS does.
 > 
+> We'll see this from xfs_lock_two_inodes() (e.g. in
+> xfs_swap_extents()) and xfs_ilock2_io_mmap() during reflink
+> oper.....
 
+Thanks for the pointer. I was kind of wondering what lockdep nesting games
+XFS plays but then forgot to look into details. Anyway, I've preserved the
+nesting annotations in XFS and fstests run on XFS passed without lockdep
+complaining so there isn't at least an obvious breakage. Also as far as I'm
+checking the code XFS usage in and lock nesting of MMAPLOCK should be
+compatible with the nesting VFS enforces (also see below)...
+ 
+> Oooooh. The page cache copy done when breaking a shared extent needs
+> to lock out page faults on both the source and destination, but it
+> still needs to be able to populate the page cache of both the source
+> and destination file.....
+> 
+> .... and vfs_dedupe_file_range_compare() has to be able to read
+> pages from both the source and destination file to determine that
+> the contents are identical and that's done while we hold the
+> XFS_MMAPLOCK exclusively so the compare is atomic w.r.t. all other
+> user data modification operations being run....
+
+So I started wondering why fstests passed when reading this :) The reason
+is that vfs_dedupe_get_page() does not use standard page cache filling path
+(neither readahead API nor filemap_read()), instead it uses
+read_mapping_page() and so gets into page cache filling path below the
+level at which we get invalidate_lock and thus everything works as it
+should. So read_mapping_page() is similar to places like e.g.
+block_truncate_page() or block_write_begin() which may end up filling in
+page cache contents but they rely on upper layers to already hold
+appropriate locks. I'll add a comment to read_mapping_page() about this.
+Once all filesystems are converted to use invalidate_lock, I also want to
+add WARN_ON_ONCE() to various places verifying that invalidate_lock is held
+as it should...
+ 
+> I now have many doubts that this "serialise page faults by locking
+> out page cache instantiation" method actually works as a generic
+> mechanism. It's not just page cache invalidation that relies on
+> being able to lock out page faults: copy-on-write and deduplication
+> both require the ability to populate the page cache with source data
+> while page faults are locked out so the data can be compared/copied
+> atomically with the extent level manipulations and so user data
+> modifications cannot occur until the physical extent manipulation
+> operation has completed.
+
+Hum, that is a good point. So there are actually two different things you
+want to block at different places:
+
+1) You really want to block page cache instantiation for operations such as
+hole punch as that operation mutates data and thus contents would become
+stale.
+
+2) You want to block page cache *modification* for operations such as
+dedupe while keeping page cache in place. This is somewhat different
+requirement but invalidate_lock can, in principle, cover it as well.
+Basically we just need to keep invalidate_lock usage in .page_mkwrite
+helpers. The question remains whether invalidate_lock is still a good name
+with this usage in mind and I probably need to update a documentation to
+reflect this usage.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
