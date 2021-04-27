@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C39FCC433ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Apr 2021 10:23:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E40BC43611
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Apr 2021 10:28:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81E3260FDC
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Apr 2021 10:23:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4593F60FF3
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Apr 2021 10:28:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230365AbhD0KYF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Apr 2021 06:24:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55592 "EHLO
+        id S238265AbhD0K3e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Apr 2021 06:29:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235463AbhD0KX7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Apr 2021 06:23:59 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C254BC06138B
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Apr 2021 03:22:29 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id lr7so12488589pjb.2
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Apr 2021 03:22:29 -0700 (PDT)
+        with ESMTP id S238290AbhD0K3G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Apr 2021 06:29:06 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D4F1C061342
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Apr 2021 03:28:20 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id lp8so587573pjb.1
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Apr 2021 03:28:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=references:user-agent:from:to:cc:subject:in-reply-to:date
          :message-id:mime-version;
-        bh=ApAXA0/rQBvxEdLQEwwqd2xhK7ngunfxwkMrc8Mn7KI=;
-        b=Vi0YLAXxYcDIxa0xtpCRhFhjYVesalGjeOnUYf5AnW+Xc5dNQrwIbR+TXo57JUJcVi
-         8aDl/QQ7BPk7bNk4Eum7r3Jb6wHu+QoVxUQUQE0yQtJizLxBqs876ePPfUhMLflEz+zD
-         vmhpUkZBO0w/ot/mU5MVqcQ6mGTQ4iNg25DNL47dpqk1hyIuoIXDJ3kCTsT8LU4IcdGL
-         3msUgoUvpafREPxpNcOgo6uTsjiA+TD036u54kxYMtDAB7k/E8D2nCAS+f088lDy6KaD
-         3WlRQIwVcTMqTqIY3nlN303QRPuXd531nscZFKeYE89craSSmdFlR6olx5wNo6MGAAdV
-         eWTA==
+        bh=B7pPIxTCfzMykaMp5m/pI6lPYLhOI4PZZ+SqIlcI/Qc=;
+        b=qPglCNhkhWBMzwN0hSJILLsyjdd79sGh/v6pmMugKW8VRO9e9m6ZtQmuK1PoHhUzxy
+         qddVBJ7UM/qIVrQ3xKADASvJuPxwmHn/q/lIQJytqJxXMtVkDG/rWvBoHEoKuKvxV4th
+         bewt275sU3p9HyA0V+8EryUOGkaHjV8c/bZqWgwZ3xDi6FkmrAtKetsfgmKRzNK4z3RQ
+         HxPgb2KEUV2r9DpnHYBOuZzroPg9Hn6iQbIouWz5/rKsB2Jytv2mohbaxZJo0Sbakoi1
+         bfHLtDY+o/qo5RktecEHJPo0z0k94w6618+aCZpTJolTHxVeHkfFC7UlcxAGRU5ezwKz
+         os2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:references:user-agent:from:to:cc:subject
          :in-reply-to:date:message-id:mime-version;
-        bh=ApAXA0/rQBvxEdLQEwwqd2xhK7ngunfxwkMrc8Mn7KI=;
-        b=J4wYvaAWZLaKIM3HLTDuv6dSYUG6t4mV0khi+JF8L0ZNd0rfrI5kgdIUdRLIg0pVFA
-         W71NIR5TSPDNcp7HraGvBaWbKScpQJwAibav28CULxREULwcgH/c7Spd5bJW8VJ9pKw6
-         y/gGfK1KHhsagXD5djUBx1iQpNA6nLw0DkM87CKQBKKZBy8EHrhVqOMVUUOQ5ExmsMo2
-         eBT9Kzodmg6ui0AgdSdAe0f8nd7Jm5XHVOxNDPIS+7H96eug9eavrMVZIkjztlX1oZEH
-         YY7vjHbcZgkBVwPM/pIVltz12G6BFGBkokcrdvuOJS91ic1Qv6YVdRX29fR0rOhnM0sM
-         E8ug==
-X-Gm-Message-State: AOAM531Ns0WNW9Q3IxaEOlYMRP/5Gv3FfVLUUAjxzzR7yZbxLShj7mI+
-        7zrjzpLRZFFQWQbcdiPEk7TMtovXm5A=
-X-Google-Smtp-Source: ABdhPJwuZNN+RPN8ED0ePLo9lpwZGiApdw74pMrJpY7ERefFo9Fhk0l1bncbB6Tod6hmDd/lV7a7Lw==
-X-Received: by 2002:a17:90b:1bd0:: with SMTP id oa16mr26283614pjb.49.1619518949176;
-        Tue, 27 Apr 2021 03:22:29 -0700 (PDT)
+        bh=B7pPIxTCfzMykaMp5m/pI6lPYLhOI4PZZ+SqIlcI/Qc=;
+        b=DIZNj8lrYdcBk+9cCm05hFIJZL9KqvTxZ1DJScq+IW9b4DN6koJe59g/fGTbt7SVQw
+         V4bOwqUl9zAKE6h1y0oSCTiN8u1c4gWowONYjKjQriC9KPOU1Q5tK9NwWlFtYCfgrCUa
+         5OsasfdLgF1cz8WB7MyFsYGlGGH1CtEi1KGqpGnlmIF5jS5nmfVgAZHPSln+4C0VP2lg
+         +pmn2vX1ZJCqrxHjxh7BS1uZsMDaaI3jG60TOfwXekw2YZGhGMEjmmdANGzJ4R/lgo71
+         cZL/npXXgNojguBIXiMOZ9HgWuHX1qK4gPzQP7U1xE9GoO8B8mUsbZGA278xnN/2S6rF
+         5HFg==
+X-Gm-Message-State: AOAM5311pbNqkjYl87v5LRXFvi3r41xWyoKvv+XhcWpyrjQFIXJDzBke
+        t/78/hbZJn7rbyxF9TJ43u6me+V91EA=
+X-Google-Smtp-Source: ABdhPJwYd8dtA2FQjxJGR1dXmfrxtcxVVsZ9m0BFTxWBBaMFq7+6yaxQ1h2MM5bD7Y49u4B9i60ITg==
+X-Received: by 2002:a17:90b:3796:: with SMTP id mz22mr4005645pjb.80.1619519299401;
+        Tue, 27 Apr 2021 03:28:19 -0700 (PDT)
 Received: from garuda ([122.171.173.111])
-        by smtp.gmail.com with ESMTPSA id b21sm2127726pfl.82.2021.04.27.03.22.27
+        by smtp.gmail.com with ESMTPSA id x3sm2287133pfj.95.2021.04.27.03.28.18
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 27 Apr 2021 03:22:28 -0700 (PDT)
-References: <20210423131050.141140-1-bfoster@redhat.com> <20210423131050.141140-2-bfoster@redhat.com>
+        Tue, 27 Apr 2021 03:28:18 -0700 (PDT)
+References: <20210423131050.141140-1-bfoster@redhat.com> <20210423131050.141140-3-bfoster@redhat.com>
 User-agent: mu4e 1.0; emacs 26.1
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 1/3] xfs: unconditionally read all AGFs on mounts with perag reservation
-In-reply-to: <20210423131050.141140-2-bfoster@redhat.com>
-Date:   Tue, 27 Apr 2021 15:52:26 +0530
-Message-ID: <874kfsm3h9.fsf@garuda>
+Subject: Re: [PATCH v4 2/3] xfs: introduce in-core global counter of allocbt blocks
+In-reply-to: <20210423131050.141140-3-bfoster@redhat.com>
+Date:   Tue, 27 Apr 2021 15:58:16 +0530
+Message-ID: <8735vcm37j.fsf@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
@@ -72,87 +72,54 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On 23 Apr 2021 at 18:40, Brian Foster wrote:
-> perag reservation is enabled at mount time on a per AG basis. The
-> upcoming change to set aside allocbt blocks from block reservation
-> requires a populated allocbt counter as soon as possible after mount
-> to be fully effective against large perag reservations. Therefore as
-> a preparation step, initialize the pagf on all mounts where at least
-> one reservation is active. Note that this already occurs to some
-> degree on most default format filesystems as reservation requirement
-> calculations already depend on the AGF or AGI, depending on the
-> reservation type.
+> Introduce an in-core counter to track the sum of all allocbt blocks
+> used by the filesystem. This value is currently tracked per-ag via
+> the ->agf_btreeblks field in the AGF, which also happens to include
+> rmapbt blocks. A global, in-core count of allocbt blocks is required
+> to identify the subset of global ->m_fdblocks that consists of
+> unavailable blocks currently used for allocation btrees. To support
+> this calculation at block reservation time, construct a similar
+> global counter for allocbt blocks, populate it on first read of each
+> AGF and update it as allocbt blocks are used and released.
 >
-
-The changes look good to me.
-
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_ag_resv.c | 34 +++++++++++++++++++++++-----------
->  1 file changed, 23 insertions(+), 11 deletions(-)
+>  fs/xfs/libxfs/xfs_alloc.c       | 12 ++++++++++++
+>  fs/xfs/libxfs/xfs_alloc_btree.c |  2 ++
+>  fs/xfs/xfs_mount.h              |  6 ++++++
+>  3 files changed, 20 insertions(+)
 >
-> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-> index 6c5f8d10589c..e32a1833d523 100644
-> --- a/fs/xfs/libxfs/xfs_ag_resv.c
-> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
-> @@ -253,7 +253,8 @@ xfs_ag_resv_init(
->  	xfs_agnumber_t			agno = pag->pag_agno;
->  	xfs_extlen_t			ask;
->  	xfs_extlen_t			used;
-> -	int				error = 0;
-> +	int				error = 0, error2;
-> +	bool				has_resv = false;
->  
->  	/* Create the metadata reservation. */
->  	if (pag->pag_meta_resv.ar_asked == 0) {
-> @@ -291,6 +292,8 @@ xfs_ag_resv_init(
->  			if (error)
->  				goto out;
->  		}
-> +		if (ask)
-> +			has_resv = true;
->  	}
->  
->  	/* Create the RMAPBT metadata reservation */
-> @@ -304,19 +307,28 @@ xfs_ag_resv_init(
->  		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_RMAPBT, ask, used);
->  		if (error)
->  			goto out;
-> +		if (ask)
-> +			has_resv = true;
->  	}
->  
-> -#ifdef DEBUG
-> -	/* need to read in the AGF for the ASSERT below to work */
-> -	error = xfs_alloc_pagf_init(pag->pag_mount, tp, pag->pag_agno, 0);
-> -	if (error)
-> -		return error;
-> -
-> -	ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
-> -	       xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <=
-> -	       pag->pagf_freeblks + pag->pagf_flcount);
-> -#endif
->  out:
-> +	/*
-> +	 * Initialize the pagf if we have at least one active reservation on the
-> +	 * AG. This may have occurred already via reservation calculation, but
-> +	 * fall back to an explicit init to ensure the in-core allocbt usage
-> +	 * counters are initialized as soon as possible. This is important
-> +	 * because filesystems with large perag reservations are susceptible to
-> +	 * free space reservation problems that the allocbt counter is used to
-> +	 * address.
-> +	 */
-> +	if (has_resv) {
-> +		error2 = xfs_alloc_pagf_init(mp, tp, pag->pag_agno, 0);
-> +		if (error2)
-> +			return error2;
-> +		ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
-> +		       xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <=
-> +		       pag->pagf_freeblks + pag->pagf_flcount);
-> +	}
->  	return error;
->  }
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index aaa19101bb2a..144e2d68245c 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -3036,6 +3036,7 @@ xfs_alloc_read_agf(
+>  	struct xfs_agf		*agf;		/* ag freelist header */
+>  	struct xfs_perag	*pag;		/* per allocation group data */
+>  	int			error;
+> +	uint32_t		allocbt_blks;
+>
+>  	trace_xfs_alloc_read_agf(mp, agno);
+>
+> @@ -3066,6 +3067,17 @@ xfs_alloc_read_agf(
+>  		pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
+>  		pag->pagf_init = 1;
+>  		pag->pagf_agflreset = xfs_agfl_needs_reset(mp, agf);
+> +
+> +		/*
+> +		 * Update the global in-core allocbt block counter. Filter
+> +		 * rmapbt blocks from the on-disk counter because those are
+> +		 * managed by perag reservation.
+> +		 */
+> +		if (pag->pagf_btreeblks > be32_to_cpu(agf->agf_rmap_blocks)) {
 
--- 
+pag->pagf_btreeblks gets incremented everytime a block is allocated to refill
+AGFL (via xfs_alloc_get_freelist()). Apart from the allobt trees, blocks for
+Rmap btree also get allocated from AGFL. Hence pag->pagf_btreeblks must be
+larger than agf->agf_rmap_blocks.
+
+Can you please describe the scenario in which pag->pagf_btreeblks has a value
+that is <= agf->agf_rmap_blocks?
+
+--
 chandan
