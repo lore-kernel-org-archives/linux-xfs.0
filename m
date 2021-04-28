@@ -4,85 +4,134 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CFECC43460
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 04:11:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7BE4C433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 04:12:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF9F8613F1
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 04:11:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7935C6140B
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 04:12:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229600AbhD1EMD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Apr 2021 00:12:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55682 "EHLO mail.kernel.org"
+        id S229451AbhD1ENX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Apr 2021 00:13:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56474 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229451AbhD1EMD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Apr 2021 00:12:03 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C776660720;
-        Wed, 28 Apr 2021 04:11:18 +0000 (UTC)
+        id S229437AbhD1ENX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Apr 2021 00:13:23 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DD2F2613FF;
+        Wed, 28 Apr 2021 04:12:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1619583079;
-        bh=n1x7CgsfjHYAGCaF5zUASNnYcaVuDJghp8uTn9lczVc=;
+        s=k20201202; t=1619583159;
+        bh=OagB2HyAkOxI3Y+M9T5BvWtnsNSjZpybLoJH92A8HBQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=eqO1UO88y4sURSpYa/HVn7l40gwCuHGj/h2T+lhh7xdxdAi1LgYhCz8CNg9PtDjOo
-         PpXAgC4+DU6Sy8h0OBXxp9YwZ2amOUmTXDbl093BmWEod+22UHXItVVFx/MCXmDUBa
-         sBzfIxgDUCKk4K3dwGa8Nh8SCvfYVJdhenwg8OQWCRnSB8qmf0T9QxY8pw7o9yWFen
-         fQFxPzvuzfVQu2sY4ylGI9OFbeqrSABa0e+aCFOrAxC6OVvFRMDij1D/jka2pqLv4c
-         8WNjSOgo9gJmZAkakeXrAOWZu2sz6OCYRwm2A+LP/UtWWUczqXZzHeY9dMzaPNE/WI
-         3HXyVRxZdYdGw==
-Date:   Tue, 27 Apr 2021 21:11:18 -0700
+        b=VErhNGTRcvpuCmSWQNaDuqDib50ajr/o4KRcyMnotrqGs7y6QlvSGMHiOgYAOy1kf
+         CSt/jsBE56HZJDmH/h8osCo2J1b6BoDMQXU2H2NMSsyJn8b51HWvqKvyZRYdGQcZSl
+         gR1pLf9tSkQN9x2D5BqTkJRHXGM2ndplHLM739wr3/je1SxS+mIaUM6ZlIES8fD43L
+         /TycNkKhbhKCA2RZN/oLZ3OFxAprOeRjLzdlwWBOeNFdvmCY6WA4x/fau2g0fcWYXb
+         LTIpdlMd4kIY8FmroM/SxZ9OXJGwcBtIZ0+kjiKdW3WC5WEiNNulTY3Xh+UnjYyaiC
+         xqW/i0ciEdWdw==
+Date:   Tue, 27 Apr 2021 21:12:38 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 2/3] rc: check dax mode in _require_scratch_swapfile
-Message-ID: <20210428041118.GF1251862@magnolia>
-References: <161958296906.3452499.12678290296714187590.stgit@magnolia>
- <161958298115.3452499.907986597475080875.stgit@magnolia>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4 1/3] xfs: unconditionally read all AGFs on mounts with
+ perag reservation
+Message-ID: <20210428041238.GF3122264@magnolia>
+References: <20210423131050.141140-1-bfoster@redhat.com>
+ <20210423131050.141140-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161958298115.3452499.907986597475080875.stgit@magnolia>
+In-Reply-To: <20210423131050.141140-2-bfoster@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 27, 2021 at 09:09:41PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Apr 23, 2021 at 09:10:48AM -0400, Brian Foster wrote:
+> perag reservation is enabled at mount time on a per AG basis. The
+> upcoming change to set aside allocbt blocks from block reservation
+> requires a populated allocbt counter as soon as possible after mount
+> to be fully effective against large perag reservations. Therefore as
+> a preparation step, initialize the pagf on all mounts where at least
+> one reservation is active. Note that this already occurs to some
+> degree on most default format filesystems as reservation requirement
+> calculations already depend on the AGF or AGI, depending on the
+> reservation type.
 > 
-> It turns out that the mm refuses to swapon() files that don't have a
-> a_ops->readpage function, because it wants to be able to read the swap
-> header.  S_DAX files don't have a readpage function (though oddly both
-> ext4 and xfs link to a swapfile activation function in their aops) so
-> they fail.  The recent commit 725feeff changed this from a _notrun to
-> _fail on xfs and ext4, so amend this not to fail on pmem test setups.
-> 
-> Fixes: 725feeff ("common/rc: swapon should not fail for given FS in _require_scratch_swapfile()")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Note that XiaoLi Feng's patch "common/rc: not run swapfile test for
-DAX" is perfectly adequate too, and that patch was sent first.
+Looks good to me too,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  common/rc |    4 ++++
->  1 file changed, 4 insertions(+)
+>  fs/xfs/libxfs/xfs_ag_resv.c | 34 +++++++++++++++++++++++-----------
+>  1 file changed, 23 insertions(+), 11 deletions(-)
 > 
-> 
-> diff --git a/common/rc b/common/rc
-> index 6752c92d..429cc24d 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -2490,6 +2490,10 @@ _require_scratch_swapfile()
->  	# Minimum size for mkswap is 10 pages
->  	_format_swapfile "$SCRATCH_MNT/swap" $(($(get_page_size) * 10))
+> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+> index 6c5f8d10589c..e32a1833d523 100644
+> --- a/fs/xfs/libxfs/xfs_ag_resv.c
+> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
+> @@ -253,7 +253,8 @@ xfs_ag_resv_init(
+>  	xfs_agnumber_t			agno = pag->pag_agno;
+>  	xfs_extlen_t			ask;
+>  	xfs_extlen_t			used;
+> -	int				error = 0;
+> +	int				error = 0, error2;
+> +	bool				has_resv = false;
 >  
-> +	# swapfiles cannot use cpu direct access mode (STATX_ATTR_DAX) for now
-> +	statx_attr="$($XFS_IO_PROG -c 'statx -r' $SCRATCH_MNT/swap 2>/dev/null | grep 'stat.attributes = ' | awk '{print $3}')"
-> +	test "$((statx_attr & 0x200000))" -gt 0 && _notrun "swapfiles not supported on DAX"
-> +
->  	# ext* and xfs have supported all variants of swap files since their
->  	# introduction, so swapon should not fail.
->  	case "$FSTYP" in
+>  	/* Create the metadata reservation. */
+>  	if (pag->pag_meta_resv.ar_asked == 0) {
+> @@ -291,6 +292,8 @@ xfs_ag_resv_init(
+>  			if (error)
+>  				goto out;
+>  		}
+> +		if (ask)
+> +			has_resv = true;
+>  	}
+>  
+>  	/* Create the RMAPBT metadata reservation */
+> @@ -304,19 +307,28 @@ xfs_ag_resv_init(
+>  		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_RMAPBT, ask, used);
+>  		if (error)
+>  			goto out;
+> +		if (ask)
+> +			has_resv = true;
+>  	}
+>  
+> -#ifdef DEBUG
+> -	/* need to read in the AGF for the ASSERT below to work */
+> -	error = xfs_alloc_pagf_init(pag->pag_mount, tp, pag->pag_agno, 0);
+> -	if (error)
+> -		return error;
+> -
+> -	ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
+> -	       xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <=
+> -	       pag->pagf_freeblks + pag->pagf_flcount);
+> -#endif
+>  out:
+> +	/*
+> +	 * Initialize the pagf if we have at least one active reservation on the
+> +	 * AG. This may have occurred already via reservation calculation, but
+> +	 * fall back to an explicit init to ensure the in-core allocbt usage
+> +	 * counters are initialized as soon as possible. This is important
+> +	 * because filesystems with large perag reservations are susceptible to
+> +	 * free space reservation problems that the allocbt counter is used to
+> +	 * address.
+> +	 */
+> +	if (has_resv) {
+> +		error2 = xfs_alloc_pagf_init(mp, tp, pag->pag_agno, 0);
+> +		if (error2)
+> +			return error2;
+> +		ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
+> +		       xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <=
+> +		       pag->pagf_freeblks + pag->pagf_flcount);
+> +	}
+>  	return error;
+>  }
+>  
+> -- 
+> 2.26.3
 > 
