@@ -3,42 +3,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA4B0C43461
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 04:09:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44827C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 04:09:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB1F96140C
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 04:09:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 208946140E
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 04:09:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234680AbhD1EKK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Apr 2021 00:10:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54316 "EHLO mail.kernel.org"
+        id S234736AbhD1EKO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Apr 2021 00:10:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54404 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234436AbhD1EKJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Apr 2021 00:10:09 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5FE08613F9;
-        Wed, 28 Apr 2021 04:09:25 +0000 (UTC)
+        id S234376AbhD1EKO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Apr 2021 00:10:14 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B180C60720;
+        Wed, 28 Apr 2021 04:09:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1619582965;
-        bh=vCQs2qZKXCWNOopS++qbkc0wL7f4psbDajdHIaGIPjg=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=CjU6AE4+iDWz3zVDrNMFc1Zn/t4bxaqGQL8vHLmxhdeYOl3q2K0SzYcIpXoISLLhz
-         BOKFas/hNHDgGu38AwX0CPCL+q371eANqqxU/bcER6FqJe+KWCAmeDrPRyCBvZSpG1
-         6E2V6DBWAdY2MNXeXENwfKC8nsGHelvbCpIoNczzdhv9g+7FU25C2H4QgC+n1Qom78
-         MZiHB93XY/CVXDeoKipSjbEHBjzy0RyHNRFMMfDKB279/0d4/7UFSQPIK199qK7p17
-         IxLoNCU3xGpB5VbhgNQlITpiVYtYboYjgBgbupQKD+IrIEpuM1yspZ8se2XePV8d7/
-         PqlwJncY537zA==
-Subject: [PATCH 5/5] xfs/49[12]: skip pre-lazysbcount filesystems
+        s=k20201202; t=1619582969;
+        bh=iBcpvoy8DiENV8OYu+hi0UP28nQ/LbcJ13ZrSZgK7Hg=;
+        h=Subject:From:To:Cc:Date:From;
+        b=udcBPx4tedYgba3pfxml4HOJiqAMAxXaE4zYHd3jO/uXGYxWmMq0Y7d7gYGgutiXL
+         eIBORpwKwH3fy8KT+t4PJZtvuHUKbzjluP0FH3Vx5yNbQDHgCIzTjmdWNCAbsRBqpM
+         U3ElGfVXTKYrz8523Bl12BNcribX1kcE4ppaE2BC99lIKxLJWKkUE4YgOEEhZax9aW
+         /bZ2IDhaQCPu//Ic4Qf235dMpio0QyeLkHmo9qf2KwFPCkbqkKeS4PXkIXNGrCg4Kh
+         SiDEJgAuVSSQN4fQ/z+8yctLP/yCS2rT2LnPUo5mm2RE1UnKYYDKNhIgyayxzhtAdU
+         Vk2TvPiHcUfMw==
+Subject: [PATCHSET 0/3] fstests: fix swapfile tests
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 27 Apr 2021 21:09:24 -0700
-Message-ID: <161958296475.3452351.7075798777673076839.stgit@magnolia>
-In-Reply-To: <161958293466.3452351.14394620932744162301.stgit@magnolia>
-References: <161958293466.3452351.14394620932744162301.stgit@magnolia>
+Date:   Tue, 27 Apr 2021 21:09:29 -0700
+Message-ID: <161958296906.3452499.12678290296714187590.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,51 +45,26 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-Prior to lazysbcount, the xfs mount code blindly trusted the value of
-the fdblocks counter in the primary super, which means that the kernel
-doesn't detect the fuzzed fdblocks value at all.  V4 is deprecated and
-pre-lazysbcount V4 hasn't been the default for ~14 years, so we'll just
-skip these two tests on those old filesystems.
+Here are a handful of fixes for various swapfile-related regression tests.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=swapfile-fixes
 ---
- tests/xfs/491 |    5 +++++
- tests/xfs/492 |    5 +++++
- 2 files changed, 10 insertions(+)
-
-
-diff --git a/tests/xfs/491 b/tests/xfs/491
-index 6420202b..9fd0ab56 100755
---- a/tests/xfs/491
-+++ b/tests/xfs/491
-@@ -36,6 +36,11 @@ _require_scratch
- 
- echo "Format and mount"
- _scratch_mkfs > $seqres.full 2>&1
-+
-+# pre-lazysbcount filesystems blindly trust the primary sb fdblocks
-+_check_scratch_xfs_features LAZYSBCOUNT &>/dev/null || \
-+	_notrun "filesystem requires lazysbcount"
-+
- _scratch_mount >> $seqres.full 2>&1
- echo "test file" > $SCRATCH_MNT/testfile
- 
-diff --git a/tests/xfs/492 b/tests/xfs/492
-index 522def47..c4b087b5 100755
---- a/tests/xfs/492
-+++ b/tests/xfs/492
-@@ -36,6 +36,11 @@ _require_scratch
- 
- echo "Format and mount"
- _scratch_mkfs > $seqres.full 2>&1
-+
-+# pre-lazysbcount filesystems blindly trust the primary sb fdblocks
-+_check_scratch_xfs_features LAZYSBCOUNT &>/dev/null || \
-+	_notrun "filesystem requires lazysbcount"
-+
- _scratch_mount >> $seqres.full 2>&1
- echo "test file" > $SCRATCH_MNT/testfile
- 
+ common/rc         |    8 +++++--
+ tests/xfs/419     |   58 -----------------------------------------------------
+ tests/xfs/419.out |    5 -----
+ tests/xfs/group   |    1 -
+ 4 files changed, 6 insertions(+), 66 deletions(-)
+ delete mode 100755 tests/xfs/419
+ delete mode 100644 tests/xfs/419.out
 
