@@ -7,178 +7,108 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8509FC433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 18:04:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC737C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 18:04:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E66261418
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 18:04:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BFFA61447
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 18:04:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243385AbhD1SFK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Apr 2021 14:05:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43269 "EHLO
+        id S241704AbhD1SFZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Apr 2021 14:05:25 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:37447 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S241704AbhD1SFK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Apr 2021 14:05:10 -0400
+        by vger.kernel.org with ESMTP id S243400AbhD1SFY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Apr 2021 14:05:24 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619633064;
+        s=mimecast20190719; t=1619633079;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=WwQwsPdsXrGNk3ZqmC+mcov3m33KP0EMDaGudJhW/4c=;
-        b=ETUKJexyYCTzzDHlO1X2TzvSFM5W7Bb4slngjDP3QEeMJ0M3jamJ9gOvVY1+xlbZoAgRo3
-        2018gCepNLXO1QJjRw0nc57GDA4cPM3YMjk+Py0DheNXuohK7p4V8VOZ3fyYEeuyIYcBL/
-        b1GPyZ++6JvRkvt9JNTOe91KV3LLBfE=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-81-mdqLWLMAPzK1oh4EjZBUnw-1; Wed, 28 Apr 2021 14:04:07 -0400
-X-MC-Unique: mdqLWLMAPzK1oh4EjZBUnw-1
-Received: by mail-qk1-f200.google.com with SMTP id d185-20020ae9efc20000b02902e45ca32479so9829040qkg.21
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Apr 2021 11:04:07 -0700 (PDT)
+        bh=rZtiAWBHQmlkFXmHoUSv+mteyIcHUJe0sGH0UK7yFt4=;
+        b=KUD2AsB/xL0i1ZFJeFtAbDlD2R8BZj50HnRiRJE+3BbDcQ8ObcsFqrVYZZSY9i5JJHror1
+        buE9WbDX30jlI2CQlS11CPdp8aaaaG76xWp23qBfSTZTkKvJ1nKRHvCWj4HORBk0YFkc0a
+        iPOgc47DcDmvfbZdPfliRTogcB5lO+I=
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
+ [209.85.160.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-580-VVENAl7RORenr1up4WNXkg-1; Wed, 28 Apr 2021 14:04:27 -0400
+X-MC-Unique: VVENAl7RORenr1up4WNXkg-1
+Received: by mail-qt1-f199.google.com with SMTP id y10-20020a05622a004ab029019d4ad3437cso25853647qtw.12
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Apr 2021 11:04:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=WwQwsPdsXrGNk3ZqmC+mcov3m33KP0EMDaGudJhW/4c=;
-        b=ULhhn1C7z05x0R1xNtU63LiHUXuSSkecJf+6Ao2uxiLkE+iuDYqfqPapCS9EiXdGT0
-         BUiQ/FW2FNV0YLfm95/Gv7x2V7lSVBXwyzZcWke7Yw2eK6CiQj2nmny05lb85jIDnAQr
-         d3KSWWcrXHGbM7B1AZaTQSTNkTYUCMvCQG+ddiV8oIRUj8uLNHzFffzlp+rCdWrZbGXO
-         dGeXo/UG2tAi35ZXFfSLJ6WUknMWxIS2uVzWpfSolBRLfher6CfoRpQa57kTtUrQvce2
-         mRVw7pKUNSShaevJlXY2c4qGBgEZnLS6Lxp+5utLxD/RMOIAQLxgSnQtXHRKRQdRhnQt
-         V8gw==
-X-Gm-Message-State: AOAM533AbgsR01YiDHfCmv0NneZTuTSK23amzSzq0bH8sO557zpHNFhs
-        IsjAW9B5VqNs4VFE4iIC8car3vzw7G4q/lI4zjGQQj90itIUxpPWvSzIxytTeZz6sVn7gq5W1y4
-        UhlYFaHsTa78rglyNg3TA
-X-Received: by 2002:a05:622a:94:: with SMTP id o20mr28689766qtw.158.1619633047257;
-        Wed, 28 Apr 2021 11:04:07 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxgf4JjYWOQnubsfqngU9igAHuW/I+NIt8V3d5jVsqnIYj0aMqWGlC8Ehjcg+yNLuE0fd+Q1g==
-X-Received: by 2002:a05:622a:94:: with SMTP id o20mr28689739qtw.158.1619633047016;
-        Wed, 28 Apr 2021 11:04:07 -0700 (PDT)
+        bh=rZtiAWBHQmlkFXmHoUSv+mteyIcHUJe0sGH0UK7yFt4=;
+        b=Glx9hBM3OC5/XhpVbmjclsE+i2XFuJqgn3+ZoXSPNCQOVW2taSpLp8Fq7vHOeOgCMW
+         WIaCZdsc73TgOaXHy1Ifeod7cEUqtlnvDUSYJgLJI1F1E/YzlUUgRrBNTNilsjc9Lstc
+         1yxMgEuyH1Hm/cZXj5jzSiIxV9Ee9f3n0a1BU+ZoStKXkbu+SNbeL7abBtsS+GkpR02h
+         3PeWagEjKu4guH1sEHSWcC99/TL+1JQwdjmAOmBqxM85MuTPROtlDg1NAOOnyjNyCYUQ
+         vpIa0HyqSwuWQPPYYhwUu7R2MYzxLBM1RlGt/aTbU+zEPjp6R9VkR2YT6V93HO2CvNDK
+         ogOw==
+X-Gm-Message-State: AOAM53111oHHr6WuDuPylzSzTcvAM+cWs0GY3QI99TgEVWSBGcqSPvIF
+        GIqeIrjmLtuEhYIl3bkeyzZQ6D+oZca90j2JeoRE5EexIe49u80Pi+9XARDrtV3dmNhm9VNAvYm
+        1ZHwAdaTZ0b+Sk4g3FAAW
+X-Received: by 2002:a37:61c1:: with SMTP id v184mr30277365qkb.466.1619633067535;
+        Wed, 28 Apr 2021 11:04:27 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxUiouegHY4bsE3/QNp7SwurCaSEGDzlLe0GbT6DDiGfdbHdr57yVpqzMhmTQkmlOFjLfo+yA==
+X-Received: by 2002:a37:61c1:: with SMTP id v184mr30277348qkb.466.1619633067333;
+        Wed, 28 Apr 2021 11:04:27 -0700 (PDT)
 Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id f2sm327117qkm.84.2021.04.28.11.04.06
+        by smtp.gmail.com with ESMTPSA id r125sm367969qkf.24.2021.04.28.11.04.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Apr 2021 11:04:06 -0700 (PDT)
-Date:   Wed, 28 Apr 2021 14:04:04 -0400
+        Wed, 28 Apr 2021 11:04:27 -0700 (PDT)
+Date:   Wed, 28 Apr 2021 14:04:25 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 1/3] xfs/419: remove irrelevant swapfile test
-Message-ID: <YImjlA1DEbaUpxwo@bfoster>
+Subject: Re: [PATCH 3/3] common/rc: relax xfs swapfile support checks
+Message-ID: <YImjqdwBfnhhIJ84@bfoster>
 References: <161958296906.3452499.12678290296714187590.stgit@magnolia>
- <161958297507.3452499.6111068461177037465.stgit@magnolia>
+ <161958298729.3452499.11374046947109958849.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <161958297507.3452499.6111068461177037465.stgit@magnolia>
+In-Reply-To: <161958298729.3452499.11374046947109958849.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 27, 2021 at 09:09:35PM -0700, Darrick J. Wong wrote:
+On Tue, Apr 27, 2021 at 09:09:47PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Since the advent of iomap_swapfile_activate in XFS, we actually /do/
-> support having swap files on the realtime device.  Remove this test.
+> In commit 725feeff, I forgot that xfs has *not* always supported all
+> swap file configurations -- the bmap swapfile activation prior to the
+> introduction of iomap_swapfile_activate did not permit the use of
+> unwritten extents in the swap file.  Therefore, kick xfs out of the
+> always-supported list.
 > 
+> Fixes: 725feeff ("common/rc: swapon should not fail for given FS in _require_scratch_swapfile()")
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  tests/xfs/419     |   58 -----------------------------------------------------
->  tests/xfs/419.out |    5 -----
->  tests/xfs/group   |    1 -
->  3 files changed, 64 deletions(-)
->  delete mode 100755 tests/xfs/419
->  delete mode 100644 tests/xfs/419.out
+>  common/rc |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 > 
-> diff --git a/tests/xfs/419 b/tests/xfs/419
-> deleted file mode 100755
-> index fc7174bd..00000000
-> --- a/tests/xfs/419
-> +++ /dev/null
-> @@ -1,58 +0,0 @@
-> -#! /bin/bash
-> -# SPDX-License-Identifier: GPL-2.0
-> -# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-> -#
-> -# FS QA Test No. 419
-> -#
-> -# Check that we can't swapon a realtime file.
-> -#
-> -seq=`basename $0`
-> -seqres=$RESULT_DIR/$seq
-> -echo "QA output created by $seq"
-> -
-> -here=`pwd`
-> -tmp=/tmp/$$
-> -status=1	# failure is the default!
-> -trap "_cleanup; exit \$status" 0 1 2 3 7 15
-> -
-> -_cleanup()
-> -{
-> -	cd /
-> -	rm -rf $tmp.*
-> -}
-> -
-> -# get standard environment, filters and checks
-> -. ./common/rc
-> -. ./common/filter
-> -
-> -# real QA test starts here
-> -_supported_fs xfs
-> -_require_realtime
-> -_require_scratch_swapfile
-> -
-> -echo "Format and mount"
-> -_scratch_mkfs > $seqres.full 2>&1
-> -_scratch_mount >> $seqres.full 2>&1
-> -
-> -testdir=$SCRATCH_MNT/test-$seq
-> -mkdir $testdir
-> -
-> -blocks=160
-> -blksz=65536
-> -
-> -echo "Initialize file"
-> -echo >> $seqres.full
-> -$XFS_IO_PROG -c "open -f -R $testdir/dummy" $testdir >> $seqres.full
-> -echo moo >> $testdir/dummy
-> -$XFS_IO_PROG -c "open -f -R $testdir/file1" $testdir >> $seqres.full
-> -_pwrite_byte 0x61 0 $((blocks * blksz)) $testdir/file1 >> $seqres.full
-> -$MKSWAP_PROG -U 27376b42-ff65-42ca-919f-6c9b62292a5c $testdir/file1 >> $seqres.full
-> -
-> -echo "Try to swapon"
-> -swapon $testdir/file1 2>&1 | _filter_scratch
-> -
-> -swapoff $testdir/file1 >> $seqres.full 2>&1
-> -
-> -# success, all done
-> -status=0
-> -exit
-> diff --git a/tests/xfs/419.out b/tests/xfs/419.out
-> deleted file mode 100644
-> index 83b7dd45..00000000
-> --- a/tests/xfs/419.out
-> +++ /dev/null
-> @@ -1,5 +0,0 @@
-> -QA output created by 419
-> -Format and mount
-> -Initialize file
-> -Try to swapon
-> -swapon: SCRATCH_MNT/test-419/file1: swapon failed: Invalid argument
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 76e31167..549209a4 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -407,7 +407,6 @@
->  416 dangerous_fuzzers dangerous_scrub dangerous_repair
->  417 dangerous_fuzzers dangerous_scrub dangerous_online_repair
->  418 dangerous_fuzzers dangerous_scrub dangerous_repair
-> -419 auto quick swap realtime
->  420 auto quick clone punch seek
->  421 auto quick clone punch seek
->  422 dangerous_scrub dangerous_online_repair
+> diff --git a/common/rc b/common/rc
+> index 429cc24d..7882355a 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -2494,10 +2494,10 @@ _require_scratch_swapfile()
+>  	statx_attr="$($XFS_IO_PROG -c 'statx -r' $SCRATCH_MNT/swap 2>/dev/null | grep 'stat.attributes = ' | awk '{print $3}')"
+>  	test "$((statx_attr & 0x200000))" -gt 0 && _notrun "swapfiles not supported on DAX"
+>  
+> -	# ext* and xfs have supported all variants of swap files since their
+> +	# ext* has supported all variants of swap files since their
+>  	# introduction, so swapon should not fail.
+>  	case "$FSTYP" in
+> -	ext2|ext3|ext4|xfs)
+> +	ext2|ext3|ext4)
+>  		if ! swapon "$SCRATCH_MNT/swap" >/dev/null 2>&1; then
+>  			_scratch_unmount
+>  			_fail "swapon failed for $FSTYP"
 > 
 
