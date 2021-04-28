@@ -2,149 +2,63 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FAD8C433ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 04:15:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A48EC433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 06:17:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E719613ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 04:15:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D5856140C
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 06:17:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230364AbhD1EPz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Apr 2021 00:15:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57940 "EHLO mail.kernel.org"
+        id S231600AbhD1GRy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Apr 2021 02:17:54 -0400
+Received: from verein.lst.de ([213.95.11.211]:47975 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229437AbhD1EPy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Apr 2021 00:15:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7D4F7613FF;
-        Wed, 28 Apr 2021 04:15:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1619583310;
-        bh=tr3RiEkYUpXM0cW8jK6LjLFqHkkIURxZQlz7091I7Sw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vQu5kofmdeukixE/zMm7Yir71aiZ+Z7SoG8Xn83xeQDwVLKuraZenjVpeQQ58J849
-         QaSIe+a0WhT6Wr0T3vqndiDHGAzNrCuudyF0frIzj6hdYMy+WM+tC0KMkjra259vqU
-         Zz/hqTvTrzXIEw5/zuugBV74uDdXZzOy/yL0uUXMgRug1/d2ByxL52pwWNlXHaRejD
-         8N5LpOq6GemD9pDvfRKVwxBNN+QWIqvCvQUmEtcLdt7W9AkAXiGARCc0Qx/HOnLUZp
-         Crq+4FdNtne26gpCFm9tGErMtJ5GI6kvvIvtxLBs6fxoWPgFJK+H+UxMWek9ZS5tG5
-         fuSYEgdM8JDGQ==
-Date:   Tue, 27 Apr 2021 21:15:09 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 2/3] xfs: introduce in-core global counter of allocbt
- blocks
-Message-ID: <20210428041509.GH3122264@magnolia>
-References: <20210423131050.141140-1-bfoster@redhat.com>
- <20210423131050.141140-3-bfoster@redhat.com>
+        id S229464AbhD1GRx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Apr 2021 02:17:53 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 7252F68B05; Wed, 28 Apr 2021 08:17:06 +0200 (CEST)
+Date:   Wed, 28 Apr 2021 08:17:06 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Darrick J. Wong" <djwong@kernel.org>, Jia He <justin.he@arm.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [GIT PULL] iomap: new code for 5.13-rc1
+Message-ID: <20210428061706.GC5084@lst.de>
+References: <20210427025805.GD3122264@magnolia> <CAHk-=wj6XUGJCgsr+hx3rz=4KvBP-kspn3dqG5v-cKMzzMktUw@mail.gmail.com> <20210427195727.GA9661@lst.de> <CAHk-=wjrpinf=8gAjxyPoXT0jbK6-U3Urawiykh-zpxeo47Vhg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210423131050.141140-3-bfoster@redhat.com>
+In-Reply-To: <CAHk-=wjrpinf=8gAjxyPoXT0jbK6-U3Urawiykh-zpxeo47Vhg@mail.gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 23, 2021 at 09:10:49AM -0400, Brian Foster wrote:
-> Introduce an in-core counter to track the sum of all allocbt blocks
-> used by the filesystem. This value is currently tracked per-ag via
-> the ->agf_btreeblks field in the AGF, which also happens to include
-> rmapbt blocks. A global, in-core count of allocbt blocks is required
-> to identify the subset of global ->m_fdblocks that consists of
-> unavailable blocks currently used for allocation btrees. To support
-> this calculation at block reservation time, construct a similar
-> global counter for allocbt blocks, populate it on first read of each
-> AGF and update it as allocbt blocks are used and released.
+On Tue, Apr 27, 2021 at 01:05:13PM -0700, Linus Torvalds wrote:
+> So how many _would_ be enough? IOW, what would make %pD work better
+> for this case?
+
+Preferably all.
+
+> Why are the xfstest messages so magically different from real cases
+> that they'd need to be separately distinguished, and that can't be
+> done with just the final path component?
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c       | 12 ++++++++++++
->  fs/xfs/libxfs/xfs_alloc_btree.c |  2 ++
->  fs/xfs/xfs_mount.h              |  6 ++++++
->  3 files changed, 20 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index aaa19101bb2a..144e2d68245c 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -3036,6 +3036,7 @@ xfs_alloc_read_agf(
->  	struct xfs_agf		*agf;		/* ag freelist header */
->  	struct xfs_perag	*pag;		/* per allocation group data */
->  	int			error;
-> +	uint32_t		allocbt_blks;
->  
->  	trace_xfs_alloc_read_agf(mp, agno);
->  
-> @@ -3066,6 +3067,17 @@ xfs_alloc_read_agf(
->  		pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
->  		pag->pagf_init = 1;
->  		pag->pagf_agflreset = xfs_agfl_needs_reset(mp, agf);
-> +
-> +		/*
-> +		 * Update the global in-core allocbt block counter. Filter
-> +		 * rmapbt blocks from the on-disk counter because those are
-> +		 * managed by perag reservation.
-> +		 */
-> +		if (pag->pagf_btreeblks > be32_to_cpu(agf->agf_rmap_blocks)) {
+> If you think the message is somehow unique and the path is something
+> secure and identifiable, you're very confused. file_path() is in no
+> way more "secure" than using %pD4 would be, since if there's some
+> actual bad actor they can put newlines etc in the pathname, they can
+> do chroot() etc to make the path look anything they like.
 
-As pointed out elsewhere in the thread, agf_rmap_blocks counts the total
-number of blocks in the rmapbt (whereas agf_btreeblks counts the number
-of non-root blocks in all three free space btrees).  Does this need a
-change?
-
-	int delta = (int)pag->pagf_btreeblks - (be32_to_cpu(...) - 1);
-	if (delta > 0)
-		atomic64_add(delta, &mp->m_allocbt_blks);
-
---D
-
-> +			allocbt_blks = pag->pagf_btreeblks -
-> +					be32_to_cpu(agf->agf_rmap_blocks);
-> +			atomic64_add(allocbt_blks, &mp->m_allocbt_blks);
-> +		}
->  	}
->  #ifdef DEBUG
->  	else if (!XFS_FORCED_SHUTDOWN(mp)) {
-> diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-> index 8e01231b308e..9f5a45f7baed 100644
-> --- a/fs/xfs/libxfs/xfs_alloc_btree.c
-> +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-> @@ -71,6 +71,7 @@ xfs_allocbt_alloc_block(
->  		return 0;
->  	}
->  
-> +	atomic64_inc(&cur->bc_mp->m_allocbt_blks);
->  	xfs_extent_busy_reuse(cur->bc_mp, cur->bc_ag.agno, bno, 1, false);
->  
->  	xfs_trans_agbtree_delta(cur->bc_tp, 1);
-> @@ -95,6 +96,7 @@ xfs_allocbt_free_block(
->  	if (error)
->  		return error;
->  
-> +	atomic64_dec(&cur->bc_mp->m_allocbt_blks);
->  	xfs_extent_busy_insert(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1,
->  			      XFS_EXTENT_BUSY_SKIP_DISCARD);
->  	xfs_trans_agbtree_delta(cur->bc_tp, -1);
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 81829d19596e..bb67274ee23f 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -170,6 +170,12 @@ typedef struct xfs_mount {
->  	 * extents or anything related to the rt device.
->  	 */
->  	struct percpu_counter	m_delalloc_blks;
-> +	/*
-> +	 * Global count of allocation btree blocks in use across all AGs. Only
-> +	 * used when perag reservation is enabled. Helps prevent block
-> +	 * reservation from attempting to reserve allocation btree blocks.
-> +	 */
-> +	atomic64_t		m_allocbt_blks;
->  
->  	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
->  	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
-> -- 
-> 2.26.3
-> 
+Nothing needs to be secure.  It just needs to not scare users because
+they can see that the first usually two components clearly identify
+this is the test file system.
