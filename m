@@ -2,188 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B040C433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 16:12:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2C7EC433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 16:50:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 320E361423
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 16:12:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F0E161417
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 16:50:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231602AbhD1QNS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Apr 2021 12:13:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59320 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229965AbhD1QNQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Apr 2021 12:13:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A9A8061420;
-        Wed, 28 Apr 2021 16:12:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1619626350;
-        bh=kNKmXhH8+UaFM3JhiL9JWMsSRKT5DRyTYga9pqn1gO0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SpZF5vjqVw4PrjTn4vxQzA9+nfWe1TYs6GUyNgJ3HYaKO/omxPEEH6n1hCkV4beUM
-         Dv9hVcwnLmshJLp/MIvcXCTCcrbKmKkctQptaMVWKjQTajlRA3Z+d9LBwDR8R1VGFC
-         EnTtxdCemyizO2Lu1MAnB8A9fJoq4kjCVg66K9MaqKV3ht0WtvUXtaCgDxGQA3/1hd
-         ASaau9IY5tDjSePc0fkXL2wNyeunZugxutMFqakFYPiCA6gFNjaZeeLwVdO8NSkynl
-         Yx5bKf/2XB5lr2cjr6f2F0hU9JNXv7ntav93kGWmPud51La6h9qFs9lOdG8NFcATfK
-         lu24GTEosD5TA==
-Date:   Wed, 28 Apr 2021 09:12:28 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 2/3] xfs: introduce in-core global counter of allocbt
- blocks
-Message-ID: <20210428161228.GI3122264@magnolia>
-References: <20210423131050.141140-1-bfoster@redhat.com>
- <20210423131050.141140-3-bfoster@redhat.com>
- <20210428041509.GH3122264@magnolia>
- <YIl4xEtHk7R6kj6k@bfoster>
- <YIl/dTdCRLAOhFGf@bfoster>
+        id S241243AbhD1QvM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Apr 2021 12:51:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37416 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240643AbhD1QvI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Apr 2021 12:51:08 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADAD4C061574
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Apr 2021 09:50:21 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id 124so19275385lff.5
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Apr 2021 09:50:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=0uZJAIRFioTiHNk4LTl3GPgwLpvR/tqMtufSg3nWhNk=;
+        b=MkEAqmIhebjBuyB/bFWJkeNmQq6+31Os4ltso3CHWcE/z6HMUwlD9kGKr75X1dcJZN
+         nhAkq4TFetgPc3bclHi1B1uRcqtiTIb2JBFDflUDC+XnR14QbDiaFEnR1UXNn7Agvs3p
+         CZs19Op5jQnv+sJsmNTa3kkHt1Kq8UyRB4q18=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=0uZJAIRFioTiHNk4LTl3GPgwLpvR/tqMtufSg3nWhNk=;
+        b=sa8GskvjrFkVTYDktHCK9w4N65b5jIOMOfioTwTMYPZ9RS3I0T4mTZBTNeF/heIK7p
+         O2oCbO4L2zAkO8Z3F7t2UXOL7MlXow/7XfhD0QRpYbpAQqwIA+beYQu4GrPlADQlOjnk
+         3hQrP079Ou/izIzovuL4NTPIV5urwPENPkAJ72u3Ux/yfMxWhRltUYu9Jonzz43WUPDY
+         rq9JQfFxo6dYaeEix2TGj86xTCEcyTjfg0Iaqk3pA/9nvQWuc5ckrwSmr34GjsKVlbar
+         PnA35/NnaAFb0UtYzSIQRjjYpVrI0HYvk8TKmQz/cxMqTr5J188mKXKOQJfMJEth1GSs
+         gDlA==
+X-Gm-Message-State: AOAM531Uq84rQYZinI0Z0Orubmg49LL3fScba17x28aEK7WUFl3qUask
+        tHhPFS9odVrNp93Qre2Lp3vLxM5aIXfPEjM8
+X-Google-Smtp-Source: ABdhPJzps/v1wAOcQDKIi8zf9Hsg+MAj2LNMqS4O0UPtV4oaDfYAVnqnEISCaRHc1oO16ojiEoxPRQ==
+X-Received: by 2002:a05:6512:304e:: with SMTP id b14mr21432227lfb.274.1619628620111;
+        Wed, 28 Apr 2021 09:50:20 -0700 (PDT)
+Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com. [209.85.167.45])
+        by smtp.gmail.com with ESMTPSA id j1sm87448lfk.235.2021.04.28.09.50.17
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 Apr 2021 09:50:17 -0700 (PDT)
+Received: by mail-lf1-f45.google.com with SMTP id j4so60841840lfp.0
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Apr 2021 09:50:17 -0700 (PDT)
+X-Received: by 2002:ac2:5f92:: with SMTP id r18mr7706166lfe.253.1619628617003;
+ Wed, 28 Apr 2021 09:50:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YIl/dTdCRLAOhFGf@bfoster>
+References: <20210427025805.GD3122264@magnolia> <CAHk-=wj6XUGJCgsr+hx3rz=4KvBP-kspn3dqG5v-cKMzzMktUw@mail.gmail.com>
+ <20210427195727.GA9661@lst.de> <CAHk-=wjrpinf=8gAjxyPoXT0jbK6-U3Urawiykh-zpxeo47Vhg@mail.gmail.com>
+ <20210428061706.GC5084@lst.de> <CAHk-=whWnFu4wztnOtySjFVYXmBR4Mb2wxrp6OayZqnpKeQw0g@mail.gmail.com>
+ <20210428064110.GA5883@lst.de> <CAHk-=wjeUhrznxM95ni4z+ynMqhgKGsJUDU8g0vrDLc+fDtYWg@mail.gmail.com>
+ <1de23de2-12a9-2b13-3b86-9fe4102fdc0c@rasmusvillemoes.dk>
+In-Reply-To: <1de23de2-12a9-2b13-3b86-9fe4102fdc0c@rasmusvillemoes.dk>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Wed, 28 Apr 2021 09:50:01 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wimsMqGdzik187YWLb-ru+iktb4MYbMQG1rnZ81dXYFVg@mail.gmail.com>
+Message-ID: <CAHk-=wimsMqGdzik187YWLb-ru+iktb4MYbMQG1rnZ81dXYFVg@mail.gmail.com>
+Subject: Re: [GIT PULL] iomap: new code for 5.13-rc1
+To:     Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Darrick J. Wong" <djwong@kernel.org>, Jia He <justin.he@arm.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 28, 2021 at 11:29:57AM -0400, Brian Foster wrote:
-> On Wed, Apr 28, 2021 at 11:01:24AM -0400, Brian Foster wrote:
-> > On Tue, Apr 27, 2021 at 09:15:09PM -0700, Darrick J. Wong wrote:
-> > > On Fri, Apr 23, 2021 at 09:10:49AM -0400, Brian Foster wrote:
-> > > > Introduce an in-core counter to track the sum of all allocbt blocks
-> > > > used by the filesystem. This value is currently tracked per-ag via
-> > > > the ->agf_btreeblks field in the AGF, which also happens to include
-> > > > rmapbt blocks. A global, in-core count of allocbt blocks is required
-> > > > to identify the subset of global ->m_fdblocks that consists of
-> > > > unavailable blocks currently used for allocation btrees. To support
-> > > > this calculation at block reservation time, construct a similar
-> > > > global counter for allocbt blocks, populate it on first read of each
-> > > > AGF and update it as allocbt blocks are used and released.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_alloc.c       | 12 ++++++++++++
-> > > >  fs/xfs/libxfs/xfs_alloc_btree.c |  2 ++
-> > > >  fs/xfs/xfs_mount.h              |  6 ++++++
-> > > >  3 files changed, 20 insertions(+)
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > > > index aaa19101bb2a..144e2d68245c 100644
-> > > > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > > > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > > > @@ -3036,6 +3036,7 @@ xfs_alloc_read_agf(
-> > > >  	struct xfs_agf		*agf;		/* ag freelist header */
-> > > >  	struct xfs_perag	*pag;		/* per allocation group data */
-> > > >  	int			error;
-> > > > +	uint32_t		allocbt_blks;
-> > > >  
-> > > >  	trace_xfs_alloc_read_agf(mp, agno);
-> > > >  
-> > > > @@ -3066,6 +3067,17 @@ xfs_alloc_read_agf(
-> > > >  		pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
-> > > >  		pag->pagf_init = 1;
-> > > >  		pag->pagf_agflreset = xfs_agfl_needs_reset(mp, agf);
-> > > > +
-> > > > +		/*
-> > > > +		 * Update the global in-core allocbt block counter. Filter
-> > > > +		 * rmapbt blocks from the on-disk counter because those are
-> > > > +		 * managed by perag reservation.
-> > > > +		 */
-> > > > +		if (pag->pagf_btreeblks > be32_to_cpu(agf->agf_rmap_blocks)) {
-> > > 
-> > > As pointed out elsewhere in the thread, agf_rmap_blocks counts the total
-> > > number of blocks in the rmapbt (whereas agf_btreeblks counts the number
-> > > of non-root blocks in all three free space btrees).  Does this need a
-> > > change?
-> > > 
-> > > 	int delta = (int)pag->pagf_btreeblks - (be32_to_cpu(...) - 1);
-> > > 	if (delta > 0)
-> > > 		atomic64_add(delta, &mp->m_allocbt_blks);
-> > >
-> > 
-> > Hm yes, this makes more sense. Will fix and update the comment..
-> > 
-> 
-> I ended up with the following:
-> 
-> 		...
->                 /*
->                  * Update the in-core allocbt counter. Filter out the rmapbt
->                  * subset of the btreeblks counter because the rmapbt is managed
->                  * by perag reservation. Subtract one for the rmapbt root block
->                  * because the rmap counter includes it while the btreeblks
->                  * counter only tracks non-root blocks.
->                  */
->                 allocbt_blks = pag->pagf_btreeblks;
->                 if (xfs_sb_version_hasrmapbt(&mp->m_sb))
->                         allocbt_blks -= be32_to_cpu(agf->agf_rmap_blocks) - 1;
->                 if (allocbt_blks > 0)
->                         atomic64_add(allocbt_blks, &mp->m_allocbt_blks);
-> 		...
-> 
-> Any thoughts before I post v5?
+[ Added Andy, who replied to the separate thread where Jia already
+posted the patch ]
 
-Looks reasonable to me. :)
+On Wed, Apr 28, 2021 at 12:38 AM Rasmus Villemoes
+<linux@rasmusvillemoes.dk> wrote:
+>
+> So the patch makes sense to me. If somebody says '%pD5', it would get
+> capped at 4 instead of being forced down to 1. But note that while that
+> grep only produces ~36 hits, it also affects %pd, of which there are
+> ~200 without a 2-4 following (including some vsprintf test cases that
+> would break). So I think one would first have to explicitly support '1',
+> switch over some users by adding that 1 in their format string
+> (test_vsprintf in particular), then flip the default for 'no digit
+> following %p[dD]'.
 
---D
+Yeah, and the "show one name" actually makes sense for "%pd", because
+that's about the *dentry*.
 
-> Brian
-> 
-> > Brian
-> >  
-> > > --D
-> > > 
-> > > > +			allocbt_blks = pag->pagf_btreeblks -
-> > > > +					be32_to_cpu(agf->agf_rmap_blocks);
-> > > > +			atomic64_add(allocbt_blks, &mp->m_allocbt_blks);
-> > > > +		}
-> > > >  	}
-> > > >  #ifdef DEBUG
-> > > >  	else if (!XFS_FORCED_SHUTDOWN(mp)) {
-> > > > diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-> > > > index 8e01231b308e..9f5a45f7baed 100644
-> > > > --- a/fs/xfs/libxfs/xfs_alloc_btree.c
-> > > > +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-> > > > @@ -71,6 +71,7 @@ xfs_allocbt_alloc_block(
-> > > >  		return 0;
-> > > >  	}
-> > > >  
-> > > > +	atomic64_inc(&cur->bc_mp->m_allocbt_blks);
-> > > >  	xfs_extent_busy_reuse(cur->bc_mp, cur->bc_ag.agno, bno, 1, false);
-> > > >  
-> > > >  	xfs_trans_agbtree_delta(cur->bc_tp, 1);
-> > > > @@ -95,6 +96,7 @@ xfs_allocbt_free_block(
-> > > >  	if (error)
-> > > >  		return error;
-> > > >  
-> > > > +	atomic64_dec(&cur->bc_mp->m_allocbt_blks);
-> > > >  	xfs_extent_busy_insert(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1,
-> > > >  			      XFS_EXTENT_BUSY_SKIP_DISCARD);
-> > > >  	xfs_trans_agbtree_delta(cur->bc_tp, -1);
-> > > > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > > > index 81829d19596e..bb67274ee23f 100644
-> > > > --- a/fs/xfs/xfs_mount.h
-> > > > +++ b/fs/xfs/xfs_mount.h
-> > > > @@ -170,6 +170,12 @@ typedef struct xfs_mount {
-> > > >  	 * extents or anything related to the rt device.
-> > > >  	 */
-> > > >  	struct percpu_counter	m_delalloc_blks;
-> > > > +	/*
-> > > > +	 * Global count of allocation btree blocks in use across all AGs. Only
-> > > > +	 * used when perag reservation is enabled. Helps prevent block
-> > > > +	 * reservation from attempting to reserve allocation btree blocks.
-> > > > +	 */
-> > > > +	atomic64_t		m_allocbt_blks;
-> > > >  
-> > > >  	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
-> > > >  	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
-> > > > -- 
-> > > > 2.26.3
-> > > > 
-> > > 
-> 
+A dentry has a parent, yes, but at the same time, a dentry really does
+inherently have "one name" (and given just the dentry pointers, you
+can't show mount-related parenthood, so in many ways the "show just
+one name" makes sense for "%pd" in ways it doesn't necessarily for
+"%pD"). But while a dentry arguably has that "one primary component",
+a _file_ is certainly not exclusively about that last component.
+
+So you're right - my "how about something like this" patch is too
+simplistic. The default number of components to show should be about
+whether it's %pd or %pD.
+
+That also does explain the arguably odd %pD defaults: %pd came first,
+and then %pD came afterwards.
+
+              Linus
