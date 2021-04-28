@@ -2,117 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2C7EC433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 16:50:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 027E9C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 16:57:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F0E161417
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 16:50:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE4A96143C
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 16:57:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241243AbhD1QvM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Apr 2021 12:51:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37416 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240643AbhD1QvI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Apr 2021 12:51:08 -0400
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADAD4C061574
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Apr 2021 09:50:21 -0700 (PDT)
-Received: by mail-lf1-x12d.google.com with SMTP id 124so19275385lff.5
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Apr 2021 09:50:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=0uZJAIRFioTiHNk4LTl3GPgwLpvR/tqMtufSg3nWhNk=;
-        b=MkEAqmIhebjBuyB/bFWJkeNmQq6+31Os4ltso3CHWcE/z6HMUwlD9kGKr75X1dcJZN
-         nhAkq4TFetgPc3bclHi1B1uRcqtiTIb2JBFDflUDC+XnR14QbDiaFEnR1UXNn7Agvs3p
-         CZs19Op5jQnv+sJsmNTa3kkHt1Kq8UyRB4q18=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=0uZJAIRFioTiHNk4LTl3GPgwLpvR/tqMtufSg3nWhNk=;
-        b=sa8GskvjrFkVTYDktHCK9w4N65b5jIOMOfioTwTMYPZ9RS3I0T4mTZBTNeF/heIK7p
-         O2oCbO4L2zAkO8Z3F7t2UXOL7MlXow/7XfhD0QRpYbpAQqwIA+beYQu4GrPlADQlOjnk
-         3hQrP079Ou/izIzovuL4NTPIV5urwPENPkAJ72u3Ux/yfMxWhRltUYu9Jonzz43WUPDY
-         rq9JQfFxo6dYaeEix2TGj86xTCEcyTjfg0Iaqk3pA/9nvQWuc5ckrwSmr34GjsKVlbar
-         PnA35/NnaAFb0UtYzSIQRjjYpVrI0HYvk8TKmQz/cxMqTr5J188mKXKOQJfMJEth1GSs
-         gDlA==
-X-Gm-Message-State: AOAM531Uq84rQYZinI0Z0Orubmg49LL3fScba17x28aEK7WUFl3qUask
-        tHhPFS9odVrNp93Qre2Lp3vLxM5aIXfPEjM8
-X-Google-Smtp-Source: ABdhPJzps/v1wAOcQDKIi8zf9Hsg+MAj2LNMqS4O0UPtV4oaDfYAVnqnEISCaRHc1oO16ojiEoxPRQ==
-X-Received: by 2002:a05:6512:304e:: with SMTP id b14mr21432227lfb.274.1619628620111;
-        Wed, 28 Apr 2021 09:50:20 -0700 (PDT)
-Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com. [209.85.167.45])
-        by smtp.gmail.com with ESMTPSA id j1sm87448lfk.235.2021.04.28.09.50.17
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Apr 2021 09:50:17 -0700 (PDT)
-Received: by mail-lf1-f45.google.com with SMTP id j4so60841840lfp.0
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Apr 2021 09:50:17 -0700 (PDT)
-X-Received: by 2002:ac2:5f92:: with SMTP id r18mr7706166lfe.253.1619628617003;
- Wed, 28 Apr 2021 09:50:17 -0700 (PDT)
+        id S241381AbhD1Q6A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Apr 2021 12:58:00 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:21933 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241290AbhD1Q57 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Apr 2021 12:57:59 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1619629034;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=1A9dvF/iFHXckxOMHvqAMkS/gfmi+QW2BPLZpRbNLkI=;
+        b=AA3mnqxSOAmbfiCqna+003SElEZtvflRbn9MkZL0D+2MhAZPBF7zcqkCb3Hz7zJ3fXZKmW
+        Ibj6CW7Rcd1hwHvJR788JSGlGjQwi3JZxHD8WZHT6SF7XeB+jwYnk8Eh34mlvYcxsba4zg
+        Ih32PbBnjz+p4cxGRkKuqUyxxV6lyTM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-447-9xvBA4ymNIWdznl-s2iwIw-1; Wed, 28 Apr 2021 12:57:12 -0400
+X-MC-Unique: 9xvBA4ymNIWdznl-s2iwIw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 37432C7400
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Apr 2021 16:57:11 +0000 (UTC)
+Received: from bfoster.redhat.com (ovpn-113-229.rdu2.redhat.com [10.10.113.229])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E9DCC5F9A6
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Apr 2021 16:57:10 +0000 (UTC)
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v5 0/3] xfs: set aside allocation btree blocks from block reservation
+Date:   Wed, 28 Apr 2021 12:57:07 -0400
+Message-Id: <20210428165710.385872-1-bfoster@redhat.com>
 MIME-Version: 1.0
-References: <20210427025805.GD3122264@magnolia> <CAHk-=wj6XUGJCgsr+hx3rz=4KvBP-kspn3dqG5v-cKMzzMktUw@mail.gmail.com>
- <20210427195727.GA9661@lst.de> <CAHk-=wjrpinf=8gAjxyPoXT0jbK6-U3Urawiykh-zpxeo47Vhg@mail.gmail.com>
- <20210428061706.GC5084@lst.de> <CAHk-=whWnFu4wztnOtySjFVYXmBR4Mb2wxrp6OayZqnpKeQw0g@mail.gmail.com>
- <20210428064110.GA5883@lst.de> <CAHk-=wjeUhrznxM95ni4z+ynMqhgKGsJUDU8g0vrDLc+fDtYWg@mail.gmail.com>
- <1de23de2-12a9-2b13-3b86-9fe4102fdc0c@rasmusvillemoes.dk>
-In-Reply-To: <1de23de2-12a9-2b13-3b86-9fe4102fdc0c@rasmusvillemoes.dk>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Wed, 28 Apr 2021 09:50:01 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wimsMqGdzik187YWLb-ru+iktb4MYbMQG1rnZ81dXYFVg@mail.gmail.com>
-Message-ID: <CAHk-=wimsMqGdzik187YWLb-ru+iktb4MYbMQG1rnZ81dXYFVg@mail.gmail.com>
-Subject: Re: [GIT PULL] iomap: new code for 5.13-rc1
-To:     Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <djwong@kernel.org>, Jia He <justin.he@arm.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[ Added Andy, who replied to the separate thread where Jia already
-posted the patch ]
+v5:
+- Tweak allocbt counter init logic to filter out rmapbt root block.
+v4: https://lore.kernel.org/linux-xfs/20210423131050.141140-1-bfoster@redhat.com/
+- Fix up perag res logic to not skip pagf init on partial res failure.
+- Split up set aside patch into separate counter mechanism and set aside
+  policy patches.
+- Drop unnecessary ->m_has_agresv flag as pagf's are always initialized
+  on filesystems with active reservations.
+v3: https://lore.kernel.org/linux-xfs/20210318161707.723742-1-bfoster@redhat.com/
+- Use a mount flag for easy detection of active perag reservation.
+- Filter rmapbt blocks from allocbt block accounting.
+v2: https://lore.kernel.org/linux-xfs/20210222152108.896178-1-bfoster@redhat.com/
+- Use an atomic counter instead of a percpu counter.
+v1: https://lore.kernel.org/linux-xfs/20210217132339.651020-1-bfoster@redhat.com/
 
-On Wed, Apr 28, 2021 at 12:38 AM Rasmus Villemoes
-<linux@rasmusvillemoes.dk> wrote:
->
-> So the patch makes sense to me. If somebody says '%pD5', it would get
-> capped at 4 instead of being forced down to 1. But note that while that
-> grep only produces ~36 hits, it also affects %pd, of which there are
-> ~200 without a 2-4 following (including some vsprintf test cases that
-> would break). So I think one would first have to explicitly support '1',
-> switch over some users by adding that 1 in their format string
-> (test_vsprintf in particular), then flip the default for 'no digit
-> following %p[dD]'.
+Brian Foster (3):
+  xfs: unconditionally read all AGFs on mounts with perag reservation
+  xfs: introduce in-core global counter of allocbt blocks
+  xfs: set aside allocation btree blocks from block reservation
 
-Yeah, and the "show one name" actually makes sense for "%pd", because
-that's about the *dentry*.
+ fs/xfs/libxfs/xfs_ag_resv.c     | 34 ++++++++++++++++++++++-----------
+ fs/xfs/libxfs/xfs_alloc.c       | 14 ++++++++++++++
+ fs/xfs/libxfs/xfs_alloc_btree.c |  2 ++
+ fs/xfs/xfs_mount.c              | 15 ++++++++++++++-
+ fs/xfs/xfs_mount.h              |  6 ++++++
+ 5 files changed, 59 insertions(+), 12 deletions(-)
 
-A dentry has a parent, yes, but at the same time, a dentry really does
-inherently have "one name" (and given just the dentry pointers, you
-can't show mount-related parenthood, so in many ways the "show just
-one name" makes sense for "%pd" in ways it doesn't necessarily for
-"%pD"). But while a dentry arguably has that "one primary component",
-a _file_ is certainly not exclusively about that last component.
+-- 
+2.26.3
 
-So you're right - my "how about something like this" patch is too
-simplistic. The default number of components to show should be about
-whether it's %pd or %pD.
-
-That also does explain the arguably odd %pD defaults: %pd came first,
-and then %pD came afterwards.
-
-              Linus
