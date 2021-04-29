@@ -4,145 +4,181 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EBDDC433ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 23:04:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28CABC433B4
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Apr 2021 00:31:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 707C761449
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Apr 2021 23:04:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE44A613F9
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Apr 2021 00:31:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229593AbhD1XFQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Apr 2021 19:05:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44626 "EHLO mail.kernel.org"
+        id S239147AbhD2AcV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Apr 2021 20:32:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37122 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229931AbhD1XFN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Apr 2021 19:05:13 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 48A9361446;
-        Wed, 28 Apr 2021 23:04:27 +0000 (UTC)
+        id S232095AbhD2AcV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Apr 2021 20:32:21 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 74B00613F1;
+        Thu, 29 Apr 2021 00:31:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1619651067;
-        bh=q/CzyC3euGvIjFdsbUrJMSKMIWifs7+0x03T8+BKcFc=;
+        s=k20201202; t=1619656295;
+        bh=bUZUk3/VXTuz79JMYVLsmHrNM1DhXmXyHyuHH0HAVow=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ks72sVbsuBvx2aLlxK34NXiSN0ph7CX9TI2sgrySd+ahl6N3QE3KcRL3gad1xVgiv
-         RzurCDmVlp5PIRz8b6qzH9ZXie9/2d4k5ZXxxDJVzUTEX170sn027830K6fHS16IYJ
-         xGUx7EqnfBsPRPcMUF7XJyWBpbxTWm5nLcYQ6YZQAPRMV6P26z8sqC8rpZOwVWlIhM
-         c2js52n7+8edT3Umy9qLEHQwDWHNYnH1moEv65FrszFbzeVLlLxt66/br+k3MBRJRG
-         txp75uhh4tUGxoUwxkxA7as/YEHt30wxwGmPMZ7m7FRD7am+Wb6CfFwrogy2JYm9mr
-         axIdqiJ4vUZCA==
-Date:   Wed, 28 Apr 2021 16:04:27 -0700
+        b=ntsVZcXb9YhGMXoRvS2+vVs+ec8KHIPGI+VJo1Tw6J48+PQYKYbkb332zPwRYJQlI
+         NhqYvW2yxE3q2eG4rZhJJREKbRZTtR3eJLZGjQAX4hwcC9RLlBRHaL8ZjTN3ov2N9b
+         D4nn5rTgjHsowoIp6ToFlpP2wNOA5Dvn+ZFdHLDoxJVe7eez9TNEsH7/t982UzlBX1
+         E0B2pcN3PLK76YvokpZvDs5BB/iw78/6wechB+AJM36M34jsQOPERVJUTi4ShbjVHc
+         Q7SaLzUKkHoTe7AdjXXVaIdHZm7KeB3qPfnHEKvIsDeW7LJYT5nDx4yH42AA5zTZCF
+         iv1iqbVGdMBIg==
+Date:   Wed, 28 Apr 2021 17:31:35 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v5 2/3] xfs: introduce in-core global counter of allocbt
- blocks
-Message-ID: <20210428230427.GK3122264@magnolia>
-References: <20210428165710.385872-1-bfoster@redhat.com>
- <20210428165710.385872-3-bfoster@redhat.com>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCH 1/2] xfs: test what happens when we reset the root dir
+ and it has xattrs
+Message-ID: <20210429003135.GL3122264@magnolia>
+References: <161958291787.3452247.15296911612919535588.stgit@magnolia>
+ <161958292387.3452247.4459342156885074164.stgit@magnolia>
+ <YImdkx6ofgQ1t8CD@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210428165710.385872-3-bfoster@redhat.com>
+In-Reply-To: <YImdkx6ofgQ1t8CD@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 28, 2021 at 12:57:09PM -0400, Brian Foster wrote:
-> Introduce an in-core counter to track the sum of all allocbt blocks
-> used by the filesystem. This value is currently tracked per-ag via
-> the ->agf_btreeblks field in the AGF, which also happens to include
-> rmapbt blocks. A global, in-core count of allocbt blocks is required
-> to identify the subset of global ->m_fdblocks that consists of
-> unavailable blocks currently used for allocation btrees. To support
-> this calculation at block reservation time, construct a similar
-> global counter for allocbt blocks, populate it on first read of each
-> AGF and update it as allocbt blocks are used and released.
+On Wed, Apr 28, 2021 at 01:38:27PM -0400, Brian Foster wrote:
+> On Tue, Apr 27, 2021 at 09:08:43PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Make sure that we can reset the root directory and the xattrs are erased
+> > properly.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  tests/xfs/757     |   63 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/757.out |    7 ++++++
+> >  tests/xfs/group   |    1 +
+> >  3 files changed, 71 insertions(+)
+> >  create mode 100755 tests/xfs/757
+> >  create mode 100644 tests/xfs/757.out
+> > 
+> > 
+> > diff --git a/tests/xfs/757 b/tests/xfs/757
+> > new file mode 100755
+> > index 00000000..0b9914f6
+> > --- /dev/null
+> > +++ b/tests/xfs/757
+> > @@ -0,0 +1,63 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0-or-later
+> > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 757
+> > +#
+> > +# Make sure that attrs are handled properly when repair has to reset the root
+> > +# directory.
+> > +#
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -rf $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +. ./common/populate
+> > +. ./common/fuzzy
+> > +
+> > +# real QA test starts here
+> > +_supported_fs xfs
+> > +_require_scratch_nocheck
+> > +
+> > +rm -f $seqres.full
+> > +
+> > +echo "Format and populate btree attr root dir"
+> > +_scratch_mkfs > "$seqres.full" 2>&1
+> > +_scratch_mount
+> > +
+> > +blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+> > +__populate_create_attr "${SCRATCH_MNT}" "$((64 * blksz / 40))" true
+> > +_scratch_unmount
+> > +
+> > +echo "Break the root directory"
+> > +_scratch_xfs_fuzz_metadata_field core.mode zeroes 'sb 0' 'addr rootino' >> $seqres.full 2>&1
+> > +
+> > +echo "Detect bad root directory"
+> > +_scratch_xfs_repair -n >> $seqres.full 2>&1 && \
+> > +	echo "Should have detected bad root dir"
+> > +
+> > +echo "Fix bad root directory"
+> > +_scratch_xfs_repair >> $seqres.full 2>&1
+> > +
+> > +echo "Detect fixed root directory"
+> > +_scratch_xfs_repair -n >> $seqres.full 2>&1
+> > +
+> > +echo "Mount test"
+> > +_scratch_mount
+> > +
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> Is the regression test here that attrs are erased after this sequence
+> (as suggested in the commit log), or that the fs mounts, or both? I'm
+> basically just wondering if we should also dump the xattrs on the root
+> dir as a last step (and expect NULL output)..? That aside:
 
-Looks better, let's see what happens when I throw it at fstests...
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+I've been racking my brain trying to remember where this test came from.
+IIRC it was some xfs_repair segfault bug that I came across last
+September.  It would manifest if the root dir had xattrs attached and
+repair decided to nuke the root directory, but there aren't any obvious
+patches, and I've totally forgotten the original context.  It might have
+related to Dave or someone noticing that things didn't quite work with a
+filesystem that had selinux enabled and the root dir got corrupt...?
+
+Either way, thanks for the reviews :)
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_alloc.c       | 14 ++++++++++++++
->  fs/xfs/libxfs/xfs_alloc_btree.c |  2 ++
->  fs/xfs/xfs_mount.h              |  6 ++++++
->  3 files changed, 22 insertions(+)
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index aaa19101bb2a..b6a082348e46 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -3036,6 +3036,7 @@ xfs_alloc_read_agf(
->  	struct xfs_agf		*agf;		/* ag freelist header */
->  	struct xfs_perag	*pag;		/* per allocation group data */
->  	int			error;
-> +	int			allocbt_blks;
->  
->  	trace_xfs_alloc_read_agf(mp, agno);
->  
-> @@ -3066,6 +3067,19 @@ xfs_alloc_read_agf(
->  		pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
->  		pag->pagf_init = 1;
->  		pag->pagf_agflreset = xfs_agfl_needs_reset(mp, agf);
-> +
-> +		/*
-> +		 * Update the in-core allocbt counter. Filter out the rmapbt
-> +		 * subset of the btreeblks counter because the rmapbt is managed
-> +		 * by perag reservation. Subtract one for the rmapbt root block
-> +		 * because the rmap counter includes it while the btreeblks
-> +		 * counter only tracks non-root blocks.
-> +		 */
-> +		allocbt_blks = pag->pagf_btreeblks;
-> +		if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> +			allocbt_blks -= be32_to_cpu(agf->agf_rmap_blocks) - 1;
-> +		if (allocbt_blks > 0)
-> +			atomic64_add(allocbt_blks, &mp->m_allocbt_blks);
->  	}
->  #ifdef DEBUG
->  	else if (!XFS_FORCED_SHUTDOWN(mp)) {
-> diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-> index 8e01231b308e..9f5a45f7baed 100644
-> --- a/fs/xfs/libxfs/xfs_alloc_btree.c
-> +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-> @@ -71,6 +71,7 @@ xfs_allocbt_alloc_block(
->  		return 0;
->  	}
->  
-> +	atomic64_inc(&cur->bc_mp->m_allocbt_blks);
->  	xfs_extent_busy_reuse(cur->bc_mp, cur->bc_ag.agno, bno, 1, false);
->  
->  	xfs_trans_agbtree_delta(cur->bc_tp, 1);
-> @@ -95,6 +96,7 @@ xfs_allocbt_free_block(
->  	if (error)
->  		return error;
->  
-> +	atomic64_dec(&cur->bc_mp->m_allocbt_blks);
->  	xfs_extent_busy_insert(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1,
->  			      XFS_EXTENT_BUSY_SKIP_DISCARD);
->  	xfs_trans_agbtree_delta(cur->bc_tp, -1);
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 81829d19596e..bb67274ee23f 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -170,6 +170,12 @@ typedef struct xfs_mount {
->  	 * extents or anything related to the rt device.
->  	 */
->  	struct percpu_counter	m_delalloc_blks;
-> +	/*
-> +	 * Global count of allocation btree blocks in use across all AGs. Only
-> +	 * used when perag reservation is enabled. Helps prevent block
-> +	 * reservation from attempting to reserve allocation btree blocks.
-> +	 */
-> +	atomic64_t		m_allocbt_blks;
->  
->  	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
->  	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
-> -- 
-> 2.26.3
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/757.out b/tests/xfs/757.out
+> > new file mode 100644
+> > index 00000000..9f3aed5a
+> > --- /dev/null
+> > +++ b/tests/xfs/757.out
+> > @@ -0,0 +1,7 @@
+> > +QA output created by 757
+> > +Format and populate btree attr root dir
+> > +Break the root directory
+> > +Detect bad root directory
+> > +Fix bad root directory
+> > +Detect fixed root directory
+> > +Mount test
+> > diff --git a/tests/xfs/group b/tests/xfs/group
+> > index 731f869c..76e31167 100644
+> > --- a/tests/xfs/group
+> > +++ b/tests/xfs/group
+> > @@ -528,5 +528,6 @@
+> >  537 auto quick
+> >  538 auto stress
+> >  539 auto quick mount
+> > +757 auto quick attr repair
+> >  908 auto quick bigtime
+> >  909 auto quick bigtime quota
+> > 
 > 
