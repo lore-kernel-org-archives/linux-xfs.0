@@ -2,75 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECB28C433ED
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Apr 2021 19:24:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A220BC433ED
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Apr 2021 00:40:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C01226144E
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Apr 2021 19:24:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F79C61450
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Apr 2021 00:40:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229965AbhD2TYq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Apr 2021 15:24:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33850 "EHLO mail.kernel.org"
+        id S229534AbhD3AlD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Apr 2021 20:41:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35184 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231631AbhD2TUI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Apr 2021 15:20:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 523A26143A;
-        Thu, 29 Apr 2021 19:19:05 +0000 (UTC)
+        id S229519AbhD3AlA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Apr 2021 20:41:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D195B613F7
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Apr 2021 00:40:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1619723945;
-        bh=zaHmnMI1qm7aj0odMUw1v/NysGsQ/7dYEMqbptg8O84=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GdDDOlb+e7KfUYg1DV7rjB5mWL8mlH23+G9PXxSwN7bjqvcCIwEtsBOyYTk+OTCOS
-         6Hf3UykjYfoWKnsGTatt2dqLzcecWcnTKVhc0JnV6f9pcLNSHtAzVMkERjecprYZJB
-         wMeoGhSg1TSZ/CqxcDSKkp6q/O6XWe8cei/E8dLv0xElpnkiHbjmB8W8QgQEVkzM+d
-         q1w6L46o9kgkMdKCJctMdY3hYm3+nMhXWGFLPd7tuSaTXPhr3PpTIEMepQzbxpgg7M
-         cd7/QJD6TMIJXvn6whkF3VkWTJ2nfY2x0RsqRl7hkTY5niwJvNnSkRmQSY4j0T+A73
-         FgYgRpuQ0Rg2A==
-Date:   Thu, 29 Apr 2021 12:19:04 -0700
+        s=k20201202; t=1619743212;
+        bh=i/HCYgJ1q4dYVa6qpxt2WPsWEC+6TboTHrJykpffiOk=;
+        h=Date:From:To:Subject:From;
+        b=DR+WF0s8XOh0ZKKcgV2sbeEj+sboQ+HE0Vtk69vLmmaw+7oM6rcHC5iGsAvy+LfWi
+         5m3JO+JYDOI+TIEHmMXtlgcwkXFpqeZA8y9YpR+h9SKjUMTXBwFhLxNFSgvjYgCMc5
+         c9rEy0fex+bLP0GgJD/frE3Kyv/hZ+Le84wZjiwR0U37O1VFqURoREperAF6VtWALi
+         KDnUHPnUT9uFfAHmjFwJWWk5VvLuCDBWpt97ysWAk2oh6iYd7dDqg61rjJu2IaA+gN
+         1f9dQrqub3r7RdmuevB7eoYejZhbVhbEaBMdQlF+S3i0XD1J8qLGQp8/U+p/r6QH5n
+         R6hbTeKvwLq3w==
+Date:   Thu, 29 Apr 2021 17:40:12 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [GIT PULL] xfs: new code for 5.13
-Message-ID: <20210429191904.GN3122264@magnolia>
-References: <20210429170619.GM3122264@magnolia>
- <CAHk-=wgpn570yfA+EM5yZ0T-m0c5jnLcx3WGSu3xR8E4DGvCFg@mail.gmail.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: don't allow log writes if the data device is readonly
+Message-ID: <20210430004012.GO3122264@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHk-=wgpn570yfA+EM5yZ0T-m0c5jnLcx3WGSu3xR8E4DGvCFg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 29, 2021 at 10:50:51AM -0700, Linus Torvalds wrote:
-> On Thu, Apr 29, 2021 at 10:06 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > Unfortunately, some of our refactoring work collided with Miklos'
-> > patchset that refactors FS_IOC_[GS]ETFLAGS and FS_IOC_FS[GS]ETXATTR.
-> 
-> Ok, the resolution looked reasonably straightforward to me, and I
-> ended up with what looks like the same end result you did.
-> 
-> But I only did a visual inspection of our --cc diffs (you seem to use
-> --patience, which made my initial diff look different) and obviously
-> verified that it all builds cleanly, I didn't do any actual testing.
-> 
-> So please double-check that everything still looks good,
+From: Darrick J. Wong <djwong@kernel.org>
 
-At a first glance it looks good to me, thanks. :)
+While running generic/050 with an external log, I observed this warning
+in dmesg:
 
-(Currently running fstests to double-check...)
+Trying to write to read-only block-device sda4 (partno 4)
+WARNING: CPU: 2 PID: 215677 at block/blk-core.c:704 submit_bio_checks+0x256/0x510
+Call Trace:
+ submit_bio_noacct+0x2c/0x430
+ _xfs_buf_ioapply+0x283/0x3c0 [xfs]
+ __xfs_buf_submit+0x6a/0x210 [xfs]
+ xfs_buf_delwri_submit_buffers+0xf8/0x270 [xfs]
+ xfsaild+0x2db/0xc50 [xfs]
+ kthread+0x14b/0x170
 
---D
+I think this happened because we tried to cover the log after a readonly
+mount, and the AIL tried to write the primary superblock to the data
+device.  The test marks the data device readonly, but it doesn't do the
+same to the external log device.  Therefore, XFS thinks that the log is
+writable, even though AIL writes whine to dmesg because the data device
+is read only.
 
-> 
->                  Linus
+Fix this by amending xfs_log_writable to prevent writes when the AIL
+can't possible write anything into the filesystem.
+
+Note: As for the external log or the rt devices being readonly--
+xfs_blkdev_get will complain about that if we aren't doing a norecovery
+mount.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_log.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 06041834daa3..e4839f22ec07 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -358,12 +358,14 @@ xfs_log_writable(
+ 	 * Never write to the log on norecovery mounts, if the block device is
+ 	 * read-only, or if the filesystem is shutdown. Read-only mounts still
+ 	 * allow internal writes for log recovery and unmount purposes, so don't
+-	 * restrict that case here.
++	 * restrict that case here unless the data device is also readonly.
+ 	 */
+ 	if (mp->m_flags & XFS_MOUNT_NORECOVERY)
+ 		return false;
+ 	if (xfs_readonly_buftarg(mp->m_log->l_targ))
+ 		return false;
++	if (xfs_readonly_buftarg(mp->m_ddev_targp))
++		return false;
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return false;
+ 	return true;
