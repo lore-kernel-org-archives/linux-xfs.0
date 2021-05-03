@@ -7,37 +7,36 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ACC8C433B4
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 May 2021 21:34:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D494C433B4
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 May 2021 21:34:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46F22611AC
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 May 2021 21:34:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3E06611AC
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 May 2021 21:34:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229499AbhECVfn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 May 2021 17:35:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41444 "EHLO mail.kernel.org"
+        id S229607AbhECVft (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 May 2021 17:35:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41512 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229497AbhECVfn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 May 2021 17:35:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 57DF2611AD;
-        Mon,  3 May 2021 21:34:49 +0000 (UTC)
+        id S229497AbhECVfs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 May 2021 17:35:48 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EA647611AC;
+        Mon,  3 May 2021 21:34:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620077689;
-        bh=Cr2dHaG1MgH1I7FimyecIuisZhHUqfQELJ+TewKOMbA=;
+        s=k20201202; t=1620077695;
+        bh=yhrc0FfyvVnfaZE4PKu9dshwPFjjBHfQ9yHqkyRUjfs=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=o2UCVxzlNaLY8CyqKPe81GGT5f/dvwojdIHbwvQiNgAL55AVOJGPH9CxCjEKRHOCC
-         ciPrekvAAwrUP4pAYy2NSe2JhwS7wAPGVhvMvEJCoz/e51Q72fXTXRWulLrR59SvgX
-         6ePoEftdPAaTIhn0KlZ8jgnfhn2Fmbdb9/Mvb6KRRq8NGhnvUNlHIFa3Mu6/Wj/irC
-         dbkM3ZWYqxrO2vWoj6ALk888N2LgTcDW/UPV8n3a35NnVhdbQp5fu7tBluY+9zEt5o
-         HBW9i/elodgFD3ZtAISawasq12WFFWo4Zb5lRTyRL40dvBtAm8GULo2EWc0cpMqZu1
-         t1MNc8/Yq0WqQ==
-Subject: [PATCH 1/2] xfs: adjust rt allocation minlen when extszhint >
- rtextsize
+        b=HfrkZRt8rkfqLkDiIDBGh0NrrnqRUmtG55McdjIuV7spmCnDayY23YAf1T6Q8+f5Y
+         sFarMFBk0OSj1myevkKwWY0r4x7aj+H1FzA9cdPh2ZoshACwdAyGb5SJVYL14jFsDF
+         HLZe7tKTrkTup/u3OZNnJwfF+4Xewiv3G03foAEwVCCEIMig58VVopnzlFOi9D7gfH
+         ka6fg+UGE079jUQf9+Osu0gikfOI5mvaey+rCjwBUOqmGX/8X3ysN5LUpXH5nvyspa
+         kYwkD90QjbKw64P13so3GIUbh5B0ghrvTJjEgXwBbgTgqCRnWUqla1g7UkELHU4CCJ
+         gZRoe24SDWv9Q==
+Subject: [PATCH 2/2] xfs: retry allocations when locality-based search fails
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 03 May 2021 14:34:49 -0700
-Message-ID: <162007768898.836421.2999725068692265955.stgit@magnolia>
+Date:   Mon, 03 May 2021 14:34:54 -0700
+Message-ID: <162007769456.836421.14886406791989530317.stgit@magnolia>
 In-Reply-To: <162007768318.836421.15582644026342097489.stgit@magnolia>
 References: <162007768318.836421.15582644026342097489.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,154 +49,59 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-xfs_bmap_rtalloc doesn't handle realtime extent files with extent size
-hints larger than the rt volume's extent size properly, because
-xfs_bmap_extsize_align can adjust the offset/length parameters to try to
-fit the extent size hint.
+If a realtime allocation fails because we can't find a sufficiently
+large free extent satisfying locality rules, relax the locality rules
+and try again.  This reduces the occurrence of short writes to realtime
+files when the write size is large and the free space is fragmented.
 
-Under these conditions, minlen has to be large enough so that any
-allocation returned by xfs_rtallocate_extent will be large enough to
-cover at least one of the blocks that the caller asked for.  If the
-allocation is too short, bmapi_write will return no mapping for the
-requested range, which causes ENOSPC errors in other parts of the
-filesystem.
-
-Therefore, adjust minlen upwards to fix this.  This can be found by
-running generic/263 (g/127 or g/522) with a realtime extent size hint
-that's larger than the rt volume extent size.
+This was originally discovered by running generic/186 with the realtime
+reflink patchset and a 128k cow extent size hint, but the same problem
+can manifest with a 128k extent size hint, so applies the fix now.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_util.c |   81 +++++++++++++++++++++++++++++++++---------------
- 1 file changed, 56 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_bmap_util.c |   15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
 
 diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index a5e9d7d34023..c9381bf4f04b 100644
+index c9381bf4f04b..0936f3a96fe6 100644
 --- a/fs/xfs/xfs_bmap_util.c
 +++ b/fs/xfs/xfs_bmap_util.c
-@@ -71,18 +71,23 @@ xfs_zero_extent(
- #ifdef CONFIG_XFS_RT
- int
- xfs_bmap_rtalloc(
--	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
-+	struct xfs_bmalloca	*ap)
- {
--	int		error;		/* error return value */
--	xfs_mount_t	*mp;		/* mount point structure */
--	xfs_extlen_t	prod = 0;	/* product factor for allocators */
--	xfs_extlen_t	mod = 0;	/* product factor for allocators */
--	xfs_extlen_t	ralen = 0;	/* realtime allocation length */
--	xfs_extlen_t	align;		/* minimum allocation alignment */
--	xfs_rtblock_t	rtb;
-+	struct xfs_mount	*mp = ap->ip->i_mount;
-+	xfs_fileoff_t		orig_offset = ap->offset;
-+	xfs_rtblock_t		rtb;
-+	xfs_extlen_t		prod = 0;  /* product factor for allocators */
-+	xfs_extlen_t		mod = 0;   /* product factor for allocators */
-+	xfs_extlen_t		ralen = 0; /* realtime allocation length */
-+	xfs_extlen_t		align;     /* minimum allocation alignment */
-+	xfs_extlen_t		orig_length = ap->length;
-+	xfs_extlen_t		minlen = mp->m_sb.sb_rextsize;
-+	xfs_extlen_t		raminlen;
-+	bool			rtlocked = false;
-+	int			error;
+@@ -84,6 +84,7 @@ xfs_bmap_rtalloc(
+ 	xfs_extlen_t		minlen = mp->m_sb.sb_rextsize;
+ 	xfs_extlen_t		raminlen;
+ 	bool			rtlocked = false;
++	bool			ignore_locality = false;
+ 	int			error;
  
--	mp = ap->ip->i_mount;
  	align = xfs_get_extsz_hint(ap->ip);
-+retry:
- 	prod = align / mp->m_sb.sb_rextsize;
- 	error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
- 					align, 1, ap->eof, 0,
-@@ -92,6 +97,15 @@ xfs_bmap_rtalloc(
- 	ASSERT(ap->length);
- 	ASSERT(ap->length % mp->m_sb.sb_rextsize == 0);
- 
-+	/*
-+	 * If we shifted the file offset downward to satisfy an extent size
-+	 * hint, increase minlen by that amount so that the allocator won't
-+	 * give us an allocation that's too short to cover at least one of the
-+	 * blocks that the caller asked for.
-+	 */
-+	if (ap->offset != orig_offset)
-+		minlen += orig_offset - ap->offset;
-+
+@@ -158,7 +159,10 @@ xfs_bmap_rtalloc(
  	/*
- 	 * If the offset & length are not perfectly aligned
- 	 * then kill prod, it will just get us in trouble.
-@@ -116,10 +130,13 @@ xfs_bmap_rtalloc(
- 	/*
- 	 * Lock out modifications to both the RT bitmap and summary inodes
+ 	 * Realtime allocation, done through xfs_rtallocate_extent.
  	 */
--	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL|XFS_ILOCK_RTBITMAP);
--	xfs_trans_ijoin(ap->tp, mp->m_rbmip, XFS_ILOCK_EXCL);
--	xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL|XFS_ILOCK_RTSUM);
--	xfs_trans_ijoin(ap->tp, mp->m_rsumip, XFS_ILOCK_EXCL);
-+	if (!rtlocked) {
-+		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL|XFS_ILOCK_RTBITMAP);
-+		xfs_trans_ijoin(ap->tp, mp->m_rbmip, XFS_ILOCK_EXCL);
-+		xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL|XFS_ILOCK_RTSUM);
-+		xfs_trans_ijoin(ap->tp, mp->m_rsumip, XFS_ILOCK_EXCL);
-+		rtlocked = true;
-+	}
- 
- 	/*
- 	 * If it's an allocation to an empty file at offset 0,
-@@ -144,30 +161,44 @@ xfs_bmap_rtalloc(
- 	do_div(ap->blkno, mp->m_sb.sb_rextsize);
+-	do_div(ap->blkno, mp->m_sb.sb_rextsize);
++	if (ignore_locality)
++		ap->blkno = 0;
++	else
++		do_div(ap->blkno, mp->m_sb.sb_rextsize);
  	rtb = ap->blkno;
  	ap->length = ralen;
--	error = xfs_rtallocate_extent(ap->tp, ap->blkno, 1, ap->length,
--				&ralen, ap->wasdel, prod, &rtb);
-+	raminlen = max_t(xfs_extlen_t, 1, minlen / mp->m_sb.sb_rextsize);
-+	error = xfs_rtallocate_extent(ap->tp, ap->blkno, raminlen, ap->length,
-+			&ralen, ap->wasdel, prod, &rtb);
- 	if (error)
- 		return error;
- 
--	ap->blkno = rtb;
--	if (ap->blkno != NULLFSBLOCK) {
--		ap->blkno *= mp->m_sb.sb_rextsize;
--		ralen *= mp->m_sb.sb_rextsize;
--		ap->length = ralen;
--		ap->ip->i_nblocks += ralen;
-+	if (rtb != NULLRTBLOCK) {
-+		ap->blkno = rtb * mp->m_sb.sb_rextsize;
-+		ap->length = ralen * mp->m_sb.sb_rextsize;
-+		ap->ip->i_nblocks += ap->length;
- 		xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
- 		if (ap->wasdel)
--			ap->ip->i_delayed_blks -= ralen;
-+			ap->ip->i_delayed_blks -= ap->length;
- 		/*
- 		 * Adjust the disk quota also. This was reserved
- 		 * earlier.
- 		 */
- 		xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
- 			ap->wasdel ? XFS_TRANS_DQ_DELRTBCOUNT :
--					XFS_TRANS_DQ_RTBCOUNT, (long) ralen);
--	} else {
--		ap->length = 0;
-+					XFS_TRANS_DQ_RTBCOUNT, ap->length);
-+		return 0;
+ 	raminlen = max_t(xfs_extlen_t, 1, minlen / mp->m_sb.sb_rextsize);
+@@ -197,6 +201,15 @@ xfs_bmap_rtalloc(
+ 		goto retry;
  	}
-+
-+	if (align > mp->m_sb.sb_rextsize) {
+ 
++	if (!ignore_locality && ap->blkno != 0) {
 +		/*
-+		 * We previously enlarged the request length to try to satisfy
-+		 * an extent size hint.  The allocator didn't return anything,
-+		 * so reset the parameters to the original values and try again
-+		 * without alignment criteria.
++		 * If we can't allocate near a specific rt extent, try again
++		 * without locality criteria.
 +		 */
-+		ap->offset = orig_offset;
-+		ap->length = orig_length;
-+		minlen = align = mp->m_sb.sb_rextsize;
++		ignore_locality = true;
 +		goto retry;
 +	}
 +
-+	ap->blkno = NULLFSBLOCK;
-+	ap->length = 0;
+ 	ap->blkno = NULLFSBLOCK;
+ 	ap->length = 0;
  	return 0;
- }
- #endif /* CONFIG_XFS_RT */
 
