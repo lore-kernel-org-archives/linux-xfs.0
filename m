@@ -2,123 +2,64 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B295C433B4
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 May 2021 12:18:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1D3AC433ED
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 May 2021 13:22:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39F42611CE
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 May 2021 12:18:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D63D61208
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 May 2021 13:22:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233204AbhECMTN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 May 2021 08:19:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:51670 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230425AbhECMTN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 May 2021 08:19:13 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620044299;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=1M3TL/ENh7inMcV/3kFYJgopO+Di9gLXwMh5L/FD00Q=;
-        b=BG190kGI4ui9iLVliTcgI4fb1O16TLBkWqQKiZwFYN/xCvB7J+cKD4guX40i6KelYcO6B4
-        KzznDHliJWYJLdD98HFHLOPkrPvlbsgbcGaWhzA61JVQc7g6YRhij+0hBH72/q7+gyMKgJ
-        1mOo+LyRsX+/8868QbmxW778B5g0Gpc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-229-op_efiVXPcOiqa4rpwvqCA-1; Mon, 03 May 2021 08:18:17 -0400
-X-MC-Unique: op_efiVXPcOiqa4rpwvqCA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S234142AbhECNXQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 May 2021 09:23:16 -0400
+Received: from sandeen.net ([63.231.237.45]:51790 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233592AbhECNXP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 May 2021 09:23:15 -0400
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E5745803622
-        for <linux-xfs@vger.kernel.org>; Mon,  3 May 2021 12:18:16 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-112-255.phx2.redhat.com [10.3.112.255])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A9C3B60C4A
-        for <linux-xfs@vger.kernel.org>; Mon,  3 May 2021 12:18:16 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH RFC] xfs: hold buffer across unpin and potential shutdown processing
-Date:   Mon,  3 May 2021 08:18:16 -0400
-Message-Id: <20210503121816.561340-1-bfoster@redhat.com>
+        by sandeen.net (Postfix) with ESMTPSA id A441D16C14D;
+        Mon,  3 May 2021 08:22:17 -0500 (CDT)
+To:     listac@nebelschwaden.de, xfs <linux-xfs@vger.kernel.org>
+References: <993c93fc-56e7-8c81-8f92-4e203b6e68dd@nebelschwaden.de>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: current maximum stripe unit size?
+Message-ID: <43d4d941-e07a-9a75-daad-a9dbcae8da0e@sandeen.net>
+Date:   Mon, 3 May 2021 08:22:21 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.10.0
 MIME-Version: 1.0
+In-Reply-To: <993c93fc-56e7-8c81-8f92-4e203b6e68dd@nebelschwaden.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The special processing used to simulate a buffer I/O failure on fs
-shutdown has a difficult to reproduce race that can result in a use
-after free of the associated buffer. Consider a buffer that has been
-committed to the on-disk log and thus is AIL resident. The buffer
-lands on the writeback delwri queue, but is subsequently locked,
-committed and pinned by another transaction before submitted for
-I/O. At this point, the buffer is stuck on the delwri queue as it
-cannot be submitted for I/O until it is unpinned. A log checkpoint
-I/O failure occurs sometime later, which aborts the bli. The unpin
-handler is called with the aborted log item, drops the bli reference
-count, the pin count, and falls into the I/O failure simulation
-path.
 
-The potential problem here is that once the pin count falls to zero
-in ->iop_unpin(), xfsaild is free to retry delwri submission of the
-buffer at any time, before the unpin handler even completes. If
-delwri queue submission wins the race to the buffer lock, it
-observes the shutdown state and simulates the I/O failure itself.
-This releases both the bli and delwri queue holds and frees the
-buffer while xfs_buf_item_unpin() sits on xfs_buf_lock() waiting to
-run through the same failure sequence. This problem is rare and
-requires many iterations of fstest generic/019 (which simulates disk
-I/O failures) to reproduce.
 
-To avoid this problem, hold the buffer across the unpin sequence in
-xfs_buf_item_unpin(). This is a bit unfortunate in that the new hold
-is unconditional while really only necessary for a rare, fatal error
-scenario, but it guarantees the buffer still exists in the off
-chance that the handler attempts to access it.
+On 4/29/21 9:10 AM, Ede Wolf wrote:
+> Hello,
+> 
+> having found different values, as of Kernel 5.10, what is the maximum allowed size in K for stripe units?
+> 
+> I came across limits from 64k - 256k
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+Where did you read that?
 
-This is a patch I've had around for a bit for a very rare corner case I
-was able to reproduce in some past testing. I'm sending this as RFC
-because I'm curious if folks have any thoughts on the approach. I'd be
-Ok with this change as is, but I think there are alternatives available
-too. We could do something fairly simple like bury the hold in the
-remove (abort) case only, or perhaps consider checking IN_AIL state
-before the pin count drops and base on that (though that seems a bit
-more fragile to me). Thoughts?
+> , but the documentation  always seemed quite aged.
 
-Brian
+Current mkfs limits are UINT_MAX for stripe unit and stripe width (so width is the effective limiter in most cases)
 
- fs/xfs/xfs_buf_item.c | 2 ++
- 1 file changed, 2 insertions(+)
+Interestingly, in the kernel the limit on swidth is INT_MAX. In any case, quite large.
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index fb69879e4b2b..a1ad6901eb15 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -504,6 +504,7 @@ xfs_buf_item_unpin(
- 
- 	freed = atomic_dec_and_test(&bip->bli_refcount);
- 
-+	xfs_buf_hold(bp);
- 	if (atomic_dec_and_test(&bp->b_pin_count))
- 		wake_up_all(&bp->b_waiters);
- 
-@@ -560,6 +561,7 @@ xfs_buf_item_unpin(
- 		bp->b_flags |= XBF_ASYNC;
- 		xfs_buf_ioend_fail(bp);
- 	}
-+	xfs_buf_rele(bp);
- }
- 
- STATIC uint
--- 
-2.26.3
+(However, the /log/ stripe unit has a limit of 256; if the data stripe unit is larger, the log stripe unit will automatically be reduced.)
+
+-Eric
+
+> Thanks
 
