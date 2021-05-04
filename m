@@ -2,64 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12CC5C433B4
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 May 2021 07:20:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58F01C433ED
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 May 2021 08:57:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E5106613B4
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 May 2021 07:20:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3165B613B3
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 May 2021 08:57:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229993AbhEDHV0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 May 2021 03:21:26 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:36283 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229839AbhEDHV0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 May 2021 03:21:26 -0400
-Received: from dread.disaster.area (pa49-179-143-157.pa.nsw.optusnet.com.au [49.179.143.157])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 0914166D67
-        for <linux-xfs@vger.kernel.org>; Tue,  4 May 2021 17:20:30 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ldpM5-002fzJ-8e
-        for linux-xfs@vger.kernel.org; Tue, 04 May 2021 17:20:29 +1000
-Date:   Tue, 4 May 2021 17:20:29 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: remove XFS_ITEM_RELEASE_WHEN_COMMITTED
-Message-ID: <20210504072029.GL63242@dread.disaster.area>
-References: <20210504042805.50176-1-david@fromorbit.com>
+        id S229867AbhEDI6g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 May 2021 04:58:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41234 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229703AbhEDI6f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 May 2021 04:58:35 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38E1BC061574
+        for <linux-xfs@vger.kernel.org>; Tue,  4 May 2021 01:57:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=qscdINsN0WbkTgWaVjYTzSjaSvc9tTc/ub6sBVFtDk4=; b=CEXZIoe5PR8HySsTKF+otMaivR
+        Xx012oQyT7hdoIkPziizqSwD03WFuo+95C4Qxm0l7Rmrv/3CQbdzMt+kJygPtyy2vW7wpl9zsVDrk
+        kejEtPv5iVe90Oamxq5btsGKyX0Ieno7fNKxYtXXo1MZ/yBNbM6rhMWuBIOJ6UF0zs8POSXgr2Otz
+        Wz1V1CKeIWfUoT/4Xh/pukNUUI+qHtGt03+2fNWDTSG6lMVJ7ni9DI1IBzTEPkyPf7Z2oVd+wRhBU
+        pmyaAFOQTlz1vA4whqbugJd+E8w5qrPLtedVHIBIChrn0LVVaZoI/s8XlE1C8KASz9zclGOi7hUBA
+        bYGSk2cg==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1ldqrc-00GMm8-Q0; Tue, 04 May 2021 08:57:15 +0000
+Date:   Tue, 4 May 2021 09:57:08 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] mkfs: reject cowextsize after making final decision
+ about reflink support
+Message-ID: <20210504085708.GA3900666@infradead.org>
+References: <20210501060745.GA7448@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210504042805.50176-1-david@fromorbit.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
-        a=I9rzhn+0hBG9LkCzAun3+g==:117 a=I9rzhn+0hBG9LkCzAun3+g==:17
-        a=kj9zAlcOel0A:10 a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=z8V1bbPmqjb9dAYrf3cA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210501060745.GA7448@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 04, 2021 at 02:28:05PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, Apr 30, 2021 at 11:07:45PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Redundant functionality. Returning NULLCOMMITLSN from
-> ->iop_committed means "release item as there is no further
-> processing to be done", making this flag entirely redundant.
+> There's a snippet of code that rejects cowextsize option if reflink is
+> disabled.  This really ought to be /after/ the last place where we can
+> turn off reflink.  Fix it so that people don't see stuff like this:
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> $ mkfs.xfs -r rtdev=b.img a.img -f -d cowextsize=16
+> illegal CoW extent size hint 16, must be less than 9600.
+> 
+> (reflink isn't supported when realtime is enabled)
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-Self NACK on this - I jus t realised I'd snet the wrong branch to
-build and test so it "passed" when in fact it doesn't even compile,
-let alone work.
+Looks good,
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
