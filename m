@@ -2,94 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63CD4C433B4
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 May 2021 19:34:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B279AC433B4
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 May 2021 19:46:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40BEB6113E
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 May 2021 19:34:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EE7C613C8
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 May 2021 19:46:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235382AbhEFTfI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 May 2021 15:35:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51374 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235302AbhEFTfF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 May 2021 15:35:05 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 375BA6105A;
-        Thu,  6 May 2021 19:34:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620329647;
-        bh=QlOxTk9ts/QBaKpEn8iiY0o8e6+f/3xqGqxM4NEBkqM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=W1mp3od1NC3b9w89w81uyrQASjmuGWtoqJkbu5gqob0PpjNI/ITLPr+hmqZ19kUEp
-         hoAsBGw8mleiCRzayKwjwof1+8Y690Dq7ECu3lDHaPL0y4u7BhL0Ke0i/7cxtU8JuO
-         e/+RDD3XTLvFaMAXYGvdSIUpKBxcJFiLK8oEwVTbhnXx8Pjd+TSBHB9pCpV9z6XOu6
-         LNoP/wzR0Ph8LQEU25tDy+hEcNmb4D1ALAofRZ8KuWAqkAzBgi1kHXqObGjv8OHwQO
-         hWNq1ykUkO5iwPKSsZ8pH/VCgdAIJymQsLXRU7+Y4CXNVbXBvr0rPiyWlIHh8AJeuh
-         HIszNCSob7SlQ==
-Date:   Thu, 6 May 2021 12:34:06 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
+        id S230104AbhEFTrI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 May 2021 15:47:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34094 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229710AbhEFTrI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 May 2021 15:47:08 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26392C061574;
+        Thu,  6 May 2021 12:46:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=v8nUrKHIOf/xBkkvxKzROgJf3R7JMgZROTDDpidrAP4=; b=UInkFEPxf/4afmSMFO005x2rlZ
+        B38n+XPLFiEmlDIk+s7Tdal8G3W77R4P5YmhyvGASPCPIO0cfH/IpgJ9fphC7CA6LAVeE9kl+uNec
+        lAqYXqgaiG6psFLnZjuBh4nodG19c3I1I3sx7JzxKReUDtgjN3IIafzcsoYj//G/Jn5vVPaKSd1Mh
+        lflOFl6Kt2qB/FZRjZigambfyFQ77FxPfL5DN2BicjFSzMff69+E51lVgHqb6QCBJ1ibHLo5uHyB8
+        69C25817SgK3ttyIalbXpOMwB21231jVtNs/4pibmWzIobw/ZYVBbUJz/xwdWwJPOQH9d56qDnWPG
+        +Q/nZ/kw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lejwM-002AMf-8x; Thu, 06 May 2021 19:45:46 +0000
+Date:   Thu, 6 May 2021 20:45:42 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Brian Foster <bfoster@redhat.com>,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH v2 2/2] xfs: kick extra large ioends to completion
  workqueue
-Message-ID: <20210506193406.GE8582@magnolia>
+Message-ID: <20210506194542.GG388843@casper.infradead.org>
 References: <20201002153357.56409-3-bfoster@redhat.com>
  <20201005152102.15797-1-bfoster@redhat.com>
  <20201006035537.GD49524@magnolia>
  <20201006140720.GQ20115@casper.infradead.org>
+ <20210506193406.GE8582@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201006140720.GQ20115@casper.infradead.org>
+In-Reply-To: <20210506193406.GE8582@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 06, 2020 at 03:07:20PM +0100, Matthew Wilcox wrote:
-> On Mon, Oct 05, 2020 at 08:55:37PM -0700, Darrick J. Wong wrote:
-> > On Mon, Oct 05, 2020 at 11:21:02AM -0400, Brian Foster wrote:
-> > > We've had reports of soft lockup warnings in the iomap ioend
-> > > completion path due to very large bios and/or bio chains. Divert any
-> > > ioends with 256k or more pages to process to the workqueue so
-> > > completion occurs in non-atomic context and can reschedule to avoid
-> > > soft lockup warnings.
+On Thu, May 06, 2021 at 12:34:06PM -0700, Darrick J. Wong wrote:
+> On Tue, Oct 06, 2020 at 03:07:20PM +0100, Matthew Wilcox wrote:
+> > On Mon, Oct 05, 2020 at 08:55:37PM -0700, Darrick J. Wong wrote:
+> > > On Mon, Oct 05, 2020 at 11:21:02AM -0400, Brian Foster wrote:
+> > > > We've had reports of soft lockup warnings in the iomap ioend
+> > > > completion path due to very large bios and/or bio chains. Divert any
+> > > > ioends with 256k or more pages to process to the workqueue so
+> > > > completion occurs in non-atomic context and can reschedule to avoid
+> > > > soft lockup warnings.
+> > > 
+> > > Hmmmm... is there any way we can just make end_page_writeback faster?
 > > 
-> > Hmmmm... is there any way we can just make end_page_writeback faster?
+> > There are ways to make it faster.  I don't know if they're a "just"
+> > solution ...
+> > 
+> > 1. We can use THPs.  That will reduce the number of pages being operated
+> > on.  I hear somebody might have a patch set for that.  Incidentally,
+> > this patch set will clash with the THP patchset, so one of us is going to
+> > have to rebase on the other's work.  Not a complaint, just acknowledging
+> > that some coordination will be needed for the 5.11 merge window.
 > 
-> There are ways to make it faster.  I don't know if they're a "just"
-> solution ...
+> How far off is this, anyway?  I assume it's in line behind the folio
+> series?
+
+Right.  The folio series found all kinds of fun places where the
+accounting was wrong (eg accounting for an N-page I/O as a single page),
+so the THP work is all renamed folio now.  The folio patchset I posted
+yesterday [1] is _most_ of what is necessary from an XFS point of view.
+There's probably another three dozen mm patches to actually enable
+multi-page folios after that, and a lot more patches to optimise the
+mm/vfs for multi-page folios, but your side of things is almost all
+published and reviewable.
+
+[1] https://lore.kernel.org/linux-fsdevel/20210505150628.111735-1-willy@infradead.org/
+
+> > 2. We could create end_writeback_pages(struct pagevec *pvec) which
+> > calls a new test_clear_writeback_pages(pvec).  That could amortise
+> > taking the memcg lock and finding the lruvec and taking the mapping
+> > lock -- assuming these pages are sufficiently virtually contiguous.
+> > It can definitely amortise all the statistics updates.
 > 
-> 1. We can use THPs.  That will reduce the number of pages being operated
-> on.  I hear somebody might have a patch set for that.  Incidentally,
-> this patch set will clash with the THP patchset, so one of us is going to
-> have to rebase on the other's work.  Not a complaint, just acknowledging
-> that some coordination will be needed for the 5.11 merge window.
+> /me kinda wonders if THPs arent the better solution for people who want
+> to run large ios.
 
-How far off is this, anyway?  I assume it's in line behind the folio
-series?
+Yes, definitely.  It does rather depend on their usage patterns,
+but if they're working on a file-contiguous chunk of memory, this
+can help a lot.
 
-> 2. We could create end_writeback_pages(struct pagevec *pvec) which
-> calls a new test_clear_writeback_pages(pvec).  That could amortise
-> taking the memcg lock and finding the lruvec and taking the mapping
-> lock -- assuming these pages are sufficiently virtually contiguous.
-> It can definitely amortise all the statistics updates.
+> > 3. We can make wake_up_page(page, PG_writeback); more efficient.  If
+> > you can produce this situation on demand, I had a patch for that which
+> > languished due to lack of interest.
+> 
+> I can (well, someone can) so I'll talk to you internally about their
+> seeekret reproducer.
 
-/me kinda wonders if THPs arent the better solution for people who want
-to run large ios.
-
-> 3. We can make wake_up_page(page, PG_writeback); more efficient.  If
-> you can produce this situation on demand, I had a patch for that which
-> languished due to lack of interest.
-
-I can (well, someone can) so I'll talk to you internally about their
-seeekret reproducer.
-
-> https://lore.kernel.org/linux-fsdevel/20200416220130.13343-1-willy@infradead.org/
-
---D
+Fantastic.  If it's something that needs to get backported to a
+stable-ABI kernel ... this isn't going to be a viable solution.
