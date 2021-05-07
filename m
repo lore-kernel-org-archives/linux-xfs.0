@@ -2,113 +2,123 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B279AC433B4
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 May 2021 19:46:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A4E4C433B4
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 May 2021 00:32:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7EE7C613C8
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 May 2021 19:46:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D08E4610A1
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 May 2021 00:32:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230104AbhEFTrI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 May 2021 15:47:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34094 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229710AbhEFTrI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 May 2021 15:47:08 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26392C061574;
-        Thu,  6 May 2021 12:46:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=v8nUrKHIOf/xBkkvxKzROgJf3R7JMgZROTDDpidrAP4=; b=UInkFEPxf/4afmSMFO005x2rlZ
-        B38n+XPLFiEmlDIk+s7Tdal8G3W77R4P5YmhyvGASPCPIO0cfH/IpgJ9fphC7CA6LAVeE9kl+uNec
-        lAqYXqgaiG6psFLnZjuBh4nodG19c3I1I3sx7JzxKReUDtgjN3IIafzcsoYj//G/Jn5vVPaKSd1Mh
-        lflOFl6Kt2qB/FZRjZigambfyFQ77FxPfL5DN2BicjFSzMff69+E51lVgHqb6QCBJ1ibHLo5uHyB8
-        69C25817SgK3ttyIalbXpOMwB21231jVtNs/4pibmWzIobw/ZYVBbUJz/xwdWwJPOQH9d56qDnWPG
-        +Q/nZ/kw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lejwM-002AMf-8x; Thu, 06 May 2021 19:45:46 +0000
-Date:   Thu, 6 May 2021 20:45:42 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] xfs: kick extra large ioends to completion
- workqueue
-Message-ID: <20210506194542.GG388843@casper.infradead.org>
-References: <20201002153357.56409-3-bfoster@redhat.com>
- <20201005152102.15797-1-bfoster@redhat.com>
- <20201006035537.GD49524@magnolia>
- <20201006140720.GQ20115@casper.infradead.org>
- <20210506193406.GE8582@magnolia>
+        id S233633AbhEGAdn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 May 2021 20:33:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44370 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233539AbhEGAdn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 May 2021 20:33:43 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2544E610FA;
+        Fri,  7 May 2021 00:32:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620347564;
+        bh=4gAFmIq38uaBj2IJ15SPVZYv1uvzYNSTPMlW8/M6ADI=;
+        h=Date:From:To:Cc:Subject:From;
+        b=mcBeHU6UlJ3QGZQhBDCTXnoqxsnoQzpvZ2Ha0LYOV4103bTyAXQNXU+Y26WqzgV86
+         QkwYytbG5lGmJl8I1DnMQAx/GoveotbPL1r9kBywy8ZPWj4fSErdc9Z3wnWIQOQEAd
+         xJd3EjaqsoUPTHHaOjV1GAiX/RfuyiUz/8dbGAXJMNtswK9+XRuZO1wCNM0Mc+Ly4U
+         BOUj2YXTwhIsRrnIa0IUbhaReCGa1jO+EbL2fErd6mmLTEZm0He1p/LT2TCY7fZmTY
+         mw0FzfNNTlf1Q7jABhKuI0Z0FF12o5xMGi4VhuNO3uhaAoT0xOWraPN1UYdaTGeB/3
+         Vv6dL04A4Zc2w==
+Date:   Thu, 6 May 2021 17:32:44 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
+Subject: [GIT PULL] xfs: more new code for 5.13
+Message-ID: <20210507003244.GF8582@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210506193406.GE8582@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 06, 2021 at 12:34:06PM -0700, Darrick J. Wong wrote:
-> On Tue, Oct 06, 2020 at 03:07:20PM +0100, Matthew Wilcox wrote:
-> > On Mon, Oct 05, 2020 at 08:55:37PM -0700, Darrick J. Wong wrote:
-> > > On Mon, Oct 05, 2020 at 11:21:02AM -0400, Brian Foster wrote:
-> > > > We've had reports of soft lockup warnings in the iomap ioend
-> > > > completion path due to very large bios and/or bio chains. Divert any
-> > > > ioends with 256k or more pages to process to the workqueue so
-> > > > completion occurs in non-atomic context and can reschedule to avoid
-> > > > soft lockup warnings.
-> > > 
-> > > Hmmmm... is there any way we can just make end_page_writeback faster?
-> > 
-> > There are ways to make it faster.  I don't know if they're a "just"
-> > solution ...
-> > 
-> > 1. We can use THPs.  That will reduce the number of pages being operated
-> > on.  I hear somebody might have a patch set for that.  Incidentally,
-> > this patch set will clash with the THP patchset, so one of us is going to
-> > have to rebase on the other's work.  Not a complaint, just acknowledging
-> > that some coordination will be needed for the 5.11 merge window.
-> 
-> How far off is this, anyway?  I assume it's in line behind the folio
-> series?
+Hi Linus,
 
-Right.  The folio series found all kinds of fun places where the
-accounting was wrong (eg accounting for an N-page I/O as a single page),
-so the THP work is all renamed folio now.  The folio patchset I posted
-yesterday [1] is _most_ of what is necessary from an XFS point of view.
-There's probably another three dozen mm patches to actually enable
-multi-page folios after that, and a lot more patches to optimise the
-mm/vfs for multi-page folios, but your side of things is almost all
-published and reviewable.
+Please pull this second branch containing new xfs code for 5.13.  Except
+for the timestamp struct renaming patches, everything else in here are
+bug fixes for 5.13-rc1.
 
-[1] https://lore.kernel.org/linux-fsdevel/20210505150628.111735-1-willy@infradead.org/
+The branch merges cleanly against upstream as of a few minutes ago.
+Please let me know if anything else strange happens during the merge
+process.
 
-> > 2. We could create end_writeback_pages(struct pagevec *pvec) which
-> > calls a new test_clear_writeback_pages(pvec).  That could amortise
-> > taking the memcg lock and finding the lruvec and taking the mapping
-> > lock -- assuming these pages are sufficiently virtually contiguous.
-> > It can definitely amortise all the statistics updates.
-> 
-> /me kinda wonders if THPs arent the better solution for people who want
-> to run large ios.
+--D
 
-Yes, definitely.  It does rather depend on their usage patterns,
-but if they're working on a file-contiguous chunk of memory, this
-can help a lot.
+The following changes since commit 76adf92a30f3b92a7f91bb00b28ea80efccd0f01:
 
-> > 3. We can make wake_up_page(page, PG_writeback); more efficient.  If
-> > you can produce this situation on demand, I had a patch for that which
-> > languished due to lack of interest.
-> 
-> I can (well, someone can) so I'll talk to you internally about their
-> seeekret reproducer.
+  xfs: remove xfs_quiesce_attr declaration (2021-04-16 08:28:36 -0700)
 
-Fantastic.  If it's something that needs to get backported to a
-stable-ABI kernel ... this isn't going to be a viable solution.
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.13-merge-5
+
+for you to fetch changes up to 8e9800f9f2b89e1efe2a5993361fae4d618a6c26:
+
+  xfs: don't allow log writes if the data device is readonly (2021-05-04 08:43:27 -0700)
+
+----------------------------------------------------------------
+More new code for 5.13:
+- Rename the log timestamp struct.
+- Remove broken transaction counter debugging that wasn't working
+  correctly on very old filesystems.
+- Various fixes to make pre-lazysbcount filesystems work properly again.
+- Fix a free space accounting problem where we neglected to consider
+  free space btree blocks that track metadata reservation space when
+  deciding whether or not to allow caller to reserve space for
+  a metadata update.
+- Fix incorrect pagecache clearing behavior during FUNSHARE ops.
+- Don't allow log writes if the data device is readonly.
+
+----------------------------------------------------------------
+Brian Foster (3):
+      xfs: unconditionally read all AGFs on mounts with perag reservation
+      xfs: introduce in-core global counter of allocbt blocks
+      xfs: set aside allocation btree blocks from block reservation
+
+Christoph Hellwig (2):
+      xfs: rename xfs_ictimestamp_t
+      xfs: rename struct xfs_legacy_ictimestamp
+
+Darrick J. Wong (5):
+      xfs: remove obsolete AGF counter debugging
+      xfs: don't check agf_btreeblks on pre-lazysbcount filesystems
+      xfs: count free space btree blocks when scrubbing pre-lazysbcount fses
+      xfs: fix xfs_reflink_unshare usage of filemap_write_and_wait_range
+      xfs: don't allow log writes if the data device is readonly
+
+Dave Chinner (1):
+      xfs: update superblock counters correctly for !lazysbcount
+
+ fs/xfs/libxfs/xfs_ag_resv.c     | 34 +++++++++++++++++++++++-----------
+ fs/xfs/libxfs/xfs_alloc.c       | 17 ++++++++++++++---
+ fs/xfs/libxfs/xfs_alloc_btree.c |  4 ++--
+ fs/xfs/libxfs/xfs_log_format.h  | 12 ++++++------
+ fs/xfs/libxfs/xfs_rmap_btree.c  |  2 --
+ fs/xfs/libxfs/xfs_sb.c          | 16 +++++++++++++---
+ fs/xfs/scrub/agheader.c         |  7 ++++++-
+ fs/xfs/scrub/fscounters.c       | 40 +++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_fsops.c              |  2 --
+ fs/xfs/xfs_inode_item.c         |  8 ++++----
+ fs/xfs/xfs_inode_item_recover.c |  6 +++---
+ fs/xfs/xfs_log.c                | 10 ++++++----
+ fs/xfs/xfs_mount.c              | 15 ++++++++++++++-
+ fs/xfs/xfs_mount.h              |  6 ++++++
+ fs/xfs/xfs_ondisk.h             |  4 ++--
+ fs/xfs/xfs_reflink.c            |  3 ++-
+ fs/xfs/xfs_trans.c              | 10 +++-------
+ fs/xfs/xfs_trans.h              | 15 ---------------
+ 18 files changed, 143 insertions(+), 68 deletions(-)
