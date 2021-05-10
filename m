@@ -2,141 +2,100 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C002C43603
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 May 2021 15:05:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF72C433B4
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 May 2021 17:59:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE5C761482
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 May 2021 15:05:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43259614A5
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 May 2021 17:59:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241685AbhEJPGu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 May 2021 11:06:50 -0400
-Received: from sandeen.net ([63.231.237.45]:34770 "EHLO sandeen.net"
+        id S232617AbhEJSA7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 May 2021 14:00:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50970 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233789AbhEJPEM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 May 2021 11:04:12 -0400
-Received: from liberator.local (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 6DB17615D6D
-        for <linux-xfs@vger.kernel.org>; Mon, 10 May 2021 10:02:41 -0500 (CDT)
-To:     xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs 5.12.0-rc1 released
-Message-ID: <c9946e72-8766-8774-7d75-f56f365599d4@sandeen.net>
-Date:   Mon, 10 May 2021 10:02:56 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.10.0
+        id S232262AbhEJSA6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 May 2021 14:00:58 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 60DC6611BD;
+        Mon, 10 May 2021 17:59:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620669593;
+        bh=02wHXbUR5HLBTn700P2Da+yYHwTsuw1A6Sj8seNhA2k=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=rj/eVwnHtCZ09plcASVJTnMDuNzL3qLQmZ4qm4kpfFEzxLconDqLJKiZ/+NJ8vASp
+         e2LLTrILmD5Ci+kHDrfjk3Ozt/5P0qtutV/b/GkmdEINSbmy9CHV9tPhkN/cTyXMPx
+         gVKM7WQYU0Hjz8alw3PZs491H6LSS8MeCdiueZnqW0PcodA+4YUOcwexlPzX3/G8cq
+         R4w4TrjD3IzkG/j+VQEzSZfsLph5jVkNrX1K7KldO/oLL6qjHnMl/OkTflcyHd+Ul+
+         lgMovBZp9EfNv63Z8b2BPMJEDKSWZp/XSVKp6xK8yL/zJO1fm6c5iG06+WVHA9jnKR
+         JmraBUWm1ckNw==
+Date:   Mon, 10 May 2021 10:59:52 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        Zorro Lang <zlang@redhat.com>, Eryu Guan <guan@eryu.me>
+Subject: Re: [PATCH v4 1/3] common/xfs: add _require_xfs_scratch_shrink helper
+Message-ID: <20210510175952.GA8558@magnolia>
+References: <20210402094937.4072606-1-hsiangkao@redhat.com>
+ <20210402094937.4072606-2-hsiangkao@redhat.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="oUbHEH1CCpo7VsWy9W0PLZw8BBbwsX7OC"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210402094937.4072606-2-hsiangkao@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---oUbHEH1CCpo7VsWy9W0PLZw8BBbwsX7OC
-Content-Type: multipart/mixed; boundary="E8S00hOVLG3rYYBQ7E8DFLuIKRSSTTJ5c";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <c9946e72-8766-8774-7d75-f56f365599d4@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs 5.12.0-rc1 released
+On Fri, Apr 02, 2021 at 05:49:35PM +0800, Gao Xiang wrote:
+> In order to detect whether the current kernel supports XFS shrinking.
+> 
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> ---
+>  common/xfs | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 69f76d6e..c6c2e3f5 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -766,6 +766,20 @@ _require_xfs_mkfs_without_validation()
+>  	fi
+>  }
+>  
+> +_require_xfs_scratch_shrink()
+> +{
+> +	_require_scratch
+> +	_require_command "$XFS_GROWFS_PROG" xfs_growfs
+> +
+> +	_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+> +	. $tmp.mkfs
+> +	_scratch_mount
+> +	# here just to check if kernel supports, no need do more extra work
+> +	$XFS_GROWFS_PROG -D$((dblocks-1)) "$SCRATCH_MNT" > /dev/null 2>&1 || \
+> +		_notrun "kernel does not support shrinking"
 
---E8S00hOVLG3rYYBQ7E8DFLuIKRSSTTJ5c
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+I think isn't sufficiently precise -- if xfs_growfs (userspace) doesn't
+support shrinking it'll error out with "data size XXX too small", and if
+the kernel doesn't support shrink, it'll return EINVAL.
 
-Hi folks,
+As written, this code attempts a single-block shrink and disables the
+entire test if that fails for any reason, even if that reason is that
+the last block in the filesystem isn't free, or we ran out of memory, or
+something like that.
 
-The master branch of the xfsprogs repository at:
+I think this needs to check the output of xfs_growfs to make the
+decision to _notrun.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+--D
 
-has just been updated and tagged with 5.12.0-rc1.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the master branch is commit:
-
-8d943b34 (HEAD -> for-next, tag: v5.12.0-rc1) xfsprogs: Release v5.12.0-r=
-c1
-
-The condensed changelog since 5.11.0 is:
-
-xfsprogs-5.12.0-rc1 (07 May 2021)
-        - mkfs: don't default to too-large physical sector size (Jeff Moy=
-er)
-        - repair: phase 6 speedups (Dave Chinner, Gao Xiang)
-        - man: Add dax mount option to man xfs(5) (Carlos Maiolino)
-        - xfs_admin: pick up log arguments correctly (Darrick Wong)
-        - xfs_growfs: support shrinking unused space (Gao Xiang)
-        - libfrog: report inobtcount in geometry (Darrick Wong)
-        - xfs_logprint: Fix buffer overflow printing quotaoff (Carlos Mai=
-olino)
-        - xfsprogs: include <signal.h> for platform_crash (Leah Neukirche=
-n)
-        - xfsprogs: remove BMV_IF_NO_DMAPI_READ flag (Anthony Iliopoulos)=
-
-        - workqueue: bound maximum queue depth (Dave Chinner)
-
-xfsprogs-5.12.0-rc0 (12 Apr 2021)
-        - libxfs changes merged from kernel 5.12
-
-New Commits since the last update announcement:
-
-Darrick J. Wong (2):
-      [28927ccb] mkfs: reject cowextsize after making final decision abou=
-t reflink support
-      [d625f741] libxfs: copy crtime correctly now that it's timespec64
-
-Eric Sandeen (1):
-      [8d943b34] xfsprogs: Release v5.12.0-rc1
-
-Code Diffstat:
-
- VERSION         |  2 +-
- configure.ac    |  2 +-
- doc/CHANGES     | 12 ++++++++++++
- libxfs/util.c   |  3 +--
- mkfs/xfs_mkfs.c | 14 +++++++-------
- 5 files changed, 22 insertions(+), 11 deletions(-)
-
-
-
-
-
-
---E8S00hOVLG3rYYBQ7E8DFLuIKRSSTTJ5c--
-
---oUbHEH1CCpo7VsWy9W0PLZw8BBbwsX7OC
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmCZSyAFAwAAAAAACgkQIK4WkuE93uBd
-/A//SpDl6V2x/gTzBmWni75pOXNdtWGYvhpF6iUnOVWlq6lbTkG+sQveH/S6xVa43XAhZVdv2z86
-2mTRDdd7n2//Ss/epGRgPre1lXtwUwks7UTvWTZRBXo/t7QUPdSCLnT5Ysukrg6OoxTKf0hQp/FU
-lz6X1kaNtP6I5e2Qoq7T5/ExEpy2mCU+Mgo1gmwTsqB61u0qAqzbVOHQhdp6UOTCw8k9hLf+6sbV
-JKVvUr2G8rHkiV3Zkc9ZsF+P2B/vLGF1Ug9p7m5j2g0WCAFA+uiLTJ166dB9ciHjn0ZGZThffSRh
-Ddzn5Bmmsq9OUWPGHhkHVQNbBR4DJMpn9Oj01Or+JATChMXpb76qIMxyyXvX39fSpWqavihxtgoX
-UaEoc0Rba0StsE6dWmWj2tn71BqGoVIkrE0eJIx+KFWNVYEKq+8Kjap9wr1qMlWNBptDV99VDKW7
-xVXO2L7QR6/arT6makQQy6I9bfD5BtrCDC5cImSf2ZhNxXTs4UGi25I9bjc0Rfq4mPP+tMIxouGj
-yAVnTPc26lmyJz4yOhQZ7rTh/pbUIAEDC8r9GF7McRXLI41bn0uoB077ZI6zuplmVylOxd/8aMso
-NKF2LhPQNeoK2xTxBDMoSA1/aXKeAPSZysavP1p8UGXLcwhzoung/cuwzol5XmoUv9t69VjW2LFB
-9k4=
-=YV6E
------END PGP SIGNATURE-----
-
---oUbHEH1CCpo7VsWy9W0PLZw8BBbwsX7OC--
+> +	_scratch_unmount
+> +}
+> +
+>  # XFS ability to change UUIDs on V5/CRC filesystems
+>  #
+>  _require_meta_uuid()
+> -- 
+> 2.27.0
+> 
