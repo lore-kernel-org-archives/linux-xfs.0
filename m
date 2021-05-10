@@ -2,153 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89E98C433B4
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 May 2021 02:45:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1127C433ED
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 May 2021 11:42:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5FA80613DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 May 2021 02:45:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 857A2611BE
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 May 2021 11:42:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230103AbhEJCqp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 9 May 2021 22:46:45 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45182 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229987AbhEJCqo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 May 2021 22:46:44 -0400
-Received: from dread.disaster.area (pa49-179-143-157.pa.nsw.optusnet.com.au [49.179.143.157])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C83321042E75;
-        Mon, 10 May 2021 12:45:35 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lfvvK-00Beju-DG; Mon, 10 May 2021 12:45:34 +1000
-Date:   Mon, 10 May 2021 12:45:34 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Brian Foster <bfoster@redhat.com>,
+        id S233226AbhEJLnJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 May 2021 07:43:09 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:59568 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S238847AbhEJLUL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 May 2021 07:20:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1620645546;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=7fU8QVP+0P6wcpOiItoUFWrhG3anw9HxqSZXYfedQD0=;
+        b=Qy6cg+v1FLQef941hzy9mWqgE52/3YFh0MUDKBzJbv2amd3xzQuQXYIn6dO97l5X8K1iMc
+        ZFPzhtP5SvnUR6GEDUC3tTfLR/Df80goia520ntTdejen+puQlp6580VCad5NLb8jhHRuE
+        iOHW+eR/ak4gmIAMgkYqFEjMk44iuos=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-450-9A9INCILOWeg7hqv7uBAjA-1; Mon, 10 May 2021 07:19:03 -0400
+X-MC-Unique: 9A9INCILOWeg7hqv7uBAjA-1
+Received: by mail-pl1-f199.google.com with SMTP id 31-20020a1709020022b02900eeddd708c8so5835365pla.11
+        for <linux-xfs@vger.kernel.org>; Mon, 10 May 2021 04:19:03 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=7fU8QVP+0P6wcpOiItoUFWrhG3anw9HxqSZXYfedQD0=;
+        b=rQsZgEQup0vOeiYLGLf7JKNGpnItp0NWnpoW86QiQjGcYshNOAQHs/OPC1S+d1ml+t
+         LlpDtGQtQLQFZtFttUPdO5wzCL7jHd/6gNl9ok/Gf52wdPeVxBt/HNiUr7ITgd9mKwh8
+         iTbbf7vWV4nyzBn3/+KxuHmBo/a9waT/J0obfzHuIWOJyQt5kZuWZ8tJRtixnwFFReQ/
+         0rw+U5f90SrJnpdWXIaXmLsdIDfTxwmVHkFqyWwC0Adz0C2uEi9B1rXQ1CIhpfsv2nM9
+         ve1ic3cxvKok8HwJOO3EsqNT4TqNXfA/txqfbhV3K0HTRptPiyea11F05bC1tXXkFIKV
+         9t0A==
+X-Gm-Message-State: AOAM533JbnWR1YZtMOtZwl3S8+mE7pBCRGfNl5D0FrvuJYSdydGJ13Zs
+        jdLZXHzQ6kNpYfCQF2D8CDLpn1fc9giA5ZbW5ZV7M+US2VbgstD8dcgk0EhttfGehS/tSFbevY/
+        VYSOupyW8b9zjF3VKHawv
+X-Received: by 2002:a63:fc11:: with SMTP id j17mr21199076pgi.355.1620645542295;
+        Mon, 10 May 2021 04:19:02 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyXH4mrnNNwd0XRV7OJkXrSmiocAyMYMGGVSIHSG5pHQrYYyilyVTkHMwA57DCdqAKV5A4otw==
+X-Received: by 2002:a63:fc11:: with SMTP id j17mr21199056pgi.355.1620645542058;
+        Mon, 10 May 2021 04:19:02 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id 9sm5015501pgy.70.2021.05.10.04.18.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 May 2021 04:19:01 -0700 (PDT)
+Date:   Mon, 10 May 2021 19:18:51 +0800
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     Eryu Guan <guan@eryu.me>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
         "Darrick J. Wong" <djwong@kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] xfs: kick extra large ioends to completion
- workqueue
-Message-ID: <20210510024534.GO63242@dread.disaster.area>
-References: <20201002153357.56409-3-bfoster@redhat.com>
- <20201005152102.15797-1-bfoster@redhat.com>
- <20201006035537.GD49524@magnolia>
- <20201006124440.GA50358@bfoster>
- <20210506193158.GD8582@magnolia>
- <YJVJZzld5ucxnlAH@bfoster>
- <YJVRZ1Bg1gan2BrW@casper.infradead.org>
+        Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH v4 0/3] xfs: testcases for shrinking free space in the
+ last AG
+Message-ID: <20210510111851.GB741809@xiangao.remote.csb>
+References: <20210402094937.4072606-1-hsiangkao@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <YJVRZ1Bg1gan2BrW@casper.infradead.org>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=I9rzhn+0hBG9LkCzAun3+g==:117 a=I9rzhn+0hBG9LkCzAun3+g==:17
-        a=kj9zAlcOel0A:10 a=5FLXtPjwQuUA:10 a=7-415B0cAAAA:8
-        a=gnKQnzLbZubkhuT5HbcA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210402094937.4072606-1-hsiangkao@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 07, 2021 at 03:40:39PM +0100, Matthew Wilcox wrote:
-> On Fri, May 07, 2021 at 10:06:31AM -0400, Brian Foster wrote:
-> > > <nod> So I guess I'm saying that my resistance to /this/ part of the
-> > > changes is melting away.  For a 2GB+ write IO, I guess the extra overhead
-> > > of poking a workqueue can be amortized over the sheer number of pages.
-> > 
-> > I think the main question is what is a suitable size threshold to kick
-> > an ioend over to the workqueue? Looking back, I think this patch just
-> > picked 256k randomly to propose the idea. ISTM there could be a
-> > potentially large window from the point where I/O latency starts to
-> > dominate (over the extra context switch for wq processing) and where the
-> > softlockup warning thing will eventually trigger due to having too many
-> > pages. I think that means we could probably use a more conservative
-> > value, I'm just not sure what value should be (10MB, 100MB, 1GB?). If
-> > you have a reproducer it might be interesting to experiment with that.
+Hi Eryu,
+
+On Fri, Apr 02, 2021 at 05:49:34PM +0800, Gao Xiang wrote:
+> Hi,
 > 
-> To my mind, there are four main types of I/Os.
-> 
-> 1. Small, dependent reads -- maybe reading a B-tree block so we can get
-> the next pointer.  Those need latency above all.
-> 
-> 2. Readahead.  Tend to be large I/Os and latency is not a concern
-> 
-> 3. Page writeback which tend to be large and can afford the extra latency.
-> 
-> 4. Log writes.  These tend to be small, and I'm not sure what increasing
-> their latency would do.  Probably bad.
-> 
-> I like 256kB as a threshold.  I think I could get behind anything from
-> 128kB to 1MB.  I don't think playing with it is going to be really
-> interesting because most IOs are going to be far below or far above
-> that threshold.
+> Sorry for little delay (yet since xfsprogs side isn't merged, and no
+> major changes compared with the previous version...)
 
-256kB is waaaaay too small for writeback IO. Brian actually proposed
-256k *pages*, not bytes. 256kB will take us back to the bad old days
-where we are dependent on bio merging to get decent IO patterns down
-to the hardware, and that's a bad place to be from both an IO and
-CPU efficiency POV.
+ping. This fstests patchset is still valid (I've confirmed with new
+kernels / old kernels and old xfsprogs) and
+shrinking tail AG functionality has been merged in kernel and xfsprogs.
 
-IOWs, the IO that is built by the filesystem needs to be large
-w.r.t. the underlying hardware so that the block layer can slice and
-dice it efficiently so we don't end up doing lots of small partial
-stripe writes to RAID devices.
+Thanks,
+Gao Xiang
 
-ISTR proposing - in response to Brian's patch - a limit of 16MB or
-so - large enough that for most storage stacks we'll keep it's
-queues full with well formed IO, but also small enough that we don't
-end up with long completion latencies due to walking hundreds of
-thousands of pages completing them in a tight loop...
-
-Yup, here's the relevent chunk of that patch:
-
-+/*
-+ * Maximum ioend IO size is used to prevent ioends from becoming unbound in
-+ * size. Bios can read 4GB in size is pages are contiguous, and bio chains are
-+ * effectively unbound in length. Hence the only limits on the size of the bio
-+ * chain is the contiguity of the extent on disk and the length of the run of
-+ * sequential dirty pages in the page cache. This can be tens of GBs of physical
-+ * extents and if memory is large enough, tens of millions of dirty pages.
-+ * Locking them all under writeback until the final bio in the chain is
-+ * submitted and completed locks all those pages for the legnth of time it takes
-+ * to write those many, many GBs of data to storage.
-+ *
-+ * Background writeback caps any single writepages call to half the device
-+ * bandwidth to ensure fairness and prevent any one dirty inode causing
-+ * writeback starvation.  fsync() and other WB_SYNC_ALL writebacks have no such
-+ * cap on wbc->nr_pages, and that's where the above massive bio chain lengths
-+ * come from. We want large IOs to reach the storage, but we need to limit
-+ * completion latencies, hence we need to control the maximum IO size we
-+ * dispatch to the storage stack.
-+ *
-+ * We don't really have to care about the extra IO completion overhead here -
-+ * iomap has contiguous IO completion merging, so if the device can sustain a
-+ * very high throughput and large bios, the ioends will be merged on completion
-+ * and processed in large, efficient chunks with no additional IO latency. IOWs,
-+ * we really don't need the huge bio chains to be built in the first place for
-+ * sequential writeback...
-+ *
-+ * Note that page size has an effect here - 64k pages really needs lower
-+ * page count thresholds because they have the same IO capabilities. We can do
-+ * larger IOs because of the lower completion overhead, so cap it at 1024
-+ * pages. For everything else, use 16MB as the ioend size.
-+ */
-+#if (PAGE_SIZE == 65536)
-+#define IOMAP_MAX_IOEND_PAGES  1024
-+#else
-+#define IOMAP_MAX_IOEND_PAGES  4096
-+#endif
-+#define IOMAP_MAX_IOEND_SIZE   (IOMAP_MAX_IOEND_PAGES * PAGE_SIZE)
-
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
