@@ -2,205 +2,124 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB862C43460
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 03:10:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1382C433ED
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 03:57:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB1A761584
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 03:10:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6DBA6191A
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 03:57:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230308AbhEKDLo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 May 2021 23:11:44 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:41093 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230252AbhEKDLk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 May 2021 23:11:40 -0400
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A+lD4Rq1utQ0JgGlxWavvzAqjBFQkLtp133Aq?=
- =?us-ascii?q?2lEZdPRUGvb4qynIpoVj6faUskdoZJhOo6HiBEDtexzhHNtOkO0s1NSZLW/bUQ?=
- =?us-ascii?q?mTXeNfBOLZqlWKcUCTygce79YGT0EUMr3N5DZB4/oSmDPIdurI3uP3jJyAtKPP?=
- =?us-ascii?q?yWt3VwF2Z+VF5wd9MAySFUp7X2B9dOAEPavZ9sxavCChZHhSSsy6A0MOV+/Fq8?=
- =?us-ascii?q?aOu4nhZXc9dmMawTjLnTW186T7DhTd+h8fVglEybAk/XOAsyGR3NTZj82G?=
-X-IronPort-AV: E=Sophos;i="5.82,290,1613404800"; 
-   d="scan'208";a="108110580"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 11 May 2021 11:10:29 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 80FF94D0B8A5;
-        Tue, 11 May 2021 11:10:26 +0800 (CST)
-Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Tue, 11 May 2021 11:10:17 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Tue, 11 May 2021 11:10:14 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>
-CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <willy@infradead.org>, <viro@zeniv.linux.org.uk>,
-        <david@fromorbit.com>, <hch@lst.de>, <rgoldwyn@suse.de>
-Subject: [PATCH v5 7/7] fs/xfs: Add dax dedupe support
-Date:   Tue, 11 May 2021 11:09:33 +0800
-Message-ID: <20210511030933.3080921-8-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210511030933.3080921-1-ruansy.fnst@fujitsu.com>
+        id S229932AbhEKD6a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 May 2021 23:58:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37772 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230096AbhEKD60 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 May 2021 23:58:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A87B66191A;
+        Tue, 11 May 2021 03:57:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620705427;
+        bh=KUxSfdHuT0OzxKcmushlCf+iiGLeisPcY+my+vMSNNA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=XA4NRg2XadNBSNYtby2zm8km5MLfULMiSS8oFp/rowdp1wF4KaICxoyLe0XOXlSLQ
+         dAzqy1GaCwX0GXO2mQtRIgCFJbVNLR6YG7Wb51ID2ezfLw9ZU5D+E1UYmzTTiXU8/9
+         dK5oIlBZ9wzqFCsp9FvDDLJeD2klTKBCtqOOrg3ekFcl9rpQu95XyoyO3dT6b95LXA
+         okn07Xswk7QRewU03CuFaHwqWV02X5zBRnJZi9i78mPhu9whxd2l7o6lOnQvlnRjkr
+         Ksj2BOYzGH6Ji74D9XKC0tFZvmKUNgrxzOGqPYF6iadWOteVMQIeGHSerUCYeIeW+D
+         GDTXwujDTFTMw==
+Date:   Mon, 10 May 2021 20:57:06 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org,
+        darrick.wong@oracle.com, dan.j.williams@intel.com,
+        willy@infradead.org, viro@zeniv.linux.org.uk, david@fromorbit.com,
+        hch@lst.de, rgoldwyn@suse.de
+Subject: Re: [PATCH v5 0/7] fsdax,xfs: Add reflink&dedupe support for fsdax
+Message-ID: <20210511035706.GL8582@magnolia>
 References: <20210511030933.3080921-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 80FF94D0B8A5.A153C
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210511030933.3080921-1-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Introduce xfs_mmaplock_two_inodes_and_break_dax_layout() for dax files
-who are going to be deduped.  After that, call compare range function
-only when files are both DAX or not.
+On Tue, May 11, 2021 at 11:09:26AM +0800, Shiyang Ruan wrote:
+> This patchset is attempt to add CoW support for fsdax, and take XFS,
+> which has both reflink and fsdax feature, as an example.
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- fs/xfs/xfs_file.c    |  2 +-
- fs/xfs/xfs_inode.c   | 66 +++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_inode.h   |  1 +
- fs/xfs/xfs_reflink.c |  4 +--
- 4 files changed, 69 insertions(+), 4 deletions(-)
+Slightly off topic, but I noticed all my pmem disappeared once I rolled
+forward to 5.13-rc1.  Am I the only lucky one?  Qemu 4.2, with fake
+memory devices backed by tmpfs files -- info qtree says they're there,
+but the kernel doesn't show anything in /proc/iomem.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 38d8eca05aee..bd5002d38df4 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -823,7 +823,7 @@ xfs_wait_dax_page(
- 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- }
- 
--static int
-+int
- xfs_break_dax_layouts(
- 	struct inode		*inode,
- 	bool			*retry)
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0369eb22c1bb..0774b6e2b940 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3711,6 +3711,64 @@ xfs_iolock_two_inodes_and_break_layout(
- 	return 0;
- }
- 
-+static int
-+xfs_mmaplock_two_inodes_and_break_dax_layout(
-+	struct inode		*src,
-+	struct inode		*dest)
-+{
-+	int			error, attempts = 0;
-+	bool			retry;
-+	struct xfs_inode	*ip0, *ip1;
-+	struct page		*page;
-+	struct xfs_log_item	*lp;
-+
-+	if (src > dest)
-+		swap(src, dest);
-+	ip0 = XFS_I(src);
-+	ip1 = XFS_I(dest);
-+
-+again:
-+	retry = false;
-+	/* Lock the first inode */
-+	xfs_ilock(ip0, XFS_MMAPLOCK_EXCL);
-+	error = xfs_break_dax_layouts(src, &retry);
-+	if (error || retry) {
-+		xfs_iunlock(ip0, XFS_MMAPLOCK_EXCL);
-+		goto again;
-+	}
-+
-+	if (src == dest)
-+		return 0;
-+
-+	/* Nested lock the second inode */
-+	lp = &ip0->i_itemp->ili_item;
-+	if (lp && test_bit(XFS_LI_IN_AIL, &lp->li_flags)) {
-+		if (!xfs_ilock_nowait(ip1,
-+		    xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1))) {
-+			xfs_iunlock(ip0, XFS_MMAPLOCK_EXCL);
-+			if ((++attempts % 5) == 0)
-+				delay(1); /* Don't just spin the CPU */
-+			goto again;
-+		}
-+	} else
-+		xfs_ilock(ip1, xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1));
-+	/*
-+	 * We cannot use xfs_break_dax_layouts() directly here because it may
-+	 * need to unlock & lock the XFS_MMAPLOCK_EXCL which is not suitable
-+	 * for this nested lock case.
-+	 */
-+	page = dax_layout_busy_page(dest->i_mapping);
-+	if (page) {
-+		if (page_ref_count(page) != 1) {
-+			xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-+			xfs_iunlock(ip0, XFS_MMAPLOCK_EXCL);
-+			goto again;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Lock two inodes so that userspace cannot initiate I/O via file syscalls or
-  * mmap activity.
-@@ -3721,10 +3779,16 @@ xfs_ilock2_io_mmap(
- 	struct xfs_inode	*ip2)
- {
- 	int			ret;
-+	struct inode		*ino1 = VFS_I(ip1);
-+	struct inode		*ino2 = VFS_I(ip2);
- 
--	ret = xfs_iolock_two_inodes_and_break_layout(VFS_I(ip1), VFS_I(ip2));
-+	ret = xfs_iolock_two_inodes_and_break_layout(ino1, ino2);
- 	if (ret)
- 		return ret;
-+
-+	if (IS_DAX(ino1) && IS_DAX(ino2))
-+		return xfs_mmaplock_two_inodes_and_break_dax_layout(ino1, ino2);
-+
- 	if (ip1 == ip2)
- 		xfs_ilock(ip1, XFS_MMAPLOCK_EXCL);
- 	else
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index ca826cfba91c..2d0b344fb100 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -457,6 +457,7 @@ enum xfs_prealloc_flags {
- 
- int	xfs_update_prealloc_flags(struct xfs_inode *ip,
- 				  enum xfs_prealloc_flags flags);
-+int	xfs_break_dax_layouts(struct inode *inode, bool *retry);
- int	xfs_break_layouts(struct inode *inode, uint *iolock,
- 		enum layout_break_reason reason);
- 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 9a780948dbd0..ff308304c5cd 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1324,8 +1324,8 @@ xfs_reflink_remap_prep(
- 	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
- 		goto out_unlock;
- 
--	/* Don't share DAX file data for now. */
--	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-+	/* Don't share DAX file data with non-DAX file. */
-+	if (IS_DAX(inode_in) != IS_DAX(inode_out))
- 		goto out_unlock;
- 
- 	if (!IS_DAX(inode_in))
--- 
-2.31.1
+--D
 
-
-
+> Changes from V4:
+>  - Fix the mistake of breaking dax layout for two inodes
+>  - Add CONFIG_FS_DAX judgement for fsdax code in remap_range.c
+>  - Fix other small problems and mistakes
+> 
+> Changes from V3:
+>  - Take out the first 3 patches as a cleanup patchset[1], which has been
+>     sent yesterday.
+>  - Fix usage of code in dax_iomap_cow_copy()
+>  - Add comments for macro definitions
+>  - Fix other code style problems and mistakes
+> 
+> One of the key mechanism need to be implemented in fsdax is CoW.  Copy
+> the data from srcmap before we actually write data to the destance
+> iomap.  And we just copy range in which data won't be changed.
+> 
+> Another mechanism is range comparison.  In page cache case, readpage()
+> is used to load data on disk to page cache in order to be able to
+> compare data.  In fsdax case, readpage() does not work.  So, we need
+> another compare data with direct access support.
+> 
+> With the two mechanisms implemented in fsdax, we are able to make reflink
+> and fsdax work together in XFS.
+> 
+> Some of the patches are picked up from Goldwyn's patchset.  I made some
+> changes to adapt to this patchset.
+> 
+> 
+> (Rebased on v5.13-rc1 and patchset[1])
+> [1]: https://lkml.org/lkml/2021/4/22/575
+> 
+> Shiyang Ruan (7):
+>   fsdax: Introduce dax_iomap_cow_copy()
+>   fsdax: Replace mmap entry in case of CoW
+>   fsdax: Add dax_iomap_cow_copy() for dax_iomap_zero
+>   iomap: Introduce iomap_apply2() for operations on two files
+>   fsdax: Dedup file range to use a compare function
+>   fs/xfs: Handle CoW for fsdax write() path
+>   fs/xfs: Add dax dedupe support
+> 
+>  fs/dax.c               | 206 +++++++++++++++++++++++++++++++++++------
+>  fs/iomap/apply.c       |  52 +++++++++++
+>  fs/iomap/buffered-io.c |   2 +-
+>  fs/remap_range.c       |  57 ++++++++++--
+>  fs/xfs/xfs_bmap_util.c |   3 +-
+>  fs/xfs/xfs_file.c      |  11 +--
+>  fs/xfs/xfs_inode.c     |  66 ++++++++++++-
+>  fs/xfs/xfs_inode.h     |   1 +
+>  fs/xfs/xfs_iomap.c     |  61 +++++++++++-
+>  fs/xfs/xfs_iomap.h     |   4 +
+>  fs/xfs/xfs_iops.c      |   7 +-
+>  fs/xfs/xfs_reflink.c   |  15 +--
+>  include/linux/dax.h    |   7 +-
+>  include/linux/fs.h     |  12 ++-
+>  include/linux/iomap.h  |   7 +-
+>  15 files changed, 449 insertions(+), 62 deletions(-)
+> 
+> -- 
+> 2.31.1
+> 
+> 
+> 
