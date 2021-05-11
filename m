@@ -7,71 +7,129 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 944E3C433ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 07:18:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9E39C433B4
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 07:19:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 69CBC61482
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 07:18:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AE9C61490
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 07:19:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229964AbhEKHTh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 May 2021 03:19:37 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:37938 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229637AbhEKHTh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 May 2021 03:19:37 -0400
+        id S231152AbhEKHUZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 May 2021 03:20:25 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:53526 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230499AbhEKHUO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 May 2021 03:20:14 -0400
 Received: from dread.disaster.area (pa49-179-143-157.pa.nsw.optusnet.com.au [49.179.143.157])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 0F58C65E2D;
-        Tue, 11 May 2021 17:18:29 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 3F7F2104321F;
+        Tue, 11 May 2021 17:19:06 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lgMex-00DUgf-VK; Tue, 11 May 2021 17:18:27 +1000
-Date:   Tue, 11 May 2021 17:18:27 +1000
+        id 1lgMfZ-00DUkS-Od; Tue, 11 May 2021 17:19:05 +1000
+Date:   Tue, 11 May 2021 17:19:05 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 01/22] xfs: move xfs_perag_get/put to xfs_ag.[ch]
-Message-ID: <20210511071827.GQ63242@dread.disaster.area>
+Subject: Re: [PATCH 02/22] xfs: prepare for moving perag definitions and
+ support to libxfs
+Message-ID: <20210511071905.GR63242@dread.disaster.area>
 References: <20210506072054.271157-1-david@fromorbit.com>
- <20210506072054.271157-2-david@fromorbit.com>
- <YJksqHGu80qgBImd@bfoster>
+ <20210506072054.271157-3-david@fromorbit.com>
+ <YJksyJDAfDmv326/@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YJksqHGu80qgBImd@bfoster>
+In-Reply-To: <YJksyJDAfDmv326/@bfoster>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=I9rzhn+0hBG9LkCzAun3+g==:117 a=I9rzhn+0hBG9LkCzAun3+g==:17
         a=kj9zAlcOel0A:10 a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=dFrUeFZAEYESspmLrHcA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=2loSEbv1Pm2Ynvyrl7gA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 10, 2021 at 08:52:56AM -0400, Brian Foster wrote:
-> On Thu, May 06, 2021 at 05:20:33PM +1000, Dave Chinner wrote:
+On Mon, May 10, 2021 at 08:53:28AM -0400, Brian Foster wrote:
+> On Thu, May 06, 2021 at 05:20:34PM +1000, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > They are AG functions, not superblock functions, so move them to the
-> > appropriate location.
+> > The perag structures really need to be defined with the rest of the
+> > AG support infrastructure. The struct xfs_perag and init/teardown
+> > has been placed in xfs_mount.[ch] because there are differences in
+> > the structure between kernel and userspace. Mainly that userspace
+> > doesn't have a lot of the internal stuff that the kernel has for
+> > caches and discard and other such structures.
+> > 
+> > However, it makes more sense to move this to libxfs than to keep
+> > this separation because we are now moving to use struct perags
+> > everywhere in the code instead of passing raw agnumber_t values
+> > about. Hence we shoudl really move the support infrastructure to
+> > libxfs/xfs_ag.[ch].
+> > 
+> > To do this without breaking userspace, first we need to rearrange
+> > the structures and code so that all the kernel specific code is
+> > located together. This makes it simple for userspace to ifdef out
+> > the all the parts it does not need, minimising the code differences
+> > between kernel and userspace. The next commit will do the move...
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > > ---
-> ...
+> >  fs/xfs/xfs_mount.c | 50 ++++++++++++++++++++++++++--------------------
+> >  fs/xfs/xfs_mount.h | 19 +++++++++---------
+> >  2 files changed, 38 insertions(+), 31 deletions(-)
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> > index c68a36688474..2ca31dc46fe8 100644
-> > --- a/fs/xfs/libxfs/xfs_ag.c
-> > +++ b/fs/xfs/libxfs/xfs_ag.c
-> > @@ -27,6 +27,141 @@
-> >  #include "xfs_defer.h"
-> >  #include "xfs_log_format.h"
-> >  #include "xfs_trans.h"
-> > +#include "xfs_trace.h"
+> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > index 21c630dde476..2e6d42014346 100644
+> > --- a/fs/xfs/xfs_mount.c
+> > +++ b/fs/xfs/xfs_mount.c
+> ...
+> > @@ -229,13 +220,27 @@ xfs_initialize_perag(
+> >  		}
+> >  		spin_unlock(&mp->m_perag_lock);
+> >  		radix_tree_preload_end();
+> > -		/* first new pag is fully initialized */
+> > -		if (first_initialised == NULLAGNUMBER)
+> > -			first_initialised = index;
+> > +
+> > +		spin_lock_init(&pag->pag_ici_lock);
+> > +		spin_lock_init(&pag->pagb_lock);
+> > +		spin_lock_init(&pag->pag_state_lock);
+> > +		INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
+> > +		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+> > +		init_waitqueue_head(&pag->pagb_wait);
+> > +		pag->pagb_count = 0;
+> > +		pag->pagb_tree = RB_ROOT;
+> > +
+> > +		error = xfs_buf_hash_init(pag);
+> > +		if (error)
+> > +			goto out_free_pag;
+> > +
 > 
-> The corresponding xfs_trace.h include can now be removed from
-> libxfs/xfs_sb.c. Otherwise looks like a straightforward move:
+> There's error handling code earlier up in this function that still lands
+> in out_hash_destroy, which is now before we get to the _hash_init()
+> call.
+> 
+> >  		error = xfs_iunlink_init(pag);
+> >  		if (error)
+> >  			goto out_hash_destroy;
+> > -		spin_lock_init(&pag->pag_state_lock);
+> > +
+> > +		/* first new pag is fully initialized */
+> > +		if (first_initialised == NULLAGNUMBER)
+> > +			first_initialised = index;
+> >  	}
+> >  
+> >  	index = xfs_set_inode_alloc(mp, agcount);
+> > @@ -249,6 +254,7 @@ xfs_initialize_perag(
+> >  out_hash_destroy:
+> >  	xfs_buf_hash_destroy(pag);
+> >  out_free_pag:
+> > +	pag = radix_tree_delete(&mp->m_perag_tree, index);
+> 
+> Now if we get here with an allocated pag that hasn't been inserted to
+> the tree, I suspect this call would assign pag = NULL..
 
-fixed.
+Yup, error handling was fubar. Fixed now.
+
 -- 
 Dave Chinner
 david@fromorbit.com
