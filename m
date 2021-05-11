@@ -2,117 +2,99 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 457F8C43461
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 13:53:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C665C433ED
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 15:09:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1829661400
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 13:53:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 418CA6128E
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 15:09:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231650AbhEKNyO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 May 2021 09:54:14 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:21172 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231649AbhEKNyI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 May 2021 09:54:08 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620741181;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=sgR+KIH4Hh42mvX+JEPtWztncyfXaw3i5mewpbhkXkM=;
-        b=dBpDa7Zd5uUFmIVpn3rj1qCjUYN7RiIc+1f66ry+uoEyJcIEu+ox9WEzwUABmTrDVL5AlP
-        rM27GoHQgeAPjEPp4IfJ01wCh3s2w0EEihZLy7uD90AatWJ6gq83WdXPSvt0Rdx4Kg3GJr
-        vZYQibx1FEd+16Ceh0S3iEvIZaFUyZk=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-30-EBRxvhNXMI6lrekBCDy_cw-1; Tue, 11 May 2021 09:52:59 -0400
-X-MC-Unique: EBRxvhNXMI6lrekBCDy_cw-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7FFEE107ACF4
-        for <linux-xfs@vger.kernel.org>; Tue, 11 May 2021 13:52:58 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-113-80.rdu2.redhat.com [10.10.113.80])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 43A0619CBF
-        for <linux-xfs@vger.kernel.org>; Tue, 11 May 2021 13:52:58 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs: remove dead stale buf unpin handling code
-Date:   Tue, 11 May 2021 09:52:57 -0400
-Message-Id: <20210511135257.878743-3-bfoster@redhat.com>
-In-Reply-To: <20210511135257.878743-1-bfoster@redhat.com>
-References: <20210511135257.878743-1-bfoster@redhat.com>
+        id S231902AbhEKPKx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 May 2021 11:10:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41062 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231874AbhEKPKx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 May 2021 11:10:53 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5FEB5613C1;
+        Tue, 11 May 2021 15:09:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620745786;
+        bh=paei3DVSoEhmQ/3lQjt1xURX22gmIT6xKJm93DBNxkc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PpHej/Dmsd+ktKuy2AlYfcrnAxxdpmkQfC1KDa1o1fgS/N3sO5HnzGMtGkBuOcjhr
+         0QK1puMt2tORmjsJlkIDWJ2i4o+Ak+hW+W9HREkgzSLUTj+kJ5LA9cb52FYgWo6jt2
+         WkOMjS0MJM1TZqT1oQNtp5ot8T/BCDfBQWHWnsHuWIU+CACIvuK0Sd0p6pUnh5vXWe
+         7DrF5mhKPjE5ITZTqlwDAts3/1g8pqJ7dLl1p7014eAZJ8bByZ7Zb7KNhvmDUgjf0r
+         YIKDG4X6g7OMCdXhISRZTD5Nc9rLSJ6lcwhIyAEcYdy/DDVfDRZx5PA8aHV/0gXYn6
+         bQuvwuyoC/yaw==
+Date:   Tue, 11 May 2021 08:09:46 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        Zorro Lang <zlang@redhat.com>, Eryu Guan <guan@eryu.me>
+Subject: Re: [PATCH v5 1/3] common/xfs: add _require_xfs_scratch_shrink helper
+Message-ID: <20210511150946.GM8582@magnolia>
+References: <20210511073945.906127-1-hsiangkao@redhat.com>
+ <20210511073945.906127-2-hsiangkao@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210511073945.906127-2-hsiangkao@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This code goes back to a time when transaction commits wrote
-directly to iclogs. The associated log items were pinned, written to
-the log, and then "uncommitted" if some part of the log write had
-failed. This uncommit sequence called an ->iop_unpin_remove()
-handler that was eventually folded into ->iop_unpin() via the remove
-parameter. The log subsystem has since changed significantly in that
-transactions commit to the CIL instead of direct to iclogs, though
-log items must still be aborted in the event of an eventual log I/O
-error. However, the context for a log item abort is now asynchronous
-from transaction commit, which means the committing transaction has
-been freed by this point in time and the transaction uncommit
-sequence of events is no longer relevant.
+On Tue, May 11, 2021 at 03:39:43PM +0800, Gao Xiang wrote:
+> In order to detect whether the current kernel supports XFS shrinking.
+> 
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> ---
+>  common/xfs | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 69f76d6e..184aa01e 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -766,6 +766,26 @@ _require_xfs_mkfs_without_validation()
+>  	fi
+>  }
+>  
+> +_require_xfs_scratch_shrink()
+> +{
+> +	_require_scratch
+> +	_require_command "$XFS_GROWFS_PROG" xfs_growfs
+> +
+> +	_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+> +	. $tmp.mkfs
+> +	_scratch_mount
+> +	# here just to check if kernel supports, no need do more extra work
+> +	errmsg=$($XFS_GROWFS_PROG -D$((dblocks-1)) "$SCRATCH_MNT" 2>&1)
+> +	if [ "$?" -ne 0 ]; then
+> +		echo "$errmsg" | grep 'XFS_IOC_FSGROWFSDATA xfsctl failed: Invalid argument' && \
+> +			_notrun "kernel does not support shrinking"
+> +		echo "$errmsg" | grep 'data size .* too small, old size is ' && \
+> +			_notrun "xfsprogs does not support shrinking"
+> +		_fail "$XFS_GROWFS_PROG failed unexpectedly"
 
-Further, since stale buffers remain locked at transaction commit
-through unpin, we can be certain that the buffer is not associated
-with any transaction when the unpin callback executes. Remove this
-unused hunk of code and replace it with an assertion that the buffer
-is disassociated from transaction context.
+Silly nit: why not print $errmsg in the fail string?
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf_item.c | 20 +-------------------
- 1 file changed, 1 insertion(+), 19 deletions(-)
+With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 7ff31788512b..634abf30b5bc 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -517,28 +517,10 @@ xfs_buf_item_unpin(
- 		ASSERT(xfs_buf_islocked(bp));
- 		ASSERT(bp->b_flags & XBF_STALE);
- 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
-+		ASSERT(list_empty(&lip->li_trans) && !bp->b_transp);
- 
- 		trace_xfs_buf_item_unpin_stale(bip);
- 
--		if (remove) {
--			/*
--			 * If we are in a transaction context, we have to
--			 * remove the log item from the transaction as we are
--			 * about to release our reference to the buffer.  If we
--			 * don't, the unlock that occurs later in
--			 * xfs_trans_uncommit() will try to reference the
--			 * buffer which we no longer have a hold on.
--			 */
--			if (!list_empty(&lip->li_trans))
--				xfs_trans_del_item(lip);
--
--			/*
--			 * Since the transaction no longer refers to the buffer,
--			 * the buffer should no longer refer to the transaction.
--			 */
--			bp->b_transp = NULL;
--		}
--
- 		/*
- 		 * If we get called here because of an IO error, we may or may
- 		 * not have the item on the AIL. xfs_trans_ail_delete() will
--- 
-2.26.3
+--D
 
+> +	fi
+> +	_scratch_unmount
+> +}
+> +
+>  # XFS ability to change UUIDs on V5/CRC filesystems
+>  #
+>  _require_meta_uuid()
+> -- 
+> 2.27.0
+> 
