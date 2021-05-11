@@ -2,137 +2,123 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00348C433B4
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 02:34:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBA28C433B4
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 03:09:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDB35616E9
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 02:34:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8906261627
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 03:09:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229684AbhEKCfp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 May 2021 22:35:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38534 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229628AbhEKCfp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 May 2021 22:35:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6D7636008E;
-        Tue, 11 May 2021 02:34:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620700479;
-        bh=z1RNdnscfnLJe9wYV2Wx7iWNJkpwGMnDaSFAaC+Fpow=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QBlnTW+DyQpeWukO7S2hnBRjMpuUKP9JrN+MAqQgnpl1XQN0eqOyRCXfG9hRvRlnp
-         Aq7YAscKrmjouuC/T7bnWCYWdNLeqM9NEkZsMtDoydfFXgJOS70IAnh6qDPUQjUrOR
-         QNKY4fCTpQHJQXTEXyrh1g/1vrRDCZaS12IRLsgy/B2d0IC4BWriqhxFoETyn2RW5f
-         XuuYlFPEuVA88b7wMRQrWbrfJ3Ik2eEAxs1WxWazo3SUFU+4bGHyuLpd6DOyihQ7bC
-         9hEytx65j5qq5M7cBHxv2GP2UTSsSF24gPQWPEGWVi7CvAU4uPFp897n91qyTjiiwk
-         lxhDyOCRYwxzg==
-Date:   Mon, 10 May 2021 19:34:38 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Zorro Lang <zlang@redhat.com>, Eryu Guan <guan@eryu.me>
-Subject: Re: [PATCH v4 1/3] common/xfs: add _require_xfs_scratch_shrink helper
-Message-ID: <20210511023438.GK8582@magnolia>
-References: <20210402094937.4072606-1-hsiangkao@redhat.com>
- <20210402094937.4072606-2-hsiangkao@redhat.com>
- <20210510175952.GA8558@magnolia>
- <20210511020248.GC741809@xiangao.remote.csb>
+        id S229932AbhEKDKu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 May 2021 23:10:50 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:17679 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229465AbhEKDKs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 May 2021 23:10:48 -0400
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AqeOPpaHk4VAK9c6upLqEAMeALOsnbusQ8zAX?=
+ =?us-ascii?q?P0AYc3Jom6uj5qSTdZUgpHjJYVkqOE3I9ertBEDiewK4yXcW2/hzAV7KZmCP0w?=
+ =?us-ascii?q?HEEGgI1+rfKlPbdBEWjtQtt5uIbZIOc+HYPBxri9rg+gmkH5IFyNmDyqqhguDT?=
+ =?us-ascii?q?1B5WPHhXQpAl/wFkERyaD0EzYAFHAKAyHJ2a6tECiCGnfR0sH7yGL0hAT+7evM?=
+ =?us-ascii?q?fKiZ6jRRYHAiQs4A6IgSjtyJOSKWn/4isj?=
+X-IronPort-AV: E=Sophos;i="5.82,290,1613404800"; 
+   d="scan'208";a="108110504"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 11 May 2021 11:09:40 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 7E1904D0BA79;
+        Tue, 11 May 2021 11:09:36 +0800 (CST)
+Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Tue, 11 May 2021 11:09:35 +0800
+Received: from irides.mr.mr.mr (10.167.225.141) by
+ G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Tue, 11 May 2021 11:09:35 +0800
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>
+CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <willy@infradead.org>, <viro@zeniv.linux.org.uk>,
+        <david@fromorbit.com>, <hch@lst.de>, <rgoldwyn@suse.de>
+Subject: [PATCH v5 0/7] fsdax,xfs: Add reflink&dedupe support for fsdax
+Date:   Tue, 11 May 2021 11:09:26 +0800
+Message-ID: <20210511030933.3080921-1-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210511020248.GC741809@xiangao.remote.csb>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 7E1904D0BA79.A04B1
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 11, 2021 at 10:02:48AM +0800, Gao Xiang wrote:
-> On Mon, May 10, 2021 at 10:59:52AM -0700, Darrick J. Wong wrote:
-> > On Fri, Apr 02, 2021 at 05:49:35PM +0800, Gao Xiang wrote:
-> > > In order to detect whether the current kernel supports XFS shrinking.
-> > > 
-> > > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> > > ---
-> > >  common/xfs | 14 ++++++++++++++
-> > >  1 file changed, 14 insertions(+)
-> > > 
-> > > diff --git a/common/xfs b/common/xfs
-> > > index 69f76d6e..c6c2e3f5 100644
-> > > --- a/common/xfs
-> > > +++ b/common/xfs
-> > > @@ -766,6 +766,20 @@ _require_xfs_mkfs_without_validation()
-> > >  	fi
-> > >  }
-> > >  
-> > > +_require_xfs_scratch_shrink()
-> > > +{
-> > > +	_require_scratch
-> > > +	_require_command "$XFS_GROWFS_PROG" xfs_growfs
-> > > +
-> > > +	_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-> > > +	. $tmp.mkfs
-> > > +	_scratch_mount
-> > > +	# here just to check if kernel supports, no need do more extra work
-> > > +	$XFS_GROWFS_PROG -D$((dblocks-1)) "$SCRATCH_MNT" > /dev/null 2>&1 || \
-> > > +		_notrun "kernel does not support shrinking"
-> > 
-> > I think isn't sufficiently precise -- if xfs_growfs (userspace) doesn't
-> > support shrinking it'll error out with "data size XXX too small", and if
-> > the kernel doesn't support shrink, it'll return EINVAL.
-> 
-> I'm not sure if we need to identify such 2 cases (xfsprogs doesn't support
-> and/or kernel doesn't support), but if it's really needed I think I could
-> update it. But I've confirmed with testing that both two cases can be
-> handled with the statements above properly.
-> 
-> > 
-> > As written, this code attempts a single-block shrink and disables the
-> > entire test if that fails for any reason, even if that reason is that
-> > the last block in the filesystem isn't free, or we ran out of memory, or
-> > something like that.
-> 
-> hmm... the filesystem here is brandly new, I think at least it'd be
-> considered as "the last block in the new filesystem is free". If we're
-> worried that such promise could be broken, I think some other golden
-> output is unstable as well (although unrelated to this.) By that time,
-> I think the test script should be updated then instead. Or am I missing
-> something?
-> 
-> If we're worried about runing out of memory, I think the whole xfstests
-> could not be predictable. I'm not sure if we need to handle such case.
+This patchset is attempt to add CoW support for fsdax, and take XFS,
+which has both reflink and fsdax feature, as an example.
 
-I'm not specifically worried about running out of memory, I'm mostly
-worried that some /other/ implementation bug (or disk format variation)
-will show up and triggers the _notrun, and nobody will notice that the
-shrink tests quietly stop running.
+Changes from V4:
+ - Fix the mistake of breaking dax layout for two inodes
+ - Add CONFIG_FS_DAX judgement for fsdax code in remap_range.c
+ - Fix other small problems and mistakes
 
---D
+Changes from V3:
+ - Take out the first 3 patches as a cleanup patchset[1], which has been
+    sent yesterday.
+ - Fix usage of code in dax_iomap_cow_copy()
+ - Add comments for macro definitions
+ - Fix other code style problems and mistakes
 
-> > 
-> > I think this needs to check the output of xfs_growfs to make the
-> > decision to _notrun.
-> 
-> I could check some golden output such as "data size XXX too small", yet
-> I still don't think we should check some cases e.g. run out of memory..
-> 
-> Thanks,
-> Gao Xiang
-> 
-> > 
-> > --D
-> > 
-> > > +	_scratch_unmount
-> > > +}
-> > > +
-> > >  # XFS ability to change UUIDs on V5/CRC filesystems
-> > >  #
-> > >  _require_meta_uuid()
-> > > -- 
-> > > 2.27.0
-> > > 
-> > 
-> 
+One of the key mechanism need to be implemented in fsdax is CoW.  Copy
+the data from srcmap before we actually write data to the destance
+iomap.  And we just copy range in which data won't be changed.
+
+Another mechanism is range comparison.  In page cache case, readpage()
+is used to load data on disk to page cache in order to be able to
+compare data.  In fsdax case, readpage() does not work.  So, we need
+another compare data with direct access support.
+
+With the two mechanisms implemented in fsdax, we are able to make reflink
+and fsdax work together in XFS.
+
+Some of the patches are picked up from Goldwyn's patchset.  I made some
+changes to adapt to this patchset.
+
+
+(Rebased on v5.13-rc1 and patchset[1])
+[1]: https://lkml.org/lkml/2021/4/22/575
+
+Shiyang Ruan (7):
+  fsdax: Introduce dax_iomap_cow_copy()
+  fsdax: Replace mmap entry in case of CoW
+  fsdax: Add dax_iomap_cow_copy() for dax_iomap_zero
+  iomap: Introduce iomap_apply2() for operations on two files
+  fsdax: Dedup file range to use a compare function
+  fs/xfs: Handle CoW for fsdax write() path
+  fs/xfs: Add dax dedupe support
+
+ fs/dax.c               | 206 +++++++++++++++++++++++++++++++++++------
+ fs/iomap/apply.c       |  52 +++++++++++
+ fs/iomap/buffered-io.c |   2 +-
+ fs/remap_range.c       |  57 ++++++++++--
+ fs/xfs/xfs_bmap_util.c |   3 +-
+ fs/xfs/xfs_file.c      |  11 +--
+ fs/xfs/xfs_inode.c     |  66 ++++++++++++-
+ fs/xfs/xfs_inode.h     |   1 +
+ fs/xfs/xfs_iomap.c     |  61 +++++++++++-
+ fs/xfs/xfs_iomap.h     |   4 +
+ fs/xfs/xfs_iops.c      |   7 +-
+ fs/xfs/xfs_reflink.c   |  15 +--
+ include/linux/dax.h    |   7 +-
+ include/linux/fs.h     |  12 ++-
+ include/linux/iomap.h  |   7 +-
+ 15 files changed, 449 insertions(+), 62 deletions(-)
+
+-- 
+2.31.1
+
+
+
