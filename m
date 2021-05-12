@@ -7,203 +7,188 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7D9BC433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 12:49:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 508E9C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 12:54:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E010613CD
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 12:49:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EC62613FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 12:54:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230230AbhELMut (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 May 2021 08:50:49 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:25722 "EHLO
+        id S233367AbhELMzT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 May 2021 08:55:19 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:60820 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230037AbhELMus (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 May 2021 08:50:48 -0400
+        by vger.kernel.org with ESMTP id S233371AbhELMxi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 May 2021 08:53:38 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620823780;
+        s=mimecast20190719; t=1620823949;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=jZXwWK/6kzE4nGJ3BIPpYD9pw+d98jh9Qy8ZhVUpYFY=;
-        b=dI+GEWbPFUdeGRYKDl+gWMoq7ZDOLGSFYPtu+sWXg+z+Fp5A2bsIUngNqPb32ESM8Mbpm9
-        JbPQujpoAR1xQJxQAYDGkgsGyvTZEiM5gzNWq2Wx/03fD01QJIVkSUBm8ij7IZnNYAbKox
-        KYiqhCIYPN4wDvvGtRAULFDF6Vm/hMY=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-399-_jIp78EoOzivrrTaDClWJg-1; Wed, 12 May 2021 08:49:39 -0400
-X-MC-Unique: _jIp78EoOzivrrTaDClWJg-1
-Received: by mail-qv1-f69.google.com with SMTP id a18-20020a0cca920000b02901d3c6996bb7so18801549qvk.6
-        for <linux-xfs@vger.kernel.org>; Wed, 12 May 2021 05:49:38 -0700 (PDT)
+        bh=oRnzp5D9QMx6M0O5GAC7QeS87YQo8Zp0WNtW2bXprZ0=;
+        b=I2I6U+U52XKbJU8k7aSKrXOZjGl00h8P4oe45hr1d4HHjaJTFEs6IyuEW0lFOS5mpIvnNi
+        zAlnbSLJ0SYe9xX1b/SnLtHdCsX7yM2va/8aySSvbqFww00r2mpc+yV23ySYahJk6dRzxS
+        +JadyMz1ik7GRz91yz9QFP509dIRYso=
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
+ [209.85.160.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-95-i1dyw0qnODuoVfpyCgcz_w-1; Wed, 12 May 2021 08:52:28 -0400
+X-MC-Unique: i1dyw0qnODuoVfpyCgcz_w-1
+Received: by mail-qt1-f200.google.com with SMTP id b19-20020ac84f130000b02901d543c52248so12489304qte.1
+        for <linux-xfs@vger.kernel.org>; Wed, 12 May 2021 05:52:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=jZXwWK/6kzE4nGJ3BIPpYD9pw+d98jh9Qy8ZhVUpYFY=;
-        b=B91MDI2IJzJpRhpmVkQsbgRboR4i4yGElIzNkc4np8nrGXOH68pIOMgSAsMIiRDrGr
-         q/KZA971tpZE4t56zUawXc5CBo7JTAZRevrjEVTrt8f5O15Jl7jNRrr6DZVcVgv2F9Em
-         4e72SKj5Hw4YcJfvioYsCcIcy1Zd9Qo3EzEeJADBbfvUcGqDaDyu5NaPCSqN6EAzZXLM
-         AG7odZRNF6/kgoabkqKruXzt42k1GX/PMJLXqIxiXJbDHg/DXgz6z8EajrInJ4v3CkgK
-         qVmEaYlta42xImAuHylJcQ6y+92LKvDb/CSpD88/xAQtHJnP938yMjjFjg2/kpF/gQSl
-         Ijkw==
-X-Gm-Message-State: AOAM5332xvJw2s7OHviGMPd2zN4ZVu8iva5I+f5SpfEj7ZMNccyLQ59D
-        /pFq/JG40BHgRtXmfDCAfJmmlUZK2I6aj5Vg9HfJ8KhCKndUE+w+Z9z/w9RN2U88ilSp8YiB+Wb
-        beUXe3R9bX3hy3a/dHo5M
-X-Received: by 2002:a37:9a16:: with SMTP id c22mr32844283qke.0.1620823778332;
-        Wed, 12 May 2021 05:49:38 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyjlLV1RmkHuh5fRTLclOf/8SBpulYT6TzWMAicPPl2z1xigfKHAMCd0GnUOmB1CihbaQ6yYg==
-X-Received: by 2002:a37:9a16:: with SMTP id c22mr32844268qke.0.1620823778114;
-        Wed, 12 May 2021 05:49:38 -0700 (PDT)
+        bh=oRnzp5D9QMx6M0O5GAC7QeS87YQo8Zp0WNtW2bXprZ0=;
+        b=nxsqRX5BefGvy0cPaatL0NmxADq0wvD1FW0nyZbkec6Ubov+C5OLOIJIfabYZ5WWrv
+         6iskD4mzc+TY7mrKtoP6Q8Va5S0KZQTUjwjSVP1OEThwYXJbraP+FHnYpUuyBiTYbd5q
+         jEj4uwMf/N3Z9cpEY+vrhalieuOnEOPLgksmjeNkP4GjDv8NNFHJny9nFIp1fSHxUjx7
+         qk/alktawo34jkQrGIbp1eOYqGrmCgUL2kHcKsMQkM3yKe80OJqlgvUCjq3XCIkROWGW
+         IVId78dXa9pG/nip1vqgL4CVTL9DX9M1soshRD1yF65ru0nBPZ5rIIvCtG1XOPdyXUum
+         llWA==
+X-Gm-Message-State: AOAM533u5i/DQhfoeI80wQXdagKM30q9v6+3wsxtSUXWD7Q0nPzVmRWf
+        4PztRlnaFXGSzw0Q7rs/1wZT442JJMrpQ+l2iJSBnaiFhpxTtDXL5UBfjEFz5S+sBz+NFV5mTDS
+        1UKZ2ryX9BoOReEne+Yee
+X-Received: by 2002:a37:404a:: with SMTP id n71mr33262696qka.330.1620823947778;
+        Wed, 12 May 2021 05:52:27 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJw6cQBFblm0EPgf1GS/yFmA8h9Av49KHWToxCX8XWY0C7EgNkxJFWT07d0XiLjMWAjlyrMKMg==
+X-Received: by 2002:a37:404a:: with SMTP id n71mr33262682qka.330.1620823947554;
+        Wed, 12 May 2021 05:52:27 -0700 (PDT)
 Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id 129sm16204360qkn.44.2021.05.12.05.49.37
+        by smtp.gmail.com with ESMTPSA id 25sm5385274qky.16.2021.05.12.05.52.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 May 2021 05:49:37 -0700 (PDT)
-Date:   Wed, 12 May 2021 08:49:36 -0400
+        Wed, 12 May 2021 05:52:27 -0700 (PDT)
+Date:   Wed, 12 May 2021 08:52:25 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 17/22] xfs: simplify xfs_dialloc_select_ag() return values
-Message-ID: <YJvO4Py+CbiEddNn@bfoster>
+Subject: Re: [PATCH 18/22] xfs: collapse AG selection for inode allocation
+Message-ID: <YJvPiWfS4Jp2has7@bfoster>
 References: <20210506072054.271157-1-david@fromorbit.com>
- <20210506072054.271157-18-david@fromorbit.com>
+ <20210506072054.271157-19-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210506072054.271157-18-david@fromorbit.com>
+In-Reply-To: <20210506072054.271157-19-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 06, 2021 at 05:20:49PM +1000, Dave Chinner wrote:
+On Thu, May 06, 2021 at 05:20:50PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The only caller of xfs_dialloc_select_ag() will always return
-> -ENOSPC to it's caller if the agbp returned from
-> xfs_dialloc_select_ag() is NULL. IOWs, failure to find a candidate
-> AGI we can allocate inodes from is always an ENOSPC condition, so
-> move this logic up into xfs_dialloc_select_ag() so we can simplify
-> the return logic in this function.
+> xfs_dialloc_select_ag() does a lot of repetitive work. It first
+> calls xfs_ialloc_ag_select() to select the AG to start allocation
+> attempts in, which can do up to two entire loops across the perags
+> that inodes can be allocated in. This is simply checking if there is
+> spce available to allocate inodes in an AG, and it returns when it
+> finds the first candidate AG.
 > 
-> xfs_dialloc_select_ag() now only ever returns 0 with a locked
-> agbp, or an error with no agbp.
+> xfs_dialloc_select_ag() then does it's own iterative walk across
+> all the perags locking the AGIs and trying to allocate inodes from
+> the locked AG. It also doesn't limit the search to mp->m_maxagi,
+> so it will walk all AGs whether they can allocate inodes or not.
+> 
+> Hence if we are really low on inodes, we could do almost 3 entire
+> walks across the whole perag range before we find an allocation
+> group we can allocate inodes in or report ENOSPC.
+> 
+> Because xfs_ialloc_ag_select() returns on the first candidate AG it
+> finds, we can simply do these checks directly in
+> xfs_dialloc_select_ag() before we lock and try to allocate inodes.
+> This reduces the inode allocation pass down to 2 perag sweeps at
+> most - one for aligned inode cluster allocation and if we can't
+> allocate full, aligned inode clusters anywhere we'll do another pass
+> trying to do sparse inode cluster allocation.
+> 
+> This also removes a big chunk of duplicate code.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_ialloc.c | 23 ++++++++---------------
->  fs/xfs/xfs_inode.c         |  3 ---
->  2 files changed, 8 insertions(+), 18 deletions(-)
+>  fs/xfs/libxfs/xfs_ialloc.c | 221 +++++++++++++------------------------
+>  1 file changed, 75 insertions(+), 146 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 4540fbcd68a3..872591e8f5cb 100644
+> index 872591e8f5cb..b22556556bba 100644
 > --- a/fs/xfs/libxfs/xfs_ialloc.c
 > +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -1717,7 +1717,7 @@ xfs_dialloc_roll(
->   * This function will ensure that the selected AG has free inodes available to
->   * allocate from. The selected AGI will be returned locked to the caller, and it
->   * will allocate more free inodes if required. If no free inodes are found or
-> - * can be allocated, no AGI will be returned.
-> + * can be allocated, -ENOSPC be returned.
->   */
->  int
->  xfs_dialloc_select_ag(
-> @@ -1730,7 +1730,6 @@ xfs_dialloc_select_ag(
->  	struct xfs_buf		*agbp;
->  	xfs_agnumber_t		agno;
->  	int			error;
-> -	bool			noroom = false;
->  	xfs_agnumber_t		start_agno;
->  	struct xfs_perag	*pag;
->  	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
-> @@ -1744,7 +1743,7 @@ xfs_dialloc_select_ag(
->  	 */
->  	start_agno = xfs_ialloc_ag_select(*tpp, parent, mode);
->  	if (start_agno == NULLAGNUMBER)
-> -		return 0;
-> +		return -ENOSPC;
->  
->  	/*
->  	 * If we have already hit the ceiling of inode blocks then clear
-> @@ -1757,7 +1756,6 @@ xfs_dialloc_select_ag(
->  	if (igeo->maxicount &&
->  	    percpu_counter_read_positive(&mp->m_icount) + igeo->ialloc_inos
->  							> igeo->maxicount) {
-> -		noroom = true;
->  		okalloc = false;
->  	}
->  
-> @@ -1794,10 +1792,8 @@ xfs_dialloc_select_ag(
->  		if (error)
->  			break;
->  
-> -		if (pag->pagi_freecount) {
-> -			xfs_perag_put(pag);
-> +		if (pag->pagi_freecount)
->  			goto found_ag;
-> -		}
->  
->  		if (!okalloc)
->  			goto nextag_relse_buffer;
-> @@ -1805,9 +1801,6 @@ xfs_dialloc_select_ag(
->  		error = xfs_ialloc_ag_alloc(*tpp, agbp, pag);
->  		if (error < 0) {
->  			xfs_trans_brelse(*tpp, agbp);
-> -
-> -			if (error == -ENOSPC)
-> -				error = 0;
->  			break;
+...
+> @@ -1778,10 +1669,41 @@ xfs_dialloc_select_ag(
+>  				break;
 >  		}
 >  
-> @@ -1818,12 +1811,11 @@ xfs_dialloc_select_ag(
->  			 * allocate one of the new inodes.
->  			 */
->  			ASSERT(pag->pagi_freecount > 0);
-> -			xfs_perag_put(pag);
+> +		if (!pag->pagi_freecount)
+> +			goto nextag;
+
+It looks like this would never allow for allocation of new inode
+chunks..?
+
+> +		if (!okalloc)
+> +			goto nextag;
+> +
+> +		if (!pag->pagf_init) {
+> +			error = xfs_alloc_pagf_init(mp, *tpp, agno, flags);
+> +			if (error)
+> +				goto nextag;
+> +		}
+> +
+>  		/*
+> -		 * Do a first racy fast path check if this AG is usable.
+> +		 * Check that there is enough free space for the file plus a
+> +		 * chunk of inodes if we need to allocate some. If this is the
+> +		 * first pass across the AGs, take into account the potential
+> +		 * space needed for alignment of inode chunks when checking the
+> +		 * longest contiguous free space in the AG - this prevents us
+> +		 * from getting ENOSPC because we have free space larger than
+> +		 * ialloc_blks but alignment constraints prevent us from using
+> +		 * it.
+> +		 *
+> +		 * If we can't find an AG with space for full alignment slack to
+> +		 * be taken into account, we must be near ENOSPC in all AGs.
+> +		 * Hence we don't include alignment for the second pass and so
+> +		 * if we fail allocation due to alignment issues then it is most
+> +		 * likely a real ENOSPC condition.
+>  		 */
+> -		if (!pag->pagi_freecount && !okalloc)
+> +		ineed = M_IGEO(mp)->ialloc_min_blks;
+> +		if (flags && ineed > 1)
+> +			ineed += M_IGEO(mp)->cluster_align;
+> +		longest = pag->pagf_longest;
+> +		if (!longest)
+> +			longest = pag->pagf_flcount > 0;
+> +
+> +		if (pag->pagf_freeblks < needspace + ineed || longest < ineed)
+>  			goto nextag;
+
+... and here we check for enough free space in the AG for chunk
+allocation purposes. The pagi_freecount check is further down, however,
+so it looks like we can skip the AG even if pagi_freecount > 0 and
+allocation is not necessary.
+
+Brian
+
 >  
->  			error = xfs_dialloc_roll(tpp, agbp);
->  			if (error) {
->  				xfs_buf_relse(agbp);
-> -				return error;
-> +				break;
->  			}
->  			goto found_ag;
->  		}
-> @@ -1831,16 +1823,17 @@ xfs_dialloc_select_ag(
+>  		/*
+> @@ -1823,10 +1745,17 @@ xfs_dialloc_select_ag(
 >  nextag_relse_buffer:
 >  		xfs_trans_brelse(*tpp, agbp);
 >  nextag:
-> -		xfs_perag_put(pag);
->  		if (++agno == mp->m_sb.sb_agcount)
->  			agno = 0;
->  		if (agno == start_agno)
-> -			return noroom ? -ENOSPC : 0;
-> +			break;
-> +		xfs_perag_put(pag);
+> -		if (++agno == mp->m_sb.sb_agcount)
+> -			agno = 0;
+> -		if (agno == start_agno)
+> +		if (XFS_FORCED_SHUTDOWN(mp)) {
+> +			error = -EFSCORRUPTED;
+>  			break;
+> +		}
+> +		if (++agno == mp->m_maxagi)
+> +			agno = 0;
+> +		if (agno == start_agno) {
+> +			if (!flags)
+> +				break;
+> +			flags = 0;
+> +		}
+>  		xfs_perag_put(pag);
 >  	}
 >  
->  	xfs_perag_put(pag);
-> -	return error;
-> +	return error ? error : -ENOSPC;
->  found_ag:
-> +	xfs_perag_put(pag);
->  	*IO_agbp = agbp;
->  	return 0;
->  }
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 25910b145d70..3918c99fa95b 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -923,9 +923,6 @@ xfs_dir_ialloc(
->  	if (error)
->  		return error;
->  
-> -	if (!agibp)
-> -		return -ENOSPC;
-> -
->  	/* Allocate an inode from the selected AG */
->  	error = xfs_dialloc_ag(*tpp, agibp, parent_ino, &ino);
->  	if (error)
 > -- 
 > 2.31.1
 > 
