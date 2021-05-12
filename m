@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	LOTS_OF_MONEY,MAILING_LIST_MULTI,MONEY_NOHTML,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A6EEC433ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 02:01:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 912B3C433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 02:02:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0C80611BD
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 02:01:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54B22613AA
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 02:02:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229934AbhELCDB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 May 2021 22:03:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49388 "EHLO mail.kernel.org"
+        id S230289AbhELCDG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 May 2021 22:03:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49524 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230018AbhELCDA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 May 2021 22:03:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9AA4C61166;
-        Wed, 12 May 2021 02:01:53 +0000 (UTC)
+        id S230216AbhELCDG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 May 2021 22:03:06 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3ACC5610EA;
+        Wed, 12 May 2021 02:01:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620784913;
-        bh=EMbXuOeK5J0ubX7gtp/s1a0yy9J7P4qptIZ2bQ1wANU=;
+        s=k20201202; t=1620784919;
+        bh=AOi4sVKfMQ9Vkmc3t1BrijdRVluIUpPSUdJ4YRS/oWw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=s0hRuBtS7CfT+aMowrrtXCPGTUlHhhWdt3R4OMEZCXJrIa1rVW2EVoANk33eSjYpq
-         BLwyo4gGsn9MOXBJ7QLn8YS1zDVFHnhjwR9M4C9JfC8S+kR/8hIlY5+obgn6MErOd0
-         FSt7fnQEiTyrsgGyix+/cQ5rlQ6h+PC7f3jpQwnt+N1B+23G5rx2ap6o54QDQEXeEN
-         fyVX4bc88ATd46HB12pwsJbhKXVJ5M91Burx6HFT1LbhQb1+smh7/MNy7/23QSenw0
-         aDcIOZQ/7bb7Y4hoja21A/2zT9Ql/Db0BVOJG0IWSE59W2d555dQK5QCv+pC3/gtRy
-         b2G7PgNATa/4w==
-Subject: [PATCH 2/8] common/xfs: refactor commands to select a particular xfs
- backing device
+        b=iGS9oC/NtM6MPl/lLL0+5HCONj8zpU8JjmoF+E18R4lSb0E6k4TRW+EFuraDMX0fq
+         WQp9ykxdmj4pARSSO2KMNYhDZDSlKWK7DimbH3K/nKtzQTeCvhGXtu9yBoa3b82HZD
+         bXbKOeTeKB3Wq/cfY1nKGhNWGvEJBBneup92AuxqqYDfEvUO3VGduF/aruRdvvgRQP
+         iQFM6ZxgB8sxrmUQaxChXXmbdNKo2JWBRWCGMJbqaRiTk9GuT4JbjtBzeqjctWe3um
+         N97OfwbmV/8UhazoDYmLJ40gRdwcLN5QPP4+rJ6CMM1DO6Co37BxWJX6WEXqumuvuM
+         FUoUJgKfmHXnQ==
+Subject: [PATCH 3/8] xfs: fix old fuzz test invocations of xfs_repair
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 11 May 2021 19:01:51 -0700
-Message-ID: <162078491108.3302755.3627499639796540923.stgit@magnolia>
+Date:   Tue, 11 May 2021 19:01:56 -0700
+Message-ID: <162078491663.3302755.12377341247476799022.stgit@magnolia>
 In-Reply-To: <162078489963.3302755.9219127595550889655.stgit@magnolia>
 References: <162078489963.3302755.9219127595550889655.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,334 +49,436 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Refactor all the places where we try to force new file data allocations
-to a specific xfs backing device so that we don't end up open-coding the
-same xfs_io command lines over and over.
+Some of the older blocktrash-based fuzz tests cause the fs to go down
+due to the corrupted image and fail to remount.  Offline repair fails
+because _repair_scratch_fs is the helper that is smart enough to call
+xfs_repair -L, not _scratch_xfs_repair.  Fix these instances.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/populate   |    2 +-
- common/xfs        |   25 +++++++++++++++++++++++++
- tests/generic/223 |    3 ++-
- tests/generic/449 |    2 +-
- tests/xfs/004     |    2 +-
- tests/xfs/088     |    1 +
- tests/xfs/089     |    1 +
- tests/xfs/091     |    1 +
- tests/xfs/120     |    1 +
- tests/xfs/130     |    1 +
- tests/xfs/146     |    2 +-
- tests/xfs/147     |    2 +-
- tests/xfs/235     |    1 +
- tests/xfs/272     |    2 +-
- tests/xfs/318     |    2 +-
- tests/xfs/431     |    4 ++--
- tests/xfs/521     |    2 +-
- tests/xfs/528     |    2 +-
- tests/xfs/532     |    2 +-
- tests/xfs/533     |    2 +-
- tests/xfs/538     |    2 +-
- 21 files changed, 47 insertions(+), 15 deletions(-)
+ tests/xfs/083 |    8 ++++----
+ tests/xfs/085 |    2 +-
+ tests/xfs/086 |    4 ++--
+ tests/xfs/087 |    2 +-
+ tests/xfs/088 |    4 ++--
+ tests/xfs/089 |    4 ++--
+ tests/xfs/091 |    4 ++--
+ tests/xfs/093 |    2 +-
+ tests/xfs/097 |    2 +-
+ tests/xfs/099 |    4 ++--
+ tests/xfs/100 |    4 ++--
+ tests/xfs/101 |    4 ++--
+ tests/xfs/102 |    4 ++--
+ tests/xfs/105 |    4 ++--
+ tests/xfs/112 |    4 ++--
+ tests/xfs/113 |    4 ++--
+ tests/xfs/117 |    2 +-
+ tests/xfs/120 |    2 +-
+ tests/xfs/123 |    2 +-
+ tests/xfs/124 |    4 ++--
+ tests/xfs/125 |    4 ++--
+ tests/xfs/126 |    4 ++--
+ tests/xfs/130 |    2 +-
+ tests/xfs/235 |    2 +-
+ 24 files changed, 41 insertions(+), 41 deletions(-)
 
 
-diff --git a/common/populate b/common/populate
-index d484866a..e1704b10 100644
---- a/common/populate
-+++ b/common/populate
-@@ -162,7 +162,7 @@ _scratch_xfs_populate() {
- 	# Clear the rtinherit flag on the root directory so that files are
- 	# always created on the data volume regardless of MKFS_OPTIONS.  We can
- 	# set the realtime flag when needed.
--	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
-+	_scratch_xfs_force_bdev data $SCRATCH_MNT
+diff --git a/tests/xfs/083 b/tests/xfs/083
+index a3f32cb7..14a36416 100755
+--- a/tests/xfs/083
++++ b/tests/xfs/083
+@@ -44,7 +44,7 @@ scratch_repair() {
  
- 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- 	dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-diff --git a/common/xfs b/common/xfs
-index 5cd7b35c..49bd6c31 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -194,6 +194,31 @@ _xfs_get_file_block_size()
- 	$XFS_INFO_PROG "$path" | grep realtime | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g'
- }
+ 	FSCK_LOG="${tmp}-fuzz-${fsck_pass}.log"
+ 	echo "++ fsck pass ${fsck_pass}" > "${FSCK_LOG}"
+-	_scratch_xfs_repair >> "${FSCK_LOG}" 2>&1
++	_repair_scratch_fs >> "${FSCK_LOG}" 2>&1
+ 	res=$?
+ 	if [ "${res}" -eq 0 ]; then
+ 		echo "++ allegedly fixed, reverify" >> "${FSCK_LOG}"
+@@ -105,7 +105,7 @@ echo "+ populate fs image" >> $seqres.full
+ _scratch_populate >> $seqres.full
  
-+# Set or clear the realtime status of every supplied path.  The first argument
-+# is either 'data' or 'realtime'.  All other arguments should be paths to
-+# existing directories or empty regular files.
-+#
-+# For each directory, each file subsequently created will target the given
-+# device for file data allocations.  For each empty regular file, each
-+# subsequent file data allocation will be on the given device.
-+_scratch_xfs_force_bdev()
-+{
-+	local device="$1"
-+	shift
-+	local chattr_arg=""
-+
-+	case "$device" in
-+	"data")		chattr_arg="-t";;
-+	"realtime")	chattr_arg="+t";;
-+	*)
-+		echo "${device}: Don't know what device this is?"
-+		return 1
-+		;;
-+	esac
-+
-+	$XFS_IO_PROG -c "chattr $chattr_arg" "$@"
-+}
-+
- _xfs_get_fsxattr()
- {
- 	local field="$1"
-diff --git a/tests/generic/223 b/tests/generic/223
-index f6393293..0df84c2b 100755
---- a/tests/generic/223
-+++ b/tests/generic/223
-@@ -46,7 +46,8 @@ for SUNIT_K in 8 16 32 64 128; do
- 	# This test checks for stripe alignments of space allocations on the
- 	# filesystem.  Make sure all files get created on the main device,
- 	# which for XFS means no rt files.
--	test "$FSTYP" = "xfs" && $XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
-+	test "$FSTYP" = "xfs" && \
-+		_scratch_xfs_force_bdev data $SCRATCH_MNT
+ echo "+ check fs" >> $seqres.full
+-_scratch_xfs_repair >> $seqres.full 2>&1 || _fail "should pass initial fsck"
++_repair_scratch_fs >> $seqres.full 2>&1 || _fail "should pass initial fsck"
  
- 	for SIZE_MULT in 1 2 8 64 256; do
- 		let SIZE=$SIZE_MULT*$SUNIT_BYTES
-diff --git a/tests/generic/449 b/tests/generic/449
-index 5fd15367..9035b705 100755
---- a/tests/generic/449
-+++ b/tests/generic/449
-@@ -46,7 +46,7 @@ _scratch_mount || _fail "mount failed"
- # This is a test of xattr behavior when we run out of disk space for xattrs,
- # so make sure the pwrite goes to the data device and not the rt volume.
- test "$FSTYP" = "xfs" && \
--	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
-+	_scratch_xfs_force_bdev data $SCRATCH_MNT
+ echo "++ corrupt image" >> $seqres.full
+ _scratch_xfs_db -x -c blockget -c "blocktrash ${FUZZ_ARGS}" >> $seqres.full 2>&1
+@@ -129,7 +129,7 @@ done
+ echo "+ fsck loop returns ${fsck_loop_ret}" >> $seqres.full
  
- TFILE=$SCRATCH_MNT/testfile.$seq
+ echo "++ check fs for round 2" >> $seqres.full
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
  
-diff --git a/tests/xfs/004 b/tests/xfs/004
-index 7633071c..b3a00fb6 100755
---- a/tests/xfs/004
-+++ b/tests/xfs/004
-@@ -31,7 +31,7 @@ _populate_scratch()
- 	# This test looks at specific behaviors of the xfs_db freesp command,
- 	# which reports on the contents of the free space btrees for the data
- 	# device.  Don't let anything get created on the realtime volume.
--	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
-+	_scratch_xfs_force_bdev data $SCRATCH_MNT
- 	dd if=/dev/zero of=$SCRATCH_MNT/foo count=200 bs=4096 >/dev/null 2>&1 &
- 	dd if=/dev/zero of=$SCRATCH_MNT/goo count=400 bs=4096 >/dev/null 2>&1 &
- 	dd if=/dev/zero of=$SCRATCH_MNT/moo count=800 bs=4096 >/dev/null 2>&1 &
-diff --git a/tests/xfs/088 b/tests/xfs/088
-index fe621d0a..62360ca8 100755
---- a/tests/xfs/088
-+++ b/tests/xfs/088
-@@ -48,6 +48,7 @@ _scratch_mkfs_xfs > /dev/null
- echo "+ mount fs image"
+ ROUND2_LOG="${tmp}-round2-${fsck_pass}.log"
+ echo "++ mount image (2)" >> $ROUND2_LOG
+@@ -150,7 +150,7 @@ umount "${SCRATCH_MNT}" >> $ROUND2_LOG 2>&1
+ cat "$ROUND2_LOG" >> $seqres.full
+ 
+ echo "++ check fs (2)" >> $seqres.full
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ egrep -q '(did not fix|makes no progress)' $seqres.full && echo "xfs_repair failed" | tee -a $seqres.full
+ if [ "$(wc -l < "$ROUND2_LOG")" -ne 8 ]; then
+diff --git a/tests/xfs/085 b/tests/xfs/085
+index 560b5a24..5d898088 100755
+--- a/tests/xfs/085
++++ b/tests/xfs/085
+@@ -75,7 +75,7 @@ echo "+ mount image"
+ _try_scratch_mount 2>/dev/null && _fail "mount should not succeed"
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
  _scratch_mount
- blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-+_scratch_xfs_force_bdev data $SCRATCH_MNT
- 
- echo "+ make some files"
- mkdir -p "${TESTDIR}"
-diff --git a/tests/xfs/089 b/tests/xfs/089
-index 3339ff63..79167a57 100755
---- a/tests/xfs/089
-+++ b/tests/xfs/089
-@@ -48,6 +48,7 @@ _scratch_mkfs_xfs > /dev/null
- echo "+ mount fs image"
- _scratch_mount
- blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-+_scratch_xfs_force_bdev data $SCRATCH_MNT
- 
- echo "+ make some files"
- mkdir -p "${TESTDIR}"
-diff --git a/tests/xfs/091 b/tests/xfs/091
-index 9304849d..db6bb0b2 100755
---- a/tests/xfs/091
-+++ b/tests/xfs/091
-@@ -48,6 +48,7 @@ _scratch_mkfs_xfs > /dev/null
- echo "+ mount fs image"
- _scratch_mount
- blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-+_scratch_xfs_force_bdev data $SCRATCH_MNT
- 
- echo "+ make some files"
- mkdir -p "${TESTDIR}"
-diff --git a/tests/xfs/120 b/tests/xfs/120
-index 59ac0433..9fcce9ee 100755
---- a/tests/xfs/120
-+++ b/tests/xfs/120
-@@ -47,6 +47,7 @@ echo "+ mount fs image"
- _scratch_mount
- blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- nr="$((blksz * 2 / 16))"
-+_scratch_xfs_force_bdev data $SCRATCH_MNT
- 
- echo "+ make some files"
- $XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" -c 'fsync' "${SCRATCH_MNT}/bigfile" >> $seqres.full
-diff --git a/tests/xfs/130 b/tests/xfs/130
-index 9fec009f..b4404c5d 100755
---- a/tests/xfs/130
-+++ b/tests/xfs/130
-@@ -43,6 +43,7 @@ echo "+ mount fs image"
- _scratch_mount
- blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- agcount="$(_xfs_mount_agcount $SCRATCH_MNT)"
-+_scratch_xfs_force_bdev data $SCRATCH_MNT
- 
- echo "+ make some files"
- _pwrite_byte 0x62 0 $((blksz * 64)) "${SCRATCH_MNT}/file0" >> "$seqres.full"
-diff --git a/tests/xfs/146 b/tests/xfs/146
-index 8f85024d..a62b8429 100755
---- a/tests/xfs/146
-+++ b/tests/xfs/146
-@@ -78,7 +78,7 @@ _scratch_mkfs -r size=$rtsize >> $seqres.full
- _scratch_mount >> $seqres.full
- 
- # Make sure the root directory has rtinherit set so our test file will too
--$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT
-+_scratch_xfs_force_bdev realtime $SCRATCH_MNT
- 
- # Allocate some stuff at the start, to force the first falloc of the ouch file
- # to happen somewhere in the middle of the rt volume
-diff --git a/tests/xfs/147 b/tests/xfs/147
-index da962f96..0071f5c3 100755
---- a/tests/xfs/147
-+++ b/tests/xfs/147
-@@ -50,7 +50,7 @@ rextblks=$((rextsize / blksz))
- echo "blksz $blksz rextsize $rextsize rextblks $rextblks" >> $seqres.full
- 
- # Make sure the root directory has rtinherit set so our test file will too
--$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT
-+_scratch_xfs_force_bdev realtime $SCRATCH_MNT
- 
- sz=$((rextsize * 100))
- range="$((blksz * 3)) $blksz"
-diff --git a/tests/xfs/235 b/tests/xfs/235
-index 1ed19424..553a3bc8 100755
---- a/tests/xfs/235
-+++ b/tests/xfs/235
-@@ -41,6 +41,7 @@ echo "+ mount fs image"
- _scratch_mount
- blksz=$(stat -f -c '%s' ${SCRATCH_MNT})
- agcount=$(_xfs_mount_agcount $SCRATCH_MNT)
-+_scratch_xfs_force_bdev data $SCRATCH_MNT
- 
- echo "+ make some files"
- _pwrite_byte 0x62 0 $((blksz * 64)) ${SCRATCH_MNT}/file0 >> $seqres.full
-diff --git a/tests/xfs/272 b/tests/xfs/272
-index 6c0fede5..2848848d 100755
---- a/tests/xfs/272
-+++ b/tests/xfs/272
-@@ -38,7 +38,7 @@ _scratch_mkfs > "$seqres.full" 2>&1
- _scratch_mount
- 
- # Make sure everything is on the data device
--$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
-+_scratch_xfs_force_bdev data $SCRATCH_MNT
- 
- _pwrite_byte 0x80 0 737373 $SCRATCH_MNT/urk >> $seqres.full
- sync
-diff --git a/tests/xfs/318 b/tests/xfs/318
-index 07375b1f..823f3e6c 100755
---- a/tests/xfs/318
-+++ b/tests/xfs/318
-@@ -44,7 +44,7 @@ _scratch_mount >> $seqres.full
- 
- # This test depends on specific behaviors of the data device, so create all
- # files on it.
--$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
-+_scratch_xfs_force_bdev data $SCRATCH_MNT
- 
- echo "Create files"
- touch $SCRATCH_MNT/file1
-diff --git a/tests/xfs/431 b/tests/xfs/431
-index e67906dc..dd634ed6 100755
---- a/tests/xfs/431
-+++ b/tests/xfs/431
-@@ -47,7 +47,7 @@ _scratch_mount
- 
- # Set realtime inherit flag on scratch mount, suppress output
- # as this may simply error out on future kernels
--$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT &> /dev/null
-+_scratch_xfs_force_bdev realtime $SCRATCH_MNT &> /dev/null
- 
- # Check if 't' is actually set, as xfs_io returns 0 even when it fails to set
- # an attribute. And erroring out here is fine, this would be desired behavior
-@@ -60,7 +60,7 @@ if $XFS_IO_PROG -c 'lsattr' $SCRATCH_MNT | grep -q 't'; then
- 	# Remove the testfile and rt inherit flag after we are done or
- 	# xfs_repair will fail.
- 	rm -f $SCRATCH_MNT/testfile
--	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT | tee -a $seqres.full 2>&1
-+	_scratch_xfs_force_bdev data $SCRATCH_MNT | tee -a $seqres.full 2>&1
+diff --git a/tests/xfs/086 b/tests/xfs/086
+index f94c26b4..f4cf950d 100755
+--- a/tests/xfs/086
++++ b/tests/xfs/086
+@@ -86,7 +86,7 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
  fi
  
- # success, all done
-diff --git a/tests/xfs/521 b/tests/xfs/521
-index b8026d45..64155662 100755
---- a/tests/xfs/521
-+++ b/tests/xfs/521
-@@ -55,7 +55,7 @@ testdir=$SCRATCH_MNT/test-$seq
- mkdir $testdir
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
  
- echo "Check rt volume stats"
--$XFS_IO_PROG -c 'chattr +t' $testdir
-+_scratch_xfs_force_bdev realtime $testdir
- $XFS_INFO_PROG $SCRATCH_MNT >> $seqres.full
- before=$(stat -f -c '%b' $testdir)
+ echo "+ mount image"
+ _scratch_mount
+@@ -109,7 +109,7 @@ done
+ umount "${SCRATCH_MNT}"
  
-diff --git a/tests/xfs/528 b/tests/xfs/528
-index 7f98c5b8..4db4f513 100755
---- a/tests/xfs/528
-+++ b/tests/xfs/528
-@@ -77,7 +77,7 @@ test_ops() {
- 		_notrun "Could not mount rextsize=$rextsize with synthetic rt volume"
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
  
- 	# Force all files to be realtime files
--	$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT
-+	_scratch_xfs_force_bdev realtime $SCRATCH_MNT
+ echo "+ mount image"
+ _scratch_mount
+diff --git a/tests/xfs/087 b/tests/xfs/087
+index 967791dd..e7b06e09 100755
+--- a/tests/xfs/087
++++ b/tests/xfs/087
+@@ -86,7 +86,7 @@ fi
+ echo "broken: ${broken}"
  
- 	log "Test regular write, rextsize=$rextsize"
- 	mk_file $SCRATCH_MNT/write $rextsize
-diff --git a/tests/xfs/532 b/tests/xfs/532
-index 560af586..1749d6ac 100755
---- a/tests/xfs/532
-+++ b/tests/xfs/532
-@@ -47,7 +47,7 @@ _scratch_mount >> $seqres.full
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
  
- # Disable realtime inherit flag (if any) on root directory so that space on data
- # device gets fragmented rather than realtime device.
--$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
-+_scratch_xfs_force_bdev data $SCRATCH_MNT
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/088 b/tests/xfs/088
+index 62360ca8..42a186be 100755
+--- a/tests/xfs/088
++++ b/tests/xfs/088
+@@ -86,7 +86,7 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
  
- bsize=$(_get_block_size $SCRATCH_MNT)
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
  
-diff --git a/tests/xfs/533 b/tests/xfs/533
-index dd4cb4c4..b73097e1 100755
---- a/tests/xfs/533
-+++ b/tests/xfs/533
-@@ -58,7 +58,7 @@ _scratch_mount >> $seqres.full
+ echo "+ mount image"
+ _scratch_mount
+@@ -109,7 +109,7 @@ done
+ umount "${SCRATCH_MNT}"
  
- # Disable realtime inherit flag (if any) on root directory so that space on data
- # device gets fragmented rather than realtime device.
--$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
-+_scratch_xfs_force_bdev data $SCRATCH_MNT
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
  
- echo "Consume free space"
- fillerdir=$SCRATCH_MNT/fillerdir
-diff --git a/tests/xfs/538 b/tests/xfs/538
-index 97273b88..deb43d7c 100755
---- a/tests/xfs/538
-+++ b/tests/xfs/538
-@@ -44,7 +44,7 @@ _scratch_mount >> $seqres.full
+ echo "+ mount image"
+ _scratch_mount
+diff --git a/tests/xfs/089 b/tests/xfs/089
+index 79167a57..7d8af7ce 100755
+--- a/tests/xfs/089
++++ b/tests/xfs/089
+@@ -86,7 +86,7 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
  
- # Disable realtime inherit flag (if any) on root directory so that space on data
- # device gets fragmented rather than realtime device.
--$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
-+_scratch_xfs_force_bdev data $SCRATCH_MNT
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
  
- bsize=$(_get_file_block_size $SCRATCH_MNT)
+ echo "+ mount image"
+ _scratch_mount
+@@ -110,7 +110,7 @@ done
+ umount "${SCRATCH_MNT}"
  
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image"
+ _scratch_mount
+diff --git a/tests/xfs/091 b/tests/xfs/091
+index db6bb0b2..5fa98328 100755
+--- a/tests/xfs/091
++++ b/tests/xfs/091
+@@ -86,7 +86,7 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image"
+ _scratch_mount
+@@ -110,7 +110,7 @@ done
+ umount "${SCRATCH_MNT}"
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image"
+ _scratch_mount
+diff --git a/tests/xfs/093 b/tests/xfs/093
+index 3bdbff4d..9a61cc3e 100755
+--- a/tests/xfs/093
++++ b/tests/xfs/093
+@@ -86,7 +86,7 @@ fi
+ echo "broken: ${broken}"
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/097 b/tests/xfs/097
+index f8ea4676..98648c9e 100755
+--- a/tests/xfs/097
++++ b/tests/xfs/097
+@@ -88,7 +88,7 @@ fi
+ echo "broken: ${broken}"
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/099 b/tests/xfs/099
+index 0cf19682..9a1408b8 100755
+--- a/tests/xfs/099
++++ b/tests/xfs/099
+@@ -74,8 +74,8 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/100 b/tests/xfs/100
+index 44d175cc..277f26ec 100755
+--- a/tests/xfs/100
++++ b/tests/xfs/100
+@@ -79,8 +79,8 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/101 b/tests/xfs/101
+index 023cc349..6eb303ad 100755
+--- a/tests/xfs/101
++++ b/tests/xfs/101
+@@ -74,8 +74,8 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/102 b/tests/xfs/102
+index 907b8592..23326ecf 100755
+--- a/tests/xfs/102
++++ b/tests/xfs/102
+@@ -79,8 +79,8 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/105 b/tests/xfs/105
+index bb7e93e1..7aeee7f0 100755
+--- a/tests/xfs/105
++++ b/tests/xfs/105
+@@ -79,8 +79,8 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/112 b/tests/xfs/112
+index cf0a36d0..085f21ee 100755
+--- a/tests/xfs/112
++++ b/tests/xfs/112
+@@ -79,11 +79,11 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ if [ $? -eq 2 ]; then
+ 	_scratch_mount
+ 	umount "${SCRATCH_MNT}"
+-	_scratch_xfs_repair >> $seqres.full 2>&1
++	_repair_scratch_fs >> $seqres.full 2>&1
+ fi
+ 
+ echo "+ mount image (2)"
+diff --git a/tests/xfs/113 b/tests/xfs/113
+index 3ab3cf5e..3dc51381 100755
+--- a/tests/xfs/113
++++ b/tests/xfs/113
+@@ -79,8 +79,8 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/117 b/tests/xfs/117
+index 15765a56..d3f4675f 100755
+--- a/tests/xfs/117
++++ b/tests/xfs/117
+@@ -88,7 +88,7 @@ fi
+ echo "broken: ${broken}"
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/120 b/tests/xfs/120
+index 9fcce9ee..1f594ebc 100755
+--- a/tests/xfs/120
++++ b/tests/xfs/120
+@@ -74,7 +74,7 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/123 b/tests/xfs/123
+index a7fae5f6..ced453bd 100755
+--- a/tests/xfs/123
++++ b/tests/xfs/123
+@@ -69,7 +69,7 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/124 b/tests/xfs/124
+index f4b24dd6..50faa66b 100755
+--- a/tests/xfs/124
++++ b/tests/xfs/124
+@@ -78,8 +78,8 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/125 b/tests/xfs/125
+index 3bdf73c4..c9ee2cf3 100755
+--- a/tests/xfs/125
++++ b/tests/xfs/125
+@@ -78,8 +78,8 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/126 b/tests/xfs/126
+index 3f069c16..0ca0670c 100755
+--- a/tests/xfs/126
++++ b/tests/xfs/126
+@@ -83,8 +83,8 @@ if _try_scratch_mount >> $seqres.full 2>&1; then
+ fi
+ 
+ echo "+ repair fs"
+-_scratch_xfs_repair >> $seqres.full 2>&1
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/130 b/tests/xfs/130
+index b4404c5d..7ff565c6 100755
+--- a/tests/xfs/130
++++ b/tests/xfs/130
+@@ -71,7 +71,7 @@ _scratch_unmount >> $seqres.full 2>&1
+ echo "+ repair fs"
+ _disable_dmesg_check
+ _repair_scratch_fs >> "$seqres.full" 2>&1
+-_scratch_xfs_repair >> "$seqres.full" 2>&1
++_repair_scratch_fs >> "$seqres.full" 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
+diff --git a/tests/xfs/235 b/tests/xfs/235
+index 553a3bc8..fe3a2cd0 100755
+--- a/tests/xfs/235
++++ b/tests/xfs/235
+@@ -72,7 +72,7 @@ fi
+ echo "+ repair fs"
+ _disable_dmesg_check
+ _repair_scratch_fs >> "$seqres.full" 2>&1
+-_scratch_xfs_repair >> $seqres.full 2>&1
++_repair_scratch_fs >> $seqres.full 2>&1
+ 
+ echo "+ mount image (2)"
+ _scratch_mount
 
