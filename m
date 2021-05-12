@@ -2,246 +2,214 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8333C433ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 23:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 277C2C433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 01:04:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C381E616EA
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 May 2021 23:33:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D969D61928
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 01:04:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229934AbhEKXeK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 May 2021 19:34:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:44887 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229637AbhEKXeJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 May 2021 19:34:09 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620775982;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=sL1wCx8ELFuxvB703Ojb+3QWnMC1Qc5Cu6MqVlj4zW0=;
-        b=Id1L6fqfUXUnFBOS6dOPXs099clK0NgJuXARxF+Qvz0QVyhlTZR+vNLkV9ZSRcS3lykQZJ
-        R5zFZYNGdfiULQSJ0kDuLERvLHOBqZz1xpK1g+YaeLx9Nw3pFIkJMVZR9sMkZ5EXUeHega
-        8wnE0SY1SAVyXty9x+2HBO/rIE7cfHQ=
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
- [209.85.216.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-557-vjMXhcBDP22A21nvK0khZQ-1; Tue, 11 May 2021 19:33:00 -0400
-X-MC-Unique: vjMXhcBDP22A21nvK0khZQ-1
-Received: by mail-pj1-f70.google.com with SMTP id mw15-20020a17090b4d0fb0290157199aadbaso2431794pjb.7
-        for <linux-xfs@vger.kernel.org>; Tue, 11 May 2021 16:33:00 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=sL1wCx8ELFuxvB703Ojb+3QWnMC1Qc5Cu6MqVlj4zW0=;
-        b=gwXcCx2gVMCi4o0n8Hle2pi5BUcZbgjxsmrCDwB+KaZ3eJnEwGNw/6HSxfRo/ng3Qg
-         7sWwD32dn1MV0odeL4Mq0cMcZyBAWvX1gAJ14X4oAQ2uk6LQRw7cha8sj5N8kccq+vk3
-         UQShCqiOymyJWfyzsOakyS9186PoF2PegILmbjeouW8ZOuVlHMpfkpcE6j5Bspmc5kQN
-         vXdHZuh/ZeFI0sJ+1dl9xu08p3hiV0yQlMwurB0sDPE/mZ7zSIzt9oYlfHJ0UwlfUilO
-         nP7Y1HBed7nyW7LOghMPZybZha85JO1hrqhmoUbkd/tjtua+TjseFjVdhb5UO6Wa0qcQ
-         KB5Q==
-X-Gm-Message-State: AOAM532gA9nj/1axyoJ1ryR7z3RpoBVvP8aQ3l/eASLuOv+lsNGk+vWy
-        4Jx4+vW6MUv2dCKQnM5v6ArwlEzOQc8Q+HrHPaw6l+WqXuPk2Hh1GMhWJ0Bmm4EIJBm3g5T0f0d
-        HseJw3Hbse88k0Q+PKsRpXY2q/Iun8V3Glj4IZjFGBqbDxyFL2MykGcVzyFF8lyUCUehRyjHT/w
-        ==
-X-Received: by 2002:a63:c13:: with SMTP id b19mr33227375pgl.198.1620775979629;
-        Tue, 11 May 2021 16:32:59 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzZYLDNIKGf8j3vzgFHYYot+eUqy/6lNa+LMOqutSWDdMNnuoGtxWEIvH7KpS2rDEde5/CzPw==
-X-Received: by 2002:a63:c13:: with SMTP id b19mr33227346pgl.198.1620775979298;
-        Tue, 11 May 2021 16:32:59 -0700 (PDT)
-Received: from xiangao.com ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id s3sm15828393pgs.62.2021.05.11.16.32.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 May 2021 16:32:59 -0700 (PDT)
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Zorro Lang <zlang@redhat.com>, Eryu Guan <guan@eryu.me>,
-        Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH v6 3/3] xfs: stress test for shrinking free space in the last AG
-Date:   Wed, 12 May 2021 07:32:28 +0800
-Message-Id: <20210511233228.1018269-4-hsiangkao@redhat.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210511233228.1018269-1-hsiangkao@redhat.com>
-References: <20210511233228.1018269-1-hsiangkao@redhat.com>
+        id S229920AbhELBFj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 May 2021 21:05:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54496 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229637AbhELBFj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 May 2021 21:05:39 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 92DFF6188B;
+        Wed, 12 May 2021 01:04:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620781471;
+        bh=4ukDiIKKgh1y+mRhe74OIC0185vE18PdqlfDiEBdDE4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HksElAHPqQqPB2hMXEL/asB8GFQXO3cFgF3KADg+VblDPr/PBw4dPekdB21RFxoSJ
+         5Awaw1RlZivkW7DrIaEee7Ctm/wxfD/BTyXlqhTLHsF6mSqovXt/1rZiv/s9Vq62w3
+         3Efp0CgDDF5waFLOzD8jmBLv46/LliifFIMNAspqqG5791JL8rsBnFOkUg8efhqMxD
+         pkxMmHCzryjgNtteu5hzHqyqzm1ACsfYCcMcwQ1fqIHGyWcNqL+R5z4nKs9grDuPoL
+         CZ5m0uxIYixuIs41CZ0xcuJBTkXamHs/pU58ime2FvfEtX89szvZdLuu9FTwcx5E8R
+         DAQVLPTmCDdfw==
+Date:   Tue, 11 May 2021 18:04:28 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org,
+        darrick.wong@oracle.com, dan.j.williams@intel.com,
+        willy@infradead.org, viro@zeniv.linux.org.uk, david@fromorbit.com,
+        hch@lst.de, rgoldwyn@suse.de
+Subject: Re: [PATCH v5 7/7] fs/xfs: Add dax dedupe support
+Message-ID: <20210512010428.GQ8582@magnolia>
+References: <20210511030933.3080921-1-ruansy.fnst@fujitsu.com>
+ <20210511030933.3080921-8-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210511030933.3080921-8-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This adds a stress testcase to shrink free space as much as
-possible in the last AG with background fsstress workload.
+On Tue, May 11, 2021 at 11:09:33AM +0800, Shiyang Ruan wrote:
+> Introduce xfs_mmaplock_two_inodes_and_break_dax_layout() for dax files
+> who are going to be deduped.  After that, call compare range function
+> only when files are both DAX or not.
+> 
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> ---
+>  fs/xfs/xfs_file.c    |  2 +-
+>  fs/xfs/xfs_inode.c   | 66 +++++++++++++++++++++++++++++++++++++++++++-
+>  fs/xfs/xfs_inode.h   |  1 +
+>  fs/xfs/xfs_reflink.c |  4 +--
+>  4 files changed, 69 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 38d8eca05aee..bd5002d38df4 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -823,7 +823,7 @@ xfs_wait_dax_page(
+>  	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+>  }
+>  
+> -static int
+> +int
+>  xfs_break_dax_layouts(
+>  	struct inode		*inode,
+>  	bool			*retry)
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 0369eb22c1bb..0774b6e2b940 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3711,6 +3711,64 @@ xfs_iolock_two_inodes_and_break_layout(
+>  	return 0;
+>  }
+>  
+> +static int
+> +xfs_mmaplock_two_inodes_and_break_dax_layout(
+> +	struct inode		*src,
+> +	struct inode		*dest)
 
-The expectation is that no crash happens with expected output.
+MMAPLOCK is an xfs_inode lock, so please pass those in here.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
----
- tests/xfs/991     | 122 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/991.out |   8 +++
- tests/xfs/group   |   1 +
- 3 files changed, 131 insertions(+)
- create mode 100755 tests/xfs/991
- create mode 100644 tests/xfs/991.out
+> +{
+> +	int			error, attempts = 0;
+> +	bool			retry;
+> +	struct xfs_inode	*ip0, *ip1;
+> +	struct page		*page;
+> +	struct xfs_log_item	*lp;
+> +
+> +	if (src > dest)
+> +		swap(src, dest);
 
-diff --git a/tests/xfs/991 b/tests/xfs/991
-new file mode 100755
-index 00000000..7f4001ab
---- /dev/null
-+++ b/tests/xfs/991
-@@ -0,0 +1,122 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2020-2021 Red Hat, Inc.  All Rights Reserved.
-+#
-+# FS QA Test 991
-+#
-+# XFS online shrinkfs stress test
-+#
-+# This test attempts to shrink unused space as much as possible with
-+# background fsstress workload. It will decrease the shrink size if
-+# larger size fails. And totally repeat 2 * TIME_FACTOR times.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+create_scratch()
-+{
-+	_scratch_mkfs_xfs $@ | tee -a $seqres.full | \
-+		_filter_mkfs 2>$tmp.mkfs >/dev/null
-+	. $tmp.mkfs
-+
-+	_scratch_mount
-+	# fix the reserve block pool to a known size so that the enospc
-+	# calculations work out correctly.
-+	_scratch_resvblks 1024 > /dev/null 2>&1
-+}
-+
-+fill_scratch()
-+{
-+	$XFS_IO_PROG -f -c "falloc 0 $1" $SCRATCH_MNT/resvfile
-+}
-+
-+stress_scratch()
-+{
-+	local procs=3
-+	local nops=1000
-+	# -w ensures that the only ops are ones which cause write I/O
-+	local FSSTRESS_ARGS=`_scale_fsstress_args -d $SCRATCH_MNT -w \
-+		-p $procs -n $nops $FSSTRESS_AVOID`
-+	$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full 2>&1
-+}
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_scratch_shrink
-+_require_xfs_io_command "falloc"
-+
-+rm -f $seqres.full
-+_scratch_mkfs_xfs | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-+. $tmp.mkfs	# extract blocksize and data size for scratch device
-+
-+endsize=`expr 125 \* 1048576`	# stop after shrinking this big
-+[ `expr $endsize / $dbsize` -lt $dblocks ] || _notrun "Scratch device too small"
-+
-+nags=2
-+totalcount=$((2 * TIME_FACTOR))
-+
-+while [ $totalcount -gt 0 ]; do
-+	size=`expr 1010 \* 1048576`	# 1010 megabytes initially
-+	logblks=$(_scratch_find_xfs_min_logblocks -dsize=${size} -dagcount=${nags})
-+
-+	create_scratch -lsize=${logblks}b -dsize=${size} -dagcount=${nags}
-+
-+	for i in `seq 125 -1 90`; do
-+		fillsize=`expr $i \* 1048576`
-+		out="$(fill_scratch $fillsize 2>&1)"
-+		echo "$out" | grep -q 'No space left on device' && continue
-+		test -n "${out}" && echo "$out"
-+		break
-+	done
-+
-+	# shrink in chunks of this size at most
-+	decsize=`expr  41 \* 1048576 + 1 + $RANDOM \* $RANDOM % 1048576`
-+
-+	while [ $size -gt $endsize ]; do
-+		stress_scratch &
-+		sleep 1
-+
-+		decb=`expr $decsize / $dbsize`    # in data blocks
-+		while [ $decb -gt 0 ]; do
-+			sizeb=`expr $size / $dbsize - $decb`
-+
-+			$XFS_GROWFS_PROG -D ${sizeb} $SCRATCH_MNT \
-+				>> $seqres.full 2>&1 && break
-+
-+			[ $decb -gt 100 ] && decb=`expr $decb + $RANDOM % 10`
-+			decb=`expr $decb / 2`
-+		done
-+
-+		wait
-+		[ $decb -eq 0 ] && break
-+
-+		# get latest dblocks
-+		$XFS_INFO_PROG $SCRATCH_MNT 2>&1 | _filter_mkfs 2>$tmp.growfs >/dev/null
-+		. $tmp.growfs
-+
-+		size=`expr $dblocks \* $dbsize`
-+		_scratch_unmount
-+		_scratch_xfs_repair -n >> $seqres.full 2>&1 || \
-+			_fail "xfs_repair failed with shrinking $sizeb"
-+		_scratch_mount
-+	done
-+
-+	_scratch_unmount
-+	_scratch_xfs_repair -n >> $seqres.full 2>&1 || \
-+		_fail "xfs_repair failed with shrinking $sizeb"
-+	totalcount=`expr $totalcount - 1`
-+done
-+
-+echo "*** done"
-+status=0
-+exit
-diff --git a/tests/xfs/991.out b/tests/xfs/991.out
-new file mode 100644
-index 00000000..e8209672
---- /dev/null
-+++ b/tests/xfs/991.out
-@@ -0,0 +1,8 @@
-+QA output created by 991
-+meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-+data     = bsize=XXX blocks=XXX, imaxpct=PCT
-+         = sunit=XXX swidth=XXX, unwritten=X
-+naming   =VERN bsize=XXX
-+log      =LDEV bsize=XXX blocks=XXX
-+realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-+*** done
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 472c8f9a..53e68bea 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -521,3 +521,4 @@
- 538 auto stress
- 539 auto quick mount
- 990 auto quick growfs shrinkfs
-+991 auto growfs shrinkfs ioctl prealloc stress
--- 
-2.27.0
+The MMAPLOCK (and ILOCK) locking order is increasing inode number, not
+the address of the incore object.  This is different (and not consistent
+with) i_rwsem/XFS_IOLOCK, but those are the rules.
 
+> +	ip0 = XFS_I(src);
+> +	ip1 = XFS_I(dest);
+> +
+> +again:
+> +	retry = false;
+> +	/* Lock the first inode */
+> +	xfs_ilock(ip0, XFS_MMAPLOCK_EXCL);
+> +	error = xfs_break_dax_layouts(src, &retry);
+> +	if (error || retry) {
+> +		xfs_iunlock(ip0, XFS_MMAPLOCK_EXCL);
+> +		goto again;
+> +	}
+> +
+> +	if (src == dest)
+> +		return 0;
+> +
+> +	/* Nested lock the second inode */
+> +	lp = &ip0->i_itemp->ili_item;
+> +	if (lp && test_bit(XFS_LI_IN_AIL, &lp->li_flags)) {
+> +		if (!xfs_ilock_nowait(ip1,
+> +		    xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1))) {
+> +			xfs_iunlock(ip0, XFS_MMAPLOCK_EXCL);
+> +			if ((++attempts % 5) == 0)
+> +				delay(1); /* Don't just spin the CPU */
+> +			goto again;
+> +		}
+> +	} else
+> +		xfs_ilock(ip1, xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1));
+> +	/*
+> +	 * We cannot use xfs_break_dax_layouts() directly here because it may
+> +	 * need to unlock & lock the XFS_MMAPLOCK_EXCL which is not suitable
+> +	 * for this nested lock case.
+> +	 */
+> +	page = dax_layout_busy_page(dest->i_mapping);
+> +	if (page) {
+> +		if (page_ref_count(page) != 1) {
+
+This could be flattened to:
+
+	if (page && page_ref_count(page) != 1) {
+		...
+	}
+
+--D
+
+> +			xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
+> +			xfs_iunlock(ip0, XFS_MMAPLOCK_EXCL);
+> +			goto again;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  /*
+>   * Lock two inodes so that userspace cannot initiate I/O via file syscalls or
+>   * mmap activity.
+> @@ -3721,10 +3779,16 @@ xfs_ilock2_io_mmap(
+>  	struct xfs_inode	*ip2)
+>  {
+>  	int			ret;
+> +	struct inode		*ino1 = VFS_I(ip1);
+> +	struct inode		*ino2 = VFS_I(ip2);
+>  
+> -	ret = xfs_iolock_two_inodes_and_break_layout(VFS_I(ip1), VFS_I(ip2));
+> +	ret = xfs_iolock_two_inodes_and_break_layout(ino1, ino2);
+>  	if (ret)
+>  		return ret;
+> +
+> +	if (IS_DAX(ino1) && IS_DAX(ino2))
+> +		return xfs_mmaplock_two_inodes_and_break_dax_layout(ino1, ino2);
+> +
+>  	if (ip1 == ip2)
+>  		xfs_ilock(ip1, XFS_MMAPLOCK_EXCL);
+>  	else
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index ca826cfba91c..2d0b344fb100 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -457,6 +457,7 @@ enum xfs_prealloc_flags {
+>  
+>  int	xfs_update_prealloc_flags(struct xfs_inode *ip,
+>  				  enum xfs_prealloc_flags flags);
+> +int	xfs_break_dax_layouts(struct inode *inode, bool *retry);
+>  int	xfs_break_layouts(struct inode *inode, uint *iolock,
+>  		enum layout_break_reason reason);
+>  
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 9a780948dbd0..ff308304c5cd 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1324,8 +1324,8 @@ xfs_reflink_remap_prep(
+>  	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
+>  		goto out_unlock;
+>  
+> -	/* Don't share DAX file data for now. */
+> -	if (IS_DAX(inode_in) || IS_DAX(inode_out))
+> +	/* Don't share DAX file data with non-DAX file. */
+> +	if (IS_DAX(inode_in) != IS_DAX(inode_out))
+>  		goto out_unlock;
+>  
+>  	if (!IS_DAX(inode_in))
+> -- 
+> 2.31.1
+> 
+> 
+> 
