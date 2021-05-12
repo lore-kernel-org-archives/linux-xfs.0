@@ -2,119 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3736C433ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 14:30:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6545CC43460
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 14:41:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8AD7C61412
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 14:30:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E41B613CA
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 14:41:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231143AbhELObh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 May 2021 10:31:37 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:58091 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230446AbhELObf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 May 2021 10:31:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620829827;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=HatySM4rC2bpY4D46RqhQoYsTcO2zeHNqk5Sud7tD4U=;
-        b=HG4jFN1K9WOLiZyPAjvYw5pwbMfIZhRxjkBaSfsohPjbaQXbPsNQaRqnhqDrH87ZHDkKFT
-        5pGd6i1WLP31+satvWwU0ieS9LfRFfxpxVYUV6DaHZj4iivUzlxgrIKXJ0fav8mU01+CN6
-        6OXyP0NpeVW405YxMEFDNdbUM3CkwUE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-494-oo1OgA7YPCqKfiytW7uw0A-1; Wed, 12 May 2021 10:30:25 -0400
-X-MC-Unique: oo1OgA7YPCqKfiytW7uw0A-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 680FD800D62
-        for <linux-xfs@vger.kernel.org>; Wed, 12 May 2021 14:30:24 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-113-80.rdu2.redhat.com [10.10.113.80])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1FBBE63BA7
-        for <linux-xfs@vger.kernel.org>; Wed, 12 May 2021 14:30:24 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v1.1 2/2] xfs: remove dead stale buf unpin handling code
-Date:   Wed, 12 May 2021 10:30:23 -0400
-Message-Id: <20210512143023.929429-1-bfoster@redhat.com>
-In-Reply-To: <20210511135257.878743-3-bfoster@redhat.com>
-References: <20210511135257.878743-3-bfoster@redhat.com>
+        id S230364AbhELOnD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 May 2021 10:43:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36880 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230202AbhELOnD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 May 2021 10:43:03 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B4C3C061574;
+        Wed, 12 May 2021 07:41:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=nmCeol4OxOYxGsAsqjc6BSS4j1R2S4rzG/0fPJoXFKI=; b=a+NNS/dSBg4ioksrXQKLAeOm0U
+        fU0YgisnbBMFBlWnjNB0l4NWnvCy2wZOot3llat5Ww6lZvRuPm3gwsrPT3VbNlfaNPXo+mmYWK7CD
+        GI4iIw8yeVzZVKkwbSyuxbJTLCe2EHfHQ55zluQDAWZp0+DB+fnvuAB766DGz2RH5Nhss0xfAw1B2
+        P1/NvqUn+xdA97P+o3Sw8HmnOS9H+PZ8qPtpFVoKHkm1jyf4U315OzYXWxMvMFqPIAtuczY9ZdRJ7
+        SqkG4lrx5+GB3z6L+CqZp3UHEsAshbfcW1DIKpYADkAyFJ/D7l+TxhRiuVYb49Scc6hu741DxOETB
+        n319PzdA==;
+Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lgq29-008NIW-W7; Wed, 12 May 2021 14:40:49 +0000
+Date:   Wed, 12 May 2021 15:40:21 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>, ceph-devel@vger.kernel.org,
+        Chao Yu <yuchao0@huawei.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>
+Subject: Re: [PATCH 03/11] mm: Protect operations adding pages to page cache
+ with invalidate_lock
+Message-ID: <YJvo1bGG1tG+gtgC@casper.infradead.org>
+References: <20210512101639.22278-1-jack@suse.cz>
+ <20210512134631.4053-3-jack@suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210512134631.4053-3-jack@suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This code goes back to a time when transaction commits wrote
-directly to iclogs. The associated log items were pinned, written to
-the log, and then "uncommitted" if some part of the log write had
-failed. This uncommit sequence called an ->iop_unpin_remove()
-handler that was eventually folded into ->iop_unpin() via the remove
-parameter. The log subsystem has since changed significantly in that
-transactions commit to the CIL instead of direct to iclogs, though
-log items must still be aborted in the event of an eventual log I/O
-error. However, the context for a log item abort is now asynchronous
-from transaction commit, which means the committing transaction has
-been freed by this point in time and the transaction uncommit
-sequence of events is no longer relevant.
+On Wed, May 12, 2021 at 03:46:11PM +0200, Jan Kara wrote:
+> Currently, serializing operations such as page fault, read, or readahead
+> against hole punching is rather difficult. The basic race scheme is
+> like:
+> 
+> fallocate(FALLOC_FL_PUNCH_HOLE)			read / fault / ..
+>   truncate_inode_pages_range()
+> 						  <create pages in page
+> 						   cache here>
+>   <update fs block mapping and free blocks>
+> 
+> Now the problem is in this way read / page fault / readahead can
+> instantiate pages in page cache with potentially stale data (if blocks
+> get quickly reused). Avoiding this race is not simple - page locks do
+> not work because we want to make sure there are *no* pages in given
+> range. inode->i_rwsem does not work because page fault happens under
+> mmap_sem which ranks below inode->i_rwsem. Also using it for reads makes
+> the performance for mixed read-write workloads suffer.
+> 
+> So create a new rw_semaphore in the address_space - invalidate_lock -
+> that protects adding of pages to page cache for page faults / reads /
+> readahead.
 
-Further, since stale buffers remain locked at transaction commit
-through unpin, we can be certain that the buffer is not associated
-with any transaction when the unpin callback executes. Remove this
-unused hunk of code and replace it with an assertion that the buffer
-is disassociated from transaction context.
+Remind me (or, rather, add to the documentation) why we have to hold the
+invalidate_lock during the call to readpage / readahead, and we don't just
+hold it around the call to add_to_page_cache / add_to_page_cache_locked
+/ add_to_page_cache_lru ?  I appreciate that ->readpages is still going
+to suck, but we're down to just three implementations of ->readpages now
+(9p, cifs & nfs).
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_buf_item.c | 21 ++-------------------
- 1 file changed, 2 insertions(+), 19 deletions(-)
+Also, could I trouble you to run the comments through 'fmt' (or
+equivalent)?  It's easier to read if you're not kissing right up on 80
+columns.
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 7ff31788512b..672112064dac 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -517,28 +517,11 @@ xfs_buf_item_unpin(
- 		ASSERT(xfs_buf_islocked(bp));
- 		ASSERT(bp->b_flags & XBF_STALE);
- 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
-+		ASSERT(list_empty(&lip->li_trans));
-+		ASSERT(!bp->b_transp);
- 
- 		trace_xfs_buf_item_unpin_stale(bip);
- 
--		if (remove) {
--			/*
--			 * If we are in a transaction context, we have to
--			 * remove the log item from the transaction as we are
--			 * about to release our reference to the buffer.  If we
--			 * don't, the unlock that occurs later in
--			 * xfs_trans_uncommit() will try to reference the
--			 * buffer which we no longer have a hold on.
--			 */
--			if (!list_empty(&lip->li_trans))
--				xfs_trans_del_item(lip);
--
--			/*
--			 * Since the transaction no longer refers to the buffer,
--			 * the buffer should no longer refer to the transaction.
--			 */
--			bp->b_transp = NULL;
--		}
--
- 		/*
- 		 * If we get called here because of an IO error, we may or may
- 		 * not have the item on the AIL. xfs_trans_ail_delete() will
--- 
-2.26.3
+> +++ b/fs/inode.c
+> @@ -190,6 +190,9 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
+>  	mapping_set_gfp_mask(mapping, GFP_HIGHUSER_MOVABLE);
+>  	mapping->private_data = NULL;
+>  	mapping->writeback_index = 0;
+> +	init_rwsem(&mapping->invalidate_lock);
+> +	lockdep_set_class(&mapping->invalidate_lock,
+> +			  &sb->s_type->invalidate_lock_key);
+
+Why not:
+
+	__init_rwsem(&mapping->invalidate_lock, "mapping.invalidate_lock",
+			&sb->s_type->invalidate_lock_key);
 
