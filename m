@@ -7,382 +7,362 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38F12C433ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 23:44:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42409C433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 23:44:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B5B361419
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 23:44:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F70C6157F
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 23:44:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231826AbhELXoX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 May 2021 19:44:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45000 "EHLO mail.kernel.org"
+        id S230318AbhELXpW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 May 2021 19:45:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47890 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237287AbhELXMc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 May 2021 19:12:32 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3D80D613EB;
-        Wed, 12 May 2021 23:11:15 +0000 (UTC)
+        id S232311AbhELXUf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 May 2021 19:20:35 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 66B4B613EB;
+        Wed, 12 May 2021 23:19:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620861075;
-        bh=Js/M1oARJBaX0ikpMLfUxPcWcxcw3GZhUxrpWYDXRe4=;
+        s=k20201202; t=1620861564;
+        bh=yvB/+2j59Qv3vX+EqLEkUS5lC3aeKzP5sJOgEyp9EVM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hhathkQWSfCi1yLDMlV5pPFX7a3PLZKxCjyKghcgNJFJy+Bdq/FhiSN/ADub1GMB7
-         dmCVs0J3EJnHBzMqhfmX4rA7bKE9GgioHYcqxCtnrjhUUfa7PsQhaIJyXfDYjggT76
-         +Px2ElQWBP8NaWmx3KCtD3QKeMAxwBCXtjgWmE+qflhUEP/+l6qJT5/GpQ45MwUzz3
-         GxJDQXZDIQbRyWb77IrPF/0C10lEFe/8E0a5xyDWQA9YVs+QPeS8TrcGmsXIvPZCqb
-         CNV+f0Y/hlN9VXI8vicNYWB/pEz/d5w08u/xdXdhexuOKzOE/SyGqV1tJ8jdvfAlO6
-         w/OwPNSuz6zTw==
-Date:   Wed, 12 May 2021 16:11:14 -0700
+        b=HL1y9fD8mVax5druAJ6xLoxuRCJ9TNRqodKHj7mzNd7VKsQ/7KKcLRsHqSk17s4ab
+         u37Cy0kshE5GUnArqI4OZ7USHNVap/Ed2Pcb2nxrE5/xi903ocQYdrKSrhmHiuEYrp
+         PorOWkoNKqBbYn7ZhY1hLleVYZoSMcMG3TTrkWiCktOj+f+2j3Vxbwrk7JHgRlUsNd
+         HQZHnR4s0NHTFNAGYO3YhiWF7i3JUp5G6ALQi1MX/3CRcoHSPZ26fHycy3N9dNOvXF
+         3woSaYPDD8lOzr7Jo7Eq5QklHjI9kpPxoMNBcpS80tk/Nz38VdE8cUaSZKTNxnYvj0
+         PistJ4B0+lKFA==
+Date:   Wed, 12 May 2021 16:19:23 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 18/22] xfs: collapse AG selection for inode allocation
-Message-ID: <20210512231114.GM8582@magnolia>
+Subject: Re: [PATCH 19/22] xfs: get rid of xfs_dir_ialloc()
+Message-ID: <20210512231923.GN8582@magnolia>
 References: <20210506072054.271157-1-david@fromorbit.com>
- <20210506072054.271157-19-david@fromorbit.com>
+ <20210506072054.271157-20-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210506072054.271157-19-david@fromorbit.com>
+In-Reply-To: <20210506072054.271157-20-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 06, 2021 at 05:20:50PM +1000, Dave Chinner wrote:
+On Thu, May 06, 2021 at 05:20:51PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> xfs_dialloc_select_ag() does a lot of repetitive work. It first
-> calls xfs_ialloc_ag_select() to select the AG to start allocation
-> attempts in, which can do up to two entire loops across the perags
-> that inodes can be allocated in. This is simply checking if there is
-> spce available to allocate inodes in an AG, and it returns when it
-> finds the first candidate AG.
+> This is just a simple wrapper around the per-ag inode allocation
+> that doesn't need to exist. The internal mechanism to select and
+> allocate within an AG does not need to be exposed outside
+> xfs_ialloc.c, and it being exposed simply makes it harder to follow
+> the code and simplify it.
 > 
-> xfs_dialloc_select_ag() then does it's own iterative walk across
-> all the perags locking the AGIs and trying to allocate inodes from
-> the locked AG. It also doesn't limit the search to mp->m_maxagi,
-> so it will walk all AGs whether they can allocate inodes or not.
-> 
-> Hence if we are really low on inodes, we could do almost 3 entire
-> walks across the whole perag range before we find an allocation
-> group we can allocate inodes in or report ENOSPC.
-> 
-> Because xfs_ialloc_ag_select() returns on the first candidate AG it
-> finds, we can simply do these checks directly in
-> xfs_dialloc_select_ag() before we lock and try to allocate inodes.
-> This reduces the inode allocation pass down to 2 perag sweeps at
-> most - one for aligned inode cluster allocation and if we can't
-> allocate full, aligned inode clusters anywhere we'll do another pass
-> trying to do sparse inode cluster allocation.
-> 
-> This also removes a big chunk of duplicate code.
-
-Soooooo... we did an AG walk to pick the optimal starting point of an AG
-walk?  Heh.
-
+> This is simplified by internalising xf_dialloc_select_ag() and
+> xfs_dialloc_ag() into a single xfs_dialloc() function and then
+> xfs_dir_ialloc() can go away.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_ialloc.c | 221 +++++++++++++------------------------
->  1 file changed, 75 insertions(+), 146 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 872591e8f5cb..b22556556bba 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -899,139 +899,6 @@ xfs_ialloc_ag_alloc(
->  	return 0;
->  }
->  
-> -STATIC xfs_agnumber_t
-> -xfs_ialloc_next_ag(
-> -	xfs_mount_t	*mp)
-> -{
-> -	xfs_agnumber_t	agno;
-> -
-> -	spin_lock(&mp->m_agirotor_lock);
-> -	agno = mp->m_agirotor;
-> -	if (++mp->m_agirotor >= mp->m_maxagi)
-> -		mp->m_agirotor = 0;
-> -	spin_unlock(&mp->m_agirotor_lock);
-> -
-> -	return agno;
-> -}
-> -
-> -/*
-> - * Select an allocation group to look for a free inode in, based on the parent
-> - * inode and the mode.  Return the allocation group buffer.
-> - */
-> -STATIC xfs_agnumber_t
-> -xfs_ialloc_ag_select(
-> -	xfs_trans_t	*tp,		/* transaction pointer */
-> -	xfs_ino_t	parent,		/* parent directory inode number */
-> -	umode_t		mode)		/* bits set to indicate file type */
-> -{
-> -	xfs_agnumber_t	agcount;	/* number of ag's in the filesystem */
-> -	xfs_agnumber_t	agno;		/* current ag number */
-> -	int		flags;		/* alloc buffer locking flags */
-> -	xfs_extlen_t	ineed;		/* blocks needed for inode allocation */
-> -	xfs_extlen_t	longest = 0;	/* longest extent available */
-> -	xfs_mount_t	*mp;		/* mount point structure */
-> -	int		needspace;	/* file mode implies space allocated */
-> -	xfs_perag_t	*pag;		/* per allocation group data */
-> -	xfs_agnumber_t	pagno;		/* parent (starting) ag number */
-> -	int		error;
-> -
-> -	/*
-> -	 * Files of these types need at least one block if length > 0
-> -	 * (and they won't fit in the inode, but that's hard to figure out).
-> -	 */
-> -	needspace = S_ISDIR(mode) || S_ISREG(mode) || S_ISLNK(mode);
-> -	mp = tp->t_mountp;
-> -	agcount = mp->m_maxagi;
-> -	if (S_ISDIR(mode))
-> -		pagno = xfs_ialloc_next_ag(mp);
-> -	else {
-> -		pagno = XFS_INO_TO_AGNO(mp, parent);
-> -		if (pagno >= agcount)
-> -			pagno = 0;
-> -	}
-> -
-> -	ASSERT(pagno < agcount);
-> -
-> -	/*
-> -	 * Loop through allocation groups, looking for one with a little
-> -	 * free space in it.  Note we don't look for free inodes, exactly.
-> -	 * Instead, we include whether there is a need to allocate inodes
-> -	 * to mean that blocks must be allocated for them,
-> -	 * if none are currently free.
-> -	 */
-> -	agno = pagno;
-> -	flags = XFS_ALLOC_FLAG_TRYLOCK;
-> -	for (;;) {
-> -		pag = xfs_perag_get(mp, agno);
-> -		if (!pag->pagi_inodeok) {
-> -			xfs_ialloc_next_ag(mp);
-> -			goto nextag;
-> -		}
-> -
-> -		if (!pag->pagi_init) {
-> -			error = xfs_ialloc_pagi_init(mp, tp, agno);
-> -			if (error)
-> -				goto nextag;
-> -		}
-> -
-> -		if (pag->pagi_freecount) {
-> -			xfs_perag_put(pag);
-> -			return agno;
-> -		}
-> -
-> -		if (!pag->pagf_init) {
-> -			error = xfs_alloc_pagf_init(mp, tp, agno, flags);
-> -			if (error)
-> -				goto nextag;
-> -		}
-> -
-> -		/*
-> -		 * Check that there is enough free space for the file plus a
-> -		 * chunk of inodes if we need to allocate some. If this is the
-> -		 * first pass across the AGs, take into account the potential
-> -		 * space needed for alignment of inode chunks when checking the
-> -		 * longest contiguous free space in the AG - this prevents us
-> -		 * from getting ENOSPC because we have free space larger than
-> -		 * ialloc_blks but alignment constraints prevent us from using
-> -		 * it.
-> -		 *
-> -		 * If we can't find an AG with space for full alignment slack to
-> -		 * be taken into account, we must be near ENOSPC in all AGs.
-> -		 * Hence we don't include alignment for the second pass and so
-> -		 * if we fail allocation due to alignment issues then it is most
-> -		 * likely a real ENOSPC condition.
-> -		 */
-> -		ineed = M_IGEO(mp)->ialloc_min_blks;
-> -		if (flags && ineed > 1)
-> -			ineed += M_IGEO(mp)->cluster_align;
-> -		longest = pag->pagf_longest;
-> -		if (!longest)
-> -			longest = pag->pagf_flcount > 0;
-> -
-> -		if (pag->pagf_freeblks >= needspace + ineed &&
-> -		    longest >= ineed) {
-> -			xfs_perag_put(pag);
-> -			return agno;
-> -		}
-> -nextag:
-> -		xfs_perag_put(pag);
-> -		/*
-> -		 * No point in iterating over the rest, if we're shutting
-> -		 * down.
-> -		 */
-> -		if (XFS_FORCED_SHUTDOWN(mp))
-> -			return NULLAGNUMBER;
-> -		agno++;
-> -		if (agno >= agcount)
-> -			agno = 0;
-> -		if (agno == pagno) {
-> -			if (flags == 0)
-> -				return NULLAGNUMBER;
-> -			flags = 0;
-> -		}
-> -	}
-> -}
-> -
->  /*
->   * Try to retrieve the next record to the left/right from the current one.
->   */
-> @@ -1708,6 +1575,21 @@ xfs_dialloc_roll(
->  	return 0;
->  }
->  
-> +STATIC xfs_agnumber_t
-> +xfs_ialloc_next_ag(
-> +	xfs_mount_t	*mp)
-> +{
-> +	xfs_agnumber_t	agno;
-> +
-> +	spin_lock(&mp->m_agirotor_lock);
-> +	agno = mp->m_agirotor;
-> +	if (++mp->m_agirotor >= mp->m_maxagi)
-> +		mp->m_agirotor = 0;
-> +	spin_unlock(&mp->m_agirotor_lock);
-> +
-> +	return agno;
-> +}
-> +
->  /*
->   * Select and prepare an AG for inode allocation.
->   *
-> @@ -1734,16 +1616,23 @@ xfs_dialloc_select_ag(
->  	struct xfs_perag	*pag;
->  	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
->  	bool			okalloc = true;
-> +	int			needspace;
-> +	int			flags;
->  
->  	*IO_agbp = NULL;
->  
->  	/*
-> -	 * We do not have an agbp, so select an initial allocation
-> -	 * group for inode allocation.
-> +	 * Files of these types need at least one block if length > 0
-> +	 * (and they won't fit in the inode, but that's hard to figure out).
 
-Uh, what is length here?  Seeing as most directories and symlinks
-probably end up in local format, is this needspace computation really
-true?
+Aha, I see what you did here with disappearing xfs_dialloc_select_ag.
+Ignore my later comments about 5.11 and whatnot.
 
-I guess it doesn't hurt to be cautious and assume that directories can
-expand and that people are aggressively symlinking.  But maybe this
-comment could be rephrased to something like:
+This'll cause some churn in the metadata directory tree patchset, but
+it's not like that hasn't happened 5x before. :P
 
-	/*
-	 * Directories, symlinks, and regular files frequently allocate
-	 * at least one block, so factor that potential expansion when
-	 * we examine whether an AG has enough space for file creation.
-	 */
-	needspace = S_ISDIR(mode)...;
-
-With that clarified,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
->  	 */
-> -	start_agno = xfs_ialloc_ag_select(*tpp, parent, mode);
-> -	if (start_agno == NULLAGNUMBER)
-> -		return -ENOSPC;
-> +	needspace = S_ISDIR(mode) || S_ISREG(mode) || S_ISLNK(mode);
-> +	if (S_ISDIR(mode))
-> +		start_agno = xfs_ialloc_next_ag(mp);
-> +	else {
-> +		start_agno = XFS_INO_TO_AGNO(mp, parent);
-> +		if (start_agno >= mp->m_maxagi)
-> +			start_agno = 0;
-> +	}
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c | 15 +++++----
+>  fs/xfs/libxfs/xfs_ialloc.h | 27 +++-------------
+>  fs/xfs/xfs_inode.c         | 66 +++++++-------------------------------
+>  fs/xfs/xfs_inode.h         |  9 +++---
+>  fs/xfs/xfs_qm.c            |  9 ++++--
+>  fs/xfs/xfs_symlink.c       |  9 ++++--
+>  6 files changed, 43 insertions(+), 92 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index b22556556bba..2c0ef2dd46d9 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -1602,24 +1602,23 @@ xfs_ialloc_next_ag(
+>   * can be allocated, -ENOSPC be returned.
+>   */
+>  int
+> -xfs_dialloc_select_ag(
+> +xfs_dialloc(
+>  	struct xfs_trans	**tpp,
+>  	xfs_ino_t		parent,
+>  	umode_t			mode,
+> -	struct xfs_buf		**IO_agbp)
+> +	xfs_ino_t		*new_ino)
+>  {
+>  	struct xfs_mount	*mp = (*tpp)->t_mountp;
+>  	struct xfs_buf		*agbp;
+>  	xfs_agnumber_t		agno;
+> -	int			error;
+> +	int			error = 0;
+>  	xfs_agnumber_t		start_agno;
+>  	struct xfs_perag	*pag;
+>  	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+>  	bool			okalloc = true;
+>  	int			needspace;
+>  	int			flags;
+> -
+> -	*IO_agbp = NULL;
+> +	xfs_ino_t		ino;
 >  
 >  	/*
->  	 * If we have already hit the ceiling of inode blocks then clear
-> @@ -1765,12 +1654,14 @@ xfs_dialloc_select_ag(
->  	 * allocation groups upward, wrapping at the end.
+>  	 * Files of these types need at least one block if length > 0
+> @@ -1763,7 +1762,11 @@ xfs_dialloc_select_ag(
+>  	return error ? error : -ENOSPC;
+>  found_ag:
+>  	xfs_perag_put(pag);
+> -	*IO_agbp = agbp;
+> +	/* Allocate an inode in the found AG */
+> +	error = xfs_dialloc_ag(*tpp, agbp, parent, &ino);
+> +	if (error)
+> +		return error;
+> +	*new_ino = ino;
+>  	return 0;
+>  }
+>  
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+> index 3511086a7ae1..886f6748fb22 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.h
+> +++ b/fs/xfs/libxfs/xfs_ialloc.h
+> @@ -33,30 +33,11 @@ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
+>  }
+>  
+>  /*
+> - * Allocate an inode on disk.
+> - * Mode is used to tell whether the new inode will need space, and whether
+> - * it is a directory.
+> - *
+> - * There are two phases to inode allocation: selecting an AG and ensuring
+> - * that it contains free inodes, followed by allocating one of the free
+> - * inodes. xfs_dialloc_select_ag() does the former and returns a locked AGI
+> - * to the caller, ensuring that followup call to xfs_dialloc_ag() will
+> - * have free inodes to allocate from. xfs_dialloc_ag() will return the inode
+> - * number of the free inode we allocated.
+> + * Allocate an inode on disk.  Mode is used to tell whether the new inode will
+> + * need space, and whether it is a directory.
+>   */
+> -int					/* error */
+> -xfs_dialloc_select_ag(
+> -	struct xfs_trans **tpp,		/* double pointer of transaction */
+> -	xfs_ino_t	parent,		/* parent inode (directory) */
+> -	umode_t		mode,		/* mode bits for new inode */
+> -	struct xfs_buf	**IO_agbp);
+> -
+> -int
+> -xfs_dialloc_ag(
+> -	struct xfs_trans	*tp,
+> -	struct xfs_buf		*agbp,
+> -	xfs_ino_t		parent,
+> -	xfs_ino_t		*inop);
+> +int xfs_dialloc(struct xfs_trans **tpp, xfs_ino_t parent, umode_t mode,
+> +		xfs_ino_t *new_ino);
+>  
+>  /*
+>   * Free disk inode.  Carefully avoids touching the incore inode, all
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 3918c99fa95b..26668b6846e2 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -749,7 +749,7 @@ xfs_inode_inherit_flags2(
+>   * Initialise a newly allocated inode and return the in-core inode to the
+>   * caller locked exclusively.
+>   */
+> -static int
+> +int
+>  xfs_init_new_inode(
+>  	struct user_namespace	*mnt_userns,
+>  	struct xfs_trans	*tp,
+> @@ -885,54 +885,6 @@ xfs_init_new_inode(
+>  	return 0;
+>  }
+>  
+> -/*
+> - * Allocates a new inode from disk and return a pointer to the incore copy. This
+> - * routine will internally commit the current transaction and allocate a new one
+> - * if we needed to allocate more on-disk free inodes to perform the requested
+> - * operation.
+> - *
+> - * If we are allocating quota inodes, we do not have a parent inode to attach to
+> - * or associate with (i.e. dp == NULL) because they are not linked into the
+> - * directory structure - they are attached directly to the superblock - and so
+> - * have no parent.
+> - */
+> -int
+> -xfs_dir_ialloc(
+> -	struct user_namespace	*mnt_userns,
+> -	struct xfs_trans	**tpp,
+> -	struct xfs_inode	*dp,
+> -	umode_t			mode,
+> -	xfs_nlink_t		nlink,
+> -	dev_t			rdev,
+> -	prid_t			prid,
+> -	bool			init_xattrs,
+> -	struct xfs_inode	**ipp)
+> -{
+> -	struct xfs_buf		*agibp;
+> -	xfs_ino_t		parent_ino = dp ? dp->i_ino : 0;
+> -	xfs_ino_t		ino;
+> -	int			error;
+> -
+> -	ASSERT((*tpp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+> -
+> -	/*
+> -	 * Call the space management code to pick the on-disk inode to be
+> -	 * allocated.
+> -	 */
+> -	error = xfs_dialloc_select_ag(tpp, parent_ino, mode, &agibp);
+> -	if (error)
+> -		return error;
+> -
+> -	/* Allocate an inode from the selected AG */
+> -	error = xfs_dialloc_ag(*tpp, agibp, parent_ino, &ino);
+> -	if (error)
+> -		return error;
+> -	ASSERT(ino != NULLFSINO);
+> -
+> -	return xfs_init_new_inode(mnt_userns, *tpp, dp, ino, mode, nlink, rdev,
+> -				  prid, init_xattrs, ipp);
+> -}
+> -
+>  /*
+>   * Decrement the link count on an inode & log the change.  If this causes the
+>   * link count to go to zero, move the inode to AGI unlinked list so that it can
+> @@ -990,6 +942,7 @@ xfs_create(
+>  	struct xfs_dquot	*pdqp = NULL;
+>  	struct xfs_trans_res	*tres;
+>  	uint			resblks;
+> +	xfs_ino_t		ino;
+>  
+>  	trace_xfs_create(dp, name);
+>  
+> @@ -1046,14 +999,16 @@ xfs_create(
+>  	 * entry pointing to them, but a directory also the "." entry
+>  	 * pointing to itself.
 >  	 */
->  	agno = start_agno;
-> +	flags = XFS_ALLOC_FLAG_TRYLOCK;
->  	for (;;) {
-> +		xfs_extlen_t	ineed;
-> +		xfs_extlen_t	longest = 0;
-> +
->  		pag = xfs_perag_get(mp, agno);
-> -		if (!pag->pagi_inodeok) {
-> -			xfs_ialloc_next_ag(mp);
-> +		if (!pag->pagi_inodeok)
->  			goto nextag;
-> -		}
+> -	error = xfs_dir_ialloc(mnt_userns, &tp, dp, mode, is_dir ? 2 : 1, rdev,
+> -			       prid, init_xattrs, &ip);
+> +	error = xfs_dialloc(&tp, dp->i_ino, mode, &ino);
+> +	if (!error)
+> +		error = xfs_init_new_inode(mnt_userns, tp, dp, ino, mode,
+> +				is_dir ? 2 : 1, rdev, prid, init_xattrs, &ip);
+>  	if (error)
+>  		goto out_trans_cancel;
 >  
->  		if (!pag->pagi_init) {
->  			error = xfs_ialloc_pagi_init(mp, *tpp, agno);
-> @@ -1778,10 +1669,41 @@ xfs_dialloc_select_ag(
->  				break;
->  		}
+>  	/*
+>  	 * Now we join the directory inode to the transaction.  We do not do it
+> -	 * earlier because xfs_dir_ialloc might commit the previous transaction
+> +	 * earlier because xfs_dialloc might commit the previous transaction
+>  	 * (and release all the locks).  An error from here on will result in
+>  	 * the transaction cancel unlocking dp so don't do it explicitly in the
+>  	 * error path.
+> @@ -1143,6 +1098,7 @@ xfs_create_tmpfile(
+>  	struct xfs_dquot	*pdqp = NULL;
+>  	struct xfs_trans_res	*tres;
+>  	uint			resblks;
+> +	xfs_ino_t		ino;
 >  
-> +		if (!pag->pagi_freecount)
-> +			goto nextag;
-> +		if (!okalloc)
-> +			goto nextag;
-> +
-> +		if (!pag->pagf_init) {
-> +			error = xfs_alloc_pagf_init(mp, *tpp, agno, flags);
-> +			if (error)
-> +				goto nextag;
-> +		}
-> +
->  		/*
-> -		 * Do a first racy fast path check if this AG is usable.
-> +		 * Check that there is enough free space for the file plus a
-> +		 * chunk of inodes if we need to allocate some. If this is the
-> +		 * first pass across the AGs, take into account the potential
-> +		 * space needed for alignment of inode chunks when checking the
-> +		 * longest contiguous free space in the AG - this prevents us
-> +		 * from getting ENOSPC because we have free space larger than
-> +		 * ialloc_blks but alignment constraints prevent us from using
-> +		 * it.
-> +		 *
-> +		 * If we can't find an AG with space for full alignment slack to
-> +		 * be taken into account, we must be near ENOSPC in all AGs.
-> +		 * Hence we don't include alignment for the second pass and so
-> +		 * if we fail allocation due to alignment issues then it is most
-> +		 * likely a real ENOSPC condition.
->  		 */
-> -		if (!pag->pagi_freecount && !okalloc)
-> +		ineed = M_IGEO(mp)->ialloc_min_blks;
-> +		if (flags && ineed > 1)
-> +			ineed += M_IGEO(mp)->cluster_align;
-> +		longest = pag->pagf_longest;
-> +		if (!longest)
-> +			longest = pag->pagf_flcount > 0;
-> +
-> +		if (pag->pagf_freeblks < needspace + ineed || longest < ineed)
->  			goto nextag;
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+> @@ -1167,8 +1123,10 @@ xfs_create_tmpfile(
+>  	if (error)
+>  		goto out_release_dquots;
 >  
->  		/*
-> @@ -1823,10 +1745,17 @@ xfs_dialloc_select_ag(
->  nextag_relse_buffer:
->  		xfs_trans_brelse(*tpp, agbp);
->  nextag:
-> -		if (++agno == mp->m_sb.sb_agcount)
-> -			agno = 0;
-> -		if (agno == start_agno)
-> +		if (XFS_FORCED_SHUTDOWN(mp)) {
-> +			error = -EFSCORRUPTED;
->  			break;
-> +		}
-> +		if (++agno == mp->m_maxagi)
-> +			agno = 0;
-> +		if (agno == start_agno) {
-> +			if (!flags)
-> +				break;
-> +			flags = 0;
-> +		}
->  		xfs_perag_put(pag);
->  	}
+> -	error = xfs_dir_ialloc(mnt_userns, &tp, dp, mode, 0, 0, prid,
+> -				false, &ip);
+> +	error = xfs_dialloc(&tp, dp->i_ino, mode, &ino);
+> +	if (!error)
+> +		error = xfs_init_new_inode(mnt_userns, tp, dp, ino, mode,
+> +				0, 0, prid, false, &ip);
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index ca826cfba91c..4b6703dbffb8 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -431,11 +431,10 @@ void		xfs_lock_two_inodes(struct xfs_inode *ip0, uint ip0_mode,
+>  xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
+>  xfs_extlen_t	xfs_get_cowextsz_hint(struct xfs_inode *ip);
+>  
+> -int		xfs_dir_ialloc(struct user_namespace *mnt_userns,
+> -			       struct xfs_trans **tpp, struct xfs_inode *dp,
+> -			       umode_t mode, xfs_nlink_t nlink, dev_t dev,
+> -			       prid_t prid, bool need_xattr,
+> -			       struct xfs_inode **ipp);
+> +int xfs_init_new_inode(struct user_namespace *mnt_userns, struct xfs_trans *tp,
+> +		struct xfs_inode *pip, xfs_ino_t ino, umode_t mode,
+> +		xfs_nlink_t nlink, dev_t rdev, prid_t prid, bool init_xattrs,
+> +		struct xfs_inode **ipp);
+>  
+>  static inline int
+>  xfs_itruncate_extents(
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index f7baf4dc2554..fe341f3fd419 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -24,6 +24,7 @@
+>  #include "xfs_icache.h"
+>  #include "xfs_error.h"
+>  #include "xfs_ag.h"
+> +#include "xfs_ialloc.h"
+>  
+>  /*
+>   * The global quota manager. There is only one of these for the entire
+> @@ -788,8 +789,12 @@ xfs_qm_qino_alloc(
+>  		return error;
+>  
+>  	if (need_alloc) {
+> -		error = xfs_dir_ialloc(&init_user_ns, &tp, NULL, S_IFREG, 1, 0,
+> -				       0, false, ipp);
+> +		xfs_ino_t	ino;
+> +
+> +		error = xfs_dialloc(&tp, 0, S_IFREG, &ino);
+> +		if (!error)
+> +			error = xfs_init_new_inode(&init_user_ns, tp, NULL, ino,
+> +					S_IFREG, 1, 0, 0, false, ipp);
+>  		if (error) {
+>  			xfs_trans_cancel(tp);
+>  			return error;
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index b4fa70282383..44596c31f4c9 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -21,6 +21,7 @@
+>  #include "xfs_trans_space.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_trans.h"
+> +#include "xfs_ialloc.h"
+>  
+>  /* ----- Kernel only functions below ----- */
+>  int
+> @@ -161,6 +162,7 @@ xfs_symlink(
+>  	struct xfs_dquot	*gdqp = NULL;
+>  	struct xfs_dquot	*pdqp = NULL;
+>  	uint			resblks;
+> +	xfs_ino_t		ino;
+>  
+>  	*ipp = NULL;
+>  
+> @@ -223,8 +225,11 @@ xfs_symlink(
+>  	/*
+>  	 * Allocate an inode for the symlink.
+>  	 */
+> -	error = xfs_dir_ialloc(mnt_userns, &tp, dp, S_IFLNK | (mode & ~S_IFMT),
+> -			       1, 0, prid, false, &ip);
+> +	error = xfs_dialloc(&tp, dp->i_ino, S_IFLNK, &ino);
+> +	if (!error)
+> +		error = xfs_init_new_inode(mnt_userns, tp, dp, ino,
+> +				S_IFLNK | (mode & ~S_IFMT), 1, 0, prid,
+> +				false, &ip);
+>  	if (error)
+>  		goto out_trans_cancel;
 >  
 > -- 
 > 2.31.1
