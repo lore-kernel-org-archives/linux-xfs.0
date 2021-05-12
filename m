@@ -2,32 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B057C2BA05
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 13:46:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ECD9C43461
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 14:21:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33849613F9
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 13:46:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B04F6613E9
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 14:21:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230037AbhELNsA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 May 2021 09:48:00 -0400
-Received: from mx2.suse.de ([195.135.220.15]:41730 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231197AbhELNrp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 May 2021 09:47:45 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id C9D1FB1B8;
-        Wed, 12 May 2021 13:46:32 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 0CBAD1F2B78; Wed, 12 May 2021 15:46:32 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     <linux-fsdevel@vger.kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
+        id S230429AbhELOWs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 May 2021 10:22:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60518 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230284AbhELOWs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 May 2021 10:22:48 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49064C061574;
+        Wed, 12 May 2021 07:21:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=eOaFDmaOsRB5SZmY7GZQyJP9EcneAu4wq/VqoZMJKA0=; b=D/FBYaSYWv6OzEkl4olo0BI6C6
+        6lwhaao1EEhwuC156MsK3O83RGoowreU8YQfQB3NMNjdeqNmm5y7zT1ognf2xw2tI+5pQvseSWoTe
+        jKliduCU0fYTsRdguXHmSopDmUb4S9WFch0Bdz8N0ws+hdznCsYBY4CQulUwmCi/PszXrTlqmY9qd
+        7k/qshhU7B+zlB5i0nHn6R28xKI1JV12MkWNr55RMoRVAK3D/eYP/s31H+VF4jzQ05gupekLTW5Ko
+        cnXx9fDn8iqGiGckS69vPlSDt6KEM8tPqYc7fF4hwIOF84lMoLJ3N+/YU7f15TMU6uaPJ3XyWf6Ip
+        /tBDqokQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lgpjA-008M00-96; Wed, 12 May 2021 14:21:01 +0000
+Date:   Wed, 12 May 2021 15:20:44 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
         Dave Chinner <david@fromorbit.com>, ceph-devel@vger.kernel.org,
         Chao Yu <yuchao0@huawei.com>,
         Damien Le Moal <damien.lemoal@wdc.com>,
@@ -35,65 +46,43 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
         Jeff Layton <jlayton@kernel.org>,
         Johannes Thumshirn <jth@kernel.org>,
-        linux-cifs@vger.kernel.org, <linux-ext4@vger.kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net, <linux-mm@kvack.org>,
-        <linux-xfs@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
-        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>
-Subject: [PATCH 11/11] cifs: Fix race between hole punch and page fault
-Date:   Wed, 12 May 2021 15:46:19 +0200
-Message-Id: <20210512134631.4053-11-jack@suse.cz>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20210512101639.22278-1-jack@suse.cz>
+        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>
+Subject: Re: [PATCH 03/11] mm: Protect operations adding pages to page cache
+ with invalidate_lock
+Message-ID: <YJvkPEAdVhM9JsbN@casper.infradead.org>
 References: <20210512101639.22278-1-jack@suse.cz>
+ <20210512134631.4053-3-jack@suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210512134631.4053-3-jack@suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Cifs has a following race between hole punching and page fault:
+On Wed, May 12, 2021 at 03:46:11PM +0200, Jan Kara wrote:
 
-CPU1                                            CPU2
-smb3_fallocate()
-  smb3_punch_hole()
-    truncate_pagecache_range()
-                                                filemap_fault()
-                                                  - loads old data into the
-                                                    page cache
-    SMB2_ioctl(..., FSCTL_SET_ZERO_DATA, ...)
+> diff --git a/mm/truncate.c b/mm/truncate.c
+> index 57a618c4a0d6..93bde2741e0e 100644
+> --- a/mm/truncate.c
+> +++ b/mm/truncate.c
+> @@ -415,7 +415,7 @@ EXPORT_SYMBOL(truncate_inode_pages_range);
+>   * @mapping: mapping to truncate
+>   * @lstart: offset from which to truncate
+>   *
+> - * Called under (and serialised by) inode->i_rwsem.
+> + * Called under (and serialised by) inode->i_rwsem and inode->i_mapping_rwsem.
 
-And now we have stale data in the page cache. Fix the problem by locking
-out faults (as well as reads) using mapping->invalidate_lock while hole
-punch is running.
+mapping->invalidate_lock, surely?  And could we ask lockdep to assert
+this for us instead of just a comment?
 
-CC: Steve French <sfrench@samba.org>
-CC: linux-cifs@vger.kernel.org
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/cifs/smb2ops.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/fs/cifs/smb2ops.c b/fs/cifs/smb2ops.c
-index dd0eb665b680..b0a0f8b34add 100644
---- a/fs/cifs/smb2ops.c
-+++ b/fs/cifs/smb2ops.c
-@@ -3579,6 +3579,7 @@ static long smb3_punch_hole(struct file *file, struct cifs_tcon *tcon,
- 		return rc;
- 	}
- 
-+	down_write(&inode->i_mapping->invalidate_lock);
- 	/*
- 	 * We implement the punch hole through ioctl, so we need remove the page
- 	 * caches first, otherwise the data may be inconsistent with the server.
-@@ -3596,6 +3597,7 @@ static long smb3_punch_hole(struct file *file, struct cifs_tcon *tcon,
- 			sizeof(struct file_zero_data_information),
- 			CIFSMaxBufSize, NULL, NULL);
- 	free_xid(xid);
-+	up_write(&inode->i_mapping->invalidate_lock);
- 	return rc;
- }
- 
--- 
-2.26.2
-
+>   *
+>   * Note: When this function returns, there can be a page in the process of
+>   * deletion (inside __delete_from_page_cache()) in the specified range.  Thus
+> -- 
+> 2.26.2
+> 
+> 
