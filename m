@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBFF8C2BA00
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 13:46:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 417DBC2BA01
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 13:46:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E714613DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 13:46:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 091E2613E6
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 May 2021 13:46:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231511AbhELNr5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S231548AbhELNr5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 12 May 2021 09:47:57 -0400
-Received: from mx2.suse.de ([195.135.220.15]:41712 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41856 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231189AbhELNro (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 May 2021 09:47:44 -0400
+        id S231211AbhELNrp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 May 2021 09:47:45 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id C8D15B1A7;
+        by mx2.suse.de (Postfix) with ESMTP id E48A3B1BE;
         Wed, 12 May 2021 13:46:32 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id E7A901E1136; Wed, 12 May 2021 15:46:31 +0200 (CEST)
+        id 014611F2B62; Wed, 12 May 2021 15:46:31 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-fsdevel@vger.kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -40,9 +40,9 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         <linux-xfs@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
         Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
         Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>
-Subject: [PATCH 05/11] ext2: Convert to using invalidate_lock
-Date:   Wed, 12 May 2021 15:46:13 +0200
-Message-Id: <20210512134631.4053-5-jack@suse.cz>
+Subject: [PATCH 08/11] f2fs: Convert to using invalidate_lock
+Date:   Wed, 12 May 2021 15:46:16 +0200
+Message-Id: <20210512134631.4053-8-jack@suse.cz>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210512101639.22278-1-jack@suse.cz>
 References: <20210512101639.22278-1-jack@suse.cz>
@@ -52,144 +52,303 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Ext2 has its private dax_sem used for synchronizing page faults and
-truncation. Use mapping->invalidate_lock instead as it is meant for this
-purpose.
+Use invalidate_lock instead of f2fs' private i_mmap_sem. The intended
+purpose is exactly the same. By this conversion we fix a long standing
+race between hole punching and read(2) / readahead(2) paths that can
+lead to stale page cache contents.
 
-CC: <linux-ext4@vger.kernel.org>
+CC: Jaegeuk Kim <jaegeuk@kernel.org>
+CC: Chao Yu <yuchao0@huawei.com>
+CC: linux-f2fs-devel@lists.sourceforge.net
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext2/ext2.h  | 11 -----------
- fs/ext2/file.c  |  7 +++----
- fs/ext2/inode.c | 12 ++++++------
- fs/ext2/super.c |  3 ---
- 4 files changed, 9 insertions(+), 24 deletions(-)
+ fs/f2fs/data.c  |  4 ++--
+ fs/f2fs/f2fs.h  |  1 -
+ fs/f2fs/file.c  | 58 ++++++++++++++++++++++++-------------------------
+ fs/f2fs/super.c |  1 -
+ 4 files changed, 30 insertions(+), 34 deletions(-)
 
-diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
-index b0a694820cb7..81907a041570 100644
---- a/fs/ext2/ext2.h
-+++ b/fs/ext2/ext2.h
-@@ -667,9 +667,6 @@ struct ext2_inode_info {
- 	struct rw_semaphore xattr_sem;
- #endif
- 	rwlock_t i_meta_lock;
--#ifdef CONFIG_FS_DAX
--	struct rw_semaphore dax_sem;
--#endif
+diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
+index 96f1a354f89f..f3177d03c28f 100644
+--- a/fs/f2fs/data.c
++++ b/fs/f2fs/data.c
+@@ -3165,12 +3165,12 @@ static void f2fs_write_failed(struct address_space *mapping, loff_t to)
+ 	/* In the fs-verity case, f2fs_end_enable_verity() does the truncate */
+ 	if (to > i_size && !f2fs_verity_in_progress(inode)) {
+ 		down_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+-		down_write(&F2FS_I(inode)->i_mmap_sem);
++		down_write(&mapping->invalidate_lock);
  
- 	/*
- 	 * truncate_mutex is for serialising ext2_truncate() against
-@@ -685,14 +682,6 @@ struct ext2_inode_info {
- #endif
- };
+ 		truncate_pagecache(inode, i_size);
+ 		f2fs_truncate_blocks(inode, i_size, true);
  
--#ifdef CONFIG_FS_DAX
--#define dax_sem_down_write(ext2_inode)	down_write(&(ext2_inode)->dax_sem)
--#define dax_sem_up_write(ext2_inode)	up_write(&(ext2_inode)->dax_sem)
--#else
--#define dax_sem_down_write(ext2_inode)
--#define dax_sem_up_write(ext2_inode)
--#endif
--
- /*
-  * Inode dynamic state flags
-  */
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index f98466acc672..cb54d77d7329 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -81,7 +81,7 @@ static ssize_t ext2_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
-  *
-  * mmap_lock (MM)
-  *   sb_start_pagefault (vfs, freeze)
-- *     ext2_inode_info->dax_sem
-+ *     address_space->invalidate_lock
-  *       address_space->i_mmap_rwsem or page_lock (mutually exclusive in DAX)
-  *         ext2_inode_info->truncate_mutex
-  *
-@@ -91,7 +91,6 @@ static ssize_t ext2_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
- static vm_fault_t ext2_dax_fault(struct vm_fault *vmf)
- {
- 	struct inode *inode = file_inode(vmf->vma->vm_file);
--	struct ext2_inode_info *ei = EXT2_I(inode);
- 	vm_fault_t ret;
- 	bool write = (vmf->flags & FAULT_FLAG_WRITE) &&
- 		(vmf->vma->vm_flags & VM_SHARED);
-@@ -100,11 +99,11 @@ static vm_fault_t ext2_dax_fault(struct vm_fault *vmf)
- 		sb_start_pagefault(inode->i_sb);
- 		file_update_time(vmf->vma->vm_file);
+-		up_write(&F2FS_I(inode)->i_mmap_sem);
++		up_write(&mapping->invalidate_lock);
+ 		up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
  	}
--	down_read(&ei->dax_sem);
+ }
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index 044878866ca3..1f887c906aaf 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -748,7 +748,6 @@ struct f2fs_inode_info {
+ 
+ 	/* avoid racing between foreground op and gc */
+ 	struct rw_semaphore i_gc_rwsem[2];
+-	struct rw_semaphore i_mmap_sem;
+ 	struct rw_semaphore i_xattr_sem; /* avoid racing between reading and changing EAs */
+ 
+ 	int i_extra_isize;		/* size of extra space located in i_addr */
+diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
+index 44a4650aea7b..6602f3c653c4 100644
+--- a/fs/f2fs/file.c
++++ b/fs/f2fs/file.c
+@@ -38,10 +38,7 @@ static vm_fault_t f2fs_filemap_fault(struct vm_fault *vmf)
+ 	struct inode *inode = file_inode(vmf->vma->vm_file);
+ 	vm_fault_t ret;
+ 
+-	down_read(&F2FS_I(inode)->i_mmap_sem);
+ 	ret = filemap_fault(vmf);
+-	up_read(&F2FS_I(inode)->i_mmap_sem);
+-
+ 	if (!ret)
+ 		f2fs_update_iostat(F2FS_I_SB(inode), APP_MAPPED_READ_IO,
+ 							F2FS_BLKSIZE);
+@@ -102,7 +99,7 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault *vmf)
+ 	f2fs_bug_on(sbi, f2fs_has_inline_data(inode));
+ 
+ 	file_update_time(vmf->vma->vm_file);
+-	down_read(&F2FS_I(inode)->i_mmap_sem);
 +	down_read(&inode->i_mapping->invalidate_lock);
+ 	lock_page(page);
+ 	if (unlikely(page->mapping != inode->i_mapping ||
+ 			page_offset(page) > i_size_read(inode) ||
+@@ -161,7 +158,7 @@ static vm_fault_t f2fs_vm_page_mkwrite(struct vm_fault *vmf)
  
- 	ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, NULL, &ext2_iomap_ops);
- 
--	up_read(&ei->dax_sem);
+ 	trace_f2fs_vm_page_mkwrite(page, DATA);
+ out_sem:
+-	up_read(&F2FS_I(inode)->i_mmap_sem);
 +	up_read(&inode->i_mapping->invalidate_lock);
- 	if (write)
- 		sb_end_pagefault(inode->i_sb);
+ 
+ 	sb_end_pagefault(inode->i_sb);
+ err:
+@@ -942,7 +939,7 @@ int f2fs_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
+ 		}
+ 
+ 		down_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+-		down_write(&F2FS_I(inode)->i_mmap_sem);
++		down_write(&inode->i_mapping->invalidate_lock);
+ 
+ 		truncate_setsize(inode, attr->ia_size);
+ 
+@@ -952,7 +949,7 @@ int f2fs_setattr(struct user_namespace *mnt_userns, struct dentry *dentry,
+ 		 * do not trim all blocks after i_size if target size is
+ 		 * larger than i_size.
+ 		 */
+-		up_write(&F2FS_I(inode)->i_mmap_sem);
++		up_write(&inode->i_mapping->invalidate_lock);
+ 		up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+ 		if (err)
+ 			return err;
+@@ -1097,7 +1094,7 @@ static int punch_hole(struct inode *inode, loff_t offset, loff_t len)
+ 			blk_end = (loff_t)pg_end << PAGE_SHIFT;
+ 
+ 			down_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+-			down_write(&F2FS_I(inode)->i_mmap_sem);
++			down_write(&mapping->invalidate_lock);
+ 
+ 			truncate_inode_pages_range(mapping, blk_start,
+ 					blk_end - 1);
+@@ -1106,7 +1103,7 @@ static int punch_hole(struct inode *inode, loff_t offset, loff_t len)
+ 			ret = f2fs_truncate_hole(inode, pg_start, pg_end);
+ 			f2fs_unlock_op(sbi);
+ 
+-			up_write(&F2FS_I(inode)->i_mmap_sem);
++			up_write(&mapping->invalidate_lock);
+ 			up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+ 		}
+ 	}
+@@ -1341,7 +1338,7 @@ static int f2fs_do_collapse(struct inode *inode, loff_t offset, loff_t len)
+ 
+ 	/* avoid gc operation during block exchange */
+ 	down_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+-	down_write(&F2FS_I(inode)->i_mmap_sem);
++	down_write(&inode->i_mapping->invalidate_lock);
+ 
+ 	f2fs_lock_op(sbi);
+ 	f2fs_drop_extent_tree(inode);
+@@ -1349,7 +1346,7 @@ static int f2fs_do_collapse(struct inode *inode, loff_t offset, loff_t len)
+ 	ret = __exchange_data_block(inode, inode, end, start, nrpages - end, true);
+ 	f2fs_unlock_op(sbi);
+ 
+-	up_write(&F2FS_I(inode)->i_mmap_sem);
++	up_write(&inode->i_mapping->invalidate_lock);
+ 	up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
  	return ret;
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 68178b2234bd..e843be0ae53c 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -1175,7 +1175,7 @@ static void ext2_free_branches(struct inode *inode, __le32 *p, __le32 *q, int de
- 		ext2_free_data(inode, p, q);
  }
+@@ -1380,13 +1377,13 @@ static int f2fs_collapse_range(struct inode *inode, loff_t offset, loff_t len)
+ 		return ret;
  
--/* dax_sem must be held when calling this function */
-+/* mapping->invalidate_lock must be held when calling this function */
- static void __ext2_truncate_blocks(struct inode *inode, loff_t offset)
+ 	/* write out all moved pages, if possible */
+-	down_write(&F2FS_I(inode)->i_mmap_sem);
++	down_write(&inode->i_mapping->invalidate_lock);
+ 	filemap_write_and_wait_range(inode->i_mapping, offset, LLONG_MAX);
+ 	truncate_pagecache(inode, offset);
+ 
+ 	new_size = i_size_read(inode) - len;
+ 	ret = f2fs_truncate_blocks(inode, new_size, true);
+-	up_write(&F2FS_I(inode)->i_mmap_sem);
++	up_write(&inode->i_mapping->invalidate_lock);
+ 	if (!ret)
+ 		f2fs_i_size_write(inode, new_size);
+ 	return ret;
+@@ -1486,7 +1483,7 @@ static int f2fs_zero_range(struct inode *inode, loff_t offset, loff_t len,
+ 			pgoff_t end;
+ 
+ 			down_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+-			down_write(&F2FS_I(inode)->i_mmap_sem);
++			down_write(&mapping->invalidate_lock);
+ 
+ 			truncate_pagecache_range(inode,
+ 				(loff_t)index << PAGE_SHIFT,
+@@ -1498,7 +1495,7 @@ static int f2fs_zero_range(struct inode *inode, loff_t offset, loff_t len,
+ 			ret = f2fs_get_dnode_of_data(&dn, index, ALLOC_NODE);
+ 			if (ret) {
+ 				f2fs_unlock_op(sbi);
+-				up_write(&F2FS_I(inode)->i_mmap_sem);
++				up_write(&mapping->invalidate_lock);
+ 				up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+ 				goto out;
+ 			}
+@@ -1510,7 +1507,7 @@ static int f2fs_zero_range(struct inode *inode, loff_t offset, loff_t len,
+ 			f2fs_put_dnode(&dn);
+ 
+ 			f2fs_unlock_op(sbi);
+-			up_write(&F2FS_I(inode)->i_mmap_sem);
++			up_write(&mapping->invalidate_lock);
+ 			up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+ 
+ 			f2fs_balance_fs(sbi, dn.node_changed);
+@@ -1545,6 +1542,7 @@ static int f2fs_zero_range(struct inode *inode, loff_t offset, loff_t len,
+ static int f2fs_insert_range(struct inode *inode, loff_t offset, loff_t len)
  {
- 	__le32 *i_data = EXT2_I(inode)->i_data;
-@@ -1192,7 +1192,7 @@ static void __ext2_truncate_blocks(struct inode *inode, loff_t offset)
- 	iblock = (offset + blocksize-1) >> EXT2_BLOCK_SIZE_BITS(inode->i_sb);
+ 	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
++	struct address_space *mapping = inode->i_mapping;
+ 	pgoff_t nr, pg_start, pg_end, delta, idx;
+ 	loff_t new_size;
+ 	int ret = 0;
+@@ -1567,14 +1565,14 @@ static int f2fs_insert_range(struct inode *inode, loff_t offset, loff_t len)
  
- #ifdef CONFIG_FS_DAX
--	WARN_ON(!rwsem_is_locked(&ei->dax_sem));
-+	WARN_ON(!rwsem_is_locked(&inode->i_mapping->invalidate_lock));
- #endif
+ 	f2fs_balance_fs(sbi, true);
  
- 	n = ext2_block_to_path(inode, iblock, offsets, NULL);
-@@ -1274,9 +1274,9 @@ static void ext2_truncate_blocks(struct inode *inode, loff_t offset)
- 	if (ext2_inode_is_fast_symlink(inode))
- 		return;
+-	down_write(&F2FS_I(inode)->i_mmap_sem);
++	down_write(&mapping->invalidate_lock);
+ 	ret = f2fs_truncate_blocks(inode, i_size_read(inode), true);
+-	up_write(&F2FS_I(inode)->i_mmap_sem);
++	up_write(&mapping->invalidate_lock);
+ 	if (ret)
+ 		return ret;
  
--	dax_sem_down_write(EXT2_I(inode));
+ 	/* write out all dirty pages from offset */
+-	ret = filemap_write_and_wait_range(inode->i_mapping, offset, LLONG_MAX);
++	ret = filemap_write_and_wait_range(mapping, offset, LLONG_MAX);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1585,7 +1583,7 @@ static int f2fs_insert_range(struct inode *inode, loff_t offset, loff_t len)
+ 
+ 	/* avoid gc operation during block exchange */
+ 	down_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+-	down_write(&F2FS_I(inode)->i_mmap_sem);
++	down_write(&mapping->invalidate_lock);
+ 	truncate_pagecache(inode, offset);
+ 
+ 	while (!ret && idx > pg_start) {
+@@ -1601,14 +1599,14 @@ static int f2fs_insert_range(struct inode *inode, loff_t offset, loff_t len)
+ 					idx + delta, nr, false);
+ 		f2fs_unlock_op(sbi);
+ 	}
+-	up_write(&F2FS_I(inode)->i_mmap_sem);
++	up_write(&mapping->invalidate_lock);
+ 	up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+ 
+ 	/* write out all moved pages, if possible */
+-	down_write(&F2FS_I(inode)->i_mmap_sem);
+-	filemap_write_and_wait_range(inode->i_mapping, offset, LLONG_MAX);
++	down_write(&mapping->invalidate_lock);
++	filemap_write_and_wait_range(mapping, offset, LLONG_MAX);
+ 	truncate_pagecache(inode, offset);
+-	up_write(&F2FS_I(inode)->i_mmap_sem);
++	up_write(&mapping->invalidate_lock);
+ 
+ 	if (!ret)
+ 		f2fs_i_size_write(inode, new_size);
+@@ -3442,7 +3440,7 @@ static int f2fs_release_compress_blocks(struct file *filp, unsigned long arg)
+ 		goto out;
+ 
+ 	down_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+-	down_write(&F2FS_I(inode)->i_mmap_sem);
 +	down_write(&inode->i_mapping->invalidate_lock);
- 	__ext2_truncate_blocks(inode, offset);
--	dax_sem_up_write(EXT2_I(inode));
+ 
+ 	last_idx = DIV_ROUND_UP(i_size_read(inode), PAGE_SIZE);
+ 
+@@ -3478,7 +3476,7 @@ static int f2fs_release_compress_blocks(struct file *filp, unsigned long arg)
+ 	}
+ 
+ 	up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+-	up_write(&F2FS_I(inode)->i_mmap_sem);
 +	up_write(&inode->i_mapping->invalidate_lock);
- }
+ out:
+ 	inode_unlock(inode);
  
- static int ext2_setsize(struct inode *inode, loff_t newsize)
-@@ -1306,10 +1306,10 @@ static int ext2_setsize(struct inode *inode, loff_t newsize)
- 	if (error)
- 		return error;
+@@ -3595,7 +3593,7 @@ static int f2fs_reserve_compress_blocks(struct file *filp, unsigned long arg)
+ 	}
  
--	dax_sem_down_write(EXT2_I(inode));
+ 	down_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+-	down_write(&F2FS_I(inode)->i_mmap_sem);
 +	down_write(&inode->i_mapping->invalidate_lock);
- 	truncate_setsize(inode, newsize);
- 	__ext2_truncate_blocks(inode, newsize);
--	dax_sem_up_write(EXT2_I(inode));
+ 
+ 	last_idx = DIV_ROUND_UP(i_size_read(inode), PAGE_SIZE);
+ 
+@@ -3631,7 +3629,7 @@ static int f2fs_reserve_compress_blocks(struct file *filp, unsigned long arg)
+ 	}
+ 
+ 	up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+-	up_write(&F2FS_I(inode)->i_mmap_sem);
 +	up_write(&inode->i_mapping->invalidate_lock);
  
- 	inode->i_mtime = inode->i_ctime = current_time(inode);
- 	if (inode_needs_sync(inode)) {
-diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-index 21e09fbaa46f..987bcf32ed46 100644
---- a/fs/ext2/super.c
-+++ b/fs/ext2/super.c
-@@ -206,9 +206,6 @@ static void init_once(void *foo)
- 	init_rwsem(&ei->xattr_sem);
- #endif
- 	mutex_init(&ei->truncate_mutex);
--#ifdef CONFIG_FS_DAX
--	init_rwsem(&ei->dax_sem);
--#endif
- 	inode_init_once(&ei->vfs_inode);
- }
+ 	if (ret >= 0) {
+ 		F2FS_I(inode)->i_flags &= ~F2FS_IMMUTABLE_FL;
+@@ -3751,7 +3749,7 @@ static int f2fs_sec_trim_file(struct file *filp, unsigned long arg)
+ 		goto err;
  
+ 	down_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+-	down_write(&F2FS_I(inode)->i_mmap_sem);
++	down_write(&mapping->invalidate_lock);
+ 
+ 	ret = filemap_write_and_wait_range(mapping, range.start,
+ 			to_end ? LLONG_MAX : end_addr - 1);
+@@ -3838,7 +3836,7 @@ static int f2fs_sec_trim_file(struct file *filp, unsigned long arg)
+ 		ret = f2fs_secure_erase(prev_bdev, inode, prev_index,
+ 				prev_block, len, range.flags);
+ out:
+-	up_write(&F2FS_I(inode)->i_mmap_sem);
++	up_write(&mapping->invalidate_lock);
+ 	up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
+ err:
+ 	inode_unlock(inode);
+diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+index 7d325bfaf65a..22e942aac7ad 100644
+--- a/fs/f2fs/super.c
++++ b/fs/f2fs/super.c
+@@ -1187,7 +1187,6 @@ static struct inode *f2fs_alloc_inode(struct super_block *sb)
+ 	mutex_init(&fi->inmem_lock);
+ 	init_rwsem(&fi->i_gc_rwsem[READ]);
+ 	init_rwsem(&fi->i_gc_rwsem[WRITE]);
+-	init_rwsem(&fi->i_mmap_sem);
+ 	init_rwsem(&fi->i_xattr_sem);
+ 
+ 	/* Will be used by directory only */
 -- 
 2.26.2
 
