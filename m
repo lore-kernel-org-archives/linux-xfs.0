@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7D08C433ED
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 01:02:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 365E7C433B4
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 01:02:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8865B61090
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 01:02:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C7E561264
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 01:02:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233491AbhEMBDI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 May 2021 21:03:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51368 "EHLO mail.kernel.org"
+        id S233508AbhEMBDP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 May 2021 21:03:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51652 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233367AbhEMBDI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 May 2021 21:03:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4A40C61090;
-        Thu, 13 May 2021 01:01:59 +0000 (UTC)
+        id S233723AbhEMBDO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 May 2021 21:03:14 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0663C61264;
+        Thu, 13 May 2021 01:02:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620867719;
-        bh=nv9tIm03fHOsYGhTf2cHo26wlcKky2dfXChtHMZw59o=;
+        s=k20201202; t=1620867725;
+        bh=iC0BHWTjsZq7/9R77rr+qacsZPFzo3Mc3PvYSP+uxbg=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=tuasGGdDhzms8DL98SFIPcXY2HOS6LMNrOg8/dYj/yLlDZGG6CyCtHv0KBEg0rZEf
-         mWU1m5hNtOvrLxV4c1+MoiYlYoJ9BDa8r1DS9f2ToM2UdT+7REctgscnK51uKmyFg0
-         7iYdC0wgdPnnGlt1ohHnqm9eyRlhCglxQsvAhmRPUHJlRgbAGiwh6kn8RptPXLmCWy
-         HbVSg20VNbT6qdA7GSJno304Tx6sjK0QKxlXAsodN9tyQsGi6uWtnIq22+2pz9Z+va
-         VMQH3lxHsYolSePkW1KM53xkT2goOqzHZxCg87r1yEeshzaY0wp47UIOocE/Uq7CfF
-         83JmJROJrqitw==
-Subject: [PATCH 3/4] xfs: validate extsz hints against rt extent size when
- rtinherit is set
+        b=OhXlO6pe0OHsM9ZZdyIKImOR6YC4tj4MmHw2QmKueqOsbhW3j6bKH/Jyl5foGfzDt
+         U8lvLAJJ3H8tit3q6u7pACmq6JdA0oL2kxWjcn0JnqyZwf/ULZzfbWbkwCa7UVRDBb
+         Pxq2DkveZYglz8bJOLxr//8W3c4TsMm4wcfOsRjonxfO9WIORycRSF+7BAWonKqkGV
+         8M9UtfaI66gfh71Ie85PGkEaBQgI5glHeevvcZzKoQY3yWc9brjCLpWGOXWD0sWHL9
+         nTfGemQI5ugNTJRW9owQG3R5xuCFtGDcQHKQWa9QB9Myjwp1IH1MEkAHfwVs5Btjx3
+         Lv5fMkkcgzIGQ==
+Subject: [PATCH 4/4] xfs: apply rt extent alignment constraints to cow extsize
+ hint
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 12 May 2021 18:01:58 -0700
-Message-ID: <162086771885.3685783.16422648250546171771.stgit@magnolia>
+Date:   Wed, 12 May 2021 18:02:04 -0700
+Message-ID: <162086772452.3685783.890036737343315171.stgit@magnolia>
 In-Reply-To: <162086770193.3685783.14418051698714099173.stgit@magnolia>
 References: <162086770193.3685783.14418051698714099173.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,58 +50,61 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The RTINHERIT bit can be set on a directory so that newly created
-regular files will have the REALTIME bit set to store their data on the
-realtime volume.  If an extent size hint (and EXTSZINHERIT) are set on
-the directory, the hint will also be copied into the new file.
+Even though reflink and copy-on-write aren't supported on the realtime
+volume, if we ever turn that on, we'd still be constrained to the same
+rt extent alignment requirements because cow involves remapping, and
+we can only allocate and free in rtextsize units on the realtime volume.
 
-As pointed out in previous patches, for realtime files we require the
-extent size hint be an integer multiple of the realtime extent, but we
-don't perform the same validation on a directory with both RTINHERIT and
-EXTSZINHERIT set, even though the only use-case of that combination is
-to propagate extent size hints into new realtime files.  This leads to
-inode corruption errors when the bad values are propagated.
-
-Strengthen the validation routine to avoid this situation and fix the
-open-coded unit conversion while we're at it.  Note that this is
-technically a breaking change to the ondisk format, but the risk should
-be minimal because (a) most vendors disable realtime, (b) letting
-unaligned hints propagate to new files would immediately crash the
-filesystem, and (c) xfs_repair flags such filesystems as corrupt, so
-anyone with such a configuration is broken already anyway.
+At the moment there aren't any filesystems with rt and reflink in the
+wild, so this is should be a zero-risk change.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c |   13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 5c9a7440d9e4..25261dd73290 100644
+index 25261dd73290..704faf806e46 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.c
 +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -569,19 +569,20 @@ xfs_inode_validate_extsize(
- 	uint16_t			mode,
- 	uint16_t			flags)
+@@ -628,14 +628,21 @@ xfs_inode_validate_cowextsize(
+ 	uint16_t			flags,
+ 	uint64_t			flags2)
  {
 -	bool				rt_flag;
 +	bool				rt_flag, rtinherit_flag;
  	bool				hint_flag;
- 	bool				inherit_flag;
- 	uint32_t			extsize_bytes;
- 	uint32_t			blocksize_bytes;
+ 	uint32_t			cowextsize_bytes;
++	uint32_t			blocksize_bytes;
  
  	rt_flag = (flags & XFS_DIFLAG_REALTIME);
 +	rtinherit_flag = (flags & XFS_DIFLAG_RTINHERIT);
- 	hint_flag = (flags & XFS_DIFLAG_EXTSIZE);
- 	inherit_flag = (flags & XFS_DIFLAG_EXTSZINHERIT);
- 	extsize_bytes = XFS_FSB_TO_B(mp, extsize);
+ 	hint_flag = (flags2 & XFS_DIFLAG2_COWEXTSIZE);
+ 	cowextsize_bytes = XFS_FSB_TO_B(mp, cowextsize);
  
--	if (rt_flag)
--		blocksize_bytes = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
-+	if (rt_flag || (rtinherit_flag && inherit_flag))
++	if (rt_flag || (rtinherit_flag && hint_flag))
 +		blocksize_bytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
- 	else
- 		blocksize_bytes = mp->m_sb.sb_blocksize;
++	else
++		blocksize_bytes = mp->m_sb.sb_blocksize;
++
+ 	if (hint_flag && !xfs_sb_version_hasreflink(&mp->m_sb))
+ 		return __this_address;
  
+@@ -652,13 +659,13 @@ xfs_inode_validate_cowextsize(
+ 	if (hint_flag && rt_flag)
+ 		return __this_address;
+ 
+-	if (cowextsize_bytes % mp->m_sb.sb_blocksize)
++	if (cowextsize_bytes % blocksize_bytes)
+ 		return __this_address;
+ 
+ 	if (cowextsize > MAXEXTLEN)
+ 		return __this_address;
+ 
+-	if (cowextsize > mp->m_sb.sb_agblocks / 2)
++	if (!rt_flag && cowextsize > mp->m_sb.sb_agblocks / 2)
+ 		return __this_address;
+ 
+ 	return NULL;
 
