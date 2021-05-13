@@ -2,872 +2,208 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72AD4C433B4
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 03:55:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D04C433B4
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 07:48:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 437F561413
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 03:55:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D09061438
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 07:48:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230104AbhEMD5F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 May 2021 23:57:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53790 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230301AbhEMD5F (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 May 2021 23:57:05 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 06E6261413;
-        Thu, 13 May 2021 03:55:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620878156;
-        bh=wP7W5u0TGVUEjZ60z1B81lMnKAxnEOqkgnvmDvo4hEw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=t0qfBhi4OY7RqviuKoy/6+EQVUW0HE/cMoIZ6Uz4h7gWubaO95iDKgDjl15AW8SW2
-         wxf3Fby3zhmCNGi0EBZb8s+X6ddM1hqWnLjp5iXm/iuxA98fDP/YuvbuvQo4JJLEt0
-         duRhp2JTaYnqIgr88LFJYX3Zext2Tl1bKHKp+IhJ+f4J9DgrxblkxQctAl3iSGrju7
-         ev4o5DhtK8a2lCt2VAwMCyj/gzfG856jDhUxROu+gQHyTI+RALI9JHSg08TybqdlMr
-         Ymki/oETkMXbCLJEIUUZQLIS7TXAt3QgP858YZHcDvLPOQLvr2XPUNlPKd+8J1TeKE
-         x6FszpgU4nHdA==
-Date:   Wed, 12 May 2021 20:55:54 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 15/22] xfs: use perag for ialloc btree cursors
-Message-ID: <20210513035554.GT8582@magnolia>
-References: <20210506072054.271157-1-david@fromorbit.com>
- <20210506072054.271157-16-david@fromorbit.com>
+        id S229748AbhEMHuG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 May 2021 03:50:06 -0400
+Received: from esa17.fujitsucc.c3s2.iphmx.com ([216.71.158.34]:36223 "EHLO
+        esa17.fujitsucc.c3s2.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230318AbhEMHuE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 May 2021 03:50:04 -0400
+IronPort-SDR: 91ai3ZutwbcG8padoo+45WrebX6xiv8Boyyo2SfCCxkPs7X2PYH/dZ+yQfaUDjeC9/DctlcoSJ
+ lQM41EMWFR6oTnqfAIO7J9lrfVDh3A4q156hCWVZw6qulkbjKjuH72YDZdPvOXaBEajwKR0KFS
+ OFWLQNX9jT8wpgr3mvYOJSS7tMHrxtyS4j4gJqf9GTd2f7/1GVOAAo1/E2vvoAzbQpr+ECil2N
+ bp4PPCV49UDnBQeGSiZVPpUZ46TWp8IAlwq4c0VhXUhMj0CP0EHckd9NkUH/b4LFvKXW3yObnv
+ opQ=
+X-IronPort-AV: E=McAfee;i="6200,9189,9982"; a="31120942"
+X-IronPort-AV: E=Sophos;i="5.82,296,1613401200"; 
+   d="scan'208";a="31120942"
+Received: from mail-os2jpn01lp2055.outbound.protection.outlook.com (HELO JPN01-OS2-obe.outbound.protection.outlook.com) ([104.47.92.55])
+  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2021 16:48:50 +0900
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=NjNoBn5DAI8ILKRuJAYnquIJ2VXIkW4lnbzfBwHW2fMUej2+fAkQvnN0/aK96eXycic5Z/zDaeKpMprQfmLHL7LRTqagARvHB6uQ/fAi945+TXS7JbdcdrTrqx9uEYIpIfRloLfnsP7VChkY/m96n8Ks1x8Wr06Uki5+8sxBr75YHB2U6k4wmBwO+AvC+PltEf1dkvOxs5noxtv/gtZIMyhg0A6Ht/LblTcRc9dz8BsEei8q0k2VJGsN0MuustWvvNsNxx5j2cJlKV1C4fav81iVCO4tR0xPSWpvzqMngd0Efj8Klmi4FnOIQN6csxAWCnRIKUZV2KbjrZCBT+NywQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=909CQEj0V5ekvY6VDrxY0ZWBd0QVFLHsM3KJCzf/1eo=;
+ b=jo2N4mXsaViSbJzRerjfQn1wVw4qwLWv9wAgjwbx55CqR1zcKS3JORziSt3b7V2bhTz55PLzlk09t+w0ydtEVKVbzE6ogeSzRUwFG1WXJZKitkn4+57v66JRt7fcKVdMk4kpR0g/FNCfuLWimPNzWpjZAyPb5Sb5JA0aZNj1hw9hIteXJRIpb1gfzbaVtSZa53nA+H87daZGN+iCvyjiahnewLGbs27WEaPz6vEgu3x4bGbbiDyJLToiMVRtAunGScjNsIHXVxxNsbwwExuUgXh2ZV4Qh7/DU0iJIcPEZ9Bi78tjplkRmFu9lKL7CkGVIZZF8GjP5+RJj7tNre2Qfw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
+ dkim=pass header.d=fujitsu.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=fujitsu.onmicrosoft.com; s=selector2-fujitsu-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=909CQEj0V5ekvY6VDrxY0ZWBd0QVFLHsM3KJCzf/1eo=;
+ b=cWvlLKRy/kZWm/mJyn3Z0aidC6oTrnfIEBgF74f20x9WWyYb2k4T9PywcEAFMqWKTsm+pNiKGNxqfSTwi7gqdkEwoQgpVPwIhVN9e1HUezq1fhW5ZmbsrhvM7X0WbVa/UqxJHYCH0I8WI4I26zZCgL25IgEW/QTnZ9OHfwseo00=
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com (2603:1096:604:18::16)
+ by OS0PR01MB5587.jpnprd01.prod.outlook.com (2603:1096:604:b9::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4129.26; Thu, 13 May
+ 2021 07:48:47 +0000
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::b985:8239:6cf0:1228]) by OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::b985:8239:6cf0:1228%7]) with mapi id 15.20.4108.032; Thu, 13 May 2021
+ 07:48:47 +0000
+From:   "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
+To:     =?utf-8?B?TWlrYSBQZW50dGlsw6Q=?= <mika.penttila@nextfour.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+CC:     "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
+        Ritesh Harjani <riteshh@linux.ibm.com>
+Subject: RE: [PATCH v5 3/7] fsdax: Add dax_iomap_cow_copy() for dax_iomap_zero
+Thread-Topic: [PATCH v5 3/7] fsdax: Add dax_iomap_cow_copy() for
+ dax_iomap_zero
+Thread-Index: AQHXRhMzaICBJaaoNUiclL46cJ8Bn6rfIH8AgAHrs9A=
+Date:   Thu, 13 May 2021 07:48:46 +0000
+Message-ID: <OSBPR01MB2920731784E0804AD7BB0DA8F4519@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+References: <20210511030933.3080921-1-ruansy.fnst@fujitsu.com>
+ <20210511030933.3080921-4-ruansy.fnst@fujitsu.com>
+ <4c944ccc-7708-5dbd-18c3-9ecb5c3a539f@nextfour.com>
+In-Reply-To: <4c944ccc-7708-5dbd-18c3-9ecb5c3a539f@nextfour.com>
+Accept-Language: en-US, zh-CN
+Content-Language: zh-CN
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: nextfour.com; dkim=none (message not signed)
+ header.d=none;nextfour.com; dmarc=none action=none header.from=fujitsu.com;
+x-originating-ip: [223.111.68.150]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: a2a496d8-77ba-4d4b-3e5f-08d915e38a4a
+x-ms-traffictypediagnostic: OS0PR01MB5587:
+x-microsoft-antispam-prvs: <OS0PR01MB5587E058A954026B63272EE8F4519@OS0PR01MB5587.jpnprd01.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:3513;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: X64Y9/GI5aaLb9miKYzE4PVsXWiZ1gakiMXS0hGXFpJFOelVdwJGcMYcG8HD9ZIAug6X0aBKhl2w0gp39n5+9bkqDBLLG2rC5Rove/7PaZyYMlV0F8VgWYbo9MXxy/IA1KR1Vpf6O47t4eeFURngFT8U0a2Bt41Jfoeza0NQQ0YjGOTqL/9fOLizWtzO3/lTbfSL1HdbqJZSlvEZWmwVJMPa1u/fO7IAFWHAVbuHJGCJKVjfYPr01TmLu/rQrK1xTXTySrYE0JQd0Yaz5mm7W1Ik9Vt3izb2fYPXagQKZQtIjqB712re9RuvBe71pSo8nOyQxWLZgEmN29F6M0wxYGQ4fa5xrnsBgkodVEChTmTVHqcdnrEDgZaBikibIVM3hsGU708m5vVW/jW8S9rqtmys/4iyGEdNpMTZn5Zmg4iyT5YIPccSg68bb39ugeXazNQdsUVra2qawTiPUpe7l90veovHIqCc5oAQf1+5v4R5PzZ8J91ovDVUbaICT8qyd3jE4PkxYNRi1YHrvzR1odRuyeL+YtTbv8G8pCAHXux8+wBYFbHJY8x51SE3FVW6U11nncp7hezdnq091ZIIKfFd4TDfOiG1bfdVAahROOs=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSBPR01MB2920.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(366004)(136003)(376002)(346002)(396003)(7416002)(8936002)(66946007)(110136005)(186003)(54906003)(38100700002)(86362001)(66476007)(478600001)(83380400001)(26005)(76116006)(7696005)(71200400001)(66556008)(66446008)(52536014)(316002)(5660300002)(6506007)(33656002)(4326008)(85182001)(122000001)(2906002)(55016002)(64756008)(8676002)(9686003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: =?utf-8?B?dHdQU1NxeEp3V3FEK084MU02Y28zK3JhSWc1N29JN3lsMUhRNElwajlIdE1K?=
+ =?utf-8?B?TTQ5RDZ5WUFnL2lBa3QvSGd3bkNzQ3ZnK1dvdWxJSWRvZW0xYXRBOW9FVGg4?=
+ =?utf-8?B?L1RGZDZiMjBnTE5aL1AyZGF6WmRMeHpYZDJzdE5TYVNmTUlWb01KWGFTTG91?=
+ =?utf-8?B?Rk5rWnJGREhHQ3p3RFQvRmdoa0RPVEprb2FiS0s0SWZ4THNiWml4dzNid0tZ?=
+ =?utf-8?B?Vk8za3d2enZ3Q3RPdy96dlRGenVYMU9xMy9DbkVRcExqQ01sVHN3T0hidzdt?=
+ =?utf-8?B?eUhScUJDYmJqZEd1OFErWlBSZ3Bsb09waTg1bGsweUhLSVJ3VGpDM0xjNDFW?=
+ =?utf-8?B?WC84bit1UG1veVdGMW9GWitXT0k3MjR1RVZZcUNCbTRWMm9GWlEwZ1Y1b0h5?=
+ =?utf-8?B?UjZJdktqMEFPN0ZVVFRYRWdyZFhORmtOVU1uK0k2d0VnMEtrNUtNKzlkc1Vp?=
+ =?utf-8?B?dVVFbDVBS24xbUtpOTFCL3JiWFFpRUlNZ2s2WXVaSmIyOUVjRHhza256Ukth?=
+ =?utf-8?B?Z29URy8rK1FySVRySnVDTjFhWGxaY0dEL1FWN2pYa29Xb2F1REhzK1FyZGZx?=
+ =?utf-8?B?UElwcGN3R09lZHFzVHVhb1JkMW8vSjNHWnlnYTV1bDNHL3l6YS9HaUlYdkdz?=
+ =?utf-8?B?cE5BdmhjcHVVL2w1eEU1U2JXNU4wZWVzQW5BRkdkaGdsSFp0ZjVvZXhDWTJp?=
+ =?utf-8?B?ZFlSQVVKdXRMaTFBY2Z6OTdZbEl0c1Nwd0xqOTF4dkt4c2FydWV1Ri9Lc1l5?=
+ =?utf-8?B?TFZjaFJOeFNJd3kzaGw4SldwcFRXb3NLTXlVOFF2dlBCSDhVOGphcnhLVEdC?=
+ =?utf-8?B?ZGZBZGlLaVZyM05HSCtjRDdYNTFxYVpWNW4yVkdINVErOWtta1l6alpHSzFi?=
+ =?utf-8?B?RnhiUXE4SjFtRjRXbk9pdVQvUDI5RnZ3YlU2NUYwcVRUR0tRVHpDZkltK2tQ?=
+ =?utf-8?B?c3hRc3U5eEVRZmYrZzA0enNHTm13dThGL0xNZ0JmbjVHc1hxYlNNVW96MS81?=
+ =?utf-8?B?YUw1OEtlUVlZN1p1WHVvZ0JObHdhVlpVU0VsUG1qK0ZPTWFscnRMMjV5VUdG?=
+ =?utf-8?B?Y2d3QkNyUFFnUzhJOUpYbEtqWVhKdzEvdEx3dzBxVE1QNlNtaEo3NWNUMW9m?=
+ =?utf-8?B?QWVlcEpaRGQyVlltbHV4UnU0RDZ3Uk82Q3NzamU0aUxlOUNEY1I4Wk9GV1VR?=
+ =?utf-8?B?UENsbk1OZW5aVkQrQWNXM3Zac25PL0FLditlamdsNnRvZnpCZ1FiTWVBTG5l?=
+ =?utf-8?B?aHJPdmwxQ3padW5TeWVqTldmVjlTSUdHZXJHWCtOeDlaVnd6elNVUTRROW9i?=
+ =?utf-8?B?QUV6NVg0VndKZWhBWkxuTkRDdlRIMU52UHFzOVJFaWJFVFE1NHI3NFNsd0lS?=
+ =?utf-8?B?NlovYWhNcVNoRkI0UDF5ZFhKWWhrb0hka096ODZidEZNUk5vVVVVQkZZbnBP?=
+ =?utf-8?B?RTlPV1NxK2hyTU1hR0dYWm85N2hCSU5oNllIbE9mL3lYZ1g5amttZFVyQWZh?=
+ =?utf-8?B?ZGlZczYrZFhJNG9OczVDZFpSWnFDY0E4TlFGK1o4b2hoZC9RREh6ZUE1SG1Q?=
+ =?utf-8?B?UC9kU1V4dTlwZjFoWExxcTZMdm5FdWVnRE5YbEtLclh5dEx6Y2Z2NXBMY1l5?=
+ =?utf-8?B?dTFVUUc3ZG84cWlkRHFTS1ZkbVBFdEpKOG5Ga0d3NXlCZDBLclZkOVlSMlFp?=
+ =?utf-8?B?RUVBQzEyMmU2SzVtUzFsaWsyK2ozUGFLYmJmak1UdWRJVnpBd1l5aVpsdlhx?=
+ =?utf-8?Q?cbPJiLvi6HlRqTS4FWpdjav6hvFvVVBLESZ4GRS?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210506072054.271157-16-david@fromorbit.com>
+X-OriginatorOrg: fujitsu.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: OSBPR01MB2920.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a2a496d8-77ba-4d4b-3e5f-08d915e38a4a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 May 2021 07:48:47.0157
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: eaIpe7iUwSHtspEE/RUKaJdPRKMe1uZvpxxx6wPmlPw6+BomqzSVjUl/c+OX6DLoFVDgItWTj04IcmMYYO9beA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS0PR01MB5587
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 06, 2021 at 05:20:47PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Looks good...
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  fs/xfs/libxfs/xfs_ialloc.c       | 177 ++++++++++++++++---------------
->  fs/xfs/libxfs/xfs_ialloc_btree.c |  27 ++---
->  fs/xfs/libxfs/xfs_ialloc_btree.h |   6 +-
->  fs/xfs/scrub/agheader_repair.c   |   4 +-
->  fs/xfs/scrub/common.c            |   5 +-
->  fs/xfs/xfs_iwalk.c               |   6 +-
->  6 files changed, 109 insertions(+), 116 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 905872bab426..e6f64d41e208 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -172,18 +172,17 @@ xfs_inobt_insert(
->  	struct xfs_mount	*mp,
->  	struct xfs_trans	*tp,
->  	struct xfs_buf		*agbp,
-> +	struct xfs_perag	*pag,
->  	xfs_agino_t		newino,
->  	xfs_agino_t		newlen,
->  	xfs_btnum_t		btnum)
->  {
->  	struct xfs_btree_cur	*cur;
-> -	struct xfs_agi		*agi = agbp->b_addr;
-> -	xfs_agnumber_t		agno = be32_to_cpu(agi->agi_seqno);
->  	xfs_agino_t		thisino;
->  	int			i;
->  	int			error;
->  
-> -	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, NULL, btnum);
-> +	cur = xfs_inobt_init_cursor(mp, tp, agbp, pag, btnum);
->  
->  	for (thisino = newino;
->  	     thisino < newino + newlen;
-> @@ -520,18 +519,17 @@ xfs_inobt_insert_sprec(
->  	struct xfs_mount		*mp,
->  	struct xfs_trans		*tp,
->  	struct xfs_buf			*agbp,
-> +	struct xfs_perag		*pag,
->  	int				btnum,
->  	struct xfs_inobt_rec_incore	*nrec,	/* in/out: new/merged rec. */
->  	bool				merge)	/* merge or replace */
->  {
->  	struct xfs_btree_cur		*cur;
-> -	struct xfs_agi			*agi = agbp->b_addr;
-> -	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
->  	int				error;
->  	int				i;
->  	struct xfs_inobt_rec_incore	rec;
->  
-> -	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, NULL, btnum);
-> +	cur = xfs_inobt_init_cursor(mp, tp, agbp, pag, btnum);
->  
->  	/* the new record is pre-aligned so we know where to look */
->  	error = xfs_inobt_lookup(cur, nrec->ir_startino, XFS_LOOKUP_EQ, &i);
-> @@ -578,14 +576,14 @@ xfs_inobt_insert_sprec(
->  			goto error;
->  		}
->  
-> -		trace_xfs_irec_merge_pre(mp, agno, rec.ir_startino,
-> +		trace_xfs_irec_merge_pre(mp, pag->pag_agno, rec.ir_startino,
->  					 rec.ir_holemask, nrec->ir_startino,
->  					 nrec->ir_holemask);
->  
->  		/* merge to nrec to output the updated record */
->  		__xfs_inobt_rec_merge(nrec, &rec);
->  
-> -		trace_xfs_irec_merge_post(mp, agno, nrec->ir_startino,
-> +		trace_xfs_irec_merge_post(mp, pag->pag_agno, nrec->ir_startino,
->  					  nrec->ir_holemask);
->  
->  		error = xfs_inobt_rec_check_count(mp, nrec);
-> @@ -613,21 +611,20 @@ xfs_inobt_insert_sprec(
->  STATIC int
->  xfs_ialloc_ag_alloc(
->  	struct xfs_trans	*tp,
-> -	struct xfs_buf		*agbp)
-> +	struct xfs_buf		*agbp,
-> +	struct xfs_perag	*pag)
->  {
->  	struct xfs_agi		*agi;
->  	struct xfs_alloc_arg	args;
-> -	xfs_agnumber_t		agno;
->  	int			error;
->  	xfs_agino_t		newino;		/* new first inode's number */
->  	xfs_agino_t		newlen;		/* new number of inodes */
->  	int			isaligned = 0;	/* inode allocation at stripe */
->  						/* unit boundary */
->  	/* init. to full chunk */
-> -	uint16_t		allocmask = (uint16_t) -1;
->  	struct xfs_inobt_rec_incore rec;
-> -	struct xfs_perag	*pag;
->  	struct xfs_ino_geometry	*igeo = M_IGEO(tp->t_mountp);
-> +	uint16_t		allocmask = (uint16_t) -1;
->  	int			do_sparse = 0;
->  
->  	memset(&args, 0, sizeof(args));
-> @@ -660,14 +657,13 @@ xfs_ialloc_ag_alloc(
->  	 */
->  	agi = agbp->b_addr;
->  	newino = be32_to_cpu(agi->agi_newino);
-> -	agno = be32_to_cpu(agi->agi_seqno);
->  	args.agbno = XFS_AGINO_TO_AGBNO(args.mp, newino) +
->  		     igeo->ialloc_blks;
->  	if (do_sparse)
->  		goto sparse_alloc;
->  	if (likely(newino != NULLAGINO &&
->  		  (args.agbno < be32_to_cpu(agi->agi_length)))) {
-> -		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
-> +		args.fsbno = XFS_AGB_TO_FSB(args.mp, pag->pag_agno, args.agbno);
->  		args.type = XFS_ALLOCTYPE_THIS_BNO;
->  		args.prod = 1;
->  
-> @@ -727,7 +723,7 @@ xfs_ialloc_ag_alloc(
->  		 * For now, just allocate blocks up front.
->  		 */
->  		args.agbno = be32_to_cpu(agi->agi_root);
-> -		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
-> +		args.fsbno = XFS_AGB_TO_FSB(args.mp, pag->pag_agno, args.agbno);
->  		/*
->  		 * Allocate a fixed-size extent of inodes.
->  		 */
-> @@ -748,7 +744,7 @@ xfs_ialloc_ag_alloc(
->  	if (isaligned && args.fsbno == NULLFSBLOCK) {
->  		args.type = XFS_ALLOCTYPE_NEAR_BNO;
->  		args.agbno = be32_to_cpu(agi->agi_root);
-> -		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
-> +		args.fsbno = XFS_AGB_TO_FSB(args.mp, pag->pag_agno, args.agbno);
->  		args.alignment = igeo->cluster_align;
->  		if ((error = xfs_alloc_vextent(&args)))
->  			return error;
-> @@ -764,7 +760,7 @@ xfs_ialloc_ag_alloc(
->  sparse_alloc:
->  		args.type = XFS_ALLOCTYPE_NEAR_BNO;
->  		args.agbno = be32_to_cpu(agi->agi_root);
-> -		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
-> +		args.fsbno = XFS_AGB_TO_FSB(args.mp, pag->pag_agno, args.agbno);
->  		args.alignment = args.mp->m_sb.sb_spino_align;
->  		args.prod = 1;
->  
-> @@ -809,7 +805,7 @@ xfs_ialloc_ag_alloc(
->  	 * rather than a linear progression to prevent the next generation
->  	 * number from being easily guessable.
->  	 */
-> -	error = xfs_ialloc_inode_init(args.mp, tp, NULL, newlen, agno,
-> +	error = xfs_ialloc_inode_init(args.mp, tp, NULL, newlen, pag->pag_agno,
->  			args.agbno, args.len, prandom_u32());
->  
->  	if (error)
-> @@ -836,12 +832,12 @@ xfs_ialloc_ag_alloc(
->  		 * if necessary. If a merge does occur, rec is updated to the
->  		 * merged record.
->  		 */
-> -		error = xfs_inobt_insert_sprec(args.mp, tp, agbp, XFS_BTNUM_INO,
-> -					       &rec, true);
-> +		error = xfs_inobt_insert_sprec(args.mp, tp, agbp, pag,
-> +				XFS_BTNUM_INO, &rec, true);
->  		if (error == -EFSCORRUPTED) {
->  			xfs_alert(args.mp,
->  	"invalid sparse inode record: ino 0x%llx holemask 0x%x count %u",
-> -				  XFS_AGINO_TO_INO(args.mp, agno,
-> +				  XFS_AGINO_TO_INO(args.mp, pag->pag_agno,
->  						   rec.ir_startino),
->  				  rec.ir_holemask, rec.ir_count);
->  			xfs_force_shutdown(args.mp, SHUTDOWN_CORRUPT_INCORE);
-> @@ -861,21 +857,20 @@ xfs_ialloc_ag_alloc(
->  		 * existing record with this one.
->  		 */
->  		if (xfs_sb_version_hasfinobt(&args.mp->m_sb)) {
-> -			error = xfs_inobt_insert_sprec(args.mp, tp, agbp,
-> -						       XFS_BTNUM_FINO, &rec,
-> -						       false);
-> +			error = xfs_inobt_insert_sprec(args.mp, tp, agbp, pag,
-> +				       XFS_BTNUM_FINO, &rec, false);
->  			if (error)
->  				return error;
->  		}
->  	} else {
->  		/* full chunk - insert new records to both btrees */
-> -		error = xfs_inobt_insert(args.mp, tp, agbp, newino, newlen,
-> +		error = xfs_inobt_insert(args.mp, tp, agbp, pag, newino, newlen,
->  					 XFS_BTNUM_INO);
->  		if (error)
->  			return error;
->  
->  		if (xfs_sb_version_hasfinobt(&args.mp->m_sb)) {
-> -			error = xfs_inobt_insert(args.mp, tp, agbp, newino,
-> +			error = xfs_inobt_insert(args.mp, tp, agbp, pag, newino,
->  						 newlen, XFS_BTNUM_FINO);
->  			if (error)
->  				return error;
-> @@ -887,7 +882,6 @@ xfs_ialloc_ag_alloc(
->  	 */
->  	be32_add_cpu(&agi->agi_count, newlen);
->  	be32_add_cpu(&agi->agi_freecount, newlen);
-> -	pag = agbp->b_pag;
->  	pag->pagi_freecount += newlen;
->  	pag->pagi_count += newlen;
->  	agi->agi_newino = cpu_to_be32(newino);
-> @@ -1123,15 +1117,14 @@ STATIC int
->  xfs_dialloc_ag_inobt(
->  	struct xfs_trans	*tp,
->  	struct xfs_buf		*agbp,
-> +	struct xfs_perag	*pag,
->  	xfs_ino_t		parent,
->  	xfs_ino_t		*inop)
->  {
->  	struct xfs_mount	*mp = tp->t_mountp;
->  	struct xfs_agi		*agi = agbp->b_addr;
-> -	xfs_agnumber_t		agno = be32_to_cpu(agi->agi_seqno);
->  	xfs_agnumber_t		pagno = XFS_INO_TO_AGNO(mp, parent);
->  	xfs_agino_t		pagino = XFS_INO_TO_AGINO(mp, parent);
-> -	struct xfs_perag	*pag = agbp->b_pag;
->  	struct xfs_btree_cur	*cur, *tcur;
->  	struct xfs_inobt_rec_incore rec, trec;
->  	xfs_ino_t		ino;
-> @@ -1145,7 +1138,7 @@ xfs_dialloc_ag_inobt(
->  	ASSERT(pag->pagi_freecount > 0);
->  
->   restart_pagno:
-> -	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, NULL, XFS_BTNUM_INO);
-> +	cur = xfs_inobt_init_cursor(mp, tp, agbp, pag, XFS_BTNUM_INO);
->  	/*
->  	 * If pagino is 0 (this is the root inode allocation) use newino.
->  	 * This must work because we've just allocated some.
-> @@ -1160,7 +1153,7 @@ xfs_dialloc_ag_inobt(
->  	/*
->  	 * If in the same AG as the parent, try to get near the parent.
->  	 */
-> -	if (pagno == agno) {
-> +	if (pagno == pag->pag_agno) {
->  		int		doneleft;	/* done, to the left */
->  		int		doneright;	/* done, to the right */
->  
-> @@ -1363,7 +1356,7 @@ xfs_dialloc_ag_inobt(
->  	ASSERT(offset < XFS_INODES_PER_CHUNK);
->  	ASSERT((XFS_AGINO_TO_OFFSET(mp, rec.ir_startino) %
->  				   XFS_INODES_PER_CHUNK) == 0);
-> -	ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino + offset);
-> +	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, rec.ir_startino + offset);
->  	rec.ir_free &= ~XFS_INOBT_MASK(offset);
->  	rec.ir_freecount--;
->  	error = xfs_inobt_update(cur, &rec);
-> @@ -1577,7 +1570,6 @@ xfs_dialloc_ag(
->  {
->  	struct xfs_mount		*mp = tp->t_mountp;
->  	struct xfs_agi			*agi = agbp->b_addr;
-> -	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
->  	xfs_agnumber_t			pagno = XFS_INO_TO_AGNO(mp, parent);
->  	xfs_agino_t			pagino = XFS_INO_TO_AGINO(mp, parent);
->  	struct xfs_btree_cur		*cur;	/* finobt cursor */
-> @@ -1587,9 +1579,10 @@ xfs_dialloc_ag(
->  	int				error;
->  	int				offset;
->  	int				i;
-> +	struct xfs_perag		*pag = agbp->b_pag;
->  
->  	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
-> -		return xfs_dialloc_ag_inobt(tp, agbp, parent, inop);
-> +		return xfs_dialloc_ag_inobt(tp, agbp, pag, parent, inop);
->  
->  	/*
->  	 * If pagino is 0 (this is the root inode allocation) use newino.
-> @@ -1598,7 +1591,7 @@ xfs_dialloc_ag(
->  	if (!pagino)
->  		pagino = be32_to_cpu(agi->agi_newino);
->  
-> -	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, NULL, XFS_BTNUM_FINO);
-> +	cur = xfs_inobt_init_cursor(mp, tp, agbp, pag, XFS_BTNUM_FINO);
->  
->  	error = xfs_check_agi_freecount(cur, agi);
->  	if (error)
-> @@ -1609,7 +1602,7 @@ xfs_dialloc_ag(
->  	 * parent. If so, find the closest available inode to the parent. If
->  	 * not, consider the agi hint or find the first free inode in the AG.
->  	 */
-> -	if (agno == pagno)
-> +	if (pag->pag_agno == pagno)
->  		error = xfs_dialloc_ag_finobt_near(pagino, &cur, &rec);
->  	else
->  		error = xfs_dialloc_ag_finobt_newino(agi, cur, &rec);
-> @@ -1621,7 +1614,7 @@ xfs_dialloc_ag(
->  	ASSERT(offset < XFS_INODES_PER_CHUNK);
->  	ASSERT((XFS_AGINO_TO_OFFSET(mp, rec.ir_startino) %
->  				   XFS_INODES_PER_CHUNK) == 0);
-> -	ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino + offset);
-> +	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, rec.ir_startino + offset);
->  
->  	/*
->  	 * Modify or remove the finobt record.
-> @@ -1641,7 +1634,7 @@ xfs_dialloc_ag(
->  	 * the original freecount. If all is well, make the equivalent update to
->  	 * the inobt using the finobt record and offset information.
->  	 */
-> -	icur = xfs_inobt_init_cursor(mp, tp, agbp, agno, NULL, XFS_BTNUM_INO);
-> +	icur = xfs_inobt_init_cursor(mp, tp, agbp, pag, XFS_BTNUM_INO);
->  
->  	error = xfs_check_agi_freecount(icur, agi);
->  	if (error)
-> @@ -1657,7 +1650,7 @@ xfs_dialloc_ag(
->  	 */
->  	be32_add_cpu(&agi->agi_freecount, -1);
->  	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
-> -	agbp->b_pag->pagi_freecount--;
-> +	pag->pagi_freecount--;
->  
->  	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -1);
->  
-> @@ -1809,7 +1802,7 @@ xfs_dialloc_select_ag(
->  		if (!okalloc)
->  			goto nextag_relse_buffer;
->  
-> -		error = xfs_ialloc_ag_alloc(*tpp, agbp);
-> +		error = xfs_ialloc_ag_alloc(*tpp, agbp, pag);
->  		if (error < 0) {
->  			xfs_trans_brelse(*tpp, agbp);
->  
-> @@ -1935,12 +1928,12 @@ xfs_difree_inobt(
->  	struct xfs_mount		*mp,
->  	struct xfs_trans		*tp,
->  	struct xfs_buf			*agbp,
-> +	struct xfs_perag		*pag,
->  	xfs_agino_t			agino,
->  	struct xfs_icluster		*xic,
->  	struct xfs_inobt_rec_incore	*orec)
->  {
->  	struct xfs_agi			*agi = agbp->b_addr;
-> -	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
->  	struct xfs_btree_cur		*cur;
->  	struct xfs_inobt_rec_incore	rec;
->  	int				ilen;
-> @@ -1954,7 +1947,7 @@ xfs_difree_inobt(
->  	/*
->  	 * Initialize the cursor.
->  	 */
-> -	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, NULL, XFS_BTNUM_INO);
-> +	cur = xfs_inobt_init_cursor(mp, tp, agbp, pag, XFS_BTNUM_INO);
->  
->  	error = xfs_check_agi_freecount(cur, agi);
->  	if (error)
-> @@ -2005,7 +1998,8 @@ xfs_difree_inobt(
->  		struct xfs_perag	*pag = agbp->b_pag;
->  
->  		xic->deleted = true;
-> -		xic->first_ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
-> +		xic->first_ino = XFS_AGINO_TO_INO(mp, pag->pag_agno,
-> +				rec.ir_startino);
->  		xic->alloc = xfs_inobt_irec_to_allocmask(&rec);
->  
->  		/*
-> @@ -2028,7 +2022,7 @@ xfs_difree_inobt(
->  			goto error0;
->  		}
->  
-> -		xfs_difree_inode_chunk(tp, agno, &rec);
-> +		xfs_difree_inode_chunk(tp, pag->pag_agno, &rec);
->  	} else {
->  		xic->deleted = false;
->  
-> @@ -2044,7 +2038,7 @@ xfs_difree_inobt(
->  		 */
->  		be32_add_cpu(&agi->agi_freecount, 1);
->  		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
-> -		agbp->b_pag->pagi_freecount++;
-> +		pag->pagi_freecount++;
->  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, 1);
->  	}
->  
-> @@ -2069,18 +2063,18 @@ xfs_difree_finobt(
->  	struct xfs_mount		*mp,
->  	struct xfs_trans		*tp,
->  	struct xfs_buf			*agbp,
-> +	struct xfs_perag		*pag,
->  	xfs_agino_t			agino,
->  	struct xfs_inobt_rec_incore	*ibtrec) /* inobt record */
->  {
->  	struct xfs_agi			*agi = agbp->b_addr;
-> -	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
->  	struct xfs_btree_cur		*cur;
->  	struct xfs_inobt_rec_incore	rec;
->  	int				offset = agino - ibtrec->ir_startino;
->  	int				error;
->  	int				i;
->  
-> -	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, NULL, XFS_BTNUM_FINO);
-> +	cur = xfs_inobt_init_cursor(mp, tp, agbp, pag, XFS_BTNUM_FINO);
->  
->  	error = xfs_inobt_lookup(cur, ibtrec->ir_startino, XFS_LOOKUP_EQ, &i);
->  	if (error)
-> @@ -2188,16 +2182,15 @@ xfs_difree(
->  	xfs_agino_t		agino;	/* allocation group inode number */
->  	xfs_agnumber_t		agno;	/* allocation group number */
->  	int			error;	/* error return value */
-> -	struct xfs_mount	*mp;	/* mount structure for filesystem */
-> +	struct xfs_mount	*mp = tp->t_mountp;
->  	struct xfs_inobt_rec_incore rec;/* btree record */
-> -
-> -	mp = tp->t_mountp;
-> +	struct xfs_perag	*pag;
->  
->  	/*
->  	 * Break up inode number into its components.
->  	 */
->  	agno = XFS_INO_TO_AGNO(mp, inode);
-> -	if (agno >= mp->m_sb.sb_agcount)  {
-> +	if (agno >= mp->m_sb.sb_agcount) {
->  		xfs_warn(mp, "%s: agno >= mp->m_sb.sb_agcount (%d >= %d).",
->  			__func__, agno, mp->m_sb.sb_agcount);
->  		ASSERT(0);
-> @@ -2231,7 +2224,8 @@ xfs_difree(
->  	/*
->  	 * Fix up the inode allocation btree.
->  	 */
-> -	error = xfs_difree_inobt(mp, tp, agbp, agino, xic, &rec);
-> +	pag = agbp->b_pag;
-> +	error = xfs_difree_inobt(mp, tp, agbp, pag, agino, xic, &rec);
->  	if (error)
->  		goto error0;
->  
-> @@ -2239,7 +2233,7 @@ xfs_difree(
->  	 * Fix up the free inode btree.
->  	 */
->  	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-> -		error = xfs_difree_finobt(mp, tp, agbp, agino, &rec);
-> +		error = xfs_difree_finobt(mp, tp, agbp, pag, agino, &rec);
->  		if (error)
->  			goto error0;
->  	}
-> @@ -2254,7 +2248,7 @@ STATIC int
->  xfs_imap_lookup(
->  	struct xfs_mount	*mp,
->  	struct xfs_trans	*tp,
-> -	xfs_agnumber_t		agno,
-> +	struct xfs_perag	*pag,
->  	xfs_agino_t		agino,
->  	xfs_agblock_t		agbno,
->  	xfs_agblock_t		*chunk_agbno,
-> @@ -2267,11 +2261,11 @@ xfs_imap_lookup(
->  	int			error;
->  	int			i;
->  
-> -	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
-> +	error = xfs_ialloc_read_agi(mp, tp, pag->pag_agno, &agbp);
->  	if (error) {
->  		xfs_alert(mp,
->  			"%s: xfs_ialloc_read_agi() returned error %d, agno %d",
-> -			__func__, error, agno);
-> +			__func__, error, pag->pag_agno);
->  		return error;
->  	}
->  
-> @@ -2281,7 +2275,7 @@ xfs_imap_lookup(
->  	 * we have a record, we need to ensure it contains the inode number
->  	 * we are looking up.
->  	 */
-> -	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, NULL, XFS_BTNUM_INO);
-> +	cur = xfs_inobt_init_cursor(mp, tp, agbp, pag, XFS_BTNUM_INO);
->  	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &i);
->  	if (!error) {
->  		if (i)
-> @@ -2315,42 +2309,44 @@ xfs_imap_lookup(
->   */
->  int
->  xfs_imap(
-> -	xfs_mount_t	 *mp,	/* file system mount structure */
-> -	xfs_trans_t	 *tp,	/* transaction pointer */
-> -	xfs_ino_t	ino,	/* inode to locate */
-> -	struct xfs_imap	*imap,	/* location map structure */
-> -	uint		flags)	/* flags for inode btree lookup */
-> +	struct xfs_mount	 *mp,	/* file system mount structure */
-> +	struct xfs_trans	 *tp,	/* transaction pointer */
-> +	xfs_ino_t		ino,	/* inode to locate */
-> +	struct xfs_imap		*imap,	/* location map structure */
-> +	uint			flags)	/* flags for inode btree lookup */
->  {
-> -	xfs_agblock_t	agbno;	/* block number of inode in the alloc group */
-> -	xfs_agino_t	agino;	/* inode number within alloc group */
-> -	xfs_agnumber_t	agno;	/* allocation group number */
-> -	xfs_agblock_t	chunk_agbno;	/* first block in inode chunk */
-> -	xfs_agblock_t	cluster_agbno;	/* first block in inode cluster */
-> -	int		error;	/* error code */
-> -	int		offset;	/* index of inode in its buffer */
-> -	xfs_agblock_t	offset_agbno;	/* blks from chunk start to inode */
-> +	xfs_agblock_t		agbno;	/* block number of inode in the alloc group */
-> +	xfs_agino_t		agino;	/* inode number within alloc group */
-> +	xfs_agblock_t		chunk_agbno;	/* first block in inode chunk */
-> +	xfs_agblock_t		cluster_agbno;	/* first block in inode cluster */
-> +	int			error;	/* error code */
-> +	int			offset;	/* index of inode in its buffer */
-> +	xfs_agblock_t		offset_agbno;	/* blks from chunk start to inode */
-> +	struct xfs_perag	*pag;
->  
->  	ASSERT(ino != NULLFSINO);
->  
->  	/*
->  	 * Split up the inode number into its parts.
->  	 */
-> -	agno = XFS_INO_TO_AGNO(mp, ino);
-> +	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ino));
->  	agino = XFS_INO_TO_AGINO(mp, ino);
->  	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
-> -	if (agno >= mp->m_sb.sb_agcount || agbno >= mp->m_sb.sb_agblocks ||
-> -	    ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
-> +	if (!pag || agbno >= mp->m_sb.sb_agblocks ||
-> +	    ino != XFS_AGINO_TO_INO(mp, pag->pag_agno, agino)) {
-> +		error = -EINVAL;
->  #ifdef DEBUG
->  		/*
->  		 * Don't output diagnostic information for untrusted inodes
->  		 * as they can be invalid without implying corruption.
->  		 */
->  		if (flags & XFS_IGET_UNTRUSTED)
-> -			return -EINVAL;
-> -		if (agno >= mp->m_sb.sb_agcount) {
-> +			goto out_drop;
-> +		if (!pag) {
->  			xfs_alert(mp,
->  				"%s: agno (%d) >= mp->m_sb.sb_agcount (%d)",
-> -				__func__, agno, mp->m_sb.sb_agcount);
-> +				__func__, XFS_INO_TO_AGNO(mp, ino),
-> +				mp->m_sb.sb_agcount);
->  		}
->  		if (agbno >= mp->m_sb.sb_agblocks) {
->  			xfs_alert(mp,
-> @@ -2358,15 +2354,15 @@ xfs_imap(
->  				__func__, (unsigned long long)agbno,
->  				(unsigned long)mp->m_sb.sb_agblocks);
->  		}
-> -		if (ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
-> +		if (pag && ino != XFS_AGINO_TO_INO(mp, pag->pag_agno, agino)) {
->  			xfs_alert(mp,
->  		"%s: ino (0x%llx) != XFS_AGINO_TO_INO() (0x%llx)",
->  				__func__, ino,
-> -				XFS_AGINO_TO_INO(mp, agno, agino));
-> +				XFS_AGINO_TO_INO(mp, pag->pag_agno, agino));
->  		}
->  		xfs_stack_trace();
->  #endif /* DEBUG */
-> -		return -EINVAL;
-> +		goto out_drop;
->  	}
->  
->  	/*
-> @@ -2377,10 +2373,10 @@ xfs_imap(
->  	 * in all cases where an untrusted inode number is passed.
->  	 */
->  	if (flags & XFS_IGET_UNTRUSTED) {
-> -		error = xfs_imap_lookup(mp, tp, agno, agino, agbno,
-> +		error = xfs_imap_lookup(mp, tp, pag, agino, agbno,
->  					&chunk_agbno, &offset_agbno, flags);
->  		if (error)
-> -			return error;
-> +			goto out_drop;
->  		goto out_map;
->  	}
->  
-> @@ -2392,11 +2388,12 @@ xfs_imap(
->  		offset = XFS_INO_TO_OFFSET(mp, ino);
->  		ASSERT(offset < mp->m_sb.sb_inopblock);
->  
-> -		imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
-> +		imap->im_blkno = XFS_AGB_TO_DADDR(mp, pag->pag_agno, agbno);
->  		imap->im_len = XFS_FSB_TO_BB(mp, 1);
->  		imap->im_boffset = (unsigned short)(offset <<
->  							mp->m_sb.sb_inodelog);
-> -		return 0;
-> +		error = 0;
-> +		goto out_drop;
->  	}
->  
->  	/*
-> @@ -2408,10 +2405,10 @@ xfs_imap(
->  		offset_agbno = agbno & M_IGEO(mp)->inoalign_mask;
->  		chunk_agbno = agbno - offset_agbno;
->  	} else {
-> -		error = xfs_imap_lookup(mp, tp, agno, agino, agbno,
-> +		error = xfs_imap_lookup(mp, tp, pag, agino, agbno,
->  					&chunk_agbno, &offset_agbno, flags);
->  		if (error)
-> -			return error;
-> +			goto out_drop;
->  	}
->  
->  out_map:
-> @@ -2422,7 +2419,7 @@ xfs_imap(
->  	offset = ((agbno - cluster_agbno) * mp->m_sb.sb_inopblock) +
->  		XFS_INO_TO_OFFSET(mp, ino);
->  
-> -	imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, cluster_agbno);
-> +	imap->im_blkno = XFS_AGB_TO_DADDR(mp, pag->pag_agno, cluster_agbno);
->  	imap->im_len = XFS_FSB_TO_BB(mp, M_IGEO(mp)->blocks_per_cluster);
->  	imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
->  
-> @@ -2439,9 +2436,13 @@ xfs_imap(
->  			__func__, (unsigned long long) imap->im_blkno,
->  			(unsigned long long) imap->im_len,
->  			XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks));
-> -		return -EINVAL;
-> +		error = -EINVAL;
-> +		goto out_drop;
->  	}
-> -	return 0;
-> +	error = 0;
-> +out_drop:
-> +	xfs_perag_put(pag);
-> +	return error;
->  }
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> index 6c4efdf01674..450161b53648 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> @@ -35,8 +35,7 @@ xfs_inobt_dup_cursor(
->  	struct xfs_btree_cur	*cur)
->  {
->  	return xfs_inobt_init_cursor(cur->bc_mp, cur->bc_tp,
-> -			cur->bc_ag.agbp, cur->bc_ag.agno,
-> -			cur->bc_ag.pag, cur->bc_btnum);
-> +			cur->bc_ag.agbp, cur->bc_ag.pag, cur->bc_btnum);
->  }
->  
->  STATIC void
-> @@ -428,7 +427,6 @@ static struct xfs_btree_cur *
->  xfs_inobt_init_common(
->  	struct xfs_mount	*mp,		/* file system mount point */
->  	struct xfs_trans	*tp,		/* transaction pointer */
-> -	xfs_agnumber_t		agno,		/* allocation group number */
->  	struct xfs_perag	*pag,
->  	xfs_btnum_t		btnum)		/* ialloc or free ino btree */
->  {
-> @@ -451,12 +449,10 @@ xfs_inobt_init_common(
->  	if (xfs_sb_version_hascrc(&mp->m_sb))
->  		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
->  
-> -	cur->bc_ag.agno = agno;
-> -	if (pag) {
-> -		/* take a reference for the cursor */
-> -		atomic_inc(&pag->pag_ref);
-> -	}
-> +	/* take a reference for the cursor */
-> +	atomic_inc(&pag->pag_ref);
->  	cur->bc_ag.pag = pag;
-> +	cur->bc_ag.agno = pag->pag_agno;
->  	return cur;
->  }
->  
-> @@ -466,14 +462,13 @@ xfs_inobt_init_cursor(
->  	struct xfs_mount	*mp,
->  	struct xfs_trans	*tp,
->  	struct xfs_buf		*agbp,
-> -	xfs_agnumber_t		agno,
->  	struct xfs_perag	*pag,
->  	xfs_btnum_t		btnum)
->  {
->  	struct xfs_btree_cur	*cur;
->  	struct xfs_agi		*agi = agbp->b_addr;
->  
-> -	cur = xfs_inobt_init_common(mp, tp, agno, pag, btnum);
-> +	cur = xfs_inobt_init_common(mp, tp, pag, btnum);
->  	if (btnum == XFS_BTNUM_INO)
->  		cur->bc_nlevels = be32_to_cpu(agi->agi_level);
->  	else
-> @@ -487,12 +482,12 @@ struct xfs_btree_cur *
->  xfs_inobt_stage_cursor(
->  	struct xfs_mount	*mp,
->  	struct xbtree_afakeroot	*afake,
-> -	xfs_agnumber_t		agno,
-> +	struct xfs_perag	*pag,
->  	xfs_btnum_t		btnum)
->  {
->  	struct xfs_btree_cur	*cur;
->  
-> -	cur = xfs_inobt_init_common(mp, NULL, agno, NULL, btnum);
-> +	cur = xfs_inobt_init_common(mp, NULL, pag, btnum);
->  	xfs_btree_stage_afakeroot(cur, afake);
->  	return cur;
->  }
-> @@ -664,7 +659,7 @@ int
->  xfs_inobt_cur(
->  	struct xfs_mount	*mp,
->  	struct xfs_trans	*tp,
-> -	xfs_agnumber_t		agno,
-> +	struct xfs_perag	*pag,
->  	xfs_btnum_t		which,
->  	struct xfs_btree_cur	**curpp,
->  	struct xfs_buf		**agi_bpp)
-> @@ -675,11 +670,11 @@ xfs_inobt_cur(
->  	ASSERT(*agi_bpp == NULL);
->  	ASSERT(*curpp == NULL);
->  
-> -	error = xfs_ialloc_read_agi(mp, tp, agno, agi_bpp);
-> +	error = xfs_ialloc_read_agi(mp, tp, pag->pag_agno, agi_bpp);
->  	if (error)
->  		return error;
->  
-> -	cur = xfs_inobt_init_cursor(mp, tp, *agi_bpp, agno, NULL, which);
-> +	cur = xfs_inobt_init_cursor(mp, tp, *agi_bpp, pag, which);
->  	*curpp = cur;
->  	return 0;
->  }
-> @@ -696,7 +691,7 @@ xfs_inobt_count_blocks(
->  	struct xfs_btree_cur	*cur = NULL;
->  	int			error;
->  
-> -	error = xfs_inobt_cur(mp, tp, pag->pag_agno, btnum, &cur, &agbp);
-> +	error = xfs_inobt_cur(mp, tp, pag, btnum, &cur, &agbp);
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
-> index 04dfa7eee81f..e530c82b2217 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc_btree.h
-> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
-> @@ -47,10 +47,10 @@ struct xfs_perag;
->  		 ((index) - 1) * sizeof(xfs_inobt_ptr_t)))
->  
->  extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *mp,
-> -		struct xfs_trans *tp, struct xfs_buf *agbp, xfs_agnumber_t agno,
-> +		struct xfs_trans *tp, struct xfs_buf *agbp,
->  		struct xfs_perag *pag, xfs_btnum_t btnum);
->  struct xfs_btree_cur *xfs_inobt_stage_cursor(struct xfs_mount *mp,
-> -		struct xbtree_afakeroot *afake, xfs_agnumber_t agno,
-> +		struct xbtree_afakeroot *afake, struct xfs_perag *pag,
->  		xfs_btnum_t btnum);
->  extern int xfs_inobt_maxrecs(struct xfs_mount *, int, int);
->  
-> @@ -69,7 +69,7 @@ int xfs_finobt_calc_reserves(struct xfs_mount *mp, struct xfs_trans *tp,
->  extern xfs_extlen_t xfs_iallocbt_calc_size(struct xfs_mount *mp,
->  		unsigned long long len);
->  int xfs_inobt_cur(struct xfs_mount *mp, struct xfs_trans *tp,
-> -		xfs_agnumber_t agno, xfs_btnum_t btnum,
-> +		struct xfs_perag *pag, xfs_btnum_t btnum,
->  		struct xfs_btree_cur **curpp, struct xfs_buf **agi_bpp);
->  
->  void xfs_inobt_commit_staged_btree(struct xfs_btree_cur *cur,
-> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> index ee2d85e3fd4a..ecc9146647ba 100644
-> --- a/fs/xfs/scrub/agheader_repair.c
-> +++ b/fs/xfs/scrub/agheader_repair.c
-> @@ -806,7 +806,7 @@ xrep_agi_calc_from_btrees(
->  	xfs_agino_t		freecount;
->  	int			error;
->  
-> -	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
-> +	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp,
->  			sc->sa.pag, XFS_BTNUM_INO);
->  	error = xfs_ialloc_count_inodes(cur, &count, &freecount);
->  	if (error)
-> @@ -828,7 +828,7 @@ xrep_agi_calc_from_btrees(
->  	    xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
->  		xfs_agblock_t	blocks;
->  
-> -		cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
-> +		cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp,
->  				sc->sa.pag, XFS_BTNUM_FINO);
->  		error = xfs_btree_count_blocks(cur, &blocks);
->  		if (error)
-> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> index 3035f8cee6f6..64c3b9b78d0d 100644
-> --- a/fs/xfs/scrub/common.c
-> +++ b/fs/xfs/scrub/common.c
-> @@ -458,7 +458,6 @@ xchk_ag_btcur_init(
->  	struct xchk_ag		*sa)
->  {
->  	struct xfs_mount	*mp = sc->mp;
-> -	xfs_agnumber_t		agno = sa->agno;
->  
->  	xchk_perag_get(sc->mp, sa);
->  	if (sa->agf_bp &&
-> @@ -479,14 +478,14 @@ xchk_ag_btcur_init(
->  	if (sa->agi_bp &&
->  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_INO)) {
->  		sa->ino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
-> -				agno, sa->pag, XFS_BTNUM_INO);
-> +				sa->pag, XFS_BTNUM_INO);
->  	}
->  
->  	/* Set up a finobt cursor for cross-referencing. */
->  	if (sa->agi_bp && xfs_sb_version_hasfinobt(&mp->m_sb) &&
->  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_FINO)) {
->  		sa->fino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
-> -				agno, sa->pag, XFS_BTNUM_FINO);
-> +				sa->pag, XFS_BTNUM_FINO);
->  	}
->  
->  	/* Set up a rmapbt cursor for cross-referencing. */
-> diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-> index c7e8f48a3ec4..917d51eefee3 100644
-> --- a/fs/xfs/xfs_iwalk.c
-> +++ b/fs/xfs/xfs_iwalk.c
-> @@ -272,8 +272,7 @@ xfs_iwalk_ag_start(
->  
->  	/* Set up a fresh cursor and empty the inobt cache. */
->  	iwag->nr_recs = 0;
-> -	error = xfs_inobt_cur(mp, tp, pag->pag_agno, XFS_BTNUM_INO,
-> -				curpp, agi_bpp);
-> +	error = xfs_inobt_cur(mp, tp, pag, XFS_BTNUM_INO, curpp, agi_bpp);
->  	if (error)
->  		return error;
->  
-> @@ -378,8 +377,7 @@ xfs_iwalk_run_callbacks(
->  		return 0;
->  
->  	/* ...and recreate the cursor just past where we left off. */
-> -	error = xfs_inobt_cur(mp, tp, iwag->pag->pag_agno, XFS_BTNUM_INO,
-> -				curpp, agi_bpp);
-> +	error = xfs_inobt_cur(mp, tp, iwag->pag, XFS_BTNUM_INO, curpp, agi_bpp);
->  	if (error)
->  		return error;
->  
-> -- 
-> 2.31.1
-> 
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNaWthIFBlbnR0aWzDpCA8bWlr
+YS5wZW50dGlsYUBuZXh0Zm91ci5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjUgMy83XSBm
+c2RheDogQWRkIGRheF9pb21hcF9jb3dfY29weSgpIGZvcg0KPiBkYXhfaW9tYXBfemVybw0KPiAN
+Cj4gSGksDQo+IA0KPiBPbiAxMS41LjIwMjEgNi4wOSwgU2hpeWFuZyBSdWFuIHdyb3RlOg0KPiA+
+IFB1bmNoIGhvbGUgb24gYSByZWZsaW5rZWQgZmlsZSBuZWVkcyBkYXhfY29weV9lZGdlKCkgdG9v
+LiAgT3RoZXJ3aXNlLA0KPiA+IGRhdGEgaW4gbm90IGFsaWduZWQgYXJlYSB3aWxsIGJlIG5vdCBj
+b3JyZWN0LiAgU28sIGFkZCB0aGUgc3JjbWFwIHRvDQo+ID4gZGF4X2lvbWFwX3plcm8oKSBhbmQg
+cmVwbGFjZSBtZW1zZXQoKSBhcyBkYXhfY29weV9lZGdlKCkuDQo+ID4NCj4gPiBTaWduZWQtb2Zm
+LWJ5OiBTaGl5YW5nIFJ1YW4gPHJ1YW5zeS5mbnN0QGZ1aml0c3UuY29tPg0KPiA+IFJldmlld2Vk
+LWJ5OiBSaXRlc2ggSGFyamFuaSA8cml0ZXNoaEBsaW51eC5pYm0uY29tPg0KPiA+IC0tLQ0KPiA+
+ICAgZnMvZGF4LmMgICAgICAgICAgICAgICB8IDI1ICsrKysrKysrKysrKysrKy0tLS0tLS0tLS0N
+Cj4gPiAgIGZzL2lvbWFwL2J1ZmZlcmVkLWlvLmMgfCAgMiArLQ0KPiA+ICAgaW5jbHVkZS9saW51
+eC9kYXguaCAgICB8ICAzICsrLQ0KPiA+ICAgMyBmaWxlcyBjaGFuZ2VkLCAxOCBpbnNlcnRpb25z
+KCspLCAxMiBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9mcy9kYXguYyBiL2Zz
+L2RheC5jDQo+ID4gaW5kZXggZWYwZTU2NGU3OTA0Li5lZTlkMjhhNzliZmIgMTAwNjQ0DQo+ID4g
+LS0tIGEvZnMvZGF4LmMNCj4gPiArKysgYi9mcy9kYXguYw0KPiA+IEBAIC0xMTg2LDcgKzExODYs
+OCBAQCBzdGF0aWMgdm1fZmF1bHRfdCBkYXhfcG1kX2xvYWRfaG9sZShzdHJ1Y3QNCj4geGFfc3Rh
+dGUgKnhhcywgc3RydWN0IHZtX2ZhdWx0ICp2bWYsDQo+ID4gICB9DQo+ID4gICAjZW5kaWYgLyog
+Q09ORklHX0ZTX0RBWF9QTUQgKi8NCj4gPg0KPiA+IC1zNjQgZGF4X2lvbWFwX3plcm8obG9mZl90
+IHBvcywgdTY0IGxlbmd0aCwgc3RydWN0IGlvbWFwICppb21hcCkNCj4gPiArczY0IGRheF9pb21h
+cF96ZXJvKGxvZmZfdCBwb3MsIHU2NCBsZW5ndGgsIHN0cnVjdCBpb21hcCAqaW9tYXAsDQo+ID4g
+KwkJc3RydWN0IGlvbWFwICpzcmNtYXApDQo+ID4gICB7DQo+ID4gICAJc2VjdG9yX3Qgc2VjdG9y
+ID0gaW9tYXBfc2VjdG9yKGlvbWFwLCBwb3MgJiBQQUdFX01BU0spOw0KPiA+ICAgCXBnb2ZmX3Qg
+cGdvZmY7DQo+ID4gQEAgLTEyMDgsMTkgKzEyMDksMjMgQEAgczY0IGRheF9pb21hcF96ZXJvKGxv
+ZmZfdCBwb3MsIHU2NCBsZW5ndGgsDQo+ID4gc3RydWN0IGlvbWFwICppb21hcCkNCj4gPg0KPiA+
+ICAgCWlmIChwYWdlX2FsaWduZWQpDQo+ID4gICAJCXJjID0gZGF4X3plcm9fcGFnZV9yYW5nZShp
+b21hcC0+ZGF4X2RldiwgcGdvZmYsIDEpOw0KPiA+IC0JZWxzZQ0KPiA+ICsJZWxzZSB7DQo+ID4g
+ICAJCXJjID0gZGF4X2RpcmVjdF9hY2Nlc3MoaW9tYXAtPmRheF9kZXYsIHBnb2ZmLCAxLCAma2Fk
+ZHIsIE5VTEwpOw0KPiA+IC0JaWYgKHJjIDwgMCkgew0KPiA+IC0JCWRheF9yZWFkX3VubG9jayhp
+ZCk7DQo+ID4gLQkJcmV0dXJuIHJjOw0KPiA+IC0JfQ0KPiA+IC0NCj4gPiAtCWlmICghcGFnZV9h
+bGlnbmVkKSB7DQo+ID4gLQkJbWVtc2V0KGthZGRyICsgb2Zmc2V0LCAwLCBzaXplKTsNCj4gPiAr
+CQlpZiAocmMgPCAwKQ0KPiA+ICsJCQlnb3RvIG91dDsNCj4gPiArCQlpZiAoaW9tYXAtPmFkZHIg
+IT0gc3JjbWFwLT5hZGRyKSB7DQo+ID4gKwkJCXJjID0gZGF4X2lvbWFwX2Nvd19jb3B5KG9mZnNl
+dCwgc2l6ZSwgUEFHRV9TSVpFLCBzcmNtYXAsDQo+ID4gKwkJCQkJCWthZGRyKTsNCj4gDQo+IG9m
+ZnNldCBhYm92ZSBpcyBvZmZzZXQgaW4gcGFnZSwgdGhpbmsgZGF4X2lvbWFwX2Nvd19jb3B5KCkg
+ZXhwZWN0cyBhYnNvbHV0ZSBwb3MNCg0KWW91IGFyZSByaWdodC4gIFNob3VsZCBwYXNzIHBvcyBo
+ZXJlLiAgVGhhbmtzIGZvciBwb2ludGluZyBvdXQuDQoNCg0KLS0NClRoYW5rcywNClJ1YW4gU2hp
+eWFuZy4NCg0KPiANCj4gPiArCQkJaWYgKHJjIDwgMCkNCj4gPiArCQkJCWdvdG8gb3V0Ow0KPiA+
+ICsJCX0gZWxzZQ0KPiA+ICsJCQltZW1zZXQoa2FkZHIgKyBvZmZzZXQsIDAsIHNpemUpOw0KPiA+
+ICAgCQlkYXhfZmx1c2goaW9tYXAtPmRheF9kZXYsIGthZGRyICsgb2Zmc2V0LCBzaXplKTsNCj4g
+PiAgIAl9DQo+ID4gKw0KPiA+ICtvdXQ6DQo+ID4gICAJZGF4X3JlYWRfdW5sb2NrKGlkKTsNCj4g
+PiAtCXJldHVybiBzaXplOw0KPiA+ICsJcmV0dXJuIHJjIDwgMCA/IHJjIDogc2l6ZTsNCj4gPiAg
+IH0NCj4gPg0KPiA+ICAgc3RhdGljIGxvZmZfdA0KPiA+IGRpZmYgLS1naXQgYS9mcy9pb21hcC9i
+dWZmZXJlZC1pby5jIGIvZnMvaW9tYXAvYnVmZmVyZWQtaW8uYyBpbmRleA0KPiA+IGYyY2QyMDM0
+YTg3Yi4uMjczNDk1NWVhNjdmIDEwMDY0NA0KPiA+IC0tLSBhL2ZzL2lvbWFwL2J1ZmZlcmVkLWlv
+LmMNCj4gPiArKysgYi9mcy9pb21hcC9idWZmZXJlZC1pby5jDQo+ID4gQEAgLTkzMyw3ICs5MzMs
+NyBAQCBzdGF0aWMgbG9mZl90IGlvbWFwX3plcm9fcmFuZ2VfYWN0b3Ioc3RydWN0IGlub2RlDQo+
+ICppbm9kZSwgbG9mZl90IHBvcywNCj4gPiAgIAkJczY0IGJ5dGVzOw0KPiA+DQo+ID4gICAJCWlm
+IChJU19EQVgoaW5vZGUpKQ0KPiA+IC0JCQlieXRlcyA9IGRheF9pb21hcF96ZXJvKHBvcywgbGVu
+Z3RoLCBpb21hcCk7DQo+ID4gKwkJCWJ5dGVzID0gZGF4X2lvbWFwX3plcm8ocG9zLCBsZW5ndGgs
+IGlvbWFwLCBzcmNtYXApOw0KPiA+ICAgCQllbHNlDQo+ID4gICAJCQlieXRlcyA9IGlvbWFwX3pl
+cm8oaW5vZGUsIHBvcywgbGVuZ3RoLCBpb21hcCwgc3JjbWFwKTsNCj4gPiAgIAkJaWYgKGJ5dGVz
+IDwgMCkNCj4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9kYXguaCBiL2luY2x1ZGUvbGlu
+dXgvZGF4LmggaW5kZXgNCj4gPiBiNTJmMDg0YWE2NDMuLjMyNzVlMDFlZDMzZCAxMDA2NDQNCj4g
+PiAtLS0gYS9pbmNsdWRlL2xpbnV4L2RheC5oDQo+ID4gKysrIGIvaW5jbHVkZS9saW51eC9kYXgu
+aA0KPiA+IEBAIC0yMzcsNyArMjM3LDggQEAgdm1fZmF1bHRfdCBkYXhfZmluaXNoX3N5bmNfZmF1
+bHQoc3RydWN0IHZtX2ZhdWx0DQo+ICp2bWYsDQo+ID4gICBpbnQgZGF4X2RlbGV0ZV9tYXBwaW5n
+X2VudHJ5KHN0cnVjdCBhZGRyZXNzX3NwYWNlICptYXBwaW5nLCBwZ29mZl90DQo+IGluZGV4KTsN
+Cj4gPiAgIGludCBkYXhfaW52YWxpZGF0ZV9tYXBwaW5nX2VudHJ5X3N5bmMoc3RydWN0IGFkZHJl
+c3Nfc3BhY2UgKm1hcHBpbmcsDQo+ID4gICAJCQkJICAgICAgcGdvZmZfdCBpbmRleCk7DQo+ID4g
+LXM2NCBkYXhfaW9tYXBfemVybyhsb2ZmX3QgcG9zLCB1NjQgbGVuZ3RoLCBzdHJ1Y3QgaW9tYXAg
+KmlvbWFwKTsNCj4gPiArczY0IGRheF9pb21hcF96ZXJvKGxvZmZfdCBwb3MsIHU2NCBsZW5ndGgs
+IHN0cnVjdCBpb21hcCAqaW9tYXAsDQo+ID4gKwkJc3RydWN0IGlvbWFwICpzcmNtYXApOw0KPiA+
+ICAgc3RhdGljIGlubGluZSBib29sIGRheF9tYXBwaW5nKHN0cnVjdCBhZGRyZXNzX3NwYWNlICpt
+YXBwaW5nKQ0KPiA+ICAgew0KPiA+ICAgCXJldHVybiBtYXBwaW5nLT5ob3N0ICYmIElTX0RBWCht
+YXBwaW5nLT5ob3N0KTsNCg0K
