@@ -2,121 +2,119 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55491C433ED
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 19:39:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2AF1C433B4
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 23:14:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33B1461408
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 19:39:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCB7261405
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 23:14:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231916AbhEMTkx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 May 2021 15:40:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56216 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229803AbhEMTkw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 May 2021 15:40:52 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3085C061574;
-        Thu, 13 May 2021 12:39:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=O8VUCTzxVSvxa3wVLPh12tovGUEtpcQQ1uxw15XLCZg=; b=S6oimQ+wSggkHbM04qw7qRcCif
-        KxJ6s1XOGzoOpDq2Ik3+iRiwQfDzyBbe0DuWvzC9OR6jXy0kTrw+5iOA+LaoPKGquDRsAkhwtB1fn
-        RAzftQHw1WIHsSHGyasEKCqK6uNc5md/QTdqO/gAX92LY/xjc3aThySb167Hsk1QbFODw0SI99hZD
-        FJ7grq8hsbbFuQNaq3roe74z070sMG/wQF5s2VcKbYsspDgU3/f5jnSJCnX9ybUtPMZoBzeRLnZAR
-        rt44B26yeOFUgC3PP1bOEdl/6GZRpu188I1tXE0mY9mkIB2XhLxPk/VtnEIL19/rPQgwFkGk1TQkJ
-        GlbkDIiw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lhHAV-009iZc-F6; Thu, 13 May 2021 19:39:06 +0000
-Date:   Thu, 13 May 2021 20:38:47 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>, ceph-devel@vger.kernel.org,
-        Chao Yu <yuchao0@huawei.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Jeff Layton <jlayton@kernel.org>,
-        Johannes Thumshirn <jth@kernel.org>,
-        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
-        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>
-Subject: Re: [PATCH 03/11] mm: Protect operations adding pages to page cache
- with invalidate_lock
-Message-ID: <YJ2AR0IURFzz+52G@casper.infradead.org>
-References: <20210512101639.22278-1-jack@suse.cz>
- <20210512134631.4053-3-jack@suse.cz>
- <YJvo1bGG1tG+gtgC@casper.infradead.org>
- <20210513190114.GJ2734@quack2.suse.cz>
+        id S231396AbhEMXPt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 May 2021 19:15:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54302 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229544AbhEMXPq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 May 2021 19:15:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8F3A4613AA;
+        Thu, 13 May 2021 23:14:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620947675;
+        bh=Xpg233amjsPwi82/iE4Rle6a8mOX47ysFqCDp7FfUyk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=TZeVX5hj4gLiR4WdQ2zaVSChwilob6Mh4yQdZIMxITm3cQkEJEWJoyZjV0QCSZH0i
+         7efgaXsgiJ6Nypjgy3Q6erVz8q+sKXYuDRaWOI+gIXeVHih8Xkhw0WgRT0bEJHY7EL
+         ALEKC39PA8FD2cM2ND681FfsDs+MTCzC7GzlHZvlYZx7eAiSjUZFrLCUWCyTicrk/c
+         9qQe7SSWqsXPd5I0KBraLeVuEGK/SuBIkR2EqF1nmdG6dCokpkpfd0UIvfusgJnUEU
+         AtOl0De+SdC1Mt5N0f3uXgiMXAh+exYBloacfMjvnqXgoWls1pu4ijF4no0YNU1KV3
+         M5+vYhmn04Tqg==
+Date:   Thu, 13 May 2021 16:14:34 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RESEND v18 01/11] xfs: Reverse apply 72b97ea40d
+Message-ID: <20210513231434.GC9675@magnolia>
+References: <20210512161408.5516-1-allison.henderson@oracle.com>
+ <20210512161408.5516-2-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210513190114.GJ2734@quack2.suse.cz>
+In-Reply-To: <20210512161408.5516-2-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 13, 2021 at 09:01:14PM +0200, Jan Kara wrote:
-> On Wed 12-05-21 15:40:21, Matthew Wilcox wrote:
-> > Remind me (or, rather, add to the documentation) why we have to hold the
-> > invalidate_lock during the call to readpage / readahead, and we don't just
-> > hold it around the call to add_to_page_cache / add_to_page_cache_locked
-> > / add_to_page_cache_lru ?  I appreciate that ->readpages is still going
-> > to suck, but we're down to just three implementations of ->readpages now
-> > (9p, cifs & nfs).
+On Wed, May 12, 2021 at 09:13:58AM -0700, Allison Henderson wrote:
+> Originally we added this patch to help modularize the attr code in
+> preparation for delayed attributes and the state machine it requires.
+> However, later reviews found that this slightly alters the transaction
+> handling as the helper function is ambiguous as to whether the
+> transaction is diry or clean.  This may cause a dirty transaction to be
+> included in the next roll, where previously it had not.  To preserve the
+> existing code flow, we reverse apply this commit.
 > 
-> There's a comment in filemap_create_page() trying to explain this. We need
-> to protect against cases like: Filesystem with 1k blocksize, file F has
-> page at index 0 with uptodate buffer at 0-1k, rest not uptodate. All blocks
-> underlying page are allocated. Now let read at offset 1k race with hole
-> punch at offset 1k, length 1k.
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+
+Looks fine I guess...
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 28 +++++++++-------------------
+>  1 file changed, 9 insertions(+), 19 deletions(-)
 > 
-> read()					hole punch
-> ...
->   filemap_read()
->     filemap_get_pages()
->       - page found in the page cache but !Uptodate
->       filemap_update_page()
-> 					  locks everything
-> 					  truncate_inode_pages_range()
-> 					    lock_page(page)
-> 					    do_invalidatepage()
-> 					    unlock_page(page)
->         locks page
->           filemap_read_page()
-
-Ah, this is the partial_start case, which means that page->mapping
-is still valid.  But that means that do_invalidatepage() was called
-with (offset 1024, length 1024), immediately after we called
-zero_user_segment().  So isn't this a bug in the fs do_invalidatepage()?
-The range from 1k-2k _is_ uptodate.  It's been zeroed in memory,
-and if we were to run after the "free block" below, we'd get that
-memory zeroed again.
-
->             ->readpage()
->               block underlying offset 1k
-> 	      still allocated -> map buffer
-> 					  free block under offset 1k
-> 	      submit IO -> corrupted data
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 96146f4..190b46d 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -1214,24 +1214,6 @@ int xfs_attr_node_removename_setup(
+>  	return 0;
+>  }
+>  
+> -STATIC int
+> -xfs_attr_node_remove_rmt(
+> -	struct xfs_da_args	*args,
+> -	struct xfs_da_state	*state)
+> -{
+> -	int			error = 0;
+> -
+> -	error = xfs_attr_rmtval_remove(args);
+> -	if (error)
+> -		return error;
+> -
+> -	/*
+> -	 * Refill the state structure with buffers, the prior calls released our
+> -	 * buffers.
+> -	 */
+> -	return xfs_attr_refillstate(state);
+> -}
+> -
+>  /*
+>   * Remove a name from a B-tree attribute list.
+>   *
+> @@ -1260,7 +1242,15 @@ xfs_attr_node_removename(
+>  	 * overflow the maximum size of a transaction and/or hit a deadlock.
+>  	 */
+>  	if (args->rmtblkno > 0) {
+> -		error = xfs_attr_node_remove_rmt(args, state);
+> +		error = xfs_attr_rmtval_remove(args);
+> +		if (error)
+> +			goto out;
+> +
+> +		/*
+> +		 * Refill the state structure with buffers, the prior calls
+> +		 * released our buffers.
+> +		 */
+> +		error = xfs_attr_refillstate(state);
+>  		if (error)
+>  			goto out;
+>  	}
+> -- 
+> 2.7.4
 > 
-> If you think I should expand it to explain more details, please tell.
-> Or maybe I can put more detailed discussion like above into the changelog?
-
-> > Why not:
-> > 
-> > 	__init_rwsem(&mapping->invalidate_lock, "mapping.invalidate_lock",
-> > 			&sb->s_type->invalidate_lock_key);
-> 
-> I replicated what we do for i_rwsem but you're right, this is better.
-> Updated.
-
-Hmm, there's a few places we should use __init_rwsem() ... something
-for my "when bored" pile of work.
