@@ -2,96 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CD49C433ED
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 11:16:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0724DC433B4
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 12:07:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39B86613CB
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 11:16:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5D00611CC
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 12:07:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233291AbhEMLRK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 May 2021 07:17:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35010 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233277AbhEMLQp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 May 2021 07:16:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 43ABD6144B
-        for <linux-xfs@vger.kernel.org>; Thu, 13 May 2021 11:15:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620904536;
-        bh=YhqjUusED+bDEgmjAV6hzvubRXIQ3ZF1D5+VUpdOoJQ=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=mAur6tMdUUmiBmhm/4kbp/1r5oVVcoiRoSJTWfG4tvC9MgwhFitQtT6+hgU6iHJGm
-         rIzOmzst9/zj74caAg8XHOCU8VFG6lyEN1qtw4vQwCGsHKukMvmD++BUfrVY1LdcPY
-         7o2NrugERiYKHd/G/t9HrBKxSLwHl48nwqZ6H/mO4uAwtU77hzo6dHQTFhi2YMZlAf
-         vA4rW9oT0uXtMai2JpE6CfhQwkwyi5i8OjreQOSYCeJxNOE3XiIKIq27CmNPK4ZKrH
-         cqftKYre6aks4zK43GP131/quzKmUqy+dujmlK3FF+LOG54K1yoYdI3yvjOX7URCCz
-         Rl3YCf0GgpcWg==
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 211605] Re-mount XFS causes "attr2 mount option is deprecated"
- warning
-Date:   Thu, 13 May 2021 11:15:35 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: low
-X-Bugzilla-Who: victor03303@gmail.com
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: CODE_FIX
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-211605-201763-CRvtFdWZL9@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-211605-201763@https.bugzilla.kernel.org/>
-References: <bug-211605-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S233655AbhEMMI0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 May 2021 08:08:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:55541 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233656AbhEMMIY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 May 2021 08:08:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1620907633;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ExZQixp+skQIKZqqJ+OSN6/O4RC+Ej0K2QATy+xA63Q=;
+        b=YPndAfBBfvWfug30/F1vytkINxum5lLL2sMqc1q1R3nw9yApTEP+ZmJdEXyJL/Z0gacBCI
+        psLgq42ZdM/DD3Y4BIahr1k49e/qikEt83J3ZMneozaH+EZChmUlPao99QaNNkZy3CXfuE
+        uc7lrikSBtQX0GLoe0b8p/V9NfmAL6c=
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
+ [209.85.160.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-126-WFKRHJcsO9SjK-JI_Mtrjw-1; Thu, 13 May 2021 08:07:11 -0400
+X-MC-Unique: WFKRHJcsO9SjK-JI_Mtrjw-1
+Received: by mail-qt1-f200.google.com with SMTP id d13-20020a05622a05cdb02901c2cffd946bso17814513qtb.23
+        for <linux-xfs@vger.kernel.org>; Thu, 13 May 2021 05:07:11 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=ExZQixp+skQIKZqqJ+OSN6/O4RC+Ej0K2QATy+xA63Q=;
+        b=NhFONdxjfsC/lyvOWeHxtacZ88+3r49kNGIMOrC0Z1qv8Jcrn4fiItxy+3UYGw6MjA
+         8O9kjOOwQJlIalWy91agEDO7Na/FrO+ujuq4sD0XIxnd4B8wQBDz9z2j9W4RrCVvaWju
+         n+m3jN2PHtQRlecSWKGCiBuGlPehm07gJSWsw+684Jw6WVZBTHg962dMlOHjosD9+nTC
+         HR07EG5OxBRkxBONk+4yX19I6nLArgETywnMEiTqYR4s9seIQ159p7n74tU9n/1kDEwJ
+         cKd9tUdpQKslzEcXhGPzhseLjRYMQew2h9zj/COVIbELDuRBV7QZxPLIAsupI8euNL+5
+         6dbw==
+X-Gm-Message-State: AOAM5334jLBqp7ygqy6pQRxuyLg47H947u5VorXWBtTlRgW0edDIocsm
+        /ehC9GTW7NE/tJxJw22oqAj7vnseYnUx6vUdePeuJRiMKEQHSreQYKMqVCEGxHeUGSGd/+PCBKz
+        tW29ytcSh3RDuqcMDTkpd
+X-Received: by 2002:ac8:1192:: with SMTP id d18mr37306204qtj.253.1620907631324;
+        Thu, 13 May 2021 05:07:11 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyS9tnN0Si7AQQZ3BBDthBTB+GmDq8LYdyPw0Fo6KGxujfDrEJnELr5OBC2tr8Ll2Nhne95HA==
+X-Received: by 2002:ac8:1192:: with SMTP id d18mr37306189qtj.253.1620907631092;
+        Thu, 13 May 2021 05:07:11 -0700 (PDT)
+Received: from bfoster ([98.216.211.229])
+        by smtp.gmail.com with ESMTPSA id 28sm2288296qkr.36.2021.05.13.05.07.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 May 2021 05:07:10 -0700 (PDT)
+Date:   Thu, 13 May 2021 08:07:09 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: fix deadlock retry tracepoint arguments
+Message-ID: <YJ0WbaNLjQb6opW5@bfoster>
+References: <162086768823.3685697.11936501771461638870.stgit@magnolia>
+ <162086769410.3685697.9016566085994934364.stgit@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <162086769410.3685697.9016566085994934364.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D211605
+On Wed, May 12, 2021 at 06:01:34PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> sc->ip is the inode that's being scrubbed, which means that it's not set
+> for scrub types that don't involve inodes.  If one of those scrubbers
+> (e.g. inode btrees) returns EDEADLOCK, we'll trip over the null pointer.
+> Fix that by reporting either the file being examined or the file that
+> was used to call scrub.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-victor03303 (victor03303@gmail.com) changed:
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |victor03303@gmail.com
+>  fs/xfs/scrub/common.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index aa874607618a..be38c960da85 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -74,7 +74,9 @@ __xchk_process_error(
+>  		return true;
+>  	case -EDEADLOCK:
+>  		/* Used to restart an op with deadlock avoidance. */
+> -		trace_xchk_deadlock_retry(sc->ip, sc->sm, *error);
+> +		trace_xchk_deadlock_retry(
+> +				sc->ip ? sc->ip : XFS_I(file_inode(sc->file)),
+> +				sc->sm, *error);
+>  		break;
+>  	case -EFSBADCRC:
+>  	case -EFSCORRUPTED:
+> 
 
---- Comment #12 from victor03303 (victor03303@gmail.com) ---
-I have the same issue.
-
-Kernel in use: 5.11.0-17-generic
-O.S.: Lubuntu 21.04
-
-fstab file:
-UUID=3Dxxxx-xxxx                            /boot/efi      vfat    umask=3D=
-0077 0 2
-UUID=3Dxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx swap           swap    defaults=
-   0 0
-UUID=3Dxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx /              xfs     defaults=
-   0 1
-/swapfile                                 swap           swap    defaults  =
- 0 0
-LABEL=3DCrucial2,5" /mnt/Crucial2,5" auto nosuid,nodev,nofail,x-gvfs-show 0=
- 0
-
-What's the current status of this bug?
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
