@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65DA6C433B4
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 01:01:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7D08C433ED
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 01:02:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2BD1C61108
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 01:01:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8865B61090
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 01:02:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233256AbhEMBDD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 May 2021 21:03:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51132 "EHLO mail.kernel.org"
+        id S233491AbhEMBDI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 May 2021 21:03:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51368 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229646AbhEMBDC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 May 2021 21:03:02 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A336761090;
-        Thu, 13 May 2021 01:01:53 +0000 (UTC)
+        id S233367AbhEMBDI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 May 2021 21:03:08 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4A40C61090;
+        Thu, 13 May 2021 01:01:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620867713;
-        bh=vgQ68KpedCzKIZM5tfjPV2KX7oIm4vGUQ/cJ4vsALfo=;
+        s=k20201202; t=1620867719;
+        bh=nv9tIm03fHOsYGhTf2cHo26wlcKky2dfXChtHMZw59o=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=uqYPU8Uv0JyuBe1z468JAH4nkqPAHO2YeYwLeYCWkcw8lmGVgcW7hwb9YZqAHvtDk
-         Qpe4D4Rq+6ZLQWRECz7QfdA84m+YYtuE0i83E4+/fIQ6uqeAY2x+aOA3C44/SgeHHl
-         TOfAh7FlQ8MqNNlyFE5Hfv2LU5M2Xqv9Q7eh9jZs5zjZ1aHxRgzaqWKWaWRrtvIIeh
-         /+VWiBd3ZsMwgLE0lts/5Is/CYK9uKqugR8jg468sc8yDn4KpecnKfSv/wCiFM2UvH
-         P6z8iXHrGfmeet2e4OACq/1N2mM540UhYTKizX7N0UmY8S3ID7syBjfQRaUVytk9JQ
-         MIRbml4VFA3NA==
-Subject: [PATCH 2/4] xfs: don't propagate invalid extent size hints to new
- files
+        b=tuasGGdDhzms8DL98SFIPcXY2HOS6LMNrOg8/dYj/yLlDZGG6CyCtHv0KBEg0rZEf
+         mWU1m5hNtOvrLxV4c1+MoiYlYoJ9BDa8r1DS9f2ToM2UdT+7REctgscnK51uKmyFg0
+         7iYdC0wgdPnnGlt1ohHnqm9eyRlhCglxQsvAhmRPUHJlRgbAGiwh6kn8RptPXLmCWy
+         HbVSg20VNbT6qdA7GSJno304Tx6sjK0QKxlXAsodN9tyQsGi6uWtnIq22+2pz9Z+va
+         VMQH3lxHsYolSePkW1KM53xkT2goOqzHZxCg87r1yEeshzaY0wp47UIOocE/Uq7CfF
+         83JmJROJrqitw==
+Subject: [PATCH 3/4] xfs: validate extsz hints against rt extent size when
+ rtinherit is set
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 12 May 2021 18:01:53 -0700
-Message-ID: <162086771324.3685783.12562187598352097487.stgit@magnolia>
+Date:   Wed, 12 May 2021 18:01:58 -0700
+Message-ID: <162086771885.3685783.16422648250546171771.stgit@magnolia>
 In-Reply-To: <162086770193.3685783.14418051698714099173.stgit@magnolia>
 References: <162086770193.3685783.14418051698714099173.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,78 +50,58 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Under the current inode extent size hint validation rules, it's possible
-to set extent size hints on directories along with an 'inherit' flag so
-that the values will be propagated to newly created regular files.  (The
-directories themselves do not care about the hint values.)
+The RTINHERIT bit can be set on a directory so that newly created
+regular files will have the REALTIME bit set to store their data on the
+realtime volume.  If an extent size hint (and EXTSZINHERIT) are set on
+the directory, the hint will also be copied into the new file.
 
-For these directories, the alignment of the hint is checked against the
-data device even if the directory also has the rtinherit hint set, which
-means that one can set a directory's hint value to something that isn't
-an integer multiple of the realtime extent size.  This isn't a problem
-for the directory itself, but the validation routines require rt extent
-alignment for realtime files.
+As pointed out in previous patches, for realtime files we require the
+extent size hint be an integer multiple of the realtime extent, but we
+don't perform the same validation on a directory with both RTINHERIT and
+EXTSZINHERIT set, even though the only use-case of that combination is
+to propagate extent size hints into new realtime files.  This leads to
+inode corruption errors when the bad values are propagated.
 
-If the unaligned hint value and the realtime bit are both propagated
-into a newly created regular realtime file, we end up writing out an
-incorrect hint that trips the verifiers the next time we try to read the
-inode buffer, and the fs shuts down.  Fix this by cancelling the hint
-propagation if it would cause problems.
+Strengthen the validation routine to avoid this situation and fix the
+open-coded unit conversion while we're at it.  Note that this is
+technically a breaking change to the ondisk format, but the risk should
+be minimal because (a) most vendors disable realtime, (b) letting
+unaligned hints propagate to new files would immediately crash the
+filesystem, and (c) xfs_repair flags such filesystems as corrupt, so
+anyone with such a configuration is broken already anyway.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_inode.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ fs/xfs/libxfs/xfs_inode_buf.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0369eb22c1bb..db81e8c22708 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -689,6 +689,7 @@ xfs_inode_inherit_flags(
- 	struct xfs_inode	*ip,
- 	const struct xfs_inode	*pip)
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 5c9a7440d9e4..25261dd73290 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -569,19 +569,20 @@ xfs_inode_validate_extsize(
+ 	uint16_t			mode,
+ 	uint16_t			flags)
  {
-+	xfs_failaddr_t		failaddr;
- 	unsigned int		di_flags = 0;
- 	umode_t			mode = VFS_I(ip)->i_mode;
+-	bool				rt_flag;
++	bool				rt_flag, rtinherit_flag;
+ 	bool				hint_flag;
+ 	bool				inherit_flag;
+ 	uint32_t			extsize_bytes;
+ 	uint32_t			blocksize_bytes;
  
-@@ -728,6 +729,14 @@ xfs_inode_inherit_flags(
- 	if (pip->i_diflags & XFS_DIFLAG_FILESTREAM)
- 		di_flags |= XFS_DIFLAG_FILESTREAM;
+ 	rt_flag = (flags & XFS_DIFLAG_REALTIME);
++	rtinherit_flag = (flags & XFS_DIFLAG_RTINHERIT);
+ 	hint_flag = (flags & XFS_DIFLAG_EXTSIZE);
+ 	inherit_flag = (flags & XFS_DIFLAG_EXTSZINHERIT);
+ 	extsize_bytes = XFS_FSB_TO_B(mp, extsize);
  
-+	/* Make sure the extsize actually validates properly. */
-+	failaddr = xfs_inode_validate_extsize(ip->i_mount, ip->i_extsize,
-+			VFS_I(ip)->i_mode, ip->i_diflags);
-+	if (failaddr) {
-+		di_flags &= ~(XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT);
-+		ip->i_extsize = 0;
-+	}
-+
- 	ip->i_diflags |= di_flags;
- }
+-	if (rt_flag)
+-		blocksize_bytes = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
++	if (rt_flag || (rtinherit_flag && inherit_flag))
++		blocksize_bytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
+ 	else
+ 		blocksize_bytes = mp->m_sb.sb_blocksize;
  
-@@ -737,12 +746,22 @@ xfs_inode_inherit_flags2(
- 	struct xfs_inode	*ip,
- 	const struct xfs_inode	*pip)
- {
-+	xfs_failaddr_t		failaddr;
-+
- 	if (pip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) {
- 		ip->i_diflags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 		ip->i_cowextsize = pip->i_cowextsize;
- 	}
- 	if (pip->i_diflags2 & XFS_DIFLAG2_DAX)
- 		ip->i_diflags2 |= XFS_DIFLAG2_DAX;
-+
-+	/* Make sure the cowextsize actually validates properly. */
-+	failaddr = xfs_inode_validate_cowextsize(ip->i_mount, ip->i_cowextsize,
-+			VFS_I(ip)->i_mode, ip->i_diflags, ip->i_diflags2);
-+	if (failaddr) {
-+		ip->i_diflags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
-+		ip->i_cowextsize = 0;
-+	}
- }
- 
- /*
 
