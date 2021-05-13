@@ -2,117 +2,76 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA646C433ED
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 12:07:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04675C433B4
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 13:23:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9CC2B611AB
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 12:07:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B33FD61446
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 May 2021 13:23:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232903AbhEMMIh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 May 2021 08:08:37 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49309 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229466AbhEMMIg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 May 2021 08:08:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620907639;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=r8JtJSKyZ2dBqMieLjrmrdUZBPYYrmBK4rpQFDO7Fds=;
-        b=CoIy+yrPKLvI9ZH+kTLlz3tgjmeWP2GWbDufqnnLuHP0NWmiIqEm2O/9PbNHzUG2Y9/hGP
-        6JlinqFhvLDxn9HCv966KtbEwFHyFdku24foIDyZ84Cu+muy3Ib8TVeMoAKJrkI5P0u7YI
-        5ooKxyZfBHR11sOrtl9cCBLsEyNKJA8=
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
- [209.85.160.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-285-qOMZAwGOPM-OJ9Lx2mj_LA-1; Thu, 13 May 2021 08:07:18 -0400
-X-MC-Unique: qOMZAwGOPM-OJ9Lx2mj_LA-1
-Received: by mail-qt1-f199.google.com with SMTP id b19-20020ac84f130000b02901d543c52248so14625335qte.1
-        for <linux-xfs@vger.kernel.org>; Thu, 13 May 2021 05:07:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=r8JtJSKyZ2dBqMieLjrmrdUZBPYYrmBK4rpQFDO7Fds=;
-        b=nHJ3rMjgI+8w0vgRF5lBPDAx1Bw/SSjWC2FFsWQqcUXXRQ0MI3eNkOSkfJ1oqoBZbR
-         3yN9ehvgxRK4cxaSfX2eUSPNQccoI6bdDnI5hUlDFPvJisVQXWmrpHZp/TRNCRwxYpg0
-         FOaP/w/cjR4IXt07LdUiHCDbXQN1KUs3WcL9aM8FzNBOpkcvkf6U1B4guogzrRgWF9E7
-         AdRZWUrurpOrrnVir7ls0zSIhq1NWFAKfyE2Bg/lr4NaApmedEWwNGtbz3nIT8uAkYPQ
-         dpsc6UV4cr9oJvRlBdm5ZnDaTUjC/DXg3xU7FRI3tk2sdfRWhK+3OjBevJRwu+f/ocdP
-         j1Yg==
-X-Gm-Message-State: AOAM533cnn0Eqn+l9+ViZ5LuFqwtMaooFOdtlUSV9v/YaeuLbfVArvcZ
-        OKzAKACtNU7IQGt1pCDduJD4PM9KzO77RzOCirZYtPP8Bwtnp6YGbyC1tseTqoPnquRjENq9X69
-        nxaLXjEuSsUM2wvlwzR9t
-X-Received: by 2002:a05:620a:13a8:: with SMTP id m8mr27798507qki.213.1620907637525;
-        Thu, 13 May 2021 05:07:17 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzRlUb/9uuqbkxuBdxbPjiNEBZQali2w2CJnvfhkS/tbI5xvhFRjT0oUSsYMv6lcM/iOaItNw==
-X-Received: by 2002:a05:620a:13a8:: with SMTP id m8mr27798500qki.213.1620907637369;
-        Thu, 13 May 2021 05:07:17 -0700 (PDT)
-Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id y9sm2145638qkm.19.2021.05.13.05.07.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 May 2021 05:07:17 -0700 (PDT)
-Date:   Thu, 13 May 2021 08:07:15 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: restore old ioctl definitions
-Message-ID: <YJ0Wc8xmwhPtxbDF@bfoster>
-References: <162086768823.3685697.11936501771461638870.stgit@magnolia>
- <162086769988.3685697.8916977231906580597.stgit@magnolia>
+        id S233992AbhEMNY6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 May 2021 09:24:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38230 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234301AbhEMNXv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 May 2021 09:23:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 8838C6143F
+        for <linux-xfs@vger.kernel.org>; Thu, 13 May 2021 13:22:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620912161;
+        bh=dehrlYOTWlz/vvEwUlY1NYWz0IwydUB6IvYfhUF5cvE=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=UGAnhAykyqBfjrZ5Lm7NyJUN2dy8IBb1qDn19SCBrf0EgMlKVia3fMVhN/9BpE4M1
+         m5g5vQazLzoHvBOrEQ1dnmd0Ay0WhC7aCP1c3ZoVP+mGwsPm6hhfd97OI2pcDMZOvg
+         5yia99bKhbYWNbshCbSBieJEnQLKw1hzfNmL09kXQdGtoIHDJ2P0kwTyRBSOyypwP/
+         sRQEu5yVyCxICeH0SMTlUW6mDryezPZyaGNLerNqeNtu2XWd/pIjLPyhmGgay1aqHK
+         icYXXF6Gml4kX4VelLKIe1FNfgp0GNl0smvBA9mYVDLDIZmEjxtXKyLQU1y8QqZSYm
+         uuaZroF2ZwcNw==
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 211605] Re-mount XFS causes "attr2 mount option is deprecated"
+ warning
+Date:   Thu, 13 May 2021 13:22:41 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: low
+X-Bugzilla-Who: preichl@redhat.com
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: CODE_FIX
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-211605-201763-1wa6QppWGS@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-211605-201763@https.bugzilla.kernel.org/>
+References: <bug-211605-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <162086769988.3685697.8916977231906580597.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 12, 2021 at 06:01:39PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> These ioctl definitions in xfs_fs.h are part of the userspace ABI and
-> were mistakenly removed during the 5.13 merge window.
-> 
-> Fixes: 9fefd5db08ce ("xfs: convert to fileattr")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
+https://bugzilla.kernel.org/show_bug.cgi?id=3D211605
 
-Maybe we should add a comment if these need to stick around unused in
-the kernel code..? Otherwise LGTM:
+--- Comment #13 from Pavel Reichl (preichl@redhat.com) ---
+Hi Victor,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+I'm not sure I follow - but as you can see the bug status is: 'RESOLVED
+CODE_FIX' and the fix is in upstream tag v5.13-rc1 .
 
->  fs/xfs/libxfs/xfs_fs.h |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index a83bdd0c47a8..bde2b4c64dbe 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -770,6 +770,8 @@ struct xfs_scrub_metadata {
->  /*
->   * ioctl commands that are used by Linux filesystems
->   */
-> +#define XFS_IOC_GETXFLAGS	FS_IOC_GETFLAGS
-> +#define XFS_IOC_SETXFLAGS	FS_IOC_SETFLAGS
->  #define XFS_IOC_GETVERSION	FS_IOC_GETVERSION
->  
->  /*
-> @@ -780,6 +782,8 @@ struct xfs_scrub_metadata {
->  #define XFS_IOC_ALLOCSP		_IOW ('X', 10, struct xfs_flock64)
->  #define XFS_IOC_FREESP		_IOW ('X', 11, struct xfs_flock64)
->  #define XFS_IOC_DIOINFO		_IOR ('X', 30, struct dioattr)
-> +#define XFS_IOC_FSGETXATTR	FS_IOC_FSGETXATTR
-> +#define XFS_IOC_FSSETXATTR	FS_IOC_FSSETXATTR
->  #define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
->  #define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
->  #define XFS_IOC_GETBMAP		_IOWR('X', 38, struct getbmap)
-> 
+--=20
+You may reply to this email to add a comment.
 
+You are receiving this mail because:
+You are watching the assignee of the bug.=
