@@ -2,354 +2,166 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD321C433ED
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 16:03:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25756C43460
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 16:17:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 980D9613C8
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 16:03:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DEFFA61442
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 16:17:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231489AbhENQEn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 May 2021 12:04:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56140 "EHLO mail.kernel.org"
+        id S233328AbhENQSn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 May 2021 12:18:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59168 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231149AbhENQEn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 May 2021 12:04:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 24F3361285;
-        Fri, 14 May 2021 16:03:31 +0000 (UTC)
+        id S230018AbhENQSm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 May 2021 12:18:42 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AE7AB61353;
+        Fri, 14 May 2021 16:17:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621008211;
-        bh=UfeJ7rlevhsr3HctnQSBie4iO7A+TPVBMGPi49VXHnk=;
+        s=k20201202; t=1621009050;
+        bh=GXTUTxfJmauY3sVW+kCaMHHzIKcRfXTYy0mfZ1awngE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RXnS1foUKNRXlRF1vY+lluRf78Hl0XuUjmCoRkWLtdmP6haDdMwIFtPzB/VMQ6mlw
-         ERBgpgY82yadY2SPS83ff3JyEeHDVlvn4UVyo+xGzwt+B+Bm1703OVIJ53hBCjuScu
-         Iv8Ehzvf9XzeWQr2NcPSg9wHoUDmA9Z4HG6lx1uDDeWtQ/vwP3LsTAz5Es/n/ZL5oB
-         qqoI1AhUU44IP0kT0Ny7+Eq3hzA/l56mmo8MsU33trzIoyU53UbskTfbhVIzoRayki
-         p7u7YlQt9RjSqqu9BASocyuqBf8+quD2KRq9B4XICmPoUr9gHAetsnP49gFwY5TqSp
-         H6UymVd9LaE0Q==
-Date:   Fri, 14 May 2021 09:03:30 -0700
+        b=oQ8dmtH4NA+L/+ELxpN7WUZ32+IKoVGAxNNf5Zt7Ofagh6dHPT0TaJ3/dhZ3udTSa
+         Ss/wqVUPPW5cMdEz+C4hQyJma01zgrZ+tDmQID9Jlsk64sp+15NKZU73+6fKkEkcgC
+         XvuSXtxBxWWmdn2PJR00Oj+G52+jT4a3Jwm4qyrvnnPwZZO7YBFRkMz9ZmsrxPdu5J
+         q4F0/QUco4Auws1Zlcox6az1nWwemazilV0J6CiqvqlCi9dMrZ8vCEq6MMIs3fgL5x
+         qVlNE4QqliLqOm7IvgNPw45DD+Jz/B6XeS0w8qkfaKzFc0Gwo3UyBFqq+MTiQmsck/
+         qFCq5EMv5glNw==
+Date:   Fri, 14 May 2021 09:17:30 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
-Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>
-Subject: Re: [PATCH v5 5/7] fsdax: Dedup file range to use a compare function
-Message-ID: <20210514160330.GK9675@magnolia>
-References: <20210511030933.3080921-1-ruansy.fnst@fujitsu.com>
- <20210511030933.3080921-6-ruansy.fnst@fujitsu.com>
- <20210512012336.GU8582@magnolia>
- <OSBPR01MB292047344E0119E78E4D443CF4509@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        ceph-devel@vger.kernel.org, Chao Yu <yuchao0@huawei.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 03/11] mm: Protect operations adding pages to page cache
+ with invalidate_lock
+Message-ID: <20210514161730.GL9675@magnolia>
+References: <20210512101639.22278-1-jack@suse.cz>
+ <20210512134631.4053-3-jack@suse.cz>
+ <20210512152345.GE8606@magnolia>
+ <20210513174459.GH2734@quack2.suse.cz>
+ <20210513185252.GB9675@magnolia>
+ <20210513231945.GD2893@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <OSBPR01MB292047344E0119E78E4D443CF4509@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+In-Reply-To: <20210513231945.GD2893@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 14, 2021 at 08:35:44AM +0000, ruansy.fnst@fujitsu.com wrote:
-> 
-> 
-> > -----Original Message-----
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > Subject: Re: [PATCH v5 5/7] fsdax: Dedup file range to use a compare function
+On Fri, May 14, 2021 at 09:19:45AM +1000, Dave Chinner wrote:
+> On Thu, May 13, 2021 at 11:52:52AM -0700, Darrick J. Wong wrote:
+> > On Thu, May 13, 2021 at 07:44:59PM +0200, Jan Kara wrote:
+> > > On Wed 12-05-21 08:23:45, Darrick J. Wong wrote:
+> > > > On Wed, May 12, 2021 at 03:46:11PM +0200, Jan Kara wrote:
+> > > > > +->fallocate implementation must be really careful to maintain page cache
+> > > > > +consistency when punching holes or performing other operations that invalidate
+> > > > > +page cache contents. Usually the filesystem needs to call
+> > > > > +truncate_inode_pages_range() to invalidate relevant range of the page cache.
+> > > > > +However the filesystem usually also needs to update its internal (and on disk)
+> > > > > +view of file offset -> disk block mapping. Until this update is finished, the
+> > > > > +filesystem needs to block page faults and reads from reloading now-stale page
+> > > > > +cache contents from the disk. VFS provides mapping->invalidate_lock for this
+> > > > > +and acquires it in shared mode in paths loading pages from disk
+> > > > > +(filemap_fault(), filemap_read(), readahead paths). The filesystem is
+> > > > > +responsible for taking this lock in its fallocate implementation and generally
+> > > > > +whenever the page cache contents needs to be invalidated because a block is
+> > > > > +moving from under a page.
+> > > > > +
+> > > > > +->copy_file_range and ->remap_file_range implementations need to serialize
+> > > > > +against modifications of file data while the operation is running. For blocking
+> > > > > +changes through write(2) and similar operations inode->i_rwsem can be used. For
+> > > > > +blocking changes through memory mapping, the filesystem can use
+> > > > > +mapping->invalidate_lock provided it also acquires it in its ->page_mkwrite
+> > > > > +implementation.
+> > > > 
+> > > > Question: What is the locking order when acquiring the invalidate_lock
+> > > > of two different files?  Is it the same as i_rwsem (increasing order of
+> > > > the struct inode pointer) or is it the same as the XFS MMAPLOCK that is
+> > > > being hoisted here (increasing order of i_ino)?
+> > > > 
+> > > > The reason I ask is that remap_file_range has to do that, but I don't
+> > > > see any conversions for the xfs_lock_two_inodes(..., MMAPLOCK_EXCL)
+> > > > calls in xfs_ilock2_io_mmap in this series.
+> > > 
+> > > Good question. Technically, I don't think there's real need to establish a
+> > > single ordering because locks among different filesystems are never going
+> > > to be acquired together (effectively each lock type is local per sb and we
+> > > are free to define an ordering for each lock type differently). But to
+> > > maintain some sanity I guess having the same locking order for doublelock
+> > > of i_rwsem and invalidate_lock makes sense. Is there a reason why XFS uses
+> > > by-ino ordering? So that we don't have to consider two different orders in
+> > > xfs_lock_two_inodes()...
 > > 
-> > On Tue, May 11, 2021 at 11:09:31AM +0800, Shiyang Ruan wrote:
-> > > With dax we cannot deal with readpage() etc. So, we create a dax
-> > > comparison funciton which is similar with
-> > > vfs_dedupe_file_range_compare().
-> > > And introduce dax_remap_file_range_prep() for filesystem use.
-> > >
-> > > Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> > > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > > ---
-> > >  fs/dax.c             | 56
-> > +++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/remap_range.c     | 57
-> > +++++++++++++++++++++++++++++++++++++-------
-> > >  fs/xfs/xfs_reflink.c |  8 +++++--
-> > >  include/linux/dax.h  |  4 ++++
-> > >  include/linux/fs.h   | 12 ++++++----
-> > >  5 files changed, 123 insertions(+), 14 deletions(-)
-> > >
-> > > diff --git a/fs/dax.c b/fs/dax.c
-> > > index ee9d28a79bfb..dedf1be0155c 100644
-> > > --- a/fs/dax.c
-> > > +++ b/fs/dax.c
-> > > @@ -1853,3 +1853,59 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault
-> > *vmf,
-> > >  	return dax_insert_pfn_mkwrite(vmf, pfn, order);  }
-> > > EXPORT_SYMBOL_GPL(dax_finish_sync_fault);
-> > > +
-> > > +static loff_t dax_range_compare_actor(struct inode *ino1, loff_t pos1,
-> > > +		struct inode *ino2, loff_t pos2, loff_t len, void *data,
-> > > +		struct iomap *smap, struct iomap *dmap) {
-> > > +	void *saddr, *daddr;
-> > > +	bool *same = data;
-> > > +	int ret;
-> > > +
-> > > +	if (smap->type == IOMAP_HOLE && dmap->type == IOMAP_HOLE) {
-> > > +		*same = true;
-> > > +		return len;
-> > > +	}
-> > > +
-> > > +	if (smap->type == IOMAP_HOLE || dmap->type == IOMAP_HOLE) {
-> > > +		*same = false;
-> > > +		return 0;
-> > > +	}
-> > > +
-> > > +	ret = dax_iomap_direct_access(smap, pos1, ALIGN(pos1 + len, PAGE_SIZE),
-> > > +				      &saddr, NULL);
-> > > +	if (ret < 0)
-> > > +		return -EIO;
-> > > +
-> > > +	ret = dax_iomap_direct_access(dmap, pos2, ALIGN(pos2 + len, PAGE_SIZE),
-> > > +				      &daddr, NULL);
-> > > +	if (ret < 0)
-> > > +		return -EIO;
-> > > +
-> > > +	*same = !memcmp(saddr, daddr, len);
-> > > +	return len;
-> > > +}
-> > > +
-> > > +int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-> > > +		struct inode *dest, loff_t destoff, loff_t len, bool *is_same,
-> > > +		const struct iomap_ops *ops)
-> > > +{
-> > > +	int id, ret = 0;
-> > > +
-> > > +	id = dax_read_lock();
-> > > +	while (len) {
-> > > +		ret = iomap_apply2(src, srcoff, dest, destoff, len, 0, ops,
-> > > +				   is_same, dax_range_compare_actor);
-> > > +		if (ret < 0 || !*is_same)
-> > > +			goto out;
-> > > +
-> > > +		len -= ret;
-> > > +		srcoff += ret;
-> > > +		destoff += ret;
-> > > +	}
-> > > +	ret = 0;
-> > > +out:
-> > > +	dax_read_unlock(id);
-> > > +	return ret;
-> > > +}
-> > > +EXPORT_SYMBOL_GPL(dax_dedupe_file_range_compare);
-> > > diff --git a/fs/remap_range.c b/fs/remap_range.c index
-> > > e4a5fdd7ad7b..7bc4c8e3aa9f 100644
-> > > --- a/fs/remap_range.c
-> > > +++ b/fs/remap_range.c
-> > > @@ -14,6 +14,7 @@
-> > >  #include <linux/compat.h>
-> > >  #include <linux/mount.h>
-> > >  #include <linux/fs.h>
-> > > +#include <linux/dax.h>
-> > >  #include "internal.h"
-> > >
-> > >  #include <linux/uaccess.h>
-> > > @@ -199,9 +200,9 @@ static void vfs_unlock_two_pages(struct page *page1,
-> > struct page *page2)
-> > >   * Compare extents of two files to see if they are the same.
-> > >   * Caller must have locked both inodes to prevent write races.
-> > >   */
-> > > -static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-> > > -					 struct inode *dest, loff_t destoff,
-> > > -					 loff_t len, bool *is_same)
-> > > +int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-> > > +				  struct inode *dest, loff_t destoff,
-> > > +				  loff_t len, bool *is_same)
-> > >  {
-> > >  	loff_t src_poff;
-> > >  	loff_t dest_poff;
-> > > @@ -280,6 +281,7 @@ static int vfs_dedupe_file_range_compare(struct
-> > > inode *src, loff_t srcoff,
-> > >  out_error:
-> > >  	return error;
-> > >  }
-> > > +EXPORT_SYMBOL(vfs_dedupe_file_range_compare);
-> > >
-> > >  /*
-> > >   * Check that the two inodes are eligible for cloning, the ranges
-> > > make @@ -289,9 +291,11 @@ static int
-> > vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-> > >   * If there's an error, then the usual negative error code is returned.
-> > >   * Otherwise returns 0 with *len set to the request length.
-> > >   */
-> > > -int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> > > -				  struct file *file_out, loff_t pos_out,
-> > > -				  loff_t *len, unsigned int remap_flags)
-> > > +static int
-> > > +__generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> > > +				struct file *file_out, loff_t pos_out,
-> > > +				loff_t *len, unsigned int remap_flags,
-> > > +				const struct iomap_ops *dax_read_ops)
-> > >  {
-> > >  	struct inode *inode_in = file_inode(file_in);
-> > >  	struct inode *inode_out = file_inode(file_out); @@ -351,8 +355,17 @@
-> > > int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> > >  	if (remap_flags & REMAP_FILE_DEDUP) {
-> > >  		bool		is_same = false;
-> > >
-> > > -		ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
-> > > -				inode_out, pos_out, *len, &is_same);
-> > > +		if (!IS_DAX(inode_in))
-> > > +			ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
-> > > +					inode_out, pos_out, *len, &is_same); #ifdef
-> > CONFIG_FS_DAX
-> > > +		else if (dax_read_ops)
-> > > +			ret = dax_dedupe_file_range_compare(inode_in, pos_in,
-> > > +					inode_out, pos_out, *len, &is_same,
-> > > +					dax_read_ops);
-> > > +#endif /* CONFIG_FS_DAX */
-> > 
-> > Hmm, can you add an entry to the !IS_ENABLED(CONFIG_DAX) part of dax.h
-> > that defines dax_dedupe_file_range_compare as a dummy function that returns
-> > -EOPNOTSUPP?  We try not to sprinkle preprocessor directives into the middle
-> > of functions, per Linus rules.
+> > I imagine Dave will chime in on this, but I suspect the reason is
+> > hysterical raisins^Wreasons.
 > 
-> I found that it's ok to build without the #ifdef and #endif here, even
-> though CONFIG_FS_DAX is disabled.
-> And like other dax functions in fs/dax.c, such as dax_iomap_rw(), it
-> is declared in include/linux/dax.h without IS_ENABLED() or #ifdef
-> wrapped.  And xfs calls it directly and it won't cause build error.
-> So, I think I could just remove the #ifdef here, but I am not sure if
-> this obeys the rule.
+> It's the locking rules that XFS has used pretty much forever.
+> Locking by inode number always guarantees the same locking order of
+> two inodes in the same filesystem, regardless of the specific
+> in-memory instances of the two inodes.
+> 
+> e.g. if we lock based on the inode structure address, in one
+> instancex, we could get A -> B, then B gets recycled and
+> reallocated, then we get B -> A as the locking order for the same
+> two inodes.
+> 
+> That, IMNSHO, is utterly crazy because with non-deterministic inode
+> lock ordered like this you can't make consistent locking rules for
+> locking the physical inode cluster buffers underlying the inodes in
+> the situation where they also need to be locked.
 
-If it doesn't break the build (yay kbuild robot!) then it's probably
-ok.
+<nod> That's protected by the ILOCK, correct?
 
-> > 
-> > > +		else
-> > > +			return -EINVAL;
-> > >  		if (ret)
-> > >  			return ret;
-> > >  		if (!is_same)
-> > > @@ -370,6 +383,34 @@ int generic_remap_file_range_prep(struct file
-> > > *file_in, loff_t pos_in,
-> > >
-> > >  	return ret;
-> > >  }
-> > > +
-> > > +#ifdef CONFIG_FS_DAX
-> > > +int dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> > > +			      struct file *file_out, loff_t pos_out,
-> > > +			      loff_t *len, unsigned int remap_flags,
-> > > +			      const struct iomap_ops *ops) {
-> > > +	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
-> > > +					       pos_out, len, remap_flags, ops); } #else int
-> > > +dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> > > +			      struct file *file_out, loff_t pos_out,
-> > > +			      loff_t *len, unsigned int remap_flags,
-> > > +			      const struct iomap_ops *ops) {
-> > > +	return -EOPNOTSUPP;
-> > > +}
-> > > +#endif /* CONFIG_FS_DAX */
-> > > +EXPORT_SYMBOL(dax_remap_file_range_prep);
-> > 
-> > I think this symbol belongs in fs/dax.c and the declaration in dax.h?
+> We've been down this path before more than a decade ago when the
+> powers that be decreed that inode locking order is to be "by
+> structure address" rather than inode number, because "inode number
+> is not unique across multiple superblocks".
 > 
-> For the function name, it does should belong to fs/dax.  But if so,
-> __generic_remap_file_range_prep() needs to be called in fs/dax.  I
-> don't think this is good.
+> I'm not sure that there is anywhere that locks multiple inodes
+> across different superblocks, but here we are again....
 
-Why not?  FS_DAX is a boolean, so fs/dax.o will get linked into the same
-vmlinux file as fs/remap_range.o.
+Hm.  Are there situations where one would want to lock multiple
+/mappings/ across different superblocks?  The remapping code doesn't
+allow cross-super operations, so ... pipes and splice, maybe?  I don't
+remember that code well enough to say for sure.
+
+I've been operating under the assumption that as long as one takes all
+the same class of lock at the same time (e.g. all the IOLOCKs, then all
+the MMAPLOCKs, then all the ILOCKs, like reflink does) that the
+incongruency in locking order rules within a class shouldn't be a
+problem.
+
+> > It might simply be time to convert all
+> > three XFS inode locks to use the same ordering rules.
+> 
+> Careful, there lie dragons along that path because of things like
+> how the inode cluster buffer operations work - they all assume
+> ascending inode number traversal within and across inode cluster
+> buffers and hence we do have locking order constraints based on
+> inode number...
+
+Fair enough, I'll leave the ILOCK alone. :)
 
 --D
 
+> Cheers,
 > 
-> 
-> --
-> Thanks,
-> Ruan Shiyang.
-> 
-> > 
-> > --D
-> > 
-> > > +int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> > > +				  struct file *file_out, loff_t pos_out,
-> > > +				  loff_t *len, unsigned int remap_flags) {
-> > > +	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
-> > > +					       pos_out, len, remap_flags, NULL); }
-> > >  EXPORT_SYMBOL(generic_remap_file_range_prep);
-> > >
-> > >  loff_t do_clone_file_range(struct file *file_in, loff_t pos_in, diff
-> > > --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c index
-> > > 060695d6d56a..d25434f93235 100644
-> > > --- a/fs/xfs/xfs_reflink.c
-> > > +++ b/fs/xfs/xfs_reflink.c
-> > > @@ -1329,8 +1329,12 @@ xfs_reflink_remap_prep(
-> > >  	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-> > >  		goto out_unlock;
-> > >
-> > > -	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
-> > > -			len, remap_flags);
-> > > +	if (!IS_DAX(inode_in))
-> > > +		ret = generic_remap_file_range_prep(file_in, pos_in, file_out,
-> > > +				pos_out, len, remap_flags);
-> > > +	else
-> > > +		ret = dax_remap_file_range_prep(file_in, pos_in, file_out,
-> > > +				pos_out, len, remap_flags, &xfs_read_iomap_ops);
-> > >  	if (ret || *len == 0)
-> > >  		goto out_unlock;
-> > >
-> > > diff --git a/include/linux/dax.h b/include/linux/dax.h index
-> > > 3275e01ed33d..32e1c34349f2 100644
-> > > --- a/include/linux/dax.h
-> > > +++ b/include/linux/dax.h
-> > > @@ -239,6 +239,10 @@ int dax_invalidate_mapping_entry_sync(struct
-> > address_space *mapping,
-> > >  				      pgoff_t index);
-> > >  s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap,
-> > >  		struct iomap *srcmap);
-> > > +int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-> > > +				  struct inode *dest, loff_t destoff,
-> > > +				  loff_t len, bool *is_same,
-> > > +				  const struct iomap_ops *ops);
-> > >  static inline bool dax_mapping(struct address_space *mapping)  {
-> > >  	return mapping->host && IS_DAX(mapping->host); diff --git
-> > > a/include/linux/fs.h b/include/linux/fs.h index
-> > > c3c88fdb9b2a..e2c348553d87 100644
-> > > --- a/include/linux/fs.h
-> > > +++ b/include/linux/fs.h
-> > > @@ -71,6 +71,7 @@ struct fsverity_operations;  struct fs_context;
-> > > struct fs_parameter_spec;  struct fileattr;
-> > > +struct iomap_ops;
-> > >
-> > >  extern void __init inode_init(void);
-> > >  extern void __init inode_init_early(void); @@ -2126,10 +2127,13 @@
-> > > extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file
-> > > *,  extern ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
-> > >  				       struct file *file_out, loff_t pos_out,
-> > >  				       size_t len, unsigned int flags); -extern int
-> > > generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> > > -					 struct file *file_out, loff_t pos_out,
-> > > -					 loff_t *count,
-> > > -					 unsigned int remap_flags);
-> > > +int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> > > +				  struct file *file_out, loff_t pos_out,
-> > > +				  loff_t *count, unsigned int remap_flags); int
-> > > +dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> > > +			      struct file *file_out, loff_t pos_out,
-> > > +			      loff_t *len, unsigned int remap_flags,
-> > > +			      const struct iomap_ops *ops);
-> > >  extern loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
-> > >  				  struct file *file_out, loff_t pos_out,
-> > >  				  loff_t len, unsigned int remap_flags);
-> > > --
-> > > 2.31.1
-> > >
-> > >
-> > >
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
