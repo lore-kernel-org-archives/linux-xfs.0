@@ -2,113 +2,143 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB454C433B4
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 12:39:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A699C433B4
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 15:55:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C4E1613E9
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 12:39:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 370C861444
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 15:55:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233231AbhENMk5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 May 2021 08:40:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38448 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232712AbhENMk4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 May 2021 08:40:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620995985;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=EQQwhvgtwZyH320vXDMEGHFsETuo+DlrHUQlvvoka5g=;
-        b=bgKZybPV4Rw+uMdJrnjZl7EFfIg8enVFhI2+HZiL53B3jfX/Qh3UE/UJc9wen0UsaBcciy
-        D/P3M49QwVE3PFiXFELJuWsCNpdWTp8lF1xPkq/3qvmamOuWU6xJxHrgq6TU6FzrhjAxTS
-        eAg0vHIoLHdXF6pCeBK3smMc1qzavaQ=
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
- [209.85.219.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-428-JPsbijPfPLCWXktZrP8pjQ-1; Fri, 14 May 2021 08:39:43 -0400
-X-MC-Unique: JPsbijPfPLCWXktZrP8pjQ-1
-Received: by mail-qv1-f70.google.com with SMTP id t1-20020a0ca6810000b029019e892416e6so23722452qva.9
-        for <linux-xfs@vger.kernel.org>; Fri, 14 May 2021 05:39:43 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=EQQwhvgtwZyH320vXDMEGHFsETuo+DlrHUQlvvoka5g=;
-        b=qQfcdbGVfzDDCF9xIYtEHQ+Fvm27+OgjW2LbXdJft4CD8GGb7IrtuCi0Cu/EN4eDEv
-         HCKkQxabZdntHiCppAQemBZLwSGCqmx8mmQDQkaozXDR2spLTCyhBMUaSgS6kIWC7Qfg
-         cHHboV01gOYYJeYcpMQwKKf8X2q/QCYITt7hicli4QvxOkOYlGcBn0sQyYfMWD9I2Wry
-         zP4ryJ1zQF5rLXGbKuxvrLhoyAqJknQKGZCGeph9GdtrNl+L7n1YEp3ykbXS1W6DiScJ
-         Jnr2V9ik1j2U+84ePwohjPtHVkpsSKphj5eTCu/+UOTh7bV4rHIpbCJzsshz98eL0XF0
-         Vh5g==
-X-Gm-Message-State: AOAM530IvHO283/giu3vQkvahmBNSbpti1t3ktHFJZ8Sic0qKjTlxo4a
-        Fy14wg/lfsHMEDE+b8lD+Oa+3cGFYVVwE/tyTlsAZ+JSlY3HS8lf++yXiAdpNnM00l6Hnd1+RUX
-        Cr5WspZRmDhlPuY3/IaLE
-X-Received: by 2002:a37:6554:: with SMTP id z81mr44338692qkb.472.1620995982972;
-        Fri, 14 May 2021 05:39:42 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwANspRqzw7nWKx7YLHmSb/WHwtLfQCVEIkilF2AyBk0QH3sdSQPKDOYHKj0XSfECGrpsDU9g==
-X-Received: by 2002:a37:6554:: with SMTP id z81mr44338680qkb.472.1620995982818;
-        Fri, 14 May 2021 05:39:42 -0700 (PDT)
-Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id z187sm4650871qkb.129.2021.05.14.05.39.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 05:39:42 -0700 (PDT)
-Date:   Fri, 14 May 2021 08:39:40 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: Remove redundant assignment to busy
-Message-ID: <YJ5vjIKWtrulwO6M@bfoster>
-References: <1620903078-58184-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+        id S233914AbhENP4r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 May 2021 11:56:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53386 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231519AbhENP4p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 May 2021 11:56:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 42051613B9;
+        Fri, 14 May 2021 15:55:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1621007734;
+        bh=v5DRmDZo2IWJ/5xYwox1340RW7KLECmn5cf4wrNd0XI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ajB2CvQ0FIacPV/sgyjBiZKix8ET6CDCAMPCt+wWMMbLK5RoERG9ZrPSHHJEjAK9A
+         9uYno5hFGM9QWr6ZVJis8k+9F63wdQmDwkvN8hkvCtB/o+KqWRBGdnat21x7IX2JU0
+         bCbW/S+REPiXN6sNw6V5pOljRMzL27F8/kriPnTjma2Q4jyToQqKuSMyKmjZf/tMN7
+         spFqNzcQHtq97k2GjjViIOrmVM9ECOS3bu/ZyszKRjy7Q/ybsaFe/xdHOztkFgayBd
+         5b1kxsdqEWPkBTPrUIq0FD4oIOlR7gL3DT3uw7YD9w+8EgFzvdtb4QqxozWqupEL9s
+         uAU+kBfPtoaSw==
+Date:   Fri, 14 May 2021 08:55:33 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/4] xfs: don't propagate invalid extent size hints to
+ new files
+Message-ID: <20210514155533.GJ9675@magnolia>
+References: <162086770193.3685783.14418051698714099173.stgit@magnolia>
+ <162086771324.3685783.12562187598352097487.stgit@magnolia>
+ <YJ5vQ2GHFw2EilJO@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1620903078-58184-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+In-Reply-To: <YJ5vQ2GHFw2EilJO@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 13, 2021 at 06:51:18PM +0800, Jiapeng Chong wrote:
-> Variable busy is set to false, but this value is never read as it is
-> overwritten or not used later on, hence it is a redundant assignment
-> and can be removed.
+On Fri, May 14, 2021 at 08:38:27AM -0400, Brian Foster wrote:
+> On Wed, May 12, 2021 at 06:01:53PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Under the current inode extent size hint validation rules, it's possible
+> > to set extent size hints on directories along with an 'inherit' flag so
+> > that the values will be propagated to newly created regular files.  (The
+> > directories themselves do not care about the hint values.)
+> > 
+> > For these directories, the alignment of the hint is checked against the
+> > data device even if the directory also has the rtinherit hint set, which
+> > means that one can set a directory's hint value to something that isn't
+> > an integer multiple of the realtime extent size.  This isn't a problem
+> > for the directory itself, but the validation routines require rt extent
+> > alignment for realtime files.
+> > 
+> > If the unaligned hint value and the realtime bit are both propagated
+> > into a newly created regular realtime file, we end up writing out an
+> > incorrect hint that trips the verifiers the next time we try to read the
+> > inode buffer, and the fs shuts down.  Fix this by cancelling the hint
+> > propagation if it would cause problems.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
 > 
-> Clean up the following clang-analyzer warning:
-> 
-> fs/xfs/libxfs/xfs_alloc.c:1679:2: warning: Value stored to 'busy' is
-> never read [clang-analyzer-deadcode.DeadStores].
-> 
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-> ---
+> Hmm.. this seems a bit unfortunate. Is the purpose of this flag
+> cancellation behavior basically to accommodate existing filesystems that
+> might have this incompatible combination in place?
 
-Part of me wonders whether it would be better to still initialize the
-variable where it's defined, assuming that would quiet the code analyzer
-(?). Not a big deal either way:
+Yes.  The incompatible combination when set on a directory is benign,
+but setting it on regular files gets us into real trouble, so the goal
+here is to end the propagation of the incompatible values.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+--D
 
->  fs/xfs/libxfs/xfs_alloc.c | 1 -
->  1 file changed, 1 deletion(-)
+> Brian
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 82b7cbb..ae46fe6 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -1676,7 +1676,6 @@ struct xfs_alloc_cur {
->  	cnt_cur = xfs_allocbt_init_cursor(args->mp, args->tp, args->agbp,
->  		args->agno, XFS_BTNUM_CNT);
->  	bno_cur = NULL;
-> -	busy = false;
->  
->  	/*
->  	 * Look for an entry >= maxlen+alignment-1 blocks.
-> -- 
-> 1.8.3.1
+> >  fs/xfs/xfs_inode.c |   19 +++++++++++++++++++
+> >  1 file changed, 19 insertions(+)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 0369eb22c1bb..db81e8c22708 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -689,6 +689,7 @@ xfs_inode_inherit_flags(
+> >  	struct xfs_inode	*ip,
+> >  	const struct xfs_inode	*pip)
+> >  {
+> > +	xfs_failaddr_t		failaddr;
+> >  	unsigned int		di_flags = 0;
+> >  	umode_t			mode = VFS_I(ip)->i_mode;
+> >  
+> > @@ -728,6 +729,14 @@ xfs_inode_inherit_flags(
+> >  	if (pip->i_diflags & XFS_DIFLAG_FILESTREAM)
+> >  		di_flags |= XFS_DIFLAG_FILESTREAM;
+> >  
+> > +	/* Make sure the extsize actually validates properly. */
+> > +	failaddr = xfs_inode_validate_extsize(ip->i_mount, ip->i_extsize,
+> > +			VFS_I(ip)->i_mode, ip->i_diflags);
+> > +	if (failaddr) {
+> > +		di_flags &= ~(XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT);
+> > +		ip->i_extsize = 0;
+> > +	}
+> > +
+> >  	ip->i_diflags |= di_flags;
+> >  }
+> >  
+> > @@ -737,12 +746,22 @@ xfs_inode_inherit_flags2(
+> >  	struct xfs_inode	*ip,
+> >  	const struct xfs_inode	*pip)
+> >  {
+> > +	xfs_failaddr_t		failaddr;
+> > +
+> >  	if (pip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) {
+> >  		ip->i_diflags2 |= XFS_DIFLAG2_COWEXTSIZE;
+> >  		ip->i_cowextsize = pip->i_cowextsize;
+> >  	}
+> >  	if (pip->i_diflags2 & XFS_DIFLAG2_DAX)
+> >  		ip->i_diflags2 |= XFS_DIFLAG2_DAX;
+> > +
+> > +	/* Make sure the cowextsize actually validates properly. */
+> > +	failaddr = xfs_inode_validate_cowextsize(ip->i_mount, ip->i_cowextsize,
+> > +			VFS_I(ip)->i_mode, ip->i_diflags, ip->i_diflags2);
+> > +	if (failaddr) {
+> > +		ip->i_diflags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
+> > +		ip->i_cowextsize = 0;
+> > +	}
+> >  }
+> >  
+> >  /*
+> > 
 > 
-
