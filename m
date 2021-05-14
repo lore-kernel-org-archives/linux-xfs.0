@@ -7,136 +7,108 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94854C433ED
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 12:38:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB454C433B4
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 12:39:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 69F0F6145D
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 12:38:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C4E1613E9
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 12:39:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233554AbhENMjv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 May 2021 08:39:51 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:36335 "EHLO
+        id S233231AbhENMk5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 May 2021 08:40:57 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38448 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232712AbhENMjv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 May 2021 08:39:51 -0400
+        by vger.kernel.org with ESMTP id S232712AbhENMk4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 May 2021 08:40:56 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620995919;
+        s=mimecast20190719; t=1620995985;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=s89697pCUJ2/vhg39Jx5slm0qUODWQos+MIXELMumZg=;
-        b=YNUz11AmlR7YN2fiILhNe5houOMCipZa6LSmFGWnBQNuCgjl+vKsEB5hPJ462v4IPAo9/y
-        35liN911CKfT+vUdAtguLLDxo/Yta5JLrA0DeA51g5LLif+yyx5VRuRlEBWMTkM/TGdxRa
-        KwjQ7ZVagZQbwjyKHxD/b+IY34Uk0/U=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-506-TIjlK3L5NxiF5tk1SC6zsQ-1; Fri, 14 May 2021 08:38:38 -0400
-X-MC-Unique: TIjlK3L5NxiF5tk1SC6zsQ-1
-Received: by mail-qv1-f72.google.com with SMTP id d11-20020a0cdb0b0000b02901c0da4391d5so23766760qvk.12
-        for <linux-xfs@vger.kernel.org>; Fri, 14 May 2021 05:38:38 -0700 (PDT)
+        bh=EQQwhvgtwZyH320vXDMEGHFsETuo+DlrHUQlvvoka5g=;
+        b=bgKZybPV4Rw+uMdJrnjZl7EFfIg8enVFhI2+HZiL53B3jfX/Qh3UE/UJc9wen0UsaBcciy
+        D/P3M49QwVE3PFiXFELJuWsCNpdWTp8lF1xPkq/3qvmamOuWU6xJxHrgq6TU6FzrhjAxTS
+        eAg0vHIoLHdXF6pCeBK3smMc1qzavaQ=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-428-JPsbijPfPLCWXktZrP8pjQ-1; Fri, 14 May 2021 08:39:43 -0400
+X-MC-Unique: JPsbijPfPLCWXktZrP8pjQ-1
+Received: by mail-qv1-f70.google.com with SMTP id t1-20020a0ca6810000b029019e892416e6so23722452qva.9
+        for <linux-xfs@vger.kernel.org>; Fri, 14 May 2021 05:39:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=s89697pCUJ2/vhg39Jx5slm0qUODWQos+MIXELMumZg=;
-        b=W64lVbxKYkghPlgCdIuhsZ7ZcH/Ux8yUVlcEADMXXjYsexvMeh98CD6NXW2rpQMtsp
-         y0h36jlpgYGbPSIw9lozLUFrMwT39nhOT7NbLr8C2mBS52oGh9Wmak1Zx5WGFJ01QE3u
-         6E6xPqEP/xxhAxRi2mpCoD+ZSiiyEmRyRd+PwG/bKJfuoCWRzd55jG7hUIsB/CTKUl50
-         ef5aNGob8JNkHhhJcbc/FlwKPI9T2ZKIHvJ6J6wC/uVN5ewNhfChJt7+VT0CH9r007WQ
-         BY3LvY7b4CqLSTUxw1SkhrVo/7fT/BIwLhehQNtTUc5nsxQcwU6gFboUdujSH6aKroqC
-         I8VA==
-X-Gm-Message-State: AOAM530hrFpnO1vzyOAv57rQtRGVkTWaX4RcENDoiTq5gY7BOLkE3qij
-        TYBXAujlMObuF+X3ZdZdLtFScMKMV+6Wu9c7SHQ4VbG3BCVVdOoNMA570igJHMcG1vfGen/N3wI
-        myEQBVVTMwKUSDkABGSzs
-X-Received: by 2002:a37:447:: with SMTP id 68mr43308595qke.15.1620995917623;
-        Fri, 14 May 2021 05:38:37 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyZgo41kYFAVlfrhUVfJTRV/AbP4wqg80NIATgcQ7+nTHHd898NPYkfVrXFoUjbLxnDiBeHIA==
-X-Received: by 2002:a37:447:: with SMTP id 68mr43308572qke.15.1620995917314;
-        Fri, 14 May 2021 05:38:37 -0700 (PDT)
+        bh=EQQwhvgtwZyH320vXDMEGHFsETuo+DlrHUQlvvoka5g=;
+        b=qQfcdbGVfzDDCF9xIYtEHQ+Fvm27+OgjW2LbXdJft4CD8GGb7IrtuCi0Cu/EN4eDEv
+         HCKkQxabZdntHiCppAQemBZLwSGCqmx8mmQDQkaozXDR2spLTCyhBMUaSgS6kIWC7Qfg
+         cHHboV01gOYYJeYcpMQwKKf8X2q/QCYITt7hicli4QvxOkOYlGcBn0sQyYfMWD9I2Wry
+         zP4ryJ1zQF5rLXGbKuxvrLhoyAqJknQKGZCGeph9GdtrNl+L7n1YEp3ykbXS1W6DiScJ
+         Jnr2V9ik1j2U+84ePwohjPtHVkpsSKphj5eTCu/+UOTh7bV4rHIpbCJzsshz98eL0XF0
+         Vh5g==
+X-Gm-Message-State: AOAM530IvHO283/giu3vQkvahmBNSbpti1t3ktHFJZ8Sic0qKjTlxo4a
+        Fy14wg/lfsHMEDE+b8lD+Oa+3cGFYVVwE/tyTlsAZ+JSlY3HS8lf++yXiAdpNnM00l6Hnd1+RUX
+        Cr5WspZRmDhlPuY3/IaLE
+X-Received: by 2002:a37:6554:: with SMTP id z81mr44338692qkb.472.1620995982972;
+        Fri, 14 May 2021 05:39:42 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwANspRqzw7nWKx7YLHmSb/WHwtLfQCVEIkilF2AyBk0QH3sdSQPKDOYHKj0XSfECGrpsDU9g==
+X-Received: by 2002:a37:6554:: with SMTP id z81mr44338680qkb.472.1620995982818;
+        Fri, 14 May 2021 05:39:42 -0700 (PDT)
 Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id f12sm4538371qtj.26.2021.05.14.05.38.36
+        by smtp.gmail.com with ESMTPSA id z187sm4650871qkb.129.2021.05.14.05.39.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 05:38:37 -0700 (PDT)
-Date:   Fri, 14 May 2021 08:38:35 -0400
+        Fri, 14 May 2021 05:39:42 -0700 (PDT)
+Date:   Fri, 14 May 2021 08:39:40 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: validate extsz hints against rt extent size
- when rtinherit is set
-Message-ID: <YJ5vS+o3BydK1DrP@bfoster>
-References: <162086770193.3685783.14418051698714099173.stgit@magnolia>
- <162086771885.3685783.16422648250546171771.stgit@magnolia>
+To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: Remove redundant assignment to busy
+Message-ID: <YJ5vjIKWtrulwO6M@bfoster>
+References: <1620903078-58184-1-git-send-email-jiapeng.chong@linux.alibaba.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162086771885.3685783.16422648250546171771.stgit@magnolia>
+In-Reply-To: <1620903078-58184-1-git-send-email-jiapeng.chong@linux.alibaba.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 12, 2021 at 06:01:58PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, May 13, 2021 at 06:51:18PM +0800, Jiapeng Chong wrote:
+> Variable busy is set to false, but this value is never read as it is
+> overwritten or not used later on, hence it is a redundant assignment
+> and can be removed.
 > 
-> The RTINHERIT bit can be set on a directory so that newly created
-> regular files will have the REALTIME bit set to store their data on the
-> realtime volume.  If an extent size hint (and EXTSZINHERIT) are set on
-> the directory, the hint will also be copied into the new file.
+> Clean up the following clang-analyzer warning:
 > 
-> As pointed out in previous patches, for realtime files we require the
-> extent size hint be an integer multiple of the realtime extent, but we
-> don't perform the same validation on a directory with both RTINHERIT and
-> EXTSZINHERIT set, even though the only use-case of that combination is
-> to propagate extent size hints into new realtime files.  This leads to
-> inode corruption errors when the bad values are propagated.
+> fs/xfs/libxfs/xfs_alloc.c:1679:2: warning: Value stored to 'busy' is
+> never read [clang-analyzer-deadcode.DeadStores].
 > 
-> Strengthen the validation routine to avoid this situation and fix the
-> open-coded unit conversion while we're at it.  Note that this is
-> technically a breaking change to the ondisk format, but the risk should
-> be minimal because (a) most vendors disable realtime, (b) letting
-> unaligned hints propagate to new files would immediately crash the
-> filesystem, and (c) xfs_repair flags such filesystems as corrupt, so
-> anyone with such a configuration is broken already anyway.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 > ---
 
-Ok, so this looks more like a proper fix, but does this turn an existing
-directory with (rtinherit && extszinherit) and a badly aligned extsz
-hint into a read validation error?
+Part of me wonders whether it would be better to still initialize the
+variable where it's defined, assuming that would quiet the code analyzer
+(?). Not a big deal either way:
 
-Brian
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/libxfs/xfs_inode_buf.c |    7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
+>  fs/xfs/libxfs/xfs_alloc.c | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 5c9a7440d9e4..25261dd73290 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -569,19 +569,20 @@ xfs_inode_validate_extsize(
->  	uint16_t			mode,
->  	uint16_t			flags)
->  {
-> -	bool				rt_flag;
-> +	bool				rt_flag, rtinherit_flag;
->  	bool				hint_flag;
->  	bool				inherit_flag;
->  	uint32_t			extsize_bytes;
->  	uint32_t			blocksize_bytes;
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 82b7cbb..ae46fe6 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -1676,7 +1676,6 @@ struct xfs_alloc_cur {
+>  	cnt_cur = xfs_allocbt_init_cursor(args->mp, args->tp, args->agbp,
+>  		args->agno, XFS_BTNUM_CNT);
+>  	bno_cur = NULL;
+> -	busy = false;
 >  
->  	rt_flag = (flags & XFS_DIFLAG_REALTIME);
-> +	rtinherit_flag = (flags & XFS_DIFLAG_RTINHERIT);
->  	hint_flag = (flags & XFS_DIFLAG_EXTSIZE);
->  	inherit_flag = (flags & XFS_DIFLAG_EXTSZINHERIT);
->  	extsize_bytes = XFS_FSB_TO_B(mp, extsize);
->  
-> -	if (rt_flag)
-> -		blocksize_bytes = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
-> +	if (rt_flag || (rtinherit_flag && inherit_flag))
-> +		blocksize_bytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
->  	else
->  		blocksize_bytes = mp->m_sb.sb_blocksize;
->  
+>  	/*
+>  	 * Look for an entry >= maxlen+alignment-1 blocks.
+> -- 
+> 1.8.3.1
 > 
 
