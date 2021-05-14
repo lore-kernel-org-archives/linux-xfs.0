@@ -2,166 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25756C43460
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 16:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DEC3C433B4
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 17:24:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEFFA61442
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 16:17:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83F4661177
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 May 2021 17:24:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233328AbhENQSn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 May 2021 12:18:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59168 "EHLO mail.kernel.org"
+        id S229780AbhENRZs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 May 2021 13:25:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53244 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230018AbhENQSm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 May 2021 12:18:42 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AE7AB61353;
-        Fri, 14 May 2021 16:17:30 +0000 (UTC)
+        id S229659AbhENRZs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 May 2021 13:25:48 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6C0A26144C
+        for <linux-xfs@vger.kernel.org>; Fri, 14 May 2021 17:24:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621009050;
-        bh=GXTUTxfJmauY3sVW+kCaMHHzIKcRfXTYy0mfZ1awngE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oQ8dmtH4NA+L/+ELxpN7WUZ32+IKoVGAxNNf5Zt7Ofagh6dHPT0TaJ3/dhZ3udTSa
-         Ss/wqVUPPW5cMdEz+C4hQyJma01zgrZ+tDmQID9Jlsk64sp+15NKZU73+6fKkEkcgC
-         XvuSXtxBxWWmdn2PJR00Oj+G52+jT4a3Jwm4qyrvnnPwZZO7YBFRkMz9ZmsrxPdu5J
-         q4F0/QUco4Auws1Zlcox6az1nWwemazilV0J6CiqvqlCi9dMrZ8vCEq6MMIs3fgL5x
-         qVlNE4QqliLqOm7IvgNPw45DD+Jz/B6XeS0w8qkfaKzFc0Gwo3UyBFqq+MTiQmsck/
-         qFCq5EMv5glNw==
-Date:   Fri, 14 May 2021 09:17:30 -0700
+        s=k20201202; t=1621013076;
+        bh=eiEQ36GoDT7nWRDfG/7S6yVl2MtNct06LQzmUZTWbAs=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=eCpOsLDx0RVjMm9LKKtyIhJY3Dy98ekiGxjIL8VL1H5D715C4K0OXiUyozgc8wXRb
+         D6nL5qlZC4qSYORzM+eFoitsI+b8+pk45DGVg4u4GQlga+OUVZ848vTVa37nFgvNZ1
+         mdBq32ZqnUQX4TGPPgE6cdyo48WgDzzvR3lShs2ggcekldFp6+xBf5/T930Te9gy1A
+         zIpnoPN5p+o/dKZGtBSRMSuQ2Yg4oWiLfaMZRTvwXTFlW2FSKhiaxgeCQXHV8pN+4/
+         8kGzaw8NdMNeuwPNYg9CQfkkZQIXxtNIskotcRjUr91ulTYpURU7znh+re/vBMQipA
+         EimobeI3W+bGw==
+Date:   Fri, 14 May 2021 10:24:35 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        ceph-devel@vger.kernel.org, Chao Yu <yuchao0@huawei.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Jeff Layton <jlayton@kernel.org>,
-        Johannes Thumshirn <jth@kernel.org>,
-        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
-        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
-        Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH 03/11] mm: Protect operations adding pages to page cache
- with invalidate_lock
-Message-ID: <20210514161730.GL9675@magnolia>
-References: <20210512101639.22278-1-jack@suse.cz>
- <20210512134631.4053-3-jack@suse.cz>
- <20210512152345.GE8606@magnolia>
- <20210513174459.GH2734@quack2.suse.cz>
- <20210513185252.GB9675@magnolia>
- <20210513231945.GD2893@dread.disaster.area>
+To:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: apply rt extent alignment constraints to cow
+ extsize hint
+Message-ID: <20210514172435.GM9675@magnolia>
+References: <162086770193.3685783.14418051698714099173.stgit@magnolia>
+ <162086772452.3685783.890036737343315171.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210513231945.GD2893@dread.disaster.area>
+In-Reply-To: <162086772452.3685783.890036737343315171.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 14, 2021 at 09:19:45AM +1000, Dave Chinner wrote:
-> On Thu, May 13, 2021 at 11:52:52AM -0700, Darrick J. Wong wrote:
-> > On Thu, May 13, 2021 at 07:44:59PM +0200, Jan Kara wrote:
-> > > On Wed 12-05-21 08:23:45, Darrick J. Wong wrote:
-> > > > On Wed, May 12, 2021 at 03:46:11PM +0200, Jan Kara wrote:
-> > > > > +->fallocate implementation must be really careful to maintain page cache
-> > > > > +consistency when punching holes or performing other operations that invalidate
-> > > > > +page cache contents. Usually the filesystem needs to call
-> > > > > +truncate_inode_pages_range() to invalidate relevant range of the page cache.
-> > > > > +However the filesystem usually also needs to update its internal (and on disk)
-> > > > > +view of file offset -> disk block mapping. Until this update is finished, the
-> > > > > +filesystem needs to block page faults and reads from reloading now-stale page
-> > > > > +cache contents from the disk. VFS provides mapping->invalidate_lock for this
-> > > > > +and acquires it in shared mode in paths loading pages from disk
-> > > > > +(filemap_fault(), filemap_read(), readahead paths). The filesystem is
-> > > > > +responsible for taking this lock in its fallocate implementation and generally
-> > > > > +whenever the page cache contents needs to be invalidated because a block is
-> > > > > +moving from under a page.
-> > > > > +
-> > > > > +->copy_file_range and ->remap_file_range implementations need to serialize
-> > > > > +against modifications of file data while the operation is running. For blocking
-> > > > > +changes through write(2) and similar operations inode->i_rwsem can be used. For
-> > > > > +blocking changes through memory mapping, the filesystem can use
-> > > > > +mapping->invalidate_lock provided it also acquires it in its ->page_mkwrite
-> > > > > +implementation.
-> > > > 
-> > > > Question: What is the locking order when acquiring the invalidate_lock
-> > > > of two different files?  Is it the same as i_rwsem (increasing order of
-> > > > the struct inode pointer) or is it the same as the XFS MMAPLOCK that is
-> > > > being hoisted here (increasing order of i_ino)?
-> > > > 
-> > > > The reason I ask is that remap_file_range has to do that, but I don't
-> > > > see any conversions for the xfs_lock_two_inodes(..., MMAPLOCK_EXCL)
-> > > > calls in xfs_ilock2_io_mmap in this series.
-> > > 
-> > > Good question. Technically, I don't think there's real need to establish a
-> > > single ordering because locks among different filesystems are never going
-> > > to be acquired together (effectively each lock type is local per sb and we
-> > > are free to define an ordering for each lock type differently). But to
-> > > maintain some sanity I guess having the same locking order for doublelock
-> > > of i_rwsem and invalidate_lock makes sense. Is there a reason why XFS uses
-> > > by-ino ordering? So that we don't have to consider two different orders in
-> > > xfs_lock_two_inodes()...
-> > 
-> > I imagine Dave will chime in on this, but I suspect the reason is
-> > hysterical raisins^Wreasons.
+On Wed, May 12, 2021 at 06:02:04PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> It's the locking rules that XFS has used pretty much forever.
-> Locking by inode number always guarantees the same locking order of
-> two inodes in the same filesystem, regardless of the specific
-> in-memory instances of the two inodes.
+> Even though reflink and copy-on-write aren't supported on the realtime
+> volume, if we ever turn that on, we'd still be constrained to the same
+> rt extent alignment requirements because cow involves remapping, and
+> we can only allocate and free in rtextsize units on the realtime volume.
 > 
-> e.g. if we lock based on the inode structure address, in one
-> instancex, we could get A -> B, then B gets recycled and
-> reallocated, then we get B -> A as the locking order for the same
-> two inodes.
+> At the moment there aren't any filesystems with rt and reflink in the
+> wild, so this is should be a zero-risk change.
 > 
-> That, IMNSHO, is utterly crazy because with non-deterministic inode
-> lock ordered like this you can't make consistent locking rules for
-> locking the physical inode cluster buffers underlying the inodes in
-> the situation where they also need to be locked.
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-<nod> That's protected by the ILOCK, correct?
-
-> We've been down this path before more than a decade ago when the
-> powers that be decreed that inode locking order is to be "by
-> structure address" rather than inode number, because "inode number
-> is not unique across multiple superblocks".
-> 
-> I'm not sure that there is anywhere that locks multiple inodes
-> across different superblocks, but here we are again....
-
-Hm.  Are there situations where one would want to lock multiple
-/mappings/ across different superblocks?  The remapping code doesn't
-allow cross-super operations, so ... pipes and splice, maybe?  I don't
-remember that code well enough to say for sure.
-
-I've been operating under the assumption that as long as one takes all
-the same class of lock at the same time (e.g. all the IOLOCKs, then all
-the MMAPLOCKs, then all the ILOCKs, like reflink does) that the
-incongruency in locking order rules within a class shouldn't be a
-problem.
-
-> > It might simply be time to convert all
-> > three XFS inode locks to use the same ordering rules.
-> 
-> Careful, there lie dragons along that path because of things like
-> how the inode cluster buffer operations work - they all assume
-> ascending inode number traversal within and across inode cluster
-> buffers and hence we do have locking order constraints based on
-> inode number...
-
-Fair enough, I'll leave the ILOCK alone. :)
+Self NAK; one cannot set a nonzero cowextsize hint on a non-reflink
+filesystem, and outside of djwong-dev, reflink on realtime isn't
+supported either.  I guess I got too enthusiastic when I was
+redistributing patches. :(
 
 --D
 
-> Cheers,
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.c |   13 ++++++++++---
+>  1 file changed, 10 insertions(+), 3 deletions(-)
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 25261dd73290..704faf806e46 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -628,14 +628,21 @@ xfs_inode_validate_cowextsize(
+>  	uint16_t			flags,
+>  	uint64_t			flags2)
+>  {
+> -	bool				rt_flag;
+> +	bool				rt_flag, rtinherit_flag;
+>  	bool				hint_flag;
+>  	uint32_t			cowextsize_bytes;
+> +	uint32_t			blocksize_bytes;
+>  
+>  	rt_flag = (flags & XFS_DIFLAG_REALTIME);
+> +	rtinherit_flag = (flags & XFS_DIFLAG_RTINHERIT);
+>  	hint_flag = (flags2 & XFS_DIFLAG2_COWEXTSIZE);
+>  	cowextsize_bytes = XFS_FSB_TO_B(mp, cowextsize);
+>  
+> +	if (rt_flag || (rtinherit_flag && hint_flag))
+> +		blocksize_bytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
+> +	else
+> +		blocksize_bytes = mp->m_sb.sb_blocksize;
+> +
+>  	if (hint_flag && !xfs_sb_version_hasreflink(&mp->m_sb))
+>  		return __this_address;
+>  
+> @@ -652,13 +659,13 @@ xfs_inode_validate_cowextsize(
+>  	if (hint_flag && rt_flag)
+>  		return __this_address;
+>  
+> -	if (cowextsize_bytes % mp->m_sb.sb_blocksize)
+> +	if (cowextsize_bytes % blocksize_bytes)
+>  		return __this_address;
+>  
+>  	if (cowextsize > MAXEXTLEN)
+>  		return __this_address;
+>  
+> -	if (cowextsize > mp->m_sb.sb_agblocks / 2)
+> +	if (!rt_flag && cowextsize > mp->m_sb.sb_agblocks / 2)
+>  		return __this_address;
+>  
+>  	return NULL;
+> 
