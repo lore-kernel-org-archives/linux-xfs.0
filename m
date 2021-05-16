@@ -2,171 +2,383 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
-	autolearn_force=no version=3.4.0
+	LOTS_OF_MONEY,MAILING_LIST_MULTI,MONEY_NOHTML,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D91C5C433B4
-	for <linux-xfs@archiver.kernel.org>; Sun, 16 May 2021 15:33:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E35CC433B4
+	for <linux-xfs@archiver.kernel.org>; Sun, 16 May 2021 15:50:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC13B61139
-	for <linux-xfs@archiver.kernel.org>; Sun, 16 May 2021 15:33:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E55B161007
+	for <linux-xfs@archiver.kernel.org>; Sun, 16 May 2021 15:50:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234578AbhEPPeh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 16 May 2021 11:34:37 -0400
-Received: from out20-61.mail.aliyun.com ([115.124.20.61]:35639 "EHLO
-        out20-61.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234554AbhEPPef (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 May 2021 11:34:35 -0400
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07437573|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0602725-0.00116504-0.938563;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047192;MF=guan@eryu.me;NM=1;PH=DS;RN=5;RT=5;SR=0;TI=SMTPD_---.KEENn2F_1621179197;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.KEENn2F_1621179197)
-          by smtp.aliyun-inc.com(10.147.43.230);
-          Sun, 16 May 2021 23:33:18 +0800
-Date:   Sun, 16 May 2021 23:33:17 +0800
+        id S229459AbhEPPvO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 16 May 2021 11:51:14 -0400
+Received: from out20-1.mail.aliyun.com ([115.124.20.1]:51931 "EHLO
+        out20-1.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229790AbhEPPvN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 May 2021 11:51:13 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07436282|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.174169-0.00111542-0.824716;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047213;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.KEFELVf_1621180196;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.KEFELVf_1621180196)
+          by smtp.aliyun-inc.com(10.147.40.44);
+          Sun, 16 May 2021 23:49:56 +0800
+Date:   Sun, 16 May 2021 23:49:55 +0800
 From:   Eryu Guan <guan@eryu.me>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH v6 2/3] xfs: basic functionality test for shrinking free
- space in the last AG
-Message-ID: <YKE7PX8E5mrpLasU@desktop>
-References: <20210511233228.1018269-1-hsiangkao@redhat.com>
- <20210511233228.1018269-3-hsiangkao@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 2/8] common/xfs: refactor commands to select a particular
+ xfs backing device
+Message-ID: <YKE/I0HE+2MNSCCG@desktop>
+References: <162078489963.3302755.9219127595550889655.stgit@magnolia>
+ <162078491108.3302755.3627499639796540923.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210511233228.1018269-3-hsiangkao@redhat.com>
+In-Reply-To: <162078491108.3302755.3627499639796540923.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 12, 2021 at 07:32:27AM +0800, Gao Xiang wrote:
-> Add basic test to make sure the functionality works as expected.
+On Tue, May 11, 2021 at 07:01:51PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> Refactor all the places where we try to force new file data allocations
+> to a specific xfs backing device so that we don't end up open-coding the
+> same xfs_io command lines over and over.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  tests/xfs/990     | 73 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/990.out | 12 ++++++++
->  tests/xfs/group   |  1 +
->  3 files changed, 86 insertions(+)
->  create mode 100755 tests/xfs/990
->  create mode 100644 tests/xfs/990.out
-> 
-> diff --git a/tests/xfs/990 b/tests/xfs/990
-> new file mode 100755
-> index 00000000..ec2592f6
-> --- /dev/null
-> +++ b/tests/xfs/990
-> @@ -0,0 +1,73 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2021 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 990
-> +#
-> +# XFS shrinkfs basic functionality test
-> +#
-> +# This test attempts to shrink with a small size (512K), half AG size and
-> +# an out-of-bound size (agsize + 1) to observe if it works as expected.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +test_shrink()
-> +{
-> +	$XFS_GROWFS_PROG -D"$1" $SCRATCH_MNT >> $seqres.full 2>&1
-> +	ret=$?
-> +
-> +	_scratch_unmount
-> +	_check_scratch_fs
-> +	_scratch_mount
-> +
-> +	$XFS_INFO_PROG $SCRATCH_MNT 2>&1 | _filter_mkfs 2>$tmp.growfs >/dev/null
-> +	. $tmp.growfs
-> +	[ $ret -eq 0 -a $1 -eq $dblocks ]
-> +}
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_xfs_scratch_shrink
-> +
-> +rm -f $seqres.full
-> +echo "Format and mount"
-> +
-> +# agcount = 1 is forbidden on purpose, and need to ensure shrinking to
-> +# 2 AGs isn't feasible yet. So agcount = 3 is the minimum number now.
-> +_scratch_mkfs -dsize="$((512 * 1024 * 1024))" -dagcount=3 2>&1 | \
-> +	tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
+>  common/populate   |    2 +-
+>  common/xfs        |   25 +++++++++++++++++++++++++
+>  tests/generic/223 |    3 ++-
+>  tests/generic/449 |    2 +-
+>  tests/xfs/004     |    2 +-
 
-The stdout of _scratch_mkfs doesn't seem necessary, I discard it as
-well. And also in xfs/991.
+>  tests/xfs/088     |    1 +
+>  tests/xfs/089     |    1 +
+>  tests/xfs/091     |    1 +
+>  tests/xfs/120     |    1 +
+>  tests/xfs/130     |    1 +
+
+I think above updates should be in a separate patch.
 
 Thanks,
 Eryu
 
-> +. $tmp.mkfs
-> +t_dblocks=$dblocks
-> +_scratch_mount >> $seqres.full
+>  tests/xfs/146     |    2 +-
+>  tests/xfs/147     |    2 +-
+>  tests/xfs/235     |    1 +
+>  tests/xfs/272     |    2 +-
+>  tests/xfs/318     |    2 +-
+>  tests/xfs/431     |    4 ++--
+>  tests/xfs/521     |    2 +-
+>  tests/xfs/528     |    2 +-
+>  tests/xfs/532     |    2 +-
+>  tests/xfs/533     |    2 +-
+>  tests/xfs/538     |    2 +-
+>  21 files changed, 47 insertions(+), 15 deletions(-)
+> 
+> 
+> diff --git a/common/populate b/common/populate
+> index d484866a..e1704b10 100644
+> --- a/common/populate
+> +++ b/common/populate
+> @@ -162,7 +162,7 @@ _scratch_xfs_populate() {
+>  	# Clear the rtinherit flag on the root directory so that files are
+>  	# always created on the data volume regardless of MKFS_OPTIONS.  We can
+>  	# set the realtime flag when needed.
+> -	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
+> +	_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+>  	dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
+> diff --git a/common/xfs b/common/xfs
+> index 5cd7b35c..49bd6c31 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -194,6 +194,31 @@ _xfs_get_file_block_size()
+>  	$XFS_INFO_PROG "$path" | grep realtime | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g'
+>  }
+>  
+> +# Set or clear the realtime status of every supplied path.  The first argument
+> +# is either 'data' or 'realtime'.  All other arguments should be paths to
+> +# existing directories or empty regular files.
+> +#
+> +# For each directory, each file subsequently created will target the given
+> +# device for file data allocations.  For each empty regular file, each
+> +# subsequent file data allocation will be on the given device.
+> +_scratch_xfs_force_bdev()
+> +{
+> +	local device="$1"
+> +	shift
+> +	local chattr_arg=""
 > +
-> +echo "Shrink fs (small size)"
-> +test_shrink $((t_dblocks-512*1024/dbsize)) || \
-> +	echo "Shrink fs (small size) failure"
+> +	case "$device" in
+> +	"data")		chattr_arg="-t";;
+> +	"realtime")	chattr_arg="+t";;
+> +	*)
+> +		echo "${device}: Don't know what device this is?"
+> +		return 1
+> +		;;
+> +	esac
 > +
-> +echo "Shrink fs (half AG)"
-> +test_shrink $((t_dblocks-agsize/2)) || \
-> +	echo "Shrink fs (half AG) failure"
+> +	$XFS_IO_PROG -c "chattr $chattr_arg" "$@"
+> +}
 > +
-> +echo "Shrink fs (out-of-bound)"
-> +test_shrink $((t_dblocks-agsize-1)) && \
-> +	echo "Shrink fs (out-of-bound) failure"
-> +[ $dblocks -ne $((t_dblocks-agsize/2)) ] && \
-> +	echo "dblocks changed after shrinking failure"
-> +
-> +$XFS_INFO_PROG $SCRATCH_MNT >> $seqres.full
-> +echo "*** done"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/990.out b/tests/xfs/990.out
-> new file mode 100644
-> index 00000000..812f89ef
-> --- /dev/null
-> +++ b/tests/xfs/990.out
-> @@ -0,0 +1,12 @@
-> +QA output created by 990
-> +Format and mount
-> +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> +         = sunit=XXX swidth=XXX, unwritten=X
-> +naming   =VERN bsize=XXX
-> +log      =LDEV bsize=XXX blocks=XXX
-> +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> +Shrink fs (small size)
-> +Shrink fs (half AG)
-> +Shrink fs (out-of-bound)
-> +*** done
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index fe83f82d..472c8f9a 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -520,3 +520,4 @@
->  537 auto quick
->  538 auto stress
->  539 auto quick mount
-> +990 auto quick growfs shrinkfs
-> -- 
-> 2.27.0
+>  _xfs_get_fsxattr()
+>  {
+>  	local field="$1"
+> diff --git a/tests/generic/223 b/tests/generic/223
+> index f6393293..0df84c2b 100755
+> --- a/tests/generic/223
+> +++ b/tests/generic/223
+> @@ -46,7 +46,8 @@ for SUNIT_K in 8 16 32 64 128; do
+>  	# This test checks for stripe alignments of space allocations on the
+>  	# filesystem.  Make sure all files get created on the main device,
+>  	# which for XFS means no rt files.
+> -	test "$FSTYP" = "xfs" && $XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
+> +	test "$FSTYP" = "xfs" && \
+> +		_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  	for SIZE_MULT in 1 2 8 64 256; do
+>  		let SIZE=$SIZE_MULT*$SUNIT_BYTES
+> diff --git a/tests/generic/449 b/tests/generic/449
+> index 5fd15367..9035b705 100755
+> --- a/tests/generic/449
+> +++ b/tests/generic/449
+> @@ -46,7 +46,7 @@ _scratch_mount || _fail "mount failed"
+>  # This is a test of xattr behavior when we run out of disk space for xattrs,
+>  # so make sure the pwrite goes to the data device and not the rt volume.
+>  test "$FSTYP" = "xfs" && \
+> -	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
+> +	_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  TFILE=$SCRATCH_MNT/testfile.$seq
+>  
+> diff --git a/tests/xfs/004 b/tests/xfs/004
+> index 7633071c..b3a00fb6 100755
+> --- a/tests/xfs/004
+> +++ b/tests/xfs/004
+> @@ -31,7 +31,7 @@ _populate_scratch()
+>  	# This test looks at specific behaviors of the xfs_db freesp command,
+>  	# which reports on the contents of the free space btrees for the data
+>  	# device.  Don't let anything get created on the realtime volume.
+> -	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
+> +	_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  	dd if=/dev/zero of=$SCRATCH_MNT/foo count=200 bs=4096 >/dev/null 2>&1 &
+>  	dd if=/dev/zero of=$SCRATCH_MNT/goo count=400 bs=4096 >/dev/null 2>&1 &
+>  	dd if=/dev/zero of=$SCRATCH_MNT/moo count=800 bs=4096 >/dev/null 2>&1 &
+> diff --git a/tests/xfs/088 b/tests/xfs/088
+> index fe621d0a..62360ca8 100755
+> --- a/tests/xfs/088
+> +++ b/tests/xfs/088
+> @@ -48,6 +48,7 @@ _scratch_mkfs_xfs > /dev/null
+>  echo "+ mount fs image"
+>  _scratch_mount
+>  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+> +_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  echo "+ make some files"
+>  mkdir -p "${TESTDIR}"
+> diff --git a/tests/xfs/089 b/tests/xfs/089
+> index 3339ff63..79167a57 100755
+> --- a/tests/xfs/089
+> +++ b/tests/xfs/089
+> @@ -48,6 +48,7 @@ _scratch_mkfs_xfs > /dev/null
+>  echo "+ mount fs image"
+>  _scratch_mount
+>  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+> +_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  echo "+ make some files"
+>  mkdir -p "${TESTDIR}"
+> diff --git a/tests/xfs/091 b/tests/xfs/091
+> index 9304849d..db6bb0b2 100755
+> --- a/tests/xfs/091
+> +++ b/tests/xfs/091
+> @@ -48,6 +48,7 @@ _scratch_mkfs_xfs > /dev/null
+>  echo "+ mount fs image"
+>  _scratch_mount
+>  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+> +_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  echo "+ make some files"
+>  mkdir -p "${TESTDIR}"
+> diff --git a/tests/xfs/120 b/tests/xfs/120
+> index 59ac0433..9fcce9ee 100755
+> --- a/tests/xfs/120
+> +++ b/tests/xfs/120
+> @@ -47,6 +47,7 @@ echo "+ mount fs image"
+>  _scratch_mount
+>  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+>  nr="$((blksz * 2 / 16))"
+> +_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  echo "+ make some files"
+>  $XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" -c 'fsync' "${SCRATCH_MNT}/bigfile" >> $seqres.full
+> diff --git a/tests/xfs/130 b/tests/xfs/130
+> index 9fec009f..b4404c5d 100755
+> --- a/tests/xfs/130
+> +++ b/tests/xfs/130
+> @@ -43,6 +43,7 @@ echo "+ mount fs image"
+>  _scratch_mount
+>  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+>  agcount="$(_xfs_mount_agcount $SCRATCH_MNT)"
+> +_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  echo "+ make some files"
+>  _pwrite_byte 0x62 0 $((blksz * 64)) "${SCRATCH_MNT}/file0" >> "$seqres.full"
+> diff --git a/tests/xfs/146 b/tests/xfs/146
+> index 8f85024d..a62b8429 100755
+> --- a/tests/xfs/146
+> +++ b/tests/xfs/146
+> @@ -78,7 +78,7 @@ _scratch_mkfs -r size=$rtsize >> $seqres.full
+>  _scratch_mount >> $seqres.full
+>  
+>  # Make sure the root directory has rtinherit set so our test file will too
+> -$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT
+> +_scratch_xfs_force_bdev realtime $SCRATCH_MNT
+>  
+>  # Allocate some stuff at the start, to force the first falloc of the ouch file
+>  # to happen somewhere in the middle of the rt volume
+> diff --git a/tests/xfs/147 b/tests/xfs/147
+> index da962f96..0071f5c3 100755
+> --- a/tests/xfs/147
+> +++ b/tests/xfs/147
+> @@ -50,7 +50,7 @@ rextblks=$((rextsize / blksz))
+>  echo "blksz $blksz rextsize $rextsize rextblks $rextblks" >> $seqres.full
+>  
+>  # Make sure the root directory has rtinherit set so our test file will too
+> -$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT
+> +_scratch_xfs_force_bdev realtime $SCRATCH_MNT
+>  
+>  sz=$((rextsize * 100))
+>  range="$((blksz * 3)) $blksz"
+> diff --git a/tests/xfs/235 b/tests/xfs/235
+> index 1ed19424..553a3bc8 100755
+> --- a/tests/xfs/235
+> +++ b/tests/xfs/235
+> @@ -41,6 +41,7 @@ echo "+ mount fs image"
+>  _scratch_mount
+>  blksz=$(stat -f -c '%s' ${SCRATCH_MNT})
+>  agcount=$(_xfs_mount_agcount $SCRATCH_MNT)
+> +_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  echo "+ make some files"
+>  _pwrite_byte 0x62 0 $((blksz * 64)) ${SCRATCH_MNT}/file0 >> $seqres.full
+> diff --git a/tests/xfs/272 b/tests/xfs/272
+> index 6c0fede5..2848848d 100755
+> --- a/tests/xfs/272
+> +++ b/tests/xfs/272
+> @@ -38,7 +38,7 @@ _scratch_mkfs > "$seqres.full" 2>&1
+>  _scratch_mount
+>  
+>  # Make sure everything is on the data device
+> -$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
+> +_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  _pwrite_byte 0x80 0 737373 $SCRATCH_MNT/urk >> $seqres.full
+>  sync
+> diff --git a/tests/xfs/318 b/tests/xfs/318
+> index 07375b1f..823f3e6c 100755
+> --- a/tests/xfs/318
+> +++ b/tests/xfs/318
+> @@ -44,7 +44,7 @@ _scratch_mount >> $seqres.full
+>  
+>  # This test depends on specific behaviors of the data device, so create all
+>  # files on it.
+> -$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
+> +_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  echo "Create files"
+>  touch $SCRATCH_MNT/file1
+> diff --git a/tests/xfs/431 b/tests/xfs/431
+> index e67906dc..dd634ed6 100755
+> --- a/tests/xfs/431
+> +++ b/tests/xfs/431
+> @@ -47,7 +47,7 @@ _scratch_mount
+>  
+>  # Set realtime inherit flag on scratch mount, suppress output
+>  # as this may simply error out on future kernels
+> -$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT &> /dev/null
+> +_scratch_xfs_force_bdev realtime $SCRATCH_MNT &> /dev/null
+>  
+>  # Check if 't' is actually set, as xfs_io returns 0 even when it fails to set
+>  # an attribute. And erroring out here is fine, this would be desired behavior
+> @@ -60,7 +60,7 @@ if $XFS_IO_PROG -c 'lsattr' $SCRATCH_MNT | grep -q 't'; then
+>  	# Remove the testfile and rt inherit flag after we are done or
+>  	# xfs_repair will fail.
+>  	rm -f $SCRATCH_MNT/testfile
+> -	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT | tee -a $seqres.full 2>&1
+> +	_scratch_xfs_force_bdev data $SCRATCH_MNT | tee -a $seqres.full 2>&1
+>  fi
+>  
+>  # success, all done
+> diff --git a/tests/xfs/521 b/tests/xfs/521
+> index b8026d45..64155662 100755
+> --- a/tests/xfs/521
+> +++ b/tests/xfs/521
+> @@ -55,7 +55,7 @@ testdir=$SCRATCH_MNT/test-$seq
+>  mkdir $testdir
+>  
+>  echo "Check rt volume stats"
+> -$XFS_IO_PROG -c 'chattr +t' $testdir
+> +_scratch_xfs_force_bdev realtime $testdir
+>  $XFS_INFO_PROG $SCRATCH_MNT >> $seqres.full
+>  before=$(stat -f -c '%b' $testdir)
+>  
+> diff --git a/tests/xfs/528 b/tests/xfs/528
+> index 7f98c5b8..4db4f513 100755
+> --- a/tests/xfs/528
+> +++ b/tests/xfs/528
+> @@ -77,7 +77,7 @@ test_ops() {
+>  		_notrun "Could not mount rextsize=$rextsize with synthetic rt volume"
+>  
+>  	# Force all files to be realtime files
+> -	$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT
+> +	_scratch_xfs_force_bdev realtime $SCRATCH_MNT
+>  
+>  	log "Test regular write, rextsize=$rextsize"
+>  	mk_file $SCRATCH_MNT/write $rextsize
+> diff --git a/tests/xfs/532 b/tests/xfs/532
+> index 560af586..1749d6ac 100755
+> --- a/tests/xfs/532
+> +++ b/tests/xfs/532
+> @@ -47,7 +47,7 @@ _scratch_mount >> $seqres.full
+>  
+>  # Disable realtime inherit flag (if any) on root directory so that space on data
+>  # device gets fragmented rather than realtime device.
+> -$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
+> +_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  bsize=$(_get_block_size $SCRATCH_MNT)
+>  
+> diff --git a/tests/xfs/533 b/tests/xfs/533
+> index dd4cb4c4..b73097e1 100755
+> --- a/tests/xfs/533
+> +++ b/tests/xfs/533
+> @@ -58,7 +58,7 @@ _scratch_mount >> $seqres.full
+>  
+>  # Disable realtime inherit flag (if any) on root directory so that space on data
+>  # device gets fragmented rather than realtime device.
+> -$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
+> +_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  echo "Consume free space"
+>  fillerdir=$SCRATCH_MNT/fillerdir
+> diff --git a/tests/xfs/538 b/tests/xfs/538
+> index 97273b88..deb43d7c 100755
+> --- a/tests/xfs/538
+> +++ b/tests/xfs/538
+> @@ -44,7 +44,7 @@ _scratch_mount >> $seqres.full
+>  
+>  # Disable realtime inherit flag (if any) on root directory so that space on data
+>  # device gets fragmented rather than realtime device.
+> -$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
+> +_scratch_xfs_force_bdev data $SCRATCH_MNT
+>  
+>  bsize=$(_get_file_block_size $SCRATCH_MNT)
+>  
+> 
