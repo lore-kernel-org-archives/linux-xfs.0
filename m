@@ -2,144 +2,96 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 341E4C43460
-	for <linux-xfs@archiver.kernel.org>; Sun, 16 May 2021 15:04:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B41AFC43461
+	for <linux-xfs@archiver.kernel.org>; Sun, 16 May 2021 15:31:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13A3061182
-	for <linux-xfs@archiver.kernel.org>; Sun, 16 May 2021 15:04:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9313C61183
+	for <linux-xfs@archiver.kernel.org>; Sun, 16 May 2021 15:31:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234344AbhEPPGJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 16 May 2021 11:06:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39714 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234318AbhEPPGI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 May 2021 11:06:08 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3194C061573;
-        Sun, 16 May 2021 08:04:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=CTEnXBDAU5VgOXas+ZpUCpolUQxSg2nvik9eRBrz2KY=; b=QlCTm0HRiYaur5pKQfxx5+Op1a
-        5XKpMmGM15CdRnaTgMsaUJb850RxqUxFRgnzkCL7a18nIKdXuI/QIA3E45SCiu/vFjfzd7SXW8Iz1
-        NhWpVb5h745Z96ECQPLhX5Nit8LCKMS5oQwkY/DIfdD/8i05dtIxWLqDrT7mIEQ2xFtakfzGVfT6a
-        dX1ilXialPKQ4Tw7S5LGY4OPrfq0+SJX6ejrf88poX8IpMbqR17jFfcaCYEh7LYmEe542iSk7LRbH
-        GDScCucAqFiZa5wm6bOuCBOOU+SFqTHXfYUoYN2zB9pH0UpecAH+jCTceGY+T8xeU/rjhMSUvPema
-        sTGl7jsg==;
-Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1liIK0-00C5m2-8O; Sun, 16 May 2021 15:04:50 +0000
-From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
-To:     stable@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, Jan Stancek <jstancek@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 5.4] iomap: fix sub-page uptodate handling
-Date:   Sun, 16 May 2021 16:03:28 +0100
-Message-Id: <20210516150328.2881778-1-willy@infradead.org>
-X-Mailer: git-send-email 2.30.2
+        id S234570AbhEPPcY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 16 May 2021 11:32:24 -0400
+Received: from out20-27.mail.aliyun.com ([115.124.20.27]:49776 "EHLO
+        out20-27.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234554AbhEPPcX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 May 2021 11:32:23 -0400
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.08107959|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.0300717-0.00211437-0.967814;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047209;MF=guan@eryu.me;NM=1;PH=DS;RN=5;RT=5;SR=0;TI=SMTPD_---.KEEUBY-_1621179065;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.KEEUBY-_1621179065)
+          by smtp.aliyun-inc.com(10.147.42.197);
+          Sun, 16 May 2021 23:31:06 +0800
+Date:   Sun, 16 May 2021 23:31:05 +0800
+From:   Eryu Guan <guan@eryu.me>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH v6 1/3] common/xfs: add _require_xfs_scratch_shrink helper
+Message-ID: <YKE6uYPIzzWry3ZN@desktop>
+References: <20210511233228.1018269-1-hsiangkao@redhat.com>
+ <20210511233228.1018269-2-hsiangkao@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210511233228.1018269-2-hsiangkao@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+On Wed, May 12, 2021 at 07:32:26AM +0800, Gao Xiang wrote:
+> In order to detect whether the current kernel supports XFS shrinking.
+> 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> ---
+>  common/xfs | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 69f76d6e..a0a4032a 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -766,6 +766,26 @@ _require_xfs_mkfs_without_validation()
+>  	fi
+>  }
+>  
+> +_require_xfs_scratch_shrink()
 
-commit 1cea335d1db1ce6ab71b3d2f94a807112b738a0f upstream
+I renamed this to _require_scratch_xfs_shrink(), as most of other
+helpers are in this format as _require_scratch_xfs_bigtime(), the only
+exception is _require_xfs_scratch_rmapbt(), I think we should change
+that too in another patch.
 
-bio completions can race when a page spans more than one file system
-block.  Add a spinlock to synchronize marking the page uptodate.
+> +{
+> +	_require_scratch
+> +	_require_command "$XFS_GROWFS_PROG" xfs_growfs
+> +
+> +	_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+> +	. $tmp.mkfs
+> +	_scratch_mount
+> +	# here just to check if kernel supports, no need do more extra work
+> +	errmsg=$($XFS_GROWFS_PROG -D$((dblocks-1)) "$SCRATCH_MNT" 2>&1)
 
-Fixes: 9dc55f1389f9 ("iomap: add support for sub-pagesize buffered I/O without buffer heads")
-Reported-by: Jan Stancek <jstancek@redhat.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/iomap/buffered-io.c | 34 ++++++++++++++++++++++++----------
- include/linux/iomap.h  |  1 +
- 2 files changed, 25 insertions(+), 10 deletions(-)
+Also make it as local.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 80867a1a94f2..5c73751adb2d 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -30,6 +30,7 @@ iomap_page_create(struct inode *inode, struct page *page)
- 	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
- 	atomic_set(&iop->read_count, 0);
- 	atomic_set(&iop->write_count, 0);
-+	spin_lock_init(&iop->uptodate_lock);
- 	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
- 
- 	/*
-@@ -118,25 +119,38 @@ iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
- }
- 
- static void
--iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
-+iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
- {
- 	struct iomap_page *iop = to_iomap_page(page);
- 	struct inode *inode = page->mapping->host;
- 	unsigned first = off >> inode->i_blkbits;
- 	unsigned last = (off + len - 1) >> inode->i_blkbits;
--	unsigned int i;
- 	bool uptodate = true;
-+	unsigned long flags;
-+	unsigned int i;
- 
--	if (iop) {
--		for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
--			if (i >= first && i <= last)
--				set_bit(i, iop->uptodate);
--			else if (!test_bit(i, iop->uptodate))
--				uptodate = false;
--		}
-+	spin_lock_irqsave(&iop->uptodate_lock, flags);
-+	for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
-+		if (i >= first && i <= last)
-+			set_bit(i, iop->uptodate);
-+		else if (!test_bit(i, iop->uptodate))
-+			uptodate = false;
- 	}
- 
--	if (uptodate && !PageError(page))
-+	if (uptodate)
-+		SetPageUptodate(page);
-+	spin_unlock_irqrestore(&iop->uptodate_lock, flags);
-+}
-+
-+static void
-+iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
-+{
-+	if (PageError(page))
-+		return;
-+
-+	if (page_has_private(page))
-+		iomap_iop_set_range_uptodate(page, off, len);
-+	else
- 		SetPageUptodate(page);
- }
- 
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 7aa5d6117936..53b16f104081 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -139,6 +139,7 @@ loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
- struct iomap_page {
- 	atomic_t		read_count;
- 	atomic_t		write_count;
-+	spinlock_t		uptodate_lock;
- 	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
- };
- 
--- 
-2.30.2
+Thanks,
+Eryu
 
+> +	if [ "$?" -ne 0 ]; then
+> +		echo "$errmsg" | grep 'XFS_IOC_FSGROWFSDATA xfsctl failed: Invalid argument' > /dev/null && \
+> +			_notrun "kernel does not support shrinking"
+> +		echo "$errmsg" | grep 'data size .* too small, old size is ' > /dev/null && \
+> +			_notrun "xfsprogs does not support shrinking"
+> +		_fail "$XFS_GROWFS_PROG failed unexpectedly: $errmsg"
+> +	fi
+> +	_scratch_unmount
+> +}
+> +
+>  # XFS ability to change UUIDs on V5/CRC filesystems
+>  #
+>  _require_meta_uuid()
+> -- 
+> 2.27.0
