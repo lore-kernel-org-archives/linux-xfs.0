@@ -2,85 +2,106 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD7EEC433ED
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 11:18:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 915E7C433ED
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 11:21:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 883B261285
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 11:18:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C6E8611CA
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 11:21:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236618AbhEQLTZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 May 2021 07:19:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54074 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236528AbhEQLTY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 May 2021 07:19:24 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BACCC061573;
-        Mon, 17 May 2021 04:18:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=jazNxV8D/7woDhWY9AkuzXWH5FjzFOrSgXVg3JXgTV8=; b=LlIkC4k+DL/6oGATReVm9MaK7X
-        9KxaYfSaHi6rAsbF8Tk2uGAlVwWRyS+bOvAYKjkIUl9zK2/Lf+w1MWjCdNe34uQthJKbZGmfVSqR1
-        rtClLQjdUCPlbERjYMEJq3sUah2HT+3ETF9eK6cn6zuPFRvIfpjGASwhtmN/hsHJwCiR4HR1KhXYn
-        vXqsC6uBn9gDLeGPXpagCE26yOPzSlrapc1AwVy5avg3yOUaS5JvzkV6MQ/SOXy6P4Qfh2XZJihUU
-        0TMhSLH64gTvBgWDu0GMJ/mZT2NE7QFMHET7MyK1QXJ9LzkDUq9G3gS4C0ZWIg9dpmilGu19X64nm
-        O6HuvzRw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1libFc-00CqY5-CF; Mon, 17 May 2021 11:17:52 +0000
-Date:   Mon, 17 May 2021 12:17:32 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Greg KH <greg@kroah.com>
-Cc:     stable@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Jan Stancek <jstancek@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5.4] iomap: fix sub-page uptodate handling
-Message-ID: <YKJQzJESWb+FZE+N@casper.infradead.org>
-References: <20210516150328.2881778-1-willy@infradead.org>
- <YKIeYkw1YjkT4hth@kroah.com>
+        id S236642AbhEQLWe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 May 2021 07:22:34 -0400
+Received: from mx2.suse.de ([195.135.220.15]:42102 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236528AbhEQLWd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 May 2021 07:22:33 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id D7294AED7;
+        Mon, 17 May 2021 11:21:15 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 56F6D1F2CA4; Mon, 17 May 2021 13:21:15 +0200 (CEST)
+Date:   Mon, 17 May 2021 13:21:15 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
+        linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        ceph-devel@vger.kernel.org, Chao Yu <yuchao0@huawei.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 03/11] mm: Protect operations adding pages to page cache
+ with invalidate_lock
+Message-ID: <20210517112115.GC31755@quack2.suse.cz>
+References: <20210512101639.22278-1-jack@suse.cz>
+ <20210512134631.4053-3-jack@suse.cz>
+ <20210512152345.GE8606@magnolia>
+ <20210513174459.GH2734@quack2.suse.cz>
+ <20210513185252.GB9675@magnolia>
+ <20210513231945.GD2893@dread.disaster.area>
+ <20210514161730.GL9675@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YKIeYkw1YjkT4hth@kroah.com>
+In-Reply-To: <20210514161730.GL9675@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 17, 2021 at 09:42:26AM +0200, Greg KH wrote:
-> On Sun, May 16, 2021 at 04:03:28PM +0100, Matthew Wilcox (Oracle) wrote:
-> > From: Christoph Hellwig <hch@lst.de>
+On Fri 14-05-21 09:17:30, Darrick J. Wong wrote:
+> On Fri, May 14, 2021 at 09:19:45AM +1000, Dave Chinner wrote:
+> > We've been down this path before more than a decade ago when the
+> > powers that be decreed that inode locking order is to be "by
+> > structure address" rather than inode number, because "inode number
+> > is not unique across multiple superblocks".
 > > 
-> > commit 1cea335d1db1ce6ab71b3d2f94a807112b738a0f upstream
-> > 
-> > bio completions can race when a page spans more than one file system
-> > block.  Add a spinlock to synchronize marking the page uptodate.
-> > 
-> > Fixes: 9dc55f1389f9 ("iomap: add support for sub-pagesize buffered I/O without buffer heads")
-> > Reported-by: Jan Stancek <jstancek@redhat.com>
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/iomap/buffered-io.c | 34 ++++++++++++++++++++++++----------
-> >  include/linux/iomap.h  |  1 +
-> >  2 files changed, 25 insertions(+), 10 deletions(-)
+> > I'm not sure that there is anywhere that locks multiple inodes
+> > across different superblocks, but here we are again....
 > 
-> No s-o-b from you as you did the backport?  :(
+> Hm.  Are there situations where one would want to lock multiple
+> /mappings/ across different superblocks?  The remapping code doesn't
+> allow cross-super operations, so ... pipes and splice, maybe?  I don't
+> remember that code well enough to say for sure.
 
-My mistake.  I don't do stable backports of other people's patches very
-often.
+Splice and friends work one file at a time. I.e., first they fill a pipe
+from the file with ->read_iter, then they flush the pipe to the target file
+with ->write_iter. So file locking doesn't get coupled there.
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> I've been operating under the assumption that as long as one takes all
+> the same class of lock at the same time (e.g. all the IOLOCKs, then all
+> the MMAPLOCKs, then all the ILOCKs, like reflink does) that the
+> incongruency in locking order rules within a class shouldn't be a
+> problem.
 
-> Anyway, what about a 4.19.y version?
+That's my understanding as well.
 
-I'll look into it and see what I can do.
+> > > It might simply be time to convert all
+> > > three XFS inode locks to use the same ordering rules.
+> > 
+> > Careful, there lie dragons along that path because of things like
+> > how the inode cluster buffer operations work - they all assume
+> > ascending inode number traversal within and across inode cluster
+> > buffers and hence we do have locking order constraints based on
+> > inode number...
+> 
+> Fair enough, I'll leave the ILOCK alone. :)
+
+OK, so should I change the order for invalidate_lock or shall we just leave
+that alone as it is not a practical problem AFAICT.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
