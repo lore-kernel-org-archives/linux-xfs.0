@@ -2,110 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 411E9C43470
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 17:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 665D6C433B4
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 17:54:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1101F61285
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 17:17:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48E36610A1
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 17:54:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235935AbhEQRSt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 May 2021 13:18:49 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:41847 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238081AbhEQRSq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 May 2021 13:18:46 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1621271849;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=70Iujgi8tr5ydV9GYZf9R2r74TCsQCw8vsdPBpWGMdU=;
-        b=aq5a3Pz5wDshjk8eo1y1hOdKrKShYB3vXeFabCdmKBp+Zr5g/idUPaHtoe8LIgpzIH98DR
-        URfqfTYhqiB946RT18xheKA/nOQwtiMr9sE9qer1/ruX89ST9W85h9V6VwBncCW+stJEXq
-        nnf5bERuQvjmQTL9SY6spdB4hWQA1yM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-604-q6uAKs3sPiqOyp-F_oLCBA-1; Mon, 17 May 2021 13:17:25 -0400
-X-MC-Unique: q6uAKs3sPiqOyp-F_oLCBA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C17B5803620;
-        Mon, 17 May 2021 17:17:24 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-113-80.rdu2.redhat.com [10.10.113.80])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 68EA55D9F2;
-        Mon, 17 May 2021 17:17:24 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org
-Subject: [PATCH v3 2/3] xfs: kick large ioends to completion workqueue
-Date:   Mon, 17 May 2021 13:17:21 -0400
-Message-Id: <20210517171722.1266878-3-bfoster@redhat.com>
-In-Reply-To: <20210517171722.1266878-1-bfoster@redhat.com>
+        id S236773AbhEQR4J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 May 2021 13:56:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58914 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236507AbhEQR4J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 May 2021 13:56:09 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ADD0C061573;
+        Mon, 17 May 2021 10:54:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=llr2rFXUC4HipaZi+CjQK2ZxikULlWbDjkjYGp4sZlQ=; b=ctfjWNS6UWv53k8ml2O7N4aGBz
+        ta7r7ptilv88ysLe6ftKPb6zmGV9+6bbmu/0TPg7jGLPIDQmiRtHbhgnpEOHi2iXnQn0DMYby7Qoq
+        nIfVxai2u8RfUZGnxlQnCVP5JnmFs6rnRbHnzAxNmEfzTpHlronz81OKJK2/5j8WcHQmOJazC/CJv
+        ne2+lwo1NIwZHcM8FYI+LLATiwJQfpIatGuR1DRUh9Q5qVpKev+twx29caNkaxd23jEei6Ehwatj8
+        ANsZD0Cq3aNYtr6xNTDtVLCRH2+iUh9uGW7oL8fuCSBTpyWb91kW785jk734E1ql3Li86K2BqVBrx
+        6GIXD7zg==;
+Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lihRq-00DFty-3n; Mon, 17 May 2021 17:54:39 +0000
+Date:   Mon, 17 May 2021 18:54:34 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] iomap: resched ioend completion when in
+ non-atomic context
+Message-ID: <YKKt2isZwu0qJK/C@casper.infradead.org>
 References: <20210517171722.1266878-1-bfoster@redhat.com>
+ <20210517171722.1266878-2-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210517171722.1266878-2-bfoster@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We've had reports of soft lockup warnings in the iomap ioend
-completion path due to very large bios and/or bio chains. This
-occurs because ioend completion touches every page associated with
-the ioend. It generally requires exceedingly large (i.e. multi-GB)
-bios or bio chains to reproduce a soft lockup warning, but even with
-smaller ioends there's really no good reason to incur the cost of
-potential cacheline misses in bio completion context. Divert ioends
-larger than 1MB to the workqueue so completion occurs in non-atomic
-context and can reschedule to avoid soft lockup warnings.
+On Mon, May 17, 2021 at 01:17:20PM -0400, Brian Foster wrote:
+> @@ -1084,9 +1084,12 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+>  			next = bio->bi_private;
+>  
+>  		/* walk each page on bio, ending page IO on them */
+> -		bio_for_each_segment_all(bv, bio, iter_all)
+> +		bio_for_each_segment_all(bv, bio, iter_all) {
+>  			iomap_finish_page_writeback(inode, bv->bv_page, error,
+>  					bv->bv_len);
+> +			if (!atomic)
+> +				cond_resched();
+> +		}
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_aops.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 84cd6cf46b12..05b1bb146f17 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -30,6 +30,13 @@ XFS_WPC(struct iomap_writepage_ctx *ctx)
- 	return container_of(ctx, struct xfs_writepage_ctx, ctx);
- }
- 
-+/*
-+ * Completion touches every page associated with the ioend. Send anything
-+ * larger than 1MB (based on 4k pages) or so to the completion workqueue to
-+ * avoid this work in bio completion context.
-+ */
-+#define XFS_LARGE_IOEND	(256ULL << PAGE_SHIFT)
-+
- /*
-  * Fast and loose check if this write could update the on-disk inode size.
-  */
-@@ -409,9 +416,14 @@ xfs_prepare_ioend(
- 
- 	memalloc_nofs_restore(nofs_flag);
- 
--	/* send ioends that might require a transaction to the completion wq */
-+	/*
-+	 * Send ioends that might require a transaction or are large enough that
-+	 * we don't want to do page processing in bio completion context to the
-+	 * wq.
-+	 */
- 	if (xfs_ioend_is_append(ioend) || ioend->io_type == IOMAP_UNWRITTEN ||
--	    (ioend->io_flags & IOMAP_F_SHARED))
-+	    (ioend->io_flags & IOMAP_F_SHARED) ||
-+	    ioend->io_size >= XFS_LARGE_IOEND)
- 		ioend->io_bio->bi_end_io = xfs_end_bio;
- 	return status;
- }
--- 
-2.26.3
+I don't know that it makes sense to check after _every_ page.  I might
+go for every segment.  Some users check after every thousand pages.
 
