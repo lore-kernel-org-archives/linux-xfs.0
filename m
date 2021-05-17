@@ -5,48 +5,48 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70CC3C43462
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 17:17:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11F0FC43460
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 17:17:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 548DC61285
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 17:17:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9EF861352
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 May 2021 17:17:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236102AbhEQRSq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S235931AbhEQRSq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 17 May 2021 13:18:46 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:20412 "EHLO
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:57375 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236178AbhEQRSp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 May 2021 13:18:45 -0400
+        by vger.kernel.org with ESMTP id S236102AbhEQRSo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 May 2021 13:18:44 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
         s=mimecast20190719; t=1621271848;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=OFHWngphh1h6Mxu0IxINP4n2sPHM5fvjAZsp4Nyy99s=;
-        b=fUm5FGNLXeujZKqDdn4rsv7buVcXeoyDJ95QAAIYPmsUhvEJBazwiQ4mB09C+xcuJeoJMk
-        53EpcTRPyOY9ZmXFnqIUBkinNlMqgL5D0hQ2WDuHv+AmlEU/4k9s9aGd1ej0H1UeUHJ+u1
-        UO4GF5extZAs9z7cuNQTyVFNL2EpZqQ=
+        bh=K3ChrpyqINd5LjVbSV1AZtzCKgi3r6GzKuhNpH//Q24=;
+        b=QShod7KaApNg/IRFybsBc1t86HfvCtpfH0mn7DlYhQOawW4qAV6nS2LDKSF2HuitllxKS4
+        7nR29TLg824l9bBhIRQVTKffWAC8HXv+fzGWVEWrgoCW4zGYDXQaow8cYltImohZvGI7FT
+        qe44r0cQQtbTHdQW2KJ2smXJZ/9uv0Y=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-268-3EWtdGeaONCJEfqVpmmu3g-1; Mon, 17 May 2021 13:17:25 -0400
-X-MC-Unique: 3EWtdGeaONCJEfqVpmmu3g-1
+ us-mta-377-2SJ8_9WlNpm9iZfgErNcKA-1; Mon, 17 May 2021 13:17:26 -0400
+X-MC-Unique: 2SJ8_9WlNpm9iZfgErNcKA-1
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 43A34107ACE6;
-        Mon, 17 May 2021 17:17:24 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 49CCF6D582;
+        Mon, 17 May 2021 17:17:25 +0000 (UTC)
 Received: from bfoster.redhat.com (ovpn-113-80.rdu2.redhat.com [10.10.113.80])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id DF7F65D9F2;
-        Mon, 17 May 2021 17:17:23 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E67735D9F2;
+        Mon, 17 May 2021 17:17:24 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org
-Subject: [PATCH v3 1/3] iomap: resched ioend completion when in non-atomic context
-Date:   Mon, 17 May 2021 13:17:20 -0400
-Message-Id: <20210517171722.1266878-2-bfoster@redhat.com>
+Subject: [PATCH RFC v3 3/3] iomap: bound ioend size to 4096 pages
+Date:   Mon, 17 May 2021 13:17:22 -0400
+Message-Id: <20210517171722.1266878-4-bfoster@redhat.com>
 In-Reply-To: <20210517171722.1266878-1-bfoster@redhat.com>
 References: <20210517171722.1266878-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -56,103 +56,90 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The iomap ioend mechanism has the ability to construct very large,
-contiguous bios and/or bio chains. This has been reported to lead to
-soft lockup warnings in bio completion due to the amount of page
-processing that occurs. Update the ioend completion path with a
-parameter to indicate atomic context and insert a cond_resched()
-call to avoid soft lockups in either scenario.
+The iomap writeback infrastructure is currently able to construct
+extremely large bio chains (tens of GBs) associated with a single
+ioend. This consolidation provides no significant value as bio
+chains increase beyond a reasonable minimum size. On the other hand,
+this does hold significant numbers of pages in the writeback
+state across an unnecessarily large number of bios because the ioend
+is not processed for completion until the final bio in the chain
+completes. Cap an individual ioend to a reasonable size of 4096
+pages (16MB with 4k pages) to avoid this condition.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/iomap/buffered-io.c | 15 +++++++++------
- fs/xfs/xfs_aops.c      |  2 +-
- include/linux/iomap.h  |  2 +-
- 3 files changed, 11 insertions(+), 8 deletions(-)
+ fs/iomap/buffered-io.c |  6 ++++--
+ include/linux/iomap.h  | 26 ++++++++++++++++++++++++++
+ 2 files changed, 30 insertions(+), 2 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 414769a6ad11..642422775e4e 100644
+index 642422775e4e..f2890ee434d0 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -1061,7 +1061,7 @@ iomap_finish_page_writeback(struct inode *inode, struct page *page,
-  * ioend after this.
-  */
- static void
--iomap_finish_ioend(struct iomap_ioend *ioend, int error)
-+iomap_finish_ioend(struct iomap_ioend *ioend, int error, bool atomic)
+@@ -1269,7 +1269,7 @@ iomap_chain_bio(struct bio *prev)
+ 
+ static bool
+ iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
+-		sector_t sector)
++		unsigned len, sector_t sector)
  {
- 	struct inode *inode = ioend->io_inode;
- 	struct bio *bio = &ioend->io_inline_bio;
-@@ -1084,9 +1084,12 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
- 			next = bio->bi_private;
- 
- 		/* walk each page on bio, ending page IO on them */
--		bio_for_each_segment_all(bv, bio, iter_all)
-+		bio_for_each_segment_all(bv, bio, iter_all) {
- 			iomap_finish_page_writeback(inode, bv->bv_page, error,
- 					bv->bv_len);
-+			if (!atomic)
-+				cond_resched();
-+		}
- 		bio_put(bio);
- 	}
- 	/* The ioend has been freed by bio_put() */
-@@ -1099,17 +1102,17 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+ 	if ((wpc->iomap.flags & IOMAP_F_SHARED) !=
+ 	    (wpc->ioend->io_flags & IOMAP_F_SHARED))
+@@ -1280,6 +1280,8 @@ iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
+ 		return false;
+ 	if (sector != bio_end_sector(wpc->ioend->io_bio))
+ 		return false;
++	if (wpc->ioend->io_size + len > IOEND_MAX_IOSIZE)
++		return false;
+ 	return true;
  }
  
- void
--iomap_finish_ioends(struct iomap_ioend *ioend, int error)
-+iomap_finish_ioends(struct iomap_ioend *ioend, int error, bool atomic)
- {
- 	struct list_head tmp;
+@@ -1297,7 +1299,7 @@ iomap_add_to_ioend(struct inode *inode, loff_t offset, struct page *page,
+ 	unsigned poff = offset & (PAGE_SIZE - 1);
+ 	bool merged, same_page = false;
  
- 	list_replace_init(&ioend->io_list, &tmp);
--	iomap_finish_ioend(ioend, error);
-+	iomap_finish_ioend(ioend, error, atomic);
- 
- 	while (!list_empty(&tmp)) {
- 		ioend = list_first_entry(&tmp, struct iomap_ioend, io_list);
- 		list_del_init(&ioend->io_list);
--		iomap_finish_ioend(ioend, error);
-+		iomap_finish_ioend(ioend, error, atomic);
- 	}
- }
- EXPORT_SYMBOL_GPL(iomap_finish_ioends);
-@@ -1178,7 +1181,7 @@ static void iomap_writepage_end_bio(struct bio *bio)
- {
- 	struct iomap_ioend *ioend = bio->bi_private;
- 
--	iomap_finish_ioend(ioend, blk_status_to_errno(bio->bi_status));
-+	iomap_finish_ioend(ioend, blk_status_to_errno(bio->bi_status), true);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 9b08db45ce85..84cd6cf46b12 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -123,7 +123,7 @@ xfs_end_ioend(
- 	if (!error && xfs_ioend_is_append(ioend))
- 		error = xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
- done:
--	iomap_finish_ioends(ioend, error);
-+	iomap_finish_ioends(ioend, error, false);
- 	memalloc_nofs_restore(nofs_flag);
- }
- 
+-	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, offset, sector)) {
++	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, offset, len, sector)) {
+ 		if (wpc->ioend)
+ 			list_add(&wpc->ioend->io_list, iolist);
+ 		wpc->ioend = iomap_alloc_ioend(inode, wpc, offset, sector, wbc);
 diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index d202fd2d0f91..07f3f4e69084 100644
+index 07f3f4e69084..89b15cc236d5 100644
 --- a/include/linux/iomap.h
 +++ b/include/linux/iomap.h
-@@ -232,7 +232,7 @@ struct iomap_writepage_ctx {
- 	const struct iomap_writeback_ops *ops;
+@@ -203,6 +203,32 @@ struct iomap_ioend {
+ 	struct bio		io_inline_bio;	/* MUST BE LAST! */
  };
  
--void iomap_finish_ioends(struct iomap_ioend *ioend, int error);
-+void iomap_finish_ioends(struct iomap_ioend *ioend, int error, bool atomic);
- void iomap_ioend_try_merge(struct iomap_ioend *ioend,
- 		struct list_head *more_ioends,
- 		void (*merge_private)(struct iomap_ioend *ioend,
++/*
++ * Maximum ioend IO size is used to prevent ioends from becoming unbound in
++ * size. bios can reach 4GB in size if pages are contiguous, and bio chains are
++ * effectively unbound in length. Hence the only limits on the size of the bio
++ * chain is the contiguity of the extent on disk and the length of the run of
++ * sequential dirty pages in the page cache. This can be tens of GBs of physical
++ * extents and if memory is large enough, tens of millions of dirty pages.
++ * Locking them all under writeback until the final bio in the chain is
++ * submitted and completed locks all those pages for the legnth of time it takes
++ * to write those many, many GBs of data to storage.
++ *
++ * Background writeback caps any single writepages call to half the device
++ * bandwidth to ensure fairness and prevent any one dirty inode causing
++ * writeback starvation. fsync() and other WB_SYNC_ALL writebacks have no such
++ * cap on wbc->nr_pages, and that's where the above massive bio chain lengths
++ * come from. We want large IOs to reach the storage, but we need to limit
++ * completion latencies, hence we need to control the maximum IO size we
++ * dispatch to the storage stack.
++ *
++ * We don't really have to care about the extra IO completion overhead here
++ * because iomap has contiguous IO completion merging. If the device can sustain
++ * high throughput and large bios, the ioends are merged on completion and
++ * processed in large, efficient chunks with no additional IO latency.
++ */
++#define IOEND_MAX_IOSIZE	(4096ULL << PAGE_SHIFT)
++
+ struct iomap_writeback_ops {
+ 	/*
+ 	 * Required, maps the blocks so that writeback can be performed on
 -- 
 2.26.3
 
