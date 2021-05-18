@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7783DC433ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 May 2021 01:21:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A1AEC433ED
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 May 2021 01:29:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 504986135F
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 May 2021 01:21:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 047E261354
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 May 2021 01:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237886AbhERBWh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 May 2021 21:22:37 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:36330 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237490AbhERBWh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 May 2021 21:22:37 -0400
+        id S1345747AbhERBbL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 May 2021 21:31:11 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:53554 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S238142AbhERBbL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 May 2021 21:31:11 -0400
 Received: from dread.disaster.area (pa49-195-118-180.pa.nsw.optusnet.com.au [49.195.118.180])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B70BF863284;
-        Tue, 18 May 2021 11:21:18 +1000 (AEST)
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id A70FF80AFB5;
+        Tue, 18 May 2021 11:29:51 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lioQ9-002Drc-Q5; Tue, 18 May 2021 11:21:17 +1000
-Date:   Tue, 18 May 2021 11:21:17 +1000
+        id 1lioYR-002E6I-42; Tue, 18 May 2021 11:29:51 +1000
+Date:   Tue, 18 May 2021 11:29:51 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 18/22] xfs: collapse AG selection for inode allocation
-Message-ID: <20210518012117.GG2893@dread.disaster.area>
+Message-ID: <20210518012951.GH2893@dread.disaster.area>
 References: <20210506072054.271157-1-david@fromorbit.com>
  <20210506072054.271157-19-david@fromorbit.com>
- <YJvPiWfS4Jp2has7@bfoster>
+ <20210512231114.GM8582@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YJvPiWfS4Jp2has7@bfoster>
+In-Reply-To: <20210512231114.GM8582@magnolia>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=xcwBwyABtj18PbVNKPPJDQ==:117 a=xcwBwyABtj18PbVNKPPJDQ==:17
-        a=kj9zAlcOel0A:10 a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=HufvsI7bE3szMNcxdEkA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=HKCYgVcdAQFlvI52QQEA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 12, 2021 at 08:52:25AM -0400, Brian Foster wrote:
+On Wed, May 12, 2021 at 04:11:14PM -0700, Darrick J. Wong wrote:
 > On Thu, May 06, 2021 at 05:20:50PM +1000, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
@@ -76,37 +77,50 @@ On Wed, May 12, 2021 at 08:52:25AM -0400, Brian Foster wrote:
 > > trying to do sparse inode cluster allocation.
 > > 
 > > This also removes a big chunk of duplicate code.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_ialloc.c | 221 +++++++++++++------------------------
-> >  1 file changed, 75 insertions(+), 146 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> > index 872591e8f5cb..b22556556bba 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> ...
-> > @@ -1778,10 +1669,41 @@ xfs_dialloc_select_ag(
-> >  				break;
-> >  		}
+> 
+> Soooooo... we did an AG walk to pick the optimal starting point of an AG
+> walk?  Heh.
+
+yup.
+
+> > @@ -1734,16 +1616,23 @@ xfs_dialloc_select_ag(
+> >  	struct xfs_perag	*pag;
+> >  	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+> >  	bool			okalloc = true;
+> > +	int			needspace;
+> > +	int			flags;
 > >  
-> > +		if (!pag->pagi_freecount)
-> > +			goto nextag;
+> >  	*IO_agbp = NULL;
+> >  
+> >  	/*
+> > -	 * We do not have an agbp, so select an initial allocation
+> > -	 * group for inode allocation.
+> > +	 * Files of these types need at least one block if length > 0
+> > +	 * (and they won't fit in the inode, but that's hard to figure out).
 > 
-> It looks like this would never allow for allocation of new inode
-> chunks..?
+> Uh, what is length here?  Seeing as most directories and symlinks
+> probably end up in local format, is this needspace computation really
+> true?
+
+Ah, that's the exact text from the comment in
+xfs_ialloc_ag_select() above the needspace calculation - I didn't
+actually change it at all. :/
+
+> I guess it doesn't hurt to be cautious and assume that directories can
+> expand and that people are aggressively symlinking.  But maybe this
+> comment could be rephrased to something like:
 > 
-> > +		if (!okalloc)
-> > +			goto nextag;
+> 	/*
+> 	 * Directories, symlinks, and regular files frequently allocate
+> 	 * at least one block, so factor that potential expansion when
+> 	 * we examine whether an AG has enough space for file creation.
+> 	 */
+> 	needspace = S_ISDIR(mode)...;
+> 
+> With that clarified,
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-I guess I never tested this patch in isolation, and I fixed the bug
-in one of the following patches. This should be:
-
-		if (!pag->pagi_freecount && !okalloc)
-			goto nextag;
-
-Fixed.
+Changed.
 
 -Dave.
 -- 
