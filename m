@@ -4,40 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC350C433ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 23:56:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8BB3C433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 23:57:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADB4D610A1
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 23:56:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A4EC61355
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 23:57:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230109AbhESX6O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 May 2021 19:58:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48514 "EHLO mail.kernel.org"
+        id S230148AbhESX6U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 May 2021 19:58:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48548 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229498AbhESX6N (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 May 2021 19:58:13 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3C5ED61007;
-        Wed, 19 May 2021 23:56:53 +0000 (UTC)
+        id S229498AbhESX6T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 May 2021 19:58:19 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4672D61007;
+        Wed, 19 May 2021 23:56:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621468613;
-        bh=Jilndsq459/6kZq4Q3+F1Dh6m7zGawEGLy3rxXGfD9Q=;
+        s=k20201202; t=1621468619;
+        bh=Yu+eAjhxeMKVLsBYZVl6EusGwPVpt+1jAIWovF6dlvQ=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=kHok4PUFeAKTy3nLH4EQWeMOC2RDnxVDdceZ+wF1FM0seT7AcfG+WzdCLXywGU3yo
-         IAtwnbBDyprcYvIsJjXMxsYMxj8Mzr7nR6rtEK64sfZ0SIxPWRCc9JExgfmBf9QgFB
-         5rvuADDD25XKmPkR33Ez82fMPaA3tcScArhLV0Y8HZTbIYKYqbfcLB1RvghUhnuoR2
-         H1oV1pSTNyuad6U+KEXP3pR6FrRNuUdlf6d7QMulgaa6Rw7Lwy6fi0MEKNFvLORimB
-         4o0XPsZGDUx1ynqwBX02USk9VxBchKuXsqSzx41c2scKbYWEXfJpYVVEU7Ovve4ugS
-         3AoIOWgkaZmLA==
-Subject: [PATCH 2/6] xfs: force file creation to the data device for certain
- layout tests
+        b=QIwvHApgjGpNXR1fA81V9mKsCZYx+ShfjDWTEbpyVFel8WX+8ukQKyrQ9bis2HcvU
+         VpwPMmcj+FEfih9zxbhw/7G3Qb/hNO/mapL3T6YnzVtdiXia6L0hpJqlQr2qsG7RpK
+         AMI4ukjKnOqje7tIJ6jn5nAhrsYYz/7z8MVjhL9Aq6LvYHsEsTjrXN9peqkprgutSN
+         UJjG60g0owSmjE+MvgghpMoy++OeGxvlVQHm3zx0PGpgRdKsBJysZVP37bYPW3Bf8c
+         bQ6e0/dSwO3XpEhjkBUDxXTb6ReUstVKRrtL56DihG9JCpJvWLi5p14UvLCzHT+T/E
+         ppOBWGQEU66zQ==
+Subject: [PATCH 3/6] xfs/117: fix fragility in this fuzz test
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Wed, 19 May 2021 16:56:52 -0700
-Message-ID: <162146861270.2500122.8499973348974838405.stgit@magnolia>
+Date:   Wed, 19 May 2021 16:56:58 -0700
+Message-ID: <162146861868.2500122.10790450415786633712.stgit@magnolia>
 In-Reply-To: <162146860057.2500122.8732083536936062491.stgit@magnolia>
 References: <162146860057.2500122.8732083536936062491.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,139 +49,99 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-I found a bunch more tests in the xfs/ directory that try to create
-specific metadata layouts on the data device, either because they're
-fuzz tests or because they're testing specific edge cases of the code
-base.  Either way, these test need to override '-d rtinherit' in the
-MKFS_OPTIONS, so do that with _xfs_force_bdev.
+This fuzz test has some fragility problems -- it doesn't do anything to
+guarantee that the inodes that it checks for EFSCORRUPTED are the same
+ones that it fuzzed, and it doesn't explicitly try to avoid victimizing
+inodes in the same chunk as the root directory.  As a result, this test
+fails annoyingly frequently.
+
+Fix both of these problems and get rid of the confusingly named TESTDIR
+variable.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/088 |    1 +
- tests/xfs/089 |    1 +
- tests/xfs/091 |    1 +
- tests/xfs/120 |    1 +
- tests/xfs/130 |    1 +
- tests/xfs/139 |    2 ++
- tests/xfs/207 |    1 +
- tests/xfs/229 |    1 +
- tests/xfs/235 |    1 +
- 9 files changed, 10 insertions(+)
+ tests/xfs/117 |   47 +++++++++++++++++++++++++++++------------------
+ 1 file changed, 29 insertions(+), 18 deletions(-)
 
 
-diff --git a/tests/xfs/088 b/tests/xfs/088
-index 6c5cbec8..b3e65dcf 100755
---- a/tests/xfs/088
-+++ b/tests/xfs/088
-@@ -48,6 +48,7 @@ _scratch_mkfs_xfs > /dev/null
- echo "+ mount fs image"
- _scratch_mount
+diff --git a/tests/xfs/117 b/tests/xfs/117
+index d3f4675f..32be525f 100755
+--- a/tests/xfs/117
++++ b/tests/xfs/117
+@@ -39,8 +39,7 @@ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+ rm -f $seqres.full
+-TESTDIR="${SCRATCH_MNT}/scratchdir"
+-TESTFILE="${TESTDIR}/testfile"
++victimdir="${SCRATCH_MNT}/scratchdir"
+ 
+ echo "+ create scratch fs"
+ _scratch_mkfs_xfs > /dev/null
+@@ -50,37 +49,49 @@ _scratch_mount
  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-+_xfs_force_bdev data $SCRATCH_MNT
  
  echo "+ make some files"
- mkdir -p "${TESTDIR}"
-diff --git a/tests/xfs/089 b/tests/xfs/089
-index 2892ad9e..21380798 100755
---- a/tests/xfs/089
-+++ b/tests/xfs/089
-@@ -48,6 +48,7 @@ _scratch_mkfs_xfs > /dev/null
- echo "+ mount fs image"
- _scratch_mount
- blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-+_xfs_force_bdev data $SCRATCH_MNT
+-mkdir -p "${TESTDIR}"
+-for x in `seq 1 1024`; do
+-	touch "${SCRATCH_MNT}/junk.${x}"
+-	inode="$(stat -c '%i' "${SCRATCH_MNT}/junk.${x}")"
+-	if [ "$x" -gt 512 ] && [ "$((inode % 64))" -eq 0 ]; then
+-		mv "${SCRATCH_MNT}/junk.${x}" "${TESTFILE}.1"
+-		break
+-	fi
++mkdir -p "$victimdir"
++
++rootdir="$(stat -c '%i' "$SCRATCH_MNT")"
++rootchunk=$(( rootdir / 64 ))
++
++# First we create some dummy file so that the victim files don't get created
++# in the same inode chunk as the root directory, because a corrupt inode in
++# the root chunk causes mount to fail.
++for ((i = 0; i < 256; i++)); do
++	fname="$SCRATCH_MNT/dummy.$i"
++	touch "$fname"
++	ino="$(stat -c '%i' "$fname")"
++	ichunk=$(( ino / 64 ))
++	test "$ichunk" -gt "$rootchunk" && break
+ done
+-for x in `seq 2 64`; do
+-	touch "${TESTFILE}.${x}"
++
++# Now create some victim files
++inos=()
++for ((i = 0; i < 64; i++)); do
++	fname="$victimdir/test.$i"
++	touch "$fname"
++	inos+=("$(stat -c '%i' "$fname")")
+ done
+-inode="$(stat -c '%i' "${TESTFILE}.1")"
++echo "First victim inode is: " >> $seqres.full
++stat -c '%i' "$fname" >> $seqres.full
+ umount "${SCRATCH_MNT}"
  
- echo "+ make some files"
- mkdir -p "${TESTDIR}"
-diff --git a/tests/xfs/091 b/tests/xfs/091
-index 04322cec..ff8f0f1f 100755
---- a/tests/xfs/091
-+++ b/tests/xfs/091
-@@ -48,6 +48,7 @@ _scratch_mkfs_xfs > /dev/null
- echo "+ mount fs image"
- _scratch_mount
- blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-+_xfs_force_bdev data $SCRATCH_MNT
+ echo "+ check fs"
+ _scratch_xfs_repair -n >> $seqres.full 2>&1 || _fail "xfs_repair should not fail"
  
- echo "+ make some files"
- mkdir -p "${TESTDIR}"
-diff --git a/tests/xfs/120 b/tests/xfs/120
-index e66bc763..f5eb14cc 100755
---- a/tests/xfs/120
-+++ b/tests/xfs/120
-@@ -47,6 +47,7 @@ echo "+ mount fs image"
- _scratch_mount
- blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- nr="$((blksz * 2 / 16))"
-+_xfs_force_bdev data $SCRATCH_MNT
+ echo "+ corrupt image"
+-seq "${inode}" "$((inode + 63))" | while read ino; do
++for ino in "${inos[@]}"; do
+ 	_scratch_xfs_db -x -c "inode ${ino}" -c "stack" -c "blocktrash -x 32 -y $((blksz * 8)) -z ${FUZZ_ARGS}" >> $seqres.full 2>&1
+ done
  
- echo "+ make some files"
- $XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" -c 'fsync' "${SCRATCH_MNT}/bigfile" >> $seqres.full
-diff --git a/tests/xfs/130 b/tests/xfs/130
-index 3071eace..6f6e8512 100755
---- a/tests/xfs/130
-+++ b/tests/xfs/130
-@@ -43,6 +43,7 @@ echo "+ mount fs image"
- _scratch_mount
- blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- agcount="$(_xfs_mount_agcount $SCRATCH_MNT)"
-+_xfs_force_bdev data $SCRATCH_MNT
- 
- echo "+ make some files"
- _pwrite_byte 0x62 0 $((blksz * 64)) "${SCRATCH_MNT}/file0" >> "$seqres.full"
-diff --git a/tests/xfs/139 b/tests/xfs/139
-index 1444444d..58b71711 100755
---- a/tests/xfs/139
-+++ b/tests/xfs/139
-@@ -38,12 +38,14 @@ rm -f $seqres.full
- 
- _scratch_mkfs >/dev/null 2>&1
- _scratch_mount
-+_xfs_force_bdev data $SCRATCH_MNT
- blksz=$(_get_file_block_size $SCRATCH_MNT)
- _scratch_unmount
- 
- echo "Format and mount"
- _scratch_mkfs -d agsize=$((16384 * $blksz)) > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
-+_xfs_force_bdev data $SCRATCH_MNT
- 
- testdir=$SCRATCH_MNT/test-$seq
- mkdir $testdir
-diff --git a/tests/xfs/207 b/tests/xfs/207
-index f703c0dc..f0f30754 100755
---- a/tests/xfs/207
-+++ b/tests/xfs/207
-@@ -50,6 +50,7 @@ rm -f $seqres.full
- echo "Format and mount"
- _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
-+_xfs_force_bdev data $SCRATCH_MNT
- 
- testdir=$SCRATCH_MNT/test-$seq
- mkdir $testdir
-diff --git a/tests/xfs/229 b/tests/xfs/229
-index e723b10b..64851557 100755
---- a/tests/xfs/229
-+++ b/tests/xfs/229
-@@ -38,6 +38,7 @@ _require_fs_space $TEST_DIR 3200000
- TDIR="${TEST_DIR}/t_holes"
- NFILES="10"
- EXTSIZE="256k"
-+_xfs_force_bdev data $TEST_DIR
- 
- # Create the test directory
- mkdir ${TDIR}
-diff --git a/tests/xfs/235 b/tests/xfs/235
-index a2ab9e55..55f5c5a6 100755
---- a/tests/xfs/235
-+++ b/tests/xfs/235
-@@ -41,6 +41,7 @@ echo "+ mount fs image"
- _scratch_mount
- blksz=$(stat -f -c '%s' ${SCRATCH_MNT})
- agcount=$(_xfs_mount_agcount $SCRATCH_MNT)
-+_xfs_force_bdev data $SCRATCH_MNT
- 
- echo "+ make some files"
- _pwrite_byte 0x62 0 $((blksz * 64)) ${SCRATCH_MNT}/file0 >> $seqres.full
+ echo "+ mount image && modify files"
+ broken=1
+ if _try_scratch_mount >> $seqres.full 2>&1; then
+-
+-	for x in `seq 1 64`; do
+-		stat "${TESTFILE}.${x}" >> $seqres.full 2>&1
++	for ((i = 0; i < 64; i++)); do
++		fname="$victimdir/test.$i"
++		stat "$fname" &>> $seqres.full
+ 		test $? -eq 0 && broken=0
+-		touch "${TESTFILE}.${x}" >> $seqres.full 2>&1
++		touch "$fname" &>> $seqres.full
+ 		test $? -eq 0 && broken=0
+ 	done
+ 	umount "${SCRATCH_MNT}"
 
