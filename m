@@ -2,97 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99FE1C433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 22:56:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5825C43460
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 23:20:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74FDA6135C
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 22:56:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6AA4613AC
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 23:20:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbhESW5e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 May 2021 18:57:34 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:46900 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229465AbhESW5d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 May 2021 18:57:33 -0400
-Received: from dread.disaster.area (pa49-195-118-180.pa.nsw.optusnet.com.au [49.195.118.180])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 2F49368559;
-        Thu, 20 May 2021 08:56:11 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ljV6o-002wml-Kl; Thu, 20 May 2021 08:56:10 +1000
-Date:   Thu, 20 May 2021 08:56:10 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/11] xfs: remove the size and nbytes variables in
- xfs_buf_alloc_pages
-Message-ID: <20210519225610.GF664593@dread.disaster.area>
-References: <20210519190900.320044-1-hch@lst.de>
- <20210519190900.320044-7-hch@lst.de>
+        id S229525AbhESXV2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 May 2021 19:21:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43164 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229465AbhESXV1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 May 2021 19:21:27 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4D469611AD;
+        Wed, 19 May 2021 23:20:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1621466407;
+        bh=X3Fr7P6lFBu+mm3Lt1fKimT0vXjEhJOo/eInly4kfh4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=dKcXul1lNyL4Vclk7gNBpBo6kuuZXvUUiAvbmacrn6PqyChHy/slphz9TkQ0PXde2
+         DNzim8BoSo8jVKeviUugbkHqVjZZVKwslif+Cjv211p/OAwUVIjiG6EMBz6C4aTFcP
+         4/AaRckSdcE+DlunCBnGBmsQE8SSKuEVroDQAZnqRPjK1oEc1Yg5bOo65z3UWJs54a
+         a6m1BUmpvgCt4Flpu2NxoPdRpodQFQbWLygl8NUTQFid47p4K20G4rADRgcZncthrP
+         XF2eP8NMjtX/mBBjHXytauiJ7LvIX+hs5WfiAEGGlCEC9b1HGE5jOieId/OoQoKNST
+         1AVfxHl9xsfPg==
+Date:   Wed, 19 May 2021 16:20:06 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eryu Guan <guan@eryu.me>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 8/8] xfs/178: fix mkfs success test
+Message-ID: <20210519232006.GD9648@magnolia>
+References: <162078489963.3302755.9219127595550889655.stgit@magnolia>
+ <162078494495.3302755.13327851823592717788.stgit@magnolia>
+ <YKFANr4Yki6+cBmk@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210519190900.320044-7-hch@lst.de>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=xcwBwyABtj18PbVNKPPJDQ==:117 a=xcwBwyABtj18PbVNKPPJDQ==:17
-        a=kj9zAlcOel0A:10 a=5FLXtPjwQuUA:10 a=7-415B0cAAAA:8
-        a=_880W3eISPMI8fE42WEA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <YKFANr4Yki6+cBmk@desktop>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 19, 2021 at 09:08:55PM +0200, Christoph Hellwig wrote:
-> These variables are not used for anything but recursively updating each
-> other.
+On Sun, May 16, 2021 at 11:54:30PM +0800, Eryu Guan wrote:
+> On Tue, May 11, 2021 at 07:02:24PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Fix the obviously incorrect code here that wants to fail the test if
+> > mkfs doesn't succeed.  The return value ("$?") is always the status of
+> > the /last/ command in the pipe.  Change the checker to _notrun so that
+> > we don't leave the scratch check files around.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  tests/xfs/178 |    4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/tests/xfs/178 b/tests/xfs/178
+> > index a24ef50c..bf72e640 100755
+> > --- a/tests/xfs/178
+> > +++ b/tests/xfs/178
+> > @@ -57,8 +57,8 @@ _supported_fs xfs
+> >  #             fix filesystem, new mkfs.xfs will be fine.
+> >  
+> >  _require_scratch
+> > -_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs \
+> > -        || _fail "mkfs failed!"
+> > +_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
+> > +test "${PIPESTATUS[0]}" -eq 0 || _notrun "mkfs failed!"
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_buf.c | 5 -----
->  1 file changed, 5 deletions(-)
+> I still don't understand why changing this to _notrun, shouldn't creating a
+> default filesystem should always pass?
+
+It will, unless you've injected a malicious mkfs.xfs to make sure
+constructions like these actually work.
+
+> and fail the test if mkfs failed?
+
+Yeah, you're right, it /should/ fail.  I'll leave it alone then.
+
+--D
+
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 76240d84d58b61..08c8667e6027fc 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -383,8 +383,6 @@ xfs_buf_alloc_pages(
->  	struct xfs_buf		*bp,
->  	uint			flags)
->  {
-> -	size_t			size;
-> -	size_t			nbytes;
->  	gfp_t			gfp_mask = xb_to_gfp(flags);
->  	unsigned short		page_count, i;
->  	xfs_off_t		start, end;
-> @@ -396,7 +394,6 @@ xfs_buf_alloc_pages(
->  	if (!(flags & XBF_READ))
->  		gfp_mask |= __GFP_ZERO;
->  
-> -	size = BBTOB(bp->b_length);
->  	start = BBTOB(bp->b_maps[0].bm_bn) >> PAGE_SHIFT;
->  	end = (BBTOB(bp->b_maps[0].bm_bn + bp->b_length) + PAGE_SIZE - 1)
->  								>> PAGE_SHIFT;
-> @@ -436,8 +433,6 @@ xfs_buf_alloc_pages(
->  			goto retry;
->  		}
->  
-> -		nbytes = min_t(size_t, size, PAGE_SIZE);
-> -		size -= nbytes;
->  		bp->b_pages[i] = page;
->  	}
->  	return 0;
-
-These have already gone away with the bulk allocation patch. I think
-you should rebase this series on top of that...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Thanks,
+> Eryu
+> 
+> >  
+> >  # By executing the followint tmp file, will get on the mkfs options stored in
+> >  # variables
+> > 
