@@ -2,89 +2,160 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C4F2C433ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 09:45:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12805C433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 10:57:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 012EA60FE8
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 09:45:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8E69613AD
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 10:57:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346047AbhESJqU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 May 2021 05:46:20 -0400
-Received: from relay.herbolt.com ([37.46.208.54]:50490 "EHLO relay.herbolt.com"
+        id S240891AbhESK6h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 May 2021 06:58:37 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60810 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239539AbhESJqU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 May 2021 05:46:20 -0400
-X-Greylist: delayed 393 seconds by postgrey-1.27 at vger.kernel.org; Wed, 19 May 2021 05:46:19 EDT
-Received: from ip-78-102-244-147.net.upcbroadband.cz (ip-78-102-244-147.net.upcbroadband.cz [78.102.244.147])
-        by relay.herbolt.com (Postfix) with ESMTPSA id 75B9B1034149;
-        Wed, 19 May 2021 11:38:25 +0200 (CEST)
-Received: from catweazle.local.lc (unknown [172.168.25.10])
-        by mail.herbolt.com (Postfix) with ESMTPSA id 5A5A5D34A0A;
-        Wed, 19 May 2021 11:38:24 +0200 (CEST)
-From:   Lukas Herbolt <lukas@herbolt.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, Lukas Herbolt <lukas@herbolt.com>
-Subject: [PATCH RFC] xfs: Print XFS UUID on mount and umount events.
-Date:   Wed, 19 May 2021 11:37:52 +0200
-Message-Id: <20210519093752.1670018-1-lukas@herbolt.com>
-X-Mailer: git-send-email 2.31.1
+        id S229720AbhESK6g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 May 2021 06:58:36 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id B6396AC4B;
+        Wed, 19 May 2021 10:57:15 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 086AA1F2C9C; Wed, 19 May 2021 12:57:14 +0200 (CEST)
+Date:   Wed, 19 May 2021 12:57:14 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+        linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        ceph-devel@vger.kernel.org, Chao Yu <yuchao0@huawei.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 03/11] mm: Protect operations adding pages to page cache
+ with invalidate_lock
+Message-ID: <20210519105713.GA26250@quack2.suse.cz>
+References: <20210512101639.22278-1-jack@suse.cz>
+ <20210512134631.4053-3-jack@suse.cz>
+ <20210512152345.GE8606@magnolia>
+ <20210513174459.GH2734@quack2.suse.cz>
+ <20210513185252.GB9675@magnolia>
+ <20210513231945.GD2893@dread.disaster.area>
+ <20210514161730.GL9675@magnolia>
+ <20210518223637.GJ2893@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210518223637.GJ2893@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-As of now only device names are pritend out over __xfs_printk().
-The device names are not persistent across reboots which in case
-of searching for origin of corruption brings another task to properly
-indetify the devices. This patch add XFS UUID upon every mount/umount
-event which will make the identification much easier.
+On Wed 19-05-21 08:36:37, Dave Chinner wrote:
+> On Fri, May 14, 2021 at 09:17:30AM -0700, Darrick J. Wong wrote:
+> > On Fri, May 14, 2021 at 09:19:45AM +1000, Dave Chinner wrote:
+> > > On Thu, May 13, 2021 at 11:52:52AM -0700, Darrick J. Wong wrote:
+> > > > On Thu, May 13, 2021 at 07:44:59PM +0200, Jan Kara wrote:
+> > > > > On Wed 12-05-21 08:23:45, Darrick J. Wong wrote:
+> > > > > > On Wed, May 12, 2021 at 03:46:11PM +0200, Jan Kara wrote:
+> > > > > > > +->fallocate implementation must be really careful to maintain page cache
+> > > > > > > +consistency when punching holes or performing other operations that invalidate
+> > > > > > > +page cache contents. Usually the filesystem needs to call
+> > > > > > > +truncate_inode_pages_range() to invalidate relevant range of the page cache.
+> > > > > > > +However the filesystem usually also needs to update its internal (and on disk)
+> > > > > > > +view of file offset -> disk block mapping. Until this update is finished, the
+> > > > > > > +filesystem needs to block page faults and reads from reloading now-stale page
+> > > > > > > +cache contents from the disk. VFS provides mapping->invalidate_lock for this
+> > > > > > > +and acquires it in shared mode in paths loading pages from disk
+> > > > > > > +(filemap_fault(), filemap_read(), readahead paths). The filesystem is
+> > > > > > > +responsible for taking this lock in its fallocate implementation and generally
+> > > > > > > +whenever the page cache contents needs to be invalidated because a block is
+> > > > > > > +moving from under a page.
+> > > > > > > +
+> > > > > > > +->copy_file_range and ->remap_file_range implementations need to serialize
+> > > > > > > +against modifications of file data while the operation is running. For blocking
+> > > > > > > +changes through write(2) and similar operations inode->i_rwsem can be used. For
+> > > > > > > +blocking changes through memory mapping, the filesystem can use
+> > > > > > > +mapping->invalidate_lock provided it also acquires it in its ->page_mkwrite
+> > > > > > > +implementation.
+> > > > > > 
+> > > > > > Question: What is the locking order when acquiring the invalidate_lock
+> > > > > > of two different files?  Is it the same as i_rwsem (increasing order of
+> > > > > > the struct inode pointer) or is it the same as the XFS MMAPLOCK that is
+> > > > > > being hoisted here (increasing order of i_ino)?
+> > > > > > 
+> > > > > > The reason I ask is that remap_file_range has to do that, but I don't
+> > > > > > see any conversions for the xfs_lock_two_inodes(..., MMAPLOCK_EXCL)
+> > > > > > calls in xfs_ilock2_io_mmap in this series.
+> > > > > 
+> > > > > Good question. Technically, I don't think there's real need to establish a
+> > > > > single ordering because locks among different filesystems are never going
+> > > > > to be acquired together (effectively each lock type is local per sb and we
+> > > > > are free to define an ordering for each lock type differently). But to
+> > > > > maintain some sanity I guess having the same locking order for doublelock
+> > > > > of i_rwsem and invalidate_lock makes sense. Is there a reason why XFS uses
+> > > > > by-ino ordering? So that we don't have to consider two different orders in
+> > > > > xfs_lock_two_inodes()...
+> > > > 
+> > > > I imagine Dave will chime in on this, but I suspect the reason is
+> > > > hysterical raisins^Wreasons.
+> > > 
+> > > It's the locking rules that XFS has used pretty much forever.
+> > > Locking by inode number always guarantees the same locking order of
+> > > two inodes in the same filesystem, regardless of the specific
+> > > in-memory instances of the two inodes.
+> > > 
+> > > e.g. if we lock based on the inode structure address, in one
+> > > instancex, we could get A -> B, then B gets recycled and
+> > > reallocated, then we get B -> A as the locking order for the same
+> > > two inodes.
+> > > 
+> > > That, IMNSHO, is utterly crazy because with non-deterministic inode
+> > > lock ordered like this you can't make consistent locking rules for
+> > > locking the physical inode cluster buffers underlying the inodes in
+> > > the situation where they also need to be locked.
+> > 
+> > <nod> That's protected by the ILOCK, correct?
+> > 
+> > > We've been down this path before more than a decade ago when the
+> > > powers that be decreed that inode locking order is to be "by
+> > > structure address" rather than inode number, because "inode number
+> > > is not unique across multiple superblocks".
+> > > 
+> > > I'm not sure that there is anywhere that locks multiple inodes
+> > > across different superblocks, but here we are again....
+> > 
+> > Hm.  Are there situations where one would want to lock multiple
+> > /mappings/ across different superblocks?  The remapping code doesn't
+> > allow cross-super operations, so ... pipes and splice, maybe?  I don't
+> > remember that code well enough to say for sure.
+> 
+> Hmmmm. Doing read IO into a buffer that is mmap()d from another
+> file, and we take a page fault on it inside the read IO path? We're
+> copying from a page in one mapping and taking a fault in another
+> mapping and hence taking the invalidate_lock to populate the page
+> cache for the second mapping...
+> 
+> I haven't looked closely enough at where the invalidate_lock is held
+> in the read path to determine if this is an issue, but if it is then
+> it is also a potential deadlock scenario...
 
-Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
----
- fs/xfs/xfs_log.c   | 8 ++++----
- fs/xfs/xfs_super.c | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+I was careful enough to avoid this problem - we first bring pages into
+pages cache (under invalidate_lock), then drop invalidate lock, just
+keep page refs, and copy page cache content into the buffer (which may grab
+invalidate_lock from another mapping as you say).
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 16114a203bcb6..79d1d2838dec3 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -646,12 +646,12 @@ xfs_log_mount(
- 	int		min_logfsbs;
- 
- 	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY)) {
--		xfs_notice(mp, "Mounting V%d Filesystem",
--			   XFS_SB_VERSION_NUM(&mp->m_sb));
-+		xfs_notice(mp, "Mounting V%d Filesystem %pU",
-+			   XFS_SB_VERSION_NUM(&mp->m_sb), (void *)&mp->m_sb.sb_uuid);
- 	} else {
- 		xfs_notice(mp,
--"Mounting V%d filesystem in no-recovery mode. Filesystem will be inconsistent.",
--			   XFS_SB_VERSION_NUM(&mp->m_sb));
-+"Mounting V%d filesystem %pU in no-recovery mode. Filesystem will be inconsistent.",
-+			   XFS_SB_VERSION_NUM(&mp->m_sb), (void *)&mp->m_sb.sb_uuid);
- 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
- 	}
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 6d8a0f805dae0..9f1b33a002fd5 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1063,7 +1063,7 @@ xfs_fs_put_super(
- 	if (!sb->s_fs_info)
- 		return;
- 
--	xfs_notice(mp, "Unmounting Filesystem");
-+	xfs_notice(mp, "Unmounting Filesystem %pU", (void *)&mp->m_sb.sb_uuid);
- 	xfs_filestream_unmount(mp);
- 	xfs_unmountfs(mp);
- 
+								Honza
 -- 
-2.31.1
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
