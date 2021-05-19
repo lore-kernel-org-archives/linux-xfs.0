@@ -7,180 +7,311 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05730C433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 03:44:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F113AC43460
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 04:49:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C87D16135C
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 03:44:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFCA76135B
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 04:49:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239253AbhESDqO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 May 2021 23:46:14 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:47270 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235999AbhESDqN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 May 2021 23:46:13 -0400
+        id S236781AbhESEu3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 May 2021 00:50:29 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55582 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233822AbhESEu2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 May 2021 00:50:28 -0400
 Received: from dread.disaster.area (pa49-195-118-180.pa.nsw.optusnet.com.au [49.195.118.180])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 6228967391;
-        Wed, 19 May 2021 13:44:51 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 050861043488;
+        Wed, 19 May 2021 14:49:05 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ljD8d-002doA-8N; Wed, 19 May 2021 13:44:51 +1000
-Date:   Wed, 19 May 2021 13:44:51 +1000
+        id 1ljE8l-002epn-Bx; Wed, 19 May 2021 14:49:03 +1000
+Date:   Wed, 19 May 2021 14:49:03 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 28/45] xfs: introduce xlog_write_single()
-Message-ID: <20210519034451.GM2893@dread.disaster.area>
+Subject: Re: [PATCH 29/45] xfs:_introduce xlog_write_partial()
+Message-ID: <20210519044903.GN2893@dread.disaster.area>
 References: <20210305051143.182133-1-david@fromorbit.com>
- <20210305051143.182133-29-david@fromorbit.com>
- <YFD7f+7h54WOIfKx@bfoster>
+ <20210305051143.182133-30-david@fromorbit.com>
+ <YFNUALXWnRFFF8J7@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YFD7f+7h54WOIfKx@bfoster>
+In-Reply-To: <YFNUALXWnRFFF8J7@bfoster>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=xcwBwyABtj18PbVNKPPJDQ==:117 a=xcwBwyABtj18PbVNKPPJDQ==:17
         a=kj9zAlcOel0A:10 a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=hlNQOcFrrv1gpfAAOH8A:9 a=0bXxn9q0MV6snEgNplNhOjQmxlI=:19
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=Bsuq2wMHWz3LXhTQCEYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 16, 2021 at 02:39:59PM -0400, Brian Foster wrote:
-> On Fri, Mar 05, 2021 at 04:11:26PM +1100, Dave Chinner wrote:
+On Thu, Mar 18, 2021 at 09:22:08AM -0400, Brian Foster wrote:
+> On Fri, Mar 05, 2021 at 04:11:27PM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Introduce an optimised version of xlog_write() that is used when the
-> > entire write will fit in a single iclog. This greatly simplifies the
-> > implementation of writing a log vector chain into an iclog, and sets
-> > the ground work for a much more understandable xlog_write()
-> > implementation.
+> > Handle writing of a logvec chain into an iclog that doesn't have
+> > enough space to fit it all. The iclog has already been changed to
+> > WANT_SYNC by xlog_get_iclog_space(), so the entire remaining space
+> > in the iclog is exclusively owned by this logvec chain.
+> > 
+> > The difference between the single and partial cases is that
+> > we end up with partial iovec writes in the iclog and have to split
+> > a log vec regions across two iclogs. The state handling for this is
+> > currently awful and so we're building up the pieces needed to
+> > handle this more cleanly one at a time.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > > ---
-> >  fs/xfs/xfs_log.c | 57 +++++++++++++++++++++++++++++++++++++++++++++++-
-> >  1 file changed, 56 insertions(+), 1 deletion(-)
+> 
+> FWIW, git --patience mode generates a more readable diff for this patch
+> than what it generates by default. I'm referring to that locally and
+> will try to leave feedback in the appropriate points here.
+> 
+> >  fs/xfs/xfs_log.c | 525 ++++++++++++++++++++++-------------------------
+> >  1 file changed, 251 insertions(+), 274 deletions(-)
 > > 
 > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > index 22f97914ab99..590c1e6db475 100644
+> > index 590c1e6db475..10916b99bf0f 100644
 > > --- a/fs/xfs/xfs_log.c
 > > +++ b/fs/xfs/xfs_log.c
-> > @@ -2214,6 +2214,52 @@ xlog_write_copy_finish(
-> >  	return error;
+> > @@ -2099,166 +2099,250 @@ xlog_print_trans(
+> >  	}
 > >  }
 > >  
-> > +/*
-> > + * Write log vectors into a single iclog which is guaranteed by the caller
-> > + * to have enough space to write the entire log vector into. Return the number
-> > + * of log vectors written into the iclog.
-> > + */
-> > +static int
+> > -static xlog_op_header_t *
+> > -xlog_write_setup_ophdr(
+> > -	struct xlog_op_header	*ophdr,
+> > -	struct xlog_ticket	*ticket)
+> > -{
+> > -	ophdr->oh_clientid = XFS_TRANSACTION;
+> > -	ophdr->oh_res2 = 0;
+> > -	ophdr->oh_flags = 0;
+> > -	return ophdr;
+> > -}
+> > -
+> >  /*
+> > - * Set up the parameters of the region copy into the log. This has
+> > - * to handle region write split across multiple log buffers - this
+> > - * state is kept external to this function so that this code can
+> > - * be written in an obvious, self documenting manner.
+> > + * Write whole log vectors into a single iclog which is guaranteed to have
+> > + * either sufficient space for the entire log vector chain to be written or
+> > + * exclusive access to the remaining space in the iclog.
+> > + *
+> > + * Return the number of iovecs and data written into the iclog, as well as
+> > + * a pointer to the logvec that doesn't fit in the log (or NULL if we hit the
+> > + * end of the chain.
+> >   */
+> > -static int
+> > -xlog_write_setup_copy(
+> > +static struct xfs_log_vec *
 > > +xlog_write_single(
 > > +	struct xfs_log_vec	*log_vector,
-> > +	struct xlog_ticket	*ticket,
-> > +	struct xlog_in_core	*iclog,
-> > +	uint32_t		log_offset,
-> > +	uint32_t		len)
-> > +{
-> > +	struct xfs_log_vec	*lv = log_vector;
 > 
-> This is initialized here and in the loop below.
+> So xlog_write_single() was initially for single CIL xlog_write() calls
+> and now it appears to be slightly different in that it writes as many
+> full log vectors that fit in the current iclog and cycles through
+> xlog_write_partial() (and back) to process log vectors that span iclogs
+> differently from those that don't.
 
-Fixed.
+Yes, that is what it does, but no, you've got the process and
+meaning backwards. I wrote xlog_write_single() it as it appears in
+this patch first, then split it out backwards to ease review. IOWs,
+"single" means "write everything that fits within this single
+iclog", not "only call this function if the entire lv chain fits
+inside a single iclog".
+
+The latter is what I split out to make it simpler to review, but it
+was not the reason it was called xlog_write_single()....
+
+> > +		do {
+> > +			/*
+> > +			 * Account for the continuation opheader before we get
+> > +			 * a new iclog. This is necessary so that we reserve
+> > +			 * space in the iclog for it.
+> > +			 */
+> > +			if (ophdr->oh_flags & XLOG_CONTINUE_TRANS) {
+> 
+> (Is this ever not true here?)
+
+It is now, wasn't always. Fixed.
 
 > 
-> > +	void			*ptr;
-> > +	int			index = 0;
-> > +	int			record_cnt = 0;
+> > +				*len += sizeof(struct xlog_op_header);
+> > +				ticket->t_curr_res -= sizeof(struct xlog_op_header);
+> > +			}
+> > +			error = xlog_write_get_more_iclog_space(log, ticket,
+> > +					&iclog, log_offset, *len, record_cnt,
+> > +					data_cnt, contwr);
+> > +			if (error)
+> > +				return ERR_PTR(error);
+> > +			ptr = iclog->ic_datap + *log_offset;
 > > +
-> > +	ASSERT(log_offset + len <= iclog->ic_size);
+> > +			ophdr = ptr;
+> >  			ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
+> > -			ophdr->oh_len = cpu_to_be32(reg->i_len -
+> > +			ophdr->oh_clientid = XFS_TRANSACTION;
+> > +			ophdr->oh_res2 = 0;
+> > +			ophdr->oh_flags = XLOG_WAS_CONT_TRANS;
 > > +
-> > +	ptr = iclog->ic_datap + log_offset;
-> > +	for (lv = log_vector; lv; lv = lv->lv_next) {
-> > +		/*
-> > +		 * Ordered log vectors have no regions to write so this
-> > +		 * loop will naturally skip them.
-> > +		 */
-> > +		for (index = 0; index < lv->lv_niovecs; index++) {
-> > +			struct xfs_log_iovec	*reg = &lv->lv_iovecp[index];
-> > +			struct xlog_op_header	*ophdr = reg->i_addr;
+> > +			xlog_write_adv_cnt(&ptr, len, log_offset,
+> >  						sizeof(struct xlog_op_header));
+> > -			memcpy(ptr, reg->i_addr, reg->i_len);
+> > -			xlog_write_adv_cnt(&ptr, &len, &log_offset, reg->i_len);
+> > -			record_cnt++;
+> > -		}
+> > +			*data_cnt += sizeof(struct xlog_op_header);
 > > +
-> > +			ASSERT(reg->i_len % sizeof(int32_t) == 0);
-> > +			ASSERT((unsigned long)ptr % sizeof(int32_t) == 0);
-> > +
-> > +			ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
-> > +			ophdr->oh_len = cpu_to_be32(reg->i_len -
-> > +						sizeof(struct xlog_op_header));
 > 
-> Perhaps we should retain the xlog_verify_dest_ptr() call here? It's
-> DEBUG code and otherwise compiled out, so shouldn't impact production
-
-The pointer check does nothing to actually prevent memory
-corruption. It only catches problems after we've already memcpy()d
-off the end of the iclog in the previous loop. So if the last region
-overruns the log, then it won't be triggered.
-
-And, well, we've already checked and asserted that the copy is going
-to fit entirely within the current iclog, so checking whether the
-pointer has overrun outside the iclog buffer is both redundant and
-too late.  Hence I removed it...
-
-> > +			memcpy(ptr, reg->i_addr, reg->i_len);
-> > +			xlog_write_adv_cnt(&ptr, &len, &log_offset, reg->i_len);
-> > +			record_cnt++;
-> > +		}
-> > +	}
-> > +	ASSERT(len == 0);
-> > +	return record_cnt;
-> > +}
+> ... which switches to the next iclog, writes the continuation header...
+> 
+> > +			/*
+> > +			 * If rlen fits in the iclog, then end the region
+> > +			 * continuation. Otherwise we're going around again.
+> > +			 */
+> > +			reg_offset += rlen;
+> > +			rlen = reg->i_len - reg_offset;
+> > +			if (rlen <= iclog->ic_size - *log_offset)
+> > +				ophdr->oh_flags |= XLOG_END_TRANS;
+> > +			else
+> > +				ophdr->oh_flags |= XLOG_CONTINUE_TRANS;
 > > +
+> > +			rlen = min_t(uint32_t, rlen, iclog->ic_size - *log_offset);
+> > +			ophdr->oh_len = cpu_to_be32(rlen);
 > > +
-> >  /*
-> >   * Write some region out to in-core log
-> >   *
-> > @@ -2294,7 +2340,6 @@ xlog_write(
-> >  			return error;
-> >  
-> >  		ASSERT(log_offset <= iclog->ic_size - 1);
-> > -		ptr = iclog->ic_datap + log_offset;
-> >  
-> >  		/* Start_lsn is the first lsn written to. */
-> >  		if (start_lsn && !*start_lsn)
-> > @@ -2311,10 +2356,20 @@ xlog_write(
-> >  						XLOG_ICL_NEED_FUA);
-> >  		}
-> >  
-> > +		/* If this is a single iclog write, go fast... */
-> > +		if (!contwr && lv == log_vector) {
-> > +			record_cnt = xlog_write_single(lv, ticket, iclog,
-> > +						log_offset, len);
-> > +			len = 0;
+> > +			xlog_verify_dest_ptr(log, ptr);
+> > +			memcpy(ptr, reg->i_addr + reg_offset, rlen);
+> > +			xlog_write_adv_cnt(&ptr, len, log_offset, rlen);
+> > +			(*record_cnt)++;
+> > +			*data_cnt += rlen;
+> > +
+> > +		} while (ophdr->oh_flags & XLOG_CONTINUE_TRANS);
 > 
-> I assume this is here to satisfy the assert further down in the
-> function.. This seems a bit contrived when you consider we pass len to
-> the helper, the helper reduces it and asserts that it goes to zero, then
-> we do so again here just for another assert. Unless this is all just
-> removed later, it might be more straightforward to pass a reference.
+> ... writes more of the region (iclog space permitting), and then
+> determines whether we need further continuations (and partial writes of
+> the same region) or can move onto the next region, until we're done with
+> the lv.
+
+Yup.
+
+> I think I follow the high level flow and it seems reasonable from a
+> functional standpoint, but this also seems like quite a bit of churn for
+> not much reduction in overall complexity. The higher level loop is much
+> more simple and I think the per lv/vector iteration is an improvement,
+> but we also seem to have duplicate functionality throughout the updated
+> code and have introduced new forms of complexity around the state
+> expectations for the transitions between the different write modes and
+> between each write mode and the higher level loop.
+
+Just getting untangling the code to get it to this point
+has been hard enough. I've held off doing more factoring and
+changing this code so I can actaully test it and find the bugs I
+might have left in it.
+
+Yes, it can be further improved by factoring the region copying
+stuff, but that's secondary to the major work of refactoring this
+code in the first place. The fact that you actually understood this
+fairly easily indicates just how much better this code already is
+compared to what is currently upstream....
+
+> I.e., xlog_write_single() implements a straighforward loop to write out
+> full log vectors. That seems fine, but the outer loop of
+> xlog_write_partial() reimplements nearly the same per-region
+> functionality with some added flexibility to handle op header flags and
+> the special iclog processing associated with the continuation case. The
+> inner loop factors out the continuation iclog management bits and op
+> header injection, which I think is an improvement, but then duplicates
+> region copying (yet again) pretty much only to implement partial copies,
+> which really just involves offset management (i.e., fairly trivial
+> relative to the broader complexity of the function).
 > 
-> > +			data_cnt = len;
+> I dunno. I'd certainly need to stare more at this to cover all of the
+> details, but given the amount of swizzling going on in a single patch
+> I'm kind of wondering if/why we couldn't land on a single iterator in
+> the spirit of xlog_write_partial() in that it primarily iterates on
+> regions and factors out the grotty reservation and continuation
+> management bits, but doesn't unroll as much and leave so much duplicate
+> functionality around.
 > 
-> Similarly, this looks a bit odd because it seems data_cnt should be zero
-> in the case where contwr == 0. xlog_state_get_iclog_space() has already
-> bumped ->ic_offset by len (so xlog_state_finish_copy() doesn't need to
-> via data_cnt).
+> For example, it looks to me that xlog_write_partial() almost nearly
+> already supports a high level algorithm along the lines of the following
+> (pseudocode):
+> 
+> xlog_write(len)
+> {
+> 	get_iclog_space(len)
+> 
+> 	for_each_lv() {
+> 		for_each_reg() {
+> 			reg_offset = 0;
+> cont_write:
+> 			/* write as much as will fit in the iclog, return count,
+> 			 * and set ophdr cont flag based on write result */
+> 			reg_offset += write_region(reg, &len, &reg_offset, ophdr, ...);
+> 
+> 			/* handle continuation writes */
+> 			if (reg_offset != reg->i_len) {
+> 				get_more_iclog_space(len);
+> 				/* stamp a WAS_CONT op hdr, set END if rlen fits
+> 				 * into new space, then continue with the same region */
+> 				stamp_cont_op_hdr();
+> 				goto cont_write;
+> 			}
+> 
+> 			if (need_more_iclog_space(len))
+> 				get_more_iclog_space(len);
+> 		}
+> 	}
+> }
 
-Yes, it's entirely contrived to make it possible to split this code
-out in a simple fashion to ease review of the simple, fast path case
-this code will end up with. The next patch changes all this context
-and the parameters passed to the function, but this was the only way
-I could easily split the complex xlog_write() rewrite change into
-something a little bit simpler....
+Yeah, na. That is exactly the mess that I've just untangled.
 
-Cheers,
+I don't want to rewrite this code again, and I don't want it more
+tightly tied to iclogs than it already is - I'm trying to move the
+code towards a common, simple fast path that knows nothing about
+iclogs and a slow path that handles the partial regions and
+obtaining a new buffer to write into. I want the two cases
+completely separate logic, because that makes both cases simpler to
+modify and reason about.
 
-Dave.
+Indeed, I want xlog_write to move away from iclogs because I want to
+use this code with direct mapped pmem regions, not just fixed memory
+buffers held in iclogs.
+
+IOWs, the code as it stands is a beginning, not an end. And even as
+a beginning, it works, is much better and faster than the current
+code, has been tested for some time now, can be further factored to
+make it simpler, easier to understand and provide infrastructure for
+new features.
+
+
+> That puts the whole thing back into a single high level walk and thus
+> reintroduces the need for some of the continuation vs. non-continuation
+> tracking wrt to the op header and iclog, but ISTM that complexity can be
+> managed by the continuation abstraction you've already started to
+> introduce (as opposed to the current scheme of conditionally
+> accumulating data_cnt). It might even be fine to dump some of the
+> requisite state into a context struct to carry between iclog reservation
+> and copy finish processing rather than pass around so many independent
+> and poorly named variables like the current upstream implementation
+> does, but that's probably getting too deep into the weeds.
+> 
+> FWIW, I can also see an approach of moving from the implementation in
+> this patch toward something like the above, but I'm not sure I'd want to
+> subject to the upstream code to that process...
+
+This is exactly what upstream is for - iterative improvement via
+small steps. This is the first step of many, and what you propose
+takes the code in the wrong direction for the steps I've already
+taken and are planning to take.
+
+Perfect is the enemy of good, and if upstream is not the place to
+make iterative improvements like this that build towards a bigger
+picture goal, then where the hell are we supposed to do them?
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
