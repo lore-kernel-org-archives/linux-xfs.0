@@ -2,118 +2,62 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0621EC433ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 12:57:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E0BEC433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 13:21:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE29160FD9
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 12:57:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7456600D4
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 13:21:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353510AbhESM7M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 May 2021 08:59:12 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:57824 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1353494AbhESM7I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 May 2021 08:59:08 -0400
-Received: from dread.disaster.area (pa49-195-118-180.pa.nsw.optusnet.com.au [49.195.118.180])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 7F83080BA7C;
-        Wed, 19 May 2021 22:57:44 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ljLlf-002mpn-8h; Wed, 19 May 2021 22:57:43 +1000
-Date:   Wed, 19 May 2021 22:57:43 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Avi Kivity <avi@scylladb.com>
-Cc:     David Howells <dhowells@redhat.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <djwong@kernel.org>, Chris Mason <clm@fb.com>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-cachefs@redhat.com,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: How capacious and well-indexed are ext4, xfs and btrfs
- directories?
-Message-ID: <20210519125743.GP2893@dread.disaster.area>
-References: <206078.1621264018@warthog.procyon.org.uk>
- <20210517232237.GE2893@dread.disaster.area>
- <ad2e8757-41ce-41e3-a22e-0cf9e356e656@scylladb.com>
+        id S1344612AbhESNWe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 May 2021 09:22:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53646 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240404AbhESNWe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 May 2021 09:22:34 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B26FDC06175F
+        for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 06:21:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=etaPCXPkM0Jaqo4Mue/7E5pF9MGOMsJ29Vs6yCUU0J8=; b=kCk9P+wUxx+WH0c2jGHl/U3JCJ
+        dDqOQ9J99+6Vmkqyktx+Guw7M9qzAPuB8dVg9Wa2TCHj9v36zgW6E6yVrCqAOUCEef8kIB+Fo7vWY
+        RX3xIqHz0tCCxjmaIvZC7jeJ9kRz5cRqKW1ZXZbZZL1AlQYZMwmQbVGxHIKLYbImB6nwMOfIgLBHA
+        cm8T3Ilgj9CeJqu4U7GCGOVWJXq/s38GbVCeFJg6n4mN8NLlFxFns5PpbsrNiLzqVKoCuRvCn//9C
+        73gDNugCEoQoOhwwqU4668az3Pnbx7yfWhcjgO6EpS5AVtJGzVRytAhxqshwaszbuJmSO/CH5K57E
+        RUz9SWwA==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1ljM7a-00Ey4I-LF; Wed, 19 May 2021 13:20:39 +0000
+Date:   Wed, 19 May 2021 14:20:22 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: fix deadlock retry tracepoint arguments
+Message-ID: <YKUQlmmHxWDubKHT@infradead.org>
+References: <162086768823.3685697.11936501771461638870.stgit@magnolia>
+ <162086769410.3685697.9016566085994934364.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ad2e8757-41ce-41e3-a22e-0cf9e356e656@scylladb.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
-        a=xcwBwyABtj18PbVNKPPJDQ==:117 a=xcwBwyABtj18PbVNKPPJDQ==:17
-        a=kj9zAlcOel0A:10 a=5FLXtPjwQuUA:10 a=7-415B0cAAAA:8
-        a=JUdNrTaQNZjwa7RRXdQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <162086769410.3685697.9016566085994934364.stgit@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 19, 2021 at 11:00:03AM +0300, Avi Kivity wrote:
+On Wed, May 12, 2021 at 06:01:34PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> On 18/05/2021 02.22, Dave Chinner wrote:
-> > 
-> > > What I'd like to do is remove the fanout directories, so that for each logical
-> > > "volume"[*] I have a single directory with all the files in it.  But that
-> > > means sticking massive amounts of entries into a single directory and hoping
-> > > it (a) isn't too slow and (b) doesn't hit the capacity limit.
-> > Note that if you use a single directory, you are effectively single
-> > threading modifications to your file index. You still need to use
-> > fanout directories if you want concurrency during modification for
-> > the cachefiles index, but that's a different design criteria
-> > compared to directory capacity and modification/lookup scalability.
-> 
-> Something that hit us with single-large-directory and XFS is that
-> XFS will allocate all files in a directory using the same
-> allocation group.  If your entire filesystem is just for that one
-> directory, then that allocation group will be contended.
+> sc->ip is the inode that's being scrubbed, which means that it's not set
+> for scrub types that don't involve inodes.  If one of those scrubbers
+> (e.g. inode btrees) returns EDEADLOCK, we'll trip over the null pointer.
+> Fix that by reporting either the file being examined or the file that
+> was used to call scrub.
 
-There is more than one concurrency problem that can arise from using
-single large directories. Allocation policy is just another aspect
-of the concurrency picture.
-
-Indeed, you can avoid this specific problem simply by using the
-inode32 allocator - this policy round-robins files across allocation
-groups instead of trying to keep files physically local to their
-parent directory. Hence if you just want one big directory with lots
-of files that index lots of data, using the inode32 allocator will
-allow the files in the filesytsem to allocate/free space at maximum
-concurrency at all times...
-
-> We saw spurious ENOSPC when that happened, though that
-> may have related to bad O_DIRECT management by us.
-
-You should not see spurious ENOSPC at all.
-
-The only time I've recall this sort of thing occurring is when large
-extent size hints are abused by applying them to every single file
-and allocation regardless of whether they are needed, whilst
-simultaneously mixing long term and short term data in the same
-physical locality. Over time the repeated removal and reallocation
-of short term data amongst long term data fragments the crap out of
-free space until there are no large contiguous free spaces left to
-allocate contiguous extents from.
-
-> We ended up creating files in a temporary directory and moving them to the
-> main directory, since for us the directory layout was mandated by
-> compatibility concerns.
-
-inode32 would have done effectively the same thing but without
-needing to change the application....
-
-> We are now happy with XFS large-directory management, but are nowhere close
-> to a million files.
-
-I think you are conflating directory scalability with problems
-arising from file allocation policies not being ideal for your data
-set organisation, layout and longevity characteristics.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Without an indication of which one we trace this is a little weird,
+isn't it?  Still better than a crash, though..
