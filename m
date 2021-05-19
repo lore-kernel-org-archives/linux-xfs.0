@@ -7,256 +7,389 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8D09C43470
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC2C6C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BFAB66139A
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0B4D61363
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231820AbhESBW0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 May 2021 21:22:26 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:39566 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231853AbhESBWY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 May 2021 21:22:24 -0400
+        id S231868AbhESBW1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 May 2021 21:22:27 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:59879 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231942AbhESBWZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 May 2021 21:22:25 -0400
 Received: from dread.disaster.area (pa49-195-118-180.pa.nsw.optusnet.com.au [49.195.118.180])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id D9C0767585
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id D9B0D107CBA
         for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 11:21:03 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ljAtT-002bO4-Bo
+        id 1ljAtT-002bO8-Cu
         for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:21:03 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1ljAtT-001tJz-4L
+        id 1ljAtT-001tK2-5G
         for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:21:03 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 05/23] xfs: convert raw ag walks to use for_each_perag
-Date:   Wed, 19 May 2021 11:20:44 +1000
-Message-Id: <20210519012102.450926-6-david@fromorbit.com>
+Subject: [PATCH 06/23] xfs: convert xfs_iwalk to use perag references
+Date:   Wed, 19 May 2021 11:20:45 +1000
+Message-Id: <20210519012102.450926-7-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210519012102.450926-1-david@fromorbit.com>
 References: <20210519012102.450926-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=xcwBwyABtj18PbVNKPPJDQ==:117 a=xcwBwyABtj18PbVNKPPJDQ==:17
-        a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=m3KLVTsULsLW6ioXb_AA:9
+        a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=XT8INelEtnzKkSDWaLAA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Convert the raw walks to an iterator, pulling the current AG out of
-pag->pag_agno instead of the loop iterator variable.
+Rather than manually walking the ags and passing agnunbers around,
+pass the perag for the AG we are currently working on around in the
+iwalk structure.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_types.c |  4 ++-
- fs/xfs/scrub/bmap.c       | 13 +++++----
- fs/xfs/xfs_log_recover.c  | 55 ++++++++++++++++++---------------------
- fs/xfs/xfs_reflink.c      |  9 ++++---
- 4 files changed, 43 insertions(+), 38 deletions(-)
+ fs/xfs/libxfs/xfs_ag.h |  8 +++-
+ fs/xfs/xfs_iwalk.c     | 86 ++++++++++++++++++++++++++----------------
+ 2 files changed, 60 insertions(+), 34 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index 04801362e1a7..e8f4abee7892 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -11,6 +11,7 @@
- #include "xfs_trans_resv.h"
- #include "xfs_bit.h"
- #include "xfs_mount.h"
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 33783120263c..3fa88222dacd 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -117,13 +117,17 @@ void	xfs_perag_put(struct xfs_perag *pag);
+ /*
+  * Perag iteration APIs
+  */
+-#define for_each_perag(mp, next_agno, pag) \
+-	for ((next_agno) = 0, (pag) = xfs_perag_get((mp), 0); \
++#define for_each_perag_from(mp, next_agno, pag) \
++	for ((pag) = xfs_perag_get((mp), (next_agno)); \
+ 		(pag) != NULL; \
+ 		(next_agno) = (pag)->pag_agno + 1, \
+ 		xfs_perag_put(pag), \
+ 		(pag) = xfs_perag_get((mp), (next_agno)))
+ 
++#define for_each_perag(mp, next_agno, pag) \
++	(next_agno) = 0; \
++	for_each_perag_from((mp), (next_agno), (pag))
++
+ #define for_each_perag_tag(mp, next_agno, pag, tag) \
+ 	for ((next_agno) = 0, (pag) = xfs_perag_get_tag((mp), 0, (tag)); \
+ 		(pag) != NULL; \
+diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+index c4a340f1f1e1..c7e8f48a3ec4 100644
+--- a/fs/xfs/xfs_iwalk.c
++++ b/fs/xfs/xfs_iwalk.c
+@@ -21,6 +21,7 @@
+ #include "xfs_health.h"
+ #include "xfs_trans.h"
+ #include "xfs_pwork.h"
 +#include "xfs_ag.h"
- 
- /* Find the size of the AG, in blocks. */
- inline xfs_agblock_t
-@@ -222,12 +223,13 @@ xfs_icount_range(
- 	unsigned long long	*max)
- {
- 	unsigned long long	nr_inos = 0;
-+	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno;
- 
- 	/* root, rtbitmap, rtsum all live in the first chunk */
- 	*min = XFS_INODES_PER_CHUNK;
- 
--	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+	for_each_perag(mp, agno, pag) {
- 		xfs_agino_t	first, last;
- 
- 		xfs_agino_range(mp, agno, &first, &last);
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index b5ebf1d1b4db..e457c086887f 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -22,6 +22,7 @@
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/btree.h"
-+#include "xfs_ag.h"
- 
- /* Set us up with an inode's bmap. */
- int
-@@ -575,6 +576,7 @@ xchk_bmap_check_rmaps(
- 	int			whichfork)
- {
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(sc->ip, whichfork);
-+	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno;
- 	bool			zero_size;
- 	int			error;
-@@ -607,15 +609,16 @@ xchk_bmap_check_rmaps(
- 	    (zero_size || ifp->if_nextents > 0))
- 		return 0;
- 
--	for (agno = 0; agno < sc->mp->m_sb.sb_agcount; agno++) {
--		error = xchk_bmap_check_ag_rmaps(sc, whichfork, agno);
-+	for_each_perag(sc->mp, agno, pag) {
-+		error = xchk_bmap_check_ag_rmaps(sc, whichfork, pag->pag_agno);
- 		if (error)
--			return error;
-+			break;
- 		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 			break;
- 	}
--
--	return 0;
-+	if (pag)
-+		xfs_perag_put(pag);
-+	return error;
- }
  
  /*
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index fee2a4e80241..1227503d2246 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2742,21 +2742,17 @@ STATIC void
- xlog_recover_process_iunlinks(
- 	struct xlog	*log)
- {
--	xfs_mount_t	*mp;
--	xfs_agnumber_t	agno;
--	xfs_agi_t	*agi;
--	struct xfs_buf	*agibp;
--	xfs_agino_t	agino;
--	int		bucket;
--	int		error;
--
--	mp = log->l_mp;
-+	struct xfs_mount	*mp = log->l_mp;
-+	struct xfs_perag	*pag;
-+	xfs_agnumber_t		agno;
-+	struct xfs_agi		*agi;
-+	struct xfs_buf		*agibp;
-+	xfs_agino_t		agino;
-+	int			bucket;
-+	int			error;
+  * Walking Inodes in the Filesystem
+@@ -51,6 +52,7 @@ struct xfs_iwalk_ag {
  
--	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
--		/*
--		 * Find the agi for this ag.
--		 */
--		error = xfs_read_agi(mp, NULL, agno, &agibp);
-+	for_each_perag(mp, agno, pag) {
-+		error = xfs_read_agi(mp, NULL, pag->pag_agno, &agibp);
- 		if (error) {
- 			/*
- 			 * AGI is b0rked. Don't process it.
-@@ -2782,7 +2778,7 @@ xlog_recover_process_iunlinks(
- 			agino = be32_to_cpu(agi->agi_unlinked[bucket]);
- 			while (agino != NULLAGINO) {
- 				agino = xlog_recover_process_one_iunlink(mp,
--							agno, agino, bucket);
-+						pag->pag_agno, agino, bucket);
- 				cond_resched();
- 			}
- 		}
-@@ -3494,27 +3490,28 @@ xlog_recover_cancel(
-  */
+ 	struct xfs_mount		*mp;
+ 	struct xfs_trans		*tp;
++	struct xfs_perag		*pag;
+ 
+ 	/* Where do we start the traversal? */
+ 	xfs_ino_t			startino;
+@@ -90,7 +92,7 @@ struct xfs_iwalk_ag {
  STATIC void
- xlog_recover_check_summary(
--	struct xlog	*log)
-+	struct xlog		*log)
+ xfs_iwalk_ichunk_ra(
+ 	struct xfs_mount		*mp,
+-	xfs_agnumber_t			agno,
++	struct xfs_perag		*pag,
+ 	struct xfs_inobt_rec_incore	*irec)
  {
--	xfs_mount_t	*mp;
--	struct xfs_buf	*agfbp;
--	struct xfs_buf	*agibp;
--	xfs_agnumber_t	agno;
--	uint64_t	freeblks;
--	uint64_t	itotal;
--	uint64_t	ifree;
--	int		error;
-+	struct xfs_mount	*mp = log->l_mp;
-+	struct xfs_perag	*pag;
-+	struct xfs_buf		*agfbp;
-+	struct xfs_buf		*agibp;
-+	xfs_agnumber_t		agno;
-+	uint64_t		freeblks;
-+	uint64_t		itotal;
-+	uint64_t		ifree;
+ 	struct xfs_ino_geometry		*igeo = M_IGEO(mp);
+@@ -106,7 +108,7 @@ xfs_iwalk_ichunk_ra(
+ 
+ 		imask = xfs_inobt_maskn(i, igeo->inodes_per_cluster);
+ 		if (imask & ~irec->ir_free) {
+-			xfs_btree_reada_bufs(mp, agno, agbno,
++			xfs_btree_reada_bufs(mp, pag->pag_agno, agbno,
+ 					igeo->blocks_per_cluster,
+ 					&xfs_inode_buf_ops);
+ 		}
+@@ -174,26 +176,25 @@ xfs_iwalk_free(
+ /* For each inuse inode in each cached inobt record, call our function. */
+ STATIC int
+ xfs_iwalk_ag_recs(
+-	struct xfs_iwalk_ag		*iwag)
++	struct xfs_iwalk_ag	*iwag)
+ {
+-	struct xfs_mount		*mp = iwag->mp;
+-	struct xfs_trans		*tp = iwag->tp;
+-	xfs_ino_t			ino;
+-	unsigned int			i, j;
+-	xfs_agnumber_t			agno;
+-	int				error;
++	struct xfs_mount	*mp = iwag->mp;
++	struct xfs_trans	*tp = iwag->tp;
++	struct xfs_perag	*pag = iwag->pag;
++	xfs_ino_t		ino;
++	unsigned int		i, j;
 +	int			error;
  
- 	mp = log->l_mp;
+-	agno = XFS_INO_TO_AGNO(mp, iwag->startino);
+ 	for (i = 0; i < iwag->nr_recs; i++) {
+ 		struct xfs_inobt_rec_incore	*irec = &iwag->recs[i];
  
- 	freeblks = 0LL;
- 	itotal = 0LL;
- 	ifree = 0LL;
--	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
--		error = xfs_read_agf(mp, NULL, agno, 0, &agfbp);
-+	for_each_perag(mp, agno, pag) {
-+		error = xfs_read_agf(mp, NULL, pag->pag_agno, 0, &agfbp);
- 		if (error) {
- 			xfs_alert(mp, "%s agf read failed agno %d error %d",
--						__func__, agno, error);
-+						__func__, pag->pag_agno, error);
- 		} else {
- 			struct xfs_agf	*agfp = agfbp->b_addr;
+-		trace_xfs_iwalk_ag_rec(mp, agno, irec);
++		trace_xfs_iwalk_ag_rec(mp, pag->pag_agno, irec);
  
-@@ -3523,10 +3520,10 @@ xlog_recover_check_summary(
- 			xfs_buf_relse(agfbp);
- 		}
+ 		if (xfs_pwork_want_abort(&iwag->pwork))
+ 			return 0;
  
--		error = xfs_read_agi(mp, NULL, agno, &agibp);
-+		error = xfs_read_agi(mp, NULL, pag->pag_agno, &agibp);
- 		if (error) {
- 			xfs_alert(mp, "%s agi read failed agno %d error %d",
--						__func__, agno, error);
-+						__func__, pag->pag_agno, error);
- 		} else {
- 			struct xfs_agi	*agi = agibp->b_addr;
+ 		if (iwag->inobt_walk_fn) {
+-			error = iwag->inobt_walk_fn(mp, tp, agno, irec,
++			error = iwag->inobt_walk_fn(mp, tp, pag->pag_agno, irec,
+ 					iwag->data);
+ 			if (error)
+ 				return error;
+@@ -211,7 +212,8 @@ xfs_iwalk_ag_recs(
+ 				continue;
  
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index f297d68a931b..0e430b0c1b16 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -755,16 +755,19 @@ int
- xfs_reflink_recover_cow(
- 	struct xfs_mount	*mp)
+ 			/* Otherwise call our function. */
+-			ino = XFS_AGINO_TO_INO(mp, agno, irec->ir_startino + j);
++			ino = XFS_AGINO_TO_INO(mp, pag->pag_agno,
++						irec->ir_startino + j);
+ 			error = iwag->iwalk_fn(mp, tp, ino, iwag->data);
+ 			if (error)
+ 				return error;
+@@ -257,7 +259,6 @@ xfs_iwalk_del_inobt(
+ STATIC int
+ xfs_iwalk_ag_start(
+ 	struct xfs_iwalk_ag	*iwag,
+-	xfs_agnumber_t		agno,
+ 	xfs_agino_t		agino,
+ 	struct xfs_btree_cur	**curpp,
+ 	struct xfs_buf		**agi_bpp,
+@@ -265,12 +266,14 @@ xfs_iwalk_ag_start(
  {
-+	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno;
- 	int			error = 0;
+ 	struct xfs_mount	*mp = iwag->mp;
+ 	struct xfs_trans	*tp = iwag->tp;
++	struct xfs_perag	*pag = iwag->pag;
+ 	struct xfs_inobt_rec_incore *irec;
+ 	int			error;
  
- 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+ 	/* Set up a fresh cursor and empty the inobt cache. */
+ 	iwag->nr_recs = 0;
+-	error = xfs_inobt_cur(mp, tp, agno, XFS_BTNUM_INO, curpp, agi_bpp);
++	error = xfs_inobt_cur(mp, tp, pag->pag_agno, XFS_BTNUM_INO,
++				curpp, agi_bpp);
+ 	if (error)
+ 		return error;
+ 
+@@ -304,7 +307,7 @@ xfs_iwalk_ag_start(
+ 	if (XFS_IS_CORRUPT(mp, *has_more != 1))
+ 		return -EFSCORRUPTED;
+ 
+-	iwag->lastino = XFS_AGINO_TO_INO(mp, agno,
++	iwag->lastino = XFS_AGINO_TO_INO(mp, pag->pag_agno,
+ 				irec->ir_startino + XFS_INODES_PER_CHUNK - 1);
+ 
+ 	/*
+@@ -345,7 +348,6 @@ xfs_iwalk_ag_start(
+ STATIC int
+ xfs_iwalk_run_callbacks(
+ 	struct xfs_iwalk_ag		*iwag,
+-	xfs_agnumber_t			agno,
+ 	struct xfs_btree_cur		**curpp,
+ 	struct xfs_buf			**agi_bpp,
+ 	int				*has_more)
+@@ -376,7 +378,8 @@ xfs_iwalk_run_callbacks(
  		return 0;
  
--	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
--		error = xfs_refcount_recover_cow_leftovers(mp, agno);
--		if (error)
-+	for_each_perag(mp, agno, pag) {
-+		error = xfs_refcount_recover_cow_leftovers(mp, pag->pag_agno);
-+		if (error) {
-+			xfs_perag_put(pag);
+ 	/* ...and recreate the cursor just past where we left off. */
+-	error = xfs_inobt_cur(mp, tp, agno, XFS_BTNUM_INO, curpp, agi_bpp);
++	error = xfs_inobt_cur(mp, tp, iwag->pag->pag_agno, XFS_BTNUM_INO,
++				curpp, agi_bpp);
+ 	if (error)
+ 		return error;
+ 
+@@ -390,17 +393,17 @@ xfs_iwalk_ag(
+ {
+ 	struct xfs_mount		*mp = iwag->mp;
+ 	struct xfs_trans		*tp = iwag->tp;
++	struct xfs_perag		*pag = iwag->pag;
+ 	struct xfs_buf			*agi_bp = NULL;
+ 	struct xfs_btree_cur		*cur = NULL;
+-	xfs_agnumber_t			agno;
+ 	xfs_agino_t			agino;
+ 	int				has_more;
+ 	int				error = 0;
+ 
+ 	/* Set up our cursor at the right place in the inode btree. */
+-	agno = XFS_INO_TO_AGNO(mp, iwag->startino);
++	ASSERT(pag->pag_agno == XFS_INO_TO_AGNO(mp, iwag->startino));
+ 	agino = XFS_INO_TO_AGINO(mp, iwag->startino);
+-	error = xfs_iwalk_ag_start(iwag, agno, agino, &cur, &agi_bp, &has_more);
++	error = xfs_iwalk_ag_start(iwag, agino, &cur, &agi_bp, &has_more);
+ 
+ 	while (!error && has_more) {
+ 		struct xfs_inobt_rec_incore	*irec;
+@@ -417,7 +420,7 @@ xfs_iwalk_ag(
  			break;
-+		}
+ 
+ 		/* Make sure that we always move forward. */
+-		rec_fsino = XFS_AGINO_TO_INO(mp, agno, irec->ir_startino);
++		rec_fsino = XFS_AGINO_TO_INO(mp, pag->pag_agno, irec->ir_startino);
+ 		if (iwag->lastino != NULLFSINO &&
+ 		    XFS_IS_CORRUPT(mp, iwag->lastino >= rec_fsino)) {
+ 			error = -EFSCORRUPTED;
+@@ -438,7 +441,7 @@ xfs_iwalk_ag(
+ 		 * walking the inodes.
+ 		 */
+ 		if (iwag->iwalk_fn)
+-			xfs_iwalk_ichunk_ra(mp, agno, irec);
++			xfs_iwalk_ichunk_ra(mp, pag, irec);
+ 
+ 		/*
+ 		 * If there's space in the buffer for more records, increment
+@@ -458,15 +461,14 @@ xfs_iwalk_ag(
+ 		 * we would be if we had been able to increment like above.
+ 		 */
+ 		ASSERT(has_more);
+-		error = xfs_iwalk_run_callbacks(iwag, agno, &cur, &agi_bp,
+-				&has_more);
++		error = xfs_iwalk_run_callbacks(iwag, &cur, &agi_bp, &has_more);
  	}
  
+ 	if (iwag->nr_recs == 0 || error)
+ 		goto out;
+ 
+ 	/* Walk the unprocessed records in the cache. */
+-	error = xfs_iwalk_run_callbacks(iwag, agno, &cur, &agi_bp, &has_more);
++	error = xfs_iwalk_run_callbacks(iwag, &cur, &agi_bp, &has_more);
+ 
+ out:
+ 	xfs_iwalk_del_inobt(tp, &cur, &agi_bp, error);
+@@ -555,6 +557,7 @@ xfs_iwalk(
+ 		.pwork		= XFS_PWORK_SINGLE_THREADED,
+ 		.lastino	= NULLFSINO,
+ 	};
++	struct xfs_perag	*pag;
+ 	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
+ 	int			error;
+ 
+@@ -565,15 +568,19 @@ xfs_iwalk(
+ 	if (error)
+ 		return error;
+ 
+-	for (; agno < mp->m_sb.sb_agcount; agno++) {
++	for_each_perag_from(mp, agno, pag) {
++		iwag.pag = pag;
+ 		error = xfs_iwalk_ag(&iwag);
+ 		if (error)
+ 			break;
+ 		iwag.startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
+ 		if (flags & XFS_INOBT_WALK_SAME_AG)
+ 			break;
++		iwag.pag = NULL;
+ 	}
+ 
++	if (iwag.pag)
++		xfs_perag_put(pag);
+ 	xfs_iwalk_free(&iwag);
  	return error;
+ }
+@@ -598,6 +605,7 @@ xfs_iwalk_ag_work(
+ 	error = xfs_iwalk_ag(iwag);
+ 	xfs_iwalk_free(iwag);
+ out:
++	xfs_perag_put(iwag->pag);
+ 	kmem_free(iwag);
+ 	return error;
+ }
+@@ -617,6 +625,7 @@ xfs_iwalk_threaded(
+ 	void			*data)
+ {
+ 	struct xfs_pwork_ctl	pctl;
++	struct xfs_perag	*pag;
+ 	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
+ 	int			error;
+ 
+@@ -627,7 +636,7 @@ xfs_iwalk_threaded(
+ 	if (error)
+ 		return error;
+ 
+-	for (; agno < mp->m_sb.sb_agcount; agno++) {
++	for_each_perag_from(mp, agno, pag) {
+ 		struct xfs_iwalk_ag	*iwag;
+ 
+ 		if (xfs_pwork_ctl_want_abort(&pctl))
+@@ -635,17 +644,25 @@ xfs_iwalk_threaded(
+ 
+ 		iwag = kmem_zalloc(sizeof(struct xfs_iwalk_ag), 0);
+ 		iwag->mp = mp;
++
++		/*
++		 * perag is being handed off to async work, so take another
++		 * reference for the async work to release.
++		 */
++		atomic_inc(&pag->pag_ref);
++		iwag->pag = pag;
+ 		iwag->iwalk_fn = iwalk_fn;
+ 		iwag->data = data;
+ 		iwag->startino = startino;
+ 		iwag->sz_recs = xfs_iwalk_prefetch(inode_records);
+ 		iwag->lastino = NULLFSINO;
+ 		xfs_pwork_queue(&pctl, &iwag->pwork);
+-		startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
++		startino = XFS_AGINO_TO_INO(mp, pag->pag_agno + 1, 0);
+ 		if (flags & XFS_INOBT_WALK_SAME_AG)
+ 			break;
+ 	}
+-
++	if (pag)
++		xfs_perag_put(pag);
+ 	if (polled)
+ 		xfs_pwork_poll(&pctl);
+ 	return xfs_pwork_destroy(&pctl);
+@@ -715,6 +732,7 @@ xfs_inobt_walk(
+ 		.pwork		= XFS_PWORK_SINGLE_THREADED,
+ 		.lastino	= NULLFSINO,
+ 	};
++	struct xfs_perag	*pag;
+ 	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
+ 	int			error;
+ 
+@@ -725,15 +743,19 @@ xfs_inobt_walk(
+ 	if (error)
+ 		return error;
+ 
+-	for (; agno < mp->m_sb.sb_agcount; agno++) {
++	for_each_perag_from(mp, agno, pag) {
++		iwag.pag = pag;
+ 		error = xfs_iwalk_ag(&iwag);
+ 		if (error)
+ 			break;
+-		iwag.startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
++		iwag.startino = XFS_AGINO_TO_INO(mp, pag->pag_agno + 1, 0);
+ 		if (flags & XFS_INOBT_WALK_SAME_AG)
+ 			break;
++		iwag.pag = NULL;
+ 	}
+ 
++	if (iwag.pag)
++		xfs_perag_put(pag);
+ 	xfs_iwalk_free(&iwag);
+ 	return error;
+ }
 -- 
 2.31.1
 
