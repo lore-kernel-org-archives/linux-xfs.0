@@ -7,220 +7,168 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73089C433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:07:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2566C433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:19:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C8836108D
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:07:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B83F961361
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:19:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231283AbhESBI4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 May 2021 21:08:56 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:48672 "EHLO
+        id S231802AbhESBUq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 May 2021 21:20:46 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:38652 "EHLO
         mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229485AbhESBI4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 May 2021 21:08:56 -0400
+        by vger.kernel.org with ESMTP id S231641AbhESBUn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 May 2021 21:20:43 -0400
 Received: from dread.disaster.area (pa49-195-118-180.pa.nsw.optusnet.com.au [49.195.118.180])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 199A91140B6B
-        for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 11:07:35 +1000 (AEST)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id CEE8A1140CF1
+        for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 11:19:21 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ljAgQ-002bE4-0x
-        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:07:34 +1000
+        id 1ljArp-002bMO-5N
+        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:19:21 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1ljAgP-001t4o-PU
-        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:07:33 +1000
+        id 1ljAro-001tBc-RR
+        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:19:20 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: use alloc_pages_bulk_array() for buffers
-Date:   Wed, 19 May 2021 11:07:33 +1000
-Message-Id: <20210519010733.449999-1-david@fromorbit.com>
+Subject: [PATCH] xfs: don't take a spinlock unconditionally in the DIO fastpath
+Date:   Wed, 19 May 2021 11:19:20 +1000
+Message-Id: <20210519011920.450421-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=xcwBwyABtj18PbVNKPPJDQ==:117 a=xcwBwyABtj18PbVNKPPJDQ==:17
-        a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=Zp1x2qE9gxlNiri35MEA:9
+        a=IkcTkHD0fZMA:10 a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8
+        a=nLem6PRWfGTXsvJcTgcA:9 a=QEXdDO2ut3YA:10
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because it's more efficient than allocating pages one at a time in a
-loop.
+Because this happens at high thread counts on high IOPS devices
+doing mixed read/write AIO-DIO to a single file at about a million
+iops:
+
+   64.09%     0.21%  [kernel]            [k] io_submit_one
+   - 63.87% io_submit_one
+      - 44.33% aio_write
+         - 42.70% xfs_file_write_iter
+            - 41.32% xfs_file_dio_write_aligned
+               - 25.51% xfs_file_write_checks
+                  - 21.60% _raw_spin_lock
+                     - 21.59% do_raw_spin_lock
+                        - 19.70% __pv_queued_spin_lock_slowpath
+
+This also happens of the IO completion IO path:
+
+   22.89%     0.69%  [kernel]            [k] xfs_dio_write_end_io
+   - 22.49% xfs_dio_write_end_io
+      - 21.79% _raw_spin_lock
+         - 20.97% do_raw_spin_lock
+            - 20.10% __pv_queued_spin_lock_slowpath                                                                                                            ▒
+
+IOWs, fio is burning ~14 whole CPUs on this spin lock.
+
+So, do an unlocked check against inode size first, then if we are
+at/beyond EOF, take the spinlock and recheck. This makes the
+spinlock disappear from the overwrite fastpath.
+
+I'd like to report that fixing this makes things go faster. It
+doesn't - it just exposes the the XFS_ILOCK as the next severe
+contention point doing extent mapping lookups, and that now burns
+all the 14 CPUs this spinlock was burning.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c | 91 +++++++++++++++++++++---------------------------
- 1 file changed, 39 insertions(+), 52 deletions(-)
+ fs/xfs/xfs_file.c | 42 +++++++++++++++++++++++++++++++-----------
+ 1 file changed, 31 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 592800c8852f..a6cf607bbc4a 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -276,8 +276,8 @@ _xfs_buf_alloc(
-  *	Allocate a page array capable of holding a specified number
-  *	of pages, and point the page buf at it.
-  */
--STATIC int
--_xfs_buf_get_pages(
-+static int
-+xfs_buf_get_pages(
- 	struct xfs_buf		*bp,
- 	int			page_count)
- {
-@@ -292,8 +292,8 @@ _xfs_buf_get_pages(
- 			if (bp->b_pages == NULL)
- 				return -ENOMEM;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 396ef36dcd0a..c068dcd414f4 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -384,21 +384,30 @@ xfs_file_write_checks(
  		}
--		memset(bp->b_pages, 0, sizeof(struct page *) * page_count);
+ 		goto restart;
  	}
-+	memset(bp->b_pages, 0, sizeof(struct page *) * bp->b_page_count);
- 	return 0;
- }
- 
-@@ -356,10 +356,10 @@ xfs_buf_allocate_memory(
- 	uint			flags)
- {
- 	size_t			size;
--	size_t			nbytes, offset;
-+	size_t			offset;
- 	gfp_t			gfp_mask = xb_to_gfp(flags);
--	unsigned short		page_count, i;
- 	xfs_off_t		start, end;
-+	long			filled = 0;
- 	int			error;
- 	xfs_km_flags_t		kmflag_mask = 0;
- 
-@@ -405,55 +405,44 @@ xfs_buf_allocate_memory(
- 	start = BBTOB(bp->b_maps[0].bm_bn) >> PAGE_SHIFT;
- 	end = (BBTOB(bp->b_maps[0].bm_bn + bp->b_length) + PAGE_SIZE - 1)
- 								>> PAGE_SHIFT;
--	page_count = end - start;
--	error = _xfs_buf_get_pages(bp, page_count);
-+	error = xfs_buf_get_pages(bp, end - start);
- 	if (unlikely(error))
- 		return error;
- 
- 	offset = bp->b_offset;
- 	bp->b_flags |= _XBF_PAGES;
- 
--	for (i = 0; i < bp->b_page_count; i++) {
--		struct page	*page;
--		uint		retries = 0;
--retry:
--		page = alloc_page(gfp_mask);
--		if (unlikely(page == NULL)) {
--			if (flags & XBF_READ_AHEAD) {
--				bp->b_page_count = i;
--				error = -ENOMEM;
--				goto out_free_pages;
--			}
-+	/*
-+	 * Bulk filling of pages can take multiple calls. Not filling the entire
-+	 * array is not an allocation failure, so don't back off if we get at
-+	 * least one extra page.
-+	 */
-+	for (;;) {
-+		int	last = filled;
- 
--			/*
--			 * This could deadlock.
--			 *
--			 * But until all the XFS lowlevel code is revamped to
--			 * handle buffer allocation failures we can't do much.
--			 */
--			if (!(++retries % 100))
--				xfs_err(NULL,
--		"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
--					current->comm, current->pid,
--					__func__, gfp_mask);
--
--			XFS_STATS_INC(bp->b_mount, xb_page_retries);
--			congestion_wait(BLK_RW_ASYNC, HZ/50);
--			goto retry;
-+		filled = alloc_pages_bulk_array(gfp_mask, bp->b_page_count,
-+						bp->b_pages);
-+		if (filled == bp->b_page_count) {
-+			XFS_STATS_INC(bp->b_mount, xb_page_found);
-+			break;
- 		}
- 
--		XFS_STATS_INC(bp->b_mount, xb_page_found);
-+		if (filled != last)
-+			continue;
- 
--		nbytes = min_t(size_t, size, PAGE_SIZE - offset);
--		size -= nbytes;
--		bp->b_pages[i] = page;
--		offset = 0;
-+		if (flags & XBF_READ_AHEAD) {
-+			error = -ENOMEM;
-+			goto out_free_pages;
-+		}
 +
-+		XFS_STATS_INC(bp->b_mount, xb_page_retries);
-+		congestion_wait(BLK_RW_ASYNC, HZ/50);
- 	}
- 	return 0;
+ 	/*
+ 	 * If the offset is beyond the size of the file, we need to zero any
+ 	 * blocks that fall between the existing EOF and the start of this
+-	 * write.  If zeroing is needed and we are currently holding the
+-	 * iolock shared, we need to update it to exclusive which implies
+-	 * having to redo all checks before.
++	 * write.  If zeroing is needed and we are currently holding the iolock
++	 * shared, we need to update it to exclusive which implies having to
++	 * redo all checks before.
++	 *
++	 * We need to serialise against EOF updates that occur in IO completions
++	 * here. We want to make sure that nobody is changing the size while we
++	 * do this check until we have placed an IO barrier (i.e.  hold the
++	 * XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.  The
++	 * spinlock effectively forms a memory barrier once we have the
++	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value and
++	 * hence be able to correctly determine if we need to run zeroing.
+ 	 *
+-	 * We need to serialise against EOF updates that occur in IO
+-	 * completions here. We want to make sure that nobody is changing the
+-	 * size while we do this check until we have placed an IO barrier (i.e.
+-	 * hold the XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.
+-	 * The spinlock effectively forms a memory barrier once we have the
+-	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value
+-	 * and hence be able to correctly determine if we need to run zeroing.
++	 * We can do an unlocked check here safely as IO completion can only
++	 * extend EOF. Truncate is locked out at this point, so the EOF can
++	 * not move backwards, only forwards. Hence we only need to take the
++	 * slow path and spin locks when we are at or beyond the current EOF.
+ 	 */
++	if (iocb->ki_pos <= i_size_read(inode))
++		goto out;
++
+ 	spin_lock(&ip->i_flags_lock);
+ 	isize = i_size_read(inode);
+ 	if (iocb->ki_pos > isize) {
+@@ -426,7 +435,7 @@ xfs_file_write_checks(
+ 			drained_dio = true;
+ 			goto restart;
+ 		}
+-	
++
+ 		trace_xfs_zero_eof(ip, isize, iocb->ki_pos - isize);
+ 		error = iomap_zero_range(inode, isize, iocb->ki_pos - isize,
+ 				NULL, &xfs_buffered_write_iomap_ops);
+@@ -435,6 +444,7 @@ xfs_file_write_checks(
+ 	} else
+ 		spin_unlock(&ip->i_flags_lock);
  
- out_free_pages:
--	for (i = 0; i < bp->b_page_count; i++)
--		__free_page(bp->b_pages[i]);
-+	while (--filled >= 0)
-+		__free_page(bp->b_pages[filled]);
- 	bp->b_flags &= ~_XBF_PAGES;
- 	return error;
++out:
+ 	return file_modified(file);
  }
-@@ -950,8 +939,8 @@ xfs_buf_get_uncached(
- 	int			flags,
- 	struct xfs_buf		**bpp)
- {
--	unsigned long		page_count;
--	int			error, i;
-+	unsigned long		filled;
-+	int			error;
- 	struct xfs_buf		*bp;
- 	DEFINE_SINGLE_BUF_MAP(map, XFS_BUF_DADDR_NULL, numblks);
  
-@@ -962,17 +951,15 @@ xfs_buf_get_uncached(
- 	if (error)
- 		goto fail;
- 
--	page_count = PAGE_ALIGN(numblks << BBSHIFT) >> PAGE_SHIFT;
--	error = _xfs_buf_get_pages(bp, page_count);
-+	error = xfs_buf_get_pages(bp, PAGE_ALIGN(BBTOB(numblks)) >> PAGE_SHIFT);
- 	if (error)
- 		goto fail_free_buf;
- 
--	for (i = 0; i < page_count; i++) {
--		bp->b_pages[i] = alloc_page(xb_to_gfp(flags));
--		if (!bp->b_pages[i]) {
--			error = -ENOMEM;
--			goto fail_free_mem;
--		}
-+	filled = alloc_pages_bulk_array(xb_to_gfp(flags), bp->b_page_count,
-+					bp->b_pages);
-+	if (filled != bp->b_page_count) {
-+		error = -ENOMEM;
-+		goto fail_free_mem;
- 	}
- 	bp->b_flags |= _XBF_PAGES;
- 
-@@ -988,8 +975,8 @@ xfs_buf_get_uncached(
- 	return 0;
- 
-  fail_free_mem:
--	while (--i >= 0)
--		__free_page(bp->b_pages[i]);
-+	while (--filled >= 0)
-+		__free_page(bp->b_pages[filled]);
- 	_xfs_buf_free_pages(bp);
-  fail_free_buf:
- 	xfs_buf_free_maps(bp);
+@@ -500,7 +510,17 @@ xfs_dio_write_end_io(
+ 	 * other IO completions here to update the EOF. Failing to serialise
+ 	 * here can result in EOF moving backwards and Bad Things Happen when
+ 	 * that occurs.
++	 *
++	 * As IO completion only ever extends EOF, we can do an unlocked check
++	 * here to avoid taking the spinlock. If we land within the current EOF,
++	 * then we do not need to do an extending update at all, and we don't
++	 * need to take the lock to check this. If we race with an update moving
++	 * EOF, then we'll either still be beyond EOF and need to take the lock,
++	 * or we'll be within EOF and we don't need to take it at all.
+ 	 */
++	if (offset + size <= i_size_read(inode))
++		goto out;
++
+ 	spin_lock(&ip->i_flags_lock);
+ 	if (offset + size > i_size_read(inode)) {
+ 		i_size_write(inode, offset + size);
 -- 
 2.31.1
 
