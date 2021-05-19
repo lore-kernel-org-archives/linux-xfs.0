@@ -7,365 +7,296 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BD36C4363F
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11923C43619
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1179C613BE
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E290261369
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232254AbhESBWb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 May 2021 21:22:31 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:45161 "EHLO
+        id S232046AbhESBW3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 May 2021 21:22:29 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:44603 "EHLO
         mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232279AbhESBW2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 May 2021 21:22:28 -0400
+        by vger.kernel.org with ESMTP id S232051AbhESBWZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 May 2021 21:22:25 -0400
 Received: from dread.disaster.area (pa49-195-118-180.pa.nsw.optusnet.com.au [49.195.118.180])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 7D4801AFB0A
-        for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 11:21:04 +1000 (AEST)
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 06A4C1AFB3F
+        for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 11:21:03 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ljAtU-002bOl-1S
-        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:21:04 +1000
+        id 1ljAtT-002bOH-HJ
+        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:21:03 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1ljAtT-001tKf-Pn
+        id 1ljAtT-001tKB-9D
         for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:21:03 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 19/23] xfs: get rid of xfs_dir_ialloc()
-Date:   Wed, 19 May 2021 11:20:58 +1000
-Message-Id: <20210519012102.450926-20-david@fromorbit.com>
+Subject: [PATCH 09/23] xfs: push perags through the ag reservation callouts
+Date:   Wed, 19 May 2021 11:20:48 +1000
+Message-Id: <20210519012102.450926-10-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210519012102.450926-1-david@fromorbit.com>
 References: <20210519012102.450926-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=xcwBwyABtj18PbVNKPPJDQ==:117 a=xcwBwyABtj18PbVNKPPJDQ==:17
         a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=wL4K8bCONkw7ZEPnSG0A:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=4ATdU0DdX-z0mX4Fz0gA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-This is just a simple wrapper around the per-ag inode allocation
-that doesn't need to exist. The internal mechanism to select and
-allocate within an AG does not need to be exposed outside
-xfs_ialloc.c, and it being exposed simply makes it harder to follow
-the code and simplify it.
-
-This is simplified by internalising xf_dialloc_select_ag() and
-xfs_dialloc_ag() into a single xfs_dialloc() function and then
-xfs_dir_ialloc() can go away.
+We currently pass an agno from the AG reservation functions to the
+individual feature accounting functions, which in future may have to
+do perag lookups to access per-AG state. Instead, pre-emptively
+plumb the perag through from the highest AG reservation layer to the
+feature callouts so they won't have to look it up again.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 17 ++++++----
- fs/xfs/libxfs/xfs_ialloc.h | 27 +++-------------
- fs/xfs/xfs_inode.c         | 66 +++++++-------------------------------
- fs/xfs/xfs_inode.h         |  9 +++---
- fs/xfs/xfs_qm.c            |  9 ++++--
- fs/xfs/xfs_symlink.c       |  9 ++++--
- 6 files changed, 44 insertions(+), 93 deletions(-)
+ fs/xfs/libxfs/xfs_ag_resv.c        |  9 ++++-----
+ fs/xfs/libxfs/xfs_ialloc_btree.c   | 17 +++++++++--------
+ fs/xfs/libxfs/xfs_ialloc_btree.h   |  2 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |  7 +++----
+ fs/xfs/libxfs/xfs_refcount_btree.h |  3 ++-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |  6 +++---
+ fs/xfs/libxfs/xfs_rmap_btree.h     |  2 +-
+ 7 files changed, 23 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 3acecdbe51e4..8762836d0996 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1428,7 +1428,7 @@ xfs_dialloc_ag_update_inobt(
-  * The caller selected an AG for us, and made sure that free inodes are
-  * available.
-  */
--int
-+static int
- xfs_dialloc_ag(
- 	struct xfs_trans	*tp,
- 	struct xfs_buf		*agbp,
-@@ -1602,24 +1602,23 @@ xfs_ialloc_next_ag(
-  * can be allocated, -ENOSPC be returned.
-  */
- int
--xfs_dialloc_select_ag(
-+xfs_dialloc(
- 	struct xfs_trans	**tpp,
- 	xfs_ino_t		parent,
- 	umode_t			mode,
--	struct xfs_buf		**IO_agbp)
-+	xfs_ino_t		*new_ino)
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index 2e3dcdfd4984..f7394a8ecf6b 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -250,7 +250,6 @@ xfs_ag_resv_init(
+ 	struct xfs_trans		*tp)
  {
- 	struct xfs_mount	*mp = (*tpp)->t_mountp;
- 	struct xfs_buf		*agbp;
- 	xfs_agnumber_t		agno;
--	int			error;
-+	int			error = 0;
- 	xfs_agnumber_t		start_agno;
- 	struct xfs_perag	*pag;
- 	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
- 	bool			okalloc = true;
- 	int			needspace;
- 	int			flags;
--
--	*IO_agbp = NULL;
-+	xfs_ino_t		ino;
+ 	struct xfs_mount		*mp = pag->pag_mount;
+-	xfs_agnumber_t			agno = pag->pag_agno;
+ 	xfs_extlen_t			ask;
+ 	xfs_extlen_t			used;
+ 	int				error = 0, error2;
+@@ -260,11 +259,11 @@ xfs_ag_resv_init(
+ 	if (pag->pag_meta_resv.ar_asked == 0) {
+ 		ask = used = 0;
  
- 	/*
- 	 * Directories, symlinks, and regular files frequently allocate at least
-@@ -1762,7 +1761,11 @@ xfs_dialloc_select_ag(
- 	return error ? error : -ENOSPC;
- found_ag:
- 	xfs_perag_put(pag);
--	*IO_agbp = agbp;
-+	/* Allocate an inode in the found AG */
-+	error = xfs_dialloc_ag(*tpp, agbp, parent, &ino);
-+	if (error)
-+		return error;
-+	*new_ino = ino;
- 	return 0;
- }
+-		error = xfs_refcountbt_calc_reserves(mp, tp, agno, &ask, &used);
++		error = xfs_refcountbt_calc_reserves(mp, tp, pag, &ask, &used);
+ 		if (error)
+ 			goto out;
  
-diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-index 3511086a7ae1..886f6748fb22 100644
---- a/fs/xfs/libxfs/xfs_ialloc.h
-+++ b/fs/xfs/libxfs/xfs_ialloc.h
-@@ -33,30 +33,11 @@ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
- }
+-		error = xfs_finobt_calc_reserves(mp, tp, agno, &ask, &used);
++		error = xfs_finobt_calc_reserves(mp, tp, pag, &ask, &used);
+ 		if (error)
+ 			goto out;
  
- /*
-- * Allocate an inode on disk.
-- * Mode is used to tell whether the new inode will need space, and whether
-- * it is a directory.
-- *
-- * There are two phases to inode allocation: selecting an AG and ensuring
-- * that it contains free inodes, followed by allocating one of the free
-- * inodes. xfs_dialloc_select_ag() does the former and returns a locked AGI
-- * to the caller, ensuring that followup call to xfs_dialloc_ag() will
-- * have free inodes to allocate from. xfs_dialloc_ag() will return the inode
-- * number of the free inode we allocated.
-+ * Allocate an inode on disk.  Mode is used to tell whether the new inode will
-+ * need space, and whether it is a directory.
-  */
--int					/* error */
--xfs_dialloc_select_ag(
--	struct xfs_trans **tpp,		/* double pointer of transaction */
--	xfs_ino_t	parent,		/* parent inode (directory) */
--	umode_t		mode,		/* mode bits for new inode */
--	struct xfs_buf	**IO_agbp);
--
--int
--xfs_dialloc_ag(
--	struct xfs_trans	*tp,
--	struct xfs_buf		*agbp,
--	xfs_ino_t		parent,
--	xfs_ino_t		*inop);
-+int xfs_dialloc(struct xfs_trans **tpp, xfs_ino_t parent, umode_t mode,
-+		xfs_ino_t *new_ino);
+@@ -282,7 +281,7 @@ xfs_ag_resv_init(
  
- /*
-  * Free disk inode.  Carefully avoids touching the incore inode, all
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 743c8eeee94a..8d204d516621 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -749,7 +749,7 @@ xfs_inode_inherit_flags2(
-  * Initialise a newly allocated inode and return the in-core inode to the
-  * caller locked exclusively.
-  */
--static int
-+int
- xfs_init_new_inode(
- 	struct user_namespace	*mnt_userns,
- 	struct xfs_trans	*tp,
-@@ -885,54 +885,6 @@ xfs_init_new_inode(
- 	return 0;
- }
+ 			mp->m_finobt_nores = true;
  
--/*
-- * Allocates a new inode from disk and return a pointer to the incore copy. This
-- * routine will internally commit the current transaction and allocate a new one
-- * if we needed to allocate more on-disk free inodes to perform the requested
-- * operation.
-- *
-- * If we are allocating quota inodes, we do not have a parent inode to attach to
-- * or associate with (i.e. dp == NULL) because they are not linked into the
-- * directory structure - they are attached directly to the superblock - and so
-- * have no parent.
-- */
--int
--xfs_dir_ialloc(
--	struct user_namespace	*mnt_userns,
--	struct xfs_trans	**tpp,
--	struct xfs_inode	*dp,
--	umode_t			mode,
--	xfs_nlink_t		nlink,
--	dev_t			rdev,
--	prid_t			prid,
--	bool			init_xattrs,
--	struct xfs_inode	**ipp)
--{
--	struct xfs_buf		*agibp;
--	xfs_ino_t		parent_ino = dp ? dp->i_ino : 0;
--	xfs_ino_t		ino;
--	int			error;
--
--	ASSERT((*tpp)->t_flags & XFS_TRANS_PERM_LOG_RES);
--
--	/*
--	 * Call the space management code to pick the on-disk inode to be
--	 * allocated.
--	 */
--	error = xfs_dialloc_select_ag(tpp, parent_ino, mode, &agibp);
--	if (error)
--		return error;
--
--	/* Allocate an inode from the selected AG */
--	error = xfs_dialloc_ag(*tpp, agibp, parent_ino, &ino);
--	if (error)
--		return error;
--	ASSERT(ino != NULLFSINO);
--
--	return xfs_init_new_inode(mnt_userns, *tpp, dp, ino, mode, nlink, rdev,
--				  prid, init_xattrs, ipp);
--}
--
- /*
-  * Decrement the link count on an inode & log the change.  If this causes the
-  * link count to go to zero, move the inode to AGI unlinked list so that it can
-@@ -990,6 +942,7 @@ xfs_create(
- 	struct xfs_dquot	*pdqp = NULL;
- 	struct xfs_trans_res	*tres;
- 	uint			resblks;
-+	xfs_ino_t		ino;
+-			error = xfs_refcountbt_calc_reserves(mp, tp, agno, &ask,
++			error = xfs_refcountbt_calc_reserves(mp, tp, pag, &ask,
+ 					&used);
+ 			if (error)
+ 				goto out;
+@@ -300,7 +299,7 @@ xfs_ag_resv_init(
+ 	if (pag->pag_rmapbt_resv.ar_asked == 0) {
+ 		ask = used = 0;
  
- 	trace_xfs_create(dp, name);
+-		error = xfs_rmapbt_calc_reserves(mp, tp, agno, &ask, &used);
++		error = xfs_rmapbt_calc_reserves(mp, tp, pag, &ask, &used);
+ 		if (error)
+ 			goto out;
  
-@@ -1046,14 +999,16 @@ xfs_create(
- 	 * entry pointing to them, but a directory also the "." entry
- 	 * pointing to itself.
- 	 */
--	error = xfs_dir_ialloc(mnt_userns, &tp, dp, mode, is_dir ? 2 : 1, rdev,
--			       prid, init_xattrs, &ip);
-+	error = xfs_dialloc(&tp, dp->i_ino, mode, &ino);
-+	if (!error)
-+		error = xfs_init_new_inode(mnt_userns, tp, dp, ino, mode,
-+				is_dir ? 2 : 1, rdev, prid, init_xattrs, &ip);
- 	if (error)
- 		goto out_trans_cancel;
- 
- 	/*
- 	 * Now we join the directory inode to the transaction.  We do not do it
--	 * earlier because xfs_dir_ialloc might commit the previous transaction
-+	 * earlier because xfs_dialloc might commit the previous transaction
- 	 * (and release all the locks).  An error from here on will result in
- 	 * the transaction cancel unlocking dp so don't do it explicitly in the
- 	 * error path.
-@@ -1143,6 +1098,7 @@ xfs_create_tmpfile(
- 	struct xfs_dquot	*pdqp = NULL;
- 	struct xfs_trans_res	*tres;
- 	uint			resblks;
-+	xfs_ino_t		ino;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
-@@ -1167,8 +1123,10 @@ xfs_create_tmpfile(
- 	if (error)
- 		goto out_release_dquots;
- 
--	error = xfs_dir_ialloc(mnt_userns, &tp, dp, mode, 0, 0, prid,
--				false, &ip);
-+	error = xfs_dialloc(&tp, dp->i_ino, mode, &ino);
-+	if (!error)
-+		error = xfs_init_new_inode(mnt_userns, tp, dp, ino, mode,
-+				0, 0, prid, false, &ip);
- 	if (error)
- 		goto out_trans_cancel;
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index ca826cfba91c..4b6703dbffb8 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -431,11 +431,10 @@ void		xfs_lock_two_inodes(struct xfs_inode *ip0, uint ip0_mode,
- xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
- xfs_extlen_t	xfs_get_cowextsz_hint(struct xfs_inode *ip);
- 
--int		xfs_dir_ialloc(struct user_namespace *mnt_userns,
--			       struct xfs_trans **tpp, struct xfs_inode *dp,
--			       umode_t mode, xfs_nlink_t nlink, dev_t dev,
--			       prid_t prid, bool need_xattr,
--			       struct xfs_inode **ipp);
-+int xfs_init_new_inode(struct user_namespace *mnt_userns, struct xfs_trans *tp,
-+		struct xfs_inode *pip, xfs_ino_t ino, umode_t mode,
-+		xfs_nlink_t nlink, dev_t rdev, prid_t prid, bool init_xattrs,
-+		struct xfs_inode **ipp);
- 
- static inline int
- xfs_itruncate_extents(
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index f7baf4dc2554..fe341f3fd419 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -24,6 +24,7 @@
- #include "xfs_icache.h"
- #include "xfs_error.h"
- #include "xfs_ag.h"
-+#include "xfs_ialloc.h"
- 
- /*
-  * The global quota manager. There is only one of these for the entire
-@@ -788,8 +789,12 @@ xfs_qm_qino_alloc(
- 		return error;
- 
- 	if (need_alloc) {
--		error = xfs_dir_ialloc(&init_user_ns, &tp, NULL, S_IFREG, 1, 0,
--				       0, false, ipp);
-+		xfs_ino_t	ino;
-+
-+		error = xfs_dialloc(&tp, 0, S_IFREG, &ino);
-+		if (!error)
-+			error = xfs_init_new_inode(&init_user_ns, tp, NULL, ino,
-+					S_IFREG, 1, 0, 0, false, ipp);
- 		if (error) {
- 			xfs_trans_cancel(tp);
- 			return error;
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 99fbec32c10a..1525636f4065 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -21,6 +21,7 @@
- #include "xfs_trans_space.h"
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 4c5831646bd9..4ec8ea1331a5 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -20,6 +20,7 @@
  #include "xfs_trace.h"
  #include "xfs_trans.h"
-+#include "xfs_ialloc.h"
+ #include "xfs_rmap.h"
++#include "xfs_ag.h"
  
- /* ----- Kernel only functions below ----- */
- int
-@@ -161,6 +162,7 @@ xfs_symlink(
- 	struct xfs_dquot	*gdqp = NULL;
- 	struct xfs_dquot	*pdqp = NULL;
- 	uint			resblks;
-+	xfs_ino_t		ino;
+ STATIC int
+ xfs_inobt_get_minrecs(
+@@ -680,7 +681,7 @@ static int
+ xfs_inobt_count_blocks(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+-	xfs_agnumber_t		agno,
++	struct xfs_perag	*pag,
+ 	xfs_btnum_t		btnum,
+ 	xfs_extlen_t		*tree_blocks)
+ {
+@@ -688,7 +689,7 @@ xfs_inobt_count_blocks(
+ 	struct xfs_btree_cur	*cur = NULL;
+ 	int			error;
  
- 	*ipp = NULL;
- 
-@@ -223,8 +225,11 @@ xfs_symlink(
- 	/*
- 	 * Allocate an inode for the symlink.
- 	 */
--	error = xfs_dir_ialloc(mnt_userns, &tp, dp, S_IFLNK | (mode & ~S_IFMT),
--			       1, 0, prid, false, &ip);
-+	error = xfs_dialloc(&tp, dp->i_ino, S_IFLNK, &ino);
-+	if (!error)
-+		error = xfs_init_new_inode(mnt_userns, tp, dp, ino,
-+				S_IFLNK | (mode & ~S_IFMT), 1, 0, prid,
-+				false, &ip);
+-	error = xfs_inobt_cur(mp, tp, agno, btnum, &cur, &agbp);
++	error = xfs_inobt_cur(mp, tp, pag->pag_agno, btnum, &cur, &agbp);
  	if (error)
- 		goto out_trans_cancel;
+ 		return error;
  
+@@ -704,14 +705,14 @@ static int
+ xfs_finobt_read_blocks(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+-	xfs_agnumber_t		agno,
++	struct xfs_perag	*pag,
+ 	xfs_extlen_t		*tree_blocks)
+ {
+ 	struct xfs_buf		*agbp;
+ 	struct xfs_agi		*agi;
+ 	int			error;
+ 
+-	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
++	error = xfs_ialloc_read_agi(mp, tp, pag->pag_agno, &agbp);
+ 	if (error)
+ 		return error;
+ 
+@@ -728,7 +729,7 @@ int
+ xfs_finobt_calc_reserves(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+-	xfs_agnumber_t		agno,
++	struct xfs_perag	*pag,
+ 	xfs_extlen_t		*ask,
+ 	xfs_extlen_t		*used)
+ {
+@@ -739,14 +740,14 @@ xfs_finobt_calc_reserves(
+ 		return 0;
+ 
+ 	if (xfs_sb_version_hasinobtcounts(&mp->m_sb))
+-		error = xfs_finobt_read_blocks(mp, tp, agno, &tree_len);
++		error = xfs_finobt_read_blocks(mp, tp, pag, &tree_len);
+ 	else
+-		error = xfs_inobt_count_blocks(mp, tp, agno, XFS_BTNUM_FINO,
++		error = xfs_inobt_count_blocks(mp, tp, pag, XFS_BTNUM_FINO,
+ 				&tree_len);
+ 	if (error)
+ 		return error;
+ 
+-	*ask += xfs_inobt_max_size(mp, agno);
++	*ask += xfs_inobt_max_size(mp, pag->pag_agno);
+ 	*used += tree_len;
+ 	return 0;
+ }
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
+index 35bbd978c272..d5afe01fb2de 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.h
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
+@@ -64,7 +64,7 @@ int xfs_inobt_rec_check_count(struct xfs_mount *,
+ #endif	/* DEBUG */
+ 
+ int xfs_finobt_calc_reserves(struct xfs_mount *mp, struct xfs_trans *tp,
+-		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
++		struct xfs_perag *pag, xfs_extlen_t *ask, xfs_extlen_t *used);
+ extern xfs_extlen_t xfs_iallocbt_calc_size(struct xfs_mount *mp,
+ 		unsigned long long len);
+ int xfs_inobt_cur(struct xfs_mount *mp, struct xfs_trans *tp,
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index b281f0c674f5..c4ddf9ded00b 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -450,7 +450,7 @@ int
+ xfs_refcountbt_calc_reserves(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+-	xfs_agnumber_t		agno,
++	struct xfs_perag	*pag,
+ 	xfs_extlen_t		*ask,
+ 	xfs_extlen_t		*used)
+ {
+@@ -463,8 +463,7 @@ xfs_refcountbt_calc_reserves(
+ 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+ 		return 0;
+ 
+-
+-	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
++	error = xfs_alloc_read_agf(mp, tp, pag->pag_agno, 0, &agbp);
+ 	if (error)
+ 		return error;
+ 
+@@ -479,7 +478,7 @@ xfs_refcountbt_calc_reserves(
+ 	 * expansion.  We therefore can pretend the space isn't there.
+ 	 */
+ 	if (mp->m_sb.sb_logstart &&
+-	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == agno)
++	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == pag->pag_agno)
+ 		agblocks -= mp->m_sb.sb_logblocks;
+ 
+ 	*ask += xfs_refcountbt_max_size(mp, agblocks);
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
+index 69dc515db671..eab1b0c672c0 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.h
++++ b/fs/xfs/libxfs/xfs_refcount_btree.h
+@@ -13,6 +13,7 @@
+ struct xfs_buf;
+ struct xfs_btree_cur;
+ struct xfs_mount;
++struct xfs_perag;
+ struct xbtree_afakeroot;
+ 
+ /*
+@@ -58,7 +59,7 @@ extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp,
+ 		xfs_agblock_t agblocks);
+ 
+ extern int xfs_refcountbt_calc_reserves(struct xfs_mount *mp,
+-		struct xfs_trans *tp, xfs_agnumber_t agno, xfs_extlen_t *ask,
++		struct xfs_trans *tp, struct xfs_perag *pag, xfs_extlen_t *ask,
+ 		xfs_extlen_t *used);
+ 
+ void xfs_refcountbt_commit_staged_btree(struct xfs_btree_cur *cur,
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 46a5295ecf35..ba2f7064451b 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -595,7 +595,7 @@ int
+ xfs_rmapbt_calc_reserves(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+-	xfs_agnumber_t		agno,
++	struct xfs_perag	*pag,
+ 	xfs_extlen_t		*ask,
+ 	xfs_extlen_t		*used)
+ {
+@@ -608,7 +608,7 @@ xfs_rmapbt_calc_reserves(
+ 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+ 		return 0;
+ 
+-	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
++	error = xfs_alloc_read_agf(mp, tp, pag->pag_agno, 0, &agbp);
+ 	if (error)
+ 		return error;
+ 
+@@ -623,7 +623,7 @@ xfs_rmapbt_calc_reserves(
+ 	 * expansion.  We therefore can pretend the space isn't there.
+ 	 */
+ 	if (mp->m_sb.sb_logstart &&
+-	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == agno)
++	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == pag->pag_agno)
+ 		agblocks -= mp->m_sb.sb_logblocks;
+ 
+ 	/* Reserve 1% of the AG or enough for 1 block per record. */
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+index 115c3455a734..57fab72e26ad 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.h
++++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+@@ -57,6 +57,6 @@ extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp,
+ 		xfs_agblock_t agblocks);
+ 
+ extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp, struct xfs_trans *tp,
+-		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
++		struct xfs_perag *pag, xfs_extlen_t *ask, xfs_extlen_t *used);
+ 
+ #endif	/* __XFS_RMAP_BTREE_H__ */
 -- 
 2.31.1
 
