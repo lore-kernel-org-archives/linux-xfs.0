@@ -2,132 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E96C2C43460
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 19:09:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FD7DC433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 20:46:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C830A6135A
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 19:09:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 487A06135A
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 20:46:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231921AbhESTLC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 May 2021 15:11:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48934 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231862AbhESTLB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 May 2021 15:11:01 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6581C06175F
-        for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 12:09:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=rP0yISESwpOMZftAxd0WcFDRmBIV6ch7cmoIGzQmN6A=; b=HQ4zLQMDsOVplz9qZkZ+ksezo/
-        TtKOTFa8Y0f+dTMJnoDKEQIRRB+zn424s8XYIZqYrLNjI9Z7/3pI8f88XQDRp0TyqpVWv3BDPFBJ5
-        Qt4v9VZiuAi8+kDddFbBeOhQlGRQ3eHMB7sCgXooklif2HI4Lmol1h+3/lpuH6OOBcVc2uK4eN0pu
-        iS4s/U23NxQ9/TYKDHjJsqFeadjTex9XZRPu0hSwQFCzZqlwy5kgi1zAa1auKYs2letkY/jjJqfkr
-        DAAz2bG4tvnlP/PFO1GWlhaWp8X3ryJV7WGqk5w+p8QQ12oWW6d2as8neIoFJMt3yU6Cz9eGSK8vr
-        bXmCNSuA==;
-Received: from [2001:4bb8:180:5add:9e44:3522:a0e8:f6e] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1ljRZc-00Fitt-U9; Wed, 19 May 2021 19:09:41 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH 11/11] xfs: use alloc_pages_bulk_array() for buffers
-Date:   Wed, 19 May 2021 21:09:00 +0200
-Message-Id: <20210519190900.320044-12-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210519190900.320044-1-hch@lst.de>
-References: <20210519190900.320044-1-hch@lst.de>
+        id S229448AbhESUsO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 May 2021 16:48:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58102 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229379AbhESUsO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 May 2021 16:48:14 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0AAA360FE6;
+        Wed, 19 May 2021 20:46:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1621457214;
+        bh=bnGuqs3ZY6S9vaC6i0HkcRvJzuSf/c7KKfH2pqisZkU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OjdZ7YJCIDEjdxir9mCw9Q+wCkjtCwHwonq5Msp+SJ+8GvQjXsEP5kNLYba1j4sDz
+         1ny7FWVJTnFH36vrYNOyHS+F7VYFEN9WZr5fevhRsP5kH7AFYgEOTSjPy2zaLSMR1b
+         hLi+HD6stPD2KsyWCcJ6HEqOh+T7o4TvqOWRMg2uuR8icu8FrfSpKrXhxluJ3LO0Cf
+         Q01JzZ4pT+3bZWECJDWtj4NKJVbetj06+ewaTRNl/3cJkFv0M8x90Ibs8L7wpFb2T/
+         zq7eUQF9Z6jMEYHaieTIeGcI2IFAk9N+tn0ZgSfpnnYGqDUDtfrQFhyOaDXlaA35GC
+         GzjoDpbwLoILg==
+Date:   Wed, 19 May 2021 13:46:53 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eryu Guan <eguan@linux.alibaba.com>
+Cc:     Eryu Guan <guan@eryu.me>, guaneryu@gmail.com,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 2/8] common/xfs: refactor commands to select a particular
+ xfs backing device
+Message-ID: <20210519204653.GC9648@magnolia>
+References: <162078489963.3302755.9219127595550889655.stgit@magnolia>
+ <162078491108.3302755.3627499639796540923.stgit@magnolia>
+ <YKE/I0HE+2MNSCCG@desktop>
+ <20210516203437.GS9675@magnolia>
+ <20210519030324.GB60846@e18g06458.et15sqa>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210519030324.GB60846@e18g06458.et15sqa>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, May 19, 2021 at 11:03:24AM +0800, Eryu Guan wrote:
+> On Sun, May 16, 2021 at 01:34:37PM -0700, Darrick J. Wong wrote:
+> > On Sun, May 16, 2021 at 11:49:55PM +0800, Eryu Guan wrote:
+> > > On Tue, May 11, 2021 at 07:01:51PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > Refactor all the places where we try to force new file data allocations
+> > > > to a specific xfs backing device so that we don't end up open-coding the
+> > > > same xfs_io command lines over and over.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  common/populate   |    2 +-
+> > > >  common/xfs        |   25 +++++++++++++++++++++++++
+> > > >  tests/generic/223 |    3 ++-
+> > > >  tests/generic/449 |    2 +-
+> > > >  tests/xfs/004     |    2 +-
+> > > 
+> > > >  tests/xfs/088     |    1 +
+> > > >  tests/xfs/089     |    1 +
+> > > >  tests/xfs/091     |    1 +
+> > > >  tests/xfs/120     |    1 +
+> > > >  tests/xfs/130     |    1 +
+> > > 
+> > > I think above updates should be in a separate patch.
+> > 
+> > Why?
+> 
+> This patch is refactoring open-coded command into a helper, which should
+> not change the logic. But above changes are adding new users of this
+> helper and change test behavior. So I think they should be in a separate
+> patch for review.
 
-Because it's more efficient than allocating pages one at a time in a
-loop.
+Oh, ok.  Will do then.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[hch: rebased ontop of a bunch of cleanups]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_buf.c | 39 +++++++++++++++------------------------
- 1 file changed, 15 insertions(+), 24 deletions(-)
+--D
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index a1295b5b6f0ca6..e2439503fc13bb 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -354,7 +354,7 @@ xfs_buf_alloc_pages(
- 	xfs_buf_flags_t		flags)
- {
- 	gfp_t			gfp_mask = __GFP_NOWARN;
--	int			i;
-+	unsigned long		filled = 0;
- 
- 	if (flags & XBF_READ_AHEAD)
- 		gfp_mask |= __GFP_NORETRY;
-@@ -377,36 +377,27 @@ xfs_buf_alloc_pages(
- 		bp->b_pages = bp->b_page_array;
- 	}
- 
--	for (i = 0; i < bp->b_page_count; i++) {
--		struct page	*page;
--		uint		retries = 0;
--retry:
--		page = alloc_page(gfp_mask);
--		if (unlikely(!page)) {
-+	/*
-+	 * Bulk filling of pages can take multiple calls. Not filling the entire
-+	 * array is not an allocation failure, so don't back off if we get at
-+	 * least one extra page.
-+	 */
-+	for (;;) {
-+		unsigned long	last = filled;
-+
-+		filled = alloc_pages_bulk_array(gfp_mask, bp->b_page_count,
-+						bp->b_pages);
-+		if (filled == bp->b_page_count)
-+			break;
-+		if (filled == last) {
- 			if (flags & XBF_READ_AHEAD) {
--				bp->b_page_count = i;
-+				bp->b_page_count = filled;
- 				xfs_buf_free_pages(bp);
- 				return -ENOMEM;
- 			}
--
--			/*
--			 * This could deadlock.
--			 *
--			 * But until all the XFS lowlevel code is revamped to
--			 * handle buffer allocation failures we can't do much.
--			 */
--			if (!(++retries % 100))
--				xfs_err(NULL,
--		"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
--					current->comm, current->pid,
--					__func__, gfp_mask);
--
- 			XFS_STATS_INC(bp->b_mount, xb_page_retries);
- 			congestion_wait(BLK_RW_ASYNC, HZ/50);
--			goto retry;
- 		}
--
--		bp->b_pages[i] = page;
- 	}
- 
- 	bp->b_flags |= _XBF_PAGES;
--- 
-2.30.2
-
+> Thanks,
+> Eryu
