@@ -2,192 +2,218 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B3DEC433ED
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 06:01:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 713C3C433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 07:59:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E4A160FF1
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 06:01:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53E416139A
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 07:59:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238486AbhESGDP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 May 2021 02:03:15 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:56917 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S240886AbhESGDM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 May 2021 02:03:12 -0400
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AX+uZmqyMOhl4y1NrYDX+KrPwEL1zdoMgy1kn?=
- =?us-ascii?q?xilNoH1uA6ilfqWV8cjzuiWbtN9vYhsdcLy7WZVoIkmskKKdg7NhXotKNTOO0A?=
- =?us-ascii?q?SVxepZnOnfKlPbexHWx6p00KdMV+xEAsTsMF4St63HyTj9P9E+4NTvysyVuds?=
- =?us-ascii?q?=3D?=
-X-IronPort-AV: E=Sophos;i="5.82,311,1613404800"; 
-   d="scan'208";a="108457058"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 19 May 2021 14:01:50 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 6876F4D0BA86;
-        Wed, 19 May 2021 14:01:50 +0800 (CST)
-Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Wed, 19 May 2021 14:01:41 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Wed, 19 May 2021 14:01:39 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-fsdevel@vger.kernel.org>
-CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <willy@infradead.org>, <viro@zeniv.linux.org.uk>,
-        <david@fromorbit.com>, <hch@lst.de>, <rgoldwyn@suse.de>
-Subject: [PATCH v6 7/7] fs/xfs: Add dax dedupe support
-Date:   Wed, 19 May 2021 14:00:45 +0800
-Message-ID: <20210519060045.1051226-8-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210519060045.1051226-1-ruansy.fnst@fujitsu.com>
-References: <20210519060045.1051226-1-ruansy.fnst@fujitsu.com>
+        id S237171AbhESIA4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 May 2021 04:00:56 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:40163 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236042AbhESIAy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 May 2021 04:00:54 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1621411175;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=6Slk/XuwxK/9gayeUH6u/0wrbQKWj6w71NpJgLO3bVQ=;
+        b=BSD73OI7bQROnmH5l9Ys3egcGcsnbNa60UPiC+fbxq4cyOutYgcp9UxNRzR8qKLwGYZmJj
+        0X9hhWe38FEHh/y/JB9UmPfZYqdaqa8PxIHz7DQFy0ZCjj2Idtn9nF4eY4oej/1JZqoVSS
+        PGn1On9fYAJPOZBnG9Z4f9TEwRjvxz4=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-399-QqOmoHV7MC-y0NHJqzh52g-1; Wed, 19 May 2021 03:59:33 -0400
+X-MC-Unique: QqOmoHV7MC-y0NHJqzh52g-1
+Received: by mail-wm1-f71.google.com with SMTP id f8-20020a1c1f080000b0290169855914dfso1250028wmf.3
+        for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 00:59:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :content-transfer-encoding:in-reply-to;
+        bh=6Slk/XuwxK/9gayeUH6u/0wrbQKWj6w71NpJgLO3bVQ=;
+        b=jlDX7lvUZehyprtiKcFrKtkYovBB5zE7F7Bjdwk466ktVltc36KKmlIZUqM7yV0YVo
+         pst67rEhjqsJVt86E2idpumGWfvent+oNIfvcsHXJctg/RXUJYEjglu2Ph8xJBM6fU0n
+         Ym2TQbRu3x7aiJAovTMFUHWFryGoHB+24n6AJYCGnrmorC61V1MIGm5dMCeaJ3wwla/o
+         ohNTqqwB1mNimNL6pYOI+wekFB0H8qW2CG9qguFZB1yugjLIb678ea6QdL5CpqqtnUfj
+         dzqQyCJUNswOIPmwBnLUUQL7rPjmn83REfKMtma0m+/BaTLXC83z4/YYMjs77wsPXbwG
+         raZg==
+X-Gm-Message-State: AOAM53008+4o959BBO0/HwENsi2o1ubXDGxy14e/rQhER7mwx6HDxCMO
+        H1K2nnvmARJftTzYwneUa5LC/HJuByQWbvw9NWBgdW7tERIcbK2QelQZc5DCXXb/ThDbbSbV4go
+        x0bQL2DiGk5lKBPNP68nO
+X-Received: by 2002:adf:e608:: with SMTP id p8mr13157264wrm.162.1621411172174;
+        Wed, 19 May 2021 00:59:32 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyb5cAiqZwO09FOLkaAvCfVp+OO5Lf4tdIPPYTftoE0/Lb4NmkM8pyu8uNCM70t476HGND4sA==
+X-Received: by 2002:adf:e608:: with SMTP id p8mr13157245wrm.162.1621411171942;
+        Wed, 19 May 2021 00:59:31 -0700 (PDT)
+Received: from omega.lan (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
+        by smtp.gmail.com with ESMTPSA id f6sm28465266wru.72.2021.05.19.00.59.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 May 2021 00:59:31 -0700 (PDT)
+Date:   Wed, 19 May 2021 09:59:29 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: don't take a spinlock unconditionally in the DIO
+ fastpath
+Message-ID: <20210519075929.glb3kdbthuybywcs@omega.lan>
+Mail-Followup-To: Dave Chinner <david@fromorbit.com>,
+        linux-xfs@vger.kernel.org
+References: <20210519011920.450421-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 6876F4D0BA86.AE3DE
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210519011920.450421-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Introduce xfs_mmaplock_two_inodes_and_break_dax_layout() for dax files
-who are going to be deduped.  After that, call compare range function
-only when files are both DAX or not.
+On Wed, May 19, 2021 at 11:19:20AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Because this happens at high thread counts on high IOPS devices
+> doing mixed read/write AIO-DIO to a single file at about a million
+> iops:
+> 
+>    64.09%     0.21%  [kernel]            [k] io_submit_one
+>    - 63.87% io_submit_one
+>       - 44.33% aio_write
+>          - 42.70% xfs_file_write_iter
+>             - 41.32% xfs_file_dio_write_aligned
+>                - 25.51% xfs_file_write_checks
+>                   - 21.60% _raw_spin_lock
+>                      - 21.59% do_raw_spin_lock
+>                         - 19.70% __pv_queued_spin_lock_slowpath
+> 
+> This also happens of the IO completion IO path:
+> 
+>    22.89%     0.69%  [kernel]            [k] xfs_dio_write_end_io
+>    - 22.49% xfs_dio_write_end_io
+>       - 21.79% _raw_spin_lock
+>          - 20.97% do_raw_spin_lock
+>             - 20.10% __pv_queued_spin_lock_slowpath                                                                                                            ▒
+> 
+> IOWs, fio is burning ~14 whole CPUs on this spin lock.
+> 
+> So, do an unlocked check against inode size first, then if we are
+> at/beyond EOF, take the spinlock and recheck. This makes the
+> spinlock disappear from the overwrite fastpath.
+> 
+> I'd like to report that fixing this makes things go faster.
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- fs/xfs/xfs_file.c    |  2 +-
- fs/xfs/xfs_inode.c   | 57 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode.h   |  1 +
- fs/xfs/xfs_reflink.c |  4 ++--
- 4 files changed, 61 insertions(+), 3 deletions(-)
+maybe you meant this does not make things go faster?
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 38d8eca05aee..bd5002d38df4 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -823,7 +823,7 @@ xfs_wait_dax_page(
- 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- }
- 
--static int
-+int
- xfs_break_dax_layouts(
- 	struct inode		*inode,
- 	bool			*retry)
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0369eb22c1bb..d5e2791969ba 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3711,6 +3711,59 @@ xfs_iolock_two_inodes_and_break_layout(
- 	return 0;
- }
- 
-+static int
-+xfs_mmaplock_two_inodes_and_break_dax_layout(
-+	struct xfs_inode	*ip1,
-+	struct xfs_inode	*ip2)
-+{
-+	int			error, attempts = 0;
-+	bool			retry;
-+	struct page		*page;
-+	struct xfs_log_item	*lp;
-+
-+	if (ip1->i_ino > ip2->i_ino)
-+		swap(ip1, ip2);
-+
-+again:
-+	retry = false;
-+	/* Lock the first inode */
-+	xfs_ilock(ip1, XFS_MMAPLOCK_EXCL);
-+	error = xfs_break_dax_layouts(VFS_I(ip1), &retry);
-+	if (error || retry) {
-+		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-+		goto again;
-+	}
-+
-+	if (ip1 == ip2)
-+		return 0;
-+
-+	/* Nested lock the second inode */
-+	lp = &ip1->i_itemp->ili_item;
-+	if (lp && test_bit(XFS_LI_IN_AIL, &lp->li_flags)) {
-+		if (!xfs_ilock_nowait(ip2,
-+		    xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1))) {
-+			xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-+			if ((++attempts % 5) == 0)
-+				delay(1); /* Don't just spin the CPU */
-+			goto again;
-+		}
-+	} else
-+		xfs_ilock(ip2, xfs_lock_inumorder(XFS_MMAPLOCK_EXCL, 1));
-+	/*
-+	 * We cannot use xfs_break_dax_layouts() directly here because it may
-+	 * need to unlock & lock the XFS_MMAPLOCK_EXCL which is not suitable
-+	 * for this nested lock case.
-+	 */
-+	page = dax_layout_busy_page(VFS_I(ip2)->i_mapping);
-+	if (page && page_ref_count(page) != 1) {
-+		xfs_iunlock(ip2, XFS_MMAPLOCK_EXCL);
-+		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
-+		goto again;
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Lock two inodes so that userspace cannot initiate I/O via file syscalls or
-  * mmap activity.
-@@ -3725,6 +3778,10 @@ xfs_ilock2_io_mmap(
- 	ret = xfs_iolock_two_inodes_and_break_layout(VFS_I(ip1), VFS_I(ip2));
- 	if (ret)
- 		return ret;
-+
-+	if (IS_DAX(VFS_I(ip1)) && IS_DAX(VFS_I(ip2)))
-+		return xfs_mmaplock_two_inodes_and_break_dax_layout(ip1, ip2);
-+
- 	if (ip1 == ip2)
- 		xfs_ilock(ip1, XFS_MMAPLOCK_EXCL);
- 	else
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index ca826cfba91c..2d0b344fb100 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -457,6 +457,7 @@ enum xfs_prealloc_flags {
- 
- int	xfs_update_prealloc_flags(struct xfs_inode *ip,
- 				  enum xfs_prealloc_flags flags);
-+int	xfs_break_dax_layouts(struct inode *inode, bool *retry);
- int	xfs_break_layouts(struct inode *inode, uint *iolock,
- 		enum layout_break_reason reason);
- 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 9a780948dbd0..ff308304c5cd 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1324,8 +1324,8 @@ xfs_reflink_remap_prep(
- 	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
- 		goto out_unlock;
- 
--	/* Don't share DAX file data for now. */
--	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-+	/* Don't share DAX file data with non-DAX file. */
-+	if (IS_DAX(inode_in) != IS_DAX(inode_out))
- 		goto out_unlock;
- 
- 	if (!IS_DAX(inode_in))
+> It
+> doesn't - it just exposes the the XFS_ILOCK as the next severe
+> contention point doing extent mapping lookups, and that now burns
+> all the 14 CPUs this spinlock was burning.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+The patch looks good, and the comments about why it's safe to not take the
+spinlock (specially why the EOF can't be moved back) is much welcomed.
+
+Feel free to add:
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> ---
+>  fs/xfs/xfs_file.c | 42 +++++++++++++++++++++++++++++++-----------
+>  1 file changed, 31 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 396ef36dcd0a..c068dcd414f4 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -384,21 +384,30 @@ xfs_file_write_checks(
+>  		}
+>  		goto restart;
+>  	}
+> +
+>  	/*
+>  	 * If the offset is beyond the size of the file, we need to zero any
+>  	 * blocks that fall between the existing EOF and the start of this
+> -	 * write.  If zeroing is needed and we are currently holding the
+> -	 * iolock shared, we need to update it to exclusive which implies
+> -	 * having to redo all checks before.
+> +	 * write.  If zeroing is needed and we are currently holding the iolock
+> +	 * shared, we need to update it to exclusive which implies having to
+> +	 * redo all checks before.
+> +	 *
+> +	 * We need to serialise against EOF updates that occur in IO completions
+> +	 * here. We want to make sure that nobody is changing the size while we
+> +	 * do this check until we have placed an IO barrier (i.e.  hold the
+> +	 * XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.  The
+> +	 * spinlock effectively forms a memory barrier once we have the
+> +	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value and
+> +	 * hence be able to correctly determine if we need to run zeroing.
+>  	 *
+> -	 * We need to serialise against EOF updates that occur in IO
+> -	 * completions here. We want to make sure that nobody is changing the
+> -	 * size while we do this check until we have placed an IO barrier (i.e.
+> -	 * hold the XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.
+> -	 * The spinlock effectively forms a memory barrier once we have the
+> -	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value
+> -	 * and hence be able to correctly determine if we need to run zeroing.
+> +	 * We can do an unlocked check here safely as IO completion can only
+> +	 * extend EOF. Truncate is locked out at this point, so the EOF can
+> +	 * not move backwards, only forwards. Hence we only need to take the
+> +	 * slow path and spin locks when we are at or beyond the current EOF.
+>  	 */
+> +	if (iocb->ki_pos <= i_size_read(inode))
+> +		goto out;
+> +
+>  	spin_lock(&ip->i_flags_lock);
+>  	isize = i_size_read(inode);
+>  	if (iocb->ki_pos > isize) {
+> @@ -426,7 +435,7 @@ xfs_file_write_checks(
+>  			drained_dio = true;
+>  			goto restart;
+>  		}
+> -	
+> +
+>  		trace_xfs_zero_eof(ip, isize, iocb->ki_pos - isize);
+>  		error = iomap_zero_range(inode, isize, iocb->ki_pos - isize,
+>  				NULL, &xfs_buffered_write_iomap_ops);
+> @@ -435,6 +444,7 @@ xfs_file_write_checks(
+>  	} else
+>  		spin_unlock(&ip->i_flags_lock);
+>  
+> +out:
+>  	return file_modified(file);
+>  }
+>  
+> @@ -500,7 +510,17 @@ xfs_dio_write_end_io(
+>  	 * other IO completions here to update the EOF. Failing to serialise
+>  	 * here can result in EOF moving backwards and Bad Things Happen when
+>  	 * that occurs.
+> +	 *
+> +	 * As IO completion only ever extends EOF, we can do an unlocked check
+> +	 * here to avoid taking the spinlock. If we land within the current EOF,
+> +	 * then we do not need to do an extending update at all, and we don't
+> +	 * need to take the lock to check this. If we race with an update moving
+> +	 * EOF, then we'll either still be beyond EOF and need to take the lock,
+> +	 * or we'll be within EOF and we don't need to take it at all.
+>  	 */
+> +	if (offset + size <= i_size_read(inode))
+> +		goto out;
+> +
+>  	spin_lock(&ip->i_flags_lock);
+>  	if (offset + size > i_size_read(inode)) {
+>  		i_size_write(inode, offset + size);
+> -- 
+> 2.31.1
+> 
+
 -- 
-2.31.1
-
-
+Carlos
 
