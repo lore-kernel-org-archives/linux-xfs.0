@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1927FC433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 12:13:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1249BC43460
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 12:13:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E5B1361040
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 12:13:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5D80611AE
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 12:13:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241072AbhESMOl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 May 2021 08:14:41 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:48597 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S241404AbhESMOl (ORCPT
+        id S1353349AbhESMOm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 May 2021 08:14:42 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:41333 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241463AbhESMOl (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 May 2021 08:14:41 -0400
 Received: from dread.disaster.area (pa49-195-118-180.pa.nsw.optusnet.com.au [49.195.118.180])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 644DF1AFD93
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 7096480B5D6
         for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 22:13:20 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ljL4h-002m0Y-Ka
-        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 22:13:19 +1000
+        id 1ljL4i-002m1A-13
+        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 22:13:20 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1ljL4h-002SGj-Cr
+        id 1ljL4h-002SHG-Py
         for linux-xfs@vger.kernel.org; Wed, 19 May 2021 22:13:19 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 06/39] xfs: remove need_start_rec parameter from xlog_write()
-Date:   Wed, 19 May 2021 22:12:44 +1000
-Message-Id: <20210519121317.585244-7-david@fromorbit.com>
+Subject: [PATCH 17/39] xfs: move log iovec alignment to preparation function
+Date:   Wed, 19 May 2021 22:12:55 +1000
+Message-Id: <20210519121317.585244-18-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210519121317.585244-1-david@fromorbit.com>
 References: <20210519121317.585244-1-david@fromorbit.com>
@@ -44,217 +44,85 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=xcwBwyABtj18PbVNKPPJDQ==:117 a=xcwBwyABtj18PbVNKPPJDQ==:17
-        a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=pGLkceISAAAA:8 a=VwQbUJbxAAAA:8
-        a=U2sKdf1BhhSb6LhUA4oA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+        a=H4FU2hCJ8sVSBq7siF0A:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The CIL push is the only call to xlog_write that sets this variable
-to true. The other callers don't need a start rec, and they tell
-xlog_write what to do by passing the type of ophdr they need written
-in the flags field. The need_start_rec parameter essentially tells
-xlog_write to to write an extra ophdr with a XLOG_START_TRANS type,
-so get rid of the variable to do this and pass XLOG_START_TRANS as
-the flag value into xlog_write() from the CIL push.
+To include log op headers directly into the log iovec regions that
+the ophdrs wrap, we need to move the buffer alignment code from
+xlog_finish_iovec() to xlog_prepare_iovec(). This is because the
+xlog_op_header is only 12 bytes long, and we need the buffer that
+the caller formats their data into to be 8 byte aligned.
 
-$ size fs/xfs/xfs_log.o*
-  text	   data	    bss	    dec	    hex	filename
- 27595	    560	      8	  28163	   6e03	fs/xfs/xfs_log.o.orig
- 27454	    560	      8	  28022	   6d76	fs/xfs/xfs_log.o.patched
+Hence once we start prepending the ophdr in xlog_prepare_iovec(), we
+are going to need to manage the padding directly to ensure that the
+buffer pointer returned is correctly aligned.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log.c      | 44 +++++++++++++++++++++----------------------
- fs/xfs/xfs_log_cil.c  |  3 ++-
- fs/xfs/xfs_log_priv.h |  3 +--
- 3 files changed, 25 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_log.h | 25 ++++++++++++++-----------
+ 1 file changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 969eebbf3f64..87870867d9fb 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -820,9 +820,7 @@ xlog_wait_on_iclog(
- static int
- xlog_write_unmount_record(
- 	struct xlog		*log,
--	struct xlog_ticket	*ticket,
--	xfs_lsn_t		*lsn,
--	uint			flags)
-+	struct xlog_ticket	*ticket)
- {
- 	struct xfs_unmount_log_format ulf = {
- 		.magic = XLOG_UNMOUNT_TYPE,
-@@ -839,7 +837,7 @@ xlog_write_unmount_record(
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index c0c3141944ea..1ca4f2edbdaf 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -21,6 +21,16 @@ struct xfs_log_vec {
  
- 	/* account for space used by record data */
- 	ticket->t_curr_res -= sizeof(ulf);
--	return xlog_write(log, &vec, ticket, lsn, NULL, flags, false);
-+	return xlog_write(log, &vec, ticket, NULL, NULL, XLOG_UNMOUNT_TRANS);
- }
+ #define XFS_LOG_VEC_ORDERED	(-1)
  
- /*
-@@ -853,15 +851,13 @@ xlog_unmount_write(
- 	struct xfs_mount	*mp = log->l_mp;
- 	struct xlog_in_core	*iclog;
- 	struct xlog_ticket	*tic = NULL;
--	xfs_lsn_t		lsn;
--	uint			flags = XLOG_UNMOUNT_TRANS;
- 	int			error;
- 
- 	error = xfs_log_reserve(mp, 600, 1, &tic, XFS_LOG, 0);
- 	if (error)
- 		goto out_err;
- 
--	error = xlog_write_unmount_record(log, tic, &lsn, flags);
-+	error = xlog_write_unmount_record(log, tic);
- 	/*
- 	 * At this point, we're umounting anyway, so there's no point in
- 	 * transitioning log state to IOERROR. Just continue...
-@@ -1553,8 +1549,7 @@ xlog_commit_record(
- 	if (XLOG_FORCED_SHUTDOWN(log))
- 		return -EIO;
- 
--	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS,
--			   false);
-+	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS);
- 	if (error)
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
- 	return error;
-@@ -2151,13 +2146,16 @@ static int
- xlog_write_calc_vec_length(
- 	struct xlog_ticket	*ticket,
- 	struct xfs_log_vec	*log_vector,
--	bool			need_start_rec)
-+	uint			optype)
- {
- 	struct xfs_log_vec	*lv;
--	int			headers = need_start_rec ? 1 : 0;
-+	int			headers = 0;
- 	int			len = 0;
- 	int			i;
- 
-+	if (optype & XLOG_START_TRANS)
-+		headers++;
-+
- 	for (lv = log_vector; lv; lv = lv->lv_next) {
- 		/* we don't write ordered log vectors */
- 		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
-@@ -2377,8 +2375,7 @@ xlog_write(
- 	struct xlog_ticket	*ticket,
- 	xfs_lsn_t		*start_lsn,
- 	struct xlog_in_core	**commit_iclog,
--	uint			flags,
--	bool			need_start_rec)
-+	uint			optype)
- {
- 	struct xlog_in_core	*iclog = NULL;
- 	struct xfs_log_vec	*lv = log_vector;
-@@ -2406,8 +2403,9 @@ xlog_write(
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
++/*
++ * We need to make sure the buffer pointer returned is naturally aligned for the
++ * biggest basic data type we put into it. We have already accounted for this
++ * padding when sizing the buffer.
++ *
++ * However, this padding does not get written into the log, and hence we have to
++ * track the space used by the log vectors separately to prevent log space hangs
++ * due to inaccurate accounting (i.e. a leak) of the used log space through the
++ * CIL context ticket.
++ */
+ static inline void *
+ xlog_prepare_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
+ 		uint type)
+@@ -34,6 +44,9 @@ xlog_prepare_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
+ 		vec = &lv->lv_iovecp[0];
  	}
  
--	len = xlog_write_calc_vec_length(ticket, log_vector, need_start_rec);
--	*start_lsn = 0;
-+	len = xlog_write_calc_vec_length(ticket, log_vector, optype);
-+	if (start_lsn)
-+		*start_lsn = 0;
- 	while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
- 		void		*ptr;
- 		int		log_offset;
-@@ -2421,7 +2419,7 @@ xlog_write(
- 		ptr = iclog->ic_datap + log_offset;
++	if (!IS_ALIGNED(lv->lv_buf_len, sizeof(uint64_t)))
++		lv->lv_buf_len = round_up(lv->lv_buf_len, sizeof(uint64_t));
++
+ 	vec->i_type = type;
+ 	vec->i_addr = lv->lv_buf + lv->lv_buf_len;
  
- 		/* start_lsn is the first lsn written to. That's all we need. */
--		if (!*start_lsn)
-+		if (start_lsn && !*start_lsn)
- 			*start_lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+@@ -43,20 +56,10 @@ xlog_prepare_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
+ 	return vec->i_addr;
+ }
  
- 		/*
-@@ -2434,6 +2432,7 @@ xlog_write(
- 			int			copy_len;
- 			int			copy_off;
- 			bool			ordered = false;
-+			bool			wrote_start_rec = false;
- 
- 			/* ordered log vectors have no regions to write */
- 			if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
-@@ -2451,13 +2450,15 @@ xlog_write(
- 			 * write a start record. Only do this for the first
- 			 * iclog we write to.
- 			 */
--			if (need_start_rec) {
-+			if (optype & XLOG_START_TRANS) {
- 				xlog_write_start_rec(ptr, ticket);
- 				xlog_write_adv_cnt(&ptr, &len, &log_offset,
- 						sizeof(struct xlog_op_header));
-+				optype &= ~XLOG_START_TRANS;
-+				wrote_start_rec = true;
- 			}
- 
--			ophdr = xlog_write_setup_ophdr(log, ptr, ticket, flags);
-+			ophdr = xlog_write_setup_ophdr(log, ptr, ticket, optype);
- 			if (!ophdr)
- 				return -EIO;
- 
-@@ -2488,14 +2489,13 @@ xlog_write(
- 			}
- 			copy_len += sizeof(struct xlog_op_header);
- 			record_cnt++;
--			if (need_start_rec) {
-+			if (wrote_start_rec) {
- 				copy_len += sizeof(struct xlog_op_header);
- 				record_cnt++;
--				need_start_rec = false;
- 			}
- 			data_cnt += contwr ? copy_len : 0;
- 
--			error = xlog_write_copy_finish(log, iclog, flags,
-+			error = xlog_write_copy_finish(log, iclog, optype,
- 						       &record_cnt, &data_cnt,
- 						       &partial_copy,
- 						       &partial_copy_len,
-@@ -2539,7 +2539,7 @@ xlog_write(
- 	spin_lock(&log->l_icloglock);
- 	xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
- 	if (commit_iclog) {
--		ASSERT(flags & XLOG_COMMIT_TRANS);
-+		ASSERT(optype & XLOG_COMMIT_TRANS);
- 		*commit_iclog = iclog;
- 	} else {
- 		error = xlog_state_release_iclog(log, iclog);
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 7b8b7ac85ea9..172bb3551d6b 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -823,7 +823,8 @@ xlog_cil_push_work(
- 	 */
- 	wait_for_completion(&bdev_flush);
- 
--	error = xlog_write(log, &lvhdr, tic, &ctx->start_lsn, NULL, 0, true);
-+	error = xlog_write(log, &lvhdr, tic, &ctx->start_lsn, NULL,
-+				XLOG_START_TRANS);
- 	if (error)
- 		goto out_abort_free_ticket;
- 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index ee7786b33da9..56e1942c47df 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -480,8 +480,7 @@ void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
- void	xlog_print_trans(struct xfs_trans *);
- int	xlog_write(struct xlog *log, struct xfs_log_vec *log_vector,
- 		struct xlog_ticket *tic, xfs_lsn_t *start_lsn,
--		struct xlog_in_core **commit_iclog, uint flags,
--		bool need_start_rec);
-+		struct xlog_in_core **commit_iclog, uint optype);
- int	xlog_commit_record(struct xlog *log, struct xlog_ticket *ticket,
- 		struct xlog_in_core **iclog, xfs_lsn_t *lsn);
- void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
+-/*
+- * We need to make sure the next buffer is naturally aligned for the biggest
+- * basic data type we put into it.  We already accounted for this padding when
+- * sizing the buffer.
+- *
+- * However, this padding does not get written into the log, and hence we have to
+- * track the space used by the log vectors separately to prevent log space hangs
+- * due to inaccurate accounting (i.e. a leak) of the used log space through the
+- * CIL context ticket.
+- */
+ static inline void
+ xlog_finish_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec *vec, int len)
+ {
+-	lv->lv_buf_len += round_up(len, sizeof(uint64_t));
++	lv->lv_buf_len += len;
+ 	lv->lv_bytes += len;
+ 	vec->i_len = len;
+ }
 -- 
 2.31.1
 
