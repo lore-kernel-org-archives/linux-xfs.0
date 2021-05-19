@@ -7,112 +7,868 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2FECC433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 078EFC433ED
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9DE66139A
+	by mail.kernel.org (Postfix) with ESMTP id DB42B613AA
 	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231981AbhESBWY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229983AbhESBWY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 18 May 2021 21:22:24 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:52346 "EHLO
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:52340 "EHLO
         mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229983AbhESBWX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 May 2021 21:22:23 -0400
+        by vger.kernel.org with ESMTP id S229556AbhESBWY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 May 2021 21:22:24 -0400
 Received: from dread.disaster.area (pa49-195-118-180.pa.nsw.optusnet.com.au [49.195.118.180])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id E62BF1140A06
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id BF88711408AF
         for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 11:21:03 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ljAtT-002bOB-EN
+        id 1ljAtT-002bNr-7g
         for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:21:03 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1ljAtT-001tK5-6I
+        id 1ljAtS-001tJn-VM
         for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:21:03 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 07/23] xfs: convert secondary superblock walk to use perags
-Date:   Wed, 19 May 2021 11:20:46 +1000
-Message-Id: <20210519012102.450926-8-david@fromorbit.com>
+Subject: [PATCH 01/23] xfs: move xfs_perag_get/put to xfs_ag.[ch]
+Date:   Wed, 19 May 2021 11:20:40 +1000
+Message-Id: <20210519012102.450926-2-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210519012102.450926-1-david@fromorbit.com>
 References: <20210519012102.450926-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=xcwBwyABtj18PbVNKPPJDQ==:117 a=xcwBwyABtj18PbVNKPPJDQ==:17
         a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=RuY9LHvN9V0gqSKNSQYA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=kUTngkE3-TPa6DuUEYIA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Clean up the last external manual AG walk.
+They are AG functions, not superblock functions, so move them to the
+appropriate location.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_sb.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c             | 135 +++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h             |  10 +++
+ fs/xfs/libxfs/xfs_ag_resv.c        |   2 +-
+ fs/xfs/libxfs/xfs_alloc.c          |   2 +-
+ fs/xfs/libxfs/xfs_alloc_btree.c    |   2 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c      |   1 +
+ fs/xfs/libxfs/xfs_bmap.c           |   1 +
+ fs/xfs/libxfs/xfs_ialloc.c         |   2 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |   2 +-
+ fs/xfs/libxfs/xfs_rmap.c           |   1 +
+ fs/xfs/libxfs/xfs_rmap_btree.c     |   2 +-
+ fs/xfs/libxfs/xfs_sb.c             | 134 ----------------------------
+ fs/xfs/libxfs/xfs_sb.h             |   9 --
+ fs/xfs/scrub/agheader.c            |   1 +
+ fs/xfs/scrub/agheader_repair.c     |   1 +
+ fs/xfs/scrub/common.c              |   2 +-
+ fs/xfs/scrub/fscounters.c          |   2 +-
+ fs/xfs/scrub/health.c              |   2 +-
+ fs/xfs/scrub/repair.c              |   1 +
+ fs/xfs/xfs_buf.c                   |   2 +-
+ fs/xfs/xfs_discard.c               |   2 +-
+ fs/xfs/xfs_extent_busy.c           |   2 +-
+ fs/xfs/xfs_filestream.c            |   2 +-
+ fs/xfs/xfs_health.c                |   2 +-
+ fs/xfs/xfs_icache.c                |   2 +-
+ fs/xfs/xfs_inode.c                 |   2 +-
+ fs/xfs/xfs_log_recover.c           |   1 +
+ fs/xfs/xfs_mount.c                 |   1 +
+ fs/xfs/xfs_qm.c                    |   1 +
+ fs/xfs/xfs_reflink.c               |   2 +-
+ fs/xfs/xfs_super.c                 |   1 +
+ 31 files changed, 172 insertions(+), 160 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index c68a36688474..2ca31dc46fe8 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -27,6 +27,141 @@
+ #include "xfs_defer.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans.h"
++#include "xfs_trace.h"
++
++/*
++ * Passive reference counting access wrappers to the perag structures.  If the
++ * per-ag structure is to be freed, the freeing code is responsible for cleaning
++ * up objects with passive references before freeing the structure. This is
++ * things like cached buffers.
++ */
++struct xfs_perag *
++xfs_perag_get(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
++{
++	struct xfs_perag	*pag;
++	int			ref = 0;
++
++	rcu_read_lock();
++	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
++	if (pag) {
++		ASSERT(atomic_read(&pag->pag_ref) >= 0);
++		ref = atomic_inc_return(&pag->pag_ref);
++	}
++	rcu_read_unlock();
++	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
++	return pag;
++}
++
++/*
++ * search from @first to find the next perag with the given tag set.
++ */
++struct xfs_perag *
++xfs_perag_get_tag(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		first,
++	int			tag)
++{
++	struct xfs_perag	*pag;
++	int			found;
++	int			ref;
++
++	rcu_read_lock();
++	found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
++					(void **)&pag, first, 1, tag);
++	if (found <= 0) {
++		rcu_read_unlock();
++		return NULL;
++	}
++	ref = atomic_inc_return(&pag->pag_ref);
++	rcu_read_unlock();
++	trace_xfs_perag_get_tag(mp, pag->pag_agno, ref, _RET_IP_);
++	return pag;
++}
++
++void
++xfs_perag_put(
++	struct xfs_perag	*pag)
++{
++	int	ref;
++
++	ASSERT(atomic_read(&pag->pag_ref) > 0);
++	ref = atomic_dec_return(&pag->pag_ref);
++	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
++}
++
++/*
++ * xfs_initialize_perag_data
++ *
++ * Read in each per-ag structure so we can count up the number of
++ * allocated inodes, free inodes and used filesystem blocks as this
++ * information is no longer persistent in the superblock. Once we have
++ * this information, write it into the in-core superblock structure.
++ */
++int
++xfs_initialize_perag_data(
++	struct xfs_mount *mp,
++	xfs_agnumber_t	agcount)
++{
++	xfs_agnumber_t	index;
++	xfs_perag_t	*pag;
++	xfs_sb_t	*sbp = &mp->m_sb;
++	uint64_t	ifree = 0;
++	uint64_t	ialloc = 0;
++	uint64_t	bfree = 0;
++	uint64_t	bfreelst = 0;
++	uint64_t	btree = 0;
++	uint64_t	fdblocks;
++	int		error = 0;
++
++	for (index = 0; index < agcount; index++) {
++		/*
++		 * read the agf, then the agi. This gets us
++		 * all the information we need and populates the
++		 * per-ag structures for us.
++		 */
++		error = xfs_alloc_pagf_init(mp, NULL, index, 0);
++		if (error)
++			return error;
++
++		error = xfs_ialloc_pagi_init(mp, NULL, index);
++		if (error)
++			return error;
++		pag = xfs_perag_get(mp, index);
++		ifree += pag->pagi_freecount;
++		ialloc += pag->pagi_count;
++		bfree += pag->pagf_freeblks;
++		bfreelst += pag->pagf_flcount;
++		btree += pag->pagf_btreeblks;
++		xfs_perag_put(pag);
++	}
++	fdblocks = bfree + bfreelst + btree;
++
++	/*
++	 * If the new summary counts are obviously incorrect, fail the
++	 * mount operation because that implies the AGFs are also corrupt.
++	 * Clear FS_COUNTERS so that we don't unmount with a dirty log, which
++	 * will prevent xfs_repair from fixing anything.
++	 */
++	if (fdblocks > sbp->sb_dblocks || ifree > ialloc) {
++		xfs_alert(mp, "AGF corruption. Please run xfs_repair.");
++		error = -EFSCORRUPTED;
++		goto out;
++	}
++
++	/* Overwrite incore superblock counters with just-read data */
++	spin_lock(&mp->m_sb_lock);
++	sbp->sb_ifree = ifree;
++	sbp->sb_icount = ialloc;
++	sbp->sb_fdblocks = fdblocks;
++	spin_unlock(&mp->m_sb_lock);
++
++	xfs_reinit_percpu_counters(mp);
++out:
++	xfs_fs_mark_healthy(mp, XFS_SICK_FS_COUNTERS);
++	return error;
++}
+ 
+ static int
+ xfs_get_aghdr_buf(
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 4535de1d88ea..cb1bd1c03cd7 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -9,6 +9,16 @@
+ 
+ struct xfs_mount;
+ struct xfs_trans;
++struct xfs_perag;
++
++/*
++ * perag get/put wrappers for ref counting
++ */
++int	xfs_initialize_perag_data(struct xfs_mount *, xfs_agnumber_t);
++struct xfs_perag *xfs_perag_get(struct xfs_mount *, xfs_agnumber_t);
++struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *, xfs_agnumber_t,
++				   int tag);
++void	xfs_perag_put(struct xfs_perag *pag);
+ 
+ struct aghdr_init_data {
+ 	/* per ag data */
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index e32a1833d523..2e3dcdfd4984 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -19,7 +19,7 @@
+ #include "xfs_btree.h"
+ #include "xfs_refcount_btree.h"
+ #include "xfs_ialloc_btree.h"
+-#include "xfs_sb.h"
++#include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 82b7cbb1f24f..dc2b77829915 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -10,7 +10,6 @@
+ #include "xfs_shared.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_bit.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_defer.h"
+ #include "xfs_btree.h"
+@@ -24,6 +23,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_log.h"
++#include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ #include "xfs_bmap.h"
+ 
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index a43e4c50e69b..a540b6e799e0 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -9,7 +9,6 @@
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_btree.h"
+ #include "xfs_btree_staging.h"
+@@ -19,6 +18,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_trans.h"
++#include "xfs_ag.h"
+ 
+ 
+ STATIC struct xfs_btree_cur *
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 556184b63061..aa371d005131 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -27,6 +27,7 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_dir2.h"
+ #include "xfs_log.h"
++#include "xfs_ag.h"
+ 
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 7e3b9b01431e..2086c55b67bd 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -31,6 +31,7 @@
+ #include "xfs_attr_leaf.h"
+ #include "xfs_filestream.h"
+ #include "xfs_rmap.h"
++#include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ #include "xfs_refcount.h"
+ #include "xfs_icache.h"
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index eefdb518fe64..8dc9225a5353 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -10,7 +10,6 @@
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_bit.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
+ #include "xfs_btree.h"
+@@ -27,6 +26,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
+ #include "xfs_rmap.h"
++#include "xfs_ag.h"
+ 
+ /*
+  * Lookup a record by ino in the btree given by cur.
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index a6ac60ae9421..b281f0c674f5 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -9,7 +9,6 @@
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_btree.h"
+ #include "xfs_btree_staging.h"
+@@ -20,6 +19,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_bit.h"
+ #include "xfs_rmap.h"
++#include "xfs_ag.h"
+ 
+ static struct xfs_btree_cur *
+ xfs_refcountbt_dup_cursor(
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 10e0cf9949a2..61e8f10436ac 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -21,6 +21,7 @@
+ #include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_inode.h"
++#include "xfs_ag.h"
+ 
+ /*
+  * Lookup the first record less than or equal to [bno, len, owner, offset]
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 9f5bcbd834c3..f1fee42dda2d 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -9,7 +9,6 @@
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_trans.h"
+ #include "xfs_alloc.h"
+@@ -20,6 +19,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_error.h"
+ #include "xfs_extent_busy.h"
++#include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ 
+ /*
 diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 99dc905b4f89..04f5386446db 100644
+index dfbbcbd448c1..99dc905b4f89 100644
 --- a/fs/xfs/libxfs/xfs_sb.c
 +++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -24,6 +24,7 @@
+@@ -15,7 +15,6 @@
+ #include "xfs_ialloc.h"
+ #include "xfs_alloc.h"
+ #include "xfs_error.h"
+-#include "xfs_trace.h"
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_bmap_btree.h"
+@@ -30,67 +29,6 @@
+  * Physical superblock buffer manipulations. Shared with libxfs in userspace.
+  */
+ 
+-/*
+- * Reference counting access wrappers to the perag structures.
+- * Because we never free per-ag structures, the only thing we
+- * have to protect against changes is the tree structure itself.
+- */
+-struct xfs_perag *
+-xfs_perag_get(
+-	struct xfs_mount	*mp,
+-	xfs_agnumber_t		agno)
+-{
+-	struct xfs_perag	*pag;
+-	int			ref = 0;
+-
+-	rcu_read_lock();
+-	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
+-	if (pag) {
+-		ASSERT(atomic_read(&pag->pag_ref) >= 0);
+-		ref = atomic_inc_return(&pag->pag_ref);
+-	}
+-	rcu_read_unlock();
+-	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
+-	return pag;
+-}
+-
+-/*
+- * search from @first to find the next perag with the given tag set.
+- */
+-struct xfs_perag *
+-xfs_perag_get_tag(
+-	struct xfs_mount	*mp,
+-	xfs_agnumber_t		first,
+-	int			tag)
+-{
+-	struct xfs_perag	*pag;
+-	int			found;
+-	int			ref;
+-
+-	rcu_read_lock();
+-	found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
+-					(void **)&pag, first, 1, tag);
+-	if (found <= 0) {
+-		rcu_read_unlock();
+-		return NULL;
+-	}
+-	ref = atomic_inc_return(&pag->pag_ref);
+-	rcu_read_unlock();
+-	trace_xfs_perag_get_tag(mp, pag->pag_agno, ref, _RET_IP_);
+-	return pag;
+-}
+-
+-void
+-xfs_perag_put(
+-	struct xfs_perag	*pag)
+-{
+-	int	ref;
+-
+-	ASSERT(atomic_read(&pag->pag_ref) > 0);
+-	ref = atomic_dec_return(&pag->pag_ref);
+-	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
+-}
+-
+ /* Check all the superblock fields we care about when reading one in. */
+ STATIC int
+ xfs_validate_sb_read(
+@@ -841,78 +779,6 @@ xfs_sb_mount_common(
+ 	mp->m_ag_max_usable = xfs_alloc_ag_max_usable(mp);
+ }
+ 
+-/*
+- * xfs_initialize_perag_data
+- *
+- * Read in each per-ag structure so we can count up the number of
+- * allocated inodes, free inodes and used filesystem blocks as this
+- * information is no longer persistent in the superblock. Once we have
+- * this information, write it into the in-core superblock structure.
+- */
+-int
+-xfs_initialize_perag_data(
+-	struct xfs_mount *mp,
+-	xfs_agnumber_t	agcount)
+-{
+-	xfs_agnumber_t	index;
+-	xfs_perag_t	*pag;
+-	xfs_sb_t	*sbp = &mp->m_sb;
+-	uint64_t	ifree = 0;
+-	uint64_t	ialloc = 0;
+-	uint64_t	bfree = 0;
+-	uint64_t	bfreelst = 0;
+-	uint64_t	btree = 0;
+-	uint64_t	fdblocks;
+-	int		error = 0;
+-
+-	for (index = 0; index < agcount; index++) {
+-		/*
+-		 * read the agf, then the agi. This gets us
+-		 * all the information we need and populates the
+-		 * per-ag structures for us.
+-		 */
+-		error = xfs_alloc_pagf_init(mp, NULL, index, 0);
+-		if (error)
+-			return error;
+-
+-		error = xfs_ialloc_pagi_init(mp, NULL, index);
+-		if (error)
+-			return error;
+-		pag = xfs_perag_get(mp, index);
+-		ifree += pag->pagi_freecount;
+-		ialloc += pag->pagi_count;
+-		bfree += pag->pagf_freeblks;
+-		bfreelst += pag->pagf_flcount;
+-		btree += pag->pagf_btreeblks;
+-		xfs_perag_put(pag);
+-	}
+-	fdblocks = bfree + bfreelst + btree;
+-
+-	/*
+-	 * If the new summary counts are obviously incorrect, fail the
+-	 * mount operation because that implies the AGFs are also corrupt.
+-	 * Clear FS_COUNTERS so that we don't unmount with a dirty log, which
+-	 * will prevent xfs_repair from fixing anything.
+-	 */
+-	if (fdblocks > sbp->sb_dblocks || ifree > ialloc) {
+-		xfs_alert(mp, "AGF corruption. Please run xfs_repair.");
+-		error = -EFSCORRUPTED;
+-		goto out;
+-	}
+-
+-	/* Overwrite incore superblock counters with just-read data */
+-	spin_lock(&mp->m_sb_lock);
+-	sbp->sb_ifree = ifree;
+-	sbp->sb_icount = ialloc;
+-	sbp->sb_fdblocks = fdblocks;
+-	spin_unlock(&mp->m_sb_lock);
+-
+-	xfs_reinit_percpu_counters(mp);
+-out:
+-	xfs_fs_mark_healthy(mp, XFS_SICK_FS_COUNTERS);
+-	return error;
+-}
+-
+ /*
+  * xfs_log_sb() can be used to copy arbitrary changes to the in-core superblock
+  * into the superblock buffer to be logged.  It does not provide the higher
+diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+index f79f9dc632b6..0c1602d9b53d 100644
+--- a/fs/xfs/libxfs/xfs_sb.h
++++ b/fs/xfs/libxfs/xfs_sb.h
+@@ -13,15 +13,6 @@ struct xfs_trans;
+ struct xfs_fsop_geom;
+ struct xfs_perag;
+ 
+-/*
+- * perag get/put wrappers for ref counting
+- */
+-extern struct xfs_perag *xfs_perag_get(struct xfs_mount *, xfs_agnumber_t);
+-extern struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *, xfs_agnumber_t,
+-					   int tag);
+-extern void	xfs_perag_put(struct xfs_perag *pag);
+-extern int	xfs_initialize_perag_data(struct xfs_mount *, xfs_agnumber_t);
+-
+ extern void	xfs_log_sb(struct xfs_trans *tp);
+ extern int	xfs_sync_sb(struct xfs_mount *mp, bool wait);
+ extern int	xfs_sync_sb_buf(struct xfs_mount *mp);
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 7a2f9b5f2db5..64a7a30f4ac0 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -14,6 +14,7 @@
+ #include "xfs_alloc.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_rmap.h"
++#include "xfs_ag.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ 
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index 23690f824ffa..1cdfbd57f36b 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -20,6 +20,7 @@
+ #include "xfs_rmap.h"
+ #include "xfs_rmap_btree.h"
  #include "xfs_refcount_btree.h"
- #include "xfs_da_format.h"
++#include "xfs_ag.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index aa874607618a..c8da976b50fc 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -12,7 +12,6 @@
+ #include "xfs_btree.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans.h"
+-#include "xfs_sb.h"
+ #include "xfs_inode.h"
+ #include "xfs_icache.h"
+ #include "xfs_alloc.h"
+@@ -26,6 +25,7 @@
+ #include "xfs_trans_priv.h"
+ #include "xfs_attr.h"
+ #include "xfs_reflink.h"
++#include "xfs_ag.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+index f1d1a8c58853..453ae9adf94c 100644
+--- a/fs/xfs/scrub/fscounters.c
++++ b/fs/xfs/scrub/fscounters.c
+@@ -9,11 +9,11 @@
+ #include "xfs_format.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
+-#include "xfs_sb.h"
+ #include "xfs_alloc.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_health.h"
+ #include "xfs_btree.h"
++#include "xfs_ag.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
+index 3de59b5c2ce6..2e61df3bca83 100644
+--- a/fs/xfs/scrub/health.c
++++ b/fs/xfs/scrub/health.c
+@@ -8,7 +8,7 @@
+ #include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_btree.h"
+-#include "xfs_sb.h"
++#include "xfs_ag.h"
+ #include "xfs_health.h"
+ #include "scrub/scrub.h"
+ #include "scrub/health.h"
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index c2857d854c83..1308b62a8170 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -22,6 +22,7 @@
+ #include "xfs_rmap_btree.h"
+ #include "xfs_refcount_btree.h"
+ #include "xfs_extent_busy.h"
++#include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ #include "xfs_quota.h"
+ #include "scrub/scrub.h"
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index a6cf607bbc4a..a10d49facadf 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -10,7 +10,6 @@
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
+@@ -19,6 +18,7 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_errortag.h"
+ #include "xfs_error.h"
++#include "xfs_ag.h"
+ 
+ static kmem_zone_t *xfs_buf_zone;
+ 
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index f979d0d7e6cd..3bf6dba1a040 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -8,7 +8,6 @@
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_btree.h"
+ #include "xfs_alloc_btree.h"
+@@ -18,6 +17,7 @@
+ #include "xfs_extent_busy.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
++#include "xfs_ag.h"
+ 
+ STATIC int
+ xfs_trim_extents(
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index a4075685d9eb..cb037d7c72b2 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -11,13 +11,13 @@
+ #include "xfs_log_format.h"
+ #include "xfs_shared.h"
+ #include "xfs_trans_resv.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_alloc.h"
+ #include "xfs_extent_busy.h"
+ #include "xfs_trace.h"
+ #include "xfs_trans.h"
+ #include "xfs_log.h"
++#include "xfs_ag.h"
+ 
+ void
+ xfs_extent_busy_insert(
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index db23e455eb91..eed6ca5f8f91 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -9,13 +9,13 @@
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
+ #include "xfs_bmap.h"
+ #include "xfs_alloc.h"
+ #include "xfs_mru_cache.h"
+ #include "xfs_trace.h"
++#include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ #include "xfs_trans.h"
+ #include "xfs_filestream.h"
+diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+index 8e0cb05a7142..b79475ea3dbd 100644
+--- a/fs/xfs/xfs_health.c
++++ b/fs/xfs/xfs_health.c
+@@ -9,11 +9,11 @@
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
+ #include "xfs_trace.h"
  #include "xfs_health.h"
 +#include "xfs_ag.h"
  
  /*
-  * Physical superblock buffer manipulations. Shared with libxfs in userspace.
-@@ -855,17 +856,18 @@ int
- xfs_update_secondary_sbs(
- 	struct xfs_mount	*mp)
- {
--	xfs_agnumber_t		agno;
-+	struct xfs_perag	*pag;
-+	xfs_agnumber_t		agno = 1;
- 	int			saved_error = 0;
- 	int			error = 0;
- 	LIST_HEAD		(buffer_list);
+  * Warn about metadata corruption that we detected but haven't fixed, and
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 3c81daca0e9a..588ea2bf88bb 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -9,7 +9,6 @@
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
+ #include "xfs_trans.h"
+@@ -23,6 +22,7 @@
+ #include "xfs_dquot.h"
+ #include "xfs_reflink.h"
+ #include "xfs_ialloc.h"
++#include "xfs_ag.h"
  
- 	/* update secondary superblocks. */
--	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
-+	for_each_perag_from(mp, agno, pag) {
- 		struct xfs_buf		*bp;
+ #include <linux/iversion.h>
  
- 		error = xfs_buf_get(mp->m_ddev_targp,
--				 XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-+				 XFS_AG_DADDR(mp, pag->pag_agno, XFS_SB_DADDR),
- 				 XFS_FSS_TO_BB(mp, 1), &bp);
- 		/*
- 		 * If we get an error reading or writing alternate superblocks,
-@@ -877,7 +879,7 @@ xfs_update_secondary_sbs(
- 		if (error) {
- 			xfs_warn(mp,
- 		"error allocating secondary superblock for ag %d",
--				agno);
-+				pag->pag_agno);
- 			if (!saved_error)
- 				saved_error = error;
- 			continue;
-@@ -898,7 +900,7 @@ xfs_update_secondary_sbs(
- 		if (error) {
- 			xfs_warn(mp,
- 		"write error %d updating a secondary superblock near ag %d",
--				error, agno);
-+				error, pag->pag_agno);
- 			if (!saved_error)
- 				saved_error = error;
- 			continue;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 0369eb22c1bb..4d397c29ff83 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -11,7 +11,6 @@
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+-#include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_defer.h"
+ #include "xfs_inode.h"
+@@ -35,6 +34,7 @@
+ #include "xfs_log.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_reflink.h"
++#include "xfs_ag.h"
+ 
+ kmem_zone_t *xfs_inode_zone;
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index e5dd1c0c2f03..fee2a4e80241 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -25,6 +25,7 @@
+ #include "xfs_icache.h"
+ #include "xfs_error.h"
+ #include "xfs_buf_item.h"
++#include "xfs_ag.h"
+ 
+ #define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index bdfee1943796..21c630dde476 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -32,6 +32,7 @@
+ #include "xfs_extent_busy.h"
+ #include "xfs_health.h"
+ #include "xfs_trace.h"
++#include "xfs_ag.h"
+ 
+ static DEFINE_MUTEX(xfs_uuid_table_mutex);
+ static int xfs_uuid_table_size;
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 4bf949a89d0d..f7baf4dc2554 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -23,6 +23,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
+ #include "xfs_error.h"
++#include "xfs_ag.h"
+ 
+ /*
+  * The global quota manager. There is only one of these for the entire
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 060695d6d56a..f297d68a931b 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -27,7 +27,7 @@
+ #include "xfs_quota.h"
+ #include "xfs_reflink.h"
+ #include "xfs_iomap.h"
+-#include "xfs_sb.h"
++#include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ 
+ /*
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index a2dab05332ac..688309dbe18b 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -36,6 +36,7 @@
+ #include "xfs_bmap_item.h"
+ #include "xfs_reflink.h"
+ #include "xfs_pwork.h"
++#include "xfs_ag.h"
+ 
+ #include <linux/magic.h>
+ #include <linux/fs_context.h>
 -- 
 2.31.1
 
