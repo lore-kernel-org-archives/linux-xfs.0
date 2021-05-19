@@ -2,40 +2,40 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F4E3C43619
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 12:13:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90F50C2B9F3
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 12:13:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 24214611AE
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 12:13:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B0BB611AE
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 12:13:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345208AbhESMOr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 May 2021 08:14:47 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:49202 "EHLO
+        id S1353390AbhESMOv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 May 2021 08:14:51 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:49324 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1346316AbhESMOo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 May 2021 08:14:44 -0400
+        by vger.kernel.org with ESMTP id S241571AbhESMOp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 May 2021 08:14:45 -0400
 Received: from dread.disaster.area (pa49-195-118-180.pa.nsw.optusnet.com.au [49.195.118.180])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 802B9861550
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E7ADF861568
         for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 22:13:20 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ljL4h-002m0N-GB
-        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 22:13:19 +1000
+        id 1ljL4i-002m1k-Fo
+        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 22:13:20 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1ljL4h-002SGU-82
-        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 22:13:19 +1000
+        id 1ljL4i-002SHq-8M
+        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 22:13:20 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 01/39] xfs: log stripe roundoff is a property of the log
-Date:   Wed, 19 May 2021 22:12:39 +1000
-Message-Id: <20210519121317.585244-2-david@fromorbit.com>
+Subject: [PATCH 29/39] xfs: introduce per-cpu CIL tracking structure
+Date:   Wed, 19 May 2021 22:13:07 +1000
+Message-Id: <20210519121317.585244-30-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210519121317.585244-1-david@fromorbit.com>
 References: <20210519121317.585244-1-david@fromorbit.com>
@@ -44,180 +44,210 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=xcwBwyABtj18PbVNKPPJDQ==:117 a=xcwBwyABtj18PbVNKPPJDQ==:17
-        a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=pGLkceISAAAA:8 a=VwQbUJbxAAAA:8
-        a=D3aekpjFca_zLI-q5woA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=ctKYPObigYSo-yGFUx4A:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We don't need to look at the xfs_mount and superblock every time we
-need to do an iclog roundoff calculation. The property is fixed for
-the life of the log, so store the roundoff in the log at mount time
-and use that everywhere.
+The CIL push lock is highly contended on larger machines, becoming a
+hard bottleneck that about 700,000 transaction commits/s on >16p
+machines. To address this, start moving the CIL tracking
+infrastructure to utilise per-CPU structures.
 
-On a debug build:
+We need to track the space used, the amount of log reservation space
+reserved to write the CIL, the log items in the CIL and the busy
+extents that need to be completed by the CIL commit.  This requires
+a couple of per-cpu counters, an unordered per-cpu list and a
+globally ordered per-cpu list.
 
-$ size fs/xfs/xfs_log.o.*
-   text	   data	    bss	    dec	    hex	filename
-  27360	    560	      8	  27928	   6d18	fs/xfs/xfs_log.o.orig
-  27219	    560	      8	  27787	   6c8b	fs/xfs/xfs_log.o.patched
+Create a per-cpu structure to hold these and all the management
+interfaces needed, as well as the hooks to handle hotplug CPUs.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_log_format.h |  3 --
- fs/xfs/xfs_log.c               | 59 ++++++++++++++--------------------
- fs/xfs/xfs_log_priv.h          |  2 ++
- 3 files changed, 27 insertions(+), 37 deletions(-)
+ fs/xfs/xfs_log_cil.c       | 106 +++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_log_priv.h      |  15 ++++++
+ include/linux/cpuhotplug.h |   1 +
+ 3 files changed, 122 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 3e15ea29fb8d..d548ea4b6aab 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -34,9 +34,6 @@ typedef uint32_t xlog_tid_t;
- #define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
- #define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
- #define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
--#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
--                                 (log)->l_mp->m_sb.sb_logsunit)
--#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 87d4eb321fdc..ba1c6979a4c7 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -1370,6 +1370,105 @@ xfs_log_item_in_current_chkpt(
+ 	return lip->li_seq == cil->xc_ctx->sequence;
+ }
  
- #define XLOG_HEADER_SIZE	512
- 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index c19a82adea1e..0e563ff8cd3b 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1401,6 +1401,11 @@ xlog_alloc_log(
- 	xlog_assign_atomic_lsn(&log->l_last_sync_lsn, 1, 0);
- 	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
- 
-+	if (xfs_sb_version_haslogv2(&mp->m_sb) && mp->m_sb.sb_logsunit > 1)
-+		log->l_iclog_roundoff = mp->m_sb.sb_logsunit;
-+	else
-+		log->l_iclog_roundoff = BBSIZE;
++#ifdef CONFIG_HOTPLUG_CPU
++static LIST_HEAD(xlog_cil_pcp_list);
++static DEFINE_SPINLOCK(xlog_cil_pcp_lock);
++static bool xlog_cil_pcp_init;
 +
- 	xlog_grant_head_init(&log->l_reserve_head);
- 	xlog_grant_head_init(&log->l_write_head);
- 
-@@ -1854,29 +1859,15 @@ xlog_calc_iclog_size(
- 	uint32_t		*roundoff)
- {
- 	uint32_t		count_init, count;
--	bool			use_lsunit;
--
--	use_lsunit = xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
--			log->l_mp->m_sb.sb_logsunit > 1;
- 
- 	/* Add for LR header */
- 	count_init = log->l_iclog_hsize + iclog->ic_offset;
-+	count = roundup(count_init, log->l_iclog_roundoff);
- 
--	/* Round out the log write size */
--	if (use_lsunit) {
--		/* we have a v2 stripe unit to use */
--		count = XLOG_LSUNITTOB(log, XLOG_BTOLSUNIT(log, count_init));
--	} else {
--		count = BBTOB(BTOBB(count_init));
--	}
--
--	ASSERT(count >= count_init);
- 	*roundoff = count - count_init;
- 
--	if (use_lsunit)
--		ASSERT(*roundoff < log->l_mp->m_sb.sb_logsunit);
--	else
--		ASSERT(*roundoff < BBTOB(1));
-+	ASSERT(count >= count_init);
-+	ASSERT(*roundoff < log->l_iclog_roundoff);
- 	return count;
- }
- 
-@@ -3151,10 +3142,9 @@ xlog_state_switch_iclogs(
- 	log->l_curr_block += BTOBB(eventual_size)+BTOBB(log->l_iclog_hsize);
- 
- 	/* Round up to next log-sunit */
--	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
--	    log->l_mp->m_sb.sb_logsunit > 1) {
--		uint32_t sunit_bb = BTOBB(log->l_mp->m_sb.sb_logsunit);
--		log->l_curr_block = roundup(log->l_curr_block, sunit_bb);
-+	if (log->l_iclog_roundoff > BBSIZE) {
-+		log->l_curr_block = roundup(log->l_curr_block,
-+						BTOBB(log->l_iclog_roundoff));
- 	}
- 
- 	if (log->l_curr_block >= log->l_logBBsize) {
-@@ -3406,12 +3396,11 @@ xfs_log_ticket_get(
-  * Figure out the total log space unit (in bytes) that would be
-  * required for a log ticket.
-  */
--int
--xfs_log_calc_unit_res(
--	struct xfs_mount	*mp,
++/*
++ * Move dead percpu state to the relevant CIL context structures.
++ *
++ * We have to lock the CIL context here to ensure that nothing is modifying
++ * the percpu state, either addition or removal. Both of these are done under
++ * the CIL context lock, so grabbing that exclusively here will ensure we can
++ * safely drain the cilpcp for the CPU that is dying.
++ */
 +static int
-+xlog_calc_unit_res(
-+	struct xlog		*log,
- 	int			unit_bytes)
- {
--	struct xlog		*log = mp->m_log;
- 	int			iclog_space;
- 	uint			num_headers;
- 
-@@ -3487,18 +3476,20 @@ xfs_log_calc_unit_res(
- 	/* for commit-rec LR header - note: padding will subsume the ophdr */
- 	unit_bytes += log->l_iclog_hsize;
- 
--	/* for roundoff padding for transaction data and one for commit record */
--	if (xfs_sb_version_haslogv2(&mp->m_sb) && mp->m_sb.sb_logsunit > 1) {
--		/* log su roundoff */
--		unit_bytes += 2 * mp->m_sb.sb_logsunit;
--	} else {
--		/* BB roundoff */
--		unit_bytes += 2 * BBSIZE;
--        }
-+	/* roundoff padding for transaction data and one for commit record */
-+	unit_bytes += 2 * log->l_iclog_roundoff;
- 
- 	return unit_bytes;
- }
- 
-+int
-+xfs_log_calc_unit_res(
-+	struct xfs_mount	*mp,
-+	int			unit_bytes)
++xlog_cil_pcp_dead(
++	unsigned int		cpu)
 +{
-+	return xlog_calc_unit_res(mp->m_log, unit_bytes);
++	struct xfs_cil		*cil, *n;
++
++	spin_lock(&xlog_cil_pcp_lock);
++	list_for_each_entry_safe(cil, n, &xlog_cil_pcp_list, xc_pcp_list) {
++		spin_unlock(&xlog_cil_pcp_lock);
++		down_write(&cil->xc_ctx_lock);
++		/* move stuff on dead CPU to context */
++		up_write(&cil->xc_ctx_lock);
++		spin_lock(&xlog_cil_pcp_lock);
++	}
++	spin_unlock(&xlog_cil_pcp_lock);
++	return 0;
++}
++
++static int
++xlog_cil_pcp_hpadd(
++	struct xfs_cil		*cil)
++{
++	if (!xlog_cil_pcp_init) {
++		int	ret;
++		ret = cpuhp_setup_state_nocalls(CPUHP_XFS_CIL_DEAD,
++						"xfs/cil_pcp:dead", NULL,
++						xlog_cil_pcp_dead);
++		if (ret < 0) {
++			xfs_warn(cil->xc_log->l_mp,
++	"Failed to initialise CIL hotplug, error %d. XFS is non-functional.",
++				ret);
++			ASSERT(0);
++			return -ENOMEM;
++		}
++		xlog_cil_pcp_init = true;
++	}
++
++	INIT_LIST_HEAD(&cil->xc_pcp_list);
++	spin_lock(&xlog_cil_pcp_lock);
++	list_add(&cil->xc_pcp_list, &xlog_cil_pcp_list);
++	spin_unlock(&xlog_cil_pcp_lock);
++	return 0;
++}
++
++static void
++xlog_cil_pcp_hpremove(
++	struct xfs_cil		*cil)
++{
++	spin_lock(&xlog_cil_pcp_lock);
++	list_del(&cil->xc_pcp_list);
++	spin_unlock(&xlog_cil_pcp_lock);
++}
++
++#else /* !CONFIG_HOTPLUG_CPU */
++static inline void xlog_cil_pcp_hpadd(struct xfs_cil *cil) {}
++static inline void xlog_cil_pcp_hpremove(struct xfs_cil *cil) {}
++#endif
++
++static void __percpu *
++xlog_cil_pcp_alloc(
++	struct xfs_cil		*cil)
++{
++	void __percpu		*pcp;
++
++	pcp = alloc_percpu(struct xlog_cil_pcp);
++	if (!pcp)
++		return NULL;
++
++	if (xlog_cil_pcp_hpadd(cil) < 0) {
++		free_percpu(pcp);
++		return NULL;
++	}
++	return pcp;
++}
++
++static void
++xlog_cil_pcp_free(
++	struct xfs_cil		*cil,
++	void __percpu		*pcp)
++{
++	if (!pcp)
++		return;
++	xlog_cil_pcp_hpremove(cil);
++	free_percpu(pcp);
 +}
 +
  /*
-  * Allocate and initialise a new log ticket.
+  * Perform initial CIL structure initialisation.
   */
-@@ -3515,7 +3506,7 @@ xlog_ticket_alloc(
+@@ -1384,6 +1483,12 @@ xlog_cil_init(
+ 	if (!cil)
+ 		return -ENOMEM;
  
- 	tic = kmem_cache_zalloc(xfs_log_ticket_zone, GFP_NOFS | __GFP_NOFAIL);
++	cil->xc_pcp = xlog_cil_pcp_alloc(cil);
++	if (!cil->xc_pcp) {
++		kmem_free(cil);
++		return -ENOMEM;
++	}
++
+ 	INIT_LIST_HEAD(&cil->xc_cil);
+ 	INIT_LIST_HEAD(&cil->xc_committing);
+ 	spin_lock_init(&cil->xc_cil_lock);
+@@ -1414,6 +1519,7 @@ xlog_cil_destroy(
  
--	unit_res = xfs_log_calc_unit_res(log->l_mp, unit_bytes);
-+	unit_res = xlog_calc_unit_res(log, unit_bytes);
+ 	ASSERT(list_empty(&cil->xc_cil));
+ 	ASSERT(test_bit(XLOG_CIL_EMPTY, &cil->xc_flags));
++	xlog_cil_pcp_free(cil, cil->xc_pcp);
+ 	kmem_free(cil);
+ }
  
- 	atomic_set(&tic->t_ref, 1);
- 	tic->t_task		= current;
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 1c6fdbf3d506..037950cf1061 100644
+index 85a85ab569fe..aaa1e7f7fb66 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -436,6 +436,8 @@ struct xlog {
- #endif
- 	/* log recovery lsn tracking (for buffer submission */
- 	xfs_lsn_t		l_recovery_lsn;
-+
-+	uint32_t		l_iclog_roundoff;/* padding roundoff */
+@@ -227,6 +227,16 @@ struct xfs_cil_ctx {
+ 	struct work_struct	push_work;
  };
  
- #define XLOG_BUF_CANCEL_BUCKET(log, blkno) \
++/*
++ * Per-cpu CIL tracking items
++ */
++struct xlog_cil_pcp {
++	uint32_t		space_used;
++	uint32_t		curr_res;
++	struct list_head	busy_extents;
++	struct list_head	log_items;
++};
++
+ /*
+  * Committed Item List structure
+  *
+@@ -260,6 +270,11 @@ struct xfs_cil {
+ 	wait_queue_head_t	xc_commit_wait;
+ 	xfs_csn_t		xc_current_sequence;
+ 	wait_queue_head_t	xc_push_wait;	/* background push throttle */
++
++	void __percpu		*xc_pcp;	/* percpu CIL structures */
++#ifdef CONFIG_HOTPLUG_CPU
++	struct list_head	xc_pcp_list;
++#endif
+ } ____cacheline_aligned_in_smp;
+ 
+ /* xc_flags bit values */
+diff --git a/include/linux/cpuhotplug.h b/include/linux/cpuhotplug.h
+index 4a62b3980642..3d3ccde9e9c8 100644
+--- a/include/linux/cpuhotplug.h
++++ b/include/linux/cpuhotplug.h
+@@ -52,6 +52,7 @@ enum cpuhp_state {
+ 	CPUHP_FS_BUFF_DEAD,
+ 	CPUHP_PRINTK_DEAD,
+ 	CPUHP_MM_MEMCQ_DEAD,
++	CPUHP_XFS_CIL_DEAD,
+ 	CPUHP_PERCPU_CNT_DEAD,
+ 	CPUHP_RADIX_DEAD,
+ 	CPUHP_PAGE_ALLOC_DEAD,
 -- 
 2.31.1
 
