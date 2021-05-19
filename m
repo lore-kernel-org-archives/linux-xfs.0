@@ -7,168 +7,112 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2566C433B4
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:19:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2FECC433B4
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B83F961361
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:19:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9DE66139A
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 May 2021 01:21:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231802AbhESBUq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 May 2021 21:20:46 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:38652 "EHLO
+        id S231981AbhESBWY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 May 2021 21:22:24 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:52346 "EHLO
         mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231641AbhESBUn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 May 2021 21:20:43 -0400
+        by vger.kernel.org with ESMTP id S229983AbhESBWX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 May 2021 21:22:23 -0400
 Received: from dread.disaster.area (pa49-195-118-180.pa.nsw.optusnet.com.au [49.195.118.180])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id CEE8A1140CF1
-        for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 11:19:21 +1000 (AEST)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id E62BF1140A06
+        for <linux-xfs@vger.kernel.org>; Wed, 19 May 2021 11:21:03 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ljArp-002bMO-5N
-        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:19:21 +1000
+        id 1ljAtT-002bOB-EN
+        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:21:03 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1ljAro-001tBc-RR
-        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:19:20 +1000
+        id 1ljAtT-001tK5-6I
+        for linux-xfs@vger.kernel.org; Wed, 19 May 2021 11:21:03 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: don't take a spinlock unconditionally in the DIO fastpath
-Date:   Wed, 19 May 2021 11:19:20 +1000
-Message-Id: <20210519011920.450421-1-david@fromorbit.com>
+Subject: [PATCH 07/23] xfs: convert secondary superblock walk to use perags
+Date:   Wed, 19 May 2021 11:20:46 +1000
+Message-Id: <20210519012102.450926-8-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210519012102.450926-1-david@fromorbit.com>
+References: <20210519012102.450926-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=xcwBwyABtj18PbVNKPPJDQ==:117 a=xcwBwyABtj18PbVNKPPJDQ==:17
-        a=IkcTkHD0fZMA:10 a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8
-        a=nLem6PRWfGTXsvJcTgcA:9 a=QEXdDO2ut3YA:10
+        a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+        a=RuY9LHvN9V0gqSKNSQYA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because this happens at high thread counts on high IOPS devices
-doing mixed read/write AIO-DIO to a single file at about a million
-iops:
-
-   64.09%     0.21%  [kernel]            [k] io_submit_one
-   - 63.87% io_submit_one
-      - 44.33% aio_write
-         - 42.70% xfs_file_write_iter
-            - 41.32% xfs_file_dio_write_aligned
-               - 25.51% xfs_file_write_checks
-                  - 21.60% _raw_spin_lock
-                     - 21.59% do_raw_spin_lock
-                        - 19.70% __pv_queued_spin_lock_slowpath
-
-This also happens of the IO completion IO path:
-
-   22.89%     0.69%  [kernel]            [k] xfs_dio_write_end_io
-   - 22.49% xfs_dio_write_end_io
-      - 21.79% _raw_spin_lock
-         - 20.97% do_raw_spin_lock
-            - 20.10% __pv_queued_spin_lock_slowpath                                                                                                            ▒
-
-IOWs, fio is burning ~14 whole CPUs on this spin lock.
-
-So, do an unlocked check against inode size first, then if we are
-at/beyond EOF, take the spinlock and recheck. This makes the
-spinlock disappear from the overwrite fastpath.
-
-I'd like to report that fixing this makes things go faster. It
-doesn't - it just exposes the the XFS_ILOCK as the next severe
-contention point doing extent mapping lookups, and that now burns
-all the 14 CPUs this spinlock was burning.
+Clean up the last external manual AG walk.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_file.c | 42 +++++++++++++++++++++++++++++++-----------
- 1 file changed, 31 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_sb.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 396ef36dcd0a..c068dcd414f4 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -384,21 +384,30 @@ xfs_file_write_checks(
- 		}
- 		goto restart;
- 	}
-+
- 	/*
- 	 * If the offset is beyond the size of the file, we need to zero any
- 	 * blocks that fall between the existing EOF and the start of this
--	 * write.  If zeroing is needed and we are currently holding the
--	 * iolock shared, we need to update it to exclusive which implies
--	 * having to redo all checks before.
-+	 * write.  If zeroing is needed and we are currently holding the iolock
-+	 * shared, we need to update it to exclusive which implies having to
-+	 * redo all checks before.
-+	 *
-+	 * We need to serialise against EOF updates that occur in IO completions
-+	 * here. We want to make sure that nobody is changing the size while we
-+	 * do this check until we have placed an IO barrier (i.e.  hold the
-+	 * XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.  The
-+	 * spinlock effectively forms a memory barrier once we have the
-+	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value and
-+	 * hence be able to correctly determine if we need to run zeroing.
- 	 *
--	 * We need to serialise against EOF updates that occur in IO
--	 * completions here. We want to make sure that nobody is changing the
--	 * size while we do this check until we have placed an IO barrier (i.e.
--	 * hold the XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.
--	 * The spinlock effectively forms a memory barrier once we have the
--	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value
--	 * and hence be able to correctly determine if we need to run zeroing.
-+	 * We can do an unlocked check here safely as IO completion can only
-+	 * extend EOF. Truncate is locked out at this point, so the EOF can
-+	 * not move backwards, only forwards. Hence we only need to take the
-+	 * slow path and spin locks when we are at or beyond the current EOF.
- 	 */
-+	if (iocb->ki_pos <= i_size_read(inode))
-+		goto out;
-+
- 	spin_lock(&ip->i_flags_lock);
- 	isize = i_size_read(inode);
- 	if (iocb->ki_pos > isize) {
-@@ -426,7 +435,7 @@ xfs_file_write_checks(
- 			drained_dio = true;
- 			goto restart;
- 		}
--	
-+
- 		trace_xfs_zero_eof(ip, isize, iocb->ki_pos - isize);
- 		error = iomap_zero_range(inode, isize, iocb->ki_pos - isize,
- 				NULL, &xfs_buffered_write_iomap_ops);
-@@ -435,6 +444,7 @@ xfs_file_write_checks(
- 	} else
- 		spin_unlock(&ip->i_flags_lock);
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 99dc905b4f89..04f5386446db 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -24,6 +24,7 @@
+ #include "xfs_refcount_btree.h"
+ #include "xfs_da_format.h"
+ #include "xfs_health.h"
++#include "xfs_ag.h"
  
-+out:
- 	return file_modified(file);
- }
+ /*
+  * Physical superblock buffer manipulations. Shared with libxfs in userspace.
+@@ -855,17 +856,18 @@ int
+ xfs_update_secondary_sbs(
+ 	struct xfs_mount	*mp)
+ {
+-	xfs_agnumber_t		agno;
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno = 1;
+ 	int			saved_error = 0;
+ 	int			error = 0;
+ 	LIST_HEAD		(buffer_list);
  
-@@ -500,7 +510,17 @@ xfs_dio_write_end_io(
- 	 * other IO completions here to update the EOF. Failing to serialise
- 	 * here can result in EOF moving backwards and Bad Things Happen when
- 	 * that occurs.
-+	 *
-+	 * As IO completion only ever extends EOF, we can do an unlocked check
-+	 * here to avoid taking the spinlock. If we land within the current EOF,
-+	 * then we do not need to do an extending update at all, and we don't
-+	 * need to take the lock to check this. If we race with an update moving
-+	 * EOF, then we'll either still be beyond EOF and need to take the lock,
-+	 * or we'll be within EOF and we don't need to take it at all.
- 	 */
-+	if (offset + size <= i_size_read(inode))
-+		goto out;
-+
- 	spin_lock(&ip->i_flags_lock);
- 	if (offset + size > i_size_read(inode)) {
- 		i_size_write(inode, offset + size);
+ 	/* update secondary superblocks. */
+-	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
++	for_each_perag_from(mp, agno, pag) {
+ 		struct xfs_buf		*bp;
+ 
+ 		error = xfs_buf_get(mp->m_ddev_targp,
+-				 XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
++				 XFS_AG_DADDR(mp, pag->pag_agno, XFS_SB_DADDR),
+ 				 XFS_FSS_TO_BB(mp, 1), &bp);
+ 		/*
+ 		 * If we get an error reading or writing alternate superblocks,
+@@ -877,7 +879,7 @@ xfs_update_secondary_sbs(
+ 		if (error) {
+ 			xfs_warn(mp,
+ 		"error allocating secondary superblock for ag %d",
+-				agno);
++				pag->pag_agno);
+ 			if (!saved_error)
+ 				saved_error = error;
+ 			continue;
+@@ -898,7 +900,7 @@ xfs_update_secondary_sbs(
+ 		if (error) {
+ 			xfs_warn(mp,
+ 		"write error %d updating a secondary superblock near ag %d",
+-				error, agno);
++				error, pag->pag_agno);
+ 			if (!saved_error)
+ 				saved_error = error;
+ 			continue;
 -- 
 2.31.1
 
