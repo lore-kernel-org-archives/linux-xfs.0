@@ -2,89 +2,174 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0F49C433ED
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 21:59:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E90AC433ED
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 23:27:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A772B6138C
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 21:59:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFFE1613BD
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 23:27:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230382AbhETWAV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 May 2021 18:00:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50868 "EHLO mail.kernel.org"
+        id S233968AbhETX3B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 May 2021 19:29:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35150 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230270AbhETWAV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 May 2021 18:00:21 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4EFF861363;
-        Thu, 20 May 2021 21:58:59 +0000 (UTC)
+        id S233032AbhETX3A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 May 2021 19:29:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 67C0F61163;
+        Thu, 20 May 2021 23:27:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621547939;
-        bh=cr9cjPOGjSJo1JeuAfqWdjxUrbyclymJOAah1WYzXrI=;
+        s=k20201202; t=1621553258;
+        bh=F4vVu72MSvpPSIlSfaqmHjBkapvBkekBrT0GhNRbgeA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=nGabWJgBOH/sMH49BwyB0JMvb8NafpSx8D+qzkYl5SHYciNTu6ogZ8z6wTDzs/2n2
-         FOsWRvxk5xwxY7dmioSDFEt8ddy9QNpZaLp0/ImqOxSFC/9vo7FkjC+Sqj2vtobIc5
-         8Ic7xEcBjrDVTIrBHK8C0ebaduULFkTsMIfcoQoDAFmQmGqTcJYf3e6R/ozkkugPrA
-         0tDF2A/SFlzgjemgNt9bp4EfcCUh2vxhwRbAQrG8c2ze2493e8G0T3JRPpe9jJd48H
-         i+hZjd2nHj04UI91G/K1r83KmGIIHkj/bwDm/6MpKE2sPPMwMv2Dha79SaKiCylIL1
-         5P0wjOliBfieg==
-Date:   Thu, 20 May 2021 14:58:58 -0700
+        b=D/tDjL7O45apzTKUnV0SVbHRnTwvb+gG6HILOX22TR7WoxcJVUOJ2QPMUln9aZBWc
+         +wFKEYSFcd46LO+Rc44v2XyfdfG2xz38VgYuxDgkW8BhDYlnV3fEvHSyOM7YRH9aL7
+         rNOXzi4+P6IjLsGe3pQxPVeV86CKcgkw9asDALp6/rFBQp3O3GklkJHLZe1q1EezaJ
+         0p+8/3QgCpG17U7WITaubzN7LhrmGGWvAEdtyhh2h25Hp4J4ssYaY3T6035BhzJzHx
+         WhTAQQjH5aiD7eRKVV8Piu/g4pezOd7uU+BR5sYJ9VcuHOAcD4aw8HjlFdbQtwwZ7W
+         yaAExDidJcC8w==
+Date:   Thu, 20 May 2021 16:27:37 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Brian Foster <bfoster@redhat.com>
-Cc:     Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] iomap: resched ioend completion when in
- non-atomic context
-Message-ID: <20210520215858.GZ9675@magnolia>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH RFC v3 3/3] iomap: bound ioend size to 4096 pages
+Message-ID: <20210520232737.GA9675@magnolia>
 References: <20210517171722.1266878-1-bfoster@redhat.com>
- <20210517171722.1266878-2-bfoster@redhat.com>
- <YKKt2isZwu0qJK/C@casper.infradead.org>
- <YKOnGSJ9NR+cSRRc@bfoster>
+ <20210517171722.1266878-4-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YKOnGSJ9NR+cSRRc@bfoster>
+In-Reply-To: <20210517171722.1266878-4-bfoster@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 18, 2021 at 07:38:01AM -0400, Brian Foster wrote:
-> On Mon, May 17, 2021 at 06:54:34PM +0100, Matthew Wilcox wrote:
-> > On Mon, May 17, 2021 at 01:17:20PM -0400, Brian Foster wrote:
-> > > @@ -1084,9 +1084,12 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
-> > >  			next = bio->bi_private;
-> > >  
-> > >  		/* walk each page on bio, ending page IO on them */
-> > > -		bio_for_each_segment_all(bv, bio, iter_all)
-> > > +		bio_for_each_segment_all(bv, bio, iter_all) {
-> > >  			iomap_finish_page_writeback(inode, bv->bv_page, error,
-> > >  					bv->bv_len);
-> > > +			if (!atomic)
-> > > +				cond_resched();
-> > > +		}
-> > 
-> > I don't know that it makes sense to check after _every_ page.  I might
-> > go for every segment.  Some users check after every thousand pages.
-> > 
+On Mon, May 17, 2021 at 01:17:22PM -0400, Brian Foster wrote:
+> The iomap writeback infrastructure is currently able to construct
+> extremely large bio chains (tens of GBs) associated with a single
+> ioend. This consolidation provides no significant value as bio
+> chains increase beyond a reasonable minimum size. On the other hand,
+> this does hold significant numbers of pages in the writeback
+> state across an unnecessarily large number of bios because the ioend
+> is not processed for completion until the final bio in the chain
+> completes. Cap an individual ioend to a reasonable size of 4096
+> pages (16MB with 4k pages) to avoid this condition.
 > 
-> The handful of examples I come across on a brief scan (including the
-> other iomap usage) have a similar pattern as used here. I don't doubt
-> there are others, but I think I'd prefer to have more reasoning behind
-> adding more code than might be necessary (i.e. do we expect additional
-> overhead to be measurable here?). As it is, the intent isn't so much to
-> check on every page as much as this just happens to be the common point
-> of the function to cover both long bio chains and single vector bios
-> with large numbers of pages.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/iomap/buffered-io.c |  6 ++++--
+>  include/linux/iomap.h  | 26 ++++++++++++++++++++++++++
+>  2 files changed, 30 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 642422775e4e..f2890ee434d0 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1269,7 +1269,7 @@ iomap_chain_bio(struct bio *prev)
+>  
+>  static bool
+>  iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
+> -		sector_t sector)
+> +		unsigned len, sector_t sector)
+>  {
+>  	if ((wpc->iomap.flags & IOMAP_F_SHARED) !=
+>  	    (wpc->ioend->io_flags & IOMAP_F_SHARED))
+> @@ -1280,6 +1280,8 @@ iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
+>  		return false;
+>  	if (sector != bio_end_sector(wpc->ioend->io_bio))
+>  		return false;
+> +	if (wpc->ioend->io_size + len > IOEND_MAX_IOSIZE)
+> +		return false;
+>  	return true;
+>  }
+>  
+> @@ -1297,7 +1299,7 @@ iomap_add_to_ioend(struct inode *inode, loff_t offset, struct page *page,
+>  	unsigned poff = offset & (PAGE_SIZE - 1);
+>  	bool merged, same_page = false;
+>  
+> -	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, offset, sector)) {
+> +	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, offset, len, sector)) {
+>  		if (wpc->ioend)
+>  			list_add(&wpc->ioend->io_list, iolist);
+>  		wpc->ioend = iomap_alloc_ioend(inode, wpc, offset, sector, wbc);
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 07f3f4e69084..89b15cc236d5 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -203,6 +203,32 @@ struct iomap_ioend {
+>  	struct bio		io_inline_bio;	/* MUST BE LAST! */
+>  };
+>  
+> +/*
+> + * Maximum ioend IO size is used to prevent ioends from becoming unbound in
+> + * size. bios can reach 4GB in size if pages are contiguous, and bio chains are
+> + * effectively unbound in length. Hence the only limits on the size of the bio
+> + * chain is the contiguity of the extent on disk and the length of the run of
+> + * sequential dirty pages in the page cache. This can be tens of GBs of physical
+> + * extents and if memory is large enough, tens of millions of dirty pages.
+> + * Locking them all under writeback until the final bio in the chain is
+> + * submitted and completed locks all those pages for the legnth of time it takes
 
-It's been a while since I waded through the macro hell to find out what
-cond_resched actually does, but iirc it can do some fairly heavyweight
-things (disable preemption, call the scheduler, rcu stuff) which is why
-we're supposed to be a little judicious about amortizing each call over
-a few thousand pages.
+s/legnth/length/
+
+> + * to write those many, many GBs of data to storage.
+> + *
+> + * Background writeback caps any single writepages call to half the device
+> + * bandwidth to ensure fairness and prevent any one dirty inode causing
+> + * writeback starvation. fsync() and other WB_SYNC_ALL writebacks have no such
+> + * cap on wbc->nr_pages, and that's where the above massive bio chain lengths
+> + * come from. We want large IOs to reach the storage, but we need to limit
+> + * completion latencies, hence we need to control the maximum IO size we
+> + * dispatch to the storage stack.
+> + *
+> + * We don't really have to care about the extra IO completion overhead here
+> + * because iomap has contiguous IO completion merging. If the device can sustain
+
+Assuming you're referring to iomap_finish_ioends, only XFS employs the
+ioend completion merging, and only for ioends where it decides to
+override the default bi_end_io.  iomap on its own never calls
+iomap_ioend_try_merge.
+
+This patch establishes a maximum ioend size of 4096 pages so that we
+don't trip the lockup watchdog while clearing pagewriteback and also so
+that we don't pin a large number of pages while constructing a big chain
+of bios.  On gfs2 and zonefs, each ioend completion will now have to
+clear up to 4096 pages from whatever context bio_endio is called.
+
+For XFS it's a more complicated -- XFS already overrode the bio handler
+for ioends that required further metadata updates (e.g. unwritten
+conversion, eof extension, or cow) so that it could combine ioends when
+possible.  XFS wants to combine ioends to amortize the cost of getting
+the ILOCK and running transactions over a larger number of pages.
+
+So I guess I see how the two changes dovetail nicely for XFS -- iomap
+issues smaller write bios, and the xfs ioend worker can recombine
+however many bios complete before the worker runs.  As a bonus, we don't
+have to worry about situations like the device driver completing so many
+bios from a single invocation of a bottom half handler that we run afoul
+of the soft lockup timer.
+
+Is that a correct understanding of how the two changes intersect with
+each other?  TBH I was expecting the two thresholds to be closer in
+value.
+
+The other two users of iomap for buffered io (gfs2 and zonefs) don't
+have a means to defer and combine ioends like xfs does.  Do you think
+they should?  I think it's still possible to trip the softlockup there.
 
 --D
 
-> Brian
+> + * high throughput and large bios, the ioends are merged on completion and
+> + * processed in large, efficient chunks with no additional IO latency.
+> + */
+> +#define IOEND_MAX_IOSIZE	(4096ULL << PAGE_SHIFT)
+> +
+>  struct iomap_writeback_ops {
+>  	/*
+>  	 * Required, maps the blocks so that writeback can be performed on
+> -- 
+> 2.26.3
 > 
