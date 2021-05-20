@@ -7,244 +7,95 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FD91C433ED
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 23:42:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C718C433ED
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 23:43:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5981E6138C
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 23:42:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 604C86138C
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 23:43:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234379AbhETXoA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 May 2021 19:44:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39396 "EHLO mail.kernel.org"
+        id S234471AbhETXpC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 May 2021 19:45:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39734 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234358AbhETXoA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 May 2021 19:44:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 22ABE60FE5;
-        Thu, 20 May 2021 23:42:38 +0000 (UTC)
+        id S233104AbhETXpB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 May 2021 19:45:01 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B7AE360FE5;
+        Thu, 20 May 2021 23:43:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621554158;
-        bh=Xv9uctXTFSfaKCJjfs39I6YXGjA7p6SDdJOhyzDY1Bs=;
+        s=k20201202; t=1621554219;
+        bh=wr58G3YxyMXRgq91+KzClba8Oh8UiFZi9bUzxWuZi3g=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=KVmtF3z6URbuwQKDiHexwgttyWokvOMPODTW1LpS205W2ZvBaOxFw1q7KZwTcjvRU
-         Ru2h+d/Hse0YQKITcE/+hAF1bb50W2dTWG91lhrpMu4w7SLoreHeFt2pLIwLObSmLA
-         eVZBAWIGmNMp95/n8g/DQL7QBn9x7vi59rqg5KvCVKfOiY3VVF4MKTZzLTViAoVVdO
-         5CdX3UgK6aay97j/ZEeqGjkRVqBn26R9UzD4YYdFNQf9WTQT/ZDBBTYn+qTe4wL/vn
-         h29OnhcglgbDrysvfI9ROh81Vi5suXUWBcrwtTJgWcCSn3NVuRaItGJP5c7jk3DIKR
-         /VEwIpR65etyA==
-Date:   Thu, 20 May 2021 16:42:37 -0700
+        b=cKNniIeHS3gwGkfGtBbZ1Vx1Y2f3qCU+hzvA9tBUoHwwSI2sapLidW7GniBh2g2JF
+         twywvbD6dqRsHitIE/x1SEhfgFCfJVqWZQiehddIJ87XS7jrOAgkmNjk/kzwJmD+1M
+         92OtxTE/gqQfbvlXQiWJsQP+Z4WQLV5VZy1NRHMyX9GhtfGd4uu7seo4/YdeOV3Va9
+         2UEjLsFfZRhD6XZqxqC3uexiQhtFrBOK7v9ZoVeOg5SOPJXCiKjqgHf8SUYhAf4k6J
+         1XqxtZcpjqQdHcg67edlSZdbpULUz1QHeBPMv4QA/RkeGbX2fBgWVahpnIonbZSSYz
+         NF+rnK/18PRwQ==
+Date:   Thu, 20 May 2021 16:43:38 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: use alloc_pages_bulk_array() for buffers
-Message-ID: <20210520234237.GC9675@magnolia>
-References: <20210519010733.449999-1-david@fromorbit.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/11] xfs: cleanup error handling in xfs_buf_get_map
+Message-ID: <20210520234338.GD9675@magnolia>
+References: <20210519190900.320044-1-hch@lst.de>
+ <20210519190900.320044-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210519010733.449999-1-david@fromorbit.com>
+In-Reply-To: <20210519190900.320044-2-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 19, 2021 at 11:07:33AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, May 19, 2021 at 09:08:50PM +0200, Christoph Hellwig wrote:
+> Use a single goto label for freeing the buffer and returning an error.
 > 
-> Because it's more efficient than allocating pages one at a time in a
-> loop.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_buf.c | 91 +++++++++++++++++++++---------------------------
->  1 file changed, 39 insertions(+), 52 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 592800c8852f..a6cf607bbc4a 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -276,8 +276,8 @@ _xfs_buf_alloc(
->   *	Allocate a page array capable of holding a specified number
->   *	of pages, and point the page buf at it.
->   */
-> -STATIC int
-> -_xfs_buf_get_pages(
-> +static int
-> +xfs_buf_get_pages(
->  	struct xfs_buf		*bp,
->  	int			page_count)
->  {
-> @@ -292,8 +292,8 @@ _xfs_buf_get_pages(
->  			if (bp->b_pages == NULL)
->  				return -ENOMEM;
->  		}
-> -		memset(bp->b_pages, 0, sizeof(struct page *) * page_count);
->  	}
-> +	memset(bp->b_pages, 0, sizeof(struct page *) * bp->b_page_count);
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Could this kmem_alloc be converted to kmem_zalloc?
-
-And isn't the xfs_buf allocated with zalloc, which means we don't need
-to zero b_page_array itself?
-
-Confused about why this is needed.
-
->  	return 0;
->  }
->  
-> @@ -356,10 +356,10 @@ xfs_buf_allocate_memory(
->  	uint			flags)
->  {
->  	size_t			size;
-> -	size_t			nbytes, offset;
-> +	size_t			offset;
->  	gfp_t			gfp_mask = xb_to_gfp(flags);
-> -	unsigned short		page_count, i;
->  	xfs_off_t		start, end;
-> +	long			filled = 0;
->  	int			error;
->  	xfs_km_flags_t		kmflag_mask = 0;
->  
-> @@ -405,55 +405,44 @@ xfs_buf_allocate_memory(
->  	start = BBTOB(bp->b_maps[0].bm_bn) >> PAGE_SHIFT;
->  	end = (BBTOB(bp->b_maps[0].bm_bn + bp->b_length) + PAGE_SIZE - 1)
->  								>> PAGE_SHIFT;
-> -	page_count = end - start;
-> -	error = _xfs_buf_get_pages(bp, page_count);
-> +	error = xfs_buf_get_pages(bp, end - start);
->  	if (unlikely(error))
->  		return error;
->  
->  	offset = bp->b_offset;
->  	bp->b_flags |= _XBF_PAGES;
->  
-> -	for (i = 0; i < bp->b_page_count; i++) {
-> -		struct page	*page;
-> -		uint		retries = 0;
-> -retry:
-> -		page = alloc_page(gfp_mask);
-> -		if (unlikely(page == NULL)) {
-> -			if (flags & XBF_READ_AHEAD) {
-> -				bp->b_page_count = i;
-> -				error = -ENOMEM;
-> -				goto out_free_pages;
-> -			}
-> +	/*
-> +	 * Bulk filling of pages can take multiple calls. Not filling the entire
-> +	 * array is not an allocation failure, so don't back off if we get at
-> +	 * least one extra page.
-> +	 */
-> +	for (;;) {
-> +		int	last = filled;
-
-Any reason why last is int but filled is long?
-
-Oh, heh, nr_pages is int.
-
-Nice how Dr. Demento came on as soon as I started reading
-__alloc_pages_bulk.
-
->  
-> -			/*
-> -			 * This could deadlock.
-> -			 *
-> -			 * But until all the XFS lowlevel code is revamped to
-> -			 * handle buffer allocation failures we can't do much.
-> -			 */
-> -			if (!(++retries % 100))
-> -				xfs_err(NULL,
-> -		"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
-> -					current->comm, current->pid,
-> -					__func__, gfp_mask);
-> -
-> -			XFS_STATS_INC(bp->b_mount, xb_page_retries);
-> -			congestion_wait(BLK_RW_ASYNC, HZ/50);
-> -			goto retry;
-> +		filled = alloc_pages_bulk_array(gfp_mask, bp->b_page_count,
-> +						bp->b_pages);
-> +		if (filled == bp->b_page_count) {
-> +			XFS_STATS_INC(bp->b_mount, xb_page_found);
-> +			break;
->  		}
->  
-> -		XFS_STATS_INC(bp->b_mount, xb_page_found);
-> +		if (filled != last)
-> +			continue;
->  
-> -		nbytes = min_t(size_t, size, PAGE_SIZE - offset);
-> -		size -= nbytes;
-> -		bp->b_pages[i] = page;
-> -		offset = 0;
-> +		if (flags & XBF_READ_AHEAD) {
-> +			error = -ENOMEM;
-> +			goto out_free_pages;
-> +		}
-> +
-> +		XFS_STATS_INC(bp->b_mount, xb_page_retries);
-> +		congestion_wait(BLK_RW_ASYNC, HZ/50);
-
-Silly nit: spaces around HZ / 50.
-
-Otherwise this mostly looks ok to me.  The bulk allocation is a big
-improvement.
+Looks ok,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
->  	}
->  	return 0;
+> ---
+>  fs/xfs/xfs_buf.c | 15 +++++++--------
+>  1 file changed, 7 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 592800c8852f45..80be0333f077c0 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -721,16 +721,12 @@ xfs_buf_get_map(
+>  		return error;
 >  
->  out_free_pages:
-> -	for (i = 0; i < bp->b_page_count; i++)
-> -		__free_page(bp->b_pages[i]);
-> +	while (--filled >= 0)
-> +		__free_page(bp->b_pages[filled]);
->  	bp->b_flags &= ~_XBF_PAGES;
->  	return error;
+>  	error = xfs_buf_allocate_memory(new_bp, flags);
+> -	if (error) {
+> -		xfs_buf_free(new_bp);
+> -		return error;
+> -	}
+> +	if (error)
+> +		goto out_free_buf;
+>  
+>  	error = xfs_buf_find(target, map, nmaps, flags, new_bp, &bp);
+> -	if (error) {
+> -		xfs_buf_free(new_bp);
+> -		return error;
+> -	}
+> +	if (error)
+> +		goto out_free_buf;
+>  
+>  	if (bp != new_bp)
+>  		xfs_buf_free(new_bp);
+> @@ -758,6 +754,9 @@ xfs_buf_get_map(
+>  	trace_xfs_buf_get(bp, flags, _RET_IP_);
+>  	*bpp = bp;
+>  	return 0;
+> +out_free_buf:
+> +	xfs_buf_free(new_bp);
+> +	return error;
 >  }
-> @@ -950,8 +939,8 @@ xfs_buf_get_uncached(
->  	int			flags,
->  	struct xfs_buf		**bpp)
->  {
-> -	unsigned long		page_count;
-> -	int			error, i;
-> +	unsigned long		filled;
-> +	int			error;
->  	struct xfs_buf		*bp;
->  	DEFINE_SINGLE_BUF_MAP(map, XFS_BUF_DADDR_NULL, numblks);
 >  
-> @@ -962,17 +951,15 @@ xfs_buf_get_uncached(
->  	if (error)
->  		goto fail;
->  
-> -	page_count = PAGE_ALIGN(numblks << BBSHIFT) >> PAGE_SHIFT;
-> -	error = _xfs_buf_get_pages(bp, page_count);
-> +	error = xfs_buf_get_pages(bp, PAGE_ALIGN(BBTOB(numblks)) >> PAGE_SHIFT);
->  	if (error)
->  		goto fail_free_buf;
->  
-> -	for (i = 0; i < page_count; i++) {
-> -		bp->b_pages[i] = alloc_page(xb_to_gfp(flags));
-> -		if (!bp->b_pages[i]) {
-> -			error = -ENOMEM;
-> -			goto fail_free_mem;
-> -		}
-> +	filled = alloc_pages_bulk_array(xb_to_gfp(flags), bp->b_page_count,
-> +					bp->b_pages);
-> +	if (filled != bp->b_page_count) {
-> +		error = -ENOMEM;
-> +		goto fail_free_mem;
->  	}
->  	bp->b_flags |= _XBF_PAGES;
->  
-> @@ -988,8 +975,8 @@ xfs_buf_get_uncached(
->  	return 0;
->  
->   fail_free_mem:
-> -	while (--i >= 0)
-> -		__free_page(bp->b_pages[i]);
-> +	while (--filled >= 0)
-> +		__free_page(bp->b_pages[filled]);
->  	_xfs_buf_free_pages(bp);
->   fail_free_buf:
->  	xfs_buf_free_maps(bp);
+>  int
 > -- 
-> 2.31.1
+> 2.30.2
 > 
