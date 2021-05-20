@@ -7,75 +7,72 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3470AC433ED
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 15:39:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBD2FC433B4
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 16:42:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1438361163
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 15:39:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE428611AB
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 16:42:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232276AbhETPkt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 May 2021 11:40:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50046 "EHLO mail.kernel.org"
+        id S233635AbhETQni (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 May 2021 12:43:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41258 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229978AbhETPkt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 May 2021 11:40:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1C6B4610A2
-        for <linux-xfs@vger.kernel.org>; Thu, 20 May 2021 15:39:28 +0000 (UTC)
+        id S232565AbhETQni (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 May 2021 12:43:38 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 747BE60FDC;
+        Thu, 20 May 2021 16:42:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621525168;
-        bh=LsbKqracXQiV/5j4h9f0DMWyWWCMADyvQVxkpiSmZsI=;
-        h=Date:From:To:Subject:From;
-        b=FZ9U9jl54UKuAB+JoQjjPt3cYHUvyhv6LEzD7a5CDI5uAOpyxF7REIfSoAt7kddqe
-         GOgkaJQJoFPKnrT7/qcnCtrC4GHWOz+0WPElWQ42ziyeujsJIcRCTCYQP3msWZNSl6
-         ET42I6i7ih9KqdBV11FX11y1xemRXIuIIS60YepJCxz3y7vD6zkVKaNfEZrFMxii3g
-         JqwidfEzI8pAeoJE8dpU/yZnxx/TIwzWSHiyNDQ6ae6Iqg23LSPHu9tuqcaujlbVyq
-         4rorBg2GOyWlXLzFL9m6fse44xakt/8TWgiNnqcahY80FBNVXyAYnnZaIDemDXaNUS
-         RL40ux9Kh8hjQ==
-Date:   Thu, 20 May 2021 08:39:27 -0700
+        s=k20201202; t=1621528936;
+        bh=suYD434GsssymEt3yUCFiqQl7SBNAl23M3qzTqwx78I=;
+        h=Subject:From:To:Cc:Date:From;
+        b=S3UW81SNPXltlJzZ5AVyGyDtN69fWdYfjolw0f5gw2EtCuhv+YdGQWBKGNDlP935/
+         18yrk9pafMlBJe5xf6ykRmKuC9Um+F0eKPbwCWGzzvfO37ZhsX9PZcUAjAkPQbq+St
+         kPDWV6tVDAkVs69YKRicaiJP5Amotge3xzWVqvQWBIy2SzC+f7ORwiPtv83ROJqWJR
+         zSIKLe8GL/7lwQTIEmyULS8Jbm+aJcQy2PBgF2e0wR+197CzuNTpaB2mygBn9VUu7D
+         DJnUY9hqEb2PaSjl76sOez8YVtpH2tL7IJZmhwZGdzDxiBhVUJCqygHGWGKHEIRMfe
+         amvt+FsGrRKAw==
+Subject: [PATCHSET v2 0/2] xfs: strengthen validation of extent size hints
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to e3c2b047475b
-Message-ID: <20210520153927.GX9675@magnolia>
+To:     djwong@kernel.org
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        bfoster@redhat.com
+Date:   Thu, 20 May 2021 09:42:15 -0700
+Message-ID: <162152893588.2694219.2462663047828018294.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+Hi all,
 
-The for-next branch of the xfs-linux repository at:
+While playing around with realtime extent sizes and extent size hints, I
+noticed that it was very possible for userspace to trip the inode
+verifiers if they tried to set an extent size hint that wasn't aligned
+to the rt extent size and then create realtime files.  This series
+tightens the existing checks and refactors the ioctls to use the libxfs
+validation functions like the verifiers, mkfs, and repair use.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+For v2, we also detect invalid extent size hints on existing filesystems
+and mitigate the problem by (a) not propagating the invalid hints to new
+realtime files and (b) removing invalid hints when set on directories.
 
-has just been updated.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  The fixes branch is based off -rc2 because pmem was
-completely broken and bfq was corrupting data in -rc1, and we already
-played at torching everyone's QA systems last cycle.  Anyway, next up
-are the extent size hint fixes which I didn't get to this week because
-of illness.
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-The new head of the for-next branch is commit:
+--D
 
-e3c2b047475b xfs: restore old ioctl definitions
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=extsize-fixes-5.13
+---
+ fs/xfs/libxfs/xfs_inode_buf.c   |   39 +++++++++++++--
+ fs/xfs/libxfs/xfs_trans_inode.c |   13 +++++
+ fs/xfs/xfs_inode.c              |   46 +++++++++++++-----
+ fs/xfs/xfs_ioctl.c              |  100 +++++++++++++--------------------------
+ 4 files changed, 113 insertions(+), 85 deletions(-)
 
-New Commits:
-
-Darrick J. Wong (4):
-      [9d5e8492eee0] xfs: adjust rt allocation minlen when extszhint > rtextsize
-      [676a659b60af] xfs: retry allocations when locality-based search fails
-      [16c9de54dc86] xfs: fix deadlock retry tracepoint arguments
-      [e3c2b047475b] xfs: restore old ioctl definitions
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_fs.h |  4 +++
- fs/xfs/scrub/common.c  |  4 ++-
- fs/xfs/xfs_bmap_util.c | 96 ++++++++++++++++++++++++++++++++++++--------------
- 3 files changed, 77 insertions(+), 27 deletions(-)
