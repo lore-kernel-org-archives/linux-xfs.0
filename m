@@ -7,169 +7,177 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E90AC433ED
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 23:27:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0023C433ED
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 23:33:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFFE1613BD
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 23:27:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6906561363
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 May 2021 23:33:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233968AbhETX3B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 May 2021 19:29:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35150 "EHLO mail.kernel.org"
+        id S234008AbhETXe4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 May 2021 19:34:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36438 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233032AbhETX3A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 May 2021 19:29:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 67C0F61163;
-        Thu, 20 May 2021 23:27:38 +0000 (UTC)
+        id S232547AbhETXez (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 May 2021 19:34:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 31DC261363;
+        Thu, 20 May 2021 23:33:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621553258;
-        bh=F4vVu72MSvpPSIlSfaqmHjBkapvBkekBrT0GhNRbgeA=;
+        s=k20201202; t=1621553613;
+        bh=JDC1LMC/3h337CCfINJvAE6/Ulw77Vppj6OjkFEwCpI=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=D/tDjL7O45apzTKUnV0SVbHRnTwvb+gG6HILOX22TR7WoxcJVUOJ2QPMUln9aZBWc
-         +wFKEYSFcd46LO+Rc44v2XyfdfG2xz38VgYuxDgkW8BhDYlnV3fEvHSyOM7YRH9aL7
-         rNOXzi4+P6IjLsGe3pQxPVeV86CKcgkw9asDALp6/rFBQp3O3GklkJHLZe1q1EezaJ
-         0p+8/3QgCpG17U7WITaubzN7LhrmGGWvAEdtyhh2h25Hp4J4ssYaY3T6035BhzJzHx
-         WhTAQQjH5aiD7eRKVV8Piu/g4pezOd7uU+BR5sYJ9VcuHOAcD4aw8HjlFdbQtwwZ7W
-         yaAExDidJcC8w==
-Date:   Thu, 20 May 2021 16:27:37 -0700
+        b=L+vEUNbVp7gI+Ic1Kg4OYrKyB6L+9ZUfzaupzlVA0AuBHwTIPYn4rCGOQU9ApmvAR
+         AUpUHtOEjUoF4gfQqa+PQtb0YusIFltbmId7v0zT+Al3kHDjJrbRZIIV6UNr8YJosl
+         kLdDlJ4qdgC/PxP56gOKbE/k8B8mFE/1fLZHG4mjR4zmUXLjWPmGD4p/B2fuYsvUg4
+         GVD13EgNznyRzgaMM61Y28HeG+JG9rqeyRLNj56JnLE9uMQQDvQ+RPC7/TZoUL4NBu
+         rlWTHVm1apGBCBPfVcIFlYgW9RBUhtOvv3SAxHfFHYCaIrK7QJXYq3r2k7tEsY9bMK
+         MByUaAabHnBZA==
+Date:   Thu, 20 May 2021 16:33:32 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH RFC v3 3/3] iomap: bound ioend size to 4096 pages
-Message-ID: <20210520232737.GA9675@magnolia>
-References: <20210517171722.1266878-1-bfoster@redhat.com>
- <20210517171722.1266878-4-bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: don't take a spinlock unconditionally in the DIO
+ fastpath
+Message-ID: <20210520233332.GB9675@magnolia>
+References: <20210519011920.450421-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210517171722.1266878-4-bfoster@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210519011920.450421-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 17, 2021 at 01:17:22PM -0400, Brian Foster wrote:
-> The iomap writeback infrastructure is currently able to construct
-> extremely large bio chains (tens of GBs) associated with a single
-> ioend. This consolidation provides no significant value as bio
-> chains increase beyond a reasonable minimum size. On the other hand,
-> this does hold significant numbers of pages in the writeback
-> state across an unnecessarily large number of bios because the ioend
-> is not processed for completion until the final bio in the chain
-> completes. Cap an individual ioend to a reasonable size of 4096
-> pages (16MB with 4k pages) to avoid this condition.
+On Wed, May 19, 2021 at 11:19:20AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Because this happens at high thread counts on high IOPS devices
+> doing mixed read/write AIO-DIO to a single file at about a million
+> iops:
+> 
+>    64.09%     0.21%  [kernel]            [k] io_submit_one
+>    - 63.87% io_submit_one
+>       - 44.33% aio_write
+>          - 42.70% xfs_file_write_iter
+>             - 41.32% xfs_file_dio_write_aligned
+>                - 25.51% xfs_file_write_checks
+>                   - 21.60% _raw_spin_lock
+>                      - 21.59% do_raw_spin_lock
+>                         - 19.70% __pv_queued_spin_lock_slowpath
+> 
+> This also happens of the IO completion IO path:
+> 
+>    22.89%     0.69%  [kernel]            [k] xfs_dio_write_end_io
+>    - 22.49% xfs_dio_write_end_io
+>       - 21.79% _raw_spin_lock
+>          - 20.97% do_raw_spin_lock
+>             - 20.10% __pv_queued_spin_lock_slowpath                                                                                                            ▒
+
+Super long line there.
+
+> 
+> IOWs, fio is burning ~14 whole CPUs on this spin lock.
+> 
+> So, do an unlocked check against inode size first, then if we are
+> at/beyond EOF, take the spinlock and recheck. This makes the
+> spinlock disappear from the overwrite fastpath.
+> 
+> I'd like to report that fixing this makes things go faster. It
+> doesn't - it just exposes the the XFS_ILOCK as the next severe
+> contention point doing extent mapping lookups, and that now burns
+> all the 14 CPUs this spinlock was burning.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/iomap/buffered-io.c |  6 ++++--
->  include/linux/iomap.h  | 26 ++++++++++++++++++++++++++
->  2 files changed, 30 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_file.c | 42 +++++++++++++++++++++++++++++++-----------
+>  1 file changed, 31 insertions(+), 11 deletions(-)
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 642422775e4e..f2890ee434d0 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1269,7 +1269,7 @@ iomap_chain_bio(struct bio *prev)
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 396ef36dcd0a..c068dcd414f4 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -384,21 +384,30 @@ xfs_file_write_checks(
+>  		}
+>  		goto restart;
+>  	}
+> +
+>  	/*
+>  	 * If the offset is beyond the size of the file, we need to zero any
+>  	 * blocks that fall between the existing EOF and the start of this
+> -	 * write.  If zeroing is needed and we are currently holding the
+> -	 * iolock shared, we need to update it to exclusive which implies
+> -	 * having to redo all checks before.
+> +	 * write.  If zeroing is needed and we are currently holding the iolock
+> +	 * shared, we need to update it to exclusive which implies having to
+> +	 * redo all checks before.
+> +	 *
+> +	 * We need to serialise against EOF updates that occur in IO completions
+> +	 * here. We want to make sure that nobody is changing the size while we
+> +	 * do this check until we have placed an IO barrier (i.e.  hold the
+> +	 * XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.  The
+> +	 * spinlock effectively forms a memory barrier once we have the
+> +	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value and
+> +	 * hence be able to correctly determine if we need to run zeroing.
+>  	 *
+> -	 * We need to serialise against EOF updates that occur in IO
+> -	 * completions here. We want to make sure that nobody is changing the
+> -	 * size while we do this check until we have placed an IO barrier (i.e.
+> -	 * hold the XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.
+> -	 * The spinlock effectively forms a memory barrier once we have the
+> -	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value
+> -	 * and hence be able to correctly determine if we need to run zeroing.
+> +	 * We can do an unlocked check here safely as IO completion can only
+> +	 * extend EOF. Truncate is locked out at this point, so the EOF can
+> +	 * not move backwards, only forwards. Hence we only need to take the
+> +	 * slow path and spin locks when we are at or beyond the current EOF.
+>  	 */
+> +	if (iocb->ki_pos <= i_size_read(inode))
+> +		goto out;
+> +
+>  	spin_lock(&ip->i_flags_lock);
+>  	isize = i_size_read(inode);
+>  	if (iocb->ki_pos > isize) {
+> @@ -426,7 +435,7 @@ xfs_file_write_checks(
+>  			drained_dio = true;
+>  			goto restart;
+>  		}
+> -	
+> +
+>  		trace_xfs_zero_eof(ip, isize, iocb->ki_pos - isize);
+>  		error = iomap_zero_range(inode, isize, iocb->ki_pos - isize,
+>  				NULL, &xfs_buffered_write_iomap_ops);
+> @@ -435,6 +444,7 @@ xfs_file_write_checks(
+>  	} else
+>  		spin_unlock(&ip->i_flags_lock);
 >  
->  static bool
->  iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
-> -		sector_t sector)
-> +		unsigned len, sector_t sector)
->  {
->  	if ((wpc->iomap.flags & IOMAP_F_SHARED) !=
->  	    (wpc->ioend->io_flags & IOMAP_F_SHARED))
-> @@ -1280,6 +1280,8 @@ iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
->  		return false;
->  	if (sector != bio_end_sector(wpc->ioend->io_bio))
->  		return false;
-> +	if (wpc->ioend->io_size + len > IOEND_MAX_IOSIZE)
-> +		return false;
->  	return true;
+> +out:
+>  	return file_modified(file);
 >  }
 >  
-> @@ -1297,7 +1299,7 @@ iomap_add_to_ioend(struct inode *inode, loff_t offset, struct page *page,
->  	unsigned poff = offset & (PAGE_SIZE - 1);
->  	bool merged, same_page = false;
->  
-> -	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, offset, sector)) {
-> +	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, offset, len, sector)) {
->  		if (wpc->ioend)
->  			list_add(&wpc->ioend->io_list, iolist);
->  		wpc->ioend = iomap_alloc_ioend(inode, wpc, offset, sector, wbc);
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 07f3f4e69084..89b15cc236d5 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -203,6 +203,32 @@ struct iomap_ioend {
->  	struct bio		io_inline_bio;	/* MUST BE LAST! */
->  };
->  
-> +/*
-> + * Maximum ioend IO size is used to prevent ioends from becoming unbound in
-> + * size. bios can reach 4GB in size if pages are contiguous, and bio chains are
-> + * effectively unbound in length. Hence the only limits on the size of the bio
-> + * chain is the contiguity of the extent on disk and the length of the run of
-> + * sequential dirty pages in the page cache. This can be tens of GBs of physical
-> + * extents and if memory is large enough, tens of millions of dirty pages.
-> + * Locking them all under writeback until the final bio in the chain is
-> + * submitted and completed locks all those pages for the legnth of time it takes
+> @@ -500,7 +510,17 @@ xfs_dio_write_end_io(
+>  	 * other IO completions here to update the EOF. Failing to serialise
+>  	 * here can result in EOF moving backwards and Bad Things Happen when
+>  	 * that occurs.
+> +	 *
+> +	 * As IO completion only ever extends EOF, we can do an unlocked check
+> +	 * here to avoid taking the spinlock. If we land within the current EOF,
+> +	 * then we do not need to do an extending update at all, and we don't
+> +	 * need to take the lock to check this. If we race with an update moving
+> +	 * EOF, then we'll either still be beyond EOF and need to take the lock,
+> +	 * or we'll be within EOF and we don't need to take it at all.
 
-s/legnth/length/
-
-> + * to write those many, many GBs of data to storage.
-> + *
-> + * Background writeback caps any single writepages call to half the device
-> + * bandwidth to ensure fairness and prevent any one dirty inode causing
-> + * writeback starvation. fsync() and other WB_SYNC_ALL writebacks have no such
-> + * cap on wbc->nr_pages, and that's where the above massive bio chain lengths
-> + * come from. We want large IOs to reach the storage, but we need to limit
-> + * completion latencies, hence we need to control the maximum IO size we
-> + * dispatch to the storage stack.
-> + *
-> + * We don't really have to care about the extra IO completion overhead here
-> + * because iomap has contiguous IO completion merging. If the device can sustain
-
-Assuming you're referring to iomap_finish_ioends, only XFS employs the
-ioend completion merging, and only for ioends where it decides to
-override the default bi_end_io.  iomap on its own never calls
-iomap_ioend_try_merge.
-
-This patch establishes a maximum ioend size of 4096 pages so that we
-don't trip the lockup watchdog while clearing pagewriteback and also so
-that we don't pin a large number of pages while constructing a big chain
-of bios.  On gfs2 and zonefs, each ioend completion will now have to
-clear up to 4096 pages from whatever context bio_endio is called.
-
-For XFS it's a more complicated -- XFS already overrode the bio handler
-for ioends that required further metadata updates (e.g. unwritten
-conversion, eof extension, or cow) so that it could combine ioends when
-possible.  XFS wants to combine ioends to amortize the cost of getting
-the ILOCK and running transactions over a larger number of pages.
-
-So I guess I see how the two changes dovetail nicely for XFS -- iomap
-issues smaller write bios, and the xfs ioend worker can recombine
-however many bios complete before the worker runs.  As a bonus, we don't
-have to worry about situations like the device driver completing so many
-bios from a single invocation of a bottom half handler that we run afoul
-of the soft lockup timer.
-
-Is that a correct understanding of how the two changes intersect with
-each other?  TBH I was expecting the two thresholds to be closer in
-value.
-
-The other two users of iomap for buffered io (gfs2 and zonefs) don't
-have a means to defer and combine ioends like xfs does.  Do you think
-they should?  I think it's still possible to trip the softlockup there.
+Is truncate locked out at this point too?  I /think/ it is since we
+still hold the iolock (shared or excl) which blocks truncate?
 
 --D
 
-> + * high throughput and large bios, the ioends are merged on completion and
-> + * processed in large, efficient chunks with no additional IO latency.
-> + */
-> +#define IOEND_MAX_IOSIZE	(4096ULL << PAGE_SHIFT)
+>  	 */
+> +	if (offset + size <= i_size_read(inode))
+> +		goto out;
 > +
->  struct iomap_writeback_ops {
->  	/*
->  	 * Required, maps the blocks so that writeback can be performed on
+>  	spin_lock(&ip->i_flags_lock);
+>  	if (offset + size > i_size_read(inode)) {
+>  		i_size_write(inode, offset + size);
 > -- 
-> 2.26.3
+> 2.31.1
 > 
