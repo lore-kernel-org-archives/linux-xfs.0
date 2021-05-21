@@ -7,60 +7,51 @@ X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB013C43600
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 08:02:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E4FBC433B4
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 08:03:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A858661363
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 08:02:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78535613B6
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 08:03:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229912AbhEUIDx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 May 2021 04:03:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38358 "EHLO
+        id S236446AbhEUIFM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 May 2021 04:05:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233713AbhEUICe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 May 2021 04:02:34 -0400
+        with ESMTP id S229693AbhEUIEM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 May 2021 04:04:12 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0F68C061574;
-        Fri, 21 May 2021 01:00:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BA13C061574;
+        Fri, 21 May 2021 01:02:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=nyKN/cXpXjdARgsRG1XBUh+GOmLDG7sTRODDt8GRxN8=; b=Xvq/41298l4s78PhLQp5bA1tQk
-        OaaV8bkW+Ii9GGlJLTDCbpRTJggTnqImMfUnXbSpBy8/sxU0cFONobCVr9bOq5oHlzataaLYSaPMk
-        vyd+xGq3WS92MIdJn9++8gYzvO17bwL+80NexREnACzrolnOPTkk5MzuiKgO91KgawphE7FpFBoIA
-        ozvnBIXHz6DW8jvXGuw81Jqx3Yhn/qsGAz/+JOGoyJaurdwsZlpNuFbVC+ZYeLqgiF8B8p2eJf+sn
-        in0xYZvNsyJM1pqjMp9lOEoG9sPAPdz7fzkqkQ66R+Wt8Zr8ciWHOsl2F9mjgPhXBqjVXu1zhg1/p
-        /CobdRfQ==;
+        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=B0Xmn9S/z6Sn+GNuRexeU8FcGq
+        9UdQ9JqSLmzRsv+rLqPCfy3LSEVqEn7g789J91xXWsiXFpWF4PH9wEMpM5XMqqFxG6QwhJ5exLCgR
+        ge7Lrc9O1FqmD5J/saKmiYpUWW3wiRelv77jNoGGAUZjfiWLKFjpLxTtsxhLk2pDZhwEX2M+MkDE0
+        sTEsTrd+kp8q5KVq44tHLeoQJ3/HsbmsEWPpzB6kzdNQBHoXfrKvVjCQS9UBvFr3YZ5yBk56wtiKF
+        ElOuiWE9Lq1ADBmewqL3z7MShIq8LJKIWt7s8GlLEhTgWZZ7nkuQ6xDzNwnwcISvd+PSUocOMSa63
+        GZrNUEmA==;
 Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1ljzwC-00GlNH-AT; Fri, 21 May 2021 07:52:00 +0000
-Date:   Fri, 21 May 2021 08:51:16 +0100
+        id 1lk06b-00Glcl-HZ; Fri, 21 May 2021 08:02:25 +0000
+Date:   Fri, 21 May 2021 09:02:01 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 1/6] common/xfs: refactor commands to select a particular
- xfs backing device
-Message-ID: <YKdmdB8NIlpGXw3T@infradead.org>
+Subject: Re: [PATCH 4/6] fsx/fsstress: round blocksize properly
+Message-ID: <YKdo+RZM2a+sHH09@infradead.org>
 References: <162146860057.2500122.8732083536936062491.stgit@magnolia>
- <162146860674.2500122.8733670522999610459.stgit@magnolia>
+ <162146862463.2500122.10829551919577698395.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162146860674.2500122.8733670522999610459.stgit@magnolia>
+In-Reply-To: <162146862463.2500122.10829551919577698395.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 19, 2021 at 04:56:46PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Refactor all the places where we try to force new file data allocations
-> to a specific xfs backing device so that we don't end up open-coding the
-> same xfs_io command lines over and over.
-
-Eventually this might need generalization for other file systems for the
-generic tests, but for now this looks good:
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
