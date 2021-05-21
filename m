@@ -4,54 +4,58 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FA24C04FF3
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 21:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 170C6C04FF3
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 21:26:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48601613EC
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 21:22:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1F50613EC
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 21:26:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229512AbhEUVXm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 May 2021 17:23:42 -0400
-Received: from sandeen.net ([63.231.237.45]:54350 "EHLO sandeen.net"
+        id S229519AbhEUV1X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 May 2021 17:27:23 -0400
+Received: from sandeen.net ([63.231.237.45]:54498 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229503AbhEUVXm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 May 2021 17:23:42 -0400
+        id S229503AbhEUV1X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 May 2021 17:27:23 -0400
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 943485382DB
-        for <linux-xfs@vger.kernel.org>; Fri, 21 May 2021 16:21:44 -0500 (CDT)
+        by sandeen.net (Postfix) with ESMTPSA id 42C225382DB
+        for <linux-xfs@vger.kernel.org>; Fri, 21 May 2021 16:25:25 -0500 (CDT)
 To:     xfs <linux-xfs@vger.kernel.org>
 From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs 5.12.0-rc1 released
-Message-ID: <3eacd030-f945-62bd-ec7f-cf6dc07d45cc@sandeen.net>
-Date:   Fri, 21 May 2021 16:22:16 -0500
+Subject: [ANNOUNCE] xfsprogs 5.12.0 released
+Message-ID: <6a17d605-5cd0-d900-4e5b-f6f17e73cade@sandeen.net>
+Date:   Fri, 21 May 2021 16:25:58 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
  Gecko/20100101 Thunderbird/78.10.2
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
  protocol="application/pgp-signature";
- boundary="omQrMnU4XiIYajHysZT6A8tN80AZ5udIU"
+ boundary="Sd3azt9AfNBG0MZhLQ4wiVftHi6sHhKUb"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---omQrMnU4XiIYajHysZT6A8tN80AZ5udIU
-Content-Type: multipart/mixed; boundary="P2RU1xamLwlLIecpDHpUbDbdPMrb9oGYD";
+--Sd3azt9AfNBG0MZhLQ4wiVftHi6sHhKUb
+Content-Type: multipart/mixed; boundary="kq8h1wLlaOBiHfCV812dHMlSPEYFreIV8";
  protected-headers="v1"
 From: Eric Sandeen <sandeen@sandeen.net>
 To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <3eacd030-f945-62bd-ec7f-cf6dc07d45cc@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs 5.12.0-rc1 released
+Message-ID: <6a17d605-5cd0-d900-4e5b-f6f17e73cade@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs 5.12.0 released
 
---P2RU1xamLwlLIecpDHpUbDbdPMrb9oGYD
+--kq8h1wLlaOBiHfCV812dHMlSPEYFreIV8
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: quoted-printable
+
+(You already knew 5.12.0-rc1 was released, and it's still true! but let's=
+
+try that again with the correct subject...)
 
 Hi folks,
 
@@ -111,27 +115,28 @@ Code Diffstat:
  4 files changed, 11 insertions(+), 2 deletions(-)
 
 
---P2RU1xamLwlLIecpDHpUbDbdPMrb9oGYD--
 
---omQrMnU4XiIYajHysZT6A8tN80AZ5udIU
+--kq8h1wLlaOBiHfCV812dHMlSPEYFreIV8--
+
+--Sd3azt9AfNBG0MZhLQ4wiVftHi6sHhKUb
 Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="OpenPGP_signature"
 
 -----BEGIN PGP SIGNATURE-----
 
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmCoJIkFAwAAAAAACgkQIK4WkuE93uCI
-9xAAq0YJUl9efoqxrFx1R6/XyBBJQHHhbOCHoV6sOGz0r24ENbJsHx9RdWs3T3hKihwPyx4nOrR9
-s9/cRuEDZa/SOXHX1+iOp7ZaPc4+ZmcORvsQABx/gE97rscs8ELVTyR5Gr8wce6eaclTpLzbKpd2
-ULGNvFtTNR0KJ46o9azBYJ/HoDCAG5iZyKxyrynYuKrkhYwvENihe2sq+NNonfuTlzE6XgebZjA6
-IKscQRgFM/Po3XyT91e9+cKDguLJVBBA260MsewAwfBJnsC0GNGUZCROPB0KbUMX2hu+gPUr9NOQ
-MyxunyaGtVcf9ViVQfFUlCHobrP7am7IRkc8hcPGRvOglXuMBDdqs10GYHUlHVTQJF0Rs7+Od0va
-QMziuf/I2VsaZ+JzH9vVEwDg/BhCLd1csVZHkrHhuUcESctlKutF7qGDOzpDprv8Y0Xd+sryvuEk
-Xc4iYroqvPJkN59ByE7BiqVVbZx2kJ8KXE3KZWqlXrsbPic2V2yiBkf9V7H5R0IbPb2ZnhHyPJxL
-Be8/RQyYaRfIyUEaFK1uqdwc/ToVQCWszLgQ9UcGamj39qWf06z3JXb7mvdQENhDATr7BYbSqcWL
-MUePrGQbzDr5qSC2EhNnX4l6faIKNU4TmqZh2x66lovOFXLr2DUdyR4WFr5pD2BB8U86cQzcit+3
-FFE=
-=2CAr
+wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmCoJWYFAwAAAAAACgkQIK4WkuE93uCC
+Og//b3ixbh9t3CNDSpYARkdCDZO7pUUIuzFf/Q45coLUQZIIdDaTzJuucw8ZA7kUQvH2NT5HXcHC
+Fo0cA7A8oPP9hPa5vBc1jxtWTdC99EzyQmr1ZHgxivi/DeiNdTOk1UDcyvfpLn2EjtkSzmEnTcJg
++Jo871LlEMXl9lrpq3Y9GK7RQXHqOp1mdvjzi0ipSxiZuo/aArUJr0uhE+AIVBOromef6FGymC1n
+OmkhV5jfdNg4GZXelkQg5MQATioAenwlGbUWMGmTuU20Wh35L8scoFnSOWO39G9Y13d0y+wegAFe
+Ap7JFz+9K+1lOpq85pV6thjKBcNy4bzj7OjXuJTXAmTL3VqPTGPhw3+0unIVrNBuFd2quW4UIYD/
+vP6YajnVtFJ81QqnvqqTo9tXmXM7bUZKfpHCVK3dRjEE50RPW5fD9filB1Qm7q8Lt4IVmElSfASp
+FJQxn8ADjicb6Ztr12EMHYgtwAWHPyG2IMaCh8OYzoMMtLk0IK19ZwgWFBIzo0Q/C29qgl5NxUri
+sUqVkp9LFPjBPMNMaTD8lUWNSYrT2KEEtVnYt4eY7AibtzJRdR+jD7BoGMR86bKNjSGPpztf4WnT
+rFceCHF2ksc02+SvRI5w2ARhs4Lh6oldD8L0/G/VxzyaDrIP+Ag0YZNAVM3FR+cz7WC9OitAo/Ju
+DpM=
+=tx6I
 -----END PGP SIGNATURE-----
 
---omQrMnU4XiIYajHysZT6A8tN80AZ5udIU--
+--Sd3azt9AfNBG0MZhLQ4wiVftHi6sHhKUb--
