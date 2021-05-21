@@ -2,147 +2,115 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2563C47076
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 16:06:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCAA6C47078
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 16:11:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAA35613E8
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 16:06:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBCC660C3E
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 16:11:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232823AbhEUQHn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 May 2021 12:07:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60884 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229586AbhEUQHn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 May 2021 12:07:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 38C3C61104;
-        Fri, 21 May 2021 16:06:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621613180;
-        bh=zdYyiQblXHYvyDTTyCflqIx7NpXpENO8S03HpB6iyis=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=aTMxx21aNzPCYxI0KpUdlH5JhlYkwUb9QmF+zC2713LasoS2UaBI/1m8JIYEPzWMD
-         WECkM9PUjiY6vMWZyUE/E+qViSKiS9aeYlWX+hJ5AEd6dE2IUS1oSfr+Bfw+4KFz5c
-         EvaqOu0qtWbe9/vS0RNd/6jATLz/0Qqji39WMiZq7bzpkPdreDPgoSZx77fja0YvIO
-         PamMNZMvir1Ta/Vce1j4lzW3JjeXd9ZPbfH8CtZg/+8wcAQvTU9vffZ4U6tMgxDWao
-         DyRvJ3aQZpK9GNb3o1an8zT8ZKhu6qCWcWgTY1OItA96xn6uzhJuhe5lHvralP1DAQ
-         EXBHIPqbKA1pg==
-Date:   Fri, 21 May 2021 09:06:19 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     lukas@herbolt.com
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+        id S237207AbhEUQMy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 May 2021 12:12:54 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:39324 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229586AbhEUQMs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 May 2021 12:12:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1621613483;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=jtcR+YpQ8JxELRRaAfsGYkpbF4f+wpH8sTxAvYqummw=;
+        b=ACO2C1RHeddiscaoMmtxAPcCTqmtegfswYSPxib9BF6Ah6ZLY7P4Q440WHE1gIQ5p1tT4A
+        myqogLwq5ruMbphbsWSnM3UzshHqHMSTqQC1nTQIWGyqh0BkpB7Y3NgLGH/KmvqRM+IJmb
+        ayFb4aGOS9c55D4zPl+JmoherlAkQRw=
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com
+ [209.85.166.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-311-gKDfwc3RPY2RK_JFQHR0kg-1; Fri, 21 May 2021 12:11:20 -0400
+X-MC-Unique: gKDfwc3RPY2RK_JFQHR0kg-1
+Received: by mail-il1-f200.google.com with SMTP id g14-20020a926b0e0000b02901bb2deb9d71so20997102ilc.6
+        for <linux-xfs@vger.kernel.org>; Fri, 21 May 2021 09:11:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=jtcR+YpQ8JxELRRaAfsGYkpbF4f+wpH8sTxAvYqummw=;
+        b=COfmafT4VEuosTpRC2Sv3rrpdTGoVnODmFSK6JghLeuJWsRAgLPOntVxPuTnOMU5aS
+         0l8IA1m3kYM8Uonfw3Hggw30s+bDzNf2/sGzBoKLM2MdaHwKWtLtyNaJfL+jp/Olc8kq
+         qrRM1x7V7stl9bP4TSiSPmpXzwN2Mtaq+ovNlbbH4zbO7WsmuIMHwRWyGwiYsO0+saEO
+         e/XLpIaeaDdRfyoXmtvx9Q8oqIIKy3hydU6hAjKJDhdp4jr7RypyXpn1yWwR9uZjurSY
+         DunoED4He/uLk5LEZFkX5XjPD2rHA7tDPfOtR8aKkKVm7RXnZuy6SYMmLSNTxoMUg76t
+         N7WA==
+X-Gm-Message-State: AOAM533a/zQPcO1JvuhpaZLK9KjN6qLpx+WhfEOyS9QO3YIsoY2JN7sF
+        AVAmdV67Pu8loFiRX8pflymqeNWUuAh/N4rvQw7xB5UY4tpYWLQ6UswVF06LcgfnYzjTAerUWEr
+        83hkFLY445dBGzbL/a2ysGj9gcLTP0C/rJ1CGWIoNc2Ckg4Ge733LO+MOh3qfM1a/Wqicqhfy
+X-Received: by 2002:a6b:3119:: with SMTP id j25mr11344942ioa.64.1621613479976;
+        Fri, 21 May 2021 09:11:19 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxQhhnO8ZEWEBJrjzOWuYkRzRKjYxx7mOT64RLecIhI4kwF4WSTJTjdakcKYJux+U0me0WBlA==
+X-Received: by 2002:a6b:3119:: with SMTP id j25mr11344921ioa.64.1621613479718;
+        Fri, 21 May 2021 09:11:19 -0700 (PDT)
+Received: from liberator.sandeen.net (sandeen.net. [63.231.237.45])
+        by smtp.gmail.com with ESMTPSA id p25sm6720640ioh.39.2021.05.21.09.11.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 21 May 2021 09:11:19 -0700 (PDT)
+From:   Eric Sandeen <esandeen@redhat.com>
+X-Google-Original-From: Eric Sandeen <sandeen@redhat.com>
 Subject: Re: [PATCH RFC v2] xfs: Print XFS UUID on mount and umount events.
-Message-ID: <20210521160619.GF2207430@magnolia>
+To:     "Darrick J. Wong" <djwong@kernel.org>, lukas@herbolt.com
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 References: <20210519152247.1853357-1-lukas@herbolt.com>
  <20210520152323.GW9675@magnolia>
  <1c29341ea9b5e362cd3252887ad01879@herbolt.com>
+ <20210521160619.GF2207430@magnolia>
+Message-ID: <d18919f5-43e5-9423-0541-3efc827f559d@redhat.com>
+Date:   Fri, 21 May 2021 11:11:18 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1c29341ea9b5e362cd3252887ad01879@herbolt.com>
+In-Reply-To: <20210521160619.GF2207430@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 21, 2021 at 11:03:11AM +0200, lukas@herbolt.com wrote:
-> > Are you going to wire up fs uuid logging for the other filesystems that
-> > support them?
-> Well, I wasn't planning to but I can take a look on other FS as well
-> Ext4 and Btrfs for start.
+On 5/21/21 11:06 AM, Darrick J. Wong wrote:
+> On Fri, May 21, 2021 at 11:03:11AM +0200, lukas@herbolt.com wrote:
+>>> Are you going to wire up fs uuid logging for the other filesystems that
+>>> support them?
+>> Well, I wasn't planning to but I can take a look on other FS as well
+>> Ext4 and Btrfs for start.
+>>
+>>> What happens w.r.t. uuid disambiguation if someone uses a nouuid mount
+>>> to mount a filesystem with the same uuid as an already-mounted xfs?
+>>
+>> I a not sure I understand the "nouuid mount". I don't think there can
+>> be XFS with empty uuid value in SB. And printing the message is independent
+>> on the mount method (mount UUID="" ...; mount /dev/sdX ...;).
 > 
-> > What happens w.r.t. uuid disambiguation if someone uses a nouuid mount
-> > to mount a filesystem with the same uuid as an already-mounted xfs?
+> I meant specifically:
 > 
-> I a not sure I understand the "nouuid mount". I don't think there can
-> be XFS with empty uuid value in SB. And printing the message is independent
-> on the mount method (mount UUID="" ...; mount /dev/sdX ...;).
-
-I meant specifically:
-
-mount /dev/mapper/fubar /mnt
-<snapshot fubar to fubar.bak>
-
-Oh no, I deleted something in fubar, let's retrieve it from fubar.bak!
-
-mount /dev/mapper/fubar.bak /opt	# fails because same uuid as fubar
-mount /dev/mapper/fubar.bak /opt -o nouuid
-
---D
-
+> mount /dev/mapper/fubar /mnt
+> <snapshot fubar to fubar.bak>
 > 
+> Oh no, I deleted something in fubar, let's retrieve it from fubar.bak!
 > 
-> On 20.05.2021 17:23, Darrick J. Wong wrote:
-> > On Wed, May 19, 2021 at 05:22:48PM +0200, Lukas Herbolt wrote:
-> > > As of now only device names are printed out over __xfs_printk().
-> > > The device names are not persistent across reboots which in case
-> > > of searching for origin of corruption brings another task to properly
-> > > identify the devices. This patch add XFS UUID upon every mount/umount
-> > > event which will make the identification much easier.
-> > 
-> > A few questions....
-> > 
-> > Are you going to wire up fs uuid logging for the other filesystems that
-> > support them?
-> > 
-> > What happens w.r.t. uuid disambiguation if someone uses a nouuid mount
-> > to mount a filesystem with the same uuid as an already-mounted xfs?
-> > 
-> > The changes themselves look ok, but I'm wondering what the use case is
-> > here.
-> > 
-> > --D
-> > 
-> > > 
-> > > Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-> > > ---
-> > > V2: Drop void casts and fix long lines
-> > > 
-> > >  fs/xfs/xfs_log.c   | 10 ++++++----
-> > >  fs/xfs/xfs_super.c |  2 +-
-> > >  2 files changed, 7 insertions(+), 5 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > > index 06041834daa31..8f4f671fd80d5 100644
-> > > --- a/fs/xfs/xfs_log.c
-> > > +++ b/fs/xfs/xfs_log.c
-> > > @@ -570,12 +570,14 @@ xfs_log_mount(
-> > >  	int		min_logfsbs;
-> > > 
-> > >  	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY)) {
-> > > -		xfs_notice(mp, "Mounting V%d Filesystem",
-> > > -			   XFS_SB_VERSION_NUM(&mp->m_sb));
-> > > +		xfs_notice(mp, "Mounting V%d Filesystem %pU",
-> > > +			   XFS_SB_VERSION_NUM(&mp->m_sb),
-> > > +			   &mp->m_sb.sb_uuid);
-> > >  	} else {
-> > >  		xfs_notice(mp,
-> > > -"Mounting V%d filesystem in no-recovery mode. Filesystem will be
-> > > inconsistent.",
-> > > -			   XFS_SB_VERSION_NUM(&mp->m_sb));
-> > > +"Mounting V%d filesystem %pU in no-recovery mode. Filesystem will
-> > > be inconsistent.",
-> > > +			   XFS_SB_VERSION_NUM(&mp->m_sb),
-> > > +			   &mp->m_sb.sb_uuid);
-> > >  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
-> > >  	}
-> > > 
-> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > index e5e0713bebcd8..a4b8a5ad8039f 100644
-> > > --- a/fs/xfs/xfs_super.c
-> > > +++ b/fs/xfs/xfs_super.c
-> > > @@ -1043,7 +1043,7 @@ xfs_fs_put_super(
-> > >  	if (!sb->s_fs_info)
-> > >  		return;
-> > > 
-> > > -	xfs_notice(mp, "Unmounting Filesystem");
-> > > +	xfs_notice(mp, "Unmounting Filesystem %pU", &mp->m_sb.sb_uuid);
-> > >  	xfs_filestream_unmount(mp);
-> > >  	xfs_unmountfs(mp);
-> > > 
-> > > --
-> > > 2.31.1
-> > > 
+> mount /dev/mapper/fubar.bak /opt	# fails because same uuid as fubar
+> mount /dev/mapper/fubar.bak /opt -o nouuid
+
+While it is possible to end up with 2 mounted devices with the same UUID,
+that's still useful information I think; to me, the -o nouuid case doesn't
+really argue against this patch.
+
+In fact, it could be /very/ useful information if someone force-mounted
+2 paths to the same underlying device by using -o nouuid.
+
+-Eric
+
