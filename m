@@ -2,148 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F08AFC4707D
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 19:31:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FA24C04FF3
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 21:22:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C0E3B6023D
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 19:31:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48601613EC
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 21:22:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235377AbhEUTdA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 May 2021 15:33:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40750 "EHLO mail.kernel.org"
+        id S229512AbhEUVXm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 May 2021 17:23:42 -0400
+Received: from sandeen.net ([63.231.237.45]:54350 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236901AbhEUTc7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 May 2021 15:32:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7FBC36023D;
-        Fri, 21 May 2021 19:31:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621625493;
-        bh=Lzpwa+4Dv31f5JLAaUOIDfqllOjAhxhucSq83xbuMY8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=DazaZ5Y34kCMO6QABv9ERiOlcuCWKhjgzdRb3HrkKS6XmFKBvLVeof05WCYAsdyai
-         zpWXpuKw+mi8sU8Aqq3jMTa17gKJgwwE+Ie4I0nkt29h7Z5mwiIF7CJlHuWuw6Pe28
-         UvFBNHLqwE7Yy2Ca6Y0R+m/8jWg7SHY5edZcYnaHILV/kVsQcvaILwBWDR3Q7ToLPE
-         kHIJs2rSIOHDJFwd9bQ45hUtPf3knv6ZpzRej9c5u0Kv2QMEVOm4N9Kr89NlZenlWU
-         ILTOPl/g3hzKyI3TyhRk4OD5SZHe5iWRyRAZPSKrSEpvB6lo3f1f20zDfNIDIuisws
-         w8hAUiLkSZ2NA==
-Date:   Fri, 21 May 2021 12:31:33 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Subject: Re: [PATCH 2/2] xfs: validate extsz hints against rt extent size
- when rtinherit is set
-Message-ID: <20210521193133.GA15971@magnolia>
-References: <162152893588.2694219.2462663047828018294.stgit@magnolia>
- <162152894725.2694219.2966158387963381824.stgit@magnolia>
- <YKdl75i5ORTiJqlO@infradead.org>
+        id S229503AbhEUVXm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 May 2021 17:23:42 -0400
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 943485382DB
+        for <linux-xfs@vger.kernel.org>; Fri, 21 May 2021 16:21:44 -0500 (CDT)
+To:     xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs 5.12.0-rc1 released
+Message-ID: <3eacd030-f945-62bd-ec7f-cf6dc07d45cc@sandeen.net>
+Date:   Fri, 21 May 2021 16:22:16 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.10.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YKdl75i5ORTiJqlO@infradead.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="omQrMnU4XiIYajHysZT6A8tN80AZ5udIU"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 21, 2021 at 08:49:03AM +0100, Christoph Hellwig wrote:
-> On Thu, May 20, 2021 at 09:42:27AM -0700, Darrick J. Wong wrote:
-> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> > index 045118c7bf78..dce267dbea5f 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> > @@ -589,8 +589,21 @@ xfs_inode_validate_extsize(
-> >  	inherit_flag = (flags & XFS_DIFLAG_EXTSZINHERIT);
-> >  	extsize_bytes = XFS_FSB_TO_B(mp, extsize);
-> >  
-> > +	/*
-> > +	 * Historically, XFS didn't check that the extent size hint was an
-> > +	 * integer multiple of the rt extent size on a directory with both
-> > +	 * rtinherit and extszinherit flags set.  This results in math errors
-> > +	 * in the rt allocator and inode verifier errors when the unaligned
-> > +	 * hint value propagates into new realtime files.  Since there might
-> > +	 * be filesystems in the wild, the best we can do for now is to
-> > +	 * mitigate the harms by stopping the propagation.
-> > +	 *
-> > +	 * The next time we add a new inode feature, the if test below should
-> > +	 * also trigger if that new feature is enabled and (rtinherit_flag &&
-> > +	 * inherit_flag).
-> > +	 */
-> 
-> I don't understand how this comment relates to the change below, and
-> in fact I don't understand the last paragraph at all.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--omQrMnU4XiIYajHysZT6A8tN80AZ5udIU
+Content-Type: multipart/mixed; boundary="P2RU1xamLwlLIecpDHpUbDbdPMrb9oGYD";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: xfs <linux-xfs@vger.kernel.org>
+Message-ID: <3eacd030-f945-62bd-ec7f-cf6dc07d45cc@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs 5.12.0-rc1 released
 
-It doesn't relate to the cleanup below at all.  I put a comment there to
-explain why this verifier function doesn't check the rextsize alignment
-of the hint.  In other words, it's a comment describing a gap in a
-validation function and why we can't remove the gap here but have to
-sprinkle mitigations everywhere else.
+--P2RU1xamLwlLIecpDHpUbDbdPMrb9oGYD
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-Earlier iterations of this patch simply fixed the verifier and allowed
-existing filesystems to fail.  Brian and I weren't totally comfortable
-with introducing a breaking change like that even though the
-consequences of the bad hint actually propagating into a realtime file
-are immediate filesystem corruption shutdowns, so this iteration
-mitigates the propagation issue by fixing directories when they get
-rewritten and preventing propagation of bad hints into new files.
+Hi folks,
 
-I don't want to introduce a new feature/inode flag just to say
-"corrected rt extent size hint" since having an extent size hint set on
-a filesystem with a realtime extent size larger than 1 fsb on a
-filesystem with a realtime volume configured at all is a vanishingly
-rare condition.
+The master branch of the xfsprogs repository at:
 
-Granted, we could decide to introduce the breaking verifier change and
-say "fmeh to this corner case, if you did that you're screwed anyway",
-but I think I want a few more ACKs on /that/ strategy before I do that.
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-> >  	if (rt_flag)
-> > -		blocksize_bytes = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
-> > +		blocksize_bytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
-> 
-> This just looks like a cleanup, that is replace the open coded version
-> of XFS_FSB_TO_B with the actual helper.
+has just been updated and tagged with 5.12.0. There are no changes from -=
+rc1.
 
-Yes.  As I mentioned above, the comment documents code that isn't there
-and cannot be added.
+Tarballs are available at:
 
-> > +	/*
-> > +	 * Clear invalid extent size hints set on files with rtinherit and
-> > +	 * extszinherit set.  See the comments in xfs_inode_validate_extsize
-> > +	 * for details.
-> > +	 */
-> 
-> Maybe that comment should be here as it makes a whole lot more sense
-> where we do the actual clearing.
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.12.0.ta=
+r.gz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.12.0.ta=
+r.xz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.12.0.ta=
+r.sign
 
-Ok.
+The new head of the master branch is commit:
 
-> 
-> > +	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
-> > +	    (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
-> > +	    (ip->i_extsize % ip->i_mount->m_sb.sb_rextsize) > 0) {
-> > +		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT);
-> 
-> Overly long line.
+3e384caa (HEAD -> for-next, tag: v5.12.0) xfsprogs: Release v5.12.0
 
-Fixed, though Linus said to stop caring about code that goes slightly
-over.
+The condensed changelog since 5.11.0 is:
 
-> > +	xfs_failaddr_t		failaddr;
-> >  	umode_t			mode = VFS_I(ip)->i_mode;
-> >  
-> >  	if (S_ISDIR(mode)) {
-> >  		if (pip->i_diflags & XFS_DIFLAG_RTINHERIT)
-> > -			di_flags |= XFS_DIFLAG_RTINHERIT;
-> > +			ip->i_diflags |= XFS_DIFLAG_RTINHERIT;
-> 
-> The removal of the di_flags seems like an unrelated (though nice)
-> cleanup.
+xfsprogs-5.12.0-rc1 (07 May 2021)
+        - mkfs: don't default to too-large physical sector size (Jeff Moy=
+er)
+        - repair: phase 6 speedups (Dave Chinner, Gao Xiang)
+        - man: Add dax mount option to man xfs(5) (Carlos Maiolino)
+        - xfs_admin: pick up log arguments correctly (Darrick Wong)
+        - xfs_growfs: support shrinking unused space (Gao Xiang)
+        - libfrog: report inobtcount in geometry (Darrick Wong)
+        - xfs_logprint: Fix buffer overflow printing quotaoff (Carlos Mai=
+olino)
+        - xfsprogs: include <signal.h> for platform_crash (Leah Neukirche=
+n)
+        - xfsprogs: remove BMV_IF_NO_DMAPI_READ flag (Anthony Iliopoulos)=
 
-Ok fine I'll do this bugfix properly and turn the cleanups into new
-separate patches and add all three to the 15+ cleanup patches I didn't
-manage to get merged last cycle.
+        - workqueue: bound maximum queue depth (Dave Chinner)
 
---D
+xfsprogs-5.12.0-rc0 (12 Apr 2021)
+        - libxfs changes merged from kernel 5.12
+
+New Commits:
+
+Eric Sandeen (1):
+      [3e384caa] xfsprogs: Release v5.12.0
+
+
+Code Diffstat:
+
+ VERSION          | 2 +-
+ configure.ac     | 2 +-
+ debian/changelog | 6 ++++++
+ doc/CHANGES      | 3 +++
+ 4 files changed, 11 insertions(+), 2 deletions(-)
+
+
+--P2RU1xamLwlLIecpDHpUbDbdPMrb9oGYD--
+
+--omQrMnU4XiIYajHysZT6A8tN80AZ5udIU
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAmCoJIkFAwAAAAAACgkQIK4WkuE93uCI
+9xAAq0YJUl9efoqxrFx1R6/XyBBJQHHhbOCHoV6sOGz0r24ENbJsHx9RdWs3T3hKihwPyx4nOrR9
+s9/cRuEDZa/SOXHX1+iOp7ZaPc4+ZmcORvsQABx/gE97rscs8ELVTyR5Gr8wce6eaclTpLzbKpd2
+ULGNvFtTNR0KJ46o9azBYJ/HoDCAG5iZyKxyrynYuKrkhYwvENihe2sq+NNonfuTlzE6XgebZjA6
+IKscQRgFM/Po3XyT91e9+cKDguLJVBBA260MsewAwfBJnsC0GNGUZCROPB0KbUMX2hu+gPUr9NOQ
+MyxunyaGtVcf9ViVQfFUlCHobrP7am7IRkc8hcPGRvOglXuMBDdqs10GYHUlHVTQJF0Rs7+Od0va
+QMziuf/I2VsaZ+JzH9vVEwDg/BhCLd1csVZHkrHhuUcESctlKutF7qGDOzpDprv8Y0Xd+sryvuEk
+Xc4iYroqvPJkN59ByE7BiqVVbZx2kJ8KXE3KZWqlXrsbPic2V2yiBkf9V7H5R0IbPb2ZnhHyPJxL
+Be8/RQyYaRfIyUEaFK1uqdwc/ToVQCWszLgQ9UcGamj39qWf06z3JXb7mvdQENhDATr7BYbSqcWL
+MUePrGQbzDr5qSC2EhNnX4l6faIKNU4TmqZh2x66lovOFXLr2DUdyR4WFr5pD2BB8U86cQzcit+3
+FFE=
+=2CAr
+-----END PGP SIGNATURE-----
+
+--omQrMnU4XiIYajHysZT6A8tN80AZ5udIU--
