@@ -2,152 +2,148 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0686C4707A
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 17:13:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F08AFC4707D
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 19:31:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A35BA6109F
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 17:13:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0E3B6023D
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 May 2021 19:31:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238056AbhEURPU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 May 2021 13:15:20 -0400
-Received: from relay.herbolt.com ([37.46.208.54]:50744 "EHLO relay.herbolt.com"
+        id S235377AbhEUTdA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 May 2021 15:33:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40750 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238048AbhEURPU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 May 2021 13:15:20 -0400
-Received: from ip-78-102-244-147.net.upcbroadband.cz (ip-78-102-244-147.net.upcbroadband.cz [78.102.244.147])
-        by relay.herbolt.com (Postfix) with ESMTPSA id 0C11B1034149;
-        Fri, 21 May 2021 19:13:55 +0200 (CEST)
-Received: from mail.herbolt.com (http-server-2.local.lc [172.168.31.10])
-        by mail.herbolt.com (Postfix) with ESMTPSA id AA264D34A0A;
-        Fri, 21 May 2021 19:13:54 +0200 (CEST)
+        id S236901AbhEUTc7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 May 2021 15:32:59 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7FBC36023D;
+        Fri, 21 May 2021 19:31:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1621625493;
+        bh=Lzpwa+4Dv31f5JLAaUOIDfqllOjAhxhucSq83xbuMY8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=DazaZ5Y34kCMO6QABv9ERiOlcuCWKhjgzdRb3HrkKS6XmFKBvLVeof05WCYAsdyai
+         zpWXpuKw+mi8sU8Aqq3jMTa17gKJgwwE+Ie4I0nkt29h7Z5mwiIF7CJlHuWuw6Pe28
+         UvFBNHLqwE7Yy2Ca6Y0R+m/8jWg7SHY5edZcYnaHILV/kVsQcvaILwBWDR3Q7ToLPE
+         kHIJs2rSIOHDJFwd9bQ45hUtPf3knv6ZpzRej9c5u0Kv2QMEVOm4N9Kr89NlZenlWU
+         ILTOPl/g3hzKyI3TyhRk4OD5SZHe5iWRyRAZPSKrSEpvB6lo3f1f20zDfNIDIuisws
+         w8hAUiLkSZ2NA==
+Date:   Fri, 21 May 2021 12:31:33 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
+Subject: Re: [PATCH 2/2] xfs: validate extsz hints against rt extent size
+ when rtinherit is set
+Message-ID: <20210521193133.GA15971@magnolia>
+References: <162152893588.2694219.2462663047828018294.stgit@magnolia>
+ <162152894725.2694219.2966158387963381824.stgit@magnolia>
+ <YKdl75i5ORTiJqlO@infradead.org>
 MIME-Version: 1.0
-Date:   Fri, 21 May 2021 19:13:54 +0200
-From:   Lukas Herbolt <lukas@herbolt.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFC v2] xfs: Print XFS UUID on mount and umount events.
-In-Reply-To: <20210521160619.GF2207430@magnolia>
-References: <20210519152247.1853357-1-lukas@herbolt.com>
- <20210520152323.GW9675@magnolia>
- <1c29341ea9b5e362cd3252887ad01879@herbolt.com>
- <20210521160619.GF2207430@magnolia>
-User-Agent: Roundcube Webmail/1.4.3
-Message-ID: <bd3dd62e0926cc2aa7ba6070a88e67ac@herbolt.com>
-X-Sender: lukas@herbolt.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YKdl75i5ORTiJqlO@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 21.05.2021 18:06, Darrick J. Wong wrote:
-> On Fri, May 21, 2021 at 11:03:11AM +0200, lukas@herbolt.com wrote:
->> > Are you going to wire up fs uuid logging for the other filesystems that
->> > support them?
->> Well, I wasn't planning to but I can take a look on other FS as well
->> Ext4 and Btrfs for start.
->> 
->> > What happens w.r.t. uuid disambiguation if someone uses a nouuid mount
->> > to mount a filesystem with the same uuid as an already-mounted xfs?
->> 
->> I a not sure I understand the "nouuid mount". I don't think there can
->> be XFS with empty uuid value in SB. And printing the message is 
->> independent
->> on the mount method (mount UUID="" ...; mount /dev/sdX ...;).
+On Fri, May 21, 2021 at 08:49:03AM +0100, Christoph Hellwig wrote:
+> On Thu, May 20, 2021 at 09:42:27AM -0700, Darrick J. Wong wrote:
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > index 045118c7bf78..dce267dbea5f 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > @@ -589,8 +589,21 @@ xfs_inode_validate_extsize(
+> >  	inherit_flag = (flags & XFS_DIFLAG_EXTSZINHERIT);
+> >  	extsize_bytes = XFS_FSB_TO_B(mp, extsize);
+> >  
+> > +	/*
+> > +	 * Historically, XFS didn't check that the extent size hint was an
+> > +	 * integer multiple of the rt extent size on a directory with both
+> > +	 * rtinherit and extszinherit flags set.  This results in math errors
+> > +	 * in the rt allocator and inode verifier errors when the unaligned
+> > +	 * hint value propagates into new realtime files.  Since there might
+> > +	 * be filesystems in the wild, the best we can do for now is to
+> > +	 * mitigate the harms by stopping the propagation.
+> > +	 *
+> > +	 * The next time we add a new inode feature, the if test below should
+> > +	 * also trigger if that new feature is enabled and (rtinherit_flag &&
+> > +	 * inherit_flag).
+> > +	 */
 > 
-> I meant specifically:
-> 
-> mount /dev/mapper/fubar /mnt
-> <snapshot fubar to fubar.bak>
-> 
-> Oh no, I deleted something in fubar, let's retrieve it from fubar.bak!
-> 
-> mount /dev/mapper/fubar.bak /opt	# fails because same uuid as fubar
-> mount /dev/mapper/fubar.bak /opt -o nouuid
-> 
-> --D
-> 
+> I don't understand how this comment relates to the change below, and
+> in fact I don't understand the last paragraph at all.
 
-Ah, right. Well using -o nouuid might have it's own info/notice in the 
-logs
-to make it clear.
+It doesn't relate to the cleanup below at all.  I put a comment there to
+explain why this verifier function doesn't check the rextsize alignment
+of the hint.  In other words, it's a comment describing a gap in a
+validation function and why we can't remove the gap here but have to
+sprinkle mitigations everywhere else.
 
->> 
->> 
->> On 20.05.2021 17:23, Darrick J. Wong wrote:
->> > On Wed, May 19, 2021 at 05:22:48PM +0200, Lukas Herbolt wrote:
->> > > As of now only device names are printed out over __xfs_printk().
->> > > The device names are not persistent across reboots which in case
->> > > of searching for origin of corruption brings another task to properly
->> > > identify the devices. This patch add XFS UUID upon every mount/umount
->> > > event which will make the identification much easier.
->> >
->> > A few questions....
->> >
->> > Are you going to wire up fs uuid logging for the other filesystems that
->> > support them?
->> >
->> > What happens w.r.t. uuid disambiguation if someone uses a nouuid mount
->> > to mount a filesystem with the same uuid as an already-mounted xfs?
->> >
->> > The changes themselves look ok, but I'm wondering what the use case is
->> > here.
->> >
->> > --D
->> >
->> > >
->> > > Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
->> > > ---
->> > > V2: Drop void casts and fix long lines
->> > >
->> > >  fs/xfs/xfs_log.c   | 10 ++++++----
->> > >  fs/xfs/xfs_super.c |  2 +-
->> > >  2 files changed, 7 insertions(+), 5 deletions(-)
->> > >
->> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
->> > > index 06041834daa31..8f4f671fd80d5 100644
->> > > --- a/fs/xfs/xfs_log.c
->> > > +++ b/fs/xfs/xfs_log.c
->> > > @@ -570,12 +570,14 @@ xfs_log_mount(
->> > >  	int		min_logfsbs;
->> > >
->> > >  	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY)) {
->> > > -		xfs_notice(mp, "Mounting V%d Filesystem",
->> > > -			   XFS_SB_VERSION_NUM(&mp->m_sb));
->> > > +		xfs_notice(mp, "Mounting V%d Filesystem %pU",
->> > > +			   XFS_SB_VERSION_NUM(&mp->m_sb),
->> > > +			   &mp->m_sb.sb_uuid);
->> > >  	} else {
->> > >  		xfs_notice(mp,
->> > > -"Mounting V%d filesystem in no-recovery mode. Filesystem will be
->> > > inconsistent.",
->> > > -			   XFS_SB_VERSION_NUM(&mp->m_sb));
->> > > +"Mounting V%d filesystem %pU in no-recovery mode. Filesystem will
->> > > be inconsistent.",
->> > > +			   XFS_SB_VERSION_NUM(&mp->m_sb),
->> > > +			   &mp->m_sb.sb_uuid);
->> > >  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
->> > >  	}
->> > >
->> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->> > > index e5e0713bebcd8..a4b8a5ad8039f 100644
->> > > --- a/fs/xfs/xfs_super.c
->> > > +++ b/fs/xfs/xfs_super.c
->> > > @@ -1043,7 +1043,7 @@ xfs_fs_put_super(
->> > >  	if (!sb->s_fs_info)
->> > >  		return;
->> > >
->> > > -	xfs_notice(mp, "Unmounting Filesystem");
->> > > +	xfs_notice(mp, "Unmounting Filesystem %pU", &mp->m_sb.sb_uuid);
->> > >  	xfs_filestream_unmount(mp);
->> > >  	xfs_unmountfs(mp);
->> > >
->> > > --
->> > > 2.31.1
->> > >
+Earlier iterations of this patch simply fixed the verifier and allowed
+existing filesystems to fail.  Brian and I weren't totally comfortable
+with introducing a breaking change like that even though the
+consequences of the bad hint actually propagating into a realtime file
+are immediate filesystem corruption shutdowns, so this iteration
+mitigates the propagation issue by fixing directories when they get
+rewritten and preventing propagation of bad hints into new files.
+
+I don't want to introduce a new feature/inode flag just to say
+"corrected rt extent size hint" since having an extent size hint set on
+a filesystem with a realtime extent size larger than 1 fsb on a
+filesystem with a realtime volume configured at all is a vanishingly
+rare condition.
+
+Granted, we could decide to introduce the breaking verifier change and
+say "fmeh to this corner case, if you did that you're screwed anyway",
+but I think I want a few more ACKs on /that/ strategy before I do that.
+
+> >  	if (rt_flag)
+> > -		blocksize_bytes = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
+> > +		blocksize_bytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
+> 
+> This just looks like a cleanup, that is replace the open coded version
+> of XFS_FSB_TO_B with the actual helper.
+
+Yes.  As I mentioned above, the comment documents code that isn't there
+and cannot be added.
+
+> > +	/*
+> > +	 * Clear invalid extent size hints set on files with rtinherit and
+> > +	 * extszinherit set.  See the comments in xfs_inode_validate_extsize
+> > +	 * for details.
+> > +	 */
+> 
+> Maybe that comment should be here as it makes a whole lot more sense
+> where we do the actual clearing.
+
+Ok.
+
+> 
+> > +	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
+> > +	    (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
+> > +	    (ip->i_extsize % ip->i_mount->m_sb.sb_rextsize) > 0) {
+> > +		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT);
+> 
+> Overly long line.
+
+Fixed, though Linus said to stop caring about code that goes slightly
+over.
+
+> > +	xfs_failaddr_t		failaddr;
+> >  	umode_t			mode = VFS_I(ip)->i_mode;
+> >  
+> >  	if (S_ISDIR(mode)) {
+> >  		if (pip->i_diflags & XFS_DIFLAG_RTINHERIT)
+> > -			di_flags |= XFS_DIFLAG_RTINHERIT;
+> > +			ip->i_diflags |= XFS_DIFLAG_RTINHERIT;
+> 
+> The removal of the di_flags seems like an unrelated (though nice)
+> cleanup.
+
+Ok fine I'll do this bugfix properly and turn the cleanups into new
+separate patches and add all three to the 15+ cleanup patches I didn't
+manage to get merged last cycle.
+
+--D
