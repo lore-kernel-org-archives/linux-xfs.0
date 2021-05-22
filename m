@@ -2,74 +2,65 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 319E5C2B9F2
-	for <linux-xfs@archiver.kernel.org>; Sat, 22 May 2021 07:45:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D51FC4707E
+	for <linux-xfs@archiver.kernel.org>; Sat, 22 May 2021 17:35:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC506611CB
-	for <linux-xfs@archiver.kernel.org>; Sat, 22 May 2021 07:45:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F368B6100B
+	for <linux-xfs@archiver.kernel.org>; Sat, 22 May 2021 17:35:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230000AbhEVHqt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 22 May 2021 03:46:49 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:57051 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229990AbhEVHqt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 May 2021 03:46:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1621669524;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=h2vI6qAlLV/+LbtWLIAbep8Td7DB8/nLdLSULmPCA2k=;
-        b=b3cs08NeXoA03gwp+4ysQdwvxTd0H5IXGCy73z+twC6M/jPzHgSzPyuZXULYJG89UhQrqT
-        cU/bm9eXspJF3QEnrqnLjAjm7CgI3cH8SptRRJdrnzT1KatBhn/Ms5tHqmZr4QXj5dIaDo
-        VZl0mv4zwAxescCnYCTXmn89arH390E=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-58-tC9wFz4xPm2K-paW3QMXaw-1; Sat, 22 May 2021 03:45:22 -0400
-X-MC-Unique: tC9wFz4xPm2K-paW3QMXaw-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 62E98180FD60;
-        Sat, 22 May 2021 07:45:21 +0000 (UTC)
-Received: from T590 (ovpn-12-34.pek2.redhat.com [10.72.12.34])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D9D4560D4B;
-        Sat, 22 May 2021 07:45:15 +0000 (UTC)
-Date:   Sat, 22 May 2021 15:45:11 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] iomap: resched ioend completion when in
- non-atomic context
-Message-ID: <YKi2hwnJMbLYtkmb@T590>
-References: <20210517171722.1266878-1-bfoster@redhat.com>
- <20210517171722.1266878-2-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210517171722.1266878-2-bfoster@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+        id S231346AbhEVRhT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 22 May 2021 13:37:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47292 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231330AbhEVRhT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 22 May 2021 13:37:19 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 363F9610A6;
+        Sat, 22 May 2021 17:35:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1621704954;
+        bh=YiAUGbC1eZTaeY09i6V48FJhBZ5QyLTpldal65bH9Ng=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=pvKlnJ8WpfXh6zcK+CC7cA+OS+uixIHKMwbug7rXks7ZLUN3D5HtzchIWyCFSlRaQ
+         R+SWeXR3fGDMAs2me+yShxl7HEa7I6Bk95hgS1jWxaX7wIo1wgx7D2h5TBbkt63d8P
+         hKU3VHmSf8LKm6QcMkdY1OK5vaRt5a/RX6UnfgkZhnTRpcnx0whTiRXhzChdoFP4/J
+         gFXbayt81Xa4NoQpD5DwkbXGQnwoIONB6yFhczbHGfti3aU9ENI9fWo9zbGVZ5moyk
+         cPjDZ/iVpZM6h99wsXOU/TA9KPVu4j4RVhXuwvOPOnwp+wAV/UO+ujfGn9kLrMobYJ
+         e1L5MX3btSG3Q==
+Subject: Re: [GIT PULL] xfs: fixes for 5.13-rc3
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20210522041115.GB15971@magnolia>
+References: <20210522041115.GB15971@magnolia>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20210522041115.GB15971@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.13-fixes-1
+X-PR-Tracked-Commit-Id: e3c2b047475b52739bcf178a9e95176c42bbcf8f
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: a3969ef463f970c6ad99f32ca154fbd2a62bf97a
+Message-Id: <162170495407.3077.13033559630823026395.pr-tracker-bot@kernel.org>
+Date:   Sat, 22 May 2021 17:35:54 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 17, 2021 at 01:17:20PM -0400, Brian Foster wrote:
-> The iomap ioend mechanism has the ability to construct very large,
-> contiguous bios and/or bio chains. This has been reported to lead to
+The pull request you sent on Fri, 21 May 2021 21:11:15 -0700:
 
-BTW, it is actually wrong to complete a large bio chains in
-iomap_finish_ioend(), which may risk in bio allocation deadlock, cause
-bio_alloc_bioset() relies on bio submission to make forward progress. But
-it becomes not true when all chained bios are freed just after the whole
-ioend is done since all chained bios(except for the one embedded in ioend)
-are allocated from same bioset(fs_bio_set).
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.13-fixes-1
 
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/a3969ef463f970c6ad99f32ca154fbd2a62bf97a
 
-Thanks,
-Ming
+Thank you!
 
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
