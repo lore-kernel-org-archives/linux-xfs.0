@@ -2,87 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BFB1C04FF3
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 14:11:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BE31C04FF3
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 15:14:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F49361370
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 14:11:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F896610FC
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 15:14:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233009AbhEXOMz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 May 2021 10:12:55 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:27462 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233005AbhEXOMv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 May 2021 10:12:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1621865481;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=XrgScrtgPE6h0yjFQjkRNhNAavrRYvrma6AaGeqjrVc=;
-        b=YirQvvSzv2AId6c8/vh1jsyENZpp9zmxMhREPUM3VMvkt3PcSVTwFrIzzgJ4mkNe2ViPBx
-        0H9/T4PI26/8m7jmJs6kpB0BQGIjTDjUGXXroFf/BwqjMPG0ds2y6q7858oZjs13z/yD97
-        eIPO3bvcbaJ3BO7OLe1cedFCsrlZXfI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-331-lh9f0pMyNxGBhr0E5-DRCQ-1; Mon, 24 May 2021 10:11:19 -0400
-X-MC-Unique: lh9f0pMyNxGBhr0E5-DRCQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4AF84107B78A;
-        Mon, 24 May 2021 14:11:18 +0000 (UTC)
-Received: from T590 (ovpn-12-30.pek2.redhat.com [10.72.12.30])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2E2D35C701;
-        Mon, 24 May 2021 14:11:15 +0000 (UTC)
-Date:   Mon, 24 May 2021 22:11:10 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] iomap: resched ioend completion when in
- non-atomic context
-Message-ID: <YKuz/vX44vqZrrVR@T590>
-References: <20210517171722.1266878-1-bfoster@redhat.com>
- <20210517171722.1266878-2-bfoster@redhat.com>
- <YKi2hwnJMbLYtkmb@T590>
- <YKuUvHB6HUyQ6TWD@bfoster>
+        id S232543AbhEXPQI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 May 2021 11:16:08 -0400
+Received: from out30-130.freemail.mail.aliyun.com ([115.124.30.130]:55531 "EHLO
+        out30-130.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235616AbhEXPLU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 May 2021 11:11:20 -0400
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e01424;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0UZyzSpv_1621868989;
+Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0UZyzSpv_1621868989)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Mon, 24 May 2021 23:09:50 +0800
+Date:   Mon, 24 May 2021 23:09:48 +0800
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, hsiangkao@aol.com, david@fromorbit.com
+Subject: Re: [PATCH 1/1] xfs: check free AG space when making per-AG
+ reservations
+Message-ID: <YKvBvBABUDHfHFux@B-P7TQMD6M-0146.local>
+References: <162181808760.203030.18032062235913134439.stgit@locust>
+ <162181809311.203030.14398379924057321012.stgit@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YKuUvHB6HUyQ6TWD@bfoster>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <162181809311.203030.14398379924057321012.stgit@locust>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 24, 2021 at 07:57:48AM -0400, Brian Foster wrote:
-> On Sat, May 22, 2021 at 03:45:11PM +0800, Ming Lei wrote:
-> > On Mon, May 17, 2021 at 01:17:20PM -0400, Brian Foster wrote:
-> > > The iomap ioend mechanism has the ability to construct very large,
-> > > contiguous bios and/or bio chains. This has been reported to lead to
-> > 
-> > BTW, it is actually wrong to complete a large bio chains in
-> > iomap_finish_ioend(), which may risk in bio allocation deadlock, cause
-> > bio_alloc_bioset() relies on bio submission to make forward progress. But
-> > it becomes not true when all chained bios are freed just after the whole
-> > ioend is done since all chained bios(except for the one embedded in ioend)
-> > are allocated from same bioset(fs_bio_set).
-> > 
+On Sun, May 23, 2021 at 06:01:33PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Interesting. Do you have a reproducer (or error report) for this? Is it
+> The new online shrink code exposed a gap in the per-AG reservation
+> code, which is that we only return ENOSPC to callers if the entire fs
+> doesn't have enough free blocks.  Except for debugging mode, the
+> reservation init code doesn't ever check that there's enough free space
+> in that AG to cover the reservation.
+> 
+> Not having enough space is not considered an immediate fatal error that
+> requires filesystem offlining because (a) it's shouldn't be possible to
+> wind up in that state through normal file operations and (b) even if
+> one did, freeing data blocks would recover the situation.
+> 
+> However, online shrink now needs to know if shrinking would not leave
+> enough space so that it can abort the shrink operation.  Hence we need
+> to promote this assertion into an actual error return.
+> 
+> Observed by running xfs/168 with a 1k block size, though in theory this
+> could happen with any configuration.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-No, but the theory has been applied for long time.
+Many thanks for the fix!
 
-> addressed by the next patch, or are further changes required?
-
-Your patchset can't address the issue.
-
+Reviewed-by: Gao Xiang <hsiangkao@linux.alibaba.com>
 
 Thanks,
-Ming
-
+Gao Xiang
