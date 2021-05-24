@@ -2,137 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B303FC2B9F7
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 10:42:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DE77C04FF3
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 11:57:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8514A6044F
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 10:42:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49C9361289
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 11:57:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232599AbhEXKoP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 May 2021 06:44:15 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43181 "EHLO
+        id S232494AbhEXL7E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 May 2021 07:59:04 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:38679 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232547AbhEXKoH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 May 2021 06:44:07 -0400
+        by vger.kernel.org with ESMTP id S232110AbhEXL7E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 May 2021 07:59:04 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1621852959;
+        s=mimecast20190719; t=1621857455;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=NoxEjuEWgkg5fs2WbwAcatgBZ7aZiGncK9IsbeTbOwo=;
-        b=br/VHNhz+Co1iSkBGhZ0rp6JAx2sw/bUByEnSJSKBvw0UdRvMFFwIJTSH2aXzxJJiTxje+
-        lTk8/uv9b7JizpmahKz63LT84ZRvTqEIqtYPo4JbBfG54CISgirZBoMuiZAtDr032MDX0H
-        5pxUkeMXNQ8uyfsb2qiR90tanLg2Tl0=
-Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
- [209.85.219.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-515-mBtfQwr_M-SabFulbOQTqA-1; Mon, 24 May 2021 06:42:37 -0400
-X-MC-Unique: mBtfQwr_M-SabFulbOQTqA-1
-Received: by mail-qv1-f71.google.com with SMTP id b5-20020a0cc9850000b02901eece87073bso25511339qvk.21
-        for <linux-xfs@vger.kernel.org>; Mon, 24 May 2021 03:42:37 -0700 (PDT)
+        bh=jsnicPGeNuNdO7KsYBksZz7HZLP3nHbQXyRo73rNtFI=;
+        b=hjn76jq7Mo431cIMRNdXx4FR5bQLA6QXeA+hQQ+qNlhAQBh7fwqK68uduaHsoTPZqnmYVP
+        RXfkMAnnxuya1tR/ebb0I+yzOGlDtYwGMXRCADNSy+KFnN1N3Ixp6cxh/wFIF+h02qT8pm
+        T3iGgQhyOCejJq3ZJQ5PCE39E3MVcus=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-419-YiCh409xP1Kf4xnnZQnH8g-1; Mon, 24 May 2021 07:57:34 -0400
+X-MC-Unique: YiCh409xP1Kf4xnnZQnH8g-1
+Received: by mail-qv1-f70.google.com with SMTP id v3-20020a0cdd830000b02901efe0c3571eso24474802qvk.5
+        for <linux-xfs@vger.kernel.org>; Mon, 24 May 2021 04:57:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=NoxEjuEWgkg5fs2WbwAcatgBZ7aZiGncK9IsbeTbOwo=;
-        b=RG25ko/dxpoL5xnO6A8y+AnA+rOsnHohzIoxVttaqkqRIIPpfpEEDWzchHvopGG8l3
-         FPAdJ0+iylYGqv9TZdV0d2ZgcxTYRkm68x0kSaFRFM9IP7m4OU7jL9Xtb8eOcbxKxu9H
-         98/SxTelGXFlvRkHTxXqLh0f2xIyO0HDqsdMNaJpMWvh/g3KGGHJAUyMxJPAWqrXu4Ik
-         wwpNFVorgOElMz3lGO0pydSrQF6+YejmXRt8BX5LXmc98SeSTdTFYkPzvw3l7PIlhdj2
-         b29CRmyDXjChquXttF8Or/SAH19Qma90rl5esqHnoRaAqjnTsM3KNxnDpZD4zJTqwq+x
-         Evpg==
-X-Gm-Message-State: AOAM532+4AhdCAbJJMvHpMFEeXD8aGLBZMyfKyVpWfklnWmCbte+GZ6z
-        8quZiH3uewzVmB4a458lUjwcE5CNRH3/IOpABbwLPSkhiJWqjQw/s8xmTga08u0wtVedmk+/l+j
-        mHH301YSXSL5cxmRJxEiS
-X-Received: by 2002:ac8:6751:: with SMTP id n17mr2692132qtp.376.1621852957062;
-        Mon, 24 May 2021 03:42:37 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzPZ3RzVOEgsEfHu+hf/2M1+OEtWMvdqqjyUrUIDDBUcLEXeXdEqwhNeACPIREJmwHBqoMXww==
-X-Received: by 2002:ac8:6751:: with SMTP id n17mr2692112qtp.376.1621852956875;
-        Mon, 24 May 2021 03:42:36 -0700 (PDT)
+        bh=jsnicPGeNuNdO7KsYBksZz7HZLP3nHbQXyRo73rNtFI=;
+        b=Ng/IgS3FbSReY6bM0AkW6S1uU0CgKsQ6m7kjGLRmAK7sLWLDuoJKtEeKm22od852ky
+         WgfScBAedEICD43ZqC+3SyUgdY5Vc1SrQAEQmkUZlqjWinaVcQDE2CUQ+qlceEmhHhO+
+         Zqt74GsIBOsVrV8EtCjM23y9GpmrEf9EDKq3HbV8tgFVMisEDwCX3IG62F0nb/XzpQL8
+         k/odgWvLyLuuHBQoT/4Gx4Ykd4MRCfPOCGst1VU8aW2tLS0gxvNYPKqQxdh6cEICKgQF
+         vNSL0XwqzDnKO86pn5WgsSD+f+jsmX1c81SDYKuhSVLE96v0h0SymMVncdrfm1WjRe5U
+         tYzw==
+X-Gm-Message-State: AOAM532lZMkLTGpYvzVeXUusG/M8WSw+AJKqagzDZp2jPBNVbCJ+Jm9r
+        RKT990HH0GqvxaUVKz7AdrMP4hGJHpx9XM6Qi+36MJdB1EfbzLmkE//PTrGIn8tlzkiux/vhVS7
+        SwPxZn5X96ffb4yZvFb81
+X-Received: by 2002:ac8:5ac7:: with SMTP id d7mr25849909qtd.173.1621857453557;
+        Mon, 24 May 2021 04:57:33 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzXr+5GBB4XKevka1pAvPxe7iPZPXqfmFr24ZdwXUSaZTCHCo2sAtz8uckkTVlEYm19AvMKTw==
+X-Received: by 2002:ac8:5ac7:: with SMTP id d7mr25849894qtd.173.1621857453364;
+        Mon, 24 May 2021 04:57:33 -0700 (PDT)
 Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id h2sm11061115qkf.106.2021.05.24.03.42.36
+        by smtp.gmail.com with ESMTPSA id t2sm1369670qkt.135.2021.05.24.04.57.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 May 2021 03:42:36 -0700 (PDT)
-Date:   Mon, 24 May 2021 06:42:34 -0400
+        Mon, 24 May 2021 04:57:33 -0700 (PDT)
+Date:   Mon, 24 May 2021 07:57:31 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, hsiangkao@aol.com, david@fromorbit.com
-Subject: Re: [PATCH 1/1] xfs: check free AG space when making per-AG
- reservations
-Message-ID: <YKuDGt2/Hj/eEHGX@bfoster>
-References: <162181808760.203030.18032062235913134439.stgit@locust>
- <162181809311.203030.14398379924057321012.stgit@locust>
+Cc:     Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] iomap: resched ioend completion when in
+ non-atomic context
+Message-ID: <YKuUqzEmt5/yZMt1@bfoster>
+References: <20210517171722.1266878-1-bfoster@redhat.com>
+ <20210517171722.1266878-2-bfoster@redhat.com>
+ <YKKt2isZwu0qJK/C@casper.infradead.org>
+ <YKOnGSJ9NR+cSRRc@bfoster>
+ <20210520215858.GZ9675@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162181809311.203030.14398379924057321012.stgit@locust>
+In-Reply-To: <20210520215858.GZ9675@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, May 23, 2021 at 06:01:33PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, May 20, 2021 at 02:58:58PM -0700, Darrick J. Wong wrote:
+> On Tue, May 18, 2021 at 07:38:01AM -0400, Brian Foster wrote:
+> > On Mon, May 17, 2021 at 06:54:34PM +0100, Matthew Wilcox wrote:
+> > > On Mon, May 17, 2021 at 01:17:20PM -0400, Brian Foster wrote:
+> > > > @@ -1084,9 +1084,12 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+> > > >  			next = bio->bi_private;
+> > > >  
+> > > >  		/* walk each page on bio, ending page IO on them */
+> > > > -		bio_for_each_segment_all(bv, bio, iter_all)
+> > > > +		bio_for_each_segment_all(bv, bio, iter_all) {
+> > > >  			iomap_finish_page_writeback(inode, bv->bv_page, error,
+> > > >  					bv->bv_len);
+> > > > +			if (!atomic)
+> > > > +				cond_resched();
+> > > > +		}
+> > > 
+> > > I don't know that it makes sense to check after _every_ page.  I might
+> > > go for every segment.  Some users check after every thousand pages.
+> > > 
+> > 
+> > The handful of examples I come across on a brief scan (including the
+> > other iomap usage) have a similar pattern as used here. I don't doubt
+> > there are others, but I think I'd prefer to have more reasoning behind
+> > adding more code than might be necessary (i.e. do we expect additional
+> > overhead to be measurable here?). As it is, the intent isn't so much to
+> > check on every page as much as this just happens to be the common point
+> > of the function to cover both long bio chains and single vector bios
+> > with large numbers of pages.
 > 
-> The new online shrink code exposed a gap in the per-AG reservation
-> code, which is that we only return ENOSPC to callers if the entire fs
-> doesn't have enough free blocks.  Except for debugging mode, the
-> reservation init code doesn't ever check that there's enough free space
-> in that AG to cover the reservation.
+> It's been a while since I waded through the macro hell to find out what
+> cond_resched actually does, but iirc it can do some fairly heavyweight
+> things (disable preemption, call the scheduler, rcu stuff) which is why
+> we're supposed to be a little judicious about amortizing each call over
+> a few thousand pages.
 > 
-> Not having enough space is not considered an immediate fatal error that
-> requires filesystem offlining because (a) it's shouldn't be possible to
-> wind up in that state through normal file operations and (b) even if
-> one did, freeing data blocks would recover the situation.
-> 
-> However, online shrink now needs to know if shrinking would not leave
-> enough space so that it can abort the shrink operation.  Hence we need
-> to promote this assertion into an actual error return.
-> 
-> Observed by running xfs/168 with a 1k block size, though in theory this
-> could happen with any configuration.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+It looks to me it just checks some state bit and only does any work if
+actually necessary. I suppose not doing that less often is cheaper than
+doing it more, but it's not clear to me it's enough that it really
+matters and/or warrants more code to filter out calls..
 
->  fs/xfs/libxfs/xfs_ag_resv.c |   18 +++++++++++++++---
->  1 file changed, 15 insertions(+), 3 deletions(-)
+What exactly did you have in mind for logic? I suppose we could always
+stuff a 'if (!(count++ % 1024)) cond_resched();' or some such in the
+inner loop, but that might have less of an effect on larger chains
+constructed of bios with fewer pages (depending on whether that might
+still be possible).
+
+Brian
+
+> --D
 > 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-> index e32a1833d523..bbfea8022a3b 100644
-> --- a/fs/xfs/libxfs/xfs_ag_resv.c
-> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
-> @@ -325,10 +325,22 @@ xfs_ag_resv_init(
->  		error2 = xfs_alloc_pagf_init(mp, tp, pag->pag_agno, 0);
->  		if (error2)
->  			return error2;
-> -		ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
-> -		       xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <=
-> -		       pag->pagf_freeblks + pag->pagf_flcount);
-> +
-> +		/*
-> +		 * If there isn't enough space in the AG to satisfy the
-> +		 * reservation, let the caller know that there wasn't enough
-> +		 * space.  Callers are responsible for deciding what to do
-> +		 * next, since (in theory) we can stumble along with
-> +		 * insufficient reservation if data blocks are being freed to
-> +		 * replenish the AG's free space.
-> +		 */
-> +		if (!error &&
-> +		    xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
-> +		    xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved >
-> +		    pag->pagf_freeblks + pag->pagf_flcount)
-> +			error = -ENOSPC;
->  	}
-> +
->  	return error;
->  }
->  
+> > Brian
+> > 
 > 
 
