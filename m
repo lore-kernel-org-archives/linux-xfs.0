@@ -2,42 +2,68 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F737C04FF3
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 18:18:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4407C04FF3
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 18:21:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59F5A60FEB
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 18:18:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A532E6140B
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 May 2021 18:21:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233424AbhEXSTo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 May 2021 14:19:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45520 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232985AbhEXSTo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 May 2021 14:19:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0E4A361413;
-        Mon, 24 May 2021 18:18:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621880296;
-        bh=VQbr62qZkrDPnbQKHxpiz273SegXw8gj688i+DGObA0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YK/fWWvLJTaVLYR6pkz94hsQsiqYa9/2bR4fE4QBFpgHyruIQOXTw8fpCp9T1SyMk
-         V8yH8tJw6Tj/c7m72np6FjB08dkMu+/yfezHv/qXKyZ2CGZpIEufeSMqzVms7JzOdM
-         QNEzEUAjmmUZSyqT9Z95uSIKC+NBcePUOsWyH1naR0BywITIbCPDab4ure0+Z6YNw+
-         WA29xz2zYQW5VZ6xz0o0Ls4JWLVrHbNyz/fh8kM5Bbs72LRMpTgtNy1aBqEK6Rxsd+
-         RBPjHsPMtz9mZXt9UGgocaxrFVPsCmtXsoCVztLKQl2FYLR6xuOk077Ad+lRIGNg7l
-         PTX04y2TU1ocw==
-Date:   Mon, 24 May 2021 11:18:15 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
+        id S233803AbhEXSWt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 May 2021 14:22:49 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:23434 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233104AbhEXSWs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 May 2021 14:22:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1621880480;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=UfiFBpMkm7Wtexl2ZI4LgT1kqLrYvDyy3tDE5wWLR10=;
+        b=E/PM7m7CTg3Txk5ZjCxk0XFWuZWkQa903YLg5jbLWgjyLADaZJtHXi97cqypUtBKhZNEpx
+        QjC3DWqe1j2RVyjn+22p7I39o9o2ISsoh+UaecKhDPqIxBRM3h/PsjJR0g5vpbrOREeeog
+        UtaHSfijmcpT9WPUxile8zgBa6T6OhU=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-31-b-gWirAzMC6xP_VYHvSzUw-1; Mon, 24 May 2021 14:21:18 -0400
+X-MC-Unique: b-gWirAzMC6xP_VYHvSzUw-1
+Received: by mail-qt1-f197.google.com with SMTP id o15-20020a05622a138fb02901e0ac29f6b2so24497869qtk.11
+        for <linux-xfs@vger.kernel.org>; Mon, 24 May 2021 11:21:18 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=UfiFBpMkm7Wtexl2ZI4LgT1kqLrYvDyy3tDE5wWLR10=;
+        b=bImmYEev4avyvZFM7VCwlP7VWfde+6N/pWY0aI27aIZ4NYOH/TEaCoOlB2ZiwT3H/V
+         lqF0N+xyr1bgVsS3ch6PFdySUM91AYMw2VC9nlKybL4lm7R0HqyL631m3sotgmT9c4g8
+         Fx4qQcJUYGq3JusDFz6EyvOcSQVo5nRrb6Q+ovfjM0A+tn8ccoxC45yUmf9APMIw95su
+         3bESmyFNL/zEUHyYma72mKYKCoZjGMu+/IxkJTqGxRKOfqzpU2AH90CVV7a7DhWSynpc
+         AuxNSJaPlh1YIESnH52K/YDyzIVlt/VXltiC0mRaS35kiWkMvXKMpsSDm4+AxoJyPW75
+         jAVg==
+X-Gm-Message-State: AOAM531f4GHOpdxsfQzx+BgJi47QfHxoOlS4T1soVQWJE5h5DtuJ6AMd
+        uxw+WR2ikji4/C1KdbUXhfTtQwLmcBIL/f9IelIlflZbC7k2oqHKFNM4sZQubCUcXgVIBSTjpf8
+        vsNHinoNlDaGIom1uhmo1
+X-Received: by 2002:a05:622a:48b:: with SMTP id p11mr28599229qtx.346.1621880477938;
+        Mon, 24 May 2021 11:21:17 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyv2BRFQRS9GIOgUghVsjioheGvS3F5GYgdNb7pOY17+qOtVRDlJhh8t2e+gwW8pycWI3Dvrg==
+X-Received: by 2002:a05:622a:48b:: with SMTP id p11mr28599198qtx.346.1621880477491;
+        Mon, 24 May 2021 11:21:17 -0700 (PDT)
+Received: from bfoster ([98.216.211.229])
+        by smtp.gmail.com with ESMTPSA id x28sm11152747qtm.71.2021.05.24.11.21.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 May 2021 11:21:17 -0700 (PDT)
+Date:   Mon, 24 May 2021 14:21:15 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
 Subject: Re: [PATCH 2/2] xfs: validate extsz hints against rt extent size
  when rtinherit is set
-Message-ID: <20210524181815.GB202121@locust>
+Message-ID: <YKvum6AFV03hwxrR@bfoster>
 References: <162181807472.202929.18194381144862527586.stgit@locust>
  <162181808584.202929.10474310046605173335.stgit@locust>
  <YKuDFNdxIqLKfIbg@bfoster>
@@ -129,6 +155,14 @@ On Mon, May 24, 2021 at 10:23:28AM -0700, Darrick J. Wong wrote:
 > ...completely away from making any code changes to the verifier.
 > So to answer your question, it should not be a factor any more.
 > 
+
+Right.. what I mean to ask is whether it's worth mentioning in the
+comment we're adding here. ISTM it is, because the flag mitigation
+strategy depends on being able to actually read the historically broken
+inodes. At the very least, that tells somebody who might be cleverly
+trying to get around the caveat in the comment that they might need to
+consider the external code when making changes to the verifier.
+
 > > >  	if (rt_flag)
 > > >  		blocksize_bytes = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
 > > >  	else
@@ -170,6 +204,26 @@ On Mon, May 24, 2021 at 10:23:28AM -0700, Darrick J. Wong wrote:
 > the change nontransactionally and wait for someone to log the icore to
 > persist the changes, but that's always frowned upon.
 > 
+
+The latter is more what I had in mind.. just filter out the bad state
+in-core (perhaps with a one-shot warning to let the user know this fs
+has the oddity) and let further modifications commit the change or not.
+I agree that it's probably overkill to introduce a transaction to
+persist a fix at read time where one does not already exist. But if
+we're going to silently modify what's on-disk anyways, I'm not sure I
+see a major problem with clearing it on read if it otherwise results in
+the same behavior. I believe we used to convert old (v1) inodes to v2 in
+a similar manner when read off disk into the in-core structure.
+
+FWIW, the reason I ask in this case is just to see if we can achieve the
+same desired behavior with less code. This seems like quite a rare case,
+so I think it would be a slightly unfortunate to have code spread in
+various places, including a non-trivial comment in the verifier, for
+something that could potentially be isolated to a single bit of
+filtering logic at or near the read verifier. Of course if I'm mistaken
+about the potential simplification, then I don't have any major issue
+with what the patch is currently doing..
+
 > That's why I decided to go with making updates in xfs_trans_log_inode,
 > since (a) it's not going to burn a bunch of human time, (b) it's where
 > we perform other silent inode upgrades, and (c) it doesn't generate any
@@ -194,12 +248,22 @@ On Mon, May 24, 2021 at 10:23:28AM -0700, Darrick J. Wong wrote:
 > 
 > If the allocation succeeds, then the rt file's inode (which is already
 > ijoined) gets logged, at which point we'll correct the inode.
+> 
 
-...and now that I've had my /third/ cup of coffee I realize that it
-isn't necessary to make any changes for regular realtime files because
-the verifiers have always checked the hint alignment there.
+Hmm.. that sounds reasonable in principle, but it's not clear to me if
+you mean to combine that with the explicit propagation prevention or use
+it in place of it. As above, I'm still curious if the implementation for
+this behavior needs to be more involved than 1. prevent new bad
+configurations in the ioctl path and 2. filter out the pre-existing bad
+settings at read time and let them persist naturally.
 
---D
+Also if this is already more than likely a fatal error, I don't think
+I'd object to just letting the verifier fail and fixing the problem via
+repair (or filtering the verifier failure to the case where failure was
+otherwise imminent; the historical situation is a little unclear to me
+tbh).
+
+Brian
 
 > > Wouldn't that also prevent the state from propagating and/or clear it
 > > from directories on next modification?
@@ -302,3 +366,5 @@ the verifiers have always checked the hint alignment there.
 > > >  			VFS_I(ip)->i_mode, new_diflags);
 > > > 
 > > 
+> 
+
