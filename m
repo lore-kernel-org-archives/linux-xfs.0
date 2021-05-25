@@ -2,88 +2,74 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17EBAC47086
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 22:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA4DC47086
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 22:44:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ECFE56141C
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 22:32:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 450D86140B
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 22:44:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231448AbhEYWdc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 May 2021 18:33:32 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:36494 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230202AbhEYWdc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 May 2021 18:33:32 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1621981921;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=t2QUVz6gnfCaqisemCBpqjC6VD3ID8/L7m//tDjqPVA=;
-        b=gJQ+r3BBK1CPH+WTQ+Qk0d986+lmxiFqLVuskbFX7hICjp99LNViKrkpV1x1+V0bcPaAf/
-        AVQKL32iQc3eTdzBLZoTnC879x5dhOAZ1ESVz3TgOpabk7N+knqJQObpLaVpiU3/GuBZ2+
-        UYCFn2qASMSm9IVvTr45kyJ0/2kgSzE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-584-PqGiBbc9PpOTULD7UQr0ZQ-1; Tue, 25 May 2021 18:31:57 -0400
-X-MC-Unique: PqGiBbc9PpOTULD7UQr0ZQ-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4E5FF107ACC7;
-        Tue, 25 May 2021 22:31:56 +0000 (UTC)
-Received: from warthog.procyon.org.uk (ovpn-112-24.rdu2.redhat.com [10.10.112.24])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 794046062F;
-        Tue, 25 May 2021 22:31:51 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-        Kingdom.
-        Registered in England and Wales under Company Registration No. 3798903
-From:   David Howells <dhowells@redhat.com>
-In-Reply-To: <6E4DE257-4220-4B5B-B3D0-B67C7BC69BB5@dilger.ca>
-References: <6E4DE257-4220-4B5B-B3D0-B67C7BC69BB5@dilger.ca> <206078.1621264018@warthog.procyon.org.uk>
-To:     Andreas Dilger <adilger@dilger.ca>
-Cc:     dhowells@redhat.com, Theodore Ts'o <tytso@mit.edu>,
-        "Darrick J. Wong" <djwong@kernel.org>, Chris Mason <clm@fb.com>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        linux-cachefs@redhat.com,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        NeilBrown <neilb@suse.com>
-Subject: Re: How capacious and well-indexed are ext4, xfs and btrfs directories?
+        id S230145AbhEYWpb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 May 2021 18:45:31 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:40425 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229952AbhEYWpb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 May 2021 18:45:31 -0400
+Received: from dread.disaster.area (pa49-180-230-185.pa.nsw.optusnet.com.au [49.180.230.185])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 307A680CB81;
+        Wed, 26 May 2021 08:43:59 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1llfmI-005DTx-52; Wed, 26 May 2021 08:43:58 +1000
+Date:   Wed, 26 May 2021 08:43:58 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/11] xfs: cleanup _xfs_buf_get_pages
+Message-ID: <20210525224358.GK664593@dread.disaster.area>
+References: <20210519190900.320044-1-hch@lst.de>
+ <20210519190900.320044-5-hch@lst.de>
+ <20210519224028.GD664593@dread.disaster.area>
+ <20210520052335.GB21165@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <4169581.1621981910.1@warthog.procyon.org.uk>
-Date:   Tue, 25 May 2021 23:31:50 +0100
-Message-ID: <4169583.1621981910@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210520052335.GB21165@lst.de>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+        a=dUIOjvib2kB+GiIc1vUx8g==:117 a=dUIOjvib2kB+GiIc1vUx8g==:17
+        a=kj9zAlcOel0A:10 a=5FLXtPjwQuUA:10 a=7-415B0cAAAA:8
+        a=BxDII7KeunfySy2DZVIA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Andreas Dilger <adilger@dilger.ca> wrote:
+On Thu, May 20, 2021 at 07:23:35AM +0200, Christoph Hellwig wrote:
+> On Thu, May 20, 2021 at 08:40:28AM +1000, Dave Chinner wrote:
+> > This will not apply (and break) the bulk alloc patch I sent out - we
+> > have to ensure that the b_pages array is always zeroed before we
+> > call the bulk alloc function, hence I moved the memset() in this
+> > function to be unconditional. I almost cleaned up this function in
+> > that patchset....
+> 
+> The buffer is freshly allocated here using kmem_cache_zalloc, so
+> b_pages can't be set, b_page_array is already zeroed from
+> kmem_cache_zalloc, and the separate b_pages allocation is swithced
+> to use kmem_zalloc.  I thought the commit log covers this, but maybe
+> I need to improve it?
 
-> As described elsewhere in the thread, allowing concurrent create and unlink
-> in a directory (rename probably not needed) would be invaluable for scaling
-> multi-threaded workloads.  Neil Brown posted a prototype patch to add this
-> to the VFS for NFS:
+I think I'm still living in the past a bit, where the page array in
+an active uncached buffer could change via the old "associate
+memory" interface. We still actually have that interface in
+userspace, but we don't have anything in the kernel that uses it any
+more.
 
-Actually, one thing I'm looking at is using vfs_tmpfile() to create a new file
-(or a replacement file when invalidation is required) and then using
-vfs_link() to attach directory entries in the background (possibly using
-vfs_link() with AT_LINK_REPLACE[1] instead of unlink+link).
+Cheers,
 
-Any thoughts on how that might scale?  vfs_tmpfile() doesn't appear to require
-the directory inode lock.  I presume the directory is required for security
-purposes in addition to being a way to specify the target filesystem.
-
-David
-
-[1] https://lore.kernel.org/linux-fsdevel/cover.1580251857.git.osandov@fb.com/
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
