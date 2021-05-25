@@ -4,173 +4,120 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94AF4C47086
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 20:36:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E625C47086
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 20:43:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 75D176140B
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 20:36:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7618E6140F
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 20:43:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233298AbhEYUhm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 May 2021 16:37:42 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34890 "EHLO mail.kernel.org"
+        id S233352AbhEYUoo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 May 2021 16:44:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35618 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233279AbhEYUhl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 May 2021 16:37:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 36742613D2;
-        Tue, 25 May 2021 20:36:11 +0000 (UTC)
+        id S231182AbhEYUoo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 May 2021 16:44:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A400061409;
+        Tue, 25 May 2021 20:43:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621974971;
-        bh=4QHmC+vie4evS84mr2isY4FSPWFSPQtknjO0/fld2PM=;
+        s=k20201202; t=1621975393;
+        bh=D9/lkDf7/4G2MsG+84gaDXO7v7xhTSSqmHMTWi1xl5w=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CyyYEaAOGdaa7nMX1CxPaG/tiEcIQww+2h/bAcBm4PK0wkIy1j+ifNkJW/87CyTPc
-         IwTTiyJvRwd8NA1C+JGBHaq9JEGJMQ0S2K5IHQ4P1+Nrxbv6VJ3D9kCOLPVZpzjW93
-         niXiygGymyTP/FgL78YqWuosQ1uxgkPUvR2Be60Dhv3BFZPpXVma8aybVEAxSeJrxE
-         5K0Sj28r9zB9PUQLPF0Lm1EngWPVDW/yc9qFk3JJqG17CnCtkHq94+sz7gUF0sqAlE
-         fqXUoLAz0Ux6v3NRhVVmvDxv2ADmI5B94Q3QwAIlza5mKNeT7TpaXrmPZl0Gd1oqOb
-         NGhQ4Kt6qqYcQ==
-Date:   Tue, 25 May 2021 13:36:10 -0700
+        b=gWt3V53WTHyJPdEqHJaiSjzFKDoxv0siITj6vkwlqJXoCFCv3a3exQZokq6Tonv30
+         gMlbZf5iUa/Tplf7dwGeETBsjwgLMAEfIxdlTKGU+qc54RBD6xX/YQQvQ5ekFgP4qd
+         2+r05F69dPROmTIFIVRPzEBOiSjcvk4cl99FWfRWeS/2hUrt1iSElUvXsOhXbbeYrI
+         3Jy9OORfYg3TKBLlS3Bi54A4zCiGK6t5PZVWbNrjze/xPOo+5rBtv4rgxsNNeh02E1
+         Whjvii7J/mMCnawZPlrhtapQheVSwKVYf3ytpEB2b4316qWTYa5vsbWoW7/muPlCfX
+         GhrzuzD+2ASMw==
+Date:   Tue, 25 May 2021 13:43:13 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v19 14/14] xfs: Make attr name schemes consistent
-Message-ID: <20210525203610.GK202121@locust>
-References: <20210525195504.7332-1-allison.henderson@oracle.com>
- <20210525195504.7332-15-allison.henderson@oracle.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>, ceph-devel@vger.kernel.org,
+        Chao Yu <yuchao0@huawei.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 02/13] documentation: Sync file_operations members with
+ reality
+Message-ID: <20210525204313.GL202121@locust>
+References: <20210525125652.20457-1-jack@suse.cz>
+ <20210525135100.11221-2-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210525195504.7332-15-allison.henderson@oracle.com>
+In-Reply-To: <20210525135100.11221-2-jack@suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 25, 2021 at 12:55:04PM -0700, Allison Henderson wrote:
-> This patch renames the following functions to make the nameing scheme more consistent:
-> xfs_attr_shortform_remove -> xfs_attr_sf_removename
-> xfs_attr_node_remove_name -> xfs_attr_node_removename
-> xfs_attr_set_fmt -> xfs_attr_sf_addname
+On Tue, May 25, 2021 at 03:50:39PM +0200, Jan Kara wrote:
+> Sync listing of struct file_operations members with the real one in
+> fs.h.
 > 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  Documentation/filesystems/locking.rst | 15 +++++++++------
+>  1 file changed, 9 insertions(+), 6 deletions(-)
+> 
+> diff --git a/Documentation/filesystems/locking.rst b/Documentation/filesystems/locking.rst
+> index 1e894480115b..4ed2b22bd0a8 100644
+> --- a/Documentation/filesystems/locking.rst
+> +++ b/Documentation/filesystems/locking.rst
+> @@ -506,6 +506,7 @@ prototypes::
+>  	ssize_t (*write) (struct file *, const char __user *, size_t, loff_t *);
+>  	ssize_t (*read_iter) (struct kiocb *, struct iov_iter *);
+>  	ssize_t (*write_iter) (struct kiocb *, struct iov_iter *);
+> +	int (*iopoll) (struct kiocb *kiocb, bool spin);
+>  	int (*iterate) (struct file *, struct dir_context *);
+>  	int (*iterate_shared) (struct file *, struct dir_context *);
+>  	__poll_t (*poll) (struct file *, struct poll_table_struct *);
+> @@ -518,12 +519,6 @@ prototypes::
+>  	int (*fsync) (struct file *, loff_t start, loff_t end, int datasync);
+>  	int (*fasync) (int, struct file *, int);
+>  	int (*lock) (struct file *, int, struct file_lock *);
+> -	ssize_t (*readv) (struct file *, const struct iovec *, unsigned long,
+> -			loff_t *);
+> -	ssize_t (*writev) (struct file *, const struct iovec *, unsigned long,
+> -			loff_t *);
+> -	ssize_t (*sendfile) (struct file *, loff_t *, size_t, read_actor_t,
+> -			void __user *);
+>  	ssize_t (*sendpage) (struct file *, struct page *, int, size_t,
+>  			loff_t *, int);
+>  	unsigned long (*get_unmapped_area)(struct file *, unsigned long,
+> @@ -536,6 +531,14 @@ prototypes::
+>  			size_t, unsigned int);
+>  	int (*setlease)(struct file *, long, struct file_lock **, void **);
+>  	long (*fallocate)(struct file *, int, loff_t, loff_t);
+> +	void (*show_fdinfo)(struct seq_file *m, struct file *f);
+> +	unsigned (*mmap_capabilities)(struct file *);
+> +	ssize_t (*copy_file_range)(struct file *, loff_t, struct file *,
+> +			loff_t, size_t, unsigned int);
+> +	loff_t (*remap_file_range)(struct file *file_in, loff_t pos_in,
+> +			struct file *file_out, loff_t pos_out,
+> +			loff_t len, unsigned int remap_flags);
 
-:)
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Acked-by: Darrick J. Wong <djwong@kernel.org>
+
+The remap_file_range part looks correct to me.  At a glance the others
+seem fine too, but I'm not as familiar with them...
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_attr.c      | 18 +++++++++---------
->  fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
->  fs/xfs/libxfs/xfs_attr_leaf.h |  2 +-
->  3 files changed, 11 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 7294a2e..20b1e3c 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -63,8 +63,8 @@ STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
->  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
->  STATIC int xfs_attr_set_iter(struct xfs_delattr_context *dac,
->  			     struct xfs_buf **leaf_bp);
-> -STATIC int xfs_attr_node_remove_name(struct xfs_da_args *args,
-> -				     struct xfs_da_state *state);
-> +STATIC int xfs_attr_node_removename(struct xfs_da_args *args,
-> +				    struct xfs_da_state *state);
+> +	int (*fadvise)(struct file *, loff_t, loff_t, int);
 >  
->  int
->  xfs_inode_hasattr(
-> @@ -298,7 +298,7 @@ xfs_attr_set_args(
->  }
->  
->  STATIC int
-> -xfs_attr_set_fmt(
-> +xfs_attr_sf_addname(
->  	struct xfs_delattr_context	*dac,
->  	struct xfs_buf			**leaf_bp)
->  {
-> @@ -367,7 +367,7 @@ xfs_attr_set_iter(
->  		 * release the hold once we return with a clean transaction.
->  		 */
->  		if (xfs_attr_is_shortform(dp))
-> -			return xfs_attr_set_fmt(dac, leaf_bp);
-> +			return xfs_attr_sf_addname(dac, leaf_bp);
->  		if (*leaf_bp != NULL) {
->  			xfs_trans_bhold_release(args->trans, *leaf_bp);
->  			*leaf_bp = NULL;
-> @@ -839,7 +839,7 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
->  	if (retval == -EEXIST) {
->  		if (args->attr_flags & XATTR_CREATE)
->  			return retval;
-> -		retval = xfs_attr_shortform_remove(args);
-> +		retval = xfs_attr_sf_removename(args);
->  		if (retval)
->  			return retval;
->  		/*
-> @@ -1222,7 +1222,7 @@ xfs_attr_node_addname_clear_incomplete(
->  	if (error)
->  		goto out;
->  
-> -	error = xfs_attr_node_remove_name(args, state);
-> +	error = xfs_attr_node_removename(args, state);
->  
->  	/*
->  	 * Check to see if the tree needs to be collapsed.
-> @@ -1338,7 +1338,7 @@ int xfs_attr_node_removename_setup(
->  }
->  
->  STATIC int
-> -xfs_attr_node_remove_name(
-> +xfs_attr_node_removename(
->  	struct xfs_da_args	*args,
->  	struct xfs_da_state	*state)
->  {
-> @@ -1389,7 +1389,7 @@ xfs_attr_remove_iter(
->  		 * thus state transitions. Call the right helper and return.
->  		 */
->  		if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL)
-> -			return xfs_attr_shortform_remove(args);
-> +			return xfs_attr_sf_removename(args);
->  
->  		if (xfs_attr_is_leaf(dp))
->  			return xfs_attr_leaf_removename(args);
-> @@ -1442,7 +1442,7 @@ xfs_attr_remove_iter(
->  
->  		/* fallthrough */
->  	case XFS_DAS_RM_NAME:
-> -		retval = xfs_attr_node_remove_name(args, state);
-> +		retval = xfs_attr_node_removename(args, state);
->  
->  		/*
->  		 * Check to see if the tree needs to be collapsed. If so, roll
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index d97de20..5a3d261 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -773,7 +773,7 @@ xfs_attr_fork_remove(
->   * Remove an attribute from the shortform attribute list structure.
->   */
->  int
-> -xfs_attr_shortform_remove(
-> +xfs_attr_sf_removename(
->  	struct xfs_da_args		*args)
->  {
->  	struct xfs_attr_shortform	*sf;
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-> index 9b1c59f..efa757f 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-> @@ -51,7 +51,7 @@ int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
->  int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
->  int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
->  			struct xfs_buf **leaf_bp);
-> -int	xfs_attr_shortform_remove(struct xfs_da_args *args);
-> +int	xfs_attr_sf_removename(struct xfs_da_args *args);
->  int	xfs_attr_sf_findname(struct xfs_da_args *args,
->  			     struct xfs_attr_sf_entry **sfep,
->  			     unsigned int *basep);
+>  locking rules:
+>  	All may block.
 > -- 
-> 2.7.4
+> 2.26.2
 > 
