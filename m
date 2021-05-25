@@ -2,314 +2,151 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB2FBC47087
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 23:29:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B5ECC47087
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 23:37:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8428F61423
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 23:29:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDF73613F9
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 23:37:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231136AbhEYXbS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 May 2021 19:31:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40488 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229610AbhEYXbS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 May 2021 19:31:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3DF9D613C5;
-        Tue, 25 May 2021 23:29:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621985388;
-        bh=AJ+FqQjD2tfizRfYl3YcUjYoTFd7vYQranc9ATQtPko=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=E3sxlTwGEaNgLugGNfFB4yLMkaP0igoa+rQCQhR/cwj6nhyR2AsfPVGHNafOibgPZ
-         +/fa93Px8rOvbB4GxCa4vr9Bq48aLfie9SVnYOofWyWlMr5hCooIA2GNPKWmBzmNkM
-         LQh34wNxbSKbLKpXhNBa4L9lc2ocCUljoODxRUX816i48FVYpf4tCnj4991lAvUWWN
-         IZ8BYTBNBBbGKu+ic0Gxr7IV3HEUkHWZvEeDPURyGc9gTPI/XAxWH/zoRcgApXNdgK
-         J+U55mGvivTg3EhS+U7ojz1X5esgMB6AsFkYWOCuPr5NE+FqwaqprV2hpsRHrIlQ6c
-         svvYgo/or1FNw==
-Date:   Tue, 25 May 2021 16:29:47 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        willy@infradead.org, viro@zeniv.linux.org.uk, david@fromorbit.com,
-        hch@lst.de, rgoldwyn@suse.de, Goldwyn Rodrigues <rgoldwyn@suse.com>
-Subject: Re: [PATCH v6 5/7] fsdax: Dedup file range to use a compare function
-Message-ID: <20210525232947.GE202144@locust>
-References: <20210519060045.1051226-1-ruansy.fnst@fujitsu.com>
- <20210519060045.1051226-6-ruansy.fnst@fujitsu.com>
+        id S229750AbhEYXjE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 May 2021 19:39:04 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:55525 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231504AbhEYXjD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 May 2021 19:39:03 -0400
+Received: from dread.disaster.area (pa49-180-230-185.pa.nsw.optusnet.com.au [49.180.230.185])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id A53CF1141F3F;
+        Wed, 26 May 2021 09:37:28 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1llgc3-005EOf-RU; Wed, 26 May 2021 09:37:27 +1000
+Date:   Wed, 26 May 2021 09:37:27 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>, hsiangkao@aol.com,
+        hsiangkao@linux.alibaba.com
+Subject: Re: more regressions in xfs/168?
+Message-ID: <20210525233727.GL664593@dread.disaster.area>
+References: <20210525225556.GR202121@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210519060045.1051226-6-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20210525225556.GR202121@locust>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=dUIOjvib2kB+GiIc1vUx8g==:117 a=dUIOjvib2kB+GiIc1vUx8g==:17
+        a=kj9zAlcOel0A:10 a=5FLXtPjwQuUA:10 a=3dkUPBxPAAAA:8 a=7-415B0cAAAA:8
+        a=5NgAXFvlRTT5Yxce-TsA:9 a=CjuIK1q_8ugA:10 a=ADKJzl-l0PKKYwS7efPl:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 19, 2021 at 02:00:43PM +0800, Shiyang Ruan wrote:
-> With dax we cannot deal with readpage() etc. So, we create a dax
-> comparison funciton which is similar with
-
-s/funciton/function/
-
-> vfs_dedupe_file_range_compare().
-> And introduce dax_remap_file_range_prep() for filesystem use.
+On Tue, May 25, 2021 at 03:55:56PM -0700, Darrick J. Wong wrote:
+> Hi again,
 > 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> ---
->  fs/dax.c             | 66 ++++++++++++++++++++++++++++++++++++++++++++
->  fs/remap_range.c     | 36 ++++++++++++++++++------
->  fs/xfs/xfs_reflink.c |  8 ++++--
->  include/linux/dax.h  |  8 ++++++
->  include/linux/fs.h   | 12 +++++---
->  5 files changed, 116 insertions(+), 14 deletions(-)
+> Even with the fix to the per-AG reservation code applied, I still see
+> periodic failures in xfs/168 if I run with ./check -I 60.  This is
+> what's at the bottom of 168.full:
 > 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index baee584cb8ae..93f16210847b 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -1864,3 +1864,69 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
->  	return dax_insert_pfn_mkwrite(vmf, pfn, order);
->  }
->  EXPORT_SYMBOL_GPL(dax_finish_sync_fault);
-> +
-> +static loff_t dax_range_compare_actor(struct inode *ino1, loff_t pos1,
-> +		struct inode *ino2, loff_t pos2, loff_t len, void *data,
-> +		struct iomap *smap, struct iomap *dmap)
-> +{
-> +	void *saddr, *daddr;
-> +	bool *same = data;
-> +	int ret;
-> +
-> +	if (smap->type == IOMAP_HOLE && dmap->type == IOMAP_HOLE) {
-> +		*same = true;
-> +		return len;
-> +	}
-> +
-> +	if (smap->type == IOMAP_HOLE || dmap->type == IOMAP_HOLE) {
-> +		*same = false;
-> +		return 0;
-> +	}
-> +
-> +	ret = dax_iomap_direct_access(smap, pos1, ALIGN(pos1 + len, PAGE_SIZE),
-> +				      &saddr, NULL);
-> +	if (ret < 0)
-> +		return -EIO;
-> +
-> +	ret = dax_iomap_direct_access(dmap, pos2, ALIGN(pos2 + len, PAGE_SIZE),
-> +				      &daddr, NULL);
-> +	if (ret < 0)
-> +		return -EIO;
-> +
-> +	*same = !memcmp(saddr, daddr, len);
-> +	return len;
-> +}
-> +
-> +int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-> +		struct inode *dest, loff_t destoff, loff_t len, bool *is_same,
-> +		const struct iomap_ops *ops)
-> +{
-> +	int id, ret = 0;
-> +
-> +	id = dax_read_lock();
-> +	while (len) {
-> +		ret = iomap_apply2(src, srcoff, dest, destoff, len, 0, ops,
-> +				   is_same, dax_range_compare_actor);
-> +		if (ret < 0 || !*is_same)
-> +			goto out;
-> +
-> +		len -= ret;
-> +		srcoff += ret;
-> +		destoff += ret;
-> +	}
-> +	ret = 0;
-> +out:
-> +	dax_read_unlock(id);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(dax_dedupe_file_range_compare);
-> +
-> +int dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> +			      struct file *file_out, loff_t pos_out,
-> +			      loff_t *len, unsigned int remap_flags,
-> +			      const struct iomap_ops *ops)
-> +{
-> +	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
-> +					       pos_out, len, remap_flags, ops);
-> +}
-> +EXPORT_SYMBOL(dax_remap_file_range_prep);
-> diff --git a/fs/remap_range.c b/fs/remap_range.c
-> index e4a5fdd7ad7b..4cfc1553f3bf 100644
-> --- a/fs/remap_range.c
-> +++ b/fs/remap_range.c
-> @@ -14,6 +14,7 @@
->  #include <linux/compat.h>
->  #include <linux/mount.h>
->  #include <linux/fs.h>
-> +#include <linux/dax.h>
->  #include "internal.h"
->  
->  #include <linux/uaccess.h>
-> @@ -199,9 +200,9 @@ static void vfs_unlock_two_pages(struct page *page1, struct page *page2)
->   * Compare extents of two files to see if they are the same.
->   * Caller must have locked both inodes to prevent write races.
->   */
-> -static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-> -					 struct inode *dest, loff_t destoff,
-> -					 loff_t len, bool *is_same)
-> +int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-> +				  struct inode *dest, loff_t destoff,
-> +				  loff_t len, bool *is_same)
->  {
->  	loff_t src_poff;
->  	loff_t dest_poff;
-> @@ -280,6 +281,7 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
->  out_error:
->  	return error;
->  }
-> +EXPORT_SYMBOL(vfs_dedupe_file_range_compare);
->  
->  /*
->   * Check that the two inodes are eligible for cloning, the ranges make
-> @@ -289,9 +291,11 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
->   * If there's an error, then the usual negative error code is returned.
->   * Otherwise returns 0 with *len set to the request length.
->   */
-> -int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> -				  struct file *file_out, loff_t pos_out,
-> -				  loff_t *len, unsigned int remap_flags)
-> +int
-> +__generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> +				struct file *file_out, loff_t pos_out,
-> +				loff_t *len, unsigned int remap_flags,
-> +				const struct iomap_ops *dax_read_ops)
->  {
->  	struct inode *inode_in = file_inode(file_in);
->  	struct inode *inode_out = file_inode(file_out);
-> @@ -351,8 +355,15 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
->  	if (remap_flags & REMAP_FILE_DEDUP) {
->  		bool		is_same = false;
->  
-> -		ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
-> -				inode_out, pos_out, *len, &is_same);
-> +		if (!IS_DAX(inode_in))
-> +			ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
-> +					inode_out, pos_out, *len, &is_same);
-> +		else if (dax_read_ops)
-> +			ret = dax_dedupe_file_range_compare(inode_in, pos_in,
-> +					inode_out, pos_out, *len, &is_same,
-> +					dax_read_ops);
-> +		else
-> +			return -EINVAL;
->  		if (ret)
->  			return ret;
->  		if (!is_same)
-> @@ -370,6 +381,15 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
->  
->  	return ret;
->  }
-> +EXPORT_SYMBOL(__generic_remap_file_range_prep);
-> +
-> +int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> +				  struct file *file_out, loff_t pos_out,
-> +				  loff_t *len, unsigned int remap_flags)
-> +{
-> +	return __generic_remap_file_range_prep(file_in, pos_in, file_out,
-> +					       pos_out, len, remap_flags, NULL);
-> +}
->  EXPORT_SYMBOL(generic_remap_file_range_prep);
->  
->  loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 060695d6d56a..d25434f93235 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1329,8 +1329,12 @@ xfs_reflink_remap_prep(
->  	if (IS_DAX(inode_in) || IS_DAX(inode_out))
->  		goto out_unlock;
->  
-> -	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
-> -			len, remap_flags);
-> +	if (!IS_DAX(inode_in))
-> +		ret = generic_remap_file_range_prep(file_in, pos_in, file_out,
-> +				pos_out, len, remap_flags);
-> +	else
-> +		ret = dax_remap_file_range_prep(file_in, pos_in, file_out,
-> +				pos_out, len, remap_flags, &xfs_read_iomap_ops);
->  	if (ret || *len == 0)
->  		goto out_unlock;
->  
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index 3275e01ed33d..106d1f033a78 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -239,6 +239,14 @@ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
->  				      pgoff_t index);
->  s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap,
->  		struct iomap *srcmap);
-> +int dax_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-> +				  struct inode *dest, loff_t destoff,
-> +				  loff_t len, bool *is_same,
-> +				  const struct iomap_ops *ops);
-> +int dax_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> +			      struct file *file_out, loff_t pos_out,
-> +			      loff_t *len, unsigned int remap_flags,
-> +			      const struct iomap_ops *ops);
-
-I totally thought that not having explicit static inline stubs of these
-functions would break the build when CONFIG_FS_DAX=n, but then I
-realized that when fsdax is disabled, S_DAX is zero, so this works
-because dead code elimination in the compiler means that the object
-files never receive deferred references to the dax functions, which
-means that linking actually succeeds.
-
-So:
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
->  static inline bool dax_mapping(struct address_space *mapping)
->  {
->  	return mapping->host && IS_DAX(mapping->host);
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index c3c88fdb9b2a..deed4371f34f 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -71,6 +71,7 @@ struct fsverity_operations;
->  struct fs_context;
->  struct fs_parameter_spec;
->  struct fileattr;
-> +struct iomap_ops;
->  
->  extern void __init inode_init(void);
->  extern void __init inode_init_early(void);
-> @@ -2126,10 +2127,13 @@ extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
->  extern ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
->  				       struct file *file_out, loff_t pos_out,
->  				       size_t len, unsigned int flags);
-> -extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> -					 struct file *file_out, loff_t pos_out,
-> -					 loff_t *count,
-> -					 unsigned int remap_flags);
-> +int __generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> +				    struct file *file_out, loff_t pos_out,
-> +				    loff_t *len, unsigned int remap_flags,
-> +				    const struct iomap_ops *dax_read_ops);
-> +int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> +				  struct file *file_out, loff_t pos_out,
-> +				  loff_t *count, unsigned int remap_flags);
->  extern loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
->  				  struct file *file_out, loff_t pos_out,
->  				  loff_t len, unsigned int remap_flags);
-> -- 
-> 2.31.1
+> [EXPERIMENTAL] try to shrink unused space 131446, old size is 131532
+> meta-data=/dev/sdf               isize=512    agcount=2, agsize=129280 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=0    bigtime=1 inobtcount=1
+> data     =                       bsize=4096   blocks=131532, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=1344, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =/dev/sdd               extsz=4096   blocks=2579968, rtextents=2579968
+> data blocks changed from 131532 to 131446
+> Phase 1 - find and verify superblock...
+> Only two AGs detected and they do not match - cannot validate filesystem geometry.
+> Use the -o force_geometry option to proceed.
+> xfs_repair failed with shrinking 131446
 > 
+> The kernel log contains this:
 > 
+> [ 2017.388598] XFS (sdf): Internal error !ino_ok at line 205 of file fs/xfs/libxfs/xfs_dir2.c.  Caller xfs_dir_ino_validate+0x4b/0xa0 [xfs]
+> [ 2017.392045] CPU: 3 PID: 49956 Comm: xfsaild/sdf Tainted: G           O      5.13.0-rc3-xfsx #rc3
+> [ 2017.393165] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
+> [ 2017.394166] Call Trace:
+> [ 2017.394488]  dump_stack+0x64/0x7c
+> [ 2017.395117]  xfs_corruption_error+0x85/0x90 [xfs]
+> [ 2017.396362]  ? xfs_dir_ino_validate+0x4b/0xa0 [xfs]
+> [ 2017.397599]  xfs_dir_ino_validate+0x75/0xa0 [xfs]
+> [ 2017.398506]  ? xfs_dir_ino_validate+0x4b/0xa0 [xfs]
+> [ 2017.399655]  xfs_dir2_sf_verify+0x16d/0x2d0 [xfs]
+> [ 2017.400731]  xfs_ifork_verify_local_data+0x33/0x60 [xfs]
+> [ 2017.402019]  xfs_iflush_cluster+0x67f/0x8f0 [xfs]
+> [ 2017.403163]  xfs_inode_item_push+0xa8/0x140 [xfs]
+> [ 2017.404203]  xfsaild+0x42c/0xc50 [xfs]
+> [ 2017.405106]  ? xfs_trans_ail_cursor_first+0x80/0x80 [xfs]
+> [ 2017.406306]  kthread+0x14b/0x170
+> [ 2017.406929]  ? __kthread_bind_mask+0x60/0x60
+> [ 2017.407638]  ret_from_fork+0x1f/0x30
+> [ 2017.408323] XFS (sdf): Corruption detected. Unmount and run xfs_repair
+> [ 2017.409467] XFS (sdf): Invalid inode number 0x104380
+> [ 2017.410301] XFS (sdf): Metadata corruption detected at xfs_dir2_sf_verify+0x268/0x2d0 [xfs], inode 0x4fb6 data fork
+> [ 2017.412095] XFS (sdf): Unmount and run xfs_repair
+> [ 2017.412675] XFS (sdf): First 72 bytes of corrupted metadata buffer:
+> [ 2017.413393] 00000000: 06 00 00 10 42 60 03 00 60 63 37 61 03 00 10 43  ....B`..`c7a...C
+> [ 2017.414286] 00000010: 80 03 00 70 64 38 39 02 00 00 4f bd 03 00 80 72  ...pd89...O....r
+> [ 2017.415390] 00000020: 38 65 01 00 10 43 32 03 00 90 72 61 62 01 00 00  8e...C2...rab...
+> [ 2017.416633] 00000030: 4e 3f 03 00 a0 66 62 34 01 00 00 51 1e 03 00 b0  N?...fb4...Q....
+> [ 2017.417733] 00000040: 63 66 61 03 00 00 50 9e                          cfa...P.
+> [ 2017.418810] XFS (sdf): metadata I/O error in "xfs_buf_ioend+0x219/0x520 [xfs]" at daddr 0x4fa0 len 32 error 5
+> [ 2017.420397] XFS (sdf): xfs_do_force_shutdown(0x8) called from line 2798 of file fs/xfs/xfs_inode.c. Return address = ffffffffa03a6018
+> [ 2017.422171] XFS (sdf): Corruption of in-memory data detected.  Shutting down filesystem
+> [ 2017.423348] XFS (sdf): Please unmount the filesystem and rectify the problem(s)
+> [ 2017.631561] XFS (sda): Unmounting Filesystem
 > 
+> At first glance this /looks/ like we might have shrunk the filesystem
+> too far, after which the shortform directory verifier tripped, which
+> caused a shutdown.  Inode 0x104380 is very close to the end of the
+> filesystem.
+> 
+> I altered xfs/168 to spit out metadumps and captured one here:
+> https://djwong.org/docs/168.iloop.131446.md.xz
+> 
+> I'll keep looking, but on the off chance this rings a bell for anyone.
+> 
+> Wait, something just rang a bell for me.  I was looking through
+> Allison's xattrs patchset and read the comment in xfs_attr_rmtval_set
+> about how it has to perform a "user data" allocation for the remote
+> value blocks because we don't log attr value blocks and therefore cannot
+> overwrite blocks which have recently been freed but their transactions
+> are not yet committed to disk.
+
+Right - that's what busy extents and the ability to reuse busy
+extents deals with. User data allocations cannot reuse a busy
+extent, they must trim them back to avoid the busy range in the
+allocated extent first. Same with exact allocation
+(XFS_ALLOCTYPE_THIS_BNO) - if there's any busy extents in over the
+range we ask for allocation, the trim will result in a range that
+doesn't match what we asked for and the allocation should fail.
+
+Hence if there is any busy range over the requested allocation from
+xfs_ag_shrink_space() it should fail because we've set
+XFS_ALLOCTYPE_THIS_BNO and minlen = maxlen = delta.
+
+> Doesn't shrink have to ensure that the log cannot contain any further
+> updates for the blocks it wants to remove from the filesystem?  In other
+> words, should xfs_ag_shrink_space be setting XFS_ALLOC_USERDATA so that
+> the allocator will make us wait for the EOFS blocks to free up if
+> they're busy?
+
+That's what xfs_extent_busy_trim() should be handling for us,
+regardless of whether it is userdata or not.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
