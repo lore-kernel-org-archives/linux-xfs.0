@@ -2,175 +2,145 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1783C47088
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 22:58:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE568C47086
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 23:05:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA4DF613D6
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 22:58:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8ACD86141C
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 23:05:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231657AbhEYXAX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 May 2021 19:00:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49620 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231189AbhEYXAX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 May 2021 19:00:23 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EE78C061756
-        for <linux-xfs@vger.kernel.org>; Tue, 25 May 2021 15:58:52 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id p39so8432304pfw.8
-        for <linux-xfs@vger.kernel.org>; Tue, 25 May 2021 15:58:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dilger-ca.20150623.gappssmtp.com; s=20150623;
-        h=from:message-id:mime-version:subject:date:in-reply-to:cc:to
-         :references;
-        bh=hX/rBRm4QBlH/CR3lcT9LZd/ibBac3+Los/O0LgpfN8=;
-        b=JPaJiOKAFtl4YgkTR2sFRag6X4h46sqRtvl5nPyZF0O9mwHyddop5CtADZ+IoEYJ7u
-         ZhWdjnIGzXZIlPe0JfgZiGlVDe8LTr07UOQpub3mZp8GoE+Eq9tCbYOO0g7s17G36yX7
-         aIyjMTk+DiPtxJY7ndeSaQ2JPhNatVClFD6f/WPfwVfIps28iyX9YqO7cBEBweUnxMZM
-         6l/9msuNuvIv5qxB+dahsJXKedXf87+BfoapTwN/fjjljnSBIuWKFy0lzktcj52jk4x9
-         DL6qHmZKvtfYrIzgTMpLhOrHKknNMcrt/ayup5WfeQcCVjeYDB26nhgyIyqsnGJUX046
-         xrWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:message-id:mime-version:subject:date
-         :in-reply-to:cc:to:references;
-        bh=hX/rBRm4QBlH/CR3lcT9LZd/ibBac3+Los/O0LgpfN8=;
-        b=qhYldTo/02Y2IvJScQIIepM9MOltb2wbY/Lty47urETKTLlGr/tIGU4Gg6DSE6d9b5
-         sf2pOEyX/GX+hhaIj6zXhE3GZg+X/UAFMer7Wam1KaC+BloWqr47lWRR/WHjP4TNZQlC
-         CWuKkmdTVU/eo0IDbKAUNKdNko2zvyDkT5p+RL8yKK/gwLWCzrtTJYnj4qHlOAZrj8gJ
-         XUSAJppLmLwGGivwf2pOVRUWw+TJaOXdY7E+Sl1kVDZknV+Ei0G+4g+6Rnz+VBVBSGli
-         rWv9vUmgO8p+QjYBoVuLd6Ki1sm9hE9zHg5Nw6DRzaIYGAq7emWuL5r7SmF0jrGskKEH
-         3oBw==
-X-Gm-Message-State: AOAM5318XxZzweQ9LTIOMFYmC43Q4Nm/UN9sAoFjW3oyo/D/lAwHXXBe
-        +S+MB5tD2X8/6FdAjpxrTQpIfQ==
-X-Google-Smtp-Source: ABdhPJyQrIl3kRoE1Ih5TyGz1SYTeMGl+VDTZuFHOs62rbg/s1kQA6rx87GCdoklhMLU3ZT66ZNPlA==
-X-Received: by 2002:a63:175e:: with SMTP id 30mr21625140pgx.48.1621983531380;
-        Tue, 25 May 2021 15:58:51 -0700 (PDT)
-Received: from cabot.adilger.int (S01061cabc081bf83.cg.shawcable.net. [70.77.221.9])
-        by smtp.gmail.com with ESMTPSA id pg5sm10748895pjb.28.2021.05.25.15.58.50
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 May 2021 15:58:50 -0700 (PDT)
-From:   Andreas Dilger <adilger@dilger.ca>
-Message-Id: <00224B62-4903-4D33-A835-2DC8CC0E3B4D@dilger.ca>
-Content-Type: multipart/signed;
- boundary="Apple-Mail=_3D8A3B39-D089-4DAF-B1B2-AD38E7039117";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: How capacious and well-indexed are ext4, xfs and btrfs
- directories?
-Date:   Tue, 25 May 2021 16:58:48 -0600
-In-Reply-To: <4169583.1621981910@warthog.procyon.org.uk>
-Cc:     Theodore Ts'o <tytso@mit.edu>,
-        "Darrick J. Wong" <djwong@kernel.org>, Chris Mason <clm@fb.com>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        linux-cachefs@redhat.com,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        NeilBrown <neilb@suse.com>
-To:     David Howells <dhowells@redhat.com>
-References: <6E4DE257-4220-4B5B-B3D0-B67C7BC69BB5@dilger.ca>
- <206078.1621264018@warthog.procyon.org.uk>
- <4169583.1621981910@warthog.procyon.org.uk>
-X-Mailer: Apple Mail (2.3273)
+        id S229898AbhEYXG4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 May 2021 19:06:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34310 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231189AbhEYXGz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 May 2021 19:06:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ADB2761284;
+        Tue, 25 May 2021 23:05:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1621983924;
+        bh=Gqyqnaf8fN2pJ7FkbFgaJnMvwRzYTXZIfSc3VgHu+IU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=pNHvea4/t/6+9Bgh7/daWw/LK81JlzhlpTOPV+fCIP30memVfRe4ZtRD0Xwx2BI52
+         D0Irr2kNWe7Hl2qI1QGUpmgRaOaM/vVsW7bYD0Qa7CTpCRdaZpJZHOG6OVw7jfGkRq
+         MFwJAg3WK0UamrWGCp8jUsF8Ofu36byUyWY9dYdeUWwVkCAqZ2aViZnnGy6yodcPEA
+         ybDxXnvh8IdoO0ADsHmYrD340ybQgUYPFG0eBxVvKhf3Ve9p9HOEK8LWdafD714S5b
+         a7Skk/cRmUVrzoQnQ3MewIO3d0ltzychRm1L6oxSMecbamIg0pteIYWMvFZ1z6L4XJ
+         WIk7z3Th1Xzqw==
+Date:   Tue, 25 May 2021 16:05:24 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, hsiangkao@aol.com,
+        hsiangkao@linux.alibaba.com
+Subject: Re: more regressions in xfs/168?
+Message-ID: <20210525230524.GS202121@locust>
+References: <20210525225556.GR202121@locust>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210525225556.GR202121@locust>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Tue, May 25, 2021 at 03:55:56PM -0700, Darrick J. Wong wrote:
+> Hi again,
+> 
+> Even with the fix to the per-AG reservation code applied, I still see
+> periodic failures in xfs/168 if I run with ./check -I 60.  This is
+> what's at the bottom of 168.full:
+> 
+> [EXPERIMENTAL] try to shrink unused space 131446, old size is 131532
+> meta-data=/dev/sdf               isize=512    agcount=2, agsize=129280 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=0    bigtime=1 inobtcount=1
+> data     =                       bsize=4096   blocks=131532, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=1344, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =/dev/sdd               extsz=4096   blocks=2579968, rtextents=2579968
+> data blocks changed from 131532 to 131446
+> Phase 1 - find and verify superblock...
+> Only two AGs detected and they do not match - cannot validate filesystem geometry.
+> Use the -o force_geometry option to proceed.
+> xfs_repair failed with shrinking 131446
+> 
+> The kernel log contains this:
+> 
+> [ 2017.388598] XFS (sdf): Internal error !ino_ok at line 205 of file fs/xfs/libxfs/xfs_dir2.c.  Caller xfs_dir_ino_validate+0x4b/0xa0 [xfs]
+> [ 2017.392045] CPU: 3 PID: 49956 Comm: xfsaild/sdf Tainted: G           O      5.13.0-rc3-xfsx #rc3
+> [ 2017.393165] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
+> [ 2017.394166] Call Trace:
+> [ 2017.394488]  dump_stack+0x64/0x7c
+> [ 2017.395117]  xfs_corruption_error+0x85/0x90 [xfs]
+> [ 2017.396362]  ? xfs_dir_ino_validate+0x4b/0xa0 [xfs]
+> [ 2017.397599]  xfs_dir_ino_validate+0x75/0xa0 [xfs]
+> [ 2017.398506]  ? xfs_dir_ino_validate+0x4b/0xa0 [xfs]
+> [ 2017.399655]  xfs_dir2_sf_verify+0x16d/0x2d0 [xfs]
+> [ 2017.400731]  xfs_ifork_verify_local_data+0x33/0x60 [xfs]
+> [ 2017.402019]  xfs_iflush_cluster+0x67f/0x8f0 [xfs]
+> [ 2017.403163]  xfs_inode_item_push+0xa8/0x140 [xfs]
+> [ 2017.404203]  xfsaild+0x42c/0xc50 [xfs]
+> [ 2017.405106]  ? xfs_trans_ail_cursor_first+0x80/0x80 [xfs]
+> [ 2017.406306]  kthread+0x14b/0x170
+> [ 2017.406929]  ? __kthread_bind_mask+0x60/0x60
+> [ 2017.407638]  ret_from_fork+0x1f/0x30
+> [ 2017.408323] XFS (sdf): Corruption detected. Unmount and run xfs_repair
+> [ 2017.409467] XFS (sdf): Invalid inode number 0x104380
+> [ 2017.410301] XFS (sdf): Metadata corruption detected at xfs_dir2_sf_verify+0x268/0x2d0 [xfs], inode 0x4fb6 data fork
+> [ 2017.412095] XFS (sdf): Unmount and run xfs_repair
+> [ 2017.412675] XFS (sdf): First 72 bytes of corrupted metadata buffer:
+> [ 2017.413393] 00000000: 06 00 00 10 42 60 03 00 60 63 37 61 03 00 10 43  ....B`..`c7a...C
+> [ 2017.414286] 00000010: 80 03 00 70 64 38 39 02 00 00 4f bd 03 00 80 72  ...pd89...O....r
+> [ 2017.415390] 00000020: 38 65 01 00 10 43 32 03 00 90 72 61 62 01 00 00  8e...C2...rab...
+> [ 2017.416633] 00000030: 4e 3f 03 00 a0 66 62 34 01 00 00 51 1e 03 00 b0  N?...fb4...Q....
+> [ 2017.417733] 00000040: 63 66 61 03 00 00 50 9e                          cfa...P.
+> [ 2017.418810] XFS (sdf): metadata I/O error in "xfs_buf_ioend+0x219/0x520 [xfs]" at daddr 0x4fa0 len 32 error 5
+> [ 2017.420397] XFS (sdf): xfs_do_force_shutdown(0x8) called from line 2798 of file fs/xfs/xfs_inode.c. Return address = ffffffffa03a6018
+> [ 2017.422171] XFS (sdf): Corruption of in-memory data detected.  Shutting down filesystem
+> [ 2017.423348] XFS (sdf): Please unmount the filesystem and rectify the problem(s)
+> [ 2017.631561] XFS (sda): Unmounting Filesystem
+> 
+> At first glance this /looks/ like we might have shrunk the filesystem
+> too far, after which the shortform directory verifier tripped, which
+> caused a shutdown.  Inode 0x104380 is very close to the end of the
+> filesystem.
+> 
+> I altered xfs/168 to spit out metadumps and captured one here:
+> https://djwong.org/docs/168.iloop.131446.md.xz
+> 
+> I'll keep looking, but on the off chance this rings a bell for anyone.
+> 
+> Wait, something just rang a bell for me.  I was looking through
+> Allison's xattrs patchset and read the comment in xfs_attr_rmtval_set
+> about how it has to perform a "user data" allocation for the remote
+> value blocks because we don't log attr value blocks and therefore cannot
+> overwrite blocks which have recently been freed but their transactions
+> are not yet committed to disk.
+> 
+> Doesn't shrink have to ensure that the log cannot contain any further
+> updates for the blocks it wants to remove from the filesystem?  In other
+> words, should xfs_ag_shrink_space be setting XFS_ALLOC_USERDATA so that
+> the allocator will make us wait for the EOFS blocks to free up if
+> they're busy?
 
---Apple-Mail=_3D8A3B39-D089-4DAF-B1B2-AD38E7039117
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+I thought of another thing -- if a process has open an empty directory
+and we delete the directory, the dotdot entry never gets updated.  If
+the dotdot entry points to a directory inode that is then deleted, and
+then we shrink the filesystem such that the parent directory's inode
+number is now beyond the end of the filesystem, then
+xfs_dir_ino_validate will trip up in the shortform verifier when writing
+the child directory.
 
-On May 25, 2021, at 4:31 PM, David Howells <dhowells@redhat.com> wrote:
->=20
-> Andreas Dilger <adilger@dilger.ca> wrote:
->=20
->> As described elsewhere in the thread, allowing concurrent create and =
-unlink
->> in a directory (rename probably not needed) would be invaluable for =
-scaling
->> multi-threaded workloads.  Neil Brown posted a prototype patch to add =
-this
->> to the VFS for NFS:
->=20
-> Actually, one thing I'm looking at is using vfs_tmpfile() to create a =
-new file
-> (or a replacement file when invalidation is required) and then using
-> vfs_link() to attach directory entries in the background (possibly =
-using
-> vfs_link() with AT_LINK_REPLACE[1] instead of unlink+link).
->=20
-> Any thoughts on how that might scale?  vfs_tmpfile() doesn't appear to =
-require
-> the directory inode lock.  I presume the directory is required for =
-security
-> purposes in addition to being a way to specify the target filesystem.
+I haven't gotten all that far in triaging, but that might be exactly
+what I encountered here.
 
-I don't see how that would help much?  Yes, the tmpfile allocation would =
-be
-out-of-line vs. the directory lock, so this may reduce the lock hold =
-time
-by some fraction, but this would still need to hold the directory lock
-when linking the tmpfile into the directory, in the same way that create
-and unlink are serialized against other threads working in the same dir.
+--D
 
-Having the directory locking scale with the size of the directory is =
-what
-will get orders of magnitude speedups for large concurrent workloads.
-In ext4 this means write locking the directory leaf blocks =
-independently,
-with read locks for the interior index blocks unless new leaf blocks are
-added (they are currently never removed).
-
-It's the same situation as back with the BKL locking the entire kernel,
-before we got fine-grained locking throughout the kernel.
-
->=20
-> David
->=20
-> [1] =
-https://lore.kernel.org/linux-fsdevel/cover.1580251857.git.osandov@fb.com/=
-
->=20
-
-
-Cheers, Andreas
-
-
-
-
-
-
---Apple-Mail=_3D8A3B39-D089-4DAF-B1B2-AD38E7039117
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAmCtgSgACgkQcqXauRfM
-H+CDVxAAnze/K3njMsggycsga9Pgt7jRP/ffBygbtoqyKa4k3uzv2ENQ2Ldlf8KL
-qgBUHNOQFTohqS3ZxcLCKB8pSYPk6MFO6dddL9sLO5iKEr3NSQtWoN55tCQOGAgw
-zB9WAVud0IkDzW8Eppy0bo5YEH6ELgxp2uCNssdGAN24UQsK5s6HdxWWZNTkiJLE
-U88ttdsgVNls0mNovoSebNVnO0ka5XFofqzCnALYcq8hI8N2Q4JmRXz2TTkmiwZY
-TURlyBIMCa07a8l8ga7htpXjN8FqkB+XVcC5tPzrMUEtfVlll8mrZIoBo8oxiHIg
-yWhNiqsV1N5HzXc6ME5LtyXaUzuuWug8fGI4+ryFRedEp1Nio5NV8gtfT7gZl9Fr
-sI3JoMyJg5W14TiYAqw3+CbvtUpBaPaG0I5mFKFyrfXKoFL+gDinonnaV5iu1bXX
-a/ra56wsobuoIDFOFftXW4U74MLHU0z63zgmhFjtt2PSgf62Tl8QYQYwusjFOuuD
-qsXcuwdRm+7JWSNSeyQDCIC8JSiqOzhbWx6lApiBGAB2wPrOZeJFmGbGChD2YByR
-GolsClW3YvJf2gYkOd/pHjgYpUqiqTKtvfieKPGI4Auy0AW0ibPzFzsMpL9NnI7M
-iU4n2bpxBVaUuk3KxJqHkKE9+0/aNcE/Orq4ULkO50hfDlwaUTY=
-=V/Um
------END PGP SIGNATURE-----
-
---Apple-Mail=_3D8A3B39-D089-4DAF-B1B2-AD38E7039117--
+> 
+> --D
