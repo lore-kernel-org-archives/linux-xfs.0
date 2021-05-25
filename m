@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFA49C4708B
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 13:51:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B01FC4709F
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 13:51:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF4246140F
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 13:51:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F11B76142B
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 May 2021 13:51:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233509AbhEYNwn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 May 2021 09:52:43 -0400
-Received: from mx2.suse.de ([195.135.220.15]:42592 "EHLO mx2.suse.de"
+        id S233561AbhEYNws (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 May 2021 09:52:48 -0400
+Received: from mx2.suse.de ([195.135.220.15]:42684 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233281AbhEYNwe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 May 2021 09:52:34 -0400
+        id S233396AbhEYNwf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 May 2021 09:52:35 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
         t=1621950662; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=6LMR/Ngf6lvtbuuF+m2yUFjG+uBCM2FsKQmwAkdHZe8=;
-        b=uwPabqO1I4EDvDUjlntJHYfMbjaaTPOoyAuBTXQPKyzqe+fS+Dj6/JBTEjB2J7DJ3leAKN
-        oZTqKNcbzHMIRIZfB0oC77snqI1QiAXhSF75Nwif94Q6EjLried6NH0r7cP/MxpIVtxmus
-        h0oMlw0bz/UJyKT6HCsJQa3Q61z69B0=
+        bh=1Zm3GVDAk5aDXe2oCWbogZ1CdxctGqDI9RHacxZ37OA=;
+        b=UvfzAbk2FV6liQCbICuNLqokQTuq76a239lxr+CsPOrA0tPk4fALfbzAsdkBTPZittPII1
+        Nudohpq6Q6ZiexTpz3SJEoH2hrxmk6cmi/mwCWDajRc4gAHNgP7QZVIb599/jSRHH6gc0k
+        pE+smzd6pi3Rrq3PFtg1K1y09N+Xdqw=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
         s=susede2_ed25519; t=1621950662;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=6LMR/Ngf6lvtbuuF+m2yUFjG+uBCM2FsKQmwAkdHZe8=;
-        b=NQDHltGxstV+jhuCvBrHFwMNOTXUqX+YVK7vAHROsjcQPVoo45ln0AjwcLptGKOL/jn/hB
-        gXfjK6yLg8Z7CzBA==
+        bh=1Zm3GVDAk5aDXe2oCWbogZ1CdxctGqDI9RHacxZ37OA=;
+        b=/EJJwL07hO3T+1CGeSpg67JNe590u7yBl7pKd8Vg7NYw6XQCNpUforMSO/lJ0Eb5GKgeHR
+        w1wrarlb74vlGFBw==
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id B1561AEC2;
+        by mx2.suse.de (Postfix) with ESMTP id EC3E6AED5;
         Tue, 25 May 2021 13:51:01 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 118FF1E0AEB; Tue, 25 May 2021 15:51:00 +0200 (CEST)
+        id 2C3321F2CB3; Tue, 25 May 2021 15:51:00 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-fsdevel@vger.kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -58,10 +58,10 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         <linux-xfs@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
         Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
         Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Christoph Hellwig <hch@lst.de>, Hugh Dickins <hughd@google.com>
-Subject: [PATCH 01/13] mm: Fix comments mentioning i_mutex
-Date:   Tue, 25 May 2021 15:50:38 +0200
-Message-Id: <20210525135100.11221-1-jack@suse.cz>
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 07/13] xfs: Convert to use invalidate_lock
+Date:   Tue, 25 May 2021 15:50:44 +0200
+Message-Id: <20210525135100.11221-7-jack@suse.cz>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210525125652.20457-1-jack@suse.cz>
 References: <20210525125652.20457-1-jack@suse.cz>
@@ -71,252 +71,215 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-inode->i_mutex has been replaced with inode->i_rwsem long ago. Fix
-comments still mentioning i_mutex.
+Use invalidate_lock instead of XFS internal i_mmap_lock. The intended
+purpose of invalidate_lock is exactly the same. Note that the locking in
+__xfs_filemap_fault() slightly changes as filemap_fault() already takes
+invalidate_lock.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Hugh Dickins <hughd@google.com>
+CC: <linux-xfs@vger.kernel.org>
+CC: "Darrick J. Wong" <darrick.wong@oracle.com>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- mm/filemap.c        | 10 +++++-----
- mm/madvise.c        |  2 +-
- mm/memory-failure.c |  2 +-
- mm/rmap.c           |  6 +++---
- mm/shmem.c          | 20 ++++++++++----------
- mm/truncate.c       |  8 ++++----
- 6 files changed, 24 insertions(+), 24 deletions(-)
+ fs/xfs/xfs_file.c  | 12 ++++++-----
+ fs/xfs/xfs_inode.c | 52 ++++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_inode.h |  1 -
+ fs/xfs/xfs_super.c |  2 --
+ 4 files changed, 36 insertions(+), 31 deletions(-)
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 66f7e9fdfbc4..ba1068a1837f 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -76,7 +76,7 @@
-  *      ->swap_lock		(exclusive_swap_page, others)
-  *        ->i_pages lock
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 396ef36dcd0a..dc9cb5c20549 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1282,7 +1282,7 @@ xfs_file_llseek(
   *
-- *  ->i_mutex
-+ *  ->i_rwsem
-  *    ->i_mmap_rwsem		(truncate->unmap_mapping_range)
+  * mmap_lock (MM)
+  *   sb_start_pagefault(vfs, freeze)
+- *     i_mmaplock (XFS - truncate serialisation)
++ *     invalidate_lock (vfs/XFS_MMAPLOCK - truncate serialisation)
+  *       page_lock (MM)
+  *         i_lock (XFS - extent map serialisation)
+  */
+@@ -1303,24 +1303,26 @@ __xfs_filemap_fault(
+ 		file_update_time(vmf->vma->vm_file);
+ 	}
+ 
+-	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 	if (IS_DAX(inode)) {
+ 		pfn_t pfn;
+ 
++		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
+ 				(write_fault && !vmf->cow_page) ?
+ 				 &xfs_direct_write_iomap_ops :
+ 				 &xfs_read_iomap_ops);
+ 		if (ret & VM_FAULT_NEEDDSYNC)
+ 			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
++		xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 	} else {
+-		if (write_fault)
++		if (write_fault) {
++			xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 			ret = iomap_page_mkwrite(vmf,
+ 					&xfs_buffered_write_iomap_ops);
+-		else
++			xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
++		} else
+ 			ret = filemap_fault(vmf);
+ 	}
+-	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 
+ 	if (write_fault)
+ 		sb_end_pagefault(inode->i_sb);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 0369eb22c1bb..53bb5fc33621 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -131,7 +131,7 @@ xfs_ilock_attr_map_shared(
+ 
+ /*
+  * In addition to i_rwsem in the VFS inode, the xfs inode contains 2
+- * multi-reader locks: i_mmap_lock and the i_lock.  This routine allows
++ * multi-reader locks: invalidate_lock and the i_lock.  This routine allows
+  * various combinations of the locks to be obtained.
   *
-  *  ->mmap_lock
-@@ -87,7 +87,7 @@
-  *  ->mmap_lock
-  *    ->lock_page		(access_process_vm)
+  * The 3 locks should always be ordered so that the IO lock is obtained first,
+@@ -139,23 +139,23 @@ xfs_ilock_attr_map_shared(
   *
-- *  ->i_mutex			(generic_perform_write)
-+ *  ->i_rwsem			(generic_perform_write)
-  *    ->mmap_lock		(fault_in_pages_readable->do_page_fault)
+  * Basic locking order:
   *
-  *  bdi->wb.list_lock
-@@ -3710,12 +3710,12 @@ EXPORT_SYMBOL(generic_perform_write);
-  * modification times and calls proper subroutines depending on whether we
-  * do direct IO or a standard buffered write.
+- * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
++ * i_rwsem -> invalidate_lock -> page_lock -> i_ilock
   *
-- * It expects i_mutex to be grabbed unless we work on a block device or similar
-+ * It expects i_rwsem to be grabbed unless we work on a block device or similar
-  * object which does not need locking at all.
+  * mmap_lock locking order:
   *
-  * This function does *not* take care of syncing data in case of O_SYNC write.
-  * A caller has to handle it. This is mainly due to the fact that we want to
-- * avoid syncing under i_mutex.
-+ * avoid syncing under i_rwsem.
+  * i_rwsem -> page lock -> mmap_lock
+- * mmap_lock -> i_mmap_lock -> page_lock
++ * mmap_lock -> invalidate_lock -> page_lock
   *
-  * Return:
-  * * number of bytes written, even for truncated writes
-@@ -3803,7 +3803,7 @@ EXPORT_SYMBOL(__generic_file_write_iter);
+  * The difference in mmap_lock locking order mean that we cannot hold the
+- * i_mmap_lock over syscall based read(2)/write(2) based IO. These IO paths can
+- * fault in pages during copy in/out (for buffered IO) or require the mmap_lock
+- * in get_user_pages() to map the user pages into the kernel address space for
+- * direct IO. Similarly the i_rwsem cannot be taken inside a page fault because
+- * page faults already hold the mmap_lock.
++ * invalidate_lock over syscall based read(2)/write(2) based IO. These IO paths
++ * can fault in pages during copy in/out (for buffered IO) or require the
++ * mmap_lock in get_user_pages() to map the user pages into the kernel address
++ * space for direct IO. Similarly the i_rwsem cannot be taken inside a page
++ * fault because page faults already hold the mmap_lock.
   *
-  * This is a wrapper around __generic_file_write_iter() to be used by most
-  * filesystems. It takes care of syncing the file in case of O_SYNC file
-- * and acquires i_mutex as needed.
-+ * and acquires i_rwsem as needed.
-  * Return:
-  * * negative error code if no data has been written at all of
-  *   vfs_fsync_range() failed for a synchronous write
-diff --git a/mm/madvise.c b/mm/madvise.c
-index 63e489e5bfdb..a0137706b92a 100644
---- a/mm/madvise.c
-+++ b/mm/madvise.c
-@@ -853,7 +853,7 @@ static long madvise_remove(struct vm_area_struct *vma,
- 			+ ((loff_t)vma->vm_pgoff << PAGE_SHIFT);
+  * Hence to serialise fully against both syscall and mmap based IO, we need to
+- * take both the i_rwsem and the i_mmap_lock. These locks should *only* be both
+- * taken in places where we need to invalidate the page cache in a race
++ * take both the i_rwsem and the invalidate_lock. These locks should *only* be
++ * both taken in places where we need to invalidate the page cache in a race
+  * free manner (e.g. truncate, hole punch and other extent manipulation
+  * functions).
+  */
+@@ -187,10 +187,13 @@ xfs_ilock(
+ 				 XFS_IOLOCK_DEP(lock_flags));
+ 	}
+ 
+-	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrupdate_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
+-	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+-		mraccess_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
++	if (lock_flags & XFS_MMAPLOCK_EXCL) {
++		down_write_nested(&VFS_I(ip)->i_mapping->invalidate_lock,
++				  XFS_MMAPLOCK_DEP(lock_flags));
++	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
++		down_read_nested(&VFS_I(ip)->i_mapping->invalidate_lock,
++				 XFS_MMAPLOCK_DEP(lock_flags));
++	}
+ 
+ 	if (lock_flags & XFS_ILOCK_EXCL)
+ 		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
+@@ -239,10 +242,10 @@ xfs_ilock_nowait(
+ 	}
+ 
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL) {
+-		if (!mrtryupdate(&ip->i_mmaplock))
++		if (!down_write_trylock(&VFS_I(ip)->i_mapping->invalidate_lock))
+ 			goto out_undo_iolock;
+ 	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
+-		if (!mrtryaccess(&ip->i_mmaplock))
++		if (!down_read_trylock(&VFS_I(ip)->i_mapping->invalidate_lock))
+ 			goto out_undo_iolock;
+ 	}
+ 
+@@ -257,9 +260,9 @@ xfs_ilock_nowait(
+ 
+ out_undo_mmaplock:
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrunlock_excl(&ip->i_mmaplock);
++		up_write(&VFS_I(ip)->i_mapping->invalidate_lock);
+ 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+-		mrunlock_shared(&ip->i_mmaplock);
++		up_read(&VFS_I(ip)->i_mapping->invalidate_lock);
+ out_undo_iolock:
+ 	if (lock_flags & XFS_IOLOCK_EXCL)
+ 		up_write(&VFS_I(ip)->i_rwsem);
+@@ -306,9 +309,9 @@ xfs_iunlock(
+ 		up_read(&VFS_I(ip)->i_rwsem);
+ 
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrunlock_excl(&ip->i_mmaplock);
++		up_write(&VFS_I(ip)->i_mapping->invalidate_lock);
+ 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+-		mrunlock_shared(&ip->i_mmaplock);
++		up_read(&VFS_I(ip)->i_mapping->invalidate_lock);
+ 
+ 	if (lock_flags & XFS_ILOCK_EXCL)
+ 		mrunlock_excl(&ip->i_lock);
+@@ -334,7 +337,7 @@ xfs_ilock_demote(
+ 	if (lock_flags & XFS_ILOCK_EXCL)
+ 		mrdemote(&ip->i_lock);
+ 	if (lock_flags & XFS_MMAPLOCK_EXCL)
+-		mrdemote(&ip->i_mmaplock);
++		downgrade_write(&VFS_I(ip)->i_mapping->invalidate_lock);
+ 	if (lock_flags & XFS_IOLOCK_EXCL)
+ 		downgrade_write(&VFS_I(ip)->i_rwsem);
+ 
+@@ -355,8 +358,11 @@ xfs_isilocked(
+ 
+ 	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
+ 		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
+-			return !!ip->i_mmaplock.mr_writer;
+-		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
++			return !debug_locks ||
++				lockdep_is_held_type(
++					&VFS_I(ip)->i_mapping->invalidate_lock,
++					0);
++		return rwsem_is_locked(&VFS_I(ip)->i_mapping->invalidate_lock);
+ 	}
+ 
+ 	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index ca826cfba91c..a0e4153efbbe 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -40,7 +40,6 @@ typedef struct xfs_inode {
+ 	/* Transaction and locking information. */
+ 	struct xfs_inode_log_item *i_itemp;	/* logging information */
+ 	mrlock_t		i_lock;		/* inode lock */
+-	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
+ 	atomic_t		i_pincount;	/* inode pin count */
  
  	/*
--	 * Filesystem's fallocate may need to take i_mutex.  We need to
-+	 * Filesystem's fallocate may need to take i_rwsem.  We need to
- 	 * explicitly grab a reference because the vma (and hence the
- 	 * vma's reference to the file) can go away as soon as we drop
- 	 * mmap_lock.
-diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-index 85ad98c00fd9..9dcc9bcea731 100644
---- a/mm/memory-failure.c
-+++ b/mm/memory-failure.c
-@@ -704,7 +704,7 @@ static int me_pagecache_clean(struct page *p, unsigned long pfn)
- 	/*
- 	 * Truncation is a bit tricky. Enable it per file system for now.
- 	 *
--	 * Open: to take i_mutex or not for this? Right now we don't.
-+	 * Open: to take i_rwsem or not for this? Right now we don't.
- 	 */
- 	return truncate_error_page(p, pfn, mapping);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index a2dab05332ac..eeaf44910b5f 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -715,8 +715,6 @@ xfs_fs_inode_init_once(
+ 	atomic_set(&ip->i_pincount, 0);
+ 	spin_lock_init(&ip->i_flags_lock);
+ 
+-	mrlock_init(&ip->i_mmaplock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+-		     "xfsino", ip->i_ino);
+ 	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+ 		     "xfsino", ip->i_ino);
  }
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 693a610e181d..a35cbbbded0d 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -20,9 +20,9 @@
- /*
-  * Lock ordering in mm:
-  *
-- * inode->i_mutex	(while writing or truncating, not reading or faulting)
-+ * inode->i_rwsem	(while writing or truncating, not reading or faulting)
-  *   mm->mmap_lock
-- *     page->flags PG_locked (lock_page)   * (see huegtlbfs below)
-+ *     page->flags PG_locked (lock_page)   * (see hugetlbfs below)
-  *       hugetlbfs_i_mmap_rwsem_key (in huge_pmd_share)
-  *         mapping->i_mmap_rwsem
-  *           hugetlb_fault_mutex (hugetlbfs specific page fault mutex)
-@@ -41,7 +41,7 @@
-  *                             in arch-dependent flush_dcache_mmap_lock,
-  *                             within bdi.wb->list_lock in __sync_single_inode)
-  *
-- * anon_vma->rwsem,mapping->i_mutex      (memory_failure, collect_procs_anon)
-+ * anon_vma->rwsem,mapping->i_mmap_rwsem   (memory_failure, collect_procs_anon)
-  *   ->tasklist_lock
-  *     pte map lock
-  *
-diff --git a/mm/shmem.c b/mm/shmem.c
-index a08cedefbfaa..056204b1f76a 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -96,7 +96,7 @@ static struct vfsmount *shm_mnt;
- 
- /*
-  * shmem_fallocate communicates with shmem_fault or shmem_writepage via
-- * inode->i_private (with i_mutex making sure that it has only one user at
-+ * inode->i_private (with i_rwsem making sure that it has only one user at
-  * a time): we would prefer not to enlarge the shmem inode just for that.
-  */
- struct shmem_falloc {
-@@ -774,7 +774,7 @@ static int shmem_free_swap(struct address_space *mapping,
-  * Determine (in bytes) how many of the shmem object's pages mapped by the
-  * given offsets are swapped out.
-  *
-- * This is safe to call without i_mutex or the i_pages lock thanks to RCU,
-+ * This is safe to call without i_rwsem or the i_pages lock thanks to RCU,
-  * as long as the inode doesn't go away and racy results are not a problem.
-  */
- unsigned long shmem_partial_swap_usage(struct address_space *mapping,
-@@ -806,7 +806,7 @@ unsigned long shmem_partial_swap_usage(struct address_space *mapping,
-  * Determine (in bytes) how many of the shmem object's pages mapped by the
-  * given vma is swapped out.
-  *
-- * This is safe to call without i_mutex or the i_pages lock thanks to RCU,
-+ * This is safe to call without i_rwsem or the i_pages lock thanks to RCU,
-  * as long as the inode doesn't go away and racy results are not a problem.
-  */
- unsigned long shmem_swap_usage(struct vm_area_struct *vma)
-@@ -1069,7 +1069,7 @@ static int shmem_setattr(struct user_namespace *mnt_userns,
- 		loff_t oldsize = inode->i_size;
- 		loff_t newsize = attr->ia_size;
- 
--		/* protected by i_mutex */
-+		/* protected by i_rwsem */
- 		if ((newsize < oldsize && (info->seals & F_SEAL_SHRINK)) ||
- 		    (newsize > oldsize && (info->seals & F_SEAL_GROW)))
- 			return -EPERM;
-@@ -2049,7 +2049,7 @@ static vm_fault_t shmem_fault(struct vm_fault *vmf)
- 	/*
- 	 * Trinity finds that probing a hole which tmpfs is punching can
- 	 * prevent the hole-punch from ever completing: which in turn
--	 * locks writers out with its hold on i_mutex.  So refrain from
-+	 * locks writers out with its hold on i_rwsem.  So refrain from
- 	 * faulting pages into the hole while it's being punched.  Although
- 	 * shmem_undo_range() does remove the additions, it may be unable to
- 	 * keep up, as each new page needs its own unmap_mapping_range() call,
-@@ -2060,7 +2060,7 @@ static vm_fault_t shmem_fault(struct vm_fault *vmf)
- 	 * we just need to make racing faults a rare case.
- 	 *
- 	 * The implementation below would be much simpler if we just used a
--	 * standard mutex or completion: but we cannot take i_mutex in fault,
-+	 * standard mutex or completion: but we cannot take i_rwsem in fault,
- 	 * and bloating every shmem inode for this unlikely case would be sad.
- 	 */
- 	if (unlikely(inode->i_private)) {
-@@ -2518,7 +2518,7 @@ shmem_write_begin(struct file *file, struct address_space *mapping,
- 	struct shmem_inode_info *info = SHMEM_I(inode);
- 	pgoff_t index = pos >> PAGE_SHIFT;
- 
--	/* i_mutex is held by caller */
-+	/* i_rwsem is held by caller */
- 	if (unlikely(info->seals & (F_SEAL_GROW |
- 				   F_SEAL_WRITE | F_SEAL_FUTURE_WRITE))) {
- 		if (info->seals & (F_SEAL_WRITE | F_SEAL_FUTURE_WRITE))
-@@ -2618,7 +2618,7 @@ static ssize_t shmem_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 
- 		/*
- 		 * We must evaluate after, since reads (unlike writes)
--		 * are called without i_mutex protection against truncate
-+		 * are called without i_rwsem protection against truncate
- 		 */
- 		nr = PAGE_SIZE;
- 		i_size = i_size_read(inode);
-@@ -2688,7 +2688,7 @@ static loff_t shmem_file_llseek(struct file *file, loff_t offset, int whence)
- 		return -ENXIO;
- 
- 	inode_lock(inode);
--	/* We're holding i_mutex so we can access i_size directly */
-+	/* We're holding i_rwsem so we can access i_size directly */
- 	offset = mapping_seek_hole_data(mapping, offset, inode->i_size, whence);
- 	if (offset >= 0)
- 		offset = vfs_setpos(file, offset, MAX_LFS_FILESIZE);
-@@ -2717,7 +2717,7 @@ static long shmem_fallocate(struct file *file, int mode, loff_t offset,
- 		loff_t unmap_end = round_down(offset + len, PAGE_SIZE) - 1;
- 		DECLARE_WAIT_QUEUE_HEAD_ONSTACK(shmem_falloc_waitq);
- 
--		/* protected by i_mutex */
-+		/* protected by i_rwsem */
- 		if (info->seals & (F_SEAL_WRITE | F_SEAL_FUTURE_WRITE)) {
- 			error = -EPERM;
- 			goto out;
-diff --git a/mm/truncate.c b/mm/truncate.c
-index 95af244b112a..57a618c4a0d6 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -415,7 +415,7 @@ EXPORT_SYMBOL(truncate_inode_pages_range);
-  * @mapping: mapping to truncate
-  * @lstart: offset from which to truncate
-  *
-- * Called under (and serialised by) inode->i_mutex.
-+ * Called under (and serialised by) inode->i_rwsem.
-  *
-  * Note: When this function returns, there can be a page in the process of
-  * deletion (inside __delete_from_page_cache()) in the specified range.  Thus
-@@ -432,7 +432,7 @@ EXPORT_SYMBOL(truncate_inode_pages);
-  * truncate_inode_pages_final - truncate *all* pages before inode dies
-  * @mapping: mapping to truncate
-  *
-- * Called under (and serialized by) inode->i_mutex.
-+ * Called under (and serialized by) inode->i_rwsem.
-  *
-  * Filesystems have to use this in the .evict_inode path to inform the
-  * VM that this is the final truncate and the inode is going away.
-@@ -753,7 +753,7 @@ EXPORT_SYMBOL(truncate_pagecache);
-  * setattr function when ATTR_SIZE is passed in.
-  *
-  * Must be called with a lock serializing truncates and writes (generally
-- * i_mutex but e.g. xfs uses a different lock) and before all filesystem
-+ * i_rwsem but e.g. xfs uses a different lock) and before all filesystem
-  * specific block truncation has been performed.
-  */
- void truncate_setsize(struct inode *inode, loff_t newsize)
-@@ -782,7 +782,7 @@ EXPORT_SYMBOL(truncate_setsize);
-  *
-  * The function must be called after i_size is updated so that page fault
-  * coming after we unlock the page will already see the new i_size.
-- * The function must be called while we still hold i_mutex - this not only
-+ * The function must be called while we still hold i_rwsem - this not only
-  * makes sure i_size is stable but also that userspace cannot observe new
-  * i_size value before we are prepared to store mmap writes at new inode size.
-  */
 -- 
 2.26.2
 
