@@ -2,283 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CAF5C47087
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 00:52:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D5ACC4707F
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 01:19:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D35056142D
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 00:52:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24A0C61423
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 01:19:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232372AbhEZAxa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 May 2021 20:53:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50468 "EHLO mail.kernel.org"
+        id S231380AbhEZBUh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 May 2021 21:20:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53806 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230157AbhEZAxa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 May 2021 20:53:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 703AE61417;
-        Wed, 26 May 2021 00:51:59 +0000 (UTC)
+        id S230505AbhEZBUh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 May 2021 21:20:37 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C202C613CD;
+        Wed, 26 May 2021 01:19:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621990319;
-        bh=2MAR2fkh7Y4btLRFfu9Lw9CjQS3ZmsTeR2N15bjo0Yw=;
+        s=k20201202; t=1621991946;
+        bh=K/bovQ5imcNacKsa0bJs5dJajZArTb7KtCPIMc4O3gw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=q39EHKre+YBQYdNaH964l3gjJ4vlFdrDNO7Zt0VA/GKvG+bfw0tJ4o9LUrnpc6fgU
-         RaStUduo9FMAkSu+0uiCc1PDUlgPKbS7F3Nvhd6XBwF/uzuCfvqav4avBZbb2KAIgN
-         bHfTU3sOCirhgoQvfOx3qq4zKcDLhyPO4xy7D6MXdMEtD8HYMGQXktzE5vy3EFEPcu
-         eMT5xAVZnr57SUKkDMrAkqxbx0zbrBl0ldBLwdFKfoP6Pg/10O0PCf52J5pYqxBrYk
-         5GdvEZDT0BqtoogAyMofviulr/qbwafNwo+Rut9QrQ9LKKSSbFajRY4ih/GZOXhwrm
-         RuGUiLDEjK0SA==
-Date:   Tue, 25 May 2021 17:51:59 -0700
+        b=h/xH8V+89o/ZhWH/TY85zu4x4YCpqyYZIHZ864OQt5RzaQpXgIMR1W3EunSvL+n/O
+         kAszQQrxQHIMYtdnHwpgVK9EAI4TI/LqCUqxGRHExeAPLBHEdsC033b4lfrrKxQjz9
+         y9Jj4hzNfHFbMGQyc7GYVk1W/aCK+7PBOVK9WH53JPj05gaPQ1CDjm8MLofjUVR+1l
+         2ENm76RYMDWCjyys1pv8jBS3nsclvjccbTGTvMhY4CVc2biaMaK41RHMuSBNcUU6Kh
+         8Gry+z5NY0FMdJfdqFky/VxLwwzRC+OZCZNK2dqNF5MYoIREBBOAsm8Z7y0U1CAhnW
+         /B134KdJTEhDw==
+Date:   Tue, 25 May 2021 18:19:06 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        willy@infradead.org, viro@zeniv.linux.org.uk, david@fromorbit.com,
-        hch@lst.de, rgoldwyn@suse.de
-Subject: Re: [PATCH v6 0/7] fsdax,xfs: Add reflink&dedupe support for fsdax
-Message-ID: <20210526005159.GF202144@locust>
-References: <20210519060045.1051226-1-ruansy.fnst@fujitsu.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] iomap: resched ioend completion when in
+ non-atomic context
+Message-ID: <20210526011906.GE202078@locust>
+References: <20210517171722.1266878-1-bfoster@redhat.com>
+ <20210517171722.1266878-2-bfoster@redhat.com>
+ <YKKt2isZwu0qJK/C@casper.infradead.org>
+ <YKOnGSJ9NR+cSRRc@bfoster>
+ <20210520215858.GZ9675@magnolia>
+ <YKuUqzEmt5/yZMt1@bfoster>
+ <20210524165305.GA202078@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210519060045.1051226-1-ruansy.fnst@fujitsu.com>
+In-Reply-To: <20210524165305.GA202078@locust>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 19, 2021 at 02:00:38PM +0800, Shiyang Ruan wrote:
-> This patchset is attempt to add CoW support for fsdax, and take XFS,
-> which has both reflink and fsdax feature, as an example.
+On Mon, May 24, 2021 at 09:53:05AM -0700, Darrick J. Wong wrote:
+> On Mon, May 24, 2021 at 07:57:31AM -0400, Brian Foster wrote:
+> > On Thu, May 20, 2021 at 02:58:58PM -0700, Darrick J. Wong wrote:
+> > > On Tue, May 18, 2021 at 07:38:01AM -0400, Brian Foster wrote:
+> > > > On Mon, May 17, 2021 at 06:54:34PM +0100, Matthew Wilcox wrote:
+> > > > > On Mon, May 17, 2021 at 01:17:20PM -0400, Brian Foster wrote:
+> > > > > > @@ -1084,9 +1084,12 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+> > > > > >  			next = bio->bi_private;
+> > > > > >  
+> > > > > >  		/* walk each page on bio, ending page IO on them */
+> > > > > > -		bio_for_each_segment_all(bv, bio, iter_all)
+> > > > > > +		bio_for_each_segment_all(bv, bio, iter_all) {
+> > > > > >  			iomap_finish_page_writeback(inode, bv->bv_page, error,
+> > > > > >  					bv->bv_len);
+> > > > > > +			if (!atomic)
+> > > > > > +				cond_resched();
+> > > > > > +		}
+> > > > > 
+> > > > > I don't know that it makes sense to check after _every_ page.  I might
+> > > > > go for every segment.  Some users check after every thousand pages.
+> > > > > 
+> > > > 
+> > > > The handful of examples I come across on a brief scan (including the
+> > > > other iomap usage) have a similar pattern as used here. I don't doubt
+> > > > there are others, but I think I'd prefer to have more reasoning behind
+> > > > adding more code than might be necessary (i.e. do we expect additional
+> > > > overhead to be measurable here?). As it is, the intent isn't so much to
+> > > > check on every page as much as this just happens to be the common point
+> > > > of the function to cover both long bio chains and single vector bios
+> > > > with large numbers of pages.
+> > > 
+> > > It's been a while since I waded through the macro hell to find out what
+> > > cond_resched actually does, but iirc it can do some fairly heavyweight
+> > > things (disable preemption, call the scheduler, rcu stuff) which is why
+> > > we're supposed to be a little judicious about amortizing each call over
+> > > a few thousand pages.
+> > > 
+> > 
+> > It looks to me it just checks some state bit and only does any work if
+> > actually necessary. I suppose not doing that less often is cheaper than
+> > doing it more, but it's not clear to me it's enough that it really
+> > matters and/or warrants more code to filter out calls..
+> > 
+> > What exactly did you have in mind for logic? I suppose we could always
+> > stuff a 'if (!(count++ % 1024)) cond_resched();' or some such in the
+> > inner loop, but that might have less of an effect on larger chains
+> > constructed of bios with fewer pages (depending on whether that might
+> > still be possible).
+> 
+> I /was/ thinking about a function level page counter until I noticed
+> that iomap_{write,unshare}_actor call cond_resched for every page it
+> touches.  I withdraw the comment. :)
 
-Soooo... how close are we to enabling reflink for DAX?
-
-I <cough> got rid of the lockouts in xfs_super.c and ran a quick
-fstests, which showed a number of odd regressions where dedupe tests
-that were supposed to fail with EBADE didn't and a bunch of clonerange
-tests failed with EINVAL:
-
-generic/122     - output mismatch (see /var/tmp/fstests/generic/122.out.bad)
-    --- tests/generic/122.out   2021-05-13 11:47:55.665860364 -0700
-    +++ /var/tmp/fstests/generic/122.out.bad    2021-05-25 17:24:03.333270522 -0700
-    @@ -4,7 +4,8 @@
-     5e3501f97fd2669babfcbd3e1972e833  TEST_DIR/test-122/file2
-     Files 1-2 do not match (intentional)
-     (Fail to) dedupe the middle blocks together
-    -XFS_IOC_FILE_EXTENT_SAME: Extents did not match.
-    +deduped 131072/131072 bytes at offset 262144
-    +128 KiB, 1 ops; 0.0000 sec (12.207 GiB/sec and 100000.0000 ops/sec)
-     Compare sections
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/122.out /var/tmp/fstests/generic/122.out.bad'  to see the entire diff)
-generic/136     - output mismatch (see /var/tmp/fstests/generic/136.out.bad)
-    --- tests/generic/136.out   2021-05-13 11:47:55.668860355 -0700
-    +++ /var/tmp/fstests/generic/136.out.bad    2021-05-25 17:24:05.773367756 -0700
-    @@ -7,7 +7,8 @@
-     Dedupe the last blocks together
-     1->2
-     1->3
-    -XFS_IOC_FILE_EXTENT_SAME: Extents did not match.
-    +deduped 37/37 bytes at offset 65536
-    +37.000000 bytes, 1 ops; 0.0000 sec (1.960 MiB/sec and 55555.5556 ops/sec)
-     c4fd505be25a0c91bcca9f502b9a8156  TEST_DIR/test-136/file1
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/136.out /var/tmp/fstests/generic/136.out.bad'  to see the entire diff)
-generic/164     - output mismatch (see /var/tmp/fstests/generic/164.out.bad)
-    --- tests/generic/164.out   2021-05-13 11:47:55.674860338 -0700
-    +++ /var/tmp/fstests/generic/164.out.bad    2021-05-25 17:25:33.339738197 -0700
-    @@ -2,4 +2,1028 @@
-     Format and mount
-     Initialize files
-     Reflink and reread the files!
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/164.out /var/tmp/fstests/generic/164.out.bad'  to see the entire diff)
-generic/165     - output mismatch (see /var/tmp/fstests/generic/165.out.bad)
-    --- tests/generic/165.out   2021-05-13 11:47:55.674860338 -0700
-    +++ /var/tmp/fstests/generic/165.out.bad    2021-05-25 17:25:45.247685323 -0700
-    @@ -2,4 +2,1028 @@
-     Format and mount
-     Initialize files
-     Reflink and dio reread the files!
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/165.out /var/tmp/fstests/generic/165.out.bad'  to see the entire diff)
-generic/175     - output mismatch (see /var/tmp/fstests/generic/175.out.bad)
-    --- tests/generic/175.out   2021-05-13 11:47:55.676860332 -0700
-    +++ /var/tmp/fstests/generic/175.out.bad    2021-05-25 17:29:55.060917807 -0700
-    @@ -3,3 +3,4 @@
-     Create a one block file
-     Create extents
-     Reflink the big file
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/175.out /var/tmp/fstests/generic/175.out.bad'  to see the entire diff)
-generic/327     - output mismatch (see /var/tmp/fstests/generic/327.out.bad)
-    --- tests/generic/327.out   2021-05-13 11:47:55.704860251 -0700
-    +++ /var/tmp/fstests/generic/327.out.bad    2021-05-25 17:35:22.338448231 -0700
-    @@ -7,6 +7,6 @@
-     root 0 0 0
-     fsgqa 2048 0 1024
-     Try to reflink again
-    -cp: failed to clone 'SCRATCH_MNT/test-327/file3' from 'SCRATCH_MNT/test-327/file1': Disk quota exceeded
-    +cp: failed to clone 'SCRATCH_MNT/test-327/file3' from 'SCRATCH_MNT/test-327/file1': Invalid argument
-     root 0 0 0
-     fsgqa 2048 0 1024
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/327.out /var/tmp/fstests/generic/327.out.bad'  to see the entire diff)
-generic/516     - output mismatch (see /var/tmp/fstests/generic/516.out.bad)
-    --- tests/generic/516.out   2021-05-13 11:47:55.739860150 -0700
-    +++ /var/tmp/fstests/generic/516.out.bad    2021-05-25 17:41:58.144177193 -0700
-    @@ -4,7 +4,8 @@
-     39578c21e2cb9f6049b1cf7fc7be12a6  TEST_DIR/test-516/file2
-     Files 1-2 do not match (intentional)
-     (partial) dedupe the middle blocks together
-    -XFS_IOC_FILE_EXTENT_SAME: Extents did not match.
-    +deduped XXXX/XXXX bytes at offset XXXX
-    +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-     Compare sections
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/516.out /var/tmp/fstests/generic/516.out.bad'  to see the entire diff)
-generic/517     - output mismatch (see /var/tmp/fstests/generic/517.out.bad)
-    --- tests/generic/517.out   2021-05-13 11:47:55.739860150 -0700
-    +++ /var/tmp/fstests/generic/517.out.bad    2021-05-25 17:41:59.352000318 -0700
-    @@ -33,8 +33,7 @@
-     0786532
-     wrote 100/100 bytes at offset 0
-     XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-    -deduped 100/100 bytes at offset 655360
-    -XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-    +XFS_IOC_FILE_EXTENT_SAME: Invalid argument
-     File content after second deduplication:
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/517.out /var/tmp/fstests/generic/517.out.bad'  to see the entire diff)
-generic/518      1s
-generic/540     - output mismatch (see /var/tmp/fstests/generic/540.out.bad)
-    --- tests/generic/540.out   2021-05-13 11:47:55.743860139 -0700
-    +++ /var/tmp/fstests/generic/540.out.bad    2021-05-25 17:42:01.999613949 -0700
-    @@ -7,8 +7,9 @@
-     6366fd359371414186688a0ef6988893  SCRATCH_MNT/test-540/file3
-     6366fd359371414186688a0ef6988893  SCRATCH_MNT/test-540/file3.chk
-     reflink across the transition
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-     Compare files
-     bdbcf02ee0aa977795a79d25fcfdccb1  SCRATCH_MNT/test-540/file1
-     5a5221017d3ab8fd7583312a14d2ba80  SCRATCH_MNT/test-540/file2
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/540.out /var/tmp/fstests/generic/540.out.bad'  to see the entire diff)
-generic/541     - output mismatch (see /var/tmp/fstests/generic/541.out.bad)
-    --- tests/generic/541.out   2021-05-13 11:47:55.743860139 -0700
-    +++ /var/tmp/fstests/generic/541.out.bad    2021-05-25 17:42:03.623377997 -0700
-    @@ -8,9 +8,10 @@
-     6366fd359371414186688a0ef6988893  SCRATCH_MNT/test-541/file3
-     6366fd359371414186688a0ef6988893  SCRATCH_MNT/test-541/file3.chk
-     reflink across the transition
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-     Compare files
-     bdbcf02ee0aa977795a79d25fcfdccb1  SCRATCH_MNT/test-541/file1
-    -51a300aae3a4b4eaa023876a397e01ef  SCRATCH_MNT/test-541/file2
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/541.out /var/tmp/fstests/generic/541.out.bad'  to see the entire diff)
-generic/542     - output mismatch (see /var/tmp/fstests/generic/542.out.bad)
-    --- tests/generic/542.out   2021-05-13 11:47:55.743860139 -0700
-    +++ /var/tmp/fstests/generic/542.out.bad    2021-05-25 17:42:05.487108030 -0700
-    @@ -7,8 +7,9 @@
-     6366fd359371414186688a0ef6988893  SCRATCH_MNT/test-542/file3
-     6366fd359371414186688a0ef6988893  SCRATCH_MNT/test-542/file3.chk
-     reflink across the transition
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-     Compare files
-     bdbcf02ee0aa977795a79d25fcfdccb1  SCRATCH_MNT/test-542/file1
-     5a5221017d3ab8fd7583312a14d2ba80  SCRATCH_MNT/test-542/file2
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/542.out /var/tmp/fstests/generic/542.out.bad'  to see the entire diff)
-generic/543     - output mismatch (see /var/tmp/fstests/generic/543.out.bad)
-    --- tests/generic/543.out   2021-05-13 11:47:55.744860136 -0700
-    +++ /var/tmp/fstests/generic/543.out.bad    2021-05-25 17:42:07.386833815 -0700
-    @@ -8,9 +8,10 @@
-     6366fd359371414186688a0ef6988893  SCRATCH_MNT/test-543/file3
-     6366fd359371414186688a0ef6988893  SCRATCH_MNT/test-543/file3.chk
-     reflink across the transition
-    +XFS_IOC_CLONE_RANGE: Invalid argument
-     Compare files
-     bdbcf02ee0aa977795a79d25fcfdccb1  SCRATCH_MNT/test-543/file1
-    -d93123af536c8c012f866ea383a905ce  SCRATCH_MNT/test-543/file2
-    ...
-    (Run 'diff -u /tmp/fstests/tests/generic/543.out /var/tmp/fstests/generic/543.out.bad'  to see the entire diff)
-
-That's all the failures to the end of the generic group; I cut it off so
-that I could schedule my regular nightly testing runs.
+Oh, also:
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > 
-> Changes from V5:
->  - Fix the lock order of xfs_inode in xfs_mmaplock_two_inodes_and_break_dax_layout()
->  - move dax_remap_file_range_prep() to fs/dax.c
->  - change type of length to uint64_t in dax_iomap_cow_copy()
->  - fix mistake in dax_iomap_zero()
+> --D
 > 
-> Changes from V4:
->  - Fix the mistake of breaking dax layout for two inodes
->  - Add CONFIG_FS_DAX judgement for fsdax code in remap_range.c
->  - Fix other small problems and mistakes
-> 
-> One of the key mechanism need to be implemented in fsdax is CoW.  Copy
-> the data from srcmap before we actually write data to the destance
-> iomap.  And we just copy range in which data won't be changed.
-> 
-> Another mechanism is range comparison.  In page cache case, readpage()
-> is used to load data on disk to page cache in order to be able to
-> compare data.  In fsdax case, readpage() does not work.  So, we need
-> another compare data with direct access support.
-> 
-> With the two mechanisms implemented in fsdax, we are able to make reflink
-> and fsdax work together in XFS.
-> 
-> Some of the patches are picked up from Goldwyn's patchset.  I made some
-> changes to adapt to this patchset.
-> 
-> 
-> (Rebased on v5.13-rc2 and patchset[1])
-> [1]: https://lkml.org/lkml/2021/4/22/575
-> 
-> Shiyang Ruan (7):
->   fsdax: Introduce dax_iomap_cow_copy()
->   fsdax: Replace mmap entry in case of CoW
->   fsdax: Add dax_iomap_cow_copy() for dax_iomap_zero
->   iomap: Introduce iomap_apply2() for operations on two files
->   fsdax: Dedup file range to use a compare function
->   fs/xfs: Handle CoW for fsdax write() path
->   fs/xfs: Add dax dedupe support
-> 
->  fs/dax.c               | 216 ++++++++++++++++++++++++++++++++++++-----
->  fs/iomap/apply.c       |  52 ++++++++++
->  fs/iomap/buffered-io.c |   2 +-
->  fs/remap_range.c       |  36 +++++--
->  fs/xfs/xfs_bmap_util.c |   3 +-
->  fs/xfs/xfs_file.c      |  11 +--
->  fs/xfs/xfs_inode.c     |  57 +++++++++++
->  fs/xfs/xfs_inode.h     |   1 +
->  fs/xfs/xfs_iomap.c     |  38 +++++++-
->  fs/xfs/xfs_iomap.h     |  24 +++++
->  fs/xfs/xfs_iops.c      |   7 +-
->  fs/xfs/xfs_reflink.c   |  15 +--
->  include/linux/dax.h    |  11 ++-
->  include/linux/fs.h     |  12 ++-
->  include/linux/iomap.h  |   7 +-
->  15 files changed, 431 insertions(+), 61 deletions(-)
-> 
-> -- 
-> 2.31.1
-> 
-> 
-> 
+> > 
+> > Brian
+> > 
+> > > --D
+> > > 
+> > > > Brian
+> > > > 
+> > > 
+> > 
