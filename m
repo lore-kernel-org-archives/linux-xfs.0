@@ -2,102 +2,169 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7695BC47088
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 12:35:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AE0CC47089
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 13:42:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4909F613D6
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 12:35:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 092E7613D8
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 13:42:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233472AbhEZMhZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 May 2021 08:37:25 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:32066 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233513AbhEZMhX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 May 2021 08:37:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1622032552;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+        id S234262AbhEZNoI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 May 2021 09:44:08 -0400
+Received: from mx2.suse.de ([195.135.220.15]:50700 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233906AbhEZNoH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 May 2021 09:44:07 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1622036554; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=bl09jjeoxoQZnHf9YiyESzyrUZxadKsjK25oBrk4g9A=;
-        b=ePHQN0G22Tc+GwFpQr1SoKUsl0yRoDrbtHY6M2AptX4nhgPCUmzeqG+83ya9ssbSpmOOnN
-        6iM7yrWtANmE3zfpyZ41VMXhJbBdskz/P+xpQTt2AragLhE6ki9oHPFDq3fSANBfYTApQw
-        TasrEZtqg5+cCxhaG6S88OdIjFBHNpc=
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
- [209.85.160.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-279-xJ55A4anP9OHvd1GINVDyQ-1; Wed, 26 May 2021 08:35:50 -0400
-X-MC-Unique: xJ55A4anP9OHvd1GINVDyQ-1
-Received: by mail-qt1-f198.google.com with SMTP id r1-20020ac85c810000b02901fa9798cdb5so580840qta.8
-        for <linux-xfs@vger.kernel.org>; Wed, 26 May 2021 05:35:50 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=bl09jjeoxoQZnHf9YiyESzyrUZxadKsjK25oBrk4g9A=;
-        b=NBBIQWtstsiuROhGVDZxlbZ1n5SeZWuK0VhDhMJPQQ/FDw0a5gJDzArLaPWOa+fYUb
-         xE4lOZCVvwpu+6EtOS/ugIv3j1pcF5qeQ8Inxi8lNdlxXDsAlxZTI3jfJCV/2iugJPqu
-         F7zWvVtLJY7x3WcSWOPTvFvXsDuhH5TZOYBLWaxTipmY+05gH/cKal4EGZ+kfX+seOSj
-         i9VNkVR0iEOI5nbgMp0cFltjfkkeC7nfK2L7jyiuS7d1e1IPXgrlIAD+uwTHB6nr9cAU
-         P3mU2izWMoJ9ZknB+KB4o4mjMvpjAN4rJ6eiP7TtBYU74ouRQNi8EE6yRY6gyLhIoOfF
-         rKlg==
-X-Gm-Message-State: AOAM5333WAePnd0Cgj5oGAoN6cPyen2R1dFpaS3bEiLv8GceyohPBapu
-        Ws265+Baf0AEbgSusEnIarlNXQgtTFe+mdGitKo4pKdr22gL+nGlxSBXVvVROz2v4+8xK4V1oPG
-        h2mhJbLJ1mn5wvHSwFC3Y
-X-Received: by 2002:a05:6214:934:: with SMTP id dk20mr43100573qvb.26.1622032550052;
-        Wed, 26 May 2021 05:35:50 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyXV1mBmT0k4OLamMp4OGFRuXjFKHlhZoORJkjAkdsJqkaWEHtj4XV1KgemNkUHHpRSFYoBBQ==
-X-Received: by 2002:a05:6214:934:: with SMTP id dk20mr43100555qvb.26.1622032549914;
-        Wed, 26 May 2021 05:35:49 -0700 (PDT)
-Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id z17sm1424398qkb.59.2021.05.26.05.35.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 May 2021 05:35:49 -0700 (PDT)
-Date:   Wed, 26 May 2021 08:35:47 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: add new IRC channel to MAINTAINERS
-Message-ID: <YK5Ao/tMNvDTKnit@bfoster>
-References: <20210526052038.GX202121@locust>
+        bh=YWrDO/Dppqnob0qSTudrbGU+4KXNmLknkAXHAtjqkPI=;
+        b=feNDsCEwezBY5eajE0X9sqDHnTCioCQIzIeMr2J2TrAYh7OvQMpRR6ljQ64+nCIR6LMdDE
+        Zi5dHF8941OXqyI8echxk8PnDv2x3Co9ptmb0tEfZbrdSAZ51qfP8Op/Pijg7rG4X5h5X8
+        Br72v5QvgRMXQv/fSVf4n4nH4GugQI8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1622036554;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YWrDO/Dppqnob0qSTudrbGU+4KXNmLknkAXHAtjqkPI=;
+        b=pwgOPKA3405jgMM+/qCsJ5+JNbyatYjdP7zr8GOt7RfHlu5t01djSVRCJw4CaQDbGc+iFj
+        eBqVo0DURM5CFSDA==
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id EE6B0AEE7;
+        Wed, 26 May 2021 13:42:33 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 696871F2CAC; Wed, 26 May 2021 15:42:32 +0200 (CEST)
+Date:   Wed, 26 May 2021 15:42:32 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        ceph-devel@vger.kernel.org, Chao Yu <yuchao0@huawei.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
+        Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 07/13] xfs: Convert to use invalidate_lock
+Message-ID: <20210526134232.GE30369@quack2.suse.cz>
+References: <20210525125652.20457-1-jack@suse.cz>
+ <20210525135100.11221-7-jack@suse.cz>
+ <20210525214041.GJ664593@dread.disaster.area>
+ <20210526102059.GD30369@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210526052038.GX202121@locust>
+In-Reply-To: <20210526102059.GD30369@quack2.suse.cz>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 25, 2021 at 10:20:38PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed 26-05-21 12:20:59, Jan Kara wrote:
+> On Wed 26-05-21 07:40:41, Dave Chinner wrote:
+> > On Tue, May 25, 2021 at 03:50:44PM +0200, Jan Kara wrote:
+> > > Use invalidate_lock instead of XFS internal i_mmap_lock. The intended
+> > > purpose of invalidate_lock is exactly the same. Note that the locking in
+> > > __xfs_filemap_fault() slightly changes as filemap_fault() already takes
+> > > invalidate_lock.
+> > > 
+> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > CC: <linux-xfs@vger.kernel.org>
+> > > CC: "Darrick J. Wong" <darrick.wong@oracle.com>
+> > > Signed-off-by: Jan Kara <jack@suse.cz>
+> > > ---
+> > >  fs/xfs/xfs_file.c  | 12 ++++++-----
+> > >  fs/xfs/xfs_inode.c | 52 ++++++++++++++++++++++++++--------------------
+> > >  fs/xfs/xfs_inode.h |  1 -
+> > >  fs/xfs/xfs_super.c |  2 --
+> > >  4 files changed, 36 insertions(+), 31 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > index 396ef36dcd0a..dc9cb5c20549 100644
+> > > --- a/fs/xfs/xfs_file.c
+> > > +++ b/fs/xfs/xfs_file.c
+> > > @@ -1282,7 +1282,7 @@ xfs_file_llseek(
+> > >   *
+> > >   * mmap_lock (MM)
+> > >   *   sb_start_pagefault(vfs, freeze)
+> > > - *     i_mmaplock (XFS - truncate serialisation)
+> > > + *     invalidate_lock (vfs/XFS_MMAPLOCK - truncate serialisation)
+> > >   *       page_lock (MM)
+> > >   *         i_lock (XFS - extent map serialisation)
+> > >   */
+> > > @@ -1303,24 +1303,26 @@ __xfs_filemap_fault(
+> > >  		file_update_time(vmf->vma->vm_file);
+> > >  	}
+> > >  
+> > > -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> > >  	if (IS_DAX(inode)) {
+> > >  		pfn_t pfn;
+> > >  
+> > > +		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> > >  		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
+> > >  				(write_fault && !vmf->cow_page) ?
+> > >  				 &xfs_direct_write_iomap_ops :
+> > >  				 &xfs_read_iomap_ops);
+> > >  		if (ret & VM_FAULT_NEEDDSYNC)
+> > >  			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
+> > > +		xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> > >  	} else {
+> > > -		if (write_fault)
+> > > +		if (write_fault) {
+> > > +			xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> > >  			ret = iomap_page_mkwrite(vmf,
+> > >  					&xfs_buffered_write_iomap_ops);
+> > > -		else
+> > > +			xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> > > +		} else
+> > >  			ret = filemap_fault(vmf);
+> > >  	}
+> > > -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> > 
+> > This seems kinda messy. filemap_fault() basically takes the
+> > invalidate lock around the entire operation, it runs, so maybe it
+> > would be cleaner to implement it as:
+> > 
+> > filemap_fault_locked(vmf)
+> > {
+> > 	/* does the filemap fault work */
+> > }
+> > 
+> > filemap_fault(vmf)
+> > {
+> > 	filemap_invalidate_down_read(...)
+> > 	ret = filemap_fault_locked(vmf)
+> > 	filemap_invalidate_up_read(...)
+> > 	return ret;
+> > }
+> > 
+> > And that means XFS could just call filemap_fault_locked() and not 
+> > have to do all this messy locking just to avoid holding the lock
+> > that filemap_fault has now internalised.
 > 
-> Add our new OFTC channel to the MAINTAINERS list so everyone will know
-> where to go.  Ignore the XFS wikis, we have no access to them.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
+> Sure, I can do that.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Hum, looking into this in more detail it isn't as easy. There are some
+operations inside filemap_fault() that need to be done outside of
+invalidate_lock. In particular we call into readahead code which will grab
+invalidate_lock for itself. So we'd need to pass in struct
+readahead_control whether invalidate_lock is held or not which is IMHO
+uglier than what we currently do in __xfs_filemap_fault().
 
->  MAINTAINERS |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 008fcad7ac00..ceb146e9b506 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -19998,6 +19998,7 @@ F:	arch/x86/xen/*swiotlb*
->  F:	drivers/xen/*swiotlb*
->  
->  XFS FILESYSTEM
-> +C:	irc://irc.oftc.net/xfs
->  M:	Darrick J. Wong <djwong@kernel.org>
->  M:	linux-xfs@vger.kernel.org
->  L:	linux-xfs@vger.kernel.org
-> 
-
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
