@@ -2,110 +2,85 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A6B5C4707F
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 01:20:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7248AC47087
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 01:27:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D575A61423
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 01:20:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40D296142D
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 01:27:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232402AbhEZBVr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 May 2021 21:21:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54116 "EHLO mail.kernel.org"
+        id S230505AbhEZB2g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 May 2021 21:28:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55366 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230505AbhEZBVr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 May 2021 21:21:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CAB5C613CD;
-        Wed, 26 May 2021 01:20:16 +0000 (UTC)
+        id S230367AbhEZB2f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 May 2021 21:28:35 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 44E8761284;
+        Wed, 26 May 2021 01:27:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621992016;
-        bh=Le8taBmDkId1qFfhU0v7LOZwz3w7W8jTlYyWpLUSoN0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IXhaILod9te3X5dmSJvIYu5qNtSO4LgOlOGYyjR3CTxkZzaG/Lg2NIx8pjOpgWLjW
-         IhPTJtqLGhxpZzJt+ZEAPDdSCGVn8PCNT/VWLAZ08Gk8wL6FveSEt0ocTUntq1yWaO
-         EYxWvnw9vnqiOt+4ItErm58rpH0f2mrLticoUqUzu3KVub8RBL2bsdDjjz4cZfpMAA
-         0yhmLGRx59witc4eFV57xfbSsUXq3Bqk9dEmCpUGhf9iTIPqhtQofVEE4KHBmxf9FK
-         /5Jfy5IV3yViqyExWFSyuI/xsg9NPX5bj4JpJYk4s63r9/SuVaFP0RKKEwsfYIunFW
-         rnvPTXTDm7h4A==
-Date:   Tue, 25 May 2021 18:20:16 -0700
+        s=k20201202; t=1621992425;
+        bh=fvARVF4RELXwoXeWAEmhnhUdrBnGSI9KrBD8vHFsfGw=;
+        h=Date:From:To:Cc:Subject:From;
+        b=rALu7rtADBhB20rzqs+SyuWjJ1MDrSin4/OadP9qkZuTrC9i3Qooo8UvSjqF3WSxO
+         dBRGKL3Dnq62GEVd24BlxnNtOfWpoyl1K7uJLfwqu2FIgCl8mEq0Xh9os9X6bpSvZh
+         HYg2tj5QHInbWBsdoW0CyaLcUrFzQnVZRI27Td0L2BcxgShsJ1CbX/iCEio5IxlGzp
+         7CLbX5bBu27MjAk6qWSpmYa85dLkUD2YoFF70IJ2C4fT/oMshuk92FUVsBzVlXdiGR
+         UJf3VDwV3mXlSK5fEZtLBnem7APDYG1rI5SFaPaRv3ZGdD6gxzHgZ4xVz3yJGi+iDd
+         JOuYIbUzTzZBw==
+Date:   Tue, 25 May 2021 18:27:04 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 2/3] xfs: kick large ioends to completion workqueue
-Message-ID: <20210526012016.GF202078@locust>
-References: <20210517171722.1266878-1-bfoster@redhat.com>
- <20210517171722.1266878-3-bfoster@redhat.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>
+Subject: patch review scheduling...
+Message-ID: <20210526012704.GH202144@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210517171722.1266878-3-bfoster@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 17, 2021 at 01:17:21PM -0400, Brian Foster wrote:
-> We've had reports of soft lockup warnings in the iomap ioend
-> completion path due to very large bios and/or bio chains. This
-> occurs because ioend completion touches every page associated with
-> the ioend. It generally requires exceedingly large (i.e. multi-GB)
-> bios or bio chains to reproduce a soft lockup warning, but even with
-> smaller ioends there's really no good reason to incur the cost of
-> potential cacheline misses in bio completion context. Divert ioends
-> larger than 1MB to the workqueue so completion occurs in non-atomic
-> context and can reschedule to avoid soft lockup warnings.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+Hello list, frequent-submitters, and usual-reviewer-suspects:
 
-Will give this a spin on the test farm overnight but at least in
-principle this seems fine to me:
+As you've all seen, we have quite a backlog of patch review for 5.14
+already.  The people cc'd on this message are the ones who either (a)
+authored the patches caught in the backlog, (b) commented on previous
+iterations of them, or (c) have participated in a lot of reviews before.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Normally I'd just chug through them all until I get to the end, but even
+after speed-reading through the shorter series (deferred xattrs,
+mmaplock, reflink+dax) I still have 73 to go, which is down from 109
+this morning.
+
+So, time to be a bit more aggressive about planning.  I would love it if
+people dedicated some time this week to reviewing things, but before we
+even get there, I have other questions:
+
+Dave: Between the CIL improvements and the perag refactoring, which
+would you rather get reviewed first?  The CIL improvments patches have
+been circulating longer, but they're more subtle changes.
+
+Dave and Christoph: Can I rely on you both to sort out whatever
+conflicts arose around reworking memory page allocation for xfs_bufs?
+
+Brian: Is it worth the time to iterate more on the ioend thresholds in
+the "iomap: avoid soft lockup warnings" series?  Specifically, I was
+kind of interested in whether or not we should/could scale the max ioend
+size limit with the optimal/max io request size that devices report,
+though I'm getting a feeling that block device limits are all over the
+place maybe we should start with the static limit and iterate up (or
+down?) from there...?
+
+Everyone else: If you'd like to review something, please stake a claim
+and start reading.
+
+Everyone else not on cc: You're included too!  If you like! :)
 
 --D
-
-> ---
->  fs/xfs/xfs_aops.c | 16 ++++++++++++++--
->  1 file changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 84cd6cf46b12..05b1bb146f17 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -30,6 +30,13 @@ XFS_WPC(struct iomap_writepage_ctx *ctx)
->  	return container_of(ctx, struct xfs_writepage_ctx, ctx);
->  }
->  
-> +/*
-> + * Completion touches every page associated with the ioend. Send anything
-> + * larger than 1MB (based on 4k pages) or so to the completion workqueue to
-> + * avoid this work in bio completion context.
-> + */
-> +#define XFS_LARGE_IOEND	(256ULL << PAGE_SHIFT)
-> +
->  /*
->   * Fast and loose check if this write could update the on-disk inode size.
->   */
-> @@ -409,9 +416,14 @@ xfs_prepare_ioend(
->  
->  	memalloc_nofs_restore(nofs_flag);
->  
-> -	/* send ioends that might require a transaction to the completion wq */
-> +	/*
-> +	 * Send ioends that might require a transaction or are large enough that
-> +	 * we don't want to do page processing in bio completion context to the
-> +	 * wq.
-> +	 */
->  	if (xfs_ioend_is_append(ioend) || ioend->io_type == IOMAP_UNWRITTEN ||
-> -	    (ioend->io_flags & IOMAP_F_SHARED))
-> +	    (ioend->io_flags & IOMAP_F_SHARED) ||
-> +	    ioend->io_size >= XFS_LARGE_IOEND)
->  		ioend->io_bio->bi_end_io = xfs_end_bio;
->  	return status;
->  }
-> -- 
-> 2.26.3
-> 
