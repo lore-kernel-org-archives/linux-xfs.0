@@ -2,202 +2,444 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BB09C47088
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 18:13:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41D6CC47082
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 18:19:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 172BF613C5
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 18:13:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14FBD613EC
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 18:19:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234826AbhEZSPJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 May 2021 14:15:09 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:54194 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232870AbhEZSPI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 May 2021 14:15:08 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14QIDYaQ049246;
-        Wed, 26 May 2021 18:13:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=YfFVnD3bVw4NZvIgpcq8IIgGTcBHCEboos2Hc49SqY0=;
- b=xe+uE/6KwUMF9bxSJshcnyG/DIJ5u8Gbtt/X/y5CluB48v+RjxCmRvIsz3f7dlw9GEcq
- vmt9d29W4LreVSCIpypqfcIic0TTI1NMGUEABNoIG6mFpv4lCwNGdNqV1R4a/LGaR37g
- 6GnXqxvpMebz5EpY16MPP6av+dUyy0UnSyQ+4lyuJIivVtNVR+2qKWKypL1arx873gmx
- OC8a+h9qVCew8gV3q8zUBgp84mA062wYPeeGZF4KCAMk/4wHuKbozr1PLIIU/2gRM9t5
- +Zsdi3RQyD+5iO8X9XlDXNhIEECr8tvNVfYNzb8aOP0SKw2I9cfZ+o0ZG1Czkb5EUotO /Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 38q3q91fhd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 26 May 2021 18:13:34 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14QIA7XA049143;
-        Wed, 26 May 2021 18:13:33 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
-        by aserp3030.oracle.com with ESMTP id 38pr0cxfv0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 26 May 2021 18:13:33 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Vh4cGIxxfhzQv+GsXRyeIzNWVTb4B63f2NtTLaUTNLazFISZh2ZE1I/Nr3Sqk9zrZ77vMawWdXOaGNSD4IHzsn0bYyCR59NpSYq4LIv1T87WsMV4uxKG+OTY//bwtstsBkNtIh49Ar0NrsNag6HIK1OAZdPDocL/4U1kKWjXbVG0n3Tz6RBonLUqK5Yxy0K0UFWc+HREQC38aX1AUJphd9qxVeArRKTaohBB962G0NAedBZ8lxPqIY8DIhIxG+fY3G5FnlBriIqAIlNhzw8G/v+56c/8+/twjkNCZgVJFzPlLLdGZUvSX6JYlQ8vtggfGMk/w5z2BC32niDWMNeYTA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YfFVnD3bVw4NZvIgpcq8IIgGTcBHCEboos2Hc49SqY0=;
- b=HJ0ruV9CIEzrsrorgsXYxftVVXKiDvNPU4hiLIoTmEQoV7tFA0zQ89yWJ3UXkD01b1fellAxW/a1GFpueRFm55QYEZxhgMTW3KmW300doPTzPNy1TmTa9Cc3BxQevSmmYPaXgI7CBgPJ8VcDsb3K8cSpXvQzYUnq9TvjTNyMoufwZHUT5Qp7IcoLZvZcmWcXa/sajOMWc5ToUXZuOMD12sevbQYBuUaDngsFoe3O8FURfgnxxFBvDtOPMveCMPJK2FZEyT8Gf149Yyr0hV2YNoijy7fJDSXstoqFvAT3HLx3pTSh+uLbcrkS0yhh7LFEojkeiNuRJIGGN4e6zzqcFA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YfFVnD3bVw4NZvIgpcq8IIgGTcBHCEboos2Hc49SqY0=;
- b=s1lPrHR0MiZu/2f/WXMUzCGgXWonocw5RnbNjQRvxmCR/e3kmH9QRDTZgqRkDAWJ3KPQq7cyFWv4WAoak6iGZW0uVMniG65Z7wvdAzOrmi7XBf1DaDlM0luufMlsceAEPc6/9wO+DmZHJLEmQ03RnUy8F+SkoeVpVM51Iq8dcmY=
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by BYAPR10MB3607.namprd10.prod.outlook.com (2603:10b6:a03:121::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4150.26; Wed, 26 May
- 2021 18:13:31 +0000
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::55a0:c9fb:d00:cd88]) by BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::55a0:c9fb:d00:cd88%3]) with mapi id 15.20.4150.027; Wed, 26 May 2021
- 18:13:31 +0000
-Subject: Re: [PATCH v19 13/14] xfs: Remove default ASSERT in xfs_attr_set_iter
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        id S232320AbhEZSVI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 May 2021 14:21:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33366 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232229AbhEZSVF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 May 2021 14:21:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E6FDA613E5;
+        Wed, 26 May 2021 18:19:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1622053174;
+        bh=zef0XRBGS1Ub14Zz+fMZ2orXoxG+eN8NqZ1mwVRBj7I=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=aeI5ZAV6+d6YohFcjfK1y8idmtX5z9IDFfvAD9fGxfia6rwegoThi8Nj2bWyhtoBW
+         4M5HCdLX5R68vIEWKwHOQdQLOR/0XlUDyZisorGKDdEUSTvRE0JKvQZldyYUBBoy/d
+         3TysSndZO9nZphvwmfxgtMoNp4Ed64PEs5kZ4pGSjOvOJdOfQRsSANJH15ZoOvraii
+         G3INv6L2z2w03lbZQ7maGkN6G6RrOacfZBxuY+ARCk+QMYApBAbfIeou/9MU/8O1gW
+         LTFItzWwOialzsKfX0kte6/pDbZeXXnYxbOv3X3bw6MLfjtt/2FHBGGdAZdC5lMxgK
+         Br7Yqr6ipHILQ==
+Date:   Wed, 26 May 2021 11:19:33 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v19 00/14] Delay Ready Attributes
+Message-ID: <20210526181933.GA202121@locust>
 References: <20210525195504.7332-1-allison.henderson@oracle.com>
- <20210525195504.7332-14-allison.henderson@oracle.com>
- <20210525205242.GN202121@locust>
-From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <3d603e99-3f19-9138-5aa2-a659fd571057@oracle.com>
-Date:   Wed, 26 May 2021 11:13:30 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
-In-Reply-To: <20210525205242.GN202121@locust>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [67.1.210.54]
-X-ClientProxiedBy: SJ0PR03CA0011.namprd03.prod.outlook.com
- (2603:10b6:a03:33a::16) To BY5PR10MB4306.namprd10.prod.outlook.com
- (2603:10b6:a03:211::7)
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.226] (67.1.210.54) by SJ0PR03CA0011.namprd03.prod.outlook.com (2603:10b6:a03:33a::16) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4173.21 via Frontend Transport; Wed, 26 May 2021 18:13:31 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d52b1847-1c55-4a25-8c41-08d92071f823
-X-MS-TrafficTypeDiagnostic: BYAPR10MB3607:
-X-Microsoft-Antispam-PRVS: <BYAPR10MB3607726645BB490997C1602E95249@BYAPR10MB3607.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: FblIX7LzB9/JD5W/cAlBNzWuVsRN8WF0omeALQ0TbO1CcUEgEplGhzPdYN1NoqO1qDvv3Dm+b+2MqBtctW1X9S0qOsVqvawMKPu/2ETUSCvjCHouLkJWL2+d3XlVXkPV5eZyGlODp1mdyLrngIvRM5wsNL6pdpXvUeez8/ze6VP8VuC2eMLxcz0Erw/Ipgv+K7CbgJmL2Zz901bEkbkTSFW/6+LKUVVB64Ja7qzJi7GxzpeyBwTlLne76ce0ma8AdLdvVXWyKn6aUYZJqks9fGWSJEE/L63UyA3fMrSvfszIDb14VW254ZfRELs+HwqhfywbfGBchTg8XbLsSGxbKh9jY9C1pA/1CG1HgviShDmKAre4S/Xk5loP6Q8wxSJvYIbnGVWzs4q/u4buADclic9qt+bgphBHi23gPk8j+7RWDN+mv88rIbwxwHQaix25HiOp5J9gpwJvQWz/x+W5DOfUmrCrCaDU12KT7b1qHlZ+CHDPjR+jLYKexwxUauKb/a234uklglhxPd0Hhn6VpqsfM+/scrr+amorOxOlsoOY0oeuUf/A1wFye8o94W6Tmr8efqTTnqVc40E0+0Y+Z620hCSZwmCfP8pQQ7osRggEVq3oRT28x1tcZkn25da8DK0KbjQtMMs9h6Hjf+6xJ+ya4XTne7x0j9OXdEmMyy8lWy+MQi81zEb9IbwDtPISSSYPwX2BonziLmC48pPi+Q==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(346002)(366004)(396003)(39860400002)(376002)(36756003)(38100700002)(6916009)(83380400001)(38350700002)(16526019)(316002)(16576012)(186003)(52116002)(2906002)(2616005)(6486002)(31686004)(66556008)(44832011)(4326008)(8676002)(8936002)(53546011)(478600001)(31696002)(66476007)(26005)(86362001)(5660300002)(956004)(66946007)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?WlZKTFg5MDE0NnhsZ01SZmpoc1VwOGFWRjhZYnJ2SHZvbzFLenYzK2xybFRF?=
- =?utf-8?B?VXFrcWNRLzlpR1gwbGVtS0JrVkJGZ1hGYlZzT0l1N3FEaGpKbHlHK2dFNlFx?=
- =?utf-8?B?Uks2WWp4ZjdXNkJqaFM2bFc3c1Ixa3UvMzcyMnAwVkNvd1FwYk1GdjFvQVhI?=
- =?utf-8?B?TDhnV2ZNL0pydTU0WFkzZ1Jjc2xXeVlnS2dQUk5sWlNHVkUvTExIYm1qSmhW?=
- =?utf-8?B?SDJDaU5qTzBsQ1VmT2R5cXZ4bFo2dEN3V2JFZ3NEZ0YwUDdJNlRFZGRvODZ0?=
- =?utf-8?B?cVpUWVQyYWQ2MDNOQ2ptL3dmcmlXa1IwelptdG9OdDRFbDJsbHFOdzZaUk5S?=
- =?utf-8?B?ZVZGSmtubWF2WDV5Y05QZ1pnVjhkenUydEhpWTBWWWtQQlJBQXZRYzlBaDRT?=
- =?utf-8?B?b3ZlRkEzb3ppSkZCSFFCTU5rcGRHRG51S1BpY3VwOTRFd2tYM3pBdzVRdjlB?=
- =?utf-8?B?Z08ybXlQQTIxQ1A1MlZCODVsbTd0OHUvYzh5bVdDaERPSyswTEx4bmFVWWlU?=
- =?utf-8?B?WEtpelA0alF3bVZPUCtOdDIzZ0RCY2lkd1hQZFB1dE93dXd1LzA5U2NWMHox?=
- =?utf-8?B?VHY4RVNFeGpKNmZ3RWJtZVlmdDFJaXdDTE50SWZ3MUswcW10MHhHOFFKTTVG?=
- =?utf-8?B?UmxiWFYyRFlmbm00SVphVStHZjRnTmhRVHRmYWc3bTBybyt2bVdBTFAvamhs?=
- =?utf-8?B?Zmk1UHJNK1dpL2ZhUy9wNUQvdkF1SXo2RGpkb0luRTF6Qis1QTdLMVk4Qlhx?=
- =?utf-8?B?S2g4cVg1Y0puR25aVXRVa0szcEtJRHEvM1AzdW1kYVgzdXFjUTlEelNKVlJN?=
- =?utf-8?B?WDBJYzN1MlA1UUxoV0Zram9EUXM1SndmL21acmhnalBNNXdveWpvTmduTmNH?=
- =?utf-8?B?Q3ZzSGhLRUZjZ3NHcWk2QS9nZWpvQ1M5RytZMVdKTDNpRGwya2Z6ZFJwQ3NL?=
- =?utf-8?B?Yk9EcHUzU2ZNNkhvUFRsQ0FDeHRUcmZWRTRCMzJtcTlYTFNXRXRldUhVdzlv?=
- =?utf-8?B?Q01FNjUvWSsybzl6eHp4ZjdEL2JkNW1ORE5XVE02RDd5MitZTlcyUXJGQWxt?=
- =?utf-8?B?VGFtK3hHbDFpdkR0NU5rSkFTTmhBUnh6d3VUYU14N2dYOXV0WHBXZXJjcEVJ?=
- =?utf-8?B?Z01mWi9EUnR2eXVqL0JKdk9NUHdUeTRXMmhqK3pYcGhpQ2R1TCtIZDNtVUZx?=
- =?utf-8?B?OHJjTStQQVN3ZUNYenZvS2drYTh3UjRZcGVGQnFmZm9uKzAxQnBnZ3Q0U1Nn?=
- =?utf-8?B?MEw2ZXpHbXFPK05qbGtEVE5NRjk3a29Ya3RtN0ZHSXZBeXJkZTJDRXZGUnBk?=
- =?utf-8?B?ZGxMMndsYks3YklCS3hpL1oxNDZzNVNwa2cwT2JYTUswbmpWV1VnU1llc1ov?=
- =?utf-8?B?dzlFYTlHd29IZ3JJUEpiUjVCK0k5a3ZJOTlJSytocEdKUVdjTmFTanEwaEJn?=
- =?utf-8?B?aFByVy9CZFZjMG42dWtyS3FubmF4Y1llQS9LUHd1bEFqR1RvK1o4dEFXb1Vu?=
- =?utf-8?B?L21kV2dGQ1JEV0lTcjNLYmlUSzhVbkhmY3ZORkp3ZlZrTkt4ZFpEZXhDOCtT?=
- =?utf-8?B?dDlWMG9LQ1hJZHc2dWpPNkpRSFRkcXBuV0x5Vkw1N2oyL3NxWGNtMTdKY2t4?=
- =?utf-8?B?NGVoKzdwOExJL2tjYkMzWjQyK0ZFYlJzbElqSUZ2V3NzcnRVd2RzamtTZ3hB?=
- =?utf-8?B?ZGtveEZ3d2duNlE2YkE4emluUVBxZ3oxdmtzVHFKeDVjS2xOZXMzZWc1RGs3?=
- =?utf-8?Q?3S0iy+RT4j7eTvlRqKfJU9qf6bsTz1wmEqsu/jH?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d52b1847-1c55-4a25-8c41-08d92071f823
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 May 2021 18:13:31.8144
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qorR6DqYlp7E5lKVq3NtbwuUEBHPuko1xMcXE9sLAy3dH8KfSOTRVpQRAF599MrAG0Q5GbE/KLFpi8NdM/rC83coqwsTy/3a05m9IbCmtsE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3607
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9996 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 spamscore=0
- mlxlogscore=999 malwarescore=0 adultscore=0 phishscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2105260123
-X-Proofpoint-GUID: J6tISD73Ea7Tt1zui8z8ONt4N0nVvyYk
-X-Proofpoint-ORIG-GUID: J6tISD73Ea7Tt1zui8z8ONt4N0nVvyYk
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9996 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 clxscore=1015
- malwarescore=0 bulkscore=0 impostorscore=0 phishscore=0 spamscore=0
- adultscore=0 priorityscore=1501 mlxlogscore=999 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2105260124
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210525195504.7332-1-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 5/25/21 1:52 PM, Darrick J. Wong wrote:
-> On Tue, May 25, 2021 at 12:55:03PM -0700, Allison Henderson wrote:
->> This ASSERT checks for the state value of RM_SHRINK in the set path.
->> Which would be invalid, and should never happen.  This change is being
->> set aside from the rest of the set for further discussion
->>
->> Suggested-by: Darrick J. Wong <djwong@kernel.org>
->> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr.c | 1 -
->>   1 file changed, 1 deletion(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index 32d451b..7294a2e 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -612,7 +612,6 @@ xfs_attr_set_iter(
->>   		error = xfs_attr_node_addname_clear_incomplete(dac);
->>   		break;
->>   	default:
->> -		ASSERT(dac->dela_state != XFS_DAS_RM_SHRINK);
+On Tue, May 25, 2021 at 12:54:50PM -0700, Allison Henderson wrote:
+> Hi all,
 > 
-> ASSERT(0); ?
-> 
-> AFAICT the switch statement covers all the states mentioned in the state
-> diagram for attr setting, so in theory it should be impossible to land
-> in this state, correct?
-Yes, that's correct, so ASSERT(0); should work too.  I am fine with this 
-change if others are.
+> This set is a subset of a larger series for Dealyed Attributes. Which is a
+> subset of a yet larger series for parent pointers. Delayed attributes allow
+> attribute operations (set and remove) to be logged and committed in the same
+> way that other delayed operations do. This allows more complex operations (like
+> parent pointers) to be broken up into multiple smaller transactions. To do
+> this, the existing attr operations must be modified to operate as a delayed
+> operation.  This means that they cannot roll, commit, or finish transactions.
+> Instead, they return -EAGAIN to allow the calling function to handle the
+> transaction.  In this series, we focus on only the delayed attribute portion.
+> We will introduce parent pointers in a later set.
 
-Allison
+Somewhere in here, this introduced a regression that I can reproduce
+pretty easily when running:
 
-> 
-> --D
-> 
->>   		break;
->>   	}
->>   out:
->> -- 
->> 2.7.4
->>
+# FSTYP=xfs ./check -overlay generic/020
+
+[ 1093.136172] XFS: Assertion failed: args->rmtblkno == 0, file: fs/xfs/libxfs/xfs_attr.c, line: 1434
+[ 1093.139776] ------------[ cut here ]------------
+[ 1093.141590] WARNING: CPU: 3 PID: 12697 at fs/xfs/xfs_message.c:112 assfail+0x3c/0x40 [xfs]
+[ 1093.144841] Modules linked in: xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set ip_set_hash_mac ip_set nfnetlink bfq ip6table_filter ip6_tables iptable_filter pvpanic_mmio pvpanic sch_fq_codel ip_tables x_tables overlay nfsv4 af_packet [last unloaded: xfs]
+[ 1093.153636] CPU: 3 PID: 12697 Comm: attr Tainted: G        W         5.13.0-rc2-djwx #rc2
+[ 1093.156094] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
+[ 1093.158530] RIP: 0010:assfail+0x3c/0x40 [xfs]
+[ 1093.159987] Code: 48 a2 3f a0 e8 81 f9 ff ff 8a 1d 7b e9 0b 00 80 fb 01 76 0f 0f b6 f3 48 c7 c7 a0 57 49 a0 e8 db c9 00 e1 80 e3 01 74 02 0f 0b <0f> 0b 5b c3 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c 24 48 89 44 24
+[ 1093.164680] RSP: 0018:ffffc90001a0fa90 EFLAGS: 00010246
+[ 1093.166021] RAX: 0000000000000000 RBX: ffffc90001a0fa00 RCX: 0000000000000000
+[ 1093.167761] RDX: 00000000ffffffc0 RSI: 0000000000000000 RDI: ffffffffa03ea6d5
+[ 1093.169461] RBP: ffff88804b6c4d20 R08: 0000000000000000 R09: 000000000000000a
+[ 1093.171095] R10: 000000000000000a R11: f000000000000000 R12: 0000000000000000
+[ 1093.172687] R13: ffffc90001a0fb70 R14: ffff88800abe4c00 R15: 0000000000000000
+[ 1093.174267] FS:  00007f8c3494f740(0000) GS:ffff88807e100000(0000) knlGS:0000000000000000
+[ 1093.176031] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1093.177250] CR2: 00007f8c34a57710 CR3: 000000004b455005 CR4: 00000000001706a0
+[ 1093.178759] Call Trace:
+[ 1093.179328]  xfs_attr_remove_iter+0x25d/0x270 [xfs]
+[ 1093.180387]  xfs_attr_set+0x2ff/0x430 [xfs]
+[ 1093.181340]  xfs_xattr_set+0x89/0xd0 [xfs]
+[ 1093.182269]  __vfs_removexattr+0x52/0x70
+[ 1093.183062]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.183957]  vfs_removexattr+0x56/0x100
+[ 1093.184729]  ovl_xattr_set+0x131/0x1d0 [overlay]
+[ 1093.185654]  __vfs_removexattr+0x52/0x70
+[ 1093.186419]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.187300]  vfs_removexattr+0x56/0x100
+[ 1093.188028]  removexattr+0x58/0x90
+[ 1093.188672]  ? __check_object_size+0xc8/0x280
+[ 1093.189513]  ? strncpy_from_user+0x47/0x180
+[ 1093.190302]  ? preempt_count_add+0x50/0xa0
+[ 1093.191119]  ? __mnt_want_write+0x65/0x90
+[ 1093.191867]  path_removexattr+0x9e/0xc0
+[ 1093.192584]  __x64_sys_lremovexattr+0x14/0x20
+[ 1093.193395]  do_syscall_64+0x3a/0x70
+[ 1093.194067]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 1093.195017] RIP: 0033:0x7f8c34a7207b
+[ 1093.195713] Code: 73 01 c3 48 8b 0d 15 ae 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 c6 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d e5 ad 0c 00 f7 d8 64 89 01 48
+[ 1093.199072] RSP: 002b:00007ffc9f3248f8 EFLAGS: 00000202 ORIG_RAX: 00000000000000c6
+[ 1093.200454] RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007f8c34a7207b
+[ 1093.201776] RDX: 0000000000000072 RSI: 00007ffc9f324910 RDI: 00007ffc9f3261a0
+[ 1093.203121] RBP: 00007ffc9f326196 R08: 0000000000000000 R09: 00007ffc9f324910
+[ 1093.204441] R10: 00007f8c34b3dbe0 R11: 0000000000000202 R12: 00007ffc9f3261a0
+[ 1093.205754] R13: 00007ffc9f324910 R14: 0000000000000000 R15: 0000000000000001
+[ 1093.207095] ---[ end trace d5f6b816d902441c ]---
+[ 1093.208039] XFS: Assertion failed: bp->b_transp == tp, file: fs/xfs/xfs_trans_buf.c, line: 450
+[ 1093.209609] ------------[ cut here ]------------
+[ 1093.210483] WARNING: CPU: 3 PID: 12697 at fs/xfs/xfs_message.c:112 assfail+0x3c/0x40 [xfs]
+[ 1093.212095] Modules linked in: xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set ip_set_hash_mac ip_set nfnetlink bfq ip6table_filter ip6_tables iptable_filter pvpanic_mmio pvpanic sch_fq_codel ip_tables x_tables overlay nfsv4 af_packet [last unloaded: xfs]
+[ 1093.217174] CPU: 3 PID: 12697 Comm: attr Tainted: G        W         5.13.0-rc2-djwx #rc2
+[ 1093.218658] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
+[ 1093.220280] RIP: 0010:assfail+0x3c/0x40 [xfs]
+[ 1093.221204] Code: 48 a2 3f a0 e8 81 f9 ff ff 8a 1d 7b e9 0b 00 80 fb 01 76 0f 0f b6 f3 48 c7 c7 a0 57 49 a0 e8 db c9 00 e1 80 e3 01 74 02 0f 0b <0f> 0b 5b c3 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c 24 48 89 44 24
+[ 1093.224534] RSP: 0018:ffffc90001a0f988 EFLAGS: 00010246
+[ 1093.225502] RAX: 0000000000000000 RBX: ffff88804e004700 RCX: 0000000000000000
+[ 1093.226823] RDX: 00000000ffffffc0 RSI: 0000000000000000 RDI: ffffffffa03ea6d5
+[ 1093.228106] RBP: ffff88804e9fee00 R08: 0000000000000000 R09: 000000000000000a
+[ 1093.228952] R10: 000000000000000a R11: f000000000000000 R12: ffff888042f11740
+[ 1093.229726] R13: 0000000000000fdc R14: ffff888042f11740 R15: ffff88804e004738
+[ 1093.230500] FS:  00007f8c3494f740(0000) GS:ffff88807e100000(0000) knlGS:0000000000000000
+[ 1093.231391] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1093.232033] CR2: 00007f8c34a57710 CR3: 000000004b455005 CR4: 00000000001706a0
+[ 1093.232811] Call Trace:
+[ 1093.233115]  xfs_trans_dirty_buf+0xbe/0x120 [xfs]
+[ 1093.233742]  xfs_trans_log_buf+0x4c/0x100 [xfs]
+[ 1093.234349]  xfs_attr3_leaf_remove+0x2b5/0xc30 [xfs]
+[ 1093.235001]  ? xfs_trans_add_item+0x6b/0x180 [xfs]
+[ 1093.235628]  xfs_attr_node_removename+0x3d/0x90 [xfs]
+[ 1093.236273]  xfs_attr_remove_iter+0x50/0x270 [xfs]
+[ 1093.236891]  xfs_attr_set+0x2ff/0x430 [xfs]
+[ 1093.237445]  xfs_xattr_set+0x89/0xd0 [xfs]
+[ 1093.238010]  __vfs_removexattr+0x52/0x70
+[ 1093.238460]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.239009]  vfs_removexattr+0x56/0x100
+[ 1093.239452]  ovl_xattr_set+0x131/0x1d0 [overlay]
+[ 1093.239979]  __vfs_removexattr+0x52/0x70
+[ 1093.240430]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.240949]  vfs_removexattr+0x56/0x100
+[ 1093.241389]  removexattr+0x58/0x90
+[ 1093.241786]  ? __check_object_size+0xc8/0x280
+[ 1093.242286]  ? strncpy_from_user+0x47/0x180
+[ 1093.242780]  ? preempt_count_add+0x50/0xa0
+[ 1093.243252]  ? __mnt_want_write+0x65/0x90
+[ 1093.243708]  path_removexattr+0x9e/0xc0
+[ 1093.244153]  __x64_sys_lremovexattr+0x14/0x20
+[ 1093.244647]  do_syscall_64+0x3a/0x70
+[ 1093.245064]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 1093.245630] RIP: 0033:0x7f8c34a7207b
+[ 1093.246047] Code: 73 01 c3 48 8b 0d 15 ae 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 c6 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d e5 ad 0c 00 f7 d8 64 89 01 48
+[ 1093.248025] RSP: 002b:00007ffc9f3248f8 EFLAGS: 00000202 ORIG_RAX: 00000000000000c6
+[ 1093.248843] RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007f8c34a7207b
+[ 1093.249621] RDX: 0000000000000072 RSI: 00007ffc9f324910 RDI: 00007ffc9f3261a0
+[ 1093.250395] RBP: 00007ffc9f326196 R08: 0000000000000000 R09: 00007ffc9f324910
+[ 1093.251191] R10: 00007f8c34b3dbe0 R11: 0000000000000202 R12: 00007ffc9f3261a0
+[ 1093.251976] R13: 00007ffc9f324910 R14: 0000000000000000 R15: 0000000000000001
+[ 1093.252753] ---[ end trace d5f6b816d902441d ]---
+[ 1093.253282] XFS: Assertion failed: bp->b_transp == tp, file: fs/xfs/xfs_trans_buf.c, line: 450
+[ 1093.254223] ------------[ cut here ]------------
+[ 1093.254758] WARNING: CPU: 3 PID: 12697 at fs/xfs/xfs_message.c:112 assfail+0x3c/0x40 [xfs]
+[ 1093.255762] Modules linked in: xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set ip_set_hash_mac ip_set nfnetlink bfq ip6table_filter ip6_tables iptable_filter pvpanic_mmio pvpanic sch_fq_codel ip_tables x_tables overlay nfsv4 af_packet [last unloaded: xfs]
+[ 1093.258748] CPU: 3 PID: 12697 Comm: attr Tainted: G        W         5.13.0-rc2-djwx #rc2
+[ 1093.259642] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
+[ 1093.260604] RIP: 0010:assfail+0x3c/0x40 [xfs]
+[ 1093.261200] Code: 48 a2 3f a0 e8 81 f9 ff ff 8a 1d 7b e9 0b 00 80 fb 01 76 0f 0f b6 f3 48 c7 c7 a0 57 49 a0 e8 db c9 00 e1 80 e3 01 74 02 0f 0b <0f> 0b 5b c3 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c 24 48 89 44 24
+[ 1093.263184] RSP: 0018:ffffc90001a0f988 EFLAGS: 00010246
+[ 1093.263763] RAX: 0000000000000000 RBX: ffff88804e004700 RCX: 0000000000000000
+[ 1093.264536] RDX: 00000000ffffffc0 RSI: 0000000000000000 RDI: ffffffffa03ea6d5
+[ 1093.265315] RBP: ffff88804e9fee00 R08: 0000000000000000 R09: 000000000000000a
+[ 1093.266116] R10: 000000000000000a R11: f000000000000000 R12: ffff888042f11740
+[ 1093.266907] R13: 0000000000000058 R14: ffff888042f11740 R15: ffff88804e004738
+[ 1093.267675] FS:  00007f8c3494f740(0000) GS:ffff88807e100000(0000) knlGS:0000000000000000
+[ 1093.268544] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1093.269178] CR2: 00007f8c34a57710 CR3: 000000004b455005 CR4: 00000000001706a0
+[ 1093.269949] Call Trace:
+[ 1093.270244]  xfs_trans_dirty_buf+0xbe/0x120 [xfs]
+[ 1093.270888]  xfs_trans_log_buf+0x4c/0x100 [xfs]
+[ 1093.271490]  xfs_attr3_leaf_remove+0x2ef/0xc30 [xfs]
+[ 1093.272129]  ? xfs_trans_add_item+0x6b/0x180 [xfs]
+[ 1093.272759]  xfs_attr_node_removename+0x3d/0x90 [xfs]
+[ 1093.273400]  xfs_attr_remove_iter+0x50/0x270 [xfs]
+[ 1093.274015]  xfs_attr_set+0x2ff/0x430 [xfs]
+[ 1093.274562]  xfs_xattr_set+0x89/0xd0 [xfs]
+[ 1093.275139]  __vfs_removexattr+0x52/0x70
+[ 1093.275592]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.276117]  vfs_removexattr+0x56/0x100
+[ 1093.276558]  ovl_xattr_set+0x131/0x1d0 [overlay]
+[ 1093.277085]  __vfs_removexattr+0x52/0x70
+[ 1093.277534]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.278063]  vfs_removexattr+0x56/0x100
+[ 1093.278506]  removexattr+0x58/0x90
+[ 1093.278934]  ? __check_object_size+0xc8/0x280
+[ 1093.279435]  ? strncpy_from_user+0x47/0x180
+[ 1093.279919]  ? preempt_count_add+0x50/0xa0
+[ 1093.280384]  ? __mnt_want_write+0x65/0x90
+[ 1093.280843]  path_removexattr+0x9e/0xc0
+[ 1093.281290]  __x64_sys_lremovexattr+0x14/0x20
+[ 1093.281788]  do_syscall_64+0x3a/0x70
+[ 1093.282208]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 1093.282792] RIP: 0033:0x7f8c34a7207b
+[ 1093.283216] Code: 73 01 c3 48 8b 0d 15 ae 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 c6 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d e5 ad 0c 00 f7 d8 64 89 01 48
+[ 1093.285191] RSP: 002b:00007ffc9f3248f8 EFLAGS: 00000202 ORIG_RAX: 00000000000000c6
+[ 1093.286027] RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007f8c34a7207b
+[ 1093.286822] RDX: 0000000000000072 RSI: 00007ffc9f324910 RDI: 00007ffc9f3261a0
+[ 1093.287614] RBP: 00007ffc9f326196 R08: 0000000000000000 R09: 00007ffc9f324910
+[ 1093.288396] R10: 00007f8c34b3dbe0 R11: 0000000000000202 R12: 00007ffc9f3261a0
+[ 1093.289174] R13: 00007ffc9f324910 R14: 0000000000000000 R15: 0000000000000001
+[ 1093.289956] ---[ end trace d5f6b816d902441e ]---
+[ 1093.290487] XFS: Assertion failed: bp->b_transp == tp, file: fs/xfs/xfs_trans_buf.c, line: 450
+[ 1093.291444] ------------[ cut here ]------------
+[ 1093.291980] WARNING: CPU: 3 PID: 12697 at fs/xfs/xfs_message.c:112 assfail+0x3c/0x40 [xfs]
+[ 1093.292978] Modules linked in: xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set ip_set_hash_mac ip_set nfnetlink bfq ip6table_filter ip6_tables iptable_filter pvpanic_mmio pvpanic sch_fq_codel ip_tables x_tables overlay nfsv4 af_packet [last unloaded: xfs]
+[ 1093.295967] CPU: 3 PID: 12697 Comm: attr Tainted: G        W         5.13.0-rc2-djwx #rc2
+[ 1093.296855] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
+[ 1093.297814] RIP: 0010:assfail+0x3c/0x40 [xfs]
+[ 1093.298412] Code: 48 a2 3f a0 e8 81 f9 ff ff 8a 1d 7b e9 0b 00 80 fb 01 76 0f 0f b6 f3 48 c7 c7 a0 57 49 a0 e8 db c9 00 e1 80 e3 01 74 02 0f 0b <0f> 0b 5b c3 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c 24 48 89 44 24
+[ 1093.300398] RSP: 0018:ffffc90001a0f988 EFLAGS: 00010246
+[ 1093.300987] RAX: 0000000000000000 RBX: ffff88804e004700 RCX: 0000000000000000
+[ 1093.301761] RDX: 00000000ffffffc0 RSI: 0000000000000000 RDI: ffffffffa03ea6d5
+[ 1093.302541] RBP: ffff88804e9fee00 R08: 0000000000000000 R09: 000000000000000a
+[ 1093.303328] R10: 000000000000000a R11: f000000000000000 R12: ffff888042f11740
+[ 1093.304107] R13: 0000000000000000 R14: ffff888042f11740 R15: ffff88804e004738
+[ 1093.304878] FS:  00007f8c3494f740(0000) GS:ffff88807e100000(0000) knlGS:0000000000000000
+[ 1093.305743] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1093.306377] CR2: 00007f8c34a57710 CR3: 000000004b455005 CR4: 00000000001706a0
+[ 1093.307172] Call Trace:
+[ 1093.307470]  xfs_trans_dirty_buf+0xbe/0x120 [xfs]
+[ 1093.308100]  xfs_trans_log_buf+0x4c/0x100 [xfs]
+[ 1093.308700]  xfs_attr3_leaf_remove+0x3b6/0xc30 [xfs]
+[ 1093.309333]  ? xfs_trans_add_item+0x6b/0x180 [xfs]
+[ 1093.309971]  xfs_attr_node_removename+0x3d/0x90 [xfs]
+[ 1093.310614]  xfs_attr_remove_iter+0x50/0x270 [xfs]
+[ 1093.311254]  xfs_attr_set+0x2ff/0x430 [xfs]
+[ 1093.311809]  xfs_xattr_set+0x89/0xd0 [xfs]
+[ 1093.312381]  __vfs_removexattr+0x52/0x70
+[ 1093.312836]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.313367]  vfs_removexattr+0x56/0x100
+[ 1093.313813]  ovl_xattr_set+0x131/0x1d0 [overlay]
+[ 1093.314350]  __vfs_removexattr+0x52/0x70
+[ 1093.314820]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.315352]  vfs_removexattr+0x56/0x100
+[ 1093.315799]  removexattr+0x58/0x90
+[ 1093.316204]  ? __check_object_size+0xc8/0x280
+[ 1093.316701]  ? strncpy_from_user+0x47/0x180
+[ 1093.317187]  ? preempt_count_add+0x50/0xa0
+[ 1093.317656]  ? __mnt_want_write+0x65/0x90
+[ 1093.318124]  path_removexattr+0x9e/0xc0
+[ 1093.318569]  __x64_sys_lremovexattr+0x14/0x20
+[ 1093.319083]  do_syscall_64+0x3a/0x70
+[ 1093.319502]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 1093.320075] RIP: 0033:0x7f8c34a7207b
+[ 1093.320491] Code: 73 01 c3 48 8b 0d 15 ae 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 c6 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d e5 ad 0c 00 f7 d8 64 89 01 48
+[ 1093.322466] RSP: 002b:00007ffc9f3248f8 EFLAGS: 00000202 ORIG_RAX: 00000000000000c6
+[ 1093.323307] RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007f8c34a7207b
+[ 1093.324092] RDX: 0000000000000072 RSI: 00007ffc9f324910 RDI: 00007ffc9f3261a0
+[ 1093.324864] RBP: 00007ffc9f326196 R08: 0000000000000000 R09: 00007ffc9f324910
+[ 1093.325647] R10: 00007f8c34b3dbe0 R11: 0000000000000202 R12: 00007ffc9f3261a0
+[ 1093.326426] R13: 00007ffc9f324910 R14: 0000000000000000 R15: 0000000000000001
+[ 1093.327224] ---[ end trace d5f6b816d902441f ]---
+[ 1093.327751] XFS: Assertion failed: !(bip->bli_flags & XFS_BLI_LOGGED), file: fs/xfs/xfs_trans_buf.c, line: 79
+[ 1093.328827] ------------[ cut here ]------------
+[ 1093.329352] WARNING: CPU: 3 PID: 12697 at fs/xfs/xfs_message.c:112 assfail+0x3c/0x40 [xfs]
+[ 1093.330350] Modules linked in: xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set ip_set_hash_mac ip_set nfnetlink bfq ip6table_filter ip6_tables iptable_filter pvpanic_mmio pvpanic sch_fq_codel ip_tables x_tables overlay nfsv4 af_packet [last unloaded: xfs]
+[ 1093.333309] CPU: 3 PID: 12697 Comm: attr Tainted: G        W         5.13.0-rc2-djwx #rc2
+[ 1093.334209] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
+[ 1093.335181] RIP: 0010:assfail+0x3c/0x40 [xfs]
+[ 1093.335774] Code: 48 a2 3f a0 e8 81 f9 ff ff 8a 1d 7b e9 0b 00 80 fb 01 76 0f 0f b6 f3 48 c7 c7 a0 57 49 a0 e8 db c9 00 e1 80 e3 01 74 02 0f 0b <0f> 0b 5b c3 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c 24 48 89 44 24
+[ 1093.337749] RSP: 0018:ffffc90001a0f930 EFLAGS: 00010246
+[ 1093.338337] RAX: 0000000000000000 RBX: ffff88804e9fee00 RCX: 0000000000000000
+[ 1093.339134] RDX: 00000000ffffffc0 RSI: 0000000000000000 RDI: ffffffffa03ea6d5
+[ 1093.339920] RBP: ffff88804e004738 R08: 0000000000000000 R09: 000000000000000a
+[ 1093.340697] R10: 000000000000000a R11: f000000000000000 R12: ffff888042f11740
+[ 1093.341477] R13: 0000000000000001 R14: ffffc90001a0f9e0 R15: ffffffffa03daaa0
+[ 1093.342258] FS:  00007f8c3494f740(0000) GS:ffff88807e100000(0000) knlGS:0000000000000000
+[ 1093.343144] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1093.343779] CR2: 00007f8c34a57710 CR3: 000000004b455005 CR4: 00000000001706a0
+[ 1093.344561] Call Trace:
+[ 1093.344857]  _xfs_trans_bjoin+0x100/0x110 [xfs]
+[ 1093.345469]  xfs_trans_read_buf_map+0x22b/0x4a0 [xfs]
+[ 1093.346130]  xfs_da_read_buf+0xce/0x120 [xfs]
+[ 1093.346714]  xfs_attr3_leaf_read+0x26/0x60 [xfs]
+[ 1093.347313]  ? xfs_attr_is_leaf+0x76/0x90 [xfs]
+[ 1093.347901]  xfs_attr_node_shrink+0x54/0x100 [xfs]
+[ 1093.348514]  xfs_attr_remove_iter+0xa9/0x270 [xfs]
+[ 1093.349129]  xfs_attr_set+0x2ff/0x430 [xfs]
+[ 1093.349675]  xfs_xattr_set+0x89/0xd0 [xfs]
+[ 1093.350237]  __vfs_removexattr+0x52/0x70
+[ 1093.350684]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.351228]  vfs_removexattr+0x56/0x100
+[ 1093.351667]  ovl_xattr_set+0x131/0x1d0 [overlay]
+[ 1093.352194]  __vfs_removexattr+0x52/0x70
+[ 1093.352642]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.353165]  vfs_removexattr+0x56/0x100
+[ 1093.353603]  removexattr+0x58/0x90
+[ 1093.354003]  ? __check_object_size+0xc8/0x280
+[ 1093.354493]  ? strncpy_from_user+0x47/0x180
+[ 1093.354983]  ? preempt_count_add+0x50/0xa0
+[ 1093.355452]  ? __mnt_want_write+0x65/0x90
+[ 1093.355914]  path_removexattr+0x9e/0xc0
+[ 1093.356353]  __x64_sys_lremovexattr+0x14/0x20
+[ 1093.356840]  do_syscall_64+0x3a/0x70
+[ 1093.357258]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 1093.357819] RIP: 0033:0x7f8c34a7207b
+[ 1093.358236] Code: 73 01 c3 48 8b 0d 15 ae 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 c6 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d e5 ad 0c 00 f7 d8 64 89 01 48
+[ 1093.360210] RSP: 002b:00007ffc9f3248f8 EFLAGS: 00000202 ORIG_RAX: 00000000000000c6
+[ 1093.361031] RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007f8c34a7207b
+[ 1093.361800] RDX: 0000000000000072 RSI: 00007ffc9f324910 RDI: 00007ffc9f3261a0
+[ 1093.362574] RBP: 00007ffc9f326196 R08: 0000000000000000 R09: 00007ffc9f324910
+[ 1093.363361] R10: 00007f8c34b3dbe0 R11: 0000000000000202 R12: 00007ffc9f3261a0
+[ 1093.364137] R13: 00007ffc9f324910 R14: 0000000000000000 R15: 0000000000000001
+[ 1093.364912] ---[ end trace d5f6b816d9024420 ]---
+[ 1093.365425] XFS: Assertion failed: !test_bit(XFS_LI_DIRTY, &lip->li_flags), file: fs/xfs/xfs_trans.c, line: 657
+[ 1093.366508] ------------[ cut here ]------------
+[ 1093.367045] WARNING: CPU: 3 PID: 12697 at fs/xfs/xfs_message.c:112 assfail+0x3c/0x40 [xfs]
+[ 1093.368050] Modules linked in: xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set ip_set_hash_mac ip_set nfnetlink bfq ip6table_filter ip6_tables iptable_filter pvpanic_mmio pvpanic sch_fq_codel ip_tables x_tables overlay nfsv4 af_packet [last unloaded: xfs]
+[ 1093.371056] CPU: 3 PID: 12697 Comm: attr Tainted: G        W         5.13.0-rc2-djwx #rc2
+[ 1093.371941] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
+[ 1093.372891] RIP: 0010:assfail+0x3c/0x40 [xfs]
+[ 1093.373477] Code: 48 a2 3f a0 e8 81 f9 ff ff 8a 1d 7b e9 0b 00 80 fb 01 76 0f 0f b6 f3 48 c7 c7 a0 57 49 a0 e8 db c9 00 e1 80 e3 01 74 02 0f 0b <0f> 0b 5b c3 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c 24 48 89 44 24
+[ 1093.375457] RSP: 0018:ffffc90001a0f900 EFLAGS: 00010246
+[ 1093.376042] RAX: 0000000000000000 RBX: ffff88804e004700 RCX: 0000000000000000
+[ 1093.376811] RDX: 00000000ffffffc0 RSI: 0000000000000000 RDI: ffffffffa03ea6d5
+[ 1093.377584] RBP: ffff888042f11740 R08: 0000000000000000 R09: 000000000000000a
+[ 1093.378361] R10: 000000000000000a R11: f000000000000000 R12: ffff88804e004748
+[ 1093.379147] R13: 0000000000000001 R14: ffffc90001a0f9e0 R15: ffffffffa03daaa0
+[ 1093.379926] FS:  00007f8c3494f740(0000) GS:ffff88807e100000(0000) knlGS:0000000000000000
+[ 1093.380796] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1093.381427] CR2: 00007f8c34a57710 CR3: 000000004b455005 CR4: 00000000001706a0
+[ 1093.382201] Call Trace:
+[ 1093.382497]  xfs_trans_add_item+0x171/0x180 [xfs]
+[ 1093.383137]  _xfs_trans_bjoin+0x72/0x110 [xfs]
+[ 1093.383732]  xfs_trans_read_buf_map+0x22b/0x4a0 [xfs]
+[ 1093.384395]  xfs_da_read_buf+0xce/0x120 [xfs]
+[ 1093.384973]  xfs_attr3_leaf_read+0x26/0x60 [xfs]
+[ 1093.385567]  ? xfs_attr_is_leaf+0x76/0x90 [xfs]
+[ 1093.386162]  xfs_attr_node_shrink+0x54/0x100 [xfs]
+[ 1093.386789]  xfs_attr_remove_iter+0xa9/0x270 [xfs]
+[ 1093.387402]  xfs_attr_set+0x2ff/0x430 [xfs]
+[ 1093.387953]  xfs_xattr_set+0x89/0xd0 [xfs]
+[ 1093.388507]  __vfs_removexattr+0x52/0x70
+[ 1093.388959]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.389476]  vfs_removexattr+0x56/0x100
+[ 1093.389919]  ovl_xattr_set+0x131/0x1d0 [overlay]
+[ 1093.390437]  __vfs_removexattr+0x52/0x70
+[ 1093.390902]  __vfs_removexattr_locked+0xb8/0x140
+[ 1093.391420]  vfs_removexattr+0x56/0x100
+[ 1093.391856]  removexattr+0x58/0x90
+[ 1093.392257]  ? __check_object_size+0xc8/0x280
+[ 1093.392747]  ? strncpy_from_user+0x47/0x180
+[ 1093.393223]  ? preempt_count_add+0x50/0xa0
+[ 1093.393684]  ? __mnt_want_write+0x65/0x90
+[ 1093.394145]  path_removexattr+0x9e/0xc0
+[ 1093.394582]  __x64_sys_lremovexattr+0x14/0x20
+[ 1093.395095]  do_syscall_64+0x3a/0x70
+[ 1093.395508]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[ 1093.396072] RIP: 0033:0x7f8c34a7207b
+[ 1093.396478] Code: 73 01 c3 48 8b 0d 15 ae 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 c6 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d e5 ad 0c 00 f7 d8 64 89 01 48
+[ 1093.398426] RSP: 002b:00007ffc9f3248f8 EFLAGS: 00000202 ORIG_RAX: 00000000000000c6
+[ 1093.399254] RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007f8c34a7207b
+[ 1093.400032] RDX: 0000000000000072 RSI: 00007ffc9f324910 RDI: 00007ffc9f3261a0
+[ 1093.400800] RBP: 00007ffc9f326196 R08: 0000000000000000 R09: 00007ffc9f324910
+[ 1093.401571] R10: 00007f8c34b3dbe0 R11: 0000000000000202 R12: 00007ffc9f3261a0
+[ 1093.402343] R13: 00007ffc9f324910 R14: 0000000000000000 R15: 0000000000000001
+[ 1093.403130] ---[ end trace d5f6b816d9024421 ]---
+[ 1093.565232] XFS (sdc): Unmounting Filesystem
+[ 1093.604852] [U] TEST FINISHED: -overlay generic/020 @ Wed May 26 10:34:41 PDT 2021
+
+The first assertion, I think, is an accounting problem -- the ASSERT
+checks that args->rmtblkno should be zero after calling the function
+__xfs_attr_rmtval_remove to unmap the blocks backing the remote value
+from the attr fork.  I don't see anywhere in that function that actually
+updates the args fields, however.
+
+AFAICT all this needs is a little bookkeeping update in
+__xfs_attr_rmtval_remove.
+
+The second and subsequent assertions come from trying to log a buffer
+that isn't attached to the current transaction.  I think what's
+happening is:
+
+1. we're in state XFS_DAS_RMTBLK
+2. call __xfs_attr_rmtval_remove to remove a remote block, which returns 0
+3. call xfs_attr_refillstate to re-attach buffers to the da state
+4. set state to XFS_DAS_RM_NAME
+5. set XFS_DAC_DEFER_FINISH and return EAGAIN to finish deferred updates
+6. <transaction roll releases buffers>
+7. now we're in state XFS_DAS_RM_NAME
+8. call xfs_attr_node_removename to remove the name
+9. trip assert because the buffers in state->path.blk[] aren't joined to the
+   current transaction
+
+I think the solution here is to call xfs_attr_refillstate to reattach
+all the buffers to the transaction, but only if we've freshly rolled the
+transaction.  If we fell through the UNINIT and RMTBLK cases into
+RM_NAME without rolling anything, then we're still on the same
+transaction that we used for the first lookup and don't need to refill
+the state.
+
+Can you take a look at this patch?  It fixes the problems for that one
+test, but I haven't run it through QA yet.
+
+--D
+
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 20b1e3c6bdd0..7b3d0c3d2e65 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -1442,6 +1442,17 @@ xfs_attr_remove_iter(
+ 
+ 		/* fallthrough */
+ 	case XFS_DAS_RM_NAME:
++
++		/*
++		 * If we came here fresh from a transaction roll, reattach all
++		 * the buffers to the current transaction.
++		 */
++		if (dac->dela_state == XFS_DAS_RM_NAME) {
++			error = xfs_attr_refillstate(state);
++			if (error)
++				goto out;
++		}
++
+ 		retval = xfs_attr_node_removename(args, state);
+ 
+ 		/*
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index b5bc50cad9bf..d560b55abedb 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -699,5 +699,8 @@ __xfs_attr_rmtval_remove(
+ 		return -EAGAIN;
+ 	}
+ 
+-	return error;
++	/* We've unmapped the remote value blocks, so zero these out */
++	args->rmtblkno = 0;
++	args->rmtblkcnt = 0;
++	return 0;
+ }
