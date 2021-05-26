@@ -2,39 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E518C2B9F7
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 05:03:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F853C2B9F7
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 05:21:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A7D5613C1
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 05:03:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 602AC61090
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 05:21:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230075AbhEZFFU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 May 2021 01:05:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38914 "EHLO mail.kernel.org"
+        id S230007AbhEZFXF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 May 2021 01:23:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41794 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229947AbhEZFFU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 May 2021 01:05:20 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 07C35613B9
-        for <linux-xfs@vger.kernel.org>; Wed, 26 May 2021 05:03:48 +0000 (UTC)
+        id S229522AbhEZFXC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 May 2021 01:23:02 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 991DA613B9;
+        Wed, 26 May 2021 05:20:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622005429;
-        bh=VSmQUmqG1CRZl7R8Bsmq0PcHZ2KEhmWyR5IAfj1e/lc=;
+        s=k20201202; t=1622006438;
+        bh=+IFtpsVHoMfnuKZ/Kbl3O9fBM9Eeb6YhX4/POJVMai4=;
         h=Date:From:To:Subject:From;
-        b=HWvYy5sTPlv7xGFHi7t+qJVZz7NvPfa+w0UvgqziJufhufNipMIUqSi4ThQ7EDRSV
-         nr8u2qEroiFeKHoOs1c20Nh22/6VbH4wsgq7HRbK1OYUWmTvqDYP0AKKR7576txTkI
-         L6g5uj+wS9elJeXWBbW9apNoD7bJYAN1adKuV5R6piuihs2PU4LQiRuC/cskQzpf0j
-         SwXxeAtN2MVCL4ZL7JA7hIGHxreJcCpi5AG46YJ++mwLMhhjvI7YZYve1zUotD7bzR
-         +k9EX1mD2Ul1rEcwQMNUwzqROR9E2m/XliIShNXmDhKyscfgF4P0td9ACcYLuCzOvS
-         yf7wqCW/GWo/g==
-Date:   Tue, 25 May 2021 22:03:48 -0700
+        b=E5MNts4ndsmbTwwMMAwWViQgVjeyhIwDaKXC/jSYX0mAUKJOLcij9IIoBWq0Zd6y4
+         hEWoAQHHLWQcF7x+LgCRkYpzbfDFb2+POAlLbdMol+rCA8RwQDF/8zxkjwL+bTYhiK
+         aD6MKDg//sKJsplCC2qgHVYccUo15hApskn7Ok0oKecUI523NEUQUP7zYV3AZKne8F
+         nOAEkiFbGLry1g659s7epQ97CURr/CftA7Mc/DAjmaw9LnDYA+B3CBIa4CpVxcXP2U
+         mYjSzv3WtY49EFZT6tLSyLIN2aFVZS6iTSnYJtVA1H5V7IOS4P4rap6qwuYQy/ydD2
+         5LU1FyrwZbpBw==
+Date:   Tue, 25 May 2021 22:20:38 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: we moved #xfs to oftc
-Message-ID: <20210526050348.GW202121@locust>
+To:     xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>,
+        Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: add new IRC channel to MAINTAINERS
+Message-ID: <20210526052038.GX202121@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -42,40 +44,25 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+From: Darrick J. Wong <djwong@kernel.org>
 
-We've moved the #xfs IRC channel to OFTC due to all the recent freenode
-drama.  Let us know if you can't join the new channel.  At some point we
-might have to make the access stricter (like we did on freenode) to stop
-the bot spam, but in theory it should be easy to get in the new channel.
+Add our new OFTC channel to the MAINTAINERS list so everyone will know
+where to go.  Ignore the XFS wikis, we have no access to them.
 
-Please do not continue to use the old freenode channel.
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ MAINTAINERS |    1 +
+ 1 file changed, 1 insertion(+)
 
-Some Q&A:
-
-- Why not post a notice in #xfs, you ask?
-
-A short while ago, the btrfs folks found out the hard way that if you
-leave any /topic breadcrumbs pointing people from freenode to another
-network, the new admins will declare a policy violation, strip everyone
-of channel op privileges, kick everyone off the channel, and erase the
-topic.  We'll see how long "10 GOTO OTFC" lasts.
-
-- Why not post a notice on the XFS wiki, you ask?
-
-AFAIK nobody don't have write privileges.
-
-- Why not post a notice on the /new/ XFS wiki, you ask?
-
-The Linux Foundation required us to use their SSO service, which they
-are now transitioning to a new third party provider, which means that
-nobody can log in anymore.
-
-- Why not use Matrix or something?
-
-The LF have hinted that they might set up an instance, but nothing
-concrete has come of that.  We could in theory decide ultimately to move
-there, but until they make a public announcement, there's nothing for
-public to do.  Also see previous answer.
-
---D
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 008fcad7ac00..ceb146e9b506 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -19998,6 +19998,7 @@ F:	arch/x86/xen/*swiotlb*
+ F:	drivers/xen/*swiotlb*
+ 
+ XFS FILESYSTEM
++C:	irc://irc.oftc.net/xfs
+ M:	Darrick J. Wong <djwong@kernel.org>
+ M:	linux-xfs@vger.kernel.org
+ L:	linux-xfs@vger.kernel.org
