@@ -2,209 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12D47C4708A
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 01:47:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09065C47087
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 02:01:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC67761423
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 01:47:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D45AB6101B
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 02:01:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232884AbhEZBtI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 May 2021 21:49:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58440 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229978AbhEZBtI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 May 2021 21:49:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A9CC861090;
-        Wed, 26 May 2021 01:47:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621993657;
-        bh=UT8EGZLVdL9lNhwG4AC4EfHEV/SL1FcwJazbsmjlClk=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=T+Po91YIEjLMemZcdHhtWdyN0M2eqwigaZDpavULy9ocHf0RzotK+8zxTS4Cd64nx
-         WbPVhtDiTzu3kluKhIA3azEgZt/sf9vRzwbyFaJLsQcVwGbHcAp72BpsqAQ+Jd0AiU
-         EiyV+9E9dQLamZ+WbCtFHY9Uc6OC0occmTkmtUc2E4r7JnMw47x73exPFfvynfp+vH
-         G6cMEB6gMLhGV0/eCBrneMPMwLZqnr09S1+gEXrPN9WZf5lehGfK42+OQGj21BDzeZ
-         TpZAa32za2AGmh4Fa+MwsjAGSwB3cewtmhnU8ZdlPip0nkoUJe4ukvBBM56f4xSlAS
-         j1MD/NPHJF/ug==
-Subject: [PATCH 10/10] fstests: remove test group management code
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 25 May 2021 18:47:37 -0700
-Message-ID: <162199365744.3744214.6541984291097194010.stgit@locust>
-In-Reply-To: <162199360248.3744214.17042613373014687643.stgit@locust>
-References: <162199360248.3744214.17042613373014687643.stgit@locust>
-User-Agent: StGit/0.19
+        id S232808AbhEZCDD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 May 2021 22:03:03 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:50521 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231911AbhEZCDC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 May 2021 22:03:02 -0400
+Received: from dread.disaster.area (pa49-180-230-185.pa.nsw.optusnet.com.au [49.180.230.185])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BC1C61043A71;
+        Wed, 26 May 2021 12:01:30 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1llirO-005GnP-9s; Wed, 26 May 2021 12:01:26 +1000
+Date:   Wed, 26 May 2021 12:01:26 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>
+Subject: Re: patch review scheduling...
+Message-ID: <20210526020126.GN664593@dread.disaster.area>
+References: <20210526012704.GH202144@locust>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210526012704.GH202144@locust>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+        a=dUIOjvib2kB+GiIc1vUx8g==:117 a=dUIOjvib2kB+GiIc1vUx8g==:17
+        a=kj9zAlcOel0A:10 a=5FLXtPjwQuUA:10 a=7-415B0cAAAA:8
+        a=PmktHFhGuwvk4lmZ-gUA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, May 25, 2021 at 06:27:04PM -0700, Darrick J. Wong wrote:
+> Hello list, frequent-submitters, and usual-reviewer-suspects:
+> 
+> As you've all seen, we have quite a backlog of patch review for 5.14
+> already.  The people cc'd on this message are the ones who either (a)
+> authored the patches caught in the backlog, (b) commented on previous
+> iterations of them, or (c) have participated in a lot of reviews before.
+> 
+> Normally I'd just chug through them all until I get to the end, but even
+> after speed-reading through the shorter series (deferred xattrs,
+> mmaplock, reflink+dax) I still have 73 to go, which is down from 109
+> this morning.
+> 
+> So, time to be a bit more aggressive about planning.  I would love it if
+> people dedicated some time this week to reviewing things, but before we
+> even get there, I have other questions:
+> 
+> Dave: Between the CIL improvements and the perag refactoring, which
+> would you rather get reviewed first?  The CIL improvments patches have
+> been circulating longer, but they're more subtle changes.
 
-Remove all the code that manages group files, since we now generate
-them at build time.
+The perag refactoring is already mostly reviewed and the changes are
+simpler, so knock the rest of them out first.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- tools/mvtest     |   12 ------
- tools/sort-group |  112 ------------------------------------------------------
- 2 files changed, 124 deletions(-)
- delete mode 100755 tools/sort-group
+The CIL series already has all the seperable changes up to patch 11
+reviewed, so they can be merged without further review work.
 
+The next chunk in that patch set is up to patch 25 (or is it 26?),
+but I think there's only 4-5 patches in that set that are not yet
+reviewed. That would be the next set to look at.
 
-diff --git a/tools/mvtest b/tools/mvtest
-index 572ae14e..fa967832 100755
---- a/tools/mvtest
-+++ b/tools/mvtest
-@@ -32,24 +32,12 @@ did="$(basename "${dest}")"
- sgroup="$(basename "$(dirname "tests/${src}")")"
- dgroup="$(basename "$(dirname "tests/${dest}")")"
- 
--sgroupfile="tests/${sgroup}/group"
--dgroupfile="tests/${dgroup}/group"
--
- git mv "tests/${src}" "tests/${dest}"
- git mv "tests/${src}.out" "tests/${dest}.out"
- sed -e "s/^# FS[[:space:]]*QA.*Test.*[0-9]\+$/# FS QA Test No. ${did}/g" -i "tests/${dest}"
- sed -e "s/^QA output created by ${sid}$/QA output created by ${did}/g" -i "tests/${dest}.out"
- sed -e "s/test-${sid}/test-${did}/g" -i "tests/${dest}.out"
- 
--grpline="$(grep "^${sid} " "${sgroupfile}")"
--newgrpline="$(echo "${grpline}" | sed -e "s/^${sid} /${did} /g")"
--
--sed -e "/^${sid} .*$/d" -i "${sgroupfile}"
--cp "${dgroupfile}" "${dgroupfile}.new"
--append "${dgroupfile}.new" "${newgrpline}"
--"${dir}/sort-group" "${dgroupfile}.new"
--mv "${dgroupfile}.new" "${dgroupfile}"
--
- echo "Moved \"${src}\" to \"${dest}\"."
- 
- exit 0
-diff --git a/tools/sort-group b/tools/sort-group
-deleted file mode 100755
-index 6fcaad77..00000000
---- a/tools/sort-group
-+++ /dev/null
-@@ -1,112 +0,0 @@
--#!/usr/bin/env python
--import sys
--
--# Sort a group list, carefully preserving comments.
--
--def xfstest_key(key):
--	'''Extract the numeric part of a test name if possible.'''
--	k = 0
--
--	assert type(key) == str
--
--	# No test number at all...
--	if not key[0].isdigit():
--		return key
--
--	# ...otherwise extract as much number as we can.
--	for digit in key:
--		if digit.isdigit():
--			k = k * 10 + int(digit)
--		else:
--			return k
--	return k
--
--def read_group(fd):
--	'''Read the group list, carefully attaching comments to the next test.'''
--	tests = {}
--	comments = None
--
--	for line in fd:
--		sline = line.strip()
--		tokens = sline.split()
--		if len(tokens) == 0 or tokens[0] == '#':
--			if comments == None:
--				comments = []
--			comments.append(sline)
--		else:
--			tests[tokens[0]] = (comments, tokens[1:])
--			comments = None
--	return tests
--
--def sort_keys(keys):
--	'''Separate keys into integer and non-integer tests.'''
--	int_keys = []
--	int_xkeys = []
--	str_keys = []
--
--	# Sort keys into integer(ish) tests and other
--	for key in keys:
--		xkey = xfstest_key(key)
--		if type(xkey) == int:
--			int_keys.append(key)
--			int_xkeys.append(xkey)
--		else:
--			str_keys.append(key)
--	return (int_keys, int_xkeys, str_keys)
--
--def write_sorted(tests, fd):
--	def dump_xkey(xkey):
--		(comments, tokens) = tests[key]
--		if comments:
--			for c in comments:
--				fd.write('%s\n' % c)
--		fd.write('%s %s\n' % (key, ' '.join(tokens)))
--	'''Print tests (and comments) in number order.'''
--
--	(int_keys, ignored, str_keys) = sort_keys(tests.keys())
--	for key in sorted(int_keys, key = xfstest_key):
--		dump_xkey(key)
--	for key in sorted(str_keys):
--		dump_xkey(key)
--
--def sort_main():
--	if '--help' in sys.argv[1:]:
--		print('Usage: %s groupfiles' % sys.argv[0])
--		sys.exit(0)
--
--	for arg in sys.argv[1:]:
--		with open(arg, 'r+') as fd:
--			x = read_group(fd)
--			fd.seek(0, 0)
--			write_sorted(x, fd)
--
--def nextid_main():
--	if '--help' in sys.argv[1:]:
--		print('Usage: %s group[/startid] ' % sys.argv[0])
--		sys.exit(0)
--
--	if len(sys.argv) != 2:
--		print('Specify exactly one group name.')
--		sys.exit(1)
--
--	c = sys.argv[1].split('/')
--	if len(c) > 1:
--		startid = int(c[1])
--	else:
--		startid = 1
--	group = c[0]
--
--	with open('tests/%s/group' % group, 'r') as fd:
--		x = read_group(fd)
--		xkeys = {int(x) for x in sort_keys(x.keys())[1]}
--
--		xid = startid
--		while xid in xkeys:
--			xid += 1
--		print('%s/%03d' % (group, xid))
--
--if __name__ == '__main__':
--	if 'nextid' in sys.argv[0]:
--		nextid_main()
--	else:
--		sort_main()
+The rest of the patchset is the scalabilty stuff which probably is
+going to be too much at this point, so we can leave it off to the
+next cycle (when I'll put out another 20-30 patches I already have
+on top of this with it...)
 
+> Dave and Christoph: Can I rely on you both to sort out whatever
+> conflicts arose around reworking memory page allocation for xfs_bufs?
+
+Yep, we'll get that sorted out. There's no disagreement on where we
+want to end up, just on how we get there :P
+
+> Brian: Is it worth the time to iterate more on the ioend thresholds in
+> the "iomap: avoid soft lockup warnings" series?  Specifically, I was
+> kind of interested in whether or not we should/could scale the max ioend
+> size limit with the optimal/max io request size that devices report,
+> though I'm getting a feeling that block device limits are all over the
+> place maybe we should start with the static limit and iterate up (or
+> down?) from there...?
+
+I recommend just staying with static limits to start with. This is
+"good enough" to solve the immediate problems, and we can look for
+more optimised solutions once we've merged the initial fixes...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
