@@ -4,422 +4,369 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D758C47089
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:22:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C76A2C47089
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:33:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEF2F6128B
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:22:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 962856109F
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:33:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234517AbhE0WYC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 May 2021 18:24:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59358 "EHLO mail.kernel.org"
+        id S234181AbhE0Weo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 May 2021 18:34:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60406 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234318AbhE0WYB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 May 2021 18:24:01 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EFFB7611C2;
-        Thu, 27 May 2021 22:22:27 +0000 (UTC)
+        id S233203AbhE0Wen (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 May 2021 18:34:43 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1FCC46109F;
+        Thu, 27 May 2021 22:33:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622154148;
-        bh=AnPoFm5hjNkbDgtrOcYRvGT4AyUyyuq0yBQFX4hbcao=;
+        s=k20201202; t=1622154790;
+        bh=swnVgmwXvlyZAlJeuTWOmVPW+ZumC5+cYy/jsA05APg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=l8ZdFI06tDiwLPT6RJRmTBej2BIwn65DkWTOROlynNFACN8FJ4bSndCVtDBVxoIF7
-         uJcfQoyt5CQxItFkDbjH+J3kHa275BGtysTwRHiGmGHaYbNgI0Wi8POxzicXXGJFyt
-         sxrhjPQdaJmQZCRfTbEBCoNEqjbvSFwxkGhumA7vJQpAbs+o4zhfq59Yvbbn/Yfteh
-         YCYL/iZy+HqUUVdrSzghakH09/OHDWZ9o3YRfzHsDEXGuxln7Rb4W8SFPGxx3Hi2Xe
-         oy+WKcCe8ibL84P0XSOmi0fW9WXID9/VGc3VgyyZU8OVE+xFmGrn5Xkel3vx+s/s0r
-         ki3Swc1wLvQ/w==
-Date:   Thu, 27 May 2021 15:22:27 -0700
+        b=BCJPBOl8iK9+AfTXWaO8+ViPkHoOrbXbxwfvrDgPtGvOmyeZG+Bi20xBfpXBZHeGK
+         QgtUWFHlIE5fPQx4tsXTFTfHSGnVBxWM2rUuOEXe4NoJknrYlAAqY0SchS6LI01LOo
+         4hh69E5IwjBmQERkrIVC/OLE0FWQdgEwsFjPfHln6Rt9sHIuIsyEzd06E6i2jTH9ys
+         50hgo9iK8Tc1x3c0jtzf6GL6VWqCcaHVk3mVnt6y1/tqz30zfC7Q2/62K2pOZ8+FRy
+         LS0oUuaZnrCUmKwkpAvvCJ2YOd7jxlCNw4Q60dlqkhj8oXIlYl48enTCOSJa9f1Mbd
+         Vu7vKgyH3GFnA==
+Date:   Thu, 27 May 2021 15:33:09 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 13/23] xfs: convert refcount btree cursor to use perags
-Message-ID: <20210527222227.GX2402049@locust>
+Subject: Re: [PATCH 18/23] xfs: collapse AG selection for inode allocation
+Message-ID: <20210527223309.GY2402049@locust>
 References: <20210519012102.450926-1-david@fromorbit.com>
- <20210519012102.450926-14-david@fromorbit.com>
+ <20210519012102.450926-19-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210519012102.450926-14-david@fromorbit.com>
+In-Reply-To: <20210519012102.450926-19-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 19, 2021 at 11:20:52AM +1000, Dave Chinner wrote:
+On Wed, May 19, 2021 at 11:20:57AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_refcount.c       | 40 ++++++++++++++++--------------
->  fs/xfs/libxfs/xfs_refcount.h       |  9 ++++++-
->  fs/xfs/libxfs/xfs_refcount_btree.c | 22 +++++++---------
->  fs/xfs/libxfs/xfs_refcount_btree.h |  4 +--
->  fs/xfs/scrub/agheader_repair.c     |  2 +-
->  fs/xfs/scrub/bmap.c                |  8 +++---
->  fs/xfs/scrub/common.c              |  2 +-
->  fs/xfs/xfs_fsmap.c                 |  3 +--
->  fs/xfs/xfs_reflink.c               |  4 +--
->  9 files changed, 50 insertions(+), 44 deletions(-)
+> xfs_dialloc_select_ag() does a lot of repetitive work. It first
+> calls xfs_ialloc_ag_select() to select the AG to start allocation
+> attempts in, which can do up to two entire loops across the perags
+> that inodes can be allocated in. This is simply checking if there is
+> spce available to allocate inodes in an AG, and it returns when it
+> finds the first candidate AG.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-> index 1c2bd2949d7d..fd2b9cd7ec66 100644
-> --- a/fs/xfs/libxfs/xfs_refcount.c
-> +++ b/fs/xfs/libxfs/xfs_refcount.c
-> @@ -22,6 +22,7 @@
->  #include "xfs_bit.h"
->  #include "xfs_refcount.h"
->  #include "xfs_rmap.h"
-> +#include "xfs_ag.h"
+> xfs_dialloc_select_ag() then does it's own iterative walk across
+> all the perags locking the AGIs and trying to allocate inodes from
+> the locked AG. It also doesn't limit the search to mp->m_maxagi,
+> so it will walk all AGs whether they can allocate inodes or not.
+> 
+> Hence if we are really low on inodes, we could do almost 3 entire
+> walks across the whole perag range before we find an allocation
+> group we can allocate inodes in or report ENOSPC.
+> 
+> Because xfs_ialloc_ag_select() returns on the first candidate AG it
+> finds, we can simply do these checks directly in
+> xfs_dialloc_select_ag() before we lock and try to allocate inodes.
+> This reduces the inode allocation pass down to 2 perag sweeps at
+> most - one for aligned inode cluster allocation and if we can't
+> allocate full, aligned inode clusters anywhere we'll do another pass
+> trying to do sparse inode cluster allocation.
+> 
+> This also removes a big chunk of duplicate code.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c | 220 +++++++++++++------------------------
+>  1 file changed, 74 insertions(+), 146 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 872591e8f5cb..3acecdbe51e4 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -899,139 +899,6 @@ xfs_ialloc_ag_alloc(
+>  	return 0;
+>  }
 >  
->  /* Allowable refcount adjustment amounts. */
->  enum xfs_refc_adjust_op {
-> @@ -1142,30 +1143,30 @@ xfs_refcount_finish_one(
->  	struct xfs_btree_cur		*rcur;
->  	struct xfs_buf			*agbp = NULL;
->  	int				error = 0;
-> -	xfs_agnumber_t			agno;
->  	xfs_agblock_t			bno;
->  	xfs_agblock_t			new_agbno;
->  	unsigned long			nr_ops = 0;
->  	int				shape_changes = 0;
-> +	struct xfs_perag		*pag;
+> -STATIC xfs_agnumber_t
+> -xfs_ialloc_next_ag(
+> -	xfs_mount_t	*mp)
+> -{
+> -	xfs_agnumber_t	agno;
+> -
+> -	spin_lock(&mp->m_agirotor_lock);
+> -	agno = mp->m_agirotor;
+> -	if (++mp->m_agirotor >= mp->m_maxagi)
+> -		mp->m_agirotor = 0;
+> -	spin_unlock(&mp->m_agirotor_lock);
+> -
+> -	return agno;
+> -}
+> -
+> -/*
+> - * Select an allocation group to look for a free inode in, based on the parent
+> - * inode and the mode.  Return the allocation group buffer.
+> - */
+> -STATIC xfs_agnumber_t
+> -xfs_ialloc_ag_select(
+> -	xfs_trans_t	*tp,		/* transaction pointer */
+> -	xfs_ino_t	parent,		/* parent directory inode number */
+> -	umode_t		mode)		/* bits set to indicate file type */
+> -{
+> -	xfs_agnumber_t	agcount;	/* number of ag's in the filesystem */
+> -	xfs_agnumber_t	agno;		/* current ag number */
+> -	int		flags;		/* alloc buffer locking flags */
+> -	xfs_extlen_t	ineed;		/* blocks needed for inode allocation */
+> -	xfs_extlen_t	longest = 0;	/* longest extent available */
+> -	xfs_mount_t	*mp;		/* mount point structure */
+> -	int		needspace;	/* file mode implies space allocated */
+> -	xfs_perag_t	*pag;		/* per allocation group data */
+> -	xfs_agnumber_t	pagno;		/* parent (starting) ag number */
+> -	int		error;
+> -
+> -	/*
+> -	 * Files of these types need at least one block if length > 0
+> -	 * (and they won't fit in the inode, but that's hard to figure out).
+> -	 */
+> -	needspace = S_ISDIR(mode) || S_ISREG(mode) || S_ISLNK(mode);
+> -	mp = tp->t_mountp;
+> -	agcount = mp->m_maxagi;
+> -	if (S_ISDIR(mode))
+> -		pagno = xfs_ialloc_next_ag(mp);
+> -	else {
+> -		pagno = XFS_INO_TO_AGNO(mp, parent);
+> -		if (pagno >= agcount)
+> -			pagno = 0;
+> -	}
+> -
+> -	ASSERT(pagno < agcount);
+> -
+> -	/*
+> -	 * Loop through allocation groups, looking for one with a little
+> -	 * free space in it.  Note we don't look for free inodes, exactly.
+> -	 * Instead, we include whether there is a need to allocate inodes
+> -	 * to mean that blocks must be allocated for them,
+> -	 * if none are currently free.
+> -	 */
+> -	agno = pagno;
+> -	flags = XFS_ALLOC_FLAG_TRYLOCK;
+> -	for (;;) {
+> -		pag = xfs_perag_get(mp, agno);
+> -		if (!pag->pagi_inodeok) {
+> -			xfs_ialloc_next_ag(mp);
+> -			goto nextag;
+> -		}
+> -
+> -		if (!pag->pagi_init) {
+> -			error = xfs_ialloc_pagi_init(mp, tp, agno);
+> -			if (error)
+> -				goto nextag;
+> -		}
+> -
+> -		if (pag->pagi_freecount) {
+> -			xfs_perag_put(pag);
+> -			return agno;
+> -		}
+> -
+> -		if (!pag->pagf_init) {
+> -			error = xfs_alloc_pagf_init(mp, tp, agno, flags);
+> -			if (error)
+> -				goto nextag;
+> -		}
+> -
+> -		/*
+> -		 * Check that there is enough free space for the file plus a
+> -		 * chunk of inodes if we need to allocate some. If this is the
+> -		 * first pass across the AGs, take into account the potential
+> -		 * space needed for alignment of inode chunks when checking the
+> -		 * longest contiguous free space in the AG - this prevents us
+> -		 * from getting ENOSPC because we have free space larger than
+> -		 * ialloc_blks but alignment constraints prevent us from using
+> -		 * it.
+> -		 *
+> -		 * If we can't find an AG with space for full alignment slack to
+> -		 * be taken into account, we must be near ENOSPC in all AGs.
+> -		 * Hence we don't include alignment for the second pass and so
+> -		 * if we fail allocation due to alignment issues then it is most
+> -		 * likely a real ENOSPC condition.
+> -		 */
+> -		ineed = M_IGEO(mp)->ialloc_min_blks;
+> -		if (flags && ineed > 1)
+> -			ineed += M_IGEO(mp)->cluster_align;
+> -		longest = pag->pagf_longest;
+> -		if (!longest)
+> -			longest = pag->pagf_flcount > 0;
+> -
+> -		if (pag->pagf_freeblks >= needspace + ineed &&
+> -		    longest >= ineed) {
+> -			xfs_perag_put(pag);
+> -			return agno;
+> -		}
+> -nextag:
+> -		xfs_perag_put(pag);
+> -		/*
+> -		 * No point in iterating over the rest, if we're shutting
+> -		 * down.
+> -		 */
+> -		if (XFS_FORCED_SHUTDOWN(mp))
+> -			return NULLAGNUMBER;
+> -		agno++;
+> -		if (agno >= agcount)
+> -			agno = 0;
+> -		if (agno == pagno) {
+> -			if (flags == 0)
+> -				return NULLAGNUMBER;
+> -			flags = 0;
+> -		}
+> -	}
+> -}
+> -
+>  /*
+>   * Try to retrieve the next record to the left/right from the current one.
+>   */
+> @@ -1708,6 +1575,21 @@ xfs_dialloc_roll(
+>  	return 0;
+>  }
 >  
-> -	agno = XFS_FSB_TO_AGNO(mp, startblock);
-> -	ASSERT(agno != NULLAGNUMBER);
-> +	pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, startblock));
->  	bno = XFS_FSB_TO_AGBNO(mp, startblock);
+> +STATIC xfs_agnumber_t
+> +xfs_ialloc_next_ag(
+> +	xfs_mount_t	*mp)
+> +{
+> +	xfs_agnumber_t	agno;
+> +
+> +	spin_lock(&mp->m_agirotor_lock);
+> +	agno = mp->m_agirotor;
+> +	if (++mp->m_agirotor >= mp->m_maxagi)
+> +		mp->m_agirotor = 0;
+> +	spin_unlock(&mp->m_agirotor_lock);
+> +
+> +	return agno;
+> +}
+> +
+>  /*
+>   * Select and prepare an AG for inode allocation.
+>   *
+> @@ -1734,16 +1616,24 @@ xfs_dialloc_select_ag(
+>  	struct xfs_perag	*pag;
+>  	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+>  	bool			okalloc = true;
+> +	int			needspace;
+> +	int			flags;
 >  
->  	trace_xfs_refcount_deferred(mp, XFS_FSB_TO_AGNO(mp, startblock),
->  			type, XFS_FSB_TO_AGBNO(mp, startblock),
->  			blockcount);
+>  	*IO_agbp = NULL;
 >  
-> -	if (XFS_TEST_ERROR(false, mp,
-> -			XFS_ERRTAG_REFCOUNT_FINISH_ONE))
-> -		return -EIO;
-> +	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REFCOUNT_FINISH_ONE)) {
-> +		error = -EIO;
-> +		goto out_drop;
+>  	/*
+> -	 * We do not have an agbp, so select an initial allocation
+> -	 * group for inode allocation.
+> +	 * Directories, symlinks, and regular files frequently allocate at least
+> +	 * one block, so factor that potential expansion when we examine whether
+> +	 * an AG has enough space for file creation.
+>  	 */
+> -	start_agno = xfs_ialloc_ag_select(*tpp, parent, mode);
+> -	if (start_agno == NULLAGNUMBER)
+> -		return -ENOSPC;
+> +	needspace = S_ISDIR(mode) || S_ISREG(mode) || S_ISLNK(mode);
+> +	if (S_ISDIR(mode))
+> +		start_agno = xfs_ialloc_next_ag(mp);
+> +	else {
+> +		start_agno = XFS_INO_TO_AGNO(mp, parent);
+> +		if (start_agno >= mp->m_maxagi)
+> +			start_agno = 0;
 > +	}
 >  
 >  	/*
->  	 * If we haven't gotten a cursor or the cursor AG doesn't match
->  	 * the startblock, get one now.
+>  	 * If we have already hit the ceiling of inode blocks then clear
+> @@ -1765,12 +1655,14 @@ xfs_dialloc_select_ag(
+>  	 * allocation groups upward, wrapping at the end.
 >  	 */
->  	rcur = *pcur;
-> -	if (rcur != NULL && rcur->bc_ag.agno != agno) {
-> +	if (rcur != NULL && rcur->bc_ag.pag != pag) {
->  		nr_ops = rcur->bc_ag.refc.nr_ops;
->  		shape_changes = rcur->bc_ag.refc.shape_changes;
->  		xfs_refcount_finish_one_cleanup(tp, rcur, 0);
-> @@ -1173,12 +1174,12 @@ xfs_refcount_finish_one(
->  		*pcur = NULL;
->  	}
->  	if (rcur == NULL) {
-> -		error = xfs_alloc_read_agf(tp->t_mountp, tp, agno,
-> +		error = xfs_alloc_read_agf(tp->t_mountp, tp, pag->pag_agno,
->  				XFS_ALLOC_FLAG_FREEING, &agbp);
->  		if (error)
-> -			return error;
-> +			goto out_drop;
->  
-> -		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
-> +		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, pag);
->  		rcur->bc_ag.refc.nr_ops = nr_ops;
->  		rcur->bc_ag.refc.shape_changes = shape_changes;
->  	}
-> @@ -1188,12 +1189,12 @@ xfs_refcount_finish_one(
->  	case XFS_REFCOUNT_INCREASE:
->  		error = xfs_refcount_adjust(rcur, bno, blockcount, &new_agbno,
->  			new_len, XFS_REFCOUNT_ADJUST_INCREASE, NULL);
-> -		*new_fsb = XFS_AGB_TO_FSB(mp, agno, new_agbno);
-> +		*new_fsb = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
->  		break;
->  	case XFS_REFCOUNT_DECREASE:
->  		error = xfs_refcount_adjust(rcur, bno, blockcount, &new_agbno,
->  			new_len, XFS_REFCOUNT_ADJUST_DECREASE, NULL);
-> -		*new_fsb = XFS_AGB_TO_FSB(mp, agno, new_agbno);
-> +		*new_fsb = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
->  		break;
->  	case XFS_REFCOUNT_ALLOC_COW:
->  		*new_fsb = startblock + blockcount;
-> @@ -1210,8 +1211,10 @@ xfs_refcount_finish_one(
->  		error = -EFSCORRUPTED;
->  	}
->  	if (!error && *new_len > 0)
-> -		trace_xfs_refcount_finish_one_leftover(mp, agno, type,
-> +		trace_xfs_refcount_finish_one_leftover(mp, pag->pag_agno, type,
->  				bno, blockcount, new_agbno, *new_len);
-> +out_drop:
-> +	xfs_perag_put(pag);
->  	return error;
->  }
->  
-> @@ -1672,7 +1675,7 @@ xfs_refcount_recover_extent(
->  int
->  xfs_refcount_recover_cow_leftovers(
->  	struct xfs_mount		*mp,
-> -	xfs_agnumber_t			agno)
-> +	struct xfs_perag		*pag)
->  {
->  	struct xfs_trans		*tp;
->  	struct xfs_btree_cur		*cur;
-> @@ -1704,10 +1707,10 @@ xfs_refcount_recover_cow_leftovers(
->  	if (error)
->  		return error;
->  
-> -	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
-> +	error = xfs_alloc_read_agf(mp, tp, pag->pag_agno, 0, &agbp);
->  	if (error)
->  		goto out_trans;
-> -	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
-> +	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, pag);
->  
->  	/* Find all the leftover CoW staging extents. */
->  	memset(&low, 0, sizeof(low));
-> @@ -1729,11 +1732,12 @@ xfs_refcount_recover_cow_leftovers(
->  		if (error)
->  			goto out_free;
->  
-> -		trace_xfs_refcount_recover_extent(mp, agno, &rr->rr_rrec);
-> +		trace_xfs_refcount_recover_extent(mp, pag->pag_agno,
-> +				&rr->rr_rrec);
->  
->  		/* Free the orphan record */
->  		agbno = rr->rr_rrec.rc_startblock - XFS_REFC_COW_START;
-> -		fsb = XFS_AGB_TO_FSB(mp, agno, agbno);
-> +		fsb = XFS_AGB_TO_FSB(mp, pag->pag_agno, agbno);
->  		xfs_refcount_free_cow_extent(tp, fsb,
->  				rr->rr_rrec.rc_blockcount);
->  
-> diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-> index 209795539c8d..9f6e9aae4da0 100644
-> --- a/fs/xfs/libxfs/xfs_refcount.h
-> +++ b/fs/xfs/libxfs/xfs_refcount.h
-> @@ -6,6 +6,13 @@
->  #ifndef __XFS_REFCOUNT_H__
->  #define __XFS_REFCOUNT_H__
->  
-> +struct xfs_trans;
-> +struct xfs_mount;
-> +struct xfs_perag;
-> +struct xfs_btree_cur;
-> +struct xfs_bmbt_irec;
-> +struct xfs_refcount_irec;
+>  	agno = start_agno;
+> +	flags = XFS_ALLOC_FLAG_TRYLOCK;
+>  	for (;;) {
+> +		xfs_extlen_t	ineed;
+> +		xfs_extlen_t	longest = 0;
 > +
->  extern int xfs_refcount_lookup_le(struct xfs_btree_cur *cur,
->  		xfs_agblock_t bno, int *stat);
->  extern int xfs_refcount_lookup_ge(struct xfs_btree_cur *cur,
-> @@ -50,7 +57,7 @@ void xfs_refcount_alloc_cow_extent(struct xfs_trans *tp, xfs_fsblock_t fsb,
->  void xfs_refcount_free_cow_extent(struct xfs_trans *tp, xfs_fsblock_t fsb,
->  		xfs_extlen_t len);
->  extern int xfs_refcount_recover_cow_leftovers(struct xfs_mount *mp,
-> -		xfs_agnumber_t agno);
-> +		struct xfs_perag *pag);
+>  		pag = xfs_perag_get(mp, agno);
+> -		if (!pag->pagi_inodeok) {
+> -			xfs_ialloc_next_ag(mp);
+> +		if (!pag->pagi_inodeok)
+>  			goto nextag;
+> -		}
 >  
->  /*
->   * While we're adjusting the refcounts records of an extent, we have
-> diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-> index 74f8ac0209f1..8f6577cb3475 100644
-> --- a/fs/xfs/libxfs/xfs_refcount_btree.c
-> +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-> @@ -26,7 +26,7 @@ xfs_refcountbt_dup_cursor(
->  	struct xfs_btree_cur	*cur)
->  {
->  	return xfs_refcountbt_init_cursor(cur->bc_mp, cur->bc_tp,
-> -			cur->bc_ag.agbp, cur->bc_ag.agno, cur->bc_ag.pag);
-> +			cur->bc_ag.agbp, cur->bc_ag.pag);
->  }
+>  		if (!pag->pagi_init) {
+>  			error = xfs_ialloc_pagi_init(mp, *tpp, agno);
+> @@ -1778,10 +1670,39 @@ xfs_dialloc_select_ag(
+>  				break;
+>  		}
 >  
->  STATIC void
-> @@ -316,13 +316,11 @@ static struct xfs_btree_cur *
->  xfs_refcountbt_init_common(
->  	struct xfs_mount	*mp,
->  	struct xfs_trans	*tp,
-> -	xfs_agnumber_t		agno,
->  	struct xfs_perag	*pag)
->  {
->  	struct xfs_btree_cur	*cur;
->  
-> -	ASSERT(agno != NULLAGNUMBER);
-> -	ASSERT(agno < mp->m_sb.sb_agcount);
-> +	ASSERT(pag->pag_agno < mp->m_sb.sb_agcount);
+> +		if (!pag->pagi_freecount && !okalloc)
+> +			goto nextag;
 
-When would this not be true?  It's fine if you want to keep this as a
-sanity check, but I thought perag structures trivially satisfied this
-relation?
+Odd... a strict translation from the old function would have skipped
+down to the xfs_ialloc_read_agi call if pag->pagi_freecount > 0,
+wouldn't it?
 
-Either way,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Oh, I guess Brian already pointed that out. :)
 
 --D
 
-
->  
->  	cur = kmem_cache_zalloc(xfs_btree_cur_zone, GFP_NOFS | __GFP_NOFAIL);
->  	cur->bc_tp = tp;
-> @@ -331,13 +329,12 @@ xfs_refcountbt_init_common(
->  	cur->bc_blocklog = mp->m_sb.sb_blocklog;
->  	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_refcbt_2);
->  
-> -	cur->bc_ag.agno = agno;
->  	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
-> -	if (pag) {
-> -		/* take a reference for the cursor */
-> -		atomic_inc(&pag->pag_ref);
-> -	}
 > +
-> +	/* take a reference for the cursor */
-> +	atomic_inc(&pag->pag_ref);
->  	cur->bc_ag.pag = pag;
-> +	cur->bc_ag.agno = pag->pag_agno;
+> +		if (!pag->pagf_init) {
+> +			error = xfs_alloc_pagf_init(mp, *tpp, agno, flags);
+> +			if (error)
+> +				goto nextag;
+> +		}
+> +
+>  		/*
+> -		 * Do a first racy fast path check if this AG is usable.
+> +		 * Check that there is enough free space for the file plus a
+> +		 * chunk of inodes if we need to allocate some. If this is the
+> +		 * first pass across the AGs, take into account the potential
+> +		 * space needed for alignment of inode chunks when checking the
+> +		 * longest contiguous free space in the AG - this prevents us
+> +		 * from getting ENOSPC because we have free space larger than
+> +		 * ialloc_blks but alignment constraints prevent us from using
+> +		 * it.
+> +		 *
+> +		 * If we can't find an AG with space for full alignment slack to
+> +		 * be taken into account, we must be near ENOSPC in all AGs.
+> +		 * Hence we don't include alignment for the second pass and so
+> +		 * if we fail allocation due to alignment issues then it is most
+> +		 * likely a real ENOSPC condition.
+>  		 */
+> -		if (!pag->pagi_freecount && !okalloc)
+> +		ineed = M_IGEO(mp)->ialloc_min_blks;
+> +		if (flags && ineed > 1)
+> +			ineed += M_IGEO(mp)->cluster_align;
+> +		longest = pag->pagf_longest;
+> +		if (!longest)
+> +			longest = pag->pagf_flcount > 0;
+> +
+> +		if (pag->pagf_freeblks < needspace + ineed || longest < ineed)
+>  			goto nextag;
 >  
->  	cur->bc_ag.refc.nr_ops = 0;
->  	cur->bc_ag.refc.shape_changes = 0;
-> @@ -351,13 +348,12 @@ xfs_refcountbt_init_cursor(
->  	struct xfs_mount	*mp,
->  	struct xfs_trans	*tp,
->  	struct xfs_buf		*agbp,
-> -	xfs_agnumber_t		agno,
->  	struct xfs_perag	*pag)
->  {
->  	struct xfs_agf		*agf = agbp->b_addr;
->  	struct xfs_btree_cur	*cur;
->  
-> -	cur = xfs_refcountbt_init_common(mp, tp, agno, pag);
-> +	cur = xfs_refcountbt_init_common(mp, tp, pag);
->  	cur->bc_nlevels = be32_to_cpu(agf->agf_refcount_level);
->  	cur->bc_ag.agbp = agbp;
->  	return cur;
-> @@ -368,11 +364,11 @@ struct xfs_btree_cur *
->  xfs_refcountbt_stage_cursor(
->  	struct xfs_mount	*mp,
->  	struct xbtree_afakeroot	*afake,
-> -	xfs_agnumber_t		agno)
-> +	struct xfs_perag	*pag)
->  {
->  	struct xfs_btree_cur	*cur;
->  
-> -	cur = xfs_refcountbt_init_common(mp, NULL, agno, NULL);
-> +	cur = xfs_refcountbt_init_common(mp, NULL, pag);
->  	xfs_btree_stage_afakeroot(cur, afake);
->  	return cur;
->  }
-> diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
-> index 8b82a39f104a..bd9ed9e1e41f 100644
-> --- a/fs/xfs/libxfs/xfs_refcount_btree.h
-> +++ b/fs/xfs/libxfs/xfs_refcount_btree.h
-> @@ -47,9 +47,9 @@ struct xbtree_afakeroot;
->  
->  extern struct xfs_btree_cur *xfs_refcountbt_init_cursor(struct xfs_mount *mp,
->  		struct xfs_trans *tp, struct xfs_buf *agbp,
-> -		xfs_agnumber_t agno, struct xfs_perag *pag);
-> +		struct xfs_perag *pag);
->  struct xfs_btree_cur *xfs_refcountbt_stage_cursor(struct xfs_mount *mp,
-> -		struct xbtree_afakeroot *afake, xfs_agnumber_t agno);
-> +		struct xbtree_afakeroot *afake, struct xfs_perag *pag);
->  extern int xfs_refcountbt_maxrecs(int blocklen, bool leaf);
->  extern void xfs_refcountbt_compute_maxlevels(struct xfs_mount *mp);
->  
-> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> index 981c689e3d95..251410c19198 100644
-> --- a/fs/xfs/scrub/agheader_repair.c
-> +++ b/fs/xfs/scrub/agheader_repair.c
-> @@ -282,7 +282,7 @@ xrep_agf_calc_from_btrees(
->  	/* Update the AGF counters from the refcountbt. */
->  	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
->  		cur = xfs_refcountbt_init_cursor(mp, sc->tp, agf_bp,
-> -				sc->sa.agno, sc->sa.pag);
-> +				sc->sa.pag);
->  		error = xfs_btree_count_blocks(cur, &blocks);
->  		if (error)
->  			goto err;
-> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-> index dbe7b65f8da1..864c107666d5 100644
-> --- a/fs/xfs/scrub/bmap.c
-> +++ b/fs/xfs/scrub/bmap.c
-> @@ -545,18 +545,18 @@ STATIC int
->  xchk_bmap_check_ag_rmaps(
->  	struct xfs_scrub		*sc,
->  	int				whichfork,
-> -	xfs_agnumber_t			agno)
-> +	struct xfs_perag		*pag)
->  {
->  	struct xchk_bmap_check_rmap_info	sbcri;
->  	struct xfs_btree_cur		*cur;
->  	struct xfs_buf			*agf;
->  	int				error;
->  
-> -	error = xfs_alloc_read_agf(sc->mp, sc->tp, agno, 0, &agf);
-> +	error = xfs_alloc_read_agf(sc->mp, sc->tp, pag->pag_agno, 0, &agf);
->  	if (error)
->  		return error;
->  
-> -	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf, sc->sa.pag);
-> +	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf, pag);
->  
->  	sbcri.sc = sc;
->  	sbcri.whichfork = whichfork;
-> @@ -610,7 +610,7 @@ xchk_bmap_check_rmaps(
->  		return 0;
->  
->  	for_each_perag(sc->mp, agno, pag) {
-> -		error = xchk_bmap_check_ag_rmaps(sc, whichfork, pag->pag_agno);
-> +		error = xchk_bmap_check_ag_rmaps(sc, whichfork, pag);
->  		if (error)
+>  		/*
+> @@ -1823,10 +1744,17 @@ xfs_dialloc_select_ag(
+>  nextag_relse_buffer:
+>  		xfs_trans_brelse(*tpp, agbp);
+>  nextag:
+> -		if (++agno == mp->m_sb.sb_agcount)
+> -			agno = 0;
+> -		if (agno == start_agno)
+> +		if (XFS_FORCED_SHUTDOWN(mp)) {
+> +			error = -EFSCORRUPTED;
 >  			break;
->  		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> index 48381c1adeed..cc7688ce79b2 100644
-> --- a/fs/xfs/scrub/common.c
-> +++ b/fs/xfs/scrub/common.c
-> @@ -500,7 +500,7 @@ xchk_ag_btcur_init(
->  	if (sa->agf_bp && xfs_sb_version_hasreflink(&mp->m_sb) &&
->  	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_REFC)) {
->  		sa->refc_cur = xfs_refcountbt_init_cursor(mp, sc->tp,
-> -				sa->agf_bp, agno, sa->pag);
-> +				sa->agf_bp, sa->pag);
+> +		}
+> +		if (++agno == mp->m_maxagi)
+> +			agno = 0;
+> +		if (agno == start_agno) {
+> +			if (!flags)
+> +				break;
+> +			flags = 0;
+> +		}
+>  		xfs_perag_put(pag);
 >  	}
->  }
 >  
-> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> index 7bfe9ea35de0..623cabaeafee 100644
-> --- a/fs/xfs/xfs_fsmap.c
-> +++ b/fs/xfs/xfs_fsmap.c
-> @@ -210,8 +210,7 @@ xfs_getfsmap_is_shared(
->  
->  	/* Are there any shared blocks here? */
->  	flen = 0;
-> -	cur = xfs_refcountbt_init_cursor(mp, tp, info->agf_bp,
-> -			info->pag->pag_agno, info->pag);
-> +	cur = xfs_refcountbt_init_cursor(mp, tp, info->agf_bp, info->pag);
->  
->  	error = xfs_refcount_find_shared(cur, rec->rm_startblock,
->  			rec->rm_blockcount, &fbno, &flen, false);
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 28ffe1817f9b..c256104772cb 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -144,7 +144,7 @@ xfs_reflink_find_shared(
->  	if (error)
->  		return error;
->  
-> -	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
-> +	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agbp->b_pag);
->  
->  	error = xfs_refcount_find_shared(cur, agbno, aglen, fbno, flen,
->  			find_end_of_shared);
-> @@ -763,7 +763,7 @@ xfs_reflink_recover_cow(
->  		return 0;
->  
->  	for_each_perag(mp, agno, pag) {
-> -		error = xfs_refcount_recover_cow_leftovers(mp, pag->pag_agno);
-> +		error = xfs_refcount_recover_cow_leftovers(mp, pag);
->  		if (error) {
->  			xfs_perag_put(pag);
->  			break;
 > -- 
 > 2.31.1
 > 
