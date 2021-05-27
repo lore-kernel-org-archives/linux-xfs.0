@@ -2,126 +2,75 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A414DC47089
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 07:03:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87AD5C47089
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 07:03:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C9EE610A2
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 07:03:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61348613BC
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 07:03:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234190AbhE0HEk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 May 2021 03:04:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58908 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233092AbhE0HEj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 May 2021 03:04:39 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30262C061574
-        for <linux-xfs@vger.kernel.org>; Thu, 27 May 2021 00:03:06 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id y202so2928172pfc.6
-        for <linux-xfs@vger.kernel.org>; Thu, 27 May 2021 00:03:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=in4kmkkhUZ6Y1ByycaIAGwd2vwBoZ2rLcQgMz7mvWOU=;
-        b=QVqNjxqAFTLb33qhPpibvZ5kCx38uyjsqQRuEhY2Kkn9uG5GBPQLGMA9AfjH6HWgTx
-         aoiHnWgVIvPiFJnjfA3a7bZcFiUJcmk+b/q7G1sZTmkbdKs4XIPIEDekbc4Pc8zFvAEI
-         3YXPjJ2wSrx0lqebneyxhID1LqtjOb6O6BLGjw06k4ZuJh3vPybcrqlAuNrsB5rD1N8l
-         vrUTpSZ1vB/3V6nfTSKjMC2ci7NT/ByRyeSTXSeIl3/5rnb24Hzpng8ocbOwDXdgqB/K
-         p28+7C+Um0Zd1/89roKvfxnh/I08adkmwFzt7JAv3U/rLeR8BXC041MEinGwiWqiLGeH
-         +b1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=in4kmkkhUZ6Y1ByycaIAGwd2vwBoZ2rLcQgMz7mvWOU=;
-        b=GUytU6wTpD2yED22UzTdnTxuAhOKW+aIidbcdYdpq0e9AZIbYLovFTcHpMi7L3i/W9
-         bX8UfYeE6/uPVkReZmtvEPNP4JlDBTLiQ2ws8hS/cHMBQqqTSPKyFGJanwcokSlKZ9fb
-         xce6OAxc9HBe5TJsp7OKkrVP5/O8OZn2ZG/wCTjh6ed3ZVuDKOjC1Qi1EffcaRkbultU
-         arl5YBaMu6gG1uczimPyXhRH8UoXicO0N8pCfjX0WE0Wux2kWo6Qn/T1dWAmE9X2NbJN
-         JhEBBCdc8wFY5uxBZD3qRXmEt4DNjzsllrZGP3wAjZwDqESxndUew/ebezave+B9iulQ
-         wQ0Q==
-X-Gm-Message-State: AOAM531njoe/YkSYLYQHBnPvkQal/xlKO8n3WjOjcRFDW56ffMsLZDCJ
-        MxfUT5/Exd0feWi8k0U9vAloV6kCA07uYg==
-X-Google-Smtp-Source: ABdhPJxCQf6LTfoqgixVLbiHIovURpw5JNT0iE9ig3hBy7rZqMBnaB4PucqqJTN4ZbPVBgPwJ+e6YA==
-X-Received: by 2002:a63:2bd5:: with SMTP id r204mr2339790pgr.426.1622098985065;
-        Thu, 27 May 2021 00:03:05 -0700 (PDT)
-Received: from garuda ([122.171.209.190])
-        by smtp.gmail.com with ESMTPSA id z22sm1139282pfa.157.2021.05.27.00.03.03
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 27 May 2021 00:03:04 -0700 (PDT)
-References: <20210525195504.7332-1-allison.henderson@oracle.com> <20210525195504.7332-13-allison.henderson@oracle.com>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v19 12/14] xfs: Clean up xfs_attr_node_addname_clear_incomplete
-In-reply-to: <20210525195504.7332-13-allison.henderson@oracle.com>
-Date:   Thu, 27 May 2021 12:33:00 +0530
-Message-ID: <87h7ioodzv.fsf@garuda>
+        id S234250AbhE0HFL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 May 2021 03:05:11 -0400
+Received: from mga11.intel.com ([192.55.52.93]:27993 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233092AbhE0HFK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 May 2021 03:05:10 -0400
+IronPort-SDR: ++McYilwwyEI9815wY/doKkZkJX1WSmRYORkcpm8AOIx5MJFM2g1sYrDNmDiu/fUQAJd+XnEZM
+ Da3tEFR/jjRw==
+X-IronPort-AV: E=McAfee;i="6200,9189,9996"; a="199623883"
+X-IronPort-AV: E=Sophos;i="5.82,334,1613462400"; 
+   d="scan'208";a="199623883"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2021 00:03:36 -0700
+IronPort-SDR: eUQIu3BJyokNmvG2RilmL57V+mgw1DXKd06gv46okPc0zVzUVcDD6NXE4VduHIUy/yWw4cd7pW
+ 9tatlsbF6IdA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,334,1613462400"; 
+   d="scan'208";a="615272551"
+Received: from lkp-server02.sh.intel.com (HELO 1ec8406c5392) ([10.239.97.151])
+  by orsmga005.jf.intel.com with ESMTP; 27 May 2021 00:03:35 -0700
+Received: from kbuild by 1ec8406c5392 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1lmA3K-0002cz-Oy; Thu, 27 May 2021 07:03:34 +0000
+Date:   Thu, 27 May 2021 15:03:23 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     kbuild-all@lists.01.org
+Subject: [RFC PATCH] xfs: xfs_allocfree_extent_res can be static
+Message-ID: <20210527070323.GA117376@de03bec1b31d>
+References: <20210527045202.1155628-5-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210527045202.1155628-5-david@fromorbit.com>
+X-Patchwork-Hint: ignore
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 26 May 2021 at 01:25, Allison Henderson wrote:
-> We can use the helper function xfs_attr_node_remove_name to reduce
-> duplicate code in this function
->
+fs/xfs/libxfs/xfs_trans_resv.c:91:1: warning: symbol 'xfs_allocfree_extent_res' was not declared. Should it be static?
 
-Looks good to me.
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: kernel test robot <lkp@intel.com>
+---
+ xfs_trans_resv.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 11 +++--------
->  1 file changed, 3 insertions(+), 8 deletions(-)
->
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index f7b0e79..32d451b 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -63,6 +63,8 @@ STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
->  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
->  STATIC int xfs_attr_set_iter(struct xfs_delattr_context *dac,
->  			     struct xfs_buf **leaf_bp);
-> +STATIC int xfs_attr_node_remove_name(struct xfs_da_args *args,
-> +				     struct xfs_da_state *state);
->  
->  int
->  xfs_inode_hasattr(
-> @@ -1207,7 +1209,6 @@ xfs_attr_node_addname_clear_incomplete(
->  {
->  	struct xfs_da_args		*args = dac->da_args;
->  	struct xfs_da_state		*state = NULL;
-> -	struct xfs_da_state_blk		*blk;
->  	int				retval = 0;
->  	int				error = 0;
->  
-> @@ -1222,13 +1223,7 @@ xfs_attr_node_addname_clear_incomplete(
->  	if (error)
->  		goto out;
->  
-> -	/*
-> -	 * Remove the name and update the hashvals in the tree.
-> -	 */
-> -	blk = &state->path.blk[state->path.active-1];
-> -	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
-> -	error = xfs_attr3_leaf_remove(blk->bp, args);
-> -	xfs_da3_fixhashpath(state, &state->path);
-> +	error = xfs_attr_node_remove_name(args, state);
->  
->  	/*
->  	 * Check to see if the tree needs to be collapsed.
-
-
--- 
-chandan
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 6363cacb790fe..1a5ee1da34a67 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -87,7 +87,7 @@ xfs_allocfree_log_count(
+  * the agfl header: 1 sector
+  * the allocation btrees: 2 trees * (max depth - 1) * block size
+  */
+-uint
++static uint
+ xfs_allocfree_extent_res(
+ 	struct xfs_mount *mp)
+ {
