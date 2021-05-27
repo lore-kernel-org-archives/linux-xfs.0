@@ -7,274 +7,260 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51736C4707F
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 18:17:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81593C4707F
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 18:31:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38485613CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 18:17:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62AAE611AE
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 18:31:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235411AbhE0ST3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 May 2021 14:19:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45478 "EHLO mail.kernel.org"
+        id S235179AbhE0SdR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 May 2021 14:33:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35016 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234756AbhE0ST3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 May 2021 14:19:29 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C0887613CC;
-        Thu, 27 May 2021 18:17:55 +0000 (UTC)
+        id S234155AbhE0SdQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 May 2021 14:33:16 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EDDF9611AE;
+        Thu, 27 May 2021 18:31:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622139475;
-        bh=7vNIvyV64C23z8mXC0vkZwiHJ0adA6VZcZeD6RAJmgI=;
+        s=k20201202; t=1622140303;
+        bh=Y6ag5IuAfqzF3Bju7o8WLTqdRpW4li++GWk2Pstr+ZQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EJN5amwPvHDm04TRyFk05ACyD21E/RE4VqmbQFF8qyxT+mMLxrEWdsVsPZHDTS1qS
-         LwukLYwJ5haRYFxvbDKPPovVQH4AqMyAPbhGJsB5zGSFO0QNh0XJLVspJCtEz+90S3
-         RFiVdvTpNJY7ydwZIbAq1ltKmhdE1DqvYmSMEbi6jS5vv94RdDyaHn9IQNyOYSdmqA
-         rEF6bj89hufVADhNpVXCWRetJ3G7FnN1WtBVvGxgbpF9uIj8P5ourbhZaB2boDHuNb
-         VaJ/4qg2PX8D+7S7ZLtUzLZQxdThvNoyBeeP+jT95GxFl5M2cSULs+3p4gQ2RRNAYU
-         3eWBkhGsKIJgQ==
-Date:   Thu, 27 May 2021 11:17:55 -0700
+        b=cPm8oYt+oZZD7B4Mq74WgiRuoj6DlP4Jq9JFo2Sb2RQNEkRybHBUroZisX+RDjBc4
+         oBUCFcccRLCpnj2CF7g7OSVRXVEXkWWRHGJeutiPQ1SWmhjC5DPa0ussH3FKTmYkH6
+         eG1CFwRsnuFY92mhMw8Qgdxw6ekkQ2gAg6VNSYkceUIUKpmGWykJZ4/97c9kZnQuDA
+         wXhrZEpk77pIel6FrqAWCQvZsUJb/A98XIjz5dXHjTuoxwfWJRxaohvHoaloZ0/Zk9
+         Bdm507SKj9xrcQO3zVJR3ldESXU6kPw3N+yBkNE4bwPz8GCX8Vd6kpJRvDyu6pF+W9
+         CZzfH74zFkkQA==
+Date:   Thu, 27 May 2021 11:31:42 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 28/39] xfs: rework per-iclog header CIL reservation
-Message-ID: <20210527181755.GG2402049@locust>
+Subject: Re: [PATCH 29/39] xfs: introduce per-cpu CIL tracking structure
+Message-ID: <20210527183142.GH2402049@locust>
 References: <20210519121317.585244-1-david@fromorbit.com>
- <20210519121317.585244-29-david@fromorbit.com>
+ <20210519121317.585244-30-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210519121317.585244-29-david@fromorbit.com>
+In-Reply-To: <20210519121317.585244-30-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 19, 2021 at 10:13:06PM +1000, Dave Chinner wrote:
+On Wed, May 19, 2021 at 10:13:07PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> For every iclog that a CIL push will use up, we need to ensure we
-> have space reserved for the iclog header in each iclog. It is
-> extremely difficult to do this accurately with a per-cpu counter
-> without expensive summing of the counter in every commit. However,
-> we know what the maximum CIL size is going to be because of the
-> hard space limit we have, and hence we know exactly how many iclogs
-> we are going to need to write out the CIL.
+> The CIL push lock is highly contended on larger machines, becoming a
+> hard bottleneck that about 700,000 transaction commits/s on >16p
+> machines. To address this, start moving the CIL tracking
+> infrastructure to utilise per-CPU structures.
 > 
-> We are constrained by the requirement that small transactions only
-> have reservation space for a single iclog header built into them.
-> At commit time we don't know how much of the current transaction
-> reservation is made up of iclog header reservations as calculated by
-> xfs_log_calc_unit_res() when the ticket was reserved. As larger
-> reservations have multiple header spaces reserved, we can steal
-> more than one iclog header reservation at a time, but we only steal
-> the exact number needed for the given log vector size delta.
+> We need to track the space used, the amount of log reservation space
+> reserved to write the CIL, the log items in the CIL and the busy
+> extents that need to be completed by the CIL commit.  This requires
+> a couple of per-cpu counters, an unordered per-cpu list and a
+> globally ordered per-cpu list.
 > 
-> As a result, we don't know exactly when we are going to steal iclog
-> header reservations, nor do we know exactly how many we are going to
-> need for a given CIL.
-> 
-> To make things simple, start by calculating the worst case number of
-> iclog headers a full CIL push will require. Record this into an
-> atomic variable in the CIL. Then add a byte counter to the log
-> ticket that records exactly how much iclog header space has been
-> reserved in this ticket by xfs_log_calc_unit_res(). This tells us
-> exactly how much space we can steal from the ticket at transaction
-> commit time.
-> 
-> Now, at transaction commit time, we can check if the CIL has a full
-> iclog header reservation and, if not, steal the entire reservation
-> the current ticket holds for iclog headers. This minimises the
-> number of times we need to do atomic operations in the fast path,
-> but still guarantees we get all the reservations we need.
+> Create a per-cpu structure to hold these and all the management
+> interfaces needed, as well as the hooks to handle hotplug CPUs.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-No new questions since last time, so:
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
 > ---
->  fs/xfs/xfs_log.c      |  9 ++++---
->  fs/xfs/xfs_log_cil.c  | 55 +++++++++++++++++++++++++++++++++----------
->  fs/xfs/xfs_log_priv.h | 20 +++++++++-------
->  3 files changed, 59 insertions(+), 25 deletions(-)
+>  fs/xfs/xfs_log_cil.c       | 106 +++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_log_priv.h      |  15 ++++++
+>  include/linux/cpuhotplug.h |   1 +
+>  3 files changed, 122 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 65b28fce4db4..77d9ea7daf26 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -3307,7 +3307,8 @@ xfs_log_ticket_get(
->  static int
->  xlog_calc_unit_res(
->  	struct xlog		*log,
-> -	int			unit_bytes)
-> +	int			unit_bytes,
-> +	int			*niclogs)
->  {
->  	int			iclog_space;
->  	uint			num_headers;
-> @@ -3387,6 +3388,8 @@ xlog_calc_unit_res(
->  	/* roundoff padding for transaction data and one for commit record */
->  	unit_bytes += 2 * log->l_iclog_roundoff;
->  
-> +	if (niclogs)
-> +		*niclogs = num_headers;
->  	return unit_bytes;
->  }
->  
-> @@ -3395,7 +3398,7 @@ xfs_log_calc_unit_res(
->  	struct xfs_mount	*mp,
->  	int			unit_bytes)
->  {
-> -	return xlog_calc_unit_res(mp->m_log, unit_bytes);
-> +	return xlog_calc_unit_res(mp->m_log, unit_bytes, NULL);
->  }
->  
->  /*
-> @@ -3413,7 +3416,7 @@ xlog_ticket_alloc(
->  
->  	tic = kmem_cache_zalloc(xfs_log_ticket_zone, GFP_NOFS | __GFP_NOFAIL);
->  
-> -	unit_res = xlog_calc_unit_res(log, unit_bytes);
-> +	unit_res = xlog_calc_unit_res(log, unit_bytes, &tic->t_iclog_hdrs);
->  
->  	atomic_set(&tic->t_ref, 1);
->  	tic->t_task		= current;
 > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 4637f8711ada..87d4eb321fdc 100644
+> index 87d4eb321fdc..ba1c6979a4c7 100644
 > --- a/fs/xfs/xfs_log_cil.c
 > +++ b/fs/xfs/xfs_log_cil.c
-> @@ -44,9 +44,20 @@ xlog_cil_ticket_alloc(
->  	 * transaction overhead reservation from the first transaction commit.
->  	 */
->  	tic->t_curr_res = 0;
-> +	tic->t_iclog_hdrs = 0;
->  	return tic;
+> @@ -1370,6 +1370,105 @@ xfs_log_item_in_current_chkpt(
+>  	return lip->li_seq == cil->xc_ctx->sequence;
 >  }
 >  
-> +static inline void
-> +xlog_cil_set_iclog_hdr_count(struct xfs_cil *cil)
-> +{
-> +	struct xlog	*log = cil->xc_log;
+> +#ifdef CONFIG_HOTPLUG_CPU
+> +static LIST_HEAD(xlog_cil_pcp_list);
+> +static DEFINE_SPINLOCK(xlog_cil_pcp_lock);
+> +static bool xlog_cil_pcp_init;
 > +
-> +	atomic_set(&cil->xc_iclog_hdrs,
-> +		   (XLOG_CIL_BLOCKING_SPACE_LIMIT(log) /
-> +			(log->l_iclog_size - log->l_iclog_hsize)));
+> +/*
+> + * Move dead percpu state to the relevant CIL context structures.
+> + *
+> + * We have to lock the CIL context here to ensure that nothing is modifying
+> + * the percpu state, either addition or removal. Both of these are done under
+> + * the CIL context lock, so grabbing that exclusively here will ensure we can
+> + * safely drain the cilpcp for the CPU that is dying.
+> + */
+> +static int
+> +xlog_cil_pcp_dead(
+> +	unsigned int		cpu)
+> +{
+> +	struct xfs_cil		*cil, *n;
+> +
+> +	spin_lock(&xlog_cil_pcp_lock);
+> +	list_for_each_entry_safe(cil, n, &xlog_cil_pcp_list, xc_pcp_list) {
+> +		spin_unlock(&xlog_cil_pcp_lock);
+> +		down_write(&cil->xc_ctx_lock);
+> +		/* move stuff on dead CPU to context */
+> +		up_write(&cil->xc_ctx_lock);
+> +		spin_lock(&xlog_cil_pcp_lock);
+> +	}
+> +	spin_unlock(&xlog_cil_pcp_lock);
+> +	return 0;
+> +}
+> +
+> +static int
+> +xlog_cil_pcp_hpadd(
+> +	struct xfs_cil		*cil)
+> +{
+> +	if (!xlog_cil_pcp_init) {
+> +		int	ret;
+> +		ret = cpuhp_setup_state_nocalls(CPUHP_XFS_CIL_DEAD,
+
+Nit: blank line between variable declarations and code.
+
+> +						"xfs/cil_pcp:dead", NULL,
+> +						xlog_cil_pcp_dead);
+> +		if (ret < 0) {
+> +			xfs_warn(cil->xc_log->l_mp,
+> +	"Failed to initialise CIL hotplug, error %d. XFS is non-functional.",
+> +				ret);
+> +			ASSERT(0);
+> +			return -ENOMEM;
+> +		}
+> +		xlog_cil_pcp_init = true;
+> +	}
+> +
+> +	INIT_LIST_HEAD(&cil->xc_pcp_list);
+> +	spin_lock(&xlog_cil_pcp_lock);
+> +	list_add(&cil->xc_pcp_list, &xlog_cil_pcp_list);
+> +	spin_unlock(&xlog_cil_pcp_lock);
+> +	return 0;
+> +}
+> +
+> +static void
+> +xlog_cil_pcp_hpremove(
+> +	struct xfs_cil		*cil)
+> +{
+> +	spin_lock(&xlog_cil_pcp_lock);
+> +	list_del(&cil->xc_pcp_list);
+> +	spin_unlock(&xlog_cil_pcp_lock);
+> +}
+> +
+> +#else /* !CONFIG_HOTPLUG_CPU */
+> +static inline void xlog_cil_pcp_hpadd(struct xfs_cil *cil) {}
+> +static inline void xlog_cil_pcp_hpremove(struct xfs_cil *cil) {}
+> +#endif
+> +
+> +static void __percpu *
+> +xlog_cil_pcp_alloc(
+> +	struct xfs_cil		*cil)
+> +{
+> +	void __percpu		*pcp;
+> +
+> +	pcp = alloc_percpu(struct xlog_cil_pcp);
+> +	if (!pcp)
+> +		return NULL;
+> +
+> +	if (xlog_cil_pcp_hpadd(cil) < 0) {
+> +		free_percpu(pcp);
+> +		return NULL;
+> +	}
+> +	return pcp;
+> +}
+> +
+> +static void
+> +xlog_cil_pcp_free(
+> +	struct xfs_cil		*cil,
+> +	void __percpu		*pcp)
+> +{
+> +	if (!pcp)
+> +		return;
+> +	xlog_cil_pcp_hpremove(cil);
+> +	free_percpu(pcp);
 > +}
 > +
 >  /*
->   * Unavoidable forward declaration - xlog_cil_push_work() calls
->   * xlog_cil_ctx_alloc() itself.
-> @@ -70,6 +81,7 @@ xlog_cil_ctx_switch(
->  	struct xfs_cil		*cil,
->  	struct xfs_cil_ctx	*ctx)
->  {
-> +	xlog_cil_set_iclog_hdr_count(cil);
->  	set_bit(XLOG_CIL_EMPTY, &cil->xc_flags);
->  	ctx->sequence = ++cil->xc_current_sequence;
->  	ctx->cil = cil;
-> @@ -92,6 +104,7 @@ xlog_cil_init_post_recovery(
->  {
->  	log->l_cilp->xc_ctx->ticket = xlog_cil_ticket_alloc(log);
->  	log->l_cilp->xc_ctx->sequence = 1;
-> +	xlog_cil_set_iclog_hdr_count(log->l_cilp);
+>   * Perform initial CIL structure initialisation.
+>   */
+> @@ -1384,6 +1483,12 @@ xlog_cil_init(
+>  	if (!cil)
+>  		return -ENOMEM;
+>  
+> +	cil->xc_pcp = xlog_cil_pcp_alloc(cil);
+> +	if (!cil->xc_pcp) {
+> +		kmem_free(cil);
+> +		return -ENOMEM;
+> +	}
+> +
+>  	INIT_LIST_HEAD(&cil->xc_cil);
+>  	INIT_LIST_HEAD(&cil->xc_committing);
+>  	spin_lock_init(&cil->xc_cil_lock);
+> @@ -1414,6 +1519,7 @@ xlog_cil_destroy(
+>  
+>  	ASSERT(list_empty(&cil->xc_cil));
+>  	ASSERT(test_bit(XLOG_CIL_EMPTY, &cil->xc_flags));
+> +	xlog_cil_pcp_free(cil, cil->xc_pcp);
+>  	kmem_free(cil);
 >  }
 >  
->  static inline int
-> @@ -419,7 +432,6 @@ xlog_cil_insert_items(
->  	struct xfs_cil_ctx	*ctx = cil->xc_ctx;
->  	struct xfs_log_item	*lip;
->  	int			len = 0;
-> -	int			iclog_space;
->  	int			iovhdr_res = 0, split_res = 0, ctx_res = 0;
->  
->  	ASSERT(tp);
-> @@ -442,19 +454,36 @@ xlog_cil_insert_items(
->  	    test_and_clear_bit(XLOG_CIL_EMPTY, &cil->xc_flags))
->  		ctx_res = ctx->ticket->t_unit_res;
->  
-> -	spin_lock(&cil->xc_cil_lock);
-> -
-> -	/* do we need space for more log record headers? */
-> -	iclog_space = log->l_iclog_size - log->l_iclog_hsize;
-> -	if (len > 0 && (ctx->space_used / iclog_space !=
-> -				(ctx->space_used + len) / iclog_space)) {
-> -		split_res = (len + iclog_space - 1) / iclog_space;
-> -		/* need to take into account split region headers, too */
-> -		split_res *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
-> -		ctx->ticket->t_unit_res += split_res;
-> +	/*
-> +	 * Check if we need to steal iclog headers. atomic_read() is not a
-> +	 * locked atomic operation, so we can check the value before we do any
-> +	 * real atomic ops in the fast path. If we've already taken the CIL unit
-> +	 * reservation from this commit, we've already got one iclog header
-> +	 * space reserved so we have to account for that otherwise we risk
-> +	 * overrunning the reservation on this ticket.
-> +	 *
-> +	 * If the CIL is already at the hard limit, we might need more header
-> +	 * space that originally reserved. So steal more header space from every
-> +	 * commit that occurs once we are over the hard limit to ensure the CIL
-> +	 * push won't run out of reservation space.
-> +	 *
-> +	 * This can steal more than we need, but that's OK.
-> +	 */
-> +	if (atomic_read(&cil->xc_iclog_hdrs) > 0 ||
-> +	    ctx->space_used + len >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
-> +		int	split_res = log->l_iclog_hsize +
-> +					sizeof(struct xlog_op_header);
-> +		if (ctx_res)
-> +			ctx_res += split_res * (tp->t_ticket->t_iclog_hdrs - 1);
-> +		else
-> +			ctx_res = split_res * tp->t_ticket->t_iclog_hdrs;
-> +		atomic_sub(tp->t_ticket->t_iclog_hdrs, &cil->xc_iclog_hdrs);
->  	}
-> -	tp->t_ticket->t_curr_res -= split_res + ctx_res + len;
-> -	ctx->ticket->t_curr_res += split_res + ctx_res;
-> +
-> +	spin_lock(&cil->xc_cil_lock);
-> +	tp->t_ticket->t_curr_res -= ctx_res + len;
-> +	ctx->ticket->t_unit_res += ctx_res;
-> +	ctx->ticket->t_curr_res += ctx_res;
->  	ctx->space_used += len;
->  
->  	/*
 > diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index 11606c378b7f..85a85ab569fe 100644
+> index 85a85ab569fe..aaa1e7f7fb66 100644
 > --- a/fs/xfs/xfs_log_priv.h
 > +++ b/fs/xfs/xfs_log_priv.h
-> @@ -137,15 +137,16 @@ enum xlog_iclog_state {
->  #define XLOG_ICL_NEED_FUA	(1 << 1)	/* iclog needs REQ_FUA */
+> @@ -227,6 +227,16 @@ struct xfs_cil_ctx {
+>  	struct work_struct	push_work;
+>  };
 >  
->  typedef struct xlog_ticket {
-> -	struct list_head   t_queue;	 /* reserve/write queue */
-> -	struct task_struct *t_task;	 /* task that owns this ticket */
-> -	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
-> -	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
-> -	int		   t_curr_res;	 /* current reservation in bytes : 4  */
-> -	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
-> -	char		   t_ocnt;	 /* original count		 : 1  */
-> -	char		   t_cnt;	 /* current count		 : 1  */
-> -	char		   t_flags;	 /* properties of reservation	 : 1  */
-> +	struct list_head	t_queue;	/* reserve/write queue */
-> +	struct task_struct	*t_task;	/* task that owns this ticket */
-> +	xlog_tid_t		t_tid;		/* transaction identifier */
-> +	atomic_t		t_ref;		/* ticket reference count */
-> +	int			t_curr_res;	/* current reservation */
-> +	int			t_unit_res;	/* unit reservation */
-> +	char			t_ocnt;		/* original count */
-> +	char			t_cnt;		/* current count */
-> +	char			t_flags;	/* properties of reservation */
-> +	int			t_iclog_hdrs;	/* iclog hdrs in t_curr_res */
->  } xlog_ticket_t;
->  
+> +/*
+> + * Per-cpu CIL tracking items
+> + */
+> +struct xlog_cil_pcp {
+> +	uint32_t		space_used;
+> +	uint32_t		curr_res;
+
+I don't think these fields need to be in this patch.
+
+Especially since you rename one of them in patch 31.
+
+I think this looks like the skeleton of adding per-cpu structures to the
+log, though I'll read the next few patches to see if the comments make
+more sense once you actually starting using the pcpu data.
+
+--D
+
+> +	struct list_head	busy_extents;
+> +	struct list_head	log_items;
+> +};
+> +
 >  /*
-> @@ -245,6 +246,7 @@ struct xfs_cil_ctx {
->  struct xfs_cil {
->  	struct xlog		*xc_log;
->  	unsigned long		xc_flags;
-> +	atomic_t		xc_iclog_hdrs;
->  	struct list_head	xc_cil;
->  	spinlock_t		xc_cil_lock;
+>   * Committed Item List structure
+>   *
+> @@ -260,6 +270,11 @@ struct xfs_cil {
+>  	wait_queue_head_t	xc_commit_wait;
+>  	xfs_csn_t		xc_current_sequence;
+>  	wait_queue_head_t	xc_push_wait;	/* background push throttle */
+> +
+> +	void __percpu		*xc_pcp;	/* percpu CIL structures */
+> +#ifdef CONFIG_HOTPLUG_CPU
+> +	struct list_head	xc_pcp_list;
+> +#endif
+>  } ____cacheline_aligned_in_smp;
 >  
+>  /* xc_flags bit values */
+> diff --git a/include/linux/cpuhotplug.h b/include/linux/cpuhotplug.h
+> index 4a62b3980642..3d3ccde9e9c8 100644
+> --- a/include/linux/cpuhotplug.h
+> +++ b/include/linux/cpuhotplug.h
+> @@ -52,6 +52,7 @@ enum cpuhp_state {
+>  	CPUHP_FS_BUFF_DEAD,
+>  	CPUHP_PRINTK_DEAD,
+>  	CPUHP_MM_MEMCQ_DEAD,
+> +	CPUHP_XFS_CIL_DEAD,
+>  	CPUHP_PERCPU_CNT_DEAD,
+>  	CPUHP_RADIX_DEAD,
+>  	CPUHP_PAGE_ALLOC_DEAD,
 > -- 
 > 2.31.1
 > 
