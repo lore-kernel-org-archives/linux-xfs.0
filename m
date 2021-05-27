@@ -4,136 +4,227 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FC50C47089
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 23:10:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5810DC4707F
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 23:10:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ECB82613D8
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 23:10:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DBB5613D8
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 23:10:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234744AbhE0XLd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 May 2021 19:11:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35202 "EHLO mail.kernel.org"
+        id S233967AbhE0XM1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 May 2021 19:12:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35452 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233726AbhE0XLd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 May 2021 19:11:33 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 419AA61176;
-        Thu, 27 May 2021 23:09:59 +0000 (UTC)
+        id S233726AbhE0XM0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 May 2021 19:12:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E95DE613D4;
+        Thu, 27 May 2021 23:10:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622156999;
-        bh=ozv62m6+abCCQ6Q0TOzx10PK7EGAxHMBn//PtQqK9mQ=;
+        s=k20201202; t=1622157053;
+        bh=ay3siPiDJUHmw5inWxg22PRv2zoptgLom6sp8u+GYg8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PnwQjJxupOpft1GYbsqCmUeyX347UDGfBUxf0YHPPGmdDg2r4CdcXiOntYWZQ1UDC
-         qBIvcSKnTfHJyH+AT7h47Tozsen+Km66XCyk7h6kRUP6xdGBbb06pyuE0DXDxZX0HZ
-         ROK2osLqx+lMuiyVfyhE/NQZOK0lUjab9kmkryIC3AOhoawLpbrHz1+EF5h1VqGQNc
-         AIcjVM+jn2lm9AZnLEtA5p3eyQqgp19JNu6J83mAorzBO95Yf36QEoYbUZ7uEzNcr/
-         LKcYR8olxS6yt5C94aUpLnSuAHkiJifY1asAPxSBL5rePLa3ou7xG9gtp5odmvyB2T
-         U/B2ea2a9vF0Q==
-Date:   Thu, 27 May 2021 16:09:58 -0700
+        b=c1SIbiYs8MObSl941P8Xuf7I9pVdAT58MBwGSaNrGTv9Mw88nh1meOQD40ZFFkh2R
+         Z3OR16FN1i8PJiVGRUfdZh3tdP8xnsZDC/5WbxgIrOvfx07Ip9wD1aAyfoYW2lTRIE
+         9ty6LpQHXJYOVlIBfORHlICLoZtFn3clzqgi/oXi2eJqfM0NZ6B8fMyYMundfKioMY
+         /QjJzApu3cUrSu9olIIa205SbGCfTj2181D+0Dz9sKDzI5zZTeSqR0GZlqOhEhoeHp
+         JZosx8pPYokkPkrZfWNoEfnqAcjjih+W1n8PLTu0N/agavYHp9UpxxMV6eJ9hAE5Rr
+         UhxcDJ0WxGfYA==
+Date:   Thu, 27 May 2021 16:10:52 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 06/10] xfs: remove ->b_offset handling for page backed
- buffers
-Message-ID: <20210527230958.GG2402049@locust>
+Subject: Re: [PATCH 01/10] xfs: split up xfs_buf_allocate_memory
+Message-ID: <20210527231052.GH2402049@locust>
 References: <20210526224722.1111377-1-david@fromorbit.com>
- <20210526224722.1111377-7-david@fromorbit.com>
+ <20210526224722.1111377-2-david@fromorbit.com>
+ <20210527224858.GA2402049@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210526224722.1111377-7-david@fromorbit.com>
+In-Reply-To: <20210527224858.GA2402049@locust>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 27, 2021 at 08:47:18AM +1000, Dave Chinner wrote:
-> From : Christoph Hellwig <hch@lst.de>
+On Thu, May 27, 2021 at 03:48:58PM -0700, Darrick J. Wong wrote:
+> On Thu, May 27, 2021 at 08:47:13AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Based on a patch from Christoph Hellwig.
+> > 
+> > This splits out the heap allocation and page allocation portions of
+> > the buffer memory allocation into two separate helper functions.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_buf.c | 126 ++++++++++++++++++++++++++++-------------------
+> >  1 file changed, 74 insertions(+), 52 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index 592800c8852f..2e35d344a69b 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -347,65 +347,55 @@ xfs_buf_free(
+> >  	kmem_cache_free(xfs_buf_zone, bp);
+> >  }
+> >  
+> > -/*
+> > - * Allocates all the pages for buffer in question and builds it's page list.
+> > - */
+> > -STATIC int
+> > -xfs_buf_allocate_memory(
+> > -	struct xfs_buf		*bp,
+> > -	uint			flags)
+> > +static int
+> > +xfs_buf_alloc_kmem(
+> > +	struct xfs_buf	*bp,
+> > +	size_t		size,
+> > +	xfs_buf_flags_t	flags)
+> >  {
+> > -	size_t			size;
+> > -	size_t			nbytes, offset;
+> > -	gfp_t			gfp_mask = xb_to_gfp(flags);
+> > -	unsigned short		page_count, i;
+> > -	xfs_off_t		start, end;
+> > -	int			error;
+> > -	xfs_km_flags_t		kmflag_mask = 0;
+> > +	int		align_mask = xfs_buftarg_dma_alignment(bp->b_target);
+> > +	xfs_km_flags_t	kmflag_mask = KM_NOFS;
+> >  
+> > -	/*
+> > -	 * assure zeroed buffer for non-read cases.
+> > -	 */
+> > -	if (!(flags & XBF_READ)) {
+> > +	/* Assure zeroed buffer for non-read cases. */
+> > +	if (!(flags & XBF_READ))
+> >  		kmflag_mask |= KM_ZERO;
+> > -		gfp_mask |= __GFP_ZERO;
+> > -	}
+> >  
+> > -	/*
+> > -	 * for buffers that are contained within a single page, just allocate
+> > -	 * the memory from the heap - there's no need for the complexity of
+> > -	 * page arrays to keep allocation down to order 0.
+> > -	 */
+> > -	size = BBTOB(bp->b_length);
+> > -	if (size < PAGE_SIZE) {
+> > -		int align_mask = xfs_buftarg_dma_alignment(bp->b_target);
+> > -		bp->b_addr = kmem_alloc_io(size, align_mask,
+> > -					   KM_NOFS | kmflag_mask);
+> > -		if (!bp->b_addr) {
+> > -			/* low memory - use alloc_page loop instead */
+> > -			goto use_alloc_page;
+> > -		}
+> > +	bp->b_addr = kmem_alloc_io(size, align_mask, kmflag_mask);
+> > +	if (!bp->b_addr)
+> > +		return -ENOMEM;
+> >  
+> > -		if (((unsigned long)(bp->b_addr + size - 1) & PAGE_MASK) !=
+> > -		    ((unsigned long)bp->b_addr & PAGE_MASK)) {
+> > -			/* b_addr spans two pages - use alloc_page instead */
+> > -			kmem_free(bp->b_addr);
+> > -			bp->b_addr = NULL;
+> > -			goto use_alloc_page;
+> > -		}
+> > -		bp->b_offset = offset_in_page(bp->b_addr);
+> > -		bp->b_pages = bp->b_page_array;
+> > -		bp->b_pages[0] = kmem_to_page(bp->b_addr);
+> > -		bp->b_page_count = 1;
+> > -		bp->b_flags |= _XBF_KMEM;
+> > -		return 0;
+> > +	if (((unsigned long)(bp->b_addr + size - 1) & PAGE_MASK) !=
+> > +	    ((unsigned long)bp->b_addr & PAGE_MASK)) {
+> > +		/* b_addr spans two pages - use alloc_page instead */
+> > +		kmem_free(bp->b_addr);
+> > +		bp->b_addr = NULL;
+> > +		return -ENOMEM;
+> >  	}
+> > +	bp->b_offset = offset_in_page(bp->b_addr);
+> > +	bp->b_pages = bp->b_page_array;
+> > +	bp->b_pages[0] = kmem_to_page(bp->b_addr);
+> > +	bp->b_page_count = 1;
+> > +	bp->b_flags |= _XBF_KMEM;
+> > +	return 0;
+> > +}
+> > +
+> > +static int
+> > +xfs_buf_alloc_pages(
+> > +	struct xfs_buf	*bp,
+> > +	uint		page_count,
+> > +	xfs_buf_flags_t	flags)
+> > +{
+> > +	gfp_t		gfp_mask = xb_to_gfp(flags);
+> > +	size_t		size;
+> > +	size_t		offset;
+> > +	size_t		nbytes;
+> > +	int		i;
+> > +	int		error;
+> > +
+> > +	/* Assure zeroed buffer for non-read cases. */
+> > +	if (!(flags & XBF_READ))
+> > +		gfp_mask |= __GFP_ZERO;
+> >  
+> > -use_alloc_page:
+> > -	start = BBTOB(bp->b_maps[0].bm_bn) >> PAGE_SHIFT;
+> > -	end = (BBTOB(bp->b_maps[0].bm_bn + bp->b_length) + PAGE_SIZE - 1)
+> > -								>> PAGE_SHIFT;
+> > -	page_count = end - start;
+> >  	error = _xfs_buf_get_pages(bp, page_count);
+> >  	if (unlikely(error))
+> >  		return error;
+> > @@ -458,6 +448,38 @@ xfs_buf_allocate_memory(
+> >  	return error;
+> >  }
+> >  
+> > +
+> > +/*
+> > + * Allocates all the pages for buffer in question and builds it's page list.
+> > + */
+> > +static int
+> > +xfs_buf_allocate_memory(
+> > +	struct xfs_buf		*bp,
+> > +	uint			flags)
+> > +{
+> > +	size_t			size;
+> > +	xfs_off_t		start, end;
+> > +	int			error;
+> > +
+> > +	/*
+> > +	 * For buffers that fit entirely within a single page, first attempt to
+> > +	 * allocate the memory from the heap to minimise memory usage. If we
+> > +	 * can't get heap memory for these small buffers, we fall back to using
+> > +	 * the page allocator.
+> > +	 */
+> > +	size = BBTOB(bp->b_length);
+> > +	if (size < PAGE_SIZE) {
+> > +		error = xfs_buf_alloc_kmem(bp, size, flags);
+> > +		if (!error)
+> > +			return 0;
+> > +	}
+> > +
+> > +	start = BBTOB(bp->b_maps[0].bm_bn) >> PAGE_SHIFT;
+> > +	end = (BBTOB(bp->b_maps[0].bm_bn + bp->b_length) + PAGE_SIZE - 1)
+> > +								>> PAGE_SHIFT;
 > 
-> ->b_offset can only be non-zero for _XBF_KMEM backed buffers, so
-> remove all code dealing with it for page backed buffers.
+> round_down and round_up?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> [dgc: modified to fit this patchset]
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> As a straight translation this seems fine, but you might as well take
+> the opportunity to declutter some of this. :)
 
-I think it's the case that the only time we'd end up with a nonzero
-b_offset is if the kmem_alloc returns a slab object in the middle of a
-page, right?  i.e. vmalloc is supposed to give us full pages, and we
-hope that nobody ever sells a device with a 64k dma alignment...?
+...which you & hch did in patch 7.  Ok.
 
-Assuming that's right,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  fs/xfs/xfs_buf.c | 8 +++-----
->  fs/xfs/xfs_buf.h | 3 ++-
->  2 files changed, 5 insertions(+), 6 deletions(-)
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index d15999c41885..87151d78a0d8 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -79,7 +79,7 @@ static inline int
->  xfs_buf_vmap_len(
->  	struct xfs_buf	*bp)
->  {
-> -	return (bp->b_page_count * PAGE_SIZE) - bp->b_offset;
-> +	return (bp->b_page_count * PAGE_SIZE);
->  }
->  
->  /*
-> @@ -281,7 +281,7 @@ xfs_buf_free_pages(
->  	ASSERT(bp->b_flags & _XBF_PAGES);
->  
->  	if (xfs_buf_is_vmapped(bp))
-> -		vm_unmap_ram(bp->b_addr - bp->b_offset, bp->b_page_count);
-> +		vm_unmap_ram(bp->b_addr, bp->b_page_count);
->  
->  	for (i = 0; i < bp->b_page_count; i++) {
->  		if (bp->b_pages[i])
-> @@ -442,7 +442,7 @@ _xfs_buf_map_pages(
->  	ASSERT(bp->b_flags & _XBF_PAGES);
->  	if (bp->b_page_count == 1) {
->  		/* A single page buffer is always mappable */
-> -		bp->b_addr = page_address(bp->b_pages[0]) + bp->b_offset;
-> +		bp->b_addr = page_address(bp->b_pages[0]);
->  	} else if (flags & XBF_UNMAPPED) {
->  		bp->b_addr = NULL;
->  	} else {
-> @@ -469,7 +469,6 @@ _xfs_buf_map_pages(
->  
->  		if (!bp->b_addr)
->  			return -ENOMEM;
-> -		bp->b_addr += bp->b_offset;
->  	}
->  
->  	return 0;
-> @@ -1680,7 +1679,6 @@ xfs_buf_offset(
->  	if (bp->b_addr)
->  		return bp->b_addr + offset;
->  
-> -	offset += bp->b_offset;
->  	page = bp->b_pages[offset >> PAGE_SHIFT];
->  	return page_address(page) + (offset & (PAGE_SIZE-1));
->  }
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 459ca34f26f5..464dc548fa23 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -167,7 +167,8 @@ struct xfs_buf {
->  	atomic_t		b_pin_count;	/* pin count */
->  	atomic_t		b_io_remaining;	/* #outstanding I/O requests */
->  	unsigned int		b_page_count;	/* size of page array */
-> -	unsigned int		b_offset;	/* page offset in first page */
-> +	unsigned int		b_offset;	/* page offset of b_addr,
-> +						   only for _XBF_KMEM buffers */
->  	int			b_error;	/* error code on I/O */
->  
->  	/*
-> -- 
-> 2.31.1
+> --D
 > 
+> > +	return xfs_buf_alloc_pages(bp, end - start, flags);
+> > +}
+> > +
+> >  /*
+> >   *	Map buffer into kernel address-space if necessary.
+> >   */
+> > -- 
+> > 2.31.1
+> > 
