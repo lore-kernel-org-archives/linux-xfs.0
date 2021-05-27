@@ -2,121 +2,136 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DC18C4708E
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 04:52:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 127E5C4707F
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 06:02:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4300061073
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 04:52:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D31D2613D1
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 06:02:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234363AbhE0Exn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 May 2021 00:53:43 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47000 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234405AbhE0Exl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 May 2021 00:53:41 -0400
-Received: from dread.disaster.area (pa49-180-230-185.pa.nsw.optusnet.com.au [49.180.230.185])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 292351043897
-        for <linux-xfs@vger.kernel.org>; Thu, 27 May 2021 14:52:06 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lm804-005h1A-O9
-        for linux-xfs@vger.kernel.org; Thu, 27 May 2021 14:52:04 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.94)
-        (envelope-from <david@fromorbit.com>)
-        id 1lm804-004qgT-GT
-        for linux-xfs@vger.kernel.org; Thu, 27 May 2021 14:52:04 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 3/6] xfs: xfs_itruncate_extents has no extent count limitation
-Date:   Thu, 27 May 2021 14:51:59 +1000
-Message-Id: <20210527045202.1155628-4-david@fromorbit.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210527045202.1155628-1-david@fromorbit.com>
-References: <20210527045202.1155628-1-david@fromorbit.com>
+        id S234367AbhE0GEO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 May 2021 02:04:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45192 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232773AbhE0GEN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 May 2021 02:04:13 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A57AC061574
+        for <linux-xfs@vger.kernel.org>; Wed, 26 May 2021 23:02:40 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id d20so1789951pls.13
+        for <linux-xfs@vger.kernel.org>; Wed, 26 May 2021 23:02:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=GW/h6RivuSeKzpTUyPSD0j3OYmtx07JI46Fo1pXFIPw=;
+        b=CWyiJyxp1Pf19Iji2llq/ZCsgm4T7untWhvvTa0zuuSI2ZhNzzpnYKg9hYgBhxMg92
+         Oq3PZUKpnC9Zrq0DkunCqhoUd1Ny2YoeVU8wiiePXzLP97i9hdGw6R/68yefkSBWYW7+
+         vVuui+Uvo1m7KJBItr5Kul1DXO/oAqv7zN1W/ecRw/jngdgpCGJbFTYpM0BdYP5VUN3/
+         L5Pk3CFjjhaAQK99b5tTlr9DYR7PYJV4T71KX1QXMGhb5qCC64y4XJ+d0qJJxrfYbsrX
+         r0kFutXGd4i78a3Nl0yIBRI37knF6jFNy5HiqyK98xbbIe84NPF2JAesbdOpiTHXnhAf
+         QyqA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=GW/h6RivuSeKzpTUyPSD0j3OYmtx07JI46Fo1pXFIPw=;
+        b=SYKiQ6kek8UgZJpu9o1IucoxqKTOyfet+jF4tSed/c4uV4pTD3V+jA1W2XDRN8w3i3
+         rrLAq7jVYkVayx++1Bd0UONF1bnycMrcnXV7gmzjjKvSf4oFA0nfd0o3zVg3WTEgxroe
+         iCEXrmAAzDbVoh43oY4C0JyJO7Wcpi+0cg+020uWI4OLsO9+ULNvqbytgikmdBCJoQTv
+         PoPA6lH+VyxFb8c1SgeijncuxbwbmnqmfqOuOPwfgElnwI4iwqnIGD+EdBCrZjDT3Ny+
+         w9Z3CJMvY44MKFzaQeBxMI85MwRN30W5RQkzLYxUx8WL/eYH/Oj325w+YuVfO7Yg2QY+
+         bv2g==
+X-Gm-Message-State: AOAM533nqSF07DCw4o87GMhrxC13Avb8buWpQUva3aSH4lk3VkWNU7sf
+        NhpHlfA6nFDRpw2vgLH58tvhH92dE2abtg==
+X-Google-Smtp-Source: ABdhPJzHAB6Waic9rC11lxWt3BfhZ/cIjSqVX67+3HWjUzNeVGRifuuattz+BFNVCg0MRh4tazi8mQ==
+X-Received: by 2002:a17:90a:dac1:: with SMTP id g1mr7653435pjx.199.1622095359888;
+        Wed, 26 May 2021 23:02:39 -0700 (PDT)
+Received: from garuda ([122.171.209.190])
+        by smtp.gmail.com with ESMTPSA id y26sm822011pge.94.2021.05.26.23.02.38
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 26 May 2021 23:02:39 -0700 (PDT)
+References: <20210527001942.1115586-1-david@fromorbit.com>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: btree format inode forks can have zero extents
+In-reply-to: <20210527001942.1115586-1-david@fromorbit.com>
+Date:   Thu, 27 May 2021 11:32:36 +0530
+Message-ID: <87k0nkogsj.fsf@garuda>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
-        a=dUIOjvib2kB+GiIc1vUx8g==:117 a=dUIOjvib2kB+GiIc1vUx8g==:17
-        a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=m78L4NlQDRkRyoOWfzwA:9
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On 27 May 2021 at 05:49, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> xfs/538 is assert failing with this trace when testing with
+> directory block sizes of 64kB:
+>
+> XFS: Assertion failed: !xfs_need_iread_extents(ifp), file: fs/xfs/libxfs/xfs_bmap.c, line: 608
+> ....
+> Call Trace:
+>  xfs_bmap_btree_to_extents+0x2a9/0x470
+>  ? kmem_cache_alloc+0xe7/0x220
+>  __xfs_bunmapi+0x4ca/0xdf0
+>  xfs_bunmapi+0x1a/0x30
+>  xfs_dir2_shrink_inode+0x71/0x210
+>  xfs_dir2_block_to_sf+0x2ae/0x410
+>  xfs_dir2_block_removename+0x21a/0x280
+>  xfs_dir_removename+0x195/0x1d0
+>  xfs_remove+0x244/0x460
+>  xfs_vn_unlink+0x53/0xa0
+>  ? selinux_inode_unlink+0x13/0x20
+>  vfs_unlink+0x117/0x220
+>  do_unlinkat+0x1a2/0x2d0
+>  __x64_sys_unlink+0x42/0x60
+>  do_syscall_64+0x3a/0x70
+>  entry_SYSCALL_64_after_hwframe+0x44/0xae
+>
+> This is a check to ensure that the extents have been read into
+> memory before we are doing a ifork btree manipulation. This assert
+> is bogus in the above case.
+>
+> We have a fragmented directory block that has more extents in it
+> than can fit in extent format, so the inode data fork is in btree
+> format. xfs_dir2_shrink_inode() asks to remove all remaining 16
+> filesystem blocks from the inode so it can convert to short form,
+> and __xfs_bunmapi() removes all the extents. We now have a data fork
+> in btree format but have zero extents in the fork. This incorrectly
+> trips the xfs_need_iread_extents() assert because it assumes that an
+> empty extent btree means the extent tree has not been read into
+> memory yet. This is clearly not the case with xfs_bunmapi(), as it
+> has an explicit call to xfs_iread_extents() in it to pull the
+> extents into memory before it starts unmapping.
+>
+> Also, the assert directly after this bogus one is:
+>
+> 	ASSERT(ifp->if_format == XFS_DINODE_FMT_BTREE);
+>
+> Which covers the context in which it is legal to call
+> xfs_bmap_btree_to_extents just fine. Hence we should just remove the
+> bogus assert as it is clearly wrong and causes a regression.
+>
+> The returns the test behaviour to the pre-existing assert failure in
+> xfs_dir2_shrink_inode() that indicates xfs_bunmapi() has failed to
+> remove all the extents in the range it was asked to unmap.
+>
 
-Ever since we moved to freeing of extents by deferred operations,
-we've already freed extents via individual transactions. Hence the
-only limitation of how many extents we can mark for freeing in a
-single xfs_bunmapi() call bound only by how many deferrals we want
-to queue.
+The functions calling xfs_bmap_btree_to_extents() have indeed read all the
+extents of the corresponding inode fork into memory. Hence, removal of the
+assert() statement is not an issue.
 
-That is xfs_bunmapi() doesn't actually do any AG based extent
-freeing, so there's no actually transaction reservation used up by
-calling bunmapi with a large count of extents to be freed. RT
-extents have always been freed directly by bunmapi, but that doesn't
-require modification of large number of blocks as there are no
-btrees to split.
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-Some callers of xfs_bunmapi assume that the extent count being freed
-is bound by geometry (e.g. directories) and these can ask bunmapi to
-free up to 64 extents in a single call. These functions just work as
-tehy stand, so there's no reason for truncate to have a limit of
-just two extents per bunmapi call anymore.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Increase XFS_ITRUNC_MAX_EXTENTS to 64 to match the number of extents
-that can be deferred in a single loop to match what the directory
-code already uses.
-
-For realtime inodes, where xfs_bunmapi() directly frees extents,
-leave the limit at 2 extents per loop as this is all the space that
-the transaction reservation will cover.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_inode.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0369eb22c1bb..db220eaa34b8 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -40,9 +40,18 @@ kmem_zone_t *xfs_inode_zone;
- 
- /*
-  * Used in xfs_itruncate_extents().  This is the maximum number of extents
-- * freed from a file in a single transaction.
-+ * we will unmap and defer for freeing in a single call to xfs_bunmapi().
-+ * Realtime inodes directly free extents in xfs_bunmapi(), so are bound
-+ * by transaction reservation size to 2 extents.
-  */
--#define	XFS_ITRUNC_MAX_EXTENTS	2
-+static inline int
-+xfs_itrunc_max_extents(
-+	struct xfs_inode	*ip)
-+{
-+	if (XFS_IS_REALTIME_INODE(ip))
-+		return 2;
-+	return 64;
-+}
- 
- STATIC int xfs_iunlink(struct xfs_trans *, struct xfs_inode *);
- STATIC int xfs_iunlink_remove(struct xfs_trans *, struct xfs_inode *);
-@@ -1402,7 +1411,7 @@ xfs_itruncate_extents_flags(
- 	while (unmap_len > 0) {
- 		ASSERT(tp->t_firstblock == NULLFSBLOCK);
- 		error = __xfs_bunmapi(tp, ip, first_unmap_block, &unmap_len,
--				flags, XFS_ITRUNC_MAX_EXTENTS);
-+				flags, xfs_itrunc_max_extents(ip));
- 		if (error)
- 			goto out;
- 
--- 
-2.31.1
-
+--
+chandan
