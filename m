@@ -2,199 +2,235 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C736C47089
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 21:31:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A6CDC4707F
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:02:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70FCB613C9
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 21:31:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6D63613EB
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:02:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234651AbhE0Vcs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 May 2021 17:32:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59496 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232975AbhE0Vcs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 May 2021 17:32:48 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC30BC061760
-        for <linux-xfs@vger.kernel.org>; Thu, 27 May 2021 14:31:14 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id b15-20020a17090a550fb029015dad75163dso1281452pji.0
-        for <linux-xfs@vger.kernel.org>; Thu, 27 May 2021 14:31:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=ggxXu6khFzuHqhI0ulwwbMYsWS89137XDyToRCuLR6Y=;
-        b=dZ+XUsedmo86h4NhBMsgswFCTPlxr3liApdTFu+31HaTfDmWsBUULBS4+NAXxo95f9
-         1ORhr+Nb9eiOqs3M1fMfwySr/Lh2N8IRUndewhoIRakj+vjdn+eV4SZk38wSebLH2dI/
-         FbGaPq2YWUdTN7HT1Zx7F7bdsQnM2nSG7OnOc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=ggxXu6khFzuHqhI0ulwwbMYsWS89137XDyToRCuLR6Y=;
-        b=fuo5b5eAzaT85xwJ3CWSrprIuJCMYxCk0lXPrfFiEQ27olbGHKy5XB/ARkc92Vjl0Q
-         IA5uXT/XxDZDwdDK2dfp7kH+rv3DDeelsnd7ygpzP882zk+64CxlDqZaeN8teVb6Yi1/
-         3hgzwjhYxmeEUTwkp8eU96eMBbduWohprbuUBt4QYinod5xeYCHiUPJV+K+dsYuL21Xw
-         XqswGGaUTIStQqI9ASrhX1rlThg7IyELaRVFN4mfpj0qXIKwZylFFxCKF9W5bueV8PTN
-         JS/D4DauvO7z3RUj1Ksk7Y7omRKZmjeOrYWgCQy6Azi+g+Krv/eD1nrA+1ila70vj3+q
-         nOuA==
-X-Gm-Message-State: AOAM532lDfl4EZcvEcCwTCdkXPTSRTTpT+SpTwHJn53ZIwFwbf+1ZBV9
-        /hTyuH8MCkS4XTOZErKcY5ZFeA==
-X-Google-Smtp-Source: ABdhPJzwu8ym8ft0mEUJfJozHYnglV77DSgsagFBD/Q4TMQwQdy9KB3lKermhhPFy/AQ7tte+s40xQ==
-X-Received: by 2002:a17:90a:390d:: with SMTP id y13mr568949pjb.133.1622151074440;
-        Thu, 27 May 2021 14:31:14 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id a12sm2952946pfg.102.2021.05.27.14.31.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 May 2021 14:31:13 -0700 (PDT)
-Date:   Thu, 27 May 2021 14:31:12 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org, joe@perches.com
-Subject: Re: [PATCH][next] xfs: Fix fall-through warnings for Clang
-Message-ID: <202105271358.22E0E2BFD@keescook>
-References: <20210420230652.GA70650@embeddedor>
- <20210420233850.GQ3122264@magnolia>
- <62895e8c-800d-fa7b-15f6-480179d552be@embeddedor.com>
- <bcae9d46-644c-d6f6-3df5-e8f7c50a673d@embeddedor.com>
- <20210526211624.GB202121@locust>
+        id S234684AbhE0WDy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 May 2021 18:03:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57234 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234404AbhE0WDy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 May 2021 18:03:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7E2C56113B;
+        Thu, 27 May 2021 22:02:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1622152940;
+        bh=4T5g8Z3gfAwUAZTay4sjwlxIg9xOsYsdZ9dHCXOhfb8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PE1wKNcvTkarROMXCUCUbDlE4U/LAAEL/fGYmrSw5KA1ILYFMqyi/pcJKmvd7DKGV
+         tJxBKz8uEwr3zJ6yOaklElZovmzBw4faKTghfWRjGXSFdDXfkaHcSjOEPotohCSdgg
+         xWHkB9b9j3dD7EPSYrDiVKwRjyT5kiSw2hyNi+4MQ/AVJQ5epXIsjFfIFu/TbqHYD2
+         eMNV/DrgJDFURgJPTBpKAWrw8haiPKPhNytUDsVQXpS0oL6yAoeUNOSOd+prfg+dM1
+         Dzk1Kwe6Co4GPtJEXE/YlUWEQf6u04FeAK1sgymgKeKWngGc6w49CiX9oCu6GUx8No
+         weSSCf1Bsv9lg==
+Date:   Thu, 27 May 2021 15:02:20 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/23] xfs: prepare for moving perag definitions and
+ support to libxfs
+Message-ID: <20210527220220.GQ2402049@locust>
+References: <20210519012102.450926-1-david@fromorbit.com>
+ <20210519012102.450926-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210526211624.GB202121@locust>
+In-Reply-To: <20210519012102.450926-3-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 26, 2021 at 02:16:24PM -0700, Darrick J. Wong wrote:
-> On Wed, May 26, 2021 at 01:21:06PM -0500, Gustavo A. R. Silva wrote:
-> > 
-> > 
-> > On 4/20/21 18:56, Gustavo A. R. Silva wrote:
-> > > 
-> > > 
-> > > On 4/20/21 18:38, Darrick J. Wong wrote:
-> > >> On Tue, Apr 20, 2021 at 06:06:52PM -0500, Gustavo A. R. Silva wrote:
-> > >>> In preparation to enable -Wimplicit-fallthrough for Clang, fix
-> > >>> the following warnings by replacing /* fall through */ comments,
-> > >>> and its variants, with the new pseudo-keyword macro fallthrough:
-> > >>>
-> > >>> fs/xfs/libxfs/xfs_alloc.c:3167:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/libxfs/xfs_da_btree.c:286:3: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/libxfs/xfs_ag_resv.c:346:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/libxfs/xfs_ag_resv.c:388:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/xfs_bmap_util.c:246:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/xfs_export.c:88:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/xfs_export.c:96:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/xfs_file.c:867:3: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/xfs_ioctl.c:562:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/xfs_ioctl.c:1548:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/xfs_iomap.c:1040:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/xfs_inode.c:852:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/xfs_log.c:2627:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/xfs_trans_buf.c:298:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/scrub/bmap.c:275:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/scrub/btree.c:48:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/scrub/common.c:85:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/scrub/common.c:138:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/scrub/common.c:698:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/scrub/dabtree.c:51:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>> fs/xfs/scrub/repair.c:951:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-> > >>>
-> > >>> Notice that Clang doesn't recognize /* fall through */ comments as
-> > >>> implicit fall-through markings, so in order to globally enable
-> > >>> -Wimplicit-fallthrough for Clang, these comments need to be
-> > >>> replaced with fallthrough; in the whole codebase.
-> > >>>
-> > >>> Link: https://github.com/KSPP/linux/issues/115
-> > >>> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> > >>
-> > >> I've already NAKd this twice, so I guess I'll NAK it a third time.
-> > > 
-> > > Darrick,
-> > > 
-> > > The adoption of fallthrough; has been already accepted and in use since Linux v5.7:
-> > > 
-> > > https://www.kernel.org/doc/html/v5.7/process/deprecated.html?highlight=fallthrough#implicit-switch-case-fall-through
-> > > 
-> > > This change is needed, and I would really prefer if this goes upstream through your tree.
-> > > 
-> > > Linus has taken these patches directly for a while, now.
-> > > 
-> > > Could you consider taking it this time? :)
-> > > 
-> > 
-> > Hi Darrick,
-> > 
-> > If you don't mind, I will take this in my -next[1] branch for v5.14, so we can globally enable
-> > -Wimplicit-fallthrough for Clang in that release.
-> > 
-> > We had thousands of these warnings and now we are down to 47 in next-20210526,
-> > 22 of which are fixed with this patch.
+On Wed, May 19, 2021 at 11:20:41AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> I guess we're all required to kowtow to a bunch of effing bots now.
-> Hooray for having to have a macro to code-switch for the sake of
-> stupid compiler writers who refuse to give the rest of us a single
-> workable way to signal "this switch code block should not end here":
+> The perag structures really need to be defined with the rest of the
+> AG support infrastructure. The struct xfs_perag and init/teardown
+> has been placed in xfs_mount.[ch] because there are differences in
+> the structure between kernel and userspace. Mainly that userspace
+> doesn't have a lot of the internal stuff that the kernel has for
+> caches and discard and other such structures.
 > 
-> /* fall through */
-> __attribute__((fallthrough));
-> do { } while (0) /* fall through */
+> However, it makes more sense to move this to libxfs than to keep
+> this separation because we are now moving to use struct perags
+> everywhere in the code instead of passing raw agnumber_t values
+> about. Hence we shoudl really move the support infrastructure to
+> libxfs/xfs_ag.[ch].
 > 
-> and soon the ISO geniuses will make it worse by adding to C2x:
+> To do this without breaking userspace, first we need to rearrange
+> the structures and code so that all the kernel specific code is
+> located together. This makes it simple for userspace to ifdef out
+> the all the parts it does not need, minimising the code differences
+> between kernel and userspace. The next commit will do the move...
 > 
-> [[fallthrough]];
-> 
-> Hooray!  Macros to abstractify stupidity!!!!
-> 
-> Dave and I have told you and Miaohe several[1] times[2] to fix[3] the
-> compiler, but clearly you don't care what we think and have decided to
-> ram this in through Linus anyway.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-To clarify, we certainly _do_ care what you think. It's just that
-when faced with the difficulties of the compiler's implementations of
-handling this, the kernel had to get creative and pick the least-bad of
-many bad choices. We're trying to make the kernel safer for everyone,
-and this particular C language weakness has caused us a significant
-number of bugs. Eradicating it is worth the effort.
+Looks good this time around,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-All that said, as you pointed out, you _have_ asked before[1] to just
-have Linus take it without bothering you directly, so okay, that can be
-done. Generally maintainers have wanted these changes to go through their
-trees so it doesn't cause them merge pain, but it seems you'd prefer it
-the other way around.
+--D
 
--Kees
-
-[1] https://lore.kernel.org/linux-xfs/20200820191237.GK6096@magnolia/
-"If you feel really passionate about ramming a bunch of pointless churn
- into the kernel tree to make my life more painful, send this to Linus
- and let him make the change."
-
-> Since that is what you choose, do not send me email again.
+> ---
+>  fs/xfs/xfs_mount.c | 56 ++++++++++++++++++++++++++--------------------
+>  fs/xfs/xfs_mount.h | 19 ++++++++--------
+>  2 files changed, 42 insertions(+), 33 deletions(-)
 > 
-> NAKed-by: Darrick J. Wong <djwong@kernel.org>
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 21c630dde476..6966d7b12a13 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -148,9 +148,11 @@ xfs_free_perag(
+>  		spin_unlock(&mp->m_perag_lock);
+>  		ASSERT(pag);
+>  		ASSERT(atomic_read(&pag->pag_ref) == 0);
+> +
+>  		cancel_delayed_work_sync(&pag->pag_blockgc_work);
+>  		xfs_iunlink_destroy(pag);
+>  		xfs_buf_hash_destroy(pag);
+> +
+>  		call_rcu(&pag->rcu_head, __xfs_free_perag);
+>  	}
+>  }
+> @@ -175,14 +177,14 @@ xfs_sb_validate_fsb_count(
+>  
+>  int
+>  xfs_initialize_perag(
+> -	xfs_mount_t	*mp,
+> -	xfs_agnumber_t	agcount,
+> -	xfs_agnumber_t	*maxagi)
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agcount,
+> +	xfs_agnumber_t		*maxagi)
+>  {
+> -	xfs_agnumber_t	index;
+> -	xfs_agnumber_t	first_initialised = NULLAGNUMBER;
+> -	xfs_perag_t	*pag;
+> -	int		error = -ENOMEM;
+> +	struct xfs_perag	*pag;
+> +	xfs_agnumber_t		index;
+> +	xfs_agnumber_t		first_initialised = NULLAGNUMBER;
+> +	int			error;
+>  
+>  	/*
+>  	 * Walk the current per-ag tree so we don't try to initialise AGs
+> @@ -203,21 +205,10 @@ xfs_initialize_perag(
+>  		}
+>  		pag->pag_agno = index;
+>  		pag->pag_mount = mp;
+> -		spin_lock_init(&pag->pag_ici_lock);
+> -		INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
+> -		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+> -
+> -		error = xfs_buf_hash_init(pag);
+> -		if (error)
+> -			goto out_free_pag;
+> -		init_waitqueue_head(&pag->pagb_wait);
+> -		spin_lock_init(&pag->pagb_lock);
+> -		pag->pagb_count = 0;
+> -		pag->pagb_tree = RB_ROOT;
+>  
+>  		error = radix_tree_preload(GFP_NOFS);
+>  		if (error)
+> -			goto out_hash_destroy;
+> +			goto out_free_pag;
+>  
+>  		spin_lock(&mp->m_perag_lock);
+>  		if (radix_tree_insert(&mp->m_perag_tree, index, pag)) {
+> @@ -225,17 +216,32 @@ xfs_initialize_perag(
+>  			spin_unlock(&mp->m_perag_lock);
+>  			radix_tree_preload_end();
+>  			error = -EEXIST;
+> -			goto out_hash_destroy;
+> +			goto out_free_pag;
+>  		}
+>  		spin_unlock(&mp->m_perag_lock);
+>  		radix_tree_preload_end();
+> -		/* first new pag is fully initialized */
+> -		if (first_initialised == NULLAGNUMBER)
+> -			first_initialised = index;
+> +
+> +		/* Place kernel structure only init below this point. */
+> +		spin_lock_init(&pag->pag_ici_lock);
+> +		spin_lock_init(&pag->pagb_lock);
+> +		spin_lock_init(&pag->pag_state_lock);
+> +		INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
+> +		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+> +		init_waitqueue_head(&pag->pagb_wait);
+> +		pag->pagb_count = 0;
+> +		pag->pagb_tree = RB_ROOT;
+> +
+> +		error = xfs_buf_hash_init(pag);
+> +		if (error)
+> +			goto out_remove_pag;
+> +
+>  		error = xfs_iunlink_init(pag);
+>  		if (error)
+>  			goto out_hash_destroy;
+> -		spin_lock_init(&pag->pag_state_lock);
+> +
+> +		/* first new pag is fully initialized */
+> +		if (first_initialised == NULLAGNUMBER)
+> +			first_initialised = index;
+>  	}
+>  
+>  	index = xfs_set_inode_alloc(mp, agcount);
+> @@ -248,6 +254,8 @@ xfs_initialize_perag(
+>  
+>  out_hash_destroy:
+>  	xfs_buf_hash_destroy(pag);
+> +out_remove_pag:
+> +	radix_tree_delete(&mp->m_perag_tree, index);
+>  out_free_pag:
+>  	kmem_free(pag);
+>  out_unwind_new_pags:
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index bb67274ee23f..6e534be5eea8 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -338,6 +338,16 @@ typedef struct xfs_perag {
+>  	xfs_agino_t	pagl_leftrec;
+>  	xfs_agino_t	pagl_rightrec;
+>  
+> +	int		pagb_count;	/* pagb slots in use */
+> +	uint8_t		pagf_refcount_level; /* recount btree height */
+> +
+> +	/* Blocks reserved for all kinds of metadata. */
+> +	struct xfs_ag_resv	pag_meta_resv;
+> +	/* Blocks reserved for the reverse mapping btree. */
+> +	struct xfs_ag_resv	pag_rmapbt_resv;
+> +
+> +	/* -- kernel only structures below this line -- */
+> +
+>  	/*
+>  	 * Bitsets of per-ag metadata that have been checked and/or are sick.
+>  	 * Callers should hold pag_state_lock before accessing this field.
+> @@ -364,19 +374,10 @@ typedef struct xfs_perag {
+>  
+>  	/* for rcu-safe freeing */
+>  	struct rcu_head	rcu_head;
+> -	int		pagb_count;	/* pagb slots in use */
+> -
+> -	/* Blocks reserved for all kinds of metadata. */
+> -	struct xfs_ag_resv	pag_meta_resv;
+> -	/* Blocks reserved for the reverse mapping btree. */
+> -	struct xfs_ag_resv	pag_rmapbt_resv;
+>  
+>  	/* background prealloc block trimming */
+>  	struct delayed_work	pag_blockgc_work;
+>  
+> -	/* reference count */
+> -	uint8_t			pagf_refcount_level;
+> -
+>  	/*
+>  	 * Unlinked inode information.  This incore information reflects
+>  	 * data stored in the AGI, so callers must hold the AGI buffer lock
+> -- 
+> 2.31.1
 > 
-> --D
-> 
-> [1] https://lore.kernel.org/linux-xfs/20200820191237.GK6096@magnolia/
-> [2] https://lore.kernel.org/linux-xfs/20210420230652.GA70650@embeddedor/
-> [3] https://lore.kernel.org/linux-xfs/20200708065512.GN2005@dread.disaster.area/
-> 
-> > 
-> > Thanks
-> > --
-> > Gustavo
-> > 
-> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/gustavoars/linux.git/log/?h=for-next/kspp
-
--- 
-Kees Cook
