@@ -7,141 +7,188 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07170C47089
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:50:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9F9CC4707F
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:59:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD691613BF
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:50:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B50B613BA
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:59:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235641AbhE0WwX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 May 2021 18:52:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33378 "EHLO mail.kernel.org"
+        id S235648AbhE0XB0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 May 2021 19:01:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34290 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233203AbhE0WwX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 May 2021 18:52:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 951CF61184;
-        Thu, 27 May 2021 22:50:49 +0000 (UTC)
+        id S233203AbhE0XB0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 May 2021 19:01:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6039D6139A;
+        Thu, 27 May 2021 22:59:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622155849;
-        bh=gYslBLFKy6UV8nKpC8Pv+uKhxfhzAqcJ5zpfUa/PK2E=;
+        s=k20201202; t=1622156392;
+        bh=XRRR3sB+pSDn36xcaMZ0Kzo9dqZi0nGFscaRB03eUOA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=uhCmm7SbbNeKC/UTD4LjzF7kdoX9ig9Nnwm45SEPa9gyQEI6/vDf9vmUc0USQ0dB+
-         yvMzjmWtrSAS0xa9umgzHRCg3FeaB0A5H4guIEANwdfkOrowmPPnck07pdKiHep7Me
-         /DTEuJe1GsmNrxdFrHWJdtDu4ez6T3hykzf4q1ttpo21ptKTCk7lOUCGonlVJCDXqe
-         0YZt/iQ6G+0/cyQJtKQMVzY83fnehY/6XPsmlPcUPPd8Cq9ehxW5+xqyATFfTq6yKY
-         gRZ50CA1Y36c9T9zjyV2WWcl2GrqQMKWpA03JlXOuRHr9fQiW1N7YXIlpoabVOsWYF
-         eZCNDQHcdXZ6Q==
-Date:   Thu, 27 May 2021 15:50:49 -0700
+        b=imA0FsAbBCSGdknV8WKTZ3ZP3L3zQVKW1sjX8lk1N5vZQGk5X/DUbci9O6f0uIVNB
+         O3jU8P72MtqGvu/bIRT69qVuiYOg0LRQSULmN0RDxSczy9+8ez8TPfCxsbupwyOrwb
+         KotS4VQ7QwdlVwT80ajNj5uc2lCg/Io0eBz7XwOZ7Wp2HPsrtabHzdngtj4O8QckzD
+         lz01K9CTblS6T6P+Hc31GZ0MIPl7padTeaWWCgRDgHn2dBUxXhTeMeT/D531JMwHcT
+         A2qKF52Blx63lOIH+SqtaC8DxZB2lXIf7MfONYVq2FZZA6nqlO2qtmLuWCsgz+yb6y
+         mBlo6p3aLkDIw==
+Date:   Thu, 27 May 2021 15:59:51 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH 02/10] xfs: use xfs_buf_alloc_pages for uncached buffers
-Message-ID: <20210527225049.GB2402049@locust>
+Subject: Re: [PATCH 03/10] xfs: use alloc_pages_bulk_array() for buffers
+Message-ID: <20210527225951.GC2402049@locust>
 References: <20210526224722.1111377-1-david@fromorbit.com>
- <20210526224722.1111377-3-david@fromorbit.com>
+ <20210526224722.1111377-4-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210526224722.1111377-3-david@fromorbit.com>
+In-Reply-To: <20210526224722.1111377-4-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 27, 2021 at 08:47:14AM +1000, Dave Chinner wrote:
+On Thu, May 27, 2021 at 08:47:15AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Use the newly factored out page allocation code. This adds
-> automatic buffer zeroing for non-read uncached buffers.
-> 
-> This also allows us to greatly simply the error handling in
-> xfs_buf_get_uncached(). Because xfs_buf_alloc_pages() cleans up
-> partial allocation failure, we can just call xfs_buf_free() in all
-> error cases now to clean up after failures.
+> Because it's more efficient than allocating pages one at a time in a
+> loop.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.c | 62 +++++++++++++++++++-----------------------------
+>  1 file changed, 24 insertions(+), 38 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index b1610115d401..8ca4add138c5 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -386,10 +386,7 @@ xfs_buf_alloc_pages(
+>  	xfs_buf_flags_t	flags)
+>  {
+>  	gfp_t		gfp_mask = xb_to_gfp(flags);
+> -	size_t		size;
+> -	size_t		offset;
+> -	size_t		nbytes;
+> -	int		i;
+> +	long		filled = 0;
+>  	int		error;
+>  
+>  	/* Assure zeroed buffer for non-read cases. */
+> @@ -400,50 +397,39 @@ xfs_buf_alloc_pages(
+>  	if (unlikely(error))
+>  		return error;
+>  
+> -	offset = bp->b_offset;
+>  	bp->b_flags |= _XBF_PAGES;
+>  
+> -	for (i = 0; i < bp->b_page_count; i++) {
+> -		struct page	*page;
+> -		uint		retries = 0;
+> -retry:
+> -		page = alloc_page(gfp_mask);
+> -		if (unlikely(page == NULL)) {
+> -			if (flags & XBF_READ_AHEAD) {
+> -				bp->b_page_count = i;
+> -				error = -ENOMEM;
+> -				goto out_free_pages;
+> -			}
+> +	/*
+> +	 * Bulk filling of pages can take multiple calls. Not filling the entire
+> +	 * array is not an allocation failure, so don't back off if we get at
+> +	 * least one extra page.
+> +	 */
+> +	for (;;) {
+> +		long	last = filled;
+>  
+> -			/*
+> -			 * This could deadlock.
+> -			 *
+> -			 * But until all the XFS lowlevel code is revamped to
+> -			 * handle buffer allocation failures we can't do much.
+> -			 */
+> -			if (!(++retries % 100))
+> -				xfs_err(NULL,
+> -		"%s(%u) possible memory allocation deadlock in %s (mode:0x%x)",
+> -					current->comm, current->pid,
+> -					__func__, gfp_mask);
+> -
+> -			XFS_STATS_INC(bp->b_mount, xb_page_retries);
+> -			congestion_wait(BLK_RW_ASYNC, HZ/50);
+> -			goto retry;
+> +		filled = alloc_pages_bulk_array(gfp_mask, bp->b_page_count,
+> +						bp->b_pages);
+> +		if (filled == bp->b_page_count) {
+> +			XFS_STATS_INC(bp->b_mount, xb_page_found);
+> +			break;
+>  		}
+>  
+> -		XFS_STATS_INC(bp->b_mount, xb_page_found);
+> +		if (filled != last)
+> +			continue;
+>  
+> -		nbytes = min_t(size_t, size, PAGE_SIZE - offset);
+> -		size -= nbytes;
+> -		bp->b_pages[i] = page;
+> -		offset = 0;
+> +		if (flags & XBF_READ_AHEAD) {
+> +			error = -ENOMEM;
+> +			goto out_free_pages;
+> +		}
+> +
+> +		XFS_STATS_INC(bp->b_mount, xb_page_retries);
+> +		congestion_wait(BLK_RW_ASYNC, HZ/50);
 
-Nice cleanup!
+Nit: spaces around operators ("HZ / 50").
+
+With that fixed,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+I have a question about _xfs_buf_get_pages:
+
+STATIC int
+_xfs_buf_get_pages(
+	struct xfs_buf		*bp,
+	int			page_count)
+{
+	/* Make sure that we have a page list */
+	if (bp->b_pages == NULL) {
+		bp->b_page_count = page_count;
+		if (page_count <= XB_PAGES) {
+			bp->b_pages = bp->b_page_array;
+		} else {
+			bp->b_pages = kmem_alloc(sizeof(struct page *) *
+						 page_count, KM_NOFS);
+			if (bp->b_pages == NULL)
+				return -ENOMEM;
+		}
+		memset(bp->b_pages, 0, sizeof(struct page *) * page_count);
+	}
+	return 0;
+}
+
+xfs_bufs are kmem_cache_zalloc'd, which means that b_page_array should
+be zeroed, right?
+
+And we could use kmem_zalloc for the pagecount > XB_PAGES case, which
+would make the memset necessary, wouldn't it?
+
+OFC that only holds if a buffer that fails the memory allocation is
+immediately fed to _xfs_buf_free_pages to null out b_pages, which I
+think is true...?
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_ag.c |  1 -
->  fs/xfs/xfs_buf.c       | 27 ++++++---------------------
->  2 files changed, 6 insertions(+), 22 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> index c68a36688474..be0087825ae0 100644
-> --- a/fs/xfs/libxfs/xfs_ag.c
-> +++ b/fs/xfs/libxfs/xfs_ag.c
-> @@ -43,7 +43,6 @@ xfs_get_aghdr_buf(
->  	if (error)
->  		return error;
->  
-> -	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
->  	bp->b_bn = blkno;
->  	bp->b_maps[0].bm_bn = blkno;
->  	bp->b_ops = ops;
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 2e35d344a69b..b1610115d401 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -973,7 +973,7 @@ xfs_buf_get_uncached(
->  	struct xfs_buf		**bpp)
->  {
->  	unsigned long		page_count;
-> -	int			error, i;
-> +	int			error;
->  	struct xfs_buf		*bp;
->  	DEFINE_SINGLE_BUF_MAP(map, XFS_BUF_DADDR_NULL, numblks);
->  
-> @@ -982,41 +982,26 @@ xfs_buf_get_uncached(
->  	/* flags might contain irrelevant bits, pass only what we care about */
->  	error = _xfs_buf_alloc(target, &map, 1, flags & XBF_NO_IOACCT, &bp);
->  	if (error)
-> -		goto fail;
-> +		return error;
->  
->  	page_count = PAGE_ALIGN(numblks << BBSHIFT) >> PAGE_SHIFT;
-> -	error = _xfs_buf_get_pages(bp, page_count);
-> +	error = xfs_buf_alloc_pages(bp, page_count, flags);
->  	if (error)
->  		goto fail_free_buf;
->  
-> -	for (i = 0; i < page_count; i++) {
-> -		bp->b_pages[i] = alloc_page(xb_to_gfp(flags));
-> -		if (!bp->b_pages[i]) {
-> -			error = -ENOMEM;
-> -			goto fail_free_mem;
-> -		}
-> -	}
-> -	bp->b_flags |= _XBF_PAGES;
-> -
->  	error = _xfs_buf_map_pages(bp, 0);
->  	if (unlikely(error)) {
->  		xfs_warn(target->bt_mount,
->  			"%s: failed to map pages", __func__);
-> -		goto fail_free_mem;
-> +		goto fail_free_buf;
 >  	}
->  
->  	trace_xfs_buf_get_uncached(bp, _RET_IP_);
->  	*bpp = bp;
 >  	return 0;
 >  
-> - fail_free_mem:
-> -	while (--i >= 0)
+>  out_free_pages:
+> -	for (i = 0; i < bp->b_page_count; i++)
 > -		__free_page(bp->b_pages[i]);
-> -	_xfs_buf_free_pages(bp);
-> - fail_free_buf:
-> -	xfs_buf_free_maps(bp);
-> -	kmem_cache_free(xfs_buf_zone, bp);
-> - fail:
-> +fail_free_buf:
-> +	xfs_buf_free(bp);
+> +	while (--filled >= 0)
+> +		__free_page(bp->b_pages[filled]);
+>  	bp->b_flags &= ~_XBF_PAGES;
 >  	return error;
 >  }
->  
 > -- 
 > 2.31.1
 > 
