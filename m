@@ -7,230 +7,190 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A6CDC4707F
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:02:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FC91C4707F
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:06:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6D63613EB
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:02:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE617613E5
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 22:06:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234684AbhE0WDy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 May 2021 18:03:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57234 "EHLO mail.kernel.org"
+        id S234514AbhE0WHx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 May 2021 18:07:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57814 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234404AbhE0WDy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 May 2021 18:03:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7E2C56113B;
-        Thu, 27 May 2021 22:02:20 +0000 (UTC)
+        id S233563AbhE0WHw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 May 2021 18:07:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5663C613DA;
+        Thu, 27 May 2021 22:06:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622152940;
-        bh=4T5g8Z3gfAwUAZTay4sjwlxIg9xOsYsdZ9dHCXOhfb8=;
+        s=k20201202; t=1622153178;
+        bh=0Xayw0T6I8H1hcfXmIM/AaZnw57roTI2e7SQ6q1Zu7Q=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PE1wKNcvTkarROMXCUCUbDlE4U/LAAEL/fGYmrSw5KA1ILYFMqyi/pcJKmvd7DKGV
-         tJxBKz8uEwr3zJ6yOaklElZovmzBw4faKTghfWRjGXSFdDXfkaHcSjOEPotohCSdgg
-         xWHkB9b9j3dD7EPSYrDiVKwRjyT5kiSw2hyNi+4MQ/AVJQ5epXIsjFfIFu/TbqHYD2
-         eMNV/DrgJDFURgJPTBpKAWrw8haiPKPhNytUDsVQXpS0oL6yAoeUNOSOd+prfg+dM1
-         Dzk1Kwe6Co4GPtJEXE/YlUWEQf6u04FeAK1sgymgKeKWngGc6w49CiX9oCu6GUx8No
-         weSSCf1Bsv9lg==
-Date:   Thu, 27 May 2021 15:02:20 -0700
+        b=pv7zX21Hm16erOnTI7Z6QFeiyzskNOD3cMtKTDCwrFPjp7G0kYXdXVMNn6kdtz5+h
+         M01158RRIs+1O+0jJ/QGyFHYtrqe5AuYxVUlh7jdRCPnkTNsx2DopTLqRe1E4mwqej
+         UIPtmZ6Z2l5/dgDgbGVbQuYQVxkjGQJM8d9rCc2RN8pnWdYBv/A5X4xUk7xMl/HcNi
+         BVpS5WOM2HY28QGRkGoy7NRPSFhHLo/sEp0ClMiyU0c2NbSWlbE7mhaCZZbA8GksXI
+         Y42TX6jVsFrEoaUgcptJlhq12PwdFQpfaULkeEtcfP8GzHCOcM8KBa/nemdTp6WLxX
+         dmtgX+9mW2Wuw==
+Date:   Thu, 27 May 2021 15:06:18 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/23] xfs: prepare for moving perag definitions and
- support to libxfs
-Message-ID: <20210527220220.GQ2402049@locust>
+Subject: Re: [PATCH 23/23] xfs: remove xfs_perag_t
+Message-ID: <20210527220618.GR2402049@locust>
 References: <20210519012102.450926-1-david@fromorbit.com>
- <20210519012102.450926-3-david@fromorbit.com>
+ <20210519012102.450926-24-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210519012102.450926-3-david@fromorbit.com>
+In-Reply-To: <20210519012102.450926-24-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 19, 2021 at 11:20:41AM +1000, Dave Chinner wrote:
+On Wed, May 19, 2021 at 11:21:02AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The perag structures really need to be defined with the rest of the
-> AG support infrastructure. The struct xfs_perag and init/teardown
-> has been placed in xfs_mount.[ch] because there are differences in
-> the structure between kernel and userspace. Mainly that userspace
-> doesn't have a lot of the internal stuff that the kernel has for
-> caches and discard and other such structures.
-> 
-> However, it makes more sense to move this to libxfs than to keep
-> this separation because we are now moving to use struct perags
-> everywhere in the code instead of passing raw agnumber_t values
-> about. Hence we shoudl really move the support infrastructure to
-> libxfs/xfs_ag.[ch].
-> 
-> To do this without breaking userspace, first we need to rearrange
-> the structures and code so that all the kernel specific code is
-> located together. This makes it simple for userspace to ifdef out
-> the all the parts it does not need, minimising the code differences
-> between kernel and userspace. The next commit will do the move...
+> Almost unused, gets rid of another typedef.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Looks good this time around,
+Looks ok,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/xfs_mount.c | 56 ++++++++++++++++++++++++++--------------------
->  fs/xfs/xfs_mount.h | 19 ++++++++--------
->  2 files changed, 42 insertions(+), 33 deletions(-)
+>  fs/xfs/libxfs/xfs_ag.c    | 24 +++++++++++-----------
+>  fs/xfs/libxfs/xfs_ag.h    |  4 ++--
+>  fs/xfs/libxfs/xfs_alloc.c | 42 +++++++++++++++++++--------------------
+>  3 files changed, 35 insertions(+), 35 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 21c630dde476..6966d7b12a13 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -148,9 +148,11 @@ xfs_free_perag(
->  		spin_unlock(&mp->m_perag_lock);
->  		ASSERT(pag);
->  		ASSERT(atomic_read(&pag->pag_ref) == 0);
-> +
->  		cancel_delayed_work_sync(&pag->pag_blockgc_work);
->  		xfs_iunlink_destroy(pag);
->  		xfs_buf_hash_destroy(pag);
-> +
->  		call_rcu(&pag->rcu_head, __xfs_free_perag);
->  	}
->  }
-> @@ -175,14 +177,14 @@ xfs_sb_validate_fsb_count(
->  
+> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> index 0e0819f6fb89..29c42698aa90 100644
+> --- a/fs/xfs/libxfs/xfs_ag.c
+> +++ b/fs/xfs/libxfs/xfs_ag.c
+> @@ -104,19 +104,19 @@ xfs_perag_put(
+>   */
 >  int
->  xfs_initialize_perag(
-> -	xfs_mount_t	*mp,
-> -	xfs_agnumber_t	agcount,
-> -	xfs_agnumber_t	*maxagi)
+>  xfs_initialize_perag_data(
+> -	struct xfs_mount *mp,
+> -	xfs_agnumber_t	agcount)
 > +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agcount,
-> +	xfs_agnumber_t		*maxagi)
+> +	xfs_agnumber_t		agcount)
 >  {
 > -	xfs_agnumber_t	index;
-> -	xfs_agnumber_t	first_initialised = NULLAGNUMBER;
 > -	xfs_perag_t	*pag;
-> -	int		error = -ENOMEM;
-> +	struct xfs_perag	*pag;
+> -	xfs_sb_t	*sbp = &mp->m_sb;
+> -	uint64_t	ifree = 0;
+> -	uint64_t	ialloc = 0;
+> -	uint64_t	bfree = 0;
+> -	uint64_t	bfreelst = 0;
+> -	uint64_t	btree = 0;
+> -	uint64_t	fdblocks;
+> -	int		error = 0;
 > +	xfs_agnumber_t		index;
-> +	xfs_agnumber_t		first_initialised = NULLAGNUMBER;
+> +	struct xfs_perag	*pag;
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+> +	uint64_t		ifree = 0;
+> +	uint64_t		ialloc = 0;
+> +	uint64_t		bfree = 0;
+> +	uint64_t		bfreelst = 0;
+> +	uint64_t		btree = 0;
+> +	uint64_t		fdblocks;
+> +	int			error = 0;
+>  
+>  	for (index = 0; index < agcount; index++) {
+>  		/*
+> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> index bebbe1bfce27..39f6a0dc984a 100644
+> --- a/fs/xfs/libxfs/xfs_ag.h
+> +++ b/fs/xfs/libxfs/xfs_ag.h
+> @@ -29,7 +29,7 @@ struct xfs_ag_resv {
+>   * Per-ag incore structure, copies of information in agf and agi, to improve the
+>   * performance of allocation group selection.
+>   */
+> -typedef struct xfs_perag {
+> +struct xfs_perag {
+>  	struct xfs_mount *pag_mount;	/* owner filesystem */
+>  	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
+>  	atomic_t	pag_ref;	/* perag reference count */
+> @@ -102,7 +102,7 @@ typedef struct xfs_perag {
+>  	 * or have some other means to control concurrency.
+>  	 */
+>  	struct rhashtable	pagi_unlinked_hash;
+> -} xfs_perag_t;
+> +};
+>  
+>  int xfs_initialize_perag(struct xfs_mount *mp, xfs_agnumber_t agcount,
+>  			xfs_agnumber_t *maxagi);
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index f7864f33c1f0..00bb34251829 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2694,21 +2694,21 @@ xfs_alloc_fix_freelist(
+>   * Get a block from the freelist.
+>   * Returns with the buffer for the block gotten.
+>   */
+> -int				/* error */
+> +int
+>  xfs_alloc_get_freelist(
+> -	xfs_trans_t	*tp,	/* transaction pointer */
+> -	struct xfs_buf	*agbp,	/* buffer containing the agf structure */
+> -	xfs_agblock_t	*bnop,	/* block address retrieved from freelist */
+> -	int		btreeblk) /* destination is a AGF btree */
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*agbp,
+> +	xfs_agblock_t		*bnop,
+> +	int			btreeblk)
+>  {
+> -	struct xfs_agf	*agf = agbp->b_addr;
+> -	struct xfs_buf	*agflbp;/* buffer for a.g. freelist structure */
+> -	xfs_agblock_t	bno;	/* block number returned */
+> -	__be32		*agfl_bno;
+> -	int		error;
+> -	int		logflags;
+> -	xfs_mount_t	*mp = tp->t_mountp;
+> -	xfs_perag_t	*pag;	/* per allocation group data */
+> +	struct xfs_agf		*agf = agbp->b_addr;
+> +	struct xfs_buf		*agflbp;
+> +	xfs_agblock_t		bno;
+> +	__be32			*agfl_bno;
 > +	int			error;
+> +	int			logflags;
+> +	struct xfs_mount	*mp = tp->t_mountp;
+> +	struct xfs_perag	*pag;
 >  
 >  	/*
->  	 * Walk the current per-ag tree so we don't try to initialise AGs
-> @@ -203,21 +205,10 @@ xfs_initialize_perag(
->  		}
->  		pag->pag_agno = index;
->  		pag->pag_mount = mp;
-> -		spin_lock_init(&pag->pag_ici_lock);
-> -		INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
-> -		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
-> -
-> -		error = xfs_buf_hash_init(pag);
-> -		if (error)
-> -			goto out_free_pag;
-> -		init_waitqueue_head(&pag->pagb_wait);
-> -		spin_lock_init(&pag->pagb_lock);
-> -		pag->pagb_count = 0;
-> -		pag->pagb_tree = RB_ROOT;
+>  	 * Freelist is empty, give up.
+> @@ -2818,20 +2818,20 @@ xfs_alloc_pagf_init(
+>  /*
+>   * Put the block on the freelist for the allocation group.
+>   */
+> -int					/* error */
+> +int
+>  xfs_alloc_put_freelist(
+> -	xfs_trans_t		*tp,	/* transaction pointer */
+> -	struct xfs_buf		*agbp,	/* buffer for a.g. freelist header */
+> -	struct xfs_buf		*agflbp,/* buffer for a.g. free block array */
+> -	xfs_agblock_t		bno,	/* block being freed */
+> -	int			btreeblk) /* block came from a AGF btree */
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*agbp,
+> +	struct xfs_buf		*agflbp,
+> +	xfs_agblock_t		bno,
+> +	int			btreeblk)
+>  {
+>  	struct xfs_mount	*mp = tp->t_mountp;
+>  	struct xfs_agf		*agf = agbp->b_addr;
+> -	__be32			*blockp;/* pointer to array entry */
+> +	struct xfs_perag	*pag;
+> +	__be32			*blockp;
+>  	int			error;
+>  	int			logflags;
+> -	xfs_perag_t		*pag;	/* per allocation group data */
+>  	__be32			*agfl_bno;
+>  	int			startoff;
 >  
->  		error = radix_tree_preload(GFP_NOFS);
->  		if (error)
-> -			goto out_hash_destroy;
-> +			goto out_free_pag;
->  
->  		spin_lock(&mp->m_perag_lock);
->  		if (radix_tree_insert(&mp->m_perag_tree, index, pag)) {
-> @@ -225,17 +216,32 @@ xfs_initialize_perag(
->  			spin_unlock(&mp->m_perag_lock);
->  			radix_tree_preload_end();
->  			error = -EEXIST;
-> -			goto out_hash_destroy;
-> +			goto out_free_pag;
->  		}
->  		spin_unlock(&mp->m_perag_lock);
->  		radix_tree_preload_end();
-> -		/* first new pag is fully initialized */
-> -		if (first_initialised == NULLAGNUMBER)
-> -			first_initialised = index;
-> +
-> +		/* Place kernel structure only init below this point. */
-> +		spin_lock_init(&pag->pag_ici_lock);
-> +		spin_lock_init(&pag->pagb_lock);
-> +		spin_lock_init(&pag->pag_state_lock);
-> +		INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
-> +		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
-> +		init_waitqueue_head(&pag->pagb_wait);
-> +		pag->pagb_count = 0;
-> +		pag->pagb_tree = RB_ROOT;
-> +
-> +		error = xfs_buf_hash_init(pag);
-> +		if (error)
-> +			goto out_remove_pag;
-> +
->  		error = xfs_iunlink_init(pag);
->  		if (error)
->  			goto out_hash_destroy;
-> -		spin_lock_init(&pag->pag_state_lock);
-> +
-> +		/* first new pag is fully initialized */
-> +		if (first_initialised == NULLAGNUMBER)
-> +			first_initialised = index;
->  	}
->  
->  	index = xfs_set_inode_alloc(mp, agcount);
-> @@ -248,6 +254,8 @@ xfs_initialize_perag(
->  
->  out_hash_destroy:
->  	xfs_buf_hash_destroy(pag);
-> +out_remove_pag:
-> +	radix_tree_delete(&mp->m_perag_tree, index);
->  out_free_pag:
->  	kmem_free(pag);
->  out_unwind_new_pags:
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index bb67274ee23f..6e534be5eea8 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -338,6 +338,16 @@ typedef struct xfs_perag {
->  	xfs_agino_t	pagl_leftrec;
->  	xfs_agino_t	pagl_rightrec;
->  
-> +	int		pagb_count;	/* pagb slots in use */
-> +	uint8_t		pagf_refcount_level; /* recount btree height */
-> +
-> +	/* Blocks reserved for all kinds of metadata. */
-> +	struct xfs_ag_resv	pag_meta_resv;
-> +	/* Blocks reserved for the reverse mapping btree. */
-> +	struct xfs_ag_resv	pag_rmapbt_resv;
-> +
-> +	/* -- kernel only structures below this line -- */
-> +
->  	/*
->  	 * Bitsets of per-ag metadata that have been checked and/or are sick.
->  	 * Callers should hold pag_state_lock before accessing this field.
-> @@ -364,19 +374,10 @@ typedef struct xfs_perag {
->  
->  	/* for rcu-safe freeing */
->  	struct rcu_head	rcu_head;
-> -	int		pagb_count;	/* pagb slots in use */
-> -
-> -	/* Blocks reserved for all kinds of metadata. */
-> -	struct xfs_ag_resv	pag_meta_resv;
-> -	/* Blocks reserved for the reverse mapping btree. */
-> -	struct xfs_ag_resv	pag_rmapbt_resv;
->  
->  	/* background prealloc block trimming */
->  	struct delayed_work	pag_blockgc_work;
->  
-> -	/* reference count */
-> -	uint8_t			pagf_refcount_level;
-> -
->  	/*
->  	 * Unlinked inode information.  This incore information reflects
->  	 * data stored in the AGI, so callers must hold the AGI buffer lock
 > -- 
 > 2.31.1
 > 
