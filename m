@@ -4,138 +4,119 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,USER_AGENT_GIT autolearn=ham
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BDA9C47088
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 23:05:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A97AC47082
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 00:19:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A6A3613D4
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 May 2021 23:05:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E911613CD
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 May 2021 00:19:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232870AbhEZXHF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 May 2021 19:07:05 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:44727 "EHLO
+        id S232430AbhE0AVW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 May 2021 20:21:22 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:51377 "EHLO
         mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233149AbhEZXHF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 May 2021 19:07:05 -0400
+        by vger.kernel.org with ESMTP id S232381AbhE0AVV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 May 2021 20:21:21 -0400
 Received: from dread.disaster.area (pa49-180-230-185.pa.nsw.optusnet.com.au [49.180.230.185])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id C444B80F8F6
-        for <linux-xfs@vger.kernel.org>; Thu, 27 May 2021 09:05:31 +1000 (AEST)
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 0C5B080B96F
+        for <linux-xfs@vger.kernel.org>; Thu, 27 May 2021 10:19:47 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lm2JB-005b8U-L9; Thu, 27 May 2021 08:47:25 +1000
+        id 1lm3kV-005ccV-3X
+        for linux-xfs@vger.kernel.org; Thu, 27 May 2021 10:19:43 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lm2JB-004fAB-Cx; Thu, 27 May 2021 08:47:25 +1000
+        id 1lm3kU-004gE5-Pm
+        for linux-xfs@vger.kernel.org; Thu, 27 May 2021 10:19:42 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     hch@lst.de
-Subject: [PATCH 02/10] xfs: use xfs_buf_alloc_pages for uncached buffers
-Date:   Thu, 27 May 2021 08:47:14 +1000
-Message-Id: <20210526224722.1111377-3-david@fromorbit.com>
+Subject: [PATCH] xfs: btree format inode forks can have zero extents
+Date:   Thu, 27 May 2021 10:19:42 +1000
+Message-Id: <20210527001942.1115586-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210526224722.1111377-1-david@fromorbit.com>
-References: <20210526224722.1111377-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=dUIOjvib2kB+GiIc1vUx8g==:117 a=dUIOjvib2kB+GiIc1vUx8g==:17
-        a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=EJc9BWZEyAod2tjSaAkA:9
+        a=5FLXtPjwQuUA:10 a=20KFwNOVAAAA:8 a=RfcaFHgcWMp4lnFpylIA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Use the newly factored out page allocation code. This adds
-automatic buffer zeroing for non-read uncached buffers.
+xfs/538 is assert failing with this trace when testing with
+directory block sizes of 64kB:
 
-This also allows us to greatly simply the error handling in
-xfs_buf_get_uncached(). Because xfs_buf_alloc_pages() cleans up
-partial allocation failure, we can just call xfs_buf_free() in all
-error cases now to clean up after failures.
+XFS: Assertion failed: !xfs_need_iread_extents(ifp), file: fs/xfs/libxfs/xfs_bmap.c, line: 608
+....
+Call Trace:
+ xfs_bmap_btree_to_extents+0x2a9/0x470
+ ? kmem_cache_alloc+0xe7/0x220
+ __xfs_bunmapi+0x4ca/0xdf0
+ xfs_bunmapi+0x1a/0x30
+ xfs_dir2_shrink_inode+0x71/0x210
+ xfs_dir2_block_to_sf+0x2ae/0x410
+ xfs_dir2_block_removename+0x21a/0x280
+ xfs_dir_removename+0x195/0x1d0
+ xfs_remove+0x244/0x460
+ xfs_vn_unlink+0x53/0xa0
+ ? selinux_inode_unlink+0x13/0x20
+ vfs_unlink+0x117/0x220
+ do_unlinkat+0x1a2/0x2d0
+ __x64_sys_unlink+0x42/0x60
+ do_syscall_64+0x3a/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+This is a check to ensure that the extents have been read into
+memory before we are doing a ifork btree manipulation. This assert
+is bogus in the above case.
+
+We have a fragmented directory block that has more extents in it
+than can fit in extent format, so the inode data fork is in btree
+format. xfs_dir2_shrink_inode() asks to remove all remaining 16
+filesystem blocks from the inode so it can convert to short form,
+and __xfs_bunmapi() removes all the extents. We now have a data fork
+in btree format but have zero extents in the fork. This incorrectly
+trips the xfs_need_iread_extents() assert because it assumes that an
+empty extent btree means the extent tree has not been read into
+memory yet. This is clearly not the case with xfs_bunmapi(), as it
+has an explicit call to xfs_iread_extents() in it to pull the
+extents into memory before it starts unmapping.
+
+Also, the assert directly after this bogus one is:
+
+	ASSERT(ifp->if_format == XFS_DINODE_FMT_BTREE);
+
+Which covers the context in which it is legal to call
+xfs_bmap_btree_to_extents just fine. Hence we should just remove the
+bogus assert as it is clearly wrong and causes a regression.
+
+The returns the test behaviour to the pre-existing assert failure in
+xfs_dir2_shrink_inode() that indicates xfs_bunmapi() has failed to
+remove all the extents in the range it was asked to unmap.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ag.c |  1 -
- fs/xfs/xfs_buf.c       | 27 ++++++---------------------
- 2 files changed, 6 insertions(+), 22 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index c68a36688474..be0087825ae0 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -43,7 +43,6 @@ xfs_get_aghdr_buf(
- 	if (error)
- 		return error;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 7e3b9b01431e..3f8b6da09261 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -605,7 +605,6 @@ xfs_bmap_btree_to_extents(
  
--	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
- 	bp->b_bn = blkno;
- 	bp->b_maps[0].bm_bn = blkno;
- 	bp->b_ops = ops;
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 2e35d344a69b..b1610115d401 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -973,7 +973,7 @@ xfs_buf_get_uncached(
- 	struct xfs_buf		**bpp)
- {
- 	unsigned long		page_count;
--	int			error, i;
-+	int			error;
- 	struct xfs_buf		*bp;
- 	DEFINE_SINGLE_BUF_MAP(map, XFS_BUF_DADDR_NULL, numblks);
- 
-@@ -982,41 +982,26 @@ xfs_buf_get_uncached(
- 	/* flags might contain irrelevant bits, pass only what we care about */
- 	error = _xfs_buf_alloc(target, &map, 1, flags & XBF_NO_IOACCT, &bp);
- 	if (error)
--		goto fail;
-+		return error;
- 
- 	page_count = PAGE_ALIGN(numblks << BBSHIFT) >> PAGE_SHIFT;
--	error = _xfs_buf_get_pages(bp, page_count);
-+	error = xfs_buf_alloc_pages(bp, page_count, flags);
- 	if (error)
- 		goto fail_free_buf;
- 
--	for (i = 0; i < page_count; i++) {
--		bp->b_pages[i] = alloc_page(xb_to_gfp(flags));
--		if (!bp->b_pages[i]) {
--			error = -ENOMEM;
--			goto fail_free_mem;
--		}
--	}
--	bp->b_flags |= _XBF_PAGES;
--
- 	error = _xfs_buf_map_pages(bp, 0);
- 	if (unlikely(error)) {
- 		xfs_warn(target->bt_mount,
- 			"%s: failed to map pages", __func__);
--		goto fail_free_mem;
-+		goto fail_free_buf;
- 	}
- 
- 	trace_xfs_buf_get_uncached(bp, _RET_IP_);
- 	*bpp = bp;
- 	return 0;
- 
-- fail_free_mem:
--	while (--i >= 0)
--		__free_page(bp->b_pages[i]);
--	_xfs_buf_free_pages(bp);
-- fail_free_buf:
--	xfs_buf_free_maps(bp);
--	kmem_cache_free(xfs_buf_zone, bp);
-- fail:
-+fail_free_buf:
-+	xfs_buf_free(bp);
- 	return error;
- }
- 
+ 	ASSERT(cur);
+ 	ASSERT(whichfork != XFS_COW_FORK);
+-	ASSERT(!xfs_need_iread_extents(ifp));
+ 	ASSERT(ifp->if_format == XFS_DINODE_FMT_BTREE);
+ 	ASSERT(be16_to_cpu(rblock->bb_level) == 1);
+ 	ASSERT(be16_to_cpu(rblock->bb_numrecs) == 1);
 -- 
 2.31.1
 
