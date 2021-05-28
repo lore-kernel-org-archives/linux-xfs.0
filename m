@@ -2,189 +2,187 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8962C47089
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 May 2021 00:01:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FC59C47089
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 May 2021 00:34:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9813361183
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 May 2021 00:01:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C44A613C9
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 May 2021 00:34:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235780AbhE1AD3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 May 2021 20:03:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47156 "EHLO mail.kernel.org"
+        id S229761AbhE1Aga (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 May 2021 20:36:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50932 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235933AbhE1AD2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 May 2021 20:03:28 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 61FF6611C9;
-        Fri, 28 May 2021 00:01:54 +0000 (UTC)
+        id S234714AbhE1Ag2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 May 2021 20:36:28 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0FF6561009;
+        Fri, 28 May 2021 00:34:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622160114;
-        bh=gt0dTk5jntF+5SM9DIU0VYalDMSvyj75mHyzPYJzBlE=;
+        s=k20201202; t=1622162095;
+        bh=u521y9Dn4EjCIPrDU4D5uqqyIIZhFY+Q4oQG1+EkBLc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=T8XPTSaNeat3eNwjXdor5GBBbD5VWg1cximNPYzkJLWi5idiTuVwPSyzpqk+i+B1c
-         z4TxWhKZAmGMMMinHM8XLRlEsvnlHef+/zIJplGZXmUU9iGadTQLFecBY0Q5NiS3vu
-         glrSqgmbxIWvMfJuPDAzIHRbK+xTxy828pkn187iNdr0gILpwhcBMMwnoVY8eNc1hB
-         XMSxLt7YND2uUcL6r+L0a/5fL9zq2R5fiT9hEwRC4ei7tzYEZZDGUuQUmDp5seB6Ne
-         V9mToFqDvHNH0/bqmZ5hKNwuZEvEwmtS7TOr7OgJiRTcLQspQRG0dedbK7H8B7i+4u
-         dR+8hitUIbYjw==
-Date:   Thu, 27 May 2021 17:01:53 -0700
+        b=jIjWj0lfpx9kixZniklLqkQcmSD9jF72+NGEKIsr/r09ity1Vabmlmp8PIG6DoUD5
+         ot9Y939GEBUwuX/X5eOHS2Eb21Kbil0kxtYaDBQxHjrXQa2hn3OCt3fBgyY56mKb5+
+         JhmqP13mXUFC+ihUtaIatwFcRKAUMeOUGgiFGlbTwmeyqU9cISYo6Wei9lAQo2MSrX
+         +e/QcMMR1p3xrcUFOTwSRiByhakMalIpsCwkpfOwofTDgumENZqmtIZyZcAtyP2zDg
+         0e/P/H3irU0R0tVc5bzwtLwW/Weu7sK7Pupq2QVFNkeHzq+rLPlDNnwB2WaNwDtU6d
+         Hlze69uyD9ZBQ==
+Date:   Thu, 27 May 2021 17:34:54 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs: reduce transaction reservation for freeing
- extents
-Message-ID: <20210528000153.GM2402049@locust>
-References: <20210527045202.1155628-1-david@fromorbit.com>
- <20210527045202.1155628-7-david@fromorbit.com>
- <20210527061947.GE202121@locust>
- <20210527085215.GP664593@dread.disaster.area>
+To:     Kees Cook <keescook@chromium.org>
+Cc:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org, joe@perches.com
+Subject: Re: [PATCH][next] xfs: Fix fall-through warnings for Clang
+Message-ID: <20210528003454.GN2402049@locust>
+References: <20210420230652.GA70650@embeddedor>
+ <20210420233850.GQ3122264@magnolia>
+ <62895e8c-800d-fa7b-15f6-480179d552be@embeddedor.com>
+ <bcae9d46-644c-d6f6-3df5-e8f7c50a673d@embeddedor.com>
+ <20210526211624.GB202121@locust>
+ <202105271358.22E0E2BFD@keescook>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210527085215.GP664593@dread.disaster.area>
+In-Reply-To: <202105271358.22E0E2BFD@keescook>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 27, 2021 at 06:52:15PM +1000, Dave Chinner wrote:
-> On Wed, May 26, 2021 at 11:19:47PM -0700, Darrick J. Wong wrote:
-> > On Thu, May 27, 2021 at 02:52:02PM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
+On Thu, May 27, 2021 at 02:31:12PM -0700, Kees Cook wrote:
+> On Wed, May 26, 2021 at 02:16:24PM -0700, Darrick J. Wong wrote:
+> > On Wed, May 26, 2021 at 01:21:06PM -0500, Gustavo A. R. Silva wrote:
 > > > 
-> > > Ever since we moved to deferred freeing of extents, we only every
-> > > free one extent per transaction. We separated the bulk unmapping of
-> > > extents from the submission of EFI/free/EFD transactions, and hence
-> > > while we unmap extents in bulk, we only every free one per
-> > > transaction.
 > > > 
-> > > Our transaction reservations still live in the era from before
-> > > deferred freeing of extents, so still refer to "xfs_bmap_finish"
-> > > and it needing to free multiple extents per transaction. These
-> > > freeing reservations can now all be reduced to a single extent to
-> > > reflect how we currently free extents.
+> > > On 4/20/21 18:56, Gustavo A. R. Silva wrote:
+> > > > 
+> > > > 
+> > > > On 4/20/21 18:38, Darrick J. Wong wrote:
+> > > >> On Tue, Apr 20, 2021 at 06:06:52PM -0500, Gustavo A. R. Silva wrote:
+> > > >>> In preparation to enable -Wimplicit-fallthrough for Clang, fix
+> > > >>> the following warnings by replacing /* fall through */ comments,
+> > > >>> and its variants, with the new pseudo-keyword macro fallthrough:
+> > > >>>
+> > > >>> fs/xfs/libxfs/xfs_alloc.c:3167:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/libxfs/xfs_da_btree.c:286:3: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/libxfs/xfs_ag_resv.c:346:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/libxfs/xfs_ag_resv.c:388:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/xfs_bmap_util.c:246:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/xfs_export.c:88:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/xfs_export.c:96:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/xfs_file.c:867:3: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/xfs_ioctl.c:562:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/xfs_ioctl.c:1548:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/xfs_iomap.c:1040:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/xfs_inode.c:852:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/xfs_log.c:2627:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/xfs_trans_buf.c:298:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/scrub/bmap.c:275:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/scrub/btree.c:48:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/scrub/common.c:85:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/scrub/common.c:138:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/scrub/common.c:698:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/scrub/dabtree.c:51:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>> fs/xfs/scrub/repair.c:951:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+> > > >>>
+> > > >>> Notice that Clang doesn't recognize /* fall through */ comments as
+> > > >>> implicit fall-through markings, so in order to globally enable
+> > > >>> -Wimplicit-fallthrough for Clang, these comments need to be
+> > > >>> replaced with fallthrough; in the whole codebase.
+> > > >>>
+> > > >>> Link: https://github.com/KSPP/linux/issues/115
+> > > >>> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> > > >>
+> > > >> I've already NAKd this twice, so I guess I'll NAK it a third time.
+> > > > 
+> > > > Darrick,
+> > > > 
+> > > > The adoption of fallthrough; has been already accepted and in use since Linux v5.7:
+> > > > 
+> > > > https://www.kernel.org/doc/html/v5.7/process/deprecated.html?highlight=fallthrough#implicit-switch-case-fall-through
+> > > > 
+> > > > This change is needed, and I would really prefer if this goes upstream through your tree.
+> > > > 
+> > > > Linus has taken these patches directly for a while, now.
+> > > > 
+> > > > Could you consider taking it this time? :)
+> > > > 
 > > > 
-> > > This significantly reduces the reservation sizes for operations like
-> > > truncate and directory operations where they currently reserve space
-> > > for freeing up to 4 extents per transaction.
+> > > Hi Darrick,
 > > > 
-> > > For a 4kB block size filesytsem with reflink=1,rmapbt=1, the
-> > > reservation sizes change like this:
+> > > If you don't mind, I will take this in my -next[1] branch for v5.14, so we can globally enable
+> > > -Wimplicit-fallthrough for Clang in that release.
 > > > 
-> > > Reservation		Before			After
-> > > (index)			logres	logcount	logres	logcount
-> > >  0	write		314104	    8		314104	    8
-> > >  1	itruncate	579456	    8           148608	    8
-> > >  2	rename		435840	    2           307936	    2
-> > >  3	link		191600	    2           191600	    2
-> > >  4	remove		312960	    2           174328	    2
-> > >  5	symlink		470656	    3           470656	    3
-> > >  6	create		469504	    2           469504	    2
-> > >  7	create_tmpfile	490240	    2           490240	    2
-> > >  8	mkdir		469504	    3           469504	    3
-> > >  9	ifree		508664	    2           508664	    2
-> > >  10	ichange		  5752	    0             5752	    0
-> > >  11	growdata	147840	    2           147840	    2
-> > >  12	addafork	178936	    2           178936	    2
-> > >  13	writeid		   760	    0              760	    0
-> > >  14	attrinval	578688	    1           147840	    1
-> > >  15	attrsetm	 26872	    3            26872	    3
-> > >  16	attrsetrt	 16896	    0            16896	    0
-> > >  17	attrrm		292224	    3           148608	    3
-> > >  18	clearagi	  4224	    0             4224	    0
-> > >  19	growrtalloc	173944	    2           173944	    2
-> > >  20	growrtzero	  4224	    0             4224	    0
-> > >  21	growrtfree	 10096	    0            10096	    0
-> > >  22	qm_setqlim	   232	    1              232	    1
-> > >  23	qm_dqalloc	318327	    8           318327	    8
-> > >  24	qm_quotaoff	  4544	    1             4544	    1
-> > >  25	qm_equotaoff	   320	    1              320	    1
-> > >  26	sb		  4224	    1             4224	    1
-> > >  27	fsyncts		   760	    0              760	    0
-> > > MAX			579456	    8           318327	    8
-> > > 
-> > > So we can see that many of the reservations have gone substantially
-> > > down in size. itruncate, rename, remove, attrinval and attrrm are
-> > > much smaller now. The maximum reservation size has gone from being
-> > > attrinval at 579456*8 bytes to dqalloc at 318327*8 bytes. This is a
-> > > substantial improvement for common operations.
+> > > We had thousands of these warnings and now we are down to 47 in next-20210526,
+> > > 22 of which are fixed with this patch.
 > > 
-> > If you're going to play around with log reservations, can you have a
-> > quick look at the branch I made to fix all the oversized reservations
-> > that we make for rmap and reflink?
+> > I guess we're all required to kowtow to a bunch of effing bots now.
+> > Hooray for having to have a macro to code-switch for the sake of
+> > stupid compiler writers who refuse to give the rest of us a single
+> > workable way to signal "this switch code block should not end here":
 > > 
-> > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=reflink-speedups
+> > /* fall through */
+> > __attribute__((fallthrough));
+> > do { } while (0) /* fall through */
 > > 
-> > That's what's next after deferred inode inactivation lands.
+> > and soon the ISO geniuses will make it worse by adding to C2x:
+> > 
+> > [[fallthrough]];
+> > 
+> > Hooray!  Macros to abstractify stupidity!!!!
+> > 
+> > Dave and I have told you and Miaohe several[1] times[2] to fix[3] the
+> > compiler, but clearly you don't care what we think and have decided to
+> > ram this in through Linus anyway.
 > 
-> They all look reasonable at a first pass. I'd need to do more than
-> read the patches to say they are definitely correct, but they
-> certainly don't seem unreasonable to me. I'd also have to run
-> numbers like the table above so I can quantify the reductions,
-> but nothing shouted "don't do this!" to me....
+> To clarify, we certainly _do_ care what you think. It's just that
+> when faced with the difficulties of the compiler's implementations of
+> handling this, the kernel had to get creative and pick the least-bad of
+> many bad choices.
 
-Reservations before and after for a sample 100G filesystem:
-
-# mkfs.xfs /tmp/a.img
-meta-data=/tmp/a.img             isize=512    agcount=4, agsize=6553600 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-         =                       reflink=1    bigtime=1 inobtcount=1
-data     =                       bsize=4096   blocks=26214400, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=12800, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-Look like:
-
-<before>				<after>
-type 0 res 294904 count 8             | type 0 res 185080 count 5
-type 1 res 547200 count 8             | type 1 res 327552 count 5
-type 2 res 410752 count 2             | type 2 res 307936 count 2
-type 3 res 187760 count 2               type 3 res 187760 count 2
-type 4 res 290688 count 2             | type 4 res 180864 count 2
-type 5 res 434560 count 3             | type 5 res 269824 count 3
-type 6 res 433408 count 2             | type 6 res 268672 count 2
-type 7 res 450432 count 2             | type 7 res 285696 count 2
-type 8 res 433408 count 3             | type 8 res 268672 count 3
-type 9 res 468728 count 2             | type 9 res 303992 count 2
-type 10 res 2168 count 0                type 10 res 2168 count 0
-type 11 res 137088 count 2            | type 11 res 82176 count 2
-type 12 res 163320 count 2            | type 12 res 108408 count 2
-type 13 res 760 count 0                 type 13 res 760 count 0
-type 14 res 546432 count 1            | type 14 res 326784 count 1
-type 15 res 23288 count 3               type 15 res 23288 count 3
-type 16 res 13312 count 0               type 16 res 13312 count 0
-type 17 res 274304 count 3            | type 17 res 164480 count 3
-type 18 res 640 count 0                 type 18 res 640 count 0
-type 19 res 158328 count 2            | type 19 res 103416 count 2
-type 20 res 4224 count 0                type 20 res 4224 count 0
-type 21 res 6512 count 0                type 21 res 6512 count 0
-type 22 res 232 count 1                 type 22 res 232 count 1
-type 23 res 299127 count 8            | type 23 res 189303 count 5
-type 24 res 848 count 1                 type 24 res 848 count 1
-type 25 res 208 count 1                 type 25 res 208 count 1
-type 26 res 640 count 1                 type 26 res 640 count 1
-type 27 res 760 count 0                 type 27 res 760 count 0
-type -1 res 547200 count 8              type -1 res 327552 count 5
-
-IOWs, a 63% reduction in the size of an itruncate reservations.
-
-Note that the patchset also includes the necessary pieces to continue
-formatting filesystems with the same minimum log size rules as before so
-that you can format with a new xfsprogs and still be able to mount on an
-older kernel.
+The choices are bad, so **turn it off** in fs/xfs/Makefile and don't go
+making us clutter up shared library code that will then have to be
+ported to userspace.
 
 --D
 
+> We're trying to make the kernel safer for everyone,
+> and this particular C language weakness has caused us a significant
+> number of bugs. Eradicating it is worth the effort.
+> All that said, as you pointed out, you _have_ asked before[1] to just
+> have Linus take it without bothering you directly, so okay, that can be
+> done. Generally maintainers have wanted these changes to go through their
+> trees so it doesn't cause them merge pain, but it seems you'd prefer it
+> the other way around.
 > 
-> Cheers,
+> -Kees
 > 
-> Dave.
+> [1] https://lore.kernel.org/linux-xfs/20200820191237.GK6096@magnolia/
+> "If you feel really passionate about ramming a bunch of pointless churn
+>  into the kernel tree to make my life more painful, send this to Linus
+>  and let him make the change."
+> 
+> > Since that is what you choose, do not send me email again.
+> > 
+> > NAKed-by: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > --D
+> > 
+> > [1] https://lore.kernel.org/linux-xfs/20200820191237.GK6096@magnolia/
+> > [2] https://lore.kernel.org/linux-xfs/20210420230652.GA70650@embeddedor/
+> > [3] https://lore.kernel.org/linux-xfs/20200708065512.GN2005@dread.disaster.area/
+> > 
+> > > 
+> > > Thanks
+> > > --
+> > > Gustavo
+> > > 
+> > > [1] https://git.kernel.org/pub/scm/linux/kernel/git/gustavoars/linux.git/log/?h=for-next/kspp
+> 
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> Kees Cook
