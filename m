@@ -2,142 +2,151 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BD60C47082
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 12:27:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A42BC47080
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 12:55:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5CDAA610C9
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 12:27:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A174610E7
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 12:55:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231330AbhEaM3U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 May 2021 08:29:20 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:56554 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231327AbhEaM3S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 May 2021 08:29:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1622464056;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=qwHK6PetfiJT/PEiSU6FSKKcGtAI+jyi0suzU4ROZHU=;
-        b=OcVvcU1gDQtXtwXufk7IfMgDxCOwVfTrpgUfX11p6G2HOSODUTWU1hnqToAT+3bZpCjqU6
-        ribTr7AYiRlBfP8DDNsxfD6JJHhj9oOxczFDPMteB+SfX1QPnqQUob3vuYLS/EwEPBHtMS
-        qSW7Nd7U6kQQEEzfEg0RA95z4JBv0bI=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-298-5CXhf59SN62rwKxXLr1PFw-1; Mon, 31 May 2021 08:27:35 -0400
-X-MC-Unique: 5CXhf59SN62rwKxXLr1PFw-1
-Received: by mail-wr1-f69.google.com with SMTP id i102-20020adf90ef0000b029010dfcfc46c0so3938558wri.1
-        for <linux-xfs@vger.kernel.org>; Mon, 31 May 2021 05:27:35 -0700 (PDT)
+        id S231397AbhEaM4r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 May 2021 08:56:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51300 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231370AbhEaM4r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 May 2021 08:56:47 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99A0FC061574
+        for <linux-xfs@vger.kernel.org>; Mon, 31 May 2021 05:55:07 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id c12so8973749pfl.3
+        for <linux-xfs@vger.kernel.org>; Mon, 31 May 2021 05:55:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=1kOa/InqQOhomoTltkOMpNUhz9d+d0cHta9R3KebJIg=;
+        b=uzjMEqpwsBh0ar/rkdGE0zlEThVHzKjks5dsqZxyxe+41aQEqFw82rRBRW4HuR4DcK
+         fop2IH929Wvr0xuwu8USbrkdk34eq9vYvJcXlxo5ycarADi4cz79DgaS6H6d+L04szC9
+         SIFvdWlFgu1/UiZHRCndk799nsAZj5jjLqsThrqFLU5LNl++k8M6tKa1ShQRJA0bvnKg
+         9bu72fYA5odenq0XxO8L++IMWzlHPiCpez6LxCZJU4O1571Q+JqdnEA7iekds6Fag2dS
+         2RDLERGd+JdGoull2ePh9cuyCV9F1YgkfL3pXM5Bbo/qBC39LH6NI7GP1bPNVnD0hW8Y
+         HKGA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to;
-        bh=qwHK6PetfiJT/PEiSU6FSKKcGtAI+jyi0suzU4ROZHU=;
-        b=WdxV4ZJENVmHdB9C5Wgn8LetURFUgF9eZKoHj9EvC6DSDbU3Ce4PxWIGDILtlI31Hu
-         Eg7GwgLTi8xhHt2BoatladmbsmV8DNX820K0+wIrHJ5rloWsnPecjJb7IkqLdOh0/x2s
-         6sSY9unQZReqbq5HjiMuYS5/GaTd4Kt+SznelKhTmJkvzBPl/IKP6iyaAtOzDsBS6X6u
-         X50Qvls8IzCYK4yb2yr1CZ8/8AygBPssuxZ7FNFVqg6dRqcieQu/9LhcuZHssAxJ00tn
-         DbAn6ZcLlhEKl4wpY+S4olG1BKhMecGKKqopLPF97PFqzij5a1WsA8mUvhzfmn6vPz64
-         zm2w==
-X-Gm-Message-State: AOAM530ao0tlMAPkH/q5o752acl38rXhAczS9XjNmy6zGsy8Vu0PKClL
-        IzWIZWbMyFnBcSDxvyMd8k5bvX3OAFoYm9rZPw5YhKShWCzQ/J2AY7Vk9t/778FS7EFHo9tfGY7
-        4wJkIeN/aw7LJoKWnbo7V
-X-Received: by 2002:adf:9d81:: with SMTP id p1mr15590856wre.287.1622464054077;
-        Mon, 31 May 2021 05:27:34 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwUKoMQBY3r1V9+wQtZEmAH/06eoM5pus4j2/St2Ebjv/29IF8dR0PRf1XL9zVw2J7uYXN+3w==
-X-Received: by 2002:adf:9d81:: with SMTP id p1mr15590844wre.287.1622464053924;
-        Mon, 31 May 2021 05:27:33 -0700 (PDT)
-Received: from omega.lan (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
-        by smtp.gmail.com with ESMTPSA id v10sm16331516wre.33.2021.05.31.05.27.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 May 2021 05:27:33 -0700 (PDT)
-Date:   Mon, 31 May 2021 14:27:31 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Shaokun Zhang <zhangshaokun@hisilicon.com>
-Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH] xfs: sort variable alphabetically to avoid repeated
- declaration
-Message-ID: <20210531122731.pv67ed67p3fkbdb6@omega.lan>
-Mail-Followup-To: Shaokun Zhang <zhangshaokun@hisilicon.com>,
-        linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
-References: <1622181328-9852-1-git-send-email-zhangshaokun@hisilicon.com>
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=1kOa/InqQOhomoTltkOMpNUhz9d+d0cHta9R3KebJIg=;
+        b=kJmgXIg5iDlSUAKdRhzOOmDMka6T5Bwtp+xhlLTuc6zF2QI8cAlxu4F5eQByT98nrx
+         eZMiS4ddqMJ6TauBhYZFHhuirPoSKvdrNT8SwZg3r1bPq8+9XFuAVRnMqAcq9XgCvUkB
+         SvDjVhw1O2z9y/Qw94TaqBijZmjRE7BNaImhtsVSFBNzK6GzYzOXfh9YEq3uFVn0wQIF
+         GvYPol3bQwN3y4fVfRim3UlULnSv5l0Lk+b5CscKHXXZ51B0btFUSzsAxA38Fdm3zljZ
+         bfXz7XpE7MuJ6jHruHkJRV7TJjC+GSBJ3hSA5GO01F9TOkDZxpvBa+TtIlZWccTyAKLm
+         0yrw==
+X-Gm-Message-State: AOAM531S4DhYv0X//Ao0bGTROabWdg1J0l7HFN4Ow5xZ5138cut/Jos6
+        O4W7uzV/Onj8+lbIsAHeoNrhtHil1MTicA==
+X-Google-Smtp-Source: ABdhPJxxxjxB79j7ISSXyV9FbAwgGLViujLtsMql8rgSIFUCjtlSSN5IJIN6Dd70SsJDtp8Hmlz9sg==
+X-Received: by 2002:a05:6a00:16cd:b029:2d0:d876:4707 with SMTP id l13-20020a056a0016cdb02902d0d8764707mr17324425pfc.64.1622465706844;
+        Mon, 31 May 2021 05:55:06 -0700 (PDT)
+Received: from garuda ([122.171.220.253])
+        by smtp.gmail.com with ESMTPSA id s48sm10861269pfw.205.2021.05.31.05.55.05
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 31 May 2021 05:55:06 -0700 (PDT)
+References: <20210527045202.1155628-1-david@fromorbit.com> <20210527045202.1155628-4-david@fromorbit.com>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/6] xfs: xfs_itruncate_extents has no extent count limitation
+In-reply-to: <20210527045202.1155628-4-david@fromorbit.com>
+Date:   Mon, 31 May 2021 18:25:03 +0530
+Message-ID: <87eednukpk.fsf@garuda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1622181328-9852-1-git-send-email-zhangshaokun@hisilicon.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 28, 2021 at 01:55:28PM +0800, Shaokun Zhang wrote:
-> Variable 'xfs_agf_buf_ops', 'xfs_agi_buf_ops', 'xfs_dquot_buf_ops' and
-> 'xfs_symlink_buf_ops' are declared twice, so sort these variables
-> alphabetically and remove the repeated declaration.
-> 
-> Cc: "Darrick J. Wong" <djwong@kernel.org>
-> Signed-off-by: Shaokun Zhang <zhangshaokun@hisilicon.com>
-
-Looks good.
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
+On 27 May 2021 at 10:21, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> Ever since we moved to freeing of extents by deferred operations,
+> we've already freed extents via individual transactions. Hence the
+> only limitation of how many extents we can mark for freeing in a
+> single xfs_bunmapi() call bound only by how many deferrals we want
+> to queue.
+>
+> That is xfs_bunmapi() doesn't actually do any AG based extent
+> freeing, so there's no actually transaction reservation used up by
+> calling bunmapi with a large count of extents to be freed. RT
+> extents have always been freed directly by bunmapi, but that doesn't
+> require modification of large number of blocks as there are no
+> btrees to split.
+>
+> Some callers of xfs_bunmapi assume that the extent count being freed
+> is bound by geometry (e.g. directories) and these can ask bunmapi to
+> free up to 64 extents in a single call. These functions just work as
+> tehy stand, so there's no reason for truncate to have a limit of
+> just two extents per bunmapi call anymore.
+>
+> Increase XFS_ITRUNC_MAX_EXTENTS to 64 to match the number of extents
+> that can be deferred in a single loop to match what the directory
+> code already uses.
+>
+> For realtime inodes, where xfs_bunmapi() directly frees extents,
+> leave the limit at 2 extents per loop as this is all the space that
+> the transaction reservation will cover.
+>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_shared.h | 20 ++++++++------------
->  1 file changed, 8 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-> index 782fdd08f759..25c4cab58851 100644
-> --- a/fs/xfs/libxfs/xfs_shared.h
-> +++ b/fs/xfs/libxfs/xfs_shared.h
-> @@ -22,30 +22,26 @@ struct xfs_inode;
->   * Buffer verifier operations are widely used, including userspace tools
+>  fs/xfs/xfs_inode.c | 15 ++++++++++++---
+>  1 file changed, 12 insertions(+), 3 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 0369eb22c1bb..db220eaa34b8 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -40,9 +40,18 @@ kmem_zone_t *xfs_inode_zone;
+>
+>  /*
+>   * Used in xfs_itruncate_extents().  This is the maximum number of extents
+> - * freed from a file in a single transaction.
+> + * we will unmap and defer for freeing in a single call to xfs_bunmapi().
+> + * Realtime inodes directly free extents in xfs_bunmapi(), so are bound
+> + * by transaction reservation size to 2 extents.
 >   */
->  extern const struct xfs_buf_ops xfs_agf_buf_ops;
-> -extern const struct xfs_buf_ops xfs_agi_buf_ops;
-> -extern const struct xfs_buf_ops xfs_agf_buf_ops;
->  extern const struct xfs_buf_ops xfs_agfl_buf_ops;
-> -extern const struct xfs_buf_ops xfs_bnobt_buf_ops;
-> -extern const struct xfs_buf_ops xfs_cntbt_buf_ops;
-> -extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
-> -extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
-> +extern const struct xfs_buf_ops xfs_agi_buf_ops;
->  extern const struct xfs_buf_ops xfs_attr3_leaf_buf_ops;
->  extern const struct xfs_buf_ops xfs_attr3_rmt_buf_ops;
->  extern const struct xfs_buf_ops xfs_bmbt_buf_ops;
-> +extern const struct xfs_buf_ops xfs_bnobt_buf_ops;
-> +extern const struct xfs_buf_ops xfs_cntbt_buf_ops;
->  extern const struct xfs_buf_ops xfs_da3_node_buf_ops;
->  extern const struct xfs_buf_ops xfs_dquot_buf_ops;
-> -extern const struct xfs_buf_ops xfs_symlink_buf_ops;
-> -extern const struct xfs_buf_ops xfs_agi_buf_ops;
-> -extern const struct xfs_buf_ops xfs_inobt_buf_ops;
-> +extern const struct xfs_buf_ops xfs_dquot_buf_ra_ops;
->  extern const struct xfs_buf_ops xfs_finobt_buf_ops;
-> +extern const struct xfs_buf_ops xfs_inobt_buf_ops;
->  extern const struct xfs_buf_ops xfs_inode_buf_ops;
->  extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
-> -extern const struct xfs_buf_ops xfs_dquot_buf_ops;
-> -extern const struct xfs_buf_ops xfs_dquot_buf_ra_ops;
-> +extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
-> +extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
-> +extern const struct xfs_buf_ops xfs_rtbuf_ops;
->  extern const struct xfs_buf_ops xfs_sb_buf_ops;
->  extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
->  extern const struct xfs_buf_ops xfs_symlink_buf_ops;
-> -extern const struct xfs_buf_ops xfs_rtbuf_ops;
->  
->  /* log size calculation functions */
->  int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
-> -- 
-> 2.7.4
-> 
+> -#define	XFS_ITRUNC_MAX_EXTENTS	2
+> +static inline int
+> +xfs_itrunc_max_extents(
+> +	struct xfs_inode	*ip)
+> +{
+> +	if (XFS_IS_REALTIME_INODE(ip))
+> +		return 2;
+> +	return 64;
+> +}
+>
+>  STATIC int xfs_iunlink(struct xfs_trans *, struct xfs_inode *);
+>  STATIC int xfs_iunlink_remove(struct xfs_trans *, struct xfs_inode *);
+> @@ -1402,7 +1411,7 @@ xfs_itruncate_extents_flags(
+>  	while (unmap_len > 0) {
+>  		ASSERT(tp->t_firstblock == NULLFSBLOCK);
+>  		error = __xfs_bunmapi(tp, ip, first_unmap_block, &unmap_len,
+> -				flags, XFS_ITRUNC_MAX_EXTENTS);
+> +				flags, xfs_itrunc_max_extents(ip));
+>  		if (error)
+>  			goto out;
 
--- 
-Carlos
+The list of free extent items at xfs_defer_pending->dfp_work could
+now contain XFS_EFI_MAX_FAST_EXTENTS (i.e. 16) entries in the worst case.
 
+For a single transaction, xfs_calc_itruncate_reservation() reserves space for
+logging only 4 extents (i.e. 4 exts * 2 trees * (2 * max depth - 1) * block
+size). But with the above change, a single transaction can now free upto 16
+extents. Wouldn't this overflow the reserved log space?
+
+--
+chandan
