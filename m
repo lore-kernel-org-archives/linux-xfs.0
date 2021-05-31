@@ -7,37 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 712A1C47080
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 22:40:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0778AC47080
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 22:40:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D549611CA
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 22:40:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2711611CA
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 22:40:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231978AbhEaWmT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 May 2021 18:42:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49616 "EHLO mail.kernel.org"
+        id S232358AbhEaWmZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 May 2021 18:42:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49736 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231717AbhEaWmS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 31 May 2021 18:42:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7913B60FDC;
-        Mon, 31 May 2021 22:40:38 +0000 (UTC)
+        id S232349AbhEaWmY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 31 May 2021 18:42:24 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EE489611CA;
+        Mon, 31 May 2021 22:40:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622500838;
-        bh=nAwCqaiwrssocsshXbDRAj7NSFihXmpFzgiPwxwIJTs=;
+        s=k20201202; t=1622500844;
+        bh=lfFzw1Nvy74WSLO6yhZcW1Q4+LvfjpCE36rrS351i4s=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=uQztKdS7RcgHz2BI1vsz9v4EWl9/WN3J/vGK7TdgVyX4tHabPJrD3TXZNjeW8K0Sq
-         ut0NEFgak3skfc7nMDfWvhq71UES735oQT//veJ7UVfsnKBSmSlFd0CYJyIbp7gDx7
-         oKe8bDEWkUOd3P02ajUtn6kldZn7FItt+ttk9O+lnM/Hs7tcbF3jznZPt6vo6RELYz
-         2I4KjRPQ85gQd949t9dsVw2w497ARMVrzS0e/XcCBs/a0YQVK9JIf03bIK47yhBjOm
-         d8jyHkuY42AQ6Xgcitn394I87U1wFWdifv+EHKli7KrrM7TAkMr/zJziO4FWd7U19b
-         ezLDVayIkB7yA==
-Subject: [PATCH 1/3] xfs: set ip->i_diflags directly in
- xfs_inode_inherit_flags
+        b=SssfXYO+fTS6cn8SHeSvs6YtaAGg9DaNzJ+QhQEdZVrSeKnZNLW/y1XpjTZ5RoO3a
+         7N8CywXngyE1xASJPOMSNxppETDAG6UnGOmQXA+fGWsjiPrXdYCY+AFXf3us3imI4Y
+         XlbZHTWxxrTUEnaC0JvVsJUD7QSFuD3AkbIMW/uTSaC85MUk19P0kXH2+f3uiqwtr9
+         0ai4OJDpXEMsMlUaLjDnJbxounVivURL+XsjjDSkkde/dfN2mnV5rX6xMDRv5ZDqkd
+         1YiXWVrJCHCXrvb9+m5v8vQUUqGS37jJjeI7yhMuYtI/un7ZFPGOUYIDLIvsDOBX80
+         PIWI3eXFh6Z2A==
+Subject: [PATCH 2/3] xfs: clean up open-coded fs block unit conversions
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Date:   Mon, 31 May 2021 15:40:38 -0700
-Message-ID: <162250083819.490289.18171121927859927558.stgit@locust>
+Date:   Mon, 31 May 2021 15:40:43 -0700
+Message-ID: <162250084368.490289.286869347542521014.stgit@locust>
 In-Reply-To: <162250083252.490289.17618066691063888710.stgit@locust>
 References: <162250083252.490289.17618066691063888710.stgit@locust>
 User-Agent: StGit/0.19
@@ -50,75 +49,49 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Remove the unnecessary convenience variable.
+Replace some open-coded fs block unit conversions with the standard
+conversion macro.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_inode.c |   25 +++++++++++--------------
- 1 file changed, 11 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c |    2 +-
+ fs/xfs/xfs_iops.c             |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index e4c2da4566f1..1e28997c6f78 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -689,47 +689,44 @@ xfs_inode_inherit_flags(
- 	struct xfs_inode	*ip,
- 	const struct xfs_inode	*pip)
- {
--	unsigned int		di_flags = 0;
- 	xfs_failaddr_t		failaddr;
- 	umode_t			mode = VFS_I(ip)->i_mode;
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index f3254a4f4cb4..04ce361688f7 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -612,7 +612,7 @@ xfs_inode_validate_extsize(
+ 	 */
  
- 	if (S_ISDIR(mode)) {
- 		if (pip->i_diflags & XFS_DIFLAG_RTINHERIT)
--			di_flags |= XFS_DIFLAG_RTINHERIT;
-+			ip->i_diflags |= XFS_DIFLAG_RTINHERIT;
- 		if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
--			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
-+			ip->i_diflags |= XFS_DIFLAG_EXTSZINHERIT;
- 			ip->i_extsize = pip->i_extsize;
- 		}
- 		if (pip->i_diflags & XFS_DIFLAG_PROJINHERIT)
--			di_flags |= XFS_DIFLAG_PROJINHERIT;
-+			ip->i_diflags |= XFS_DIFLAG_PROJINHERIT;
- 	} else if (S_ISREG(mode)) {
- 		if ((pip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
- 		    xfs_sb_version_hasrealtime(&ip->i_mount->m_sb))
--			di_flags |= XFS_DIFLAG_REALTIME;
-+			ip->i_diflags |= XFS_DIFLAG_REALTIME;
- 		if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
--			di_flags |= XFS_DIFLAG_EXTSIZE;
-+			ip->i_diflags |= XFS_DIFLAG_EXTSIZE;
- 			ip->i_extsize = pip->i_extsize;
- 		}
- 	}
- 	if ((pip->i_diflags & XFS_DIFLAG_NOATIME) &&
- 	    xfs_inherit_noatime)
--		di_flags |= XFS_DIFLAG_NOATIME;
-+		ip->i_diflags |= XFS_DIFLAG_NOATIME;
- 	if ((pip->i_diflags & XFS_DIFLAG_NODUMP) &&
- 	    xfs_inherit_nodump)
--		di_flags |= XFS_DIFLAG_NODUMP;
-+		ip->i_diflags |= XFS_DIFLAG_NODUMP;
- 	if ((pip->i_diflags & XFS_DIFLAG_SYNC) &&
- 	    xfs_inherit_sync)
--		di_flags |= XFS_DIFLAG_SYNC;
-+		ip->i_diflags |= XFS_DIFLAG_SYNC;
- 	if ((pip->i_diflags & XFS_DIFLAG_NOSYMLINKS) &&
- 	    xfs_inherit_nosymlinks)
--		di_flags |= XFS_DIFLAG_NOSYMLINKS;
-+		ip->i_diflags |= XFS_DIFLAG_NOSYMLINKS;
- 	if ((pip->i_diflags & XFS_DIFLAG_NODEFRAG) &&
- 	    xfs_inherit_nodefrag)
--		di_flags |= XFS_DIFLAG_NODEFRAG;
-+		ip->i_diflags |= XFS_DIFLAG_NODEFRAG;
- 	if (pip->i_diflags & XFS_DIFLAG_FILESTREAM)
--		di_flags |= XFS_DIFLAG_FILESTREAM;
--
--	ip->i_diflags |= di_flags;
-+		ip->i_diflags |= XFS_DIFLAG_FILESTREAM;
+ 	if (rt_flag)
+-		blocksize_bytes = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
++		blocksize_bytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
+ 	else
+ 		blocksize_bytes = mp->m_sb.sb_blocksize;
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index dfe24b7f26e5..93c082db04b7 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -543,7 +543,7 @@ xfs_stat_blksize(
+ 	 * always return the realtime extent size.
+ 	 */
+ 	if (XFS_IS_REALTIME_INODE(ip))
+-		return xfs_get_extsz_hint(ip) << mp->m_sb.sb_blocklog;
++		return XFS_FSB_TO_B(mp, xfs_get_extsz_hint(ip));
  
  	/*
- 	 * Inode verifiers on older kernels only check that the extent size
+ 	 * Allow large block sizes to be reported to userspace programs if the
+@@ -560,7 +560,7 @@ xfs_stat_blksize(
+ 	 */
+ 	if (mp->m_flags & XFS_MOUNT_LARGEIO) {
+ 		if (mp->m_swidth)
+-			return mp->m_swidth << mp->m_sb.sb_blocklog;
++			return XFS_FSB_TO_B(mp, mp->m_swidth);
+ 		if (mp->m_flags & XFS_MOUNT_ALLOCSIZE)
+ 			return 1U << mp->m_allocsize_log;
+ 	}
 
