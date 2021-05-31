@@ -7,37 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C943C47082
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 22:41:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8F69C47082
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 22:41:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 328FC611CB
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 22:41:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC8A6611CA
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 22:41:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231144AbhEaWms (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 May 2021 18:42:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50128 "EHLO mail.kernel.org"
+        id S231624AbhEaWmy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 May 2021 18:42:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50194 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232268AbhEaWms (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 31 May 2021 18:42:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EEC8B60FDC;
-        Mon, 31 May 2021 22:41:07 +0000 (UTC)
+        id S232268AbhEaWmx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 31 May 2021 18:42:53 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 77F5D60FDC;
+        Mon, 31 May 2021 22:41:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622500868;
-        bh=QMk4en1hpmqqhS2kssR9HBSjeN2L50NQvMy0jDAzg9s=;
+        s=k20201202; t=1622500873;
+        bh=ve4/+B7ihihTcsno8nIpyoQCEzSiyEeYfiPNOHlwcn4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=aOkz5q77SHBw0QTn+X6bGSObVAWowesd2dbj2qaxUQyglCZARoogRRel31SIG+dOs
-         jgbEgpDQ9myxA57nsisafr3QL1GjwdxwQioMFRAreazNXDP3uw4HF0yIUj2mQZu7zo
-         pvcjKrtn4MfBcz9R2DnrzitQMOzNwUuyFYs/yo8rvpOYZBtXv1X+B1Un+TQQNwa2jY
-         GEmPyOu+umXM6M92fAIGkC6wxtoQRtpdC2wvvEK7OjsiYDZs2nTqOaTvYricZ2eDkn
-         lrnL6xqri2RtoFQTDLhZjJ1k9AV9lJCbbW47z1b68JVI/JrRXucGOqfXXZZML3oW9q
-         KKGazzshrxslA==
-Subject: [PATCH 3/5] xfs: separate the dqrele_all inode grab logic from
- xfs_inode_walk_ag_grab
+        b=FVHIyTp391sCKBHJQXRe47gTCU0Xhba7y/Uo8ju3kLew9I3AxskGzuBAkQSbyOWys
+         nHzo87He9t1SQSOxaNnSxqxTD0W9We664JlCeW5NjsyPXea85EVqE+O8jSS47CRwOx
+         lo8IoTZ9uvuPvTEbOSBrmSSRJ26EhiZbHqM09D3j4Nuqfg9I9u8fp2oYEIdyjrgrYx
+         bUI6bwfEK2kyvBbVuwy++l9r0suABsSb9OIlr14THyB69oNvV8lDGuBJI9unrT5wrK
+         cxOoOaufhJdp7pTb9pgxOOYcm5C3nApfVd79ao7mKyPQRTZB+lhN3GgGLnu392/uLG
+         wAjDlWVkZR1qw==
+Subject: [PATCH 4/5] xfs: drop inactive dquots before inactivating inodes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Date:   Mon, 31 May 2021 15:41:07 -0700
-Message-ID: <162250086766.490412.9229536536315438431.stgit@locust>
+Date:   Mon, 31 May 2021 15:41:13 -0700
+Message-ID: <162250087317.490412.346108244268292896.stgit@locust>
 In-Reply-To: <162250085103.490412.4291071116538386696.stgit@locust>
 References: <162250085103.490412.4291071116538386696.stgit@locust>
 User-Agent: StGit/0.19
@@ -50,150 +49,72 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Disentangle the dqrele_all inode grab code from the "generic" inode walk
-grabbing code, and and use the opportunity to document why the dqrele
-grab function does what it does.
-
-Since dqrele_all is the only user of XFS_ICI_NO_TAG, rename it to
-something more specific for what we're doing.
+During quotaoff, the incore inode scan to detach dquots from inodes
+won't touch inodes that have lost their VFS state but haven't yet been
+queued for reclaim.  This isn't strictly a problem because we drop the
+dquots at the end of inactivation, but if we detect this situation
+before starting inactivation, we can drop the inactive dquots early to
+avoid delaying quotaoff further.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |   64 ++++++++++++++++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_icache.h |    4 ++-
- 2 files changed, 62 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_super.c |   32 ++++++++++++++++++++++++++++----
+ 1 file changed, 28 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 34b8b5fbd60d..5501318b5db0 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -26,6 +26,8 @@
- 
- #include <linux/iversion.h>
- 
-+static bool xfs_dqrele_inode_grab(struct xfs_inode *ip);
-+
- /*
-  * Allocate and initialise an xfs_inode.
-  */
-@@ -765,6 +767,22 @@ xfs_inode_walk_ag_grab(
- 	return false;
- }
- 
-+static inline bool
-+xfs_grabbed_for_walk(
-+	int			tag,
-+	struct xfs_inode	*ip,
-+	int			iter_flags)
-+{
-+	switch (tag) {
-+	case XFS_ICI_BLOCKGC_TAG:
-+		return xfs_inode_walk_ag_grab(ip, iter_flags);
-+	case XFS_ICI_DQRELE_NONTAG:
-+		return xfs_dqrele_inode_grab(ip);
-+	default:
-+		return false;
-+	}
-+}
-+
- /*
-  * For a given per-AG structure @pag, grab, @execute, and rele all incore
-  * inodes with the given radix tree @tag.
-@@ -796,7 +814,7 @@ xfs_inode_walk_ag(
- 
- 		rcu_read_lock();
- 
--		if (tag == XFS_ICI_NO_TAG)
-+		if (tag == XFS_ICI_DQRELE_NONTAG)
- 			nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
- 					(void **)batch, first_index,
- 					XFS_LOOKUP_BATCH);
-@@ -818,7 +836,7 @@ xfs_inode_walk_ag(
- 		for (i = 0; i < nr_found; i++) {
- 			struct xfs_inode *ip = batch[i];
- 
--			if (done || !xfs_inode_walk_ag_grab(ip, iter_flags))
-+			if (done || !xfs_grabbed_for_walk(tag, ip, iter_flags))
- 				batch[i] = NULL;
- 
- 			/*
-@@ -881,7 +899,7 @@ xfs_inode_walk_get_perag(
- 	xfs_agnumber_t		agno,
- 	int			tag)
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index a2dab05332ac..79f1cd1a0221 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -637,22 +637,46 @@ xfs_fs_destroy_inode(
+ 	struct inode		*inode)
  {
--	if (tag == XFS_ICI_NO_TAG)
-+	if (tag == XFS_ICI_DQRELE_NONTAG)
- 		return xfs_perag_get(mp, agno);
- 	return xfs_perag_get_tag(mp, agno, tag);
- }
-@@ -917,6 +935,44 @@ xfs_inode_walk(
- 	return last_error;
- }
+ 	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
  
-+/* Decide if we want to grab this inode to drop its dquots. */
-+static bool
-+xfs_dqrele_inode_grab(
-+	struct xfs_inode	*ip)
-+{
-+	bool			ret = false;
-+
-+	ASSERT(rcu_read_lock_held());
-+
-+	/* Check for stale RCU freed inode */
-+	spin_lock(&ip->i_flags_lock);
-+	if (!ip->i_ino)
-+		goto out_unlock;
+ 	trace_xfs_destroy_inode(ip);
+ 
+ 	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
+-	XFS_STATS_INC(ip->i_mount, vn_rele);
+-	XFS_STATS_INC(ip->i_mount, vn_remove);
++	XFS_STATS_INC(mp, vn_rele);
++	XFS_STATS_INC(mp, vn_remove);
 +
 +	/*
-+	 * Skip inodes that are anywhere in the reclaim machinery because we
-+	 * drop dquots before tagging an inode for reclamation.
-+	 */
-+	if (ip->i_flags & (XFS_IRECLAIM | XFS_IRECLAIMABLE))
-+		goto out_unlock;
-+
-+	/*
-+	 * The inode looks alive; try to grab a VFS reference so that it won't
-+	 * get destroyed.  If we got the reference, return true to say that
-+	 * we grabbed the inode.
++	 * If a quota type is turned off but we still have a dquot attached to
++	 * the inode, detach it before processing this inode to avoid delaying
++	 * quotaoff for longer than is necessary.
 +	 *
-+	 * If we can't get the reference, then we know the inode had its VFS
-+	 * state torn down and hasn't yet entered the reclaim machinery.  Since
-+	 * we also know that dquots are detached from an inode before it enters
-+	 * reclaim, we can skip the inode.
++	 * The inode has no VFS state and hasn't been tagged for any kind of
++	 * reclamation, which means that iget, quotaoff, blockgc, and reclaim
++	 * will not touch it.  It is therefore safe to do this locklessly
++	 * because we have the only reference here.
 +	 */
-+	ret = igrab(VFS_I(ip)) != NULL;
-+
-+out_unlock:
-+	spin_unlock(&ip->i_flags_lock);
-+	return ret;
-+}
-+
- /* Drop this inode's dquots. */
- static int
- xfs_dqrele_inode(
-@@ -964,7 +1020,7 @@ xfs_dqrele_all_inodes(
- 		eofb.eof_flags |= XFS_EOFB_DROP_PDQUOT;
++	if (!XFS_IS_UQUOTA_ON(mp)) {
++		xfs_qm_dqrele(ip->i_udquot);
++		ip->i_udquot = NULL;
++	}
++	if (!XFS_IS_GQUOTA_ON(mp)) {
++		xfs_qm_dqrele(ip->i_gdquot);
++		ip->i_gdquot = NULL;
++	}
++	if (!XFS_IS_PQUOTA_ON(mp)) {
++		xfs_qm_dqrele(ip->i_pdquot);
++		ip->i_pdquot = NULL;
++	}
  
- 	return xfs_inode_walk(mp, XFS_INODE_WALK_INEW_WAIT, xfs_dqrele_inode,
--			&eofb, XFS_ICI_NO_TAG);
-+			&eofb, XFS_ICI_DQRELE_NONTAG);
- }
+ 	xfs_inactive(ip);
  
- /*
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 77029e92ba4c..fcfcdad7f977 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -29,8 +29,8 @@ struct xfs_eofblocks {
- /*
-  * tags for inode radix tree
-  */
--#define XFS_ICI_NO_TAG		(-1)	/* special flag for an untagged lookup
--					   in xfs_inode_walk */
-+#define XFS_ICI_DQRELE_NONTAG	(-1)	/* quotaoff dqdetach inode walk uses
-+					   untagged lookups */
- #define XFS_ICI_RECLAIM_TAG	0	/* inode is to be reclaimed */
- /* Inode has speculative preallocations (posteof or cow) to clean. */
- #define XFS_ICI_BLOCKGC_TAG	1
+-	if (!XFS_FORCED_SHUTDOWN(ip->i_mount) && ip->i_delayed_blks) {
++	if (!XFS_FORCED_SHUTDOWN(mp) && ip->i_delayed_blks) {
+ 		xfs_check_delalloc(ip, XFS_DATA_FORK);
+ 		xfs_check_delalloc(ip, XFS_COW_FORK);
+ 		ASSERT(0);
+ 	}
+ 
+-	XFS_STATS_INC(ip->i_mount, vn_reclaim);
++	XFS_STATS_INC(mp, vn_reclaim);
+ 
+ 	/*
+ 	 * We should never get here with one of the reclaim flags already set.
 
