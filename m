@@ -2,181 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1376C47080
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 10:02:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BD60C47082
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 12:27:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7708C60E08
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 10:02:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CDAA610C9
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 May 2021 12:27:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231177AbhEaKDu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 May 2021 06:03:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40496 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230518AbhEaKDu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 May 2021 06:03:50 -0400
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC94CC061574
-        for <linux-xfs@vger.kernel.org>; Mon, 31 May 2021 03:02:09 -0700 (PDT)
-Received: by mail-pj1-x1036.google.com with SMTP id m8-20020a17090a4148b029015fc5d36343so6452366pjg.1
-        for <linux-xfs@vger.kernel.org>; Mon, 31 May 2021 03:02:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=QKqjyRs3mWkJjJvo73kAm/6h0AV6R4c66zLdPzlFTns=;
-        b=csRmHh8Pr5/MxOKd1H62jc5+lMgQ9T2d6O4pWwH/HBZLa83BpClnitxfdlIPjY1580
-         1jQ0qq7nbCNox0AISF6mOU2Cq88EoNvBVY7/oc98Kx7drik+mQ3f5QmL25Z55WQwvVbN
-         qe086ZWHNP9eOfsZ3e4x+2E0XLwTTcjJIb8blFSzFTBqsqay4lBu5MhCZoFKp7H8dq+Y
-         WzlxBUjE38xGJ/7QswJQ2xcufpknuOs7RWzs7eoBIKQ0L2Z206UvmOxHfv8xCFPI7PdI
-         lf2a392tIcYHenHDLKo89PBXLz0zVXezt18BfI2RxS8jW0DqRxmpL3nQAkDWQokd3Nvq
-         X9Rg==
+        id S231330AbhEaM3U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 May 2021 08:29:20 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:56554 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231327AbhEaM3S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 May 2021 08:29:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1622464056;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=qwHK6PetfiJT/PEiSU6FSKKcGtAI+jyi0suzU4ROZHU=;
+        b=OcVvcU1gDQtXtwXufk7IfMgDxCOwVfTrpgUfX11p6G2HOSODUTWU1hnqToAT+3bZpCjqU6
+        ribTr7AYiRlBfP8DDNsxfD6JJHhj9oOxczFDPMteB+SfX1QPnqQUob3vuYLS/EwEPBHtMS
+        qSW7Nd7U6kQQEEzfEg0RA95z4JBv0bI=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-298-5CXhf59SN62rwKxXLr1PFw-1; Mon, 31 May 2021 08:27:35 -0400
+X-MC-Unique: 5CXhf59SN62rwKxXLr1PFw-1
+Received: by mail-wr1-f69.google.com with SMTP id i102-20020adf90ef0000b029010dfcfc46c0so3938558wri.1
+        for <linux-xfs@vger.kernel.org>; Mon, 31 May 2021 05:27:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=QKqjyRs3mWkJjJvo73kAm/6h0AV6R4c66zLdPzlFTns=;
-        b=NynzmBZwcKud0YKUDfsxb9c/XxoRkPf/JkamGsnYqcgPyxeZ0TCNE9Ori0ppDSIw8y
-         /dOlCRjowQDy3Zvp1gZbXhoCBPYzTw2RTmfBSxGEi92usYAm/hTgaQVb3+8yRjJHXy13
-         omUsJxoKuE70YOZETE78Rtq1d6CPtjxsVPlkcbB+dRsEOzx+O+HzMoU+sd2JJZ+r1ml2
-         i7fgooacXodBFNdQTNbY/vcPtqBm4gHzWxJqvpLAn+oybdNnvVGXSXhp+YqqhQ7adFmH
-         MxzIciAkNTi/4ZdCmwq7lZITdgqeTcT2vPjmnOwBiqam2LB5uTw3iEGYVRU16i1pCX0U
-         tzwA==
-X-Gm-Message-State: AOAM530YODUIQ901+DXXs2V5q2EUyg66EPHT71LEeDlK8oe9FvN7AqMG
-        otfAPIW40Zgi5LKP6HG/2W/VSMbNXq8oGg==
-X-Google-Smtp-Source: ABdhPJxeE9reWXH4gjLYeDZueLzmR/CqjZrztAX33YAABgrnvv9w5exRRFBUW01tRH9vf9RFUvCtwg==
-X-Received: by 2002:a17:90a:4fc2:: with SMTP id q60mr18045283pjh.64.1622455329058;
-        Mon, 31 May 2021 03:02:09 -0700 (PDT)
-Received: from garuda ([122.171.220.253])
-        by smtp.gmail.com with ESMTPSA id d18sm11292078pgm.93.2021.05.31.03.02.07
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 31 May 2021 03:02:08 -0700 (PDT)
-References: <20210527045202.1155628-1-david@fromorbit.com>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/6] xfs: bunmapi needs updating for deferred freeing
-In-reply-to: <20210527045202.1155628-1-david@fromorbit.com>
-Date:   Mon, 31 May 2021 15:32:05 +0530
-Message-ID: <87fsy3uspu.fsf@garuda>
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=qwHK6PetfiJT/PEiSU6FSKKcGtAI+jyi0suzU4ROZHU=;
+        b=WdxV4ZJENVmHdB9C5Wgn8LetURFUgF9eZKoHj9EvC6DSDbU3Ce4PxWIGDILtlI31Hu
+         Eg7GwgLTi8xhHt2BoatladmbsmV8DNX820K0+wIrHJ5rloWsnPecjJb7IkqLdOh0/x2s
+         6sSY9unQZReqbq5HjiMuYS5/GaTd4Kt+SznelKhTmJkvzBPl/IKP6iyaAtOzDsBS6X6u
+         X50Qvls8IzCYK4yb2yr1CZ8/8AygBPssuxZ7FNFVqg6dRqcieQu/9LhcuZHssAxJ00tn
+         DbAn6ZcLlhEKl4wpY+S4olG1BKhMecGKKqopLPF97PFqzij5a1WsA8mUvhzfmn6vPz64
+         zm2w==
+X-Gm-Message-State: AOAM530ao0tlMAPkH/q5o752acl38rXhAczS9XjNmy6zGsy8Vu0PKClL
+        IzWIZWbMyFnBcSDxvyMd8k5bvX3OAFoYm9rZPw5YhKShWCzQ/J2AY7Vk9t/778FS7EFHo9tfGY7
+        4wJkIeN/aw7LJoKWnbo7V
+X-Received: by 2002:adf:9d81:: with SMTP id p1mr15590856wre.287.1622464054077;
+        Mon, 31 May 2021 05:27:34 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwUKoMQBY3r1V9+wQtZEmAH/06eoM5pus4j2/St2Ebjv/29IF8dR0PRf1XL9zVw2J7uYXN+3w==
+X-Received: by 2002:adf:9d81:: with SMTP id p1mr15590844wre.287.1622464053924;
+        Mon, 31 May 2021 05:27:33 -0700 (PDT)
+Received: from omega.lan (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
+        by smtp.gmail.com with ESMTPSA id v10sm16331516wre.33.2021.05.31.05.27.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 31 May 2021 05:27:33 -0700 (PDT)
+Date:   Mon, 31 May 2021 14:27:31 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     Shaokun Zhang <zhangshaokun@hisilicon.com>
+Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: [PATCH] xfs: sort variable alphabetically to avoid repeated
+ declaration
+Message-ID: <20210531122731.pv67ed67p3fkbdb6@omega.lan>
+Mail-Followup-To: Shaokun Zhang <zhangshaokun@hisilicon.com>,
+        linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
+References: <1622181328-9852-1-git-send-email-zhangshaokun@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1622181328-9852-1-git-send-email-zhangshaokun@hisilicon.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 27 May 2021 at 10:21, Dave Chinner wrote:
-> Hi folks,
->
-> I pulled on a loose thread when I started looking into the 64kB
-> directory block size assert failure I was seeing while trying to
-> test the bulk page allocation changes.
->
-> I posted the first patch in the series separately - it fixed the
-> immediate assert failure (5.13-rc1 regression) I was seeing, but in
-> fixing that it only then dropped back to the previous assert failure
-> that g/538 was triggering with 64kb directory block sizes. This can
-> only be reproduced on 5.12, because that's when the error injection
-> that g/538 uses was added. So I went looking deeper.
->
-> It turns out that xfs_bunmapi() has some code in it to avoid locking
-> AGFs in the wrong order and this is what was triggering. Many of the
-> xfs_bunmapi() callers can not/do not handle partial unmaps that
-> return success, and that's what the directory code is tripping over
-> trying to free badly fragmented directory blocks.
->
-> This AGF locking order constraint was added to xfs_bunmapu in 2017
-> to avoid a deadlock in g/299. Sad thing is that shortly after this,
-> we converted xfs-bunmapi to use deferred freeing, so it never
-> actually locks AGFs anymore. But the deadlock avoiding landmine
-> remained. And xfs_bmap_finish() went away, too, and we now only ever
-> put one extent in any EFI we log for deferred freeing.
+On Fri, May 28, 2021 at 01:55:28PM +0800, Shaokun Zhang wrote:
+> Variable 'xfs_agf_buf_ops', 'xfs_agi_buf_ops', 'xfs_dquot_buf_ops' and
+> 'xfs_symlink_buf_ops' are declared twice, so sort these variables
+> alphabetically and remove the repeated declaration.
+> 
+> Cc: "Darrick J. Wong" <djwong@kernel.org>
+> Signed-off-by: Shaokun Zhang <zhangshaokun@hisilicon.com>
 
-I did come across a scenario (when executing xfs/538 with 1k fs block size and
-64k directory block size) where an EFI item contained three extents:
+Looks good.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-- Two of those extents belonged to the file whose extents were being freed.
-- One more extent was added by xfs_bmap_btree_to_extents().
-  The corresponding call trace was,
-    CPU: 3 PID: 1367 Comm: fsstress Not tainted 5.12.0-rc8-next-20210419-chandan #125
-    Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.12.0-1 04/01/2014
-    Call Trace:
-     dump_stack+0x64/0x7c
-     xfs_defer_add.cold+0x1d/0x22
-     xfs_bmap_btree_to_extents+0x1f6/0x470
-     __xfs_bunmapi+0x50a/0xe60
-     ? xfs_trans_alloc_inode+0xbb/0x180
-     xfs_bunmapi+0x15/0x30
-     xfs_free_file_space+0x241/0x2c0
-     xfs_file_fallocate+0x1ca/0x430
-     ? __cond_resched+0x16/0x40
-     ? inode_security+0x22/0x60
-     ? selinux_file_permission+0xe2/0x120
-     vfs_fallocate+0x146/0x2e0
-     ioctl_preallocate+0x8f/0xc0
-     __x64_sys_ioctl+0x62/0xb0
-     do_syscall_64+0x40/0x80
-     entry_SYSCALL_64_after_hwframe+0x44/0xae
+> ---
+>  fs/xfs/libxfs/xfs_shared.h | 20 ++++++++------------
+>  1 file changed, 8 insertions(+), 12 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+> index 782fdd08f759..25c4cab58851 100644
+> --- a/fs/xfs/libxfs/xfs_shared.h
+> +++ b/fs/xfs/libxfs/xfs_shared.h
+> @@ -22,30 +22,26 @@ struct xfs_inode;
+>   * Buffer verifier operations are widely used, including userspace tools
+>   */
+>  extern const struct xfs_buf_ops xfs_agf_buf_ops;
+> -extern const struct xfs_buf_ops xfs_agi_buf_ops;
+> -extern const struct xfs_buf_ops xfs_agf_buf_ops;
+>  extern const struct xfs_buf_ops xfs_agfl_buf_ops;
+> -extern const struct xfs_buf_ops xfs_bnobt_buf_ops;
+> -extern const struct xfs_buf_ops xfs_cntbt_buf_ops;
+> -extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
+> -extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
+> +extern const struct xfs_buf_ops xfs_agi_buf_ops;
+>  extern const struct xfs_buf_ops xfs_attr3_leaf_buf_ops;
+>  extern const struct xfs_buf_ops xfs_attr3_rmt_buf_ops;
+>  extern const struct xfs_buf_ops xfs_bmbt_buf_ops;
+> +extern const struct xfs_buf_ops xfs_bnobt_buf_ops;
+> +extern const struct xfs_buf_ops xfs_cntbt_buf_ops;
+>  extern const struct xfs_buf_ops xfs_da3_node_buf_ops;
+>  extern const struct xfs_buf_ops xfs_dquot_buf_ops;
+> -extern const struct xfs_buf_ops xfs_symlink_buf_ops;
+> -extern const struct xfs_buf_ops xfs_agi_buf_ops;
+> -extern const struct xfs_buf_ops xfs_inobt_buf_ops;
+> +extern const struct xfs_buf_ops xfs_dquot_buf_ra_ops;
+>  extern const struct xfs_buf_ops xfs_finobt_buf_ops;
+> +extern const struct xfs_buf_ops xfs_inobt_buf_ops;
+>  extern const struct xfs_buf_ops xfs_inode_buf_ops;
+>  extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
+> -extern const struct xfs_buf_ops xfs_dquot_buf_ops;
+> -extern const struct xfs_buf_ops xfs_dquot_buf_ra_ops;
+> +extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
+> +extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
+> +extern const struct xfs_buf_ops xfs_rtbuf_ops;
+>  extern const struct xfs_buf_ops xfs_sb_buf_ops;
+>  extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
+>  extern const struct xfs_buf_ops xfs_symlink_buf_ops;
+> -extern const struct xfs_buf_ops xfs_rtbuf_ops;
+>  
+>  /* log size calculation functions */
+>  int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
+> -- 
+> 2.7.4
+> 
 
->
-> That means we now only free one extent per transaction via deferred
-> freeing,
+-- 
+Carlos
 
-With three instances of xfs_extent_free_items associated with one instance of
-xfs_defer_pending, xfs_defer_finish_noroll() would,
-1. Create an EFI item containing information about the three extents to be
-   freed.
-   - The extents in xfs_defer_pending->dfp_work list are sorted based on AG
-     number.
-2. Roll the transaction.
-3. The new transaction would,
-   - Create an EFD item to hold information about the three extents to be
-     freed.
-   - Free the three extents in a single transaction.
-
-> and there are no limitations on what order xfs_bunmapi()
-> can unmap extents.
-
-I think the sorting of extent items mentioned above is the reason that AG
-locks are obtained in increasing AGNO order while freeing extents.
-
-> 64kB directories on a 1kB block size filesystem
-> already unmap 64 extents in a single loop, so there's no real
-> limitation here.
-
-I think, in the worst case, we can free atmost XFS_EFI_MAX_FAST_EXTENTS
-(i.e. 16) extents in a single transaction assuming that they were all added
-in a sequence without any non-XFS_DEFER_OPS_TYPE_FREE deferred objects
-added in between.
-
->
-> This means that the limitations of how many extents we can unmap per
-> loop in xfs_itruncate_extents_flags() goes away for data device
-> extents (and will eventually go away for RT devices, too, when
-> Darrick's RT EFI stuff gets merged).
->
-> This "one data deveice extent free per transaction" change now means
-> that all of the transaction reservations that include
-> "xfs_bmap_finish" based freeing reservations are wrong. These extent
-> frees are now done by deferred freeing, and so they only need a
-> single extent free reservation instead of up to 4 (as truncate was
-> reserving).
->
-> This series fixes the btree fork regression, the bunmapi partial
-> unmap regression from 2017, extends xfs_itruncate_extents to unmap
-> 64 extents at a time for data device (AG) resident extents, and
-> reworks the transaction reservations to use a consistent and correct
-> reservation for allocation and freeing extents. The size of some
-> transaction reservations drops dramatically as a result.
->
-> The first two patches are -rcX candidates, the rest are for the next
-> merge cycle....
->
-
---
-chandan
