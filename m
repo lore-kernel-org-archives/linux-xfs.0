@@ -2,103 +2,79 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8683C47080
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Jun 2021 00:47:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 090A0C47080
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Jun 2021 01:46:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B74CF6128A
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Jun 2021 00:47:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCEEF610A0
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Jun 2021 01:46:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232356AbhFAAtX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 May 2021 20:49:23 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:37528 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232183AbhFAAtX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 May 2021 20:49:23 -0400
+        id S232320AbhFABs2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 May 2021 21:48:28 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54090 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231714AbhFABs2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 May 2021 21:48:28 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 6735A6764A;
-        Tue,  1 Jun 2021 10:47:40 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id EAC8F1043684;
+        Tue,  1 Jun 2021 11:46:44 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lnsZH-007WTo-SU; Tue, 01 Jun 2021 10:47:39 +1000
-Date:   Tue, 1 Jun 2021 10:47:39 +1000
+        id 1lntUR-007XRL-Nz; Tue, 01 Jun 2021 11:46:43 +1000
+Date:   Tue, 1 Jun 2021 11:46:43 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH 5/5] xfs: move xfs_inew_wait call into xfs_dqrele_inode
-Message-ID: <20210601004739.GA664593@dread.disaster.area>
-References: <162250085103.490412.4291071116538386696.stgit@locust>
- <162250087868.490412.809961177992047138.stgit@locust>
+Cc:     linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 06/10] xfs: remove ->b_offset handling for page backed
+ buffers
+Message-ID: <20210601014643.GB664593@dread.disaster.area>
+References: <20210526224722.1111377-1-david@fromorbit.com>
+ <20210526224722.1111377-7-david@fromorbit.com>
+ <20210527230958.GG2402049@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162250087868.490412.809961177992047138.stgit@locust>
+In-Reply-To: <20210527230958.GG2402049@locust>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=F6fRWN01BkR3Eer-cnYA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=7tGYVfG8Jl-GJ3kmL8oA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 31, 2021 at 03:41:18PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, May 27, 2021 at 04:09:58PM -0700, Darrick J. Wong wrote:
+> On Thu, May 27, 2021 at 08:47:18AM +1000, Dave Chinner wrote:
+> > From : Christoph Hellwig <hch@lst.de>
+> > 
+> > ->b_offset can only be non-zero for _XBF_KMEM backed buffers, so
+> > remove all code dealing with it for page backed buffers.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > [dgc: modified to fit this patchset]
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > 
-> Move the INEW wait into xfs_dqrele_inode so that we can drop the
-> iter_flags parameter in the next patch.
+> I think it's the case that the only time we'd end up with a nonzero
+> b_offset is if the kmem_alloc returns a slab object in the middle of a
+> page, right?  i.e. vmalloc is supposed to give us full pages, and we
+> hope that nobody ever sells a device with a 64k dma alignment...?
 
-What next patch? :/
+So much would break with such a device :/
 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_icache.c |    7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 5501318b5db0..859ab1279d8d 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -981,6 +981,9 @@ xfs_dqrele_inode(
->  {
->  	struct xfs_eofblocks	*eofb = priv;
->  
-> +	if (xfs_iflags_test(ip, XFS_INEW))
-> +		xfs_inew_wait(ip);
-> +
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	if (eofb->eof_flags & XFS_EOFB_DROP_UDQUOT) {
->  		xfs_qm_dqrele(ip->i_udquot);
-> @@ -1019,8 +1022,8 @@ xfs_dqrele_all_inodes(
->  	if (qflags & XFS_PQUOTA_ACCT)
->  		eofb.eof_flags |= XFS_EOFB_DROP_PDQUOT;
->  
-> -	return xfs_inode_walk(mp, XFS_INODE_WALK_INEW_WAIT, xfs_dqrele_inode,
-> -			&eofb, XFS_ICI_DQRELE_NONTAG);
-> +	return xfs_inode_walk(mp, 0, xfs_dqrele_inode, &eofb,
-> +			XFS_ICI_DQRELE_NONTAG);
->  }
+> Assuming that's right,
 
-In isolation, this doesn't mean a whole lot. It seems somewhat
-related to the earlier patch that kinda duplicated
-xfs_inode_walk_ag_grab(), and it looks like this removes the only
-user of XFS_INODE_WALK_INEW_WAIT, so does the missing next patch
-remove XFS_INODE_WALK_INEW_WAIT and the rest of the that machinery?
+Yup, it is.
 
-If so, this seems like it should follow up the earlier patch or even
-precede it, because getting rid of XFS_INODE_WALK_INEW_WAIT first
-means that xfs_inode_walk_ag_grab() and xfs_inode_walk_dquot_grab()
-are then identical....
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Cheers,
+Ta.
 
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
