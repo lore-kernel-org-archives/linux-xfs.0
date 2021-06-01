@@ -2,127 +2,133 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1EA2C4708F
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Jun 2021 19:53:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C2E4C4708F
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Jun 2021 21:40:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7EC1613C1
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Jun 2021 19:53:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E51960FF3
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Jun 2021 21:40:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234723AbhFATzJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Jun 2021 15:55:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38286 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233853AbhFATzG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 Jun 2021 15:55:06 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7DEBE6023B;
-        Tue,  1 Jun 2021 19:53:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622577204;
-        bh=Kn+xm7L0+263Q+pPrjDNjaUNxSJM6DylX5ppu5+SrD0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=J6/IzPi3NlytE1wWsLXNVxGE53YKLxmEeRKRHWa4L9b6gBVQNUWDIMHHwKOnHRJBU
-         Klv4TyzxnabvyfjsQX4HLpt09lgJKLst1tcaQp9S+Ywj9XE5mg8gF9WhdcjJR4NNqZ
-         EIBVwJUynIPsEVWsiq8+3g8iAjwu14Sh5mDo1w8Zyr8womEuk7D2yz5Y8V/xHiVFcc
-         MPDLLpe8mD60i3COdnmlwCf/avwZBhToSc0ov0p1go8A5OadkPw+Wg3xCkThFPjSc7
-         mTdnMJF5twROhNUsLAenxOGAHlWb2qkRuPeWXHLUamKFl+9dVQIoYkxmQ144BrZRht
-         Haj0rlWxPtFQg==
-Date:   Tue, 1 Jun 2021 12:53:24 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
+        id S234656AbhFAVmO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Jun 2021 17:42:14 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:45683 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234513AbhFAVmM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Jun 2021 17:42:12 -0400
+Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 0CFB080B0A1;
+        Wed,  2 Jun 2021 07:40:29 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1loC7f-007rZ3-Qt; Wed, 02 Jun 2021 07:40:27 +1000
+Date:   Wed, 2 Jun 2021 07:40:27 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH 4/5] xfs: drop inactive dquots before inactivating inodes
-Message-ID: <20210601195324.GC26380@locust>
+Subject: Re: [PATCH 3/5] xfs: separate the dqrele_all inode grab logic from
+ xfs_inode_walk_ag_grab
+Message-ID: <20210601214027.GD664593@dread.disaster.area>
 References: <162250085103.490412.4291071116538386696.stgit@locust>
- <162250087317.490412.346108244268292896.stgit@locust>
- <20210601003506.GZ664593@dread.disaster.area>
+ <162250086766.490412.9229536536315438431.stgit@locust>
+ <20210601002023.GY664593@dread.disaster.area>
+ <20210601195051.GB26380@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210601003506.GZ664593@dread.disaster.area>
+In-Reply-To: <20210601195051.GB26380@locust>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=ZXq8Lt_eA9W1qzQrdYIA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 01, 2021 at 10:35:06AM +1000, Dave Chinner wrote:
-> On Mon, May 31, 2021 at 03:41:13PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jun 01, 2021 at 12:50:51PM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 01, 2021 at 10:20:23AM +1000, Dave Chinner wrote:
+> > On Mon, May 31, 2021 at 03:41:07PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Disentangle the dqrele_all inode grab code from the "generic" inode walk
+> > > grabbing code, and and use the opportunity to document why the dqrele
+> > > grab function does what it does.
+> > > 
+> > > Since dqrele_all is the only user of XFS_ICI_NO_TAG, rename it to
+> > > something more specific for what we're doing.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  fs/xfs/xfs_icache.c |   64 ++++++++++++++++++++++++++++++++++++++++++++++++---
+> > >  fs/xfs/xfs_icache.h |    4 ++-
+> > >  2 files changed, 62 insertions(+), 6 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > index 34b8b5fbd60d..5501318b5db0 100644
+> > > --- a/fs/xfs/xfs_icache.c
+> > > +++ b/fs/xfs/xfs_icache.c
+> > > @@ -26,6 +26,8 @@
+> > >  
+> > >  #include <linux/iversion.h>
+> > >  
+> > > +static bool xfs_dqrele_inode_grab(struct xfs_inode *ip);
+> > > +
 > > 
-> > During quotaoff, the incore inode scan to detach dquots from inodes
-> > won't touch inodes that have lost their VFS state but haven't yet been
-> > queued for reclaim.  This isn't strictly a problem because we drop the
-> > dquots at the end of inactivation, but if we detect this situation
-> > before starting inactivation, we can drop the inactive dquots early to
-> > avoid delaying quotaoff further.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/xfs_super.c |   32 ++++++++++++++++++++++++++++----
-> >  1 file changed, 28 insertions(+), 4 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index a2dab05332ac..79f1cd1a0221 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -637,22 +637,46 @@ xfs_fs_destroy_inode(
-> >  	struct inode		*inode)
-> >  {
-> >  	struct xfs_inode	*ip = XFS_I(inode);
-> > +	struct xfs_mount	*mp = ip->i_mount;
-> >  
-> >  	trace_xfs_destroy_inode(ip);
-> >  
-> >  	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
-> > -	XFS_STATS_INC(ip->i_mount, vn_rele);
-> > -	XFS_STATS_INC(ip->i_mount, vn_remove);
-> > +	XFS_STATS_INC(mp, vn_rele);
-> > +	XFS_STATS_INC(mp, vn_remove);
-> > +
-> > +	/*
-> > +	 * If a quota type is turned off but we still have a dquot attached to
-> > +	 * the inode, detach it before processing this inode to avoid delaying
-> > +	 * quotaoff for longer than is necessary.
-> > +	 *
-> > +	 * The inode has no VFS state and hasn't been tagged for any kind of
-> > +	 * reclamation, which means that iget, quotaoff, blockgc, and reclaim
-> > +	 * will not touch it.  It is therefore safe to do this locklessly
-> > +	 * because we have the only reference here.
-> > +	 */
-> > +	if (!XFS_IS_UQUOTA_ON(mp)) {
-> > +		xfs_qm_dqrele(ip->i_udquot);
-> > +		ip->i_udquot = NULL;
-> > +	}
-> > +	if (!XFS_IS_GQUOTA_ON(mp)) {
-> > +		xfs_qm_dqrele(ip->i_gdquot);
-> > +		ip->i_gdquot = NULL;
-> > +	}
-> > +	if (!XFS_IS_PQUOTA_ON(mp)) {
-> > +		xfs_qm_dqrele(ip->i_pdquot);
-> > +		ip->i_pdquot = NULL;
-> > +	}
-> >  
-> >  	xfs_inactive(ip);
+> > Just mov the function higher up in the file rather than add forward
+> > declarations....
 > 
-> Shouldn't we just make xfs_inactive() unconditionally detatch dquots
-> rather than just in the conditional case it does now after attaching
-> dquots because it has to make modifications? For inodes that don't
-> require any inactivation work, we get the same thing, and for those
-> that do running a few extra transactions before dropping the dquots
-> isn't going to make a huge difference to the quotaoff latency....
+> Ugh, this will cause churn that will ripple through this and the next
+> iwalk refactoring patchsets and deferred inactivation.  Can I please
+> please please defer the churn cleanup until the end of all that?
 
-Actually... the previous patch does exactly that.  I'll drop this patch.
+Yes, by all means. I don't want to make it harder to get stuff done,
+so moving stuff around at the end of the series is fine...
 
---D
+....
 
+> > This is basically just duplication of xfs_inode_walk_ag_grab()
+> > without the XFS_INODE_WALK_INEW_WAIT check in it. At this point I
+> > just don't see a reason for this function or the
+> > XFS_ICI_DQRELE_NONTAG rename just to use this grab function...
 > 
-> Cheers,
+> Ugh.  I should have sent the /next/ iwalk refactoring series along with
+> this one so that it would become more obvious that the end goal is to
+> seal all the incore inode walk code in xfs_icache.c, since there are
+> only four of them (reclaim, inodegc, blockgc, quotaoff) and the grab
+> functions for all four are just different enough that it's not really
+> worth it to keep them combined in one function full of conditionals.
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Once that's done, the only user of xfs_inode_walk_ag_grab is the blockgc
+> code and I can rename it.
+
+Ok, that context is missing from the patch series. :/
+
+> Ofc the reason I held back is that the next series adds 8 more iwalk
+> cleanup patches, and the more patches I send all at once the longer it
+> takes for anyone to start looking at it.  I /still/ can't figure out the
+> balance between risking overwhelming everyone with too many patches vs.
+> sending insufficient patches to convey where I'm really going with
+> something.
+
+Yeah, can be difficult. I prefer to err on the side of "complete
+change" rather than splitting two parts of a larger work
+arbitrarily...
+
+> <shrug> I might just ping you on irc so that we can have a conversation
+> about this and summarize whatever we come up with for the list.
+
+You've got a branch with the full series in it somewhere, I'm
+guessing? point me at it so I can see where this ends up....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
