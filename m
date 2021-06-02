@@ -2,74 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B41F6C4708F
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 02:22:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33B2AC4708F
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 03:28:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A04D7613BF
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 02:22:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F48D613CC
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 03:28:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231303AbhFBCYg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Jun 2021 22:24:36 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:42250 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231196AbhFBCYS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Jun 2021 22:24:18 -0400
-Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 9BD231140B53;
-        Wed,  2 Jun 2021 12:22:31 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1loGWc-007w8S-Sw; Wed, 02 Jun 2021 12:22:30 +1000
-Date:   Wed, 2 Jun 2021 12:22:30 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        id S231210AbhFBD34 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Jun 2021 23:29:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55020 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231258AbhFBD34 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 Jun 2021 23:29:56 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 53B1D613B8;
+        Wed,  2 Jun 2021 03:28:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1622604494;
+        bh=Ny2c5hUI6rdJ08FO3ViDUl/3WjVL5+WG17+j7QHzJII=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OeKOIj6xHbkI4eDnboiF6go/VP8G1jX9LN6WJ82VP2qq0BWG2VJNw418HJXNxeWPx
+         t7CHDMQqq00Oev+Hw/ZZTvxeQPyORckEzuf2BaJUhFZr0hYPCSBGVpiIeijtXRCpj9
+         1iQksJPOOVTL68iFEGLkLQUQ+WBW1pZ4fHBB6iDNLjIkD9qqD9u/2z1hgRnmi1aG8+
+         UP9dagfkrenWe3+zO5LFZGe0YGFGScrQ3Ju+LWVsWFPzE/+yJzzR46HV1//Tt3MJ7l
+         /0KAB/f90giCVplpZ8V0TDFqquFuP8lxT+jr175pwWZCo+604cLlDyjQolCIyN4ETe
+         fIAO9/FUSlKOg==
+Date:   Tue, 1 Jun 2021 20:28:13 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH 14/14] xfs: refactor per-AG inode tagging functions
-Message-ID: <20210602022230.GT664593@dread.disaster.area>
+Subject: Re: [PATCH 05/14] xfs: separate the dqrele_all inode grab logic from
+ xfs_inode_walk_ag_grab
+Message-ID: <20210602032813.GG26380@locust>
 References: <162259515220.662681.6750744293005850812.stgit@locust>
- <162259522967.662681.2128059699058630959.stgit@locust>
+ <162259518016.662681.13322964506776234493.stgit@locust>
+ <20210602015147.GM664593@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162259522967.662681.2128059699058630959.stgit@locust>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=n4xLSl0TgsyNihJ6So4A:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210602015147.GM664593@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 01, 2021 at 05:53:49PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Jun 02, 2021 at 11:51:47AM +1000, Dave Chinner wrote:
+> On Tue, Jun 01, 2021 at 05:53:00PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Disentangle the dqrele_all inode grab code from the "generic" inode walk
+> > grabbing code, and and use the opportunity to document why the dqrele
+> > grab function does what it does.  Since xfs_inode_walk_ag_grab is now
+> > only used for blockgc, rename it to reflect that.
+> > 
+> > Ultimately, there will be four reasons to perform a walk of incore
+> > inodes: quotaoff dquote releasing (dqrele), garbage collection of
+> > speculative preallocations (blockgc), reclamation of incore inodes
+> > (reclaim), and deferred inactivation (inodegc).  Each of these four have
+> > their own slightly different criteria for deciding if they want to
+> > handle an inode, so it makes more sense to have four cohesive igrab
+> > functions than one confusing parameteric grab function like we do now.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/xfs_icache.c |   66 +++++++++++++++++++++++++++++++++++++++++++++++----
+> >  1 file changed, 61 insertions(+), 5 deletions(-)
 > 
-> In preparation for adding another incore inode tree tag, refactor the
-> code that sets and clears tags from the per-AG inode tree and the tree
-> of per-AG structures, and remove the open-coded versions used by the
-> blockgc code.
+> Looks ok - one minor nit:
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_icache.c |  158 +++++++++++++++++++++++++--------------------------
->  fs/xfs/xfs_icache.h |    2 -
->  fs/xfs/xfs_super.c  |    2 -
->  fs/xfs/xfs_trace.h  |    6 +-
->  4 files changed, 80 insertions(+), 88 deletions(-)
+> > @@ -1642,6 +1682,22 @@ xfs_blockgc_free_quota(
+> >  
+> >  /* XFS Incore Inode Walking Code */
+> >  
+> > +static inline bool
+> > +xfs_grabbed_for_walk(
+> > +	enum xfs_icwalk_goal	goal,
+> > +	struct xfs_inode	*ip,
+> > +	int			iter_flags)
+> > +{
+> > +	switch (goal) {
+> > +	case XFS_ICWALK_BLOCKGC:
+> > +		return xfs_blockgc_igrab(ip, iter_flags);
+> > +	case XFS_ICWALK_DQRELE:
+> > +		return xfs_dqrele_igrab(ip);
+> > +	default:
+> > +		return false;
+> > +	}
+> > +}
+> 
+> xfs_icwalk_grab() seems to make more sense here.
 
-There's a few little logic changes in amongst the changes,
-largely around using tree tag status rather than reclaimable inode
-counts in the reclaim tagging logic, but the conversion looks
-correct.
+Ok, changed.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> /me is wondering if all this should eventually end up under a
+> xfs_icwalk namespace?
 
--- 
-Dave Chinner
-david@fromorbit.com
+Yeah, I'll throw a renamer patch on the end of this series.  Or possibly
+just do it after I move the xfs_inode_walk functions to the bottom.
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
