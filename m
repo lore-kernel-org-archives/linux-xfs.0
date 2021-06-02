@@ -4,177 +4,241 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85FD0C4708F
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 23:00:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBA87C4708F
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 23:01:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D5D3613E6
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 23:00:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD5FC60E08
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 23:01:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229667AbhFBXCf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Jun 2021 19:02:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46738 "EHLO mail.kernel.org"
+        id S229786AbhFBXDf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Jun 2021 19:03:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46938 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229626AbhFBXCf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Jun 2021 19:02:35 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7CDE1613E6;
-        Wed,  2 Jun 2021 23:00:51 +0000 (UTC)
+        id S229626AbhFBXDe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Jun 2021 19:03:34 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 31EE76024A;
+        Wed,  2 Jun 2021 23:01:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622674851;
-        bh=KC6qdW1O0gAW43urJ80ddt5Q8BSzwyd3uDjFdWlYVB8=;
+        s=k20201202; t=1622674911;
+        bh=6PmUHIdDLTfs6EM9FiSe1XRrGd+9ec7Db01IWmmnSjU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hVAIosILRpzr0q+10RmnTw6881NmpOC8t6s/wQrFvjBkcrJ8xN5cJ95rzEvUbIYZp
-         5p3Rj3aL0PB1k/vtXJ/4jDEfOdQoprLbZwSdZzdZBpsheFsWTHOJy3dT9nPS76cu5z
-         I+DazZaCiSJXzC3+WcFQVsGfH7B6fg1WDn254LaWohoWx2d4OmdCP/qbKNy3tWtyN2
-         J07GRNDmF71hE1Fr9wBeRpjD1ip14Z1PT6n0puhF2nas5BytnRRyocgn4jeTV/O+T5
-         8CdRLBOzS0fuPNbtATqqhca16z/N/Hlx3b4XfWw6f9eHT3byLE33kdxK8N/TkaE3Gd
-         GhyLoGphJzztw==
-Date:   Wed, 2 Jun 2021 16:00:51 -0700
+        b=CIGykENVsBfgihXcD3bHN+RxLrWZaOiZFBXCCpxurhsCltMxJqHvTo2KcYs5o40pW
+         KOeXqzDYD+e1+miP6Y9SkZ/HO+xpsbAowR8gq26ZlOhukrXNnikTvlQztjnkE9rlJp
+         LZOuafWKGKuxDgnNbojM8zinXjw7OEXS5xFtmEdiQBnWQ/83aJc/Eyz0Tfuz4VvOpF
+         8/Uach9IgdmsXW/OB+d2evWo2GZwcnhZsa6dU6OLSyugbKzOuE2txS34PiEjAAXKv9
+         L+Yz+LfCAsRrZTRIJ6sJdYfpKiDUwcF2xHydiLDH8+AiUTGAwucybBdT4zpH+lAuiF
+         Qv+1Q3FM6qcbA==
+Date:   Wed, 2 Jun 2021 16:01:50 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: don't take a spinlock unconditionally in the DIO
- fastpath
-Message-ID: <20210602230051.GO26380@locust>
-References: <20210602215802.24753-1-david@fromorbit.com>
+Subject: Re: [PATCH 20/39 V2] xfs: pass lv chain length into xlog_write()
+Message-ID: <20210602230150.GP26380@locust>
+References: <20210519121317.585244-1-david@fromorbit.com>
+ <20210519121317.585244-21-david@fromorbit.com>
+ <20210527172027.GL202144@locust>
+ <20210602221852.GV664593@dread.disaster.area>
+ <20210602222427.GN26380@locust>
+ <20210602225800.GX664593@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210602215802.24753-1-david@fromorbit.com>
+In-Reply-To: <20210602225800.GX664593@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 03, 2021 at 07:58:02AM +1000, Dave Chinner wrote:
+On Thu, Jun 03, 2021 at 08:58:00AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Because this happens at high thread counts on high IOPS devices
-> doing mixed read/write AIO-DIO to a single file at about a million
-> iops:
+> The caller of xlog_write() usually has a close accounting of the
+> aggregated vector length contained in the log vector chain passed to
+> xlog_write(). There is no need to iterate the chain to calculate he
+> length of the data in xlog_write_calculate_len() if the caller is
+> already iterating that chain to build it.
 > 
->    64.09%     0.21%  [kernel]            [k] io_submit_one
->    - 63.87% io_submit_one
->       - 44.33% aio_write
->          - 42.70% xfs_file_write_iter
->             - 41.32% xfs_file_dio_write_aligned
->                - 25.51% xfs_file_write_checks
->                   - 21.60% _raw_spin_lock
->                      - 21.59% do_raw_spin_lock
->                         - 19.70% __pv_queued_spin_lock_slowpath
-> 
-> This also happens of the IO completion IO path:
-> 
->    22.89%     0.69%  [kernel]            [k] xfs_dio_write_end_io
->    - 22.49% xfs_dio_write_end_io
->       - 21.79% _raw_spin_lock
->          - 20.97% do_raw_spin_lock
->             - 20.10% __pv_queued_spin_lock_slowpath
-> 
-> IOWs, fio is burning ~14 whole CPUs on this spin lock.
-> 
-> So, do an unlocked check against inode size first, then if we are
-> at/beyond EOF, take the spinlock and recheck. This makes the
-> spinlock disappear from the overwrite fastpath.
-> 
-> I'd like to report that fixing this makes things go faster. It
-> doesn't - it just exposes the the XFS_ILOCK as the next severe
-> contention point doing extent mapping lookups, and that now burns
-> all the 14 CPUs this spinlock was burning.
+> Passing in the vector length avoids doing an extra chain iteration,
+> which can be a significant amount of work given that large CIL
+> commits can have hundreds of thousands of vectors attached to the
+> chain.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+> V2: removed unnecessary update of num_iovecs.
 
-Looks good,
+Heh, nice refactor :)
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/xfs/xfs_file.c | 42 +++++++++++++++++++++++++++++++-----------
->  1 file changed, 31 insertions(+), 11 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 396ef36dcd0a..c068dcd414f4 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -384,21 +384,30 @@ xfs_file_write_checks(
->  		}
->  		goto restart;
->  	}
-> +
->  	/*
->  	 * If the offset is beyond the size of the file, we need to zero any
->  	 * blocks that fall between the existing EOF and the start of this
-> -	 * write.  If zeroing is needed and we are currently holding the
-> -	 * iolock shared, we need to update it to exclusive which implies
-> -	 * having to redo all checks before.
-> +	 * write.  If zeroing is needed and we are currently holding the iolock
-> +	 * shared, we need to update it to exclusive which implies having to
-> +	 * redo all checks before.
-> +	 *
-> +	 * We need to serialise against EOF updates that occur in IO completions
-> +	 * here. We want to make sure that nobody is changing the size while we
-> +	 * do this check until we have placed an IO barrier (i.e.  hold the
-> +	 * XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.  The
-> +	 * spinlock effectively forms a memory barrier once we have the
-> +	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value and
-> +	 * hence be able to correctly determine if we need to run zeroing.
->  	 *
-> -	 * We need to serialise against EOF updates that occur in IO
-> -	 * completions here. We want to make sure that nobody is changing the
-> -	 * size while we do this check until we have placed an IO barrier (i.e.
-> -	 * hold the XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.
-> -	 * The spinlock effectively forms a memory barrier once we have the
-> -	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value
-> -	 * and hence be able to correctly determine if we need to run zeroing.
-> +	 * We can do an unlocked check here safely as IO completion can only
-> +	 * extend EOF. Truncate is locked out at this point, so the EOF can
-> +	 * not move backwards, only forwards. Hence we only need to take the
-> +	 * slow path and spin locks when we are at or beyond the current EOF.
+>  fs/xfs/xfs_log.c      | 37 ++++++-------------------------------
+>  fs/xfs/xfs_log_cil.c  | 16 +++++++++++-----
+>  fs/xfs/xfs_log_priv.h |  2 +-
+>  3 files changed, 18 insertions(+), 37 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index e849f15e9e04..58f9aafce29e 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -864,7 +864,8 @@ xlog_write_unmount_record(
 >  	 */
-> +	if (iocb->ki_pos <= i_size_read(inode))
-> +		goto out;
-> +
->  	spin_lock(&ip->i_flags_lock);
->  	isize = i_size_read(inode);
->  	if (iocb->ki_pos > isize) {
-> @@ -426,7 +435,7 @@ xfs_file_write_checks(
->  			drained_dio = true;
->  			goto restart;
->  		}
-> -	
-> +
->  		trace_xfs_zero_eof(ip, isize, iocb->ki_pos - isize);
->  		error = iomap_zero_range(inode, isize, iocb->ki_pos - isize,
->  				NULL, &xfs_buffered_write_iomap_ops);
-> @@ -435,6 +444,7 @@ xfs_file_write_checks(
->  	} else
->  		spin_unlock(&ip->i_flags_lock);
->  
-> +out:
->  	return file_modified(file);
+>  	if (log->l_targ != log->l_mp->m_ddev_targp)
+>  		blkdev_issue_flush(log->l_targ->bt_bdev);
+> -	return xlog_write(log, &vec, ticket, NULL, NULL, XLOG_UNMOUNT_TRANS);
+> +	return xlog_write(log, &vec, ticket, NULL, NULL, XLOG_UNMOUNT_TRANS,
+> +				reg.i_len);
 >  }
 >  
-> @@ -500,7 +510,17 @@ xfs_dio_write_end_io(
->  	 * other IO completions here to update the EOF. Failing to serialise
->  	 * here can result in EOF moving backwards and Bad Things Happen when
->  	 * that occurs.
-> +	 *
-> +	 * As IO completion only ever extends EOF, we can do an unlocked check
-> +	 * here to avoid taking the spinlock. If we land within the current EOF,
-> +	 * then we do not need to do an extending update at all, and we don't
-> +	 * need to take the lock to check this. If we race with an update moving
-> +	 * EOF, then we'll either still be beyond EOF and need to take the lock,
-> +	 * or we'll be within EOF and we don't need to take it at all.
->  	 */
-> +	if (offset + size <= i_size_read(inode))
-> +		goto out;
+>  /*
+> @@ -1588,7 +1589,8 @@ xlog_commit_record(
+>  
+>  	/* account for space used by record data */
+>  	ticket->t_curr_res -= reg.i_len;
+> -	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS);
+> +	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS,
+> +				reg.i_len);
+>  	if (error)
+>  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+>  	return error;
+> @@ -2108,32 +2110,6 @@ xlog_print_trans(
+>  	}
+>  }
+>  
+> -/*
+> - * Calculate the potential space needed by the log vector. All regions contain
+> - * their own opheaders and they are accounted for in region space so we don't
+> - * need to add them to the vector length here.
+> - */
+> -static int
+> -xlog_write_calc_vec_length(
+> -	struct xlog_ticket	*ticket,
+> -	struct xfs_log_vec	*log_vector,
+> -	uint			optype)
+> -{
+> -	struct xfs_log_vec	*lv;
+> -	int			len = 0;
+> -	int			i;
+> -
+> -	for (lv = log_vector; lv; lv = lv->lv_next) {
+> -		/* we don't write ordered log vectors */
+> -		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
+> -			continue;
+> -
+> -		for (i = 0; i < lv->lv_niovecs; i++)
+> -			len += lv->lv_iovecp[i].i_len;
+> -	}
+> -	return len;
+> -}
+> -
+>  static xlog_op_header_t *
+>  xlog_write_setup_ophdr(
+>  	struct xlog_op_header	*ophdr,
+> @@ -2296,13 +2272,13 @@ xlog_write(
+>  	struct xlog_ticket	*ticket,
+>  	xfs_lsn_t		*start_lsn,
+>  	struct xlog_in_core	**commit_iclog,
+> -	uint			optype)
+> +	uint			optype,
+> +	uint32_t		len)
+>  {
+>  	struct xlog_in_core	*iclog = NULL;
+>  	struct xfs_log_vec	*lv = log_vector;
+>  	struct xfs_log_iovec	*vecp = lv->lv_iovecp;
+>  	int			index = 0;
+> -	int			len;
+>  	int			partial_copy = 0;
+>  	int			partial_copy_len = 0;
+>  	int			contwr = 0;
+> @@ -2317,7 +2293,6 @@ xlog_write(
+>  		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+>  	}
+>  
+> -	len = xlog_write_calc_vec_length(ticket, log_vector, optype);
+>  	if (start_lsn)
+>  		*start_lsn = 0;
+>  	while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 58900171de09..68bec4b81052 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -710,11 +710,12 @@ xlog_cil_build_trans_hdr(
+>  				sizeof(struct xfs_trans_header);
+>  	hdr->lhdr[1].i_type = XLOG_REG_TYPE_TRANSHDR;
+>  
+> -	tic->t_curr_res -= hdr->lhdr[0].i_len + hdr->lhdr[1].i_len;
+> -
+>  	lvhdr->lv_niovecs = 2;
+>  	lvhdr->lv_iovecp = &hdr->lhdr[0];
+> +	lvhdr->lv_bytes = hdr->lhdr[0].i_len + hdr->lhdr[1].i_len;
+>  	lvhdr->lv_next = ctx->lv_chain;
 > +
->  	spin_lock(&ip->i_flags_lock);
->  	if (offset + size > i_size_read(inode)) {
->  		i_size_write(inode, offset + size);
+> +	tic->t_curr_res -= lvhdr->lv_bytes;
+>  }
+>  
+>  /*
+> @@ -742,7 +743,8 @@ xlog_cil_push_work(
+>  	struct xfs_log_vec	*lv;
+>  	struct xfs_cil_ctx	*new_ctx;
+>  	struct xlog_in_core	*commit_iclog;
+> -	int			num_iovecs;
+> +	int			num_iovecs = 0;
+> +	int			num_bytes = 0;
+>  	int			error = 0;
+>  	struct xlog_cil_trans_hdr thdr;
+>  	struct xfs_log_vec	lvhdr = { NULL };
+> @@ -835,7 +837,6 @@ xlog_cil_push_work(
+>  	 * by the flush lock.
+>  	 */
+>  	lv = NULL;
+> -	num_iovecs = 0;
+>  	while (!list_empty(&cil->xc_cil)) {
+>  		struct xfs_log_item	*item;
+>  
+> @@ -849,6 +850,10 @@ xlog_cil_push_work(
+>  		lv = item->li_lv;
+>  		item->li_lv = NULL;
+>  		num_iovecs += lv->lv_niovecs;
+> +
+> +		/* we don't write ordered log vectors */
+> +		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED)
+> +			num_bytes += lv->lv_bytes;
+>  	}
+>  
+>  	/*
+> @@ -887,6 +892,7 @@ xlog_cil_push_work(
+>  	 * transaction header here as it is not accounted for in xlog_write().
+>  	 */
+>  	xlog_cil_build_trans_hdr(ctx, &thdr, &lvhdr, num_iovecs);
+> +	num_bytes += lvhdr.lv_bytes;
+>  
+>  	/*
+>  	 * Before we format and submit the first iclog, we have to ensure that
+> @@ -901,7 +907,7 @@ xlog_cil_push_work(
+>  	 * write head.
+>  	 */
+>  	error = xlog_write(log, &lvhdr, ctx->ticket, &ctx->start_lsn, NULL,
+> -				XLOG_START_TRANS);
+> +				XLOG_START_TRANS, num_bytes);
+>  	if (error)
+>  		goto out_abort_free_ticket;
+>  
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 301c36165974..eba905c273b0 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -459,7 +459,7 @@ void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
+>  void	xlog_print_trans(struct xfs_trans *);
+>  int	xlog_write(struct xlog *log, struct xfs_log_vec *log_vector,
+>  		struct xlog_ticket *tic, xfs_lsn_t *start_lsn,
+> -		struct xlog_in_core **commit_iclog, uint optype);
+> +		struct xlog_in_core **commit_iclog, uint optype, uint32_t len);
+>  int	xlog_commit_record(struct xlog *log, struct xlog_ticket *ticket,
+>  		struct xlog_in_core **iclog, xfs_lsn_t *lsn);
+>  
 > -- 
-> 2.31.1
-> 
+> Dave Chinner
+> david@fromorbit.com
