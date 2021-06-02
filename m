@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88546C47080
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:53:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12329C47080
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:53:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70630613CE
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:53:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF768613CD
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:53:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229740AbhFBAyx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Jun 2021 20:54:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33704 "EHLO mail.kernel.org"
+        id S229739AbhFBAy7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Jun 2021 20:54:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33752 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229739AbhFBAyx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 Jun 2021 20:54:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 71885613CA;
-        Wed,  2 Jun 2021 00:53:11 +0000 (UTC)
+        id S229737AbhFBAy7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 Jun 2021 20:54:59 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E96FD613C5;
+        Wed,  2 Jun 2021 00:53:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622595191;
-        bh=JhCvzxI3wujItmWyugVhq6eSnBX58uPzSGKHV0s4DFI=;
+        s=k20201202; t=1622595197;
+        bh=4VicXZ4VJ6Eop2oxRtqaxaMME6D+7eDCgePTUJ60aSg=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=NE+1pmlACbPyiTVH/leOQBvWdDuj64/KfIyaKD+pHhQt6kZsPsCF2os2jC8opaK2d
-         9LM8QHcn3gIzNLgb9XoARGRqi1t/OtWfNN3RSnw3eKXAllQ90NAd3sNrzMqUTpQSuw
-         52D9Vap1bGnTdfA8/vKqBFFqwf4y9zCiztMhdQK6dX4SQ6YA93DmwP57d3HrRtZVD9
-         L5yi6EnZWk1I0bRMlOkkmbvKlkWOfq4Nt6IRImFAsyzZxrpwCOj2A9OD1+fuGRyBsd
-         AIrEJb6mK0YTCOv5ckLoCboGPutuLBd2ma/p3BY054JoM/l7rP8mRvqUy7Dj/q4q70
-         6lWRmz7iRprGQ==
-Subject: [PATCH 07/14] xfs: remove iter_flags parameter from xfs_inode_walk_*
+        b=GSmBHAQqMLo+6LWJAjPiVbOGfxN2zXVAL0FgSu3lKzJipInX8lINLdrh+1MXmbdb9
+         SQiWLnmB2joq3wg+uw5GzbieR/Fsvp01IO0nE+4f6lWgU5XCkssSmBd2fo36aVZGZq
+         420jiUWSxdXJ8hT4YY+VQtxBmyzJbRXGkhzNFO4PgZ4eEVHHGw19k1PpxGHtOqag14
+         hgILGoP4wB4kAyXQCHCo8CUE0HFLEddR8M/SSBhBD9w4ZECBxOoJYVe24peUoveMgo
+         iMh51ftlaq+vYr5SLLwkACaERPRzG2SAGKMs/+ldMHWCHwfpO+KjAnYMSfjtRj1mMJ
+         +N8Z0VBTR5OlA==
+Subject: [PATCH 08/14] xfs: remove indirect calls from xfs_inode_walk{,_ag}
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Tue, 01 Jun 2021 17:53:11 -0700
-Message-ID: <162259519113.662681.9888544412918017319.stgit@locust>
+Date:   Tue, 01 Jun 2021 17:53:16 -0700
+Message-ID: <162259519664.662681.8440195387091934320.stgit@locust>
 In-Reply-To: <162259515220.662681.6750744293005850812.stgit@locust>
 References: <162259515220.662681.6750744293005850812.stgit@locust>
 User-Agent: StGit/0.19
@@ -49,165 +49,141 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The sole iter_flags is XFS_INODE_WALK_INEW_WAIT, and there are no users.
-Remove the flag, and the parameter, and all the code that used it.
+It turns out that there is a 1:1 mapping between the execute and goal
+parameters that are passed to xfs_inode_walk_ag:
+
+	xfs_blockgc_scan_inode <=> XFS_ICWALK_BLOCKGC
+	xfs_dqrele_inode <=> XFS_ICWALK_DQRELE
+
+Because of this exact correspondence, we don't need the execute function
+pointer and can replace it with a direct call.
+
+For the price of a forward static declaration, we can eliminate the
+indirect function call.  This likely has a negligible impact on
+performance (since the execute function runs transactions), but it also
+simplifies the function signature.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |   33 ++++++++++++---------------------
- fs/xfs/xfs_icache.h |    5 -----
- 2 files changed, 12 insertions(+), 26 deletions(-)
+ fs/xfs/xfs_icache.c |   46 ++++++++++++++++++++++------------------------
+ 1 file changed, 22 insertions(+), 24 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index b22a3fe20c4a..2e13e9347147 100644
+index 2e13e9347147..5c17bed8edb2 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -49,10 +49,10 @@ xfs_icwalk_tagged(enum xfs_icwalk_goal goal)
- 	return goal != XFS_ICWALK_DQRELE;
+@@ -50,11 +50,9 @@ xfs_icwalk_tagged(enum xfs_icwalk_goal goal)
  }
  
--static int xfs_inode_walk(struct xfs_mount *mp, int iter_flags,
-+static int xfs_inode_walk(struct xfs_mount *mp,
- 		int (*execute)(struct xfs_inode *ip, void *args),
- 		void *args, enum xfs_icwalk_goal goal);
--static int xfs_inode_walk_ag(struct xfs_perag *pag, int iter_flags,
-+static int xfs_inode_walk_ag(struct xfs_perag *pag,
- 		int (*execute)(struct xfs_inode *ip, void *args),
- 		void *args, enum xfs_icwalk_goal goal);
+ static int xfs_inode_walk(struct xfs_mount *mp,
+-		int (*execute)(struct xfs_inode *ip, void *args),
+-		void *args, enum xfs_icwalk_goal goal);
++		enum xfs_icwalk_goal goal, void *args);
+ static int xfs_inode_walk_ag(struct xfs_perag *pag,
+-		int (*execute)(struct xfs_inode *ip, void *args),
+-		void *args, enum xfs_icwalk_goal goal);
++		enum xfs_icwalk_goal goal, void *args);
  
-@@ -265,7 +265,7 @@ xfs_inode_clear_reclaim_tag(
- 	xfs_perag_clear_reclaim_tag(pag);
- }
- 
--static void
-+static inline void
- xfs_inew_wait(
- 	struct xfs_inode	*ip)
- {
-@@ -844,7 +844,7 @@ xfs_dqrele_all_inodes(
+ /*
+  * Allocate and initialise an xfs_inode.
+@@ -844,11 +842,11 @@ xfs_dqrele_all_inodes(
  	if (qflags & XFS_PQUOTA_ACCT)
  		eofb.eof_flags |= XFS_EOFB_DROP_PDQUOT;
  
--	return xfs_inode_walk(mp, 0, xfs_dqrele_inode, &eofb,
-+	return xfs_inode_walk(mp, xfs_dqrele_inode, &eofb,
- 			XFS_ICWALK_DQRELE);
+-	return xfs_inode_walk(mp, xfs_dqrele_inode, &eofb,
+-			XFS_ICWALK_DQRELE);
++	return xfs_inode_walk(mp, XFS_ICWALK_DQRELE, &eofb);
  }
  #else
-@@ -1527,11 +1527,9 @@ xfs_blockgc_start(
-  */
- static bool
- xfs_blockgc_igrab(
--	struct xfs_inode	*ip,
--	int			flags)
-+	struct xfs_inode	*ip)
- {
- 	struct inode		*inode = VFS_I(ip);
--	bool			newinos = !!(flags & XFS_INODE_WALK_INEW_WAIT);
+ # define xfs_dqrele_igrab(ip)		(false)
++# define xfs_dqrele_inode(ip, priv)	(0)
+ #endif /* CONFIG_XFS_QUOTA */
  
- 	ASSERT(rcu_read_lock_held());
- 
-@@ -1541,8 +1539,7 @@ xfs_blockgc_igrab(
- 		goto out_unlock_noent;
- 
- 	/* avoid new or reclaimable inodes. Leave for reclaim code to flush */
--	if ((!newinos && __xfs_iflags_test(ip, XFS_INEW)) ||
--	    __xfs_iflags_test(ip, XFS_IRECLAIMABLE | XFS_IRECLAIM))
-+	if (__xfs_iflags_test(ip, XFS_INEW | XFS_IRECLAIMABLE | XFS_IRECLAIM))
- 		goto out_unlock_noent;
- 	spin_unlock(&ip->i_flags_lock);
- 
-@@ -1594,7 +1591,7 @@ xfs_blockgc_worker(
+ /*
+@@ -1591,8 +1589,7 @@ xfs_blockgc_worker(
  
  	if (!sb_start_write_trylock(mp->m_super))
  		return;
--	error = xfs_inode_walk_ag(pag, 0, xfs_blockgc_scan_inode, NULL,
-+	error = xfs_inode_walk_ag(pag, xfs_blockgc_scan_inode, NULL,
- 			XFS_ICWALK_BLOCKGC);
+-	error = xfs_inode_walk_ag(pag, xfs_blockgc_scan_inode, NULL,
+-			XFS_ICWALK_BLOCKGC);
++	error = xfs_inode_walk_ag(pag, XFS_ICWALK_BLOCKGC, NULL);
  	if (error)
  		xfs_info(mp, "AG %u preallocation gc worker failed, err=%d",
-@@ -1613,7 +1610,7 @@ xfs_blockgc_free_space(
+ 				pag->pag_agno, error);
+@@ -1610,8 +1607,7 @@ xfs_blockgc_free_space(
  {
  	trace_xfs_blockgc_free_space(mp, eofb, _RET_IP_);
  
--	return xfs_inode_walk(mp, 0, xfs_blockgc_scan_inode, eofb,
-+	return xfs_inode_walk(mp, xfs_blockgc_scan_inode, eofb,
- 			XFS_ICWALK_BLOCKGC);
+-	return xfs_inode_walk(mp, xfs_blockgc_scan_inode, eofb,
+-			XFS_ICWALK_BLOCKGC);
++	return xfs_inode_walk(mp, XFS_ICWALK_BLOCKGC, eofb);
  }
  
-@@ -1688,12 +1685,11 @@ xfs_blockgc_free_quota(
- static inline bool
- xfs_grabbed_for_walk(
- 	enum xfs_icwalk_goal	goal,
--	struct xfs_inode	*ip,
--	int			iter_flags)
-+	struct xfs_inode	*ip)
- {
- 	switch (goal) {
- 	case XFS_ICWALK_BLOCKGC:
--		return xfs_blockgc_igrab(ip, iter_flags);
-+		return xfs_blockgc_igrab(ip);
- 	case XFS_ICWALK_DQRELE:
- 		return xfs_dqrele_igrab(ip);
- 	default:
-@@ -1708,7 +1704,6 @@ xfs_grabbed_for_walk(
+ /*
+@@ -1698,15 +1694,14 @@ xfs_grabbed_for_walk(
+ }
+ 
+ /*
+- * For a given per-AG structure @pag, grab, @execute, and rele all incore
+- * inodes with the given radix tree @tag.
++ * For a given per-AG structure @pag and a goal, grab qualifying inodes and
++ * process them in some manner.
+  */
  static int
  xfs_inode_walk_ag(
  	struct xfs_perag	*pag,
--	int			iter_flags,
- 	int			(*execute)(struct xfs_inode *ip, void *args),
- 	void			*args,
- 	enum xfs_icwalk_goal	goal)
-@@ -1754,7 +1749,7 @@ xfs_inode_walk_ag(
- 		for (i = 0; i < nr_found; i++) {
- 			struct xfs_inode *ip = batch[i];
- 
--			if (done || !xfs_grabbed_for_walk(goal, ip, iter_flags))
-+			if (done || !xfs_grabbed_for_walk(goal, ip))
- 				batch[i] = NULL;
- 
- 			/*
-@@ -1782,9 +1777,6 @@ xfs_inode_walk_ag(
+-	int			(*execute)(struct xfs_inode *ip, void *args),
+-	void			*args,
+-	enum xfs_icwalk_goal	goal)
++	enum xfs_icwalk_goal	goal,
++	void			*args)
+ {
+ 	struct xfs_mount	*mp = pag->pag_mount;
+ 	uint32_t		first_index;
+@@ -1777,7 +1772,14 @@ xfs_inode_walk_ag(
  		for (i = 0; i < nr_found; i++) {
  			if (!batch[i])
  				continue;
--			if ((iter_flags & XFS_INODE_WALK_INEW_WAIT) &&
--			    xfs_iflags_test(batch[i], XFS_INEW))
--				xfs_inew_wait(batch[i]);
- 			error = execute(batch[i], args);
+-			error = execute(batch[i], args);
++			switch (goal) {
++			case XFS_ICWALK_DQRELE:
++				error = xfs_dqrele_inode(batch[i], args);
++				break;
++			case XFS_ICWALK_BLOCKGC:
++				error = xfs_blockgc_scan_inode(batch[i], args);
++				break;
++			}
  			xfs_irele(batch[i]);
  			if (error == -EAGAIN) {
-@@ -1829,7 +1821,6 @@ xfs_inode_walk_get_perag(
+ 				skipped++;
+@@ -1814,16 +1816,12 @@ xfs_inode_walk_get_perag(
+ 	return xfs_perag_get_tag(mp, agno, goal);
+ }
+ 
+-/*
+- * Call the @execute function on all incore inodes matching the radix tree
+- * @tag.
+- */
++/* Walk all incore inodes to achieve a given goal. */
  static int
  xfs_inode_walk(
  	struct xfs_mount	*mp,
--	int			iter_flags,
- 	int			(*execute)(struct xfs_inode *ip, void *args),
- 	void			*args,
- 	enum xfs_icwalk_goal	goal)
-@@ -1842,7 +1833,7 @@ xfs_inode_walk(
+-	int			(*execute)(struct xfs_inode *ip, void *args),
+-	void			*args,
+-	enum xfs_icwalk_goal	goal)
++	enum xfs_icwalk_goal	goal,
++	void			*args)
+ {
+ 	struct xfs_perag	*pag;
+ 	int			error = 0;
+@@ -1833,7 +1831,7 @@ xfs_inode_walk(
  	ag = 0;
  	while ((pag = xfs_inode_walk_get_perag(mp, ag, goal))) {
  		ag = pag->pag_agno + 1;
--		error = xfs_inode_walk_ag(pag, iter_flags, execute, args, goal);
-+		error = xfs_inode_walk_ag(pag, execute, args, goal);
+-		error = xfs_inode_walk_ag(pag, execute, args, goal);
++		error = xfs_inode_walk_ag(pag, goal, args);
  		xfs_perag_put(pag);
  		if (error) {
  			last_error = error;
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index bc0998a2f7d6..6f6260c91ba0 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -34,11 +34,6 @@ struct xfs_eofblocks {
- #define XFS_IGET_DONTCACHE	0x4
- #define XFS_IGET_INCORE		0x8	/* don't read from disk or reinit */
- 
--/*
-- * flags for AG inode iterator
-- */
--#define XFS_INODE_WALK_INEW_WAIT	0x1	/* wait on new inodes */
--
- int xfs_iget(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t ino,
- 	     uint flags, uint lock_flags, xfs_inode_t **ipp);
- 
 
