@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEC2FC4708F
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:53:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56D7AC4708F
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:53:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C9BE2613CD
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:53:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40B3D613CD
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:53:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229737AbhFBAzK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Jun 2021 20:55:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33836 "EHLO mail.kernel.org"
+        id S229745AbhFBAzP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Jun 2021 20:55:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33874 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229736AbhFBAzK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 Jun 2021 20:55:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E4FE5613C5;
-        Wed,  2 Jun 2021 00:53:27 +0000 (UTC)
+        id S229736AbhFBAzP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 Jun 2021 20:55:15 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 66CCB613CA;
+        Wed,  2 Jun 2021 00:53:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622595208;
-        bh=vrDG9J2jGPubgEDB0ciwoLck1gX777tyclxMkW/cTA4=;
+        s=k20201202; t=1622595213;
+        bh=Rhn4H7A53MjxGU5+qPPQhdbDGtd03v1nR729opUjakA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=TfDd8XawQ/6cJQsVQSPqt3Non+bOIVuI2dY8G/DZue6agvw9qYhoJ4eiZx0e3jh03
-         ic1YHi4Zg1rkMEpSXs6YPAzeDYlMg5yV8AIPIqUaTNGX0Fh5vTVHCTXqTknivjaIlP
-         uz630jHFdjUi0WinwmN6p8F1gR/T1rrYEvAR+pa2UdYEgRpQk7BxXJzw89uA4USfZp
-         0LpRvRJTRtvWTv07G010h1labw1RG6kYe0CP5Wes62J9Vvsbtm8cuJ1FAkL1mrVvJM
-         rOSVx8AuhVeoSU5zT+eyYcw3L4oHfjYbWLb1yckVMxjpx68zE7ZE/l7VQxp2oAS8BP
-         rnWwLTGfC1p0g==
-Subject: [PATCH 10/14] xfs: clean up xfs_dqrele_inode calling conventions
+        b=MSe9mlK+XRlePj3dys7G5LU/dP/78JYRNMJXs2CNlls3mcu3aK/gQ0RmJtSwXR/5U
+         5uIa5eJplEDnDluAb22MQtC+Dpq2CPzCD0MzrcdI8cCa3o5DMvl7oswEyUkP+dDqJT
+         RFS9G1z1eiWRl1CeRUteAqCdNXnDh6PpMxXtA1wRD/2BeYsvrZ77azYSyHVjnjxXc4
+         UKIKBIwZRPB6ILphQdTGjvhBCXmp0dMT6nuNJzpRWDcSwjEnJ46VRV0VSSozVhQuRu
+         MxkqPbf71G5UtyZV38sx6lm+JKOVA1cwIDSnMYKcEUQP6NKjWy25lyOcuv+HSlzLWh
+         xJXMhu5OKip1Q==
+Subject: [PATCH 11/14] xfs: fix radix tree tag signs
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Tue, 01 Jun 2021 17:53:27 -0700
-Message-ID: <162259520763.662681.11880671088212649919.stgit@locust>
+Date:   Tue, 01 Jun 2021 17:53:33 -0700
+Message-ID: <162259521313.662681.11016822371804821220.stgit@locust>
 In-Reply-To: <162259515220.662681.6750744293005850812.stgit@locust>
 References: <162259515220.662681.6750744293005850812.stgit@locust>
 User-Agent: StGit/0.19
@@ -49,54 +49,41 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Similar to the last patch, establish that xfs_dqrele_inode is
-responsible for cleaning up anything that xfs_dqrele_inode_grab touches.
+Radix tree tags are supposed to be unsigned ints, so fix the callers.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_sb.c |    2 +-
+ fs/xfs/libxfs/xfs_sb.h |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 5922010b956d..7d956c842ae1 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -794,7 +794,7 @@ xfs_dqrele_igrab(
- }
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index dfbbcbd448c1..300d0a1a8049 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -61,7 +61,7 @@ struct xfs_perag *
+ xfs_perag_get_tag(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		first,
+-	int			tag)
++	unsigned int		tag)
+ {
+ 	struct xfs_perag	*pag;
+ 	int			found;
+diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+index f79f9dc632b6..e5f1c2d879eb 100644
+--- a/fs/xfs/libxfs/xfs_sb.h
++++ b/fs/xfs/libxfs/xfs_sb.h
+@@ -17,8 +17,8 @@ struct xfs_perag;
+  * perag get/put wrappers for ref counting
+  */
+ extern struct xfs_perag *xfs_perag_get(struct xfs_mount *, xfs_agnumber_t);
+-extern struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *, xfs_agnumber_t,
+-					   int tag);
++struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *mp, xfs_agnumber_t agno,
++		unsigned int tag);
+ extern void	xfs_perag_put(struct xfs_perag *pag);
+ extern int	xfs_initialize_perag_data(struct xfs_mount *, xfs_agnumber_t);
  
- /* Drop this inode's dquots. */
--static int
-+static void
- xfs_dqrele_inode(
- 	struct xfs_inode	*ip,
- 	void			*priv)
-@@ -818,7 +818,7 @@ xfs_dqrele_inode(
- 		ip->i_pdquot = NULL;
- 	}
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	return 0;
-+	xfs_irele(ip);
- }
- 
- /*
-@@ -846,7 +846,7 @@ xfs_dqrele_all_inodes(
- }
- #else
- # define xfs_dqrele_igrab(ip)		(false)
--# define xfs_dqrele_inode(ip, priv)	(0)
-+# define xfs_dqrele_inode(ip, priv)	((void)0)
- #endif /* CONFIG_XFS_QUOTA */
- 
- /*
-@@ -1778,8 +1778,7 @@ xfs_inode_walk_ag(
- 				continue;
- 			switch (goal) {
- 			case XFS_ICWALK_DQRELE:
--				error = xfs_dqrele_inode(batch[i], args);
--				xfs_irele(batch[i]);
-+				xfs_dqrele_inode(batch[i], args);
- 				break;
- 			case XFS_ICWALK_BLOCKGC:
- 				error = xfs_blockgc_scan_inode(batch[i], args);
 
