@@ -3,41 +3,44 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA39C4708F
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:24:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7276C47083
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:25:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54A68613DE
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:24:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB8CF613E6
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:25:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229774AbhFBW0l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Jun 2021 18:26:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42982 "EHLO mail.kernel.org"
+        id S229619AbhFBW0q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Jun 2021 18:26:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43020 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229619AbhFBW0k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Jun 2021 18:26:40 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5A4B66138C;
-        Wed,  2 Jun 2021 22:24:57 +0000 (UTC)
+        id S229576AbhFBW0q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Jun 2021 18:26:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DB53E613AC;
+        Wed,  2 Jun 2021 22:25:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622672697;
-        bh=T4Az6PhgDF5iznG5bwwwsXvHlPHlN06NnPUkMs2P1RU=;
-        h=Subject:From:To:Cc:Date:From;
-        b=BLEDD45gdNwUldycDy3YYYxRhS0m6ulPVh29tOZQHDg4RgTcJa8moOuABIKVYcX3q
-         XWH4WqdFNng3r/44OJfPFIqlVIhhR6uIFJCiv/AVg2oQg1dVRAeCG38S6sK0crbl+N
-         xdSdqtJqapnLvrx78MKeLgtdmUA70zaUZQ50faEbX516WopQNeJWu6yyAk5dMZivyT
-         k5joniea9Uv+l0EGpOaiDb3TymIHLFNshnGIJ5q5+pjhXob5NPLqZmobzAKajJWZNo
-         SRWCi6CE2iKODieHjy10QzXXgSsoEimpFXmvM6skpCUXotTkX6Ry/kjbDjKJzs5OgV
-         95GOdee1zA60A==
-Subject: [PATCHSET v6 00/15] xfs: clean up incore inode walk functions
+        s=k20201202; t=1622672702;
+        bh=q6/HzbGNM1cHtz75NwaMucCqPONwxUICQSoVFnvWASU=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=JXL0PWL2FxPncJF0zjBg97r1OiCmxq+pvsMlfzDqwUZQMOMThL1V/yrclyRUnn8+U
+         fSOyKYx+IEKXxU0dLMVPTNNop8YSIihsjnYCqREuP2SaSr30b5zhPdrsUUpBJex5fY
+         OwXsItvFZ0jrwGU3tEt3Kk5urfe7dXIpexehS25MxEjlg9r0iqFumR2aeKe8B6cnUi
+         +o7L9o/ehDnOLS6bs1AYTt5ydEfoKNksKm34phYlAJlIneBQwfU0el26mXalpZE0fd
+         3TtqOcQlihF0oop5+MWke7nXv6lbMGAmftovLZCOT/QzhDkvSykFFpL9zwWKzP8e9G
+         gSgfsCtRxwWzQ==
+Subject: [PATCH 01/15] xfs: move the quotaoff dqrele inode walk into
+ xfs_icache.c
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
-        linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Wed, 02 Jun 2021 15:24:57 -0700
-Message-ID: <162267269663.2375284.15885514656776142361.stgit@locust>
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, hch@infradead.org
+Date:   Wed, 02 Jun 2021 15:25:02 -0700
+Message-ID: <162267270255.2375284.1543209092353216258.stgit@locust>
+In-Reply-To: <162267269663.2375284.15885514656776142361.stgit@locust>
+References: <162267269663.2375284.15885514656776142361.stgit@locust>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -46,80 +49,213 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This ambitious series aims to cleans up redundant inode walk code in
-xfs_icache.c, hide implementation details of the quotaoff dquot release
-code, and eliminates indirect function calls from incore inode walks.
+The only external caller of xfs_inode_walk* happens in quotaoff, when we
+want to walk all the incore inodes to detach the dquots.  Move this code
+to xfs_icache.c so that we can hide xfs_inode_walk as the starting step
+in more cleanups of inode walks.
 
-The first thing it does is to move all the code that quotaoff calls to
-release dquots from all incore inodes into xfs_icache.c.  Next, it
-separates the goal of an inode walk from the actual radix tree tags that
-may or may not be involved and drops the kludgy XFS_ICI_NO_TAG thing.
-Finally, we split the speculative preallocation (blockgc) and quotaoff
-dquot release code paths into separate functions so that we can keep the
-implementations cohesive.
-
-Christoph suggested last cycle that we 'simply' change quotaoff not to
-allow deactivating quota entirely, but as these cleanups are to enable
-one major change in behavior (deferred inode inactivation) I do not want
-to add a second behavior change (quotaoff) as a dependency.
-
-To be blunt: Additional cleanups are not in scope for this series.
-
-Next, I made two observations about incore inode radix tree walks --
-since there's a 1:1 mapping between the walk goal and the per-inode
-processing function passed in, we can use the goal to make a direct call
-to the processing function.  Furthermore, the only caller to supply a
-nonzero iter_flags argument is quotaoff, and there's only one INEW flag.
-
-From that observation, I concluded that it's quite possible to remove
-two parameters from the xfs_inode_walk* function signatures -- the
-iter_flags, and the execute function pointer.  The middle of the series
-moves the INEW functionality into the one piece (quotaoff) that wants
-it, and removes the indirect calls.
-
-The final observation is that the inode reclaim walk loop is now almost
-the same as xfs_inode_walk, so it's silly to maintain two copies.  Merge
-the reclaim loop code into xfs_inode_walk.
-
-Lastly, refactor the per-ag radix tagging functions since there's
-duplicated code that can be consolidated.
-
-This series is a prerequisite for the next two patchsets, since deferred
-inode inactivation will add another inode radix tree tag and iterator
-function to xfs_inode_walk.
-
-v2: walk the vfs inode list when running quotaoff instead of the radix
-    tree, then rework the (now completely internal) inode walk function
-    to take the tag as the main parameter.
-v3: merge the reclaim loop into xfs_inode_walk, then consolidate the
-    radix tree tagging functions
-v4: rebase to 5.13-rc4
-v5: combine with the quotaoff patchset, reorder functions to minimize
-    forward declarations, split inode walk goals from radix tree tags
-    to reduce conceptual confusion
-v6: start moving the inode cache code towards the xfs_icwalk prefix
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=inode-walk-cleanups-5.14
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_sb.c   |    2 
- fs/xfs/libxfs/xfs_sb.h   |    4 
- fs/xfs/xfs_icache.c      |  848 ++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_icache.h      |   27 -
- fs/xfs/xfs_inode.c       |   22 +
- fs/xfs/xfs_qm.h          |    1 
- fs/xfs/xfs_qm_syscalls.c |   54 ---
- fs/xfs/xfs_super.c       |    2 
- fs/xfs/xfs_trace.h       |   11 -
- 9 files changed, 506 insertions(+), 465 deletions(-)
+ fs/xfs/xfs_icache.c      |   65 +++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_icache.h      |    8 ++++--
+ fs/xfs/xfs_qm.h          |    1 -
+ fs/xfs/xfs_qm_syscalls.c |   54 +-------------------------------------
+ 4 files changed, 71 insertions(+), 57 deletions(-)
+
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 3c81daca0e9a..e2edbcf7a528 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -26,6 +26,18 @@
+ 
+ #include <linux/iversion.h>
+ 
++/*
++ * Private inode cache walk flags for struct xfs_eofblocks.  Must not coincide
++ * with XFS_EOF_FLAGS_*.
++ */
++#define XFS_ICWALK_FLAG_DROP_UDQUOT	(1U << 31)
++#define XFS_ICWALK_FLAG_DROP_GDQUOT	(1U << 30)
++#define XFS_ICWALK_FLAG_DROP_PDQUOT	(1U << 29)
++
++#define XFS_ICWALK_PRIVATE_FLAGS	(XFS_ICWALK_FLAG_DROP_UDQUOT | \
++					 XFS_ICWALK_FLAG_DROP_GDQUOT | \
++					 XFS_ICWALK_FLAG_DROP_PDQUOT)
++
+ /*
+  * Allocate and initialise an xfs_inode.
+  */
+@@ -890,7 +902,7 @@ xfs_inode_walk_get_perag(
+  * Call the @execute function on all incore inodes matching the radix tree
+  * @tag.
+  */
+-int
++static int
+ xfs_inode_walk(
+ 	struct xfs_mount	*mp,
+ 	int			iter_flags,
+@@ -915,8 +927,59 @@ xfs_inode_walk(
+ 		}
+ 	}
+ 	return last_error;
++	BUILD_BUG_ON(XFS_ICWALK_PRIVATE_FLAGS & XFS_EOF_FLAGS_VALID);
+ }
+ 
++#ifdef CONFIG_XFS_QUOTA
++/* Drop this inode's dquots. */
++static int
++xfs_dqrele_inode(
++	struct xfs_inode	*ip,
++	void			*priv)
++{
++	struct xfs_eofblocks	*eofb = priv;
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	if (eofb->eof_flags & XFS_ICWALK_FLAG_DROP_UDQUOT) {
++		xfs_qm_dqrele(ip->i_udquot);
++		ip->i_udquot = NULL;
++	}
++	if (eofb->eof_flags & XFS_ICWALK_FLAG_DROP_GDQUOT) {
++		xfs_qm_dqrele(ip->i_gdquot);
++		ip->i_gdquot = NULL;
++	}
++	if (eofb->eof_flags & XFS_ICWALK_FLAG_DROP_PDQUOT) {
++		xfs_qm_dqrele(ip->i_pdquot);
++		ip->i_pdquot = NULL;
++	}
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return 0;
++}
++
++/*
++ * Detach all dquots from incore inodes if we can.  The caller must already
++ * have dropped the relevant XFS_[UGP]QUOTA_ACTIVE flags so that dquots will
++ * not get reattached.
++ */
++int
++xfs_dqrele_all_inodes(
++	struct xfs_mount	*mp,
++	unsigned int		qflags)
++{
++	struct xfs_eofblocks	eofb = { .eof_flags = 0 };
++
++	if (qflags & XFS_UQUOTA_ACCT)
++		eofb.eof_flags |= XFS_ICWALK_FLAG_DROP_UDQUOT;
++	if (qflags & XFS_GQUOTA_ACCT)
++		eofb.eof_flags |= XFS_ICWALK_FLAG_DROP_GDQUOT;
++	if (qflags & XFS_PQUOTA_ACCT)
++		eofb.eof_flags |= XFS_ICWALK_FLAG_DROP_PDQUOT;
++
++	return xfs_inode_walk(mp, XFS_INODE_WALK_INEW_WAIT, xfs_dqrele_inode,
++			&eofb, XFS_ICI_NO_TAG);
++}
++#endif /* CONFIG_XFS_QUOTA */
++
+ /*
+  * Grab the inode for reclaim exclusively.
+  *
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index d1fddb152420..d9baa6df1121 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -68,9 +68,11 @@ void xfs_inode_clear_cowblocks_tag(struct xfs_inode *ip);
+ 
+ void xfs_blockgc_worker(struct work_struct *work);
+ 
+-int xfs_inode_walk(struct xfs_mount *mp, int iter_flags,
+-	int (*execute)(struct xfs_inode *ip, void *args),
+-	void *args, int tag);
++#ifdef CONFIG_XFS_QUOTA
++int xfs_dqrele_all_inodes(struct xfs_mount *mp, unsigned int qflags);
++#else
++# define xfs_dqrele_all_inodes(mp, qflags)	(0)
++#endif
+ 
+ int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
+ 				  xfs_ino_t ino, bool *inuse);
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index e3dabab44097..ebbb484c49dc 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -142,7 +142,6 @@ extern void		xfs_qm_destroy_quotainfo(struct xfs_mount *);
+ 
+ /* dquot stuff */
+ extern void		xfs_qm_dqpurge_all(struct xfs_mount *, uint);
+-extern void		xfs_qm_dqrele_all_inodes(struct xfs_mount *, uint);
+ 
+ /* quota ops */
+ extern int		xfs_qm_scall_trunc_qfiles(struct xfs_mount *, uint);
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 11f1e2fbf22f..13a56e1ea15c 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -201,7 +201,8 @@ xfs_qm_scall_quotaoff(
+ 	 * depend on the quota inodes (and other things) being valid as long as
+ 	 * we keep the lock(s).
+ 	 */
+-	xfs_qm_dqrele_all_inodes(mp, flags);
++	error = xfs_dqrele_all_inodes(mp, flags);
++	ASSERT(!error);
+ 
+ 	/*
+ 	 * Next we make the changes in the quota flag in the mount struct.
+@@ -747,54 +748,3 @@ xfs_qm_scall_getquota_next(
+ 	xfs_qm_dqput(dqp);
+ 	return error;
+ }
+-
+-STATIC int
+-xfs_dqrele_inode(
+-	struct xfs_inode	*ip,
+-	void			*args)
+-{
+-	uint			*flags = args;
+-
+-	/* skip quota inodes */
+-	if (ip == ip->i_mount->m_quotainfo->qi_uquotaip ||
+-	    ip == ip->i_mount->m_quotainfo->qi_gquotaip ||
+-	    ip == ip->i_mount->m_quotainfo->qi_pquotaip) {
+-		ASSERT(ip->i_udquot == NULL);
+-		ASSERT(ip->i_gdquot == NULL);
+-		ASSERT(ip->i_pdquot == NULL);
+-		return 0;
+-	}
+-
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	if ((*flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
+-		xfs_qm_dqrele(ip->i_udquot);
+-		ip->i_udquot = NULL;
+-	}
+-	if ((*flags & XFS_GQUOTA_ACCT) && ip->i_gdquot) {
+-		xfs_qm_dqrele(ip->i_gdquot);
+-		ip->i_gdquot = NULL;
+-	}
+-	if ((*flags & XFS_PQUOTA_ACCT) && ip->i_pdquot) {
+-		xfs_qm_dqrele(ip->i_pdquot);
+-		ip->i_pdquot = NULL;
+-	}
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	return 0;
+-}
+-
+-
+-/*
+- * Go thru all the inodes in the file system, releasing their dquots.
+- *
+- * Note that the mount structure gets modified to indicate that quotas are off
+- * AFTER this, in the case of quotaoff.
+- */
+-void
+-xfs_qm_dqrele_all_inodes(
+-	struct xfs_mount	*mp,
+-	uint			flags)
+-{
+-	ASSERT(mp->m_quotainfo);
+-	xfs_inode_walk(mp, XFS_INODE_WALK_INEW_WAIT, xfs_dqrele_inode,
+-			&flags, XFS_ICI_NO_TAG);
+-}
 
