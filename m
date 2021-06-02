@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8069C47083
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:25:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C2DCC47083
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:25:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92999613DE
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:25:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FCCD6138C
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:25:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229744AbhFBW0w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Jun 2021 18:26:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43050 "EHLO mail.kernel.org"
+        id S229786AbhFBW05 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Jun 2021 18:26:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43078 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229576AbhFBW0v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Jun 2021 18:26:51 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 63EE1613AC;
-        Wed,  2 Jun 2021 22:25:08 +0000 (UTC)
+        id S229576AbhFBW05 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Jun 2021 18:26:57 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E9C766138C;
+        Wed,  2 Jun 2021 22:25:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622672708;
-        bh=oBl7LUbZXx5Ux7N6ocRUo7ZevhWYuIg1D11BT5Yegf8=;
+        s=k20201202; t=1622672714;
+        bh=dWI4MhfzZ5sofkcby10aIDrma64E7V4PndDpBhsWfcQ=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=fKe4J0eLK3C7AyVimApcDHGJ4q83u3xBfcnr//Tr/C7AC9HcHrcAVuKbH6jY8pUOd
-         pgU/qPobMIESPiVmMaLBN6Sa6NS1Z24qIb/G9352SWeV1bS2UheYQyOgaXFR0fLUMN
-         xeuxZpjVnX7wtAGCjhJqdIlGte4QUDzQ5PC5JlLzPoUL4Z6Povb2Kf7k0pfp3mKUp3
-         ot0YcR0UT/f7oXwGNt+TdBYdcNOfqYk0AxFUYerDmURQqY8lcT/rUTsUzNjD8oOFg3
-         LkVrOI6LXEUoH1boRIN3X/FC3oIVv4LrfiISGwv9DcjfbqsMhzAdKPCvjXGDRAQvS9
-         EiTfhsjSAdBkw==
-Subject: [PATCH 02/15] xfs: detach inode dquots at the end of inactivation
+        b=H2cb6yqI+ZShmGl3bEH0v89ruXc2wKSJx/WL27xz0fn+ehN3dl6K16eJ84ek88hZe
+         PJQQsUysG37KVLBz2pmMepbs0zfoS5Mce5R4znE45xpmJgNmifGU/tPcnIzf72B7z2
+         GszNtkSITSEoOvcHmO5fW+FyfAwfYQbUxoByLWxw7JLNlpFOeVWnzaOzySWAx7Ks99
+         ef0aSVrksN9ohST7DaEIDJz4emBL378MrB+ei1rfkhJNJQYusPPMk7aH5J8FZevNJI
+         ZQ2mWYdYbmll2t6/Ft5cctSTxSCUE+foeP01r6wLm6qEds5JndDEyWlHPiLqaxWmRy
+         ONTDQhJiwie3g==
+Subject: [PATCH 03/15] xfs: move the inode walk functions further down
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
         david@fromorbit.com, hch@infradead.org
-Date:   Wed, 02 Jun 2021 15:25:08 -0700
-Message-ID: <162267270808.2375284.11171512285980946391.stgit@locust>
+Date:   Wed, 02 Jun 2021 15:25:13 -0700
+Message-ID: <162267271362.2375284.6369986652230578143.stgit@locust>
 In-Reply-To: <162267269663.2375284.15885514656776142361.stgit@locust>
 References: <162267269663.2375284.15885514656776142361.stgit@locust>
 User-Agent: StGit/0.19
@@ -50,108 +50,449 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Once we're done with inactivating an inode, we're finished updating
-metadata for that inode.  This means that we can detach the dquots at
-the end and not have to wait for reclaim to do it for us.
+Move the inode walk functions further down in the file to limit the
+forward declarations to the two walk functions as we add new code that
+uses the inode walks.  We'll clean them out later (i.e. after the
+deferred inode inactivation series).
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_icache.c |    2 +-
- fs/xfs/xfs_inode.c  |   22 +++++++++++-----------
- 2 files changed, 12 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_icache.c |  401 ++++++++++++++++++++++++++-------------------------
+ 1 file changed, 206 insertions(+), 195 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index e2edbcf7a528..dfa0ec7d02b8 100644
+index dfa0ec7d02b8..55c55e449cab 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1093,7 +1093,7 @@ xfs_reclaim_inode(
- 	 * unlocked after the lookup before we go ahead and free it.
- 	 */
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_qm_dqdetach(ip);
-+	ASSERT(!ip->i_udquot && !ip->i_gdquot && !ip->i_pdquot);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	ASSERT(xfs_inode_clean(ip));
+@@ -26,6 +26,13 @@
  
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index e4c2da4566f1..51972549e73c 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1716,7 +1716,7 @@ xfs_inactive(
- 	 */
- 	if (VFS_I(ip)->i_mode == 0) {
- 		ASSERT(ip->i_df.if_broot_bytes == 0);
--		return;
-+		goto out;
- 	}
+ #include <linux/iversion.h>
  
- 	mp = ip->i_mount;
-@@ -1724,11 +1724,11 @@ xfs_inactive(
++static int xfs_inode_walk(struct xfs_mount *mp, int iter_flags,
++		int (*execute)(struct xfs_inode *ip, void *args),
++		void *args, int tag);
++static int xfs_inode_walk_ag(struct xfs_perag *pag, int iter_flags,
++		int (*execute)(struct xfs_inode *ip, void *args),
++		void *args, int tag);
++
+ /*
+  * Private inode cache walk flags for struct xfs_eofblocks.  Must not coincide
+  * with XFS_EOF_FLAGS_*.
+@@ -732,204 +739,12 @@ xfs_icache_inode_is_allocated(
+  * radix tree lookups to a minimum. The batch size is a trade off between
+  * lookup reduction and stack usage. This is in the reclaim path, so we can't
+  * be too greedy.
++ *
++ * XXX: This will be moved closer to xfs_inode_walk* once we get rid of the
++ * separate reclaim walk functions.
+  */
+ #define XFS_LOOKUP_BATCH	32
  
- 	/* If this is a read-only mount, don't do this (would generate I/O) */
- 	if (mp->m_flags & XFS_MOUNT_RDONLY)
--		return;
-+		goto out;
- 
- 	/* Metadata inodes require explicit resource cleanup. */
- 	if (xfs_is_metadata_inode(ip))
--		return;
-+		goto out;
- 
- 	/* Try to clean out the cow blocks if there are any. */
- 	if (xfs_inode_has_cow_data(ip))
-@@ -1747,7 +1747,7 @@ xfs_inactive(
- 		if (xfs_can_free_eofblocks(ip, true))
- 			xfs_free_eofblocks(ip);
- 
--		return;
-+		goto out;
- 	}
- 
- 	if (S_ISREG(VFS_I(ip)->i_mode) &&
-@@ -1757,14 +1757,14 @@ xfs_inactive(
- 
- 	error = xfs_qm_dqattach(ip);
- 	if (error)
--		return;
-+		goto out;
- 
- 	if (S_ISLNK(VFS_I(ip)->i_mode))
- 		error = xfs_inactive_symlink(ip);
- 	else if (truncate)
- 		error = xfs_inactive_truncate(ip);
- 	if (error)
--		return;
-+		goto out;
- 
- 	/*
- 	 * If there are attributes associated with the file then blow them away
-@@ -1774,7 +1774,7 @@ xfs_inactive(
- 	if (XFS_IFORK_Q(ip)) {
- 		error = xfs_attr_inactive(ip);
- 		if (error)
--			return;
-+			goto out;
- 	}
- 
- 	ASSERT(!ip->i_afp);
-@@ -1783,12 +1783,12 @@ xfs_inactive(
- 	/*
- 	 * Free the inode.
- 	 */
--	error = xfs_inactive_ifree(ip);
--	if (error)
--		return;
-+	xfs_inactive_ifree(ip);
- 
-+out:
- 	/*
--	 * Release the dquots held by inode, if any.
-+	 * We're done making metadata updates for this inode, so we can release
-+	 * the attached dquots.
- 	 */
- 	xfs_qm_dqdetach(ip);
+-/*
+- * Decide if the given @ip is eligible to be a part of the inode walk, and
+- * grab it if so.  Returns true if it's ready to go or false if we should just
+- * ignore it.
+- */
+-STATIC bool
+-xfs_inode_walk_ag_grab(
+-	struct xfs_inode	*ip,
+-	int			flags)
+-{
+-	struct inode		*inode = VFS_I(ip);
+-	bool			newinos = !!(flags & XFS_INODE_WALK_INEW_WAIT);
+-
+-	ASSERT(rcu_read_lock_held());
+-
+-	/* Check for stale RCU freed inode */
+-	spin_lock(&ip->i_flags_lock);
+-	if (!ip->i_ino)
+-		goto out_unlock_noent;
+-
+-	/* avoid new or reclaimable inodes. Leave for reclaim code to flush */
+-	if ((!newinos && __xfs_iflags_test(ip, XFS_INEW)) ||
+-	    __xfs_iflags_test(ip, XFS_IRECLAIMABLE | XFS_IRECLAIM))
+-		goto out_unlock_noent;
+-	spin_unlock(&ip->i_flags_lock);
+-
+-	/* nothing to sync during shutdown */
+-	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+-		return false;
+-
+-	/* If we can't grab the inode, it must on it's way to reclaim. */
+-	if (!igrab(inode))
+-		return false;
+-
+-	/* inode is valid */
+-	return true;
+-
+-out_unlock_noent:
+-	spin_unlock(&ip->i_flags_lock);
+-	return false;
+-}
+-
+-/*
+- * For a given per-AG structure @pag, grab, @execute, and rele all incore
+- * inodes with the given radix tree @tag.
+- */
+-STATIC int
+-xfs_inode_walk_ag(
+-	struct xfs_perag	*pag,
+-	int			iter_flags,
+-	int			(*execute)(struct xfs_inode *ip, void *args),
+-	void			*args,
+-	int			tag)
+-{
+-	struct xfs_mount	*mp = pag->pag_mount;
+-	uint32_t		first_index;
+-	int			last_error = 0;
+-	int			skipped;
+-	bool			done;
+-	int			nr_found;
+-
+-restart:
+-	done = false;
+-	skipped = 0;
+-	first_index = 0;
+-	nr_found = 0;
+-	do {
+-		struct xfs_inode *batch[XFS_LOOKUP_BATCH];
+-		int		error = 0;
+-		int		i;
+-
+-		rcu_read_lock();
+-
+-		if (tag == XFS_ICI_NO_TAG)
+-			nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
+-					(void **)batch, first_index,
+-					XFS_LOOKUP_BATCH);
+-		else
+-			nr_found = radix_tree_gang_lookup_tag(
+-					&pag->pag_ici_root,
+-					(void **) batch, first_index,
+-					XFS_LOOKUP_BATCH, tag);
+-
+-		if (!nr_found) {
+-			rcu_read_unlock();
+-			break;
+-		}
+-
+-		/*
+-		 * Grab the inodes before we drop the lock. if we found
+-		 * nothing, nr == 0 and the loop will be skipped.
+-		 */
+-		for (i = 0; i < nr_found; i++) {
+-			struct xfs_inode *ip = batch[i];
+-
+-			if (done || !xfs_inode_walk_ag_grab(ip, iter_flags))
+-				batch[i] = NULL;
+-
+-			/*
+-			 * Update the index for the next lookup. Catch
+-			 * overflows into the next AG range which can occur if
+-			 * we have inodes in the last block of the AG and we
+-			 * are currently pointing to the last inode.
+-			 *
+-			 * Because we may see inodes that are from the wrong AG
+-			 * due to RCU freeing and reallocation, only update the
+-			 * index if it lies in this AG. It was a race that lead
+-			 * us to see this inode, so another lookup from the
+-			 * same index will not find it again.
+-			 */
+-			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
+-				continue;
+-			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+-			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
+-				done = true;
+-		}
+-
+-		/* unlock now we've grabbed the inodes. */
+-		rcu_read_unlock();
+-
+-		for (i = 0; i < nr_found; i++) {
+-			if (!batch[i])
+-				continue;
+-			if ((iter_flags & XFS_INODE_WALK_INEW_WAIT) &&
+-			    xfs_iflags_test(batch[i], XFS_INEW))
+-				xfs_inew_wait(batch[i]);
+-			error = execute(batch[i], args);
+-			xfs_irele(batch[i]);
+-			if (error == -EAGAIN) {
+-				skipped++;
+-				continue;
+-			}
+-			if (error && last_error != -EFSCORRUPTED)
+-				last_error = error;
+-		}
+-
+-		/* bail out if the filesystem is corrupted.  */
+-		if (error == -EFSCORRUPTED)
+-			break;
+-
+-		cond_resched();
+-
+-	} while (nr_found && !done);
+-
+-	if (skipped) {
+-		delay(1);
+-		goto restart;
+-	}
+-	return last_error;
+-}
+-
+-/* Fetch the next (possibly tagged) per-AG structure. */
+-static inline struct xfs_perag *
+-xfs_inode_walk_get_perag(
+-	struct xfs_mount	*mp,
+-	xfs_agnumber_t		agno,
+-	int			tag)
+-{
+-	if (tag == XFS_ICI_NO_TAG)
+-		return xfs_perag_get(mp, agno);
+-	return xfs_perag_get_tag(mp, agno, tag);
+-}
+-
+-/*
+- * Call the @execute function on all incore inodes matching the radix tree
+- * @tag.
+- */
+-static int
+-xfs_inode_walk(
+-	struct xfs_mount	*mp,
+-	int			iter_flags,
+-	int			(*execute)(struct xfs_inode *ip, void *args),
+-	void			*args,
+-	int			tag)
+-{
+-	struct xfs_perag	*pag;
+-	int			error = 0;
+-	int			last_error = 0;
+-	xfs_agnumber_t		ag;
+-
+-	ag = 0;
+-	while ((pag = xfs_inode_walk_get_perag(mp, ag, tag))) {
+-		ag = pag->pag_agno + 1;
+-		error = xfs_inode_walk_ag(pag, iter_flags, execute, args, tag);
+-		xfs_perag_put(pag);
+-		if (error) {
+-			last_error = error;
+-			if (error == -EFSCORRUPTED)
+-				break;
+-		}
+-	}
+-	return last_error;
+-	BUILD_BUG_ON(XFS_ICWALK_PRIVATE_FLAGS & XFS_EOF_FLAGS_VALID);
+-}
+-
+ #ifdef CONFIG_XFS_QUOTA
+ /* Drop this inode's dquots. */
+ static int
+@@ -1649,6 +1464,48 @@ xfs_blockgc_start(
+ 		xfs_blockgc_queue(pag);
  }
+ 
++/*
++ * Decide if the given @ip is eligible to be a part of the inode walk, and
++ * grab it if so.  Returns true if it's ready to go or false if we should just
++ * ignore it.
++ */
++static bool
++xfs_inode_walk_ag_grab(
++	struct xfs_inode	*ip,
++	int			flags)
++{
++	struct inode		*inode = VFS_I(ip);
++	bool			newinos = !!(flags & XFS_INODE_WALK_INEW_WAIT);
++
++	ASSERT(rcu_read_lock_held());
++
++	/* Check for stale RCU freed inode */
++	spin_lock(&ip->i_flags_lock);
++	if (!ip->i_ino)
++		goto out_unlock_noent;
++
++	/* avoid new or reclaimable inodes. Leave for reclaim code to flush */
++	if ((!newinos && __xfs_iflags_test(ip, XFS_INEW)) ||
++	    __xfs_iflags_test(ip, XFS_IRECLAIMABLE | XFS_IRECLAIM))
++		goto out_unlock_noent;
++	spin_unlock(&ip->i_flags_lock);
++
++	/* nothing to sync during shutdown */
++	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
++		return false;
++
++	/* If we can't grab the inode, it must on it's way to reclaim. */
++	if (!igrab(inode))
++		return false;
++
++	/* inode is valid */
++	return true;
++
++out_unlock_noent:
++	spin_unlock(&ip->i_flags_lock);
++	return false;
++}
++
+ /* Scan one incore inode for block preallocations that we can remove. */
+ static int
+ xfs_blockgc_scan_inode(
+@@ -1769,3 +1626,157 @@ xfs_blockgc_free_quota(
+ 			xfs_inode_dquot(ip, XFS_DQTYPE_GROUP),
+ 			xfs_inode_dquot(ip, XFS_DQTYPE_PROJ), eof_flags);
+ }
++
++/* XFS Inode Cache Walking Code */
++
++/*
++ * For a given per-AG structure @pag, grab, @execute, and rele all incore
++ * inodes with the given radix tree @tag.
++ */
++static int
++xfs_inode_walk_ag(
++	struct xfs_perag	*pag,
++	int			iter_flags,
++	int			(*execute)(struct xfs_inode *ip, void *args),
++	void			*args,
++	int			tag)
++{
++	struct xfs_mount	*mp = pag->pag_mount;
++	uint32_t		first_index;
++	int			last_error = 0;
++	int			skipped;
++	bool			done;
++	int			nr_found;
++
++restart:
++	done = false;
++	skipped = 0;
++	first_index = 0;
++	nr_found = 0;
++	do {
++		struct xfs_inode *batch[XFS_LOOKUP_BATCH];
++		int		error = 0;
++		int		i;
++
++		rcu_read_lock();
++
++		if (tag == XFS_ICI_NO_TAG)
++			nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
++					(void **)batch, first_index,
++					XFS_LOOKUP_BATCH);
++		else
++			nr_found = radix_tree_gang_lookup_tag(
++					&pag->pag_ici_root,
++					(void **) batch, first_index,
++					XFS_LOOKUP_BATCH, tag);
++
++		if (!nr_found) {
++			rcu_read_unlock();
++			break;
++		}
++
++		/*
++		 * Grab the inodes before we drop the lock. if we found
++		 * nothing, nr == 0 and the loop will be skipped.
++		 */
++		for (i = 0; i < nr_found; i++) {
++			struct xfs_inode *ip = batch[i];
++
++			if (done || !xfs_inode_walk_ag_grab(ip, iter_flags))
++				batch[i] = NULL;
++
++			/*
++			 * Update the index for the next lookup. Catch
++			 * overflows into the next AG range which can occur if
++			 * we have inodes in the last block of the AG and we
++			 * are currently pointing to the last inode.
++			 *
++			 * Because we may see inodes that are from the wrong AG
++			 * due to RCU freeing and reallocation, only update the
++			 * index if it lies in this AG. It was a race that lead
++			 * us to see this inode, so another lookup from the
++			 * same index will not find it again.
++			 */
++			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
++				continue;
++			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
++			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
++				done = true;
++		}
++
++		/* unlock now we've grabbed the inodes. */
++		rcu_read_unlock();
++
++		for (i = 0; i < nr_found; i++) {
++			if (!batch[i])
++				continue;
++			if ((iter_flags & XFS_INODE_WALK_INEW_WAIT) &&
++			    xfs_iflags_test(batch[i], XFS_INEW))
++				xfs_inew_wait(batch[i]);
++			error = execute(batch[i], args);
++			xfs_irele(batch[i]);
++			if (error == -EAGAIN) {
++				skipped++;
++				continue;
++			}
++			if (error && last_error != -EFSCORRUPTED)
++				last_error = error;
++		}
++
++		/* bail out if the filesystem is corrupted.  */
++		if (error == -EFSCORRUPTED)
++			break;
++
++		cond_resched();
++
++	} while (nr_found && !done);
++
++	if (skipped) {
++		delay(1);
++		goto restart;
++	}
++	return last_error;
++}
++
++/* Fetch the next (possibly tagged) per-AG structure. */
++static inline struct xfs_perag *
++xfs_inode_walk_get_perag(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	int			tag)
++{
++	if (tag == XFS_ICI_NO_TAG)
++		return xfs_perag_get(mp, agno);
++	return xfs_perag_get_tag(mp, agno, tag);
++}
++
++/*
++ * Call the @execute function on all incore inodes matching the radix tree
++ * @tag.
++ */
++static int
++xfs_inode_walk(
++	struct xfs_mount	*mp,
++	int			iter_flags,
++	int			(*execute)(struct xfs_inode *ip, void *args),
++	void			*args,
++	int			tag)
++{
++	struct xfs_perag	*pag;
++	int			error = 0;
++	int			last_error = 0;
++	xfs_agnumber_t		agno = 0;
++
++	while ((pag = xfs_inode_walk_get_perag(mp, agno, tag))) {
++		agno = pag->pag_agno + 1;
++		error = xfs_inode_walk_ag(pag, iter_flags, execute, args, tag);
++		xfs_perag_put(pag);
++		if (error) {
++			last_error = error;
++			if (error == -EFSCORRUPTED)
++				break;
++		}
++	}
++	return last_error;
++	BUILD_BUG_ON(XFS_ICWALK_PRIVATE_FLAGS & XFS_EOF_FLAGS_VALID);
++}
 
