@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D3AAC4708F
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:25:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E84BC47083
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:25:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73D64613E6
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:25:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86E63613DE
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:25:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229576AbhFBW1J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Jun 2021 18:27:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43144 "EHLO mail.kernel.org"
+        id S229552AbhFBW1O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Jun 2021 18:27:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43168 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229552AbhFBW1I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Jun 2021 18:27:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0CF8C6138C;
-        Wed,  2 Jun 2021 22:25:25 +0000 (UTC)
+        id S229801AbhFBW1O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Jun 2021 18:27:14 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8A7B8613AC;
+        Wed,  2 Jun 2021 22:25:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622672725;
-        bh=ELyNj2dtbgWLB++3GO3Y8RuohyFIVCJRhP0bdCKn6mk=;
+        s=k20201202; t=1622672730;
+        bh=dhZ40m7VtQM8m0Fp4FbiJKN3GAoem9X0cRUPeIU9Guk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=YvNRnSzT3Gv/n4x+OsCR3Cph2il0dy561EM27yFfO3xOKRtC+Ff3BLg6KPOOb+LOk
-         xlusn5a6LYqTVgEUW+4BIcnvLKu8DCO8JQopDZh5oIwOO9mQ+ZppVjVOFPwBWh+4RK
-         lJKdDCkp5QFJ1jvYqkqxq1XtKBN4CTAjz/86Av6C+45kg4so5c2KPP64eve0Ql1bPz
-         amWXCr/tzYsGh3pbDrCzEFrU8R7yABRdF4YsoN5Taabo2mo7cNnxXaJW0zD958LAIA
-         +DmrBSCMqdXiSjINCpJvLJiXml221fppq4f1w6JK3oByWRK07tNdBe8Xr6nUZMy4dV
-         jbvzDNx1xDMnA==
-Subject: [PATCH 05/15] xfs: pass the goal of the incore inode walk to
- xfs_inode_walk()
+        b=LpLIw7ckI+SfMlUN+dcvnTClFrs8Hl9nIqFYwrn9i66Ev0uLPsjlhqeoofapMNLUp
+         4CqYCrq3pRl3xU6itUkj3Nr5pwlFj2gpjMDTaXcegsgcaud45a7PtqWexCkveCJNpG
+         aYKp+WZJEEBtCD7/VeH7VFz/k+mxvSLKRVqEtiZxStFWMEXSAKxeuZ8jhpbwgrwiey
+         BpAYmdkc1klx30H5mNB5fNTHmnOJQ+nsGJiY0FVvNY6Xx7lYqW9O6p+h3TtPhAwcVs
+         frNFKWYL4BhvSyp0qQLwQRhToJ2Ms9q1cNDvs3UuVD1qt3IpELN1owMp+/Q2Nose3T
+         hdWvWwT1oK90g==
+Subject: [PATCH 06/15] xfs: separate the dqrele_all inode grab logic from
+ xfs_inode_walk_ag_grab
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Wed, 02 Jun 2021 15:25:24 -0700
-Message-ID: <162267272469.2375284.14945153699742283950.stgit@locust>
+Date:   Wed, 02 Jun 2021 15:25:30 -0700
+Message-ID: <162267273023.2375284.13883230665214658106.stgit@locust>
 In-Reply-To: <162267269663.2375284.15885514656776142361.stgit@locust>
 References: <162267269663.2375284.15885514656776142361.stgit@locust>
 User-Agent: StGit/0.19
@@ -50,168 +50,135 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-As part of removing the indirect calls and radix tag implementation
-details from the incore inode walk loop, create an enum to represent the
-goal of the inode iteration.  More immediately, this separate removes
-the need for the "ICI_NOTAG" define which makes little sense.
+Disentangle the dqrele_all inode grab code from the "generic" inode walk
+grabbing code, and and use the opportunity to document why the dqrele
+grab function does what it does.  Since xfs_inode_walk_ag_grab is now
+only used for blockgc, rename it to reflect that.
+
+Ultimately, there will be four reasons to perform a walk of incore
+inodes: quotaoff dquote releasing (dqrele), garbage collection of
+speculative preallocations (blockgc), reclamation of incore inodes
+(reclaim), and deferred inactivation (inodegc).  Each of these four have
+their own slightly different criteria for deciding if they want to
+handle an inode, so it makes more sense to have four cohesive igrab
+functions than one confusing parameteric grab function like we do now.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |   55 ++++++++++++++++++++++++++++++++++++++++-----------
- fs/xfs/xfs_icache.h |    9 --------
- 2 files changed, 43 insertions(+), 21 deletions(-)
+ fs/xfs/xfs_icache.c |   71 +++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 66 insertions(+), 5 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index d5ecd4cd3ef5..c6d956406033 100644
+index c6d956406033..45979791313f 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -26,12 +26,40 @@
+@@ -774,6 +774,44 @@ xfs_icache_inode_is_allocated(
+ #define XFS_LOOKUP_BATCH	32
  
- #include <linux/iversion.h>
- 
-+/* Radix tree tags for incore inode tree. */
-+
-+/* inode is to be reclaimed */
-+#define XFS_ICI_RECLAIM_TAG	0
-+/* Inode has speculative preallocations (posteof or cow) to clean. */
-+#define XFS_ICI_BLOCKGC_TAG	1
-+
-+/*
-+ * The goal for walking incore inodes.  These can correspond with incore inode
-+ * radix tree tags when convenient.  Avoid existing XFS_IWALK namespace.
-+ */
-+enum xfs_icwalk_goal {
-+	/* Goals that are not related to tags; these must be < 0. */
-+	XFS_ICWALK_DQRELE	= -1,
-+
-+	/* Goals directly associated with tagged inodes. */
-+	XFS_ICWALK_BLOCKGC	= XFS_ICI_BLOCKGC_TAG,
-+};
-+
-+#define XFS_ICWALK_NULL_TAG	(-1U)
-+
-+/* Compute the inode radix tree tag for this goal. */
-+static inline unsigned int
-+xfs_icwalk_tag(enum xfs_icwalk_goal goal)
+ #ifdef CONFIG_XFS_QUOTA
++/* Decide if we want to grab this inode to drop its dquots. */
++static bool
++xfs_dqrele_igrab(
++	struct xfs_inode	*ip)
 +{
-+	return goal < 0 ? XFS_ICWALK_NULL_TAG : goal;
++	bool			ret = false;
++
++	ASSERT(rcu_read_lock_held());
++
++	/* Check for stale RCU freed inode */
++	spin_lock(&ip->i_flags_lock);
++	if (!ip->i_ino)
++		goto out_unlock;
++
++	/*
++	 * Skip inodes that are anywhere in the reclaim machinery because we
++	 * drop dquots before tagging an inode for reclamation.
++	 */
++	if (ip->i_flags & (XFS_IRECLAIM | XFS_IRECLAIMABLE))
++		goto out_unlock;
++
++	/*
++	 * The inode looks alive; try to grab a VFS reference so that it won't
++	 * get destroyed.  If we got the reference, return true to say that
++	 * we grabbed the inode.
++	 *
++	 * If we can't get the reference, then we know the inode had its VFS
++	 * state torn down and hasn't yet entered the reclaim machinery.  Since
++	 * we also know that dquots are detached from an inode before it enters
++	 * reclaim, we can skip the inode.
++	 */
++	ret = igrab(VFS_I(ip)) != NULL;
++
++out_unlock:
++	spin_unlock(&ip->i_flags_lock);
++	return ret;
 +}
 +
- static int xfs_icwalk(struct xfs_mount *mp, int iter_flags,
- 		int (*execute)(struct xfs_inode *ip, void *args),
--		void *args, int tag);
-+		void *args, enum xfs_icwalk_goal goal);
- static int xfs_icwalk_ag(struct xfs_perag *pag, int iter_flags,
- 		int (*execute)(struct xfs_inode *ip, void *args),
--		void *args, int tag);
-+		void *args, enum xfs_icwalk_goal goal);
- 
- /*
-  * Private inode cache walk flags for struct xfs_eofblocks.  Must not coincide
-@@ -791,7 +819,7 @@ xfs_dqrele_all_inodes(
- 		eofb.eof_flags |= XFS_ICWALK_FLAG_DROP_PDQUOT;
- 
+ /* Drop this inode's dquots. */
+ static int
+ xfs_dqrele_inode(
+@@ -821,6 +859,8 @@ xfs_dqrele_all_inodes(
  	return xfs_icwalk(mp, XFS_INODE_WALK_INEW_WAIT, xfs_dqrele_inode,
--			&eofb, XFS_ICI_NO_TAG);
-+			&eofb, XFS_ICWALK_DQRELE);
+ 			&eofb, XFS_ICWALK_DQRELE);
  }
++#else
++# define xfs_dqrele_igrab(ip)		(false)
  #endif /* CONFIG_XFS_QUOTA */
  
-@@ -1539,7 +1567,7 @@ xfs_blockgc_worker(
- 	if (!sb_start_write_trylock(mp->m_super))
- 		return;
- 	error = xfs_icwalk_ag(pag, 0, xfs_blockgc_scan_inode, NULL,
--			XFS_ICI_BLOCKGC_TAG);
-+			XFS_ICWALK_BLOCKGC);
- 	if (error)
- 		xfs_info(mp, "AG %u preallocation gc worker failed, err=%d",
- 				pag->pag_agno, error);
-@@ -1558,7 +1586,7 @@ xfs_blockgc_free_space(
- 	trace_xfs_blockgc_free_space(mp, eofb, _RET_IP_);
- 
- 	return xfs_icwalk(mp, 0, xfs_blockgc_scan_inode, eofb,
--			XFS_ICI_BLOCKGC_TAG);
-+			XFS_ICWALK_BLOCKGC);
+ /*
+@@ -1493,12 +1533,12 @@ xfs_blockgc_start(
  }
  
  /*
-@@ -1639,7 +1667,7 @@ xfs_icwalk_ag(
- 	int			iter_flags,
- 	int			(*execute)(struct xfs_inode *ip, void *args),
- 	void			*args,
--	int			tag)
-+	enum xfs_icwalk_goal	goal)
- {
- 	struct xfs_mount	*mp = pag->pag_mount;
- 	uint32_t		first_index;
-@@ -1655,12 +1683,13 @@ xfs_icwalk_ag(
- 	nr_found = 0;
- 	do {
- 		struct xfs_inode *batch[XFS_LOOKUP_BATCH];
-+		unsigned int	tag = xfs_icwalk_tag(goal);
- 		int		error = 0;
- 		int		i;
- 
- 		rcu_read_lock();
- 
--		if (tag == XFS_ICI_NO_TAG)
-+		if (tag == XFS_ICWALK_NULL_TAG)
- 			nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
- 					(void **)batch, first_index,
- 					XFS_LOOKUP_BATCH);
-@@ -1743,9 +1772,11 @@ static inline struct xfs_perag *
- xfs_icwalk_get_perag(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
--	int			tag)
-+	enum xfs_icwalk_goal	goal)
- {
--	if (tag == XFS_ICI_NO_TAG)
-+	unsigned int		tag = xfs_icwalk_tag(goal);
-+
-+	if (tag == XFS_ICWALK_NULL_TAG)
- 		return xfs_perag_get(mp, agno);
- 	return xfs_perag_get_tag(mp, agno, tag);
- }
-@@ -1760,16 +1791,16 @@ xfs_icwalk(
- 	int			iter_flags,
- 	int			(*execute)(struct xfs_inode *ip, void *args),
- 	void			*args,
--	int			tag)
-+	enum xfs_icwalk_goal	goal)
- {
- 	struct xfs_perag	*pag;
- 	int			error = 0;
- 	int			last_error = 0;
- 	xfs_agnumber_t		agno = 0;
- 
--	while ((pag = xfs_icwalk_get_perag(mp, agno, tag))) {
-+	while ((pag = xfs_icwalk_get_perag(mp, agno, goal))) {
- 		agno = pag->pag_agno + 1;
--		error = xfs_icwalk_ag(pag, iter_flags, execute, args, tag);
-+		error = xfs_icwalk_ag(pag, iter_flags, execute, args, goal);
- 		xfs_perag_put(pag);
- 		if (error) {
- 			last_error = error;
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index d9baa6df1121..c4274c45d914 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -17,15 +17,6 @@ struct xfs_eofblocks {
- 	__u64		eof_min_file_size;
- };
- 
--/*
-- * tags for inode radix tree
-- */
--#define XFS_ICI_NO_TAG		(-1)	/* special flag for an untagged lookup
--					   in xfs_inode_walk */
--#define XFS_ICI_RECLAIM_TAG	0	/* inode is to be reclaimed */
--/* Inode has speculative preallocations (posteof or cow) to clean. */
--#define XFS_ICI_BLOCKGC_TAG	1
--
- /*
-  * Flags for xfs_iget()
+- * Decide if the given @ip is eligible to be a part of the inode walk, and
+- * grab it if so.  Returns true if it's ready to go or false if we should just
+- * ignore it.
++ * Decide if the given @ip is eligible for garbage collection of speculative
++ * preallocations, and grab it if so.  Returns true if it's ready to go or
++ * false if we should just ignore it.
   */
+ static bool
+-xfs_inode_walk_ag_grab(
++xfs_blockgc_igrab(
+ 	struct xfs_inode	*ip,
+ 	int			flags)
+ {
+@@ -1657,6 +1697,27 @@ xfs_blockgc_free_quota(
+ 
+ /* XFS Inode Cache Walking Code */
+ 
++/*
++ * Decide if we want to grab this inode in anticipation of doing work towards
++ * the goal.  If selected, the VFS must hold a reference to this inode, which
++ * will be released after processing.
++ */
++static inline bool
++xfs_icwalk_igrab(
++	enum xfs_icwalk_goal	goal,
++	struct xfs_inode	*ip,
++	int			iter_flags)
++{
++	switch (goal) {
++	case XFS_ICWALK_DQRELE:
++		return xfs_dqrele_igrab(ip);
++	case XFS_ICWALK_BLOCKGC:
++		return xfs_blockgc_igrab(ip, iter_flags);
++	default:
++		return false;
++	}
++}
++
+ /*
+  * For a given per-AG structure @pag, grab, @execute, and rele all incore
+  * inodes with the given radix tree @tag.
+@@ -1711,7 +1772,7 @@ xfs_icwalk_ag(
+ 		for (i = 0; i < nr_found; i++) {
+ 			struct xfs_inode *ip = batch[i];
+ 
+-			if (done || !xfs_inode_walk_ag_grab(ip, iter_flags))
++			if (done || !xfs_icwalk_igrab(goal, ip, iter_flags))
+ 				batch[i] = NULL;
+ 
+ 			/*
 
