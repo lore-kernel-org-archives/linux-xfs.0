@@ -7,60 +7,63 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D40C47080
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 01:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A3C6C47080
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 01:53:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D32761396
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 01:52:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CFC4613D0
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 01:53:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230196AbhFBBxz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Jun 2021 21:53:55 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:57549 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230193AbhFBBxz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Jun 2021 21:53:55 -0400
+        id S230215AbhFBBze (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Jun 2021 21:55:34 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:54644 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229606AbhFBBzd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Jun 2021 21:55:33 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 1F4891AFE5A;
-        Wed,  2 Jun 2021 11:52:11 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 13563861AF1;
+        Wed,  2 Jun 2021 11:53:50 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1loG3G-007vdd-JQ; Wed, 02 Jun 2021 11:52:10 +1000
-Date:   Wed, 2 Jun 2021 11:52:10 +1000
+        id 1loG4r-007veS-FM; Wed, 02 Jun 2021 11:53:49 +1000
+Date:   Wed, 2 Jun 2021 11:53:49 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH 06/14] xfs: move xfs_inew_wait call into xfs_dqrele_inode
-Message-ID: <20210602015210.GN664593@dread.disaster.area>
+Subject: Re: [PATCH 07/14] xfs: remove iter_flags parameter from
+ xfs_inode_walk_*
+Message-ID: <20210602015349.GO664593@dread.disaster.area>
 References: <162259515220.662681.6750744293005850812.stgit@locust>
- <162259518565.662681.11590996146177657551.stgit@locust>
+ <162259519113.662681.9888544412918017319.stgit@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162259518565.662681.11590996146177657551.stgit@locust>
+In-Reply-To: <162259519113.662681.9888544412918017319.stgit@locust>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
         a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=EvlOBHq32hjNzslds6oA:9 a=CjuIK1q_8ugA:10
+        a=7-415B0cAAAA:8 a=Q5PhYKGLR5-N2YrBqpcA:9 a=CjuIK1q_8ugA:10
         a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 01, 2021 at 05:53:05PM -0700, Darrick J. Wong wrote:
+On Tue, Jun 01, 2021 at 05:53:11PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Move the INEW wait into xfs_dqrele_inode so that we can drop the
-> iter_flags parameter in the next patch.
+> The sole iter_flags is XFS_INODE_WALK_INEW_WAIT, and there are no users.
+> Remove the flag, and the parameter, and all the code that used it.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/xfs_icache.c |    7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_icache.c |   33 ++++++++++++---------------------
+>  fs/xfs/xfs_icache.h |    5 -----
+>  2 files changed, 12 insertions(+), 26 deletions(-)
 
-LGTM.
+Nice!
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 -- 
 Dave Chinner
 david@fromorbit.com
