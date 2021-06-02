@@ -2,121 +2,112 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF26C4708F
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:32:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D6E7C47080
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:34:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7506761026
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:32:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0154661026
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 00:34:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229662AbhFBAek (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Jun 2021 20:34:40 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:53521 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229586AbhFBAek (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Jun 2021 20:34:40 -0400
+        id S229589AbhFBAgf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Jun 2021 20:36:35 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:39702 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229586AbhFBAgf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Jun 2021 20:36:35 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 466096961B;
-        Wed,  2 Jun 2021 10:32:52 +1000 (AEST)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 569F21141C89;
+        Wed,  2 Jun 2021 10:34:50 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1loEoV-007uPw-H3; Wed, 02 Jun 2021 10:32:51 +1000
-Date:   Wed, 2 Jun 2021 10:32:51 +1000
+        id 1loEqL-007uRO-TT; Wed, 02 Jun 2021 10:34:45 +1000
+Date:   Wed, 2 Jun 2021 10:34:45 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org, joe@perches.com
-Subject: Re: [PATCH][next] xfs: Fix fall-through warnings for Clang
-Message-ID: <20210602003251.GH664593@dread.disaster.area>
-References: <20210420230652.GA70650@embeddedor>
- <20210420233850.GQ3122264@magnolia>
- <62895e8c-800d-fa7b-15f6-480179d552be@embeddedor.com>
- <bcae9d46-644c-d6f6-3df5-e8f7c50a673d@embeddedor.com>
- <20210526211624.GB202121@locust>
- <202105271358.22E0E2BFD@keescook>
- <20210528003454.GN2402049@locust>
- <202105280915.9117D7C@keescook>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 06/23 V2] xfs: convert xfs_iwalk to use perag references
+Message-ID: <20210602003445.GI664593@dread.disaster.area>
+References: <20210519012102.450926-1-david@fromorbit.com>
+ <20210519012102.450926-7-david@fromorbit.com>
+ <20210527221648.GV2402049@locust>
+ <20210601220054.GE664593@dread.disaster.area>
+ <20210601233216.GF26380@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <202105280915.9117D7C@keescook>
+In-Reply-To: <20210601233216.GF26380@locust>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=7-415B0cAAAA:8
-        a=a3pdOmBBwOh8kAAHZ5sA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=Ht2_HAE20jwxD2X_WvsA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 28, 2021 at 09:48:39AM -0700, Kees Cook wrote:
-> On Thu, May 27, 2021 at 05:34:54PM -0700, Darrick J. Wong wrote:
-> > The choices are bad, so **turn it off** in fs/xfs/Makefile and don't go
-> > making us clutter up shared library code that will then have to be
-> > ported to userspace.
+On Tue, Jun 01, 2021 at 04:32:16PM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 02, 2021 at 08:00:54AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Rather than manually walking the ags and passing agnunbers around,
+> > pass the perag for the AG we are currently working on around in the
+> > iwalk structure.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > V2: convert next_agno -> agno in perag walk macros
+> > 
+> >  fs/xfs/libxfs/xfs_ag.h | 20 +++++++-----
+> >  fs/xfs/xfs_iwalk.c     | 86 +++++++++++++++++++++++++++++++-------------------
+> >  2 files changed, 66 insertions(+), 40 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> > index 33783120263c..2e02ec3693c5 100644
+> > --- a/fs/xfs/libxfs/xfs_ag.h
+> > +++ b/fs/xfs/libxfs/xfs_ag.h
+> > @@ -117,19 +117,23 @@ void	xfs_perag_put(struct xfs_perag *pag);
+> >  /*
+> >   * Perag iteration APIs
+> >   */
+> > -#define for_each_perag(mp, next_agno, pag) \
+> > -	for ((next_agno) = 0, (pag) = xfs_perag_get((mp), 0); \
+> > +#define for_each_perag_from(mp, agno, pag) \
+> > +	for ((pag) = xfs_perag_get((mp), (agno)); \
 > 
-> Ah! So the concern you have is with portable code shared outside of
-> the kernel? This came up also with the ACPICA code (which is regularly
-> imported into the kernel tree), and they just included their own macro
-> directly[1].
+> Er... I guess I wasn't clear enough.  I was ok with the "next_agno" name
+> for for_each_perag_from to reinforce the idea that the caller is
+> required to initialize the variable before using the macro.
 > 
-> Would you prefer something like that, which would be XFS-specific? I'm
-> just trying to find a way to avoid losing fall-through coverage
-> in XFS. (Especially since distros are slowly moving toward enabling
-> -Wimplicit-fallthrough by default since it's a long-standing weakness
-> in the C language, and has been hiding real bugs for years.)
+> It's the other variants (for_each_perag and for_each_perag_tag) where
+> the macro initializes @agno so it's not necessary for the caller to have
+> provided any value at all.
 > 
-> It seems like the options here could be:
-> 1) Use an XFS-specific macro like ACPICA does, so that the out-of-tree
->    userspace code can share it (more typing, keep coverage).
-> 2) Add -Wno-implicit-fallthrough to fs/xfs/Makefile (easy, lose coverage).
+> IOWS,
 > 
-> For 1), which portions are shared between xfsprogs and the kernel? Only
-> libxfs/ and scrub/? How does the below patch look? I could prepare similar
-> for all of xfsprogs, or do this only for xfsprogs and leave the stuff
-> outside of libxfs/ and scrube/ using the kernel's "fallthrough" macro?
+> #define for_each_perag_from(mp, next_agno, pag) \
+> 	for ((pag) = xfs_perag_get((mp), (next_agno)); \
+> 		(pag) != NULL; \
+> 		(next_agno) = (pag)->pag_agno + 1, \
+> 		xfs_perag_put(pag), \
+> 		(pag) = xfs_perag_get((mp), (next_agno)))
 > 
-> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-> index 782fdd08f759..ade529ddb60b 100644
-> --- a/fs/xfs/libxfs/xfs_shared.h
-> +++ b/fs/xfs/libxfs/xfs_shared.h
-> @@ -184,4 +184,14 @@ struct xfs_ino_geometry {
->  
->  };
->  
-> +/* Programmatically mark implicit fallthroughs for GCC and Clang. */
-> +#ifndef __has_attribute
-> +#define __has_attribute(x) 0
-> +#endif
-> +#if __has_attribute(__fallthrough__)
-> +#define XFS_FALLTHROUGH __attribute__((__fallthrough__))
-> +#else
-> +#define XFS_FALLTHROUGH do { } while (0)
-> +#endif
+> #define for_each_perag(mp, agno, pag) \
+> 	(agno) = 0; \
+> 	for_each_perag_from((mp), (agno), (pag))
+> 
+> #define for_each_perag_tag(mp, agno, pag, tag) \
+> 	for ((agno) = 0, (pag) = xfs_perag_get_tag((mp), 0, (tag)); \
+> 		(pag) != NULL; \
+> 		(agno) = (pag)->pag_agno + 1, \
+> 		xfs_perag_put(pag), \
+> 		(pag) = xfs_perag_get_tag((mp), (agno), (tag)))
 
-No. This is Obviously Stupid.
-
-Did you listen to what Darrick just said? Wasn't it "Don't go making
-us clutter up shared library code..."?
-
-If we're complaining that replacing obvious comments demonstrating
-intent with weird macros is not in our best interest, then replacing
-the comments with an eye-bleeding, one off, XFS specific macro
-doesn't address the objections being raised.
-
-I don't even know why you are continuing trying to convince us to
-take the changes - Darrick has already given you guys the option of
-going straight to Linus with them. If you do that then we'll just
-have to deal with the undefined macro fallout that results in
-userspace.
-
-Please just stop wasting more of our time on this.
+Ok, let me go change that back...
 
 -Dave.
 -- 
