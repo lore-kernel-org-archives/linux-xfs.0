@@ -7,37 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0EE6C4708F
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:26:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 558CCC47083
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:26:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6A9C6138C
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:26:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37D78613DE
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Jun 2021 22:26:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229814AbhFBW16 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Jun 2021 18:27:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43396 "EHLO mail.kernel.org"
+        id S229583AbhFBW2E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Jun 2021 18:28:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43426 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229583AbhFBW16 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Jun 2021 18:27:58 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 97822613AC;
-        Wed,  2 Jun 2021 22:26:14 +0000 (UTC)
+        id S229600AbhFBW2E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Jun 2021 18:28:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2268B6138C;
+        Wed,  2 Jun 2021 22:26:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622672774;
-        bh=Vwac39+XKvEh3cxQPvQbb9odFPjQUOePlzoJYQ1c1Pg=;
+        s=k20201202; t=1622672780;
+        bh=v+gCbPIy9s7ekmZ3AP89+sk/XcefLyvXgUQ+eX7DLyc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=MmJNz3AUyAa6wtPfroK3ordVYLt1K90XAZ1fMYlsdR8//f5U73NNpGrZKyg9gyZge
-         LvpZ+E5zQMX2WdtnSuN3rGbFTiTyfi+2W0sz0xTCwQAtYqRZOb5xps8AU5hyoqKXUL
-         198fqUfVxYTP2StmZtr038GWg7SFZ3rp+V9NUTlxmAYaKrWRY1L5j+ic58uaF9R5in
-         FXfSwUHl+kucMqtrYvQD3xg8WXO7thWa2c/UmRAksy6HmGKaobqYDOEljwCpRzcWCp
-         3XBgg0s4aRN1NRSyuK8Zzu8NfIWT0p6Wz0q6pzusIM68c8q+UNSysJtETwtbiz+aa5
-         EQqe/NqS/VbYQ==
-Subject: [PATCH 14/15] xfs: merge xfs_reclaim_inodes_ag into xfs_inode_walk_ag
+        b=jo6o332QMHn3zf38+AQfjoTjR2X7tS7y2BpVOJ1xolgwSgIe+4AVdv1EjHUUUCB68
+         brY5/JEbpneQm31Y8g3YeK4Zl5LI5ZTWchGmK6YO6jqtHY3IOyss/5BmWzmDWHGTFs
+         6gZVUWUk40KsXdZVQx4VUFEDylB3N5MNP68bR/WwZj+EQmAu2fXIjeR5GeKkNikb+s
+         WxK6wdDn9Ri3WaV8qX7fvZkQkiEomw/QsgFL/k8/lNxQ8xJ2NNOH7chz1A741yFtKs
+         jWQzvmV5pCzU9OeDp5hsyxfllTdQXV7ktcuKmOBVShSdNIfVMw910hCTnN9pPFLymp
+         azbwmXCeLGAHg==
+Subject: [PATCH 15/15] xfs: refactor per-AG inode tagging functions
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, hch@infradead.org
-Date:   Wed, 02 Jun 2021 15:26:14 -0700
-Message-ID: <162267277428.2375284.12041128696726728176.stgit@locust>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
+Date:   Wed, 02 Jun 2021 15:26:19 -0700
+Message-ID: <162267277981.2375284.3555542495306293304.stgit@locust>
 In-Reply-To: <162267269663.2375284.15885514656776142361.stgit@locust>
 References: <162267269663.2375284.15885514656776142361.stgit@locust>
 User-Agent: StGit/0.19
@@ -50,347 +49,320 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Merge these two inode walk loops together, since they're pretty similar
-now.
+In preparation for adding another incore inode tree tag, refactor the
+code that sets and clears tags from the per-AG inode tree and the tree
+of per-AG structures, and remove the open-coded versions used by the
+blockgc code.
+
+Note: For reclaim, we now rely on the radix tree tags instead of the
+reclaimable inode count more heavily than we used to.  The conversion
+should be fine, but the logic isn't 100% identical.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_icache.c |  162 +++++++++++++++------------------------------------
- fs/xfs/xfs_icache.h |    3 +
- fs/xfs/xfs_trace.h  |    5 +-
- 3 files changed, 55 insertions(+), 115 deletions(-)
+ fs/xfs/xfs_icache.c |  158 +++++++++++++++++++++++++--------------------------
+ fs/xfs/xfs_icache.h |    2 -
+ fs/xfs/xfs_super.c  |    2 -
+ fs/xfs/xfs_trace.h  |    6 +-
+ 4 files changed, 80 insertions(+), 88 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 0c40c39a5f9f..1223921fb01c 100644
+index 1223921fb01c..396cc54ca03f 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -43,6 +43,7 @@ enum xfs_icwalk_goal {
- 
- 	/* Goals directly associated with tagged inodes. */
- 	XFS_ICWALK_BLOCKGC	= XFS_ICI_BLOCKGC_TAG,
-+	XFS_ICWALK_RECLAIM	= XFS_ICI_RECLAIM_TAG,
- };
- 
- #define XFS_ICWALK_NULL_TAG	(-1U)
-@@ -67,9 +68,13 @@ static int xfs_icwalk_ag(struct xfs_perag *pag,
- #define XFS_ICWALK_FLAG_DROP_GDQUOT	(1U << 30)
- #define XFS_ICWALK_FLAG_DROP_PDQUOT	(1U << 29)
- 
-+/* Stop scanning after icw_scan_limit inodes. */
-+#define XFS_ICWALK_FLAG_SCAN_LIMIT	(1U << 28)
-+
- #define XFS_ICWALK_PRIVATE_FLAGS	(XFS_ICWALK_FLAG_DROP_UDQUOT | \
- 					 XFS_ICWALK_FLAG_DROP_GDQUOT | \
--					 XFS_ICWALK_FLAG_DROP_PDQUOT)
-+					 XFS_ICWALK_FLAG_DROP_PDQUOT | \
-+					 XFS_ICWALK_FLAG_SCAN_LIMIT)
- 
- /*
-  * Allocate and initialise an xfs_inode.
-@@ -760,17 +765,6 @@ xfs_icache_inode_is_allocated(
- 	return 0;
+@@ -207,46 +207,94 @@ xfs_reclaim_work_queue(
+ 	rcu_read_unlock();
  }
  
--/*
-- * The inode lookup is done in batches to keep the amount of lock traffic and
-- * radix tree lookups to a minimum. The batch size is a trade off between
-- * lookup reduction and stack usage. This is in the reclaim path, so we can't
-- * be too greedy.
-- *
-- * XXX: This will be moved closer to xfs_icwalk* once we get rid of the
-- * separate reclaim walk functions.
-- */
--#define XFS_LOOKUP_BATCH	32
--
- #ifdef CONFIG_XFS_QUOTA
- /* Decide if we want to grab this inode to drop its dquots. */
- static bool
-@@ -880,7 +874,7 @@ xfs_dqrele_all_inodes(
-  * Return true if we grabbed it, false otherwise.
+-static void
+-xfs_perag_set_reclaim_tag(
++/*
++ * Background scanning to trim preallocated space. This is queued based on the
++ * 'speculative_prealloc_lifetime' tunable (5m by default).
++ */
++static inline void
++xfs_blockgc_queue(
+ 	struct xfs_perag	*pag)
++{
++	rcu_read_lock();
++	if (radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG))
++		queue_delayed_work(pag->pag_mount->m_gc_workqueue,
++				   &pag->pag_blockgc_work,
++				   msecs_to_jiffies(xfs_blockgc_secs * 1000));
++	rcu_read_unlock();
++}
++
++/* Set a tag on both the AG incore inode tree and the AG radix tree. */
++static void
++xfs_perag_set_inode_tag(
++	struct xfs_perag	*pag,
++	xfs_agino_t		agino,
++	unsigned int		tag)
+ {
+ 	struct xfs_mount	*mp = pag->pag_mount;
++	bool			was_tagged;
+ 
+ 	lockdep_assert_held(&pag->pag_ici_lock);
+-	if (pag->pag_ici_reclaimable++)
++
++	was_tagged = radix_tree_tagged(&pag->pag_ici_root, tag);
++	radix_tree_tag_set(&pag->pag_ici_root, agino, tag);
++
++	if (tag == XFS_ICI_RECLAIM_TAG)
++		pag->pag_ici_reclaimable++;
++
++	if (was_tagged)
+ 		return;
+ 
+-	/* propagate the reclaim tag up into the perag radix tree */
++	/* propagate the tag up into the perag radix tree */
+ 	spin_lock(&mp->m_perag_lock);
+-	radix_tree_tag_set(&mp->m_perag_tree, pag->pag_agno,
+-			   XFS_ICI_RECLAIM_TAG);
++	radix_tree_tag_set(&mp->m_perag_tree, pag->pag_agno, tag);
+ 	spin_unlock(&mp->m_perag_lock);
+ 
+-	/* schedule periodic background inode reclaim */
+-	xfs_reclaim_work_queue(mp);
++	/* start background work */
++	switch (tag) {
++	case XFS_ICI_RECLAIM_TAG:
++		xfs_reclaim_work_queue(mp);
++		break;
++	case XFS_ICI_BLOCKGC_TAG:
++		xfs_blockgc_queue(pag);
++		break;
++	}
+ 
+-	trace_xfs_perag_set_reclaim(mp, pag->pag_agno, -1, _RET_IP_);
++	trace_xfs_perag_set_inode_tag(mp, pag->pag_agno, tag, _RET_IP_);
+ }
+ 
++/* Clear a tag on both the AG incore inode tree and the AG radix tree. */
+ static void
+-xfs_perag_clear_reclaim_tag(
+-	struct xfs_perag	*pag)
++xfs_perag_clear_inode_tag(
++	struct xfs_perag	*pag,
++	xfs_agino_t		agino,
++	unsigned int		tag)
+ {
+ 	struct xfs_mount	*mp = pag->pag_mount;
+ 
+ 	lockdep_assert_held(&pag->pag_ici_lock);
+-	if (--pag->pag_ici_reclaimable)
++
++	/*
++	 * Reclaim can signal (with a null agino) that it cleared its own tag
++	 * by removing the inode from the radix tree.
++	 */
++	if (agino != NULLAGINO)
++		radix_tree_tag_clear(&pag->pag_ici_root, agino, tag);
++	else
++		ASSERT(tag == XFS_ICI_RECLAIM_TAG);
++
++	if (tag == XFS_ICI_RECLAIM_TAG)
++		pag->pag_ici_reclaimable--;
++
++	if (radix_tree_tagged(&pag->pag_ici_root, tag))
+ 		return;
+ 
+-	/* clear the reclaim tag from the perag radix tree */
++	/* clear the tag from the perag radix tree */
+ 	spin_lock(&mp->m_perag_lock);
+-	radix_tree_tag_clear(&mp->m_perag_tree, pag->pag_agno,
+-			     XFS_ICI_RECLAIM_TAG);
++	radix_tree_tag_clear(&mp->m_perag_tree, pag->pag_agno, tag);
+ 	spin_unlock(&mp->m_perag_lock);
+-	trace_xfs_perag_clear_reclaim(mp, pag->pag_agno, -1, _RET_IP_);
+-}
+ 
++	trace_xfs_perag_clear_inode_tag(mp, pag->pag_agno, tag, _RET_IP_);
++}
+ 
+ /*
+  * We set the inode flag atomically with the radix tree tag.
+@@ -254,7 +302,7 @@ xfs_perag_clear_reclaim_tag(
+  * can go away.
   */
- static bool
--xfs_reclaim_inode_grab(
-+xfs_reclaim_igrab(
+ void
+-xfs_inode_set_reclaim_tag(
++xfs_inode_mark_reclaimable(
  	struct xfs_inode	*ip)
  {
- 	ASSERT(rcu_read_lock_held());
-@@ -990,108 +984,13 @@ xfs_reclaim_inode(
- 	xfs_iflags_clear(ip, XFS_IRECLAIM);
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -264,9 +312,8 @@ xfs_inode_set_reclaim_tag(
+ 	spin_lock(&pag->pag_ici_lock);
+ 	spin_lock(&ip->i_flags_lock);
+ 
+-	radix_tree_tag_set(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino),
+-			   XFS_ICI_RECLAIM_TAG);
+-	xfs_perag_set_reclaim_tag(pag);
++	xfs_perag_set_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino),
++			XFS_ICI_RECLAIM_TAG);
+ 	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+ 
+ 	spin_unlock(&ip->i_flags_lock);
+@@ -274,17 +321,6 @@ xfs_inode_set_reclaim_tag(
+ 	xfs_perag_put(pag);
  }
  
--/*
-- * Walk the AGs and reclaim the inodes in them. Even if the filesystem is
-- * corrupted, we still want to try to reclaim all the inodes. If we don't,
-- * then a shut down during filesystem unmount reclaim walk leak all the
-- * unreclaimed inodes.
-- *
-- * Returns non-zero if any AGs or inodes were skipped in the reclaim pass
-- * so that callers that want to block until all dirty inodes are written back
-- * and reclaimed can sanely loop.
-- */
--static void
--xfs_reclaim_inodes_ag(
--	struct xfs_mount	*mp,
--	int			*nr_to_scan)
+-STATIC void
+-xfs_inode_clear_reclaim_tag(
+-	struct xfs_perag	*pag,
+-	xfs_ino_t		ino)
 -{
--	struct xfs_perag	*pag;
--	xfs_agnumber_t		ag = 0;
--
--	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
--		unsigned long	first_index = 0;
--		int		done = 0;
--		int		nr_found = 0;
--
--		ag = pag->pag_agno + 1;
--
--		first_index = READ_ONCE(pag->pag_ici_reclaim_cursor);
--		do {
--			struct xfs_inode *batch[XFS_LOOKUP_BATCH];
--			int	i;
--
--			rcu_read_lock();
--			nr_found = radix_tree_gang_lookup_tag(
--					&pag->pag_ici_root,
--					(void **)batch, first_index,
--					XFS_LOOKUP_BATCH,
--					XFS_ICI_RECLAIM_TAG);
--			if (!nr_found) {
--				done = 1;
--				rcu_read_unlock();
--				break;
--			}
--
--			/*
--			 * Grab the inodes before we drop the lock. if we found
--			 * nothing, nr == 0 and the loop will be skipped.
--			 */
--			for (i = 0; i < nr_found; i++) {
--				struct xfs_inode *ip = batch[i];
--
--				if (done || !xfs_reclaim_inode_grab(ip))
--					batch[i] = NULL;
--
--				/*
--				 * Update the index for the next lookup. Catch
--				 * overflows into the next AG range which can
--				 * occur if we have inodes in the last block of
--				 * the AG and we are currently pointing to the
--				 * last inode.
--				 *
--				 * Because we may see inodes that are from the
--				 * wrong AG due to RCU freeing and
--				 * reallocation, only update the index if it
--				 * lies in this AG. It was a race that lead us
--				 * to see this inode, so another lookup from
--				 * the same index will not find it again.
--				 */
--				if (XFS_INO_TO_AGNO(mp, ip->i_ino) !=
--								pag->pag_agno)
--					continue;
--				first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
--				if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
--					done = 1;
--			}
--
--			/* unlock now we've grabbed the inodes. */
--			rcu_read_unlock();
--
--			for (i = 0; i < nr_found; i++) {
--				if (batch[i])
--					xfs_reclaim_inode(batch[i], pag);
--			}
--
--			*nr_to_scan -= XFS_LOOKUP_BATCH;
--			cond_resched();
--		} while (nr_found && !done && *nr_to_scan > 0);
--
--		if (done)
--			first_index = 0;
--		WRITE_ONCE(pag->pag_ici_reclaim_cursor, first_index);
--		xfs_perag_put(pag);
--	}
+-	radix_tree_tag_clear(&pag->pag_ici_root,
+-			     XFS_INO_TO_AGINO(pag->pag_mount, ino),
+-			     XFS_ICI_RECLAIM_TAG);
+-	xfs_perag_clear_reclaim_tag(pag);
 -}
 -
- void
- xfs_reclaim_inodes(
- 	struct xfs_mount	*mp)
- {
--	int		nr_to_scan = INT_MAX;
--
- 	while (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
- 		xfs_ail_push_all_sync(mp->m_ail);
--		xfs_reclaim_inodes_ag(mp, &nr_to_scan);
-+		xfs_icwalk(mp, XFS_ICWALK_RECLAIM, NULL);
- 	}
- }
+ static inline void
+ xfs_inew_wait(
+ 	struct xfs_inode	*ip)
+@@ -483,7 +519,9 @@ xfs_iget_cache_hit(
+ 		 */
+ 		ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
+ 		ip->i_flags |= XFS_INEW;
+-		xfs_inode_clear_reclaim_tag(pag, ip->i_ino);
++		xfs_perag_clear_inode_tag(pag,
++				XFS_INO_TO_AGINO(pag->pag_mount, ino),
++				XFS_ICI_RECLAIM_TAG);
+ 		inode->i_state = I_NEW;
+ 		ip->i_sick = 0;
+ 		ip->i_checked = 0;
+@@ -957,7 +995,7 @@ xfs_reclaim_inode(
+ 	if (!radix_tree_delete(&pag->pag_ici_root,
+ 				XFS_INO_TO_AGINO(ip->i_mount, ino)))
+ 		ASSERT(0);
+-	xfs_perag_clear_reclaim_tag(pag);
++	xfs_perag_clear_inode_tag(pag, NULLAGINO, XFS_ICI_RECLAIM_TAG);
+ 	spin_unlock(&pag->pag_ici_lock);
  
-@@ -1107,11 +1006,16 @@ xfs_reclaim_inodes_nr(
- 	struct xfs_mount	*mp,
- 	int			nr_to_scan)
- {
-+	struct xfs_eofblocks	eofb = {
-+		.eof_flags	= XFS_ICWALK_FLAG_SCAN_LIMIT,
-+		.icw_scan_limit	= nr_to_scan,
-+	};
-+
- 	/* kick background reclaimer and push the AIL */
- 	xfs_reclaim_work_queue(mp);
- 	xfs_ail_push_all(mp->m_ail);
- 
--	xfs_reclaim_inodes_ag(mp, &nr_to_scan);
-+	xfs_icwalk(mp, XFS_ICWALK_RECLAIM, &eofb);
+ 	/*
+@@ -1173,22 +1211,6 @@ xfs_inode_free_eofblocks(
  	return 0;
  }
  
-@@ -1221,9 +1125,8 @@ xfs_reclaim_worker(
- {
- 	struct xfs_mount *mp = container_of(to_delayed_work(work),
- 					struct xfs_mount, m_reclaim_work);
--	int		nr_to_scan = INT_MAX;
- 
--	xfs_reclaim_inodes_ag(mp, &nr_to_scan);
-+	xfs_icwalk(mp, XFS_ICWALK_RECLAIM, NULL);
- 	xfs_reclaim_work_queue(mp);
- }
- 
-@@ -1693,6 +1596,15 @@ xfs_blockgc_free_quota(
- 
- /* XFS Inode Cache Walking Code */
- 
-+/*
-+ * The inode lookup is done in batches to keep the amount of lock traffic and
-+ * radix tree lookups to a minimum. The batch size is a trade off between
-+ * lookup reduction and stack usage. This is in the reclaim path, so we can't
-+ * be too greedy.
-+ */
-+#define XFS_LOOKUP_BATCH	32
-+
-+
- /*
-  * Decide if we want to grab this inode in anticipation of doing work towards
-  * the goal.
-@@ -1707,6 +1619,8 @@ xfs_icwalk_igrab(
- 		return xfs_dqrele_igrab(ip);
- 	case XFS_ICWALK_BLOCKGC:
- 		return xfs_blockgc_igrab(ip);
-+	case XFS_ICWALK_RECLAIM:
-+		return xfs_reclaim_igrab(ip);
- 	default:
- 		return false;
- 	}
-@@ -1720,6 +1634,7 @@ static inline int
- xfs_icwalk_process_inode(
- 	enum xfs_icwalk_goal	goal,
+-/*
+- * Background scanning to trim preallocated space. This is queued based on the
+- * 'speculative_prealloc_lifetime' tunable (5m by default).
+- */
+-static inline void
+-xfs_blockgc_queue(
+-	struct xfs_perag	*pag)
+-{
+-	rcu_read_lock();
+-	if (radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG))
+-		queue_delayed_work(pag->pag_mount->m_gc_workqueue,
+-				   &pag->pag_blockgc_work,
+-				   msecs_to_jiffies(xfs_blockgc_secs * 1000));
+-	rcu_read_unlock();
+-}
+-
+ static void
+ xfs_blockgc_set_iflag(
  	struct xfs_inode	*ip,
-+	struct xfs_perag	*pag,
- 	struct xfs_eofblocks	*eofb)
+@@ -1196,7 +1218,6 @@ xfs_blockgc_set_iflag(
  {
- 	int			error = 0;
-@@ -1731,6 +1646,9 @@ xfs_icwalk_process_inode(
- 	case XFS_ICWALK_BLOCKGC:
- 		error = xfs_blockgc_scan_inode(ip, eofb);
- 		break;
-+	case XFS_ICWALK_RECLAIM:
-+		xfs_reclaim_inode(ip, pag);
-+		break;
- 	}
- 	return error;
- }
-@@ -1755,7 +1673,10 @@ xfs_icwalk_ag(
- restart:
- 	done = false;
- 	skipped = 0;
--	first_index = 0;
-+	if (goal == XFS_ICWALK_RECLAIM)
-+		first_index = READ_ONCE(pag->pag_ici_reclaim_cursor);
-+	else
-+		first_index = 0;
- 	nr_found = 0;
- 	do {
- 		struct xfs_inode *batch[XFS_LOOKUP_BATCH];
-@@ -1776,6 +1697,7 @@ xfs_icwalk_ag(
- 					XFS_LOOKUP_BATCH, tag);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_perag	*pag;
+-	int			tagged;
  
- 		if (!nr_found) {
-+			done = true;
- 			rcu_read_unlock();
- 			break;
- 		}
-@@ -1815,7 +1737,8 @@ xfs_icwalk_ag(
- 		for (i = 0; i < nr_found; i++) {
- 			if (!batch[i])
- 				continue;
--			error = xfs_icwalk_process_inode(goal, batch[i], eofb);
-+			error = xfs_icwalk_process_inode(goal, batch[i], pag,
-+					eofb);
- 			if (error == -EAGAIN) {
- 				skipped++;
- 				continue;
-@@ -1830,8 +1753,19 @@ xfs_icwalk_ag(
+ 	ASSERT((iflag & ~(XFS_IEOFBLOCKS | XFS_ICOWBLOCKS)) == 0);
  
- 		cond_resched();
+@@ -1213,24 +1234,8 @@ xfs_blockgc_set_iflag(
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+ 	spin_lock(&pag->pag_ici_lock);
  
-+		if (eofb && (eofb->eof_flags & XFS_ICWALK_FLAG_SCAN_LIMIT)) {
-+			eofb->icw_scan_limit -= XFS_LOOKUP_BATCH;
-+			if (eofb->icw_scan_limit <= 0)
-+				break;
-+		}
- 	} while (nr_found && !done);
+-	tagged = radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG);
+-	radix_tree_tag_set(&pag->pag_ici_root,
+-			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
+-			   XFS_ICI_BLOCKGC_TAG);
+-	if (!tagged) {
+-		/* propagate the blockgc tag up into the perag radix tree */
+-		spin_lock(&ip->i_mount->m_perag_lock);
+-		radix_tree_tag_set(&ip->i_mount->m_perag_tree,
+-				   XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
+-				   XFS_ICI_BLOCKGC_TAG);
+-		spin_unlock(&ip->i_mount->m_perag_lock);
+-
+-		/* kick off background trimming */
+-		xfs_blockgc_queue(pag);
+-
+-		trace_xfs_perag_set_blockgc(ip->i_mount, pag->pag_agno, -1,
+-				_RET_IP_);
+-	}
++	xfs_perag_set_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino),
++			XFS_ICI_BLOCKGC_TAG);
  
-+	if (goal == XFS_ICWALK_RECLAIM) {
-+		if (done)
-+			first_index = 0;
-+		WRITE_ONCE(pag->pag_ici_reclaim_cursor, first_index);
-+	}
-+
- 	if (skipped) {
- 		delay(1);
- 		goto restart;
+ 	spin_unlock(&pag->pag_ici_lock);
+ 	xfs_perag_put(pag);
+@@ -1266,19 +1271,8 @@ xfs_blockgc_clear_iflag(
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+ 	spin_lock(&pag->pag_ici_lock);
+ 
+-	radix_tree_tag_clear(&pag->pag_ici_root,
+-			     XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
+-			     XFS_ICI_BLOCKGC_TAG);
+-	if (!radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG)) {
+-		/* clear the blockgc tag from the perag radix tree */
+-		spin_lock(&ip->i_mount->m_perag_lock);
+-		radix_tree_tag_clear(&ip->i_mount->m_perag_tree,
+-				     XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
+-				     XFS_ICI_BLOCKGC_TAG);
+-		spin_unlock(&ip->i_mount->m_perag_lock);
+-		trace_xfs_perag_clear_blockgc(ip->i_mount, pag->pag_agno, -1,
+-				_RET_IP_);
+-	}
++	xfs_perag_clear_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino),
++			XFS_ICI_BLOCKGC_TAG);
+ 
+ 	spin_unlock(&pag->pag_ici_lock);
+ 	xfs_perag_put(pag);
 diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 3ec00f1fea86..2d86fdbd08a2 100644
+index 2d86fdbd08a2..49a45176e673 100644
 --- a/fs/xfs/xfs_icache.h
 +++ b/fs/xfs/xfs_icache.h
-@@ -15,6 +15,9 @@ struct xfs_eofblocks {
- 	kgid_t		eof_gid;
- 	prid_t		eof_prid;
- 	__u64		eof_min_file_size;
-+
-+	/* Stop after scanning this number of inodes. */
-+	int		icw_scan_limit;
- };
+@@ -41,7 +41,7 @@ void xfs_reclaim_inodes(struct xfs_mount *mp);
+ int xfs_reclaim_inodes_count(struct xfs_mount *mp);
+ long xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
  
- /*
+-void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
++void xfs_inode_mark_reclaimable(struct xfs_inode *ip);
+ 
+ int xfs_blockgc_free_dquots(struct xfs_mount *mp, struct xfs_dquot *udqp,
+ 		struct xfs_dquot *gdqp, struct xfs_dquot *pdqp,
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index a2dab05332ac..db61e9cdc013 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -667,7 +667,7 @@ xfs_fs_destroy_inode(
+ 	 * reclaim path handles this more efficiently than we can here, so
+ 	 * simply let background reclaim tear down all inodes.
+ 	 */
+-	xfs_inode_set_reclaim_tag(ip);
++	xfs_inode_mark_reclaimable(ip);
+ }
+ 
+ static void
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 808ae337b222..1377b1e24e1d 100644
+index 1377b1e24e1d..0171d93239a2 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -3898,6 +3898,7 @@ DECLARE_EVENT_CLASS(xfs_eofblocks_class,
- 		__field(uint32_t, gid)
- 		__field(prid_t, prid)
- 		__field(__u64, min_file_size)
-+		__field(int, scan_limit)
- 		__field(unsigned long, caller_ip)
- 	),
- 	TP_fast_assign(
-@@ -3909,15 +3910,17 @@ DECLARE_EVENT_CLASS(xfs_eofblocks_class,
- 						eofb->eof_gid) : 0;
- 		__entry->prid = eofb ? eofb->eof_prid : 0;
- 		__entry->min_file_size = eofb ? eofb->eof_min_file_size : 0;
-+		__entry->scan_limit = eofb ? eofb->icw_scan_limit : 0;
- 		__entry->caller_ip = caller_ip;
- 	),
--	TP_printk("dev %d:%d flags 0x%x uid %u gid %u prid %u minsize %llu caller %pS",
-+	TP_printk("dev %d:%d flags 0x%x uid %u gid %u prid %u minsize %llu scan_limit %d caller %pS",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->flags,
- 		  __entry->uid,
- 		  __entry->gid,
- 		  __entry->prid,
- 		  __entry->min_file_size,
-+		  __entry->scan_limit,
- 		  (char *)__entry->caller_ip)
- );
- #define DEFINE_EOFBLOCKS_EVENT(name)	\
+@@ -153,10 +153,8 @@ DEFINE_EVENT(xfs_perag_class, name,	\
+ DEFINE_PERAG_REF_EVENT(xfs_perag_get);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_get_tag);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_put);
+-DEFINE_PERAG_REF_EVENT(xfs_perag_set_reclaim);
+-DEFINE_PERAG_REF_EVENT(xfs_perag_clear_reclaim);
+-DEFINE_PERAG_REF_EVENT(xfs_perag_set_blockgc);
+-DEFINE_PERAG_REF_EVENT(xfs_perag_clear_blockgc);
++DEFINE_PERAG_REF_EVENT(xfs_perag_set_inode_tag);
++DEFINE_PERAG_REF_EVENT(xfs_perag_clear_inode_tag);
+ 
+ DECLARE_EVENT_CLASS(xfs_ag_class,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno),
 
