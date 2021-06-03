@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 582B2C47096
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4139EC4709A
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4632561361
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F10A613F0
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229661AbhFCFZF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 01:25:05 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:46512 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229695AbhFCFZE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:25:04 -0400
+        id S229747AbhFCFZG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 01:25:06 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:57905 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229761AbhFCFZF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:25:05 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 83938681B1
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:51 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 0EAF110438E1
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:52 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lofoh-008Mqs-0C
+        id 1lofoh-008MrY-Hk
         for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lofog-000im9-On
-        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
+        id 1lofoh-000imp-9K
+        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 20/39] xfs: pass lv chain length into xlog_write()
-Date:   Thu,  3 Jun 2021 15:22:21 +1000
-Message-Id: <20210603052240.171998-21-david@fromorbit.com>
+Subject: [PATCH 34/39] xfs: convert CIL to unordered per cpu lists
+Date:   Thu,  3 Jun 2021 15:22:35 +1000
+Message-Id: <20210603052240.171998-35-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210603052240.171998-1-david@fromorbit.com>
 References: <20210603052240.171998-1-david@fromorbit.com>
@@ -45,192 +45,243 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
         a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=hIND3nFijBJh5Kz5_mcA:9 a=SWhVIwS7yl9XnlAU:21 a=28HQk30EFEOawxvn:21
-        a=AjGcO6oz07-iQ99wixmX:22
+        a=LJalFvrMBqGHNnPjixMA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The caller of xlog_write() usually has a close accounting of the
-aggregated vector length contained in the log vector chain passed to
-xlog_write(). There is no need to iterate the chain to calculate he
-length of the data in xlog_write_calculate_len() if the caller is
-already iterating that chain to build it.
+So that we can remove the cil_lock which is a global serialisation
+point. We've already got ordering sorted, so all we need to do is
+treat the CIL list like the busy extent list and reconstruct it
+before the push starts.
 
-Passing in the vector length avoids doing an extra chain iteration,
-which can be a significant amount of work given that large CIL
-commits can have hundreds of thousands of vectors attached to the
-chain.
+This is what we're trying to avoid:
+
+ -   75.35%     1.83%  [kernel]            [k] xfs_log_commit_cil
+    - 46.35% xfs_log_commit_cil
+       - 41.54% _raw_spin_lock
+          - 67.30% do_raw_spin_lock
+               66.96% __pv_queued_spin_lock_slowpath
+
+Which happens on a 32p system when running a 32-way 'rm -rf'
+workload. After this patch:
+
+-   20.90%     3.23%  [kernel]               [k] xfs_log_commit_cil
+   - 17.67% xfs_log_commit_cil
+      - 6.51% xfs_log_ticket_ungrant
+           1.40% xfs_log_space_wake
+        2.32% memcpy_erms
+      - 2.18% xfs_buf_item_committing
+         - 2.12% xfs_buf_item_release
+            - 1.03% xfs_buf_unlock
+                 0.96% up
+              0.72% xfs_buf_rele
+        1.33% xfs_inode_item_format
+        1.19% down_read
+        0.91% up_read
+        0.76% xfs_buf_item_format
+      - 0.68% kmem_alloc_large
+         - 0.67% kmem_alloc
+              0.64% __kmalloc
+        0.50% xfs_buf_item_size
+
+It kinda looks like the workload is running out of log space all
+the time. But all the spinlock contention is gone and the
+transaction commit rate has gone from 800k/s to 1.3M/s so the amount
+of real work being done has gone up a *lot*.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log.c      | 37 ++++++-------------------------------
- fs/xfs/xfs_log_cil.c  | 16 +++++++++++-----
- fs/xfs/xfs_log_priv.h |  2 +-
- 3 files changed, 18 insertions(+), 37 deletions(-)
+ fs/xfs/xfs_log_cil.c  | 69 +++++++++++++++++++------------------------
+ fs/xfs/xfs_log_priv.h |  3 +-
+ 2 files changed, 31 insertions(+), 41 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index e849f15e9e04..58f9aafce29e 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -864,7 +864,8 @@ xlog_write_unmount_record(
- 	 */
- 	if (log->l_targ != log->l_mp->m_ddev_targp)
- 		blkdev_issue_flush(log->l_targ->bt_bdev);
--	return xlog_write(log, &vec, ticket, NULL, NULL, XLOG_UNMOUNT_TRANS);
-+	return xlog_write(log, &vec, ticket, NULL, NULL, XLOG_UNMOUNT_TRANS,
-+				reg.i_len);
- }
- 
- /*
-@@ -1588,7 +1589,8 @@ xlog_commit_record(
- 
- 	/* account for space used by record data */
- 	ticket->t_curr_res -= reg.i_len;
--	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS);
-+	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS,
-+				reg.i_len);
- 	if (error)
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
- 	return error;
-@@ -2108,32 +2110,6 @@ xlog_print_trans(
- 	}
- }
- 
--/*
-- * Calculate the potential space needed by the log vector. All regions contain
-- * their own opheaders and they are accounted for in region space so we don't
-- * need to add them to the vector length here.
-- */
--static int
--xlog_write_calc_vec_length(
--	struct xlog_ticket	*ticket,
--	struct xfs_log_vec	*log_vector,
--	uint			optype)
--{
--	struct xfs_log_vec	*lv;
--	int			len = 0;
--	int			i;
--
--	for (lv = log_vector; lv; lv = lv->lv_next) {
--		/* we don't write ordered log vectors */
--		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
--			continue;
--
--		for (i = 0; i < lv->lv_niovecs; i++)
--			len += lv->lv_iovecp[i].i_len;
--	}
--	return len;
--}
--
- static xlog_op_header_t *
- xlog_write_setup_ophdr(
- 	struct xlog_op_header	*ophdr,
-@@ -2296,13 +2272,13 @@ xlog_write(
- 	struct xlog_ticket	*ticket,
- 	xfs_lsn_t		*start_lsn,
- 	struct xlog_in_core	**commit_iclog,
--	uint			optype)
-+	uint			optype,
-+	uint32_t		len)
- {
- 	struct xlog_in_core	*iclog = NULL;
- 	struct xfs_log_vec	*lv = log_vector;
- 	struct xfs_log_iovec	*vecp = lv->lv_iovecp;
- 	int			index = 0;
--	int			len;
- 	int			partial_copy = 0;
- 	int			partial_copy_len = 0;
- 	int			contwr = 0;
-@@ -2317,7 +2293,6 @@ xlog_write(
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
- 	}
- 
--	len = xlog_write_calc_vec_length(ticket, log_vector, optype);
- 	if (start_lsn)
- 		*start_lsn = 0;
- 	while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
 diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 58900171de09..68bec4b81052 100644
+index dd3493058161..3ca9fce57584 100644
 --- a/fs/xfs/xfs_log_cil.c
 +++ b/fs/xfs/xfs_log_cil.c
-@@ -710,11 +710,12 @@ xlog_cil_build_trans_hdr(
- 				sizeof(struct xfs_trans_header);
- 	hdr->lhdr[1].i_type = XLOG_REG_TYPE_TRANSHDR;
- 
--	tic->t_curr_res -= hdr->lhdr[0].i_len + hdr->lhdr[1].i_len;
--
- 	lvhdr->lv_niovecs = 2;
- 	lvhdr->lv_iovecp = &hdr->lhdr[0];
-+	lvhdr->lv_bytes = hdr->lhdr[0].i_len + hdr->lhdr[1].i_len;
- 	lvhdr->lv_next = ctx->lv_chain;
-+
-+	tic->t_curr_res -= lvhdr->lv_bytes;
+@@ -72,6 +72,7 @@ xlog_cil_ctx_alloc(void)
+ 	ctx = kmem_zalloc(sizeof(*ctx), KM_NOFS);
+ 	INIT_LIST_HEAD(&ctx->committing);
+ 	INIT_LIST_HEAD(&ctx->busy_extents);
++	INIT_LIST_HEAD(&ctx->log_items);
+ 	INIT_WORK(&ctx->push_work, xlog_cil_push_work);
+ 	return ctx;
  }
+@@ -99,6 +100,8 @@ xlog_cil_pcp_aggregate(
+ 			list_splice_init(&cilpcp->busy_extents,
+ 					&ctx->busy_extents);
+ 		}
++		if (!list_empty(&cilpcp->log_items))
++			list_splice_init(&cilpcp->log_items, &ctx->log_items);
  
- /*
-@@ -742,7 +743,8 @@ xlog_cil_push_work(
- 	struct xfs_log_vec	*lv;
- 	struct xfs_cil_ctx	*new_ctx;
- 	struct xlog_in_core	*commit_iclog;
--	int			num_iovecs;
-+	int			num_iovecs = 0;
-+	int			num_bytes = 0;
- 	int			error = 0;
- 	struct xlog_cil_trans_hdr thdr;
- 	struct xfs_log_vec	lvhdr = { NULL };
-@@ -835,7 +837,6 @@ xlog_cil_push_work(
- 	 * by the flush lock.
+ 		/*
+ 		 * We're in the middle of switching cil contexts.  Reset the
+@@ -482,10 +485,9 @@ xlog_cil_insert_items(
+ 	/*
+ 	 * We need to take the CIL checkpoint unit reservation on the first
+ 	 * commit into the CIL. Test the XLOG_CIL_EMPTY bit first so we don't
+-	 * unnecessarily do an atomic op in the fast path here. We don't need to
+-	 * hold the xc_cil_lock here to clear the XLOG_CIL_EMPTY bit as we are
+-	 * under the xc_ctx_lock here and that needs to be held exclusively to
+-	 * reset the XLOG_CIL_EMPTY bit.
++	 * unnecessarily do an atomic op in the fast path here. We can clear the
++	 * XLOG_CIL_EMPTY bit as we are under the xc_ctx_lock here and that
++	 * needs to be held exclusively to reset the XLOG_CIL_EMPTY bit.
  	 */
- 	lv = NULL;
--	num_iovecs = 0;
- 	while (!list_empty(&cil->xc_cil)) {
+ 	if (test_bit(XLOG_CIL_EMPTY, &cil->xc_flags) &&
+ 	    test_and_clear_bit(XLOG_CIL_EMPTY, &cil->xc_flags))
+@@ -539,24 +541,6 @@ xlog_cil_insert_items(
+ 	/* attach the transaction to the CIL if it has any busy extents */
+ 	if (!list_empty(&tp->t_busy))
+ 		list_splice_init(&tp->t_busy, &cilpcp->busy_extents);
+-	put_cpu_ptr(cilpcp);
+-
+-	/*
+-	 * If we've overrun the reservation, dump the tx details before we move
+-	 * the log items. Shutdown is imminent...
+-	 */
+-	tp->t_ticket->t_curr_res -= ctx_res + len;
+-	if (WARN_ON(tp->t_ticket->t_curr_res < 0)) {
+-		xfs_warn(log->l_mp, "Transaction log reservation overrun:");
+-		xfs_warn(log->l_mp,
+-			 "  log items: %d bytes (iov hdrs: %d bytes)",
+-			 len, iovhdr_res);
+-		xfs_warn(log->l_mp, "  split region headers: %d bytes",
+-			 split_res);
+-		xfs_warn(log->l_mp, "  ctx ticket: %d bytes", ctx_res);
+-		xlog_print_trans(tp);
+-	}
+-
+ 	/*
+ 	 * Now update the order of everything modified in the transaction
+ 	 * and insert items into the CIL if they aren't already there.
+@@ -564,7 +548,6 @@ xlog_cil_insert_items(
+ 	 * the transaction commit.
+ 	 */
+ 	order = atomic_inc_return(&ctx->order_id);
+-	spin_lock(&cil->xc_cil_lock);
+ 	list_for_each_entry(lip, &tp->t_items, li_trans) {
+ 
+ 		/* Skip items which aren't dirty in this transaction. */
+@@ -574,10 +557,25 @@ xlog_cil_insert_items(
+ 		lip->li_order_id = order;
+ 		if (!list_empty(&lip->li_cil))
+ 			continue;
+-		list_add_tail(&lip->li_cil, &cil->xc_cil);
++		list_add_tail(&lip->li_cil, &cilpcp->log_items);
+ 	}
++	put_cpu_ptr(cilpcp);
+ 
+-	spin_unlock(&cil->xc_cil_lock);
++	/*
++	 * If we've overrun the reservation, dump the tx details before we move
++	 * the log items. Shutdown is imminent...
++	 */
++	tp->t_ticket->t_curr_res -= ctx_res + len;
++	if (WARN_ON(tp->t_ticket->t_curr_res < 0)) {
++		xfs_warn(log->l_mp, "Transaction log reservation overrun:");
++		xfs_warn(log->l_mp,
++			 "  log items: %d bytes (iov hdrs: %d bytes)",
++			 len, iovhdr_res);
++		xfs_warn(log->l_mp, "  split region headers: %d bytes",
++			 split_res);
++		xfs_warn(log->l_mp, "  ctx ticket: %d bytes", ctx_res);
++		xlog_print_trans(tp);
++	}
+ 
+ 	if (tp->t_ticket->t_curr_res < 0)
+ 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+@@ -921,18 +919,12 @@ xlog_cil_push_work(
+ 
+ 	xlog_cil_pcp_aggregate(cil, ctx);
+ 
+-	/*
+-	 * Pull all the log vectors off the items in the CIL, and remove the
+-	 * items from the CIL. We don't need the CIL lock here because it's only
+-	 * needed on the transaction commit side which is currently locked out
+-	 * by the flush lock.
+-	 */
+-	list_sort(NULL, &cil->xc_cil, xlog_cil_order_cmp);
+-	lv = NULL;
+-	while (!list_empty(&cil->xc_cil)) {
++	list_sort(NULL, &ctx->log_items, xlog_cil_order_cmp);
++
++	while (!list_empty(&ctx->log_items)) {
  		struct xfs_log_item	*item;
  
-@@ -849,6 +850,10 @@ xlog_cil_push_work(
- 		lv = item->li_lv;
- 		item->li_lv = NULL;
- 		num_iovecs += lv->lv_niovecs;
-+
-+		/* we don't write ordered log vectors */
-+		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED)
-+			num_bytes += lv->lv_bytes;
+-		item = list_first_entry(&cil->xc_cil,
++		item = list_first_entry(&ctx->log_items,
+ 					struct xfs_log_item, li_cil);
+ 		list_del_init(&item->li_cil);
+ 		item->li_order_id = 0;
+@@ -1125,7 +1117,6 @@ xlog_cil_push_background(
+ 	 * The cil won't be empty because we are called while holding the
+ 	 * context lock so whatever we added to the CIL will still be there.
+ 	 */
+-	ASSERT(!list_empty(&cil->xc_cil));
+ 	ASSERT(!test_bit(XLOG_CIL_EMPTY, &cil->xc_flags));
+ 
+ 	/*
+@@ -1484,6 +1475,8 @@ xlog_cil_pcp_dead(
+ 			list_splice_init(&cilpcp->busy_extents,
+ 					&ctx->busy_extents);
+ 		}
++		if (!list_empty(&cilpcp->log_items))
++			list_splice_init(&cilpcp->log_items, &ctx->log_items);
+ 
+ 		cilpcp->space_used = 0;
+ 		cilpcp->space_reserved = 0;
+@@ -1556,6 +1549,7 @@ xlog_cil_pcp_alloc(
+ 	for_each_possible_cpu(cpu) {
+ 		cilpcp = per_cpu_ptr(pcp, cpu);
+ 		INIT_LIST_HEAD(&cilpcp->busy_extents);
++		INIT_LIST_HEAD(&cilpcp->log_items);
+ 	}
+ 	return pcp;
+ }
+@@ -1591,9 +1585,7 @@ xlog_cil_init(
+ 		return -ENOMEM;
  	}
  
- 	/*
-@@ -887,6 +892,7 @@ xlog_cil_push_work(
- 	 * transaction header here as it is not accounted for in xlog_write().
- 	 */
- 	xlog_cil_build_trans_hdr(ctx, &thdr, &lvhdr, num_iovecs);
-+	num_bytes += lvhdr.lv_bytes;
+-	INIT_LIST_HEAD(&cil->xc_cil);
+ 	INIT_LIST_HEAD(&cil->xc_committing);
+-	spin_lock_init(&cil->xc_cil_lock);
+ 	spin_lock_init(&cil->xc_push_lock);
+ 	init_waitqueue_head(&cil->xc_push_wait);
+ 	init_rwsem(&cil->xc_ctx_lock);
+@@ -1619,7 +1611,6 @@ xlog_cil_destroy(
+ 		kmem_free(cil->xc_ctx);
+ 	}
  
- 	/*
- 	 * Before we format and submit the first iclog, we have to ensure that
-@@ -901,7 +907,7 @@ xlog_cil_push_work(
- 	 * write head.
- 	 */
- 	error = xlog_write(log, &lvhdr, ctx->ticket, &ctx->start_lsn, NULL,
--				XLOG_START_TRANS);
-+				XLOG_START_TRANS, num_bytes);
- 	if (error)
- 		goto out_abort_free_ticket;
- 
+-	ASSERT(list_empty(&cil->xc_cil));
+ 	ASSERT(test_bit(XLOG_CIL_EMPTY, &cil->xc_flags));
+ 	xlog_cil_pcp_free(cil, cil->xc_pcp);
+ 	kmem_free(cil);
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 301c36165974..eba905c273b0 100644
+index 466862a943ba..d3bf3b367370 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -459,7 +459,7 @@ void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
- void	xlog_print_trans(struct xfs_trans *);
- int	xlog_write(struct xlog *log, struct xfs_log_vec *log_vector,
- 		struct xlog_ticket *tic, xfs_lsn_t *start_lsn,
--		struct xlog_in_core **commit_iclog, uint optype);
-+		struct xlog_in_core **commit_iclog, uint optype, uint32_t len);
- int	xlog_commit_record(struct xlog *log, struct xlog_ticket *ticket,
- 		struct xlog_in_core **iclog, xfs_lsn_t *lsn);
+@@ -220,6 +220,7 @@ struct xfs_cil_ctx {
+ 	struct xlog_ticket	*ticket;	/* chkpt ticket */
+ 	atomic_t		space_used;	/* aggregate size of regions */
+ 	struct list_head	busy_extents;	/* busy extents in chkpt */
++	struct list_head	log_items;	/* log items in chkpt */
+ 	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
+ 	struct list_head	iclog_entry;
+ 	struct list_head	committing;	/* ctx committing list */
+@@ -258,8 +259,6 @@ struct xfs_cil {
+ 	struct xlog		*xc_log;
+ 	unsigned long		xc_flags;
+ 	atomic_t		xc_iclog_hdrs;
+-	struct list_head	xc_cil;
+-	spinlock_t		xc_cil_lock;
  
+ 	struct rw_semaphore	xc_ctx_lock ____cacheline_aligned_in_smp;
+ 	struct xfs_cil_ctx	*xc_ctx;
 -- 
 2.31.1
 
