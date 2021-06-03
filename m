@@ -7,110 +7,98 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 332CEC47080
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 04:34:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 655B1C47096
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 04:43:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 131936124B
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 04:34:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44B04613B8
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 04:43:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229441AbhFCEge (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 00:36:34 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54980 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229656AbhFCEgd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 00:36:33 -0400
+        id S229501AbhFCEop (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 00:44:45 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:42247 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229487AbhFCEop (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 00:44:45 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 39C8210439E3;
-        Thu,  3 Jun 2021 14:34:48 +1000 (AEST)
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id A22C81AFC23;
+        Thu,  3 Jun 2021 14:42:43 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lof4A-008M9a-M1; Thu, 03 Jun 2021 14:34:46 +1000
-Date:   Thu, 3 Jun 2021 14:34:46 +1000
+        id 1lofBq-008MFC-Vw; Thu, 03 Jun 2021 14:42:42 +1000
+Date:   Thu, 3 Jun 2021 14:42:42 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Subject: Re: [PATCH 2/3] xfs: drop IDONTCACHE on inodes when we mark them sick
-Message-ID: <20210603043446.GP664593@dread.disaster.area>
+Subject: Re: [PATCH 3/3] xfs: don't let background reclaim forget sick inodes
+Message-ID: <20210603044242.GQ664593@dread.disaster.area>
 References: <162268995567.2724138.15163777746481739089.stgit@locust>
- <162268996687.2724138.9307511745121153042.stgit@locust>
+ <162268997239.2724138.6026093150916734925.stgit@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162268996687.2724138.9307511745121153042.stgit@locust>
+In-Reply-To: <162268997239.2724138.6026093150916734925.stgit@locust>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
         a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=CYz6lWv1jFzmRfEIpzUA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=4vf14kBzrKSEk1TxR20A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
         a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 02, 2021 at 08:12:46PM -0700, Darrick J. Wong wrote:
+On Wed, Jun 02, 2021 at 08:12:52PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> When we decide to mark an inode sick, clear the DONTCACHE flag so that
-> the incore inode will be kept around until memory pressure forces it out
-> of memory.  This increases the chances that the sick status will be
-> caught by someone compiling a health report later on.
+> It's important that the filesystem retain its memory of sick inodes for
+> a little while after problems are found so that reports can be collected
+> about what was wrong.  Don't let background inode reclamation free sick
+> inodes unless we're under memory pressure.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/xfs_health.c |    5 +++++
->  fs/xfs/xfs_icache.c |    3 ++-
->  2 files changed, 7 insertions(+), 1 deletion(-)
+>  fs/xfs/xfs_icache.c |   21 +++++++++++++++++----
+>  1 file changed, 17 insertions(+), 4 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-> index 8e0cb05a7142..824e0b781290 100644
-> --- a/fs/xfs/xfs_health.c
-> +++ b/fs/xfs/xfs_health.c
-> @@ -231,6 +231,11 @@ xfs_inode_mark_sick(
->  	ip->i_sick |= mask;
->  	ip->i_checked |= mask;
->  	spin_unlock(&ip->i_flags_lock);
-> +
-> +	/* Keep this inode around so we don't lose the sickness report. */
-> +	spin_lock(&VFS_I(ip)->i_lock);
-> +	VFS_I(ip)->i_state &= ~I_DONTCACHE;
-> +	spin_unlock(&VFS_I(ip)->i_lock);
->  }
-
-Dentries will still be reclaimed, but the VFS will at least hold on
-to the inode in this case.
-
->  /* Mark parts of an inode healed. */
 > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index c3f912a9231b..0e2b6c05e604 100644
+> index 0e2b6c05e604..54285d1ad574 100644
 > --- a/fs/xfs/xfs_icache.c
 > +++ b/fs/xfs/xfs_icache.c
-> @@ -23,6 +23,7 @@
->  #include "xfs_dquot.h"
->  #include "xfs_reflink.h"
->  #include "xfs_ialloc.h"
-> +#include "xfs_health.h"
+> @@ -911,7 +911,8 @@ xfs_dqrele_all_inodes(
+>   */
+>  static bool
+>  xfs_reclaim_igrab(
+> -	struct xfs_inode	*ip)
+> +	struct xfs_inode	*ip,
+> +	struct xfs_eofblocks	*eofb)
+>  {
+>  	ASSERT(rcu_read_lock_held());
 >  
->  #include <linux/iversion.h>
->  
-> @@ -648,7 +649,7 @@ xfs_iget_cache_miss(
->  	 * time.
->  	 */
->  	iflags = XFS_INEW;
-> -	if (flags & XFS_IGET_DONTCACHE)
-> +	if ((flags & XFS_IGET_DONTCACHE) && xfs_inode_is_healthy(ip))
+> @@ -922,6 +923,17 @@ xfs_reclaim_igrab(
+>  		spin_unlock(&ip->i_flags_lock);
+>  		return false;
+>  	}
+> +
+> +	/*
+> +	 * Don't reclaim a sick inode unless we're under memory pressure or the
+> +	 * filesystem is unmounting.
+> +	 */
+> +	if (ip->i_sick && eofb == NULL &&
+> +	    !(ip->i_mount->m_flags & XFS_MOUNT_UNMOUNTING)) {
+> +		spin_unlock(&ip->i_flags_lock);
+> +		return false;
+> +	}
 
-Hmmmm. xfs_inode_is_healthy() is kind of heavyweight for just
-checking that ip->i_sick == 0. At this point, nobody else can be
-accessing the inode, so we don't need masks nor a spinlock for
-checking the sick field.
+Using the "eofb == NULL" as a proxy for being under memory pressure
+is ... a bit obtuse. If we've got a handful of sick inodes, then
+there is no problem with just leaving the in memory regardless of
+memory pressure. If we've got lots of sick inodes, we're likely to
+end up in a shutdown state or be unmounted for checking real soon.
 
-So why not:
-
-	if ((flags & XFS_IGET_DONTCACHE) && !READ_ONCE(ip->i_sick))
-
-Or maybe still use xfs_inode_is_healthy() but convert it to the
-simpler, lockless sick check?
+I'd just leave sick inodes around until unmount or shutdown occurs;
+lots of sick inodes means repair is necessary right now, so
+shutdown+unmount is the right solution here, not memory reclaim....
 
 Cheers,
 
