@@ -2,215 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9088C47096
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 17:05:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EF0CC47096
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 20:29:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC419613F4
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 17:05:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30CA2613DE
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 20:29:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229892AbhFCRG7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 13:06:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39652 "EHLO mail.kernel.org"
+        id S229790AbhFCUbk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 16:31:40 -0400
+Received: from sandeen.net ([63.231.237.45]:35052 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229849AbhFCRG7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Jun 2021 13:06:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3CBAD613BA;
-        Thu,  3 Jun 2021 17:05:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622739914;
-        bh=LEwiG1zRY7lqdjkNZytw93zU6BXTzKdo/JcWVcyHg6M=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bg10Ww0uUwcvr03IyJjg0JIvCIzw2xQ5gZhweg28srQby0p5aglpFASQT0SBLbeg7
-         NkuAYBlyedh+KbdS1yPyUYVF7Shl/0uqhtaLDCk/TJEo7fpWjuSAVCDiwb/R1fvzCX
-         3aMP56T3ZGtSsvVDhl3fMnNr/OZEhIi5OhdTsb28RzyeTI1XIP0Xl4vUrkRkfQ6GD+
-         G4mVe505Pgc8WxZnqR2TmvcHm8a3Ixu5yWwKN8+McNdnZ1dqgvh0gIxDQXnnCy3cHy
-         P2aE4WVnzIzvvt84dj9p9UPI04avE2P64RnUWC2tGhufmN4YwRgj45JFoHVFswP1Vy
-         +mhRuIN/rnsaQ==
-Date:   Thu, 3 Jun 2021 10:05:13 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 00/39 v5] xfs: CIL and log optimisations
-Message-ID: <20210603170513.GH26402@locust>
-References: <20210603052240.171998-1-david@fromorbit.com>
+        id S229576AbhFCUbk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Jun 2021 16:31:40 -0400
+Received: from liberator.local (h15.159.16.98.static.ip.windstream.net [98.16.159.15])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 16C8B4872FA;
+        Thu,  3 Jun 2021 15:29:53 -0500 (CDT)
+Subject: Re: [PATCH v2 1/2] xfsdump: Revert "xfsdump: handle bind mount
+ targets"
+To:     Gao Xiang <hsiangkao@redhat.com>, linux-xfs@vger.kernel.org
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>
+References: <20201103023315.786103-1-hsiangkao@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <04428916-1fdc-0958-2ead-8d10fca7f82c@sandeen.net>
+Date:   Thu, 3 Jun 2021 15:29:53 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.10.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210603052240.171998-1-david@fromorbit.com>
+In-Reply-To: <20201103023315.786103-1-hsiangkao@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 03, 2021 at 03:22:01PM +1000, Dave Chinner wrote:
-> Hi folks,
+On 11/2/20 8:33 PM, Gao Xiang wrote:
+> Bind mount mntpnts will be forbided in the next commits
+> instead since it's not the real rootdir.
 > 
-> This is an update of the consolidated log scalability patchset I've been working
-> on. Version 4 was posted here:
+> This cannot be reverted cleanly due to several cleanup
+> patches, but the logic is reverted equivalently.
 > 
-> https://lore.kernel.org/linux-xfs/20210519121317.585244-1-david@fromorbit.com/
+> This reverts commit 25195ebf107dc81b1b7cea1476764950e1d6cc9d.
 > 
-> This version contains the changes Darrick requested during review. The only
-> patch remaining without at least one RVB tag is patch 30.
-> 
-> Performance improvements are largely documented in the change logs of the
-> individual patches. Headline numbers are an increase in transaction rate from
-> 700k commits/s to 1.7M commits/s, and a reduction in fua/flush operations by
-> 2-3 orders of magnitude on metadata heavy workloads that don't use fsync.
-> 
-> Summary of series:
-> 
-> Patches		Modifications
-> -------		-------------
-> 1-7:		log write FUA/FLUSH optimisations
-> 8:		bug fix
-> 9-11:		Async CIL pushes
-> 12-25:		xlog_write() rework
-> 26-39:		CIL commit scalability
+> Fixes: 25195ebf107d ("xfsdump: handle bind mount targets")
+> Cc: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 
-From this latest posting, I see that the first nine patches all have
-multiple reviews.  Some of patches 10-19 have review tags split between
-Brian and Christoph, but neither have added them all the way through.
-I think I'm the only one who has supplied RVB tags for all forty.
+Sorry this is so ridiculously late:
 
-So my question is: at what point would you like me to pull the segments
-of this patchset into upstream?  "The maintainer reviewed everything" is
-of course our usual standard, but this touches a /lot/ of core logging
-code, and logging isn't one of my stronger areas of familiarity.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-I think 1-8 look fine for 5.14.  Do you want me to wait for Brian and/or
-Christoph (or really, any third pair of eyes) to finish working their
-way through 9-11 and 12-25 before merging them?
-
---D
-
+> ---
+>  dump/content.c | 21 ++-------------------
+>  1 file changed, 2 insertions(+), 19 deletions(-)
 > 
-> Change log is below.
-> 
-> Cheers,
-> 
-> Dave.
-> 
-> Version 5:
-> - fix typo in comment (patch 4)
-> - fix typo in commit msg (patch 7)
-> - removed unnecessary update of num_iovecs (patch 20)
-> - fixed whitespace (patch 29)
-> - removed unused space_used/curr_res from CIL pcp structure (patch 29)
-> - added space_used to CIL pcp structure (patch 30)
-> - add comment to xlog_cil_pcp_aggregate() (patch 30)
-> - added space_reserved to CIL pcp structure (patch 31)
-> - removed unnecessary commentary about CIL ordering issues from commit msg in
->   patch 33 as patch 35 addresses these issues..
-> - fix whitespace in xlog_cil_free_logvec() (patch 35)
-> - fix weird sentence in docco (patch 39)
-> - propagate changes through patches to fix conflicts due to dependent changes.
->   (various patches)
-> 
-> 
-> Version 4:
-> - rebase on 5.13-rc2+
-> - fixed completion logic for async cache flush
-> - trimmed superflous comments about not requiring REQ_PREFLUSH for iclog IO
->   anymore.
-> - ensure that setting/clearing XLOG_ICL_NEED_FLUSH is atomic (i.e. only modified
->   while holding the icloglock)
-> - ensure callers only add iclog flush/fua flags appropriately before releasing
->   the iclog so that multiple independent writes to an iclog doesn't clear flags
->   other writes into the iclog depend on.
-> - buffer log item dirty tracking patches merged so removed from series
-> - replaced XFS_LSN_CMP() checks with direct lsn1 == lsn2 comparisons to simplify
->   the code
-> - changed "push_async" to "push_commit_stable" to indicate that the push caller
->   wants the entire CIL checkpoint and commit record to be on stable storage when
->   it completes.
-> - updated comment to indicate that iclog sync state is set according to the
->   caller's desire for a stable checkpoint to be performed.
-> - Added comment explaining why the CIL workqueue is limited to 4 concurrent
->   works per filesystem.
-> - debug overhead reduction patches merged so removed from series
-> - cleaned up a couple of typedef uses.
-> - updated pahole output for checkpoint header in commit message
-> - Added BUILD_BUG_ON() to check the size of unmount records.
-> - got rid of XFS_VOLUME define.
-> - got rid of XLOG_TIC_LEN_MAX define.
-> - cleaned up extra blank lines.
-> - fixed double initialisation of lv in xlog_write_single().
-> - removed the unnecessary change for reserved iclog space in
->   xlog_state_get_iclog_space().
-> - no need to check for XLOG_CONTINUE_TRANS in xlog_write_partial() as it will
->   always be set.
-> - added a patch for removing the optype parameter from xlog_write()
-> - removed unused nvecs from struct xfs_cil_ctx
-> - fixed whitespace damage in xlog_cil_pcp_dead()
-> - added missing cpu dead accounting transfer in xlog_cil_pcp_dead().
-> - factored out CIL push percpu structure aggregation into
->   xlog_cil_pcp_aggregate()
-> - added the ctx->ticket->t_unit_res update back into the code even though it is
->   largely unnecessary.
-> - cleaned up the pcp, cilpcp, pcptr mess in xlog_cil_pcp_alloc() and elsewhere
->   to use variable names consistently.
-> - simplified the CIL sort comparison functions to a single comparison operation
-> - fixed percpu CIL item list sort order where items in the same transaction
->   (order id) were reversed, leading to intents being replayed in the wrong
->   order.
-> - split out log vector chain conversion to list_head into separate patch
-> - Updated documentation with all the fixes and suggestions made.
-> 
-> 
-> Version 3:
-> - rebase onto 5.12-rc1+
-> - aggregate many small dependent patchsets in one large one.
-> - simplify xlog_wait_on_iclog_lsn() back to just a call to xlog_wait_on_iclog()
-> - remove xfs_blkdev_issue_flush() instead of moving and renaming it.
-> - pass bio to xfs_flush_bdev_async() so it doesn't need allocation.
-> - skip cache flush in xfs_flush_bdev_async() if the underlying queue does not
->   require it.
-> - fixed whitespace in xfs_flush_bdev_async()
-> - remove the implicit external log's data device cache flush code and replace it
->   with an explicit flush in the unmount record write so that it works the same
->   as the new CIL checkpoint cache pre-flush mechanism. This mechanism now
->   guarantees metadata vs journal ordering for both internal and external logs.
-> - updated various commit messages
-> - fixed incorrect/unintended changes to xfs_log_force() behaviour
-> - typedef uint64_t xfs_csn_t; and conversion.
-> - removed stray trace_printk()s that were used for debugging.
-> - fixed minor formatting details.
-> - uninlined xlog_prepare_iovec()
-> - fixed up "lv chain vector and size calculation" commit message to reflect we
->   are only calculating and passin gin the vector byte count.
-> - reworked the loop in xlog_write_single() based on Christoph's suggestion. Much
->   cleaner!
-> - added patch to pass log ticket down to xlog_sync() so that it accounts the
->   roundoff to the log ticket rather than directly modifying grant heads. Grant
->   heads are hot, so every little bit helps.
-> - added patch to update delayed logging design doc with background material on
->   how transactions and log space accounting works in XFS.
-> 
-> Version 2:
-> - fix ticket reservation roundoff to include 2 roundoffs
-> - removed stale copied comment from roundoff initialisation.
-> - clarified "separation" to mean "separation for ordering purposes" in commit
->   message.
-> - added comment that newly activated, clean, empty iclogs have a LSN of 0 so are
->   captured by the "iclog lsn < start_lsn" case that avoids needing to wait
->   before releasing the commit iclog to be written.
-> - added async cache flush infrastructure
-> - convert CIL checkpoint push work it issue an unconditional metadata device
->   cache flush rather than asking the first iclog write to issue it via
->   REQ_PREFLUSH.
-> - cleaned up xlog_write() to remove a redundant parameter and prepare the logic
->   for setting flags on the iclog based on the type of operational data is being
->   written to the log.
-> - added XLOG_ICL_NEED_FUA flag to complement the NEED_FLUSH flag, allowing
->   callers to issue explicit flushes and clear the NEED_FLUSH flag before the
->   iclog is written without dropping the REQ_FUA requirement in /dev/null...
-> - added CIL commit-in-start-iclog optimisation that clears the NEED_FLUSH flag
->   to avoid an unnecessary cache flush when issuing the iclog.
-> - fixed typo in CIL throttle bugfix comment.
-> - fixed trailing whitespace in commit message.
-> 
+> diff --git a/dump/content.c b/dump/content.c
+> index 30232d4..c11d9b4 100644
+> --- a/dump/content.c
+> +++ b/dump/content.c
+> @@ -1382,17 +1382,10 @@ baseuuidbypass:
+>  	}
+>  
+>  	/* figure out the ino for the root directory of the fs
+> -	 * and get its struct xfs_bstat for inomap_build().  This could
+> -	 * be a bind mount; don't ask for the mount point inode,
+> -	 * find the actual lowest inode number in the filesystem.
+> +	 * and get its xfs_bstat_t for inomap_build()
+>  	 */
+>  	{
+>  		stat64_t rootstat;
+> -		xfs_ino_t lastino = 0;
+> -		int ocount = 0;
+> -		struct xfs_fsop_bulkreq bulkreq;
+> -
+> -		/* Get the inode of the mount point */
+>  		rval = fstat64(sc_fsfd, &rootstat);
+>  		if (rval) {
+>  			mlog(MLOG_NORMAL, _(
+> @@ -1404,21 +1397,11 @@ baseuuidbypass:
+>  			(struct xfs_bstat *)calloc(1, sizeof(struct xfs_bstat));
+>  		assert(sc_rootxfsstatp);
+>  
+> -		/* Get the first valid (i.e. root) inode in this fs */
+> -		bulkreq.lastip = (__u64 *)&lastino;
+> -		bulkreq.icount = 1;
+> -		bulkreq.ubuffer = sc_rootxfsstatp;
+> -		bulkreq.ocount = &ocount;
+> -		if (ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT, &bulkreq) < 0) {
+> +		if (bigstat_one(sc_fsfd, rootstat.st_ino, sc_rootxfsstatp) < 0) {
+>  			mlog(MLOG_ERROR,
+>  			      _("failed to get bulkstat information for root inode\n"));
+>  			return BOOL_FALSE;
+>  		}
+> -
+> -		if (sc_rootxfsstatp->bs_ino != rootstat.st_ino)
+> -			mlog (MLOG_NORMAL | MLOG_NOTE,
+> -			       _("root ino %lld differs from mount dir ino %lld, bind mount?\n"),
+> -			         sc_rootxfsstatp->bs_ino, rootstat.st_ino);
+>  	}
+>  
+>  	/* alloc a file system handle, to be used with the jdm_open()
 > 
