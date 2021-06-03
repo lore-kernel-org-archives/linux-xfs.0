@@ -2,171 +2,203 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67E1FC47096
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 12:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0855AC47082
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 14:54:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 468DC6136E
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 12:31:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D103F6121D
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 14:54:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230010AbhFCMdi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 08:33:38 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50313 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230288AbhFCMdi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 08:33:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1622723513;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=w68MC0CSaql2kBMD91UtgAuOsrTLN4OAUJYz93IW8Qg=;
-        b=F+esZpL3e8LChKq9WOVTGt+x41uPZGBzZ4649m8gObQal2cccy/woO7t5bTGyCnnnat10H
-        jdWMfkVI+56nGTwoCKi/QCxobXV6Nl2UrUaS9xFYZ0ALcBzLErwH5oFXQqatUbiP3c/NJ6
-        HHJiItui6Kz1+KOm9N5VmqwAQHGTrRE=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-565-GHyFzociMImtdBlrM5ZSdA-1; Thu, 03 Jun 2021 08:31:52 -0400
-X-MC-Unique: GHyFzociMImtdBlrM5ZSdA-1
-Received: by mail-qv1-f69.google.com with SMTP id dr11-20020a05621408ebb029021e40008bd5so3463100qvb.0
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Jun 2021 05:31:52 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=w68MC0CSaql2kBMD91UtgAuOsrTLN4OAUJYz93IW8Qg=;
-        b=EutBkzZo7rQcstiVNvfPw1GEiUfxAa9ftH0rXrfAj/PDwx25ETYqgY+ZrDnLQF9XqG
-         JcfmseSPHid+sumZMH9tzXnLZ6revQZy5qAVgISBY0oeLlxhcvp7RvIuPt+Uk/UNIeup
-         sF25VN75vlH5qq5oX3FQ+iPxkTAbFHMOOc9cjx5QMvTMrGUAv/dF1rNE/XvzSkU9rXAB
-         /qs2M4E0nS4CQYvdCPepesPz6jybROZalTCbuSRskrVp5iZeURBUzBp13S5D0C0Ajadn
-         0Tw1spda6HjaBStsRvh7Byp+J045KD7MJ0omOZSiIoW7iojBZjxrzUMr6+2f6ittk2Gs
-         W9Gw==
-X-Gm-Message-State: AOAM533WO4W/EI6zX6OvhfykREhjZmLo/DiaTmrnbKRlGKc9E/QZl9QS
-        lwFnDiFfEg9zqSvfMotTBw1Gp+4me14vybm052X4suqUIhKpxzdNQm+h5MxQfNurY5wBhcmSbeB
-        ubg4jE6X4UMZDudszXNis
-X-Received: by 2002:a05:6214:a89:: with SMTP id ev9mr8135512qvb.34.1622723512111;
-        Thu, 03 Jun 2021 05:31:52 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJy+ARYDzfaM7zLN11gz/JCjEqlAKAWZeDri8nd4Om+pWrGZxkG6vOkuhxAVqtZ0ZEOE8xqX6Q==
-X-Received: by 2002:a05:6214:a89:: with SMTP id ev9mr8135502qvb.34.1622723511917;
-        Thu, 03 Jun 2021 05:31:51 -0700 (PDT)
-Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id b4sm1657793qti.43.2021.06.03.05.31.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Jun 2021 05:31:51 -0700 (PDT)
-Date:   Thu, 3 Jun 2021 08:31:49 -0400
-From:   Brian Foster <bfoster@redhat.com>
+        id S231535AbhFCO4X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 10:56:23 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:12132 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230319AbhFCO4G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 10:56:06 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 153Ed54W185335;
+        Thu, 3 Jun 2021 10:54:19 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=pp1; bh=mUbe1lk/PG0v8kW5ZivmztkK3PnWj5Q8hpLRIokUU5U=;
+ b=WylHoaRFasmu4VcfKEh2emmOX6UiYNDy94AHvIVKYVGKfxO2fxADtykFh/DxQwC6YVWH
+ +KBFM93cJRJmM4nPP/2/Mf1QvoLDxg/FhIwFPT5UYfEgHfm6xNpNrseUVCpXph42ANDk
+ /tKi57hhLE8WknkNFbRfxQerbqKyjUNfPr3KOQyrQ9Y2RILWitlNjCQZUdo4zW624fLI
+ +UhW0nMpBeIckpDGY1fX7uYa1ao0/LM2Ro6azQ/gd61pz9mVxpObBtUH0H7vYkprud1k
+ 5NYBMcBPTusqXlxy11rwcf3p6yLTt9AXeOV4gfDNnmyhcyhDV1fLPl+Bi/UMIk+X8EGx Cg== 
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 38xw68gd0b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 03 Jun 2021 10:54:18 -0400
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 153ErN6t031132;
+        Thu, 3 Jun 2021 14:54:16 GMT
+Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
+        by ppma03ams.nl.ibm.com with ESMTP id 38ud88b210-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 03 Jun 2021 14:54:16 +0000
+Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
+        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 153EsEpQ29622692
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 3 Jun 2021 14:54:14 GMT
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 5C0DBAE058;
+        Thu,  3 Jun 2021 14:54:14 +0000 (GMT)
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0932DAE051;
+        Thu,  3 Jun 2021 14:54:14 +0000 (GMT)
+Received: from localhost (unknown [9.85.75.172])
+        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Thu,  3 Jun 2021 14:54:13 +0000 (GMT)
+Date:   Thu, 3 Jun 2021 20:24:13 +0530
+From:   riteshh <riteshh@linux.ibm.com>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: don't let background reclaim forget sick inodes
-Message-ID: <YLjLtfDLw89A0gbS@bfoster>
-References: <162268995567.2724138.15163777746481739089.stgit@locust>
- <162268997239.2724138.6026093150916734925.stgit@locust>
- <20210603044242.GQ664593@dread.disaster.area>
+Cc:     Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: don't take a spinlock unconditionally in the DIO
+ fastpath
+Message-ID: <20210603145413.5dzvl5tubfswol7f@riteshh-domain>
+References: <20210519011920.450421-1-david@fromorbit.com>
+ <20210531175825.mahfjai3pqftdlrv@riteshh-domain>
+ <20210601231520.GG664593@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210603044242.GQ664593@dread.disaster.area>
+In-Reply-To: <20210601231520.GG664593@dread.disaster.area>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: TdGgE7WXuWj1FFde6d3seHjnA7xc24dg
+X-Proofpoint-GUID: TdGgE7WXuWj1FFde6d3seHjnA7xc24dg
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-06-03_09:2021-06-02,2021-06-03 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ clxscore=1015 adultscore=0 mlxlogscore=999 suspectscore=0 spamscore=0
+ priorityscore=1501 mlxscore=0 impostorscore=0 phishscore=0 bulkscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104190000 definitions=main-2106030100
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 03, 2021 at 02:42:42PM +1000, Dave Chinner wrote:
-> On Wed, Jun 02, 2021 at 08:12:52PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > It's important that the filesystem retain its memory of sick inodes for
-> > a little while after problems are found so that reports can be collected
-> > about what was wrong.  Don't let background inode reclamation free sick
-> > inodes unless we're under memory pressure.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/xfs_icache.c |   21 +++++++++++++++++----
-> >  1 file changed, 17 insertions(+), 4 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index 0e2b6c05e604..54285d1ad574 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -911,7 +911,8 @@ xfs_dqrele_all_inodes(
-> >   */
-> >  static bool
-> >  xfs_reclaim_igrab(
-> > -	struct xfs_inode	*ip)
-> > +	struct xfs_inode	*ip,
-> > +	struct xfs_eofblocks	*eofb)
-> >  {
-> >  	ASSERT(rcu_read_lock_held());
-> >  
-> > @@ -922,6 +923,17 @@ xfs_reclaim_igrab(
-> >  		spin_unlock(&ip->i_flags_lock);
-> >  		return false;
-> >  	}
-> > +
-> > +	/*
-> > +	 * Don't reclaim a sick inode unless we're under memory pressure or the
-> > +	 * filesystem is unmounting.
-> > +	 */
-> > +	if (ip->i_sick && eofb == NULL &&
-> > +	    !(ip->i_mount->m_flags & XFS_MOUNT_UNMOUNTING)) {
-> > +		spin_unlock(&ip->i_flags_lock);
-> > +		return false;
-> > +	}
-> 
-> Using the "eofb == NULL" as a proxy for being under memory pressure
-> is ... a bit obtuse. If we've got a handful of sick inodes, then
-> there is no problem with just leaving the in memory regardless of
-> memory pressure. If we've got lots of sick inodes, we're likely to
-> end up in a shutdown state or be unmounted for checking real soon.
-> 
+On 21/06/02 09:15AM, Dave Chinner wrote:
+> On Mon, May 31, 2021 at 11:28:25PM +0530, riteshh wrote:
+> > On 21/05/19 11:19AM, Dave Chinner wrote:
+> > > --- a/fs/xfs/xfs_file.c
+> > > +++ b/fs/xfs/xfs_file.c
+> > > @@ -384,21 +384,30 @@ xfs_file_write_checks(
+> > >  		}
+> > >  		goto restart;
+> > >  	}
+> > > +
+> > >  	/*
+> > >  	 * If the offset is beyond the size of the file, we need to zero any
+> > >  	 * blocks that fall between the existing EOF and the start of this
+> > > -	 * write.  If zeroing is needed and we are currently holding the
+> > > -	 * iolock shared, we need to update it to exclusive which implies
+> > > -	 * having to redo all checks before.
+> > > +	 * write.  If zeroing is needed and we are currently holding the iolock
+> > > +	 * shared, we need to update it to exclusive which implies having to
+> > > +	 * redo all checks before.
+> > > +	 *
+> > > +	 * We need to serialise against EOF updates that occur in IO completions
+> > > +	 * here. We want to make sure that nobody is changing the size while we
+> > > +	 * do this check until we have placed an IO barrier (i.e.  hold the
+> > > +	 * XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.  The
+> > > +	 * spinlock effectively forms a memory barrier once we have the
+> > > +	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value and
+> > > +	 * hence be able to correctly determine if we need to run zeroing.
+> > >  	 *
+> > > -	 * We need to serialise against EOF updates that occur in IO
+> > > -	 * completions here. We want to make sure that nobody is changing the
+> > > -	 * size while we do this check until we have placed an IO barrier (i.e.
+> > > -	 * hold the XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.
+> > > -	 * The spinlock effectively forms a memory barrier once we have the
+> > > -	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value
+> > > -	 * and hence be able to correctly determine if we need to run zeroing.
+> > > +	 * We can do an unlocked check here safely as IO completion can only
+> > > +	 * extend EOF. Truncate is locked out at this point, so the EOF can
+> > > +	 * not move backwards, only forwards. Hence we only need to take the
+> > > +	 * slow path and spin locks when we are at or beyond the current EOF.
+> > >  	 */
+> > > +	if (iocb->ki_pos <= i_size_read(inode))
+> > > +		goto out;
+> > > +
+> > >  	spin_lock(&ip->i_flags_lock);
+> > >  	isize = i_size_read(inode);
+> > >  	if (iocb->ki_pos > isize) {
+> >
+> > Hello Dave/Jan,
+> >
+> > Sorry about some silly queries here. But locking sometimes can get confusing and
+> > needs a background context/history.
+> >
+> > So,
+> > I was going through the XFS DIO path and I couldn't completely get this below
+> > difference between xfs_file_dio_write_unaligned() v/s
+> > xfs_file_dio_write_aligned() checks for taking xfs iolock (inode rwsem)
+> > with different exclusivity(exclusive v/s shared).
+> >
+> > I in xfs_**_unaligned() function, we also check if (ki_pos + count >= isize()).
+> > If yes, then we go for an exclusive iolock.
+> > While in xfs_**_aligned() function, we always take shared iolock.
+> >
+> > Can you please help me understand why is that? In case of an extending aligned
+> > write, won't we need an exclusive iolock for XFS?
+>
+> No. Extending the file is a slowpath operation which requires
+> exclusive locking. We always take the shared lock first if we can
+> because that's the normal fast path operation and so we optimise for
+> that case.
+>
+> In the aligned DIO case, we check for sub-block EOF zeroing in
+> xfs_file_write_checks(). If needed, we upgrade the lock to exclusive
+> while the EOF zeroing is done. Once we return back to the aligned IO
+> code, we'll demote that exclusive lock back to shared for the block
+> aligned IO that we are issuing.
+>
+> > Or IIUC, this exclusive lock is mostly needed to prevent two sub-bock zeroing
+> > from running in parallel (which if this happens could cause corruption)
+> > and this can only happen with unaligned writes.
+>
+> The exclusive lock is needed for serialising zeroing operations,
+> whether it be zeroing for EOF extension or sub-block zeroing for
+> unaligned writes.
+>
+> The reason for the EOF checks in the unaligned case is right there
+> in the comment above the EOF checks:
+>
+>         /*
+>          * Extending writes need exclusivity because of the sub-block zeroing
+>          * that the DIO code always does for partial tail blocks beyond EOF, so
+>          * don't even bother trying the fast path in this case.
+>          */
+>
+> IOWs, there is no possible "fast path" shared locking case for
+> unaligned extending DIOs, so we just take the exlusive lock right
+> from the start.
+>
+> > Whereas, I guess ext4, still does exclusive lock even with aligned extending
+> > writes, possibly because of updation of inode->i_size and orphan inode
+> > handling requires it to take exclusive inode rwsem.
+> >
+> > While for XFS inode->i_size updation happens with a different spinlock which is
+> > ip->i_flags_lock.
+>
+> XFS is serialising DIO completion against DIO submission here rather
+> than anything else to do with inode size updates which are,
+> generally speaking, serialised at a higher level by various
+> combinations of i_rwsem, MMAPLOCK, ILOCK and inode_dio_wait().
 
-Agreed.. it would be nice to see more explicit logic here. Using the
-existence or not of an optional parameter meant to provide various
-controls is quite fragile.
+Thanks a lot Dave for detailed explaination about this.
+This makes things quite clear now from XFS side.
 
-> I'd just leave sick inodes around until unmount or shutdown occurs;
-> lots of sick inodes means repair is necessary right now, so
-> shutdown+unmount is the right solution here, not memory reclaim....
-> 
+-ritesh
 
-That seems like a dependency on a loose correlation and rather
-dangerous.. we're either assuming action on behalf of a user before the
-built up state becomes a broader problem for the system or that somehow
-a cascade of in-core inode problems is going to lead to a shutdown. I
-don't think that is a guarantee, or even necessarily likely. I think if
-we were to do something like pin sick inodes in memory indefinitely, as
-you've pointed out in the past for other such things, we should at least
-consider breakdown conditions and potential for unbound behavior.
-
-IOW, if scrub decides it wants to pin sick inodes until shutdown, it
-should probably implement some kind of worst case threshold where it
-actually initiates shutdown based on broad health state. If we can't
-reasonably define something like that, then to me that is a pretty clear
-indication that an indefinite pinning strategy is probably too fragile.
-OTOH, perhaps scrub has enough knowledge to implement some kind of
-policy where a sick object is pinned until we know the state has been
-queried at least once, then reclaim can have it? I guess we still may
-want to be careful about things like how many sick objects a single
-scrub scan can produce before there's an opportunity for userspace to
-query status; it's not clear to me how much of an issue that might be..
-
-In any event, this all seems moderately more involved to get right vs
-what the current patch proposes. I think this patch is a reasonable step
-if we can clean up the logic a bit. Perhaps define a flag that contexts
-can use to explicitly reclaim or skip unhealthy inodes?
-
-Brian
-
+>
 > Cheers,
-> 
+>
 > Dave.
-> -- 
+> --
 > Dave Chinner
 > david@fromorbit.com
-> 
-
