@@ -7,287 +7,246 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E54F5C47099
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F2C1C47096
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC115613F0
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08DD3613F0
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229828AbhFCFZK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229833AbhFCFZK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 3 Jun 2021 01:25:10 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:57834 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229833AbhFCFZJ (ORCPT
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:46514 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229835AbhFCFZJ (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:25:09 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 64E5F80B2CA
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id CCE146821B
         for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:51 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lofog-008Mqg-SW
-        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
+        id 1lofoh-008MrJ-Bo
+        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lofog-000ilx-Jo
-        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
+        id 1lofoh-000ima-4C
+        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 16/39] xfs: log tickets don't need log client id
-Date:   Thu,  3 Jun 2021 15:22:17 +1000
-Message-Id: <20210603052240.171998-17-david@fromorbit.com>
+Subject: [PATCH 29/39] xfs: introduce per-cpu CIL tracking structure
+Date:   Thu,  3 Jun 2021 15:22:30 +1000
+Message-Id: <20210603052240.171998-30-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210603052240.171998-1-david@fromorbit.com>
 References: <20210603052240.171998-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=YlqFwBsl5h0Aqb0hd38A:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=ctKYPObigYSo-yGFUx4A:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We currently set the log ticket client ID when we reserve a
-transaction. This client ID is only ever written to the log by
-a CIL checkpoint or unmount records, and so anything using a high
-level transaction allocated through xfs_trans_alloc() does not need
-a log ticket client ID to be set.
+The CIL push lock is highly contended on larger machines, becoming a
+hard bottleneck that about 700,000 transaction commits/s on >16p
+machines. To address this, start moving the CIL tracking
+infrastructure to utilise per-CPU structures.
 
-For the CIL checkpoint, the client ID written to the journal is
-always XFS_TRANSACTION, and for the unmount record it is always
-XFS_LOG, and nothing else writes to the log. All of these operations
-tell xlog_write() exactly what they need to write to the log (the
-optype) and build their own opheaders for start, commit and unmount
-records. Hence we no longer need to set the client id in either the
-log ticket or the xfs_trans.
+We need to track the space used, the amount of log reservation space
+reserved to write the CIL, the log items in the CIL and the busy
+extents that need to be completed by the CIL commit.  This requires
+a couple of per-cpu counters, an unordered per-cpu list and a
+globally ordered per-cpu list.
+
+Create a per-cpu structure to hold these and all the management
+interfaces needed, as well as the hooks to handle hotplug CPUs.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_log_format.h |  1 -
- fs/xfs/xfs_log.c               | 47 ++++++----------------------------
- fs/xfs/xfs_log.h               | 16 +++++-------
- fs/xfs/xfs_log_cil.c           |  2 +-
- fs/xfs/xfs_log_priv.h          | 10 ++------
- fs/xfs/xfs_trans.c             |  6 ++---
- 6 files changed, 19 insertions(+), 63 deletions(-)
+ fs/xfs/xfs_log_cil.c       | 107 +++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_log_priv.h      |  13 +++++
+ include/linux/cpuhotplug.h |   1 +
+ 3 files changed, 121 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index d548ea4b6aab..78d5368a7caa 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -69,7 +69,6 @@ static inline uint xlog_get_cycle(char *ptr)
- 
- /* Log Clients */
- #define XFS_TRANSACTION		0x69
--#define XFS_VOLUME		0x2
- #define XFS_LOG			0xaa
- 
- #define XLOG_UNMOUNT_TYPE	0x556e	/* Un for Unmount */
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 76a73f4b0f30..ccf584914b6a 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -433,10 +433,9 @@ xfs_log_regrant(
- int
- xfs_log_reserve(
- 	struct xfs_mount	*mp,
--	int		 	unit_bytes,
--	int		 	cnt,
-+	int			unit_bytes,
-+	int			cnt,
- 	struct xlog_ticket	**ticp,
--	uint8_t		 	client,
- 	bool			permanent)
- {
- 	struct xlog		*log = mp->m_log;
-@@ -444,15 +443,13 @@ xfs_log_reserve(
- 	int			need_bytes;
- 	int			error = 0;
- 
--	ASSERT(client == XFS_TRANSACTION || client == XFS_LOG);
--
- 	if (XLOG_FORCED_SHUTDOWN(log))
- 		return -EIO;
- 
- 	XFS_STATS_INC(mp, xs_try_logspace);
- 
- 	ASSERT(*ticp == NULL);
--	tic = xlog_ticket_alloc(log, unit_bytes, cnt, client, permanent);
-+	tic = xlog_ticket_alloc(log, unit_bytes, cnt, permanent);
- 	*ticp = tic;
- 
- 	xlog_grant_push_ail(log, tic->t_cnt ? tic->t_unit_res * tic->t_cnt
-@@ -853,7 +850,7 @@ xlog_unmount_write(
- 	struct xlog_ticket	*tic = NULL;
- 	int			error;
- 
--	error = xfs_log_reserve(mp, 600, 1, &tic, XFS_LOG, 0);
-+	error = xfs_log_reserve(mp, 600, 1, &tic, 0);
- 	if (error)
- 		goto out_err;
- 
-@@ -2181,35 +2178,13 @@ xlog_write_calc_vec_length(
- 
- static xlog_op_header_t *
- xlog_write_setup_ophdr(
--	struct xlog		*log,
- 	struct xlog_op_header	*ophdr,
--	struct xlog_ticket	*ticket,
--	uint			flags)
-+	struct xlog_ticket	*ticket)
- {
- 	ophdr->oh_tid = cpu_to_be32(ticket->t_tid);
--	ophdr->oh_clientid = ticket->t_clientid;
-+	ophdr->oh_clientid = XFS_TRANSACTION;
- 	ophdr->oh_res2 = 0;
--
--	/* are we copying a commit or unmount record? */
--	ophdr->oh_flags = flags;
--
--	/*
--	 * We've seen logs corrupted with bad transaction client ids.  This
--	 * makes sure that XFS doesn't generate them on.  Turn this into an EIO
--	 * and shut down the filesystem.
--	 */
--	switch (ophdr->oh_clientid)  {
--	case XFS_TRANSACTION:
--	case XFS_VOLUME:
--	case XFS_LOG:
--		break;
--	default:
--		xfs_warn(log->l_mp,
--			"Bad XFS transaction clientid 0x%x in ticket "PTR_FMT,
--			ophdr->oh_clientid, ticket);
--		return NULL;
--	}
--
-+	ophdr->oh_flags = 0;
- 	return ophdr;
- }
- 
-@@ -2439,11 +2414,7 @@ xlog_write(
- 				if (index)
- 					optype &= ~XLOG_START_TRANS;
- 			} else {
--				ophdr = xlog_write_setup_ophdr(log, ptr,
--							ticket, optype);
--				if (!ophdr)
--					return -EIO;
--
-+                                ophdr = xlog_write_setup_ophdr(ptr, ticket);
- 				xlog_write_adv_cnt(&ptr, &len, &log_offset,
- 					   sizeof(struct xlog_op_header));
- 				added_ophdr = true;
-@@ -3499,7 +3470,6 @@ xlog_ticket_alloc(
- 	struct xlog		*log,
- 	int			unit_bytes,
- 	int			cnt,
--	char			client,
- 	bool			permanent)
- {
- 	struct xlog_ticket	*tic;
-@@ -3517,7 +3487,6 @@ xlog_ticket_alloc(
- 	tic->t_cnt		= cnt;
- 	tic->t_ocnt		= cnt;
- 	tic->t_tid		= prandom_u32();
--	tic->t_clientid		= client;
- 	if (permanent)
- 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
- 
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index 1bd080ce3a95..c0c3141944ea 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -117,16 +117,12 @@ int	  xfs_log_mount_finish(struct xfs_mount *mp);
- void	xfs_log_mount_cancel(struct xfs_mount *);
- xfs_lsn_t xlog_assign_tail_lsn(struct xfs_mount *mp);
- xfs_lsn_t xlog_assign_tail_lsn_locked(struct xfs_mount *mp);
--void	  xfs_log_space_wake(struct xfs_mount *mp);
--int	  xfs_log_reserve(struct xfs_mount *mp,
--			  int		   length,
--			  int		   count,
--			  struct xlog_ticket **ticket,
--			  uint8_t		   clientid,
--			  bool		   permanent);
--int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
--void      xfs_log_unmount(struct xfs_mount *mp);
--int	  xfs_log_force_umount(struct xfs_mount *mp, int logerror);
-+void	xfs_log_space_wake(struct xfs_mount *mp);
-+int	xfs_log_reserve(struct xfs_mount *mp, int length, int count,
-+			struct xlog_ticket **ticket, bool permanent);
-+int	xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
-+void	xfs_log_unmount(struct xfs_mount *mp);
-+int	xfs_log_force_umount(struct xfs_mount *mp, int logerror);
- bool	xfs_log_writable(struct xfs_mount *mp);
- 
- struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
 diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 2983adaed675..9d3a495f1c78 100644
+index 738dc4248113..791ed1058fb4 100644
 --- a/fs/xfs/xfs_log_cil.c
 +++ b/fs/xfs/xfs_log_cil.c
-@@ -37,7 +37,7 @@ xlog_cil_ticket_alloc(
- {
- 	struct xlog_ticket *tic;
+@@ -1369,6 +1369,106 @@ xfs_log_item_in_current_chkpt(
+ 	return lip->li_seq == cil->xc_ctx->sequence;
+ }
  
--	tic = xlog_ticket_alloc(log, 0, 1, XFS_TRANSACTION, 0);
-+	tic = xlog_ticket_alloc(log, 0, 1, 0);
++#ifdef CONFIG_HOTPLUG_CPU
++static LIST_HEAD(xlog_cil_pcp_list);
++static DEFINE_SPINLOCK(xlog_cil_pcp_lock);
++static bool xlog_cil_pcp_init;
++
++/*
++ * Move dead percpu state to the relevant CIL context structures.
++ *
++ * We have to lock the CIL context here to ensure that nothing is modifying
++ * the percpu state, either addition or removal. Both of these are done under
++ * the CIL context lock, so grabbing that exclusively here will ensure we can
++ * safely drain the cilpcp for the CPU that is dying.
++ */
++static int
++xlog_cil_pcp_dead(
++	unsigned int		cpu)
++{
++	struct xfs_cil		*cil, *n;
++
++	spin_lock(&xlog_cil_pcp_lock);
++	list_for_each_entry_safe(cil, n, &xlog_cil_pcp_list, xc_pcp_list) {
++		spin_unlock(&xlog_cil_pcp_lock);
++		down_write(&cil->xc_ctx_lock);
++		/* move stuff on dead CPU to context */
++		up_write(&cil->xc_ctx_lock);
++		spin_lock(&xlog_cil_pcp_lock);
++	}
++	spin_unlock(&xlog_cil_pcp_lock);
++	return 0;
++}
++
++static int
++xlog_cil_pcp_hpadd(
++	struct xfs_cil		*cil)
++{
++	if (!xlog_cil_pcp_init) {
++		int	ret;
++
++		ret = cpuhp_setup_state_nocalls(CPUHP_XFS_CIL_DEAD,
++						"xfs/cil_pcp:dead", NULL,
++						xlog_cil_pcp_dead);
++		if (ret < 0) {
++			xfs_warn(cil->xc_log->l_mp,
++	"Failed to initialise CIL hotplug, error %d. XFS is non-functional.",
++				ret);
++			ASSERT(0);
++			return -ENOMEM;
++		}
++		xlog_cil_pcp_init = true;
++	}
++
++	INIT_LIST_HEAD(&cil->xc_pcp_list);
++	spin_lock(&xlog_cil_pcp_lock);
++	list_add(&cil->xc_pcp_list, &xlog_cil_pcp_list);
++	spin_unlock(&xlog_cil_pcp_lock);
++	return 0;
++}
++
++static void
++xlog_cil_pcp_hpremove(
++	struct xfs_cil		*cil)
++{
++	spin_lock(&xlog_cil_pcp_lock);
++	list_del(&cil->xc_pcp_list);
++	spin_unlock(&xlog_cil_pcp_lock);
++}
++
++#else /* !CONFIG_HOTPLUG_CPU */
++static inline void xlog_cil_pcp_hpadd(struct xfs_cil *cil) {}
++static inline void xlog_cil_pcp_hpremove(struct xfs_cil *cil) {}
++#endif
++
++static void __percpu *
++xlog_cil_pcp_alloc(
++	struct xfs_cil		*cil)
++{
++	void __percpu		*pcp;
++
++	pcp = alloc_percpu(struct xlog_cil_pcp);
++	if (!pcp)
++		return NULL;
++
++	if (xlog_cil_pcp_hpadd(cil) < 0) {
++		free_percpu(pcp);
++		return NULL;
++	}
++	return pcp;
++}
++
++static void
++xlog_cil_pcp_free(
++	struct xfs_cil		*cil,
++	void __percpu		*pcp)
++{
++	if (!pcp)
++		return;
++	xlog_cil_pcp_hpremove(cil);
++	free_percpu(pcp);
++}
++
+ /*
+  * Perform initial CIL structure initialisation.
+  */
+@@ -1383,6 +1483,12 @@ xlog_cil_init(
+ 	if (!cil)
+ 		return -ENOMEM;
  
- 	/*
- 	 * set the current reservation to zero so we know to steal the basic
++	cil->xc_pcp = xlog_cil_pcp_alloc(cil);
++	if (!cil->xc_pcp) {
++		kmem_free(cil);
++		return -ENOMEM;
++	}
++
+ 	INIT_LIST_HEAD(&cil->xc_cil);
+ 	INIT_LIST_HEAD(&cil->xc_committing);
+ 	spin_lock_init(&cil->xc_cil_lock);
+@@ -1413,6 +1519,7 @@ xlog_cil_destroy(
+ 
+ 	ASSERT(list_empty(&cil->xc_cil));
+ 	ASSERT(test_bit(XLOG_CIL_EMPTY, &cil->xc_flags));
++	xlog_cil_pcp_free(cil, cil->xc_pcp);
+ 	kmem_free(cil);
+ }
+ 
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 87447fa34c43..e4e3e71b2b1b 100644
+index 85a85ab569fe..d76deffa4690 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -158,7 +158,6 @@ typedef struct xlog_ticket {
- 	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
- 	char		   t_ocnt;	 /* original count		 : 1  */
- 	char		   t_cnt;	 /* current count		 : 1  */
--	char		   t_clientid;	 /* who does this belong to;	 : 1  */
- 	char		   t_flags;	 /* properties of reservation	 : 1  */
+@@ -227,6 +227,14 @@ struct xfs_cil_ctx {
+ 	struct work_struct	push_work;
+ };
  
-         /* reservation array fields */
-@@ -465,13 +464,8 @@ extern __le32	 xlog_cksum(struct xlog *log, struct xlog_rec_header *rhead,
- 			    char *dp, int size);
++/*
++ * Per-cpu CIL tracking items
++ */
++struct xlog_cil_pcp {
++	struct list_head	busy_extents;
++	struct list_head	log_items;
++};
++
+ /*
+  * Committed Item List structure
+  *
+@@ -260,6 +268,11 @@ struct xfs_cil {
+ 	wait_queue_head_t	xc_commit_wait;
+ 	xfs_csn_t		xc_current_sequence;
+ 	wait_queue_head_t	xc_push_wait;	/* background push throttle */
++
++	void __percpu		*xc_pcp;	/* percpu CIL structures */
++#ifdef CONFIG_HOTPLUG_CPU
++	struct list_head	xc_pcp_list;
++#endif
+ } ____cacheline_aligned_in_smp;
  
- extern kmem_zone_t *xfs_log_ticket_zone;
--struct xlog_ticket *
--xlog_ticket_alloc(
--	struct xlog	*log,
--	int		unit_bytes,
--	int		count,
--	char		client,
--	bool		permanent);
-+struct xlog_ticket *xlog_ticket_alloc(struct xlog *log, int unit_bytes,
-+		int count, bool permanent);
- 
- static inline void
- xlog_write_adv_cnt(void **ptr, int *len, int *off, size_t bytes)
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index c214a69b573d..bc72826d1f97 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -194,11 +194,9 @@ xfs_trans_reserve(
- 			ASSERT(resp->tr_logflags & XFS_TRANS_PERM_LOG_RES);
- 			error = xfs_log_regrant(mp, tp->t_ticket);
- 		} else {
--			error = xfs_log_reserve(mp,
--						resp->tr_logres,
-+			error = xfs_log_reserve(mp, resp->tr_logres,
- 						resp->tr_logcount,
--						&tp->t_ticket, XFS_TRANSACTION,
--						permanent);
-+						&tp->t_ticket, permanent);
- 		}
- 
- 		if (error)
+ /* xc_flags bit values */
+diff --git a/include/linux/cpuhotplug.h b/include/linux/cpuhotplug.h
+index 4a62b3980642..3d3ccde9e9c8 100644
+--- a/include/linux/cpuhotplug.h
++++ b/include/linux/cpuhotplug.h
+@@ -52,6 +52,7 @@ enum cpuhp_state {
+ 	CPUHP_FS_BUFF_DEAD,
+ 	CPUHP_PRINTK_DEAD,
+ 	CPUHP_MM_MEMCQ_DEAD,
++	CPUHP_XFS_CIL_DEAD,
+ 	CPUHP_PERCPU_CNT_DEAD,
+ 	CPUHP_RADIX_DEAD,
+ 	CPUHP_PAGE_ALLOC_DEAD,
 -- 
 2.31.1
 
