@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63FB3C4708F
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 03:12:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3322C47083
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 03:12:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B154613B8
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 03:12:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA33B613E9
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 03:12:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229721AbhFCDOb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Jun 2021 23:14:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56366 "EHLO mail.kernel.org"
+        id S229723AbhFCDOg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Jun 2021 23:14:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56470 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229611AbhFCDOb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Jun 2021 23:14:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 30DAC61360;
-        Thu,  3 Jun 2021 03:12:47 +0000 (UTC)
+        id S229611AbhFCDOg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Jun 2021 23:14:36 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AD33361360;
+        Thu,  3 Jun 2021 03:12:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622689967;
-        bh=0e7mPbYmfdK7lIvLKvu78JoFrIZ5rM7fzdYa+rkQGDI=;
+        s=k20201202; t=1622689972;
+        bh=MZCMSzrWuVJnAZStmaDiVU5iIZg/5Xv3dWJkNNyUlxM=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=EvxuztGIQ86PylvxITnRb86ObkOoNd+vwNFmGLG/tdFkoghd7PFd15b8X112mCzRq
-         FqWxA3HDm+V8uqQV2ThKnhrijpWhbhvvNZB4jLGrty3XLA8X578Rqwp4y7FOeSMJ4q
-         NgqxJgUPeAN2aySJAi21tfgJzsVRGMrzsxx6wQmCABd0Gr7WKlvfihW4QnlTgq6Ysz
-         D0w/FHEd0QFujOhgh5WgFqwA0GN+dKJ3WJ8evAC4VwwvfIvIYcPuy+O+vCTQUKmvkd
-         kA7wN5Y0IuI9HlU8tCDRzcMgZ3hZQTKnsTSdOsxjhE3dMHN4m6ucE8QFvILqIJT8Jn
-         7cGcVVqdWI9SA==
-Subject: [PATCH 2/3] xfs: drop IDONTCACHE on inodes when we mark them sick
+        b=mPGIeZ6VJMFGLu1YkOiz/kXmGOf7cFBSs787r2YXGPMjZ95wxfOHpB9i1Y9PTW1ZH
+         Zw5T8hC+ErKan71ccURR/pHsPHxHpuf2CFpWMdVneVF9o/ah/MGBPDGqm7KIzktlxf
+         fhNbquUt73oVuZreTsd5ppcVqd04Ce/KF8FLObWKRXiB+CDDw62EMhGNqJyR9BqQvG
+         S55D/z0eBsWqQrn0v1bRSVG0ExccCLuhK6tkcQ06OQyQy7AB0JvrbFJ/MXGfIvWvGc
+         PEiaHhwy+A1CQBZu5bY9scX1jO+JwvXzrnNkgCLsu4WCZk3bOjO7ftzE8FVm9jkUnd
+         WJivOCiPJyvxg==
+Subject: [PATCH 3/3] xfs: don't let background reclaim forget sick inodes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, bfoster@redhat.com
-Date:   Wed, 02 Jun 2021 20:12:46 -0700
-Message-ID: <162268996687.2724138.9307511745121153042.stgit@locust>
+Date:   Wed, 02 Jun 2021 20:12:52 -0700
+Message-ID: <162268997239.2724138.6026093150916734925.stgit@locust>
 In-Reply-To: <162268995567.2724138.15163777746481739089.stgit@locust>
 References: <162268995567.2724138.15163777746481739089.stgit@locust>
 User-Agent: StGit/0.19
@@ -49,53 +49,75 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we decide to mark an inode sick, clear the DONTCACHE flag so that
-the incore inode will be kept around until memory pressure forces it out
-of memory.  This increases the chances that the sick status will be
-caught by someone compiling a health report later on.
+It's important that the filesystem retain its memory of sick inodes for
+a little while after problems are found so that reports can be collected
+about what was wrong.  Don't let background inode reclamation free sick
+inodes unless we're under memory pressure.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_health.c |    5 +++++
- fs/xfs/xfs_icache.c |    3 ++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_icache.c |   21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-index 8e0cb05a7142..824e0b781290 100644
---- a/fs/xfs/xfs_health.c
-+++ b/fs/xfs/xfs_health.c
-@@ -231,6 +231,11 @@ xfs_inode_mark_sick(
- 	ip->i_sick |= mask;
- 	ip->i_checked |= mask;
- 	spin_unlock(&ip->i_flags_lock);
-+
-+	/* Keep this inode around so we don't lose the sickness report. */
-+	spin_lock(&VFS_I(ip)->i_lock);
-+	VFS_I(ip)->i_state &= ~I_DONTCACHE;
-+	spin_unlock(&VFS_I(ip)->i_lock);
- }
- 
- /* Mark parts of an inode healed. */
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index c3f912a9231b..0e2b6c05e604 100644
+index 0e2b6c05e604..54285d1ad574 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -23,6 +23,7 @@
- #include "xfs_dquot.h"
- #include "xfs_reflink.h"
- #include "xfs_ialloc.h"
-+#include "xfs_health.h"
+@@ -911,7 +911,8 @@ xfs_dqrele_all_inodes(
+  */
+ static bool
+ xfs_reclaim_igrab(
+-	struct xfs_inode	*ip)
++	struct xfs_inode	*ip,
++	struct xfs_eofblocks	*eofb)
+ {
+ 	ASSERT(rcu_read_lock_held());
  
- #include <linux/iversion.h>
+@@ -922,6 +923,17 @@ xfs_reclaim_igrab(
+ 		spin_unlock(&ip->i_flags_lock);
+ 		return false;
+ 	}
++
++	/*
++	 * Don't reclaim a sick inode unless we're under memory pressure or the
++	 * filesystem is unmounting.
++	 */
++	if (ip->i_sick && eofb == NULL &&
++	    !(ip->i_mount->m_flags & XFS_MOUNT_UNMOUNTING)) {
++		spin_unlock(&ip->i_flags_lock);
++		return false;
++	}
++
+ 	__xfs_iflags_set(ip, XFS_IRECLAIM);
+ 	spin_unlock(&ip->i_flags_lock);
+ 	return true;
+@@ -1606,7 +1618,8 @@ xfs_blockgc_free_quota(
+ static inline bool
+ xfs_icwalk_igrab(
+ 	enum xfs_icwalk_goal	goal,
+-	struct xfs_inode	*ip)
++	struct xfs_inode	*ip,
++	struct xfs_eofblocks	*eofb)
+ {
+ 	switch (goal) {
+ 	case XFS_ICWALK_DQRELE:
+@@ -1614,7 +1627,7 @@ xfs_icwalk_igrab(
+ 	case XFS_ICWALK_BLOCKGC:
+ 		return xfs_blockgc_igrab(ip);
+ 	case XFS_ICWALK_RECLAIM:
+-		return xfs_reclaim_igrab(ip);
++		return xfs_reclaim_igrab(ip, eofb);
+ 	default:
+ 		return false;
+ 	}
+@@ -1703,7 +1716,7 @@ xfs_icwalk_ag(
+ 		for (i = 0; i < nr_found; i++) {
+ 			struct xfs_inode *ip = batch[i];
  
-@@ -648,7 +649,7 @@ xfs_iget_cache_miss(
- 	 * time.
- 	 */
- 	iflags = XFS_INEW;
--	if (flags & XFS_IGET_DONTCACHE)
-+	if ((flags & XFS_IGET_DONTCACHE) && xfs_inode_is_healthy(ip))
- 		d_mark_dontcache(VFS_I(ip));
- 	ip->i_udquot = NULL;
- 	ip->i_gdquot = NULL;
+-			if (done || !xfs_icwalk_igrab(goal, ip))
++			if (done || !xfs_icwalk_igrab(goal, ip, eofb))
+ 				batch[i] = NULL;
+ 
+ 			/*
 
