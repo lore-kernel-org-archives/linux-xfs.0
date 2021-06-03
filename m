@@ -2,113 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EF0CC47096
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 20:29:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA1BC47082
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 20:41:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30CA2613DE
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 20:29:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B057613DE
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 20:41:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229790AbhFCUbk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 16:31:40 -0400
-Received: from sandeen.net ([63.231.237.45]:35052 "EHLO sandeen.net"
+        id S229617AbhFCUn2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 16:43:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43650 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229576AbhFCUbk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Jun 2021 16:31:40 -0400
-Received: from liberator.local (h15.159.16.98.static.ip.windstream.net [98.16.159.15])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 16C8B4872FA;
-        Thu,  3 Jun 2021 15:29:53 -0500 (CDT)
-Subject: Re: [PATCH v2 1/2] xfsdump: Revert "xfsdump: handle bind mount
- targets"
-To:     Gao Xiang <hsiangkao@redhat.com>, linux-xfs@vger.kernel.org
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-References: <20201103023315.786103-1-hsiangkao@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <04428916-1fdc-0958-2ead-8d10fca7f82c@sandeen.net>
-Date:   Thu, 3 Jun 2021 15:29:53 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.10.2
+        id S229665AbhFCUn2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Jun 2021 16:43:28 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D88C6610CB;
+        Thu,  3 Jun 2021 20:41:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1622752902;
+        bh=CNGOX7Qtjbj220jpTBVi4b+pDrbjOMtk7JNUOMQj9yE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=UkT6Qoq89/yLFhgHaqpm+IVLZFbkqwVxIBrjsFt7MvTjhQmYFpHHTt66Xr1WJ7JRT
+         7Qsqvf8MmmSmuZioMmI/pvlm6j/eox/k72/9Y3PuJU/hlFegmWqGz9hY9c0qF07iS9
+         Sm8/lSNykqe4BHvf4h9N+G/4YgmXrS0Ba7hn7Q2HZ1uvRKVPcuibnt/9k9hZmV8mix
+         SwlD4x72ySZbxedIXQzTOTGTOGRd3fD9jcgKDRfyNqy2tirzY7biIX5lmobXzSFLeh
+         jR11GN7EgRC0qu1X4VEr2YsodAmG4wffTFKj+gWNDZXveYJl3ZWfwiq3gPu5vybF/W
+         e3g+hSKnzaNzg==
+Date:   Thu, 3 Jun 2021 13:41:42 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
+Subject: Re: [PATCH 1/3] xfs: only reset incore inode health state flags when
+ reclaiming an inode
+Message-ID: <20210603204142.GY26380@locust>
+References: <162268995567.2724138.15163777746481739089.stgit@locust>
+ <162268996135.2724138.14276025100886638786.stgit@locust>
+ <20210603042107.GO664593@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20201103023315.786103-1-hsiangkao@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210603042107.GO664593@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/2/20 8:33 PM, Gao Xiang wrote:
-> Bind mount mntpnts will be forbided in the next commits
-> instead since it's not the real rootdir.
+On Thu, Jun 03, 2021 at 02:21:07PM +1000, Dave Chinner wrote:
+> On Wed, Jun 02, 2021 at 08:12:41PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > While running some fuzz tests on inode metadata, I noticed that the
+> > filesystem health report (as provided by xfs_spaceman) failed to report
+> > the file corruption even when spaceman was run immediately after running
+> > xfs_scrub to detect the corruption.  That isn't the intended behavior;
+> > one ought to be able to run scrub to detect errors in the ondisk
+> > metadata and be able to access to those reports for some time after the
+> > scrub.
+> > 
+> > After running the same sequence through an instrumented kernel, I
+> > discovered the reason why -- scrub igets the file, scans it, marks it
+> > sick, and ireleases the inode.  When the VFS lets go of the incore
+> > inode, it moves to RECLAIMABLE state.  If spaceman igets the incore
+> > inode before it moves to RECLAIM state, iget reinitializes the VFS
+> > state, clears the sick and checked masks, and hands back the inode.  At
+> > this point, the caller has the exact same incore inode, but with all the
+> > health state erased.
+> > 
+> > In other words, we're erasing the incore inode's health state flags when
+> > we've decided NOT to sever the link between the incore inode and the
+> > ondisk inode.  This is wrong, so we need to remove the lines that zero
+> > the fields from xfs_iget_cache_hit.
+> > 
+> > As a precaution, we add the same lines into xfs_reclaim_inode just after
+> > we sever the link between incore and ondisk inode.  Strictly speaking
+> > this isn't necessary because once an inode has gone through reclaim it
+> > must go through xfs_inode_alloc (which also zeroes the state) and
+> > xfs_iget is careful to check for mismatches between the inode it pulls
+> > out of the radix tree and the one it wants.
+> > 
+> > Fixes: 6772c1f11206 ("xfs: track metadata health status")
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/xfs_icache.c |    5 ++---
+> >  1 file changed, 2 insertions(+), 3 deletions(-)
 > 
-> This cannot be reverted cleanly due to several cleanup
-> patches, but the logic is reverted equivalently.
+> Looks fine.
 > 
-> This reverts commit 25195ebf107dc81b1b7cea1476764950e1d6cc9d.
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > 
-> Fixes: 25195ebf107d ("xfsdump: handle bind mount targets")
-> Cc: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> Though I do wonder how long such state will hang around, because
+> once the inode is IRECLAIMABLE and clean it is only a matter of
+> seconds before the background inode reclaimer will free it...
 
-Sorry this is so ridiculously late:
+A future patchset will add the ability to make the per-AG health status
+remember that we were forced to reclaim a sick inode:
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=indirect-health-reporting
 
-> ---
->  dump/content.c | 21 ++-------------------
->  1 file changed, 2 insertions(+), 19 deletions(-)
+This series used to be the "fixes first" part of that code, but since it
+directly intersects with the deferred inactivation changes, I moved it
+up to try to fix the problem sooner than later.
+
+Anyway, thanks for the review.
+
+--D
+
 > 
-> diff --git a/dump/content.c b/dump/content.c
-> index 30232d4..c11d9b4 100644
-> --- a/dump/content.c
-> +++ b/dump/content.c
-> @@ -1382,17 +1382,10 @@ baseuuidbypass:
->  	}
->  
->  	/* figure out the ino for the root directory of the fs
-> -	 * and get its struct xfs_bstat for inomap_build().  This could
-> -	 * be a bind mount; don't ask for the mount point inode,
-> -	 * find the actual lowest inode number in the filesystem.
-> +	 * and get its xfs_bstat_t for inomap_build()
->  	 */
->  	{
->  		stat64_t rootstat;
-> -		xfs_ino_t lastino = 0;
-> -		int ocount = 0;
-> -		struct xfs_fsop_bulkreq bulkreq;
-> -
-> -		/* Get the inode of the mount point */
->  		rval = fstat64(sc_fsfd, &rootstat);
->  		if (rval) {
->  			mlog(MLOG_NORMAL, _(
-> @@ -1404,21 +1397,11 @@ baseuuidbypass:
->  			(struct xfs_bstat *)calloc(1, sizeof(struct xfs_bstat));
->  		assert(sc_rootxfsstatp);
->  
-> -		/* Get the first valid (i.e. root) inode in this fs */
-> -		bulkreq.lastip = (__u64 *)&lastino;
-> -		bulkreq.icount = 1;
-> -		bulkreq.ubuffer = sc_rootxfsstatp;
-> -		bulkreq.ocount = &ocount;
-> -		if (ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT, &bulkreq) < 0) {
-> +		if (bigstat_one(sc_fsfd, rootstat.st_ino, sc_rootxfsstatp) < 0) {
->  			mlog(MLOG_ERROR,
->  			      _("failed to get bulkstat information for root inode\n"));
->  			return BOOL_FALSE;
->  		}
-> -
-> -		if (sc_rootxfsstatp->bs_ino != rootstat.st_ino)
-> -			mlog (MLOG_NORMAL | MLOG_NOTE,
-> -			       _("root ino %lld differs from mount dir ino %lld, bind mount?\n"),
-> -			         sc_rootxfsstatp->bs_ino, rootstat.st_ino);
->  	}
->  
->  	/* alloc a file system handle, to be used with the jdm_open()
+> Cheers,
 > 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
