@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BF38C47240
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0A3CC47242
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 822FB613F0
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7D6561361
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229807AbhFCFYx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 01:24:53 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:45122 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229640AbhFCFYw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:24:52 -0400
+        id S229640AbhFCFYz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 01:24:55 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:57254 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229828AbhFCFYy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:24:54 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id F2F0B68072
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:50 +1000 (AEST)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id E23AA114090B
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:51 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lofog-008Mq2-DE
-        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
+        id 1lofoh-008MrN-E0
+        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lofog-000ilN-5S
-        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
+        id 1lofoh-000img-6T
+        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 04/39] xfs: async blkdev cache flush
-Date:   Thu,  3 Jun 2021 15:22:05 +1000
-Message-Id: <20210603052240.171998-5-david@fromorbit.com>
+Subject: [PATCH 31/39] xfs: track CIL ticket reservation in percpu structure
+Date:   Thu,  3 Jun 2021 15:22:32 +1000
+Message-Id: <20210603052240.171998-32-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210603052240.171998-1-david@fromorbit.com>
 References: <20210603052240.171998-1-david@fromorbit.com>
@@ -44,96 +44,106 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
-        a=xC2MDfIwAKB5AMCYbWUA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+        a=vUsicihHAahmRoZZVqUA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The new checkpoint cache flush mechanism requires us to issue an
-unconditional cache flush before we start a new checkpoint. We don't
-want to block for this if we can help it, and we have a fair chunk
-of CPU work to do between starting the checkpoint and issuing the
-first journal IO.
-
-Hence it makes sense to amortise the latency cost of the cache flush
-by issuing it asynchronously and then waiting for it only when we
-need to issue the first IO in the transaction.
-
-To do this, we need async cache flush primitives to submit the cache
-flush bio and to wait on it. The block layer has no such primitives
-for filesystems, so roll our own for the moment.
+To get it out from under the cil spinlock.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/xfs_bio_io.c | 35 +++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_linux.h  |  2 ++
- 2 files changed, 37 insertions(+)
+ fs/xfs/xfs_log_cil.c  | 21 ++++++++++++++++-----
+ fs/xfs/xfs_log_priv.h |  1 +
+ 2 files changed, 17 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
-index 17f36db2f792..667e297f59b1 100644
---- a/fs/xfs/xfs_bio_io.c
-+++ b/fs/xfs/xfs_bio_io.c
-@@ -9,6 +9,41 @@ static inline unsigned int bio_max_vecs(unsigned int count)
- 	return bio_max_segs(howmany(count, PAGE_SIZE));
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 620824c6f7fa..f5ce7099afc5 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -91,12 +91,17 @@ xlog_cil_pcp_aggregate(
+ 	for_each_online_cpu(cpu) {
+ 		cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
+ 
++		ctx->ticket->t_curr_res += cilpcp->space_reserved;
++		ctx->ticket->t_unit_res += cilpcp->space_reserved;
++		cilpcp->space_reserved = 0;
++
+ 		/*
+ 		 * We're in the middle of switching cil contexts.  Reset the
+ 		 * counter we use to detect when the current context is nearing
+ 		 * full.
+ 		 */
+ 		cilpcp->space_used = 0;
++
+ 	}
  }
  
-+static void
-+xfs_flush_bdev_async_endio(
-+	struct bio	*bio)
-+{
-+	complete(bio->bi_private);
-+}
-+
-+/*
-+ * Submit a request for an async cache flush to run. If the request queue does
-+ * not require flush operations, just skip it altogether. If the caller needs
-+ * to wait for the flush completion at a later point in time, they must supply a
-+ * valid completion. This will be signalled when the flush completes.  The
-+ * caller never sees the bio that is issued here.
-+ */
-+void
-+xfs_flush_bdev_async(
-+	struct bio		*bio,
-+	struct block_device	*bdev,
-+	struct completion	*done)
-+{
-+	struct request_queue	*q = bdev->bd_disk->queue;
-+
-+	if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
-+		complete(done);
-+		return;
-+	}
-+
-+	bio_init(bio, NULL, 0);
-+	bio_set_dev(bio, bdev);
-+	bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
-+	bio->bi_private = done;
-+	bio->bi_end_io = xfs_flush_bdev_async_endio;
-+
-+	submit_bio(bio);
-+}
- int
- xfs_rw_bdev(
- 	struct block_device	*bdev,
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 7688663b9773..c174262a074e 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -196,6 +196,8 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
+@@ -516,6 +521,7 @@ xlog_cil_insert_items(
+ 	 * based on how close we are to the hard limit.
+ 	 */
+ 	cilpcp = get_cpu_ptr(cil->xc_pcp);
++	cilpcp->space_reserved += ctx_res;
+ 	cilpcp->space_used += len;
+ 	if (space_used >= XLOG_CIL_SPACE_LIMIT(log) ||
+ 	    cilpcp->space_used >
+@@ -526,10 +532,6 @@ xlog_cil_insert_items(
+ 	}
+ 	put_cpu_ptr(cilpcp);
  
- int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
- 		char *data, unsigned int op);
-+void xfs_flush_bdev_async(struct bio *bio, struct block_device *bdev,
-+		struct completion *done);
+-	spin_lock(&cil->xc_cil_lock);
+-	ctx->ticket->t_unit_res += ctx_res;
+-	ctx->ticket->t_curr_res += ctx_res;
+-
+ 	/*
+ 	 * If we've overrun the reservation, dump the tx details before we move
+ 	 * the log items. Shutdown is imminent...
+@@ -551,6 +553,7 @@ xlog_cil_insert_items(
+ 	 * We do this here so we only need to take the CIL lock once during
+ 	 * the transaction commit.
+ 	 */
++	spin_lock(&cil->xc_cil_lock);
+ 	list_for_each_entry(lip, &tp->t_items, li_trans) {
  
- #define ASSERT_ALWAYS(expr)	\
- 	(likely(expr) ? (void)0 : assfail(NULL, #expr, __FILE__, __LINE__))
+ 		/* Skip items which aren't dirty in this transaction. */
+@@ -1439,12 +1442,20 @@ xlog_cil_pcp_dead(
+ 	spin_lock(&xlog_cil_pcp_lock);
+ 	list_for_each_entry_safe(cil, n, &xlog_cil_pcp_list, xc_pcp_list) {
+ 		struct xlog_cil_pcp	*cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
++		struct xfs_cil_ctx	*ctx;
+ 
+ 		spin_unlock(&xlog_cil_pcp_lock);
+ 		down_write(&cil->xc_ctx_lock);
++		ctx = cil->xc_ctx;
++
++		atomic_add(cilpcp->space_used, &ctx->space_used);
++		if (ctx->ticket) {
++			ctx->ticket->t_curr_res += cilpcp->space_reserved;
++			ctx->ticket->t_unit_res += cilpcp->space_reserved;
++		}
+ 
+-		atomic_add(cilpcp->space_used, &cil->xc_ctx->space_used);
+ 		cilpcp->space_used = 0;
++		cilpcp->space_reserved = 0;
+ 
+ 		up_write(&cil->xc_ctx_lock);
+ 		spin_lock(&xlog_cil_pcp_lock);
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 373b7dbde4af..b80cb3a0edb7 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -232,6 +232,7 @@ struct xfs_cil_ctx {
+  */
+ struct xlog_cil_pcp {
+ 	uint32_t		space_used;
++	uint32_t		space_reserved;
+ 	struct list_head	busy_extents;
+ 	struct list_head	log_items;
+ };
 -- 
 2.31.1
 
