@@ -7,136 +7,166 @@ X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF408C47082
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 12:23:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67E1FC47096
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 12:31:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFF30613E6
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 12:23:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 468DC6136E
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 12:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229932AbhFCMZK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 08:25:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:26084 "EHLO
+        id S230010AbhFCMdi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 08:33:38 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50313 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229747AbhFCMZJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 08:25:09 -0400
+        by vger.kernel.org with ESMTP id S230288AbhFCMdi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 08:33:38 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1622723005;
+        s=mimecast20190719; t=1622723513;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=hsk+hTZIt7ptRoLzK1qaC8ocCwU9w6+dj8/HM+WHHaU=;
-        b=T4GrwMn1B/FyIjU8Y6hd5pr+I5t45STATe3AA2ku8jm5BrFlQSbzxefTPBb/FW+uujrhGA
-        ayvBQzb6sQPdWUE75aPe+dAPDysrsXopja285ndAA1RZ5i6D5wni4cDS1MELFvB0vKjhfd
-        HFkLrZUbKbJDjm8j1syMWswOOgCXFEQ=
+        bh=w68MC0CSaql2kBMD91UtgAuOsrTLN4OAUJYz93IW8Qg=;
+        b=F+esZpL3e8LChKq9WOVTGt+x41uPZGBzZ4649m8gObQal2cccy/woO7t5bTGyCnnnat10H
+        jdWMfkVI+56nGTwoCKi/QCxobXV6Nl2UrUaS9xFYZ0ALcBzLErwH5oFXQqatUbiP3c/NJ6
+        HHJiItui6Kz1+KOm9N5VmqwAQHGTrRE=
 Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
  [209.85.219.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-54-Vowtupy-PnqB6cJFfrDhgg-1; Thu, 03 Jun 2021 08:23:24 -0400
-X-MC-Unique: Vowtupy-PnqB6cJFfrDhgg-1
-Received: by mail-qv1-f69.google.com with SMTP id k12-20020a0cfd6c0000b029020df9543019so1935972qvs.14
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Jun 2021 05:23:23 -0700 (PDT)
+ us-mta-565-GHyFzociMImtdBlrM5ZSdA-1; Thu, 03 Jun 2021 08:31:52 -0400
+X-MC-Unique: GHyFzociMImtdBlrM5ZSdA-1
+Received: by mail-qv1-f69.google.com with SMTP id dr11-20020a05621408ebb029021e40008bd5so3463100qvb.0
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Jun 2021 05:31:52 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=hsk+hTZIt7ptRoLzK1qaC8ocCwU9w6+dj8/HM+WHHaU=;
-        b=QUqBad/qXu7xrBvBjkmEFC1Bb5zj3+vk6IpGLZoLZY+xg4eYi14XrcdYX1/a/zL/ZA
-         LIWjEsQLrhBT6fLvGA0ng4dgELBpMKnBnAWanpO4bV+cS+Ru0V6nWUt52rQI3J4SvhcM
-         TBUMg4BV805LD/qB/qiYZTDEH7QFIcKNaDTBDzQALq8MBMxq5OLuRw2BPqEF+Jrv77Y0
-         GOJ/cakTM6YC9scV5hP1xraXj3WfPbQXWvtv8I/jBEuuwyk4cv4ppxGuPhlDWOHkM5FD
-         QvL1XgHf4ljGelyaddz30t1wJ0lm/2mvIHLFrDlau2RXvkNnS5GDGADKFeY88Nubvl+q
-         NIcg==
-X-Gm-Message-State: AOAM5310WuH5xOhQc3rw/N1hLuizYoCI5ohVtfB50Z1iyj297fdku9cO
-        WIs7s/2rjNjAGm4WM5yWBgjMrLzWzvDwMbm4vf3BMbmINsN+Dew0zDB6zUGi9x9BMCF9MXsV1r7
-        9UJPhVStu/cJbytyJ1wyq
-X-Received: by 2002:ac8:5e0e:: with SMTP id h14mr28559986qtx.117.1622723003392;
-        Thu, 03 Jun 2021 05:23:23 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzz/xnqENSRzaIpgXJOhU6Aw6xPAdy+fA7sOyapJta1i5WekEdo8GyTbyTl45GpazklFgOiNA==
-X-Received: by 2002:ac8:5e0e:: with SMTP id h14mr28559977qtx.117.1622723003174;
-        Thu, 03 Jun 2021 05:23:23 -0700 (PDT)
+        bh=w68MC0CSaql2kBMD91UtgAuOsrTLN4OAUJYz93IW8Qg=;
+        b=EutBkzZo7rQcstiVNvfPw1GEiUfxAa9ftH0rXrfAj/PDwx25ETYqgY+ZrDnLQF9XqG
+         JcfmseSPHid+sumZMH9tzXnLZ6revQZy5qAVgISBY0oeLlxhcvp7RvIuPt+Uk/UNIeup
+         sF25VN75vlH5qq5oX3FQ+iPxkTAbFHMOOc9cjx5QMvTMrGUAv/dF1rNE/XvzSkU9rXAB
+         /qs2M4E0nS4CQYvdCPepesPz6jybROZalTCbuSRskrVp5iZeURBUzBp13S5D0C0Ajadn
+         0Tw1spda6HjaBStsRvh7Byp+J045KD7MJ0omOZSiIoW7iojBZjxrzUMr6+2f6ittk2Gs
+         W9Gw==
+X-Gm-Message-State: AOAM533WO4W/EI6zX6OvhfykREhjZmLo/DiaTmrnbKRlGKc9E/QZl9QS
+        lwFnDiFfEg9zqSvfMotTBw1Gp+4me14vybm052X4suqUIhKpxzdNQm+h5MxQfNurY5wBhcmSbeB
+        ubg4jE6X4UMZDudszXNis
+X-Received: by 2002:a05:6214:a89:: with SMTP id ev9mr8135512qvb.34.1622723512111;
+        Thu, 03 Jun 2021 05:31:52 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJy+ARYDzfaM7zLN11gz/JCjEqlAKAWZeDri8nd4Om+pWrGZxkG6vOkuhxAVqtZ0ZEOE8xqX6Q==
+X-Received: by 2002:a05:6214:a89:: with SMTP id ev9mr8135502qvb.34.1622723511917;
+        Thu, 03 Jun 2021 05:31:51 -0700 (PDT)
 Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id u14sm1887125qkp.80.2021.06.03.05.23.22
+        by smtp.gmail.com with ESMTPSA id b4sm1657793qti.43.2021.06.03.05.31.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Jun 2021 05:23:22 -0700 (PDT)
-Date:   Thu, 3 Jun 2021 08:23:21 -0400
+        Thu, 03 Jun 2021 05:31:51 -0700 (PDT)
+Date:   Thu, 3 Jun 2021 08:31:49 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH 2/3] xfs: drop IDONTCACHE on inodes when we mark them sick
-Message-ID: <YLjJuZQ0xVk17Dcg@bfoster>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs: don't let background reclaim forget sick inodes
+Message-ID: <YLjLtfDLw89A0gbS@bfoster>
 References: <162268995567.2724138.15163777746481739089.stgit@locust>
- <162268996687.2724138.9307511745121153042.stgit@locust>
+ <162268997239.2724138.6026093150916734925.stgit@locust>
+ <20210603044242.GQ664593@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162268996687.2724138.9307511745121153042.stgit@locust>
+In-Reply-To: <20210603044242.GQ664593@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 02, 2021 at 08:12:46PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Jun 03, 2021 at 02:42:42PM +1000, Dave Chinner wrote:
+> On Wed, Jun 02, 2021 at 08:12:52PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > It's important that the filesystem retain its memory of sick inodes for
+> > a little while after problems are found so that reports can be collected
+> > about what was wrong.  Don't let background inode reclamation free sick
+> > inodes unless we're under memory pressure.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/xfs_icache.c |   21 +++++++++++++++++----
+> >  1 file changed, 17 insertions(+), 4 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > index 0e2b6c05e604..54285d1ad574 100644
+> > --- a/fs/xfs/xfs_icache.c
+> > +++ b/fs/xfs/xfs_icache.c
+> > @@ -911,7 +911,8 @@ xfs_dqrele_all_inodes(
+> >   */
+> >  static bool
+> >  xfs_reclaim_igrab(
+> > -	struct xfs_inode	*ip)
+> > +	struct xfs_inode	*ip,
+> > +	struct xfs_eofblocks	*eofb)
+> >  {
+> >  	ASSERT(rcu_read_lock_held());
+> >  
+> > @@ -922,6 +923,17 @@ xfs_reclaim_igrab(
+> >  		spin_unlock(&ip->i_flags_lock);
+> >  		return false;
+> >  	}
+> > +
+> > +	/*
+> > +	 * Don't reclaim a sick inode unless we're under memory pressure or the
+> > +	 * filesystem is unmounting.
+> > +	 */
+> > +	if (ip->i_sick && eofb == NULL &&
+> > +	    !(ip->i_mount->m_flags & XFS_MOUNT_UNMOUNTING)) {
+> > +		spin_unlock(&ip->i_flags_lock);
+> > +		return false;
+> > +	}
 > 
-> When we decide to mark an inode sick, clear the DONTCACHE flag so that
-> the incore inode will be kept around until memory pressure forces it out
-> of memory.  This increases the chances that the sick status will be
-> caught by someone compiling a health report later on.
+> Using the "eofb == NULL" as a proxy for being under memory pressure
+> is ... a bit obtuse. If we've got a handful of sick inodes, then
+> there is no problem with just leaving the in memory regardless of
+> memory pressure. If we've got lots of sick inodes, we're likely to
+> end up in a shutdown state or be unmounted for checking real soon.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_health.c |    5 +++++
->  fs/xfs/xfs_icache.c |    3 ++-
->  2 files changed, 7 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-> index 8e0cb05a7142..824e0b781290 100644
-> --- a/fs/xfs/xfs_health.c
-> +++ b/fs/xfs/xfs_health.c
-> @@ -231,6 +231,11 @@ xfs_inode_mark_sick(
->  	ip->i_sick |= mask;
->  	ip->i_checked |= mask;
->  	spin_unlock(&ip->i_flags_lock);
-> +
-> +	/* Keep this inode around so we don't lose the sickness report. */
-> +	spin_lock(&VFS_I(ip)->i_lock);
-> +	VFS_I(ip)->i_state &= ~I_DONTCACHE;
-> +	spin_unlock(&VFS_I(ip)->i_lock);
 
-If I follow the scrub code correctly, it will grab a dontcache reference
-on the inode, so presumably the intent here is to clear that status once
-we've identified some problem to keep the inode around. Seems
-reasonable.
+Agreed.. it would be nice to see more explicit logic here. Using the
+existence or not of an optional parameter meant to provide various
+controls is quite fragile.
 
->  }
->  
->  /* Mark parts of an inode healed. */
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index c3f912a9231b..0e2b6c05e604 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -23,6 +23,7 @@
->  #include "xfs_dquot.h"
->  #include "xfs_reflink.h"
->  #include "xfs_ialloc.h"
-> +#include "xfs_health.h"
->  
->  #include <linux/iversion.h>
->  
-> @@ -648,7 +649,7 @@ xfs_iget_cache_miss(
->  	 * time.
->  	 */
->  	iflags = XFS_INEW;
-> -	if (flags & XFS_IGET_DONTCACHE)
-> +	if ((flags & XFS_IGET_DONTCACHE) && xfs_inode_is_healthy(ip))
->  		d_mark_dontcache(VFS_I(ip));
+> I'd just leave sick inodes around until unmount or shutdown occurs;
+> lots of sick inodes means repair is necessary right now, so
+> shutdown+unmount is the right solution here, not memory reclaim....
+> 
 
-This one I'm less clear on.. we've just allocated ip above and haven't
-made it accessible yet. What's the use case for finding an unhealthy
-inode here?
+That seems like a dependency on a loose correlation and rather
+dangerous.. we're either assuming action on behalf of a user before the
+built up state becomes a broader problem for the system or that somehow
+a cascade of in-core inode problems is going to lead to a shutdown. I
+don't think that is a guarantee, or even necessarily likely. I think if
+we were to do something like pin sick inodes in memory indefinitely, as
+you've pointed out in the past for other such things, we should at least
+consider breakdown conditions and potential for unbound behavior.
+
+IOW, if scrub decides it wants to pin sick inodes until shutdown, it
+should probably implement some kind of worst case threshold where it
+actually initiates shutdown based on broad health state. If we can't
+reasonably define something like that, then to me that is a pretty clear
+indication that an indefinite pinning strategy is probably too fragile.
+OTOH, perhaps scrub has enough knowledge to implement some kind of
+policy where a sick object is pinned until we know the state has been
+queried at least once, then reclaim can have it? I guess we still may
+want to be careful about things like how many sick objects a single
+scrub scan can produce before there's an opportunity for userspace to
+query status; it's not clear to me how much of an issue that might be..
+
+In any event, this all seems moderately more involved to get right vs
+what the current patch proposes. I think this patch is a reasonable step
+if we can clean up the logic a bit. Perhaps define a flag that contexts
+can use to explicitly reclaim or skip unhealthy inodes?
 
 Brian
 
->  	ip->i_udquot = NULL;
->  	ip->i_gdquot = NULL;
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > 
 
