@@ -8,151 +8,150 @@ X-Spam-Status: No, score=-17.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 477ECC47096
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 22:29:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 590BDC47082
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 22:30:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E5F8613F1
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 22:29:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 418BA61404
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 22:30:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230511AbhFCWbf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 18:31:35 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:52960 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230468AbhFCWbf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 18:31:35 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 153MKars035056;
-        Thu, 3 Jun 2021 22:29:49 GMT
+        id S230018AbhFCWbp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 18:31:45 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:53126 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230468AbhFCWbp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 18:31:45 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 153MJvUZ181313;
+        Thu, 3 Jun 2021 22:29:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=AHjVHC3y3/e7ZFdHwyay4NjFsOjrZE2wCKJSTSwCxeg=;
- b=CAZkC6tynTOKxlHri2EWzxITZMzoMcS4aew4Eh2KRe63RbCMQajaHiOQH7PCJuK6oHSr
- K38eHjIpDaWdl8gH5Y3wuh//KjTvummSAYDLRcf95MJw+7naDQr/La2PcFgTklnZfeYb
- 4DgF5aeEwuiR+taI9Yv8ROdIKNgWkiYvS+iE8bvnNwSPBSU2FTM6CxIWe1A9pKSnufXi
- 90lY3QFO8JEzOgTPKHWr46qSVMIHXqqLq21Pwc9bylpfl4aTGU4ByiS0WhuIQtUX3Ttn
- Oj2ZI+EfgqxKZLv7437h7fFMUWcuhMeahn4laGwppapxM2vsF/pdCdpF4/+JDjfHVX+p iA== 
+ bh=+dbRXwGTFsE5033H3t/7yUa8DC/XJlg9r60yD3F6EqY=;
+ b=KSinYo/sp9I4AM12fjfZWdjNsB2B/AyVhPEP4qXpr4ZNBW8shaRmfRbnWtK1VlaHe/Vj
+ zuYrPEs3jpZuqXC02je5fxshmOCBPPwFrk0154tnjSCKO7rXwVyNOZjAVgJAqU+v67BD
+ 8mCz+ecBMaAciPsLqg6KG94HhALjSLS24e4JwIjVMwnIL9TOgShuMIantF7qlnhPT5Fz
+ NlJjxgtOwhfXqZ5pBXaaeTU5htVztq+lEe3H0m+KOQ5jdVOwWgmZLxBDcVcqriOuDozX
+ AiMyi6/i91EN3sWO4WqXN28Pwh0czBRZDe3XSopqwqxG1obQJ9u4/UoIRNv+Dp0UEafb 0A== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 38ud1smj2f-1
+        by userp2120.oracle.com with ESMTP id 38ue8pmj55-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 03 Jun 2021 22:29:48 +0000
+        Thu, 03 Jun 2021 22:29:58 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 153MK7Wh031487;
-        Thu, 3 Jun 2021 22:29:48 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2168.outbound.protection.outlook.com [104.47.56.168])
-        by userp3030.oracle.com with ESMTP id 38uaqypcry-1
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 153MK7lX031472;
+        Thu, 3 Jun 2021 22:29:58 GMT
+Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1anam02lp2048.outbound.protection.outlook.com [104.47.57.48])
+        by userp3030.oracle.com with ESMTP id 38uaqypcur-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 03 Jun 2021 22:29:48 +0000
+        Thu, 03 Jun 2021 22:29:57 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TfM8y6RDoPr8g8QMJ1b3GFYFKHX1duj+K6DjV3G76M0XB2d+tVWG6xxiB2dfn5MLoXsg590NB/jXSUgGvZlRpYpIT2GGwSW2/HF/fQL8lEsd2eNoiZwAV5bGzFD6Hx+6fJvRNsrHgxMOc7SheggKsQkuQzSzkRl3ghmRuAZeWsRC0+3OyGU4lLJX3u4liTk/kn34KrFWHYIxUwKhBH1EIXbAo02YkwaigTQYEJxHTL9NCPuyCjYrLKA2eEn6qEkK+mnk6y/yZxuUEXXKNbVskKIChYmm7O9JsiN8u1jPJwaLvXWlxXES+/rAsnRTeQZi//PaqsbEOTKzPHIHp0u+Aw==
+ b=aVWijhH+lz/ISKHz69DmjcEtMbboRnBKbICPbjxPSyV59cklpIA13ilY1HOg2wDDFYfiUiivXpy/+EF/BjVQtSXhUjYi4JTpYSlfQ+SfyttGavFZbQby4omM10jQRSSpCoEuL/ywib9Bmj25IMA04elpuNa2/jxpKofv1M57hv4Bqf7VCoJmDJTRPlGN19e4FxDTYRvidaTG+rWozaVBboTPKoNsF5CV5n9Y2boKCj2/fONIvm1glIPD1Ok3D74LuMZSVl9jlzM93kOOBdf9oA4AuDGV+iuieYHe8aIfbjDdzeD7KGiD7ctEtit00DUIxPIHxhxDJk8Tk12VDoTE8w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AHjVHC3y3/e7ZFdHwyay4NjFsOjrZE2wCKJSTSwCxeg=;
- b=DqQ8TuJa7ZlfQb4ylZITtCQfMxWD6apmSOBQRaWQLVZSVk43H3sFZWie1xMoo8tbBNkdhjrzHZo97YM6O1EyTcpNefNVpilga9FP71pzAK0s2xA6h7RMZyDkjvY2fAYaVNsKpP/YBdPY6Wco3Q4sxCPYOojOdPe2lnT7p6PXoHwKIZe5qiwSVJH7kn5IIO+DcpvA7iZaIfneOduw/xUF9Ae5gdT4IoX6T3bHWsWA6e1EVdHiMM7CHoYQpdT+NE+vJ9gAd2LDKQ9l2mIWbOEyQoReZY5dmBOxaiSDDoskZLQPko3CIc/RPWpylXtqQeV5DRIl+oCoXsvG8rbj1CcLuQ==
+ bh=+dbRXwGTFsE5033H3t/7yUa8DC/XJlg9r60yD3F6EqY=;
+ b=gCScOSfQekU7PoHr0KCj2dD81HmJu19qnDYPyZIsU2KSlkfx0OylyI5nD7wwtSzkmweSjFZu6aIjAIyPR8cpxdyaJZMS70lhsGPtERVwZcFG7SXk+B0yf35c0jV/H75tYQ9e2bcfiHjHP+ZDq6UT1EPLwwBjnsOXExWEJ5wrR3UWlmfLC1pYYvBxz+F0Wdp/Fmp5f4ZeNlzf2qaKZXGlP038AaNsvMmoZ4SYsGMOVG/eD1zfu/CDWTe6xN6mAN/TCKRi1Hh7Mg8BABX5Qnx5lmsPacCF398gg9zALeh/jw9BGRBNULBd5+wiob7daNaR2EJF+jS9+LApM2V9HBcLGQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AHjVHC3y3/e7ZFdHwyay4NjFsOjrZE2wCKJSTSwCxeg=;
- b=l8pLr7mX4wSCWCftDICiyfzBRE+F1ECgPNkxrLuxT4w9aai+CitNIdPn3oBDKEkwfk+oDHgnPI0V8XCwbizjpOKuAVFFmLGvUeUcP14r6BpxBuH/zL8kxnqslxVGyj3hLi+gVqg23HVs9LyqRR5slVpYhUWg3vzu2X3Ac4itcOY=
+ bh=+dbRXwGTFsE5033H3t/7yUa8DC/XJlg9r60yD3F6EqY=;
+ b=y7MoivME5ax+rCkZOpsr+HMI44Itl22YptoUDfDo1eqtT3mPSrzF6Vfi+xbWrRz6fUbYkUxB4PTbObpwvCbSMDvqYaDXDcufLvIkB+NYmfd1cA6bvSbaxcZn0Jw/qFkt5eEGRY9nWQPIHFFz7QRDpbw851ap3snNk9+ccnvLs1U=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
  by BYAPR10MB2712.namprd10.prod.outlook.com (2603:10b6:a02:b3::15) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.23; Thu, 3 Jun
- 2021 22:29:45 +0000
+ 2021 22:29:56 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::a9c4:d124:3473:1728]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::a9c4:d124:3473:1728%5]) with mapi id 15.20.4195.023; Thu, 3 Jun 2021
- 22:29:45 +0000
-Subject: Re: [PATCH 08/39] xfs: Fix CIL throttle hang when CIL space used
- going backwards
+ 22:29:56 +0000
+Subject: Re: [PATCH 09/39] xfs: xfs_log_force_lsn isn't passed a LSN
 To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 References: <20210603052240.171998-1-david@fromorbit.com>
- <20210603052240.171998-9-david@fromorbit.com>
+ <20210603052240.171998-10-david@fromorbit.com>
 From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <15087e77-b553-ef41-8298-1b1a45f5acae@oracle.com>
-Date:   Thu, 3 Jun 2021 15:29:43 -0700
+Message-ID: <f6c1155b-5294-117a-3f4a-b75a8ed31e96@oracle.com>
+Date:   Thu, 3 Jun 2021 15:29:54 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
-In-Reply-To: <20210603052240.171998-9-david@fromorbit.com>
+In-Reply-To: <20210603052240.171998-10-david@fromorbit.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [67.1.210.54]
-X-ClientProxiedBy: BY5PR17CA0067.namprd17.prod.outlook.com
- (2603:10b6:a03:167::44) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: BY5PR17CA0062.namprd17.prod.outlook.com
+ (2603:10b6:a03:167::39) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.226] (67.1.210.54) by BY5PR17CA0067.namprd17.prod.outlook.com (2603:10b6:a03:167::44) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.22 via Frontend Transport; Thu, 3 Jun 2021 22:29:45 +0000
+Received: from [192.168.1.226] (67.1.210.54) by BY5PR17CA0062.namprd17.prod.outlook.com (2603:10b6:a03:167::39) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.22 via Frontend Transport; Thu, 3 Jun 2021 22:29:55 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d05e9bb7-27cd-42dd-414e-08d926df16d2
+X-MS-Office365-Filtering-Correlation-Id: 2a0f73bf-637f-40b9-aafa-08d926df1d30
 X-MS-TrafficTypeDiagnostic: BYAPR10MB2712:
-X-Microsoft-Antispam-PRVS: <BYAPR10MB2712295CCD6DA5E2B1441E8C953C9@BYAPR10MB2712.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
+X-Microsoft-Antispam-PRVS: <BYAPR10MB2712B35665751ADF6CD7997E953C9@BYAPR10MB2712.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2201;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: fRJOjj3rj2/DEqWE1ahU/BHWn1YzrRIkGnZY8Yd4rZw1iWj4dVB0sPfTeAjKrtut/0HPiJCquc3fWSe94HiHd0RZHhGB28QJSinvDRVQM1QNxAXLWmqUK+uYp+WDEtwU3J3JGk7TD0ZlYlkCGtrghk+GBdUda50gU///zbb/77Kl/Msj/NAj6p4H9Oq0Vol+YWZ1HFS3RpvUqYVkIW04sfQlfyjS0yGlmMFE5LSz2M/q6HU2h9pxwEM6bzeau/606nJmn25qUw4BWkbArTQJAEwMoOe2XfVHNCk7cbKn4P8Va07RSjELtGilkC59HBQJizVDFFze7RlTe8fVDBpPphVApxOhVGNeuA2iCzS1BjczWEpFtw4/qon9FeWFMFznTCSkwbD5xER1MWUKc0PBbsCURnD8o35QbrqrOR0fFFJicGU1ypU/gtkfW3OmG/YkuyuireRO+CBpBkhs9PqYsmyexkphtyMwgSkTPKXO3sf3qELu3c+IETIIMzg4oPqbV/1NLqp+TL1e7DDpKISxrmDZTL+Tzss0/X3gsaUKy8mhWp3m1ls7ENPH75l4FP+Jf3udfh4cLFVqI/PpKCRuoP+Osvp0mPiOG3abbX6jXvW09dXqDW9b2tlM9iSWWkdXN0PJAxOA8C7D7trsnLs25zaQo/euULhwVlrKnh7LCtp9MLOh/aemoCfCQQT0VrJshh0ltiuyw+fowF7OgxrrmQ==
+X-Microsoft-Antispam-Message-Info: xbfYJCBA8KEiQF73BPc91kU63vDFAFHD8RgTaCrpigzWTbjs1jchk6fE4vzC4rp/fnw0T0Y8FcQGM53DlY8iKNhmS0Vj0pOeU54wJL78ecUVm/kC9HrSCzYZxUeBaqVStshIhwC93Rh91THDSfEMtPCxCgaTs/rjVjsrZQGni6JCgtirtfhE6yJpjjgPBd5BgCFf3lwhbYL8dQTD9f2g006oRXYCbPsUJsfN7kteF042hbjYL2kCxmAp1bwGtOYKyYh6LO0IQ/BzyptEOEkINjv0FAss3GabAshFvQEQ/V2Ie3Bm+u7AQ8Wi3zknKLrxDFschmdUY2FQiWVguYEe0pwfgNIEQp7MOz4cIA9c8AY+i5Cv3OKPsYP3s+yXu4iezvWRYxsSHljFmEDS7ZkPgb/T8Ypm3B8rin2gT+cjaAHJHeUv7fMtxZwWIKqMsfP17HebP2n0mvKlUB0iCI9E29wUi1DmujOYpKAKSChPFT/zj0XCuphwxidgS4VJebUWvOHJRAtj3MCSl39gEfbVjrmJ81FWxN9jaqf6KNNzwhuQvNWjAFrHZX4vFdKwJe4LPgxALC3gxJcp5RzMQHmKCdAn5+dDSjC+JpMp3QewHYRYLxkANsiZZ8qUaKrYt6n5V9B6Zr28uJwzwToreKM3mTpM0yEkc86bTHqCGomptx0ihP/skA2sns2pXNUlIfJycSH8GX6JnsekDRr5CYlN5g==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(39860400002)(376002)(396003)(366004)(136003)(346002)(16576012)(316002)(30864003)(66946007)(36756003)(44832011)(8676002)(31686004)(83380400001)(66476007)(5660300002)(66556008)(186003)(26005)(16526019)(38100700002)(38350700002)(956004)(86362001)(31696002)(2616005)(8936002)(478600001)(2906002)(6486002)(52116002)(53546011)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?TVZFbGUxakJFT1RYRXUwa1FORVpUWUlqaTJuRjR1RTZ3Q2wwK01JRFZ6a20x?=
- =?utf-8?B?MUc0bUdUeXp3L2FGek5aVkNTdVdhN2tYMDR5MDlQUC9pZyswMzBveEd4VFNp?=
- =?utf-8?B?eXowM2hraDJVekZuOGVacTdmWi9vK3oxT0JDdG5JN1FvU2YrTjlHeVlFZ2lj?=
- =?utf-8?B?dE5OYjlOUXFhWEM5c0RXWTJiblA1bTl2TnR4SVdMOXNRcHFXM25RN2U2bkFl?=
- =?utf-8?B?Nm84dFlsUTdVR1JMNkJMOUlNMnFBRmJzL3VkTFozNzJrYzF0ZE5uMGN6V2J4?=
- =?utf-8?B?ejdyNXo4N3A4RXh1dWZJYiswM3NYSUhTUTN4K2txaFRHcXphVk9QOEZ5M2lH?=
- =?utf-8?B?am1yOWJGNG9WN204YjJ0V2trZStIYU80Q1lHODBWNyt6L2Nhc3NxbGp3YXpu?=
- =?utf-8?B?aFpnc21SVlZnV1I5dDRwaW1pbUJKQUpkU3dyalZta3ppSHFLK1VJUitGbDNa?=
- =?utf-8?B?LzZUN0JRZTZBL081blQySjNBMDRpRnFrRnN2TStXcmVlazM5aEhOSjVKVmtI?=
- =?utf-8?B?SDJoWmpOM3Vaem05Z0ZzajA4MERqa2Z3L3JzYWh6RE5rMXVmeVFKd0pCbjdo?=
- =?utf-8?B?UkhlRTQ3M2hIa08zTC9hU3lkcHVCMVphaWErUGUybE1aejBxQ0w0TDNJYkRX?=
- =?utf-8?B?MWg5djZzSEZXeHd4U3QydWs5bkx5dmZ0ZG1wTkxCdjBTL2N4Q0ZpTDU4Rm9Y?=
- =?utf-8?B?eGJ5UWZQQnI1ekhXaHdRYWtGRmkySUJFQWIvYitkVDYyUkY3TkVJNFBPL3lz?=
- =?utf-8?B?TndLWGJkUXN2T0RGSVpJSWl2aHNHTEhVTE1CZ2ppNXJpNzRsRkUzVjBYTTNq?=
- =?utf-8?B?YmFtcnpERzVvaGEvQTdPL0RRaEZTbjVHdno5VjlWWUxqNmMyekxIZTBLMk5D?=
- =?utf-8?B?a3NoYklRZDU1WERRZGJTdmozd0szdFRCVWZOMFZmcTNtT00xUit6QjlQbmc1?=
- =?utf-8?B?WjNpWGhhRGVzOEFKZ1ZjNE5ib2U2RDlNcHppRm9vYlpCczBuWEFhTG50b0pJ?=
- =?utf-8?B?SCs3ZWFmdXp0ay9TdjhsWkc5alJrQzlYVFJKT0k0YThLSzVGMFRkNTh6QmJa?=
- =?utf-8?B?ck5qMWhJZXVJNUFtMDJUd1R1WCtnWGFNK1o0REwyYi90dFZmQnVVczdobWVM?=
- =?utf-8?B?bGs0WTY4Umh3TEU4RU90dTV4NGhEL01XcVpFZ2Jxcy83TjF1UUJaYlJobCtt?=
- =?utf-8?B?WTYveXJWN0gveHBwUXNNK3RhdXhQbE1pVmVWU2tvQ2JIME5kYXAyalFkOTI5?=
- =?utf-8?B?aTBOSHp6QkwxYzRGQTBpc1M4TVZ5VHd0SE03R2hPaFhmNlVGM0liN0svb1No?=
- =?utf-8?B?MzJMWUhHZjQybkF3bi9sQWpacFNoZFVQS0J5VkN5REJMc0VvVkRrcnpJYUdP?=
- =?utf-8?B?ZnB5YTVvdlljTjhITG9PVDRhcitoZDFNb1U3TzhXYW5FenlUdnBiLy9tdlRW?=
- =?utf-8?B?b2hDRi9Ea2RKdzlSR3lwK3IwdUNYV0cycjMwb1pERHpnZVZmR0VTdkI1TFlX?=
- =?utf-8?B?ZFkxTXNibHNtL25nMkNWdmQ2bEhrSW8wVFV1RVZuUDE3bnB2MXdlNklaa2pZ?=
- =?utf-8?B?UDBhT0FFYjhuMHRWNHB2NzIvVld5VTJOdm14dTJSNWVQZzVHZDVuaGJEcXdj?=
- =?utf-8?B?bDh3WHEwTE55SlRjVUdQWFVoNkdPaS9zcFBsZ2hNZmI2Qk80YlRxYkE2Nllp?=
- =?utf-8?B?eVFmVngyeFp3M0E1TjFFclVtVkZIbEd2RkRWUkZpZi9zZ1htY2FaVnd2cXlu?=
- =?utf-8?Q?e8Ymw0fbTb3a3/P07up4KN/RzdRr7GHs4Q+VrI8?=
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?Y0pzZy9PQzZaUnRKS2RGN1NubzRwb1FvUVlqalVjdkRzLzdYYjRCUUVpTWRT?=
+ =?utf-8?B?anJuL283cXVVNkI3akZpd2JBM2dyVlVaTFFKbmV4dmI0MzNsUkxqQ2p6SG5n?=
+ =?utf-8?B?Ym02RVUvUlVnalVVL1JQMGw0dXlCTzN5WEVadHZpV05yUk9wWk4zMmdKTGhT?=
+ =?utf-8?B?K3A1dkZKSnhPcE0wZ25IeUEvZXk4M1ZmL0k3K1NZQVp5YnlwQW1DTGY4bjRX?=
+ =?utf-8?B?U3krcjVyWkdLVm9wMTZ1SERTc1RuVjdYaVhTdHdIVytqTXErajNxOFlYSTY2?=
+ =?utf-8?B?YkxGQVJDOEF4QVAwbEhSWTRoOFB6VjBHY2ZZSUZORkx2MTVmQWZxdWpzUVI3?=
+ =?utf-8?B?SmZqcjBSa1k2VFdKS0F6OFF1b0lZTGFvL2RDZlN4YlBYN0V1YlpObjVmYVpH?=
+ =?utf-8?B?cnBBbHBFemtkK0FMSVJVNW9LK1lqTU9RYmJHMHR1YmN6VzVjcEN3K0haRlpr?=
+ =?utf-8?B?dFJjVkNWd1NWdFRjK3BuTTJrV0FiU3RoemlXUkxyYytIWnIybnJnZlB6T0dU?=
+ =?utf-8?B?UFBzTmlyVUxtb2Q3MGtyZnhJN1FFdlZUZXRoQk9KRjI3c3ZqaU5SaWhSVGxU?=
+ =?utf-8?B?Wm9tZ0JNajNsVHdFWmtOSnpZaUJCZHhDb3pYYkJGMVlWbUpxaTBrNGd4c3hT?=
+ =?utf-8?B?bzhuWG1CQUhqQ3ZWRGhPVXljRm1rb2NNWTFyWWJoVTkvODg5R2tRZlNFNTlx?=
+ =?utf-8?B?TmRCdFkydW8wRWRIbDJubGZMbkhYNXhSQUJsTit1RVJsSUZxd25ON0NRMm44?=
+ =?utf-8?B?NTNPOUZ1dHN5TDNGRC9SV01mRmgwNkE5VlJLM1M0U3lxMXVKNW52NXUyRTFx?=
+ =?utf-8?B?SkszelpGV1ExU3ZkaUREd3Btcm1SREttWVRDdURTd01FWXkyMmtzL21HVWJX?=
+ =?utf-8?B?ZUc5Q1hFM1Frb2lTdUN2bnJ4VGhLSXRTQVNBRW5QdWZRSnVVWW4ybmNUZERk?=
+ =?utf-8?B?Y0JnOWExTWtFbWVRQS9MUEpRdDRjeGdCTW95Q3FaODJmV3NOZk5jRGJKKzhF?=
+ =?utf-8?B?V3hTOEw1N1NEWURDNjhteWRKaVZBd1ZaSHR4MmNiNTFCb1B6M2k4aG9MaW1H?=
+ =?utf-8?B?RHF4K25CMUxTaC95ak9jT1dIR3NiWWN2OHRqcW41cEF1REh0aUplZEJSM05U?=
+ =?utf-8?B?WWRlV1IxNWpZNHY4S1p2TlhxOSthV1J5czhEMWdQc0RuOXVkZ2JPMG9wQnpk?=
+ =?utf-8?B?dzh3MzJmOFd6alYvcUg4NEpxUnpzQiszL1lmd3NtUmxUanp5dUdEUGYxZ3Y0?=
+ =?utf-8?B?bnFsby9GTjJVMjZkazNZM2tKVXcvMmluZzdGYkRIMXljbnQ1Mng4dXgzczFm?=
+ =?utf-8?B?bEUvVmFaTUQ1V0piMjN4NVAycXJyWDhqVCtXb2FwOERIYTJnSEtQUXNlZStv?=
+ =?utf-8?B?Y051bFl5cUF3S3NqeVhNbEhrd1plKzFGcU1MUFFZVTkwNC9mWHU0NjVmRzZ5?=
+ =?utf-8?B?cEliU2F0Qmg5dGJIQS8rdDFDTXAvVjB4Z0lQaHhhdXV6SmhGQklqblhwYmtY?=
+ =?utf-8?B?RXFiK05CQTduUFBtYkdJT1JOUE5KR1JmY0hNYUJaV2orQUpoRDNhbVM4Y1NO?=
+ =?utf-8?B?STFhRWNsV25aeGkvQzhqWmIwUnpuQyszcVRCMlRnbllBdm55THRyUCtsWkwz?=
+ =?utf-8?B?OWt6TDJJUEVxMFQ4THQzai85YWJiaUh1alhCYUdaT1pGb01ERThSZ0FLMksr?=
+ =?utf-8?B?QkZtUlZTaGF4bFhTNGtGOGxuL04yaGVnY2g4RVhxN1hBdzZZQ29oZEYzazlI?=
+ =?utf-8?Q?hs3+WVZzfx7NKP7UAzNzK2IHv+x4OcwYweiJi7f?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d05e9bb7-27cd-42dd-414e-08d926df16d2
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2a0f73bf-637f-40b9-aafa-08d926df1d30
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Jun 2021 22:29:45.2842
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Jun 2021 22:29:55.9663
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 3fosFyTIPnPllprKLPQoV6bRHw0z98uxrsaj7njTI56/KMe+N0m+iAf+EPdOxkmuJtIL2I/yvWZKmwp5K+2sS+tNhV2ttIfHXZ3TyHkqR7k=
+X-MS-Exchange-CrossTenant-UserPrincipalName: 80ppdJnC+YKTmMraSWM6USxYpRKYJQK75GT4IrNAelFkB8d83ZxlybdlCANvXN6tYblteLKOdyH8lmh2Pz/iHjG5wagwnubE9skmXSBp08A=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2712
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10004 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
  suspectscore=0 spamscore=0 adultscore=0 mlxscore=0 phishscore=0
  malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2104190000 definitions=main-2106030148
-X-Proofpoint-ORIG-GUID: oWX59Q1UI034q3P2K62EAkm0Q_ncnyPw
-X-Proofpoint-GUID: oWX59Q1UI034q3P2K62EAkm0Q_ncnyPw
+X-Proofpoint-GUID: MiAJ7WJ5wYCI12gm2krzwhh8LRO-gooN
+X-Proofpoint-ORIG-GUID: MiAJ7WJ5wYCI12gm2krzwhh8LRO-gooN
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10004 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
- suspectscore=0 phishscore=0 lowpriorityscore=0 mlxlogscore=999
- malwarescore=0 clxscore=1015 spamscore=0 impostorscore=0 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2104190000 definitions=main-2106030148
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
+ malwarescore=0 adultscore=0 suspectscore=0 lowpriorityscore=0 spamscore=0
+ bulkscore=0 phishscore=0 priorityscore=1501 clxscore=1015 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
+ definitions=main-2106030148
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -162,256 +161,486 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 6/2/21 10:22 PM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> A hang with tasks stuck on the CIL hard throttle was reported and
-> largely diagnosed by Donald Buczek, who discovered that it was a
-> result of the CIL context space usage decrementing in committed
-> transactions once the hard throttle limit had been hit and processes
-> were already blocked.  This resulted in the CIL push not waking up
-> those waiters because the CIL context was no longer over the hard
-> throttle limit.
+> In doing an investigation into AIL push stalls, I was looking at the
+> log force code to see if an async CIL push could be done instead.
+> This lead me to xfs_log_force_lsn() and looking at how it works.
 > 
-> The surprising aspect of this was the CIL space usage going
-> backwards regularly enough to trigger this situation. Assumptions
-> had been made in design that the relogging process would only
-> increase the size of the objects in the CIL, and so that space would
-> only increase.
+> xfs_log_force_lsn() is only called from inode synchronisation
+> contexts such as fsync(), and it takes the ip->i_itemp->ili_last_lsn
+> value as the LSN to sync the log to. This gets passed to
+> xlog_cil_force_lsn() via xfs_log_force_lsn() to flush the CIL to the
+> journal, and then used by xfs_log_force_lsn() to flush the iclogs to
+> the journal.
 > 
-> This change and commit message fixes the issue and documents the
-> result of an audit of the triggers that can cause the CIL space to
-> go backwards, how large the backwards steps tend to be, the
-> frequency in which they occur, and what the impact on the CIL
-> accounting code is.
+> The problem is that ip->i_itemp->ili_last_lsn does not store a
+> log sequence number. What it stores is passed to it from the
+> ->iop_committing method, which is called by xfs_log_commit_cil().
+> The value this passes to the iop_committing method is the CIL
+> context sequence number that the item was committed to.
 > 
-> Even though the CIL ctx->space_used can go backwards, it will only
-> do so if the log item is already logged to the CIL and contains a
-> space reservation for it's entire logged state. This is tracked by
-> the shadow buffer state on the log item. If the item is not
-> previously logged in the CIL it has no shadow buffer nor log vector,
-> and hence the entire size of the logged item copied to the log
-> vector is accounted to the CIL space usage. i.e.  it will always go
-> up in this case.
+> As it turns out, xlog_cil_force_lsn() converts the sequence to an
+> actual commit LSN for the related context and returns that to
+> xfs_log_force_lsn(). xfs_log_force_lsn() overwrites it's "lsn"
+> variable that contained a sequence with an actual LSN and then uses
+> that to sync the iclogs.
 > 
-> If the item has a log vector (i.e. already in the CIL) and the size
-> decreases, then the existing log vector will be overwritten and the
-> space usage will go down. This is the only condition where the space
-> usage reduces, and it can only occur when an item is already tracked
-> in the CIL. Hence we are safe from CIL space usage underruns as a
-> result of log items decreasing in size when they are relogged.
+> This caused me some confusion for a while, even though I originally
+> wrote all this code a decade ago. ->iop_committing is only used by
+> a couple of log item types, and only inode items use the sequence
+> number it is passed.
 > 
-> Typically this reduction in CIL usage occurs from metadata blocks
-> being free, such as when a btree block merge occurs or a directory
-> enter/xattr entry is removed and the da-tree is reduced in size.
-> This generally results in a reduction in size of around a single
-> block in the CIL, but also tends to increase the number of log
-> vectors because the parent and sibling nodes in the tree needs to be
-> updated when a btree block is removed. If a multi-level merge
-> occurs, then we see reduction in size of 2+ blocks, but again the
-> log vector count goes up.
+> Let's clean up the API, CIL structures and inode log item to call it
+> a sequence number, and make it clear that the high level code is
+> using CIL sequence numbers and not on-disk LSNs for integrity
+> synchronisation purposes.
 > 
-> The other vector is inode fork size changes, which only log the
-> current size of the fork and ignore the previously logged size when
-> the fork is relogged. Hence if we are removing items from the inode
-> fork (dir/xattr removal in shortform, extent record removal in
-> extent form, etc) the relogged size of the inode for can decrease.
-> 
-> No other log items can decrease in size either because they are a
-> fixed size (e.g. dquots) or they cannot be relogged (e.g. relogging
-> an intent actually creates a new intent log item and doesn't relog
-> the old item at all.) Hence the only two vectors for CIL context
-> size reduction are relogging inode forks and marking buffers active
-> in the CIL as stale.
-> 
-> Long story short: the majority of the code does the right thing and
-> handles the reduction in log item size correctly, and only the CIL
-> hard throttle implementation is problematic and needs fixing. This
-> patch makes that fix, as well as adds comments in the log item code
-> that result in items shrinking in size when they are relogged as a
-> clear reminder that this can and does happen frequently.
-> 
-> The throttle fix is based upon the change Donald proposed, though it
-> goes further to ensure that once the throttle is activated, it
-> captures all tasks until the CIL push issues a wakeup, regardless of
-> whether the CIL space used has gone back under the throttle
-> threshold.
-> 
-> This ensures that we prevent tasks reducing the CIL slightly under
-> the throttle threshold and then making more changes that push it
-> well over the throttle limit. This is acheived by checking if the
-> throttle wait queue is already active as a condition of throttling.
-> Hence once we start throttling, we continue to apply the throttle
-> until the CIL context push wakes everything on the wait queue.
-> 
-> We can use waitqueue_active() for the waitqueue manipulations and
-> checks as they are all done under the ctx->xc_push_lock. Hence the
-> waitqueue has external serialisation and we can safely peek inside
-> the wait queue without holding the internal waitqueue locks.
-> 
-> Many thanks to Donald for his diagnostic and analysis work to
-> isolate the cause of this hang.
-> 
-> Reported-and-tested-by: Donald Buczek <buczek@molgen.mpg.de>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Ok, makes sense.  Thanks for all the commentary
+Ok, looks like a nice clean up
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
 > ---
->   fs/xfs/xfs_buf_item.c   | 37 ++++++++++++++++++-------------------
->   fs/xfs/xfs_inode_item.c | 14 ++++++++++++++
->   fs/xfs/xfs_log_cil.c    | 22 +++++++++++++++++-----
->   3 files changed, 49 insertions(+), 24 deletions(-)
+>   fs/xfs/libxfs/xfs_types.h |  1 +
+>   fs/xfs/xfs_buf_item.c     |  2 +-
+>   fs/xfs/xfs_dquot_item.c   |  2 +-
+>   fs/xfs/xfs_file.c         | 14 +++++++-------
+>   fs/xfs/xfs_inode.c        | 10 +++++-----
+>   fs/xfs/xfs_inode_item.c   |  4 ++--
+>   fs/xfs/xfs_inode_item.h   |  2 +-
+>   fs/xfs/xfs_log.c          | 27 ++++++++++++++-------------
+>   fs/xfs/xfs_log.h          |  4 +---
+>   fs/xfs/xfs_log_cil.c      | 30 +++++++++++-------------------
+>   fs/xfs/xfs_log_priv.h     | 15 +++++++--------
+>   fs/xfs/xfs_trans.c        |  6 +++---
+>   fs/xfs/xfs_trans.h        |  4 ++--
+>   13 files changed, 56 insertions(+), 65 deletions(-)
 > 
+> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> index 064bd6e8c922..0870ef6f933d 100644
+> --- a/fs/xfs/libxfs/xfs_types.h
+> +++ b/fs/xfs/libxfs/xfs_types.h
+> @@ -21,6 +21,7 @@ typedef int32_t		xfs_suminfo_t;	/* type of bitmap summary info */
+>   typedef uint32_t	xfs_rtword_t;	/* word type for bitmap manipulations */
+>   
+>   typedef int64_t		xfs_lsn_t;	/* log sequence number */
+> +typedef int64_t		xfs_csn_t;	/* CIL sequence number */
+>   
+>   typedef uint32_t	xfs_dablk_t;	/* dir/attr block number (in file) */
+>   typedef uint32_t	xfs_dahash_t;	/* dir/attr hash value */
 > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index fb69879e4b2b..14d1fefcbf4c 100644
+> index 14d1fefcbf4c..1cb087b320b1 100644
 > --- a/fs/xfs/xfs_buf_item.c
 > +++ b/fs/xfs/xfs_buf_item.c
-> @@ -74,14 +74,12 @@ xfs_buf_item_straddle(
+> @@ -713,7 +713,7 @@ xfs_buf_item_release(
+>   STATIC void
+>   xfs_buf_item_committing(
+>   	struct xfs_log_item	*lip,
+> -	xfs_lsn_t		commit_lsn)
+> +	xfs_csn_t		seq)
+>   {
+>   	return xfs_buf_item_release(lip);
+>   }
+> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+> index 8c1fdf37ee8f..8ed47b739b6c 100644
+> --- a/fs/xfs/xfs_dquot_item.c
+> +++ b/fs/xfs/xfs_dquot_item.c
+> @@ -188,7 +188,7 @@ xfs_qm_dquot_logitem_release(
+>   STATIC void
+>   xfs_qm_dquot_logitem_committing(
+>   	struct xfs_log_item	*lip,
+> -	xfs_lsn_t		commit_lsn)
+> +	xfs_csn_t		seq)
+>   {
+>   	return xfs_qm_dquot_logitem_release(lip);
+>   }
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index f3e834563a56..a607f0024070 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -119,8 +119,8 @@ xfs_dir_fsync(
+>   	return xfs_log_force_inode(ip);
+>   }
+>   
+> -static xfs_lsn_t
+> -xfs_fsync_lsn(
+> +static xfs_csn_t
+> +xfs_fsync_seq(
+>   	struct xfs_inode	*ip,
+>   	bool			datasync)
+>   {
+> @@ -128,7 +128,7 @@ xfs_fsync_lsn(
+>   		return 0;
+>   	if (datasync && !(ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
+>   		return 0;
+> -	return ip->i_itemp->ili_last_lsn;
+> +	return ip->i_itemp->ili_commit_seq;
 >   }
 >   
 >   /*
-> - * This returns the number of log iovecs needed to log the
-> - * given buf log item.
-> + * Return the number of log iovecs and space needed to log the given buf log
-> + * item segment.
->    *
-> - * It calculates this as 1 iovec for the buf log format structure
-> - * and 1 for each stretch of non-contiguous chunks to be logged.
-> - * Contiguous chunks are logged in a single iovec.
-> - *
-> - * If the XFS_BLI_STALE flag has been set, then log nothing.
-> + * It calculates this as 1 iovec for the buf log format structure and 1 for each
-> + * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
-> + * in a single iovec.
->    */
->   STATIC void
->   xfs_buf_item_size_segment(
-> @@ -168,11 +166,8 @@ xfs_buf_item_size_segment(
+> @@ -151,12 +151,12 @@ xfs_fsync_flush_log(
+>   	int			*log_flushed)
+>   {
+>   	int			error = 0;
+> -	xfs_lsn_t		lsn;
+> +	xfs_csn_t		seq;
+>   
+>   	xfs_ilock(ip, XFS_ILOCK_SHARED);
+> -	lsn = xfs_fsync_lsn(ip, datasync);
+> -	if (lsn) {
+> -		error = xfs_log_force_lsn(ip->i_mount, lsn, XFS_LOG_SYNC,
+> +	seq = xfs_fsync_seq(ip, datasync);
+> +	if (seq) {
+> +		error = xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC,
+>   					  log_flushed);
+>   
+>   		spin_lock(&ip->i_itemp->ili_lock);
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 0369eb22c1bb..bffaec06bb0f 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2635,7 +2635,7 @@ xfs_iunpin(
+>   	trace_xfs_inode_unpin_nowait(ip, _RET_IP_);
+>   
+>   	/* Give the log a push to start the unpinning I/O */
+> -	xfs_log_force_lsn(ip->i_mount, ip->i_itemp->ili_last_lsn, 0, NULL);
+> +	xfs_log_force_seq(ip->i_mount, ip->i_itemp->ili_commit_seq, 0, NULL);
+>   
+>   }
+>   
+> @@ -3644,16 +3644,16 @@ int
+>   xfs_log_force_inode(
+>   	struct xfs_inode	*ip)
+>   {
+> -	xfs_lsn_t		lsn = 0;
+> +	xfs_csn_t		seq = 0;
+>   
+>   	xfs_ilock(ip, XFS_ILOCK_SHARED);
+>   	if (xfs_ipincount(ip))
+> -		lsn = ip->i_itemp->ili_last_lsn;
+> +		seq = ip->i_itemp->ili_commit_seq;
+>   	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+>   
+> -	if (!lsn)
+> +	if (!seq)
+>   		return 0;
+> -	return xfs_log_force_lsn(ip->i_mount, lsn, XFS_LOG_SYNC, NULL);
+> +	return xfs_log_force_seq(ip->i_mount, seq, XFS_LOG_SYNC, NULL);
 >   }
 >   
 >   /*
-> - * This returns the number of log iovecs needed to log the given buf log item.
-> - *
-> - * It calculates this as 1 iovec for the buf log format structure and 1 for each
-> - * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
-> - * in a single iovec.
-> + * Return the number of log iovecs and space needed to log the given buf log
-> + * item.
->    *
->    * Discontiguous buffers need a format structure per region that is being
->    * logged. This makes the changes in the buffer appear to log recovery as though
-> @@ -182,7 +177,11 @@ xfs_buf_item_size_segment(
->    * what ends up on disk.
->    *
->    * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
-> - * format structures.
-> + * format structures. If the item has previously been logged and has dirty
-> + * regions, we do not relog them in stale buffers. This has the effect of
-> + * reducing the size of the relogged item by the amount of dirty data tracked
-> + * by the log item. This can result in the committing transaction reducing the
-> + * amount of space being consumed by the CIL.
->    */
->   STATIC void
->   xfs_buf_item_size(
-> @@ -199,9 +198,9 @@ xfs_buf_item_size(
->   	ASSERT(atomic_read(&bip->bli_refcount) > 0);
->   	if (bip->bli_flags & XFS_BLI_STALE) {
->   		/*
-> -		 * The buffer is stale, so all we need to log
-> -		 * is the buf log format structure with the
-> -		 * cancel flag in it.
-> +		 * The buffer is stale, so all we need to log is the buf log
-> +		 * format structure with the cancel flag in it as we are never
-> +		 * going to replay the changes tracked in the log item.
->   		 */
->   		trace_xfs_buf_item_size_stale(bip);
->   		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
-> @@ -216,9 +215,9 @@ xfs_buf_item_size(
->   
->   	if (bip->bli_flags & XFS_BLI_ORDERED) {
->   		/*
-> -		 * The buffer has been logged just to order it.
-> -		 * It is not being included in the transaction
-> -		 * commit, so no vectors are used at all.
-> +		 * The buffer has been logged just to order it. It is not being
-> +		 * included in the transaction commit, so no vectors are used at
-> +		 * all.
->   		 */
->   		trace_xfs_buf_item_size_ordered(bip);
->   		*nvecs = XFS_LOG_VEC_ORDERED;
 > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 6764d12342da..5a2dd33020e2 100644
+> index 5a2dd33020e2..35de30849fcc 100644
 > --- a/fs/xfs/xfs_inode_item.c
 > +++ b/fs/xfs/xfs_inode_item.c
-> @@ -28,6 +28,20 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
->   	return container_of(lip, struct xfs_inode_log_item, ili_item);
+> @@ -643,9 +643,9 @@ xfs_inode_item_committed(
+>   STATIC void
+>   xfs_inode_item_committing(
+>   	struct xfs_log_item	*lip,
+> -	xfs_lsn_t		commit_lsn)
+> +	xfs_csn_t		seq)
+>   {
+> -	INODE_ITEM(lip)->ili_last_lsn = commit_lsn;
+> +	INODE_ITEM(lip)->ili_commit_seq = seq;
+>   	return xfs_inode_item_release(lip);
 >   }
 >   
-> +/*
-> + * The logged size of an inode fork is always the current size of the inode
-> + * fork. This means that when an inode fork is relogged, the size of the logged
-> + * region is determined by the current state, not the combination of the
-> + * previously logged state + the current state. This is different relogging
-> + * behaviour to most other log items which will retain the size of the
-> + * previously logged changes when smaller regions are relogged.
-> + *
-> + * Hence operations that remove data from the inode fork (e.g. shortform
-> + * dir/attr remove, extent form extent removal, etc), the size of the relogged
-> + * inode gets -smaller- rather than stays the same size as the previously logged
-> + * size and this can result in the committing transaction reducing the amount of
-> + * space being consumed by the CIL.
-> + */
->   STATIC void
->   xfs_inode_item_data_fork_size(
->   	struct xfs_inode_log_item *iip,
+> diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
+> index 4b926e32831c..403b45ab9aa2 100644
+> --- a/fs/xfs/xfs_inode_item.h
+> +++ b/fs/xfs/xfs_inode_item.h
+> @@ -33,7 +33,7 @@ struct xfs_inode_log_item {
+>   	unsigned int		ili_fields;	   /* fields to be logged */
+>   	unsigned int		ili_fsync_fields;  /* logged since last fsync */
+>   	xfs_lsn_t		ili_flush_lsn;	   /* lsn at last flush */
+> -	xfs_lsn_t		ili_last_lsn;	   /* lsn at last transaction */
+> +	xfs_csn_t		ili_commit_seq;	   /* last transaction commit */
+>   };
+>   
+>   static inline int xfs_inode_clean(struct xfs_inode *ip)
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index b6145e4cb7bc..aa37f4319052 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -3252,14 +3252,13 @@ xfs_log_force(
+>   }
+>   
+>   static int
+> -__xfs_log_force_lsn(
+> -	struct xfs_mount	*mp,
+> +xlog_force_lsn(
+> +	struct xlog		*log,
+>   	xfs_lsn_t		lsn,
+>   	uint			flags,
+>   	int			*log_flushed,
+>   	bool			already_slept)
+>   {
+> -	struct xlog		*log = mp->m_log;
+>   	struct xlog_in_core	*iclog;
+>   
+>   	spin_lock(&log->l_icloglock);
+> @@ -3292,8 +3291,6 @@ __xfs_log_force_lsn(
+>   		if (!already_slept &&
+>   		    (iclog->ic_prev->ic_state == XLOG_STATE_WANT_SYNC ||
+>   		     iclog->ic_prev->ic_state == XLOG_STATE_SYNCING)) {
+> -			XFS_STATS_INC(mp, xs_log_force_sleep);
+> -
+>   			xlog_wait(&iclog->ic_prev->ic_write_wait,
+>   					&log->l_icloglock);
+>   			return -EAGAIN;
+> @@ -3331,25 +3328,29 @@ __xfs_log_force_lsn(
+>    * to disk, that thread will wake up all threads waiting on the queue.
+>    */
+>   int
+> -xfs_log_force_lsn(
+> +xfs_log_force_seq(
+>   	struct xfs_mount	*mp,
+> -	xfs_lsn_t		lsn,
+> +	xfs_csn_t		seq,
+>   	uint			flags,
+>   	int			*log_flushed)
+>   {
+> +	struct xlog		*log = mp->m_log;
+> +	xfs_lsn_t		lsn;
+>   	int			ret;
+> -	ASSERT(lsn != 0);
+> +	ASSERT(seq != 0);
+>   
+>   	XFS_STATS_INC(mp, xs_log_force);
+> -	trace_xfs_log_force(mp, lsn, _RET_IP_);
+> +	trace_xfs_log_force(mp, seq, _RET_IP_);
+>   
+> -	lsn = xlog_cil_force_lsn(mp->m_log, lsn);
+> +	lsn = xlog_cil_force_seq(log, seq);
+>   	if (lsn == NULLCOMMITLSN)
+>   		return 0;
+>   
+> -	ret = __xfs_log_force_lsn(mp, lsn, flags, log_flushed, false);
+> -	if (ret == -EAGAIN)
+> -		ret = __xfs_log_force_lsn(mp, lsn, flags, log_flushed, true);
+> +	ret = xlog_force_lsn(log, lsn, flags, log_flushed, false);
+> +	if (ret == -EAGAIN) {
+> +		XFS_STATS_INC(mp, xs_log_force_sleep);
+> +		ret = xlog_force_lsn(log, lsn, flags, log_flushed, true);
+> +	}
+>   	return ret;
+>   }
+>   
+> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+> index 99f9d6ed9598..813b972e9788 100644
+> --- a/fs/xfs/xfs_log.h
+> +++ b/fs/xfs/xfs_log.h
+> @@ -106,7 +106,7 @@ struct xfs_item_ops;
+>   struct xfs_trans;
+>   
+>   int	  xfs_log_force(struct xfs_mount *mp, uint flags);
+> -int	  xfs_log_force_lsn(struct xfs_mount *mp, xfs_lsn_t lsn, uint flags,
+> +int	  xfs_log_force_seq(struct xfs_mount *mp, xfs_csn_t seq, uint flags,
+>   		int *log_forced);
+>   int	  xfs_log_mount(struct xfs_mount	*mp,
+>   			struct xfs_buftarg	*log_target,
+> @@ -131,8 +131,6 @@ bool	xfs_log_writable(struct xfs_mount *mp);
+>   struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
+>   void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
+>   
+> -void	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
+> -				xfs_lsn_t *commit_lsn, bool regrant);
+>   void	xlog_cil_process_committed(struct list_head *list);
+>   bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
+>   
 > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 9d2fa8464289..903617e6d054 100644
+> index 903617e6d054..3c2b1205944d 100644
 > --- a/fs/xfs/xfs_log_cil.c
 > +++ b/fs/xfs/xfs_log_cil.c
-> @@ -670,9 +670,14 @@ xlog_cil_push_work(
->   	ASSERT(push_seq <= ctx->sequence);
+> @@ -788,7 +788,7 @@ xlog_cil_push_work(
+>   	 * that higher sequences will wait for us to write out a commit record
+>   	 * before they do.
+>   	 *
+> -	 * xfs_log_force_lsn requires us to mirror the new sequence into the cil
+> +	 * xfs_log_force_seq requires us to mirror the new sequence into the cil
+>   	 * structure atomically with the addition of this sequence to the
+>   	 * committing list. This also ensures that we can do unlocked checks
+>   	 * against the current sequence in log forces without risking
+> @@ -1057,16 +1057,14 @@ xlog_cil_empty(
+>    * allowed again.
+>    */
+>   void
+> -xfs_log_commit_cil(
+> -	struct xfs_mount	*mp,
+> +xlog_cil_commit(
+> +	struct xlog		*log,
+>   	struct xfs_trans	*tp,
+> -	xfs_lsn_t		*commit_lsn,
+> +	xfs_csn_t		*commit_seq,
+>   	bool			regrant)
+>   {
+> -	struct xlog		*log = mp->m_log;
+>   	struct xfs_cil		*cil = log->l_cilp;
+>   	struct xfs_log_item	*lip, *next;
+> -	xfs_lsn_t		xc_commit_lsn;
 >   
 >   	/*
-> -	 * Wake up any background push waiters now this context is being pushed.
-> +	 * As we are about to switch to a new, empty CIL context, we no longer
-> +	 * need to throttle tasks on CIL space overruns. Wake any waiters that
-> +	 * the hard push throttle may have caught so they can start committing
-> +	 * to the new context. The ctx->xc_push_lock provides the serialisation
-> +	 * necessary for safely using the lockless waitqueue_active() check in
-> +	 * this context.
+>   	 * Do all necessary memory allocation before we lock the CIL.
+> @@ -1080,10 +1078,6 @@ xfs_log_commit_cil(
+>   
+>   	xlog_cil_insert_items(log, tp);
+>   
+> -	xc_commit_lsn = cil->xc_ctx->sequence;
+> -	if (commit_lsn)
+> -		*commit_lsn = xc_commit_lsn;
+> -
+>   	if (regrant && !XLOG_FORCED_SHUTDOWN(log))
+>   		xfs_log_ticket_regrant(log, tp->t_ticket);
+>   	else
+> @@ -1106,8 +1100,10 @@ xfs_log_commit_cil(
+>   	list_for_each_entry_safe(lip, next, &tp->t_items, li_trans) {
+>   		xfs_trans_del_item(lip);
+>   		if (lip->li_ops->iop_committing)
+> -			lip->li_ops->iop_committing(lip, xc_commit_lsn);
+> +			lip->li_ops->iop_committing(lip, cil->xc_ctx->sequence);
+>   	}
+> +	if (commit_seq)
+> +		*commit_seq = cil->xc_ctx->sequence;
+>   
+>   	/* xlog_cil_push_background() releases cil->xc_ctx_lock */
+>   	xlog_cil_push_background(log);
+> @@ -1124,9 +1120,9 @@ xfs_log_commit_cil(
+>    * iclog flush is necessary following this call.
+>    */
+>   xfs_lsn_t
+> -xlog_cil_force_lsn(
+> +xlog_cil_force_seq(
+>   	struct xlog	*log,
+> -	xfs_lsn_t	sequence)
+> +	xfs_csn_t	sequence)
+>   {
+>   	struct xfs_cil		*cil = log->l_cilp;
+>   	struct xfs_cil_ctx	*ctx;
+> @@ -1222,21 +1218,17 @@ bool
+>   xfs_log_item_in_current_chkpt(
+>   	struct xfs_log_item *lip)
+>   {
+> -	struct xfs_cil_ctx *ctx;
+> +	struct xfs_cil_ctx *ctx = lip->li_mountp->m_log->l_cilp->xc_ctx;
+>   
+>   	if (list_empty(&lip->li_cil))
+>   		return false;
+>   
+> -	ctx = lip->li_mountp->m_log->l_cilp->xc_ctx;
+> -
+>   	/*
+>   	 * li_seq is written on the first commit of a log item to record the
+>   	 * first checkpoint it is written to. Hence if it is different to the
+>   	 * current sequence, we're in a new checkpoint.
 >   	 */
-> -	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
-> +	if (waitqueue_active(&cil->xc_push_wait))
->   		wake_up_all(&cil->xc_push_wait);
+> -	if (XFS_LSN_CMP(lip->li_seq, ctx->sequence) != 0)
+> -		return false;
+> -	return true;
+> +	return lip->li_seq == ctx->sequence;
+>   }
 >   
->   	/*
-> @@ -944,7 +949,7 @@ xlog_cil_push_background(
->   	ASSERT(!list_empty(&cil->xc_cil));
+>   /*
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 2203ccecafb6..2d7e7cbee8b7 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -234,7 +234,7 @@ struct xfs_cil;
 >   
->   	/*
-> -	 * don't do a background push if we haven't used up all the
-> +	 * Don't do a background push if we haven't used up all the
->   	 * space available yet.
+>   struct xfs_cil_ctx {
+>   	struct xfs_cil		*cil;
+> -	xfs_lsn_t		sequence;	/* chkpt sequence # */
+> +	xfs_csn_t		sequence;	/* chkpt sequence # */
+>   	xfs_lsn_t		start_lsn;	/* first LSN of chkpt commit */
+>   	xfs_lsn_t		commit_lsn;	/* chkpt commit record lsn */
+>   	struct xlog_ticket	*ticket;	/* chkpt ticket */
+> @@ -272,10 +272,10 @@ struct xfs_cil {
+>   	struct xfs_cil_ctx	*xc_ctx;
+>   
+>   	spinlock_t		xc_push_lock ____cacheline_aligned_in_smp;
+> -	xfs_lsn_t		xc_push_seq;
+> +	xfs_csn_t		xc_push_seq;
+>   	struct list_head	xc_committing;
+>   	wait_queue_head_t	xc_commit_wait;
+> -	xfs_lsn_t		xc_current_sequence;
+> +	xfs_csn_t		xc_current_sequence;
+>   	struct work_struct	xc_push_work;
+>   	wait_queue_head_t	xc_push_wait;	/* background push throttle */
+>   } ____cacheline_aligned_in_smp;
+> @@ -554,19 +554,18 @@ int	xlog_cil_init(struct xlog *log);
+>   void	xlog_cil_init_post_recovery(struct xlog *log);
+>   void	xlog_cil_destroy(struct xlog *log);
+>   bool	xlog_cil_empty(struct xlog *log);
+> +void	xlog_cil_commit(struct xlog *log, struct xfs_trans *tp,
+> +			xfs_csn_t *commit_seq, bool regrant);
+>   
+>   /*
+>    * CIL force routines
+>    */
+> -xfs_lsn_t
+> -xlog_cil_force_lsn(
+> -	struct xlog *log,
+> -	xfs_lsn_t sequence);
+> +xfs_lsn_t xlog_cil_force_seq(struct xlog *log, xfs_csn_t sequence);
+>   
+>   static inline void
+>   xlog_cil_force(struct xlog *log)
+>   {
+> -	xlog_cil_force_lsn(log, log->l_cilp->xc_current_sequence);
+> +	xlog_cil_force_seq(log, log->l_cilp->xc_current_sequence);
+>   }
+>   
+>   /*
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 586f2992b789..87bffd12c20c 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -839,7 +839,7 @@ __xfs_trans_commit(
+>   	bool			regrant)
+>   {
+>   	struct xfs_mount	*mp = tp->t_mountp;
+> -	xfs_lsn_t		commit_lsn = -1;
+> +	xfs_csn_t		commit_seq = 0;
+>   	int			error = 0;
+>   	int			sync = tp->t_flags & XFS_TRANS_SYNC;
+>   
+> @@ -881,7 +881,7 @@ __xfs_trans_commit(
+>   		xfs_trans_apply_sb_deltas(tp);
+>   	xfs_trans_apply_dquot_deltas(tp);
+>   
+> -	xfs_log_commit_cil(mp, tp, &commit_lsn, regrant);
+> +	xlog_cil_commit(mp->m_log, tp, &commit_seq, regrant);
+>   
+>   	xfs_trans_free(tp);
+>   
+> @@ -890,7 +890,7 @@ __xfs_trans_commit(
+>   	 * log out now and wait for it.
 >   	 */
->   	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
-> @@ -968,9 +973,16 @@ xlog_cil_push_background(
+>   	if (sync) {
+> -		error = xfs_log_force_lsn(mp, commit_lsn, XFS_LOG_SYNC, NULL);
+> +		error = xfs_log_force_seq(mp, commit_seq, XFS_LOG_SYNC, NULL);
+>   		XFS_STATS_INC(mp, xs_trans_sync);
+>   	} else {
+>   		XFS_STATS_INC(mp, xs_trans_async);
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index ee42d98d9011..50da47f23a07 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -43,7 +43,7 @@ struct xfs_log_item {
+>   	struct list_head		li_cil;		/* CIL pointers */
+>   	struct xfs_log_vec		*li_lv;		/* active log vector */
+>   	struct xfs_log_vec		*li_lv_shadow;	/* standby vector */
+> -	xfs_lsn_t			li_seq;		/* CIL commit seq */
+> +	xfs_csn_t			li_seq;		/* CIL commit seq */
+>   };
 >   
->   	/*
->   	 * If we are well over the space limit, throttle the work that is being
-> -	 * done until the push work on this context has begun.
-> +	 * done until the push work on this context has begun. Enforce the hard
-> +	 * throttle on all transaction commits once it has been activated, even
-> +	 * if the committing transactions have resulted in the space usage
-> +	 * dipping back down under the hard limit.
-> +	 *
-> +	 * The ctx->xc_push_lock provides the serialisation necessary for safely
-> +	 * using the lockless waitqueue_active() check in this context.
->   	 */
-> -	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
-> +	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log) ||
-> +	    waitqueue_active(&cil->xc_push_wait)) {
->   		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
->   		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
->   		xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
+>   /*
+> @@ -69,7 +69,7 @@ struct xfs_item_ops {
+>   	void (*iop_pin)(struct xfs_log_item *);
+>   	void (*iop_unpin)(struct xfs_log_item *, int remove);
+>   	uint (*iop_push)(struct xfs_log_item *, struct list_head *);
+> -	void (*iop_committing)(struct xfs_log_item *, xfs_lsn_t commit_lsn);
+> +	void (*iop_committing)(struct xfs_log_item *lip, xfs_csn_t seq);
+>   	void (*iop_release)(struct xfs_log_item *);
+>   	xfs_lsn_t (*iop_committed)(struct xfs_log_item *, xfs_lsn_t);
+>   	int (*iop_recover)(struct xfs_log_item *lip,
 > 
