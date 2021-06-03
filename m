@@ -7,143 +7,218 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0A3CC47242
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B167C4709F
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7D6561361
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 094A761359
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229640AbhFCFYz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 01:24:55 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:57254 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229828AbhFCFYy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:24:54 -0400
+        id S229823AbhFCFYx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 01:24:53 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:33279 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229665AbhFCFYw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:24:52 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id E23AA114090B
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:51 +1000 (AEST)
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id F222E1AFE34
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:50 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lofoh-008MrN-E0
-        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
+        id 1lofog-008Mpv-97
+        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lofoh-000img-6T
-        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
+        id 1lofog-000ilE-1S
+        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 31/39] xfs: track CIL ticket reservation in percpu structure
-Date:   Thu,  3 Jun 2021 15:22:32 +1000
-Message-Id: <20210603052240.171998-32-david@fromorbit.com>
+Subject: [PATCH 01/39] xfs: log stripe roundoff is a property of the log
+Date:   Thu,  3 Jun 2021 15:22:02 +1000
+Message-Id: <20210603052240.171998-2-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210603052240.171998-1-david@fromorbit.com>
 References: <20210603052240.171998-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=vUsicihHAahmRoZZVqUA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=pGLkceISAAAA:8 a=VwQbUJbxAAAA:8
+        a=yPCof4ZbAAAA:8 a=D3aekpjFca_zLI-q5woA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To get it out from under the cil spinlock.
+We don't need to look at the xfs_mount and superblock every time we
+need to do an iclog roundoff calculation. The property is fixed for
+the life of the log, so store the roundoff in the log at mount time
+and use that everywhere.
+
+On a debug build:
+
+$ size fs/xfs/xfs_log.o.*
+   text	   data	    bss	    dec	    hex	filename
+  27360	    560	      8	  27928	   6d18	fs/xfs/xfs_log.o.orig
+  27219	    560	      8	  27787	   6c8b	fs/xfs/xfs_log.o.patched
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/xfs_log_cil.c  | 21 ++++++++++++++++-----
- fs/xfs/xfs_log_priv.h |  1 +
- 2 files changed, 17 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_log_format.h |  3 --
+ fs/xfs/xfs_log.c               | 59 ++++++++++++++--------------------
+ fs/xfs/xfs_log_priv.h          |  2 ++
+ 3 files changed, 27 insertions(+), 37 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 620824c6f7fa..f5ce7099afc5 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -91,12 +91,17 @@ xlog_cil_pcp_aggregate(
- 	for_each_online_cpu(cpu) {
- 		cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 3e15ea29fb8d..d548ea4b6aab 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -34,9 +34,6 @@ typedef uint32_t xlog_tid_t;
+ #define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
+ #define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
+ #define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
+-#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
+-                                 (log)->l_mp->m_sb.sb_logsunit)
+-#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
  
-+		ctx->ticket->t_curr_res += cilpcp->space_reserved;
-+		ctx->ticket->t_unit_res += cilpcp->space_reserved;
-+		cilpcp->space_reserved = 0;
+ #define XLOG_HEADER_SIZE	512
+ 
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index c19a82adea1e..0e563ff8cd3b 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1401,6 +1401,11 @@ xlog_alloc_log(
+ 	xlog_assign_atomic_lsn(&log->l_last_sync_lsn, 1, 0);
+ 	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
+ 
++	if (xfs_sb_version_haslogv2(&mp->m_sb) && mp->m_sb.sb_logsunit > 1)
++		log->l_iclog_roundoff = mp->m_sb.sb_logsunit;
++	else
++		log->l_iclog_roundoff = BBSIZE;
 +
- 		/*
- 		 * We're in the middle of switching cil contexts.  Reset the
- 		 * counter we use to detect when the current context is nearing
- 		 * full.
- 		 */
- 		cilpcp->space_used = 0;
-+
- 	}
+ 	xlog_grant_head_init(&log->l_reserve_head);
+ 	xlog_grant_head_init(&log->l_write_head);
+ 
+@@ -1854,29 +1859,15 @@ xlog_calc_iclog_size(
+ 	uint32_t		*roundoff)
+ {
+ 	uint32_t		count_init, count;
+-	bool			use_lsunit;
+-
+-	use_lsunit = xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
+-			log->l_mp->m_sb.sb_logsunit > 1;
+ 
+ 	/* Add for LR header */
+ 	count_init = log->l_iclog_hsize + iclog->ic_offset;
++	count = roundup(count_init, log->l_iclog_roundoff);
+ 
+-	/* Round out the log write size */
+-	if (use_lsunit) {
+-		/* we have a v2 stripe unit to use */
+-		count = XLOG_LSUNITTOB(log, XLOG_BTOLSUNIT(log, count_init));
+-	} else {
+-		count = BBTOB(BTOBB(count_init));
+-	}
+-
+-	ASSERT(count >= count_init);
+ 	*roundoff = count - count_init;
+ 
+-	if (use_lsunit)
+-		ASSERT(*roundoff < log->l_mp->m_sb.sb_logsunit);
+-	else
+-		ASSERT(*roundoff < BBTOB(1));
++	ASSERT(count >= count_init);
++	ASSERT(*roundoff < log->l_iclog_roundoff);
+ 	return count;
  }
  
-@@ -516,6 +521,7 @@ xlog_cil_insert_items(
- 	 * based on how close we are to the hard limit.
- 	 */
- 	cilpcp = get_cpu_ptr(cil->xc_pcp);
-+	cilpcp->space_reserved += ctx_res;
- 	cilpcp->space_used += len;
- 	if (space_used >= XLOG_CIL_SPACE_LIMIT(log) ||
- 	    cilpcp->space_used >
-@@ -526,10 +532,6 @@ xlog_cil_insert_items(
+@@ -3151,10 +3142,9 @@ xlog_state_switch_iclogs(
+ 	log->l_curr_block += BTOBB(eventual_size)+BTOBB(log->l_iclog_hsize);
+ 
+ 	/* Round up to next log-sunit */
+-	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
+-	    log->l_mp->m_sb.sb_logsunit > 1) {
+-		uint32_t sunit_bb = BTOBB(log->l_mp->m_sb.sb_logsunit);
+-		log->l_curr_block = roundup(log->l_curr_block, sunit_bb);
++	if (log->l_iclog_roundoff > BBSIZE) {
++		log->l_curr_block = roundup(log->l_curr_block,
++						BTOBB(log->l_iclog_roundoff));
  	}
- 	put_cpu_ptr(cilpcp);
  
--	spin_lock(&cil->xc_cil_lock);
--	ctx->ticket->t_unit_res += ctx_res;
--	ctx->ticket->t_curr_res += ctx_res;
--
- 	/*
- 	 * If we've overrun the reservation, dump the tx details before we move
- 	 * the log items. Shutdown is imminent...
-@@ -551,6 +553,7 @@ xlog_cil_insert_items(
- 	 * We do this here so we only need to take the CIL lock once during
- 	 * the transaction commit.
- 	 */
-+	spin_lock(&cil->xc_cil_lock);
- 	list_for_each_entry(lip, &tp->t_items, li_trans) {
+ 	if (log->l_curr_block >= log->l_logBBsize) {
+@@ -3406,12 +3396,11 @@ xfs_log_ticket_get(
+  * Figure out the total log space unit (in bytes) that would be
+  * required for a log ticket.
+  */
+-int
+-xfs_log_calc_unit_res(
+-	struct xfs_mount	*mp,
++static int
++xlog_calc_unit_res(
++	struct xlog		*log,
+ 	int			unit_bytes)
+ {
+-	struct xlog		*log = mp->m_log;
+ 	int			iclog_space;
+ 	uint			num_headers;
  
- 		/* Skip items which aren't dirty in this transaction. */
-@@ -1439,12 +1442,20 @@ xlog_cil_pcp_dead(
- 	spin_lock(&xlog_cil_pcp_lock);
- 	list_for_each_entry_safe(cil, n, &xlog_cil_pcp_list, xc_pcp_list) {
- 		struct xlog_cil_pcp	*cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
-+		struct xfs_cil_ctx	*ctx;
+@@ -3487,18 +3476,20 @@ xfs_log_calc_unit_res(
+ 	/* for commit-rec LR header - note: padding will subsume the ophdr */
+ 	unit_bytes += log->l_iclog_hsize;
  
- 		spin_unlock(&xlog_cil_pcp_lock);
- 		down_write(&cil->xc_ctx_lock);
-+		ctx = cil->xc_ctx;
+-	/* for roundoff padding for transaction data and one for commit record */
+-	if (xfs_sb_version_haslogv2(&mp->m_sb) && mp->m_sb.sb_logsunit > 1) {
+-		/* log su roundoff */
+-		unit_bytes += 2 * mp->m_sb.sb_logsunit;
+-	} else {
+-		/* BB roundoff */
+-		unit_bytes += 2 * BBSIZE;
+-        }
++	/* roundoff padding for transaction data and one for commit record */
++	unit_bytes += 2 * log->l_iclog_roundoff;
+ 
+ 	return unit_bytes;
+ }
+ 
++int
++xfs_log_calc_unit_res(
++	struct xfs_mount	*mp,
++	int			unit_bytes)
++{
++	return xlog_calc_unit_res(mp->m_log, unit_bytes);
++}
 +
-+		atomic_add(cilpcp->space_used, &ctx->space_used);
-+		if (ctx->ticket) {
-+			ctx->ticket->t_curr_res += cilpcp->space_reserved;
-+			ctx->ticket->t_unit_res += cilpcp->space_reserved;
-+		}
+ /*
+  * Allocate and initialise a new log ticket.
+  */
+@@ -3515,7 +3506,7 @@ xlog_ticket_alloc(
  
--		atomic_add(cilpcp->space_used, &cil->xc_ctx->space_used);
- 		cilpcp->space_used = 0;
-+		cilpcp->space_reserved = 0;
+ 	tic = kmem_cache_zalloc(xfs_log_ticket_zone, GFP_NOFS | __GFP_NOFAIL);
  
- 		up_write(&cil->xc_ctx_lock);
- 		spin_lock(&xlog_cil_pcp_lock);
+-	unit_res = xfs_log_calc_unit_res(log->l_mp, unit_bytes);
++	unit_res = xlog_calc_unit_res(log, unit_bytes);
+ 
+ 	atomic_set(&tic->t_ref, 1);
+ 	tic->t_task		= current;
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 373b7dbde4af..b80cb3a0edb7 100644
+index 1c6fdbf3d506..037950cf1061 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -232,6 +232,7 @@ struct xfs_cil_ctx {
-  */
- struct xlog_cil_pcp {
- 	uint32_t		space_used;
-+	uint32_t		space_reserved;
- 	struct list_head	busy_extents;
- 	struct list_head	log_items;
+@@ -436,6 +436,8 @@ struct xlog {
+ #endif
+ 	/* log recovery lsn tracking (for buffer submission */
+ 	xfs_lsn_t		l_recovery_lsn;
++
++	uint32_t		l_iclog_roundoff;/* padding roundoff */
  };
+ 
+ #define XLOG_BUF_CANCEL_BUCKET(log, blkno) \
 -- 
 2.31.1
 
