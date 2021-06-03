@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7769C47082
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1362C4709A
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A100F61359
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB01E613F1
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229817AbhFCFYu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 01:24:50 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:45138 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229665AbhFCFYu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:24:50 -0400
+        id S229820AbhFCFYw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 01:24:52 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56315 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229803AbhFCFYv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:24:51 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 5601D681EF
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 237851043969
         for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:51 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lofog-008Mqc-Qi
+        id 1lofog-008Mpy-AT
         for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lofog-000ilu-Iq
+        id 1lofog-000ilH-2S
         for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 15/39] xfs: embed the xlog_op_header in the commit record
-Date:   Thu,  3 Jun 2021 15:22:16 +1000
-Message-Id: <20210603052240.171998-16-david@fromorbit.com>
+Subject: [PATCH 02/39] xfs: separate CIL commit record IO
+Date:   Thu,  3 Jun 2021 15:22:03 +1000
+Message-Id: <20210603052240.171998-3-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210603052240.171998-1-david@fromorbit.com>
 References: <20210603052240.171998-1-david@fromorbit.com>
@@ -44,103 +44,103 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=vJQcxmv--GFCDeo9qXwA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8
+        a=yPCof4ZbAAAA:8 a=6GbAA9ItjH-Z6eHFJ-YA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remove the final case where xlog_write() has to prepend an opheader
-to a log transaction. Similar to the start record, the commit record
-is just an empty opheader with a XLOG_COMMIT_TRANS type, so we can
-just make this the payload for the region being passed to
-xlog_write() and remove the special handling in xlog_write() for
-the commit record.
+From: Dave Chinner <dchinner@redhat.com>
+
+To allow for iclog IO device cache flush behaviour to be optimised,
+we first need to separate out the commit record iclog IO from the
+rest of the checkpoint so we can wait for the checkpoint IO to
+complete before we issue the commit record.
+
+This separation is only necessary if the commit record is being
+written into a different iclog to the start of the checkpoint as the
+upcoming cache flushing changes requires completion ordering against
+the other iclogs submitted by the checkpoint.
+
+If the entire checkpoint and commit is in the one iclog, then they
+are both covered by the one set of cache flush primitives on the
+iclog and hence there is no need to separate them for ordering.
+
+Otherwise, we need to wait for all the previous iclogs to complete
+so they are ordered correctly and made stable by the REQ_PREFLUSH
+that the commit record iclog IO issues. This guarantees that if a
+reader sees the commit record in the journal, they will also see the
+entire checkpoint that commit record closes off.
+
+This also provides the guarantee that when the commit record IO
+completes, we can safely unpin all the log items in the checkpoint
+so they can be written back because the entire checkpoint is stable
+in the journal.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/xfs_log.c | 33 +++++++++++++++------------------
- 1 file changed, 15 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_log.c      | 8 +++++---
+ fs/xfs/xfs_log_cil.c  | 9 +++++++++
+ fs/xfs/xfs_log_priv.h | 2 ++
+ 3 files changed, 16 insertions(+), 3 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index e7a135ffa66f..76a73f4b0f30 100644
+index 0e563ff8cd3b..4cd5840e953a 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -1540,9 +1540,14 @@ xlog_commit_record(
- 	struct xlog_in_core	**iclog,
- 	xfs_lsn_t		*lsn)
- {
-+	struct xlog_op_header	ophdr = {
-+		.oh_clientid = XFS_TRANSACTION,
-+		.oh_tid = cpu_to_be32(ticket->t_tid),
-+		.oh_flags = XLOG_COMMIT_TRANS,
-+	};
- 	struct xfs_log_iovec reg = {
--		.i_addr = NULL,
--		.i_len = 0,
-+		.i_addr = &ophdr,
-+		.i_len = sizeof(struct xlog_op_header),
- 		.i_type = XLOG_REG_TYPE_COMMIT,
- 	};
- 	struct xfs_log_vec vec = {
-@@ -1554,6 +1559,8 @@ xlog_commit_record(
- 	if (XLOG_FORCED_SHUTDOWN(log))
- 		return -EIO;
+@@ -786,10 +786,12 @@ xfs_log_mount_cancel(
+ }
  
-+	/* account for space used by record data */
-+	ticket->t_curr_res -= reg.i_len;
- 	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS);
- 	if (error)
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
-@@ -2159,11 +2166,10 @@ xlog_write_calc_vec_length(
+ /*
+- * Wait for the iclog to be written disk, or return an error if the log has been
+- * shut down.
++ * Wait for the iclog and all prior iclogs to be written disk as required by the
++ * log force state machine. Waiting on ic_force_wait ensures iclog completions
++ * have been ordered and callbacks run before we are woken here, hence
++ * guaranteeing that all the iclogs up to this one are on stable storage.
+  */
+-static int
++int
+ xlog_wait_on_iclog(
+ 	struct xlog_in_core	*iclog)
+ 		__releases(iclog->ic_log->l_icloglock)
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index b0ef071b3cb5..1e5fd6f268c2 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -870,6 +870,15 @@ xlog_cil_push_work(
+ 	wake_up_all(&cil->xc_commit_wait);
+ 	spin_unlock(&cil->xc_push_lock);
  
- 	/* Don't account for regions with embedded ophdrs */
- 	if (optype && headers > 0) {
--		if (optype & XLOG_UNMOUNT_TRANS)
--			headers--;
-+		headers--;
- 		if (optype & XLOG_START_TRANS) {
--			ASSERT(headers >= 2);
--			headers -= 2;
-+			ASSERT(headers >= 1);
-+			headers--;
- 		}
- 	}
++	/*
++	 * If the checkpoint spans multiple iclogs, wait for all previous
++	 * iclogs to complete before we submit the commit_iclog.
++	 */
++	if (ctx->start_lsn != commit_lsn) {
++		spin_lock(&log->l_icloglock);
++		xlog_wait_on_iclog(commit_iclog->ic_prev);
++	}
++
+ 	/* release the hounds! */
+ 	xfs_log_release_iclog(commit_iclog);
+ 	return;
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 037950cf1061..ee7786b33da9 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -584,6 +584,8 @@ xlog_wait(
+ 	remove_wait_queue(wq, &wait);
+ }
  
-@@ -2373,14 +2379,6 @@ xlog_write(
- 	int			data_cnt = 0;
- 	int			error = 0;
- 
--	/*
--	 * If this is a commit or unmount transaction, we don't need a start
--	 * record to be written.  We do, however, have to account for the commit
--	 * header that gets written. Hence we always have to account for an
--	 * extra xlog_op_header here for commit records.
--	 */
--	if (optype & XLOG_COMMIT_TRANS)
--		ticket->t_curr_res -= sizeof(struct xlog_op_header);
- 	if (ticket->t_curr_res < 0) {
- 		xfs_alert_tag(log->l_mp, XFS_PTAG_LOGRES,
- 		     "ctx ticket reservation ran out. Need to up reservation");
-@@ -2433,14 +2431,13 @@ xlog_write(
- 			/*
- 			 * The XLOG_START_TRANS has embedded ophdrs for the
- 			 * start record and transaction header. They will always
--			 * be the first two regions in the lv chain.
-+			 * be the first two regions in the lv chain. Commit and
-+			 * unmount records also have embedded ophdrs.
- 			 */
--			if (optype & XLOG_START_TRANS) {
-+			if (optype) {
- 				ophdr = reg->i_addr;
- 				if (index)
- 					optype &= ~XLOG_START_TRANS;
--			} else if (optype & XLOG_UNMOUNT_TRANS) {
--				ophdr = reg->i_addr;
- 			} else {
- 				ophdr = xlog_write_setup_ophdr(log, ptr,
- 							ticket, optype);
++int xlog_wait_on_iclog(struct xlog_in_core *iclog);
++
+ /*
+  * The LSN is valid so long as it is behind the current LSN. If it isn't, this
+  * means that the next log record that includes this metadata could have a
 -- 
 2.31.1
 
