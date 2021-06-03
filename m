@@ -7,318 +7,297 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B58C2C47098
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF488C4709E
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A226D613F0
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0DA6613F1
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229702AbhFCFYw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 01:24:52 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:57092 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229820AbhFCFYv (ORCPT
+        id S229813AbhFCFYx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 01:24:53 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:33309 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229814AbhFCFYv (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:24:51 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 9135D1140CD5
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 2FCBA1AFE03
         for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:51 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lofog-008Mqp-VR
+        id 1lofog-008MqQ-Lc
         for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lofog-000im6-NZ
+        id 1lofog-000ili-Dz
         for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 19/39] xfs: log ticket region debug is largely useless
-Date:   Thu,  3 Jun 2021 15:22:20 +1000
-Message-Id: <20210603052240.171998-20-david@fromorbit.com>
+Subject: [PATCH 11/39] xfs: CIL work is serialised, not pipelined
+Date:   Thu,  3 Jun 2021 15:22:12 +1000
+Message-Id: <20210603052240.171998-12-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210603052240.171998-1-david@fromorbit.com>
 References: <20210603052240.171998-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
         a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=hXrHYZd4HXSh28dySQwA:9 a=ZBBUq1ay7XXbTIux:21 a=PseHVoqCgIdsv_9O:21
-        a=AjGcO6oz07-iQ99wixmX:22
+        a=A5Cs0mGKsY9zP8qgzdMA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xlog_tic_add_region() is used to trace the regions being added to a
-log ticket to provide information in the situation where a ticket
-reservation overrun occurs. The information gathered is stored int
-the ticket, and dumped if xlog_print_tic_res() is called.
+Because we use a single work structure attached to the CIL rather
+than the CIL context, we can only queue a single work item at a
+time. This results in the CIL being single threaded and limits
+performance when it becomes CPU bound.
 
-For a front end struct xfs_trans overrun, the ticket only contains
-reservation tracking information - the ticket is never handed to the
-log so has no regions attached to it. The overrun debug information in this
-case comes from xlog_print_trans(), which walks the items attached
-to the transaction and dumps their attached formatted log vectors
-directly. It also dumps the ticket state, but that only contains
-reservation accounting and nothing else. Hence xlog_print_tic_res()
-never dumps region or overrun information from this path.
+The design of the CIL is that it is pipelined and multiple commits
+can be running concurrently, but the way the work is currently
+implemented means that it is not pipelining as it was intended. The
+critical work to switch the CIL context can take a few milliseconds
+to run, but the rest of the CIL context flush can take hundreds of
+milliseconds to complete. The context switching is the serialisation
+point of the CIL, once the context has been switched the rest of the
+context push can run asynchrnously with all other context pushes.
 
-xlog_tic_add_region() is actually called from xlog_write(), which
-means it is being used to track the regions seen in a
-CIL checkpoint log vector chain. In looking at CIL behaviour
-recently, I've seen 32MB checkpoints regularly exceed 250,000
-regions in the LV chain. The log ticket debug code can track *15*
-regions. IOWs, if there is a ticket overrun in the CIL code, the
-ticket region tracking code is going to be completely useless for
-determining what went wrong. The only thing it can tell us is how
-much of an overrun occurred, and we really don't need extra debug
-information in the log ticket to tell us that.
+Hence we can move the work to the CIL context so that we can run
+multiple CIL pushes at the same time and spread the majority of
+the work out over multiple CPUs. We can keep the per-cpu CIL commit
+state on the CIL rather than the context, because the context is
+pinned to the CIL until the switch is done and we aggregate and
+drain the per-cpu state held on the CIL during the context switch.
 
-Indeed, the main place we call xlog_tic_add_region() is also adding
-up the number of regions and the space used so that xlog_write()
-knows how much will be written to the log. This is exactly the same
-information that log ticket is storing once we take away the useless
-region tracking array. Hence xlog_tic_add_region() is not useful,
-but can be called 250,000 times a CIL push...
-
-Just strip all that debug "information" out of the of the log ticket
-and only have it report reservation space information when an
-overrun occurs. This also reduces the size of a log ticket down by
-about 150 bytes...
+However, because we no longer serialise the CIL work, we can have
+effectively unlimited CIL pushes in progress. We don't want to do
+this - not only does it create contention on the iclogs and the
+state machine locks, we can run the log right out of space with
+outstanding pushes. Instead, limit the work concurrency to 4
+concurrent works being processed at a time. This is enough
+concurrency to remove the CIL from being a CPU bound bottleneck but
+not enough to create new contention points or unbound concurrency
+issues.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log.c      | 107 +++---------------------------------------
- fs/xfs/xfs_log_priv.h |  20 --------
- 2 files changed, 6 insertions(+), 121 deletions(-)
+ fs/xfs/xfs_log_cil.c  | 80 +++++++++++++++++++++++--------------------
+ fs/xfs/xfs_log_priv.h |  2 +-
+ fs/xfs/xfs_super.c    |  6 +++-
+ 3 files changed, 48 insertions(+), 40 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 48890fb6122e..e849f15e9e04 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -377,30 +377,6 @@ xlog_grant_head_check(
- 	return error;
- }
- 
--static void
--xlog_tic_reset_res(xlog_ticket_t *tic)
--{
--	tic->t_res_num = 0;
--	tic->t_res_arr_sum = 0;
--	tic->t_res_num_ophdrs = 0;
--}
--
--static void
--xlog_tic_add_region(xlog_ticket_t *tic, uint len, uint type)
--{
--	if (tic->t_res_num == XLOG_TIC_LEN_MAX) {
--		/* add to overflow and start again */
--		tic->t_res_o_flow += tic->t_res_arr_sum;
--		tic->t_res_num = 0;
--		tic->t_res_arr_sum = 0;
--	}
--
--	tic->t_res_arr[tic->t_res_num].r_len = len;
--	tic->t_res_arr[tic->t_res_num].r_type = type;
--	tic->t_res_arr_sum += len;
--	tic->t_res_num++;
--}
--
- bool
- xfs_log_writable(
- 	struct xfs_mount	*mp)
-@@ -450,8 +426,6 @@ xfs_log_regrant(
- 	xlog_grant_push_ail(log, tic->t_unit_res);
- 
- 	tic->t_curr_res = tic->t_unit_res;
--	xlog_tic_reset_res(tic);
--
- 	if (tic->t_cnt > 0)
- 		return 0;
- 
-@@ -2077,63 +2051,11 @@ xlog_print_tic_res(
- 	struct xfs_mount	*mp,
- 	struct xlog_ticket	*ticket)
- {
--	uint i;
--	uint ophdr_spc = ticket->t_res_num_ophdrs * (uint)sizeof(xlog_op_header_t);
--
--	/* match with XLOG_REG_TYPE_* in xfs_log.h */
--#define REG_TYPE_STR(type, str)	[XLOG_REG_TYPE_##type] = str
--	static char *res_type_str[] = {
--	    REG_TYPE_STR(BFORMAT, "bformat"),
--	    REG_TYPE_STR(BCHUNK, "bchunk"),
--	    REG_TYPE_STR(EFI_FORMAT, "efi_format"),
--	    REG_TYPE_STR(EFD_FORMAT, "efd_format"),
--	    REG_TYPE_STR(IFORMAT, "iformat"),
--	    REG_TYPE_STR(ICORE, "icore"),
--	    REG_TYPE_STR(IEXT, "iext"),
--	    REG_TYPE_STR(IBROOT, "ibroot"),
--	    REG_TYPE_STR(ILOCAL, "ilocal"),
--	    REG_TYPE_STR(IATTR_EXT, "iattr_ext"),
--	    REG_TYPE_STR(IATTR_BROOT, "iattr_broot"),
--	    REG_TYPE_STR(IATTR_LOCAL, "iattr_local"),
--	    REG_TYPE_STR(QFORMAT, "qformat"),
--	    REG_TYPE_STR(DQUOT, "dquot"),
--	    REG_TYPE_STR(QUOTAOFF, "quotaoff"),
--	    REG_TYPE_STR(LRHEADER, "LR header"),
--	    REG_TYPE_STR(UNMOUNT, "unmount"),
--	    REG_TYPE_STR(COMMIT, "commit"),
--	    REG_TYPE_STR(TRANSHDR, "trans header"),
--	    REG_TYPE_STR(ICREATE, "inode create"),
--	    REG_TYPE_STR(RUI_FORMAT, "rui_format"),
--	    REG_TYPE_STR(RUD_FORMAT, "rud_format"),
--	    REG_TYPE_STR(CUI_FORMAT, "cui_format"),
--	    REG_TYPE_STR(CUD_FORMAT, "cud_format"),
--	    REG_TYPE_STR(BUI_FORMAT, "bui_format"),
--	    REG_TYPE_STR(BUD_FORMAT, "bud_format"),
--	};
--	BUILD_BUG_ON(ARRAY_SIZE(res_type_str) != XLOG_REG_TYPE_MAX + 1);
--#undef REG_TYPE_STR
--
- 	xfs_warn(mp, "ticket reservation summary:");
--	xfs_warn(mp, "  unit res    = %d bytes",
--		 ticket->t_unit_res);
--	xfs_warn(mp, "  current res = %d bytes",
--		 ticket->t_curr_res);
--	xfs_warn(mp, "  total reg   = %u bytes (o/flow = %u bytes)",
--		 ticket->t_res_arr_sum, ticket->t_res_o_flow);
--	xfs_warn(mp, "  ophdrs      = %u (ophdr space = %u bytes)",
--		 ticket->t_res_num_ophdrs, ophdr_spc);
--	xfs_warn(mp, "  ophdr + reg = %u bytes",
--		 ticket->t_res_arr_sum + ticket->t_res_o_flow + ophdr_spc);
--	xfs_warn(mp, "  num regions = %u",
--		 ticket->t_res_num);
--
--	for (i = 0; i < ticket->t_res_num; i++) {
--		uint r_type = ticket->t_res_arr[i].r_type;
--		xfs_warn(mp, "region[%u]: %s - %u bytes", i,
--			    ((r_type <= 0 || r_type > XLOG_REG_TYPE_MAX) ?
--			    "bad-rtype" : res_type_str[r_type]),
--			    ticket->t_res_arr[i].r_len);
--	}
-+	xfs_warn(mp, "  unit res    = %d bytes", ticket->t_unit_res);
-+	xfs_warn(mp, "  current res = %d bytes", ticket->t_curr_res);
-+	xfs_warn(mp, "  original count  = %d", ticket->t_ocnt);
-+	xfs_warn(mp, "  remaining count = %d", ticket->t_cnt);
- }
- 
- /*
-@@ -2198,7 +2120,6 @@ xlog_write_calc_vec_length(
- 	uint			optype)
- {
- 	struct xfs_log_vec	*lv;
--	int			headers = 0;
- 	int			len = 0;
- 	int			i;
- 
-@@ -2207,17 +2128,9 @@ xlog_write_calc_vec_length(
- 		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
- 			continue;
- 
--		headers += lv->lv_niovecs;
--
--		for (i = 0; i < lv->lv_niovecs; i++) {
--			struct xfs_log_iovec	*vecp = &lv->lv_iovecp[i];
--
--			len += vecp->i_len;
--			xlog_tic_add_region(ticket, vecp->i_len, vecp->i_type);
--		}
-+		for (i = 0; i < lv->lv_niovecs; i++)
-+			len += lv->lv_iovecp[i].i_len;
- 	}
--	ticket->t_res_num_ophdrs += headers;
--
- 	return len;
- }
- 
-@@ -2276,7 +2189,6 @@ xlog_write_setup_copy(
- 
- 	/* account for new log op header */
- 	ticket->t_curr_res -= sizeof(struct xlog_op_header);
--	ticket->t_res_num_ophdrs++;
- 
- 	return sizeof(struct xlog_op_header);
- }
-@@ -2973,9 +2885,6 @@ xlog_state_get_iclog_space(
- 	 */
- 	if (log_offset == 0) {
- 		ticket->t_curr_res -= log->l_iclog_hsize;
--		xlog_tic_add_region(ticket,
--				    log->l_iclog_hsize,
--				    XLOG_REG_TYPE_LRHEADER);
- 		head->h_cycle = cpu_to_be32(log->l_curr_cycle);
- 		head->h_lsn = cpu_to_be64(
- 			xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block));
-@@ -3055,7 +2964,6 @@ xfs_log_ticket_regrant(
- 	xlog_grant_sub_space(log, &log->l_write_head.grant,
- 					ticket->t_curr_res);
- 	ticket->t_curr_res = ticket->t_unit_res;
--	xlog_tic_reset_res(ticket);
- 
- 	trace_xfs_log_ticket_regrant_sub(log, ticket);
- 
-@@ -3066,7 +2974,6 @@ xfs_log_ticket_regrant(
- 		trace_xfs_log_ticket_regrant_exit(log, ticket);
- 
- 		ticket->t_curr_res = ticket->t_unit_res;
--		xlog_tic_reset_res(ticket);
- 	}
- 
- 	xfs_log_ticket_put(ticket);
-@@ -3529,8 +3436,6 @@ xlog_ticket_alloc(
- 	if (permanent)
- 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
- 
--	xlog_tic_reset_res(tic);
--
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index cb849e67b1c4..713ea66d4c0c 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -47,6 +47,34 @@ xlog_cil_ticket_alloc(
  	return tic;
  }
  
++/*
++ * Unavoidable forward declaration - xlog_cil_push_work() calls
++ * xlog_cil_ctx_alloc() itself.
++ */
++static void xlog_cil_push_work(struct work_struct *work);
++
++static struct xfs_cil_ctx *
++xlog_cil_ctx_alloc(void)
++{
++	struct xfs_cil_ctx	*ctx;
++
++	ctx = kmem_zalloc(sizeof(*ctx), KM_NOFS);
++	INIT_LIST_HEAD(&ctx->committing);
++	INIT_LIST_HEAD(&ctx->busy_extents);
++	INIT_WORK(&ctx->push_work, xlog_cil_push_work);
++	return ctx;
++}
++
++static void
++xlog_cil_ctx_switch(
++	struct xfs_cil		*cil,
++	struct xfs_cil_ctx	*ctx)
++{
++	ctx->sequence = ++cil->xc_current_sequence;
++	ctx->cil = cil;
++	cil->xc_ctx = ctx;
++}
++
+ /*
+  * After the first stage of log recovery is done, we know where the head and
+  * tail of the log are. We need this log initialisation done before we can
+@@ -641,11 +669,11 @@ static void
+ xlog_cil_push_work(
+ 	struct work_struct	*work)
+ {
+-	struct xfs_cil		*cil =
+-		container_of(work, struct xfs_cil, xc_push_work);
++	struct xfs_cil_ctx	*ctx =
++		container_of(work, struct xfs_cil_ctx, push_work);
++	struct xfs_cil		*cil = ctx->cil;
+ 	struct xlog		*log = cil->xc_log;
+ 	struct xfs_log_vec	*lv;
+-	struct xfs_cil_ctx	*ctx;
+ 	struct xfs_cil_ctx	*new_ctx;
+ 	struct xlog_in_core	*commit_iclog;
+ 	struct xlog_ticket	*tic;
+@@ -660,11 +688,10 @@ xlog_cil_push_work(
+ 	DECLARE_COMPLETION_ONSTACK(bdev_flush);
+ 	bool			push_commit_stable;
+ 
+-	new_ctx = kmem_zalloc(sizeof(*new_ctx), KM_NOFS);
++	new_ctx = xlog_cil_ctx_alloc();
+ 	new_ctx->ticket = xlog_cil_ticket_alloc(log);
+ 
+ 	down_write(&cil->xc_ctx_lock);
+-	ctx = cil->xc_ctx;
+ 
+ 	spin_lock(&cil->xc_push_lock);
+ 	push_seq = cil->xc_push_seq;
+@@ -696,7 +723,7 @@ xlog_cil_push_work(
+ 
+ 
+ 	/* check for a previously pushed sequence */
+-	if (push_seq < cil->xc_ctx->sequence) {
++	if (push_seq < ctx->sequence) {
+ 		spin_unlock(&cil->xc_push_lock);
+ 		goto out_skip;
+ 	}
+@@ -761,19 +788,7 @@ xlog_cil_push_work(
+ 	}
+ 
+ 	/*
+-	 * initialise the new context and attach it to the CIL. Then attach
+-	 * the current context to the CIL committing list so it can be found
+-	 * during log forces to extract the commit lsn of the sequence that
+-	 * needs to be forced.
+-	 */
+-	INIT_LIST_HEAD(&new_ctx->committing);
+-	INIT_LIST_HEAD(&new_ctx->busy_extents);
+-	new_ctx->sequence = ctx->sequence + 1;
+-	new_ctx->cil = cil;
+-	cil->xc_ctx = new_ctx;
+-
+-	/*
+-	 * The switch is now done, so we can drop the context lock and move out
++	 * Switch the contexts so we can drop the context lock and move out
+ 	 * of a shared context. We can't just go straight to the commit record,
+ 	 * though - we need to synchronise with previous and future commits so
+ 	 * that the commit records are correctly ordered in the log to ensure
+@@ -798,7 +813,7 @@ xlog_cil_push_work(
+ 	 * deferencing a freed context pointer.
+ 	 */
+ 	spin_lock(&cil->xc_push_lock);
+-	cil->xc_current_sequence = new_ctx->sequence;
++	xlog_cil_ctx_switch(cil, new_ctx);
+ 	spin_unlock(&cil->xc_push_lock);
+ 	up_write(&cil->xc_ctx_lock);
+ 
+@@ -970,7 +985,7 @@ xlog_cil_push_background(
+ 	spin_lock(&cil->xc_push_lock);
+ 	if (cil->xc_push_seq < cil->xc_current_sequence) {
+ 		cil->xc_push_seq = cil->xc_current_sequence;
+-		queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
++		queue_work(log->l_mp->m_cil_workqueue, &cil->xc_ctx->push_work);
+ 	}
+ 
+ 	/*
+@@ -1036,7 +1051,7 @@ xlog_cil_push_now(
+ 
+ 	/* start on any pending background push to minimise wait time on it */
+ 	if (!async)
+-		flush_work(&cil->xc_push_work);
++		flush_workqueue(log->l_mp->m_cil_workqueue);
+ 
+ 	/*
+ 	 * If the CIL is empty or we've already pushed the sequence then
+@@ -1050,7 +1065,7 @@ xlog_cil_push_now(
+ 
+ 	cil->xc_push_seq = push_seq;
+ 	cil->xc_push_commit_stable = async;
+-	queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
++	queue_work(log->l_mp->m_cil_workqueue, &cil->xc_ctx->push_work);
+ 	spin_unlock(&cil->xc_push_lock);
+ }
+ 
+@@ -1290,13 +1305,6 @@ xlog_cil_init(
+ 	if (!cil)
+ 		return -ENOMEM;
+ 
+-	ctx = kmem_zalloc(sizeof(*ctx), KM_MAYFAIL);
+-	if (!ctx) {
+-		kmem_free(cil);
+-		return -ENOMEM;
+-	}
+-
+-	INIT_WORK(&cil->xc_push_work, xlog_cil_push_work);
+ 	INIT_LIST_HEAD(&cil->xc_cil);
+ 	INIT_LIST_HEAD(&cil->xc_committing);
+ 	spin_lock_init(&cil->xc_cil_lock);
+@@ -1304,16 +1312,12 @@ xlog_cil_init(
+ 	init_waitqueue_head(&cil->xc_push_wait);
+ 	init_rwsem(&cil->xc_ctx_lock);
+ 	init_waitqueue_head(&cil->xc_commit_wait);
+-
+-	INIT_LIST_HEAD(&ctx->committing);
+-	INIT_LIST_HEAD(&ctx->busy_extents);
+-	ctx->sequence = 1;
+-	ctx->cil = cil;
+-	cil->xc_ctx = ctx;
+-	cil->xc_current_sequence = ctx->sequence;
+-
+ 	cil->xc_log = log;
+ 	log->l_cilp = cil;
++
++	ctx = xlog_cil_ctx_alloc();
++	xlog_cil_ctx_switch(cil, ctx);
++
+ 	return 0;
+ }
+ 
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index e4e3e71b2b1b..301c36165974 100644
+index a863ccb5ece6..87447fa34c43 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -136,19 +136,6 @@ enum xlog_iclog_state {
- #define XLOG_ICL_NEED_FLUSH	(1 << 0)	/* iclog needs REQ_PREFLUSH */
- #define XLOG_ICL_NEED_FUA	(1 << 1)	/* iclog needs REQ_FUA */
- 
--/* Ticket reservation region accounting */ 
--#define XLOG_TIC_LEN_MAX	15
--
--/*
-- * Reservation region
-- * As would be stored in xfs_log_iovec but without the i_addr which
-- * we don't care about.
-- */
--typedef struct xlog_res {
--	uint	r_len;	/* region length		:4 */
--	uint	r_type;	/* region's transaction type	:4 */
--} xlog_res_t;
--
- typedef struct xlog_ticket {
- 	struct list_head   t_queue;	 /* reserve/write queue */
- 	struct task_struct *t_task;	 /* task that owns this ticket */
-@@ -159,13 +146,6 @@ typedef struct xlog_ticket {
- 	char		   t_ocnt;	 /* original count		 : 1  */
- 	char		   t_cnt;	 /* current count		 : 1  */
- 	char		   t_flags;	 /* properties of reservation	 : 1  */
--
--        /* reservation array fields */
--	uint		   t_res_num;                    /* num in array : 4 */
--	uint		   t_res_num_ophdrs;		 /* num op hdrs  : 4 */
--	uint		   t_res_arr_sum;		 /* array sum    : 4 */
--	uint		   t_res_o_flow;		 /* sum overflow : 4 */
--	xlog_res_t	   t_res_arr[XLOG_TIC_LEN_MAX];  /* array of res : 8 * 15 */ 
- } xlog_ticket_t;
+@@ -245,6 +245,7 @@ struct xfs_cil_ctx {
+ 	struct list_head	iclog_entry;
+ 	struct list_head	committing;	/* ctx committing list */
+ 	struct work_struct	discard_endio_work;
++	struct work_struct	push_work;
+ };
  
  /*
+@@ -277,7 +278,6 @@ struct xfs_cil {
+ 	struct list_head	xc_committing;
+ 	wait_queue_head_t	xc_commit_wait;
+ 	xfs_csn_t		xc_current_sequence;
+-	struct work_struct	xc_push_work;
+ 	wait_queue_head_t	xc_push_wait;	/* background push throttle */
+ } ____cacheline_aligned_in_smp;
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 9500ad115233..017ba9c24c2d 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -500,9 +500,13 @@ xfs_init_mount_workqueues(
+ 	if (!mp->m_unwritten_workqueue)
+ 		goto out_destroy_buf;
+ 
++	/*
++	 * Limit the CIL pipeline depth to 4 concurrent works to bound the
++	 * concurrency the log spinlocks will be exposed to.
++	 */
+ 	mp->m_cil_workqueue = alloc_workqueue("xfs-cil/%s",
+ 			XFS_WQFLAGS(WQ_FREEZABLE | WQ_MEM_RECLAIM | WQ_UNBOUND),
+-			0, mp->m_super->s_id);
++			4, mp->m_super->s_id);
+ 	if (!mp->m_cil_workqueue)
+ 		goto out_destroy_unwritten;
+ 
 -- 
 2.31.1
 
