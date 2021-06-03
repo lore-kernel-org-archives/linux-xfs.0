@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9A9AC47097
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67868C47082
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A165C61359
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5368F613E6
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229774AbhFCFZS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 01:25:18 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:56554 "EHLO
+        id S229837AbhFCFZT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 01:25:19 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:56556 "EHLO
         mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229837AbhFCFZS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:25:18 -0400
+        by vger.kernel.org with ESMTP id S229840AbhFCFZT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:25:19 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id CC8ED1047D5
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id A941C10227C
         for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:51 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lofoh-008MrM-Dg
+        id 1lofoh-008Mr4-58
         for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lofoh-000imd-5D
-        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
+        id 1lofog-000imL-Tb
+        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 30/39] xfs: implement percpu cil space used calculation
-Date:   Thu,  3 Jun 2021 15:22:31 +1000
-Message-Id: <20210603052240.171998-31-david@fromorbit.com>
+Subject: [PATCH 24/39] xfs: xlog_write() doesn't need optype anymore
+Date:   Thu,  3 Jun 2021 15:22:25 +1000
+Message-Id: <20210603052240.171998-25-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210603052240.171998-1-david@fromorbit.com>
 References: <20210603052240.171998-1-david@fromorbit.com>
@@ -44,191 +44,105 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=UK9uc7nx2zrob_3ZfNMA:9
+        a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+        a=JnHvY13FuJIPsMKcdksA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that we have the CIL percpu structures in place, implement the
-space used counter with a fast sum check similar to the
-percpu_counter infrastructure.
+So remove it from the interface and callers.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log_cil.c  | 67 ++++++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_log_priv.h |  3 +-
- 2 files changed, 62 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_log.c      | 14 ++++----------
+ fs/xfs/xfs_log_cil.c  |  2 +-
+ fs/xfs/xfs_log_priv.h |  2 +-
+ 3 files changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 791ed1058fb4..620824c6f7fa 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -76,6 +76,30 @@ xlog_cil_ctx_alloc(void)
- 	return ctx;
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 574078985f0a..65b28fce4db4 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -863,8 +863,7 @@ xlog_write_unmount_record(
+ 	 */
+ 	if (log->l_targ != log->l_mp->m_ddev_targp)
+ 		blkdev_issue_flush(log->l_targ->bt_bdev);
+-	return xlog_write(log, &vec, ticket, NULL, NULL, XLOG_UNMOUNT_TRANS,
+-				reg.i_len);
++	return xlog_write(log, &vec, ticket, NULL, NULL, reg.i_len);
  }
  
-+/*
-+ * Aggregate the CIL per cpu structures into global counts, lists, etc and
-+ * clear the percpu state ready for the next context to use.
-+ */
-+static void
-+xlog_cil_pcp_aggregate(
-+	struct xfs_cil		*cil,
-+	struct xfs_cil_ctx	*ctx)
-+{
-+	struct xlog_cil_pcp	*cilpcp;
-+	int			cpu;
-+
-+	for_each_online_cpu(cpu) {
-+		cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
-+
-+		/*
-+		 * We're in the middle of switching cil contexts.  Reset the
-+		 * counter we use to detect when the current context is nearing
-+		 * full.
-+		 */
-+		cilpcp->space_used = 0;
-+	}
-+}
-+
- static void
- xlog_cil_ctx_switch(
- 	struct xfs_cil		*cil,
-@@ -433,6 +457,8 @@ xlog_cil_insert_items(
- 	struct xfs_log_item	*lip;
- 	int			len = 0;
- 	int			iovhdr_res = 0, split_res = 0, ctx_res = 0;
-+	int			space_used;
-+	struct xlog_cil_pcp	*cilpcp;
+ /*
+@@ -1588,8 +1587,7 @@ xlog_commit_record(
  
- 	ASSERT(tp);
- 
-@@ -469,8 +495,9 @@ xlog_cil_insert_items(
- 	 *
- 	 * This can steal more than we need, but that's OK.
- 	 */
-+	space_used = atomic_read(&ctx->space_used);
- 	if (atomic_read(&cil->xc_iclog_hdrs) > 0 ||
--	    ctx->space_used + len >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
-+	    space_used + len >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
- 		int	split_res = log->l_iclog_hsize +
- 					sizeof(struct xlog_op_header);
- 		if (ctx_res)
-@@ -480,16 +507,34 @@ xlog_cil_insert_items(
- 		atomic_sub(tp->t_ticket->t_iclog_hdrs, &cil->xc_iclog_hdrs);
- 	}
- 
-+	/*
-+	 * Update the CIL percpu pointer. This updates the global counter when
-+	 * over the percpu batch size or when the CIL is over the space limit.
-+	 * This means low lock overhead for normal updates, and when over the
-+	 * limit the space used is immediately accounted. This makes enforcing
-+	 * the hard limit much more accurate. The per cpu fold threshold is
-+	 * based on how close we are to the hard limit.
-+	 */
-+	cilpcp = get_cpu_ptr(cil->xc_pcp);
-+	cilpcp->space_used += len;
-+	if (space_used >= XLOG_CIL_SPACE_LIMIT(log) ||
-+	    cilpcp->space_used >
-+			((XLOG_CIL_BLOCKING_SPACE_LIMIT(log) - space_used) /
-+					num_online_cpus())) {
-+		atomic_add(cilpcp->space_used, &ctx->space_used);
-+		cilpcp->space_used = 0;
-+	}
-+	put_cpu_ptr(cilpcp);
-+
- 	spin_lock(&cil->xc_cil_lock);
--	tp->t_ticket->t_curr_res -= ctx_res + len;
- 	ctx->ticket->t_unit_res += ctx_res;
- 	ctx->ticket->t_curr_res += ctx_res;
--	ctx->space_used += len;
- 
- 	/*
- 	 * If we've overrun the reservation, dump the tx details before we move
- 	 * the log items. Shutdown is imminent...
- 	 */
-+	tp->t_ticket->t_curr_res -= ctx_res + len;
- 	if (WARN_ON(tp->t_ticket->t_curr_res < 0)) {
- 		xfs_warn(log->l_mp, "Transaction log reservation overrun:");
- 		xfs_warn(log->l_mp,
-@@ -846,6 +891,8 @@ xlog_cil_push_work(
- 	xfs_flush_bdev_async(&bio, log->l_mp->m_ddev_targp->bt_bdev,
- 				&bdev_flush);
- 
-+	xlog_cil_pcp_aggregate(cil, ctx);
-+
- 	/*
- 	 * Pull all the log vectors off the items in the CIL, and remove the
- 	 * items from the CIL. We don't need the CIL lock here because it's only
-@@ -1042,6 +1089,7 @@ xlog_cil_push_background(
- 	struct xlog	*log) __releases(cil->xc_ctx_lock)
+ 	/* account for space used by record data */
+ 	ticket->t_curr_res -= reg.i_len;
+-	error = xlog_write(log, &vec, ticket, lsn, iclog, XLOG_COMMIT_TRANS,
+-				reg.i_len);
++	error = xlog_write(log, &vec, ticket, lsn, iclog, reg.i_len);
+ 	if (error)
+ 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
+ 	return error;
+@@ -2399,7 +2397,6 @@ xlog_write(
+ 	struct xlog_ticket	*ticket,
+ 	xfs_lsn_t		*start_lsn,
+ 	struct xlog_in_core	**commit_iclog,
+-	uint			optype,
+ 	uint32_t		len)
  {
- 	struct xfs_cil	*cil = log->l_cilp;
-+	int		space_used = atomic_read(&cil->xc_ctx->space_used);
+ 	struct xlog_in_core	*iclog = NULL;
+@@ -2431,7 +2428,6 @@ xlog_write(
+ 		if (!lv)
+ 			break;
  
- 	/*
- 	 * The cil won't be empty because we are called while holding the
-@@ -1054,7 +1102,7 @@ xlog_cil_push_background(
- 	 * Don't do a background push if we haven't used up all the
- 	 * space available yet.
+-		ASSERT(!(optype & (XLOG_COMMIT_TRANS | XLOG_UNMOUNT_TRANS)));
+ 		lv = xlog_write_partial(log, lv, ticket, &iclog, &log_offset,
+ 					&len, &record_cnt, &data_cnt);
+ 		if (IS_ERR_OR_NULL(lv)) {
+@@ -2449,12 +2445,10 @@ xlog_write(
  	 */
--	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
-+	if (space_used < XLOG_CIL_SPACE_LIMIT(log)) {
- 		up_read(&cil->xc_ctx_lock);
- 		return;
- 	}
-@@ -1083,10 +1131,10 @@ xlog_cil_push_background(
- 	 * The ctx->xc_push_lock provides the serialisation necessary for safely
- 	 * using the lockless waitqueue_active() check in this context.
- 	 */
--	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log) ||
-+	if (space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log) ||
- 	    waitqueue_active(&cil->xc_push_wait)) {
- 		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
--		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
-+		ASSERT(space_used < log->l_logsize);
- 		xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
- 		return;
- 	}
-@@ -1390,9 +1438,14 @@ xlog_cil_pcp_dead(
+ 	spin_lock(&log->l_icloglock);
+ 	xlog_state_finish_copy(log, iclog, record_cnt, 0);
+-	if (commit_iclog) {
+-		ASSERT(optype & XLOG_COMMIT_TRANS);
++	if (commit_iclog)
+ 		*commit_iclog = iclog;
+-	} else {
++	else
+ 		error = xlog_state_release_iclog(log, iclog);
+-	}
+ 	spin_unlock(&log->l_icloglock);
  
- 	spin_lock(&xlog_cil_pcp_lock);
- 	list_for_each_entry_safe(cil, n, &xlog_cil_pcp_list, xc_pcp_list) {
-+		struct xlog_cil_pcp	*cilpcp = per_cpu_ptr(cil->xc_pcp, cpu);
-+
- 		spin_unlock(&xlog_cil_pcp_lock);
- 		down_write(&cil->xc_ctx_lock);
--		/* move stuff on dead CPU to context */
-+
-+		atomic_add(cilpcp->space_used, &cil->xc_ctx->space_used);
-+		cilpcp->space_used = 0;
-+
- 		up_write(&cil->xc_ctx_lock);
- 		spin_lock(&xlog_cil_pcp_lock);
- 	}
+ 	return error;
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 68bec4b81052..b051f3c44ec1 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -907,7 +907,7 @@ xlog_cil_push_work(
+ 	 * write head.
+ 	 */
+ 	error = xlog_write(log, &lvhdr, ctx->ticket, &ctx->start_lsn, NULL,
+-				XLOG_START_TRANS, num_bytes);
++				num_bytes);
+ 	if (error)
+ 		goto out_abort_free_ticket;
+ 
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index d76deffa4690..373b7dbde4af 100644
+index eba905c273b0..a16ffdc8ae97 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -218,7 +218,7 @@ struct xfs_cil_ctx {
- 	xfs_lsn_t		start_lsn;	/* first LSN of chkpt commit */
- 	xfs_lsn_t		commit_lsn;	/* chkpt commit record lsn */
- 	struct xlog_ticket	*ticket;	/* chkpt ticket */
--	int			space_used;	/* aggregate size of regions */
-+	atomic_t		space_used;	/* aggregate size of regions */
- 	struct list_head	busy_extents;	/* busy extents in chkpt */
- 	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
- 	struct list_head	iclog_entry;
-@@ -231,6 +231,7 @@ struct xfs_cil_ctx {
-  * Per-cpu CIL tracking items
-  */
- struct xlog_cil_pcp {
-+	uint32_t		space_used;
- 	struct list_head	busy_extents;
- 	struct list_head	log_items;
- };
+@@ -459,7 +459,7 @@ void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
+ void	xlog_print_trans(struct xfs_trans *);
+ int	xlog_write(struct xlog *log, struct xfs_log_vec *log_vector,
+ 		struct xlog_ticket *tic, xfs_lsn_t *start_lsn,
+-		struct xlog_in_core **commit_iclog, uint optype, uint32_t len);
++		struct xlog_in_core **commit_iclog, uint32_t len);
+ int	xlog_commit_record(struct xlog *log, struct xlog_ticket *ticket,
+ 		struct xlog_in_core **iclog, xfs_lsn_t *lsn);
+ 
 -- 
 2.31.1
 
