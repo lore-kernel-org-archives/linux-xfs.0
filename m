@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F20CC47097
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B58C2C47098
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 75D08613F0
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A226D613F0
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229822AbhFCFYy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 01:24:54 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33979 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229665AbhFCFYy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:24:54 -0400
+        id S229702AbhFCFYw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 01:24:52 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:57092 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229820AbhFCFYv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:24:51 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B3CB3861C0D
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 9135D1140CD5
         for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:51 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lofoh-008Mr7-6W
-        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
+        id 1lofog-008Mqp-VR
+        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lofog-000imO-Uo
+        id 1lofog-000im6-NZ
         for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 25/39] xfs: CIL context doesn't need to count iovecs
-Date:   Thu,  3 Jun 2021 15:22:26 +1000
-Message-Id: <20210603052240.171998-26-david@fromorbit.com>
+Subject: [PATCH 19/39] xfs: log ticket region debug is largely useless
+Date:   Thu,  3 Jun 2021 15:22:20 +1000
+Message-Id: <20210603052240.171998-20-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210603052240.171998-1-david@fromorbit.com>
 References: <20210603052240.171998-1-david@fromorbit.com>
@@ -45,131 +45,280 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
         a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=XTp5-oq1X3BrlmPbjW0A:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=hXrHYZd4HXSh28dySQwA:9 a=ZBBUq1ay7XXbTIux:21 a=PseHVoqCgIdsv_9O:21
+        a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that we account for log opheaders in the log item formatting
-code, we don't actually use the aggregated count of log iovecs in
-the CIL for anything. Remove it and the tracking code that
-calculates it.
+xlog_tic_add_region() is used to trace the regions being added to a
+log ticket to provide information in the situation where a ticket
+reservation overrun occurs. The information gathered is stored int
+the ticket, and dumped if xlog_print_tic_res() is called.
+
+For a front end struct xfs_trans overrun, the ticket only contains
+reservation tracking information - the ticket is never handed to the
+log so has no regions attached to it. The overrun debug information in this
+case comes from xlog_print_trans(), which walks the items attached
+to the transaction and dumps their attached formatted log vectors
+directly. It also dumps the ticket state, but that only contains
+reservation accounting and nothing else. Hence xlog_print_tic_res()
+never dumps region or overrun information from this path.
+
+xlog_tic_add_region() is actually called from xlog_write(), which
+means it is being used to track the regions seen in a
+CIL checkpoint log vector chain. In looking at CIL behaviour
+recently, I've seen 32MB checkpoints regularly exceed 250,000
+regions in the LV chain. The log ticket debug code can track *15*
+regions. IOWs, if there is a ticket overrun in the CIL code, the
+ticket region tracking code is going to be completely useless for
+determining what went wrong. The only thing it can tell us is how
+much of an overrun occurred, and we really don't need extra debug
+information in the log ticket to tell us that.
+
+Indeed, the main place we call xlog_tic_add_region() is also adding
+up the number of regions and the space used so that xlog_write()
+knows how much will be written to the log. This is exactly the same
+information that log ticket is storing once we take away the useless
+region tracking array. Hence xlog_tic_add_region() is not useful,
+but can be called 250,000 times a CIL push...
+
+Just strip all that debug "information" out of the of the log ticket
+and only have it report reservation space information when an
+overrun occurs. This also reduces the size of a log ticket down by
+about 150 bytes...
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log_cil.c  | 22 ++++++----------------
- fs/xfs/xfs_log_priv.h |  1 -
- 2 files changed, 6 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_log.c      | 107 +++---------------------------------------
+ fs/xfs/xfs_log_priv.h |  20 --------
+ 2 files changed, 6 insertions(+), 121 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b051f3c44ec1..d87b09916f5a 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -252,22 +252,18 @@ xlog_cil_alloc_shadow_bufs(
- 
- /*
-  * Prepare the log item for insertion into the CIL. Calculate the difference in
-- * log space and vectors it will consume, and if it is a new item pin it as
-- * well.
-+ * log space it will consume, and if it is a new item pin it as well.
-  */
- STATIC void
- xfs_cil_prepare_item(
- 	struct xlog		*log,
- 	struct xfs_log_vec	*lv,
- 	struct xfs_log_vec	*old_lv,
--	int			*diff_len,
--	int			*diff_iovecs)
-+	int			*diff_len)
- {
- 	/* Account for the new LV being passed in */
--	if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED) {
-+	if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED)
- 		*diff_len += lv->lv_bytes;
--		*diff_iovecs += lv->lv_niovecs;
--	}
- 
- 	/*
- 	 * If there is no old LV, this is the first time we've seen the item in
-@@ -284,7 +280,6 @@ xfs_cil_prepare_item(
- 		ASSERT(lv->lv_buf_len != XFS_LOG_VEC_ORDERED);
- 
- 		*diff_len -= old_lv->lv_bytes;
--		*diff_iovecs -= old_lv->lv_niovecs;
- 		lv->lv_item->li_lv_shadow = old_lv;
- 	}
- 
-@@ -333,12 +328,10 @@ static void
- xlog_cil_insert_format_items(
- 	struct xlog		*log,
- 	struct xfs_trans	*tp,
--	int			*diff_len,
--	int			*diff_iovecs)
-+	int			*diff_len)
- {
- 	struct xfs_log_item	*lip;
- 
--
- 	/* Bail out if we didn't find a log item.  */
- 	if (list_empty(&tp->t_items)) {
- 		ASSERT(0);
-@@ -381,7 +374,6 @@ xlog_cil_insert_format_items(
- 			 * set the item up as though it is a new insertion so
- 			 * that the space reservation accounting is correct.
- 			 */
--			*diff_iovecs -= lv->lv_niovecs;
- 			*diff_len -= lv->lv_bytes;
- 
- 			/* Ensure the lv is set up according to ->iop_size */
-@@ -406,7 +398,7 @@ xlog_cil_insert_format_items(
- 		ASSERT(IS_ALIGNED((unsigned long)lv->lv_buf, sizeof(uint64_t)));
- 		lip->li_ops->iop_format(lip, lv);
- insert:
--		xfs_cil_prepare_item(log, lv, old_lv, diff_len, diff_iovecs);
-+		xfs_cil_prepare_item(log, lv, old_lv, diff_len);
- 	}
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 48890fb6122e..e849f15e9e04 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -377,30 +377,6 @@ xlog_grant_head_check(
+ 	return error;
  }
  
-@@ -426,7 +418,6 @@ xlog_cil_insert_items(
- 	struct xfs_cil_ctx	*ctx = cil->xc_ctx;
- 	struct xfs_log_item	*lip;
+-static void
+-xlog_tic_reset_res(xlog_ticket_t *tic)
+-{
+-	tic->t_res_num = 0;
+-	tic->t_res_arr_sum = 0;
+-	tic->t_res_num_ophdrs = 0;
+-}
+-
+-static void
+-xlog_tic_add_region(xlog_ticket_t *tic, uint len, uint type)
+-{
+-	if (tic->t_res_num == XLOG_TIC_LEN_MAX) {
+-		/* add to overflow and start again */
+-		tic->t_res_o_flow += tic->t_res_arr_sum;
+-		tic->t_res_num = 0;
+-		tic->t_res_arr_sum = 0;
+-	}
+-
+-	tic->t_res_arr[tic->t_res_num].r_len = len;
+-	tic->t_res_arr[tic->t_res_num].r_type = type;
+-	tic->t_res_arr_sum += len;
+-	tic->t_res_num++;
+-}
+-
+ bool
+ xfs_log_writable(
+ 	struct xfs_mount	*mp)
+@@ -450,8 +426,6 @@ xfs_log_regrant(
+ 	xlog_grant_push_ail(log, tic->t_unit_res);
+ 
+ 	tic->t_curr_res = tic->t_unit_res;
+-	xlog_tic_reset_res(tic);
+-
+ 	if (tic->t_cnt > 0)
+ 		return 0;
+ 
+@@ -2077,63 +2051,11 @@ xlog_print_tic_res(
+ 	struct xfs_mount	*mp,
+ 	struct xlog_ticket	*ticket)
+ {
+-	uint i;
+-	uint ophdr_spc = ticket->t_res_num_ophdrs * (uint)sizeof(xlog_op_header_t);
+-
+-	/* match with XLOG_REG_TYPE_* in xfs_log.h */
+-#define REG_TYPE_STR(type, str)	[XLOG_REG_TYPE_##type] = str
+-	static char *res_type_str[] = {
+-	    REG_TYPE_STR(BFORMAT, "bformat"),
+-	    REG_TYPE_STR(BCHUNK, "bchunk"),
+-	    REG_TYPE_STR(EFI_FORMAT, "efi_format"),
+-	    REG_TYPE_STR(EFD_FORMAT, "efd_format"),
+-	    REG_TYPE_STR(IFORMAT, "iformat"),
+-	    REG_TYPE_STR(ICORE, "icore"),
+-	    REG_TYPE_STR(IEXT, "iext"),
+-	    REG_TYPE_STR(IBROOT, "ibroot"),
+-	    REG_TYPE_STR(ILOCAL, "ilocal"),
+-	    REG_TYPE_STR(IATTR_EXT, "iattr_ext"),
+-	    REG_TYPE_STR(IATTR_BROOT, "iattr_broot"),
+-	    REG_TYPE_STR(IATTR_LOCAL, "iattr_local"),
+-	    REG_TYPE_STR(QFORMAT, "qformat"),
+-	    REG_TYPE_STR(DQUOT, "dquot"),
+-	    REG_TYPE_STR(QUOTAOFF, "quotaoff"),
+-	    REG_TYPE_STR(LRHEADER, "LR header"),
+-	    REG_TYPE_STR(UNMOUNT, "unmount"),
+-	    REG_TYPE_STR(COMMIT, "commit"),
+-	    REG_TYPE_STR(TRANSHDR, "trans header"),
+-	    REG_TYPE_STR(ICREATE, "inode create"),
+-	    REG_TYPE_STR(RUI_FORMAT, "rui_format"),
+-	    REG_TYPE_STR(RUD_FORMAT, "rud_format"),
+-	    REG_TYPE_STR(CUI_FORMAT, "cui_format"),
+-	    REG_TYPE_STR(CUD_FORMAT, "cud_format"),
+-	    REG_TYPE_STR(BUI_FORMAT, "bui_format"),
+-	    REG_TYPE_STR(BUD_FORMAT, "bud_format"),
+-	};
+-	BUILD_BUG_ON(ARRAY_SIZE(res_type_str) != XLOG_REG_TYPE_MAX + 1);
+-#undef REG_TYPE_STR
+-
+ 	xfs_warn(mp, "ticket reservation summary:");
+-	xfs_warn(mp, "  unit res    = %d bytes",
+-		 ticket->t_unit_res);
+-	xfs_warn(mp, "  current res = %d bytes",
+-		 ticket->t_curr_res);
+-	xfs_warn(mp, "  total reg   = %u bytes (o/flow = %u bytes)",
+-		 ticket->t_res_arr_sum, ticket->t_res_o_flow);
+-	xfs_warn(mp, "  ophdrs      = %u (ophdr space = %u bytes)",
+-		 ticket->t_res_num_ophdrs, ophdr_spc);
+-	xfs_warn(mp, "  ophdr + reg = %u bytes",
+-		 ticket->t_res_arr_sum + ticket->t_res_o_flow + ophdr_spc);
+-	xfs_warn(mp, "  num regions = %u",
+-		 ticket->t_res_num);
+-
+-	for (i = 0; i < ticket->t_res_num; i++) {
+-		uint r_type = ticket->t_res_arr[i].r_type;
+-		xfs_warn(mp, "region[%u]: %s - %u bytes", i,
+-			    ((r_type <= 0 || r_type > XLOG_REG_TYPE_MAX) ?
+-			    "bad-rtype" : res_type_str[r_type]),
+-			    ticket->t_res_arr[i].r_len);
+-	}
++	xfs_warn(mp, "  unit res    = %d bytes", ticket->t_unit_res);
++	xfs_warn(mp, "  current res = %d bytes", ticket->t_curr_res);
++	xfs_warn(mp, "  original count  = %d", ticket->t_ocnt);
++	xfs_warn(mp, "  remaining count = %d", ticket->t_cnt);
+ }
+ 
+ /*
+@@ -2198,7 +2120,6 @@ xlog_write_calc_vec_length(
+ 	uint			optype)
+ {
+ 	struct xfs_log_vec	*lv;
+-	int			headers = 0;
  	int			len = 0;
--	int			diff_iovecs = 0;
- 	int			iclog_space;
- 	int			iovhdr_res = 0, split_res = 0, ctx_res = 0;
+ 	int			i;
  
-@@ -436,7 +427,7 @@ xlog_cil_insert_items(
- 	 * We can do this safely because the context can't checkpoint until we
- 	 * are done so it doesn't matter exactly how we update the CIL.
- 	 */
--	xlog_cil_insert_format_items(log, tp, &len, &diff_iovecs);
-+	xlog_cil_insert_format_items(log, tp, &len);
+@@ -2207,17 +2128,9 @@ xlog_write_calc_vec_length(
+ 		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
+ 			continue;
  
- 	spin_lock(&cil->xc_cil_lock);
- 
-@@ -471,7 +462,6 @@ xlog_cil_insert_items(
+-		headers += lv->lv_niovecs;
+-
+-		for (i = 0; i < lv->lv_niovecs; i++) {
+-			struct xfs_log_iovec	*vecp = &lv->lv_iovecp[i];
+-
+-			len += vecp->i_len;
+-			xlog_tic_add_region(ticket, vecp->i_len, vecp->i_type);
+-		}
++		for (i = 0; i < lv->lv_niovecs; i++)
++			len += lv->lv_iovecp[i].i_len;
  	}
- 	tp->t_ticket->t_curr_res -= len;
- 	ctx->space_used += len;
--	ctx->nvecs += diff_iovecs;
+-	ticket->t_res_num_ophdrs += headers;
+-
+ 	return len;
+ }
  
- 	/*
- 	 * If we've overrun the reservation, dump the tx details before we move
+@@ -2276,7 +2189,6 @@ xlog_write_setup_copy(
+ 
+ 	/* account for new log op header */
+ 	ticket->t_curr_res -= sizeof(struct xlog_op_header);
+-	ticket->t_res_num_ophdrs++;
+ 
+ 	return sizeof(struct xlog_op_header);
+ }
+@@ -2973,9 +2885,6 @@ xlog_state_get_iclog_space(
+ 	 */
+ 	if (log_offset == 0) {
+ 		ticket->t_curr_res -= log->l_iclog_hsize;
+-		xlog_tic_add_region(ticket,
+-				    log->l_iclog_hsize,
+-				    XLOG_REG_TYPE_LRHEADER);
+ 		head->h_cycle = cpu_to_be32(log->l_curr_cycle);
+ 		head->h_lsn = cpu_to_be64(
+ 			xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block));
+@@ -3055,7 +2964,6 @@ xfs_log_ticket_regrant(
+ 	xlog_grant_sub_space(log, &log->l_write_head.grant,
+ 					ticket->t_curr_res);
+ 	ticket->t_curr_res = ticket->t_unit_res;
+-	xlog_tic_reset_res(ticket);
+ 
+ 	trace_xfs_log_ticket_regrant_sub(log, ticket);
+ 
+@@ -3066,7 +2974,6 @@ xfs_log_ticket_regrant(
+ 		trace_xfs_log_ticket_regrant_exit(log, ticket);
+ 
+ 		ticket->t_curr_res = ticket->t_unit_res;
+-		xlog_tic_reset_res(ticket);
+ 	}
+ 
+ 	xfs_log_ticket_put(ticket);
+@@ -3529,8 +3436,6 @@ xlog_ticket_alloc(
+ 	if (permanent)
+ 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
+ 
+-	xlog_tic_reset_res(tic);
+-
+ 	return tic;
+ }
+ 
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index a16ffdc8ae97..02c94b6d0642 100644
+index e4e3e71b2b1b..301c36165974 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -217,7 +217,6 @@ struct xfs_cil_ctx {
- 	xfs_lsn_t		start_lsn;	/* first LSN of chkpt commit */
- 	xfs_lsn_t		commit_lsn;	/* chkpt commit record lsn */
- 	struct xlog_ticket	*ticket;	/* chkpt ticket */
--	int			nvecs;		/* number of regions */
- 	int			space_used;	/* aggregate size of regions */
- 	struct list_head	busy_extents;	/* busy extents in chkpt */
- 	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
+@@ -136,19 +136,6 @@ enum xlog_iclog_state {
+ #define XLOG_ICL_NEED_FLUSH	(1 << 0)	/* iclog needs REQ_PREFLUSH */
+ #define XLOG_ICL_NEED_FUA	(1 << 1)	/* iclog needs REQ_FUA */
+ 
+-/* Ticket reservation region accounting */ 
+-#define XLOG_TIC_LEN_MAX	15
+-
+-/*
+- * Reservation region
+- * As would be stored in xfs_log_iovec but without the i_addr which
+- * we don't care about.
+- */
+-typedef struct xlog_res {
+-	uint	r_len;	/* region length		:4 */
+-	uint	r_type;	/* region's transaction type	:4 */
+-} xlog_res_t;
+-
+ typedef struct xlog_ticket {
+ 	struct list_head   t_queue;	 /* reserve/write queue */
+ 	struct task_struct *t_task;	 /* task that owns this ticket */
+@@ -159,13 +146,6 @@ typedef struct xlog_ticket {
+ 	char		   t_ocnt;	 /* original count		 : 1  */
+ 	char		   t_cnt;	 /* current count		 : 1  */
+ 	char		   t_flags;	 /* properties of reservation	 : 1  */
+-
+-        /* reservation array fields */
+-	uint		   t_res_num;                    /* num in array : 4 */
+-	uint		   t_res_num_ophdrs;		 /* num op hdrs  : 4 */
+-	uint		   t_res_arr_sum;		 /* array sum    : 4 */
+-	uint		   t_res_o_flow;		 /* sum overflow : 4 */
+-	xlog_res_t	   t_res_arr[XLOG_TIC_LEN_MAX];  /* array of res : 8 * 15 */ 
+ } xlog_ticket_t;
+ 
+ /*
 -- 
 2.31.1
 
