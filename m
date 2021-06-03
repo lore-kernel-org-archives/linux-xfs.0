@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4139EC4709A
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E51B9C47098
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F10A613F0
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEEAB613E6
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 05:23:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229747AbhFCFZG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229695AbhFCFZG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 3 Jun 2021 01:25:06 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:57905 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229761AbhFCFZF (ORCPT
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:56554 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229758AbhFCFZF (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 01:25:05 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 0EAF110438E1
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:52 +1000 (AEST)
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 237BC106494
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Jun 2021 15:22:51 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lofoh-008MrY-Hk
-        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
+        id 1lofog-008MqO-Kj
+        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1lofoh-000imp-9K
-        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:51 +1000
+        id 1lofog-000ilf-Cj
+        for linux-xfs@vger.kernel.org; Thu, 03 Jun 2021 15:22:50 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 34/39] xfs: convert CIL to unordered per cpu lists
-Date:   Thu,  3 Jun 2021 15:22:35 +1000
-Message-Id: <20210603052240.171998-35-david@fromorbit.com>
+Subject: [PATCH 10/39] xfs: AIL needs asynchronous CIL forcing
+Date:   Thu,  3 Jun 2021 15:22:11 +1000
+Message-Id: <20210603052240.171998-11-david@fromorbit.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210603052240.171998-1-david@fromorbit.com>
 References: <20210603052240.171998-1-david@fromorbit.com>
@@ -45,243 +45,456 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
         a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=LJalFvrMBqGHNnPjixMA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=frthO3jOuRkPAE1aD6kA:9 a=AjGcO6oz07-iQ99wixmX:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-So that we can remove the cil_lock which is a global serialisation
-point. We've already got ordering sorted, so all we need to do is
-treat the CIL list like the busy extent list and reconstruct it
-before the push starts.
+The AIL pushing is stalling on log forces when it comes across
+pinned items. This is happening on removal workloads where the AIL
+is dominated by stale items that are removed from AIL when the
+checkpoint that marks the items stale is committed to the journal.
+This results is relatively few items in the AIL, but those that are
+are often pinned as directories items are being removed from are
+still being logged.
 
-This is what we're trying to avoid:
+As a result, many push cycles through the CIL will first issue a
+blocking log force to unpin the items. This can take some time to
+complete, with tracing regularly showing push delays of half a
+second and sometimes up into the range of several seconds. Sequences
+like this aren't uncommon:
 
- -   75.35%     1.83%  [kernel]            [k] xfs_log_commit_cil
-    - 46.35% xfs_log_commit_cil
-       - 41.54% _raw_spin_lock
-          - 67.30% do_raw_spin_lock
-               66.96% __pv_queued_spin_lock_slowpath
+....
+ 399.829437:  xfsaild: last lsn 0x11002dd000 count 101 stuck 101 flushing 0 tout 20
+<wanted 20ms, got 270ms delay>
+ 400.099622:  xfsaild: target 0x11002f3600, prev 0x11002f3600, last lsn 0x0
+ 400.099623:  xfsaild: first lsn 0x11002f3600
+ 400.099679:  xfsaild: last lsn 0x1100305000 count 16 stuck 11 flushing 0 tout 50
+<wanted 50ms, got 500ms delay>
+ 400.589348:  xfsaild: target 0x110032e600, prev 0x11002f3600, last lsn 0x0
+ 400.589349:  xfsaild: first lsn 0x1100305000
+ 400.589595:  xfsaild: last lsn 0x110032e600 count 156 stuck 101 flushing 30 tout 50
+<wanted 50ms, got 460ms delay>
+ 400.950341:  xfsaild: target 0x1100353000, prev 0x110032e600, last lsn 0x0
+ 400.950343:  xfsaild: first lsn 0x1100317c00
+ 400.950436:  xfsaild: last lsn 0x110033d200 count 105 stuck 101 flushing 0 tout 20
+<wanted 20ms, got 200ms delay>
+ 401.142333:  xfsaild: target 0x1100361600, prev 0x1100353000, last lsn 0x0
+ 401.142334:  xfsaild: first lsn 0x110032e600
+ 401.142535:  xfsaild: last lsn 0x1100353000 count 122 stuck 101 flushing 8 tout 10
+<wanted 10ms, got 10ms delay>
+ 401.154323:  xfsaild: target 0x1100361600, prev 0x1100361600, last lsn 0x1100353000
+ 401.154328:  xfsaild: first lsn 0x1100353000
+ 401.154389:  xfsaild: last lsn 0x1100353000 count 101 stuck 101 flushing 0 tout 20
+<wanted 20ms, got 300ms delay>
+ 401.451525:  xfsaild: target 0x1100361600, prev 0x1100361600, last lsn 0x0
+ 401.451526:  xfsaild: first lsn 0x1100353000
+ 401.451804:  xfsaild: last lsn 0x1100377200 count 170 stuck 22 flushing 122 tout 50
+<wanted 50ms, got 500ms delay>
+ 401.933581:  xfsaild: target 0x1100361600, prev 0x1100361600, last lsn 0x0
+....
 
-Which happens on a 32p system when running a 32-way 'rm -rf'
-workload. After this patch:
+In each of these cases, every AIL pass saw 101 log items stuck on
+the AIL (pinned) with very few other items being found. Each pass, a
+log force was issued, and delay between last/first is the sleep time
++ the sync log force time.
 
--   20.90%     3.23%  [kernel]               [k] xfs_log_commit_cil
-   - 17.67% xfs_log_commit_cil
-      - 6.51% xfs_log_ticket_ungrant
-           1.40% xfs_log_space_wake
-        2.32% memcpy_erms
-      - 2.18% xfs_buf_item_committing
-         - 2.12% xfs_buf_item_release
-            - 1.03% xfs_buf_unlock
-                 0.96% up
-              0.72% xfs_buf_rele
-        1.33% xfs_inode_item_format
-        1.19% down_read
-        0.91% up_read
-        0.76% xfs_buf_item_format
-      - 0.68% kmem_alloc_large
-         - 0.67% kmem_alloc
-              0.64% __kmalloc
-        0.50% xfs_buf_item_size
+Some of these 101 items pinned the tail of the log. The tail of the
+log does slowly creep forward (first lsn), but the problem is that
+the log is actually out of reservation space because it's been
+running so many transactions that stale items that never reach the
+AIL but consume log space. Hence we have a largely empty AIL, with
+long term pins on items that pin the tail of the log that don't get
+pushed frequently enough to keep log space available.
 
-It kinda looks like the workload is running out of log space all
-the time. But all the spinlock contention is gone and the
-transaction commit rate has gone from 800k/s to 1.3M/s so the amount
-of real work being done has gone up a *lot*.
+The problem is the hundreds of milliseconds that we block in the log
+force pushing the CIL out to disk. The AIL should not be stalled
+like this - it needs to run and flush items that are at the tail of
+the log with minimal latency. What we really need to do is trigger a
+log flush, but then not wait for it at all - we've already done our
+waiting for stuff to complete when we backed off prior to the log
+force being issued.
+
+Even if we remove the XFS_LOG_SYNC from the xfs_log_force() call, we
+still do a blocking flush of the CIL and that is what is causing the
+issue. Hence we need a new interface for the CIL to trigger an
+immediate background push of the CIL to get it moving faster but not
+to wait on that to occur. While the CIL is pushing, the AIL can also
+be pushing.
+
+We already have an internal interface to do this -
+xlog_cil_push_now() - but we need a wrapper for it to be used
+externally. xlog_cil_force_seq() can easily be extended to do what
+we need as it already implements the synchronous CIL push via
+xlog_cil_push_now(). Add the necessary flags and "push current
+sequence" semantics to xlog_cil_force_seq() and convert the AIL
+pushing to use it.
+
+One of the complexities here is that the CIL push does not guarantee
+that the commit record for the CIL checkpoint is written to disk.
+The current log force ensures this by submitting the current ACTIVE
+iclog that the commit record was written to. We need the CIL to
+actually write this commit record to disk for an async push to
+ensure that the checkpoint actually makes it to disk and unpins the
+pinned items in the checkpoint on completion. Hence we need to pass
+down to the CIL push that we are doing an async flush so that it can
+switch out the commit_iclog if necessary to get written to disk when
+the commit iclog is finally released.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log_cil.c  | 69 +++++++++++++++++++------------------------
- fs/xfs/xfs_log_priv.h |  3 +-
- 2 files changed, 31 insertions(+), 41 deletions(-)
+ fs/xfs/xfs_log.c       | 38 ++++++++++++++------------
+ fs/xfs/xfs_log.h       |  1 +
+ fs/xfs/xfs_log_cil.c   | 61 ++++++++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_log_priv.h  |  5 ++++
+ fs/xfs/xfs_sysfs.c     |  1 +
+ fs/xfs/xfs_trace.c     |  1 +
+ fs/xfs/xfs_trans.c     |  2 +-
+ fs/xfs/xfs_trans_ail.c | 11 +++++---
+ 8 files changed, 91 insertions(+), 29 deletions(-)
 
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index aa37f4319052..c53644d19dd3 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -50,11 +50,6 @@ xlog_state_get_iclog_space(
+ 	int			*continued_write,
+ 	int			*logoffsetp);
+ STATIC void
+-xlog_state_switch_iclogs(
+-	struct xlog		*log,
+-	struct xlog_in_core	*iclog,
+-	int			eventual_size);
+-STATIC void
+ xlog_grant_push_ail(
+ 	struct xlog		*log,
+ 	int			need_bytes);
+@@ -3104,7 +3099,7 @@ xfs_log_ticket_ungrant(
+  * This routine will mark the current iclog in the ring as WANT_SYNC and move
+  * the current iclog pointer to the next iclog in the ring.
+  */
+-STATIC void
++void
+ xlog_state_switch_iclogs(
+ 	struct xlog		*log,
+ 	struct xlog_in_core	*iclog,
+@@ -3251,6 +3246,20 @@ xfs_log_force(
+ 	return -EIO;
+ }
+ 
++/*
++ * Force the log to a specific LSN.
++ *
++ * If an iclog with that lsn can be found:
++ *	If it is in the DIRTY state, just return.
++ *	If it is in the ACTIVE state, move the in-core log into the WANT_SYNC
++ *		state and go to sleep or return.
++ *	If it is in any other state, go to sleep or return.
++ *
++ * Synchronous forces are implemented with a wait queue.  All callers trying
++ * to force a given lsn to disk must wait on the queue attached to the
++ * specific in-core log.  When given in-core log finally completes its write
++ * to disk, that thread will wake up all threads waiting on the queue.
++ */
+ static int
+ xlog_force_lsn(
+ 	struct xlog		*log,
+@@ -3314,18 +3323,13 @@ xlog_force_lsn(
+ }
+ 
+ /*
+- * Force the in-core log to disk for a specific LSN.
++ * Force the log to a specific checkpoint sequence.
+  *
+- * Find in-core log with lsn.
+- *	If it is in the DIRTY state, just return.
+- *	If it is in the ACTIVE state, move the in-core log into the WANT_SYNC
+- *		state and go to sleep or return.
+- *	If it is in any other state, go to sleep or return.
+- *
+- * Synchronous forces are implemented with a wait queue.  All callers trying
+- * to force a given lsn to disk must wait on the queue attached to the
+- * specific in-core log.  When given in-core log finally completes its write
+- * to disk, that thread will wake up all threads waiting on the queue.
++ * First force the CIL so that all the required changes have been flushed to the
++ * iclogs. If the CIL force completed it will return a commit LSN that indicates
++ * the iclog that needs to be flushed to stable storage. If the caller needs
++ * a synchronous log force, we will wait on the iclog with the LSN returned by
++ * xlog_cil_force_seq() to be completed.
+  */
+ int
+ xfs_log_force_seq(
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index 813b972e9788..1bd080ce3a95 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -104,6 +104,7 @@ struct xlog_ticket;
+ struct xfs_log_item;
+ struct xfs_item_ops;
+ struct xfs_trans;
++struct xlog;
+ 
+ int	  xfs_log_force(struct xfs_mount *mp, uint flags);
+ int	  xfs_log_force_seq(struct xfs_mount *mp, xfs_csn_t seq, uint flags,
 diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index dd3493058161..3ca9fce57584 100644
+index 3c2b1205944d..cb849e67b1c4 100644
 --- a/fs/xfs/xfs_log_cil.c
 +++ b/fs/xfs/xfs_log_cil.c
-@@ -72,6 +72,7 @@ xlog_cil_ctx_alloc(void)
- 	ctx = kmem_zalloc(sizeof(*ctx), KM_NOFS);
- 	INIT_LIST_HEAD(&ctx->committing);
- 	INIT_LIST_HEAD(&ctx->busy_extents);
-+	INIT_LIST_HEAD(&ctx->log_items);
- 	INIT_WORK(&ctx->push_work, xlog_cil_push_work);
- 	return ctx;
- }
-@@ -99,6 +100,8 @@ xlog_cil_pcp_aggregate(
- 			list_splice_init(&cilpcp->busy_extents,
- 					&ctx->busy_extents);
- 		}
-+		if (!list_empty(&cilpcp->log_items))
-+			list_splice_init(&cilpcp->log_items, &ctx->log_items);
+@@ -658,6 +658,7 @@ xlog_cil_push_work(
+ 	xfs_lsn_t		push_seq;
+ 	struct bio		bio;
+ 	DECLARE_COMPLETION_ONSTACK(bdev_flush);
++	bool			push_commit_stable;
  
- 		/*
- 		 * We're in the middle of switching cil contexts.  Reset the
-@@ -482,10 +485,9 @@ xlog_cil_insert_items(
- 	/*
- 	 * We need to take the CIL checkpoint unit reservation on the first
- 	 * commit into the CIL. Test the XLOG_CIL_EMPTY bit first so we don't
--	 * unnecessarily do an atomic op in the fast path here. We don't need to
--	 * hold the xc_cil_lock here to clear the XLOG_CIL_EMPTY bit as we are
--	 * under the xc_ctx_lock here and that needs to be held exclusively to
--	 * reset the XLOG_CIL_EMPTY bit.
-+	 * unnecessarily do an atomic op in the fast path here. We can clear the
-+	 * XLOG_CIL_EMPTY bit as we are under the xc_ctx_lock here and that
-+	 * needs to be held exclusively to reset the XLOG_CIL_EMPTY bit.
- 	 */
- 	if (test_bit(XLOG_CIL_EMPTY, &cil->xc_flags) &&
- 	    test_and_clear_bit(XLOG_CIL_EMPTY, &cil->xc_flags))
-@@ -539,24 +541,6 @@ xlog_cil_insert_items(
- 	/* attach the transaction to the CIL if it has any busy extents */
- 	if (!list_empty(&tp->t_busy))
- 		list_splice_init(&tp->t_busy, &cilpcp->busy_extents);
--	put_cpu_ptr(cilpcp);
--
--	/*
--	 * If we've overrun the reservation, dump the tx details before we move
--	 * the log items. Shutdown is imminent...
--	 */
--	tp->t_ticket->t_curr_res -= ctx_res + len;
--	if (WARN_ON(tp->t_ticket->t_curr_res < 0)) {
--		xfs_warn(log->l_mp, "Transaction log reservation overrun:");
--		xfs_warn(log->l_mp,
--			 "  log items: %d bytes (iov hdrs: %d bytes)",
--			 len, iovhdr_res);
--		xfs_warn(log->l_mp, "  split region headers: %d bytes",
--			 split_res);
--		xfs_warn(log->l_mp, "  ctx ticket: %d bytes", ctx_res);
--		xlog_print_trans(tp);
--	}
--
- 	/*
- 	 * Now update the order of everything modified in the transaction
- 	 * and insert items into the CIL if they aren't already there.
-@@ -564,7 +548,6 @@ xlog_cil_insert_items(
- 	 * the transaction commit.
- 	 */
- 	order = atomic_inc_return(&ctx->order_id);
--	spin_lock(&cil->xc_cil_lock);
- 	list_for_each_entry(lip, &tp->t_items, li_trans) {
+ 	new_ctx = kmem_zalloc(sizeof(*new_ctx), KM_NOFS);
+ 	new_ctx->ticket = xlog_cil_ticket_alloc(log);
+@@ -668,6 +669,8 @@ xlog_cil_push_work(
+ 	spin_lock(&cil->xc_push_lock);
+ 	push_seq = cil->xc_push_seq;
+ 	ASSERT(push_seq <= ctx->sequence);
++	push_commit_stable = cil->xc_push_commit_stable;
++	cil->xc_push_commit_stable = false;
  
- 		/* Skip items which aren't dirty in this transaction. */
-@@ -574,10 +557,25 @@ xlog_cil_insert_items(
- 		lip->li_order_id = order;
- 		if (!list_empty(&lip->li_cil))
- 			continue;
--		list_add_tail(&lip->li_cil, &cil->xc_cil);
-+		list_add_tail(&lip->li_cil, &cilpcp->log_items);
+ 	/*
+ 	 * As we are about to switch to a new, empty CIL context, we no longer
+@@ -910,8 +913,15 @@ xlog_cil_push_work(
+ 	 * The commit iclog must be written to stable storage to guarantee
+ 	 * journal IO vs metadata writeback IO is correctly ordered on stable
+ 	 * storage.
++	 *
++	 * If the push caller needs the commit to be immediately stable and the
++	 * commit_iclog is not yet marked as XLOG_STATE_WANT_SYNC to indicate it
++	 * will be written when released, switch it's state to WANT_SYNC right
++	 * now.
+ 	 */
+ 	commit_iclog->ic_flags |= XLOG_ICL_NEED_FUA;
++	if (push_commit_stable && commit_iclog->ic_state == XLOG_STATE_ACTIVE)
++		xlog_state_switch_iclogs(log, commit_iclog, 0);
+ 	xlog_state_release_iclog(log, commit_iclog);
+ 	spin_unlock(&log->l_icloglock);
+ 	return;
+@@ -996,13 +1006,26 @@ xlog_cil_push_background(
+ /*
+  * xlog_cil_push_now() is used to trigger an immediate CIL push to the sequence
+  * number that is passed. When it returns, the work will be queued for
+- * @push_seq, but it won't be completed. The caller is expected to do any
+- * waiting for push_seq to complete if it is required.
++ * @push_seq, but it won't be completed.
++ *
++ * If the caller is performing a synchronous force, we will flush the workqueue
++ * to get previously queued work moving to minimise the wait time they will
++ * undergo waiting for all outstanding pushes to complete. The caller is
++ * expected to do the required waiting for push_seq to complete.
++ *
++ * If the caller is performing an async push, we need to ensure that the
++ * checkpoint is fully flushed out of the iclogs when we finish the push. If we
++ * don't do this, then the commit record may remain sitting in memory in an
++ * ACTIVE iclog. This then requires another full log force to push to disk,
++ * which defeats the purpose of having an async, non-blocking CIL force
++ * mechanism. Hence in this case we need to pass a flag to the push work to
++ * indicate it needs to flush the commit record itself.
+  */
+ static void
+ xlog_cil_push_now(
+ 	struct xlog	*log,
+-	xfs_lsn_t	push_seq)
++	xfs_lsn_t	push_seq,
++	bool		async)
+ {
+ 	struct xfs_cil	*cil = log->l_cilp;
+ 
+@@ -1012,7 +1035,8 @@ xlog_cil_push_now(
+ 	ASSERT(push_seq && push_seq <= cil->xc_current_sequence);
+ 
+ 	/* start on any pending background push to minimise wait time on it */
+-	flush_work(&cil->xc_push_work);
++	if (!async)
++		flush_work(&cil->xc_push_work);
+ 
+ 	/*
+ 	 * If the CIL is empty or we've already pushed the sequence then
+@@ -1025,6 +1049,7 @@ xlog_cil_push_now(
  	}
-+	put_cpu_ptr(cilpcp);
  
--	spin_unlock(&cil->xc_cil_lock);
-+	/*
-+	 * If we've overrun the reservation, dump the tx details before we move
-+	 * the log items. Shutdown is imminent...
-+	 */
-+	tp->t_ticket->t_curr_res -= ctx_res + len;
-+	if (WARN_ON(tp->t_ticket->t_curr_res < 0)) {
-+		xfs_warn(log->l_mp, "Transaction log reservation overrun:");
-+		xfs_warn(log->l_mp,
-+			 "  log items: %d bytes (iov hdrs: %d bytes)",
-+			 len, iovhdr_res);
-+		xfs_warn(log->l_mp, "  split region headers: %d bytes",
-+			 split_res);
-+		xfs_warn(log->l_mp, "  ctx ticket: %d bytes", ctx_res);
-+		xlog_print_trans(tp);
-+	}
+ 	cil->xc_push_seq = push_seq;
++	cil->xc_push_commit_stable = async;
+ 	queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
+ 	spin_unlock(&cil->xc_push_lock);
+ }
+@@ -1109,12 +1134,27 @@ xlog_cil_commit(
+ 	xlog_cil_push_background(log);
+ }
  
- 	if (tp->t_ticket->t_curr_res < 0)
- 		xfs_force_shutdown(log->l_mp, SHUTDOWN_LOG_IO_ERROR);
-@@ -921,18 +919,12 @@ xlog_cil_push_work(
- 
- 	xlog_cil_pcp_aggregate(cil, ctx);
- 
--	/*
--	 * Pull all the log vectors off the items in the CIL, and remove the
--	 * items from the CIL. We don't need the CIL lock here because it's only
--	 * needed on the transaction commit side which is currently locked out
--	 * by the flush lock.
--	 */
--	list_sort(NULL, &cil->xc_cil, xlog_cil_order_cmp);
--	lv = NULL;
--	while (!list_empty(&cil->xc_cil)) {
-+	list_sort(NULL, &ctx->log_items, xlog_cil_order_cmp);
++/*
++ * Flush the CIL to stable storage but don't wait for it to complete. This
++ * requires the CIL push to ensure the commit record for the push hits the disk,
++ * but otherwise is no different to a push done from a log force.
++ */
++void
++xlog_cil_flush(
++	struct xlog	*log)
++{
++	xfs_csn_t	seq = log->l_cilp->xc_current_sequence;
 +
-+	while (!list_empty(&ctx->log_items)) {
- 		struct xfs_log_item	*item;
++	trace_xfs_log_force(log->l_mp, seq, _RET_IP_);
++	xlog_cil_push_now(log, seq, true);
++}
++
+ /*
+  * Conditionally push the CIL based on the sequence passed in.
+  *
+- * We only need to push if we haven't already pushed the sequence
+- * number given. Hence the only time we will trigger a push here is
+- * if the push sequence is the same as the current context.
++ * We only need to push if we haven't already pushed the sequence number given.
++ * Hence the only time we will trigger a push here is if the push sequence is
++ * the same as the current context.
+  *
+  * We return the current commit lsn to allow the callers to determine if a
+  * iclog flush is necessary following this call.
+@@ -1130,13 +1170,17 @@ xlog_cil_force_seq(
  
--		item = list_first_entry(&cil->xc_cil,
-+		item = list_first_entry(&ctx->log_items,
- 					struct xfs_log_item, li_cil);
- 		list_del_init(&item->li_cil);
- 		item->li_order_id = 0;
-@@ -1125,7 +1117,6 @@ xlog_cil_push_background(
- 	 * The cil won't be empty because we are called while holding the
- 	 * context lock so whatever we added to the CIL will still be there.
+ 	ASSERT(sequence <= cil->xc_current_sequence);
+ 
++	if (!sequence)
++		sequence = cil->xc_current_sequence;
++	trace_xfs_log_force(log->l_mp, sequence, _RET_IP_);
++
+ 	/*
+ 	 * check to see if we need to force out the current context.
+ 	 * xlog_cil_push() handles racing pushes for the same sequence,
+ 	 * so no need to deal with it here.
  	 */
--	ASSERT(!list_empty(&cil->xc_cil));
- 	ASSERT(!test_bit(XLOG_CIL_EMPTY, &cil->xc_flags));
+ restart:
+-	xlog_cil_push_now(log, sequence);
++	xlog_cil_push_now(log, sequence, false);
  
  	/*
-@@ -1484,6 +1475,8 @@ xlog_cil_pcp_dead(
- 			list_splice_init(&cilpcp->busy_extents,
- 					&ctx->busy_extents);
+ 	 * See if we can find a previous sequence still committing.
+@@ -1160,6 +1204,7 @@ xlog_cil_force_seq(
+ 			 * It is still being pushed! Wait for the push to
+ 			 * complete, then start again from the beginning.
+ 			 */
++			XFS_STATS_INC(log->l_mp, xs_log_force_sleep);
+ 			xlog_wait(&cil->xc_commit_wait, &cil->xc_push_lock);
+ 			goto restart;
  		}
-+		if (!list_empty(&cilpcp->log_items))
-+			list_splice_init(&cilpcp->log_items, &ctx->log_items);
- 
- 		cilpcp->space_used = 0;
- 		cilpcp->space_reserved = 0;
-@@ -1556,6 +1549,7 @@ xlog_cil_pcp_alloc(
- 	for_each_possible_cpu(cpu) {
- 		cilpcp = per_cpu_ptr(pcp, cpu);
- 		INIT_LIST_HEAD(&cilpcp->busy_extents);
-+		INIT_LIST_HEAD(&cilpcp->log_items);
- 	}
- 	return pcp;
- }
-@@ -1591,9 +1585,7 @@ xlog_cil_init(
- 		return -ENOMEM;
- 	}
- 
--	INIT_LIST_HEAD(&cil->xc_cil);
- 	INIT_LIST_HEAD(&cil->xc_committing);
--	spin_lock_init(&cil->xc_cil_lock);
- 	spin_lock_init(&cil->xc_push_lock);
- 	init_waitqueue_head(&cil->xc_push_wait);
- 	init_rwsem(&cil->xc_ctx_lock);
-@@ -1619,7 +1611,6 @@ xlog_cil_destroy(
- 		kmem_free(cil->xc_ctx);
- 	}
- 
--	ASSERT(list_empty(&cil->xc_cil));
- 	ASSERT(test_bit(XLOG_CIL_EMPTY, &cil->xc_flags));
- 	xlog_cil_pcp_free(cil, cil->xc_pcp);
- 	kmem_free(cil);
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 466862a943ba..d3bf3b367370 100644
+index 2d7e7cbee8b7..a863ccb5ece6 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -220,6 +220,7 @@ struct xfs_cil_ctx {
- 	struct xlog_ticket	*ticket;	/* chkpt ticket */
- 	atomic_t		space_used;	/* aggregate size of regions */
- 	struct list_head	busy_extents;	/* busy extents in chkpt */
-+	struct list_head	log_items;	/* log items in chkpt */
- 	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
- 	struct list_head	iclog_entry;
- 	struct list_head	committing;	/* ctx committing list */
-@@ -258,8 +259,6 @@ struct xfs_cil {
- 	struct xlog		*xc_log;
- 	unsigned long		xc_flags;
- 	atomic_t		xc_iclog_hdrs;
--	struct list_head	xc_cil;
--	spinlock_t		xc_cil_lock;
+@@ -273,6 +273,7 @@ struct xfs_cil {
  
- 	struct rw_semaphore	xc_ctx_lock ____cacheline_aligned_in_smp;
- 	struct xfs_cil_ctx	*xc_ctx;
+ 	spinlock_t		xc_push_lock ____cacheline_aligned_in_smp;
+ 	xfs_csn_t		xc_push_seq;
++	bool			xc_push_commit_stable;
+ 	struct list_head	xc_committing;
+ 	wait_queue_head_t	xc_commit_wait;
+ 	xfs_csn_t		xc_current_sequence;
+@@ -487,9 +488,12 @@ int	xlog_write(struct xlog *log, struct xfs_log_vec *log_vector,
+ 		struct xlog_in_core **commit_iclog, uint optype);
+ int	xlog_commit_record(struct xlog *log, struct xlog_ticket *ticket,
+ 		struct xlog_in_core **iclog, xfs_lsn_t *lsn);
++
+ void	xfs_log_ticket_ungrant(struct xlog *log, struct xlog_ticket *ticket);
+ void	xfs_log_ticket_regrant(struct xlog *log, struct xlog_ticket *ticket);
+ 
++void xlog_state_switch_iclogs(struct xlog *log, struct xlog_in_core *iclog,
++		int eventual_size);
+ int xlog_state_release_iclog(struct xlog *log, struct xlog_in_core *iclog);
+ 
+ /*
+@@ -560,6 +564,7 @@ void	xlog_cil_commit(struct xlog *log, struct xfs_trans *tp,
+ /*
+  * CIL force routines
+  */
++void xlog_cil_flush(struct xlog *log);
+ xfs_lsn_t xlog_cil_force_seq(struct xlog *log, xfs_csn_t sequence);
+ 
+ static inline void
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index f1bc88f4367c..18dc5eca6c04 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -10,6 +10,7 @@
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_sysfs.h"
++#include "xfs_log.h"
+ #include "xfs_log_priv.h"
+ #include "xfs_mount.h"
+ 
+diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+index 9b8d703dc9fd..d111a994b7b6 100644
+--- a/fs/xfs/xfs_trace.c
++++ b/fs/xfs/xfs_trace.c
+@@ -20,6 +20,7 @@
+ #include "xfs_bmap.h"
+ #include "xfs_attr.h"
+ #include "xfs_trans.h"
++#include "xfs_log.h"
+ #include "xfs_log_priv.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_quota.h"
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 87bffd12c20c..c214a69b573d 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -9,7 +9,6 @@
+ #include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+-#include "xfs_log_priv.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
+ #include "xfs_extent_busy.h"
+@@ -17,6 +16,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_log.h"
++#include "xfs_log_priv.h"
+ #include "xfs_trace.h"
+ #include "xfs_error.h"
+ #include "xfs_defer.h"
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index dbb69b4bf3ed..69aac416e2ce 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -17,6 +17,7 @@
+ #include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_log.h"
++#include "xfs_log_priv.h"
+ 
+ #ifdef DEBUG
+ /*
+@@ -429,8 +430,12 @@ xfsaild_push(
+ 
+ 	/*
+ 	 * If we encountered pinned items or did not finish writing out all
+-	 * buffers the last time we ran, force the log first and wait for it
+-	 * before pushing again.
++	 * buffers the last time we ran, force a background CIL push to get the
++	 * items unpinned in the near future. We do not wait on the CIL push as
++	 * that could stall us for seconds if there is enough background IO
++	 * load. Stalling for that long when the tail of the log is pinned and
++	 * needs flushing will hard stop the transaction subsystem when log
++	 * space runs out.
+ 	 */
+ 	if (ailp->ail_log_flush && ailp->ail_last_pushed_lsn == 0 &&
+ 	    (!list_empty_careful(&ailp->ail_buf_list) ||
+@@ -438,7 +443,7 @@ xfsaild_push(
+ 		ailp->ail_log_flush = 0;
+ 
+ 		XFS_STATS_INC(mp, xs_push_ail_flush);
+-		xfs_log_force(mp, XFS_LOG_SYNC);
++		xlog_cil_flush(mp->m_log);
+ 	}
+ 
+ 	spin_lock(&ailp->ail_lock);
 -- 
 2.31.1
 
