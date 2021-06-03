@@ -7,139 +7,136 @@ X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04311C47096
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 12:22:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF408C47082
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 12:23:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD558613DC
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 12:22:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFF30613E6
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 12:23:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229786AbhFCMYG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 08:24:06 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:23450 "EHLO
+        id S229932AbhFCMZK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 08:25:10 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:26084 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229747AbhFCMYG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 08:24:06 -0400
+        by vger.kernel.org with ESMTP id S229747AbhFCMZJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 08:25:09 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1622722941;
+        s=mimecast20190719; t=1622723005;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=jQH+7UTydZpM3kKD52Kaetm+/8c9Qmsv8RzkzyOUHu8=;
-        b=IBqwLp0HJC2ZE/hqQMc7MEl8sYumXnje3EJIvC+htAyZuEDPHzRLzMUKx5A9RFWq6kHg91
-        xinNhRCurjunq5Nbf/L6LYBTevIAOi4JL6rrheHhUoskYeZ60zQ1AF8MRxc6lm/5PW6EQs
-        att4TkD0BzLD+G2UKxYvWSeKujF5O3g=
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
- [209.85.160.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-212-HMbgZ_T1Mnu1QYyqZQjw_A-1; Thu, 03 Jun 2021 08:22:13 -0400
-X-MC-Unique: HMbgZ_T1Mnu1QYyqZQjw_A-1
-Received: by mail-qt1-f200.google.com with SMTP id f17-20020ac87f110000b02901e117339ea7so2974231qtk.16
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Jun 2021 05:22:13 -0700 (PDT)
+        bh=hsk+hTZIt7ptRoLzK1qaC8ocCwU9w6+dj8/HM+WHHaU=;
+        b=T4GrwMn1B/FyIjU8Y6hd5pr+I5t45STATe3AA2ku8jm5BrFlQSbzxefTPBb/FW+uujrhGA
+        ayvBQzb6sQPdWUE75aPe+dAPDysrsXopja285ndAA1RZ5i6D5wni4cDS1MELFvB0vKjhfd
+        HFkLrZUbKbJDjm8j1syMWswOOgCXFEQ=
+Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
+ [209.85.219.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-54-Vowtupy-PnqB6cJFfrDhgg-1; Thu, 03 Jun 2021 08:23:24 -0400
+X-MC-Unique: Vowtupy-PnqB6cJFfrDhgg-1
+Received: by mail-qv1-f69.google.com with SMTP id k12-20020a0cfd6c0000b029020df9543019so1935972qvs.14
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Jun 2021 05:23:23 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=jQH+7UTydZpM3kKD52Kaetm+/8c9Qmsv8RzkzyOUHu8=;
-        b=hT6Z961s4rEW9crISlPOZdyix14gfbrK+qrbIRtKVoE+4UdbCNQcNKNw+Mg91fE5fU
-         sLtVkWsC2DNESRQd2XpUao3/krE8DqddlkMATabRaiwKiCdB9Jx3M4FIVzCLCBDVIQ/i
-         LTJgs+c9fJRY//L6iDmveq+N1yI40E81HhB42ztDQEOsP4uS8zIhozsiNxy8qgsexnTm
-         vKfll5mKHL9szSWnC4CqueurmbZCy1Ut+r8Nv3sTYZmUlMX9V1p/YBo63QFCVIZQmdbU
-         QUTiGSBfczFx1x+tPI9+A2tCJUTU1wq7b3o1ofTO7hqpnY1eKqeY487ldqdJqwm8vnM+
-         CFww==
-X-Gm-Message-State: AOAM533HtzK663Bhvf7MxPHzSgFmNffT8KxT8Msibl6yy0tChDNn8o3f
-        K3AodwGI/O56Q8BAIgf+IQxnlIF04D35d0TcfbGha/XZJVJYmNQQMAejDzTd/EEVz3WeR0Rpvlj
-        edKrj8IQFD4XieuoIrkUr
-X-Received: by 2002:a37:a3cc:: with SMTP id m195mr8892067qke.433.1622722932520;
-        Thu, 03 Jun 2021 05:22:12 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJx1w3k7u0o7F3EcMjjDClbFTQ4T7UmbbwCe75ogWpxPWaDyocYMIZFDTWCN+V8H+8E82qSuQw==
-X-Received: by 2002:a37:a3cc:: with SMTP id m195mr8892052qke.433.1622722932298;
-        Thu, 03 Jun 2021 05:22:12 -0700 (PDT)
+        bh=hsk+hTZIt7ptRoLzK1qaC8ocCwU9w6+dj8/HM+WHHaU=;
+        b=QUqBad/qXu7xrBvBjkmEFC1Bb5zj3+vk6IpGLZoLZY+xg4eYi14XrcdYX1/a/zL/ZA
+         LIWjEsQLrhBT6fLvGA0ng4dgELBpMKnBnAWanpO4bV+cS+Ru0V6nWUt52rQI3J4SvhcM
+         TBUMg4BV805LD/qB/qiYZTDEH7QFIcKNaDTBDzQALq8MBMxq5OLuRw2BPqEF+Jrv77Y0
+         GOJ/cakTM6YC9scV5hP1xraXj3WfPbQXWvtv8I/jBEuuwyk4cv4ppxGuPhlDWOHkM5FD
+         QvL1XgHf4ljGelyaddz30t1wJ0lm/2mvIHLFrDlau2RXvkNnS5GDGADKFeY88Nubvl+q
+         NIcg==
+X-Gm-Message-State: AOAM5310WuH5xOhQc3rw/N1hLuizYoCI5ohVtfB50Z1iyj297fdku9cO
+        WIs7s/2rjNjAGm4WM5yWBgjMrLzWzvDwMbm4vf3BMbmINsN+Dew0zDB6zUGi9x9BMCF9MXsV1r7
+        9UJPhVStu/cJbytyJ1wyq
+X-Received: by 2002:ac8:5e0e:: with SMTP id h14mr28559986qtx.117.1622723003392;
+        Thu, 03 Jun 2021 05:23:23 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzz/xnqENSRzaIpgXJOhU6Aw6xPAdy+fA7sOyapJta1i5WekEdo8GyTbyTl45GpazklFgOiNA==
+X-Received: by 2002:ac8:5e0e:: with SMTP id h14mr28559977qtx.117.1622723003174;
+        Thu, 03 Jun 2021 05:23:23 -0700 (PDT)
 Received: from bfoster ([98.216.211.229])
-        by smtp.gmail.com with ESMTPSA id v6sm1784531qkv.54.2021.06.03.05.22.11
+        by smtp.gmail.com with ESMTPSA id u14sm1887125qkp.80.2021.06.03.05.23.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Jun 2021 05:22:12 -0700 (PDT)
-Date:   Thu, 3 Jun 2021 08:22:10 -0400
+        Thu, 03 Jun 2021 05:23:22 -0700 (PDT)
+Date:   Thu, 3 Jun 2021 08:23:21 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH 1/3] xfs: only reset incore inode health state flags when
- reclaiming an inode
-Message-ID: <YLjJcro1vhPTfGrv@bfoster>
+Subject: Re: [PATCH 2/3] xfs: drop IDONTCACHE on inodes when we mark them sick
+Message-ID: <YLjJuZQ0xVk17Dcg@bfoster>
 References: <162268995567.2724138.15163777746481739089.stgit@locust>
- <162268996135.2724138.14276025100886638786.stgit@locust>
+ <162268996687.2724138.9307511745121153042.stgit@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162268996135.2724138.14276025100886638786.stgit@locust>
+In-Reply-To: <162268996687.2724138.9307511745121153042.stgit@locust>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 02, 2021 at 08:12:41PM -0700, Darrick J. Wong wrote:
+On Wed, Jun 02, 2021 at 08:12:46PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> While running some fuzz tests on inode metadata, I noticed that the
-> filesystem health report (as provided by xfs_spaceman) failed to report
-> the file corruption even when spaceman was run immediately after running
-> xfs_scrub to detect the corruption.  That isn't the intended behavior;
-> one ought to be able to run scrub to detect errors in the ondisk
-> metadata and be able to access to those reports for some time after the
-> scrub.
+> When we decide to mark an inode sick, clear the DONTCACHE flag so that
+> the incore inode will be kept around until memory pressure forces it out
+> of memory.  This increases the chances that the sick status will be
+> caught by someone compiling a health report later on.
 > 
-> After running the same sequence through an instrumented kernel, I
-> discovered the reason why -- scrub igets the file, scans it, marks it
-> sick, and ireleases the inode.  When the VFS lets go of the incore
-> inode, it moves to RECLAIMABLE state.  If spaceman igets the incore
-> inode before it moves to RECLAIM state, iget reinitializes the VFS
-> state, clears the sick and checked masks, and hands back the inode.  At
-> this point, the caller has the exact same incore inode, but with all the
-> health state erased.
-> 
-> In other words, we're erasing the incore inode's health state flags when
-> we've decided NOT to sever the link between the incore inode and the
-> ondisk inode.  This is wrong, so we need to remove the lines that zero
-> the fields from xfs_iget_cache_hit.
-> 
-> As a precaution, we add the same lines into xfs_reclaim_inode just after
-> we sever the link between incore and ondisk inode.  Strictly speaking
-> this isn't necessary because once an inode has gone through reclaim it
-> must go through xfs_inode_alloc (which also zeroes the state) and
-> xfs_iget is careful to check for mismatches between the inode it pulls
-> out of the radix tree and the one it wants.
-> 
-> Fixes: 6772c1f11206 ("xfs: track metadata health status")
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
-
-I think I reviewed this the last time around..
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_icache.c |    5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
+>  fs/xfs/xfs_health.c |    5 +++++
+>  fs/xfs/xfs_icache.c |    3 ++-
+>  2 files changed, 7 insertions(+), 1 deletion(-)
 > 
 > 
+> diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+> index 8e0cb05a7142..824e0b781290 100644
+> --- a/fs/xfs/xfs_health.c
+> +++ b/fs/xfs/xfs_health.c
+> @@ -231,6 +231,11 @@ xfs_inode_mark_sick(
+>  	ip->i_sick |= mask;
+>  	ip->i_checked |= mask;
+>  	spin_unlock(&ip->i_flags_lock);
+> +
+> +	/* Keep this inode around so we don't lose the sickness report. */
+> +	spin_lock(&VFS_I(ip)->i_lock);
+> +	VFS_I(ip)->i_state &= ~I_DONTCACHE;
+> +	spin_unlock(&VFS_I(ip)->i_lock);
+
+If I follow the scrub code correctly, it will grab a dontcache reference
+on the inode, so presumably the intent here is to clear that status once
+we've identified some problem to keep the inode around. Seems
+reasonable.
+
+>  }
+>  
+>  /* Mark parts of an inode healed. */
 > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 396cc54ca03f..c3f912a9231b 100644
+> index c3f912a9231b..0e2b6c05e604 100644
 > --- a/fs/xfs/xfs_icache.c
 > +++ b/fs/xfs/xfs_icache.c
-> @@ -523,9 +523,6 @@ xfs_iget_cache_hit(
->  				XFS_INO_TO_AGINO(pag->pag_mount, ino),
->  				XFS_ICI_RECLAIM_TAG);
->  		inode->i_state = I_NEW;
-> -		ip->i_sick = 0;
-> -		ip->i_checked = 0;
-> -
->  		spin_unlock(&ip->i_flags_lock);
->  		spin_unlock(&pag->pag_ici_lock);
->  	} else {
-> @@ -979,6 +976,8 @@ xfs_reclaim_inode(
->  	spin_lock(&ip->i_flags_lock);
->  	ip->i_flags = XFS_IRECLAIM;
->  	ip->i_ino = 0;
-> +	ip->i_sick = 0;
-> +	ip->i_checked = 0;
->  	spin_unlock(&ip->i_flags_lock);
+> @@ -23,6 +23,7 @@
+>  #include "xfs_dquot.h"
+>  #include "xfs_reflink.h"
+>  #include "xfs_ialloc.h"
+> +#include "xfs_health.h"
 >  
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  #include <linux/iversion.h>
+>  
+> @@ -648,7 +649,7 @@ xfs_iget_cache_miss(
+>  	 * time.
+>  	 */
+>  	iflags = XFS_INEW;
+> -	if (flags & XFS_IGET_DONTCACHE)
+> +	if ((flags & XFS_IGET_DONTCACHE) && xfs_inode_is_healthy(ip))
+>  		d_mark_dontcache(VFS_I(ip));
+
+This one I'm less clear on.. we've just allocated ip above and haven't
+made it accessible yet. What's the use case for finding an unhealthy
+inode here?
+
+Brian
+
+>  	ip->i_udquot = NULL;
+>  	ip->i_gdquot = NULL;
 > 
 
