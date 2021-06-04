@@ -2,125 +2,183 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C43CC47096
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 22:43:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D71DFC47082
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Jun 2021 01:18:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 102C6613D8
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Jun 2021 22:43:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A860061168
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Jun 2021 01:18:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229629AbhFCWpi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 18:45:38 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:41023 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229610AbhFCWpi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 18:45:38 -0400
-Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id C37F41AFBF9;
-        Fri,  4 Jun 2021 08:43:36 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1low3r-008e6X-1r; Fri, 04 Jun 2021 08:43:35 +1000
-Date:   Fri, 4 Jun 2021 08:43:35 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 00/39 v5] xfs: CIL and log optimisations
-Message-ID: <20210603224335.GT664593@dread.disaster.area>
-References: <20210603052240.171998-1-david@fromorbit.com>
- <20210603170513.GH26402@locust>
+        id S229772AbhFDBUl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 21:20:41 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:45492 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229576AbhFDBUl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 21:20:41 -0400
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3Ag3ZKiKlaGTCpHJTyTExY54VFtYLpDfLI3DAb?=
+ =?us-ascii?q?v31ZSRFFG/Fxl6iV8sjzsiWE7gr5OUtQ4OxoV5PhfZqxz/JICMwqTNKftWrdyQ?=
+ =?us-ascii?q?yVxeNZnOjfKlTbckWUnINgPOVbAsxD4bbLbGSS4/yU3ODBKadD/DCYytHUuc7u?=
+ =?us-ascii?q?i2dqURpxa7xtqyNwCgOgGEVwQwVcbKBJb6a0145WoSa6Y3QLYoCeDnkBZeLKoN?=
+ =?us-ascii?q?rGj9bIehgDbiRXkjWmvHe57qLgCRiE0lM7WzNL+70r9m/IiEjYy8yYwomG9iM?=
+ =?us-ascii?q?=3D?=
+X-IronPort-AV: E=Sophos;i="5.83,246,1616428800"; 
+   d="scan'208";a="109209786"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 04 Jun 2021 09:18:54 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id 9860D4C36A0F;
+        Fri,  4 Jun 2021 09:18:51 +0800 (CST)
+Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Fri, 4 Jun 2021 09:18:51 +0800
+Received: from irides.mr.mr.mr (10.167.225.141) by
+ G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Fri, 4 Jun 2021 09:18:51 +0800
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <dm-devel@redhat.com>
+CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <agk@redhat.com>,
+        <snitzer@redhat.com>, <rgoldwyn@suse.de>
+Subject: [PATCH v4 02/10] dax: Introduce holder for dax_device
+Date:   Fri, 4 Jun 2021 09:18:36 +0800
+Message-ID: <20210604011844.1756145-3-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210604011844.1756145-1-ruansy.fnst@fujitsu.com>
+References: <20210604011844.1756145-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210603170513.GH26402@locust>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=AU4K_jjmL_ufvn0EDyEA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 9860D4C36A0F.A12C5
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 03, 2021 at 10:05:13AM -0700, Darrick J. Wong wrote:
-> On Thu, Jun 03, 2021 at 03:22:01PM +1000, Dave Chinner wrote:
-> > Hi folks,
-> > 
-> > This is an update of the consolidated log scalability patchset I've been working
-> > on. Version 4 was posted here:
-> > 
-> > https://lore.kernel.org/linux-xfs/20210519121317.585244-1-david@fromorbit.com/
-> > 
-> > This version contains the changes Darrick requested during review. The only
-> > patch remaining without at least one RVB tag is patch 30.
-> > 
-> > Performance improvements are largely documented in the change logs of the
-> > individual patches. Headline numbers are an increase in transaction rate from
-> > 700k commits/s to 1.7M commits/s, and a reduction in fua/flush operations by
-> > 2-3 orders of magnitude on metadata heavy workloads that don't use fsync.
-> > 
-> > Summary of series:
-> > 
-> > Patches		Modifications
-> > -------		-------------
-> > 1-7:		log write FUA/FLUSH optimisations
-> > 8:		bug fix
-> > 9-11:		Async CIL pushes
-> > 12-25:		xlog_write() rework
-> > 26-39:		CIL commit scalability
-> 
-> From this latest posting, I see that the first nine patches all have
-> multiple reviews.  Some of patches 10-19 have review tags split between
-> Brian and Christoph, but neither have added them all the way through.
-> I think I'm the only one who has supplied RVB tags for all forty.
-> 
-> So my question is: at what point would you like me to pull the segments
-> of this patchset into upstream?  "The maintainer reviewed everything" is
-> of course our usual standard, but this touches a /lot/ of core logging
-> code, and logging isn't one of my stronger areas of familiarity.
-> 
-> I think 1-8 look fine for 5.14.  Do you want me to wait for Brian and/or
-> Christoph (or really, any third pair of eyes) to finish working their
-> way through 9-11 and 12-25 before merging them?
+To easily track filesystem from a pmem device, we introduce a holder for
+dax_device structure, and also its operation.  This holder is used to
+remember who is using this dax_device:
+ - When it is the backend of a filesystem, the holder will be the
+   superblock of this filesystem.
+ - When this pmem device is one of the targets in a mapped device, the
+   holder will be this mapped device.  In this case, the mapped device
+   has its own dax_device and it will follow the first rule.  So that we
+   can finally track to the filesystem we needed.
 
-Quite frankly, I don't think waiting longer for more review is going
-to do much to improve the code further. It's largely unchanged since
-the last merge cycle went by when I was already waiting for reviews
-and it was considered "not enough time to review in this cycle".
-It's got enough reviews now to pass the merge bar, and the only way
-we are going to shake any remaining problems with this code out is
-to merge it and get it out to a wider testing base....
+The holder and holder_ops will be set when filesystem is being mounted,
+or an target device is being activated.
 
-Indeed, if it is merged now it is going to sit another 3 months in
-for-next+rc kernels before it is released to users, so I don't think
-having it sit for another 3 months only in my test tree before it
-gets wider testing benefits anyone. All it does is slow me down and
-start pushing me towards having an entirely unmanageable review
-backlog like you already have, Darrick.
+Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+---
+ drivers/dax/super.c | 38 ++++++++++++++++++++++++++++++++++++++
+ include/linux/dax.h | 10 ++++++++++
+ 2 files changed, 48 insertions(+)
 
-Given that our rate-of-merge limitations are largely caused by a
-lack of review bandwidth, putting off merging code that has already
-met the review bar so it can have "more review" seems like a big
-step backwards in terms of working through our review backlog. We
-need to review and merge stuff faster, not block more stuff by
-trying to make review capture every possible problem before we merge
-the code.
-
-So, yeah, if I were maintainer and I saw every patch had a RVB on
-it, I'd be merging it straight away. But I'm not the maintainer, so
-I'll do whatever you want...
-
-I've fixed the little issues with the last posting, and it ran
-through fstests just fine last night, so I'm just about ready to
-send you a pull request for this series.
-
-Cheers,
-
-Dave.
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 5fa6ae9dbc8b..d118e2a7dc70 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -222,8 +222,10 @@ struct dax_device {
+ 	struct cdev cdev;
+ 	const char *host;
+ 	void *private;
++	void *holder;
+ 	unsigned long flags;
+ 	const struct dax_operations *ops;
++	const struct dax_holder_operations *holder_ops;
+ };
+ 
+ static ssize_t write_cache_show(struct device *dev,
+@@ -373,6 +375,24 @@ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
+ }
+ EXPORT_SYMBOL_GPL(dax_zero_page_range);
+ 
++int dax_corrupted_range(struct dax_device *dax_dev, struct block_device *bdev,
++		loff_t offset, size_t size, void *data)
++{
++	int rc = -ENXIO;
++	if (!dax_dev)
++		return rc;
++
++	if (dax_dev->holder) {
++		rc = dax_dev->holder_ops->corrupted_range(dax_dev, bdev, offset,
++							  size, data);
++		if (rc == -ENODEV)
++			rc = -ENXIO;
++	} else
++		rc = -EOPNOTSUPP;
++	return rc;
++}
++EXPORT_SYMBOL_GPL(dax_corrupted_range);
++
+ #ifdef CONFIG_ARCH_HAS_PMEM_API
+ void arch_wb_cache_pmem(void *addr, size_t size);
+ void dax_flush(struct dax_device *dax_dev, void *addr, size_t size)
+@@ -624,6 +644,24 @@ void put_dax(struct dax_device *dax_dev)
+ }
+ EXPORT_SYMBOL_GPL(put_dax);
+ 
++void dax_set_holder(struct dax_device *dax_dev, void *holder,
++		const struct dax_holder_operations *ops)
++{
++	if (!dax_dev)
++		return;
++	dax_dev->holder = holder;
++	dax_dev->holder_ops = ops;
++}
++EXPORT_SYMBOL_GPL(dax_set_holder);
++
++void *dax_get_holder(struct dax_device *dax_dev)
++{
++	if (!dax_dev)
++		return NULL;
++	return dax_dev->holder;
++}
++EXPORT_SYMBOL_GPL(dax_get_holder);
++
+ /**
+  * dax_get_by_host() - temporary lookup mechanism for filesystem-dax
+  * @host: alternate name for the device registered by a dax driver
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index b52f084aa643..1ce343a960ab 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -38,10 +38,18 @@ struct dax_operations {
+ 	int (*zero_page_range)(struct dax_device *, pgoff_t, size_t);
+ };
+ 
++struct dax_holder_operations {
++	int (*corrupted_range)(struct dax_device *, struct block_device *,
++			loff_t, size_t, void *);
++};
++
+ extern struct attribute_group dax_attribute_group;
+ 
+ #if IS_ENABLED(CONFIG_DAX)
+ struct dax_device *dax_get_by_host(const char *host);
++void dax_set_holder(struct dax_device *dax_dev, void *holder,
++		const struct dax_holder_operations *ops);
++void *dax_get_holder(struct dax_device *dax_dev);
+ struct dax_device *alloc_dax(void *private, const char *host,
+ 		const struct dax_operations *ops, unsigned long flags);
+ void put_dax(struct dax_device *dax_dev);
+@@ -226,6 +234,8 @@ size_t dax_copy_to_iter(struct dax_device *dax_dev, pgoff_t pgoff, void *addr,
+ 		size_t bytes, struct iov_iter *i);
+ int dax_zero_page_range(struct dax_device *dax_dev, pgoff_t pgoff,
+ 			size_t nr_pages);
++int dax_corrupted_range(struct dax_device *dax_dev, struct block_device *bdev,
++		loff_t offset, size_t size, void *data);
+ void dax_flush(struct dax_device *dax_dev, void *addr, size_t size);
+ 
+ ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
 -- 
-Dave Chinner
-david@fromorbit.com
+2.31.1
+
+
+
