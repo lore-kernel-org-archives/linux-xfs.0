@@ -2,269 +2,188 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4E9CC47096
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Jun 2021 01:19:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 651DFC47082
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Jun 2021 03:29:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFF5C613F1
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Jun 2021 01:19:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47141613DE
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Jun 2021 03:29:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230145AbhFDBVg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 21:21:36 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:12868 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229911AbhFDBVg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 21:21:36 -0400
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A9SJqT6lOmHo+bnnG0ZR7u1pBhNHpDfLI3DAb?=
- =?us-ascii?q?v31ZSRFFG/Fxl6iV8sjzsiWE7gr5OUtQ4OxoV5PhfZqxz/JICMwqTNKftWrdyQ?=
- =?us-ascii?q?yVxeNZnOjfKlTbckWUnINgPOVbAsxD4bbLbGSS4/yU3ODBKadD/DCYytHUuc7u?=
- =?us-ascii?q?i2dqURpxa7xtqyNwCgOgGEVwQwVcbKBJb6a0145WoSa6Y3QLYoCeDnkBZeLKoN?=
- =?us-ascii?q?rGj9bIehgDbiRXkjWmvHe57qLgCRiE0lM7WzNL+70r9m/IiEjYy8yYwomG9iM?=
- =?us-ascii?q?=3D?=
-X-IronPort-AV: E=Sophos;i="5.83,246,1616428800"; 
-   d="scan'208";a="109209841"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 04 Jun 2021 09:19:49 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 7B97E4C36A01;
-        Fri,  4 Jun 2021 09:19:46 +0800 (CST)
-Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Fri, 4 Jun 2021 09:19:36 +0800
-Received: from irides.mr.mr.mr (10.167.225.141) by
- G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Fri, 4 Jun 2021 09:19:35 +0800
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>, <dm-devel@redhat.com>
-CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <agk@redhat.com>,
-        <snitzer@redhat.com>, <rgoldwyn@suse.de>
-Subject: [PATCH v4 09/10] xfs: Implement ->corrupted_range() for XFS
-Date:   Fri, 4 Jun 2021 09:18:43 +0800
-Message-ID: <20210604011844.1756145-10-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210604011844.1756145-1-ruansy.fnst@fujitsu.com>
-References: <20210604011844.1756145-1-ruansy.fnst@fujitsu.com>
+        id S229752AbhFDDbR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 23:31:17 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:45177 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229704AbhFDDbQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 23:31:16 -0400
+Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id DF8561AFC6B;
+        Fri,  4 Jun 2021 13:29:29 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lp0WW-008iqK-U0; Fri, 04 Jun 2021 13:29:29 +1000
+Date:   Fri, 4 Jun 2021 13:29:28 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: [GIT PULL] xfs: CIL and log scalability improvements
+Message-ID: <20210604032928.GU664593@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 7B97E4C36A01.A2B39
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=Pd3FYh-qvBS4izetHo8A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This function is used to handle errors which may cause data lost in
-filesystem.  Such as memory failure in fsdax mode.
+Hi Darrick,
 
-If the rmap feature of XFS enabled, we can query it to find files and
-metadata which are associated with the corrupt data.  For now all we do
-is kill processes with that file mapped into their address spaces, but
-future patches could actually do something about corrupt metadata.
+Can you please pull the CIL and log improvements from the tag listed
+below?
 
-After that, the memory failure needs to notify the processes who are
-using those files.
+Cheers,
 
-Only support data device.  Realtime device is not supported for now.
+Dave.
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- fs/xfs/xfs_fsops.c |   5 +++
- fs/xfs/xfs_mount.h |   1 +
- fs/xfs/xfs_super.c | 108 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 114 insertions(+)
+The following changes since commit d07f6ca923ea0927a1024dfccafc5b53b61cfecc:
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index be9cf88d2ad7..e89ada33d8fc 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -551,6 +551,11 @@ xfs_do_force_shutdown(
- "Corruption of in-memory data detected.  Shutting down filesystem");
- 		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
- 			xfs_stack_trace();
-+	} else if (flags & SHUTDOWN_CORRUPT_META) {
-+		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
-+"Corruption of on-disk metadata detected.  Shutting down filesystem");
-+		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
-+			xfs_stack_trace();
- 	} else if (logerror) {
- 		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
- 			"Log I/O Error Detected. Shutting down filesystem");
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index bb67274ee23f..c62ccf3e07d0 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -276,6 +276,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
- #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
- #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
-+#define SHUTDOWN_CORRUPT_META	0x0010  /* corrupt metadata on device */
- 
- /*
-  * Flags for xfs_mountfs
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index a2dab05332ac..498edaeb8363 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -36,6 +36,11 @@
- #include "xfs_bmap_item.h"
- #include "xfs_reflink.h"
- #include "xfs_pwork.h"
-+#include "xfs_alloc.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_bit.h"
- 
- #include <linux/magic.h>
- #include <linux/fs_context.h>
-@@ -392,6 +397,7 @@ xfs_open_devices(
- 	struct block_device	*logdev = NULL, *rtdev = NULL;
- 	int			error;
- 
-+	dax_set_holder(dax_ddev, mp->m_super, &fs_dax_holder_ops);
- 	/*
- 	 * Open real time and log devices - order is important.
- 	 */
-@@ -400,6 +406,9 @@ xfs_open_devices(
- 		if (error)
- 			goto out;
- 		dax_logdev = fs_dax_get_by_bdev(logdev);
-+		if (dax_logdev != dax_ddev)
-+			dax_set_holder(dax_logdev, mp->m_super,
-+				       &fs_dax_holder_ops);
- 	}
- 
- 	if (mp->m_rtname) {
-@@ -414,6 +423,7 @@ xfs_open_devices(
- 			goto out_close_rtdev;
- 		}
- 		dax_rtdev = fs_dax_get_by_bdev(rtdev);
-+		dax_set_holder(dax_rtdev, mp->m_super, &fs_dax_holder_ops);
- 	}
- 
- 	/*
-@@ -1076,6 +1086,103 @@ xfs_fs_free_cached_objects(
- 	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
- }
- 
-+static int
-+xfs_corrupt_helper(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*data)
-+{
-+	struct xfs_inode		*ip;
-+	struct address_space		*mapping;
-+	int				rc = 0;
-+	int				*flags = data;
-+
-+	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
-+	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-+		// TODO check and try to fix metadata
-+		xfs_force_shutdown(cur->bc_mp, SHUTDOWN_CORRUPT_META);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	/*
-+	 * Get files that incore, filter out others that are not in use.
-+	 */
-+	rc = xfs_iget(cur->bc_mp, cur->bc_tp, rec->rm_owner, XFS_IGET_INCORE,
-+			0, &ip);
-+	if (rc)
-+		return rc;
-+
-+	mapping = VFS_I(ip)->i_mapping;
-+	rc = mf_dax_kill_procs(mapping, rec->rm_offset, *flags);
-+
-+	// TODO try to fix data
-+	xfs_irele(ip);
-+
-+	return rc;
-+}
-+
-+static int
-+xfs_fs_corrupted_range(
-+	struct super_block	*sb,
-+	struct block_device	*bdev,
-+	loff_t			offset,
-+	size_t			len,
-+	void			*data)
-+{
-+	struct xfs_mount	*mp = XFS_M(sb);
-+	struct xfs_trans	*tp = NULL;
-+	struct xfs_btree_cur	*cur = NULL;
-+	struct xfs_rmap_irec	rmap_low, rmap_high;
-+	struct xfs_buf		*agf_bp = NULL;
-+	xfs_fsblock_t		fsbno = XFS_B_TO_FSB(mp, offset);
-+	xfs_filblks_t		bcnt = XFS_B_TO_FSB(mp, len);
-+	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	int			error = 0;
-+
-+	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_bdev == bdev) {
-+		xfs_warn(mp, "corrupted_range support not available for realtime device!");
-+		return -EOPNOTSUPP;
-+	}
-+	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_bdev == bdev &&
-+	    mp->m_logdev_targp != mp->m_ddev_targp) {
-+		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		xfs_warn(mp, "corrupted_range needs rmapbt enabled!");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	error = xfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
-+	if (error)
-+		goto out_cancel_tp;
-+
-+	cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agno);
-+
-+	/* Construct a range for rmap query */
-+	memset(&rmap_low, 0, sizeof(rmap_low));
-+	memset(&rmap_high, 0xFF, sizeof(rmap_high));
-+	rmap_low.rm_startblock = rmap_high.rm_startblock = agbno;
-+	rmap_low.rm_blockcount = rmap_high.rm_blockcount = bcnt;
-+
-+	error = xfs_rmap_query_range(cur, &rmap_low, &rmap_high,
-+				     xfs_corrupt_helper, data);
-+
-+	xfs_btree_del_cursor(cur, error);
-+	xfs_trans_brelse(tp, agf_bp);
-+
-+out_cancel_tp:
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-@@ -1089,6 +1196,7 @@ static const struct super_operations xfs_super_operations = {
- 	.show_options		= xfs_fs_show_options,
- 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
- 	.free_cached_objects	= xfs_fs_free_cached_objects,
-+	.corrupted_range	= xfs_fs_corrupted_range,
- };
- 
- static int
+  Linux 5.13-rc2 (2021-05-16 15:27:44 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-cil-scale-tag
+
+for you to fetch changes up to 856d6346ad5e76f230906792b1eb4ba70c860748:
+
+  xfs: expanding delayed logging design with background material (2021-06-04 12:42:29 +1000)
+
+----------------------------------------------------------------
+xfs: CIL and log scalability improvements
+
+Performance improvements are largely documented in the change logs of the
+individual patches. Headline numbers are an increase in transaction rate from
+700k commits/s to 1.7M commits/s, and a reduction in fua/flush operations by
+2-3 orders of magnitude on metadata heavy workloads that don't use fsync.
+
+Summary of series:
+
+Patches         Modifications
+-------         -------------
+1-7:            log write FUA/FLUSH optimisations
+8:              bug fix
+9-11:           Async CIL pushes
+12-25:          xlog_write() rework
+26-39:          CIL commit scalability
+
+The log write FUA/FLUSH optimisations reduce the number of cache flushes
+required to flush the CIL to the journal. It extends the old pre-delayed logging
+ordering semantics required by writing individual transactions to the iclogs out
+to cover then CIL checkpoint transactions rather than individual writes to the
+iclogs. In doing so, we reduce the cache flush requirements to once per CIL
+checkpoint rather than once per iclog write.
+
+The async CIL pushes fix a pipeline limitation that only allowed a single CIL
+push to be processed at a time. This was causing CIL checkpoint writing to
+become CPU bound as only a single CIL checkpoint could be pushed at a time. The
+checkpoint pipleine was designed to allow multiple pushes to be in flight at
+once and use careful ordering of the commit records to ensure correct recovery
+order, but the workqueue implementation didn't allow concurrent works to be run.
+The concurrent works now extend out to 4 CIL checkpoints running at a time,
+hence removing the CPU usage limiations without introducing new lock contention
+issues.
+
+The xlog_write() rework is long overdue. The code is complex, difficult to
+understand, full of tricky, subtle corner cases and just generally really hard
+to modify. This patchset reworks the xlog_write() API to reduce the processing
+overhead of writing out long log vector chains, and factors the xlog_write()
+code into a simple, compact fast path along with a clearer slow path to handle
+the complex cases.
+
+The CIL commit scalability patchset removes spinlocks from the transaction
+commit fast path. These spinlocks are the performance limiting bottleneck in the
+transaction commit path, so we apply a variety of different techniques to do
+either atomic. lockless or per-cpu updates of the CIL tracking structures during
+commits. This greatly increases the throughput of the the transaction commit
+engine, moving the contention point to the log space tracking algorithms after
+doubling throughput on 32-way workloads.
+
+----------------------------------------------------------------
+Dave Chinner (39):
+      xfs: log stripe roundoff is a property of the log
+      xfs: separate CIL commit record IO
+      xfs: remove xfs_blkdev_issue_flush
+      xfs: async blkdev cache flush
+      xfs: CIL checkpoint flushes caches unconditionally
+      xfs: remove need_start_rec parameter from xlog_write()
+      xfs: journal IO cache flush reductions
+      xfs: Fix CIL throttle hang when CIL space used going backwards
+      xfs: xfs_log_force_lsn isn't passed a LSN
+      xfs: AIL needs asynchronous CIL forcing
+      xfs: CIL work is serialised, not pipelined
+      xfs: factor out the CIL transaction header building
+      xfs: only CIL pushes require a start record
+      xfs: embed the xlog_op_header in the unmount record
+      xfs: embed the xlog_op_header in the commit record
+      xfs: log tickets don't need log client id
+      xfs: move log iovec alignment to preparation function
+      xfs: reserve space and initialise xlog_op_header in item formatting
+      xfs: log ticket region debug is largely useless
+      xfs: pass lv chain length into xlog_write()
+      xfs: introduce xlog_write_single()
+      xfs:_introduce xlog_write_partial()
+      xfs: xlog_write() no longer needs contwr state
+      xfs: xlog_write() doesn't need optype anymore
+      xfs: CIL context doesn't need to count iovecs
+      xfs: use the CIL space used counter for emptiness checks
+      xfs: lift init CIL reservation out of xc_cil_lock
+      xfs: rework per-iclog header CIL reservation
+      xfs: introduce per-cpu CIL tracking structure
+      xfs: implement percpu cil space used calculation
+      xfs: track CIL ticket reservation in percpu structure
+      xfs: convert CIL busy extents to per-cpu
+      xfs: Add order IDs to log items in CIL
+      xfs: convert CIL to unordered per cpu lists
+      xfs: convert log vector chain to use list heads
+      xfs: move CIL ordering to the logvec chain
+      xfs: avoid cil push lock if possible
+      xfs: xlog_sync() manually adjusts grant head space
+      xfs: expanding delayed logging design with background material
+
+ Documentation/filesystems/xfs-delayed-logging-design.rst |  361 ++++++++++++++++++++++++++----
+ fs/xfs/libxfs/xfs_log_format.h                           |    4 -
+ fs/xfs/libxfs/xfs_types.h                                |    1 +
+ fs/xfs/xfs_bio_io.c                                      |   35 +++
+ fs/xfs/xfs_buf.c                                         |    2 +-
+ fs/xfs/xfs_buf_item.c                                    |   39 ++--
+ fs/xfs/xfs_dquot_item.c                                  |    2 +-
+ fs/xfs/xfs_file.c                                        |   20 +-
+ fs/xfs/xfs_inode.c                                       |   10 +-
+ fs/xfs/xfs_inode_item.c                                  |   18 +-
+ fs/xfs/xfs_inode_item.h                                  |    2 +-
+ fs/xfs/xfs_linux.h                                       |    2 +
+ fs/xfs/xfs_log.c                                         | 1015 +++++++++++++++++++++++++++++++++++++++---------------------------------------------
+ fs/xfs/xfs_log.h                                         |   66 ++----
+ fs/xfs/xfs_log_cil.c                                     |  822 ++++++++++++++++++++++++++++++++++++++++++++++++++------------------
+ fs/xfs/xfs_log_priv.h                                    |  114 +++++-----
+ fs/xfs/xfs_super.c                                       |   13 +-
+ fs/xfs/xfs_super.h                                       |    1 -
+ fs/xfs/xfs_sysfs.c                                       |    1 +
+ fs/xfs/xfs_trace.c                                       |    1 +
+ fs/xfs/xfs_trans.c                                       |   18 +-
+ fs/xfs/xfs_trans.h                                       |    5 +-
+ fs/xfs/xfs_trans_ail.c                                   |   11 +-
+ fs/xfs/xfs_trans_priv.h                                  |    3 +-
+ include/linux/cpuhotplug.h                               |    1 +
+ 25 files changed, 1603 insertions(+), 964 deletions(-)
+
 -- 
-2.31.1
-
-
-
+Dave Chinner
+david@fromorbit.com
