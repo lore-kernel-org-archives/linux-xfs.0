@@ -2,41 +2,39 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1FB5C47097
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Jun 2021 01:19:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D74E8C47098
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Jun 2021 01:19:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8539D6120F
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Jun 2021 01:19:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCC88610E7
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Jun 2021 01:19:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229981AbhFDBUn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Jun 2021 21:20:43 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:45492 "EHLO
+        id S229995AbhFDBUr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Jun 2021 21:20:47 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:12799 "EHLO
         heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229882AbhFDBUm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 21:20:42 -0400
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A97nSk66uC1F30wIpuQPXwCzXdLJyesId70hD?=
- =?us-ascii?q?6qhwISY6TiX+rbHJoB17726MtN9/YhEdcLy7VJVoBEmskKKdgrNhWotKPjOW21?=
- =?us-ascii?q?dARbsKheCJrgEIWReOktK1vp0AT0ERMrLN5CBB/KTHCReDYqsd6ejC4Ka1nv3f?=
- =?us-ascii?q?0nsoaQlrbptr5wB/Bh3zKDwMeCB2QYo+CIGH5tdK4x6peXEsZMy9AXUfG8fZod?=
- =?us-ascii?q?mjruOdXTc2Qw4g9BKVjS6lrJrzEx2j1B8YVD9VhZcOmFK16zDE2g=3D=3D?=
+        with ESMTP id S229973AbhFDBUn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jun 2021 21:20:43 -0400
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AA3bLW6jvnopU4Bnx6L9YoZtz3nBQXuYji2hC?=
+ =?us-ascii?q?6mlwRA09TyX4rbHLoB1/73LJYVkqNk3I5urrBEDtexLhHP1OkOws1NWZLWrbUQ?=
+ =?us-ascii?q?KTRekM0WKI+UyDJ8SRzI5g/JYlW61/Jfm1NlJikPv9iTPSL/8QhPWB74Ck7N2z?=
+ =?us-ascii?q?80tQ?=
 X-IronPort-AV: E=Sophos;i="5.83,246,1616428800"; 
-   d="scan'208";a="109209788"
+   d="scan'208";a="109209787"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
   by heian.cn.fujitsu.com with ESMTP; 04 Jun 2021 09:18:54 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id B3A5D4C36A05;
-        Fri,  4 Jun 2021 09:18:52 +0800 (CST)
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 31BEC4C369FE;
+        Fri,  4 Jun 2021 09:18:49 +0800 (CST)
 Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Fri, 4 Jun 2021 09:18:54 +0800
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Fri, 4 Jun 2021 09:18:49 +0800
 Received: from irides.mr.mr.mr (10.167.225.141) by
  G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Fri, 4 Jun 2021 09:18:52 +0800
+ id 15.0.1497.2 via Frontend Transport; Fri, 4 Jun 2021 09:18:48 +0800
 From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
 To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
@@ -44,45 +42,92 @@ To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
 CC:     <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
         <david@fromorbit.com>, <hch@lst.de>, <agk@redhat.com>,
         <snitzer@redhat.com>, <rgoldwyn@suse.de>
-Subject: [PATCH v4 03/10] fs: Introduce ->corrupted_range() for superblock
-Date:   Fri, 4 Jun 2021 09:18:37 +0800
-Message-ID: <20210604011844.1756145-4-ruansy.fnst@fujitsu.com>
+Subject: [PATCH v4 00/10] fsdax: introduce fs query to support reflink
+Date:   Fri, 4 Jun 2021 09:18:34 +0800
+Message-ID: <20210604011844.1756145-1-ruansy.fnst@fujitsu.com>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210604011844.1756145-1-ruansy.fnst@fujitsu.com>
-References: <20210604011844.1756145-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: B3A5D4C36A05.A0A85
+X-yoursite-MailScanner-ID: 31BEC4C369FE.A3141
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Memory failure occurs in fsdax mode will finally be handled in
-filesystem.  We introduce this interface to find out files or metadata
-affected by the corrupted range, and try to recover the corrupted data
-if possiable.
+This patchset is aimed to support shared pages tracking for fsdax.
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- include/linux/fs.h | 2 ++
- 1 file changed, 2 insertions(+)
+Change from V3:
+  - Introduce dax_device->holder to split dax specific issues from
+    block device, instead of the ->corrupted_range() in
+    block_device_operations
+  - Other mistakes and problems fix
+  - Rebased to v5.13-rc4
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index c3c88fdb9b2a..92af36c4225f 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2176,6 +2176,8 @@ struct super_operations {
- 				  struct shrink_control *);
- 	long (*free_cached_objects)(struct super_block *,
- 				    struct shrink_control *);
-+	int (*corrupted_range)(struct super_block *sb, struct block_device *bdev,
-+			       loff_t offset, size_t len, void *data);
- };
- 
- /*
+This patchset moves owner tracking from dax_assocaite_entry() to pmem
+device driver, by introducing an interface ->memory_failure() of struct
+pagemap.  This interface is called by memory_failure() in mm, and
+implemented by pmem device.
+
+Then call holder operations to find the filesystem which the corrupted
+data located in, and call filesystem handler to track files or metadata
+associated with this page.
+
+Finally we are able to try to fix the corrupted data in filesystem and
+do other necessary processing, such as killing processes who are using
+the files affected.
+
+The call trace is like this:
+memory_failure()
+ pgmap->ops->memory_failure()      => pmem_pgmap_memory_failure()
+  dax_device->holder_ops->corrupted_range() =>
+                                      - fs_dax_corrupted_range()
+                                      - md_dax_corrupted_range()
+   sb->s_ops->currupted_range()    => xfs_fs_corrupted_range()
+    xfs_rmap_query_range()
+     xfs_currupt_helper()
+      * corrupted on metadata
+          try to recover data, call xfs_force_shutdown()
+      * corrupted on file data
+          try to recover data, call mf_dax_kill_procs()
+
+The fsdax & reflink support for XFS is not contained in this patchset.
+
+(Rebased on v5.13-rc4)
+==
+
+
+Shiyang Ruan (10):
+  pagemap: Introduce ->memory_failure()
+  dax: Introduce holder for dax_device
+  fs: Introduce ->corrupted_range() for superblock
+  mm, fsdax: Refactor memory-failure handler for dax mapping
+  mm, pmem: Implement ->memory_failure() in pmem driver
+  fs/dax: Implement dax_holder_operations
+  dm: Introduce ->rmap() to find bdev offset
+  md: Implement dax_holder_operations
+  xfs: Implement ->corrupted_range() for XFS
+  fs/dax: Remove useless functions
+
+ block/genhd.c                 |  30 ++++++
+ drivers/dax/super.c           |  38 ++++++++
+ drivers/md/dm-linear.c        |  20 ++++
+ drivers/md/dm.c               | 119 ++++++++++++++++++++++-
+ drivers/nvdimm/pmem.c         |  14 +++
+ fs/dax.c                      |  79 +++++++---------
+ fs/xfs/xfs_fsops.c            |   5 +
+ fs/xfs/xfs_mount.h            |   1 +
+ fs/xfs/xfs_super.c            | 108 +++++++++++++++++++++
+ include/linux/dax.h           |  13 +++
+ include/linux/device-mapper.h |   5 +
+ include/linux/fs.h            |   2 +
+ include/linux/genhd.h         |   1 +
+ include/linux/memremap.h      |   8 ++
+ include/linux/mm.h            |   9 ++
+ mm/memory-failure.c           | 173 ++++++++++++++++++++++------------
+ 16 files changed, 520 insertions(+), 105 deletions(-)
+
 -- 
 2.31.1
 
