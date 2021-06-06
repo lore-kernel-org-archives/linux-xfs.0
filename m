@@ -2,141 +2,143 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E492C4743E
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Jun 2021 18:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F66EC4743F
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Jun 2021 22:11:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B70A6136D
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Jun 2021 18:05:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4077E611C1
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Jun 2021 22:11:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229764AbhFFSG7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Jun 2021 14:06:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57112 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229474AbhFFSG7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 6 Jun 2021 14:06:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B05306139A;
-        Sun,  6 Jun 2021 18:05:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623002709;
-        bh=eA65rCkKZ0o8UvPjxxfm8K5PmUThmbuVaE4s1m3vGz4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ZfUTu9BtQLwcZ46dWpfQnUkPtula+CzHAvEUsuBeO/jAakrRqkTCncvf/yC6ddIOX
-         5XO8s6138hXKsb/1RgjP3e3zPTr7xmA5ZaCoyWp1o+goZ8iNkwRPINt093M4lY2wF8
-         BKZAFqzI0oRpdzQHjdi2vZXdQBX4pxgsb7Dcya/mWbgvIza+5rCO9U3N4/eJivOcCv
-         yLuKMc0yr8jmoG1faLrJcomVHOmybyJwg2qX3ub+n+IrXJKg0KG87vdtUAQBv5CxOo
-         yKtj5M7KLzEcIqeLxmfnw0ujZRgggRhZhZZVICJGoFaaUBai+y2FE233jdaO+wSRUU
-         ep43xu0hPZ5Sw==
-Date:   Sun, 6 Jun 2021 11:05:09 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eryu Guan <guan@eryu.me>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCHSET RFC 00/10] fstests: move test group lists into test
- files
-Message-ID: <20210606180509.GE2945738@locust>
-References: <162199360248.3744214.17042613373014687643.stgit@locust>
- <YLzfV9Xx1ynZQau+@desktop>
+        id S230398AbhFFWN2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 6 Jun 2021 18:13:28 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:52409 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230355AbhFFWN2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Jun 2021 18:13:28 -0400
+Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 16C9210990D;
+        Mon,  7 Jun 2021 08:11:21 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lq0zH-009mNg-Lp; Mon, 07 Jun 2021 08:11:19 +1000
+Date:   Mon, 7 Jun 2021 08:11:19 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [GIT PULL] xfs: CIL and log scalability improvements
+Message-ID: <20210606221119.GW664593@dread.disaster.area>
+References: <20210604032928.GU664593@dread.disaster.area>
+ <20210605020354.GG26380@locust>
+ <20210605021533.GH26380@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YLzfV9Xx1ynZQau+@desktop>
+In-Reply-To: <20210605021533.GH26380@locust>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=7-415B0cAAAA:8
+        a=5qwbSo7xEbUzIbcv7coA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jun 06, 2021 at 10:44:39PM +0800, Eryu Guan wrote:
-> On Tue, May 25, 2021 at 06:46:42PM -0700, Darrick J. Wong wrote:
-> > Hi all,
+On Fri, Jun 04, 2021 at 07:15:33PM -0700, Darrick J. Wong wrote:
+> On Fri, Jun 04, 2021 at 07:03:54PM -0700, Darrick J. Wong wrote:
+> > On Fri, Jun 04, 2021 at 01:29:28PM +1000, Dave Chinner wrote:
+> > > Hi Darrick,
+> > > 
+> > > Can you please pull the CIL and log improvements from the tag listed
+> > > below?
 > > 
-> > Test group files (e.g. tests/generic/group) are a pain to keep up.
-> > Every week I rebase on Eryu's latest upstream, and every week I have to
-> > slog through dozens of trivial merge conflicts because of the
-> > groupfiles.  Moving tests is annoying because we have to maintain all
-> > this code to move the group associations from one /group file to
-> > another.
-> 
-> Thanks for doing this! It looks find overall from a quick look. Mind
-> adding some words in README file as well?
-
-Ok.
-
-> > It doesn't need to be this way -- we could move each test's group
-> > information into the test itself, and automatically generate the group
-> > files as part of the make process.  This series does exactly that.
+> > I tried that and threw the series at fstests, which crashed all VMs with
+> > the following null pointer dereference:
 > > 
-> > The first few patches add some convenient anchors for the new
-> > per-testfile group tagging and a conversion script to migrate existing
-> > test files.  Next there's a huge patch that is the results of running
-> > the conversion script, followed by cleanup of the golden outputs.  After
-> > that comes the build infrastructure to generate group files and other
-> 
-> The group files are auto-generated correctly upon "make", but "make
-> group" printed tons of errors like:
-> 
-> [root@fedoravm xfstests]# make group
->  [GROUP] /root/workspace/xfstests/group
-> /root/workspace/xfstests/tests/btrfs/001: line 9: ./common/test_names: No such file or directory
-> /root/workspace/xfstests/tests/btrfs/001: line 10: _set_seq_and_groups: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 21: ./common/rc: No such file or directory
-> /root/workspace/xfstests/tests/btrfs/001: line 22: ./common/filter: No such file or directory
-> /root/workspace/xfstests/tests/btrfs/001: line 23: ./common/filter.btrfs: No such file or directory
-> /root/workspace/xfstests/tests/btrfs/001: line 26: _supported_fs: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 27: _require_scratch: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 30: _scratch_mount: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 38: _filter_scratch: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 38: subvolume: command not found
-> ls: cannot access '/snap': No such file or directory
-> ls: cannot access '/snap': No such file or directory
-> /root/workspace/xfstests/tests/btrfs/001: line 50: _filter_scratch: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 50: subvolume: command not found
-> ls: cannot access '/subvol': No such file or directory
-> /root/workspace/xfstests/tests/btrfs/001: line 60: _btrfs_get_subvolid: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 61: _filter_scratch: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 61: subvolume: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 62: _scratch_cycle_mount: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 65: _scratch_unmount: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 67: _scratch_mount: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 71: _filter_scratch: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 71: subvolume: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 72: _scratch_cycle_mount: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 78: subvolume: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 81: _filter_btrfs_subvol_delete: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 81: subvolume: command not found
-> /root/workspace/xfstests/tests/btrfs/001: line 84: _scratch_cycle_mount: command not found
-> 
-> I think it's better to let 'make group' work as well, it might be easier
-> to re-generated just group files.
-
-Yikes.  I will investigate this before reposting.
-
-> > tweaks to the existing maintainer scripts to use the new infrastructure.
-> > Finally, remove the group files themselves and the (now unnecessary)
-> > code that maintained them.
+> > BUG: kernel NULL pointer dereference, address: 0000000000000000
+> > #PF: supervisor read access in kernel mode
+> > #PF: error_code(0x0000) - not-present page
+> > PGD 0 P4D 0 
+> > Oops: 0000 [#1] PREEMPT SMP
+> > CPU: 2 PID: 731060 Comm: mount Not tainted 5.13.0-rc4-djwx #rc4
+> > Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
+> > RIP: 0010:xlog_cil_init+0x2f7/0x370 [xfs]
+> > Code: b4 7e a0 bf 1c 00 00 00 e8 c6 3b 8d e0 85 c0 78 0c c6 05 13 7f 12 00 01 e9 7b fd ff ff 4
+> > 2 48 c7 c6 f8 bf 7f a0 <48> 8b 39 e8 f0 24 04 00 31 ff b9 fc 05 00 00 48 c7 c2 d9 b3 7e a0
+> > RSP: 0018:ffffc9000776bcd0 EFLAGS: 00010286
+> > RAX: 00000000fffffff0 RBX: 0000000000000000 RCX: 0000000000000000
+> > RDX: 00000000fffffff0 RSI: ffffffffa07fbff8 RDI: 00000000ffffffff
+> > RBP: ffff888004cf3c00 R08: ffffffffa078fb40 R09: 0000000000000000
+> > R10: 000000000000000c R11: 0000000000000048 R12: ffff888052810000
+> > R13: 0000607f81c0b0f8 R14: ffff888004a09c00 R15: ffff888004a09c00
+> > FS:  00007fd2e4486840(0000) GS:ffff88807e000000(0000) knlGS:0000000000000000
+> > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > CR2: 0000000000000000 CR3: 00000000528e5004 CR4: 00000000001706a0
+> > Call Trace:
+> >  xlog_alloc_log+0x51f/0x5f0 [xfs]
+> >  xfs_log_mount+0x55/0x340 [xfs]
+> >  xfs_mountfs+0x4e4/0x9f0 [xfs]
+> >  xfs_fs_fill_super+0x4dd/0x7a0 [xfs]
+> >  ? suffix_kstrtoint.constprop.0+0xe0/0xe0 [xfs]
+> >  get_tree_bdev+0x175/0x280
+> >  vfs_get_tree+0x1a/0x80
+> >  ? capable+0x2f/0x50
+> >  path_mount+0x6fb/0xa90
+> >  __x64_sys_mount+0x103/0x140
+> >  do_syscall_64+0x3a/0x70
+> >  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> > RIP: 0033:0x7fd2e46e8dde
+> > Code: 48 8b 0d b5 80 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0
+> > f 1e fa 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 82 80 0c 00 f7 d8 64 89 01 48
 > > 
-> > If you're going to start using this mess, you probably ought to just
-> > pull from my git trees, which are linked below.
+> > I'm pretty sure that's due to:
 > > 
-> > This is an extraordinary way to destroy everything.  Enjoy!
-> > Comments and questions are, as always, welcome.
+> > 	if (!xlog_cil_pcp_init) {
+> > 		int	ret;
 > > 
-> > --D
+> > 		ret = cpuhp_setup_state_nocalls(CPUHP_XFS_CIL_DEAD,
+> > 						"xfs/cil_pcp:dead", NULL,
+> > 						xlog_cil_pcp_dead);
+> > 		if (ret < 0) {
+> > 			xfs_warn(cil->xc_log->l_mp,
+> > 	"Failed to initialise CIL hotplug, error %d. XFS is non-functional.",
+> > 				ret);
 > > 
-> > fstests git tree:
-> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=autogenerate-groupfiles
+> > Because we haven't set cil->xc_log yet.
 > 
-> I noticed that your patches are based on your internal base, and this
-> branch couldn't be pulled into current master branch. But this is fine
-> for RFC patches I think :)
-
-Yep.  Since this is a treewide change I'll put this in a special branch
-and rebase my dev tree after it lands.
-
---D
-
+> And having now fixed that, I get tons of:
 > 
-> Thanks,
-> Eryu
+> XFS (sda): Failed to initialise CIL hotplug, error -16. XFS is non-functional.
+> XFS: Assertion failed: 0, file: fs/xfs/xfs_log_cil.c, line: 1532
+> ------------[ cut here ]------------
+> WARNING: CPU: 2 PID: 113983 at fs/xfs/xfs_message.c:112 assfail+0x3c/0x40 [xfs]
+> Modules linked in: xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_REDIR
+> 
+> EBUSY??
+
+Ok, so EBUSY implies a setup race - multiple filesystems are trying
+to run the init code at the same time. That seems somewhat unlikely,
+but regardless what I'm going to do is move this setup/teardown to
+the XFS module init functions rather than do it in the CIL.
+
+i.e. turn this into a generic XFS filesystem hotplug infrastructure
+in xfs_super.c and call out to xlog_cil_pcp_dead() from there.
+
+This way we are guaranteed a single init call when the module is
+inserted, and a single destroy call when the module is removed. That
+should solve all these issues.
+
+How do you want me to handle these changes? Just send out the
+replacement patches for the code that is alread in the branch for
+review, then resend a rebased pull-req after review? Or something
+else? I don't really want to keep bombing the mailing list with 40
+emails every time I need to get fixes for a single patch reviewed...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
