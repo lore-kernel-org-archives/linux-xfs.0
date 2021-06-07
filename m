@@ -4,47 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB187C4CC6B
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAEDBC52CA0
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:53:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 975AE61249
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FDE461107
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:53:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231329AbhFGOyi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Jun 2021 10:54:38 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:51640 "EHLO
+        id S231483AbhFGOyy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Jun 2021 10:54:54 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:51722 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230453AbhFGOyb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 10:54:31 -0400
+        with ESMTP id S230525AbhFGOyc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 10:54:32 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id D28CC1FDD2;
+        by smtp-out2.suse.de (Postfix) with ESMTP id E170F1FDD5;
         Mon,  7 Jun 2021 14:52:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
         t=1623077557; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=YK8GEJCDKjq8m4s9mPl+Cr6kVFf/7XBXLx1QgmSt22Q=;
-        b=ZPlrCJN1Q+nMRsgZETbRrkJxtgOotDXgTM7o/Tu5h0Gr8bAQMMOWm9ywdBWCrBwAI7CZji
-        XQ89VbYq6IO3nzIgL5B3Uyh2skJ78mL6D0ufMj4PSXgd24UOChI0BchwDit/Ibjypzxjl7
-        YB3X8fXTW/lTTi+z7pDiySNk0P53K8Q=
+        bh=KfDin0J2zny5bW8XnWnPVfAKe9yqG7WG/xT8oxb1OFc=;
+        b=ko9c25cMZ9m2NiKcrQaoy4jB2KP5+1KJ5AmveEHVcxVC897KyySKjriOsW9ddFUrBmrsnW
+        tplhe3RBaLbIBGr/60F4LD9RtyGK0O7MJoXf3rJ2ReLB48rTwVcVr5qpYZnb39Umi7B1TU
+        fevxNlW1A1nPHC0/mQw4leHU5yao5Us=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
         s=susede2_ed25519; t=1623077557;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=YK8GEJCDKjq8m4s9mPl+Cr6kVFf/7XBXLx1QgmSt22Q=;
-        b=SxBYwXZ92n/WdiLGzzzCaCsIzOkITvUlxhfnTWU+AtfUWr6eqleklDVqDXiKoJuS5uohUU
-        u91Krl7ddNuSAXCA==
+        bh=KfDin0J2zny5bW8XnWnPVfAKe9yqG7WG/xT8oxb1OFc=;
+        b=zCJrGdMPlN9oBtyZvI/DiQEevYk2yUhECJIW5Kelc7FBxXz22DF6h0GjiHDGJjDHaYrs2Q
+        SEThINadMsXZUtBw==
 Received: from quack2.suse.cz (unknown [10.100.200.198])
-        by relay2.suse.de (Postfix) with ESMTP id B2199A3B8E;
+        by relay2.suse.de (Postfix) with ESMTP id B3662A3B90;
         Mon,  7 Jun 2021 14:52:37 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id A28761F2CB6; Mon,  7 Jun 2021 16:52:36 +0200 (CEST)
+        id ABD5C1F2CB8; Mon,  7 Jun 2021 16:52:36 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-fsdevel@vger.kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -59,143 +59,155 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         linux-f2fs-devel@lists.sourceforge.net, <linux-mm@kvack.org>,
         <linux-xfs@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
         Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
-        Matthew Wilcox <willy@infradead.org>,
-        Pavel Reichl <preichl@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
-Subject: [PATCH 07/14] xfs: Refactor xfs_isilocked()
-Date:   Mon,  7 Jun 2021 16:52:17 +0200
-Message-Id: <20210607145236.31852-7-jack@suse.cz>
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH 09/14] xfs: Convert double locking of MMAPLOCK to use VFS helpers
+Date:   Mon,  7 Jun 2021 16:52:19 +0200
+Message-Id: <20210607145236.31852-9-jack@suse.cz>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210607144631.8717-1-jack@suse.cz>
 References: <20210607144631.8717-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4097; i=jack@suse.cz; h=from:subject; bh=EyWkjLzMxBvucK3cTjl3wByc8CRPjLl12F487VSLK9k=; b=owGbwMvMwME4Z+4qdvsUh5uMp9WSGBL2GS2sPKKyPeulwoHnToySDLXdc5y83cKnpbv1c6xXNbp3 WO1SJ6MxCwMjB4OsmCLL6siL2tfmGXVtDdWQgRnEygQyhYGLUwAmElzK/k99C/OZUBGvGTm+bpWfZo W7yKq6BCfnG6l6VHLy3Wp+EbSn0t6ds1F+hWD105TVc+6WbF0VtfLdzeNapxayi29dfnhaT9fJ/pnT BFMP+LPdFci78DnbR+V0RM/Tts8fpi2al+LWuPul1OtWVwPllpvT/h1/U3Xc3jciaJa0LytvV2PxJ/ fDP03yKioVHk/uteHTv5ya1WhiEJvu3axd9nmHtA7DNckdh+1NubaWqnOGrZvayXzmaa5K0+tnxnHu fsWd617V/Ij1OczrefPUAweFJtGSQrG7C3YVO65x//t5h99p7z2F/wNkfj2cvLfxp8CG7SuCXlpdqD uQdn3HYzE5Tx/jGUskWUViuRLCAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4917; h=from:subject; bh=Xf/EluwecvDckS87lWRfy77OC8mUhzlKOvkojalUOxs=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBgvjKjGNBsDA4B/xWBG7QqXcuTTJ84ph+j2kRzoAje 0Eh8m9mJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYL4yowAKCRCcnaoHP2RA2Uh7CA DZbcBgGYIBPgI4e6MROhQ7DoBtFZkTvHXvvFzadqOPGkvDAkWZ7mKBrNWv6aRNNMkTBjw6uF7CuYOR AQk0lmW+6Cx7gK1uu5H9A96j7hXnKvCDYplEu4gG5Ac7LQTmWPNtFlG4gATfERUak58My8Ja2eDkLj r74P/RTyjlGIG5SLeKnqQAKaxk1qYZ7ILXWpX4U4VZ1J6U9X7uZYKaU7HfsZd5yqB+QADrj++hrsEG Kgr4bDYlseBkWLvTOGTVyaU+izvpq7aJNMbC+BoWwusx2fNABlDXJo0MDQiivDY0+75/9P3+OatqKt 5Bux1K4NKGY6+gr+NlJqaR6T1oEnwb
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Pavel Reichl <preichl@redhat.com>
+Convert places in XFS that take MMAPLOCK for two inodes to use helper
+VFS provides for it (filemap_invalidate_down_write_two()). Note that
+this changes lock ordering for MMAPLOCK from inode number based ordering
+to pointer based ordering VFS generally uses.
 
-Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
-__xfs_rwsem_islocked() is a helper function which encapsulates checking
-state of rw_semaphores hold by inode.
-
-Signed-off-by: Pavel Reichl <preichl@redhat.com>
-Suggested-by: Dave Chinner <dchinner@redhat.com>
-Suggested-by: Eric Sandeen <sandeen@redhat.com>
-Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+CC: "Darrick J. Wong" <djwong@kernel.org>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/xfs_inode.c | 39 +++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_inode.h | 21 ++++++++++++++-------
- 2 files changed, 45 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 15 ++++++++-------
+ fs/xfs/xfs_inode.c     | 37 +++++++++++--------------------------
+ 2 files changed, 19 insertions(+), 33 deletions(-)
 
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index a5e9d7d34023..7421d6ec4def 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1582,7 +1582,6 @@ xfs_swap_extents(
+ 	struct xfs_bstat	*sbp = &sxp->sx_stat;
+ 	int			src_log_flags, target_log_flags;
+ 	int			error = 0;
+-	int			lock_flags;
+ 	uint64_t		f;
+ 	int			resblks = 0;
+ 	unsigned int		flags = 0;
+@@ -1594,8 +1593,8 @@ xfs_swap_extents(
+ 	 * do the rest of the checks.
+ 	 */
+ 	lock_two_nondirectories(VFS_I(ip), VFS_I(tip));
+-	lock_flags = XFS_MMAPLOCK_EXCL;
+-	xfs_lock_two_inodes(ip, XFS_MMAPLOCK_EXCL, tip, XFS_MMAPLOCK_EXCL);
++	filemap_invalidate_lock_two(VFS_I(ip)->i_mapping,
++				    VFS_I(tip)->i_mapping);
+ 
+ 	/* Verify that both files have the same format */
+ 	if ((VFS_I(ip)->i_mode & S_IFMT) != (VFS_I(tip)->i_mode & S_IFMT)) {
+@@ -1667,7 +1666,6 @@ xfs_swap_extents(
+ 	 * or cancel will unlock the inodes from this point onwards.
+ 	 */
+ 	xfs_lock_two_inodes(ip, XFS_ILOCK_EXCL, tip, XFS_ILOCK_EXCL);
+-	lock_flags |= XFS_ILOCK_EXCL;
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 	xfs_trans_ijoin(tp, tip, 0);
+ 
+@@ -1786,13 +1784,16 @@ xfs_swap_extents(
+ 	trace_xfs_swap_extent_after(ip, 0);
+ 	trace_xfs_swap_extent_after(tip, 1);
+ 
++out_unlock_ilock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_iunlock(tip, XFS_ILOCK_EXCL);
+ out_unlock:
+-	xfs_iunlock(ip, lock_flags);
+-	xfs_iunlock(tip, lock_flags);
++	filemap_invalidate_unlock_two(VFS_I(ip)->i_mapping,
++				      VFS_I(tip)->i_mapping);
+ 	unlock_two_nondirectories(VFS_I(ip), VFS_I(tip));
+ 	return error;
+ 
+ out_trans_cancel:
+ 	xfs_trans_cancel(tp);
+-	goto out_unlock;
++	goto out_unlock_ilock;
+ }
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0369eb22c1bb..6247977870bd 100644
+index e1854a660809..0468f56f3bbb 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -342,9 +342,34 @@ xfs_ilock_demote(
+@@ -556,12 +556,10 @@ xfs_lock_inodes(
  }
  
- #if defined(DEBUG) || defined(XFS_WARN)
--int
-+static inline bool
-+__xfs_rwsem_islocked(
-+	struct rw_semaphore	*rwsem,
-+	int			lock_flags,
-+	int			shift)
-+{
-+	lock_flags >>= shift;
-+
-+	if (!debug_locks)
-+		return rwsem_is_locked(rwsem);
-+	/*
-+	 * If the shared flag is not set, pass 0 to explicitly check for
-+	 * exclusive access to the lock. If the shared flag is set, we typically
-+	 * want to make sure the lock is at least held in shared mode
-+	 * (i.e., shared | excl) but we don't necessarily care that it might
-+	 * actually be held exclusive. Therefore, pass -1 to check whether the
-+	 * lock is held in any mode rather than one of the explicit shared mode
-+	 * values (1 or 2)."
-+	 */
-+	if (lock_flags & (1 << XFS_SHARED_LOCK_SHIFT)) {
-+		return lockdep_is_held_type(rwsem, -1);
-+	}
-+	return lockdep_is_held_type(rwsem, 0);
-+}
-+
-+bool
- xfs_isilocked(
--	xfs_inode_t		*ip,
-+	struct xfs_inode	*ip,
- 	uint			lock_flags)
- {
- 	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
-@@ -359,15 +384,13 @@ xfs_isilocked(
- 		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
- 	}
- 
--	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
--		if (!(lock_flags & XFS_IOLOCK_SHARED))
--			return !debug_locks ||
--				lockdep_is_held_type(&VFS_I(ip)->i_rwsem, 0);
--		return rwsem_is_locked(&VFS_I(ip)->i_rwsem);
-+	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
-+		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem, lock_flags,
-+				XFS_IOLOCK_FLAG_SHIFT);
- 	}
- 
- 	ASSERT(0);
--	return 0;
-+	return false;
- }
- #endif
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index ca826cfba91c..1c0e15c480bc 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -262,12 +262,19 @@ static inline bool xfs_inode_has_bigtime(struct xfs_inode *ip)
-  * Bit ranges:	1<<1  - 1<<16-1 -- iolock/ilock modes (bitfield)
-  *		1<<16 - 1<<32-1 -- lockdep annotation (integers)
+ /*
+- * xfs_lock_two_inodes() can only be used to lock one type of lock at a time -
+- * the mmaplock or the ilock, but not more than one type at a time. If we lock
+- * more than one at a time, lockdep will report false positives saying we have
+- * violated locking orders.  The iolock must be double-locked separately since
+- * we use i_rwsem for that.  We now support taking one lock EXCL and the other
+- * SHARED.
++ * xfs_lock_two_inodes() can only be used to lock ilock. The iolock and
++ * mmaplock must be double-locked separately since we use i_rwsem and
++ * invalidate_lock for that. We now support taking one lock EXCL and the
++ * other SHARED.
   */
--#define	XFS_IOLOCK_EXCL		(1<<0)
--#define	XFS_IOLOCK_SHARED	(1<<1)
--#define	XFS_ILOCK_EXCL		(1<<2)
--#define	XFS_ILOCK_SHARED	(1<<3)
--#define	XFS_MMAPLOCK_EXCL	(1<<4)
--#define	XFS_MMAPLOCK_SHARED	(1<<5)
-+
-+#define XFS_IOLOCK_FLAG_SHIFT	0
-+#define XFS_ILOCK_FLAG_SHIFT	2
-+#define XFS_MMAPLOCK_FLAG_SHIFT	4
-+
-+#define XFS_SHARED_LOCK_SHIFT	1
-+
-+#define XFS_IOLOCK_EXCL		(1 << XFS_IOLOCK_FLAG_SHIFT)
-+#define XFS_IOLOCK_SHARED	(XFS_IOLOCK_EXCL << XFS_SHARED_LOCK_SHIFT)
-+#define XFS_ILOCK_EXCL		(1 << XFS_ILOCK_FLAG_SHIFT)
-+#define XFS_ILOCK_SHARED	(XFS_ILOCK_EXCL << XFS_SHARED_LOCK_SHIFT)
-+#define XFS_MMAPLOCK_EXCL	(1 << XFS_MMAPLOCK_FLAG_SHIFT)
-+#define XFS_MMAPLOCK_SHARED	(XFS_MMAPLOCK_EXCL << XFS_SHARED_LOCK_SHIFT)
+ void
+ xfs_lock_two_inodes(
+@@ -579,15 +577,8 @@ xfs_lock_two_inodes(
+ 	ASSERT(hweight32(ip1_mode) == 1);
+ 	ASSERT(!(ip0_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL)));
+ 	ASSERT(!(ip1_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL)));
+-	ASSERT(!(ip0_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)) ||
+-	       !(ip0_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)));
+-	ASSERT(!(ip1_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)) ||
+-	       !(ip1_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)));
+-	ASSERT(!(ip1_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)) ||
+-	       !(ip0_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)));
+-	ASSERT(!(ip0_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)) ||
+-	       !(ip1_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)));
+-
++	ASSERT(!(ip0_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)));
++	ASSERT(!(ip1_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)));
+ 	ASSERT(ip0->i_ino != ip1->i_ino);
  
- #define XFS_LOCK_MASK		(XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED \
- 				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED \
-@@ -410,7 +417,7 @@ void		xfs_ilock(xfs_inode_t *, uint);
- int		xfs_ilock_nowait(xfs_inode_t *, uint);
- void		xfs_iunlock(xfs_inode_t *, uint);
- void		xfs_ilock_demote(xfs_inode_t *, uint);
--int		xfs_isilocked(xfs_inode_t *, uint);
-+bool		xfs_isilocked(struct xfs_inode *, uint);
- uint		xfs_ilock_data_map_shared(struct xfs_inode *);
- uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
+ 	if (ip0->i_ino > ip1->i_ino) {
+@@ -3750,11 +3741,8 @@ xfs_ilock2_io_mmap(
+ 	ret = xfs_iolock_two_inodes_and_break_layout(VFS_I(ip1), VFS_I(ip2));
+ 	if (ret)
+ 		return ret;
+-	if (ip1 == ip2)
+-		xfs_ilock(ip1, XFS_MMAPLOCK_EXCL);
+-	else
+-		xfs_lock_two_inodes(ip1, XFS_MMAPLOCK_EXCL,
+-				    ip2, XFS_MMAPLOCK_EXCL);
++	filemap_invalidate_lock_two(VFS_I(ip1)->i_mapping,
++				    VFS_I(ip2)->i_mapping);
+ 	return 0;
+ }
  
+@@ -3764,12 +3752,9 @@ xfs_iunlock2_io_mmap(
+ 	struct xfs_inode	*ip1,
+ 	struct xfs_inode	*ip2)
+ {
+-	bool			same_inode = (ip1 == ip2);
+-
+-	xfs_iunlock(ip2, XFS_MMAPLOCK_EXCL);
+-	if (!same_inode)
+-		xfs_iunlock(ip1, XFS_MMAPLOCK_EXCL);
++	filemap_invalidate_unlock_two(VFS_I(ip1)->i_mapping,
++				      VFS_I(ip2)->i_mapping);
+ 	inode_unlock(VFS_I(ip2));
+-	if (!same_inode)
++	if (ip1 != ip2)
+ 		inode_unlock(VFS_I(ip1));
+ }
 -- 
 2.26.2
 
