@@ -2,155 +2,154 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F98CC4743D
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 00:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1C2DC4743D
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 00:17:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B88A613D4
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 00:00:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B01C4613C8
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 00:17:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230081AbhFGACs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Jun 2021 20:02:48 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:37610 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229772AbhFGACr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Jun 2021 20:02:47 -0400
+        id S229885AbhFGATT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 6 Jun 2021 20:19:19 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:35824 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229884AbhFGATS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Jun 2021 20:19:18 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 24556862255;
-        Mon,  7 Jun 2021 10:00:41 +1000 (AEST)
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 8D80280BA33;
+        Mon,  7 Jun 2021 10:17:15 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lq2h6-009oCq-4P; Mon, 07 Jun 2021 10:00:40 +1000
-Date:   Mon, 7 Jun 2021 10:00:40 +1000
+        id 1lq2x8-009oOq-9G; Mon, 07 Jun 2021 10:17:14 +1000
+Date:   Mon, 7 Jun 2021 10:17:14 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [GIT PULL] xfs: CIL and log scalability improvements
-Message-ID: <20210607000040.GX664593@dread.disaster.area>
+Subject: [PATCH 1/2] xfs: introduce CPU hotplug infrastructure
+Message-ID: <20210607001714.GY664593@dread.disaster.area>
 References: <20210604032928.GU664593@dread.disaster.area>
  <20210605020354.GG26380@locust>
  <20210605021533.GH26380@locust>
  <20210606221119.GW664593@dread.disaster.area>
+ <20210607000040.GX664593@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210606221119.GW664593@dread.disaster.area>
+In-Reply-To: <20210607000040.GX664593@dread.disaster.area>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=7-415B0cAAAA:8
-        a=QrPR4reUl0WW-nG0wAoA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=20KFwNOVAAAA:8
+        a=Mj-D7b2SoFQ7hKLnWc8A:9 a=CjuIK1q_8ugA:10
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 07, 2021 at 08:11:19AM +1000, Dave Chinner wrote:
-> On Fri, Jun 04, 2021 at 07:15:33PM -0700, Darrick J. Wong wrote:
-> > On Fri, Jun 04, 2021 at 07:03:54PM -0700, Darrick J. Wong wrote:
-> > > On Fri, Jun 04, 2021 at 01:29:28PM +1000, Dave Chinner wrote:
-> > > > Hi Darrick,
-> > > > 
-> > > > Can you please pull the CIL and log improvements from the tag listed
-> > > > below?
-> > > 
-> > > I tried that and threw the series at fstests, which crashed all VMs with
-> > > the following null pointer dereference:
-> > > 
-> > > BUG: kernel NULL pointer dereference, address: 0000000000000000
-> > > #PF: supervisor read access in kernel mode
-> > > #PF: error_code(0x0000) - not-present page
-> > > PGD 0 P4D 0 
-> > > Oops: 0000 [#1] PREEMPT SMP
-> > > CPU: 2 PID: 731060 Comm: mount Not tainted 5.13.0-rc4-djwx #rc4
-> > > Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
-> > > RIP: 0010:xlog_cil_init+0x2f7/0x370 [xfs]
-> > > Code: b4 7e a0 bf 1c 00 00 00 e8 c6 3b 8d e0 85 c0 78 0c c6 05 13 7f 12 00 01 e9 7b fd ff ff 4
-> > > 2 48 c7 c6 f8 bf 7f a0 <48> 8b 39 e8 f0 24 04 00 31 ff b9 fc 05 00 00 48 c7 c2 d9 b3 7e a0
-> > > RSP: 0018:ffffc9000776bcd0 EFLAGS: 00010286
-> > > RAX: 00000000fffffff0 RBX: 0000000000000000 RCX: 0000000000000000
-> > > RDX: 00000000fffffff0 RSI: ffffffffa07fbff8 RDI: 00000000ffffffff
-> > > RBP: ffff888004cf3c00 R08: ffffffffa078fb40 R09: 0000000000000000
-> > > R10: 000000000000000c R11: 0000000000000048 R12: ffff888052810000
-> > > R13: 0000607f81c0b0f8 R14: ffff888004a09c00 R15: ffff888004a09c00
-> > > FS:  00007fd2e4486840(0000) GS:ffff88807e000000(0000) knlGS:0000000000000000
-> > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > CR2: 0000000000000000 CR3: 00000000528e5004 CR4: 00000000001706a0
-> > > Call Trace:
-> > >  xlog_alloc_log+0x51f/0x5f0 [xfs]
-> > >  xfs_log_mount+0x55/0x340 [xfs]
-> > >  xfs_mountfs+0x4e4/0x9f0 [xfs]
-> > >  xfs_fs_fill_super+0x4dd/0x7a0 [xfs]
-> > >  ? suffix_kstrtoint.constprop.0+0xe0/0xe0 [xfs]
-> > >  get_tree_bdev+0x175/0x280
-> > >  vfs_get_tree+0x1a/0x80
-> > >  ? capable+0x2f/0x50
-> > >  path_mount+0x6fb/0xa90
-> > >  __x64_sys_mount+0x103/0x140
-> > >  do_syscall_64+0x3a/0x70
-> > >  entry_SYSCALL_64_after_hwframe+0x44/0xae
-> > > RIP: 0033:0x7fd2e46e8dde
-> > > Code: 48 8b 0d b5 80 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0
-> > > f 1e fa 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 82 80 0c 00 f7 d8 64 89 01 48
-> > > 
-> > > I'm pretty sure that's due to:
-> > > 
-> > > 	if (!xlog_cil_pcp_init) {
-> > > 		int	ret;
-> > > 
-> > > 		ret = cpuhp_setup_state_nocalls(CPUHP_XFS_CIL_DEAD,
-> > > 						"xfs/cil_pcp:dead", NULL,
-> > > 						xlog_cil_pcp_dead);
-> > > 		if (ret < 0) {
-> > > 			xfs_warn(cil->xc_log->l_mp,
-> > > 	"Failed to initialise CIL hotplug, error %d. XFS is non-functional.",
-> > > 				ret);
-> > > 
-> > > Because we haven't set cil->xc_log yet.
-> > 
-> > And having now fixed that, I get tons of:
-> > 
-> > XFS (sda): Failed to initialise CIL hotplug, error -16. XFS is non-functional.
-> > XFS: Assertion failed: 0, file: fs/xfs/xfs_log_cil.c, line: 1532
-> > ------------[ cut here ]------------
-> > WARNING: CPU: 2 PID: 113983 at fs/xfs/xfs_message.c:112 assfail+0x3c/0x40 [xfs]
-> > Modules linked in: xfs libcrc32c ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_REDIR
-> > 
-> > EBUSY??
-> 
-> Ok, so EBUSY implies a setup race - multiple filesystems are trying
-> to run the init code at the same time. That seems somewhat unlikely,
-> but regardless what I'm going to do is move this setup/teardown to
-> the XFS module init functions rather than do it in the CIL.
-> 
-> i.e. turn this into a generic XFS filesystem hotplug infrastructure
-> in xfs_super.c and call out to xlog_cil_pcp_dead() from there.
-> 
-> This way we are guaranteed a single init call when the module is
-> inserted, and a single destroy call when the module is removed. That
-> should solve all these issues.
-> 
-> How do you want me to handle these changes? Just send out the
-> replacement patches for the code that is alread in the branch for
-> review, then resend a rebased pull-req after review? Or something
-> else? I don't really want to keep bombing the mailing list with 40
-> emails every time I need to get fixes for a single patch reviewed...
 
-I've tested the two patches that will appear as replies to this mail
-as the replacement for the one hotplug infrastructure patch in the
-original series. I've tested it against modular XFS builds, and it
-doesn't cause any problems here.  Essentially the first patch splits
-out the XFS hotplug infrastructure, the second is the CIL
-functionality for handling dead CPU notifications.
+From: Dave Chinner <dchinner@redhat.com>
 
-If they work for you, I'll rebase the branch for you to reconstruct
-the for-next tree with the fixes in it...
+We need to move to per-cpu state for CIL tracking, but to do that we
+need to handle CPUs being removed from the system by the hot-plug
+code. Introduce generic XFS infrastructure to handle CPU hotplug
+events that is set up at module init time and torn down at module
+exit time.
 
-Cheers,
+Initially, the CIL only needs CPU dead notifications, so we only set
+up a callback for these notifications. The infrastructure can be
+updated in future for CPU add notifications easily if every needed.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_super.c         | 38 +++++++++++++++++++++++++++++++++++++-
+ include/linux/cpuhotplug.h |  1 +
+ 2 files changed, 38 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 017ba9c24c2d..0146d3c89da9 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -2123,6 +2123,35 @@ xfs_destroy_workqueues(void)
+ 	destroy_workqueue(xfs_alloc_wq);
+ }
+ 
++static int
++xfs_cpu_dead(
++	unsigned int		cpu)
++{
++	return 0;
++}
++
++static int __init
++xfs_cpu_hotplug_init(void)
++{
++	int	error;
++
++	error = cpuhp_setup_state_nocalls(CPUHP_XFS_DEAD,
++					"xfs:dead", NULL,
++					xfs_cpu_dead);
++	if (error < 0) {
++		xfs_alert(NULL,
++"Failed to initialise CPU hotplug, error %d. XFS is non-functional.",
++			error);
++	}
++	return error;
++}
++
++static void
++xfs_cpu_hotplug_destroy(void)
++{
++	cpuhp_remove_state_nocalls(CPUHP_XFS_DEAD);
++}
++
+ STATIC int __init
+ init_xfs_fs(void)
+ {
+@@ -2135,10 +2164,14 @@ init_xfs_fs(void)
+ 
+ 	xfs_dir_startup();
+ 
+-	error = xfs_init_zones();
++	error = xfs_cpu_hotplug_init();
+ 	if (error)
+ 		goto out;
+ 
++	error = xfs_init_zones();
++	if (error)
++		goto out_destroy_hp;
++
+ 	error = xfs_init_workqueues();
+ 	if (error)
+ 		goto out_destroy_zones;
+@@ -2218,6 +2251,8 @@ init_xfs_fs(void)
+ 	xfs_destroy_workqueues();
+  out_destroy_zones:
+ 	xfs_destroy_zones();
++ out_destroy_hp:
++	xfs_cpu_hotplug_destroy();
+  out:
+ 	return error;
+ }
+@@ -2240,6 +2275,7 @@ exit_xfs_fs(void)
+ 	xfs_destroy_workqueues();
+ 	xfs_destroy_zones();
+ 	xfs_uuid_table_free();
++	xfs_cpu_hotplug_destroy();
+ }
+ 
+ module_init(init_xfs_fs);
+diff --git a/include/linux/cpuhotplug.h b/include/linux/cpuhotplug.h
+index 4a62b3980642..bf8f29ad9bf8 100644
+--- a/include/linux/cpuhotplug.h
++++ b/include/linux/cpuhotplug.h
+@@ -52,6 +52,7 @@ enum cpuhp_state {
+ 	CPUHP_FS_BUFF_DEAD,
+ 	CPUHP_PRINTK_DEAD,
+ 	CPUHP_MM_MEMCQ_DEAD,
++	CPUHP_XFS_DEAD,
+ 	CPUHP_PERCPU_CNT_DEAD,
+ 	CPUHP_RADIX_DEAD,
+ 	CPUHP_PAGE_ALLOC_DEAD,
