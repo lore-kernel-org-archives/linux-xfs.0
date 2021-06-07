@@ -2,171 +2,154 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 512DAC4743C
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 05:28:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3570FC47082
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 07:49:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34FB46120F
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 05:28:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F3D160FE9
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 07:49:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230097AbhFGF3y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Jun 2021 01:29:54 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:37602 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229545AbhFGF3y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 01:29:54 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1575S3Qi007863
-        for <linux-xfs@vger.kernel.org>; Mon, 7 Jun 2021 05:28:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references : content-type :
- mime-version; s=corp-2020-01-29;
- bh=8BPR/yxCjs+1PKh344Vx5oDlK834YRRWJZf0nvi2DY0=;
- b=TsxNLjNkSWtHmFbGVOwhfKLwPtbjryEu3s24+cQXq4HNcaNBODVEfTOk4/hWyH2j5xTK
- 8yNxibe0H/gR1j7ytT3MOtAfncfUYVyhEedwd9uncmO+SyeC6q8jy3dKzZOdpVtOM+oK
- lMJAayUSotXIm2kfIX97uKsVTBLRf+ClYaReLlKTCrh0e6P5W2D1GO61F5whurKBG3jW
- 9BI1+HU7VdEIRaBg1EQJ6vCJtpuVfo8PM1cM/aNfryo5YX7y/5KZkbdEfB+GpZIBOz8b
- m/36qVAdp1jFI/AJ8hMleXC8OEbNxayxEtRR4BlIJGo/ygqc+39xvRcXFa3QbBQF2ECH IQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 3914qugaq6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 07 Jun 2021 05:28:03 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1575PmCl178624
-        for <linux-xfs@vger.kernel.org>; Mon, 7 Jun 2021 05:28:02 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2175.outbound.protection.outlook.com [104.47.59.175])
-        by aserp3020.oracle.com with ESMTP id 3906snnq3j-4
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 07 Jun 2021 05:28:02 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=f4NL+hrQy8HmY/WxdrDWf7VJK9h2MRSlqgEf1PhrJgtm8/CaF4KejG6cH3K1mZ7M1h9GMzpqARiCZuQweR93gAVpvNSmi3JY1aDoxiNT7HDOdI7q4P4kupu9KoT5x7nLhrE0crGytgrEzGIAiwHdA30pimFOENVvWL/57Xvgrzx7Y4R2bpeHZX20CkEdIs1gadDiXKDxFyNd1t9UvH4DdFztQyfypV3PbfLVvE8Z0Xbk/nmTbafUlpgtK83OrCQFYvkk+5lWnCdTCH0b/iHnbJp/hdMvKpcWdb5gx0lD59q7sP7uKV/VKHGdOqDGhMWQPDHMAyw+Hdv+dUcy9ekGlw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8BPR/yxCjs+1PKh344Vx5oDlK834YRRWJZf0nvi2DY0=;
- b=ll2vHl1ECCEAx0nsef9ZgP9a+iIpg/fUIZsF3KE1yIbJk+do2lcrxd+X1bSN2IK/zRohHhZzqViAmdD3oaRNbocTKm2Pao62ZlyVoKt8OdVzgZNeyIadj8Mli1wr+/9HAZXYzoJawy8dUZGoErh6+KrcN/jl1joVkXgwMJbG1A/jgilCYEyHhSs50LlV/vDHnYu5tszZzT/68SOWc6igl1BYrL9ztl0wuIXSnqP65PwY6jA4Eo/lUh7xeIhnv4JNBTAbwG+tx2gUfey23q0/ym7cTASzNJmvUoz9p15/hkCbj0zC0fwrePxfigT8574ChaDlE92PZEgBr0osb5G0MQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8BPR/yxCjs+1PKh344Vx5oDlK834YRRWJZf0nvi2DY0=;
- b=uxMdCALLtxRm4MQ/cXTOb8JI4dVF/OEZesYScDY4WnLNBsyLtHQeh9sH2G9+aZcMBuLm4KiRy54s/mD04lmZhmbZMWI2L9R6UJnIzlncGU1UDNfLyIpldPNXqJgCZlGIhctiKy+ADtvse6HeMRzCuZ5LNr516K+Ao16+wD/tVsE=
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by SJ0PR10MB4687.namprd10.prod.outlook.com (2603:10b6:a03:2d8::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.23; Mon, 7 Jun
- 2021 05:28:00 +0000
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::a9c4:d124:3473:1728]) by BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::a9c4:d124:3473:1728%5]) with mapi id 15.20.4195.030; Mon, 7 Jun 2021
- 05:28:00 +0000
-From:   Allison Henderson <allison.henderson@oracle.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v20 13/14] xfs: Fix default ASSERT in xfs_attr_set_iter
-Date:   Sun,  6 Jun 2021 22:27:46 -0700
-Message-Id: <20210607052747.31422-4-allison.henderson@oracle.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20210607052747.31422-1-allison.henderson@oracle.com>
-References: <20210607052747.31422-1-allison.henderson@oracle.com>
-Content-Type: text/plain
-X-Originating-IP: [67.1.210.54]
-X-ClientProxiedBy: BYAPR08CA0019.namprd08.prod.outlook.com
- (2603:10b6:a03:100::32) To BY5PR10MB4306.namprd10.prod.outlook.com
- (2603:10b6:a03:211::7)
+        id S229923AbhFGHvE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Jun 2021 03:51:04 -0400
+Received: from condef-06.nifty.com ([202.248.20.71]:17928 "EHLO
+        condef-06.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229545AbhFGHvD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 03:51:03 -0400
+X-Greylist: delayed 357 seconds by postgrey-1.27 at vger.kernel.org; Mon, 07 Jun 2021 03:51:02 EDT
+Received: from conssluserg-02.nifty.com ([10.126.8.81])by condef-06.nifty.com with ESMTP id 1577ejMR032763;
+        Mon, 7 Jun 2021 16:40:45 +0900
+Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51]) (authenticated)
+        by conssluserg-02.nifty.com with ESMTP id 1577e4cr029736;
+        Mon, 7 Jun 2021 16:40:05 +0900
+DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-02.nifty.com 1577e4cr029736
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
+        s=dec2015msa; t=1623051605;
+        bh=EKJEqB3Q6tIfy2A4ywMNYaG/WTIqmzMmTredZAM1eyY=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=rCbmr+PJtfqOvYdx+tg6tNe+ulGgWc8DM4wPOwDOMxO464uhW3SM4YIp8ouiWr6D2
+         yFDq3SUMr6K9d+k5CD8oaK0+wjbbkRKpgzxm5gU6Jt6sHwUJgPukt+Ie+EUJidvouB
+         QCipHwGMraBCrfZK+6+YKhTBqf1Ry9qjyiqwPM/8++rBqeoo5ZmqM3pP0yXVOqriyR
+         KAOmcpss4ARyFtb8cITGpqkbe3DgZZR7YsNJvfFhcNz9GrjTi5d/JwxNdvLO3yrTJ5
+         Pw7WfuQyhmz6+DkHWz7V0TVVxdSewlTy3Q2hCQmMNnHwBP8yFWvNhLBsudkRKgWHHz
+         To5r+JyNQhNtg==
+X-Nifty-SrcIP: [209.85.217.51]
+Received: by mail-vs1-f51.google.com with SMTP id j15so8412318vsf.2;
+        Mon, 07 Jun 2021 00:40:04 -0700 (PDT)
+X-Gm-Message-State: AOAM530ilV7x9BOYsxhMHcnwVwqHaih58l/6kueGfJCzvVlGiGTj+8dd
+        PXKRy3Ke8jMTTkQathvLHaRFAv3O3xAwgDA5ZIY=
+X-Google-Smtp-Source: ABdhPJwPmFut2nTxArXa07v4xPlHzxrJ0sLjVDtvrdtLChTFpKiR9239Z6WTj44UnleODc79Z+HXDtosElosU9UFvGs=
+X-Received: by 2002:aa7:99c9:0:b029:2e9:e084:e1de with SMTP id
+ v9-20020aa799c90000b02902e9e084e1demr15812551pfi.80.1623051593156; Mon, 07
+ Jun 2021 00:39:53 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (67.1.210.54) by BYAPR08CA0019.namprd08.prod.outlook.com (2603:10b6:a03:100::32) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.20 via Frontend Transport; Mon, 7 Jun 2021 05:27:59 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 77e67f92-5a04-46f5-67fd-08d9297503a6
-X-MS-TrafficTypeDiagnostic: SJ0PR10MB4687:
-X-Microsoft-Antispam-PRVS: <SJ0PR10MB46873D53CCF621BC80FA556F95389@SJ0PR10MB4687.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4125;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Tn5FlftWtrk9q37NC5B+DWKk0PO2XshwM+n+9G8Lc9wGVvXahoslOKwtdk6i/zzpIzRjlqQXy6ELo/l6gPBX0Ac/M8OXqzq3imuZhQOIbdOhJLs+2FX2Asl0JDD8r0ptcQOfUx1KqWEFDkJLQCoOgWyI4PCs++foPIwD1BKRnBswRNB6rjFlSsI6sIW3Fy8xcJHrw+CWg2OLJB4hu2tRCsu6xBAXRSEtBaJJaPZyEBXO9SJgxjVYZylVR+BAvFQOd1JbRiO6Q7ateW1dsxLkk/qzFodzwuKkSwgiz1WmznfkQTfdlHjjh/Sk2zhTNR8FijcT55nd/WOFgSXOyApDfAjB3Q28o+1WRxTXicQr+Tfe0dQxsL1BCwDc2YWH0m+iCUHQpl+9YcgOUDAG20KUFwCl4bfMNdt4H/J6/lTVTf8ZKFz6JNo0DJJVCL9TZc4opASo90t5l6/dC0IKHibJjfdSNizj8Sv1/dNyR5Ebovvx2/Wwsq/rl02PogS6GVA/G0ARTHcrHzgr2zDVjDNsK408yxtv//343bZRa5Ai8a/ELKSao8FteVCZhoNZmzIV9MwSNEZsFckNCIn24UF8NRFsmWq8rBsSt1WrQv9z5+e64UMt7MeD76PXWptgNHVuMtBPjt5EJXIq2/BoDc8e/Sg0HPolC5Sgy6y3d0eQiIRf14hW8A5qDPdwIbkFazR6
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(39860400002)(376002)(346002)(136003)(396003)(366004)(186003)(16526019)(4744005)(1076003)(316002)(6512007)(6666004)(8676002)(8936002)(38350700002)(6486002)(26005)(83380400001)(44832011)(66476007)(66556008)(66946007)(36756003)(86362001)(5660300002)(956004)(52116002)(478600001)(38100700002)(6916009)(2616005)(2906002)(6506007)(69590400013);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?k9KFZIP98kWedozE0S/o+wkCRp3UIRBb7wxcxqX3u5M6dEx1VBgYN334/CvL?=
- =?us-ascii?Q?w0WcwmKBSvFwW2sTqL2cGniTC251VL+3RmEttZ/NiBu9XzbUOYjowUtHZsaK?=
- =?us-ascii?Q?NHEv0+NC+kyXd4vvosgpx85JyLhpEHgO0C7uBU/qteqbZos1oPTjsW3xYrdc?=
- =?us-ascii?Q?oYqEHWnyEr/fhspN4FWB7F8X4DDQ5psZsjwGFMurYYvlxbnHdpjXOQLMsmIC?=
- =?us-ascii?Q?HhJHr5rRD8ZBW2f/0WSK8liFTUdIQZdz1ivFvn4z26dIR0mgOuVzgtvk6wML?=
- =?us-ascii?Q?2nm3RIMOxzipWsJMevzJkQg9aIYIzBFJfG41/0X8OPVszId5AwTmq/dFVR0Z?=
- =?us-ascii?Q?Gy7Xp7CdvR42oxGReY7PJar/mGnNowVEZpa1EPEJWwvsAxoZdaldgQ2gCOwk?=
- =?us-ascii?Q?j3Ene9rVcaX5JwtRYtNnnZ2Ybuwvj+M5NKcQeBW64WOszWg/M1jYTdS7UGXD?=
- =?us-ascii?Q?Ul8c1uuooOwEpb/jS9at4ypws4nO+AAGQ+pe4tG9PggYZHCUGvBCdB6DORWA?=
- =?us-ascii?Q?NEzOoIJ4PzbKx1iYSLPqwVxZ3a2YB9wDzWe9+QgiLrclcz7Hyyg5b4TgHWAK?=
- =?us-ascii?Q?8VT52hYBxQnG+DcbW/AbbmCFA9kwrfQ3qyQSEH34BAcWB8iVdFGsjJncmOWD?=
- =?us-ascii?Q?vQ8HwROjc0a7EITbWy5P8Re8Dxb1CnqIx50S93+X7sY2fXUKyyk9qdU2atGr?=
- =?us-ascii?Q?/FBRTN+q1PFBzEPVq5ijcxkKRSVwJwl4J4k1ZuamjpO1wpAvr+s+7fvKg769?=
- =?us-ascii?Q?j3Qshugs4QDPhtm/iZO4f/GjjNHu556NTrdSfgenziVe0wHz30Scnhq88KXW?=
- =?us-ascii?Q?pjiKmgrBpOL18vak4HSWTFX5SAGbEmFzYslKoaOqUF49gBEjPH+t8uxE2vGR?=
- =?us-ascii?Q?G8TSgeIqigbe7pipysKkMxixwPrT73JCSM3V94IPooOjROgWrNcd5q+dWfUC?=
- =?us-ascii?Q?clYfyJ3SViCh3ugilhP0sarpM15OZ7wVtXrcoDk0vq+QiM286TFCIn/xnfzh?=
- =?us-ascii?Q?3PoafVdemzntZ1pKpbKIqF2CNv/7PQVxjotCCyWplM5TW8gbYtqxU1ds8GyB?=
- =?us-ascii?Q?DWO4R91tCaKtBykzXsb5a252Dv38mWEqBx8oo9FLIAQXDP4P8B4/0RmTozrF?=
- =?us-ascii?Q?+9Ye6PJEPZ0+Q2XkQ44hv0CETcR8w40IYcei2/hpEBgh4x05jBKAFnx+YUs4?=
- =?us-ascii?Q?K0fdW8DGvUU8dfai/X0BxAYzQv6P6a/dyT2Ty4k/YghTRLiUehV1DyGIcQMX?=
- =?us-ascii?Q?VhhMxfu5+xy6KDaM3poh1dlKPN6xijVQeX0+LVx7Uql+5LFfEvofWSbAVpZF?=
- =?us-ascii?Q?NE78oH4pqqZWx9px7/mgFyxt?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 77e67f92-5a04-46f5-67fd-08d9297503a6
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jun 2021 05:28:00.0129
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JWeOEJqED9RdGn3ZmgSfMexLRTcS3CY+C4FMx5kiwkZTqyK6J9T5U4Yt58x7LQAHPTwI40cXim3d3r4Uacwonu7QpW2JeSRmwWzEA4jtr5E=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB4687
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10007 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0
- mlxlogscore=999 malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2104190000 definitions=main-2106070041
-X-Proofpoint-ORIG-GUID: _gdIjo0M9OFefhajPuSkXwrR-M4ZlSro
-X-Proofpoint-GUID: _gdIjo0M9OFefhajPuSkXwrR-M4ZlSro
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10007 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 phishscore=0
- spamscore=0 malwarescore=0 clxscore=1015 lowpriorityscore=0
- priorityscore=1501 adultscore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2104190000 definitions=main-2106070041
+References: <20210227183910.221873-1-masahiroy@kernel.org> <CAK7LNASL_X43_nMTz1CZQB+jiLCRAJbh-wQdc23QV0pWceL_Lw@mail.gmail.com>
+ <20210228064936.zixrhxlthyy6fmid@24bbad8f3778>
+In-Reply-To: <20210228064936.zixrhxlthyy6fmid@24bbad8f3778>
+From:   Masahiro Yamada <masahiroy@kernel.org>
+Date:   Mon, 7 Jun 2021 16:39:16 +0900
+X-Gmail-Original-Message-ID: <CAK7LNASY_+_38XEMLZAf7txr4EdukkcFL8pnGGe2XyhQ9F4oDQ@mail.gmail.com>
+Message-ID: <CAK7LNASY_+_38XEMLZAf7txr4EdukkcFL8pnGGe2XyhQ9F4oDQ@mail.gmail.com>
+Subject: Re: [PATCH RFC] x86: remove toolchain check for X32 ABI capability
+To:     Nathan Chancellor <nathan@kernel.org>
+Cc:     X86 ML <x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+        Borislav Petkov <bp@alien8.de>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Fangrui Song <maskray@google.com>,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        "H . J . Lu" <hjl.tools@gmail.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>, Brian Gerst <brgerst@gmail.com>,
+        "Chang S. Bae" <chang.seok.bae@intel.com>,
+        Chao Yu <chao@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dmitry Safonov <0x7f454c46@gmail.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Gabriel Krisman Bertazi <krisman@collabora.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Jethro Beekman <jethro@fortanix.com>,
+        Kees Cook <keescook@chromium.org>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Sasha Levin <sashal@kernel.org>,
+        Sean Christopherson <seanjc@google.com>,
+        Takashi Iwai <tiwai@suse.com>,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This ASSERT checks for the state value of RM_SHRINK in the set path
-which should never happen.  Change to ASSERT(0);
+On Sun, Feb 28, 2021 at 3:49 PM Nathan Chancellor <nathan@kernel.org> wrote:
+>
+> On Sun, Feb 28, 2021 at 12:15:16PM +0900, Masahiro Yamada wrote:
+> > On Sun, Feb 28, 2021 at 3:41 AM Masahiro Yamada <masahiroy@kernel.org> wrote:
+> > >
+> > > This commit reverts 0bf6276392e9 ("x32: Warn and disable rather than
+> > > error if binutils too old").
+> > >
+> > > The help text in arch/x86/Kconfig says enabling the X32 ABI support
+> > > needs binutils 2.22 or later. This is met because the minimal binutils
+> > > version is 2.23 according to Documentation/process/changes.rst.
+> > >
+> > > I would not say I am not familiar with toolchain configuration, but
+> >
+> > I mean:
+> > I would not say I am familiar ...
+> > That is why I added RFC.
+> >
+> > I appreciate comments from people who are familiar
+> > with toolchains (binutils, llvm).
+> >
+> > If this change is not safe,
+> > we can move this check to Kconfig at least.
+>
+> Hi Masahiro,
+>
+> As Fangrui pointed out, there are two outstanding issues with x32 with
+> LLVM=1, both seemingly related to LLVM=1.
 
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/libxfs/xfs_attr.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Is this still a problem for Clang built Linux?
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 2387a41..a0edebc 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -612,7 +612,7 @@ xfs_attr_set_iter(
- 		error = xfs_attr_node_addname_clear_incomplete(dac);
- 		break;
- 	default:
--		ASSERT(dac->dela_state != XFS_DAS_RM_SHRINK);
-+		ASSERT(0);
- 		break;
- 	}
- out:
+
+
+> https://github.com/ClangBuiltLinux/linux/issues/514
+
+I am not tracking the status.
+What was the conclusion?
+
+> https://github.com/ClangBuiltLinux/linux/issues/1141
+
+
+This got marked "unreproducible"
+
+>
+> Additionally, there appears to be one from Arnd as well but that one has
+> received no triage yet.
+>
+> https://github.com/ClangBuiltLinux/linux/issues/1205
+
+Same as well.
+
+
+>
+> I intend to test this patch as well as a few others at some point in the
+> coming week although I am having to play sysadmin due to moving servers
+> so I might not be able to get to it until later in the week.
+>
+> Cheers,
+> Nathan
+>
+
+
 -- 
-2.7.4
-
+Best Regards
+Masahiro Yamada
