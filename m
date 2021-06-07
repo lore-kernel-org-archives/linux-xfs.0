@@ -5,46 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16C33C49ED9
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB187C4CC6B
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF31761130
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 975AE61249
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231366AbhFGOyj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Jun 2021 10:54:39 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:51742 "EHLO
+        id S231329AbhFGOyi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Jun 2021 10:54:38 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:51640 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231158AbhFGOyd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 10:54:33 -0400
+        with ESMTP id S230453AbhFGOyb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 10:54:31 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 090AB1FDA5;
-        Mon,  7 Jun 2021 14:52:38 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTP id D28CC1FDD2;
+        Mon,  7 Jun 2021 14:52:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1623077558; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1623077557; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=aeX4rhkcDHAyqUpRgiJbnC2LH6a+zs6J+9zaOkeEH3Y=;
-        b=XKHoLqpO5u67Iq1U103lvhzthovxYzIkoYspqJJDoDb+R9Auyk98ao/C2orSymtbdPI++5
-        tTLqwae79VBb2dWxJwHXWMglDDs2Gz2GB8cEu1pNeNJlI+Hb0Vkvfr94xjROSjeboqrKas
-        keY23Y0pqdNFPyuBcqc2DxjsKC/LtB0=
+        bh=YK8GEJCDKjq8m4s9mPl+Cr6kVFf/7XBXLx1QgmSt22Q=;
+        b=ZPlrCJN1Q+nMRsgZETbRrkJxtgOotDXgTM7o/Tu5h0Gr8bAQMMOWm9ywdBWCrBwAI7CZji
+        XQ89VbYq6IO3nzIgL5B3Uyh2skJ78mL6D0ufMj4PSXgd24UOChI0BchwDit/Ibjypzxjl7
+        YB3X8fXTW/lTTi+z7pDiySNk0P53K8Q=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1623077558;
+        s=susede2_ed25519; t=1623077557;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=aeX4rhkcDHAyqUpRgiJbnC2LH6a+zs6J+9zaOkeEH3Y=;
-        b=ZXyOigLF8+gzgMHZgS63re8HQfTdxNWEzzvxp+FjrrnrVr3EMSP04e6pjUfIU+7yUPRucp
-        zKOanfokJXnvYuCg==
+        bh=YK8GEJCDKjq8m4s9mPl+Cr6kVFf/7XBXLx1QgmSt22Q=;
+        b=SxBYwXZ92n/WdiLGzzzCaCsIzOkITvUlxhfnTWU+AtfUWr6eqleklDVqDXiKoJuS5uohUU
+        u91Krl7ddNuSAXCA==
 Received: from quack2.suse.cz (unknown [10.100.200.198])
-        by relay2.suse.de (Postfix) with ESMTP id CED68A3B97;
+        by relay2.suse.de (Postfix) with ESMTP id B2199A3B8E;
         Mon,  7 Jun 2021 14:52:37 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id BBB171F2CBD; Mon,  7 Jun 2021 16:52:36 +0200 (CEST)
+        id A28761F2CB6; Mon,  7 Jun 2021 16:52:36 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-fsdevel@vger.kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -59,309 +59,143 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         linux-f2fs-devel@lists.sourceforge.net, <linux-mm@kvack.org>,
         <linux-xfs@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
         Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>
-Subject: [PATCH 12/14] fuse: Convert to using invalidate_lock
-Date:   Mon,  7 Jun 2021 16:52:22 +0200
-Message-Id: <20210607145236.31852-12-jack@suse.cz>
+        Matthew Wilcox <willy@infradead.org>,
+        Pavel Reichl <preichl@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
+Subject: [PATCH 07/14] xfs: Refactor xfs_isilocked()
+Date:   Mon,  7 Jun 2021 16:52:17 +0200
+Message-Id: <20210607145236.31852-7-jack@suse.cz>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210607144631.8717-1-jack@suse.cz>
 References: <20210607144631.8717-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=11313; h=from:subject; bh=Bf0pPMhZZMXzEqZz0ieuU3uwLQ7nvtve6PWBxVKZWek=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBgvjKmqB0Ijs9WLLgTFedxnvXTc/CiIxq0V+5ipdJ4 NeNDQTyJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYL4ypgAKCRCcnaoHP2RA2fnzCA CLTo/KDG1Cz6GCXe9Uwbl3ugR+Pa9NxdgsbhQ7HONLWDsmxplP0A3LB2bOs0hxzum/dN+KMnAhP7JH 6N/TZ1UWorqAcQhaz/PWbiIEO/7bv2CpV/1nUD7ZPh/dE3Tr64UyzCGJj/DX3cq0itQ5e4yJvbXDdQ gRyTs277uGbdTrpDDtMMyM8lqgEJpPxGyhHyq+U6NRHZiuEImdUd+2Ypj3MGpBrt9ZPEkb/WpssrjU Z2P+OLhfGuVFao3YU1ruH9bsRJ6WnEbTl7yoKyjfFg1k8nHZhY1TGtY3bxXBoMamEofwTLjcBmPeLY hRZJNeZZr0pBzUbC/OIz85j+J6LK3h
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4097; i=jack@suse.cz; h=from:subject; bh=EyWkjLzMxBvucK3cTjl3wByc8CRPjLl12F487VSLK9k=; b=owGbwMvMwME4Z+4qdvsUh5uMp9WSGBL2GS2sPKKyPeulwoHnToySDLXdc5y83cKnpbv1c6xXNbp3 WO1SJ6MxCwMjB4OsmCLL6siL2tfmGXVtDdWQgRnEygQyhYGLUwAmElzK/k99C/OZUBGvGTm+bpWfZo W7yKq6BCfnG6l6VHLy3Wp+EbSn0t6ds1F+hWD105TVc+6WbF0VtfLdzeNapxayi29dfnhaT9fJ/pnT BFMP+LPdFci78DnbR+V0RM/Tts8fpi2al+LWuPul1OtWVwPllpvT/h1/U3Xc3jciaJa0LytvV2PxJ/ fDP03yKioVHk/uteHTv5ya1WhiEJvu3axd9nmHtA7DNckdh+1NubaWqnOGrZvayXzmaa5K0+tnxnHu fsWd617V/Ij1OczrefPUAweFJtGSQrG7C3YVO65x//t5h99p7z2F/wNkfj2cvLfxp8CG7SuCXlpdqD uQdn3HYzE5Tx/jGUskWUViuRLCAA==
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use invalidate_lock instead of fuse's private i_mmap_sem. The intended
-purpose is exactly the same. By this conversion we fix a long standing
-race between hole punching and read(2) / readahead(2) paths that can
-lead to stale page cache contents.
+From: Pavel Reichl <preichl@redhat.com>
 
-CC: Miklos Szeredi <miklos@szeredi.hu>
+Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
+__xfs_rwsem_islocked() is a helper function which encapsulates checking
+state of rw_semaphores hold by inode.
+
+Signed-off-by: Pavel Reichl <preichl@redhat.com>
+Suggested-by: Dave Chinner <dchinner@redhat.com>
+Suggested-by: Eric Sandeen <sandeen@redhat.com>
+Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/fuse/dax.c    | 50 +++++++++++++++++++++++-------------------------
- fs/fuse/dir.c    | 11 ++++++-----
- fs/fuse/file.c   | 10 +++++-----
- fs/fuse/fuse_i.h |  7 -------
- fs/fuse/inode.c  |  1 -
- 5 files changed, 35 insertions(+), 44 deletions(-)
+ fs/xfs/xfs_inode.c | 39 +++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_inode.h | 21 ++++++++++++++-------
+ 2 files changed, 45 insertions(+), 15 deletions(-)
 
-diff --git a/fs/fuse/dax.c b/fs/fuse/dax.c
-index ff99ab2a3c43..08d2b7e2c3a0 100644
---- a/fs/fuse/dax.c
-+++ b/fs/fuse/dax.c
-@@ -443,12 +443,12 @@ static int fuse_setup_new_dax_mapping(struct inode *inode, loff_t pos,
- 	/*
- 	 * Can't do inline reclaim in fault path. We call
- 	 * dax_layout_busy_page() before we free a range. And
--	 * fuse_wait_dax_page() drops fi->i_mmap_sem lock and requires it.
--	 * In fault path we enter with fi->i_mmap_sem held and can't drop
--	 * it. Also in fault path we hold fi->i_mmap_sem shared and not
--	 * exclusive, so that creates further issues with fuse_wait_dax_page().
--	 * Hence return -EAGAIN and fuse_dax_fault() will wait for a memory
--	 * range to become free and retry.
-+	 * fuse_wait_dax_page() drops mapping->invalidate_lock and requires it.
-+	 * In fault path we enter with mapping->invalidate_lock held and can't
-+	 * drop it. Also in fault path we hold mapping->invalidate_lock shared
-+	 * and not exclusive, so that creates further issues with
-+	 * fuse_wait_dax_page().  Hence return -EAGAIN and fuse_dax_fault()
-+	 * will wait for a memory range to become free and retry.
- 	 */
- 	if (flags & IOMAP_FAULT) {
- 		alloc_dmap = alloc_dax_mapping(fcd);
-@@ -512,7 +512,7 @@ static int fuse_upgrade_dax_mapping(struct inode *inode, loff_t pos,
- 	down_write(&fi->dax->sem);
- 	node = interval_tree_iter_first(&fi->dax->tree, idx, idx);
- 
--	/* We are holding either inode lock or i_mmap_sem, and that should
-+	/* We are holding either inode lock or invalidate_lock, and that should
- 	 * ensure that dmap can't be truncated. We are holding a reference
- 	 * on dmap and that should make sure it can't be reclaimed. So dmap
- 	 * should still be there in tree despite the fact we dropped and
-@@ -659,14 +659,12 @@ static const struct iomap_ops fuse_iomap_ops = {
- 
- static void fuse_wait_dax_page(struct inode *inode)
- {
--	struct fuse_inode *fi = get_fuse_inode(inode);
--
--	up_write(&fi->i_mmap_sem);
-+	filemap_invalidate_unlock(inode->i_mapping);
- 	schedule();
--	down_write(&fi->i_mmap_sem);
-+	filemap_invalidate_lock(inode->i_mapping);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 0369eb22c1bb..6247977870bd 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -342,9 +342,34 @@ xfs_ilock_demote(
  }
  
--/* Should be called with fi->i_mmap_sem lock held exclusively */
-+/* Should be called with mapping->invalidate_lock held exclusively */
- static int __fuse_dax_break_layouts(struct inode *inode, bool *retry,
- 				    loff_t start, loff_t end)
+ #if defined(DEBUG) || defined(XFS_WARN)
+-int
++static inline bool
++__xfs_rwsem_islocked(
++	struct rw_semaphore	*rwsem,
++	int			lock_flags,
++	int			shift)
++{
++	lock_flags >>= shift;
++
++	if (!debug_locks)
++		return rwsem_is_locked(rwsem);
++	/*
++	 * If the shared flag is not set, pass 0 to explicitly check for
++	 * exclusive access to the lock. If the shared flag is set, we typically
++	 * want to make sure the lock is at least held in shared mode
++	 * (i.e., shared | excl) but we don't necessarily care that it might
++	 * actually be held exclusive. Therefore, pass -1 to check whether the
++	 * lock is held in any mode rather than one of the explicit shared mode
++	 * values (1 or 2)."
++	 */
++	if (lock_flags & (1 << XFS_SHARED_LOCK_SHIFT)) {
++		return lockdep_is_held_type(rwsem, -1);
++	}
++	return lockdep_is_held_type(rwsem, 0);
++}
++
++bool
+ xfs_isilocked(
+-	xfs_inode_t		*ip,
++	struct xfs_inode	*ip,
+ 	uint			lock_flags)
  {
-@@ -812,18 +810,18 @@ static vm_fault_t __fuse_dax_fault(struct vm_fault *vmf,
- 	 * we do not want any read/write/mmap to make progress and try
- 	 * to populate page cache or access memory we are trying to free.
- 	 */
--	down_read(&get_fuse_inode(inode)->i_mmap_sem);
-+	filemap_invalidate_lock_shared(inode->i_mapping);
- 	ret = dax_iomap_fault(vmf, pe_size, &pfn, &error, &fuse_iomap_ops);
- 	if ((ret & VM_FAULT_ERROR) && error == -EAGAIN) {
- 		error = 0;
- 		retry = true;
--		up_read(&get_fuse_inode(inode)->i_mmap_sem);
-+		filemap_invalidate_unlock_shared(inode->i_mapping);
- 		goto retry;
+ 	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
+@@ -359,15 +384,13 @@ xfs_isilocked(
+ 		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
  	}
  
- 	if (ret & VM_FAULT_NEEDDSYNC)
- 		ret = dax_finish_sync_fault(vmf, pe_size, pfn);
--	up_read(&get_fuse_inode(inode)->i_mmap_sem);
-+	filemap_invalidate_unlock_shared(inode->i_mapping);
+-	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
+-		if (!(lock_flags & XFS_IOLOCK_SHARED))
+-			return !debug_locks ||
+-				lockdep_is_held_type(&VFS_I(ip)->i_rwsem, 0);
+-		return rwsem_is_locked(&VFS_I(ip)->i_rwsem);
++	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
++		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem, lock_flags,
++				XFS_IOLOCK_FLAG_SHIFT);
+ 	}
  
- 	if (write)
- 		sb_end_pagefault(sb);
-@@ -959,7 +957,7 @@ inode_inline_reclaim_one_dmap(struct fuse_conn_dax *fcd, struct inode *inode,
- 	int ret;
- 	struct interval_tree_node *node;
- 
--	down_write(&fi->i_mmap_sem);
-+	filemap_invalidate_lock(inode->i_mapping);
- 
- 	/* Lookup a dmap and corresponding file offset to reclaim. */
- 	down_read(&fi->dax->sem);
-@@ -1020,7 +1018,7 @@ inode_inline_reclaim_one_dmap(struct fuse_conn_dax *fcd, struct inode *inode,
- out_write_dmap_sem:
- 	up_write(&fi->dax->sem);
- out_mmap_sem:
--	up_write(&fi->i_mmap_sem);
-+	filemap_invalidate_unlock(inode->i_mapping);
- 	return dmap;
+ 	ASSERT(0);
+-	return 0;
++	return false;
  }
+ #endif
  
-@@ -1049,10 +1047,10 @@ alloc_dax_mapping_reclaim(struct fuse_conn_dax *fcd, struct inode *inode)
- 		 * had a reference or some other temporary failure,
- 		 * Try again. We want to give up inline reclaim only
- 		 * if there is no range assigned to this node. Otherwise
--		 * if a deadlock is possible if we sleep with fi->i_mmap_sem
--		 * held and worker to free memory can't make progress due
--		 * to unavailability of fi->i_mmap_sem lock. So sleep
--		 * only if fi->dax->nr=0
-+		 * if a deadlock is possible if we sleep with
-+		 * mapping->invalidate_lock held and worker to free memory
-+		 * can't make progress due to unavailability of
-+		 * mapping->invalidate_lock.  So sleep only if fi->dax->nr=0
- 		 */
- 		if (retry)
- 			continue;
-@@ -1060,8 +1058,8 @@ alloc_dax_mapping_reclaim(struct fuse_conn_dax *fcd, struct inode *inode)
- 		 * There are no mappings which can be reclaimed. Wait for one.
- 		 * We are not holding fi->dax->sem. So it is possible
- 		 * that range gets added now. But as we are not holding
--		 * fi->i_mmap_sem, worker should still be able to free up
--		 * a range and wake us up.
-+		 * mapping->invalidate_lock, worker should still be able to
-+		 * free up a range and wake us up.
- 		 */
- 		if (!fi->dax->nr && !(fcd->nr_free_ranges > 0)) {
- 			if (wait_event_killable_exclusive(fcd->range_waitq,
-@@ -1107,7 +1105,7 @@ static int lookup_and_reclaim_dmap_locked(struct fuse_conn_dax *fcd,
- /*
-  * Free a range of memory.
-  * Locking:
-- * 1. Take fi->i_mmap_sem to block dax faults.
-+ * 1. Take mapping->invalidate_lock to block dax faults.
-  * 2. Take fi->dax->sem to protect interval tree and also to make sure
-  *    read/write can not reuse a dmap which we might be freeing.
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index ca826cfba91c..1c0e15c480bc 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -262,12 +262,19 @@ static inline bool xfs_inode_has_bigtime(struct xfs_inode *ip)
+  * Bit ranges:	1<<1  - 1<<16-1 -- iolock/ilock modes (bitfield)
+  *		1<<16 - 1<<32-1 -- lockdep annotation (integers)
   */
-@@ -1121,7 +1119,7 @@ static int lookup_and_reclaim_dmap(struct fuse_conn_dax *fcd,
- 	loff_t dmap_start = start_idx << FUSE_DAX_SHIFT;
- 	loff_t dmap_end = (dmap_start + FUSE_DAX_SZ) - 1;
+-#define	XFS_IOLOCK_EXCL		(1<<0)
+-#define	XFS_IOLOCK_SHARED	(1<<1)
+-#define	XFS_ILOCK_EXCL		(1<<2)
+-#define	XFS_ILOCK_SHARED	(1<<3)
+-#define	XFS_MMAPLOCK_EXCL	(1<<4)
+-#define	XFS_MMAPLOCK_SHARED	(1<<5)
++
++#define XFS_IOLOCK_FLAG_SHIFT	0
++#define XFS_ILOCK_FLAG_SHIFT	2
++#define XFS_MMAPLOCK_FLAG_SHIFT	4
++
++#define XFS_SHARED_LOCK_SHIFT	1
++
++#define XFS_IOLOCK_EXCL		(1 << XFS_IOLOCK_FLAG_SHIFT)
++#define XFS_IOLOCK_SHARED	(XFS_IOLOCK_EXCL << XFS_SHARED_LOCK_SHIFT)
++#define XFS_ILOCK_EXCL		(1 << XFS_ILOCK_FLAG_SHIFT)
++#define XFS_ILOCK_SHARED	(XFS_ILOCK_EXCL << XFS_SHARED_LOCK_SHIFT)
++#define XFS_MMAPLOCK_EXCL	(1 << XFS_MMAPLOCK_FLAG_SHIFT)
++#define XFS_MMAPLOCK_SHARED	(XFS_MMAPLOCK_EXCL << XFS_SHARED_LOCK_SHIFT)
  
--	down_write(&fi->i_mmap_sem);
-+	filemap_invalidate_lock(inode->i_mapping);
- 	ret = fuse_dax_break_layouts(inode, dmap_start, dmap_end);
- 	if (ret) {
- 		pr_debug("virtio_fs: fuse_dax_break_layouts() failed. err=%d\n",
-@@ -1133,7 +1131,7 @@ static int lookup_and_reclaim_dmap(struct fuse_conn_dax *fcd,
- 	ret = lookup_and_reclaim_dmap_locked(fcd, inode, start_idx);
- 	up_write(&fi->dax->sem);
- out_mmap_sem:
--	up_write(&fi->i_mmap_sem);
-+	filemap_invalidate_unlock(inode->i_mapping);
- 	return ret;
- }
+ #define XFS_LOCK_MASK		(XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED \
+ 				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED \
+@@ -410,7 +417,7 @@ void		xfs_ilock(xfs_inode_t *, uint);
+ int		xfs_ilock_nowait(xfs_inode_t *, uint);
+ void		xfs_iunlock(xfs_inode_t *, uint);
+ void		xfs_ilock_demote(xfs_inode_t *, uint);
+-int		xfs_isilocked(xfs_inode_t *, uint);
++bool		xfs_isilocked(struct xfs_inode *, uint);
+ uint		xfs_ilock_data_map_shared(struct xfs_inode *);
+ uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
  
-diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
-index 1b6c001a7dd1..4ea9c690dfed 100644
---- a/fs/fuse/dir.c
-+++ b/fs/fuse/dir.c
-@@ -1601,6 +1601,7 @@ int fuse_do_setattr(struct dentry *dentry, struct iattr *attr,
- 	struct fuse_mount *fm = get_fuse_mount(inode);
- 	struct fuse_conn *fc = fm->fc;
- 	struct fuse_inode *fi = get_fuse_inode(inode);
-+	struct address_space *mapping = inode->i_mapping;
- 	FUSE_ARGS(args);
- 	struct fuse_setattr_in inarg;
- 	struct fuse_attr_out outarg;
-@@ -1625,11 +1626,11 @@ int fuse_do_setattr(struct dentry *dentry, struct iattr *attr,
- 	}
- 
- 	if (FUSE_IS_DAX(inode) && is_truncate) {
--		down_write(&fi->i_mmap_sem);
-+		filemap_invalidate_lock(mapping);
- 		fault_blocked = true;
- 		err = fuse_dax_break_layouts(inode, 0, 0);
- 		if (err) {
--			up_write(&fi->i_mmap_sem);
-+			filemap_invalidate_unlock(mapping);
- 			return err;
- 		}
- 	}
-@@ -1739,13 +1740,13 @@ int fuse_do_setattr(struct dentry *dentry, struct iattr *attr,
- 	if ((is_truncate || !is_wb) &&
- 	    S_ISREG(inode->i_mode) && oldsize != outarg.attr.size) {
- 		truncate_pagecache(inode, outarg.attr.size);
--		invalidate_inode_pages2(inode->i_mapping);
-+		invalidate_inode_pages2(mapping);
- 	}
- 
- 	clear_bit(FUSE_I_SIZE_UNSTABLE, &fi->state);
- out:
- 	if (fault_blocked)
--		up_write(&fi->i_mmap_sem);
-+		filemap_invalidate_unlock(mapping);
- 
- 	return 0;
- 
-@@ -1756,7 +1757,7 @@ int fuse_do_setattr(struct dentry *dentry, struct iattr *attr,
- 	clear_bit(FUSE_I_SIZE_UNSTABLE, &fi->state);
- 
- 	if (fault_blocked)
--		up_write(&fi->i_mmap_sem);
-+		filemap_invalidate_unlock(mapping);
- 	return err;
- }
- 
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index 09ef2a4d25ed..515104032ddc 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -243,7 +243,7 @@ int fuse_open_common(struct inode *inode, struct file *file, bool isdir)
- 	}
- 
- 	if (dax_truncate) {
--		down_write(&get_fuse_inode(inode)->i_mmap_sem);
-+		filemap_invalidate_lock(inode->i_mapping);
- 		err = fuse_dax_break_layouts(inode, 0, 0);
- 		if (err)
- 			goto out;
-@@ -255,7 +255,7 @@ int fuse_open_common(struct inode *inode, struct file *file, bool isdir)
- 
- out:
- 	if (dax_truncate)
--		up_write(&get_fuse_inode(inode)->i_mmap_sem);
-+		filemap_invalidate_unlock(inode->i_mapping);
- 
- 	if (is_wb_truncate | dax_truncate) {
- 		fuse_release_nowrite(inode);
-@@ -2920,7 +2920,7 @@ static long fuse_file_fallocate(struct file *file, int mode, loff_t offset,
- 	if (lock_inode) {
- 		inode_lock(inode);
- 		if (block_faults) {
--			down_write(&fi->i_mmap_sem);
-+			filemap_invalidate_lock(inode->i_mapping);
- 			err = fuse_dax_break_layouts(inode, 0, 0);
- 			if (err)
- 				goto out;
-@@ -2976,7 +2976,7 @@ static long fuse_file_fallocate(struct file *file, int mode, loff_t offset,
- 		clear_bit(FUSE_I_SIZE_UNSTABLE, &fi->state);
- 
- 	if (block_faults)
--		up_write(&fi->i_mmap_sem);
-+		filemap_invalidate_unlock(inode->i_mapping);
- 
- 	if (lock_inode)
- 		inode_unlock(inode);
-@@ -3045,7 +3045,7 @@ static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
- 	 * modifications.  Yet this does give less guarantees than if the
- 	 * copying was performed with write(2).
- 	 *
--	 * To fix this a i_mmap_sem style lock could be used to prevent new
-+	 * To fix this a mapping->invalidate_lock could be used to prevent new
- 	 * faults while the copy is ongoing.
- 	 */
- 	err = fuse_writeback_range(inode_out, pos_out, pos_out + len - 1);
-diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
-index 7e463e220053..5130e88f811e 100644
---- a/fs/fuse/fuse_i.h
-+++ b/fs/fuse/fuse_i.h
-@@ -149,13 +149,6 @@ struct fuse_inode {
- 	/** Lock to protect write related fields */
- 	spinlock_t lock;
- 
--	/**
--	 * Can't take inode lock in fault path (leads to circular dependency).
--	 * Introduce another semaphore which can be taken in fault path and
--	 * then other filesystem paths can take this to block faults.
--	 */
--	struct rw_semaphore i_mmap_sem;
--
- #ifdef CONFIG_FUSE_DAX
- 	/*
- 	 * Dax specific inode data
-diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
-index 393e36b74dc4..f73bab71a0a0 100644
---- a/fs/fuse/inode.c
-+++ b/fs/fuse/inode.c
-@@ -85,7 +85,6 @@ static struct inode *fuse_alloc_inode(struct super_block *sb)
- 	fi->orig_ino = 0;
- 	fi->state = 0;
- 	mutex_init(&fi->mutex);
--	init_rwsem(&fi->i_mmap_sem);
- 	spin_lock_init(&fi->lock);
- 	fi->forget = fuse_alloc_forget();
- 	if (!fi->forget)
 -- 
 2.26.2
 
