@@ -2,154 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3570FC47082
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 07:49:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C37FAC47082
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 08:33:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F3D160FE9
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 07:49:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB6CF6108E
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 08:33:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229923AbhFGHvE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Jun 2021 03:51:04 -0400
-Received: from condef-06.nifty.com ([202.248.20.71]:17928 "EHLO
-        condef-06.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229545AbhFGHvD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 03:51:03 -0400
-X-Greylist: delayed 357 seconds by postgrey-1.27 at vger.kernel.org; Mon, 07 Jun 2021 03:51:02 EDT
-Received: from conssluserg-02.nifty.com ([10.126.8.81])by condef-06.nifty.com with ESMTP id 1577ejMR032763;
-        Mon, 7 Jun 2021 16:40:45 +0900
-Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51]) (authenticated)
-        by conssluserg-02.nifty.com with ESMTP id 1577e4cr029736;
-        Mon, 7 Jun 2021 16:40:05 +0900
-DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-02.nifty.com 1577e4cr029736
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
-        s=dec2015msa; t=1623051605;
-        bh=EKJEqB3Q6tIfy2A4ywMNYaG/WTIqmzMmTredZAM1eyY=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=rCbmr+PJtfqOvYdx+tg6tNe+ulGgWc8DM4wPOwDOMxO464uhW3SM4YIp8ouiWr6D2
-         yFDq3SUMr6K9d+k5CD8oaK0+wjbbkRKpgzxm5gU6Jt6sHwUJgPukt+Ie+EUJidvouB
-         QCipHwGMraBCrfZK+6+YKhTBqf1Ry9qjyiqwPM/8++rBqeoo5ZmqM3pP0yXVOqriyR
-         KAOmcpss4ARyFtb8cITGpqkbe3DgZZR7YsNJvfFhcNz9GrjTi5d/JwxNdvLO3yrTJ5
-         Pw7WfuQyhmz6+DkHWz7V0TVVxdSewlTy3Q2hCQmMNnHwBP8yFWvNhLBsudkRKgWHHz
-         To5r+JyNQhNtg==
-X-Nifty-SrcIP: [209.85.217.51]
-Received: by mail-vs1-f51.google.com with SMTP id j15so8412318vsf.2;
-        Mon, 07 Jun 2021 00:40:04 -0700 (PDT)
-X-Gm-Message-State: AOAM530ilV7x9BOYsxhMHcnwVwqHaih58l/6kueGfJCzvVlGiGTj+8dd
-        PXKRy3Ke8jMTTkQathvLHaRFAv3O3xAwgDA5ZIY=
-X-Google-Smtp-Source: ABdhPJwPmFut2nTxArXa07v4xPlHzxrJ0sLjVDtvrdtLChTFpKiR9239Z6WTj44UnleODc79Z+HXDtosElosU9UFvGs=
-X-Received: by 2002:aa7:99c9:0:b029:2e9:e084:e1de with SMTP id
- v9-20020aa799c90000b02902e9e084e1demr15812551pfi.80.1623051593156; Mon, 07
- Jun 2021 00:39:53 -0700 (PDT)
+        id S230281AbhFGIfU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Jun 2021 04:35:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58620 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229657AbhFGIfU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 04:35:20 -0400
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A290C061766
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Jun 2021 01:33:17 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id u7so8234040plq.4
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Jun 2021 01:33:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=SiYoXLVNn5lr5ZE4pcEuJwTjKFW3AW9bZo9rNDIG3UA=;
+        b=d4DZHxN0aoW+EEeIJI+mAGh2mmfsd7UnIVeRmNkIl5/+9ZL+Rgxuj5OYFZgXGYWmai
+         +ghyEmdrZFjsPIcs8TCc1uEarPGkOcu5NkRVqG662UckQP7R3bqWCh5yzG7Vuw7rAp+q
+         My3LnczzdjQ2XzvCyoD/2HBDjF4aG5pvSuioewc2cwxZo3q/D7TDPbAutoGmMTzXYC2c
+         YtCf/V5Zgg3BRnlLExvRRafzEIrHNNaL3vVYejgqIcNXITnaDZISSxZHXY9/5cROE6bu
+         4p5jD0JmXpp3EkPTybnw4yFV20P+0fnUVksdbXeRW2dSnO2aN7I2b8YoVHfvVXmFo/od
+         MAEg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=SiYoXLVNn5lr5ZE4pcEuJwTjKFW3AW9bZo9rNDIG3UA=;
+        b=drrbRMirJsvS3BIHDOhWeCkYCAP783BuYed+T+ch1yNOxBLt1fg6DDqhZiW235N/vn
+         1ByVSQhWjAZSl8Ry1nr2kgMqaTK80imTy8/zG5IBufIPHPlN7uQBodNUNstM+YE76T5e
+         ndl7pMfMzoub9TemIhC4827J0e2z0YiqN77G1Hhwk91Sm5VMO3LuKLXFE0ylg5AMNoa9
+         /XfMUgolje7rQGtSKIrq9rT4fnJ0Jt+wvJoH1trITGdlmLmiJmuPdOmk3CnLfohN4WPw
+         Wqm8mRhdMAqWZCHRQ2zWxaAmy657C1i+KKarGnIvUi26j43q+LyaXqaaEdNlS28gB5BR
+         0wVg==
+X-Gm-Message-State: AOAM533LrY9A3DBBS25LpL16ZBLJ1QjmtLCsIeHpdhnl4iUz284ehPty
+        iML03IwJt0ZR+fzxqgpN5IkE3wQPBEYrRw==
+X-Google-Smtp-Source: ABdhPJzF0CyIdJOq3LOCUJMVaCJksSoWOoodmlfvwwVUd1fpz/7DdQPGP7shsNQ3mcKhMhrx70mj6g==
+X-Received: by 2002:a17:902:548:b029:10f:30af:7d5f with SMTP id 66-20020a1709020548b029010f30af7d5fmr16039606plf.22.1623054796512;
+        Mon, 07 Jun 2021 01:33:16 -0700 (PDT)
+Received: from garuda ([122.179.77.39])
+        by smtp.gmail.com with ESMTPSA id l5sm7365046pff.20.2021.06.07.01.33.15
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 07 Jun 2021 01:33:16 -0700 (PDT)
+References: <20210607052747.31422-1-allison.henderson@oracle.com> <20210607052747.31422-4-allison.henderson@oracle.com>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v20 13/14] xfs: Fix default ASSERT in xfs_attr_set_iter
+In-reply-to: <20210607052747.31422-4-allison.henderson@oracle.com>
+Date:   Mon, 07 Jun 2021 14:03:13 +0530
+Message-ID: <87h7iakrau.fsf@garuda>
 MIME-Version: 1.0
-References: <20210227183910.221873-1-masahiroy@kernel.org> <CAK7LNASL_X43_nMTz1CZQB+jiLCRAJbh-wQdc23QV0pWceL_Lw@mail.gmail.com>
- <20210228064936.zixrhxlthyy6fmid@24bbad8f3778>
-In-Reply-To: <20210228064936.zixrhxlthyy6fmid@24bbad8f3778>
-From:   Masahiro Yamada <masahiroy@kernel.org>
-Date:   Mon, 7 Jun 2021 16:39:16 +0900
-X-Gmail-Original-Message-ID: <CAK7LNASY_+_38XEMLZAf7txr4EdukkcFL8pnGGe2XyhQ9F4oDQ@mail.gmail.com>
-Message-ID: <CAK7LNASY_+_38XEMLZAf7txr4EdukkcFL8pnGGe2XyhQ9F4oDQ@mail.gmail.com>
-Subject: Re: [PATCH RFC] x86: remove toolchain check for X32 ABI capability
-To:     Nathan Chancellor <nathan@kernel.org>
-Cc:     X86 ML <x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-        Borislav Petkov <bp@alien8.de>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Fangrui Song <maskray@google.com>,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        "H . J . Lu" <hjl.tools@gmail.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Brian Gerst <brgerst@gmail.com>,
-        "Chang S. Bae" <chang.seok.bae@intel.com>,
-        Chao Yu <chao@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dmitry Safonov <0x7f454c46@gmail.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Gabriel Krisman Bertazi <krisman@collabora.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Jethro Beekman <jethro@fortanix.com>,
-        Kees Cook <keescook@chromium.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Sasha Levin <sashal@kernel.org>,
-        Sean Christopherson <seanjc@google.com>,
-        Takashi Iwai <tiwai@suse.com>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Feb 28, 2021 at 3:49 PM Nathan Chancellor <nathan@kernel.org> wrote:
+On 07 Jun 2021 at 10:57, Allison Henderson wrote:
+> This ASSERT checks for the state value of RM_SHRINK in the set path
+> which should never happen.  Change to ASSERT(0);
 >
-> On Sun, Feb 28, 2021 at 12:15:16PM +0900, Masahiro Yamada wrote:
-> > On Sun, Feb 28, 2021 at 3:41 AM Masahiro Yamada <masahiroy@kernel.org> wrote:
-> > >
-> > > This commit reverts 0bf6276392e9 ("x32: Warn and disable rather than
-> > > error if binutils too old").
-> > >
-> > > The help text in arch/x86/Kconfig says enabling the X32 ABI support
-> > > needs binutils 2.22 or later. This is met because the minimal binutils
-> > > version is 2.23 according to Documentation/process/changes.rst.
-> > >
-> > > I would not say I am not familiar with toolchain configuration, but
-> >
-> > I mean:
-> > I would not say I am familiar ...
-> > That is why I added RFC.
-> >
-> > I appreciate comments from people who are familiar
-> > with toolchains (binutils, llvm).
-> >
-> > If this change is not safe,
-> > we can move this check to Kconfig at least.
+
+Looks good.
+
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+
+> Suggested-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> Hi Masahiro,
->
-> As Fangrui pointed out, there are two outstanding issues with x32 with
-> LLVM=1, both seemingly related to LLVM=1.
-
-Is this still a problem for Clang built Linux?
-
-
-
-> https://github.com/ClangBuiltLinux/linux/issues/514
-
-I am not tracking the status.
-What was the conclusion?
-
-> https://github.com/ClangBuiltLinux/linux/issues/1141
-
-
-This got marked "unreproducible"
-
->
-> Additionally, there appears to be one from Arnd as well but that one has
-> received no triage yet.
->
-> https://github.com/ClangBuiltLinux/linux/issues/1205
-
-Same as well.
-
-
->
-> I intend to test this patch as well as a few others at some point in the
-> coming week although I am having to play sysadmin due to moving servers
-> so I might not be able to get to it until later in the week.
->
-> Cheers,
-> Nathan
->
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 2387a41..a0edebc 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -612,7 +612,7 @@ xfs_attr_set_iter(
+>  		error = xfs_attr_node_addname_clear_incomplete(dac);
+>  		break;
+>  	default:
+> -		ASSERT(dac->dela_state != XFS_DAS_RM_SHRINK);
+> +		ASSERT(0);
+>  		break;
+>  	}
+>  out:
 
 
 -- 
-Best Regards
-Masahiro Yamada
+chandan
