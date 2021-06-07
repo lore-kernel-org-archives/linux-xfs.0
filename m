@@ -5,46 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA661C48BE5
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 780B3C47082
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C85C261153
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DC5561108
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231164AbhFGOyc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Jun 2021 10:54:32 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:34624 "EHLO
+        id S231219AbhFGOyd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Jun 2021 10:54:33 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:34648 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230264AbhFGOya (ORCPT
+        with ESMTP id S230302AbhFGOya (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 10:54:30 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 819DE21A68;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 831A521A7F;
         Mon,  7 Jun 2021 14:52:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
         t=1623077557; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=vhH8fZvd6Tom4nBiYNHBFCVmcJF6aY93XCBQD2IK7mE=;
-        b=sTYyrBrhmcoYH4Pc6qGpefCJy5Sux5PJVReKTeUz6gUVd74lV8PShJvlmgXRUYi7K78zGY
-        d4J3ry2lEKY4SEj8ooKRSfsxNwMcXt1Hj4nLWK6IcMLWMM+R6InO8T8IFySZfCpG7xy0Kk
-        TEFjqGOekbxuEn9tycM3YhzJbNJncoU=
+        bh=y1jAxj7HpC0zj00ojIU7+2/5URp27cwg5ekGhnTUbK4=;
+        b=ywpLGJdty5iSkKm9w/AOo+yDNL4Z58wAqS4EOreSA/RTLfpPyDQIQG9zDcEQUTUIsTn7Uj
+        94XekAdYr8iJEtAEitFyi7XMby7ti4W1OsXID63Z8n/ZBzDTENhqBEKOs3aH5j+V9Ua27A
+        hMpOy+zgKJ+RI9txJxqgPDv4dQU0n94=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
         s=susede2_ed25519; t=1623077557;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=vhH8fZvd6Tom4nBiYNHBFCVmcJF6aY93XCBQD2IK7mE=;
-        b=DwFAqfCR7Wr+2ACyXhre2GSoLv5DOgFn+ENsakIV7+3dRNt9fpuZ6AfKNeT4x7NlOGqZpl
-        fOCS0M97+XnF36Bg==
+        bh=y1jAxj7HpC0zj00ojIU7+2/5URp27cwg5ekGhnTUbK4=;
+        b=MZWqBrCVyau4A4+7kibfDaD/WXjp5/wDxL8xwWeSypxo9GmQTmBtF3KWOEsjSfh6Nm1WBL
+        NWn8ph386/4QalBQ==
 Received: from quack2.suse.cz (unknown [10.100.200.198])
-        by relay2.suse.de (Postfix) with ESMTP id B8DC1A3B98;
+        by relay2.suse.de (Postfix) with ESMTP id B4900A3B96;
         Mon,  7 Jun 2021 14:52:36 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 91DF31F2CB3; Mon,  7 Jun 2021 16:52:36 +0200 (CEST)
+        id 882571E0B03; Mon,  7 Jun 2021 16:52:36 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-fsdevel@vger.kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -59,96 +59,71 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         linux-f2fs-devel@lists.sourceforge.net, <linux-mm@kvack.org>,
         <linux-xfs@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
         Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>
-Subject: [PATCH 04/14] mm: Add functions to lock invalidate_lock for two mappings
-Date:   Mon,  7 Jun 2021 16:52:14 +0200
-Message-Id: <20210607145236.31852-4-jack@suse.cz>
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH 02/14] documentation: Sync file_operations members with reality
+Date:   Mon,  7 Jun 2021 16:52:12 +0200
+Message-Id: <20210607145236.31852-2-jack@suse.cz>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210607144631.8717-1-jack@suse.cz>
 References: <20210607144631.8717-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2616; h=from:subject; bh=feuIxLKoHMpqfTsHSNzx+Llrxfh/M4pQHEj3mln4fkU=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBgvjKf4qNEt/Jyz8s3OnJ3hXcO5MHT6Xe5BiU0vi7v Yg+bSvWJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYL4ynwAKCRCcnaoHP2RA2chHB/ wKYys4WnIBaTn+iTmcDwD76cwJNj9fNUmSIB5g6n0gtAP4/BnjWvcBbmQla0RGUYJvtO/9VQX1/DPE RdysgXZVUQqMFjHYjWjBwkkpPWcvdHvIW+9KXp0iJzLJkqUV8p8ZfByoP2JTRzDN82Rte87GtnN2Sp L0xIljcsn5jrH8Ww2o3Twm5GXBaCRdS8AVgRk1xEBgsw9Tm6VEqipm87uxNWlHgaU4THjuXQviA32K qTmxhDoIUFvd+7DyJIQyVFx8U2bwkAdQVm20zTZnZAZepHKSgapRODGbx6Yqk1g6ob+l9hmvzMz/zA Y3rmXXMf7ydvJe7qAvc8CkddqajivD
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2278; h=from:subject; bh=+JHTm1BDQQGdP9H1PUT1wwFK/NSOXnEkL9zE0DdMSHk=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBgvjKdtH3fQO/hIgFbbEMhZxePOrm925VwhMgEiw4b MZAHXzCJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYL4ynQAKCRCcnaoHP2RA2fHqCA DR4FmBISIXxJa3PNOQ3OqL5QeKcbbO1Zpjtii476euyuydAtDIIYOyEz257A1VHUgxoMCEXnAQI9ff sLzEt9kmkB1b/yKBs2CvDun65BumMP87ftjIJySy8SprEB/KpnHt2Ok2HMRiFDKugwkpzCPCmWqRdA jNdd5215Cmv3aHgIN0bFdYUv4DjnnZela2eh1CF2cAlSU1SQ/h0TYM4tqoIaGZPe1bPPjLA5SNr+k4 HEKKAlOFdZQO9jpOjAlR64g2DY5zuPS8ZAg7woFTAlj4fm1VlUWxTlohEV6g6xHmI5jPBt+0u0AsgA oDOxcxy/EcMWvuXXl9AhoPhV8EF94z
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Some operations such as reflinking blocks among files will need to lock
-invalidate_lock for two mappings. Add helper functions to do that.
+Sync listing of struct file_operations members with the real one in
+fs.h.
 
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- include/linux/fs.h |  6 ++++++
- mm/filemap.c       | 38 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 44 insertions(+)
+ Documentation/filesystems/locking.rst | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index d8afbc9661d7..ddc11bafc183 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -849,6 +849,12 @@ static inline void filemap_invalidate_unlock_shared(
- void lock_two_nondirectories(struct inode *, struct inode*);
- void unlock_two_nondirectories(struct inode *, struct inode*);
+diff --git a/Documentation/filesystems/locking.rst b/Documentation/filesystems/locking.rst
+index 1e894480115b..4ed2b22bd0a8 100644
+--- a/Documentation/filesystems/locking.rst
++++ b/Documentation/filesystems/locking.rst
+@@ -506,6 +506,7 @@ prototypes::
+ 	ssize_t (*write) (struct file *, const char __user *, size_t, loff_t *);
+ 	ssize_t (*read_iter) (struct kiocb *, struct iov_iter *);
+ 	ssize_t (*write_iter) (struct kiocb *, struct iov_iter *);
++	int (*iopoll) (struct kiocb *kiocb, bool spin);
+ 	int (*iterate) (struct file *, struct dir_context *);
+ 	int (*iterate_shared) (struct file *, struct dir_context *);
+ 	__poll_t (*poll) (struct file *, struct poll_table_struct *);
+@@ -518,12 +519,6 @@ prototypes::
+ 	int (*fsync) (struct file *, loff_t start, loff_t end, int datasync);
+ 	int (*fasync) (int, struct file *, int);
+ 	int (*lock) (struct file *, int, struct file_lock *);
+-	ssize_t (*readv) (struct file *, const struct iovec *, unsigned long,
+-			loff_t *);
+-	ssize_t (*writev) (struct file *, const struct iovec *, unsigned long,
+-			loff_t *);
+-	ssize_t (*sendfile) (struct file *, loff_t *, size_t, read_actor_t,
+-			void __user *);
+ 	ssize_t (*sendpage) (struct file *, struct page *, int, size_t,
+ 			loff_t *, int);
+ 	unsigned long (*get_unmapped_area)(struct file *, unsigned long,
+@@ -536,6 +531,14 @@ prototypes::
+ 			size_t, unsigned int);
+ 	int (*setlease)(struct file *, long, struct file_lock **, void **);
+ 	long (*fallocate)(struct file *, int, loff_t, loff_t);
++	void (*show_fdinfo)(struct seq_file *m, struct file *f);
++	unsigned (*mmap_capabilities)(struct file *);
++	ssize_t (*copy_file_range)(struct file *, loff_t, struct file *,
++			loff_t, size_t, unsigned int);
++	loff_t (*remap_file_range)(struct file *file_in, loff_t pos_in,
++			struct file *file_out, loff_t pos_out,
++			loff_t len, unsigned int remap_flags);
++	int (*fadvise)(struct file *, loff_t, loff_t, int);
  
-+void filemap_invalidate_lock_two(struct address_space *mapping1,
-+				 struct address_space *mapping2);
-+void filemap_invalidate_unlock_two(struct address_space *mapping1,
-+				   struct address_space *mapping2);
-+
-+
- /*
-  * NOTE: in a 32bit arch with a preemptable kernel and
-  * an UP compile the i_size_read/write must be atomic
-diff --git a/mm/filemap.c b/mm/filemap.c
-index c8e7e451d81e..b8e9bccecd9f 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1009,6 +1009,44 @@ struct page *__page_cache_alloc(gfp_t gfp)
- EXPORT_SYMBOL(__page_cache_alloc);
- #endif
- 
-+/*
-+ * filemap_invalidate_lock_two - lock invalidate_lock for two mappings
-+ *
-+ * Lock exclusively invalidate_lock of any passed mapping that is not NULL.
-+ *
-+ * @mapping1: the first mapping to lock
-+ * @mapping2: the second mapping to lock
-+ */
-+void filemap_invalidate_lock_two(struct address_space *mapping1,
-+				 struct address_space *mapping2)
-+{
-+	if (mapping1 > mapping2)
-+		swap(mapping1, mapping2);
-+	if (mapping1)
-+		down_write(&mapping1->invalidate_lock);
-+	if (mapping2 && mapping1 != mapping2)
-+		down_write_nested(&mapping2->invalidate_lock, 1);
-+}
-+EXPORT_SYMBOL(filemap_invalidate_lock_two);
-+
-+/*
-+ * filemap_invalidate_unlock_two - unlock invalidate_lock for two mappings
-+ *
-+ * Unlock exclusive invalidate_lock of any passed mapping that is not NULL.
-+ *
-+ * @mapping1: the first mapping to unlock
-+ * @mapping2: the second mapping to unlock
-+ */
-+void filemap_invalidate_unlock_two(struct address_space *mapping1,
-+				   struct address_space *mapping2)
-+{
-+	if (mapping1)
-+		up_write(&mapping1->invalidate_lock);
-+	if (mapping2 && mapping1 != mapping2)
-+		up_write(&mapping2->invalidate_lock);
-+}
-+EXPORT_SYMBOL(filemap_invalidate_unlock_two);
-+
- /*
-  * In order to wait for pages to become available there must be
-  * waitqueues associated with pages. By using a hash table of
+ locking rules:
+ 	All may block.
 -- 
 2.26.2
 
