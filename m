@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37C27C47082
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 22:25:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB868C47094
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 22:25:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2097D61040
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 22:25:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3F6A61245
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 22:25:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230197AbhFGW1a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Jun 2021 18:27:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53936 "EHLO mail.kernel.org"
+        id S230375AbhFGW1f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Jun 2021 18:27:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53986 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230183AbhFGW1a (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 Jun 2021 18:27:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 45C7261059;
-        Mon,  7 Jun 2021 22:25:38 +0000 (UTC)
+        id S230183AbhFGW1f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 Jun 2021 18:27:35 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BD77F61040;
+        Mon,  7 Jun 2021 22:25:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623104738;
-        bh=KJcbnibZDmu4IqbPS3X0vAresvjSLBsWp0DD66VhjpU=;
+        s=k20201202; t=1623104743;
+        bh=1dux238x4nCpTc/Ks1zNtPWbwcksk/ApfN3YPgywvcA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=CNZlUFc5btKPIsdviZ+QMs3T9027E6WKBpZzfjrGPZ73Jwhs606mv19s1X7cWm6ZT
-         zW+4lfz6/ZJlT1RYWLY2xzEGzcqONRz27Az+WDkyUUPA5J7iDXZJl9IrOM2vOxpqV/
-         0lP5lUpJOEPAkxy0oAe+dnTsuQ+gPsRaQxtff1wVsW66jdoQNwHegB+MxfsV7i1H/A
-         nr0kcDAo2HC6jdSwmRI+i/lAKkJNB9vRmclovOpfNIiwp2Q24T/MOCtkzANTCk2yv2
-         /7tteIkwj5YQ0ZLHac0oeZ7c9wv+MB8AJLZ1zHTp/jEROyvbwXVmUOnRq5Ukqg04k6
-         6316K0xcmrBBg==
-Subject: [PATCH 8/9] xfs: don't run speculative preallocation gc when fs is
- frozen
+        b=EeEl5S9CQNl2tHfDDLF0POXQb4X5g5kXhjDwd8Fag6k/PvZYZN3cMeWeAp5hLO3Pq
+         zc7AhAjGzrMg9NmOkHSNtE2eRY6iehR7QwG5J1lAvFT4o5vIZzW+vneiV0ivXx9Ovs
+         UbbsvlYB1OFBAVEexL2o565r4msAlv8JKMx89e9o6rnuRTabVkM/mnmPMaeiO4JUVd
+         bQ3P8s2MqXgTylh7ml9mozqoE13+EOCs2G/HSqTfZT9zLVFN6rgSPc1CYPqn2wjsn0
+         M31wWqYJxzQBewHnu5z6H2YpzGJS9pt6Z0cnG66u6JqqBxAqX7CjfzGrUQ1EKI5vg1
+         mvtUe/CEM25wQ==
+Subject: [PATCH 9/9] xfs: avoid buffer deadlocks when walking fs inodes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Mon, 07 Jun 2021 15:25:38 -0700
-Message-ID: <162310473797.3465262.16041946316966485442.stgit@locust>
+Cc:     Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
+Date:   Mon, 07 Jun 2021 15:25:43 -0700
+Message-ID: <162310474347.3465262.15673658432859700796.stgit@locust>
 In-Reply-To: <162310469340.3465262.504398465311182657.stgit@locust>
 References: <162310469340.3465262.504398465311182657.stgit@locust>
 User-Agent: StGit/0.19
@@ -50,148 +50,211 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we have the infrastructure to switch background workers on and
-off at will, fix the block gc worker code so that we don't actually run
-the worker when the filesystem is frozen, same as we do for deferred
-inactivation.
+When we're servicing an INUMBERS or BULKSTAT request or running
+quotacheck, grab an empty transaction so that we can use its inherent
+recursive buffer locking abilities to detect inode btree cycles without
+hitting ABBA buffer deadlocks.  This patch requires the deferred inode
+inactivation patchset because xfs_irele cannot directly call
+xfs_inactive when the iwalk itself has an (empty) transaction.
+
+Found by fuzzing an inode btree pointer to introduce a cycle into the
+tree (xfs/365).
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_icache.c |   29 ++++++++++++++++++++++++++---
- fs/xfs/xfs_mount.c  |    1 +
- fs/xfs/xfs_mount.h  |    3 +++
- fs/xfs/xfs_super.c  |    5 +++--
- 4 files changed, 33 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_itable.c |   42 +++++++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_iwalk.c  |   33 ++++++++++++++++++++++++++++-----
+ 2 files changed, 65 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 22090b318e58..5d5a0c137f32 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -215,6 +215,12 @@ xfs_reclaim_work_queue(
- 	rcu_read_unlock();
- }
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index f331975a16de..84c17a9f9869 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -19,6 +19,7 @@
+ #include "xfs_error.h"
+ #include "xfs_icache.h"
+ #include "xfs_health.h"
++#include "xfs_trans.h"
  
-+static inline bool
-+xfs_blockgc_running(struct xfs_mount *mp)
-+{
-+	return test_bit(XFS_OPFLAG_BLOCKGC_RUNNING_BIT, &mp->m_opflags);
-+}
-+
  /*
-  * Background scanning to trim preallocated space. This is queued based on the
-  * 'speculative_prealloc_lifetime' tunable (5m by default).
-@@ -223,6 +229,9 @@ static inline void
- xfs_blockgc_queue(
- 	struct xfs_perag	*pag)
- {
-+	if (!xfs_blockgc_running(pag->pag_mount))
-+		return;
-+
- 	rcu_read_lock();
- 	if (radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_BLOCKGC_TAG))
- 		queue_delayed_work(pag->pag_mount->m_gc_workqueue,
-@@ -1557,7 +1566,8 @@ xfs_blockgc_stop(
- 	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno;
- 
--	for_each_perag_tag(mp, agno, pag, XFS_ICI_BLOCKGC_TAG)
-+	clear_bit(XFS_OPFLAG_BLOCKGC_RUNNING_BIT, &mp->m_opflags);
-+	for_each_perag(mp, agno, pag)
- 		cancel_delayed_work_sync(&pag->pag_blockgc_work);
- }
- 
-@@ -1569,6 +1579,7 @@ xfs_blockgc_start(
- 	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno;
- 
-+	set_bit(XFS_OPFLAG_BLOCKGC_RUNNING_BIT, &mp->m_opflags);
- 	for_each_perag_tag(mp, agno, pag, XFS_ICI_BLOCKGC_TAG)
- 		xfs_blockgc_queue(pag);
- }
-@@ -1626,6 +1637,13 @@ xfs_blockgc_scan_inode(
- 	unsigned int		lockflags = 0;
+  * Bulk Stat
+@@ -163,6 +164,7 @@ xfs_bulkstat_one(
+ 		.formatter	= formatter,
+ 		.breq		= breq,
+ 	};
++	struct xfs_trans	*tp;
  	int			error;
  
+ 	if (breq->mnt_userns != &init_user_ns) {
+@@ -178,9 +180,18 @@ xfs_bulkstat_one(
+ 	if (!bc.buf)
+ 		return -ENOMEM;
+ 
+-	error = xfs_bulkstat_one_int(breq->mp, breq->mnt_userns, NULL,
+-				     breq->startino, &bc);
 +	/*
-+	 * Speculative preallocation gc isn't supposed to run when the fs is
-+	 * frozen because we don't want kernel threads to block on transaction
-+	 * allocation.
++	 * Grab an empty transaction so that we can use its recursive buffer
++	 * locking abilities to detect cycles in the inobt without deadlocking.
 +	 */
-+	ASSERT(ip->i_mount->m_super->s_writers.frozen < SB_FREEZE_FS);
-+
- 	error = xfs_inode_free_eofblocks(ip, icw, &lockflags);
- 	if (error)
- 		goto unlock;
-@@ -1648,13 +1666,18 @@ xfs_blockgc_worker(
- 	struct xfs_mount	*mp = pag->pag_mount;
- 	int			error;
++	error = xfs_trans_alloc_empty(breq->mp, &tp);
++	if (error)
++		goto out;
  
--	if (!sb_start_write_trylock(mp->m_super))
-+	/*
-+	 * Queueing of this blockgc worker can race with xfs_blockgc_stop,
-+	 * which means that we can be running after the opflag clears.  Double
-+	 * check the flag state so that we don't trip asserts.
-+	 */
-+	if (!xfs_blockgc_running(mp))
- 		return;
-+
- 	error = xfs_icwalk_ag(pag, XFS_ICWALK_BLOCKGC, NULL);
- 	if (error)
- 		xfs_info(mp, "AG %u preallocation gc worker failed, err=%d",
- 				pag->pag_agno, error);
--	sb_end_write(mp->m_super);
- 	xfs_blockgc_queue(pag);
- }
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 24dc3b7026b7..d95432e4ac39 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -797,6 +797,7 @@ xfs_mountfs(
- 
- 	/* Enable background workers. */
- 	xfs_inodegc_start(mp);
-+	xfs_blockgc_start(mp);
++	error = xfs_bulkstat_one_int(breq->mp, breq->mnt_userns, tp,
++			breq->startino, &bc);
++	xfs_trans_cancel(tp);
++out:
+ 	kmem_free(bc.buf);
  
  	/*
- 	 * Get and sanity-check the root inode.
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 4323aaa3e7b4..2da5bd55dd81 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -270,6 +270,9 @@ typedef struct xfs_mount {
- 						   inode inactivation worker? */
- #define XFS_OPFLAG_INACTIVATE_NOW_BIT	(1)	/* force foreground inactivation
- 						   of unlinked inodes */
-+#define XFS_OPFLAG_BLOCKGC_RUNNING_BIT	(2)	/* are we allowed to start the
-+						   speculative preallocation gc
-+						   worker? */
+@@ -244,6 +255,7 @@ xfs_bulkstat(
+ 		.formatter	= formatter,
+ 		.breq		= breq,
+ 	};
++	struct xfs_trans	*tp;
+ 	int			error;
+ 
+ 	if (breq->mnt_userns != &init_user_ns) {
+@@ -259,9 +271,18 @@ xfs_bulkstat(
+ 	if (!bc.buf)
+ 		return -ENOMEM;
+ 
+-	error = xfs_iwalk(breq->mp, NULL, breq->startino, breq->flags,
++	/*
++	 * Grab an empty transaction so that we can use its recursive buffer
++	 * locking abilities to detect cycles in the inobt without deadlocking.
++	 */
++	error = xfs_trans_alloc_empty(breq->mp, &tp);
++	if (error)
++		goto out;
++
++	error = xfs_iwalk(breq->mp, tp, breq->startino, breq->flags,
+ 			xfs_bulkstat_iwalk, breq->icount, &bc);
+-
++	xfs_trans_cancel(tp);
++out:
+ 	kmem_free(bc.buf);
+ 
+ 	/*
+@@ -374,13 +395,24 @@ xfs_inumbers(
+ 		.formatter	= formatter,
+ 		.breq		= breq,
+ 	};
++	struct xfs_trans	*tp;
+ 	int			error = 0;
+ 
+ 	if (xfs_bulkstat_already_done(breq->mp, breq->startino))
+ 		return 0;
+ 
+-	error = xfs_inobt_walk(breq->mp, NULL, breq->startino, breq->flags,
++	/*
++	 * Grab an empty transaction so that we can use its recursive buffer
++	 * locking abilities to detect cycles in the inobt without deadlocking.
++	 */
++	error = xfs_trans_alloc_empty(breq->mp, &tp);
++	if (error)
++		goto out;
++
++	error = xfs_inobt_walk(breq->mp, tp, breq->startino, breq->flags,
+ 			xfs_inumbers_walk, breq->icount, &ic);
++	xfs_trans_cancel(tp);
++out:
+ 
+ 	/*
+ 	 * We found some inode groups, so clear the error status and return
+diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+index 917d51eefee3..7558486f4937 100644
+--- a/fs/xfs/xfs_iwalk.c
++++ b/fs/xfs/xfs_iwalk.c
+@@ -83,6 +83,9 @@ struct xfs_iwalk_ag {
+ 
+ 	/* Skip empty inobt records? */
+ 	unsigned int			skip_empty:1;
++
++	/* Drop the (hopefully empty) transaction when calling iwalk_fn. */
++	unsigned int			drop_trans:1;
+ };
  
  /*
-  * Max and min values for mount-option defined I/O
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 968176b35d13..730f8e960d98 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -852,8 +852,10 @@ xfs_fs_sync_fs(
- 	 * s_umount, which means we can't lock out a concurrent thaw request
- 	 * without adding another layer of locks to the freeze process.
- 	 */
--	if (sb->s_writers.frozen == SB_FREEZE_PAGEFAULT)
-+	if (sb->s_writers.frozen == SB_FREEZE_PAGEFAULT) {
- 		xfs_inodegc_stop(mp);
-+		xfs_blockgc_stop(mp);
-+	}
+@@ -352,7 +355,6 @@ xfs_iwalk_run_callbacks(
+ 	int				*has_more)
+ {
+ 	struct xfs_mount		*mp = iwag->mp;
+-	struct xfs_trans		*tp = iwag->tp;
+ 	struct xfs_inobt_rec_incore	*irec;
+ 	xfs_agino_t			next_agino;
+ 	int				error;
+@@ -362,10 +364,15 @@ xfs_iwalk_run_callbacks(
+ 	ASSERT(iwag->nr_recs > 0);
  
- 	return 0;
+ 	/* Delete cursor but remember the last record we cached... */
+-	xfs_iwalk_del_inobt(tp, curpp, agi_bpp, 0);
++	xfs_iwalk_del_inobt(iwag->tp, curpp, agi_bpp, 0);
+ 	irec = &iwag->recs[iwag->nr_recs - 1];
+ 	ASSERT(next_agino >= irec->ir_startino + XFS_INODES_PER_CHUNK);
+ 
++	if (iwag->drop_trans) {
++		xfs_trans_cancel(iwag->tp);
++		iwag->tp = NULL;
++	}
++
+ 	error = xfs_iwalk_ag_recs(iwag);
+ 	if (error)
+ 		return error;
+@@ -376,8 +383,15 @@ xfs_iwalk_run_callbacks(
+ 	if (!has_more)
+ 		return 0;
+ 
++	if (iwag->drop_trans) {
++		error = xfs_trans_alloc_empty(mp, &iwag->tp);
++		if (error)
++			return error;
++	}
++
+ 	/* ...and recreate the cursor just past where we left off. */
+-	error = xfs_inobt_cur(mp, tp, iwag->pag, XFS_BTNUM_INO, curpp, agi_bpp);
++	error = xfs_inobt_cur(mp, iwag->tp, iwag->pag, XFS_BTNUM_INO, curpp,
++			agi_bpp);
+ 	if (error)
+ 		return error;
+ 
+@@ -390,7 +404,6 @@ xfs_iwalk_ag(
+ 	struct xfs_iwalk_ag		*iwag)
+ {
+ 	struct xfs_mount		*mp = iwag->mp;
+-	struct xfs_trans		*tp = iwag->tp;
+ 	struct xfs_perag		*pag = iwag->pag;
+ 	struct xfs_buf			*agi_bp = NULL;
+ 	struct xfs_btree_cur		*cur = NULL;
+@@ -469,7 +482,7 @@ xfs_iwalk_ag(
+ 	error = xfs_iwalk_run_callbacks(iwag, &cur, &agi_bp, &has_more);
+ 
+ out:
+-	xfs_iwalk_del_inobt(tp, &cur, &agi_bp, error);
++	xfs_iwalk_del_inobt(iwag->tp, &cur, &agi_bp, error);
+ 	return error;
  }
-@@ -970,7 +972,6 @@ xfs_fs_freeze(
- 	 * set a GFP_NOFS context here to avoid recursion deadlocks.
- 	 */
- 	flags = memalloc_nofs_save();
--	xfs_blockgc_stop(mp);
- 	xfs_save_resvblks(mp);
- 	ret = xfs_log_quiesce(mp);
- 	memalloc_nofs_restore(flags);
+ 
+@@ -599,8 +612,18 @@ xfs_iwalk_ag_work(
+ 	error = xfs_iwalk_alloc(iwag);
+ 	if (error)
+ 		goto out;
++	/*
++	 * Grab an empty transaction so that we can use its recursive buffer
++	 * locking abilities to detect cycles in the inobt without deadlocking.
++	 */
++	error = xfs_trans_alloc_empty(mp, &iwag->tp);
++	if (error)
++		goto out;
++	iwag->drop_trans = 1;
+ 
+ 	error = xfs_iwalk_ag(iwag);
++	if (iwag->tp)
++		xfs_trans_cancel(iwag->tp);
+ 	xfs_iwalk_free(iwag);
+ out:
+ 	xfs_perag_put(iwag->pag);
 
