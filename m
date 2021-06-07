@@ -2,116 +2,163 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 561DDC47094
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 13:14:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6963C47094
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38D39610C7
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 13:14:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE28260FE5
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230145AbhFGNPx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Jun 2021 09:15:53 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56556 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230203AbhFGNPw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 09:15:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1623071640;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Hs4yE34WnGZd3JFHSrloTR+6ttoxdUCGayaSBwNWKtY=;
-        b=KjwLa/h4luUmwrqhD3u7KfgX568gSg6BDH4re+hh9iXjo6JZaKjQKKmv96Fu/pXFRDNzbh
-        RJaZVz0aHTQXi7ypY1FEZFOVeHOPQsB6wbzsPu5Br/ICg9ENZujYZelFl1VSzW2sDOcN0O
-        dK/7wOCxXhftcv5NUXnpkZpJiDsb4Yk=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-39-vNeG9KXBMy2MK3gQjKMZCg-1; Mon, 07 Jun 2021 09:13:59 -0400
-X-MC-Unique: vNeG9KXBMy2MK3gQjKMZCg-1
-Received: by mail-wm1-f69.google.com with SMTP id z25-20020a1c4c190000b029019f15b0657dso4091502wmf.8
-        for <linux-xfs@vger.kernel.org>; Mon, 07 Jun 2021 06:13:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to;
-        bh=Hs4yE34WnGZd3JFHSrloTR+6ttoxdUCGayaSBwNWKtY=;
-        b=Nn4r+HJHOklU/FrzVg5Gu34tumVFg7KSulB/duSHKjZ6/ypf36VFbLoEYI77WbYwxq
-         8QhoGQj6INkWx4MFYcbO16TzVhl5zwg7gBxFGgiUeh+Y7H5m7OUt189gRf+o6e6h9htg
-         bpwEg9yqgT+OFDv8U6EEzUEk3rdON1ixHG5VMUyGhgEXqbI9KbyW0Ysy1iMStFmJSB1T
-         ISpH/jbZ886vOLQ0cZuP97y2exuMCZ+TiojvEtczlKE37kZwuAQ61ItEvO5UcxvNqW4t
-         ixGelbs6Qm1S9lzepfF0nESViDjlX7PGpVamFhCs4qsV16sCr/SqfWi6/2Vaa7mSlq2d
-         /c0w==
-X-Gm-Message-State: AOAM530/ijG7pvDpTLz0/yQ9QId6LtSX4p5wrctcsngZOjr1zLroHckS
-        kic2crv3gAqiweO0ZGcayBXXU7xjEa6Zw1VgBZGRfhMzWwod0dceoLRcHd3H8/b/3m6ZkBSeDKn
-        YyarOOWxS4FBNWBDoSOSv
-X-Received: by 2002:a1c:4c18:: with SMTP id z24mr13504210wmf.27.1623071638087;
-        Mon, 07 Jun 2021 06:13:58 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzU/yGT93RPfYj3GBKMynyqUdvtSWdnRPREgAt+DPRPDoOiamINOzbmrIdF4/wpM7J0slzs2w==
-X-Received: by 2002:a1c:4c18:: with SMTP id z24mr13504180wmf.27.1623071637715;
-        Mon, 07 Jun 2021 06:13:57 -0700 (PDT)
-Received: from omega.lan (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
-        by smtp.gmail.com with ESMTPSA id k42sm4746963wms.0.2021.06.07.06.13.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Jun 2021 06:13:57 -0700 (PDT)
-Date:   Mon, 7 Jun 2021 15:13:55 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Shaokun Zhang <zhangshaokun@hisilicon.com>
-Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: [PATCH] xfs: remove redundant initialization of variable error
-Message-ID: <20210607131355.bjdf7lovz5drofrw@omega.lan>
-Mail-Followup-To: Shaokun Zhang <zhangshaokun@hisilicon.com>,
-        linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>
-References: <1622883170-33317-1-git-send-email-zhangshaokun@hisilicon.com>
+        id S231133AbhFGOyb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Jun 2021 10:54:31 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:51518 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230220AbhFGOya (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 10:54:30 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id 838B71FD30;
+        Mon,  7 Jun 2021 14:52:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1623077557; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=dXoAu7GQXVTWLNML0ZDCTisk4K7XoHyJObObTC90fms=;
+        b=n5y6GFisMEh+A5JM36h5vwzI9AfE+bbNmsI1jJQIjg63Kl2XZCkUOnazg1stcBSt1g2F/B
+        kGORzGj2jqJqLUAjF53Dragxk4kjM8pCR0frezM0yBkPCoB6WesCJE6r/B9rygmxDaO0vR
+        +URUuqHP6cHorDGg2yg7KECsXmr+X+A=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1623077557;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=dXoAu7GQXVTWLNML0ZDCTisk4K7XoHyJObObTC90fms=;
+        b=mYFsNfNlCAlPVk9uoaYY4HANzUKLEdfBnU/GFntY7jVg1ZQFkotYD6gILk8kz0Wk/TZ9Gf
+        AxSAYgNMGjWXlCAQ==
+Received: from quack2.suse.cz (unknown [10.100.200.198])
+        by relay2.suse.de (Postfix) with ESMTP id B48B3A3B88;
+        Mon,  7 Jun 2021 14:52:36 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 7FFA81F2CAC; Mon,  7 Jun 2021 16:52:36 +0200 (CEST)
+From:   Jan Kara <jack@suse.cz>
+To:     <linux-fsdevel@vger.kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>, ceph-devel@vger.kernel.org,
+        Chao Yu <yuchao0@huawei.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        linux-cifs@vger.kernel.org, <linux-ext4@vger.kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net, <linux-mm@kvack.org>,
+        <linux-xfs@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
+        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>
+Subject: [PATCH 0/14 v7] fs: Hole punch vs page cache filling races
+Date:   Mon,  7 Jun 2021 16:52:10 +0200
+Message-Id: <20210607144631.8717-1-jack@suse.cz>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1622883170-33317-1-git-send-email-zhangshaokun@hisilicon.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4536; h=from:subject:message-id; bh=P0xjoHEljjWrXlT5jhnGa40YEfdwjktVMbfSRuehRng=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBgvjKWdgDiE/fLVFkWEAkIZkFmQCkqJGxyJZ4ENpOy pv3oapKJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYL4ylgAKCRCcnaoHP2RA2aboB/ sFYL2MHuSq4OG683y+6SRm+HLM9QjIwDQ1mhPrW5rdgFESv6HtB0RLh5l3h9f+oIYyyXM3oFKpTph9 pVTRYbSCjRcrn6WyyqmYousdw2V5l7BgNv92EKKH21ci4zh3ILXKLRhFn07A8MxRdtqNFzQuWhixkc okci90yaAc+nM+whGNX6L3rDA2tCheAsL5Wgrfm95V+SWYP+Co0VG32hpiTIistXxbzJF8CuiSgITE 9P8uLujr6fmaRlblzZRhL132+zFHxO1p319kllneBn3/+NbEZCbgFsVoJrtqCCgWA1lJBF1J84uWhE jnGow/3y6AE3EIzGCNUoZmj/Tcy7pd
+X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+Hello,
 
-On Sat, Jun 05, 2021 at 04:52:50PM +0800, Shaokun Zhang wrote:
-> 'error' will be initialized, so clean up the redundant initialization.
-> 
-> Cc: "Darrick J. Wong" <djwong@kernel.org>
-> Signed-off-by: Shaokun Zhang <zhangshaokun@hisilicon.com>
+here is another version of my patches to address races between hole punching
+and page cache filling functions for ext4 and other filesystems. The biggest
+change since the last time is providing function to lock two mappings and using
+it from XFS. Other changes were pretty minor.
 
+Out of all filesystem supporting hole punching, only GFS2 and OCFS2 remain
+unresolved. GFS2 people are working on their own solution (cluster locking is
+involved), OCFS2 has even bigger issues (maintainers informed, looking into
+it).
 
-This makes no difference in the resulting code.
-Particularly, I'd rather have such variables explicitly initialized. This
-function is small, so it's easy to see its initialization later in the code, but
-still, IMHO, it's way better to see the 'default error values' explicit at the
-beginning of the function. But, it's just my 'visual' preference :)
+As a next step, I'd like to actually make sure all calls to
+truncate_inode_pages() happen under mapping->invalidate_lock, add the assert
+and then we can also get rid of i_size checks in some places (truncate can
+use the same serialization scheme as hole punch). But that step is mostly
+a cleanup so I'd like to get these functional fixes in first.
 
+Note that the first patch of the series is already in mm tree but I'm
+submitting it here so that the series applies to Linus' tree cleanly.
 
-> ---
->  fs/xfs/xfs_buf.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 592800c8852f..59991c8c7127 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -707,7 +707,7 @@ xfs_buf_get_map(
->  {
->  	struct xfs_buf		*bp;
->  	struct xfs_buf		*new_bp;
-> -	int			error = 0;
-> +	int			error;
->  
->  	*bpp = NULL;
->  	error = xfs_buf_find(target, map, nmaps, flags, NULL, &bp);
-> -- 
-> 2.7.4
-> 
+Changes since v6:
+* Added some reviewed-by tags
+* Added wrapper for taking invalidate_lock similar to inode_lock
+* Renamed wrappers for taking invalidate_lock for two inodes
+* Added xfs patch to make xfs_isilocked() work better even without lockdep
+* Some minor documentation fixes
 
--- 
-Carlos
+Changes since v5:
+* Added some reviewed-by tags
+* Added functions for locking two mappings and using them from XFS where needed
+* Some minor code style & comment fixes
 
+Changes since v4:
+* Rebased onto 5.13-rc1
+* Removed shmfs conversion patches
+* Fixed up zonefs changelog
+* Fixed up XFS comments
+* Added patch fixing up definition of file_operations in Documentation/vfs/
+* Updated documentation and comments to explain invalidate_lock is used also
+  to prevent changes through memory mappings to existing pages for some VFS
+  operations.
+
+Changes since v3:
+* Renamed and moved lock to struct address_space
+* Added conversions of tmpfs, ceph, cifs, fuse, f2fs
+* Fixed error handling path in filemap_read()
+* Removed .page_mkwrite() cleanup from the series for now
+
+Changes since v2:
+* Added documentation and comments regarding lock ordering and how the lock is
+  supposed to be used
+* Added conversions of ext2, xfs, zonefs
+* Added patch removing i_mapping_sem protection from .page_mkwrite handlers
+
+Changes since v1:
+* Moved to using inode->i_mapping_sem instead of aops handler to acquire
+  appropriate lock
+
+---
+Motivation:
+
+Amir has reported [1] a that ext4 has a potential issues when reads can race
+with hole punching possibly exposing stale data from freed blocks or even
+corrupting filesystem when stale mapping data gets used for writeout. The
+problem is that during hole punching, new page cache pages can get instantiated
+and block mapping from the looked up in a punched range after
+truncate_inode_pages() has run but before the filesystem removes blocks from
+the file. In principle any filesystem implementing hole punching thus needs to
+implement a mechanism to block instantiating page cache pages during hole
+punching to avoid this race. This is further complicated by the fact that there
+are multiple places that can instantiate pages in page cache.  We can have
+regular read(2) or page fault doing this but fadvise(2) or madvise(2) can also
+result in reading in page cache pages through force_page_cache_readahead().
+
+There are couple of ways how to fix this. First way (currently implemented by
+XFS) is to protect read(2) and *advise(2) calls with i_rwsem so that they are
+serialized with hole punching. This is easy to do but as a result all reads
+would then be serialized with writes and thus mixed read-write workloads suffer
+heavily on ext4. Thus this series introduces inode->i_mapping_sem and uses it
+when creating new pages in the page cache and looking up their corresponding
+block mapping. We also replace EXT4_I(inode)->i_mmap_sem with this new rwsem
+which provides necessary serialization with hole punching for ext4.
+
+								Honza
+
+[1] https://lore.kernel.org/linux-fsdevel/CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com/
+
+Previous versions:
+Link: https://lore.kernel.org/linux-fsdevel/20210208163918.7871-1-jack@suse.cz/
+Link: https://lore.kernel.org/r/20210413105205.3093-1-jack@suse.cz
+Link: https://lore.kernel.org/r/20210423171010.12-1-jack@suse.cz
+Link: https://lore.kernel.org/r/20210512101639.22278-1-jack@suse.cz
+Link: http://lore.kernel.org/r/20210525125652.20457-1-jack@suse.cz
