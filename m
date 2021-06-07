@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E79CBC49ECC
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1938AC48BE0
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF07861130
+	by mail.kernel.org (Postfix) with ESMTP id EDACC61164
 	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 14:52:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231355AbhFGOyi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Jun 2021 10:54:38 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:51720 "EHLO
+        id S231357AbhFGOyj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Jun 2021 10:54:39 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:51740 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231132AbhFGOyc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 10:54:32 -0400
+        with ESMTP id S231157AbhFGOyd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 10:54:33 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id D1CF11FDD1;
-        Mon,  7 Jun 2021 14:52:37 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTP id 0DA7F1FDD6;
+        Mon,  7 Jun 2021 14:52:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1623077557; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1623077558; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=bgvhMIl1mhONFJymI2z921fWdq0nztyS6tFQ71v6L/c=;
-        b=EogLMR4VH/4i7SOnd8JnFVMebkTurk1AiRWT9zX3SM76UqTrozjotz9wtldiZHnAOrL+J/
-        5arW/6LoGlowEyqm0G74Q6JDXuZZo3QefVvJemg9NNrQqq175ej6ugZnm6YUcw6NWbPVXE
-        ggDSiQxU0aXdW8cMSgiqEujHS4WLVPo=
+        bh=c5hN9VihgYabPzS6M/DoMuNHHykbae3N2/E4zCgl0t4=;
+        b=NFenYZndzTQCSEs0kiVAUsrK4q4SXXp9cvTfVysJCl9S8OYKpb3mep2Wudp9TVce+rKAos
+        ADmLsAgkFnGXxOPA69oYb85BUicyV5sjjgoWrMhz6Wpq7+ACrl16M4hl2VwI4wW/Ld4Gho
+        I9oJu7DPonRpgXb0g9RDbabMD167D1E=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1623077557;
+        s=susede2_ed25519; t=1623077558;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=bgvhMIl1mhONFJymI2z921fWdq0nztyS6tFQ71v6L/c=;
-        b=ppG1pyBH/COR3cR7iByuuCer71tUF00D0mctM0GDVYDjxq5hWjNYXM65CnirRjZf3jKWWg
-        DaS1QAcczgCciEBQ==
+        bh=c5hN9VihgYabPzS6M/DoMuNHHykbae3N2/E4zCgl0t4=;
+        b=YpALarJquUvnyzCPi/IGQR1z3cZ2is7/Uh27Kg/PZfUSGOrH9/QH4sHHGmPwz8dPsIyLwH
+        UR1UQkMjNEdHi2Bw==
 Received: from quack2.suse.cz (unknown [10.100.200.198])
-        by relay2.suse.de (Postfix) with ESMTP id B3B80A3B91;
+        by relay2.suse.de (Postfix) with ESMTP id DA68DA3B92;
         Mon,  7 Jun 2021 14:52:37 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id A7F1E1F2CB7; Mon,  7 Jun 2021 16:52:36 +0200 (CEST)
+        id C03301F2CBF; Mon,  7 Jun 2021 16:52:36 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-fsdevel@vger.kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -59,231 +59,93 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         linux-f2fs-devel@lists.sourceforge.net, <linux-mm@kvack.org>,
         <linux-xfs@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
         Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Subject: [PATCH 08/14] xfs: Convert to use invalidate_lock
-Date:   Mon,  7 Jun 2021 16:52:18 +0200
-Message-Id: <20210607145236.31852-8-jack@suse.cz>
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>
+Subject: [PATCH 13/14] ceph: Fix race between hole punch and page fault
+Date:   Mon,  7 Jun 2021 16:52:23 +0200
+Message-Id: <20210607145236.31852-13-jack@suse.cz>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210607144631.8717-1-jack@suse.cz>
 References: <20210607144631.8717-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7878; h=from:subject; bh=J3EQ8pDQ5KRZUdlRHNva+CWDZzhCxMdVvTCGFmCAjwU=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBgvjKiV7EBqLMkIyrPRQk9vprxZNHegMYGEVXhYfxb 0fnI37OJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYL4yogAKCRCcnaoHP2RA2XlUB/ 0QZ4lKWIb3zLYk1dU5C31Zyp7eDhQwPHyHUdXnw3tlLdht3VwmkPWMlwZjSkYIlQzSk86MZBo5U+9s MlU/Msh5iu3K2ipkMhCe2E0jKnfnssiy8RQDzlUZdSGhrHZyRWVVVvnw+4GEI7fx+xB5VjrBNDsql3 I2YbA11Vy9PMzWQuOtDfu3auh5kN2WT1GTvpbFJOyJZPe0x4FU/XOlRKPpowFkIMyppuhW1MU/UVlZ lmpMmU2xkCwJIDCKl7YTdLvNp6v39KORODCCgSE7FURn5ZllE3CWOZZ9BWefBkPsZIRTOWaeBkgO8V WHaxLauOSdTqRL1Hn1hlHXwIkITtfx
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2465; h=from:subject; bh=Sp8IgV3mV8zmiY5I9Wbg4z0IgLX0J9niLgWRID5omWo=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBgvjKmt/G434Rs9ZHmHm4m7KwtsKNjseeQr2d06yTU b1jblrKJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCYL4ypgAKCRCcnaoHP2RA2XPBB/ 0WRyE3RzVXQo4gUS7mKGJPyff+S+h8thH32QhOWZDXf4WYznPoJ+G3wFt5xde4p7HM3U7v4hpB7tQ8 EygfikeupmDm5O4NkUcQX/1NsWO5mf1y1khgu8KW9yas0wO4nNDvfUKTZj+5HUQukNJRO9ns9dIP+i ZHpf05z3tet5psuGs9y6FwuZstNgxlaQ9J8UOjG7fthTYQQ84eb7tMDli7aa2ogiQCpEULtSaR2KZq oSaXwXuly1pLWQKgrrob8K3/TVpt+5qVCPl0s81BB5Lp+mP2VILVhXd3lUp0wCBKewMTkqSdkyuX4i GM5IPBYS2vNK7LNSJvGIyk6io3Qiy/
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use invalidate_lock instead of XFS internal i_mmap_lock. The intended
-purpose of invalidate_lock is exactly the same. Note that the locking in
-__xfs_filemap_fault() slightly changes as filemap_fault() already takes
-invalidate_lock.
+Ceph has a following race between hole punching and page fault:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-CC: <linux-xfs@vger.kernel.org>
-CC: "Darrick J. Wong" <djwong@kernel.org>
+CPU1                                  CPU2
+ceph_fallocate()
+  ...
+  ceph_zero_pagecache_range()
+                                      ceph_filemap_fault()
+                                        faults in page in the range being
+                                        punched
+  ceph_zero_objects()
+
+And now we have a page in punched range with invalid data. Fix the
+problem by using mapping->invalidate_lock similarly to other
+filesystems. Note that using invalidate_lock also fixes a similar race
+wrt ->readpage().
+
+CC: Jeff Layton <jlayton@kernel.org>
+CC: ceph-devel@vger.kernel.org
+Reviewed-by: Jeff Layton <jlayton@kernel.org>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/xfs_file.c  | 13 +++++++-----
- fs/xfs/xfs_inode.c | 50 ++++++++++++++++++++++++----------------------
- fs/xfs/xfs_inode.h |  1 -
- fs/xfs/xfs_super.c |  2 --
- 4 files changed, 34 insertions(+), 32 deletions(-)
+ fs/ceph/addr.c | 9 ++++++---
+ fs/ceph/file.c | 2 ++
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 396ef36dcd0a..7cb7703c2209 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1282,7 +1282,7 @@ xfs_file_llseek(
-  *
-  * mmap_lock (MM)
-  *   sb_start_pagefault(vfs, freeze)
-- *     i_mmaplock (XFS - truncate serialisation)
-+ *     invalidate_lock (vfs/XFS_MMAPLOCK - truncate serialisation)
-  *       page_lock (MM)
-  *         i_lock (XFS - extent map serialisation)
-  */
-@@ -1303,24 +1303,27 @@ __xfs_filemap_fault(
- 		file_update_time(vmf->vma->vm_file);
- 	}
- 
--	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 	if (IS_DAX(inode)) {
- 		pfn_t pfn;
- 
-+		xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL,
- 				(write_fault && !vmf->cow_page) ?
- 				 &xfs_direct_write_iomap_ops :
- 				 &xfs_read_iomap_ops);
- 		if (ret & VM_FAULT_NEEDDSYNC)
- 			ret = dax_finish_sync_fault(vmf, pe_size, pfn);
-+		xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
+index c1570fada3d8..4664b93a32db 100644
+--- a/fs/ceph/addr.c
++++ b/fs/ceph/addr.c
+@@ -1401,9 +1401,11 @@ static vm_fault_t ceph_filemap_fault(struct vm_fault *vmf)
+ 		ret = VM_FAULT_SIGBUS;
  	} else {
--		if (write_fault)
-+		if (write_fault) {
-+			xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 			ret = iomap_page_mkwrite(vmf,
- 					&xfs_buffered_write_iomap_ops);
--		else
-+			xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-+		} else {
- 			ret = filemap_fault(vmf);
-+		}
+ 		struct address_space *mapping = inode->i_mapping;
+-		struct page *page = find_or_create_page(mapping, 0,
+-						mapping_gfp_constraint(mapping,
+-						~__GFP_FS));
++		struct page *page;
++
++		filemap_invalidate_lock_shared(mapping);
++		page = find_or_create_page(mapping, 0,
++				mapping_gfp_constraint(mapping, ~__GFP_FS));
+ 		if (!page) {
+ 			ret = VM_FAULT_OOM;
+ 			goto out_inline;
+@@ -1424,6 +1426,7 @@ static vm_fault_t ceph_filemap_fault(struct vm_fault *vmf)
+ 		vmf->page = page;
+ 		ret = VM_FAULT_MAJOR | VM_FAULT_LOCKED;
+ out_inline:
++		filemap_invalidate_unlock_shared(mapping);
+ 		dout("filemap_fault %p %llu read inline data ret %x\n",
+ 		     inode, off, ret);
  	}
--	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+index 77fc037d5beb..e826b1b1e4af 100644
+--- a/fs/ceph/file.c
++++ b/fs/ceph/file.c
+@@ -2083,6 +2083,7 @@ static long ceph_fallocate(struct file *file, int mode,
+ 	if (ret < 0)
+ 		goto unlock;
  
- 	if (write_fault)
- 		sb_end_pagefault(inode->i_sb);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 6247977870bd..e1854a660809 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -131,7 +131,7 @@ xfs_ilock_attr_map_shared(
++	filemap_invalidate_lock(inode->i_mapping);
+ 	ceph_zero_pagecache_range(inode, offset, length);
+ 	ret = ceph_zero_objects(inode, offset, length);
  
- /*
-  * In addition to i_rwsem in the VFS inode, the xfs inode contains 2
-- * multi-reader locks: i_mmap_lock and the i_lock.  This routine allows
-+ * multi-reader locks: invalidate_lock and the i_lock.  This routine allows
-  * various combinations of the locks to be obtained.
-  *
-  * The 3 locks should always be ordered so that the IO lock is obtained first,
-@@ -139,23 +139,23 @@ xfs_ilock_attr_map_shared(
-  *
-  * Basic locking order:
-  *
-- * i_rwsem -> i_mmap_lock -> page_lock -> i_ilock
-+ * i_rwsem -> invalidate_lock -> page_lock -> i_ilock
-  *
-  * mmap_lock locking order:
-  *
-  * i_rwsem -> page lock -> mmap_lock
-- * mmap_lock -> i_mmap_lock -> page_lock
-+ * mmap_lock -> invalidate_lock -> page_lock
-  *
-  * The difference in mmap_lock locking order mean that we cannot hold the
-- * i_mmap_lock over syscall based read(2)/write(2) based IO. These IO paths can
-- * fault in pages during copy in/out (for buffered IO) or require the mmap_lock
-- * in get_user_pages() to map the user pages into the kernel address space for
-- * direct IO. Similarly the i_rwsem cannot be taken inside a page fault because
-- * page faults already hold the mmap_lock.
-+ * invalidate_lock over syscall based read(2)/write(2) based IO. These IO paths
-+ * can fault in pages during copy in/out (for buffered IO) or require the
-+ * mmap_lock in get_user_pages() to map the user pages into the kernel address
-+ * space for direct IO. Similarly the i_rwsem cannot be taken inside a page
-+ * fault because page faults already hold the mmap_lock.
-  *
-  * Hence to serialise fully against both syscall and mmap based IO, we need to
-- * take both the i_rwsem and the i_mmap_lock. These locks should *only* be both
-- * taken in places where we need to invalidate the page cache in a race
-+ * take both the i_rwsem and the invalidate_lock. These locks should *only* be
-+ * both taken in places where we need to invalidate the page cache in a race
-  * free manner (e.g. truncate, hole punch and other extent manipulation
-  * functions).
-  */
-@@ -187,10 +187,13 @@ xfs_ilock(
- 				 XFS_IOLOCK_DEP(lock_flags));
+@@ -2095,6 +2096,7 @@ static long ceph_fallocate(struct file *file, int mode,
+ 		if (dirty)
+ 			__mark_inode_dirty(inode, dirty);
  	}
++	filemap_invalidate_unlock(inode->i_mapping);
  
--	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrupdate_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
--	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mraccess_nested(&ip->i_mmaplock, XFS_MMAPLOCK_DEP(lock_flags));
-+	if (lock_flags & XFS_MMAPLOCK_EXCL) {
-+		down_write_nested(&VFS_I(ip)->i_mapping->invalidate_lock,
-+				  XFS_MMAPLOCK_DEP(lock_flags));
-+	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
-+		down_read_nested(&VFS_I(ip)->i_mapping->invalidate_lock,
-+				 XFS_MMAPLOCK_DEP(lock_flags));
-+	}
- 
- 	if (lock_flags & XFS_ILOCK_EXCL)
- 		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
-@@ -239,10 +242,10 @@ xfs_ilock_nowait(
- 	}
- 
- 	if (lock_flags & XFS_MMAPLOCK_EXCL) {
--		if (!mrtryupdate(&ip->i_mmaplock))
-+		if (!down_write_trylock(&VFS_I(ip)->i_mapping->invalidate_lock))
- 			goto out_undo_iolock;
- 	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
--		if (!mrtryaccess(&ip->i_mmaplock))
-+		if (!down_read_trylock(&VFS_I(ip)->i_mapping->invalidate_lock))
- 			goto out_undo_iolock;
- 	}
- 
-@@ -257,9 +260,9 @@ xfs_ilock_nowait(
- 
- out_undo_mmaplock:
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrunlock_excl(&ip->i_mmaplock);
-+		up_write(&VFS_I(ip)->i_mapping->invalidate_lock);
- 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mrunlock_shared(&ip->i_mmaplock);
-+		up_read(&VFS_I(ip)->i_mapping->invalidate_lock);
- out_undo_iolock:
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		up_write(&VFS_I(ip)->i_rwsem);
-@@ -306,9 +309,9 @@ xfs_iunlock(
- 		up_read(&VFS_I(ip)->i_rwsem);
- 
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrunlock_excl(&ip->i_mmaplock);
-+		up_write(&VFS_I(ip)->i_mapping->invalidate_lock);
- 	else if (lock_flags & XFS_MMAPLOCK_SHARED)
--		mrunlock_shared(&ip->i_mmaplock);
-+		up_read(&VFS_I(ip)->i_mapping->invalidate_lock);
- 
- 	if (lock_flags & XFS_ILOCK_EXCL)
- 		mrunlock_excl(&ip->i_lock);
-@@ -334,7 +337,7 @@ xfs_ilock_demote(
- 	if (lock_flags & XFS_ILOCK_EXCL)
- 		mrdemote(&ip->i_lock);
- 	if (lock_flags & XFS_MMAPLOCK_EXCL)
--		mrdemote(&ip->i_mmaplock);
-+		downgrade_write(&VFS_I(ip)->i_mapping->invalidate_lock);
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		downgrade_write(&VFS_I(ip)->i_rwsem);
- 
-@@ -379,9 +382,8 @@ xfs_isilocked(
- 	}
- 
- 	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
--		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
--			return !!ip->i_mmaplock.mr_writer;
--		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
-+		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem, lock_flags,
-+				XFS_MMAPLOCK_FLAG_SHIFT);
- 	}
- 
- 	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 1c0e15c480bc..4551bdd555ce 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -40,7 +40,6 @@ typedef struct xfs_inode {
- 	/* Transaction and locking information. */
- 	struct xfs_inode_log_item *i_itemp;	/* logging information */
- 	mrlock_t		i_lock;		/* inode lock */
--	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
- 	atomic_t		i_pincount;	/* inode pin count */
- 
- 	/*
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index a2dab05332ac..eeaf44910b5f 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -715,8 +715,6 @@ xfs_fs_inode_init_once(
- 	atomic_set(&ip->i_pincount, 0);
- 	spin_lock_init(&ip->i_flags_lock);
- 
--	mrlock_init(&ip->i_mmaplock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
--		     "xfsino", ip->i_ino);
- 	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
- 		     "xfsino", ip->i_ino);
- }
+ 	ceph_put_cap_refs(ci, got);
+ unlock:
 -- 
 2.26.2
 
