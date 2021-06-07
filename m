@@ -2,199 +2,230 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83C54C47082
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 08:35:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 798E6C47082
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 10:46:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6304A610C8
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 08:35:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DD0860FEA
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Jun 2021 10:46:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229657AbhFGIhX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Jun 2021 04:37:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59084 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229545AbhFGIhX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 04:37:23 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06C12C061766
-        for <linux-xfs@vger.kernel.org>; Mon,  7 Jun 2021 01:35:26 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id q25so12547030pfh.7
-        for <linux-xfs@vger.kernel.org>; Mon, 07 Jun 2021 01:35:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=NDXUUQ34z2dzbXUZUAU2Okrpml8dfpFJgZ1JgcD7Ol4=;
-        b=dJ5ic9/CS+D/bAovvoyhUJ7ND++TafHPrkY6Gt+HwEgIc5SDMfgDGTS0yT14x5L2hG
-         k3V5PORbYPlYjnYyWjjDpzVdJUBATqy24VXJcJYEwW4Y0btyxUN7hgBe5uzcbt/jsa/X
-         wmEJ/do0R5O4aS1WXOfCc8ays5n7t2UkPNiF23/tOdPh/E4CxErI3t1PktrQDR6qlMUr
-         kL/Vw7G9C2P5/6xWjmU9HRN1Y4/W7Wjd9aogs4GKuTFmysv7wJEWtLc2jAyHR6J9EZwA
-         ZcmstRNnOb0DA38kuKPBsjCkpJE1ZrVTmQtcvzDE0OCK33BdnZDhBCEO4pQR/9vRd2oO
-         cLYA==
+        id S230392AbhFGKsV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Jun 2021 06:48:21 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:56368 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230322AbhFGKsV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jun 2021 06:48:21 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1623062789;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DG4tCEAd8ZdElKwOy4nYarTMpnYGcV9N7cDR0MUibw8=;
+        b=h2abmbbKekmpvO9W3dd18NQa4ip/8DQQEBkE9CdNLdKLj8xgHcaMQ+qcd0LHe51BXMSppG
+        1GKODYUMvMIOcW7jq4Yk8tgRYv4SsYqA6Hnq6XFNZpEUqOiENk1T2iq29d3imKimhT4Qix
+        XeJMznQmoun6Hodvu2OWGtfVGLkVFdw=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-404-3E_ThEWmMhSkkj1gZlz2qA-1; Mon, 07 Jun 2021 06:46:28 -0400
+X-MC-Unique: 3E_ThEWmMhSkkj1gZlz2qA-1
+Received: by mail-wr1-f69.google.com with SMTP id u5-20020adf9e050000b029010df603f280so7675724wre.18
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Jun 2021 03:46:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=NDXUUQ34z2dzbXUZUAU2Okrpml8dfpFJgZ1JgcD7Ol4=;
-        b=OJvaoqqTNkJ8VmSgIWUaJ/TveL17r7D9FHtxWArDWhzFUChTaJqM3fDVFpi8QkSq5b
-         u0Hyc59Q3JwFm7qhZ5D33a2xVFyfQnuefsOssGFDGM7G2ijRBlwBSl0fK8GBHfsoZ9TE
-         yBzbX+TTjm+deQlb81hHS2dWI14wxL0oEawPioddp6VatUJi+pxAjNcgnsyVJ8xGRykV
-         JmZTju536fYARxSguc4LQs46/0/bBR7uMnqBATxN2O8GeczXEsZ50ULmswXJtejev5U2
-         g3fsr/n7fpAY01OpLVvqtbkCRSglvb/VCk5VJoJtRoDtC9JlX1UICgBW1o4oc3vsluM4
-         rzgg==
-X-Gm-Message-State: AOAM531Wl2UPIXKkH/gUSTP+devjFlgHWWu8VPmV6HMqmAIw6RlZ2YXf
-        pEnXJpC9QiJQR4nKxBJSs68V9X6Uo7Mjpg==
-X-Google-Smtp-Source: ABdhPJzuTlvM4iB10espL5o6LMNvYpLPP53/S5aeUG+OO0FNX4XvI2i9VKMubskZ2Dc6dAGqgIz9uA==
-X-Received: by 2002:aa7:860a:0:b029:2e9:f8cb:489c with SMTP id p10-20020aa7860a0000b02902e9f8cb489cmr16077703pfn.50.1623054925468;
-        Mon, 07 Jun 2021 01:35:25 -0700 (PDT)
-Received: from garuda ([122.179.77.39])
-        by smtp.gmail.com with ESMTPSA id n8sm11591837pjo.1.2021.06.07.01.35.24
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 07 Jun 2021 01:35:25 -0700 (PDT)
-References: <20210607052747.31422-1-allison.henderson@oracle.com> <20210607052747.31422-5-allison.henderson@oracle.com>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Allison Henderson <allison.henderson@oracle.com>
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=DG4tCEAd8ZdElKwOy4nYarTMpnYGcV9N7cDR0MUibw8=;
+        b=rKEHH4qUvxyWbalvc4MeqeVddSDiuKX6yiGUwGehm28y11y3F545Tgon3E4DQOvVr3
+         QothoObyEjdYhnOSFI7t5+NuXZDz0625IDcqYk+P24GO0gH8+eElzjkUD2rSS6TV7Zxm
+         s+Y38QVXp0WHTspRIQG88xuUidZuzxcMqUMwTv7rzeYzxr18eF/g0WUdnyhJuxd+LP8Z
+         5cw3E/ekBJ/ql1KgSzrbLo/BhUQlVH11InZ+FlWSKV+XVgot1skup+eo/d7F1+Tc6/ou
+         2GzLUCJcuqhOyU3TzQ2VBvmUNzDJXJ8VmzDuye1U94I19/+TjoXzGSPcjArMSQHpXVGw
+         hdCw==
+X-Gm-Message-State: AOAM532r3/uawuSNSsdXamUiHJwtVVvNJGKPVrVqw0dbgn7w2ME2hHIf
+        2NHi85KMcZf9c7RVQImWsz1amm38VhvRFWXfxVamVfswf11ecpAB+kODRpxr/fKtQ/ixDCimdU+
+        ztp7vabWy/15SoOVZBbHv
+X-Received: by 2002:a05:600c:b50:: with SMTP id k16mr16208153wmr.137.1623062786438;
+        Mon, 07 Jun 2021 03:46:26 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwckQPyueSRN8gbRqGVLz1+ykrTaNwWG51y55APGLkLPOSHwbK5DJ14qCzXbVJS7wOZIA7oNg==
+X-Received: by 2002:a05:600c:b50:: with SMTP id k16mr16208135wmr.137.1623062786098;
+        Mon, 07 Jun 2021 03:46:26 -0700 (PDT)
+Received: from omega.lan (ip4-46-39-172-19.cust.nbox.cz. [46.39.172.19])
+        by smtp.gmail.com with ESMTPSA id z10sm14481043wmb.26.2021.06.07.03.46.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Jun 2021 03:46:25 -0700 (PDT)
+Date:   Mon, 7 Jun 2021 12:46:23 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v20 14/14] xfs: Make attr name schemes consistent
-In-reply-to: <20210607052747.31422-5-allison.henderson@oracle.com>
-Date:   Mon, 07 Jun 2021 14:05:22 +0530
-Message-ID: <87fsxukr79.fsf@garuda>
+Subject: Re: [PATCH] xfs: drop the AGI being passed to xfs_check_agi_freecount
+Message-ID: <20210607104623.empfngu3y7e74bz3@omega.lan>
+Mail-Followup-To: Dave Chinner <david@fromorbit.com>,
+        linux-xfs@vger.kernel.org
+References: <20210607041529.392451-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210607041529.392451-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 07 Jun 2021 at 10:57, Allison Henderson wrote:
-> This patch renames the following functions to make the nameing scheme more consistent:
-> xfs_attr_shortform_remove -> xfs_attr_sf_removename
-> xfs_attr_node_remove_name -> xfs_attr_node_removename
-> xfs_attr_set_fmt -> xfs_attr_sf_addname
->
+On Mon, Jun 07, 2021 at 02:15:29PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Stephen Rothwell reported this compiler warning from linux-next:
+> 
+> fs/xfs/libxfs/xfs_ialloc.c: In function 'xfs_difree_finobt':
+> fs/xfs/libxfs/xfs_ialloc.c:2032:20: warning: unused variable 'agi' [-Wunused-variable]
+>  2032 |  struct xfs_agi   *agi = agbp->b_addr;
+> 
+> Which is fallout from agno -> perag conversions that were done in
+> this function. xfs_check_agi_freecount() is the only user of "agi"
+> in xfs_difree_finobt() now, and it only uses the agi to get the
+> current free inode count. We hold that in the perag structure, so
+> there's not need to directly reference the raw AGI to get this
+> information.
+> 
+> The btree cursor being passed to xfs_check_agi_freecount() has a
+> reference to the perag being operated on, so use that directly in
+> xfs_check_agi_freecount() rather than passing an AGI.
+> 
+> Fixes: 7b13c5155182 ("xfs: use perag for ialloc btree cursors")
+> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Looks good to me.
+Looks good:
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_attr.c      | 18 +++++++++---------
->  fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
->  fs/xfs/libxfs/xfs_attr_leaf.h |  2 +-
->  3 files changed, 11 insertions(+), 11 deletions(-)
->
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index a0edebc..611dc67 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -63,8 +63,8 @@ STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
->  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
->  STATIC int xfs_attr_set_iter(struct xfs_delattr_context *dac,
->  			     struct xfs_buf **leaf_bp);
-> -STATIC int xfs_attr_node_remove_name(struct xfs_da_args *args,
-> -				     struct xfs_da_state *state);
-> +STATIC int xfs_attr_node_removename(struct xfs_da_args *args,
-> +				    struct xfs_da_state *state);
->  
->  int
->  xfs_inode_hasattr(
-> @@ -298,7 +298,7 @@ xfs_attr_set_args(
->  }
->  
->  STATIC int
-> -xfs_attr_set_fmt(
-> +xfs_attr_sf_addname(
->  	struct xfs_delattr_context	*dac,
->  	struct xfs_buf			**leaf_bp)
->  {
-> @@ -367,7 +367,7 @@ xfs_attr_set_iter(
->  		 * release the hold once we return with a clean transaction.
->  		 */
->  		if (xfs_attr_is_shortform(dp))
-> -			return xfs_attr_set_fmt(dac, leaf_bp);
-> +			return xfs_attr_sf_addname(dac, leaf_bp);
->  		if (*leaf_bp != NULL) {
->  			xfs_trans_bhold_release(args->trans, *leaf_bp);
->  			*leaf_bp = NULL;
-> @@ -840,7 +840,7 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
->  	if (retval == -EEXIST) {
->  		if (args->attr_flags & XATTR_CREATE)
->  			return retval;
-> -		retval = xfs_attr_shortform_remove(args);
-> +		retval = xfs_attr_sf_removename(args);
->  		if (retval)
->  			return retval;
->  		/*
-> @@ -1223,7 +1223,7 @@ xfs_attr_node_addname_clear_incomplete(
->  	if (error)
->  		goto out;
->  
-> -	error = xfs_attr_node_remove_name(args, state);
-> +	error = xfs_attr_node_removename(args, state);
->  
->  	/*
->  	 * Check to see if the tree needs to be collapsed.
-> @@ -1339,7 +1339,7 @@ int xfs_attr_node_removename_setup(
->  }
->  
->  STATIC int
-> -xfs_attr_node_remove_name(
-> +xfs_attr_node_removename(
->  	struct xfs_da_args	*args,
->  	struct xfs_da_state	*state)
->  {
-> @@ -1390,7 +1390,7 @@ xfs_attr_remove_iter(
->  		 * thus state transitions. Call the right helper and return.
->  		 */
->  		if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL)
-> -			return xfs_attr_shortform_remove(args);
-> +			return xfs_attr_sf_removename(args);
->  
->  		if (xfs_attr_is_leaf(dp))
->  			return xfs_attr_leaf_removename(args);
-> @@ -1453,7 +1453,7 @@ xfs_attr_remove_iter(
->  				goto out;
->  		}
->  
-> -		retval = xfs_attr_node_remove_name(args, state);
-> +		retval = xfs_attr_node_removename(args, state);
->  
->  		/*
->  		 * Check to see if the tree needs to be collapsed. If so, roll
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index d97de20..5a3d261 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -773,7 +773,7 @@ xfs_attr_fork_remove(
->   * Remove an attribute from the shortform attribute list structure.
+>  fs/xfs/libxfs/xfs_ialloc.c | 28 +++++++++++++---------------
+>  1 file changed, 13 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 2ed6de6faf8a..654a8d9681e1 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -214,10 +214,9 @@ xfs_inobt_insert(
+>   * Verify that the number of free inodes in the AGI is correct.
 >   */
->  int
-> -xfs_attr_shortform_remove(
-> +xfs_attr_sf_removename(
->  	struct xfs_da_args		*args)
+>  #ifdef DEBUG
+> -STATIC int
+> +static int
+>  xfs_check_agi_freecount(
+> -	struct xfs_btree_cur	*cur,
+> -	struct xfs_agi		*agi)
+> +	struct xfs_btree_cur	*cur)
 >  {
->  	struct xfs_attr_shortform	*sf;
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-> index 9b1c59f..efa757f 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-> @@ -51,7 +51,7 @@ int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
->  int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
->  int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
->  			struct xfs_buf **leaf_bp);
-> -int	xfs_attr_shortform_remove(struct xfs_da_args *args);
-> +int	xfs_attr_sf_removename(struct xfs_da_args *args);
->  int	xfs_attr_sf_findname(struct xfs_da_args *args,
->  			     struct xfs_attr_sf_entry **sfep,
->  			     unsigned int *basep);
-
+>  	if (cur->bc_nlevels == 1) {
+>  		xfs_inobt_rec_incore_t rec;
+> @@ -243,12 +242,12 @@ xfs_check_agi_freecount(
+>  		} while (i == 1);
+>  
+>  		if (!XFS_FORCED_SHUTDOWN(cur->bc_mp))
+> -			ASSERT(freecount == be32_to_cpu(agi->agi_freecount));
+> +			ASSERT(freecount == cur->bc_ag.pag->pagi_freecount);
+>  	}
+>  	return 0;
+>  }
+>  #else
+> -#define xfs_check_agi_freecount(cur, agi)	0
+> +#define xfs_check_agi_freecount(cur)	0
+>  #endif
+>  
+>  /*
+> @@ -1014,7 +1013,7 @@ xfs_dialloc_ag_inobt(
+>  	if (!pagino)
+>  		pagino = be32_to_cpu(agi->agi_newino);
+>  
+> -	error = xfs_check_agi_freecount(cur, agi);
+> +	error = xfs_check_agi_freecount(cur);
+>  	if (error)
+>  		goto error0;
+>  
+> @@ -1234,7 +1233,7 @@ xfs_dialloc_ag_inobt(
+>  	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
+>  	pag->pagi_freecount--;
+>  
+> -	error = xfs_check_agi_freecount(cur, agi);
+> +	error = xfs_check_agi_freecount(cur);
+>  	if (error)
+>  		goto error0;
+>  
+> @@ -1461,7 +1460,7 @@ xfs_dialloc_ag(
+>  
+>  	cur = xfs_inobt_init_cursor(mp, tp, agbp, pag, XFS_BTNUM_FINO);
+>  
+> -	error = xfs_check_agi_freecount(cur, agi);
+> +	error = xfs_check_agi_freecount(cur);
+>  	if (error)
+>  		goto error_cur;
+>  
+> @@ -1504,7 +1503,7 @@ xfs_dialloc_ag(
+>  	 */
+>  	icur = xfs_inobt_init_cursor(mp, tp, agbp, pag, XFS_BTNUM_INO);
+>  
+> -	error = xfs_check_agi_freecount(icur, agi);
+> +	error = xfs_check_agi_freecount(icur);
+>  	if (error)
+>  		goto error_icur;
+>  
+> @@ -1522,10 +1521,10 @@ xfs_dialloc_ag(
+>  
+>  	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -1);
+>  
+> -	error = xfs_check_agi_freecount(icur, agi);
+> +	error = xfs_check_agi_freecount(icur);
+>  	if (error)
+>  		goto error_icur;
+> -	error = xfs_check_agi_freecount(cur, agi);
+> +	error = xfs_check_agi_freecount(cur);
+>  	if (error)
+>  		goto error_icur;
+>  
+> @@ -1911,7 +1910,7 @@ xfs_difree_inobt(
+>  	 */
+>  	cur = xfs_inobt_init_cursor(mp, tp, agbp, pag, XFS_BTNUM_INO);
+>  
+> -	error = xfs_check_agi_freecount(cur, agi);
+> +	error = xfs_check_agi_freecount(cur);
+>  	if (error)
+>  		goto error0;
+>  
+> @@ -2004,7 +2003,7 @@ xfs_difree_inobt(
+>  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, 1);
+>  	}
+>  
+> -	error = xfs_check_agi_freecount(cur, agi);
+> +	error = xfs_check_agi_freecount(cur);
+>  	if (error)
+>  		goto error0;
+>  
+> @@ -2029,7 +2028,6 @@ xfs_difree_finobt(
+>  	xfs_agino_t			agino,
+>  	struct xfs_inobt_rec_incore	*ibtrec) /* inobt record */
+>  {
+> -	struct xfs_agi			*agi = agbp->b_addr;
+>  	struct xfs_btree_cur		*cur;
+>  	struct xfs_inobt_rec_incore	rec;
+>  	int				offset = agino - ibtrec->ir_startino;
+> @@ -2114,7 +2112,7 @@ xfs_difree_finobt(
+>  	}
+>  
+>  out:
+> -	error = xfs_check_agi_freecount(cur, agi);
+> +	error = xfs_check_agi_freecount(cur);
+>  	if (error)
+>  		goto error;
+>  
+> -- 
+> 2.31.1
+> 
 
 -- 
-chandan
+Carlos
+
