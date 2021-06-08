@@ -3,41 +3,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7CF5C47082
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 17:19:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D295CC4743F
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 17:19:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB29B61354
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 17:19:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B63B561351
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 17:19:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231675AbhFHRVQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Jun 2021 13:21:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54484 "EHLO mail.kernel.org"
+        id S232312AbhFHRVV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Jun 2021 13:21:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54560 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232007AbhFHRVP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Jun 2021 13:21:15 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8F96561354;
-        Tue,  8 Jun 2021 17:19:22 +0000 (UTC)
+        id S232263AbhFHRVV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 Jun 2021 13:21:21 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 08D2361359;
+        Tue,  8 Jun 2021 17:19:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623172762;
-        bh=9jip8HqNQmo24IiytMmd0mPl31W/hjmJ+9r1tiUlLNo=;
-        h=Subject:From:To:Cc:Date:From;
-        b=p7P9dg2qCbypL+s32qrkaUTzEey9sWLCZmJ9hpvJqYtbua0ZIhbX1SOyXaP3LWKlR
-         6HG2cW3ZtZ2ryl0BsWgyX/TbCLAzBWGrZm7WJ52Eoo9F4uRDEfvUwWsLRcsJN5iEI3
-         ZaQhf9zD34omIhYL4XGjWdoxLOHFKqAFMhgTLSkGhSp7UHRdEhH3iUGNlnHatmkjmu
-         fxJBCDOcHAkFMCKt39ZTtDafYcEsS5DyGiXTJ95ITc4rK0/ujEUOIlROutW24K0he/
-         je06Bu/Qdw8FuzRnlYDQwpx1I09UdJCUSbgtGyFcKnG6g5UwHd0hrFRDzaUKMPYewJ
-         OxWcufp0Jug5w==
-Subject: [PATCHSET v1 00/13] fstests: move test group lists into test files
+        s=k20201202; t=1623172768;
+        bh=Qa57kI1fGHkYAMkToh9ejc4GN8tRVM+CoTHt5jT/UKU=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=dT0B+RnjwBRIlEyf/sFlG6bvMtHOc2k6mXDda0BDs54+KXawrYT1TFz6pZ2hXq+bN
+         P06uW50xZHzItyEcqrC9J6sgua3ChvM+/FL0j3fPUt4tH9c5uplhbGBNsSR6EIh1yU
+         ral00v+lJQYSzCyj8gvfMCmsFslzzBBluGipbIbTiGsB/yMGBmogjQ9ACFuhFqBlUC
+         UndgH+bzb6HjJnpV3pVspFU2/3yEkOJ9251vjFj/WWmh5yyAnuAC8qFbYQ9KytvAXr
+         +S3q7axj8w1/X0jjeelpo/ojfM8nKl5H7fX2U+y5cSdf1y2AuCK/DICsBWuTfDcLdY
+         4vfQXYReOb5og==
+Subject: [PATCH 01/13] fstests: fix group check in new script
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
         amir73il@gmail.com, ebiggers@kernel.org
-Date:   Tue, 08 Jun 2021 10:19:22 -0700
-Message-ID: <162317276202.653489.13006238543620278716.stgit@locust>
+Date:   Tue, 08 Jun 2021 10:19:27 -0700
+Message-ID: <162317276776.653489.15862429375974956030.stgit@locust>
+In-Reply-To: <162317276202.653489.13006238543620278716.stgit@locust>
+References: <162317276202.653489.13006238543620278716.stgit@locust>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -46,111 +48,32 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Test group files (e.g. tests/generic/group) are a pain to keep up.
-Every week I rebase on Eryu's latest upstream, and every week I have to
-slog through dozens of trivial merge conflicts because of the
-groupfiles.  Moving tests is annoying because we have to maintain all
-this code to move the group associations from one /group file to
-another.
+In the tests/*/group files, group names are found in the Nth columns of
+the file, where N > 1.  The grep expression to warn about unknown groups
+is not correct (since it currently checks column 1), so fix this.
 
-It doesn't need to be this way -- we could move each test's group
-information into the test itself, and automatically generate the group
-files as part of the make process.  This series does exactly that.
-
-The first few patches add some convenient anchors for the new
-per-testfile group tagging and a conversion script to migrate existing
-test files.  Next there's a huge patch that is the results of running
-the conversion script, followed by cleanup of the golden outputs.  After
-that comes the build infrastructure to generate group files and other
-tweaks to the existing maintainer scripts to use the new infrastructure.
-Finally, remove the group files themselves and the (now unnecessary)
-code that maintained them.
-
-v1: promote from rfc, use group.list for autogenerated group files, fix
-    odd build warts, rename preamble function, update readme
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=autogenerate-groupfiles-5.14
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- .gitignore             |    3 
- README                 |   19 +
- check                  |    6 
- common/preamble        |   57 ++++
- include/buildgrouplist |    8 +
- new                    |  217 +++++-----------
- tests/Makefile         |    4 
- tests/btrfs/001        |   15 -
- tests/btrfs/002        |   15 -
- tests/btrfs/003        |   15 -
- tests/btrfs/004        |   15 -
- tests/btrfs/005        |   16 -
- tests/btrfs/006        |   16 -
- tests/btrfs/006.out    |    2 
- tests/btrfs/012.out    |    2 
- tests/btrfs/Makefile   |    4 
- tests/btrfs/group      |  245 ------------------
- tests/ceph/Makefile    |    4 
- tests/ceph/group       |    4 
- tests/cifs/Makefile    |    4 
- tests/cifs/group       |    6 
- tests/ext4/Makefile    |    4 
- tests/ext4/group       |   63 -----
- tests/f2fs/Makefile    |    4 
- tests/f2fs/group       |    7 -
- tests/generic/068      |    3 
- tests/generic/184.out  |    2 
- tests/generic/Makefile |    4 
- tests/generic/group    |  643 ------------------------------------------------
- tests/nfs/Makefile     |    4 
- tests/nfs/group        |    6 
- tests/ocfs2/Makefile   |    4 
- tests/ocfs2/group      |    1 
- tests/overlay/Makefile |    4 
- tests/overlay/group    |  100 -------
- tests/perf/Makefile    |    4 
- tests/perf/group       |    1 
- tests/shared/Makefile  |    4 
- tests/shared/group     |    8 -
- tests/udf/Makefile     |    4 
- tests/udf/group        |    6 
- tests/xfs/004          |    3 
- tests/xfs/Makefile     |    4 
- tests/xfs/group        |  534 ----------------------------------------
- tools/convert-group    |  131 ++++++++++
- tools/mkgroupfile      |   42 +++
- tools/mvtest           |   12 -
- tools/nextid           |    1 
- tools/nextid           |   39 +++
- tools/sort-group       |  112 --------
- 50 files changed, 451 insertions(+), 1980 deletions(-)
- create mode 100644 common/preamble
- create mode 100644 include/buildgrouplist
- delete mode 100644 tests/btrfs/group
- delete mode 100644 tests/ceph/group
- delete mode 100644 tests/cifs/group
- delete mode 100644 tests/ext4/group
- delete mode 100644 tests/f2fs/group
- delete mode 100644 tests/generic/group
- delete mode 100644 tests/nfs/group
- delete mode 100644 tests/ocfs2/group
- delete mode 100644 tests/overlay/group
- delete mode 100644 tests/perf/group
- delete mode 100644 tests/shared/group
- delete mode 100644 tests/udf/group
- delete mode 100644 tests/xfs/group
- create mode 100755 tools/convert-group
- create mode 100755 tools/mkgroupfile
- delete mode 120000 tools/nextid
- create mode 100755 tools/nextid
- delete mode 100755 tools/sort-group
+ new |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+
+diff --git a/new b/new
+index bb427f0d..357983d9 100755
+--- a/new
++++ b/new
+@@ -243,10 +243,7 @@ else
+     #
+     for g in $*
+     do
+-	if grep "^$g[ 	]" $tdir/group >/dev/null
+-	then
+-	    :
+-	else
++	if ! grep -q "[[:space:]]$g" "$tdir/group"; then
+ 	    echo "Warning: group \"$g\" not defined in $tdir/group"
+ 	fi
+     done
 
