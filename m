@@ -2,193 +2,194 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23563C47082
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 04:43:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FEAAC47082
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 11:48:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2F9460241
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 04:43:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FFB8613AB
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 11:48:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229507AbhFHEps (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Jun 2021 00:45:48 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:51810 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229462AbhFHEps (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jun 2021 00:45:48 -0400
-Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 3A15C80ABFE;
-        Tue,  8 Jun 2021 14:43:41 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1lqTaW-00AGPn-CC; Tue, 08 Jun 2021 14:43:40 +1000
-Date:   Tue, 8 Jun 2021 14:43:40 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: [GIT PULL v2] xfs: CIL and log scalability improvements
-Message-ID: <20210608044340.GK664593@dread.disaster.area>
+        id S232154AbhFHLuD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Jun 2021 07:50:03 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:21296 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232134AbhFHLuC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jun 2021 07:50:02 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1623152889;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=lQqNGa8RXRjpqzgykt53Ay9zVXKPLj6nX6sYPWGsGW0=;
+        b=BhijHHm9Hr7FaFya8v/OKFAS7rY/RPQfgWXx/uug8zRBs1nBNTnwbfjdH9mi2CsWg2e/bT
+        7N81ewahprgJ4zyRSQYGY3DutV8TqNPZcC5ELdIlkkKss0QgjNlJpPWJps50qmxjxi5/Ks
+        mnUz4oY6SDRRworjdXR4BVUFnHnOQY4=
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
+ [209.85.160.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-211-B8cTutGkMJmq-6Klchinog-1; Tue, 08 Jun 2021 07:48:08 -0400
+X-MC-Unique: B8cTutGkMJmq-6Klchinog-1
+Received: by mail-qt1-f199.google.com with SMTP id i24-20020ac876580000b02902458afcb6faso4992726qtr.23
+        for <linux-xfs@vger.kernel.org>; Tue, 08 Jun 2021 04:48:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=lQqNGa8RXRjpqzgykt53Ay9zVXKPLj6nX6sYPWGsGW0=;
+        b=gcD5f8AQucBzZlHCK7+zWjSiB6q44VRuVQ4xegW1jxNtEufpWZQK+l/ZvvstbeOPEJ
+         sAMxjHxFEcolqQCPzpqSnyvv9ICqznmzyuMg6psUX5eakDVYKdSSlkaKIY8oUN/xwSy6
+         UqV95Tpy2cKrxllMp7Ph9iFopN4tUVwiYxro8+XS1XkmsKEsC45u9KeMe3fE2SmJo6VX
+         eVwdpmhVVDE7JlBjazIjjJN/rpHiBNeKqy5yDPNHihUjN5KxmG8uVBwkjRiRF0z2C7he
+         DAnA2QCb2fihhI9DBpfAOtCzO/mPR9TZzaVM0lpvrWNCRqsnyPsKo4cp6H47V6Eya7s3
+         CcuA==
+X-Gm-Message-State: AOAM533a89eHmhloX164hJPcC2Wjud9iH95dbc9P0XG6O2Ngc2J+vJkO
+        MZARmTEuGLc59LwJ+Lv81dLna+GSH9HH1ZR2phxBF4R+rk+61In3IR08w/KLWggOxtsCtVozt8u
+        O0GrZjPw1TIcXxgoFtsTD
+X-Received: by 2002:a37:8343:: with SMTP id f64mr20831602qkd.12.1623152887914;
+        Tue, 08 Jun 2021 04:48:07 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzkaLDz6zc+zB+oYwoOK5AB5r/I4/IMwlnYoZteMULYMvR2Xnp0zDv+ag1oqBgT+2KHUtLUNw==
+X-Received: by 2002:a37:8343:: with SMTP id f64mr20831583qkd.12.1623152887618;
+        Tue, 08 Jun 2021 04:48:07 -0700 (PDT)
+Received: from bfoster ([98.216.211.229])
+        by smtp.gmail.com with ESMTPSA id t201sm6480318qka.49.2021.06.08.04.48.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Jun 2021 04:48:07 -0700 (PDT)
+Date:   Tue, 8 Jun 2021 07:48:05 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        hch@infradead.org
+Subject: Re: [PATCH 5/9] xfs: force inode garbage collection before fallocate
+ when space is low
+Message-ID: <YL9Y9YM6VtxSnq+c@bfoster>
+References: <162310469340.3465262.504398465311182657.stgit@locust>
+ <162310472140.3465262.3509717954267805085.stgit@locust>
+ <20210608012605.GI664593@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
-        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=Pd3FYh-qvBS4izetHo8A:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20210608012605.GI664593@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
+On Tue, Jun 08, 2021 at 11:26:05AM +1000, Dave Chinner wrote:
+> On Mon, Jun 07, 2021 at 03:25:21PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Generally speaking, when a user calls fallocate, they're looking to
+> > preallocate space in a file in the largest contiguous chunks possible.
+> > If free space is low, it's possible that the free space will look
+> > unnecessarily fragmented because there are unlinked inodes that are
+> > holding on to space that we could allocate.  When this happens,
+> > fallocate makes suboptimal allocation decisions for the sake of deleted
+> > files, which doesn't make much sense, so scan the filesystem for dead
+> > items to delete to try to avoid this.
+> > 
+> > Note that there are a handful of fstests that fill a filesystem, delete
+> > just enough files to allow a single large allocation, and check that
+> > fallocate actually gets the allocation.  These tests regress because the
+> > test runs fallocate before the inode gc has a chance to run, so add this
+> > behavior to maintain as much of the old behavior as possible.
+> 
+> I don't think this is a good justification for the change. Just
+> because the unit tests exploit an undefined behaviour that no
+> filesystem actually guarantees to acheive a specific layout, it
+> doesn't mean we always have to behave that way.
+> 
+> For example, many tests used to use reverse sequential writes to
+> exploit deficiencies in the allocation algorithms to generate
+> fragmented files. We fixed that problem and the tests broke because
+> they couldn't fragment files any more.
+> 
+> Did we reject those changes because the tests broke? No, we didn't
+> because the tests were exploiting an observed behaviour rather than
+> a guaranteed behaviour.
+> 
+> So, yeah, "test does X to make Y happen" doesn't mean "X will always
+> make Y happen". It just means the test needs to be made more robust,
+> or we have to provide a way for the test to trigger the behaviour it
+> needs.
+> 
 
-I've updated the branch and tag for the CIL and log scalability
-improvements to fix the CPU hotplug bug that was in the previous
-version. The code changes are limited to those, otherwise everything
-else in the series is unchanged.
+Agree on all this..
 
-Please pull from the tag decsribed below.
+> Indeed, I think that the way to fix these sorts of issues is to have
+> the tests issue a syncfs(2) after they've deleted the inodes and have
+> the filesystem run a inodegc flush as part of the sync mechanism.
+> 
 
-Cheers,
+... but it seems a bit of a leap to equate exploitation of a
+historically poorly handled allocation pattern in developer tests with
+adding a new requirement (i.e. sync) to achieve optimal behavior of a
+fairly common allocation pattern (delete a file, use the space for
+something else).
 
-Dave.
+IOW, how to hack around test regressions aside (are the test regressions
+actual ENOSPC failures or something else, btw?), what's the impact on
+users/workloads that might operate under these conditions? I guess
+historically we've always recommended to not consistently operate in
+<20% free space conditions, so to some degree there is an expectation
+for less than optimal behavior if one decides to constantly bash an fs
+into ENOSPC. Then again with large enough files, will/can we put the
+filesystem into that state ourselves without any indication to the user?
 
-The following changes since commit d07f6ca923ea0927a1024dfccafc5b53b61cfecc:
+I kind of wonder if unless/until there's some kind of efficient feedback
+between allocation and "pending" free space, whether deferred
+inactivation should be an optimization tied to some kind of heuristic
+that balances the amount of currently available free space against
+pending free space (but I've not combed through the code enough to grok
+whether this already does something like that).
 
-  Linux 5.13-rc2 (2021-05-16 15:27:44 -0700)
+Brian
 
-are available in the Git repository at:
+> Then we don't need to do.....
+> 
+> > +/*
+> > + * If the target device (or some part of it) is full enough that it won't to be
+> > + * able to satisfy the entire request, try to free inactive files to free up
+> > + * space.  While it's perfectly fine to fill a preallocation request with a
+> > + * bunch of short extents, we prefer to slow down preallocation requests to
+> > + * combat long term fragmentation in new file data.
+> > + */
+> > +static int
+> > +xfs_alloc_consolidate_freespace(
+> > +	struct xfs_inode	*ip,
+> > +	xfs_filblks_t		wanted)
+> > +{
+> > +	struct xfs_mount	*mp = ip->i_mount;
+> > +	struct xfs_perag	*pag;
+> > +	struct xfs_sb		*sbp = &mp->m_sb;
+> > +	xfs_agnumber_t		agno;
+> > +
+> > +	if (!xfs_has_inodegc_work(mp))
+> > +		return 0;
+> > +
+> > +	if (XFS_IS_REALTIME_INODE(ip)) {
+> > +		if (sbp->sb_frextents * sbp->sb_rextsize >= wanted)
+> > +			return 0;
+> > +		goto free_space;
+> > +	}
+> > +
+> > +	for_each_perag(mp, agno, pag) {
+> > +		if (pag->pagf_freeblks >= wanted) {
+> > +			xfs_perag_put(pag);
+> > +			return 0;
+> > +		}
+> > +	}
+> 
+> ... really hurty things (e.g. on high AG count fs) on every fallocate()
+> call, and we have a simple modification to the tests that allow them
+> to work as they want to on both old and new kernels....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-cil-scale-2-tag
-
-for you to fetch changes up to 7017b129e69c1b451fa926f2cac507c4128608dc:
-
-  xfs: expanding delayed logging design with background material (2021-06-08 14:27:46 +1000)
-
-----------------------------------------------------------------
-xfs: CIL and log scalability improvements
-
-Performance improvements are largely documented in the change logs of the
-individual patches. Headline numbers are an increase in transaction rate from
-700k commits/s to 1.7M commits/s, and a reduction in fua/flush operations by
-2-3 orders of magnitude on metadata heavy workloads that don't use fsync.
-
-Summary of series:
-
-Patches         Modifications
--------         -------------
-1-7:            log write FUA/FLUSH optimisations
-8:              bug fix
-9-11:           Async CIL pushes
-12-25:          xlog_write() rework
-26-39:          CIL commit scalability
-
-The log write FUA/FLUSH optimisations reduce the number of cache flushes
-required to flush the CIL to the journal. It extends the old pre-delayed logging
-ordering semantics required by writing individual transactions to the iclogs out
-to cover then CIL checkpoint transactions rather than individual writes to the
-iclogs. In doing so, we reduce the cache flush requirements to once per CIL
-checkpoint rather than once per iclog write.
-
-The async CIL pushes fix a pipeline limitation that only allowed a single CIL
-push to be processed at a time. This was causing CIL checkpoint writing to
-become CPU bound as only a single CIL checkpoint could be pushed at a time. The
-checkpoint pipleine was designed to allow multiple pushes to be in flight at
-once and use careful ordering of the commit records to ensure correct recovery
-order, but the workqueue implementation didn't allow concurrent works to be run.
-The concurrent works now extend out to 4 CIL checkpoints running at a time,
-hence removing the CPU usage limiations without introducing new lock contention
-issues.
-
-The xlog_write() rework is long overdue. The code is complex, difficult to
-understand, full of tricky, subtle corner cases and just generally really hard
-to modify. This patchset reworks the xlog_write() API to reduce the processing
-overhead of writing out long log vector chains, and factors the xlog_write()
-code into a simple, compact fast path along with a clearer slow path to handle
-the complex cases.
-
-The CIL commit scalability patchset removes spinlocks from the transaction
-commit fast path. These spinlocks are the performance limiting bottleneck in the
-transaction commit path, so we apply a variety of different techniques to do
-either atomic. lockless or per-cpu updates of the CIL tracking structures during
-commits. This greatly increases the throughput of the the transaction commit
-engine, moving the contention point to the log space tracking algorithms after
-doubling throughput on 32-way workloads.
-
-----------------------------------------------------------------
-Dave Chinner (40):
-      xfs: log stripe roundoff is a property of the log
-      xfs: separate CIL commit record IO
-      xfs: remove xfs_blkdev_issue_flush
-      xfs: async blkdev cache flush
-      xfs: CIL checkpoint flushes caches unconditionally
-      xfs: remove need_start_rec parameter from xlog_write()
-      xfs: journal IO cache flush reductions
-      xfs: Fix CIL throttle hang when CIL space used going backwards
-      xfs: xfs_log_force_lsn isn't passed a LSN
-      xfs: AIL needs asynchronous CIL forcing
-      xfs: CIL work is serialised, not pipelined
-      xfs: factor out the CIL transaction header building
-      xfs: only CIL pushes require a start record
-      xfs: embed the xlog_op_header in the unmount record
-      xfs: embed the xlog_op_header in the commit record
-      xfs: log tickets don't need log client id
-      xfs: move log iovec alignment to preparation function
-      xfs: reserve space and initialise xlog_op_header in item formatting
-      xfs: log ticket region debug is largely useless
-      xfs: pass lv chain length into xlog_write()
-      xfs: introduce xlog_write_single()
-      xfs:_introduce xlog_write_partial()
-      xfs: xlog_write() no longer needs contwr state
-      xfs: xlog_write() doesn't need optype anymore
-      xfs: CIL context doesn't need to count iovecs
-      xfs: use the CIL space used counter for emptiness checks
-      xfs: lift init CIL reservation out of xc_cil_lock
-      xfs: rework per-iclog header CIL reservation
-      xfs: introduce CPU hotplug infrastructure
-      xfs: introduce per-cpu CIL tracking structure
-      xfs: implement percpu cil space used calculation
-      xfs: track CIL ticket reservation in percpu structure
-      xfs: convert CIL busy extents to per-cpu
-      xfs: Add order IDs to log items in CIL
-      xfs: convert CIL to unordered per cpu lists
-      xfs: convert log vector chain to use list heads
-      xfs: move CIL ordering to the logvec chain
-      xfs: avoid cil push lock if possible
-      xfs: xlog_sync() manually adjusts grant head space
-      xfs: expanding delayed logging design with background material
-
- Documentation/filesystems/xfs-delayed-logging-design.rst |  361 ++++++++++++++++++++++++++----
- fs/xfs/libxfs/xfs_log_format.h                           |    4 -
- fs/xfs/libxfs/xfs_types.h                                |    1 +
- fs/xfs/xfs_bio_io.c                                      |   35 +++
- fs/xfs/xfs_buf.c                                         |    2 +-
- fs/xfs/xfs_buf_item.c                                    |   39 ++--
- fs/xfs/xfs_dquot_item.c                                  |    2 +-
- fs/xfs/xfs_file.c                                        |   20 +-
- fs/xfs/xfs_inode.c                                       |   10 +-
- fs/xfs/xfs_inode_item.c                                  |   18 +-
- fs/xfs/xfs_inode_item.h                                  |    2 +-
- fs/xfs/xfs_linux.h                                       |    2 +
- fs/xfs/xfs_log.c                                         | 1015 +++++++++++++++++++++++++++++++++++++++---------------------------------------------
- fs/xfs/xfs_log.h                                         |   66 ++----
- fs/xfs/xfs_log_cil.c                                     |  804 ++++++++++++++++++++++++++++++++++++++++++++++++------------------
- fs/xfs/xfs_log_priv.h                                    |  123 ++++++-----
- fs/xfs/xfs_super.c                                       |   52 ++++-
- fs/xfs/xfs_super.h                                       |    1 -
- fs/xfs/xfs_sysfs.c                                       |    1 +
- fs/xfs/xfs_trace.c                                       |    1 +
- fs/xfs/xfs_trans.c                                       |   18 +-
- fs/xfs/xfs_trans.h                                       |    5 +-
- fs/xfs/xfs_trans_ail.c                                   |   11 +-
- fs/xfs/xfs_trans_priv.h                                  |    3 +-
- include/linux/cpuhotplug.h                               |    1 +
- 25 files changed, 1632 insertions(+), 965 deletions(-)
-
--- 
-Dave Chinner
-david@fromorbit.com
