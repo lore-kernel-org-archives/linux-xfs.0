@@ -2,146 +2,89 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB949C4743E
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 17:26:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C826AC47082
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 21:56:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB65161029
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 17:26:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C2E86124B
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 21:56:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231983AbhFHR20 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Jun 2021 13:28:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58166 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231416AbhFHR20 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Jun 2021 13:28:26 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 752536136D;
-        Tue,  8 Jun 2021 17:26:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623173193;
-        bh=quLPk8hf1rTsI/xDu+n2XJpKuLPzI5budPumpjnNExg=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=BzsBwSngPLULxxPD6oB4tsxncLu2Xc8OBaztzdTDKmYZZ5qr1mDI/jNZWGmEW3ynD
-         N4YKqlrlp1/SxNQ2ppnMpRDsl6tIfj18eHsqKOvbuxIa8CrC2takPVQ0yqFfiUO/ls
-         AJhV/UxK5syg4kFKzNGeEdAfxQW6elZBw46CRkAKlg+mumbkoyF9XQGa/H6jOLrZTa
-         BNazLU1YGSeTLVDuLsCTt7vKyMqEs6CovHtqujL7UjMucc23T6hLCbTtFTRtwGzZdZ
-         lpPCIrReBi+xIXYuBUZPXo8WFDfH4Y8RTQyvQ6VOIDDzcOBidx3A/slQvjQw+ufFyh
-         9e0vUf1WLgbBQ==
-Subject: Re: [PATCH RFC] x86: remove toolchain check for X32 ABI capability
-To:     Masahiro Yamada <masahiroy@kernel.org>
-Cc:     X86 ML <x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-        Borislav Petkov <bp@alien8.de>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Fangrui Song <maskray@google.com>,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        "H . J . Lu" <hjl.tools@gmail.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Brian Gerst <brgerst@gmail.com>,
-        "Chang S. Bae" <chang.seok.bae@intel.com>,
-        Chao Yu <chao@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dmitry Safonov <0x7f454c46@gmail.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Gabriel Krisman Bertazi <krisman@collabora.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Jethro Beekman <jethro@fortanix.com>,
-        Kees Cook <keescook@chromium.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Sasha Levin <sashal@kernel.org>,
-        Sean Christopherson <seanjc@google.com>,
-        Takashi Iwai <tiwai@suse.com>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-References: <20210227183910.221873-1-masahiroy@kernel.org>
- <CAK7LNASL_X43_nMTz1CZQB+jiLCRAJbh-wQdc23QV0pWceL_Lw@mail.gmail.com>
- <20210228064936.zixrhxlthyy6fmid@24bbad8f3778>
- <CAK7LNASY_+_38XEMLZAf7txr4EdukkcFL8pnGGe2XyhQ9F4oDQ@mail.gmail.com>
-From:   Nathan Chancellor <nathan@kernel.org>
-Message-ID: <1992c9cf-739e-d98f-85c0-bbcf7df123ea@kernel.org>
-Date:   Tue, 8 Jun 2021 10:26:30 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S234426AbhFHV5y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Jun 2021 17:57:54 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:47634 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234404AbhFHV5x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jun 2021 17:57:53 -0400
+Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 9731380B4EB;
+        Wed,  9 Jun 2021 07:55:43 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lqjhG-00AXNX-Fx; Wed, 09 Jun 2021 07:55:42 +1000
+Date:   Wed, 9 Jun 2021 07:55:42 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        hch@infradead.org
+Subject: Re: [PATCH 5/9] xfs: force inode garbage collection before fallocate
+ when space is low
+Message-ID: <20210608215542.GL664593@dread.disaster.area>
+References: <162310469340.3465262.504398465311182657.stgit@locust>
+ <162310472140.3465262.3509717954267805085.stgit@locust>
+ <20210608012605.GI664593@dread.disaster.area>
+ <YL9Y9YM6VtxSnq+c@bfoster>
+ <20210608153204.GS2945738@locust>
 MIME-Version: 1.0
-In-Reply-To: <CAK7LNASY_+_38XEMLZAf7txr4EdukkcFL8pnGGe2XyhQ9F4oDQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210608153204.GS2945738@locust>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0
+        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=7-415B0cAAAA:8
+        a=9zZp27vEaiiRlEtZjvoA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Masahiro,
+On Tue, Jun 08, 2021 at 08:32:04AM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 08, 2021 at 07:48:05AM -0400, Brian Foster wrote:
+> > users/workloads that might operate under these conditions? I guess
+> > historically we've always recommended to not consistently operate in
+> > <20% free space conditions, so to some degree there is an expectation
+> > for less than optimal behavior if one decides to constantly bash an fs
+> > into ENOSPC. Then again with large enough files, will/can we put the
+> > filesystem into that state ourselves without any indication to the user?
+> > 
+> > I kind of wonder if unless/until there's some kind of efficient feedback
+> > between allocation and "pending" free space, whether deferred
+> > inactivation should be an optimization tied to some kind of heuristic
+> > that balances the amount of currently available free space against
+> > pending free space (but I've not combed through the code enough to grok
+> > whether this already does something like that).
+> 
+> Ooh!  You mentioned "efficient feedback", and one sprung immediately to
+> mind -- if the AG is near full (or above 80% full, or whatever) we
+> schedule the per-AG inodegc worker immediately instead of delaying it.
 
-On 6/7/2021 12:39 AM, Masahiro Yamada wrote:
-> On Sun, Feb 28, 2021 at 3:49 PM Nathan Chancellor <nathan@kernel.org> wrote:
->>
->> On Sun, Feb 28, 2021 at 12:15:16PM +0900, Masahiro Yamada wrote:
->>> On Sun, Feb 28, 2021 at 3:41 AM Masahiro Yamada <masahiroy@kernel.org> wrote:
->>>>
->>>> This commit reverts 0bf6276392e9 ("x32: Warn and disable rather than
->>>> error if binutils too old").
->>>>
->>>> The help text in arch/x86/Kconfig says enabling the X32 ABI support
->>>> needs binutils 2.22 or later. This is met because the minimal binutils
->>>> version is 2.23 according to Documentation/process/changes.rst.
->>>>
->>>> I would not say I am not familiar with toolchain configuration, but
->>>
->>> I mean:
->>> I would not say I am familiar ...
->>> That is why I added RFC.
->>>
->>> I appreciate comments from people who are familiar
->>> with toolchains (binutils, llvm).
->>>
->>> If this change is not safe,
->>> we can move this check to Kconfig at least.
->>
->> Hi Masahiro,
->>
->> As Fangrui pointed out, there are two outstanding issues with x32 with
->> LLVM=1, both seemingly related to LLVM=1.
-> 
-> Is this still a problem for Clang built Linux?
-> 
-> 
-> 
->> https://github.com/ClangBuiltLinux/linux/issues/514
-> 
-> I am not tracking the status.
-> What was the conclusion?
+That's what the lowspace thresholds in speculative preallocation are
+for...
 
-This appears to no longer be reproducible so I closed it.
+20% of a 1TB AG is an awful lot of freespace still remaining, and
+if someone is asking for a 200GB fallocate(), they are always going
+to get some fragmentation on a used, 80% full filesystem regardless
+of deferred inode inactivation.
 
->> https://github.com/ClangBuiltLinux/linux/issues/1141
-> 
-> 
-> This got marked "unreproducible"
-
-I just had a look at this and it is still reproducible (see the bug for 
-details).
-
->> Additionally, there appears to be one from Arnd as well but that one has
->> received no triage yet.
->>
->> https://github.com/ClangBuiltLinux/linux/issues/1205
-> 
-> Same as well.
-
-Yeah, I cannot reproduce this.
-
-It seems like a Kconfig test would still be best for the issue above, if 
-it is not too much to maintain.
+IMO, if you're going to do this, use the same thresholds we already
+use to limit preallocation near global ENOSPC and graduate it to be
+more severe the closer we get to global ENOSPC...
 
 Cheers,
-Nathan
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
