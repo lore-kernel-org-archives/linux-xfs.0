@@ -2,106 +2,146 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC622C4743D
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 17:20:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB949C4743E
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 17:26:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADB086135D
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 17:20:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB65161029
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Jun 2021 17:26:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232088AbhFHRW1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Jun 2021 13:22:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55524 "EHLO mail.kernel.org"
+        id S231983AbhFHR20 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Jun 2021 13:28:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58166 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233149AbhFHRW0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Jun 2021 13:22:26 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7B1D761351;
-        Tue,  8 Jun 2021 17:20:33 +0000 (UTC)
+        id S231416AbhFHR20 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 Jun 2021 13:28:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 752536136D;
+        Tue,  8 Jun 2021 17:26:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623172833;
-        bh=iKRFafqnyGEZpNjLy/a63WvSEqBjkH1Mx8Nv3TuncEI=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=eZ/FyIvoqsMY3sWAUwJtPdKBYjUEuJ5/po/FrY66ib6yfDHXD92/sxTggLDuZzakx
-         u9HMSraTFxWm00HQwy5/qdBBirkfT8QbBy2e0jFqssa+v6ESEPp7juHD10SX8EGcPQ
-         T0cc/6bRz/qaE7a+lwOiP5P3DgzXDIZxxbsRVzyxhcrgt2TfSYQqXxq/kDHK9REpN3
-         5gD4cs9oQHD5zSux3g6QmbdBIt6MdNwkIY9X/bQ8wd1D3e2xY0vjsHs1FCQbxZcfK5
-         nSMfN/Pprjc2f8bbc3wAf5hv7XL+Nvx3z1nH7B/7ELURMJedea6WIKm4WNwvcrY4bl
-         Y3oH3tEBteMfA==
-Subject: [PATCH 13/13] misc: update documentation to reflect auto-generated
- group files
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        amir73il@gmail.com, ebiggers@kernel.org
-Date:   Tue, 08 Jun 2021 10:20:33 -0700
-Message-ID: <162317283324.653489.9381968524443830077.stgit@locust>
-In-Reply-To: <162317276202.653489.13006238543620278716.stgit@locust>
-References: <162317276202.653489.13006238543620278716.stgit@locust>
-User-Agent: StGit/0.19
+        s=k20201202; t=1623173193;
+        bh=quLPk8hf1rTsI/xDu+n2XJpKuLPzI5budPumpjnNExg=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=BzsBwSngPLULxxPD6oB4tsxncLu2Xc8OBaztzdTDKmYZZ5qr1mDI/jNZWGmEW3ynD
+         N4YKqlrlp1/SxNQ2ppnMpRDsl6tIfj18eHsqKOvbuxIa8CrC2takPVQ0yqFfiUO/ls
+         AJhV/UxK5syg4kFKzNGeEdAfxQW6elZBw46CRkAKlg+mumbkoyF9XQGa/H6jOLrZTa
+         BNazLU1YGSeTLVDuLsCTt7vKyMqEs6CovHtqujL7UjMucc23T6hLCbTtFTRtwGzZdZ
+         lpPCIrReBi+xIXYuBUZPXo8WFDfH4Y8RTQyvQ6VOIDDzcOBidx3A/slQvjQw+ufFyh
+         9e0vUf1WLgbBQ==
+Subject: Re: [PATCH RFC] x86: remove toolchain check for X32 ABI capability
+To:     Masahiro Yamada <masahiroy@kernel.org>
+Cc:     X86 ML <x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+        Borislav Petkov <bp@alien8.de>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Fangrui Song <maskray@google.com>,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        "H . J . Lu" <hjl.tools@gmail.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>, Brian Gerst <brgerst@gmail.com>,
+        "Chang S. Bae" <chang.seok.bae@intel.com>,
+        Chao Yu <chao@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dmitry Safonov <0x7f454c46@gmail.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Gabriel Krisman Bertazi <krisman@collabora.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Jethro Beekman <jethro@fortanix.com>,
+        Kees Cook <keescook@chromium.org>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Sasha Levin <sashal@kernel.org>,
+        Sean Christopherson <seanjc@google.com>,
+        Takashi Iwai <tiwai@suse.com>,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+References: <20210227183910.221873-1-masahiroy@kernel.org>
+ <CAK7LNASL_X43_nMTz1CZQB+jiLCRAJbh-wQdc23QV0pWceL_Lw@mail.gmail.com>
+ <20210228064936.zixrhxlthyy6fmid@24bbad8f3778>
+ <CAK7LNASY_+_38XEMLZAf7txr4EdukkcFL8pnGGe2XyhQ9F4oDQ@mail.gmail.com>
+From:   Nathan Chancellor <nathan@kernel.org>
+Message-ID: <1992c9cf-739e-d98f-85c0-bbcf7df123ea@kernel.org>
+Date:   Tue, 8 Jun 2021 10:26:30 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAK7LNASY_+_38XEMLZAf7txr4EdukkcFL8pnGGe2XyhQ9F4oDQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi Masahiro,
 
-Update the documentation to outline the new requirements for test files
-so that we can generate group files during build.
+On 6/7/2021 12:39 AM, Masahiro Yamada wrote:
+> On Sun, Feb 28, 2021 at 3:49 PM Nathan Chancellor <nathan@kernel.org> wrote:
+>>
+>> On Sun, Feb 28, 2021 at 12:15:16PM +0900, Masahiro Yamada wrote:
+>>> On Sun, Feb 28, 2021 at 3:41 AM Masahiro Yamada <masahiroy@kernel.org> wrote:
+>>>>
+>>>> This commit reverts 0bf6276392e9 ("x32: Warn and disable rather than
+>>>> error if binutils too old").
+>>>>
+>>>> The help text in arch/x86/Kconfig says enabling the X32 ABI support
+>>>> needs binutils 2.22 or later. This is met because the minimal binutils
+>>>> version is 2.23 according to Documentation/process/changes.rst.
+>>>>
+>>>> I would not say I am not familiar with toolchain configuration, but
+>>>
+>>> I mean:
+>>> I would not say I am familiar ...
+>>> That is why I added RFC.
+>>>
+>>> I appreciate comments from people who are familiar
+>>> with toolchains (binutils, llvm).
+>>>
+>>> If this change is not safe,
+>>> we can move this check to Kconfig at least.
+>>
+>> Hi Masahiro,
+>>
+>> As Fangrui pointed out, there are two outstanding issues with x32 with
+>> LLVM=1, both seemingly related to LLVM=1.
+> 
+> Is this still a problem for Clang built Linux?
+> 
+> 
+> 
+>> https://github.com/ClangBuiltLinux/linux/issues/514
+> 
+> I am not tracking the status.
+> What was the conclusion?
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- README |   19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
+This appears to no longer be reproducible so I closed it.
 
+>> https://github.com/ClangBuiltLinux/linux/issues/1141
+> 
+> 
+> This got marked "unreproducible"
 
-diff --git a/README b/README
-index 048491a6..ab298ca9 100644
---- a/README
-+++ b/README
-@@ -140,7 +140,8 @@ Running tests:
-     - ./check '*/001' '*/002' '*/003'
-     - ./check '*/06?'
-     - Groups of tests maybe ran by: ./check -g [group(s)]
--      See the 'group' file for details on groups
-+      See the tests/*/group.list files after building xfstests to learn about
-+      each test's group memberships.
-     - If you want to run all tests regardless of what group they are in
-       (including dangerous tests), use the "all" group: ./check -g all
-     - To randomize test order: ./check -r [test(s)]
-@@ -174,8 +175,8 @@ Test script environment:
- 
-     When developing a new test script keep the following things in
-     mind.  All of the environment variables and shell procedures are
--    available to the script once the "common/rc" file has been
--    sourced.
-+    available to the script once the "common/preamble" file has been
-+    sourced and the "_begin_fstest" function has been called.
- 
-      1. The tests are run from an arbitrary directory.  If you want to
- 	do operations on an XFS filesystem (good idea, eh?), then do
-@@ -249,6 +250,18 @@ Test script environment:
- 	  in the ./new script. It can contain only alphanumeric characters
- 	  and dash. Note the "NNN-" part is added automatically.
- 
-+     6. Test group membership: Each test can be associated with any number
-+	of groups for convenient selection of subsets of tests.  Test names
-+	can be any sequence of non-whitespace characters.  Test authors
-+	associate a test with groups by passing the names of those groups as
-+	arguments to the _begin_fstest function:
-+
-+	_begin_fstest auto quick subvol snapshot
-+
-+	The build process scans test files for _begin_fstest invocations and
-+	compiles the group list from that information.  In other words, test
-+	files must call _begin_fstest or they will not be run.
-+
- Verified output:
- 
-     Each test script has a name, e.g. 007, and an associated
+I just had a look at this and it is still reproducible (see the bug for 
+details).
 
+>> Additionally, there appears to be one from Arnd as well but that one has
+>> received no triage yet.
+>>
+>> https://github.com/ClangBuiltLinux/linux/issues/1205
+> 
+> Same as well.
+
+Yeah, I cannot reproduce this.
+
+It seems like a Kconfig test would still be best for the issue above, if 
+it is not too much to maintain.
+
+Cheers,
+Nathan
