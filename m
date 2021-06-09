@@ -2,447 +2,316 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6135C4743D
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 01:28:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D8B7C4743D
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 02:28:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 849B061184
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 01:28:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F073F6128D
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 02:28:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233935AbhFIBac (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Jun 2021 21:30:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34010 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230288AbhFIBac (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Jun 2021 21:30:32 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ACFE76023D;
-        Wed,  9 Jun 2021 01:28:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623202118;
-        bh=4mfPSFn2yYFOIiozDiSwhN0JEf4HQqXYcQ9u+5qOnT4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=LsCXjxKUeByPwyxhAu+i+5jQwiy+lkdwc3ATg22ErxnVKbK6usvhuiNi+Q6EqyWpX
-         +FNvUcSScsx8pRhPDF2Ep1cUjGmJCkbtL7XZPmtk8TrpoimvD6UKJ7H+Myu2F/WRkI
-         2/oz+GpzB35SVN/KW0ICYmn4LV9HZPv6OfBBzXtke57rsCyPnzXDXjK+9AEgkyi/0K
-         BVFi7+bMG2vLGWMzAwY1gtesAV4WrwYE2RfgKMIPWK4aNt3WfO8ztZaIis8sX+ef+f
-         qJElvhioG2tED2K9PkYslpVQYvk05YcQ8ObYOnWMd5S38tLB1KZhn/jNAsKBiajOf8
-         IS2YsZmp5QNrw==
-Date:   Tue, 8 Jun 2021 18:28:38 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
-Subject: Re: [PATCH 2/9] xfs: deferred inode inactivation
-Message-ID: <20210609012838.GW2945738@locust>
-References: <162310469340.3465262.504398465311182657.stgit@locust>
- <162310470480.3465262.12512984715866568596.stgit@locust>
- <20210608005753.GG664593@dread.disaster.area>
- <20210608044051.GB2945763@locust>
- <20210609010109.GN664593@dread.disaster.area>
+        id S231806AbhFICaf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Jun 2021 22:30:35 -0400
+Received: from esa10.fujitsucc.c3s2.iphmx.com ([68.232.159.247]:48521 "EHLO
+        esa10.fujitsucc.c3s2.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230450AbhFICaf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jun 2021 22:30:35 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj1;
+  t=1623205721; x=1654741721;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=7imPpepvuqOE5O3V+CMeaOvKf19a6mRvoo11XNFdwQQ=;
+  b=jZR46+5KfdKbov9p13r60fy5lulpEaNJOQx4uW23RLHXtOQAs4dINpSq
+   3LPKPcoQaLkGm/WQI5sE6UUfBlLhS5NkthUhVLej7Vav+cb3gzPxUKFWp
+   m57gP6E6dNjzs+HZmWHDfptKuHd6X7deQNCiRZoh15Wr0I3yxCKlm9hFu
+   UUcNOPo2LPOhZhJs5NK00ojrD05sxbDIG96eBsgkJYKQdggO/QznW0vVb
+   W52BZFD8nFSur/T+QH6WzYrDyywg7I0n8Zk5XjZOH0YKi9FqwPkjYFtkH
+   c4RgqVeep5ZDFW9R56un1HqL88muprshmHcJZ97oYE1+Ffop6JMDNcacJ
+   A==;
+IronPort-SDR: WCXGzzFF9yRORCc6t62tkFLR8IWrJL4FMfC3k8VCoFcju0ym/UcsFsl83Kor7RVSCDgbExpOlc
+ GnPatJB+doUbsEWqKePrC91Bvu0mIOfrM2NWpGZ5lf0U3U3WqHdk8adlmNPpV5ddCM87GkJfK7
+ MLR5lkl02vkeK3WHZZL/jzom68o7eNSwwgS92HvIk0KDusI5uYcIVFJLFl/+UtkD+56COU17Do
+ NdfUd/CH6I0bVZcZvhX1Uu4lz/CfIGivpnoKJuyARt9Yzbfkuj0LsvvM8IRNOhUCDgr1MYHn+P
+ p9g=
+X-IronPort-AV: E=McAfee;i="6200,9189,10009"; a="32761210"
+X-IronPort-AV: E=Sophos;i="5.83,259,1616425200"; 
+   d="scan'208";a="32761210"
+Received: from mail-os2jpn01lp2059.outbound.protection.outlook.com (HELO JPN01-OS2-obe.outbound.protection.outlook.com) ([104.47.92.59])
+  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2021 11:28:36 +0900
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=gTsPgE1VXsKWfbN5opVTT4HO8ZFmgQb/Vg65OF88dBf2p5fsgouavzNxN0c0G9Xd1+LBRw0hLM47QVLfZGQl4Bzl0ikujHUjXDy9143FOLw+4pu/0ksj+3d1b+dR8evX+owAzqFwmxCcZqDIQ0JJqJraH3gfxT1KRuVxEHKzUVCTxxpk9/mgYNTNcRsvt4xJF/4SLe+G650PitFrLfVKKS+ItYGVbTwOnA3wNYmMZ5jHNIpCqHhwzDLNA2uWqw4P8F9zyj7cZIBznygvltksYBucUOjtGGEBO1zTe2fRAJxPwj7Vy0MNzN+Ll/hoizQcQoRANfFANiYSr1HviTW4Tg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7imPpepvuqOE5O3V+CMeaOvKf19a6mRvoo11XNFdwQQ=;
+ b=QC1rgHKX6VTIbxuLpp4SAqbI6nZ7/cpROPyxt5Gn8RL3zsHKuNAR2e+uGtoBsU0GHEDfdTmsVrwx/5UFJU0Q8l8xNXpVRumxWnWW240aC+QIsWJ6bZsGx58BQumcSsldnGB12jHc1fOOzft/v18dnQMdQUuKgeRkhs/o9dMnBgbZm+7OwnwegRb2wLJzZG6MvpdpSy30B57iZ7hPXs/SMmzBm8/ZUI9nsonxyc2DxSXZI5T2Mb7lKvIrctfLllV8uMkBtlyw5PiVYu4AHN42ypakU83E221v4OZPDmBDNQRwvXkrlPWwxGe+XJt3QbwCtizvM9+oZkPnBmJgC1Yfjg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
+ dkim=pass header.d=fujitsu.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=fujitsu.onmicrosoft.com; s=selector2-fujitsu-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7imPpepvuqOE5O3V+CMeaOvKf19a6mRvoo11XNFdwQQ=;
+ b=YeJmZrcJshIFnzbOUXWKTr+omUily0H2WI/g7URvDHioJNAfYILI7X7VmSoVgSA3rdGho4I/sTi78x/YtBasHMYqGYjbtxwYHzE1GARv0aC7CgpqW52P+KeL4PHzaOZVTZ9Stc09kVpRpHZif+9OHcqMArdHmCXZxOwXcunUbXs=
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com (2603:1096:604:18::16)
+ by OSAPR01MB3745.jpnprd01.prod.outlook.com (2603:1096:604:5d::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.21; Wed, 9 Jun
+ 2021 02:28:33 +0000
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::b985:8239:6cf0:1228]) by OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::b985:8239:6cf0:1228%7]) with mapi id 15.20.4195.030; Wed, 9 Jun 2021
+ 02:28:33 +0000
+From:   "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>
+Subject: RE: [PATCH v6 6/7] fs/xfs: Handle CoW for fsdax write() path
+Thread-Topic: [PATCH v6 6/7] fs/xfs: Handle CoW for fsdax write() path
+Thread-Index: AQHXTHSayuQueyvs2UCNmiPp16/XBqr08RyAgBYcViA=
+Date:   Wed, 9 Jun 2021 02:28:33 +0000
+Message-ID: <OSBPR01MB2920A2BCD568364C1363AFA6F4369@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+References: <20210519060045.1051226-1-ruansy.fnst@fujitsu.com>
+ <20210519060045.1051226-7-ruansy.fnst@fujitsu.com>
+ <20210526002103.GT202121@locust>
+In-Reply-To: <20210526002103.GT202121@locust>
+Accept-Language: en-US, zh-CN
+Content-Language: zh-CN
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: kernel.org; dkim=none (message not signed)
+ header.d=none;kernel.org; dmarc=none action=none header.from=fujitsu.com;
+x-originating-ip: [223.111.68.150]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: de7ed7c6-bf16-4d09-f82b-08d92aee470a
+x-ms-traffictypediagnostic: OSAPR01MB3745:
+x-microsoft-antispam-prvs: <OSAPR01MB3745D56572035D037BC4D3F5F4369@OSAPR01MB3745.jpnprd01.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:303;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: /A7u/P074BpmrCEoPqniOWDDdm8q8JfgVYIxLnz6gRzWuh6WRobdZW4Q2RKzSH1HG+2F+W+6mnjSL7kh9pE5OY+8F884e1TzIhCgHZbe1aEHwjSAjjHjHNugzRGoXIti04WDMsIWHwHYEEbv7IZ8bfFfq58l/yn5IQAHiFWU3VCJxwyWNyJqF308f7g3L14TfmrJq48xZghRcWj73N6VwOg7oBVZLrbcIm8u1Ss/HGpdX1j4NO+tt6dxgQwnCZQsWPcP4ufmrwUpbibkb+G13rKJ/v9Nsi+dWbD13qkjADiLoqW0nknjr/OTDR35Ywb8jiak3/Jq/XKo1t4r6c3pywQ74futksuN64oHPM37Jg1a3u2WoUCY737hEydSH/S3gDXSEbpUILGV5sjKM18RIWb5WhunmMyzcXC3pbS6sBMxjVGkf5niQncsrQDWqrCEW4sHywPfTNyDW5jyxtaw+RsqfUQN1xIDq7RXcqpZott/DL3TTb8ohczfab+pufLW5BcMSTh2gWGlK3W8qw7HKzeGbnMyq4Ec3Qavj96J7XQKDL7JyEGfMKmJ6RgfSfAQIa80DJW/hyc3sOwecq3WVmMhDBo5BiGbIqARNvXgYCs=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSBPR01MB2920.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(136003)(39860400002)(346002)(396003)(376002)(33656002)(316002)(122000001)(478600001)(86362001)(38100700002)(85182001)(8676002)(9686003)(6506007)(186003)(26005)(7416002)(83380400001)(4326008)(7696005)(8936002)(52536014)(6916009)(5660300002)(2906002)(71200400001)(66946007)(54906003)(76116006)(66476007)(64756008)(66446008)(66556008)(55016002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: =?gb2312?B?bm93YVZzeWUzNHBiVFlVanFLc2JPN1h3eDVHSUNpaGRyQjA4MklmMDVNREx6?=
+ =?gb2312?B?YWFVVTRSbk5USjA0eFFBcTdGbUNxRXg3aWpPZ2tacmRZVE9vNDRnNkFwY0RN?=
+ =?gb2312?B?ZXRhNloydjVkWGRxTUJzVGVDSktTWVRDektSU0lmNmtvcnFCMkJnSm1uWHE2?=
+ =?gb2312?B?cCtNS0VRTFlkSXlQODlwVytHRHJDYjI4U1lOKzVNRmViRGhVMzM5Z3lGcUVk?=
+ =?gb2312?B?UnhUeG91SmNoRFBvYWxBV1Q5Ykd0d09pdHVqUjZQT05PcXZqT1ZYenNjdUZV?=
+ =?gb2312?B?VEU3dFdScjNzQjZQZkFQUGtVUWY5OE5KbTR6UDhkS3ZQdWJXNFpaL215NlF1?=
+ =?gb2312?B?Rjh3S3FGUnBJMS8wekx1ZFdkaDJScDRBVnNvdU5tcVdCRW51elAreVlBSFRC?=
+ =?gb2312?B?VXlSL0t5UWNnRjVKNjZMVmlMeFdmOWZSVWZEeW1iSWJKVDNzKzVIQkJjaUFO?=
+ =?gb2312?B?M3N5V0ZrWUlYNzNPT0NNbC9qaEg4TXZqRmN5OEJIcnVYNDEzTStpdkI0MVF0?=
+ =?gb2312?B?K3IrZlJCTnc0dzRMS0pxdklwL2tublcrQ1NGUlBOa0tsWC9ieXEyM0t6bm1W?=
+ =?gb2312?B?UlA5cjM0T1ZOWEs0cjFwZGQ4THNlTU9CeitKSk1EVThzZ2tGWnZERGVkRnNX?=
+ =?gb2312?B?emZVVnhnU2pnSXpDZDVzc2JnOXczelFraXRCeFdGSDY0ZGhNaVdUNS90aExk?=
+ =?gb2312?B?S2pGaFlkay9iaE9OdzNIdyt1WWI0YzJEMkFqRWxWeDlKNTR2V3d2dWdKRU5s?=
+ =?gb2312?B?V2Q0bkZVUU82ZnBBN0pnc2ZYMWM0OHVlMGwxWkQrZDZsK0FyQ21ieWRyMFlW?=
+ =?gb2312?B?UVdhMEw1aS9Hdk1Jc0owZzVxeDIvK0xOZGNBVEhWR0NsV095Z3ZzR1BOeFZz?=
+ =?gb2312?B?WXVjYWtpNVlHZGt1bXplaGZVQUtoWUFHOXZxbWZ0QkpzbzU5S24wV0hSZEpu?=
+ =?gb2312?B?cm1zRi9PYXZ2d0dMZEZyNzVtZDdHWkJGMGc1WWxkVEwyWmhBb0JCOGNpWU0r?=
+ =?gb2312?B?UHI0NlhMclNxb3lPSlZmMkQ5dVlSQmNUSFpuK2NYUE1FVnZuMFppa0k0M1ly?=
+ =?gb2312?B?RzRubXRSZGgzTHpRYmplNER5UXZPUnVVVDdNU0ZPNzVFTUl6c2lkQWFSQmRm?=
+ =?gb2312?B?RmQwemNWTUR4TFovU0FkVU4yV09uYTY3VHpQSVhPc1I3T2cvekJaV21JcVVL?=
+ =?gb2312?B?SmpoV21vVXRnOXVXNjkwRmtUV0IxUnBERnUrdktZNUsyQndTWUZkSGxxd3F1?=
+ =?gb2312?B?VFZnSFFNZlVjWFkzSmI5SjZzNG5LbUJnOUpaVWpzWjlhcndibUsxWHc4Z2dK?=
+ =?gb2312?B?ODNzSnFBZnNxVGhWVVVOQlQvdVUyMTYvVVVzV3hqZFZiN3NESzVSRHJVVi8v?=
+ =?gb2312?B?cFdCTWUxYk9QSGIwc3RGUTNoeTFKMFVJZENVbjRhWUVidUlOSDN3RkNxTHo3?=
+ =?gb2312?B?aklmZ3RQZ05neFlNQ1V1ZWdOUGVRbU5lY21tQTZjZGs3dERBUzl1YVdSaUhw?=
+ =?gb2312?B?c2pCa3Q3QkhiOXc5RGU4SmpmbXJJTUlpTytmT0ppVm9NM0tITjFFVFpQOTg3?=
+ =?gb2312?B?Y3NQM2w2ZE05SDZ5Tm82ZDByVHRUTU5YVnZMREdPTXdaN1lxSkN4V0FiOVI2?=
+ =?gb2312?B?TUlCV0VNRjNtZW1yUU4zekFWTDhaUm1RRHFxN1hUbSs2eHM0SnY1QVV4SURt?=
+ =?gb2312?B?Q29sZ3lYOEVIMnZiQ0NQTHhHOFBrZUYxNFJJTS8wcWxMeFR2bmRNM1I3UWlj?=
+ =?gb2312?Q?ev5QMe+1ba0LPbJASjbqWBs4cSsCvQ5RG7NQm8o?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210609010109.GN664593@dread.disaster.area>
+X-OriginatorOrg: fujitsu.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: OSBPR01MB2920.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: de7ed7c6-bf16-4d09-f82b-08d92aee470a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jun 2021 02:28:33.1140
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: iquPPDsDx7Mbj1HN3rZrlSR+vqL9xcE+GW7NZcArj4CCCo+LyCjs2DNZ8mdHffryODH8waXGZHIbMTG2VWpr4g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSAPR01MB3745
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 09, 2021 at 11:01:09AM +1000, Dave Chinner wrote:
-> On Mon, Jun 07, 2021 at 09:40:51PM -0700, Darrick J. Wong wrote:
-> > On Tue, Jun 08, 2021 at 10:57:53AM +1000, Dave Chinner wrote:
-> > > On Mon, Jun 07, 2021 at 03:25:04PM -0700, Darrick J. Wong wrote:
-> > > > +/* Queue a new inode gc pass if there are inodes needing inactivation. */
-> > > > +static void
-> > > > +xfs_inodegc_queue(
-> > > > +	struct xfs_mount        *mp)
-> > > > +{
-> > > > +	if (!xfs_inodegc_running(mp))
-> > > > +		return;
-> > > > +
-> > > > +	rcu_read_lock();
-> > > > +	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_INODEGC_TAG))
-> > > > +		queue_delayed_work(mp->m_gc_workqueue, &mp->m_inodegc_work, 0);
-> > > > +	rcu_read_unlock();
-> > > > +}
-> > > 
-> > > I have no idea why we are checking if the gc is running here. All
-> > > our other background stuff runs and re-queues until it is directly
-> > > stopped or there's nothing left in the tree. Hence I'm a bit
-> > > clueless right now about what this semantic is for...
-> > 
-> > The opflag is supposed to control whether inactivation actually runs.
-> > As you might guess from _running calls being scattered everywhere, it's
-> > pretty ugly code.  All this crap exists because there's no easy solution
-> > to shutting down background threads after we commit to freezing the fs
-> > but before an fs freeze hits SB_FREEZE_FS and we can't allocate new
-> > transactions.
-> > 
-> > Fixing inactivation to use NO_WRITECOUNT means auditing every function
-> > call that xfs_inactive makes to look for an xfs_trans_alloc* call and
-> > probably modifying all of them to be able to switch between regular and
-> > NOWRITECOUNT mode.  I tried that, it's ugly.
-> > 
-> > Another solution is to add ->freeze_super and ->thaw_super functions
-> > to prevent a FITHAW caller from racing with a FIFREEZE caller and
-> > accidentally rearming the inodegc while a freeze starts.
-> 
-> This seems like the right way to proceed.
-> 
-> Of course, all the freeze/thaw exclusion is in freeze_super and
-> thaw_super via the umount lock, so to do this we need to factor
-> freeze_super() so that we can take the active references to the
-> superblock ourselves, then turn off inodegc, then run the generic
-> freeze_super() code...
-> 
-> The unfreeze side where we'd turn the inode gc back on is already
-> inside the protected region (via ->unfreeze_fs callout in
-> thaw_super_locked()) so we don't need to do anything special there.
-
-<nod> Not sure I want to go factoring vfs functions if I can avoid it,
-though I guess there's always the copy-pasta approach :P
-
-But for now, I /think/ I figured out a way to make it work and avoid all
-that (see below).
-
-> [I'll reorder bits to address all the other freeze stuff now so it's
-> not all mixed up with the stat/df stuff]
-> 
-> > > > +/* Stop all queued inactivation work. */
-> > > > +void
-> > > > +xfs_inodegc_stop(
-> > > > +	struct xfs_mount	*mp)
-> > > > +{
-> > > > +	clear_bit(XFS_OPFLAG_INODEGC_RUNNING_BIT, &mp->m_opflags);
-> > > > +	cancel_delayed_work_sync(&mp->m_inodegc_work);
-> > > > +}
-> > > 
-> > > what's to stop racing invocations of stop/start? Perhaps:
-> > > 
-> > > 	if (test_and_clear_bit())
-> > > 		cancel_delayed_work_sync(&mp->m_inodegc_work);
-> > 
-> > That horrible hack below.
-> >
-> > > > +
-> > > > +/* Schedule deferred inode inactivation work. */
-> > > > +void
-> > > > +xfs_inodegc_start(
-> > > > +	struct xfs_mount	*mp)
-> > > > +{
-> > > > +	set_bit(XFS_OPFLAG_INODEGC_RUNNING_BIT, &mp->m_opflags);
-> > > > +	xfs_inodegc_queue(mp);
-> > > > +}
-> > > 
-> > > 	if (test_and_set_bit())
-> > > 		xfs_inodegc_queue(mp);
-> > > 
-> > > So that the running state will remain in sync with the actual queue
-> > > operation? Though I'm still not sure why we need the running bit...
-> > 
-> > (see ugly sync_fs SB_FREEZE_PAGEFAULTS hack)
-> 
-> I'm not sure how that addresses any sort of concurrent set/clear
-> that could occur as it doesn't guarantee that the running state
-> matches the opflag bit state...
-> 
-> > > Ok, "opflags" are undocumented as to how they work, what their
-> > > consistency model is, etc. I understand you want an atomic flag to
-> > > indicate that something is running, and mp->m_flags is not that
-> > > (despite being used that way historically). 
-> > > 
-> > > I dislike the "_BIT" annotations for a variable that is only to be
-> > > used as an index bit field. Or maybe it's a flag field and you
-> > > haven't defined any bitwise flags for it because you're not using it
-> > > that way yet.
-> > > 
-> > > So, is m_opflags an indexed bit field or a normal flag field like
-> > > m_flags?
-> > 
-> > It's an indexed bit field, which is why I named it _BIT.  I'll try to
-> > add more documentation around what this thing is and how the flags work:
-> > 
-> > struct xfs_mount {
-> > 	...
-> > 	/*
-> > 	 * This atomic bitset controls flags that alter the behavior of
-> > 	 * the filesystem.  Use only the atomic bit helper functions
-> > 	 * here; see XFS_OPFLAG_* for information about the actual
-> > 	 * flags.
-> > 	 */
-> > 	unsigned long		m_opflags;
-> > 	...
-> > };
-> > 
-> > /*
-> >  * Operation flags -- each entry here is a bit index into m_opflags and
-> >  * is not itself a flag value.
-> >  */
-> > 
-> > /* Are we allowed to run the inode inactivation worker? */
-> > #define XFS_OPFLAG_INODEGC_RUNNING_BIT	(0)
-> 
-> This doesn't really address my comments - there's still the _BIT
-> annotation mixed with "flags" variables. Other examples of this are
-> that "operational flags" or state variables are updated via
-> set/clear/test/etc bit op wrappers. An example of this is page and
-> bufferhead state bits and variables...
-
-Urk, it was late last night and I forgot to update the reply after I
-changed that to an enum.
-
-> I mentioned on #xfs an older patchset I had that cleaned up a lot of
-> this cruft in the xfs_mount flags fields by separating feature flags
-> from state flags. That can be found here:
-> 
-> https://lore.kernel.org/linux-xfs/20180820044851.414-1-david@fromorbit.com/
-> 
-> I think if we are going to introduce dynamic mount state flags, we
-> need to move towards that sort of separation. So leave this patch
-> set as it is now with the opflags, and I'll update my flag vs state
-> rework patchset and merge this new code into it...
-> 
-> That all said, I still don't really see a need for a state bit here
-> if we can stop the inode gc before we start the freeze process as
-> via a xfs_fs_freeze_super() method.
-> 
-> (and that's freeze done...)
-> 
-> > > > @@ -947,6 +963,7 @@ xfs_mountfs(
-> > > >  	 * qm_unmount_quotas and therefore rely on qm_unmount to release the
-> > > >  	 * quota inodes.
-> > > >  	 */
-> > > > +	xfs_inodegc_flush(mp);
-> > > >  	xfs_unmount_flush_inodes(mp);
-> > > 
-> > > Why isn't xfs_inodegc_flush() part of xfs_unmount_flush_inodes()?
-> > > Because, really, xfs_unmount_flush_inodes() depends on all the
-> > > inodes first being inactivated so that all transactions on inodes
-> > > are complete....
-> > 
-> > The teardown sequence is not the same between a regular unmount and an
-> > aborted mount...
-> > 
-> > > >   out_log_dealloc:
-> > > >  	xfs_log_mount_cancel(mp);
-> > > > @@ -983,6 +1000,12 @@ xfs_unmountfs(
-> > > >  	uint64_t		resblks;
-> > > >  	int			error;
-> > > >  
-> > > > +	/*
-> > > > +	 * Flush all the queued inode inactivation work to disk before tearing
-> > > > +	 * down rt metadata and quotas.
-> > > > +	 */
-> > > > +	xfs_inodegc_flush(mp);
-> > > > +
-> > > >  	xfs_blockgc_stop(mp);
-> > > >  	xfs_fs_unreserve_ag_blocks(mp);
-> > > >  	xfs_qm_unmount_quotas(mp);
-> > > 
-> > > FWIW, there's inconsistency in the order of operations between
-> > > failure handling in xfs_mountfs() w.r.t. inode flushing and quotas
-> > > vs what xfs_unmountfs() is now doing....
-> > 
-> > ...because during regular unmountfs, we want to inactivate inodes while
-> > we still have a per-ag reservation protecting finobt expansions.  During
-> > an aborted mount, we don't necessarily have the reservation set up but
-> > we have to clean everything out, so the inodegc flush comes much later.
-> > 
-> > It's convoluted, but do you want me to clean /that/ up too?  That's a
-> > pretty heavy lift; I already tried to fix those two paths, ran out of
-> > brain cells, and gave up.
-> 
-> No, I was just noting that they are different and there was no clear
-> explaination of why. A comment explaining the difference is really
-> all I am looking for here...
-
-Ok.  I'll document why xfs_unmountfs calls inodegc_flush explicitly:
-
-	/*
-	 * Perform all on-disk metadata updates required to inactivate
-	 * inodes.  Freeing inodes can cause shape changes to the
-	 * finobt, so take care of this before we lose the per-AG space
-	 * reservations.
-	 */
-	xfs_inodegc_flush(mp);
-
-It shouldn't be necessary to call it again from xfs_unmount_flush_inodes
-since the only inodes that should be in memory at that point are the
-quota, realtime, and root directory inodes, none of which ever go
-through inactivation (quota/rt are metadata, and the root dir should
-never get deleted).
-
-However, it's a bit murkier for the failed mountfs case -- I /think/ I
-put the flush in there to make sure that we always sent all inodes to
-reclaim no matter what weird things happened during mount.  In theory
-it's always a NOP since log recovery inactivates all the inodes it
-touches (if necessary) and the only other inodes that mount touches are
-the quota/rt/rootdir inodes.
-
-> (and now df vs unlink....)
-> 
-> > > > @@ -80,4 +80,37 @@ int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
-> > > >  void xfs_blockgc_stop(struct xfs_mount *mp);
-> > > >  void xfs_blockgc_start(struct xfs_mount *mp);
-> > > >  
-> > > > +void xfs_inodegc_worker(struct work_struct *work);
-> > > > +void xfs_inodegc_flush(struct xfs_mount *mp);
-> > > > +void xfs_inodegc_stop(struct xfs_mount *mp);
-> > > > +void xfs_inodegc_start(struct xfs_mount *mp);
-> > > > +int xfs_inodegc_free_space(struct xfs_mount *mp, struct xfs_icwalk *icw);
-> > > > +
-> > > > +/*
-> > > > + * Process all pending inode inactivations immediately (sort of) so that a
-> > > > + * resource usage report will be mostly accurate with regards to files that
-> > > > + * have been unlinked recently.
-> > > > + *
-> > > > + * It isn't practical to maintain a count of the resources used by unlinked
-> > > > + * inodes to adjust the values reported by this function.  Resources that are
-> > > > + * shared (e.g. reflink) when an inode is queued for inactivation cannot be
-> > > > + * counted towards the adjustment, and cross referencing data extents with the
-> > > > + * refcount btree is the only way to decide if a resource is shared.  Worse,
-> > > > + * unsharing of any data blocks in the system requires either a second
-> > > > + * consultation with the refcount btree, or training users to deal with the
-> > > > + * free space counts possibly fluctuating upwards as inactivations occur.
-> > > > + *
-> > > > + * Hence we guard the inactivation flush with a ratelimiter so that the counts
-> > > > + * are not way out of whack while ignoring workloads that hammer us with statfs
-> > > > + * calls.  Once per clock tick seems frequent enough to avoid complaints about
-> > > > + * inaccurate counts.
-> > > > + */
-> > > > +static inline void
-> > > > +xfs_inodegc_summary_flush(
-> > > > +	struct xfs_mount	*mp)
-> > > > +{
-> > > > +	if (__ratelimit(&mp->m_inodegc_ratelimit))
-> > > > +		xfs_inodegc_flush(mp);
-> > > > +}
-> > > 
-> > > ONce per clock tick is still quite fast - once a millisecond on a
-> > > 1000Hz kernel. I'd prefer that we use a known timer base for this
-> > > sort of thing, not something that changes with kernel config. Every
-> > > 100ms, perhaps?
-> > 
-> > I tried a number of ratelimit values here: 1ms, 4ms, 10ms, 100ms, 500ms,
-> > 2s, and 15s.  fstests and most everything else seemed to act the same up
-> > to 10ms.  At 100ms, the tests that delete something and immediately run
-> > df will start to fail, and above that all hell breaks loose because many
-> > tests (from which I extrapolate most programmers) expect that statfs
-> > won't run until unlink has deleted everything.
-> 
-> So the main problem I have with this is that it it blocks the caller
-> until inactivation is done. For something that is supposed to be
-> fast and non-blocking, this is a bad thing to do.
-> 
-> The quota usage (called on every get/get_next syscall) is really the
-> only one that should be called with any frequency - if anyone is
-> calling statfs so fast that we have to rate limit gc flushes, then
-> they aren't getting any useful information in the delta between
-> calls a millisecond apart.
-> 
-> Hence I suspect that flushes and/or rate limited flushes are not
-> necessary at all here. Why not just deal with it like we do the
-> inode flush at ENOSPC (i.e. xfs_flush_inodes())? i.e. we try to
-> flush the work first, and if that returns true we waited on a flush
-> already in progress and we don't need to do our own? Indeed, why
-> aren't all the inodegc flushes done this way?
-> 
-> For the quota case, I think doing a flush on the first get call
-> would be sufficient - doing one for every "next" call doesn't make
-> much sense, because we've already done a flush at the start of the
-> dquot get walk. IOWs, we've done the work necessary for a point in
-> time snapshot of the quota state that is largely consistent across
-> all the quotas at the time the walk started. Hence I don't think we
-> need to keep flushing over and over again....
-
-<nod> The quota case might get put back, then.
-
-> For fs_counts, it is non-blocking, best effort only.  The percpu
-> counters are read, not summed, so they are inaccurate to begin with.
-> Hence there's not need to flush inactivated inodes there becuse the
-> counters are not guaranteed accurate. If we do need a flush, then
-> just do it unconditionally because anyone calling this with
-> extremely high frequency really isn't going to get anything useful
-> from it.
-> 
-> For statfs, we actually sum the percpu counters, so we should just
-> flush the inodegc before this. If someone is calling statfs with
-> high enough frequency that rate limiting inodegc flushes is actually
-> needed, then they've already got substantial problems on large CPU
-> count machines..
-> 
-> Hence I think we should just have flushes where they are needed, and
-> change the flush to block and return if a flush is already in
-> progress rather than doing an entire new flush itself. That
-> effectively rate limits the flushing, but doesn't prevent a flush
-> when none has been done in a while due to ratelimit state...
-
-For now, I'm taking your suggestion to kick off the inactivation work at
-the end of xfs_fs_syncfs, since regular syncfs is known to involve disk
-access already, and the people who "unlink(); syncfs(); statfs();" like
-they're supposed to will still get the results they expect.
-
-I also made it so that if fdblocks is below the low space thresholds
-then we'll delay the inode/blockgc workers less and less, and removed
-xfs_inodegc_summary_flush completely.
-
-I /think/ that flushing inodegc during a syncfs also solves the problem
-of coordinating inodegc flush and stop with the rest of freeze.  I might
-still need the opflag to prevent requeuing if a destroy_inode races with
-a readonly remount, but I need to recheck that a little more carefully
-tomorrow when I'm not tired.
-
-But, at worst, if that doesn't work, I can open-code freeze_super to
-call the parts of XFS that we really want.
-
-> 
-> > > I suspect that's really going to hurt stat performance. I guess
-> > > benchmarks are in order...
-> > 
-> > Ok, so here's the question I have: Does POSIX (or any other standard we
-> > care to fit) actually define any behavior between the following
-> > sequence:
-> > 
-> > unlink("/foo");	/* no sync calls of any kind */
-> > statfs("/");
-> 
-> None that I know of. the man page for statfs even says:
-> 
-> "buf is a pointer to a statfs structure defined approximately as
-> follows"
-> 
-> so even the man page is extremely cagey about what is actually
-> returned in the statfs buffer. Free space counters not being totally
-> accurate at any specific point in time fits with the "approximately
-> defined" behaviour description in the man page. As long as we do, in
-> the near term, correct account for deferred operations, then we're
-> all good.
-> 
-> > As I've mentioned in the past, the only reason we need these inodegc
-> > flushes for summary reporting is because users expect that if they
-> > delete an unshared 10GB file, they can immediately df and see that the
-> > inode count went down by one and free space went up by 10GB.
-> > 
-> > I /guess/ we could modify every single fstest to sync before checking
-> > summary counts instead of doing this, but I bet there will be some users
-> > who will be surprised that xfs now has *trfs df logic.
-> 
-> If fstests needs accurate counters, it should use 'df --sync' and we
-> should make sure that the syncfs implementation triggers a flush of
-> inactive inodes before it returns. We don't have to guarantee that
-> the inactivation is on stable storage, but it would make sense that
-> we trigger background ops to get the free space accounting near to
-> accurate...
-
-<nod> Well let's see how it does overnight...
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEYXJyaWNrIEouIFdvbmcgPGRq
+d29uZ0BrZXJuZWwub3JnPg0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHY2IDYvN10gZnMveGZzOiBI
+YW5kbGUgQ29XIGZvciBmc2RheCB3cml0ZSgpIHBhdGgNCj4gDQo+IE9uIFdlZCwgTWF5IDE5LCAy
+MDIxIGF0IDAyOjAwOjQ0UE0gKzA4MDAsIFNoaXlhbmcgUnVhbiB3cm90ZToNCj4gPiBJbiBmc2Rh
+eCBtb2RlLCBXUklURSBhbmQgWkVSTyBvbiBhIHNoYXJlZCBleHRlbnQgbmVlZCBDb1cgcGVyZm9y
+bWVkLg0KPiA+IEFmdGVyIENvVywgbmV3IGFsbG9jYXRlZCBleHRlbnRzIG5lZWRzIHRvIGJlIHJl
+bWFwcGVkIHRvIHRoZSBmaWxlLg0KPiA+IFNvLCBhZGQgYW4gaW9tYXBfZW5kIGZvciBkYXggd3Jp
+dGUgb3BzIHRvIGRvIHRoZSByZW1hcHBpbmcgd29yay4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6
+IFNoaXlhbmcgUnVhbiA8cnVhbnN5LmZuc3RAZnVqaXRzdS5jb20+DQo+ID4gLS0tDQo+ID4gIGZz
+L3hmcy94ZnNfYm1hcF91dGlsLmMgfCAgMyArLS0NCj4gPiAgZnMveGZzL3hmc19maWxlLmMgICAg
+ICB8ICA5ICsrKy0tLS0tLQ0KPiA+ICBmcy94ZnMveGZzX2lvbWFwLmMgICAgIHwgMzggKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0NCj4gPiAgZnMveGZzL3hmc19pb21hcC5o
+ICAgICB8IDI0ICsrKysrKysrKysrKysrKysrKysrKysrKw0KPiA+ICBmcy94ZnMveGZzX2lvcHMu
+YyAgICAgIHwgIDcgKysrLS0tLQ0KPiA+ICBmcy94ZnMveGZzX3JlZmxpbmsuYyAgIHwgIDMgKy0t
+DQo+ID4gIDYgZmlsZXMgY2hhbmdlZCwgNjkgaW5zZXJ0aW9ucygrKSwgMTUgZGVsZXRpb25zKC0p
+DQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19ibWFwX3V0aWwuYyBiL2ZzL3hmcy94
+ZnNfYm1hcF91dGlsLmMgaW5kZXgNCj4gPiBhNWU5ZDdkMzQwMjMuLjJhMzZkYzkzZmYyNyAxMDA2
+NDQNCj4gPiAtLS0gYS9mcy94ZnMveGZzX2JtYXBfdXRpbC5jDQo+ID4gKysrIGIvZnMveGZzL3hm
+c19ibWFwX3V0aWwuYw0KPiA+IEBAIC05NjUsOCArOTY1LDcgQEAgeGZzX2ZyZWVfZmlsZV9zcGFj
+ZSgNCj4gPiAgCQlyZXR1cm4gMDsNCj4gPiAgCWlmIChvZmZzZXQgKyBsZW4gPiBYRlNfSVNJWkUo
+aXApKQ0KPiA+ICAJCWxlbiA9IFhGU19JU0laRShpcCkgLSBvZmZzZXQ7DQo+ID4gLQllcnJvciA9
+IGlvbWFwX3plcm9fcmFuZ2UoVkZTX0koaXApLCBvZmZzZXQsIGxlbiwgTlVMTCwNCj4gPiAtCQkJ
+Jnhmc19idWZmZXJlZF93cml0ZV9pb21hcF9vcHMpOw0KPiA+ICsJZXJyb3IgPSB4ZnNfaW9tYXBf
+emVyb19yYW5nZShpcCwgb2Zmc2V0LCBsZW4sIE5VTEwpOw0KPiA+ICAJaWYgKGVycm9yKQ0KPiA+
+ICAJCXJldHVybiBlcnJvcjsNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2ZpbGUu
+YyBiL2ZzL3hmcy94ZnNfZmlsZS5jIGluZGV4DQo+ID4gMzk2ZWYzNmRjZDBhLi4zOGQ4ZWNhMDVh
+ZWUgMTAwNjQ0DQo+ID4gLS0tIGEvZnMveGZzL3hmc19maWxlLmMNCj4gPiArKysgYi9mcy94ZnMv
+eGZzX2ZpbGUuYw0KPiA+IEBAIC02ODQsMTEgKzY4NCw4IEBAIHhmc19maWxlX2RheF93cml0ZSgN
+Cj4gPiAgCXBvcyA9IGlvY2ItPmtpX3BvczsNCj4gPg0KPiA+ICAJdHJhY2VfeGZzX2ZpbGVfZGF4
+X3dyaXRlKGlvY2IsIGZyb20pOw0KPiA+IC0JcmV0ID0gZGF4X2lvbWFwX3J3KGlvY2IsIGZyb20s
+ICZ4ZnNfZGlyZWN0X3dyaXRlX2lvbWFwX29wcyk7DQo+ID4gLQlpZiAocmV0ID4gMCAmJiBpb2Ni
+LT5raV9wb3MgPiBpX3NpemVfcmVhZChpbm9kZSkpIHsNCj4gPiAtCQlpX3NpemVfd3JpdGUoaW5v
+ZGUsIGlvY2ItPmtpX3Bvcyk7DQo+ID4gLQkJZXJyb3IgPSB4ZnNfc2V0ZmlsZXNpemUoaXAsIHBv
+cywgcmV0KTsNCj4gPiAtCX0NCj4gPiArCXJldCA9IGRheF9pb21hcF9ydyhpb2NiLCBmcm9tLCAm
+eGZzX2RheF93cml0ZV9pb21hcF9vcHMpOw0KPiA+ICsNCj4gPiAgb3V0Og0KPiA+ICAJaWYgKGlv
+bG9jaykNCj4gPiAgCQl4ZnNfaXVubG9jayhpcCwgaW9sb2NrKTsNCj4gPiBAQCAtMTMwOSw3ICsx
+MzA2LDcgQEAgX194ZnNfZmlsZW1hcF9mYXVsdCgNCj4gPg0KPiA+ICAJCXJldCA9IGRheF9pb21h
+cF9mYXVsdCh2bWYsIHBlX3NpemUsICZwZm4sIE5VTEwsDQo+ID4gIAkJCQkod3JpdGVfZmF1bHQg
+JiYgIXZtZi0+Y293X3BhZ2UpID8NCj4gPiAtCQkJCSAmeGZzX2RpcmVjdF93cml0ZV9pb21hcF9v
+cHMgOg0KPiA+ICsJCQkJICZ4ZnNfZGF4X3dyaXRlX2lvbWFwX29wcyA6DQo+ID4gIAkJCQkgJnhm
+c19yZWFkX2lvbWFwX29wcyk7DQo+ID4gIAkJaWYgKHJldCAmIFZNX0ZBVUxUX05FRUREU1lOQykN
+Cj4gPiAgCQkJcmV0ID0gZGF4X2ZpbmlzaF9zeW5jX2ZhdWx0KHZtZiwgcGVfc2l6ZSwgcGZuKTsg
+ZGlmZiAtLWdpdA0KPiA+IGEvZnMveGZzL3hmc19pb21hcC5jIGIvZnMveGZzL3hmc19pb21hcC5j
+IGluZGV4DQo+ID4gZDE1NGY0MmUyZGM2Li45Mzg3MjNhYTEzN2QgMTAwNjQ0DQo+ID4gLS0tIGEv
+ZnMveGZzL3hmc19pb21hcC5jDQo+ID4gKysrIGIvZnMveGZzL3hmc19pb21hcC5jDQo+ID4gQEAg
+LTc2MSw3ICs3NjEsOCBAQCB4ZnNfZGlyZWN0X3dyaXRlX2lvbWFwX2JlZ2luKA0KPiA+DQo+ID4g
+IAkJLyogbWF5IGRyb3AgYW5kIHJlLWFjcXVpcmUgdGhlIGlsb2NrICovDQo+ID4gIAkJZXJyb3Ig
+PSB4ZnNfcmVmbGlua19hbGxvY2F0ZV9jb3coaXAsICZpbWFwLCAmY21hcCwgJnNoYXJlZCwNCj4g
+PiAtCQkJCSZsb2NrbW9kZSwgZmxhZ3MgJiBJT01BUF9ESVJFQ1QpOw0KPiA+ICsJCQkJJmxvY2tt
+b2RlLA0KPiA+ICsJCQkJKGZsYWdzICYgSU9NQVBfRElSRUNUKSB8fCBJU19EQVgoaW5vZGUpKTsN
+Cj4gPiAgCQlpZiAoZXJyb3IpDQo+ID4gIAkJCWdvdG8gb3V0X3VubG9jazsNCj4gPiAgCQlpZiAo
+c2hhcmVkKQ0KPiA+IEBAIC04NTQsNiArODU1LDQxIEBAIGNvbnN0IHN0cnVjdCBpb21hcF9vcHMg
+eGZzX2RpcmVjdF93cml0ZV9pb21hcF9vcHMNCj4gPSB7DQo+ID4gIAkuaW9tYXBfYmVnaW4JCT0g
+eGZzX2RpcmVjdF93cml0ZV9pb21hcF9iZWdpbiwNCj4gPiAgfTsNCj4gPg0KPiA+ICtzdGF0aWMg
+aW50DQo+ID4gK3hmc19kYXhfd3JpdGVfaW9tYXBfZW5kKA0KPiA+ICsJc3RydWN0IGlub2RlCQkq
+aW5vZGUsDQo+ID4gKwlsb2ZmX3QJCQlwb3MsDQo+ID4gKwlsb2ZmX3QJCQlsZW5ndGgsDQo+ID4g
+Kwlzc2l6ZV90CQkJd3JpdHRlbiwNCj4gPiArCXVuc2lnbmVkIGludAkJZmxhZ3MsDQo+ID4gKwlz
+dHJ1Y3QgaW9tYXAJCSppb21hcCkNCj4gPiArew0KPiA+ICsJaW50CQkJZXJyb3IgPSAwOw0KPiA+
+ICsJc3RydWN0IHhmc19pbm9kZQkqaXAgPSBYRlNfSShpbm9kZSk7DQo+ID4gKwlib29sCQkJY293
+ID0geGZzX2lzX2Nvd19pbm9kZShpcCk7DQo+ID4gKw0KPiA+ICsJaWYgKCF3cml0dGVuKQ0KPiA+
+ICsJCXJldHVybiAwOw0KPiA+ICsNCj4gPiArCWlmIChwb3MgKyB3cml0dGVuID4gaV9zaXplX3Jl
+YWQoaW5vZGUpICYmICEoZmxhZ3MgJiBJT01BUF9GQVVMVCkpIHsNCj4gPiArCQlpX3NpemVfd3Jp
+dGUoaW5vZGUsIHBvcyArIHdyaXR0ZW4pOw0KPiA+ICsJCWVycm9yID0geGZzX3NldGZpbGVzaXpl
+KGlwLCBwb3MsIHdyaXR0ZW4pOw0KPiA+ICsJCWlmIChlcnJvciAmJiBjb3cpIHsNCj4gPiArCQkJ
+eGZzX3JlZmxpbmtfY2FuY2VsX2Nvd19yYW5nZShpcCwgcG9zLCB3cml0dGVuLCB0cnVlKTsNCj4g
+PiArCQkJcmV0dXJuIGVycm9yOw0KPiA+ICsJCX0NCj4gPiArCX0NCj4gPiArCWlmIChjb3cpDQo+
+ID4gKwkJZXJyb3IgPSB4ZnNfcmVmbGlua19lbmRfY293KGlwLCBwb3MsIHdyaXR0ZW4pOw0KPiA+
+ICsNCj4gPiArCXJldHVybiBlcnJvcjsNCj4gDQo+IEkgdGhpbmsgdGhpcyAodGhlIC0+aW9tYXBf
+ZW5kIGhhbmRsZXIpIGlzIHRoZSB3cm9uZyBwbGFjZSB0byBiZSBwZXJmb3JtaW5nIENPVw0KPiBy
+ZW1hcHBpbmcsIGJlY2F1c2Ugb2YgdGhpcyBjaHVuayBpbiBpb21hcF9hcHBseToNCj4gDQo+IAkv
+Kg0KPiAJICogTm93IHRoZSBkYXRhIGhhcyBiZWVuIGNvcGllZCwgY29tbWl0IHRoZSByYW5nZSB3
+ZSd2ZSBjb3BpZWQuDQo+IAkgKiBUaGlzIHNob3VsZCBub3QgZmFpbCB1bmxlc3MgdGhlIGZpbGVz
+eXN0ZW0gaGFzIGhhZCBhIGZhdGFsDQo+IAkgKiBlcnJvci4NCj4gCSAqLw0KPiAJaWYgKG9wcy0+
+aW9tYXBfZW5kKSB7DQo+IAkJcmV0ID0gb3BzLT5pb21hcF9lbmQoaW5vZGUsIHBvcywgbGVuZ3Ro
+LA0KPiAJCQkJICAgICB3cml0dGVuID4gMCA/IHdyaXR0ZW4gOiAwLA0KPiAJCQkJICAgICBmbGFn
+cywgJmlvbWFwKTsNCj4gCX0NCj4gDQo+IAlyZXR1cm4gd3JpdHRlbiA/IHdyaXR0ZW4gOiByZXQ7
+DQo+IA0KPiBJZiB3ZSBtYW5hZ2VkIHRvIHdyaXRlIHNvbWV0aGluZyBidXQgdGhlIHJlbWFwIGZh
+aWxzLCB3ZSdsbCBlYXQgdGhlIGVycm9yDQo+IG1lc3NhZ2UgYW5kIHJldHVybiB0aGUgbGVuZ3Ro
+IG9mIHRoZSB3cml0ZSB0byB0aGUgY2FsbGVyLg0KPiBFdmVudHVhbGx5IHRoZSBjYWxsZXJzIC9t
+YXkvIG5vdGljZSB0aGF0IHRoZXkgY2FuIHN0aWxsIHJlYWQgb2xkIGZpbGUgY29udGVudHMgYWZ0
+ZXINCj4gYSAic3VjY2Vzc2Z1bCIgd3JpdGUuDQoNClVuZGVyc3Rvb2QuDQoNCj4gDQo+IEkgdGhp
+bmsgd2hhdCBuZWVkcyB0byBoYXBwZW4gaGVyZSBpcyB0aGF0IHdlIGNhbGwgb3V0IHRvIHRoZSBm
+aWxlc3lzdGVtIHRvIHJlbWFwDQo+IHRoZSBibG9ja3MgYXQgdGhlIGVuZCBvZiBkYXhfaW9tYXBf
+YWN0b3IsIHNpbWlsYXIgdG8gaG93IHRoZSBpb21hcCBkaXJlY3Rpbw0KPiBjb2RlIGNhbGxzIHhm
+c19kaW9fd3JpdGVfZW5kX2lvIGFmdGVyIGFsbCBvZiB0aGUgd3JpdGUgYmlvcyBjb21wbGV0ZS4g
+IElmIHRoZQ0KPiByZW1hcCBmYWlscywgd2UgcmV0dXJuIHRoYXQgZXJyb3Igb3V0IG9mIGRheF9p
+b21hcF9hY3Rvciwgd2hpY2ggd2lsbCBiZQ0KPiByZXR1cm5lZCB0byB0aGUgY2FsbGVyIGFzIGEg
+c2hvcnQgd3JpdGUgb3IgYW4gZXJyb3IgY29kZSBpZiBub3RoaW5nIGdvdCB3cml0dGVuLg0KPiAN
+Cj4gSU9XcywgdGhlIGVuZCBvZiBkYXhfaW9tYXBfYWN0b3Igc2hvdWxkIGJlY29tZToNCj4gDQo+
+IAkJLyogZGF4X2NvcHlfe3RvLGZyb219X2l0ZXIgY2FsbHMgaGVyZSAqLw0KPiANCj4gCQlwb3Mg
+Kz0geGZlcjsNCj4gCQlsZW5ndGggLT0geGZlcjsNCj4gCQlkb25lICs9IHhmZXI7DQo+IA0KPiAJ
+CWlmICh4ZmVyID09IDApDQo+IAkJCXJldCA9IC1FRkFVTFQ7DQo+IAkJaWYgKHhmZXIgPCBtYXBf
+bGVuKQ0KPiAJCQlicmVhazsNCj4gCX0NCj4gCWRheF9yZWFkX3VubG9jayhpZCk7DQo+IA0KPiAJ
+aWYgKGRvcHMgJiYgZG9wcy0+ZW5kX2lvKSB7DQo+IAkJdW5zaWduZWQgZmxhZ3MgPSAwOw0KPiAN
+Cj4gCQlpZiAoc3JjbWFwLT5hZGRyICE9IGlvbWFwLT5hZGRyKQ0KPiAJCQlmbGFncyB8PSBJT01B
+UF9ESU9fQ09XOw0KPiANCj4gCQlyZXQgPSBkb3BzLT5lbmRfaW8oaW9jYiwgZG9uZSwgcmV0LCBm
+bGFncyk7DQo+IAl9DQo+IA0KPiAJaWYgKGxpa2VseSghcmV0KSkgew0KPiAJCXJldCA9IGRvbmU7
+DQo+IAkJLyogY2hlY2sgZm9yIHNob3J0IHJlYWQgKi8NCj4gCQlpZiAob2Zmc2V0ICsgcmV0ID4g
+aV9zaXplX3JlYWQoaW5vZGUpICYmICF3cml0ZSkNCj4gCQkJcmV0ID0gaV9zaXplX3JlYWQoaW5v
+ZGUpIC0gb2Zmc2V0Ow0KPiAJCWlvY2ItPmtpX3BvcyArPSByZXQ7DQo+IAl9DQo+IA0KPiAJcmV0
+dXJuIHJldDsNCj4gfQ0KPiANCj4gQW5kIEkgdGhpbmsgeW91IGNhbiBldmVuIHJldXNlIHRoZSBz
+dHJ1Y3QgaW9tYXBfZGlvX29wcyBhbmQNCj4geGZzX2Rpb193cml0ZV9lbmRfaW8gZm9yIHRoaXMg
+cHVycG9zZS4NCg0KVGhpcyBpcyBhIGdvb2QgaWRlYS4gIEFuZCB0aGUgdHdvIGRheCBwYWdlIGZh
+dWx0IGhhbmRsZXJzIGFsc28gbmVlZCBpdC4gIFNvIEkgYW0gdGhpbmtpbmcsIGluc3RlYWQgb2Yg
+Y29weWluZyB0aGlzIGxvZ2ljIHRocmVlIHRpbWVzLCBob3cgYWJvdXQgYWRkaW5nIGFuIGludGVy
+ZmFjZSwgY2FsbGVkIC0+aW9tYXBfcG9zdF9hY3RvcigpIGZvciBleGFtcGxlLCBpbiB0aGUgaW9t
+YXBfb3BzLCBiZXR3ZWVuIC0+YWN0b3IoKSBhbmQgLT5pb21hcF9lbmQoKSA/ICBBbmQgdGhpcyBs
+b29rcyBtb3JlIGNvbW1vbi4NCg0KSW4gYWRkaXRpb24sIHRoZSBkb3BzLT5lbmRfaW8oKSByZXF1
+aXJlcyBzdHJ1Y3Qga2lvY2IgYW5kIGl0cyBub3QgYXZhaWxhYmxlIGluIGRheCBwYWdlIGZhdWx0
+IGhhbmRsZXIuDQoNCg0KLS0NClJ1YW4uDQoNCj4gDQo+ID4gK30NCj4gPiArDQo+ID4gK2NvbnN0
+IHN0cnVjdCBpb21hcF9vcHMgeGZzX2RheF93cml0ZV9pb21hcF9vcHMgPSB7DQo+ID4gKwkuaW9t
+YXBfYmVnaW4JCT0geGZzX2RpcmVjdF93cml0ZV9pb21hcF9iZWdpbiwNCj4gPiArCS5pb21hcF9l
+bmQJCT0geGZzX2RheF93cml0ZV9pb21hcF9lbmQsDQo+ID4gK307DQo+ID4gKw0KPiA+ICBzdGF0
+aWMgaW50DQo+ID4gIHhmc19idWZmZXJlZF93cml0ZV9pb21hcF9iZWdpbigNCj4gPiAgCXN0cnVj
+dCBpbm9kZQkJKmlub2RlLA0KPiA+IGRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lvbWFwLmggYi9m
+cy94ZnMveGZzX2lvbWFwLmggaW5kZXgNCj4gPiA3ZDM3MDM1NTZkMGUuLmZiYWNmNjM4YWIyMSAx
+MDA2NDQNCj4gPiAtLS0gYS9mcy94ZnMveGZzX2lvbWFwLmgNCj4gPiArKysgYi9mcy94ZnMveGZz
+X2lvbWFwLmgNCj4gPiBAQCAtNDIsOCArNDIsMzIgQEAgeGZzX2FsaWduZWRfZnNiX2NvdW50KA0K
+PiA+DQo+ID4gIGV4dGVybiBjb25zdCBzdHJ1Y3QgaW9tYXBfb3BzIHhmc19idWZmZXJlZF93cml0
+ZV9pb21hcF9vcHM7ICBleHRlcm4NCj4gPiBjb25zdCBzdHJ1Y3QgaW9tYXBfb3BzIHhmc19kaXJl
+Y3Rfd3JpdGVfaW9tYXBfb3BzOw0KPiA+ICtleHRlcm4gY29uc3Qgc3RydWN0IGlvbWFwX29wcyB4
+ZnNfZGF4X3dyaXRlX2lvbWFwX29wczsNCj4gPiAgZXh0ZXJuIGNvbnN0IHN0cnVjdCBpb21hcF9v
+cHMgeGZzX3JlYWRfaW9tYXBfb3BzOyAgZXh0ZXJuIGNvbnN0DQo+ID4gc3RydWN0IGlvbWFwX29w
+cyB4ZnNfc2Vla19pb21hcF9vcHM7ICBleHRlcm4gY29uc3Qgc3RydWN0IGlvbWFwX29wcw0KPiA+
+IHhmc194YXR0cl9pb21hcF9vcHM7DQo+ID4NCj4gPiArc3RhdGljIGlubGluZSBpbnQNCj4gPiAr
+eGZzX2lvbWFwX3plcm9fcmFuZ2UoDQo+ID4gKwlzdHJ1Y3QgeGZzX2lub2RlCSppcCwNCj4gPiAr
+CWxvZmZfdAkJCW9mZnNldCwNCj4gPiArCWxvZmZfdAkJCWxlbiwNCj4gPiArCWJvb2wJCQkqZGlk
+X3plcm8pDQo+ID4gK3sNCj4gPiArCXJldHVybiBpb21hcF96ZXJvX3JhbmdlKFZGU19JKGlwKSwg
+b2Zmc2V0LCBsZW4sIGRpZF96ZXJvLA0KPiA+ICsJCQlJU19EQVgoVkZTX0koaXApKSA/ICZ4ZnNf
+ZGF4X3dyaXRlX2lvbWFwX29wcw0KPiA+ICsJCQkJCSAgOiAmeGZzX2J1ZmZlcmVkX3dyaXRlX2lv
+bWFwX29wcyk7IH0NCj4gPiArDQo+ID4gK3N0YXRpYyBpbmxpbmUgaW50DQo+ID4gK3hmc19pb21h
+cF90cnVuY2F0ZV9wYWdlKA0KPiA+ICsJc3RydWN0IHhmc19pbm9kZQkqaXAsDQo+ID4gKwlsb2Zm
+X3QJCQlwb3MsDQo+ID4gKwlib29sCQkJKmRpZF96ZXJvKQ0KPiA+ICt7DQo+ID4gKwlyZXR1cm4g
+aW9tYXBfdHJ1bmNhdGVfcGFnZShWRlNfSShpcCksIHBvcywgZGlkX3plcm8sDQo+ID4gKwkJCUlT
+X0RBWChWRlNfSShpcCkpID8gJnhmc19kYXhfd3JpdGVfaW9tYXBfb3BzDQo+ID4gKwkJCQkJICA6
+ICZ4ZnNfYnVmZmVyZWRfd3JpdGVfaW9tYXBfb3BzKTsgfQ0KPiA+ICsNCj4gPiAgI2VuZGlmIC8q
+IF9fWEZTX0lPTUFQX0hfXyovDQo+ID4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfaW9wcy5jIGIv
+ZnMveGZzL3hmc19pb3BzLmMgaW5kZXgNCj4gPiBkZmUyNGI3ZjI2ZTUuLjZkOTM2YzNlMWE2ZSAx
+MDA2NDQNCj4gPiAtLS0gYS9mcy94ZnMveGZzX2lvcHMuYw0KPiA+ICsrKyBiL2ZzL3hmcy94ZnNf
+aW9wcy5jDQo+ID4gQEAgLTkxMSw4ICs5MTEsOCBAQCB4ZnNfc2V0YXR0cl9zaXplKA0KPiA+ICAJ
+ICovDQo+ID4gIAlpZiAobmV3c2l6ZSA+IG9sZHNpemUpIHsNCj4gPiAgCQl0cmFjZV94ZnNfemVy
+b19lb2YoaXAsIG9sZHNpemUsIG5ld3NpemUgLSBvbGRzaXplKTsNCj4gPiAtCQllcnJvciA9IGlv
+bWFwX3plcm9fcmFuZ2UoaW5vZGUsIG9sZHNpemUsIG5ld3NpemUgLSBvbGRzaXplLA0KPiA+IC0J
+CQkJJmRpZF96ZXJvaW5nLCAmeGZzX2J1ZmZlcmVkX3dyaXRlX2lvbWFwX29wcyk7DQo+ID4gKwkJ
+ZXJyb3IgPSB4ZnNfaW9tYXBfemVyb19yYW5nZShpcCwgb2xkc2l6ZSwgbmV3c2l6ZSAtIG9sZHNp
+emUsDQo+ID4gKwkJCQkmZGlkX3plcm9pbmcpOw0KPiA+ICAJfSBlbHNlIHsNCj4gPiAgCQkvKg0K
+PiA+ICAJCSAqIGlvbWFwIHdvbid0IGRldGVjdCBhIGRpcnR5IHBhZ2Ugb3ZlciBhbiB1bndyaXR0
+ZW4gYmxvY2sgKG9yIGEgQEANCj4gPiAtOTI0LDggKzkyNCw3IEBAIHhmc19zZXRhdHRyX3NpemUo
+DQo+ID4gIAkJCQkJCSAgICAgbmV3c2l6ZSk7DQo+ID4gIAkJaWYgKGVycm9yKQ0KPiA+ICAJCQly
+ZXR1cm4gZXJyb3I7DQo+ID4gLQkJZXJyb3IgPSBpb21hcF90cnVuY2F0ZV9wYWdlKGlub2RlLCBu
+ZXdzaXplLCAmZGlkX3plcm9pbmcsDQo+ID4gLQkJCQkmeGZzX2J1ZmZlcmVkX3dyaXRlX2lvbWFw
+X29wcyk7DQo+ID4gKwkJZXJyb3IgPSB4ZnNfaW9tYXBfdHJ1bmNhdGVfcGFnZShpcCwgbmV3c2l6
+ZSwgJmRpZF96ZXJvaW5nKTsNCj4gPiAgCX0NCj4gPg0KPiA+ICAJaWYgKGVycm9yKQ0KPiA+IGRp
+ZmYgLS1naXQgYS9mcy94ZnMveGZzX3JlZmxpbmsuYyBiL2ZzL3hmcy94ZnNfcmVmbGluay5jIGlu
+ZGV4DQo+ID4gZDI1NDM0ZjkzMjM1Li45YTc4MDk0OGRiZDAgMTAwNjQ0DQo+ID4gLS0tIGEvZnMv
+eGZzL3hmc19yZWZsaW5rLmMNCj4gPiArKysgYi9mcy94ZnMveGZzX3JlZmxpbmsuYw0KPiA+IEBA
+IC0xMjY2LDggKzEyNjYsNyBAQCB4ZnNfcmVmbGlua196ZXJvX3Bvc3Rlb2YoDQo+ID4gIAkJcmV0
+dXJuIDA7DQo+ID4NCj4gPiAgCXRyYWNlX3hmc196ZXJvX2VvZihpcCwgaXNpemUsIHBvcyAtIGlz
+aXplKTsNCj4gPiAtCXJldHVybiBpb21hcF96ZXJvX3JhbmdlKFZGU19JKGlwKSwgaXNpemUsIHBv
+cyAtIGlzaXplLCBOVUxMLA0KPiA+IC0JCQkmeGZzX2J1ZmZlcmVkX3dyaXRlX2lvbWFwX29wcyk7
+DQo+ID4gKwlyZXR1cm4geGZzX2lvbWFwX3plcm9fcmFuZ2UoaXAsIGlzaXplLCBwb3MgLSBpc2l6
+ZSwgTlVMTCk7DQo+ID4gIH0NCj4gPg0KPiA+ICAvKg0KPiA+IC0tDQo+ID4gMi4zMS4xDQo+ID4N
+Cj4gPg0KPiA+DQo=
