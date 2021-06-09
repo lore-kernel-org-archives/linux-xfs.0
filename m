@@ -2,291 +2,387 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B128C4743D
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 01:00:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07752C4743D
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 01:01:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22BB1613AD
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 01:00:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4AEA60FF2
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 01:01:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230479AbhFIBCr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Jun 2021 21:02:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57178 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230303AbhFIBCr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Jun 2021 21:02:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D55BF60FF2
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Jun 2021 01:00:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623200453;
-        bh=QdiM9VY0SxSZM+FulC19fTUbA/MHfpEdOvZbjU51inA=;
-        h=Date:From:To:Subject:From;
-        b=dQE8OW0bVkm/5LC8Zb63azHX9p1UNAkBHvrZQmvoVQ7BPSOAysiZ4cj6U5FOGQWFL
-         TGy0kMeRNMoIKGIhlAMN6nIVrEtvkYvzej3sB2VO3vFQWMXk59yDZtV26QQu9kfYC9
-         CSIiT6cTDKla8jzWO/c/Ur4qZJ3D8Ukroy1jU3uhEvpWBSSopMgFz/D72HnSrhZHJ4
-         Ar3kKtigBIpPuNim+JDdp8HP9QAZFB8I6axCnn+N+LvjJi+ZYibKqdWVPo147ssR7n
-         8FBm5HIypw/En0ICUI9+VWcC2AZhZzqTtq/V/eUU0rzT/TDW7AZt0PBACPngVWETTO
-         /0apDWjob3SMw==
-Date:   Tue, 8 Jun 2021 18:00:53 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next **REBASED** to 7e4311b04be4
-Message-ID: <20210609010053.GV2945738@locust>
+        id S231180AbhFIBDZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Jun 2021 21:03:25 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49004 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230303AbhFIBDZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jun 2021 21:03:25 -0400
+Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id F407B1043F8F;
+        Wed,  9 Jun 2021 11:01:11 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lqmaj-00AaW5-A2; Wed, 09 Jun 2021 11:01:09 +1000
+Date:   Wed, 9 Jun 2021 11:01:09 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
+Subject: Re: [PATCH 2/9] xfs: deferred inode inactivation
+Message-ID: <20210609010109.GN664593@dread.disaster.area>
+References: <162310469340.3465262.504398465311182657.stgit@locust>
+ <162310470480.3465262.12512984715866568596.stgit@locust>
+ <20210608005753.GG664593@dread.disaster.area>
+ <20210608044051.GB2945763@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20210608044051.GB2945763@locust>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Tu+Yewfh c=1 sm=1 tr=0
+        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=WH9A7_TyzLk7ZCWRKK8A:9 a=kLYwObMevb3PokJb:21 a=4EAlflD1rj-eSrKO:21
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Mon, Jun 07, 2021 at 09:40:51PM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 08, 2021 at 10:57:53AM +1000, Dave Chinner wrote:
+> > On Mon, Jun 07, 2021 at 03:25:04PM -0700, Darrick J. Wong wrote:
+> > > +/* Queue a new inode gc pass if there are inodes needing inactivation. */
+> > > +static void
+> > > +xfs_inodegc_queue(
+> > > +	struct xfs_mount        *mp)
+> > > +{
+> > > +	if (!xfs_inodegc_running(mp))
+> > > +		return;
+> > > +
+> > > +	rcu_read_lock();
+> > > +	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_INODEGC_TAG))
+> > > +		queue_delayed_work(mp->m_gc_workqueue, &mp->m_inodegc_work, 0);
+> > > +	rcu_read_unlock();
+> > > +}
+> > 
+> > I have no idea why we are checking if the gc is running here. All
+> > our other background stuff runs and re-queues until it is directly
+> > stopped or there's nothing left in the tree. Hence I'm a bit
+> > clueless right now about what this semantic is for...
+> 
+> The opflag is supposed to control whether inactivation actually runs.
+> As you might guess from _running calls being scattered everywhere, it's
+> pretty ugly code.  All this crap exists because there's no easy solution
+> to shutting down background threads after we commit to freezing the fs
+> but before an fs freeze hits SB_FREEZE_FS and we can't allocate new
+> transactions.
+> 
+> Fixing inactivation to use NO_WRITECOUNT means auditing every function
+> call that xfs_inactive makes to look for an xfs_trans_alloc* call and
+> probably modifying all of them to be able to switch between regular and
+> NOWRITECOUNT mode.  I tried that, it's ugly.
+> 
+> Another solution is to add ->freeze_super and ->thaw_super functions
+> to prevent a FITHAW caller from racing with a FIFREEZE caller and
+> accidentally rearming the inodegc while a freeze starts.
 
-The for-next branch of the xfs-linux repository at:
+This seems like the right way to proceed.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Of course, all the freeze/thaw exclusion is in freeze_super and
+thaw_super via the umount lock, so to do this we need to factor
+freeze_super() so that we can take the active references to the
+superblock ourselves, then turn off inodegc, then run the generic
+freeze_super() code...
 
-has just been **REBASED**.
+The unfreeze side where we'd turn the inode gc back on is already
+inside the protected region (via ->unfreeze_fs callout in
+thaw_super_locked()) so we don't need to do anything special there.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+[I'll reorder bits to address all the other freeze stuff now so it's
+not all mixed up with the stat/df stuff]
 
-There were enough attribution problems in the previous for-next push
-that Dave and I decided that overrode the hassle of making everyone
-rebase.  I /did/ warn you all not to rebase your dev branches just yet.
-Here we go with the second try!  This time I also added Dave's CIL
-scalability work and the last of my inode core refactoring patches.
+> > > +/* Stop all queued inactivation work. */
+> > > +void
+> > > +xfs_inodegc_stop(
+> > > +	struct xfs_mount	*mp)
+> > > +{
+> > > +	clear_bit(XFS_OPFLAG_INODEGC_RUNNING_BIT, &mp->m_opflags);
+> > > +	cancel_delayed_work_sync(&mp->m_inodegc_work);
+> > > +}
+> > 
+> > what's to stop racing invocations of stop/start? Perhaps:
+> > 
+> > 	if (test_and_clear_bit())
+> > 		cancel_delayed_work_sync(&mp->m_inodegc_work);
+> 
+> That horrible hack below.
+>
+> > > +
+> > > +/* Schedule deferred inode inactivation work. */
+> > > +void
+> > > +xfs_inodegc_start(
+> > > +	struct xfs_mount	*mp)
+> > > +{
+> > > +	set_bit(XFS_OPFLAG_INODEGC_RUNNING_BIT, &mp->m_opflags);
+> > > +	xfs_inodegc_queue(mp);
+> > > +}
+> > 
+> > 	if (test_and_set_bit())
+> > 		xfs_inodegc_queue(mp);
+> > 
+> > So that the running state will remain in sync with the actual queue
+> > operation? Though I'm still not sure why we need the running bit...
+> 
+> (see ugly sync_fs SB_FREEZE_PAGEFAULTS hack)
 
-So ... if you have some time to burn, try pulling this branch and let me
-know what you think.  Assuming nothing weird happens in the next couple
-of days, this will be the first real for-next branch for 5.14.  I think
-Allison's delayed xattrs work will be next to land, probably in the post
--rc6 push.
+I'm not sure how that addresses any sort of concurrent set/clear
+that could occur as it doesn't guarantee that the running state
+matches the opflag bit state...
 
-I'm reworking the deferred inactivation patchset; we'll see how long it
-takes to restabilize that. ;)
+> > Ok, "opflags" are undocumented as to how they work, what their
+> > consistency model is, etc. I understand you want an atomic flag to
+> > indicate that something is running, and mp->m_flags is not that
+> > (despite being used that way historically). 
+> > 
+> > I dislike the "_BIT" annotations for a variable that is only to be
+> > used as an index bit field. Or maybe it's a flag field and you
+> > haven't defined any bitwise flags for it because you're not using it
+> > that way yet.
+> > 
+> > So, is m_opflags an indexed bit field or a normal flag field like
+> > m_flags?
+> 
+> It's an indexed bit field, which is why I named it _BIT.  I'll try to
+> add more documentation around what this thing is and how the flags work:
+> 
+> struct xfs_mount {
+> 	...
+> 	/*
+> 	 * This atomic bitset controls flags that alter the behavior of
+> 	 * the filesystem.  Use only the atomic bit helper functions
+> 	 * here; see XFS_OPFLAG_* for information about the actual
+> 	 * flags.
+> 	 */
+> 	unsigned long		m_opflags;
+> 	...
+> };
+> 
+> /*
+>  * Operation flags -- each entry here is a bit index into m_opflags and
+>  * is not itself a flag value.
+>  */
+> 
+> /* Are we allowed to run the inode inactivation worker? */
+> #define XFS_OPFLAG_INODEGC_RUNNING_BIT	(0)
 
-The new head of the for-next branch is commit:
+This doesn't really address my comments - there's still the _BIT
+annotation mixed with "flags" variables. Other examples of this are
+that "operational flags" or state variables are updated via
+set/clear/test/etc bit op wrappers. An example of this is page and
+bufferhead state bits and variables...
 
-7e4311b04be4 Merge tag 'xfs-cil-scale-2-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.14-merge2-cil
+I mentioned on #xfs an older patchset I had that cleaned up a lot of
+this cruft in the xfs_mount flags fields by separating feature flags
+from state flags. That can be found here:
 
-New Commits:
+https://lore.kernel.org/linux-xfs/20180820044851.414-1-david@fromorbit.com/
 
-Christoph Hellwig (4):
-      [5a981e4ea8ff] xfs: mark xfs_bmap_set_attrforkoff static
-      [54cd3aa6f810] xfs: remove ->b_offset handling for page backed buffers
-      [934d1076bb2c] xfs: simplify the b_page_count calculation
-      [170041f71596] xfs: cleanup error handling in xfs_buf_get_map
+I think if we are going to introduce dynamic mount state flags, we
+need to move towards that sort of separation. So leave this patch
+set as it is now with the opflags, and I'll update my flag vs state
+rework patchset and merge this new code into it...
 
-Darrick J. Wong (30):
-      [a7bcb147fef3] xfs: clean up open-coded fs block unit conversions
-      [20bd8e63f30b] xfs: remove unnecessary shifts
-      [1ad2cfe0a570] xfs: move the quotaoff dqrele inode walk into xfs_icache.c
-      [3ea06d73e3c0] xfs: detach inode dquots at the end of inactivation
-      [df60019739d8] xfs: move the inode walk functions further down
-      [c1115c0cba2b] xfs: rename xfs_inode_walk functions to xfs_icwalk
-      [c809d7e948a1] xfs: pass the goal of the incore inode walk to xfs_inode_walk()
-      [b9baaef42f76] xfs: separate the dqrele_all inode grab logic from xfs_inode_walk_ag_grab
-      [9d2793ceecb9] xfs: move xfs_inew_wait call into xfs_dqrele_inode
-      [7fdff52623b4] xfs: remove iter_flags parameter from xfs_inode_walk_*
-      [f427cf5c6236] xfs: remove indirect calls from xfs_inode_walk{,_ag}
-      [d20d5edcf941] xfs: clean up inode state flag tests in xfs_blockgc_igrab
-      [594ab00b760f] xfs: make the icwalk processing functions clean up the grab state
-      [919a4ddb6841] xfs: fix radix tree tag signs
-      [9d5ee8375951] xfs: pass struct xfs_eofblocks to the inode scan callback
-      [f1bc5c5630f9] xfs: merge xfs_reclaim_inodes_ag into xfs_inode_walk_ag
-      [c076ae7a9361] xfs: refactor per-AG inode tagging functions
-      [ebf2e3372332] Merge tag 'xfs-buf-bulk-alloc-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.14-merge2
-      [c3eabd365034] Merge tag 'xfs-perag-conv-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.14-merge2
-      [f52edf6c54d9] Merge tag 'unit-conversion-cleanups-5.14_2021-06-03' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
-      [8b943d21d40d] Merge tag 'assorted-fixes-5.14-1_2021-06-03' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
-      [ffc18582ed18] Merge tag 'inode-walk-cleanups-5.14_2021-06-03' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
-      [255794c7ed7a] xfs: only reset incore inode health state flags when reclaiming an inode
-      [7975e465af6b] xfs: drop IDONTCACHE on inodes when we mark them sick
-      [2d53f66baffd] xfs: change the prefix of XFS_EOF_FLAGS_* to XFS_ICWALK_FLAG_
-      [9492750a8b18] xfs: selectively keep sick inodes in memory
-      [b26b2bf14f82] xfs: rename struct xfs_eofblocks to xfs_icwalk
-      [295abff2fb94] Merge tag 'fix-inode-health-reports-5.14_2021-06-08' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
-      [68b2c8bcdb81] Merge tag 'rename-eofblocks-5.14_2021-06-08' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
-      [7e4311b04be4] Merge tag 'xfs-cil-scale-2-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.14-merge2-cil
+That all said, I still don't really see a need for a state bit here
+if we can stop the inode gc before we start the freeze process as
+via a xfs_fs_freeze_super() method.
 
-Dave Chinner (72):
-      [0a683794ace2] xfs: split up xfs_buf_allocate_memory
-      [07b5c5add42a] xfs: use xfs_buf_alloc_pages for uncached buffers
-      [c9fa563072e1] xfs: use alloc_pages_bulk_array() for buffers
-      [02c511738688] xfs: merge _xfs_buf_get_pages()
-      [e7d236a6fe51] xfs: move page freeing into _xfs_buf_free_pages()
-      [9bbafc71919a] xfs: move xfs_perag_get/put to xfs_ag.[ch]
-      [61aa005a5bd7] xfs: prepare for moving perag definitions and support to libxfs
-      [07b6403a6873] xfs: move perag structure and setup to libxfs/xfs_ag.[ch]
-      [f250eedcf762] xfs: make for_each_perag... a first class citizen
-      [934933c3eec9] xfs: convert raw ag walks to use for_each_perag
-      [6f4118fc6482] xfs: convert xfs_iwalk to use perag references
-      [7f8d3b3ca6fe] xfs: convert secondary superblock walk to use perags
-      [45d066211756] xfs: pass perags through to the busy extent code
-      [30933120ad79] xfs: push perags through the ag reservation callouts
-      [58d43a7e3263] xfs: pass perags around in fsmap data dev functions
-      [be9fb17d88f0] xfs: add a perag to the btree cursor
-      [fa9c3c197329] xfs: convert rmap btree cursor to using a perag
-      [a81a06211fb4] xfs: convert refcount btree cursor to use perags
-      [289d38d22cd8] xfs: convert allocbt cursors to use perags
-      [7b13c5155182] xfs: use perag for ialloc btree cursors
-      [50f02fe3338d] xfs: remove agno from btree cursor
-      [4268547305c9] xfs: simplify xfs_dialloc_select_ag() return values
-      [89b1f55a2951] xfs: collapse AG selection for inode allocation
-      [b652afd93703] xfs: get rid of xfs_dir_ialloc()
-      [309161f6603c] xfs: inode allocation can use a single perag instance
-      [8237fbf53d6f] xfs: clean up and simplify xfs_dialloc()
-      [f40aadb2bb64] xfs: use perag through unlink processing
-      [509201163fca] xfs: remove xfs_perag_t
-      [977ec4ddf0b7] xfs: don't take a spinlock unconditionally in the DIO fastpath
-      [7660a5b48fbe] xfs: log stripe roundoff is a property of the log
-      [5fd9256ce156] xfs: separate CIL commit record IO
-      [944f2c49fba1] xfs: remove xfs_blkdev_issue_flush
-      [db7e30204e4c] xfs: async blkdev cache flush
-      [0279bbbbc03f] xfs: CIL checkpoint flushes caches unconditionally
-      [69d51e0e1686] xfs: remove need_start_rec parameter from xlog_write()
-      [cb1acb3f3246] xfs: journal IO cache flush reductions
-      [3682277520d6] xfs: Fix CIL throttle hang when CIL space used going backwards
-      [f39ae5297c5c] xfs: xfs_log_force_lsn isn't passed a LSN
-      [e12213ba5d90] xfs: AIL needs asynchronous CIL forcing
-      [facd77e4e38b] xfs: CIL work is serialised, not pipelined
-      [877cf3473914] xfs: factor out the CIL transaction header building
-      [fa55689e031e] xfs: only CIL pushes require a start record
-      [58adbf5268b1] xfs: embed the xlog_op_header in the unmount record
-      [1d4f4b375658] xfs: embed the xlog_op_header in the commit record
-      [58e54b5e5dcc] xfs: log tickets don't need log client id
-      [695385a4aa76] xfs: move log iovec alignment to preparation function
-      [b424a7fd981d] xfs: reserve space and initialise xlog_op_header in item formatting
-      [b61901c58324] xfs: log ticket region debug is largely useless
-      [66fc9ffa8638] xfs: pass lv chain length into xlog_write()
-      [a8b8e1c74ea7] xfs: introduce xlog_write_single()
-      [586359999f40] xfs:_introduce xlog_write_partial()
-      [46eb52d3150c] xfs: xlog_write() no longer needs contwr state
-      [9373dd073625] xfs: xlog_write() doesn't need optype anymore
-      [5e5591ab632a] xfs: CIL context doesn't need to count iovecs
-      [0d11bae4bcf4] xfs: use the CIL space used counter for emptiness checks
-      [230b4cc9c9cc] xfs: lift init CIL reservation out of xc_cil_lock
-      [153bd5b5cd98] xfs: rework per-iclog header CIL reservation
-      [289ae7b48c2c] xfs: get rid of xb_to_gfp()
-      [8bcac7448a94] xfs: merge xfs_buf_allocate_memory
-      [abb480858143] xfs: introduce CPU hotplug infrastructure
-      [0e4c3e0ee4fd] xfs: introduce per-cpu CIL tracking structure
-      [a8613836d99e] xfs: implement percpu cil space used calculation
-      [57edd3f6599e] xfs: track CIL ticket reservation in percpu structure
-      [7f3b7c463f00] xfs: convert CIL busy extents to per-cpu
-      [be05dd0e68ac] xfs: Add order IDs to log items in CIL
-      [1f18c0c4b78c] xfs: convert CIL to unordered per cpu lists
-      [a47518453bf9] xfs: convert log vector chain to use list heads
-      [a1785f597c8b] xfs: move CIL ordering to the logvec chain
-      [02f1473ded55] xfs: avoid cil push lock if possible
-      [e469cbe84f4a] xfs: xlog_sync() manually adjusts grant head space
-      [7017b129e69c] xfs: expanding delayed logging design with background material
-      [9ba0889e2272] xfs: drop the AGI being passed to xfs_check_agi_freecount
+(and that's freeze done...)
 
-Jiapeng Chong (1):
-      [9673261c32dc] xfs: Remove redundant assignment to busy
+> > > @@ -947,6 +963,7 @@ xfs_mountfs(
+> > >  	 * qm_unmount_quotas and therefore rely on qm_unmount to release the
+> > >  	 * quota inodes.
+> > >  	 */
+> > > +	xfs_inodegc_flush(mp);
+> > >  	xfs_unmount_flush_inodes(mp);
+> > 
+> > Why isn't xfs_inodegc_flush() part of xfs_unmount_flush_inodes()?
+> > Because, really, xfs_unmount_flush_inodes() depends on all the
+> > inodes first being inactivated so that all transactions on inodes
+> > are complete....
+> 
+> The teardown sequence is not the same between a regular unmount and an
+> aborted mount...
+> 
+> > >   out_log_dealloc:
+> > >  	xfs_log_mount_cancel(mp);
+> > > @@ -983,6 +1000,12 @@ xfs_unmountfs(
+> > >  	uint64_t		resblks;
+> > >  	int			error;
+> > >  
+> > > +	/*
+> > > +	 * Flush all the queued inode inactivation work to disk before tearing
+> > > +	 * down rt metadata and quotas.
+> > > +	 */
+> > > +	xfs_inodegc_flush(mp);
+> > > +
+> > >  	xfs_blockgc_stop(mp);
+> > >  	xfs_fs_unreserve_ag_blocks(mp);
+> > >  	xfs_qm_unmount_quotas(mp);
+> > 
+> > FWIW, there's inconsistency in the order of operations between
+> > failure handling in xfs_mountfs() w.r.t. inode flushing and quotas
+> > vs what xfs_unmountfs() is now doing....
+> 
+> ...because during regular unmountfs, we want to inactivate inodes while
+> we still have a per-ag reservation protecting finobt expansions.  During
+> an aborted mount, we don't necessarily have the reservation set up but
+> we have to clean everything out, so the inodegc flush comes much later.
+> 
+> It's convoluted, but do you want me to clean /that/ up too?  That's a
+> pretty heavy lift; I already tried to fix those two paths, ran out of
+> brain cells, and gave up.
 
-Shaokun Zhang (1):
-      [5f7fd7508620] xfs: sort variable alphabetically to avoid repeated declaration
+No, I was just noting that they are different and there was no clear
+explaination of why. A comment explaining the difference is really
+all I am looking for here...
 
+(and now df vs unlink....)
 
-Code Diffstat:
+> > > @@ -80,4 +80,37 @@ int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
+> > >  void xfs_blockgc_stop(struct xfs_mount *mp);
+> > >  void xfs_blockgc_start(struct xfs_mount *mp);
+> > >  
+> > > +void xfs_inodegc_worker(struct work_struct *work);
+> > > +void xfs_inodegc_flush(struct xfs_mount *mp);
+> > > +void xfs_inodegc_stop(struct xfs_mount *mp);
+> > > +void xfs_inodegc_start(struct xfs_mount *mp);
+> > > +int xfs_inodegc_free_space(struct xfs_mount *mp, struct xfs_icwalk *icw);
+> > > +
+> > > +/*
+> > > + * Process all pending inode inactivations immediately (sort of) so that a
+> > > + * resource usage report will be mostly accurate with regards to files that
+> > > + * have been unlinked recently.
+> > > + *
+> > > + * It isn't practical to maintain a count of the resources used by unlinked
+> > > + * inodes to adjust the values reported by this function.  Resources that are
+> > > + * shared (e.g. reflink) when an inode is queued for inactivation cannot be
+> > > + * counted towards the adjustment, and cross referencing data extents with the
+> > > + * refcount btree is the only way to decide if a resource is shared.  Worse,
+> > > + * unsharing of any data blocks in the system requires either a second
+> > > + * consultation with the refcount btree, or training users to deal with the
+> > > + * free space counts possibly fluctuating upwards as inactivations occur.
+> > > + *
+> > > + * Hence we guard the inactivation flush with a ratelimiter so that the counts
+> > > + * are not way out of whack while ignoring workloads that hammer us with statfs
+> > > + * calls.  Once per clock tick seems frequent enough to avoid complaints about
+> > > + * inaccurate counts.
+> > > + */
+> > > +static inline void
+> > > +xfs_inodegc_summary_flush(
+> > > +	struct xfs_mount	*mp)
+> > > +{
+> > > +	if (__ratelimit(&mp->m_inodegc_ratelimit))
+> > > +		xfs_inodegc_flush(mp);
+> > > +}
+> > 
+> > ONce per clock tick is still quite fast - once a millisecond on a
+> > 1000Hz kernel. I'd prefer that we use a known timer base for this
+> > sort of thing, not something that changes with kernel config. Every
+> > 100ms, perhaps?
+> 
+> I tried a number of ratelimit values here: 1ms, 4ms, 10ms, 100ms, 500ms,
+> 2s, and 15s.  fstests and most everything else seemed to act the same up
+> to 10ms.  At 100ms, the tests that delete something and immediately run
+> df will start to fail, and above that all hell breaks loose because many
+> tests (from which I extrapolate most programmers) expect that statfs
+> won't run until unlink has deleted everything.
 
- .../filesystems/xfs-delayed-logging-design.rst     |  361 ++++++-
- fs/xfs/libxfs/xfs_ag.c                             |  273 ++++-
- fs/xfs/libxfs/xfs_ag.h                             |  136 +++
- fs/xfs/libxfs/xfs_ag_resv.c                        |   11 +-
- fs/xfs/libxfs/xfs_ag_resv.h                        |   15 +
- fs/xfs/libxfs/xfs_alloc.c                          |  111 +-
- fs/xfs/libxfs/xfs_alloc.h                          |    2 +-
- fs/xfs/libxfs/xfs_alloc_btree.c                    |   31 +-
- fs/xfs/libxfs/xfs_alloc_btree.h                    |    9 +-
- fs/xfs/libxfs/xfs_attr_leaf.c                      |    1 +
- fs/xfs/libxfs/xfs_bmap.c                           |    3 +-
- fs/xfs/libxfs/xfs_bmap.h                           |    1 -
- fs/xfs/libxfs/xfs_btree.c                          |   15 +-
- fs/xfs/libxfs/xfs_btree.h                          |   10 +-
- fs/xfs/libxfs/xfs_ialloc.c                         |  640 ++++++------
- fs/xfs/libxfs/xfs_ialloc.h                         |   40 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c                   |   46 +-
- fs/xfs/libxfs/xfs_ialloc_btree.h                   |   13 +-
- fs/xfs/libxfs/xfs_inode_buf.c                      |    2 +-
- fs/xfs/libxfs/xfs_log_format.h                     |    4 -
- fs/xfs/libxfs/xfs_refcount.c                       |  122 +--
- fs/xfs/libxfs/xfs_refcount.h                       |    9 +-
- fs/xfs/libxfs/xfs_refcount_btree.c                 |   39 +-
- fs/xfs/libxfs/xfs_refcount_btree.h                 |    7 +-
- fs/xfs/libxfs/xfs_rmap.c                           |  147 +--
- fs/xfs/libxfs/xfs_rmap.h                           |    6 +-
- fs/xfs/libxfs/xfs_rmap_btree.c                     |   46 +-
- fs/xfs/libxfs/xfs_rmap_btree.h                     |    6 +-
- fs/xfs/libxfs/xfs_sb.c                             |  146 +--
- fs/xfs/libxfs/xfs_sb.h                             |    9 -
- fs/xfs/libxfs/xfs_shared.h                         |   20 +-
- fs/xfs/libxfs/xfs_types.c                          |    4 +-
- fs/xfs/libxfs/xfs_types.h                          |    1 +
- fs/xfs/scrub/agheader.c                            |    1 +
- fs/xfs/scrub/agheader_repair.c                     |   33 +-
- fs/xfs/scrub/alloc.c                               |    3 +-
- fs/xfs/scrub/bmap.c                                |   21 +-
- fs/xfs/scrub/common.c                              |   15 +-
- fs/xfs/scrub/fscounters.c                          |   42 +-
- fs/xfs/scrub/health.c                              |    2 +-
- fs/xfs/scrub/ialloc.c                              |    9 +-
- fs/xfs/scrub/refcount.c                            |    3 +-
- fs/xfs/scrub/repair.c                              |   14 +-
- fs/xfs/scrub/rmap.c                                |    3 +-
- fs/xfs/scrub/trace.c                               |    3 +-
- fs/xfs/xfs_bio_io.c                                |   35 +
- fs/xfs/xfs_bmap_util.c                             |    6 +-
- fs/xfs/xfs_buf.c                                   |  309 +++---
- fs/xfs/xfs_buf.h                                   |    3 +-
- fs/xfs/xfs_buf_item.c                              |   39 +-
- fs/xfs/xfs_discard.c                               |    6 +-
- fs/xfs/xfs_dquot_item.c                            |    2 +-
- fs/xfs/xfs_extent_busy.c                           |   35 +-
- fs/xfs/xfs_extent_busy.h                           |    7 +-
- fs/xfs/xfs_file.c                                  |   70 +-
- fs/xfs/xfs_filestream.c                            |    2 +-
- fs/xfs/xfs_fsmap.c                                 |   80 +-
- fs/xfs/xfs_fsops.c                                 |    8 +-
- fs/xfs/xfs_health.c                                |   15 +-
- fs/xfs/xfs_icache.c                                |  980 ++++++++++--------
- fs/xfs/xfs_icache.h                                |   54 +-
- fs/xfs/xfs_inode.c                                 |  234 ++---
- fs/xfs/xfs_inode.h                                 |    9 +-
- fs/xfs/xfs_inode_item.c                            |   18 +-
- fs/xfs/xfs_inode_item.h                            |    2 +-
- fs/xfs/xfs_ioctl.c                                 |   41 +-
- fs/xfs/xfs_iops.c                                  |    4 +-
- fs/xfs/xfs_iwalk.c                                 |   84 +-
- fs/xfs/xfs_linux.h                                 |    2 +
- fs/xfs/xfs_log.c                                   | 1061 +++++++++-----------
- fs/xfs/xfs_log.h                                   |   66 +-
- fs/xfs/xfs_log_cil.c                               |  802 +++++++++++----
- fs/xfs/xfs_log_priv.h                              |  123 ++-
- fs/xfs/xfs_log_recover.c                           |   56 +-
- fs/xfs/xfs_mount.c                                 |  126 +--
- fs/xfs/xfs_mount.h                                 |  110 +-
- fs/xfs/xfs_qm.c                                    |   10 +-
- fs/xfs/xfs_qm.h                                    |    1 -
- fs/xfs/xfs_qm_syscalls.c                           |   54 +-
- fs/xfs/xfs_reflink.c                               |   13 +-
- fs/xfs/xfs_super.c                                 |   55 +-
- fs/xfs/xfs_super.h                                 |    1 -
- fs/xfs/xfs_symlink.c                               |    9 +-
- fs/xfs/xfs_sysfs.c                                 |    1 +
- fs/xfs/xfs_trace.c                                 |    3 +
- fs/xfs/xfs_trace.h                                 |   49 +-
- fs/xfs/xfs_trans.c                                 |   18 +-
- fs/xfs/xfs_trans.h                                 |    5 +-
- fs/xfs/xfs_trans_ail.c                             |   11 +-
- fs/xfs/xfs_trans_priv.h                            |    3 +-
- include/linux/cpuhotplug.h                         |    1 +
- 91 files changed, 3898 insertions(+), 3160 deletions(-)
+So the main problem I have with this is that it it blocks the caller
+until inactivation is done. For something that is supposed to be
+fast and non-blocking, this is a bad thing to do.
+
+The quota usage (called on every get/get_next syscall) is really the
+only one that should be called with any frequency - if anyone is
+calling statfs so fast that we have to rate limit gc flushes, then
+they aren't getting any useful information in the delta between
+calls a millisecond apart.
+
+Hence I suspect that flushes and/or rate limited flushes are not
+necessary at all here. Why not just deal with it like we do the
+inode flush at ENOSPC (i.e. xfs_flush_inodes())? i.e. we try to
+flush the work first, and if that returns true we waited on a flush
+already in progress and we don't need to do our own? Indeed, why
+aren't all the inodegc flushes done this way?
+
+For the quota case, I think doing a flush on the first get call
+would be sufficient - doing one for every "next" call doesn't make
+much sense, because we've already done a flush at the start of the
+dquot get walk. IOWs, we've done the work necessary for a point in
+time snapshot of the quota state that is largely consistent across
+all the quotas at the time the walk started. Hence I don't think we
+need to keep flushing over and over again....
+
+For fs_counts, it is non-blocking, best effort only.  The percpu
+counters are read, not summed, so they are inaccurate to begin with.
+Hence there's not need to flush inactivated inodes there becuse the
+counters are not guaranteed accurate. If we do need a flush, then
+just do it unconditionally because anyone calling this with
+extremely high frequency really isn't going to get anything useful
+from it.
+
+For statfs, we actually sum the percpu counters, so we should just
+flush the inodegc before this. If someone is calling statfs with
+high enough frequency that rate limiting inodegc flushes is actually
+needed, then they've already got substantial problems on large CPU
+count machines..
+
+Hence I think we should just have flushes where they are needed, and
+change the flush to block and return if a flush is already in
+progress rather than doing an entire new flush itself. That
+effectively rate limits the flushing, but doesn't prevent a flush
+when none has been done in a while due to ratelimit state...
+
+> > I suspect that's really going to hurt stat performance. I guess
+> > benchmarks are in order...
+> 
+> Ok, so here's the question I have: Does POSIX (or any other standard we
+> care to fit) actually define any behavior between the following
+> sequence:
+> 
+> unlink("/foo");	/* no sync calls of any kind */
+> statfs("/");
+
+None that I know of. the man page for statfs even says:
+
+"buf is a pointer to a statfs structure defined approximately as
+follows"
+
+so even the man page is extremely cagey about what is actually
+returned in the statfs buffer. Free space counters not being totally
+accurate at any specific point in time fits with the "approximately
+defined" behaviour description in the man page. As long as we do, in
+the near term, correct account for deferred operations, then we're
+all good.
+
+> As I've mentioned in the past, the only reason we need these inodegc
+> flushes for summary reporting is because users expect that if they
+> delete an unshared 10GB file, they can immediately df and see that the
+> inode count went down by one and free space went up by 10GB.
+> 
+> I /guess/ we could modify every single fstest to sync before checking
+> summary counts instead of doing this, but I bet there will be some users
+> who will be surprised that xfs now has *trfs df logic.
+
+If fstests needs accurate counters, it should use 'df --sync' and we
+should make sure that the syncfs implementation triggers a flush of
+inactive inodes before it returns. We don't have to guarantee that
+the inactivation is on stable storage, but it would make sense that
+we trigger background ops to get the free space accounting near to
+accurate...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
