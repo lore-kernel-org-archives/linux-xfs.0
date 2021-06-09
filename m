@@ -2,201 +2,150 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34C8EC48BCF
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 20:46:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33416C48BD1
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 22:04:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1597561359
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 20:46:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16D1D613F4
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Jun 2021 22:04:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229705AbhFIUst (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Jun 2021 16:48:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39624 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229639AbhFIUst (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Jun 2021 16:48:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 35A1A6128A;
-        Wed,  9 Jun 2021 20:46:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623271614;
-        bh=Zkng/w4oUhxjCzOgCOH4jlluKJDb5EBDF9eHHrM8uVI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Iz9hvQsRpeST0Cwh6VNR75rouUhp3c6dLifJGqc5s1Mo7RbrHfqvCjXlFq107kZKV
-         3dj5tSa4EYHecK5Uvwgr4dH5PeGu4eADG2kHoUzu750DVMu5cuYO5jKjomglnhUtkp
-         CPAssLjT1NB9GyAj8I1pbwLYYhUYUjeMKjN+pvv6Kfy8OW87M2FqaW69x1bQlHjXz5
-         Y5yJoAQc0pC01x0enM8L5z0rjTAeAYROdS6lFv+h9MZhUz4tjjWeLmhCeRiMOJuRa8
-         aZVE+PrwqYgNDWcrxUE0ByQbPJ4w4asXPuitHe9HMSRBa28nZ1dyuOUwpRnYf+oWkM
-         opSA4BjGKL9SQ==
-Date:   Wed, 9 Jun 2021 13:46:53 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
+        id S230190AbhFIWGJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Jun 2021 18:06:09 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58594 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229947AbhFIWGF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Jun 2021 18:06:05 -0400
+Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4D9608666C7;
+        Thu, 10 Jun 2021 08:03:51 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1lr6IV-00Av6o-PE; Thu, 10 Jun 2021 08:03:39 +1000
+Date:   Thu, 10 Jun 2021 08:03:39 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [GIT PULL v2] xfs: CIL and log scalability improvements
-Message-ID: <20210609204653.GZ2945738@locust>
-References: <20210608044340.GK664593@dread.disaster.area>
+Subject: Re: [GIT PULL] xfs: Delay Ready Attributes
+Message-ID: <20210609220339.GO664593@dread.disaster.area>
+References: <20210609194447.10600-1-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210608044340.GK664593@dread.disaster.area>
+In-Reply-To: <20210609194447.10600-1-allison.henderson@oracle.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
+        a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=7-415B0cAAAA:8
+        a=cmtwn1_pvDLKzlOutJsA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 08, 2021 at 02:43:40PM +1000, Dave Chinner wrote:
+On Wed, Jun 09, 2021 at 12:44:47PM -0700, Allison Henderson wrote:
 > Hi Darrick,
 > 
-> I've updated the branch and tag for the CIL and log scalability
-> improvements to fix the CPU hotplug bug that was in the previous
-> version. The code changes are limited to those, otherwise everything
-> else in the series is unchanged.
+> I've created a branch and tag for the delay ready attribute series.  I'ved
+> added the rvbs since the last review, but otherwise it is unchanged since
+> v20.
 > 
 > Please pull from the tag decsribed below.
 
-Pulled, thanks!
+Yay! At last! Good work, Allison. :)
 
---D
+Nothing to worry about here, but I thought I'd make an observation
+on the construction branches for pull requests seeing as pull
+request are becoming our way of saying "this code is ready to
+merge". 
 
+> Thanks!
+> Allison
 > 
-> Cheers,
+> The following changes since commit 0fe0bbe00a6fb77adf75085b7d06b71a830dd6f2:
 > 
-> Dave.
-> 
-> The following changes since commit d07f6ca923ea0927a1024dfccafc5b53b61cfecc:
-> 
->   Linux 5.13-rc2 (2021-05-16 15:27:44 -0700)
-> 
-> are available in the Git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-cil-scale-2-tag
-> 
-> for you to fetch changes up to 7017b129e69c1b451fa926f2cac507c4128608dc:
-> 
->   xfs: expanding delayed logging design with background material (2021-06-08 14:27:46 +1000)
-> 
-> ----------------------------------------------------------------
-> xfs: CIL and log scalability improvements
-> 
-> Performance improvements are largely documented in the change logs of the
-> individual patches. Headline numbers are an increase in transaction rate from
-> 700k commits/s to 1.7M commits/s, and a reduction in fua/flush operations by
-> 2-3 orders of magnitude on metadata heavy workloads that don't use fsync.
-> 
-> Summary of series:
-> 
-> Patches         Modifications
-> -------         -------------
-> 1-7:            log write FUA/FLUSH optimisations
-> 8:              bug fix
-> 9-11:           Async CIL pushes
-> 12-25:          xlog_write() rework
-> 26-39:          CIL commit scalability
-> 
-> The log write FUA/FLUSH optimisations reduce the number of cache flushes
-> required to flush the CIL to the journal. It extends the old pre-delayed logging
-> ordering semantics required by writing individual transactions to the iclogs out
-> to cover then CIL checkpoint transactions rather than individual writes to the
-> iclogs. In doing so, we reduce the cache flush requirements to once per CIL
-> checkpoint rather than once per iclog write.
-> 
-> The async CIL pushes fix a pipeline limitation that only allowed a single CIL
-> push to be processed at a time. This was causing CIL checkpoint writing to
-> become CPU bound as only a single CIL checkpoint could be pushed at a time. The
-> checkpoint pipleine was designed to allow multiple pushes to be in flight at
-> once and use careful ordering of the commit records to ensure correct recovery
-> order, but the workqueue implementation didn't allow concurrent works to be run.
-> The concurrent works now extend out to 4 CIL checkpoints running at a time,
-> hence removing the CPU usage limiations without introducing new lock contention
-> issues.
-> 
-> The xlog_write() rework is long overdue. The code is complex, difficult to
-> understand, full of tricky, subtle corner cases and just generally really hard
-> to modify. This patchset reworks the xlog_write() API to reduce the processing
-> overhead of writing out long log vector chains, and factors the xlog_write()
-> code into a simple, compact fast path along with a clearer slow path to handle
-> the complex cases.
-> 
-> The CIL commit scalability patchset removes spinlocks from the transaction
-> commit fast path. These spinlocks are the performance limiting bottleneck in the
-> transaction commit path, so we apply a variety of different techniques to do
-> either atomic. lockless or per-cpu updates of the CIL tracking structures during
-> commits. This greatly increases the throughput of the the transaction commit
-> engine, moving the contention point to the log space tracking algorithms after
-> doubling throughput on 32-way workloads.
-> 
-> ----------------------------------------------------------------
-> Dave Chinner (40):
->       xfs: log stripe roundoff is a property of the log
->       xfs: separate CIL commit record IO
->       xfs: remove xfs_blkdev_issue_flush
->       xfs: async blkdev cache flush
->       xfs: CIL checkpoint flushes caches unconditionally
->       xfs: remove need_start_rec parameter from xlog_write()
->       xfs: journal IO cache flush reductions
->       xfs: Fix CIL throttle hang when CIL space used going backwards
->       xfs: xfs_log_force_lsn isn't passed a LSN
->       xfs: AIL needs asynchronous CIL forcing
->       xfs: CIL work is serialised, not pipelined
->       xfs: factor out the CIL transaction header building
->       xfs: only CIL pushes require a start record
->       xfs: embed the xlog_op_header in the unmount record
->       xfs: embed the xlog_op_header in the commit record
->       xfs: log tickets don't need log client id
->       xfs: move log iovec alignment to preparation function
->       xfs: reserve space and initialise xlog_op_header in item formatting
->       xfs: log ticket region debug is largely useless
->       xfs: pass lv chain length into xlog_write()
->       xfs: introduce xlog_write_single()
->       xfs:_introduce xlog_write_partial()
->       xfs: xlog_write() no longer needs contwr state
->       xfs: xlog_write() doesn't need optype anymore
->       xfs: CIL context doesn't need to count iovecs
->       xfs: use the CIL space used counter for emptiness checks
->       xfs: lift init CIL reservation out of xc_cil_lock
->       xfs: rework per-iclog header CIL reservation
->       xfs: introduce CPU hotplug infrastructure
->       xfs: introduce per-cpu CIL tracking structure
->       xfs: implement percpu cil space used calculation
->       xfs: track CIL ticket reservation in percpu structure
->       xfs: convert CIL busy extents to per-cpu
->       xfs: Add order IDs to log items in CIL
->       xfs: convert CIL to unordered per cpu lists
->       xfs: convert log vector chain to use list heads
->       xfs: move CIL ordering to the logvec chain
->       xfs: avoid cil push lock if possible
->       xfs: xlog_sync() manually adjusts grant head space
->       xfs: expanding delayed logging design with background material
-> 
->  Documentation/filesystems/xfs-delayed-logging-design.rst |  361 ++++++++++++++++++++++++++----
->  fs/xfs/libxfs/xfs_log_format.h                           |    4 -
->  fs/xfs/libxfs/xfs_types.h                                |    1 +
->  fs/xfs/xfs_bio_io.c                                      |   35 +++
->  fs/xfs/xfs_buf.c                                         |    2 +-
->  fs/xfs/xfs_buf_item.c                                    |   39 ++--
->  fs/xfs/xfs_dquot_item.c                                  |    2 +-
->  fs/xfs/xfs_file.c                                        |   20 +-
->  fs/xfs/xfs_inode.c                                       |   10 +-
->  fs/xfs/xfs_inode_item.c                                  |   18 +-
->  fs/xfs/xfs_inode_item.h                                  |    2 +-
->  fs/xfs/xfs_linux.h                                       |    2 +
->  fs/xfs/xfs_log.c                                         | 1015 +++++++++++++++++++++++++++++++++++++++---------------------------------------------
->  fs/xfs/xfs_log.h                                         |   66 ++----
->  fs/xfs/xfs_log_cil.c                                     |  804 ++++++++++++++++++++++++++++++++++++++++++++++++------------------
->  fs/xfs/xfs_log_priv.h                                    |  123 ++++++-----
->  fs/xfs/xfs_super.c                                       |   52 ++++-
->  fs/xfs/xfs_super.h                                       |    1 -
->  fs/xfs/xfs_sysfs.c                                       |    1 +
->  fs/xfs/xfs_trace.c                                       |    1 +
->  fs/xfs/xfs_trans.c                                       |   18 +-
->  fs/xfs/xfs_trans.h                                       |    5 +-
->  fs/xfs/xfs_trans_ail.c                                   |   11 +-
->  fs/xfs/xfs_trans_priv.h                                  |    3 +-
->  include/linux/cpuhotplug.h                               |    1 +
->  25 files changed, 1632 insertions(+), 965 deletions(-)
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+>   xfs: bunmapi has unnecessary AG lock ordering issues (2021-05-27 08:11:24 -0700)
+
+This looks like it has been built on top of a specific commit in the
+linux-xfs tree - perhaps a for-next branch before all the most
+recent development branches have been merged in.
+
+The problem with doing this is that the for-next tree can rebase,
+which can leave your tree with orphaned commits that are no longer
+in the main development branch or upstream. While these commits
+are upstream now, this isn't an issue for this particular branch
+and pull request.
+
+i.e. if the recent rebase of the for-next branch rewrote the above
+commit, pulling this branch would cause all sorts of problems.
+
+So to avoid this sort of issue with pull requests, and to allow the
+maintainer (darrick) to be able to easily reformulate the for-next
+tree just by merging branches, pull requests should all come from a
+known upstream base. In the case of pull requests for the xfs tree,
+that known base is the master branch of the XFS tree.
+
+The only time that you wouldn't do this is when your work is
+dependent on some other set of fixes. Those fixes then need to be
+in a stable upstream branch somewhere, which you then merge into
+your own dev branch based on xfs/master and the put your own commits
+on top of. IOWs, you start your own branch with a merge commit...
+
+If you do this, you should note in the pull request that there are
+other branches merged into this pull request and where they came
+from. THat way the maintainer can determine if the branch is
+actually stable and will end up being merged upstream unchanged from
+it's current state.
+
+It is also nice to tell the maintainer that you've based the branch
+on a stable XFS commit ahead of the current master branch. This
+might be necessary because there's a dependency between multiple
+development branches that are being merged one at a time in seperate
+pull requests.
+
+In terms of workflow, what this means is that development is done on
+a xfs/master based branch. i.e. dev branches are built like this:
+
+$ git checkout -b dev-branch-1 xfs/master
+$ git merge remote/stable-dev-branch
+$ git merge local-dependent-dev-branch
+$ <apply all your changes>
+$ <build kernel and test>
+
+And for testing against the latest -rc (say 5.13-rc5) and for-next
+kernels you do:
+
+$ git checkout -b testing v5.13-rc5
+$ git merge xfs/for-next
+$ git merge dev-branch-1
+<resolve conflicts>
+$ git merge dev-branch-2
+<resolve conflicts>
+....
+$ git merge dev-branch-N
+<resolve conflicts>
+$ <build kernel and test>
+
+This means that each dev branch has all the correct dependencies
+built into it, and they can be pulled by anyone without perturbing
+their local tree for testing and review because they are all working
+on the same xfs/master branch as your branches are.
+
+This also means that the xfs/for-next tree can remain based on
+xfs/master and be reformulated against xfs/master in a repeatable
+manner. It just makes everything easier if all pull requests are
+sent from the same stable base commit...
+
+Anyway, this isn't an issue for this pull-req because it is based on
+a stable XFS commit in a branch based on xfs/master, but I thought
+it's worth pointing out the pitfalls of using random stable commits
+as the base for pull requests so everyone knows what they should be
+doing as it's not really documented anywhere. :)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
