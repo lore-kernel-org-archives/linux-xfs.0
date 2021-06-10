@@ -5,68 +5,68 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1CA6C47094
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Jun 2021 08:44:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72A3AC48BD1
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Jun 2021 08:44:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B8030613F5
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Jun 2021 08:44:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BD9D613BC
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Jun 2021 08:44:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229895AbhFJIqH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Jun 2021 04:46:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53766 "EHLO
+        id S230060AbhFJIqc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Jun 2021 04:46:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229770AbhFJIqG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Jun 2021 04:46:06 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 899EFC061574;
-        Thu, 10 Jun 2021 01:44:04 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id 11so607995plk.12;
-        Thu, 10 Jun 2021 01:44:04 -0700 (PDT)
+        with ESMTP id S229770AbhFJIqc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Jun 2021 04:46:32 -0400
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42AAAC061574;
+        Thu, 10 Jun 2021 01:44:20 -0700 (PDT)
+Received: by mail-pf1-x434.google.com with SMTP id z26so1024281pfj.5;
+        Thu, 10 Jun 2021 01:44:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=references:user-agent:from:to:cc:subject:in-reply-to:date
          :message-id:mime-version;
-        bh=ALx+Si3czxv+LUCp/D+y31vtK5zKs6u6wL6Wo4SmWcM=;
-        b=rj+RIC9VwqdUtWyhw9lOt1vKbM2bY3O3xqnA+zUMvjMiksC23jA9fkj+5MSdWLlwVC
-         Iosva913tG/j5LTOASMI9dfoAtJ1fBO2EWb+wikWRtM2HE2orN4mfF+G38hzl0Ihxqfh
-         dqBmLz1CkxTCL0IIuwpyVE7f1GzKWA5TniteYTvNkFLbv7XkPxVhXZn6CHO0rsSGGoe7
-         ECEMl/5ytcLpSqXVcNscEJwarO9Ey2IXvXcABy/QgMkUmsC/yr4vBJ0aqJXclZw8xqmg
-         ElrIXHw5jt7T6hQCax592DjDhXX4dBIGRoltHXwDIbeC4mqtkP6Y4b6YJwmoilzAcZ+Y
-         TGwg==
+        bh=lVsvKiiR7CxPrj5T7GKiZgcGE780r8EQFR9Wnscdrh8=;
+        b=F68Otecm9ecMAMQaK7J3XDPjrjoQVtHFe11iGnimWiyKl0vAV4bGKikrlTfPGxBR/p
+         hcLqSOxFwrwR3Nj2cCjHXbBI4b6sa4kIku/jPJBzelF727WTs3AEMFyN53AbqF+HaALy
+         gy9pzt6fAYpZxi6YyDF8TwpcENjicCJKDRe2lzIBaVsnhC54Z9b3f3h7ChKAUtIkpNrj
+         sPBEESh95diMN9vJaVYplKQXt2Ufbu0lgYALYdimSzwjYFbj4kmNa4OLIIr/+BmbAhP1
+         Ue6Xq0mqSOu1LOz5lEOkokHnU3+hJP+Bz+dgfUAmiZ+zX60aQrU9qYxSMc3Z3o9jufWI
+         lBFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:references:user-agent:from:to:cc:subject
          :in-reply-to:date:message-id:mime-version;
-        bh=ALx+Si3czxv+LUCp/D+y31vtK5zKs6u6wL6Wo4SmWcM=;
-        b=lgBvRZkFlPrDCcc3gfMcpjEbkmSXfB8fWWJRtZ6N+TbwcTukSG1VoAuZr+rLyBlkCv
-         JuG0WN4YMZ66hXg5GLZwMQRuoytV6fldADk/CIUfAxZiYA+4KhlWKVy0rAS2pXlmrhpa
-         LxhkNJ7TIKa9KiOZVBNNBOxl4SgBEdWRgzjvjojuKhH5dVS6Qk7G6VcusQImobs/Zygp
-         7rSaMU/j2Q6c+3JVBsxN5zgNMsxUDsWhsqQ/oacaubvKG+uCQ5xQx+rVoFBhvghnUZtp
-         yxFxwOlOsFn4wOIrbKR7bkf8UDONVdZ40Z6xjomrvicunUlbKUrIx6mITzHJq6R5brlu
-         lHlw==
-X-Gm-Message-State: AOAM531uBoDv833yRM7fowLQWdNYpgCoAVMR6/aBttmty22X5+TbJWM/
-        lzhRvEX10dlfyba3AIB3kk0=
-X-Google-Smtp-Source: ABdhPJzlQPdkI1QTBte1L7ePFdyE7TRSZjhiZlUHqvMWitcOFomQgcRpvWsCVH+0vmknPMzEO1ggVw==
-X-Received: by 2002:a17:902:d4c8:b029:102:715b:e3a5 with SMTP id o8-20020a170902d4c8b0290102715be3a5mr3762919plg.83.1623314644151;
-        Thu, 10 Jun 2021 01:44:04 -0700 (PDT)
+        bh=lVsvKiiR7CxPrj5T7GKiZgcGE780r8EQFR9Wnscdrh8=;
+        b=tyD/GkYTyWpiWud4+6885A3iysXXj0J8paq57SoU0/u3lPOAqKM8qQG5Wu+7YDIASi
+         /oXYsuBObw22Co1xTQuYMKnMqyf+w63QwOrRC0oa0R5CSHQTF3SZ1fLWz31MmGKkazDt
+         QPrOp6xQqLTvKj39DLhiPruZRNe06diqnixU9ZGogMBDu+Xw4hv8AhkKt1gq5HxsU+KH
+         wLrOCIfHVMkdaac2Ba4jqp6cS0tlO+wA8WwyDcdczMmEh2FAcUua5cJjsIwCmmPKLcWk
+         fm5Fh7crXmiKrlMDudkkB6IU1620MniV5XCAjIFuF45bP0ZtvqbKaZ4rE2r9e8i8JY7R
+         9Ocw==
+X-Gm-Message-State: AOAM5314+hpZqWFAv/O1cDiOWon53LIIB6jddhKUeFL6abWd50tzNlgA
+        CPbzeKDDrA5sdSuv8TzpEAk=
+X-Google-Smtp-Source: ABdhPJwcIPjZGC7tuqr0zBxM8csanMZV5+yNt6ITjdIPG3s/Qm3kSrzcJ+KBLDEkKU/Std8+2wEllQ==
+X-Received: by 2002:a63:d403:: with SMTP id a3mr3962421pgh.175.1623314659893;
+        Thu, 10 Jun 2021 01:44:19 -0700 (PDT)
 Received: from garuda ([122.171.171.192])
-        by smtp.gmail.com with ESMTPSA id d23sm7088636pjz.15.2021.06.10.01.44.01
+        by smtp.gmail.com with ESMTPSA id d15sm1762151pfd.35.2021.06.10.01.44.17
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 10 Jun 2021 01:44:03 -0700 (PDT)
-References: <162317276202.653489.13006238543620278716.stgit@locust> <162317277866.653489.1612159248973350500.stgit@locust>
+        Thu, 10 Jun 2021 01:44:19 -0700 (PDT)
+References: <162317276202.653489.13006238543620278716.stgit@locust> <162317278412.653489.8220326541398463657.stgit@locust>
 User-agent: mu4e 1.0; emacs 26.1
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me, amir73il@gmail.com,
         ebiggers@kernel.org
-Subject: Re: [PATCH 03/13] fstests: refactor test boilerplate code
-In-reply-to: <162317277866.653489.1612159248973350500.stgit@locust>
-Date:   Thu, 10 Jun 2021 14:14:00 +0530
-Message-ID: <87wnr2p0rz.fsf@garuda>
+Subject: Re: [PATCH 04/13] fstests: add tool migrate group membership data to test files
+In-reply-to: <162317278412.653489.8220326541398463657.stgit@locust>
+Date:   Thu, 10 Jun 2021 14:14:16 +0530
+Message-ID: <87v96mp0rj.fsf@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
@@ -76,127 +76,160 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 08 Jun 2021 at 22:49, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 >
-> Create two new helper functions to deal with boilerplate test code:
->
-> A helper function to set the seq and seqnum variables.  We will expand
-> on this in the next patch so that fstests can autogenerate group files
-> from now on.
->
-> A helper function to register cleanup code that will run if the test
-> exits or trips over a standard range of signals.
+> Create a tool to migrate the mapping of tests <-> groups out of the
+> group file and into the individual test file as a _begin_fstest
+> call.  In the next patches we'll rewrite all the test files and auto
+> generate the group files from the tests.
 >
 
-Looks good to me.
+The code looks to be logically correct.
 
 Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  common/preamble |   49 +++++++++++++++++++++++++++++++++++++++++++++++++
->  new             |   33 ++++++++++++---------------------
->  2 files changed, 61 insertions(+), 21 deletions(-)
->  create mode 100644 common/preamble
+>  tools/convert-group |  131 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 131 insertions(+)
+>  create mode 100755 tools/convert-group
 >
 >
-> diff --git a/common/preamble b/common/preamble
-> new file mode 100644
-> index 00000000..63f66957
+> diff --git a/tools/convert-group b/tools/convert-group
+> new file mode 100755
+> index 00000000..42a99fe5
 > --- /dev/null
-> +++ b/common/preamble
-> @@ -0,0 +1,49 @@
+> +++ b/tools/convert-group
+> @@ -0,0 +1,131 @@
 > +#!/bin/bash
 > +# SPDX-License-Identifier: GPL-2.0
 > +# Copyright (c) 2021 Oracle.  All Rights Reserved.
 > +
-> +# Boilerplate fstests functionality
+> +# Move group tags from the groups file into the test files themselves.
 > +
-> +# Standard cleanup function.  Individual tests should override this.
-> +_cleanup()
+> +if [ -z "$1" ] || [ "$1" = "--help" ]; then
+> +	echo "Usage: $0 test_dir [test_dirs...]"
+> +	exit 1
+> +fi
+> +
+> +obliterate_group_file() {
+> +	sed -e 's/^#.*$//g' < group | while read test groups; do
+> +		if [ -z "$test" ]; then
+> +			continue;
+> +		elif [ ! -e "$test" ]; then
+> +			echo "Ignoring unknown test file \"$test\"."
+> +			continue
+> +		fi
+> +
+> +		# Replace all the open-coded test preparation code with a
+> +		# single call to _begin_fstest.
+> +		sed -e '/^seqres=\$RESULT_DIR\/\$seq$/d' \
+> +		    -e '/^seqres=\"\$RESULT_DIR\/\$seq\"$/d' \
+> +		    -e '/^echo "QA output created by \$seq"$/d' \
+> +		    -e '/^here=`pwd`$/d' \
+> +		    -e '/^here=\$(pwd)$/d' \
+> +		    -e '/^here=\$PWD$/d' \
+> +		    -e '/^here=\"`pwd`\"$/d' \
+> +		    -e '/^tmp=\/tmp\/\$\$$/d' \
+> +		    -e '/^status=1.*failure.*is.*the.*default/d' \
+> +		    -e '/^status=1.*FAILure.*is.*the.*default/d' \
+> +		    -e '/^status=1.*success.*is.*the.*default/d' \
+> +		    -e '/^status=1.*default.*failure/d' \
+> +		    -e '/^echo.*QA output created by.*seq/d' \
+> +		    -e '/^# remove previous \$seqres.full before test/d' \
+> +		    -e '/^rm -f \$seqres.full/d' \
+> +		    -e 's|^# get standard environment, filters and checks|# Import common functions.|g' \
+> +		    -e '/^\. \.\/common\/rc/d' \
+> +		    -e '/^\. common\/rc/d' \
+> +		    -e 's|^seq=.*$|. ./common/preamble\n_begin_fstest '"$groups"'|g' \
+> +		    -i "$test"
+> +
+> +		# Replace the open-coded trap calls that register cleanup code
+> +		# with a call to _register_cleanup.
+> +		#
+> +		# For tests that registered empty-string cleanups or open-coded
+> +		# calls to remove $tmp files, remove the _register_cleanup
+> +		# calls entirely because the default _cleanup does that for us.
+> +		#
+> +		# For tests that now have a _register_cleanup call for the
+> +		# _cleanup function, remove the explicit call because
+> +		# _begin_fstest already registers that for us.
+> +		#
+> +		# For tests that override _cleanup, insert a comment noting
+> +		# that it is overriding the default, to match the ./new
+> +		# template.
+> +		sed -e 's|^trap "exit \\\$status" 0 1 2 3 15|_register_cleanup ""|g' \
+> +		    -e 's|^trap "\(.*\)[[:space:]]*; exit \\\$status" 0 1 2 3 15|_register_cleanup "\1"|g' \
+> +		    -e 's|^trap "\(.*\)[[:space:]]*; exit \\\$status" 1 2 3 15|_register_cleanup "\1"|g' \
+> +		    -e 's|^trap '"'"'\(.*\)[[:space:]]*; exit \$status'"'"' 0 1 2 3 15|_register_cleanup "\1"|g' \
+> +		    -e 's|^trap "\(.*\)[[:space:]]*; exit \\\$status" 0 1 2 3 7 15|_register_cleanup "\1" BUS|g' \
+> +		    -e 's|^_register_cleanup "[[:space:]]*\([^[:space:]]*\)[[:space:]]*"|_register_cleanup "\1"|g' \
+> +		    -e '/^_register_cleanup ""$/d' \
+> +		    -e '/^_register_cleanup "rm -f \$tmp.*"$/d' \
+> +		    -e '/^_register_cleanup "_cleanup"$/d' \
+> +		    -e 's|^_cleanup()|# Override the default cleanup function.\n_cleanup()|g' \
+> +		    -i "$test"
+> +
+> +		# If the test doesn't import any common functionality,
+> +		# get rid of the pointless comment.
+> +		if ! grep -q '^\. .*common' "$test"; then
+> +			sed -e '/^# Import common functions.$/d' -i "$test"
+> +		fi
+> +
+> +		# Replace the "status=1" lines that don't have the usual
+> +		# "failure is the default" message if there's no other code
+> +		# between _begin_fstest and status=1.
+> +		if grep -q '^status=1$' "$test"; then
+> +			awk '
+> +BEGIN {
+> +	saw_groupinfo = 0;
+> +}
 > +{
-> +	cd /
-> +	rm -f $tmp.*
+> +	if ($0 ~ /^_begin_fstest/) {
+> +		saw_groupinfo = 1;
+> +		printf("%s\n", $0);
+> +	} else if ($0 ~ /^status=1$/) {
+> +		if (saw_groupinfo == 0) {
+> +			printf("%s\n", $0);
+> +		}
+> +	} else if ($0 == "") {
+> +		printf("\n");
+> +	} else {
+> +		saw_groupinfo = 0;
+> +		printf("%s\n", $0);
+> +	}
+> +}
+> +' < "$test" > "$test.new"
+> +			cat "$test.new" > "$test"
+> +			rm -f "$test.new"
+> +		fi
+> +
+> +		# Collapse sequences of blank lines to a single blank line.
+> +		awk '
+> +BEGIN {
+> +	saw_blank = 0;
+> +}
+> +{
+> +	if ($0 ~ /^$/) {
+> +		if (saw_blank == 0) {
+> +			printf("\n");
+> +			saw_blank = 1;
+> +		}
+> +	} else {
+> +		printf("%s\n", $0);
+> +		saw_blank = 0;
+> +	}
+> +}
+> +' < "$test" > "$test.new"
+> +		cat "$test.new" > "$test"
+> +		rm -f "$test.new"
+> +	done
 > +}
 > +
-> +# Install the supplied cleanup code as a signal handler for HUP, INT, QUIT,
-> +# TERM, or when the test exits.  Extra signals can be specified as subsequent
-> +# parameters.
-> +_register_cleanup()
-> +{
-> +	local cleanup="$1"
-> +	shift
-> +
-> +	test -n "$cleanup" && cleanup="${cleanup}; "
-> +	trap "${cleanup}exit \$status" EXIT HUP INT QUIT TERM $*
-> +}
-> +# Initialize the global seq, seqres, here, tmp, and status variables to their
-> +# defaults.  Group memberships are the only arguments to this helper.
-> +_begin_fstest()
-> +{
-> +	if [ -n "$seq" ]; then
-> +		echo "_begin_fstest can only be called once!"
-> +		exit 1
-> +	fi
-> +
-> +	seq=`basename $0`
-> +	seqres=$RESULT_DIR/$seq
-> +	echo "QA output created by $seq"
-> +
-> +	here=`pwd`
-> +	tmp=/tmp/$$
-> +	status=1	# failure is the default!
-> +
-> +	_register_cleanup _cleanup
-> +
-> +	. ./common/rc
-> +
-> +	# remove previous $seqres.full before test
-> +	rm -f $seqres.full
-> +
-> +}
-> diff --git a/new b/new
-> index 357983d9..16e7c782 100755
-> --- a/new
-> +++ b/new
-> @@ -153,27 +153,18 @@ cat <<End-of-File >$tdir/$id
->  #
->  # what am I here for?
->  #
-> -seq=\`basename \$0\`
-> -seqres=\$RESULT_DIR/\$seq
-> -echo "QA output created by \$seq"
-> -
-> -here=\`pwd\`
-> -tmp=/tmp/\$\$
-> -status=1	# failure is the default!
-> -trap "_cleanup; exit \\\$status" 0 1 2 3 15
-> -
-> -_cleanup()
-> -{
-> -	cd /
-> -	rm -f \$tmp.*
-> -}
-> -
-> -# get standard environment, filters and checks
-> -. ./common/rc
-> -. ./common/filter
-> -
-> -# remove previous \$seqres.full before test
-> -rm -f \$seqres.full
-> +. ./common/preamble
-> +_begin_fstest group list here
-> +
-> +# Override the default cleanup function.
-> +# _cleanup()
-> +# {
-> +# 	cd /
-> +# 	rm -f \$tmp.*
-> +# }
-> +
-> +# Import common functions.
-> +# . ./common/filter
->  
->  # real QA test starts here
->  
+> +curr_dir="$PWD"
+> +for tdir in "$@"; do
+> +	cd "tests/$tdir"
+> +	obliterate_group_file
+> +	cd "$curr_dir"
+> +done
 
 
 -- 
