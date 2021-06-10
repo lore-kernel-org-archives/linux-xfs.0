@@ -2,121 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D4A9C48BD1
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Jun 2021 08:57:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45FD2C48BE5
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Jun 2021 09:07:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E041A613F1
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Jun 2021 08:57:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2960861406
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Jun 2021 09:07:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230184AbhFJI7t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Jun 2021 04:59:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56776 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229943AbhFJI7s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Jun 2021 04:59:48 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 148BDC061574;
-        Thu, 10 Jun 2021 01:57:53 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id md2-20020a17090b23c2b029016de4440381so3411012pjb.1;
-        Thu, 10 Jun 2021 01:57:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=references:user-agent:from:to:cc:subject:in-reply-to:date
-         :message-id:mime-version;
-        bh=ijWZr6HXHyIcQWn5sH05q8yu47bOscUp5VhIIoB/qUI=;
-        b=jJG8ndrRtefLijwy87Q438NPh0jliDP/q3liBUoLkVYyzttfDudX2xnxyyavuWYP48
-         cj1Cs7daQuY7R0b+Q5ouu436bVfCxjUoAXLGu2v+UEAy62JfMhw5FGOzUB9pvJfgGvFV
-         qTF4FL9bAV2unbEu5UCDhJ9ogDQbbM6m0X9PFQxGW+NdmnSKHjp9ubL8rpac/elHGBQO
-         HwuiFczrtoWsNpIIoGp72CVRA5t5/N6ppa9mEzJYs51vOI/PeE5DCIfxi72dEE246nIS
-         wD/h6a+Ss2kMMHCUh+oGdD2pVg84uw/NU6tjLlroIva3Td+B8x2oh7nbriLHhBX0gAr5
-         moZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject
-         :in-reply-to:date:message-id:mime-version;
-        bh=ijWZr6HXHyIcQWn5sH05q8yu47bOscUp5VhIIoB/qUI=;
-        b=gZKCqCidapb0RKmpSaOC365XiIbQQRHkot1mEjwGF3ZOOKOrSvpr5hF5LSC2IGTzZ/
-         S+Jp7a+mVI050Nqnm3XAXdDwEBjll6zqwzKYyV2SQrphL9pjgZSdiBjgPJMjzOb15nnQ
-         wktRjxIA3jsrFxLBvdPsy1/qkIje3F43EGWMUzgyWZHcd3GN0Pn/DTc1IL23MUNtPoKB
-         D788kXrDXGIV96tCCOVI91k1j2NTt2opiy7jrMRgXM9NtGLDEcFpkqwKN0yBkhn9Kgqd
-         wb21kUqcmcuuouJKH+sMkT12YkklmgBETo2xADFpkSvqhLXytIyzKqQSioAjb+DMIGRL
-         ZUGw==
-X-Gm-Message-State: AOAM5320y51VdJY1u2ILPR2rr+IC9FULVUWeFI1Tzr4TZcLpbPNeQ1el
-        2gssevRheL2D11PvO1zKbZQ=
-X-Google-Smtp-Source: ABdhPJw74agagSohQPUJDaeCCsNd1D5MMcdD93LSVrrIs3c2mbR6der628jrKvnngN6PS8un7xq3qQ==
-X-Received: by 2002:a17:90a:8c14:: with SMTP id a20mr2278053pjo.167.1623315472589;
-        Thu, 10 Jun 2021 01:57:52 -0700 (PDT)
-Received: from garuda ([122.171.171.192])
-        by smtp.gmail.com with ESMTPSA id ep6sm7091441pjb.24.2021.06.10.01.57.50
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 10 Jun 2021 01:57:52 -0700 (PDT)
-References: <162317276202.653489.13006238543620278716.stgit@locust> <162317279504.653489.6631181052382825481.stgit@locust>
-User-agent: mu4e 1.0; emacs 26.1
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me, amir73il@gmail.com,
-        ebiggers@kernel.org
-Subject: Re: [PATCH 06/13] fstests: clean up open-coded golden output
-In-reply-to: <162317279504.653489.6631181052382825481.stgit@locust>
-Date:   Thu, 10 Jun 2021 14:27:48 +0530
-Message-ID: <87tum6p04z.fsf@garuda>
+        id S230190AbhFJJJC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Jun 2021 05:09:02 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:53851 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229770AbhFJJJB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Jun 2021 05:09:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1623316024;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=361/Mv7Fre9yzH+UkaH8Am6n4w1iJ449u+nGkGfSsgU=;
+        b=ERBgHfqneTUTF/izPs8m4bWArhZ/KsiUfWNCMTkhqaaS7Bm8BUQfFRZR1NCBBOWo2gLm6w
+        oJYrnnamOcm9JZsYXh0kiFRJ4KknRdYmv3A4Z4GsShDN//rGMbX/nL6sb1abG4gT1H0Wb/
+        BgDnq9YJc/OieuX+eC2FQWK+gcPgBHw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-581-5j4c0fCIN22TQ8P_CUs7aw-1; Thu, 10 Jun 2021 05:07:03 -0400
+X-MC-Unique: 5j4c0fCIN22TQ8P_CUs7aw-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BFD06185060A;
+        Thu, 10 Jun 2021 09:06:59 +0000 (UTC)
+Received: from T590 (ovpn-13-145.pek2.redhat.com [10.72.13.145])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0092660917;
+        Thu, 10 Jun 2021 09:06:46 +0000 (UTC)
+Date:   Thu, 10 Jun 2021 17:06:41 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>, ceph-devel@vger.kernel.org,
+        Chao Yu <yuchao0@huawei.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Johannes Thumshirn <jth@kernel.org>,
+        linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        Steve French <sfrench@samba.org>, Ted Tso <tytso@mit.edu>,
+        Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, Hugh Dickins <hughd@google.com>
+Subject: Re: [PATCH 01/14] mm: Fix comments mentioning i_mutex
+Message-ID: <YMHWIcbnLPW5AfiC@T590>
+References: <20210607144631.8717-1-jack@suse.cz>
+ <20210607145236.31852-1-jack@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210607145236.31852-1-jack@suse.cz>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 08 Jun 2021 at 22:49, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> Fix the handful of tests that open-coded 'QA output created by XXX'.
->
-
-Grep shows that the files modified by this patch are the only ones having open
-coded header in a *.out file. Hence,
-
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jun 07, 2021 at 04:52:11PM +0200, Jan Kara wrote:
+> inode->i_mutex has been replaced with inode->i_rwsem long ago. Fix
+> comments still mentioning i_mutex.
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Hugh Dickins <hughd@google.com>
+> Signed-off-by: Jan Kara <jack@suse.cz>
 > ---
->  tests/btrfs/006.out   |    2 +-
->  tests/btrfs/012.out   |    2 +-
->  tests/generic/184.out |    2 +-
->  3 files changed, 3 insertions(+), 3 deletions(-)
->
->
-> diff --git a/tests/btrfs/006.out b/tests/btrfs/006.out
-> index a9769721..b7f29f96 100644
-> --- a/tests/btrfs/006.out
-> +++ b/tests/btrfs/006.out
-> @@ -1,4 +1,4 @@
-> -== QA output created by 006
-> +QA output created by 006
->  == Set filesystem label to TestLabel.006
->  == Get filesystem label
->  TestLabel.006
-> diff --git a/tests/btrfs/012.out b/tests/btrfs/012.out
-> index 2a41e7e4..7aa5ae94 100644
-> --- a/tests/btrfs/012.out
-> +++ b/tests/btrfs/012.out
-> @@ -1 +1 @@
-> -== QA output created by 012
-> +QA output created by 012
-> diff --git a/tests/generic/184.out b/tests/generic/184.out
-> index 2d19691d..4c300543 100644
-> --- a/tests/generic/184.out
-> +++ b/tests/generic/184.out
-> @@ -1 +1 @@
-> -QA output created by 184 - silence is golden
-> +QA output created by 184
 
+...
 
---
-chandan
+> diff --git a/mm/rmap.c b/mm/rmap.c
+> index 693a610e181d..a35cbbbded0d 100644
+> --- a/mm/rmap.c
+> +++ b/mm/rmap.c
+> @@ -20,9 +20,9 @@
+>  /*
+>   * Lock ordering in mm:
+>   *
+> - * inode->i_mutex	(while writing or truncating, not reading or faulting)
+> + * inode->i_rwsem	(while writing or truncating, not reading or faulting)
+>   *   mm->mmap_lock
+> - *     page->flags PG_locked (lock_page)   * (see huegtlbfs below)
+> + *     page->flags PG_locked (lock_page)   * (see hugetlbfs below)
+>   *       hugetlbfs_i_mmap_rwsem_key (in huge_pmd_share)
+>   *         mapping->i_mmap_rwsem
+>   *           hugetlb_fault_mutex (hugetlbfs specific page fault mutex)
+> @@ -41,7 +41,7 @@
+>   *                             in arch-dependent flush_dcache_mmap_lock,
+>   *                             within bdi.wb->list_lock in __sync_single_inode)
+>   *
+> - * anon_vma->rwsem,mapping->i_mutex      (memory_failure, collect_procs_anon)
+> + * anon_vma->rwsem,mapping->i_mmap_rwsem   (memory_failure, collect_procs_anon)
+
+This one looks a typo.
+
+-- 
+Ming
+
