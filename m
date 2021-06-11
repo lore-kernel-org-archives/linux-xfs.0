@@ -8,62 +8,65 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC6A8C48BD1
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 06:57:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07092C4743D
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 07:50:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7672613AD
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 06:57:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E918960FF4
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 07:50:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230382AbhFKG7R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Jun 2021 02:59:17 -0400
-Received: from mail-pl1-f178.google.com ([209.85.214.178]:41928 "EHLO
-        mail-pl1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230272AbhFKG7L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Jun 2021 02:59:11 -0400
-Received: by mail-pl1-f178.google.com with SMTP id e1so2351594plh.8;
-        Thu, 10 Jun 2021 23:56:58 -0700 (PDT)
+        id S231558AbhFKHv7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Jun 2021 03:51:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49794 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231216AbhFKHv6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Jun 2021 03:51:58 -0400
+Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA913C061574;
+        Fri, 11 Jun 2021 00:50:00 -0700 (PDT)
+Received: by mail-pg1-x536.google.com with SMTP id t17so1796259pga.5;
+        Fri, 11 Jun 2021 00:50:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=references:user-agent:from:to:cc:subject:in-reply-to:date
          :message-id:mime-version;
-        bh=FGk0hkp4y7ReM7Ri7a+9GpX2Oq3xfzRymG2Aaw0k6Nc=;
-        b=fMpnKV+FcQktHGw2Jc6HrsTb2bdFrfS56COQRnMXDBwgdgqnAfilJJvmVtsVh0XmX5
-         C9wbIjfCD+3TzpzHKrgIx900jvu7F/NPtdC1VFIHJ9Q74IR3CRp8IF5EHFBaVoSDU6Fz
-         XLtAcm95P6UBSjc2x18GIsqxQP6/lVcjc6rA13HtzYOJXpUpCLylDK+xqhIu9YHUGZx/
-         zClaYXzOcT1yo5/L8NHnNW0/nR35MZSqDzYSEa8ePmhwe1hrKIBOa/qkH35xpHVE/iJ9
-         wnnDtL4ReSB8Ofj9UQpWSBzIQBVLH6Rk1VPNDYRBJGNGs8mmbe7hOuEbMBV6sVQlqc3T
-         HChg==
+        bh=XDQ7Y2LsbskU8VR11lnF8kU3uLMWTVdaleXRQTdHo0g=;
+        b=TZyAnpOMS67yK6El2csuZrnZ03w6lT+WIloObno/4TKyKzvOl1t95meioJrb7y70iW
+         42jdLtRpaMP71DGRDMMERDZL1BN0EOPLMCrV34gjqsZJlSvVCAJXsQrwOL/d6fYP28WQ
+         GMmK2dVo0W1rBPxabSMlll4vMr1LHD9y+pN4rNO67E+osLRDdxAB3nqFZGv3lZsXkzih
+         tlxEU9O/+O0s1W9WpZx0VbKC48q9i7K7vn9tpVrn1XOK4cCvPTB4HqKmJoJoXJ0Z0DMC
+         3WsEuwrf91agqdG5+0n2sLxgSpVMRY3ecZX4zhy04PkivaLAoRWl2vPvkt9gqjT0y3nl
+         BNyQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:references:user-agent:from:to:cc:subject
          :in-reply-to:date:message-id:mime-version;
-        bh=FGk0hkp4y7ReM7Ri7a+9GpX2Oq3xfzRymG2Aaw0k6Nc=;
-        b=BGarQoPc5qymgoS0WYgjCFwcSG4R5Rmu1rFTkOO+zxCRJkjo3AGuazXksiWkH1AaNc
-         03QAR1/PueQJCS6NRs2Io8hX4MTiqToc8qHglFDaOko2T6DdFxn1uXvXG72uSoMQ0+J7
-         rAstinig7RhJg6YUl2wRNAV4PCZRByqy96wbU0+ikA/I/bpNtfQfLJjW0bHsGEOQhffc
-         XBVRfuluFkciZOZfJeWhaqjB9FEsjZsoV+kZHCBFNKJpRuA0Hc+2o3ARPustZ6gaER8E
-         195VbyVs0B1ZcGVL3qzUNvb2Wvn18OudGhKNaPARu2QlHrk0yemP0G4+KHzCiWvXwM6V
-         wLHg==
-X-Gm-Message-State: AOAM533zIRQq45ZPbCmFo7tjmkIkXTU5ZwHPmG0PY2cxQ7F196cg2YeL
-        rAfMFcGyzw4QIG4mWPoqZOY=
-X-Google-Smtp-Source: ABdhPJy9DeFfmzdYWDZUqPWG4REVHVlmyB2Wz5SomWLVaS8hfpF5RUnoYJpJ/JcjgtggHNEtPaVgbQ==
-X-Received: by 2002:a17:90a:e409:: with SMTP id hv9mr7662551pjb.126.1623394558681;
-        Thu, 10 Jun 2021 23:55:58 -0700 (PDT)
+        bh=XDQ7Y2LsbskU8VR11lnF8kU3uLMWTVdaleXRQTdHo0g=;
+        b=FO8C3j/5pXBmmp7o/w/gnlKl7fpIC4yM6dHvtANzp/D47M48lAbW8VoHdUJ4qTmctC
+         LcKjH1w5xKMp0wYrxYT+7iN4cUc4qa6hS9rpbTP1QhkjvCgPskWwXJF8y9kbReGkynnU
+         vVFwGUtjxAfin6azjzhv3xgdztnhdaLhODH6TPv2aSysBoqqcuvFEoIKReSBUjHhzVDh
+         LXvd3zTK2/9COWI8EIHip9jUohWiDCsi3zAXZbzvrlMhDmCqaJDZypo540F9prYkvym9
+         Zz2tkHKKBca3T4/2Fu7oP1a7P/08/lmIJGg4NFqEg2Ov9vVJXN94o1q6CNrBixAAFhgv
+         qzxQ==
+X-Gm-Message-State: AOAM532z8xBniwLM40YnFIUcoTxJPMtShPzeG7OB7H0oy9m5R9kPDu2g
+        WfDJ74siAPgwGoRQnHJh3AA=
+X-Google-Smtp-Source: ABdhPJztyVgEQFfuhCBpxxPh/N//fWVEhzQDX2UutPGLd993ngNVqmI7nDXONbD8m6ri9rwwKZrflw==
+X-Received: by 2002:a63:be45:: with SMTP id g5mr2330356pgo.311.1623397800149;
+        Fri, 11 Jun 2021 00:50:00 -0700 (PDT)
 Received: from garuda ([171.61.74.194])
-        by smtp.gmail.com with ESMTPSA id p19sm9339249pjv.21.2021.06.10.23.55.56
+        by smtp.gmail.com with ESMTPSA id h21sm4130479pfv.190.2021.06.11.00.49.57
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 10 Jun 2021 23:55:58 -0700 (PDT)
-References: <162317276202.653489.13006238543620278716.stgit@locust> <162317281137.653489.16228043613270527911.stgit@locust>
+        Fri, 11 Jun 2021 00:49:59 -0700 (PDT)
+References: <162317276202.653489.13006238543620278716.stgit@locust> <162317281679.653489.1178774292862746443.stgit@locust>
 User-agent: mu4e 1.0; emacs 26.1
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me, amir73il@gmail.com,
         ebiggers@kernel.org
-Subject: Re: [PATCH 09/13] fstests: adapt the new test script to our new group tagging scheme
-In-reply-to: <162317281137.653489.16228043613270527911.stgit@locust>
-Date:   Fri, 11 Jun 2021 12:25:54 +0530
-Message-ID: <87tum43n5x.fsf@garuda>
+Subject: Re: [PATCH 10/13] check: use generated group files
+In-reply-to: <162317281679.653489.1178774292862746443.stgit@locust>
+Date:   Fri, 11 Jun 2021 13:19:56 +0530
+Message-ID: <87sg1o3knv.fsf@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
@@ -73,154 +76,46 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 08 Jun 2021 at 22:50, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 >
-> Now that we autogenerate group files, adapt the new test creation script
-> to use autogenerated group files and to set the group data in the new
-> test.
+> Convert the ./check script to use the automatically generated group list
+> membership files, as the transition is now complete.
 >
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  new |  179 ++++++++++++++++++++-----------------------------------------------
->  1 file changed, 54 insertions(+), 125 deletions(-)
->
->
-> diff --git a/new b/new
-> index 16e7c782..cdd909ad 100755
-> --- a/new
-> +++ b/new
-> @@ -9,7 +9,8 @@
->  iam=new
->  . ./common/test_names
->  
-> -trap "rm -f /tmp/$$.; exit" 0 1 2 3 15
-> +tmpfile="/tmp/$$."
-> +trap "rm -f $tmpfile; exit" 0 1 2 3 15
->  
->  _cleanup()
->  {
-> @@ -26,71 +27,18 @@ usage()
->  
->  [ $# -eq 0 ] && usage
->  tdir=tests/$1
-> -shift
-> -
-> -if [ ! -f $tdir/group ]
-> -then
-> -    echo "Creating the $tdir/group index ..."
-> -    cat <<'End-of-File' >$tdir/group
-> -# QA groups control
-> -#
-> -# define groups and default group owners
-> -# do not start group name with a digit
-> -#
-> -
-> -# catch-all
-> -#
-> -other		some-user-login
-> -
-> -# test-group association ... one line per test
-> -#
-> -End-of-File
-> -fi
-> -
-> -if [ ! -w $tdir/group ]
-> -then
-> -    chmod u+w $tdir/group
-> -    echo "Warning: making the index file \"$tdir/group\" writeable"
-> -fi
-> -
-> -if make
-> -then
-> -    :
-> -else
-> -    echo "Warning: make failed -- some tests may be missing"
-> -fi
->  
->  i=0
->  line=0
->  eof=1
-> -[ -f "$tdir/group" ] || usage
-> +[ -d "$tdir/" ] || usage
->  
->  export AWK_PROG="$(type -P awk)"
->  [ "$AWK_PROG" = "" ] && { echo "awk not found"; exit; }
->  
-> -for found in `cat $tdir/group | tr - ' ' | $AWK_PROG '{ print $1 }'`
-> -do
-> -    line=$((line+1))
-> -    if [ -z "$found" ] || [ "$found" == "#" ]; then
-> -        continue
-> -    elif ! echo "$found" | grep -q "^$VALID_TEST_NAME$"; then
-> -        # this one is for tests not named by a number
-> -        continue
-> -    fi
-> -    i=$((i+1))
-> -    id=`printf "%03d" $i`
-> -    if [ "$id" != "$found" ];then
-> -	eof=0
-> -	break
-> -    fi
-> -done
-> -if [ $eof -eq 1 ]; then
-> -   line=$((line+1))
-> -   i=$((i+1))
-> -   id=`printf "%03d" $i`
-> -fi
-> -
-> +id="$(basename "$(./tools/nextid "$1")")"
->  echo "Next test id is $id"
-> +shift
->  
->  read -p "Append a name to the ID? Test name will be $id-\$name. y,[n]: " -r
->  if [[ $REPLY = [Yy] ]]; then
-> @@ -113,24 +61,9 @@ if [[ $REPLY = [Yy] ]]; then
->  		fi
->  	done
->  
-> -	# now find where to insert this name
-> -	eof=1
-> -	for found in `tail -n +$line $tdir/group | $AWK_PROG '{ print $1 }'`; do
-> -		found_id=$(echo "$found" | cut -d "-" -f 1 - )
-> -		line=$((line+1))
-> -		if [ -z "$found" ] || [ "$found" == "#" ]; then
-> -			continue
-> -		elif [ $found_id -gt $id ]; then
-> -			eof=0
-> -			break
-> -		fi
-> -	done
-> -	if [ $eof -eq 0 ]; then
-> -		# If place wasn't found, let $line be the end of the file
-> -		line=$((line-1))
-> -	fi
->  	id="$id-$name"
->  fi
-> +
->  echo "Creating test file '$id'"
->  
->  if [ -f $tdir/$id ]
-> @@ -140,6 +73,53 @@ then
->      exit 1
->  fi
->  
-> +if [ $# -eq 0 ]
-> +then
-> +
-> +    while true
-> +    do
-> +	echo -n "Add to group(s) [other] (separate by space, ? for list): "
-> +	read ans
-> +	[ -z "$ans" ] && ans=other
-> +	if [ "X$ans" = "X?" ]
-> +	then
-> +	    for d in $SRC_GROUPS; do
-> +		(cd "tests/$d/" ; ../../tools/mkgroupfile "$tmpfile")
-> +		l=$(set -n < "$tmpfile" \
 
-The above should have been "sed" instead of "set".
-
-Apart from the above nit, the rest looks good to me.
+Looks good.
 
 Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  check |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+>
+> diff --git a/check b/check
+> index ba192042..3dab7630 100755
+> --- a/check
+> +++ b/check
+> @@ -124,9 +124,9 @@ get_sub_group_list()
+>  	local d=$1
+>  	local grp=$2
+>  
+> -	test -s "$SRC_DIR/$d/group" || return 1
+> +	test -s "$SRC_DIR/$d/group.list" || return 1
+>  
+> -	local grpl=$(sed -n < $SRC_DIR/$d/group \
+> +	local grpl=$(sed -n < $SRC_DIR/$d/group.list \
+>  		-e 's/#.*//' \
+>  		-e 's/$/ /' \
+>  		-e "s;^\($VALID_TEST_NAME\).* $grp .*;$SRC_DIR/$d/\1;p")
+> @@ -384,7 +384,7 @@ if $have_test_arg; then
+>  				test_dir=`dirname $t`
+>  				test_dir=${test_dir#$SRC_DIR/*}
+>  				test_name=`basename $t`
+> -				group_file=$SRC_DIR/$test_dir/group
+> +				group_file=$SRC_DIR/$test_dir/group.list
+>  
+>  				if egrep -q "^$test_name" $group_file; then
+>  					# in group file ... OK
+
 
 -- 
 chandan
