@@ -2,201 +2,458 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B222BC48BDF
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 00:57:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 049EEC48BE0
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 05:40:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8388461009
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 00:57:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D53266136D
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 05:40:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230233AbhFKA7R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Jun 2021 20:59:17 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:44658 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229578AbhFKA7R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Jun 2021 20:59:17 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 15B0nxiW029762;
-        Fri, 11 Jun 2021 00:57:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=pRWd1+ktbF0qi079cg3iptvtClg15aczex1JR8nQYRQ=;
- b=HzZxyY1B96s1fPXMqnXroTGN1IP7akMVRIehq22GmuOlfeKZwlIXKfoX1vn6gWHQZKsm
- 1Z9uhUwLkAAbol4dXLbwSOFuXJa9NPQ9CKR19oeyXTuQSLUXd9er/TiqJJQ6UMmvImxG
- L9/gMVzgFUPfwl3/p/z1xAcOJ0ULjGMqIhpczDpzdkgt7+awkZ9nycQTGgc2qjmiL87m
- Xh2ZPk6z28v0qVCR9lb0L8w3ZbghNwSs9fHH7C108Ojs457bqrRcmeVpLndU9qMKxFP0
- c5rD41Q0/QWe9/XAt3DBDcsgrvHkkbdFfrAHOoOm1sGwaE5yVcejxAOj7Uz9f+JerCzp tA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 39017nnbac-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Jun 2021 00:57:18 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 15B0oWb5174482;
-        Fri, 11 Jun 2021 00:57:17 GMT
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam08lp2046.outbound.protection.outlook.com [104.47.74.46])
-        by userp3030.oracle.com with ESMTP id 38yxcx38yy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Jun 2021 00:57:17 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=UJPysHp03p1QMEtyOG/PsEw4WSCohtqHNzRlNEPqpegvJG8Rox/qMPyXRlpDusQ/H+8EYGRdkkPBfgetbBfUfSPNpyWcNC2xuzub01EanCuhs4DM26WptGCWr0LyuF+GDShaqANeN8pxRM5kQXmczQ/ISayJHkVM8v540fwgQ617aJ4VCwN9i1rg8yvgL47cBheqE1dxAqwJ7+MNVxCh0A3ote2sJuvuDZtXDXgI/m+6Y+QMyBLVzcLrcubkVMVVnLf55+z22hVeDHGemAP0We6WShcudiFXjalRZZct2VMXofS2sp8XWQ+J0hlP6sRpg0n8e2XEQi9ykjg2XJ4yHg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pRWd1+ktbF0qi079cg3iptvtClg15aczex1JR8nQYRQ=;
- b=hkm1+6elgyvksVgPxLQSVhGWmZGQckKNOofp2lB0gUubOTsHiotA/08jOC06auwboTDahwHjOZ5g+PDTHcAhVwyDXVVVkazAvjWGMFUsGf0j2kjFmeSokEY9YJSaubOB67fkLn80WIg6pBHoMzgkiIodHE541lFNs/b4PYdg0LMhL1WS8fn0rUGIVGUZaFKZ65K3kEnExRRhoOdc/0d8xYLUV4ZFwmoV0A6NsdWQftClKdxbL99C6IQi7lhQjN6RKRUS1wUqpQ6hvdxbU+D+xsEDCmrGVtraYaJyfuBdjDWijwO+QoiIH30pcHtd0H+SzH6/5FS7MuzaMxcxXHAkzA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        id S230179AbhFKFmn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Jun 2021 01:42:43 -0400
+Received: from mail-pf1-f170.google.com ([209.85.210.170]:35565 "EHLO
+        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230001AbhFKFmn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Jun 2021 01:42:43 -0400
+Received: by mail-pf1-f170.google.com with SMTP id h12so3542987pfe.2;
+        Thu, 10 Jun 2021 22:40:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pRWd1+ktbF0qi079cg3iptvtClg15aczex1JR8nQYRQ=;
- b=kd+8uluWkyAa+9En2vmUovyQQ88A+JK+5eLqzO543kGS0q5bDLwjJvC8TMBnbzfT4RxOxrjaDrBHatrIjSg2xc4zSOsnwdI5fpvk/TrnVRedfFA/0x3pF4tLey4GStqrRlOUET65uNh2NLTUoF2eMykzXLOdmppD7RVvHD5BXHA=
-Authentication-Results: kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=none action=none header.from=oracle.com;
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by SJ0PR10MB4800.namprd10.prod.outlook.com (2603:10b6:a03:2da::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.24; Fri, 11 Jun
- 2021 00:57:15 +0000
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::a9c4:d124:3473:1728]) by BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::a9c4:d124:3473:1728%5]) with mapi id 15.20.4195.032; Fri, 11 Jun 2021
- 00:57:15 +0000
-Subject: Re: [PATCH] xfs: perag may be null in xfs_imap()
-To:     Dave Chinner <david@fromorbit.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
-References: <YMGuMliXClE/dz5y@mwanda>
- <20210610223747.GR664593@dread.disaster.area>
-From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <e375e2c9-5ebd-4430-e60a-11669f72da73@oracle.com>
-Date:   Thu, 10 Jun 2021 17:57:13 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
-In-Reply-To: <20210610223747.GR664593@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [67.1.210.54]
-X-ClientProxiedBy: BYAPR11CA0077.namprd11.prod.outlook.com
- (2603:10b6:a03:f4::18) To BY5PR10MB4306.namprd10.prod.outlook.com
- (2603:10b6:a03:211::7)
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=zCqwQfqD/T+jHHC7e8qOegy+rwTh1pkHb6sB5zA5ljM=;
+        b=Y5dvMoZ6C2bKRpaJVSoepD3mDxWUM95/eDIpRL6joAIn30gUtwkrKgaLqlZpOLt1GV
+         OsfHldamW7QXwy+aNPPn4xRcSWM+lfChLtlbm1AA4kJZduC6tGE2DyWlpeDtR0P+SVfK
+         tqPXaVfoVkzqkfOE7kug0JedLb1/5p02iob+Hd4y8IPkqy0mms3r05+UUBMIEsFgkFW0
+         m5KWdYv3/ndQG6hZ0gxTq+pAZwIx24YlZIfFMYLG7I3Erl3Ilh6VMnxh3mlHMpEF9gKp
+         y+3vsswco8bFmv8DfAxAs7LWxbIkKAcCVffh/6paQ+nChH+KCNw/pLGlVzBo5skz3TXY
+         KR6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=zCqwQfqD/T+jHHC7e8qOegy+rwTh1pkHb6sB5zA5ljM=;
+        b=nDyrYuZ5x6QO8lChz3H3qdVHKeuSi8B6lS3KBm8l9RlQAq/rUwiep5Z3/VI5P7EBJ1
+         Kp6vPvFvoebJu1wcvDZekg9zzxbXjKRXuv+9H6iLYk5YVDc2Qg6Jv2uq1nFn1sS44NZ1
+         1T5UV+nMV1XlEiF5f3BqQikPr+moIi9o58vVAVkHyfTA3MTW7+NbU0Holm2nGhg0hSpP
+         i4iMLT8sgmsE+4QEgowpIUMw4MrvsRDbCUZv2qLKsVz/JhJFGlmSYTKNICcUBwTDCnpR
+         uE5L8WryMPl0Kdh3rNyJumRulWUD2Ck3cKjMIqb8Z1cTDKy+SMgwL2CTP9WLcgO3QRxJ
+         m+Vg==
+X-Gm-Message-State: AOAM530CPs4aChYJNcmTjNWtMLljGoiKFtDyn+48DxWy3LRuKf+UFMj8
+        BSvNj/aZXt2U5wWrTGh3QF0=
+X-Google-Smtp-Source: ABdhPJyxi8g6Wy02Qc58G4wNToj2o2V7Japxv0iZ+EuuYRuQiEpqD3+1KjIwgXRb6MaqyfwzzFCFhw==
+X-Received: by 2002:aa7:96e3:0:b029:2ec:e8a1:3d66 with SMTP id i3-20020aa796e30000b02902ece8a13d66mr6530573pfq.79.1623389985837;
+        Thu, 10 Jun 2021 22:39:45 -0700 (PDT)
+Received: from garuda ([171.61.74.194])
+        by smtp.gmail.com with ESMTPSA id z8sm4436276pgi.94.2021.06.10.22.39.43
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 10 Jun 2021 22:39:45 -0700 (PDT)
+References: <162317276202.653489.13006238543620278716.stgit@locust> <162317280046.653489.3322406175723320960.stgit@locust>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me, amir73il@gmail.com,
+        ebiggers@kernel.org
+Subject: Re: [PATCH 07/13] fstests: automatically generate group files
+In-reply-to: <162317280046.653489.3322406175723320960.stgit@locust>
+Date:   Fri, 11 Jun 2021 11:09:41 +0530
+Message-ID: <87wnr12c4i.fsf@garuda>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.226] (67.1.210.54) by BYAPR11CA0077.namprd11.prod.outlook.com (2603:10b6:a03:f4::18) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.20 via Frontend Transport; Fri, 11 Jun 2021 00:57:14 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: e6adba7d-8342-4674-2fac-08d92c73da70
-X-MS-TrafficTypeDiagnostic: SJ0PR10MB4800:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SJ0PR10MB480039B76F68F358EB3D20C695349@SJ0PR10MB4800.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Ma6LoVWhVbjW04JRjBFx1hu49gDEjPEex+qX0m7TaHFmnNzaQ9UMXqbcoWtpH2fQcCSZI2Yg7LVD0qPH1CdOn9rC61g6pFuEfbRwoDKuK7vk+b0pF8ldfKzbn9AzhwEunF7E+cUTO62g3q/f+dhv4K7xT21WzmKRQ0Xkq5iHQ6sm/GzF6bbs+31q32ah6zbrvVkxDa9rWswJNe2F+cVGMBUlfS6ZswilcDQaOF8F6/wt0vA8PuKkCexuLd6/F3pOtWZJdbjbHS0Cgbs+thmffvUXFhYQy2ZPdQyPGOfPGcuF7lRw9Q79ltp8vpZ2tQGlhsQgz2aQWiU83EncbTAdct07DUW8TPs39Ty1ACptxolReHwnEbYIMAlFWDgrkqsT/JajSs5S1NRcp8ZlNVxH6r/v8Rs+Cdtk+x2e/APLyIvpdQKlXQTuZaKzEpMNXze0KVDBOPctEC0q5e6QPyyAV0WudUbNN53GzPtvzW0dpwk0Ek5kCa83yClRYp7cMAo5/1P6O4l6FuHF5HT4LN4vvh0da+3uVU3jCxR2xtbJAm+TI6Tf8b0KRFba9AMH356oXm12VYzPC+NQZkx0zzRjUS9dKMxoSQnNCaS4p1kqLFxtzbJdJWqqZiBjQIGHICQ1z0D4sx+KOX30ZrJdbK+FbnPyrio4ddDdsOidR7F7HLLFRvj9NP497+c5+dlt+Fr1bsf73BQxzfgDN1Xs6M7BVg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(376002)(396003)(39860400002)(136003)(366004)(478600001)(956004)(8676002)(31686004)(66476007)(66556008)(44832011)(2616005)(5660300002)(83380400001)(8936002)(66946007)(38350700002)(53546011)(16526019)(31696002)(26005)(110136005)(38100700002)(86362001)(16576012)(186003)(316002)(4326008)(36756003)(6486002)(6636002)(52116002)(2906002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?bld1eUx3ck4zRUh4V3Z2QnFwbTE3RXE2ODZpaUdER2djV2VDSzIxVkxlNVBm?=
- =?utf-8?B?MnRBSDhKMGtnbDlmdXo3RUV2bXp2YVlscVkrVitRSmkrSGoyRzM1b1MvV0ZK?=
- =?utf-8?B?dnBUOGh0RTN6VTArQmZJUTJOcHBtS2U5aEpXN2F4WmhBZWd3L0VvSDlORGUr?=
- =?utf-8?B?d3VJWTJ4YmI1a3BiTi9YdXpyYlUvcmI0L1RzRDlveVBFckRxc3dYK3JhRkRR?=
- =?utf-8?B?dXFrc1crUXREeTYyWmRMWm5xVTBzZWlGTkNUUUJ4T1VndmsyR3dVVjQxM2x5?=
- =?utf-8?B?Q1ZRZzFaR1N0L2JKY2N3OWpZbXBVZkNHZXRxZUI3RW15eGJlLzB4MXlGZ21M?=
- =?utf-8?B?M1dNWWo1Y0oxcFI1ZTlKNVVvRldkZ3U0ZVVjTjU5cTFEbk9mVGpFLzU1aFVK?=
- =?utf-8?B?OVhHTjA5MHgzUzlwaGZIcTV3c2hyUGZtdVZLY2NWRVhVVHB5UHlMRW1uUEZZ?=
- =?utf-8?B?Z01yZXBESEsvdnRRMnpiU3BvNDZaQ1lITUxaWjVOcElWcHZTVVp0QSs3MWZo?=
- =?utf-8?B?YW4yTHUyRnJEZnN3TWMwSGd0L2lJSHUyQ1VSSlA5L1VHUmFJd01tZi9kNGs3?=
- =?utf-8?B?TlRIUGNPVXRrcFprRzA2WENpQ3VKbXFtbTc0ZlMrQjVlOWVSd3pPbC9TZG9n?=
- =?utf-8?B?QXY0b0lFRVFFeTB2SXpGR29PbFUwN0tvUnpPWDdyai9qRUlQUWVheFlIUStU?=
- =?utf-8?B?WWtzQ3YxV1g4aUFTU0ZkaUc5d0NhRHA0TTNEeGJHZkV6MVFvN2M5TTZqbjEz?=
- =?utf-8?B?UjA1UUd5emVzYm0wREVxUDdMWXZOQjZQbUp3Y1dTSkVPTjN2UXN1amVnbEU5?=
- =?utf-8?B?MlhaT04xUFR1ODJQSXBHNFV4RkR2MzZER1Nrb1RxMDIyUk9uWUZDNDNxdTNw?=
- =?utf-8?B?NklpOVdSWkh0SzlrL2d2UTlGaWY1OFU3MzZ6ekxvOHBmN0tFK1E5YTRnZ0tt?=
- =?utf-8?B?SjBJY2RxTS8zbnZVMTVZaFRRK0pQUFN3eW5OWTVuS0JCYUx6Szhrd3FDeXNT?=
- =?utf-8?B?ajdRWWxtTVRVditPK3BuaWZFcGFQeFpJV2NPMnYwUjNLWjFOZStDR1JpU1Ju?=
- =?utf-8?B?bGdkMnlJVVdNL0NXUkVVQUthd0pSZTI0cU96ZzhBck1RR1FwMzJMK3dKbUhV?=
- =?utf-8?B?Y1NiWm4veXVaUWE4eVQxSXJOb1JTZlhyS1ArUGRGU2MzaG8raGI5WWVrMW4y?=
- =?utf-8?B?RWJzNm9kcXMvSU8xVk9QUS9tdVA3L1RFRXl1enphZ3BvaEQzYVFxY2JVSTkx?=
- =?utf-8?B?RUQwWk81SUVneWkvRGxEeC9RSjloZURTck03Z1hmZzVnbHc2YktXa09xS0h4?=
- =?utf-8?B?NjZ2TnlWMkVJdWh4MEw5emN0Y3lWamRWQUkzZnB5Qkw5RDIrYXNKdjE4Yk5R?=
- =?utf-8?B?T0hpR3RJUThPeVhjSzZaRFNWWE4zck56RXBsbmlNT1BUSW12V2UxcURsS0RZ?=
- =?utf-8?B?UUxSaGdiRGFuSzFiVUJkOUliaDBtS2xuY1h2T1ltV1RWOFFPYTluWnZ1eWZx?=
- =?utf-8?B?ZURWVU1EVkwzeEdvRG1VaWFzWHBNaFdLODJsbk51TnoxNVI0TXZZL0lDdDJP?=
- =?utf-8?B?TUZWMWU0dmtzekZONUg3alR6YkRlL2tWWGszd1dhcmRYTDUwdit5ZFZuTFRK?=
- =?utf-8?B?WFZXRG1ELzQvMUR2cmZkZHExQkZoeThXNzc4dDNwck9kd2tDQUVUalVHbUdY?=
- =?utf-8?B?ZlUwWlRPVEdUL0JyL1pNOXhUelJuRHg4ZDRWVSt1UUdqTjE1RzQ5OEhua3hx?=
- =?utf-8?Q?TdG8YPSNCwyZyLuFCv2CFP0/9riI1uuZfPJep/z?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e6adba7d-8342-4674-2fac-08d92c73da70
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jun 2021 00:57:14.8467
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: FgBaymUCSy2Yu0S8G9enXz8a5UDL9ULV6nNaTJOWV4YS6Yr4iv2kLutJEnGPz/piCJvWiQEuky5YRdOsc92dfUt5QIuCcibUSx7HPjTW+xY=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB4800
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10011 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 mlxscore=0
- spamscore=0 adultscore=0 mlxlogscore=999 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2106110003
-X-Proofpoint-GUID: i6Lwghd4qSQUfVBl7zsmy3TDHcfMbsXm
-X-Proofpoint-ORIG-GUID: i6Lwghd4qSQUfVBl7zsmy3TDHcfMbsXm
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10011 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 spamscore=0
- mlxlogscore=999 phishscore=0 impostorscore=0 suspectscore=0 clxscore=1015
- mlxscore=0 malwarescore=0 priorityscore=1501 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2106110003
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On 08 Jun 2021 at 22:50, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> Now that we've moved the group membership details into the test case
+> files themselves, automatically generate the group files during build.
+> The autogenerated files are named "group.list" instead of "group" to
+> avoid conflicts between generated and (stale) SCM files as everyone
+> rebases.
 
+Looks good to me.
 
-On 6/10/21 3:37 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Dan Carpenter's static checker reported:
-> 
-> The patch 7b13c5155182: "xfs: use perag for ialloc btree cursors"
-> from Jun 2, 2021, leads to the following Smatch complaint:
-> 
->      fs/xfs/libxfs/xfs_ialloc.c:2403 xfs_imap()
->      error: we previously assumed 'pag' could be null (see line 2294)
-> 
-> And it's right. Fix it.
-> 
-> Fixes: 7b13c5155182 ("xfs: use perag for ialloc btree cursors")
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Looks ok
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
+>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->   fs/xfs/libxfs/xfs_ialloc.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 654a8d9681e1..57d9cb632983 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -2398,7 +2398,8 @@ xfs_imap(
->   	}
->   	error = 0;
->   out_drop:
-> -	xfs_perag_put(pag);
-> +	if (pag)
-> +		xfs_perag_put(pag);
->   	return error;
->   }
->   
-> 
+>  .gitignore             |    3 +++
+>  common/preamble        |    8 ++++++++
+>  include/buildgrouplist |    8 ++++++++
+>  tests/Makefile         |    4 ++++
+>  tests/btrfs/Makefile   |    4 ++++
+>  tests/ceph/Makefile    |    4 ++++
+>  tests/cifs/Makefile    |    4 ++++
+>  tests/ext4/Makefile    |    4 ++++
+>  tests/f2fs/Makefile    |    4 ++++
+>  tests/generic/Makefile |    4 ++++
+>  tests/nfs/Makefile     |    4 ++++
+>  tests/ocfs2/Makefile   |    4 ++++
+>  tests/overlay/Makefile |    4 ++++
+>  tests/perf/Makefile    |    4 ++++
+>  tests/shared/Makefile  |    4 ++++
+>  tests/udf/Makefile     |    4 ++++
+>  tests/xfs/Makefile     |    4 ++++
+>  tools/mkgroupfile      |   42 ++++++++++++++++++++++++++++++++++++++++++
+>  18 files changed, 117 insertions(+)
+>  create mode 100644 include/buildgrouplist
+>  create mode 100755 tools/mkgroupfile
+>
+>
+> diff --git a/.gitignore b/.gitignore
+> index c62c1556..ab366961 100644
+> --- a/.gitignore
+> +++ b/.gitignore
+> @@ -11,6 +11,9 @@ tags
+>  /local.config
+>  /results
+>  
+> +# autogenerated group files
+> +/tests/*/group.list
+> +
+>  # autoconf generated files
+>  /aclocal.m4
+>  /autom4te.cache
+> diff --git a/common/preamble b/common/preamble
+> index 63f66957..4fe8fd3f 100644
+> --- a/common/preamble
+> +++ b/common/preamble
+> @@ -32,6 +32,14 @@ _begin_fstest()
+>  	fi
+>  
+>  	seq=`basename $0`
+> +
+> +	# If we're only running the test to generate a group.list file,
+> +	# spit out the group data and exit.
+> +	if [ -n "$GENERATE_GROUPS" ]; then
+> +		echo "$seq $@"
+> +		exit 0
+> +	fi
+> +
+>  	seqres=$RESULT_DIR/$seq
+>  	echo "QA output created by $seq"
+>  
+> diff --git a/include/buildgrouplist b/include/buildgrouplist
+> new file mode 100644
+> index 00000000..d898efa3
+> --- /dev/null
+> +++ b/include/buildgrouplist
+> @@ -0,0 +1,8 @@
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
+> +#
+> +.PHONY: group.list
+> +
+> +group.list:
+> +	@echo " [GROUP] $$PWD/$@"
+> +	$(Q)$(TOPDIR)/tools/mkgroupfile $@
+> diff --git a/tests/Makefile b/tests/Makefile
+> index 8ce8f209..5c8f0b10 100644
+> --- a/tests/Makefile
+> +++ b/tests/Makefile
+> @@ -7,6 +7,10 @@ include $(TOPDIR)/include/builddefs
+>  
+>  TESTS_SUBDIRS = $(sort $(dir $(wildcard $(CURDIR)/[[:lower:]]*/)))
+>  
+> +SUBDIRS = $(wildcard [[:lower:]]*)
+> +
+> +default: $(SUBDIRS)
+> +
+>  include $(BUILDRULES)
+>  
+>  install: $(addsuffix -install,$(TESTS_SUBDIRS))
+> diff --git a/tests/btrfs/Makefile b/tests/btrfs/Makefile
+> index 2d936421..cc2b2fc9 100644
+> --- a/tests/btrfs/Makefile
+> +++ b/tests/btrfs/Makefile
+> @@ -4,9 +4,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  BTRFS_DIR = btrfs
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(BTRFS_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/ceph/Makefile b/tests/ceph/Makefile
+> index 55e35d77..61ab01d4 100644
+> --- a/tests/ceph/Makefile
+> +++ b/tests/ceph/Makefile
+> @@ -2,9 +2,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  CEPH_DIR = ceph
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(CEPH_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/cifs/Makefile b/tests/cifs/Makefile
+> index 0c5cf3be..5356a682 100644
+> --- a/tests/cifs/Makefile
+> +++ b/tests/cifs/Makefile
+> @@ -4,9 +4,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  CIFS_DIR = cifs
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(CIFS_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/ext4/Makefile b/tests/ext4/Makefile
+> index beb1541f..9c765497 100644
+> --- a/tests/ext4/Makefile
+> +++ b/tests/ext4/Makefile
+> @@ -4,9 +4,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  EXT4_DIR = ext4
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(EXT4_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/f2fs/Makefile b/tests/f2fs/Makefile
+> index d13bca3f..d2374018 100644
+> --- a/tests/f2fs/Makefile
+> +++ b/tests/f2fs/Makefile
+> @@ -5,9 +5,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  F2FS_DIR = f2fs
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(F2FS_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/generic/Makefile b/tests/generic/Makefile
+> index 3878d05c..95cd403c 100644
+> --- a/tests/generic/Makefile
+> +++ b/tests/generic/Makefile
+> @@ -4,9 +4,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  GENERIC_DIR = generic
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(GENERIC_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/nfs/Makefile b/tests/nfs/Makefile
+> index 754f2b25..e372b305 100644
+> --- a/tests/nfs/Makefile
+> +++ b/tests/nfs/Makefile
+> @@ -4,9 +4,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  NFS_DIR = nfs
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(NFS_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/ocfs2/Makefile b/tests/ocfs2/Makefile
+> index e1337908..d85c4fd3 100644
+> --- a/tests/ocfs2/Makefile
+> +++ b/tests/ocfs2/Makefile
+> @@ -4,9 +4,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  OCFS2_DIR = ocfs2
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(OCFS2_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/overlay/Makefile b/tests/overlay/Makefile
+> index b07f8925..b995a6ec 100644
+> --- a/tests/overlay/Makefile
+> +++ b/tests/overlay/Makefile
+> @@ -4,9 +4,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  TEST_DIR = overlay
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(TEST_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/perf/Makefile b/tests/perf/Makefile
+> index 620f1dbf..5d82cccc 100644
+> --- a/tests/perf/Makefile
+> +++ b/tests/perf/Makefile
+> @@ -4,9 +4,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  PERF_DIR = perf
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(PERF_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/shared/Makefile b/tests/shared/Makefile
+> index 8a832782..6c6533c8 100644
+> --- a/tests/shared/Makefile
+> +++ b/tests/shared/Makefile
+> @@ -4,9 +4,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  SHARED_DIR = shared
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(SHARED_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/udf/Makefile b/tests/udf/Makefile
+> index c9c9f1bd..bfaa1b0e 100644
+> --- a/tests/udf/Makefile
+> +++ b/tests/udf/Makefile
+> @@ -4,9 +4,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  UDF_DIR = udf
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(UDF_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tests/xfs/Makefile b/tests/xfs/Makefile
+> index d64800ea..c2f0ba48 100644
+> --- a/tests/xfs/Makefile
+> +++ b/tests/xfs/Makefile
+> @@ -4,9 +4,13 @@
+>  
+>  TOPDIR = ../..
+>  include $(TOPDIR)/include/builddefs
+> +include $(TOPDIR)/include/buildgrouplist
+>  
+>  XFS_DIR = xfs
+>  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(XFS_DIR)
+> +DIRT = group.list
+> +
+> +default: $(DIRT)
+>  
+>  include $(BUILDRULES)
+>  
+> diff --git a/tools/mkgroupfile b/tools/mkgroupfile
+> new file mode 100755
+> index 00000000..0681e5d2
+> --- /dev/null
+> +++ b/tools/mkgroupfile
+> @@ -0,0 +1,42 @@
+> +#!/bin/bash
+> +
+> +# Generate a group file from the _begin_fstest call in each test.
+> +
+> +if [ "$1" = "--help" ]; then
+> +	echo "Usage: (cd tests/XXX/ ; ../../tools/mkgroupfile [output])"
+> +	exit 1
+> +fi
+> +
+> +test_dir="$PWD"
+> +groupfile="$1"
+> +
+> +if [ ! -x ../../check ]; then
+> +	echo "$0: Run this from tests/XXX/."
+> +	exit 1
+> +fi
+> +
+> +generate_groupfile() {
+> +	cat << ENDL
+> +# QA groups control file, automatically generated.
+> +# See _begin_fstest in each test for details.
+> +
+> +ENDL
+> +	cd ../../
+> +	export GENERATE_GROUPS=yes
+> +	grep -R -l "^_begin_fstest" "$test_dir/" 2>/dev/null | while read testfile; do
+> +		test -x "$testfile" && "$testfile"
+> +	done | sort -g
+> +	cd "$test_dir"
+> +}
+> +
+> +if [ -z "$groupfile" ] || [ "$groupfile" = "-" ]; then
+> +	# Dump the group file to stdout and exit
+> +	generate_groupfile
+> +	exit 0
+> +fi
+> +
+> +# Otherwise, write the group file to disk somewhere.
+> +ngroupfile="${groupfile}.new"
+> +rm -f "$ngroupfile"
+> +generate_groupfile >> "$ngroupfile"
+> +mv "$ngroupfile" "$groupfile"
+
+
+-- 
+chandan
