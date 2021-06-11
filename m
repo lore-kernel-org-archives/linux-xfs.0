@@ -5,65 +5,68 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 049EEC48BE0
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 05:40:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A89BC48BE0
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 06:31:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D53266136D
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 05:40:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FBE9610A0
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 06:31:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230179AbhFKFmn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Jun 2021 01:42:43 -0400
-Received: from mail-pf1-f170.google.com ([209.85.210.170]:35565 "EHLO
-        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230001AbhFKFmn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Jun 2021 01:42:43 -0400
-Received: by mail-pf1-f170.google.com with SMTP id h12so3542987pfe.2;
-        Thu, 10 Jun 2021 22:40:46 -0700 (PDT)
+        id S230526AbhFKGdn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Jun 2021 02:33:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60360 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229584AbhFKGdm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Jun 2021 02:33:42 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 357B3C061574;
+        Thu, 10 Jun 2021 23:31:29 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id s17-20020a17090a8811b029016e89654f93so86106pjn.1;
+        Thu, 10 Jun 2021 23:31:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=references:user-agent:from:to:cc:subject:in-reply-to:date
          :message-id:mime-version;
-        bh=zCqwQfqD/T+jHHC7e8qOegy+rwTh1pkHb6sB5zA5ljM=;
-        b=Y5dvMoZ6C2bKRpaJVSoepD3mDxWUM95/eDIpRL6joAIn30gUtwkrKgaLqlZpOLt1GV
-         OsfHldamW7QXwy+aNPPn4xRcSWM+lfChLtlbm1AA4kJZduC6tGE2DyWlpeDtR0P+SVfK
-         tqPXaVfoVkzqkfOE7kug0JedLb1/5p02iob+Hd4y8IPkqy0mms3r05+UUBMIEsFgkFW0
-         m5KWdYv3/ndQG6hZ0gxTq+pAZwIx24YlZIfFMYLG7I3Erl3Ilh6VMnxh3mlHMpEF9gKp
-         y+3vsswco8bFmv8DfAxAs7LWxbIkKAcCVffh/6paQ+nChH+KCNw/pLGlVzBo5skz3TXY
-         KR6Q==
+        bh=rDJbmulKROCjCE+FcnlfJQX3awvMgGF3tA9qRM1MDNk=;
+        b=lkTyXzodFUyb0QSRW6hCkfBTH38SnNXdHMMvvrQ0i1cbMkpDRaQm1+utKyYQIlJVfB
+         JOdiPk5GnNVD6PZ1Z0GUm0MlzpcKkAb2YSKP/D4Nz7DiEK3bO6VQSdjIawHwQstUgZlI
+         fZJVzrhhzi5N7LEtA9F1KMw0S1z8CSMi1bMLRgNyez6hSD+lCplmzxF/JNF1s7ZYRpwC
+         Zc/sCDyiNZ94zm7HfnA+3aRgAD8lyRtEBjBENaBLUODAZd//QQnLbMIYgr050VsxpbDr
+         t6tJ2zUtjd2oqWcFGZwL8Y9KvCg0go9tZEZfOw4I/pk8dcXVC8RwFrAGtguSQaRzGmxO
+         3Zmg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:references:user-agent:from:to:cc:subject
          :in-reply-to:date:message-id:mime-version;
-        bh=zCqwQfqD/T+jHHC7e8qOegy+rwTh1pkHb6sB5zA5ljM=;
-        b=nDyrYuZ5x6QO8lChz3H3qdVHKeuSi8B6lS3KBm8l9RlQAq/rUwiep5Z3/VI5P7EBJ1
-         Kp6vPvFvoebJu1wcvDZekg9zzxbXjKRXuv+9H6iLYk5YVDc2Qg6Jv2uq1nFn1sS44NZ1
-         1T5UV+nMV1XlEiF5f3BqQikPr+moIi9o58vVAVkHyfTA3MTW7+NbU0Holm2nGhg0hSpP
-         i4iMLT8sgmsE+4QEgowpIUMw4MrvsRDbCUZv2qLKsVz/JhJFGlmSYTKNICcUBwTDCnpR
-         uE5L8WryMPl0Kdh3rNyJumRulWUD2Ck3cKjMIqb8Z1cTDKy+SMgwL2CTP9WLcgO3QRxJ
-         m+Vg==
-X-Gm-Message-State: AOAM530CPs4aChYJNcmTjNWtMLljGoiKFtDyn+48DxWy3LRuKf+UFMj8
-        BSvNj/aZXt2U5wWrTGh3QF0=
-X-Google-Smtp-Source: ABdhPJyxi8g6Wy02Qc58G4wNToj2o2V7Japxv0iZ+EuuYRuQiEpqD3+1KjIwgXRb6MaqyfwzzFCFhw==
-X-Received: by 2002:aa7:96e3:0:b029:2ec:e8a1:3d66 with SMTP id i3-20020aa796e30000b02902ece8a13d66mr6530573pfq.79.1623389985837;
-        Thu, 10 Jun 2021 22:39:45 -0700 (PDT)
+        bh=rDJbmulKROCjCE+FcnlfJQX3awvMgGF3tA9qRM1MDNk=;
+        b=jUrPpYcsiuOwUSAiKEzmV+bRQjwmjmv0P0A5ugIXBA5Ljlua9wKMVMnN7CGTbM6IpE
+         NKawSO805rlShC+gBw0mm2Nm7CEcyNFIPqR8Tx6wlvmzvMEKhvYwlc7yDMjKGwAU3Zwv
+         TcVl2PFPlaWrhhdE30/nSa2lOueV4M6vyFCRQALPz9GG9J97CjVE3ZwRg1pMRMoixwWC
+         IO1elBtZxWnlFKRqIM/DtebNJKV1mT2uA3MjssJCIn3VdUmzcnJpvMf1o2vPtUebdwMH
+         dVEP+S5bGfMTBjsSMr5+pGJx+ajlN8FBq81VLjfcbZTyUMW7B09ywVcsncF6WdFAgIo4
+         3SZg==
+X-Gm-Message-State: AOAM53138lSrG1L8xP7zRFinbL8S96jvwCcuGNWQfD9xn6kn4Z6p5o3h
+        25Y5RUe0H7JQ7yNQiSI42BI=
+X-Google-Smtp-Source: ABdhPJxKubz3piajKb4C2kquQVGqz4ZrG5iLpz2GT0O2M7nV+DYsiOwMlzA9wyzM26DOzZZ7lblGjA==
+X-Received: by 2002:a17:90a:7841:: with SMTP id y1mr7583423pjl.119.1623393088725;
+        Thu, 10 Jun 2021 23:31:28 -0700 (PDT)
 Received: from garuda ([171.61.74.194])
-        by smtp.gmail.com with ESMTPSA id z8sm4436276pgi.94.2021.06.10.22.39.43
+        by smtp.gmail.com with ESMTPSA id q12sm4398384pgc.25.2021.06.10.23.31.25
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 10 Jun 2021 22:39:45 -0700 (PDT)
-References: <162317276202.653489.13006238543620278716.stgit@locust> <162317280046.653489.3322406175723320960.stgit@locust>
+        Thu, 10 Jun 2021 23:31:28 -0700 (PDT)
+References: <162317276202.653489.13006238543620278716.stgit@locust> <162317280590.653489.10114638028601363399.stgit@locust>
 User-agent: mu4e 1.0; emacs 26.1
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me, amir73il@gmail.com,
         ebiggers@kernel.org
-Subject: Re: [PATCH 07/13] fstests: automatically generate group files
-In-reply-to: <162317280046.653489.3322406175723320960.stgit@locust>
-Date:   Fri, 11 Jun 2021 11:09:41 +0530
-Message-ID: <87wnr12c4i.fsf@garuda>
+Subject: Re: [PATCH 08/13] fstests: convert nextid to use automatic group generation
+In-reply-to: <162317280590.653489.10114638028601363399.stgit@locust>
+Date:   Fri, 11 Jun 2021 12:01:24 +0530
+Message-ID: <87v96k3oar.fsf@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
@@ -73,11 +76,8 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 08 Jun 2021 at 22:50, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 >
-> Now that we've moved the group membership details into the test case
-> files themselves, automatically generate the group files during build.
-> The autogenerated files are named "group.list" instead of "group" to
-> avoid conflicts between generated and (stale) SCM files as everyone
-> rebases.
+> Convert the nextid script to use the automatic group file generation to
+> figure out the next available test id.
 
 Looks good to me.
 
@@ -86,373 +86,66 @@ Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 >
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  .gitignore             |    3 +++
->  common/preamble        |    8 ++++++++
->  include/buildgrouplist |    8 ++++++++
->  tests/Makefile         |    4 ++++
->  tests/btrfs/Makefile   |    4 ++++
->  tests/ceph/Makefile    |    4 ++++
->  tests/cifs/Makefile    |    4 ++++
->  tests/ext4/Makefile    |    4 ++++
->  tests/f2fs/Makefile    |    4 ++++
->  tests/generic/Makefile |    4 ++++
->  tests/nfs/Makefile     |    4 ++++
->  tests/ocfs2/Makefile   |    4 ++++
->  tests/overlay/Makefile |    4 ++++
->  tests/perf/Makefile    |    4 ++++
->  tests/shared/Makefile  |    4 ++++
->  tests/udf/Makefile     |    4 ++++
->  tests/xfs/Makefile     |    4 ++++
->  tools/mkgroupfile      |   42 ++++++++++++++++++++++++++++++++++++++++++
->  18 files changed, 117 insertions(+)
->  create mode 100644 include/buildgrouplist
->  create mode 100755 tools/mkgroupfile
+>  tools/nextid |    1 -
+>  tools/nextid |   39 +++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 39 insertions(+), 1 deletion(-)
+>  delete mode 120000 tools/nextid
+>  create mode 100755 tools/nextid
 >
 >
-> diff --git a/.gitignore b/.gitignore
-> index c62c1556..ab366961 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -11,6 +11,9 @@ tags
->  /local.config
->  /results
->  
-> +# autogenerated group files
-> +/tests/*/group.list
-> +
->  # autoconf generated files
->  /aclocal.m4
->  /autom4te.cache
-> diff --git a/common/preamble b/common/preamble
-> index 63f66957..4fe8fd3f 100644
-> --- a/common/preamble
-> +++ b/common/preamble
-> @@ -32,6 +32,14 @@ _begin_fstest()
->  	fi
->  
->  	seq=`basename $0`
-> +
-> +	# If we're only running the test to generate a group.list file,
-> +	# spit out the group data and exit.
-> +	if [ -n "$GENERATE_GROUPS" ]; then
-> +		echo "$seq $@"
-> +		exit 0
-> +	fi
-> +
->  	seqres=$RESULT_DIR/$seq
->  	echo "QA output created by $seq"
->  
-> diff --git a/include/buildgrouplist b/include/buildgrouplist
-> new file mode 100644
-> index 00000000..d898efa3
-> --- /dev/null
-> +++ b/include/buildgrouplist
-> @@ -0,0 +1,8 @@
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2021 Oracle, Inc.  All Rights Reserved.
-> +#
-> +.PHONY: group.list
-> +
-> +group.list:
-> +	@echo " [GROUP] $$PWD/$@"
-> +	$(Q)$(TOPDIR)/tools/mkgroupfile $@
-> diff --git a/tests/Makefile b/tests/Makefile
-> index 8ce8f209..5c8f0b10 100644
-> --- a/tests/Makefile
-> +++ b/tests/Makefile
-> @@ -7,6 +7,10 @@ include $(TOPDIR)/include/builddefs
->  
->  TESTS_SUBDIRS = $(sort $(dir $(wildcard $(CURDIR)/[[:lower:]]*/)))
->  
-> +SUBDIRS = $(wildcard [[:lower:]]*)
-> +
-> +default: $(SUBDIRS)
-> +
->  include $(BUILDRULES)
->  
->  install: $(addsuffix -install,$(TESTS_SUBDIRS))
-> diff --git a/tests/btrfs/Makefile b/tests/btrfs/Makefile
-> index 2d936421..cc2b2fc9 100644
-> --- a/tests/btrfs/Makefile
-> +++ b/tests/btrfs/Makefile
-> @@ -4,9 +4,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  BTRFS_DIR = btrfs
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(BTRFS_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/ceph/Makefile b/tests/ceph/Makefile
-> index 55e35d77..61ab01d4 100644
-> --- a/tests/ceph/Makefile
-> +++ b/tests/ceph/Makefile
-> @@ -2,9 +2,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  CEPH_DIR = ceph
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(CEPH_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/cifs/Makefile b/tests/cifs/Makefile
-> index 0c5cf3be..5356a682 100644
-> --- a/tests/cifs/Makefile
-> +++ b/tests/cifs/Makefile
-> @@ -4,9 +4,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  CIFS_DIR = cifs
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(CIFS_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/ext4/Makefile b/tests/ext4/Makefile
-> index beb1541f..9c765497 100644
-> --- a/tests/ext4/Makefile
-> +++ b/tests/ext4/Makefile
-> @@ -4,9 +4,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  EXT4_DIR = ext4
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(EXT4_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/f2fs/Makefile b/tests/f2fs/Makefile
-> index d13bca3f..d2374018 100644
-> --- a/tests/f2fs/Makefile
-> +++ b/tests/f2fs/Makefile
-> @@ -5,9 +5,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  F2FS_DIR = f2fs
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(F2FS_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/generic/Makefile b/tests/generic/Makefile
-> index 3878d05c..95cd403c 100644
-> --- a/tests/generic/Makefile
-> +++ b/tests/generic/Makefile
-> @@ -4,9 +4,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  GENERIC_DIR = generic
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(GENERIC_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/nfs/Makefile b/tests/nfs/Makefile
-> index 754f2b25..e372b305 100644
-> --- a/tests/nfs/Makefile
-> +++ b/tests/nfs/Makefile
-> @@ -4,9 +4,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  NFS_DIR = nfs
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(NFS_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/ocfs2/Makefile b/tests/ocfs2/Makefile
-> index e1337908..d85c4fd3 100644
-> --- a/tests/ocfs2/Makefile
-> +++ b/tests/ocfs2/Makefile
-> @@ -4,9 +4,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  OCFS2_DIR = ocfs2
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(OCFS2_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/overlay/Makefile b/tests/overlay/Makefile
-> index b07f8925..b995a6ec 100644
-> --- a/tests/overlay/Makefile
-> +++ b/tests/overlay/Makefile
-> @@ -4,9 +4,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  TEST_DIR = overlay
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(TEST_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/perf/Makefile b/tests/perf/Makefile
-> index 620f1dbf..5d82cccc 100644
-> --- a/tests/perf/Makefile
-> +++ b/tests/perf/Makefile
-> @@ -4,9 +4,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  PERF_DIR = perf
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(PERF_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/shared/Makefile b/tests/shared/Makefile
-> index 8a832782..6c6533c8 100644
-> --- a/tests/shared/Makefile
-> +++ b/tests/shared/Makefile
-> @@ -4,9 +4,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  SHARED_DIR = shared
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(SHARED_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/udf/Makefile b/tests/udf/Makefile
-> index c9c9f1bd..bfaa1b0e 100644
-> --- a/tests/udf/Makefile
-> +++ b/tests/udf/Makefile
-> @@ -4,9 +4,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  UDF_DIR = udf
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(UDF_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tests/xfs/Makefile b/tests/xfs/Makefile
-> index d64800ea..c2f0ba48 100644
-> --- a/tests/xfs/Makefile
-> +++ b/tests/xfs/Makefile
-> @@ -4,9 +4,13 @@
->  
->  TOPDIR = ../..
->  include $(TOPDIR)/include/builddefs
-> +include $(TOPDIR)/include/buildgrouplist
->  
->  XFS_DIR = xfs
->  TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(XFS_DIR)
-> +DIRT = group.list
-> +
-> +default: $(DIRT)
->  
->  include $(BUILDRULES)
->  
-> diff --git a/tools/mkgroupfile b/tools/mkgroupfile
+> diff --git a/tools/nextid b/tools/nextid
+> deleted file mode 120000
+> index 5c31d602..00000000
+> --- a/tools/nextid
+> +++ /dev/null
+> @@ -1 +0,0 @@
+> -sort-group
+> \ No newline at end of file
+> diff --git a/tools/nextid b/tools/nextid
 > new file mode 100755
-> index 00000000..0681e5d2
+> index 00000000..a65348e8
 > --- /dev/null
-> +++ b/tools/mkgroupfile
-> @@ -0,0 +1,42 @@
+> +++ b/tools/nextid
+> @@ -0,0 +1,39 @@
 > +#!/bin/bash
 > +
-> +# Generate a group file from the _begin_fstest call in each test.
+> +# Compute the next available test id in a given test directory.
 > +
-> +if [ "$1" = "--help" ]; then
-> +	echo "Usage: (cd tests/XXX/ ; ../../tools/mkgroupfile [output])"
+> +if [ -z "$1" ] || [ "$1" = "--help" ] || [ -n "$2" ] || [ ! -d "tests/$1/" ]; then
+> +	echo "Usage: $0 test_dir"
 > +	exit 1
 > +fi
 > +
-> +test_dir="$PWD"
-> +groupfile="$1"
+> +. ./common/test_names
 > +
-> +if [ ! -x ../../check ]; then
-> +	echo "$0: Run this from tests/XXX/."
-> +	exit 1
+> +line=0
+> +i=0
+> +eof=1
+> +
+> +while read found other_junk;
+> +do
+> +	line=$((line+1))
+> +	if [ -z "$found" ] || [ "$found" == "#" ]; then
+> +		continue
+> +	elif ! echo "$found" | grep -q "^$VALID_TEST_NAME$"; then
+> +		# this one is for tests not named by a number
+> +		continue
+> +	fi
+> +	i=$((i+1))
+> +	id=`printf "%03d" $i`
+> +	if [ "$id" != "$found" ]; then
+> +		eof=0
+> +		break
+> +	fi
+> +done < <(cd "tests/$1/" ; ../../tools/mkgroupfile | tr - ' ')
+> +
+> +if [ $eof -eq 1 ]; then
+> +   line=$((line+1))
+> +   i=$((i+1))
+> +   id=`printf "%03d" $i`
 > +fi
 > +
-> +generate_groupfile() {
-> +	cat << ENDL
-> +# QA groups control file, automatically generated.
-> +# See _begin_fstest in each test for details.
-> +
-> +ENDL
-> +	cd ../../
-> +	export GENERATE_GROUPS=yes
-> +	grep -R -l "^_begin_fstest" "$test_dir/" 2>/dev/null | while read testfile; do
-> +		test -x "$testfile" && "$testfile"
-> +	done | sort -g
-> +	cd "$test_dir"
-> +}
-> +
-> +if [ -z "$groupfile" ] || [ "$groupfile" = "-" ]; then
-> +	# Dump the group file to stdout and exit
-> +	generate_groupfile
-> +	exit 0
-> +fi
-> +
-> +# Otherwise, write the group file to disk somewhere.
-> +ngroupfile="${groupfile}.new"
-> +rm -f "$ngroupfile"
-> +generate_groupfile >> "$ngroupfile"
-> +mv "$ngroupfile" "$groupfile"
+> +echo "$1/$id"
 
 
 -- 
