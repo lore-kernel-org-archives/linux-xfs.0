@@ -2,99 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14222C48BE0
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 22:33:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B5F7C48BD1
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 22:46:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF707613DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 22:33:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4127D61019
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 22:46:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229937AbhFKWff (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Jun 2021 18:35:35 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:35696 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229572AbhFKWff (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Jun 2021 18:35:35 -0400
+        id S230181AbhFKWsx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Jun 2021 18:48:53 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:51773 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229777AbhFKWsx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Jun 2021 18:48:53 -0400
 Received: from dread.disaster.area (pa49-179-138-183.pa.nsw.optusnet.com.au [49.179.138.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 925161044490;
-        Sat, 12 Jun 2021 08:33:34 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 284F6862B88;
+        Sat, 12 Jun 2021 08:46:38 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1lrpiW-00Bgas-5d; Sat, 12 Jun 2021 08:33:32 +1000
-Date:   Sat, 12 Jun 2021 08:33:32 +1000
+        id 1lrpvC-00Bgjv-D7; Sat, 12 Jun 2021 08:46:38 +1000
+Date:   Sat, 12 Jun 2021 08:46:38 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [BUG] generic/475 recovery failure(s)
-Message-ID: <20210611223332.GS664593@dread.disaster.area>
-References: <YMIsWJ0Cb2ot/UjG@bfoster>
- <YMOzT1goreWVgo8S@bfoster>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Dave Chinner <dchinner@redhat.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        Linux-Next <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        noreply@ellerman.id.au
+Subject: Re: [PATCH] xfs: Fix 64-bit division on 32-bit in
+ xlog_state_switch_iclogs()
+Message-ID: <20210611224638.GT664593@dread.disaster.area>
+References: <20210610110001.2805317-1-geert@linux-m68k.org>
+ <20210610220155.GQ664593@dread.disaster.area>
+ <CAMuHMdWp3E3QDnbGDcTZsCiQNP3pLV2nXVmtOD7OEQO8P-9egQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YMOzT1goreWVgo8S@bfoster>
+In-Reply-To: <CAMuHMdWp3E3QDnbGDcTZsCiQNP3pLV2nXVmtOD7OEQO8P-9egQ@mail.gmail.com>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0
         a=MnllW2CieawZLw/OcHE/Ng==:117 a=MnllW2CieawZLw/OcHE/Ng==:17
-        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=7-415B0cAAAA:8
-        a=qX4u6SBrIjunKUc1KhcA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=r6YtysWOX24A:10 a=7-415B0cAAAA:8 a=tBb2bbeoAAAA:8
+        a=sw44Y3MIkDGLgX3rhVgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=Oj-tNtZlA1e06AYgeCfH:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 11, 2021 at 03:02:39PM -0400, Brian Foster wrote:
-> On Thu, Jun 10, 2021 at 11:14:32AM -0400, Brian Foster wrote:
-> > Hi all,
-> > 
-> > I'm seeing what looks like at least one new generic/475 failure on
-> > current for-next. (I've seen one related to an attr buffer that seems to
-> > be older and harder to reproduce.). The test devices are a couple ~15GB
-> > lvm devices formatted with mkfs defaults. I'm still trying to establish
-> > reproducibility, but so far a failure seems fairly reliable within ~30
-> > iterations.
-> > 
-> > The first [1] looks like log recovery failure processing an EFI. The
-> > second variant [2] looks like it passes log recovery, but then fails the
-> > mount in the COW extent cleanup stage due to a refcountbt problem. I've
-> > also seen one that looks like the same free space corruption error as
-> > [1], but triggered via the COW recovery codepath in [2], so these could
-> > very well be related. A snippet of the dmesg output for each failed
-> > mount is appended below.
-> > 
-> ...
+On Fri, Jun 11, 2021 at 08:55:24AM +0200, Geert Uytterhoeven wrote:
+> Hi Dave,
 > 
-> A couple updates..
+> On Fri, Jun 11, 2021 at 12:02 AM Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Jun 10, 2021 at 01:00:01PM +0200, Geert Uytterhoeven wrote:
+> > > On 32-bit (e.g. m68k):
+> > >
+> > >     ERROR: modpost: "__udivdi3" [fs/xfs/xfs.ko] undefined!
+> > >
+> > > Fix this by using a uint32_t intermediate, like before.
+> > >
+> > > Reported-by: noreply@ellerman.id.au
+> > > Fixes: 7660a5b48fbef958 ("xfs: log stripe roundoff is a property of the log")
+> > > Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> > > ---
+> > > Compile-tested only.
+> > > ---
+> > >  fs/xfs/xfs_log.c | 4 ++--
+> > >  1 file changed, 2 insertions(+), 2 deletions(-)
+> >
+> > <sigh>
+> >
+> > 64 bit division on 32 bit platforms is still a problem in this day
+> > and age?
 > 
-> First (as noted on irc), the generic/475 failure is not new as I was
-> able to produce it on vanilla 5.13.0-rc4. I'm not quite sure how far
-> back that one goes, but Dave noted he's seen it on occasion for some
-> time.
-> 
-> The generic/019 failure I'm seeing does appear to be new as I cannot
-> reproduce on 5.13.0-rc4. This failure looks more like silent fs
-> corruption. I.e., the test or log recovery doesn't explicitly fail, but
-> the post-test xfs_repair check detects corruption. Example xfs_repair
-> output is appended below (note that 'xfs_repair -n' actually crashes,
-> while destructive repair seems to work). Since this reproduces fairly
-> reliably on for-next, I bisected it (while also navigating an unmount
-> hang that I don't otherwise have data on) down to facd77e4e38b ("xfs:
-> CIL work is serialised, not pipelined"). From a quick glance at that I'm
-> not quite sure what the problem is there, just that it doesn't occur
-> prior to that particular commit.
+> They're not a problem.  But you should use the right operations from
+> <linux/math64.h>, iff you really need these expensive operations.
 
-I suspect that there's an underlying bug in the overlapping CIL
-commit record sequencing. This commit will be the first time we are
-actually getting overlapping checkpoints that need ordering via the
-commit record writes. Hence I suspect what is being seen here is a
-subtle ordering bug that has been in that code since it was first
-introduced but never exercised until now..
+See, that's the whole problem. This *isn't* obviously a 64 bit
+division - BBTOB is shifting the variable down by 9 (bytes to blocks)
+and then using that as the divisor.
 
-I haven't had any success in reproducing this yet, I'll keep trying
-to see if I can get it to trigger so I can look at it in more
-detail...
+The problem is that BBTOB has an internal cast to a 64 bit size,
+and roundup() just blindly takes it and hence we get non-obvious
+compile errors only on 32 bit platforms.
+
+We have type checking macros for all sorts of generic functionality
+- why haven't these generic macros that do division also have type
+checking to catch this? i.e. so that when people build kernels on
+64 bit machines find out that they've unwittingly broken 32 bit
+builds the moment they use roundup() and/or friends incorrectly?
+
+That would save a lot of extra work having fix crap like this up
+after the fact...
 
 Cheers,
 
