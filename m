@@ -2,100 +2,225 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5699C4743D
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 06:55:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC6A8C48BD1
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 06:57:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0D7C613CB
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 06:55:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7672613AD
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Jun 2021 06:57:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231268AbhFKG5t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Jun 2021 02:57:49 -0400
-Received: from mail-ua1-f48.google.com ([209.85.222.48]:45036 "EHLO
-        mail-ua1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229480AbhFKG5s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Jun 2021 02:57:48 -0400
-Received: by mail-ua1-f48.google.com with SMTP id 68so2212408uao.11;
-        Thu, 10 Jun 2021 23:55:36 -0700 (PDT)
+        id S230382AbhFKG7R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Jun 2021 02:59:17 -0400
+Received: from mail-pl1-f178.google.com ([209.85.214.178]:41928 "EHLO
+        mail-pl1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230272AbhFKG7L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Jun 2021 02:59:11 -0400
+Received: by mail-pl1-f178.google.com with SMTP id e1so2351594plh.8;
+        Thu, 10 Jun 2021 23:56:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=references:user-agent:from:to:cc:subject:in-reply-to:date
+         :message-id:mime-version;
+        bh=FGk0hkp4y7ReM7Ri7a+9GpX2Oq3xfzRymG2Aaw0k6Nc=;
+        b=fMpnKV+FcQktHGw2Jc6HrsTb2bdFrfS56COQRnMXDBwgdgqnAfilJJvmVtsVh0XmX5
+         C9wbIjfCD+3TzpzHKrgIx900jvu7F/NPtdC1VFIHJ9Q74IR3CRp8IF5EHFBaVoSDU6Fz
+         XLtAcm95P6UBSjc2x18GIsqxQP6/lVcjc6rA13HtzYOJXpUpCLylDK+xqhIu9YHUGZx/
+         zClaYXzOcT1yo5/L8NHnNW0/nR35MZSqDzYSEa8ePmhwe1hrKIBOa/qkH35xpHVE/iJ9
+         wnnDtL4ReSB8Ofj9UQpWSBzIQBVLH6Rk1VPNDYRBJGNGs8mmbe7hOuEbMBV6sVQlqc3T
+         HChg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=uDY2dim4aXXjh83+9TfmRnq4rAnvdm1kS4I6xxJDBSY=;
-        b=V8wkSTGaotw6yDaMI8aW6zeuqP/9qpv6sNZL7MFNPEDxPfllq+EdlOM9Njgg2l7YN4
-         RlcYRVDGe3tq4GGFcM/PXS0vZjEOI6FcWPeEBBfGnTLGKvXKwpCv8+IvTnNrSJjnuya5
-         s4QBw+/4fOzC2ihXRJhoE5MbpAOB960hQ215vegLP+cdgFmfUNjNy9YIA/7XH4ZmNJKs
-         6V2GqdQcrhUEGZP8viIgExf8sr4WRHXrdO77IMJ4HIYYveFdEgr9tfcv0k6aFYA/8sBu
-         IWdSg2MDoOnLVEnV2tQBVQFeM9t3kwkyH/FaPi/yvC5aG6/KxoHGZvXpvnkNFDE6Kc54
-         qsfg==
-X-Gm-Message-State: AOAM533Yb+mOuqMOevMSRMZYEEiQ/AJ+VOMXl8CcQ2re1+/gMq+cZq/+
-        uNFP5S5VNfNh9bGg6PK+kq/mwIdxAQ1s1Mpq1RLDbpjB2Byyeg==
-X-Google-Smtp-Source: ABdhPJzhZ+LeTQ29TGU1dlV4GczrEvE6sFGwLOsBiAcVefRdC1tiB9fStBtgAe4vXGARVmr3VV85cQxTnQjYHt/4Rsk=
-X-Received: by 2002:ab0:71d9:: with SMTP id n25mr1728908uao.2.1623394535969;
- Thu, 10 Jun 2021 23:55:35 -0700 (PDT)
+        h=x-gm-message-state:references:user-agent:from:to:cc:subject
+         :in-reply-to:date:message-id:mime-version;
+        bh=FGk0hkp4y7ReM7Ri7a+9GpX2Oq3xfzRymG2Aaw0k6Nc=;
+        b=BGarQoPc5qymgoS0WYgjCFwcSG4R5Rmu1rFTkOO+zxCRJkjo3AGuazXksiWkH1AaNc
+         03QAR1/PueQJCS6NRs2Io8hX4MTiqToc8qHglFDaOko2T6DdFxn1uXvXG72uSoMQ0+J7
+         rAstinig7RhJg6YUl2wRNAV4PCZRByqy96wbU0+ikA/I/bpNtfQfLJjW0bHsGEOQhffc
+         XBVRfuluFkciZOZfJeWhaqjB9FEsjZsoV+kZHCBFNKJpRuA0Hc+2o3ARPustZ6gaER8E
+         195VbyVs0B1ZcGVL3qzUNvb2Wvn18OudGhKNaPARu2QlHrk0yemP0G4+KHzCiWvXwM6V
+         wLHg==
+X-Gm-Message-State: AOAM533zIRQq45ZPbCmFo7tjmkIkXTU5ZwHPmG0PY2cxQ7F196cg2YeL
+        rAfMFcGyzw4QIG4mWPoqZOY=
+X-Google-Smtp-Source: ABdhPJy9DeFfmzdYWDZUqPWG4REVHVlmyB2Wz5SomWLVaS8hfpF5RUnoYJpJ/JcjgtggHNEtPaVgbQ==
+X-Received: by 2002:a17:90a:e409:: with SMTP id hv9mr7662551pjb.126.1623394558681;
+        Thu, 10 Jun 2021 23:55:58 -0700 (PDT)
+Received: from garuda ([171.61.74.194])
+        by smtp.gmail.com with ESMTPSA id p19sm9339249pjv.21.2021.06.10.23.55.56
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 10 Jun 2021 23:55:58 -0700 (PDT)
+References: <162317276202.653489.13006238543620278716.stgit@locust> <162317281137.653489.16228043613270527911.stgit@locust>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me, amir73il@gmail.com,
+        ebiggers@kernel.org
+Subject: Re: [PATCH 09/13] fstests: adapt the new test script to our new group tagging scheme
+In-reply-to: <162317281137.653489.16228043613270527911.stgit@locust>
+Date:   Fri, 11 Jun 2021 12:25:54 +0530
+Message-ID: <87tum43n5x.fsf@garuda>
 MIME-Version: 1.0
-References: <20210610110001.2805317-1-geert@linux-m68k.org> <20210610220155.GQ664593@dread.disaster.area>
-In-Reply-To: <20210610220155.GQ664593@dread.disaster.area>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Fri, 11 Jun 2021 08:55:24 +0200
-Message-ID: <CAMuHMdWp3E3QDnbGDcTZsCiQNP3pLV2nXVmtOD7OEQO8P-9egQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: Fix 64-bit division on 32-bit in xlog_state_switch_iclogs()
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Dave Chinner <dchinner@redhat.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        Linux-Next <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        noreply@ellerman.id.au
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
-
-On Fri, Jun 11, 2021 at 12:02 AM Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Jun 10, 2021 at 01:00:01PM +0200, Geert Uytterhoeven wrote:
-> > On 32-bit (e.g. m68k):
-> >
-> >     ERROR: modpost: "__udivdi3" [fs/xfs/xfs.ko] undefined!
-> >
-> > Fix this by using a uint32_t intermediate, like before.
-> >
-> > Reported-by: noreply@ellerman.id.au
-> > Fixes: 7660a5b48fbef958 ("xfs: log stripe roundoff is a property of the log")
-> > Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> > ---
-> > Compile-tested only.
-> > ---
-> >  fs/xfs/xfs_log.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
+On 08 Jun 2021 at 22:50, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 >
-> <sigh>
+> Now that we autogenerate group files, adapt the new test creation script
+> to use autogenerated group files and to set the group data in the new
+> test.
 >
-> 64 bit division on 32 bit platforms is still a problem in this day
-> and age?
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  new |  179 ++++++++++++++++++++-----------------------------------------------
+>  1 file changed, 54 insertions(+), 125 deletions(-)
+>
+>
+> diff --git a/new b/new
+> index 16e7c782..cdd909ad 100755
+> --- a/new
+> +++ b/new
+> @@ -9,7 +9,8 @@
+>  iam=new
+>  . ./common/test_names
+>  
+> -trap "rm -f /tmp/$$.; exit" 0 1 2 3 15
+> +tmpfile="/tmp/$$."
+> +trap "rm -f $tmpfile; exit" 0 1 2 3 15
+>  
+>  _cleanup()
+>  {
+> @@ -26,71 +27,18 @@ usage()
+>  
+>  [ $# -eq 0 ] && usage
+>  tdir=tests/$1
+> -shift
+> -
+> -if [ ! -f $tdir/group ]
+> -then
+> -    echo "Creating the $tdir/group index ..."
+> -    cat <<'End-of-File' >$tdir/group
+> -# QA groups control
+> -#
+> -# define groups and default group owners
+> -# do not start group name with a digit
+> -#
+> -
+> -# catch-all
+> -#
+> -other		some-user-login
+> -
+> -# test-group association ... one line per test
+> -#
+> -End-of-File
+> -fi
+> -
+> -if [ ! -w $tdir/group ]
+> -then
+> -    chmod u+w $tdir/group
+> -    echo "Warning: making the index file \"$tdir/group\" writeable"
+> -fi
+> -
+> -if make
+> -then
+> -    :
+> -else
+> -    echo "Warning: make failed -- some tests may be missing"
+> -fi
+>  
+>  i=0
+>  line=0
+>  eof=1
+> -[ -f "$tdir/group" ] || usage
+> +[ -d "$tdir/" ] || usage
+>  
+>  export AWK_PROG="$(type -P awk)"
+>  [ "$AWK_PROG" = "" ] && { echo "awk not found"; exit; }
+>  
+> -for found in `cat $tdir/group | tr - ' ' | $AWK_PROG '{ print $1 }'`
+> -do
+> -    line=$((line+1))
+> -    if [ -z "$found" ] || [ "$found" == "#" ]; then
+> -        continue
+> -    elif ! echo "$found" | grep -q "^$VALID_TEST_NAME$"; then
+> -        # this one is for tests not named by a number
+> -        continue
+> -    fi
+> -    i=$((i+1))
+> -    id=`printf "%03d" $i`
+> -    if [ "$id" != "$found" ];then
+> -	eof=0
+> -	break
+> -    fi
+> -done
+> -if [ $eof -eq 1 ]; then
+> -   line=$((line+1))
+> -   i=$((i+1))
+> -   id=`printf "%03d" $i`
+> -fi
+> -
+> +id="$(basename "$(./tools/nextid "$1")")"
+>  echo "Next test id is $id"
+> +shift
+>  
+>  read -p "Append a name to the ID? Test name will be $id-\$name. y,[n]: " -r
+>  if [[ $REPLY = [Yy] ]]; then
+> @@ -113,24 +61,9 @@ if [[ $REPLY = [Yy] ]]; then
+>  		fi
+>  	done
+>  
+> -	# now find where to insert this name
+> -	eof=1
+> -	for found in `tail -n +$line $tdir/group | $AWK_PROG '{ print $1 }'`; do
+> -		found_id=$(echo "$found" | cut -d "-" -f 1 - )
+> -		line=$((line+1))
+> -		if [ -z "$found" ] || [ "$found" == "#" ]; then
+> -			continue
+> -		elif [ $found_id -gt $id ]; then
+> -			eof=0
+> -			break
+> -		fi
+> -	done
+> -	if [ $eof -eq 0 ]; then
+> -		# If place wasn't found, let $line be the end of the file
+> -		line=$((line-1))
+> -	fi
+>  	id="$id-$name"
+>  fi
+> +
+>  echo "Creating test file '$id'"
+>  
+>  if [ -f $tdir/$id ]
+> @@ -140,6 +73,53 @@ then
+>      exit 1
+>  fi
+>  
+> +if [ $# -eq 0 ]
+> +then
+> +
+> +    while true
+> +    do
+> +	echo -n "Add to group(s) [other] (separate by space, ? for list): "
+> +	read ans
+> +	[ -z "$ans" ] && ans=other
+> +	if [ "X$ans" = "X?" ]
+> +	then
+> +	    for d in $SRC_GROUPS; do
+> +		(cd "tests/$d/" ; ../../tools/mkgroupfile "$tmpfile")
+> +		l=$(set -n < "$tmpfile" \
 
-They're not a problem.  But you should use the right operations from
-<linux/math64.h>, iff you really need these expensive operations.
+The above should have been "sed" instead of "set".
 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Apart from the above nit, the rest looks good to me.
 
-Thanks!
-
-Gr{oetje,eeting}s,
-
-                        Geert
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+chandan
