@@ -2,78 +2,142 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73B68C48BE6
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 00:53:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABAFC48BCF
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 08:54:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FF59613BF
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 00:53:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26E61611CC
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 08:54:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229976AbhFLAzT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Jun 2021 20:55:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56826 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229942AbhFLAzS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jun 2021 20:55:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3EFFA61287;
-        Sat, 12 Jun 2021 00:53:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623459199;
-        bh=aToDz5Br7iOoXq9+eOXI8LiZMYSzbIG64qK/83p84Lo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oSMasUgZq4jl3EZO32n8L/DW3IgFRp0sl1x4avkDZw432nmfXNVIyJJQUhunLCOol
-         sA/WKRfPsZEvOdgXQXzlyc1cWdmy/f65/zquiePdoAGRPtSOMCFBlSDHXGlxRJSbXw
-         WlBNQUibpRgYRSWM1AzMKRrLWiJ8ZAAH3F0OJveM4C9oQWBGXzorkfPlUupZrOsQ5H
-         q0Iii9kRjcWk/POAStLuAwcOpalu506PKQL1FTJQMlnRgDBqy9FJGh139eBvoBCoy/
-         7lGwmIgqBpNzb5rs3G7QY6s/O8iaHclbCeT0NB48b+zQx0oYXtp0+9gAKvajcrAMve
-         bvpkRfLMylwFQ==
-Date:   Fri, 11 Jun 2021 17:53:18 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shaokun Zhang <zhangshaokun@hisilicon.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: remove redundant initialization of variable error
-Message-ID: <20210612005318.GJ2945738@locust>
-References: <1622883170-33317-1-git-send-email-zhangshaokun@hisilicon.com>
+        id S229942AbhFLI4t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 12 Jun 2021 04:56:49 -0400
+Received: from mail-vs1-f43.google.com ([209.85.217.43]:41774 "EHLO
+        mail-vs1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229584AbhFLI4t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Jun 2021 04:56:49 -0400
+Received: by mail-vs1-f43.google.com with SMTP id c1so5119990vsh.8;
+        Sat, 12 Jun 2021 01:54:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=GD2Olda9AmSNWAvIUnqMGuloWkjPAxn/zDHn8rCyeik=;
+        b=WMZIqcJpKrCtTBxTrQuhxSryloSzbak5D0o0I862v8EGdRs791HlhJKBqo6dsJhDl8
+         O66sEJS3CG9kxXYHskZlKX8K4sSu9+P4CeHtUu1OF0qRoAeIBA5km9bHwNX8ji52SjTp
+         OMlaVZFmft7jz3XIROSwM0j53Lp08GL0eUfCurIeGlFK5rx3qmwG2jSQ8GrQwcpteTV9
+         AEYfLpc3Jka4eHdIT6qVvNYmKSLc6Sv3/lCGyoHY8bg3qFMRPiyBZ5qG46pPXgayBi6J
+         Cjr/lvhKa57mJTOWqhxIx18StzTPN4iEkq1REZ4GJY+K8OPL3RQUSEZpsiaLse/wgqx/
+         EJZA==
+X-Gm-Message-State: AOAM532TRuMEaTDZ12b7pz2oHz6lnmZ4q35iOHQe3k056qHNqhFpqY5a
+        31eT2wqwB+D8a8cQBH+z4hiJqbb1hsMrYxBVVAU=
+X-Google-Smtp-Source: ABdhPJwQqVoaYjc0es2Y8dX/xEIoI5ZH3RdFJKE9qfsQHMDXtt6noFdUluHDMrZeJgyKIb7/kZOxucdlD8ELeejk3nU=
+X-Received: by 2002:a67:efd6:: with SMTP id s22mr13429864vsp.3.1623488074285;
+ Sat, 12 Jun 2021 01:54:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1622883170-33317-1-git-send-email-zhangshaokun@hisilicon.com>
+References: <20210610110001.2805317-1-geert@linux-m68k.org>
+ <20210610220155.GQ664593@dread.disaster.area> <CAMuHMdWp3E3QDnbGDcTZsCiQNP3pLV2nXVmtOD7OEQO8P-9egQ@mail.gmail.com>
+ <20210611224638.GT664593@dread.disaster.area>
+In-Reply-To: <20210611224638.GT664593@dread.disaster.area>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Sat, 12 Jun 2021 10:54:23 +0200
+Message-ID: <CAMuHMdU1f5QD9J9Hz5m97arhF6gKQTFqz5EqrskD+cnWpYbX1Q@mail.gmail.com>
+Subject: Re: [PATCH] xfs: Fix 64-bit division on 32-bit in xlog_state_switch_iclogs()
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Dave Chinner <dchinner@redhat.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        Linux-Next <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        noreply@ellerman.id.au
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jun 05, 2021 at 04:52:50PM +0800, Shaokun Zhang wrote:
-> 'error' will be initialized, so clean up the redundant initialization.
-> 
-> Cc: "Darrick J. Wong" <djwong@kernel.org>
-> Signed-off-by: Shaokun Zhang <zhangshaokun@hisilicon.com>
+Hi Dave,
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+On Sat, Jun 12, 2021 at 12:46 AM Dave Chinner <david@fromorbit.com> wrote:
+> On Fri, Jun 11, 2021 at 08:55:24AM +0200, Geert Uytterhoeven wrote:
+> > On Fri, Jun 11, 2021 at 12:02 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > On Thu, Jun 10, 2021 at 01:00:01PM +0200, Geert Uytterhoeven wrote:
+> > > > On 32-bit (e.g. m68k):
+> > > >
+> > > >     ERROR: modpost: "__udivdi3" [fs/xfs/xfs.ko] undefined!
+> > > >
+> > > > Fix this by using a uint32_t intermediate, like before.
+> > > >
+> > > > Reported-by: noreply@ellerman.id.au
+> > > > Fixes: 7660a5b48fbef958 ("xfs: log stripe roundoff is a property of the log")
+> > > > Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> > > > ---
+> > > > Compile-tested only.
+> > > > ---
+> > > >  fs/xfs/xfs_log.c | 4 ++--
+> > > >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > >
+> > > <sigh>
+> > >
+> > > 64 bit division on 32 bit platforms is still a problem in this day
+> > > and age?
+> >
+> > They're not a problem.  But you should use the right operations from
+> > <linux/math64.h>, iff you really need these expensive operations.
+>
+> See, that's the whole problem. This *isn't* obviously a 64 bit
+> division - BBTOB is shifting the variable down by 9 (bytes to blocks)
+> and then using that as the divisor.
 
---D
+BTOBB, not BBTOB ;-)
 
-> ---
->  fs/xfs/xfs_buf.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 592800c8852f..59991c8c7127 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -707,7 +707,7 @@ xfs_buf_get_map(
->  {
->  	struct xfs_buf		*bp;
->  	struct xfs_buf		*new_bp;
-> -	int			error = 0;
-> +	int			error;
->  
->  	*bpp = NULL;
->  	error = xfs_buf_find(target, map, nmaps, flags, NULL, &bp);
-> -- 
-> 2.7.4
-> 
+> The problem is that BBTOB has an internal cast to a 64 bit size,
+> and roundup() just blindly takes it and hence we get non-obvious
+> compile errors only on 32 bit platforms.
+
+Indeed. Perhaps the macros should be fixed?
+
+    #define BBSHIFT         9
+    #define BBSIZE          (1<<BBSHIFT)
+    #define BBMASK          (BBSIZE-1)
+    #define BTOBB(bytes)    (((__u64)(bytes) + BBSIZE - 1) >> BBSHIFT)
+    #define BTOBBT(bytes)   ((__u64)(bytes) >> BBSHIFT)
+
+Why are these two casting bytes to u64? The result will be smaller
+due to the shift.
+if the type holding bytes was too small, you're screwed anyway.
+
+    #define BBTOB(bbs)      ((bbs) << BBSHIFT)
+
+Why does this one lack the cast? If the passed bbs is ever 32-bit,
+it may overflow due to the shift.
+
+> We have type checking macros for all sorts of generic functionality
+> - why haven't these generic macros that do division also have type
+> checking to catch this? i.e. so that when people build kernels on
+> 64 bit machines find out that they've unwittingly broken 32 bit
+> builds the moment they use roundup() and/or friends incorrectly?
+>
+> That would save a lot of extra work having fix crap like this up
+> after the fact...
+
+While adding checks would work for e.g. roundup(), it wouldn't work
+for plain divisions not involving rounding, as we don't have a way to
+catch this for "a / b", except for the link error on 32-bit platforms.
+
+Perhaps the build bots are not monitoring linux-xfs?
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
