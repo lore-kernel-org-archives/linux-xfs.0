@@ -2,142 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABAFC48BCF
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 08:54:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC6F6C48BE5
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 20:19:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26E61611CC
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 08:54:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79AFC61182
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 20:19:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229942AbhFLI4t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 12 Jun 2021 04:56:49 -0400
-Received: from mail-vs1-f43.google.com ([209.85.217.43]:41774 "EHLO
-        mail-vs1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229584AbhFLI4t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Jun 2021 04:56:49 -0400
-Received: by mail-vs1-f43.google.com with SMTP id c1so5119990vsh.8;
-        Sat, 12 Jun 2021 01:54:34 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=GD2Olda9AmSNWAvIUnqMGuloWkjPAxn/zDHn8rCyeik=;
-        b=WMZIqcJpKrCtTBxTrQuhxSryloSzbak5D0o0I862v8EGdRs791HlhJKBqo6dsJhDl8
-         O66sEJS3CG9kxXYHskZlKX8K4sSu9+P4CeHtUu1OF0qRoAeIBA5km9bHwNX8ji52SjTp
-         OMlaVZFmft7jz3XIROSwM0j53Lp08GL0eUfCurIeGlFK5rx3qmwG2jSQ8GrQwcpteTV9
-         AEYfLpc3Jka4eHdIT6qVvNYmKSLc6Sv3/lCGyoHY8bg3qFMRPiyBZ5qG46pPXgayBi6J
-         Cjr/lvhKa57mJTOWqhxIx18StzTPN4iEkq1REZ4GJY+K8OPL3RQUSEZpsiaLse/wgqx/
-         EJZA==
-X-Gm-Message-State: AOAM532TRuMEaTDZ12b7pz2oHz6lnmZ4q35iOHQe3k056qHNqhFpqY5a
-        31eT2wqwB+D8a8cQBH+z4hiJqbb1hsMrYxBVVAU=
-X-Google-Smtp-Source: ABdhPJwQqVoaYjc0es2Y8dX/xEIoI5ZH3RdFJKE9qfsQHMDXtt6noFdUluHDMrZeJgyKIb7/kZOxucdlD8ELeejk3nU=
-X-Received: by 2002:a67:efd6:: with SMTP id s22mr13429864vsp.3.1623488074285;
- Sat, 12 Jun 2021 01:54:34 -0700 (PDT)
+        id S229777AbhFLUVk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 12 Jun 2021 16:21:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36586 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229753AbhFLUVk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 12 Jun 2021 16:21:40 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4C38861107;
+        Sat, 12 Jun 2021 20:19:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1623529180;
+        bh=ez5wamjDqI9ymYM367JuxRRPRCMTRuVX80rURrDznZg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PuBLpn5dYWugbaDhOSyhBYSUrUk36CPrUbvf7mJKqKaHMgezkMUkUV32SzVKACMoI
+         0XEk3yIdXfTcdE11WFwb6YJsUWD08f2Q1V1QxifqpuE3jJEtciR1fFZ18Pa6WX9Z+1
+         uTNJtUCChHGHoyPxPCqbFiSrLi/KRUzQ6OeGFlTiVPOzhMAcgP2X3eS2wxYbZEsstf
+         bb1EAf7c78weZqMaq9AqQ35KETABrhEBWPd2hCkmpL8ySDCO+Ky3peTbbmyNI/xw9o
+         DyLqZ42p+UbTY3w2u76gX+32KHL1bZbq+AF2mpGQJKV0e8NX4CQnPbPOk9NbRCO3vW
+         ef2r8jJsODc3Q==
+Date:   Sat, 12 Jun 2021 13:19:39 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Yizhuo Zhai <yzhai003@ucr.edu>
+Cc:     dchinner@redhat.com, bfoster@redhat.com,
+        allison.henderson@oracle.com, chandanrlinux@gmail.com,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: A Potential Bug in fs/xfs/libxfs/xfs_bmap.c
+Message-ID: <20210612201939.GE2945763@locust>
+References: <CABvMjLSDhy8witCZCm3ZHaWZ+E7S8NeQm8oc+sP6HSObZeUUqw@mail.gmail.com>
 MIME-Version: 1.0
-References: <20210610110001.2805317-1-geert@linux-m68k.org>
- <20210610220155.GQ664593@dread.disaster.area> <CAMuHMdWp3E3QDnbGDcTZsCiQNP3pLV2nXVmtOD7OEQO8P-9egQ@mail.gmail.com>
- <20210611224638.GT664593@dread.disaster.area>
-In-Reply-To: <20210611224638.GT664593@dread.disaster.area>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Sat, 12 Jun 2021 10:54:23 +0200
-Message-ID: <CAMuHMdU1f5QD9J9Hz5m97arhF6gKQTFqz5EqrskD+cnWpYbX1Q@mail.gmail.com>
-Subject: Re: [PATCH] xfs: Fix 64-bit division on 32-bit in xlog_state_switch_iclogs()
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Dave Chinner <dchinner@redhat.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        Linux-Next <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        noreply@ellerman.id.au
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CABvMjLSDhy8witCZCm3ZHaWZ+E7S8NeQm8oc+sP6HSObZeUUqw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+[cc list]
 
-On Sat, Jun 12, 2021 at 12:46 AM Dave Chinner <david@fromorbit.com> wrote:
-> On Fri, Jun 11, 2021 at 08:55:24AM +0200, Geert Uytterhoeven wrote:
-> > On Fri, Jun 11, 2021 at 12:02 AM Dave Chinner <david@fromorbit.com> wrote:
-> > > On Thu, Jun 10, 2021 at 01:00:01PM +0200, Geert Uytterhoeven wrote:
-> > > > On 32-bit (e.g. m68k):
-> > > >
-> > > >     ERROR: modpost: "__udivdi3" [fs/xfs/xfs.ko] undefined!
-> > > >
-> > > > Fix this by using a uint32_t intermediate, like before.
-> > > >
-> > > > Reported-by: noreply@ellerman.id.au
-> > > > Fixes: 7660a5b48fbef958 ("xfs: log stripe roundoff is a property of the log")
-> > > > Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> > > > ---
-> > > > Compile-tested only.
-> > > > ---
-> > > >  fs/xfs/xfs_log.c | 4 ++--
-> > > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > >
-> > > <sigh>
-> > >
-> > > 64 bit division on 32 bit platforms is still a problem in this day
-> > > and age?
-> >
-> > They're not a problem.  But you should use the right operations from
-> > <linux/math64.h>, iff you really need these expensive operations.
->
-> See, that's the whole problem. This *isn't* obviously a 64 bit
-> division - BBTOB is shifting the variable down by 9 (bytes to blocks)
-> and then using that as the divisor.
+On Fri, Jun 11, 2021 at 11:12:18PM -0700, Yizhuo Zhai wrote:
+> Hi All:
+> I just found a bug in the cramfs using the static analysis tool, but not
 
-BTOBB, not BBTOB ;-)
+cramfs?  I thought we were in xfs.  Well, I get turned around easily.
 
-> The problem is that BBTOB has an internal cast to a 64 bit size,
-> and roundup() just blindly takes it and hence we get non-obvious
-> compile errors only on 32 bit platforms.
+> sure if this could happen in reality, could you please advise here? Thanks
+> for your attention : )
+> 
+> In function xfs_bmap_del_extent_real
+> <https://elixir.bootlin.com/linux/v5.12/source/fs/xfs/libxfs/v5.12/C/ident/xfs_bmap_del_extent_real>()
+> , the structure "got" could be uninitialized if function "
+> xfs_iext_get_extent
+> <https://elixir.bootlin.com/linux/v5.12/source/fs/xfs/libxfs/v5.12/C/ident/xfs_iext_get_extent>()"
+> returns false. However, there's no check for the return value but it is
+> still used in the later code.
 
-Indeed. Perhaps the macros should be fixed?
+What's the state of the iext cursor?  Has it moved since the last time
+anyone validated it?
 
-    #define BBSHIFT         9
-    #define BBSIZE          (1<<BBSHIFT)
-    #define BBMASK          (BBSIZE-1)
-    #define BTOBB(bytes)    (((__u64)(bytes) + BBSIZE - 1) >> BBSHIFT)
-    #define BTOBBT(bytes)   ((__u64)(bytes) >> BBSHIFT)
+--D
 
-Why are these two casting bytes to u64? The result will be smaller
-due to the shift.
-if the type holding bytes was too small, you're screwed anyway.
-
-    #define BBTOB(bbs)      ((bbs) << BBSHIFT)
-
-Why does this one lack the cast? If the passed bbs is ever 32-bit,
-it may overflow due to the shift.
-
-> We have type checking macros for all sorts of generic functionality
-> - why haven't these generic macros that do division also have type
-> checking to catch this? i.e. so that when people build kernels on
-> 64 bit machines find out that they've unwittingly broken 32 bit
-> builds the moment they use roundup() and/or friends incorrectly?
->
-> That would save a lot of extra work having fix crap like this up
-> after the fact...
-
-While adding checks would work for e.g. roundup(), it wouldn't work
-for plain divisions not involving rounding, as we don't have a way to
-catch this for "a / b", except for the link error on 32-bit platforms.
-
-Perhaps the build bots are not monitoring linux-xfs?
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+> 
+> Here's the related code:
+> 
+> STATIC int xfs_bmap_del_extent_real ()
+> {
+>         struct xfs_bmbt_irec	got; //"got" declared here but not initialized
+>         xfs_iext_get_extent(ifp, icur, &got); //"got" could be
+> uninitialized if xfs_iext_get_extent() return false.
+> 
+> 
+>         ASSERT(got.br_startoff <= del->br_startoff); //"got" is used
+> here and later code
+> }bool
+> xfs_iext_get_extent(
+> 	struct xfs_ifork	*ifp,
+> 	struct xfs_iext_cursor	*cur,
+> 	struct xfs_bmbt_irec	*gotp)
+> {
+> 	if (!xfs_iext_valid(ifp, cur))
+> 		return false;
+>         ...
+> }
+> 
+> 
+> 
+> -- 
+> Kind Regards,
+> 
+> *Yizhuo Zhai*
+> 
+> *Computer Science, Graduate Student*
+> *University of California, Riverside *
