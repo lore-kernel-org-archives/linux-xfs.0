@@ -2,72 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9265C48BE8
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 00:08:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B15C2C48BE8
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 00:17:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 913E7613D9
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 00:08:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 883F3613CC
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Jun 2021 00:17:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230380AbhFLAKE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Jun 2021 20:10:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60856 "EHLO mail.kernel.org"
+        id S229931AbhFLATA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Jun 2021 20:19:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47244 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230103AbhFLAKE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jun 2021 20:10:04 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A6F196124B;
-        Sat, 12 Jun 2021 00:08:05 +0000 (UTC)
+        id S229584AbhFLATA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jun 2021 20:19:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 804C2611C9;
+        Sat, 12 Jun 2021 00:17:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623456485;
-        bh=qdA3OELLB5CP/JOvUeK9pnaH5r2hCiQAUX7423yxG5c=;
+        s=k20201202; t=1623457021;
+        bh=OPT9nSBzQA3FkwZO3j/piDWeKowoD7cc4eiv5cj1eFs=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ThJIjOR3zLAG1kPymiUq8sfpe4+/HAspRBc62FxTPVtYxKnJI4mhMUG0tTZwsunUw
-         2MV5xeCKLh5/Dted/yq7A5XbUaVSMXieMl8t7hvvEjcxUg0XODKwVTHzCv9I/diVR/
-         eG7es1xG02bE37I9lUDKn9FJfWkHV7T6z7aKE/f8hNayhnd/D+lQC1y9mZ0WvxemVF
-         +iYcbLpqEloGgcr32OMAufI8CQGgap7ki5o1isZIURWeuinEfRLOudVHagrylktw5V
-         vOiiLS9amC8SujyJh9TYx2L3dLgopyjNr59iFBnyKWvtMI1g9AwOQfCU2Ijed7gh5L
-         qvnBdy5Szm+AQ==
-Date:   Fri, 11 Jun 2021 17:08:04 -0700
+        b=THX+s7vP1F1KiiS5KKYgt+Zvqn1sIGjWTEYcY/12jvwGowGUPbPBFe/NYFrqvRi0r
+         6rHsy3pLJ/jUhCTvQdpiGuQ1mK1TRBwOwDiVCo6sKpGItPEdY5mghxeWAQ2qNi7l/q
+         jFbjXiDZr6ka5ba60Bcpe2r8NjvZApCbROW+gHHLAuRo1RGULrN/zvPrnuPoAdft6b
+         oSe6JHCAj8X3ZPqdkS/WzCIw2DOQKtslQrUnhoi0uihat8y6A4/cK3VjF2LUWRnh1T
+         SPCfKk1mSpyPEWqJnhL40x7WwBUODbaOuvSIg8F691KkHCopLtj5vmnd8NUTdu/TQz
+         hNoQmfQo2UKfg==
+Date:   Fri, 11 Jun 2021 17:17:00 -0700
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me, amir73il@gmail.com
-Subject: Re: [PATCH 03/13] fstests: refactor test boilerplate code
-Message-ID: <YMP65LkTANPpJ2Bg@gmail.com>
+Subject: Re: [PATCH 05/13] fstests: move test group info to test files
+Message-ID: <YMP8/DcmO0e5OldC@gmail.com>
 References: <162317276202.653489.13006238543620278716.stgit@locust>
- <162317277866.653489.1612159248973350500.stgit@locust>
+ <162317278957.653489.1221763643277904130.stgit@locust>
+ <YMPx2vmImnkUlmge@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <162317277866.653489.1612159248973350500.stgit@locust>
+In-Reply-To: <YMPx2vmImnkUlmge@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 08, 2021 at 10:19:38AM -0700, Darrick J. Wong wrote:
-> diff --git a/common/preamble b/common/preamble
-> new file mode 100644
-> index 00000000..63f66957
-> --- /dev/null
-> +++ b/common/preamble
-> @@ -0,0 +1,49 @@
-> +#!/bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2021 Oracle.  All Rights Reserved.
-> +
-> +# Boilerplate fstests functionality
-> +
-> +# Standard cleanup function.  Individual tests should override this.
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
+On Fri, Jun 11, 2021 at 04:29:30PM -0700, Eric Biggers wrote:
+> On Tue, Jun 08, 2021 at 10:19:49AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Refactor every test in the entire test suite to use the new boilerplate
+> > functions.  This also migrates all the test group information into the
+> > test files.  This patch has been autogenerated via the command:
+> > 
+> > ./tools/convert-group btrfs ceph cifs ext4 f2fs generic nfs ocfs2 overlay perf shared udf xfs
+> > 
+> > NOTE: This patch submission only contains diffs of the first seven btrfs
+> > tests because vger rejects 1.5MB patches.  The full conversion is in the
+> > git branch linked from the cover letter.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> [...]
+> > diff --git a/tests/btrfs/006 b/tests/btrfs/006
+> > index 67f1fcd8..c0f9541a 100755
+> > --- a/tests/btrfs/006
+> > +++ b/tests/btrfs/006
+> > @@ -7,23 +7,17 @@
+> >  # run basic btrfs information commands in various ways
+> >  # sanity tests: filesystem show, label, sync, and device stats
+> >  #
+> > -seq=`basename $0`
+> > -seqres=$RESULT_DIR/$seq
+> > -echo "== QA output created by $seq"
+> > -
+> > -here=`pwd`
+> > -tmp=/tmp/$$
+> > -status=1	# failure is the default!
+> > -trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +. ./common/preamble
+> > +_begin_fstest auto quick volume
+> >  
+> > +# Override the default cleanup function.
+> >  _cleanup()
+> >  {
+> >      cd /
+> >      rm -f $tmp.*
+> >  }
+> 
+> A lot of the _cleanup() functions (such as the one above) are identical to the
+> one in common/preamble.  It might make sense to make tools/convert-group
+> recognize these and remove them.
 
-This probably should use "rm -rf" so that tests don't need to override this just
-because they created directories rather than files.
+The following command would remove most of them, including ones that omit the
+"cd /" or use "rm -rf" instead of "rm -f":
+
+sed -z -E -i 's/(#[^#\n]*\n)*_cleanup\(\)\n\{\n(\s+cd \/\n)?\s+rm -r?f "?\$tmp"?\.\*\n\}\n\n?//' tests/*/*
+
+I'm not sure how far you want to go, though.
 
 - Eric
