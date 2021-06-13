@@ -7,38 +7,37 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C788C48BDF
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:20:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49AC5C48BCF
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:20:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E62E061078
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:20:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C72661285
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:20:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232007AbhFMRWQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 13 Jun 2021 13:22:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41258 "EHLO mail.kernel.org"
+        id S231997AbhFMRWU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 13 Jun 2021 13:22:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41284 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231915AbhFMRWP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 13 Jun 2021 13:22:15 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AD7B761107;
-        Sun, 13 Jun 2021 17:20:13 +0000 (UTC)
+        id S231915AbhFMRWU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 13 Jun 2021 13:22:20 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2F96761078;
+        Sun, 13 Jun 2021 17:20:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623604813;
-        bh=5ltstnOjOSXrVfpaxHSZ8nTRKPJFB1bmc7ZhGKceso0=;
+        s=k20201202; t=1623604819;
+        bh=7ZIoRfxfRm+VFi8nyVLZYOM8GZu3m/0OxVGTwbdu0/c=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=dVDhCzhkUPA4wLR34Bb0zCdCCA311HUHXjiNBVg9763cfDHAbn6c6lF1C4yGkMA5e
-         ShxaaOg5qIgLSrGWRdy2BRJr6FuefxQeKbaraH78vxh2OELmNJ6Ng4D318UBCsKXqd
-         c3dleC0GCP1VrNya8MMcnFO4EgK5mf+4lnRvqBvWVHkxbos8k7YJ8XeD/Caj4KSEyH
-         y0SuIGcYULg6V0cJhOzHtRc17yGdOl6PvbJ9643ojl1uOAoD9jqmunEUApt3W3a1Qz
-         ss6/R3Klp1v2dzqqijy8dAazSOReN1ZZjmNCuxg1g9l1XYty8IcSzkJizznTLyMpD7
-         61Eyjo2KJX3xg==
-Subject: [PATCH 03/16] xfs: detach dquots from inode if we don't need to
- inactivate it
+        b=AE4u/Yk9q/Kfc6EYYmqox9IB6ZDG5z7K6hvLPXee5guwzgwIjw5tkN1u1P+iC86oP
+         4qtlfbM/eJ1CBRANj14yZJP2JFrVHqD96X9v/FuWH71Ti0eSfmS4I65cN/DR7DMMtI
+         imf0oVHCCWEIftaQBxpYVw7H/fsGA0vvvQ2KeZfygE9mXN8oSpYB51SZNIkV3CZTAR
+         esE2BjEfDQ6zGXAr/ZgS6iDKiD2Cj9FlbBJAq20Tmr+K9O3zBNipARQR7tbJ+WGLqK
+         RKDMH4xKOrXkuh0/erPgmW4ymAxULG6HwYyB/2Nl+G/IDbLb4z7f2eu4eYNdGFQPTJ
+         175jaHkPt6w3w==
+Subject: [PATCH 04/16] xfs: clean up xfs_inactive a little bit
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org,
         bfoster@redhat.com
-Date:   Sun, 13 Jun 2021 10:20:13 -0700
-Message-ID: <162360481340.1530792.16718628800672012784.stgit@locust>
+Date:   Sun, 13 Jun 2021 10:20:18 -0700
+Message-ID: <162360481889.1530792.8153660904394768299.stgit@locust>
 In-Reply-To: <162360479631.1530792.17147217854887531696.stgit@locust>
 References: <162360479631.1530792.17147217854887531696.stgit@locust>
 User-Agent: StGit/0.19
@@ -51,113 +50,51 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If we don't need to inactivate an inode, we can detach the dquots and
-move on to reclamation.  This isn't strictly required here; it's a
-preparation patch for deferred inactivation.
+Move the dqattach further up in xfs_inactive.  In theory we should
+always have dquots attached if there are CoW blocks, but this makes the
+usage pattern more consistent with the rest of xfs (attach dquots, then
+start making changes).
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |    8 +++++++-
- fs/xfs/xfs_inode.c  |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode.h  |    2 ++
- 3 files changed, 62 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_inode.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index a2d81331867b..7939eced3a47 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -338,8 +338,14 @@ xfs_inode_mark_reclaimable(
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_perag	*pag;
-+	bool			need_inactive = xfs_inode_needs_inactive(ip);
- 
--	xfs_inactive(ip);
-+	if (!need_inactive) {
-+		/* Going straight to reclaim, so drop the dquots. */
-+		xfs_qm_dqdetach(ip);
-+	} else {
-+		xfs_inactive(ip);
-+	}
- 
- 	if (!XFS_FORCED_SHUTDOWN(mp) && ip->i_delayed_blks) {
- 		xfs_check_delalloc(ip, XFS_DATA_FORK);
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3bee1cd20072..85b2b11b5217 100644
+index 85b2b11b5217..67786814997c 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1654,6 +1654,59 @@ xfs_inactive_ifree(
- 	return 0;
- }
- 
-+/*
-+ * Returns true if we need to update the on-disk metadata before we can free
-+ * the memory used by this inode.  Updates include freeing post-eof
-+ * preallocations; freeing COW staging extents; and marking the inode free in
-+ * the inobt if it is on the unlinked list.
-+ */
-+bool
-+xfs_inode_needs_inactive(
+@@ -1717,7 +1717,7 @@ xfs_inode_needs_inactive(
+  */
+ void
+ xfs_inactive(
+-	xfs_inode_t	*ip)
 +	struct xfs_inode	*ip)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_ifork	*cow_ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-+
-+	/*
-+	 * If the inode is already free, then there can be nothing
-+	 * to clean up here.
-+	 */
-+	if (VFS_I(ip)->i_mode == 0)
-+		return false;
-+
-+	/* If this is a read-only mount, don't do this (would generate I/O) */
-+	if (mp->m_flags & XFS_MOUNT_RDONLY)
-+		return false;
-+
-+	/* If the log isn't running, push inodes straight to reclaim. */
-+	if (XFS_FORCED_SHUTDOWN(mp) || (mp->m_flags & XFS_MOUNT_NORECOVERY))
-+		return false;
-+
-+	/* Metadata inodes require explicit resource cleanup. */
-+	if (xfs_is_metadata_inode(ip))
-+		return false;
-+
-+	/* Want to clean out the cow blocks if there are any. */
-+	if (cow_ifp && cow_ifp->if_bytes > 0)
-+		return true;
-+
-+	/* Unlinked files must be freed. */
-+	if (VFS_I(ip)->i_nlink == 0)
-+		return true;
-+
-+	/*
-+	 * This file isn't being freed, so check if there are post-eof blocks
-+	 * to free.  @force is true because we are evicting an inode from the
-+	 * cache.  Post-eof blocks must be freed, lest we end up with broken
-+	 * free space accounting.
-+	 *
-+	 * Note: don't bother with iolock here since lockdep complains about
-+	 * acquiring it in reclaim context. We have the only reference to the
-+	 * inode at this point anyways.
-+	 */
-+	return xfs_can_free_eofblocks(ip, true);
-+}
-+
- /*
-  * xfs_inactive
-  *
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 4b6703dbffb8..e3137bbc7b14 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -493,6 +493,8 @@ extern struct kmem_zone	*xfs_inode_zone;
- /* The default CoW extent size hint. */
- #define XFS_DEFAULT_COWEXTSZ_HINT 32
+ {
+ 	struct xfs_mount	*mp;
+ 	int			error;
+@@ -1743,6 +1743,11 @@ xfs_inactive(
+ 	if (xfs_is_metadata_inode(ip))
+ 		goto out;
  
-+bool xfs_inode_needs_inactive(struct xfs_inode *ip);
++	/* Ensure dquots are attached prior to making changes to this file. */
++	error = xfs_qm_dqattach(ip);
++	if (error)
++		goto out;
 +
- int xfs_iunlink_init(struct xfs_perag *pag);
- void xfs_iunlink_destroy(struct xfs_perag *pag);
+ 	/* Try to clean out the cow blocks if there are any. */
+ 	if (xfs_inode_has_cow_data(ip))
+ 		xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
+@@ -1768,10 +1773,6 @@ xfs_inactive(
+ 	     ip->i_df.if_nextents > 0 || ip->i_delayed_blks > 0))
+ 		truncate = 1;
  
+-	error = xfs_qm_dqattach(ip);
+-	if (error)
+-		goto out;
+-
+ 	if (S_ISLNK(VFS_I(ip)->i_mode))
+ 		error = xfs_inactive_symlink(ip);
+ 	else if (truncate)
 
