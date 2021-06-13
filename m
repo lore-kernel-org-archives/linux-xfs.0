@@ -3,42 +3,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16262C48BCF
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:19:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26479C48BCF
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:20:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D733A61284
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:19:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED62361284
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:20:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231931AbhFMRV6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 13 Jun 2021 13:21:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41132 "EHLO mail.kernel.org"
+        id S231951AbhFMRWE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 13 Jun 2021 13:22:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41188 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231915AbhFMRV6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 13 Jun 2021 13:21:58 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3123761107;
-        Sun, 13 Jun 2021 17:19:57 +0000 (UTC)
+        id S231915AbhFMRWE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 13 Jun 2021 13:22:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ADA1661078;
+        Sun, 13 Jun 2021 17:20:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623604797;
-        bh=zFjmtF3LyB1hJQZywVmlXBt3FZeALPwJ7UCa/8mFQqU=;
-        h=Subject:From:To:Cc:Date:From;
-        b=jipwaBFGDydWd8pOnNKCI6putaxNuW34erCIOZ34xXfJrmB1JkKXfKEz5RjBIK6nf
-         mSfUOGCommRKlyRCODnRgfZXgjdbHa/pribEY2An1845gSPGUHv/b3NGeMzD+3IwwR
-         FXJJYJrKQNEtn2cqBytS/OjOj1PB8DnmsGSsqGMF5owA6BRWY2Vrk2lq+KVuO6P8In
-         Mwj0s1w9VbPqBHzR09xHD0erAPnF7S+2m31H+l/YvTQJXRgxtUz02Yafltbu+eJq7i
-         9BAlehchfW9qFxrGeipyYHvXK0a1jnxMFKd9QDes30hbJcTA3CGYFGbctXzIP2z/zV
-         lsUs02LQaZjaA==
-Subject: [PATCHSET v7 00/16] xfs: deferred inode inactivation
+        s=k20201202; t=1623604802;
+        bh=V2R6VpMA805DF/IiZD0t7l8tdX/48BvUPgC4EPk0aEY=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=NP58FwX8dnV5Sh9wNrPJmGC20k0SLGOwhOaw/H/kkLKnCL8S3ncAsWR/CsJzq8ncM
+         qWKFveeYyzVnmzLgh+HcyyMujvtPsW9CBiXvhw2wbqsf2vhk7aass3xyUbZINtFsSf
+         1YJC1oSVzCCXSt1E9A5L+47vZpmQqChom/p+yikRXM5wTH3a1qkTvfkCotz1LMiEu/
+         eFjgTM+szsTpdUnNUAFuj6CgiFa4BTlrDhlTj7QjaHDhq67ZgDfkokA+0U0wzQyQJw
+         c+4vSX5IlC5OGXg68iEbImsop8xP5S4usQV+XXwJpB18unMZdRH44w3V/P0sX5ljwp
+         d3jmT4XlfQXSw==
+Subject: [PATCH 01/16] xfs: refactor the inode recycling code
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org,
-        bfoster@redhat.com
-Date:   Sun, 13 Jun 2021 10:19:56 -0700
-Message-ID: <162360479631.1530792.17147217854887531696.stgit@locust>
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, hch@infradead.org, bfoster@redhat.com
+Date:   Sun, 13 Jun 2021 10:20:02 -0700
+Message-ID: <162360480240.1530792.10821283161255096063.stgit@locust>
+In-Reply-To: <162360479631.1530792.17147217854887531696.stgit@locust>
+References: <162360479631.1530792.17147217854887531696.stgit@locust>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,108 +48,222 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This patch series implements deferred inode inactivation.  Inactivation
-is what happens when an open file loses its last incore reference: if
-the file has speculative preallocations, they must be freed, and if the
-file is unlinked, all forks must be truncated, and the inode marked
-freed in the inode chunk and the inode btrees.
+Hoist the code in xfs_iget_cache_hit that restores the VFS inode state
+to an xfs_inode that was previously vfs-destroyed.  The next patch will
+add a new set of state flags, so we need the helper to avoid
+duplication.
 
-Currently, all of this activity is performed in frontend threads when
-the last in-memory reference is lost and/or the vfs decides to drop the
-inode.  Three complaints stem from this behavior: first, that the time
-to unlink (in the worst case) depends on both the complexity of the
-directory as well as the the number of extents in that file; second,
-that deleting a directory tree is inefficient and seeky because we free
-the inodes in readdir order, not disk order; and third, the upcoming
-online repair feature needs to be able to xfs_irele while scanning a
-filesystem in transaction context.  It cannot perform inode inactivation
-in this context because xfs does not support nested transactions.
-
-The implementation will be familiar to those who have studied how XFS
-scans for reclaimable in-core inodes -- we create a couple more inode
-state flags to mark an inode as needing inactivation and being in the
-middle of inactivation.  When inodes need inactivation, we set
-NEED_INACTIVE in iflags, set the INACTIVE radix tree tag, and schedule a
-deferred work item.  The deferred worker runs in an unbounded workqueue,
-scanning the inode radix tree for tagged inodes to inactivate, and
-performing all the on-disk metadata updates.  Once the inode has been
-inactivated, it is left in the reclaim state and the background reclaim
-worker (or direct reclaim) will get to it eventually.
-
-Doing the inactivations from kernel threads solves the first problem by
-constraining the amount of work done by the unlink() call to removing
-the directory entry.  It solves the third problem by moving inactivation
-to a separate process.  Because the inactivations are done in order of
-inode number, we solve the second problem by performing updates in (we
-hope) disk order.  This also decreases the amount of time it takes to
-let go of an inode cluster if we're deleting entire directory trees.
-
-There are three big warts I can think of in this series: first, because
-the actual freeing of nlink==0 inodes is now done in the background,
-this means that the system will be busy making metadata updates for some
-time after the unlink() call returns.  This temporarily reduces
-available iops.  Second, in order to retain the behavior that deleting
-100TB of unshared data should result in a free space gain of 100TB, the
-statvfs and quota reporting ioctls wait for inactivation to finish,
-which increases the long tail latency of those calls.  This behavior is,
-unfortunately, key to not introducing regressions in fstests.  The third
-problem is that the deferrals keep memory usage higher for longer,
-reduce opportunities to throttle the frontend when metadata load is
-heavy, and the unbounded workqueues can create transaction storms.
-
-v1-v2: NYE patchbombs
-v3: rebase against 5.12-rc2 for submission.
-v4: combine the can/has eofblocks predicates, clean up incore inode tree
-    walks, fix inobt deadlock
-v5: actually freeze the inode gc threads when we freeze the filesystem,
-    consolidate the code that deals with inode tagging, and use
-    foreground inactivation during quotaoff to avoid cycling dquots
-v6: rebase to 5.13-rc4, fix quotaoff not to require foreground inactivation,
-    refactor to use inode walk goals, use atomic bitflags to control the
-    scheduling of gc workers
-v7: simplify the inodegc worker, which simplifies how flushes work, break
-    up the patch into smaller pieces, flush inactive inodes on syncfs to
-    simplify freeze/ro-remount handling, separate inode selection filtering
-    in iget, refactor inode recycling further, change gc delay to 100ms,
-    decrease the gc delay when space or quota are low, move most of the
-    destroy_inode logic to mark_reclaimable, get rid of the fallocate flush
-    scan thing, get rid of polled flush mode
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=deferred-inactivation-5.14
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- Documentation/admin-guide/xfs.rst |   10 
- fs/xfs/libxfs/xfs_ag.c            |    3 
- fs/xfs/libxfs/xfs_ag.h            |    3 
- fs/xfs/scrub/common.c             |   10 
- fs/xfs/xfs_globals.c              |    5 
- fs/xfs/xfs_icache.c               |  863 ++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_icache.h               |    6 
- fs/xfs/xfs_inode.c                |   64 +++
- fs/xfs/xfs_inode.h                |   21 +
- fs/xfs/xfs_itable.c               |   42 ++
- fs/xfs/xfs_iwalk.c                |   33 +
- fs/xfs/xfs_linux.h                |    1 
- fs/xfs/xfs_log_recover.c          |    7 
- fs/xfs/xfs_mount.c                |   38 +-
- fs/xfs/xfs_mount.h                |   28 +
- fs/xfs/xfs_qm.c                   |   28 +
- fs/xfs/xfs_qm_syscalls.c          |    8 
- fs/xfs/xfs_quota.h                |    2 
- fs/xfs/xfs_super.c                |  110 +++--
- fs/xfs/xfs_sysctl.c               |    9 
- fs/xfs/xfs_sysctl.h               |    1 
- fs/xfs/xfs_trace.h                |   63 ++-
- fs/xfs/xfs_trans.c                |    5 
- 23 files changed, 1163 insertions(+), 197 deletions(-)
+ fs/xfs/xfs_icache.c |  143 +++++++++++++++++++++++++++++----------------------
+ fs/xfs/xfs_trace.h  |    4 +
+ 2 files changed, 83 insertions(+), 64 deletions(-)
+
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 4e4682879bbd..37229517c8f7 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -355,14 +355,14 @@ xfs_reinit_inode(
+ 	struct xfs_mount	*mp,
+ 	struct inode		*inode)
+ {
+-	int		error;
+-	uint32_t	nlink = inode->i_nlink;
+-	uint32_t	generation = inode->i_generation;
+-	uint64_t	version = inode_peek_iversion(inode);
+-	umode_t		mode = inode->i_mode;
+-	dev_t		dev = inode->i_rdev;
+-	kuid_t		uid = inode->i_uid;
+-	kgid_t		gid = inode->i_gid;
++	int			error;
++	uint32_t		nlink = inode->i_nlink;
++	uint32_t		generation = inode->i_generation;
++	uint64_t		version = inode_peek_iversion(inode);
++	umode_t			mode = inode->i_mode;
++	dev_t			dev = inode->i_rdev;
++	kuid_t			uid = inode->i_uid;
++	kgid_t			gid = inode->i_gid;
+ 
+ 	error = inode_init_always(mp->m_super, inode);
+ 
+@@ -376,6 +376,74 @@ xfs_reinit_inode(
+ 	return error;
+ }
+ 
++/*
++ * Carefully nudge an inode whose VFS state has been torn down back into a
++ * usable state.  Drops the i_flags_lock and the rcu read lock.
++ */
++static int
++xfs_iget_recycle(
++	struct xfs_perag	*pag,
++	struct xfs_inode	*ip) __releases(&ip->i_flags_lock)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct inode		*inode = VFS_I(ip);
++	int			error;
++
++	trace_xfs_iget_recycle(ip);
++
++	/*
++	 * We need to make it look like the inode is being reclaimed to prevent
++	 * the actual reclaim workers from stomping over us while we recycle
++	 * the inode.  We can't clear the radix tree tag yet as it requires
++	 * pag_ici_lock to be held exclusive.
++	 */
++	ip->i_flags |= XFS_IRECLAIM;
++
++	spin_unlock(&ip->i_flags_lock);
++	rcu_read_unlock();
++
++	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
++	error = xfs_reinit_inode(mp, inode);
++	if (error) {
++		bool	wake;
++
++		/*
++		 * Re-initializing the inode failed, and we are in deep
++		 * trouble.  Try to re-add it to the reclaim list.
++		 */
++		rcu_read_lock();
++		spin_lock(&ip->i_flags_lock);
++		wake = !!__xfs_iflags_test(ip, XFS_INEW);
++		ip->i_flags &= ~(XFS_INEW | XFS_IRECLAIM);
++		if (wake)
++			wake_up_bit(&ip->i_flags, __XFS_INEW_BIT);
++		ASSERT(ip->i_flags & XFS_IRECLAIMABLE);
++		spin_unlock(&ip->i_flags_lock);
++		rcu_read_unlock();
++
++		trace_xfs_iget_recycle_fail(ip);
++		return error;
++	}
++
++	spin_lock(&pag->pag_ici_lock);
++	spin_lock(&ip->i_flags_lock);
++
++	/*
++	 * Clear the per-lifetime state in the inode as we are now effectively
++	 * a new inode and need to return to the initial state before reuse
++	 * occurs.
++	 */
++	ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
++	ip->i_flags |= XFS_INEW;
++	xfs_perag_clear_inode_tag(pag, XFS_INO_TO_AGINO(mp, ip->i_ino),
++			XFS_ICI_RECLAIM_TAG);
++	inode->i_state = I_NEW;
++	spin_unlock(&ip->i_flags_lock);
++	spin_unlock(&pag->pag_ici_lock);
++
++	return 0;
++}
++
+ /*
+  * If we are allocating a new inode, then check what was returned is
+  * actually a free, empty inode. If we are not allocating an inode,
+@@ -450,7 +518,7 @@ xfs_iget_cache_hit(
+ 	/*
+ 	 * If we are racing with another cache hit that is currently
+ 	 * instantiating this inode or currently recycling it out of
+-	 * reclaimabe state, wait for the initialisation to complete
++	 * reclaimable state, wait for the initialisation to complete
+ 	 * before continuing.
+ 	 *
+ 	 * XXX(hch): eventually we should do something equivalent to
+@@ -472,64 +540,16 @@ xfs_iget_cache_hit(
+ 	if (error)
+ 		goto out_error;
+ 
+-	/*
+-	 * If IRECLAIMABLE is set, we've torn down the VFS inode already.
+-	 * Need to carefully get it back into useable state.
+-	 */
+ 	if (ip->i_flags & XFS_IRECLAIMABLE) {
+-		trace_xfs_iget_reclaim(ip);
+-
+ 		if (flags & XFS_IGET_INCORE) {
+ 			error = -EAGAIN;
+ 			goto out_error;
+ 		}
+ 
+-		/*
+-		 * We need to set XFS_IRECLAIM to prevent xfs_reclaim_inode
+-		 * from stomping over us while we recycle the inode.  We can't
+-		 * clear the radix tree reclaimable tag yet as it requires
+-		 * pag_ici_lock to be held exclusive.
+-		 */
+-		ip->i_flags |= XFS_IRECLAIM;
+-
+-		spin_unlock(&ip->i_flags_lock);
+-		rcu_read_unlock();
+-
+-		ASSERT(!rwsem_is_locked(&inode->i_rwsem));
+-		error = xfs_reinit_inode(mp, inode);
+-		if (error) {
+-			bool wake;
+-			/*
+-			 * Re-initializing the inode failed, and we are in deep
+-			 * trouble.  Try to re-add it to the reclaim list.
+-			 */
+-			rcu_read_lock();
+-			spin_lock(&ip->i_flags_lock);
+-			wake = !!__xfs_iflags_test(ip, XFS_INEW);
+-			ip->i_flags &= ~(XFS_INEW | XFS_IRECLAIM);
+-			if (wake)
+-				wake_up_bit(&ip->i_flags, __XFS_INEW_BIT);
+-			ASSERT(ip->i_flags & XFS_IRECLAIMABLE);
+-			trace_xfs_iget_reclaim_fail(ip);
+-			goto out_error;
+-		}
+-
+-		spin_lock(&pag->pag_ici_lock);
+-		spin_lock(&ip->i_flags_lock);
+-
+-		/*
+-		 * Clear the per-lifetime state in the inode as we are now
+-		 * effectively a new inode and need to return to the initial
+-		 * state before reuse occurs.
+-		 */
+-		ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
+-		ip->i_flags |= XFS_INEW;
+-		xfs_perag_clear_inode_tag(pag,
+-				XFS_INO_TO_AGINO(pag->pag_mount, ino),
+-				XFS_ICI_RECLAIM_TAG);
+-		inode->i_state = I_NEW;
+-		spin_unlock(&ip->i_flags_lock);
+-		spin_unlock(&pag->pag_ici_lock);
++		/* Drops i_flags_lock and RCU read lock. */
++		error = xfs_iget_recycle(pag, ip);
++		if (error)
++			return error;
+ 	} else {
+ 		/* If the VFS inode is being torn down, pause and try again. */
+ 		if (!igrab(inode)) {
+@@ -559,7 +579,6 @@ xfs_iget_cache_hit(
+ 	return error;
+ }
+ 
+-
+ static int
+ xfs_iget_cache_miss(
+ 	struct xfs_mount	*mp,
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index a10612155377..d0b4799ad1e6 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -630,8 +630,8 @@ DEFINE_EVENT(xfs_inode_class, name, \
+ 	TP_PROTO(struct xfs_inode *ip), \
+ 	TP_ARGS(ip))
+ DEFINE_INODE_EVENT(xfs_iget_skip);
+-DEFINE_INODE_EVENT(xfs_iget_reclaim);
+-DEFINE_INODE_EVENT(xfs_iget_reclaim_fail);
++DEFINE_INODE_EVENT(xfs_iget_recycle);
++DEFINE_INODE_EVENT(xfs_iget_recycle_fail);
+ DEFINE_INODE_EVENT(xfs_iget_hit);
+ DEFINE_INODE_EVENT(xfs_iget_miss);
+ 
 
