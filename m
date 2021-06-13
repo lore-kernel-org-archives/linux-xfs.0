@@ -7,37 +7,38 @@ X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49AC5C48BCF
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:20:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4429C48BDF
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:20:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C72661285
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:20:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D7EA61284
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 17:20:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231997AbhFMRWU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 13 Jun 2021 13:22:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41284 "EHLO mail.kernel.org"
+        id S232011AbhFMRW0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 13 Jun 2021 13:22:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41310 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231915AbhFMRWU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 13 Jun 2021 13:22:20 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2F96761078;
-        Sun, 13 Jun 2021 17:20:19 +0000 (UTC)
+        id S231915AbhFMRW0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 13 Jun 2021 13:22:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A770C61078;
+        Sun, 13 Jun 2021 17:20:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623604819;
-        bh=7ZIoRfxfRm+VFi8nyVLZYOM8GZu3m/0OxVGTwbdu0/c=;
+        s=k20201202; t=1623604824;
+        bh=eGqhITI7uxnulhLZj+DBJdw+G5jKdmTUT/agH5YTFu0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=AE4u/Yk9q/Kfc6EYYmqox9IB6ZDG5z7K6hvLPXee5guwzgwIjw5tkN1u1P+iC86oP
-         4qtlfbM/eJ1CBRANj14yZJP2JFrVHqD96X9v/FuWH71Ti0eSfmS4I65cN/DR7DMMtI
-         imf0oVHCCWEIftaQBxpYVw7H/fsGA0vvvQ2KeZfygE9mXN8oSpYB51SZNIkV3CZTAR
-         esE2BjEfDQ6zGXAr/ZgS6iDKiD2Cj9FlbBJAq20Tmr+K9O3zBNipARQR7tbJ+WGLqK
-         RKDMH4xKOrXkuh0/erPgmW4ymAxULG6HwYyB/2Nl+G/IDbLb4z7f2eu4eYNdGFQPTJ
-         175jaHkPt6w3w==
-Subject: [PATCH 04/16] xfs: clean up xfs_inactive a little bit
+        b=vD6iCBUjB6h4tvUrEHmusFL+UZKT10WwrizRffE8KK1LSplTJYMhTaxhoifeI5Ci6
+         DY0pDg+nEeK8RjE1wESYiYnRqJ89b6YNh+weoxh6wxYfAY7njVjbxB7I/9HtL0K9uV
+         F7LdmrAHlIRVB+txAFQWcpH3fZdGxdYohukLRDoQH/n96usmvRW0btSNwbhbujdQ+F
+         88pFU38gUwl//dx+MSDmjwyc7QxMP+1o0BEtS8YXtJrFgIQwmbFl6w9z2i+RTvJCol
+         mL9mVId+tK1Hq6dvzNz4XNV7T7T77JOLfgdH4uxI0zVig6OCVI5hBr48pm2orRm1Hk
+         IYddPgoWRCnuw==
+Subject: [PATCH 05/16] xfs: separate primary inode selection criteria in
+ xfs_iget_cache_hit
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org,
         bfoster@redhat.com
-Date:   Sun, 13 Jun 2021 10:20:18 -0700
-Message-ID: <162360481889.1530792.8153660904394768299.stgit@locust>
+Date:   Sun, 13 Jun 2021 10:20:24 -0700
+Message-ID: <162360482438.1530792.18197198406001465325.stgit@locust>
 In-Reply-To: <162360479631.1530792.17147217854887531696.stgit@locust>
 References: <162360479631.1530792.17147217854887531696.stgit@locust>
 User-Agent: StGit/0.19
@@ -50,51 +51,94 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move the dqattach further up in xfs_inactive.  In theory we should
-always have dquots attached if there are CoW blocks, but this makes the
-usage pattern more consistent with the rest of xfs (attach dquots, then
-start making changes).
+During review of the v6 deferred inode inactivation patchset[1], Dave
+commented that _cache_hit should have a clear separation between inode
+selection criteria and actions performed on a selected inode.  Move a
+hunk to make this true, and compact the shrink cases in the function.
 
+[1] https://lore.kernel.org/linux-xfs/162310469340.3465262.504398465311182657.stgit@locust/T/#mca6d958521cb88bbc1bfe1a30767203328d410b5
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_inode.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_icache.c |   39 ++++++++++++++++-----------------------
+ 1 file changed, 16 insertions(+), 23 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 85b2b11b5217..67786814997c 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1717,7 +1717,7 @@ xfs_inode_needs_inactive(
-  */
- void
- xfs_inactive(
--	xfs_inode_t	*ip)
-+	struct xfs_inode	*ip)
- {
- 	struct xfs_mount	*mp;
- 	int			error;
-@@ -1743,6 +1743,11 @@ xfs_inactive(
- 	if (xfs_is_metadata_inode(ip))
- 		goto out;
- 
-+	/* Ensure dquots are attached prior to making changes to this file. */
-+	error = xfs_qm_dqattach(ip);
-+	if (error)
-+		goto out;
-+
- 	/* Try to clean out the cow blocks if there are any. */
- 	if (xfs_inode_has_cow_data(ip))
- 		xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
-@@ -1768,10 +1773,6 @@ xfs_inactive(
- 	     ip->i_df.if_nextents > 0 || ip->i_delayed_blks > 0))
- 		truncate = 1;
- 
--	error = xfs_qm_dqattach(ip);
--	if (error)
--		goto out;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 7939eced3a47..4002f0b84401 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -562,13 +562,8 @@ xfs_iget_cache_hit(
+ 	 * will not match, so check for that, too.
+ 	 */
+ 	spin_lock(&ip->i_flags_lock);
+-	if (ip->i_ino != ino) {
+-		trace_xfs_iget_skip(ip);
+-		XFS_STATS_INC(mp, xs_ig_frecycle);
+-		error = -EAGAIN;
+-		goto out_error;
+-	}
 -
- 	if (S_ISLNK(VFS_I(ip)->i_mode))
- 		error = xfs_inactive_symlink(ip);
- 	else if (truncate)
++	if (ip->i_ino != ino)
++		goto out_skip;
+ 
+ 	/*
+ 	 * If we are racing with another cache hit that is currently
+@@ -580,12 +575,8 @@ xfs_iget_cache_hit(
+ 	 *	     wait_on_inode to wait for these flags to be cleared
+ 	 *	     instead of polling for it.
+ 	 */
+-	if (ip->i_flags & (XFS_INEW|XFS_IRECLAIM)) {
+-		trace_xfs_iget_skip(ip);
+-		XFS_STATS_INC(mp, xs_ig_frecycle);
+-		error = -EAGAIN;
+-		goto out_error;
+-	}
++	if (ip->i_flags & (XFS_INEW | XFS_IRECLAIM))
++		goto out_skip;
+ 
+ 	/*
+ 	 * Check the inode free state is valid. This also detects lookup
+@@ -595,23 +586,21 @@ xfs_iget_cache_hit(
+ 	if (error)
+ 		goto out_error;
+ 
++	/* Skip inodes that have no vfs state. */
++	if ((flags & XFS_IGET_INCORE) &&
++	    (ip->i_flags & XFS_IRECLAIMABLE))
++		goto out_skip;
++
++	/* The inode fits the selection criteria; process it. */
+ 	if (ip->i_flags & XFS_IRECLAIMABLE) {
+-		if (flags & XFS_IGET_INCORE) {
+-			error = -EAGAIN;
+-			goto out_error;
+-		}
+-
+ 		/* Drops i_flags_lock and RCU read lock. */
+ 		error = xfs_iget_recycle(pag, ip);
+ 		if (error)
+ 			return error;
+ 	} else {
+ 		/* If the VFS inode is being torn down, pause and try again. */
+-		if (!igrab(inode)) {
+-			trace_xfs_iget_skip(ip);
+-			error = -EAGAIN;
+-			goto out_error;
+-		}
++		if (!igrab(inode))
++			goto out_skip;
+ 
+ 		/* We've got a live one. */
+ 		spin_unlock(&ip->i_flags_lock);
+@@ -628,6 +617,10 @@ xfs_iget_cache_hit(
+ 
+ 	return 0;
+ 
++out_skip:
++	trace_xfs_iget_skip(ip);
++	XFS_STATS_INC(mp, xs_ig_frecycle);
++	error = -EAGAIN;
+ out_error:
+ 	spin_unlock(&ip->i_flags_lock);
+ 	rcu_read_unlock();
 
