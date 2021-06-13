@@ -2,292 +2,305 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95BAEC48BCF
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 00:36:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41DF4C48BCF
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 00:39:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5FE8560FEA
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 00:36:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21F7C61181
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Jun 2021 00:39:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229777AbhFMAiN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 12 Jun 2021 20:38:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60296 "EHLO mail.kernel.org"
+        id S231593AbhFMAlG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 12 Jun 2021 20:41:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32796 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229753AbhFMAiL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 12 Jun 2021 20:38:11 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3902F60FEA;
-        Sun, 13 Jun 2021 00:36:11 +0000 (UTC)
+        id S229753AbhFMAlF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 12 Jun 2021 20:41:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1F40E61179
+        for <linux-xfs@vger.kernel.org>; Sun, 13 Jun 2021 00:39:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623544571;
-        bh=orHg0kO8XETm84yred1Xv7q13aFUIVbsw4sxeyqKigY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gzaS/NPmq4ane621om0cSHB6ovsnl5an6equxXi1OXtjpPrPVBV34dFIFch9838pP
-         /tYpaOFVhuA4BTg3Pk7J3w6JgK69sr32ksHfwvsMIin/hM/wI8gMgvubDEZ8aDofFF
-         7ddTjsoBpF5qOtTbVTYNbDd0o+dHv+jGsdYU5GnA/pDiu2w06IUX1TQXmaAp6SEtLe
-         VSMUhsrcYCB31xyREh+Ufkr3RokRX/Bzqr04c7O5himWgbI4ywbAxFFf+CBgIwTFdJ
-         K2vC9ychE8pn6ApawVEGQpYu+avV2i+NQuaYHjvHRjfWh4Y9cTtEsn+ezZFbk0IRoa
-         Fb8i26D183jUA==
-Date:   Sat, 12 Jun 2021 17:36:10 -0700
+        s=k20201202; t=1623544745;
+        bh=ZCK7NjX1nXgBXlfDXisSpUyG5SQiPnXmNwJ/SEVdfMc=;
+        h=Date:From:To:Subject:From;
+        b=LeBrox9usefbr00zpgDXA/jszoRW52r4bshtEqz9OnS12N4FqwWuqujBa4ET5WvN7
+         HxrtLsHCYkiogxApTbWNpeR2DGoJv4CSJ6dCxfUX8XN5Q1+yzbtysktCYiSO5L/16f
+         1FFX+4oD7qrsGlwVOzUjkbFnxgY9Msbh4j9Zi495MlKWTN5ed5F/eLv818fCgwblic
+         nTzN0cnqbBh7G9Jwv1rnEUpsv/7fJxtmLMCIXUFcNXGEQQEmpmT4h5oWCgxhHfjSQ1
+         50nOVkly+K4BJJvS2v2/u8zUR5AS/wBXS1E/Rs/OvBghQ2SJCo7cPmtfGRHzOAMHjU
+         Uv9lFTHE9dkSw==
+Date:   Sat, 12 Jun 2021 17:39:04 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [GIT PULL] xfs: Delay Ready Attributes
-Message-ID: <20210613003610.GK2945738@locust>
-References: <20210609194447.10600-1-allison.henderson@oracle.com>
- <20210609220339.GO664593@dread.disaster.area>
- <20210610002806.GA2945738@locust>
- <20210610014953.GP664593@dread.disaster.area>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to e0d2d97b5477
+Message-ID: <20210613003904.GL2945738@locust>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210610014953.GP664593@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 10, 2021 at 11:49:53AM +1000, Dave Chinner wrote:
-> On Wed, Jun 09, 2021 at 05:28:06PM -0700, Darrick J. Wong wrote:
-> > On Thu, Jun 10, 2021 at 08:03:39AM +1000, Dave Chinner wrote:
-> > > On Wed, Jun 09, 2021 at 12:44:47PM -0700, Allison Henderson wrote:
-> > > > Hi Darrick,
-> > > > 
-> > > > I've created a branch and tag for the delay ready attribute series.  I'ved
-> > > > added the rvbs since the last review, but otherwise it is unchanged since
-> > > > v20.
-> > > > 
-> > > > Please pull from the tag decsribed below.
-> > > 
-> > > Yay! At last! Good work, Allison. :)
-> > 
-> > Yes, indeed.  Pulled!
-> > 
-> > > Nothing to worry about here, but I thought I'd make an observation
-> > > on the construction branches for pull requests seeing as pull
-> > > request are becoming our way of saying "this code is ready to
-> > > merge". 
-> > > 
-> > > > Thanks!
-> > > > Allison
-> > > > 
-> > > > The following changes since commit 0fe0bbe00a6fb77adf75085b7d06b71a830dd6f2:
-> > > > 
-> > > >   xfs: bunmapi has unnecessary AG lock ordering issues (2021-05-27 08:11:24 -0700)
-> > > 
-> > > This looks like it has been built on top of a specific commit in the
-> > > linux-xfs tree - perhaps a for-next branch before all the most
-> > > recent development branches have been merged in.
-> > 
-> > Yes, it's the xfs-5.13-fixes-3 tag at the end of the 5.13 fixes branch.
-> > 
-> > > The problem with doing this is that the for-next tree can rebase,
-> > > which can leave your tree with orphaned commits that are no longer
-> > > in the main development branch or upstream. While these commits
-> > > are upstream now, this isn't an issue for this particular branch
-> > > and pull request.
-> > > 
-> > > i.e. if the recent rebase of the for-next branch rewrote the above
-> > > commit, pulling this branch would cause all sorts of problems.
-> > > 
-> > > So to avoid this sort of issue with pull requests, and to allow the
-> > > maintainer (darrick) to be able to easily reformulate the for-next
-> > > tree just by merging branches, pull requests should all come from a
-> > > known upstream base. In the case of pull requests for the xfs tree,
-> > > that known base is the master branch of the XFS tree.
-> > 
-> > This is a good point.  Branches should be based off of something that's
-> > stable, recent, and relatively close to the current development work.
-> > 
-> > Ideally that would be for-next, but I hadn't actually declared that
-> > stable yet since I just started accepting pull requests and wanted a
-> > couple of days to make sure nothing totally weird happened with Stephen
-> > Rothwell's integration merge.
-> 
-> I don't think you should ever declare for-next as a "stable" branch
-> to base new work on, for the same reason that linux-next isn't
-> stable. i.e. for-next is a "work in progress" branch that, eventually,
-> becomes the branch that is merged upstream. It's not actually
-> something developers can rely on being "stable" until it is tagged
-> for upstream merge and a pull-request issued.
+Hi folks,
 
-Oh!  Well that clears up a misconception then!  For the whole time I've
-been maintainer, I'd assumed (and worried about) that for-next was not
-to be rewritten under any circumstances once pushed and announced,
-unless a commit was found to be so bad that rewriting history was a
-better option.
+The for-next branch of the xfs-linux repository at:
 
-"Tagged and pull requested" is a lower and easier standard.  Good.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-> Really, for-next is the intergration branch - it's first place where
-> we get wider coverage of the development code via linux-next. There
-> is -always- a chance that someone using linux-next is going to find
-> a problem that requires a rebase of the for-next branch to fix, and
-> so the for-next branch really isn't "stable".
-> 
-> If we need public stable branches for cross-dev development, they
-> need to be published in their own branch as an explicitly stable
-> branch. That stable branch can then be merged into dev trees and
-> for-next like any other stable branch and when those dev branches
-> are merged into the one tree from multiple sources git will
-> recognise this and merge them cleanly.
+has just been updated.
 
-<nod> That I can do.
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  This push merges Allison's delay-ready xattr branch
+and adds a couple of bug fixes.
 
-> IOWs, for-next is for shaking out problems found during integration
-> and wider testing, not for commit stability....
-> 
-> > With for-next in flux, basing your branch off the end of the fixes
-> > branch, or an upstream Linus release some time after that, are good
-> > enough choices...
-> 
-> The base of topic branch should be a Linus release at or before
-> (older) the base commit the xfs fixes branch is based off.
-> Otherwise when the topic branch is merged into the for-next tree, it
-> will also pull all the commits from the upstream branch that the
-> for-next tree doesn't have.
-> 
-> IOWs, if the XFS fixes branch is based on 5.13-rc2, then all pull
-> requests need to be based on either the fixes branch or at or
-> something earlier than xfs/master. If you base the pull req on
-> 5.13-rc3, then merging the topic branch into for-next will also move
-> for-next forward to 5.13-rc3. This makes a mess of the tree history,
-> and Linus will complain about the mess when he sees it...
-> 
-> > since I hadn't updated xfs-linux.git#master in a
-> > while.
-> 
-> In case I haven't already made it clear, I think the master branch
-> should only get updated once per release cycle, some time shortly
-> after the merge window closes.  Ideally this happens around -rc2
-> so the base is somewhat stable.
-> 
-> /me does a double take
-> 
-> When did xfs/master move forward to 5.13-rc4?
+The new head of the for-next branch is commit:
 
-After Linus merged the last of the xfs-5.13-fixes branch.  I can never
-really settle my mind as to whether to keep master on -rc1 or push it
-forward.  Leaving it at -rc1 is less churn, but OTOH there are (rather
-frequently) bugs in other parts of the kernel that I hear about breaking
-peoples' (or my own) ability to test, so I push it forward when things
-seem to have stabilized.
+e0d2d97b5477 xfs: remove redundant initialization of variable error
 
-(or at least, every other kernel since about 5.5 has had /some/ stupid
-problem in the mm/block/networking code that has caused me personally
-to see a higher rate of random test regressions, which means I've now
-internalized pushing master to -rc4 because it takes a month for that
-to shake out)
+New Commits:
 
-> > For the past 4.5 years, the pattern has always been that the most recent
-> > fixes branch (xfs-5.X-fixes) gets merged into upstream before I create
-> > the xfs-5.(X+1)-merge branch.  This could get murky if I ever have
-> > enough bandwidth to be building a fixes branch and a merge branch at the
-> > same time, but TBH if xfs is so unstable that we /need/ fixes past -rc4
-> > then we really should concentrate on that at the expense of merging new
-> > code.
-> > 
-> > I guess that means I should be updating xfs-linux.git#master to point to
-> > the most recent -rc with any Xfs changes in it.
-> 
-> IMO, it should not change at all during a cycle. Having to update
-> the -fixes branch late in the cycle does not need rebasing the
-> master branch or the fixes branch. It just means it needs to be
-> merged into the for-next branch again after the new fix is appended
-> to it.
-> 
-> Moving the master branch forwards to pick up all the fixes just
-> leads to downstream problems when people are managing multiple
-> branches locally. i.e. master branch stability isn't about what is
-> convenient for building for-next, but about providing a stable base
-> for all developers that are using the tree to build pull requests.
-> 
-> IOWs, I do not want to be using -rc2 for one set of topic branches,
-> and then another branch I set up for merge a week later to be based
-> on -rc4 even though I've used xfs/master as the base for all of
-> them.  That results in lots of local merge noise and difficultly in
-> getting diffs between branches. This also causes problems with
-> explicitly stable branches if they end up being based off different
-> commits to the rest of the trees.
-> 
-> So unless there's a compelling reason, I don't think the master
-> branch should move more than once per dev cycle. Everyone should be
-> using the same base for their pull requests so they can pull each
-> other's work without getting base kernel revision noise in the
-> merges...
+Allison Henderson (14):
+      [4126c06e25b3] xfs: Reverse apply 72b97ea40d
+      [a8490f699f6e] xfs: Add xfs_attr_node_remove_name
+      [6286514b63e1] xfs: Refactor xfs_attr_set_shortform
+      [f0f7c502c728] xfs: Separate xfs_attr_node_addname and xfs_attr_node_addname_clear_incomplete
+      [6ca5a4a1f529] xfs: Add helper xfs_attr_node_addname_find_attr
+      [5d954cc09f6b] xfs: Hoist xfs_attr_node_addname
+      [83c6e70789ff] xfs: Hoist xfs_attr_leaf_addname
+      [3f562d092bb1] xfs: Hoist node transaction handling
+      [2b74b03c13c4] xfs: Add delay ready attr remove routines
+      [8f502a400982] xfs: Add delay ready attr set routines
+      [0e6acf29db6f] xfs: Remove xfs_attr_rmtval_set
+      [4fd084dbbd05] xfs: Clean up xfs_attr_node_addname_clear_incomplete
+      [4a4957c16dc6] xfs: Fix default ASSERT in xfs_attr_set_iter
+      [816c8e39b7ea] xfs: Make attr name schemes consistent
 
-Fair enough.  Next cycle, I'll update master when I put out the first
--fixes branch and leave it there all the way through.
+Christoph Hellwig (4):
+      [5a981e4ea8ff] xfs: mark xfs_bmap_set_attrforkoff static
+      [54cd3aa6f810] xfs: remove ->b_offset handling for page backed buffers
+      [934d1076bb2c] xfs: simplify the b_page_count calculation
+      [170041f71596] xfs: cleanup error handling in xfs_buf_get_map
 
-> > > In terms of workflow, what this means is that development is done on
-> > > a xfs/master based branch. i.e. dev branches are built like this:
-> > > 
-> > > $ git checkout -b dev-branch-1 xfs/master
-> > > $ git merge remote/stable-dev-branch
-> > > $ git merge local-dependent-dev-branch
-> > > $ <apply all your changes>
-> > > $ <build kernel and test>
-> > > 
-> > > And for testing against the latest -rc (say 5.13-rc5) and for-next
-> > > kernels you do:
-> > > 
-> > > $ git checkout -b testing v5.13-rc5
-> > > $ git merge xfs/for-next
-> > > $ git merge dev-branch-1
-> > > <resolve conflicts>
-> > > $ git merge dev-branch-2
-> > > <resolve conflicts>
-> > > ....
-> > > $ git merge dev-branch-N
-> > > <resolve conflicts>
-> > > $ <build kernel and test>
-> > 
-> > Whee, the modern era... :)
-> 
-> Hardly - that's how I've worked for over a decade :P
-> 
-> (Get Off My Lawn!)
+Darrick J. Wong (31):
+      [a7bcb147fef3] xfs: clean up open-coded fs block unit conversions
+      [20bd8e63f30b] xfs: remove unnecessary shifts
+      [1ad2cfe0a570] xfs: move the quotaoff dqrele inode walk into xfs_icache.c
+      [3ea06d73e3c0] xfs: detach inode dquots at the end of inactivation
+      [df60019739d8] xfs: move the inode walk functions further down
+      [c1115c0cba2b] xfs: rename xfs_inode_walk functions to xfs_icwalk
+      [c809d7e948a1] xfs: pass the goal of the incore inode walk to xfs_inode_walk()
+      [b9baaef42f76] xfs: separate the dqrele_all inode grab logic from xfs_inode_walk_ag_grab
+      [9d2793ceecb9] xfs: move xfs_inew_wait call into xfs_dqrele_inode
+      [7fdff52623b4] xfs: remove iter_flags parameter from xfs_inode_walk_*
+      [f427cf5c6236] xfs: remove indirect calls from xfs_inode_walk{,_ag}
+      [d20d5edcf941] xfs: clean up inode state flag tests in xfs_blockgc_igrab
+      [594ab00b760f] xfs: make the icwalk processing functions clean up the grab state
+      [919a4ddb6841] xfs: fix radix tree tag signs
+      [9d5ee8375951] xfs: pass struct xfs_eofblocks to the inode scan callback
+      [f1bc5c5630f9] xfs: merge xfs_reclaim_inodes_ag into xfs_inode_walk_ag
+      [c076ae7a9361] xfs: refactor per-AG inode tagging functions
+      [ebf2e3372332] Merge tag 'xfs-buf-bulk-alloc-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.14-merge2
+      [c3eabd365034] Merge tag 'xfs-perag-conv-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.14-merge2
+      [f52edf6c54d9] Merge tag 'unit-conversion-cleanups-5.14_2021-06-03' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
+      [8b943d21d40d] Merge tag 'assorted-fixes-5.14-1_2021-06-03' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
+      [ffc18582ed18] Merge tag 'inode-walk-cleanups-5.14_2021-06-03' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
+      [255794c7ed7a] xfs: only reset incore inode health state flags when reclaiming an inode
+      [7975e465af6b] xfs: drop IDONTCACHE on inodes when we mark them sick
+      [2d53f66baffd] xfs: change the prefix of XFS_EOF_FLAGS_* to XFS_ICWALK_FLAG_
+      [9492750a8b18] xfs: selectively keep sick inodes in memory
+      [b26b2bf14f82] xfs: rename struct xfs_eofblocks to xfs_icwalk
+      [295abff2fb94] Merge tag 'fix-inode-health-reports-5.14_2021-06-08' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
+      [68b2c8bcdb81] Merge tag 'rename-eofblocks-5.14_2021-06-08' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-5.14-merge2
+      [7e4311b04be4] Merge tag 'xfs-cil-scale-2-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.14-merge2-cil
+      [4123eea444ab] Merge tag 'xfs-delay-ready-attrs-v20.1' of https://github.com/allisonhenderson/xfs_work into xfs-5.14-merge2-cil-xattr
 
-(Heh, me too, but messily with stgit)
+Dave Chinner (73):
+      [0a683794ace2] xfs: split up xfs_buf_allocate_memory
+      [07b5c5add42a] xfs: use xfs_buf_alloc_pages for uncached buffers
+      [c9fa563072e1] xfs: use alloc_pages_bulk_array() for buffers
+      [02c511738688] xfs: merge _xfs_buf_get_pages()
+      [e7d236a6fe51] xfs: move page freeing into _xfs_buf_free_pages()
+      [9bbafc71919a] xfs: move xfs_perag_get/put to xfs_ag.[ch]
+      [61aa005a5bd7] xfs: prepare for moving perag definitions and support to libxfs
+      [07b6403a6873] xfs: move perag structure and setup to libxfs/xfs_ag.[ch]
+      [f250eedcf762] xfs: make for_each_perag... a first class citizen
+      [934933c3eec9] xfs: convert raw ag walks to use for_each_perag
+      [6f4118fc6482] xfs: convert xfs_iwalk to use perag references
+      [7f8d3b3ca6fe] xfs: convert secondary superblock walk to use perags
+      [45d066211756] xfs: pass perags through to the busy extent code
+      [30933120ad79] xfs: push perags through the ag reservation callouts
+      [58d43a7e3263] xfs: pass perags around in fsmap data dev functions
+      [be9fb17d88f0] xfs: add a perag to the btree cursor
+      [fa9c3c197329] xfs: convert rmap btree cursor to using a perag
+      [a81a06211fb4] xfs: convert refcount btree cursor to use perags
+      [289d38d22cd8] xfs: convert allocbt cursors to use perags
+      [7b13c5155182] xfs: use perag for ialloc btree cursors
+      [50f02fe3338d] xfs: remove agno from btree cursor
+      [4268547305c9] xfs: simplify xfs_dialloc_select_ag() return values
+      [89b1f55a2951] xfs: collapse AG selection for inode allocation
+      [b652afd93703] xfs: get rid of xfs_dir_ialloc()
+      [309161f6603c] xfs: inode allocation can use a single perag instance
+      [8237fbf53d6f] xfs: clean up and simplify xfs_dialloc()
+      [f40aadb2bb64] xfs: use perag through unlink processing
+      [509201163fca] xfs: remove xfs_perag_t
+      [977ec4ddf0b7] xfs: don't take a spinlock unconditionally in the DIO fastpath
+      [7660a5b48fbe] xfs: log stripe roundoff is a property of the log
+      [5fd9256ce156] xfs: separate CIL commit record IO
+      [944f2c49fba1] xfs: remove xfs_blkdev_issue_flush
+      [db7e30204e4c] xfs: async blkdev cache flush
+      [0279bbbbc03f] xfs: CIL checkpoint flushes caches unconditionally
+      [69d51e0e1686] xfs: remove need_start_rec parameter from xlog_write()
+      [cb1acb3f3246] xfs: journal IO cache flush reductions
+      [3682277520d6] xfs: Fix CIL throttle hang when CIL space used going backwards
+      [f39ae5297c5c] xfs: xfs_log_force_lsn isn't passed a LSN
+      [e12213ba5d90] xfs: AIL needs asynchronous CIL forcing
+      [facd77e4e38b] xfs: CIL work is serialised, not pipelined
+      [877cf3473914] xfs: factor out the CIL transaction header building
+      [fa55689e031e] xfs: only CIL pushes require a start record
+      [58adbf5268b1] xfs: embed the xlog_op_header in the unmount record
+      [1d4f4b375658] xfs: embed the xlog_op_header in the commit record
+      [58e54b5e5dcc] xfs: log tickets don't need log client id
+      [695385a4aa76] xfs: move log iovec alignment to preparation function
+      [b424a7fd981d] xfs: reserve space and initialise xlog_op_header in item formatting
+      [b61901c58324] xfs: log ticket region debug is largely useless
+      [66fc9ffa8638] xfs: pass lv chain length into xlog_write()
+      [a8b8e1c74ea7] xfs: introduce xlog_write_single()
+      [586359999f40] xfs:_introduce xlog_write_partial()
+      [46eb52d3150c] xfs: xlog_write() no longer needs contwr state
+      [9373dd073625] xfs: xlog_write() doesn't need optype anymore
+      [5e5591ab632a] xfs: CIL context doesn't need to count iovecs
+      [0d11bae4bcf4] xfs: use the CIL space used counter for emptiness checks
+      [230b4cc9c9cc] xfs: lift init CIL reservation out of xc_cil_lock
+      [153bd5b5cd98] xfs: rework per-iclog header CIL reservation
+      [289ae7b48c2c] xfs: get rid of xb_to_gfp()
+      [8bcac7448a94] xfs: merge xfs_buf_allocate_memory
+      [abb480858143] xfs: introduce CPU hotplug infrastructure
+      [0e4c3e0ee4fd] xfs: introduce per-cpu CIL tracking structure
+      [a8613836d99e] xfs: implement percpu cil space used calculation
+      [57edd3f6599e] xfs: track CIL ticket reservation in percpu structure
+      [7f3b7c463f00] xfs: convert CIL busy extents to per-cpu
+      [be05dd0e68ac] xfs: Add order IDs to log items in CIL
+      [1f18c0c4b78c] xfs: convert CIL to unordered per cpu lists
+      [a47518453bf9] xfs: convert log vector chain to use list heads
+      [a1785f597c8b] xfs: move CIL ordering to the logvec chain
+      [02f1473ded55] xfs: avoid cil push lock if possible
+      [e469cbe84f4a] xfs: xlog_sync() manually adjusts grant head space
+      [7017b129e69c] xfs: expanding delayed logging design with background material
+      [9ba0889e2272] xfs: drop the AGI being passed to xfs_check_agi_freecount
+      [78cb6ad1c12d] xfs: perag may be null in xfs_imap()
 
-> > > Anyway, this isn't an issue for this pull-req because it is based on
-> > > a stable XFS commit in a branch based on xfs/master, but I thought
-> > > it's worth pointing out the pitfalls of using random stable commits
-> > > as the base for pull requests so everyone knows what they should be
-> > > doing as it's not really documented anywhere. :)
-> > 
-> > Agreed, though this isn't entirely a "random stable commit", it's the
-> > end of the most recent stable branch.
-> 
-> Right, but my point is that where that commit comes from isn't
-> obvious just by looking at the pull request. I mean, can you tell me
-> what branch/base kernel is the pull request based on just from the
-> commit ID and name?
-> 
-> If you look at the pull-reqs I sent you, they say:
-> 
-> The following changes since commit d07f6ca923ea0927a1024dfccafc5b53b61cfecc:
-> 
->   Linux 5.13-rc2 (2021-05-16 15:27:44 -0700)
-> 
-> are available in the Git repository at:
-> ....
-> 
-> And that is immediately obvious what the pull-req is based on.
-> That's what xfs/master /was/ based on when I built the topic
-> branches. Using a common, known base for building branches makes
-> things easier for everyone....
+Geert Uytterhoeven (1):
+      [c185e2d3b728] xfs: Fix 64-bit division on 32-bit in xlog_state_switch_iclogs()
 
-<nod>
+Jiapeng Chong (1):
+      [9673261c32dc] xfs: Remove redundant assignment to busy
 
---D
+Shaokun Zhang (2):
+      [5f7fd7508620] xfs: sort variable alphabetically to avoid repeated declaration
+      [e0d2d97b5477] xfs: remove redundant initialization of variable error
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+
+Code Diffstat:
+
+ .../filesystems/xfs-delayed-logging-design.rst     |  361 ++++++-
+ fs/xfs/libxfs/xfs_ag.c                             |  273 ++++-
+ fs/xfs/libxfs/xfs_ag.h                             |  136 +++
+ fs/xfs/libxfs/xfs_ag_resv.c                        |   11 +-
+ fs/xfs/libxfs/xfs_ag_resv.h                        |   15 +
+ fs/xfs/libxfs/xfs_alloc.c                          |  111 +-
+ fs/xfs/libxfs/xfs_alloc.h                          |    2 +-
+ fs/xfs/libxfs/xfs_alloc_btree.c                    |   31 +-
+ fs/xfs/libxfs/xfs_alloc_btree.h                    |    9 +-
+ fs/xfs/libxfs/xfs_attr.c                           |  956 +++++++++++-------
+ fs/xfs/libxfs/xfs_attr.h                           |  403 ++++++++
+ fs/xfs/libxfs/xfs_attr_leaf.c                      |    5 +-
+ fs/xfs/libxfs/xfs_attr_leaf.h                      |    2 +-
+ fs/xfs/libxfs/xfs_attr_remote.c                    |  167 ++-
+ fs/xfs/libxfs/xfs_attr_remote.h                    |    8 +-
+ fs/xfs/libxfs/xfs_bmap.c                           |    3 +-
+ fs/xfs/libxfs/xfs_bmap.h                           |    1 -
+ fs/xfs/libxfs/xfs_btree.c                          |   15 +-
+ fs/xfs/libxfs/xfs_btree.h                          |   10 +-
+ fs/xfs/libxfs/xfs_ialloc.c                         |  641 ++++++------
+ fs/xfs/libxfs/xfs_ialloc.h                         |   40 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c                   |   46 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.h                   |   13 +-
+ fs/xfs/libxfs/xfs_inode_buf.c                      |    2 +-
+ fs/xfs/libxfs/xfs_log_format.h                     |    4 -
+ fs/xfs/libxfs/xfs_refcount.c                       |  122 +--
+ fs/xfs/libxfs/xfs_refcount.h                       |    9 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c                 |   39 +-
+ fs/xfs/libxfs/xfs_refcount_btree.h                 |    7 +-
+ fs/xfs/libxfs/xfs_rmap.c                           |  147 +--
+ fs/xfs/libxfs/xfs_rmap.h                           |    6 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c                     |   46 +-
+ fs/xfs/libxfs/xfs_rmap_btree.h                     |    6 +-
+ fs/xfs/libxfs/xfs_sb.c                             |  146 +--
+ fs/xfs/libxfs/xfs_sb.h                             |    9 -
+ fs/xfs/libxfs/xfs_shared.h                         |   20 +-
+ fs/xfs/libxfs/xfs_types.c                          |    4 +-
+ fs/xfs/libxfs/xfs_types.h                          |    1 +
+ fs/xfs/scrub/agheader.c                            |    1 +
+ fs/xfs/scrub/agheader_repair.c                     |   33 +-
+ fs/xfs/scrub/alloc.c                               |    3 +-
+ fs/xfs/scrub/bmap.c                                |   21 +-
+ fs/xfs/scrub/common.c                              |   15 +-
+ fs/xfs/scrub/fscounters.c                          |   42 +-
+ fs/xfs/scrub/health.c                              |    2 +-
+ fs/xfs/scrub/ialloc.c                              |    9 +-
+ fs/xfs/scrub/refcount.c                            |    3 +-
+ fs/xfs/scrub/repair.c                              |   14 +-
+ fs/xfs/scrub/rmap.c                                |    3 +-
+ fs/xfs/scrub/trace.c                               |    3 +-
+ fs/xfs/xfs_attr_inactive.c                         |    2 +-
+ fs/xfs/xfs_bio_io.c                                |   35 +
+ fs/xfs/xfs_bmap_util.c                             |    6 +-
+ fs/xfs/xfs_buf.c                                   |  311 +++---
+ fs/xfs/xfs_buf.h                                   |    3 +-
+ fs/xfs/xfs_buf_item.c                              |   39 +-
+ fs/xfs/xfs_discard.c                               |    6 +-
+ fs/xfs/xfs_dquot_item.c                            |    2 +-
+ fs/xfs/xfs_extent_busy.c                           |   35 +-
+ fs/xfs/xfs_extent_busy.h                           |    7 +-
+ fs/xfs/xfs_file.c                                  |   70 +-
+ fs/xfs/xfs_filestream.c                            |    2 +-
+ fs/xfs/xfs_fsmap.c                                 |   80 +-
+ fs/xfs/xfs_fsops.c                                 |    8 +-
+ fs/xfs/xfs_health.c                                |   15 +-
+ fs/xfs/xfs_icache.c                                |  980 ++++++++++--------
+ fs/xfs/xfs_icache.h                                |   54 +-
+ fs/xfs/xfs_inode.c                                 |  234 ++---
+ fs/xfs/xfs_inode.h                                 |    9 +-
+ fs/xfs/xfs_inode_item.c                            |   18 +-
+ fs/xfs/xfs_inode_item.h                            |    2 +-
+ fs/xfs/xfs_ioctl.c                                 |   41 +-
+ fs/xfs/xfs_iops.c                                  |    4 +-
+ fs/xfs/xfs_iwalk.c                                 |   84 +-
+ fs/xfs/xfs_linux.h                                 |    2 +
+ fs/xfs/xfs_log.c                                   | 1059 +++++++++-----------
+ fs/xfs/xfs_log.h                                   |   66 +-
+ fs/xfs/xfs_log_cil.c                               |  802 +++++++++++----
+ fs/xfs/xfs_log_priv.h                              |  123 ++-
+ fs/xfs/xfs_log_recover.c                           |   56 +-
+ fs/xfs/xfs_mount.c                                 |  126 +--
+ fs/xfs/xfs_mount.h                                 |  110 +-
+ fs/xfs/xfs_qm.c                                    |   10 +-
+ fs/xfs/xfs_qm.h                                    |    1 -
+ fs/xfs/xfs_qm_syscalls.c                           |   54 +-
+ fs/xfs/xfs_reflink.c                               |   13 +-
+ fs/xfs/xfs_super.c                                 |   55 +-
+ fs/xfs/xfs_super.h                                 |    1 -
+ fs/xfs/xfs_symlink.c                               |    9 +-
+ fs/xfs/xfs_sysfs.c                                 |    1 +
+ fs/xfs/xfs_trace.c                                 |    3 +
+ fs/xfs/xfs_trace.h                                 |   51 +-
+ fs/xfs/xfs_trans.c                                 |   18 +-
+ fs/xfs/xfs_trans.h                                 |    5 +-
+ fs/xfs/xfs_trans_ail.c                             |   11 +-
+ fs/xfs/xfs_trans_priv.h                            |    3 +-
+ include/linux/cpuhotplug.h                         |    1 +
+ 97 files changed, 4954 insertions(+), 3649 deletions(-)
