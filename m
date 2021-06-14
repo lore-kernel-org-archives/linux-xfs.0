@@ -8,148 +8,148 @@ X-Spam-Status: No, score=-17.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38E35C49360
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0BA0C48BE8
 	for <linux-xfs@archiver.kernel.org>; Mon, 14 Jun 2021 05:39:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CDF360BBB
+	by mail.kernel.org (Postfix) with ESMTP id B55A260BBB
 	for <linux-xfs@archiver.kernel.org>; Mon, 14 Jun 2021 05:39:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231952AbhFNFlB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229696AbhFNFlB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 14 Jun 2021 01:41:01 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:41320 "EHLO
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:41940 "EHLO
         mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229696AbhFNFlA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Jun 2021 01:41:00 -0400
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15E5aHQO008492;
-        Mon, 14 Jun 2021 05:38:52 GMT
+        by vger.kernel.org with ESMTP id S231939AbhFNFlB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Jun 2021 01:41:01 -0400
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15E5br4v029290;
+        Mon, 14 Jun 2021 05:38:54 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=CQy4CDDCWvYjj0NnZpwf3uPUZ53sUycYBCJBrkJt+5s=;
- b=ty8kDxO30AZ7S3Ip2DsZ4TFPGPtomSgduf0XTEyQwEYPhFF/gUlKXagRpEITpQ/zs9TW
- 03g9M4yetQU6k6G0b2sf/oD6oY5KNCLwAfRftusTGYSURVRk3bb26arTVLLeNxgZWVJj
- A3SmePabLHt/XCm9SOL66So7Y0B2+jSGIbxzJblfZDBj5DAT2csYoHVQqtTGdEv5jU2f
- 37Xq4spBQmU8J9SJqBFcDVarVU1ldjwUgooKjE64u4KKCTu38VEjlZEB2X6syZpCYSHD
- 4qy15B4sku2JfwRN/42c/mqkBJf9lWhNJJHCVB2056qMqrdY19n3EQlzuKYzURUserMS 8g== 
-Received: from oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 395nsar4xv-1
+ bh=nNAR/y9j9U/9DZv3809gZ7f4l3sVieMNOPSeUXJFQFU=;
+ b=vVf7t5GrZ57wT89Y7k9tMwfV+8SN1nb02NpQWixNV51FbL1pxceVcjYJtc3FVGhfORFm
+ Ji60jQnTclSBjpwjd9Omaw8Ryo5Tub/9BAfWy0XRe5ojXLswpeuyae88W5U7dVCH4xrA
+ nruzXFom3wZDtOqemdxJgHAWJFy/5V6GC5cLePT/Wau8J3H3DiEF/ZxD5qOu9GD849Mz
+ 2UdSH8Xpp5f6hES0w8M0E8BdO8YOX6/qkCfRR5tuvX2Gjedl1OsPftCkuJBJq+uLccPG
+ pMRR5E8za+VgWxkXsQrq6+GQOOW6j8S+lvhqWbgQpnULXhpn6/qHqwSVfJqqUTs7DGi4 KA== 
+Received: from oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 395t6ug33j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Jun 2021 05:38:52 +0000
-Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
-        by pps.podrdrct (8.16.0.36/8.16.0.36) with SMTP id 15E5cp24030721;
-        Mon, 14 Jun 2021 05:38:51 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2173.outbound.protection.outlook.com [104.47.57.173])
-        by userp3020.oracle.com with ESMTP id 395hk1sdf6-1
+        Mon, 14 Jun 2021 05:38:54 +0000
+Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
+        by pps.podrdrct (8.16.0.36/8.16.0.36) with SMTP id 15E5cIYB157841;
+        Mon, 14 Jun 2021 05:38:53 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2174.outbound.protection.outlook.com [104.47.57.174])
+        by userp3030.oracle.com with ESMTP id 394j1spf8s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Jun 2021 05:38:51 +0000
+        Mon, 14 Jun 2021 05:38:53 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Or9DenxxOCU0IGDi6NripE/px+SD86mzUXbg4JDRY2wCPTjtgZF3LH4F4AdkBsp1cnb9oTQeeQM+AQCZi/mBgPNK6aGLlLcU1W36UASl35+ezgM50gmsU0iIRzudbHwWuOt2eioVdQDPAZgTwGlqloQMeSUm52fKeo+slodCG7gppjHl1w1w2eld/vszKjjfDsy4RGlINO0QyDFAxhTOwBItHdE8Nby0gQ+A66XGvaVr4EggzOK2DtIONi//kEtkY4VuUkMxOx+6dtyXY/YKd87rsNOIWRbiDPnRvnC6V86MTnBhh5/rhsGSQy9uvL5fTZ7+HrDfMfhUZnLIHPVZEQ==
+ b=gzkNHC2qfG1gDS3D0SvJmBym69ssYYwsnY8xR4pRUvGB5Gly68uNJp3S8WtrFuKBJ35CNNMTNKGH1HvqXrwjmKAkndf+GkThhnGa5RWMpqP7sm0onNpEXl0T2Qy8MLvklQjrQUS7d09ckHbpODqLTnZxeyIGRVluYyrHNsCfcqLgFLngFLQEYhYp7PUwfgJ2e1d0E6u6PZcKHwUt5x/3gkt2A5LCcepDR+eXPZAOSFi5K+wXPkhBliuksAvPM6ZFS8C4msZEnShaZ2PHcL3F0BLSLX4Br7POVo+8vYmAL4OYxGUd3Lcb2yjdFVfCuRB5fzCUWyBrLUzGoh19+G1mIg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CQy4CDDCWvYjj0NnZpwf3uPUZ53sUycYBCJBrkJt+5s=;
- b=MLWidyW7cbanucF5PQElSHfAT5ibDKx8+E3Bt45c5zzp/+R1HuHmaA6D96O1XobyXp+/s+jmyCHBoqptcit55SjObSqhrfehHs0Nmjg6anzhqoxw8GqaifbGAwP7+hoMsmWJ03S2+/urwBpr2dXGcQlb+Ey4iR5wbpy2cIA49DXWpRAF+5c8Fk2PvdvNI7WBOaRXqrWPiBmkrVZ0rafa05N3LdKSW/xvk3CsjYiy41MVQETxUkxDQsmQHZ0MEbUkrKwCHksNvLDGi6p//7Bi89Z/XLnj4LY32IovcCAg4zko3KdmodZE3dd1BN3KigbpGW0XpM66b3/zEfxeq9OM7Q==
+ bh=nNAR/y9j9U/9DZv3809gZ7f4l3sVieMNOPSeUXJFQFU=;
+ b=Ws5RxGHbs1u2LgKDZhRQdO2P8t8h8fk0uRXLLYDE0TlE01njpke+FAZSWy+GrFraqzZA5biGWQm9Gy1n2guKJSuvehynN9ye+WITLr8QdxtdivdBGIA68o7RB2C8cyMUm/e0HxrdaP0kNS15hWKOYbPeziLlPXLqUM2YHIeij4wlh6Cq5QQge3AG2Wcpcw/v2k+amTHXdi1GEomVUEt3++NYqYDjbry/Dy4gLLNMuyaSKAZtM5aRVryhL3a2iRmcvmUyUMcZeoI/6y4Qhd/fFezNhKcFZL/T0ABbLzPI48t7SLHLDTzD5OftDXIQ4bxMqjffN4dsO6YT3jvvrGBfcw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CQy4CDDCWvYjj0NnZpwf3uPUZ53sUycYBCJBrkJt+5s=;
- b=ORSF6dF+QDnMtofUgiLJiqSny1OAitg/arp5f2CdkrBELsmZYjwaiKDgDQSbQ9+W7O09mHyKVeC2/H+kWMef7FsXy+I5es7ZT8vaYqzK8YNIpTV1uhyaqgj3cIXOfAM0kg0cjCif3YWyNLUiCKv5uOT+Lub2zIJ0Ybsnkr8Q2A4=
+ bh=nNAR/y9j9U/9DZv3809gZ7f4l3sVieMNOPSeUXJFQFU=;
+ b=YHNWnqkYbYnpwB3WHSxyHJFig4ib3hFvNb7+Ez1f8mJLZPZRna5EyMC5ABRB4bMG2p47vzwNuakTChFPCte0D4Sk5wok3zccEq5jMDsDSNzh7GTYLoKGbWWCPlf+i9A5ew7++OzffQzrXuvbJ3QqFvaDTBaNd8+/2krNqR1O9cI=
 Authentication-Results: kernel.org; dkim=none (message not signed)
  header.d=none;kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
  by BYAPR10MB2485.namprd10.prod.outlook.com (2603:10b6:a02:b2::13) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.20; Mon, 14 Jun
- 2021 05:38:49 +0000
+ 2021 05:38:51 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::20c4:32a4:24ac:df89]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::20c4:32a4:24ac:df89%6]) with mapi id 15.20.4219.025; Mon, 14 Jun 2021
- 05:38:49 +0000
-Subject: Re: [PATCH 08/13] fstests: convert nextid to use automatic group
- generation
+ 05:38:51 +0000
+Subject: Re: [PATCH 09/13] fstests: adapt the new test script to our new group
+ tagging scheme
 To:     "Darrick J. Wong" <djwong@kernel.org>, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
         amir73il@gmail.com, ebiggers@kernel.org
 References: <162317276202.653489.13006238543620278716.stgit@locust>
- <162317280590.653489.10114638028601363399.stgit@locust>
+ <162317281137.653489.16228043613270527911.stgit@locust>
 From:   Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <13f77f99-f306-70f9-54f0-0b77a9c37ea0@oracle.com>
-Date:   Sun, 13 Jun 2021 22:38:47 -0700
+Message-ID: <aa5d4ffe-7409-147d-4cc1-0975f926a8b7@oracle.com>
+Date:   Sun, 13 Jun 2021 22:38:49 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
-In-Reply-To: <162317280590.653489.10114638028601363399.stgit@locust>
+In-Reply-To: <162317281137.653489.16228043613270527911.stgit@locust>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [67.1.210.54]
-X-ClientProxiedBy: SJ0PR13CA0061.namprd13.prod.outlook.com
- (2603:10b6:a03:2c4::6) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: SJ0PR13CA0076.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c4::21) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.226] (67.1.210.54) by SJ0PR13CA0061.namprd13.prod.outlook.com (2603:10b6:a03:2c4::6) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.9 via Frontend Transport; Mon, 14 Jun 2021 05:38:48 +0000
+Received: from [192.168.1.226] (67.1.210.54) by SJ0PR13CA0076.namprd13.prod.outlook.com (2603:10b6:a03:2c4::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.9 via Frontend Transport; Mon, 14 Jun 2021 05:38:51 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 792c0e42-f239-48e5-d5bd-08d92ef6af56
+X-MS-Office365-Filtering-Correlation-Id: 8ea1cd4c-0a26-47e5-6c68-08d92ef6b0d1
 X-MS-TrafficTypeDiagnostic: BYAPR10MB2485:
-X-Microsoft-Antispam-PRVS: <BYAPR10MB2485BC655E6FA183CE16580495319@BYAPR10MB2485.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:3276;
+X-Microsoft-Antispam-PRVS: <BYAPR10MB248558704ED064895108619995319@BYAPR10MB2485.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:129;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Ywteqtp62qEvYAwWaaCE8cLfNcV7zE8tjxU9xWPQqSyaQYGYZ0c610SShIc55Vppyb2LKJlFvSuxc7YISw3qnOftoe8QS/nGzYp+CSaNo7mJVYsLUXv9MkS5sqns0dbaosyt9OkvcZbeq3STvpUm8VYOBVQWreKtqls+qTRI091DXPyrPIkmieuL7r7nXLTvvGFWIf5KNa5LeB2VkS1uKgDREjP83+kqNDqWFWkNhsg2tSUolXvnJaSeoBEJ4KEvuSmuBNY46ffLFw1J3G2ju+47fo7cKUef3AfZ1TwUyXaZaoV1jMeWO45fgJzEKogMbt2sEwxlyMadDG+SQxrKQL33D3gyMrN0K4urGqlK+9eizLrtxIsC+FTNMiVhrEisxXvLuE54LiNaS1rlVO2/HSDOHEkVpjTXoKEdsYpxbzpKKS553uloMLXmpi+FTWyE0nGY/FaG9sNO3fUqQJkbSwmok58EJXEcHJ+oXXJfeMoYf76wTQvriXgwa5S8IwGdpgR/JMKv9Ua1tLjT89LM7GV2AVzh6CFaA+bDTbi7Tz3SqYOSNYllgGrfgmz8eGsqaIeHvhyr/wXC11cSluqiR1HivgnGnsCtHS5yUAOabIzRMZML3Bu1WdOq67JKd1Rthj0F+u6nzNochv8JbovAQk/XtCZjFBod8n7GWZ2wJ3qEG6RtiNm0/GKHJa4T0RowJfuLKlriGcCWwf48MpSCQw==
+X-Microsoft-Antispam-Message-Info: eLxG9XZWd3U63aqupzeLZZlft7R83dKW44Z/EUezK4yR78hcK+RjnEVJBfMQDLb5DDlKfEYOXIA148kVx6n9A2FIg52puWGu5PvHBYCUcqYRHQy+pOcdPpdzrG28kzzZ2PAOvOPrWYvZUtxMeDBGaBg5ErTY4Qlx8gDWIu3YckQ6wnywOWILYjYFTQ4gb7QhwhUbl2Fd6KAVSFrRwhp54YhT8wWTtxME9WzYarZUlZl7ZkoBziEtYS0YkbU8Ag2K3ivzGPJ77jVi6kUckj9FNcQv5Cqe66QgSSfjVyEqATGaZWhFWYCx7eDgt5+boH88SDoMuvuGF5Llyy+h1injHuMzZNn3H4qGh7r+57caDM46AeVV8MJLKjlzP2Zg/iiJYOZGwetLMlefAZG+B/Eszj4TpL5rKRfmfnvy5MzGz25aKPp9j0KUVUqbVY94IWAaDiL+KsRP0XlxZWdNJWENN1JMHWEyWzz1gEnFseVAR9ZJVstXcBhojkJ/sL/Es2DUP+aqfPHvntr8lwJyxGDiSdoFl6QAH5hbK24X6bnLBEDVZfqvKGDw897z+adrtErAbSkkOjNU7sIes18LP8yHUk57k79zgK7wydjZRqKteQjYw8473MP7CLdNRDPlWV3qqOdb4BTv/h++6Elgx/IHp/UyTHov5h3h8SqSTpkIct0V4ccCEcvTamJsm2iRwvN7Cz7y5t0KF21PGtZD7Kbnlg==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(396003)(376002)(346002)(366004)(39860400002)(186003)(16526019)(5660300002)(31686004)(83380400001)(8676002)(53546011)(44832011)(478600001)(2906002)(316002)(86362001)(8936002)(66946007)(4326008)(38100700002)(38350700002)(66556008)(52116002)(66476007)(956004)(31696002)(16576012)(26005)(6486002)(36756003)(2616005)(45980500001)(43740500002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?VFNRbEVCZlZYVHE0OXpwZ2VLcFdOcjVmdUgrT0dQakhzVDdsNzkvYi9xQUJl?=
- =?utf-8?B?LytHUDlrVE9DOEE0b0UrSnBtZnYxZ2ZMWFlLSnRSSTloNVcwZ1ptR2RLM0Na?=
- =?utf-8?B?NTN6dG9KTGdadFI1dXNQSm4vaVZFTzFrWjZOcFJYbnVKN3I2bGtoa0d2c2Nr?=
- =?utf-8?B?ekkvcTU5ODVWVmdSRWVoYVlWSUxKQ3c0RGd5blFkZkFkTnlPVjNyOGJCMzBY?=
- =?utf-8?B?dlIyQjFpM3ZtcHowKzJGWFNvVFJzWmhQUXEwd09yTnRibm9Yek1iYmNKMnlr?=
- =?utf-8?B?a29FQVpaN25JSTBSNG1Ia2VmQXpLSURHUVpUSTZkQWNFSU9uWkxaalg1S3Ev?=
- =?utf-8?B?VDNUb29OdGttdThiQ294ejQrbisyWXo1dDJoWnJMcytnTCsrOWdBdzFObnZp?=
- =?utf-8?B?dHBTZFljOC82d3hJS3ZPWUdGQVVMOHJVRnNBTFROVVYrNDd0Wmd5TER6SDVo?=
- =?utf-8?B?RzhlNFgzNzNiRk9lc2wwSS82OFRlUmI4NnhDQkloOWhPK1F5YTQrZHVkczdB?=
- =?utf-8?B?R3ZyUzRqWlAzSzdWeW0xT1Z4T2hzMSs4TW9BcVE3SkpxT0tESVpmZ2QvT1Qx?=
- =?utf-8?B?QjBwcmlKaVk4djF1dU41NkZaRHVvaCt2NTFoaU4vSVRYUGE4dEZQbUE2L000?=
- =?utf-8?B?YjNhdFk3QVpWY3JlSzc4dU9IcUpmUVhLS1l2S0VYUFFqUENTbWdmMVdkVGZp?=
- =?utf-8?B?cEZKSkl1c1d0eUdhOFNGOGlMeHd1byswNENrc1k5MytuNk54Z3dpS09PTjFy?=
- =?utf-8?B?bHhkZXN4UlBNdEQ4aFdiQnl2TGxGdzVoUWVVam4vbXJLQjRTMVFvRXlLa29i?=
- =?utf-8?B?VnQrbTBaaXNWY2RSNkJSUlJ3TC8vQlZONzB1N2czWDcrRDVIdU1vZklZbnBu?=
- =?utf-8?B?Q1FVTVNGNjRVdTRHOUVXRGM0YXAwL04wMUFHNXZ5MnpSZllxOU5YWU5MUWFB?=
- =?utf-8?B?SDR6ZnNqQW8xR0FFR3FxRE5TVkp3WFBwUDh4NEhwSWhlSzJud1U4WStrUjRN?=
- =?utf-8?B?QzZGaUtnUEN6VHJabWhkZDVqOXhyYVd4cmtqQmRoZ2x0Qm5lME5QakdnM054?=
- =?utf-8?B?TVU5bHEza0Jra3BwSmszL1BqZzNLcS8veEIwdnN1MFFCUTdhV3N2cWp4cktG?=
- =?utf-8?B?c0VWR2hjUC9EdFFoZDk1MkpEMk5xTjNVTnZYMTdrbnU2RmxzakxsTFBpSEZD?=
- =?utf-8?B?M21iQXRGK2o1OTQ2MGFDTExud2pDd2kvKzh2cENTKzRpTEpkMUVTVmpWVm0w?=
- =?utf-8?B?YmtCYVZYZUVVeUFkREtaMHQvR1Rkc0dQVzFPVVpEVkJGdjhLUURuNVY4N2Mw?=
- =?utf-8?B?dFRMWndXaFFBL0c3SWhGZjgyTzVIQTJKSTYyaDQwNXliZDF1Qkt5RHNCaEp0?=
- =?utf-8?B?NitidmNqZU5SLzdLSlNyUHFLWitIcnY4ZEpseVYwOC9zUEFZbVQ0eVdJOGNV?=
- =?utf-8?B?NTRRb2pvaDBjRUtOQzhoL0IrRS9kYUY4U0dkQU9iOUtWdDdROEgzOUtuMEZP?=
- =?utf-8?B?WEcyRmJmdmIraVN3UE4rN2c5RE0xNWJyOWRva1JHNDRwaktlZFA1ZHJ4b3dE?=
- =?utf-8?B?SXkvN3lXWXVUNDFBYjc0UmIvd1V1VzluSnlyQXdMQnBCajRsekIvSVJ0YkZw?=
- =?utf-8?B?bWxXTytZQStSbWZwdkNRbGVXSGlRQ080MWkva3FNU0JwQXhZRmwzY3RVWFd0?=
- =?utf-8?B?NjdYK3B2bWZMVU50ZmYzdlBXS3pqZmVuZ2JxT1Z0dXNkelUyRy91cXR2aEts?=
- =?utf-8?Q?iE6zBYFcgPpT//MWP20TAIPDq5L8T/jZv9CAB1C?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?QkFTRVEyOFVTUmxsbnVOc25pUEtRc3Z2U09pcy9hVkFGRUFobEpuWCtXOG5D?=
+ =?utf-8?B?OVV1ekU4QU5aMElSMjFlcVU5M3RGdEszKzBVcGtmTlN6c0UwdXpEWGJ3L1d1?=
+ =?utf-8?B?cUpWejZvNlZPcVlSZ0hleFMwL1IxOExEcE1OY2NrWWNHTG1YZ083ZlZmWWZt?=
+ =?utf-8?B?aXVmcktxWlExMjNoK0t6bE5DaFplemdsS3FKWHFLa0U0cVJlV1BhWExaa0dn?=
+ =?utf-8?B?OWl1Y0dHdDdnUElLbTdlRjYzd01KZm9ZcFZKU3hla0ZjdjRKTldvSU5INHVl?=
+ =?utf-8?B?SWtZM0k0WjJHUVAycWtmU0U5d3d2RWQvUzBpM1Q0ak42SEt3MmRGd0FBU2tD?=
+ =?utf-8?B?UFJBWEtCRjd6cDdtUFdoTHFaZHVjQkR6RUZDSUlHWUdvTzFKeGp0cDg0RW5W?=
+ =?utf-8?B?QjNOaHhTYUlhVjZMN2M2NDhQV1gyeGZrTStkL3ZyL0l5V1ZZOUkvSm9GdUVH?=
+ =?utf-8?B?S2c0Y2ViUGFHeGg4a0Y0MTg3RDZmcm96UGpoOWRUN1p1azZzTGZNbkhGMWdp?=
+ =?utf-8?B?cllYY2RaYktmcTRxTlB2bkpOUytENEk4QWVlam9Cd3YwR2JkZWpVbi92d2R3?=
+ =?utf-8?B?aUxNT1dHMkR3NnNwVXRqSW1jMFRETFlXc0c0RzQzUmRzQjY5b1pBcVI5aTlU?=
+ =?utf-8?B?YmJINDBIRVNadW5zR2xqQ1NSb1ZnTFkrOUoyUHhQT2VSK29uMjZwNnJpZVVP?=
+ =?utf-8?B?MlJoeUNmNVp2UjA5dVNJVlFzL09RblM2OUxHekU1V3ZzOThaa0c3WlNYaGdF?=
+ =?utf-8?B?MFdVeG9ZQ2pMOTd1dmNpdFJoTllSVVJtN2Z2L0VSMjZHTHJ5T1p3U04yNUVK?=
+ =?utf-8?B?WlJTUkJ5NVpHeHl2MmxOY0xoUXd1M09NMmczSklkWjJ5dHdoZFc1Y214ZENp?=
+ =?utf-8?B?aTdsMlV4MU9UbXU2bWNJSGpaVmtWWGhpVHYxbVJqRDlmM0JXV1J2MCtEd2sz?=
+ =?utf-8?B?SFcrNFNhdGU5VTI0QUtzeEJBR0RYditjZWZxWTZvdGh5UlREcUQ2S0hnZU1M?=
+ =?utf-8?B?MEg5VHlycWRsL04vMDdHZ2xZUE9Pc0lSK2NsRkJCejZrRW9jVHArNEFYT2xK?=
+ =?utf-8?B?SkNHaUhBUVRkT0RnbGZlSDBjM0xJUW5pemVRQzczNlh1Wk96N1FVbm82RWVz?=
+ =?utf-8?B?anRhOWhLTTRKbUQvZHRSVzdPUEV3Q2RqVDgwYjZVcnA4UG40T0FVc1pmV2Fz?=
+ =?utf-8?B?V09MZ0hTR2x5V3FHSFRxS2dHQy9LOFp6dE04VUtvdHB6MnFCNTRLRXNwR3dm?=
+ =?utf-8?B?Z2JJRkJYRGZLRGNlVzNaUUVERGQyZENGbTVuVjZmM3lDR0MvQ2VHVFJ6UDlS?=
+ =?utf-8?B?eG50NUluRXN3endadFN4YWM3L1ArZ0l6aU1xc0NKY0x2YzdJdnRLSG5xTnhv?=
+ =?utf-8?B?ZG10cmJ6M3Q4V0R5WmoxcXNEeURCRzg1NWNoYkRScTJTNGlVaWRsbUJxdjlK?=
+ =?utf-8?B?ZmpKVFBvQWhWdUNTOHNwUTZtWjU3R3ZZVkVoazJrZ3NsV1g5eFJJSmJJUXkz?=
+ =?utf-8?B?Q3RPYjIzblJ6WVpNQm44ZmRBNCs0S3B5OXNyWEoxSU9CZFhSaXJ0VDFKS3Z0?=
+ =?utf-8?B?YVZnempWT0FKTDB3Y2d6ZmR1a09rVXJtVDgrV2ZPQ2dWTnZYTlBRdGtDWUhj?=
+ =?utf-8?B?OGZtYVJSMVNBeExobDRPVEVwZFo4MTJpdFZqR2VUN0FKalVRYlZWOG1zaEF4?=
+ =?utf-8?B?Nk9HOGtsMEM2eUk4NWJ5Z2E1WmZrenMwS1R1V2t6ZGhuZmJJRjdTSUZNWEFC?=
+ =?utf-8?Q?OyL+JU1g4wSOgVHs3KOCatWvsmpsHOGrSfzxZPd?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 792c0e42-f239-48e5-d5bd-08d92ef6af56
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8ea1cd4c-0a26-47e5-6c68-08d92ef6b0d1
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jun 2021 05:38:48.9675
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jun 2021 05:38:51.4456
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5oA5YjlDGs0dpxoToa6x2M9QQtAg5Y7xwLf4L4Fd0aJlq09gi5dDuLHCvqtFudPF6pBNY0rQ2WnRxDLgaUu8mTc+FCcNSB7YyClYbDriqsc=
+X-MS-Exchange-CrossTenant-UserPrincipalName: QbW4d9RdEkroe5WrgLkRJMxcsuNzOnk5iT3/8ow30Y1icrT0K3eXGGZbPnqxd4Z16Km+b96NfPVcW+OtNnK9EV46Kmm1vIi1uauwzCVMh/g=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2485
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10014 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=999
- suspectscore=0 malwarescore=0 adultscore=0 mlxscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2104190000 definitions=main-2106140041
-X-Proofpoint-GUID: jq5XLt_TWCV70DXvByjGj3TCyfu3cAkw
-X-Proofpoint-ORIG-GUID: jq5XLt_TWCV70DXvByjGj3TCyfu3cAkw
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 mlxscore=0
+ malwarescore=0 bulkscore=0 adultscore=0 suspectscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
+ definitions=main-2106140041
+X-Proofpoint-ORIG-GUID: 11TDyVg7AH23O8PPTHWNPoJMy8lvAJU7
+X-Proofpoint-GUID: 11TDyVg7AH23O8PPTHWNPoJMy8lvAJU7
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -159,72 +159,252 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 6/8/21 10:20 AM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Convert the nextid script to use the automatic group file generation to
-> figure out the next available test id.
+> Now that we autogenerate group files, adapt the new test creation script
+> to use autogenerated group files and to set the group data in the new
+> test.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-With other review nits addressed
+Other than the sed nit, looks ok to me
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
 > ---
->   tools/nextid |    1 -
->   tools/nextid |   39 +++++++++++++++++++++++++++++++++++++++
->   2 files changed, 39 insertions(+), 1 deletion(-)
->   delete mode 120000 tools/nextid
->   create mode 100755 tools/nextid
+>   new |  179 ++++++++++++++++++++-----------------------------------------------
+>   1 file changed, 54 insertions(+), 125 deletions(-)
 > 
 > 
-> diff --git a/tools/nextid b/tools/nextid
-> deleted file mode 120000
-> index 5c31d602..00000000
-> --- a/tools/nextid
-> +++ /dev/null
-> @@ -1 +0,0 @@
-> -sort-group
-> \ No newline at end of file
-> diff --git a/tools/nextid b/tools/nextid
-> new file mode 100755
-> index 00000000..a65348e8
-> --- /dev/null
-> +++ b/tools/nextid
-> @@ -0,0 +1,39 @@
-> +#!/bin/bash
+> diff --git a/new b/new
+> index 16e7c782..cdd909ad 100755
+> --- a/new
+> +++ b/new
+> @@ -9,7 +9,8 @@
+>   iam=new
+>   . ./common/test_names
+>   
+> -trap "rm -f /tmp/$$.; exit" 0 1 2 3 15
+> +tmpfile="/tmp/$$."
+> +trap "rm -f $tmpfile; exit" 0 1 2 3 15
+>   
+>   _cleanup()
+>   {
+> @@ -26,71 +27,18 @@ usage()
+>   
+>   [ $# -eq 0 ] && usage
+>   tdir=tests/$1
+> -shift
+> -
+> -if [ ! -f $tdir/group ]
+> -then
+> -    echo "Creating the $tdir/group index ..."
+> -    cat <<'End-of-File' >$tdir/group
+> -# QA groups control
+> -#
+> -# define groups and default group owners
+> -# do not start group name with a digit
+> -#
+> -
+> -# catch-all
+> -#
+> -other		some-user-login
+> -
+> -# test-group association ... one line per test
+> -#
+> -End-of-File
+> -fi
+> -
+> -if [ ! -w $tdir/group ]
+> -then
+> -    chmod u+w $tdir/group
+> -    echo "Warning: making the index file \"$tdir/group\" writeable"
+> -fi
+> -
+> -if make
+> -then
+> -    :
+> -else
+> -    echo "Warning: make failed -- some tests may be missing"
+> -fi
+>   
+>   i=0
+>   line=0
+>   eof=1
+> -[ -f "$tdir/group" ] || usage
+> +[ -d "$tdir/" ] || usage
+>   
+>   export AWK_PROG="$(type -P awk)"
+>   [ "$AWK_PROG" = "" ] && { echo "awk not found"; exit; }
+>   
+> -for found in `cat $tdir/group | tr - ' ' | $AWK_PROG '{ print $1 }'`
+> -do
+> -    line=$((line+1))
+> -    if [ -z "$found" ] || [ "$found" == "#" ]; then
+> -        continue
+> -    elif ! echo "$found" | grep -q "^$VALID_TEST_NAME$"; then
+> -        # this one is for tests not named by a number
+> -        continue
+> -    fi
+> -    i=$((i+1))
+> -    id=`printf "%03d" $i`
+> -    if [ "$id" != "$found" ];then
+> -	eof=0
+> -	break
+> -    fi
+> -done
+> -if [ $eof -eq 1 ]; then
+> -   line=$((line+1))
+> -   i=$((i+1))
+> -   id=`printf "%03d" $i`
+> -fi
+> -
+> +id="$(basename "$(./tools/nextid "$1")")"
+>   echo "Next test id is $id"
+> +shift
+>   
+>   read -p "Append a name to the ID? Test name will be $id-\$name. y,[n]: " -r
+>   if [[ $REPLY = [Yy] ]]; then
+> @@ -113,24 +61,9 @@ if [[ $REPLY = [Yy] ]]; then
+>   		fi
+>   	done
+>   
+> -	# now find where to insert this name
+> -	eof=1
+> -	for found in `tail -n +$line $tdir/group | $AWK_PROG '{ print $1 }'`; do
+> -		found_id=$(echo "$found" | cut -d "-" -f 1 - )
+> -		line=$((line+1))
+> -		if [ -z "$found" ] || [ "$found" == "#" ]; then
+> -			continue
+> -		elif [ $found_id -gt $id ]; then
+> -			eof=0
+> -			break
+> -		fi
+> -	done
+> -	if [ $eof -eq 0 ]; then
+> -		# If place wasn't found, let $line be the end of the file
+> -		line=$((line-1))
+> -	fi
+>   	id="$id-$name"
+>   fi
 > +
-> +# Compute the next available test id in a given test directory.
+>   echo "Creating test file '$id'"
+>   
+>   if [ -f $tdir/$id ]
+> @@ -140,6 +73,53 @@ then
+>       exit 1
+>   fi
+>   
+> +if [ $# -eq 0 ]
+> +then
 > +
-> +if [ -z "$1" ] || [ "$1" = "--help" ] || [ -n "$2" ] || [ ! -d "tests/$1/" ]; then
-> +	echo "Usage: $0 test_dir"
-> +	exit 1
-> +fi
-> +
-> +. ./common/test_names
-> +
-> +line=0
-> +i=0
-> +eof=1
-> +
-> +while read found other_junk;
-> +do
-> +	line=$((line+1))
-> +	if [ -z "$found" ] || [ "$found" == "#" ]; then
+> +    while true
+> +    do
+> +	echo -n "Add to group(s) [other] (separate by space, ? for list): "
+> +	read ans
+> +	[ -z "$ans" ] && ans=other
+> +	if [ "X$ans" = "X?" ]
+> +	then
+> +	    for d in $SRC_GROUPS; do
+> +		(cd "tests/$d/" ; ../../tools/mkgroupfile "$tmpfile")
+> +		l=$(set -n < "$tmpfile" \
+> +		    -e 's/#.*//' \
+> +		    -e 's/$/ /' \
+> +		    -e 's;\(^[0-9][0-9][0-9]\)\(.*$\);\2;p')
+> +		grpl="$grpl $l"
+> +	    done
+> +	    lst=`for word in $grpl; do echo $word; done | sort| uniq `
+> +	    echo $lst
+> +	else
+> +	    # only allow lower cases, spaces, digits and underscore in group
+> +	    inval=`echo $ans | tr -d '[:lower:][:space:][:digit:]_'`
+> +	    if [ "$inval" != "" ]; then
+> +		echo "Invalid characters in group(s): $inval"
+> +		echo "Only lower cases, digits and underscore are allowed in groups, separated by space"
 > +		continue
-> +	elif ! echo "$found" | grep -q "^$VALID_TEST_NAME$"; then
-> +		# this one is for tests not named by a number
-> +		continue
-> +	fi
-> +	i=$((i+1))
-> +	id=`printf "%03d" $i`
-> +	if [ "$id" != "$found" ]; then
-> +		eof=0
+> +	    else
+> +		# remove redundant spaces/tabs
+> +		ans=`echo "$ans" | sed 's/\s\+/ /g'`
 > +		break
+> +	    fi
 > +	fi
-> +done < <(cd "tests/$1/" ; ../../tools/mkgroupfile | tr - ' ')
-> +
-> +if [ $eof -eq 1 ]; then
-> +   line=$((line+1))
-> +   i=$((i+1))
-> +   id=`printf "%03d" $i`
+> +    done
+> +else
+> +    # expert mode, groups are on the command line
+> +    #
+> +    (cd "$tdir" ; ../../tools/mkgroupfile "$tmpfile")
+> +    for g in $*
+> +    do
+> +	if ! grep -q "[[:space:]]$g" "$tmpfile"; then
+> +	    echo "Warning: group \"$g\" not defined in $tdir tests"
+> +	fi
+> +    done
+> +    ans="$*"
 > +fi
 > +
-> +echo "$1/$id"
+>   echo -n "Creating skeletal script for you to edit ..."
+>   
+>   year=`date +%Y`
+> @@ -154,7 +134,7 @@ cat <<End-of-File >$tdir/$id
+>   # what am I here for?
+>   #
+>   . ./common/preamble
+> -_begin_fstest group list here
+> +_begin_fstest $ans
+>   
+>   # Override the default cleanup function.
+>   # _cleanup()
+> @@ -196,56 +176,5 @@ QA output created by $id
+>   Silence is golden
+>   End-of-File
+>   
+> -if [ $# -eq 0 ]
+> -then
+> -
+> -    while true
+> -    do
+> -	echo -n "Add to group(s) [other] (separate by space, ? for list): "
+> -	read ans
+> -	[ -z "$ans" ] && ans=other
+> -	if [ "X$ans" = "X?" ]
+> -	then
+> -	    for d in $SRC_GROUPS; do
+> -		l=$(sed -n < tests/$d/group \
+> -		    -e 's/#.*//' \
+> -		    -e 's/$/ /' \
+> -		    -e 's;\(^[0-9][0-9][0-9]\)\(.*$\);\2;p')
+> -		grpl="$grpl $l"
+> -	    done
+> -	    lst=`for word in $grpl; do echo $word; done | sort| uniq `
+> -	    echo $lst
+> -	else
+> -	    # only allow lower cases, spaces, digits and underscore in group
+> -	    inval=`echo $ans | tr -d '[:lower:][:space:][:digit:]_'`
+> -	    if [ "$inval" != "" ]; then
+> -		echo "Invalid characters in group(s): $inval"
+> -		echo "Only lower cases, digits and underscore are allowed in groups, separated by space"
+> -		continue
+> -	    else
+> -		# remove redundant spaces/tabs
+> -		ans=`echo "$ans" | sed 's/\s\+/ /g'`
+> -		break
+> -	    fi
+> -	fi
+> -    done
+> -else
+> -    # expert mode, groups are on the command line
+> -    #
+> -    for g in $*
+> -    do
+> -	if ! grep -q "[[:space:]]$g" "$tdir/group"; then
+> -	    echo "Warning: group \"$g\" not defined in $tdir/group"
+> -	fi
+> -    done
+> -    ans="$*"
+> -fi
+> -
+> -echo -n "Adding $id to group index ..."
+> -head -n $(($line-1)) $tdir/group > /tmp/$$.group
+> -echo "$id $ans" >> /tmp/$$.group
+> -tail -n +$((line)) $tdir/group >> /tmp/$$.group
+> -mv /tmp/$$.group $tdir/group
+>   echo " done."
+> -
+>   exit 0
 > 
